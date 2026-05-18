@@ -7,6 +7,10 @@ import { db, usersTable } from "@workspace/db";
 import router from "./routes";
 import { logger } from "./lib/logger";
 import { decodeRole, decodeSession } from "./lib/session";
+import { requireSession } from "./lib/session";
+import { requireTenant } from "./lib/requireTenant";
+import helmet from "helmet";
+
 
 const app: Express = express();
 
@@ -61,10 +65,31 @@ app.use(
     },
   }),
 );
-app.use(cors({ credentials: true, origin: true }));
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "https://vndry.ai" // change later
+];
+
+app.use(cors({
+  credentials: true,
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error("Not allowed by CORS"));
+  }
+}));
+``
+app.use(helmet());
 app.use(cookieParser());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
+``
+
 
 // Bearer-token shim: mobile clients send the signed session as
 // `Authorization: Bearer <token>`. Route the token to the appropriate
@@ -180,6 +205,63 @@ app.use(async (req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
-app.use("/api", router);
+const { enforceTenant } = require("./lib/tenantGuard");
+
+const { getSessionFromRequest } = require("./lib/session");
+
+app.use("/api", requireSession, (req, res, next) => {
+  const session = getSessionFromRequest(req);
+
+  const originalJson = res.json;
+
+  res.json = function (data) {
+    try {
+      // If no session, don't touch response
+      if (!session) return originalJson.call(this, data);
+
+      // Handle arrays
+      if (Array.isArray(data)) {
+        data = data.filter((item) => {
+          if (!item || typeof item !== "object") return true;
+
+          if (session.partnerId && item.partnerId) {
+            return item.partnerId === session.partnerId;
+          }
+
+          if (session.vendorId && item.vendorId) {
+            return item.vendorId === session.vendorId;
+          }
+
+          return true; // allow non-tenant objects through (metadata, etc)
+        });
+      }
+
+      // Handle single object
+      else if (data && typeof data === "object") {
+        if (
+          (session.partnerId && data.partnerId && data.partnerId !== session.partnerId) ||
+          (session.vendorId && data.vendorId && data.vendorId !== session.vendorId)
+        ) {
+          return originalJson.call(this, null); // block it
+        }
+      }
+
+      return originalJson.call(this, data);
+    } catch (err) {
+      console.error("Tenant guard error:", err);
+      return originalJson.call(this, data);
+    }
+  };
+
+  next();
+}, router);
 
 export default app;
+
+app.use((err, req, res, next) => {
+  console.error(err);
+
+  res.status(500).json({
+    message: "Internal server error"
+  });
+});
