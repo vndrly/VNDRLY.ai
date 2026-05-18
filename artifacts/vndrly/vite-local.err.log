@@ -9014,3 +9014,27 @@ Error: read ECONNRESET
 Error: read ECONNRESET
     at TLSWrap.onStreamRead (node:internal/stream_base_commons:216:20)
 [RUNTIME_ERROR]{"type":"runtime-error","timestamp":1779084892323,"name":"Error","message":"DashboardAnalyticsCards is not defined","stack":"    at Dashboard C:/Users/JohnElerick/Desktop/vndrly/artifacts/vndrly/src/pages/dashboard.tsx:820:8\n\n\n\n\n\n\n\n\n","loc":{"line":820,"column":8,"file":"C:/Users/JohnElerick/Desktop/vndrly/artifacts/vndrly/src/pages/dashboard.tsx"},"frame":"818|        </div>\n819|  \n820|        <DashboardAnalyticsCards\n   |         ^\n821|          cards={analyticsCards}\n822|          loading={siteTicketsQuery.isLoading || siteListQuery.isLoading}"}
+[2m5:41:15 AM[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/notifications/unread-count[39m
+Error: socket hang up
+    at TLSSocket.socketOnEnd (node:_http_client:617:25)
+    at TLSSocket.emit (node:events:521:24)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+[2m5:43:43 AM[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/notifications/unread-count[39m
+Error: socket hang up
+    at TLSSocket.socketOnEnd (node:_http_client:617:25)
+    at TLSSocket.emit (node:events:521:24)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+[2m5:43:54 AM[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/tickets/events[39m
+Error: socket hang up
+    at TLSSocket.socketOnEnd (node:_http_client:617:25)
+    at TLSSocket.emit (node:events:521:24)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+[2m5:48:02 AM[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/tickets/128/note-logs[39m
+Error: socket hang up
+    at TLSSocket.socketOnEnd (node:_http_client:617:25)
+    at TLSSocket.emit (node:events:521:24)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
