@@ -14,7 +14,8 @@
     "test:mobile": "pnpm --filter @workspace/vndrly-mobile run test",
     "test:api": "pnpm --filter @workspace/api-server run test",
     "test:e2e": "pnpm --filter @workspace/e2e exec playwright test",
-    "lint:i18n": "pnpm --filter @workspace/scripts run lint:i18n"
+    "lint:i18n": "pnpm --filter @workspace/scripts run lint:i18n",
+    "save": "powershell -ExecutionPolicy Bypass -File scripts/save-online.ps1"
   },
   "private": true,
   "devDependencies": {

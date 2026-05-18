@@ -200,3 +200,85 @@
 [2m2:20:41 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/site-location-detail.tsx, /src/index.css[22m
 [2m2:20:41 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/site-location-detail.tsx, /src/index.css[22m
 [2m2:20:49 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/portal.tsx, /src/index.css[22m
+[2m3:16:27 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/baker-pill-button.tsx[22m
+[2m3:16:27 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/brand-pill-button.tsx[22m
+[2m3:16:27 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/brand-pill.tsx[22m
+[2m3:16:27 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/assistant-panel.tsx, /src/index.css[22m
+[2m3:16:27 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/baker-pill-button.tsx[22m
+[2m3:16:29 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/comments-panel.tsx[22m
+[2m3:16:29 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/ui/card.tsx[22m
+[2m3:16:29 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/lib/locales/en.json[22m
+[2m3:16:29 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/language-toggle.tsx, /src/components/dark-light-toggle.tsx, /src/components/ticket-route-map.tsx[22m
+[2m3:16:29 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/catalog.tsx, /src/index.css[22m
+[2m3:16:29 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+[2m3:16:29 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/crew-time-section.tsx[22m
+[2m3:16:29 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/employee-role-pill.tsx[22m
+[2m3:16:29 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/hotlist-section.tsx[22m
+[2m3:16:29 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/image-pill.tsx[22m
+[2m3:16:29 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/live-connection-pill.tsx[22m
+[2m3:16:29 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/pill.tsx[22m
+[2m3:16:29 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/role-pill.tsx[22m
+[2m3:16:29 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/sidebar-button.tsx[22m
+[2m3:16:29 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/ticket-status-action-pill.tsx[22m
+[2m3:16:29 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/ticket-status-badge.tsx[22m
+[2m3:16:29 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/ticket-status-toggle-pill.tsx[22m
+[2m3:16:29 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/components/toggle-pill.tsx[22m
+[2m3:16:29 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/vertical-pill-bar-shape.tsx[22m
+[2m3:16:30 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/components/toggle-pill.tsx[22m
+[2m3:16:30 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/vertical-pill-bar-shape.tsx[22m
+[2m3:16:30 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/ui/card.tsx[22m
+[2m3:16:30 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/lib/locales/en.json[22m
+[2m3:16:30 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/lib/locales/es.json[22m
+[2m3:16:30 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/language-toggle.tsx, /src/components/dark-light-toggle.tsx, /src/components/ticket-route-map.tsx[22m
+[2m3:16:31 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/catalog.tsx, /src/index.css[22m
+[2m3:16:31 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/crew-replay.tsx, /src/index.css[22m
+[2m3:16:31 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/dashboard.tsx, /src/index.css[22m
+[2m3:16:31 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/field-employees.tsx, /src/index.css[22m
+[2m3:16:31 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/login.tsx, /src/index.css[22m
+[2m3:16:31 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/portal.tsx, /src/index.css[22m
+[2m3:16:31 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/site-location-detail.tsx, /src/index.css[22m
+[2m3:16:31 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/ticket-detail.tsx, /src/index.css[22m
+[2m3:16:31 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/vendor-catalog.tsx, /src/index.css[22m
+[2m3:16:31 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/dashboard.tsx, /src/components/ticket-status-badge.tsx, /src/components/ticket-status-action-pill.tsx, /src/components/ticket-status-toggle-pill.tsx, /src/components/vertical-pill-bar-shape.tsx, /src/pages/ticket-detail.tsx[22m
+[2m3:16:32 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/assistant-panel.tsx, /src/index.css[22m
+[2m3:16:32 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/dashboard.tsx, /src/components/ticket-status-badge.tsx, /src/components/ticket-status-action-pill.tsx, /src/components/ticket-status-toggle-pill.tsx, /src/components/vertical-pill-bar-shape.tsx, /src/pages/ticket-detail.tsx[22m
+[2m3:16:47 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/assistant-panel.tsx, /src/index.css[22m
+[2m3:16:47 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/baker-pill-button.tsx[22m
+[2m3:16:47 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/brand-pill-button.tsx[22m
+[2m3:16:47 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/brand-pill.tsx[22m
+[2m3:16:47 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/comments-panel.tsx[22m
+[2m3:16:47 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/crew-time-section.tsx[22m
+[2m3:16:47 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/ui/card.tsx[22m
+[2m3:16:47 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/lib/locales/en.json[22m
+[2m3:16:47 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/crew-time-section.tsx[22m
+[2m3:16:47 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/employee-role-pill.tsx[22m
+[2m3:16:47 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/hotlist-section.tsx[22m
+[2m3:16:47 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/image-pill.tsx[22m
+[2m3:16:47 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/live-connection-pill.tsx[22m
+[2m3:16:47 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/pill.tsx[22m
+[2m3:16:47 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/role-pill.tsx[22m
+[2m3:16:47 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/sidebar-button.tsx[22m
+[2m3:16:47 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/ticket-status-action-pill.tsx[22m
+[2m3:16:47 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/ticket-status-badge.tsx[22m
+[2m3:16:47 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/ticket-status-toggle-pill.tsx[22m
+[2m3:16:47 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/components/toggle-pill.tsx[22m
+[2m3:16:47 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/vertical-pill-bar-shape.tsx[22m
+[2m3:16:48 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/language-toggle.tsx, /src/components/dark-light-toggle.tsx, /src/components/ticket-route-map.tsx[22m
+[2m3:16:48 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/catalog.tsx, /src/index.css[22m
+[2m3:16:48 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/assistant-panel.tsx, /src/index.css[22m
+[2m3:16:48 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+[2m3:16:48 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/ui/card.tsx[22m
+[2m3:16:48 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/dashboard.tsx, /src/components/ticket-status-badge.tsx, /src/components/ticket-status-action-pill.tsx, /src/components/ticket-status-toggle-pill.tsx, /src/components/vertical-pill-bar-shape.tsx, /src/pages/ticket-detail.tsx[22m
+[2m3:16:48 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/lib/locales/en.json[22m
+[2m3:16:48 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/lib/locales/es.json[22m
+[2m3:16:48 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css, /src/components/language-toggle.tsx, /src/components/dark-light-toggle.tsx, /src/components/ticket-route-map.tsx[22m
+[2m3:16:48 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/catalog.tsx, /src/index.css[22m
+[2m3:16:49 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/crew-replay.tsx, /src/index.css[22m
+[2m3:16:49 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/dashboard.tsx, /src/index.css[22m
+[2m3:16:49 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/field-employees.tsx, /src/index.css[22m
+[2m3:16:49 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/login.tsx, /src/index.css[22m
+[2m3:16:49 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/portal.tsx, /src/index.css[22m
+[2m3:16:49 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/site-location-detail.tsx, /src/index.css[22m
+[2m3:16:49 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/ticket-detail.tsx, /src/index.css[22m
+[2m3:16:49 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/vendor-catalog.tsx, /src/index.css[22m
+[2m3:16:49 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/dashboard.tsx, /src/components/ticket-status-badge.tsx, /src/components/ticket-status-action-pill.tsx, /src/components/ticket-status-toggle-pill.tsx, /src/components/vertical-pill-bar-shape.tsx, /src/pages/ticket-detail.tsx[22m

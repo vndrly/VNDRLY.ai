@@ -9038,3 +9038,6 @@ Error: socket hang up
     at TLSSocket.emit (node:events:521:24)
     at endReadableNT (node:internal/streams/readable:1729:12)
     at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+[2m3:24:46 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Can't resolve 'tailwindcss' in 'C:\Users\JohnElerick\Desktop\vndrly\artifacts\vndrly\src'
+  Plugin: [35m@tailwindcss/vite:generate:serve[39m
+  File: [36mC:/Users/JohnElerick/Desktop/vndrly/artifacts/vndrly/src/index.css[39m
