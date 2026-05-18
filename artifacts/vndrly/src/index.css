@@ -1,0 +1,567 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-card-border: hsl(var(--card-border));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-popover-border: hsl(var(--popover-border));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-primary-border: var(--primary-border);
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-secondary-border: var(--secondary-border);
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-muted-border: var(--muted-border);
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-accent-border: var(--accent-border);
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-destructive-border: var(--destructive-border);
+
+  --color-chart-1: hsl(var(--chart-1));
+  --color-chart-2: hsl(var(--chart-2));
+  --color-chart-3: hsl(var(--chart-3));
+  --color-chart-4: hsl(var(--chart-4));
+  --color-chart-5: hsl(var(--chart-5));
+
+  --color-sidebar: hsl(var(--sidebar));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-primary: hsl(var(--sidebar-primary));
+  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  --color-sidebar-primary-border: var(--sidebar-primary-border);
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --color-sidebar-accent-border: var(--sidebar-accent-border);
+  --color-sidebar-ring: hsl(var(--sidebar-ring));
+
+  --font-sans: var(--app-font-sans);
+  --font-serif: var(--app-font-serif);
+  --font-mono: var(--app-font-mono);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --button-outline: rgba(0,0,0, .10);
+  --badge-outline: rgba(0,0,0, .05);
+  --opaque-button-border-intensity: -8;
+  --elevate-1: rgba(0,0,0, .03);
+  --elevate-2: rgba(0,0,0, .08);
+
+  /* Light gray-blue background */
+  --background: 210 20% 98%;
+  /* Deep steel text */
+  --foreground: 220 25% 15%;
+  --border: 214 32% 91%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 220 25% 15%;
+  --card-border: 214 32% 91%;
+
+  /* Dark grey sidebar */
+  --sidebar: 220 10% 25%;
+  --sidebar-foreground: 0 0% 95%;
+  --sidebar-border: 220 10% 30%;
+  --sidebar-primary: 25 95% 55%; /* Safety orange */
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 220 25% 22%;
+  --sidebar-accent-foreground: 0 0% 100%;
+  --sidebar-ring: 25 95% 55%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 220 25% 15%;
+  --popover-border: 214 32% 91%;
+
+  /* Industrial Blue */
+  --primary: 212 90% 30%;
+  --primary-foreground: 0 0% 100%;
+
+  /* Steel */
+  --secondary: 215 15% 40%;
+  --secondary-foreground: 0 0% 100%;
+
+  --muted: 210 20% 95%;
+  --muted-foreground: 215 15% 45%;
+
+  /* Safety Orange */
+  --accent: 25 95% 55%;
+  --accent-foreground: 0 0% 100%;
+
+  /* Alert Red */
+  --destructive: 0 84% 45%;
+  --destructive-foreground: 0 0% 100%;
+
+  --input: 214 32% 91%;
+  --ring: 212 90% 30%;
+  
+  --chart-1: 212 90% 30%; /* Industrial Blue */
+  --chart-2: 25 95% 55%; /* Safety Orange */
+  --chart-3: 215 15% 40%; /* Steel */
+  --chart-4: 160 60% 40%; /* Green */
+  --chart-5: 0 84% 45%; /* Red */
+
+  --app-font-sans: 'Inter', sans-serif;
+  --app-font-serif: Georgia, serif;
+  --app-font-mono: Menlo, monospace;
+  --radius: 0.25rem;
+  
+  --shadow-2xs: 0px 2px 0px 0px hsl(var(--primary) / 0.1);
+  --shadow-xs: 0px 2px 0px 0px hsl(var(--primary) / 0.1);
+  --shadow-sm: 0px 2px 0px 0px hsl(var(--primary) / 0.1), 0px 1px 2px -1px hsl(var(--primary) / 0.1);
+  --shadow: 0px 2px 0px 0px hsl(var(--primary) / 0.1), 0px 1px 2px -1px hsl(var(--primary) / 0.1);
+  --shadow-md: 0px 2px 0px 0px hsl(var(--primary) / 0.1), 0px 2px 4px -1px hsl(var(--primary) / 0.1);
+  --shadow-lg: 0px 2px 0px 0px hsl(var(--primary) / 0.1), 0px 4px 6px -1px hsl(var(--primary) / 0.1);
+  --shadow-xl: 0px 2px 0px 0px hsl(var(--primary) / 0.1), 0px 8px 10px -1px hsl(var(--primary) / 0.1);
+  --shadow-2xl: 0px 2px 0px 0px hsl(var(--primary) / 0.1);
+  --tracking-normal: 0em;
+  --spacing: 0.25rem;
+
+  --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --sidebar-accent-border: hsl(from hsl(var(--sidebar-accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --primary-border: hsl(from hsl(var(--primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --secondary-border: hsl(from hsl(var(--secondary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --muted-border: hsl(from hsl(var(--muted)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --accent-border: hsl(from hsl(var(--accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+}
+
+.dark .bg-card {
+  background-color: rgba(255, 255, 255, 0.5) !important;
+  border: 2px solid var(--brand-primary) !important;
+}
+
+/* Global dark-mode "VNDRLY-00000239 timeline" treatment for any soft
+ * muted-fill surface: drop the grey background and replace it with a
+ * brand-color outline. Matches the look the user approved on the
+ * ticket-detail timeline GPS boxes and asked for everywhere (hotlist
+ * cards, etc.). Uses outline (not border) so it does not affect
+ * layout. */
+.dark :where(
+  .bg-muted,
+  .bg-muted\/10,
+  .bg-muted\/20,
+  .bg-muted\/30,
+  .bg-muted\/40,
+  .bg-muted\/50,
+  .bg-muted\/60,
+  .bg-muted\/70,
+  .bg-muted\/80,
+  .bg-muted\/90
+) {
+  background-color: transparent !important;
+  outline: 1px solid var(--brand-primary) !important;
+  outline-offset: -1px;
+}
+
+/* Hover state for those same surfaces in dark mode — light up with a
+ * soft light-grey wash so cards/rows still respond to the cursor.
+ * Uses non-:where selectors so specificity beats the resting rule
+ * above without needing !important order tricks. */
+.dark .hover\:bg-muted:hover,
+.dark .hover\:bg-muted\/10:hover,
+.dark .hover\:bg-muted\/20:hover,
+.dark .hover\:bg-muted\/30:hover,
+.dark .hover\:bg-muted\/40:hover,
+.dark .hover\:bg-muted\/50:hover,
+.dark .hover\:bg-muted\/60:hover,
+.dark .hover\:bg-muted\/70:hover,
+.dark .hover\:bg-muted\/80:hover,
+.dark .hover\:bg-muted\/90:hover {
+  background-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+/* In dark mode, force native scrollbars and form-control chrome to stay
+ * light so table scrollbars / inputs don't render dark — the page surface
+ * is light grey (#E6E6E7), not a true dark background. */
+.dark {
+  color-scheme: light;
+}
+
+/* Modals (and other surfaces using bg-background) should match the page
+ * background in dark mode (#E6E6E7) instead of the deep --background HSL. */
+.dark .bg-background {
+  background-color: #E6E6E7 !important;
+}
+
+/* Keep body/card lettering identical to light mode in dark mode — the dark
+ * surface is light grey (#E6E6E7) with half-white cards, so light text
+ * would disappear. Override the foreground tokens back to the light-mode
+ * values so all text stays readable. */
+.dark {
+  --foreground: 220 25% 15%;
+  --card-foreground: 220 25% 15%;
+  --popover-foreground: 220 25% 15%;
+  --muted-foreground: 215 15% 45%;
+}
+
+.dark {
+  --button-outline: rgba(255,255,255, .10);
+  --badge-outline: rgba(255,255,255, .05);
+  --opaque-button-border-intensity: 9;
+  --elevate-1: rgba(255,255,255, .04);
+  --elevate-2: rgba(255,255,255, .09);
+
+  --background: 220 30% 10%;
+  --foreground: 220 25% 15%;
+  --border: 214 32% 91%;
+
+  --card: 220 30% 12%;
+  --card-foreground: 220 25% 15%;
+  --card-border: 214 32% 91%;
+
+  /* Dark mode sidebar / sign-out pane: per user spec, only ~10%
+     darker than light mode (light is 220 10% 25%, so dark is
+     220 10% 22%) instead of the much-deeper 220 30% 8%. Keeps the
+     two themes visually related rather than night-and-day. */
+  --sidebar: 220 10% 22%;
+  --sidebar-foreground: 210 20% 98%;
+  --sidebar-border: 220 30% 15%;
+  --sidebar-primary: 25 95% 55%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 220 25% 15%;
+  --sidebar-accent-foreground: 0 0% 100%;
+  --sidebar-ring: 25 95% 55%;
+
+  --popover: 220 30% 12%;
+  --popover-foreground: 220 25% 15%;
+  --popover-border: 214 32% 91%;
+
+  --primary: 212 90% 50%;
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 215 15% 40%;
+  --secondary-foreground: 0 0% 100%;
+
+  --muted: 213 22% 75%;
+  --muted-foreground: 215 15% 45%;
+
+  --accent: 25 95% 55%;
+  --accent-foreground: 0 0% 100%;
+
+  --destructive: 0 84% 50%;
+  --destructive-foreground: 0 0% 100%;
+
+  --input: 220 30% 18%;
+  --ring: 212 90% 50%;
+
+  --chart-1: 212 90% 50%;
+  --chart-2: 25 95% 55%;
+  --chart-3: 215 15% 60%;
+  --chart-4: 160 60% 50%;
+  --chart-5: 0 84% 60%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+
+  @keyframes lifecycle-flash {
+    0%, 100% {
+      background-color: transparent;
+      box-shadow: none;
+    }
+    15%, 65% {
+      background-color: rgb(254 243 199 / 0.6);
+      box-shadow: inset 0 0 0 2px rgb(245 158 11 / 0.85);
+    }
+  }
+
+  .lifecycle-flash {
+    animation: lifecycle-flash 2s ease-in-out 1;
+  }
+
+  /* Expanding ring overlay drawn underneath the crew-map car pin when its
+     ticket transitions lifecycle stages. Sits as a sibling of the car SVG
+     inside the pin's outer container so animating it never disturbs the
+     `transform: translate(...)` that anchors the pin on the map. The ring
+     starts small and tight around the car, then expands outward and fades
+     so the geographic location of the change is unmistakable. */
+  @keyframes lifecycle-flash-pin-ring {
+    0% {
+      transform: translate(-50%, -50%) scale(0.6);
+      opacity: 0;
+    }
+    15% {
+      opacity: 1;
+    }
+    100% {
+      transform: translate(-50%, -50%) scale(2.6);
+      opacity: 0;
+    }
+  }
+
+  .lifecycle-flash-pin-ring {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 3px solid rgb(245 158 11 / 0.95);
+    background: rgb(245 158 11 / 0.18);
+    box-shadow: 0 0 12px rgb(245 158 11 / 0.55);
+    pointer-events: none;
+    z-index: 1;
+    transform: translate(-50%, -50%) scale(0.6);
+    animation: lifecycle-flash-pin-ring 2s ease-out 1 forwards;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lifecycle-flash-pin-ring {
+      animation-duration: 0.01ms;
+      opacity: 0;
+    }
+  }
+
+  /* Ask VNDRLY launcher — synchronized "breathing" attract pulse.
+     The brand-primary tint layer never fully extinguishes; instead
+     it alternates two gentle breaths per 4s cycle, dipping to 40%
+     opacity and back to 100% twice. The active foreground glyph
+     (ask first breath, V second breath) rides the SAME opacity
+     track via its own keyframe below so the brand color and the
+     glyph fade in and out as one — never out of sync. The glyph
+     hand-off happens at the brand-color trough so the swap is
+     visually masked by the dim. The animation pauses on hover /
+     focus / open and the brand-color layer snaps to full opacity
+     (handled inline in `assistant-panel.tsx`). */
+  @keyframes assistant-launcher-attract-pulse {
+    0%, 50%, 100% { opacity: 1; }
+    25%, 75% { opacity: 0.4; }
+  }
+
+  .assistant-launcher-attract-pulse {
+    animation: assistant-launcher-attract-pulse 4s ease-in-out infinite;
+  }
+
+  /* Ask V launcher — bottom grey sphere image gently breathes
+     between 20% and 50% opacity on a 4s loop while idle. */
+  @keyframes assistant-launcher-base-pulse {
+    0%, 100% { opacity: 0.2; }
+    50% { opacity: 0.5; }
+  }
+
+  .assistant-launcher-base-pulse {
+    animation: assistant-launcher-base-pulse 4s ease-in-out infinite;
+  }
+
+  /* Ask V launcher — both foreground glyphs stay continuously
+     visible and pulse opacity in opposite phase between 100% and
+     70% over a 4s cycle, so the orb always reads as the full
+     "ask V" mark while one glyph leads and the other follows.
+       - "ask" glyph: 100% → 70% → 100%
+       - "V" glyph:   70% → 100% → 70%
+     On hover/focus or when the panel is open the animation pauses
+     and the layer SNAPS to its rest position (V at 100%, ask at
+     70%) so the engaged launcher reads as a steady mark. */
+  @keyframes assistant-launcher-glyph-ask {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+  }
+
+  @keyframes assistant-launcher-glyph-v {
+    0% { opacity: 0.7; }
+    50% { opacity: 1; }
+    100% { opacity: 0.7; }
+  }
+
+  .assistant-launcher-glyph-v {
+    animation: assistant-launcher-glyph-v 4s ease-in-out infinite;
+  }
+
+  .assistant-launcher-glyph-ask {
+    animation: assistant-launcher-glyph-ask 4s ease-in-out infinite;
+  }
+
+  /* Ask V launcher — slow 6s breathe between 100% and 50% opacity,
+     used for the brand-color overlay (default) and the Baker active
+     layer. Pauses on hover/focus/open via inline opacity override. */
+  @keyframes assistant-launcher-breathe-6s {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .assistant-launcher-breathe-6s {
+    animation: assistant-launcher-breathe-6s 10s ease-in-out infinite;
+  }
+
+  /* Baker variant — top askV layer fades to 25% instead of 50%. */
+  @keyframes assistant-launcher-breathe-baker {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.25; }
+  }
+
+  .assistant-launcher-breathe-baker {
+    animation: assistant-launcher-breathe-baker 10s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .assistant-launcher-attract-pulse,
+    .assistant-launcher-base-pulse,
+    .assistant-launcher-glyph-v,
+    .assistant-launcher-glyph-ask,
+    .assistant-launcher-breathe-6s {
+      animation: none;
+    }
+    .assistant-launcher-breathe-6s {
+      opacity: 1;
+    }
+    .assistant-launcher-attract-pulse {
+      opacity: 1;
+    }
+    .assistant-launcher-base-pulse {
+      opacity: 0.2;
+    }
+    .assistant-launcher-glyph-v {
+      opacity: 1;
+    }
+    .assistant-launcher-glyph-ask {
+      opacity: 0.7;
+    }
+  }
+
+  /* Leaflet stacking-context fix — by default the Leaflet container
+     is `position: relative` with no explicit `z-index`, so it does
+     NOT establish a stacking context. That lets its internal panes
+     (tile 200, overlay 400, marker 600, popup 700) escape and rank
+     against the document root, where they end up on top of shadcn
+     dialog overlays/content (z-50). Forcing `z-index: 0` makes the
+     container a stacking context, scoping all panes to it so modals
+     reliably paint above any embedded SiteLocationMap. */
+  .leaflet-container {
+    z-index: 0;
+  }
+
+  /* Native date/time picker indicators — replace the browser's
+     default amber-tinted icon with a calendar/clock SVG masked in
+     the partner's brand-primary color so the picker affordance
+     matches the rest of the brand chrome regardless of partner. */
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+  input[type="month"]::-webkit-calendar-picker-indicator,
+  input[type="week"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    background-image: none;
+    background-color: var(--brand-primary, currentColor);
+    -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'><path d='M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM5 8V6h14v2H5z'/></svg>");
+    mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'><path d='M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM5 8V6h14v2H5z'/></svg>");
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    opacity: 1;
+    filter: none;
+  }
+
+  input[type="time"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    background-image: none;
+    background-color: var(--brand-primary, currentColor);
+    -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z'/></svg>");
+    mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z'/></svg>");
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    opacity: 1;
+    filter: none;
+  }
+}
+
+/* Global pill + button drop-shadow doctrine. Promoted from the
+   Tickets-page `.tickets-shadow-test` experiment to apply to every
+   button / pill chip across the app.
+
+   Two layers, because the app uses two very different "pill"
+   constructions:
+     1. CSS pills — plain <button> / <span class="rounded-full"> / shadcn
+        button slots. Get a real `box-shadow` (with !important so we beat
+        Tailwind v4's preflight + any utility shadows on the element).
+     2. Image pills — `TogglePill` / `TogglePillButton` / `ImagePill` /
+        `TicketStatusBadge` etc. paint themselves with PNG <img> layers
+        (`PillBg`), so a box-shadow on the wrapper produces a rectangle
+        behind the transparent PNG. We use `filter: drop-shadow(...)` on
+        the wrapper instead — that shadows the actual painted pixels
+        (the PNG silhouette).
+
+   Excludes table-header sort buttons and checkbox controls so the
+   shadow doesn't muddy column header rows or bulk-select checkboxes. */
+/* CSS rectangular box-shadow only applies to actual rectangular
+   button surfaces. The image-pill family (`TogglePillButton`,
+   `PillButton`, etc.) renders a transparent-bg <button> wrapping a
+   PNG silhouette — a rectangular box-shadow on that wrapper paints
+   a square shadow ARTIFACT around the rounded pill. We exclude any
+   transparent-bg <button> so the pill family is shadowed exclusively
+   by the silhouette-aware drop-shadow rule below. */
+:is(button, [data-slot="button"], span.rounded-full, a.rounded-full):not([data-testid^="sort-"]):not([role="checkbox"]):not(.bg-transparent) {
+  box-shadow:
+    0 1px 2px 0 rgb(0 0 0 / 0.10),
+    0 2px 6px -1px rgb(0 0 0 / 0.10) !important;
+}
+:is(button, [data-slot="button"], a.rounded-full):not([data-testid^="sort-"]):not([role="checkbox"]):not(.bg-transparent):hover {
+  box-shadow:
+    0 2px 4px 0 rgb(0 0 0 / 0.14),
+    0 6px 12px -2px rgb(0 0 0 / 0.12) !important;
+}
+
+/* Image-based pills: `TogglePill`, `TogglePillButton`, `ImagePill`,
+   and `TicketStatusBadge` all paint themselves with PNG <img> layers
+   via the shared `PillBg` component, so a `box-shadow` on the wrapper
+   produces a rectangle behind the transparent PNG. We use
+   `filter: drop-shadow(...)` on the wrapper instead — that shadows
+   the actual painted pixels (the PNG silhouette).
+
+   These wrappers don't carry semantic class hooks, but they all share
+   the same Tailwind class soup: `inline-flex items-center` plus the
+   tell-tale `pointer-events-none select-none` pair (used by every
+   read-only pill in the family) — see toggle-pill.tsx, image-pill.tsx,
+   ticket-status-badge.tsx. We key off that combo to scope the shadow
+   without touching the components themselves. */
+.pointer-events-none.select-none.inline-flex,
+main :is(button, a, span).relative.inline-flex.items-center.select-none {
+  filter: drop-shadow(0 0.9px 0.9px rgb(0 0 0 / 0.198))
+    drop-shadow(0 1.8px 3.6px rgb(0 0 0 / 0.162));
+}
+/* `TogglePillButton` is rendered inside an interactive <button>, so the
+   wrapper above has `pointer-events-none` set on the inner shell.
+   When the host <button> is hovered, push the drop-shadow a little
+   stronger so the affordance reads. */
+button:hover .pointer-events-none.select-none.inline-flex,
+main :is(button, a).relative.inline-flex.items-center.select-none:hover {
+  filter: drop-shadow(0 1.8px 1.8px rgb(0 0 0 / 0.252))
+    drop-shadow(0 3.6px 7.2px rgb(0 0 0 / 0.18));
+}

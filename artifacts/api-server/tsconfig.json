@@ -1,0 +1,20 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": ".",
+    "types": ["node"]
+  },
+  "include": ["src", "scripts"],
+  "references": [
+    {
+      "path": "../../lib/api-zod"
+    },
+    {
+      "path": "../../lib/form1099"
+    },
+    {
+      "path": "../../lib/integrations-anthropic-ai"
+    }
+  ]
+}

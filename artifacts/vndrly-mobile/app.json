@@ -1,0 +1,115 @@
+{
+  "expo": {
+    "name": "VNDRLY Field Mobile",
+    "slug": "vndrly-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icons/vndrly.png",
+    "scheme": "vndrly-mobile",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/REPLACE_WITH_EAS_PROJECT_ID",
+      "fallbackToCacheTimeout": 0
+    },
+    "splash": {
+      "image": "./assets/images/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.vndrly.field",
+      "infoPlist": {
+        "NSCameraUsageDescription": "VNDRLY uses the camera to scan site QR codes and capture work-site photos.",
+        "NSPhotoLibraryUsageDescription": "VNDRLY uses your photo library to attach photos to tracking tickets.",
+        "NSLocationWhenInUseUsageDescription": "VNDRLY records your GPS location at check-in and check-out to verify on-site work.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "VNDRLY shares your live location with your vendor while you are en route or on site, even when the app is in the background.",
+        "NSLocationAlwaysUsageDescription": "VNDRLY shares your live location with your vendor while you are en route or on site, even when the app is in the background.",
+        "UIBackgroundModes": [
+          "location",
+          "fetch"
+        ],
+        "NSFaceIDUsageDescription": "VNDRLY uses Face ID to sign you in quickly and securely."
+      }
+    },
+    "android": {
+      "package": "com.vndrly.field",
+      "permissions": [
+        "CAMERA",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION",
+        "READ_MEDIA_IMAGES"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/images/icon.png"
+    },
+    "plugins": [
+      [
+        "expo-router",
+        {
+          "origin": "https://replit.com/"
+        }
+      ],
+      "expo-font",
+      "expo-web-browser",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "VNDRLY uses the camera to scan site QR codes and capture work-site photos."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "VNDRLY shares your live location with your vendor while you are en route or on site, even when the app is in the background.",
+          "locationWhenInUsePermission": "VNDRLY records your GPS location at check-in and check-out to verify on-site work.",
+          "isIosBackgroundLocationEnabled": true,
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "VNDRLY uses your photo library to attach photos to tracking tickets.",
+          "cameraPermission": "VNDRLY uses the camera to capture work-site photos."
+        }
+      ],
+      "expo-notifications",
+      "expo-secure-store",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "VNDRLY uses Face ID to sign you in quickly and securely."
+        }
+      ],
+      "expo-updates",
+      "@sentry/react-native",
+      [
+        "expo-dynamic-app-icon",
+        {
+          "mach": {
+            "image": "./assets/icons/mach.png",
+            "prerendered": true
+          },
+          "baker": {
+            "image": "./assets/icons/baker.png",
+            "prerendered": true
+          }
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}

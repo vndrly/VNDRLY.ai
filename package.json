@@ -1,0 +1,27 @@
+{
+  "name": "workspace",
+  "version": "0.0.0",
+  "license": "MIT",
+  "scripts": {
+    "preinstall": "sh -c 'rm -f package-lock.json yarn.lock; case \"$npm_config_user_agent\" in pnpm/*) ;; *) echo \"Use pnpm instead\" >&2; exit 1 ;; esac'",
+    "dev:bootstrap": "bash scripts/dev-bootstrap.sh",
+    "build": "pnpm run typecheck && pnpm -r --if-present run build",
+    "typecheck:libs": "tsc --build",
+    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck",
+    "test": "pnpm run test:libs && pnpm run test:web && pnpm run test:mobile && pnpm run test:api && pnpm run test:e2e",
+    "test:libs": "pnpm -r --filter \"./lib/**\" --filter \"!@workspace/e2e\" --if-present run test",
+    "test:web": "pnpm --filter @workspace/vndrly run test",
+    "test:mobile": "pnpm --filter @workspace/vndrly-mobile run test",
+    "test:api": "pnpm --filter @workspace/api-server run test",
+    "test:e2e": "pnpm --filter @workspace/e2e exec playwright test",
+    "lint:i18n": "pnpm --filter @workspace/scripts run lint:i18n"
+  },
+  "private": true,
+  "devDependencies": {
+    "prettier": "^3.8.1",
+    "typescript": "~5.9.2"
+  },
+  "dependencies": {
+    "@swc/helpers": "^0.5.21"
+  }
+}

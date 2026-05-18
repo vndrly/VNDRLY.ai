@@ -1,0 +1,228 @@
+name: Assistant tone eval
+
+# Nightly opt-in eval that replays a small prompt battery through
+# Claude and asserts (a) tone — second-person, ≤200 words, no
+# markdown tables — and (b) refusal correctness — when the assistant
+# declines because of role/scope, the reply must trip the production
+# `classifyRefusal` heuristic AND name a real screen the user can be
+# pointed to instead.
+#
+# Sibling to `assistant-language-eval.yml` and
+# `assistant-tool-use-eval.yml` — kept as its own workflow so a tone
+# or refusal regression files its own GitHub issue (under the
+# `assistant-tone-eval` label) instead of being misattributed to the
+# language-drift triage thread.
+#
+# The eval is gated locally on ANTHROPIC_API_KEY (see
+# artifacts/api-server/src/assistant/__evals__/tone.eval.ts); this
+# workflow is the scheduled runner that wires the key in.
+#
+# See docs/assistant-tone-eval.md for the run instructions, the
+# prompt-add procedure, and the operational notes for this workflow.
+
+on:
+  schedule:
+    # 09:30 UTC — thirty minutes after the language eval (09:00) and
+    # fifteen minutes after the tool-use eval (09:15) so all three
+    # nightly jobs don't slam the Anthropic API at the same minute.
+    # Same rough "morning coffee triage" reasoning as the siblings.
+    - cron: "30 9 * * *"
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: "Why are you running this on demand? (free-form, surfaces in logs)"
+        required: false
+        default: "manual run"
+
+# Never run two tone evals in parallel — the suite is intentionally
+# serial (fileParallelism: false in vitest.eval.config.ts) and
+# overlapping runs would just double the API spend without catching
+# anything new. We deliberately do NOT cancel-in-progress: a long
+# manual run should not be killed by the next nightly tick.
+concurrency:
+  group: assistant-tone-eval
+  cancel-in-progress: false
+
+jobs:
+  eval:
+    name: Run tone & refusal eval
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    permissions:
+      # Needed for the failure-notification step to file/refresh a
+      # GitHub issue. Read on contents is the default but we pin it.
+      contents: read
+      issues: write
+
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Verify ANTHROPIC_API_KEY is configured
+        # Fail fast with a clear message if the secret is missing —
+        # without it the eval suite would silently skip every test
+        # (describe.skipIf(!HAS_KEY)) and the workflow would go green
+        # while catching nothing. That's the exact failure mode this
+        # workflow exists to prevent, so guard against it explicitly.
+        run: |
+          if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
+            echo "::error title=Missing secret::ANTHROPIC_API_KEY is not set. Add it under Settings → Secrets and variables → Actions → New repository secret."
+            exit 1
+          fi
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+          run_install: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          # Match the Replit runtime pinned in .replit (modules = ["nodejs-24", ...]).
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run tone & refusal eval
+        id: eval
+        # `tee` gives us a copy of the output for the artifact upload
+        # below while preserving the exit code via pipefail. The
+        # `eval:tone` script targets ONLY tone.eval.ts so the run
+        # cost stays a fraction of a full nightly and a failure here
+        # is unambiguously a tone or refusal regression.
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm --filter @workspace/api-server run eval:tone 2>&1 | tee eval-output.log
+
+      - name: Upload eval output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: assistant-tone-eval-${{ github.run_id }}
+          path: eval-output.log
+          if-no-files-found: ignore
+          retention-days: 30
+
+      - name: Open or refresh failure issue
+        # Only file an issue for *scheduled* failures. A developer
+        # debugging via workflow_dispatch already has the run page
+        # open and doesn't need an inbox notification.
+        if: failure() && github.event_name == 'schedule'
+        uses: actions/github-script@v7
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        with:
+          script: |
+            const fs = require('fs');
+            // Distinct label from the language and tool-use evals so
+            // the three suites stay in separate triage threads.
+            const label = 'assistant-tone-eval';
+            const title = 'Nightly assistant tone & refusal eval is failing';
+            const runUrl = process.env.RUN_URL;
+
+            // Capture the tail of the eval log so the issue body is
+            // self-sufficient — a triager shouldn't have to dig into
+            // the artifact for a first-look diagnosis. 8 KB keeps the
+            // issue body well under GitHub's 65 KB limit even after
+            // the surrounding boilerplate.
+            let logTail = '(eval-output.log not found — see the run page for full logs)';
+            try {
+              const buf = fs.readFileSync('eval-output.log');
+              const TAIL_BYTES = 8 * 1024;
+              const slice = buf.length > TAIL_BYTES ? buf.subarray(buf.length - TAIL_BYTES) : buf;
+              logTail = slice.toString('utf8');
+            } catch (err) {
+              core.warning(`Could not read eval-output.log: ${err.message}`);
+            }
+
+            const body = [
+              `The nightly assistant tone & refusal eval failed on run ${runUrl}.`,
+              '',
+              'This usually means one of:',
+              '',
+              '* A tone prompt produced a reply over the ~200-word target or contained a markdown table — the GROUND RULES in the system prompt may have been weakened, or the model swap stopped honouring them.',
+              '* A refusal prompt produced a reply that did not trip the production `classifyRefusal` heuristic (the assistant didn\'t actually refuse) OR did not name a concrete screen / role to point the user at — that\'s the "terse refusal" failure mode the assistant review flagged.',
+              '',
+              'See `docs/assistant-tone-eval.md` for triage steps and the failing-test → likely-cause mapping.',
+              '',
+              '<details><summary>Tail of <code>eval-output.log</code></summary>',
+              '',
+              '```',
+              logTail.trim(),
+              '```',
+              '',
+              '</details>',
+            ].join('\n');
+
+            // Look for an existing open issue tagged with our label so
+            // a multi-day outage collapses into a single thread instead
+            // of spamming a fresh issue every night.
+            const existing = await github.paginate(github.rest.issues.listForRepo, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: label,
+              per_page: 100,
+            });
+
+            if (existing.length > 0) {
+              const issue = existing[0];
+              core.info(`Refreshing existing failure issue #${issue.number}`);
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body,
+              });
+            } else {
+              core.info('Filing a new failure issue');
+              // Ensure the label exists before we try to apply it.
+              try {
+                await github.rest.issues.createLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: label,
+                  // Distinct color from `assistant-language-eval`
+                  // (b60205) and `assistant-tool-use-eval` (d93f0b)
+                  // so the three labels are visually separable in
+                  // the issue list. Yellow-ish.
+                  color: 'fbca04',
+                  description: 'Nightly assistant tone & refusal eval regression tracker',
+                });
+              } catch (err) {
+                if (err.status !== 422) throw err; // 422 = label already exists
+              }
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: [label],
+              });
+            }
+
+      - name: Summarize result
+        if: always()
+        # A short job summary lets a triager see pass/fail at a glance
+        # from the Actions list without opening the run.
+        run: |
+          {
+            echo "# Assistant tone & refusal eval"
+            echo ""
+            if [ "${{ job.status }}" = "success" ]; then
+              echo "✅ All tone replies stayed under the word/table guardrails and all refusals named a concrete screen."
+            else
+              echo "❌ Eval failed — see \`eval-output.log\` artifact and the failure issue (for scheduled runs)."
+            fi
+            echo ""
+            echo "* Trigger: \`${{ github.event_name }}\`"
+            echo "* Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          } >> "$GITHUB_STEP_SUMMARY"

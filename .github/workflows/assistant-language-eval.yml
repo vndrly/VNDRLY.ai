@@ -1,0 +1,297 @@
+name: Assistant language eval
+
+# Nightly opt-in eval that replays a small prompt battery through Claude
+# and asserts the assistant reply language matches the user's preferred
+# UI language. The eval is gated locally on ANTHROPIC_API_KEY (see
+# artifacts/api-server/src/assistant/__evals__/language.eval.ts); this
+# workflow is the scheduled runner that wires the key in.
+#
+# See docs/assistant-language-eval.md for the run instructions, the
+# prompt-add procedure, and the operational notes for this workflow.
+
+on:
+  schedule:
+    # 09:00 UTC ≈ 02:00 PT / 05:00 ET — early enough that a US-based
+    # team can triage a regression with their morning coffee, late
+    # enough that the previous day's deploys are settled.
+    - cron: "0 9 * * *"
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: "Why are you running this on demand? (free-form, surfaces in logs)"
+        required: false
+        default: "manual run"
+
+# Never run two evals in parallel — the suite is intentionally serial
+# (fileParallelism: false in vitest.eval.config.ts) and overlapping
+# runs would just double the API spend without catching anything new.
+# We deliberately do NOT cancel-in-progress: a long manual run should
+# not be killed by the next nightly tick.
+concurrency:
+  group: assistant-language-eval
+  cancel-in-progress: false
+
+jobs:
+  eval:
+    name: Run language drift eval
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    permissions:
+      # Needed for the failure-notification step to file/refresh a
+      # GitHub issue, and for the trend-history step to push to the
+      # `assistant-language-eval-history` orphan branch. We don't
+      # touch the default branch — the trend lives on its own branch
+      # so nightly commits never land on `main`.
+      contents: write
+      issues: write
+
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      # Branch name for the trend history. Centralized here so the
+      # workflow steps below stay in sync if it's ever renamed.
+      HISTORY_BRANCH: assistant-language-eval-history
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Verify ANTHROPIC_API_KEY is configured
+        # Fail fast with a clear message if the secret is missing —
+        # without it the eval suite would silently skip every test
+        # (describe.skipIf(!HAS_KEY)) and the workflow would go green
+        # while catching nothing. That's the exact failure mode this
+        # task exists to prevent, so guard against it explicitly.
+        run: |
+          if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
+            echo "::error title=Missing secret::ANTHROPIC_API_KEY is not set. Add it under Settings → Secrets and variables → Actions → New repository secret."
+            exit 1
+          fi
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+          run_install: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          # Match the Replit runtime pinned in .replit (modules = ["nodejs-24", ...]).
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run language drift eval
+        id: eval
+        # `tee` gives us a copy of the output for the artifact upload
+        # below while preserving the exit code via pipefail. We use
+        # the `eval:language` script (language.eval.ts only) so
+        # tool-use AND tone regressions don't ALSO file issues under
+        # this workflow's `assistant-language-eval` label — the
+        # dedicated tool-use and tone workflows track those suites
+        # separately.
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm --filter @workspace/api-server run eval:language 2>&1 | tee eval-output.log
+
+      - name: Upload eval output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: assistant-language-eval-${{ github.run_id }}
+          # Pick up both the human-readable log AND the structured
+          # per-prompt summary the eval now emits. The summary is the
+          # input to the trend dashboard step below; uploading it as
+          # an artifact also lets a triager grab the raw JSON for ad
+          # hoc analysis without needing repo write access.
+          path: |
+            eval-output.log
+            artifacts/api-server/eval-summary.json
+          if-no-files-found: ignore
+          retention-days: 30
+
+      - name: Append run to trend history
+        # Run on success AND failure: a failing nightly is *exactly*
+        # what we want to surface in the trend report ("prompt X has
+        # regressed twice this week"). Skipping this step on failure
+        # would defeat the entire dashboard.
+        #
+        # We DON'T run this on workflow_dispatch — manual runs are
+        # often debugging a specific prompt and shouldn't pollute
+        # the long-term trend.
+        if: always() && github.event_name == 'schedule'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          # Configure the bot identity for the history-branch commit.
+          # The "github-actions[bot]" pattern is GitHub's standard
+          # convention so the commit is attributed to Actions, not
+          # to a person.
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Fetch (or skip if absent) the history branch. The branch
+          # is orphaned — it has no shared history with main — so we
+          # use --no-tags and a narrow refspec to keep the fetch fast.
+          if git ls-remote --exit-code --heads origin "$HISTORY_BRANCH" >/dev/null 2>&1; then
+            git fetch --no-tags --depth=1 origin "$HISTORY_BRANCH:$HISTORY_BRANCH"
+            git worktree add _history "$HISTORY_BRANCH"
+          else
+            # First-ever run: create the orphan branch in a fresh
+            # worktree. We seed it with a README so an empty branch
+            # isn't visually confusing in the GitHub UI.
+            git worktree add --detach _history
+            ( cd _history && \
+              git checkout --orphan "$HISTORY_BRANCH" && \
+              git rm -rf . >/dev/null 2>&1 || true )
+            mkdir -p _history/data/assistant-language-eval
+            cat > _history/README.md <<'README'
+          # assistant-language-eval-history
+
+          This branch is **machine-managed**. It is the durable store for
+          the nightly assistant language drift eval. Do not edit it by
+          hand; the next scheduled run will overwrite `TREND.md` and
+          append rows to `history.csv`.
+
+          See `data/assistant-language-eval/TREND.md` for the trailing
+          30-day pass-rate dashboard. The `docs/assistant-language-eval.md`
+          file on the default branch documents how the eval works.
+          README
+          fi
+
+          # Run the aggregator against the worktree. It appends rows
+          # to data/assistant-language-eval/history.csv and rewrites
+          # data/assistant-language-eval/TREND.md based on the merged
+          # history.
+          pnpm --filter @workspace/scripts run aggregate:language-eval -- \
+            --summary "$GITHUB_WORKSPACE/artifacts/api-server/eval-summary.json" \
+            --out "$GITHUB_WORKSPACE/_history/data/assistant-language-eval" \
+            --run-id "$GITHUB_RUN_ID" \
+            --commit "$GITHUB_SHA"
+
+          # Commit + push. `git commit` exits non-zero when there is
+          # nothing staged (e.g. an idempotent re-run); the trailing
+          # `|| true` suppresses that and only that failure mode —
+          # the push below will surface any other problem.
+          cd _history
+          # README.md is created on the first run and persists in
+          # the branch from then on, so it's always present here;
+          # `git add` of an unchanged file is a no-op.
+          git add data/assistant-language-eval README.md
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(eval): record run ${GITHUB_RUN_ID} ($(date -u +%FT%TZ))"
+            git push origin "HEAD:$HISTORY_BRANCH"
+          else
+            echo "No changes to history (likely an idempotent re-run); skipping commit."
+          fi
+
+      - name: Open or refresh failure issue
+        # Only file an issue for *scheduled* failures. A developer
+        # debugging via workflow_dispatch already has the run page
+        # open and doesn't need an inbox notification.
+        if: failure() && github.event_name == 'schedule'
+        uses: actions/github-script@v7
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        with:
+          script: |
+            const fs = require('fs');
+            const label = 'assistant-language-eval';
+            const title = 'Nightly assistant language eval is failing';
+            const runUrl = process.env.RUN_URL;
+
+            // Capture the tail of the eval log so the issue body is
+            // self-sufficient — a triager shouldn't have to dig into
+            // the artifact for a first-look diagnosis. 8 KB keeps the
+            // issue body well under GitHub's 65 KB limit even after
+            // the surrounding boilerplate.
+            let logTail = '(eval-output.log not found — see the run page for full logs)';
+            try {
+              const buf = fs.readFileSync('eval-output.log');
+              const TAIL_BYTES = 8 * 1024;
+              const slice = buf.length > TAIL_BYTES ? buf.subarray(buf.length - TAIL_BYTES) : buf;
+              logTail = slice.toString('utf8');
+            } catch (err) {
+              core.warning(`Could not read eval-output.log: ${err.message}`);
+            }
+
+            const body = [
+              `The nightly assistant language eval failed on run ${runUrl}.`,
+              '',
+              'This usually means the assistant replied in the wrong language for at least one prompt in the battery, or the live Anthropic call errored. See `docs/assistant-language-eval.md` for triage steps.',
+              '',
+              '<details><summary>Tail of <code>eval-output.log</code></summary>',
+              '',
+              '```',
+              logTail.trim(),
+              '```',
+              '',
+              '</details>',
+            ].join('\n');
+
+            // Look for an existing open issue tagged with our label so
+            // a multi-day outage collapses into a single thread instead
+            // of spamming a fresh issue every night.
+            const existing = await github.paginate(github.rest.issues.listForRepo, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: label,
+              per_page: 100,
+            });
+
+            if (existing.length > 0) {
+              const issue = existing[0];
+              core.info(`Refreshing existing failure issue #${issue.number}`);
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body,
+              });
+            } else {
+              core.info('Filing a new failure issue');
+              // Ensure the label exists before we try to apply it.
+              try {
+                await github.rest.issues.createLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: label,
+                  color: 'b60205',
+                  description: 'Nightly assistant language eval regression tracker',
+                });
+              } catch (err) {
+                if (err.status !== 422) throw err; // 422 = label already exists
+              }
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: [label],
+              });
+            }
+
+      - name: Summarize result
+        if: always()
+        # A short job summary lets a triager see pass/fail at a glance
+        # from the Actions list without opening the run.
+        run: |
+          {
+            echo "# Assistant language eval"
+            echo ""
+            if [ "${{ job.status }}" = "success" ]; then
+              echo "✅ All prompts replied in the expected language."
+            else
+              echo "❌ Eval failed — see \`eval-output.log\` artifact and the failure issue (for scheduled runs)."
+            fi
+            echo ""
+            echo "* Trigger: \`${{ github.event_name }}\`"
+            echo "* Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          } >> "$GITHUB_STEP_SUMMARY"

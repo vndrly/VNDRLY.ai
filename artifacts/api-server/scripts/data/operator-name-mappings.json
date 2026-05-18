@@ -1,0 +1,131 @@
+{
+  "_README": "Maps each VNDRLY partner to (a) `ok`: OPERATOR strings used in the OK layer of the FracTracker National Wells AGOL feature service (per-well attribution from OCC); (b) `tx`: canonical RRC OPERATOR_NAME strings used by the TX per-well attribution path that joins RRC's wellbore.dbf with OPERATOR.dbf (see scripts/build-tx-operator-wells.ts and scripts/data/rrc-tx-operator-wells.json); (c) `tx_counties`: the partner's publicly disclosed core counties — used both as the fallback bbox-attribution path inside ingest-rrc-occ-wells.ts (when the per-well JSON has no rows for a partner) and as the spatial seed for the FracTracker fallback inside build-tx-operator-wells.ts. See artifacts/api-server/scripts/README.md.",
+  "_data_sources": {
+    "ok_operator_attribution": "Oklahoma Corporation Commission Oil & Gas Conservation Division well data (public records), compiled by FracTracker Alliance into FracTrackerNationalWells_Part2_OH_WY (CC-BY 4.0)",
+    "tx_per_well_attribution": "Texas Railroad Commission Digital Map Information bulk wellbore.dbf joined with the RRC OPERATOR.dbf master file on OPERATOR_NUMBER (public records). Operator-name strings are sourced from the partner's RRC P-5 operator filings.",
+    "tx_well_coordinates_fallback": "Texas Railroad Commission Digital Map Information bulk wellbore download (public records), compiled by FracTracker Alliance into FracTrackerNationalWells_Part3_TX (CC-BY 4.0). Used only when the per-well JSON file is unavailable.",
+    "tx_operator_county_attribution": "Operator 10-K filings, investor presentations, and RRC W-1 drilling permit announcements"
+  },
+  "_last_verified": "2026-04-26",
+
+  "ExxonMobil": {
+    "ok": [],
+    "tx": ["XTO ENERGY INC.", "EXXONMOBIL OIL CORP", "EXXON MOBIL CORPORATION"],
+    "tx_counties": ["Loving, TX", "Reeves, TX", "Culberson, TX", "Ward, TX", "Winkler, TX", "Midland, TX", "Martin, TX", "Andrews, TX", "Reagan, TX", "Upton, TX", "Glasscock, TX", "Howard, TX"]
+  },
+  "Chevron": {
+    "ok": [],
+    "tx": ["CHEVRON U.S.A. INC."],
+    "tx_counties": ["Loving, TX", "Reeves, TX", "Culberson, TX", "Ward, TX", "Midland, TX", "Martin, TX", "Reagan, TX", "Upton, TX", "Glasscock, TX", "Howard, TX"]
+  },
+  "ConocoPhillips": {
+    "ok": ["CONOCOPHILLIPS CO", "CONOCOPHILLIPS COMPANY"],
+    "tx": ["CONOCOPHILLIPS COMPANY", "BURLINGTON RESOURCES OIL & GAS COMPANY LP"],
+    "tx_counties": ["Loving, TX", "Reeves, TX", "Ward, TX", "Winkler, TX", "Culberson, TX", "Karnes, TX", "DeWitt, TX"]
+  },
+  "Pioneer Natural Resources": {
+    "ok": [],
+    "tx": ["PIONEER NATURAL RES. USA, INC.", "PIONEER NATURAL RESOURCES USA, INC."],
+    "tx_counties": ["Midland, TX", "Martin, TX", "Andrews, TX", "Reagan, TX", "Upton, TX", "Glasscock, TX", "Howard, TX", "Borden, TX"]
+  },
+  "Diamondback Energy": {
+    "ok": [],
+    "tx": ["DIAMONDBACK E&P LLC", "ENERGEN RESOURCES CORPORATION"],
+    "tx_counties": ["Midland, TX", "Martin, TX", "Andrews, TX", "Reagan, TX", "Upton, TX", "Glasscock, TX", "Howard, TX", "Ector, TX"]
+  },
+  "Occidental Petroleum": {
+    "ok": [],
+    "tx": ["OXY USA INC.", "OXY USA WTP LP", "ANADARKO E&P ONSHORE LLC"],
+    "tx_counties": ["Loving, TX", "Reeves, TX", "Ward, TX", "Winkler, TX", "Culberson, TX", "Pecos, TX"]
+  },
+  "Devon Energy": {
+    "ok": ["DEVON ENERGY PRODUCTION CO LP"],
+    "tx": ["DEVON ENERGY PRODUCTION CO., L.P."],
+    "tx_counties": ["Loving, TX", "Reeves, TX", "Ward, TX"]
+  },
+  "EOG Resources": {
+    "ok": ["EOG RESOURCES INC"],
+    "tx": ["EOG RESOURCES, INC."],
+    "tx_counties": ["Loving, TX", "Reeves, TX", "Culberson, TX", "Karnes, TX", "Atascosa, TX", "Gonzales, TX"]
+  },
+  "APA Corporation (Apache)": {
+    "ok": [],
+    "tx": ["APACHE CORPORATION"],
+    "tx_counties": ["Reeves, TX", "Culberson, TX", "Pecos, TX"]
+  },
+  "Coterra Energy": {
+    "ok": ["CIMAREX ENERGY CO"],
+    "tx": ["COTERRA ENERGY OPERATING CO.", "CIMAREX ENERGY CO."],
+    "tx_counties": ["Culberson, TX", "Reeves, TX"]
+  },
+  "Permian Resources": {
+    "ok": [],
+    "tx": ["PERMIAN RESOURCES OPERATING, LLC", "CENTENNIAL RESOURCE PRODUCTION, LLC", "COLGATE OPERATING, LLC"],
+    "tx_counties": ["Loving, TX", "Reeves, TX", "Ward, TX", "Winkler, TX"]
+  },
+  "BP America (BPX Energy)": {
+    "ok": ["BP AMERICA PRODUCTION COMPANY"],
+    "tx": ["BP AMERICA PRODUCTION COMPANY", "BPX OPERATING COMPANY"],
+    "tx_counties": ["Reeves, TX", "Loving, TX", "Pecos, TX"]
+  },
+  "Shell USA": {
+    "ok": [],
+    "tx": ["SWEPI LP", "SHELL OIL CO"],
+    "tx_counties": ["Loving, TX", "Reeves, TX"]
+  },
+  "Marathon Oil": {
+    "ok": ["MARATHON OIL COMPANY"],
+    "tx": ["MARATHON OIL EF LLC", "MARATHON OIL COMPANY"],
+    "tx_counties": ["Karnes, TX", "DeWitt, TX", "Atascosa, TX", "Gonzales, TX"]
+  },
+  "Endeavor Energy Resources": {
+    "ok": ["ENDEAVOR ENERGY RESOURCES LP"],
+    "tx": ["ENDEAVOR ENERGY RESOURCES, L.P."],
+    "tx_counties": ["Midland, TX", "Martin, TX", "Howard, TX", "Glasscock, TX", "Reagan, TX", "Upton, TX"]
+  },
+  "Continental Resources": {
+    "ok": ["CONTINENTAL RESOURCES INC"],
+    "tx": [],
+    "tx_counties": []
+  },
+  "Matador Resources": {
+    "ok": [],
+    "tx": ["MATADOR PRODUCTION COMPANY"],
+    "tx_counties": ["Loving, TX", "Reeves, TX"]
+  },
+  "SM Energy": {
+    "ok": [],
+    "tx": ["SM ENERGY COMPANY"],
+    "tx_counties": ["Howard, TX", "Martin, TX", "Webb, TX", "Dimmit, TX", "Maverick, TX"]
+  },
+  "Vital Energy": {
+    "ok": [],
+    "tx": ["VITAL ENERGY, INC.", "LAREDO PETROLEUM, INC."],
+    "tx_counties": ["Howard, TX", "Glasscock, TX", "Reagan, TX", "Upton, TX", "Crockett, TX"]
+  },
+  "Ovintiv": {
+    "ok": ["OVINTIV MID-CONTINENT INC.", "OVINTIV MID-CONTINENT INC", "NEWFIELD EXPLORATION MID-CONTINENT INC"],
+    "tx": ["OVINTIV USA INC.", "NEWPEK LLC"],
+    "tx_counties": ["Martin, TX", "Midland, TX"]
+  },
+  "Civitas Resources": {
+    "ok": [],
+    "tx": ["CIVITAS RESOURCES, INC.", "VENCER ENERGY OPERATING, LLC"],
+    "tx_counties": ["Reeves, TX", "Howard, TX"]
+  },
+  "Ring Energy": {
+    "ok": [],
+    "tx": ["RING ENERGY, INC."],
+    "tx_counties": ["Andrews, TX", "Crane, TX", "Yoakum, TX", "Gaines, TX"]
+  },
+  "Crownquest Operating": {
+    "ok": [],
+    "tx": ["CROWNQUEST OPERATING, LLC"],
+    "tx_counties": ["Midland, TX", "Martin, TX", "Andrews, TX", "Howard, TX"]
+  },
+  "Mach Natural Resources": {
+    "ok": ["BCE-MACH LLC", "BCE-MACH II LLC", "BCE-MACH III LLC"],
+    "tx": ["BCE-MACH LLC", "BCE-MACH II LLC", "BCE-MACH III LLC"],
+    "tx_counties": ["Hemphill, TX", "Lipscomb, TX", "Wheeler, TX", "Roberts, TX", "Ochiltree, TX"]
+  }
+}

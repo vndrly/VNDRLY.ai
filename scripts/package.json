@@ -1,0 +1,26 @@
+{
+  "name": "@workspace/scripts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "hello": "tsx ./src/hello.ts",
+    "seed:demo-phase2": "tsx ./src/seed-demo-phase2.ts",
+    "backfill:object-acls": "tsx ./src/backfill-object-acls.ts",
+    "audit:1099-overrides": "tsx ./src/audit-1099-category-overrides.ts",
+    "aggregate:language-eval": "tsx ./src/aggregate-language-eval.ts",
+    "lint:i18n": "tsx ./src/lint-i18n.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "tsx": "catalog:"
+  },
+  "dependencies": {
+    "@google-cloud/storage": "^7.19.0",
+    "@types/bcryptjs": "^3.0.0",
+    "@workspace/db": "workspace:*",
+    "bcryptjs": "^3.0.3",
+    "drizzle-orm": "catalog:"
+  }
+}

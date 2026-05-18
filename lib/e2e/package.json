@@ -1,0 +1,17 @@
+{
+  "name": "@workspace/e2e",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:install": "playwright install chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0",
+    "@types/node": "catalog:",
+    "@types/pg": "^8.18.0",
+    "bcryptjs": "^3.0.3",
+    "pg": "^8.20.0"
+  }
+}

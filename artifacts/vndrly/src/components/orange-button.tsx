@@ -1,0 +1,18 @@
+import { PillButton } from "@/components/pill";
+
+interface OrangeButtonProps {
+  children: React.ReactNode;
+  onClick?: () => void;
+  className?: string;
+  type?: "button" | "submit";
+  disabled?: boolean;
+  "data-testid"?: string;
+}
+
+export default function OrangeButton({ children, onClick, className, type = "button", disabled, ...props }: OrangeButtonProps) {
+  return (
+    <PillButton color="amber" onClick={onClick} type={type} disabled={disabled} className={className} data-testid={props["data-testid"]}>
+      {children}
+    </PillButton>
+  );
+}

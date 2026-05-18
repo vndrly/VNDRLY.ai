@@ -1,0 +1,31 @@
+import { chromium } from 'playwright';
+import { execSync } from 'node:child_process';
+import { mkdir, rm, readdir, stat } from 'node:fs/promises';
+import { join } from 'node:path';
+const exe = execSync('command -v chromium', { encoding: 'utf8' }).trim();
+const RAW = '/tmp/test-rec';
+await rm(RAW, { recursive: true, force: true });
+await mkdir(RAW, { recursive: true });
+const dur = parseInt(process.argv[2] || '15', 10) * 1000;
+console.log(`recording ${dur/1000}s`);
+const b = await chromium.launch({ headless: true, executablePath: exe, args: ['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu-sandbox'] });
+const ctx = await b.newContext({ viewport: { width: 1280, height: 720 }, recordVideo: { dir: RAW, size: { width: 1280, height: 720 } } });
+const p = await ctx.newPage();
+p.on('pageerror', e => console.log('PERR', e.message));
+p.on('crash', () => console.log('PAGE CRASHED'));
+await p.goto('http://127.0.0.1:80/vndrly-commercial/?capture=1', { waitUntil: 'load', timeout: 60000 });
+console.log('loaded');
+const t0 = Date.now();
+const tick = setInterval(() => console.log(`+${((Date.now()-t0)/1000).toFixed(1)}s`), 5000);
+await p.waitForTimeout(dur);
+clearInterval(tick);
+console.log('record window done, closing context...');
+await ctx.close();
+console.log('context closed, closing browser...');
+await b.close();
+console.log('browser closed');
+const files = await readdir(RAW);
+for (const f of files) {
+  const s = await stat(join(RAW, f));
+  console.log(' ', f, s.size);
+}
