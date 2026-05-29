@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useBrand } from "@/hooks/use-brand";
+import ToggleHalfPillBg from "@/components/toggle-half-pill-bg";
 import { pickTogglePillSrc, TOGGLE_IDLE_PILL_SRC } from "@/lib/pick-toggle-pill";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -68,25 +69,11 @@ export default function LanguageToggle({ className, variant = "dark" }: { classN
       backgroundRepeat: "no-repeat",
       textShadow: "0 1px 2px rgba(0,0,0,0.65), 0 2px 4px rgba(0,0,0,0.45)",
     }) as const;
-  // Inactive half = clipped half of the canonical light-grey pill PNG
-  // (the new-palette asset that best matches the previous solid-white
-  // chip). Same 200% width + left|right anchor trick as the active
-  // half, so the two halves still read as one continuous pill
-  // silhouette across the toggle.
-  const idleBgStyle = (side: "left" | "right") =>
-    ({
-      backgroundImage: `url(${TOGGLE_IDLE_PILL_SRC})`,
-      backgroundSize: "200% 100%",
-      backgroundPosition: side === "left" ? "left center" : "right center",
-      backgroundRepeat: "no-repeat",
-    }) as const;
-  const base = "px-2 py-0.5 text-xs font-bold transition-colors cursor-pointer select-none";
+  const base =
+    "relative overflow-hidden px-2 py-0.5 text-xs font-bold transition-colors cursor-pointer select-none";
   const activeCls = "text-white";
-  // Idle text. The previous `bg-white` on the light variant has been
-  // dropped — the inactive half now paints a clipped half of the
-  // canonical light-grey pill PNG via `idleBgStyle`, so the solid
-  // white background would double-up and re-introduce a hard rectangle
-  // behind the pill silhouette.
+  // Idle text. The inactive half paints a clipped half of the canonical
+  // white pill PNG via `ToggleHalfPillBg` (3-slice caps, no endcap squash).
   const idleCls = isDark
     ? "text-sidebar-foreground/80 hover:text-gray-900"
     : "text-gray-600 hover:text-gray-900";
@@ -107,11 +94,14 @@ export default function LanguageToggle({ className, variant = "dark" }: { classN
         type="button"
         onClick={() => set("en")}
         className={cn(base, current === "en" ? activeCls : idleCls)}
-        style={current === "en" ? activeBgStyle("left") : idleBgStyle("left")}
+        style={current === "en" ? activeBgStyle("left") : undefined}
         data-testid="lang-en"
         aria-pressed={current === "en"}
       >
-        EN
+        {current !== "en" && (
+          <ToggleHalfPillBg src={TOGGLE_IDLE_PILL_SRC} side="left" />
+        )}
+        <span className="relative">EN</span>
       </button>
       {/* Vertical hairline divider between EN and ES so the two halves
           read as a clearly split toggle rather than one continuous
@@ -125,11 +115,14 @@ export default function LanguageToggle({ className, variant = "dark" }: { classN
         type="button"
         onClick={() => set("es")}
         className={cn(base, current === "es" ? activeCls : idleCls)}
-        style={current === "es" ? activeBgStyle("right") : idleBgStyle("right")}
+        style={current === "es" ? activeBgStyle("right") : undefined}
         data-testid="lang-es"
         aria-pressed={current === "es"}
       >
-        ES
+        {current !== "es" && (
+          <ToggleHalfPillBg src={TOGGLE_IDLE_PILL_SRC} side="right" />
+        )}
+        <span className="relative">ES</span>
       </button>
     </div>
   );

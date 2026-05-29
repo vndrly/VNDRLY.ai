@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useBrand } from "@/hooks/use-brand";
+import ToggleHalfPillBg from "@/components/toggle-half-pill-bg";
 import { pickTogglePillSrc, TOGGLE_IDLE_PILL_SRC } from "@/lib/pick-toggle-pill";
 
 export type ThemeMode = "dark" | "light";
@@ -47,19 +48,8 @@ export default function DarkLightToggle({
       backgroundRepeat: "no-repeat",
       textShadow: "0 1px 2px rgba(0,0,0,0.65), 0 2px 4px rgba(0,0,0,0.45)",
     }) as const;
-  // Inactive half = clipped half of the canonical light-grey pill PNG
-  // (the new-palette asset that best matches the previous solid-white
-  // chip). Same 200% width + left|right anchor trick as the active
-  // half, so the two halves still read as one continuous pill
-  // silhouette across the toggle.
-  const idleBgStyle = (side: "left" | "right") =>
-    ({
-      backgroundImage: `url(${TOGGLE_IDLE_PILL_SRC})`,
-      backgroundSize: "200% 100%",
-      backgroundPosition: side === "left" ? "left center" : "right center",
-      backgroundRepeat: "no-repeat",
-    }) as const;
-  const base = "px-2 py-0.5 text-xs font-bold transition-colors cursor-pointer select-none";
+  const base =
+    "relative overflow-hidden px-2 py-0.5 text-xs font-bold transition-colors cursor-pointer select-none";
   const activeCls = "text-white";
   const idleCls = isDark
     ? "text-sidebar-foreground/80 hover:text-gray-900"
@@ -88,11 +78,14 @@ export default function DarkLightToggle({
         onFocus={() => setHover("dark")}
         onBlur={() => setHover(null)}
         className={cn(base, darkActive ? activeCls : idleCls)}
-        style={darkActive ? activeBgStyle("left") : idleBgStyle("left")}
+        style={darkActive ? activeBgStyle("left") : undefined}
         data-testid="theme-dark"
         aria-pressed={mode === "dark"}
       >
-        Dark
+        {!darkActive && (
+          <ToggleHalfPillBg src={TOGGLE_IDLE_PILL_SRC} side="left" />
+        )}
+        <span className="relative">Dark</span>
       </button>
       <span aria-hidden className="self-stretch w-px my-px bg-gray-400" />
       <button
@@ -103,11 +96,14 @@ export default function DarkLightToggle({
         onFocus={() => setHover("light")}
         onBlur={() => setHover(null)}
         className={cn(base, lightActive ? activeCls : idleCls)}
-        style={lightActive ? activeBgStyle("right") : idleBgStyle("right")}
+        style={lightActive ? activeBgStyle("right") : undefined}
         data-testid="theme-light"
         aria-pressed={mode === "light"}
       >
-        Light
+        {!lightActive && (
+          <ToggleHalfPillBg src={TOGGLE_IDLE_PILL_SRC} side="right" />
+        )}
+        <span className="relative">Light</span>
       </button>
     </div>
   );

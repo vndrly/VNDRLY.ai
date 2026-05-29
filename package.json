@@ -17,11 +17,15 @@
     "test:e2e": "pnpm --filter @workspace/e2e exec playwright test",
     "lint:i18n": "pnpm --filter @workspace/scripts run lint:i18n",
     "publish:online": "powershell -ExecutionPolicy Bypass -File scripts/publish-online.ps1",
-    "save": "powershell -ExecutionPolicy Bypass -File scripts/publish-online.ps1"
+    "save": "powershell -ExecutionPolicy Bypass -File scripts/publish-online.ps1",
+    "setup:vps": "node lib/e2e/scripts/godaddy-setup-vps.mjs",
+    "setup:production": "node scripts/godaddy-provision.mjs",
+    "deploy:production": "node scripts/godaddy-deploy.mjs"
   },
   "private": true,
   "devDependencies": {
     "prettier": "^3.8.1",
+    "ssh2": "^1.17.0",
     "typescript": "~5.9.2"
   },
   "dependencies": {

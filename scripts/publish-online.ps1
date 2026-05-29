@@ -52,16 +52,14 @@ if (-not $SkipCommit) {
 
   $staged = (& git diff --cached --name-only)
   if (-not $staged) {
-    Write-Host "No source changes to publish."
-    exit 0
+    Write-Host "No source changes to commit."
+  } else {
+    if (-not $Message.Trim()) {
+      $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm"
+      $Message = "Publish updates $timestamp"
+    }
+    Run-Git @("commit", "-m", $Message)
   }
-
-  if (-not $Message.Trim()) {
-    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm"
-    $Message = "Publish updates $timestamp"
-  }
-
-  Run-Git @("commit", "-m", $Message)
 }
 
 $pushTarget = "${remote}/${remoteBranch}"
@@ -84,6 +82,19 @@ try {
 
 $head = (& git rev-parse HEAD).Trim()
 Write-Host ""
-Write-Host "Published to GitHub: $head on $pushTarget"
-Write-Host "Next: open Replit and click Republish (or enable GitHub auto-deploy once)."
-Write-Host "iOS changes still need a separate EAS build."
+Write-Host "Pushed to GitHub: $head on $pushTarget"
+Write-Host "Deploying..."
+
+node (Join-Path $root "scripts/deploy.mjs")
+if ($LASTEXITCODE -ne 0) {
+  throw "Production deploy failed."
+}
+
+Write-Host ""
+Write-Host "Done. Changes pushed and deployed from Cursor."
+$liveUrlFile = Join-Path $root ".local/live-url.txt"
+if (Test-Path $liveUrlFile) {
+  $liveUrl = (Get-Content $liveUrlFile -Raw).Trim()
+  if ($liveUrl) { Write-Host "Live URL: $liveUrl" }
+}
+Write-Host "iOS still needs a separate EAS build when mobile code changes."

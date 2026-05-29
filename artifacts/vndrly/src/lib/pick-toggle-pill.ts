@@ -16,11 +16,13 @@ const TOGGLE_PILL_PALETTE: PaletteEntry[] = [
 
 const NEUTRAL_TOGGLE_PILL_SRC = greyPill;
 
+/** Natural width:height of the canonical 900×229 toggle pill PNGs. */
+export const TOGGLE_PILL_IMAGE_ASPECT = 900 / 229;
+
 /**
  * Canonical white pill PNG used for the *inactive* half of these
- * inline toggles, painted via the same 200%-width / left|right-anchor
- * background trick as the active half so the two halves read as one
- * continuous pill silhouette.
+ * inline toggles. Rendered via `ToggleHalfPillBg` (PillBg 3-slice)
+ * so the endcaps stay circular while the middle stretches.
  */
 export const TOGGLE_IDLE_PILL_SRC = whitePill;
 
