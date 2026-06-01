@@ -28,7 +28,7 @@ import { Handshake, Users, MapPin, FileText, Clock, CheckCircle2, AlertTriangle,
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import RedButton from "@/components/red-button";
-import { TogglePillButton } from "@/components/toggle-pill";
+import { PngPillButton } from "@/components/png-pill-rollover";
 import LightGreyRedButton from "@/components/light-grey-red-button";
 import { useRateLimitGate } from "@/hooks/use-rate-limit-gate";
 import HotlistSection from "@/components/hotlist-section";
@@ -46,7 +46,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "react-i18next";
 import { useBrand } from "@/hooks/use-brand";
 import { useToast } from "@/hooks/use-toast";
-import { pickPillForBrand } from "@/components/baker-pill-button";
+import { brandImagePillSrc } from "@/components/png-pill-rollover";
 
 // Maps a raw ticket status key to the same i18n label that the
 // tracking-page "All Status" jump list (`pages/tickets.tsx` →
@@ -528,7 +528,7 @@ export default function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const accentColor = brand.isOrgBranded ? brand.primary : "#f59e0b";
-  const progressPillSrc = pickPillForBrand(brand.primary, "pill", brand.name);
+  const progressPillSrc = brandImagePillSrc(brand.primary, brand.name);
   const iconStyle = { color: accentColor };
   const handleBarClick = (status: string) => navigate(`/tickets?status=${encodeURIComponent(status)}`);
 
@@ -616,7 +616,7 @@ export default function Dashboard() {
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  <TogglePillButton
+                  <PngPillButton
                     color="green"
                     className="px-3"
                     onClick={() => {
@@ -640,8 +640,8 @@ export default function Dashboard() {
                     data-testid={`button-commit-direct-${a.id}`}
                   >
                     {t("directAssignment.commit")}
-                  </TogglePillButton>
-                  <TogglePillButton
+                  </PngPillButton>
+                  <PngPillButton
                     color="red"
                     className="px-3"
                     onClick={() => {
@@ -651,7 +651,7 @@ export default function Dashboard() {
                     data-testid={`button-pass-direct-${a.id}`}
                   >
                     {t("directAssignment.pass")}
-                  </TogglePillButton>
+                  </PngPillButton>
                 </div>
               </div>
             ))}
@@ -686,7 +686,7 @@ export default function Dashboard() {
               >
                 {t("common.back")}
               </LightGreyRedButton>
-              <TogglePillButton color="red"
+              <PngPillButton color="red"
                 onClick={() => {
                   if (passDialogId === null) return;
                   const reason = passReason.trim();
@@ -717,7 +717,7 @@ export default function Dashboard() {
                 {passDirect.isPending
                   ? t("directAssignment.passing")
                   : t("directAssignment.confirmPass")}
-              </TogglePillButton>
+              </PngPillButton>
             </div>
           </div>
         </DialogContent>

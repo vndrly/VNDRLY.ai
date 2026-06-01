@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Cropper, { type Area } from "react-easy-crop";
-import { PillButton } from "@/components/pill";
+import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import {
   Dialog,
   DialogContent,

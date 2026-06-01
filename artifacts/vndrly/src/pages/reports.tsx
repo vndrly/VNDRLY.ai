@@ -54,8 +54,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
-import { PillButton } from "@/components/pill";
-import { TogglePillButton } from "@/components/toggle-pill";
+import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
+import { PngPillButton } from "@/components/png-pill-rollover";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -597,7 +597,7 @@ function ReportCard(props: ReportCardProps): ReactElement {
               </Select>
             )}
             {(props.showCsv ?? true) && (
-              <TogglePillButton
+              <PngPillButton
                 color="green"
 
                 disabled={!canFetch}
@@ -610,10 +610,10 @@ function ReportCard(props: ReportCardProps): ReactElement {
               >
                 <FileSpreadsheet className="h-3.5 w-3.5" />
                 {t("reports.download.csv")}
-              </TogglePillButton>
+              </PngPillButton>
             )}
             {(props.showPdf ?? true) && (
-              <TogglePillButton
+              <PngPillButton
                 color="red"
 
                 disabled={!canFetch}
@@ -626,7 +626,7 @@ function ReportCard(props: ReportCardProps): ReactElement {
               >
                 <FileText className="h-3.5 w-3.5" />
                 {t("reports.download.pdf")}
-              </TogglePillButton>
+              </PngPillButton>
             )}
           </div>
         </div>
@@ -3949,7 +3949,7 @@ function QbExportCard({ vendorId }: QbExportCardProps): ReactElement {
 
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2">
-              <TogglePillButton
+              <PngPillButton
                 color="green"
 
                 className="px-3 gap-2"
@@ -3963,9 +3963,9 @@ function QbExportCard({ vendorId }: QbExportCardProps): ReactElement {
                   <Cloud className="h-4 w-4" />
                 )}
                 {t("reports.push.qbo")}
-              </TogglePillButton>
+              </PngPillButton>
               {!qbo ? (
-                <TogglePillButton
+                <PngPillButton
                   color="blue"
 
                   className="px-3"
@@ -3973,9 +3973,9 @@ function QbExportCard({ vendorId }: QbExportCardProps): ReactElement {
                   data-testid="button-connect-qbo"
                 >
                   {t("reports.connection.connectQbo")}
-                </TogglePillButton>
+                </PngPillButton>
               ) : (
-                <TogglePillButton
+                <PngPillButton
                   color="red"
 
                   className="px-3"
@@ -3983,13 +3983,13 @@ function QbExportCard({ vendorId }: QbExportCardProps): ReactElement {
                   data-testid="button-disconnect-qbo"
                 >
                   {t("reports.connection.disconnect")}
-                </TogglePillButton>
+                </PngPillButton>
               )}
               <ConnectionStatus label="QBO" conn={qbo} />
             </div>
 
             <div className="flex items-center gap-2">
-              <TogglePillButton
+              <PngPillButton
                 color="green"
 
                 className="px-3 gap-2"
@@ -4003,10 +4003,10 @@ function QbExportCard({ vendorId }: QbExportCardProps): ReactElement {
                   <Cloud className="h-4 w-4" />
                 )}
                 {t("reports.push.oa")}
-              </TogglePillButton>
+              </PngPillButton>
               {!oa ? (
                 <>
-                  <TogglePillButton
+                  <PngPillButton
                     color="blue"
 
                     className="px-3"
@@ -4014,7 +4014,7 @@ function QbExportCard({ vendorId }: QbExportCardProps): ReactElement {
                     data-testid="button-connect-oa"
                   >
                     {t("reports.connection.connectOa")}
-                  </TogglePillButton>
+                  </PngPillButton>
                   <button
                     type="button"
                     onClick={() => setOaOpen(true)}
@@ -4025,7 +4025,7 @@ function QbExportCard({ vendorId }: QbExportCardProps): ReactElement {
                   </button>
                 </>
               ) : (
-                <TogglePillButton
+                <PngPillButton
                   color="red"
 
                   className="px-3"
@@ -4033,7 +4033,7 @@ function QbExportCard({ vendorId }: QbExportCardProps): ReactElement {
                   data-testid="button-disconnect-oa"
                 >
                   {t("reports.connection.disconnect")}
-                </TogglePillButton>
+                </PngPillButton>
               )}
               <ConnectionStatus label="OA" conn={oa} />
             </div>
@@ -4229,7 +4229,7 @@ function QbExportCard({ vendorId }: QbExportCardProps): ReactElement {
 
         {/* Manual download section (legacy fallbacks) */}
         <div className="flex flex-wrap gap-2">
-          <TogglePillButton
+          <PngPillButton
             color="green"
 
             className="px-3 gap-2"
@@ -4239,8 +4239,8 @@ function QbExportCard({ vendorId }: QbExportCardProps): ReactElement {
           >
             <Package className="h-4 w-4" />
             {t("reports.quickbooks.iif")}
-          </TogglePillButton>
-          <TogglePillButton
+          </PngPillButton>
+          <PngPillButton
             color="green"
 
             className="px-3 gap-2"
@@ -4250,7 +4250,7 @@ function QbExportCard({ vendorId }: QbExportCardProps): ReactElement {
           >
             <Package className="h-4 w-4" />
             {t("reports.quickbooks.qboZip")}
-          </TogglePillButton>
+          </PngPillButton>
           <a
             href={buildUrl(`${base}/openaccountant-export`, params)}
             download
@@ -4258,7 +4258,7 @@ function QbExportCard({ vendorId }: QbExportCardProps): ReactElement {
             aria-disabled={!canDownload}
             className="inline-flex"
           >
-            <TogglePillButton
+            <PngPillButton
               color="green"
 
               className="px-3 gap-2"
@@ -4267,7 +4267,7 @@ function QbExportCard({ vendorId }: QbExportCardProps): ReactElement {
             >
               <Package className="h-4 w-4" />
               {t("reports.openaccountant.zip")}
-            </TogglePillButton>
+            </PngPillButton>
           </a>
         </div>
         <QbExportPreviewDialog
@@ -6992,7 +6992,7 @@ function EDeliveryConsentCard({
             data-testid="input-edelivery-email"
             className="max-w-xs"
           />
-          <TogglePillButton
+          <PngPillButton
             color="green"
 
             className="px-3"
@@ -7001,8 +7001,8 @@ function EDeliveryConsentCard({
             data-testid="btn-edelivery-grant"
           >
             {t("reports.eDelivery.grantBtn")}
-          </TogglePillButton>
-          <TogglePillButton
+          </PngPillButton>
+          <PngPillButton
             color="red"
 
             className="px-3"
@@ -7011,7 +7011,7 @@ function EDeliveryConsentCard({
             data-testid="btn-edelivery-revoke"
           >
             {t("reports.eDelivery.revokeBtn")}
-          </TogglePillButton>
+          </PngPillButton>
         </div>
       </CardContent>
     </Card>
@@ -7442,7 +7442,7 @@ function Dashboard1099EmailScheduleRow({
             )}
           </span>
         )}
-        <TogglePillButton
+        <PngPillButton
           color="blue"
 
           className="ml-auto"
@@ -7452,7 +7452,7 @@ function Dashboard1099EmailScheduleRow({
           {open
             ? t("common.cancel")
             : t("reports.dashboard1099.emailSchedule.configure")}
-        </TogglePillButton>
+        </PngPillButton>
       </div>
       {loadErr && <p className="text-xs text-destructive">{loadErr}</p>}
       {open && state && (
@@ -7532,7 +7532,7 @@ function Dashboard1099EmailScheduleRow({
           </p>
           {saveErr && <p className="text-destructive">{saveErr}</p>}
           <div className="flex gap-2">
-            <TogglePillButton
+            <PngPillButton
               color="blue"
 
               onClick={() => void onSave()}
@@ -7541,8 +7541,8 @@ function Dashboard1099EmailScheduleRow({
             >
               {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
               {t("common.saveChanges")}
-            </TogglePillButton>
-            <TogglePillButton
+            </PngPillButton>
+            <PngPillButton
               color="red"
 
               onClick={() => {
@@ -7552,7 +7552,7 @@ function Dashboard1099EmailScheduleRow({
               data-testid="btn-email-schedule-cancel"
             >
               {t("common.cancel")}
-            </TogglePillButton>
+            </PngPillButton>
           </div>
         </div>
       )}
@@ -8054,7 +8054,7 @@ function Dashboard1099Card({ scope }: DashboardScopeProps): ReactElement {
                 <option value="MISC">1099-MISC</option>
                 <option value="K">1099-K</option>
               </select>
-              <TogglePillButton
+              <PngPillButton
                 color="blue"
 
                 onClick={sendStatements}
@@ -8065,7 +8065,7 @@ function Dashboard1099Card({ scope }: DashboardScopeProps): ReactElement {
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 )}
                 {t("reports.dashboard1099.deliver.send")}
-              </TogglePillButton>
+              </PngPillButton>
               <span className="text-xs text-muted-foreground">
                 {t("reports.dashboard1099.deliver.help")}
               </span>
@@ -8079,7 +8079,7 @@ function Dashboard1099Card({ scope }: DashboardScopeProps): ReactElement {
                     : "Sending…"}
                 </span>
               )}
-              <TogglePillButton
+              <PngPillButton
                 color="blue"
 
                 className="ml-auto"
@@ -8097,8 +8097,8 @@ function Dashboard1099Card({ scope }: DashboardScopeProps): ReactElement {
               >
                 <Download className="h-3.5 w-3.5" />
                 {t("reports.dashboard1099.k.downloadCsv")}
-              </TogglePillButton>
-              <TogglePillButton
+              </PngPillButton>
+              <PngPillButton
                 color="blue"
 
                 onClick={() => {
@@ -8114,7 +8114,7 @@ function Dashboard1099Card({ scope }: DashboardScopeProps): ReactElement {
               >
                 <Download className="h-3.5 w-3.5" />
                 {t("reports.dashboard1099.k.downloadPdf")}
-              </TogglePillButton>
+              </PngPillButton>
             </div>
             <Dashboard1099EmailScheduleRow scope={scope} />
             {isAdminScope && (
@@ -8125,7 +8125,7 @@ function Dashboard1099Card({ scope }: DashboardScopeProps): ReactElement {
                 <span className="text-xs text-muted-foreground">
                   {t("reports.dashboard1099.backfill.label")}
                 </span>
-                <TogglePillButton
+                <PngPillButton
                   color="blue"
 
                   onClick={() => setBackfillOpen(true)}
@@ -8136,7 +8136,7 @@ function Dashboard1099Card({ scope }: DashboardScopeProps): ReactElement {
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   )}
                   {t("reports.dashboard1099.backfill.button")}
-                </TogglePillButton>
+                </PngPillButton>
                 <span className="text-xs text-muted-foreground">
                   {t("reports.dashboard1099.backfill.help")}
                 </span>

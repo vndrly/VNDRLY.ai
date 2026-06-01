@@ -5,7 +5,7 @@ import { MapContainer, Marker, Polyline, Popup, TileLayer, useMap } from "react-
 import "leaflet/dist/leaflet.css";
 import { cn } from "@/lib/utils";
 import { useBrand } from "@/hooks/use-brand";
-import { pickTogglePillSrc, TOGGLE_IDLE_PILL_SRC } from "@/lib/pick-toggle-pill";
+import { brandHuePillSrc, HALF_TOGGLE_IDLE_SRC } from "@/components/png-pill-rollover";
 import { BrandZoomControlInMap } from "@/components/brand-zoom-control";
 import { LONG_DWELL_MS as DEFAULT_LONG_DWELL_MS, deriveLongStops, formatDwell } from "@/lib/stops";
 
@@ -326,13 +326,7 @@ export function TicketRouteMap({
         maxZoom: 19,
       };
 
-  // Map / Satellite toggle styled to match the sidebar dark/light + EN/ES
-  // toggles: active half = clipped half of the brand-matched canonical
-  // pill PNG (via `pickTogglePillSrc`); inactive half = clipped half of
-  // the canonical white pill PNG (`TOGGLE_IDLE_PILL_SRC`). Same
-  // 200%-width / left|right-anchor trick so the two halves read as one
-  // continuous pill silhouette.
-  const activePillSrc = pickTogglePillSrc(brand.primary);
+  const activePillSrc = brandHuePillSrc(brand.primary);
   const activeStyle = (side: "left" | "right") =>
     ({
       backgroundImage: `url(${activePillSrc})`,
@@ -343,7 +337,7 @@ export function TicketRouteMap({
     }) as const;
   const idleStyle = (side: "left" | "right") =>
     ({
-      backgroundImage: `url(${TOGGLE_IDLE_PILL_SRC})`,
+      backgroundImage: `url(${HALF_TOGGLE_IDLE_SRC})`,
       backgroundSize: "200% 100%",
       backgroundPosition: side === "left" ? "left center" : "right center",
       backgroundRepeat: "no-repeat",

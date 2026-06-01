@@ -23,7 +23,7 @@ import {
   useClearStaleFieldEmployeeSelection,
 } from "@/hooks/use-eligible-vendor-field-employees";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PillButton } from "@/components/pill";
+import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import GreenButton from "@/components/green-button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";

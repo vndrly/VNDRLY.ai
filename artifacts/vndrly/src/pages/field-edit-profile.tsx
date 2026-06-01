@@ -3,8 +3,9 @@ import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft, User as UserIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { TogglePillButton } from "@/components/toggle-pill";
+import { PngPillButton } from "@/components/png-pill-rollover";
 import { cn } from "@/lib/utils";
+import { usePortalBase } from "@/lib/portal-base";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -30,6 +31,7 @@ function resolveUrl(path: string | null | undefined): string | null {
 export default function FieldEditProfile() {
   const { t } = useTranslation();
   const [, navigate] = useLocation();
+  const portalBase = usePortalBase();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -120,7 +122,7 @@ export default function FieldEditProfile() {
       });
       if (!r.ok) throw new Error(String(r.status));
       toast({ title: t("editProfile.savedTitle"), description: t("editProfile.savedBody") });
-      navigate("/field/profile");
+      navigate(`${portalBase}/profile`);
     } catch {
       toast({ title: t("common.error"), description: t("editProfile.couldNotSave"), variant: "destructive" });
     } finally {
@@ -168,7 +170,7 @@ export default function FieldEditProfile() {
       <div className="flex items-center gap-2 mb-4">
         <button
           type="button"
-          onClick={() => navigate("/field/profile")}
+          onClick={() => navigate(`${portalBase}/profile`)}
           className="p-2 -ml-2 rounded-md hover:bg-muted"
           data-testid="button-back"
           aria-label={t("common.back")}
@@ -207,7 +209,7 @@ export default function FieldEditProfile() {
         <Field label={t("editProfile.jobTitle")} value={jobTitle} onChange={setJobTitle} placeholder={t("editProfile.jobTitlePlaceholder")} testId="input-job-title" disabled={loading} />
         <Field label={t("editProfile.phone")} value={phone} onChange={setPhone} type="tel" placeholder={t("editProfile.phonePlaceholder")} testId="input-phone" disabled={loading} />
         <Field label={t("editProfile.pecLabel")} value={pecDate} onChange={setPecDate} placeholder={t("editProfile.pecPlaceholder")} testId="input-pec-date" disabled={loading} />
-        <TogglePillButton
+        <PngPillButton
           color="brand"
           onClick={() => void onSave()}
           disabled={loading || saving}
@@ -215,7 +217,7 @@ export default function FieldEditProfile() {
           data-testid="button-save-profile"
         >
           {saving ? t("common.saving") : t("editProfile.saveChanges")}
-        </TogglePillButton>
+        </PngPillButton>
       </section>
 
       <section className="rounded-xl border border-border bg-card p-4 space-y-3">
@@ -225,7 +227,7 @@ export default function FieldEditProfile() {
         <Field label={t("editProfile.currentPw")} value={currentPw} onChange={setCurrentPw} type="password" testId="input-current-password" />
         <Field label={t("editProfile.newPw")} value={newPw} onChange={setNewPw} type="password" testId="input-new-password" />
         <Field label={t("editProfile.confirmPw")} value={confirmPw} onChange={setConfirmPw} type="password" testId="input-confirm-password" />
-        <TogglePillButton
+        <PngPillButton
           color="blue"
           onClick={() => void onChangePassword()}
           disabled={pwSaving}
@@ -233,7 +235,7 @@ export default function FieldEditProfile() {
           data-testid="button-change-password"
         >
           {pwSaving ? t("common.saving") : t("editProfile.updatePw")}
-        </TogglePillButton>
+        </PngPillButton>
       </section>
     </div>
   );

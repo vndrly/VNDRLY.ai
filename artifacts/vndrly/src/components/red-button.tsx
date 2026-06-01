@@ -1,4 +1,4 @@
-import { PillButton } from "@/components/pill";
+import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 
 interface RedButtonProps {
   children: React.ReactNode;

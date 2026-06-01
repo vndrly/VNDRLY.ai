@@ -14,7 +14,7 @@ import { AlertTriangle, BatteryLow, Clock, Gauge, MapPin, Navigation, RefreshCw,
 import { visitsApi, type VisitorRow } from "@/lib/visits-api";
 import { useListSiteLocations, getListSiteLocationsQueryKey } from "@workspace/api-client-react";
 import LiveConnectionPill, { type LiveConnectionStatus } from "@/components/live-connection-pill";
-import { TogglePillButton } from "@/components/toggle-pill";
+import { PngPillButton } from "@/components/png-pill-rollover";
 import { useRateLimitGate } from "@/hooks/use-rate-limit-gate";
 
 const LOW_BATTERY_THRESHOLD = 0.2;
@@ -801,7 +801,7 @@ export default function CrewMapPage() {
               ))}
             </SelectContent>
           </Select>
-          <TogglePillButton
+          <PngPillButton
             color="blue"
             height={32}
             onClick={fetchLocations}
@@ -810,7 +810,7 @@ export default function CrewMapPage() {
           >
             <RefreshCw className="h-4 w-4" />
             {t("crewMap.refresh")}
-          </TogglePillButton>
+          </PngPillButton>
         </div>
       </div>
 

@@ -28,7 +28,7 @@ import {
 import { Receipt, CloudCheck, AlertTriangle } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import SphereBackButton from "@/components/sphere-back-button";
-import TogglePill, { type TogglePillColor } from "@/components/toggle-pill";
+import PngPill, { type PngPillColor } from "@/components/png-pill-rollover";
 import { useAuth } from "@/hooks/use-auth";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -118,7 +118,7 @@ function formatDate(s: string | null | undefined): string {
 
 function statusPillColor(
   status: InvoiceRow["status"],
-): TogglePillColor {
+): PngPillColor {
   switch (status) {
     case "paid":
       return "green";
@@ -679,12 +679,12 @@ export default function InvoicesPage() {
                       {formatDate(row.periodStart)} – {formatDate(row.periodEnd)}
                     </TableCell>
                     <TableCell>
-                      <TogglePill
+                      <PngPill
                         color={statusPillColor(row.status)}
                         rest={row.status === "draft"}
                       >
                         {t(`invoices.status.${row.status}`)}
-                      </TogglePill>
+                      </PngPill>
                     </TableCell>
                     <TableCell className="text-right tabular-nums">
                       {formatMoney(row.subtotal)}

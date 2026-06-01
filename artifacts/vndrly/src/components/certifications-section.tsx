@@ -10,13 +10,13 @@ import {
   type EmployeeCertification,
 } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PillButton } from "@/components/pill";
+import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { ShieldCheck, Plus, Pencil, Trash2 } from "lucide-react";
-import TogglePill, { TogglePillButton } from "@/components/toggle-pill";
+import PngPill, { PngPillButton } from "@/components/png-pill-rollover";
 import { translateApiError } from "@/lib/api-error";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -35,7 +35,7 @@ function statusBadge(expirationDate: string | null) {
   // valid status per the established palette doctrine), height=24
   // to match the surrounding StatusBadge family. Expired and
   // Expires-soon variants intentionally left as-is per scope.
-  return <TogglePill color="green">Valid</TogglePill>;
+  return <PngPill color="green">Valid</PngPill>;
 }
 
 type FormState = {
@@ -162,9 +162,9 @@ export default function CertificationsSection({ employeeId }: { employeeId: numb
           <ShieldCheck className="w-5 h-5 text-amber-500" />
           Certifications &amp; Training ({certs?.length || 0})
         </CardTitle>
-        {/* Add → canonical TogglePillButton blue (primary action),
+        {/* Add → canonical PngPillButton blue (primary action),
             height=24 to match the surrounding pill family. */}
-        <TogglePillButton color="blue" onClick={startAdd} data-testid="button-add-certification"><Plus className="w-4 h-4" />Add</TogglePillButton>
+        <PngPillButton color="blue" onClick={startAdd} data-testid="button-add-certification"><Plus className="w-4 h-4" />Add</PngPillButton>
       </CardHeader>
       <CardContent>
         {isLoading ? (

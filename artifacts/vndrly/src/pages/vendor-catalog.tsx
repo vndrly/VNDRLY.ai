@@ -29,7 +29,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { AlertCircle, Info, ShoppingCart } from "lucide-react";
-import { TogglePillButton } from "@/components/toggle-pill";
+import { PngPillButton } from "@/components/png-pill-rollover";
 import SphereBackButton from "@/components/sphere-back-button";
 import GreyButton from "@/components/grey-button";
 import AfePill from "@/components/afe-pill";
@@ -515,7 +515,7 @@ export default function VendorCatalog() {
                       {t("vendorCatalog.recommendedSubtitle")}
                     </p>
                   </div>
-                  <TogglePillButton
+                  <PngPillButton
                     color="blue"
                     onClick={() => {
                       setDrafts((prev) => {
@@ -533,7 +533,7 @@ export default function VendorCatalog() {
                     data-testid="button-add-all-recommended"
                   >
                     {t("vendorCatalog.recommendedAddAll")}
-                  </TogglePillButton>
+                  </PngPillButton>
                 </div>
                 <div className="space-y-1">
                   {recommendedItems.map((wt) => (
@@ -558,7 +558,7 @@ export default function VendorCatalog() {
                           {t("vendorCatalog.notInYourCatalog")}
                         </span>
                       </div>
-                      <TogglePillButton
+                      <PngPillButton
                         color="blue"
                         onClick={() =>
                           setDrafts((prev) => ({
@@ -573,7 +573,7 @@ export default function VendorCatalog() {
                         data-testid={`button-add-recommended-${wt.id}`}
                       >
                         {t("vendorCatalog.recommendedAdd")}
-                      </TogglePillButton>
+                      </PngPillButton>
                     </div>
                   ))}
                 </div>
@@ -830,7 +830,7 @@ export default function VendorCatalog() {
               ) : null}
             </span>
             {dirty ? (
-              <TogglePillButton
+              <PngPillButton
                 color="blue"
                 onClick={() => save.mutate()}
                 disabled={save.isPending}
@@ -840,11 +840,11 @@ export default function VendorCatalog() {
                 {save.isPending
                   ? t("vendorCatalog.saving")
                   : t("vendorCatalog.save")}
-              </TogglePillButton>
+              </PngPillButton>
             ) : (
-              <TogglePillButton disabled data-testid="button-save-work-types">
+              <PngPillButton disabled data-testid="button-save-work-types">
                 {t("vendorCatalog.save")}
-              </TogglePillButton>
+              </PngPillButton>
             )}
           </div>
         </CardContent>
@@ -1026,7 +1026,7 @@ function PublishCatalogPanel({
         </label>
         <div className="flex justify-end pt-2 border-t">
           {canPublish ? (
-            <TogglePillButton
+            <PngPillButton
               color="blue"
               onClick={() => publish.mutate()}
               disabled={publish.isPending}
@@ -1036,11 +1036,11 @@ function PublishCatalogPanel({
               {publish.isPending
                 ? t("vendorCatalog.publish.publishing")
                 : t("vendorCatalog.publish.publishButton")}
-            </TogglePillButton>
+            </PngPillButton>
           ) : (
-            <TogglePillButton disabled data-testid="button-publish-catalog">
+            <PngPillButton disabled data-testid="button-publish-catalog">
               {t("vendorCatalog.publish.publishButton")}
-            </TogglePillButton>
+            </PngPillButton>
           )}
         </div>
       </CardContent>

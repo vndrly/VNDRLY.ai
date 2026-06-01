@@ -15,7 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { PillButton } from "@/components/pill";
+import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";

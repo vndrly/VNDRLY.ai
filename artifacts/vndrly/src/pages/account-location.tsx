@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import Layout from "@/components/layout";
 import SphereBackButton from "@/components/sphere-back-button";
+import { useAuth } from "@/hooks/use-auth";
+import { isForemanPersona } from "@/lib/portal-base";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -15,6 +17,8 @@ type Consent = {
 
 export default function AccountLocationPage() {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const backHref = isForemanPersona(user) ? "/foreman" : "/field";
   const [consents, setConsents] = useState<Consent[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -61,7 +65,7 @@ export default function AccountLocationPage() {
       <div className="max-w-3xl mx-auto p-6 space-y-6">
         <div className="flex items-start gap-4">
           <Link
-            href="/field"
+            href={backHref}
             className="group inline-flex items-center shrink-0 mt-1"
             aria-label="Back"
             data-testid="button-back"

@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import TicketStatusBadge from "@/components/ticket-status-badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PillButton } from "@/components/pill";
+import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -19,7 +19,7 @@ import { ArrowUpDown, FileText, Search, Plus, RotateCcw, ChevronRight, MapPin, N
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { translateApiError } from "@/lib/api-error";
 import { type V2Color } from "@/components/v2-color-button";
-import { TogglePillButton } from "@/components/toggle-pill";
+import { PngPillButton } from "@/components/png-pill-rollover";
 import { useBrand } from "@/hooks/use-brand";
 import LiveConnectionPill, { type LiveConnectionStatus } from "@/components/live-connection-pill";
 import { useAuth } from "@/hooks/use-auth";
@@ -1691,14 +1691,14 @@ export default function Tickets() {
           {/* Row 1: Start New, Group by visit, All states (+ role-specific extras) */}
           <div className="flex flex-wrap items-center gap-3">
           {(isVendor || isPartner) && (
-            <TogglePillButton
+            <PngPillButton
               color="image"
               data-testid="button-start-new-ticket"
               onClick={() => setAddOpen(true)}
             >
               <Plus className="w-4 h-4" />
               {t("tickets.startNew", { defaultValue: "Start New" })}
-            </TogglePillButton>
+            </PngPillButton>
           )}
           {isVendorOffice && (
             <Dialog
@@ -1718,14 +1718,14 @@ export default function Tickets() {
                 }
               }}
             >
-              <TogglePillButton
+              <PngPillButton
                 color="image"
                 data-testid="button-phone-intake"
                 onClick={() => setPhoneOpen(true)}
               >
                 <Phone className="w-4 h-4" />
                 {t("tickets.phoneIntake", { defaultValue: "Phone intake" })}
-              </TogglePillButton>
+              </PngPillButton>
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>
@@ -2113,7 +2113,7 @@ export default function Tickets() {
                       data-testid="input-phone-description"
                     />
                   </div>
-                  <TogglePillButton
+                  <PngPillButton
                     type="submit"
                     color="blue"
                     disabled={
@@ -2131,7 +2131,7 @@ export default function Tickets() {
                     {creatingPhoneIntake
                       ? t("tickets.starting", { defaultValue: "Starting..." })
                       : t("tickets.startJob", { defaultValue: "Start Job" })}
-                  </TogglePillButton>
+                  </PngPillButton>
                 </form>
               </DialogContent>
             </Dialog>
@@ -2160,7 +2160,7 @@ export default function Tickets() {
               they don't pad the toolbar count or claim a confirm dialog
               they couldn't deliver on. */}
           {isAdmin && selectedReversibleIds.length > 0 && (
-            <TogglePillButton
+            <PngPillButton
               color="red"
               data-testid="button-bulk-reverse-funds"
               onClick={() => {
@@ -2173,10 +2173,10 @@ export default function Tickets() {
                 count: selectedReversibleIds.length,
                 defaultValue: "Reverse {{count}} payment(s)",
               })}
-            </TogglePillButton>
+            </PngPillButton>
           )}
           {isPartner && awaitingPayment && (
-            <TogglePillButton
+            <PngPillButton
               color="green"
               data-testid="export-awaiting-payment-csv"
               onClick={() => {
@@ -2247,10 +2247,10 @@ export default function Tickets() {
               {t("tickets.exportAwaitingPaymentCsv", {
                 defaultValue: "Export CSV",
               })}
-            </TogglePillButton>
+            </PngPillButton>
           )}
           {isPartner && (
-            <TogglePillButton
+            <PngPillButton
               color="amber"
               data-testid="toggle-awaiting-payment"
               onClick={() => {
@@ -2265,9 +2265,9 @@ export default function Tickets() {
             >
               <DollarSign className="w-4 h-4" />
               {t("tickets.awaitingPayment", { defaultValue: "Awaiting payment" })}
-            </TogglePillButton>
+            </PngPillButton>
           )}
-          <TogglePillButton
+          <PngPillButton
             color="blue"
             data-testid="toggle-group-by-visit"
             className="px-2"
@@ -2275,7 +2275,7 @@ export default function Tickets() {
           >
             <Layers className="w-3.5 h-3.5" />
             {t("tickets.groupByVisit", { defaultValue: "Group by visit" })}
-          </TogglePillButton>
+          </PngPillButton>
           {/* Task #857: aggregate cross-ticket audit-trail CSV export.
               Admins, partners, and vendor org admins can pull every
               transition for the tickets they're allowed to see — useful
@@ -2283,7 +2283,7 @@ export default function Tickets() {
               this affordance (the server also returns 403 for that
               role). */}
           {!isFieldEmployee && (
-            <TogglePillButton
+            <PngPillButton
               color="green"
               data-testid="button-audit-trail-export-all"
               className="px-2"
@@ -2291,10 +2291,10 @@ export default function Tickets() {
             >
               <FileText className="w-3.5 h-3.5" />
               {t("tickets.auditExportAll", { defaultValue: "Audit CSV" })}
-            </TogglePillButton>
+            </PngPillButton>
           )}
           {!isFieldEmployee && (
-            <TogglePillButton
+            <PngPillButton
               color="red"
               data-testid="button-audit-trail-export-all-pdf"
               className="px-2"
@@ -2302,7 +2302,7 @@ export default function Tickets() {
             >
               <FileText className="w-3.5 h-3.5" />
               {t("tickets.auditExportPdf", { defaultValue: "Audit PDF" })}
-            </TogglePillButton>
+            </PngPillButton>
           )}
           </div>
           {/* Row 2: Search tracking #, All locations, All States */}
@@ -2542,7 +2542,7 @@ export default function Tickets() {
                       {t("tickets.partnerInviteNotice", { defaultValue: "The vendor will be notified to accept and assign a crew." })}
                     </p>
                   )}
-                  <TogglePillButton
+                  <PngPillButton
                     type="submit"
                     color="blue"
                     disabled={
@@ -2559,7 +2559,7 @@ export default function Tickets() {
                       : form.workTypeIds.length > 1
                         ? t("tickets.startNJobs", { defaultValue: "Start {{n}} Tracking Numbers", n: form.workTypeIds.length })
                         : t("tickets.startJob", { defaultValue: "Start Job" })}
-                  </TogglePillButton>
+                  </PngPillButton>
                 </form>
               </DialogContent>
             </Dialog>
@@ -2973,7 +2973,7 @@ export default function Tickets() {
                                 // tertiary Reverse / void payment chip
                                 // matches the gray pending_arrival /
                                 // en_route / on_site / off_site lifecycle
-                                // pills above. The TogglePillButton
+                                // pills above. The PngPillButton
                                 // variant introduced in commit 387867a5
                                 // changed the height and gloss treatment
                                 // and broke the row-level visual parity.
@@ -3119,7 +3119,7 @@ export default function Tickets() {
             >
               {t("common.cancel")}
             </PillButton>
-            <TogglePillButton
+            <PngPillButton
               color="red"
               onClick={handleReverseFundsDispersal}
               disabled={
@@ -3131,7 +3131,7 @@ export default function Tickets() {
               {reverseFundsDispersalMut.isPending
                 ? t("ticketDetail.reverseFundsSubmitting")
                 : t("ticketDetail.reverseFundsConfirm")}
-            </TogglePillButton>
+            </PngPillButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -3225,7 +3225,7 @@ export default function Tickets() {
             >
               {t("common.cancel")}
             </PillButton>
-            <TogglePillButton
+            <PngPillButton
               color="red"
               onClick={handleBulkReverseFundsDispersal}
               disabled={
@@ -3245,7 +3245,7 @@ export default function Tickets() {
                     count: selectedReversibleIds.length,
                     defaultValue: "Reverse {{count}} payment(s)",
                   })}
-            </TogglePillButton>
+            </PngPillButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>

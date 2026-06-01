@@ -1,12 +1,12 @@
-import { TogglePillButton } from "@/components/toggle-pill";
+import { PngPillButton } from "@/components/png-pill-rollover";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
-import vndrlyLogo from "@assets/512_Vndrly_Logo_2_1777147855089.png";
+import { VNDRLY_LOGO_SQUARE as vndrlyLogo } from "@/lib/vndrly-brand-assets";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { PillButton } from "@/components/pill";
+import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import { Checkbox } from "@/components/ui/checkbox";
 import BlueButton from "@/components/blue-button";
 import GreyButton from "@/components/grey-button";
@@ -849,51 +849,51 @@ export default function OnboardingPartner() {
             </PillButton>
             <div className="flex items-center gap-2">
               {stepIndex > 0 && !REQUIRED_STEPS.has(currentStep.key as StepKey) && (
-                <TogglePillButton onClick={skipStep} disabled={loading} data-testid="button-skip" className="px-4 h-10">
+                <PngPillButton onClick={skipStep} disabled={loading} data-testid="button-skip" className="px-4 h-10">
                   {t("onboardingActions.skipForNow")}
-                </TogglePillButton>
+                </PngPillButton>
               )}
               {/* Save & Quit — only meaningful once an account exists.
                   Persists the current step's edits then sends the user
                   to the dashboard, where the Finish-setup widget
                   surfaces a Resume CTA. */}
               {stepIndex > 0 && (
-                <TogglePillButton
+                <PngPillButton
                   onClick={saveAndQuit}
                   disabled={loading}
                   data-testid="button-save-and-quit"
                   className="px-4 h-10"
                 >
                   {t("onboardingActions.saveAndQuit")}
-                </TogglePillButton>
+                </PngPillButton>
               )}
               {stepIndex === 0 ? (
-                <TogglePillButton color="blue"
+                <PngPillButton color="blue"
                   onClick={submitBasics}
                   disabled={loading || namePending || !namePassesDuplicateCheck}
                   data-testid="button-create-account"
                   className="px-6 h-10"
                 >
                   {loading ? "Creating…" : "Create account"}
-                </TogglePillButton>
+                </PngPillButton>
               ) : stepIndex === STEPS.length - 1 ? (
-                <TogglePillButton color="blue"
+                <PngPillButton color="blue"
                   onClick={() => finish({ payloadPatch: { inviteEmails } })}
                   disabled={loading}
                   data-testid="button-finish"
                   className="px-6 h-10"
                 >
                   {loading ? "Finishing…" : "Finish setup"}
-                </TogglePillButton>
+                </PngPillButton>
               ) : (
-                <TogglePillButton color="blue"
+                <PngPillButton color="blue"
                   onClick={() => nextStep({ payloadPatch: currentStepPatch() })}
                   disabled={loading}
                   data-testid="button-next"
                   className="px-6 h-10"
                 >
                   {loading ? "Saving…" : "Continue"}
-                </TogglePillButton>
+                </PngPillButton>
               )}
             </div>
           </div>

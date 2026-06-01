@@ -1,4 +1,4 @@
-import { PillButton, type PillColor } from "@/components/pill";
+import { PngPillButton as PillButton, type PngPillColor as PillColor } from "@/components/png-pill-rollover";
 
 export type V2Color = "blue" | "green" | "red" | "amber" | "orange" | "grey";
 

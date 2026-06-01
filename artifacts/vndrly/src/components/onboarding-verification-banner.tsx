@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CheckCircle2, MailWarning } from "lucide-react";
-import { PillButton } from "@/components/pill";
+import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import { useToast } from "@/hooks/use-toast";
 import { onboardingApi } from "@/lib/onboarding-api";
 

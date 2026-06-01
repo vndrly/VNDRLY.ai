@@ -3,7 +3,8 @@ import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft, Shield, User as UserIcon } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
-import TogglePill from "@/components/toggle-pill";
+import PngPill from "@/components/png-pill-rollover";
+import { usePortalBase } from "@/lib/portal-base";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -88,6 +89,7 @@ function statusOf(
 export default function FieldCompliance() {
   const { t } = useTranslation();
   const [, navigate] = useLocation();
+  const portalBase = usePortalBase();
   const [me, setMe] = useState<FieldMe | null>(null);
   const [certs, setCerts] = useState<Cert[] | null>(null);
   const [token, setToken] = useState<ComplianceToken | null>(null);
@@ -130,7 +132,7 @@ export default function FieldCompliance() {
       <div className="flex items-center gap-2 mb-4">
         <button
           type="button"
-          onClick={() => navigate("/field/profile")}
+          onClick={() => navigate(`${portalBase}/profile`)}
           className="p-2 -ml-2 rounded-md hover:bg-muted"
           aria-label={t("common.back")}
           data-testid="button-back"
@@ -199,21 +201,21 @@ export default function FieldCompliance() {
                         </p>
                       </div>
                       {s.color ? (
-                        <TogglePill
+                        <PngPill
                           color={s.color}
                           className="text-[10px] px-2 py-0.5 shrink-0"
                           data-testid={`cert-${cert.id}-status`}
                         >
                           {s.label}
-                        </TogglePill>
+                        </PngPill>
                       ) : (
-                        <TogglePill
+                        <PngPill
                           rest
                           className="text-[10px] px-2 py-0.5 shrink-0"
                           data-testid={`cert-${cert.id}-status`}
                         >
                           {s.label}
-                        </TogglePill>
+                        </PngPill>
                       )}
                     </li>
                   );

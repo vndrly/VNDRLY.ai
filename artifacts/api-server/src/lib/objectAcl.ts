@@ -1,7 +1,3 @@
-import { File } from "@google-cloud/storage";
-
-const ACL_POLICY_METADATA_KEY = "custom:aclPolicy";
-
 // Can be flexibly defined according to the use case.
 //
 // Examples:
@@ -29,7 +25,6 @@ export interface ObjectAclRule {
   permission: ObjectPermission;
 }
 
-// Stored as object custom metadata under "custom:aclPolicy" (JSON string).
 export interface ObjectAclPolicy {
   owner: string;
   visibility: "public" | "private";
@@ -59,51 +54,20 @@ function createObjectAccessGroup(
   group: ObjectAccessGroup,
 ): BaseObjectAccessGroup {
   switch (group.type) {
-    // Implement per access group type, e.g.:
-    // case "USER_LIST":
-    //   return new UserListAccessGroup(group.id);
     default:
       throw new Error(`Unknown access group type: ${group.type}`);
   }
 }
 
-export async function setObjectAclPolicy(
-  objectFile: File,
-  aclPolicy: ObjectAclPolicy,
-): Promise<void> {
-  const [exists] = await objectFile.exists();
-  if (!exists) {
-    throw new Error(`Object not found: ${objectFile.name}`);
-  }
-
-  await objectFile.setMetadata({
-    metadata: {
-      [ACL_POLICY_METADATA_KEY]: JSON.stringify(aclPolicy),
-    },
-  });
-}
-
-export async function getObjectAclPolicy(
-  objectFile: File,
-): Promise<ObjectAclPolicy | null> {
-  const [metadata] = await objectFile.getMetadata();
-  const aclPolicy = metadata?.metadata?.[ACL_POLICY_METADATA_KEY];
-  if (!aclPolicy) {
-    return null;
-  }
-  return JSON.parse(aclPolicy as string);
-}
-
 export async function canAccessObject({
   userId,
-  objectFile,
+  aclPolicy,
   requestedPermission,
 }: {
   userId?: string;
-  objectFile: File;
+  aclPolicy: ObjectAclPolicy | null;
   requestedPermission: ObjectPermission;
 }): Promise<boolean> {
-  const aclPolicy = await getObjectAclPolicy(objectFile);
   if (!aclPolicy) {
     return false;
   }

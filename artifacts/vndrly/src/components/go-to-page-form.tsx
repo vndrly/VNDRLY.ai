@@ -1,6 +1,6 @@
 import { useState, type ReactElement } from "react";
 import { useTranslation } from "react-i18next";
-import { PillButton } from "@/components/pill";
+import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 

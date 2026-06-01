@@ -5,6 +5,7 @@ export * from "./platformSettingsAuditLog";
 export * from "./partnerContacts";
 export * from "./partnerNotes";
 export * from "./vendorPeople";
+export * from "./vendorCrewPresets";
 export * from "./vendorNotes";
 export * from "./vendors";
 export * from "./workTypes";

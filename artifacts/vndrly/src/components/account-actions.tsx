@@ -1,4 +1,4 @@
-import { TogglePillButton } from "@/components/toggle-pill";
+import { PngPillButton } from "@/components/png-pill-rollover";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -120,17 +120,17 @@ export default function AccountActions({ userId, hasLogin, suspendedAt, testIdPr
 
   return (
     <div className="flex flex-wrap gap-2">
-      <TogglePillButton color="blue" type="button" onClick={() => setResetOpen(true)} data-testid={`${testIdPrefix}-reset-password`}>
+      <PngPillButton color="blue" type="button" onClick={() => setResetOpen(true)} data-testid={`${testIdPrefix}-reset-password`}>
         {t("accountActions.resetPassword")}
-      </TogglePillButton>
+      </PngPillButton>
       {isSuspended ? (
         <GreenButton type="button" onClick={() => setReactivateOpen(true)} data-testid={`${testIdPrefix}-reactivate`}>
           {t("accountActions.reactivate")}
         </GreenButton>
       ) : (
-        <TogglePillButton color="red" type="button" onClick={() => setSuspendOpen(true)} data-testid={`${testIdPrefix}-suspend`}>
+        <PngPillButton color="red" type="button" onClick={() => setSuspendOpen(true)} data-testid={`${testIdPrefix}-suspend`}>
           {t("accountActions.suspend")}
-        </TogglePillButton>
+        </PngPillButton>
       )}
 
       {/* Reset password sub-modal */}
@@ -154,9 +154,9 @@ export default function AccountActions({ userId, hasLogin, suspendedAt, testIdPr
                 data-testid={`${testIdPrefix}-new-password-input`}
               />
             </div>
-            <TogglePillButton color="blue" type="submit" disabled={busy} className="w-full" data-testid={`${testIdPrefix}-reset-submit`}>
+            <PngPillButton color="blue" type="submit" disabled={busy} className="w-full" data-testid={`${testIdPrefix}-reset-submit`}>
               {busy ? t("accountActions.sending") : t("accountActions.changePasswordAndEmail")}
-            </TogglePillButton>
+            </PngPillButton>
           </form>
         </DialogContent>
       </Dialog>

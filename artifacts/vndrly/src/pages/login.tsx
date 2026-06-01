@@ -8,20 +8,17 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { translateApiError } from "@/lib/api-error";
 import { Spinner } from "@/components/ui/spinner";
-import vndrlyLogo from "@assets/512_Vndrly_Logo_2_1777147855089.png";
+import { VNDRLY_LOGO_SQUARE as vndrlyLogo } from "@/lib/vndrly-brand-assets";
 import headerBg from "@assets/VNDRLY_Header_Blur_4_1776220762025.png";
 import AmberButton from "@/components/amber-button";
 import BlueButton from "@/components/blue-button";
 import PortalButton from "@/components/portal-button";
-import BakerPillButton from "@/components/baker-pill-button";
-// Hard-pinned login pill PNGs. The Sign In to Portal and Continue as
-// Visitor buttons use ONLY these two images per user direction — the
-// brand-color matcher is bypassed at these callsites.
-import loginPillIdle from "@assets/900x229_Light-grey_v2r_square_1778227100771.png";
-import loginPillActive from "@assets/NewPillPallet_0001s_0004_Layer-5.png";
+import { PngPillButton } from "@/components/png-pill-rollover";
+import { pickLoginSquareActive, LOGIN_IDLE_SQUARE_SRC } from "@/lib/login-button-palette";
 import LanguageToggle from "@/components/language-toggle";
 import DarkLightToggle, { type ThemeMode } from "@/components/dark-light-toggle";
-import vndrlyMark from "@assets/vndrlylogo7_1778217520404.png";
+import { PoweredByVndrly } from "@/components/powered-by-vndrly";
+
 import logoUnderlay from "@assets/logo-underrlay_1778217900673.png";
 import logoOverlay from "@assets/logo-overlay_1778217860263.png";
 import { useBrand, brandStyleVars } from "@/hooks/use-brand";
@@ -193,6 +190,8 @@ export default function Login() {
   const formReady = username.length > 0 && password.length > 0;
   const brand = useBrand();
   const branded = brand.isOrgBranded;
+  const loginActiveSrc = pickLoginSquareActive(brand.primary, brand.name);
+  const loginIdleSrc = LOGIN_IDLE_SQUARE_SRC;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -287,15 +286,9 @@ export default function Login() {
             WebkitMaskImage: "linear-gradient(to bottom, black 0%, transparent 100%)",
           }}
         />
-        <div className={cn("absolute bottom-4 right-4 z-20 flex items-center gap-2 text-sm leading-relaxed", isDark ? "text-gray-300" : "text-gray-500")}>
-          <span className="italic">…powered by</span>
-          <img
-            src={vndrlyMark}
-            alt="VNDRLY"
-            className="w-6 h-6 shrink-0"
-            draggable={false}
-          />
-        </div>
+        <PoweredByVndrly
+          className={cn("absolute bottom-4 right-4 z-20", isDark ? "text-gray-300" : "text-gray-500")}
+        />
         <div className="absolute top-4 right-4 z-20">
           <LanguageToggle variant="light" />
         </div>
@@ -416,23 +409,19 @@ export default function Login() {
                 </div>
               </div>
               <div className="pt-2">
-                <BakerPillButton
+                <PngPillButton
                   type="submit"
                   disabled={!formReady || isSubmitting}
-                  testId="button-login"
-                  idleVariant="grey"
+                  data-testid="button-login"
+                  idleSrc={loginIdleSrc}
+                  activeSrc={loginActiveSrc}
+                  color="image"
                   height={32}
-                  brandColor={brand.primary}
-                  /* Per user direction: ONLY when the active brand is
-                     Baker, hard-pin to the user-supplied login PNGs.
-                     All other brands (including unbranded VNDRLY) keep
-                     the default brand-color matcher. */
-                  {...(brand.name?.toLowerCase().includes("baker")
-                    ? { activeSrc: loginPillActive, idleSrc: loginPillIdle }
-                    : {})}
+                  fullWidth
+                  size="sm"
                 >
                   {isSubmitting ? t("login.signingIn") : t("login.signIn")}
-                </BakerPillButton>
+                </PngPillButton>
               </div>
             </form>
           </div>
@@ -477,20 +466,19 @@ export default function Login() {
               button lines up under "Sign In to Portal" at the exact same
               width. */}
           <div className={cn("mt-5 pt-4 px-6 border-t", isDark ? "border-white/20" : "border-gray-200")}>
-            <BakerPillButton
+            <PngPillButton
               type="button"
               onClick={() => navigate("/visitor")}
-              testId="button-continue-as-visitor"
-              idleVariant="grey"
+              data-testid="button-continue-as-visitor"
+              idleSrc={loginIdleSrc}
+              activeSrc={loginActiveSrc}
+              color="image"
               height={32}
-              brandColor={brand.primary}
-              /* Baker-only hard-pin (see Sign In to Portal above). */
-              {...(brand.name?.toLowerCase().includes("baker")
-                ? { activeSrc: loginPillActive, idleSrc: loginPillIdle }
-                : {})}
+              fullWidth
+              size="sm"
             >
               {t("visitor.continueAsVisitor")}
-            </BakerPillButton>
+            </PngPillButton>
           </div>
 
           {/* Dev-only affordances. Mirrors the gating used by the

@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogLogoHeader } from "@/components/ui/dialog";
 import { ShoppingCart, Plus, Pencil, Trash2, ArrowUp, ArrowDown, ArrowUpDown, Download, Upload } from "lucide-react";
-import { TogglePillButton } from "@/components/toggle-pill";
+import { PngPillButton } from "@/components/png-pill-rollover";
 import PillBg from "@/components/pill-bg";
 import bluePill from "@assets/NewPillPallet_0001s_0017_900x229_blue_Pill.png";
 import AfePill from "@/components/afe-pill";
@@ -913,22 +913,22 @@ export default function Catalog() {
           <p className="text-muted-foreground text-sm mt-1">{t("catalog.subtitle")}</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <TogglePillButton color="blue" className="px-3" onClick={handleExport} data-testid="button-export-csv">
+          <PngPillButton color="blue" className="px-3" onClick={handleExport} data-testid="button-export-csv">
             <Download className="w-4 h-4" />{t("catalog.exportCsv")}
-          </TogglePillButton>
-          <TogglePillButton color="blue" className="px-3" onClick={openImportDialog} data-testid="button-import-csv">
+          </PngPillButton>
+          <PngPillButton color="blue" className="px-3" onClick={openImportDialog} data-testid="button-import-csv">
             <Upload className="w-4 h-4" />{t("catalog.importCsv")}
-          </TogglePillButton>
+          </PngPillButton>
         <Dialog open={addOpen} onOpenChange={(o) => { setAddOpen(o); if (o) resetForm(); }}>
           <DialogTrigger asChild>
-            <TogglePillButton color="blue" className="px-3" data-testid="button-add-catalog-item"><Plus className="w-4 h-4" />{t("catalog.addItem")}</TogglePillButton>
+            <PngPillButton color="blue" className="px-3" data-testid="button-add-catalog-item"><Plus className="w-4 h-4" />{t("catalog.addItem")}</PngPillButton>
           </DialogTrigger>
           <DialogContent className="max-h-[85vh] overflow-y-auto">
             <ModalLogoHeader />
             <DialogHeader><DialogTitle>{t("catalog.addNew")}</DialogTitle></DialogHeader>
             <form onSubmit={handleAdd} className="space-y-4">
               {formFields("add")}
-              <TogglePillButton
+              <PngPillButton
                 type="submit"
                 color="blue"
 
@@ -937,7 +937,7 @@ export default function Catalog() {
                 className="w-full px-3 justify-center"
               >
                 {saving ? t("catalog.adding") : t("catalog.add")}
-              </TogglePillButton>
+              </PngPillButton>
             </form>
           </DialogContent>
         </Dialog>
@@ -961,12 +961,12 @@ export default function Catalog() {
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">{t("catalog.importDescription")}</p>
             <div className="flex items-center gap-2 flex-wrap">
-              <TogglePillButton color="blue" className="px-3" onClick={() => fileInputRef.current?.click()} data-testid="button-pick-import-file">
+              <PngPillButton color="blue" className="px-3" onClick={() => fileInputRef.current?.click()} data-testid="button-pick-import-file">
                 <Upload className="w-4 h-4" />{t("catalog.importChooseFile")}
-              </TogglePillButton>
-              <TogglePillButton color="blue" className="px-3" onClick={handleDownloadTemplate} data-testid="button-download-template">
+              </PngPillButton>
+              <PngPillButton color="blue" className="px-3" onClick={handleDownloadTemplate} data-testid="button-download-template">
                 <Download className="w-4 h-4" />{t("catalog.importDownloadTemplate")}
-              </TogglePillButton>
+              </PngPillButton>
               {importFileName && (
                 <span className="text-xs text-muted-foreground truncate" data-testid="text-import-filename">{importFileName}</span>
               )}
@@ -1039,11 +1039,11 @@ export default function Catalog() {
             )}
           </div>
           <DialogFooter className="mt-4 gap-2">
-            <TogglePillButton color="blue" className="px-3" onClick={() => setImportOpen(false)} data-testid="button-close-import">
+            <PngPillButton color="blue" className="px-3" onClick={() => setImportOpen(false)} data-testid="button-close-import">
               {importSummary ? t("common.close") : t("catalog.keep")}
-            </TogglePillButton>
+            </PngPillButton>
             {!importSummary && (
-              <TogglePillButton
+              <PngPillButton
                 color="blue"
 
                 className="px-3"
@@ -1053,7 +1053,7 @@ export default function Catalog() {
               >
                 <Upload className="w-4 h-4" />
                 {importing ? t("catalog.importRunning") : t("catalog.importRun")}
-              </TogglePillButton>
+              </PngPillButton>
             )}
           </DialogFooter>
         </DialogContent>
@@ -1173,7 +1173,7 @@ export default function Catalog() {
           <DialogHeader><DialogTitle>{t("catalog.editItem")}</DialogTitle></DialogHeader>
           <form onSubmit={handleEdit} className="space-y-4">
             {formFields("edit")}
-            <TogglePillButton
+            <PngPillButton
               type="submit"
               color="blue"
 
@@ -1182,7 +1182,7 @@ export default function Catalog() {
               className="w-full px-3 justify-center"
             >
               {saving ? t("common.saving") : t("common.saveChanges")}
-            </TogglePillButton>
+            </PngPillButton>
           </form>
         </DialogContent>
       </Dialog>
@@ -1194,10 +1194,10 @@ export default function Catalog() {
             {t("catalog.removeConfirmPrefix")} <span className="font-medium text-foreground">{selected?.name}</span>{t("catalog.removeConfirmSuffix")}
           </p>
           <div className="flex gap-3 justify-end mt-4">
-            <TogglePillButton color="blue" className="px-3" onClick={() => setDeleteOpen(false)} data-testid="button-cancel-delete">{t("catalog.keep")}</TogglePillButton>
-            <TogglePillButton color="blue" className="px-3" onClick={handleDelete} disabled={saving} data-testid="button-confirm-delete">
+            <PngPillButton color="blue" className="px-3" onClick={() => setDeleteOpen(false)} data-testid="button-cancel-delete">{t("catalog.keep")}</PngPillButton>
+            <PngPillButton color="blue" className="px-3" onClick={handleDelete} disabled={saving} data-testid="button-confirm-delete">
               <Trash2 className="w-4 h-4" />{saving ? t("catalog.removing") : t("catalog.remove")}
-            </TogglePillButton>
+            </PngPillButton>
           </div>
         </DialogContent>
       </Dialog>

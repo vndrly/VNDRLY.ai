@@ -52,7 +52,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import BlueButton from "@/components/blue-button";
-import TogglePill, { TogglePillButton } from "@/components/toggle-pill";
+import PngPill, { PngPillButton } from "@/components/png-pill-rollover";
 import ImagePill from "@/components/image-pill";
 import RoleBadge from "@/components/role-badge";
 import PecStatusBadge from "@/components/pec-status-badge";
@@ -296,7 +296,7 @@ export default function OrgMembersCard({
           <UserCheck className="w-5 h-5" style={{ color: "var(--brand-primary)" }} />
           Administrative Team Members ({members.length})
         </CardTitle>
-        <TogglePillButton
+        <PngPillButton
           color="blue"
 
           onClick={() => setAddOpen(true)}
@@ -305,7 +305,7 @@ export default function OrgMembersCard({
         >
           <Plus className="w-4 h-4" />
           Add Team Member
-        </TogglePillButton>
+        </PngPillButton>
         <Dialog open={addOpen} onOpenChange={setAddOpen}>
           <DialogContent className="max-w-md">
             <DialogHeader>
@@ -447,7 +447,7 @@ export default function OrgMembersCard({
                 ) : null}
               </div>
               <div className="flex justify-end gap-2 pt-2">
-                <TogglePillButton
+                <PngPillButton
                   type="button"
                   color="red"
 
@@ -455,8 +455,8 @@ export default function OrgMembersCard({
                   data-testid={`button-cancel-${orgType}-member`}
                 >
                   Cancel
-                </TogglePillButton>
-                <TogglePillButton
+                </PngPillButton>
+                <PngPillButton
                   type="submit"
                   color="blue"
 
@@ -464,7 +464,7 @@ export default function OrgMembersCard({
                   data-testid={`button-submit-${orgType}-member`}
                 >
                   {addMutation.isPending ? "Saving…" : "Add Team Member"}
-                </TogglePillButton>
+                </PngPillButton>
               </div>
             </form>
           </DialogContent>
@@ -869,7 +869,7 @@ export default function OrgMembersCard({
                     {resetPasswordError}
                   </p>
                 ) : null}
-                <TogglePillButton color="blue"
+                <PngPillButton color="blue"
                   type="button"
                   disabled={
                     resetPending || editTempPassword.trim().length < 8
@@ -933,10 +933,10 @@ export default function OrgMembersCard({
                   data-testid={`button-edit-${orgType}-member-reset-password`}
                 >
                   {resetPending ? "Sending…" : "Send temporary password"}
-                </TogglePillButton>
+                </PngPillButton>
               </div>
               <div className="flex justify-end gap-2 pt-2">
-                <TogglePillButton
+                <PngPillButton
                   type="button"
                   onClick={() => {
                     if (resetPending) return;
@@ -947,7 +947,7 @@ export default function OrgMembersCard({
                   data-testid={`button-edit-${orgType}-member-close`}
                 >
                   Close
-                </TogglePillButton>
+                </PngPillButton>
               </div>
             </div>
           ) : null}

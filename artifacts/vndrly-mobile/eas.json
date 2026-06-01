@@ -51,9 +51,12 @@
   "submit": {
     "production": {
       "ios": {
-        "appleId": "REPLACE_WITH_APPLE_ID_EMAIL",
+        "appleId": "v@vndrly.ai",
         "ascAppId": "6771456209",
-        "appleTeamId": "CM253WWQW2"
+        "appleTeamId": "CM253WWQW2",
+        "ascApiKeyPath": "../../.local/AuthKey_RR78KF6Y3M.p8",
+        "ascApiKeyId": "RR78KF6Y3M",
+        "ascApiKeyIssuerId": "0bb5c187-d2b0-4058-91b2-b1cccccaac53"
       },
       "android": {
         "serviceAccountKeyPath": "./google-play-service-account.json",

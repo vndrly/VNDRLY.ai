@@ -46,7 +46,7 @@ interface VerticalPillBarShapeProps {
  * bar as a TogglePill rotated 90° CCW from `HorizontalPillBarShape`:
  * solid tonal fill + 50% white left-half gloss highlight + 1px
  * black/10 border, in a rounded-pill shape. Mirrors the visual
- * language of `<TogglePill>` (see `toggle-pill.tsx`).
+ * language of `<PngPill>` (see `png-pill-rollover.tsx`).
  *
  * The gloss runs along the short (horizontal) axis — the rotated
  * equivalent of the horizontal pill's top-half gloss running along

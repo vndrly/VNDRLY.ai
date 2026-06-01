@@ -1,4 +1,5 @@
 import { Switch, Route, Router as WouterRouter, useLocation, useRoute } from "wouter";
+import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -27,6 +28,8 @@ import FieldEditProfile from "@/pages/field-edit-profile";
 import FieldCompliance from "@/pages/field-compliance";
 import FieldCrew from "@/pages/field-crew";
 import { FieldPortalLayout } from "@/components/field-portal-layout";
+import { ForemanPortalLayout } from "@/components/foreman-portal-layout";
+import { isForemanPersona } from "@/lib/portal-base";
 import Catalog from "@/pages/catalog";
 import VendorCatalog from "@/pages/vendor-catalog";
 import VendorAnalytics from "@/pages/vendor-analytics";
@@ -53,6 +56,8 @@ import PrintVisitorQrsPage from "@/pages/print-visitor-qrs";
 import PrintTicketPage from "@/pages/print-ticket";
 import PrintHotlistPage from "@/pages/print-hotlist";
 import FieldHome from "@/pages/field-home";
+import ForemanHome from "@/pages/foreman-home";
+import ForemanCrews from "@/pages/foreman-crews";
 import FieldNewTicket from "@/pages/field-new-ticket";
 import AccountLocation from "@/pages/account-location";
 import Signup from "@/pages/signup";
@@ -71,6 +76,14 @@ import AdminRemovedComments from "@/pages/admin-removed-comments";
 import Admin1099Transmitter from "@/pages/admin-1099-transmitter";
 
 const queryClient = new QueryClient();
+
+function ForemanRootRedirect() {
+  const [, navigate] = useLocation();
+  useEffect(() => {
+    navigate("/foreman", { replace: true });
+  }, [navigate]);
+  return null;
+}
 
 function AdminRoutes() {
   return (
@@ -147,11 +160,27 @@ function AuthenticatedRouter() {
         <Route path="/onboarding/field/:token" component={OnboardingField} />
         {!user ? (
           <Route path="/*splat" component={Login} />
-        ) : user.role === "field_employee" && user.vendorRole !== "foreman" ? (
-          // Foremen are field_employee at the top level but operate from
-          // the vendor portal on web (they manage crews / dispatch from a
-          // desk). Only true field employees land in the mobile-style
-          // FieldPortalLayout. Foremen fall through to AdminRoutes below.
+        ) : user.role === "field_employee" && isForemanPersona(user) ? (
+          <ForemanPortalLayout>
+            <Switch>
+              <Route path="/foreman" component={ForemanHome} />
+              <Route path="/foreman/schedule" component={FieldSchedule} />
+              <Route path="/foreman/crews" component={ForemanCrews} />
+              <Route path="/foreman/profile" component={FieldProfile} />
+              <Route path="/foreman/profile/edit" component={FieldEditProfile} />
+              <Route path="/foreman/compliance" component={FieldCompliance} />
+              <Route path="/foreman/crew" component={FieldCrew} />
+              <Route path="/foreman/new-ticket" component={FieldNewTicket} />
+              <Route path="/foreman/scan" component={FieldNewTicket} />
+              <Route path="/account/location" component={AccountLocation} />
+              <Route path="/tickets/:id">{(params) => <TicketDetail id={parseInt(params.id)} />}</Route>
+              <Route path="/">
+                <ForemanRootRedirect />
+              </Route>
+              <Route path="/*splat" component={ForemanHome} />
+            </Switch>
+          </ForemanPortalLayout>
+        ) : user.role === "field_employee" ? (
           <FieldPortalLayout>
             <Switch>
               <Route path="/field" component={FieldHome} />

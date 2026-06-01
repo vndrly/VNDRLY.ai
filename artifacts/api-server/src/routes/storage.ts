@@ -1,23 +1,62 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { Readable } from "stream";
+import express from "express";
 import {
   RequestUploadUrlBody,
   RequestUploadUrlResponse,
 } from "@workspace/api-zod";
 import { sendResponse } from "../lib/typed-response";
-import { ObjectStorageService, ObjectNotFoundError } from "../lib/objectStorage";
+import {
+  ObjectStorageService,
+  ObjectNotFoundError,
+} from "../lib/objectStorage";
 import { ObjectPermission } from "../lib/objectAcl";
 import { getSessionFromRequest } from "../lib/session";
+import { getObjectStore, UPLOAD_ROUTE } from "../lib/objectStore";
+import { absoluteUploadUrl } from "../lib/uploadUrl";
 
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
 
 /**
+ * PUT /storage/upload/:id
+ *
+ * Receives raw upload bytes from the browser. The upload id is an unguessable
+ * UUID issued by request-url; no session required (same security model as a
+ * presigned URL). Onboarding field employees use this before they have login.
+ */
+router.put(
+  "/storage/upload/:id",
+  express.raw({ type: "*/*", limit: "25mb" }),
+  async (req: Request, res: Response) => {
+    const uploadId = String(req.params.id ?? "").trim();
+    if (!uploadId || !/^[0-9a-f-]{36}$/i.test(uploadId)) {
+      res.status(400).json({ error: "Invalid upload id" });
+      return;
+    }
+    const body = Buffer.isBuffer(req.body) ? req.body : Buffer.alloc(0);
+    if (body.length === 0) {
+      res.status(400).json({ error: "Empty body" });
+      return;
+    }
+    const contentType =
+      typeof req.headers["content-type"] === "string"
+        ? req.headers["content-type"]
+        : "application/octet-stream";
+    try {
+      await getObjectStore().putUpload(uploadId, contentType, body);
+      res.status(204).end();
+    } catch (error) {
+      console.error("Error storing upload", error);
+      res.status(500).json({ error: "Failed to store upload" });
+    }
+  },
+);
+
+/**
  * POST /storage/uploads/request-url
  *
- * Request a presigned URL for file upload.
- * The client sends JSON metadata (name, size, contentType) — NOT the file.
- * Then uploads the file directly to the returned presigned URL.
+ * Request an upload URL on our API. Client PUTs bytes to uploadURL, then
+ * calls finalize to stamp ACL metadata.
  */
 router.post("/storage/uploads/request-url", async (req: Request, res: Response) => {
   const session = getSessionFromRequest(req);
@@ -33,18 +72,10 @@ router.post("/storage/uploads/request-url", async (req: Request, res: Response) 
   }
 
   try {
-    // Task #583: only `uploadURL` and `objectPath` are part of
-    // RequestUploadUrlResponse. The previous handler also threaded
-    // `metadata: { name, size, contentType }` through `.parse()`, which
-    // silently stripped it before responding — the client never saw it.
-    // The typed bridge surfaces that mismatch, and we drop the dead field
-    // here rather than expanding the schema.
-    const uploadURL = await objectStorageService.getObjectEntityUploadURL();
-    const objectPath = objectStorageService.normalizeObjectEntityPath(uploadURL);
-
+    const descriptor = objectStorageService.getUploadDescriptor();
     sendResponse(res, RequestUploadUrlResponse, {
-      uploadURL,
-      objectPath,
+      uploadURL: absoluteUploadUrl(req, descriptor.uploadURL),
+      objectPath: descriptor.objectPath,
     });
   } catch (error) {
     console.error("Error generating upload URL", error);
@@ -55,14 +86,7 @@ router.post("/storage/uploads/request-url", async (req: Request, res: Response) 
 /**
  * POST /storage/uploads/finalize
  *
- * After the client PUTs the file to the presigned URL, it calls this to
- * stamp an ACL policy on the freshly-uploaded object. Without an ACL the
- * object is unreadable through GET /storage/objects/* (returns 403).
- *
- * For org-shared assets like vendor / partner logos, employee photos,
- * comment attachments, certification documents — visibility "public"
- * means "any authenticated session of this app may read", since the
- * GET endpoint still requires a valid login.
+ * After the client PUTs the file, stamp an ACL policy on the object.
  */
 router.post("/storage/uploads/finalize", async (req: Request, res: Response) => {
   const session = getSessionFromRequest(req);
@@ -97,31 +121,22 @@ router.post("/storage/uploads/finalize", async (req: Request, res: Response) => 
 /**
  * GET /storage/public-objects/*
  *
- * Serve public assets from PUBLIC_OBJECT_SEARCH_PATHS.
- * These are unconditionally public — no authentication or ACL checks.
- * IMPORTANT: Always provide this endpoint when object storage is set up.
+ * Serve public branding assets (logos seeded under `public/`).
  */
 router.get("/storage/public-objects/*filePath", async (req: Request, res: Response) => {
   try {
     const raw = req.params.filePath;
     const filePath = Array.isArray(raw) ? raw.join("/") : raw;
-    const file = await objectStorageService.searchPublicObject(filePath);
-    if (!file) {
+    const obj = await objectStorageService.getPublicObject(filePath);
+    if (!obj) {
       res.status(404).json({ error: "File not found" });
       return;
     }
 
-    const response = await objectStorageService.downloadObject(file);
-
-    res.status(response.status);
-    response.headers.forEach((value, key) => res.setHeader(key, value));
-
-    if (response.body) {
-      const nodeStream = Readable.fromWeb(response.body as ReadableStream<Uint8Array>);
-      nodeStream.pipe(res);
-    } else {
-      res.end();
-    }
+    res.setHeader("Content-Type", obj.contentType);
+    res.setHeader("Cache-Control", "public, max-age=3600");
+    res.setHeader("Content-Length", String(obj.size));
+    res.send(obj.body);
   } catch (error) {
     console.error("Error serving public object", error);
     res.status(500).json({ error: "Failed to serve public object" });
@@ -131,9 +146,7 @@ router.get("/storage/public-objects/*filePath", async (req: Request, res: Respon
 /**
  * GET /storage/objects/*
  *
- * Serve object entities from PRIVATE_OBJECT_DIR.
- * These are served from a separate path from /public-objects and can optionally
- * be protected with authentication or ACL checks based on the use case.
+ * Serve private objects through ACL-checked proxy (Supabase bucket stays private).
  */
 router.get("/storage/objects/*path", async (req: Request, res: Response) => {
   try {
@@ -146,11 +159,11 @@ router.get("/storage/objects/*path", async (req: Request, res: Response) => {
     const raw = req.params.path;
     const wildcardPath = Array.isArray(raw) ? raw.join("/") : raw;
     const objectPath = `/objects/${wildcardPath}`;
-    const objectFile = await objectStorageService.getObjectEntityFile(objectPath);
+    const obj = await objectStorageService.getStoredObject(objectPath);
 
-    const canAccess = await objectStorageService.canAccessObjectEntity({
+    const canAccess = await objectStorageService.canAccessStoredObject({
       userId: String(session.userId),
-      objectFile,
+      object: obj,
       requestedPermission: ObjectPermission.READ,
     });
     if (!canAccess) {
@@ -158,20 +171,16 @@ router.get("/storage/objects/*path", async (req: Request, res: Response) => {
       return;
     }
 
-    const response = await objectStorageService.downloadObject(objectFile);
-
-    res.status(response.status);
-    response.headers.forEach((value, key) => res.setHeader(key, value));
-
-    if (response.body) {
-      const nodeStream = Readable.fromWeb(response.body as ReadableStream<Uint8Array>);
-      nodeStream.pipe(res);
-    } else {
-      res.end();
-    }
+    const isPublic = obj.acl?.visibility === "public";
+    res.setHeader("Content-Type", obj.contentType);
+    res.setHeader(
+      "Cache-Control",
+      `${isPublic ? "public" : "private"}, max-age=3600`,
+    );
+    res.setHeader("Content-Length", String(obj.size));
+    res.send(obj.body);
   } catch (error) {
     if (error instanceof ObjectNotFoundError) {
-      console.warn("Object not found", error);
       res.status(404).json({ error: "Object not found" });
       return;
     }
@@ -180,4 +189,5 @@ router.get("/storage/objects/*path", async (req: Request, res: Response) => {
   }
 });
 
+export { UPLOAD_ROUTE };
 export default router;

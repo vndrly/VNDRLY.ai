@@ -17,7 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Users, Receipt, AlertTriangle } from "lucide-react";
-import { TogglePillButton } from "@/components/toggle-pill";
+import { PngPillButton } from "@/components/png-pill-rollover";
 import BrandRolePill from "@/components/brand-role-pill";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
@@ -354,13 +354,13 @@ function ApproveModal({
           </div>
         </div>
         <DialogFooter>
-          <TogglePillButton
+          <PngPillButton
             className="px-3"
             onClick={() => onOpenChange(false)}
           >
             {t("common.cancel")}
-          </TogglePillButton>
-          <TogglePillButton
+          </PngPillButton>
+          <PngPillButton
             color="amber"
             className="px-3"
             onClick={() => promote.mutate()}
@@ -370,7 +370,7 @@ function ApproveModal({
             {promote.isPending
               ? t("approvals.saving")
               : t("approvals.approveAndSave")}
-          </TogglePillButton>
+          </PngPillButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -435,12 +435,12 @@ function CatalogDiffModal({
           />
         </div>
         <DialogFooter>
-          <TogglePillButton
+          <PngPillButton
             className="px-3"
             onClick={() => onOpenChange(false)}
           >
             {t("common.close")}
-          </TogglePillButton>
+          </PngPillButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -602,7 +602,7 @@ export default function PartnerVendorApprovalsCard({
                 {t("approvals.bulkReapproveBannerHelp")}
               </p>
             </div>
-            <TogglePillButton
+            <PngPillButton
               color="green"
 
               className="min-w-[150px]"
@@ -613,7 +613,7 @@ export default function PartnerVendorApprovalsCard({
               {bulkReapprove.isPending
                 ? t("approvals.saving")
                 : t("approvals.bulkReapproveAction")}
-            </TogglePillButton>
+            </PngPillButton>
           </div>
         ) : null}
         {isLoading ? (
@@ -723,7 +723,7 @@ export default function PartnerVendorApprovalsCard({
                       </button>
                     ) : null}
                     {canManage && r.status !== "approved" && (
-                      <TogglePillButton
+                      <PngPillButton
                         color="green"
 
                         className="min-w-[120px]"
@@ -733,7 +733,7 @@ export default function PartnerVendorApprovalsCard({
                         {r.status === "auto_unapproved"
                           ? t("approvals.reapproveButton")
                           : t("approvals.approveButton")}
-                      </TogglePillButton>
+                      </PngPillButton>
                     )}
                   </div>
                 </div>

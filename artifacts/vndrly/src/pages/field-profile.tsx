@@ -4,9 +4,10 @@ import { useTranslation } from "react-i18next";
 import { ChevronRight, User as UserIcon, Edit3, Shield, Users, LogOut, Sun, Moon, Monitor, Check } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
-import TogglePill, { TogglePillButton } from "@/components/toggle-pill";
+import PngPill, { PngPillButton } from "@/components/png-pill-rollover";
 import LanguageToggle from "@/components/language-toggle";
 import { cn } from "@/lib/utils";
+import { usePortalBase } from "@/lib/portal-base";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -33,6 +34,7 @@ function resolveUrl(path: string | null | undefined): string | null {
 export default function FieldProfile() {
   const { t } = useTranslation();
   const [, navigate] = useLocation();
+  const portalBase = usePortalBase();
   const { user, logout, switchContext } = useAuth();
   const availableMemberships = user?.availableMemberships ?? [];
   const activeMembershipId = user?.activeMembershipId ?? null;
@@ -173,37 +175,37 @@ export default function FieldProfile() {
       </section>
 
       <div className="space-y-2">
-        <TogglePillButton
+        <PngPillButton
           color="blue"
-          onClick={() => navigate("/field/profile/edit")}
+          onClick={() => navigate(`${portalBase}/profile/edit`)}
           className="w-full h-11 text-sm"
           data-testid="button-edit-profile"
         >
           <Edit3 className="w-4 h-4 mr-2" />
           {t("profile.editProfile")}
           <ChevronRight className="w-4 h-4 ml-auto" />
-        </TogglePillButton>
-        <TogglePillButton
+        </PngPillButton>
+        <PngPillButton
           color="brand"
-          onClick={() => navigate("/field/compliance")}
+          onClick={() => navigate(`${portalBase}/compliance`)}
           className="w-full h-11 text-sm"
           data-testid="button-compliance-card"
         >
           <Shield className="w-4 h-4 mr-2" />
           {t("profile.complianceCard")}
           <ChevronRight className="w-4 h-4 ml-auto" />
-        </TogglePillButton>
-        <TogglePillButton
+        </PngPillButton>
+        <PngPillButton
           color="brand"
-          onClick={() => navigate("/field/crew")}
+          onClick={() => navigate(`${portalBase}/crew`)}
           className="w-full h-11 text-sm"
           data-testid="button-crew-changes"
         >
           <Users className="w-4 h-4 mr-2" />
           {t("profile.crewChanges")}
           <ChevronRight className="w-4 h-4 ml-auto" />
-        </TogglePillButton>
-        <TogglePillButton
+        </PngPillButton>
+        <PngPillButton
           color="red"
           onClick={() => void onLogout()}
           className="w-full h-11 text-sm"
@@ -211,7 +213,7 @@ export default function FieldProfile() {
         >
           <LogOut className="w-4 h-4 mr-2" />
           {t("nav.signOut")}
-        </TogglePillButton>
+        </PngPillButton>
       </div>
     </div>
   );

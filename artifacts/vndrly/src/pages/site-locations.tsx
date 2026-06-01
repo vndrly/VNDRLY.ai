@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import SphereBackButton from "@/components/sphere-back-button";
 import { Card, CardContent } from "@/components/ui/card";
-import { PillButton } from "@/components/pill";
+import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import StatusBadge from "@/components/status-badge";
@@ -17,7 +17,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, MapPin, ArrowUpDown, Printer, Search, Ruler, LocateFixed } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import BlueButton from "@/components/blue-button";
-import { TogglePillButton } from "@/components/toggle-pill";
+import { PngPillButton } from "@/components/png-pill-rollover";
 import BrandPillButton from "@/components/brand-pill-button";
 import { PhotoUploadField } from "@/components/photo-upload-field";
 import { SiteLocationMap } from "@/components/site-location-map";
@@ -395,18 +395,18 @@ export default function SiteLocations() {
         </div>
         <div className="flex items-center gap-2">
           {!isVendor && selectedIds.size > 0 && (
-            <TogglePillButton color="blue"
+            <PngPillButton color="blue"
               type="button"
               onClick={handlePrintSelected}
               data-testid="button-print-selected-qrs"
             >
               <Printer className="w-4 h-4" />
               {t("siteLocations.printSelectedQrs", { count: selectedIds.size })}
-            </TogglePillButton>
+            </PngPillButton>
           )}
         {!isVendor && <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <TogglePillButton color="blue" className="px-2" data-testid="button-add-site"><Plus className="w-4 h-4" />{t("siteLocations.addSite")}</TogglePillButton>
+            <PngPillButton color="blue" className="px-2" data-testid="button-add-site"><Plus className="w-4 h-4" />{t("siteLocations.addSite")}</PngPillButton>
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader><DialogTitle>{t("siteLocations.addSiteLocation")}</DialogTitle></DialogHeader>
@@ -568,9 +568,9 @@ export default function SiteLocations() {
               </div>
 
               <DialogFooter>
-                <TogglePillButton color="blue" type="submit" disabled={createSite.isPending} data-testid="button-submit-site" className="w-full">
+                <PngPillButton color="blue" type="submit" disabled={createSite.isPending} data-testid="button-submit-site" className="w-full">
                   {createSite.isPending ? t("siteLocations.creating") : t("siteLocations.createSite")}
-                </TogglePillButton>
+                </PngPillButton>
               </DialogFooter>
             </form>
           </DialogContent>
@@ -703,7 +703,7 @@ export default function SiteLocations() {
                             : t("siteLocations.radiusDefault", { meters: DEFAULT_RADIUS_METERS })}
                         </span>
                         {canEditRadius && (
-                          <TogglePillButton
+                          <PngPillButton
                             type="button"
                             color="blue"
                             className="min-w-[120px]"
@@ -712,7 +712,7 @@ export default function SiteLocations() {
                           >
                             <Ruler className="w-3.5 h-3.5" />
                             {t("siteLocations.editRadius")}
-                          </TogglePillButton>
+                          </PngPillButton>
                         )}
                       </div>
                     </TableCell>
@@ -777,7 +777,7 @@ export default function SiteLocations() {
               </p>
             </div>
             <DialogFooter>
-              <TogglePillButton
+              <PngPillButton
                 type="button"
                 color="red"
                 className="px-2"
@@ -785,8 +785,8 @@ export default function SiteLocations() {
                 data-testid="button-cancel-radius"
               >
                 {t("siteLocations.cancel", { defaultValue: "Cancel" })}
-              </TogglePillButton>
-              <TogglePillButton
+              </PngPillButton>
+              <PngPillButton
                 type="submit"
                 color="blue"
                 className="px-2"
@@ -796,7 +796,7 @@ export default function SiteLocations() {
                 {updateSite.isPending
                   ? t("siteLocations.saving")
                   : t("siteLocations.save")}
-              </TogglePillButton>
+              </PngPillButton>
             </DialogFooter>
           </form>
         </DialogContent>

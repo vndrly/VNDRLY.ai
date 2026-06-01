@@ -24,6 +24,7 @@ import { SESSION_SECRET, getSessionFromRequest } from "../lib/session";
 import { addMembership } from "../lib/membership-sync";
 import { logger } from "../lib/logger";
 import { ObjectStorageService } from "../lib/objectStorage";
+import { absoluteUploadUrl } from "../lib/uploadUrl";
 import { normalizeVendorName } from "../lib/vendor-match";
 
 import { sendValidationFailed } from "../lib/validation-error";
@@ -1401,9 +1402,11 @@ router.post("/onboarding/field/by-token/:token/upload-url", async (req: Request,
     return;
   }
   try {
-    const uploadURL = await onboardingObjectStorageService.getObjectEntityUploadURL();
-    const objectPath = onboardingObjectStorageService.normalizeObjectEntityPath(uploadURL);
-    res.json({ uploadURL, objectPath });
+    const descriptor = onboardingObjectStorageService.getUploadDescriptor();
+    res.json({
+      uploadURL: absoluteUploadUrl(req, descriptor.uploadURL),
+      objectPath: descriptor.objectPath,
+    });
   } catch (error) {
     logger.error({ err: error }, "Error generating onboarding upload URL");
     res.status(500).json({ error: "Failed to generate upload URL", code: "onboarding.generate_upload_url_failed" });

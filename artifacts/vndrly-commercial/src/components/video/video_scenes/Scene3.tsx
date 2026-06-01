@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
-import logoPng from '@assets/512_Vndrly_Logo_2_1777147855089.png';
+import { VNDRLY_LOGO_SQUARE as logoPng } from '@/lib/vndrly-brand-assets';
 
 export function Scene3() {
   const [phase, setPhase] = useState(0);

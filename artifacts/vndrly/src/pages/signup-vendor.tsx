@@ -1,4 +1,4 @@
-import { TogglePillButton } from "@/components/toggle-pill";
+import { PngPillButton } from "@/components/png-pill-rollover";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { AlertTriangle } from "lucide-react";
-import vndrlyLogo from "@assets/512_Vndrly_Logo_2_1777147855089.png";
+import { VNDRLY_LOGO_SQUARE as vndrlyLogo } from "@/lib/vndrly-brand-assets";
 import AmberButton from "@/components/amber-button";
 import GreyButton from "@/components/grey-button";
 import LanguageToggle from "@/components/language-toggle";
@@ -334,18 +334,18 @@ export default function SignupVendor() {
               </div>
               <div className="pt-2">
                 {formReady ? (
-                  <TogglePillButton color="amber"
+                  <PngPillButton color="amber"
                     type="submit"
                     disabled={saving || checkPending || blockedByDuplicate}
                     className="w-full h-11"
                     data-testid="button-submit-signup"
                   >
                     {saving ? "Creating Account..." : "Create Vendor Account"}
-                  </TogglePillButton>
+                  </PngPillButton>
                 ) : (
-                  <TogglePillButton type="submit" disabled className="w-full h-11" data-testid="button-submit-signup">
+                  <PngPillButton type="submit" disabled className="w-full h-11" data-testid="button-submit-signup">
                     Create Vendor Account
-                  </TogglePillButton>
+                  </PngPillButton>
                 )}
               </div>
             </form>

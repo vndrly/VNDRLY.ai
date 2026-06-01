@@ -68,8 +68,10 @@ function getSession(req: any): Session | null {
   } catch { return null; }
 }
 
-const VALID_KINDS = new Set(["1d", "4h", "1h", "start"]);
+const VALID_KINDS = new Set(["3d", "2d", "1d", "4h", "1h", "start"]);
 const KIND_OFFSET_MS: Record<string, number> = {
+  "3d": 3 * 24 * 60 * 60 * 1000,
+  "2d": 2 * 24 * 60 * 60 * 1000,
   "1d": 24 * 60 * 60 * 1000,
   "4h": 4 * 60 * 60 * 1000,
   "1h": 60 * 60 * 1000,
@@ -1444,6 +1446,8 @@ async function dispatchDueNotifications(): Promise<void> {
 
     for (const item of items) {
       const titleByKind: Record<string, string> = {
+        "3d": "In 3 days",
+        "2d": "In 2 days",
         "1d": "Tomorrow",
         "4h": "In ~4 hours",
         "1h": "Starting soon (1h)",

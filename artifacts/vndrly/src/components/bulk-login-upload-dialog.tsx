@@ -3,11 +3,11 @@ import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { PillButton } from "@/components/pill";
+import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Upload, Download, CheckCircle2, AlertCircle, RotateCw } from "lucide-react";
-import { TogglePillButton } from "@/components/toggle-pill";
+import { PngPillButton } from "@/components/png-pill-rollover";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { getListFieldEmployeesQueryKey } from "@workspace/api-client-react";
@@ -253,10 +253,10 @@ export default function BulkLoginUploadDialog({ visible }: Props) {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <TogglePillButton color="blue" data-testid="button-open-bulk-login-upload">
+        <PngPillButton color="blue" data-testid="button-open-bulk-login-upload">
           <Upload className="w-4 h-4" />
           {t("bulkLoginUpload.openButton", { defaultValue: "Bulk Upload Logins" })}
-        </TogglePillButton>
+        </PngPillButton>
       </DialogTrigger>
       <DialogContent className="w-[760px] max-w-[calc(100vw-2rem)]" data-testid="dialog-bulk-login-upload">
         <DialogHeader>
@@ -329,7 +329,7 @@ export default function BulkLoginUploadDialog({ visible }: Props) {
                     invalid: invalidCount,
                   })}
                 </p>
-                <TogglePillButton
+                <PngPillButton
                   color="blue"
                   type="button"
                   onClick={handleSubmit}
@@ -343,7 +343,7 @@ export default function BulkLoginUploadDialog({ visible }: Props) {
                         defaultValue: "Upload {{count}} rows",
                         count: validRows.length,
                       })}
-                </TogglePillButton>
+                </PngPillButton>
               </div>
               <div className="max-h-[320px] overflow-auto border rounded-md">
                 <Table>

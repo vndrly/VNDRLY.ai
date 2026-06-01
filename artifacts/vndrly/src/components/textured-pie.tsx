@@ -5,8 +5,8 @@ export type PieColor = "amber" | "blue" | "green" | "red" | "grey";
 
 /**
  * Solid hex fills mirror `PILL_FILL` in
- * `vertical-pill-bar-shape.tsx` / the canonical `TOGGLE_PILL_COLORS`
- * palette in `toggle-pill.tsx`. Keeping the pie on the same palette
+ * `vertical-pill-bar-shape.tsx` / the canonical `PNG_PILL_COLORS`
+ * palette in `png-pill-rollover.tsx`. Keeping the pie on the same palette
  * as the Tracking Status Breakdown bars means an `amber` slice and
  * an `amber` bar read as the same color across charts.
  */

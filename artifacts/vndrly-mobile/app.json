@@ -13,7 +13,8 @@
     },
     "updates": {
       "url": "https://u.expo.dev/2b63b072-00bc-4330-aac5-fafaaa7f7ff5",
-      "fallbackToCacheTimeout": 0
+      "fallbackToCacheTimeout": 0,
+      "checkAutomatically": "ON_ERROR_RECOVERY"
     },
     "splash": {
       "image": "./assets/images/icon.png",
@@ -58,6 +59,7 @@
       "favicon": "./assets/images/icon.png"
     },
     "plugins": [
+      "./plugins/withKotlinJvmTarget",
       [
         "expo-router",
         {

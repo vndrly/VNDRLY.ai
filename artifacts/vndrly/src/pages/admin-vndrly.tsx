@@ -25,8 +25,8 @@ import {
   type UpdatePlatformSettingsBody,
 } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PillButton } from "@/components/pill";
-import { TogglePillButton } from "@/components/toggle-pill";
+import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
+import { PngPillButton } from "@/components/png-pill-rollover";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -405,7 +405,7 @@ export default function AdminVndrly() {
                   </div>
                 </div>
               </div>
-              <TogglePillButton
+              <PngPillButton
                 color="blue"
                 type="submit"
                 disabled={updateSettings.isPending}
@@ -413,7 +413,7 @@ export default function AdminVndrly() {
                 data-testid="button-save-settings"
               >
                 {updateSettings.isPending ? "Saving..." : "Save Changes"}
-              </TogglePillButton>
+              </PngPillButton>
             </form>
           )}
         </CardContent>

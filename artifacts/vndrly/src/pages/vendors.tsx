@@ -29,7 +29,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import BlueButton from "@/components/blue-button";
 import BrandPillButton from "@/components/brand-pill-button";
-import { TogglePillButton } from "@/components/toggle-pill";
+import { PngPillButton } from "@/components/png-pill-rollover";
 import { useBrand } from "@/hooks/use-brand";
 import { useTranslation } from "react-i18next";
 
@@ -400,7 +400,7 @@ export default function Vendors() {
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <TogglePillButton color="blue" className="px-2" data-testid="button-add-vendor"><Plus className="w-4 h-4" />{t("vendors.addVendor")}</TogglePillButton>
+            <PngPillButton color="blue" className="px-2" data-testid="button-add-vendor"><Plus className="w-4 h-4" />{t("vendors.addVendor")}</PngPillButton>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader><DialogTitle>{t("vendors.addVendor")}</DialogTitle></DialogHeader>
@@ -505,7 +505,7 @@ export default function Vendors() {
               <div><Label>{t("vendors.contactPhone")}</Label><Input data-testid="input-contact-phone" value={form.contactPhone} onChange={(e) => setForm({ ...form, contactPhone: handlePhoneInput(e.target.value) })} /></div>
               <div><Label>{t("vendors.physicalAddress")}</Label><Input data-testid="input-physical-address" value={form.physicalAddress} onChange={(e) => setForm({ ...form, physicalAddress: e.target.value })} placeholder={t("vendors.addressPlaceholder")} /></div>
               <div><Label>{t("vendors.billingAddress")}</Label><Input data-testid="input-billing-address" value={form.billingAddress} onChange={(e) => setForm({ ...form, billingAddress: e.target.value })} placeholder={t("vendors.addressPlaceholder")} /></div>
-              <TogglePillButton color="blue" type="submit" disabled={submitDisabled} data-testid="button-submit-vendor" className="w-full">{createVendor.isPending ? t("vendors.creating") : t("vendors.createVendor")}</TogglePillButton>
+              <PngPillButton color="blue" type="submit" disabled={submitDisabled} data-testid="button-submit-vendor" className="w-full">{createVendor.isPending ? t("vendors.creating") : t("vendors.createVendor")}</PngPillButton>
             </form>
           </DialogContent>
         </Dialog>
@@ -526,7 +526,7 @@ export default function Vendors() {
           </SelectContent>
         </Select>
         {visibleSelectedIds.length > 0 && (
-          <TogglePillButton color="blue"
+          <PngPillButton color="blue"
             type="button"
             onClick={handleBulkEnable}
             disabled={bulkEnabling}
@@ -541,7 +541,7 @@ export default function Vendors() {
                   count: visibleSelectedIds.length,
                   defaultValue: `Enable drift alerts (${visibleSelectedIds.length})`,
                 })}
-          </TogglePillButton>
+          </PngPillButton>
         )}
       </div>
 

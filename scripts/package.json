@@ -17,7 +17,6 @@
     "tsx": "catalog:"
   },
   "dependencies": {
-    "@google-cloud/storage": "^7.19.0",
     "@types/bcryptjs": "^3.0.0",
     "@workspace/db": "workspace:*",
     "bcryptjs": "^3.0.3",

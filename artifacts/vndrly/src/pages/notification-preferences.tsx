@@ -11,7 +11,7 @@ import { notificationsApi, type NotificationPreferences } from "@/lib/notificati
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { PillButton } from "@/components/pill";
+import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Dialog,

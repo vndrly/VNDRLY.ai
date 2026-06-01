@@ -1,7 +1,7 @@
-import { TogglePillButton } from "@/components/toggle-pill";
+import { PngPillButton } from "@/components/png-pill-rollover";
 import { useState } from "react";
 import { useLocation } from "wouter";
-import vndrlyLogo from "@assets/512_Vndrly_Logo_2_1777147855089.png";
+import { VNDRLY_LOGO_SQUARE as vndrlyLogo } from "@/lib/vndrly-brand-assets";
 import AmberButton from "@/components/amber-button";
 import BlueButton from "@/components/blue-button";
 import LanguageToggle from "@/components/language-toggle";
@@ -40,7 +40,7 @@ export default function Signup() {
               <h2 className="text-lg font-bold text-gray-900 mb-1">Sign Up as a Vendor</h2>
               <p className="text-sm text-gray-500">You provide field services and assign employees to job sites.</p>
               <div className="mt-4">
-                <TogglePillButton color="amber" className="w-full h-11">Begin Vendor Onboarding</TogglePillButton>
+                <PngPillButton color="amber" className="w-full h-11">Begin Vendor Onboarding</PngPillButton>
               </div>
             </div>
 
@@ -48,7 +48,7 @@ export default function Signup() {
               <h2 className="text-lg font-bold text-gray-900 mb-1">Sign Up as a Partner</h2>
               <p className="text-sm text-gray-500">You own or manage drilling sites and oversee vendor operations.</p>
               <div className="mt-4">
-                <TogglePillButton color="blue" className="w-full h-11">Begin Partner Onboarding</TogglePillButton>
+                <PngPillButton color="blue" className="w-full h-11">Begin Partner Onboarding</PngPillButton>
               </div>
             </div>
           </div>

@@ -1,10 +1,10 @@
-import { TogglePillButton } from "@/components/toggle-pill";
+import { PngPillButton } from "@/components/png-pill-rollover";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { translateApiError } from "@/lib/api-error";
 import { MessageSquare, Image as ImageIcon, Trash2, Pencil, X, Eye, RotateCcw } from "lucide-react";
-import { PillButton } from "@/components/pill";
+import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import BlueButton from "@/components/blue-button";
 import PillBg from "@/components/pill-bg";
 import bluePill from "@assets/NewPillPallet_0001s_0017_900x229_blue_Pill.png";
@@ -485,13 +485,13 @@ export function CommentsPanel({ source, parentId, testIdPrefix = "comments" }: P
             </span>
           </button>
           <div className="ml-auto">
-            <TogglePillButton color="blue"
+            <PngPillButton color="blue"
               onClick={() => post.mutate()}
               disabled={post.isPending || (!content.trim() && attachments.length === 0)}
               data-testid={`${testIdPrefix}-submit`}
             >
               {t("comments.post")}
-            </TogglePillButton>
+            </PngPillButton>
           </div>
         </div>
       </div>

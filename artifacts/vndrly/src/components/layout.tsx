@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { PillButton } from "@/components/pill";
+import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import { useAuth } from "@/hooks/use-auth";
 import LanguageToggle from "@/components/language-toggle";
 import DarkLightToggle from "@/components/dark-light-toggle";
@@ -34,13 +34,18 @@ import StarRating from "@/components/star-rating";
 import SidebarButton from "@/components/sidebar-button";
 import ContextSwitcher from "@/components/context-switcher";
 import ReferToVndrlyDialog from "@/components/refer-to-vndrly-dialog";
-import vndrlyLogo from "@assets/512_Vndrly_Logo_2_1777147855089.png";
+import { PoweredByVndrly } from "@/components/powered-by-vndrly";
+import { VNDRLY_LOGO_SQUARE as vndrlyLogo } from "@/lib/vndrly-brand-assets";
 import NotificationsBell from "@/components/notifications-bell";
 import sidebarBg from "@assets/VNDRLY_Header_Blur_4_1776220762025.png";
-import vndrlyMark from "@assets/vndrlylogo7_1778217520404.png";
+
 import logoUnderlay from "@assets/logo-underrlay_1778217900673.png";
 import logoOverlay from "@assets/logo-overlay_1778217860263.png";
 import { useBrand, brandStyleVars } from "@/hooks/use-brand";
+import {
+  portalDisplayLogo,
+  shouldUseLayeredPortalLogo,
+} from "@/lib/portal-branding";
 
 function useNavItems(user: { role: string; vendorId: number | null; partnerId: number | null } | null) {
   const { t } = useTranslation();
@@ -159,11 +164,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   // doesn't latch and defeat the fallback. (use-brand also normalizes empty
   // strings to null, but defense-in-depth is cheap here.)
   const sidebarLogoUrl = brand.logoSquareUrl || brand.logoUrl || null;
-  const displayLogo = branded && sidebarLogoUrl ? sidebarLogoUrl : vndrlyLogo;
-  // Treat the square slot as "square" only if the partner explicitly uploaded
-  // a square logo. When falling back to logoUrl (irregular), keep the more
-  // permissive sizing so a wordmark doesn't get squashed into a 64x64 box.
-  const usingSquareLogo = branded && !!brand.logoSquareUrl;
+  const displayLogo = portalDisplayLogo(brand, vndrlyLogo);
+  const usingSquareLogo = shouldUseLayeredPortalLogo(brand);
   // Top content-pane bar: now shown globally for every context (every
   // vendor / partner / admin / VNDRLY viewer). The bar's accent uses
   // `var(--brand-primary)` (and the sidebar background flexes to the
@@ -342,8 +344,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 className="flex items-center gap-2 text-sm text-sidebar-foreground/80 leading-relaxed cursor-pointer transition-colors hover:[color:var(--brand-primary)] focus-visible:[color:var(--brand-primary)] focus:outline-none bg-transparent border-0 p-0"
                 data-testid="button-topbar-refer-to-vndrly"
               >
-                <span className="italic">…powered by</span>
-                <img src={vndrlyMark} alt="VNDRLY" className="w-6 h-6 shrink-0" />
+                <PoweredByVndrly textClassName="text-sidebar-foreground/80" />
               </button>
             }
           />

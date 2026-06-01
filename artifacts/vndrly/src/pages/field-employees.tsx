@@ -11,15 +11,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { PillButton } from "@/components/pill";
+import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import { Link } from "wouter";
 import { UserCheck, ArrowUp, ArrowDown, Plus, RotateCcw } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PhotoUploadField } from "@/components/photo-upload-field";
 import BrandPill from "@/components/brand-pill";
 import BlueButton from "@/components/blue-button";
-import BakerPillButton from "@/components/baker-pill-button";
-import { TogglePillButton } from "@/components/toggle-pill";
+import { PngPillButton, brandImagePillSrc } from "@/components/png-pill-rollover";
 import addEmployeeIdle from "@assets/download_1778508804009.png";
 import addEmployeeModalActive from "@assets/NewPillPallet_0001s_0004_Layer-5.png";
 import AccountActions, { SuspendedPill, InactivePill } from "@/components/account-actions";
@@ -480,7 +479,7 @@ export default function FieldEmployees() {
         {isVendor && (
           <Dialog open={addOpen} onOpenChange={setAddOpen}>
             <DialogTrigger asChild>
-              <TogglePillButton
+              <PngPillButton
                 color="blue"
                 data-testid="button-add-employee"
                 onClick={() => setForm((f) => ({ ...f, vendorRole: "field" }))}
@@ -488,7 +487,7 @@ export default function FieldEmployees() {
               >
                 <Plus className="w-4 h-4" />
                 {t("fieldEmployees.addEmployee")}
-              </TogglePillButton>
+              </PngPillButton>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader><DialogTitle>{t("fieldEmployees.addEmployee")}</DialogTitle></DialogHeader>
@@ -522,20 +521,26 @@ export default function FieldEmployees() {
                   <Label htmlFor="pec-cert-page" className="cursor-pointer">{t("fieldEmployees.pecCertified")}</Label>
                 </div>
                 <div><Label>{t("fieldEmployees.pecExpiration")}</Label><Input type="date" value={form.pecExpirationDate} onChange={(e) => setForm({ ...form, pecExpirationDate: e.target.value })} data-testid="input-pec-expiration" /></div>
-                <BakerPillButton
+                <PngPillButton
                   type="submit"
                   disabled={createContact.isPending}
-                  testId="button-submit-employee"
-                  idleVariant="grey"
+                  data-testid="button-submit-employee"
                   height={36}
                   idleOpacity={0.5}
-                  brandColor={brand.primary}
-                  {...(brand.name?.toLowerCase().includes("baker")
-                    ? { activeSrc: addEmployeeModalActive, idleSrc: addEmployeeIdle }
-                    : {})}
+                  color="image"
+                  activeSrc={
+                    brand.name?.toLowerCase().includes("baker")
+                      ? addEmployeeModalActive
+                      : brandImagePillSrc(brand.primary, brand.name)
+                  }
+                  idleSrc={
+                    brand.name?.toLowerCase().includes("baker")
+                      ? addEmployeeIdle
+                      : undefined
+                  }
                 >
                   {createContact.isPending ? t("fieldEmployees.adding") : t("fieldEmployees.addEmployee")}
-                </BakerPillButton>
+                </PngPillButton>
               </form>
             </DialogContent>
           </Dialog>
@@ -552,7 +557,7 @@ export default function FieldEmployees() {
             </CardTitle>
             <Dialog open={addPartnerContactOpen} onOpenChange={(open) => { setAddPartnerContactOpen(open); if (!open) setAddPartnerContactForm(emptyPartnerContactForm); }}>
               <DialogTrigger asChild>
-                <TogglePillButton color="blue" data-testid="button-add-partner-employee"><Plus className="w-4 h-4" />{t("fieldEmployees.addEmployee")}</TogglePillButton>
+                <PngPillButton color="blue" data-testid="button-add-partner-employee"><Plus className="w-4 h-4" />{t("fieldEmployees.addEmployee")}</PngPillButton>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader><DialogTitle>{t("fieldEmployees.addEmployee")}</DialogTitle></DialogHeader>
@@ -582,9 +587,9 @@ export default function FieldEmployees() {
                     <p className="text-xs text-muted-foreground mb-2">{t("fieldEmployees.partnerRolesHelp")}</p>
                     <RoleMultiSelect value={addPartnerContactForm.roles} onChange={(roles) => setAddPartnerContactForm({ ...addPartnerContactForm, roles })} testIdPrefix="add-partner-role" />
                   </div>
-                  <TogglePillButton color="blue" type="submit" disabled={createPartnerContact.isPending} className="w-full" data-testid="button-submit-add-partner-contact">
+                  <PngPillButton color="blue" type="submit" disabled={createPartnerContact.isPending} className="w-full" data-testid="button-submit-add-partner-contact">
                     {createPartnerContact.isPending ? t("fieldEmployees.adding") : t("fieldEmployees.addEmployee")}
-                  </TogglePillButton>
+                  </PngPillButton>
                 </form>
               </DialogContent>
             </Dialog>
@@ -761,9 +766,9 @@ export default function FieldEmployees() {
                 <p className="text-xs text-muted-foreground mb-2">{t("fieldEmployees.partnerRolesHelp")}</p>
                 <RoleMultiSelect value={editPartnerContactForm.roles} onChange={(roles) => setEditPartnerContactForm({ ...editPartnerContactForm, roles })} testIdPrefix="edit-partner-role" />
               </div>
-              <TogglePillButton color="blue" type="submit" disabled={updatePartnerContact.isPending} className="w-full" data-testid="button-submit-edit-partner-contact">
+              <PngPillButton color="blue" type="submit" disabled={updatePartnerContact.isPending} className="w-full" data-testid="button-submit-edit-partner-contact">
                 {updatePartnerContact.isPending ? t("fieldEmployees.saving") : t("fieldEmployees.saveChanges")}
-              </TogglePillButton>
+              </PngPillButton>
             </form>
           </DialogContent>
         </Dialog>
@@ -835,9 +840,9 @@ export default function FieldEmployees() {
                 />
               );
             })()}
-            <TogglePillButton color="blue" type="submit" disabled={updateVendorContact.isPending} attention={editOfficeDirty} className="w-full" data-testid="button-submit-edit-office">
+            <PngPillButton color="blue" type="submit" disabled={updateVendorContact.isPending} attention={editOfficeDirty} className="w-full" data-testid="button-submit-edit-office">
               {updateVendorContact.isPending ? t("fieldEmployees.saving") : t("fieldEmployees.saveChanges")}
-            </TogglePillButton>
+            </PngPillButton>
           </form>
         </DialogContent>
       </Dialog>

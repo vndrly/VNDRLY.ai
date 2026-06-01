@@ -1,10 +1,10 @@
-import { TogglePillButton } from "@/components/toggle-pill";
+import { PngPillButton } from "@/components/png-pill-rollover";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { OFF_GEOFENCE } from "@workspace/visit-error-codes";
 import { visitsApi, type SiteContext, type VisitorRow } from "@/lib/visits-api";
-import { PillButton } from "@/components/pill";
+import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import BlueButton from "@/components/blue-button";
 import PortalButton from "@/components/portal-button";
 import SidebarButton from "@/components/sidebar-button";
@@ -396,9 +396,9 @@ export default function VisitPublicPage({ siteCode }: { siteCode: string }) {
                     {busy ? t("common.submitting") : t("visitor.public.continue")}
                   </PortalButton>
                 ) : (
-                  <TogglePillButton color="blue" disabled className="w-full h-11" data-testid="button-guest-signin">
+                  <PngPillButton color="blue" disabled className="w-full h-11" data-testid="button-guest-signin">
                     {t("visitor.public.continue")}
-                  </TogglePillButton>
+                  </PngPillButton>
                 );
               })()}
             </CardContent>

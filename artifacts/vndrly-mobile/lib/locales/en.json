@@ -1255,6 +1255,9 @@
     "scan": "Scan",
     "profile": "Profile"
   },
+  "foremanHome": {
+    "portal": "Foreman Portal"
+  },
   "scanScreen": {
     "cameraDenied": "Camera access is required to scan QR codes.",
     "grantPermission": "Grant Permission",

@@ -1,4 +1,4 @@
-import { TogglePillButton } from "@/components/toggle-pill";
+import { PngPillButton } from "@/components/png-pill-rollover";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
@@ -14,7 +14,7 @@ import DarkLightToggle, { type ThemeMode } from "@/components/dark-light-toggle"
 import { visitsApi, type PublicSite } from "@/lib/visits-api";
 import { RolePill } from "@/components/role-pill";
 import { MapPin, Loader2 } from "lucide-react";
-import vndrlyLogo from "@assets/512_Vndrly_Logo_2_1777147855089.png";
+import { VNDRLY_LOGO_SQUARE as vndrlyLogo } from "@/lib/vndrly-brand-assets";
 import headerBg from "@assets/VNDRLY_Header_Blur_4_1776220762025.png";
 import backButtonImg from "@assets/Amber-back-button-logo-tuned.png";
 
@@ -219,9 +219,9 @@ export default function VisitorEntryPage() {
                 </div>
 
                 <div className="flex justify-center pt-1">
-                  <TogglePillButton color="red" onClick={() => navigate("/login")} data-testid="link-back-to-login">
+                  <PngPillButton color="red" onClick={() => navigate("/login")} data-testid="link-back-to-login">
                     {t("common.cancel")}
-                  </TogglePillButton>
+                  </PngPillButton>
                 </div>
               </div>
             ) : (
@@ -243,13 +243,13 @@ export default function VisitorEntryPage() {
                 </div>
 
                 {codeReady ? (
-                  <TogglePillButton color="amber" type="submit" className="w-full h-11" data-testid="button-visitor-continue">
+                  <PngPillButton color="amber" type="submit" className="w-full h-11" data-testid="button-visitor-continue">
                     {t("visitor.web.continue")}
-                  </TogglePillButton>
+                  </PngPillButton>
                 ) : (
-                  <TogglePillButton color="blue" type="submit" disabled className="w-full h-11" data-testid="button-visitor-continue">
+                  <PngPillButton color="blue" type="submit" disabled className="w-full h-11" data-testid="button-visitor-continue">
                     {t("visitor.web.continue")}
-                  </TogglePillButton>
+                  </PngPillButton>
                 )}
 
                 <button
@@ -262,9 +262,9 @@ export default function VisitorEntryPage() {
                 </button>
 
                 <div className="flex justify-center pt-1">
-                  <TogglePillButton color="red" onClick={() => navigate("/login")} data-testid="link-back-to-login">
+                  <PngPillButton color="red" onClick={() => navigate("/login")} data-testid="link-back-to-login">
                     {t("common.cancel")}
-                  </TogglePillButton>
+                  </PngPillButton>
                 </div>
               </form>
             )}

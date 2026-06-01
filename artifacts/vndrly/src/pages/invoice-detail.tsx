@@ -4,9 +4,9 @@ import { useTranslation } from "react-i18next";
 import { translateApiError } from "@/lib/api-error";
 import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PillButton } from "@/components/pill";
+import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import { Badge } from "@/components/ui/badge";
-import TogglePill, { TogglePillButton, type TogglePillColor } from "@/components/toggle-pill";
+import PngPill, { PngPillButton, type PngPillColor } from "@/components/png-pill-rollover";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -256,7 +256,7 @@ function statusVariant(
   }
 }
 
-function statusPillColor(status: InvoiceDetail["status"]): TogglePillColor {
+function statusPillColor(status: InvoiceDetail["status"]): PngPillColor {
   switch (status) {
     case "paid":
       return "green";
@@ -981,11 +981,11 @@ export default function InvoiceDetailPage({ id }: { id: number }) {
             <SphereBackButton size={32} />
           </Link>
           <h1 className="text-2xl font-semibold">{data.invoiceNumber}</h1>
-          <TogglePill color={statusPillColor(data.status)} data-testid="badge-status">
+          <PngPill color={statusPillColor(data.status)} data-testid="badge-status">
             {t(`invoices.status.${data.status}`)}
-          </TogglePill>
+          </PngPill>
           {showAgingBadge && data.dueDate && (
-            <TogglePill color="red" data-testid="badge-aging">
+            <PngPill color="red" data-testid="badge-aging">
               {t("invoices.agingBadge", {
                 // Calendar-day diff (UTC) so the badge label matches the
                 // server-side aging worker's day count regardless of
@@ -1009,12 +1009,12 @@ export default function InvoiceDetailPage({ id }: { id: number }) {
                   );
                 })(),
               })}
-            </TogglePill>
+            </PngPill>
           )}
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {isDraft && (
-            <TogglePillButton
+            <PngPillButton
               color="blue"
 
               onClick={() => regenerate.mutate()}
@@ -1024,16 +1024,16 @@ export default function InvoiceDetailPage({ id }: { id: number }) {
             >
               <RefreshCw className="w-4 h-4" />
               {t("invoices.regenerate")}
-            </TogglePillButton>
+            </PngPillButton>
           )}
           <a href={pdfUrl} target="_blank" rel="noreferrer" className="inline-flex" data-testid="link-download-pdf">
-            <TogglePillButton color="red" className="px-3 gap-2" data-testid="button-download-pdf">
+            <PngPillButton color="red" className="px-3 gap-2" data-testid="button-download-pdf">
               <FileDown className="w-4 h-4" />
               {t("invoices.actions.downloadPdf")}
-            </TogglePillButton>
+            </PngPillButton>
           </a>
           {sendable && (
-            <TogglePillButton
+            <PngPillButton
               color="green"
 
               onClick={() => {
@@ -1047,10 +1047,10 @@ export default function InvoiceDetailPage({ id }: { id: number }) {
               {isResend
                 ? t("invoices.actions.resend")
                 : t("invoices.actions.send")}
-            </TogglePillButton>
+            </PngPillButton>
           )}
           {canPay && !isPaid && data.status !== "draft" && (
-            <TogglePillButton
+            <PngPillButton
               color="green"
 
               onClick={() => {
@@ -1062,10 +1062,10 @@ export default function InvoiceDetailPage({ id }: { id: number }) {
             >
               <DollarSign className="w-4 h-4" />
               {t("invoices.actions.recordPayment")}
-            </TogglePillButton>
+            </PngPillButton>
           )}
           {canManageBilling && !isPaid && data.status !== "draft" && (
-            <TogglePillButton
+            <PngPillButton
               color="brand"
 
               onClick={() => setOpenCredit(true)}
@@ -1074,12 +1074,12 @@ export default function InvoiceDetailPage({ id }: { id: number }) {
             >
               <Receipt className="w-4 h-4" />
               {t("invoices.actions.creditMemo")}
-            </TogglePillButton>
+            </PngPillButton>
           )}
           {canRemind &&
             !isPaid &&
             (data.status === "sent" || data.status === "overdue") && (
-              <TogglePillButton
+              <PngPillButton
                 color="blue"
 
                 onClick={() => setOpenRemind(true)}
@@ -1088,7 +1088,7 @@ export default function InvoiceDetailPage({ id }: { id: number }) {
               >
                 <Bell className="w-4 h-4" />
                 {t("invoices.actions.remind")}
-              </TogglePillButton>
+              </PngPillButton>
             )}
         </div>
       </div>

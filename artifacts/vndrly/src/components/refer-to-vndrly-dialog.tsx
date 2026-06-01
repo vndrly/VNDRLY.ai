@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { TogglePillButton } from "@/components/toggle-pill";
+import { PngPillButton } from "@/components/png-pill-rollover";
 import { useToast } from "@/hooks/use-toast";
 import { onboardingApi } from "@/lib/onboarding-api";
 
@@ -112,7 +112,7 @@ export function ReferToVndrlyDialog({ trigger }: ReferToVndrlyDialogProps) {
             )}
           </div>
           <div className="flex justify-end pt-2">
-            <TogglePillButton
+            <PngPillButton
               color="blue"
               type="submit"
 
@@ -124,7 +124,7 @@ export function ReferToVndrlyDialog({ trigger }: ReferToVndrlyDialogProps) {
               {submitting
                 ? t("refer.sending", { defaultValue: "Sending…" })
                 : t("refer.sendInvite", { defaultValue: "Send invite" })}
-            </TogglePillButton>
+            </PngPillButton>
           </div>
         </form>
       </DialogContent>

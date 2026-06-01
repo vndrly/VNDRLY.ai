@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { PillButton } from "@/components/pill";
+import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 
 export default function PortalButton({
   children,

@@ -9,7 +9,7 @@ import { visitsApi } from "@/lib/visits-api";
 import { useRateLimitGate } from "@/hooks/use-rate-limit-gate";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import TogglePill from "@/components/toggle-pill";
+import PngPill from "@/components/png-pill-rollover";
 import { ClipboardList, Clock, MapPin } from "lucide-react";
 import SphereBackButton from "@/components/sphere-back-button";
 import { useBrand } from "@/hooks/use-brand";
@@ -122,13 +122,13 @@ export default function VisitDetailPage({ id }: { id: string }) {
               "Currently On Site" red count badge on the visitors
               list and the rest of the status palette). */}
           {data.checkOutTime ? (
-            <TogglePill color="red" data-testid="badge-visit-status">
+            <PngPill color="red" data-testid="badge-visit-status">
               {t("visitor.detail.checkedOut")}
-            </TogglePill>
+            </PngPill>
           ) : (
-            <TogglePill color="amber" data-testid="badge-visit-status">
+            <PngPill color="amber" data-testid="badge-visit-status">
               {t("visitor.detail.onSite")}
-            </TogglePill>
+            </PngPill>
           )}
           {data.autoCheckedOut && <Badge variant="outline">{t("visitor.detail.autoCheckout")}</Badge>}
         </div>

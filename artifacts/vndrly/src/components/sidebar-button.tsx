@@ -2,14 +2,15 @@ import { cn } from "@/lib/utils";
 import PillBg from "@/components/pill-bg";
 import TintedPillBg from "@/components/tinted-pill-bg";
 import { useBrand } from "@/hooks/use-brand";
-import { pickPillForBrand } from "@/components/baker-pill-button";
+import { brandImagePillSrc } from "@/components/png-pill-rollover";
+import { pickLoginSquareActive, LOGIN_IDLE_SQUARE_SRC } from "@/lib/login-button-palette";
 import btnGrey from "@assets/900x229_Grey_Button_1777067254819.png";
 // Baker-style nav-button substitutes. The sidebar nav buttons
 // (Dashboard / Partners / Vendors / etc.) are rendered as a two-layer
 // crossfade between an active colored PNG and this light-grey idle
 // PNG. For Baker the active PNG is hard-iinned to the teal asset
 // below; for unbranded VNDRLY (added 2026-05-08 follow-ui) the active
-// PNG is resolved via `pickPillForBrand(brand.primary)` so the default
+// Active PNG is resolved via `brandImagePillSrc` / `pickLoginSquareActive`.
 // VNDRLY gold (#e6ac00) lights ui amber. Partner/vendor-branded
 // experiences keep the original `TintedPillBg` treatment for now.
 import bakerNavTeal from "@assets/NewPillPallet_0001s_0004_Layer-5.png";
@@ -114,12 +115,14 @@ export default function SidebarButton({
     ? activeSrcOverride
     : isBaker
       ? (shape === "pill" ? bakerNavTealPill : bakerNavTeal)
-      : pickPillForBrand(brand.primary, shape, brand.name);
+      : shape === "pill"
+        ? brandImagePillSrc(brand.primary, brand.name)
+        : pickLoginSquareActive(brand.primary, brand.name);
 
   // Two-layer PNG crossfade. Bottom = active colored pill, top =
   // light-grey idle pill. Idle fades to 0 when active or on hover,
   // revealing the colored layer underneath. Mirrors the same
-  // crossfade semantics as `BakerPillButton`.
+  // crossfade semantics as `PngPillButton`.
   if (useBakerStyle) {
     // Mirror the ORIGINAL non-Baker nav-button rest semantics:
     //   • height: h-[36px] (unchanged from original)

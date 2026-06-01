@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { TogglePillButton } from "@/components/toggle-pill";
+import { PngPillButton } from "@/components/png-pill-rollover";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { translateApiError } from "@/lib/api-error";
@@ -69,9 +69,9 @@ export default function ChangePasswordModal() {
             <Label htmlFor="cp-confirm">{t("changePassword.confirmPassword")}</Label>
             <Input id="cp-confirm" type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required minLength={8} data-testid="input-change-password-confirm" />
           </div>
-          <TogglePillButton color="blue" type="submit" disabled={busy} className="w-full justify-center" data-testid="button-change-password-submit">
+          <PngPillButton color="blue" type="submit" disabled={busy} className="w-full justify-center" data-testid="button-change-password-submit">
             {busy ? t("changePassword.saving") : t("changePassword.submit")}
-          </TogglePillButton>
+          </PngPillButton>
         </form>
       </DialogContent>
     </Dialog>

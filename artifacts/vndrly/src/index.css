@@ -511,7 +511,7 @@
      1. CSS pills — plain <button> / <span class="rounded-full"> / shadcn
         button slots. Get a real `box-shadow` (with !important so we beat
         Tailwind v4's preflight + any utility shadows on the element).
-     2. Image pills — `TogglePill` / `TogglePillButton` / `ImagePill` /
+     2. Image pills — `PngPill` / `PngPillButton` / `ImagePill` /
         `TicketStatusBadge` etc. paint themselves with PNG <img> layers
         (`PillBg`), so a box-shadow on the wrapper produces a rectangle
         behind the transparent PNG. We use `filter: drop-shadow(...)` on
@@ -521,7 +521,7 @@
    Excludes table-header sort buttons and checkbox controls so the
    shadow doesn't muddy column header rows or bulk-select checkboxes. */
 /* CSS rectangular box-shadow only applies to actual rectangular
-   button surfaces. The image-pill family (`TogglePillButton`,
+   button surfaces. The image-pill family (`PngPillButton`,
    `PillButton`, etc.) renders a transparent-bg <button> wrapping a
    PNG silhouette — a rectangular box-shadow on that wrapper paints
    a square shadow ARTIFACT around the rounded pill. We exclude any
@@ -538,7 +538,7 @@
     0 6px 12px -2px rgb(0 0 0 / 0.12) !important;
 }
 
-/* Image-based pills: `TogglePill`, `TogglePillButton`, `ImagePill`,
+/* Image-based pills: `PngPill`, `PngPillButton`, `ImagePill`,
    and `TicketStatusBadge` all paint themselves with PNG <img> layers
    via the shared `PillBg` component, so a `box-shadow` on the wrapper
    produces a rectangle behind the transparent PNG. We use
@@ -548,7 +548,7 @@
    These wrappers don't carry semantic class hooks, but they all share
    the same Tailwind class soup: `inline-flex items-center` plus the
    tell-tale `pointer-events-none select-none` pair (used by every
-   read-only pill in the family) — see toggle-pill.tsx, image-pill.tsx,
+   read-only pill in the family) — see png-pill-rollover.tsx, image-pill.tsx,
    ticket-status-badge.tsx. We key off that combo to scope the shadow
    without touching the components themselves. */
 .pointer-events-none.select-none.inline-flex,
@@ -556,7 +556,7 @@ main :is(button, a, span).relative.inline-flex.items-center.select-none {
   filter: drop-shadow(0 0.9px 0.9px rgb(0 0 0 / 0.198))
     drop-shadow(0 1.8px 3.6px rgb(0 0 0 / 0.162));
 }
-/* `TogglePillButton` is rendered inside an interactive <button>, so the
+/* `PngPillButton` is rendered inside an interactive <button>, so the
    wrapper above has `pointer-events-none` set on the inner shell.
    When the host <button> is hovered, push the drop-shadow a little
    stronger so the affordance reads. */

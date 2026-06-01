@@ -5,7 +5,7 @@ import { translateApiError } from "@/lib/api-error";
 import { Link } from "wouter";
 import SphereBackButton from "@/components/sphere-back-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PillButton } from "@/components/pill";
+import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";

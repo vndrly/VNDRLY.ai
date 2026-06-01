@@ -36,11 +36,11 @@ import { MapPin, Plus, ArrowRight, Navigation, CheckCircle2, Clock, AlertTriangl
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import SphereBackButton from "@/components/sphere-back-button";
-import vndrlyLogo from "@assets/512_Vndrly_Logo_2_1777147855089.png";
+import { VNDRLY_LOGO_SQUARE as vndrlyLogo } from "@/lib/vndrly-brand-assets";
 import sidebarBg from "@assets/VNDRLY_Header_Blur_4_1776220762025.png";
 import GreyButton from "@/components/grey-button";
 import PortalButton from "@/components/portal-button";
-import { TogglePillButton } from "@/components/toggle-pill";
+import { PngPillButton } from "@/components/png-pill-rollover";
 import AfePill from "@/components/afe-pill";
 import {
   DEFAULT_BRAND_PRIMARY,
@@ -109,7 +109,7 @@ export default function Portal({ siteCode }: { siteCode: string }) {
   const [selectedVendorId, setSelectedVendorId] = useState<string>("");
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>("");
   // Pill-family login selectors: wire up open state + click-outside
-  // for the vendor/employee TogglePillButton dropdowns so they read
+  // for the vendor/employee PngPillButton dropdowns so they read
   // as part of the same toolbar system as Tracking/Field Employees.
   const [vendorMenuOpen, setVendorMenuOpen] = useState(false);
   const [employeeMenuOpen, setEmployeeMenuOpen] = useState(false);
@@ -439,7 +439,7 @@ export default function Portal({ siteCode }: { siteCode: string }) {
                 <div className="space-y-2">
                   <Label className="text-gray-700">Select Your Company</Label>
                   <div className="relative" ref={vendorMenuRef}>
-                    <TogglePillButton
+                    <PngPillButton
                       color="blue"
                      
                       onClick={() => setVendorMenuOpen((v) => !v)}
@@ -450,11 +450,11 @@ export default function Portal({ siteCode }: { siteCode: string }) {
                         {uniqueVendors.find((v) => String(v.id) === selectedVendorId)?.name ?? "Choose your company"}
                       </span>
                       <ChevronDown className="w-4 h-4" />
-                    </TogglePillButton>
+                    </PngPillButton>
                     {vendorMenuOpen && (
                       <div className="absolute left-0 right-0 top-[48px] z-50 bg-white border rounded-lg shadow-lg p-2 max-h-60 overflow-y-auto flex flex-col gap-1.5">
                         {uniqueVendors.map((v) => (
-                          <TogglePillButton
+                          <PngPillButton
                             key={v.id}
                             color="blue"
                             attention={String(v.id) === selectedVendorId}
@@ -468,7 +468,7 @@ export default function Portal({ siteCode }: { siteCode: string }) {
                             data-testid={`portal-vendor-option-${v.id}`}
                           >
                             <span className="truncate">{v.name}</span>
-                          </TogglePillButton>
+                          </PngPillButton>
                         ))}
                       </div>
                     )}
@@ -478,7 +478,7 @@ export default function Portal({ siteCode }: { siteCode: string }) {
                   <div className="space-y-2">
                     <Label className="text-gray-700">Select Your Name</Label>
                     <div className="relative" ref={employeeMenuRef}>
-                      <TogglePillButton
+                      <PngPillButton
                         color="blue"
                        
                         onClick={() => setEmployeeMenuOpen((v) => !v)}
@@ -492,7 +492,7 @@ export default function Portal({ siteCode }: { siteCode: string }) {
                           })()}
                         </span>
                         <ChevronDown className="w-4 h-4" />
-                      </TogglePillButton>
+                      </PngPillButton>
                       {employeeMenuOpen && (
                         <div className="absolute left-0 right-0 top-[48px] z-50 bg-white border rounded-lg shadow-lg p-2 max-h-60 overflow-y-auto flex flex-col gap-1.5">
                           {vendorFieldEmployees.length === 0 ? (
@@ -504,7 +504,7 @@ export default function Portal({ siteCode }: { siteCode: string }) {
                             </div>
                           ) : (
                             vendorFieldEmployees.map((fe) => (
-                              <TogglePillButton
+                              <PngPillButton
                                 key={fe.id}
                                 color="blue"
                                 attention={String(fe.id) === selectedEmployeeId}
@@ -517,7 +517,7 @@ export default function Portal({ siteCode }: { siteCode: string }) {
                                 data-testid={`portal-employee-option-${fe.id}`}
                               >
                                 <span className="truncate">{fe.firstName} {fe.lastName}</span>
-                              </TogglePillButton>
+                              </PngPillButton>
                             ))
                           )}
                         </div>
@@ -717,9 +717,9 @@ export default function Portal({ siteCode }: { siteCode: string }) {
                             </p>
                           </div>
                           <div className="flex gap-3 justify-end mt-2">
-                            <TogglePillButton onClick={() => setCheckoutConfirmOpen(false)} data-testid="button-checkout-cancel">
+                            <PngPillButton onClick={() => setCheckoutConfirmOpen(false)} data-testid="button-checkout-cancel">
                               No, Go Back
-                            </TogglePillButton>
+                            </PngPillButton>
                             <PortalButton
                               onClick={() => { setCheckoutConfirmOpen(false); handleCheckOut(ticketDetail.id); }}
                               disabled={checkOutTicket.isPending}
@@ -778,9 +778,9 @@ export default function Portal({ siteCode }: { siteCode: string }) {
                       <FileText className="w-4 h-4 mr-2" />{createNoteLog.isPending ? "Logging..." : "Log Note"}
                     </PortalButton>
                   ) : (
-                    <TogglePillButton disabled className="w-full h-10" data-testid="button-log-note">
+                    <PngPillButton disabled className="w-full h-10" data-testid="button-log-note">
                       <FileText className="w-4 h-4 mr-2" />Log Note
-                    </TogglePillButton>
+                    </PngPillButton>
                   )}
                 </div>
                 {ticketNoteLogs && ticketNoteLogs.length > 0 && (
@@ -844,14 +844,14 @@ export default function Portal({ siteCode }: { siteCode: string }) {
                       <CheckCircle2 className="w-4 h-4 mr-2" />{createTicket.isPending ? "Checking In..." : "Check In & Create Ticket"}
                     </PortalButton>
                   ) : (
-                    <TogglePillButton type="submit" disabled className="w-full h-11" data-testid="button-checkin-new">
+                    <PngPillButton type="submit" disabled className="w-full h-11" data-testid="button-checkin-new">
                       <CheckCircle2 className="w-4 h-4 mr-2" />Check In & Create Ticket
-                    </TogglePillButton>
+                    </PngPillButton>
                   )}
                 </div>
-                <TogglePillButton type="button" className="w-full h-11" onClick={() => setView("main")} data-testid="button-cancel-new">
+                <PngPillButton type="button" className="w-full h-11" onClick={() => setView("main")} data-testid="button-cancel-new">
                   Back
-                </TogglePillButton>
+                </PngPillButton>
               </form>
             </div>
           </div>
@@ -864,7 +864,7 @@ export default function Portal({ siteCode }: { siteCode: string }) {
                   <Plus className="w-5 h-5 mr-2" />Initiate New Ticket
                 </PortalButton>
                 {openTickets && openTickets.length > 0 ? (
-                  <TogglePillButton
+                  <PngPillButton
                     onClick={() => {
                       const el = document.getElementById("open-tickets-section");
                       if (el) el.scrollIntoView({ behavior: "smooth" });
@@ -873,11 +873,11 @@ export default function Portal({ siteCode }: { siteCode: string }) {
                     data-testid="button-continue-ticket"
                   >
                     <ChevronDown className="w-5 h-5 mr-2" />Continue Existing Ticket ({openTickets.length})
-                  </TogglePillButton>
+                  </PngPillButton>
                 ) : (
-                  <TogglePillButton disabled className="w-full h-14" data-testid="button-continue-ticket">
+                  <PngPillButton disabled className="w-full h-14" data-testid="button-continue-ticket">
                     <ChevronDown className="w-5 h-5 mr-2" />Continue Existing Ticket
-                  </TogglePillButton>
+                  </PngPillButton>
                 )}
               </div>
             </div>

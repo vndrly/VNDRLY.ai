@@ -1,4 +1,4 @@
-import { TogglePillButton } from "@/components/toggle-pill";
+import { PngPillButton } from "@/components/png-pill-rollover";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -10,7 +10,7 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
 } from "@/components/ui/alert-dialog";
-import { PillButton } from "@/components/pill";
+import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
@@ -73,7 +73,9 @@ type ScheduleSnapshot = {
 
 type FE = { id: number; vendorId: number; firstName: string; lastName: string; userId?: number | null; isActive?: boolean };
 
-const KIND_OPTIONS: Array<{ kind: "1d" | "4h" | "1h" | "start"; labelKey: string }> = [
+const KIND_OPTIONS: Array<{ kind: "3d" | "2d" | "1d" | "4h" | "1h" | "start"; labelKey: string }> = [
+  { kind: "3d", labelKey: "scheduleTicket.warning3d" },
+  { kind: "2d", labelKey: "scheduleTicket.warning2d" },
   { kind: "1d", labelKey: "scheduleTicket.warning1d" },
   { kind: "4h", labelKey: "scheduleTicket.warning4h" },
   { kind: "1h", labelKey: "scheduleTicket.warning1h" },
@@ -129,11 +131,13 @@ export default function ScheduleTicketDialog({
   onOpenChange,
   ticketId,
   vendorId,
+  foremanMode = false,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   ticketId: number;
   vendorId: number;
+  foremanMode?: boolean;
 }) {
   const { t } = useTranslation();
   const { toast } = useToast();
@@ -189,6 +193,26 @@ export default function ScheduleTicketDialog({
   // admin-only override button. Cleared on every Save attempt and
   // whenever the dialog closes.
   const [certBlock, setCertBlock] = useState<CertBlock | null>(null);
+  const [crewPresets, setCrewPresets] = useState<Array<{ id: number; name: string; memberEmployeeIds: number[] }>>([]);
+
+  useEffect(() => {
+    if (!open || !foremanMode) {
+      setCrewPresets([]);
+      return;
+    }
+    let cancelled = false;
+    fetch(`${import.meta.env.BASE_URL.replace(/\/$/, "")}/api/field/crew-presets`, { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((rows) => {
+        if (!cancelled) setCrewPresets(Array.isArray(rows) ? rows : []);
+      })
+      .catch(() => {
+        if (!cancelled) setCrewPresets([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, foremanMode]);
 
   // Load existing schedule on open + ticket details (workType + site for cert + weather lookups).
   useEffect(() => {
@@ -718,6 +742,25 @@ export default function ScheduleTicketDialog({
                 <Users className="w-4 h-4 text-amber-500" />
                 <label className="text-xs text-muted-foreground">{t("scheduleTicket.crewLabel")}</label>
               </div>
+              {foremanMode && crewPresets.length > 0 ? (
+                <Select
+                  onValueChange={(presetId) => {
+                    const preset = crewPresets.find((p) => String(p.id) === presetId);
+                    if (preset) setCrewIds(preset.memberEmployeeIds);
+                  }}
+                >
+                  <SelectTrigger className="mb-2 h-9" data-testid="select-crew-preset">
+                    <SelectValue placeholder={t("scheduleTicket.applyCrewPresetPlaceholder")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {crewPresets.map((p) => (
+                      <SelectItem key={p.id} value={String(p.id)}>
+                        {p.name} ({p.memberEmployeeIds.length})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : null}
               <div className="border rounded-md max-h-44 overflow-y-auto p-2 space-y-1">
                 {employees.length === 0 ? (
                   <div className="text-xs text-muted-foreground py-2 text-center">{t("scheduleTicket.noEmployees")}</div>
@@ -886,17 +929,17 @@ export default function ScheduleTicketDialog({
             )}
 
             <div className="flex justify-end gap-2 pt-2">
-              <TogglePillButton onClick={() => onOpenChange(false)} disabled={submitting} data-testid="button-cancel-schedule">
+              <PngPillButton onClick={() => onOpenChange(false)} disabled={submitting} data-testid="button-cancel-schedule">
                 {t("scheduleTicket.cancel")}
-              </TogglePillButton>
+              </PngPillButton>
               {certBlock && certBlock.canOverride && certBlock.blockingMissing.length > 0 && (
-                <TogglePillButton
+                <PngPillButton
                   onClick={handleOverrideAndSave}
                   disabled={submitting}
                   data-testid="button-override-schedule"
                 >
                   {submitting ? t("scheduleTicket.saving") : t("scheduleTicket.overrideAndSave")}
-                </TogglePillButton>
+                </PngPillButton>
               )}
               <GreenButton onClick={handleSave} disabled={submitting} data-testid="button-save-schedule">
                 {submitting ? t("scheduleTicket.saving") : t("scheduleTicket.save")}
@@ -985,12 +1028,12 @@ export default function ScheduleTicketDialog({
           </div>
 
           <AlertDialogFooter>
-            <TogglePillButton
+            <PngPillButton
               onClick={() => setPendingConflicts(null)}
               data-testid="button-conflict-cancel"
             >
               {t("scheduleTicket.conflictCancel")}
-            </TogglePillButton>
+            </PngPillButton>
             <PillButton
               color="red"
               onClick={() => { void confirmOverride(); }}

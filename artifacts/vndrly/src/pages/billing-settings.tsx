@@ -35,7 +35,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TogglePillButton } from "@/components/toggle-pill";
+import { PngPillButton } from "@/components/png-pill-rollover";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
@@ -518,7 +518,7 @@ export default function BillingSettingsPage({
       </Card>
 
       <div className="flex justify-end">
-        <TogglePillButton
+        <PngPillButton
           color="blue"
           onClick={() => save.mutate()}
           disabled={!canEdit || !dirty || save.isPending}
@@ -529,7 +529,7 @@ export default function BillingSettingsPage({
           {save.isPending
             ? t("invoices.billingSettings.saving")
             : t("invoices.billingSettings.save")}
-        </TogglePillButton>
+        </PngPillButton>
       </div>
     </div>
   );

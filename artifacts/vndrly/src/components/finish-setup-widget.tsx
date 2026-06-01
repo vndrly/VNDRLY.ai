@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PillButton } from "@/components/pill";
+import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import { CheckCircle2, Circle } from "lucide-react";
 import { onboardingApi, type OnboardingProgressRow } from "@/lib/onboarding-api";
 import { useTranslation } from "react-i18next";

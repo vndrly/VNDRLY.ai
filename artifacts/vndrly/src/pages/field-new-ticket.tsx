@@ -1,4 +1,4 @@
-import { TogglePillButton } from "@/components/toggle-pill";
+import { PngPillButton } from "@/components/png-pill-rollover";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
@@ -10,11 +10,13 @@ import AmberButton from "@/components/amber-button";
 import GreyButton from "@/components/grey-button";
 import SphereBackButton from "@/components/sphere-back-button";
 import { useListFieldSites, useListFieldSiteWorkTypes, useCreateFieldTicket, getListFieldSiteWorkTypesQueryKey } from "@workspace/api-client-react";
+import { usePortalBase } from "@/lib/portal-base";
 
 interface Gps { latitude: number; longitude: number; }
 
 export default function FieldNewTicket() {
   const [, navigate] = useLocation();
+  const portalBase = usePortalBase();
   const { toast } = useToast();
   const { t } = useTranslation();
   const [siteId, setSiteId] = useState<number | null>(null);
@@ -92,7 +94,7 @@ export default function FieldNewTicket() {
       <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-2 max-w-md mx-auto w-full">
         <button
           type="button"
-          onClick={() => navigate("/field")}
+          onClick={() => navigate(portalBase)}
           className="group w-9 h-9 rounded-md flex items-center justify-center"
           data-testid="button-back"
           aria-label={t("fieldNewTicket.back")}
@@ -193,17 +195,17 @@ export default function FieldNewTicket() {
 
       <div className="mt-auto px-4 pb-6 pt-3 bg-white border-t border-gray-200 max-w-md mx-auto w-full">
         {ready && !submitting ? (
-          <TogglePillButton color="amber"
+          <PngPillButton color="amber"
             onClick={handleSubmit}
             data-testid="button-check-in"
             className="w-full"
           >
             {t("fieldNewTicket.checkInStart")}
-          </TogglePillButton>
+          </PngPillButton>
         ) : (
-          <TogglePillButton disabled data-testid="button-check-in" className="w-full">
+          <PngPillButton disabled data-testid="button-check-in" className="w-full">
             {submitting ? t("fieldNewTicket.creating") : t("fieldNewTicket.checkInStart")}
-          </TogglePillButton>
+          </PngPillButton>
         )}
         <p className="text-[10px] text-gray-400 text-center mt-2">
           {t("fieldNewTicket.stamped")}

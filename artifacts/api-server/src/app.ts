@@ -6,31 +6,21 @@ import { eq } from "drizzle-orm";
 import { db, usersTable } from "@workspace/db";
 import router from "./routes";
 import { logger } from "./lib/logger";
-import { decodeRole, decodeSession } from "./lib/session";
+import {
+  GUEST_ALLOWLIST,
+  PUBLIC_UNAUTHENTICATED_ALLOWLIST,
+} from "./lib/publicApiAllowlist";
+import {
+  decodeRole,
+  decodeSession,
+  getSessionFromRequest,
+  isAllowlistedApiRoute,
+} from "./lib/session";
 import { requireTenant } from "./lib/requireTenant";
 import helmet from "helmet";
 
 
 const app: Express = express();
-
-const GUEST_ALLOWLIST: { method: string; pattern: RegExp }[] = [
-  { method: "POST", pattern: /^\/api\/auth\/guest\/?$/ },
-  { method: "GET", pattern: /^\/api\/auth\/guest\/me\/?$/ },
-  { method: "POST", pattern: /^\/api\/auth\/guest\/logout\/?$/ },
-  { method: "POST", pattern: /^\/api\/auth\/logout\/?$/ },
-  // Allow staff auth endpoints so a stale visitor guest cookie doesn't
-  // block a user from signing in to the vendor / staff portal.
-  { method: "POST", pattern: /^\/api\/auth\/login\/?$/ },
-  { method: "GET", pattern: /^\/api\/auth\/me\/?$/ },
-  { method: "POST", pattern: /^\/api\/auth\/forgot-password\/?$/ },
-  { method: "GET", pattern: /^\/api\/auth\/reset-password\/validate\/?$/ },
-  { method: "POST", pattern: /^\/api\/auth\/reset-password\/?$/ },
-  { method: "GET", pattern: /^\/api\/visits\/site-context\/[^/]+\/?$/ },
-  { method: "GET", pattern: /^\/api\/visits\/public-sites\/?$/ },
-  { method: "POST", pattern: /^\/api\/visits\/check-in\/?$/ },
-  { method: "POST", pattern: /^\/api\/visits\/\d+\/check-out\/?$/ },
-  { method: "GET", pattern: /^\/api\/visits\/me\/active\/?$/ },
-];
 
 // Paths that must bypass the session-version guard. Only include routes
 // that run before a valid session exists (login, anonymous health check).
@@ -40,8 +30,7 @@ const GUEST_ALLOWLIST: { method: string; pattern: RegExp }[] = [
 // equivalent to a successful logout from the client's perspective, and
 // also prevents stolen tokens from being used to repeatedly increment
 // sessionVersion (DoS via forced global logout).
-const SESSION_VERSION_SKIP: { method: string; pattern: RegExp }[] = [
-  { method: "POST", pattern: /^\/api\/auth\/login\/?$/ },
+const SESSION_VERSION_SKIP: { method: string; pattern: RegExp }[] = [  { method: "POST", pattern: /^\/api\/auth\/login\/?$/ },
   { method: "GET", pattern: /^\/api\/health\/?$/ },
   { method: "GET", pattern: /^\/api\/healthz\/?$/ },
 ];
@@ -129,6 +118,23 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   return res.status(403).json({ message: "Forbidden for guest session" });
 });
 
+// Deny-by-default for unauthenticated staff sessions. Guest-only traffic
+// is handled by the guest gate above; authenticated callers pass through
+// and route handlers enforce their own role checks.
+app.use((req: Request, res: Response, next: NextFunction) => {
+  if (!req.path.startsWith("/api/")) return next();
+  if (getSessionFromRequest(req)) return next();
+
+  const cookies = (req as any).cookies ?? {};
+  if (decodeRole(cookies["vndrly_guest"])) return next();
+
+  if (isAllowlistedApiRoute(req, PUBLIC_UNAUTHENTICATED_ALLOWLIST)) return next();
+  return res.status(401).json({
+    error: "Authentication required",
+    code: "auth.unauthenticated",
+  });
+});
+
 // Staff session version guard: on every authenticated staff request,
 // validate that the token's embedded session version (sv) matches the
 // current value stored in the database. This makes explicit logout and
@@ -203,8 +209,6 @@ app.use(async (req: Request, res: Response, next: NextFunction) => {
 });
 
 const { enforceTenant } = require("./lib/tenantGuard");
-
-const { getSessionFromRequest } = require("./lib/session");
 
 // Per-route handlers enforce auth; this layer only applies tenant response
 // filtering when a session is present.

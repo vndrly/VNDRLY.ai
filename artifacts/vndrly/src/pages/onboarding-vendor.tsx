@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
-import vndrlyLogo from "@assets/512_Vndrly_Logo_2_1777147855089.png";
+import { VNDRLY_LOGO_SQUARE as vndrlyLogo } from "@/lib/vndrly-brand-assets";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { PillButton } from "@/components/pill";
+import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import { Checkbox } from "@/components/ui/checkbox";
 import OnboardingPillButton from "@/components/onboarding-pill-button";
 import { useToast } from "@/hooks/use-toast";

@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { Plus, Minus } from "lucide-react";
 import L from "leaflet";
 import { useMap } from "react-leaflet";
-import { TOGGLE_PILL_GLOSS_GRADIENT } from "@/components/toggle-pill";
+import { PNG_PILL_GLOSS_GRADIENT } from "@/components/png-pill-rollover";
 
 type Props = {
   onZoomIn: () => void;
@@ -19,7 +19,7 @@ export function BrandZoomControl({ onZoomIn, onZoomOut }: Props) {
   }, []);
   const halfStyle = {
     backgroundColor: "var(--brand-primary)",
-    backgroundImage: TOGGLE_PILL_GLOSS_GRADIENT,
+    backgroundImage: PNG_PILL_GLOSS_GRADIENT,
   } as const;
   const halfClass =
     "w-6 h-6 inline-flex items-center justify-center text-white transition-opacity hover:opacity-90 active:opacity-80 cursor-pointer select-none";

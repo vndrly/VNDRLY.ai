@@ -1,11 +1,11 @@
-import { TogglePillButton } from "@/components/toggle-pill";
+import { PngPillButton } from "@/components/png-pill-rollover";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import vndrlyLogo from "@assets/512_Vndrly_Logo_2_1777147855089.png";
+import { VNDRLY_LOGO_SQUARE as vndrlyLogo } from "@/lib/vndrly-brand-assets";
 import headerBg from "@assets/VNDRLY_Header_Blur_4_1776220762025.png";
 import AmberButton from "@/components/amber-button";
 import GreyButton from "@/components/grey-button";
@@ -120,9 +120,9 @@ export default function ResetPassword() {
                 This reset link is no longer valid. Please request a new one.
               </p>
               <div className="pt-5">
-                <TogglePillButton color="amber" type="button" className="w-full h-11" onClick={() => navigate("/forgot-password")} data-testid="button-request-new">
+                <PngPillButton color="amber" type="button" className="w-full h-11" onClick={() => navigate("/forgot-password")} data-testid="button-request-new">
                   Request a New Link
-                </TogglePillButton>
+                </PngPillButton>
               </div>
             </div>
           ) : done ? (
@@ -132,9 +132,9 @@ export default function ResetPassword() {
                 Your password was updated successfully. You can now sign in with your new password.
               </p>
               <div className="pt-5">
-                <TogglePillButton color="amber" type="button" className="w-full h-11" onClick={() => navigate("/login")} data-testid="button-go-to-login">
+                <PngPillButton color="amber" type="button" className="w-full h-11" onClick={() => navigate("/login")} data-testid="button-go-to-login">
                   Go to Sign In
-                </TogglePillButton>
+                </PngPillButton>
               </div>
             </div>
           ) : (
@@ -171,13 +171,13 @@ export default function ResetPassword() {
                 </div>
                 <div className="pt-2">
                   {formReady ? (
-                    <TogglePillButton color="amber" type="submit" disabled={isSubmitting} className="w-full h-11" data-testid="button-set-password">
+                    <PngPillButton color="amber" type="submit" disabled={isSubmitting} className="w-full h-11" data-testid="button-set-password">
                       {isSubmitting ? "Updating..." : "Set New Password"}
-                    </TogglePillButton>
+                    </PngPillButton>
                   ) : (
-                    <TogglePillButton type="submit" disabled className="w-full h-11" data-testid="button-set-password">
+                    <PngPillButton type="submit" disabled className="w-full h-11" data-testid="button-set-password">
                       Set New Password
-                    </TogglePillButton>
+                    </PngPillButton>
                   )}
                 </div>
               </form>

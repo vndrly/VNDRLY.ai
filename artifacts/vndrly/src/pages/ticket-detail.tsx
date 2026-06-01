@@ -1,4 +1,4 @@
-import { TogglePillButton } from "@/components/toggle-pill";
+import { PngPillButton } from "@/components/png-pill-rollover";
 import type { TicketTransition } from "@workspace/api-client-react";
 import {
   useGetTicket,
@@ -52,7 +52,7 @@ import { forwardRef, useState, useEffect, useMemo, useRef, useCallback, type But
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PillButton } from "@/components/pill";
+import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -69,7 +69,7 @@ import {
 } from "@/hooks/use-eligible-vendor-field-employees";
 import SphereBackButton from "@/components/sphere-back-button";
 import headerBg from "@assets/VNDRLY_Header_Blur_4_1776220762025.png";
-import vndrlyLogo from "@assets/512_Vndrly_Logo_2_1777147855089.png";
+import { VNDRLY_LOGO_SQUARE as vndrlyLogo } from "@/lib/vndrly-brand-assets";
 import GreenButton from "@/components/green-button";
 import GreenSquareButton from "@/components/green-square-button";
 import RedButton from "@/components/red-button";
@@ -1428,10 +1428,10 @@ export default function TicketDetail({ id }: { id: number }) {
         </div>
         <div className="ml-auto flex items-center gap-3">
           {canEdit && (user?.role === "admin" || user?.role === "vendor" || user?.role === "field_employee") && (
-            <TogglePillButton color="blue" onClick={() => setScheduleOpen(true)} data-testid="button-schedule-ticket">
+            <PngPillButton color="blue" onClick={() => setScheduleOpen(true)} data-testid="button-schedule-ticket">
               <CalendarClock className="w-4 h-4" />
               {t("scheduleTicket.button")}
-            </TogglePillButton>
+            </PngPillButton>
           )}
         </div>
       </div>
@@ -1509,7 +1509,7 @@ export default function TicketDetail({ id }: { id: number }) {
               </div>
             </div>
             <div className="flex gap-2 shrink-0">
-              <TogglePillButton color="red"
+              <PngPillButton color="red"
                 onClick={() => {
                   // Self-contained confirm so the banner's cancel works
                   // for any role that can hit it — the existing cancel
@@ -1530,7 +1530,7 @@ export default function TicketDetail({ id }: { id: number }) {
                 {cancelTicket.isPending
                   ? t("ticketDetail.cancelling")
                   : t("ticketDetail.assignmentRemovedCancel")}
-              </TogglePillButton>
+              </PngPillButton>
             </div>
           </CardContent>
         </Card>
@@ -1558,7 +1558,7 @@ export default function TicketDetail({ id }: { id: number }) {
             <div className="flex gap-2 shrink-0">
               <Dialog open={denyOpen} onOpenChange={setDenyOpen}>
                 <DialogTrigger asChild>
-                  <TogglePillButton color="red" data-testid="button-deny-invite">{t("ticketDetail.denyInvite")}</TogglePillButton>
+                  <PngPillButton color="red" data-testid="button-deny-invite">{t("ticketDetail.denyInvite")}</PngPillButton>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader><DialogTitle>{t("ticketDetail.denyInviteTitle")}</DialogTitle></DialogHeader>
@@ -1570,14 +1570,14 @@ export default function TicketDetail({ id }: { id: number }) {
                       maxLength={500}
                       data-testid="input-deny-reason"
                     />
-                    <TogglePillButton color="red"
+                    <PngPillButton color="red"
                       onClick={handleDeny}
                       disabled={denyTicket.isPending || !denyReason.trim()}
                       className="w-full"
                       data-testid="button-submit-deny"
                     >
                       {denyTicket.isPending ? t("ticketDetail.sending") : t("ticketDetail.denyInvite")}
-                    </TogglePillButton>
+                    </PngPillButton>
                   </div>
                 </DialogContent>
               </Dialog>
@@ -1624,9 +1624,9 @@ export default function TicketDetail({ id }: { id: number }) {
                 )}
               </div>
             </div>
-            <TogglePillButton color="amber" onClick={() => setFindVendorOpen(true)} data-testid="button-find-vendor">
+            <PngPillButton color="amber" onClick={() => setFindVendorOpen(true)} data-testid="button-find-vendor">
               {t("ticketDetail.findAnotherVendor")}
-            </TogglePillButton>
+            </PngPillButton>
           </CardContent>
         </Card>
       )}
@@ -2186,10 +2186,10 @@ export default function TicketDetail({ id }: { id: number }) {
                   }}
                 >
                   <DialogTrigger asChild>
-                    <TogglePillButton color="red" data-testid="button-reverse-funds-trigger">
+                    <PngPillButton color="red" data-testid="button-reverse-funds-trigger">
                       <RotateCcw className="w-4 h-4" />
                       {t("ticketDetail.reverseFunds")}
-                    </TogglePillButton>
+                    </PngPillButton>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
@@ -2218,13 +2218,13 @@ export default function TicketDetail({ id }: { id: number }) {
                         )}
                       </div>
                       <div className="flex justify-end gap-2">
-                        <TogglePillButton
+                        <PngPillButton
                           onClick={() => setReverseFundsOpen(false)}
                           data-testid="button-cancel-reverse-funds"
                         >
                           <X className="w-4 h-4" />{t("ticketDetail.cancel")}
-                        </TogglePillButton>
-                        <TogglePillButton color="red"
+                        </PngPillButton>
+                        <PngPillButton color="red"
                           onClick={handleReverseFundsDispersal}
                           disabled={reverseFundsDispersal.isPending || !reverseFundsReason.trim()}
                           data-testid="button-confirm-reverse-funds"
@@ -2233,7 +2233,7 @@ export default function TicketDetail({ id }: { id: number }) {
                           {reverseFundsDispersal.isPending
                             ? t("ticketDetail.reverseFundsSubmitting")
                             : t("ticketDetail.reverseFundsConfirm")}
-                        </TogglePillButton>
+                        </PngPillButton>
                       </div>
                     </div>
                   </DialogContent>
@@ -2261,13 +2261,13 @@ export default function TicketDetail({ id }: { id: number }) {
                   }}
                 >
                   <DialogTrigger asChild>
-                    <TogglePillButton
+                    <PngPillButton
                       color="red"
                       data-testid="link-reverse-dispersal"
                     >
                       <RotateCcw className="w-4 h-4" />
                       {t("ticketDetail.reverseDispersal")}
-                    </TogglePillButton>
+                    </PngPillButton>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
@@ -2296,13 +2296,13 @@ export default function TicketDetail({ id }: { id: number }) {
                         )}
                       </div>
                       <div className="flex justify-end gap-2">
-                        <TogglePillButton
+                        <PngPillButton
                           onClick={() => setReverseDispersalOpen(false)}
                           data-testid="button-cancel-reverse-dispersal"
                         >
                           <X className="w-4 h-4" />{t("ticketDetail.cancel")}
-                        </TogglePillButton>
-                        <TogglePillButton color="red"
+                        </PngPillButton>
+                        <PngPillButton color="red"
                           onClick={handleReverseDispersal}
                           disabled={reverseDispersal.isPending || !reverseDispersalReason.trim()}
                           data-testid="button-confirm-reverse-dispersal"
@@ -2311,7 +2311,7 @@ export default function TicketDetail({ id }: { id: number }) {
                           {reverseDispersal.isPending
                             ? t("ticketDetail.reverseDispersalSubmitting")
                             : t("ticketDetail.reverseDispersalConfirm")}
-                        </TogglePillButton>
+                        </PngPillButton>
                       </div>
                     </div>
                   </DialogContent>
@@ -2764,13 +2764,13 @@ export default function TicketDetail({ id }: { id: number }) {
               </div>
               <div className="flex justify-end">
                 {lineItemDesc.trim() && lineItemQty && lineItemPrice ? (
-                  <TogglePillButton color="amber" onClick={handleAddLineItem} disabled={createLineItem.isPending}>
+                  <PngPillButton color="amber" onClick={handleAddLineItem} disabled={createLineItem.isPending}>
                     <Plus className="w-4 h-4" />{createLineItem.isPending ? t("ticketDetail.adding") : t("ticketDetail.add")}
-                  </TogglePillButton>
+                  </PngPillButton>
                 ) : (
-                  <TogglePillButton disabled>
+                  <PngPillButton disabled>
                     <Plus className="w-4 h-4" />{t("ticketDetail.add")}
-                  </TogglePillButton>
+                  </PngPillButton>
                 )}
               </div>
             </div>
@@ -2847,14 +2847,14 @@ export default function TicketDetail({ id }: { id: number }) {
               {(ticket.status === "in_progress" || ticket.status === "kicked_back") && (
                 // Task #593: grey out while the assignment-removed banner is
                 // showing — re-tapping just re-raises the banner.
-                <TogglePillButton color="blue"
+                <PngPillButton color="blue"
                   onClick={handleSendForReview}
                   disabled={checkOutTicket.isPending || !!assignmentRemoved}
                   data-testid="button-send-for-review"
                 >
                   <Send className="w-4 h-4" />
                   {checkOutTicket.isPending ? t("ticketDetail.sending") : t("ticketDetail.sendForReview")}
-                </TogglePillButton>
+                </PngPillButton>
               )}
             </>
           ) : user?.role === "vendor" ? (
@@ -2873,44 +2873,44 @@ export default function TicketDetail({ id }: { id: number }) {
                         <Save className="w-4 h-4" />{updateTicket.isPending ? t("ticketDetail.saving") : t("ticketDetail.save")}
                       </GreenButton>
                     ) : (
-                      <TogglePillButton disabled data-testid="button-save-ticket" className="mr-3">
+                      <PngPillButton disabled data-testid="button-save-ticket" className="mr-3">
                         <Save className="w-4 h-4" />{t("ticketDetail.save")}
-                      </TogglePillButton>
+                      </PngPillButton>
                     )
                   ) : canEdit ? (
-                    <TogglePillButton color="amber" onClick={() => setIsEditing(true)} data-testid="button-edit-ticket" className="mr-3">
+                    <PngPillButton color="amber" onClick={() => setIsEditing(true)} data-testid="button-edit-ticket" className="mr-3">
                       <Pencil className="w-4 h-4" />{t("ticketDetail.edit")}
-                    </TogglePillButton>
+                    </PngPillButton>
                   ) : null}
                   <Dialog open={cancelOpen} onOpenChange={setCancelOpen}>
                     <DialogTrigger asChild>
-                      <TogglePillButton color="red" disabled={cancelTicket.isPending} data-testid="button-cancel-ticket" className="mr-3">
+                      <PngPillButton color="red" disabled={cancelTicket.isPending} data-testid="button-cancel-ticket" className="mr-3">
                         <XCircle className="w-4 h-4" />{cancelTicket.isPending ? t("ticketDetail.cancelling") : t("ticketDetail.cancel")}
-                      </TogglePillButton>
+                      </PngPillButton>
                     </DialogTrigger>
                     <DialogContent>
                       <DialogHeader><DialogTitle>{t("ticketDetail.cancelJob")}</DialogTitle></DialogHeader>
                       <p className="text-sm text-muted-foreground">{t("ticketDetail.cancelJobConfirm")}</p>
                       <div className="flex gap-3 justify-end mt-4">
-                        <TogglePillButton color="amber" onClick={() => setCancelOpen(false)}>{t("ticketDetail.noGoBack")}</TogglePillButton>
-                        <TogglePillButton color="red" onClick={() => { handleCancel(); setCancelOpen(false); }} disabled={cancelTicket.isPending} data-testid="button-confirm-cancel">
+                        <PngPillButton color="amber" onClick={() => setCancelOpen(false)}>{t("ticketDetail.noGoBack")}</PngPillButton>
+                        <PngPillButton color="red" onClick={() => { handleCancel(); setCancelOpen(false); }} disabled={cancelTicket.isPending} data-testid="button-confirm-cancel">
                           {cancelTicket.isPending ? t("ticketDetail.cancelling") : t("ticketDetail.yesCancelJob")}
-                        </TogglePillButton>
+                        </PngPillButton>
                       </div>
                     </DialogContent>
                   </Dialog>
                   {grandTotal > 0 && !assignmentRemoved ? (
-                    <TogglePillButton color="blue" onClick={handleSubmit} disabled={submitTicket.isPending} data-testid="button-submit-ticket">
+                    <PngPillButton color="blue" onClick={handleSubmit} disabled={submitTicket.isPending} data-testid="button-submit-ticket">
                       <Send className="w-4 h-4" />{submitTicket.isPending ? t("ticketDetail.submitting") : t("ticketDetail.submit")}
-                    </TogglePillButton>
+                    </PngPillButton>
                   ) : (
                     // Task #593: when the assignment-removed banner is up,
                     // collapse Submit into the same disabled grey state we
                     // already use for the empty-line-items case so the
                     // dispatcher can't keep poking it.
-                    <TogglePillButton disabled data-testid="button-submit-ticket">
+                    <PngPillButton disabled data-testid="button-submit-ticket">
                       <Send className="w-4 h-4" />{t("ticketDetail.submit")}
-                    </TogglePillButton>
+                    </PngPillButton>
                   )}
                 </>
               )}
@@ -2922,14 +2922,14 @@ export default function TicketDetail({ id }: { id: number }) {
                   out (forbidden_not_assigned) and the dialog won't render
                   for them either since this branch is vendor-only. */}
               {ticket.status === "in_progress" && (
-                <TogglePillButton color="amber"
+                <PngPillButton color="amber"
                   onClick={() => { setAwaitingPaymentNote(""); setAwaitingPaymentOpen(true); }}
                   disabled={awaitingPaymentPending}
                   data-testid="button-mark-awaiting-payment"
                 >
                   <DollarSign className="w-4 h-4" />
                   {t("tickets.markAwaitingPayment")}
-                </TogglePillButton>
+                </PngPillButton>
               )}
             </>
           ) : (
@@ -3118,7 +3118,7 @@ export default function TicketDetail({ id }: { id: number }) {
                               />
                             </a>
                             <div className="flex gap-2">
-                              <TogglePillButton color="blue"
+                              <PngPillButton color="blue"
                                 type="button"
                                 onClick={() => disperseReceiptInputRef.current?.click()}
                                 disabled={
@@ -3130,8 +3130,8 @@ export default function TicketDetail({ id }: { id: number }) {
                                 {disperseReceiptUploading
                                   ? t("ticketDetail.disperseFundsReceiptUploading")
                                   : t("ticketDetail.disperseFundsReceiptReplace")}
-                              </TogglePillButton>
-                              <TogglePillButton
+                              </PngPillButton>
+                              <PngPillButton
                                 type="button"
                                 onClick={() => setDisperseReceiptUrl(null)}
                                 disabled={
@@ -3141,11 +3141,11 @@ export default function TicketDetail({ id }: { id: number }) {
                               >
                                 <X className="w-4 h-4" />
                                 {t("ticketDetail.disperseFundsReceiptRemove")}
-                              </TogglePillButton>
+                              </PngPillButton>
                             </div>
                           </div>
                         ) : (
-                          <TogglePillButton color="blue"
+                          <PngPillButton color="blue"
                             type="button"
                             onClick={() => disperseReceiptInputRef.current?.click()}
                             disabled={
@@ -3157,13 +3157,13 @@ export default function TicketDetail({ id }: { id: number }) {
                             {disperseReceiptUploading
                               ? t("ticketDetail.disperseFundsReceiptUploading")
                               : t("ticketDetail.disperseFundsReceiptAttach")}
-                          </TogglePillButton>
+                          </PngPillButton>
                         )}
                       </div>
                       <div className="flex justify-end gap-2">
-                        <TogglePillButton onClick={() => setDisperseOpen(false)} data-testid="button-cancel-disperse">
+                        <PngPillButton onClick={() => setDisperseOpen(false)} data-testid="button-cancel-disperse">
                           <X className="w-4 h-4" />{t("ticketDetail.cancel")}
-                        </TogglePillButton>
+                        </PngPillButton>
                         <GreenButton
                           onClick={handleDisperseFunds}
                           disabled={disperseFunds.isPending || (disperseMethod === "check" && !disperseRef.trim())}
@@ -3217,9 +3217,9 @@ export default function TicketDetail({ id }: { id: number }) {
                           data-testid="input-approve-rating-review"
                         />
                         <div className="flex justify-end gap-2">
-                          <TogglePillButton onClick={() => setRateOpen(false)} data-testid="button-cancel-approve-rating">
+                          <PngPillButton onClick={() => setRateOpen(false)} data-testid="button-cancel-approve-rating">
                             <X className="w-4 h-4" />{t("ticketDetail.cancel")}
-                          </TogglePillButton>
+                          </PngPillButton>
                           <GreenButton
                             onClick={() => {
                               if (draftRating < 1) {
@@ -3257,17 +3257,17 @@ export default function TicketDetail({ id }: { id: number }) {
                   {isApprovalAdmin && (
                     <Dialog open={kickbackOpen} onOpenChange={setKickbackOpen}>
                       <DialogTrigger asChild>
-                        <TogglePillButton color="red" data-testid="button-kickback-trigger">
+                        <PngPillButton color="red" data-testid="button-kickback-trigger">
                           <RotateCcw className="w-4 h-4" />{t("ticketDetail.kickBack")}
-                        </TogglePillButton>
+                        </PngPillButton>
                       </DialogTrigger>
                       <DialogContent>
                         <DialogHeader><DialogTitle>{t("ticketDetail.kickBackTracking")}</DialogTitle></DialogHeader>
                         <div className="space-y-4">
                           <Textarea placeholder={t("ticketDetail.kickbackReasonPlaceholder")} value={kickbackReason} onChange={(e) => setKickbackReason(e.target.value)} data-testid="input-kickback-reason" />
-                          <TogglePillButton color="red" onClick={handleKickback} disabled={kickbackTicket.isPending || !kickbackReason} className="w-full" data-testid="button-submit-kickback">
+                          <PngPillButton color="red" onClick={handleKickback} disabled={kickbackTicket.isPending || !kickbackReason} className="w-full" data-testid="button-submit-kickback">
                             {kickbackTicket.isPending ? t("ticketDetail.sending") : t("ticketDetail.kickBackTracking")}
-                          </TogglePillButton>
+                          </PngPillButton>
                         </div>
                       </DialogContent>
                     </Dialog>
@@ -3277,13 +3277,13 @@ export default function TicketDetail({ id }: { id: number }) {
               {user?.role === "admin" && (ticket.status === "submitted" || ticket.status === "approved") && (
                 <Dialog open={unlockOpen} onOpenChange={(open) => { setUnlockOpen(open); if (!open) setUnlockReason(""); }}>
                   <DialogTrigger asChild>
-                    <TogglePillButton color="amber"
+                    <PngPillButton color="amber"
                       disabled={unlockTicket.isPending}
                       data-testid="button-unlock-ticket"
                     >
                       <RotateCcw className="w-4 h-4" />
                       {unlockTicket.isPending ? t("ticketDetail.unlocking") : t("ticketDetail.unlockForEditing")}
-                    </TogglePillButton>
+                    </PngPillButton>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader><DialogTitle>{t("ticketDetail.unlockTrackingForEditing")}</DialogTitle></DialogHeader>
@@ -3302,22 +3302,22 @@ export default function TicketDetail({ id }: { id: number }) {
                         {unlockReason.length}/500
                       </p>
                       <div className="flex justify-end gap-2">
-                        <TogglePillButton onClick={() => { setUnlockOpen(false); setUnlockReason(""); }}>
+                        <PngPillButton onClick={() => { setUnlockOpen(false); setUnlockReason(""); }}>
                           <X className="w-4 h-4" />{t("ticketDetail.cancel")}
-                        </TogglePillButton>
+                        </PngPillButton>
                         {unlockReason.trim() ? (
-                          <TogglePillButton color="amber"
+                          <PngPillButton color="amber"
                             onClick={handleUnlock}
                             disabled={unlockTicket.isPending}
                             data-testid="button-confirm-unlock"
                           >
                             <RotateCcw className="w-4 h-4" />
                             {unlockTicket.isPending ? t("ticketDetail.unlocking") : t("ticketDetail.unlock")}
-                          </TogglePillButton>
+                          </PngPillButton>
                         ) : (
-                          <TogglePillButton disabled data-testid="button-confirm-unlock">
+                          <PngPillButton disabled data-testid="button-confirm-unlock">
                             <RotateCcw className="w-4 h-4" />{t("ticketDetail.unlock")}
-                          </TogglePillButton>
+                          </PngPillButton>
                         )}
                       </div>
                     </div>
@@ -3327,31 +3327,31 @@ export default function TicketDetail({ id }: { id: number }) {
               {isApprovalAdmin && ticket.status !== "approved" && ticket.status !== "cancelled" && (
                 <Dialog open={cancelOpen} onOpenChange={setCancelOpen}>
                   <DialogTrigger asChild>
-                    <TogglePillButton color="red" disabled={cancelTicket.isPending} data-testid="button-cancel-ticket">
+                    <PngPillButton color="red" disabled={cancelTicket.isPending} data-testid="button-cancel-ticket">
                       <XCircle className="w-4 h-4" />{cancelTicket.isPending ? t("ticketDetail.cancelling") : t("ticketDetail.cancel")}
-                    </TogglePillButton>
+                    </PngPillButton>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader><DialogTitle>{t("ticketDetail.cancelJob")}</DialogTitle></DialogHeader>
                     <p className="text-sm text-muted-foreground">{t("ticketDetail.cancelJobConfirm")}</p>
                     <div className="flex gap-3 justify-end mt-4">
-                      <TogglePillButton color="amber" onClick={() => setCancelOpen(false)}>{t("ticketDetail.noGoBack")}</TogglePillButton>
-                      <TogglePillButton color="red" onClick={() => { handleCancel(); setCancelOpen(false); }} disabled={cancelTicket.isPending} data-testid="button-confirm-cancel">
+                      <PngPillButton color="amber" onClick={() => setCancelOpen(false)}>{t("ticketDetail.noGoBack")}</PngPillButton>
+                      <PngPillButton color="red" onClick={() => { handleCancel(); setCancelOpen(false); }} disabled={cancelTicket.isPending} data-testid="button-confirm-cancel">
                         {cancelTicket.isPending ? t("ticketDetail.cancelling") : t("ticketDetail.yesCancelJob")}
-                      </TogglePillButton>
+                      </PngPillButton>
                     </div>
                   </DialogContent>
                 </Dialog>
               )}
               {ticket.status === "cancelled" && user?.role === "admin" && (
-                <TogglePillButton color="amber"
+                <PngPillButton color="amber"
                   onClick={handleReactivate}
                   disabled={reactivateTicket.isPending}
                   data-testid="button-reactivate-ticket"
                 >
                   <RotateCcw className="w-4 h-4" />
                   {reactivateTicket.isPending ? t("ticketDetail.restoring") : t("ticketDetail.restoreUndoCancel")}
-                </TogglePillButton>
+                </PngPillButton>
               )}
               {/* Task #587 / Task #729 — Mark Awaiting Payment (admin + partner-AP).
                   Same shared dialog state as the vendor branch above. Admins
@@ -3409,14 +3409,14 @@ export default function TicketDetail({ id }: { id: number }) {
                   {awaitingPaymentNote.length}/500
                 </p>
                 <div className="flex justify-end gap-2">
-                  <TogglePillButton
+                  <PngPillButton
                     onClick={() => { setAwaitingPaymentOpen(false); setAwaitingPaymentNote(""); }}
                     disabled={awaitingPaymentPending}
                     data-testid="button-awaiting-payment-cancel"
                   >
                     <X className="w-4 h-4" />{t("ticketDetail.cancel")}
-                  </TogglePillButton>
-                  <TogglePillButton color="amber"
+                  </PngPillButton>
+                  <PngPillButton color="amber"
                     onClick={handleMarkAwaitingPayment}
                     disabled={awaitingPaymentPending}
                     data-testid="button-awaiting-payment-submit"
@@ -3425,7 +3425,7 @@ export default function TicketDetail({ id }: { id: number }) {
                     {awaitingPaymentPending
                       ? t("ticketDetail.sending")
                       : t("tickets.awaitingPaymentSubmit")}
-                  </TogglePillButton>
+                  </PngPillButton>
                 </div>
               </div>
             </DialogContent>
@@ -3436,10 +3436,10 @@ export default function TicketDetail({ id }: { id: number }) {
             rel="noopener noreferrer"
             className="ml-auto"
           >
-            <TogglePillButton color="blue" data-testid="button-print-ticket">
+            <PngPillButton color="blue" data-testid="button-print-ticket">
               <Printer className="w-4 h-4" />
               {t("ticketDetail.print")}
-            </TogglePillButton>
+            </PngPillButton>
           </a>
         </CardContent>
       </Card>

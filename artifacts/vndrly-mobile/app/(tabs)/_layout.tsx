@@ -13,7 +13,13 @@ export default function TabLayout() {
   const { t } = useTranslation();
   const badges = useTabBadges();
   const { user } = useAuth();
-  const isFieldEmployee = user?.role === "field_employee";
+  const isFieldOnlyEmployee =
+    user?.role === "field_employee" &&
+    user.vendorRole !== "foreman" &&
+    user.vendorRole !== "both";
+  const isForemanEmployee =
+    user?.role === "field_employee" &&
+    (user.vendorRole === "foreman" || user.vendorRole === "both");
   return (
     <Tabs
       screenOptions={{
@@ -43,7 +49,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: t("tabs.home"),
+          title: isForemanEmployee ? t("foremanHome.portal") : t("tabs.home"),
           tabBarIcon: ({ color, size }) => (
             <Feather name="home" size={size} color={color} />
           ),
@@ -55,7 +61,7 @@ export default function TabLayout() {
         name="schedule"
         options={{
           title: t("tabs.schedule"),
-          href: isFieldEmployee ? null : undefined,
+          href: isFieldOnlyEmployee ? null : undefined,
           tabBarIcon: ({ color, size }) => (
             <Feather name="calendar" size={size} color={color} />
           ),

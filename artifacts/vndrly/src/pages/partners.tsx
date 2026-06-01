@@ -20,7 +20,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Handshake, ArrowUp, ArrowDown, AlertTriangle, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import BlueButton from "@/components/blue-button";
-import { TogglePillButton } from "@/components/toggle-pill";
+import { PngPillButton } from "@/components/png-pill-rollover";
 import { useAuth } from "@/hooks/use-auth";
 import { useBrand } from "@/hooks/use-brand";
 import { useTranslation } from "react-i18next";
@@ -225,7 +225,7 @@ export default function Partners() {
         </div>
         {!isVendor && <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <TogglePillButton color="blue" data-testid="button-add-partner" className="px-2"><Plus className="w-4 h-4" />{t("partners.addPartner")}</TogglePillButton>
+            <PngPillButton color="blue" data-testid="button-add-partner" className="px-2"><Plus className="w-4 h-4" />{t("partners.addPartner")}</PngPillButton>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader><DialogTitle>{t("partners.addPartner")}</DialogTitle></DialogHeader>
@@ -295,7 +295,7 @@ export default function Partners() {
               <div><Label>{t("partners.contactPhone")}</Label><Input data-testid="input-contact-phone" value={form.contactPhone} onChange={(e) => setForm({ ...form, contactPhone: handlePhoneInput(e.target.value) })} /></div>
               <div><Label>{t("partners.physicalAddress")}</Label><Input data-testid="input-physical-address" value={form.physicalAddress} onChange={(e) => setForm({ ...form, physicalAddress: e.target.value })} placeholder={t("partners.addressPlaceholder")} /></div>
               <div><Label>{t("partners.billingAddress")}</Label><Input data-testid="input-billing-address" value={form.billingAddress} onChange={(e) => setForm({ ...form, billingAddress: e.target.value })} placeholder={t("partners.addressPlaceholder")} /></div>
-              <TogglePillButton color="blue" type="submit" disabled={submitDisabled} data-testid="button-submit-partner" className="w-full">{createPartner.isPending ? t("partners.creating") : t("partners.createPartner")}</TogglePillButton>
+              <PngPillButton color="blue" type="submit" disabled={submitDisabled} data-testid="button-submit-partner" className="w-full">{createPartner.isPending ? t("partners.creating") : t("partners.createPartner")}</PngPillButton>
             </form>
           </DialogContent>
         </Dialog>}

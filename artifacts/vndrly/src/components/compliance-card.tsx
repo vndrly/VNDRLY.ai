@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useListEmployeeCertifications, getListEmployeeCertificationsQueryKey } from "@workspace/api-client-react";
 import { Camera, ShieldCheck } from "lucide-react";
-import TogglePill from "@/components/toggle-pill";
+import PngPill from "@/components/png-pill-rollover";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -29,7 +29,7 @@ function statusFor(expirationDate: string | null | undefined) {
   const days = (new Date(expirationDate + "T00:00:00").getTime() - Date.now()) / (1000 * 60 * 60 * 24);
   if (days < 0) return <span className="text-xs font-semibold px-2 py-1 rounded bg-red-100 text-red-700">Expired</span>;
   if (days <= 60) return <span className="text-xs font-semibold px-2 py-1 rounded bg-amber-100 text-amber-800">Expires in {Math.ceil(days)}d</span>;
-  return <TogglePill color="green">Valid</TogglePill>;
+  return <PngPill color="green">Valid</PngPill>;
 }
 
 export function ComplianceCard({ employeeId, firstName, lastName, jobTitle, vendorName, vendorLogoUrl, photoUrl, profilePhotoPath }: Props) {

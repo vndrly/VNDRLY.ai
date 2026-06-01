@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and, desc, inArray, ne, sql, isNull, isNotNull } from "drizzle-orm";
+import { eq, and, desc, gte, lte, inArray, ne, or, sql, isNull, isNotNull } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import {
@@ -16,8 +16,11 @@ import {
   gpsLogsTable,
   fieldPushTokensTable,
   ticketCheckInsTable,
+  ticketCrewTable,
+  vendorCrewPresetsTable,
 } from "@workspace/db";
 import { sendPushToFieldEmployee } from "../lib/expo-push";
+import { notifyUsers } from "./notifications";
 import { removeMembership } from "../lib/membership-sync";
 import { recordTicketTransition } from "../lib/ticket-transitions";
 import { isGeofenceBypassActive } from "../lib/geo";
@@ -150,6 +153,40 @@ async function requireFieldUser(req: any, res: any) {
     return null;
   }
   return { session, employee: fe };
+}
+
+async function requireForemanFieldUser(req: any, res: any) {
+  const ctx = await requireFieldUser(req, res);
+  if (!ctx) return null;
+  const role = ctx.session.vendorRole;
+  if (role !== "foreman" && role !== "both") {
+    res.status(403).json({
+      code: "foreman.required",
+      error: "foreman_required",
+      message: "Foreman access required",
+    });
+    return null;
+  }
+  return ctx;
+}
+
+function parseEmployeeIdList(raw: unknown): number[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((n) => Number(n))
+    .filter((n) => Number.isFinite(n) && n > 0);
+}
+
+function startOfLocalDay(d: Date): Date {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  return x;
+}
+
+function endOfLocalDay(d: Date): Date {
+  const x = new Date(d);
+  x.setHours(23, 59, 59, 999);
+  return x;
 }
 
 /**
@@ -570,7 +607,8 @@ router.get("/field/open-tickets", async (req, res): Promise<void> => {
   //     top-level role is `vendor` on a particular membership).
   // This way a foreman never sees pending_review/kicked_back regardless
   // of which auth path their session walked.
-  const isForemanSession = ctx.session.vendorRole === "foreman";
+  const isForemanSession =
+    ctx.session.vendorRole === "foreman" || ctx.session.vendorRole === "both";
   const isNarrowViewer = ctx.mode === "field" || isForemanSession;
   const narrowStatuses = ["initiated", "in_progress"];
   const broadStatuses = [
@@ -588,7 +626,25 @@ router.get("/field/open-tickets", async (req, res): Promise<void> => {
     ),
   ];
   if (ctx.mode === "field") {
-    conditions.push(eq(ticketsTable.fieldEmployeeId, ctx.employee.id));
+    if (isForemanSession) {
+      const crewRows = await db
+        .select({ ticketId: ticketCrewTable.ticketId })
+        .from(ticketCrewTable)
+        .where(and(
+          eq(ticketCrewTable.employeeId, ctx.employee.id),
+          isNull(ticketCrewTable.removedAt),
+        ));
+      const crewTicketIds = crewRows.map((row) => row.ticketId);
+      conditions.push(or(
+        eq(ticketsTable.fieldEmployeeId, ctx.employee.id),
+        eq(ticketsTable.foremanUserId, ctx.session.userId),
+        crewTicketIds.length > 0
+          ? inArray(ticketsTable.id, crewTicketIds)
+          : sql`false`,
+      )!);
+    } else {
+      conditions.push(eq(ticketsTable.fieldEmployeeId, ctx.employee.id));
+    }
   }
 
   const rows = await db
@@ -602,6 +658,7 @@ router.get("/field/open-tickets", async (req, res): Promise<void> => {
       workTypeId: ticketsTable.workTypeId,
       workTypeName: workTypesTable.name,
       fieldEmployeeId: ticketsTable.fieldEmployeeId,
+      foremanUserId: ticketsTable.foremanUserId,
       fieldEmployeeFirstName: vendorPeopleTable.firstName,
       fieldEmployeeLastName: vendorPeopleTable.lastName,
       createdAt: ticketsTable.createdAt,
@@ -1409,6 +1466,252 @@ router.get("/field-employees/:id/login", async (req, res): Promise<void> => {
     return;
   }
   res.json({ hasLogin: true, email: user.username, userId: user.id });
+});
+
+// ── GET /api/field/co-workers — active vendor people for foreman crew tools ──
+router.get("/field/co-workers", async (req, res): Promise<void> => {
+  const ctx = await requireForemanFieldUser(req, res);
+  if (!ctx) return;
+  const rows = await db
+    .select({
+      id: vendorPeopleTable.id,
+      userId: vendorPeopleTable.userId,
+      firstName: vendorPeopleTable.firstName,
+      lastName: vendorPeopleTable.lastName,
+      vendorRole: vendorPeopleTable.vendorRole,
+      jobTitle: vendorPeopleTable.jobTitle,
+    })
+    .from(vendorPeopleTable)
+    .where(and(
+      eq(vendorPeopleTable.vendorId, ctx.employee.vendorId),
+      eq(vendorPeopleTable.isActive, true),
+      isNull(vendorPeopleTable.deletedAt),
+    ))
+    .orderBy(vendorPeopleTable.firstName, vendorPeopleTable.lastName);
+  res.json(rows);
+});
+
+// ── GET /api/field/crew-presets ──
+router.get("/field/crew-presets", async (req, res): Promise<void> => {
+  const ctx = await requireForemanFieldUser(req, res);
+  if (!ctx) return;
+  const rows = await db
+    .select()
+    .from(vendorCrewPresetsTable)
+    .where(eq(vendorCrewPresetsTable.vendorId, ctx.employee.vendorId))
+    .orderBy(vendorCrewPresetsTable.name);
+  res.json(rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    memberEmployeeIds: parseEmployeeIdList(row.memberEmployeeIds),
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  })));
+});
+
+// ── POST /api/field/crew-presets ──
+router.post("/field/crew-presets", async (req, res): Promise<void> => {
+  const ctx = await requireForemanFieldUser(req, res);
+  if (!ctx) return;
+  const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
+  if (!name) {
+    res.status(400).json({ code: "validation.required", message: "name required" });
+    return;
+  }
+  const memberEmployeeIds = parseEmployeeIdList(req.body?.memberEmployeeIds);
+  if (memberEmployeeIds.length > 0) {
+    const valid = await db
+      .select({ id: vendorPeopleTable.id })
+      .from(vendorPeopleTable)
+      .where(and(
+        inArray(vendorPeopleTable.id, memberEmployeeIds),
+        eq(vendorPeopleTable.vendorId, ctx.employee.vendorId),
+        isNull(vendorPeopleTable.deletedAt),
+      ));
+    if (valid.length !== memberEmployeeIds.length) {
+      res.status(400).json({ code: "crew.invalid_members", message: "Invalid crew members" });
+      return;
+    }
+  }
+  const now = new Date();
+  const [row] = await db
+    .insert(vendorCrewPresetsTable)
+    .values({
+      vendorId: ctx.employee.vendorId,
+      name,
+      memberEmployeeIds,
+      createdByUserId: ctx.session.userId,
+      updatedAt: now,
+    })
+    .returning();
+  res.status(201).json({
+    id: row.id,
+    name: row.name,
+    memberEmployeeIds,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  });
+});
+
+// ── PATCH /api/field/crew-presets/:id ──
+router.patch("/field/crew-presets/:id", async (req, res): Promise<void> => {
+  const ctx = await requireForemanFieldUser(req, res);
+  if (!ctx) return;
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) {
+    res.status(400).json({ code: "validation.invalid_id", message: "Invalid id" });
+    return;
+  }
+  const [existing] = await db
+    .select()
+    .from(vendorCrewPresetsTable)
+    .where(and(
+      eq(vendorCrewPresetsTable.id, id),
+      eq(vendorCrewPresetsTable.vendorId, ctx.employee.vendorId),
+    ));
+  if (!existing) {
+    res.status(404).json({ code: "crew_preset.not_found", message: "Not found" });
+    return;
+  }
+  const patch: Record<string, unknown> = { updatedAt: new Date() };
+  if (typeof req.body?.name === "string" && req.body.name.trim()) {
+    patch.name = req.body.name.trim();
+  }
+  if (req.body?.memberEmployeeIds != null) {
+    const memberEmployeeIds = parseEmployeeIdList(req.body.memberEmployeeIds);
+    if (memberEmployeeIds.length > 0) {
+      const valid = await db
+        .select({ id: vendorPeopleTable.id })
+        .from(vendorPeopleTable)
+        .where(and(
+          inArray(vendorPeopleTable.id, memberEmployeeIds),
+          eq(vendorPeopleTable.vendorId, ctx.employee.vendorId),
+          isNull(vendorPeopleTable.deletedAt),
+        ));
+      if (valid.length !== memberEmployeeIds.length) {
+        res.status(400).json({ code: "crew.invalid_members", message: "Invalid crew members" });
+        return;
+      }
+    }
+    patch.memberEmployeeIds = memberEmployeeIds;
+  }
+  const [row] = await db
+    .update(vendorCrewPresetsTable)
+    .set(patch)
+    .where(eq(vendorCrewPresetsTable.id, id))
+    .returning();
+  res.json({
+    id: row.id,
+    name: row.name,
+    memberEmployeeIds: parseEmployeeIdList(row.memberEmployeeIds),
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  });
+});
+
+// ── DELETE /api/field/crew-presets/:id ──
+router.delete("/field/crew-presets/:id", async (req, res): Promise<void> => {
+  const ctx = await requireForemanFieldUser(req, res);
+  if (!ctx) return;
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) {
+    res.status(400).json({ code: "validation.invalid_id", message: "Invalid id" });
+    return;
+  }
+  const deleted = await db
+    .delete(vendorCrewPresetsTable)
+    .where(and(
+      eq(vendorCrewPresetsTable.id, id),
+      eq(vendorCrewPresetsTable.vendorId, ctx.employee.vendorId),
+    ))
+    .returning({ id: vendorCrewPresetsTable.id });
+  if (deleted.length === 0) {
+    res.status(404).json({ code: "crew_preset.not_found", message: "Not found" });
+    return;
+  }
+  res.status(204).end();
+});
+
+// ── POST /api/field/batch-schedule-reminders ──
+// Notify crews about jobs scheduled on a specific day N days from today.
+router.post("/field/batch-schedule-reminders", async (req, res): Promise<void> => {
+  const ctx = await requireForemanFieldUser(req, res);
+  if (!ctx) return;
+  const daysAhead = Number(req.body?.daysAhead);
+  if (![1, 2, 3].includes(daysAhead)) {
+    res.status(400).json({
+      code: "validation.invalid_days_ahead",
+      message: "daysAhead must be 1, 2, or 3",
+    });
+    return;
+  }
+  const target = new Date();
+  target.setDate(target.getDate() + daysAhead);
+  const windowStart = startOfLocalDay(target);
+  const windowEnd = endOfLocalDay(target);
+
+  const tickets = await db
+    .select({
+      id: ticketsTable.id,
+      scheduledStartAt: ticketsTable.scheduledStartAt,
+      workTypeName: workTypesTable.name,
+      siteName: siteLocationsTable.name,
+      siteAddress: siteLocationsTable.address,
+      partnerName: partnersTable.name,
+    })
+    .from(ticketsTable)
+    .leftJoin(workTypesTable, eq(ticketsTable.workTypeId, workTypesTable.id))
+    .leftJoin(siteLocationsTable, eq(ticketsTable.siteLocationId, siteLocationsTable.id))
+    .leftJoin(partnersTable, eq(siteLocationsTable.partnerId, partnersTable.id))
+    .where(and(
+      eq(ticketsTable.vendorId, ctx.employee.vendorId),
+      eq(ticketsTable.foremanUserId, ctx.session.userId),
+      isNotNull(ticketsTable.scheduledStartAt),
+      gte(ticketsTable.scheduledStartAt, windowStart),
+      lte(ticketsTable.scheduledStartAt, windowEnd),
+    ));
+
+  let notifiedUsers = 0;
+  let ticketsProcessed = 0;
+  for (const ticket of tickets) {
+    ticketsProcessed += 1;
+    const crew = await db
+      .select({ userId: vendorPeopleTable.userId })
+      .from(ticketCrewTable)
+      .innerJoin(vendorPeopleTable, eq(ticketCrewTable.employeeId, vendorPeopleTable.id))
+      .where(and(
+        eq(ticketCrewTable.ticketId, ticket.id),
+        isNull(ticketCrewTable.removedAt),
+        isNotNull(vendorPeopleTable.userId),
+      ));
+    const userIds = [...new Set(crew.map((c) => c.userId).filter((u): u is number => u != null))];
+    if (userIds.length === 0) continue;
+
+    const when = ticket.scheduledStartAt
+      ? new Date(ticket.scheduledStartAt).toLocaleString(undefined, {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+        })
+      : "TBD";
+    const job = ticket.workTypeName ?? "Job";
+    const where = [ticket.partnerName, ticket.siteName].filter(Boolean).join(" — ") || "site";
+    const title = `Scheduled in ${daysAhead} day${daysAhead === 1 ? "" : "s"}: ${job}`;
+    const body = `${where}\n${when}${ticket.siteAddress ? `\n${ticket.siteAddress}` : ""}`;
+
+    notifiedUsers += await notifyUsers(userIds, {
+      type: "schedule_reminder_batch",
+      title,
+      body,
+      link: `/tickets/${ticket.id}`,
+      dedupeKey: `schedule-batch:${ticket.id}:${daysAhead}:${windowStart.toISOString().slice(0, 10)}`,
+      pushData: { ticketId: ticket.id, type: "schedule_reminder_batch", daysAhead },
+    });
+  }
+
+  res.json({ ok: true, ticketsProcessed, notifiedUsers, daysAhead });
 });
 
 export default router;

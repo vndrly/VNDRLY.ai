@@ -1,9 +1,11 @@
 import { useEffect, useState, useCallback } from "react";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
-import { Clock, MapPin, UserCheck, Users, Navigation, Check, X, ChevronRight } from "lucide-react";
+import { Clock, MapPin, UserCheck, Users, Navigation, Check, X, ChevronRight, CalendarClock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import TogglePill, { TogglePillButton } from "@/components/toggle-pill";
+import PngPill, { PngPillButton } from "@/components/png-pill-rollover";
+import ScheduleTicketDialog from "@/components/schedule-ticket-dialog";
+import { usePortalBase } from "@/lib/portal-base";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -60,9 +62,13 @@ function openInMaps(lat: number, lng: number, label?: string) {
 export default function FieldSchedule() {
   const { t } = useTranslation();
   const [, navigate] = useLocation();
+  const portalBase = usePortalBase();
+  const isForemanPortal = portalBase === "/foreman";
   const { toast } = useToast();
   const [tickets, setTickets] = useState<ScheduledTicket[]>([]);
   const [loading, setLoading] = useState(true);
+  const [vendorId, setVendorId] = useState<number | null>(null);
+  const [scheduleTicketId, setScheduleTicketId] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -80,6 +86,14 @@ export default function FieldSchedule() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    if (!isForemanPortal) return;
+    fetch(`${BASE}/api/field/me`, { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((me) => setVendorId(typeof me?.vendorId === "number" ? me.vendorId : null))
+      .catch(() => setVendorId(null));
+  }, [isForemanPortal]);
 
   async function sendAck(ticketId: number, status: "confirmed" | "declined") {
     try {
@@ -147,17 +161,17 @@ export default function FieldSchedule() {
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="text-sm font-semibold">#{String(item.id).padStart(4, "0")}</span>
                     {ackPillColor ? (
-                      <TogglePill color={ackPillColor} className="text-[10px] px-2 py-0.5">
+                      <PngPill color={ackPillColor} className="text-[10px] px-2 py-0.5">
                         {ackLabel}
-                      </TogglePill>
+                      </PngPill>
                     ) : ackIsRest ? (
-                      <TogglePill rest className="text-[10px] px-2 py-0.5">
+                      <PngPill rest className="text-[10px] px-2 py-0.5">
                         {ackLabel}
-                      </TogglePill>
+                      </PngPill>
                     ) : (
-                      <TogglePill rest className="text-[10px] px-2 py-0.5">
+                      <PngPill rest className="text-[10px] px-2 py-0.5">
                         {item.status}
-                      </TogglePill>
+                      </PngPill>
                     )}
                   </div>
                   <h3 className="font-semibold text-base mb-2">{item.workTypeName || t("mySchedule.untitledJob")}</h3>
@@ -192,7 +206,7 @@ export default function FieldSchedule() {
                 {ack && ack !== "confirmed" ? (
                   <div className="flex gap-2 mt-3">
                     {ack === "pending" ? (
-                      <TogglePillButton
+                      <PngPillButton
                         color="red"
                         onClick={() => onDecline(item.id)}
                         className="flex-1 h-10 text-sm"
@@ -200,9 +214,9 @@ export default function FieldSchedule() {
                       >
                         <X className="w-4 h-4 mr-1.5" />
                         {t("mySchedule.decline")}
-                      </TogglePillButton>
+                      </PngPillButton>
                     ) : null}
-                    <TogglePillButton
+                    <PngPillButton
                       color="green"
                       onClick={() => void sendAck(item.id, "confirmed")}
                       className="flex-1 h-10 text-sm"
@@ -210,25 +224,38 @@ export default function FieldSchedule() {
                     >
                       <Check className="w-4 h-4 mr-1.5" />
                       {t("mySchedule.confirm")}
-                    </TogglePillButton>
+                    </PngPillButton>
                   </div>
                 ) : null}
 
                 {item.isForeman ? (
-                  <TogglePillButton
-                    color="brand"
-                    onClick={() => navigate(`/tickets/${item.id}`)}
-                    className="w-full h-10 text-sm mt-2"
-                    data-testid={`button-foreman-view-${item.id}`}
-                  >
-                    <Users className="w-4 h-4 mr-1.5" />
-                    {t("mySchedule.foremanView")}
-                    <ChevronRight className="w-4 h-4 ml-auto" />
-                  </TogglePillButton>
+                  <>
+                    {isForemanPortal && vendorId ? (
+                      <PngPillButton
+                        color="brand"
+                        onClick={() => setScheduleTicketId(item.id)}
+                        className="w-full h-10 text-sm mt-2"
+                        data-testid={`button-schedule-${item.id}`}
+                      >
+                        <CalendarClock className="w-4 h-4 mr-1.5" />
+                        {t("scheduleTicket.button")}
+                      </PngPillButton>
+                    ) : null}
+                    <PngPillButton
+                      color="brand"
+                      onClick={() => navigate(`/tickets/${item.id}`)}
+                      className="w-full h-10 text-sm mt-2"
+                      data-testid={`button-foreman-view-${item.id}`}
+                    >
+                      <Users className="w-4 h-4 mr-1.5" />
+                      {t("mySchedule.foremanView")}
+                      <ChevronRight className="w-4 h-4 ml-auto" />
+                    </PngPillButton>
+                  </>
                 ) : null}
 
                 {canDirections ? (
-                  <TogglePillButton
+                  <PngPillButton
                     color="blue"
                     onClick={() => openInMaps(item.siteLatitude!, item.siteLongitude!, item.siteName ?? undefined)}
                     className="w-full h-10 text-sm mt-2"
@@ -236,13 +263,27 @@ export default function FieldSchedule() {
                   >
                     <Navigation className="w-4 h-4 mr-1.5" />
                     {t("mySchedule.getDirections")}
-                  </TogglePillButton>
+                  </PngPillButton>
                 ) : null}
               </li>
             );
           })}
         </ul>
       )}
+      {scheduleTicketId != null && vendorId != null ? (
+        <ScheduleTicketDialog
+          open={scheduleTicketId != null}
+          onOpenChange={(open) => {
+            if (!open) {
+              setScheduleTicketId(null);
+              void load();
+            }
+          }}
+          ticketId={scheduleTicketId}
+          vendorId={vendorId}
+          foremanMode={isForemanPortal}
+        />
+      ) : null}
     </div>
   );
 }

@@ -1,3 +1,5 @@
+import "react-native-gesture-handler";
+
 import {
   Inter_400Regular,
   Inter_500Medium,
@@ -33,6 +35,9 @@ void SplashScreen.preventAutoHideAsync().catch(() => undefined);
 initSentry();
 initApi();
 
+/** Never leave the splash spinner up forever if SecureStore/keychain stalls. */
+const AUTH_BOOTSTRAP_TIMEOUT_MS = 8000;
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: { retry: false },
@@ -55,6 +60,15 @@ function AuthGate() {
   const [checked, setChecked] = useState(isTokenCacheReady());
   const [hasAuth, setHasAuth] = useState(!!getCachedToken());
   const [role, setRole] = useState<string | null>(getCachedRole());
+
+  useEffect(() => {
+    if (checked) return;
+    const timeout = setTimeout(() => {
+      setChecked(true);
+      setHasAuth(false);
+    }, AUTH_BOOTSTRAP_TIMEOUT_MS);
+    return () => clearTimeout(timeout);
+  }, [checked]);
 
   useEffect(() => {
     let cancelled = false;
@@ -239,7 +253,7 @@ function RootLayout() {
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
             <BrandProvider>
-              <GestureHandlerRootView>
+              <GestureHandlerRootView style={{ flex: 1 }}>
                 <SafeKeyboardProvider>
                   <AuthGate />
                 </SafeKeyboardProvider>

@@ -7,7 +7,7 @@ import { formatPhone, handlePhoneInput, stripPhone } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PillButton } from "@/components/pill";
+import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -19,7 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Calendar, Camera, UserCheck, StickyNote, Plus, Trash2, KeyRound, Smartphone } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import BlueButton from "@/components/blue-button";
-import { TogglePillButton } from "@/components/toggle-pill";
+import { PngPillButton } from "@/components/png-pill-rollover";
 import PecStatusBadge from "@/components/pec-status-badge";
 import SphereBackButton from "@/components/sphere-back-button";
 
@@ -461,21 +461,21 @@ export default function FieldEmployeeDetail({ id }: { id: number }) {
                 })()}
                 <div className="flex flex-col items-start gap-2">
                   <input type="file" ref={fileInputRef} accept="image/*" onChange={handlePhotoUpload} className="hidden" data-testid="input-photo-file" />
-                  {/* Add Photo → canonical TogglePillButton blue
+                  {/* Add Photo → canonical PngPillButton blue
                       (primary action), h=24, matching the rest of
                       the pill family. The conditional label flips
                       to "Uploading…" while the request is in flight. */}
-                  <TogglePillButton type="button" color="blue" onClick={() => fileInputRef.current?.click()} disabled={uploading} data-testid="button-add-photo">
+                  <PngPillButton type="button" color="blue" onClick={() => fileInputRef.current?.click()} disabled={uploading} data-testid="button-add-photo">
                     <Camera className="w-4 h-4" />{uploading ? t("fieldEmployeeDetail.uploading") : t("fieldEmployeeDetail.addPhoto")}
-                  </TogglePillButton>
-                  {/* Remove Photo → TogglePillButton red (destructive),
+                  </PngPillButton>
+                  {/* Remove Photo → PngPillButton red (destructive),
                       h=24. AlertDialogTrigger asChild still binds
-                      because TogglePillButton renders an underlying
+                      because PngPillButton renders an underlying
                       <button>. */}
                   {employee.profilePhotoPath ? (
                     <AlertDialog open={removePhotoOpen} onOpenChange={(open) => { if (!updateEmployee.isPending) setRemovePhotoOpen(open); }}>
                       <AlertDialogTrigger asChild>
-                        <TogglePillButton
+                        <PngPillButton
                           type="button"
                           color="red"
 
@@ -484,7 +484,7 @@ export default function FieldEmployeeDetail({ id }: { id: number }) {
                           data-testid="button-remove-photo"
                         >
                           <Trash2 className="w-4 h-4" />{t("fieldEmployeeDetail.removePhoto")}
-                        </TogglePillButton>
+                        </PngPillButton>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
@@ -524,11 +524,11 @@ export default function FieldEmployeeDetail({ id }: { id: number }) {
                   `attention={isDirty}` halo on Save is preserved
                   so the chip still glows when the form has unsaved
                   edits. AlertDialog gating on Delete is unchanged
-                  — TogglePillButton renders an underlying <button>
+                  — PngPillButton renders an underlying <button>
                   so AlertDialogTrigger asChild still binds. */}
-              <TogglePillButton type="submit" color="blue" disabled={updateEmployee.isPending} attention={isDirty} className="w-[140px] justify-center" data-testid="button-save">
+              <PngPillButton type="submit" color="blue" disabled={updateEmployee.isPending} attention={isDirty} className="w-[140px] justify-center" data-testid="button-save">
                 {updateEmployee.isPending ? t("fieldEmployeeDetail.saving") : t("fieldEmployeeDetail.saveChanges")}
-              </TogglePillButton>
+              </PngPillButton>
               <AlertDialog
                 open={deleteOpen}
                 onOpenChange={(open) => {
@@ -542,7 +542,7 @@ export default function FieldEmployeeDetail({ id }: { id: number }) {
                 }}
               >
                 <AlertDialogTrigger asChild>
-                  <TogglePillButton
+                  <PngPillButton
                     type="button"
                     color="red"
 
@@ -552,7 +552,7 @@ export default function FieldEmployeeDetail({ id }: { id: number }) {
                     onClick={() => setDeleteOpen(true)}
                   >
                     {deleteEmployee.isPending ? t("fieldEmployeeDetail.removing") : t("fieldEmployeeDetail.delete")}
-                  </TogglePillButton>
+                  </PngPillButton>
                 </AlertDialogTrigger>
                 <AlertDialogContent data-testid="delete-confirm-dialog">
                   {deletedOpenSessions ? (
@@ -634,7 +634,7 @@ export default function FieldEmployeeDetail({ id }: { id: number }) {
               {loginInfo?.hasLogin ? (
                 <>
                   <p className="font-semibold text-green-800">{t("fieldEmployeeDetail.activeLogin")}</p>
-                  <p className="text-green-700 mt-0.5">{t("fieldEmployeeDetail.signsInAt")} <code className="font-mono">{BASE_PATH || ""}/field</code> {t("fieldEmployeeDetail.asUser")} <span className="font-semibold">{loginInfo.email}</span></p>
+                  <p className="text-green-700 mt-0.5">{t("fieldEmployeeDetail.signsInAt")} <code className="font-mono">{BASE_PATH || ""}{form.vendorRole === "foreman" || form.vendorRole === "both" ? "/foreman" : "/field"}</code> {t("fieldEmployeeDetail.asUser")} <span className="font-semibold">{loginInfo.email}</span></p>
                 </>
               ) : (
                 <>
@@ -686,13 +686,13 @@ export default function FieldEmployeeDetail({ id }: { id: number }) {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            {/* Save credentials → TogglePillButton blue (primary
+            {/* Save credentials → PngPillButton blue (primary
                 action), h=24. The label is conditional — "Update
                 Password" when a login exists, "Create Login" when
                 first-time provisioning, "Saving…" while in flight. */}
-            <TogglePillButton type="button" color="blue" onClick={saveCredentials} disabled={credBusy} data-testid="button-save-credentials">
+            <PngPillButton type="button" color="blue" onClick={saveCredentials} disabled={credBusy} data-testid="button-save-credentials">
               {credBusy ? t("fieldEmployeeDetail.saving") : loginInfo?.hasLogin ? t("fieldEmployeeDetail.updatePassword") : t("fieldEmployeeDetail.createLogin")}
-            </TogglePillButton>
+            </PngPillButton>
             {!loginInfo?.hasLogin && (
               <PillButton
                 type="button"
@@ -726,12 +726,12 @@ export default function FieldEmployeeDetail({ id }: { id: number }) {
                 Send onboarding invite
               </PillButton>
             )}
-            {/* Disable Login → TogglePillButton red (destructive),
+            {/* Disable Login → PngPillButton red (destructive),
                 h=24. Conditionally rendered only when a login exists. */}
             {loginInfo?.hasLogin && (
-              <TogglePillButton type="button" color="red" onClick={disableCredentials} disabled={credBusy} data-testid="button-disable-credentials">
+              <PngPillButton type="button" color="red" onClick={disableCredentials} disabled={credBusy} data-testid="button-disable-credentials">
                 {t("fieldEmployeeDetail.disableLogin")}
-              </TogglePillButton>
+              </PngPillButton>
             )}
           </div>
         </CardContent>
@@ -767,12 +767,12 @@ export default function FieldEmployeeDetail({ id }: { id: number }) {
             <StickyNote className="w-5 h-5 text-amber-500" />
             {t("fieldEmployeeDetail.notes", { count: notes?.length || 0 })}
           </CardTitle>
-          {/* Add Note → TogglePillButton blue (primary action), h=24.
-              DialogTrigger asChild still binds because TogglePillButton
+          {/* Add Note → PngPillButton blue (primary action), h=24.
+              DialogTrigger asChild still binds because PngPillButton
               renders an underlying <button>. */}
           <Dialog open={noteOpen} onOpenChange={setNoteOpen}>
             <DialogTrigger asChild>
-              <TogglePillButton color="blue" data-testid="button-add-note"><Plus className="w-4 h-4" />{t("fieldEmployeeDetail.addNote")}</TogglePillButton>
+              <PngPillButton color="blue" data-testid="button-add-note"><Plus className="w-4 h-4" />{t("fieldEmployeeDetail.addNote")}</PngPillButton>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader><DialogTitle>{t("fieldEmployeeDetail.addNote")}</DialogTitle></DialogHeader>
@@ -785,9 +785,9 @@ export default function FieldEmployeeDetail({ id }: { id: number }) {
                   data-testid="input-note-content"
                   required
                 />
-                <TogglePillButton color="blue" type="submit" disabled={createNote.isPending} className="w-full" data-testid="button-submit-note">
+                <PngPillButton color="blue" type="submit" disabled={createNote.isPending} className="w-full" data-testid="button-submit-note">
                   {createNote.isPending ? t("fieldEmployeeDetail.adding") : t("fieldEmployeeDetail.addNote")}
-                </TogglePillButton>
+                </PngPillButton>
               </form>
             </DialogContent>
           </Dialog>

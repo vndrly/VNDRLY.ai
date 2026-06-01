@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import BrandPillButton from "@/components/brand-pill-button";
 import SphereBackButton from "@/components/sphere-back-button";
-import TogglePill, { TogglePillButton } from "@/components/toggle-pill";
+import PngPill, { PngPillButton } from "@/components/png-pill-rollover";
 import {
   Select,
   SelectContent,
@@ -155,9 +155,9 @@ export default function VisitorsPage() {
               />
             </div>
             <div>
-              <TogglePillButton color="blue" onClick={onClear} data-testid="button-clear-filters">
+              <PngPillButton color="blue" onClick={onClear} data-testid="button-clear-filters">
                 {t("visitor.filters.clear")}
-              </TogglePillButton>
+              </PngPillButton>
             </div>
           </div>
         </CardContent>
@@ -193,13 +193,13 @@ export default function VisitorsPage() {
                     color — replaces the prior glossy red PNG pill
                     so the on-site counter visually ties to the
                     rest of the brand-tinted chrome. */}
-                <TogglePill
+                <PngPill
                   color="brand"
                   className="align-middle"
                   data-testid="badge-currently-on-site-count"
                 >
                   {active.length}
-                </TogglePill>
+                </PngPill>
               </CardTitle>
             </CardHeader>
             <CardContent>

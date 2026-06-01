@@ -41,7 +41,7 @@ import { useEligibleVendorFieldEmployeesByVendorId } from "@/hooks/use-eligible-
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PillButton } from "@/components/pill";
+import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -55,8 +55,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import BlueButton from "@/components/blue-button";
-import { TogglePillButton } from "@/components/toggle-pill";
-import BakerPillButton from "@/components/baker-pill-button";
+import { PngPillButton, brandImagePillSrc } from "@/components/png-pill-rollover";
+import btnBakerTealPill from "@assets/button-palette/900x229_baker_teal_Pill.png";
 import { useBrand } from "@/hooks/use-brand";
 import GreyButton from "@/components/grey-button";
 import BrandPillButton from "@/components/brand-pill-button";
@@ -763,7 +763,7 @@ export default function VendorDetail({ id }: { id: number }) {
           {canEditVendor && (
           <Dialog open={editOpen} onOpenChange={tryCloseEdit}>
             <DialogTrigger asChild>
-              <TogglePillButton color="blue" onClick={openEditDialog} className="px-2" data-testid="button-edit-vendor"><Pencil className="w-4 h-4" />{t("common.edit")}</TogglePillButton>
+              <PngPillButton color="blue" onClick={openEditDialog} className="px-2" data-testid="button-edit-vendor"><Pencil className="w-4 h-4" />{t("common.edit")}</PngPillButton>
             </DialogTrigger>
             <DialogContent className="max-h-[90vh] overflow-y-auto">
               <DialogLogoHeader
@@ -883,13 +883,13 @@ export default function VendorDetail({ id }: { id: number }) {
                               primary in dialog (Upload/Replace), red =
                               destructive (Remove). Pulses to colored state
                               on hover to match the rest of the pill chrome. */}
-                          <TogglePillButton type="button" color="blue" onClick={() => logoInputRef.current?.click()} disabled={uploadingLogo} data-testid="button-upload-logo">
+                          <PngPillButton type="button" color="blue" onClick={() => logoInputRef.current?.click()} disabled={uploadingLogo} data-testid="button-upload-logo">
                             <Upload className="w-4 h-4" />{uploadingLogo ? "Uploading..." : vendor.logoUrl ? "Replace Logo" : "Upload Logo"}
-                          </TogglePillButton>
+                          </PngPillButton>
                           {vendor.logoUrl && (
-                            <TogglePillButton type="button" color="red" onClick={handleRemoveLogo} data-testid="button-remove-logo">
+                            <PngPillButton type="button" color="red" onClick={handleRemoveLogo} data-testid="button-remove-logo">
                               <Trash2 className="w-4 h-4" />Remove
-                            </TogglePillButton>
+                            </PngPillButton>
                           )}
                         </div>
                       </div>
@@ -921,7 +921,7 @@ export default function VendorDetail({ id }: { id: number }) {
                           data-testid="input-square-logo-file"
                         />
                         <div className="flex gap-2 flex-wrap">
-                          <TogglePillButton
+                          <PngPillButton
                             type="button"
                             color="blue"
                             onClick={() => squareLogoInputRef.current?.click()}
@@ -934,11 +934,11 @@ export default function VendorDetail({ id }: { id: number }) {
                               : vendor.logoSquareUrl
                                 ? "Replace Square Logo"
                                 : "Upload Square Logo"}
-                          </TogglePillButton>
+                          </PngPillButton>
                           {vendor.logoSquareUrl && (
-                            <TogglePillButton type="button" color="red" onClick={handleRemoveSquareLogo} data-testid="button-remove-square-logo">
+                            <PngPillButton type="button" color="red" onClick={handleRemoveSquareLogo} data-testid="button-remove-square-logo">
                               <Trash2 className="w-4 h-4" />Remove
-                            </TogglePillButton>
+                            </PngPillButton>
                           )}
                         </div>
                       </div>
@@ -1009,29 +1009,22 @@ export default function VendorDetail({ id }: { id: number }) {
                     </div>
                   </div>
                 </div>
-                {/* Save Changes — BakerPillButton matching the vendor
-                    login portal Sign In button: 44px tall, idle uses
-                    the new "grey-modal" light-grey square PNG, hover/
-                    pulse swaps to the brand-matched colored pill. */}
-                <BakerPillButton
+                <PngPillButton
                   type="submit"
                   height={44}
-                  idleVariant="grey-modal"
-                  brandColor={
-                    /* Per user direction: hard-pin Baker vendors to the
-                       Baker teal pill PNG regardless of stored brand
-                       color. `brandColor={null}` makes BakerPillButton
-                       fall through to the bakerTeal asset directly. */
+                  color="image"
+                  activeSrc={
                     vendor?.name?.toLowerCase().includes("baker")
-                      ? null
-                      : brand.primary
+                      ? btnBakerTealPill
+                      : brandImagePillSrc(brand.primary, brand.name)
                   }
                   attention={editFormDirty}
                   disabled={updateVendor.isPending || (isAdmin && editForm.name.trim().length >= 3 && (renameMatchesLoading || renameCheckedName !== editForm.name.trim())) || (isAdmin && renameMatches.length > 0 && !confirmDifferentRename)}
-                  testId="button-submit-edit"
+                  data-testid="button-submit-edit"
+                  size="sm"
                 >
                   {updateVendor.isPending ? t("common.saving") : t("common.saveChanges")}
-                </BakerPillButton>
+                </PngPillButton>
               </form>
             </DialogContent>
           </Dialog>
@@ -1066,7 +1059,7 @@ export default function VendorDetail({ id }: { id: number }) {
           <Dialog open={contactOpen} onOpenChange={setContactOpen}>
             {canEditVendor && (
             <DialogTrigger asChild>
-              <TogglePillButton color="blue" data-testid="button-add-contact" className="px-2" onClick={() => setContactForm((f) => ({ ...f, vendorRole: "office" }))}><Plus className="w-4 h-4" />{t("vendors.addEmployee")}</TogglePillButton>
+              <PngPillButton color="blue" data-testid="button-add-contact" className="px-2" onClick={() => setContactForm((f) => ({ ...f, vendorRole: "office" }))}><Plus className="w-4 h-4" />{t("vendors.addEmployee")}</PngPillButton>
             </DialogTrigger>
             )}
             <DialogContent>
@@ -1120,9 +1113,9 @@ export default function VendorDetail({ id }: { id: number }) {
                   <Label>{t("vendors.pecExpiration")}</Label>
                   <Input type="date" value={contactForm.pecExpirationDate} onChange={(e) => setContactForm({ ...contactForm, pecExpirationDate: e.target.value })} data-testid="input-contact-pec-expiration" />
                 </div>
-                <TogglePillButton color="blue" type="submit" disabled={createContact.isPending} className="w-full" data-testid="button-submit-contact">
+                <PngPillButton color="blue" type="submit" disabled={createContact.isPending} className="w-full" data-testid="button-submit-contact">
                   {createContact.isPending ? t("vendors.addingEmployee") : t("vendors.addEmployee")}
-                </TogglePillButton>
+                </PngPillButton>
               </form>
             </DialogContent>
           </Dialog>
@@ -1190,7 +1183,7 @@ export default function VendorDetail({ id }: { id: number }) {
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2"><UserCheck className="w-5 h-5" style={{ color: "var(--brand-primary)" }} />Field Employees ({employees?.length ?? 0})</CardTitle>
           {canEditVendor && (
-            <TogglePillButton color="blue" data-testid="button-add-employee" className="px-2" onClick={() => { setContactForm({ jobTitle: "", firstName: "", lastName: "", email: "", phone: "", vendorRole: "field", pecCertification: false, pecExpirationDate: "", roles: [] }); setContactOpen(true); }}><Plus className="w-4 h-4" />{t("vendors.addEmployee")}</TogglePillButton>
+            <PngPillButton color="blue" data-testid="button-add-employee" className="px-2" onClick={() => { setContactForm({ jobTitle: "", firstName: "", lastName: "", email: "", phone: "", vendorRole: "field", pecCertification: false, pecExpirationDate: "", roles: [] }); setContactOpen(true); }}><Plus className="w-4 h-4" />{t("vendors.addEmployee")}</PngPillButton>
           )}
         </CardHeader>
         <CardContent className="p-0">
@@ -1281,7 +1274,7 @@ export default function VendorDetail({ id }: { id: number }) {
           <CardTitle className="flex items-center gap-2"><FileText className="w-5 h-5" style={{ color: "var(--brand-primary)" }} />Notes ({notes?.length ?? 0})</CardTitle>
           <Dialog open={noteOpen} onOpenChange={setNoteOpen}>
             <DialogTrigger asChild>
-              <TogglePillButton color="blue" className="px-2" data-testid="button-add-note"><Plus className="w-4 h-4" />Add Note</TogglePillButton>
+              <PngPillButton color="blue" className="px-2" data-testid="button-add-note"><Plus className="w-4 h-4" />Add Note</PngPillButton>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader><DialogTitle>Add Note</DialogTitle></DialogHeader>
@@ -1290,9 +1283,9 @@ export default function VendorDetail({ id }: { id: number }) {
                   <Label>Note</Label>
                   <Textarea value={noteContent} onChange={(e) => setNoteContent(e.target.value)} placeholder="Enter note..." rows={4} data-testid="input-note-content" />
                 </div>
-                <TogglePillButton color="blue" type="submit" disabled={createNote.isPending} className="w-full" data-testid="button-submit-note">
+                <PngPillButton color="blue" type="submit" disabled={createNote.isPending} className="w-full" data-testid="button-submit-note">
                   {createNote.isPending ? "Adding..." : "Add Note"}
-                </TogglePillButton>
+                </PngPillButton>
               </form>
             </DialogContent>
           </Dialog>
@@ -1320,15 +1313,15 @@ export default function VendorDetail({ id }: { id: number }) {
 
       {authUser?.role === "admin" && (
         <div className="flex justify-end gap-2">
-          <TogglePillButton
+          <PngPillButton
             onClick={() => { resetMergeDialog(); setMergeOpen(true); }}
             data-testid="button-merge-vendor"
           >
             <Users className="w-4 h-4" />Merge into another vendor…
-          </TogglePillButton>
-          <TogglePillButton color="red" onClick={handleRemoveVendor} disabled={removeVendor.isPending} data-testid="button-remove-vendor">
+          </PngPillButton>
+          <PngPillButton color="red" onClick={handleRemoveVendor} disabled={removeVendor.isPending} data-testid="button-remove-vendor">
             <Trash2 className="w-4 h-4" />{removeVendor.isPending ? "Removing..." : "Remove Vendor"}
-          </TogglePillButton>
+          </PngPillButton>
         </div>
       )}
 
@@ -1381,13 +1374,13 @@ export default function VendorDetail({ id }: { id: number }) {
               )}
               {!mergePreview ? (
                 <div className="flex justify-end">
-                  <TogglePillButton color="blue"
+                  <PngPillButton color="blue"
                     onClick={handleLoadMergePreview}
                     disabled={mergePreviewLoading || !mergeSurvivorId}
                     data-testid="button-load-merge-preview"
                   >
                     {mergePreviewLoading ? "Loading…" : "Preview merge"}
-                  </TogglePillButton>
+                  </PngPillButton>
                 </div>
               ) : (
                 <div className="space-y-3" data-testid="merge-preview-block">
@@ -1433,20 +1426,20 @@ export default function VendorDetail({ id }: { id: number }) {
                     <strong>{mergePreview.totalConflictDeleted}</strong> conflict row(s) dropped.
                   </div>
                   <div className="flex justify-end gap-2">
-                    <TogglePillButton
+                    <PngPillButton
                       onClick={() => { setMergePreview(null); }}
                       disabled={mergeApplying}
                       data-testid="button-merge-back"
                     >
                       Back
-                    </TogglePillButton>
-                    <TogglePillButton color="red"
+                    </PngPillButton>
+                    <PngPillButton color="red"
                       onClick={handleConfirmMerge}
                       disabled={mergeApplying}
                       data-testid="button-confirm-merge"
                     >
                       {mergeApplying ? "Merging…" : "Confirm merge"}
-                    </TogglePillButton>
+                    </PngPillButton>
                   </div>
                 </div>
               )}
@@ -1515,9 +1508,9 @@ export default function VendorDetail({ id }: { id: number }) {
               <Label>{t("vendors.pecExpiration")}</Label>
               <Input type="date" value={editContactForm.pecExpirationDate} onChange={(e) => setEditContactForm({ ...editContactForm, pecExpirationDate: e.target.value })} data-testid="input-edit-contact-pec-expiration" />
             </div>
-            <TogglePillButton color="blue" type="submit" disabled={updateContact.isPending} attention={editContactDirty} className="w-full" data-testid="button-submit-edit-contact">
+            <PngPillButton color="blue" type="submit" disabled={updateContact.isPending} attention={editContactDirty} className="w-full" data-testid="button-submit-edit-contact">
               {updateContact.isPending ? t("common.saving") : t("common.saveChanges")}
-            </TogglePillButton>
+            </PngPillButton>
           </form>
         </DialogContent>
       </Dialog>
@@ -1582,9 +1575,9 @@ export default function VendorDetail({ id }: { id: number }) {
               <Checkbox id="visit-notif-employee-edit" checked={editEmployeeForm.roles.includes("Visitor Notifications")} onCheckedChange={(v) => setEditEmployeeForm({ ...editEmployeeForm, roles: v ? Array.from(new Set([...editEmployeeForm.roles, "Visitor Notifications"])) : editEmployeeForm.roles.filter((r) => r !== "Visitor Notifications") })} data-testid="checkbox-edit-employee-visit-notifications" />
               <Label htmlFor="visit-notif-employee-edit" className="cursor-pointer">{t("vendors.visitorNotifications")}</Label>
             </div>
-            <TogglePillButton type="submit" color="blue" className="w-full px-2" disabled={updateEmployee.isPending} attention={editEmployeeDirty} data-testid="button-submit-edit-employee">
+            <PngPillButton type="submit" color="blue" className="w-full px-2" disabled={updateEmployee.isPending} attention={editEmployeeDirty} data-testid="button-submit-edit-employee">
               {updateEmployee.isPending ? t("common.saving") : t("common.saveChanges")}
-            </TogglePillButton>
+            </PngPillButton>
           </form>
         </DialogContent>
       </Dialog>
@@ -1660,7 +1653,7 @@ function OperatingAreaEditor({ vendorId, canEdit }: { vendorId: number; canEdit:
           </div>
         </div>
         {canEdit && !editing && (
-          <TogglePillButton color="blue" onClick={start} className="px-2" data-testid="button-edit-operating-area"><Pencil className="w-3 h-3" />Change Radius</TogglePillButton>
+          <PngPillButton color="blue" onClick={start} className="px-2" data-testid="button-edit-operating-area"><Pencil className="w-3 h-3" />Change Radius</PngPillButton>
         )}
       </div>
       {editing && (
@@ -1682,15 +1675,15 @@ function OperatingAreaEditor({ vendorId, canEdit }: { vendorId: number; canEdit:
               Cancel is explicitly red per user request (overrides
               the usual grey-cancel convention for this surface). */}
           <div className="flex gap-2">
-            <TogglePillButton color="blue" onClick={save} disabled={saving} data-testid="button-save-operating-area">
+            <PngPillButton color="blue" onClick={save} disabled={saving} data-testid="button-save-operating-area">
               <Check className="h-4 w-4" />
               {saving ? "Saving..." : "Save"}
-            </TogglePillButton>
+            </PngPillButton>
             <div className="w-3" />
-            <TogglePillButton color="red" onClick={() => setEditing(false)} data-testid="button-cancel-operating-area">
+            <PngPillButton color="red" onClick={() => setEditing(false)} data-testid="button-cancel-operating-area">
               <X className="h-4 w-4" />
               Cancel
-            </TogglePillButton>
+            </PngPillButton>
           </div>
         </div>
       )}
@@ -1784,14 +1777,14 @@ function VendorRatingsCard({ vendorId }: { vendorId: number }) {
                     <StarRating value={myRating.rating} readOnly size={20} />
                     {myRating.review && <span className="text-sm text-muted-foreground line-clamp-1">"{myRating.review}"</span>}
                     <div className="ml-auto mr-2 flex items-center gap-4">
-                      <TogglePillButton color="blue" onClick={startEdit} className="px-2" data-testid="button-edit-my-rating"><Pencil className="w-4 h-4" />Edit</TogglePillButton>
+                      <PngPillButton color="blue" onClick={startEdit} className="px-2" data-testid="button-edit-my-rating"><Pencil className="w-4 h-4" />Edit</PngPillButton>
                       <BrandPillButton tone="red" onClick={removeMine} data-testid="button-remove-my-rating"><Trash2 className="w-4 h-4" />Remove</BrandPillButton>
                     </div>
                   </>
                 ) : (
                   <>
                     <span className="text-sm text-muted-foreground">You haven't rated this vendor.</span>
-                    <div className="ml-auto"><TogglePillButton color="blue" className="px-2" onClick={startEdit} data-testid="button-add-my-rating"><Plus className="w-4 h-4" />Add Rating</TogglePillButton></div>
+                    <div className="ml-auto"><PngPillButton color="blue" className="px-2" onClick={startEdit} data-testid="button-add-my-rating"><Plus className="w-4 h-4" />Add Rating</PngPillButton></div>
                   </>
                 )}
               </div>
@@ -1809,15 +1802,15 @@ function VendorRatingsCard({ vendorId }: { vendorId: number }) {
                   data-testid="input-rating-review"
                 />
                 <div className="flex gap-2">
-                  <TogglePillButton color="blue" onClick={submit} disabled={upsert.isPending} data-testid="button-save-rating">
+                  <PngPillButton color="blue" onClick={submit} disabled={upsert.isPending} data-testid="button-save-rating">
                     <Check className="w-4 h-4" />
                     {upsert.isPending ? "Saving..." : "Save"}
-                  </TogglePillButton>
+                  </PngPillButton>
                   <div className="w-3" />
-                  <TogglePillButton onClick={() => setEditing(false)} data-testid="button-cancel-rating">
+                  <PngPillButton onClick={() => setEditing(false)} data-testid="button-cancel-rating">
                     <X className="w-4 h-4" />
                     Cancel
-                  </TogglePillButton>
+                  </PngPillButton>
                 </div>
               </div>
             )}
@@ -2062,19 +2055,19 @@ function ServicePriceEditModal({
           </p>
         </div>
         <div className="flex items-stretch gap-2 pt-2">
-          {/* Cancel → canonical TogglePillButton with color="red".
-              TogglePillButton's default behavior is grey-idle → swap
+          {/* Cancel → canonical PngPillButton with color="red".
+              PngPillButton's default behavior is grey-idle → swap
               to its `color` on hover, so this renders neutral grey
               at rest and pulses red on hover (red = destructive,
               matching the brand-aware chrome doctrine). height={36}
               matches the sibling Save button so the two pills line
               up in the `flex items-stretch gap-2` footer. */}
-          <TogglePillButton color="red" size="sm" height={36} onClick={() => onOpenChange(false)} data-testid={`button-cancel-edit-price-${item.id}`}>Cancel</TogglePillButton>
+          <PngPillButton color="red" size="sm" height={36} onClick={() => onOpenChange(false)} data-testid={`button-cancel-edit-price-${item.id}`}>Cancel</PngPillButton>
           {/* Wide blue TogglePill — idles in the shared light-grey
               pill chrome and pulses to the canonical TogglePill blue
               on hover. `flex-1` makes it span the remainder of the
               footer next to the Cancel button. */}
-          <TogglePillButton
+          <PngPillButton
             color="blue"
             size="sm"
             height={36}
@@ -2084,7 +2077,7 @@ function ServicePriceEditModal({
             data-testid={`button-save-price-${item.id}`}
           >
             {save.isPending ? "Saving…" : "Save price"}
-          </TogglePillButton>
+          </PngPillButton>
         </div>
       </DialogContent>
     </Dialog>

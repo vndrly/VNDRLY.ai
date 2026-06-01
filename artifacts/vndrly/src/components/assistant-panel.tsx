@@ -15,11 +15,11 @@ import askVHighlight from "@assets/askVhighlight_1778250163247.png";
 import askVTop from "@assets/askVtop_1778249704393.png";
 import askVInactiveBaker from "@assets/askVinactivebaker_1778249704392.png";
 import askVActiveBaker from "@assets/askVactivebaker_1778249704391.png";
-import { PillButton } from "@/components/pill";
+import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import { Textarea } from "@/components/ui/textarea";
 import SidebarButton from "@/components/sidebar-button";
 import PillBg from "@/components/pill-bg";
-import { pickPillForBrand } from "@/components/baker-pill-button";
+import { brandImagePillSrc } from "@/components/png-pill-rollover";
 import { cn } from "@/lib/utils";
 import toolbarPillActiveSrc from "@assets/NewPillPallet_0001s_0004_Layer-5.png";
 import bakerNavTealSquareSrc from "@assets/NewPillPallet_0001s_0004_Layer-5.png";
@@ -720,7 +720,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
                       data-testid={`assistant-quick-${qa.label.replace(/\s+/g, "-").toLowerCase()}`}
                     >
                       <PillBg
-                        src={isBaker ? bakerTealPillRoundSrc : pickPillForBrand(brand.primary, "pill", brand.name)}
+                        src={isBaker ? bakerTealPillRoundSrc : brandImagePillSrc(brand.primary, brand.name)}
                         imageAspect={900 / 229}
                         className="opacity-0 transition-opacity duration-200 group-hover:opacity-100"
                       />
@@ -756,7 +756,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
               >
                 {m.role === "user" && (
                   <PillBg
-                    src={isBaker ? userBubblePillSrc : pickPillForBrand(brand.primary, "pill", brand.name)}
+                    src={isBaker ? userBubblePillSrc : brandImagePillSrc(brand.primary, brand.name)}
                     imageAspect={900 / 229}
                   />
                 )}

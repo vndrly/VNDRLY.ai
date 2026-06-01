@@ -28,7 +28,7 @@ import { useTranslation } from "react-i18next";
 import { visitsApi, type VisitorRow } from "@/lib/visits-api";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PillButton } from "@/components/pill";
+import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -43,7 +43,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { useBrand } from "@/hooks/use-brand";
 import StatusBadge from "@/components/status-badge";
 import TicketStatusBadge from "@/components/ticket-status-badge";
-import TicketStatusTogglePill from "@/components/ticket-status-toggle-pill";
 import { SiteLocationMap } from "@/components/site-location-map";
 import BlueButton from "@/components/blue-button";
 import RedButton from "@/components/red-button";
@@ -52,7 +51,7 @@ import LightGreyRedButton from "@/components/light-grey-red-button";
 import GreenV2Button from "@/components/green-v2-button";
 import AmberButton from "@/components/amber-button";
 import BrandPill from "@/components/brand-pill";
-import TogglePill, { TogglePillButton } from "@/components/toggle-pill";
+import PngPill, { PngPillButton } from "@/components/png-pill-rollover";
 import BrandPillButton from "@/components/brand-pill-button";
 import SphereBackButton from "@/components/sphere-back-button";
 import AfePill from "@/components/afe-pill";
@@ -927,14 +926,14 @@ export default function SiteLocationDetail({ id }: { id: number }) {
                     </p>
                   </div>
                 </div>
-                <TogglePillButton color="blue"
+                <PngPillButton color="blue"
                   className="w-full"
                   onClick={handleUnhide}
                   disabled={updateSite.isPending}
                   data-testid="button-unhide-site"
                 >
                   {updateSite.isPending ? t("siteLocations.unhiding") : t("siteLocations.unhideSite")}
-                </TogglePillButton>
+                </PngPillButton>
               </div>
             </div>
           )}
@@ -942,14 +941,14 @@ export default function SiteLocationDetail({ id }: { id: number }) {
             <div className="px-6 pb-6">
               <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
                 <DialogTrigger asChild>
-                  <TogglePillButton color="red" className="w-full px-2" data-testid="button-remove-site"><Trash2 className="w-4 h-4" />{t("siteLocations.removeSite")}</TogglePillButton>
+                  <PngPillButton color="red" className="w-full px-2" data-testid="button-remove-site"><Trash2 className="w-4 h-4" />{t("siteLocations.removeSite")}</PngPillButton>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader><DialogTitle>{t("siteLocations.removeSiteTitle")}</DialogTitle></DialogHeader>
                   <p className="text-sm text-muted-foreground">{t("siteLocations.removeSiteConfirmPrefix")} <strong>{site.name}</strong>{t("siteLocations.removeSiteConfirmSuffix")}</p>
                   <div className="flex gap-3 justify-end mt-4">
                     <PillButton color="red" onClick={() => setDeleteOpen(false)}>{t("common.cancel")}</PillButton>
-                    <TogglePillButton color="red" onClick={handleDeleteSite} data-testid="button-confirm-remove">{deleteSite.isPending ? t("siteLocations.removing") : t("siteLocations.removeSite")}</TogglePillButton>
+                    <PngPillButton color="red" onClick={handleDeleteSite} data-testid="button-confirm-remove">{deleteSite.isPending ? t("siteLocations.removing") : t("siteLocations.removeSite")}</PngPillButton>
                   </div>
                 </DialogContent>
               </Dialog>
@@ -1127,9 +1126,9 @@ export default function SiteLocationDetail({ id }: { id: number }) {
                 <div className="flex gap-8 justify-end pt-3 border-t">
                   <LightGreyRedButton onClick={() => setExpandOpen(false)} data-testid="button-cancel-expand">{t("common.cancel")}</LightGreyRedButton>
                   {expandDirty ? (
-                    <TogglePillButton color="green" onClick={handleSaveExpand} disabled={expandSaving} data-testid="button-save-expand">{expandSaving ? t("siteLocations.saving") : t("siteLocations.save")}</TogglePillButton>
+                    <PngPillButton color="green" onClick={handleSaveExpand} disabled={expandSaving} data-testid="button-save-expand">{expandSaving ? t("siteLocations.saving") : t("siteLocations.save")}</PngPillButton>
                   ) : (
-                    <TogglePillButton color="blue" onClick={handleSaveExpand} disabled={expandSaving} data-testid="button-save-expand">{expandSaving ? t("siteLocations.saving") : t("siteLocations.save")}</TogglePillButton>
+                    <PngPillButton color="blue" onClick={handleSaveExpand} disabled={expandSaving} data-testid="button-save-expand">{expandSaving ? t("siteLocations.saving") : t("siteLocations.save")}</PngPillButton>
                   )}
                 </div>
               </DialogContent>
@@ -1169,7 +1168,7 @@ export default function SiteLocationDetail({ id }: { id: number }) {
                       data-testid="input-add-assignment-afe"
                     />
                   </div>
-                  <TogglePillButton color="blue" type="submit" disabled={createAssignment.isPending} data-testid="button-submit-assignment" className="w-full">{createAssignment.isPending ? t("siteLocations.addingAssignment") : t("siteLocations.addAssignment")}</TogglePillButton>
+                  <PngPillButton color="blue" type="submit" disabled={createAssignment.isPending} data-testid="button-submit-assignment" className="w-full">{createAssignment.isPending ? t("siteLocations.addingAssignment") : t("siteLocations.addAssignment")}</PngPillButton>
                 </form>
               </DialogContent>
             </Dialog>
@@ -1275,10 +1274,10 @@ export default function SiteLocationDetail({ id }: { id: number }) {
             {canManageAssignments && (
               <Dialog open={directOpen} onOpenChange={setDirectOpen}>
                 <DialogTrigger asChild>
-                  <TogglePillButton color="blue" className="px-2" data-testid="button-add-direct-assignment">
+                  <PngPillButton color="blue" className="px-2" data-testid="button-add-direct-assignment">
                     <Plus className="w-4 h-4" />
                     {t("directAssignment.addButton")}
-                  </TogglePillButton>
+                  </PngPillButton>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
@@ -1375,7 +1374,7 @@ export default function SiteLocationDetail({ id }: { id: number }) {
                         data-testid="textarea-direct-scope"
                       />
                     </div>
-                    <TogglePillButton
+                    <PngPillButton
                       color="blue"
                       type="submit"
 
@@ -1386,7 +1385,7 @@ export default function SiteLocationDetail({ id }: { id: number }) {
                       {createDirectAssignment.isPending
                         ? t("directAssignment.sending")
                         : t("directAssignment.sendOffer")}
-                    </TogglePillButton>
+                    </PngPillButton>
                   </form>
                 </DialogContent>
               </Dialog>
@@ -1441,13 +1440,13 @@ export default function SiteLocationDetail({ id }: { id: number }) {
                         </TableCell>
                         <TableCell>
                           {statusTone ? (
-                            <TogglePill color={statusTone} className="min-w-[90px]" data-testid={`badge-direct-status-${a.id}`}>
+                            <PngPill color={statusTone} className="min-w-[90px]" data-testid={`badge-direct-status-${a.id}`}>
                               {t(`directAssignment.status.${a.status}`)}
-                            </TogglePill>
+                            </PngPill>
                           ) : (
-                            <TogglePill rest className="min-w-[90px]" data-testid={`badge-direct-status-${a.id}`}>
+                            <PngPill rest className="min-w-[90px]" data-testid={`badge-direct-status-${a.id}`}>
                               {t(`directAssignment.status.${a.status}`)}
-                            </TogglePill>
+                            </PngPill>
                           )}
                         </TableCell>
                         {canManageAssignments && (
@@ -1530,7 +1529,7 @@ export default function SiteLocationDetail({ id }: { id: number }) {
                             </TableCell>
                             <TableCell>{t.workTypeName}</TableCell>
                             <TableCell>{t.fieldEmployeeName || "-"}</TableCell>
-                            <TableCell><TicketStatusTogglePill status={t.status} updatedAt={t.updatedAt ?? t.createdAt} className="min-w-[90px]" /></TableCell>
+                            <TableCell><TicketStatusBadge status={t.status} updatedAt={t.updatedAt ?? t.createdAt} className="min-w-[90px]" /></TableCell>
                             <TableCell className="text-sm text-muted-foreground">{new Date(t.updatedAt ?? t.createdAt).toLocaleDateString()}</TableCell>
                           </TableRow>
                         ))}

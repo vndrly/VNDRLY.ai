@@ -18,29 +18,12 @@
  * Run with:
  *   pnpm --filter @workspace/api-server exec tsx scripts/seed-partner-branding.ts
  */
-import { Storage } from "@google-cloud/storage";
 import { eq } from "drizzle-orm";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import { db, partnersTable } from "@workspace/db";
-
-const REPLIT_SIDECAR_ENDPOINT = "http://127.0.0.1:1106";
-
-const storage = new Storage({
-  credentials: {
-    audience: "replit",
-    subject_token_type: "access_token",
-    token_url: `${REPLIT_SIDECAR_ENDPOINT}/token`,
-    type: "external_account",
-    credential_source: {
-      url: `${REPLIT_SIDECAR_ENDPOINT}/credential`,
-      format: { type: "json", subject_token_field_name: "access_token" },
-    },
-    universe_domain: "googleapis.com",
-  },
-  projectId: "",
-});
+import { getObjectStore } from "../src/lib/objectStore.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ASSETS_DIR = path.join(__dirname, "assets");
@@ -96,26 +79,12 @@ function findLogoFile(slug: string): { absPath: string; ext: "png" | "jpg" } | n
 }
 
 async function uploadPublicLogo(objectKey: string, fileAbsPath: string, ext: "png" | "jpg"): Promise<string> {
-  const publicSearchPaths = (process.env.PUBLIC_OBJECT_SEARCH_PATHS || "")
-    .split(",")
-    .map((p) => p.trim())
-    .filter(Boolean);
-  if (publicSearchPaths.length === 0) {
-    throw new Error("PUBLIC_OBJECT_SEARCH_PATHS not set");
-  }
-  const basePath = publicSearchPaths[0];
-  const fullPath = `${basePath}/${objectKey}`.replace(/^\//, "");
-  const [bucketName, ...rest] = fullPath.split("/");
-  const objectName = rest.join("/");
-  const bucket = storage.bucket(bucketName);
-  const file = bucket.file(objectName);
   const contentType = ext === "jpg" ? "image/jpeg" : "image/png";
-  await file.save(fs.readFileSync(fileAbsPath), {
+  return getObjectStore().putPublicObject(
+    objectKey,
     contentType,
-    resumable: false,
-    metadata: { cacheControl: "public, max-age=3600" },
-  });
-  return `/api/storage/public-objects/${objectKey}`;
+    fs.readFileSync(fileAbsPath),
+  );
 }
 
 export type PartnerBrandingSeedCounts = {

@@ -1,12 +1,18 @@
 import * as ImagePicker from "expo-image-picker";
 
-import { apiFetch } from "./api";
+import { apiFetch, getApiBase } from "./api";
 
 export type UploadResult = {
   objectPath: string;
   contentType: string;
   size: number;
 };
+
+function resolveUploadUrl(uploadURL: string): string {
+  if (/^https?:\/\//i.test(uploadURL)) return uploadURL;
+  const base = getApiBase().replace(/\/$/, "");
+  return `${base}${uploadURL.startsWith("/") ? uploadURL : `/${uploadURL}`}`;
+}
 
 export async function pickAndUploadImage(): Promise<UploadResult | null> {
   const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -51,7 +57,8 @@ async function uploadAsset(
   );
 
   const blob = await fetch(asset.uri).then((r) => r.blob());
-  const putRes = await fetch(presigned.uploadURL, {
+  const putUrl = resolveUploadUrl(presigned.uploadURL);
+  const putRes = await fetch(putUrl, {
     method: "PUT",
     headers: { "content-type": contentType },
     body: blob,
@@ -59,5 +66,14 @@ async function uploadAsset(
   if (!putRes.ok) {
     throw new Error(`Upload failed (HTTP ${putRes.status})`);
   }
+
+  await apiFetch("/api/storage/uploads/finalize", {
+    method: "POST",
+    body: JSON.stringify({
+      objectURL: presigned.uploadURL,
+      visibility: "public",
+    }),
+  });
+
   return { objectPath: presigned.objectPath, contentType, size };
 }

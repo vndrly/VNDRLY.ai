@@ -4,10 +4,10 @@ import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "wouter";
 import SphereBackButton from "@/components/sphere-back-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import TogglePill, {
-  TogglePillButton,
-  type TogglePillColor,
-} from "@/components/toggle-pill";
+import PngPill, {
+  PngPillButton,
+  type PngPillColor,
+} from "@/components/png-pill-rollover";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -60,7 +60,7 @@ type StatementResponse = {
 
 function statusPillColor(
   status: StatementRow["status"],
-): TogglePillColor {
+): PngPillColor {
   switch (status) {
     case "paid":
       return "green";
@@ -265,7 +265,7 @@ export default function StatementPage() {
           </h1>
         </div>
         <div className="flex items-center gap-2">
-          <TogglePillButton
+          <PngPillButton
             color="blue"
 
             onClick={() => window.print()}
@@ -273,7 +273,7 @@ export default function StatementPage() {
           >
             <Printer className="w-3.5 h-3.5" />
             {t("statement.actions.print")}
-          </TogglePillButton>
+          </PngPillButton>
         </div>
       </div>
 
@@ -519,9 +519,9 @@ export default function StatementPage() {
                           {formatDate(r.periodEnd)}
                         </TableCell>
                         <TableCell>
-                          <TogglePill color={statusPillColor(r.status)}>
+                          <PngPill color={statusPillColor(r.status)}>
                             {t(`invoices.status.${r.status}`)}
-                          </TogglePill>
+                          </PngPill>
                         </TableCell>
                         <TableCell className="text-right tabular-nums">
                           {formatMoney(r.total)}

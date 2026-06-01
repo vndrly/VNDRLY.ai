@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { notificationsApi, type NotificationRow } from "@/lib/notifications-api";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PillButton } from "@/components/pill";
+import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 
 const CATEGORY_IDS = ["all", "tickets", "hotlist", "compliance", "crew", "visitor", "system"] as const;
 

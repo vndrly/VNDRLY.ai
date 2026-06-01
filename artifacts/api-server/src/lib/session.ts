@@ -81,6 +81,15 @@ export function getSessionFromRequest(req: Request): SessionPayload | null {
   return decodeSession(cookies["vndrly_session"]);
 }
 
+export function isAllowlistedApiRoute(
+  req: Request,
+  allowlist: { method: string; pattern: RegExp }[],
+): boolean {
+  return allowlist.some(
+    (rule) => rule.method === req.method && rule.pattern.test(req.path),
+  );
+}
+
 export function requireSession(req: Request, res: Response, next: NextFunction): void {
   const session = getSessionFromRequest(req);
   if (!session) {
@@ -88,6 +97,16 @@ export function requireSession(req: Request, res: Response, next: NextFunction):
     return;
   }
   next();
+}
+
+/** Skip the session check for explicitly public pre-auth API routes. */
+export function requireSessionUnlessAllowlisted(
+  allowlist: { method: string; pattern: RegExp }[],
+) {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    if (isAllowlistedApiRoute(req, allowlist)) return next();
+    return requireSession(req, res, next);
+  };
 }
 
 export function requireAdmin(req: Request, res: Response, next: NextFunction): void {

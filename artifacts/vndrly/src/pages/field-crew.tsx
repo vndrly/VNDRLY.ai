@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft, UserPlus, UserMinus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { usePortalBase } from "@/lib/portal-base";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -31,6 +32,7 @@ function ticketIdFromLink(link: string | null): number | null {
 export default function FieldCrew() {
   const { t } = useTranslation();
   const [, navigate] = useLocation();
+  const portalBase = usePortalBase();
   const [items, setItems] = useState<NotificationRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -108,7 +110,7 @@ export default function FieldCrew() {
       return;
     }
     if (item.link === "/tickets") {
-      navigate("/field");
+      navigate(portalBase);
     }
   };
 
@@ -117,7 +119,7 @@ export default function FieldCrew() {
       <div className="flex items-center gap-2 mb-4">
         <button
           type="button"
-          onClick={() => navigate("/field/profile")}
+          onClick={() => navigate(`${portalBase}/profile`)}
           className="p-2 -ml-2 rounded-md hover:bg-muted"
           aria-label={t("common.back")}
           data-testid="crew-changes-back"

@@ -1,11 +1,11 @@
-import { TogglePillButton } from "@/components/toggle-pill";
+import { PngPillButton } from "@/components/png-pill-rollover";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useRoute } from "wouter";
 import { useTranslation } from "react-i18next";
-import vndrlyLogo from "@assets/512_Vndrly_Logo_2_1777147855089.png";
+import { VNDRLY_LOGO_SQUARE as vndrlyLogo } from "@/lib/vndrly-brand-assets";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PillButton } from "@/components/pill";
+import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import { Checkbox } from "@/components/ui/checkbox";
 import AmberButton from "@/components/amber-button";
 import { useToast } from "@/hooks/use-toast";
@@ -424,11 +424,11 @@ export default function OnboardingField() {
             </PillButton>
             <div className="flex items-center gap-2">
               {currentStep.key === "set-password" ? (
-                <TogglePillButton color="amber" onClick={submit} disabled={loading} data-testid="button-finish" className="px-6 h-10">
+                <PngPillButton color="amber" onClick={submit} disabled={loading} data-testid="button-finish" className="px-6 h-10">
                   {loading ? t("fieldOnboarding.finishing") : t("fieldOnboarding.finishSetup")}
-                </TogglePillButton>
+                </PngPillButton>
               ) : (
-                <TogglePillButton color="amber" onClick={goNext} disabled={loading} data-testid="button-next" className="px-6 h-10">{t("fieldOnboarding.continue")}</TogglePillButton>
+                <PngPillButton color="amber" onClick={goNext} disabled={loading} data-testid="button-next" className="px-6 h-10">{t("fieldOnboarding.continue")}</PngPillButton>
               )}
             </div>
           </div>
