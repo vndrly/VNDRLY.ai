@@ -20,7 +20,8 @@
     "save": "powershell -ExecutionPolicy Bypass -File scripts/publish-online.ps1",
     "setup:vps": "node lib/e2e/scripts/godaddy-setup-vps.mjs",
     "setup:production": "node scripts/godaddy-provision.mjs",
-    "deploy:production": "node scripts/godaddy-deploy.mjs"
+    "deploy:production": "node scripts/godaddy-deploy.mjs",
+    "preflight:deploy": "node scripts/preflight-deploy.mjs"
   },
   "private": true,
   "devDependencies": {
