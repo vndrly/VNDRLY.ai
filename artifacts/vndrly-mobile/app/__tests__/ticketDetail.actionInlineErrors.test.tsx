@@ -76,6 +76,28 @@ vi.mock("expo-notifications", () => ({
   addNotificationReceivedListener: () => ({ remove: () => {} }),
 }));
 
+vi.mock("react-native", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("react-native")>();
+  const ReactLib = (await import("react")).default;
+  return {
+    ...actual,
+    Modal: ({
+      visible,
+      children,
+    }: {
+      visible?: boolean;
+      children?: React.ReactNode;
+    }) =>
+      visible
+        ? ReactLib.createElement(
+            "div",
+            { "data-testid": "rn-modal-visible" },
+            children,
+          )
+        : null,
+  };
+});
+
 vi.mock("expo-location", () => ({
   Accuracy: { High: 4, Balanced: 3 },
   requestForegroundPermissionsAsync: (...a: unknown[]) =>
@@ -232,6 +254,7 @@ import {
 import { Alert } from "react-native";
 
 import TicketDetailScreen from "../ticket/[id]";
+import { tap, tapThroughMileagePrompt } from "@/lib/testDomHelpers";
 
 afterEach(() => {
   cleanup();
@@ -337,10 +360,15 @@ function firstByTestId(id: string): HTMLElement {
   return screen.getAllByTestId(id)[0];
 }
 
-function tap(el: HTMLElement): void {
-  fireEvent.pointerDown(el);
-  fireEvent.pointerUp(el);
-  fireEvent.click(el);
+async function tapActionButton(buttonTestId: string): Promise<void> {
+  if (
+    buttonTestId === "button-en-route" ||
+    buttonTestId === "button-check-out"
+  ) {
+    await tapThroughMileagePrompt(buttonTestId);
+    return;
+  }
+  tap(firstByTestId(buttonTestId));
 }
 
 async function renderAndWaitForLoad() {
@@ -442,7 +470,7 @@ describe.each(BUTTONS)(
 
       const ticketGetsBefore = getTicketGetCount();
 
-      tap(firstByTestId(buttonTestId));
+      await tapActionButton(buttonTestId);
 
       // Inline error renders under the failed button.
       await waitFor(() => {
@@ -486,7 +514,7 @@ describe.each(BUTTONS)(
 
       const ticketGetsBefore = getTicketGetCount();
 
-      tap(firstByTestId(buttonTestId));
+      await tapActionButton(buttonTestId);
 
       // handleActionError must trigger a silent reload (one extra GET
       // of the ticket) when the code is in STATE_CONFLICT_CODES.

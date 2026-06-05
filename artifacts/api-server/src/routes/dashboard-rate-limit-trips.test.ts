@@ -66,6 +66,7 @@ vi.mock("@workspace/db", () => {
     vendorsTable: tableTag("vendors"),
     siteLocationsTable: tableTag("siteLocations"),
     ticketsTable: tableTag("tickets"),
+    ticketCrewTable: tableTag("ticketCrew"),
     hotlistJobsTable: tableTag("hotlistJobs"),
     hotlistBidsTable: tableTag("hotlistBids"),
     // Task #51 — referenced by unread-comments.ts subqueries.

@@ -54,6 +54,7 @@ async function loadTicketForAuth(ticketId: number) {
       status: ticketsTable.status,
       partnerId: siteLocationsTable.partnerId,
       fieldEmployeeId: ticketsTable.fieldEmployeeId,
+      foremanUserId: ticketsTable.foremanUserId,
     })
     .from(ticketsTable)
     .leftJoin(siteLocationsTable, eq(ticketsTable.siteLocationId, siteLocationsTable.id))
@@ -238,6 +239,30 @@ router.post("/tickets/:id/crew/:employeeId/check-in", async (req, res): Promise<
   }
 
   res.status(201).json(row);
+
+  // Foreman alert: crew punch in (Option A — foreman-driven or observed)
+  try {
+    const ticket = await loadTicketForAuth(ticketId);
+    const employee = await loadEmployeeForAuth(employeeId);
+    if (
+      ticket?.foremanUserId &&
+      auth.session?.userId !== ticket.foremanUserId &&
+      employee
+    ) {
+      const name = `${employee.firstName ?? ""} ${employee.lastName ?? ""}`.trim() || "Crew member";
+      await notifyUsers([ticket.foremanUserId], {
+        type: "crew_punch_in",
+        title: `${name} checked in`,
+        body: `Ticket ${formatTicketTrackingNumber(ticketId)}`,
+        link: `/tickets/${ticketId}`,
+        dedupeKey: `crew_punch_in:${row.id}`,
+        category: "crew",
+        pushData: { ticketId, type: "crew_punch_in" },
+      });
+    }
+  } catch (err) {
+    logger.warn({ err, ticketId, employeeId }, "foreman crew punch-in notification failed");
+  }
 });
 
 // POST /tickets/:id/crew/:employeeId/check-out
@@ -296,6 +321,29 @@ router.post("/tickets/:id/crew/:employeeId/check-out", async (req, res): Promise
   }
 
   res.json(row);
+
+  try {
+    const ticket = await loadTicketForAuth(ticketId);
+    const employee = await loadEmployeeForAuth(employeeId);
+    if (
+      ticket?.foremanUserId &&
+      auth.session?.userId !== ticket.foremanUserId &&
+      employee
+    ) {
+      const name = `${employee.firstName ?? ""} ${employee.lastName ?? ""}`.trim() || "Crew member";
+      await notifyUsers([ticket.foremanUserId], {
+        type: "crew_punch_out",
+        title: `${name} checked out`,
+        body: `Ticket ${formatTicketTrackingNumber(ticketId)}`,
+        link: `/tickets/${ticketId}`,
+        dedupeKey: `crew_punch_out:${row.id}`,
+        category: "crew",
+        pushData: { ticketId, type: "crew_punch_out" },
+      });
+    }
+  } catch (err) {
+    logger.warn({ err, ticketId, employeeId }, "foreman crew punch-out notification failed");
+  }
 });
 
 // PATCH /tickets/:id/crew-sessions/:sessionId — supervisor correction

@@ -58,6 +58,7 @@
     "@workspace/api-zod": "workspace:*",
     "@workspace/crew-validation-codes": "workspace:*",
     "@workspace/db": "workspace:*",
+    "@workspace/ticket-nudge-ui": "workspace:*",
     "@workspace/ticket-state-conflict-codes": "workspace:*",
     "@workspace/ticket-status-meta": "workspace:*",
     "@workspace/visit-error-codes": "workspace:*",

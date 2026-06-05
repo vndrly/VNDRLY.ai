@@ -18,7 +18,7 @@ export default defineConfig({
     // Each eval call to Claude can take a few seconds; the per-test
     // timeout is set in the eval file itself (CALL_TIMEOUT_MS) but
     // we also raise the suite hook timeout so beforeAll has room.
-    hookTimeout: 30_000,
+    hookTimeout: 60_000,
     // Run the prompts serially so a developer running the eval
     // locally doesn't trip rate limits. The suite is small enough
     // that the wall-clock cost is still under a minute.

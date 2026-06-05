@@ -1,8 +1,8 @@
 import { useSyncExternalStore } from "react";
 
-type Counts = { home: number; schedule: number };
+type Counts = { home: number; schedule: number; comms: number };
 
-let state: Counts = { home: 0, schedule: 0 };
+let state: Counts = { home: 0, schedule: 0, comms: 0 };
 const listeners = new Set<() => void>();
 
 function emit() {
@@ -31,6 +31,13 @@ export function setScheduleBadge(n: number) {
   const next = Math.max(0, Math.floor(n));
   if (state.schedule === next) return;
   state = { ...state, schedule: next };
+  emit();
+}
+
+export function setCommsBadge(n: number) {
+  const next = Math.max(0, Math.floor(n));
+  if (state.comms === next) return;
+  state = { ...state, comms: next };
   emit();
 }
 

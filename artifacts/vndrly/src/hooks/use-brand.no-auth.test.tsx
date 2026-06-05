@@ -18,9 +18,11 @@ vi.mock("@workspace/api-client-react", () => ({
   useGetPartner: () => ({ data: undefined }),
   useGetVendor: () => ({ data: undefined }),
   useGetPlatformSettings: () => ({ data: undefined }),
+  useGetPublicPlatformBrand: () => ({ data: undefined }),
   getGetPartnerQueryKey: (id: number) => ["partner", id],
   getGetVendorQueryKey: (id: number) => ["vendor", id],
   getGetPlatformSettingsQueryKey: () => ["platform-settings"],
+  getGetPublicPlatformBrandQueryKey: () => ["public-platform-brand"],
 }));
 
 import {

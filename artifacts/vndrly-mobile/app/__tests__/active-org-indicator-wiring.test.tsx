@@ -122,8 +122,8 @@ vi.mock("expo-notifications", () => ({
 }));
 
 vi.mock("expo-splash-screen", () => ({
-  preventAutoHideAsync: vi.fn(),
-  hideAsync: vi.fn(),
+  preventAutoHideAsync: vi.fn(() => Promise.resolve()),
+  hideAsync: vi.fn(() => Promise.resolve()),
 }));
 
 vi.mock("@expo-google-fonts/inter", () => ({

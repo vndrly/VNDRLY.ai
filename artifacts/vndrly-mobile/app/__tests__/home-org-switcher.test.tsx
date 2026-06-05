@@ -295,6 +295,13 @@ describe("HomeScreen — Task #187 org-switcher pill", () => {
     authState.availableMemberships = [
       { id: 1, orgType: "vendor", orgName: "Acme Vendor" },
     ];
+    // Vendor/admin roles show the org-type badge on the static pill;
+    // field employees intentionally hide it (see Home header wiring).
+    authState.user = {
+      id: 99,
+      role: "vendor",
+      displayName: "Vendor Tester",
+    };
 
     render(<HomeScreen />);
 

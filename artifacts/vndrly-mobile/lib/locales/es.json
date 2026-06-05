@@ -248,6 +248,7 @@
     "assignmentRemovedCancelFailed": "No se pudo cancelar este ticket. Inténtalo de nuevo o contacta a despacho.",
     "assignmentRestoredToast": "Asignación restaurada — puedes continuar.",
     "assignmentRestoredToastForList": "Asignación restaurada para {{ticket}} — puedes abrirlo de nuevo.",
+    "nudgeReceivedToastForList": "{{ticket}} requiere tu atención — alguien envió un recordatorio de flujo.",
     "deletePhotoTitle": "¿Eliminar foto?",
     "deletePhotoBody": "Esta foto se eliminará del ticket.",
     "deleteNoteTitle": "¿Eliminar nota?",
@@ -319,7 +320,24 @@
     "paymentDispersedOn": "Liberado el",
     "paymentDispersedBy": "Liberado por",
     "paymentNoteLabel": "Nota",
-    "paymentReceiptLabel": "Recibo"
+    "paymentReceiptLabel": "Recibo",
+    "nudge": {
+      "title": "Recordatorio de flujo",
+      "subtitle": "Envía un recordatorio a la siguiente parte arriba o abajo en la cadena. No cambia el estado del ticket.",
+      "messagePlaceholder": "Nota opcional (p. ej. esperando aprobación)",
+      "up": "Recordar arriba",
+      "down": "Recordar abajo",
+      "upShort": "Arriba",
+      "downShort": "Abajo",
+      "sending": "Enviando…",
+      "sentTitle": "Recordatorio enviado",
+      "sentBody": "Se notificó a {{count}} destinatario(s).",
+      "sentBodyShort": "Tu recordatorio fue enviado.",
+      "failedTitle": "No se pudo enviar el recordatorio",
+      "failedBody": "Inténtalo de nuevo.",
+      "recent": "Recordatorios recientes",
+      "noMessage": "Estado: {{status}}"
+    }
   },
   "language": {
     "english": "Inglés",
@@ -536,6 +554,13 @@
     "guest": {
       "name_required": "El nombre y apellido son obligatorios.",
       "safety_required": "Confirma el aviso de seguridad para continuar."
+    },
+    "nudge": {
+      "invalid_direction": "No hay nadie en esa dirección a quien recordar en este ticket.",
+      "not_allowed": "Tu rol no puede enviar recordatorios de flujo.",
+      "no_recipients": "No hay nadie disponible para notificar con este recordatorio.",
+      "ticket_closed": "No se puede recordar en un ticket cerrado o completado.",
+      "rate_limited": "Espera antes de enviar otro recordatorio en esta dirección."
     },
     "ticket": {
       "not_found": "No se encontró el ticket.",
@@ -1252,11 +1277,35 @@
   "tabs": {
     "home": "Inicio",
     "schedule": "Agenda",
+    "comms": "Comunicación",
     "scan": "Escanear",
     "profile": "Perfil"
   },
   "foremanHome": {
-    "portal": "Portal de capataz"
+    "portal": "Portal de capataz",
+    "quickActions": "Acciones rápidas",
+    "startJob": "Iniciar trabajo",
+    "schedule": "Agenda",
+    "crewComms": "Comunicación",
+    "alerts": "Alertas",
+    "activeJobs": "Trabajos activos",
+    "crewCommsTitle": "Comunicación de cuadrilla",
+    "crewCommsSubtitle": "Mantenga pulsado para hablar con la cuadrilla en un ticket activo. Los clips se guardan en Supabase y la cuadrilla recibe alertas push y correo.",
+    "commsForemanOnly": "La comunicación de cuadrilla está disponible para capataces en tickets activos.",
+    "commsNoTickets": "No hay tickets activos — inicie o acepte un trabajo para abrir un canal.",
+    "openTicketDetail": "Abrir detalle del ticket",
+    "pttHold": "Mantener para hablar",
+    "pttRecording": "Grabando…",
+    "pttHoldHint": "Mantenga el botón del micrófono mientras habla. Suelte para enviar al canal de la cuadrilla.",
+    "pttHoldA11y": "Mantener para grabar un mensaje de voz para la cuadrilla",
+    "pttRecent": "Mensajes de voz recientes",
+    "pttEmpty": "Aún no hay mensajes de voz — sea el primero en el canal.",
+    "pttVoice": "Mensaje de voz",
+    "pttUnknownSender": "Miembro de cuadrilla",
+    "pttMicDeniedTitle": "Se necesita acceso al micrófono",
+    "pttMicDeniedBody": "Permita el acceso al micrófono para usar pulsar-para-hablar.",
+    "pttSendFailed": "No se pudo enviar el mensaje de voz.",
+    "pttPlayFailed": "No se pudo reproducir este clip."
   },
   "scanScreen": {
     "cameraDenied": "Se necesita acceso a la cámara para escanear códigos QR.",

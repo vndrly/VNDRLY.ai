@@ -110,6 +110,7 @@ async function ticketParticipantUserIds(ticketId: number): Promise<{
       vendorId: ticketsTable.vendorId,
       partnerId: siteLocationsTable.partnerId,
       fieldEmployeeId: ticketsTable.fieldEmployeeId,
+      foremanUserId: ticketsTable.foremanUserId,
     })
     .from(ticketsTable)
     .leftJoin(siteLocationsTable, eq(ticketsTable.siteLocationId, siteLocationsTable.id))
@@ -119,6 +120,7 @@ async function ticketParticipantUserIds(ticketId: number): Promise<{
   if (t.vendorId) (await findVendorUserIds(t.vendorId)).forEach((i) => ids.add(i));
   if (t.partnerId) (await findPartnerUserIds(t.partnerId)).forEach((i) => ids.add(i));
   let fieldUserId: number | null = null;
+  if (t.foremanUserId) ids.add(t.foremanUserId);
   if (t.fieldEmployeeId) {
     const [fe] = await db
       .select({ userId: fieldEmployeesTable.userId })
@@ -129,14 +131,17 @@ async function ticketParticipantUserIds(ticketId: number): Promise<{
       fieldUserId = fe.userId;
     }
   }
+  const { ticketParticipantUserIdsExpanded } = await import("../lib/field-ticket-access");
+  const expanded = await ticketParticipantUserIdsExpanded(ticketId);
+  expanded.ids.forEach((i) => ids.add(i));
   return { ids: [...ids], vendorId: t.vendorId, partnerId: t.partnerId, fieldUserId };
 }
 
-function canParticipateTicket(session: Session, ctx: { vendorId: number | null; partnerId: number | null; fieldUserId: number | null }): boolean {
+function canParticipateTicket(session: Session, ctx: { ids: number[]; vendorId: number | null; partnerId: number | null; fieldUserId: number | null }): boolean {
   if (session.role === "admin") return true;
   if (session.role === "vendor" && session.vendorId && session.vendorId === ctx.vendorId) return true;
   if (session.role === "partner" && session.partnerId && session.partnerId === ctx.partnerId) return true;
-  if (session.role === "field_employee" && session.userId === ctx.fieldUserId) return true;
+  if (session.role === "field_employee" && ctx.ids.includes(session.userId)) return true;
   return false;
 }
 
@@ -334,12 +339,15 @@ router.post("/tickets/:id/comments", async (req: Request, res: Response): Promis
     })
     .returning();
 
-  // Notify mentions explicitly + everyone else as new-comment
+  // Notify mentions explicitly + everyone else as new-comment / PTT
   const mentionSet = new Set(mentionIds);
   const others = ctx.ids.filter((u) => u !== session.userId && !mentionSet.has(u));
   const me = session.displayName || "Someone";
   const link = `/tickets/${ticketId}#comment-${row.id}`;
   const preview = text.slice(0, 120) || "[photo]";
+  const isPtt =
+    text.startsWith("[ptt") ||
+    (atts.length > 0 && /audio|\.m4a|\.mp3|\.aac|\.wav/i.test(atts.join(" ")));
 
   if (mentionIds.length) {
     await notifyUsers(
@@ -355,11 +363,15 @@ router.post("/tickets/:id/comments", async (req: Request, res: Response): Promis
   }
   if (others.length) {
     await notifyUsers(others, {
-      type: "comment_added",
-      title: `${me} commented on tracking #${String(ticketId).padStart(4, "0")}`,
-      body: preview,
+      type: isPtt ? "ptt_message" : "comment_added",
+      title: isPtt
+        ? `${me} sent a voice message on #${String(ticketId).padStart(4, "0")}`
+        : `${me} commented on tracking #${String(ticketId).padStart(4, "0")}`,
+      body: isPtt ? "Tap to listen in Crew Comms" : preview,
       link,
-      dedupeKey: `comment_added:${row.id}`,
+      dedupeKey: isPtt ? `ptt_message:${row.id}` : `comment_added:${row.id}`,
+      category: isPtt ? "crew" : undefined,
+      pushData: isPtt ? { ticketId, commentId: row.id, type: "ptt_message" } : undefined,
     });
   }
 

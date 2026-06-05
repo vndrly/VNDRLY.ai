@@ -27,6 +27,7 @@ const tables = {
   consents: tableTag("consents", ["id", "userId", "deviceId", "revokedAt", "acceptedAt"]),
   employees: tableTag("employees", ["id", "userId", "vendorId", "firstName", "lastName"]),
   tickets: tableTag("tickets", ["id", "fieldEmployeeId", "lifecycleState", "vendorId", "siteLocationId"]),
+  ticketCrew: tableTag("ticketCrew", ["ticketId", "employeeId", "removedAt"]),
   gpsLogs: tableTag("gpsLogs", ["id", "ticketId", "latitude", "longitude", "eventType", "batteryLevel", "recordedAt"]),
   sites: tableTag("sites", ["id", "name", "siteCode", "partnerId"]),
 };
@@ -102,6 +103,7 @@ vi.mock("@workspace/db", () => {
     locationConsentsTable: tables.consents,
     fieldEmployeesTable: tables.employees,
     ticketsTable: tables.tickets,
+  ticketCrewTable: tables.ticketCrew,
     gpsLogsTable: tables.gpsLogs,
     siteLocationsTable: tables.sites,
     // Task #51 — referenced by unread-comments.ts subqueries.

@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import {
   Bell,
+  BellRing,
   Briefcase,
   UserMinus,
   UserPlus,
@@ -32,6 +33,7 @@ const CATEGORY_IDS = ["all", "tickets", "hotlist", "compliance", "crew", "visito
 // crew see the same "you got the job" affordance in the inbox/dropdown.
 const TYPE_META: Record<string, { Icon: LucideIcon; labelKey: string }> = {
   ticket_assigned: { Icon: Briefcase, labelKey: "notifications.types.ticket_assigned" },
+  workflow_nudge: { Icon: BellRing, labelKey: "notifications.types.workflow_nudge" },
   crew_added: { Icon: UserPlus, labelKey: "notifications.types.crew_added" },
   // Task #649 — `schedule_changed` is the more useful signal when a
   // worker stays on the roster but the time/duration moved. Same

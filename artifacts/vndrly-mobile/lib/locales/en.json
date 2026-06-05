@@ -248,6 +248,7 @@
     "assignmentRemovedCancelFailed": "Couldn't cancel this ticket. Try again or contact dispatch.",
     "assignmentRestoredToast": "Assignment restored — you can continue.",
     "assignmentRestoredToastForList": "Assignment restored for {{ticket}} — you can open it again.",
+    "nudgeReceivedToastForList": "{{ticket}} needs your attention — someone sent a workflow nudge.",
     "deletePhotoTitle": "Delete photo?",
     "deletePhotoBody": "This photo will be removed from the ticket.",
     "deleteNoteTitle": "Delete note?",
@@ -319,7 +320,24 @@
     "paymentDispersedOn": "Dispersed on",
     "paymentDispersedBy": "Dispersed by",
     "paymentNoteLabel": "Note",
-    "paymentReceiptLabel": "Receipt"
+    "paymentReceiptLabel": "Receipt",
+    "nudge": {
+      "title": "Workflow nudge",
+      "subtitle": "Send a reminder to the next party up or down the chain. Does not change ticket status.",
+      "messagePlaceholder": "Optional note (e.g. waiting on approval)",
+      "up": "Nudge up",
+      "down": "Nudge down",
+      "upShort": "Up",
+      "downShort": "Down",
+      "sending": "Sending…",
+      "sentTitle": "Nudge sent",
+      "sentBody": "Notified {{count}} recipient(s).",
+      "sentBodyShort": "Your reminder was sent.",
+      "failedTitle": "Couldn't send nudge",
+      "failedBody": "Please try again.",
+      "recent": "Recent nudges",
+      "noMessage": "Status was {{status}}"
+    }
   },
   "language": {
     "english": "English",
@@ -536,6 +554,13 @@
     "guest": {
       "name_required": "First name and last name are required.",
       "safety_required": "Please confirm the safety acknowledgement to continue."
+    },
+    "nudge": {
+      "invalid_direction": "There is no party in that direction to nudge on this ticket.",
+      "not_allowed": "Your role cannot send workflow nudges.",
+      "no_recipients": "No one is available to notify for this nudge.",
+      "ticket_closed": "Cannot nudge a closed or completed ticket.",
+      "rate_limited": "Please wait before sending another nudge in this direction."
     },
     "ticket": {
       "not_found": "Ticket not found.",
@@ -1252,11 +1277,35 @@
   "tabs": {
     "home": "Home",
     "schedule": "Schedule",
+    "comms": "Comms",
     "scan": "Scan",
     "profile": "Profile"
   },
   "foremanHome": {
-    "portal": "Foreman Portal"
+    "portal": "Foreman Portal",
+    "quickActions": "Quick actions",
+    "startJob": "Start job",
+    "schedule": "Schedule",
+    "crewComms": "Crew comms",
+    "alerts": "Alerts",
+    "activeJobs": "Active jobs",
+    "crewCommsTitle": "Crew comms",
+    "crewCommsSubtitle": "Hold to talk with crew on an active ticket. Voice clips are stored in Supabase and crew get push + email alerts.",
+    "commsForemanOnly": "Crew comms is available to foremen on active tickets.",
+    "commsNoTickets": "No active tickets — start or accept a job to open a crew channel.",
+    "openTicketDetail": "Open ticket detail",
+    "pttHold": "Hold to talk",
+    "pttRecording": "Recording…",
+    "pttHoldHint": "Hold the mic button while speaking. Release to send to the crew channel.",
+    "pttHoldA11y": "Hold to record a voice message for the crew",
+    "pttRecent": "Recent voice messages",
+    "pttEmpty": "No voice messages yet — be the first on the channel.",
+    "pttVoice": "Voice message",
+    "pttUnknownSender": "Crew member",
+    "pttMicDeniedTitle": "Microphone access needed",
+    "pttMicDeniedBody": "Allow microphone access to use push-to-talk.",
+    "pttSendFailed": "Could not send voice message.",
+    "pttPlayFailed": "Could not play this clip."
   },
   "scanScreen": {
     "cameraDenied": "Camera access is required to scan QR codes.",

@@ -5,7 +5,13 @@ import { MapContainer, Marker, Polyline, Popup, TileLayer, useMap } from "react-
 import "leaflet/dist/leaflet.css";
 import { cn } from "@/lib/utils";
 import { useBrand } from "@/hooks/use-brand";
-import { brandHuePillSrc, HALF_TOGGLE_IDLE_SRC } from "@/components/png-pill-rollover";
+import SplitToggleHalf from "@/components/split-toggle-half";
+import {
+  pickTogglePillSrc,
+  SPLIT_TOGGLE_ACTIVE_TEXT_SHADOW,
+  SPLIT_TOGGLE_IDLE_TEXT_CLASS,
+  TOGGLE_IDLE_PILL_SRC,
+} from "@/lib/pick-toggle-pill";
 import { BrandZoomControlInMap } from "@/components/brand-zoom-control";
 import { LONG_DWELL_MS as DEFAULT_LONG_DWELL_MS, deriveLongStops, formatDwell } from "@/lib/stops";
 
@@ -326,64 +332,40 @@ export function TicketRouteMap({
         maxZoom: 19,
       };
 
-  const activePillSrc = brandHuePillSrc(brand.primary);
-  const activeStyle = (side: "left" | "right") =>
-    ({
-      backgroundImage: `url(${activePillSrc})`,
-      backgroundSize: "200% 100%",
-      backgroundPosition: side === "left" ? "left center" : "right center",
-      backgroundRepeat: "no-repeat",
-      textShadow: "0 1px 2px rgba(0,0,0,0.65), 0 2px 4px rgba(0,0,0,0.45)",
-    }) as const;
-  const idleStyle = (side: "left" | "right") =>
-    ({
-      backgroundImage: `url(${HALF_TOGGLE_IDLE_SRC})`,
-      backgroundSize: "200% 100%",
-      backgroundPosition: side === "left" ? "left center" : "right center",
-      backgroundRepeat: "no-repeat",
-    }) as const;
-  const toggleBase = "px-2 py-0.5 text-xs font-bold transition-colors cursor-pointer select-none";
-  const activeCls = "text-white";
-  const idleCls = "text-gray-600 hover:text-gray-900";
+  const activePillSrc = pickTogglePillSrc(brand.primary, brand.name);
+  const activeText = cn("text-white", SPLIT_TOGGLE_ACTIVE_TEXT_SHADOW);
+  const idleText = SPLIT_TOGGLE_IDLE_TEXT_CLASS;
 
   return (
     <div className="space-y-2">
       <div className="flex justify-end">
         <div
-          className="inline-flex items-center rounded-full overflow-hidden"
+          className="inline-flex items-stretch rounded-full overflow-hidden"
           data-testid="map-view-toggle"
         >
-          <button
-            type="button"
+          <SplitToggleHalf
+            side="left"
+            pillSrc={view === "map" ? activePillSrc : TOGGLE_IDLE_PILL_SRC}
+            bgClassName={view !== "map" ? "opacity-70" : undefined}
+            textClassName={view === "map" ? activeText : idleText}
             onClick={() => setView("map")}
-            className={cn(toggleBase, "relative", view === "map" ? activeCls : idleCls)}
             data-testid="button-map-view-map"
             aria-pressed={view === "map"}
           >
-            {/* Background pill image lives on an absolute layer so the
-                inactive-half 70% opacity affects only the image, not
-                the "Map" text. */}
-            <span
-              aria-hidden
-              className={cn(
-                "absolute inset-0",
-                view !== "map" && "opacity-70",
-              )}
-              style={view === "map" ? activeStyle("left") : idleStyle("left")}
-            />
-            <span className="relative">{t("ticketRouteMap.viewMap")}</span>
-          </button>
-          <span aria-hidden className="self-stretch w-px my-px bg-gray-300" />
-          <button
-            type="button"
+            {t("ticketRouteMap.viewMap")}
+          </SplitToggleHalf>
+          <span aria-hidden className="w-px shrink-0 self-stretch bg-gray-300" />
+          <SplitToggleHalf
+            side="right"
+            pillSrc={view === "satellite" ? activePillSrc : TOGGLE_IDLE_PILL_SRC}
+            bgClassName={view !== "satellite" ? "opacity-70" : undefined}
+            textClassName={view === "satellite" ? activeText : idleText}
             onClick={() => setView("satellite")}
-            className={cn(toggleBase, view === "satellite" ? activeCls : idleCls)}
-            style={view === "satellite" ? activeStyle("right") : idleStyle("right")}
             data-testid="button-map-view-satellite"
             aria-pressed={view === "satellite"}
           >
             {t("ticketRouteMap.viewSatellite")}
-          </button>
+          </SplitToggleHalf>
         </div>
       </div>
       <div

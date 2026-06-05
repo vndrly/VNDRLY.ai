@@ -606,6 +606,7 @@
     "awaitingPaymentSentBody": "Se notificó a tu oficina que el trabajo terminó y el cliente debe el pago.",
     "errorAwaitingPayment": "No se pudo marcar en espera de pago",
     "assignmentRestoredToastForList": "Asignación restaurada para {{ticket}} — puedes abrirlo de nuevo.",
+    "nudgeReceivedToastForList": "{{ticket}} requiere tu atención — alguien envió un recordatorio de flujo.",
     "listGapWarning": "Reconectado a actualizaciones en vivo — es posible que algunos cambios de tickets se hayan perdido. Actualizando ahora…",
     "refreshNow": "Actualizar ahora"
   },
@@ -1217,7 +1218,6 @@
     "offGeofence": "Está a {{distance}} m — debe estar a menos de {{radius}} m del sitio para registrarse."
   },
   "fieldHome": {
-    "logout": "Cerrar Sesión",
     "portal": "Portal del Empleado de Campo",
     "vendorFallback": "Cuadrilla de Campo",
     "whatDoing": "¿Qué estás haciendo?",
@@ -1258,6 +1258,7 @@
     },
     "types": {
       "ticket_assigned": "Asignado a ti",
+      "workflow_nudge": "Recordatorio de flujo",
       "crew_added": "Añadido a la cuadrilla",
       "schedule_changed": "Horario actualizado",
       "crew_removed": "Retirado de la cuadrilla",
@@ -1472,12 +1473,28 @@
     "taxLabel": "Impuesto ({{state}} — {{pct}}%)",
     "totalRow": "Total",
     "actions": "Acciones",
+    "nudge": {
+      "title": "Recordatorio de flujo",
+      "subtitle": "Envía un recordatorio a la siguiente parte arriba o abajo en la cadena. No cambia el estado del ticket.",
+      "messagePlaceholder": "Nota opcional (p. ej. esperando aprobación)",
+      "up": "Recordar arriba",
+      "down": "Recordar abajo",
+      "upShort": "Arriba",
+      "downShort": "Abajo",
+      "sending": "Enviando…",
+      "sentTitle": "Recordatorio enviado",
+      "sentBody": "Se notificó a {{count}} destinatario(s).",
+      "sentBodyShort": "Tu recordatorio fue enviado.",
+      "failedTitle": "No se pudo enviar el recordatorio",
+      "failedBody": "Inténtalo de nuevo.",
+      "recent": "Recordatorios recientes",
+      "noMessage": "Estado: {{status}}"
+    },
     "approved": "Aprobación 1",
     "submitted": "Enviado",
     "pendingOfficeReview": "Pendiente de Revisión de Oficina",
     "cancelled": "Cancelado",
     "fundsDispersed": "Aprobación 3",
-    "disperseFunds": "Liberar Fondos",
     "disperseFundsTitle": "Liberar Fondos",
     "disperseFundsHelp": "Registra el pago que cierra este ticket. Se notificará al proveedor cuando los fondos sean liberados.",
     "disperseFundsMethod": "Método de pago",
@@ -1529,7 +1546,6 @@
     "sending": "Enviando...",
     "sendForReview": "Enviar a Revisión",
     "kickedBack": "Rechazado",
-    "approve": "Aprobar",
     "approving": "Aprobando...",
     "rateBeforeApprove": "Califica a {{vendor}} antes de aprobar",
     "ratePrompt": "Por favor califica el trabajo de este proveedor antes de aprobar el ticket para pago.",
@@ -1918,7 +1934,6 @@
     "durationLabel": "Duración estimada (minutos)",
     "durationPlaceholder": "Opcional",
     "crewLabel": "Asignar cuadrilla",
-    "applyCrewPreset": "Aplicar cuadrilla guardada",
     "applyCrewPresetPlaceholder": "Elige una cuadrilla guardada…",
     "noEmployees": "No hay empleados de campo activos en tu proveedor.",
     "noLogin": "sin acceso — no recibirá notificaciones",
@@ -3403,6 +3418,13 @@
       "not_geocoded": "El sitio no está geocodificado: no se puede verificar el radio del proveedor.",
       "forbidden_not_owning_partner": "Solo el socio propietario puede hacer eso."
     },
+    "nudge": {
+      "invalid_direction": "No hay nadie en esa dirección a quien recordar en este ticket.",
+      "not_allowed": "Tu rol no puede enviar recordatorios de flujo.",
+      "no_recipients": "No hay nadie disponible para notificar con este recordatorio.",
+      "ticket_closed": "No se puede recordar en un ticket cerrado o completado.",
+      "rate_limited": "Espera antes de enviar otro recordatorio en esta dirección."
+    },
     "ticket": {
       "not_found": "No se encontró el ticket.",
       "no_access": "No tienes acceso a este ticket.",
@@ -4023,7 +4045,6 @@
     "noCoWorkers": "No hay compañeros activos en su proveedor."
   },
   "foremanHome": {
-    "logout": "Cerrar sesión",
     "portal": "Portal de capataz",
     "vendorFallback": "Cuadrilla de campo",
     "whatDoing": "Trabajos de hoy",

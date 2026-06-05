@@ -23,6 +23,7 @@ export const GUEST_ALLOWLIST: ApiAllowRule[] = [
   { method: "GET", pattern: /^\/api\/visits\/me\/active\/?$/ },
   // Pre-auth brand fetch for mobile/web login surfaces.
   { method: "GET", pattern: /^\/api\/public\/platform-brand\/?$/ },
+  { method: "GET", pattern: /^\/api\/public\/login-brand\/?$/ },
 ];
 
 export const PUBLIC_UNAUTHENTICATED_ALLOWLIST: ApiAllowRule[] = [
@@ -62,6 +63,8 @@ export const PUBLIC_UNAUTHENTICATED_ALLOWLIST: ApiAllowRule[] = [
   { method: "POST", pattern: /^\/api\/onboarding\/refer\/?$/ },
   { method: "POST", pattern: /^\/api\/assistant\/signup\/[^/]+\/chat\/?$/ },
   { method: "GET", pattern: /^\/api\/storage\/public-objects\/.+$/ },
+  // Public ACL uploads (logos) must load on the sign-in page after logout.
+  { method: "GET", pattern: /^\/api\/storage\/objects\/.+$/ },
   { method: "PUT", pattern: /^\/api\/storage\/upload\/[^/]+\/?$/ },
   { method: "POST", pattern: /^\/api\/webhooks\/sendgrid\/?$/ },
 ];

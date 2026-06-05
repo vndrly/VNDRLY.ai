@@ -13,8 +13,7 @@ import headerBg from "@assets/VNDRLY_Header_Blur_4_1776220762025.png";
 import AmberButton from "@/components/amber-button";
 import BlueButton from "@/components/blue-button";
 import PortalButton from "@/components/portal-button";
-import { PngPillButton } from "@/components/png-pill-rollover";
-import { pickLoginSquareActive, LOGIN_IDLE_SQUARE_SRC } from "@/lib/login-button-palette";
+import LoginSquareButton from "@/components/login-square-button";
 import LanguageToggle from "@/components/language-toggle";
 import DarkLightToggle, { type ThemeMode } from "@/components/dark-light-toggle";
 import { PoweredByVndrly } from "@/components/powered-by-vndrly";
@@ -190,8 +189,6 @@ export default function Login() {
   const formReady = username.length > 0 && password.length > 0;
   const brand = useBrand();
   const branded = brand.isOrgBranded;
-  const loginActiveSrc = pickLoginSquareActive(brand.primary, brand.name);
-  const loginIdleSrc = LOGIN_IDLE_SQUARE_SRC;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -290,10 +287,10 @@ export default function Login() {
           className={cn("absolute bottom-4 right-4 z-20", isDark ? "text-gray-300" : "text-gray-500")}
         />
         <div className="absolute top-4 right-4 z-20">
-          <LanguageToggle variant="light" />
+          <LanguageToggle variant={isDark ? "dark" : "light"} />
         </div>
         <div className="absolute top-4 left-4 z-20">
-          <DarkLightToggle mode={themeMode} onChange={setThemeMode} variant="light" />
+          <DarkLightToggle mode={themeMode} onChange={setThemeMode} variant={isDark ? "dark" : "light"} />
         </div>
         <div className="w-full max-w-md relative z-10">
           <div className="flex items-center gap-3 mb-3">
@@ -409,19 +406,13 @@ export default function Login() {
                 </div>
               </div>
               <div className="pt-2">
-                <PngPillButton
+                <LoginSquareButton
                   type="submit"
                   disabled={!formReady || isSubmitting}
-                  data-testid="button-login"
-                  idleSrc={loginIdleSrc}
-                  activeSrc={loginActiveSrc}
-                  color="image"
-                  height={32}
-                  fullWidth
-                  size="sm"
+                  testId="button-login"
                 >
                   {isSubmitting ? t("login.signingIn") : t("login.signIn")}
-                </PngPillButton>
+                </LoginSquareButton>
               </div>
             </form>
           </div>
@@ -466,19 +457,13 @@ export default function Login() {
               button lines up under "Sign In to Portal" at the exact same
               width. */}
           <div className={cn("mt-5 pt-4 px-6 border-t", isDark ? "border-white/20" : "border-gray-200")}>
-            <PngPillButton
+            <LoginSquareButton
               type="button"
               onClick={() => navigate("/visitor")}
-              data-testid="button-continue-as-visitor"
-              idleSrc={loginIdleSrc}
-              activeSrc={loginActiveSrc}
-              color="image"
-              height={32}
-              fullWidth
-              size="sm"
+              testId="button-continue-as-visitor"
             >
               {t("visitor.continueAsVisitor")}
-            </PngPillButton>
+            </LoginSquareButton>
           </div>
 
           {/* Dev-only affordances. Mirrors the gating used by the

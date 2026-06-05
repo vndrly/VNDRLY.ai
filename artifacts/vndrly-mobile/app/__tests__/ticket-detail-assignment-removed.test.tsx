@@ -75,6 +75,28 @@ vi.mock("expo-notifications", () => ({
   addNotificationReceivedListener: () => ({ remove: () => {} }),
 }));
 
+vi.mock("react-native", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("react-native")>();
+  const ReactLib = (await import("react")).default;
+  return {
+    ...actual,
+    Modal: ({
+      visible,
+      children,
+    }: {
+      visible?: boolean;
+      children?: React.ReactNode;
+    }) =>
+      visible
+        ? ReactLib.createElement(
+            "div",
+            { "data-testid": "rn-modal-visible" },
+            children,
+          )
+        : null,
+  };
+});
+
 vi.mock("expo-location", () => ({
   Accuracy: { High: 4, Balanced: 3 },
   requestForegroundPermissionsAsync: vi.fn(async () => ({ status: "denied" })),
@@ -198,6 +220,7 @@ import {
 } from "@testing-library/react";
 
 import TicketDetailScreen from "../ticket/[id]";
+import { tap, tapThroughMileagePrompt } from "@/lib/testDomHelpers";
 
 afterEach(() => {
   cleanup();
@@ -243,12 +266,6 @@ function makeApiError(code: string, status = 400): Error {
 
 function firstByTestId(id: string): HTMLElement {
   return screen.getAllByTestId(id)[0];
-}
-
-function tap(el: HTMLElement): void {
-  fireEvent.pointerDown(el);
-  fireEvent.pointerUp(el);
-  fireEvent.click(el);
 }
 
 // Default GET responses cover the load() Promise.all and the optional
@@ -301,7 +318,7 @@ describe("TicketDetailScreen — Task #572 assignment-removed banner", () => {
     expect(firstByTestId("button-check-out").getAttribute("data-variant")).toBe("amber");
 
     // Tap check-out — POST rejects with the assignment code.
-    tap(firstByTestId("button-check-out"));
+    await tapThroughMileagePrompt("button-check-out");
 
     // Banner appears with the SITE-mismatch copy and the cancel button.
     await waitFor(() => {
@@ -353,7 +370,7 @@ describe("TicketDetailScreen — Task #572 assignment-removed banner", () => {
       expect(firstByTestId("button-check-out")).toBeTruthy();
     });
 
-    tap(firstByTestId("button-check-out"));
+    await tapThroughMileagePrompt("button-check-out");
 
     await waitFor(() => {
       expect(firstByTestId("banner-assignment-removed")).toBeTruthy();
@@ -417,7 +434,7 @@ describe("TicketDetailScreen — Task #572 assignment-removed banner", () => {
       expect(countTicketGets()).toBe(ticketGetsBeforeBanner);
 
       // Trigger the banner by failing a check-out POST.
-      tap(firstByTestId("button-check-out"));
+      await tapThroughMileagePrompt("button-check-out");
       await waitFor(() => {
         expect(firstByTestId("banner-assignment-removed")).toBeTruthy();
       });
@@ -507,7 +524,7 @@ describe("TicketDetailScreen — Task #572 assignment-removed banner", () => {
       });
 
       // Bring the banner up so the polling effect arms.
-      tap(firstByTestId("button-check-out"));
+      await tapThroughMileagePrompt("button-check-out");
       await waitFor(() => {
         expect(firstByTestId("banner-assignment-removed")).toBeTruthy();
       });
@@ -623,7 +640,7 @@ describe("TicketDetailScreen — Task #572 assignment-removed banner", () => {
       expect(firstByTestId("button-en-route")).toBeTruthy();
     });
 
-    tap(firstByTestId("button-en-route"));
+    await tapThroughMileagePrompt("button-en-route");
 
     await waitFor(() => {
       expect(firstByTestId("banner-assignment-removed")).toBeTruthy();

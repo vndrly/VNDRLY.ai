@@ -1,29 +1,10 @@
-// Login-portal button palette + resolver.
+// Login-portal square button palette (button-palette/*_square*.png).
 //
-// SCOPE: this module is intentionally login-only. It enforces the
-// Branding Rules for the login portal's two SQUARE call-to-action
-// buttons (Sign In to Portal / Continue as Visitor) by sourcing every
-// asset from the consolidated, deduplicated palette in
-// `attached_assets/button-palette/`. App-wide brand pill matching lives
-// in `png-pill-rollover.tsx`.
-//
-// Branding Rules applied here:
-//   1. Shape integrity — the login CTAs are squares, so every asset
-//      below is a SQUARE PNG (flat top/bottom, four preserved corners).
-//   2. Idle/non-hover — universal light-grey square for ALL brands.
-//   3. Active/hover — best-match to the brand's primary color from the
-//      square palette, EXCEPT the enumerated brand overrides.
-//   4. Enumerated overrides — Baker → teal square; Winchester → tan
-//      square (v4). These bypass the color matcher entirely.
-//   5. Default (unbranded VNDRLY) — falls back to the VNDRLY amber
-//      square.
+// Enumerated brands: Baker → teal, Winchester → tan square v4 + tan pill v3, unbranded VNDRLY → amber.
+// Idle (all brands): light-grey v2r square. Everyone else: best hue match.
 
-// Idle (universal, all brands)
 import idleSquare from "@assets/button-palette/900x229_Light-grey_v2r_square.png";
-// Neutral fallback for very-low-saturation brand colors
 import greySquare from "@assets/button-palette/900x229_grey_square.png";
-
-// Best-match brand-color square palette
 import redSquare from "@assets/button-palette/900x229_red_square_v4.png";
 import amberSquare from "@assets/button-palette/900x229_Amber_squarel_v3.png";
 import tanSquare from "@assets/button-palette/900x229_tan_square-v2.png";
@@ -35,19 +16,17 @@ import blueSquare from "@assets/button-palette/900x229_dark_blue_square-v2.png";
 import purpleSquare from "@assets/button-palette/900x229_purple_square_v2.png";
 import hotPinkSquare from "@assets/button-palette/900x229_hot-pink_square-v2l.png";
 import pinkSquare from "@assets/button-palette/900x229_pink_square.png";
-
-// Enumerated brand overrides
 import bakerTealSquare from "@assets/button-palette/900x229_baker_teal_button.png";
 import winchesterTanSquare from "@assets/button-palette/900x229_tan_square-v4.png";
 
-/** Universal light-grey idle square — used for every brand at rest. */
+/** Universal light-grey idle square — every brand at rest. */
 export const LOGIN_IDLE_SQUARE_SRC = idleSquare;
+
+/** Natural width:height of the 900×229 square PNGs. */
+export const LOGIN_BUTTON_IMAGE_ASPECT = 900 / 229;
 
 type PaletteEntry = { hex: string; src: string };
 
-// One canonical saturated square per hue family. Baker teal is included
-// so a Baker-ish brand color still lands on teal even via the matcher,
-// but Baker is normally caught by the enumerated override below.
 const SQUARE_PALETTE: PaletteEntry[] = [
   { hex: "#D80B0B", src: redSquare },
   { hex: "#F39C1A", src: amberSquare },
@@ -63,7 +42,6 @@ const SQUARE_PALETTE: PaletteEntry[] = [
   { hex: "#DB1E5C", src: pinkSquare },
 ];
 
-// VNDRLY default active when no brand color is supplied (unbranded).
 const VNDRLY_DEFAULT_SRC = amberSquare;
 
 function hexToRgb(hex: string): [number, number, number] | null {
@@ -116,14 +94,7 @@ function isWinchesterBrand(name: string | null | undefined): boolean {
   return !!name?.toLowerCase().includes("winchester");
 }
 
-/**
- * Resolve the active/hover SQUARE asset for the login CTAs.
- *
- * Enumerated brands win first (Baker teal, Winchester tan v4); then a
- * usable brand color is matched to the nearest square in the palette;
- * very-low-saturation colors fall back to the neutral grey square; and
- * a missing color falls back to the VNDRLY amber default.
- */
+/** Active/hover square for login CTAs. */
 export function pickLoginSquareActive(
   brandColor: string | null | undefined,
   brandName?: string | null,

@@ -146,15 +146,15 @@ router.get("/storage/public-objects/*filePath", async (req: Request, res: Respon
 /**
  * GET /storage/objects/*
  *
- * Serve private objects through ACL-checked proxy (Supabase bucket stays private).
+ * Serve uploaded objects through ACL-checked proxy (Supabase bucket stays
+ * private). Public ACL objects (e.g. partner/vendor logos) are readable
+ * without a session so the sign-in page can show the last org brand after
+ * logout.
  */
 router.get("/storage/objects/*path", async (req: Request, res: Response) => {
   try {
     const session = getSessionFromRequest(req);
-    if (!session || !session.userId) {
-      res.status(401).json({ error: "Unauthorized" });
-      return;
-    }
+    const userId = session?.userId ? String(session.userId) : undefined;
 
     const raw = req.params.path;
     const wildcardPath = Array.isArray(raw) ? raw.join("/") : raw;
@@ -162,7 +162,7 @@ router.get("/storage/objects/*path", async (req: Request, res: Response) => {
     const obj = await objectStorageService.getStoredObject(objectPath);
 
     const canAccess = await objectStorageService.canAccessStoredObject({
-      userId: String(session.userId),
+      userId,
       object: obj,
       requestedPermission: ObjectPermission.READ,
     });

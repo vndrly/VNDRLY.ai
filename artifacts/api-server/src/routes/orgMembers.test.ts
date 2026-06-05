@@ -125,6 +125,7 @@ const tables = {
     "updatedAt",
     "createdAt",
   ]),
+  ticketCrew: tableTag("ticketCrew", ["ticketId", "employeeId", "removedAt"]),
   siteLocations: tableTag("siteLocations", ["id", "partnerId", "name"]),
   fieldEmployees: tableTag("fieldEmployees", ["id", "userId"]),
   ticketNoteLogs: tableTag("ticketNoteLogs", [
@@ -680,6 +681,7 @@ vi.mock("@workspace/db", () => ({
   notificationPreferencesTable: tables.notificationPreferences,
   fieldPushTokensTable: tables.fieldPushTokens,
   ticketsTable: tables.tickets,
+  ticketCrewTable: tables.ticketCrew,
   siteLocationsTable: tables.siteLocations,
   fieldEmployeesTable: tables.fieldEmployees,
   ticketNoteLogsTable: tables.ticketNoteLogs,

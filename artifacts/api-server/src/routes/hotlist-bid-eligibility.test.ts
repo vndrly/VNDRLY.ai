@@ -92,6 +92,7 @@ vi.mock("@workspace/db", () => {
     partnersTable: tableTag("partners"),
     partnerVendorRelationshipsTable: tableTag("partnerVendorRelationships"),
     ticketsTable: tableTag("tickets"),
+    ticketCrewTable: tableTag("ticketCrew"),
     siteLocationsTable: tableTag("siteLocations"),
     siteWorkAssignmentsTable: tableTag("siteWorkAssignments"),
     workTypesTable: tableTag("workTypes"),

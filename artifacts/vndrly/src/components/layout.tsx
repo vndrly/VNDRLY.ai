@@ -174,12 +174,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   // vendors/partners pick up their own primary, and unbranded VNDRLY
   // stays VNDRLY gold.
   const showTopBar = !!user;
+  const navPaneStyle = { backgroundColor: "#3a3d42" } as const;
 
   return (
     <div className="min-h-screen flex" style={brandStyleVars(brand)}>
       <aside
+        style={navPaneStyle}
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 bg-sidebar text-sidebar-foreground flex flex-col transition-transform md:translate-x-0 md:static overflow-hidden",
+          "fixed inset-y-0 left-0 z-50 w-64 flex flex-col transition-transform md:translate-x-0 md:static overflow-hidden",
           sidebarOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
@@ -335,7 +337,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             viewer — see `showTopBar` above. */}
         {showTopBar && (
         <div
-          className="bg-sidebar text-sidebar-foreground border-b border-sidebar-border px-4 py-2 flex items-center justify-between"
+          style={navPaneStyle}
+          className="px-4 py-2 flex items-center justify-between"
         >
           <ReferToVndrlyDialog
             trigger={

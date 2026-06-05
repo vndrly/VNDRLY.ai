@@ -20,3 +20,15 @@ lib/e2e
 .env.*.local
 
 node_modules
+
+# Web-only assets and unrelated workspace apps (mobile build does not use these).
+attached_assets
+artifacts/vndrly
+artifacts/api-server
+artifacts/vndrly-commercial
+artifacts/mockup-sandbox
+artifacts/vndrly-mobile/.expo-smoke-export
+
+# Leftover export archives and design sources — never needed on EAS.
+**/*.zip
+**/*.psd

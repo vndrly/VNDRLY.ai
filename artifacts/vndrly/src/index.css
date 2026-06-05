@@ -234,19 +234,6 @@
   --card-foreground: 220 25% 15%;
   --card-border: 214 32% 91%;
 
-  /* Dark mode sidebar / sign-out pane: per user spec, only ~10%
-     darker than light mode (light is 220 10% 25%, so dark is
-     220 10% 22%) instead of the much-deeper 220 30% 8%. Keeps the
-     two themes visually related rather than night-and-day. */
-  --sidebar: 220 10% 22%;
-  --sidebar-foreground: 210 20% 98%;
-  --sidebar-border: 220 30% 15%;
-  --sidebar-primary: 25 95% 55%;
-  --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 220 25% 15%;
-  --sidebar-accent-foreground: 0 0% 100%;
-  --sidebar-ring: 25 95% 55%;
-
   --popover: 220 30% 12%;
   --popover-foreground: 220 25% 15%;
   --popover-border: 214 32% 91%;
@@ -298,6 +285,45 @@
 
   .lifecycle-flash {
     animation: lifecycle-flash 2s ease-in-out 1;
+  }
+
+  /* Workflow nudge — blue pulse on ticket rows/cards when someone nudges
+     you up or down the chain. Three blinks over ~3.5s so it reads as
+     "needs attention" without being confused with lifecycle amber. */
+  @keyframes nudge-flash {
+    0%, 100% {
+      background-color: transparent;
+      box-shadow: none;
+    }
+    10%, 30%, 50% {
+      background-color: rgb(219 234 254 / 0.75);
+      box-shadow: inset 0 0 0 2px rgb(59 130 246 / 0.9);
+    }
+    20%, 40%, 60% {
+      background-color: transparent;
+      box-shadow: none;
+    }
+  }
+
+  .nudge-flash {
+    animation: nudge-flash 3.5s ease-in-out 1;
+  }
+
+  @keyframes nudge-flash-page {
+    0%, 100% {
+      box-shadow: none;
+    }
+    10%, 30%, 50% {
+      box-shadow: 0 0 0 3px rgb(59 130 246 / 0.55);
+    }
+    20%, 40%, 60% {
+      box-shadow: none;
+    }
+  }
+
+  .nudge-flash-page {
+    animation: nudge-flash-page 3.5s ease-in-out 1;
+    border-radius: 0.75rem;
   }
 
   /* Expanding ring overlay drawn underneath the crew-map car pin when its

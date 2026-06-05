@@ -94,6 +94,28 @@ vi.mock("expo-notifications", () => ({
   },
 }));
 
+vi.mock("react-native", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("react-native")>();
+  const ReactLib = (await import("react")).default;
+  return {
+    ...actual,
+    Modal: ({
+      visible,
+      children,
+    }: {
+      visible?: boolean;
+      children?: React.ReactNode;
+    }) =>
+      visible
+        ? ReactLib.createElement(
+            "div",
+            { "data-testid": "rn-modal-visible" },
+            children,
+          )
+        : null,
+  };
+});
+
 vi.mock("expo-image", async () => {
   const ReactLib = (await import("react")).default;
   return { Image: (p: any) => ReactLib.createElement("img", { ...p }) };
@@ -201,6 +223,7 @@ import {
 } from "@testing-library/react";
 
 import TicketDetailScreen from "../ticket/[id]";
+import { tap, tapThroughMileagePrompt } from "@/lib/testDomHelpers";
 
 afterEach(() => {
   cleanup();
@@ -242,12 +265,6 @@ function makeApiError(code: string, status = 400): Error {
 
 function firstByTestId(id: string): HTMLElement {
   return screen.getAllByTestId(id)[0];
-}
-
-function tap(el: HTMLElement): void {
-  fireEvent.pointerDown(el);
-  fireEvent.pointerUp(el);
-  fireEvent.click(el);
 }
 
 // Loader that returns the happy ticket on every GET, with a switch the
@@ -301,7 +318,7 @@ describe("TicketDetailScreen — Task #613 foreground ticket_unblocked refresh",
     });
 
     // Trigger the assignment-removed banner by tapping check-out.
-    tap(firstByTestId("button-check-out"));
+    await tapThroughMileagePrompt("button-check-out");
     await waitFor(() => {
       expect(firstByTestId("banner-assignment-removed")).toBeTruthy();
     });
@@ -338,7 +355,7 @@ describe("TicketDetailScreen — Task #613 foreground ticket_unblocked refresh",
       expect(firstByTestId("button-check-out")).toBeTruthy();
     });
 
-    tap(firstByTestId("button-check-out"));
+    await tapThroughMileagePrompt("button-check-out");
     await waitFor(() => {
       expect(firstByTestId("banner-assignment-removed")).toBeTruthy();
     });
@@ -379,7 +396,7 @@ describe("TicketDetailScreen — Task #613 foreground ticket_unblocked refresh",
       expect(firstByTestId("button-check-out")).toBeTruthy();
     });
 
-    tap(firstByTestId("button-check-out"));
+    await tapThroughMileagePrompt("button-check-out");
     await waitFor(() => {
       expect(firstByTestId("banner-assignment-removed")).toBeTruthy();
     });
@@ -432,7 +449,7 @@ describe("TicketDetailScreen — Task #613 foreground ticket_unblocked refresh",
     });
 
     // Surface the assignment-removed banner via a failed check-out.
-    tap(firstByTestId("button-check-out"));
+    await tapThroughMileagePrompt("button-check-out");
     await waitFor(() => {
       expect(firstByTestId("banner-assignment-removed")).toBeTruthy();
     });

@@ -88,6 +88,7 @@ const tables = {
     "checkOutAt",
   ]),
   tickets: tableTag("tickets", ["id"]),
+  ticketCrew: tableTag("ticketCrew", ["ticketId", "employeeId", "removedAt"]),
 };
 
 const fixtures: Record<string, Row[]> = {
@@ -302,6 +303,7 @@ vi.mock("@workspace/db", () => {
     fieldEmployeeNotesTable: tables.fieldEmployeeNotes,
     ticketCheckInsTable: tables.ticketCheckIns,
     ticketsTable: tables.tickets,
+  ticketCrewTable: tables.ticketCrew,
     // Mirror lib/db/src/format/ticket-tracking-number.ts (`VNDRLY-` +
     // 8-digit zero-padded id) so the DELETE handler can format tracking
     // numbers without pulling the real lib through the mock.

@@ -21,10 +21,13 @@ import {
 import { formatTicketTrackingNumber } from "@workspace/db/format";
 
 import AuthedImage from "@/components/AuthedImage";
+import ForemanQuickActions from "@/components/ForemanQuickActions";
 import FreshnessPill from "@/components/FreshnessPill";
 import LayeredPillButton from "@/components/LayeredPillButton";
+import NudgeFlashOverlay from "@/components/NudgeFlashOverlay";
 import TogglePillButton from "@/components/TogglePillButton";
 import { useAuth } from "@/hooks/use-auth";
+import { useTicketNudgeFlash } from "@/hooks/useTicketNudgeFlash";
 import type { MembershipSummary } from "@/lib/auth";
 import { useBrand } from "@/hooks/use-brand";
 import { useColors } from "@/hooks/useColors";
@@ -112,6 +115,17 @@ export default function HomeScreen() {
   const [restoredToastMessage, setRestoredToastMessage] = useState<string | null>(
     null,
   );
+  const [nudgeToastMessage, setNudgeToastMessage] = useState<string | null>(null);
+  const { nudgeFlashingTicketIds, handlePushData } = useTicketNudgeFlash({
+    enabled: !!me,
+    onNudge: (ticketId) => {
+      setNudgeToastMessage(
+        t("tickets.nudgeReceivedToastForList", {
+          ticket: formatTicketTrackingNumber(ticketId),
+        }),
+      );
+    },
+  });
   // Task #669: brief "Refreshed" confirmation toast for manual refresh
   // (header button or pull-to-refresh). Mirrors the web LiveConnectionPill's
   // "refreshed" state from Task #667 — the user gets the same visible
@@ -212,6 +226,9 @@ export default function HomeScreen() {
   // (read-only). Use this flag everywhere those field-only affordances
   // would otherwise create dead ends or 401 errors.
   const isFieldEmployee = me?.role === "field_employee";
+  const isForemanEmployee =
+    isFieldEmployee &&
+    (me?.vendorRole === "foreman" || me?.vendorRole === "both");
   // Direct assignments are vendor-side (offered to a vendor org). Surface
   // for any user whose active org is a vendor (admin, member, or field).
   const isVendorViewer = orgType === "vendor";
@@ -503,6 +520,12 @@ export default function HomeScreen() {
     const sub = Notifications.addNotificationReceivedListener((n) => {
       const data = n.request.content.data as Record<string, unknown> | null;
       if (!data || typeof data !== "object") return;
+
+      if (data.type === "workflow_nudge") {
+        handlePushData(data);
+        return;
+      }
+
       if (data.type !== "ticket_unblocked") return;
       const incoming =
         typeof data.ticketId === "number"
@@ -525,7 +548,13 @@ export default function HomeScreen() {
       void refreshTicketRow(incoming);
     });
     return () => sub.remove();
-  }, [refreshTicketRow, t]);
+  }, [refreshTicketRow, t, handlePushData]);
+
+  useEffect(() => {
+    if (!nudgeToastMessage) return;
+    const handle = setTimeout(() => setNudgeToastMessage(null), 3000);
+    return () => clearTimeout(handle);
+  }, [nudgeToastMessage]);
 
   // Task #630: auto-dismiss the restored confirmation after ~3s. The
   // toast is non-blocking and never requires manual dismissal.
@@ -779,12 +808,16 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
+      {isForemanEmployee ? (
+        <ForemanQuickActions unreadAlerts={unreadCount} />
+      ) : null}
+
       {isFieldEmployee ? (
         /* Field-employee home — matches the TestFlight layout: "Tracking"
            on the left, grey History + brand "Start New Job" on the right. */
         <View style={styles.trackingRow}>
           <Text style={[styles.heading, { color: colors.foreground }]} numberOfLines={1}>
-            {t("tickets.title")}
+            {isForemanEmployee ? t("foremanHome.activeJobs") : t("tickets.title")}
           </Text>
           <View style={styles.trackingActions}>
             <TogglePillButton
@@ -1113,6 +1146,7 @@ export default function HomeScreen() {
                 ]}
                 testID={`card-ticket-${item.id}`}
               >
+                <NudgeFlashOverlay active={nudgeFlashingTicketIds.has(item.id)} />
                 <View style={styles.cardHeader}>
                   <View style={styles.ticketNumGroup}>
                     <Text style={[styles.ticketNum, { color: colors.foreground }]}>
@@ -1202,7 +1236,8 @@ export default function HomeScreen() {
                 {/* Vendor admins need to see WHICH field employee owns
                     each ticket; field-employee viewers don't (every
                     row is theirs). */}
-                {!isFieldEmployee && employeeName ? (
+                {!isFieldEmployee || isForemanEmployee ? (
+                  employeeName ? (
                   <Text
                     style={[styles.cardMeta, { color: colors.mutedForeground }]}
                     testID={`text-ticket-employee-${item.id}`}
@@ -1211,6 +1246,7 @@ export default function HomeScreen() {
                     {"  "}
                     {employeeName}
                   </Text>
+                  ) : null
                 ) : null}
               </TouchableOpacity>
             );
@@ -1227,6 +1263,21 @@ export default function HomeScreen() {
           <View style={styles.restoredToast}>
             <Feather name="check-circle" size={16} color="#ffffff" />
             <Text style={styles.restoredToastText}>{restoredToastMessage}</Text>
+          </View>
+        </View>
+      ) : null}
+      {nudgeToastMessage ? (
+        <View
+          style={[
+            styles.restoredToastContainer,
+            { bottom: restoredToastMessage ? 80 : 32 },
+          ]}
+          pointerEvents="none"
+          testID="toast-nudge-received"
+        >
+          <View style={[styles.restoredToast, styles.nudgeToast]}>
+            <Feather name="bell" size={16} color="#ffffff" />
+            <Text style={styles.restoredToastText}>{nudgeToastMessage}</Text>
           </View>
         </View>
       ) : null}
@@ -1435,6 +1486,9 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 },
     elevation: 4,
+  },
+  nudgeToast: {
+    backgroundColor: "#2563eb",
   },
   restoredToastText: {
     color: "#ffffff",
@@ -1655,6 +1709,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 14,
     marginBottom: 10,
+    overflow: "hidden",
   },
   cardHeader: {
     flexDirection: "row",

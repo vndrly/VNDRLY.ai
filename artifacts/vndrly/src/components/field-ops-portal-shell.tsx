@@ -188,11 +188,14 @@ export function FieldOpsPortalShell({
     </nav>
   );
 
+  const navPaneStyle = { backgroundColor: "#3a3d42" } as const;
+
   return (
     <div className="min-h-screen flex" style={brandStyleVars(brand)}>
       <aside
+        style={navPaneStyle}
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 bg-sidebar text-sidebar-foreground flex flex-col transition-transform overflow-hidden",
+          "fixed inset-y-0 left-0 z-50 w-64 flex flex-col transition-transform overflow-hidden",
           sidebarOpen ? "translate-x-0" : "-translate-x-full",
           "md:translate-x-0 md:static",
         )}
@@ -227,7 +230,10 @@ export function FieldOpsPortalShell({
       )}
 
       <div className="flex-1 flex flex-col min-w-0">
-        <div className="bg-sidebar text-sidebar-foreground border-b border-sidebar-border px-3 py-2 flex items-center justify-between gap-2 shrink-0">
+        <div
+          style={navPaneStyle}
+          className="px-3 py-2 flex items-center justify-between gap-2 shrink-0"
+        >
           <ReferToVndrlyDialog
             trigger={
               <button

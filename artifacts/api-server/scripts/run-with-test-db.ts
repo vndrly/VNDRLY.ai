@@ -43,6 +43,7 @@
  *   tsx scripts/run-with-test-db.ts -- \
  *       sh -c "pnpm --filter @workspace/db run check-schema && vitest run"
  */
+import "../../../scripts/load-env-local.mjs";
 import { spawn } from "node:child_process";
 import { drizzle } from "drizzle-orm/node-postgres";
 import type { PgDatabase } from "drizzle-orm/pg-core";
@@ -158,7 +159,11 @@ function spawnChild(
   env: NodeJS.ProcessEnv,
 ): Promise<number> {
   return new Promise((resolve, reject) => {
-    const child = spawn(cmd, args, { stdio: "inherit", env });
+    const child = spawn(cmd, args, {
+      stdio: "inherit",
+      env,
+      shell: process.platform === "win32",
+    });
     child.on("error", reject);
     child.on("close", (code, signal) => {
       if (signal) {
@@ -210,6 +215,15 @@ async function main(): Promise<void> {
     DATABASE_URL: resolved.testUrl,
     TEST_DATABASE_URL: resolved.testUrl,
   };
+
+  const checkCode = await spawnChild(
+    "pnpm",
+    ["--filter", "@workspace/db", "run", "check-schema"],
+    env,
+  );
+  if (checkCode !== 0) {
+    process.exit(checkCode);
+  }
 
   const code = await spawnChild(childArgs[0]!, childArgs.slice(1), env);
   process.exit(code);

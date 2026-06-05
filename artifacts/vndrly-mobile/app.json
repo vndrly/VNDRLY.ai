@@ -113,7 +113,9 @@
             "prerendered": true
           }
         }
-      ]
+      ],
+      "expo-build-properties",
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true,

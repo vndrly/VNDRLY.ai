@@ -51,6 +51,8 @@ class FakeEventSource {
   }
   close(): void {
     this.closed = true;
+    const idx = FakeEventSource.instances.indexOf(this);
+    if (idx >= 0) FakeEventSource.instances.splice(idx, 1);
   }
   /** Test helper — fan out a message to every registered listener. */
   dispatch(type: string, data: unknown): void {
@@ -452,6 +454,20 @@ vi.mock("@/components/ui/select", () => {
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import TicketDetail from "./ticket-detail";
 
+function findTicketsEventSource(): FakeEventSource {
+  const es = FakeEventSource.instances.find((i) =>
+    /\/api\/tickets\/events$/.test(i.url),
+  );
+  if (!es) {
+    throw new Error(
+      `No EventSource for /api/tickets/events. Saw: ${FakeEventSource.instances
+        .map((i) => i.url)
+        .join(", ")}`,
+    );
+  }
+  return es;
+}
+
 beforeEach(() => {
   toastFn.mockReset();
   submitMutateMock.mockReset();
@@ -790,8 +806,11 @@ describe("ticket-detail — Task #593 assignment-removed banner (web)", () => {
       // Exactly one subscription per page mount; reconnects/refetches
       // would balloon connections to the proxy, which has finite
       // long-lived stream slots.
-      expect(FakeEventSource.instances.length).toBe(1);
-      const es = FakeEventSource.instances[0];
+      expect(
+        FakeEventSource.instances.filter((i) => /\/api\/tickets\/events$/.test(i.url))
+          .length,
+      ).toBe(1);
+      const es = findTicketsEventSource();
       // The path is intentionally relative to import.meta.env.BASE_URL
       // so the same code works under the dev path-routed proxy and
       // under the deployed root mount.
@@ -832,8 +851,7 @@ describe("ticket-detail — Task #593 assignment-removed banner (web)", () => {
       // (no banner → no toast) so the gate stays in place.
       const toastCallsBeforeUnblock = toastFn.mock.calls.length;
 
-      const es = FakeEventSource.instances[0];
-      expect(es).toBeTruthy();
+      const es = findTicketsEventSource();
       act(() => {
         es.dispatch("ticket.unblocked", {
           type: "ticket.unblocked",
@@ -887,8 +905,7 @@ describe("ticket-detail — Task #593 assignment-removed banner (web)", () => {
       expect(screen.queryByTestId("banner-assignment-removed")).toBeNull();
       const toastCallsBeforeUnblock = toastFn.mock.calls.length;
 
-      const es = FakeEventSource.instances[0];
-      expect(es).toBeTruthy();
+      const es = findTicketsEventSource();
       act(() => {
         es.dispatch("ticket.unblocked", {
           type: "ticket.unblocked",
@@ -920,7 +937,7 @@ describe("ticket-detail — Task #593 assignment-removed banner (web)", () => {
         screen.getByTestId("banner-assignment-removed"),
       ).toBeTruthy();
 
-      const es = FakeEventSource.instances[0];
+      const es = findTicketsEventSource();
       // Two unrelated unblocks — different ticket id and a malformed
       // payload. Neither should pull our ticket out of cache or drop
       // our banner. (The handler is shared across all open ticket
@@ -983,7 +1000,7 @@ describe("ticket-detail — Task #593 assignment-removed banner (web)", () => {
         screen.getByTestId("banner-assignment-removed"),
       ).toBeTruthy();
 
-      const es = FakeEventSource.instances[0];
+      const es = findTicketsEventSource();
       expect(es).toBeTruthy();
 
       // Reset the spy so we can assert the hello path triggered
@@ -1022,7 +1039,7 @@ describe("ticket-detail — Task #593 assignment-removed banner (web)", () => {
 
     it("does NOT re-fetch on the first hello of a fresh subscription", () => {
       render(<TicketDetail id={TICKET_ID} />);
-      const es = FakeEventSource.instances[0];
+      const es = findTicketsEventSource();
       expect(es).toBeTruthy();
 
       // Drop any incidental invalidations from mount so we can
@@ -1046,7 +1063,7 @@ describe("ticket-detail — Task #593 assignment-removed banner (web)", () => {
 
     it("ignores a malformed hello payload", () => {
       render(<TicketDetail id={TICKET_ID} />);
-      const es = FakeEventSource.instances[0];
+      const es = findTicketsEventSource();
       expect(es).toBeTruthy();
 
       stableQueryClient.invalidateQueries.mockClear();

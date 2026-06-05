@@ -85,7 +85,11 @@ const TYPE_TO_CATEGORY: Record<string, NotificationCategory> = {
   crew_added: "crew",
   long_checkin: "crew",
   crew_removed: "crew",
+  crew_punch_in: "crew",
+  crew_punch_out: "crew",
   schedule_changed: "crew",
+  ptt_message: "crew",
+  workflow_nudge: "tickets",
   // Task #57 — dispatcher alert when a crew member's phone battery hits
   // a configurable critical threshold. Lives in the `crew` category so
   // it inherits the same per-user opt-in toggle as the other crew/roster
@@ -269,6 +273,8 @@ export const HIGH_PRIORITY_NOTIFICATION_TYPES: ReadonlySet<string> = new Set([
   "direct_assignment_offered",
   "direct_assignment_committed",
   "direct_assignment_passed",
+  "ptt_message",
+  "workflow_nudge",
 ]);
 
 export function isHighPriorityNotificationType(type: string): boolean {

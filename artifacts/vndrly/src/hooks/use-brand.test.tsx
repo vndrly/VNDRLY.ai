@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // Task #452 — vendor-role users must inherit their vendor's brand
@@ -26,6 +26,8 @@ const mockState = vi.hoisted(() => ({
   partner: null as Record<string, unknown> | null,
   vendor: null as Record<string, unknown> | null,
   platformSettings: null as Record<string, unknown> | null,
+  loginBrand: null as Record<string, unknown> | null,
+  publicPlatformBrand: null as Record<string, unknown> | null,
 }));
 
 vi.mock("@/hooks/use-auth", () => ({
@@ -50,9 +52,13 @@ vi.mock("@workspace/api-client-react", () => ({
   useGetPlatformSettings: (opts: { query?: { enabled?: boolean } }) => ({
     data: opts.query?.enabled ? mockState.platformSettings : undefined,
   }),
+  useGetPublicPlatformBrand: (opts: { query?: { enabled?: boolean } }) => ({
+    data: opts.query?.enabled ? mockState.publicPlatformBrand : undefined,
+  }),
   getGetPartnerQueryKey: (id: number) => ["partner", id],
   getGetVendorQueryKey: (id: number) => ["vendor", id],
   getGetPlatformSettingsQueryKey: () => ["platform-settings"],
+  getGetPublicPlatformBrandQueryKey: () => ["public-platform-brand"],
 }));
 
 import {
@@ -92,6 +98,29 @@ beforeEach(() => {
   mockState.partner = null;
   mockState.vendor = null;
   mockState.platformSettings = null;
+  mockState.loginBrand = null;
+  mockState.publicPlatformBrand = null;
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("/api/public/login-brand")) {
+        return {
+          ok: true,
+          json: async () =>
+            mockState.loginBrand ?? {
+              name: null,
+              brandPrimaryColor: null,
+              brandAccentColor: null,
+              logoUrl: null,
+              logoSquareUrl: null,
+              isOrgBranded: false,
+            },
+        } as Response;
+      }
+      throw new Error(`Unexpected fetch: ${url}`);
+    }),
+  );
   // Reset CSS custom properties between tests so a previous render's
   // values don't leak into the next assertion.
   document.documentElement.style.removeProperty("--brand-primary");
@@ -239,33 +268,24 @@ describe("BrandProvider — vendor-role branding (Task #452)", () => {
     expect(screen.getByTestId("branded").textContent).toBe("no");
   });
 
-  it("caches vendor branding so the next page load can rehydrate it", () => {
-    mockState.user = {
-      userId: 7,
-      role: "vendor",
-      partnerId: null,
-      vendorId: 42,
-    };
-    mockState.vendor = {
-      id: 42,
+  it("loads org branding from the public login-brand API after sign-out", async () => {
+    window.history.replaceState({}, "", "/?vendorId=42");
+    mockState.loginBrand = {
       name: "Acme Drilling",
       brandPrimaryColor: "#2b6cb0",
       brandAccentColor: "#1a365d",
       logoUrl: "https://example.com/logo.png",
       logoSquareUrl: "https://example.com/logo-sq.png",
+      isOrgBranded: true,
     };
 
     renderWithProvider();
 
-    const cached = JSON.parse(
-      localStorage.getItem("vndrly:lastPartnerBrand") ?? "{}",
-    );
-    expect(cached.primary).toBe("#2b6cb0");
-    expect(cached.accent).toBe("#1a365d");
-    expect(cached.logoUrl).toBe("https://example.com/logo.png");
-    // Vendors gained their own logo_square_url column; the cache must
-    // round-trip it instead of dropping it on the floor.
-    expect(cached.logoSquareUrl).toBe("https://example.com/logo-sq.png");
-    expect(cached.name).toBe("Acme Drilling");
+    await waitFor(() => {
+      expect(screen.getByTestId("primary").textContent).toBe("#2b6cb0");
+    });
+    expect(screen.getByTestId("accent").textContent).toBe("#1a365d");
+    expect(screen.getByTestId("name").textContent).toBe("Acme Drilling");
+    expect(localStorage.getItem("vndrly:lastPartnerBrand")).toBeNull();
   });
 });

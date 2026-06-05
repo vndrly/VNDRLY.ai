@@ -1,6 +1,11 @@
-import amberPill from "@assets/900x229_Amber_Pill_v4_1778504507024.png";
-import bluePill from "@assets/NewPillPallet_0001s_0017_900x229_blue_Pill.png";
-import greenPill from "@assets/NewPillPallet_0001s_0051_900x229_green_Pill_v3.png";
+import type { CSSProperties } from "react";
+import tanPill from "@assets/button-palette/900x229_tan_Pill-v3.png";
+import { isWinchesterBrand } from "@/lib/portal-branding";
+// Toggle pills MUST share one canvas size (500×127) so active + idle
+// halves scale to the same height under the 200% background clip.
+import amberPill from "@assets/900x229_Amber_Pill_v3.png";
+import bluePill from "@assets/900x229_blue_Pill_v3.png";
+import greenPill from "@assets/900x229_green_Pill_v3_1777847855324.png";
 import redPill from "@assets/900x229_red_Pill_v2_1777847855327.png";
 import greyPill from "@assets/Vndrly_900x229_Light_Grey_Pill1_1777664658767.png";
 import whitePill from "@assets/900x229_white_Pill2_1778850026167.png";
@@ -16,15 +21,30 @@ const TOGGLE_PILL_PALETTE: PaletteEntry[] = [
 
 const NEUTRAL_TOGGLE_PILL_SRC = greyPill;
 
-/** Natural width:height of the canonical 900×229 toggle pill PNGs. */
-export const TOGGLE_PILL_IMAGE_ASPECT = 900 / 229;
+/** Natural width:height of the canonical 500×127 toggle pill PNGs. */
+export const TOGGLE_PILL_IMAGE_ASPECT = 500 / 127;
 
-/**
- * Canonical white pill PNG used for the *inactive* half of these
- * inline toggles. Rendered via `ToggleHalfPillBg` (PillBg 3-slice)
- * so the endcaps stay circular while the middle stretches.
- */
+/** Canonical white pill for the inactive half of split toggles. */
 export const TOGGLE_IDLE_PILL_SRC = whitePill;
+
+/** CSS background for one half of a split toggle pill. */
+export function toggleHalfPillBgStyle(
+  src: string,
+  side: "left" | "right",
+): CSSProperties {
+  return {
+    backgroundImage: `url(${src})`,
+    backgroundSize: "200% 100%",
+    backgroundPosition: side === "left" ? "left center" : "right center",
+    backgroundRepeat: "no-repeat",
+  };
+}
+
+export const SPLIT_TOGGLE_ACTIVE_TEXT_SHADOW =
+  "drop-shadow-[0_1px_2px_rgba(0,0,0,0.65)] drop-shadow-[0_2px_4px_rgba(0,0,0,0.45)]";
+
+/** Inactive half label — fixed dark grey, not theme-derived. */
+export const SPLIT_TOGGLE_IDLE_TEXT_CLASS = "text-gray-700";
 
 function hexToRgb(hex: string): [number, number, number] | null {
   const cleaned = hex.trim().replace(/^#/, "");
@@ -72,24 +92,11 @@ function hueDistance(a: number, b: number): number {
   return d > 180 ? 360 - d : d;
 }
 
-/**
- * Pick the best-matching canonical 900x229 pill PNG to use as the
- * active-half background of the dark/light + EN/ES inline toggles.
- *
- * This is intentionally separate from `pickPillForBrand` in
- * `baker-pill-button.tsx`:
- *   - We restrict the palette to the four canonical *colored* pills
- *     (amber / blue / green / red) plus a grey neutral fallback. The
- *     baker / teal / purple / pink / etc. variants are deliberately
- *     excluded per the user spec ("except baker") — these toggles
- *     should always read as one of the four core semantic colors.
- *   - Returns the grey pill (rather than the baker teal pill) when no
- *     brand color is supplied or the input is too desaturated to pick
- *     a meaningful hue.
- */
 export function pickTogglePillSrc(
   brandColor: string | null | undefined,
+  brandName?: string | null,
 ): string {
+  if (isWinchesterBrand(brandName)) return tanPill;
   if (!brandColor) return NEUTRAL_TOGGLE_PILL_SRC;
   const rgb = hexToRgb(brandColor);
   if (!rgb) return NEUTRAL_TOGGLE_PILL_SRC;

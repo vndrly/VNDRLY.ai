@@ -25,6 +25,7 @@ import LiveConnectionPill, { type LiveConnectionStatus } from "@/components/live
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useTicketsRateLimitGate } from "@/hooks/use-tickets-rate-limit-gate";
+import { useTicketNudgeFlash } from "@/hooks/use-ticket-nudge-flash";
 import { useTranslation } from "react-i18next";
 // Task #648: name the affected ticket in the assignment-restored toast
 // using the same canonical tracking-number format the mobile open-tickets
@@ -489,6 +490,25 @@ export default function Tickets() {
     }, 2000);
     flashTimersRef.current.set(ticketId, timer);
   };
+
+  const { nudgeFlashingTicketIds } = useTicketNudgeFlash({
+    enabled: !!user,
+    onNudge: (ticketId) => {
+      toastRef.current({
+        title: tRef.current("tickets.nudgeReceivedToastForList", {
+          ticket: formatTicketTrackingNumber(ticketId),
+        }),
+        duration: 3000,
+      });
+    },
+  });
+
+  const ticketRowFlashClass = (id: number) =>
+    nudgeFlashingTicketIds.has(id)
+      ? "nudge-flash"
+      : flashingTicketIds.has(id)
+        ? "lifecycle-flash"
+        : undefined;
 
   useEffect(() => {
     let es: EventSource | null = null;
@@ -2670,7 +2690,7 @@ export default function Tickets() {
                               <TableRow
                                 key={tk.id}
                                 data-testid={`visit-row-${tk.id}`}
-                                className={flashingTicketIds.has(tk.id) ? "lifecycle-flash" : undefined}
+                                className={ticketRowFlashClass(tk.id)}
                               >
                                 <TableCell>
                                   <Link href={`/tickets/${tk.id}`} className="font-medium text-gray-700 hover:underline hover:text-[var(--brand-primary)]">
@@ -2801,7 +2821,7 @@ export default function Tickets() {
                     <Fragment key={tk.id}>
                       <TableRow
                         data-testid={`row-ticket-${tk.id}`}
-                        className={flashingTicketIds.has(tk.id) ? "lifecycle-flash" : undefined}
+                        className={ticketRowFlashClass(tk.id)}
                       >
                         {/* Task #1029 — per-row bulk-select checkbox.
                             Only enabled for funds_dispersed rows; other

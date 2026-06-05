@@ -259,3 +259,56 @@ vi.mock("react-native-safe-area-context", async () => {
     useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
   };
 });
+
+// ── Fix #5: stub `expo-splash-screen` ─────────────────────────────────
+//
+// Root `_layout.tsx` calls `SplashScreen.preventAutoHideAsync().catch(...)`.
+// A bare `vi.fn()` mock returns `undefined`, so `.catch` throws at import.
+vi.mock("expo-splash-screen", () => ({
+  preventAutoHideAsync: vi.fn(() => Promise.resolve()),
+  hideAsync: vi.fn(() => Promise.resolve()),
+}));
+
+// ── Fix #6: stub `LayeredPillButton` for jsdom tests ────────────────
+//
+// Ticket detail and several other screens now use LayeredPillButton instead
+// of AmberButton/GreyButton. Per-file Amber/Grey mocks no longer cover
+// state-change buttons; this shim preserves testID + disabled semantics and
+// exposes `data-variant` (`amber` vs `grey`) for assignment-removed tests.
+vi.mock("@/components/LayeredPillButton", async () => {
+  const ReactLib = (await import("react")).default;
+  return {
+    default: ({
+      children,
+      onPress,
+      disabled,
+      loading,
+      testID,
+      inactive,
+    }: {
+      children?: React.ReactNode;
+      onPress?: () => void;
+      disabled?: boolean;
+      loading?: boolean;
+      testID?: string;
+      inactive?: boolean;
+    }) => {
+      const isDisabled = !!(disabled || loading);
+      const isGrey = !!(inactive || isDisabled);
+      return ReactLib.createElement(
+        "button",
+        {
+          "data-testid": testID,
+          "data-variant": isGrey ? "grey" : "amber",
+          "aria-disabled": isDisabled || undefined,
+          disabled: isDisabled,
+          onClick: () => {
+            if (!isDisabled && onPress) onPress(undefined as never);
+          },
+        },
+        typeof children === "string" ? children : "btn",
+      );
+    },
+    pickPillForBrand: () => ({ src: "", rgb: [0, 0, 0] as [number, number, number] }),
+  };
+});

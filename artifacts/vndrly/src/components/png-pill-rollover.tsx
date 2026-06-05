@@ -8,7 +8,7 @@ import btnGreenPill from "@assets/button-palette/900x229_green_Pill_v3.png";
 import btnRedPill from "@assets/button-palette/900x229_red_Pill_v2.png";
 import btnAmberPill from "@assets/button-palette/900x229_Amber_Pill_v4.png";
 import btnBakerTealPill from "@assets/button-palette/900x229_baker_teal_Pill.png";
-import btnWinTanPill from "@assets/button-palette/900x229_tan_Pill-v4.png";
+import btnWinTanPill from "@assets/button-palette/900x229_tan_Pill-v3.png";
 import btnWhitePill from "@assets/button-palette/900x229_white_Pill2.png";
 
 const PILL_AR = 900 / 229;

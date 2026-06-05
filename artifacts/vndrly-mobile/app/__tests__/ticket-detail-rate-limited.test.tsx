@@ -77,6 +77,16 @@ vi.mock("expo-notifications", () => ({
   addNotificationReceivedListener: () => ({ remove: vi.fn() }),
 }));
 
+// Ticket detail mounts useTicketNudgeFlash, which polls unread nudges on
+// mount. During a rate-limit cooldown the screen must not apiFetch at all.
+vi.mock("@/hooks/useTicketNudgeFlash", () => ({
+  useTicketNudgeFlash: () => ({
+    nudgeFlashingTicketIds: new Set<number>(),
+    flashNudgeTicket: vi.fn(),
+    handlePushData: vi.fn(),
+  }),
+}));
+
 vi.mock("expo-image", async () => {
   const ReactLib = (await import("react")).default;
   return { Image: (p: any) => ReactLib.createElement("img", { ...p }) };

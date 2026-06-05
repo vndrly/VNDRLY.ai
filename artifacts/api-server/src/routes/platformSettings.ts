@@ -20,8 +20,11 @@ import {
   platformSettingsTable,
   platformSettingsAuditLogTable,
   usersTable,
+  partnersTable,
+  vendorsTable,
   type PlatformSettings,
 } from "@workspace/db";
+import { loginBrandQueryFromContext, parseLoginBrandQuery } from "../lib/loginBrandQuery";
 import {
   UpdatePlatformSettingsBody,
   CreateAdminUserBody,
@@ -151,6 +154,83 @@ router.get("/public/platform-brand", async (_req, res): Promise<void> => {
     logoUrl: row.logoUrl ?? null,
     logoSquareUrl: row.logoSquareUrl ?? null,
   });
+});
+
+function buildPublicOrgBrand(row: {
+  name: string;
+  brandPrimaryColor: string | null;
+  brandAccentColor: string | null;
+  logoUrl: string | null;
+  logoSquareUrl: string | null;
+}) {
+  const logoUrl = row.logoUrl?.trim() || null;
+  const logoSquareUrl = row.logoSquareUrl?.trim() || null;
+  const isOrgBranded = !!(row.brandPrimaryColor || logoUrl || logoSquareUrl);
+  return {
+    name: row.name,
+    brandPrimaryColor: row.brandPrimaryColor ?? null,
+    brandAccentColor: row.brandAccentColor ?? null,
+    logoUrl,
+    logoSquareUrl,
+    isOrgBranded,
+  };
+}
+
+// Pre-auth login chrome. Pass ?vendorId= or ?partnerId= (set on the
+// logout redirect) and brand colors + Supabase logo URLs are read fresh
+// from Postgres on every request — no cookies or local storage.
+router.get("/public/login-brand", async (req, res): Promise<void> => {
+  const ref = parseLoginBrandQuery(req.query as Record<string, unknown>);
+  if (!ref) {
+    res.json({
+      name: null,
+      brandPrimaryColor: null,
+      brandAccentColor: null,
+      logoUrl: null,
+      logoSquareUrl: null,
+      isOrgBranded: false,
+    });
+    return;
+  }
+
+  if (ref.orgType === "partner") {
+    const [partner] = await db
+      .select()
+      .from(partnersTable)
+      .where(eq(partnersTable.id, ref.orgId))
+      .limit(1);
+    if (!partner) {
+      res.json({
+        name: null,
+        brandPrimaryColor: null,
+        brandAccentColor: null,
+        logoUrl: null,
+        logoSquareUrl: null,
+        isOrgBranded: false,
+      });
+      return;
+    }
+    res.json(buildPublicOrgBrand(partner));
+    return;
+  }
+
+  const [vendor] = await db
+    .select()
+    .from(vendorsTable)
+    .where(eq(vendorsTable.id, ref.orgId))
+    .limit(1);
+  if (!vendor) {
+    res.json({
+      name: null,
+      brandPrimaryColor: null,
+      brandAccentColor: null,
+      logoUrl: null,
+      logoSquareUrl: null,
+      isOrgBranded: false,
+    });
+    return;
+  }
+  res.json(buildPublicOrgBrand(vendor));
 });
 
 router.patch("/platform-settings", async (req, res): Promise<void> => {

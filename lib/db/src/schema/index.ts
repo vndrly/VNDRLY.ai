@@ -31,6 +31,7 @@ export * from "./ticketAssignmentRates";
 export * from "./ticketNoteLogs";
 export * from "./ticketUnlocks";
 export * from "./ticketStatusHistory";
+export * from "./ticketNudges";
 export * from "./gpsLogs";
 export * from "./users";
 export * from "./userOrgMemberships";

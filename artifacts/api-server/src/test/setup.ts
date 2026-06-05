@@ -1,3 +1,5 @@
+import "../../../../scripts/load-env-local.mjs";
+
 // Pin SESSION_SECRET unconditionally so cookie signatures line up with the
 // literal `"test-secret"` default in `test-utils/session.ts`. A shared dev
 // shell may export a real `SESSION_SECRET` that does not match what the test

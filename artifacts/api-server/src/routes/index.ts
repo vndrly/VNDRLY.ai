@@ -40,6 +40,7 @@ import adminRecoveryRouter from "./adminRecovery";
 import platformSettingsRouter from "./platformSettings";
 import fireTransmitterSettingsRouter from "./fireTransmitterSettings";
 import webhooksSendgridRouter from "./webhooksSendgrid";
+import ticketNudgeRouter from "./ticketNudge";
 
 const router: IRouter = Router();
 
@@ -72,6 +73,7 @@ router.use(siteLocationsRouter);
 router.use(directAssignmentsRouter);
 router.use(fieldEmployeesRouter);
 router.use(ticketsRouter);
+router.use(ticketNudgeRouter);
 router.use(crewRouter);
 router.use(ticketScheduleRouter);
 router.use(employeeCertificationsRouter);

@@ -436,6 +436,7 @@ vi.mock("@workspace/db", () => ({
   siteWorkAssignmentsTable: tableTag("siteWorkAssignments", []),
   workTypesTable: tableTag("workTypes", []),
   ticketsTable: tableTag("tickets", []),
+  ticketCrewTable: tableTag("ticketCrew", []),
   gpsLogsTable: tableTag("gpsLogs", []),
   fieldPushTokensTable: tableTag("fieldPushTokens", []),
   // Task #51 — referenced by unread-comments.ts subqueries that the

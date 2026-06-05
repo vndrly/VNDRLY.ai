@@ -6,6 +6,8 @@ import { useToast } from "@/hooks/use-toast";
 import PngPill, { PngPillButton } from "@/components/png-pill-rollover";
 import ScheduleTicketDialog from "@/components/schedule-ticket-dialog";
 import { usePortalBase } from "@/lib/portal-base";
+import { useAuth } from "@/hooks/use-auth";
+import { useTicketNudgeFlash } from "@/hooks/use-ticket-nudge-flash";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -61,6 +63,8 @@ function openInMaps(lat: number, lng: number, label?: string) {
 
 export default function FieldSchedule() {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const { nudgeFlashingTicketIds } = useTicketNudgeFlash({ enabled: !!user });
   const [, navigate] = useLocation();
   const portalBase = usePortalBase();
   const isForemanPortal = portalBase === "/foreman";
@@ -149,7 +153,7 @@ export default function FieldSchedule() {
             return (
               <li
                 key={item.id}
-                className="rounded-xl border border-border bg-card text-card-foreground p-4 shadow-sm"
+                className={`rounded-xl border border-border bg-card text-card-foreground p-4 shadow-sm ${nudgeFlashingTicketIds.has(item.id) ? "nudge-flash" : ""}`}
                 data-testid={`schedule-card-${item.id}`}
               >
                 <button

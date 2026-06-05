@@ -47,6 +47,7 @@ import StarRating from "@/components/star-rating";
 import TicketStatusStepper from "@/components/ticket-status-stepper";
 import { TicketRouteMap } from "@/components/ticket-route-map";
 import { CrewTimeSection } from "@/components/crew-time-section";
+import { TicketNudgePanel } from "@/components/ticket-nudge-panel";
 import { getGoogleMapsUrl } from "@/lib/maps";
 import { forwardRef, useState, useEffect, useMemo, useRef, useCallback, type ButtonHTMLAttributes } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -84,6 +85,7 @@ import TicketStatusBadge from "@/components/ticket-status-badge";
 import ScheduleTicketDialog from "@/components/schedule-ticket-dialog";
 import LiveConnectionPill, { type LiveConnectionStatus } from "@/components/live-connection-pill";
 import { useTicketsRateLimitGate } from "@/hooks/use-tickets-rate-limit-gate";
+import { useTicketNudgeFlash } from "@/hooks/use-ticket-nudge-flash";
 import { useTranslation } from "react-i18next";
 import { translateApiError } from "@/lib/api-error";
 import { buildGpsTimelineCsv } from "@/lib/gps-timeline-csv";
@@ -321,6 +323,11 @@ function deriveTransitionKind(
 export default function TicketDetail({ id }: { id: number }) {
   const { user } = useAuth();
   const { t } = useTranslation();
+  const { nudgeFlashingTicketIds } = useTicketNudgeFlash({
+    enabled: !!user,
+    ticketId: id,
+  });
+  const isNudgeFlashing = nudgeFlashingTicketIds.has(id);
   // Task #157: when a partner brand is active, audit-trail filter chips
   // (and other inline amber/blue accents on this page) flip to the
   // partner's primary/accent so the page chrome reads consistently
@@ -1354,7 +1361,10 @@ export default function TicketDetail({ id }: { id: number }) {
   if (!ticket) return <p className="text-muted-foreground">{t("ticketDetail.trackingNotFound")}</p>;
 
   return (
-    <div className={`space-y-6 relative ${user?.role === "field_employee" ? "pt-24" : ""}`} data-testid="ticket-detail-page">
+    <div
+      className={`space-y-6 relative ${user?.role === "field_employee" ? "pt-24" : ""} ${isNudgeFlashing ? "nudge-flash-page" : ""}`}
+      data-testid="ticket-detail-page"
+    >
       {user?.role === "field_employee" && (
         <>
           <div
@@ -3443,6 +3453,12 @@ export default function TicketDetail({ id }: { id: number }) {
           </a>
         </CardContent>
       </Card>
+
+      <TicketNudgePanel
+        ticketId={ticket.id}
+        ticketStatus={ticket.status}
+        userRole={user?.role}
+      />
 
       {/* ── Task #494: Find another Vendor sheet ── */}
       <FindAnotherVendorSheet

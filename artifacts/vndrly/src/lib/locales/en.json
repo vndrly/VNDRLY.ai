@@ -606,6 +606,7 @@
     "awaitingPaymentSentBody": "Your office has been notified that this job is wrapped and the customer owes payment.",
     "errorAwaitingPayment": "Failed to mark awaiting payment",
     "assignmentRestoredToastForList": "Assignment restored for {{ticket}} — you can open it again.",
+    "nudgeReceivedToastForList": "{{ticket}} needs your attention — someone sent a workflow nudge.",
     "listGapWarning": "Reconnected to live updates — some ticket changes may have been missed. Refreshing now…",
     "refreshNow": "Refresh now"
   },
@@ -1217,7 +1218,6 @@
     "offGeofence": "You are {{distance}} m away — must be within {{radius}} m of the site to check in."
   },
   "fieldHome": {
-    "logout": "Log out",
     "portal": "Field Employee Portal",
     "vendorFallback": "Field Crew",
     "whatDoing": "What are you doing?",
@@ -1258,6 +1258,7 @@
     },
     "types": {
       "ticket_assigned": "Assigned to you",
+      "workflow_nudge": "Workflow nudge",
       "crew_added": "Added to crew",
       "schedule_changed": "Schedule changed",
       "crew_removed": "Removed from crew",
@@ -1472,12 +1473,28 @@
     "taxLabel": "Tax ({{state}} — {{pct}}%)",
     "totalRow": "Total",
     "actions": "Actions",
+    "nudge": {
+      "title": "Workflow nudge",
+      "subtitle": "Send a reminder to the next party up or down the chain. Does not change ticket status.",
+      "messagePlaceholder": "Optional note (e.g. waiting on approval)",
+      "up": "Nudge up",
+      "down": "Nudge down",
+      "upShort": "Up",
+      "downShort": "Down",
+      "sending": "Sending…",
+      "sentTitle": "Nudge sent",
+      "sentBody": "Notified {{count}} recipient(s).",
+      "sentBodyShort": "Your reminder was sent.",
+      "failedTitle": "Couldn't send nudge",
+      "failedBody": "Please try again.",
+      "recent": "Recent nudges",
+      "noMessage": "Status was {{status}}"
+    },
     "approved": "Approval 1",
     "submitted": "Submitted",
     "pendingOfficeReview": "Pending Office Review",
     "cancelled": "Cancelled",
     "fundsDispersed": "Approval 3",
-    "disperseFunds": "Disperse Funds",
     "disperseFundsTitle": "Disperse Funds",
     "disperseFundsHelp": "Record the payment that closes this ticket. The vendor will be notified once funds are dispersed.",
     "disperseFundsMethod": "Payment method",
@@ -1529,7 +1546,6 @@
     "sending": "Sending...",
     "sendForReview": "Send for Review",
     "kickedBack": "Kicked Back",
-    "approve": "Approve",
     "approving": "Approving...",
     "rateBeforeApprove": "Rate {{vendor}} before approving",
     "ratePrompt": "Please rate this vendor's work before approving the ticket for payment.",
@@ -1918,7 +1934,6 @@
     "durationLabel": "Estimated duration (minutes)",
     "durationPlaceholder": "Optional",
     "crewLabel": "Assign crew",
-    "applyCrewPreset": "Apply saved crew",
     "applyCrewPresetPlaceholder": "Pick a saved crew…",
     "noEmployees": "No active field employees on your vendor.",
     "noLogin": "no login — won't get push",
@@ -3403,6 +3418,13 @@
       "not_geocoded": "Site is not geocoded — vendor radius can't be verified.",
       "forbidden_not_owning_partner": "Only the owning partner can do that."
     },
+    "nudge": {
+      "invalid_direction": "There is no party in that direction to nudge on this ticket.",
+      "not_allowed": "Your role cannot send workflow nudges.",
+      "no_recipients": "No one is available to notify for this nudge.",
+      "ticket_closed": "Cannot nudge a closed or completed ticket.",
+      "rate_limited": "Please wait before sending another nudge in this direction."
+    },
     "ticket": {
       "not_found": "Ticket not found.",
       "no_access": "You don't have access to this ticket.",
@@ -4023,7 +4045,6 @@
     "noCoWorkers": "No co-workers found for your vendor. People must be active field employees on your roster."
   },
   "foremanHome": {
-    "logout": "Log out",
     "portal": "Foreman Portal",
     "vendorFallback": "Field Crew",
     "whatDoing": "Today's jobs",

@@ -90,6 +90,20 @@ vi.mock("@workspace/api-client-react", () => ({
     isLoading: false,
     reset: vi.fn(),
   }),
+  useListSiteLocations: ({ query }: { query?: Record<string, unknown> } = {}) =>
+    useQuery({
+      queryKey: ["dash-site-locations"],
+      queryFn: async () => [],
+      ...(query ?? {}),
+    }),
+  getListSiteLocationsQueryKey: () => ["dash-site-locations"],
+  useListTickets: (_params: unknown, { query }: { query?: Record<string, unknown> } = {}) =>
+    useQuery({
+      queryKey: ["dash-site-tickets"],
+      queryFn: async () => [],
+      ...(query ?? {}),
+    }),
+  getListTicketsQueryKey: () => ["dash-site-tickets"],
 }));
 
 // Mock the heavy children so the dashboard render stays focused on

@@ -17,6 +17,7 @@ import crypto from "crypto";
 import { DEMO_USERS } from "../lib/demo-users";
 import { logger } from "../lib/logger";
 import { SESSION_SECRET } from "../lib/session";
+import { loginBrandQueryFromContext } from "../lib/loginBrandQuery";
 
 const router = Router();
 
@@ -473,9 +474,19 @@ router.post("/auth/change-password", async (req, res) => {
 });
 
 router.post("/auth/logout", async (req, res) => {
+  let loginBrandQuery: string | null = null;
   const session = readSession(req);
   if (session?.userId) {
     try {
+      const [user] = await db
+        .select()
+        .from(usersTable)
+        .where(eq(usersTable.id, session.userId as number))
+        .limit(1);
+      if (user) {
+        const ctx = await resolveContext(user);
+        loginBrandQuery = loginBrandQueryFromContext(ctx);
+      }
       await db
         .update(usersTable)
         .set({ sessionVersion: sql`${usersTable.sessionVersion} + 1` })
@@ -485,7 +496,7 @@ router.post("/auth/logout", async (req, res) => {
     }
   }
   res.clearCookie(COOKIE_NAME, { path: "/" });
-  return res.json({ message: "Logged out" });
+  return res.json({ message: "Logged out", loginBrandQuery });
 });
 
 function readSession(req: import("express").Request): { userId: number; [k: string]: unknown } | null {

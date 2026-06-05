@@ -199,19 +199,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    // Best-effort: clear the server session. Swallow network errors so a
-    // transient failure can't trap the user on an authenticated page.
+    let loginBrandQuery: string | null = null;
     try {
-      await fetch(`${BASE}/api/auth/logout`, { method: "POST", credentials: "include" });
+      const res = await fetch(`${BASE}/api/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (res.ok) {
+        const data = (await res.json()) as { loginBrandQuery?: unknown };
+        loginBrandQuery =
+          typeof data.loginBrandQuery === "string" && data.loginBrandQuery.trim()
+            ? data.loginBrandQuery.trim()
+            : null;
+      }
     } catch {
       // ignore
     }
     setUser(null);
+    const qs = loginBrandQuery ? `?${loginBrandQuery}` : "";
     // Hard navigate to the login page. A full reload is intentional here:
     // it tears down react-query caches, SSE streams (notifications/tickets
     // events), and any in-memory subscribers that would otherwise keep
-    // serving stale authenticated data after the cookie is gone.
-    window.location.replace(`${BASE}/`);
+    // serving stale authenticated data after the cookie is gone. The org id
+    // in the query string tells the login page which Supabase-backed brand
+    // to load — no extra cookies or localStorage.
+    window.location.replace(`${BASE}/${qs}`);
   }, []);
 
   const setPreferredLanguage = useCallback((lng: "en" | "es") => {

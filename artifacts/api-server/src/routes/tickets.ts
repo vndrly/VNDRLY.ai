@@ -65,15 +65,10 @@ async function ensureFieldOwnership(req: any, res: any, ticketId: number): Promi
   }
   if (session.role === "admin") return true;
 
-  const [t] = await db
-    .select({
-      vendorId: ticketsTable.vendorId,
-      fieldEmployeeId: ticketsTable.fieldEmployeeId,
-      partnerId: siteLocationsTable.partnerId,
-    })
-    .from(ticketsTable)
-    .leftJoin(siteLocationsTable, eq(ticketsTable.siteLocationId, siteLocationsTable.id))
-    .where(eq(ticketsTable.id, ticketId));
+  const { loadFieldTicketAccessRow, fieldEmployeeCanAccessTicket } = await import(
+    "../lib/field-ticket-access"
+  );
+  const t = await loadFieldTicketAccessRow(ticketId);
 
   if (!t) {
     res.status(404).json({ message: "Ticket not found", code: "ticket.not_found" });
@@ -102,7 +97,12 @@ async function ensureFieldOwnership(req: any, res: any, ticketId: number): Promi
       res.status(403).json({ message: "Field account not active", code: "field.account_inactive" });
       return false;
     }
-    if (t.vendorId !== fe.vendorId || t.fieldEmployeeId !== fe.id) {
+    const allowed = await fieldEmployeeCanAccessTicket(
+      ticketId,
+      { id: fe.id, vendorId: fe.vendorId, userId: session.userId },
+      t,
+    );
+    if (!allowed) {
       res.status(403).json({ message: "You do not have access to this ticket", code: "ticket.no_access" });
       return false;
     }

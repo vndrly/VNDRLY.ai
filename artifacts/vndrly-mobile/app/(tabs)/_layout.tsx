@@ -70,6 +70,18 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="comms"
+        options={{
+          title: t("tabs.comms"),
+          href: isForemanEmployee ? undefined : null,
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="radio" size={size} color={color} />
+          ),
+          tabBarBadge: badges.comms > 0 ? (badges.comms > 99 ? "99+" : badges.comms) : undefined,
+          tabBarBadgeStyle: { backgroundColor: colors.primary, color: "#ffffff" },
+        }}
+      />
+      <Tabs.Screen
         name="scan"
         options={{
           title: t("tabs.scan"),

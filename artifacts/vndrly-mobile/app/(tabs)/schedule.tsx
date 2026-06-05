@@ -133,7 +133,10 @@ export default function ScheduleScreen() {
         </Text>
       }
       renderItem={({ item }) => {
-        const crewNames = item.crew.filter((c) => !c.isMe).map((c) => c.name).filter(Boolean);
+        const crewNames = item.crew
+          .filter((c: { isMe?: boolean }) => !c.isMe)
+          .map((c: { name?: string | null }) => c.name)
+          .filter(Boolean);
         const canDirections = item.siteLatitude != null && item.siteLongitude != null;
         const ackStatus = item.myAckStatus;
         // Override the generic grey fallback so "awaiting your reply"

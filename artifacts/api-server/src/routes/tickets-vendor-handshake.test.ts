@@ -36,6 +36,39 @@ let workTypeCoverageRows: any[] = [];
 let workTypeRows: any[] = [];
 let updatedRow: any = null;
 
+vi.mock("../lib/field-ticket-access", () => ({
+  loadFieldTicketAccessRow: vi.fn(async () => {
+    if (!ticketRow) return null;
+    return {
+      vendorId: ticketRow.vendorId ?? null,
+      fieldEmployeeId: ticketRow.fieldEmployeeId ?? null,
+      foremanUserId: ticketRow.foremanUserId ?? null,
+      partnerId: ticketRow.partnerId ?? null,
+    };
+  }),
+  fieldEmployeeCanAccessTicket: vi.fn(
+    async (
+      _ticketId: number,
+      employee: { id: number; vendorId: number; userId: number },
+      ticket: {
+        vendorId: number | null;
+        fieldEmployeeId: number | null;
+        foremanUserId: number | null;
+      },
+    ) => {
+      if (ticket.vendorId !== employee.vendorId) return false;
+      if (ticket.fieldEmployeeId === employee.id) return true;
+      if (ticket.foremanUserId === employee.userId) return true;
+      return false;
+    },
+  ),
+  ticketParticipantUserIdsExpanded: vi.fn(async () => ({
+    ids: [],
+    vendorId: null,
+    partnerId: null,
+  })),
+}));
+
 // Each .from(table) is matched by name so we can return different rows for
 // each query in the same handler.
 function makeChain(rows: any) {
@@ -75,18 +108,20 @@ vi.mock("@workspace/db", () => {
       // Per-handler queries return different rows in fixed order. The order
       // here mirrors the read order in the new endpoints in tickets.ts.
       const seq = [
-        // slot 0: ensureFieldOwnership ticket lookup (check-in/cancel) OR
-        // accept/deny initial existing-row read.
-        () => makeChain([ticketRow].filter(Boolean)),
+        // slot 0: vendorPeople lookup for field_employee callers, otherwise
+        // the ticket row read (check-in/cancel/accept/deny).
+        () => {
+          if (ticketRow?.fieldEmployeeId != null) {
+            return makeChain([
+              { id: ticketRow.fieldEmployeeId, vendorId: ticketRow.vendorId },
+            ]);
+          }
+          return makeChain([ticketRow].filter(Boolean));
+        },
         // slot 1: check-in pre-flight siteForGeofence join (Task #145) OR
-        // accept/deny post-tx siteRow (partnerId lookup). Same `siteRow`
-        // mutable powers both — for geofence the destructure pulls
-        // `latitude`/`longitude`/`siteRadiusMeters` (undefined on the
-        // accept/deny shape, which makes `distanceMeters(...)` NaN and
-        // therefore harmless: `NaN > radius` is false so the rejection
-        // is skipped and the route falls through to its real status
-        // guard, which is what the existing tests assert.
-        () => makeChain([siteRow].filter(Boolean)),
+        // accept/deny post-tx siteRow (partnerId lookup) OR cancel's
+        // existing-ticket read for field employees (slot 0 was vendorPeople).
+        () => makeChain([siteRow ?? ticketRow].filter(Boolean)),
         // slot 2: check-in in-transaction existing-row read (status +
         // arrivedAt). The handshake-status tests reuse the same `row`
         // for ticketRow + siteRow, so returning ticketRow here lets the
@@ -120,6 +155,7 @@ vi.mock("@workspace/db", () => {
     db,
     pool: { query: async () => ({ rows: [] }) },
     ticketsTable: tableTag("tickets"),
+    ticketCrewTable: tableTag("ticketCrew"),
     siteLocationsTable: tableTag("siteLocations"),
     vendorsTable: tableTag("vendors"),
     workTypesTable: tableTag("workTypes"),

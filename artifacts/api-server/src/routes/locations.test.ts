@@ -48,6 +48,7 @@ const tables = {
     "vendorId",
     "siteLocationId",
   ]),
+  ticketCrew: tableTag("ticketCrew", ["ticketId", "employeeId", "removedAt"]),
   gpsLogs: tableTag("gpsLogs", [
     "id",
     "ticketId",
@@ -208,6 +209,7 @@ vi.mock("@workspace/db", () => {
     locationConsentsTable: tables.consents,
     fieldEmployeesTable: tables.employees,
     ticketsTable: tables.tickets,
+  ticketCrewTable: tables.ticketCrew,
     gpsLogsTable: tables.gpsLogs,
     siteLocationsTable: tables.sites,
     // Task #51 — referenced by unread-comments.ts subqueries.

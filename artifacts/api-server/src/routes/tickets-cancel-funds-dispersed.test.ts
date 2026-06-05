@@ -63,6 +63,7 @@ vi.mock("@workspace/db", () => {
     db,
     pool: { query: async () => ({ rows: [] }) },
     ticketsTable: tableTag("tickets"),
+    ticketCrewTable: tableTag("ticketCrew"),
     siteLocationsTable: tableTag("siteLocations"),
     vendorsTable: tableTag("vendors"),
     workTypesTable: tableTag("workTypes"),

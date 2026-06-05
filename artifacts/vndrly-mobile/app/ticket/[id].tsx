@@ -35,10 +35,13 @@ import LiveLocationStatusPill from "@/components/LiveLocationStatusPill";
 import { TicketRouteMap } from "@/components/TicketRouteMap";
 import { TicketTrackingTimeline } from "@/components/TicketTrackingTimeline";
 import CrewTimeSection, { type CrewTimeSectionHandle } from "@/components/CrewTimeSection";
+import TicketNudgePanel from "@/components/TicketNudgePanel";
+import NudgeFlashOverlay from "@/components/NudgeFlashOverlay";
 import CommentsPanel from "@/components/CommentsPanel";
 import TicketStatusStepper from "@/components/TicketStatusStepper";
 import { useColors } from "@/hooks/useColors";
 import { useTicketsRateLimitGate } from "@/hooks/use-tickets-rate-limit-gate";
+import { useTicketNudgeFlash } from "@/hooks/useTicketNudgeFlash";
 import { apiFetch, getApiBase } from "@/lib/api";
 import {
   inlineErrorForTicketAction,
@@ -240,6 +243,12 @@ export default function TicketDetailScreen() {
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const ticketId = Number(id);
+  const { nudgeFlashingTicketIds, handlePushData } = useTicketNudgeFlash({
+    enabled: Number.isFinite(ticketId) && ticketId > 0,
+    ticketId: Number.isFinite(ticketId) ? ticketId : undefined,
+  });
+  const isNudgeFlashing =
+    Number.isFinite(ticketId) && nudgeFlashingTicketIds.has(ticketId);
 
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [siteLocation, setSiteLocation] = useState<SiteLocation | null>(null);
@@ -518,6 +527,12 @@ export default function TicketDetailScreen() {
     const sub = Notifications.addNotificationReceivedListener((n) => {
       const data = n.request.content.data as Record<string, unknown> | null;
       if (!data || typeof data !== "object") return;
+
+      if (data.type === "workflow_nudge") {
+        handlePushData(data);
+        return;
+      }
+
       if (data.type !== "ticket_unblocked") return;
       const incoming =
         typeof data.ticketId === "number"
@@ -542,7 +557,7 @@ export default function TicketDetailScreen() {
       })();
     });
     return () => sub.remove();
-  }, [ticketId, load]);
+  }, [ticketId, load, handlePushData]);
 
   // Task #623: auto-dismiss the restored confirmation after ~3s. The toast
   // is non-blocking and never requires manual dismissal.
@@ -1725,6 +1740,7 @@ export default function TicketDetailScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <NudgeFlashOverlay active={isNudgeFlashing} borderRadius={0} />
     {/* ── Task #669: header refresh button ──
         We render this via Stack.Screen.headerRight so it lives in the
         native nav bar alongside the back affordance — same pattern the
@@ -2260,7 +2276,8 @@ export default function TicketDetailScreen() {
         const canMarkAwaitingPayment =
           !blockedByAssignment &&
           status === "in_progress" &&
-          isVendorAdminOrOffice;
+          (isVendorAdminOrOffice ||
+            currentUser?.role === "field_employee");
         // Task #600: Disperse Funds is the AP-side action that closes
         // the loop. The server returns a per-viewer `viewerCanDisperseFunds`
         // capability flag (admin role OR partner contact in the AP role
@@ -3331,6 +3348,12 @@ export default function TicketDetailScreen() {
           }))}
         selectedTrackingId={selectedTrackingId}
         onSelectTracking={setSelectedTrackingId}
+      />
+
+      <TicketNudgePanel
+        ticketId={ticket.id}
+        ticketStatus={ticket.status}
+        userRole={currentUser?.role}
       />
 
       <CrewTimeSection

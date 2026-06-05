@@ -31,6 +31,7 @@ const { routerReplaceMock, useLocalSearchParamsMock } = vi.hoisted(() => ({
   useLocalSearchParamsMock: vi.fn(),
 }));
 vi.mock("expo-router", () => ({
+  Stack: { Screen: () => null },
   router: { replace: routerReplaceMock, push: vi.fn(), back: vi.fn() },
   useLocalSearchParams: () => useLocalSearchParamsMock(),
 }));
