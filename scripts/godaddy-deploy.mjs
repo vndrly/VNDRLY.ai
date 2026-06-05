@@ -163,7 +163,7 @@ async function main() {
     "OPS_ALERT_EMAIL=admin@vndrly.ai",
   ].filter(Boolean);
 
-  const bootstrapB64 = b64(readFileSync(BOOTSTRAP, "utf8"));
+  const bootstrapB64 = b64(readFileSync(BOOTSTRAP, "utf8").replace(/\r\n/g, "\n"));
   const prodEnvB64 = b64(prodEnvLines.join("\n") + "\n");
 
   console.log(`Deploying to ${cfg.user}@${cfg.host}:${cfg.port} ...`);
@@ -175,25 +175,25 @@ set -e
 APP_DIR=/var/www/vndrly
 if [ ! -d "$APP_DIR/.git" ]; then
   echo "First deploy — bootstrapping VPS..."
-  echo ${JSON.stringify(bootstrapB64)} | base64 -d | bash
+  echo ${JSON.stringify(bootstrapB64)} | base64 -d | sudo bash
 fi
 cd "$APP_DIR"
-echo ${JSON.stringify(prodEnvB64)} | base64 -d > .env.production
-chown vndrly:vndrly .env.production
-chmod 600 .env.production
+echo ${JSON.stringify(prodEnvB64)} | base64 -d | sudo tee .env.production >/dev/null
+sudo chown vndrly:vndrly .env.production
+sudo chmod 600 .env.production
 sudo -u vndrly git fetch origin main
 sudo -u vndrly git reset --hard origin/main
 export CI=true
 sudo -u vndrly env HOME=/home/vndrly pnpm install --frozen-lockfile || sudo -u vndrly env HOME=/home/vndrly pnpm install
 sudo -u vndrly env HOME=/home/vndrly BASE_PATH=/ NODE_ENV=production pnpm --filter @workspace/vndrly run build
 sudo -u vndrly env HOME=/home/vndrly pnpm --filter @workspace/api-server run build
-systemctl daemon-reload
-systemctl enable vndrly-api 2>/dev/null || true
-systemctl restart vndrly-api
-nginx -t
-systemctl reload nginx
-if ! certbot certificates 2>/dev/null | grep -q vndrly.ai; then
-  certbot --nginx -d vndrly.ai -d www.vndrly.ai --non-interactive --agree-tos -m admin@vndrly.ai --redirect || true
+sudo systemctl daemon-reload
+sudo systemctl enable vndrly-api 2>/dev/null || true
+sudo systemctl restart vndrly-api
+sudo nginx -t
+sudo systemctl reload nginx
+if ! sudo certbot certificates 2>/dev/null | grep -q vndrly.ai; then
+  sudo certbot --nginx -d vndrly.ai -d www.vndrly.ai --non-interactive --agree-tos -m admin@vndrly.ai --redirect || true
 fi
 curl -fsS http://127.0.0.1:8080/api/healthz && echo " API OK"
 `;
