@@ -85,6 +85,14 @@ function ForemanRootRedirect() {
   return null;
 }
 
+function LoginRedirect() {
+  const [, navigate] = useLocation();
+  useEffect(() => {
+    navigate("/", { replace: true });
+  }, [navigate]);
+  return null;
+}
+
 function AdminRoutes() {
   return (
     <Layout>
@@ -202,7 +210,11 @@ function AuthenticatedRouter() {
             </Switch>
           </FieldPortalLayout>
         ) : (
-          <Route path="/*splat" component={AdminRoutes} />
+          <>
+            <Route path="/login" component={LoginRedirect} />
+            <Route path="/login/" component={LoginRedirect} />
+            <Route path="/*splat" component={AdminRoutes} />
+          </>
         )}
       </Switch>
       {/* Picker self-gates on requiresContextChoice + memberships >= 2,

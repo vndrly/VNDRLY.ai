@@ -126,6 +126,7 @@ export default function Login() {
     setIsSubmitting(true);
     try {
       await login(account.username, account.password);
+      navigate("/", { replace: true });
     } catch (err) {
       toast({
         title: translateApiError(err, t, t("login.loginFailed")),
@@ -196,6 +197,7 @@ export default function Login() {
     setIsSubmitting(true);
     try {
       await login(username, password);
+      navigate("/", { replace: true });
     } catch (err) {
       toast({
         title: translateApiError(err, t, t("login.loginFailed")),
