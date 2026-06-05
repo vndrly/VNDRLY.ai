@@ -1,5 +1,5 @@
 import { Feather } from "@expo/vector-icons";
-import { router, useFocusEffect } from "expo-router";
+import { router, useFocusEffect, Stack } from "expo-router";
 import React, { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -13,6 +13,7 @@ import {
 } from "react-native";
 
 import ActiveOrgIndicator from "@/components/ActiveOrgIndicator";
+import InPageHeader from "@/components/InPageHeader";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
 
@@ -182,26 +183,11 @@ export default function CrewChangesScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={styles.headerRow}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.iconBtn}
-          accessibilityLabel={t("stack.back")}
-          testID="crew-changes-back"
-        >
-          <Feather name="arrow-left" size={20} color={colors.foreground} />
-        </TouchableOpacity>
-        <Text style={[styles.heading, { color: colors.foreground }]}>
-          {t("crewChanges.title")}
-        </Text>
-        {/* Task #186: this screen draws its own header (the route is
-            registered with `headerShown: false`), so the global
-            root-stack `headerRight` that injects ActiveOrgIndicator
-            never runs here. Render the indicator inline on the right
-            of the header row so dual-role users keep the active-org
-            reminder on this screen too. */}
-        <ActiveOrgIndicator />
-      </View>
+      <Stack.Screen options={{ headerShown: false }} />
+      <InPageHeader
+        title={t("crewChanges.title")}
+        right={<ActiveOrgIndicator />}
+      />
 
       {loading ? (
         <ActivityIndicator style={{ marginTop: 40 }} color={colors.primary} />
@@ -335,20 +321,6 @@ export default function CrewChangesScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  headerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    paddingTop: 12,
-    paddingBottom: 8,
-  },
-  iconBtn: { padding: 8 },
-  heading: {
-    fontFamily: "Inter_700Bold",
-    fontSize: 18,
-    flex: 1,
-    marginLeft: 4,
-  },
   empty: { textAlign: "center", marginTop: 40, fontFamily: "Inter_400Regular" },
   card: {
     borderWidth: 2,

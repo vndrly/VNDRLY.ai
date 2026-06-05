@@ -1,5 +1,5 @@
 import { Feather } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, Stack } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -13,6 +13,7 @@ import {
   View,
 } from "react-native";
 
+import InPageHeader from "@/components/InPageHeader";
 import { useRateLimitGate } from "@/hooks/use-rate-limit-gate";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
@@ -170,20 +171,28 @@ export default function NotificationsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={styles.headerRow}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.iconBtn}>
-          <Feather name="arrow-left" size={20} color={colors.foreground} />
-        </TouchableOpacity>
-        <Text style={[styles.heading, { color: colors.foreground }]}>{t("notifications.title")}</Text>
-        <View style={{ flexDirection: "row", gap: 8 }}>
-          <TouchableOpacity onPress={() => router.push("/notification-preferences")} style={styles.iconBtn}>
-            <Feather name="settings" size={18} color={colors.foreground} />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={markAll} style={styles.iconBtn} accessibilityLabel={t("notifications.markAll")}>
-            <Feather name="check-circle" size={18} color={colors.primary} />
-          </TouchableOpacity>
-        </View>
-      </View>
+      <Stack.Screen options={{ headerShown: false }} />
+      <InPageHeader
+        title={t("notifications.title")}
+        right={
+          <View style={{ flexDirection: "row", gap: 4 }}>
+            <TouchableOpacity
+              onPress={() => router.push("/notification-preferences")}
+              style={styles.iconBtn}
+              accessibilityLabel={t("notifications.preferencesTitle")}
+            >
+              <Feather name="settings" size={18} color={colors.foreground} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={markAll}
+              style={styles.iconBtn}
+              accessibilityLabel={t("notifications.markAll")}
+            >
+              <Feather name="check-circle" size={18} color={colors.primary} />
+            </TouchableOpacity>
+          </View>
+        }
+      />
 
       {rateLimited ? (
         <View
@@ -307,16 +316,7 @@ export default function NotificationsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  headerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 12,
-    paddingTop: 12,
-    paddingBottom: 8,
-  },
   iconBtn: { padding: 8 },
-  heading: { fontFamily: "Inter_700Bold", fontSize: 18, flex: 1, marginLeft: 4 },
   slowDownBanner: {
     flexDirection: "row",
     alignItems: "center",

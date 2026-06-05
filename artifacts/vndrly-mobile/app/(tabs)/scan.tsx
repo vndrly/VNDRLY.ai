@@ -1,4 +1,4 @@
-import { router, useFocusEffect } from "expo-router";
+import { router, useFocusEffect, Stack } from "expo-router";
 import React, { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -10,7 +10,9 @@ import {
   View,
 } from "react-native";
 
+import ActiveOrgIndicator from "@/components/ActiveOrgIndicator";
 import AmberButton from "@/components/AmberButton";
+import InPageHeader from "@/components/InPageHeader";
 import { useColors } from "@/hooks/useColors";
 
 // `expo-camera` ships a native view manager. On a host build that wasn't
@@ -70,7 +72,13 @@ export default function ScanScreen() {
 
   if (!CameraModule) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.flex, { backgroundColor: colors.background }]}>
+        <Stack.Screen options={{ headerShown: false }} />
+        <InPageHeader
+          title={t("tabs.scan")}
+          hideBack
+          right={<ActiveOrgIndicator />}
+        />
         <ManualSiteCodeFallback
           colors={colors}
           t={t}
@@ -116,23 +124,39 @@ function ScanScreenWithCamera({
 
   if (!permission) {
     return (
-      <View style={[styles.center, { backgroundColor: colors.background }]} />
+      <View style={[styles.flex, { backgroundColor: colors.background }]}>
+        <Stack.Screen options={{ headerShown: false }} />
+        <InPageHeader
+          title={t("tabs.scan")}
+          hideBack
+          right={<ActiveOrgIndicator />}
+        />
+        <View style={styles.center} />
+      </View>
     );
   }
   if (!permission.granted) {
     return (
-      <View style={[styles.center, { backgroundColor: colors.background }]}>
-        <Text style={[styles.msg, { color: colors.foreground }]}>
-          {t("scanScreen.cameraDenied")}
-        </Text>
-        <AmberButton
-          onPress={requestPermission}
-          height={44}
-          style={styles.btn}
-          textStyle={styles.btnText}
-        >
-          {t("scanScreen.grantPermission")}
-        </AmberButton>
+      <View style={[styles.flex, { backgroundColor: colors.background }]}>
+        <Stack.Screen options={{ headerShown: false }} />
+        <InPageHeader
+          title={t("tabs.scan")}
+          hideBack
+          right={<ActiveOrgIndicator />}
+        />
+        <View style={styles.center}>
+          <Text style={[styles.msg, { color: colors.foreground }]}>
+            {t("scanScreen.cameraDenied")}
+          </Text>
+          <AmberButton
+            onPress={requestPermission}
+            height={44}
+            style={styles.btn}
+            textStyle={styles.btnText}
+          >
+            {t("scanScreen.grantPermission")}
+          </AmberButton>
+        </View>
       </View>
     );
   }
@@ -153,7 +177,15 @@ function ScanScreenWithCamera({
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.flex}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <InPageHeader
+        title={t("tabs.scan")}
+        hideBack
+        right={<ActiveOrgIndicator />}
+        style={{ position: "absolute", top: 0, left: 0, right: 0, zIndex: 2 }}
+      />
+      <View style={styles.container}>
       <CameraBoundary
         fallback={
           <ManualSiteCodeFallback
@@ -176,6 +208,7 @@ function ScanScreenWithCamera({
           <Text style={styles.hint}>{t("tickets.newTicket")}</Text>
         </View>
       </CameraBoundary>
+      </View>
     </View>
   );
 }
@@ -196,7 +229,7 @@ function ManualSiteCodeFallback({
   const trimmed = value.trim();
   const valid = /^[A-Za-z0-9_-]+$/.test(trimmed);
   return (
-    <View style={[styles.center, { backgroundColor: colors.background }]}>
+    <View style={styles.center}>
       <Text style={[styles.msg, { color: colors.foreground }]}>
         Camera unavailable in this build. Enter the site code from the QR
         poster instead.
@@ -231,6 +264,7 @@ function ManualSiteCodeFallback({
 }
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
   container: { flex: 1, backgroundColor: "#000" },
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24 },
   msg: {

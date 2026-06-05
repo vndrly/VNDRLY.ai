@@ -6,14 +6,13 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
+import { Stack } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import QRCode from "react-native-qrcode-svg";
 
+import InPageHeader from "@/components/InPageHeader";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch, getApiBase } from "@/lib/api";
 
@@ -100,14 +99,9 @@ export default function ComplianceScreen() {
   const photo = me ? photoUrl(me.profilePhotoPath) : null;
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: c.background }]} edges={["top"]}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Feather name="arrow-left" size={24} color={c.foreground} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: c.foreground }]}>{t("compliance.title")}</Text>
-        <View style={{ width: 40 }} />
-      </View>
+    <View style={[styles.container, { backgroundColor: c.background }]}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <InPageHeader title={t("compliance.title")} />
 
       <ScrollView contentContainerStyle={styles.content}>
         {error ? (
@@ -188,15 +182,12 @@ export default function ComplianceScreen() {
           </View>
         )}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 12, paddingVertical: 10 },
-  backBtn: { width: 40, height: 40, alignItems: "center", justifyContent: "center" },
-  headerTitle: { fontSize: 17, fontWeight: "600" },
   content: { padding: 16, paddingBottom: 48 },
   card: { borderRadius: 16, borderWidth: 1, padding: 20, gap: 16 },
   brandRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },

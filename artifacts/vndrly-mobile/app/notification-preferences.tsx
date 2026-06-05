@@ -1,20 +1,5 @@
-import { Feather } from "@expo/vector-icons";
-import { router } from "expo-router";
-import React, { useEffect, useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
-import {
-  ActivityIndicator,
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
-
 import AmberButton from "@/components/AmberButton";
+import InPageHeader from "@/components/InPageHeader";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
 
@@ -95,19 +80,17 @@ export default function NotificationPreferencesScreen() {
   if (!prefs) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background, justifyContent: "center" }]}>
-        <ActivityIndicator color={colors.primary} />
+        <Stack.Screen options={{ headerShown: false }} />
+        <InPageHeader title={t("notifications.preferencesTitle")} />
+        <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} />
       </View>
     );
   }
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={styles.headerRow}>
-        <TouchableOpacity onPress={() => router.back()} style={{ padding: 8 }}>
-          <Feather name="arrow-left" size={20} color={colors.foreground} />
-        </TouchableOpacity>
-        <Text style={[styles.heading, { color: colors.foreground }]}>{t("notifications.preferencesTitle")}</Text>
-      </View>
+      <Stack.Screen options={{ headerShown: false }} />
+      <InPageHeader title={t("notifications.preferencesTitle")} />
 
       <ScrollView contentContainerStyle={{ padding: 16 }}>
         <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -179,8 +162,6 @@ export default function NotificationPreferencesScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  headerRow: { flexDirection: "row", alignItems: "center", paddingHorizontal: 12, paddingTop: 12, paddingBottom: 8 },
-  heading: { fontFamily: "Inter_700Bold", fontSize: 18, marginLeft: 4 },
   card: { borderWidth: 1, borderRadius: 12, marginBottom: 16 },
   row: { flexDirection: "row", alignItems: "center", padding: 14 },
   rowLabel: { fontFamily: "Inter_600SemiBold", fontSize: 14 },

@@ -1,5 +1,5 @@
 import { Feather } from "@expo/vector-icons";
-import { router, useFocusEffect } from "expo-router";
+import { router, useFocusEffect, Stack } from "expo-router";
 import React, { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -12,6 +12,8 @@ import {
   View,
 } from "react-native";
 
+import ActiveOrgIndicator from "@/components/ActiveOrgIndicator";
+import InPageHeader from "@/components/InPageHeader";
 import PushToTalkPanel from "@/components/PushToTalkPanel";
 import NudgeFlashOverlay from "@/components/NudgeFlashOverlay";
 import { useAuth } from "@/hooks/use-auth";
@@ -75,6 +77,12 @@ export default function CommsScreen() {
   if (!isForeman) {
     return (
       <View style={[styles.centered, { backgroundColor: colors.background }]}>
+        <Stack.Screen options={{ headerShown: false }} />
+        <InPageHeader
+          title={t("foremanHome.crewCommsTitle")}
+          hideBack
+          right={<ActiveOrgIndicator />}
+        />
         <Feather name="lock" size={32} color={colors.mutedForeground} />
         <Text style={[styles.locked, { color: colors.mutedForeground }]}>
           {t("foremanHome.commsForemanOnly")}
@@ -87,12 +95,12 @@ export default function CommsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { borderBottomColor: colors.border }]}>
-        <Feather name="radio" size={22} color={colors.primary} />
-        <Text style={[styles.heading, { color: colors.foreground }]}>
-          {t("foremanHome.crewCommsTitle")}
-        </Text>
-      </View>
+      <Stack.Screen options={{ headerShown: false }} />
+      <InPageHeader
+        title={t("foremanHome.crewCommsTitle")}
+        hideBack
+        right={<ActiveOrgIndicator />}
+      />
       <Text style={[styles.sub, { color: colors.mutedForeground }]}>
         {t("foremanHome.crewCommsSubtitle")}
       </Text>
@@ -203,19 +211,6 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_400Regular",
     fontSize: 14,
     textAlign: "center",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 4,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  heading: {
-    fontFamily: "Inter_600SemiBold",
-    fontSize: 18,
   },
   sub: {
     fontFamily: "Inter_400Regular",

@@ -1,5 +1,5 @@
 import { Feather } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, Stack } from "expo-router";
 import * as Location from "expo-location";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -11,9 +11,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 import AmberButton from "@/components/AmberButton";
+import InPageHeader from "@/components/InPageHeader";
 import { useColors } from "@/hooks/useColors";
 import { acceptConsent, setConsentDeclined } from "@/lib/locationConsent";
 import { startLiveLocationReporter } from "@/lib/liveLocationReporter";
@@ -54,7 +54,15 @@ export default function LocationConsentScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.flex, { backgroundColor: colors.background }]}>
+    <View style={[styles.flex, { backgroundColor: colors.background }]}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <InPageHeader
+        title={t("consent.title")}
+        onBack={() => {
+          if (router.canGoBack()) router.back();
+          else router.replace("/(tabs)/profile");
+        }}
+      />
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={[styles.iconWrap, { backgroundColor: colors.accent }]}>
           <Feather name="map-pin" size={36} color={colors.accentForeground} />
@@ -88,7 +96,7 @@ export default function LocationConsentScreen() {
           <Text style={[styles.secondaryText, { color: colors.foreground }]}>{t("consent.decline")}</Text>
         </TouchableOpacity>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 

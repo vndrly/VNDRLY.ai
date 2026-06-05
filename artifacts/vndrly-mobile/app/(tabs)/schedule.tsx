@@ -1,5 +1,5 @@
 import { Feather } from "@expo/vector-icons";
-import { router, useFocusEffect } from "expo-router";
+import { router, useFocusEffect, Stack } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -18,6 +18,8 @@ import type {
   UpcomingScheduleResponse,
 } from "@workspace/api-client-react";
 
+import ActiveOrgIndicator from "@/components/ActiveOrgIndicator";
+import InPageHeader from "@/components/InPageHeader";
 import LayeredPillButton from "@/components/LayeredPillButton";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
@@ -115,14 +117,27 @@ export default function ScheduleScreen() {
   if (loading) {
     return (
       <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <Stack.Screen options={{ headerShown: false }} />
+        <InPageHeader
+          title={t("tabs.schedule")}
+          hideBack
+          right={<ActiveOrgIndicator />}
+        />
         <ActivityIndicator color={colors.primary} />
       </View>
     );
   }
 
   return (
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <InPageHeader
+        title={t("tabs.schedule")}
+        hideBack
+        right={<ActiveOrgIndicator />}
+      />
     <FlatList
-      style={{ backgroundColor: colors.background }}
+      style={{ flex: 1 }}
       contentContainerStyle={{ padding: 16 }}
       data={tickets}
       keyExtractor={(item) => String(item.id)}
@@ -310,6 +325,7 @@ export default function ScheduleScreen() {
         );
       }}
     />
+    </View>
   );
 }
 

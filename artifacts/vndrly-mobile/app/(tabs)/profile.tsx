@@ -1,20 +1,22 @@
 import { Feather } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
+import * as Location from "expo-location";
 import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Alert,
   Image,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
+import ActiveOrgIndicator from "@/components/ActiveOrgIndicator";
 import AmberButton from "@/components/AmberButton";
+import InPageHeader from "@/components/InPageHeader";
 import LayeredPillButton from "@/components/LayeredPillButton";
-import GreyButton from "@/components/GreyButton";
 import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch, getApiBase, logout, updatePreferredLanguage } from "@/lib/api";
@@ -25,6 +27,7 @@ import {
   acceptConsent,
   hasActiveConsentForThisDevice,
   revokeConsent,
+  setConsentDeclined,
 } from "@/lib/locationConsent";
 import {
   startLiveLocationReporter,
@@ -85,6 +88,12 @@ export default function ProfileScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      hasActiveConsentForThisDevice().then(setLocConsent).catch(() => setLocConsent(false));
+    }, []),
+  );
+
+  useFocusEffect(
+    useCallback(() => {
       apiFetch<FieldMe>("/api/field/me")
         .then((me) => {
           setPhotoPath(me.profilePhotoPath);
@@ -114,7 +123,21 @@ export default function ProfileScreen() {
         stopLiveLocationReporter();
         setLocConsent(false);
       } else {
+        const perm = await Location.requestForegroundPermissionsAsync();
+        if (perm.status !== "granted") {
+          Alert.alert(
+            t("consent.permissionNeeded"),
+            t("consent.permissionMessage"),
+          );
+          return;
+        }
+        try {
+          await Location.requestBackgroundPermissionsAsync();
+        } catch {
+          // Foreground-only is still useful while the app is open.
+        }
         await acceptConsent();
+        await setConsentDeclined(false);
         await startLiveLocationReporter();
         setLocConsent(true);
       }
@@ -201,10 +224,13 @@ export default function ProfileScreen() {
   const url = resolvePhotoUrl({ photoUrl: directPhotoUrl, profilePhotoPath: photoPath });
 
   return (
-    <SafeAreaView
-      style={[styles.flex, { backgroundColor: colors.background }]}
-      edges={["bottom"]}
-    >
+    <View style={[styles.flex, { backgroundColor: colors.background }]}>
+      <InPageHeader
+        title={t("tabs.profile")}
+        hideBack
+        right={<ActiveOrgIndicator />}
+      />
+      <ScrollView contentContainerStyle={styles.scrollContent}>
       <View style={styles.header}>
         <TouchableOpacity onPress={onChangePhoto} style={styles.avatarWrap}>
           {url ? (
@@ -348,24 +374,41 @@ export default function ProfileScreen() {
         <Text style={{ color: colors.mutedForeground, fontSize: 11, marginBottom: 10, lineHeight: 16 }}>
           {t("profile.locationFinePrint")}
         </Text>
+        {locConsent ? (
+          <LayeredPillButton
+            onPress={onToggleLocation}
+            disabled={locBusy}
+            height={44}
+            color="#dc2626"
+            inactive
+            style={styles.locationBtn}
+            testID="button-toggle-location-consent"
+          >
+            <Feather name="map-pin" size={16} color="#ffffff" />
+            <Text style={styles.actionText}>
+              {locBusy ? "…" : t("profile.stopSharing")}
+            </Text>
+          </LayeredPillButton>
+        ) : (
+          <AmberButton
+            onPress={onToggleLocation}
+            disabled={locConsent === null || locBusy}
+            loading={locBusy}
+            height={48}
+            style={styles.locationBtn}
+            textStyle={styles.locationBtnText}
+            testID="button-toggle-location-consent"
+          >
+            {locConsent === null ? "…" : t("profile.turnOnSharing")}
+          </AmberButton>
+        )}
         <TouchableOpacity
-          onPress={onToggleLocation}
-          disabled={locConsent === null || locBusy}
-          style={[
-            styles.langBtn,
-            {
-              backgroundColor: locConsent ? "transparent" : colors.primary,
-              borderColor: locConsent ? colors.destructive : colors.primary,
-              opacity: locConsent === null || locBusy ? 0.5 : 1,
-            },
-          ]}
-          testID="button-toggle-location-consent"
+          onPress={() => router.push("/location-consent")}
+          style={styles.locationDetailsLink}
+          testID="button-location-consent-details"
         >
-          <Text style={{
-            color: locConsent ? colors.destructive : colors.primaryForeground,
-            fontFamily: "Inter_600SemiBold",
-          }}>
-            {locConsent === null ? "…" : locConsent ? t("profile.stopSharing") : t("profile.turnOnSharing")}
+          <Text style={{ color: colors.primary, fontFamily: "Inter_500Medium", fontSize: 13 }}>
+            {t("profile.reviewLocationDetails")}
           </Text>
         </TouchableOpacity>
       </View>
@@ -453,12 +496,17 @@ export default function ProfileScreen() {
           </View>
         </View>
       ) : null}
-    </SafeAreaView>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  scrollContent: { paddingBottom: 32 },
+  locationBtn: { alignSelf: "stretch" },
+  locationBtnText: { fontFamily: "Inter_600SemiBold", fontSize: 15 },
+  locationDetailsLink: { marginTop: 10, alignSelf: "center", paddingVertical: 4 },
   actionBtn: { marginHorizontal: 16, marginTop: 12, alignSelf: "stretch" },
   actionText: { color: "#ffffff", fontFamily: "Inter_600SemiBold", fontSize: 15 },
   actionChevron: { marginLeft: "auto" },

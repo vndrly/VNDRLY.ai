@@ -50,6 +50,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: isForemanEmployee ? t("foremanHome.portal") : t("tabs.home"),
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Feather name="home" size={size} color={color} />
           ),
@@ -61,6 +62,7 @@ export default function TabLayout() {
         name="schedule"
         options={{
           title: t("tabs.schedule"),
+          headerShown: false,
           href: isFieldOnlyEmployee ? null : undefined,
           tabBarIcon: ({ color, size }) => (
             <Feather name="calendar" size={size} color={color} />
@@ -73,6 +75,7 @@ export default function TabLayout() {
         name="comms"
         options={{
           title: t("tabs.comms"),
+          headerShown: false,
           href: isForemanEmployee ? undefined : null,
           tabBarIcon: ({ color, size }) => (
             <Feather name="radio" size={size} color={color} />
@@ -85,6 +88,7 @@ export default function TabLayout() {
         name="scan"
         options={{
           title: t("tabs.scan"),
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Feather name="maximize" size={size} color={color} />
           ),
@@ -94,6 +98,7 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: t("tabs.profile"),
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Feather name="user" size={size} color={color} />
           ),

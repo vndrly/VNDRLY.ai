@@ -49,7 +49,9 @@ vi.mock("expo-router", () => ({
   router: {
     push: (...a: unknown[]) => routerPushMock(...a),
     back: (...a: unknown[]) => routerBackMock(...a),
+    canGoBack: () => true,
   },
+  Stack: Object.assign(() => null, { Screen: () => null }),
   // Real expo-router invokes the callback once on mount; the test
   // shim does the same so the screen's focus-driven refresh fires.
   useFocusEffect: (cb: () => void | (() => void)) => {
