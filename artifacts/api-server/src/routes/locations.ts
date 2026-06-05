@@ -18,7 +18,7 @@ import {
 import { notifyUsers, findVendorUserIds } from "./notifications";
 import { logger } from "../lib/logger";
 
-import { SESSION_SECRET } from "../lib/session";
+import { SESSION_SECRET, getSessionFromRequest } from "../lib/session";
 import { enforceLiveLocationsRateLimit } from "../lib/live-locations-rate-limit";
 
 const COOKIE_NAME = "vndrly_session";
@@ -146,7 +146,7 @@ router.get("/location-consents/me", async (req: Request, res: Response) => {
 });
 
 router.post("/location-consents", async (req: Request, res: Response) => {
-  const session = getSession(req);
+  const session = getSessionFromRequest(req);
   if (!session) {
     res.status(401).json({ code: "auth.unauthenticated", error: "unauthenticated" });
     return;
@@ -156,24 +156,15 @@ router.post("/location-consents", async (req: Request, res: Response) => {
     res.status(400).json({ code: "visitor.device_id_required", error: "deviceId required" });
     return;
   }
-  const existing = await db
-    .select()
-    .from(locationConsentsTable)
-    .where(and(eq(locationConsentsTable.userId, session.userId), eq(locationConsentsTable.deviceId, deviceId)));
-  if (existing.length > 0) {
-    const [updated] = await db
-      .update(locationConsentsTable)
-      .set({ revokedAt: null, acceptedAt: new Date() })
-      .where(eq(locationConsentsTable.id, existing[0].id))
-      .returning();
-    res.status(200).json(updated);
-    return;
-  }
-  const [created] = await db
+  const [row] = await db
     .insert(locationConsentsTable)
     .values({ userId: session.userId, deviceId })
+    .onConflictDoUpdate({
+      target: [locationConsentsTable.userId, locationConsentsTable.deviceId],
+      set: { revokedAt: null, acceptedAt: new Date() },
+    })
     .returning();
-  res.status(201).json(created);
+  res.status(200).json(row);
 });
 
 router.delete("/location-consents", async (req: Request, res: Response) => {
