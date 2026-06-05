@@ -303,7 +303,7 @@ vi.mock("@/components/LayeredPillButton", async () => {
           "aria-disabled": isDisabled || undefined,
           disabled: isDisabled,
           onClick: () => {
-            if (!isDisabled && onPress) onPress(undefined as never);
+            if (!isDisabled && onPress) onPress();
           },
         },
         typeof children === "string" ? children : "btn",

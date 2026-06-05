@@ -1,3 +1,17 @@
+import { Stack } from "expo-router";
+import React, { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import {
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+
 import AmberButton from "@/components/AmberButton";
 import InPageHeader from "@/components/InPageHeader";
 import { useColors } from "@/hooks/useColors";
