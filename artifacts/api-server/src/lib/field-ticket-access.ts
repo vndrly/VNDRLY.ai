@@ -11,6 +11,7 @@ export type FieldTicketAccessRow = {
   vendorId: number | null;
   fieldEmployeeId: number | null;
   foremanUserId: number | null;
+  actingForemanUserId: number | null;
   partnerId: number | null;
 };
 
@@ -23,6 +24,7 @@ export async function loadFieldTicketAccessRow(
       vendorId: ticketsTable.vendorId,
       fieldEmployeeId: ticketsTable.fieldEmployeeId,
       foremanUserId: ticketsTable.foremanUserId,
+      actingForemanUserId: ticketsTable.actingForemanUserId,
       partnerId: siteLocationsTable.partnerId,
     })
     .from(ticketsTable)
@@ -43,6 +45,7 @@ export async function fieldEmployeeCanAccessTicket(
   if (ticket.vendorId !== employee.vendorId) return false;
   if (ticket.fieldEmployeeId === employee.id) return true;
   if (ticket.foremanUserId === employee.userId) return true;
+  if (ticket.actingForemanUserId === employee.userId) return true;
 
   const [onCrew] = await db
     .select({ ticketId: ticketCrewTable.ticketId })
@@ -69,6 +72,7 @@ export async function ticketParticipantUserIdsExpanded(ticketId: number): Promis
   const ids = new Set<number>();
 
   if (ticket.foremanUserId) ids.add(ticket.foremanUserId);
+  if (ticket.actingForemanUserId) ids.add(ticket.actingForemanUserId);
 
   if (ticket.fieldEmployeeId) {
     const [fe] = await db

@@ -19,26 +19,11 @@ import {
   subscribeLiveLocationStatus,
 } from "@/lib/liveLocationReporter";
 
-// Task #56 — small "Live location: active / paused" indicator that sits
-// on the active-ticket detail screen. Even with background updates
-// configured, the OS can still throttle or stop delivery (low-power
-// mode, Doze on Android, killed-from-recents, revoked Always
-// permission). Today the field employee has no in-app indication that
-// pings have stopped flowing — only the dispatcher sees the gap. This
-// pill polls the reporter's status surface and shows:
-//
-//   • green "Live location: active" when pings are flowing.
-//   • amber "Live location: paused — Tap to fix" when the reporter
-//     detects a problem (missing permission, low-power mode, stale
-//     pings, foreground service killed, …). Tap opens settings or
-//     surfaces a friendly explanation depending on the reason.
-//
-// Renders nothing when `enabled === false` (the parent screen gates
-// this on the ticket's lifecycleState being en_route or on_site) or
-// when the reporter doesn't yet think there's an active ticket. That
-// keeps the pill out of the way on closed tickets, drafts, and
-// pending-arrival rows where background tracking shouldn't be
-// running anyway.
+// Task #56 — small green "Live location: active" indicator on the
+// active-ticket detail screen. Only renders while pings are actually
+// flowing — we intentionally hide the pill when tracking is paused
+// so field workers never see a scary red error banner for transient
+// GPS or permission quirks the reporter is already recovering from.
 
 const DEFAULT_POLL_INTERVAL_MS = 30 * 1000;
 
@@ -160,9 +145,10 @@ export function LiveLocationStatusPill({
 
   if (!enabled) return null;
   if (!status || !status.hasActiveTicket) return null;
+  if (!status.flowing) return null;
 
-  const isPaused = !status.flowing;
-  const reason = primaryReason(status.reasons);
+  const isPaused = false;
+  const reason = null;
 
   // Each reason gets a localized one-line hint that's appended after
   // the "Live location: paused" headline. Kept short so the pill

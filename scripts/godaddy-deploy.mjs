@@ -12,6 +12,7 @@ const ROOT = path.resolve(__dirname, "..");
 const DESKTOP = path.dirname(ROOT);
 const LOCAL_CFG = path.join(ROOT, ".local", "godaddy-vps.json");
 const BOOTSTRAP = path.join(ROOT, "scripts/server/bootstrap-vps.sh");
+const NGINX_SITE = path.join(ROOT, "scripts/server/vndrly.ai.nginx.conf");
 
 function parseEnvFile(filePath) {
   const out = {};
@@ -137,6 +138,13 @@ async function main() {
   const akMatch = localEnv.match(/^AI_INTEGRATIONS_ANTHROPIC_API_KEY=(.+)$/m);
   if (akMatch) anthropicKey = akMatch[1].trim();
 
+  const sendgridKey =
+    localEnv.match(/^SENDGRID_API_KEY=(.+)$/m)?.[1]?.trim() || "";
+  const sendgridFrom =
+    localEnv.match(/^SENDGRID_FROM_EMAIL=(.+)$/m)?.[1]?.trim() ||
+    localEnv.match(/^OPS_ALERT_EMAIL=(.+)$/m)?.[1]?.trim() ||
+    "admin@vndrly.ai";
+
   const supabaseUrl =
     localEnv.match(/^SUPABASE_URL=(.+)$/m)?.[1]?.trim() ||
     "https://bihjmgbdzbhcnsuhzzwo.supabase.co";
@@ -160,10 +168,13 @@ async function main() {
     `SUPABASE_STORAGE_BUCKET=${storageBucket}`,
     "AI_INTEGRATIONS_ANTHROPIC_BASE_URL=https://api.anthropic.com",
     anthropicKey ? `AI_INTEGRATIONS_ANTHROPIC_API_KEY=${anthropicKey}` : "",
+    sendgridKey ? `SENDGRID_API_KEY=${sendgridKey}` : "",
+    sendgridKey ? `SENDGRID_FROM_EMAIL=${sendgridFrom}` : "",
     "OPS_ALERT_EMAIL=admin@vndrly.ai",
   ].filter(Boolean);
 
   const bootstrapB64 = b64(readFileSync(BOOTSTRAP, "utf8").replace(/\r\n/g, "\n"));
+  const nginxB64 = b64(readFileSync(NGINX_SITE, "utf8").replace(/\r\n/g, "\n"));
   const prodEnvB64 = b64(prodEnvLines.join("\n") + "\n");
 
   console.log(`Deploying to ${cfg.user}@${cfg.host}:${cfg.port} ...`);
@@ -190,12 +201,24 @@ sudo -u vndrly env HOME=/home/vndrly pnpm --filter @workspace/api-server run bui
 sudo systemctl daemon-reload
 sudo systemctl enable vndrly-api 2>/dev/null || true
 sudo systemctl restart vndrly-api
+echo ${JSON.stringify(nginxB64)} | base64 -d | sudo tee /etc/nginx/sites-available/vndrly.ai >/dev/null
+sudo ln -sf /etc/nginx/sites-available/vndrly.ai /etc/nginx/sites-enabled/vndrly.ai
 sudo nginx -t
 sudo systemctl reload nginx
 if ! sudo certbot certificates 2>/dev/null | grep -q vndrly.ai; then
   sudo certbot --nginx -d vndrly.ai -d www.vndrly.ai --non-interactive --agree-tos -m admin@vndrly.ai --redirect || true
 fi
-curl -fsS http://127.0.0.1:8080/api/healthz && echo " API OK"
+for i in 1 2 3 4 5 6 7 8 9 10; do
+  if curl -fsS http://127.0.0.1:8080/api/healthz >/dev/null 2>&1; then
+    curl -fsS http://127.0.0.1:8080/api/healthz && echo " API OK"
+    break
+  fi
+  sleep 2
+done
+if ! curl -fsS http://127.0.0.1:8080/api/healthz >/dev/null 2>&1; then
+  echo "API health check failed after deploy" >&2
+  exit 1
+fi
 `;
     await sshExec(conn, script);
     console.log("\nDeploy finished.");

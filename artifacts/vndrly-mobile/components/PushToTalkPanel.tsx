@@ -1,10 +1,13 @@
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
+  AppState,
+  type AppStateStatus,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -18,10 +21,13 @@ import { useColors } from "@/hooks/useColors";
 import { apiFetch, getApiBase } from "@/lib/api";
 import {
   createPttRecorder,
+  isBackgroundAudioSessionError,
   isPttComment,
   playPttUri,
   postPttMessage,
+  PttMicPermissionError,
   pttDurationLabel,
+  warmUpPttSession,
   type PttRecorder,
 } from "@/lib/ptt";
 
@@ -54,7 +60,36 @@ export default function PushToTalkPanel({ ticketId, ticketLabel }: Props) {
   const [recording, setRecording] = useState(false);
   const [sending, setSending] = useState(false);
   const [playingId, setPlayingId] = useState<number | null>(null);
+  const [micReady, setMicReady] = useState(false);
+  const [appForegrounded, setAppForegrounded] = useState(
+    () => AppState.currentState === "active",
+  );
   const recorderRef = useRef<PttRecorder | null>(null);
+
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (next: AppStateStatus) => {
+      setAppForegrounded(next === "active");
+    });
+    return () => sub.remove();
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      setMicReady(false);
+      void (async () => {
+        try {
+          await warmUpPttSession();
+          if (!cancelled) setMicReady(true);
+        } catch {
+          if (!cancelled) setMicReady(false);
+        }
+      })();
+      return () => {
+        cancelled = true;
+      };
+    }, []),
+  );
 
   const load = useCallback(async () => {
     try {
@@ -87,7 +122,31 @@ export default function PushToTalkPanel({ ticketId, ticketLabel }: Props) {
   }, []);
 
   const onPressIn = async () => {
-    if (sending) return;
+    if (sending || !appForegrounded) return;
+    if (!micReady) {
+      try {
+        await warmUpPttSession();
+        setMicReady(true);
+      } catch (e) {
+        if (e instanceof PttMicPermissionError) {
+          Alert.alert(
+            t("foremanHome.pttMicDeniedTitle"),
+            t("foremanHome.pttMicDeniedBody"),
+          );
+        } else if (isBackgroundAudioSessionError(e)) {
+          Alert.alert(
+            t("foremanHome.pttNotReadyTitle"),
+            t("foremanHome.pttNotReadyBody"),
+          );
+        } else {
+          Alert.alert(
+            t("foremanHome.pttMicDeniedTitle"),
+            e instanceof Error ? e.message : t("foremanHome.pttMicDeniedBody"),
+          );
+        }
+        return;
+      }
+    }
     try {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       const rec = await createPttRecorder();
@@ -95,10 +154,22 @@ export default function PushToTalkPanel({ ticketId, ticketLabel }: Props) {
       await rec.start();
       setRecording(true);
     } catch (e) {
-      Alert.alert(
-        t("foremanHome.pttMicDeniedTitle"),
-        e instanceof Error ? e.message : t("foremanHome.pttMicDeniedBody"),
-      );
+      if (e instanceof PttMicPermissionError) {
+        Alert.alert(
+          t("foremanHome.pttMicDeniedTitle"),
+          t("foremanHome.pttMicDeniedBody"),
+        );
+      } else if (isBackgroundAudioSessionError(e)) {
+        Alert.alert(
+          t("foremanHome.pttNotReadyTitle"),
+          t("foremanHome.pttNotReadyBody"),
+        );
+      } else {
+        Alert.alert(
+          t("foremanHome.pttMicDeniedTitle"),
+          e instanceof Error ? e.message : t("foremanHome.pttMicDeniedBody"),
+        );
+      }
     }
   };
 
@@ -148,7 +219,7 @@ export default function PushToTalkPanel({ ticketId, ticketLabel }: Props) {
       <Pressable
         onPressIn={() => void onPressIn()}
         onPressOut={() => void onPressOut()}
-        disabled={sending}
+        disabled={sending || !appForegrounded}
         style={({ pressed }) => [
           styles.pttButton,
           {

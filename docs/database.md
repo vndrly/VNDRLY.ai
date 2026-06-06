@@ -5,7 +5,9 @@ VNDRLY uses **one** Postgres database, hosted on **Supabase**. There is no separ
 | Environment | Where the connection lives | Same database? |
 |---|---|---|
 | **Your Desktop** (Cursor edits) | Repo root `.env.local` → `DATABASE_URL` | Yes — Supabase |
-| **Production** (vndrly.ai on Replit) | Replit **Secrets** → `DATABASE_URL` | Yes — same Supabase URL |
+| **Production** (vndrly.ai on GoDaddy VPS) | `/var/www/vndrly/.env.production` (written by `scripts/godaddy-deploy.mjs`) | Yes — same Supabase URL |
+
+Production `.env.production` is assembled on deploy from repo `.env.local` plus Supabase credentials. Include `SENDGRID_API_KEY` and optional `SENDGRID_FROM_EMAIL` in `.env.local` so password-reset and notification email work on the VPS (Replit SendGrid connector is not available there).
 | **Schema / SQL from Cursor** | Supabase MCP plugin, project `bihjmgbdzbhcnsuhzzwo` | Yes — Supabase |
 
 ## Connection strings

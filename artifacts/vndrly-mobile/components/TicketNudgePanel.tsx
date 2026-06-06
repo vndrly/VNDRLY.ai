@@ -129,40 +129,38 @@ export default function TicketNudgePanel({
         testID="input-nudge-message"
       />
       <View style={styles.row}>
-        {directions.up ? (
-          <LayeredPillButton
-            height={40}
-            onPress={() => void send("up")}
-            disabled={busy !== null}
-            loading={busy === "up"}
-            style={styles.btn}
-            testID="button-nudge-up"
-          >
-            <Feather name="arrow-up" size={16} color="#fff" />
-            <Text style={styles.btnText}>
-              {busy === "up"
-                ? t("ticketDetail.nudge.sending")
-                : t("ticketDetail.nudge.up")}
-            </Text>
-          </LayeredPillButton>
-        ) : null}
-        {directions.down ? (
-          <LayeredPillButton
-            height={40}
-            onPress={() => void send("down")}
-            disabled={busy !== null}
-            loading={busy === "down"}
-            style={styles.btn}
-            testID="button-nudge-down"
-          >
-            <Feather name="arrow-down" size={16} color="#fff" />
-            <Text style={styles.btnText}>
-              {busy === "down"
-                ? t("ticketDetail.nudge.sending")
-                : t("ticketDetail.nudge.down")}
-            </Text>
-          </LayeredPillButton>
-        ) : null}
+        <LayeredPillButton
+          height={40}
+          onPress={() => void send("up")}
+          disabled={!directions.up || busy !== null}
+          inactive={!directions.up}
+          loading={busy === "up"}
+          style={styles.btn}
+          testID="button-nudge-up"
+        >
+          <Feather name="arrow-up" size={16} color="#fff" />
+          <Text style={styles.btnText}>
+            {busy === "up"
+              ? t("ticketDetail.nudge.sending")
+              : t("ticketDetail.nudge.up")}
+          </Text>
+        </LayeredPillButton>
+        <LayeredPillButton
+          height={40}
+          onPress={() => void send("down")}
+          disabled={!directions.down || busy !== null}
+          inactive={!directions.down}
+          loading={busy === "down"}
+          style={styles.btn}
+          testID="button-nudge-down"
+        >
+          <Feather name="arrow-down" size={16} color="#fff" />
+          <Text style={styles.btnText}>
+            {busy === "down"
+              ? t("ticketDetail.nudge.sending")
+              : t("ticketDetail.nudge.down")}
+          </Text>
+        </LayeredPillButton>
       </View>
       {loadingHistory ? (
         <ActivityIndicator color={colors.primary} style={{ marginTop: 8 }} />
@@ -230,13 +228,12 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: "row",
-    flexWrap: "wrap",
     gap: 10,
     marginTop: 10,
   },
   btn: {
-    flexGrow: 1,
-    minWidth: "45%",
+    flex: 1,
+    minWidth: 0,
   },
   btnText: {
     color: "#fff",

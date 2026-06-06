@@ -202,6 +202,8 @@ const PRE_ACCEPT_STATUSES: ReadonlySet<string> = new Set([
 // route code.
 import {
   computeInitialStatus,
+  computeInitialLifecycleState,
+  isOnSiteAtCreate,
   OFFICE_INTAKE_CHANNELS,
   REINVITE_ELIGIBLE_STATUSES,
   type IntakeChannel,
@@ -1344,6 +1346,11 @@ router.post("/tickets", async (req, res): Promise<void> => {
     shouldCheckIn,
     acceptanceImplicit,
   );
+  const onSiteAtCreate = isOnSiteAtCreate(initialStatus, shouldCheckIn);
+  const initialLifecycleState = computeInitialLifecycleState(
+    initialStatus,
+    shouldCheckIn,
+  );
 
   // Phone intake captures the human caller's name on the initial transition
   // row so the front-office can later trace which caller opened a ticket
@@ -1371,9 +1378,9 @@ router.post("/tickets", async (req, res): Promise<void> => {
         description: parsed.data.description ?? null,
         status: initialStatus,
         intakeChannel,
-        lifecycleState: shouldCheckIn ? "on_site" : "pending_arrival",
-        checkInTime: shouldCheckIn ? now : null,
-        arrivedAt: shouldCheckIn ? now : null,
+        lifecycleState: initialLifecycleState,
+        checkInTime: onSiteAtCreate ? now : null,
+        arrivedAt: onSiteAtCreate ? now : null,
         checkInLatitude: shouldCheckIn ? lat : null,
         checkInLongitude: shouldCheckIn ? lng : null,
         createdById: creatorSession?.userId ?? null,
@@ -2164,7 +2171,10 @@ router.post("/tickets/:id/submit", async (req, res): Promise<void> => {
       .where(eq(ticketsTable.id, params.data.id));
     const [u] = await tx
       .update(ticketsTable)
-      .set({ status: "submitted" })
+      .set({
+        status: "submitted",
+        lifecycleState: "off_site",
+      })
       .where(eq(ticketsTable.id, params.data.id))
       .returning();
     if (u && priorSubmit && priorSubmit.status !== "submitted") {

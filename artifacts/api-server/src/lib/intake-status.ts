@@ -28,6 +28,30 @@ export type InitialTicketStatus =
   | "initiated"
   | "in_progress";
 
+export type TicketFieldLifecycleState =
+  | "pending_arrival"
+  | "en_route"
+  | "on_location"
+  | "on_site"
+  | "off_site";
+
+/** Field GPS phase at ticket creation — must stay coherent with initialStatus. */
+export function computeInitialLifecycleState(
+  initialStatus: InitialTicketStatus,
+  shouldCheckIn: boolean,
+): TicketFieldLifecycleState {
+  if (shouldCheckIn || initialStatus === "in_progress") return "on_site";
+  return "pending_arrival";
+}
+
+/** True when the ticket is on the clock at insert time (geofence or office phone intake). */
+export function isOnSiteAtCreate(
+  initialStatus: InitialTicketStatus,
+  shouldCheckIn: boolean,
+): boolean {
+  return shouldCheckIn || initialStatus === "in_progress";
+}
+
 // Task #498: phone intake (office channels) inherits the same gating rule as
 // before — partner-on-behalf must be vendor-accepted unless the office
 // operator explicitly marks the partner as "already aware" via

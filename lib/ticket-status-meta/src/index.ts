@@ -256,9 +256,12 @@ export const ticketStatusMeta: Record<string, TicketStatusMeta> = {
 
 // Canonical ticket lifecycle order. Consumers (e.g. the dashboard
 // "Tracking Status Breakdown" chart) render status buckets in this
-// order rather than alphabetical / insertion-by-data order. Crew-ack
-// values are intentionally excluded — they are not part of the
-// ticket lifecycle.
+// order rather than alphabetical / insertion-by-data order. Pre-accept
+// handshake statuses (`awaiting_acceptance`, `denied`) are included at
+// the front/tail because the dashboard chart groups them separately from
+// the field-work progression. Crew-tracker ack values (pending/confirmed/
+// declined) are intentionally excluded — they are not part of the ticket
+// lifecycle.
 //
 // Tail convention: the two "exit-without-completion" statuses live at
 // the end of the array — `kicked_back` second-from-right, `cancelled`
@@ -285,3 +288,18 @@ export const TICKET_LIFECYCLE_ORDER: readonly TicketStatus[] = [
   "kicked_back",
   "cancelled",
 ];
+
+// Field GPS phases that should appear on the crew map and receive live pings.
+// Shared by api-server (locations SSE) and mobile (liveLocationReporter).
+export const LIVE_TRACKED_LIFECYCLE_STATES = [
+  "en_route",
+  "on_location",
+  "on_site",
+] as const;
+
+export type LiveTrackedLifecycleState =
+  (typeof LIVE_TRACKED_LIFECYCLE_STATES)[number];
+
+export const LIVE_TRACKED_LIFECYCLE_SET: ReadonlySet<string> = new Set(
+  LIVE_TRACKED_LIFECYCLE_STATES,
+);

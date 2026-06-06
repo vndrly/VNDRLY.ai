@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import {
   Image,
+  Platform,
   View,
   type ImageSourcePropType,
   type LayoutChangeEvent,
@@ -9,50 +10,128 @@ import {
 } from "react-native";
 
 /**
- * Nine-slice / cap-preserving pill renderer for the 900×229 pill PNG
- * assets shipped in `assets/pill-stack/` (blue-hot, orange-hot,
- * light-grey, etc).
- *
- * The source images have rounded glossy caps on the left and right.
- * If you `resizeMode="stretch"` the entire PNG into a small button,
- * the caps squish horizontally and the pill loses its shape. Instead
- * we render the same source three times:
- *
- *   ┌──────────────────────────────────────────────────┐
- *   │ left cap │ stretched middle band │ right cap │
- *   └──────────────────────────────────────────────────┘
- *
- *  - Left and right caps render the source at its natural aspect
- *    ratio (height-driven), clipped so only the outer 15% is visible.
- *    This preserves the rounded glossy corner exactly.
- *  - The middle band shows the inner 70% of the source, stretched
- *    horizontally to fill whatever space remains between the caps.
- *
- * `borderRadius` defaults to `height / 2` so the container is also
- * a perfect pill.
+ * Cap-preserving pill renderer for the 900×229 pill PNG assets in
+ * `assets/pill-stack/`. Uses native `capInsets` on iOS (no seams) and
+ * a z-indexed manual slice on Android/web where the middle band is
+ * taken only from the flat center of the source so cap gradients are
+ * never double-drawn at the join lines.
  */
 const SRC_W = 900;
 const SRC_H = 229;
-const CAP_PCT = 0.15;
-// Sub-pixel rounding between the cap views and the stretched middle
-// view leaves a ~1px transparent seam on web. Extend the middle band
-// outward by OVERLAP_PX on each side so it tucks under both caps,
-// then render caps after the middle so they paint on top and hide
-// the overshoot. Works the same on iOS/Android.
-const OVERLAP_PX = 1.5;
+/** Source-image inset (each end) passed to iOS capInsets. */
+const CAP_INSET_SRC = Math.round(SRC_W * 0.2);
+/** Manual slice: layout cap width as a fraction of scaled image width. */
+const LAYOUT_CAP_PCT = 0.15;
+/** Manual slice: only the inner `[INNER_START, 1-INNER_START)` band stretches. */
+const INNER_START = 0.2;
+const INNER_WIDTH = 1 - 2 * INNER_START;
 
 export interface Pill9SliceProps {
   source: ImageSourcePropType;
-  /**
-   * Render height. If omitted, the component fills its parent and
-   * measures its own height via onLayout. Use the explicit form when
-   * the parent's height comes from intrinsic content (e.g. a badge
-   * around <Text>); use the auto form when the parent already has a
-   * fixed height (e.g. a Pressable with style.height = 40).
-   */
   height?: number;
   borderRadius?: number;
   style?: StyleProp<ViewStyle>;
+}
+
+function overlapPx(height: number): number {
+  return Math.max(4, Math.round(height * 0.1));
+}
+
+function ManualPillSlice({
+  source,
+  width,
+  height,
+}: {
+  source: ImageSourcePropType;
+  width: number;
+  height: number;
+}) {
+  const aspect = SRC_W / SRC_H;
+  const naturalImgW = height * aspect;
+  const layoutCap = naturalImgW * LAYOUT_CAP_PCT;
+  const overlap = overlapPx(height);
+  const capWidth = layoutCap + overlap;
+  const midLayoutLeft = layoutCap - overlap;
+  const midLayoutRight = layoutCap - overlap;
+  const midLayoutW = Math.max(0, width - midLayoutLeft - midLayoutRight);
+  const midImgW = midLayoutW > 0 ? midLayoutW * (SRC_W / (SRC_W * INNER_WIDTH)) : 0;
+  const midImgLeft = -(INNER_START * midImgW);
+
+  return (
+    <>
+      {midLayoutW > 0 && midImgW > 0 ? (
+        <View
+          style={{
+            position: "absolute",
+            left: midLayoutLeft,
+            right: midLayoutRight,
+            top: 0,
+            bottom: 0,
+            overflow: "hidden",
+            zIndex: 1,
+          }}
+        >
+          <Image
+            source={source}
+            resizeMode="stretch"
+            style={{
+              position: "absolute",
+              left: midImgLeft,
+              top: 0,
+              width: midImgW,
+              height,
+            }}
+          />
+        </View>
+      ) : null}
+      <View
+        style={{
+          position: "absolute",
+          left: 0,
+          top: 0,
+          bottom: 0,
+          width: capWidth,
+          overflow: "hidden",
+          zIndex: 2,
+        }}
+      >
+        <Image
+          source={source}
+          resizeMode="stretch"
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            width: naturalImgW,
+            height,
+          }}
+        />
+      </View>
+      <View
+        style={{
+          position: "absolute",
+          right: 0,
+          top: 0,
+          bottom: 0,
+          width: capWidth,
+          overflow: "hidden",
+          zIndex: 2,
+        }}
+      >
+        <Image
+          source={source}
+          resizeMode="stretch"
+          style={{
+            position: "absolute",
+            right: 0,
+            top: 0,
+            width: naturalImgW,
+            height,
+          }}
+        />
+      </View>
+    </>
+  );
 }
 
 export default function Pill9Slice({
@@ -71,17 +150,8 @@ export default function Pill9Slice({
   };
 
   const height = heightProp ?? measuredH;
-  const radius = borderRadius ?? height / 2;
-  const aspect = SRC_W / SRC_H;
-  const naturalImgW = height * aspect;
-  const capW = naturalImgW * CAP_PCT;
-  // Stretch the middle band a hair WIDER than the cap-to-cap gap so
-  // it tucks under both caps and there is no transparent seam on web.
-  const midLeft = Math.max(0, capW - OVERLAP_PX);
-  const midRight = Math.max(0, capW - OVERLAP_PX);
-  const visibleMiddle = Math.max(0, w - midLeft - midRight);
-  const midScaledW = visibleMiddle / (1 - 2 * CAP_PCT);
-  const midOffset = midScaledW * CAP_PCT;
+  const radius = borderRadius ?? (height > 0 ? height / 2 : 0);
+  const useNativeCaps = Platform.OS === "ios" && height > 0 && w > 0;
 
   return (
     <View
@@ -100,81 +170,21 @@ export default function Pill9Slice({
         style,
       ]}
     >
-      {/* Middle — render FIRST so the cap views below paint on top
-          and hide the OVERLAP_PX overshoot used to kill the seam. */}
-      {w > 0 && midScaledW > 0 ? (
-        <View
-          style={{
-            position: "absolute",
-            left: midLeft,
-            right: midRight,
+      {useNativeCaps ? (
+        <Image
+          source={source}
+          capInsets={{
+            left: CAP_INSET_SRC,
+            right: CAP_INSET_SRC,
             top: 0,
             bottom: 0,
-            overflow: "hidden",
           }}
-        >
-          <Image
-            source={source}
-            resizeMode="stretch"
-            style={{
-              position: "absolute",
-              left: -midOffset,
-              top: 0,
-              width: midScaledW,
-              height,
-            }}
-          />
-        </View>
+          style={{ width: w, height }}
+          resizeMode="stretch"
+        />
+      ) : height > 0 && w > 0 ? (
+        <ManualPillSlice source={source} width={w} height={height} />
       ) : null}
-      {/* Left cap — show outer 15% of the source PNG, no horizontal
-          squish (image rendered at its natural aspect width). Painted
-          AFTER the middle so any sub-pixel overshoot from the middle
-          band is hidden under the cap. */}
-      <View
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          bottom: 0,
-          width: capW,
-          overflow: "hidden",
-        }}
-      >
-        <Image
-          source={source}
-          resizeMode="stretch"
-          style={{
-            position: "absolute",
-            left: 0,
-            top: 0,
-            width: naturalImgW,
-            height,
-          }}
-        />
-      </View>
-      {/* Right cap — mirror of left, image pinned to right edge. */}
-      <View
-        style={{
-          position: "absolute",
-          right: 0,
-          top: 0,
-          bottom: 0,
-          width: capW,
-          overflow: "hidden",
-        }}
-      >
-        <Image
-          source={source}
-          resizeMode="stretch"
-          style={{
-            position: "absolute",
-            right: 0,
-            top: 0,
-            width: naturalImgW,
-            height,
-          }}
-        />
-      </View>
     </View>
   );
 }

@@ -22,6 +22,13 @@ export default function ForemanQuickActions({
 
   const tiles = [
     {
+      key: "comms",
+      icon: "radio" as const,
+      label: t("foremanHome.crewComms"),
+      onPress: () => router.push("/(tabs)/comms"),
+      testID: "foreman-action-comms",
+    },
+    {
       key: "new",
       icon: "plus-circle" as const,
       label: t("foremanHome.startJob"),
@@ -35,13 +42,6 @@ export default function ForemanQuickActions({
       badge: pendingSchedule,
       onPress: () => router.push("/(tabs)/schedule"),
       testID: "foreman-action-schedule",
-    },
-    {
-      key: "comms",
-      icon: "radio" as const,
-      label: t("foremanHome.crewComms"),
-      onPress: () => router.push("/(tabs)/comms"),
-      testID: "foreman-action-comms",
     },
     {
       key: "alerts",

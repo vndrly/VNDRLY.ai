@@ -37,6 +37,7 @@
           "fetch"
         ],
         "NSFaceIDUsageDescription": "VNDRLY uses Face ID to sign you in quickly and securely.",
+        "NSMicrophoneUsageDescription": "VNDRLY uses the microphone for crew push-to-talk voice messages on active tickets.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },

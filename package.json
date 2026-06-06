@@ -21,7 +21,9 @@
     "setup:vps": "node lib/e2e/scripts/godaddy-setup-vps.mjs",
     "setup:production": "node scripts/godaddy-provision.mjs",
     "deploy:production": "node scripts/godaddy-deploy.mjs",
-    "preflight:deploy": "node scripts/preflight-deploy.mjs"
+    "preflight:deploy": "node scripts/preflight-deploy.mjs",
+    "check:live": "node scripts/check-live.mjs",
+    "check:vps": "node scripts/check-vps-api.mjs"
   },
   "private": true,
   "devDependencies": {

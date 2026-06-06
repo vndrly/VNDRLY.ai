@@ -22,6 +22,14 @@ vi.mock("expo-location", () => ({
   startLocationUpdatesAsync: vi.fn(async () => undefined),
   stopLocationUpdatesAsync: vi.fn(async () => undefined),
   watchPositionAsync: vi.fn(async () => ({ remove: () => {} })),
+  getCurrentPositionAsync: vi.fn(async () => ({
+    coords: {
+      latitude: 35.5,
+      longitude: -97.2,
+      heading: 90,
+      speed: 0,
+    },
+  })),
 }));
 
 vi.mock("expo-task-manager", () => ({
@@ -102,7 +110,7 @@ describe("getLiveLocationStatus (Task #56)", () => {
     expect(s.reasons).toEqual([]);
   });
 
-  it("flags missing background permission when only foreground is granted", async () => {
+  it("treats recent pings as flowing even when Always permission is missing", async () => {
     __setLiveLocationReporterStateForTests({
       activeTicketIds: [1],
       startedAt: Date.now() - 1000,
@@ -112,9 +120,22 @@ describe("getLiveLocationStatus (Task #56)", () => {
       status: "denied",
     } as Awaited<ReturnType<typeof Location.getBackgroundPermissionsAsync>>);
     const s = await getLiveLocationStatus();
+    expect(s.flowing).toBe(true);
+    expect(s.reasons).toContain("background_permission_missing");
+  });
+
+  it("flags missing background permission when only foreground is granted and no recent ping", async () => {
+    __setLiveLocationReporterStateForTests({
+      activeTicketIds: [1],
+      startedAt: Date.now() - 10 * 60_000,
+      lastSuccessfulPingAt: null,
+    });
+    vi.mocked(Location.getBackgroundPermissionsAsync).mockResolvedValue({
+      status: "denied",
+    } as Awaited<ReturnType<typeof Location.getBackgroundPermissionsAsync>>);
+    const s = await getLiveLocationStatus();
     expect(s.flowing).toBe(false);
     expect(s.reasons).toContain("background_permission_missing");
-    expect(s.reasons).not.toContain("foreground_permission_missing");
   });
 
   it("flags foreground permission missing and suppresses background-only reason", async () => {
@@ -134,7 +155,7 @@ describe("getLiveLocationStatus (Task #56)", () => {
     expect(s.reasons).not.toContain("background_permission_missing");
   });
 
-  it("flags low-power mode when the OS reports it", async () => {
+  it("records low-power mode without blocking flowing when pings are recent", async () => {
     __setLiveLocationReporterStateForTests({
       activeTicketIds: [1],
       startedAt: Date.now() - 1000,
@@ -142,11 +163,11 @@ describe("getLiveLocationStatus (Task #56)", () => {
     });
     vi.mocked(Battery.isLowPowerModeEnabledAsync).mockResolvedValue(true);
     const s = await getLiveLocationStatus();
-    expect(s.flowing).toBe(false);
+    expect(s.flowing).toBe(true);
     expect(s.reasons).toContain("low_power_mode");
   });
 
-  it("flags background_task_not_running when the OS task isn't registered", async () => {
+  it("records background_task_not_running without blocking flowing when pings are recent", async () => {
     __setLiveLocationReporterStateForTests({
       activeTicketIds: [1],
       startedAt: Date.now() - 1000,
@@ -154,6 +175,7 @@ describe("getLiveLocationStatus (Task #56)", () => {
     });
     vi.mocked(Location.hasStartedLocationUpdatesAsync).mockResolvedValue(false);
     const s = await getLiveLocationStatus();
+    expect(s.flowing).toBe(true);
     expect(s.reasons).toContain("background_task_not_running");
   });
 
@@ -170,7 +192,7 @@ describe("getLiveLocationStatus (Task #56)", () => {
     expect(s.reasons).toContain("consent_missing");
   });
 
-  it("does NOT flag stale_pings during the initial 5-minute startup grace window", async () => {
+  it("does NOT flag stale_pings during the initial startup grace window", async () => {
     __setLiveLocationReporterStateForTests({
       activeTicketIds: [1],
       startedAt: Date.now() - 60_000, // 1 minute since start
@@ -184,7 +206,7 @@ describe("getLiveLocationStatus (Task #56)", () => {
   it("flags stale_pings after the grace window when no ping has landed", async () => {
     __setLiveLocationReporterStateForTests({
       activeTicketIds: [1],
-      startedAt: Date.now() - 10 * 60_000, // 10 minutes
+      startedAt: Date.now() - 5 * 60_000, // 5 minutes
       lastSuccessfulPingAt: null,
     });
     const s = await getLiveLocationStatus();
@@ -196,7 +218,7 @@ describe("getLiveLocationStatus (Task #56)", () => {
     __setLiveLocationReporterStateForTests({
       activeTicketIds: [1],
       startedAt: Date.now() - 30 * 60_000,
-      lastSuccessfulPingAt: Date.now() - 15 * 60_000, // 15 min ago
+      lastSuccessfulPingAt: Date.now() - 20 * 60_000, // 20 min ago
     });
     const s = await getLiveLocationStatus();
     expect(s.reasons).toContain("stale_pings");

@@ -1,19 +1,19 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useFocusEffect } from "expo-router";
-import { View, Text, TouchableOpacity, ActivityIndicator, AppState, type AppStateStatus, StyleSheet, Modal, ScrollView, Image, Pressable } from "react-native";
+import { View, Text, TouchableOpacity, ActivityIndicator, AppState, type AppStateStatus, StyleSheet, Modal, ScrollView, Pressable } from "react-native";
 // Per-employee check-in/out, the bulk in/out buttons (Task #546), and the
 // roster-remove flow (Task #561) all surface failures via
 // inlineErrorForTicketAction instead of popping modal alerts, so Alert is
 // no longer imported here.
 import { Feather } from "@expo/vector-icons";
 import AmberButton from "@/components/AmberButton";
+import BluePillButton from "@/components/BluePillButton";
+import Pill9Slice from "@/components/Pill9Slice";
 import { apiFetch } from "@/lib/api";
 import { getApiErrorCode, inlineErrorForTicketAction } from "@/lib/apiErrors";
 
-const pillLeft = require("../assets/buttons/blue-left.png");
-const pillCenter = require("../assets/buttons/blue-center.png");
-const pillRight = require("../assets/buttons/blue-right.png");
+const BLUE_PILL = require("@/assets/pill-stack/blue-hot.png");
 
 type RosterEntry = {
   id: number;
@@ -38,13 +38,7 @@ function CrewChip({
   const height = 28;
   return (
     <View style={[chipStyles.chip, { height }]} testID={testID}>
-      <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        <View style={chipStyles.row}>
-          <Image source={pillLeft} style={[chipStyles.cap, { height }]} resizeMode="stretch" />
-          <Image source={pillCenter} style={[chipStyles.center, { height }]} resizeMode="stretch" />
-          <Image source={pillRight} style={[chipStyles.cap, { height }]} resizeMode="stretch" />
-        </View>
-      </View>
+      <Pill9Slice source={BLUE_PILL} height={height} borderRadius={height / 2} />
       <View style={chipStyles.contentRow}>
         <Text style={chipStyles.label} numberOfLines={1}>{name}</Text>
         {onRemove && (
@@ -63,26 +57,20 @@ function CrewChip({
 }
 
 function AddChip({ label, onPress, disabled, testID }: { label: string; onPress: () => void; disabled?: boolean; testID?: string }) {
-  const height = 28;
   return (
-    <Pressable
+    <BluePillButton
+      height={28}
       onPress={onPress}
       disabled={disabled}
       testID={testID}
-      style={({ pressed }) => [chipStyles.chip, { height, opacity: disabled ? 0.5 : pressed ? 0.85 : 0.9 }]}
+      style={chipStyles.chip}
+      textStyle={chipStyles.label}
     >
-      <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        <View style={chipStyles.row}>
-          <Image source={pillLeft} style={[chipStyles.cap, { height }]} resizeMode="stretch" />
-          <Image source={pillCenter} style={[chipStyles.center, { height }]} resizeMode="stretch" />
-          <Image source={pillRight} style={[chipStyles.cap, { height }]} resizeMode="stretch" />
-        </View>
-      </View>
-      <View style={chipStyles.contentRow}>
+      <>
         <Feather name="plus" size={12} color="#ffffff" />
         <Text style={chipStyles.label} numberOfLines={1}>{label}</Text>
-      </View>
-    </Pressable>
+      </>
+    </BluePillButton>
   );
 }
 
@@ -95,10 +83,8 @@ const chipStyles = StyleSheet.create({
     alignItems: "center",
     marginRight: 6,
     marginBottom: 6,
+    overflow: "hidden",
   },
-  row: { flex: 1, flexDirection: "row" },
-  cap: { width: 6 },
-  center: { flex: 1 },
   contentRow: { flexDirection: "row", alignItems: "center", gap: 6 },
   label: { color: "#ffffff", fontSize: 12, fontWeight: "700" },
   removeBtn: {

@@ -110,6 +110,11 @@ export default function NewTicketScreen() {
   // generic copy.
   const [workTypeUnavailableNotice, setWorkTypeUnavailableNotice] =
     useState(false);
+  // Guard against a race when the operator switches sites: the previous
+  // site's work-type chips must disappear immediately and submit must
+  // stay disabled until the new site's list has loaded.
+  const [workTypesSiteId, setWorkTypesSiteId] = useState<number | null>(null);
+  const [workTypesLoading, setWorkTypesLoading] = useState(false);
   const siteErrorCode =
     fieldErrorCode === "site_not_found" ||
     fieldErrorCode === "site_vendor_mismatch"
@@ -207,15 +212,32 @@ export default function NewTicketScreen() {
     setWorkTypeUnavailableNotice(false);
     if (!siteId) {
       setWorkTypes([]);
+      setWorkTypesSiteId(null);
+      setWorkTypesLoading(false);
       return;
     }
+    let cancelled = false;
+    setWorkTypes([]);
+    setWorkTypesSiteId(null);
+    setWorkTypesLoading(true);
     (async () => {
       try {
         await loadWorkTypes(siteId);
+        if (!cancelled) setWorkTypesSiteId(siteId);
       } catch (e) {
-        Alert.alert(t("common.error"), e instanceof Error ? e.message : t("toasts.failed"));
+        if (!cancelled) {
+          Alert.alert(
+            t("common.error"),
+            e instanceof Error ? e.message : t("toasts.failed"),
+          );
+        }
+      } finally {
+        if (!cancelled) setWorkTypesLoading(false);
       }
     })();
+    return () => {
+      cancelled = true;
+    };
   }, [siteId, t, loadWorkTypes]);
 
   const toggleWorkType = (id: number) => {
@@ -233,6 +255,17 @@ export default function NewTicketScreen() {
   const onCreate = async () => {
     if (!siteId || selectedWorkTypeIds.length === 0) {
       Alert.alert(t("tickets.newJob.missingInfoTitle"), t("tickets.newJob.missingInfoBody"));
+      return;
+    }
+    if (workTypesLoading || workTypesSiteId !== siteId) {
+      Alert.alert(t("common.error"), t("tickets.newJob.workTypesLoading"));
+      return;
+    }
+    const allowedWorkTypeIds = new Set(workTypes.map((w) => w.id));
+    const staleSelection = selectedWorkTypeIds.some((id) => !allowedWorkTypeIds.has(id));
+    if (staleSelection) {
+      setSelectedWorkTypeIds((prev) => prev.filter((id) => allowedWorkTypeIds.has(id)));
+      setWorkTypeUnavailableNotice(true);
       return;
     }
     // Task #526: clear any prior structured field error before retrying —
@@ -398,8 +431,13 @@ export default function NewTicketScreen() {
     );
   }
 
+  const workTypesReady =
+    siteId != null && !workTypesLoading && workTypesSiteId === siteId;
   const submitDisabled =
-    creating || !siteId || selectedWorkTypeIds.length === 0;
+    creating ||
+    !siteId ||
+    !workTypesReady ||
+    selectedWorkTypeIds.length === 0;
 
   return (
     <ScrollView
@@ -555,8 +593,16 @@ export default function NewTicketScreen() {
               </Text>
             </View>
           ) : null}
+          {workTypesLoading ? (
+            <ActivityIndicator
+              color={colors.primary}
+              style={{ marginVertical: 12 }}
+              testID="work-types-loading"
+            />
+          ) : null}
           <View style={styles.chips}>
-            {workTypes.map((w) => {
+            {workTypesReady
+              ? workTypes.map((w) => {
               const selected = selectedWorkTypeIds.includes(w.id);
               return (
                 <TouchableOpacity
@@ -585,7 +631,8 @@ export default function NewTicketScreen() {
                   </Text>
                 </TouchableOpacity>
               );
-            })}
+            })
+              : null}
           </View>
           {selectedWorkTypeIds.length > 0 ? (
             <Text

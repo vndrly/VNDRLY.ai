@@ -78,7 +78,14 @@ The database schema supports comprehensive management of users, organizations (P
 The system uses cookie-based session authentication with distinct portals and access levels for `admin`, `partner`, `vendor`, and `field_employee` roles. Users can hold multiple organizational memberships, switching their active context post-login. Passwords are hashed with bcryptjs.
 
 ### Ticket Management and Workflow
-Tickets follow a lifecycle: `draft` → `in_progress` → `pending_review` → `submitted` → `approved` / `kicked_back`, with a `cancel` option. The system supports multiple tracking tickets per work type at a site, accessible via mobile and web interfaces.
+Tickets use **two axes** that must stay coherent:
+
+- **`status`** — office/accounting workflow: `awaiting_acceptance` → `initiated` → `in_progress` → `pending_review` → `submitted` → `approved` / `awaiting_payment` → `funds_dispersed`, with `kicked_back`, `denied`, and `cancelled` branches.
+- **`lifecycleState`** — field GPS phase: `pending_arrival` → `en_route` → `on_location` → `on_site` → `off_site`.
+
+Rule of thumb: `in_progress` (on the clock) must pair with `on_site`; terminal office statuses pair with `off_site`. Live crew map and mobile location pings track `en_route`, `on_location`, and `on_site` (see `@workspace/ticket-status-meta` `LIVE_TRACKED_LIFECYCLE_STATES`).
+
+The system supports multiple tracking tickets per work type at a site, accessible via mobile and web interfaces.
 
 ### User Interface and Design
 The application features an industrial oil & gas aesthetic, utilizing a deep steel blue primary color with a safety orange accent. A custom button system employs a 5-color palette (Amber, Blue, Green, Red, Lightgrey) for all status and progress indicators, each carrying specific semantic meaning throughout the UI.

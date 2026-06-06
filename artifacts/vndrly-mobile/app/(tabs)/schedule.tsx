@@ -24,6 +24,7 @@ import LayeredPillButton from "@/components/LayeredPillButton";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
 import { setScheduleBadge } from "@/lib/tabBadges";
+import { openScheduleIcs } from "@/lib/openScheduleIcs";
 import { translateApiError } from "@/lib/apiErrors";
 import { openInMaps } from "@/lib/maps";
 import {
@@ -112,6 +113,17 @@ export default function ScheduleScreen() {
         },
       ],
     );
+  }
+
+  async function addToCalendar(ticketId: number) {
+    try {
+      await openScheduleIcs(ticketId, t);
+    } catch (e) {
+      Alert.alert(
+        t("mySchedule.calendarErrorTitle"),
+        e instanceof Error ? e.message : translateApiError(e, t),
+      );
+    }
   }
 
   if (loading) {
@@ -321,6 +333,17 @@ export default function ScheduleScreen() {
                 </Text>
               </LayeredPillButton>
             ) : null}
+
+            <LayeredPillButton
+              onPress={() => void addToCalendar(item.id)}
+              height={40}
+              inactive
+              style={styles.foremanBtnPill}
+              testID={`button-calendar-${item.id}`}
+            >
+              <Feather name="calendar" size={14} color="#ffffff" />
+              <Text style={styles.ackPillBtnText}>{t("mySchedule.addToCalendar")}</Text>
+            </LayeredPillButton>
           </View>
         );
       }}

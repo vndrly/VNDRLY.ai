@@ -1,4 +1,4 @@
-// SendGrid integration via Replit Connectors
+// SendGrid integration: direct env vars on VPS/production, Replit Connectors on Replit.
 import sgMail from "@sendgrid/mail";
 import {
   formatPushWarningLine,
@@ -21,16 +21,32 @@ interface ConnectionsResponse {
 
 let connectionSettings: SendGridConnection | undefined;
 
-async function getCredentials() {
+/** Env-based credentials for GoDaddy VPS and other non-Replit hosts. */
+function getEnvCredentials(): { apiKey: string; email: string } | null {
+  const apiKey = process.env.SENDGRID_API_KEY?.trim();
+  const email =
+    process.env.SENDGRID_FROM_EMAIL?.trim() ||
+    process.env.OPS_ALERT_EMAIL?.trim() ||
+    "admin@vndrly.ai";
+  if (!apiKey) return null;
+  return { apiKey, email };
+}
+
+async function getReplitConnectorCredentials(): Promise<{
+  apiKey: string;
+  email: string;
+}> {
   const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
   const xReplitToken = process.env.REPL_IDENTITY
     ? "repl " + process.env.REPL_IDENTITY
     : process.env.WEB_REPL_RENEWAL
-    ? "depl " + process.env.WEB_REPL_RENEWAL
-    : null;
+      ? "depl " + process.env.WEB_REPL_RENEWAL
+      : null;
 
-  if (!xReplitToken) {
-    throw new Error("X-Replit-Token not found for repl/depl");
+  if (!xReplitToken || !hostname) {
+    throw new Error(
+      "SendGrid not configured: set SENDGRID_API_KEY (and optionally SENDGRID_FROM_EMAIL) or run on Replit with the SendGrid connector",
+    );
   }
 
   const response = await fetch(
@@ -56,6 +72,12 @@ async function getCredentials() {
     apiKey: connectionSettings.settings.api_key,
     email: connectionSettings.settings.from_email,
   };
+}
+
+async function getCredentials() {
+  const envCreds = getEnvCredentials();
+  if (envCreds) return envCreds;
+  return getReplitConnectorCredentials();
 }
 
 export async function getUncachableSendGridClient() {

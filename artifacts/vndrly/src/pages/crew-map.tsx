@@ -164,7 +164,9 @@ function carIcon(
   const color =
     lifecycleState === "en_route"
       ? "#f59e0b"
-      : lifecycleState === "on_site"
+      : lifecycleState === "on_location"
+        ? "#6366f1"
+        : lifecycleState === "on_site"
       ? "#10b981"
       : "#0ea5e9";
   const rotation = heading != null ? heading : 0;

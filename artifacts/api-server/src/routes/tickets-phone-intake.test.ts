@@ -331,6 +331,8 @@ describe("POST /tickets — phone intake + intake_channel resolution", () => {
     expect(inserted.intakeChannel).toBe("office_on_behalf_of_field_employee");
     expect(inserted.foremanUserId).toBe(142);
     expect(inserted.status).toBe("in_progress");
+    expect(inserted.lifecycleState).toBe("on_site");
+    expect(inserted.checkInTime).toBeTruthy();
 
     const tx = recordTransitionMock.mock.calls[0]![0] as any;
     expect(tx.reason).toBe("phone_intake_caller:Frank Foreman");

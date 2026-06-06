@@ -20,9 +20,12 @@ import { logger } from "../lib/logger";
 
 import { SESSION_SECRET, getSessionFromRequest } from "../lib/session";
 import { enforceLiveLocationsRateLimit } from "../lib/live-locations-rate-limit";
+import {
+  LIVE_TRACKED_LIFECYCLE_STATES,
+} from "@workspace/ticket-status-meta";
 
 const COOKIE_NAME = "vndrly_session";
-const ACTIVE_LIFECYCLE_STATES = ["en_route", "on_site"] as const;
+const ACTIVE_LIFECYCLE_STATES = LIVE_TRACKED_LIFECYCLE_STATES;
 const LIVE_PING_EVENT = "live_ping" as const;
 const LIVE_PING_FRESH_MS = 15 * 60 * 1000;
 

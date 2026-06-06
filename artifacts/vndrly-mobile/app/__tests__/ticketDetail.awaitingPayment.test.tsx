@@ -436,7 +436,7 @@ describe("TicketDetailScreen — Mark Awaiting Payment role/status gating (Task 
     ).toBeGreaterThan(0);
   });
 
-  it("shows the button for field employees on in_progress tickets", async () => {
+  it("hides the button for field employees on in_progress tickets", async () => {
     getUserMock.mockResolvedValue({
       id: 3,
       username: "field",
@@ -450,7 +450,25 @@ describe("TicketDetailScreen — Mark Awaiting Payment role/status gating (Task 
 
     expect(
       screen.queryAllByTestId("button-mark-awaiting-payment").length,
-    ).toBeGreaterThan(0);
+    ).toBe(0);
+  });
+
+  it("hides the button for foremen on in_progress tickets", async () => {
+    getUserMock.mockResolvedValue({
+      id: 5,
+      username: "foreman",
+      role: "field_employee",
+      vendorRole: "foreman",
+      displayName: "Foreman",
+    });
+    setupApi({ ticket: makeTicket({ status: "in_progress" }) });
+
+    await renderAndWaitForLoad();
+    await waitForUserLoaded();
+
+    expect(
+      screen.queryAllByTestId("button-mark-awaiting-payment").length,
+    ).toBe(0);
   });
 
   it("hides the button for partners even on in_progress tickets", async () => {

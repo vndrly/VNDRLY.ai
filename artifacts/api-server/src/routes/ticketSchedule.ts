@@ -110,37 +110,122 @@ async function loadTicketForAuth(ticketId: number) {
   return t || null;
 }
 
-// Platform admin OR vendor admin (user_org_memberships role='admin' on this vendor)
-// OR THIS ticket's assigned foreman (must match ticket.foremanUserId; not just any vendor foreman).
-async function ensureSchedulerAuth(req: any, res: any, ticketId: number): Promise<{ session: Session; vendorId: number } | null> {
-  const session = getSession(req);
-  if (!session) { res.status(401).json({ error: "not_authenticated", message: "Not authenticated", code: "auth.not_authenticated" }); return null; }
-  const ticket = await loadTicketForAuth(ticketId);
-  if (!ticket) { res.status(404).json({ error: "ticket_not_found", message: "Ticket not found", code: "ticket.not_found" }); return null; }
-  if (session.role === "admin") return { session, vendorId: ticket.vendorId };
-  if (session.role === "vendor" && session.vendorId === ticket.vendorId) {
-    // Require an admin membership on this vendor org (vendor "members" cannot schedule).
+// Platform admin OR vendor admin OR assigned / acting foreman on this ticket.
+async function resolveSchedulerAuth(
+  session: Session,
+  ticketId: number,
+  ticketVendorId: number,
+): Promise<boolean> {
+  if (session.role === "admin") return true;
+  if (session.role === "vendor" && session.vendorId === ticketVendorId) {
     const [m] = await db
       .select({ role: userOrgMembershipsTable.role })
       .from(userOrgMembershipsTable)
       .where(and(
         eq(userOrgMembershipsTable.userId, session.userId),
         eq(userOrgMembershipsTable.orgType, "vendor"),
-        eq(userOrgMembershipsTable.vendorId, ticket.vendorId),
+        eq(userOrgMembershipsTable.vendorId, ticketVendorId),
       ));
-    if (m && m.role === "admin") return { session, vendorId: ticket.vendorId };
+    if (m && m.role === "admin") return true;
   }
   if (session.role === "field_employee") {
-    // Only the foreman ASSIGNED to this specific ticket may use scheduler-grade endpoints.
     const [t] = await db
-      .select({ foremanUserId: ticketsTable.foremanUserId })
+      .select({
+        foremanUserId: ticketsTable.foremanUserId,
+        actingForemanUserId: ticketsTable.actingForemanUserId,
+      })
       .from(ticketsTable)
       .where(eq(ticketsTable.id, ticketId));
-    if (t && t.foremanUserId === session.userId) {
-      return { session, vendorId: ticket.vendorId };
+    if (
+      t &&
+      (t.foremanUserId === session.userId || t.actingForemanUserId === session.userId)
+    ) {
+      return true;
     }
   }
+  return false;
+}
+
+async function ensureSchedulerAuth(req: any, res: any, ticketId: number): Promise<{ session: Session; vendorId: number } | null> {
+  const session = getSession(req);
+  if (!session) { res.status(401).json({ error: "not_authenticated", message: "Not authenticated", code: "auth.not_authenticated" }); return null; }
+  const ticket = await loadTicketForAuth(ticketId);
+  if (!ticket) { res.status(404).json({ error: "ticket_not_found", message: "Ticket not found", code: "ticket.not_found" }); return null; }
+  if (await resolveSchedulerAuth(session, ticketId, ticket.vendorId)) {
+    return { session, vendorId: ticket.vendorId };
+  }
   res.status(403).json({ error: "forbidden_not_scheduler", message: "Not allowed", code: "ticket.no_access" });
+  return null;
+}
+
+/** Scheduler auth, or any active crew member on a scheduled ticket (for .ics). */
+async function ensureScheduleOrCrewAuth(
+  req: any,
+  res: any,
+  ticketId: number,
+): Promise<{ session: Session; vendorId: number } | null> {
+  const session = getSession(req);
+  if (!session) {
+    res.status(401).json({
+      error: "not_authenticated",
+      message: "Not authenticated",
+      code: "auth.not_authenticated",
+    });
+    return null;
+  }
+
+  const ticket = await loadTicketForAuth(ticketId);
+  if (!ticket) {
+    res.status(404).json({
+      error: "ticket_not_found",
+      message: "Ticket not found",
+      code: "ticket.not_found",
+    });
+    return null;
+  }
+
+  if (await resolveSchedulerAuth(session, ticketId, ticket.vendorId)) {
+    return { session, vendorId: ticket.vendorId };
+  }
+
+  const [sched] = await db
+    .select({ scheduledStartAt: ticketsTable.scheduledStartAt })
+    .from(ticketsTable)
+    .where(eq(ticketsTable.id, ticketId));
+  if (!sched?.scheduledStartAt) {
+    res.status(409).json({
+      error: "not_scheduled",
+      message: "Ticket is not scheduled",
+      code: "schedule.not_scheduled",
+    });
+    return null;
+  }
+
+  const [me] = await db
+    .select({ id: vendorPeopleTable.id })
+    .from(vendorPeopleTable)
+    .where(and(
+      eq(vendorPeopleTable.userId, session.userId),
+      eq(vendorPeopleTable.vendorId, ticket.vendorId),
+      isNull(vendorPeopleTable.deletedAt),
+    ));
+  if (me) {
+    const [onCrew] = await db
+      .select({ ticketId: ticketCrewTable.ticketId })
+      .from(ticketCrewTable)
+      .where(and(
+        eq(ticketCrewTable.ticketId, ticketId),
+        eq(ticketCrewTable.employeeId, me.id),
+        isNull(ticketCrewTable.removedAt),
+      ));
+    if (onCrew) return { session, vendorId: ticket.vendorId };
+  }
+
+  res.status(403).json({
+    error: "forbidden_not_scheduler",
+    message: "Not allowed",
+    code: "ticket.no_access",
+  });
   return null;
 }
 
@@ -173,6 +258,9 @@ router.post("/tickets/:id/schedule", async (req, res): Promise<void> => {
     return;
   }
   const foremanUserId = body.foremanUserId != null ? Number(body.foremanUserId) : null;
+  const actingForemanUserId = body.actingForemanUserId != null
+    ? Number(body.actingForemanUserId)
+    : null;
   const crewEmployeeIds: number[] = Array.isArray(body.crewEmployeeIds)
     ? body.crewEmployeeIds.map((n: unknown) => Number(n)).filter((n: number) => Number.isFinite(n))
     : [];
@@ -222,7 +310,20 @@ router.post("/tickets/:id/schedule", async (req, res): Promise<void> => {
     }
   }
 
-  // Ticket details for push payload. Also pulls the PREVIOUS schedule
+  // Acting foreman: same crew + login rule; may differ from primary foreman.
+  if (actingForemanUserId != null) {
+    const okActing = crewRows.some(r => r.userId === actingForemanUserId);
+    if (!okActing) {
+      res.status(400).json({
+        error: FOREMAN_NOT_IN_CREW,
+        message: "Acting foreman must be one of the assigned crew members with a login",
+        code: "schedule.invalid_acting_foreman",
+      });
+      return;
+    }
+  }
+
+  // Ticket details for push payload.
   // fields (scheduledStartAt + scheduledDurationMinutes) so we can diff
   // them against the incoming values below to decide whether an
   // already-on-roster crew member should get a `schedule_changed`
@@ -545,6 +646,7 @@ router.post("/tickets/:id/schedule", async (req, res): Promise<void> => {
         scheduledStartAt,
         scheduledDurationMinutes,
         foremanUserId,
+        actingForemanUserId,
         scheduledAt: now,
         scheduledById: auth.session.userId,
       })
@@ -705,6 +807,7 @@ router.post("/tickets/:id/schedule", async (req, res): Promise<void> => {
     scheduledStartAt: scheduledStartAt.toISOString(),
     scheduledDurationMinutes,
     foremanUserId,
+    actingForemanUserId,
     crewEmployeeIds,
     warningKinds,
     certWarnings,
@@ -726,6 +829,7 @@ router.get("/tickets/:id/schedule", async (req, res): Promise<void> => {
       scheduledStartAt: ticketsTable.scheduledStartAt,
       scheduledDurationMinutes: ticketsTable.scheduledDurationMinutes,
       foremanUserId: ticketsTable.foremanUserId,
+      actingForemanUserId: ticketsTable.actingForemanUserId,
       scheduledAt: ticketsTable.scheduledAt,
     })
     .from(ticketsTable)
@@ -751,6 +855,7 @@ router.get("/tickets/:id/schedule", async (req, res): Promise<void> => {
     scheduledStartAt: t?.scheduledStartAt ?? null,
     scheduledDurationMinutes: t?.scheduledDurationMinutes ?? null,
     foremanUserId: t?.foremanUserId ?? null,
+    actingForemanUserId: t?.actingForemanUserId ?? null,
     scheduledAt: t?.scheduledAt ?? null,
     crew: crew.map(c => ({
       employeeId: c.employeeId,
@@ -1095,7 +1200,7 @@ function formatICSDate(d: Date): string {
 router.get("/tickets/:id/schedule.ics", async (req, res): Promise<void> => {
   const ticketId = Number(req.params.id);
   if (!Number.isFinite(ticketId)) { res.status(400).json({ error: "Invalid id", code: "validation.invalid_id" }); return; }
-  const auth = await ensureSchedulerAuth(req, res, ticketId);
+  const auth = await ensureScheduleOrCrewAuth(req, res, ticketId);
   if (!auth) return;
 
   const [t] = await db

@@ -93,6 +93,10 @@ vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: tIdentity }),
 }));
 
+vi.mock("@/hooks/use-auth", () => ({
+  useAuth: () => ({ user: { role: "field_employee" } }),
+}));
+
 const { apiFetchMock } = vi.hoisted(() => ({ apiFetchMock: vi.fn() }));
 vi.mock("@/lib/api", () => ({
   apiFetch: (...a: unknown[]) => apiFetchMock(...a),
@@ -144,6 +148,9 @@ describe("HistoryScreen — Task #762 rate-limit gate", () => {
     // active — otherwise we'd immediately re-trip the limiter on
     // every mount.
     apiFetchMock.mockImplementation((url: string) => {
+      if (url === "/api/field/open-tickets") {
+        throw new Error("/api/field/open-tickets must not run during cooldown");
+      }
       if (url === "/api/field/history") {
         throw new Error("/api/field/history must not run during cooldown");
       }
@@ -163,13 +170,14 @@ describe("HistoryScreen — Task #762 rate-limit gate", () => {
     // Sanity: the early-exit guard inside `load()` must short-circuit
     // before any /api/field/history call.
     const earlyHistoryCalls = apiFetchMock.mock.calls.filter(
-      ([u]) => u === "/api/field/history",
+      ([u]) => u === "/api/field/open-tickets" || u === "/api/field/history",
     );
     expect(earlyHistoryCalls.length).toBe(0);
 
     // Now arm the happy path so when the cooldown expires the
     // recovery effect's load() actually populates the list.
     apiFetchMock.mockImplementation((url: string) => {
+      if (url === "/api/field/open-tickets") return Promise.resolve([]);
       if (url === "/api/field/history") return Promise.resolve([]);
       return Promise.resolve(null);
     });
@@ -185,7 +193,7 @@ describe("HistoryScreen — Task #762 rate-limit gate", () => {
       () => {
         expect(
           apiFetchMock.mock.calls.some(
-            ([u]) => u === "/api/field/history",
+            ([u]) => u === "/api/field/open-tickets" || u === "/api/field/history",
           ),
         ).toBe(true);
       },
@@ -204,6 +212,7 @@ describe("HistoryScreen — Task #762 rate-limit gate", () => {
     // Initial mount: list loads happily so the refresh button is in
     // the DOM and we can assert the disabled flip.
     apiFetchMock.mockImplementation((url: string) => {
+      if (url === "/api/field/open-tickets") return Promise.resolve([]);
       if (url === "/api/field/history") return Promise.resolve([]);
       return Promise.resolve(null);
     });

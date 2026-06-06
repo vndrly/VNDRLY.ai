@@ -76,6 +76,34 @@ describe("getApiErrorCode", () => {
     ).toBe("field.account_inactive");
   });
 
+  it("prefers err.data.error over namespaced err.code (field POST /tickets)", () => {
+    expect(
+      getApiErrorCode(
+        makeApiError({
+          message: "Vendor is not approved for this work type at this site.",
+          status: 400,
+          code: "field_ticket.work_type_not_allowed",
+          data: {
+            code: "field_ticket.work_type_not_allowed",
+            error: "work_type_not_allowed",
+          },
+        }),
+      ),
+    ).toBe("work_type_not_allowed");
+  });
+
+  it("strips field_ticket. prefix when only err.code is present", () => {
+    expect(
+      getApiErrorCode(
+        makeApiError({
+          message: "Site not found.",
+          status: 400,
+          code: "field_ticket.site_not_found",
+        }),
+      ),
+    ).toBe("site_not_found");
+  });
+
   it("falls back to err.data.error (Task #517 convention)", () => {
     // The office POST /tickets endpoint returns
     // { error: "site_not_found", message: "Site not found." } — `error`

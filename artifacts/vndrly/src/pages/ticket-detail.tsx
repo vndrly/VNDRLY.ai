@@ -1449,6 +1449,17 @@ export default function TicketDetail({ id }: { id: number }) {
       <Card className="mb-6">
         <CardContent className="py-5">
           <TicketStatusStepper status={ticket.status} />
+          {ticket.lifecycleState ? (
+            <p
+              className="mt-3 text-sm text-muted-foreground text-center"
+              data-testid="ticket-field-lifecycle"
+            >
+              {t("ticketDetail.fieldLifecycle")}:{" "}
+              {t(`crewMap.lifecycleState.${ticket.lifecycleState}`, {
+                defaultValue: ticket.lifecycleState.replace(/_/g, " "),
+              })}
+            </p>
+          ) : null}
         </CardContent>
       </Card>
 

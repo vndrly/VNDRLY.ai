@@ -35,6 +35,7 @@ import LiveLocationStatusPill from "@/components/LiveLocationStatusPill";
 import { TicketRouteMap } from "@/components/TicketRouteMap";
 import { TicketTrackingTimeline } from "@/components/TicketTrackingTimeline";
 import CrewTimeSection, { type CrewTimeSectionHandle } from "@/components/CrewTimeSection";
+import ScheduleTicketPanel from "@/components/ScheduleTicketPanel";
 import TicketNudgePanel from "@/components/TicketNudgePanel";
 import NudgeFlashOverlay from "@/components/NudgeFlashOverlay";
 import CommentsPanel from "@/components/CommentsPanel";
@@ -53,6 +54,7 @@ import {
   noteTicketsRateLimit,
 } from "@/lib/ticketsRateLimitGate";
 import { getUser, type StoredUser } from "@/lib/auth";
+import { nudgeLiveLocationReporter } from "@/lib/liveLocationReporter";
 import { MAP_TILE_SIZE, getOsmTile, openInMaps } from "@/lib/maps";
 import { captureAndUploadImage } from "@/lib/photos";
 import { ticketStatusLabel, ticketStatusPillStyle } from "@/lib/ticketStatusLabels";
@@ -74,6 +76,9 @@ type Ticket = {
   checkOutLatitude?: number | null;
   checkOutLongitude?: number | null;
   vendorId?: number | null;
+  scheduledStartAt?: string | null;
+  foremanUserId?: number | null;
+  actingForemanUserId?: number | null;
   kickbackReason?: string | null;
   createdAt?: string | null;
   unlockedAt?: string | null;
@@ -261,13 +266,13 @@ export default function TicketDetailScreen() {
   // existing GPS-driven `historyEvents` so foremen can see why their
   // ticket bounced through multiple vendors before they took it.
   const [transitions, setTransitions] = useState<TicketTransition[]>([]);
-  const [historyPage, setHistoryPage] = useState(0);
   const scrollRef = React.useRef<ScrollView | null>(null);
   const unlockHistoryY = React.useRef<number>(0);
   const [taxRate, setTaxRate] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
+  const [scheduleOpen, setScheduleOpen] = useState(false);
   const [selectedTrackingId, setSelectedTrackingId] = useState<
     number | string | null
   >(null);
@@ -625,6 +630,15 @@ export default function TicketDetailScreen() {
       }, 7000);
       return () => clearInterval(handle);
     }, [assignmentRemoved, load, rateLimited, appForegrounded]),
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      const state = ticket?.lifecycleState;
+      if (state === "en_route" || state === "on_site") {
+        void nudgeLiveLocationReporter();
+      }
+    }, [ticket?.lifecycleState]),
   );
 
   // Task #42 — Geofence arrival auto-check-in. While the ticket is
@@ -1694,6 +1708,13 @@ export default function TicketDetailScreen() {
       )
     : false;
 
+  const canShowSchedule =
+    isEditable &&
+    (currentUser?.role === "admin" ||
+      currentUser?.role === "vendor" ||
+      (currentUser?.role === "field_employee" &&
+        (currentUser.vendorRole === "foreman" || currentUser.vendorRole === "both")));
+
   const subtotal = items.reduce((sum, it) => {
     const q = typeof it.quantity === "string" ? parseFloat(it.quantity) : it.quantity;
     const p = typeof it.unitPrice === "string" ? parseFloat(it.unitPrice) : it.unitPrice;
@@ -2265,19 +2286,13 @@ export default function TicketDetailScreen() {
             lifecycle === "en_route" ||
             lifecycle === "on_location");
         // Task #575: only in-progress tickets can be flipped into
-        // awaiting_payment, and partners are intentionally locked out
-        // server-side (`forbidden_not_assigned`) — gate the UI to match
-        // so they don't see a button that always errors. Admins, the
-        // assigned vendor, and the assigned field employee all see it;
-        // the server is the source of truth for the latter two.
-        // Task #572: also gate on the assignment-removed banner so the
-        // worker can't keep flipping the ticket while their site/work-
-        // type assignment is missing.
+        // awaiting_payment. The action button is vendor-admin / org-admin
+        // only — field employees and foremen see the status on the pill
+        // but must not mark awaiting payment from the field app.
         const canMarkAwaitingPayment =
           !blockedByAssignment &&
           status === "in_progress" &&
-          (isVendorAdminOrOffice ||
-            currentUser?.role === "field_employee");
+          isVendorAdminOrOffice;
         // Task #600: Disperse Funds is the AP-side action that closes
         // the loop. The server returns a per-viewer `viewerCanDisperseFunds`
         // capability flag (admin role OR partner contact in the AP role
@@ -3356,6 +3371,41 @@ export default function TicketDetailScreen() {
         userRole={currentUser?.role}
       />
 
+      {canShowSchedule ? (
+        <View style={{ marginBottom: 12 }}>
+          {ticket.scheduledStartAt ? (
+            <Text style={{ color: colors.mutedForeground, marginBottom: 8 }} testID="text-scheduled-when">
+              {t("scheduleTicket.scheduledBanner", {
+                when: new Date(ticket.scheduledStartAt).toLocaleString(undefined, {
+                  weekday: "short",
+                  month: "short",
+                  day: "numeric",
+                  hour: "numeric",
+                  minute: "2-digit",
+                }),
+              })}
+            </Text>
+          ) : null}
+          <BlueButton
+            onPress={() => setScheduleOpen(true)}
+            testID="button-schedule-ticket"
+          >
+            {t("scheduleTicket.button")}
+          </BlueButton>
+          {ticket.scheduledStartAt ? (
+            <TouchableOpacity
+              onPress={() => router.push(`/ticket/${ticket.id}/crew-tracker`)}
+              style={{ marginTop: 8 }}
+              testID="button-crew-tracker"
+            >
+              <Text style={{ color: colors.primary, fontWeight: "600" }}>
+                {t("mySchedule.foremanView")}
+              </Text>
+            </TouchableOpacity>
+          ) : null}
+        </View>
+      ) : null}
+
       <CrewTimeSection
         ticketId={ticket.id}
         vendorId={ticket.vendorId ?? currentUser?.vendorId ?? null}
@@ -3629,83 +3679,27 @@ export default function TicketDetailScreen() {
             { borderColor: colors.border, backgroundColor: colors.card },
           ]}
         >
-          {(() => {
-            const HISTORY_PAGE_SIZE = 10;
-            const totalPages = Math.max(1, Math.ceil(historyEvents.length / HISTORY_PAGE_SIZE));
-            const safePage = Math.min(historyPage, totalPages - 1);
-            const start = safePage * HISTORY_PAGE_SIZE;
-            const visible = historyEvents.slice(start, start + HISTORY_PAGE_SIZE);
-            const hasOlder = safePage < totalPages - 1;
-            const hasNewer = safePage > 0;
-            return (
-              <>
-                {visible.map((evt, idx) => {
-            const tile = evt.coords
-              ? getOsmTile(evt.coords.latitude, evt.coords.longitude)
-              : null;
-            return (
-              <View
-                key={evt.key}
-                style={[
-                  styles.historyRow,
-                  idx > 0 && { borderTopWidth: 1, borderTopColor: colors.border },
-                ]}
-              >
-                {tile && evt.coords ? (
-                  <Pressable
-                    onPress={() =>
-                      openInMaps(
-                        evt.coords!.latitude,
-                        evt.coords!.longitude,
-                        evt.label,
-                      )
-                    }
-                    style={[
-                      styles.mapThumb,
-                      { borderColor: colors.border, backgroundColor: colors.muted },
-                    ]}
-                    accessibilityRole="button"
-                    accessibilityLabel={`View ${evt.label} on map`}
-                  >
-                    <Image
-                      source={{ uri: tile.url }}
-                      style={{
-                        position: "absolute",
-                        width: MAP_TILE_SIZE,
-                        height: MAP_TILE_SIZE,
-                        left: -tile.offsetX + 32,
-                        top: -tile.offsetY + 32,
-                      }}
-                      resizeMode="cover"
-                    />
-                    <View style={styles.mapPin} pointerEvents="none">
-                      <Feather name="map-pin" size={18} color={colors.primary} />
-                    </View>
-                  </Pressable>
-                ) : null}
-                <View style={{ flex: 1 }}>
-                  <Text
-                    style={{
-                      color: colors.foreground,
-                      fontFamily: "Inter_600SemiBold",
-                      fontSize: 13,
-                    }}
-                  >
-                    {evt.label}
-                  </Text>
-                  {evt.detail ? (
-                    <Text
-                      style={{
-                        color: colors.mutedForeground,
-                        fontSize: 12,
-                        marginTop: 2,
-                      }}
-                    >
-                      {evt.detail}
-                    </Text>
-                  ) : null}
-                  {evt.coords ? (
-                    <TouchableOpacity
+          <ScrollView
+            nestedScrollEnabled
+            style={styles.historyScroll}
+            contentContainerStyle={styles.historyScrollContent}
+            showsVerticalScrollIndicator
+            testID="history-events-scroll"
+          >
+            {historyEvents.map((evt, idx) => {
+              const tile = evt.coords
+                ? getOsmTile(evt.coords.latitude, evt.coords.longitude)
+                : null;
+              return (
+                <View
+                  key={evt.key}
+                  style={[
+                    styles.historyRow,
+                    idx > 0 && { borderTopWidth: 1, borderTopColor: colors.border },
+                  ]}
+                >
+                  {tile && evt.coords ? (
+                    <Pressable
                       onPress={() =>
                         openInMaps(
                           evt.coords!.latitude,
@@ -3713,71 +3707,87 @@ export default function TicketDetailScreen() {
                           evt.label,
                         )
                       }
-                      hitSlop={6}
+                      style={[
+                        styles.mapThumb,
+                        { borderColor: colors.border, backgroundColor: colors.muted },
+                      ]}
+                      accessibilityRole="button"
+                      accessibilityLabel={`View ${evt.label} on map`}
                     >
+                      <Image
+                        source={{ uri: tile.url }}
+                        style={{
+                          position: "absolute",
+                          width: MAP_TILE_SIZE,
+                          height: MAP_TILE_SIZE,
+                          left: -tile.offsetX + 32,
+                          top: -tile.offsetY + 32,
+                        }}
+                        resizeMode="cover"
+                      />
+                      <View style={styles.mapPin} pointerEvents="none">
+                        <Feather name="map-pin" size={18} color={colors.primary} />
+                      </View>
+                    </Pressable>
+                  ) : null}
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={{
+                        color: colors.foreground,
+                        fontFamily: "Inter_600SemiBold",
+                        fontSize: 13,
+                      }}
+                    >
+                      {evt.label}
+                    </Text>
+                    {evt.detail ? (
                       <Text
                         style={{
-                          color: colors.primary,
+                          color: colors.mutedForeground,
                           fontSize: 12,
-                          fontFamily: "Inter_600SemiBold",
-                          marginTop: 4,
+                          marginTop: 2,
                         }}
                       >
-                        {t("tickets.viewOnMap")}
+                        {evt.detail}
                       </Text>
-                    </TouchableOpacity>
-                  ) : null}
-                </View>
-                <Text
-                  style={{
-                    color: colors.mutedForeground,
-                    fontSize: 11,
-                    marginLeft: 8,
-                  }}
-                >
-                  {new Date(evt.at).toLocaleString()}
-                </Text>
-              </View>
-            );
-          })}
-                {totalPages > 1 ? (
-                  <View
-                    style={[
-                      styles.historyPager,
-                      { borderTopColor: colors.border },
-                    ]}
-                  >
-                    <TouchableOpacity
-                      onPress={() => hasNewer && setHistoryPage((p) => Math.max(0, p - 1))}
-                      disabled={!hasNewer}
-                      hitSlop={8}
-                      style={[styles.historyPagerBtn, { opacity: hasNewer ? 1 : 0.3 }]}
-                      accessibilityLabel={t("tickets.historyNewer")}
-                      testID="history-pager-newer"
-                    >
-                      <Feather name="chevron-up" size={22} color={colors.primary} />
-                    </TouchableOpacity>
-                    <Text style={{ color: colors.mutedForeground, fontSize: 12 }}>
-                      {t("tickets.historyPageLabel", {
-                        page: safePage + 1,
-                        total: totalPages,
-                      })}
-                    </Text>
-                    <TouchableOpacity
-                      onPress={() => hasOlder && setHistoryPage((p) => p + 1)}
-                      disabled={!hasOlder}
-                      hitSlop={8}
-                      style={[styles.historyPagerBtn, { opacity: hasOlder ? 1 : 0.3 }]}
-                      accessibilityLabel={t("tickets.historyOlder")}
-                      testID="history-pager-older"
-                    >
-                      <Feather name="chevron-down" size={22} color={colors.primary} />
-                    </TouchableOpacity>
+                    ) : null}
+                    {evt.coords ? (
+                      <TouchableOpacity
+                        onPress={() =>
+                          openInMaps(
+                            evt.coords!.latitude,
+                            evt.coords!.longitude,
+                            evt.label,
+                          )
+                        }
+                        hitSlop={6}
+                      >
+                        <Text
+                          style={{
+                            color: colors.primary,
+                            fontSize: 12,
+                            fontFamily: "Inter_600SemiBold",
+                            marginTop: 4,
+                          }}
+                        >
+                          {t("tickets.viewOnMap")}
+                        </Text>
+                      </TouchableOpacity>
+                    ) : null}
                   </View>
-                ) : null}
-              </>
-            );
-          })()}
+                  <Text
+                    style={{
+                      color: colors.mutedForeground,
+                      fontSize: 11,
+                      marginLeft: 8,
+                    }}
+                  >
+                    {new Date(evt.at).toLocaleString()}
+                  </Text>
+                </View>
+              );
+            })}
+          </ScrollView>
         </View>
       )}
 
@@ -4135,6 +4145,18 @@ export default function TicketDetailScreen() {
         </View>
       </View>
     ) : null}
+    {ticket.vendorId != null ? (
+      <ScheduleTicketPanel
+        visible={scheduleOpen}
+        onClose={() => setScheduleOpen(false)}
+        ticketId={ticket.id}
+        vendorId={ticket.vendorId}
+        onSaved={() => {
+          void load({ silent: true });
+          void crewHandleRef.current?.refreshAll();
+        }}
+      />
+    ) : null}
     </View>
   );
 }
@@ -4372,17 +4394,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     overflow: "hidden",
   },
-  historyPager: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderTopWidth: 1,
+  // Cap visible history to ~5 map-thumb rows; older pings scroll inside.
+  historyScroll: {
+    maxHeight: 420,
   },
-  historyPagerBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
+  historyScrollContent: {
+    flexGrow: 0,
   },
   historyRow: {
     flexDirection: "row",

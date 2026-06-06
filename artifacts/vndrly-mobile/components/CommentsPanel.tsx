@@ -20,6 +20,7 @@ import LayeredPillButton from "@/components/LayeredPillButton";
 import { useRateLimitGate } from "@/hooks/use-rate-limit-gate";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch, getApiBase } from "@/lib/api";
+import { translateApiError } from "@/lib/apiErrors";
 import { getUser, type StoredUser } from "@/lib/auth";
 import { captureAndUploadImage, pickAndUploadImage } from "@/lib/photos";
 
@@ -132,8 +133,11 @@ export default function CommentsPanel({ source, parentId, isEditable = true }: P
       setContent("");
       setAttachments([]);
       load();
-    } catch (e: any) {
-      Alert.alert(t("comments.couldntPost"), String(e?.message ?? t("comments.tryAgain")));
+    } catch (e: unknown) {
+      Alert.alert(
+        t("comments.couldntPost"),
+        translateApiError(e, t, t("comments.tryAgain")),
+      );
     } finally {
       setPosting(false);
     }

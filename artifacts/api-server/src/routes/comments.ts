@@ -25,6 +25,7 @@ import {
 import { enforceCommentsRateLimit } from "../lib/comments-rate-limit";
 import { enforceParticipantsRateLimit } from "../lib/participants-rate-limit";
 import { sendApiError } from "../lib/apiError";
+import { withSerialInsertRetry } from "../lib/pg-sequence-resync";
 
 const COOKIE_NAME = "vndrly_session";
 const EDIT_WINDOW_MS = 5 * 60 * 1000;
@@ -313,6 +314,7 @@ router.get("/tickets/:id/comments/:commentId/seen-by", async (req: Request, res:
 });
 
 router.post("/tickets/:id/comments", async (req: Request, res: Response): Promise<void> => {
+  try {
   const session = getSession(req);
   if (!session) { sendApiError(res, 401, "auth.not_authenticated", "Unauthorized"); return; }
   const ticketId = parseInt(String(req.params.id));
@@ -328,16 +330,18 @@ router.post("/tickets/:id/comments", async (req: Request, res: Response): Promis
   const tokens = extractMentionTokens(text);
   const mentionIds = await resolveMentionUserIds(tokens, ctx.ids);
 
-  const [row] = await db
-    .insert(ticketNoteLogsTable)
-    .values({
-      ticketId,
-      content: text || "[photo]",
-      attachments: atts.length ? atts : null,
-      mentions: mentionIds.length ? mentionIds : null,
-      createdById: session.userId,
-    })
-    .returning();
+  const [row] = await withSerialInsertRetry("ticket_note_logs", () =>
+    db
+      .insert(ticketNoteLogsTable)
+      .values({
+        ticketId,
+        content: text || "[photo]",
+        attachments: atts.length ? atts : null,
+        mentions: mentionIds.length ? mentionIds : null,
+        createdById: session.userId,
+      })
+      .returning(),
+  );
 
   // Notify mentions explicitly + everyone else as new-comment / PTT
   const mentionSet = new Set(mentionIds);
@@ -376,6 +380,10 @@ router.post("/tickets/:id/comments", async (req: Request, res: Response): Promis
   }
 
   res.status(201).json(row);
+  } catch (err) {
+    req.log.error({ err, ticketId: req.params.id }, "POST /tickets/:id/comments failed");
+    sendApiError(res, 500, "comment.create_failed", "Failed to post comment");
+  }
 });
 
 router.patch("/tickets/:id/comments/:commentId", async (req: Request, res: Response): Promise<void> => {
@@ -565,6 +573,7 @@ router.get("/hotlist/jobs/:id/comments/:commentId/seen-by", async (req: Request,
 });
 
 router.post("/hotlist/jobs/:id/comments", async (req: Request, res: Response): Promise<void> => {
+  try {
   const session = getSession(req);
   if (!session) { sendApiError(res, 401, "auth.not_authenticated", "Unauthorized"); return; }
   const jobId = parseInt(String(req.params.id));
@@ -580,16 +589,18 @@ router.post("/hotlist/jobs/:id/comments", async (req: Request, res: Response): P
   const tokens = extractMentionTokens(text);
   const mentionIds = await resolveMentionUserIds(tokens, ctx.ids);
 
-  const [row] = await db
-    .insert(hotlistCommentsTable)
-    .values({
-      jobId,
-      content: text || "[photo]",
-      attachments: atts.length ? atts : null,
-      mentions: mentionIds.length ? mentionIds : null,
-      createdById: session.userId,
-    })
-    .returning();
+  const [row] = await withSerialInsertRetry("hotlist_comments", () =>
+    db
+      .insert(hotlistCommentsTable)
+      .values({
+        jobId,
+        content: text || "[photo]",
+        attachments: atts.length ? atts : null,
+        mentions: mentionIds.length ? mentionIds : null,
+        createdById: session.userId,
+      })
+      .returning(),
+  );
 
   const mentionSet = new Set(mentionIds);
   const others = ctx.ids.filter((u) => u !== session.userId && !mentionSet.has(u));
@@ -631,6 +642,10 @@ router.post("/hotlist/jobs/:id/comments", async (req: Request, res: Response): P
   });
 
   res.status(201).json(row);
+  } catch (err) {
+    req.log.error({ err, jobId: req.params.id }, "POST /hotlist/jobs/:id/comments failed");
+    sendApiError(res, 500, "comment.create_failed", "Failed to post comment");
+  }
 });
 
 router.patch("/hotlist/jobs/:id/comments/:commentId", async (req: Request, res: Response): Promise<void> => {

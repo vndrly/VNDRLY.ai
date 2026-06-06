@@ -816,6 +816,7 @@ router.get("/field/foremen", async (req, res): Promise<void> => {
 
 // ── POST /api/field/tickets — create ticket + auto check-in ──
 router.post("/field/tickets", async (req, res): Promise<void> => {
+  try {
   const ctx = await requireFieldUser(req, res);
   if (!ctx) return;
   const {
@@ -1067,6 +1068,14 @@ router.post("/field/tickets", async (req, res): Promise<void> => {
   });
 
   res.status(201).json(ticket);
+  } catch (err) {
+    req.log.error({ err }, "POST /field/tickets failed");
+    res.status(500).json({
+      code: "field_ticket.create_failed",
+      error: "internal_error",
+      message: "Failed to create ticket",
+    });
+  }
 });
 
 // ── POST /api/field/push-token — register expo push token for current user ──

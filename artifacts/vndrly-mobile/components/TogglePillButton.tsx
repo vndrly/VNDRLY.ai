@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   ActivityIndicator,
   Image,
@@ -13,6 +13,7 @@ import {
   type ViewStyle,
 } from "react-native";
 import { useBrand } from "@/hooks/use-brand";
+import Pill9Slice from "@/components/Pill9Slice";
 
 /**
  * # TogglePillButton (mobile) — the canonical VNDRLY pill button
@@ -138,11 +139,17 @@ function SlicedBg({
   center: ImageSourcePropType;
   right: ImageSourcePropType;
 }) {
+  const capW = Math.max(8, Math.round((height * INACTIVE_CAP_SRC_W) / INACTIVE_SRC_H));
+  const seamCover = Math.max(2, Math.round(height * 0.06));
   return (
     <View style={styles.row}>
-      <Image source={left} style={[styles.cap, { height }]} resizeMode="stretch" />
-      <Image source={center} style={[styles.center, { height }]} resizeMode="stretch" />
-      <Image source={right} style={[styles.cap, { height }]} resizeMode="stretch" />
+      <Image source={left} style={{ width: capW + seamCover, height }} resizeMode="stretch" />
+      <Image
+        source={center}
+        style={{ flex: 1, height, marginHorizontal: -seamCover }}
+        resizeMode="stretch"
+      />
+      <Image source={right} style={{ width: capW + seamCover, height }} resizeMode="stretch" />
     </View>
   );
 }
@@ -194,36 +201,9 @@ function BrandColoredBg({ height, color }: { height: number; color: string }) {
  * Identical math to the legacy AmberButton helper.
  */
 function SlicedSingleBg({ height, src }: { height: number; src: ImageSourcePropType }) {
-  const capW = Math.round((height * INACTIVE_CAP_SRC_W) / INACTIVE_SRC_H);
-  const fullScaledW = (capW * INACTIVE_SRC_W) / INACTIVE_CAP_SRC_W;
-  const [centerW, setCenterW] = useState(0);
-  const middleSrcW = INACTIVE_SRC_W - 2 * INACTIVE_CAP_SRC_W;
-  const centerScaledW = centerW > 0 ? (centerW * INACTIVE_SRC_W) / middleSrcW : 0;
-  const centerOffset = centerW > 0 ? -(centerScaledW * INACTIVE_CAP_SRC_W) / INACTIVE_SRC_W : 0;
   return (
-    <View style={{ flex: 1, flexDirection: "row" }}>
-      <View style={{ width: capW, height, overflow: "hidden" }}>
-        <Image source={src} style={{ width: fullScaledW, height }} resizeMode="stretch" />
-      </View>
-      <View
-        style={{ flex: 1, height, overflow: "hidden" }}
-        onLayout={(e) => setCenterW(e.nativeEvent.layout.width)}
-      >
-        {centerW > 0 && (
-          <Image
-            source={src}
-            style={{ width: centerScaledW, height, marginLeft: centerOffset }}
-            resizeMode="stretch"
-          />
-        )}
-      </View>
-      <View style={{ width: capW, height, overflow: "hidden" }}>
-        <Image
-          source={src}
-          style={{ width: fullScaledW, height, marginLeft: -(fullScaledW - capW) }}
-          resizeMode="stretch"
-        />
-      </View>
+    <View style={{ flex: 1 }}>
+      <Pill9Slice source={src} height={height} borderRadius={height / 2} />
     </View>
   );
 }

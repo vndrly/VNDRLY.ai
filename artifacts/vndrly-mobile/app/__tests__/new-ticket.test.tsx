@@ -446,3 +446,40 @@ describe("NewTicketScreen — work_type_not_allowed handling (Task #560)", () =>
     });
   });
 });
+
+describe("NewTicketScreen — stale work types on site switch", () => {
+  it("clears the previous site's chips immediately when a different site is picked", async () => {
+    const siteATypes = [{ id: 9, name: "Pump Repair", category: null }];
+    const siteBTypes = [{ id: 4, name: "Cementing", category: null }];
+
+    apiFetchMock.mockImplementation((url: string) => {
+      if (url === "/api/field/sites") return Promise.resolve(SITES_BEFORE);
+      if (url === "/api/field/sites/11/work-types") {
+        return Promise.resolve(siteATypes);
+      }
+      if (url === "/api/field/sites/22/work-types") {
+        return new Promise((resolve) => {
+          setTimeout(() => resolve(siteBTypes), 50);
+        });
+      }
+      return Promise.reject(new Error(`unexpected url ${url}`));
+    });
+
+    render(<NewTicketScreen />);
+    await waitFor(() => {
+      expect(screen.getAllByText("Acme Old Site").length).toBeGreaterThan(0);
+    });
+
+    tap(screen.getAllByText("Acme Old Site")[0]);
+    await waitFor(() => {
+      expect(firstByTestId("work-type-9")).toBeTruthy();
+    });
+
+    tap(screen.getAllByText("Acme Other Site")[0]);
+    expect(screen.queryAllByTestId("work-type-9").length).toBe(0);
+
+    await waitFor(() => {
+      expect(firstByTestId("work-type-4")).toBeTruthy();
+    });
+  });
+});

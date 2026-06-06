@@ -1,11 +1,10 @@
 import React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-// Task #679: tests cover the manual refresh button on the field
-// employee history screen — the field-side equivalent of the open
-// tickets list refresh shipped in Task #669. The header refresh button
-// funnels through the same `load()` the pull-to-refresh uses, then
-// surfaces a brief "Refreshed" confirmation toast on success.
+// Task #679: tests cover the manual refresh button on the open-jobs
+// list (History tab). The header refresh button funnels through the
+// same `load()` the pull-to-refresh uses, then surfaces a brief
+// "Refreshed" confirmation toast on success.
 
 // Task #186: render a recognizable stub for the active-org indicator
 // so the composition test below can assert the screen-level
@@ -69,6 +68,10 @@ vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: tIdentity }),
 }));
 
+vi.mock("@/hooks/use-auth", () => ({
+  useAuth: () => ({ user: { role: "field_employee" } }),
+}));
+
 const { apiFetchMock } = vi.hoisted(() => ({ apiFetchMock: vi.fn() }));
 vi.mock("@/lib/api", () => ({
   apiFetch: (...a: unknown[]) => apiFetchMock(...a),
@@ -86,11 +89,26 @@ import {
 
 import HistoryScreen from "../history";
 
-const HISTORY = [
+const OPEN_JOBS = [
   {
     id: 101,
-    status: "closed",
+    status: "in_progress",
     siteName: "Acme Site",
+    partnerName: "Acme Co",
+    workTypeName: "Maintenance",
+    fieldEmployeeFirstName: "Alex",
+    fieldEmployeeLastName: "Rivera",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    unreadCommentCount: 0,
+  },
+];
+
+const CLOSED_JOBS = [
+  {
+    id: 202,
+    status: "completed",
+    siteName: "Past Site",
     partnerName: "Acme Co",
     workTypeName: "Maintenance",
     checkOutTime: new Date().toISOString(),
@@ -107,13 +125,14 @@ beforeEach(() => {
   apiFetchMock.mockReset();
   routerPushMock.mockReset();
   apiFetchMock.mockImplementation((url: string) => {
-    if (url === "/api/field/history") return Promise.resolve(HISTORY);
+    if (url === "/api/field/open-tickets") return Promise.resolve(OPEN_JOBS);
+    if (url === "/api/field/history") return Promise.resolve(CLOSED_JOBS);
     return Promise.resolve(null);
   });
 });
 
 describe("HistoryScreen — Task #679 manual refresh button", () => {
-  it("re-fetches /api/field/history when the header refresh button is tapped", async () => {
+  it("re-fetches open tickets and recent history when the header refresh button is tapped", async () => {
     render(<HistoryScreen />);
 
     // Wait for the screen's mount-time `load()` to settle so the
@@ -121,7 +140,7 @@ describe("HistoryScreen — Task #679 manual refresh button", () => {
     const button = await screen.findByTestId("button-refresh-history");
 
     const callsBefore = apiFetchMock.mock.calls.filter(
-      ([u]) => u === "/api/field/history",
+      ([u]) => u === "/api/field/open-tickets" || u === "/api/field/history",
     ).length;
     expect(callsBefore).toBeGreaterThan(0);
 
@@ -133,7 +152,7 @@ describe("HistoryScreen — Task #679 manual refresh button", () => {
     // resource — same surface the pull-to-refresh covers.
     await waitFor(() => {
       const after = apiFetchMock.mock.calls.filter(
-        ([u]) => u === "/api/field/history",
+        ([u]) => u === "/api/field/open-tickets" || u === "/api/field/history",
       ).length;
       expect(after).toBeGreaterThan(callsBefore);
     });
@@ -180,11 +199,12 @@ describe("HistoryScreen — Task #679 manual refresh button", () => {
     const button = await screen.findByTestId("button-refresh-history");
 
     // After the screen loads happily, swap the API to fail the next
-    // history fetch so the manual refresh's `load()` returns false.
+    // open-jobs fetch so the manual refresh's `load()` returns false.
     apiFetchMock.mockImplementation((url: string) => {
-      if (url === "/api/field/history") {
+      if (url === "/api/field/open-tickets") {
         return Promise.reject(new Error("network down"));
       }
+      if (url === "/api/field/history") return Promise.resolve(CLOSED_JOBS);
       return Promise.resolve(null);
     });
 

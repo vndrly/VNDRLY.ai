@@ -12,9 +12,24 @@ import {
   isTicketsRateLimited,
   noteTicketsRateLimit,
 } from "./ticketsRateLimitGate";
+import {
+  LIVE_TRACKED_LIFECYCLE_SET,
+} from "@workspace/ticket-status-meta";
 
 const POLL_TICKETS_MS = 60 * 1000;
-const ACTIVE_STATES = new Set(["en_route", "on_site"]);
+const ACTIVE_STATES = LIVE_TRACKED_LIFECYCLE_SET;
+
+/** Foreground watcher — while the app is open we ping often. */
+const FOREGROUND_PING_INTERVAL_MS = 60 * 1000;
+const FOREGROUND_DISTANCE_M = 25;
+/** Background OS task — still tighter than the old 3-minute cadence. */
+const BACKGROUND_PING_INTERVAL_MS = 2 * 60 * 1000;
+const BACKGROUND_DISTANCE_M = 50;
+/** UI shows green only when a ping landed within this window. */
+export const FLOWING_PING_MAX_AGE_MS = 6 * 60 * 1000;
+// Internal recovery threshold before we force a fresh GPS read.
+const STALE_PING_MS = 12 * 60 * 1000;
+const PING_STARTUP_GRACE_MS = 2 * 60 * 1000;
 
 export const LIVE_LOCATION_TASK = "vndrly-live-location";
 
@@ -115,6 +130,39 @@ async function getBatteryLevel(): Promise<number | null> {
   } catch {
     return null;
   }
+}
+
+async function flushLocationPing() {
+  if (activeTicketIds.length === 0) return;
+  const allowed = await hasActiveConsentForThisDevice();
+  if (!allowed) return;
+  try {
+    const fg = await Location.getForegroundPermissionsAsync();
+    if (fg.status !== "granted") return;
+    const loc = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.Balanced,
+    });
+    await postPing(
+      loc.coords.latitude,
+      loc.coords.longitude,
+      normalizeHeading(loc.coords.heading),
+      normalizeSpeed(loc.coords.speed),
+    );
+  } catch {
+    // Next watcher callback or recovery pass will retry.
+  }
+}
+
+async function maybeRecoverStalePings() {
+  if (activeTicketIds.length === 0) return;
+  const now = Date.now();
+  const stale =
+    lastSuccessfulPingAt == null
+      ? startedAt != null && now - startedAt > PING_STARTUP_GRACE_MS
+      : now - lastSuccessfulPingAt > FLOWING_PING_MAX_AGE_MS;
+  if (!stale) return;
+  await ensureBackgroundUpdates();
+  await flushLocationPing();
 }
 
 async function postPing(
@@ -243,10 +291,10 @@ async function ensureBackgroundUpdates() {
       if (!already) {
         await Location.startLocationUpdatesAsync(LIVE_LOCATION_TASK, {
           accuracy: Location.Accuracy.Balanced,
-          timeInterval: 3 * 60 * 1000,
-          distanceInterval: 75,
-          deferredUpdatesInterval: 3 * 60 * 1000,
-          deferredUpdatesDistance: 75,
+          timeInterval: BACKGROUND_PING_INTERVAL_MS,
+          distanceInterval: BACKGROUND_DISTANCE_M,
+          deferredUpdatesInterval: BACKGROUND_PING_INTERVAL_MS,
+          deferredUpdatesDistance: BACKGROUND_DISTANCE_M,
           showsBackgroundLocationIndicator: false,
           // Keep updates flowing while parked on site; iOS otherwise stops
           // delivering once the device is stationary and may not resume.
@@ -279,8 +327,8 @@ async function ensureForegroundWatcher() {
     foregroundSub = await Location.watchPositionAsync(
       {
         accuracy: Location.Accuracy.Balanced,
-        timeInterval: 3 * 60 * 1000,
-        distanceInterval: 75,
+        timeInterval: FOREGROUND_PING_INTERVAL_MS,
+        distanceInterval: FOREGROUND_DISTANCE_M,
       },
       (loc) => {
         postPing(
@@ -324,8 +372,12 @@ async function refreshActiveTicket() {
   if (ids == null) return;
   const prevCount = activeTicketIds.length;
   activeTicketIds = ids;
-  if (ids.length > 0) await ensureBackgroundUpdates();
-  else await stopBackgroundUpdates();
+  if (ids.length > 0) {
+    await ensureBackgroundUpdates();
+    await maybeRecoverStalePings();
+  } else {
+    await stopBackgroundUpdates();
+  }
   // Task #56 — notify subscribers when the active-ticket set toggles
   // size. The pill renders (and stops rendering) based on whether at
   // least one ticket is active, so this is the moment its visibility
@@ -337,8 +389,10 @@ async function refreshActiveTicket() {
 
 function handleAppState(state: AppStateStatus) {
   if (state === "active") {
-    // Refresh ticket list on foreground; background task keeps reporting otherwise.
-    refreshActiveTicket();
+    void (async () => {
+      await refreshActiveTicket();
+      await flushLocationPing();
+    })();
   }
 }
 
@@ -349,8 +403,16 @@ export async function startLiveLocationReporter() {
   started = true;
   startedAt = Date.now();
   await refreshActiveTicket();
+  await flushLocationPing();
   pollTimer = setInterval(refreshActiveTicket, POLL_TICKETS_MS);
   appStateSub = AppState.addEventListener("change", handleAppState);
+}
+
+/** Force a fresh GPS read — e.g. when the tracking screen gains focus. */
+export async function nudgeLiveLocationReporter(): Promise<void> {
+  if (!started) return;
+  await maybeRecoverStalePings();
+  await flushLocationPing();
 }
 
 export async function stopLiveLocationReporter() {
@@ -414,17 +476,6 @@ export function subscribeLiveLocationStatus(listener: () => void): () => void {
     statusListeners.delete(listener);
   };
 }
-
-// Anything older than ~3x the configured timeInterval (3 minutes)
-// counts as stale. Picked to tolerate one missed callback (GPS lock
-// blip, brief app suspension) without flagging, but flag fast enough
-// that a real Doze/low-power throttle surfaces inside ~10 minutes.
-const STALE_PING_MS = 9 * 60 * 1000;
-// Grace window after start() during which we don't claim "stale_pings"
-// just because the OS hasn't delivered the first callback yet. The
-// background watcher's `timeInterval` is 3 min; allow 5 to account for
-// cold-fix latency.
-const PING_STARTUP_GRACE_MS = 5 * 60 * 1000;
 
 /**
  * Snapshot of the reporter's current health for the foreground UI.
@@ -530,9 +581,30 @@ export async function getLiveLocationStatus(): Promise<LiveLocationStatus> {
     if (!reasons.includes("stale_pings")) reasons.push("stale_pings");
   }
 
+  const hardBlockers = reasons.filter(
+    (r) =>
+      r === "consent_missing" ||
+      r === "foreground_permission_missing" ||
+      r === "expo_go_unsupported",
+  );
+  const pingRecent =
+    lastSuccessfulPingAt != null &&
+    now - lastSuccessfulPingAt <= FLOWING_PING_MAX_AGE_MS;
+  const inStartupGrace =
+    !aliveLongEnough &&
+    lastSuccessfulPingAt == null &&
+    hardBlockers.length === 0;
+
+  // A recent successful ping is ground truth — background-task registration
+  // quirks, missing Always permission while the app is open, and low-power
+  // mode should not flash a scary paused banner when dispatch is actually
+  // receiving coordinates.
+  const flowing =
+    hardBlockers.length === 0 && (pingRecent || inStartupGrace);
+
   return {
     hasActiveTicket: true,
-    flowing: reasons.length === 0,
+    flowing,
     reasons,
     lastPingAt: lastSuccessfulPingAt,
   };

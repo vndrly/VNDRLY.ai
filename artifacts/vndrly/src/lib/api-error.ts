@@ -58,13 +58,26 @@ function isStructuredCode(value: unknown): value is string {
  * English copy in `error` instead of a stable identifier, so callers can
  * fall through to generic status-family / fallback copy.
  */
+function normalizeStructuredCode(value: string): string {
+  if (value.startsWith("field_ticket.")) {
+    return value.slice("field_ticket.".length);
+  }
+  return value;
+}
+
 export function getApiErrorCode(e: unknown): string | null {
   const err = asApiError(e);
   if (!err) return null;
   const data = err.data ?? err.response?.data ?? null;
-  if (isStructuredCode(err.code)) return err.code;
-  if (isStructuredCode(data?.code)) return data!.code as string;
-  if (isStructuredCode(data?.error)) return data!.error as string;
+  if (isStructuredCode(data?.error)) {
+    return normalizeStructuredCode(data!.error as string);
+  }
+  if (isStructuredCode(err.code)) {
+    return normalizeStructuredCode(err.code);
+  }
+  if (isStructuredCode(data?.code)) {
+    return normalizeStructuredCode(data!.code as string);
+  }
   return null;
 }
 

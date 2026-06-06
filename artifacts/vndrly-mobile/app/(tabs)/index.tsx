@@ -17,6 +17,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { formatTicketTrackingNumber } from "@workspace/db/format";
 
@@ -88,6 +89,7 @@ export default function HomeScreen() {
       throw new Error("switchContext not provided");
     },
   } = useAuth();
+  const insets = useSafeAreaInsets();
   const [tickets, setTickets] = useState<OpenTicket[]>([]);
   // Task #498 — recent history rows used to broaden adjacent-ticket CTA
   // eligibility to "currently assigned to OR recently checked-in to a
@@ -645,7 +647,12 @@ export default function HomeScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.brandRow, { borderBottomColor: colors.border }]}>
+      <View
+        style={[
+          styles.brandRow,
+          { borderBottomColor: colors.border, paddingTop: insets.top + 8 },
+        ]}
+      >
         <View style={styles.brandLeft}>
           {brand.isOrgBranded && (brand.logoSquareUrl || brand.logoUrl) ? (
             <AuthedImage
@@ -788,24 +795,26 @@ export default function HomeScreen() {
             </View>
           ) : null}
         </View>
-        <TouchableOpacity
-          onPress={() => router.push("/notifications")}
-          accessibilityLabel={t("nav.notifications")}
-          accessibilityHint={
-            unreadCount > 0 ? t("home.unreadNotifications", { count: unreadCount }) : t("home.noUnreadNotifications")
-          }
-          style={styles.bellBtn}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        >
-          <Feather name="bell" size={28} color={colors.primary} />
-          {unreadCount > 0 ? (
-            <View style={[styles.badge, { backgroundColor: "#dc2626", borderColor: colors.background }]}>
-              <Text style={[styles.badgeText, { color: "#ffffff" }]} numberOfLines={1}>
-                {badgeText}
-              </Text>
-            </View>
-          ) : null}
-        </TouchableOpacity>
+        {!isForemanEmployee ? (
+          <TouchableOpacity
+            onPress={() => router.push("/notifications")}
+            accessibilityLabel={t("nav.notifications")}
+            accessibilityHint={
+              unreadCount > 0 ? t("home.unreadNotifications", { count: unreadCount }) : t("home.noUnreadNotifications")
+            }
+            style={styles.bellBtn}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Feather name="bell" size={28} color={colors.primary} />
+            {unreadCount > 0 ? (
+              <View style={[styles.badge, { backgroundColor: "#dc2626", borderColor: colors.background }]}>
+                <Text style={[styles.badgeText, { color: "#ffffff" }]} numberOfLines={1}>
+                  {badgeText}
+                </Text>
+              </View>
+            ) : null}
+          </TouchableOpacity>
+        ) : null}
       </View>
 
       {isForemanEmployee ? (
@@ -1509,7 +1518,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    paddingTop: 12,
     paddingBottom: 8,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },

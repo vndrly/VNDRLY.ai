@@ -72,6 +72,7 @@ export const ticketsTable = pgTable("tickets", {
   scheduledStartAt: timestamp("scheduled_start_at", { withTimezone: true }),
   scheduledDurationMinutes: integer("scheduled_duration_minutes"),
   foremanUserId: integer("foreman_user_id"),
+  actingForemanUserId: integer("acting_foreman_user_id"),
   scheduledAt: timestamp("scheduled_at", { withTimezone: true }),
   scheduledById: integer("scheduled_by_id"),
   lateCheckInReminderSentAt: timestamp("late_check_in_reminder_sent_at", { withTimezone: true }),

@@ -1,3 +1,9 @@
+import {
+  AppState,
+  InteractionManager,
+  type AppStateStatus,
+} from "react-native";
+
 import { apiFetch, getApiBase } from "./api";
 
 export type UploadResult = {
@@ -8,6 +14,16 @@ export type UploadResult = {
 
 const PTT_PREFIX = "[ptt:";
 
+const BACKGROUND_AUDIO_RE =
+  /background.*audio session|audio session could not be activated/i;
+
+export class PttMicPermissionError extends Error {
+  constructor() {
+    super("Microphone permission denied");
+    this.name = "PttMicPermissionError";
+  }
+}
+
 export function isPttComment(content: string): boolean {
   return content.trim().startsWith(PTT_PREFIX);
 }
@@ -15,6 +31,117 @@ export function isPttComment(content: string): boolean {
 export function pttDurationLabel(content: string): string | null {
   const m = /^\[ptt:([^\]]+)\]/.exec(content.trim());
   return m?.[1] ?? null;
+}
+
+export function isBackgroundAudioSessionError(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err ?? "");
+  return BACKGROUND_AUDIO_RE.test(msg);
+}
+
+export async function waitForActiveAppState(maxWaitMs = 4000): Promise<void> {
+  if (AppState.currentState === "active") return;
+
+  await new Promise<void>((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      sub.remove();
+      reject(new Error("App is not in the foreground"));
+    }, maxWaitMs);
+
+    const sub = AppState.addEventListener("change", (state: AppStateStatus) => {
+      if (state === "active") {
+        clearTimeout(timeout);
+        sub.remove();
+        resolve();
+      }
+    });
+  });
+}
+
+function runAfterInteractions(): Promise<void> {
+  return new Promise((resolve) => {
+    InteractionManager.runAfterInteractions(() => resolve());
+  });
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function withBackgroundAudioRetry<T>(
+  fn: () => Promise<T>,
+  attempts = 4,
+): Promise<T> {
+  let lastErr: unknown;
+  for (let i = 0; i < attempts; i += 1) {
+    try {
+      await waitForActiveAppState();
+      await runAfterInteractions();
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      if (!isBackgroundAudioSessionError(err) || i === attempts - 1) {
+        throw err;
+      }
+      await sleep(120 * (i + 1));
+    }
+  }
+  throw lastErr;
+}
+
+async function configureRecordingAudioMode(
+  Audio: typeof import("expo-av").Audio,
+): Promise<void> {
+  const av = await import("expo-av");
+  const mode: Record<string, unknown> = {
+    allowsRecordingIOS: true,
+    playsInSilentModeIOS: true,
+    staysActiveInBackground: false,
+    shouldDuckAndroid: true,
+    playThroughEarpieceAndroid: false,
+  };
+
+  if ("InterruptionModeIOS" in av && "InterruptionModeAndroid" in av) {
+    const { InterruptionModeIOS, InterruptionModeAndroid } = av as {
+      InterruptionModeIOS: { DuckOthers: number };
+      InterruptionModeAndroid: { DuckOthers: number };
+    };
+    mode.interruptionModeIOS = InterruptionModeIOS.DuckOthers;
+    mode.interruptionModeAndroid = InterruptionModeAndroid.DuckOthers;
+  }
+
+  await Audio.setAudioModeAsync(mode);
+}
+
+async function ensureMicPermission(
+  Audio: typeof import("expo-av").Audio,
+): Promise<void> {
+  const current = await Audio.getPermissionsAsync();
+  if (current.status === "granted") return;
+
+  const requested = await Audio.requestPermissionsAsync();
+  if (requested.status !== "granted") {
+    throw new PttMicPermissionError();
+  }
+}
+
+/** Pre-request mic permission when the Comms screen is focused. */
+export async function warmUpPttSession(): Promise<void> {
+  await waitForActiveAppState();
+  await runAfterInteractions();
+  const { Audio } = await import("expo-av");
+  await ensureMicPermission(Audio);
+  await withBackgroundAudioRetry(() => configureRecordingAudioMode(Audio));
+}
+
+async function activateRecordingSession(): Promise<
+  typeof import("expo-av").Audio
+> {
+  await waitForActiveAppState();
+  await runAfterInteractions();
+  const { Audio } = await import("expo-av");
+  await ensureMicPermission(Audio);
+  await withBackgroundAudioRetry(() => configureRecordingAudioMode(Audio));
+  return Audio;
 }
 
 function resolveUploadUrl(uploadURL: string): string {
@@ -89,25 +216,23 @@ export type PttRecorder = {
 
 /** Lazy-load expo-av so web / tests without native module still compile. */
 export async function createPttRecorder(): Promise<PttRecorder> {
-  const { Audio } = await import("expo-av");
-  await Audio.requestPermissionsAsync();
-  await Audio.setAudioModeAsync({
-    allowsRecordingIOS: true,
-    playsInSilentModeIOS: true,
-  });
-
-  let recording: InstanceType<typeof Audio.Recording> | null = null;
+  let recording: InstanceType<
+    typeof import("expo-av").Audio.Recording
+  > | null = null;
   let startedAt = 0;
 
   return {
     async start() {
-      const rec = new Audio.Recording();
-      await rec.prepareToRecordAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY,
-      );
-      await rec.startAsync();
-      recording = rec;
-      startedAt = Date.now();
+      const Audio = await activateRecordingSession();
+      await withBackgroundAudioRetry(async () => {
+        const rec = new Audio.Recording();
+        await rec.prepareToRecordAsync(
+          Audio.RecordingOptionsPresets.HIGH_QUALITY,
+        );
+        await rec.startAsync();
+        recording = rec;
+        startedAt = Date.now();
+      });
     },
     async stop() {
       if (!recording) throw new Error("Not recording");
@@ -133,7 +258,15 @@ export async function createPttRecorder(): Promise<PttRecorder> {
 
 export async function playPttUri(uri: string): Promise<void> {
   const { Audio } = await import("expo-av");
-  await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
+  await withBackgroundAudioRetry(() =>
+    Audio.setAudioModeAsync({
+      allowsRecordingIOS: false,
+      playsInSilentModeIOS: true,
+      staysActiveInBackground: false,
+      shouldDuckAndroid: true,
+      playThroughEarpieceAndroid: false,
+    }),
+  );
   const { sound } = await Audio.createAsync({ uri });
   await sound.playAsync();
 }

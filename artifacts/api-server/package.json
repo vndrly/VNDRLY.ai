@@ -33,6 +33,7 @@
     "@workspace/form1099": "workspace:*",
     "@workspace/integrations-anthropic-ai": "workspace:*",
     "@workspace/ticket-state-conflict-codes": "workspace:*",
+    "@workspace/ticket-status-meta": "workspace:*",
     "@workspace/visit-error-codes": "workspace:*",
     "@workspace/zod-validation-issues": "workspace:*",
     "bcryptjs": "^3.0.3",

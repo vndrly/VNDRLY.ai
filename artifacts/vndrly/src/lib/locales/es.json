@@ -1367,6 +1367,7 @@
     "adminFallback": "admin",
     "print": "Imprimir",
     "trackingDetails": "Detalles del Seguimiento",
+    "fieldLifecycle": "Fase de campo",
     "site": "Sitio:",
     "partner": "Socio:",
     "vendor": "Proveedor:",
@@ -1693,6 +1694,7 @@
     "lifecycleState": {
       "pending_arrival": "pendiente de llegada",
       "en_route": "en camino",
+      "on_location": "en ubicación",
       "on_site": "en sitio",
       "off_site": "fuera del sitio",
       "completed": "completado"

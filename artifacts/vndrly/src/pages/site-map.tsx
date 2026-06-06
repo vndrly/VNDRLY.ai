@@ -137,9 +137,11 @@ function carIcon(emp: NearbyEmployee) {
   const color =
     lifecycle === "en_route"
       ? "#f59e0b"
-      : lifecycle === "on_site"
-        ? "#10b981"
-        : "#64748b"; // slate when no active ticket
+      : lifecycle === "on_location"
+        ? "#6366f1"
+        : lifecycle === "on_site"
+          ? "#10b981"
+          : "#64748b"; // slate when no active ticket
   const lowBattery =
     emp.batteryLevel != null && emp.batteryLevel <= LOW_BATTERY_THRESHOLD;
   const rotation = emp.heading != null ? emp.heading : 0;

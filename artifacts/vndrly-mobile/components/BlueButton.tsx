@@ -1,12 +1,12 @@
 import React from "react";
 import type { GestureResponderEvent, StyleProp, TextStyle, ViewStyle } from "react-native";
-import TogglePillButton from "@/components/TogglePillButton";
+
+import BluePillButton from "@/components/BluePillButton";
 
 /**
  * Legacy `BlueButton` import surface — preserved so existing call
- * sites keep working unchanged. Delegates to the canonical mobile
- * `TogglePillButton` with `color="blue"`. New code SHOULD import
- * `TogglePillButton` directly.
+ * sites keep working unchanged. Delegates to the canonical glossy
+ * blue pill (`BluePillButton`).
  */
 interface BlueButtonProps {
   children: React.ReactNode;
@@ -17,14 +17,10 @@ interface BlueButtonProps {
   textStyle?: StyleProp<TextStyle>;
   testID?: string;
   height?: number;
-  /**
-   * Forces the colored chrome on at all times. Defaults to `true`
-   * for legacy parity — the original BlueButton was always blue,
-   * not a press-only toggle.
-   */
+  /** Kept for API compatibility; blue pills are always solid. */
   solid?: boolean;
 }
 
-export default function BlueButton({ solid = true, ...props }: BlueButtonProps) {
-  return <TogglePillButton color="blue" solid={solid} {...props} />;
+export default function BlueButton({ solid: _solid = true, ...props }: BlueButtonProps) {
+  return <BluePillButton {...props} />;
 }

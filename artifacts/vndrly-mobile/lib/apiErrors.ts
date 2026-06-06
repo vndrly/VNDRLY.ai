@@ -78,12 +78,31 @@ function isStructuredCode(value: unknown): value is string {
  * use this to decide whether to surface the error inline next to a
  * specific form field (when there's a code) or as a generic toast/alert.
  */
+function normalizeStructuredCode(value: string): string {
+  // Field POST /tickets emits both `code: field_ticket.<name>` and
+  // `error: <name>`. apiFetch copies the namespaced value onto err.code,
+  // but our i18n keys live at `errors.<name>` — strip the prefix when
+  // the short sibling is absent.
+  if (value.startsWith("field_ticket.")) {
+    return value.slice("field_ticket.".length);
+  }
+  return value;
+}
+
 export function getApiErrorCode(e: unknown): string | null {
   const err = asApiError(e);
   if (!err) return null;
-  if (isStructuredCode(err.code)) return err.code;
-  if (isStructuredCode(err.data?.code)) return err.data!.code as string;
-  if (isStructuredCode(err.data?.error)) return err.data!.error as string;
+  // Prefer the short `error` sibling when present — it is the stable
+  // contract for UI lookup (Task #517 / #528).
+  if (isStructuredCode(err.data?.error)) {
+    return normalizeStructuredCode(err.data!.error as string);
+  }
+  if (isStructuredCode(err.code)) {
+    return normalizeStructuredCode(err.code);
+  }
+  if (isStructuredCode(err.data?.code)) {
+    return normalizeStructuredCode(err.data!.code as string);
+  }
   return null;
 }
 
