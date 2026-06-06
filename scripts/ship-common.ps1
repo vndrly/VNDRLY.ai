@@ -50,10 +50,6 @@ function Remove-StaleGitLock {
 function Add-GitShipChanges {
   param([string]$Root)
   Set-Location $Root
-  Remove-StaleGitLock -Root $Root
-
-  & git add -u
-  if ($LASTEXITCODE -ne 0) { throw "git add -u failed (exit $LASTEXITCODE)" }
 
   $pathspecs = @(
     "artifacts", "lib", "scripts", "docs", "attached_assets",
@@ -61,13 +57,50 @@ function Add-GitShipChanges {
     "tsconfig.base.json", "Start-VNDRLY-Dev.ps1", ".vscode/settings.json"
   )
 
-  foreach ($path in $pathspecs) {
-    $full = Join-Path $Root $path
-    if (-not (Test-Path $full)) { continue }
-    & git add -- $path
+  for ($attempt = 1; $attempt -le 3; $attempt++) {
+    Remove-StaleGitLock -Root $Root
+    & git add -u
     if ($LASTEXITCODE -ne 0) {
-      throw "git add -- $path failed (exit $LASTEXITCODE)"
+      if ($attempt -lt 3) {
+        Start-Sleep -Seconds 2
+        continue
+      }
+      throw "git add -u failed (exit $LASTEXITCODE)"
     }
+
+    $addFailed = $false
+    foreach ($path in $pathspecs) {
+      $full = Join-Path $Root $path
+      if (-not (Test-Path $full)) { continue }
+      & git add -- $path
+      if ($LASTEXITCODE -ne 0) {
+        $addFailed = $true
+        break
+      }
+    }
+
+    if (-not $addFailed) { return }
+    if ($attempt -lt 3) {
+      Write-Host "git add retry $attempt/3 after permission or lock issue..."
+      Start-Sleep -Seconds 2
+    } else {
+      throw "git add failed after 3 attempts (exit $LASTEXITCODE)"
+    }
+  }
+}
+
+function Invoke-ShipProcess {
+  param(
+    [string]$Label,
+    [scriptblock]$Body
+  )
+  $prev = $ErrorActionPreference
+  $ErrorActionPreference = "Continue"
+  try {
+    & $Body
+    return $LASTEXITCODE
+  } finally {
+    $ErrorActionPreference = $prev
   }
 }
 

@@ -61,12 +61,12 @@ Write-ShipStep "Building iOS on EAS and submitting to TestFlight"
 $iosLog = Join-Path $env:TEMP "vndrly-ship-ios.log"
 if (Test-Path $iosLog) { Remove-Item $iosLog -Force }
 
-$prev = $ErrorActionPreference
 $ErrorActionPreference = "Continue"
-& powershell -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "testflight-build.ps1") `
-  -Submit -NonInteractive -SkipTypecheck -SkipEnsureDev *>&1 | Tee-Object -FilePath $iosLog
+Start-Transcript -Path $iosLog -Force | Out-Null
+& (Join-Path $PSScriptRoot "testflight-build.ps1") -Submit -NonInteractive -SkipTypecheck -SkipEnsureDev
 $iosExit = $LASTEXITCODE
-$ErrorActionPreference = $prev
+Stop-Transcript | Out-Null
+$ErrorActionPreference = "Stop"
 
 if ($iosExit -ne 0) {
   Fail-Ship "iOS build / TestFlight" "EAS build or submit failed (exit $iosExit). See log: $iosLog"
