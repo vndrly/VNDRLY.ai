@@ -32,6 +32,13 @@ function Read-Pat {
   return $raw
 }
 
+function Push-VndrlyGitHub {
+  param([string]$RemoteBranch)
+  $pat = Read-Pat
+  $authUrl = "https://${script:GitHubOwner}:${pat}@github.com/${script:GitHubOwner}/${script:GitHubRepo}.git"
+  Run-Git @("push", $authUrl, "HEAD:${RemoteBranch}")
+}
+
 $root = (& git rev-parse --show-toplevel).Trim()
 Set-Location $root
 $env:Path = "C:\Program Files\nodejs;$env:APPDATA\npm;" + $env:Path
