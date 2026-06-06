@@ -64,8 +64,8 @@ function AuthGate() {
   useEffect(() => {
     if (checked) return;
     const timeout = setTimeout(() => {
+      // Never force-logout on slow SecureStore — only stop blocking the UI.
       setChecked(true);
-      setHasAuth(false);
     }, AUTH_BOOTSTRAP_TIMEOUT_MS);
     return () => clearTimeout(timeout);
   }, [checked]);

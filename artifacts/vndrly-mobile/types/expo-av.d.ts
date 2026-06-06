@@ -20,6 +20,13 @@ declare module "expo-av" {
     class Sound {
       playAsync(): Promise<void>;
       unloadAsync(): Promise<void>;
+      setOnPlaybackStatusUpdate(
+        callback: (status: {
+          isLoaded: boolean;
+          didJustFinish?: boolean;
+          error?: string;
+        }) => void,
+      ): void;
     }
     const RecordingOptionsPresets: { HIGH_QUALITY: unknown };
     function getPermissionsAsync(): Promise<{ status: string }>;

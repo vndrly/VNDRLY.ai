@@ -1,3 +1,4 @@
+import * as SecureStore from "expo-secure-store";
 import Constants from "expo-constants";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
@@ -23,6 +24,19 @@ try {
   });
 } catch {
   // ignore — host (Expo Go on SDK 54+) doesn't support the handler
+}
+
+const LAST_PUSH_TOKEN_KEY = "vndrly_last_push_token";
+
+export async function unregisterStoredPushToken(): Promise<void> {
+  try {
+    const token = await SecureStore.getItemAsync(LAST_PUSH_TOKEN_KEY);
+    if (!token) return;
+    await unregisterPushToken(token);
+    await SecureStore.deleteItemAsync(LAST_PUSH_TOKEN_KEY);
+  } catch {
+    // ignore
+  }
 }
 
 export async function registerForPushNotifications(): Promise<string | null> {
@@ -58,6 +72,7 @@ export async function registerForPushNotifications(): Promise<string | null> {
       method: "POST",
       body: JSON.stringify({ token, platform: Platform.OS }),
     });
+    await SecureStore.setItemAsync(LAST_PUSH_TOKEN_KEY, token);
     return token;
   } catch (err) {
     console.warn("Push token registration failed", err);

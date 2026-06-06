@@ -132,7 +132,6 @@ export default function ScheduleScreen() {
         <Stack.Screen options={{ headerShown: false }} />
         <InPageHeader
           title={t("tabs.schedule")}
-          hideBack
           right={<ActiveOrgIndicator />}
         />
         <ActivityIndicator color={colors.primary} />
@@ -145,7 +144,6 @@ export default function ScheduleScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <InPageHeader
         title={t("tabs.schedule")}
-        hideBack
         right={<ActiveOrgIndicator />}
       />
     <FlatList

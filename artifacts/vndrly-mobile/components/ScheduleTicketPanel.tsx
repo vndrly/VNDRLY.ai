@@ -2,7 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import DateTimePicker, {
   type DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
@@ -127,44 +127,48 @@ export default function ScheduleTicketPanel({
     [selectedEmployees],
   );
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [schedule, roster, presetRows] = await Promise.all([
-        apiFetch<ScheduleSnapshot>(`/api/tickets/${ticketId}/schedule`).catch(() => null),
-        apiFetch<Coworker[]>(`/api/field-employees?vendorId=${vendorId}`).catch(() => []),
-        apiFetch<CrewPreset[]>("/api/field/crew-presets").catch(() => []),
-      ]);
-      const active = (roster ?? []).filter((e) => e.isActive !== false);
-      setEmployees(active);
-      setPresets(presetRows ?? []);
-
-      if (schedule?.scheduledStartAt) {
-        const d = new Date(schedule.scheduledStartAt);
-        if (!Number.isNaN(d.getTime())) setStartAt(d);
-      }
-      if (schedule?.scheduledDurationMinutes != null) {
-        setDurationMin(String(schedule.scheduledDurationMinutes));
-      }
-      if (schedule?.crew?.length) {
-        setSelectedIds(schedule.crew.map((c) => c.employeeId));
-      }
-      setForemanUserId(schedule?.foremanUserId ?? null);
-      setActingForemanUserId(schedule?.actingForemanUserId ?? null);
-      if (schedule?.warningKinds?.length) {
-        setWarningKinds(schedule.warningKinds);
-      }
-    } catch (e) {
-      setError(translateApiError(e, t));
-    } finally {
-      setLoading(false);
-    }
-  }, [ticketId, vendorId, t]);
-
   useEffect(() => {
-    if (visible) void load();
-  }, [visible, load]);
+    if (!visible) return;
+    let cancelled = false;
+    void (async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const [schedule, roster, presetRows] = await Promise.all([
+          apiFetch<ScheduleSnapshot>(`/api/tickets/${ticketId}/schedule`),
+          apiFetch<Coworker[]>(`/api/field-employees?vendorId=${vendorId}`),
+          apiFetch<CrewPreset[]>("/api/field/crew-presets").catch(() => [] as CrewPreset[]),
+        ]);
+        if (cancelled) return;
+        const active = (roster ?? []).filter((e) => e.isActive !== false);
+        setEmployees(active);
+        setPresets(presetRows ?? []);
+
+        if (schedule?.scheduledStartAt) {
+          const d = new Date(schedule.scheduledStartAt);
+          if (!Number.isNaN(d.getTime())) setStartAt(d);
+        }
+        if (schedule?.scheduledDurationMinutes != null) {
+          setDurationMin(String(schedule.scheduledDurationMinutes));
+        }
+        if (schedule?.crew?.length) {
+          setSelectedIds(schedule.crew.map((c) => c.employeeId));
+        }
+        setForemanUserId(schedule?.foremanUserId ?? null);
+        setActingForemanUserId(schedule?.actingForemanUserId ?? null);
+        if (schedule?.warningKinds?.length) {
+          setWarningKinds(schedule.warningKinds);
+        }
+      } catch (e) {
+        if (!cancelled) setError(translateApiError(e, t));
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [visible, ticketId, vendorId, t]);
 
   function toggleEmployee(id: number) {
     setSelectedIds((prev) => {

@@ -279,7 +279,7 @@ describe("translateApiError — Task #603 duplicate-name interpolation", () => {
       message: "ignored",
       status: 409,
       data: {
-        error: "ignored",
+        error: "Duplicate vendor name",
         code: "vendor.duplicate_name",
         details: "not-an-object" as unknown as Record<string, unknown>,
       },

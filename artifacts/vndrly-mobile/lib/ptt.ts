@@ -268,5 +268,22 @@ export async function playPttUri(uri: string): Promise<void> {
     }),
   );
   const { sound } = await Audio.createAsync({ uri });
-  await sound.playAsync();
+  try {
+    await sound.playAsync();
+    await new Promise<void>((resolve, reject) => {
+      sound.setOnPlaybackStatusUpdate((status) => {
+        if (!status.isLoaded) return;
+        if (status.didJustFinish) resolve();
+        if ("error" in status && status.error) {
+          reject(new Error(String(status.error)));
+        }
+      });
+    });
+  } finally {
+    try {
+      await sound.unloadAsync();
+    } catch {
+      // ignore
+    }
+  }
 }

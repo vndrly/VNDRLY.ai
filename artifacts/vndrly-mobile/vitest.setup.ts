@@ -312,3 +312,19 @@ vi.mock("@/components/LayeredPillButton", async () => {
     pickPillForBrand: () => ({ src: "", rgb: [0, 0, 0] as [number, number, number] }),
   };
 });
+
+// ── Fix #7: native modules added for schedule / calendar flows ───────
+vi.mock("@react-native-community/datetimepicker", () => ({
+  default: () => null,
+}));
+
+vi.mock("expo-file-system/legacy", () => ({
+  cacheDirectory: "/tmp/vndrly-cache/",
+  EncodingType: { UTF8: "utf8" },
+  writeAsStringAsync: vi.fn(async () => undefined),
+}));
+
+vi.mock("expo-sharing", () => ({
+  isAvailableAsync: vi.fn(async () => true),
+  shareAsync: vi.fn(async () => undefined),
+}));

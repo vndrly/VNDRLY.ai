@@ -66,7 +66,7 @@ export default function HistoryScreen() {
       const rlSeconds = noteTicketsRateLimit(e);
       setLoadError(e);
       if (rlSeconds == null) {
-        Alert.alert(t("common.error"), t("tickets.errorLoadOpen"));
+        Alert.alert(t("common.error"), t("tickets.errorLoadHistory"));
       }
       return false;
     } finally {

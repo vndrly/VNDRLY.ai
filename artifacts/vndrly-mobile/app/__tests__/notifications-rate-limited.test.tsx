@@ -30,6 +30,7 @@ vi.mock("@expo/vector-icons", () => ({ Feather: () => null }));
 
 vi.mock("expo-router", () => ({
   router: { push: vi.fn(), replace: vi.fn(), back: vi.fn() },
+  Stack: { Screen: () => null },
 }));
 
 import enLocale from "../../lib/locales/en.json";

@@ -26,7 +26,6 @@ import ForemanQuickActions from "@/components/ForemanQuickActions";
 import FreshnessPill from "@/components/FreshnessPill";
 import LayeredPillButton from "@/components/LayeredPillButton";
 import NudgeFlashOverlay from "@/components/NudgeFlashOverlay";
-import TogglePillButton from "@/components/TogglePillButton";
 import { useAuth } from "@/hooks/use-auth";
 import { useTicketNudgeFlash } from "@/hooks/useTicketNudgeFlash";
 import type { MembershipSummary } from "@/lib/auth";
@@ -519,7 +518,9 @@ export default function HomeScreen() {
   // is a meaningful win over the legacy full-list refetch. Mirrors the
   // web tickets page's per-row refresh shipped in Tasks #656 / #663.
   useEffect(() => {
-    const sub = Notifications.addNotificationReceivedListener((n) => {
+    let sub: Notifications.EventSubscription | undefined;
+    try {
+      sub = Notifications.addNotificationReceivedListener((n) => {
       const data = n.request.content.data as Record<string, unknown> | null;
       if (!data || typeof data !== "object") return;
 
@@ -549,7 +550,10 @@ export default function HomeScreen() {
       );
       void refreshTicketRow(incoming);
     });
-    return () => sub.remove();
+    } catch {
+      return;
+    }
+    return () => sub?.remove();
   }, [refreshTicketRow, t, handlePushData]);
 
   useEffect(() => {
@@ -822,32 +826,40 @@ export default function HomeScreen() {
       ) : null}
 
       {isFieldEmployee ? (
-        /* Field-employee home — matches the TestFlight layout: "Tracking"
-           on the left, grey History + brand "Start New Job" on the right. */
-        <View style={styles.trackingRow}>
-          <Text style={[styles.heading, { color: colors.foreground }]} numberOfLines={1}>
+        <View style={styles.activeJobsHeader}>
+          <Text style={[styles.heading, { color: colors.foreground }]}>
             {isForemanEmployee ? t("foremanHome.activeJobs") : t("tickets.title")}
           </Text>
-          <View style={styles.trackingActions}>
-            <TogglePillButton
-              inactive
-              height={36}
-              onPress={() => router.push("/history")}
+          <View style={styles.activeJobsActions}>
+            <Pressable
               testID="button-tickets-history"
+              onPress={() => router.push("/history")}
+              style={({ pressed }) => [
+                styles.simplePill,
+                styles.simplePillGrey,
+                pressed ? styles.simplePillPressed : null,
+              ]}
             >
-              <Feather name="clock" size={14} color="#1a1d23" />
-              <Text style={styles.historyBtnText}>{t("tickets.history")}</Text>
-            </TogglePillButton>
-            <LayeredPillButton
-              onPress={() => router.push("/new-ticket")}
-              height={36}
+              <Feather name="clock" size={14} color="#f3f4f6" />
+              <Text style={styles.simplePillGreyText} numberOfLines={1}>
+                {t("tickets.history")}
+              </Text>
+            </Pressable>
+            <Pressable
               testID="button-new-ticket"
+              onPress={() => router.push("/new-ticket")}
+              style={({ pressed }) => [
+                styles.simplePill,
+                styles.simplePillBrand,
+                { backgroundColor: brand.primary },
+                pressed ? styles.simplePillPressed : null,
+              ]}
             >
-              <Feather name="plus" size={16} color="#ffffff" style={styles.btnIconShadow} />
-              <Text style={[styles.newBtnText, { color: "#ffffff" }]}>
+              <Feather name="plus" size={16} color="#ffffff" />
+              <Text style={styles.simplePillBrandText} numberOfLines={1}>
                 {t("tickets.newTicket")}
               </Text>
-            </LayeredPillButton>
+            </Pressable>
           </View>
         </View>
       ) : (
@@ -935,7 +947,7 @@ export default function HomeScreen() {
         const activeTicket = { siteLocationId: activeSiteId, siteName: activeSiteName };
         return (
           <View style={styles.adjacentRow}>
-            <TouchableOpacity
+            <Pressable
               testID="button-initiate-adjacent-ticket"
               onPress={() =>
                 router.push({
@@ -946,15 +958,21 @@ export default function HomeScreen() {
                   },
                 })
               }
-              style={[
+              style={({ pressed }) => [
                 styles.adjacentBtn,
-                { borderColor: colors.primary, backgroundColor: colors.background },
+                {
+                  borderColor: colors.primary,
+                  backgroundColor: colors.card,
+                },
+                pressed ? styles.simplePillPressed : null,
               ]}
             >
-              <Feather name="link" size={14} color={colors.primary} />
-              <Text style={[styles.adjacentBtnText, { color: colors.primary }]}>
-                {t("tickets.initiateAdjacent")}
-              </Text>
+              <View style={styles.adjacentBtnTop}>
+                <Feather name="link" size={14} color={colors.primary} />
+                <Text style={[styles.adjacentBtnText, { color: colors.primary }]}>
+                  {t("tickets.initiateAdjacent")}
+                </Text>
+              </View>
               {activeTicket.siteName ? (
                 <Text
                   style={[styles.adjacentBtnHint, { color: colors.mutedForeground }]}
@@ -963,7 +981,7 @@ export default function HomeScreen() {
                   {t("tickets.adjacentSiteHint", { site: activeTicket.siteName })}
                 </Text>
               ) : null}
-            </TouchableOpacity>
+            </Pressable>
           </View>
         );
       })()}
@@ -1616,7 +1634,53 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   freshnessRow: { flexDirection: "row", alignItems: "center" },
-  heading: { fontFamily: "Inter_700Bold", fontSize: 22, flexShrink: 1 },
+  heading: { fontFamily: "Inter_700Bold", fontSize: 22 },
+  activeJobsHeader: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 8,
+    gap: 10,
+  },
+  activeJobsActions: {
+    flexDirection: "row",
+    alignItems: "stretch",
+    gap: 10,
+  },
+  simplePill: {
+    flex: 1,
+    minHeight: 40,
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+  },
+  simplePillGrey: {
+    backgroundColor: "#4b5563",
+    borderWidth: 1,
+    borderColor: "#6b7280",
+  },
+  simplePillBrand: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "rgba(0,0,0,0.15)",
+  },
+  simplePillPressed: {
+    opacity: 0.88,
+  },
+  simplePillGreyText: {
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 13,
+    color: "#f3f4f6",
+    flexShrink: 1,
+  },
+  simplePillBrandText: {
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 13,
+    color: "#ffffff",
+    flexShrink: 1,
+  },
   trackingRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -1693,13 +1757,16 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   adjacentBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderRadius: 20,
+    gap: 4,
+  },
+  adjacentBtnTop: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderRadius: 10,
   },
   adjacentBtnText: { fontFamily: "Inter_600SemiBold", fontSize: 13 },
   adjacentBtnHint: {

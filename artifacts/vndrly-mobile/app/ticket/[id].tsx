@@ -529,7 +529,9 @@ export default function TicketDetailScreen() {
   // are ignored.
   useEffect(() => {
     if (!Number.isFinite(ticketId)) return;
-    const sub = Notifications.addNotificationReceivedListener((n) => {
+    let sub: Notifications.EventSubscription | undefined;
+    try {
+      sub = Notifications.addNotificationReceivedListener((n) => {
       const data = n.request.content.data as Record<string, unknown> | null;
       if (!data || typeof data !== "object") return;
 
@@ -561,7 +563,10 @@ export default function TicketDetailScreen() {
         if (ok && wasShowingBanner) setRestoredVisible(true);
       })();
     });
-    return () => sub.remove();
+    } catch {
+      return;
+    }
+    return () => sub?.remove();
   }, [ticketId, load, handlePushData]);
 
   // Task #623: auto-dismiss the restored confirmation after ~3s. The toast

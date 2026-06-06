@@ -122,7 +122,14 @@ export async function apiFetch<T = unknown>(
   }
   if (res.status === 204) return null as T;
   const text = await res.text();
-  return (text ? JSON.parse(text) : null) as T;
+  if (!text) return null as T;
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    const err = new Error("Invalid JSON response") as Error & { code?: string };
+    err.code = "network.parse_error";
+    throw err;
+  }
 }
 
 type RawMembership = {
@@ -269,6 +276,12 @@ export async function updatePreferredLanguage(language: "en" | "es" | "pt"): Pro
 }
 
 export async function logout() {
+  try {
+    const { unregisterStoredPushToken } = await import("./push");
+    await unregisterStoredPushToken();
+  } catch {
+    // ignore
+  }
   try {
     await apiFetch("/api/auth/logout", { method: "POST" });
   } catch {
