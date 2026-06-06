@@ -63,7 +63,7 @@ pnpm exec eas update --branch production --message "Photo upload finalize"
 
 ## Cursor Ultra billing
 
-Contact Cursor support to move Ultra from **jelerick2** personal to **v@vndrly.ai** — not fixable in this repo.
+Production GitHub org: **vndrly** (`v@vndrly.ai`). Repo: `vndrly/VNDRLY.ai`.
 
 ## After deploy — quick check
 

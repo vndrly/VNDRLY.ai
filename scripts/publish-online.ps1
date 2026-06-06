@@ -16,11 +16,19 @@ function Run-Git {
   }
 }
 
+# GitHub push uses vndrly org PAT only (no credential-manager fallback).
+$script:GitHubPatFile = "C:\Users\JohnElerick\OneDrive - Elerick.com\Desktop\VNDRLY-GitHub-PAT.env"
+$script:GitHubOwner = "vndrly"
+$script:GitHubRepo = "VNDRLY.ai"
+
 function Read-Pat {
-  param([string]$Path)
-  if (-not (Test-Path $Path)) { return $null }
-  $raw = (Get-Content $Path -Raw).Trim()
-  if (-not $raw) { return $null }
+  if (-not (Test-Path $script:GitHubPatFile)) {
+    throw "GitHub PAT not found: $($script:GitHubPatFile)"
+  }
+  $raw = (Get-Content $script:GitHubPatFile -Raw).Trim()
+  if (-not $raw) {
+    throw "GitHub PAT file is empty: $($script:GitHubPatFile)"
+  }
   return $raw
 }
 
@@ -46,7 +54,6 @@ if (-not $branch) {
 
 $remote = "origin"
 $remoteBranch = "main"
-$patFile = Join-Path (Split-Path $root -Parent) "GitHub_PAT.env"
 
 if (-not $SkipCommit) {
   Add-GitShipChanges -Root $root
@@ -64,22 +71,9 @@ if (-not $SkipCommit) {
 }
 
 $pushTarget = "${remote}/${remoteBranch}"
-Write-Host "Pushing $branch -> $pushTarget ..."
+Write-Host "Pushing $branch -> $pushTarget (vndrly via PAT) ..."
 
-try {
-  Run-Git @("push", $remote, "HEAD:${remoteBranch}")
-} catch {
-  $pat = Read-Pat $patFile
-  if (-not $pat) { throw }
-  $repoUrl = (& git remote get-url $remote).Trim()
-  if ($repoUrl -notmatch "github\.com[:/](?<owner>[^/]+)/(?<repo>[^/.]+)") {
-    throw "Could not parse GitHub remote URL: $repoUrl"
-  }
-  $owner = $Matches.owner
-  $repo = $Matches.repo -replace '\.git$', ''
-  $authUrl = "https://${owner}:${pat}@github.com/${owner}/${repo}.git"
-  Run-Git @("push", $authUrl, "HEAD:${remoteBranch}")
-}
+Push-VndrlyGitHub -RemoteBranch $remoteBranch
 
 $head = (& git rev-parse HEAD).Trim()
 Write-Host ""

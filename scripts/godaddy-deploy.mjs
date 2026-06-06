@@ -192,6 +192,7 @@ cd "$APP_DIR"
 echo ${JSON.stringify(prodEnvB64)} | base64 -d | sudo tee .env.production >/dev/null
 sudo chown vndrly:vndrly .env.production
 sudo chmod 600 .env.production
+sudo -u vndrly git remote set-url origin https://github.com/vndrly/VNDRLY.ai.git
 sudo -u vndrly git fetch origin main
 sudo -u vndrly git reset --hard origin/main
 export CI=true

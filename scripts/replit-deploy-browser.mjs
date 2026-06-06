@@ -28,10 +28,10 @@ const HEALTH_URL =
 
 const REPL_CANDIDATES = [
   process.env.REPLIT_REPL_URL?.trim(),
-  "https://replit.com/@jelerick2/VNDRLY-ai",
-  "https://replit.com/@jelerick2/VNDRLY.ai",
-  "https://replit.com/@jelerick2/vndrly",
-  "https://replit.com/@jelerick2/VNDRLY",
+  "https://replit.com/@vndrly/VNDRLY-ai",
+  "https://replit.com/@vndrly/VNDRLY.ai",
+  "https://replit.com/@vndrly/vndrly",
+  "https://replit.com/@vndrly/VNDRLY",
 ].filter(Boolean);
 
 mkdirSync(LOCAL, { recursive: true });

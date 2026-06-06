@@ -14,7 +14,7 @@ One-time setup so "pnpm run save" updates vndrly.ai without opening Replit:
    REPLIT_DEPLOY_TOKEN=paste-token-here
    PRODUCTION_HEALTH_URL=https://vndrly.ai/api/healthz
 
-6. Connect the Repl to GitHub repo jelerick2/VNDRLY.ai branch main
+6. Connect the Repl to GitHub repo vndrly/VNDRLY.ai branch main
    (Repl settings → Git / GitHub — one time)
 
 After that, from Cursor only:

@@ -4,7 +4,7 @@ set -euo pipefail
 
 APP_DIR="${APP_DIR:-/var/www/vndrly}"
 APP_USER="${APP_USER:-vndrly}"
-REPO_URL="${REPO_URL:-https://github.com/jelerick2/VNDRLY.ai.git}"
+REPO_URL="${REPO_URL:-https://github.com/vndrly/VNDRLY.ai.git}"
 NODE_MAJOR="${NODE_MAJOR:-22}"
 
 export DEBIAN_FRONTEND=noninteractive
