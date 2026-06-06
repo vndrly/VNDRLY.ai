@@ -11,6 +11,7 @@ function Initialize-EasEnvironment {
   } elseif ($env:NODE_OPTIONS -notmatch "--use-system-ca") {
     $env:NODE_OPTIONS = "$env:NODE_OPTIONS --use-system-ca"
   }
+  $env:EAS_BUILD_NO_EXPO_GO_WARNING = "true"
 }
 
 function Assert-EasCli {
@@ -27,9 +28,21 @@ function Assert-EasCli {
 function Invoke-Eas {
   param([Parameter(Mandatory = $true)][string[]]$Args)
   Set-Location $script:MobileRoot
-  & $script:EasCli @Args
-  if ($LASTEXITCODE -ne 0) {
-    exit $LASTEXITCODE
+  $prev = $ErrorActionPreference
+  $ErrorActionPreference = "Continue"
+  try {
+    & $script:EasCli @Args 2>&1 | ForEach-Object {
+      if ($_ -is [System.Management.Automation.ErrorRecord]) {
+        Write-Host $_.ToString()
+      } else {
+        Write-Host $_
+      }
+    }
+    if ($LASTEXITCODE -ne 0) {
+      exit $LASTEXITCODE
+    }
+  } finally {
+    $ErrorActionPreference = $prev
   }
 }
 

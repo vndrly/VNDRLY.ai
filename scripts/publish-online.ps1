@@ -6,6 +6,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "ship-common.ps1")
 
 function Run-Git {
   param([string[]]$ArgsList)
@@ -48,24 +49,7 @@ $remoteBranch = "main"
 $patFile = Join-Path (Split-Path $root -Parent) "GitHub_PAT.env"
 
 if (-not $SkipCommit) {
-  Run-Git @("add", "-u")
-
-  $untracked = @(
-    & git ls-files --others --exclude-standard | Where-Object {
-      $_ -notmatch "\.log$" -and
-      $_ -notmatch "\.zip$" -and
-      $_ -notmatch "(^|/)node_modules/" -and
-      $_ -notmatch "(^|/)\.pnpm-store/" -and
-      $_ -notmatch "(^|/)\.tmp_" -and
-      $_ -notmatch "(^|/)\\.claude/" -and
-      $_ -notmatch "(^|/)\\.expo-smoke-export/" -and
-      $_ -notmatch "vitest-results\\.json$"
-    }
-  )
-
-  if ($untracked.Count -gt 0) {
-    Run-Git (@("add", "--") + $untracked)
-  }
+  Add-GitShipChanges -Root $root
 
   $staged = (& git diff --cached --name-only)
   if (-not $staged) {

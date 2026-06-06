@@ -3,7 +3,8 @@
 
 param(
   [switch]$OpenBrowser,
-  [switch]$RefreshApi
+  [switch]$RefreshApi,
+  [switch]$Strict
 )
 
 $ErrorActionPreference = "Stop"
@@ -44,19 +45,26 @@ function Stop-PortListener {
     }
 }
 
-function Start-DevWindow {
-  param(
-    [string]$Title,
-    [string]$Command
-  )
-  Start-Process powershell -ArgumentList @(
-    "-NoExit", "-Command",
-    "`$Host.UI.RawUI.WindowTitle = '$Title'; $Command"
-  )
+function Wait-ForApiHealth {
+  param([int]$TimeoutSeconds = 180)
+  $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+  while ((Get-Date) -lt $deadline) {
+    if (Test-PortListening -Port 8080) {
+      try {
+        $resp = Invoke-WebRequest -Uri "http://localhost:8080/api/health" -UseBasicParsing -TimeoutSec 3
+        if ($resp.StatusCode -eq 200) { return $true }
+      } catch {
+        # port up but not ready yet
+      }
+    }
+    Write-Host "  Waiting for API on :8080..."
+    Start-Sleep -Seconds 3
+  }
+  return $false
 }
 
-$apiScript = Join-Path $Repo "scripts/run-api-local.mjs"
-$viteScript = Join-Path $Repo "scripts/run-vite-local.mjs"
+$apiScript = Join-Path $Repo "scripts/start-api-dev.ps1"
+$viteScript = Join-Path $Repo "scripts/start-vite-dev.ps1"
 
 if (-not (Test-Path "$Repo/artifacts/api-server/dist/index.mjs")) {
   Write-Host "Building API (first run)..."
@@ -77,17 +85,13 @@ if ($RefreshApi -and $apiUp) {
 
 if (-not $apiUp) {
   Write-Host "Starting local API on :8080..."
-  $apiCmd = @(
-    "`$env:Path='C:\Program Files\nodejs;' + `$env:APPDATA + '\npm;' + `$env:Path'",
-    "`$env:NODE_OPTIONS='--use-system-ca'",
-    "`$env:VNDRLY_LOAD_ENV_LOCAL='1'",
-    "Set-Location '$Repo'",
-    "node '$apiScript'"
-  ) -join "; "
-  Start-DevWindow -Title "VNDRLY API (8080)" -Command $apiCmd
-  if (-not (Wait-ForPort -Port 8080 -Label "API" -TimeoutSeconds 180)) {
-    Write-Host "API did not start on :8080 within 3 minutes. Check the 'VNDRLY API (8080)' window for errors." -ForegroundColor Red
-    exit 1
+  Start-Process powershell -ArgumentList @(
+    "-NoExit", "-ExecutionPolicy", "Bypass", "-Command",
+    "`$Host.UI.RawUI.WindowTitle = 'VNDRLY API (8080)'; & '$apiScript'"
+  )
+  if (-not (Wait-ForApiHealth -TimeoutSeconds 180)) {
+    Write-Host "API did not become healthy on :8080 within 3 minutes." -ForegroundColor $(if ($Strict) { "Red" } else { "Yellow" })
+    if ($Strict) { exit 1 }
   }
 } else {
   Write-Host "Local API already running on :8080"
@@ -95,17 +99,13 @@ if (-not $apiUp) {
 
 if (-not $viteUp) {
   Write-Host "Starting local web on :5173..."
-  $viteCmd = @(
-    "`$env:Path='C:\Program Files\nodejs;' + `$env:APPDATA + '\npm;' + `$env:Path'",
-    "`$env:NODE_OPTIONS='--use-system-ca'",
-    "`$env:VNDRLY_LOAD_ENV_LOCAL='1'",
-    "Set-Location '$Repo'",
-    "node '$viteScript'"
-  ) -join "; "
-  Start-DevWindow -Title "VNDRLY Web (5173)" -Command $viteCmd
+  Start-Process powershell -ArgumentList @(
+    "-NoExit", "-ExecutionPolicy", "Bypass", "-Command",
+    "`$Host.UI.RawUI.WindowTitle = 'VNDRLY Web (5173)'; & '$viteScript'"
+  )
   if (-not (Wait-ForPort -Port 5173 -Label "web" -TimeoutSeconds 60)) {
-    Write-Host "Web did not start on :5173 within 1 minute. Check the 'VNDRLY Web (5173)' window for errors." -ForegroundColor Red
-    exit 1
+    Write-Host "Web did not start on :5173 within 1 minute." -ForegroundColor $(if ($Strict) { "Red" } else { "Yellow" })
+    if ($Strict) { exit 1 }
   }
   $viteStarted = $true
 } else {
