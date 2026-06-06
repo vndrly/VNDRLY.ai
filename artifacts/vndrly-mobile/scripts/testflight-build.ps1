@@ -88,5 +88,10 @@ if ($Submit) {
   }
 }
 
+Step "Ensuring local dev servers"
+$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "../../..")).Path
+& (Join-Path $repoRoot "scripts/ensure-local-dev.ps1") -RefreshApi
+
 Step "Done"
 Write-Host "If you did not use -Submit, open the EAS build URL above and submit/upload from there."
+Write-Host "Local web: http://localhost:5173/  |  Live: https://vndrly.ai"

@@ -5,6 +5,7 @@ import {
   Alert,
   Image,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   ScrollView,
   StyleSheet,
@@ -317,6 +318,17 @@ export default function LoginScreen() {
             >
               <Text style={[styles.linkText, { color: colors.primary }]}>
                 {t("vendorSignup.signUpAsVendor")}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => void Linking.openURL("https://vndrly.ai/legal/eula")}
+              disabled={busy}
+              style={styles.linkButton}
+              testID="link-platform-eula"
+            >
+              <Text style={[styles.linkText, { color: colors.mutedForeground }]}>
+                {t("login.eulaLink")}
               </Text>
             </TouchableOpacity>
 

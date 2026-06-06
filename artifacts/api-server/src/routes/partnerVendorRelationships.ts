@@ -26,6 +26,7 @@ import {
 import { logger } from "../lib/logger";
 import { recomputeApproval } from "../lib/approval-derivation";
 import { sha256Hex } from "../lib/hash";
+import { resolveEulaDisplayText } from "@workspace/platform-eula";
 import { sendApiError } from "../lib/apiError";
 
 const router: IRouter = Router();
@@ -558,7 +559,8 @@ router.post(
       });
       return;
     }
-    const acceptedHash = version.eulaHash ?? sha256Hex(version.eulaText);
+    const acceptedHash =
+      version.eulaHash ?? sha256Hex(resolveEulaDisplayText(version.eulaText));
     await db.insert(partnerEulaAcceptancesTable).values({
       partnerId,
       vendorId,

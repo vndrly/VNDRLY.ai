@@ -23,6 +23,7 @@ import {
   createPttRecorder,
   isBackgroundAudioSessionError,
   isPttComment,
+  isRecordingBusyError,
   playPttUri,
   postPttMessage,
   PttMicPermissionError,
@@ -122,7 +123,7 @@ export default function PushToTalkPanel({ ticketId, ticketLabel }: Props) {
   }, []);
 
   const onPressIn = async () => {
-    if (sending || !appForegrounded) return;
+    if (sending || recording || !appForegrounded) return;
     if (!micReady) {
       try {
         await warmUpPttSession();
@@ -137,6 +138,15 @@ export default function PushToTalkPanel({ ticketId, ticketLabel }: Props) {
           Alert.alert(
             t("foremanHome.pttNotReadyTitle"),
             t("foremanHome.pttNotReadyBody"),
+          );
+        } else if (isRecordingBusyError(e)) {
+          await recorderRef.current?.dispose();
+          recorderRef.current = null;
+          Alert.alert(
+            t("foremanHome.pttMicDeniedTitle"),
+            t("foremanHome.pttBusyBody", {
+              defaultValue: "Microphone is busy. Wait a moment and try again.",
+            }),
           );
         } else {
           Alert.alert(
@@ -163,6 +173,15 @@ export default function PushToTalkPanel({ ticketId, ticketLabel }: Props) {
         Alert.alert(
           t("foremanHome.pttNotReadyTitle"),
           t("foremanHome.pttNotReadyBody"),
+        );
+      } else if (isRecordingBusyError(e)) {
+        await recorderRef.current?.dispose();
+        recorderRef.current = null;
+        Alert.alert(
+          t("foremanHome.pttMicDeniedTitle"),
+          t("foremanHome.pttBusyBody", {
+            defaultValue: "Microphone is busy. Wait a moment and try again.",
+          }),
         );
       } else {
         Alert.alert(
@@ -248,7 +267,12 @@ export default function PushToTalkPanel({ ticketId, ticketLabel }: Props) {
         <Text style={[styles.threadTitle, { color: colors.foreground }]}>
           {t("foremanHome.pttRecent")}
         </Text>
-        <LayeredPillButton height={32} onPress={() => void load()} testID="button-ptt-refresh">
+        <LayeredPillButton
+          height={32}
+          onPress={() => void load()}
+          style={styles.refreshPill}
+          testID="button-ptt-refresh"
+        >
           <Feather name="refresh-cw" size={14} color="#fff" />
         </LayeredPillButton>
       </View>
@@ -338,6 +362,10 @@ const styles = StyleSheet.create({
   threadTitle: {
     fontFamily: "Inter_600SemiBold",
     fontSize: 14,
+  },
+  refreshPill: {
+    paddingHorizontal: 10,
+    minWidth: 44,
   },
   thread: {
     maxHeight: 220,

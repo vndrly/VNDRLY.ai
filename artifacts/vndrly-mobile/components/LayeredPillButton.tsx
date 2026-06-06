@@ -9,16 +9,11 @@ import {
   type ViewStyle,
 } from "react-native";
 
-import { useBrand } from "@/hooks/use-brand";
 import Pill9Slice from "@/components/Pill9Slice";
+import { useBrand } from "@/hooks/use-brand";
+import { pickTogglePillSrc, TOGGLE_IDLE_PILL_SRC } from "@/lib/pick-toggle-pill";
 
-const BASE = require("@/assets/pill-stack/base-grey.png");
-// Inactive variants (Close For Review while checked in/out, etc.)
-// use the lighter, brighter grey pill so disabled state is clearly
-// distinct from the dark-grey active base. Active buttons keep BASE
-// because the mid-color overlay is layered on top of it.
-const BASE_INACTIVE = require("@/assets/pill-stack/light-grey.png");
-const HIGHLIGHT = require("@/assets/pill-stack/highlight.png");
+const GREY_PILL = require("@/assets/pill-stack/light-grey.png");
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Mid = { src: any; rgb: [number, number, number] };
@@ -85,19 +80,14 @@ export interface LayeredPillButtonProps {
   height?: number;
   /** Override brand color (else uses brand.primary). */
   color?: string;
-  /** Forces inactive (grey-only) chrome — middle pill is hidden. */
+  /** Grey idle pill — no color overlay. */
   inactive?: boolean;
 }
 
 /**
- * Three-layer pill button:
- *   1. base-grey.png         (always present; shows through when inactive)
- *   2. nearest middle pill   (color-matched to brand.primary, then tinted)
- *   3. highlight.png         (white gloss on top)
- *
- * The middle layer is picked by RGB-distance to the resolved brand
- * primary, then a translucent overlay of the exact brand color is
- * laid over it to "dial in" the hue/saturation a step closer.
+ * Mobile pill button — one 900×229 PNG, 3-slice stretch (web Hotlist rule).
+ * Active = brand-matched colored pill. Inactive/disabled = light grey pill
+ * at 50% opacity (same as web `PngPillButton disabled`).
  */
 export default function LayeredPillButton({
   children,
@@ -113,10 +103,13 @@ export default function LayeredPillButton({
   const brand = useBrand();
   const targetHex = color ?? brand.primary ?? "#1f9a3d";
   const mid = useMemo(() => pickPillForBrand(targetHex), [targetHex]);
-  const isInactive = inactive || disabled || loading;
-  // Hard cap: every action pill on mobile is 40px tall, full stop.
-  const height = Math.min(heightProp, 40);
+  const isGrey = inactive || disabled || loading;
+  const height = Math.min(heightProp, 48);
   const radius = height / 2;
+  const brandPillSrc = pickTogglePillSrc(targetHex, brand.name);
+  const activeSrc = color ? mid.src : brandPillSrc;
+  const src = isGrey ? GREY_PILL : activeSrc;
+  const dimmed = (disabled || loading) && !inactive;
 
   return (
     <Pressable
@@ -125,54 +118,14 @@ export default function LayeredPillButton({
       testID={testID}
       style={({ pressed }) => [
         styles.wrap,
-        {
-          height,
-          opacity: pressed ? 0.92 : 1,
-        },
+        { height, minWidth: height + 12, borderRadius: radius },
+        dimmed ? styles.dimmed : null,
+        pressed && !isGrey ? styles.pressed : null,
         style,
       ]}
     >
-      {/* Inactive variants render the pill layers inside an opacity
-          wrapper so the disabled state visually softens the whole pill
-          (image + glossy highlight) to ~80% without affecting the
-          text/icon, which we recolor separately to light grey below. */}
-      <View
-        pointerEvents="none"
-        style={[
-          StyleSheet.absoluteFillObject,
-          isInactive && { opacity: 0.6 },
-        ]}
-      >
-        {/* All three pill layers (base, mid color, highlight) render
-            through Pill9Slice — the rounded glossy caps on the source
-            PNGs are preserved (left 15% + right 15%) and only the
-            middle 70% stretches horizontally to fill the button. */}
-        <Pill9Slice
-          source={isInactive ? BASE_INACTIVE : BASE}
-          borderRadius={radius}
-        />
-        {!isInactive ? (
-          <>
-            <Pill9Slice source={mid.src} borderRadius={radius} />
-            {/* HSL "dial-in" — translucent brand-color overlay nudges
-                the picked middle pill closer to the actual brand
-                primary. */}
-            <View
-              pointerEvents="none"
-              style={[
-                StyleSheet.absoluteFillObject,
-                {
-                  backgroundColor: targetHex,
-                  opacity: 0.22,
-                  borderRadius: radius,
-                },
-              ]}
-            />
-          </>
-        ) : null}
-        <Pill9Slice source={HIGHLIGHT} borderRadius={radius} />
-      </View>
-      <View style={[styles.content, isInactive && { opacity: 0.8 }]}>
+      <Pill9Slice source={src} height={height} borderRadius={radius} />
+      <View style={styles.content}>
         {loading ? <ActivityIndicator color="#ffffff" /> : children}
       </View>
     </Pressable>
@@ -185,12 +138,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     justifyContent: "center",
     alignItems: "center",
-    overflow: "visible",
+    overflow: "hidden",
+    borderRadius: 999,
+  },
+  dimmed: {
+    opacity: 0.5,
+  },
+  pressed: {
+    opacity: 0.92,
   },
   content: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 6,
+    zIndex: 1,
   },
 });

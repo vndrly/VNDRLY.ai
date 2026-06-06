@@ -177,6 +177,7 @@
     "newToVndrlyQuote": "No sabes lo que no sabes hasta que es demasiado tarde",
     "newToVndrlyAttribution": "~ Djon Tsu",
     "resetPassword": "Restablecer mi Contraseña",
+    "eulaLink": "Acuerdo de licencia de usuario final",
     "loginFailed": "Error al iniciar sesión",
     "resetDemoInSync": "Los accesos de demo ya están sincronizados",
     "resetDemoRestored": "Restaurados: {{users}}",

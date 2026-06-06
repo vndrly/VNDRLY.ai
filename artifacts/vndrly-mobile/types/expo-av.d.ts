@@ -12,10 +12,17 @@ declare module "expo-av" {
 
   export namespace Audio {
     class Recording {
+      static createAsync(
+        options: unknown,
+      ): Promise<{ recording: Recording }>;
       prepareToRecordAsync(options: unknown): Promise<void>;
       startAsync(): Promise<void>;
       stopAndUnloadAsync(): Promise<void>;
       getURI(): string | null;
+      getStatusAsync(): Promise<{
+        isRecording?: boolean;
+        canRecord?: boolean;
+      }>;
     }
     class Sound {
       playAsync(): Promise<void>;

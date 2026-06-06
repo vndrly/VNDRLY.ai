@@ -71,7 +71,8 @@
     "biometricEnableTitle": "Enable {{label}}?",
     "biometricEnableBody": "Use {{label}} to sign in faster next time.",
     "signInWith": "Sign in with {{label}}",
-    "forget": "Forget {{label}}"
+    "forget": "Forget {{label}}",
+    "eulaLink": "End User License Agreement"
   },
   "directAssignment": {
     "vendorInboxTitle": "Pending work offers ({{count}})",

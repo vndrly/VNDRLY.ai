@@ -98,3 +98,7 @@ if (Test-Path $liveUrlFile) {
   if ($liveUrl) { Write-Host "Live URL: $liveUrl" }
 }
 Write-Host "iOS still needs a separate EAS build when mobile code changes."
+
+Write-Host ""
+Write-Host "Ensuring local dev servers (http://localhost:5173/) ..."
+& (Join-Path $root "scripts/ensure-local-dev.ps1") -RefreshApi

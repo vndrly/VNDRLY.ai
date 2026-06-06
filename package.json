@@ -18,6 +18,7 @@
     "lint:i18n": "pnpm --filter @workspace/scripts run lint:i18n",
     "publish:online": "powershell -ExecutionPolicy Bypass -File scripts/publish-online.ps1",
     "save": "powershell -ExecutionPolicy Bypass -File scripts/publish-online.ps1",
+    "dev:local": "powershell -ExecutionPolicy Bypass -File scripts/ensure-local-dev.ps1 -RefreshApi -OpenBrowser",
     "setup:vps": "node lib/e2e/scripts/godaddy-setup-vps.mjs",
     "setup:production": "node scripts/godaddy-provision.mjs",
     "deploy:production": "node scripts/godaddy-deploy.mjs",

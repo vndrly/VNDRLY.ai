@@ -22,6 +22,7 @@ import BrandRolePill from "@/components/brand-role-pill";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { resolveEulaDisplayText } from "@workspace/platform-eula";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -280,7 +281,7 @@ function ApproveModal({
                   className="whitespace-pre-wrap text-xs border rounded-md bg-background p-2 max-h-48 overflow-y-auto"
                   data-testid="text-eula-body"
                 >
-                  {current.eulaText}
+                  {resolveEulaDisplayText(current.eulaText)}
                 </pre>
                 <label className="flex items-start gap-2 text-sm pt-1">
                   <Checkbox

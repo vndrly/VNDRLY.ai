@@ -831,35 +831,29 @@ export default function HomeScreen() {
             {isForemanEmployee ? t("foremanHome.activeJobs") : t("tickets.title")}
           </Text>
           <View style={styles.activeJobsActions}>
-            <Pressable
+            <LayeredPillButton
               testID="button-tickets-history"
               onPress={() => router.push("/history")}
-              style={({ pressed }) => [
-                styles.simplePill,
-                styles.simplePillGrey,
-                pressed ? styles.simplePillPressed : null,
-              ]}
+              inactive
+              height={40}
+              style={styles.foremanPillHalf}
             >
-              <Feather name="clock" size={14} color="#f3f4f6" />
-              <Text style={styles.simplePillGreyText} numberOfLines={1}>
+              <Feather name="clock" size={14} color="#ffffff" style={styles.btnIconShadow} />
+              <Text style={[styles.newBtnText, { color: "#ffffff" }]} numberOfLines={1}>
                 {t("tickets.history")}
               </Text>
-            </Pressable>
-            <Pressable
+            </LayeredPillButton>
+            <LayeredPillButton
               testID="button-new-ticket"
               onPress={() => router.push("/new-ticket")}
-              style={({ pressed }) => [
-                styles.simplePill,
-                styles.simplePillBrand,
-                { backgroundColor: brand.primary },
-                pressed ? styles.simplePillPressed : null,
-              ]}
+              height={40}
+              style={styles.foremanPillHalf}
             >
-              <Feather name="plus" size={16} color="#ffffff" />
-              <Text style={styles.simplePillBrandText} numberOfLines={1}>
+              <Feather name="plus" size={16} color="#ffffff" style={styles.btnIconShadow} />
+              <Text style={[styles.newBtnText, { color: "#ffffff" }]} numberOfLines={1}>
                 {t("tickets.newTicket")}
               </Text>
-            </Pressable>
+            </LayeredPillButton>
           </View>
         </View>
       ) : (
@@ -947,7 +941,7 @@ export default function HomeScreen() {
         const activeTicket = { siteLocationId: activeSiteId, siteName: activeSiteName };
         return (
           <View style={styles.adjacentRow}>
-            <Pressable
+            <LayeredPillButton
               testID="button-initiate-adjacent-ticket"
               onPress={() =>
                 router.push({
@@ -958,30 +952,24 @@ export default function HomeScreen() {
                   },
                 })
               }
-              style={({ pressed }) => [
-                styles.adjacentBtn,
-                {
-                  borderColor: colors.primary,
-                  backgroundColor: colors.card,
-                },
-                pressed ? styles.simplePillPressed : null,
-              ]}
+              height={44}
+              style={styles.adjacentBtn}
             >
               <View style={styles.adjacentBtnTop}>
-                <Feather name="link" size={14} color={colors.primary} />
-                <Text style={[styles.adjacentBtnText, { color: colors.primary }]}>
+                <Feather name="link" size={14} color="#ffffff" style={styles.btnIconShadow} />
+                <Text style={[styles.adjacentBtnText, { color: "#ffffff" }]}>
                   {t("tickets.initiateAdjacent")}
                 </Text>
               </View>
               {activeTicket.siteName ? (
                 <Text
-                  style={[styles.adjacentBtnHint, { color: colors.mutedForeground }]}
+                  style={[styles.adjacentBtnHint, { color: "rgba(255,255,255,0.85)" }]}
                   numberOfLines={1}
                 >
                   {t("tickets.adjacentSiteHint", { site: activeTicket.siteName })}
                 </Text>
               ) : null}
-            </Pressable>
+            </LayeredPillButton>
           </View>
         );
       })()}
@@ -1645,6 +1633,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "stretch",
     gap: 10,
+  },
+  foremanPillHalf: {
+    flex: 1,
   },
   simplePill: {
     flex: 1,

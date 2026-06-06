@@ -61,6 +61,7 @@
     "@workspace/ticket-nudge-ui": "workspace:*",
     "@workspace/ticket-state-conflict-codes": "workspace:*",
     "@workspace/ticket-status-meta": "workspace:*",
+    "@workspace/platform-eula": "workspace:*",
     "@workspace/visit-error-codes": "workspace:*",
     "class-variance-authority": "catalog:",
     "clsx": "catalog:",

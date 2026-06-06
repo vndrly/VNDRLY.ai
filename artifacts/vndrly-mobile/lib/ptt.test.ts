@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { isBackgroundAudioSessionError, isPttComment, pttDurationLabel } from "./ptt";
+import { isBackgroundAudioSessionError, isPttComment, isRecordingBusyError, pttDurationLabel } from "./ptt";
 
 describe("isBackgroundAudioSessionError", () => {
   it("detects expo-av background session errors", () => {
@@ -15,6 +15,16 @@ describe("isBackgroundAudioSessionError", () => {
 
   it("returns false for unrelated errors", () => {
     expect(isBackgroundAudioSessionError(new Error("Upload failed"))).toBe(false);
+  });
+});
+
+describe("isRecordingBusyError", () => {
+  it("detects expo-av single-recording errors", () => {
+    expect(
+      isRecordingBusyError(
+        new Error("Only one Recording object can be prepared at a given time."),
+      ),
+    ).toBe(true);
   });
 });
 

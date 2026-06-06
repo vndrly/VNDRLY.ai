@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import {
   Image,
-  Platform,
   View,
   type ImageSourcePropType,
   type LayoutChangeEvent,
@@ -10,21 +9,18 @@ import {
 } from "react-native";
 
 /**
- * Cap-preserving pill renderer for the 900×229 pill PNG assets in
- * `assets/pill-stack/`. Uses native `capInsets` on iOS (no seams) and
- * a z-indexed manual slice on Android/web where the middle band is
- * taken only from the flat center of the source so cap gradients are
- * never double-drawn at the join lines.
+ * Cap-preserving pill renderer for 900×229 PNG assets.
+ * Matches web `pill-bg.tsx`: left 15% + right 15% caps, middle 70%
+ * stretches horizontally. Same math on every platform — no iOS
+ * capInsets (they caused left-cap smear / missing middle on device).
  */
-const SRC_W = 900;
-const SRC_H = 229;
-/** Source-image inset (each end) passed to iOS capInsets. */
-const CAP_INSET_SRC = Math.round(SRC_W * 0.2);
-/** Manual slice: layout cap width as a fraction of scaled image width. */
-const LAYOUT_CAP_PCT = 0.15;
-/** Manual slice: only the inner `[INNER_START, 1-INNER_START)` band stretches. */
-const INNER_START = 0.2;
-const INNER_WIDTH = 1 - 2 * INNER_START;
+export const PILL_SRC_W = 900;
+export const PILL_SRC_H = 229;
+export const PILL_IMAGE_ASPECT = PILL_SRC_W / PILL_SRC_H;
+/** Each end cap = 15% of source width (135px on 900w assets). */
+export const PILL_CAP_FRAC = 0.15;
+/** Middle band = 70% of source width. */
+export const PILL_MID_FRAC = 0.7;
 
 export interface Pill9SliceProps {
   source: ImageSourcePropType;
@@ -33,11 +29,7 @@ export interface Pill9SliceProps {
   style?: StyleProp<ViewStyle>;
 }
 
-function overlapPx(height: number): number {
-  return Math.max(4, Math.round(height * 0.1));
-}
-
-function ManualPillSlice({
+function PillSliceLayers({
   source,
   width,
   height,
@@ -46,16 +38,25 @@ function ManualPillSlice({
   width: number;
   height: number;
 }) {
-  const aspect = SRC_W / SRC_H;
-  const naturalImgW = height * aspect;
-  const layoutCap = naturalImgW * LAYOUT_CAP_PCT;
-  const overlap = overlapPx(height);
-  const capWidth = layoutCap + overlap;
-  const midLayoutLeft = layoutCap - overlap;
-  const midLayoutRight = layoutCap - overlap;
+  const naturalImgW = height * PILL_IMAGE_ASPECT;
+  const layoutCap = naturalImgW * PILL_CAP_FRAC;
+  // Below this width the end caps overlap — stretch the whole asset instead.
+  if (width < layoutCap * 2 + 4) {
+    return (
+      <Image
+        source={source}
+        resizeMode="stretch"
+        style={{ position: "absolute", top: 0, left: 0, width, height }}
+      />
+    );
+  }
+  const seam = 1;
+  const capWidth = layoutCap + seam;
+  const midLayoutLeft = layoutCap - seam;
+  const midLayoutRight = layoutCap - seam;
   const midLayoutW = Math.max(0, width - midLayoutLeft - midLayoutRight);
-  const midImgW = midLayoutW > 0 ? midLayoutW * (SRC_W / (SRC_W * INNER_WIDTH)) : 0;
-  const midImgLeft = -(INNER_START * midImgW);
+  const midImgW = midLayoutW > 0 ? midLayoutW / PILL_MID_FRAC : 0;
+  const midImgLeft = -(PILL_CAP_FRAC * midImgW);
 
   return (
     <>
@@ -151,7 +152,6 @@ export default function Pill9Slice({
 
   const height = heightProp ?? measuredH;
   const radius = borderRadius ?? (height > 0 ? height / 2 : 0);
-  const useNativeCaps = Platform.OS === "ios" && height > 0 && w > 0;
 
   return (
     <View
@@ -170,20 +170,8 @@ export default function Pill9Slice({
         style,
       ]}
     >
-      {useNativeCaps ? (
-        <Image
-          source={source}
-          capInsets={{
-            left: CAP_INSET_SRC,
-            right: CAP_INSET_SRC,
-            top: 0,
-            bottom: 0,
-          }}
-          style={{ width: w, height }}
-          resizeMode="stretch"
-        />
-      ) : height > 0 && w > 0 ? (
-        <ManualPillSlice source={source} width={w} height={height} />
+      {height > 0 && w > 0 ? (
+        <PillSliceLayers source={source} width={w} height={height} />
       ) : null}
     </View>
   );

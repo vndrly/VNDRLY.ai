@@ -8,6 +8,8 @@ pnpm run save
 
 Commits (if needed), pushes to GitHub, builds, and deploys.
 
+After each save, **local dev is started automatically** if it is not already running (`http://localhost:5173/` with API on `:8080`). Two small PowerShell windows stay open while you work; close them to stop local dev. To start manually without saving: `pnpm run dev:local` or double-click `Start-VNDRLY-Dev.ps1`.
+
 **While GoDaddy account is locked:** same command deploys to a **public live URL** (tunnel from this PC) plus GitHub. URL is in `.local/live-url.txt` after each save.
 
 **When GoDaddy VPS credentials work:** same command switches to GoDaddy VPS and `vndrly.ai` automatically.

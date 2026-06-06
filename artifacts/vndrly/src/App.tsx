@@ -65,6 +65,7 @@ import OnboardingPartner from "@/pages/onboarding-partner";
 import OnboardingVendor from "@/pages/onboarding-vendor";
 import OnboardingField from "@/pages/onboarding-field";
 import ForgotPassword from "@/pages/forgot-password";
+import PlatformEulaPage from "@/pages/platform-eula";
 import ResetPassword from "@/pages/reset-password";
 import SignupVendor from "@/pages/signup-vendor";
 import SignupPartner from "@/pages/signup-partner";
@@ -160,6 +161,7 @@ function AuthenticatedRouter() {
         <Route path="/print-hotlist" component={PrintHotlistPage} />
         <Route path="/forgot-password" component={ForgotPassword} />
         <Route path="/reset-password" component={ResetPassword} />
+        <Route path="/legal/eula" component={PlatformEulaPage} />
         <Route path="/signup" component={Signup} />
         <Route path="/signup/vendor" component={OnboardingVendor} />
         <Route path="/signup/partner" component={OnboardingPartner} />
@@ -282,7 +284,8 @@ function GlobalAssistantLauncher({ authenticated }: { authenticated: boolean }) 
     matches("/forgot-password") ||
     matches("/reset-password") ||
     matches("/login") ||
-    matches("/signup");
+    matches("/signup") ||
+    matches("/legal");
   if (hidden) return null;
   return <AssistantLauncher />;
 }

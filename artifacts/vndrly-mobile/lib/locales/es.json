@@ -71,7 +71,8 @@
     "biometricEnableTitle": "¿Activar {{label}}?",
     "biometricEnableBody": "Usa {{label}} para iniciar sesión más rápido la próxima vez.",
     "signInWith": "Iniciar sesión con {{label}}",
-    "forget": "Olvidar {{label}}"
+    "forget": "Olvidar {{label}}",
+    "eulaLink": "Acuerdo de licencia de usuario final"
   },
   "directAssignment": {
     "vendorInboxTitle": "Ofertas de trabajo pendientes ({{count}})",

@@ -1,0 +1,9 @@
+{
+  "name": "@workspace/platform-eula",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

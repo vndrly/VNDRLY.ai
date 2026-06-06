@@ -23,6 +23,7 @@ export const GUEST_ALLOWLIST: ApiAllowRule[] = [
   { method: "GET", pattern: /^\/api\/visits\/me\/active\/?$/ },
   // Pre-auth brand fetch for mobile/web login surfaces.
   { method: "GET", pattern: /^\/api\/public\/platform-brand\/?$/ },
+  { method: "GET", pattern: /^\/api\/public\/platform-eula\/?$/ },
   { method: "GET", pattern: /^\/api\/public\/login-brand\/?$/ },
 ];
 

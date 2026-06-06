@@ -452,6 +452,19 @@ export default function Login() {
               <span className="italic">"{t("login.newToVndrlyQuote")}"</span>{" "}
               <span className={isDark ? "text-gray-300" : "text-gray-500"}>{t("login.newToVndrlyAttribution")}</span>
             </p>
+            <p className={cn("mt-3 text-sm", isDark ? "text-gray-300" : "text-gray-500")}>
+              <a
+                href="/legal/eula"
+                className="font-semibold text-[color:var(--brand-primary)] hover:underline no-underline transition-colors"
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate("/legal/eula");
+                }}
+                data-testid="link-platform-eula"
+              >
+                {t("login.eulaLink")}
+              </a>
+            </p>
           </div>
 
           {/* Match the inner width of the bordered Sign In card above

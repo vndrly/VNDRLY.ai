@@ -13,7 +13,7 @@ import {
 
 import Pill9Slice from "@/components/Pill9Slice";
 
-const BLUE_PILL = require("@/assets/pill-stack/blue-hot.png");
+const BLUE_PILL = require("@/assets/pill-stack/mid-blue.png");
 
 export interface BluePillButtonProps {
   children: React.ReactNode;

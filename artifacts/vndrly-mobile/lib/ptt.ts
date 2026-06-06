@@ -17,6 +17,14 @@ const PTT_PREFIX = "[ptt:";
 const BACKGROUND_AUDIO_RE =
   /background.*audio session|audio session could not be activated/i;
 
+const RECORDING_BUSY_RE =
+  /only one recording object can be prepared|recording not stopped|already prepared/i;
+
+export function isRecordingBusyError(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err ?? "");
+  return RECORDING_BUSY_RE.test(msg);
+}
+
 export class PttMicPermissionError extends Error {
   constructor() {
     super("Microphone permission denied");
@@ -124,10 +132,33 @@ async function ensureMicPermission(
   }
 }
 
+/** Tracks the one expo-av Recording instance allowed at a time. */
+let activeRecording: InstanceType<
+  typeof import("expo-av").Audio.Recording
+> | null = null;
+
+async function releaseActiveRecording(): Promise<void> {
+  if (!activeRecording) return;
+  try {
+    const status = await activeRecording.getStatusAsync();
+    if (status.isRecording || status.canRecord) {
+      await activeRecording.stopAndUnloadAsync();
+    }
+  } catch {
+    try {
+      await activeRecording.stopAndUnloadAsync();
+    } catch {
+      /* ignore */
+    }
+  }
+  activeRecording = null;
+}
+
 /** Pre-request mic permission when the Comms screen is focused. */
 export async function warmUpPttSession(): Promise<void> {
   await waitForActiveAppState();
   await runAfterInteractions();
+  await releaseActiveRecording();
   const { Audio } = await import("expo-av");
   await ensureMicPermission(Audio);
   await withBackgroundAudioRetry(() => configureRecordingAudioMode(Audio));
@@ -223,22 +254,24 @@ export async function createPttRecorder(): Promise<PttRecorder> {
 
   return {
     async start() {
+      await releaseActiveRecording();
       const Audio = await activateRecordingSession();
       await withBackgroundAudioRetry(async () => {
-        const rec = new Audio.Recording();
-        await rec.prepareToRecordAsync(
+        const { recording: rec } = await Audio.Recording.createAsync(
           Audio.RecordingOptionsPresets.HIGH_QUALITY,
         );
-        await rec.startAsync();
         recording = rec;
+        activeRecording = rec;
         startedAt = Date.now();
       });
     },
     async stop() {
       if (!recording) throw new Error("Not recording");
-      await recording.stopAndUnloadAsync();
-      const uri = recording.getURI();
+      const rec = recording;
+      await rec.stopAndUnloadAsync();
+      const uri = rec.getURI();
       recording = null;
+      if (activeRecording === rec) activeRecording = null;
       if (!uri) throw new Error("No recording URI");
       const durationSeconds = Math.max(0.5, (Date.now() - startedAt) / 1000);
       return { uri, durationSeconds };
@@ -252,11 +285,15 @@ export async function createPttRecorder(): Promise<PttRecorder> {
         }
         recording = null;
       }
+      if (activeRecording) {
+        await releaseActiveRecording();
+      }
     },
   };
 }
 
 export async function playPttUri(uri: string): Promise<void> {
+  await releaseActiveRecording();
   const { Audio } = await import("expo-av");
   await withBackgroundAudioRetry(() =>
     Audio.setAudioModeAsync({

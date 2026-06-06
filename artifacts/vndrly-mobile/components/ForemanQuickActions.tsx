@@ -22,11 +22,12 @@ export default function ForemanQuickActions({
 
   const tiles = [
     {
-      key: "comms",
-      icon: "radio" as const,
-      label: t("foremanHome.crewComms"),
-      onPress: () => router.push("/(tabs)/comms"),
-      testID: "foreman-action-comms",
+      key: "alerts",
+      icon: "bell" as const,
+      label: t("foremanHome.alerts"),
+      badge: unreadAlerts,
+      onPress: () => router.push("/notifications"),
+      testID: "foreman-action-alerts",
     },
     {
       key: "new",
@@ -44,12 +45,11 @@ export default function ForemanQuickActions({
       testID: "foreman-action-schedule",
     },
     {
-      key: "alerts",
-      icon: "bell" as const,
-      label: t("foremanHome.alerts"),
-      badge: unreadAlerts,
-      onPress: () => router.push("/notifications"),
-      testID: "foreman-action-alerts",
+      key: "comms",
+      icon: "radio" as const,
+      label: t("foremanHome.crewComms"),
+      onPress: () => router.push("/(tabs)/comms"),
+      testID: "foreman-action-comms",
     },
   ];
 

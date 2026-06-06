@@ -33,6 +33,13 @@ import {
 import { getSessionFromRequest } from "../lib/session";
 import { logger } from "../lib/logger";
 import { DEMO_LOCALES } from "../lib/demo-users";
+import {
+  PLATFORM_EULA_LAST_UPDATED,
+  PLATFORM_EULA_PRIVACY_URL,
+  PLATFORM_EULA_TEXT,
+  PLATFORM_EULA_TITLE,
+  PLATFORM_EULA_VERSION,
+} from "@workspace/platform-eula";
 import { sendValidationFailed } from "../lib/validation-error";
 import {
   clearDemoLabelOverride,
@@ -153,6 +160,16 @@ router.get("/public/platform-brand", async (_req, res): Promise<void> => {
     brandAccentColor: row.brandAccentColor ?? null,
     logoUrl: row.logoUrl ?? null,
     logoSquareUrl: row.logoSquareUrl ?? null,
+  });
+});
+
+router.get("/public/platform-eula", async (_req, res): Promise<void> => {
+  res.json({
+    version: PLATFORM_EULA_VERSION,
+    title: PLATFORM_EULA_TITLE,
+    lastUpdated: PLATFORM_EULA_LAST_UPDATED,
+    privacyUrl: PLATFORM_EULA_PRIVACY_URL,
+    text: PLATFORM_EULA_TEXT,
   });
 });
 

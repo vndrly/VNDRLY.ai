@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { translateApiError } from "@/lib/api-error";
+import { PLATFORM_EULA_TEXT } from "@workspace/platform-eula";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   useGetVendorWorkTypeSiteAfes,
@@ -878,7 +879,7 @@ function PublishCatalogPanel({
   const { t } = useTranslation();
   const { toast } = useToast();
   const qc = useQueryClient();
-  const [eulaText, setEulaText] = useState("");
+  const [eulaText, setEulaText] = useState(PLATFORM_EULA_TEXT);
   const [changeSummary, setChangeSummary] = useState("");
   const [attest, setAttest] = useState(false);
 
@@ -918,7 +919,7 @@ function PublishCatalogPanel({
           version: r.version,
         }),
       });
-      setEulaText("");
+      setEulaText(PLATFORM_EULA_TEXT);
       setChangeSummary("");
       setAttest(false);
       qc.invalidateQueries({ queryKey: impactKey });

@@ -41,8 +41,13 @@ import {
   recomputeAllForVendor,
 } from "../lib/approval-derivation";
 import { sha256Hex } from "../lib/hash";
+import { resolveEulaDisplayText } from "@workspace/platform-eula";
 
 const router: IRouter = Router();
+
+function withResolvedEulaText<T extends { eulaText: string }>(row: T): T {
+  return { ...row, eulaText: resolveEulaDisplayText(row.eulaText) };
+}
 
 async function requireVendorAdmin(
   req: Request,
@@ -189,7 +194,7 @@ router.get(
       .from(vendorCatalogVersionsTable)
       .where(eq(vendorCatalogVersionsTable.id, vendor.currentCatalogVersionId))
       .limit(1);
-    res.json({ version: v ?? null });
+    res.json({ version: v ? withResolvedEulaText(v) : null });
   },
 );
 
@@ -219,7 +224,7 @@ router.get(
       res.status(404).json({ error: "Catalog version not found" });
       return;
     }
-    res.json(v);
+    res.json(withResolvedEulaText(v));
   },
 );
 
