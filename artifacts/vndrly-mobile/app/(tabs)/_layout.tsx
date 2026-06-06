@@ -72,6 +72,17 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="crews"
+        options={{
+          title: t("tabs.crews"),
+          headerShown: false,
+          href: isForemanEmployee ? undefined : null,
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="users" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="comms"
         options={{
           title: t("tabs.comms"),

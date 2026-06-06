@@ -59,14 +59,25 @@ $Summary["Live"] = "https://vndrly.ai (verified)"
 
 Write-ShipStep "Building iOS on EAS and submitting to TestFlight"
 $iosLog = Join-Path $env:TEMP "vndrly-ship-ios.log"
+$iosErr = "$iosLog.err"
 if (Test-Path $iosLog) { Remove-Item $iosLog -Force }
+if (Test-Path $iosErr) { Remove-Item $iosErr -Force }
 
-$ErrorActionPreference = "Continue"
-Start-Transcript -Path $iosLog -Force | Out-Null
-& (Join-Path $PSScriptRoot "testflight-build.ps1") -Submit -NonInteractive -SkipTypecheck -SkipEnsureDev
-$iosExit = $LASTEXITCODE
-Stop-Transcript | Out-Null
-$ErrorActionPreference = "Stop"
+$iosProc = Start-Process -FilePath "powershell.exe" -Wait -PassThru -NoNewWindow `
+  -ArgumentList @(
+    "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+    (Join-Path $PSScriptRoot "testflight-build.ps1"),
+    "-Submit", "-NonInteractive", "-SkipTypecheck", "-SkipEnsureDev"
+  ) `
+  -RedirectStandardOutput $iosLog `
+  -RedirectStandardError $iosErr
+$iosExit = $iosProc.ExitCode
+if (Test-Path $iosLog) { Get-Content $iosLog | Write-Host }
+if (Test-Path $iosErr) {
+  Get-Content $iosErr -ErrorAction SilentlyContinue | ForEach-Object {
+    if ($_ -and $_ -ne "System.Management.Automation.RemoteException") { Write-Host $_ }
+  }
+}
 
 if ($iosExit -ne 0) {
   Fail-Ship "iOS build / TestFlight" "EAS build or submit failed (exit $iosExit). See log: $iosLog"

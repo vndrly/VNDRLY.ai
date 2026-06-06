@@ -28,6 +28,10 @@ import { unreadTicketCommentCountSql } from "../lib/unread-comments";
 import { enforceTicketsRateLimit } from "../lib/tickets-rate-limit";
 
 import { SESSION_SECRET } from "../lib/session";
+import {
+  resolveVendorPersonPhotoUrl,
+  storageApiPathFromObjectPath,
+} from "../lib/vendor-person-photo";
 
 const COOKIE_NAME = "vndrly_session";
 
@@ -343,7 +347,10 @@ router.get("/field/me", async (req, res): Promise<void> => {
     pecCertification: extra?.pecCertification ?? false,
     vendorLogoUrl: extra?.vendorLogoUrl ?? null,
     profilePhotoPath: extra?.profilePhotoPath ?? null,
-    photoUrl: extra?.photoUrl ?? null,
+    photoUrl: resolveVendorPersonPhotoUrl(
+      extra?.profilePhotoPath,
+      extra?.photoUrl,
+    ),
   });
 });
 
@@ -361,7 +368,13 @@ router.patch("/field/me", async (req, res): Promise<void> => {
   };
 
   const updates: Record<string, unknown> = {};
-  if ("profilePhotoPath" in body) updates.profilePhotoPath = body.profilePhotoPath ?? null;
+  if ("profilePhotoPath" in body) {
+    const path = body.profilePhotoPath ?? null;
+    updates.profilePhotoPath = path;
+    // Keep photoUrl in sync so legacy clients and web onboarding URLs
+    // cannot mask a newer mobile upload on reload.
+    updates.photoUrl = path ? storageApiPathFromObjectPath(path) : null;
+  }
   if (typeof body.firstName === "string") {
     const v = body.firstName.trim();
     if (!v) {
@@ -419,6 +432,7 @@ router.patch("/field/me", async (req, res): Promise<void> => {
   const [extra] = await db
     .select({
       profilePhotoPath: vendorPeopleTable.profilePhotoPath,
+      photoUrl: vendorPeopleTable.photoUrl,
       jobTitle: vendorPeopleTable.jobTitle,
       phone: vendorPeopleTable.phone,
       firstName: vendorPeopleTable.firstName,
@@ -428,7 +442,11 @@ router.patch("/field/me", async (req, res): Promise<void> => {
     })
     .from(vendorPeopleTable)
     .where(eq(vendorPeopleTable.id, ctx.employee.id));
-  res.json(extra ?? {});
+  const row = extra ?? {};
+  res.json({
+    ...row,
+    photoUrl: resolveVendorPersonPhotoUrl(row.profilePhotoPath, row.photoUrl),
+  });
 });
 
 // ── POST /api/field/me/password — change current field employee password ──
@@ -609,6 +627,9 @@ router.get("/field/open-tickets", async (req, res): Promise<void> => {
   // of which auth path their session walked.
   const isForemanSession =
     ctx.session.vendorRole === "foreman" || ctx.session.vendorRole === "both";
+  const vendorWide =
+    (req.query.vendorWide === "1" || req.query.vendorWide === "true") &&
+    isForemanSession;
   const isNarrowViewer = ctx.mode === "field" || isForemanSession;
   const narrowStatuses = ["initiated", "in_progress"];
   const broadStatuses = [
@@ -625,7 +646,7 @@ router.get("/field/open-tickets", async (req, res): Promise<void> => {
       isNarrowViewer ? narrowStatuses : broadStatuses,
     ),
   ];
-  if (ctx.mode === "field") {
+  if (ctx.mode === "field" && !vendorWide) {
     if (isForemanSession) {
       const crewRows = await db
         .select({ ticketId: ticketCrewTable.ticketId })

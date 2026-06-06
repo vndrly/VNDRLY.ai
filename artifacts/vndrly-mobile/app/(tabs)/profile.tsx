@@ -5,7 +5,6 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Alert,
-  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -17,9 +16,10 @@ import ActiveOrgIndicator from "@/components/ActiveOrgIndicator";
 import AmberButton from "@/components/AmberButton";
 import InPageHeader from "@/components/InPageHeader";
 import LayeredPillButton from "@/components/LayeredPillButton";
+import ProfilePhotoImage from "@/components/ProfilePhotoImage";
 import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/useColors";
-import { apiFetch, getApiBase, logout, updatePreferredLanguage } from "@/lib/api";
+import { apiFetch, logout, updatePreferredLanguage } from "@/lib/api";
 import type { MembershipSummary } from "@/lib/auth";
 import { setLanguage, SUPPORTED_LANGUAGES, type SupportedLanguage } from "@/lib/i18n";
 import { captureAndUploadImage, pickAndUploadImage } from "@/lib/photos";
@@ -43,19 +43,6 @@ type FieldMe = {
   profilePhotoPath: string | null;
   photoUrl: string | null;
 };
-
-function resolvePath(path: string | null | undefined): string | null {
-  if (!path) return null;
-  if (path.startsWith("http")) return path;
-  const normalized = path.startsWith("/") ? path : `/${path}`;
-  if (normalized.startsWith("/api/")) return `${getApiBase()}${normalized}`;
-  return `${getApiBase()}/api/storage${normalized}`;
-}
-
-function resolvePhotoUrl(me: { photoUrl?: string | null; profilePhotoPath?: string | null } | null): string | null {
-  if (!me) return null;
-  return resolvePath(me.photoUrl) ?? resolvePath(me.profilePhotoPath);
-}
 
 export default function ProfileScreen() {
   const colors = useColors();
@@ -161,8 +148,7 @@ export default function ProfileScreen() {
         },
       );
       setPhotoPath(saved.profilePhotoPath);
-      // Newly uploaded photos take precedence — clear any old direct URL.
-      setDirectPhotoUrl(null);
+      setDirectPhotoUrl(saved.photoUrl ?? null);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : t("editProfile.couldNotUpload");
       Alert.alert(t("common.error"), msg);
@@ -221,7 +207,7 @@ export default function ProfileScreen() {
     return () => clearTimeout(handle);
   }, [langToast]);
 
-  const url = resolvePhotoUrl({ photoUrl: directPhotoUrl, profilePhotoPath: photoPath });
+  const hasPhoto = !!(photoPath || directPhotoUrl);
 
   return (
     <View style={[styles.flex, { backgroundColor: colors.background }]}>
@@ -233,8 +219,12 @@ export default function ProfileScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
       <View style={styles.header}>
         <TouchableOpacity onPress={onChangePhoto} style={styles.avatarWrap}>
-          {url ? (
-            <Image source={{ uri: url }} style={styles.avatar} />
+          {hasPhoto ? (
+            <ProfilePhotoImage
+              profilePhotoPath={photoPath}
+              photoUrl={directPhotoUrl}
+              style={styles.avatar}
+            />
           ) : (
             <View
               style={[
@@ -432,17 +422,6 @@ export default function ProfileScreen() {
       >
         <Feather name="shield" size={16} color="#ffffff" style={styles.pillIconShadow} />
         <Text style={[styles.actionText, styles.pillTextShadow]}>{t("profile.complianceCard")}</Text>
-        <Feather name="chevron-right" size={18} color="#ffffff" style={[styles.actionChevron, styles.pillIconShadow]} />
-      </LayeredPillButton>
-
-      <LayeredPillButton
-        onPress={() => router.push("/crew-changes")}
-        height={40}
-        style={styles.actionBtn}
-        testID="button-crew-changes"
-      >
-        <Feather name="users" size={16} color="#ffffff" style={styles.pillIconShadow} />
-        <Text style={[styles.actionText, styles.pillTextShadow]}>{t("profile.crewChanges")}</Text>
         <Feather name="chevron-right" size={18} color="#ffffff" style={[styles.actionChevron, styles.pillIconShadow]} />
       </LayeredPillButton>
 

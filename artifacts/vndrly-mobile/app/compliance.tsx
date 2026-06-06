@@ -13,8 +13,9 @@ import { Feather } from "@expo/vector-icons";
 import QRCode from "react-native-qrcode-svg";
 
 import InPageHeader from "@/components/InPageHeader";
+import ProfilePhotoImage from "@/components/ProfilePhotoImage";
 import { useColors } from "@/hooks/useColors";
-import { apiFetch, getApiBase } from "@/lib/api";
+import { apiFetch } from "@/lib/api";
 
 type FieldMe = {
   employeeId: number;
@@ -25,6 +26,7 @@ type FieldMe = {
   jobTitle: string | null;
   vendorLogoUrl: string | null;
   profilePhotoPath: string | null;
+  photoUrl?: string | null;
 };
 
 type Cert = {
@@ -59,14 +61,6 @@ function statusOf(expirationDate: string | null, t: (k: string, opts?: Record<st
   return { label: t("compliance.active"), color: "#15803d", bg: "#dcfce7" };
 }
 
-function photoUrl(path: string | null): string | null {
-  if (!path) return null;
-  if (path.startsWith("http")) return path;
-  const normalized = path.startsWith("/") ? path : `/${path}`;
-  if (normalized.startsWith("/api/")) return `${getApiBase()}${normalized}`;
-  return `${getApiBase()}/api/storage${normalized}`;
-}
-
 export default function ComplianceScreen() {
   const c = useColors();
   const { t } = useTranslation();
@@ -96,7 +90,7 @@ export default function ComplianceScreen() {
     return () => { cancelled = true; };
   }, []);
 
-  const photo = me ? photoUrl(me.profilePhotoPath) : null;
+  const hasPhoto = !!(me?.profilePhotoPath || me?.photoUrl);
 
   return (
     <View style={[styles.container, { backgroundColor: c.background }]}>
@@ -119,8 +113,12 @@ export default function ComplianceScreen() {
             </View>
 
             <View style={styles.identityRow}>
-              {photo ? (
-                <Image source={{ uri: photo }} style={styles.avatar} />
+              {hasPhoto ? (
+                <ProfilePhotoImage
+                  profilePhotoPath={me.profilePhotoPath}
+                  photoUrl={me.photoUrl}
+                  style={styles.avatar}
+                />
               ) : (
                 <View style={[styles.avatar, { backgroundColor: c.muted, alignItems: "center", justifyContent: "center" }]}>
                   <Feather name="user" size={32} color={c.mutedForeground} />

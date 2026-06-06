@@ -14,6 +14,7 @@ import {
 
 import Pill9Slice from "@/components/Pill9Slice";
 import { useBrand } from "@/hooks/use-brand";
+import { GREY_PILL_OPACITY } from "@/lib/pill-opacity";
 import { pickTogglePillSrc, TOGGLE_IDLE_PILL_SRC } from "@/lib/pick-toggle-pill";
 
 const BLUE_PILL = require("@/assets/pill-stack/mid-blue.png");
@@ -85,8 +86,10 @@ export default function TogglePillButton({
         const showColored = !lockToRest && (lockToColored ? !pressed : pressed);
         const src = showColored ? activeSrc : restSrc;
         const labelColor = showColored ? "#ffffff" : "#1a1d23";
+        const isGreyedOut = isDisabled && !inactive;
+        const isGreyPill = !showColored && !isGreyedOut;
         return (
-          <>
+          <View style={[styles.inner, { height }, isGreyPill ? styles.greyPill : null]}>
             <Pill9Slice source={src} height={height} borderRadius={radius} />
             <View style={styles.contentRow}>
               {loading ? (
@@ -107,7 +110,7 @@ export default function TogglePillButton({
                 children
               )}
             </View>
-          </>
+          </View>
         );
       }}
     </Pressable>
@@ -117,14 +120,23 @@ export default function TogglePillButton({
 const styles = StyleSheet.create({
   container: {
     position: "relative",
+    overflow: "hidden",
+    borderRadius: 999,
+  },
+  inner: {
+    position: "relative",
     paddingHorizontal: 16,
     justifyContent: "center",
     alignItems: "center",
     overflow: "hidden",
     borderRadius: 999,
+    flex: 1,
   },
   dimmed: {
     opacity: 0.5,
+  },
+  greyPill: {
+    opacity: GREY_PILL_OPACITY,
   },
   contentRow: {
     flexDirection: "row",

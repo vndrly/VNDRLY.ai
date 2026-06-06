@@ -38,6 +38,7 @@ export default function LanguageToggle({ style }: Props) {
       <SplitToggleHalf
         side="left"
         pillSrc={current === "en" ? activePillSrc : TOGGLE_IDLE_PILL_SRC}
+        greyPill={current !== "en"}
         onPress={() => onPress("en")}
         textStyle={current === "en" ? activeText : idleText}
         testID="button-lang-en"
@@ -49,6 +50,7 @@ export default function LanguageToggle({ style }: Props) {
       <SplitToggleHalf
         side="right"
         pillSrc={current === "es" ? activePillSrc : TOGGLE_IDLE_PILL_SRC}
+        greyPill={current !== "es"}
         onPress={() => onPress("es")}
         textStyle={current === "es" ? activeText : idleText}
         testID="button-lang-es"

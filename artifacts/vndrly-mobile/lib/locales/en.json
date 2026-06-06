@@ -1197,6 +1197,32 @@
     "empty": "No recent crew changes.",
     "loadFailed": "Couldn't load crew changes."
   },
+  "crews": {
+    "setCrew": "Set a crew",
+    "setCrewTitle": "Set a crew",
+    "editTitle": "Edit crew",
+    "help": "Name a crew and pick field employees or foremen. Use saved crews when scheduling jobs.",
+    "empty": "No saved crews yet. Tap Set a crew to create one.",
+    "memberCount": "{{count}} member(s)",
+    "crewName": "Crew name",
+    "crewNamePlaceholder": "Day Crew A",
+    "membersLabel": "Members ({{count}} selected)",
+    "membersHint": "Pick any active Winchester field employee or foreman.",
+    "foremanBadge": "Foreman",
+    "saveCrew": "Save crew",
+    "deleteCrew": "Delete crew",
+    "deleteTitle": "Delete crew?",
+    "deleteBody": "Remove \"{{name}}\"? This cannot be undone.",
+    "deleteConfirm": "Delete",
+    "nameRequired": "Enter a crew name.",
+    "membersRequired": "Pick at least one crew member."
+  },
+  "foremanSchedule": {
+    "addToCalendar": "Add to Calendar",
+    "pickTicketTitle": "Open tickets",
+    "noOpenTickets": "No open tickets for your vendor.",
+    "emptyForeman": "Nothing scheduled yet. Tap Add to Calendar to schedule a crew on an open ticket."
+  },
   "crew": {
     "title": "Crew & Time",
     "crewOnSite": "Crew on Site",
@@ -1277,6 +1303,7 @@
   "tabs": {
     "home": "Home",
     "schedule": "Schedule",
+    "crews": "Crews",
     "comms": "Comms",
     "scan": "Scan",
     "profile": "Profile"

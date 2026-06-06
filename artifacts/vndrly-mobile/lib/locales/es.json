@@ -1197,6 +1197,32 @@
     "empty": "Sin cambios de cuadrilla recientes.",
     "loadFailed": "No se pudieron cargar los cambios de cuadrilla."
   },
+  "crews": {
+    "setCrew": "Definir cuadrilla",
+    "setCrewTitle": "Definir cuadrilla",
+    "editTitle": "Editar cuadrilla",
+    "help": "Nombre la cuadrilla y elija empleados de campo o capataces. Use cuadrillas guardadas al programar trabajos.",
+    "empty": "Aún no hay cuadrillas guardadas. Toque Definir cuadrilla para crear una.",
+    "memberCount": "{{count}} miembro(s)",
+    "crewName": "Nombre de cuadrilla",
+    "crewNamePlaceholder": "Cuadrilla Día A",
+    "membersLabel": "Miembros ({{count}} seleccionados)",
+    "membersHint": "Elija cualquier empleado de campo o capataz activo.",
+    "foremanBadge": "Capataz",
+    "saveCrew": "Guardar cuadrilla",
+    "deleteCrew": "Eliminar cuadrilla",
+    "deleteTitle": "¿Eliminar cuadrilla?",
+    "deleteBody": "¿Eliminar \"{{name}}\"? No se puede deshacer.",
+    "deleteConfirm": "Eliminar",
+    "nameRequired": "Ingrese un nombre de cuadrilla.",
+    "membersRequired": "Elija al menos un miembro."
+  },
+  "foremanSchedule": {
+    "addToCalendar": "Agregar al calendario",
+    "pickTicketTitle": "Tickets abiertos",
+    "noOpenTickets": "No hay tickets abiertos para su proveedor.",
+    "emptyForeman": "Nada programado aún. Toque Agregar al calendario para programar una cuadrilla en un ticket abierto."
+  },
   "crew": {
     "title": "Cuadrilla y Tiempo",
     "crewOnSite": "Cuadrilla en sitio",
@@ -1277,6 +1303,7 @@
   "tabs": {
     "home": "Inicio",
     "schedule": "Agenda",
+    "crews": "Cuadrillas",
     "comms": "Comunicación",
     "scan": "Escanear",
     "profile": "Perfil"

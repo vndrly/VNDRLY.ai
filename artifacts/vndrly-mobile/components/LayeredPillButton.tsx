@@ -11,6 +11,7 @@ import {
 
 import Pill9Slice from "@/components/Pill9Slice";
 import { useBrand } from "@/hooks/use-brand";
+import { GREY_PILL_OPACITY } from "@/lib/pill-opacity";
 import { pickTogglePillSrc, TOGGLE_IDLE_PILL_SRC } from "@/lib/pick-toggle-pill";
 
 const GREY_PILL = require("@/assets/pill-stack/light-grey.png");
@@ -86,8 +87,8 @@ export interface LayeredPillButtonProps {
 
 /**
  * Mobile pill button — one 900×229 PNG, 3-slice stretch (web Hotlist rule).
- * Active = brand-matched colored pill. Inactive/disabled = light grey pill
- * at 50% opacity (same as web `PngPillButton disabled`).
+ * Active = brand-matched colored pill. `inactive` = grey pill at 80% opacity.
+ * Disabled/loading (without `inactive`) = grey asset dimmed to 50%.
  */
 export default function LayeredPillButton({
   children,
@@ -103,13 +104,13 @@ export default function LayeredPillButton({
   const brand = useBrand();
   const targetHex = color ?? brand.primary ?? "#1f9a3d";
   const mid = useMemo(() => pickPillForBrand(targetHex), [targetHex]);
-  const isGrey = inactive || disabled || loading;
+  const useGreyAsset = inactive || disabled || loading;
+  const isGreyedOut = (disabled || loading) && !inactive;
   const height = Math.min(heightProp, 48);
   const radius = height / 2;
   const brandPillSrc = pickTogglePillSrc(targetHex, brand.name);
   const activeSrc = color ? mid.src : brandPillSrc;
-  const src = isGrey ? GREY_PILL : activeSrc;
-  const dimmed = (disabled || loading) && !inactive;
+  const src = useGreyAsset ? GREY_PILL : activeSrc;
 
   return (
     <Pressable
@@ -119,8 +120,9 @@ export default function LayeredPillButton({
       style={({ pressed }) => [
         styles.wrap,
         { height, minWidth: height + 12, borderRadius: radius },
-        dimmed ? styles.dimmed : null,
-        pressed && !isGrey ? styles.pressed : null,
+        inactive ? styles.greyPill : null,
+        isGreyedOut ? styles.dimmed : null,
+        pressed && !useGreyAsset ? styles.pressed : null,
         style,
       ]}
     >
@@ -140,6 +142,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     overflow: "hidden",
     borderRadius: 999,
+  },
+  greyPill: {
+    opacity: GREY_PILL_OPACITY,
   },
   dimmed: {
     opacity: 0.5,

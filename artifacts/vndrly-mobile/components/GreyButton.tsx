@@ -12,6 +12,8 @@ import {
   type ViewStyle,
 } from "react-native";
 
+import { GREY_PILL_OPACITY } from "@/lib/pill-opacity";
+
 const leftSrc = require("../assets/buttons/grey-left.png");
 const centerSrc = require("../assets/buttons/grey-center.png");
 const rightSrc = require("../assets/buttons/grey-right.png");
@@ -45,7 +47,10 @@ export default function GreyButton({
       testID={testID}
       style={({ pressed }) => [
         styles.container,
-        { height, opacity: isDisabled ? 0.5 : pressed ? 0.85 : 1 },
+        {
+          height,
+          opacity: isDisabled ? 0.5 : pressed ? GREY_PILL_OPACITY * 0.95 : GREY_PILL_OPACITY,
+        },
         style,
       ]}
     >

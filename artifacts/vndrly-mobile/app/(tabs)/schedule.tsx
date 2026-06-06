@@ -19,8 +19,10 @@ import type {
 } from "@workspace/api-client-react";
 
 import ActiveOrgIndicator from "@/components/ActiveOrgIndicator";
+import ForemanScheduleTicketsModal from "@/components/ForemanScheduleTicketsModal";
 import InPageHeader from "@/components/InPageHeader";
 import LayeredPillButton from "@/components/LayeredPillButton";
+import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
 import { setScheduleBadge } from "@/lib/tabBadges";
@@ -49,9 +51,15 @@ function formatWhen(iso: string | null): string {
 export default function ScheduleScreen() {
   const colors = useColors();
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const isForeman =
+    user?.role === "field_employee" &&
+    (user.vendorRole === "foreman" || user.vendorRole === "both");
   const [tickets, setTickets] = useState<ScheduledTicket[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [vendorId, setVendorId] = useState<number | null>(null);
+  const [pickTicketOpen, setPickTicketOpen] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -69,7 +77,12 @@ export default function ScheduleScreen() {
     useCallback(() => {
       setLoading(true);
       load();
-    }, [load]),
+      if (isForeman) {
+        apiFetch<{ vendorId: number | null }>("/api/field/me")
+          .then((me) => setVendorId(me.vendorId ?? null))
+          .catch(() => setVendorId(null));
+      }
+    }, [load, isForeman]),
   );
 
   function onRefresh() {
@@ -146,6 +159,21 @@ export default function ScheduleScreen() {
         title={t("tabs.schedule")}
         right={<ActiveOrgIndicator />}
       />
+      {isForeman ? (
+        <View style={styles.foremanBar}>
+          <LayeredPillButton
+            onPress={() => setPickTicketOpen(true)}
+            height={44}
+            style={styles.foremanAddBtn}
+            testID="button-add-to-calendar"
+          >
+            <Feather name="calendar" size={16} color="#ffffff" style={styles.pillIconShadow} />
+            <Text style={[styles.foremanAddText, styles.pillTextShadow]}>
+              {t("foremanSchedule.addToCalendar")}
+            </Text>
+          </LayeredPillButton>
+        </View>
+      ) : null}
     <FlatList
       style={{ flex: 1 }}
       contentContainerStyle={{ padding: 16 }}
@@ -154,7 +182,7 @@ export default function ScheduleScreen() {
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       ListEmptyComponent={
         <Text style={{ color: colors.mutedForeground, textAlign: "center", marginTop: 40 }}>
-          {t("mySchedule.empty")}
+          {isForeman ? t("foremanSchedule.emptyForeman") : t("mySchedule.empty")}
         </Text>
       }
       renderItem={({ item }) => {
@@ -346,12 +374,26 @@ export default function ScheduleScreen() {
         );
       }}
     />
+    {isForeman && vendorId != null ? (
+      <ForemanScheduleTicketsModal
+        visible={pickTicketOpen}
+        vendorId={vendorId}
+        onClose={() => setPickTicketOpen(false)}
+        onScheduled={() => {
+          setLoading(true);
+          void load();
+        }}
+      />
+    ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
+  foremanBar: { paddingHorizontal: 16, paddingBottom: 8 },
+  foremanAddBtn: { alignSelf: "stretch" },
+  foremanAddText: { color: "#ffffff", fontFamily: "Inter_600SemiBold", fontSize: 15 },
   card: {
     borderWidth: 1,
     borderRadius: 12,

@@ -10,6 +10,7 @@ import {
 } from "react-native";
 
 import Pill9Slice from "@/components/Pill9Slice";
+import { GREY_PILL_OPACITY } from "@/lib/pill-opacity";
 
 export const SPLIT_TOGGLE_PILL_HEIGHT_PX = 23;
 
@@ -22,6 +23,8 @@ type Props = {
   style?: StyleProp<ViewStyle>;
   testID?: string;
   accessibilityState?: { selected?: boolean };
+  /** Unselected grey pill half — rendered at {@link GREY_PILL_OPACITY}. */
+  greyPill?: boolean;
 };
 
 /**
@@ -37,6 +40,7 @@ export default function SplitToggleHalf({
   style,
   testID,
   accessibilityState,
+  greyPill,
 }: Props) {
   const height = SPLIT_TOGGLE_PILL_HEIGHT_PX;
   const radius = height / 2;
@@ -52,7 +56,7 @@ export default function SplitToggleHalf({
         const nw = e.nativeEvent.layout.width;
         if (nw !== halfW) setHalfW(nw);
       }}
-      style={[styles.half, { height }, style]}
+      style={[styles.half, { height }, greyPill ? styles.greyPill : null, style]}
     >
       {halfW > 0 ? (
         <View
@@ -95,5 +99,8 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_700Bold",
     fontSize: 11,
     letterSpacing: 0.5,
+  },
+  greyPill: {
+    opacity: GREY_PILL_OPACITY,
   },
 });

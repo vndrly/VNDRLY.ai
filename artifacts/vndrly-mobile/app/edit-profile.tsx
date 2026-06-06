@@ -5,7 +5,6 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Alert,
-  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -18,8 +17,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import AmberButton from "@/components/AmberButton";
+import ProfilePhotoImage from "@/components/ProfilePhotoImage";
 import { useColors } from "@/hooks/useColors";
-import { apiFetch, getApiBase } from "@/lib/api";
+import { apiFetch } from "@/lib/api";
 import { captureAndUploadImage, pickAndUploadImage } from "@/lib/photos";
 
 type FieldMe = {
@@ -43,19 +43,6 @@ type FieldMeFull = {
   profilePhotoPath: string | null;
   photoUrl?: string | null;
 };
-
-function resolvePath(path: string | null | undefined): string | null {
-  if (!path) return null;
-  if (path.startsWith("http")) return path;
-  const normalized = path.startsWith("/") ? path : `/${path}`;
-  if (normalized.startsWith("/api/")) return `${getApiBase()}${normalized}`;
-  return `${getApiBase()}/api/storage${normalized}`;
-}
-
-function resolvePhotoUrl(me: { photoUrl?: string | null; profilePhotoPath?: string | null } | null): string | null {
-  if (!me) return null;
-  return resolvePath(me.photoUrl) ?? resolvePath(me.profilePhotoPath);
-}
 
 export default function EditProfileScreen() {
   const colors = useColors();
@@ -101,7 +88,7 @@ export default function EditProfileScreen() {
         body: JSON.stringify({ profilePhotoPath: result.objectPath }),
       });
       setPhotoPath(saved.profilePhotoPath);
-      setDirectPhotoUrl(null);
+      setDirectPhotoUrl(saved.photoUrl ?? null);
     } catch (e: unknown) {
       Alert.alert(t("common.error"), e instanceof Error ? e.message : t("editProfile.couldNotUpload"));
     }
@@ -180,7 +167,7 @@ export default function EditProfileScreen() {
     }
   };
 
-  const url = resolvePhotoUrl({ photoUrl: directPhotoUrl, profilePhotoPath: photoPath });
+  const hasPhoto = !!(photoPath || directPhotoUrl);
 
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: colors.background }]} edges={["bottom"]}>
@@ -193,8 +180,12 @@ export default function EditProfileScreen() {
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           <View style={styles.header}>
             <TouchableOpacity onPress={onChangePhoto} style={styles.avatarWrap} disabled={loading}>
-              {url ? (
-                <Image source={{ uri: url }} style={styles.avatar} />
+              {hasPhoto ? (
+                <ProfilePhotoImage
+                  profilePhotoPath={photoPath}
+                  photoUrl={directPhotoUrl}
+                  style={styles.avatar}
+                />
               ) : (
                 <View
                   style={[

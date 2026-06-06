@@ -2462,7 +2462,7 @@ export default function TicketDetailScreen() {
                           height: 40,
                           borderRadius: 20,
                           overflow: "hidden",
-                          opacity: isInactive ? 0.85 : pressed ? 0.92 : 1,
+                          opacity: isInactive ? 0.8 : pressed ? 0.92 : 1,
                           alignItems: "center",
                           justifyContent: "center",
                         },

@@ -10,7 +10,7 @@ function Write-ShipSuccess {
   param([hashtable]$Summary)
   Write-Host ""
   Write-Host "========================================" -ForegroundColor Green
-  Write-Host "  SHIP IT — SUCCESS" -ForegroundColor Green
+  Write-Host "  SHIP IT - SUCCESS" -ForegroundColor Green
   Write-Host "========================================" -ForegroundColor Green
   foreach ($key in @("Commit", "Live", "iOS build", "TestFlight", "Local web", "Local API")) {
     if ($Summary.ContainsKey($key) -and $Summary[$key]) {
@@ -28,7 +28,7 @@ function Write-ShipFailure {
   )
   Write-Host ""
   Write-Host "========================================" -ForegroundColor Red
-  Write-Host "  SHIP IT — FAILED" -ForegroundColor Red
+  Write-Host "  SHIP IT - FAILED" -ForegroundColor Red
   Write-Host "========================================" -ForegroundColor Red
   Write-Host ("  Step:   {0}" -f $Step) -ForegroundColor Red
   Write-Host ("  Reason: {0}" -f $Reason) -ForegroundColor Red
