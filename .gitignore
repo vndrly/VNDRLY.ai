@@ -7,6 +7,7 @@ out-tsc
 *.tsbuildinfo
 .expo
 .expo-shared
+.expo-smoke-export
 
 # dependencies
 node_modules
@@ -69,3 +70,5 @@ Thumbs.db
 # nightly workflow uploads this to the trend branch; locally it's just
 # scratch.
 eval-summary.json
+vitest-results.json
+.claude/

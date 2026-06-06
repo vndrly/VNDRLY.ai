@@ -19,6 +19,23 @@ function Test-PortListening {
   return $null -ne $conn
 }
 
+function Wait-ForPort {
+  param(
+    [int]$Port,
+    [string]$Label,
+    [int]$TimeoutSeconds = 120
+  )
+  $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+  while ((Get-Date) -lt $deadline) {
+    if (Test-PortListening -Port $Port) {
+      return $true
+    }
+    Write-Host "  Waiting for $Label on :$Port..."
+    Start-Sleep -Seconds 3
+  }
+  return $false
+}
+
 function Stop-PortListener {
   param([int]$Port)
   Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue |
@@ -68,7 +85,10 @@ if (-not $apiUp) {
     "node '$apiScript'"
   ) -join "; "
   Start-DevWindow -Title "VNDRLY API (8080)" -Command $apiCmd
-  Start-Sleep -Seconds 4
+  if (-not (Wait-ForPort -Port 8080 -Label "API" -TimeoutSeconds 180)) {
+    Write-Host "API did not start on :8080 within 3 minutes. Check the 'VNDRLY API (8080)' window for errors." -ForegroundColor Red
+    exit 1
+  }
 } else {
   Write-Host "Local API already running on :8080"
 }
@@ -83,7 +103,10 @@ if (-not $viteUp) {
     "node '$viteScript'"
   ) -join "; "
   Start-DevWindow -Title "VNDRLY Web (5173)" -Command $viteCmd
-  Start-Sleep -Seconds 6
+  if (-not (Wait-ForPort -Port 5173 -Label "web" -TimeoutSeconds 60)) {
+    Write-Host "Web did not start on :5173 within 1 minute. Check the 'VNDRLY Web (5173)' window for errors." -ForegroundColor Red
+    exit 1
+  }
   $viteStarted = $true
 } else {
   Write-Host "Local web already running on :5173"

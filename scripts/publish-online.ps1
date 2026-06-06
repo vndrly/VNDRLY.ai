@@ -1,6 +1,8 @@
 param(
   [string]$Message = "",
-  [switch]$SkipCommit
+  [switch]$SkipCommit,
+  [switch]$SkipDeploy,
+  [switch]$SkipTypecheck
 )
 
 $ErrorActionPreference = "Stop"
@@ -23,6 +25,18 @@ function Read-Pat {
 
 $root = (& git rev-parse --show-toplevel).Trim()
 Set-Location $root
+$env:Path = "C:\Program Files\nodejs;$env:APPDATA\npm;" + $env:Path
+$env:NODE_OPTIONS = "--use-system-ca"
+
+if (-not $SkipTypecheck) {
+  Write-Host ""
+  Write-Host "==> Typechecking workspace..." -ForegroundColor Cyan
+  pnpm run typecheck
+  if ($LASTEXITCODE -ne 0) {
+    Write-Host "Typecheck failed. Fix errors before publishing." -ForegroundColor Red
+    exit 1
+  }
+}
 
 $branch = (& git branch --show-current).Trim()
 if (-not $branch) {
@@ -42,7 +56,10 @@ if (-not $SkipCommit) {
       $_ -notmatch "\.zip$" -and
       $_ -notmatch "(^|/)node_modules/" -and
       $_ -notmatch "(^|/)\.pnpm-store/" -and
-      $_ -notmatch "(^|/)\.tmp_"
+      $_ -notmatch "(^|/)\.tmp_" -and
+      $_ -notmatch "(^|/)\\.claude/" -and
+      $_ -notmatch "(^|/)\\.expo-smoke-export/" -and
+      $_ -notmatch "vitest-results\\.json$"
     }
   )
 
@@ -83,6 +100,12 @@ try {
 $head = (& git rev-parse HEAD).Trim()
 Write-Host ""
 Write-Host "Pushed to GitHub: $head on $pushTarget"
+
+if ($SkipDeploy) {
+  Write-Host "Skipping deploy (caller handles deploy/build)."
+  exit 0
+}
+
 Write-Host "Deploying..."
 
 node (Join-Path $root "scripts/deploy.mjs")
@@ -98,6 +121,7 @@ if (Test-Path $liveUrlFile) {
   if ($liveUrl) { Write-Host "Live URL: $liveUrl" }
 }
 Write-Host "iOS still needs a separate EAS build when mobile code changes."
+Write-Host "Run:  pnpm run `"ship it`""
 
 Write-Host ""
 Write-Host "Ensuring local dev servers (http://localhost:5173/) ..."

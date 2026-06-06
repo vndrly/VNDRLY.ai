@@ -159,6 +159,10 @@ router.post("/location-consents", async (req: Request, res: Response) => {
     res.status(400).json({ code: "visitor.device_id_required", error: "deviceId required" });
     return;
   }
+  if (session.userId == null) {
+    res.status(401).json({ code: "auth.unauthenticated", error: "unauthenticated" });
+    return;
+  }
   const [row] = await db
     .insert(locationConsentsTable)
     .values({ userId: session.userId, deviceId })

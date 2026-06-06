@@ -1,3 +1,6 @@
+type FetchInput = Parameters<typeof fetch>[0];
+type FetchHeadersInit = NonNullable<RequestInit["headers"]>;
+
 export type CustomFetchOptions = RequestInit & {
   responseType?: "json" | "text" | "blob" | "auto";
 };
@@ -44,11 +47,11 @@ export function setAuthTokenGetter(getter: AuthTokenGetter | null): void {
   _authTokenGetter = getter;
 }
 
-function isRequest(input: RequestInfo | URL): input is Request {
+function isRequest(input: FetchInput): input is Request {
   return typeof Request !== "undefined" && input instanceof Request;
 }
 
-function resolveMethod(input: RequestInfo | URL, explicitMethod?: string): string {
+function resolveMethod(input: FetchInput, explicitMethod?: string): string {
   if (explicitMethod) return explicitMethod.toUpperCase();
   if (isRequest(input)) return input.method.toUpperCase();
   return "GET";
@@ -56,11 +59,11 @@ function resolveMethod(input: RequestInfo | URL, explicitMethod?: string): strin
 
 // Use loose check for URL — some runtimes (e.g. React Native) polyfill URL
 // differently, so `instanceof URL` can fail.
-function isUrl(input: RequestInfo | URL): input is URL {
+function isUrl(input: FetchInput): input is URL {
   return typeof URL !== "undefined" && input instanceof URL;
 }
 
-function applyBaseUrl(input: RequestInfo | URL): RequestInfo | URL {
+function applyBaseUrl(input: FetchInput): FetchInput {
   if (!_baseUrl) return input;
   const url = resolveUrl(input);
   // Only prepend to relative paths (starting with /)
@@ -72,13 +75,13 @@ function applyBaseUrl(input: RequestInfo | URL): RequestInfo | URL {
   return new Request(absolute, input as Request);
 }
 
-function resolveUrl(input: RequestInfo | URL): string {
+function resolveUrl(input: FetchInput): string {
   if (typeof input === "string") return input;
   if (isUrl(input)) return input.toString();
   return input.url;
 }
 
-function mergeHeaders(...sources: Array<HeadersInit | undefined>): Headers {
+function mergeHeaders(...sources: Array<FetchHeadersInit | undefined>): Headers {
   const headers = new Headers();
 
   for (const source of sources) {
@@ -323,7 +326,7 @@ async function parseSuccessBody(
 }
 
 export async function customFetch<T = unknown>(
-  input: RequestInfo | URL,
+  input: FetchInput,
   options: CustomFetchOptions = {},
 ): Promise<T> {
   input = applyBaseUrl(input);
@@ -374,7 +377,7 @@ export async function customFetch<T = unknown>(
     ...init,
     method,
     headers,
-    credentials: "include" as RequestCredentials,
+    credentials: "include" satisfies RequestInit["credentials"],
     cache: "no-store",
   });
 

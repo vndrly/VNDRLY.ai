@@ -7,7 +7,7 @@ if (!buildId) {
   process.exit(1);
 }
 
-const raw = execSync(`npx.cmd eas-cli@19.1.0 build:view ${buildId} --json`, {
+const raw = execSync(`npx.cmd eas-cli@20.1.0 build:view ${buildId} --json`, {
   encoding: "utf8",
 });
 const json = JSON.parse(raw.match(/\{[\s\S]*\}/)[0]);
