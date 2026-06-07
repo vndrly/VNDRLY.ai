@@ -451,12 +451,24 @@
     animation: assistant-launcher-breathe-baker 10s ease-in-out infinite;
   }
 
+  /* AskV launcher — gentle vertical bob while idle (no ring ripples). */
+  @keyframes assistant-launcher-bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(2px); }
+  }
+
+  .assistant-launcher-bob {
+    animation: assistant-launcher-bob 4.5s ease-in-out infinite;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .assistant-launcher-attract-pulse,
     .assistant-launcher-base-pulse,
     .assistant-launcher-glyph-v,
     .assistant-launcher-glyph-ask,
-    .assistant-launcher-breathe-6s {
+    .assistant-launcher-breathe-6s,
+    .assistant-launcher-breathe-baker,
+    .assistant-launcher-bob {
       animation: none;
     }
     .assistant-launcher-breathe-6s {

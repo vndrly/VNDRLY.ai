@@ -244,6 +244,7 @@ function AuthenticatedRouter() {
 // up in the printout), on the unauthenticated visitor/portal landing
 // pages, and on the password-recovery / login / signup flows.
 function GlobalAssistantLauncher({ authenticated }: { authenticated: boolean }) {
+  const { user } = useAuth();
   const [location] = useLocation();
   // Token-mode: the field-employee onboarding invite link is
   // pre-login. Match the route ourselves so the launcher can pass the
@@ -287,6 +288,17 @@ function GlobalAssistantLauncher({ authenticated }: { authenticated: boolean }) 
     matches("/signup") ||
     matches("/legal");
   if (hidden) return null;
+  // Main admin/partner/vendor chrome mounts Ask V in the layout AskV pane.
+  // Field ops portals (/field, /foreman) use the same AskV pane in
+  // FieldOpsPortalShell. Onboarding wizards keep the floating launcher.
+  if (user && !location.startsWith("/onboarding/")) {
+    if (user.role !== "field_employee") {
+      return null;
+    }
+    if (matches("/foreman") || matches("/field")) {
+      return null;
+    }
+  }
   return <AssistantLauncher />;
 }
 

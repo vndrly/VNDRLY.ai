@@ -1,0 +1,15 @@
+{
+  "name": "@vndrly/cursor-bridge",
+  "private": true,
+  "version": "1.9.0-vndrly.1",
+  "description": "Patched IDE For Cursor mobile bridge (Windows + stable pairing)",
+  "type": "module",
+  "bin": {
+    "cursor-bridge": "./index.mjs"
+  },
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "sql.js": "^1.13.0",
+    "ws": "^8.20.0"
+  }
+}

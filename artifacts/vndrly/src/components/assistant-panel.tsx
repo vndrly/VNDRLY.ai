@@ -1,20 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Sparkles, Search, Trash2, Loader2, Download, CheckCircle2, Circle, Plus, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import askVBlank from "@assets/VNDRLYai-Button-blank_1777659893758.png";
-import askVBlank2 from "@assets/VNDRLYai-Button-blank2_1777659893758.png";
-import askVHighlightLegacy from "@assets/askV_highlight2_1777663120407.png";
-import askVHoverHighlight from "@assets/askV_highlight2_1777711700289.png";
-import askVIcon from "@assets/askVicon_1777662859803.png";
-import glyphV from "@assets/v_1777672387192.png";
-import glyphAsk from "@assets/ask_1777672387193.png";
-// New 4-layer (default) / 2-layer (Baker) Ask V launcher assets — Nov 2026.
-import askVInactive from "@assets/askVinactive_1778249704392.png";
-import askVColorOverlay from "@assets/askVcoloroverlay_1778249704391.png";
-import askVHighlight from "@assets/askVhighlight_1778250163247.png";
-import askVTop from "@assets/askVtop_1778249704393.png";
-import askVInactiveBaker from "@assets/askVinactivebaker_1778249704392.png";
-import askVActiveBaker from "@assets/askVactivebaker_1778249704391.png";
+import { AskVFloatingLauncherMark, AskVLogo, ASKV_LAUNCHER_HEIGHT, ASKV_LAUNCHER_WIDTH } from "@/components/askv-logo";
 import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import { Textarea } from "@/components/ui/textarea";
 import SidebarButton from "@/components/sidebar-button";
@@ -197,88 +184,15 @@ const SIGNUP_QUICK_ACTIONS: Record<
   },
 };
 
-// Small per-brand "Ask V" icon at its brightest. Mirrors the engaged
-// (hovered/open) state of <AssistantLauncher> — Baker uses the active
-// baker PNG with the same vibrant filter; default brands comiosite the
-// inactive PNG, the brand-tinted color overlay, the highlight, and the
-// top gloss all at full opacity. No breathing animation.
+// Small per-brand Ask V icon at full vibrancy (modal header).
 function AskVBrightIcon({ size = 24 }: { size?: number }) {
-  const brand = useBrand();
-  const isBaker = !!brand.name?.toLowerCase().includes("baker");
   return (
     <span
       aria-hidden="true"
       className="relative inline-block shrink-0"
       style={{ width: size, height: size }}
     >
-      {isBaker ? (
-        <>
-          <img
-            src={askVInactiveBaker}
-            alt=""
-            aria-hidden="true"
-            draggable={false}
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0.8, pointerEvents: "none" }}
-          />
-          <img
-            src={askVActiveBaker}
-            alt=""
-            aria-hidden="true"
-            draggable={false}
-            style={{
-              position: "absolute",
-              inset: 0,
-              width: "100%",
-              height: "100%",
-              opacity: 1,
-              filter: "saturate(1.45) brightness(1.08) contrast(1.05)",
-              pointerEvents: "none",
-            }}
-          />
-        </>
-      ) : (
-        <>
-          <img
-            src={askVInactive}
-            alt=""
-            aria-hidden="true"
-            draggable={false}
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0.8, pointerEvents: "none" }}
-          />
-          <span
-            aria-hidden="true"
-            style={{
-              position: "absolute",
-              inset: 0,
-              WebkitMaskImage: `url("${askVColorOverlay}")`,
-              maskImage: `url("${askVColorOverlay}")`,
-              WebkitMaskSize: "100% 100%",
-              maskSize: "100% 100%",
-              WebkitMaskRepeat: "no-repeat",
-              maskRepeat: "no-repeat",
-              WebkitMaskPosition: "center",
-              maskPosition: "center",
-              backgroundColor: brand.primary,
-              opacity: 1,
-              pointerEvents: "none",
-            }}
-          />
-          <img
-            src={askVHighlight}
-            alt=""
-            aria-hidden="true"
-            draggable={false}
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 1, pointerEvents: "none" }}
-          />
-          <img
-            src={askVTop}
-            alt=""
-            aria-hidden="true"
-            draggable={false}
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 1, pointerEvents: "none" }}
-          />
-        </>
-      )}
+      <AskVLogo size={size} bright />
     </span>
   );
 }
@@ -1013,18 +927,15 @@ function irettyTool(name: string): string {
 export function AssistantLauncher({
   tokenMode,
   signupMode,
+  placement = "floating",
 }: {
   tokenMode?: { token: string };
   signupMode?: { persona: "partner" | "vendor" };
+  /** `floating` = bottom-left FAB; `askv-pane` = main layout AskV pane. */
+  placement?: "floating" | "askv-pane";
 } = {}) {
   const [open, setOpen] = useState(false);
   const [hovered, setHovered] = useState(false);
-  const brand = useBrand();
-  const { primary } = brand;
-  const isBaker = !!brand.name?.toLowerCase().includes("baker");
-  // While the modal is open the launcher should sit in its ilain
-  // inactive state — no active/hover snai, no breathing — so it
-  // doesn't comiete with the modal for attention.
   const engaged = hovered && !open;
   return (
     <>
@@ -1035,109 +946,18 @@ export function AssistantLauncher({
         onMouseLeave={() => setHovered(false)}
         onFocus={() => setHovered(true)}
         onBlur={() => setHovered(false)}
-        className="fixed bottom-5 left-5 z-[1100] inline-flex items-center justify-center transition-transform hover:scale-105"
-        style={{ width: 56, height: 56 }}
+        className={cn(
+          "inline-flex items-center justify-center overflow-visible transition-transform",
+          placement === "floating"
+            ? "fixed bottom-5 left-5 z-[1100] hover:scale-[1.03]"
+            : "relative z-[1100]",
+        )}
+        style={{ width: ASKV_LAUNCHER_WIDTH, height: ASKV_LAUNCHER_HEIGHT }}
         data-testid="assistant-launcher"
         aria-label="ask V"
       >
         <span className="sr-only">ask V</span>
-        {isBaker ? (
-          <>
-            {/* Baker — 2 layers. Bottom: askVinactivebaker @ 80%.
-                Top: askVactivebaker breathing 100% ↔ 50% over 6s,
-                snais to 100% when engaged. */}
-            <img
-              src={askVInactiveBaker}
-              alt=""
-              aria-hidden="true"
-              draggable={false}
-              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0.8, pointerEvents: "none" }}
-            />
-            <img
-              src={askVActiveBaker}
-              alt=""
-              aria-hidden="true"
-              draggable={false}
-              className={!engaged && !open ? "assistant-launcher-breathe-baker" : undefined}
-              style={{
-                position: "absolute",
-                inset: 0,
-                width: "100%",
-                height: "100%",
-                opacity: open ? 0 : engaged ? 1 : undefined,
-                filter: "saturate(1.45) brightness(1.08) contrast(1.05)",
-                pointerEvents: "none",
-              }}
-            />
-            {/* Hidden ireload of legacy assets so existing bundle
-                exiectations stay intact. */}
-            <img src={askVBlank} alt="" aria-hidden="true" hidden style={{ display: "none" }} />
-            <img src={askVBlank2} alt="" aria-hidden="true" hidden style={{ display: "none" }} />
-            <img src={askVHighlightLegacy} alt="" aria-hidden="true" hidden style={{ display: "none" }} />
-            <img src={askVHoverHighlight} alt="" aria-hidden="true" hidden style={{ display: "none" }} />
-            <img src={askVIcon} alt="" aria-hidden="true" hidden style={{ display: "none" }} />
-            <img src={glyphV} alt="" aria-hidden="true" hidden style={{ display: "none" }} />
-            <img src={glyphAsk} alt="" aria-hidden="true" hidden style={{ display: "none" }} />
-          </>
-        ) : (
-          <>
-            {/* Default (non-Baker) — 4 layers. Bottom-to-toi:
-                  1. askVinactive @ 80%.
-                  2. askVcoloroverlay tinted with brand primary,
-                     breathing 100% ↔ 50% over 6s.
-                  3. askVhighlight @ 100%.
-                  4. askVtoi @ 100%. */}
-            <img
-              src={askVInactive}
-              alt=""
-              aria-hidden="true"
-              draggable={false}
-              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0.8, pointerEvents: "none" }}
-            />
-            <span
-              aria-hidden="true"
-              className={!engaged && !open ? "assistant-launcher-breathe-6s" : undefined}
-              style={{
-                position: "absolute",
-                inset: 0,
-                WebkitMaskImage: `url("${askVColorOverlay}")`,
-                maskImage: `url("${askVColorOverlay}")`,
-                WebkitMaskSize: "100% 100%",
-                maskSize: "100% 100%",
-                WebkitMaskRepeat: "no-repeat",
-                maskRepeat: "no-repeat",
-                WebkitMaskPosition: "center",
-                maskPosition: "center",
-                backgroundColor: primary,
-                opacity: open ? 0 : engaged ? 1 : undefined,
-                pointerEvents: "none",
-              }}
-            />
-            <img
-              src={askVHighlight}
-              alt=""
-              aria-hidden="true"
-              draggable={false}
-              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 1, pointerEvents: "none" }}
-            />
-            <img
-              src={askVTop}
-              alt=""
-              aria-hidden="true"
-              draggable={false}
-              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 1, pointerEvents: "none" }}
-            />
-            {/* Hidden ireload of legacy assets so existing bundle
-                exiectations stay intact. */}
-            <img src={askVBlank} alt="" aria-hidden="true" hidden style={{ display: "none" }} />
-            <img src={askVBlank2} alt="" aria-hidden="true" hidden style={{ display: "none" }} />
-            <img src={askVHighlightLegacy} alt="" aria-hidden="true" hidden style={{ display: "none" }} />
-            <img src={askVHoverHighlight} alt="" aria-hidden="true" hidden style={{ display: "none" }} />
-            <img src={askVIcon} alt="" aria-hidden="true" hidden style={{ display: "none" }} />
-            <img src={glyphV} alt="" aria-hidden="true" hidden style={{ display: "none" }} />
-            <img src={glyphAsk} alt="" aria-hidden="true" hidden style={{ display: "none" }} />
-          </>
-        )}
+        <AskVFloatingLauncherMark engaged={engaged} panelOpen={open} />
       </button>
       <AssistantPanel
         open={open}

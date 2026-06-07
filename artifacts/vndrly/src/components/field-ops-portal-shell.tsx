@@ -13,18 +13,29 @@ import SidebarButton from "@/components/sidebar-button";
 import ReferToVndrlyDialog from "@/components/refer-to-vndrly-dialog";
 import { PoweredByVndrly } from "@/components/powered-by-vndrly";
 import ContextSwitcher from "@/components/context-switcher";
+import StarRating from "@/components/star-rating";
+import { AssistantLauncher } from "@/components/assistant-panel";
 import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import {
   portalDisplayLogo,
   shouldUseLayeredPortalLogo,
 } from "@/lib/portal-branding";
 import { VNDRLY_LOGO_SQUARE as vndrlyLogo } from "@/lib/vndrly-brand-assets";
+import {
+  useGetVendor,
+  useGetVendorRatings,
+  getGetVendorQueryKey,
+  getGetVendorRatingsQueryKey,
+} from "@workspace/api-client-react";
 import sidebarBg from "@assets/VNDRLY_Header_Blur_4_1776220762025.png";
 
 import logoUnderlay from "@assets/logo-underrlay_1778217900673.png";
 import logoOverlay from "@assets/logo-overlay_1778217860263.png";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+/** Matches main Layout — fixed sidebar + AskV pane; only main scrolls. */
+const FIXED_APP_CHROME = true;
 
 export interface FieldOpsTabDef {
   href: string;
@@ -58,6 +69,25 @@ export function FieldOpsPortalShell({
   const [vendorName, setVendorName] = useState<string | null>(null);
   const [employeeName, setEmployeeName] = useState<string | null>(null);
 
+  const vendorId = user?.vendorId ?? null;
+  const { data: vendor } = useGetVendor(vendorId ?? 0, {
+    query: {
+      enabled: !!vendorId,
+      queryKey: getGetVendorQueryKey(vendorId ?? 0),
+    },
+  });
+  const { data: vendorRatings } = useGetVendorRatings(vendorId ?? 0, {
+    query: {
+      enabled: !!vendorId,
+      queryKey: getGetVendorRatingsQueryKey(vendorId ?? 0),
+    },
+  });
+  const recentRatings = (vendorRatings?.items ?? []).slice(0, 20);
+  const recentAvg =
+    recentRatings.length > 0
+      ? recentRatings.reduce((s, r) => s + r.rating, 0) / recentRatings.length
+      : null;
+
   useEffect(() => {
     let cancelled = false;
     fetch(`${BASE}/api/field/me`, { credentials: "include" })
@@ -80,8 +110,9 @@ export function FieldOpsPortalShell({
 
   const displayLogo = portalDisplayLogo(brand, vndrlyLogo);
   const useLayeredLogo = shouldUseLayeredPortalLogo(brand);
-  const orgName = brand.name || vendorName;
+  const orgName = brand.name || vendor?.name || vendorName;
   const displayUserName = user?.displayName?.trim() || employeeName;
+  const navPaneStyle = { backgroundColor: "#3a3d42" } as const;
 
   const logoNode = useLayeredLogo ? (
     <div className="relative w-16 h-16 shrink-0 mt-[2px] rounded-lg overflow-hidden">
@@ -106,7 +137,7 @@ export function FieldOpsPortalShell({
         alt={brand.name ? `${brand.name} Logo` : "Partner Logo"}
         className="absolute inset-0 w-full h-full object-contain p-2"
         draggable={false}
-        data-testid="img-field-portal-logo"
+        data-testid="img-sidebar-logo"
       />
     </div>
   ) : (
@@ -120,84 +151,21 @@ export function FieldOpsPortalShell({
           : "w-10 h-10",
       )}
       draggable={false}
-      data-testid="img-field-portal-logo"
+      data-testid="img-sidebar-logo"
     />
   );
 
-  const sidebarHeader = (
-    <div className="relative z-10 px-4 pt-4 pb-1 border-b border-sidebar-border">
-      <div className="flex items-start gap-3">
-        {logoNode}
-        <div className="flex-1 min-w-0 self-end">
-          <p className="text-xs text-sidebar-foreground/60 leading-tight">
-            {t(portalLabelKey)}
-          </p>
-        </div>
-        <NotificationsBell />
-      </div>
-      {user && user.availableMemberships.length >= 2 ? (
-        <div className="mt-1">
-          <ContextSwitcher fallbackOrgName={orgName ?? null} />
-        </div>
-      ) : (
-        orgName && (
-          <p className="mt-1 text-base font-semibold text-sidebar-foreground/90 leading-tight truncate text-left">
-            {orgName}
-          </p>
-        )
-      )}
-      {displayUserName && (
-        <p
-          className="mt-1 text-xs text-sidebar-foreground/60 truncate text-left"
-          data-testid="text-field-portal-user-name"
-        >
-          {displayUserName}
-        </p>
-      )}
-    </div>
-  );
-
-  const sidebarNav = (
-    <nav className="relative z-10 flex-1 p-3 space-y-[5px] overflow-y-auto">
-      {tabs.map((tab) => {
-        const isActive = tab.match(location);
-        const Icon = tab.icon;
-        return (
-          <Link key={tab.href} href={tab.href} onClick={() => setSidebarOpen(false)}>
-            <SidebarButton
-              isActive={isActive}
-              testId={tab.testId}
-              branded={branded}
-              brandPrimary={brand.primary}
-              brandAccent={brand.accent}
-            >
-              <Icon className="w-4 h-4" />
-              {t(tab.labelKey)}
-            </SidebarButton>
-          </Link>
-        );
-      })}
-      <div className="pt-6 pb-1 px-1 flex justify-between items-center gap-2 md:hidden">
-        <DarkLightToggle
-          mode={isDarkTheme ? "dark" : "light"}
-          onChange={(m) => setThemeMode(m)}
-          variant="light"
-        />
-        <LanguageToggle variant="light" />
-      </div>
-    </nav>
-  );
-
-  const navPaneStyle = { backgroundColor: "#3a3d42" } as const;
-
   return (
-    <div className="min-h-screen flex" style={brandStyleVars(brand)}>
+    <div
+      className={cn("flex", FIXED_APP_CHROME ? "h-screen overflow-hidden" : "min-h-screen")}
+      style={brandStyleVars(brand)}
+    >
       <aside
         style={navPaneStyle}
         className={cn(
           "fixed inset-y-0 left-0 z-50 w-64 flex flex-col transition-transform overflow-hidden",
+          FIXED_APP_CHROME ? "md:translate-x-0" : "md:static md:translate-x-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full",
-          "md:translate-x-0 md:static",
         )}
       >
         <div
@@ -212,14 +180,104 @@ export function FieldOpsPortalShell({
             WebkitMaskImage: "linear-gradient(to bottom, black 0%, transparent 100%)",
           }}
         />
-        {sidebarHeader}
-        {sidebarNav}
+        <div className="relative z-10 px-4 pt-4 pb-1 border-b border-sidebar-border">
+          <div className="flex items-start gap-3">
+            {logoNode}
+            <div className="flex-1 min-w-0 self-end">
+              <p className="text-xs text-sidebar-foreground/60 leading-tight">
+                {t(portalLabelKey)}
+              </p>
+              {recentAvg !== null && (
+                <div className="flex items-center gap-1 mt-0.5" data-testid="sidebar-vendor-rating">
+                  <StarRating value={Math.round(recentAvg)} size={12} readOnly />
+                  <span className="text-xs text-sidebar-foreground/80">
+                    {recentAvg.toFixed(1)}{" "}
+                    <span className="text-sidebar-foreground/60">({recentRatings.length})</span>
+                  </span>
+                </div>
+              )}
+            </div>
+            <NotificationsBell />
+          </div>
+          {user && user.availableMemberships.length >= 2 ? (
+            <div className="mt-1">
+              <ContextSwitcher fallbackOrgName={orgName ?? null} />
+            </div>
+          ) : (
+            orgName && (
+              <p className="mt-1 text-base font-semibold text-sidebar-foreground/90 leading-tight truncate text-left">
+                {orgName}
+              </p>
+            )
+          )}
+          {displayUserName && (
+            <p
+              className="mt-1 text-xs text-sidebar-foreground/60 truncate text-left"
+              data-testid="text-user-name"
+            >
+              {displayUserName}
+            </p>
+          )}
+        </div>
+        <nav
+          className={cn(
+            "relative z-10 flex-1 p-3 space-y-[5px]",
+            FIXED_APP_CHROME && "min-h-0 overflow-y-auto",
+          )}
+        >
+          {tabs.map((tab) => {
+            const isActive = tab.match(location);
+            const Icon = tab.icon;
+            return (
+              <Link key={tab.href} href={tab.href} onClick={() => setSidebarOpen(false)}>
+                <SidebarButton
+                  isActive={isActive}
+                  testId={tab.testId}
+                  branded={branded}
+                  brandPrimary={brand.primary}
+                  brandAccent={brand.accent}
+                >
+                  <Icon className="w-4 h-4" />
+                  {t(tab.labelKey)}
+                </SidebarButton>
+              </Link>
+            );
+          })}
+          <div className="pt-6 pb-1 px-1 flex justify-between items-center gap-2">
+            <DarkLightToggle
+              mode={isDarkTheme ? "dark" : "light"}
+              onChange={(m) => setThemeMode(m)}
+              variant="light"
+            />
+            <LanguageToggle variant="light" />
+          </div>
+          {user && (
+            <div className="pt-3">
+              <SidebarButton
+                isActive={false}
+                activeOnHover
+                onClick={() => {
+                  void logout();
+                }}
+                testId="nav-sign-out-sidebar"
+                branded={branded}
+                brandPrimary={brand.primary}
+                brandAccent={brand.accent}
+              >
+                <LogOut className="w-4 h-4" />
+                {t("nav.signOut")}
+              </SidebarButton>
+            </div>
+          )}
+        </nav>
       </aside>
 
-      <div
-        className="hidden md:block w-[2px] shrink-0"
-        style={{ backgroundColor: "var(--brand-primary)" }}
-      />
+      {!FIXED_APP_CHROME && (
+        <div
+          className="hidden md:block w-[2px] shrink-0"
+          style={{ backgroundColor: "var(--brand-primary)" }}
+        />
+      )}
 
       {sidebarOpen && (
         <div
@@ -229,57 +287,50 @@ export function FieldOpsPortalShell({
         />
       )}
 
-      <div className="flex-1 flex flex-col min-w-0">
+      <div
+        className={cn(
+          "flex min-w-0 flex-1 flex-col",
+          FIXED_APP_CHROME && "h-screen md:ml-64 md:border-l-2 md:border-[var(--brand-primary)]",
+        )}
+      >
         <div
           style={navPaneStyle}
-          className="px-3 py-2 flex items-center justify-between gap-2 shrink-0"
+          className="flex min-h-[48px] shrink-0 items-center justify-end gap-4 overflow-visible px-4 py-2"
+          data-testid="askv-pane"
         >
+          <div className="flex items-center overflow-visible">
+            <AssistantLauncher placement="askv-pane" />
+          </div>
           <ReferToVndrlyDialog
             trigger={
               <button
                 type="button"
-                className="hidden sm:flex items-center gap-2 text-sm text-sidebar-foreground/80 leading-relaxed cursor-pointer transition-colors hover:[color:var(--brand-primary)] focus-visible:[color:var(--brand-primary)] focus:outline-none bg-transparent border-0 p-0"
-                data-testid="button-field-portal-refer"
+                className="flex items-center gap-2 text-sm text-sidebar-foreground/80 leading-relaxed cursor-pointer transition-colors hover:[color:var(--brand-primary)] focus-visible:[color:var(--brand-primary)] focus:outline-none bg-transparent border-0 p-0"
+                data-testid="button-askv-pane-refer-to-vndrly"
               >
                 <PoweredByVndrly textClassName="text-sidebar-foreground/80" />
               </button>
             }
           />
-          <div className="flex items-center gap-2 ml-auto">
-            <div className="hidden md:flex items-center gap-2">
-              <DarkLightToggle
-                mode={isDarkTheme ? "dark" : "light"}
-                onChange={(m) => setThemeMode(m)}
-                variant="light"
-              />
-              <LanguageToggle variant="light" />
-            </div>
-            <div className="[&>*]:!h-[28px]">
-              <SidebarButton
-                isActive={false}
-                activeOnHover
-                onClick={() => { void logout(); }}
-                testId="nav-field-portal-sign-out"
-                branded={branded}
-                brandPrimary={brand.primary}
-                brandAccent={brand.accent}
-              >
-                <LogOut className="w-4 h-4" />
-                <span className="hidden sm:inline">{t("nav.signOut")}</span>
-              </SidebarButton>
-            </div>
-          </div>
         </div>
 
-        <header className="border-b bg-card px-4 py-3 flex items-center gap-3 md:hidden">
-          <PillButton color="image" className="min-w-[28px] px-0" onClick={() => setSidebarOpen(true)} data-testid="button-field-portal-menu">
+        <header className="flex shrink-0 items-center gap-3 border-b bg-card px-4 py-3 md:hidden">
+          <PillButton
+            color="image"
+            className="min-w-[28px] px-0"
+            onClick={() => setSidebarOpen(true)}
+            data-testid="button-menu"
+          >
             <Menu className="w-5 h-5" />
           </PillButton>
-          <span className="font-bold truncate flex-1">{orgName ?? "VNDRLY"}</span>
+          <span className="font-bold truncate">{orgName ?? "VNDRLY"}</span>
         </header>
 
         <main
-          className="flex-1 overflow-auto pb-20 md:pb-0"
+          className={cn(
+            "flex-1 p-6 pb-24 md:pb-6",
+            FIXED_APP_CHROME ? "min-h-0 overflow-y-auto" : "overflow-auto",
+          )}
           style={isDarkTheme ? { backgroundColor: "#E6E6E7" } : undefined}
         >
           {children}
@@ -301,7 +352,9 @@ export function FieldOpsPortalShell({
                     data-testid={`${tab.testId}-mobile`}
                     className={cn(
                       "flex flex-col items-center justify-center gap-0.5 h-full text-[10px] font-medium transition-colors",
-                      active ? "text-[color:var(--brand-primary)]" : "text-muted-foreground hover:text-foreground",
+                      active
+                        ? "text-[color:var(--brand-primary)]"
+                        : "text-muted-foreground hover:text-foreground",
                     )}
                     aria-current={active ? "page" : undefined}
                   >

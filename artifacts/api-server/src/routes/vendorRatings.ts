@@ -59,11 +59,21 @@ router.get("/vendors/:vendorId/ratings", async (req, res): Promise<void> => {
     res.status(401).json({ error: "Not authenticated", code: "auth.not_authenticated" });
     return;
   }
-  if (session.role !== "admin" && session.role !== "partner" && session.role !== "vendor") {
+  if (
+    session.role !== "admin" &&
+    session.role !== "partner" &&
+    session.role !== "vendor" &&
+    session.role !== "field_employee"
+  ) {
     res.status(403).json({ error: "Forbidden", code: "auth.forbidden" });
     return;
   }
-  if (session.role === "vendor" && session.vendorId !== params.data.vendorId) {
+  // Vendor admins and field employees (foreman portal chrome) may read
+  // aggregate ratings for their own employer only — not other vendors.
+  if (
+    (session.role === "vendor" || session.role === "field_employee") &&
+    session.vendorId !== params.data.vendorId
+  ) {
     res.status(403).json({ error: "Forbidden", code: "auth.forbidden" });
     return;
   }

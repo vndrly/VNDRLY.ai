@@ -46,6 +46,7 @@ import {
   portalDisplayLogo,
   shouldUseLayeredPortalLogo,
 } from "@/lib/portal-branding";
+import { AssistantLauncher } from "@/components/assistant-panel";
 
 function useNavItems(user: { role: string; vendorId: number | null; partnerId: number | null } | null) {
   const { t } = useTranslation();
@@ -129,6 +130,8 @@ function useNavItems(user: { role: string; vendorId: number | null; partnerId: n
   return baseNavItems;
 }
 
+/** Set to `false` to revert: whole page scrolls (legacy layout). */
+const FIXED_APP_CHROME = true;
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
@@ -166,22 +169,22 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const sidebarLogoUrl = brand.logoSquareUrl || brand.logoUrl || null;
   const displayLogo = portalDisplayLogo(brand, vndrlyLogo);
   const usingSquareLogo = shouldUseLayeredPortalLogo(brand);
-  // Top content-pane bar: now shown globally for every context (every
-  // vendor / partner / admin / VNDRLY viewer). The bar's accent uses
-  // `var(--brand-primary)` (and the sidebar background flexes to the
-  // active brand color), so each tenant automatically gets their own
-  // brand color in the top bar — Baker stays Baker teal, other
-  // vendors/partners pick up their own primary, and unbranded VNDRLY
-  // stays VNDRLY gold.
-  const showTopBar = !!user;
+  // AskV pane: horizontal chrome above the content area for every
+  // authenticated admin / partner / vendor viewer. Uses the same
+  // nav-pane background as the left sidebar; hosts Ask V + powered-by.
+  const showAskVPane = !!user;
   const navPaneStyle = { backgroundColor: "#3a3d42" } as const;
 
   return (
-    <div className="min-h-screen flex" style={brandStyleVars(brand)}>
+    <div
+      className={cn("flex", FIXED_APP_CHROME ? "h-screen overflow-hidden" : "min-h-screen")}
+      style={brandStyleVars(brand)}
+    >
       <aside
         style={navPaneStyle}
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 flex flex-col transition-transform md:translate-x-0 md:static overflow-hidden",
+          "fixed inset-y-0 left-0 z-50 w-64 flex flex-col transition-transform overflow-hidden",
+          FIXED_APP_CHROME ? "md:translate-x-0" : "md:static md:translate-x-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
@@ -288,7 +291,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </p>
         )}
         </div>
-        <nav className="relative z-10 flex-1 p-3 space-y-[5px]">
+        <nav
+          className={cn(
+            "relative z-10 flex-1 p-3 space-y-[5px]",
+            FIXED_APP_CHROME && "min-h-0 overflow-y-auto",
+          )}
+        >
           {navItems.map((item) => {
             const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
             return (
@@ -315,66 +323,77 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             />
             <LanguageToggle variant="light" />
           </div>
+          {user && (
+            <div className="pt-3">
+              <SidebarButton
+                isActive={false}
+                activeOnHover
+                onClick={() => {
+                  logout();
+                }}
+                testId="nav-sign-out-sidebar"
+                branded={branded}
+                brandPrimary={brand.primary}
+                brandAccent={brand.accent}
+              >
+                <LogOut className="w-4 h-4" />
+                {t("nav.signOut")}
+              </SidebarButton>
+            </div>
+          )}
         </nav>
       </aside>
 
-      <div
-        className="hidden md:block w-[2px] shrink-0"
-        style={{ backgroundColor: "var(--brand-primary)" }}
-      />
+      {!FIXED_APP_CHROME && (
+        <div
+          className="hidden md:block w-[2px] shrink-0"
+          style={{ backgroundColor: "var(--brand-primary)" }}
+        />
+      )}
 
       {sidebarOpen && (
         <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Narrow top bar in the right content pane. Background color matches
-            the sidebar (bg-sidebar) so it visually extends the navigation
-            pane across the top. Left: "…powered by" + VNDRLY mark. Right: a
-            copy of the Sign Out button (the original sidebar footer
-            Sign Out has been removed; this is the only Sign Out
-            surface now). Shown globally for every authenticated
-            viewer — see `showTopBar` above. */}
-        {showTopBar && (
+      <div
+        className={cn(
+          "flex min-w-0 flex-1 flex-col",
+          FIXED_APP_CHROME && "h-screen md:ml-64 md:border-l-2 md:border-[var(--brand-primary)]",
+        )}
+      >
+        {showAskVPane && (
         <div
           style={navPaneStyle}
-          className="px-4 py-2 flex items-center justify-between"
+          className="flex min-h-[48px] shrink-0 items-center justify-end gap-4 overflow-visible px-4 py-2"
+          data-testid="askv-pane"
         >
+          <div className="flex items-center overflow-visible">
+            <AssistantLauncher placement="askv-pane" />
+          </div>
           <ReferToVndrlyDialog
             trigger={
               <button
                 type="button"
                 className="flex items-center gap-2 text-sm text-sidebar-foreground/80 leading-relaxed cursor-pointer transition-colors hover:[color:var(--brand-primary)] focus-visible:[color:var(--brand-primary)] focus:outline-none bg-transparent border-0 p-0"
-                data-testid="button-topbar-refer-to-vndrly"
+                data-testid="button-askv-pane-refer-to-vndrly"
               >
                 <PoweredByVndrly textClassName="text-sidebar-foreground/80" />
               </button>
             }
           />
-          <div className="[&>*]:!h-[28px]">
-            <SidebarButton
-              isActive={false}
-              activeOnHover
-              onClick={() => { logout(); }}
-              testId="nav-sign-out-topbar"
-              branded={branded}
-              brandPrimary={brand.primary}
-              brandAccent={brand.accent}
-            >
-              <LogOut className="w-4 h-4" />
-              {t("nav.signOut")}
-            </SidebarButton>
-          </div>
         </div>
         )}
-        <header className="border-b bg-card px-4 py-3 flex items-center gap-3 md:hidden">
+        <header className="flex shrink-0 items-center gap-3 border-b bg-card px-4 py-3 md:hidden">
           <PillButton color="image" className="min-w-[28px] px-0" onClick={() => setSidebarOpen(true)} data-testid="button-menu">
             <Menu className="w-5 h-5" />
           </PillButton>
           <span className="font-bold">VNDRLY</span>
         </header>
         <main
-          className="flex-1 p-6 overflow-auto"
+          className={cn(
+            "flex-1 p-6",
+            FIXED_APP_CHROME ? "min-h-0 overflow-y-auto" : "overflow-auto",
+          )}
           style={isDarkTheme ? { backgroundColor: "#E6E6E7" } : undefined}
         >
           {children}
