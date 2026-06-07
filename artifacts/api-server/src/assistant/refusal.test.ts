@@ -54,6 +54,23 @@ describe("classifyRefusal", () => {
     ).toBe(false);
   });
 
+  it("matches a warm opener + 'you don't have permission' refusal", () => {
+    const reply =
+      "I appreciate you wanting to help your team grow! However, as a field employee, " +
+      "you don't have permission to add new team members to your vendor org.\n\n" +
+      "Contact your vendor admin from the Field Employees screen.";
+    expect(classifyRefusal(reply)).toBe(true);
+  });
+
+  it("matches 'I don't have access' role-boundary refusals", () => {
+    expect(
+      classifyRefusal(
+        "I don't have access to the vendor Invoices screen from a partner account. " +
+          "Open Bills to Pay instead.",
+      ),
+    ).toBe(true);
+  });
+
   // Spanish branch — keeps the admin metrics card honest for
   // Spanish-toggled crew members. Without these, a refusal in
   // Spanish would silently count as a helpful reply.

@@ -26,7 +26,7 @@
 //     deep in the body to flag as a refusal.
 
 export const REFUSAL_RE =
-  /\b(i (?:can'?t|cannot|don'?t have|won'?t)|i'?m (?:not able|unable|sorry)|that'?s (?:outside|not (?:something|in)) my)\b/i;
+  /\b(i (?:can'?t|cannot|don'?t have|won'?t)|(?:you|i) don'?t have (?:access|permission)|i'?m (?:not able|unable|sorry)|that'?s (?:outside|not (?:something|in)) my|not (?:permitted|allowed) (?:for|to))\b/i;
 
 // Spanish refusal openings. Mirrors the English regex's intent:
 //   - "no puedo" / "no podría" — "I can't" / "I couldn't"
@@ -39,7 +39,7 @@ export const REFUSAL_RE =
 // (the apostrophe contractions don't apply), but we still anchor
 // on `\b` to avoid matching mid-word.
 export const REFUSAL_RE_ES =
-  /\b(no\s+(?:puedo|podr[ií]a|tengo\s+(?:acceso|permiso|la\s+capacidad|forma)|me\s+es\s+posible|est[áa]\s+dentro\s+de)|lo\s+(?:siento|lamento)|(?:eso|esto)\s+(?:est[áa]|queda)\s+fuera\s+de)\b/i;
+  /\b(no\s+(?:puedo|podr[ií]a|tengo\s+(?:acceso|permiso|la\s+capacidad|forma)|me\s+es\s+posible|est[áa]\s+dentro\s+de)|(?:no\s+)?tienes\s+permiso|lo\s+(?:siento|lamento)|(?:eso|esto)\s+(?:est[áa]|queda)\s+fuera\s+de)\b/i;
 
 export function classifyRefusal(text: string): boolean {
   if (!text) return false;
