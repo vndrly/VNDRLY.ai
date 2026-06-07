@@ -13,7 +13,15 @@ pnpm --filter @workspace/vndrly-mobile run typecheck
 pnpm --filter @workspace/vndrly-mobile run test
 ```
 
-Expo account: **`vndrlyadmin`** (EAS project `@vndrlyadmin/vndrly-mobile`, id `2b63b072-00bc-4330-aac5-fafaaa7f7ff5`).
+Expo account: **`vndrlyadmin`** (display name **VNDRLYAdmin** — subscribe billing here, not the Apple email).
+
+| Name in Expo UI | What it is | Use for |
+|---|---|---|
+| **VNDRLYAdmin** (`vndrlyadmin`) | EAS project owner | **Paid plan**, builds, credentials — `@vndrlyadmin/vndrly-mobile` |
+| **V@VNDRLY.ai** | Login email / separate Expo identity | Sign-in only; not where this app lives |
+| `v@vndrly.ai` in `eas.json` | Apple ID for TestFlight submit | App Store Connect only |
+
+EAS project: `@vndrlyadmin/vndrly-mobile`, id `2b63b072-00bc-4330-aac5-fafaaa7f7ff5` (`app.json` → `"owner": "vndrlyadmin"`).
 
 ## Build for TestFlight
 
@@ -46,11 +54,51 @@ Add `-Submit` after filling `appleId` and `appleTeamId` in `eas.json` (App Store
 
 ## Local dev (simulator / Expo Go)
 
+### Quick dev server (Windows or Mac — Expo Go / dev client over LAN)
+
 ```powershell
 pnpm --filter @workspace/vndrly-mobile run dev:local
 ```
 
 Uses `EXPO_PUBLIC_DOMAIN` from repo-root `.env.local` (defaults to `https://vndrly.ai`).
+
+### iOS Simulator — from Windows (EAS cloud build)
+
+Builds a simulator `.app` in the cloud (`eas.json` → `development` profile, `simulator: true`):
+
+```powershell
+pnpm run ios:sim:eas
+```
+
+When the build finishes, on a **Mac** download the `.tar.gz` from the EAS build page, then:
+
+```powershell
+pnpm run ios:sim:install -- C:\path\to\build.tar.gz
+```
+
+### iOS Simulator — native on Mac (Xcode)
+
+Requires **macOS + Xcode** (does not run on Windows):
+
+```powershell
+pnpm run ios:sim:local
+```
+
+Optional device name:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/ios-simulator-local.ps1 -Device "iPhone 16"
+```
+
+Point the simulator at your local API by setting in repo-root `.env.local`:
+
+```env
+EXPO_PUBLIC_DOMAIN=http://localhost:8080
+```
+
+Then run `pnpm run dev:local` (API) and `pnpm run ios:sim:local` (simulator).
+
+See also `docs/database.md` for local DB + API setup.
 
 ## Optional env vars
 

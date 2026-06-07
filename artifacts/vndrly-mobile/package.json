@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "EXPO_PACKAGER_PROXY_URL=https://$REPLIT_EXPO_DEV_DOMAIN EXPO_PUBLIC_DOMAIN=${EXPO_PUBLIC_DOMAIN:-https://vndrly.ai} EXPO_PUBLIC_REPL_ID=$REPL_ID EXPO_PUBLIC_SENTRY_DSN=$SENTRY_DSN REACT_NATIVE_PACKAGER_HOSTNAME=$REPLIT_DEV_DOMAIN pnpm exec expo start --localhost --port $PORT",
     "dev:local": "node ../../scripts/run-expo-local.mjs",
+    "dev:ios:sim": "node ../../scripts/run-expo-ios-local.mjs",
     "build": "node scripts/build.js",
     "serve": "node server/serve.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
