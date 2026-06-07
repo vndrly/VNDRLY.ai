@@ -36,17 +36,17 @@ describe("ForemanQuickActions", () => {
     render(<ForemanQuickActions unreadAlerts={3} pendingSchedule={1} />);
 
     const ids = [
-      "foreman-action-comms",
+      "foreman-action-alerts",
       "foreman-action-start-job",
       "foreman-action-schedule",
-      "foreman-action-alerts",
+      "foreman-action-comms",
     ].map((id) => screen.getByTestId(id).getAttribute("data-testid"));
 
     expect(ids).toEqual([
-      "foreman-action-comms",
+      "foreman-action-alerts",
       "foreman-action-start-job",
       "foreman-action-schedule",
-      "foreman-action-alerts",
+      "foreman-action-comms",
     ]);
   });
 });

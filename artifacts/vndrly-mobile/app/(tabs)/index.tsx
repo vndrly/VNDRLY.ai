@@ -23,6 +23,7 @@ import { formatTicketTrackingNumber } from "@workspace/db/format";
 
 import AuthedImage from "@/components/AuthedImage";
 import ForemanQuickActions from "@/components/ForemanQuickActions";
+import ForemanScheduleTicketsModal from "@/components/ForemanScheduleTicketsModal";
 import FreshnessPill from "@/components/FreshnessPill";
 import LayeredPillButton from "@/components/LayeredPillButton";
 import NudgeFlashOverlay from "@/components/NudgeFlashOverlay";
@@ -106,6 +107,8 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [pendingScheduleCount, setPendingScheduleCount] = useState(0);
+  const [schedulePickerOpen, setSchedulePickerOpen] = useState(false);
   // Task #630: brief confirmation toast that appears when a foreground
   // `ticket_unblocked` push arrives while the worker is on the open-
   // tickets list. Mirrors the detail-screen toast added in Task #623 so
@@ -297,6 +300,19 @@ export default function HomeScreen() {
     }
   }, []);
 
+  const loadPendingSchedule = useCallback(async () => {
+    if (!isForemanEmployee) return;
+    try {
+      const r = await apiFetch<{ tickets?: Array<{ myAckStatus?: string }> }>(
+        "/api/me/upcoming-schedule?days=14",
+      );
+      const pending = (r?.tickets ?? []).filter((tk) => tk.myAckStatus === "pending").length;
+      setPendingScheduleCount(pending);
+    } catch {
+      setPendingScheduleCount(0);
+    }
+  }, [isForemanEmployee]);
+
   // `silent` callers (e.g. Task #630's push-triggered refresh) suppress
   // the failure Alert so a transient network blip doesn't pop a blocking
   // modal on top of the brief "assignment restored" confirmation toast.
@@ -314,7 +330,10 @@ export default function HomeScreen() {
         // cooldown expires; the recovery effect below then re-invokes
         // load() so the screen converges naturally.
         if (isTicketsRateLimited()) return false;
-        const data = await apiFetch<OpenTicket[]>("/api/field/open-tickets");
+        const openTicketsPath = isForemanEmployee
+          ? "/api/field/open-tickets?vendorWide=1"
+          : "/api/field/open-tickets";
+        const data = await apiFetch<OpenTicket[]>(openTicketsPath);
         setTickets(data || []);
         // Task #691: a successful load means we're no longer in an
         // error state — clear so the gate hook doesn't re-fire on
@@ -372,12 +391,13 @@ export default function HomeScreen() {
         })();
       }
       void loadUnread();
+      void loadPendingSchedule();
       // Direct work assignments inbox refresh — vendor-only, silent. The
       // UI just hides the section when empty so any failure here is fine.
       void loadPendingDirect();
       return ok;
     },
-    [loadUnread, loadPendingDirect, isFieldEmployee, t],
+    [loadUnread, loadPendingDirect, loadPendingSchedule, isFieldEmployee, isForemanEmployee, t],
   );
 
   // Task #668 — surgical per-row refresh used by the foreground push
@@ -460,7 +480,8 @@ export default function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       load();
-    }, [load]),
+      void loadPendingSchedule();
+    }, [load, loadPendingSchedule]),
   );
 
   // Task #691: auto-recover from a tickets rate-limit cooldown.
@@ -822,7 +843,11 @@ export default function HomeScreen() {
       </View>
 
       {isForemanEmployee ? (
-        <ForemanQuickActions unreadAlerts={unreadCount} />
+        <ForemanQuickActions
+          unreadAlerts={unreadCount}
+          pendingSchedule={pendingScheduleCount}
+          onSchedulePress={() => setSchedulePickerOpen(true)}
+        />
       ) : null}
 
       {isFieldEmployee ? (
@@ -836,24 +861,26 @@ export default function HomeScreen() {
               onPress={() => router.push("/history")}
               inactive
               height={40}
-              style={styles.foremanPillHalf}
+              style={isForemanEmployee ? styles.foremanPillFull : styles.foremanPillHalf}
             >
               <Feather name="clock" size={14} color="#ffffff" style={styles.btnIconShadow} />
               <Text style={[styles.newBtnText, { color: "#ffffff" }]} numberOfLines={1}>
                 {t("tickets.history")}
               </Text>
             </LayeredPillButton>
-            <LayeredPillButton
-              testID="button-new-ticket"
-              onPress={() => router.push("/new-ticket")}
-              height={40}
-              style={styles.foremanPillHalf}
-            >
-              <Feather name="plus" size={16} color="#ffffff" style={styles.btnIconShadow} />
-              <Text style={[styles.newBtnText, { color: "#ffffff" }]} numberOfLines={1}>
-                {t("tickets.newTicket")}
-              </Text>
-            </LayeredPillButton>
+            {!isForemanEmployee ? (
+              <LayeredPillButton
+                testID="button-new-ticket"
+                onPress={() => router.push("/new-ticket")}
+                height={40}
+                style={styles.foremanPillHalf}
+              >
+                <Feather name="plus" size={16} color="#ffffff" style={styles.btnIconShadow} />
+                <Text style={[styles.newBtnText, { color: "#ffffff" }]} numberOfLines={1}>
+                  {t("tickets.newTicket")}
+                </Text>
+              </LayeredPillButton>
+            ) : null}
           </View>
         </View>
       ) : (
@@ -1157,7 +1184,12 @@ export default function HomeScreen() {
                 onPress={onPress}
                 style={[
                   styles.card,
-                  { backgroundColor: colors.card, borderColor: colors.border },
+                  {
+                    backgroundColor: colors.card,
+                    borderColor: isForemanEmployee ? `${brand.primary}55` : colors.border,
+                    borderLeftColor: isForemanEmployee ? brand.primary : colors.border,
+                    borderLeftWidth: isForemanEmployee ? 4 : 1,
+                  },
                 ]}
                 testID={`card-ticket-${item.id}`}
               >
@@ -1189,7 +1221,8 @@ export default function HomeScreen() {
                   </View>
                   {(() => {
                     const staleDays = ticketStaleDays(item.status, item.updatedAt);
-                    if (isFieldEmployee) {
+                    const useStatusPills = !isFieldEmployee || isForemanEmployee;
+                    if (!useStatusPills) {
                       return (
                         <View style={styles.statusGroup}>
                           {staleDays != null ? (
@@ -1470,6 +1503,18 @@ export default function HomeScreen() {
           </Pressable>
         </Modal>
       ) : null}
+      {isForemanEmployee && me?.vendorId ? (
+        <ForemanScheduleTicketsModal
+          visible={schedulePickerOpen}
+          onClose={() => setSchedulePickerOpen(false)}
+          vendorId={me.vendorId}
+          onScheduled={() => {
+            setSchedulePickerOpen(false);
+            void load();
+            void loadPendingSchedule();
+          }}
+        />
+      ) : null}
     </View>
   );
 }
@@ -1635,6 +1680,9 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   foremanPillHalf: {
+    flex: 1,
+  },
+  foremanPillFull: {
     flex: 1,
   },
   simplePill: {

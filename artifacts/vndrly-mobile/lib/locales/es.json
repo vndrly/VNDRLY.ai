@@ -1218,10 +1218,12 @@
     "membersRequired": "Elija al menos un miembro."
   },
   "foremanSchedule": {
+    "scheduleTicket": "Programar ticket",
+    "scheduleNow": "Programar ahora",
     "addToCalendar": "Agregar al calendario",
     "pickTicketTitle": "Tickets abiertos",
     "noOpenTickets": "No hay tickets abiertos para su proveedor.",
-    "emptyForeman": "Nada programado aún. Toque Agregar al calendario para programar una cuadrilla en un ticket abierto."
+    "emptyForeman": "Nada programado aún. Toque Programar ticket para asignar una cuadrilla a un trabajo abierto."
   },
   "crew": {
     "title": "Cuadrilla y Tiempo",
@@ -1454,11 +1456,12 @@
   "scheduleTicket": {
     "button": "Programar trabajo",
     "title": "Programar trabajo",
+    "scheduleNowTitle": "Programar ahora",
     "loading": "Cargando programación…",
     "whenLabel": "Fecha y hora de inicio",
     "durationLabel": "Duración estimada (minutos)",
     "durationPlaceholder": "Opcional",
-    "crewLabel": "Asignar cuadrilla",
+    "crewLabel": "Seleccionar cuadrilla",
     "crewPresetLabel": "Cuadrillas guardadas",
     "presetAppliedTitle": "Cuadrilla aplicada",
     "presetAppliedBody": "{{name}} — {{count}} miembro(s) seleccionados.",
@@ -1469,8 +1472,10 @@
     "actingForemanLabel": "Capataz suplente",
     "actingForemanHint": "Si no puedes estar en sitio, elige quién liderará este ticket.",
     "noActingForeman": "(ninguno)",
-    "warningsLabel": "Recordatorios (push)",
-    "warning1d": "1 día antes",
+    "warningsLabel": "Recordatorios para la cuadrilla",
+    "warningsHint": "Alertas push a 24 h, 12 h y 1 h antes del inicio. Toque la notificación para abrir el ticket en VNDRLY.",
+    "warning1d": "24 horas antes",
+    "warning12h": "12 horas antes",
     "warning2d": "2 días antes",
     "warning3d": "3 días antes",
     "warning4h": "4 horas antes",
@@ -1478,9 +1483,10 @@
     "warningStart": "Al iniciar",
     "cancel": "Cancelar",
     "save": "Guardar programación",
+    "notifyCrew": "Notificar cuadrilla",
     "saving": "Guardando…",
-    "savedTitle": "Programación guardada",
-    "savedBody": "Se notificó a la cuadrilla.",
+    "savedTitle": "Cuadrilla notificada",
+    "savedBody": "Recordatorios programados. ¿Agregar este trabajo al calendario de iOS?",
     "donePicker": "Listo",
     "scheduledBanner": "Programado: {{when}}",
     "conflictTitle": "Cuadrilla ya reservada",

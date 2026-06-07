@@ -11,7 +11,9 @@ import {
   View,
 } from "react-native";
 
+import LayeredPillButton from "@/components/LayeredPillButton";
 import ScheduleTicketPanel from "@/components/ScheduleTicketPanel";
+import { useBrand } from "@/hooks/use-brand";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
 import { translateApiError } from "@/lib/apiErrors";
@@ -40,6 +42,7 @@ export default function ForemanScheduleTicketsModal({
   onScheduled,
 }: Props) {
   const colors = useColors();
+  const brand = useBrand();
   const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [tickets, setTickets] = useState<OpenTicket[]>([]);
@@ -61,7 +64,10 @@ export default function ForemanScheduleTicketsModal({
   }, [t]);
 
   useEffect(() => {
-    if (visible) void load();
+    if (visible) {
+      setScheduleTicketId(null);
+      void load();
+    }
   }, [visible, load]);
 
   return (
@@ -99,9 +105,15 @@ export default function ForemanScheduleTicketsModal({
               renderItem={({ item }) => {
                 const pill = ticketStatusPillStyle(item.status, item.updatedAt);
                 return (
-                  <TouchableOpacity
-                    onPress={() => setScheduleTicketId(item.id)}
-                    style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
+                  <View
+                    style={[
+                      styles.card,
+                      {
+                        backgroundColor: colors.card,
+                        borderColor: `${brand.primary}55`,
+                        borderLeftColor: brand.primary,
+                      },
+                    ]}
                     testID={`open-ticket-schedule-${item.id}`}
                   >
                     <View style={styles.row}>
@@ -123,7 +135,17 @@ export default function ForemanScheduleTicketsModal({
                         {[item.partnerName, item.siteName].filter(Boolean).join(" — ") || "—"}
                       </Text>
                     </View>
-                  </TouchableOpacity>
+                    <LayeredPillButton
+                      onPress={() => setScheduleTicketId(item.id)}
+                      height={40}
+                      style={{ marginTop: 12 }}
+                      testID={`button-schedule-now-${item.id}`}
+                    >
+                      <Text style={{ color: "#fff", fontFamily: "Inter_600SemiBold", fontSize: 14 }}>
+                        {t("foremanSchedule.scheduleNow")}
+                      </Text>
+                    </LayeredPillButton>
+                  </View>
                 );
               }}
             />
@@ -161,7 +183,13 @@ const styles = StyleSheet.create({
   title: { fontFamily: "Inter_700Bold", fontSize: 16 },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   empty: { textAlign: "center", marginTop: 40, fontFamily: "Inter_400Regular", padding: 16 },
-  card: { borderWidth: 1, borderRadius: 12, padding: 14, marginBottom: 10 },
+  card: {
+    borderWidth: 1,
+    borderLeftWidth: 4,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 10,
+  },
   row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 },
   id: { fontFamily: "Inter_600SemiBold", fontSize: 14 },
   badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },

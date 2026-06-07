@@ -10,11 +10,13 @@ import { useColors } from "@/hooks/useColors";
 type Props = {
   unreadAlerts?: number;
   pendingSchedule?: number;
+  onSchedulePress?: () => void;
 };
 
 export default function ForemanQuickActions({
   unreadAlerts = 0,
   pendingSchedule = 0,
+  onSchedulePress,
 }: Props) {
   const colors = useColors();
   const brand = useBrand();
@@ -41,7 +43,7 @@ export default function ForemanQuickActions({
       icon: "calendar" as const,
       label: t("foremanHome.schedule"),
       badge: pendingSchedule,
-      onPress: () => router.push("/(tabs)/schedule"),
+      onPress: onSchedulePress ?? (() => router.push("/(tabs)/schedule")),
       testID: "foreman-action-schedule",
     },
     {
@@ -67,7 +69,8 @@ export default function ForemanQuickActions({
               styles.tile,
               {
                 backgroundColor: colors.card,
-                borderColor: colors.border,
+                borderColor: `${brand.primary}55`,
+                borderLeftColor: brand.primary,
               },
             ]}
             testID={tile.testID}
@@ -76,7 +79,7 @@ export default function ForemanQuickActions({
             <View
               style={[
                 styles.iconCircle,
-                { backgroundColor: `${brand.primary}22` },
+                { backgroundColor: `${brand.primary}28` },
               ]}
             >
               <Feather name={tile.icon} size={22} color={brand.primary} />
@@ -121,6 +124,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     flexBasis: "46%",
     borderWidth: 1,
+    borderLeftWidth: 4,
     borderRadius: 14,
     padding: 14,
     minHeight: 96,

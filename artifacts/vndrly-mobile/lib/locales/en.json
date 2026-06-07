@@ -1218,10 +1218,12 @@
     "membersRequired": "Pick at least one crew member."
   },
   "foremanSchedule": {
+    "scheduleTicket": "Schedule Ticket",
+    "scheduleNow": "Schedule Now",
     "addToCalendar": "Add to Calendar",
     "pickTicketTitle": "Open tickets",
     "noOpenTickets": "No open tickets for your vendor.",
-    "emptyForeman": "Nothing scheduled yet. Tap Add to Calendar to schedule a crew on an open ticket."
+    "emptyForeman": "Nothing scheduled yet. Tap Schedule Ticket to assign a crew to an open job."
   },
   "crew": {
     "title": "Crew & Time",
@@ -1454,11 +1456,12 @@
   "scheduleTicket": {
     "button": "Schedule job",
     "title": "Schedule job",
+    "scheduleNowTitle": "Schedule Now",
     "loading": "Loading current schedule…",
     "whenLabel": "Date & start time",
     "durationLabel": "Estimated duration (minutes)",
     "durationPlaceholder": "Optional",
-    "crewLabel": "Assign crew",
+    "crewLabel": "Select crew",
     "crewPresetLabel": "Saved crews",
     "presetAppliedTitle": "Crew applied",
     "presetAppliedBody": "{{name}} — {{count}} member(s) selected.",
@@ -1469,8 +1472,10 @@
     "actingForemanLabel": "Acting foreman",
     "actingForemanHint": "When you can't be on site, pick a crew member to lead this ticket.",
     "noActingForeman": "(none)",
-    "warningsLabel": "Reminders (push)",
-    "warning1d": "1 day before",
+    "warningsLabel": "Crew reminders",
+    "warningsHint": "Push alerts at 24h, 12h, and 1h before start. Tap a notification to open the ticket in VNDRLY.",
+    "warning1d": "24 hours before",
+    "warning12h": "12 hours before",
     "warning2d": "2 days before",
     "warning3d": "3 days before",
     "warning4h": "4 hours before",
@@ -1478,9 +1483,10 @@
     "warningStart": "At start time",
     "cancel": "Cancel",
     "save": "Save schedule",
+    "notifyCrew": "Notify Crew",
     "saving": "Saving…",
-    "savedTitle": "Schedule saved",
-    "savedBody": "Crew has been notified.",
+    "savedTitle": "Crew notified",
+    "savedBody": "Reminders are scheduled. Add this job to your iOS calendar?",
     "donePicker": "Done",
     "scheduledBanner": "Scheduled: {{when}}",
     "conflictTitle": "Crew already booked",

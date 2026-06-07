@@ -165,11 +165,11 @@ export default function ScheduleScreen() {
             onPress={() => setPickTicketOpen(true)}
             height={44}
             style={styles.foremanAddBtn}
-            testID="button-add-to-calendar"
+            testID="button-schedule-ticket"
           >
             <Feather name="calendar" size={16} color="#ffffff" style={styles.pillIconShadow} />
             <Text style={[styles.foremanAddText, styles.pillTextShadow]}>
-              {t("foremanSchedule.addToCalendar")}
+              {t("foremanSchedule.scheduleTicket")}
             </Text>
           </LayeredPillButton>
         </View>

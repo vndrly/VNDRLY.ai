@@ -21,9 +21,11 @@ import {
 import BluePillButton from "@/components/BluePillButton";
 import GreyButton from "@/components/GreyButton";
 import LayeredPillButton from "@/components/LayeredPillButton";
+import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
 import { translateApiError } from "@/lib/apiErrors";
+import { openScheduleIcs } from "@/lib/openScheduleIcs";
 
 type Coworker = {
   id: number;
@@ -59,14 +61,11 @@ type ScheduleConflict = {
   otherDurationMinutes: number | null;
 };
 
-const DEFAULT_KINDS = ["1d", "1h", "start"] as const;
-const KIND_OPTIONS: Array<{ kind: typeof DEFAULT_KINDS[number] | "3d" | "2d" | "4h"; labelKey: string }> = [
-  { kind: "3d", labelKey: "scheduleTicket.warning3d" },
-  { kind: "2d", labelKey: "scheduleTicket.warning2d" },
+const DEFAULT_KINDS = ["1d", "12h", "1h"] as const;
+const KIND_OPTIONS: Array<{ kind: typeof DEFAULT_KINDS[number]; labelKey: string }> = [
   { kind: "1d", labelKey: "scheduleTicket.warning1d" },
-  { kind: "4h", labelKey: "scheduleTicket.warning4h" },
+  { kind: "12h", labelKey: "scheduleTicket.warning12h" },
   { kind: "1h", labelKey: "scheduleTicket.warning1h" },
-  { kind: "start", labelKey: "scheduleTicket.warningStart" },
 ];
 
 function empName(e: Coworker): string {
@@ -98,6 +97,7 @@ export default function ScheduleTicketPanel({
 }) {
   const colors = useColors();
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [employees, setEmployees] = useState<Coworker[]>([]);
@@ -147,17 +147,27 @@ export default function ScheduleTicketPanel({
         if (schedule?.scheduledStartAt) {
           const d = new Date(schedule.scheduledStartAt);
           if (!Number.isNaN(d.getTime())) setStartAt(d);
+        } else {
+          setShowPicker(true);
         }
         if (schedule?.scheduledDurationMinutes != null) {
           setDurationMin(String(schedule.scheduledDurationMinutes));
         }
         if (schedule?.crew?.length) {
           setSelectedIds(schedule.crew.map((c) => c.employeeId));
+        } else if (user?.vendorPeopleId) {
+          setSelectedIds([user.vendorPeopleId]);
         }
-        setForemanUserId(schedule?.foremanUserId ?? null);
+        const myUserId = user?.id ?? null;
+        setForemanUserId(schedule?.foremanUserId ?? myUserId);
         setActingForemanUserId(schedule?.actingForemanUserId ?? null);
         if (schedule?.warningKinds?.length) {
-          setWarningKinds(schedule.warningKinds);
+          const filtered = schedule.warningKinds.filter((k) =>
+            DEFAULT_KINDS.includes(k as typeof DEFAULT_KINDS[number]),
+          );
+          setWarningKinds(filtered.length ? filtered : [...DEFAULT_KINDS]);
+        } else {
+          setWarningKinds([...DEFAULT_KINDS]);
         }
       } catch (e) {
         if (!cancelled) setError(translateApiError(e, t));
@@ -168,7 +178,7 @@ export default function ScheduleTicketPanel({
     return () => {
       cancelled = true;
     };
-  }, [visible, ticketId, vendorId, t]);
+  }, [visible, ticketId, vendorId, t, user?.id, user?.vendorPeopleId]);
 
   function toggleEmployee(id: number) {
     setSelectedIds((prev) => {
@@ -232,7 +242,24 @@ export default function ScheduleTicketPanel({
         setSaving(false);
         return;
       }
-      Alert.alert(t("scheduleTicket.savedTitle"), t("scheduleTicket.savedBody"));
+      Alert.alert(
+        t("scheduleTicket.savedTitle"),
+        t("scheduleTicket.savedBody"),
+        [
+          {
+            text: t("mySchedule.addToCalendar"),
+            onPress: () => {
+              void openScheduleIcs(ticketId, t).catch((e) => {
+                Alert.alert(
+                  t("mySchedule.calendarErrorTitle"),
+                  e instanceof Error ? e.message : translateApiError(e, t),
+                );
+              });
+            },
+          },
+          { text: t("common.ok"), style: "cancel" },
+        ],
+      );
       onSaved?.();
       onClose();
     } catch (e) {
@@ -254,7 +281,7 @@ export default function ScheduleTicketPanel({
           <TouchableOpacity onPress={onClose} accessibilityLabel={t("scheduleTicket.cancel")}>
             <Text style={{ color: colors.primary, fontWeight: "600" }}>{t("scheduleTicket.cancel")}</Text>
           </TouchableOpacity>
-          <Text style={[styles.title, { color: colors.foreground }]}>{t("scheduleTicket.title")}</Text>
+          <Text style={[styles.title, { color: colors.foreground }]}>{t("scheduleTicket.scheduleNowTitle")}</Text>
           <View style={{ width: 60 }} />
         </View>
 
@@ -415,6 +442,9 @@ export default function ScheduleTicketPanel({
             </ScrollView>
 
             <Text style={[styles.label, { color: colors.foreground }]}>{t("scheduleTicket.warningsLabel")}</Text>
+            <Text style={{ color: colors.mutedForeground, fontSize: 12, marginBottom: 8 }}>
+              {t("scheduleTicket.warningsHint")}
+            </Text>
             <View style={styles.kindRow}>
               {KIND_OPTIONS.map(({ kind, labelKey }) => {
                 const on = warningKinds.includes(kind);
@@ -436,10 +466,10 @@ export default function ScheduleTicketPanel({
               loading={saving}
               height={44}
               color="#16a34a"
-              testID="button-save-schedule"
+              testID="button-notify-crew"
               style={{ marginTop: 24 }}
             >
-              {saving ? t("scheduleTicket.saving") : t("scheduleTicket.save")}
+              {saving ? t("scheduleTicket.saving") : t("scheduleTicket.notifyCrew")}
             </LayeredPillButton>
           </ScrollView>
         )}

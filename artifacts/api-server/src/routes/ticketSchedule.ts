@@ -47,7 +47,7 @@ function etaMinutesFromMeters(meters: number): number {
 }
 
 const COOKIE_NAME = "vndrly_session";
-type Session = { userId: number; role: string; vendorId: number | null; partnerId: number | null };
+type Session = { userId: number; role: string; vendorId: number | null; partnerId: number | null; vendorRole?: string | null };
 
 function getSession(req: any): Session | null {
   const cookie = req.cookies?.[COOKIE_NAME];
@@ -68,11 +68,12 @@ function getSession(req: any): Session | null {
   } catch { return null; }
 }
 
-const VALID_KINDS = new Set(["3d", "2d", "1d", "4h", "1h", "start"]);
+const VALID_KINDS = new Set(["3d", "2d", "1d", "12h", "4h", "1h", "start"]);
 const KIND_OFFSET_MS: Record<string, number> = {
   "3d": 3 * 24 * 60 * 60 * 1000,
   "2d": 2 * 24 * 60 * 60 * 1000,
   "1d": 24 * 60 * 60 * 1000,
+  "12h": 12 * 60 * 60 * 1000,
   "4h": 4 * 60 * 60 * 1000,
   "1h": 60 * 60 * 1000,
   "start": 0,
@@ -129,6 +130,14 @@ async function resolveSchedulerAuth(
     if (m && m.role === "admin") return true;
   }
   if (session.role === "field_employee") {
+    // Vendor foremen may schedule any open ticket on their vendor (mobile
+    // vendorWide picker). Assigned / acting foremen keep access on their ticket.
+    if (
+      session.vendorId === ticketVendorId &&
+      (session.vendorRole === "foreman" || session.vendorRole === "both")
+    ) {
+      return true;
+    }
     const [t] = await db
       .select({
         foremanUserId: ticketsTable.foremanUserId,
@@ -1553,7 +1562,8 @@ async function dispatchDueNotifications(): Promise<void> {
       const titleByKind: Record<string, string> = {
         "3d": "In 3 days",
         "2d": "In 2 days",
-        "1d": "Tomorrow",
+        "1d": "Tomorrow (24h)",
+        "12h": "In 12 hours",
         "4h": "In ~4 hours",
         "1h": "Starting soon (1h)",
         "start": "Starting now",
@@ -1561,7 +1571,7 @@ async function dispatchDueNotifications(): Promise<void> {
       const job = t.workTypeName ?? "Job";
       const where = `${t.partnerName ? t.partnerName + " — " : ""}${t.siteName ?? "site"}`;
       const title = `${titleByKind[item.kind] ?? "Reminder"}: ${job}`;
-      const body = `${where}${t.siteAddress ? "\n" + t.siteAddress : ""}`;
+      const body = `${where}${t.siteAddress ? "\n" + t.siteAddress : ""}\nOpen in VNDRLY to view this ticket.`;
 
       // Insert into the in-app feed (dedupe per user × ticket × kind).
       try {
