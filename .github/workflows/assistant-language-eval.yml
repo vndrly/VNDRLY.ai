@@ -71,13 +71,12 @@ jobs:
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10
+          version: 9.15.9
           run_install: false
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          # Match the Replit runtime pinned in .replit (modules = ["nodejs-24", ...]).
           node-version: 24
           cache: pnpm
 
@@ -128,6 +127,8 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          corepack enable
+          command -v pnpm >/dev/null || { echo "::error::pnpm not on PATH after setup"; exit 127; }
 
           # Configure the bot identity for the history-branch commit.
           # The "github-actions[bot]" pattern is GitHub's standard

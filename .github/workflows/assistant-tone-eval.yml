@@ -77,13 +77,12 @@ jobs:
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10
+          version: 9.15.9
           run_install: false
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          # Match the Replit runtime pinned in .replit (modules = ["nodejs-24", ...]).
           node-version: 24
           cache: pnpm
 
