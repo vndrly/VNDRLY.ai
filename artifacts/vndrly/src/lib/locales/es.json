@@ -1934,9 +1934,13 @@
     "title": "Programar Trabajo",
     "loading": "Cargando programación actual…",
     "whenLabel": "Fecha y hora de inicio",
-    "durationLabel": "Duración estimada (minutos)",
-    "durationPlaceholder": "Opcional",
+    "durationLabel": "Duración estimada (horas)",
+    "durationPlaceholder": "ej. 4",
     "crewLabel": "Asignar cuadrilla",
+    "savedCrewsLabel": "Cuadrillas guardadas (opcional)",
+    "individualCrewLabel": "O elija miembros individualmente",
+    "crewSearchPlaceholder": "Buscar cuadrilla…",
+    "noCrewSearchResults": "Ningún miembro coincide con la búsqueda.",
     "applyCrewPresetPlaceholder": "Elige una cuadrilla guardada…",
     "noEmployees": "No hay empleados de campo activos en tu proveedor.",
     "noLogin": "sin acceso — no recibirá notificaciones",
@@ -1946,6 +1950,7 @@
     "foremanNeedsLogin": "La cuadrilla seleccionada necesita acceso móvil para ser capataz.",
     "warningsLabel": "Notificaciones de aviso",
     "warning1d": "1 día antes",
+    "warning12h": "12 horas antes",
     "warning2d": "2 días antes",
     "warning3d": "3 días antes",
     "warning4h": "4 horas antes",
@@ -4013,6 +4018,7 @@
   "foremanNav": {
     "home": "Hoy",
     "schedule": "Agenda",
+    "map": "Mapa",
     "crews": "Cuadrillas",
     "scan": "Escanear",
     "profile": "Perfil",
@@ -4052,6 +4058,11 @@
     "vendorFallback": "Cuadrilla de campo",
     "whatDoing": "Trabajos de hoy",
     "whatDoingSub": "Lidera tu cuadrilla, retoma tickets abiertos o inicia una nueva visita.",
+    "quickActions": "Acciones rápidas",
+    "alerts": "Alertas",
+    "startJob": "Iniciar trabajo",
+    "schedule": "Agenda",
+    "crewComms": "Comunicación",
     "startNewJob": "Iniciar nuevo trabajo",
     "startNewJobSub": "Abrir un ticket en este sitio",
     "continueExisting": "Tickets abiertos",
@@ -4067,6 +4078,17 @@
     "today": "Hoy",
     "yesterday": "Ayer",
     "checkedIn": "Check-in {{when}} · {{elapsed}}"
+  },
+  "foremanMap": {
+    "title": "Mapa de cuadrilla",
+    "subtitle": "GPS en vivo de su cuadrilla en trabajos activos."
+  },
+  "foremanSchedule": {
+    "scheduleTicket": "Programar ticket",
+    "scheduleNow": "Programar ahora",
+    "pickTicketTitle": "Tickets abiertos",
+    "noOpenTickets": "No hay tickets abiertos para su proveedor.",
+    "emptyForeman": "Nada programado aún. Toque Programar ticket para asignar cuadrilla a un trabajo abierto."
   },
   "fieldProfile": {
     "appearance": "Apariencia",

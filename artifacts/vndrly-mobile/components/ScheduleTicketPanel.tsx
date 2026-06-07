@@ -36,6 +36,20 @@ type Coworker = {
   isActive?: boolean;
 };
 
+function formatDurationHoursFromMinutes(minutes: number | null): string {
+  if (minutes == null) return "1";
+  const hours = minutes / 60;
+  return Number.isInteger(hours) ? String(hours) : String(Math.round(hours * 100) / 100);
+}
+
+function parseDurationHoursToMinutes(hoursStr: string): number | null {
+  const trimmed = hoursStr.trim();
+  if (!trimmed) return null;
+  const hours = Number(trimmed);
+  if (!Number.isFinite(hours) || hours < 0) return null;
+  return Math.round(hours * 60);
+}
+
 type ScheduleSnapshot = {
   scheduledStartAt: string | null;
   scheduledDurationMinutes: number | null;
@@ -109,7 +123,7 @@ export default function ScheduleTicketPanel({
     return d;
   });
   const [showPicker, setShowPicker] = useState(false);
-  const [durationMin, setDurationMin] = useState("60");
+  const [durationHours, setDurationHours] = useState("1");
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [foremanUserId, setForemanUserId] = useState<number | null>(null);
   const [actingForemanUserId, setActingForemanUserId] = useState<number | null>(null);
@@ -136,12 +150,11 @@ export default function ScheduleTicketPanel({
       try {
         const [schedule, roster, presetRows] = await Promise.all([
           apiFetch<ScheduleSnapshot>(`/api/tickets/${ticketId}/schedule`),
-          apiFetch<Coworker[]>(`/api/field-employees?vendorId=${vendorId}`),
+          apiFetch<Coworker[]>("/api/field/co-workers"),
           apiFetch<CrewPreset[]>("/api/field/crew-presets").catch(() => [] as CrewPreset[]),
         ]);
         if (cancelled) return;
-        const active = (roster ?? []).filter((e) => e.isActive !== false);
-        setEmployees(active);
+        setEmployees(roster ?? []);
         setPresets(presetRows ?? []);
 
         if (schedule?.scheduledStartAt) {
@@ -151,7 +164,9 @@ export default function ScheduleTicketPanel({
           setShowPicker(true);
         }
         if (schedule?.scheduledDurationMinutes != null) {
-          setDurationMin(String(schedule.scheduledDurationMinutes));
+          setDurationHours(formatDurationHoursFromMinutes(schedule.scheduledDurationMinutes));
+        } else {
+          setDurationHours("1");
         }
         if (schedule?.crew?.length) {
           setSelectedIds(schedule.crew.map((c) => c.employeeId));
@@ -213,8 +228,8 @@ export default function ScheduleTicketPanel({
     setSaving(true);
     setError(null);
     setConflicts(null);
-    const dur = durationMin.trim() ? Number(durationMin) : null;
-    if (dur != null && (!Number.isFinite(dur) || dur < 15)) {
+    const dur = parseDurationHoursToMinutes(durationHours);
+    if (dur != null && dur < 15) {
       setError(t("apiErrors.scheduled_duration_invalid"));
       setSaving(false);
       return;
@@ -345,9 +360,9 @@ export default function ScheduleTicketPanel({
 
             <Text style={[styles.label, { color: colors.foreground }]}>{t("scheduleTicket.durationLabel")}</Text>
             <TextInput
-              value={durationMin}
-              onChangeText={setDurationMin}
-              keyboardType="number-pad"
+              value={durationHours}
+              onChangeText={setDurationHours}
+              keyboardType="decimal-pad"
               placeholder={t("scheduleTicket.durationPlaceholder")}
               placeholderTextColor={colors.mutedForeground}
               style={[styles.textInput, { borderColor: colors.border, color: colors.foreground, backgroundColor: colors.card }]}
@@ -372,7 +387,7 @@ export default function ScheduleTicketPanel({
               </>
             ) : null}
 
-            <Text style={[styles.label, { color: colors.foreground }]}>{t("scheduleTicket.crewLabel")}</Text>
+            <Text style={[styles.label, { color: colors.foreground }]}>{t("scheduleTicket.individualCrewLabel")}</Text>
             {employees.length === 0 ? (
               <Text style={{ color: colors.mutedForeground }}>{t("scheduleTicket.noEmployees")}</Text>
             ) : (

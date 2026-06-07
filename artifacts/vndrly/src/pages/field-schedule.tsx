@@ -5,6 +5,7 @@ import { Clock, MapPin, UserCheck, Users, Navigation, Check, X, ChevronRight, Ca
 import { useToast } from "@/hooks/use-toast";
 import PngPill, { PngPillButton } from "@/components/png-pill-rollover";
 import ScheduleTicketDialog from "@/components/schedule-ticket-dialog";
+import ForemanSchedulePickDialog from "@/components/foreman-schedule-pick-dialog";
 import { usePortalBase } from "@/lib/portal-base";
 import { useAuth } from "@/hooks/use-auth";
 import { useTicketNudgeFlash } from "@/hooks/use-ticket-nudge-flash";
@@ -73,6 +74,7 @@ export default function FieldSchedule() {
   const [loading, setLoading] = useState(true);
   const [vendorId, setVendorId] = useState<number | null>(null);
   const [scheduleTicketId, setScheduleTicketId] = useState<number | null>(null);
+  const [schedulePickOpen, setSchedulePickOpen] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -124,8 +126,22 @@ export default function FieldSchedule() {
 
   return (
     <div className="px-4 pt-6 pb-6 max-w-2xl mx-auto w-full" data-testid="field-schedule">
-      <h1 className="text-2xl font-bold mb-1">{t("mySchedule.title")}</h1>
+      <h1 className="text-2xl font-bold mb-1">
+        {isForemanPortal ? t("foremanSchedule.scheduleTicket") : t("mySchedule.title")}
+      </h1>
       <p className="text-sm text-muted-foreground mb-5">{t("mySchedule.subtitle")}</p>
+
+      {isForemanPortal && vendorId ? (
+        <PngPillButton
+          color="brand"
+          onClick={() => setSchedulePickOpen(true)}
+          className="w-full h-11 text-sm mb-5"
+          data-testid="button-foreman-schedule-ticket"
+        >
+          <CalendarClock className="w-4 h-4 mr-1.5" />
+          {t("foremanSchedule.scheduleTicket")}
+        </PngPillButton>
+      ) : null}
 
       {loading ? (
         <div className="flex items-center justify-center py-16">
@@ -133,7 +149,7 @@ export default function FieldSchedule() {
         </div>
       ) : tickets.length === 0 ? (
         <div className="rounded-xl border border-border bg-card p-8 text-center text-sm text-muted-foreground">
-          {t("mySchedule.empty")}
+          {isForemanPortal ? t("foremanSchedule.emptyForeman") : t("mySchedule.empty")}
         </div>
       ) : (
         <ul className="space-y-3">
@@ -286,6 +302,14 @@ export default function FieldSchedule() {
           ticketId={scheduleTicketId}
           vendorId={vendorId}
           foremanMode={isForemanPortal}
+        />
+      ) : null}
+      {isForemanPortal && vendorId != null ? (
+        <ForemanSchedulePickDialog
+          open={schedulePickOpen}
+          onOpenChange={setSchedulePickOpen}
+          vendorId={vendorId}
+          onScheduled={() => void load()}
         />
       ) : null}
     </div>

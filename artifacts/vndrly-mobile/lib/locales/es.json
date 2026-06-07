@@ -1225,6 +1225,12 @@
     "noOpenTickets": "No hay tickets abiertos para su proveedor.",
     "emptyForeman": "Nada programado aún. Toque Programar ticket para asignar una cuadrilla a un trabajo abierto."
   },
+  "foremanMap": {
+    "title": "Mapa de cuadrilla",
+    "subtitle": "GPS en vivo de su cuadrilla en trabajos activos.",
+    "onShiftNow": "En turno ahora ({{count}})",
+    "nobodyOnClock": "Ningún miembro de la cuadrilla comparte ubicación en este momento."
+  },
   "crew": {
     "title": "Cuadrilla y Tiempo",
     "crewOnSite": "Cuadrilla en sitio",
@@ -1305,6 +1311,7 @@
   "tabs": {
     "home": "Inicio",
     "schedule": "Agenda",
+    "crewMap": "Mapa",
     "crews": "Cuadrillas",
     "comms": "Comunicación",
     "scan": "Escanear",
@@ -1459,10 +1466,11 @@
     "scheduleNowTitle": "Programar ahora",
     "loading": "Cargando programación…",
     "whenLabel": "Fecha y hora de inicio",
-    "durationLabel": "Duración estimada (minutos)",
-    "durationPlaceholder": "Opcional",
+    "durationLabel": "Duración estimada (horas)",
+    "durationPlaceholder": "ej. 4",
     "crewLabel": "Seleccionar cuadrilla",
     "crewPresetLabel": "Cuadrillas guardadas",
+    "individualCrewLabel": "O elija miembros individualmente",
     "presetAppliedTitle": "Cuadrilla aplicada",
     "presetAppliedBody": "{{name}} — {{count}} miembro(s) seleccionados.",
     "noEmployees": "No hay empleados de campo activos en tu proveedor.",

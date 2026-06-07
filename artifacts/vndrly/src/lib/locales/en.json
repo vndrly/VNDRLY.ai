@@ -1934,9 +1934,13 @@
     "title": "Schedule Job",
     "loading": "Loading current schedule…",
     "whenLabel": "Date & start time",
-    "durationLabel": "Estimated duration (minutes)",
-    "durationPlaceholder": "Optional",
+    "durationLabel": "Estimated duration (hours)",
+    "durationPlaceholder": "e.g. 4",
     "crewLabel": "Assign crew",
+    "savedCrewsLabel": "Saved crews (optional)",
+    "individualCrewLabel": "Or pick crew members individually",
+    "crewSearchPlaceholder": "Search crew…",
+    "noCrewSearchResults": "No crew match your search.",
     "applyCrewPresetPlaceholder": "Pick a saved crew…",
     "noEmployees": "No active field employees on your vendor.",
     "noLogin": "no login — won't get push",
@@ -1946,6 +1950,7 @@
     "foremanNeedsLogin": "Selected crew need a mobile login to be eligible as foreman.",
     "warningsLabel": "Warning notifications",
     "warning1d": "1 day before",
+    "warning12h": "12 hours before",
     "warning2d": "2 days before",
     "warning3d": "3 days before",
     "warning4h": "4 hours before",
@@ -4013,6 +4018,7 @@
   "foremanNav": {
     "home": "Today",
     "schedule": "Schedule",
+    "map": "Map",
     "crews": "Crews",
     "scan": "Scan",
     "profile": "Profile",
@@ -4052,6 +4058,11 @@
     "vendorFallback": "Field Crew",
     "whatDoing": "Today's jobs",
     "whatDoingSub": "Lead your crew, pick up open tickets, or start a new visit.",
+    "quickActions": "Quick actions",
+    "alerts": "Alerts",
+    "startJob": "Start job",
+    "schedule": "Schedule",
+    "crewComms": "Crew comms",
     "startNewJob": "Start New Job",
     "startNewJobSub": "Open a ticket at this site",
     "continueExisting": "Open tickets",
@@ -4067,6 +4078,17 @@
     "today": "Today",
     "yesterday": "Yesterday",
     "checkedIn": "Checked in {{when}} · {{elapsed}}"
+  },
+  "foremanMap": {
+    "title": "Crew map",
+    "subtitle": "Live GPS for your crew on active jobs."
+  },
+  "foremanSchedule": {
+    "scheduleTicket": "Schedule Ticket",
+    "scheduleNow": "Schedule Now",
+    "pickTicketTitle": "Open tickets",
+    "noOpenTickets": "No open tickets for your vendor.",
+    "emptyForeman": "Nothing scheduled yet. Tap Schedule Ticket to assign a crew to an open job."
   },
   "fieldProfile": {
     "appearance": "Appearance",

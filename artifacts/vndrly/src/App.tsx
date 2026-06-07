@@ -58,6 +58,7 @@ import PrintHotlistPage from "@/pages/print-hotlist";
 import FieldHome from "@/pages/field-home";
 import ForemanHome from "@/pages/foreman-home";
 import ForemanCrews from "@/pages/foreman-crews";
+import ForemanCrewMapPage from "@/pages/foreman-crew-map";
 import FieldNewTicket from "@/pages/field-new-ticket";
 import AccountLocation from "@/pages/account-location";
 import Signup from "@/pages/signup";
@@ -109,7 +110,7 @@ function AdminRoutes() {
         <Route path="/site-locations/:id">{(params) => <SiteLocationDetail id={parseInt(params.id)} />}</Route>
         <Route path="/tickets" component={Tickets} />
         <Route path="/tickets/:id">{(params) => <TicketDetail id={parseInt(params.id)} />}</Route>
-        <Route path="/crew-map" component={CrewMapPage} />
+        <Route path="/crew-map">{() => <CrewMapPage />}</Route>
         <Route path="/crew-map/:id">{(params) => <CrewReplayPage employeeId={parseInt(params.id)} />}</Route>
         <Route path="/site-map" component={SiteMapPage} />
         <Route path="/catalog" component={Catalog} />
@@ -175,6 +176,7 @@ function AuthenticatedRouter() {
             <Switch>
               <Route path="/foreman" component={ForemanHome} />
               <Route path="/foreman/schedule" component={FieldSchedule} />
+              <Route path="/foreman/map" component={ForemanCrewMapPage} />
               <Route path="/foreman/crews" component={ForemanCrews} />
               <Route path="/foreman/profile" component={FieldProfile} />
               <Route path="/foreman/profile/edit" component={FieldEditProfile} />

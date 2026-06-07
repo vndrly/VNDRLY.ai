@@ -300,6 +300,7 @@ function authCookie(
     role: string;
     vendorId: number | null;
     partnerId: number | null;
+    vendorRole: string | null;
   }> = {},
 ) {
   const session = {
@@ -717,6 +718,33 @@ describe("GET /api/live-locations", () => {
     expect(partner.status).toBe(403);
     expect(partner.body.code).toBe("visitor.forbidden");
     expect(partner.body.error).toBe("forbidden");
+  });
+
+  it("allows vendor foremen (field_employee) to read their vendor crew pins", async () => {
+    fixtures.tickets = [
+      ticket({
+        id: 100,
+        ticketId: 100,
+        vendorId: 1,
+        fieldEmployeeId: 50,
+        empFirst: "Joe",
+        empLast: "Foreman",
+      }),
+    ];
+    fixtures.gpsLogs = [ping({ ticketId: 100 })];
+    const res = await request(app)
+      .get("/api/live-locations")
+      .set(
+        "Cookie",
+        authCookie({
+          role: "field_employee",
+          vendorId: 1,
+          vendorRole: "foreman",
+        }),
+      );
+    expect(res.status).toBe(200);
+    expect(res.body.locations).toHaveLength(1);
+    expect(res.body.locations[0].employeeName).toContain("Joe");
   });
 
   it("rejects vendor sessions without an attached vendorId", async () => {

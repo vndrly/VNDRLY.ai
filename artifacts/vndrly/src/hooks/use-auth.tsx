@@ -44,6 +44,8 @@ interface AuthUser {
   displayName: string;
   partnerId: number | null;
   vendorId: number | null;
+  /** vendor_people.id for field_employee sessions — used to pre-select self in foreman scheduling. */
+  vendorPeopleId: number | null;
   // For vendor sessions: vendor_people.vendor_role of the active membership
   // ('field' | 'foreman' | 'office' | 'both' | null). Used by the UI to
   // decide whether to surface office-only affordances like phone intake.
@@ -95,6 +97,7 @@ type RawAuthResponse = {
   partnerId?: unknown;
   vendorId?: unknown;
   vendorRole?: unknown;
+  vendorPeopleId?: unknown;
   preferredLanguage?: unknown;
   activeMembershipId?: unknown;
   availableMemberships?: unknown;
@@ -148,6 +151,8 @@ function fromResponse(input: unknown): AuthUser {
     displayName: typeof data.displayName === "string" ? data.displayName : "",
     partnerId: typeof data.partnerId === "number" ? data.partnerId : null,
     vendorId: typeof data.vendorId === "number" ? data.vendorId : null,
+    vendorPeopleId:
+      typeof data.vendorPeopleId === "number" ? data.vendorPeopleId : null,
     vendorRole,
     preferredLanguage:
       data.preferredLanguage === "en" || data.preferredLanguage === "es"

@@ -72,6 +72,17 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="crew-map"
+        options={{
+          title: t("tabs.crewMap"),
+          headerShown: false,
+          href: isForemanEmployee ? undefined : null,
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="map-pin" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="crews"
         options={{
           title: t("tabs.crews"),

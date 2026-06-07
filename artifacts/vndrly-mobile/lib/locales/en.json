@@ -1225,6 +1225,12 @@
     "noOpenTickets": "No open tickets for your vendor.",
     "emptyForeman": "Nothing scheduled yet. Tap Schedule Ticket to assign a crew to an open job."
   },
+  "foremanMap": {
+    "title": "Crew map",
+    "subtitle": "Live GPS for your crew on active jobs.",
+    "onShiftNow": "On shift now ({{count}})",
+    "nobodyOnClock": "No crew are actively sharing location right now."
+  },
   "crew": {
     "title": "Crew & Time",
     "crewOnSite": "Crew on Site",
@@ -1305,6 +1311,7 @@
   "tabs": {
     "home": "Home",
     "schedule": "Schedule",
+    "crewMap": "Map",
     "crews": "Crews",
     "comms": "Comms",
     "scan": "Scan",
@@ -1459,10 +1466,11 @@
     "scheduleNowTitle": "Schedule Now",
     "loading": "Loading current schedule…",
     "whenLabel": "Date & start time",
-    "durationLabel": "Estimated duration (minutes)",
-    "durationPlaceholder": "Optional",
+    "durationLabel": "Estimated duration (hours)",
+    "durationPlaceholder": "e.g. 4",
     "crewLabel": "Select crew",
     "crewPresetLabel": "Saved crews",
+    "individualCrewLabel": "Or pick crew members individually",
     "presetAppliedTitle": "Crew applied",
     "presetAppliedBody": "{{name}} — {{count}} member(s) selected.",
     "noEmployees": "No active field employees on your vendor.",

@@ -14,11 +14,18 @@ import {
 interface TicketStatusBadgeProps {
   status: string;
   updatedAt?: string | Date | null;
+  /** Narrower pill for tight layouts (e.g. foreman pick-ticket modal). */
+  compact?: boolean;
   className?: string;
   "data-testid"?: string;
 }
 
-export default function TicketStatusBadge({ status, className, "data-testid": testId }: TicketStatusBadgeProps) {
+export default function TicketStatusBadge({
+  status,
+  compact = false,
+  className,
+  "data-testid": testId,
+}: TicketStatusBadgeProps) {
   const { t } = useTranslation();
   const meta = ticketStatusMeta[status];
   const label = meta ? t(meta.badgeLabelKey) : status;
@@ -37,7 +44,10 @@ export default function TicketStatusBadge({ status, className, "data-testid": te
   return (
     <span
       className={cn(
-        "group relative inline-flex items-center h-[24px] min-w-[98px] select-none pointer-events-none align-middle",
+        "group relative inline-flex items-center select-none pointer-events-none align-middle",
+        compact
+          ? "h-auto min-h-[24px] min-w-0 max-w-full"
+          : "h-[24px] min-w-[98px]",
         className,
       )}
       data-testid={testId}
@@ -50,7 +60,10 @@ export default function TicketStatusBadge({ status, className, "data-testid": te
       <PillBg src={ticketLifecyclePillGloss} stretch className="opacity-60" />
       <span
         className={cn(
-          "relative z-10 flex items-center justify-center w-full h-full px-3 text-xs font-bold whitespace-nowrap",
+          "relative z-10 flex items-center justify-center w-full h-full font-bold",
+          compact
+            ? "px-2 py-0.5 text-[10px] leading-tight text-center whitespace-normal"
+            : "h-full px-3 text-xs whitespace-nowrap",
           cfg.light ? "text-gray-700" : "text-white",
         )}
         style={cfg.light ? undefined : { textShadow: "0 2px 4px rgba(0,0,0,0.9)" }}

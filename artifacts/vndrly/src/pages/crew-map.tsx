@@ -254,7 +254,10 @@ function lifecycleLabel(
   return translated;
 }
 
-export default function CrewMapPage() {
+export type CrewMapPageProps = { portalMode?: "default" | "foreman" };
+
+export default function CrewMapPage({ portalMode = "default" }: CrewMapPageProps) {
+  const isForemanPortal = portalMode === "foreman";
   const { t } = useTranslation();
   const { user } = useAuth();
   const [locations, setLocations] = useState<LiveLocation[]>([]);
@@ -380,10 +383,33 @@ export default function CrewMapPage() {
       // ignore storage errors (e.g. private mode)
     }
   }, [siteFilter]);
-  const siteParams = user?.role === "partner" && user.partnerId ? { partnerId: user.partnerId } : undefined;
-  const { data: sites } = useListSiteLocations(siteParams, {
-    query: { queryKey: getListSiteLocationsQueryKey(siteParams) },
+  const siteParams = !isForemanPortal && user?.role === "partner" && user.partnerId ? { partnerId: user.partnerId } : undefined;
+  const { data: vendorSites } = useListSiteLocations(siteParams, {
+    query: { enabled: !isForemanPortal && siteParams != null, queryKey: getListSiteLocationsQueryKey(siteParams) },
   });
+  const [fieldSites, setFieldSites] = useState<Array<{ id: number; name: string }>>([]);
+  useEffect(() => {
+    if (!isForemanPortal) return;
+    let cancelled = false;
+    fetch(`${API_BASE}/api/field/sites`, { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((rows) => {
+        if (!cancelled) {
+          setFieldSites(
+            Array.isArray(rows)
+              ? rows.map((s: { id: number; name: string }) => ({ id: s.id, name: s.name }))
+              : [],
+          );
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setFieldSites([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isForemanPortal]);
+  const sites = isForemanPortal ? fieldSites : vendorSites;
   const selectedSiteId = siteFilter === "all" ? null : Number(siteFilter);
 
   // Task #710 — per-resource gates. The fetchers below early-return
@@ -482,6 +508,10 @@ export default function CrewMapPage() {
   };
 
   const fetchLocations = async () => {
+    if (isForemanPortal) {
+      await fetchLocationsOnly();
+      return;
+    }
     await Promise.all([fetchLocationsOnly(), fetchVisitorsOnly()]);
   };
 
@@ -575,7 +605,7 @@ export default function CrewMapPage() {
       }
     };
     const openStreams = () => {
-      if (!visitsEs) {
+      if (!isForemanPortal && !visitsEs) {
         try {
           visitsEs = new EventSource(`${API_BASE}/api/visits/events`, { withCredentials: true });
           visitsEs.addEventListener("visit.checked_in", scheduleVisitorResync);
@@ -780,13 +810,13 @@ export default function CrewMapPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link href="/" className="group inline-flex items-center" aria-label="Back" data-testid="button-back"><SphereBackButton size={40} /></Link>
+          <Link href={isForemanPortal ? "/foreman" : "/"} className="group inline-flex items-center" aria-label="Back" data-testid="button-back"><SphereBackButton size={40} /></Link>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold">{t("crewMap.title")}</h1>
+              <h1 className="text-2xl font-bold">{isForemanPortal ? t("foremanMap.title") : t("crewMap.title")}</h1>
               <LiveConnectionPill status={liveStatus} testId="crew-map-live-connection-pill" />
             </div>
-            <p className="text-sm text-muted-foreground">{t("crewMap.subtitle")}</p>
+            <p className="text-sm text-muted-foreground">{isForemanPortal ? t("foremanMap.subtitle") : t("crewMap.subtitle")}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -1094,7 +1124,8 @@ export default function CrewMapPage() {
                       </Popup>
                     </Marker>
                   ))}
-                  {visitors.map((v) => {
+                  {!isForemanPortal
+                    ? visitors.map((v) => {
                     const host = v.hostType === "partner" ? v.hostPartnerName : v.hostVendorName;
                     return (
                       <Marker
@@ -1127,7 +1158,8 @@ export default function CrewMapPage() {
                         </Popup>
                       </Marker>
                     );
-                  })}
+                  })
+                    : null}
                 </MapContainer>
               </div>
             </CardContent>
@@ -1194,7 +1226,7 @@ export default function CrewMapPage() {
             </CardContent>
           </Card>
 
-          {visitors.length > 0 && (
+          {!isForemanPortal && visitors.length > 0 && (
             <Card className="mt-4">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-1.5">

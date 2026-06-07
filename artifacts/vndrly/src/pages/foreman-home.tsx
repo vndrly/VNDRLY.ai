@@ -1,10 +1,12 @@
-import { PngPillButton } from "@/components/png-pill-rollover";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
-import { Plus, ChevronRight, MapPin, Clock, HardHat } from "lucide-react";
+import { ChevronRight, MapPin, Clock, HardHat } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useBrand } from "@/hooks/use-brand";
 import TicketStatusBadge from "@/components/ticket-status-badge";
+import ForemanQuickActions from "@/components/foreman-quick-actions";
+import ForemanSchedulePickDialog from "@/components/foreman-schedule-pick-dialog";
 import { usePortalBase } from "@/lib/portal-base";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -58,19 +60,35 @@ function formatCheckIn(iso: string | null, locale: string, todayLabel: string, y
 
 export default function ForemanHome() {
   const { user } = useAuth();
+  const brand = useBrand();
   const portalBase = usePortalBase();
   const { t, i18n } = useTranslation();
   const [, navigate] = useLocation();
   const [me, setMe] = useState<FieldMe | null>(null);
   const [tickets, setTickets] = useState<OpenTicket[]>([]);
   const [loading, setLoading] = useState(true);
+  const [unreadAlerts, setUnreadAlerts] = useState(0);
+  const [pendingSchedule, setPendingSchedule] = useState(0);
+  const [schedulePickOpen, setSchedulePickOpen] = useState(false);
+
+  const loadTickets = useCallback(async () => {
+    const r = await fetch(`${BASE}/api/field/open-tickets?vendorWide=1`, { credentials: "include" });
+    setTickets(r.ok ? await r.json() : []);
+  }, []);
 
   useEffect(() => {
     Promise.all([
-      fetch(`${BASE}/api/field/me`, { credentials: "include" }).then(r => r.ok ? r.json() : null),
-      fetch(`${BASE}/api/field/open-tickets`, { credentials: "include" }).then(r => r.ok ? r.json() : []),
-    ]).then(([m, tkts]) => {
-      setMe(m); setTickets(tkts || []); setLoading(false);
+      fetch(`${BASE}/api/field/me`, { credentials: "include" }).then((r) => (r.ok ? r.json() : null)),
+      fetch(`${BASE}/api/field/open-tickets?vendorWide=1`, { credentials: "include" }).then((r) => (r.ok ? r.json() : [])),
+      fetch(`${BASE}/api/notifications/unread-count`, { credentials: "include" }).then((r) => (r.ok ? r.json() : { count: 0 })),
+      fetch(`${BASE}/api/me/upcoming-schedule?days=14`, { credentials: "include" }).then((r) => (r.ok ? r.json() : { tickets: [] })),
+    ]).then(([m, tkts, unread, schedule]) => {
+      setMe(m);
+      setTickets(tkts || []);
+      setUnreadAlerts(typeof unread?.count === "number" ? unread.count : 0);
+      const pending = (schedule?.tickets ?? []).filter((tk: { myAckStatus?: string }) => tk.myAckStatus === "pending").length;
+      setPendingSchedule(pending);
+      setLoading(false);
     });
   }, []);
 
@@ -91,26 +109,21 @@ export default function ForemanHome() {
         <p className="text-xs text-gray-500 mt-0.5">{t("foremanHome.whatDoingSub")}</p>
       </div>
 
-      <div className="pb-4">
-        <PngPillButton
-          color="amber"
-          height={72}
-          onClick={() => navigate(`${portalBase}/new-ticket`)}
-          data-testid="button-foreman-new-ticket"
-          className="w-full px-4"
-        >
-          <span className="flex items-center gap-3 w-full">
-            <span className="w-10 h-10 rounded-lg bg-white/25 flex items-center justify-center shrink-0">
-              <Plus className="w-5 h-5 text-white" />
-            </span>
-            <span className="flex-1 text-left flex flex-col">
-              <span className="text-sm font-bold text-white leading-tight">{t("foremanHome.startNewJob")}</span>
-              <span className="text-[11px] text-white/85 leading-tight">{t("foremanHome.startNewJobSub")}</span>
-            </span>
-            <ChevronRight className="w-5 h-5 text-white/85 shrink-0" />
-          </span>
-        </PngPillButton>
-      </div>
+      <ForemanQuickActions
+        portalBase={portalBase}
+        unreadAlerts={unreadAlerts}
+        pendingSchedule={pendingSchedule}
+        onSchedulePress={() => setSchedulePickOpen(true)}
+      />
+
+      {me?.vendorId ? (
+        <ForemanSchedulePickDialog
+          open={schedulePickOpen}
+          onOpenChange={setSchedulePickOpen}
+          vendorId={me.vendorId}
+          onScheduled={() => void loadTickets()}
+        />
+      ) : null}
 
       <div className="pb-2 flex items-center justify-between">
         <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wide">{t("foremanHome.continueExisting")}</h3>
@@ -145,9 +158,12 @@ export default function ForemanHome() {
               <button
                 key={ticket.id}
                 onClick={() => navigate(`/tickets/${ticket.id}`)}
-                className={`w-full text-left rounded-xl bg-white p-4 border-2 shadow-sm hover:shadow-md transition-shadow ${
-                  leading ? "border-violet-400" : mine ? "border-amber-400" : "border-gray-300"
-                }`}
+                className="w-full text-left rounded-xl bg-card p-4 border shadow-sm hover:shadow-md transition-shadow"
+                style={{
+                  borderColor: `${brand.primary}55`,
+                  borderLeftWidth: 4,
+                  borderLeftColor: leading ? brand.primary : mine ? brand.primary : `${brand.primary}88`,
+                }}
                 data-testid={`button-foreman-open-ticket-${ticket.id}`}
               >
                 <div className="flex items-start gap-3">

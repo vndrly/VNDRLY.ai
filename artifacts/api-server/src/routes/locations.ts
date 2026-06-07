@@ -20,6 +20,7 @@ import { logger } from "../lib/logger";
 
 import { SESSION_SECRET, getSessionFromRequest } from "../lib/session";
 import { enforceLiveLocationsRateLimit } from "../lib/live-locations-rate-limit";
+import { resolveLiveLocationsScope } from "../lib/live-locations-scope";
 import {
   LIVE_TRACKED_LIFECYCLE_STATES,
 } from "@workspace/ticket-status-meta";
@@ -453,23 +454,12 @@ router.get("/live-locations", async (req: Request, res: Response) => {
     res.status(400).json({ code: "visitor.invalid_site_location_id", error: "invalid_siteLocationId" });
     return;
   }
-  let scopedVendorId: number | null = null;
-  if (session.role === "vendor") {
-    if (!session.vendorId) {
-      res.status(403).json({ code: "visitor.no_vendor", error: "no_vendor" });
-      return;
-    }
-    scopedVendorId = session.vendorId;
-    if (filterVendorId && filterVendorId !== session.vendorId) {
-      res.status(403).json({ code: "visitor.wrong_vendor", error: "wrong_vendor" });
-      return;
-    }
-  } else if (session.role === "admin") {
-    scopedVendorId = filterVendorId;
-  } else {
-    res.status(403).json({ code: "visitor.forbidden", error: "forbidden" });
+  const scope = resolveLiveLocationsScope(session, filterVendorId);
+  if (!scope.ok) {
+    res.status(scope.status).json(scope.body);
     return;
   }
+  const scopedVendorId = scope.scopedVendorId;
 
   const sinceTs = new Date(Date.now() - LIVE_PING_FRESH_MS);
   const ticketFilters = [
@@ -630,23 +620,12 @@ router.get("/live-locations/events", async (req: Request, res: Response): Promis
   }
   // Mirror /api/live-locations role gating exactly so the SSE stream and
   // the REST fallback expose the same set of pings to a given session.
-  let scopedVendorId: number | null = null;
-  if (session.role === "vendor") {
-    if (!session.vendorId) {
-      res.status(403).json({ code: "visitor.no_vendor", error: "no_vendor" });
-      return;
-    }
-    scopedVendorId = session.vendorId;
-    if (filterVendorId && filterVendorId !== session.vendorId) {
-      res.status(403).json({ code: "visitor.wrong_vendor", error: "wrong_vendor" });
-      return;
-    }
-  } else if (session.role === "admin") {
-    scopedVendorId = filterVendorId;
-  } else {
-    res.status(403).json({ code: "visitor.forbidden", error: "forbidden" });
+  const scope = resolveLiveLocationsScope(session, filterVendorId);
+  if (!scope.ok) {
+    res.status(scope.status).json(scope.body);
     return;
   }
+  const scopedVendorId = scope.scopedVendorId;
 
   const visible = (ev: PublishedLocationEvent): boolean => {
     const loc = ev.location;

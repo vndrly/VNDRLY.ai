@@ -29,8 +29,10 @@ import {
   useEligibleVendorFieldEmployeesByVendorId,
   useClearStaleFieldEmployeeSelection,
 } from "@/hooks/use-eligible-vendor-field-employees";
+import { useFieldCoWorkers } from "@/hooks/use-field-co-workers";
 import { CalendarClock, Users, UserCog, Bell, AlertTriangle, ShieldAlert, Cloud, ExternalLink, MapPin, Briefcase, Clock } from "lucide-react";
 import { translateApiError } from "@/lib/api-error";
+import { useAuth } from "@/hooks/use-auth";
 
 type CertWarning = { employeeId: number; employeeName: string; missing: string[] };
 // Task #650: amber tier returned by POST /tickets/:id/schedule when a
@@ -73,16 +75,31 @@ type ScheduleSnapshot = {
 
 type FE = { id: number; vendorId: number; firstName: string; lastName: string; userId?: number | null; isActive?: boolean };
 
-const KIND_OPTIONS: Array<{ kind: "3d" | "2d" | "1d" | "4h" | "1h" | "start"; labelKey: string }> = [
+const KIND_OPTIONS: Array<{ kind: "3d" | "2d" | "1d" | "12h" | "4h" | "1h" | "start"; labelKey: string }> = [
   { kind: "3d", labelKey: "scheduleTicket.warning3d" },
   { kind: "2d", labelKey: "scheduleTicket.warning2d" },
   { kind: "1d", labelKey: "scheduleTicket.warning1d" },
+  { kind: "12h", labelKey: "scheduleTicket.warning12h" },
   { kind: "4h", labelKey: "scheduleTicket.warning4h" },
   { kind: "1h", labelKey: "scheduleTicket.warning1h" },
   { kind: "start", labelKey: "scheduleTicket.warningStart" },
 ];
 
-const DEFAULT_KINDS = ["1d", "1h", "start"];
+const DEFAULT_KINDS = ["1d", "12h", "1h"];
+
+function formatDurationHoursFromMinutes(minutes: number | null): string {
+  if (minutes == null) return "";
+  const hours = minutes / 60;
+  return Number.isInteger(hours) ? String(hours) : String(Math.round(hours * 100) / 100);
+}
+
+function parseDurationHoursToMinutes(hoursStr: string): number | null {
+  const trimmed = hoursStr.trim();
+  if (!trimmed) return null;
+  const hours = Number(trimmed);
+  if (!Number.isFinite(hours) || hours < 0) return null;
+  return Math.round(hours * 60);
+}
 
 // Ticket-state-conflict codes the API may emit when the underlying ticket
 // has moved on between when this dialog opened and when Save was tapped
@@ -132,15 +149,18 @@ export default function ScheduleTicketDialog({
   ticketId,
   vendorId,
   foremanMode = false,
+  onSaved,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   ticketId: number;
   vendorId: number;
   foremanMode?: boolean;
+  onSaved?: () => void;
 }) {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const { user } = useAuth();
   const qc = useQueryClient();
 
   // Task #523 (supersedes the inline filter Task #519 added here): source
@@ -153,17 +173,27 @@ export default function ScheduleTicketDialog({
   // may belong to a different vendor than the operator's active membership.
   // `fieldEmployees` is the raw list, kept for the cleanup effects' "still
   // loading?" guard.
-  const { eligibleForemen, fieldEmployees } =
-    useEligibleVendorFieldEmployeesByVendorId(vendorId);
+  const vendorRoster = useEligibleVendorFieldEmployeesByVendorId(
+    foremanMode ? null : vendorId,
+  );
+  const fieldCoWorkers = useFieldCoWorkers(open && foremanMode);
+  const eligibleForemen = foremanMode
+    ? fieldCoWorkers.eligibleForemen
+    : vendorRoster.eligibleForemen;
+  const fieldEmployees = foremanMode
+    ? fieldCoWorkers.eligibleForemen
+    : vendorRoster.fieldEmployees;
   const employees = eligibleForemen as unknown as FE[];
 
   const [startInput, setStartInput] = useState("");
-  const [durationMinutes, setDurationMinutes] = useState<string>("");
+  const [durationHours, setDurationHours] = useState("");
   const [crewIds, setCrewIds] = useState<number[]>([]);
   const [foremanUserId, setForemanUserId] = useState<string>("");
+  const [crewSearch, setCrewSearch] = useState("");
   const [warningKinds, setWarningKinds] = useState<string[]>(DEFAULT_KINDS);
   const [submitting, setSubmitting] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const scheduleReady = loaded && (!foremanMode || fieldCoWorkers.rosterLoaded);
   const [requiredCerts, setRequiredCerts] = useState<string[]>([]);
   // Per-crew cert cache. Stores the full {name, expirationDate} pairs
   // (rather than the previous valid-name-only string[]) so the modal can
@@ -227,7 +257,7 @@ export default function ScheduleTicketDialog({
         const j: ScheduleSnapshot = scheduleRes.ok ? await scheduleRes.json() : { scheduledStartAt: null, scheduledDurationMinutes: null, foremanUserId: null, crew: [], warningKinds: [] };
         if (cancelled) return;
         setStartInput(toLocalInputValue(j.scheduledStartAt));
-        setDurationMinutes(j.scheduledDurationMinutes != null ? String(j.scheduledDurationMinutes) : "");
+        setDurationHours(formatDurationHoursFromMinutes(j.scheduledDurationMinutes));
         setCrewIds(j.crew.map(c => c.employeeId));
         setForemanUserId(j.foremanUserId != null ? String(j.foremanUserId) : "");
         setWarningKinds(j.warningKinds.length > 0 ? j.warningKinds : DEFAULT_KINDS);
@@ -322,18 +352,61 @@ export default function ScheduleTicketDialog({
   // Task #507 tenancy guard would 400 on. Gated on `open && loaded` so we
   // don't filter before the saved schedule snapshot has hydrated crewIds.
   useEffect(() => {
-    if (!open || !loaded) return;
+    if (!open || !scheduleReady) return;
     if (!fieldEmployees) return; // wait for the list before deciding
     if (crewIds.length === 0) return;
     const eligibleIds = new Set(employees.map(e => e.id));
     const filtered = crewIds.filter(id => eligibleIds.has(id));
     if (filtered.length !== crewIds.length) setCrewIds(filtered);
-  }, [open, loaded, employees, fieldEmployees, crewIds]);
+  }, [open, scheduleReady, employees, fieldEmployees, crewIds]);
 
   // Derive crewWithUsers from the api-typed eligibleForemen so it can be
   // passed straight to the shared cleanup helper without a re-cast. Same
   // entries as the FE-typed `employees` view above.
   const crewWithUsers = eligibleForemen.filter(e => crewIds.includes(e.id) && e.userId != null);
+
+  const filteredEmployees = useMemo(() => {
+    const q = crewSearch.trim().toLowerCase();
+    if (!q) return employees;
+    return employees.filter((e) =>
+      `${e.firstName ?? ""} ${e.lastName ?? ""}`.toLowerCase().includes(q),
+    );
+  }, [employees, crewSearch]);
+
+  // Foreman portal: default crew + foreman to the signed-in operator on a
+  // fresh schedule (mirrors mobile ScheduleTicketPanel).
+  useEffect(() => {
+    if (!open || !scheduleReady || !foremanMode || !user) return;
+    let cancelled = false;
+    void (async () => {
+      let myEmployeeId = user.vendorPeopleId;
+      if (myEmployeeId == null) {
+        try {
+          const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+          const me = await fetch(`${base}/api/field/me`, { credentials: "include" }).then((r) =>
+            r.ok ? r.json() : null,
+          );
+          if (typeof me?.employeeId === "number") myEmployeeId = me.employeeId;
+        } catch {
+          /* non-fatal */
+        }
+      }
+      if (cancelled || myEmployeeId == null) return;
+      const meInRoster = employees.find((e) => e.id === myEmployeeId);
+      if (!meInRoster) return;
+
+      setCrewIds((prev) => (prev.length > 0 ? prev : [myEmployeeId!]));
+
+      setForemanUserId((prev) => {
+        if (prev) return prev;
+        const uid = meInRoster.userId ?? user.userId;
+        return uid ? String(uid) : prev;
+      });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, scheduleReady, foremanMode, user, employees]);
 
   // Task #519 / #523: companion cleanup for the foreman pick. The dropdown
   // options are sourced from `crewWithUsers`, so a foreman who's no longer
@@ -343,7 +416,7 @@ export default function ScheduleTicketDialog({
   // crew-with-user entry to its String(userId). Gated on `open && loaded`
   // so we don't clear before the saved schedule snapshot has hydrated.
   useClearStaleFieldEmployeeSelection({
-    selectedId: open && loaded ? foremanUserId : "",
+    selectedId: open && scheduleReady ? foremanUserId : "",
     eligibleForemen: crewWithUsers,
     fieldEmployees,
     onClear: () => setForemanUserId(""),
@@ -455,7 +528,7 @@ export default function ScheduleTicketDialog({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         scheduledStartAt: new Date(startInput).toISOString(),
-        scheduledDurationMinutes: durationMinutes ? Number(durationMinutes) : null,
+        scheduledDurationMinutes: parseDurationHoursToMinutes(durationHours),
         foremanUserId: foremanUserId ? Number(foremanUserId) : null,
         crewEmployeeIds: crewIds,
         warningKinds,
@@ -585,6 +658,7 @@ export default function ScheduleTicketDialog({
       description: sections.join("\n"),
     });
     qc.invalidateQueries({ queryKey: getGetTicketQueryKey(ticketId) });
+    onSaved?.();
     onOpenChange(false);
     return true;
   }
@@ -698,7 +772,7 @@ export default function ScheduleTicketDialog({
           </DialogTitle>
         </DialogHeader>
 
-        {!loaded ? (
+        {!scheduleReady ? (
           <div className="py-8 text-center text-sm text-muted-foreground">{t("scheduleTicket.loading")}</div>
         ) : (
           <div className="space-y-4">
@@ -723,9 +797,9 @@ export default function ScheduleTicketDialog({
               <Input
                 type="number"
                 min="0"
-                step="15"
-                value={durationMinutes}
-                onChange={(e) => { setDurationMinutes(e.target.value); if (fieldError?.field === "duration") setFieldError(null); }}
+                step="0.25"
+                value={durationHours}
+                onChange={(e) => { setDurationHours(e.target.value); if (fieldError?.field === "duration") setFieldError(null); }}
                 placeholder={t("scheduleTicket.durationPlaceholder")}
                 data-testid="input-schedule-duration"
                 aria-invalid={fieldError?.field === "duration" || undefined}
@@ -743,6 +817,26 @@ export default function ScheduleTicketDialog({
                 <label className="text-xs text-muted-foreground">{t("scheduleTicket.crewLabel")}</label>
               </div>
               {foremanMode && crewPresets.length > 0 ? (
+                <div className="mb-2">
+                  <p className="text-[11px] text-muted-foreground mb-1.5">{t("scheduleTicket.savedCrewsLabel")}</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {crewPresets.map((p) => (
+                      <PngPillButton
+                        key={p.id}
+                        color="brand"
+                        height={24}
+                        size="xs"
+                        type="button"
+                        onClick={() => setCrewIds(p.memberEmployeeIds)}
+                        data-testid={`button-crew-preset-${p.id}`}
+                      >
+                        {p.name} ({p.memberEmployeeIds.length})
+                      </PngPillButton>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+              {!foremanMode && crewPresets.length > 0 ? (
                 <Select
                   onValueChange={(presetId) => {
                     const preset = crewPresets.find((p) => String(p.id) === presetId);
@@ -761,10 +855,20 @@ export default function ScheduleTicketDialog({
                   </SelectContent>
                 </Select>
               ) : null}
+              <p className="text-[11px] text-muted-foreground mb-1.5">{t("scheduleTicket.individualCrewLabel")}</p>
+              <Input
+                value={crewSearch}
+                onChange={(e) => setCrewSearch(e.target.value)}
+                placeholder={t("scheduleTicket.crewSearchPlaceholder")}
+                className="mb-2 h-9 text-sm"
+                data-testid="input-crew-search"
+              />
               <div className="border rounded-md max-h-44 overflow-y-auto p-2 space-y-1">
                 {employees.length === 0 ? (
                   <div className="text-xs text-muted-foreground py-2 text-center">{t("scheduleTicket.noEmployees")}</div>
-                ) : employees.map((e) => {
+                ) : filteredEmployees.length === 0 ? (
+                  <div className="text-xs text-muted-foreground py-2 text-center">{t("scheduleTicket.noCrewSearchResults")}</div>
+                ) : filteredEmployees.map((e) => {
                   const missing = inlineCertWarnings[e.id];
                   // Task #650: amber heads-up — certs that are still
                   // valid today but lapse inside the configurable window
