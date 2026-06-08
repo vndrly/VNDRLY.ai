@@ -20,7 +20,7 @@ import BlueButton from "@/components/blue-button";
 import { PngPillButton, brandImagePillSrc } from "@/components/png-pill-rollover";
 import addEmployeeIdle from "@assets/download_1778508804009.png";
 import addEmployeeModalActive from "@assets/NewPillPallet_0001s_0004_Layer-5.png";
-import { SuspendedPill, InactivePill } from "@/components/account-actions";
+import AccountActions, { SuspendedPill, InactivePill } from "@/components/account-actions";
 import { EmployeeRolePill } from "@/components/employee-role-pill";
 import PecStatusBadge from "@/components/pec-status-badge";
 import { useAuth } from "@/hooks/use-auth";
@@ -860,7 +860,11 @@ export default function FieldEmployees() {
               <Label htmlFor="visit-notif-office-edit" className="cursor-pointer">Receive site visitor check-in notifications</Label>
             </div>
             <div><Label>{t("fieldEmployees.pecExpiration")}</Label><Input type="date" value={editOfficeForm.pecExpirationDate} onChange={(e) => setEditOfficeForm({ ...editOfficeForm, pecExpirationDate: e.target.value })} data-testid="input-edit-office-pec-expiration" /></div>
-            {editingOfficeContactId ? (
+            {editingOfficeContactId &&
+            (editingFromFieldTable ||
+              editOfficeForm.vendorRole === "field" ||
+              editOfficeForm.vendorRole === "both" ||
+              editOfficeForm.vendorRole === "foreman") ? (
               <EmployeePortalLoginFields
                 employeeId={editingOfficeContactId}
                 defaultEmail={editOfficeForm.email}
@@ -873,6 +877,21 @@ export default function FieldEmployees() {
                 }}
               />
             ) : null}
+            {(() => {
+              const editing =
+                (officeEmployees ?? []).find((e) => e.id === editingOfficeContactId) ??
+                (fieldEmployees ?? []).find((e) => e.id === editingOfficeContactId);
+              if (!editing?.hasLogin || !editing.userId) return null;
+              return (
+                <AccountActions
+                  userId={editing.userId}
+                  hasLogin={editing.hasLogin}
+                  suspendedAt={editing.suspendedAt ?? null}
+                  testIdPrefix="edit-office-account"
+                  onChanged={() => queryClient.invalidateQueries({ queryKey: officeQueryKey })}
+                />
+              );
+            })()}
             <PngPillButton color="blue" type="submit" disabled={updateVendorContact.isPending} attention={editOfficeDirty} className="w-full" data-testid="button-submit-edit-office">
               {updateVendorContact.isPending ? t("fieldEmployees.saving") : t("fieldEmployees.saveChanges")}
             </PngPillButton>
