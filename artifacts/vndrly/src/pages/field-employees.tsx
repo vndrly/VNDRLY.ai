@@ -868,16 +868,14 @@ export default function FieldEmployees() {
                 testIdPrefix="edit-office-certifications"
               />
             ) : null}
-            {editingOfficeContactId &&
-            (editingFromFieldTable ||
-              editOfficeForm.vendorRole === "field" ||
-              editOfficeForm.vendorRole === "both" ||
-              editOfficeForm.vendorRole === "foreman") ? (
+            {editingOfficeContactId ? (
               <EmployeePortalLoginFields
                 employeeId={editingOfficeContactId}
                 defaultEmail={editOfficeForm.email}
                 vendorRole={editOfficeForm.vendorRole}
                 variant="inline"
+                showOnboardingInvite
+                showDisableLogin
                 testIdPrefix="edit-office-login"
                 onSaved={() => {
                   queryClient.invalidateQueries({ queryKey: officeQueryKey });

@@ -13,6 +13,7 @@ import { Feather } from "@expo/vector-icons";
 import QRCode from "react-native-qrcode-svg";
 
 import InPageHeader from "@/components/InPageHeader";
+import EmployeeCertificationsPanel from "@/components/EmployeeCertificationsPanel";
 import ProfilePhotoImage from "@/components/ProfilePhotoImage";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
@@ -29,43 +30,17 @@ type FieldMe = {
   photoUrl?: string | null;
 };
 
-type Cert = {
-  id: number;
-  name: string;
-  issuer: string | null;
-  certNumber: string | null;
-  issuedDate: string | null;
-  expirationDate: string | null;
-  documentUrl: string | null;
-};
-
 type ComplianceToken = {
   token: string;
   verifyUrl: string;
   expiresAt: string;
 };
 
-// Mirrors the four-bucket compliance status used by the web field
-// portal (`artifacts/vndrly/src/pages/field-compliance.tsx`) so a
-// field employee sees the same chip wherever they look.
-//
-//   - noExpiration → null         (neutral grey)
-//   - expired      → days < 0     (red, TogglePill semantic)
-//   - expiringSoon → 0..60 days   (amber, TogglePill semantic)
-//   - active       → days > 60    (green, TogglePill semantic)
-function statusOf(expirationDate: string | null, t: (k: string, opts?: Record<string, unknown>) => string) {
-  if (!expirationDate) return { label: t("compliance.noExpiration"), color: "#6b7280", bg: "#f4f4f5" };
-  const days = (new Date(expirationDate + "T00:00:00").getTime() - Date.now()) / (1000 * 60 * 60 * 24);
-  if (days < 0) return { label: t("compliance.expired"), color: "#b91c1c", bg: "#fee2e2" };
-  if (days <= 60) return { label: t("compliance.expiringSoon"), color: "#92400e", bg: "#fef3c7" };
-  return { label: t("compliance.active"), color: "#15803d", bg: "#dcfce7" };
-}
 
 export default function ComplianceScreen() {
   const c = useColors();
   const { t } = useTranslation();
   const [me, setMe] = useState<FieldMe | null>(null);
-  const [certs, setCerts] = useState<Cert[] | null>(null);
   const [token, setToken] = useState<ComplianceToken | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -76,12 +51,8 @@ export default function ComplianceScreen() {
         const meRes = await apiFetch<FieldMe>("/api/field/me");
         if (cancelled) return;
         setMe(meRes);
-        const [certsRes, tokenRes] = await Promise.all([
-          apiFetch<Cert[]>(`/api/field-employees/${meRes.employeeId}/certifications`),
-          apiFetch<ComplianceToken>(`/api/field-employees/${meRes.employeeId}/compliance-token`),
-        ]);
+        const tokenRes = await apiFetch<ComplianceToken>(`/api/field-employees/${meRes.employeeId}/compliance-token`);
         if (cancelled) return;
-        setCerts(certsRes);
         setToken(tokenRes);
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : String(e));
@@ -136,32 +107,7 @@ export default function ComplianceScreen() {
               </View>
             </View>
 
-            <Text style={[styles.sectionLabel, { color: c.mutedForeground }]}>{t("compliance.certifications")}</Text>
-            {certs === null ? (
-              <ActivityIndicator color={c.primary} />
-            ) : certs.length === 0 ? (
-              <Text style={{ color: c.mutedForeground, fontSize: 14 }}>{t("compliance.noCerts")}</Text>
-            ) : (
-              certs.map((cert) => {
-                const s = statusOf(cert.expirationDate, t);
-                return (
-                  <View key={cert.id} style={[styles.certRow, { borderColor: c.border }]}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={[styles.certName, { color: c.foreground }]}>{cert.name}</Text>
-                      <Text style={[styles.certMeta, { color: c.mutedForeground }]} numberOfLines={1}>
-                        {cert.issuer || t("compliance.unknownIssuer")}
-                        {cert.expirationDate
-                          ? t("compliance.expirationSuffix", { date: cert.expirationDate })
-                          : ""}
-                      </Text>
-                    </View>
-                    <View style={[styles.badge, { backgroundColor: s.bg }]}>
-                      <Text style={[styles.badgeText, { color: s.color }]}>{s.label}</Text>
-                    </View>
-                  </View>
-                );
-              })
-            )}
+            <EmployeeCertificationsPanel employeeId={me.employeeId} />
 
             <View style={[styles.qrWrap, { borderTopColor: c.border }]}>
               {token ? (
@@ -197,12 +143,6 @@ const styles = StyleSheet.create({
   name: { fontSize: 18, fontWeight: "700" },
   sub: { fontSize: 13, marginTop: 2 },
   vendor: { fontSize: 13, fontWeight: "600", marginTop: 2 },
-  sectionLabel: { fontSize: 11, fontWeight: "700", letterSpacing: 1, marginBottom: 4 },
-  certRow: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderRadius: 8, padding: 10, gap: 8 },
-  certName: { fontSize: 14, fontWeight: "600" },
-  certMeta: { fontSize: 12, marginTop: 2 },
-  badge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
-  badgeText: { fontSize: 11, fontWeight: "700" },
-  qrWrap: { alignItems: "center", paddingTop: 16, borderTopWidth: 1 },
+  qrWrap: { alignItems: "center", paddingTop: 16, borderTopWidth: 1, marginTop: 8 },
   qrCaption: { fontSize: 12, marginTop: 10, textAlign: "center" },
 });

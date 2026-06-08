@@ -8,7 +8,11 @@
     "required": "Obligatorio",
     "ok": "OK",
     "error": "Error",
-    "unknownError": "Error desconocido"
+    "unknownError": "Error desconocido",
+    "saved": "Guardado",
+    "add": "Agregar",
+    "save": "Guardar",
+    "edit": "Editar"
   },
   "freshness": {
     "live": "En vivo",
@@ -1527,7 +1531,25 @@
     "notFound": "Empleado no encontrado",
     "loadFailed": "No se pudo cargar el empleado",
     "saveFailed": "No se pudo guardar el empleado",
-    "saved": "Empleado guardado"
+    "saved": "Empleado guardado",
+    "certifications": {
+      "title": "Certificaciones y capacitación",
+      "empty": "Aún no hay certificaciones. Agregue una aquí para que pasen las verificaciones de cuadrilla.",
+      "addTitle": "Agregar certificación",
+      "editTitle": "Editar certificación",
+      "nameLabel": "Nombre",
+      "namePlaceholder": "p. ej. Cementing Tech, H2S Awareness",
+      "nameRequired": "El nombre de la certificación es obligatorio.",
+      "issuerLabel": "Emisor",
+      "numberLabel": "Certificado #",
+      "issuedLabel": "Emitido (AAAA-MM-DD)",
+      "expiresLabel": "Vence (AAAA-MM-DD)",
+      "loadFailed": "No se pudieron cargar las certificaciones",
+      "saveFailed": "No se pudo guardar la certificación",
+      "deleteFailed": "No se pudo eliminar la certificación",
+      "removeTitle": "¿Eliminar certificación?",
+      "removeConfirm": "¿Eliminar \"{{name}}\"?"
+    }
   },
   "fieldEmployees": {
     "firstName": "Nombre",

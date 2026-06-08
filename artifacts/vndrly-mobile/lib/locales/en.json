@@ -9,7 +9,10 @@
     "ok": "OK",
     "error": "Error",
     "unknownError": "Unknown error",
-    "saved": "Saved"
+    "saved": "Saved",
+    "add": "Add",
+    "save": "Save",
+    "edit": "Edit"
   },
   "freshness": {
     "live": "Live",
@@ -1528,7 +1531,25 @@
     "notFound": "Employee not found",
     "loadFailed": "Could not load employee",
     "saveFailed": "Could not save employee",
-    "saved": "Employee saved"
+    "saved": "Employee saved",
+    "certifications": {
+      "title": "Certifications & training",
+      "empty": "No certifications yet. Add one here so schedule crew checks pass.",
+      "addTitle": "Add certification",
+      "editTitle": "Edit certification",
+      "nameLabel": "Name",
+      "namePlaceholder": "e.g. Cementing Tech, H2S Awareness",
+      "nameRequired": "Certification name is required.",
+      "issuerLabel": "Issuer",
+      "numberLabel": "Certificate #",
+      "issuedLabel": "Issued (YYYY-MM-DD)",
+      "expiresLabel": "Expires (YYYY-MM-DD)",
+      "loadFailed": "Could not load certifications",
+      "saveFailed": "Could not save certification",
+      "deleteFailed": "Could not remove certification",
+      "removeTitle": "Remove certification?",
+      "removeConfirm": "Remove \"{{name}}\"?"
+    }
   },
   "fieldEmployees": {
     "firstName": "First name",

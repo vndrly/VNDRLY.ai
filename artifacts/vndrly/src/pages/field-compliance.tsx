@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft, Shield, User as UserIcon } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
-import PngPill from "@/components/png-pill-rollover";
+import CertificationsSection from "@/components/certifications-section";
 import { usePortalBase } from "@/lib/portal-base";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -18,16 +18,6 @@ interface FieldMe {
   vendorLogoUrl: string | null;
   profilePhotoPath: string | null;
   photoUrl?: string | null;
-}
-
-interface Cert {
-  id: number;
-  name: string;
-  issuer: string | null;
-  certNumber: string | null;
-  issuedDate: string | null;
-  expirationDate: string | null;
-  documentUrl: string | null;
 }
 
 interface ComplianceToken {
@@ -91,7 +81,6 @@ export default function FieldCompliance() {
   const [, navigate] = useLocation();
   const portalBase = usePortalBase();
   const [me, setMe] = useState<FieldMe | null>(null);
-  const [certs, setCerts] = useState<Cert[] | null>(null);
   const [token, setToken] = useState<ComplianceToken | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -105,16 +94,10 @@ export default function FieldCompliance() {
           return;
         }
         setMe(meRes as FieldMe);
-        const [certsRes, tokenRes] = await Promise.all([
-          fetch(`${BASE}/api/field-employees/${meRes.employeeId}/certifications`, { credentials: "include" }).then((r) =>
-            r.ok ? r.json() : [],
-          ),
-          fetch(`${BASE}/api/field-employees/${meRes.employeeId}/compliance-token`, { credentials: "include" }).then((r) =>
-            r.ok ? r.json() : null,
-          ),
-        ]);
+        const tokenRes = await fetch(`${BASE}/api/field-employees/${meRes.employeeId}/compliance-token`, { credentials: "include" }).then((r) =>
+          r.ok ? r.json() : null,
+        );
         if (cancelled) return;
-        setCerts((certsRes as Cert[]) ?? []);
         setToken((tokenRes as ComplianceToken | null) ?? null);
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : String(e));
@@ -175,54 +158,11 @@ export default function FieldCompliance() {
             </div>
           </div>
 
-          <div>
-            <h2 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2">
-              {t("compliance.certifications")}
-            </h2>
-            {certs === null ? (
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[color:var(--brand-primary)] mx-auto" />
-            ) : certs.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{t("compliance.noCerts")}</p>
-            ) : (
-              <ul className="space-y-2">
-                {certs.map((cert) => {
-                  const s = statusOf(cert.expirationDate, t);
-                  return (
-                    <li
-                      key={cert.id}
-                      className="flex items-center gap-2 border border-border rounded-lg p-2.5"
-                      data-testid={`cert-${cert.id}`}
-                    >
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold truncate">{cert.name}</p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {cert.issuer || t("compliance.unknownIssuer")}
-                          {cert.expirationDate ? t("compliance.expirationSuffix", { date: cert.expirationDate }) : ""}
-                        </p>
-                      </div>
-                      {s.color ? (
-                        <PngPill
-                          color={s.color}
-                          className="text-[10px] px-2 py-0.5 shrink-0"
-                          data-testid={`cert-${cert.id}-status`}
-                        >
-                          {s.label}
-                        </PngPill>
-                      ) : (
-                        <PngPill
-                          rest
-                          className="text-[10px] px-2 py-0.5 shrink-0"
-                          data-testid={`cert-${cert.id}-status`}
-                        >
-                          {s.label}
-                        </PngPill>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
+          <CertificationsSection
+            employeeId={me.employeeId}
+            variant="inline"
+            testIdPrefix="field-self-certifications"
+          />
 
           <div className="flex flex-col items-center pt-4 border-t border-border">
             {token ? (

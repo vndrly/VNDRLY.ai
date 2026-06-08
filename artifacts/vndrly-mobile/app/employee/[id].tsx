@@ -16,6 +16,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import EmployeePortalLoginPanel from "@/components/EmployeePortalLoginPanel";
+import EmployeeCertificationsPanel from "@/components/EmployeeCertificationsPanel";
 import InPageHeader from "@/components/InPageHeader";
 import LayeredPillButton from "@/components/LayeredPillButton";
 import { useAuth } from "@/hooks/use-auth";
@@ -172,6 +173,8 @@ export default function EmployeeEditScreen() {
             placeholderTextColor={colors.mutedForeground}
             style={[styles.input, inputStyle(colors)]}
           />
+
+          <EmployeeCertificationsPanel employeeId={form.id} />
 
           <EmployeePortalLoginPanel
             employeeId={form.id}

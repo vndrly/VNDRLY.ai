@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and, isNull, inArray } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 import crypto from "crypto";
 import {
   db,
@@ -56,7 +56,6 @@ function getSession(req: any): Session | null {
   }
 }
 
-const FIELD_ROLES = ["field", "both", "foreman", "office", "admin"];
 
 async function loadEmployee(id: number) {
   const [e] = await db
@@ -65,14 +64,36 @@ async function loadEmployee(id: number) {
       vendorId: fieldEmployeesTable.vendorId,
     })
     .from(fieldEmployeesTable)
-    .where(
-      and(
-        eq(fieldEmployeesTable.id, id),
-        inArray(fieldEmployeesTable.vendorRole, FIELD_ROLES),
-        isNull(fieldEmployeesTable.deletedAt),
-      ),
-    );
+    .where(and(eq(fieldEmployeesTable.id, id), isNull(fieldEmployeesTable.deletedAt)));
   return e || null;
+}
+
+async function fieldEmployeeSelfId(userId: number): Promise<number | null> {
+  const [me] = await db
+    .select({ id: fieldEmployeesTable.id })
+    .from(fieldEmployeesTable)
+    .where(and(eq(fieldEmployeesTable.userId, userId), isNull(fieldEmployeesTable.deletedAt)));
+  return me?.id ?? null;
+}
+
+async function canReadCerts(session: Session, employee: { id: number; vendorId: number }) {
+  if (session.role === "admin") return true;
+  if (session.role === "vendor" && session.vendorId === employee.vendorId) return true;
+  if (session.role === "field_employee") {
+    const selfId = await fieldEmployeeSelfId(session.userId);
+    return selfId === employee.id;
+  }
+  return false;
+}
+
+async function canMutateCerts(session: Session, employee: { id: number; vendorId: number }) {
+  if (session.role === "admin") return true;
+  if (session.role === "vendor" && session.vendorId === employee.vendorId) return true;
+  if (session.role === "field_employee") {
+    const selfId = await fieldEmployeeSelfId(session.userId);
+    return selfId === employee.id;
+  }
+  return false;
 }
 
 // Read access: admin, vendor of the employee, or the employee themselves.
@@ -87,26 +108,14 @@ async function ensureCertRead(req: any, res: any, employeeId: number) {
     res.status(401).json({ error: "Not authenticated", code: "auth.not_authenticated" });
     return null;
   }
-  if (session.role === "admin") return employee;
-  if (session.role === "vendor" && session.vendorId === employee.vendorId)
-    return employee;
-  if (session.role === "field_employee") {
-    const [me] = await db
-      .select({ id: fieldEmployeesTable.id })
-      .from(fieldEmployeesTable)
-      .where(
-        and(
-          eq(fieldEmployeesTable.userId, session.userId),
-          isNull(fieldEmployeesTable.deletedAt),
-        ),
-      );
-    if (me && me.id === employee.id) return employee;
+  if (!(await canReadCerts(session, employee))) {
+    res.status(403).json({ error: "Not allowed", code: "auth.not_allowed" });
+    return null;
   }
-  res.status(403).json({ error: "Not allowed", code: "auth.not_allowed" });
-  return null;
+  return employee;
 }
 
-// Mutate: admin or vendor of employee.
+// Mutate: platform admin, vendor admin/office of employee, or the employee themselves.
 async function ensureCertMutate(req: any, res: any, employeeId: number) {
   const employee = await loadEmployee(employeeId);
   if (!employee) {
@@ -118,11 +127,11 @@ async function ensureCertMutate(req: any, res: any, employeeId: number) {
     res.status(401).json({ error: "Not authenticated", code: "auth.not_authenticated" });
     return null;
   }
-  if (session.role === "admin") return { employee, session };
-  if (session.role === "vendor" && session.vendorId === employee.vendorId)
-    return { employee, session };
-  res.status(403).json({ error: "Not allowed", code: "auth.not_allowed" });
-  return null;
+  if (!(await canMutateCerts(session, employee))) {
+    res.status(403).json({ error: "Not allowed", code: "auth.not_allowed" });
+    return null;
+  }
+  return { employee, session };
 }
 
 const router: IRouter = Router();
