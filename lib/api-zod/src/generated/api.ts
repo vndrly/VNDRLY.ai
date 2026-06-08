@@ -1818,7 +1818,11 @@ export const setFieldEmployeeLoginBodyPasswordMin = 8;
 
 export const SetFieldEmployeeLoginBody = zod.object({
   email: zod.string(),
-  password: zod.string().min(setFieldEmployeeLoginBodyPasswordMin),
+  password: zod.string().min(setFieldEmployeeLoginBodyPasswordMin).optional(),
+  portalLoginEnabled: zod
+    .boolean()
+    .optional()
+    .describe("When false, disable portal login for this employee."),
   displayName: zod
     .string()
     .optional()

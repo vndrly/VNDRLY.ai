@@ -1755,6 +1755,7 @@ export interface CreateFieldEmployeeBody {
  */
 export interface FieldEmployeeLoginStatus {
   hasLogin: boolean;
+  portalLoginEnabled?: boolean;
   email?: string;
   userId?: number;
   /** When true, the employee must set a new password on next sign-in before using the app. */
@@ -1776,7 +1777,8 @@ export const SetFieldEmployeeLoginBodyPreferredLanguage = {
 export interface SetFieldEmployeeLoginBody {
   email: string;
   /** @minLength 8 */
-  password: string;
+  password?: string;
+  portalLoginEnabled?: boolean;
   /** Optional override; defaults to the employee's "First Last" name (or the email if unnamed). */
   displayName?: string;
   /** Default UI language for the linked login. Omit to leave any existing preference unchanged. */

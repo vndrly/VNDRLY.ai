@@ -6075,6 +6075,9 @@ components:
       properties:
         hasLogin:
           type: boolean
+        portalLoginEnabled:
+          type: boolean
+          description: When true, email/password portal login is active for this employee.
         email:
           type: string
         userId:
@@ -6092,6 +6095,10 @@ components:
         password:
           type: string
           minLength: 8
+          description: Required when enabling login for the first time. Optional when updating an existing login (omit to keep the current password).
+        portalLoginEnabled:
+          type: boolean
+          description: When false, disable portal login for this employee.
         displayName:
           type: string
           description: Optional override; defaults to the employee's "First Last" name (or the email if unnamed).
@@ -6103,7 +6110,7 @@ components:
         mustChangePassword:
           type: boolean
           description: When true, require the employee to change this password on first sign-in. Defaults to false when omitted.
-      required: [email, password]
+      required: [email]
 
     SetFieldEmployeeLoginResponse:
       type: object

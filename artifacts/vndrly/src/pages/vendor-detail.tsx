@@ -1509,6 +1509,18 @@ export default function VendorDetail({ id }: { id: number }) {
               <Label>{t("vendors.pecExpiration")}</Label>
               <Input type="date" value={editContactForm.pecExpirationDate} onChange={(e) => setEditContactForm({ ...editContactForm, pecExpirationDate: e.target.value })} data-testid="input-edit-contact-pec-expiration" />
             </div>
+            {editingContactId ? (
+              <EmployeePortalLoginFields
+                employeeId={editingContactId}
+                defaultEmail={editContactForm.email}
+                vendorRole={editContactForm.vendorRole}
+                variant="inline"
+                testIdPrefix="edit-contact-login"
+                onSaved={() => {
+                  queryClient.invalidateQueries({ queryKey: getListVendorContactsQueryKey(id) });
+                }}
+              />
+            ) : null}
             <PngPillButton color="blue" type="submit" disabled={updateContact.isPending} attention={editContactDirty} className="w-full" data-testid="button-submit-edit-contact">
               {updateContact.isPending ? t("common.saving") : t("common.saveChanges")}
             </PngPillButton>

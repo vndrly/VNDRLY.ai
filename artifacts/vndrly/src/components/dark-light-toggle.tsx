@@ -3,9 +3,11 @@ import { useBrand } from "@/hooks/use-brand";
 import SplitToggleHalf from "@/components/split-toggle-half";
 import {
   pickTogglePillSrc,
-  SPLIT_TOGGLE_ACTIVE_TEXT_SHADOW,
-  SPLIT_TOGGLE_IDLE_TEXT_CLASS,
+  splitToggleActiveTextClass,
+  splitToggleDividerClass,
+  splitToggleIdleTextClass,
   TOGGLE_IDLE_PILL_SRC,
+  type SplitToggleVariant,
 } from "@/lib/pick-toggle-pill";
 
 export type ThemeMode = "dark" | "light";
@@ -14,12 +16,12 @@ export default function DarkLightToggle({
   mode,
   onChange,
   className,
-  variant: _variant = "light",
+  variant = "light",
 }: {
   mode: ThemeMode;
   onChange: (mode: ThemeMode) => void;
   className?: string;
-  variant?: "dark" | "light";
+  variant?: SplitToggleVariant;
 }) {
   const set = (next: ThemeMode) => {
     if (next === mode) return;
@@ -27,8 +29,9 @@ export default function DarkLightToggle({
   };
   const brand = useBrand();
   const activePillSrc = pickTogglePillSrc(brand.primary, brand.name);
-  const activeText = cn("text-white", SPLIT_TOGGLE_ACTIVE_TEXT_SHADOW);
-  const idleText = SPLIT_TOGGLE_IDLE_TEXT_CLASS;
+  const activeText = splitToggleActiveTextClass(variant);
+  const idleText = splitToggleIdleTextClass(variant);
+  const dividerClass = splitToggleDividerClass(variant);
 
   return (
     <div
@@ -48,7 +51,7 @@ export default function DarkLightToggle({
       >
         Dark
       </SplitToggleHalf>
-      <span aria-hidden className="w-px shrink-0 self-stretch bg-gray-400" />
+      <span aria-hidden className={cn("w-px shrink-0 self-stretch", dividerClass)} />
       <SplitToggleHalf
         side="right"
         pillSrc={mode === "light" ? activePillSrc : TOGGLE_IDLE_PILL_SRC}

@@ -72,7 +72,7 @@ export default function ForgotPassword() {
         }}
       />
       <div className="absolute top-4 left-4 z-20">
-        <DarkLightToggle mode={themeMode} onChange={setThemeMode} variant="light" />
+        <DarkLightToggle mode={themeMode} onChange={setThemeMode} variant={isDark ? "dark" : "light"} />
       </div>
       <div className="flex-1 flex items-center justify-center">
         <div className="w-full max-w-md relative z-10">

@@ -43,8 +43,26 @@ export function toggleHalfPillBgStyle(
 export const SPLIT_TOGGLE_ACTIVE_TEXT_SHADOW =
   "drop-shadow-[0_1px_2px_rgba(0,0,0,0.65)] drop-shadow-[0_2px_4px_rgba(0,0,0,0.45)]";
 
-/** Inactive half label — fixed dark grey, not theme-derived. */
+/** Inactive half label — fixed dark grey on light surfaces. */
 export const SPLIT_TOGGLE_IDLE_TEXT_CLASS = "text-gray-700";
+
+export type SplitToggleVariant = "dark" | "light";
+
+/** Active half label — no drop shadow on dark surfaces so the pill art reads crisp. */
+export function splitToggleActiveTextClass(variant: SplitToggleVariant): string {
+  if (variant === "dark") return "text-white";
+  return `text-white ${SPLIT_TOGGLE_ACTIVE_TEXT_SHADOW}`;
+}
+
+/** Inactive half label — high contrast on dark chrome, grey on light. */
+export function splitToggleIdleTextClass(variant: SplitToggleVariant): string {
+  if (variant === "dark") return "text-neutral-100";
+  return SPLIT_TOGGLE_IDLE_TEXT_CLASS;
+}
+
+export function splitToggleDividerClass(variant: SplitToggleVariant): string {
+  return variant === "dark" ? "bg-white/45" : "bg-gray-400";
+}
 
 function hexToRgb(hex: string): [number, number, number] | null {
   const cleaned = hex.trim().replace(/^#/, "");

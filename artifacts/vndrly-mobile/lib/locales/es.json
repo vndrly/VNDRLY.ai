@@ -1187,6 +1187,7 @@
     "reviewLocationDetails": "Ver detalles del uso compartido",
     "editProfile": "Editar Perfil",
     "complianceCard": "Tarjeta de Cumplimiento",
+    "manageEmployees": "Administrar empleados",
     "crewChanges": "Mis cambios de cuadrilla",
     "couldNotUpdate": "No se pudo actualizar",
     "languageSavedToast": "Guardado — {{language}}",
@@ -1518,5 +1519,42 @@
     "etaHrs": "{{h}} h",
     "etaHrsMins": "{{h}}h {{min}}m",
     "directions": "Cómo llegar"
+  },
+  "employees": {
+    "title": "Empleados",
+    "editTitle": "Editar empleado",
+    "empty": "No se encontraron empleados.",
+    "notFound": "Empleado no encontrado",
+    "loadFailed": "No se pudo cargar el empleado",
+    "saveFailed": "No se pudo guardar el empleado",
+    "saved": "Empleado guardado"
+  },
+  "fieldEmployees": {
+    "firstName": "Nombre",
+    "lastName": "Apellido",
+    "email": "Correo",
+    "phone": "Teléfono",
+    "jobTitle": "Puesto",
+    "role": "Rol",
+    "pecExpiration": "Vencimiento PEC",
+    "saveChanges": "Guardar cambios",
+    "saving": "Guardando..."
+  },
+  "fieldEmployeeDetail": {
+    "fieldPortalLogin": "Acceso al portal",
+    "loginEmail": "Correo de acceso",
+    "newPassword": "Nueva contraseña",
+    "password": "Contraseña",
+    "passwordPlaceholder": "Al menos 8 caracteres",
+    "passwordOptionalPlaceholder": "Dejar en blanco para mantener la contraseña actual",
+    "enablePortalLogin": "Habilitar inicio de sesión en el portal web",
+    "enablePortalLoginHelp": "Permite que este empleado inicie sesión con correo y contraseña en {{path}}.",
+    "saveLoginSettings": "Guardar configuración de acceso",
+    "updatePassword": "Actualizar contraseña",
+    "createLogin": "Crear acceso",
+    "saving": "Guardando...",
+    "emailPasswordRequired": "Se requiere correo y contraseña de al menos 8 caracteres",
+    "forcePasswordChange": "Requerir cambio de contraseña en el próximo inicio de sesión",
+    "forcePasswordChangeHelp": "El empleado debe elegir una nueva contraseña antes de usar la app o el portal."
   }
 }

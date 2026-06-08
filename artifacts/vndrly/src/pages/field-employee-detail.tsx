@@ -566,8 +566,6 @@ export default function FieldEmployeeDetail({ id }: { id: number }) {
         defaultEmail={employee.email}
         vendorRole={form.vendorRole}
         variant="card"
-        showOnboardingInvite
-        showDisableLogin
         testIdPrefix="employee-detail-login"
         onSaved={() => {
           queryClient.invalidateQueries({ queryKey: getGetFieldEmployeeQueryKey(id) });

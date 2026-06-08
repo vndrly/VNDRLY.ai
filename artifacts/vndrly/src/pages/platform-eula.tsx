@@ -22,8 +22,8 @@ export default function PlatformEulaPage() {
       style={{ backgroundColor: isDark ? "#3a3d42" : "#f9fafb" }}
     >
       <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
-        <DarkLightToggle mode={themeMode} onChange={setThemeMode} variant="light" />
-        <LanguageToggle variant="light" />
+        <DarkLightToggle mode={themeMode} onChange={setThemeMode} variant={isDark ? "dark" : "light"} />
+        <LanguageToggle variant={isDark ? "dark" : "light"} />
       </div>
       <div className="w-full max-w-3xl mx-auto relative z-10">
         <div className="flex items-center gap-3 mb-6">

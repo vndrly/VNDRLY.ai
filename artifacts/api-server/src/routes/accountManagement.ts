@@ -24,6 +24,8 @@ import {
 import { getSessionFromRequest } from "../lib/session";
 import { sendAdminResetPasswordEmail } from "../lib/sendgrid";
 import { logger } from "../lib/logger";
+import { canManageVendorPeople } from "../lib/vendor-people-management";
+import { userIsVendorOffice } from "../lib/office-role";
 
 const router: IRouter = Router();
 
@@ -70,7 +72,51 @@ async function authorizeAdminFor(
   }
 
   // Partner / vendor admin — must have membershipRole=admin AND share an
-  // org with the target.
+  // org with the target. Vendor office staff may also manage logins on
+  // their vendor. Foremen may reset passwords for teammates on their vendor.
+  if (session.role === "vendor" && session.vendorId) {
+    const sameVendor = await db
+      .select({ id: userOrgMembershipsTable.id })
+      .from(userOrgMembershipsTable)
+      .where(
+        and(
+          eq(userOrgMembershipsTable.userId, targetUserId),
+          eq(userOrgMembershipsTable.orgType, "vendor"),
+          eq(userOrgMembershipsTable.vendorId, session.vendorId),
+        ),
+      )
+      .limit(1);
+    if (sameVendor.length > 0) {
+      const officeOk =
+        session.membershipRole === "admin" ||
+        (await userIsVendorOffice(session.userId, session.vendorId)) ||
+        (await canManageVendorPeople(
+          {
+            userId: session.userId,
+            role: session.role,
+            vendorId: session.vendorId,
+            membershipRole: session.membershipRole,
+            vendorRole: session.vendorRole,
+            vendorPeopleId: session.vendorPeopleId,
+          },
+          session.vendorId,
+        ));
+      if (officeOk) {
+        const [me] = await db
+          .select({ displayName: usersTable.displayName })
+          .from(usersTable)
+          .where(eq(usersTable.id, session.userId));
+        return {
+          ok: true,
+          ctx: {
+            adminUserId: session.userId,
+            adminDisplayName: me?.displayName ?? "Administrator",
+          },
+        };
+      }
+    }
+  }
+
   if (
     (session.role !== "partner" && session.role !== "vendor") ||
     session.membershipRole !== "admin"
@@ -150,6 +196,7 @@ router.post("/users/:id/admin-reset-password", async (req, res) => {
     return;
   }
   const tempPassword = String(req.body?.tempPassword ?? "");
+  const mustChangePassword = req.body?.mustChangePassword !== false;
   if (tempPassword.length < 8) {
     res.status(400).json({
       message: "Temporary password must be at least 8 characters",
@@ -184,7 +231,7 @@ router.post("/users/:id/admin-reset-password", async (req, res) => {
     .update(usersTable)
     .set({
       passwordHash: hash,
-      mustChangePassword: true,
+      mustChangePassword,
       sessionVersion: sql`${usersTable.sessionVersion} + 1`,
     })
     .where(eq(usersTable.id, targetUserId));

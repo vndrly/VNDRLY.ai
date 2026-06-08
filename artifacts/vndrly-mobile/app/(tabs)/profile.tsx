@@ -53,6 +53,10 @@ export default function ProfileScreen() {
     activeMembershipId,
     switchContext,
   } = useAuth();
+  const isForemanEmployee =
+    user?.role === "field_employee" &&
+    (user.vendorRole === "foreman" || user.vendorRole === "both");
+  const canManageEmployees = user?.role === "vendor" || isForemanEmployee;
   const [photoPath, setPhotoPath] = useState<string | null>(null);
   const [directPhotoUrl, setDirectPhotoUrl] = useState<string | null>(null);
   const [locConsent, setLocConsent] = useState<boolean | null>(null);
@@ -413,6 +417,19 @@ export default function ProfileScreen() {
         <Text style={[styles.actionText, styles.pillTextShadow]}>{t("profile.editProfile")}</Text>
         <Feather name="chevron-right" size={18} color="#ffffff" style={[styles.actionChevron, styles.pillIconShadow]} />
       </LayeredPillButton>
+
+      {canManageEmployees ? (
+        <LayeredPillButton
+          onPress={() => router.push("/employees")}
+          height={40}
+          style={styles.actionBtn}
+          testID="button-manage-employees"
+        >
+          <Feather name="users" size={16} color="#ffffff" style={styles.pillIconShadow} />
+          <Text style={[styles.actionText, styles.pillTextShadow]}>{t("profile.manageEmployees")}</Text>
+          <Feather name="chevron-right" size={18} color="#ffffff" style={[styles.actionChevron, styles.pillIconShadow]} />
+        </LayeredPillButton>
+      ) : null}
 
       <LayeredPillButton
         onPress={() => router.push("/compliance")}

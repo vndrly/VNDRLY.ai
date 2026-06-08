@@ -4,10 +4,23 @@ import crypto from "crypto";
 import { db, fieldEmployeesTable, vendorsTable, fieldEmployeeNotesTable, usersTable, ticketCheckInsTable, ticketsTable, formatTicketTrackingNumber } from "@workspace/db";
 import { SESSION_SECRET } from "../lib/session";
 import { sendResponse, sendResponseStatus } from "../lib/typed-response";
+import {
+  assertCanManageVendorPeople,
+  isForemanActor,
+  validateVendorRoleAssignment,
+} from "../lib/vendor-people-management";
 
 import { sendValidationFailed } from "../lib/validation-error";
 const COOKIE_NAME = "vndrly_session";
-type Session = { userId: number; role: string; vendorId: number | null; partnerId: number | null; membershipRole?: string | null };
+type Session = {
+  userId: number;
+  role: string;
+  vendorId: number | null;
+  partnerId: number | null;
+  membershipRole?: string | null;
+  vendorRole?: string | null;
+  vendorPeopleId?: number | null;
+};
 function getSession(req: any): Session | null {
   const cookie = req.cookies?.[COOKIE_NAME];
   if (!cookie) return null;
@@ -95,18 +108,13 @@ function shapeEmployee<T extends { userId: number | null; suspendedAt: Date | st
 
 router.get("/field-employees", async (req, res): Promise<void> => {
   const session = getSession(req);
-  if (!session || !["admin", "vendor"].includes(session.role)) {
+  if (!session) {
     res.status(401).json({ error: "Login required" });
     return;
   }
 
   const query = ListFieldEmployeesQueryParams.safeParse(req.query);
   const includeDeleted = session.role === "admin" && (req.query.includeDeleted === "true" || req.query.includeDeleted === "1");
-  // Default to active-only so every picker (phone-intake foreman picker,
-  // schedule-ticket dialog, ticket-detail crew assignment, mobile crew picker,
-  // etc.) doesn't have to re-implement the same client-side filter. The
-  // field-employees admin page opts back in via includeInactive=true so it
-  // can still surface deactivated rows for editing/restoring.
   const includeInactive = req.query.includeInactive === "true" || req.query.includeInactive === "1";
 
   const fieldRoles = ["field", "both", "foreman"];
@@ -114,13 +122,21 @@ router.get("/field-employees", async (req, res): Promise<void> => {
   if (!includeDeleted) conds.push(isNull(fieldEmployeesTable.deletedAt));
   if (!includeInactive) conds.push(eq(fieldEmployeesTable.isActive, true));
 
-  // Vendors can only see their own employees; admins may filter by vendorId param
   if (session.role === "vendor") {
     if (!session.vendorId) {
       res.status(403).json({ error: "Vendor session missing vendorId" });
       return;
     }
     conds.push(eq(fieldEmployeesTable.vendorId, session.vendorId));
+  } else if (session.role === "field_employee") {
+    if (!isForemanActor(session) || !session.vendorId) {
+      res.status(403).json({ error: "Foreman access required" });
+      return;
+    }
+    conds.push(eq(fieldEmployeesTable.vendorId, session.vendorId));
+  } else if (session.role !== "admin") {
+    res.status(401).json({ error: "Login required" });
+    return;
   } else if (query.success && query.data.vendorId) {
     conds.push(eq(fieldEmployeesTable.vendorId, query.data.vendorId));
   }
@@ -179,16 +195,13 @@ router.get("/field-employees/:id", async (req, res): Promise<void> => {
   }
 
   const session = getSession(req);
-  if (!session || !["admin", "vendor"].includes(session.role)) {
+  if (!session) {
     res.status(401).json({ error: "Login required" });
     return;
   }
 
   const includeDeleted = session.role === "admin";
-  const conds = [
-    eq(fieldEmployeesTable.id, params.data.id),
-    inArray(fieldEmployeesTable.vendorRole, ["field", "both", "foreman"]),
-  ];
+  const conds = [eq(fieldEmployeesTable.id, params.data.id)];
   if (!includeDeleted) conds.push(isNull(fieldEmployeesTable.deletedAt));
 
   const [result] = await db
@@ -203,8 +216,12 @@ router.get("/field-employees/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  // Vendors may only view their own employees; return 404 to avoid leaking existence
-  if (session.role === "vendor" && result.vendorId !== session.vendorId) {
+  if (session.role === "admin") {
+    sendResponse(res, GetFieldEmployeeResponse, shapeEmployee(result));
+    return;
+  }
+  const auth = await assertCanManageVendorPeople(session, result.vendorId);
+  if (!auth.ok) {
     res.status(404).json({ error: "Field employee not found" });
     return;
   }
@@ -306,12 +323,8 @@ router.post("/field-employees/:id/restore", async (req, res): Promise<void> => {
 
 router.patch("/field-employees/:id", async (req, res): Promise<void> => {
   const session = getSession(req);
-  if (!session || !["admin", "vendor"].includes(session.role)) {
+  if (!session) {
     res.status(401).json({ error: "Login required" });
-    return;
-  }
-  if (session.role === "vendor" && session.membershipRole !== "admin") {
-    res.status(403).json({ error: "Vendor admin access required" });
     return;
   }
 
@@ -326,21 +339,37 @@ router.patch("/field-employees/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  // Verify the employee exists and enforce tenant isolation for vendors
   const [target] = await db
-    .select({ vendorId: fieldEmployeesTable.vendorId })
+    .select({
+      id: fieldEmployeesTable.id,
+      vendorId: fieldEmployeesTable.vendorId,
+      vendorRole: fieldEmployeesTable.vendorRole,
+      pecCertification: fieldEmployeesTable.pecCertification,
+      pecExpirationDate: fieldEmployeesTable.pecExpirationDate,
+    })
     .from(fieldEmployeesTable)
-    .where(and(
-      eq(fieldEmployeesTable.id, params.data.id),
-      inArray(fieldEmployeesTable.vendorRole, ["field", "both", "foreman"]),
-      isNull(fieldEmployeesTable.deletedAt),
-    ));
+    .where(and(eq(fieldEmployeesTable.id, params.data.id), isNull(fieldEmployeesTable.deletedAt)));
   if (!target) {
     res.status(404).json({ error: "Field employee not found" });
     return;
   }
-  if (session.role === "vendor" && session.vendorId !== target.vendorId) {
+  if (
+    (session.role === "vendor" || session.role === "field_employee") &&
+    session.vendorId != null &&
+    session.vendorId !== target.vendorId
+  ) {
     res.status(404).json({ error: "Field employee not found" });
+    return;
+  }
+  const auth = await assertCanManageVendorPeople(session, target.vendorId);
+  if (!auth.ok) {
+    res.status(auth.status).json({ error: auth.message });
+    return;
+  }
+
+  const roleCheck = await validateVendorRoleAssignment(session, target, parsed.data.vendorRole);
+  if (!roleCheck.ok) {
+    res.status(roleCheck.status).json({ error: roleCheck.message });
     return;
   }
 
@@ -360,7 +389,7 @@ router.patch("/field-employees/:id", async (req, res): Promise<void> => {
     .set(updateData)
     .where(and(
       eq(fieldEmployeesTable.id, params.data.id),
-      inArray(fieldEmployeesTable.vendorRole, ["field", "both", "foreman"]),
+      isNull(fieldEmployeesTable.deletedAt),
     ))
     .returning();
   // Task #831: keep `users.preferred_language` in sync with the

@@ -11,6 +11,7 @@
  */
 export interface FieldEmployeeLoginStatusType {
   hasLogin: boolean;
+  portalLoginEnabled?: boolean;
   email?: string;
   userId?: number;
   /** When true, the employee must set a new password on next sign-in before using the app. */

@@ -319,7 +319,7 @@ export default function Portal({ siteCode }: { siteCode: string }) {
     return (
       <div className="min-h-screen flex items-center justify-center relative" style={{ backgroundColor: portalBg }}>
         <div className="absolute top-4 left-4 z-20">
-          <DarkLightToggle mode={themeMode} onChange={setThemeMode} variant="light" />
+          <DarkLightToggle mode={themeMode} onChange={setThemeMode} variant={isDark ? "dark" : "light"} />
         </div>
         <Skeleton className="h-64 w-full max-w-md" />
       </div>
@@ -355,7 +355,7 @@ export default function Portal({ siteCode }: { siteCode: string }) {
       style={{ ...partnerBrandStyle, backgroundColor: portalBg }}
     >
       <div className="absolute top-4 left-4 z-30">
-        <DarkLightToggle mode={themeMode} onChange={setThemeMode} variant="light" />
+        <DarkLightToggle mode={themeMode} onChange={setThemeMode} variant={isDark ? "dark" : "light"} />
       </div>
       <div className="relative overflow-hidden" style={{ backgroundColor: "hsl(220 10% 25%)" }}>
         <div

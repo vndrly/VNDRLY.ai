@@ -15,9 +15,22 @@ import {
   type MergedRowIds,
 } from "../lib/vendor-merge";
 import { findVendorMatches, normalizeVendorName } from "../lib/vendor-match";
+import {
+  assertCanManageVendorPeople,
+  isForemanActor,
+  validateVendorRoleAssignment,
+} from "../lib/vendor-people-management";
 
 const COOKIE_NAME = "vndrly_session";
-type Session = { userId: number; role: string; vendorId: number | null; partnerId: number | null; membershipRole?: string | null };
+type Session = {
+  userId: number;
+  role: string;
+  vendorId: number | null;
+  partnerId: number | null;
+  membershipRole?: string | null;
+  vendorRole?: string | null;
+  vendorPeopleId?: number | null;
+};
 function getSession(req: any): Session | null {
   const cookie = req.cookies?.[COOKIE_NAME];
   if (!cookie) return null;
@@ -1419,12 +1432,17 @@ router.get("/vendor-contacts", async (req, res): Promise<void> => {
     res.status(401).json({ error: "Not authenticated", code: "auth.not_authenticated" });
     return;
   }
-  if (session.role !== "admin" && session.role !== "partner" && session.role !== "vendor") {
+  if (
+    session.role !== "admin" &&
+    session.role !== "partner" &&
+    session.role !== "vendor" &&
+    !isForemanActor(session)
+  ) {
     res.status(403).json({ error: "Forbidden", code: "auth.forbidden" });
     return;
   }
   let vendorId: number | null;
-  if (session.role === "vendor") {
+  if (session.role === "vendor" || isForemanActor(session)) {
     if (!session.vendorId) {
       res.status(403).json({ error: "Forbidden", code: "auth.forbidden" });
       return;
@@ -1608,17 +1626,37 @@ router.patch("/vendors/:vendorId/contacts/:contactId", async (req, res): Promise
     sendValidationFailed(res, params.error, { code: "validation.invalid_input" });
     return;
   }
-  if (session.role === "vendor" && session.vendorId !== params.data.vendorId) {
-    res.status(403).json({ error: "Forbidden", code: "auth.forbidden" });
-    return;
-  }
-  if (session.role !== "admin" && session.role !== "vendor") {
-    res.status(403).json({ error: "Admin or vendor access required", code: "auth.admin_or_vendor_required" });
+  const auth = await assertCanManageVendorPeople(session, params.data.vendorId);
+  if (!auth.ok) {
+    res.status(auth.status).json({ error: auth.message, code: "auth.forbidden" });
     return;
   }
   const parsed = UpdateVendorContactBody.safeParse(req.body);
   if (!parsed.success) {
     sendValidationFailed(res, parsed.error, { code: "validation.invalid_input" });
+    return;
+  }
+  const [target] = await db
+    .select({
+      id: vendorContactsTable.id,
+      vendorId: vendorContactsTable.vendorId,
+      vendorRole: vendorContactsTable.vendorRole,
+      pecCertification: vendorContactsTable.pecCertification,
+      pecExpirationDate: vendorContactsTable.pecExpirationDate,
+    })
+    .from(vendorContactsTable)
+    .where(and(
+      eq(vendorContactsTable.id, params.data.contactId),
+      eq(vendorContactsTable.vendorId, params.data.vendorId),
+      isNull(vendorContactsTable.deletedAt),
+    ));
+  if (!target) {
+    res.status(404).json({ error: "Contact not found", code: "contact.not_found" });
+    return;
+  }
+  const roleCheck = await validateVendorRoleAssignment(session, target, parsed.data.vendorRole);
+  if (!roleCheck.ok) {
+    res.status(roleCheck.status).json({ error: roleCheck.message, code: "auth.forbidden" });
     return;
   }
   const [contact] = await db
@@ -1627,7 +1665,7 @@ router.patch("/vendors/:vendorId/contacts/:contactId", async (req, res): Promise
     .where(and(
       eq(vendorContactsTable.id, params.data.contactId),
       eq(vendorContactsTable.vendorId, params.data.vendorId),
-      notInArray(vendorContactsTable.vendorRole, ["field", "foreman"]),
+      isNull(vendorContactsTable.deletedAt),
     ))
     .returning();
   if (!contact) {

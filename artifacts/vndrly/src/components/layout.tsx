@@ -319,9 +319,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <DarkLightToggle
               mode={isDarkTheme ? "dark" : "light"}
               onChange={(m) => setThemeMode(m)}
-              variant="light"
+              variant={isDarkTheme ? "dark" : "light"}
             />
-            <LanguageToggle variant="light" />
+            <LanguageToggle variant={isDarkTheme ? "dark" : "light"} />
           </div>
           {user && (
             <div className="pt-3">

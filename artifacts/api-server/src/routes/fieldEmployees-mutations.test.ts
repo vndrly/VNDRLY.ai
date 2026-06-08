@@ -5,6 +5,10 @@ import request from "supertest";
 import { attachTestErrorMiddleware, expectStatus } from "../test-utils/route-app";
 import { buildTestCookie } from "../test-utils/session";
 
+vi.mock("../lib/office-role", () => ({
+  userIsVendorOffice: vi.fn(async () => false),
+}));
+
 // Coverage for Task #514 — POST / PATCH / DELETE / POST :id/restore on
 // /field-employees.
 //

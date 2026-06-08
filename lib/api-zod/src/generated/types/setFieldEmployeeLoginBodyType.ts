@@ -10,7 +10,8 @@ import type { SetFieldEmployeeLoginBodyTypePreferredLanguage } from "./setFieldE
 export interface SetFieldEmployeeLoginBodyType {
   email: string;
   /** @minLength 8 */
-  password: string;
+  password?: string;
+  portalLoginEnabled?: boolean;
   /** Optional override; defaults to the employee's "First Last" name (or the email if unnamed). */
   displayName?: string;
   /** Default UI language for the linked login. Omit to leave any existing preference unchanged. */

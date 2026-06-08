@@ -29,6 +29,12 @@ import { enforceTicketsRateLimit } from "../lib/tickets-rate-limit";
 
 import { SESSION_SECRET } from "../lib/session";
 import {
+  assertCanManageVendorPeople,
+  membershipRoleForVendorPerson,
+  sessionUserRoleForVendorPerson,
+  usesFieldEmployeeLogin,
+} from "../lib/vendor-people-management";
+import {
   resolveVendorPersonPhotoUrl,
   storageApiPathFromObjectPath,
 } from "../lib/vendor-person-photo";
@@ -126,6 +132,82 @@ async function ensureFieldEmployeeMembershipTx(
       .set({ activeMembershipId: membershipId })
       .where(eq(usersTable.id, userId));
   }
+}
+
+async function ensureVendorPortalMembershipTx(
+  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  userId: number,
+  vendorId: number,
+  vendorPeopleId: number,
+  vendorRole: string | null,
+): Promise<void> {
+  const membershipRole = membershipRoleForVendorPerson(vendorRole);
+  const inserted = await tx
+    .insert(userOrgMembershipsTable)
+    .values({
+      userId,
+      orgType: "vendor",
+      partnerId: null,
+      vendorId,
+      role: membershipRole,
+      vendorPeopleId,
+    })
+    .onConflictDoNothing()
+    .returning({ id: userOrgMembershipsTable.id });
+
+  let membershipId: number | null = inserted[0]?.id ?? null;
+  if (!membershipId) {
+    const [existing] = await tx
+      .select({ id: userOrgMembershipsTable.id })
+      .from(userOrgMembershipsTable)
+      .where(
+        and(
+          eq(userOrgMembershipsTable.userId, userId),
+          eq(userOrgMembershipsTable.vendorId, vendorId),
+        ),
+      )
+      .limit(1);
+    membershipId = existing?.id ?? null;
+    if (membershipId) {
+      await tx
+        .update(userOrgMembershipsTable)
+        .set({ vendorPeopleId, role: membershipRole })
+        .where(eq(userOrgMembershipsTable.id, membershipId));
+    }
+  }
+
+  if (membershipId) {
+    await tx
+      .update(usersTable)
+      .set({ activeMembershipId: membershipId })
+      .where(eq(usersTable.id, userId));
+  }
+}
+
+async function disableVendorPersonPortalLogin(employeeId: number, employee: typeof vendorPeopleTable.$inferSelect): Promise<void> {
+  if (!employee.userId) return;
+  const membershipRole = membershipRoleForVendorPerson(employee.vendorRole);
+  const memberships = await db
+    .select({ id: userOrgMembershipsTable.id })
+    .from(userOrgMembershipsTable)
+    .where(and(
+      eq(userOrgMembershipsTable.userId, employee.userId),
+      eq(userOrgMembershipsTable.orgType, "vendor"),
+      eq(userOrgMembershipsTable.vendorId, employee.vendorId),
+      eq(userOrgMembershipsTable.role, membershipRole),
+      eq(userOrgMembershipsTable.vendorPeopleId, employeeId),
+    ));
+  for (const m of memberships) {
+    await removeMembership(m.id);
+  }
+  await db.transaction(async (tx) => {
+    const expectedRole = sessionUserRoleForVendorPerson(employee.vendorRole);
+    await tx.delete(usersTable).where(and(
+      eq(usersTable.id, employee.userId!),
+      eq(usersTable.role, expectedRole),
+    ));
+    await tx.update(vendorPeopleTable).set({ userId: null }).where(eq(vendorPeopleTable.id, employeeId));
+  });
 }
 
 async function requireFieldUser(req: any, res: any) {
@@ -1142,42 +1224,24 @@ router.delete("/field/push-token", async (req, res): Promise<void> => {
 // ── POST /api/field-employees/:id/login — set or update login credentials ──
 router.post("/field-employees/:id/login", async (req, res): Promise<void> => {
   const session = getSession(req);
-  if (!session || !["admin", "vendor"].includes(session.role)) {
+  if (!session) {
     res.status(401).json({
       code: "field.admin_or_vendor_login_required",
       error: "field_admin_or_vendor_login_required",
-      message: "Admin or vendor login required",
+      message: "Login required",
     });
     return;
   }
   const employeeId = parseInt(req.params.id);
-  const { email, password, displayName, preferredLanguage, mustChangePassword: mustChangePasswordRaw } = req.body ?? {};
-  if (!email || !password) {
-    res.status(400).json({
-      code: "field.email_and_password_required",
-      error: "field_email_and_password_required",
-      message: "email and password are required",
-    });
-    return;
-  }
-  if (password.length < 8) {
-    res.status(400).json({
-      code: "field.password_too_short",
-      error: "field_password_too_short",
-      message: "Password must be at least 8 characters",
-    });
-    return;
-  }
-  if (preferredLanguage !== undefined && preferredLanguage !== null && normalizeLanguage(preferredLanguage) === null) {
-    res.status(400).json({
-      code: "field.invalid_preferred_language",
-      error: "field_invalid_preferred_language",
-      message: "preferredLanguage must be 'en' or 'es'",
-    });
-    return;
-  }
-  const langForInsert = normalizeLanguage(preferredLanguage);
-  const langProvided = preferredLanguage !== undefined;
+  const body = req.body ?? {};
+  const portalLoginEnabled = body.portalLoginEnabled;
+  const emailRaw = body.email;
+  const email = typeof emailRaw === "string" ? emailRaw.trim() : "";
+  const passwordRaw = body.password;
+  const password = typeof passwordRaw === "string" ? passwordRaw : "";
+  const displayName = body.displayName;
+  const preferredLanguage = body.preferredLanguage;
+  const mustChangePasswordRaw = body.mustChangePassword;
   const mustChangePassword = mustChangePasswordRaw === true;
 
   const [employee] = await db
@@ -1192,46 +1256,96 @@ router.post("/field-employees/:id/login", async (req, res): Promise<void> => {
     });
     return;
   }
-  if (session.role === "vendor" && session.vendorId !== employee.vendorId) {
-    res.status(403).json({
-      code: "field.employee_outside_vendor",
-      error: "field_employee_outside_vendor",
-      message: "Cannot manage employees outside your vendor",
+
+  const auth = await assertCanManageVendorPeople(session, employee.vendorId);
+  if (!auth.ok) {
+    res.status(auth.status).json({ message: auth.message, code: "field.forbidden" });
+    return;
+  }
+
+  if (portalLoginEnabled === false) {
+    await disableVendorPersonPortalLogin(employeeId, employee);
+    res.status(204).send();
+    return;
+  }
+
+  if (!email) {
+    res.status(400).json({
+      code: "field.email_required",
+      error: "field_email_required",
+      message: "email is required",
     });
     return;
   }
 
-  const passwordHash = bcrypt.hashSync(password, 10);
+  const creating = !employee.userId;
+  if (creating && password.length < 8) {
+    res.status(400).json({
+      code: "field.password_too_short",
+      error: "field_password_too_short",
+      message: "Password must be at least 8 characters",
+    });
+    return;
+  }
+  if (!creating && password.length > 0 && password.length < 8) {
+    res.status(400).json({
+      code: "field.password_too_short",
+      error: "field_password_too_short",
+      message: "Password must be at least 8 characters",
+    });
+    return;
+  }
+  if (creating && !password) {
+    res.status(400).json({
+      code: "field.password_required",
+      error: "field_password_required",
+      message: "password is required when enabling portal login",
+    });
+    return;
+  }
+
+  if (preferredLanguage !== undefined && preferredLanguage !== null && normalizeLanguage(preferredLanguage) === null) {
+    res.status(400).json({
+      code: "field.invalid_preferred_language",
+      error: "field_invalid_preferred_language",
+      message: "preferredLanguage must be 'en' or 'es'",
+    });
+    return;
+  }
+  const langForInsert = normalizeLanguage(preferredLanguage);
+  const langProvided = preferredLanguage !== undefined;
+  const expectedUserRole = sessionUserRoleForVendorPerson(employee.vendorRole);
   const finalDisplayName = displayName || `${employee.firstName} ${employee.lastName}`.trim() || email;
 
   try {
     const result = await db.transaction(async (tx) => {
       if (employee.userId) {
         const [existing] = await tx.select().from(usersTable).where(eq(usersTable.id, employee.userId));
-        if (existing && existing.role !== "field_employee") {
-          throw Object.assign(new Error("Linked user is not a field_employee account"), { http: 409 });
+        if (existing && existing.role !== expectedUserRole) {
+          throw Object.assign(new Error("Linked login role does not match employee role"), { http: 409 });
         }
         const [conflict] = await tx.select({ id: usersTable.id }).from(usersTable).where(and(eq(usersTable.username, email), ne(usersTable.id, employee.userId)));
         if (conflict) throw Object.assign(new Error("That email is already in use by another login"), { http: 409 });
-        // The (user, vendor) membership row below is the authoritative
-        // source for org assignment.
         const updateValues: Record<string, unknown> = {
           username: email,
-          // Keep `users.email` in sync with the login email so visitor
-          // notification lookups (which join by email) keep working.
           email,
-          passwordHash,
           displayName: finalDisplayName,
-          role: "field_employee",
+          role: expectedUserRole,
           mustChangePassword,
           sessionVersion: sql`${usersTable.sessionVersion} + 1`,
         };
+        if (password) updateValues.passwordHash = bcrypt.hashSync(password, 10);
         if (langProvided) updateValues.preferredLanguage = langForInsert;
         await tx
           .update(usersTable)
           .set(updateValues)
           .where(eq(usersTable.id, employee.userId));
-        await ensureFieldEmployeeMembershipTx(tx, employee.userId, employee.vendorId, employeeId);
+        if (usesFieldEmployeeLogin(employee.vendorRole)) {
+          await ensureFieldEmployeeMembershipTx(tx, employee.userId, employee.vendorId, employeeId);
+        } else {
+          await ensureVendorPortalMembershipTx(tx, employee.userId, employee.vendorId, employeeId, employee.vendorRole);
+        }
+        await tx.update(vendorPeopleTable).set({ email }).where(eq(vendorPeopleTable.id, employeeId));
         return { userId: employee.userId, status: "updated" as const };
       }
       const [conflict] = await tx.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.username, email));
@@ -1241,8 +1355,8 @@ router.post("/field-employees/:id/login", async (req, res): Promise<void> => {
         .values({
           username: email,
           email,
-          passwordHash,
-          role: "field_employee",
+          passwordHash: bcrypt.hashSync(password, 10),
+          role: expectedUserRole,
           displayName: finalDisplayName,
           preferredLanguage: langForInsert,
           mustChangePassword,
@@ -1252,12 +1366,13 @@ router.post("/field-employees/:id/login", async (req, res): Promise<void> => {
         .update(vendorPeopleTable)
         .set({ userId: newUser.id, email })
         .where(eq(vendorPeopleTable.id, employeeId));
-      await ensureFieldEmployeeMembershipTx(tx, newUser.id, employee.vendorId, employeeId);
+      if (usesFieldEmployeeLogin(employee.vendorRole)) {
+        await ensureFieldEmployeeMembershipTx(tx, newUser.id, employee.vendorId, employeeId);
+      } else {
+        await ensureVendorPortalMembershipTx(tx, newUser.id, employee.vendorId, employeeId, employee.vendorRole);
+      }
       return { userId: newUser.id, status: "created" as const };
     });
-    // The membership row is inserted by ensureFieldEmployeeMembershipTx
-    // inside the transaction above, so the user is never visible
-    // without it.
     res.status(result.status === "created" ? 201 : 200).json({ employeeId, userId: result.userId, email, status: result.status, preferredLanguage: langForInsert });
   } catch (err: any) {
     res.status(err.http || 500).json({ message: err.message || "Failed to save credentials" });
@@ -1402,11 +1517,11 @@ router.post("/field-employees/bulk-login", async (req, res): Promise<void> => {
 // ── DELETE /api/field-employees/:id/login — disable credentials ──
 router.delete("/field-employees/:id/login", async (req, res): Promise<void> => {
   const session = getSession(req);
-  if (!session || !["admin", "vendor"].includes(session.role)) {
+  if (!session) {
     res.status(401).json({
       code: "field.admin_or_vendor_login_required",
       error: "field_admin_or_vendor_login_required",
-      message: "Admin or vendor login required",
+      message: "Login required",
     });
     return;
   }
@@ -1420,52 +1535,23 @@ router.delete("/field-employees/:id/login", async (req, res): Promise<void> => {
     });
     return;
   }
-  if (session.role === "vendor" && session.vendorId !== employee.vendorId) {
-    res.status(403).json({
-      code: "field.employee_outside_vendor",
-      error: "field_employee_outside_vendor",
-      message: "Cannot manage employees outside your vendor",
-    });
+  const auth = await assertCanManageVendorPeople(session, employee.vendorId);
+  if (!auth.ok) {
+    res.status(auth.status).json({ message: auth.message, code: "field.forbidden" });
     return;
   }
-  if (employee.userId) {
-    // Only target THIS field-employee's membership rows. Scope by
-    // role=field_employee + vendorPeopleId so we never collateral-
-    // delete an admin/member membership the same login may also have
-    // on this vendor (rare but possible after dual-role invites).
-    const memberships = await db
-      .select({ id: userOrgMembershipsTable.id })
-      .from(userOrgMembershipsTable)
-      .where(and(
-        eq(userOrgMembershipsTable.userId, employee.userId),
-        eq(userOrgMembershipsTable.orgType, "vendor"),
-        eq(userOrgMembershipsTable.vendorId, employee.vendorId),
-        eq(userOrgMembershipsTable.role, "field_employee"),
-        eq(userOrgMembershipsTable.vendorPeopleId, employeeId),
-      ));
-    for (const m of memberships) {
-      await removeMembership(m.id);
-    }
-    await db.transaction(async (tx) => {
-      // Only delete the user if it's actually a field_employee account, never an admin/vendor/partner.
-      await tx.delete(usersTable).where(and(
-        eq(usersTable.id, employee.userId!),
-        eq(usersTable.role, "field_employee"),
-      ));
-      await tx.update(vendorPeopleTable).set({ userId: null }).where(eq(vendorPeopleTable.id, employeeId));
-    });
-  }
+  await disableVendorPersonPortalLogin(employeeId, employee);
   res.status(204).send();
 });
 
 // ── GET /api/field-employees/:id/login — get login status ──
 router.get("/field-employees/:id/login", async (req, res): Promise<void> => {
   const session = getSession(req);
-  if (!session || !["admin", "vendor"].includes(session.role)) {
+  if (!session) {
     res.status(401).json({
       code: "field.admin_or_vendor_login_required",
       error: "field_admin_or_vendor_login_required",
-      message: "Admin or vendor login required",
+      message: "Login required",
     });
     return;
   }
@@ -1479,18 +1565,16 @@ router.get("/field-employees/:id/login", async (req, res): Promise<void> => {
     });
     return;
   }
-  if (session.role === "vendor" && session.vendorId !== employee.vendorId) {
-    res.status(403).json({
-      code: "field.employee_view_outside_vendor",
-      error: "field_employee_view_outside_vendor",
-      message: "Cannot view employees outside your vendor",
-    });
+  const auth = await assertCanManageVendorPeople(session, employee.vendorId);
+  if (!auth.ok) {
+    res.status(auth.status).json({ message: auth.message, code: "field.forbidden" });
     return;
   }
   if (!employee.userId) {
-    res.json({ hasLogin: false });
+    res.json({ hasLogin: false, portalLoginEnabled: false });
     return;
   }
+  const expectedUserRole = sessionUserRoleForVendorPerson(employee.vendorRole);
   const [user] = await db
     .select({
       id: usersTable.id,
@@ -1500,12 +1584,13 @@ router.get("/field-employees/:id/login", async (req, res): Promise<void> => {
     })
     .from(usersTable)
     .where(eq(usersTable.id, employee.userId));
-  if (!user || user.role !== "field_employee") {
-    res.json({ hasLogin: false });
+  if (!user || user.role !== expectedUserRole) {
+    res.json({ hasLogin: false, portalLoginEnabled: false });
     return;
   }
   res.json({
     hasLogin: true,
+    portalLoginEnabled: true,
     email: user.username,
     userId: user.id,
     mustChangePassword: !!user.mustChangePassword,

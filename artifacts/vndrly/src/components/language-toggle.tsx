@@ -6,14 +6,16 @@ import { useBrand } from "@/hooks/use-brand";
 import SplitToggleHalf from "@/components/split-toggle-half";
 import {
   pickTogglePillSrc,
-  SPLIT_TOGGLE_ACTIVE_TEXT_SHADOW,
-  SPLIT_TOGGLE_IDLE_TEXT_CLASS,
+  splitToggleActiveTextClass,
+  splitToggleDividerClass,
+  splitToggleIdleTextClass,
   TOGGLE_IDLE_PILL_SRC,
+  type SplitToggleVariant,
 } from "@/lib/pick-toggle-pill";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-export default function LanguageToggle({ className, variant: _variant = "dark" }: { className?: string; variant?: "dark" | "light" }) {
+export default function LanguageToggle({ className, variant = "dark" }: { className?: string; variant?: SplitToggleVariant }) {
   const { t, i18n } = useTranslation();
   const { user, setPreferredLanguage } = useAuth();
   const { toast } = useToast();
@@ -48,8 +50,9 @@ export default function LanguageToggle({ className, variant: _variant = "dark" }
   };
   const brand = useBrand();
   const activePillSrc = pickTogglePillSrc(brand.primary, brand.name);
-  const activeText = cn("text-white", SPLIT_TOGGLE_ACTIVE_TEXT_SHADOW);
-  const idleText = SPLIT_TOGGLE_IDLE_TEXT_CLASS;
+  const activeText = splitToggleActiveTextClass(variant);
+  const idleText = splitToggleIdleTextClass(variant);
+  const dividerClass = splitToggleDividerClass(variant);
 
   return (
     <div
@@ -69,7 +72,7 @@ export default function LanguageToggle({ className, variant: _variant = "dark" }
       >
         EN
       </SplitToggleHalf>
-      <span aria-hidden className="w-px shrink-0 self-stretch bg-gray-400" />
+      <span aria-hidden className={cn("w-px shrink-0 self-stretch", dividerClass)} />
       <SplitToggleHalf
         side="right"
         pillSrc={current === "es" ? activePillSrc : TOGGLE_IDLE_PILL_SRC}

@@ -8,7 +8,8 @@
     "required": "Required",
     "ok": "OK",
     "error": "Error",
-    "unknownError": "Unknown error"
+    "unknownError": "Unknown error",
+    "saved": "Saved"
   },
   "freshness": {
     "live": "Live",
@@ -1187,6 +1188,7 @@
     "reviewLocationDetails": "Review sharing details",
     "editProfile": "Edit Profile",
     "complianceCard": "Compliance Card",
+    "manageEmployees": "Manage employees",
     "crewChanges": "My Crew Changes",
     "couldNotUpdate": "Could not update",
     "languageSavedToast": "Saved — {{language}}",
@@ -1518,5 +1520,42 @@
     "etaHrs": "{{h}} h",
     "etaHrsMins": "{{h}}h {{min}}m",
     "directions": "Directions"
+  },
+  "employees": {
+    "title": "Employees",
+    "editTitle": "Edit employee",
+    "empty": "No employees found.",
+    "notFound": "Employee not found",
+    "loadFailed": "Could not load employee",
+    "saveFailed": "Could not save employee",
+    "saved": "Employee saved"
+  },
+  "fieldEmployees": {
+    "firstName": "First name",
+    "lastName": "Last name",
+    "email": "Email",
+    "phone": "Phone",
+    "jobTitle": "Job title",
+    "role": "Role",
+    "pecExpiration": "PEC expiration",
+    "saveChanges": "Save changes",
+    "saving": "Saving..."
+  },
+  "fieldEmployeeDetail": {
+    "fieldPortalLogin": "Portal login",
+    "loginEmail": "Login email",
+    "newPassword": "New password",
+    "password": "Password",
+    "passwordPlaceholder": "At least 8 characters",
+    "passwordOptionalPlaceholder": "Leave blank to keep current password",
+    "enablePortalLogin": "Enable web portal login",
+    "enablePortalLoginHelp": "Allows this employee to sign in with email and password at {{path}}.",
+    "saveLoginSettings": "Save login settings",
+    "updatePassword": "Update password",
+    "createLogin": "Create login",
+    "saving": "Saving...",
+    "emailPasswordRequired": "Email required and password must be 8+ characters",
+    "forcePasswordChange": "Require password change at next sign-in",
+    "forcePasswordChangeHelp": "The employee must choose a new password before using the app or portal."
   }
 }

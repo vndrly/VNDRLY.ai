@@ -20,7 +20,7 @@ import BlueButton from "@/components/blue-button";
 import { PngPillButton, brandImagePillSrc } from "@/components/png-pill-rollover";
 import addEmployeeIdle from "@assets/download_1778508804009.png";
 import addEmployeeModalActive from "@assets/NewPillPallet_0001s_0004_Layer-5.png";
-import AccountActions, { SuspendedPill, InactivePill } from "@/components/account-actions";
+import { SuspendedPill, InactivePill } from "@/components/account-actions";
 import { EmployeeRolePill } from "@/components/employee-role-pill";
 import PecStatusBadge from "@/components/pec-status-badge";
 import { useAuth } from "@/hooks/use-auth";
@@ -148,6 +148,21 @@ export default function FieldEmployees() {
   const vendorId = isVendor ? user!.vendorId! : null;
   const isPartner = user?.role === "partner" && !!user.partnerId;
   const partnerId = isPartner ? user!.partnerId! : null;
+  const isForemanOnly =
+    user?.role === "field_employee" &&
+    (user.vendorRole === "foreman" || user.vendorRole === "both");
+
+  const pecIsCurrent = (form: { pecCertification: boolean; pecExpirationDate: string }) => {
+    if (form.pecExpirationDate) {
+      const exp = new Date(`${form.pecExpirationDate}T00:00:00`);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return exp.getTime() >= today.getTime();
+    }
+    return form.pecCertification;
+  };
+
+  const canEditPerson = (p: PersonRow) => !isForemanOnly || p.vendorRole !== "admin";
 
   const { data: vendorData } = useGetVendor(vendorId ?? 0, { query: { enabled: !!vendorId, queryKey: ["vendor", vendorId] } });
   const { data: partnerData } = useGetPartner(partnerId ?? 0, { query: { enabled: !!partnerId, queryKey: getGetPartnerQueryKey(partnerId ?? 0) } });
@@ -423,6 +438,7 @@ export default function FieldEmployees() {
       <TableCell className="font-medium">{p.jobTitle || "-"}</TableCell>
       <TableCell className="font-medium">
         {kind === "field" ? (
+          canEditPerson(p) ? (
           <button
             type="button"
             onClick={() => openEditOfficeDialog(p, true)}
@@ -431,7 +447,11 @@ export default function FieldEmployees() {
           >
             <div className="flex items-center gap-2">{avatar}<span>{p.firstName} {p.lastName}</span>{p.suspendedAt && <SuspendedPill />}{p.isActive === false && <InactivePill />}</div>
           </button>
+          ) : (
+            <div className="flex items-center gap-2">{avatar}<span>{p.firstName} {p.lastName}</span>{p.suspendedAt && <SuspendedPill />}{p.isActive === false && <InactivePill />}</div>
+          )
         ) : (
+          canEditPerson(p) ? (
           <button
             type="button"
             onClick={() => openEditOfficeDialog(p, false)}
@@ -440,6 +460,9 @@ export default function FieldEmployees() {
           >
             <div className="flex items-center gap-2">{avatar}<span>{p.firstName} {p.lastName}</span>{p.suspendedAt && <SuspendedPill />}{p.isActive === false && <InactivePill />}</div>
           </button>
+          ) : (
+            <div className="flex items-center gap-2">{avatar}<span>{p.firstName} {p.lastName}</span>{p.suspendedAt && <SuspendedPill />}{p.isActive === false && <InactivePill />}</div>
+          )
         )}
       </TableCell>
       {!isVendor && <TableCell>{p.vendorName || "-"}</TableCell>}
@@ -812,7 +835,9 @@ export default function FieldEmployees() {
               <Select value={editOfficeForm.vendorRole} onValueChange={(v) => setEditOfficeForm({ ...editOfficeForm, vendorRole: v })}>
                 <SelectTrigger data-testid="select-edit-office-role"><SelectValue placeholder={t("fieldEmployees.selectRole")} /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="admin" className="focus:bg-transparent data-[highlighted]:bg-transparent"><EmployeeRolePill role="admin" /></SelectItem>
+                  {(!isForemanOnly || pecIsCurrent(editOfficeForm)) ? (
+                    <SelectItem value="admin" className="focus:bg-transparent data-[highlighted]:bg-transparent"><EmployeeRolePill role="admin" /></SelectItem>
+                  ) : null}
                   <SelectItem value="office" className="focus:bg-transparent data-[highlighted]:bg-transparent"><EmployeeRolePill role="office" /></SelectItem>
                   <SelectItem value="field" className="focus:bg-transparent data-[highlighted]:bg-transparent"><EmployeeRolePill role="field" /></SelectItem>
                   <SelectItem value="both" className="focus:bg-transparent data-[highlighted]:bg-transparent"><EmployeeRolePill role="both" /></SelectItem>
@@ -835,11 +860,7 @@ export default function FieldEmployees() {
               <Label htmlFor="visit-notif-office-edit" className="cursor-pointer">Receive site visitor check-in notifications</Label>
             </div>
             <div><Label>{t("fieldEmployees.pecExpiration")}</Label><Input type="date" value={editOfficeForm.pecExpirationDate} onChange={(e) => setEditOfficeForm({ ...editOfficeForm, pecExpirationDate: e.target.value })} data-testid="input-edit-office-pec-expiration" /></div>
-            {editingOfficeContactId &&
-            (editingFromFieldTable ||
-              editOfficeForm.vendorRole === "field" ||
-              editOfficeForm.vendorRole === "both" ||
-              editOfficeForm.vendorRole === "foreman") ? (
+            {editingOfficeContactId ? (
               <EmployeePortalLoginFields
                 employeeId={editingOfficeContactId}
                 defaultEmail={editOfficeForm.email}
@@ -852,21 +873,6 @@ export default function FieldEmployees() {
                 }}
               />
             ) : null}
-            {(() => {
-              const editing =
-                (officeEmployees ?? []).find((e) => e.id === editingOfficeContactId) ??
-                (fieldEmployees ?? []).find((e) => e.id === editingOfficeContactId);
-              if (!editing?.hasLogin || !editing.userId) return null;
-              return (
-                <AccountActions
-                  userId={editing.userId}
-                  hasLogin={editing.hasLogin}
-                  suspendedAt={editing.suspendedAt ?? null}
-                  testIdPrefix="edit-office-account"
-                  onChanged={() => queryClient.invalidateQueries({ queryKey: officeQueryKey })}
-                />
-              );
-            })()}
             <PngPillButton color="blue" type="submit" disabled={updateVendorContact.isPending} attention={editOfficeDirty} className="w-full" data-testid="button-submit-edit-office">
               {updateVendorContact.isPending ? t("fieldEmployees.saving") : t("fieldEmployees.saveChanges")}
             </PngPillButton>

@@ -114,8 +114,8 @@ export default function VisitorEntryPage() {
         }}
       />
       <div className="flex justify-between items-center p-4 relative z-20">
-        <DarkLightToggle mode={themeMode} onChange={setThemeMode} variant="light" />
-        <LanguageToggle />
+        <DarkLightToggle mode={themeMode} onChange={setThemeMode} variant={isDark ? "dark" : "light"} />
+        <LanguageToggle variant={isDark ? "dark" : "light"} />
       </div>
       <div className="flex-1 flex items-start justify-center px-4 pb-10 relative z-10">
         <Card className="w-full max-w-md border-2 border-gray-200 shadow-xl">
