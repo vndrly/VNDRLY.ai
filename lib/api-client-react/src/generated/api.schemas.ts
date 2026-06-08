@@ -1757,6 +1757,8 @@ export interface FieldEmployeeLoginStatus {
   hasLogin: boolean;
   email?: string;
   userId?: number;
+  /** When true, the employee must set a new password on next sign-in before using the app. */
+  mustChangePassword?: boolean;
 }
 
 /**
@@ -1779,6 +1781,8 @@ export interface SetFieldEmployeeLoginBody {
   displayName?: string;
   /** Default UI language for the linked login. Omit to leave any existing preference unchanged. */
   preferredLanguage?: SetFieldEmployeeLoginBodyPreferredLanguage;
+  /** When true, require the employee to change this password on first sign-in. Defaults to false when omitted. */
+  mustChangePassword?: boolean;
 }
 
 export type SetFieldEmployeeLoginResponseStatus =

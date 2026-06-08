@@ -6079,6 +6079,9 @@ components:
           type: string
         userId:
           type: integer
+        mustChangePassword:
+          type: boolean
+          description: When true, the employee must set a new password on next sign-in before using the app.
       required: [hasLogin]
 
     SetFieldEmployeeLoginBody:
@@ -6097,6 +6100,9 @@ components:
           enum: [en, es]
           nullable: true
           description: Default UI language for the linked login. Omit to leave any existing preference unchanged.
+        mustChangePassword:
+          type: boolean
+          description: When true, require the employee to change this password on first sign-in. Defaults to false when omitted.
       required: [email, password]
 
     SetFieldEmployeeLoginResponse:

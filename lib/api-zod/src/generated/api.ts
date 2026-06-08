@@ -1789,6 +1789,12 @@ export const GetFieldEmployeeLoginResponse = zod
     hasLogin: zod.boolean(),
     email: zod.string().optional(),
     userId: zod.number().optional(),
+    mustChangePassword: zod
+      .boolean()
+      .optional()
+      .describe(
+        "When true, the employee must set a new password on next sign-in before using the app.",
+      ),
   })
   .describe(
     "Whether the field employee has a linked login user, and that user's email\/id when present.",
@@ -1824,6 +1830,12 @@ export const SetFieldEmployeeLoginBody = zod.object({
     .nullish()
     .describe(
       "Default UI language for the linked login. Omit to leave any existing preference unchanged.",
+    ),
+  mustChangePassword: zod
+    .boolean()
+    .optional()
+    .describe(
+      "When true, require the employee to change this password on first sign-in. Defaults to false when omitted.",
     ),
 });
 

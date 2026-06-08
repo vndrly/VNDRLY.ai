@@ -1151,7 +1151,7 @@ router.post("/field-employees/:id/login", async (req, res): Promise<void> => {
     return;
   }
   const employeeId = parseInt(req.params.id);
-  const { email, password, displayName, preferredLanguage } = req.body ?? {};
+  const { email, password, displayName, preferredLanguage, mustChangePassword: mustChangePasswordRaw } = req.body ?? {};
   if (!email || !password) {
     res.status(400).json({
       code: "field.email_and_password_required",
@@ -1178,6 +1178,7 @@ router.post("/field-employees/:id/login", async (req, res): Promise<void> => {
   }
   const langForInsert = normalizeLanguage(preferredLanguage);
   const langProvided = preferredLanguage !== undefined;
+  const mustChangePassword = mustChangePasswordRaw === true;
 
   const [employee] = await db
     .select()
@@ -1222,6 +1223,8 @@ router.post("/field-employees/:id/login", async (req, res): Promise<void> => {
           passwordHash,
           displayName: finalDisplayName,
           role: "field_employee",
+          mustChangePassword,
+          sessionVersion: sql`${usersTable.sessionVersion} + 1`,
         };
         if (langProvided) updateValues.preferredLanguage = langForInsert;
         await tx
@@ -1242,6 +1245,7 @@ router.post("/field-employees/:id/login", async (req, res): Promise<void> => {
           role: "field_employee",
           displayName: finalDisplayName,
           preferredLanguage: langForInsert,
+          mustChangePassword,
         })
         .returning();
       await tx
@@ -1488,14 +1492,24 @@ router.get("/field-employees/:id/login", async (req, res): Promise<void> => {
     return;
   }
   const [user] = await db
-    .select({ id: usersTable.id, username: usersTable.username, role: usersTable.role })
+    .select({
+      id: usersTable.id,
+      username: usersTable.username,
+      role: usersTable.role,
+      mustChangePassword: usersTable.mustChangePassword,
+    })
     .from(usersTable)
     .where(eq(usersTable.id, employee.userId));
   if (!user || user.role !== "field_employee") {
     res.json({ hasLogin: false });
     return;
   }
-  res.json({ hasLogin: true, email: user.username, userId: user.id });
+  res.json({
+    hasLogin: true,
+    email: user.username,
+    userId: user.id,
+    mustChangePassword: !!user.mustChangePassword,
+  });
 });
 
 // ── GET /api/field/co-workers — active vendor people for foreman crew tools ──

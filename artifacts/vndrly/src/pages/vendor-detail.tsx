@@ -65,6 +65,7 @@ import SphereBackButton from "@/components/sphere-back-button";
 import PecStatusBadge from "@/components/pec-status-badge";
 import RoleBadge from "@/components/role-badge";
 import { PhotoUploadField } from "@/components/photo-upload-field";
+import EmployeePortalLoginFields from "@/components/employee-portal-login-fields";
 import { useAuth } from "@/hooks/use-auth";
 import OrgMembersCard from "@/components/org-members-card";
 import VendorPartnerRelationshipsCard from "@/components/vendor-partner-relationships-card";
@@ -1575,6 +1576,18 @@ export default function VendorDetail({ id }: { id: number }) {
               <Checkbox id="visit-notif-employee-edit" checked={editEmployeeForm.roles.includes("Visitor Notifications")} onCheckedChange={(v) => setEditEmployeeForm({ ...editEmployeeForm, roles: v ? Array.from(new Set([...editEmployeeForm.roles, "Visitor Notifications"])) : editEmployeeForm.roles.filter((r) => r !== "Visitor Notifications") })} data-testid="checkbox-edit-employee-visit-notifications" />
               <Label htmlFor="visit-notif-employee-edit" className="cursor-pointer">{t("vendors.visitorNotifications")}</Label>
             </div>
+            {editingEmployeeId ? (
+              <EmployeePortalLoginFields
+                employeeId={editingEmployeeId}
+                defaultEmail={editEmployeeForm.email}
+                vendorRole={editEmployeeForm.vendorRole}
+                variant="inline"
+                testIdPrefix="edit-employee-login"
+                onSaved={() => {
+                  queryClient.invalidateQueries({ queryKey: getListFieldEmployeesQueryKey({ vendorId: id }) });
+                }}
+              />
+            ) : null}
             <PngPillButton type="submit" color="blue" className="w-full px-2" disabled={updateEmployee.isPending} attention={editEmployeeDirty} data-testid="button-submit-edit-employee">
               {updateEmployee.isPending ? t("common.saving") : t("common.saveChanges")}
             </PngPillButton>

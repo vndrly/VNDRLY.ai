@@ -13,4 +13,6 @@ export interface FieldEmployeeLoginStatusType {
   hasLogin: boolean;
   email?: string;
   userId?: number;
+  /** When true, the employee must set a new password on next sign-in before using the app. */
+  mustChangePassword?: boolean;
 }

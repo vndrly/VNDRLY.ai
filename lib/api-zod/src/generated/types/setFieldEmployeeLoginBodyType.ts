@@ -15,4 +15,6 @@ export interface SetFieldEmployeeLoginBodyType {
   displayName?: string;
   /** Default UI language for the linked login. Omit to leave any existing preference unchanged. */
   preferredLanguage?: SetFieldEmployeeLoginBodyTypePreferredLanguage;
+  /** When true, require the employee to change this password on first sign-in. Defaults to false when omitted. */
+  mustChangePassword?: boolean;
 }

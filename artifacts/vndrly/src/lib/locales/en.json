@@ -1017,6 +1017,8 @@
     "emailPasswordRequired": "Email required and password must be 8+ characters",
     "failedToSaveCredentials": "Failed to save credentials",
     "failedToDisableLogin": "Failed to disable login",
+    "forcePasswordChange": "Require password change at next sign-in",
+    "forcePasswordChangeHelp": "The employee must choose a new password before using the field app or portal.",
     "compliancePreview": "Compliance Card Preview",
     "compliancePreviewHelp": "This is what an inspector sees when they scan the employee's QR code.",
     "print": "Print",

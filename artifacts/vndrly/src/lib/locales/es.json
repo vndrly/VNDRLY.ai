@@ -1017,6 +1017,8 @@
     "emailPasswordRequired": "Se requiere correo y la contraseña debe tener 8+ caracteres",
     "failedToSaveCredentials": "No se pudieron guardar las credenciales",
     "failedToDisableLogin": "No se pudo deshabilitar el acceso",
+    "forcePasswordChange": "Exigir cambio de contraseña en el próximo inicio de sesión",
+    "forcePasswordChangeHelp": "El empleado debe elegir una nueva contraseña antes de usar la app de campo o el portal.",
     "compliancePreview": "Vista Previa de Tarjeta de Cumplimiento",
     "compliancePreviewHelp": "Esto es lo que ve un inspector cuando escanea el código QR del empleado.",
     "print": "Imprimir",

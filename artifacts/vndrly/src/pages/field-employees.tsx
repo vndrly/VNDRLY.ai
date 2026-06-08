@@ -12,7 +12,6 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
-import { Link } from "wouter";
 import { UserCheck, ArrowUp, ArrowDown, Plus, RotateCcw } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PhotoUploadField } from "@/components/photo-upload-field";
@@ -28,6 +27,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useBrand } from "@/hooks/use-brand";
 import { useToast } from "@/hooks/use-toast";
 import BulkLoginUploadDialog from "@/components/bulk-login-upload-dialog";
+import EmployeePortalLoginFields from "@/components/employee-portal-login-fields";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -180,6 +180,7 @@ export default function FieldEmployees() {
   type EditOfficeForm = { jobTitle: string; firstName: string; lastName: string; email: string; phone: string; vendorRole: string; pecCertification: boolean; pecExpirationDate: string; photoUrl: string | null; roles: string[] };
   const [editOfficeOpen, setEditOfficeOpen] = useState(false);
   const [editingOfficeContactId, setEditingOfficeContactId] = useState<number | null>(null);
+  const [editingFromFieldTable, setEditingFromFieldTable] = useState(false);
   const [editingOfficeVendorId, setEditingOfficeVendorId] = useState<number | null>(null);
   const [editingOfficeVendorLogoUrl, setEditingOfficeVendorLogoUrl] = useState<string | null>(null);
   const [editingOfficeVendorName, setEditingOfficeVendorName] = useState<string | null>(null);
@@ -192,6 +193,7 @@ export default function FieldEmployees() {
     if (!open) {
       initialEditOfficeFormRef.current = null;
       setEditingOfficeContactId(null);
+      setEditingFromFieldTable(false);
       setEditingOfficeVendorId(null);
       setEditingOfficeVendorLogoUrl(null);
       setEditingOfficeVendorName(null);
@@ -199,8 +201,9 @@ export default function FieldEmployees() {
     setEditOfficeOpen(open);
   };
 
-  const openEditOfficeDialog = (p: PersonRow) => {
+  const openEditOfficeDialog = (p: PersonRow, fromFieldTable: boolean) => {
     setEditingOfficeContactId(p.id);
+    setEditingFromFieldTable(fromFieldTable);
     setEditingOfficeVendorId(p.vendorId);
     setEditingOfficeVendorLogoUrl(p.vendorLogoUrl ?? null);
     setEditingOfficeVendorName(p.vendorName ?? null);
@@ -420,13 +423,18 @@ export default function FieldEmployees() {
       <TableCell className="font-medium">{p.jobTitle || "-"}</TableCell>
       <TableCell className="font-medium">
         {kind === "field" ? (
-          <Link href={`/field-employees/${p.id}`} className="text-gray-700 hover:[color:var(--brand-primary)] hover:[text-shadow:0_1px_2px_rgba(0,0,0,0.35)] transition-all" data-testid={`link-employee-${p.id}`}>
+          <button
+            type="button"
+            onClick={() => openEditOfficeDialog(p, true)}
+            className="text-gray-700 hover:[color:var(--brand-primary)] hover:[text-shadow:0_1px_2px_rgba(0,0,0,0.35)] transition-all text-left bg-transparent p-0 m-0 border-0 cursor-pointer"
+            data-testid={`button-edit-field-${p.id}`}
+          >
             <div className="flex items-center gap-2">{avatar}<span>{p.firstName} {p.lastName}</span>{p.suspendedAt && <SuspendedPill />}{p.isActive === false && <InactivePill />}</div>
-          </Link>
+          </button>
         ) : (
           <button
             type="button"
-            onClick={() => openEditOfficeDialog(p)}
+            onClick={() => openEditOfficeDialog(p, false)}
             className="text-gray-700 hover:[color:var(--brand-primary)] hover:[text-shadow:0_1px_2px_rgba(0,0,0,0.35)] transition-all text-left bg-transparent p-0 m-0 border-0 cursor-pointer"
             data-testid={`button-edit-office-${p.id}`}
           >
@@ -827,8 +835,27 @@ export default function FieldEmployees() {
               <Label htmlFor="visit-notif-office-edit" className="cursor-pointer">Receive site visitor check-in notifications</Label>
             </div>
             <div><Label>{t("fieldEmployees.pecExpiration")}</Label><Input type="date" value={editOfficeForm.pecExpirationDate} onChange={(e) => setEditOfficeForm({ ...editOfficeForm, pecExpirationDate: e.target.value })} data-testid="input-edit-office-pec-expiration" /></div>
+            {editingOfficeContactId &&
+            (editingFromFieldTable ||
+              editOfficeForm.vendorRole === "field" ||
+              editOfficeForm.vendorRole === "both" ||
+              editOfficeForm.vendorRole === "foreman") ? (
+              <EmployeePortalLoginFields
+                employeeId={editingOfficeContactId}
+                defaultEmail={editOfficeForm.email}
+                vendorRole={editOfficeForm.vendorRole}
+                variant="inline"
+                testIdPrefix="edit-office-login"
+                onSaved={() => {
+                  queryClient.invalidateQueries({ queryKey: officeQueryKey });
+                  queryClient.invalidateQueries({ queryKey: getListFieldEmployeesQueryKey(fieldQueryParams) });
+                }}
+              />
+            ) : null}
             {(() => {
-              const editing = (officeEmployees ?? []).find((e) => e.id === editingOfficeContactId);
+              const editing =
+                (officeEmployees ?? []).find((e) => e.id === editingOfficeContactId) ??
+                (fieldEmployees ?? []).find((e) => e.id === editingOfficeContactId);
               if (!editing?.hasLogin || !editing.userId) return null;
               return (
                 <AccountActions
