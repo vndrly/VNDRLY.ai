@@ -57,7 +57,13 @@ export default function EmployeePortalLoginFields({
   useEffect(() => {
     const enabled = !!(loginInfo?.hasLogin || loginInfo?.portalLoginEnabled);
     setPortalLoginEnabled(enabled);
-    setMustChangePassword(!!loginInfo?.mustChangePassword);
+    if (loginInfo?.hasLogin) {
+      setMustChangePassword(!!loginInfo.mustChangePassword);
+    } else if (enabled) {
+      setMustChangePassword(true);
+    } else {
+      setMustChangePassword(false);
+    }
   }, [loginInfo?.hasLogin, loginInfo?.portalLoginEnabled, loginInfo?.mustChangePassword, employeeId]);
 
   const invalidateLogin = () => {

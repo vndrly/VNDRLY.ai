@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 import { useTranslation } from "react-i18next";
-import { useGetFieldEmployee, useUpdateFieldEmployee, useDeleteFieldEmployee, getGetFieldEmployeeQueryKey, useListFieldEmployeeNotes, useCreateFieldEmployeeNote, useDeleteFieldEmployeeNote, getListFieldEmployeeNotesQueryKey, useRequestUploadUrl, useFinalizeUpload } from "@workspace/api-client-react";
+import { useGetFieldEmployee, useUpdateFieldEmployee, useDeleteFieldEmployee, getGetFieldEmployeeQueryKey, useListFieldEmployeeNotes, useCreateFieldEmployeeNote, useDeleteFieldEmployeeNote, getListFieldEmployeeNotesQueryKey, useGetFieldEmployeeLogin, useSetFieldEmployeeLogin, useDeleteFieldEmployeeLogin, getGetFieldEmployeeLoginQueryKey, useCreateFieldOnboardingInvite, useRequestUploadUrl, useFinalizeUpload } from "@workspace/api-client-react";
 import type { DeleteFieldEmployeeOpenSession } from "@workspace/api-client-react";
 import { formatPhone, handlePhoneInput, stripPhone } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, Camera, UserCheck, StickyNote, Plus, Trash2 } from "lucide-react";
+import { Calendar, Camera, UserCheck, StickyNote, Plus, Trash2, KeyRound, Smartphone } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import BlueButton from "@/components/blue-button";
 import { PngPillButton } from "@/components/png-pill-rollover";
@@ -27,7 +27,6 @@ import RoleBadge from "@/components/role-badge";
 import CertificationsSection from "@/components/certifications-section";
 import { ComplianceCard } from "@/components/compliance-card";
 import AccountActions, { SuspendedPill } from "@/components/account-actions";
-import EmployeePortalLoginFields from "@/components/employee-portal-login-fields";
 import { translateApiError } from "@/lib/api-error";
 
 // Vite-injected base path for this artifact (e.g. "" or "/vndrly"),
@@ -59,8 +58,87 @@ export default function FieldEmployeeDetail({ id }: { id: number }) {
   // employee, delete note) and can be translated.
   const [removePhotoOpen, setRemovePhotoOpen] = useState(false);
 
+  // ── Field Login Credentials ──
+  const { data: loginInfo } = useGetFieldEmployeeLogin(id, {
+    query: { enabled: !!id, queryKey: getGetFieldEmployeeLoginQueryKey(id) },
+  });
+  const setLoginMutation = useSetFieldEmployeeLogin();
+  const deleteLoginMutation = useDeleteFieldEmployeeLogin();
+  // Onboarding-invite mutation (Task #1046): replaces the prior raw
+  // `fetch(POST /api/field-employees/:id/onboarding-invite)` so the
+  // response is typed as FieldOnboardingInviteResponse and any future
+  // schema drift is caught at compile time.
+  const onboardingInviteMutation = useCreateFieldOnboardingInvite();
+  // Storage upload mutations (Task #1046): the prior code called
+  // `fetch(POST /api/storage/uploads/request-url)` and
+  // `fetch(POST /api/storage/uploads/finalize)` directly. These two
+  // hooks now handle that wire-level work so the field-employee
+  // detail page no longer hand-rolls BASE_PATH for mutating calls.
   const requestUploadUrlMutation = useRequestUploadUrl();
   const finalizeUploadMutation = useFinalizeUpload();
+  const [credEmail, setCredEmail] = useState("");
+  const [credPassword, setCredPassword] = useState("");
+  const [credLanguage, setCredLanguage] = useState<"browser" | "en" | "es">("browser");
+  const [mustChangePassword, setMustChangePassword] = useState(true);
+  const credBusy = setLoginMutation.isPending || deleteLoginMutation.isPending || onboardingInviteMutation.isPending;
+  const invalidateLogin = () => queryClient.invalidateQueries({ queryKey: getGetFieldEmployeeLoginQueryKey(id) });
+  useEffect(() => { if (loginInfo?.email) setCredEmail(loginInfo.email); }, [loginInfo?.email]);
+  useEffect(() => { if (employee && !credEmail) setCredEmail(employee.email); }, [employee, credEmail]);
+  useEffect(() => {
+    if (loginInfo?.hasLogin) {
+      setMustChangePassword(!!loginInfo.mustChangePassword);
+    } else {
+      setMustChangePassword(true);
+    }
+  }, [loginInfo?.hasLogin, loginInfo?.mustChangePassword, id]);
+
+  const saveCredentials = async () => {
+    if (!credEmail.trim()) {
+      toast({ title: t("fieldEmployeeDetail.emailPasswordRequired"), variant: "destructive" });
+      return;
+    }
+    const creating = !loginInfo?.hasLogin;
+    if (creating && credPassword.length < 8) {
+      toast({ title: t("fieldEmployeeDetail.emailPasswordRequired"), variant: "destructive" });
+      return;
+    }
+    if (!creating && credPassword.length > 0 && credPassword.length < 8) {
+      toast({ title: t("fieldEmployeeDetail.emailPasswordRequired"), variant: "destructive" });
+      return;
+    }
+    try {
+      await setLoginMutation.mutateAsync({
+        id,
+        data: {
+          email: credEmail.trim(),
+          portalLoginEnabled: true,
+          mustChangePassword,
+          ...(credPassword ? { password: credPassword } : {}),
+          // Only send preferredLanguage when the admin explicitly picks en/es.
+          // Leaving it on "browser" (the default state) preserves any existing
+          // preference on the user's account when updating credentials.
+          ...(credLanguage === "browser" ? {} : { preferredLanguage: credLanguage }),
+        },
+      });
+      toast({ title: loginInfo?.hasLogin ? t("fieldEmployeeDetail.credentialsUpdated") : t("fieldEmployeeDetail.loginCreated") });
+      setCredPassword("");
+      invalidateLogin();
+    } catch (err: unknown) {
+      toast({ title: translateApiError(err, t, t("fieldEmployeeDetail.failedToSaveCredentials")), variant: "destructive" });
+    }
+  };
+
+  const disableCredentials = async () => {
+    if (!confirm(t("fieldEmployeeDetail.disableLoginConfirm"))) return;
+    try {
+      await deleteLoginMutation.mutateAsync({ id });
+      toast({ title: t("fieldEmployeeDetail.loginDisabled") });
+      setCredPassword("");
+      invalidateLogin();
+    } catch (err: unknown) {
+      toast({ title: translateApiError(err, t, t("fieldEmployeeDetail.failedToDisableLogin")), variant: "destructive" });
+    }
+  };
 
   const [form, setForm] = useState({ jobTitle: "", firstName: "", lastName: "", email: "", phone: "", pecCertification: false, pecExpirationDate: "", vendorRole: "field" as string, roles: [] as string[], preferredLanguage: "browser" as "browser" | "en" | "es" });
   const initialFormRef = useRef<typeof form | null>(null);
@@ -561,16 +639,140 @@ export default function FieldEmployeeDetail({ id }: { id: number }) {
         </CardContent>
       </Card>
 
-      <EmployeePortalLoginFields
-        employeeId={id}
-        defaultEmail={employee.email}
-        vendorRole={form.vendorRole}
-        variant="card"
-        testIdPrefix="employee-detail-login"
-        onSaved={() => {
-          queryClient.invalidateQueries({ queryKey: getGetFieldEmployeeQueryKey(id) });
-        }}
-      />
+      <Card data-testid="employee-credentials-section">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <KeyRound className="w-5 h-5 text-amber-500" />
+            {t("fieldEmployeeDetail.fieldPortalLogin")}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className={`rounded-md border-2 p-3 flex items-start gap-2 ${loginInfo?.hasLogin ? "border-green-200 bg-green-50" : "border-amber-200 bg-amber-50"}`}>
+            <Smartphone className={`w-4 h-4 mt-0.5 ${loginInfo?.hasLogin ? "text-green-600" : "text-amber-600"}`} />
+            <div className="flex-1 text-xs">
+              {loginInfo?.hasLogin ? (
+                <>
+                  <p className="font-semibold text-green-800">{t("fieldEmployeeDetail.activeLogin")}</p>
+                  <p className="text-green-700 mt-0.5">{t("fieldEmployeeDetail.signsInAt")} <code className="font-mono">{BASE_PATH || ""}{form.vendorRole === "foreman" || form.vendorRole === "both" ? "/foreman" : "/field"}</code> {t("fieldEmployeeDetail.asUser")} <span className="font-semibold">{loginInfo.email}</span></p>
+                </>
+              ) : (
+                <>
+                  <p className="font-semibold text-amber-800">{t("fieldEmployeeDetail.noLoginYet")}</p>
+                  <p className="text-amber-700 mt-0.5">{t("fieldEmployeeDetail.noLoginYetDesc")}</p>
+                </>
+              )}
+            </div>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="cred-email">{t("fieldEmployeeDetail.loginEmail")}</Label>
+              <Input
+                id="cred-email"
+                type="email"
+                value={credEmail}
+                onChange={(e) => setCredEmail(e.target.value)}
+                placeholder={t("fieldEmployeeDetail.loginEmailPlaceholder")}
+                data-testid="input-credential-email"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="cred-password">{loginInfo?.hasLogin ? t("fieldEmployeeDetail.newPassword") : t("fieldEmployeeDetail.password")}</Label>
+              <Input
+                id="cred-password"
+                type="password"
+                value={credPassword}
+                onChange={(e) => setCredPassword(e.target.value)}
+                placeholder={
+                  loginInfo?.hasLogin
+                    ? t("fieldEmployeeDetail.passwordOptionalPlaceholder")
+                    : t("fieldEmployeeDetail.passwordPlaceholder")
+                }
+                autoComplete="new-password"
+                data-testid="input-credential-password"
+              />
+            </div>
+          </div>
+          <div className="flex items-start gap-2">
+            <Checkbox
+              id="cred-must-change-password"
+              checked={mustChangePassword}
+              onCheckedChange={(v) => setMustChangePassword(!!v)}
+              data-testid="checkbox-credential-must-change-password"
+            />
+            <Label htmlFor="cred-must-change-password" className="cursor-pointer text-sm leading-snug">
+              {t("fieldEmployeeDetail.forcePasswordChange")}
+              <span className="block text-xs text-muted-foreground font-normal mt-0.5">
+                {t("fieldEmployeeDetail.forcePasswordChangeHelp")}
+              </span>
+            </Label>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="cred-language">{t("fieldEmployeeDetail.defaultLanguage")}</Label>
+            <Select value={credLanguage} onValueChange={(v) => setCredLanguage(v as "browser" | "en" | "es")}>
+              <SelectTrigger id="cred-language" data-testid="select-credential-language">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="browser">{t("fieldEmployeeDetail.useBrowserLanguage")}</SelectItem>
+                <SelectItem value="en">{t("fieldEmployeeDetail.english")}</SelectItem>
+                <SelectItem value="es">{t("fieldEmployeeDetail.spanish")}</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              {t("fieldEmployeeDetail.defaultLanguageHelp")}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {/* Save credentials → PngPillButton blue (primary
+                action), h=24. The label is conditional — "Update
+                Password" when a login exists, "Create Login" when
+                first-time provisioning, "Saving…" while in flight. */}
+            <PngPillButton type="button" color="blue" onClick={saveCredentials} disabled={credBusy} data-testid="button-save-credentials">
+              {credBusy ? t("fieldEmployeeDetail.saving") : loginInfo?.hasLogin ? t("fieldEmployeeDetail.updatePassword") : t("fieldEmployeeDetail.createLogin")}
+            </PngPillButton>
+            {!loginInfo?.hasLogin && (
+              <PillButton
+                type="button"
+                color="image"
+                disabled={credBusy}
+                onClick={async () => {
+                  try {
+                    // Typed mutation (Task #1046) — the response is a
+                    // FieldOnboardingInviteResponse so `url` and
+                    // `emailSent` are guaranteed to exist by the
+                    // generated client.
+                    const data = await onboardingInviteMutation.mutateAsync({ id });
+                    await navigator.clipboard.writeText(data.url).catch(() => undefined);
+                    toast({
+                      title: data.emailSent
+                        ? "Invite emailed and link copied to clipboard."
+                        : "Invite link copied to clipboard.",
+                    });
+                  } catch (err) {
+                    // Surface the server-translated reason (matches the prior
+                    // raw-fetch UX which showed `(err as Error).message`); fall
+                    // back to a generic copy if the server didn't return one.
+                    toast({
+                      title: translateApiError(err, t, "Could not create invite link."),
+                      variant: "destructive",
+                    });
+                  }
+                }}
+                data-testid="button-send-onboarding-invite"
+              >
+                Send onboarding invite
+              </PillButton>
+            )}
+            {/* Disable Login → PngPillButton red (destructive),
+                h=24. Conditionally rendered only when a login exists. */}
+            {loginInfo?.hasLogin && (
+              <PngPillButton type="button" color="red" onClick={disableCredentials} disabled={credBusy} data-testid="button-disable-credentials">
+                {t("fieldEmployeeDetail.disableLogin")}
+              </PngPillButton>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       <CertificationsSection employeeId={id} />
 

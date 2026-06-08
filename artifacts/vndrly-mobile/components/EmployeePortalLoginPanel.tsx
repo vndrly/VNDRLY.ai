@@ -52,7 +52,7 @@ export default function EmployeePortalLoginPanel({
         const enabled = !!(info?.hasLogin || info?.portalLoginEnabled);
         setPortalLoginEnabled(enabled);
         setHasLogin(!!info?.hasLogin);
-        setMustChangePassword(!!info?.mustChangePassword);
+        setMustChangePassword(info?.hasLogin ? !!info?.mustChangePassword : true);
         if (info?.email) setEmail(info.email);
         else if (defaultEmail) setEmail(defaultEmail);
       })
