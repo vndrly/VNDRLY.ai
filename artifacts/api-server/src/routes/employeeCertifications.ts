@@ -56,7 +56,7 @@ function getSession(req: any): Session | null {
   }
 }
 
-const FIELD_ROLES = ["field", "both", "foreman"];
+const FIELD_ROLES = ["field", "both", "foreman", "office", "admin"];
 
 async function loadEmployee(id: number) {
   const [e] = await db

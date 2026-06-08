@@ -50,7 +50,16 @@ type FormState = {
 
 const blankForm: FormState = { name: "", issuer: "", certNumber: "", issuedDate: "", expirationDate: "", documentUrl: "", documentPath: "" };
 
-export default function CertificationsSection({ employeeId }: { employeeId: number }) {
+export default function CertificationsSection({
+  employeeId,
+  variant = "card",
+  testIdPrefix = "employee-certifications",
+}: {
+  employeeId: number;
+  /** Full page card vs compact block inside edit modals. */
+  variant?: "card" | "inline";
+  testIdPrefix?: string;
+}) {
   const { t } = useTranslation();
   const qc = useQueryClient();
   const { toast } = useToast();
@@ -155,89 +164,100 @@ export default function CertificationsSection({ employeeId }: { employeeId: numb
     }
   };
 
+  const listAndDialog = (
+    <>
+      {isLoading ? (
+        <p className="text-sm text-muted-foreground">Loading…</p>
+      ) : !certs || certs.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No certifications yet. Add one here (e.g. Pump Mechanic) so schedule crew checks pass.</p>
+      ) : (
+        <ul className="space-y-2">
+          {certs.map(c => (
+            <li key={c.id} className="border rounded p-3 flex items-start justify-between gap-3">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-medium">{c.name}</span>
+                  {statusBadge(c.expirationDate)}
+                </div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  {c.issuer || "—"}{c.certNumber ? ` · #${c.certNumber}` : ""}
+                  {c.issuedDate ? ` · issued ${c.issuedDate}` : ""}
+                  {c.expirationDate ? ` · exp ${c.expirationDate}` : ""}
+                </div>
+                {isSafeUrl(c.documentUrl) && (
+                  <a href={c.documentUrl!} target="_blank" rel="noreferrer" className="text-xs text-blue-600 underline">View document</a>
+                )}
+              </div>
+              <div className="flex items-center gap-0">
+                <PillButton color="image" className="group min-w-[28px] px-0" onClick={() => startEdit(c)}>
+                  <Pencil className="w-4 h-4 text-gray-500 transition-colors group-hover:text-blue-600" />
+                </PillButton>
+                <PillButton color="image" className="group min-w-[28px] px-0" onClick={() => onDelete(c)}>
+                  <Trash2 className="w-4 h-4 text-gray-500 transition-colors group-hover:text-red-600" />
+                </PillButton>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild><span /></DialogTrigger>
+        <DialogContent>
+          <DialogHeader><DialogTitle>{editing ? "Edit certification" : "Add certification"}</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div><Label>Name *</Label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. Pump Mechanic, PEC, OSHA 10, H2S Clear" data-testid={`${testIdPrefix}-name`} /></div>
+            <div><Label>Issuer</Label><Input value={form.issuer} onChange={e => setForm({ ...form, issuer: e.target.value })} placeholder="e.g. PEC Premier" /></div>
+            <div><Label>Certificate #</Label><Input value={form.certNumber} onChange={e => setForm({ ...form, certNumber: e.target.value })} /></div>
+            <div className="grid grid-cols-2 gap-2">
+              <div><Label>Issued</Label><Input type="date" value={form.issuedDate} onChange={e => setForm({ ...form, issuedDate: e.target.value })} /></div>
+              <div><Label>Expires</Label><Input type="date" value={form.expirationDate} onChange={e => setForm({ ...form, expirationDate: e.target.value })} /></div>
+            </div>
+            <div>
+              <Label>Document</Label>
+              <input type="file" accept="image/*,application/pdf" onChange={onUpload} className="text-sm" />
+              {uploading && <p className="text-xs text-muted-foreground">Uploading…</p>}
+              {isSafeUrl(form.documentUrl) && <a href={form.documentUrl} target="_blank" rel="noreferrer" className="text-xs text-blue-600 underline block mt-1">Current document</a>}
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <PillButton color="red" onClick={() => setOpen(false)}>Cancel</PillButton>
+              <PillButton color="blue" onClick={submit} disabled={create.isPending || update.isPending}>{editing ? "Save" : "Add"}</PillButton>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+
+  if (variant === "inline") {
+    return (
+      <div className="rounded-md border p-3 space-y-1" data-testid={`${testIdPrefix}-section`}>
+        <div className="flex flex-row items-center justify-between gap-2 mb-3">
+          <p className="text-sm font-semibold flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-amber-500" />
+            Certifications &amp; Training ({certs?.length || 0})
+          </p>
+          <PngPillButton color="blue" onClick={startAdd} data-testid={`${testIdPrefix}-add`}>
+            <Plus className="w-4 h-4" />
+            Add
+          </PngPillButton>
+        </div>
+        {listAndDialog}
+      </div>
+    );
+  }
+
   return (
-    <Card data-testid="employee-certifications-section">
+    <Card data-testid={`${testIdPrefix}-section`}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
         <CardTitle className="flex items-center gap-2">
           <ShieldCheck className="w-5 h-5 text-amber-500" />
           Certifications &amp; Training ({certs?.length || 0})
         </CardTitle>
-        {/* Add → canonical PngPillButton blue (primary action),
-            height=24 to match the surrounding pill family. */}
-        <PngPillButton color="blue" onClick={startAdd} data-testid="button-add-certification"><Plus className="w-4 h-4" />Add</PngPillButton>
+        <PngPillButton color="blue" onClick={startAdd} data-testid={`${testIdPrefix}-add`}><Plus className="w-4 h-4" />Add</PngPillButton>
       </CardHeader>
       <CardContent>
-        {isLoading ? (
-          <p className="text-sm text-muted-foreground">Loading…</p>
-        ) : !certs || certs.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No certifications yet.</p>
-        ) : (
-          <ul className="space-y-2">
-            {certs.map(c => (
-              <li key={c.id} className="border rounded p-3 flex items-start justify-between gap-3">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-medium">{c.name}</span>
-                    {statusBadge(c.expirationDate)}
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-0.5">
-                    {c.issuer || "—"}{c.certNumber ? ` · #${c.certNumber}` : ""}
-                    {c.issuedDate ? ` · issued ${c.issuedDate}` : ""}
-                    {c.expirationDate ? ` · exp ${c.expirationDate}` : ""}
-                  </div>
-                  {isSafeUrl(c.documentUrl) && (
-                    <a href={c.documentUrl!} target="_blank" rel="noreferrer" className="text-xs text-blue-600 underline">View document</a>
-                  )}
-                </div>
-                {/* Edit / Delete icon row: tightened with gap-0 +
-                    h-7/w-7/p-0/min-h-0 button overrides so the two
-                    icons sit visually adjacent. (`size="sm"` injects
-                    `min-h-8` which would otherwise prevent h-7 from
-                    taking effect — `min-h-0` clears that floor.)
-                    Both icons render gray at rest; on hover the Edit
-                    icon flips to blue (primary) and the Trash icon
-                    flips to red (destructive), matching the brand-
-                    aware chrome doctrine. The `group` class on each
-                    Button lets `group-hover:` on the inner svg react
-                    to the button's hover state. */}
-                <div className="flex items-center gap-0">
-                  <PillButton color="image" className="group min-w-[28px] px-0" onClick={() => startEdit(c)}>
-                    <Pencil className="w-4 h-4 text-gray-500 transition-colors group-hover:text-blue-600" />
-                  </PillButton>
-                  <PillButton color="image" className="group min-w-[28px] px-0" onClick={() => onDelete(c)}>
-                    <Trash2 className="w-4 h-4 text-gray-500 transition-colors group-hover:text-red-600" />
-                  </PillButton>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild><span /></DialogTrigger>
-          <DialogContent>
-            <DialogHeader><DialogTitle>{editing ? "Edit certification" : "Add certification"}</DialogTitle></DialogHeader>
-            <div className="space-y-3">
-              <div><Label>Name *</Label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. PEC, OSHA 10, H2S Clear" /></div>
-              <div><Label>Issuer</Label><Input value={form.issuer} onChange={e => setForm({ ...form, issuer: e.target.value })} placeholder="e.g. PEC Premier" /></div>
-              <div><Label>Certificate #</Label><Input value={form.certNumber} onChange={e => setForm({ ...form, certNumber: e.target.value })} /></div>
-              <div className="grid grid-cols-2 gap-2">
-                <div><Label>Issued</Label><Input type="date" value={form.issuedDate} onChange={e => setForm({ ...form, issuedDate: e.target.value })} /></div>
-                <div><Label>Expires</Label><Input type="date" value={form.expirationDate} onChange={e => setForm({ ...form, expirationDate: e.target.value })} /></div>
-              </div>
-              <div>
-                <Label>Document</Label>
-                <input type="file" accept="image/*,application/pdf" onChange={onUpload} className="text-sm" />
-                {uploading && <p className="text-xs text-muted-foreground">Uploading…</p>}
-                {isSafeUrl(form.documentUrl) && <a href={form.documentUrl} target="_blank" rel="noreferrer" className="text-xs text-blue-600 underline block mt-1">Current document</a>}
-              </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <PillButton color="red" onClick={() => setOpen(false)}>Cancel</PillButton>
-                <PillButton color="blue" onClick={submit} disabled={create.isPending || update.isPending}>{editing ? "Save" : "Add"}</PillButton>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+        {listAndDialog}
       </CardContent>
     </Card>
   );

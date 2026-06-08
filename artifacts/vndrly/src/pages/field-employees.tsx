@@ -28,6 +28,7 @@ import { useBrand } from "@/hooks/use-brand";
 import { useToast } from "@/hooks/use-toast";
 import BulkLoginUploadDialog from "@/components/bulk-login-upload-dialog";
 import EmployeePortalLoginFields from "@/components/employee-portal-login-fields";
+import CertificationsSection from "@/components/certifications-section";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -860,6 +861,13 @@ export default function FieldEmployees() {
               <Label htmlFor="visit-notif-office-edit" className="cursor-pointer">Receive site visitor check-in notifications</Label>
             </div>
             <div><Label>{t("fieldEmployees.pecExpiration")}</Label><Input type="date" value={editOfficeForm.pecExpirationDate} onChange={(e) => setEditOfficeForm({ ...editOfficeForm, pecExpirationDate: e.target.value })} data-testid="input-edit-office-pec-expiration" /></div>
+            {editingOfficeContactId ? (
+              <CertificationsSection
+                employeeId={editingOfficeContactId}
+                variant="inline"
+                testIdPrefix="edit-office-certifications"
+              />
+            ) : null}
             {editingOfficeContactId &&
             (editingFromFieldTable ||
               editOfficeForm.vendorRole === "field" ||
