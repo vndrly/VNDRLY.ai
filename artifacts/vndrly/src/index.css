@@ -603,3 +603,34 @@ main :is(button, a).relative.inline-flex.items-center.select-none:hover {
   filter: drop-shadow(0 1.8px 1.8px rgb(0 0 0 / 0.252))
     drop-shadow(0 3.6px 7.2px rgb(0 0 0 / 0.18));
 }
+
+/* Button + pill label weight: always normal. Do not use font-bold or
+   font-semibold on interactive buttons or PNG pill labels unless the
+   user explicitly asks for an exception. */
+:is(button, [data-slot="button"], [role="button"]:not([role="checkbox"])) {
+  font-weight: 400;
+}
+:is(button, [data-slot="button"], [role="button"]:not([role="checkbox"]))
+  :is(.font-bold, .font-semibold) {
+  font-weight: 400 !important;
+}
+:is(div.cursor-pointer.group, a.relative.cursor-pointer.group) {
+  font-weight: 400;
+}
+:is(div.cursor-pointer.group, a.relative.cursor-pointer.group)
+  :is(.font-bold, .font-semibold) {
+  font-weight: 400 !important;
+}
+.relative.inline-flex.items-center.select-none.pointer-events-none
+  :is(.font-bold, .font-semibold) {
+  font-weight: 400 !important;
+}
+
+/* CSS pill chips (rounded-full status/tag surfaces) — 23px doctrine. */
+:is(span, button, a).inline-flex.rounded-full.border:not([class*="animate-"]):not([class*="w-2"]):not([class*="w-3"]):not([class*="h-2"]):not([class*="h-3"]):not([class*="h-4"]):not([class*="h-5"]):not([class*="h-6"]):not([class*="h-7"]):not([class*="h-8"]) {
+  min-height: 23px;
+  height: 23px;
+  font-weight: 400;
+  font-size: 0.75rem;
+  line-height: 1;
+}

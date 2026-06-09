@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Point vndrly.ai A records at the VPS (GoDaddy Domains API).
- * Add to Desktop/GoDaddy.env:
+ * Add to API Keys and Secrets/GoDaddy.env:
  *   api_key YOUR_KEY
  *   api_secret YOUR_SECRET
  */
@@ -9,9 +9,9 @@ import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { ROOT, godaddyEnvPath } from "./secrets-path.mjs";
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(__dirname, "..");
-const DESKTOP = path.dirname(ROOT);
 const LOCAL_CFG = path.join(ROOT, ".local", "godaddy-vps.json");
 
 function parseEnvFile(filePath) {
@@ -26,7 +26,7 @@ function parseEnvFile(filePath) {
   return out;
 }
 
-const gd = parseEnvFile(process.env.GODADDY_ENV || path.join(DESKTOP, "GoDaddy.env"));
+const gd = parseEnvFile(godaddyEnvPath());
 const apiKey = gd.api_key || gd.key;
 const apiSecret = gd.api_secret || gd.secret;
 const ip =
@@ -35,7 +35,7 @@ const ip =
   (existsSync(LOCAL_CFG) ? JSON.parse(readFileSync(LOCAL_CFG, "utf8")).ip : null);
 
 if (!apiKey || !apiSecret) {
-  throw new Error("Add api_key and api_secret to Desktop/GoDaddy.env (developer.godaddy.com/keys)");
+  throw new Error("Add api_key and api_secret to API Keys and Secrets/GoDaddy.env (developer.godaddy.com/keys)");
 }
 if (!ip) throw new Error("Missing vps_ip");
 

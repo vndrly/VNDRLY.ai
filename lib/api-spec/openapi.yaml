@@ -1474,6 +1474,23 @@ paths:
         "204":
           description: Deleted
 
+  /certification-names:
+    get:
+      operationId: listCertificationNames
+      tags: [fieldEmployees]
+      summary: Known certification names for dropdown pickers
+      description: |
+        Returns a sorted, de-duplicated list of certification names drawn from
+        work-type requirements and existing employee certifications.
+      responses:
+        "200":
+          description: Certification name catalog
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { type: string }
+
   /field-employees/{employeeId}/compliance-token:
     get:
       operationId: getComplianceToken
@@ -5954,6 +5971,13 @@ components:
             assistant reads, and is kept in sync with `users.preferred_language`
             for the linked login (when one exists). `null` means "let the
             user/device decide".
+        profilePendingReviewAt:
+          type: ["string", "null"]
+          format: date-time
+          description: |
+            Set when the employee updates their own profile or certifications.
+            Vendor office/admin sees a review indicator until they open and save
+            the employee record.
       required: [id, vendorId, firstName, lastName, email, phone, vendorName, isActive, pecCertification, pecExpirationDate, createdAt]
 
     # ── Vendor / Partner Contacts ──
@@ -6005,6 +6029,10 @@ components:
         deletedBy:
           type: ["string", "null"]
           description: "`role:userId` audit string identifying who soft-deleted this contact."
+        profilePendingReviewAt:
+          type: ["string", "null"]
+          format: date-time
+          description: Set when this person updates their own profile or certifications.
       required: [id, vendorId, vendorRole, jobTitle, firstName, lastName, email, phone, isActive, createdAt]
 
     PartnerContact:
@@ -6202,6 +6230,8 @@ components:
         expirationDate: { type: ["string", "null"] }
         documentUrl: { type: ["string", "null"] }
         documentPath: { type: ["string", "null"] }
+        vendorVerifiedAt: { type: ["string", "null"], format: date-time }
+        vendorVerifiedByUserId: { type: ["integer", "null"] }
         createdAt: { type: string, format: date-time }
         deletedAt: { type: ["string", "null"], format: date-time }
         deletedBy: { type: ["string", "null"] }
@@ -6217,7 +6247,7 @@ components:
         expirationDate: { type: ["string", "null"] }
         documentUrl: { type: ["string", "null"] }
         documentPath: { type: ["string", "null"] }
-      required: [name]
+      required: [name, certNumber]
 
     UpdateEmployeeCertificationBody:
       type: object
@@ -6229,6 +6259,11 @@ components:
         expirationDate: { type: ["string", "null"] }
         documentUrl: { type: ["string", "null"] }
         documentPath: { type: ["string", "null"] }
+        vendorVerified:
+          type: boolean
+          description: |
+            Vendor/admin only. When true, marks the certification as verified.
+            When false, clears verification (e.g. after employee edits).
 
     ComplianceCertSummary:
       type: object
@@ -7700,6 +7735,7 @@ components:
         fieldEmployeeFirstName: { type: ["string", "null"] }
         fieldEmployeeLastName: { type: ["string", "null"] }
         createdAt: { type: string, format: date-time }
+        scheduledStartAt: { type: ["string", "null"], format: date-time }
         updatedAt:
           type: ["string", "null"]
           format: date-time
@@ -7718,6 +7754,14 @@ components:
             Excludes deleted comments and the viewer's own posts.
             Drops to 0 the next time the list re-fetches after the
             detail screen runs `markAllSeen` on its comments thread.
+        crewNames:
+          type: array
+          items: { type: string }
+          description: |
+            Active scheduled crew on this ticket (from ticket_crew).
+            The assigned foreman is listed first; remaining crew are
+            sorted alphabetically. Empty when no crew is assigned yet;
+            the Today/home card falls back to the assigned field employee.
       required:
         [
           id,
@@ -7732,8 +7776,10 @@ components:
           fieldEmployeeFirstName,
           fieldEmployeeLastName,
           createdAt,
+          scheduledStartAt,
           updatedAt,
           unreadCommentCount,
+          crewNames,
         ]
 
     CreateFieldTicketBody:

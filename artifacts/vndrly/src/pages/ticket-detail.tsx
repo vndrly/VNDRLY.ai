@@ -69,8 +69,6 @@ import {
   useClearStaleFieldEmployeeSelection,
 } from "@/hooks/use-eligible-vendor-field-employees";
 import SphereBackButton from "@/components/sphere-back-button";
-import headerBg from "@assets/VNDRLY_Header_Blur_4_1776220762025.png";
-import { VNDRLY_LOGO_SQUARE as vndrlyLogo } from "@/lib/vndrly-brand-assets";
 import GreenButton from "@/components/green-button";
 import GreenSquareButton from "@/components/green-square-button";
 import RedButton from "@/components/red-button";
@@ -88,14 +86,19 @@ import { useTicketsRateLimitGate } from "@/hooks/use-tickets-rate-limit-gate";
 import { useTicketNudgeFlash } from "@/hooks/use-ticket-nudge-flash";
 import { useTranslation } from "react-i18next";
 import { translateApiError } from "@/lib/api-error";
+import { isForemanPersona } from "@/lib/portal-base";
 import { buildGpsTimelineCsv } from "@/lib/gps-timeline-csv";
-import PillBg from "@/components/pill-bg";
 import { cn } from "@/lib/utils";
+import { PillColorLayer, PillGlossOverlay } from "@/components/png-pill-chrome";
 import {
-  TICKET_STATUS_PILL_ASPECT,
-  ticketLifecyclePillGloss,
-  ticketLifecyclePillForStatus,
-} from "@/lib/ticket-status-palette";
+  PILL_HEIGHT_CLASS,
+  PILL_HEIGHT_PX,
+  PILL_LABEL_CLASS,
+  PILL_MIN_HEIGHT_CLASS,
+  PILL_TEXT_SHADOW,
+  PILL_WRAPPER_CLASS,
+} from "@/lib/pill-doctrine";
+import { ticketLifecyclePillForStatus } from "@/lib/ticket-status-palette";
 
 function getDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371;
@@ -119,25 +122,28 @@ const ApprovalActionButton = forwardRef<
       type={type}
       disabled={disabled}
       className={cn(
-        "group relative inline-flex h-[24px] min-w-[118px] select-none items-center border-0 bg-transparent p-0",
+        PILL_WRAPPER_CLASS,
+        PILL_HEIGHT_CLASS,
+        "min-w-[118px] border-0 bg-transparent p-0",
         "transition-transform active:scale-[0.98]",
         "disabled:cursor-not-allowed disabled:opacity-60",
         className,
       )}
+      style={{ height: PILL_HEIGHT_PX }}
       {...props}
     >
-      <PillBg
+      <PillColorLayer
         src={cfg.src}
-        imageAspect={TICKET_STATUS_PILL_ASPECT}
-        className="opacity-90 transition-opacity duration-200 group-hover:opacity-100"
+        className="group-hover:opacity-100"
       />
-      <PillBg src={ticketLifecyclePillGloss} stretch className="opacity-60" />
+      <PillGlossOverlay />
       <span
         className={cn(
-          "relative z-10 flex h-full w-full items-center justify-center gap-1.5 whitespace-nowrap px-3 text-xs font-bold",
+          PILL_LABEL_CLASS,
+          "h-full gap-1.5",
           cfg.light ? "text-gray-700" : "text-white",
         )}
-        style={cfg.light ? undefined : { textShadow: "0 2px 4px rgba(0,0,0,0.9)" }}
+        style={cfg.light ? undefined : { textShadow: PILL_TEXT_SHADOW }}
       >
         {children}
       </span>
@@ -1362,32 +1368,9 @@ export default function TicketDetail({ id }: { id: number }) {
 
   return (
     <div
-      className={`space-y-6 relative ${user?.role === "field_employee" ? "pt-24" : ""} ${isNudgeFlashing ? "nudge-flash-page" : ""}`}
+      className={`space-y-6 relative ${isNudgeFlashing ? "nudge-flash-page" : ""}`}
       data-testid="ticket-detail-page"
     >
-      {user?.role === "field_employee" && (
-        <>
-          <div
-            className="absolute top-0 left-0 right-0 pointer-events-none z-0"
-            style={{
-              backgroundImage: `url(${headerBg})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center top",
-              opacity: 0.85,
-              height: "200px",
-              maskImage: "linear-gradient(to bottom, black 0%, transparent 100%)",
-              WebkitMaskImage: "linear-gradient(to bottom, black 0%, transparent 100%)",
-            }}
-          />
-          <div className="relative z-10 flex items-center gap-3 mb-2">
-            <img src={vndrlyLogo} alt="VNDRLY" className="w-12 h-12 rounded-lg shrink-0" draggable={false} />
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight leading-none">VNDRLY</h1>
-              <p className="text-sm font-semibold text-gray-700 leading-tight mt-1">{t("fieldHome.portal")}</p>
-            </div>
-          </div>
-        </>
-      )}
       <div className="relative z-10 flex items-center gap-4">
         <Link href="/tickets" className="group inline-flex items-center gap-2" aria-label={t("ticketDetail.backAlt")} data-testid="button-back"><SphereBackButton size={40} /></Link>
         <div>
@@ -1420,7 +1403,7 @@ export default function TicketDetail({ id }: { id: number }) {
                   e.preventDefault();
                   document.getElementById("unlock-history")?.scrollIntoView({ behavior: "smooth", block: "start" });
                 }}
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-amber-400 bg-amber-50 text-amber-700 text-xs font-semibold hover:bg-amber-100"
+                className="inline-flex items-center gap-1 px-3 h-[23px] rounded-full border border-amber-400 bg-amber-50 text-amber-700 text-xs font-normal hover:bg-amber-100"
                 title={
                   ticket.unlockCount > 1
                     ? t("ticketDetail.reopenedByTitleCount", { name: ticket.unlockedByName ?? t("ticketDetail.adminFallback"), when: new Date(ticket.unlockedAt).toLocaleString(), count: ticket.unlockCount })
@@ -1438,9 +1421,13 @@ export default function TicketDetail({ id }: { id: number }) {
         </div>
         <div className="ml-auto flex items-center gap-3">
           {canEdit && (user?.role === "admin" || user?.role === "vendor" || user?.role === "field_employee") && (
-            <PngPillButton color="blue" onClick={() => setScheduleOpen(true)} data-testid="button-schedule-ticket">
+            <PngPillButton
+              color={ticket.scheduledStartAt ? "green" : "brand"}
+              onClick={() => setScheduleOpen(true)}
+              data-testid="button-schedule-ticket"
+            >
               <CalendarClock className="w-4 h-4" />
-              {t("scheduleTicket.button")}
+              {ticket.scheduledStartAt ? t("scheduleTicket.scheduled") : t("scheduleTicket.button")}
             </PngPillButton>
           )}
         </div>
@@ -2406,7 +2393,7 @@ export default function TicketDetail({ id }: { id: number }) {
                     onClick={() => toggleAuditKind(k)}
                     data-testid={`chip-audit-kind-${k}`}
                     className={
-                      "text-xs px-2 py-0.5 rounded-full border transition-colors " +
+                      "inline-flex items-center h-[23px] text-xs font-normal px-3 rounded-full border transition-colors " +
                       (branded ? (active ? "text-white" : "bg-white") : fallbackClass)
                     }
                     style={branded ? (active ? activeStyle : idleStyle) : undefined}
@@ -2440,7 +2427,7 @@ export default function TicketDetail({ id }: { id: number }) {
                     onClick={() => toggleAuditRole(r)}
                     data-testid={`chip-audit-role-${r}`}
                     className={
-                      "text-xs px-2 py-0.5 rounded-full border transition-colors " +
+                      "inline-flex items-center h-[23px] text-xs font-normal px-3 rounded-full border transition-colors " +
                       (branded ? (active ? "text-white" : "bg-white") : fallbackClass)
                     }
                     style={branded ? (active ? activeStyle : idleStyle) : undefined}
@@ -2624,7 +2611,7 @@ export default function TicketDetail({ id }: { id: number }) {
                       </span>
                       {isPaymentReversed && (
                         <span
-                          className="inline-flex items-center rounded-full bg-red-100 text-red-800 text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 border border-red-200"
+                          className="inline-flex items-center h-[23px] rounded-full bg-red-100 text-red-800 text-xs font-normal uppercase tracking-wide px-3 border border-red-200"
                           data-testid={`audit-trail-payment-reversed-badge-${entry.id}`}
                         >
                           {t("ticketDetail.auditPaymentReversedBadge")}
@@ -2737,6 +2724,7 @@ export default function TicketDetail({ id }: { id: number }) {
           onOpenChange={setScheduleOpen}
           ticketId={ticket.id}
           vendorId={ticket.vendorId}
+          foremanMode={isForemanPersona(user)}
         />
       )}
 

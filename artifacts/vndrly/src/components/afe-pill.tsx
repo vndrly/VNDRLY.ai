@@ -1,10 +1,13 @@
 import type { ReactNode } from "react";
-import PillBg from "@/components/pill-bg";
 import { cn } from "@/lib/utils";
 import afeBluePill from "@assets/NewPillPallet_0001s_0017_900x229_blue_Pill.png";
-import pillGloss from "@assets/900x229_overlay_v2_1777664185377.png";
-
-const AFE_PILL_ASPECT = 900 / 229;
+import {
+  PILL_HEIGHT_PX,
+  PILL_LABEL_CLASS,
+  PILL_TEXT_SHADOW,
+  PILL_WRAPPER_CLASS,
+} from "@/lib/pill-doctrine";
+import { PillColorLayer, PillGlossOverlay } from "@/components/png-pill-chrome";
 
 interface AfePillProps {
   children: ReactNode;
@@ -22,21 +25,19 @@ export default function AfePill({
   return (
     <span
       className={cn(
-        "group relative inline-flex h-[24px] min-w-[88px] select-none items-center align-middle",
+        PILL_WRAPPER_CLASS,
+        "pointer-events-none min-w-[88px]",
         className,
       )}
+      style={{ height: PILL_HEIGHT_PX }}
       title={title}
       data-testid={dataTestId}
     >
-      <PillBg
-        src={afeBluePill}
-        imageAspect={AFE_PILL_ASPECT}
-        className="opacity-95 transition-opacity group-hover:opacity-100"
-      />
-      <PillBg src={pillGloss} stretch className="opacity-60" />
+      <PillColorLayer src={afeBluePill} />
+      <PillGlossOverlay />
       <span
-        className="relative z-10 flex h-full w-full items-center justify-center whitespace-nowrap px-3 text-xs font-bold text-white"
-        style={{ textShadow: "0 2px 4px rgba(0,0,0,0.9)" }}
+        className={cn(PILL_LABEL_CLASS, "text-white")}
+        style={{ textShadow: PILL_TEXT_SHADOW }}
       >
         {children}
       </span>

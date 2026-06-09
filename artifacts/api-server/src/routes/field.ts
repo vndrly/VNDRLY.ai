@@ -20,6 +20,7 @@ import {
   vendorCrewPresetsTable,
 } from "@workspace/db";
 import { sendPushToFieldEmployee } from "../lib/expo-push";
+import { markEmployeeProfilePendingReview } from "../lib/employee-profile-review";
 import { notifyUsers } from "./notifications";
 import { removeMembership } from "../lib/membership-sync";
 import { recordTicketTransition } from "../lib/ticket-transitions";
@@ -499,6 +500,7 @@ router.patch("/field/me", async (req, res): Promise<void> => {
 
   if (Object.keys(updates).length > 0) {
     await db.update(vendorPeopleTable).set(updates).where(eq(vendorPeopleTable.id, ctx.employee.id));
+    await markEmployeeProfilePendingReview(ctx.employee.id);
   }
 
   // Keep linked user displayName in sync with name changes.
@@ -672,6 +674,60 @@ router.get("/field/sites/:siteId/work-types", async (req, res): Promise<void> =>
   res.json(rows);
 });
 
+/** Active ticket_crew display names keyed by ticket id. */
+async function crewNamesByTicketIds(
+  ticketIds: number[],
+): Promise<Map<number, Array<{ name: string; userId: number | null }>>> {
+  if (ticketIds.length === 0) return new Map();
+  const crewRows = await db
+    .select({
+      ticketId: ticketCrewTable.ticketId,
+      userId: vendorPeopleTable.userId,
+      firstName: vendorPeopleTable.firstName,
+      lastName: vendorPeopleTable.lastName,
+    })
+    .from(ticketCrewTable)
+    .innerJoin(vendorPeopleTable, eq(ticketCrewTable.employeeId, vendorPeopleTable.id))
+    .where(and(
+      inArray(ticketCrewTable.ticketId, ticketIds),
+      isNull(ticketCrewTable.removedAt),
+    ));
+  const map = new Map<number, Array<{ name: string; userId: number | null }>>();
+  for (const row of crewRows) {
+    const name = `${row.firstName ?? ""} ${row.lastName ?? ""}`.trim();
+    if (!name) continue;
+    const list = map.get(row.ticketId) ?? [];
+    list.push({ name, userId: row.userId });
+    map.set(row.ticketId, list);
+  }
+  return map;
+}
+
+function orderCrewNamesForemanFirst(
+  crew: Array<{ name: string; userId: number | null }>,
+  foremanUserId: number | null | undefined,
+): string[] {
+  const foremanId = foremanUserId ?? null;
+  return [...crew]
+    .sort((a, b) => {
+      const aForeman = foremanId != null && a.userId === foremanId;
+      const bForeman = foremanId != null && b.userId === foremanId;
+      if (aForeman !== bForeman) return aForeman ? -1 : 1;
+      return a.name.localeCompare(b.name);
+    })
+    .map((c) => c.name);
+}
+
+function attachOpenTicketCrewNames<T extends { id: number; foremanUserId?: number | null }>(
+  rows: T[],
+  crewMap: Map<number, Array<{ name: string; userId: number | null }>>,
+): Array<T & { crewNames: string[] }> {
+  return rows.map((row) => ({
+    ...row,
+    crewNames: orderCrewNamesForemanFirst(crewMap.get(row.id) ?? [], row.foremanUserId),
+  }));
+}
+
 // ── GET /api/field/open-tickets — open tickets for this viewer ──
 //
 // Accepts both field-employee and vendor-admin sessions:
@@ -765,6 +821,7 @@ router.get("/field/open-tickets", async (req, res): Promise<void> => {
       fieldEmployeeFirstName: vendorPeopleTable.firstName,
       fieldEmployeeLastName: vendorPeopleTable.lastName,
       createdAt: ticketsTable.createdAt,
+      scheduledStartAt: ticketsTable.scheduledStartAt,
       // Task #605: mobile open-tickets pill mirrors the web 7-day
       // inactivity escalation, which keys off updatedAt.
       updatedAt: ticketsTable.updatedAt,
@@ -785,7 +842,8 @@ router.get("/field/open-tickets", async (req, res): Promise<void> => {
     .where(and(...conditions))
     .orderBy(desc(ticketsTable.createdAt));
 
-  res.json(rows);
+  const crewMap = await crewNamesByTicketIds(rows.map((r) => r.id));
+  res.json(attachOpenTicketCrewNames(rows, crewMap));
 });
 
 // ── GET /api/field/open-tickets/:id — single open-ticket row for this field employee ──
@@ -850,9 +908,11 @@ router.get("/field/open-tickets/:id", async (req, res): Promise<void> => {
       workTypeId: ticketsTable.workTypeId,
       workTypeName: workTypesTable.name,
       fieldEmployeeId: ticketsTable.fieldEmployeeId,
+      foremanUserId: ticketsTable.foremanUserId,
       fieldEmployeeFirstName: vendorPeopleTable.firstName,
       fieldEmployeeLastName: vendorPeopleTable.lastName,
       createdAt: ticketsTable.createdAt,
+      scheduledStartAt: ticketsTable.scheduledStartAt,
       // Task #605: matches the list endpoint so the surgical per-row
       // refresh keeps the inactivity-escalated pill color correct.
       updatedAt: ticketsTable.updatedAt,
@@ -879,7 +939,8 @@ router.get("/field/open-tickets/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  res.json(row);
+  const crewMap = await crewNamesByTicketIds([row.id]);
+  res.json(attachOpenTicketCrewNames([row], crewMap)[0]);
 });
 
 // ── GET /api/field/foremen — vendor people on this vendor who can be foremen ──

@@ -30,6 +30,7 @@
     "setup:production": "node scripts/godaddy-provision.mjs",
     "deploy:production": "node scripts/godaddy-deploy.mjs",
     "preflight:deploy": "node scripts/preflight-deploy.mjs",
+    "pack:machine-transfer": "powershell -ExecutionPolicy Bypass -File scripts/create-machine-transfer-pack.ps1",
     "check:live": "node scripts/check-live.mjs",
     "check:vps": "node scripts/check-vps-api.mjs"
   },

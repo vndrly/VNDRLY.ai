@@ -7,6 +7,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "ship-common.ps1")
+. (Join-Path $PSScriptRoot "secrets-path.ps1")
 
 function Run-Git {
   param([string[]]$ArgsList)
@@ -17,7 +18,7 @@ function Run-Git {
 }
 
 # GitHub push uses vndrly org PAT only (no credential-manager fallback).
-$script:GitHubPatFile = "C:\Users\JohnElerick\OneDrive - Elerick.com\Desktop\VNDRLY-GitHub-PAT.env"
+$script:GitHubPatFile = Join-Path (Get-VndrlySecretsDir) "VNDRLY-GitHub-PAT.env"
 $script:GitHubOwner = "vndrly"
 $script:GitHubRepo = "VNDRLY.ai"
 

@@ -1,16 +1,20 @@
-import PillBg from "@/components/pill-bg";
 import { cn } from "@/lib/utils";
+import { PillColorLayer } from "@/components/png-pill-chrome";
 import { useBrand } from "@/hooks/use-brand";
 import {
   LOGIN_BUTTON_IMAGE_ASPECT,
   LOGIN_IDLE_SQUARE_SRC,
   pickLoginSquareActive,
 } from "@/lib/login-button-palette";
+import {
+  PILL_HEIGHT_CLASS,
+  PILL_HEIGHT_PX,
+  PILL_LABEL_CLASS,
+  PILL_TEXT_SHADOW,
+  PILL_WRAPPER_CLASS,
+} from "@/lib/pill-doctrine";
 
-/**
- * Login-only CTA: light-grey square at rest, brand square on hover.
- * PillBg 3-slice keeps end caps crisp; only the middle 70% stretches.
- */
+/** Login-only CTA: light-grey square at rest, brand square on hover. */
 export default function LoginSquareButton({
   children,
   onClick,
@@ -18,7 +22,7 @@ export default function LoginSquareButton({
   disabled = false,
   testId,
   className,
-  height = 32,
+  height = PILL_HEIGHT_PX,
   fullWidth = true,
 }: {
   children: React.ReactNode;
@@ -41,30 +45,27 @@ export default function LoginSquareButton({
       disabled={disabled}
       data-testid={testId}
       className={cn(
-        "relative cursor-pointer group select-none inline-flex items-center justify-center",
+        PILL_WRAPPER_CLASS,
+        PILL_HEIGHT_CLASS,
+        "cursor-pointer border-0 bg-transparent p-0",
         "transition-transform active:scale-[0.99]",
         "disabled:cursor-not-allowed disabled:opacity-50",
         fullWidth ? "w-full" : "",
         className,
       )}
-      style={{ height, padding: 0, background: "transparent", border: 0 }}
+      style={{ height }}
     >
-      <PillBg
+      <PillColorLayer
         src={activeSrc}
         imageAspect={LOGIN_BUTTON_IMAGE_ASPECT}
-        className="opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-active:opacity-100 group-disabled:opacity-0"
+        className="opacity-0 group-hover:opacity-100 group-active:opacity-100 group-disabled:opacity-0"
       />
-      <PillBg
+      <PillColorLayer
         src={idleSrc}
         imageAspect={LOGIN_BUTTON_IMAGE_ASPECT}
-        className="opacity-100 transition-opacity duration-200 group-hover:opacity-0 group-active:opacity-0 group-disabled:opacity-100"
+        className="opacity-100 group-hover:opacity-0 group-active:opacity-0 group-disabled:opacity-100"
       />
-      <span
-        className={cn(
-          "relative z-10 inline-flex items-center justify-center gap-1.5 px-4 h-full",
-          "text-sm font-bold whitespace-nowrap",
-        )}
-      >
+      <span className={cn(PILL_LABEL_CLASS, "h-full gap-1.5")}>
         <span
           className={cn(
             "inline-flex items-center justify-center gap-1.5",
@@ -77,11 +78,11 @@ export default function LoginSquareButton({
         <span
           aria-hidden
           className={cn(
-            "absolute inset-0 inline-flex items-center justify-center gap-1.5 px-4",
+            "absolute inset-0 inline-flex items-center justify-center gap-1.5",
             "opacity-0 transition-opacity duration-200 text-white",
-            "drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]",
             "group-hover:opacity-100 group-active:opacity-100 group-disabled:opacity-0",
           )}
+          style={{ textShadow: PILL_TEXT_SHADOW }}
         >
           {children}
         </span>

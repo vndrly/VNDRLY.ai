@@ -304,14 +304,14 @@ export default function Partners() {
       {/* Plain white pill search input — canonical pill-family chrome
           mirrored from the Tracking page so the partners listing reads
           as part of the same toolbar system. */}
-      <div className="relative inline-flex items-center h-[28px] w-[180px] rounded-full bg-white border border-black/10">
+      <div className="relative inline-flex items-center h-[23px] w-[180px] rounded-full bg-white border border-black/10">
         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500 pointer-events-none" />
         <input
           type="text"
           placeholder={t("partners.searchPlaceholder", { defaultValue: "Search partners" })}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full h-full bg-transparent border-0 outline-none pl-8 pr-3 text-xs font-bold text-gray-800 placeholder:text-gray-500 rounded-full"
+          className="w-full h-full bg-transparent border-0 outline-none pl-8 pr-3 text-xs font-normal text-gray-800 placeholder:text-gray-500 rounded-full"
           data-testid="input-search-partner"
         />
       </div>

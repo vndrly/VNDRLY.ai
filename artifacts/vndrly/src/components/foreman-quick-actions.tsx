@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { useBrand } from "@/hooks/use-brand";
+import { useNotificationsModal } from "@/components/notifications-modal-context";
 
 type Props = {
   portalBase?: string;
@@ -20,6 +21,7 @@ export default function ForemanQuickActions({
   const { t } = useTranslation();
   const [, navigate] = useLocation();
   const brand = useBrand();
+  const notificationsModal = useNotificationsModal();
 
   const tiles = [
     {
@@ -27,7 +29,7 @@ export default function ForemanQuickActions({
       icon: Bell,
       label: t("foremanHome.alerts"),
       badge: unreadAlerts,
-      onClick: () => navigate("/notifications"),
+      onClick: () => notificationsModal?.openNotifications(),
       testId: "foreman-action-alerts",
     },
     {

@@ -1,11 +1,12 @@
 import { Router, type IRouter } from "express";
-import { eq, and, isNull } from "drizzle-orm";
+import { eq, and, isNull, sql } from "drizzle-orm";
 import crypto from "crypto";
 import {
   db,
   employeeCertificationsTable,
   fieldEmployeesTable,
   vendorsTable,
+  workTypesTable,
 } from "@workspace/db";
 import {
   CreateEmployeeCertificationBody,
@@ -13,6 +14,12 @@ import {
 } from "@workspace/api-zod";
 
 import { SESSION_SECRET } from "../lib/session";
+import {
+  clearEmployeeProfilePendingReview,
+  isFieldEmployeeSelfSession,
+  isVendorOrAdminSession,
+  markEmployeeProfilePendingReview,
+} from "../lib/employee-profile-review";
 
 import { sendValidationFailed } from "../lib/validation-error";
 const COOKIE_NAME = "vndrly_session";
@@ -25,6 +32,7 @@ type Session = {
   role: string;
   vendorId: number | null;
   partnerId: number | null;
+  vendorRole?: string | null;
 };
 
 function getSession(req: any): Session | null {
@@ -81,7 +89,15 @@ async function canReadCerts(session: Session, employee: { id: number; vendorId: 
   if (session.role === "vendor" && session.vendorId === employee.vendorId) return true;
   if (session.role === "field_employee") {
     const selfId = await fieldEmployeeSelfId(session.userId);
-    return selfId === employee.id;
+    if (selfId === employee.id) return true;
+    // Foremen scheduling crew need to read same-vendor certifications
+    // for inline schedule warnings (mirrors vendor roster visibility).
+    if (
+      session.vendorId === employee.vendorId &&
+      (session.vendorRole === "foreman" || session.vendorRole === "both")
+    ) {
+      return true;
+    }
   }
   return false;
 }
@@ -94,6 +110,61 @@ async function canMutateCerts(session: Session, employee: { id: number; vendorId
     return selfId === employee.id;
   }
   return false;
+}
+
+function shapeCertRow<T extends Record<string, unknown>>(row: T) {
+  const verifiedAt = row.vendorVerifiedAt;
+  return {
+    ...row,
+    vendorVerifiedAt:
+      verifiedAt instanceof Date
+        ? verifiedAt.toISOString()
+        : (verifiedAt ?? null),
+  };
+}
+
+async function collectCertificationNames(vendorId: number | null): Promise<string[]> {
+  const workTypes = await db
+    .select({
+      requiredCertifications: workTypesTable.requiredCertifications,
+      blockingCertifications: workTypesTable.blockingCertifications,
+    })
+    .from(workTypesTable);
+  const names = new Set<string>([
+    "PEC",
+    "Pump Mechanic",
+    "Field Mechanic",
+    "H2S Awareness",
+    "Cementing Tech",
+    "OSHA 10",
+    "H2S Clear",
+    "Excavating Tech",
+    "Drilling Operator",
+    "HazWoper 40",
+    "Hot Oil Operator",
+    "Perforating Specialist",
+    "Wellhead Tech II",
+    "Wireline Operator",
+  ]);
+  for (const wt of workTypes) {
+    for (const n of wt.requiredCertifications ?? []) {
+      const t = n?.trim();
+      if (t) names.add(t);
+    }
+    for (const n of wt.blockingCertifications ?? []) {
+      const t = n?.trim();
+      if (t) names.add(t);
+    }
+  }
+  const allExisting = await db
+    .select({ name: employeeCertificationsTable.name })
+    .from(employeeCertificationsTable)
+    .where(isNull(employeeCertificationsTable.deletedAt));
+  for (const row of allExisting) {
+    const t = row.name?.trim();
+    if (t) names.add(t);
+  }
+  return Array.from(names).sort((a, b) => a.localeCompare(b));
 }
 
 // Read access: admin, vendor of the employee, or the employee themselves.
@@ -136,6 +207,24 @@ async function ensureCertMutate(req: any, res: any, employeeId: number) {
 
 const router: IRouter = Router();
 
+router.get("/certification-names", async (req, res): Promise<void> => {
+  const session = getSession(req);
+  if (!session) {
+    res.status(401).json({ error: "Not authenticated", code: "auth.not_authenticated" });
+    return;
+  }
+  if (!["admin", "vendor", "field_employee", "partner"].includes(session.role)) {
+    res.status(403).json({ error: "Not allowed", code: "auth.not_allowed" });
+    return;
+  }
+  const vendorId =
+    session.role === "vendor" || session.role === "field_employee"
+      ? session.vendorId
+      : null;
+  const names = await collectCertificationNames(vendorId);
+  res.json(names);
+});
+
 router.get(
   "/field-employees/:employeeId/certifications",
   async (req, res): Promise<void> => {
@@ -156,7 +245,7 @@ router.get(
         ),
       )
       .orderBy(employeeCertificationsTable.expirationDate);
-    res.json(rows);
+    res.json(rows.map(shapeCertRow));
   },
 );
 
@@ -175,15 +264,31 @@ router.post(
       sendValidationFailed(res, parsed.error, { code: "validation.invalid_input" });
       return;
     }
+    if (!parsed.data.certNumber?.trim()) {
+      res.status(400).json({ error: "Certificate number is required", code: "certification.cert_number_required" });
+      return;
+    }
     if (parsed.data.documentUrl != null && !isSafeDocumentUrl(parsed.data.documentUrl)) {
       res.status(400).json({ error: "documentUrl must be an internal storage path", code: "certification.invalid_document_url" });
       return;
     }
+    const selfId = await fieldEmployeeSelfId(auth.session.userId);
+    const selfEdit = isFieldEmployeeSelfSession(auth.session, employeeId, selfId);
+    const vendorVerified = isVendorOrAdminSession(auth.session);
     const [row] = await db
       .insert(employeeCertificationsTable)
-      .values({ ...parsed.data, employeeId })
+      .values({
+        ...parsed.data,
+        certNumber: parsed.data.certNumber.trim(),
+        employeeId,
+        vendorVerifiedAt: vendorVerified ? sql`now()` : null,
+        vendorVerifiedByUserId: vendorVerified ? auth.session.userId : null,
+      })
       .returning();
-    res.status(201).json(row);
+    if (selfEdit) {
+      await markEmployeeProfilePendingReview(employeeId);
+    }
+    res.status(201).json(shapeCertRow(row));
   },
 );
 
@@ -203,13 +308,33 @@ router.patch(
       sendValidationFailed(res, parsed.error, { code: "validation.invalid_input" });
       return;
     }
+    if (parsed.data.certNumber != null && !String(parsed.data.certNumber).trim()) {
+      res.status(400).json({ error: "Certificate number is required", code: "certification.cert_number_required" });
+      return;
+    }
     if (parsed.data.documentUrl != null && !isSafeDocumentUrl(parsed.data.documentUrl)) {
       res.status(400).json({ error: "documentUrl must be an internal storage path", code: "certification.invalid_document_url" });
       return;
     }
+    const selfId = await fieldEmployeeSelfId(auth.session.userId);
+    const selfEdit = isFieldEmployeeSelfSession(auth.session, employeeId, selfId);
+    const { vendorVerified, ...rest } = parsed.data;
+    const patch: Record<string, unknown> = { ...rest };
+    if (rest.certNumber != null) patch.certNumber = String(rest.certNumber).trim();
+    if (vendorVerified !== undefined) {
+      if (!isVendorOrAdminSession(auth.session)) {
+        res.status(403).json({ error: "Only vendor admin can verify certifications", code: "certification.verify_forbidden" });
+        return;
+      }
+      patch.vendorVerifiedAt = vendorVerified ? sql`now()` : null;
+      patch.vendorVerifiedByUserId = vendorVerified ? auth.session.userId : null;
+    } else if (selfEdit) {
+      patch.vendorVerifiedAt = null;
+      patch.vendorVerifiedByUserId = null;
+    }
     const [row] = await db
       .update(employeeCertificationsTable)
-      .set(parsed.data)
+      .set(patch)
       .where(
         and(
           eq(employeeCertificationsTable.id, certId),
@@ -222,7 +347,10 @@ router.patch(
       res.status(404).json({ error: "Certification not found", code: "certification.not_found" });
       return;
     }
-    res.json(row);
+    if (selfEdit) {
+      await markEmployeeProfilePendingReview(employeeId);
+    }
+    res.json(shapeCertRow(row));
   },
 );
 
@@ -254,6 +382,10 @@ router.delete(
     if (!row) {
       res.status(404).json({ error: "Certification not found", code: "certification.not_found" });
       return;
+    }
+    const selfId = await fieldEmployeeSelfId(auth.session.userId);
+    if (isFieldEmployeeSelfSession(auth.session, employeeId, selfId)) {
+      await markEmployeeProfilePendingReview(employeeId);
     }
     res.status(204).send();
   },

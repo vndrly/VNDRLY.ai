@@ -1,14 +1,9 @@
 /**
  * Shared SSH config for VPS maintenance scripts (check-live, fix-vps-https, etc.).
- * Reads Desktop/GoDaddy.env or GODADDY_ENV — same layout as godaddy-deploy.mjs.
+ * Reads API Keys and Secrets/GoDaddy.env or GODADDY_ENV.
  */
 import { existsSync, readFileSync } from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(__dirname, "..");
-const DESKTOP = path.dirname(ROOT);
+import { ROOT, SECRETS_DIR, godaddyEnvPath } from "./secrets-path.mjs";
 
 function parseEnvFile(filePath) {
   const out = {};
@@ -41,7 +36,7 @@ function isRealSecret(v) {
 }
 
 export function loadVpsSshConfig() {
-  const gd = parseEnvFile(process.env.GODADDY_ENV || path.join(DESKTOP, "GoDaddy.env"));
+  const gd = parseEnvFile(godaddyEnvPath());
   const hostCandidate = gd.vps_ip || gd.host || gd.ip;
   const host = isRealIp(hostCandidate) ? hostCandidate : null;
   const user = gd.ssh_user || gd.user_ssh || "vndrly";
@@ -52,16 +47,16 @@ export function loadVpsSshConfig() {
 
   if (!host) {
     throw new Error(
-      "Missing VPS IP. Add vps_ip to Desktop/GoDaddy.env (or set GODADDY_ENV).",
+      "Missing VPS IP. Add vps_ip to API Keys and Secrets/GoDaddy.env (or set GODADDY_ENV).",
     );
   }
   if (!password) {
     throw new Error(
-      "Missing SSH password. Add ssh_pass to Desktop/GoDaddy.env.",
+      "Missing SSH password. Add ssh_pass to API Keys and Secrets/GoDaddy.env.",
     );
   }
 
   return { host, port, username: user, password, readyTimeout: 120000 };
 }
 
-export { parseEnvFile, ROOT, DESKTOP };
+export { parseEnvFile, ROOT, SECRETS_DIR };

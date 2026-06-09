@@ -875,6 +875,148 @@ router.get("/tickets/:id/schedule", async (req, res): Promise<void> => {
   });
 });
 
+// ── POST /api/tickets/:id/schedule/resend-notifications ───────────────
+// Manually re-notify the current crew. Useful when someone missed the
+// original push/in-app row (re-save without schedule changes sends nothing)
+// or when a dispatcher wants to ping the team again.
+router.post("/tickets/:id/schedule/resend-notifications", async (req, res): Promise<void> => {
+  const ticketId = Number(req.params.id);
+  if (!Number.isFinite(ticketId)) {
+    res.status(400).json({ error: "Invalid id", code: "validation.invalid_id" });
+    return;
+  }
+  const auth = await ensureSchedulerAuth(req, res, ticketId);
+  if (!auth) return;
+
+  const [ticket] = await db
+    .select({
+      scheduledStartAt: ticketsTable.scheduledStartAt,
+      workTypeId: ticketsTable.workTypeId,
+      siteLocationId: ticketsTable.siteLocationId,
+    })
+    .from(ticketsTable)
+    .where(eq(ticketsTable.id, ticketId));
+  if (!ticket?.scheduledStartAt) {
+    res.status(409).json({
+      error: "not_scheduled",
+      message: "Ticket is not scheduled",
+      code: "schedule.not_scheduled",
+    });
+    return;
+  }
+
+  const body = req.body ?? {};
+  let crewEmployeeIds: number[];
+  if (Array.isArray(body.crewEmployeeIds)) {
+    crewEmployeeIds = body.crewEmployeeIds
+      .map((n: unknown) => Number(n))
+      .filter((n: number) => Number.isFinite(n));
+  } else {
+    const rows = await db
+      .select({ employeeId: ticketCrewTable.employeeId })
+      .from(ticketCrewTable)
+      .where(and(eq(ticketCrewTable.ticketId, ticketId), isNull(ticketCrewTable.removedAt)));
+    crewEmployeeIds = rows.map((r) => r.employeeId);
+  }
+
+  if (crewEmployeeIds.length === 0) {
+    res.status(400).json({
+      error: "crew_required",
+      message: "Assign at least one crew member",
+      code: "schedule.crew_required",
+    });
+    return;
+  }
+
+  const crewRows = await db
+    .select({
+      id: vendorPeopleTable.id,
+      userId: vendorPeopleTable.userId,
+      firstName: vendorPeopleTable.firstName,
+      lastName: vendorPeopleTable.lastName,
+    })
+    .from(vendorPeopleTable)
+    .where(
+      and(
+        inArray(vendorPeopleTable.id, crewEmployeeIds),
+        eq(vendorPeopleTable.vendorId, auth.vendorId),
+        isNull(vendorPeopleTable.deletedAt),
+      ),
+    );
+
+  const [workType] = ticket.workTypeId
+    ? await db
+        .select({ name: workTypesTable.name })
+        .from(workTypesTable)
+        .where(eq(workTypesTable.id, ticket.workTypeId))
+    : [];
+  const [site] = ticket.siteLocationId
+    ? await db
+        .select({
+          name: siteLocationsTable.name,
+          partnerId: siteLocationsTable.partnerId,
+        })
+        .from(siteLocationsTable)
+        .where(eq(siteLocationsTable.id, ticket.siteLocationId))
+    : [];
+  const [partner] = site?.partnerId
+    ? await db
+        .select({ name: partnersTable.name })
+        .from(partnersTable)
+        .where(eq(partnersTable.id, site.partnerId))
+    : [];
+
+  const scheduledStartAt =
+    ticket.scheduledStartAt instanceof Date
+      ? ticket.scheduledStartAt
+      : new Date(ticket.scheduledStartAt as unknown as string);
+  const jobLabel = workType?.name ?? "Job";
+  const siteLabel = site?.name ?? "site";
+  const partnerLabel = partner?.name ?? "";
+  const whenLabel = scheduledStartAt.toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+  const resendIso = new Date().toISOString();
+
+  let notified = 0;
+  let skippedNoLogin = 0;
+  for (const r of crewRows) {
+    if (!r.userId) {
+      skippedNoLogin += 1;
+      continue;
+    }
+    if (r.userId === auth.session.userId) continue;
+
+    void sendPushToUser(r.userId, {
+      title: `Scheduled: ${jobLabel}`,
+      body: `${partnerLabel ? partnerLabel + " — " : ""}${siteLabel} on ${whenLabel}`,
+      data: { type: "ticket_scheduled", ticketId, link: `/tickets/${ticketId}` },
+    }).catch(() => undefined);
+
+    try {
+      const n = await notifyUsers([r.userId], {
+        type: "schedule_changed",
+        title: "Job schedule reminder",
+        body: `${jobLabel} at ${siteLabel} starts ${whenLabel}.`,
+        link: `/tickets/${ticketId}`,
+        dedupeKey: `schedule_resend:${ticketId}:${r.id}:${resendIso}`,
+        pushData: { ticketId, type: "schedule_changed" },
+      });
+      if (n > 0) notified += n;
+    } catch (err) {
+      logger.warn(
+        { err, ticketId, employeeId: r.id, userId: r.userId },
+        "schedule_resend notify failed",
+      );
+    }
+  }
+
+  res.status(200).json({ ok: true, notified, skippedNoLogin, crewCount: crewRows.length });
+});
+
 // ── GET /api/me/upcoming-schedule?days=14 ─────────────────────────────
 router.get("/me/upcoming-schedule", async (req, res): Promise<void> => {
   const session = getSession(req);

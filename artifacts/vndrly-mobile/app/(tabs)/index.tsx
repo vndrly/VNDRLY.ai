@@ -46,6 +46,7 @@ import {
   ticketStatusLabel,
   ticketStatusPillStyle,
 } from "@/lib/ticketStatusLabels";
+import { PILL_CHIP_LAYOUT, PILL_TEXT } from "@/lib/pill-doctrine";
 
 type OpenTicket = {
   id: number;
@@ -61,6 +62,7 @@ type OpenTicket = {
   fieldEmployeeId: number | null;
   fieldEmployeeFirstName: string | null;
   fieldEmployeeLastName: string | null;
+  crewNames?: string[];
   createdAt: string;
   // Task #605: drives the 7-day inactivity escalation in the status
   // pill so a draft / in_progress / pending_review / kicked_back
@@ -1179,6 +1181,10 @@ export default function HomeScreen() {
               const full = `${first} ${last}`.trim();
               return full.length > 0 ? full : null;
             })();
+            const crewLine =
+              item.crewNames && item.crewNames.length > 0
+                ? item.crewNames.join(", ")
+                : employeeName;
             return (
               <TouchableOpacity
                 onPress={onPress}
@@ -1285,14 +1291,15 @@ export default function HomeScreen() {
                     each ticket; field-employee viewers don't (every
                     row is theirs). */}
                 {!isFieldEmployee || isForemanEmployee ? (
-                  employeeName ? (
+                  crewLine ? (
                   <Text
                     style={[styles.cardMeta, { color: colors.mutedForeground }]}
                     testID={`text-ticket-employee-${item.id}`}
+                    numberOfLines={2}
                   >
-                    <Feather name="user" size={11} color={colors.mutedForeground} />
+                    <Feather name="users" size={11} color={colors.mutedForeground} />
                     {"  "}
-                    {employeeName}
+                    {crewLine}
                   </Text>
                   ) : null
                 ) : null}
@@ -1709,13 +1716,13 @@ const styles = StyleSheet.create({
     opacity: 0.88,
   },
   simplePillGreyText: {
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Inter_400Regular",
     fontSize: 13,
     color: "#f3f4f6",
     flexShrink: 1,
   },
   simplePillBrandText: {
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Inter_400Regular",
     fontSize: 13,
     color: "#ffffff",
     flexShrink: 1,
@@ -1736,7 +1743,7 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   historyBtnText: {
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Inter_400Regular",
     fontSize: 13,
     color: "#1a1d23",
   },
@@ -1764,7 +1771,7 @@ const styles = StyleSheet.create({
   // purpose — a hard shadow reads as cheap UI; this is just enough to
   // give the text dimensional separation from the colored chrome.
   newBtnText: {
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Inter_400Regular",
     fontSize: 13,
     textShadowColor: "rgba(0, 0, 0, 0.63)",
     textShadowOffset: { width: 0, height: 2 },
@@ -1807,7 +1814,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
   },
-  adjacentBtnText: { fontFamily: "Inter_600SemiBold", fontSize: 13 },
+  adjacentBtnText: { fontFamily: "Inter_400Regular", fontSize: 13 },
   adjacentBtnHint: {
     fontFamily: "Inter_400Regular",
     fontSize: 12,
@@ -1851,12 +1858,11 @@ const styles = StyleSheet.create({
     color: "#1a1d23",
   },
   statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    ...PILL_CHIP_LAYOUT,
     borderRadius: 6,
   },
-  statusText: { fontFamily: "Inter_500Medium", fontSize: 11 },
-  statusTextOnly: { fontFamily: "Inter_600SemiBold", fontSize: 13 },
+  statusText: { ...PILL_TEXT },
+  statusTextOnly: { fontFamily: "Inter_400Regular", fontSize: 13 },
   // Task #890: groups the stale-time suffix with the status pill on
   // the right side of the card header so the two read together as a
   // single status block rather than the suffix floating on its own.
@@ -1898,7 +1904,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 8,
   },
-  directBtnText: { color: "#ffffff", fontFamily: "Inter_600SemiBold", fontSize: 13 },
+  directBtnText: { color: "#ffffff", fontFamily: "Inter_400Regular", fontSize: 13 },
   modalBackdrop: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.45)",

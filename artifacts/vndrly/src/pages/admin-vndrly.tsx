@@ -552,9 +552,9 @@ export default function AdminVndrly() {
                     <TableCell>{a.email ?? a.username}</TableCell>
                     <TableCell>
                       {a.suspendedAt ? (
-                        <span className="px-2 py-0.5 text-xs rounded-full bg-muted text-muted-foreground">Suspended</span>
+                        <span className="inline-flex items-center h-[23px] px-3 text-xs font-normal rounded-full bg-muted text-muted-foreground">Suspended</span>
                       ) : (
-                        <span className="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-800">Active</span>
+                        <span className="inline-flex items-center h-[23px] px-3 text-xs font-normal rounded-full bg-green-100 text-green-800">Active</span>
                       )}
                     </TableCell>
                   </TableRow>

@@ -2,18 +2,16 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Sparkles, Search, Trash2, Loader2, Download, CheckCircle2, Circle, Plus, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AskVFloatingLauncherMark, AskVLogo, ASKV_LAUNCHER_HEIGHT, ASKV_LAUNCHER_WIDTH } from "@/components/askv-logo";
-import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
+import { PngPillButton as PillButton, brandImagePillSrc } from "@/components/png-pill-rollover";
+import { PillColorLayer } from "@/components/png-pill-chrome";
 import { Textarea } from "@/components/ui/textarea";
 import SidebarButton from "@/components/sidebar-button";
-import PillBg from "@/components/pill-bg";
-import { brandImagePillSrc } from "@/components/png-pill-rollover";
+import { TICKET_STATUS_PILL_ASPECT } from "@/lib/ticket-status-palette";
 import { cn } from "@/lib/utils";
 import toolbarPillActiveSrc from "@assets/NewPillPallet_0001s_0004_Layer-5.png";
 import bakerNavTealSquareSrc from "@assets/NewPillPallet_0001s_0004_Layer-5.png";
-import bakerTealPillRoundSrc from "@assets/NewPillPallet_0001s_0004_Layer-5.png";
 import userBubblePillSrc from "@assets/NewPillPallet_0001s_0004_Layer-5.png";
 import lightGreySquareSrc from "@assets/900x229_Light-grey_v2r_square_1778256462232.png";
-import lightGreyPillSrc from "@assets/900x229_Light-grey_v2r_Pill_1778256462229.png";
 import { useAuth } from "@/hooks/use-auth";
 import { useBrand } from "@/hooks/use-brand";
 import {
@@ -222,11 +220,11 @@ function HeaderChromeButton({
       title={title}
       className="relative inline-flex items-center justify-center w-9 h-9 group select-none disabled:opacity-40 disabled:cursor-not-allowed"
     >
-      <PillBg
+      <PillColorLayer
         src={lightGreySquareSrc}
-        imageAspect={900 / 229}
+        imageAspect={TICKET_STATUS_PILL_ASPECT}
         stretch
-        className="opacity-70 transition-opacity duration-200 group-hover:opacity-100 group-disabled:opacity-70"
+        className="opacity-70 group-hover:opacity-100 group-disabled:opacity-70"
       />
       <span className="relative z-10 text-gray-700 group-hover:text-gray-900">
         {children}
@@ -616,9 +614,10 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
           {messages.length === 0 && (
             <div className="siace-y-3">
               <div className="relative px-4 py-2 text-sm text-gray-300">
-                <PillBg
+                <PillColorLayer
                   src={lightGreySquareSrc}
-                  imageAspect={900 / 229}
+                  imageAspect={TICKET_STATUS_PILL_ASPECT}
+                  stretch
                   className="opacity-40"
                 />
                 <span className="relative z-10">{greeting}</span>
@@ -626,25 +625,14 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
               {quickActions.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                   {quickActions.map((qa) => (
-                    <button
+                    <PillButton
                       key={qa.label}
                       type="button"
                       onClick={() => handleSend(qa.prompt)}
-                      className="relative inline-flex items-center text-xs px-4 py-1.5 text-gray-300 hover:text-white group transition-colors"
                       data-testid={`assistant-quick-${qa.label.replace(/\s+/g, "-").toLowerCase()}`}
                     >
-                      <PillBg
-                        src={isBaker ? bakerTealPillRoundSrc : brandImagePillSrc(brand.primary, brand.name)}
-                        imageAspect={900 / 229}
-                        className="opacity-0 transition-opacity duration-200 group-hover:opacity-100"
-                      />
-                      <PillBg
-                        src={lightGreyPillSrc}
-                        imageAspect={900 / 229}
-                        className="opacity-40 transition-opacity duration-200 group-hover:opacity-0"
-                      />
-                      <span className="relative z-10">{qa.label}</span>
-                    </button>
+                      {qa.label}
+                    </PillButton>
                   ))}
                 </div>
               )}
@@ -669,9 +657,9 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
                 }
               >
                 {m.role === "user" && (
-                  <PillBg
+                  <PillColorLayer
                     src={isBaker ? userBubblePillSrc : brandImagePillSrc(brand.primary, brand.name)}
-                    imageAspect={900 / 229}
+                    imageAspect={TICKET_STATUS_PILL_ASPECT}
                   />
                 )}
                 {m.role === "assistant" ? (
@@ -732,7 +720,6 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
                 theme="light"
                 shape="pill"
                 activeSrcOverride={isBaker ? toolbarPillActiveSrc : undefined}
-                className="!h-[40px]"
                 idleOiacityClass="opacity-70"
                 solidIdleText
                 testId="assistant-send"

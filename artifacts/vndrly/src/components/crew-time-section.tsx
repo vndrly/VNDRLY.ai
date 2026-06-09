@@ -23,15 +23,14 @@ import {
   useClearStaleFieldEmployeeSelection,
 } from "@/hooks/use-eligible-vendor-field-employees";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
+import PngPill, { PngPillButton as PillButton } from "@/components/png-pill-rollover";
+import btnBluePill from "@assets/button-palette/900x229_blue_Pill_v3.png";
 import GreenButton from "@/components/green-button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Users, Clock, AlertTriangle, Pencil, RefreshCw, LogIn, LogOut, X, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import PillBg from "@/components/pill-bg";
-import bluePill from "@assets/NewPillPallet_0001s_0017_900x229_blue_Pill.png";
 
 // Ticket-state-conflict codes the API may emit when the foreman taps × on
 // a crew chip but the underlying roster has already moved on (the chip is
@@ -68,44 +67,44 @@ function money(n: number) { return `$${n.toFixed(2)}`; }
 
 function CrewPill({ name, employeeId, onRemove, removeLabel }: { name: string; employeeId?: number; onRemove?: () => void; removeLabel?: string }) {
   return (
-    <span
-      className="relative inline-flex items-center h-[28px] min-w-[100px] select-none"
+    <PngPill
+      color="blue"
+      interactive
+      className="min-w-[100px]"
       data-testid={employeeId != null ? `chip-crew-${employeeId}` : undefined}
     >
-      <PillBg src={bluePill} />
-      <span className="relative z-10 flex items-center gap-1.5 px-3 h-full w-full text-xs font-bold text-white whitespace-nowrap">
-        {name}
-        {onRemove && (
-          <button
-            type="button"
-            onClick={onRemove}
-            aria-label={removeLabel ?? `Remove ${name}`}
-            className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-white/25 hover:bg-white/45 transition-colors text-white"
-            data-testid={`button-remove-crew-${name.replace(/\s+/g, "-").toLowerCase()}`}
-          >
-            <X className="w-3 h-3" strokeWidth={3} />
-          </button>
-        )}
-      </span>
-    </span>
+      {name}
+      {onRemove && (
+        <button
+          type="button"
+          onClick={onRemove}
+          aria-label={removeLabel ?? `Remove ${name}`}
+          className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-white/25 hover:bg-white/45 transition-colors text-white"
+          data-testid={`button-remove-crew-${name.replace(/\s+/g, "-").toLowerCase()}`}
+        >
+          <X className="w-3 h-3" strokeWidth={3} />
+        </button>
+      )}
+    </PngPill>
   );
 }
 
 function AddCrewPill({ label, onClick, disabled }: { label: string; onClick: () => void; disabled?: boolean }) {
   return (
-    <button
+    <PillButton
       type="button"
+      color="blue"
+      idleSrc={btnBluePill}
+      activeSrc={btnBluePill}
+      idleOpacity={1}
       onClick={onClick}
       disabled={disabled}
-      className="relative inline-flex items-center h-[28px] min-w-[110px] select-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 group"
+      className="min-w-[110px]"
       data-testid="button-add-crew-roster"
     >
-      <PillBg src={bluePill} className="opacity-80 group-hover:opacity-100 transition-opacity" />
-      <span className="relative z-10 flex items-center gap-1.5 px-3 h-full w-full text-xs font-bold text-white whitespace-nowrap">
-        <Plus className="w-3.5 h-3.5" strokeWidth={3} />
-        {label}
-      </span>
-    </button>
+      <Plus className="w-3.5 h-3.5" strokeWidth={3} />
+      {label}
+    </PillButton>
   );
 }
 

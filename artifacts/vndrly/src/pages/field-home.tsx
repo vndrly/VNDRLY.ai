@@ -89,7 +89,6 @@ export default function FieldHome() {
       <div className="pb-4">
         <PngPillButton
           color="amber"
-          height={72}
           onClick={() => navigate(`${portalBase}/new-ticket`)}
           data-testid="button-new-ticket"
           className="w-full px-4"
@@ -99,7 +98,7 @@ export default function FieldHome() {
               <Plus className="w-5 h-5 text-white" />
             </span>
             <span className="flex-1 text-left flex flex-col">
-              <span className="text-sm font-bold text-white leading-tight">{t("fieldHome.startNewJob")}</span>
+              <span className="text-sm font-normal text-white leading-tight">{t("fieldHome.startNewJob")}</span>
               <span className="text-[11px] text-white/85 leading-tight">{t("fieldHome.startNewJobSub")}</span>
             </span>
             <ChevronRight className="w-5 h-5 text-white/85 shrink-0" />

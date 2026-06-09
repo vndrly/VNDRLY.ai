@@ -1213,6 +1213,12 @@ export const ListVendorContactsResponseItem = zod.object({
     .describe(
       "`role:userId` audit string identifying who soft-deleted this contact.",
     ),
+  profilePendingReviewAt: zod.coerce
+    .date()
+    .nullish()
+    .describe(
+      "Set when this person updates their own profile or certifications.",
+    ),
 });
 export const ListVendorContactsResponse = zod.array(
   ListVendorContactsResponseItem,
@@ -1700,6 +1706,12 @@ export const ListFieldEmployeesResponseItem = zod.object({
     .describe(
       'Preferred UI\/assistant language for this field employee. Mirrors the\n`vendor_people.preferred_language` column the token-mode onboarding\nassistant reads, and is kept in sync with `users.preferred_language`\nfor the linked login (when one exists). `null` means \"let the\nuser\/device decide\".\n',
     ),
+  profilePendingReviewAt: zod.coerce
+    .date()
+    .nullish()
+    .describe(
+      "Set when the employee updates their own profile or certifications.\nVendor office\/admin sees a review indicator until they open and save\nthe employee record.\n",
+    ),
 });
 export const ListFieldEmployeesResponse = zod.array(
   ListFieldEmployeesResponseItem,
@@ -1775,6 +1787,12 @@ export const GetFieldEmployeeResponse = zod.object({
     .describe(
       'Preferred UI\/assistant language for this field employee. Mirrors the\n`vendor_people.preferred_language` column the token-mode onboarding\nassistant reads, and is kept in sync with `users.preferred_language`\nfor the linked login (when one exists). `null` means \"let the\nuser\/device decide\".\n',
     ),
+  profilePendingReviewAt: zod.coerce
+    .date()
+    .nullish()
+    .describe(
+      "Set when the employee updates their own profile or certifications.\nVendor office\/admin sees a review indicator until they open and save\nthe employee record.\n",
+    ),
 });
 
 /**
@@ -1787,6 +1805,12 @@ export const GetFieldEmployeeLoginParams = zod.object({
 export const GetFieldEmployeeLoginResponse = zod
   .object({
     hasLogin: zod.boolean(),
+    portalLoginEnabled: zod
+      .boolean()
+      .optional()
+      .describe(
+        "When true, email\/password portal login is active for this employee.",
+      ),
     email: zod.string().optional(),
     userId: zod.number().optional(),
     mustChangePassword: zod
@@ -1818,7 +1842,13 @@ export const setFieldEmployeeLoginBodyPasswordMin = 8;
 
 export const SetFieldEmployeeLoginBody = zod.object({
   email: zod.string(),
-  password: zod.string().min(setFieldEmployeeLoginBodyPasswordMin).optional(),
+  password: zod
+    .string()
+    .min(setFieldEmployeeLoginBodyPasswordMin)
+    .optional()
+    .describe(
+      "Required when enabling login for the first time. Optional when updating an existing login (omit to keep the current password).",
+    ),
   portalLoginEnabled: zod
     .boolean()
     .optional()
@@ -1930,6 +1960,8 @@ export const ListEmployeeCertificationsResponseItem = zod.object({
   expirationDate: zod.string().nullable(),
   documentUrl: zod.string().nullable(),
   documentPath: zod.string().nullable(),
+  vendorVerifiedAt: zod.coerce.date().nullish(),
+  vendorVerifiedByUserId: zod.number().nullish(),
   createdAt: zod.coerce.date(),
   deletedAt: zod.coerce.date().nullish(),
   deletedBy: zod.string().nullish(),
@@ -1948,7 +1980,7 @@ export const CreateEmployeeCertificationParams = zod.object({
 export const CreateEmployeeCertificationBody = zod.object({
   name: zod.string(),
   issuer: zod.string().nullish(),
-  certNumber: zod.string().nullish(),
+  certNumber: zod.string().nullable(),
   issuedDate: zod.string().nullish(),
   expirationDate: zod.string().nullish(),
   documentUrl: zod.string().nullish(),
@@ -1971,6 +2003,12 @@ export const UpdateEmployeeCertificationBody = zod.object({
   expirationDate: zod.string().nullish(),
   documentUrl: zod.string().nullish(),
   documentPath: zod.string().nullish(),
+  vendorVerified: zod
+    .boolean()
+    .optional()
+    .describe(
+      "Vendor\/admin only. When true, marks the certification as verified.\nWhen false, clears verification (e.g. after employee edits).\n",
+    ),
 });
 
 export const UpdateEmployeeCertificationResponse = zod.object({
@@ -1983,6 +2021,8 @@ export const UpdateEmployeeCertificationResponse = zod.object({
   expirationDate: zod.string().nullable(),
   documentUrl: zod.string().nullable(),
   documentPath: zod.string().nullable(),
+  vendorVerifiedAt: zod.coerce.date().nullish(),
+  vendorVerifiedByUserId: zod.number().nullish(),
   createdAt: zod.coerce.date(),
   deletedAt: zod.coerce.date().nullish(),
   deletedBy: zod.string().nullish(),
@@ -1995,6 +2035,17 @@ export const DeleteEmployeeCertificationParams = zod.object({
   employeeId: zod.coerce.number(),
   certId: zod.coerce.number(),
 });
+
+/**
+ * Returns a sorted, de-duplicated list of certification names drawn from
+work-type requirements and existing employee certifications.
+
+ * @summary Known certification names for dropdown pickers
+ */
+export const ListCertificationNamesResponseItem = zod.string();
+export const ListCertificationNamesResponse = zod.array(
+  ListCertificationNamesResponseItem,
+);
 
 /**
  * @summary Get a signed verify-token for this employee's compliance card
@@ -6668,6 +6719,7 @@ export const ListFieldOpenTicketsResponseItem = zod
     fieldEmployeeFirstName: zod.string().nullable(),
     fieldEmployeeLastName: zod.string().nullable(),
     createdAt: zod.coerce.date(),
+    scheduledStartAt: zod.coerce.date().nullable(),
     updatedAt: zod.coerce
       .date()
       .nullable()
@@ -6679,6 +6731,11 @@ export const ListFieldOpenTicketsResponseItem = zod
       .min(listFieldOpenTicketsResponseUnreadCommentCountMin)
       .describe(
         "Task #51 — count of comments on this ticket's thread that\nthe signed-in field viewer has not yet seen, used to render\nan unread badge on the mobile home-screen ticket card.\nExcludes deleted comments and the viewer's own posts.\nDrops to 0 the next time the list re-fetches after the\ndetail screen runs `markAllSeen` on its comments thread.\n",
+      ),
+    crewNames: zod
+      .array(zod.string())
+      .describe(
+        "Active scheduled crew on this ticket (from ticket_crew),\nsorted by first name. Empty when no crew is assigned yet;\nthe Today\/home card falls back to the assigned field employee.\n",
       ),
   })
   .describe(
@@ -6731,6 +6788,7 @@ export const GetFieldOpenTicketResponse = zod
     fieldEmployeeFirstName: zod.string().nullable(),
     fieldEmployeeLastName: zod.string().nullable(),
     createdAt: zod.coerce.date(),
+    scheduledStartAt: zod.coerce.date().nullable(),
     updatedAt: zod.coerce
       .date()
       .nullable()
@@ -6742,6 +6800,11 @@ export const GetFieldOpenTicketResponse = zod
       .min(getFieldOpenTicketResponseUnreadCommentCountMin)
       .describe(
         "Task #51 — count of comments on this ticket's thread that\nthe signed-in field viewer has not yet seen, used to render\nan unread badge on the mobile home-screen ticket card.\nExcludes deleted comments and the viewer's own posts.\nDrops to 0 the next time the list re-fetches after the\ndetail screen runs `markAllSeen` on its comments thread.\n",
+      ),
+    crewNames: zod
+      .array(zod.string())
+      .describe(
+        "Active scheduled crew on this ticket (from ticket_crew),\nsorted by first name. Empty when no crew is assigned yet;\nthe Today\/home card falls back to the assigned field employee.\n",
       ),
   })
   .describe(

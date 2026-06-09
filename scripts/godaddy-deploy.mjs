@@ -1,15 +1,11 @@
 #!/usr/bin/env node
 /**
- * SSH deploy to GoDaddy VPS after git push. Reads Desktop/GoDaddy.env + Supabase.env.
+ * SSH deploy to GoDaddy VPS after git push. Reads API Keys and Secrets/GoDaddy.env + Supabase.env.
  */
 import { Client } from "ssh2";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(__dirname, "..");
-const DESKTOP = path.dirname(ROOT);
+import { ROOT, godaddyEnvPath, supabaseEnvPath } from "./secrets-path.mjs";
 const LOCAL_CFG = path.join(ROOT, ".local", "godaddy-vps.json");
 const BOOTSTRAP = path.join(ROOT, "scripts/server/bootstrap-vps.sh");
 const NGINX_SITE = path.join(ROOT, "scripts/server/vndrly.ai.nginx.conf");
@@ -45,7 +41,7 @@ function isRealSecret(v) {
 }
 
 function loadDeployConfig() {
-  const gd = parseEnvFile(process.env.GODADDY_ENV || path.join(DESKTOP, "GoDaddy.env"));
+  const gd = parseEnvFile(godaddyEnvPath());
   const local = existsSync(LOCAL_CFG)
     ? JSON.parse(readFileSync(LOCAL_CFG, "utf8"))
     : {};
@@ -58,7 +54,7 @@ function loadDeployConfig() {
   const password = isRealSecret(passCandidate) ? passCandidate : null;
   const port = Number(gd.ssh_port || local.sshPort || 22);
 
-  const supabasePath = process.env.SUPABASE_ENV || path.join(DESKTOP, "Supabase.env");
+  const supabasePath = supabaseEnvPath();
   let dbPassword = gd.supabase_password;
   if (!dbPassword && existsSync(supabasePath)) {
     const raw = readFileSync(supabasePath, "utf8");
@@ -68,16 +64,16 @@ function loadDeployConfig() {
 
   if (!host) {
     throw new Error(
-      "Missing VPS IP. Run: pnpm run setup:vps (or add vps_ip to Desktop/GoDaddy.env)",
+      "Missing VPS IP. Run: pnpm run setup:vps (or add vps_ip to API Keys and Secrets/GoDaddy.env)",
     );
   }
   if (!password) {
     throw new Error(
-      "Missing SSH password. Add ssh_pass to Desktop/GoDaddy.env (VPS admin password from GoDaddy setup).",
+      "Missing SSH password. Add ssh_pass to API Keys and Secrets/GoDaddy.env (VPS admin password from GoDaddy setup).",
     );
   }
   if (!dbPassword) {
-    throw new Error("Missing Supabase password in Desktop/Supabase.env");
+    throw new Error("Missing Supabase password in API Keys and Secrets/Supabase.env");
   }
 
   return { host, user, password, port, dbPassword };

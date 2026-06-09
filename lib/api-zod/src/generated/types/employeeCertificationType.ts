@@ -22,6 +22,10 @@ export interface EmployeeCertificationType {
   documentUrl: string | null;
   /** @nullable */
   documentPath: string | null;
+  /** @nullable */
+  vendorVerifiedAt?: Date | null;
+  /** @nullable */
+  vendorVerifiedByUserId?: number | null;
   createdAt: Date;
   /** @nullable */
   deletedAt?: Date | null;

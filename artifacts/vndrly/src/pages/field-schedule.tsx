@@ -1,8 +1,9 @@
 import { useEffect, useState, useCallback } from "react";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
-import { Clock, MapPin, UserCheck, Users, Navigation, Check, X, ChevronRight, CalendarClock } from "lucide-react";
+import { Clock, MapPin, UserCheck, Users, Navigation, Check, X, ChevronRight, CalendarClock, Bell } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { translateApiError } from "@/lib/api-error";
 import PngPill, { PngPillButton } from "@/components/png-pill-rollover";
 import ScheduleTicketDialog from "@/components/schedule-ticket-dialog";
 import ForemanSchedulePickDialog from "@/components/foreman-schedule-pick-dialog";
@@ -62,6 +63,9 @@ function openInMaps(lat: number, lng: number, label?: string) {
   window.open(url, "_blank", "noopener,noreferrer");
 }
 
+/** Compact schedule-card actions — fit content; label centered in pill. */
+const scheduleBtnProps = { height: 24 as const, size: "xs" as const, className: "shrink-0" };
+
 export default function FieldSchedule() {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -75,6 +79,7 @@ export default function FieldSchedule() {
   const [vendorId, setVendorId] = useState<number | null>(null);
   const [scheduleTicketId, setScheduleTicketId] = useState<number | null>(null);
   const [schedulePickOpen, setSchedulePickOpen] = useState(false);
+  const [resendingTicketId, setResendingTicketId] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -124,6 +129,40 @@ export default function FieldSchedule() {
     if (window.confirm(t("mySchedule.declineBody"))) void sendAck(ticketId, "declined");
   }
 
+  async function resendCrewNotifications(ticketId: number) {
+    setResendingTicketId(ticketId);
+    try {
+      const r = await fetch(`${BASE}/api/tickets/${ticketId}/schedule/resend-notifications`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        toast({
+          title: t("scheduleTicket.resendFailed"),
+          description: translateApiError(j, t),
+          variant: "destructive",
+        });
+        return;
+      }
+      const parts = [t("scheduleTicket.resendSuccess", { count: j.notified ?? 0 })];
+      if (j.skippedNoLogin > 0) {
+        parts.push(t("scheduleTicket.resendSkippedNoLogin", { count: j.skippedNoLogin }));
+      }
+      toast({ title: t("scheduleTicket.resendTitle"), description: parts.join(" ") });
+    } catch (e) {
+      toast({
+        title: t("scheduleTicket.resendFailed"),
+        description: translateApiError(e, t),
+        variant: "destructive",
+      });
+    } finally {
+      setResendingTicketId(null);
+    }
+  }
+
   return (
     <div className="px-4 pt-6 pb-6 max-w-2xl mx-auto w-full" data-testid="field-schedule">
       <h1 className="text-2xl font-bold mb-1">
@@ -134,11 +173,12 @@ export default function FieldSchedule() {
       {isForemanPortal && vendorId ? (
         <PngPillButton
           color="brand"
+          {...scheduleBtnProps}
           onClick={() => setSchedulePickOpen(true)}
-          className="w-full h-11 text-sm mb-5"
+          className={`${scheduleBtnProps.className} mb-5`}
           data-testid="button-foreman-schedule-ticket"
         >
-          <CalendarClock className="w-4 h-4 mr-1.5" />
+          <CalendarClock className="w-3 h-3" />
           {t("foremanSchedule.scheduleTicket")}
         </PngPillButton>
       ) : null}
@@ -224,66 +264,82 @@ export default function FieldSchedule() {
                 </button>
 
                 {ack && ack !== "confirmed" ? (
-                  <div className="flex gap-2 mt-3">
+                  <div className="flex flex-wrap items-center gap-2 mt-3">
                     {ack === "pending" ? (
                       <PngPillButton
                         color="red"
+                        {...scheduleBtnProps}
                         onClick={() => onDecline(item.id)}
-                        className="flex-1 h-10 text-sm"
                         data-testid={`button-decline-${item.id}`}
                       >
-                        <X className="w-4 h-4 mr-1.5" />
+                        <X className="w-3 h-3" />
                         {t("mySchedule.decline")}
                       </PngPillButton>
                     ) : null}
                     <PngPillButton
                       color="green"
+                      {...scheduleBtnProps}
                       onClick={() => void sendAck(item.id, "confirmed")}
-                      className="flex-1 h-10 text-sm"
                       data-testid={`button-confirm-${item.id}`}
                     >
-                      <Check className="w-4 h-4 mr-1.5" />
+                      <Check className="w-3 h-3" />
                       {t("mySchedule.confirm")}
                     </PngPillButton>
                   </div>
                 ) : null}
 
                 {item.isForeman ? (
-                  <>
+                  <div className="flex flex-wrap items-center gap-2 mt-3">
                     {isForemanPortal && vendorId ? (
                       <PngPillButton
-                        color="brand"
+                        color={item.scheduledStartAt ? "green" : "brand"}
+                        {...scheduleBtnProps}
                         onClick={() => setScheduleTicketId(item.id)}
-                        className="w-full h-10 text-sm mt-2"
                         data-testid={`button-schedule-${item.id}`}
                       >
-                        <CalendarClock className="w-4 h-4 mr-1.5" />
-                        {t("scheduleTicket.button")}
+                        <CalendarClock className="w-3 h-3" />
+                        {item.scheduledStartAt ? t("scheduleTicket.scheduled") : t("scheduleTicket.button")}
+                      </PngPillButton>
+                    ) : null}
+                    {isForemanPortal && item.scheduledStartAt ? (
+                      <PngPillButton
+                        color="brand"
+                        {...scheduleBtnProps}
+                        onClick={() => void resendCrewNotifications(item.id)}
+                        disabled={resendingTicketId === item.id}
+                        data-testid={`button-resend-crew-${item.id}`}
+                      >
+                        <Bell className="w-3 h-3" />
+                        {resendingTicketId === item.id
+                          ? t("scheduleTicket.resendingNotifications")
+                          : t("scheduleTicket.resendCrewNotifications")}
                       </PngPillButton>
                     ) : null}
                     <PngPillButton
                       color="brand"
+                      {...scheduleBtnProps}
                       onClick={() => navigate(`/tickets/${item.id}`)}
-                      className="w-full h-10 text-sm mt-2"
                       data-testid={`button-foreman-view-${item.id}`}
                     >
-                      <Users className="w-4 h-4 mr-1.5" />
+                      <Users className="w-3 h-3" />
                       {t("mySchedule.foremanView")}
-                      <ChevronRight className="w-4 h-4 ml-auto" />
+                      <ChevronRight className="w-3 h-3" />
                     </PngPillButton>
-                  </>
+                  </div>
                 ) : null}
 
                 {canDirections ? (
-                  <PngPillButton
-                    color="blue"
-                    onClick={() => openInMaps(item.siteLatitude!, item.siteLongitude!, item.siteName ?? undefined)}
-                    className="w-full h-10 text-sm mt-2"
-                    data-testid={`button-directions-${item.id}`}
-                  >
-                    <Navigation className="w-4 h-4 mr-1.5" />
-                    {t("mySchedule.getDirections")}
-                  </PngPillButton>
+                  <div className="mt-2">
+                    <PngPillButton
+                      color="brand"
+                      {...scheduleBtnProps}
+                      onClick={() => openInMaps(item.siteLatitude!, item.siteLongitude!, item.siteName ?? undefined)}
+                      data-testid={`button-directions-${item.id}`}
+                    >
+                      <Navigation className="w-3 h-3" />
+                      {t("mySchedule.getDirections")}
+                    </PngPillButton>
+                  </div>
                 ) : null}
               </li>
             );

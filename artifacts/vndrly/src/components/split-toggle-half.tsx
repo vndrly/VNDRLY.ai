@@ -36,7 +36,7 @@ export default function SplitToggleHalf({
       className={cn(
         "relative inline-flex shrink-0 items-center justify-center",
         "border-0 m-0 p-0 px-2 bg-transparent",
-        "text-xs font-bold leading-none cursor-pointer select-none",
+        "text-xs font-normal leading-none cursor-pointer select-none",
         className,
       )}
       style={{ height: SPLIT_TOGGLE_PILL_HEIGHT_PX, minHeight: SPLIT_TOGGLE_PILL_HEIGHT_PX, maxHeight: SPLIT_TOGGLE_PILL_HEIGHT_PX }}

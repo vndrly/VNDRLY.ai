@@ -637,7 +637,7 @@ export default function Vendors() {
                         <span
                           data-testid={`recon-status-${v.id}`}
                           data-recon-enabled="true"
-                          className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-800 border border-emerald-200"
+                          className="inline-flex items-center h-[23px] gap-1 rounded-full bg-emerald-50 px-3 text-xs font-normal text-emerald-800 border border-emerald-200"
                         >
                           <BellRing className="w-3 h-3" />
                           {t("vendors.reconAlertStatusOn", { defaultValue: "On" })}
@@ -646,7 +646,7 @@ export default function Vendors() {
                         <span
                           data-testid={`recon-status-${v.id}`}
                           data-recon-enabled="false"
-                          className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground border border-border"
+                          className="inline-flex items-center h-[23px] gap-1 rounded-full bg-muted px-3 text-xs font-normal text-muted-foreground border border-border"
                         >
                           <BellOff className="w-3 h-3" />
                           {t("vendors.reconAlertStatusOff", { defaultValue: "Off" })}

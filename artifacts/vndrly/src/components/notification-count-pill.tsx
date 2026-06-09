@@ -1,10 +1,14 @@
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import PillBg from "@/components/pill-bg";
+import { PillColorLayer, PillGlossOverlay } from "@/components/png-pill-chrome";
 import bluePill from "@assets/NewPillPallet_0001s_0017_900x229_blue_Pill.png";
-import pillGloss from "@assets/900x229_overlay_v2_1777664185377.png";
-
-const PILL_ASPECT = 900 / 229;
+import {
+  PILL_HEIGHT_CLASS,
+  PILL_HEIGHT_PX,
+  PILL_LABEL_CLASS,
+  PILL_TEXT_SHADOW,
+  PILL_WRAPPER_CLASS,
+} from "@/lib/pill-doctrine";
 
 interface NotificationCountPillProps {
   icon: LucideIcon;
@@ -15,12 +19,6 @@ interface NotificationCountPillProps {
   className?: string;
 }
 
-/**
- * Notification-count chip — rendered with the canonical blue pill PNG
- * + pillGloss overlay so it follows the global pill doctrine
- * (PillBg 3-slice, height 24, opacity-90 rest / 100 hover, text-shadow
- * on the colored pill).
- */
 export default function NotificationCountPill({
   icon: Icon,
   count,
@@ -32,23 +30,21 @@ export default function NotificationCountPill({
   return (
     <span
       className={cn(
-        "group relative inline-flex items-center justify-center select-none align-middle pointer-events-none",
+        PILL_WRAPPER_CLASS,
+        PILL_HEIGHT_CLASS,
+        "pointer-events-none min-w-[38px]",
         className,
       )}
-      style={{ height: 24, minWidth: 38 }}
+      style={{ height: PILL_HEIGHT_PX }}
       title={title}
       aria-label={ariaLabel}
       data-testid={testId}
     >
-      <PillBg
-        src={bluePill}
-        imageAspect={PILL_ASPECT}
-        className="opacity-90 group-hover:opacity-100 transition-opacity"
-      />
-      <PillBg src={pillGloss} stretch className="opacity-60" />
+      <PillColorLayer src={bluePill} />
+      <PillGlossOverlay />
       <span
-        className="relative z-10 inline-flex items-center gap-1 px-2 text-xs font-bold text-white"
-        style={{ textShadow: "0 2px 4px rgba(0,0,0,0.9)" }}
+        className={cn(PILL_LABEL_CLASS, "h-full gap-1 text-white")}
+        style={{ textShadow: PILL_TEXT_SHADOW }}
       >
         <Icon className="w-3 h-3" />
         {count}

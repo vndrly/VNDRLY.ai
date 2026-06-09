@@ -2,13 +2,17 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { RefreshCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
-import PillBg from "@/components/pill-bg";
+import { PillColorLayer, PillGlossOverlay } from "@/components/png-pill-chrome";
 import amberPill from "@assets/900x229_Amber_Pill_v4_1778504507024.png";
 import greenPill from "@assets/NewPillPallet_0001s_0051_900x229_green_Pill_v3.png";
 import redPill from "@assets/900x229_red_Pill_v2_1777847855327.png";
-import pillGloss from "@assets/900x229_overlay_v2_1777664185377.png";
-
-const PILL_ASPECT = 900 / 229;
+import {
+  PILL_HEIGHT_CLASS,
+  PILL_HEIGHT_PX,
+  PILL_LABEL_CLASS,
+  PILL_TEXT_SHADOW,
+  PILL_WRAPPER_CLASS,
+} from "@/lib/pill-doctrine";
 
 export type LiveConnectionStatus =
   | "connecting"
@@ -103,21 +107,19 @@ export function LiveConnectionPill({
         data-interactive="true"
         data-cooldown={coolingDown ? "true" : undefined}
         className={cn(
-          "group relative inline-flex items-center justify-center select-none h-[23px]",
+          PILL_WRAPPER_CLASS,
+          PILL_HEIGHT_CLASS,
           minWidthClass,
           "bg-transparent border-0 p-0",
           coolingDown ? "opacity-60 cursor-not-allowed" : "cursor-pointer",
         )}
+        style={{ height: PILL_HEIGHT_PX }}
       >
-        <PillBg
-          src={pillSrc}
-          imageAspect={PILL_ASPECT}
-          className="opacity-90 group-hover:opacity-100 transition-opacity"
-        />
-        <PillBg src={pillGloss} stretch className="opacity-60" />
+        <PillColorLayer src={pillSrc} className="group-hover:opacity-100" />
+        <PillGlossOverlay />
         <span
-          className="relative z-10 inline-flex items-center gap-1.5 px-2.5 text-xs font-bold text-white whitespace-nowrap"
-          style={{ textShadow: "0 2px 4px rgba(0,0,0,0.9)" }}
+          className={cn(PILL_LABEL_CLASS, "h-full gap-1.5 text-white")}
+          style={{ textShadow: PILL_TEXT_SHADOW }}
         >
           <RefreshCw
             aria-hidden="true"
@@ -140,19 +142,18 @@ export function LiveConnectionPill({
       data-testid={testId}
       data-status={status}
       className={cn(
-        "group relative inline-flex items-center justify-center select-none align-middle pointer-events-none h-[23px]",
+        PILL_WRAPPER_CLASS,
+        PILL_HEIGHT_CLASS,
+        "pointer-events-none",
         compact ? "" : "min-w-[112px]",
       )}
+      style={{ height: PILL_HEIGHT_PX }}
     >
-      <PillBg
-        src={pillSrc}
-        imageAspect={PILL_ASPECT}
-        className="opacity-90 group-hover:opacity-100 transition-opacity"
-      />
-      <PillBg src={pillGloss} stretch className="opacity-60" />
+      <PillColorLayer src={pillSrc} />
+      <PillGlossOverlay />
       <span
-        className="relative z-10 inline-flex items-center gap-1.5 px-2.5 text-xs font-bold text-white whitespace-nowrap"
-        style={{ textShadow: "0 2px 4px rgba(0,0,0,0.9)" }}
+        className={cn(PILL_LABEL_CLASS, "h-full gap-1.5 text-white")}
+        style={{ textShadow: PILL_TEXT_SHADOW }}
         data-testid={`${testId}-label`}
       >
         {labels[status]}

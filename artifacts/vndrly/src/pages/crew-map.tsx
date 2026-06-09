@@ -835,7 +835,6 @@ export default function CrewMapPage({ portalMode = "default" }: CrewMapPageProps
           </Select>
           <PngPillButton
             color="blue"
-            height={32}
             onClick={fetchLocations}
             className="px-3 gap-2"
             data-testid="button-refresh-crew"

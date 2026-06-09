@@ -1,10 +1,11 @@
 import ImagePill, { type ImagePillColor } from "@/components/image-pill";
+import { PILL_HEIGHT_PX } from "@/lib/pill-doctrine";
 
 /**
  * Display-only role chip rendered with the canonical PNG image-pill
  * family. Maps the legacy `tone` API onto `ImagePill` colors so the
  * surface participates in the global pill doctrine (PillBg 3-slice,
- * height 24, opacity-90 rest / 100 hover, text-shadow on colored
+ * height 23, opacity-90 rest / 100 hover, text-shadow on colored
  * pills only). The previous CSS-gradient + brand-primary fill is
  * retired — every pill in the content pane uses the canonical PNG
  * palette (Baker is the only exception).
@@ -22,7 +23,7 @@ export const GREY_PILL_HEX = "#9CA3AF";
 export default function BrandRolePill({
   children,
   tone = "brand",
-  height = 24,
+  height = PILL_HEIGHT_PX,
   className = "",
   testId,
 }: {

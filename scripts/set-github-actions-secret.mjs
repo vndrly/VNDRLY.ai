@@ -5,16 +5,15 @@
  * Usage:
  *   node scripts/set-github-actions-secret.mjs SECRET_NAME path/to/value.env
  *
- * Reads the PAT from VNDRLY-GitHub-PAT.env (Desktop). Never commit secret values.
+ * Reads the PAT from API Keys and Secrets/VNDRLY-GitHub-PAT.env. Never commit secret values.
  */
 import { readFileSync } from "node:fs";
 import sodium from "libsodium-wrappers";
+import { githubPatPath } from "./secrets-path.mjs";
 
 const secretName = process.argv[2];
 const valueFile = process.argv[3];
-const patFile =
-  process.env.GITHUB_PAT_FILE ||
-  "C:\\Users\\JohnElerick\\OneDrive - Elerick.com\\Desktop\\VNDRLY-GitHub-PAT.env";
+const patFile = githubPatPath();
 const repo = process.env.GITHUB_REPO || "vndrly/VNDRLY.ai";
 
 if (!secretName || !valueFile) {

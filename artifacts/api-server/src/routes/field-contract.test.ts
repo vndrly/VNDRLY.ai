@@ -227,9 +227,11 @@ function openTicketRow(overrides: Record<string, unknown> = {}) {
     fieldEmployeeFirstName: "Frank",
     fieldEmployeeLastName: "Field",
     createdAt: new Date("2026-04-30T14:00:00.000Z"),
+    scheduledStartAt: null,
     updatedAt: new Date("2026-04-30T15:00:00.000Z"),
     // Task #51 — mobile home-screen unread-comment badge.
     unreadCommentCount: 0,
+    crewNames: [] as string[],
     ...overrides,
   };
 }
@@ -392,6 +394,8 @@ describe("GET /api/field/open-tickets — response contract", () => {
           updatedAt: null,
         }),
       ],
+      // 3) ticket_crew names for attachOpenTicketCrewNames
+      () => [],
     ];
     const res = await request(app)
       .get("/api/field/open-tickets")
@@ -419,6 +423,8 @@ describe("GET /api/field/open-tickets/:id — response contract", () => {
       //    as the list endpoint — the spec guarantees both share the
       //    shape so a row from one can replace a row from the other).
       () => [openTicketRow()],
+      // 3) ticket_crew names for attachOpenTicketCrewNames
+      () => [],
     ];
     const res = await request(app)
       .get("/api/field/open-tickets/101")

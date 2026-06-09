@@ -200,7 +200,7 @@ export function SuspendedPill({ className = "" }: { className?: string }) {
   const { t } = useTranslation();
   return (
     <span
-      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700 border border-red-200 ${className}`}
+      className={`inline-flex items-center h-[23px] px-3 rounded-full text-xs font-normal bg-red-100 text-red-700 border border-red-200 ${className}`}
       data-testid="pill-suspended"
     >
       {t("accountActions.suspended")}
@@ -212,7 +212,7 @@ export function InactivePill({ className = "" }: { className?: string }) {
   const { t } = useTranslation();
   return (
     <span
-      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200 ${className}`}
+      className={`inline-flex items-center h-[23px] px-3 rounded-full text-xs font-normal bg-gray-100 text-gray-700 border border-gray-200 ${className}`}
       data-testid="pill-inactive"
     >
       {t("accountActions.inactive")}

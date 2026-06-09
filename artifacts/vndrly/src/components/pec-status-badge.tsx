@@ -1,9 +1,13 @@
 import { RolePill, type RolePillColor } from "@/components/role-pill";
-import PillBg from "@/components/pill-bg";
+import { PillColorLayer, PillGlossOverlay } from "@/components/png-pill-chrome";
 import { cn } from "@/lib/utils";
 import pillBase from "@assets/Vndrly_900x229_Light_Grey_Pill1_1777664658767.png";
-import pillGloss from "@assets/900x229_overlay_v2_1777664185377.png";
-
+import {
+  PILL_HEIGHT_CLASS,
+  PILL_HEIGHT_PX,
+  PILL_LABEL_CLASS,
+  PILL_WRAPPER_CLASS,
+} from "@/lib/pill-doctrine";
 /**
  * Shared sizing for every PEC Status pill — fixed min-width so the
  * label is always centered within the same footprint regardless of
@@ -59,27 +63,28 @@ interface PecStatusBadgeProps {
  * the idle PEC pill read as the rest state of an action button —
  * consistent with the rest of the new Pill doctrine.
  */
-export default function PecStatusBadge({ expirationDate, className, height = 24 }: PecStatusBadgeProps) {
+export default function PecStatusBadge({ expirationDate, className, height = PILL_HEIGHT_PX }: PecStatusBadgeProps) {
   const state = getPecState(expirationDate);
 
   if (state.kind === "none") {
     return (
       <span
         className={cn(
-          "relative inline-flex items-center justify-center pointer-events-none select-none",
+          PILL_WRAPPER_CLASS,
+          PILL_HEIGHT_CLASS,
+          "pointer-events-none",
           PEC_PILL_BASE_CLASS,
           className,
         )}
         style={{ height }}
         data-testid="pec-status-badge-none"
       >
-        <PillBg src={pillBase} className="opacity-90" />
-        <PillBg src={pillGloss} className="opacity-60" />
-        <span className="relative z-10 inline-flex items-center justify-center w-full h-full px-3 text-xs font-bold whitespace-nowrap text-gray-800">
+        <PillColorLayer src={pillBase} />
+        <PillGlossOverlay />
+        <span className={cn(PILL_LABEL_CLASS, "h-full text-gray-800")}>
           None
         </span>
-      </span>
-    );
+      </span>    );
   }
 
   const colorByKind: Record<"expired" | "soon" | "active", RolePillColor> = {

@@ -11,6 +11,7 @@
  */
 export interface FieldEmployeeLoginStatusType {
   hasLogin: boolean;
+  /** When true, email/password portal login is active for this employee. */
   portalLoginEnabled?: boolean;
   email?: string;
   userId?: number;

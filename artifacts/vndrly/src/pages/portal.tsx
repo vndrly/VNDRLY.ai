@@ -458,7 +458,6 @@ export default function Portal({ siteCode }: { siteCode: string }) {
                             key={v.id}
                             color="blue"
                             attention={String(v.id) === selectedVendorId}
-                            height={28}
                             className="w-full justify-start"
                             onClick={() => {
                               setSelectedVendorId(String(v.id));
@@ -508,7 +507,6 @@ export default function Portal({ siteCode }: { siteCode: string }) {
                                 key={fe.id}
                                 color="blue"
                                 attention={String(fe.id) === selectedEmployeeId}
-                                height={28}
                                 className="w-full justify-start"
                                 onClick={() => {
                                   setSelectedEmployeeId(String(fe.id));

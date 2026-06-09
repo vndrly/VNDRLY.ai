@@ -27,7 +27,7 @@ postgresql://postgres.bihjmgbdzbhcnsuhzzwo:[PASSWORD]@aws-1-us-west-2.pooler.sup
 - **Project ref:** `bihjmgbdzbhcnsuhzzwo`
 - **Region:** us-west-2
 - **Dashboard:** https://supabase.com/dashboard/project/bihjmgbdzbhcnsuhzzwo/settings/database
-- **Password:** stored locally in `C:\Users\JohnElerick\Desktop\Supabase.env` (not committed to git)
+- **Password:** stored locally in `C:\Users\JohnElerick\DEV\API Keys and Secrets\Supabase.env` (not committed to git)
 
 Replit **Secret name** must be exactly `DATABASE_URL` with the **direct** connection string (not the pooler URL).
 

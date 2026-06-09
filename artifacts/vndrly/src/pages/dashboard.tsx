@@ -32,7 +32,7 @@ import { PngPillButton } from "@/components/png-pill-rollover";
 import LightGreyRedButton from "@/components/light-grey-red-button";
 import { useRateLimitGate } from "@/hooks/use-rate-limit-gate";
 import HotlistSection from "@/components/hotlist-section";
-import PillBg from "@/components/pill-bg";
+import { PillColorLayer } from "@/components/png-pill-chrome";
 import FinishSetupWidget from "@/components/finish-setup-widget";
 import { AssistantMetricsCard } from "@/components/assistant-metrics-card";
 import { RateLimitBudgetsCard } from "@/components/rate-limit-budgets-card";
@@ -859,7 +859,7 @@ export default function Dashboard() {
                           </p>
                           {item.needsAttention && (
                             <span
-                              className="inline-flex items-center px-2 py-0.5 rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-[10px] font-semibold whitespace-nowrap"
+                              className="inline-flex items-center px-3 h-[23px] rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-xs font-normal whitespace-nowrap"
                               data-testid={`badge-needs-attention-${item.id}`}
                             >
                               ⚠ Needs attention
@@ -882,7 +882,7 @@ export default function Dashboard() {
                         />
                         {item.lifecycleState === "pending_arrival" && (
                           <span
-                            className="inline-flex items-center px-2 py-0.5 rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-[10px] font-semibold whitespace-nowrap"
+                            className="inline-flex items-center px-3 h-[23px] rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-xs font-normal whitespace-nowrap"
                             data-testid={`activity-pending-arrival-${item.id}`}
                             title={t("tickets.lifecyclePendingArrivalTitle", { defaultValue: "Field employee has not arrived yet" })}
                           >
@@ -891,7 +891,7 @@ export default function Dashboard() {
                         )}
                         {item.lifecycleState === "en_route" && (
                           <span
-                            className="inline-flex items-center px-2 py-0.5 rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-[10px] font-semibold whitespace-nowrap"
+                            className="inline-flex items-center px-3 h-[23px] rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-xs font-normal whitespace-nowrap"
                             data-testid={`activity-en-route-${item.id}`}
                             title={t("tickets.lifecycleEnRouteTitle", { defaultValue: "Field employee is en route" })}
                           >
@@ -900,7 +900,7 @@ export default function Dashboard() {
                         )}
                         {item.lifecycleState === "on_site" && (
                           <span
-                            className="inline-flex items-center px-2 py-0.5 rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-[10px] font-semibold whitespace-nowrap"
+                            className="inline-flex items-center px-3 h-[23px] rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-xs font-normal whitespace-nowrap"
                             data-testid={`activity-on-site-${item.id}`}
                             title={t("tickets.lifecycleOnSiteTitle", { defaultValue: "Field employee is on site" })}
                           >
@@ -909,7 +909,7 @@ export default function Dashboard() {
                         )}
                         {item.lifecycleState === "off_site" && (
                           <span
-                            className="inline-flex items-center px-2 py-0.5 rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-[10px] font-semibold whitespace-nowrap"
+                            className="inline-flex items-center px-3 h-[23px] rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-xs font-normal whitespace-nowrap"
                             data-testid={`activity-off-site-${item.id}`}
                             title={t("tickets.lifecycleOffSiteTitle", { defaultValue: "Field employee has left the site" })}
                           >
@@ -1083,7 +1083,7 @@ function SiteLocationSnapshotCard({
                       </div>
                       <div className="mt-2 h-2 overflow-hidden rounded-full bg-gray-100">
                         <div className="relative h-full rounded-full overflow-hidden" style={{ width: `${width}%` }}>
-                          <PillBg src={progressPillSrc} imageAspect={900 / 229} />
+                          <PillColorLayer src={progressPillSrc} className="opacity-100" />
                         </div>
                       </div>
                     </div>

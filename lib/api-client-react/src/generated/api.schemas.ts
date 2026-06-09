@@ -1673,6 +1673,14 @@ user/device decide".
    * @nullable
    */
   preferredLanguage?: FieldEmployeePreferredLanguage;
+  /**
+   * Set when the employee updates their own profile or certifications.
+Vendor office/admin sees a review indicator until they open and save
+the employee record.
+
+   * @nullable
+   */
+  profilePendingReviewAt?: string | null;
 }
 
 export interface VendorContact {
@@ -1708,6 +1716,11 @@ export interface VendorContact {
    * @nullable
    */
   deletedBy?: string | null;
+  /**
+   * Set when this person updates their own profile or certifications.
+   * @nullable
+   */
+  profilePendingReviewAt?: string | null;
 }
 
 export interface PartnerContact {
@@ -1755,6 +1768,7 @@ export interface CreateFieldEmployeeBody {
  */
 export interface FieldEmployeeLoginStatus {
   hasLogin: boolean;
+  /** When true, email/password portal login is active for this employee. */
   portalLoginEnabled?: boolean;
   email?: string;
   userId?: number;
@@ -1776,8 +1790,12 @@ export const SetFieldEmployeeLoginBodyPreferredLanguage = {
 
 export interface SetFieldEmployeeLoginBody {
   email: string;
-  /** @minLength 8 */
+  /**
+   * Required when enabling login for the first time. Optional when updating an existing login (omit to keep the current password).
+   * @minLength 8
+   */
   password?: string;
+  /** When false, disable portal login for this employee. */
   portalLoginEnabled?: boolean;
   /** Optional override; defaults to the employee's "First Last" name (or the email if unnamed). */
   displayName?: string;
@@ -1906,6 +1924,10 @@ export interface EmployeeCertification {
   documentUrl: string | null;
   /** @nullable */
   documentPath: string | null;
+  /** @nullable */
+  vendorVerifiedAt?: string | null;
+  /** @nullable */
+  vendorVerifiedByUserId?: number | null;
   createdAt: string;
   /** @nullable */
   deletedAt?: string | null;
@@ -1918,7 +1940,7 @@ export interface CreateEmployeeCertificationBody {
   /** @nullable */
   issuer?: string | null;
   /** @nullable */
-  certNumber?: string | null;
+  certNumber: string | null;
   /** @nullable */
   issuedDate?: string | null;
   /** @nullable */
@@ -1943,6 +1965,10 @@ export interface UpdateEmployeeCertificationBody {
   documentUrl?: string | null;
   /** @nullable */
   documentPath?: string | null;
+  /** Vendor/admin only. When true, marks the certification as verified.
+When false, clears verification (e.g. after employee edits).
+ */
+  vendorVerified?: boolean;
 }
 
 export type ComplianceCertSummaryStatus =
@@ -3247,6 +3273,8 @@ export interface FieldOpenTicketRow {
   /** @nullable */
   fieldEmployeeLastName: string | null;
   createdAt: string;
+  /** @nullable */
+  scheduledStartAt: string | null;
   /**
    * Last write to the underlying ticket row. Drives the mobile
 open-tickets pill's 7-day inactivity escalation (see
@@ -3267,6 +3295,11 @@ detail screen runs `markAllSeen` on its comments thread.
    * @minimum 0
    */
   unreadCommentCount: number;
+  /** Active scheduled crew on this ticket (from ticket_crew),
+sorted by first name. Empty when no crew is assigned yet;
+the Today/home card falls back to the assigned field employee.
+ */
+  crewNames: string[];
 }
 
 /**

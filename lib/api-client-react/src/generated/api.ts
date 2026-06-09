@@ -5251,6 +5251,85 @@ export const useDeleteEmployeeCertification = <
 };
 
 /**
+ * Returns a sorted, de-duplicated list of certification names drawn from
+work-type requirements and existing employee certifications.
+
+ * @summary Known certification names for dropdown pickers
+ */
+export const getListCertificationNamesUrl = () => {
+  return `/api/certification-names`;
+};
+
+export const listCertificationNames = async (
+  options?: RequestInit,
+): Promise<string[]> => {
+  return customFetch<string[]>(getListCertificationNamesUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListCertificationNamesQueryKey = () => {
+  return [`/api/certification-names`] as const;
+};
+
+export const getListCertificationNamesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listCertificationNames>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listCertificationNames>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListCertificationNamesQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listCertificationNames>>
+  > = ({ signal }) => listCertificationNames({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listCertificationNames>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListCertificationNamesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listCertificationNames>>
+>;
+export type ListCertificationNamesQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Known certification names for dropdown pickers
+ */
+
+export function useListCertificationNames<
+  TData = Awaited<ReturnType<typeof listCertificationNames>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listCertificationNames>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListCertificationNamesQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
  * @summary Get a signed verify-token for this employee's compliance card
  */
 export const getGetComplianceTokenUrl = (employeeId: number) => {

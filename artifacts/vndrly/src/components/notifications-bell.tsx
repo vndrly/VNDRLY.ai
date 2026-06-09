@@ -25,6 +25,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { notificationsApi, type NotificationRow } from "@/lib/notifications-api";
 import { useRateLimitGate } from "@/hooks/use-rate-limit-gate";
 import { useBrowserNotifications } from "@/hooks/use-browser-notifications";
+import { useNotificationsModal } from "@/components/notifications-modal-context";
 
 const CATEGORY_IDS = ["all", "tickets", "hotlist", "compliance", "crew", "visitor", "system"] as const;
 
@@ -79,7 +80,9 @@ export default function NotificationsBell() {
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("all");
   const categories = CATEGORY_IDS.map((id) => ({ id, label: t(`notifications.categories.${id}`) }));
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
+  const notificationsModal = useNotificationsModal();
+  const isFieldOpsPortal = location.startsWith("/foreman") || location.startsWith("/field");
   // Task #48 — browser pop-up integration. The hook reads the per-browser
   // opt-in from localStorage; we never auto-prompt for permission here
   // (the toggle on the preferences page does that on user click). When
@@ -375,7 +378,7 @@ export default function NotificationsBell() {
                             <div className="flex-1 min-w-0">
                               {meta && Icon && (
                                 <span
-                                  className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide mb-1 ${
+                                  className={`inline-flex items-center gap-1 h-[23px] px-3 rounded-full text-xs font-normal uppercase tracking-wide mb-1 ${
                                     !n.isRead
                                       ? "bg-amber-500 text-white"
                                       : "bg-muted text-muted-foreground"
@@ -408,14 +411,28 @@ export default function NotificationsBell() {
           })}
         </Tabs>
         <div className="border-t px-3 py-2 text-center">
-          <Link
-            href="/notifications"
-            className="text-xs text-primary hover:underline"
-            onClick={() => setOpen(false)}
-            data-testid="link-view-all-notifications"
-          >
-            {t("notifications.viewAll")}
-          </Link>
+          {isFieldOpsPortal && notificationsModal ? (
+            <button
+              type="button"
+              className="text-xs text-primary hover:underline"
+              onClick={() => {
+                setOpen(false);
+                notificationsModal.openNotifications();
+              }}
+              data-testid="link-view-all-notifications"
+            >
+              {t("notifications.viewAll")}
+            </button>
+          ) : (
+            <Link
+              href="/notifications"
+              className="text-xs text-primary hover:underline"
+              onClick={() => setOpen(false)}
+              data-testid="link-view-all-notifications"
+            >
+              {t("notifications.viewAll")}
+            </Link>
+          )}
         </div>
       </PopoverContent>
     </Popover>

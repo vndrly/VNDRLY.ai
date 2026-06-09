@@ -103,7 +103,6 @@ export default function ForemanSchedulePickDialog({
                         <TicketStatusBadge status={ticket.status} compact className="max-w-[8.5rem]" />
                         <PngPillButton
                           color="brand"
-                          height={24}
                           size="xs"
                           onClick={() => setScheduleTicketId(ticket.id)}
                           data-testid={`button-schedule-now-${ticket.id}`}

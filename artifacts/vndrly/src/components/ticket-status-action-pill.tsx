@@ -1,12 +1,15 @@
 import { useTranslation } from "react-i18next";
 import { ticketStatusMeta } from "@/lib/ticket-status-meta";
-import PillBg from "@/components/pill-bg";
 import { cn } from "@/lib/utils";
+import { ticketLifecyclePills } from "@/lib/ticket-status-palette";
+import { PillColorLayer, PillGlossOverlay } from "@/components/png-pill-chrome";
 import {
-  TICKET_STATUS_PILL_ASPECT,
-  ticketLifecyclePillGloss,
-  ticketLifecyclePills,
-} from "@/lib/ticket-status-palette";
+  PILL_HEIGHT_CLASS,
+  PILL_HEIGHT_PX,
+  PILL_LABEL_CLASS,
+  PILL_TEXT_SHADOW,
+  PILL_WRAPPER_CLASS,
+} from "@/lib/pill-doctrine";
 
 interface TicketStatusActionPillProps {
   status: string;
@@ -27,21 +30,23 @@ export default function TicketStatusActionPill({ status }: TicketStatusActionPil
     <button
       type="button"
       disabled
-      className="group relative inline-flex h-[24px] min-w-[118px] select-none items-center border-0 bg-transparent p-0 disabled:cursor-not-allowed"
+      className={cn(
+        PILL_WRAPPER_CLASS,
+        PILL_HEIGHT_CLASS,
+        "min-w-[118px] border-0 bg-transparent p-0 disabled:cursor-not-allowed",
+      )}
+      style={{ height: PILL_HEIGHT_PX }}
       data-testid={testId}
     >
-      <PillBg
-        src={cfg.src}
-        imageAspect={TICKET_STATUS_PILL_ASPECT}
-        className="opacity-90"
-      />
-      <PillBg src={ticketLifecyclePillGloss} stretch className="opacity-60" />
+      <PillColorLayer src={cfg.src} />
+      <PillGlossOverlay />
       <span
         className={cn(
-          "relative z-10 flex h-full w-full items-center justify-center gap-1.5 whitespace-nowrap px-3 text-xs font-bold",
+          PILL_LABEL_CLASS,
+          "h-full gap-1.5",
           cfg.light ? "text-gray-700" : "text-white",
         )}
-        style={cfg.light ? undefined : { textShadow: "0 2px 4px rgba(0,0,0,0.9)" }}
+        style={cfg.light ? undefined : { textShadow: PILL_TEXT_SHADOW }}
       >
         <Icon className="h-4 w-4" />
         {label}

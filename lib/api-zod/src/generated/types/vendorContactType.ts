@@ -39,4 +39,9 @@ export interface VendorContactType {
    * @nullable
    */
   deletedBy?: string | null;
+  /**
+   * Set when this person updates their own profile or certifications.
+   * @nullable
+   */
+  profilePendingReviewAt?: Date | null;
 }

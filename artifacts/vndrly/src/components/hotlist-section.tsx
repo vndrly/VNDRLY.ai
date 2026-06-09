@@ -15,7 +15,8 @@ import { Label } from "@/components/ui/label";
 import { Flame, Plus, MapPin, Calendar, Clock, Trash2, Award, FileText, Copy, ExternalLink, Printer, Undo2, ListChecks, MessageCircle } from "lucide-react";
 import RemovePill from "@/components/remove-pill";
 import PngPill, { PngPillButton, type PngPillColor } from "@/components/png-pill-rollover";
-import PillBg from "@/components/pill-bg";
+import { PILL_HEIGHT_CLASS, PILL_HEIGHT_PX, PILL_LABEL_CLASS, PILL_TEXT_SHADOW, PILL_WRAPPER_CLASS } from "@/lib/pill-doctrine";
+import { PillColorLayer, PillGlossOverlay } from "@/components/png-pill-chrome";
 import statusPillAmber from "@assets/900x229_Amber_Pill_v4_1778504507024.png";
 import statusPillBlue from "@assets/NewPillPallet_0001s_0017_900x229_blue_Pill.png";
 import statusPillGreen from "@assets/NewPillPallet_0001s_0051_900x229_green_Pill_v3.png";
@@ -26,6 +27,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { translateApiError } from "@/lib/api-error";
+import { cn } from "@/lib/utils";
 import { hotlistApi, isVendorListResponse, type HotlistJobRow, type HotlistBidRow } from "@/lib/hotlist-api";
 import { Link } from "wouter";
 import {
@@ -95,7 +97,7 @@ function StatusBadge({ status }: { status: HotlistJobStatus | HotlistBidStatus }
     <PngPill
       color={toggleColor ?? "brand"}
       rest={!toggleColor}
-      height={24}
+      height={PILL_HEIGHT_PX}
       className="w-[100px]"
       data-testid={`badge-status-${status}`}
     >
@@ -137,17 +139,26 @@ function HotlistStatusPill({ status }: { status: HotlistJobStatus | HotlistBidSt
     HOTLIST_STATUS_PILL_IMAGE[status] ?? { src: statusPillLightGrey, light: true };
   return (
     <span
-      className="relative inline-flex items-center h-[22px] min-w-[98px] select-none pointer-events-none align-middle"
+      className={cn(
+        PILL_WRAPPER_CLASS,
+        PILL_HEIGHT_CLASS,
+        "pointer-events-none min-w-[98px]",
+      )}
+      style={{ height: PILL_HEIGHT_PX }}
       data-testid={`badge-status-${status}`}
     >
-      <PillBg
+      <PillColorLayer
         src={cfg.src}
-        imageAspect={NEW_PILL_ASPECT}
         className={cfg.light ? "opacity-50" : undefined}
       />
+      <PillGlossOverlay />
       <span
-        className={`relative z-10 flex items-center justify-center w-full h-full px-3 text-xs font-bold whitespace-nowrap ${cfg.light ? "text-gray-700" : "text-white"}`}
-        style={cfg.light ? undefined : { textShadow: "0 1px 1px rgba(0,0,0,0.35)" }}
+        className={cn(
+          PILL_LABEL_CLASS,
+          "h-full",
+          cfg.light ? "text-gray-700" : "text-white",
+        )}
+        style={cfg.light ? undefined : { textShadow: PILL_TEXT_SHADOW }}
       >
         {toTitleCase(status)}
       </span>
@@ -167,7 +178,7 @@ function UnreadCommentBadge({ count, jobId }: { count: number | undefined; jobId
   const label = `${count} unread comment${count === 1 ? "" : "s"}`;
   return (
     <span
-      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-[10px] font-semibold whitespace-nowrap"
+      className="inline-flex items-center gap-1 h-[23px] px-3 rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-xs font-normal whitespace-nowrap"
       title={label}
       aria-label={label}
       data-testid={`badge-unread-comments-${jobId}`}
@@ -497,7 +508,7 @@ function PartnerJobCard({ job, expanded, isFocused, onToggle, onDelete }: { job:
               <img
                 src={job.partnerLogoUrl}
                 alt={job.partnerName ?? "Partner"}
-                className="h-[22px] w-auto max-w-[100px] object-contain shrink-0"
+                className="h-[23px] w-auto max-w-[100px] object-contain shrink-0"
                 data-testid={`img-partner-logo-${job.id}`}
               />
             ) : (
@@ -1373,7 +1384,7 @@ function VendorJobCard({ job, radiusMiles, isFocused }: { job: HotlistJobRow; ra
             <img
               src={job.partnerLogoUrl}
               alt={job.partnerName ?? "Partner"}
-              className="h-[22px] w-auto max-w-[100px] object-contain shrink-0"
+              className="h-[23px] w-auto max-w-[100px] object-contain shrink-0"
               data-testid={`img-partner-logo-${job.id}`}
             />
           ) : (
@@ -1640,7 +1651,7 @@ function AdminHotlist() {
                         <img
                           src={j.partnerLogoUrl}
                           alt={j.partnerName ?? "Partner"}
-                          className="h-[28px] w-auto max-w-[110px] object-contain shrink-0"
+                          className="h-[23px] w-auto max-w-[110px] object-contain shrink-0"
                           data-testid={`img-partner-logo-${j.id}`}
                         />
                       ) : (

@@ -1,11 +1,14 @@
 import { cn } from "@/lib/utils";
-import PillBg from "@/components/pill-bg";
+import { PillColorLayer, PillGlossOverlay } from "@/components/png-pill-chrome";
 import pillBase from "@assets/Vndrly_900x229_Light_Grey_Pill1_1777664658767.png";
-import pillGloss from "@assets/900x229_overlay_v2_1777664185377.png";
 import bluePill from "@assets/NewPillPallet_0001s_0017_900x229_blue_Pill.png";
-
-const PILL_ASPECT = 900 / 229;
-
+import {
+  PILL_HEIGHT_CLASS,
+  PILL_HEIGHT_PX,
+  PILL_LABEL_CLASS,
+  PILL_TEXT_SHADOW,
+  PILL_WRAPPER_CLASS,
+} from "@/lib/pill-doctrine";
 /**
  * Brand-tinted toggle pill — canonical pill-family doctrine.
  *
@@ -27,7 +30,7 @@ export default function BrandPill({
   onClick,
   children,
   testId,
-  height = 24,
+  height = PILL_HEIGHT_PX,
   className = "",
   disabled = false,
   tone: _tone = "brand",
@@ -52,9 +55,6 @@ export default function BrandPill({
   const glossRestClass = active
     ? "opacity-0"
     : "opacity-60 group-hover:opacity-0";
-  const textClass = active
-    ? "text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]"
-    : "text-gray-800 group-hover:text-white group-hover:drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]";
 
   return (
     <button
@@ -64,32 +64,36 @@ export default function BrandPill({
       data-testid={testId}
       aria-pressed={active}
       className={cn(
-        "relative cursor-pointer group select-none inline-flex items-center justify-center",
+        PILL_WRAPPER_CLASS,
+        PILL_HEIGHT_CLASS,
+        "cursor-pointer border-0 bg-transparent p-0",
         "transition-transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed",
         className,
       )}
-      style={{ height, padding: 0, background: "transparent", border: 0 }}
+      style={{ height }}
     >
-      <PillBg
+      <PillColorLayer
         src={pillBase}
-        imageAspect={PILL_ASPECT}
-        className="opacity-90 group-hover:opacity-100 transition-opacity"
+        className="group-hover:opacity-100"
       />
-      <PillBg
+      <PillColorLayer
         src={bluePill}
-        imageAspect={PILL_ASPECT}
         className={cn("transition-opacity duration-200", colorOpacityClass)}
       />
-      <PillBg
-        src={pillGloss}
-        stretch
-        className={cn("transition-opacity duration-200", glossRestClass)}
-      />
+      <PillGlossOverlay className={cn("transition-opacity duration-200", glossRestClass)} />
       <span
         className={cn(
-          "relative z-10 inline-flex items-center whitespace-nowrap px-3 text-xs font-bold transition-colors",
-          textClass,
+          PILL_LABEL_CLASS,
+          "h-full transition-colors",
+          active
+            ? "text-white"
+            : "text-gray-800 group-hover:text-white",
         )}
+        style={
+          active
+            ? { textShadow: PILL_TEXT_SHADOW }
+            : undefined
+        }
       >
         {children}
       </span>

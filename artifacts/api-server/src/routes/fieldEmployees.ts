@@ -79,6 +79,7 @@ const baseSelect = {
   // value mirrors `users.preferred_language` for the linked login
   // (kept in sync by PATCH below).
   preferredLanguage: fieldEmployeesTable.preferredLanguage,
+  profilePendingReviewAt: fieldEmployeesTable.profilePendingReviewAt,
   createdAt: fieldEmployeesTable.createdAt,
   deletedAt: fieldEmployeesTable.deletedAt,
   deletedBy: fieldEmployeesTable.deletedBy,
@@ -91,19 +92,23 @@ const baseSelect = {
 // Normalize the joined select into the response shape that the OpenAPI
 // FieldEmployee schema requires. `hasLogin` is derived from userId, and
 // mustChangePassword falls back to false when there is no linked user.
-function shapeEmployee<T extends { userId: number | null; suspendedAt: Date | string | null; mustChangePasswordRaw: boolean | null } & Record<string, unknown>>(
+function shapeEmployee<T extends { userId: number | null; suspendedAt: Date | string | null; mustChangePasswordRaw: boolean | null; profilePendingReviewAt?: Date | string | null } & Record<string, unknown>>(
   row: T,
-): Omit<T, "mustChangePasswordRaw"> & { hasLogin: boolean; mustChangePassword: boolean; suspendedAt: string | null } {
-  const { mustChangePasswordRaw, suspendedAt, ...rest } = row;
+): Omit<T, "mustChangePasswordRaw"> & { hasLogin: boolean; mustChangePassword: boolean; suspendedAt: string | null; profilePendingReviewAt: string | null } {
+  const { mustChangePasswordRaw, suspendedAt, profilePendingReviewAt, ...rest } = row;
   return {
     ...rest,
     suspendedAt:
       suspendedAt instanceof Date
         ? suspendedAt.toISOString()
         : (suspendedAt ?? null),
+    profilePendingReviewAt:
+      profilePendingReviewAt instanceof Date
+        ? profilePendingReviewAt.toISOString()
+        : (profilePendingReviewAt ?? null),
     hasLogin: row.userId !== null && row.userId !== undefined,
     mustChangePassword: !!mustChangePasswordRaw,
-  } as Omit<T, "mustChangePasswordRaw"> & { hasLogin: boolean; mustChangePassword: boolean; suspendedAt: string | null };
+  } as Omit<T, "mustChangePasswordRaw"> & { hasLogin: boolean; mustChangePassword: boolean; suspendedAt: string | null; profilePendingReviewAt: string | null };
 }
 
 router.get("/field-employees", async (req, res): Promise<void> => {
@@ -386,7 +391,12 @@ router.patch("/field-employees/:id", async (req, res): Promise<void> => {
   }
   const [updated] = await db
     .update(fieldEmployeesTable)
-    .set(updateData)
+    .set({
+      ...updateData,
+      ...(session.role === "vendor" || session.role === "admin"
+        ? { profilePendingReviewAt: null }
+        : {}),
+    })
     .where(and(
       eq(fieldEmployeesTable.id, params.data.id),
       isNull(fieldEmployeesTable.deletedAt),

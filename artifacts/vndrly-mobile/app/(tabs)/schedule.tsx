@@ -34,6 +34,7 @@ import {
   ticketStatusLabel,
   ticketStatusPillStyle,
 } from "@/lib/ticketStatusLabels";
+import { PILL_CHIP_LAYOUT, PILL_TEXT } from "@/lib/pill-doctrine";
 
 function formatWhen(iso: string | null): string {
   if (!iso) return "—";
@@ -407,8 +408,8 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   id: { fontFamily: "Inter_600SemiBold", fontSize: 14 },
-  badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
-  badgeText: { fontFamily: "Inter_500Medium", fontSize: 11 },
+  badge: { ...PILL_CHIP_LAYOUT },
+  badgeText: { ...PILL_TEXT },
   // Task #890: groups the stale-time suffix with the status pill so
   // they read as a single status block on the right side of the row.
   statusGroup: { flexDirection: "row", alignItems: "center", gap: 6 },
@@ -426,7 +427,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   directionsText: { fontFamily: "Inter_500Medium", fontSize: 14 },
-  ackPill: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999, marginTop: 2 },
+  ackPill: { ...PILL_CHIP_LAYOUT, marginTop: 2 },
   ackPillText: { fontFamily: "Inter_500Medium", fontSize: 11 },
   ackRow: { flexDirection: "row", gap: 8, marginTop: 12 },
   ackBtn: {

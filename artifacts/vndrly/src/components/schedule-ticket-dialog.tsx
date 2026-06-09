@@ -33,6 +33,7 @@ import { useFieldCoWorkers } from "@/hooks/use-field-co-workers";
 import { CalendarClock, Users, UserCog, Bell, AlertTriangle, ShieldAlert, Cloud, ExternalLink, MapPin, Briefcase, Clock } from "lucide-react";
 import { translateApiError } from "@/lib/api-error";
 import { useAuth } from "@/hooks/use-auth";
+import { isForemanPersona } from "@/lib/portal-base";
 
 type CertWarning = { employeeId: number; employeeName: string; missing: string[] };
 // Task #650: amber tier returned by POST /tickets/:id/schedule when a
@@ -162,6 +163,10 @@ export default function ScheduleTicketDialog({
   const { toast } = useToast();
   const { user } = useAuth();
   const qc = useQueryClient();
+  // Foreman portal passes `foremanMode`; ticket-detail opens the same dialog
+  // without it. Co-workers includes office/admin vendor people that
+  // GET /field-employees omits — match mobile ScheduleTicketPanel.
+  const useCoworkerRoster = foremanMode || isForemanPersona(user);
 
   // Task #523 (supersedes the inline filter Task #519 added here): source
   // the eligible roster through the by-vendorId variant of the shared hook.
@@ -174,16 +179,39 @@ export default function ScheduleTicketDialog({
   // `fieldEmployees` is the raw list, kept for the cleanup effects' "still
   // loading?" guard.
   const vendorRoster = useEligibleVendorFieldEmployeesByVendorId(
-    foremanMode ? null : vendorId,
+    useCoworkerRoster ? null : vendorId,
   );
-  const fieldCoWorkers = useFieldCoWorkers(open && foremanMode);
-  const eligibleForemen = foremanMode
+  const fieldCoWorkers = useFieldCoWorkers(open && useCoworkerRoster);
+  const eligibleForemen = useCoworkerRoster
     ? fieldCoWorkers.eligibleForemen
     : vendorRoster.eligibleForemen;
-  const fieldEmployees = foremanMode
+  const fieldEmployees = useCoworkerRoster
     ? fieldCoWorkers.eligibleForemen
     : vendorRoster.fieldEmployees;
   const employees = eligibleForemen as unknown as FE[];
+
+  const [savedCrew, setSavedCrew] = useState<ScheduleSnapshot["crew"]>([]);
+  const rosterEmployees = useMemo(() => {
+    const byId = new Map<number, FE>();
+    for (const e of employees) byId.set(e.id, e);
+    for (const c of savedCrew) {
+      if (byId.has(c.employeeId)) continue;
+      const parts = c.name.trim().split(/\s+/);
+      byId.set(c.employeeId, {
+        id: c.employeeId,
+        vendorId,
+        firstName: parts[0] ?? c.name,
+        lastName: parts.slice(1).join(" "),
+        userId: c.userId,
+        isActive: true,
+      });
+    }
+    return [...byId.values()].sort((a, b) =>
+      `${a.firstName ?? ""} ${a.lastName ?? ""}`.localeCompare(
+        `${b.firstName ?? ""} ${b.lastName ?? ""}`,
+      ),
+    );
+  }, [employees, savedCrew, vendorId]);
 
   const [startInput, setStartInput] = useState("");
   const [durationHours, setDurationHours] = useState("");
@@ -192,8 +220,10 @@ export default function ScheduleTicketDialog({
   const [crewSearch, setCrewSearch] = useState("");
   const [warningKinds, setWarningKinds] = useState<string[]>(DEFAULT_KINDS);
   const [submitting, setSubmitting] = useState(false);
+  const [resendingNotifications, setResendingNotifications] = useState(false);
+  const [hasSavedSchedule, setHasSavedSchedule] = useState(false);
   const [loaded, setLoaded] = useState(false);
-  const scheduleReady = loaded && (!foremanMode || fieldCoWorkers.rosterLoaded);
+  const scheduleReady = loaded && (!useCoworkerRoster || fieldCoWorkers.rosterLoaded);
   const [requiredCerts, setRequiredCerts] = useState<string[]>([]);
   // Per-crew cert cache. Stores the full {name, expirationDate} pairs
   // (rather than the previous valid-name-only string[]) so the modal can
@@ -226,7 +256,7 @@ export default function ScheduleTicketDialog({
   const [crewPresets, setCrewPresets] = useState<Array<{ id: number; name: string; memberEmployeeIds: number[] }>>([]);
 
   useEffect(() => {
-    if (!open || !foremanMode) {
+    if (!open || !useCoworkerRoster) {
       setCrewPresets([]);
       return;
     }
@@ -242,11 +272,12 @@ export default function ScheduleTicketDialog({
     return () => {
       cancelled = true;
     };
-  }, [open, foremanMode]);
+  }, [open, useCoworkerRoster]);
 
   // Load existing schedule on open + ticket details (workType + site for cert + weather lookups).
   useEffect(() => {
-    if (!open) { setLoaded(false); setRequiredCerts([]); setEmpCerts({}); setWeather(null); setSiteId(null); setPendingConflicts(null); setCertBlock(null); setFieldError(null); return; }
+    if (!open) { setLoaded(false); setRequiredCerts([]); setEmpCerts({}); setWeather(null); setSiteId(null); setPendingConflicts(null); setCertBlock(null); setFieldError(null); setHasSavedSchedule(false); setSavedCrew([]); return; }
+    setEmpCerts({});
     let cancelled = false;
     (async () => {
       try {
@@ -259,8 +290,10 @@ export default function ScheduleTicketDialog({
         setStartInput(toLocalInputValue(j.scheduledStartAt));
         setDurationHours(formatDurationHoursFromMinutes(j.scheduledDurationMinutes));
         setCrewIds(j.crew.map(c => c.employeeId));
+        setSavedCrew(j.crew ?? []);
         setForemanUserId(j.foremanUserId != null ? String(j.foremanUserId) : "");
         setWarningKinds(j.warningKinds.length > 0 ? j.warningKinds : DEFAULT_KINDS);
+        setHasSavedSchedule(!!j.scheduledStartAt);
 
         if (ticketRes.ok) {
           const ticket: any = await ticketRes.json();
@@ -299,7 +332,7 @@ export default function ScheduleTicketDialog({
       const results = await Promise.all(missingIds.map(async (id) => {
         try {
           const r = await fetch(`/api/field-employees/${id}/certifications`, { credentials: "include" });
-          if (!r.ok) return [id, [] as Array<{ name: string; expirationDate: string | null }>] as const;
+          if (!r.ok) return null;
           const list: any[] = await r.json();
           const certs = list.map((c) => ({
             name: String(c.name ?? ""),
@@ -310,13 +343,15 @@ export default function ScheduleTicketDialog({
           }));
           return [id, certs] as const;
         } catch {
-          return [id, [] as Array<{ name: string; expirationDate: string | null }>] as const;
+          return null;
         }
       }));
       if (cancelled) return;
       setEmpCerts((prev) => {
         const next = { ...prev };
-        for (const [id, certs] of results) next[id] = certs;
+        for (const row of results) {
+          if (row) next[row[0]] = row[1];
+        }
         return next;
       });
     })();
@@ -353,12 +388,13 @@ export default function ScheduleTicketDialog({
   // don't filter before the saved schedule snapshot has hydrated crewIds.
   useEffect(() => {
     if (!open || !scheduleReady) return;
-    if (!fieldEmployees) return; // wait for the list before deciding
+    if (!fieldEmployees) return;
+    if (useCoworkerRoster && !fieldCoWorkers.rosterLoaded) return;
     if (crewIds.length === 0) return;
-    const eligibleIds = new Set(employees.map(e => e.id));
+    const eligibleIds = new Set(rosterEmployees.map(e => e.id));
     const filtered = crewIds.filter(id => eligibleIds.has(id));
     if (filtered.length !== crewIds.length) setCrewIds(filtered);
-  }, [open, scheduleReady, employees, fieldEmployees, crewIds]);
+  }, [open, scheduleReady, rosterEmployees, fieldEmployees, crewIds, useCoworkerRoster, fieldCoWorkers.rosterLoaded]);
 
   // Derive crewWithUsers from the api-typed eligibleForemen so it can be
   // passed straight to the shared cleanup helper without a re-cast. Same
@@ -367,16 +403,16 @@ export default function ScheduleTicketDialog({
 
   const filteredEmployees = useMemo(() => {
     const q = crewSearch.trim().toLowerCase();
-    if (!q) return employees;
-    return employees.filter((e) =>
+    if (!q) return rosterEmployees;
+    return rosterEmployees.filter((e) =>
       `${e.firstName ?? ""} ${e.lastName ?? ""}`.toLowerCase().includes(q),
     );
-  }, [employees, crewSearch]);
+  }, [rosterEmployees, crewSearch]);
 
   // Foreman portal: default crew + foreman to the signed-in operator on a
   // fresh schedule (mirrors mobile ScheduleTicketPanel).
   useEffect(() => {
-    if (!open || !scheduleReady || !foremanMode || !user) return;
+    if (!open || !scheduleReady || !useCoworkerRoster || !user) return;
     let cancelled = false;
     void (async () => {
       let myEmployeeId = user.vendorPeopleId;
@@ -392,7 +428,7 @@ export default function ScheduleTicketDialog({
         }
       }
       if (cancelled || myEmployeeId == null) return;
-      const meInRoster = employees.find((e) => e.id === myEmployeeId);
+      const meInRoster = rosterEmployees.find((e) => e.id === myEmployeeId);
       if (!meInRoster) return;
 
       setCrewIds((prev) => (prev.length > 0 ? prev : [myEmployeeId!]));
@@ -406,7 +442,7 @@ export default function ScheduleTicketDialog({
     return () => {
       cancelled = true;
     };
-  }, [open, scheduleReady, foremanMode, user, employees]);
+  }, [open, scheduleReady, useCoworkerRoster, user, rosterEmployees]);
 
   // Task #519 / #523: companion cleanup for the foreman pick. The dropdown
   // options are sourced from `crewWithUsers`, so a foreman who's no longer
@@ -431,11 +467,16 @@ export default function ScheduleTicketDialog({
     if (requiredCerts.length === 0) return {};
     const out: Record<number, string[]> = {};
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
     for (const id of crewIds) {
-      const certs = empCerts[id] ?? [];
+      const certs = empCerts[id];
+      if (certs === undefined) continue;
       const valid = new Set<string>();
       for (const c of certs) {
-        if (c.expirationDate && new Date(c.expirationDate) < today) continue;
+        if (c.expirationDate) {
+          const exp = new Date(`${c.expirationDate}T00:00:00`);
+          if (exp < today) continue;
+        }
         valid.add(c.name);
       }
       const miss = requiredCerts.filter(req => !valid.has(req));
@@ -506,6 +547,41 @@ export default function ScheduleTicketDialog({
   }
   function toggleKind(k: string) {
     setWarningKinds((prev) => prev.includes(k) ? prev.filter(x => x !== k) : [...prev, k]);
+  }
+
+  async function handleResendCrewNotifications() {
+    if (!startInput || crewIds.length === 0) return;
+    setResendingNotifications(true);
+    try {
+      const r = await fetch(`/api/tickets/${ticketId}/schedule/resend-notifications`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ crewEmployeeIds: crewIds }),
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        toast({
+          title: t("scheduleTicket.resendFailed"),
+          description: translateApiError(j, t),
+          variant: "destructive",
+        });
+        return;
+      }
+      const parts = [t("scheduleTicket.resendSuccess", { count: j.notified ?? 0 })];
+      if (j.skippedNoLogin > 0) {
+        parts.push(t("scheduleTicket.resendSkippedNoLogin", { count: j.skippedNoLogin }));
+      }
+      toast({ title: t("scheduleTicket.resendTitle"), description: parts.join(" ") });
+    } catch (e) {
+      toast({
+        title: t("scheduleTicket.resendFailed"),
+        description: translateApiError(e, t),
+        variant: "destructive",
+      });
+    } finally {
+      setResendingNotifications(false);
+    }
   }
 
   // postSchedule now surfaces the structured error code from the API
@@ -657,6 +733,7 @@ export default function ScheduleTicketDialog({
       title: t("scheduleTicket.savedTitle"),
       description: sections.join("\n"),
     });
+    setHasSavedSchedule(true);
     qc.invalidateQueries({ queryKey: getGetTicketQueryKey(ticketId) });
     onSaved?.();
     onOpenChange(false);
@@ -766,10 +843,13 @@ export default function ScheduleTicketDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <CalendarClock className="w-5 h-5 text-amber-500" />
-            {t("scheduleTicket.title")}
+          <DialogTitle data-testid="text-schedule-ticket-id">
+            {formatTicketTrackingNumber(ticketId)}
           </DialogTitle>
+          <p className="text-sm text-muted-foreground flex items-center gap-2">
+            <CalendarClock className="w-4 h-4 text-amber-500" />
+            {t("scheduleTicket.title")}
+          </p>
         </DialogHeader>
 
         {!scheduleReady ? (
@@ -824,7 +904,6 @@ export default function ScheduleTicketDialog({
                       <PngPillButton
                         key={p.id}
                         color="brand"
-                        height={24}
                         size="xs"
                         type="button"
                         onClick={() => setCrewIds(p.memberEmployeeIds)}
@@ -864,7 +943,7 @@ export default function ScheduleTicketDialog({
                 data-testid="input-crew-search"
               />
               <div className="border rounded-md max-h-44 overflow-y-auto p-2 space-y-1">
-                {employees.length === 0 ? (
+                {rosterEmployees.length === 0 ? (
                   <div className="text-xs text-muted-foreground py-2 text-center">{t("scheduleTicket.noEmployees")}</div>
                 ) : filteredEmployees.length === 0 ? (
                   <div className="text-xs text-muted-foreground py-2 text-center">{t("scheduleTicket.noCrewSearchResults")}</div>
@@ -1032,7 +1111,20 @@ export default function ScheduleTicketDialog({
               </div>
             )}
 
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="flex justify-end gap-2 pt-2 flex-wrap">
+              {hasSavedSchedule && crewIds.length > 0 ? (
+                <PngPillButton
+                  color="brand"
+                  type="button"
+                  disabled={resendingNotifications || submitting}
+                  onClick={() => void handleResendCrewNotifications()}
+                  data-testid="button-resend-crew-notifications-footer"
+                >
+                  {resendingNotifications
+                    ? t("scheduleTicket.resendingNotifications")
+                    : t("scheduleTicket.resendCrewNotifications")}
+                </PngPillButton>
+              ) : null}
               <PngPillButton onClick={() => onOpenChange(false)} disabled={submitting} data-testid="button-cancel-schedule">
                 {t("scheduleTicket.cancel")}
               </PngPillButton>

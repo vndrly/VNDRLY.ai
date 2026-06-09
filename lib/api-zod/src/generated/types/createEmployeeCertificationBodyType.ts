@@ -11,7 +11,7 @@ export interface CreateEmployeeCertificationBodyType {
   /** @nullable */
   issuer?: string | null;
   /** @nullable */
-  certNumber?: string | null;
+  certNumber: string | null;
   /** @nullable */
   issuedDate?: string | null;
   /** @nullable */

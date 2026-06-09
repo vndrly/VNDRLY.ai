@@ -100,7 +100,7 @@ function RoleMultiSelect({ value, onChange, testIdPrefix }: { value: string[]; o
               data-testid={testId}
               className="bg-transparent border-0 p-0 cursor-pointer select-none transition-transform active:scale-[0.98]"
             >
-              <PngPill color="brand" height={28}>
+              <PngPill color="brand">
                 {label}
               </PngPill>
             </button>
@@ -112,7 +112,6 @@ function RoleMultiSelect({ value, onChange, testIdPrefix }: { value: string[]; o
             color="brand"
             onClick={() => toggle(role)}
             data-testid={testId}
-            height={28}
           >
             {label}
           </PngPillButton>
@@ -592,14 +591,14 @@ function PartnerProductServiceCatalogCard({
           {t("partners.productServiceCatalog.description")}
         </p>
         <div className="flex items-center gap-3 flex-wrap">
-          <div className="relative inline-flex items-center h-[28px] w-[180px] rounded-full bg-white border border-black/10">
+          <div className="relative inline-flex items-center h-[23px] w-[180px] rounded-full bg-white border border-black/10">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500 pointer-events-none" />
             <input
               type="text"
               placeholder={t("partners.productServiceCatalog.filterPlaceholder")}
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="w-full h-full bg-transparent border-0 outline-none pl-8 pr-3 text-xs font-bold text-gray-800 placeholder:text-gray-500 rounded-full"
+              className="w-full h-full bg-transparent border-0 outline-none pl-8 pr-3 text-xs font-normal text-gray-800 placeholder:text-gray-500 rounded-full"
               data-testid="input-catalog-filter"
             />
           </div>
@@ -669,7 +668,6 @@ function PartnerProductServiceCatalogCard({
                             <PngPill
                               color="brand"
                               rest={it.vendorCount === 0}
-                              height={20}
                               className="shrink-0"
                               data-testid={`badge-catalog-vendor-count-${it.workTypeId}`}
                               aria-label={t(
@@ -970,7 +968,7 @@ function Partner1099TotalsCard({ partnerId }: { partnerId: number }) {
             <button
               type="button"
               onClick={() => setMode("year")}
-              className={`px-3 h-7 rounded-full text-xs font-bold ${mode === "year" ? "bg-[var(--brand-primary)] text-white" : "text-gray-700"}`}
+              className={`px-3 h-[23px] rounded-full text-xs font-normal ${mode === "year" ? "bg-[var(--brand-primary)] text-white" : "text-gray-700"}`}
               data-testid="button-1099-totals-mode-year"
             >
               {t("partners.totals1099.modeYear", { defaultValue: "Year" })}
@@ -978,7 +976,7 @@ function Partner1099TotalsCard({ partnerId }: { partnerId: number }) {
             <button
               type="button"
               onClick={() => setMode("custom")}
-              className={`px-3 h-7 rounded-full text-xs font-bold ${mode === "custom" ? "bg-[var(--brand-primary)] text-white" : "text-gray-700"}`}
+              className={`px-3 h-[23px] rounded-full text-xs font-normal ${mode === "custom" ? "bg-[var(--brand-primary)] text-white" : "text-gray-700"}`}
               data-testid="button-1099-totals-mode-custom"
             >
               {t("partners.totals1099.modeCustom", {
@@ -990,7 +988,7 @@ function Partner1099TotalsCard({ partnerId }: { partnerId: number }) {
             <select
               value={year}
               onChange={(e) => setYear(Number(e.target.value))}
-              className="h-7 rounded-full border border-black/10 bg-white px-2 text-xs font-bold text-gray-800"
+              className="h-[23px] rounded-full border border-black/10 bg-white px-2 text-xs font-normal text-gray-800"
               data-testid="select-1099-totals-year"
             >
               {yearOptions.map((y) => (
@@ -2071,7 +2069,6 @@ export default function PartnerDetail({ id }: { id: number }) {
                 </div>
                 <PngPillButton
                   type="submit"
-                  height={44}
                   color="image"
                   activeSrc={brandImagePillSrc(brand.primary, brand.name)}
                   attention={editFormDirty}
@@ -2125,14 +2122,14 @@ export default function PartnerDetail({ id }: { id: number }) {
           {sites && sites.length > 0 ? (
             <>
             <div className="px-6 pt-2 pb-3 flex items-center gap-3 flex-wrap">
-              <div className="relative inline-flex items-center h-[28px] w-[180px] rounded-full bg-white border border-black/10">
+              <div className="relative inline-flex items-center h-[23px] w-[180px] rounded-full bg-white border border-black/10">
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500 pointer-events-none" />
                 <input
                   type="text"
                   value={siteFilter}
                   onChange={(e) => setSiteFilter(e.target.value)}
                   placeholder={t("partners.filterSitesPlaceholder")}
-                  className="w-full h-full bg-transparent border-0 outline-none pl-8 pr-3 text-xs font-bold text-gray-800 placeholder:text-gray-500 rounded-full"
+                  className="w-full h-full bg-transparent border-0 outline-none pl-8 pr-3 text-xs font-normal text-gray-800 placeholder:text-gray-500 rounded-full"
                   data-testid="input-filter-sites"
                 />
               </div>

@@ -199,7 +199,7 @@ export default function VisitorEntryPage() {
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="font-medium text-sm text-gray-900 truncate">{site.name}</span>
                               {isClosest && (
-                                <RolePill color="amber" height={20} className="text-[10px] uppercase tracking-wide">
+                                <RolePill color="amber" className="uppercase tracking-wide">
                                   {t("visitor.web.closest")}
                                 </RolePill>
                               )}

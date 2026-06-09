@@ -1,11 +1,16 @@
 import { cn } from "@/lib/utils";
-import PillBg from "@/components/pill-bg";
 import amberPill from "@assets/900x229_Amber_Pill_v4_1778504507024.png";
 import bluePill from "@assets/NewPillPallet_0001s_0017_900x229_blue_Pill.png";
 import greenPill from "@assets/NewPillPallet_0001s_0051_900x229_green_Pill_v3.png";
 import redPill from "@assets/900x229_red_Pill_v2_1777847855327.png";
 import pillBase from "@assets/Vndrly_900x229_Light_Grey_Pill1_1777664658767.png";
-import pillGloss from "@assets/900x229_overlay_v2_1777664185377.png";
+import {
+  PILL_HEIGHT_PX,
+  PILL_LABEL_CLASS,
+  PILL_TEXT_SHADOW,
+  PILL_WRAPPER_CLASS,
+} from "@/lib/pill-doctrine";
+import { PillColorLayer, PillGlossOverlay } from "@/components/png-pill-chrome";
 
 export type ImagePillColor = "amber" | "blue" | "green" | "red" | "grey";
 
@@ -16,8 +21,6 @@ const PILL_IMAGE: Record<ImagePillColor, string> = {
   red: redPill,
   grey: pillBase,
 };
-
-const PILL_ASPECT = 900 / 229;
 
 interface ImagePillProps {
   color?: ImagePillColor;
@@ -31,7 +34,7 @@ interface ImagePillProps {
 export default function ImagePill({
   color = "grey",
   rest = false,
-  height = 24,
+  height = PILL_HEIGHT_PX,
   className,
   children,
   "data-testid": dataTestId,
@@ -41,28 +44,21 @@ export default function ImagePill({
   return (
     <span
       className={cn(
-        "group relative inline-flex items-center min-w-[70px] align-middle select-none pointer-events-none",
+        PILL_WRAPPER_CLASS,
+        "pointer-events-none min-w-[70px]",
         className,
       )}
       style={{ height: `${height}px` }}
       data-testid={dataTestId}
     >
-      <PillBg
-        src={PILL_IMAGE[effectiveColor]}
-        imageAspect={PILL_ASPECT}
-        className="opacity-70 group-hover:opacity-100 transition-opacity"
-      />
-      <PillBg
-        src={pillGloss}
-        stretch
-        className="opacity-60"
-      />
+      <PillColorLayer src={PILL_IMAGE[effectiveColor]} />
+      <PillGlossOverlay />
       <span
         className={cn(
-          "relative z-10 flex items-center justify-center w-full h-full px-3 text-xs font-bold whitespace-nowrap",
+          PILL_LABEL_CLASS,
           isLight ? "text-neutral-700" : "text-white",
         )}
-        style={isLight ? undefined : { textShadow: "0 2px 4px rgba(0,0,0,0.9)" }}
+        style={isLight ? undefined : { textShadow: PILL_TEXT_SHADOW }}
       >
         {children}
       </span>

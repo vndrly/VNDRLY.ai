@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogLogoHeader } from "@/components/ui/dialog";
 import { ShoppingCart, Plus, Pencil, Trash2, ArrowUp, ArrowDown, ArrowUpDown, Download, Upload } from "lucide-react";
 import { PngPillButton } from "@/components/png-pill-rollover";
-import PillBg from "@/components/pill-bg";
+import { PillColorLayer } from "@/components/png-pill-chrome";
 import bluePill from "@assets/NewPillPallet_0001s_0017_900x229_blue_Pill.png";
 import AfePill from "@/components/afe-pill";
 import { useToast } from "@/hooks/use-toast";
@@ -866,8 +866,8 @@ export default function Catalog() {
                                   ({s.partnerName})
                                 </span>
                               </span>
-                              <div className="relative h-7 w-32 shrink-0">
-                                <PillBg src={bluePill} />
+                              <div className="relative h-[23px] w-32 shrink-0">
+                                <PillColorLayer src={bluePill} />
                                 <Input
                                   value={value}
                                   onChange={(e) =>
@@ -884,7 +884,7 @@ export default function Catalog() {
                                   }
                                   placeholder={t("catalog.vendorAfePlaceholder")}
                                   aria-label={`${v.name} – ${s.name} AFE`}
-                                  className="relative z-10 h-7 w-32 rounded-full text-xs px-3 bg-transparent border-0 text-white placeholder:text-white/70 font-semibold text-center focus-visible:ring-1 focus-visible:ring-white/60 focus-visible:ring-offset-0 shadow-none"
+                                  className="relative z-10 h-[23px] w-32 rounded-full text-xs px-3 bg-transparent border-0 text-white placeholder:text-white/70 font-normal text-center focus-visible:ring-1 focus-visible:ring-white/60 focus-visible:ring-offset-0 shadow-none"
                                   data-testid={`${prefix}-vendor-afe-${v.id}-site-${s.id}`}
                                 />
                               </div>

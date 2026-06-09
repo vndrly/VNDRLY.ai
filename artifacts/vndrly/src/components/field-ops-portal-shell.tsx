@@ -9,6 +9,7 @@ import { useBrand, brandStyleVars } from "@/hooks/use-brand";
 import LanguageToggle from "@/components/language-toggle";
 import DarkLightToggle from "@/components/dark-light-toggle";
 import NotificationsBell from "@/components/notifications-bell";
+import { NotificationsModalProvider } from "@/components/notifications-modal-context";
 import SidebarButton from "@/components/sidebar-button";
 import ReferToVndrlyDialog from "@/components/refer-to-vndrly-dialog";
 import { PoweredByVndrly } from "@/components/powered-by-vndrly";
@@ -156,6 +157,7 @@ export function FieldOpsPortalShell({
   );
 
   return (
+    <NotificationsModalProvider>
     <div
       className={cn("flex", FIXED_APP_CHROME ? "h-screen overflow-hidden" : "min-h-screen")}
       style={brandStyleVars(brand)}
@@ -368,5 +370,6 @@ export function FieldOpsPortalShell({
         </nav>
       </div>
     </div>
+    </NotificationsModalProvider>
   );
 }

@@ -2669,7 +2669,7 @@ export default function Tickets() {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-semibold">
+                          <span className="inline-flex items-center h-[23px] px-3 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-xs font-normal">
                             {t("tickets.jobs", { count: grp.items.length, defaultValue: grp.items.length === 1 ? "{{count}} job" : "{{count}} jobs" })}
                           </span>
                         </div>
@@ -2704,7 +2704,7 @@ export default function Tickets() {
                                     <TicketStatusBadge status={tk.status} updatedAt={tk.updatedAt} />
                                     {tk.lifecycleState === "pending_arrival" && (
                                       <span
-                                        className="inline-flex items-center h-[22px] px-2 rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-[10px] font-semibold whitespace-nowrap"
+                                        className="inline-flex items-center h-[23px] px-3 rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-xs font-normal whitespace-nowrap"
                                         data-testid={`badge-pending-arrival-${tk.id}`}
                                         title={t("tickets.lifecyclePendingArrivalTitle", { defaultValue: "Field employee has not arrived yet" })}
                                       >
@@ -2713,7 +2713,7 @@ export default function Tickets() {
                                     )}
                                     {tk.lifecycleState === "en_route" && (
                                       <span
-                                        className="inline-flex items-center h-[22px] px-2 rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-[10px] font-semibold whitespace-nowrap"
+                                        className="inline-flex items-center h-[23px] px-3 rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-xs font-normal whitespace-nowrap"
                                         data-testid={`badge-en-route-${tk.id}`}
                                         title={t("tickets.lifecycleEnRouteTitle", { defaultValue: "Field employee is en route" })}
                                       >
@@ -2722,7 +2722,7 @@ export default function Tickets() {
                                     )}
                                     {tk.lifecycleState === "on_site" && (
                                       <span
-                                        className="inline-flex items-center h-[22px] px-2 rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-[10px] font-semibold whitespace-nowrap"
+                                        className="inline-flex items-center h-[23px] px-3 rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-xs font-normal whitespace-nowrap"
                                         data-testid={`badge-on-site-${tk.id}`}
                                         title={t("tickets.lifecycleOnSiteTitle", { defaultValue: "Field employee is on site" })}
                                       >
@@ -2731,7 +2731,7 @@ export default function Tickets() {
                                     )}
                                     {tk.lifecycleState === "off_site" && (
                                       <span
-                                        className="inline-flex items-center h-[22px] px-2 rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-[10px] font-semibold whitespace-nowrap"
+                                        className="inline-flex items-center h-[23px] px-3 rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-xs font-normal whitespace-nowrap"
                                         data-testid={`badge-off-site-${tk.id}`}
                                         title={t("tickets.lifecycleOffSiteTitle", { defaultValue: "Field employee has left the site" })}
                                       >
@@ -2919,7 +2919,7 @@ export default function Tickets() {
                                 markAllSeen) and the list re-fetches. */}
                             {tk.unreadCommentCount > 0 && (
                               <span
-                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-[10px] font-semibold whitespace-nowrap"
+                                className="inline-flex items-center gap-1 px-3 h-[23px] rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-xs font-normal whitespace-nowrap"
                                 title={t("tickets.unreadComments", {
                                   defaultValue: "{{count}} unread comment(s)",
                                   count: tk.unreadCommentCount,
@@ -2953,7 +2953,7 @@ export default function Tickets() {
                             <div className="flex items-center gap-2">
                               {tk.lifecycleState === "pending_arrival" && (
                                 <span
-                                  className="inline-flex items-center h-[22px] px-2 rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-[10px] font-semibold whitespace-nowrap"
+                                  className="inline-flex items-center h-[23px] px-3 rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-xs font-normal whitespace-nowrap"
                                   data-testid={`badge-pending-arrival-${tk.id}`}
                                   title={t("tickets.lifecyclePendingArrivalTitle", { defaultValue: "Field employee has not arrived yet" })}
                                 >
@@ -2962,7 +2962,7 @@ export default function Tickets() {
                               )}
                               {tk.lifecycleState === "en_route" && (
                                 <span
-                                  className="inline-flex items-center h-[22px] px-2 rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-[10px] font-semibold whitespace-nowrap"
+                                  className="inline-flex items-center h-[23px] px-3 rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-xs font-normal whitespace-nowrap"
                                   data-testid={`badge-en-route-${tk.id}`}
                                   title={t("tickets.lifecycleEnRouteTitle", { defaultValue: "Field employee is en route" })}
                                 >
@@ -2971,7 +2971,7 @@ export default function Tickets() {
                               )}
                               {tk.lifecycleState === "on_site" && (
                                 <span
-                                  className="inline-flex items-center h-[22px] px-2 rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-[10px] font-semibold whitespace-nowrap"
+                                  className="inline-flex items-center h-[23px] px-3 rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-xs font-normal whitespace-nowrap"
                                   data-testid={`badge-on-site-${tk.id}`}
                                   title={t("tickets.lifecycleOnSiteTitle", { defaultValue: "Field employee is on site" })}
                                 >
@@ -2980,7 +2980,7 @@ export default function Tickets() {
                               )}
                               {tk.lifecycleState === "off_site" && (
                                 <span
-                                  className="inline-flex items-center h-[22px] px-2 rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-[10px] font-semibold whitespace-nowrap"
+                                  className="inline-flex items-center h-[23px] px-3 rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-xs font-normal whitespace-nowrap"
                                   data-testid={`badge-off-site-${tk.id}`}
                                   title={t("tickets.lifecycleOffSiteTitle", { defaultValue: "Field employee has left the site" })}
                                 >
@@ -2999,7 +2999,7 @@ export default function Tickets() {
                                 // and broke the row-level visual parity.
                                 <button
                                   type="button"
-                                  className="inline-flex items-center h-[22px] px-2 rounded-full border border-red-300 bg-red-50 text-red-700 text-[10px] font-semibold whitespace-nowrap hover:bg-red-100 hover:text-red-800 cursor-pointer"
+                                  className="inline-flex items-center h-[23px] px-3 rounded-full border border-red-300 bg-red-50 text-red-700 text-xs font-normal whitespace-nowrap hover:bg-red-100 hover:text-red-800 cursor-pointer"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setReverseFundsReason("");
@@ -3017,7 +3017,7 @@ export default function Tickets() {
                               <Link
                                 href={`/tickets/${tk.id}#unlock-history`}
                                 onClick={(e) => e.stopPropagation()}
-                                className="inline-flex items-center gap-1 h-[22px] px-2 rounded-full border border-amber-400 bg-amber-50 text-amber-700 text-[10px] font-semibold whitespace-nowrap hover:bg-amber-100"
+                                className="inline-flex items-center gap-1 h-[23px] px-3 rounded-full border border-amber-400 bg-amber-50 text-amber-700 text-xs font-normal whitespace-nowrap hover:bg-amber-100"
                                 title={tk.unlockCount > 1
                                   ? t("tickets.reopenedTitleCount", { name: tk.unlockedByName ?? t("tickets.adminFallback", { defaultValue: "admin" }), when: new Date(tk.unlockedAt).toLocaleString(), count: tk.unlockCount, defaultValue: "Reopened by {{name}} on {{when}} ({{count}} times)" })
                                   : t("tickets.reopenedTitle", { name: tk.unlockedByName ?? t("tickets.adminFallback", { defaultValue: "admin" }), when: new Date(tk.unlockedAt).toLocaleString(), defaultValue: "Reopened by {{name}} on {{when}}" })}

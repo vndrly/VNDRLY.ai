@@ -58,6 +58,7 @@ import { nudgeLiveLocationReporter } from "@/lib/liveLocationReporter";
 import { MAP_TILE_SIZE, getOsmTile, openInMaps } from "@/lib/maps";
 import { captureAndUploadImage } from "@/lib/photos";
 import { ticketStatusLabel, ticketStatusPillStyle } from "@/lib/ticketStatusLabels";
+import { PILL_CHIP_LAYOUT, PILL_TEXT } from "@/lib/pill-doctrine";
 
 type Ticket = {
   id: number;
@@ -1869,7 +1870,7 @@ export default function TicketDetailScreen() {
               style={{
                 color: "#ffffff",
                 fontSize: 11,
-                fontFamily: "Inter_700Bold",
+                fontFamily: "Inter_400Regular",
                 textShadowColor: "rgba(0,0,0,0.55)",
                 textShadowOffset: { width: 0, height: 1 },
                 textShadowRadius: 2,
@@ -4228,13 +4229,10 @@ const styles = StyleSheet.create({
   statusPill: {
     alignSelf: "flex-start",
     marginTop: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 999,
+    ...PILL_CHIP_LAYOUT,
   },
   statusPillText: {
-    fontFamily: "Inter_700Bold",
-    fontSize: 11,
+    ...PILL_TEXT,
     textTransform: "uppercase",
     letterSpacing: 0.4,
   },
@@ -4338,7 +4336,7 @@ const styles = StyleSheet.create({
   },
   actionBtnHalf: { flex: 1 },
   actionBtnFull: { width: "100%" },
-  actionBtnText: { fontFamily: "Inter_600SemiBold", fontSize: 14 },
+  actionBtnText: { fontFamily: "Inter_400Regular", fontSize: 14 },
   actionBtnTextShadow: {
     textShadowColor: "rgba(0, 0, 0, 0.63)",
     textShadowOffset: { width: 0, height: 2 },

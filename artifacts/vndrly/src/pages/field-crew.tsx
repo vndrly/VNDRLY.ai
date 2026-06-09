@@ -162,7 +162,7 @@ export default function FieldCrew() {
                   <div className="flex items-center gap-2 mb-1.5">
                     <span
                       className={cn(
-                        "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
+                        "inline-flex items-center gap-1 px-3 h-[23px] rounded-full text-xs font-normal uppercase tracking-wider",
                         item.isRead ? "bg-muted text-muted-foreground" : "bg-[color:var(--brand-primary)] text-white",
                       )}
                       data-testid={`crew-change-${item.id}-type-${item.type}`}

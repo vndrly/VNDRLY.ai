@@ -1,20 +1,26 @@
-import { PngPillButton } from "@/components/png-pill-rollover";
+import { PngPillButton, PngPillButton as PillButton } from "@/components/png-pill-rollover";
+import { PillColorLayer, PillGlossOverlay } from "@/components/png-pill-chrome";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { translateApiError } from "@/lib/api-error";
 import { MessageSquare, Image as ImageIcon, Trash2, Pencil, X, Eye, RotateCcw } from "lucide-react";
-import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import BlueButton from "@/components/blue-button";
-import PillBg from "@/components/pill-bg";
 import bluePill from "@assets/NewPillPallet_0001s_0017_900x229_blue_Pill.png";
 import greyPill from "@assets/900x229_Light_Grey_Pill_1777116998094.png";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import LiveConnectionPill from "@/components/live-connection-pill";
+import {
+  PILL_HEIGHT_CLASS,
+  PILL_HEIGHT_PX,
+  PILL_LABEL_CLASS,
+  PILL_WRAPPER_CLASS,
+} from "@/lib/pill-doctrine";
 import { useLiveConnectionStatus } from "@/hooks/use-live-connection-status";
 import { useRateLimitGate } from "@/hooks/use-rate-limit-gate";
+import { cn } from "@/lib/utils";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -474,12 +480,31 @@ export function CommentsPanel({ source, parentId, testIdPrefix = "comments" }: P
             type="button"
             onClick={() => fileRef.current?.click()}
             disabled={uploading}
-            className="relative inline-flex items-center h-[28px] select-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 group"
+            className={cn(
+              PILL_WRAPPER_CLASS,
+              PILL_HEIGHT_CLASS,
+              "cursor-pointer border-0 bg-transparent p-0 disabled:cursor-not-allowed disabled:opacity-50 group",
+            )}
+            style={{ height: PILL_HEIGHT_PX }}
             data-testid={`${testIdPrefix}-attach`}
           >
-            <PillBg src={greyPill} className="opacity-50 group-hover:opacity-0 group-active:opacity-0 transition-opacity" />
-            <PillBg src={bluePill} className="absolute inset-0 opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity" />
-            <span className="relative z-10 inline-flex items-center gap-1.5 text-xs font-bold text-gray-700 group-hover:text-white group-active:text-white transition-colors px-3 whitespace-nowrap">
+            <PillColorLayer
+              src={greyPill}
+              className="opacity-50 group-hover:opacity-0 group-active:opacity-0"
+            />
+            <PillColorLayer
+              src={bluePill}
+              className="opacity-0 group-hover:opacity-90 group-active:opacity-90"
+            />
+            <PillGlossOverlay />
+            <span
+              className={cn(
+                PILL_LABEL_CLASS,
+                "h-full gap-1.5 text-gray-700 transition-colors",
+                "group-hover:text-white group-active:text-white",
+                "group-hover:[text-shadow:0_2px_4px_rgba(0,0,0,0.9)] group-active:[text-shadow:0_2px_4px_rgba(0,0,0,0.9)]",
+              )}
+            >
               <ImageIcon className="w-3.5 h-3.5" strokeWidth={3} />
               {uploading ? t("comments.uploading") : t("comments.attachPhoto")}
             </span>

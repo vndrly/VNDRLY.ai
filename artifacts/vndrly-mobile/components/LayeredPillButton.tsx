@@ -12,6 +12,7 @@ import {
 import Pill9Slice from "@/components/Pill9Slice";
 import { useBrand } from "@/hooks/use-brand";
 import { GREY_PILL_OPACITY } from "@/lib/pill-opacity";
+import { PILL_HEIGHT_PX } from "@/lib/pill-doctrine";
 import { pickTogglePillSrc, TOGGLE_IDLE_PILL_SRC } from "@/lib/pick-toggle-pill";
 
 const GREY_PILL = require("@/assets/pill-stack/light-grey.png");
@@ -71,6 +72,12 @@ export function pickPillForBrand(brandHex: string): Mid {
   return best;
 }
 
+export const LAYERED_PILL_BUTTON_TEXT = {
+  fontFamily: "Inter_400Regular",
+  fontSize: 12,
+  color: "#ffffff",
+} as const;
+
 export interface LayeredPillButtonProps {
   children: React.ReactNode;
   onPress?: (e: GestureResponderEvent) => void;
@@ -89,6 +96,8 @@ export interface LayeredPillButtonProps {
  * Mobile pill button — one 900×229 PNG, 3-slice stretch (web Hotlist rule).
  * Active = brand-matched colored pill. `inactive` = grey pill at 80% opacity.
  * Disabled/loading (without `inactive`) = grey asset dimmed to 50%.
+ *
+ * Site doctrine: every pill is exactly 23px tall (matches web Crew Tracker).
  */
 export default function LayeredPillButton({
   children,
@@ -97,7 +106,7 @@ export default function LayeredPillButton({
   loading,
   style,
   testID,
-  height: heightProp = 40,
+  height: _heightProp = PILL_HEIGHT_PX,
   color,
   inactive,
 }: LayeredPillButtonProps) {
@@ -106,7 +115,7 @@ export default function LayeredPillButton({
   const mid = useMemo(() => pickPillForBrand(targetHex), [targetHex]);
   const useGreyAsset = inactive || disabled || loading;
   const isGreyedOut = (disabled || loading) && !inactive;
-  const height = Math.min(heightProp, 48);
+  const height = PILL_HEIGHT_PX;
   const radius = height / 2;
   const brandPillSrc = pickTogglePillSrc(targetHex, brand.name);
   const activeSrc = color ? mid.src : brandPillSrc;

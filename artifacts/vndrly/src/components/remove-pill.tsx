@@ -1,10 +1,14 @@
 import { cn } from "@/lib/utils";
-import PillBg from "@/components/pill-bg";
+import { PillColorLayer, PillGlossOverlay } from "@/components/png-pill-chrome";
 import pillBase from "@assets/Vndrly_900x229_Light_Grey_Pill1_1777664658767.png";
 import pillRed from "@assets/900x229_red_Pill_v2_1777847855327.png";
-import pillGloss from "@assets/900x229_overlay_v2_1777664185377.png";
-
-const PILL_ASPECT = 900 / 229;
+import {
+  PILL_HEIGHT_CLASS,
+  PILL_HEIGHT_PX,
+  PILL_LABEL_CLASS,
+  PILL_TEXT_SHADOW,
+  PILL_WRAPPER_CLASS,
+} from "@/lib/pill-doctrine";
 
 interface RemovePillProps {
   children: React.ReactNode;
@@ -29,29 +33,27 @@ export default function RemovePill({
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        "relative h-[24px] min-w-[70px] cursor-pointer group/removepill inline-flex items-center select-none disabled:cursor-not-allowed disabled:opacity-50",
+        PILL_WRAPPER_CLASS,
+        PILL_HEIGHT_CLASS,
+        "group/removepill min-w-[70px] cursor-pointer border-0 bg-transparent p-0 disabled:cursor-not-allowed disabled:opacity-50",
         className,
       )}
+      style={{ height: PILL_HEIGHT_PX }}
       data-testid={props["data-testid"]}
     >
-      <PillBg
+      <PillColorLayer
         src={pillBase}
-        imageAspect={PILL_ASPECT}
-        className="opacity-90 group-hover/removepill:opacity-0 transition-opacity duration-200"
+        className="group-hover/removepill:opacity-0"
       />
-      <PillBg
+      <PillColorLayer
         src={pillRed}
-        imageAspect={PILL_ASPECT}
-        className="opacity-0 group-hover/removepill:opacity-100 transition-opacity duration-200"
+        className="opacity-0 group-hover/removepill:opacity-100"
       />
-      <PillBg
-        src={pillGloss}
-        stretch
-        className="opacity-60"
-      />
+      <PillGlossOverlay />
       <span
         className={cn(
-          "relative z-10 flex items-center justify-center gap-1.5 px-3 h-full w-full text-xs font-bold whitespace-nowrap transition-colors",
+          PILL_LABEL_CLASS,
+          "h-full gap-1.5 transition-colors",
           "text-gray-700 group-hover/removepill:text-white",
           "group-hover/removepill:[text-shadow:0_2px_4px_rgba(0,0,0,0.9)]",
         )}

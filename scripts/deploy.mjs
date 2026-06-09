@@ -6,10 +6,9 @@ import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { ROOT, godaddyEnvPath } from "./secrets-path.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(__dirname, "..");
-const DESKTOP = path.dirname(ROOT);
 const LOCAL_CFG = path.join(ROOT, ".local", "godaddy-vps.json");
 
 function parseEnvFile(filePath) {
@@ -44,7 +43,7 @@ function godaddyReady() {
   if (process.env.VNDRLY_DEPLOY_TARGET === "interim") return false;
   if (process.env.VNDRLY_DEPLOY_TARGET === "godaddy") return true;
 
-  const gd = parseEnvFile(process.env.GODADDY_ENV || path.join(DESKTOP, "GoDaddy.env"));
+  const gd = parseEnvFile(godaddyEnvPath());
   const local = existsSync(LOCAL_CFG)
     ? JSON.parse(readFileSync(LOCAL_CFG, "utf8"))
     : {};

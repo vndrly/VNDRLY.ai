@@ -157,7 +157,7 @@ export default function NotificationsInboxPage() {
                               <div className="flex items-center gap-2 min-w-0">
                                 {meta && Icon && (
                                   <span
-                                    className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide shrink-0 ${
+                                    className={`inline-flex items-center gap-1 h-[23px] px-3 rounded-full text-xs font-normal uppercase tracking-wide shrink-0 ${
                                       !n.isRead
                                         ? "bg-amber-500 text-white"
                                         : "bg-muted text-muted-foreground"

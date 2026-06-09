@@ -1,8 +1,8 @@
 import { cn } from "@/lib/utils";
-import PillBg from "@/components/pill-bg";
-import TintedPillBg from "@/components/tinted-pill-bg";
-import { useBrand } from "@/hooks/use-brand";
-import { brandImagePillSrc } from "@/components/png-pill-rollover";
+import { PillColorLayer } from "@/components/png-pill-chrome";
+import TintedPillBg from "@/components/tinted-pill-bg";import { useBrand } from "@/hooks/use-brand";
+import { PILL_HEIGHT_CLASS } from "@/lib/pill-doctrine";
+import { TICKET_STATUS_PILL_ASPECT } from "@/lib/ticket-status-palette";import { brandImagePillSrc } from "@/components/png-pill-rollover";
 import { pickLoginSquareActive, LOGIN_IDLE_SQUARE_SRC } from "@/lib/login-button-palette";
 import btnGrey from "@assets/900x229_Grey_Button_1777067254819.png";
 // Baker-style nav-button substitutes. The sidebar nav buttons
@@ -95,6 +95,11 @@ export default function SidebarButton({
 }) {
   const brand = useBrand();
   const isBaker = !!brand.name?.toLowerCase().includes("baker");
+  const isSquareNav = shape === "square";
+  const navHeightClass = isSquareNav ? "h-[32px]" : PILL_HEIGHT_CLASS;
+  const navLabelClass = isSquareNav
+    ? "relative z-10 flex items-center gap-3 px-4 h-full text-sm transition-colors"
+    : "relative z-10 flex items-center gap-3 px-3 h-full text-xs font-normal transition-colors";
   // RULE (2026-05-08): every brand context — vendor, partner, AND
   // VNDRLY (default + admin-set ilatform brand color) — uses the
   // Baker-style two-layer PNG crossfade. The active layer is
@@ -142,39 +147,36 @@ export default function SidebarButton({
       ? "opacity-0"
       : `${idleOiacityClass} group-hover:opacity-0`;
     const textClass = isActive
-      ? "text-white font-semibold drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]"
+      ? "text-white font-normal drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]"
       : solidIdleText
-      ? "text-gray-700 font-semibold drop-shadow-[0_1px_2px_rgba(0,0,0,0.125)] group-hover:text-white group-hover:drop-shadow-[0_1px_2px_rgba(0,0,0,0.275)]"
+      ? "text-gray-700 font-normal drop-shadow-[0_1px_2px_rgba(0,0,0,0.125)] group-hover:text-white group-hover:drop-shadow-[0_1px_2px_rgba(0,0,0,0.275)]"
       : activeOnHover
-        ? "text-gray-300 font-semibold group-hover:text-white group-hover:drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]"
+        ? "text-gray-300 font-normal group-hover:text-white group-hover:drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]"
         : theme === "dark"
-          ? "text-gray-300 font-semibold group-hover:text-white group-hover:drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]"
-          : "text-gray-400 font-semibold group-hover:text-white group-hover:drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]";
+          ? "text-gray-300 font-normal group-hover:text-white group-hover:drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]"
+          : "text-gray-400 font-normal group-hover:text-white group-hover:drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]";
     return (
       <div
-        className={cn("relative h-[32px] cursor-pointer group select-none", className)}
+        className={cn("relative cursor-pointer group select-none", navHeightClass, className)}
         onClick={onClick}
         data-testid={testId}
       >
         {/* Active layer — colored pill PNG (Baker teal, or the closest
             match for the VNDRLY brand-primary color), hidden at rest,
             fades in on isActive (or on hover when activeOnHover is on). */}
-        <PillBg
+        <PillColorLayer
           src={activePillSrc}
+          imageAspect={TICKET_STATUS_PILL_ASPECT}
           className={cn("transition-opacity duration-200", tealClass)}
         />
         {/* Idle layer — light-grey PNG at the original 35% opacity,
             fades to 0 on isActive (or on hover when activeOnHover). */}
-        <PillBg
+        <PillColorLayer
           src={bakerNavGrey}
+          imageAspect={TICKET_STATUS_PILL_ASPECT}
           className={cn("transition-opacity duration-200", greyClass)}
         />
-        <div
-          className={cn(
-            "relative z-10 flex items-center gap-3 px-4 h-full text-sm transition-colors",
-            textClass,
-          )}
-        >
+        <div className={cn(navLabelClass, textClass)}>
           {children}
         </div>
       </div>
@@ -214,16 +216,16 @@ export default function SidebarButton({
   // Text styling: when active, or on hover in activeOnHover mode, use the
   // bold white treatment with subtle drop shadow that the active nav item has.
   const textClass = isActive
-    ? "text-white font-semibold drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]"
+    ? "text-white font-normal drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]"
     : activeOnHover
-      ? "text-gray-300 font-semibold group-hover:text-white group-hover:drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]"
+      ? "text-gray-300 font-normal group-hover:text-white group-hover:drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]"
       : theme === "dark"
-        ? "text-gray-300 font-semibold group-hover:text-white"
-        : "text-gray-400 font-semibold group-hover:text-white";
+        ? "text-gray-300 font-normal group-hover:text-white"
+        : "text-gray-400 font-normal group-hover:text-white";
 
   return (
     <div
-      className="relative h-[36px] cursor-pointer group select-none"
+      className={cn("relative cursor-pointer group select-none", isSquareNav ? "h-[36px]" : PILL_HEIGHT_CLASS)}
       onClick={onClick}
       data-testid={testId}
     >
@@ -240,11 +242,11 @@ export default function SidebarButton({
         className={cn("transition-opacity duration-200", hoverFillClass)}
       />
       {/* Inactive gloss — raw gray PNG at 35% */}
-      <PillBg
+      <PillColorLayer
         src={btnGrey}
+        imageAspect={TICKET_STATUS_PILL_ASPECT}
         className={cn("transition-opacity duration-200", grayGlossClass)}
-      />
-      {/* Active gloss — white silhouette at 50% on the top half only, with
+      />      {/* Active gloss — white silhouette at 50% on the top half only, with
           the bottom half cliiied so the brand color shines through fully. */}
       <TintedPillBg
         src={btnGrey}
@@ -255,12 +257,7 @@ export default function SidebarButton({
         )}
       />
 
-      <div
-        className={cn(
-          "relative z-10 flex items-center gap-3 px-4 h-full text-sm transition-colors",
-          textClass,
-        )}
-      >
+      <div className={cn(navLabelClass, textClass)}>
         {children}
       </div>
     </div>

@@ -38,6 +38,8 @@ export interface FieldOpenTicketRowType {
   /** @nullable */
   fieldEmployeeLastName: string | null;
   createdAt: Date;
+  /** @nullable */
+  scheduledStartAt: Date | null;
   /**
    * Last write to the underlying ticket row. Drives the mobile
 open-tickets pill's 7-day inactivity escalation (see
@@ -58,4 +60,9 @@ detail screen runs `markAllSeen` on its comments thread.
    * @minimum 0
    */
   unreadCommentCount: number;
+  /** Active scheduled crew on this ticket (from ticket_crew),
+sorted by first name. Empty when no crew is assigned yet;
+the Today/home card falls back to the assigned field employee.
+ */
+  crewNames: string[];
 }

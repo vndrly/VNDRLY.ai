@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import ImagePill, { type ImagePillColor } from "@/components/image-pill";
+import { PILL_HEIGHT_PX } from "@/lib/pill-doctrine";
 
 const roleConfig: Record<
   string,
@@ -29,7 +30,7 @@ interface RoleBadgeProps {
  * Read-only user-role chip rendered with the canonical PNG image
  * pills — matches the Employees page treatment exactly.
  */
-export default function RoleBadge({ role, className, height = 24, "data-testid": dataTestId }: RoleBadgeProps) {
+export default function RoleBadge({ role, className, height = PILL_HEIGHT_PX, "data-testid": dataTestId }: RoleBadgeProps) {
   const { t } = useTranslation();
   const cfg = roleConfig[role || "field"] || roleConfig.field;
   const label = t(cfg.labelKey, { defaultValue: cfg.fallback });

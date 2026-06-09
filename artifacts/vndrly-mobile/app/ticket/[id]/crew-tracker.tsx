@@ -20,6 +20,7 @@ import { apiFetch } from "@/lib/api";
 import { translateApiError } from "@/lib/apiErrors";
 import { openInMaps } from "@/lib/maps";
 import { ticketStatusPillStyle } from "@/lib/ticketStatusLabels";
+import { PILL_CHIP_LAYOUT, PILL_TEXT } from "@/lib/pill-doctrine";
 
 type CrewRow = {
   employeeId: number;
@@ -227,8 +228,8 @@ const styles = StyleSheet.create({
   card: { borderWidth: 1, borderRadius: 12, padding: 14, marginBottom: 12 },
   row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 },
   name: { fontFamily: "Inter_600SemiBold", fontSize: 15 },
-  pill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
-  pillText: { fontFamily: "Inter_500Medium", fontSize: 11 },
+  pill: { ...PILL_CHIP_LAYOUT },
+  pillText: { ...PILL_TEXT },
   metaRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 4 },
   meta: { fontFamily: "Inter_400Regular", fontSize: 13, flex: 1 },
   dirBtn: {

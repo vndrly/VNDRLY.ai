@@ -102,7 +102,21 @@ type PersonRow = {
   // the field-side table can show which UI language each employee sees.
   // Null when there's no linked login or the user hasn't picked one yet.
   preferredLanguage?: string | null;
+  profilePendingReviewAt?: string | null;
 };
+
+function ProfileReviewDot() {
+  return (
+    <span
+      className="relative inline-flex h-2.5 w-2.5 shrink-0"
+      title="Employee updated their profile — review needed"
+      data-testid="profile-pending-review-dot"
+    >
+      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
+    </span>
+  );
+}
 
 function resolveAvatarUrl(p: PersonRow): string | null {
   if (p.photoUrl) return p.photoUrl;
@@ -163,7 +177,21 @@ export default function FieldEmployees() {
     return form.pecCertification;
   };
 
+  const activeMembership = user?.availableMemberships.find(
+    (m) => m.id === user.activeMembershipId,
+  );
+  const isVendorAdmin = isVendor && activeMembership?.role === "admin";
+  const canVerifyCerts = isVendorAdmin || user?.role === "admin";
+
   const canEditPerson = (p: PersonRow) => !isForemanOnly || p.vendorRole !== "admin";
+
+  const nameExtras = (p: PersonRow) => (
+    <>
+      {p.profilePendingReviewAt ? <ProfileReviewDot /> : null}
+      {p.suspendedAt ? <SuspendedPill /> : null}
+      {p.isActive === false ? <InactivePill /> : null}
+    </>
+  );
 
   const { data: vendorData } = useGetVendor(vendorId ?? 0, { query: { enabled: !!vendorId, queryKey: ["vendor", vendorId] } });
   const { data: partnerData } = useGetPartner(partnerId ?? 0, { query: { enabled: !!partnerId, queryKey: getGetPartnerQueryKey(partnerId ?? 0) } });
@@ -446,10 +474,10 @@ export default function FieldEmployees() {
             className="text-gray-700 hover:[color:var(--brand-primary)] hover:[text-shadow:0_1px_2px_rgba(0,0,0,0.35)] transition-all text-left bg-transparent p-0 m-0 border-0 cursor-pointer"
             data-testid={`button-edit-field-${p.id}`}
           >
-            <div className="flex items-center gap-2">{avatar}<span>{p.firstName} {p.lastName}</span>{p.suspendedAt && <SuspendedPill />}{p.isActive === false && <InactivePill />}</div>
+            <div className="flex items-center gap-2">{avatar}<span>{p.firstName} {p.lastName}</span>{nameExtras(p)}</div>
           </button>
           ) : (
-            <div className="flex items-center gap-2">{avatar}<span>{p.firstName} {p.lastName}</span>{p.suspendedAt && <SuspendedPill />}{p.isActive === false && <InactivePill />}</div>
+            <div className="flex items-center gap-2">{avatar}<span>{p.firstName} {p.lastName}</span>{nameExtras(p)}</div>
           )
         ) : (
           canEditPerson(p) ? (
@@ -459,10 +487,10 @@ export default function FieldEmployees() {
             className="text-gray-700 hover:[color:var(--brand-primary)] hover:[text-shadow:0_1px_2px_rgba(0,0,0,0.35)] transition-all text-left bg-transparent p-0 m-0 border-0 cursor-pointer"
             data-testid={`button-edit-office-${p.id}`}
           >
-            <div className="flex items-center gap-2">{avatar}<span>{p.firstName} {p.lastName}</span>{p.suspendedAt && <SuspendedPill />}{p.isActive === false && <InactivePill />}</div>
+            <div className="flex items-center gap-2">{avatar}<span>{p.firstName} {p.lastName}</span>{nameExtras(p)}</div>
           </button>
           ) : (
-            <div className="flex items-center gap-2">{avatar}<span>{p.firstName} {p.lastName}</span>{p.suspendedAt && <SuspendedPill />}{p.isActive === false && <InactivePill />}</div>
+            <div className="flex items-center gap-2">{avatar}<span>{p.firstName} {p.lastName}</span>{nameExtras(p)}</div>
           )
         )}
       </TableCell>
@@ -557,7 +585,6 @@ export default function FieldEmployees() {
                   type="submit"
                   disabled={createContact.isPending}
                   data-testid="button-submit-employee"
-                  height={36}
                   idleOpacity={0.5}
                   color="image"
                   activeSrc={
@@ -853,19 +880,22 @@ export default function FieldEmployees() {
             <div><Label>{t("fieldEmployees.email")}</Label><Input type="email" value={editOfficeForm.email} onChange={(e) => setEditOfficeForm({ ...editOfficeForm, email: e.target.value })} data-testid="input-edit-office-email" /></div>
             <div><Label>{t("fieldEmployees.phone")}</Label><Input value={editOfficeForm.phone} onChange={(e) => setEditOfficeForm({ ...editOfficeForm, phone: handlePhoneInput(e.target.value) })} data-testid="input-edit-office-phone" /></div>
             <div className="flex items-center gap-2">
-              <Checkbox id="pec-cert-office-edit" checked={editOfficeForm.pecCertification} onCheckedChange={(v) => setEditOfficeForm({ ...editOfficeForm, pecCertification: !!v })} data-testid="checkbox-edit-office-pec-cert" />
-              <Label htmlFor="pec-cert-office-edit" className="cursor-pointer">{t("fieldEmployees.pecCertified")}</Label>
-            </div>
-            <div className="flex items-center gap-2">
               <Checkbox id="visit-notif-office-edit" checked={editOfficeForm.roles.includes("Visitor Notifications")} onCheckedChange={(v) => setEditOfficeForm({ ...editOfficeForm, roles: v ? Array.from(new Set([...editOfficeForm.roles, "Visitor Notifications"])) : editOfficeForm.roles.filter((r) => r !== "Visitor Notifications") })} data-testid="checkbox-edit-office-visit-notifications" />
               <Label htmlFor="visit-notif-office-edit" className="cursor-pointer">Receive site visitor check-in notifications</Label>
             </div>
-            <div><Label>{t("fieldEmployees.pecExpiration")}</Label><Input type="date" value={editOfficeForm.pecExpirationDate} onChange={(e) => setEditOfficeForm({ ...editOfficeForm, pecExpirationDate: e.target.value })} data-testid="input-edit-office-pec-expiration" /></div>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-3">
+              <div className="flex items-center gap-2">
+                <Checkbox id="pec-cert-office-edit" checked={editOfficeForm.pecCertification} onCheckedChange={(v) => setEditOfficeForm({ ...editOfficeForm, pecCertification: !!v })} data-testid="checkbox-edit-office-pec-cert" />
+                <Label htmlFor="pec-cert-office-edit" className="cursor-pointer whitespace-nowrap">{t("fieldEmployees.pecCertified")}</Label>
+              </div>
+              <Input type="date" value={editOfficeForm.pecExpirationDate} onChange={(e) => setEditOfficeForm({ ...editOfficeForm, pecExpirationDate: e.target.value })} className="w-auto max-w-[11rem]" data-testid="input-edit-office-pec-expiration" aria-label={t("fieldEmployees.pecExpiration")} />
+            </div>
             {editingOfficeContactId ? (
               <CertificationsSection
                 employeeId={editingOfficeContactId}
                 variant="inline"
                 testIdPrefix="edit-office-certifications"
+                showVendorVerify={canVerifyCerts}
               />
             ) : null}
             {editingOfficeContactId ? (

@@ -1012,7 +1012,6 @@ export default function VendorDetail({ id }: { id: number }) {
                 </div>
                 <PngPillButton
                   type="submit"
-                  height={44}
                   color="image"
                   activeSrc={
                     vendor?.name?.toLowerCase().includes("baker")
@@ -2087,7 +2086,7 @@ function ServicePriceEditModal({
               matching the brand-aware chrome doctrine). height={36}
               matches the sibling Save button so the two pills line
               up in the `flex items-stretch gap-2` footer. */}
-          <PngPillButton color="red" size="sm" height={36} onClick={() => onOpenChange(false)} data-testid={`button-cancel-edit-price-${item.id}`}>Cancel</PngPillButton>
+          <PngPillButton color="red" size="sm" onClick={() => onOpenChange(false)} data-testid={`button-cancel-edit-price-${item.id}`}>Cancel</PngPillButton>
           {/* Wide blue TogglePill — idles in the shared light-grey
               pill chrome and pulses to the canonical TogglePill blue
               on hover. `flex-1` makes it span the remainder of the
@@ -2095,7 +2094,6 @@ function ServicePriceEditModal({
           <PngPillButton
             color="blue"
             size="sm"
-            height={36}
             className="flex-1"
             onClick={() => save.mutate()}
             disabled={!canSubmit}

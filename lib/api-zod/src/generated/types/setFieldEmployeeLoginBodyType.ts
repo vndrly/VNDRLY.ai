@@ -9,8 +9,12 @@ import type { SetFieldEmployeeLoginBodyTypePreferredLanguage } from "./setFieldE
 
 export interface SetFieldEmployeeLoginBodyType {
   email: string;
-  /** @minLength 8 */
+  /**
+   * Required when enabling login for the first time. Optional when updating an existing login (omit to keep the current password).
+   * @minLength 8
+   */
   password?: string;
+  /** When false, disable portal login for this employee. */
   portalLoginEnabled?: boolean;
   /** Optional override; defaults to the employee's "First Last" name (or the email if unnamed). */
   displayName?: string;

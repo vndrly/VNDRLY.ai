@@ -5,10 +5,9 @@
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { ROOT, godaddyEnvPath } from "./secrets-path.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(__dirname, "..");
-const DESKTOP = path.dirname(ROOT);
 
 function parseEnvFile(filePath) {
   const out = {};
@@ -32,7 +31,7 @@ function ok(v) {
 }
 
 const localEnv = parseEnvFile(path.join(ROOT, ".env.local"));
-const gd = parseEnvFile(path.join(DESKTOP, "GoDaddy.env"));
+const gd = parseEnvFile(godaddyEnvPath());
 const localVps = existsSync(path.join(ROOT, ".local", "godaddy-vps.json"))
   ? JSON.parse(readFileSync(path.join(ROOT, ".local", "godaddy-vps.json"), "utf8"))
   : {};
@@ -49,7 +48,7 @@ console.log("DATABASE_URL:", ok(localEnv.database_url));
 console.log("SUPABASE_URL:", ok(localEnv.supabase_url));
 console.log("SUPABASE_SERVICE_ROLE_KEY:", serviceKey && !/YOUR_/i.test(serviceKey) ? "OK" : "MISSING (uploads use disk on server without this)");
 console.log("SESSION_SECRET:", ok(localEnv.session_secret));
-console.log("VPS IP (GoDaddy.env or .local/godaddy-vps.json):", realVps ? vpsIp : `MISSING (DNS suggests 34.111.179.208 — set vps_ip in Desktop/GoDaddy.env)`);
+console.log("VPS IP (GoDaddy.env or .local/godaddy-vps.json):", realVps ? vpsIp : `MISSING (DNS suggests 34.111.179.208 — set vps_ip in API Keys and Secrets/GoDaddy.env)`);
 console.log("SSH password:", realSsh ? "OK" : "MISSING");
 console.log("\nBlocked until you add:");
 const blockers = [];
@@ -57,10 +56,10 @@ if (!serviceKey || /YOUR_/i.test(serviceKey)) {
   blockers.push("- SUPABASE_SERVICE_ROLE_KEY in .env.local (Supabase → Settings → API → service_role)");
 }
 if (!realVps) {
-  blockers.push("- vps_ip in Desktop/GoDaddy.env (or run: pnpm run setup:vps)");
+  blockers.push("- vps_ip in API Keys and Secrets/GoDaddy.env (or run: pnpm run setup:vps)");
 }
 if (!realSsh) {
-  blockers.push("- ssh_pass in Desktop/GoDaddy.env");
+  blockers.push("- ssh_pass in API Keys and Secrets/GoDaddy.env");
 }
 if (blockers.length === 0) {
   console.log("  (none — run: node scripts/godaddy-deploy.mjs)");

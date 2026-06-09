@@ -86,6 +86,25 @@ function empName(e: Coworker): string {
   return `${e.firstName ?? ""} ${e.lastName ?? ""}`.trim() || `#${e.id}`;
 }
 
+function mergeRosterWithSavedCrew(
+  roster: Coworker[],
+  savedCrew: ScheduleSnapshot["crew"],
+): Coworker[] {
+  const byId = new Map<number, Coworker>();
+  for (const e of roster) byId.set(e.id, e);
+  for (const c of savedCrew) {
+    if (byId.has(c.employeeId)) continue;
+    const parts = c.name.trim().split(/\s+/);
+    byId.set(c.employeeId, {
+      id: c.employeeId,
+      userId: c.userId,
+      firstName: parts[0] ?? c.name,
+      lastName: parts.slice(1).join(" ") || null,
+    });
+  }
+  return [...byId.values()].sort((a, b) => empName(a).localeCompare(empName(b)));
+}
+
 function formatWhen(d: Date): string {
   return d.toLocaleString(undefined, {
     weekday: "short",
@@ -154,7 +173,7 @@ export default function ScheduleTicketPanel({
           apiFetch<CrewPreset[]>("/api/field/crew-presets").catch(() => [] as CrewPreset[]),
         ]);
         if (cancelled) return;
-        setEmployees(roster ?? []);
+        setEmployees(mergeRosterWithSavedCrew(roster ?? [], schedule?.crew ?? []));
         setPresets(presetRows ?? []);
 
         if (schedule?.scheduledStartAt) {

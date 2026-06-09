@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-import PillBg from "@/components/pill-bg";
 import { useBrand } from "@/hooks/use-brand";
 import btnIdlePill from "@assets/button-palette/900x229_Light-grey_v2r_Pill.png";
 import btnBluePill from "@assets/button-palette/900x229_blue_Pill_v3.png";
@@ -10,8 +9,14 @@ import btnAmberPill from "@assets/button-palette/900x229_Amber_Pill_v4.png";
 import btnBakerTealPill from "@assets/button-palette/900x229_baker_teal_Pill.png";
 import btnWinTanPill from "@assets/button-palette/900x229_tan_Pill-v3.png";
 import btnWhitePill from "@assets/button-palette/900x229_white_Pill2.png";
-
-const PILL_AR = 900 / 229;
+import {
+  PILL_HEIGHT_CLASS,
+  PILL_HEIGHT_PX,
+  PILL_LABEL_CLASS,
+  PILL_TEXT_SHADOW,
+  PILL_WRAPPER_CLASS,
+} from "@/lib/pill-doctrine";
+import { PillColorLayer, PillGlossOverlay } from "@/components/png-pill-chrome";
 
 /** Inactive half of EN/ES + dark/light inline toggles. */
 export const HALF_TOGGLE_IDLE_SRC = btnWhitePill;
@@ -106,7 +111,7 @@ export function brandImagePillSrc(
 export const PNG_PILL_GLOSS_GRADIENT =
   "linear-gradient(to bottom, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.5) 50%, transparent 50%, transparent 100%)";
 
-export const PNG_PILL_TEXT_SHADOW = "0 2px 4px rgba(0,0,0,0.9)";
+export const PNG_PILL_TEXT_SHADOW = PILL_TEXT_SHADOW;
 
 export const PNG_PILL_COLORS = {
   brand: "var(--brand-primary)",
@@ -148,6 +153,8 @@ interface PngPillProps {
   height?: number;
   size?: "xs" | "sm";
   className?: string;
+  /** Allow nested controls (e.g. crew-chip remove button). */
+  interactive?: boolean;
   "data-testid"?: string;
   "aria-label"?: string;
 }
@@ -157,27 +164,33 @@ export default function PngPill({
   children,
   color = "brand",
   rest = false,
-  height = 23,
+  height = PILL_HEIGHT_PX,
   size = "xs",
   className,
+  interactive = false,
   ...props
 }: PngPillProps) {
-  const labelClass = size === "sm" ? "px-4 text-sm" : "px-3 text-xs";
   const src = rest ? btnIdlePill : coloredSrcForChip(color);
 
   return (
     <div
-      className={cn("relative inline-flex items-center pointer-events-none select-none", className)}
+      className={cn(
+        PILL_WRAPPER_CLASS,
+        PILL_HEIGHT_CLASS,
+        !interactive && "pointer-events-none",
+        className,
+      )}
       style={{ height }}
       data-testid={props["data-testid"]}
       aria-label={props["aria-label"]}
     >
-      <PillBg src={src} imageAspect={PILL_AR} />
+      <PillColorLayer src={src} />
+      <PillGlossOverlay />
       <span
         className={cn(
-          "relative z-10 flex items-center justify-center w-full h-full font-bold whitespace-nowrap",
-          labelClass,
-          rest ? "text-gray-800/85" : "text-white",
+          PILL_LABEL_CLASS,
+          "h-full gap-1.5",
+          rest ? "text-gray-700" : "text-white",
         )}
         style={rest ? undefined : { textShadow: PNG_PILL_TEXT_SHADOW }}
       >
@@ -220,7 +233,7 @@ export function PngPillButton({
   onClick,
   type = "button",
   disabled,
-  height = 23,
+  height = PILL_HEIGHT_PX,
   size = "xs",
   attention = false,
   className,
@@ -230,7 +243,6 @@ export function PngPillButton({
   const brand = useBrand();
   const hoverSrc = hoverSrcForColor(color, activeSrc, brand.name);
   const restSrc = idleSrc ?? btnIdlePill;
-  const labelClass = size === "sm" ? "px-4 text-sm" : "px-3 text-xs";
 
   const [pulseOn, setPulseOn] = useState(false);
   useEffect(() => {
@@ -243,6 +255,7 @@ export function PngPillButton({
   }, [attention, disabled]);
 
   const showHover = pulseOn;
+  const alwaysColored = idleOpacity === 1 && restSrc === hoverSrc;
 
   return (
     <button
@@ -251,7 +264,9 @@ export function PngPillButton({
       disabled={disabled}
       title={title}
       className={cn(
-        "relative inline-flex items-center select-none cursor-pointer group bg-transparent border-0 p-0",
+        PILL_WRAPPER_CLASS,
+        PILL_HEIGHT_CLASS,
+        "group cursor-pointer bg-transparent border-0 p-0",
         fullWidth && "w-full",
         "transition-transform active:scale-[0.98]",
         "disabled:opacity-50 disabled:cursor-not-allowed",
@@ -260,35 +275,39 @@ export function PngPillButton({
       style={{ height }}
       data-testid={props["data-testid"]}
     >
-      <PillBg
+      <PillColorLayer
         src={restSrc}
-        imageAspect={PILL_AR}
         className={cn(
           "transition-opacity duration-200",
-          showHover
-            ? "opacity-0"
-            : cn(
-                "group-hover:opacity-0",
-                idleOpacity === 1 ? "opacity-100" : "opacity-50",
-              ),
+          alwaysColored
+            ? "opacity-90"
+            : showHover
+              ? "opacity-0"
+              : cn(
+                  "group-hover:opacity-0",
+                  idleOpacity === 1 ? "opacity-90" : "opacity-45",
+                ),
         )}
       />
-      <PillBg
-        src={hoverSrc}
-        imageAspect={PILL_AR}
-        className={cn(
-          "transition-opacity duration-200",
-          showHover ? "opacity-100" : "opacity-0 group-hover:opacity-100",
-        )}
-      />
+      {!alwaysColored && (
+        <PillColorLayer
+          src={hoverSrc}
+          className={cn(
+            "transition-opacity duration-200",
+            showHover ? "opacity-90" : "opacity-0 group-hover:opacity-90",
+          )}
+        />
+      )}
+      <PillGlossOverlay />
       <span
         className={cn(
-          "relative z-10 flex items-center justify-center gap-1.5 w-full h-full font-bold whitespace-nowrap transition-colors duration-200",
-          labelClass,
-          showHover
-            ? cn("text-white", activeTextShadowClass)
-            : cn("text-gray-800/85 group-hover:text-white", hoverTextShadowClass),
+          PILL_LABEL_CLASS,
+          "h-full gap-1.5 transition-colors duration-200",
+          alwaysColored || showHover
+            ? "text-white"
+            : "text-gray-700 group-hover:text-white group-hover:[text-shadow:0_2px_4px_rgba(0,0,0,0.9)]",
         )}
+        style={alwaysColored || showHover ? { textShadow: PILL_TEXT_SHADOW } : undefined}
       >
         {children}
       </span>

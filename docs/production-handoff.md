@@ -31,7 +31,7 @@ Without this, production uploads fall back to disk on the VPS and won’t match 
 
 ### 2. GoDaddy VPS SSH
 
-Edit `C:\Users\JohnElerick\Desktop\GoDaddy.env`:
+Edit `C:\Users\JohnElerick\DEV\API Keys and Secrets\GoDaddy.env`:
 
 ```text
 vps_ip 34.111.179.208

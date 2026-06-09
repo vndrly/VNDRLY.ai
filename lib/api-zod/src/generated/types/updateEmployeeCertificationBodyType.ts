@@ -20,4 +20,8 @@ export interface UpdateEmployeeCertificationBodyType {
   documentUrl?: string | null;
   /** @nullable */
   documentPath?: string | null;
+  /** Vendor/admin only. When true, marks the certification as verified.
+When false, clears verification (e.g. after employee edits).
+ */
+  vendorVerified?: boolean;
 }

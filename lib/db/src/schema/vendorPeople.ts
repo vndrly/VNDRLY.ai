@@ -46,6 +46,7 @@ export const vendorPeopleTable = pgTable("vendor_people", {
   // value is also mirrored into `users.preferred_language` so post-auth
   // sessions key off the same preference.
   preferredLanguage: text("preferred_language"),
+  profilePendingReviewAt: timestamp("profile_pending_review_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp("deleted_at", { withTimezone: true }),
   deletedBy: text("deleted_by"),

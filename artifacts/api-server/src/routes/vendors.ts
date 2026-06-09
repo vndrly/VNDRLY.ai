@@ -1483,6 +1483,7 @@ router.get("/vendor-contacts", async (req, res): Promise<void> => {
     pecCertification: fieldEmployeesTable.pecCertification,
     pecExpirationDate: fieldEmployeesTable.pecExpirationDate,
     photoUrl: fieldEmployeesTable.photoUrl,
+    profilePendingReviewAt: fieldEmployeesTable.profilePendingReviewAt,
     createdAt: fieldEmployeesTable.createdAt,
     deletedAt: fieldEmployeesTable.deletedAt,
     deletedBy: fieldEmployeesTable.deletedBy,
@@ -1498,17 +1499,22 @@ router.get("/vendor-contacts", async (req, res): Promise<void> => {
       userId: number | null;
       suspendedAt: Date | string | null;
       mustChangePasswordRaw: boolean | null;
+      profilePendingReviewAt?: Date | string | null;
     },
   >(
     row: R,
   ) => {
-    const { mustChangePasswordRaw, suspendedAt, ...rest } = row;
+    const { mustChangePasswordRaw, suspendedAt, profilePendingReviewAt, ...rest } = row;
     return {
       ...rest,
       suspendedAt:
         suspendedAt instanceof Date
           ? suspendedAt.toISOString()
           : (suspendedAt ?? null),
+      profilePendingReviewAt:
+        profilePendingReviewAt instanceof Date
+          ? profilePendingReviewAt.toISOString()
+          : (profilePendingReviewAt ?? null),
       hasLogin: row.userId !== null && row.userId !== undefined,
       mustChangePassword: !!mustChangePasswordRaw,
     };
@@ -1661,7 +1667,12 @@ router.patch("/vendors/:vendorId/contacts/:contactId", async (req, res): Promise
   }
   const [contact] = await db
     .update(vendorContactsTable)
-    .set(parsed.data)
+    .set({
+      ...parsed.data,
+      ...(session.role === "vendor" || session.role === "admin"
+        ? { profilePendingReviewAt: null }
+        : {}),
+    })
     .where(and(
       eq(vendorContactsTable.id, params.data.contactId),
       eq(vendorContactsTable.vendorId, params.data.vendorId),

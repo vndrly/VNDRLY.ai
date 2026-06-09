@@ -57,4 +57,12 @@ user/device decide".
    * @nullable
    */
   preferredLanguage?: FieldEmployeeTypePreferredLanguage;
+  /**
+   * Set when the employee updates their own profile or certifications.
+Vendor office/admin sees a review indicator until they open and save
+the employee record.
+
+   * @nullable
+   */
+  profilePendingReviewAt?: Date | null;
 }

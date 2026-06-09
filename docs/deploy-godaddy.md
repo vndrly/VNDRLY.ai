@@ -14,9 +14,9 @@ After each save, **local dev is started automatically** if it is not already run
 
 **When GoDaddy VPS credentials work:** same command switches to GoDaddy VPS and `vndrly.ai` automatically.
 
-## One-time setup files (Desktop, not in git)
+## One-time setup files (API Keys and Secrets, not in git)
 
-`C:\Users\JohnElerick\Desktop\GoDaddy.env`:
+`C:\Users\JohnElerick\DEV\API Keys and Secrets\GoDaddy.env`:
 
 ```
 user your@email.com
@@ -32,7 +32,7 @@ api_key ...
 api_secret ...
 ```
 
-`C:\Users\JohnElerick\Desktop\Supabase.env` — already used for `DATABASE_URL` password.
+`C:\Users\JohnElerick\DEV\API Keys and Secrets\Supabase.env` — already used for `DATABASE_URL` password.
 
 ## One-time VPS discovery
 

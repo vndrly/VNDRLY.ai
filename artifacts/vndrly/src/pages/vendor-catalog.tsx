@@ -1140,7 +1140,6 @@ function VendorWorkTypeAfeModal({
                   </div>
                   {it.afe ? (
                     <AfePill
-                      className="h-[28px]"
                       data-testid={`pill-afe-${it.assignmentId}`}
                     >
                       {it.afe}
