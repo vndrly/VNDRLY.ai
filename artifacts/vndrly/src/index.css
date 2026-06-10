@@ -129,15 +129,28 @@
   --app-font-serif: Georgia, serif;
   --app-font-mono: Menlo, monospace;
   --radius: 0.25rem;
-  
-  --shadow-2xs: 0px 2px 0px 0px hsl(var(--primary) / 0.1);
-  --shadow-xs: 0px 2px 0px 0px hsl(var(--primary) / 0.1);
-  --shadow-sm: 0px 2px 0px 0px hsl(var(--primary) / 0.1), 0px 1px 2px -1px hsl(var(--primary) / 0.1);
-  --shadow: 0px 2px 0px 0px hsl(var(--primary) / 0.1), 0px 1px 2px -1px hsl(var(--primary) / 0.1);
-  --shadow-md: 0px 2px 0px 0px hsl(var(--primary) / 0.1), 0px 2px 4px -1px hsl(var(--primary) / 0.1);
-  --shadow-lg: 0px 2px 0px 0px hsl(var(--primary) / 0.1), 0px 4px 6px -1px hsl(var(--primary) / 0.1);
-  --shadow-xl: 0px 2px 0px 0px hsl(var(--primary) / 0.1), 0px 8px 10px -1px hsl(var(--primary) / 0.1);
-  --shadow-2xl: 0px 2px 0px 0px hsl(var(--primary) / 0.1);
+
+  /* Card elevation — light from top-left, readable contrast on white. */
+  --card-shadow:
+    1px 2px 0 rgb(0 0 0 / 0.11),
+    2px 5px 12px rgb(0 0 0 / 0.15);
+  --card-shadow-hover:
+    2px 3px 0 rgb(0 0 0 / 0.13),
+    4px 10px 20px rgb(0 0 0 / 0.20);
+
+  /* Unified hover drop shadow — content pane branded links (nav excluded). */
+  --drop-shadow-hover:
+    1px 1px 0 rgb(0 0 0 / 0.35),
+    1.5px 2px 1px rgb(0 0 0 / 0.27);
+
+  --shadow-2xs: 1px 1px 0 rgb(0 0 0 / 0.06);
+  --shadow-xs: 1px 1px 0 rgb(0 0 0 / 0.07), 0 1px 3px rgb(0 0 0 / 0.10);
+  --shadow-sm: 1px 2px 0 rgb(0 0 0 / 0.08), 0 2px 4px rgb(0 0 0 / 0.12);
+  --shadow: 1px 2px 0 rgb(0 0 0 / 0.09), 0 3px 6px rgb(0 0 0 / 0.14);
+  --shadow-md: var(--card-shadow);
+  --shadow-lg: 2px 3px 0 rgb(0 0 0 / 0.10), 0 8px 16px rgb(0 0 0 / 0.18);
+  --shadow-xl: 2px 4px 0 rgb(0 0 0 / 0.10), 0 12px 24px rgb(0 0 0 / 0.20);
+  --shadow-2xl: 3px 5px 0 rgb(0 0 0 / 0.12), 0 16px 32px rgb(0 0 0 / 0.22);
   --tracking-normal: 0em;
   --spacing: 0.25rem;
 
@@ -150,9 +163,44 @@
   --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
 }
 
+/* Dark-mode content pane + cards */
+.dark main {
+  background-color: #d1d5db !important; /* gray-300 page surface */
+}
+
 .dark .bg-card {
   background-color: rgba(255, 255, 255, 0.5) !important;
-  border: 2px solid var(--brand-primary) !important;
+  border: 2px solid #9ca3af !important; /* gray-400 — ~20% lighter than gray-500 */
+}
+
+.dark main .bg-card {
+  box-shadow: var(--card-shadow);
+  transition: box-shadow 0.2s ease;
+}
+
+.dark main .bg-card:hover {
+  box-shadow: var(--card-shadow-hover);
+}
+
+.dark nav.bg-card:hover {
+  box-shadow: none;
+}
+
+/* Light-mode content cards — 2px light-grey border + lift on hover.
+   Matches <Card> and inline `bg-card` sections in the main pane. */
+:root:not(.dark) main .bg-card {
+  border: 2px solid #d1d5db !important; /* gray-300 — visible card outline in light mode */
+  box-shadow: var(--card-shadow);
+  transition: box-shadow 0.2s ease;
+}
+
+:root:not(.dark) main .bg-card:hover {
+  box-shadow: var(--card-shadow-hover);
+}
+
+/* Mobile bottom nav uses bg-card but should not lift on hover. */
+:root:not(.dark) nav.bg-card:hover {
+  box-shadow: none;
 }
 
 /* Global dark-mode "VNDRLY-00000239 timeline" treatment for any soft
@@ -196,22 +244,18 @@
 }
 
 /* In dark mode, force native scrollbars and form-control chrome to stay
- * light so table scrollbars / inputs don't render dark — the page surface
- * is light grey (#E6E6E7), not a true dark background. */
+ * light — the content pane is grey (#d1d5db), not a true dark background. */
 .dark {
   color-scheme: light;
 }
 
-/* Modals (and other surfaces using bg-background) should match the page
- * background in dark mode (#E6E6E7) instead of the deep --background HSL. */
+/* Modals match the grey content-pane surface. */
 .dark .bg-background {
-  background-color: #E6E6E7 !important;
+  background-color: #d1d5db !important;
 }
 
-/* Keep body/card lettering identical to light mode in dark mode — the dark
- * surface is light grey (#E6E6E7) with half-white cards, so light text
- * would disappear. Override the foreground tokens back to the light-mode
- * values so all text stays readable. */
+/* Keep body/card lettering identical to light mode — grey page + light
+ * cards, so light text would disappear. */
 .dark {
   --foreground: 220 25% 15%;
   --card-foreground: 220 25% 15%;
@@ -540,69 +584,8 @@
   }
 }
 
-/* Global pill + button drop-shadow doctrine. Promoted from the
-   Tickets-page `.tickets-shadow-test` experiment to apply to every
-   button / pill chip across the app.
-
-   Two layers, because the app uses two very different "pill"
-   constructions:
-     1. CSS pills — plain <button> / <span class="rounded-full"> / shadcn
-        button slots. Get a real `box-shadow` (with !important so we beat
-        Tailwind v4's preflight + any utility shadows on the element).
-     2. Image pills — `PngPill` / `PngPillButton` / `ImagePill` /
-        `TicketStatusBadge` etc. paint themselves with PNG <img> layers
-        (`PillBg`), so a box-shadow on the wrapper produces a rectangle
-        behind the transparent PNG. We use `filter: drop-shadow(...)` on
-        the wrapper instead — that shadows the actual painted pixels
-        (the PNG silhouette).
-
-   Excludes table-header sort buttons and checkbox controls so the
-   shadow doesn't muddy column header rows or bulk-select checkboxes. */
-/* CSS rectangular box-shadow only applies to actual rectangular
-   button surfaces. The image-pill family (`PngPillButton`,
-   `PillButton`, etc.) renders a transparent-bg <button> wrapping a
-   PNG silhouette — a rectangular box-shadow on that wrapper paints
-   a square shadow ARTIFACT around the rounded pill. We exclude any
-   transparent-bg <button> so the pill family is shadowed exclusively
-   by the silhouette-aware drop-shadow rule below. */
-:is(button, [data-slot="button"], span.rounded-full, a.rounded-full):not([data-testid^="sort-"]):not([role="checkbox"]):not(.bg-transparent) {
-  box-shadow:
-    0 1px 2px 0 rgb(0 0 0 / 0.10),
-    0 2px 6px -1px rgb(0 0 0 / 0.10) !important;
-}
-:is(button, [data-slot="button"], a.rounded-full):not([data-testid^="sort-"]):not([role="checkbox"]):not(.bg-transparent):hover {
-  box-shadow:
-    0 2px 4px 0 rgb(0 0 0 / 0.14),
-    0 6px 12px -2px rgb(0 0 0 / 0.12) !important;
-}
-
-/* Image-based pills: `PngPill`, `PngPillButton`, `ImagePill`,
-   and `TicketStatusBadge` all paint themselves with PNG <img> layers
-   via the shared `PillBg` component, so a `box-shadow` on the wrapper
-   produces a rectangle behind the transparent PNG. We use
-   `filter: drop-shadow(...)` on the wrapper instead — that shadows
-   the actual painted pixels (the PNG silhouette).
-
-   These wrappers don't carry semantic class hooks, but they all share
-   the same Tailwind class soup: `inline-flex items-center` plus the
-   tell-tale `pointer-events-none select-none` pair (used by every
-   read-only pill in the family) — see png-pill-rollover.tsx, image-pill.tsx,
-   ticket-status-badge.tsx. We key off that combo to scope the shadow
-   without touching the components themselves. */
-.pointer-events-none.select-none.inline-flex,
-main :is(button, a, span).relative.inline-flex.items-center.select-none {
-  filter: drop-shadow(0 0.9px 0.9px rgb(0 0 0 / 0.198))
-    drop-shadow(0 1.8px 3.6px rgb(0 0 0 / 0.162));
-}
-/* `PngPillButton` is rendered inside an interactive <button>, so the
-   wrapper above has `pointer-events-none` set on the inner shell.
-   When the host <button> is hovered, push the drop-shadow a little
-   stronger so the affordance reads. */
-button:hover .pointer-events-none.select-none.inline-flex,
-main :is(button, a).relative.inline-flex.items-center.select-none:hover {
-  filter: drop-shadow(0 1.8px 1.8px rgb(0 0 0 / 0.252))
-    drop-shadow(0 3.6px 7.2px rgb(0 0 0 / 0.18));
-}
+/* Pill/button CSS shadows removed — PillsV1 PNGs carry baked-in chrome.
+   A unified global pill look will be reintroduced in a follow-up pass. */
 
 /* Button + pill label weight: always normal. Do not use font-bold or
    font-semibold on interactive buttons or PNG pill labels unless the
@@ -633,4 +616,46 @@ main :is(button, a).relative.inline-flex.items-center.select-none:hover {
   font-weight: 400;
   font-size: 0.75rem;
   line-height: 1;
+}
+
+@layer utilities {
+  /* Content pane branded links — unified drop shadow (nav/aside excluded). */
+  main :is(
+    a[href]:not([data-link-surface]):not(.block):not([data-recent-activity-row]),
+    [role="link"]:not([data-link-surface])
+  ):not(nav a):not(aside a):hover {
+    color: var(--brand-primary, hsl(var(--primary))) !important;
+    text-shadow: var(--drop-shadow-hover);
+    transition: color 0.15s ease, text-shadow 0.15s ease;
+  }
+
+  main .group:hover .hotlist-job-title,
+  main .group:hover [class*="group-hover:text-"] {
+    color: var(--brand-primary, hsl(var(--primary))) !important;
+    text-shadow: var(--drop-shadow-hover);
+    transition: color 0.15s ease, text-shadow 0.15s ease;
+  }
+
+  /* Pills/buttons inside a link row should not inherit link hover styling. */
+  main a[href]:hover :is(
+    button,
+    [role="button"]:not([role="link"]),
+    [data-slot="button"],
+    .relative.inline-flex.items-center.select-none,
+    .pointer-events-none.select-none.inline-flex
+  ) {
+    color: inherit !important;
+    text-shadow: none !important;
+  }
+
+  /* Recent Activity rows — shadow + brand color on title line only. */
+  main a[data-recent-activity-row]:hover .recent-activity-title {
+    color: var(--brand-primary, hsl(var(--primary))) !important;
+    text-shadow: var(--drop-shadow-hover);
+    transition: color 0.15s ease, text-shadow 0.15s ease;
+  }
+
+  main a[data-recent-activity-row]:hover :is(.text-muted-foreground, [class*="text-muted-foreground"]) {
+    text-shadow: none !important;
+  }
 }

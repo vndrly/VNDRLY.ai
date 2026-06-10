@@ -18,9 +18,10 @@ import { PhotoUploadField } from "@/components/photo-upload-field";
 import BrandPill from "@/components/brand-pill";
 import BlueButton from "@/components/blue-button";
 import { PngPillButton, brandImagePillSrc } from "@/components/png-pill-rollover";
+import { pillBaker } from "@/lib/pill-palette-assets";
 import addEmployeeIdle from "@assets/download_1778508804009.png";
-import addEmployeeModalActive from "@assets/NewPillPallet_0001s_0004_Layer-5.png";
 import AccountActions, { SuspendedPill, InactivePill } from "@/components/account-actions";
+import CompanyRolePill from "@/components/company-role-pill";
 import { EmployeeRolePill } from "@/components/employee-role-pill";
 import PecStatusBadge from "@/components/pec-status-badge";
 import { useAuth } from "@/hooks/use-auth";
@@ -29,15 +30,12 @@ import { useToast } from "@/hooks/use-toast";
 import BulkLoginUploadDialog from "@/components/bulk-login-upload-dialog";
 import EmployeePortalLoginFields from "@/components/employee-portal-login-fields";
 import CertificationsSection from "@/components/certifications-section";
+import ContentPaneBackLink from "@/components/content-pane-back-link";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-// PEC Status pill rendered via shared PecStatusBadge — uses RolePill's
-// 3-slice (left/center/right with cap = height/2 widths) so the
-// rounded caps never stretch regardless of label width. The previous
-// inline EmployeePecPill / EmployeePillBg used a single PNG sliced
-// with fractional aspect ratios and was the source of the visible
-// stretching artifact in the PEC Status column.
+// PEC Status + Role columns use shared ImagePill status chips (PillsV1,
+// pill doctrine label depth on text).
 
 const COMPANY_ROLES = [
   "Operations Manager",
@@ -513,11 +511,14 @@ export default function FieldEmployees() {
   return (
     <div className="space-y-6" data-testid="field-employees-page">
       <div className="flex items-center justify-between">
-        <div>
+        <div className="flex items-center gap-3">
+          <ContentPaneBackLink href="/" />
+          <div>
           {isVendor && vendorData && <p className="text-sm font-medium text-muted-foreground" data-testid="text-vendor-name">{vendorData.name}</p>}
           {isPartner && partnerData && <p className="text-sm font-medium text-muted-foreground" data-testid="text-partner-name">{partnerData.name}</p>}
           <h1 className="text-2xl font-bold tracking-tight" data-testid="text-page-title">{t("fieldEmployees.title")}</h1>
           <p className="text-muted-foreground text-sm mt-1">{isVendor ? t("fieldEmployees.subtitleVendor") : isPartner ? t("fieldEmployees.subtitleVendor") : t("fieldEmployees.subtitleAdmin")}</p>
+          </div>
         </div>
         <div className="flex items-center gap-3">
           {!isPartner && (
@@ -589,7 +590,7 @@ export default function FieldEmployees() {
                   color="image"
                   activeSrc={
                     brand.name?.toLowerCase().includes("baker")
-                      ? addEmployeeModalActive
+                      ? pillBaker
                       : brandImagePillSrc(brand.primary, brand.name)
                   }
                   idleSrc={
@@ -680,16 +681,7 @@ export default function FieldEmployees() {
                         {c.roles && c.roles.length > 0 ? (
                           <div className="flex flex-wrap gap-1">
                             {c.roles.map((r) => (
-                              <span
-                                key={r}
-                                className="px-3 py-1 rounded-full text-xs font-medium border text-white"
-                                style={{
-                                  backgroundColor: "var(--brand-primary)",
-                                  borderColor: "var(--brand-primary)",
-                                }}
-                              >
-                                {r}
-                              </span>
+                              <CompanyRolePill key={r}>{r}</CompanyRolePill>
                             ))}
                           </div>
                         ) : "-"}

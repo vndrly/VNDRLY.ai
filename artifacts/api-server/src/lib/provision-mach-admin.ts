@@ -6,16 +6,31 @@ import { logger } from "./logger";
 const TARGET_USERNAME = "mach@vndrly.com";
 const TARGET_DISPLAY_NAME = "Mach Admin";
 const TARGET_PARTNER_NAME = "Mach Natural Resources";
-const TARGET_PASSWORD = "mach1";
+const TARGET_PASSWORD = "mach123";
 
 export async function provisionMachAdmin(): Promise<void> {
   try {
     const [existing] = await db
-      .select({ id: usersTable.id })
+      .select({ id: usersTable.id, passwordHash: usersTable.passwordHash })
       .from(usersTable)
       .where(sql`lower(${usersTable.username}) = lower(${TARGET_USERNAME})`)
       .limit(1);
-    if (existing) return;
+
+    if (existing) {
+      const passwordOk = bcrypt.compareSync(TARGET_PASSWORD, existing.passwordHash);
+      if (!passwordOk) {
+        const passwordHash = bcrypt.hashSync(TARGET_PASSWORD, 10);
+        await db
+          .update(usersTable)
+          .set({ passwordHash, mustChangePassword: false })
+          .where(eq(usersTable.id, existing.id));
+        logger.warn(
+          { userId: existing.id, username: TARGET_USERNAME },
+          "provisionMachAdmin: restored canonical mach123 password",
+        );
+      }
+      return;
+    }
 
     const [partner] = await db
       .select({ id: partnersTable.id })

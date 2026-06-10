@@ -1,13 +1,7 @@
 import type { ReactNode } from "react";
+import ImagePill from "@/components/image-pill";
+import { PILL_HEIGHT_PX } from "@/lib/pill-doctrine";
 import { cn } from "@/lib/utils";
-import afeBluePill from "@assets/NewPillPallet_0001s_0017_900x229_blue_Pill.png";
-import {
-  PILL_HEIGHT_PX,
-  PILL_LABEL_CLASS,
-  PILL_TEXT_SHADOW,
-  PILL_WRAPPER_CLASS,
-} from "@/lib/pill-doctrine";
-import { PillColorLayer, PillGlossOverlay } from "@/components/png-pill-chrome";
 
 interface AfePillProps {
   children: ReactNode;
@@ -23,24 +17,14 @@ export default function AfePill({
   "data-testid": dataTestId,
 }: AfePillProps) {
   return (
-    <span
-      className={cn(
-        PILL_WRAPPER_CLASS,
-        "pointer-events-none min-w-[88px]",
-        className,
-      )}
-      style={{ height: PILL_HEIGHT_PX }}
-      title={title}
+    <ImagePill
+      color="blue"
+      height={PILL_HEIGHT_PX}
+      className={cn("min-w-[88px] pointer-events-none", className)}
       data-testid={dataTestId}
+      title={title}
     >
-      <PillColorLayer src={afeBluePill} />
-      <PillGlossOverlay />
-      <span
-        className={cn(PILL_LABEL_CLASS, "text-white")}
-        style={{ textShadow: PILL_TEXT_SHADOW }}
-      >
-        {children}
-      </span>
-    </span>
+      {children}
+    </ImagePill>
   );
 }

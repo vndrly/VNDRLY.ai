@@ -155,7 +155,7 @@ export const DEMO_USERS: DemoUser[] = [
   },
   {
     username: "mach",
-    password: "winchester2",
+    password: "mach123",
     role: "partner",
     displayName: "Mach Natural Resources User",
     labels: { en: "Mach Natural Resources", es: "Mach Natural Resources" },

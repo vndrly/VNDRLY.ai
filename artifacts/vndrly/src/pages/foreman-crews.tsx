@@ -5,6 +5,8 @@ import { PngPillButton } from "@/components/png-pill-rollover";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import ContentPaneBackLink from "@/components/content-pane-back-link";
+import { FIELD_OPS_PAGE_CLASS } from "@/lib/field-ops-content-pane";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -179,13 +181,16 @@ export default function ForemanCrews() {
   }
 
   return (
-    <div className="p-6 max-w-2xl mx-auto w-full space-y-8" data-testid="foreman-crews">
-      <div>
+    <div className={FIELD_OPS_PAGE_CLASS} data-testid="foreman-crews">
+      <div className="flex items-center gap-3">
+        <ContentPaneBackLink href="/foreman" />
+        <div>
         <h1 className="text-2xl font-bold">{t("foremanCrews.title")}</h1>
         <p className="text-sm text-muted-foreground mt-1">{t("foremanCrews.subtitle")}</p>
         {loadError ? (
           <p className="text-sm text-destructive mt-2">{t("foremanCrews.loadFailed")}</p>
         ) : null}
+        </div>
       </div>
 
       <section className="rounded-xl border border-border bg-card p-4 space-y-4">
@@ -322,12 +327,11 @@ export default function ForemanCrews() {
               </div>
             )
           ) : null}
-          <div className="flex gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <PngPillButton
-              color="brand"
+              color="blue"
               onClick={() => void savePreset()}
               disabled={saveBusy}
-              className="flex-1 h-10"
               data-testid="button-save-crew-preset"
             >
               <Save className="w-4 h-4 mr-1.5" />
@@ -361,7 +365,7 @@ export default function ForemanCrews() {
               className={cn(
                 "flex-1 rounded-lg border py-2 text-sm font-medium",
                 daysAhead === d
-                  ? "border-[color:var(--brand-primary)] bg-sidebar-accent text-[color:var(--brand-primary)]"
+                  ? "border-[color:var(--brand-primary)] bg-sidebar-accent text-[color:var(--brand-primary)] drop-shadow-[0_1px_2px_rgba(0,0,0,0.125)]"
                   : "border-border text-muted-foreground",
               )}
             >
@@ -373,7 +377,6 @@ export default function ForemanCrews() {
           color="blue"
           onClick={() => void sendBatchReminders()}
           disabled={batchBusy}
-          className="w-full h-10"
           data-testid="button-batch-schedule-remind"
         >
           <Bell className="w-4 h-4 mr-1.5" />

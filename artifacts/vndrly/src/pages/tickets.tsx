@@ -5,6 +5,9 @@ import { TicketRouteMap } from "@/components/ticket-route-map";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation, useSearch } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
+import CountBadgePill from "@/components/count-badge-pill";
+import ImagePill from "@/components/image-pill";
+import TicketLifecyclePill from "@/components/ticket-lifecycle-pill";
 import TicketStatusBadge from "@/components/ticket-status-badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,6 +35,7 @@ import { useTranslation } from "react-i18next";
 // list (Task #630) uses, so a dispatcher juggling several tickets can
 // see at a glance which one was restored.
 import { formatTicketTrackingNumber } from "@workspace/db/format";
+import ContentPaneBackLink from "@/components/content-pane-back-link";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -1687,7 +1691,9 @@ export default function Tickets() {
   return (
     <div className="space-y-6" data-testid="tickets-page">
       <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-2">
-        <div>
+        <div className="flex items-start gap-3">
+          <ContentPaneBackLink href="/" className="mt-0.5" />
+          <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-bold tracking-tight" data-testid="text-page-title">{t("tickets.title")}</h1>
             {/* Task #661 — non-blocking SSE health pill. Sits next to the
@@ -1706,6 +1712,7 @@ export default function Tickets() {
             />
           </div>
           <p className="text-muted-foreground text-sm mt-1">{isVendor ? t("tickets.subtitleVendor", { defaultValue: "Your VNDRLY tracking numbers" }) : t("tickets.subtitleAll", { defaultValue: "All VNDRLY tracking numbers" })}</p>
+          </div>
         </div>
         <div className="flex flex-col items-end gap-2">
           {/* Row 1: Start New, Group by visit, All states (+ role-specific extras) */}
@@ -2669,9 +2676,9 @@ export default function Tickets() {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="inline-flex items-center h-[23px] px-3 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-xs font-normal">
+                          <CountBadgePill color="blue">
                             {t("tickets.jobs", { count: grp.items.length, defaultValue: grp.items.length === 1 ? "{{count}} job" : "{{count}} jobs" })}
-                          </span>
+                          </CountBadgePill>
                         </div>
                       </button>
                       {open && (
@@ -2702,42 +2709,7 @@ export default function Tickets() {
                                 <TableCell>
                                   <div className="flex flex-col items-start gap-1">
                                     <TicketStatusBadge status={tk.status} updatedAt={tk.updatedAt} />
-                                    {tk.lifecycleState === "pending_arrival" && (
-                                      <span
-                                        className="inline-flex items-center h-[23px] px-3 rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-xs font-normal whitespace-nowrap"
-                                        data-testid={`badge-pending-arrival-${tk.id}`}
-                                        title={t("tickets.lifecyclePendingArrivalTitle", { defaultValue: "Field employee has not arrived yet" })}
-                                      >
-                                        {t("tickets.lifecyclePendingArrival", { defaultValue: "Pending Arrival" })}
-                                      </span>
-                                    )}
-                                    {tk.lifecycleState === "en_route" && (
-                                      <span
-                                        className="inline-flex items-center h-[23px] px-3 rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-xs font-normal whitespace-nowrap"
-                                        data-testid={`badge-en-route-${tk.id}`}
-                                        title={t("tickets.lifecycleEnRouteTitle", { defaultValue: "Field employee is en route" })}
-                                      >
-                                        {t("tickets.lifecycleEnRoute", { defaultValue: "En Route" })}
-                                      </span>
-                                    )}
-                                    {tk.lifecycleState === "on_site" && (
-                                      <span
-                                        className="inline-flex items-center h-[23px] px-3 rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-xs font-normal whitespace-nowrap"
-                                        data-testid={`badge-on-site-${tk.id}`}
-                                        title={t("tickets.lifecycleOnSiteTitle", { defaultValue: "Field employee is on site" })}
-                                      >
-                                        {t("tickets.lifecycleOnSite", { defaultValue: "On Site" })}
-                                      </span>
-                                    )}
-                                    {tk.lifecycleState === "off_site" && (
-                                      <span
-                                        className="inline-flex items-center h-[23px] px-3 rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-xs font-normal whitespace-nowrap"
-                                        data-testid={`badge-off-site-${tk.id}`}
-                                        title={t("tickets.lifecycleOffSiteTitle", { defaultValue: "Field employee has left the site" })}
-                                      >
-                                        {t("tickets.lifecycleOffSite", { defaultValue: "Off Site" })}
-                                      </span>
-                                    )}
+                                    <TicketLifecyclePill state={tk.lifecycleState} idSuffix={tk.id} />
                                   </div>
                                 </TableCell>
                                 <TableCell className="text-muted-foreground text-sm">{new Date(tk.createdAt).toLocaleString()}</TableCell>
@@ -2918,8 +2890,8 @@ export default function Tickets() {
                                 detail page (its comments fetch runs
                                 markAllSeen) and the list re-fetches. */}
                             {tk.unreadCommentCount > 0 && (
-                              <span
-                                className="inline-flex items-center gap-1 px-3 h-[23px] rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-xs font-normal whitespace-nowrap"
+                              <CountBadgePill
+                                icon={MessageCircle}
                                 title={t("tickets.unreadComments", {
                                   defaultValue: "{{count}} unread comment(s)",
                                   count: tk.unreadCommentCount,
@@ -2930,9 +2902,8 @@ export default function Tickets() {
                                 })}
                                 data-testid={`badge-unread-comments-${tk.id}`}
                               >
-                                <MessageCircle className="w-3 h-3" />
                                 {tk.unreadCommentCount}
-                              </span>
+                              </CountBadgePill>
                             )}
                           </div>
                         </TableCell>
@@ -2951,65 +2922,22 @@ export default function Tickets() {
                                 right of the lifecycle badge with a small
                                 gap, instead of stacking under it. */}
                             <div className="flex items-center gap-2">
-                              {tk.lifecycleState === "pending_arrival" && (
-                                <span
-                                  className="inline-flex items-center h-[23px] px-3 rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-xs font-normal whitespace-nowrap"
-                                  data-testid={`badge-pending-arrival-${tk.id}`}
-                                  title={t("tickets.lifecyclePendingArrivalTitle", { defaultValue: "Field employee has not arrived yet" })}
-                                >
-                                  {t("tickets.lifecyclePendingArrival", { defaultValue: "Pending Arrival" })}
-                                </span>
-                              )}
-                              {tk.lifecycleState === "en_route" && (
-                                <span
-                                  className="inline-flex items-center h-[23px] px-3 rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-xs font-normal whitespace-nowrap"
-                                  data-testid={`badge-en-route-${tk.id}`}
-                                  title={t("tickets.lifecycleEnRouteTitle", { defaultValue: "Field employee is en route" })}
-                                >
-                                  {t("tickets.lifecycleEnRoute", { defaultValue: "En Route" })}
-                                </span>
-                              )}
-                              {tk.lifecycleState === "on_site" && (
-                                <span
-                                  className="inline-flex items-center h-[23px] px-3 rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-xs font-normal whitespace-nowrap"
-                                  data-testid={`badge-on-site-${tk.id}`}
-                                  title={t("tickets.lifecycleOnSiteTitle", { defaultValue: "Field employee is on site" })}
-                                >
-                                  {t("tickets.lifecycleOnSite", { defaultValue: "On Site" })}
-                                </span>
-                              )}
-                              {tk.lifecycleState === "off_site" && (
-                                <span
-                                  className="inline-flex items-center h-[23px] px-3 rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-xs font-normal whitespace-nowrap"
-                                  data-testid={`badge-off-site-${tk.id}`}
-                                  title={t("tickets.lifecycleOffSiteTitle", { defaultValue: "Field employee has left the site" })}
-                                >
-                                  {t("tickets.lifecycleOffSite", { defaultValue: "Off Site" })}
-                                </span>
-                              )}
+                              <TicketLifecyclePill state={tk.lifecycleState} idSuffix={tk.id} />
                               {isAdmin && tk.status === "funds_dispersed" && (
-                                // Restored to the previous "red secondary
-                                // pill" shape (commit 7ab1b2e4) so the
-                                // tertiary Reverse / void payment chip
-                                // matches the gray pending_arrival /
-                                // en_route / on_site / off_site lifecycle
-                                // pills above. The PngPillButton
-                                // variant introduced in commit 387867a5
-                                // changed the height and gloss treatment
-                                // and broke the row-level visual parity.
-                                <button
-                                  type="button"
-                                  className="inline-flex items-center h-[23px] px-3 rounded-full border border-red-300 bg-red-50 text-red-700 text-xs font-normal whitespace-nowrap hover:bg-red-100 hover:text-red-800 cursor-pointer"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setReverseFundsReason("");
-                                    setReverseFundsTicketId(tk.id);
-                                  }}
-                                  data-testid={`button-reverse-funds-${tk.id}`}
-                                  title={t("ticketDetail.reverseFunds")}
-                                >
-                                  {t("ticketDetail.reverseFunds")}
-                                </button>
+                                <span onClick={(e) => e.stopPropagation()}>
+                                  <PngPillButton
+                                    type="button"
+                                    color="red"
+                                    onClick={() => {
+                                      setReverseFundsReason("");
+                                      setReverseFundsTicketId(tk.id);
+                                    }}
+                                    data-testid={`button-reverse-funds-${tk.id}`}
+                                    title={t("ticketDetail.reverseFunds")}
+                                  >
+                                    {t("ticketDetail.reverseFunds")}
+                                  </PngPillButton>
+                                </span>
                               )}
                             </div>
                             </div>
@@ -3017,15 +2945,17 @@ export default function Tickets() {
                               <Link
                                 href={`/tickets/${tk.id}#unlock-history`}
                                 onClick={(e) => e.stopPropagation()}
-                                className="inline-flex items-center gap-1 h-[23px] px-3 rounded-full border border-amber-400 bg-amber-50 text-amber-700 text-xs font-normal whitespace-nowrap hover:bg-amber-100"
+                                className="inline-flex"
                                 title={tk.unlockCount > 1
                                   ? t("tickets.reopenedTitleCount", { name: tk.unlockedByName ?? t("tickets.adminFallback", { defaultValue: "admin" }), when: new Date(tk.unlockedAt).toLocaleString(), count: tk.unlockCount, defaultValue: "Reopened by {{name}} on {{when}} ({{count}} times)" })
                                   : t("tickets.reopenedTitle", { name: tk.unlockedByName ?? t("tickets.adminFallback", { defaultValue: "admin" }), when: new Date(tk.unlockedAt).toLocaleString(), defaultValue: "Reopened by {{name}} on {{when}}" })}
                                 data-testid={`badge-reopened-${tk.id}`}
                               >
-                                <RotateCcw className="w-3 h-3" />
-                                {t("tickets.reopenedBy", { name: tk.unlockedByName ?? t("tickets.adminFallback", { defaultValue: "admin" }), defaultValue: "Reopened by {{name}}" })}
-                                {tk.unlockCount > 1 ? t("tickets.reopenedTimes", { count: tk.unlockCount, defaultValue: " · {{count}}×" }) : ""}
+                                <ImagePill color="amber">
+                                  <RotateCcw className="w-3 h-3" />
+                                  {t("tickets.reopenedBy", { name: tk.unlockedByName ?? t("tickets.adminFallback", { defaultValue: "admin" }), defaultValue: "Reopened by {{name}}" })}
+                                  {tk.unlockCount > 1 ? t("tickets.reopenedTimes", { count: tk.unlockCount, defaultValue: " · {{count}}×" }) : ""}
+                                </ImagePill>
                               </Link>
                             )}
                           </div>

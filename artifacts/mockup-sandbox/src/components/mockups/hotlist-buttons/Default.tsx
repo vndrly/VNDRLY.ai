@@ -6,17 +6,17 @@ import btnAmber from "@assets/5eb2ccae-d124-40fb-a518-0e89712eb438_1777067094038
 import btnBlue from "@assets/900x229_Blue_Button_1777067254818.png";
 import btnRed from "@assets/900x229_Red_Button_1777066896414.png";
 
-import statusPillGreen from "@assets/900x229_Green_Pill_1777093057355.png";
-import statusPillBlue from "@assets/900x229_Blue_Pill_1777093057350.png";
-import statusPillAmber from "@assets/900x229_Amber_Pill_1777093057350.png";
-import statusPillRed from "@assets/900x229_Red_Pill_1777093057349.png";
-import statusPillDarkGrey from "@assets/900x229_Dark_Grey_Pill_1777093057352.png";
-import statusPillLightGrey from "@assets/900x229_Light_Grey_Pill_1777093057356.png";
-import statusPillIndigo from "@assets/900x229_Indego_Pill_1777093057356.png";
-import statusPillOrange from "@assets/900x229_Orange_Pill_1777093057357.png";
-import statusPillPurple from "@assets/900x229_Purple_Pill_1777093057348.png";
-import removePillGrey from "@assets/900x229_Light_Grey_Pill_1777093886279.png";
-import removePillRed from "@assets/900x229_Red_Pill_1777093057349.png";
+import statusPillGreen from "@assets/pills/pill_green.png";
+import statusPillBlue from "@assets/pills/pill_blue.png";
+import statusPillAmber from "@assets/pills/pill_amber.png";
+import statusPillRed from "@assets/pills/pill_red.png";
+import statusPillDarkGrey from "@assets/pills/pill_dark_grey.png";
+import statusPillLightGrey from "@assets/pills/pill_light_grey.png";
+import statusPillIndigo from "@assets/pills/pill_indigo.png";
+import statusPillOrange from "@assets/pills/pill_orange.png";
+import statusPillPurple from "@assets/pills/pill_purple.png";
+import removePillGrey from "@assets/pills/pill_light_grey_v2r.png";
+import removePillRed from "@assets/pills/pill_red.png";
 import exxonLogo from "@assets/ExxonMobil_Logo_transparent.png";
 
 function PillBg({ src, opacity = 1 }: { src: string; opacity?: number }) {

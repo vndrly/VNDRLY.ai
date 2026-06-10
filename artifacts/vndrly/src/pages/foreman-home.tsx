@@ -3,22 +3,14 @@ import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { ChevronRight, MapPin, Clock, HardHat } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { PillColorLayer, PillGlossOverlay } from "@/components/png-pill-chrome";
-import {
-  PILL_HEIGHT_CLASS,
-  PILL_HEIGHT_PX,
-  PILL_LABEL_CLASS,
-  PILL_MIN_HEIGHT_CLASS,
-  PILL_TEXT_SHADOW,
-  PILL_WRAPPER_CLASS,
-} from "@/lib/pill-doctrine";
-import { useAuth } from "@/hooks/use-auth";
+import ImagePill from "@/components/image-pill";
 import { useBrand } from "@/hooks/use-brand";
 import TicketStatusBadge from "@/components/ticket-status-badge";
 import ForemanQuickActions from "@/components/foreman-quick-actions";
 import ForemanSchedulePickDialog from "@/components/foreman-schedule-pick-dialog";
 import { usePortalBase } from "@/lib/portal-base";
-import { ticketLifecyclePills } from "@/lib/ticket-status-palette";
+import ContentPaneBackLink from "@/components/content-pane-back-link";
+import { FIELD_OPS_PAGE_CLASS } from "@/lib/field-ops-content-pane";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -77,7 +69,6 @@ function formatCheckIn(iso: string | null, locale: string, todayLabel: string, y
 }
 
 export default function ForemanHome() {
-  const { user } = useAuth();
   const brand = useBrand();
   const portalBase = usePortalBase();
   const { t, i18n } = useTranslation();
@@ -120,10 +111,13 @@ export default function ForemanHome() {
   const vendorLabel = me?.vendorName || t("foremanHome.vendorFallback");
 
   return (
-    <div className="p-6 max-w-md mx-auto w-full" data-testid="foreman-home">
-      <div className="pb-3">
-        <h2 className="text-lg font-bold text-gray-900">{t("foremanHome.whatDoing")}</h2>
-        <p className="text-xs text-gray-500 mt-0.5">{t("foremanHome.whatDoingSub")}</p>
+    <div className={FIELD_OPS_PAGE_CLASS} data-testid="foreman-home">
+      <div className="flex items-center gap-3">
+        <ContentPaneBackLink href={portalBase} />
+        <div>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">{t("foremanHome.whatDoing")}</h1>
+        <p className="text-muted-foreground text-sm mt-1">{t("foremanHome.whatDoingSub")}</p>
+        </div>
       </div>
 
       <ForemanQuickActions
@@ -143,13 +137,13 @@ export default function ForemanHome() {
       ) : null}
 
       <div className="pb-2 flex items-center justify-between">
-        <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wide">{t("foremanHome.continueExisting")}</h3>
-        <span className="text-[11px] text-gray-400">{t("foremanHome.openCount", { count: tickets.length })}</span>
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("foremanHome.continueExisting")}</h3>
+        <span className="text-[11px] text-muted-foreground">{t("foremanHome.openCount", { count: tickets.length })}</span>
       </div>
 
       {tickets.length === 0 ? (
         <div className="pb-8">
-          <div className="rounded-xl border-2 border-dashed border-gray-300 p-6 text-center text-sm text-gray-500">
+          <div className="rounded-xl border-2 border-dashed border-border bg-card p-6 text-center text-sm text-muted-foreground">
             {t("foremanHome.emptyJobsPrefix", { vendor: vendorLabel })}{" "}
             <span className="font-semibold text-amber-600">{t("foremanHome.startNewJob")}</span>{" "}
             {t("foremanHome.emptyJobsSuffix")}
@@ -158,8 +152,6 @@ export default function ForemanHome() {
       ) : (
         <div className="space-y-3 pb-8">
           {tickets.map((ticket) => {
-            const mine = ticket.fieldEmployeeId === me?.employeeId;
-            const leading = ticket.foremanUserId === user?.userId;
             const ownerName = ticket.fieldEmployeeFirstName
               ? `${ticket.fieldEmployeeFirstName} ${ticket.fieldEmployeeLastName ?? ""}`.trim()
               : t("foremanHome.unassigned");
@@ -179,66 +171,44 @@ export default function ForemanHome() {
               <button
                 key={ticket.id}
                 onClick={() => navigate(`/tickets/${ticket.id}`)}
-                className="w-full text-left rounded-xl bg-card p-4 border shadow-sm hover:shadow-md transition-shadow"
+                className="w-full text-left rounded-xl bg-card p-4 border transition-shadow"
                 style={{
                   borderColor: `${brand.primary}55`,
                   borderLeftWidth: 4,
-                  borderLeftColor: leading ? brand.primary : mine ? brand.primary : `${brand.primary}88`,
+                  borderLeftColor: brand.primary,
                 }}
                 data-testid={`button-foreman-open-ticket-${ticket.id}`}
               >
                 <div className="flex items-start gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-sm font-bold text-gray-900 truncate">#{ticket.id}</p>
+                      <p className="text-sm font-bold text-foreground truncate">#{ticket.id}</p>
                       <TicketStatusBadge status={ticket.status} compact />
                       {ticket.scheduledStartAt ? (
-                        <span
-                          className={cn(
-                            PILL_WRAPPER_CLASS,
-                            "pointer-events-none",
-                            PILL_HEIGHT_CLASS,
-                            PILL_MIN_HEIGHT_CLASS,
-                            "min-w-0 max-w-full",
-                          )}
-                          style={{ height: PILL_HEIGHT_PX }}
+                        <ImagePill
+                          color="green"
+                          className="min-w-0 max-w-full leading-tight text-center whitespace-normal"
                           data-testid={`indicator-job-scheduled-${ticket.id}`}
                         >
-                          <PillColorLayer src={ticketLifecyclePills.green.src} />
-                          <PillGlossOverlay />
-                          <span
-                            className={cn(
-                              PILL_LABEL_CLASS,
-                              "leading-tight text-center whitespace-normal text-white",
-                            )}
-                            style={{ textShadow: PILL_TEXT_SHADOW }}
-                          >
-                            {t("ticketDetail.jobIsScheduled")}
-                          </span>
-                        </span>
+                          {t("ticketDetail.jobIsScheduled")}
+                        </ImagePill>
                       ) : null}
-                      {leading && (
-                        <span className="inline-flex items-center h-[23px] text-[9px] font-normal uppercase tracking-wider px-3 rounded bg-violet-600 text-white">{t("foremanHome.leading")}</span>
-                      )}
-                      {mine && (
-                        <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-500 text-white">{t("foremanHome.you")}</span>
-                      )}
                     </div>
-                    <p className="text-xs text-gray-700 mt-0.5 truncate">{ticket.workTypeName || "—"}</p>
-                    <div className="flex items-center gap-1 mt-1.5 text-[11px] text-gray-500">
+                    <p className="text-xs text-muted-foreground mt-0.5 truncate">{ticket.workTypeName || "—"}</p>
+                    <div className="flex items-center gap-1 mt-1.5 text-[11px] text-muted-foreground">
                       <MapPin className="w-3 h-3" />
                       <span className="truncate">{ticket.siteName} · {ticket.partnerName}</span>
                     </div>
-                    <div className="flex items-center gap-1 mt-1 text-[11px] text-gray-500">
+                    <div className="flex items-center gap-1 mt-1 text-[11px] text-muted-foreground">
                       <HardHat className="w-3 h-3 shrink-0" />
                       <span className="line-clamp-2">{crewLine}</span>
                     </div>
-                    <div className="flex items-center gap-1 mt-1 text-[11px] text-gray-400">
+                    <div className="flex items-center gap-1 mt-1 text-[11px] text-muted-foreground/80">
                       <Clock className="w-3 h-3" />
                       <span>{t("foremanHome.checkedIn", { when: checkInWhen, elapsed: elapsedStr })}</span>
                     </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-gray-300 mt-1" />
+                  <ChevronRight className="w-4 h-4 text-muted-foreground/50 mt-1" />
                 </div>
               </button>
             );

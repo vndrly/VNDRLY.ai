@@ -1,3 +1,4 @@
+import ImagePill from "@/components/image-pill";
 import { PngPillButton } from "@/components/png-pill-rollover";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -199,23 +200,17 @@ export default function AccountActions({ userId, hasLogin, suspendedAt, testIdPr
 export function SuspendedPill({ className = "" }: { className?: string }) {
   const { t } = useTranslation();
   return (
-    <span
-      className={`inline-flex items-center h-[23px] px-3 rounded-full text-xs font-normal bg-red-100 text-red-700 border border-red-200 ${className}`}
-      data-testid="pill-suspended"
-    >
+    <ImagePill color="red" className={className} data-testid="pill-suspended">
       {t("accountActions.suspended")}
-    </span>
+    </ImagePill>
   );
 }
 
 export function InactivePill({ className = "" }: { className?: string }) {
   const { t } = useTranslation();
   return (
-    <span
-      className={`inline-flex items-center h-[23px] px-3 rounded-full text-xs font-normal bg-gray-100 text-gray-700 border border-gray-200 ${className}`}
-      data-testid="pill-inactive"
-    >
+    <ImagePill color="grey" className={className} data-testid="pill-inactive">
       {t("accountActions.inactive")}
-    </span>
+    </ImagePill>
   );
 }

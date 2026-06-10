@@ -30,18 +30,19 @@ describe("ticketStatusLabel", () => {
 });
 
 describe("ticketStatusPillStyle", () => {
-  it("maps statuses to the same color buckets as the web pill", () => {
-    // Mirrors statusColors in
-    // artifacts/vndrly/src/components/ticket-status-badge.tsx
+  it("maps statuses to the user-assigned lifecycle buckets", () => {
+    expect(TICKET_STATUS_COLORS.awaiting_acceptance).toBe("orange");
+    expect(TICKET_STATUS_COLORS.initiated).toBe("babyBlue");
     expect(TICKET_STATUS_COLORS.in_progress).toBe("blue");
-    expect(TICKET_STATUS_COLORS.submitted).toBe("amber");
-    expect(TICKET_STATUS_COLORS.awaiting_payment).toBe("orange");
-    expect(TICKET_STATUS_COLORS.approved).toBe("lime");
-    expect(TICKET_STATUS_COLORS.completed).toBe("teal");
+    expect(TICKET_STATUS_COLORS.pending_review).toBe("amber");
+    expect(TICKET_STATUS_COLORS.completed).toBe("grey");
+    expect(TICKET_STATUS_COLORS.submitted).toBe("lime");
+    expect(TICKET_STATUS_COLORS.approved).toBe("green");
+    expect(TICKET_STATUS_COLORS.awaiting_payment).toBe("green");
     expect(TICKET_STATUS_COLORS.funds_dispersed).toBe("darkGreen");
+    expect(TICKET_STATUS_COLORS.denied).toBe("red");
     expect(TICKET_STATUS_COLORS.kicked_back).toBe("red");
-    expect(TICKET_STATUS_COLORS.cancelled).toBe("darkRed");
-    expect(TICKET_STATUS_COLORS.pending_review).toBe("purple");
+    expect(TICKET_STATUS_COLORS.cancelled).toBe("red");
   });
 
   it("renders submitted and awaiting_payment as distinct office-owned states", () => {

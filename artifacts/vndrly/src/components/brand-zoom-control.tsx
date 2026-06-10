@@ -2,7 +2,6 @@ import { useEffect, useRef } from "react";
 import { Plus, Minus } from "lucide-react";
 import L from "leaflet";
 import { useMap } from "react-leaflet";
-import { PNG_PILL_GLOSS_GRADIENT } from "@/components/png-pill-rollover";
 
 type Props = {
   onZoomIn: () => void;
@@ -19,14 +18,13 @@ export function BrandZoomControl({ onZoomIn, onZoomOut }: Props) {
   }, []);
   const halfStyle = {
     backgroundColor: "var(--brand-primary)",
-    backgroundImage: PNG_PILL_GLOSS_GRADIENT,
   } as const;
   const halfClass =
-    "w-6 h-6 inline-flex items-center justify-center text-white transition-opacity hover:opacity-90 active:opacity-80 cursor-pointer select-none";
+    "w-6 h-6 inline-flex items-center justify-center text-white cursor-pointer select-none";
   return (
     <div
       ref={wrapperRef}
-      className="inline-flex flex-col items-stretch rounded-full overflow-hidden shadow-md"
+      className="inline-flex flex-col items-stretch rounded-full overflow-hidden"
       data-testid="map-zoom-control"
     >
       <button

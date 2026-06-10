@@ -4,10 +4,13 @@ import { useTranslation } from "react-i18next";
 import { Clock, MapPin, UserCheck, Users, Navigation, Check, X, ChevronRight, CalendarClock, Bell } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { translateApiError } from "@/lib/api-error";
-import PngPill, { PngPillButton } from "@/components/png-pill-rollover";
+import ImagePill from "@/components/image-pill";
+import { PngPillButton } from "@/components/png-pill-rollover";
 import ScheduleTicketDialog from "@/components/schedule-ticket-dialog";
 import ForemanSchedulePickDialog from "@/components/foreman-schedule-pick-dialog";
 import { usePortalBase } from "@/lib/portal-base";
+import ContentPaneBackLink from "@/components/content-pane-back-link";
+import { FIELD_OPS_PAGE_CLASS } from "@/lib/field-ops-content-pane";
 import { useAuth } from "@/hooks/use-auth";
 import { useTicketNudgeFlash } from "@/hooks/use-ticket-nudge-flash";
 
@@ -164,11 +167,16 @@ export default function FieldSchedule() {
   }
 
   return (
-    <div className="px-4 pt-6 pb-6 max-w-2xl mx-auto w-full" data-testid="field-schedule">
-      <h1 className="text-2xl font-bold mb-1">
-        {isForemanPortal ? t("foremanSchedule.scheduleTicket") : t("mySchedule.title")}
-      </h1>
-      <p className="text-sm text-muted-foreground mb-5">{t("mySchedule.subtitle")}</p>
+    <div className={FIELD_OPS_PAGE_CLASS} data-testid="field-schedule">
+      <div className="flex items-center gap-3 mb-5">
+        <ContentPaneBackLink href={portalBase} />
+        <div>
+          <h1 className="text-2xl font-bold mb-1">
+            {isForemanPortal ? t("foremanSchedule.scheduleTicket") : t("mySchedule.title")}
+          </h1>
+          <p className="text-sm text-muted-foreground">{t("mySchedule.subtitle")}</p>
+        </div>
+      </div>
 
       {isForemanPortal && vendorId ? (
         <PngPillButton
@@ -209,7 +217,7 @@ export default function FieldSchedule() {
             return (
               <li
                 key={item.id}
-                className={`rounded-xl border border-border bg-card text-card-foreground p-4 shadow-sm ${nudgeFlashingTicketIds.has(item.id) ? "nudge-flash" : ""}`}
+                className={`rounded-xl border border-border bg-card text-card-foreground p-4 ${nudgeFlashingTicketIds.has(item.id) ? "nudge-flash" : ""}`}
                 data-testid={`schedule-card-${item.id}`}
               >
                 <button
@@ -221,17 +229,15 @@ export default function FieldSchedule() {
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="text-sm font-semibold">#{String(item.id).padStart(4, "0")}</span>
                     {ackPillColor ? (
-                      <PngPill color={ackPillColor} className="text-[10px] px-2 py-0.5">
-                        {ackLabel}
-                      </PngPill>
+                      <ImagePill color={ackPillColor}>{ackLabel}</ImagePill>
                     ) : ackIsRest ? (
-                      <PngPill rest className="text-[10px] px-2 py-0.5">
+                      <ImagePill color="grey" rest>
                         {ackLabel}
-                      </PngPill>
+                      </ImagePill>
                     ) : (
-                      <PngPill rest className="text-[10px] px-2 py-0.5">
+                      <ImagePill color="grey" rest>
                         {item.status}
-                      </PngPill>
+                      </ImagePill>
                     )}
                   </div>
                   <h3 className="font-semibold text-base mb-2">{item.workTypeName || t("mySchedule.untitledJob")}</h3>

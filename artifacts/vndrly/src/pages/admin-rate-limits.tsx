@@ -36,6 +36,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { RefreshCcw, Gauge, Database, MemoryStick } from "lucide-react";
+import ContentPaneBackLink from "@/components/content-pane-back-link";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -369,6 +370,7 @@ export default function AdminRateLimits() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
+          <ContentPaneBackLink href="/" />
           <Gauge className="w-6 h-6 text-muted-foreground" />
           <div>
             <h1

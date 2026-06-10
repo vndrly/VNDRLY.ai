@@ -8,9 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import SidebarButton from "@/components/sidebar-button";
 import { TICKET_STATUS_PILL_ASPECT } from "@/lib/ticket-status-palette";
 import { cn } from "@/lib/utils";
-import toolbarPillActiveSrc from "@assets/NewPillPallet_0001s_0004_Layer-5.png";
-import bakerNavTealSquareSrc from "@assets/NewPillPallet_0001s_0004_Layer-5.png";
-import userBubblePillSrc from "@assets/NewPillPallet_0001s_0004_Layer-5.png";
+import { pillBaker } from "@/lib/pill-palette-assets";
 import lightGreySquareSrc from "@assets/900x229_Light-grey_v2r_square_1778256462232.png";
 import { useAuth } from "@/hooks/use-auth";
 import { useBrand } from "@/hooks/use-brand";
@@ -658,7 +656,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
               >
                 {m.role === "user" && (
                   <PillColorLayer
-                    src={isBaker ? userBubblePillSrc : brandImagePillSrc(brand.primary, brand.name)}
+                    src={isBaker ? pillBaker : brandImagePillSrc(brand.primary, brand.name)}
                     imageAspect={TICKET_STATUS_PILL_ASPECT}
                   />
                 )}
@@ -719,7 +717,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
                 isActive={false}
                 theme="light"
                 shape="pill"
-                activeSrcOverride={isBaker ? toolbarPillActiveSrc : undefined}
+                activeSrcOverride={isBaker ? pillBaker : undefined}
                 idleOiacityClass="opacity-70"
                 solidIdleText
                 testId="assistant-send"

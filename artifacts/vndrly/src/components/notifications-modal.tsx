@@ -191,7 +191,7 @@ export default function NotificationsModal({ open, onOpenChange }: Props) {
                       PILL_HEIGHT_CLASS,
                       PILL_MIN_HEIGHT_CLASS,
                       "group shrink-0 rounded-full border px-3 text-xs font-normal shadow-none",
-                      "data-[state=active]:!border-[color:var(--brand-primary)] data-[state=active]:!bg-[color:var(--brand-primary)] data-[state=active]:!text-white data-[state=active]:[text-shadow:0_2px_4px_rgba(0,0,0,0.9)]",
+                      "data-[state=active]:!border-[color:var(--brand-primary)] data-[state=active]:!bg-[color:var(--brand-primary)] data-[state=active]:!text-white data-[state=active]:drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.55)]",
                       "data-[state=inactive]:!border-[color:var(--brand-primary)]/35 data-[state=inactive]:!bg-[color:color-mix(in_srgb,var(--brand-primary)_18%,white)] data-[state=inactive]:!text-[color:var(--brand-primary)]",
                     )}
                     data-testid={`modal-tab-notif-${c.id}`}
@@ -201,7 +201,7 @@ export default function NotificationsModal({ open, onOpenChange }: Props) {
                       <span
                         className={cn(
                           "ml-1 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[9px] font-normal",
-                          "bg-[color:var(--brand-primary)] text-white group-data-[state=active]:bg-white/30 group-data-[state=active]:[text-shadow:0_2px_4px_rgba(0,0,0,0.9)]",
+                          "bg-[color:var(--brand-primary)] text-white group-data-[state=active]:bg-white/30",
                         )}
                       >
                         {unread}

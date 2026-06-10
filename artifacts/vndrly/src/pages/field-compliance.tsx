@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, Shield, User as UserIcon } from "lucide-react";
+import { Shield, User as UserIcon } from "lucide-react";
+import ContentPaneBackLink from "@/components/content-pane-back-link";
+import { FIELD_OPS_PAGE_CLASS } from "@/lib/field-ops-content-pane";
 import { QRCodeSVG } from "qrcode.react";
 import CertificationsSection from "@/components/certifications-section";
 import { usePortalBase } from "@/lib/portal-base";
@@ -78,7 +79,6 @@ function statusOf(
 
 export default function FieldCompliance() {
   const { t } = useTranslation();
-  const [, navigate] = useLocation();
   const portalBase = usePortalBase();
   const [me, setMe] = useState<FieldMe | null>(null);
   const [token, setToken] = useState<ComplianceToken | null>(null);
@@ -111,17 +111,12 @@ export default function FieldCompliance() {
   const photoUrl = resolveUrl(me?.photoUrl ?? me?.profilePhotoPath ?? null);
 
   return (
-    <div className="px-4 pt-4 pb-6 max-w-2xl mx-auto w-full" data-testid="field-compliance">
-      <div className="flex items-center gap-2 mb-4">
-        <button
-          type="button"
-          onClick={() => navigate(`${portalBase}/profile`)}
-          className="p-2 -ml-2 rounded-md hover:bg-muted"
-          aria-label={t("common.back")}
-          data-testid="button-back"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
+    <div className={FIELD_OPS_PAGE_CLASS} data-testid="field-compliance">
+      <div className="flex items-center gap-3 mb-4">
+        <ContentPaneBackLink
+          href={`${portalBase}/profile`}
+          ariaLabel={t("common.back")}
+        />
         <h1 className="text-xl font-bold">{t("compliance.title")}</h1>
       </div>
 
@@ -167,7 +162,7 @@ export default function FieldCompliance() {
           <div className="flex flex-col items-center pt-4 border-t border-border">
             {token ? (
               <>
-                <div className="bg-white p-3 rounded-lg" data-testid="compliance-qr">
+                <div className="bg-card p-3 rounded-lg border border-border" data-testid="compliance-qr">
                   <QRCodeSVG value={token.verifyUrl} size={180} />
                 </div>
                 <p className="text-xs text-muted-foreground mt-2 text-center">{t("compliance.qrCaption")}</p>

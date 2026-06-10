@@ -394,7 +394,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             "flex-1 p-6",
             FIXED_APP_CHROME ? "min-h-0 overflow-y-auto" : "overflow-auto",
           )}
-          style={isDarkTheme ? { backgroundColor: "#E6E6E7" } : undefined}
         >
           {children}
         </main>

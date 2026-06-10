@@ -1,5 +1,6 @@
 ﻿# Double-click to run VNDRLY locally (web + API).
-# Keeps two small terminal windows open while you work; close them to stop.
+# Opens two terminal windows (API + web). Use keep-dev-awake.ps1 to auto-restart
+# after sleep and prevent Windows from sleeping while you work.
 
 $Repo = "C:\Users\JohnElerick\DEV\VNDRLY.ai"
 $NodeDir = "C:\Users\JohnElerick\DEV\tools\node"

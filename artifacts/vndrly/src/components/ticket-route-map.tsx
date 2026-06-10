@@ -6,12 +6,7 @@ import "leaflet/dist/leaflet.css";
 import { cn } from "@/lib/utils";
 import { useBrand } from "@/hooks/use-brand";
 import SplitToggleHalf from "@/components/split-toggle-half";
-import {
-  pickTogglePillSrc,
-  SPLIT_TOGGLE_ACTIVE_TEXT_SHADOW,
-  SPLIT_TOGGLE_IDLE_TEXT_CLASS,
-  TOGGLE_IDLE_PILL_SRC,
-} from "@/lib/pick-toggle-pill";
+import { pickTogglePillSrc, TOGGLE_IDLE_PILL_SRC } from "@/lib/pick-toggle-pill";
 import { BrandZoomControlInMap } from "@/components/brand-zoom-control";
 import { LONG_DWELL_MS as DEFAULT_LONG_DWELL_MS, deriveLongStops, formatDwell } from "@/lib/stops";
 
@@ -333,8 +328,6 @@ export function TicketRouteMap({
       };
 
   const activePillSrc = pickTogglePillSrc(brand.primary, brand.name);
-  const activeText = cn("text-white", SPLIT_TOGGLE_ACTIVE_TEXT_SHADOW);
-  const idleText = SPLIT_TOGGLE_IDLE_TEXT_CLASS;
 
   return (
     <div className="space-y-2">
@@ -345,9 +338,8 @@ export function TicketRouteMap({
         >
           <SplitToggleHalf
             side="left"
+            active={view === "map"}
             pillSrc={view === "map" ? activePillSrc : TOGGLE_IDLE_PILL_SRC}
-            bgClassName={view !== "map" ? "opacity-70" : undefined}
-            textClassName={view === "map" ? activeText : idleText}
             onClick={() => setView("map")}
             data-testid="button-map-view-map"
             aria-pressed={view === "map"}
@@ -357,9 +349,8 @@ export function TicketRouteMap({
           <span aria-hidden className="w-px shrink-0 self-stretch bg-gray-300" />
           <SplitToggleHalf
             side="right"
+            active={view === "satellite"}
             pillSrc={view === "satellite" ? activePillSrc : TOGGLE_IDLE_PILL_SRC}
-            bgClassName={view !== "satellite" ? "opacity-70" : undefined}
-            textClassName={view === "satellite" ? activeText : idleText}
             onClick={() => setView("satellite")}
             data-testid="button-map-view-satellite"
             aria-pressed={view === "satellite"}

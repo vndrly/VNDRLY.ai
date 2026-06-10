@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, User as UserIcon } from "lucide-react";
+import { User as UserIcon } from "lucide-react";
+import ContentPaneBackLink from "@/components/content-pane-back-link";
+import { FIELD_OPS_PAGE_CLASS } from "@/lib/field-ops-content-pane";
 import { useToast } from "@/hooks/use-toast";
 import { PngPillButton } from "@/components/png-pill-rollover";
 import { cn } from "@/lib/utils";
@@ -166,17 +168,13 @@ export default function FieldEditProfile() {
   const url = resolveUrl(directPhotoUrl ?? photoPath);
 
   return (
-    <div className="px-4 pt-4 pb-6 max-w-2xl mx-auto w-full" data-testid="field-edit-profile">
-      <div className="flex items-center gap-2 mb-4">
-        <button
-          type="button"
-          onClick={() => navigate(`${portalBase}/profile`)}
-          className="p-2 -ml-2 rounded-md hover:bg-muted"
-          data-testid="button-back"
-          aria-label={t("common.back")}
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
+    <div className={FIELD_OPS_PAGE_CLASS} data-testid="field-edit-profile">
+      <div className="flex items-center gap-3 mb-4">
+        <ContentPaneBackLink
+          href={`${portalBase}/profile`}
+          testId="button-back"
+          ariaLabel={t("common.back")}
+        />
         <h1 className="text-xl font-bold">{t("editProfile.title")}</h1>
       </div>
 

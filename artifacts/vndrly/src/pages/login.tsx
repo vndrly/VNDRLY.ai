@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
-import { Check, Copy, Eye, EyeOff } from "lucide-react";
+import { Check, Copy, Eye, EyeOff, LogIn, UserPlus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
@@ -10,10 +10,7 @@ import { translateApiError } from "@/lib/api-error";
 import { Spinner } from "@/components/ui/spinner";
 import { VNDRLY_LOGO_SQUARE as vndrlyLogo } from "@/lib/vndrly-brand-assets";
 import headerBg from "@assets/VNDRLY_Header_Blur_4_1776220762025.png";
-import AmberButton from "@/components/amber-button";
-import BlueButton from "@/components/blue-button";
-import PortalButton from "@/components/portal-button";
-import LoginSquareButton from "@/components/login-square-button";
+import SidebarButton from "@/components/sidebar-button";
 import LanguageToggle from "@/components/language-toggle";
 import DarkLightToggle, { type ThemeMode } from "@/components/dark-light-toggle";
 import { PoweredByVndrly } from "@/components/powered-by-vndrly";
@@ -368,7 +365,7 @@ export default function Login() {
             className={cn("border-2 rounded-xl p-6 shadow-xl transition-colors duration-300", formReady ? (branded ? "" : "border-amber-500") : "border-gray-300")}
             style={formReady && branded ? { borderColor: brand.primary } : undefined}
           >
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form id="login-form" onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
                 <Label htmlFor="username" className={isDark ? "text-gray-100" : "text-gray-700"}>{t("login.emailLabel")}</Label>
                 <Input
@@ -408,13 +405,20 @@ export default function Login() {
                 </div>
               </div>
               <div className="pt-2">
-                <LoginSquareButton
-                  type="submit"
-                  disabled={!formReady || isSubmitting}
+                <SidebarButton
+                  isActive={false}
                   testId="button-login"
+                  branded={branded}
+                  brandPrimary={brand.primary}
+                  brandAccent={brand.accent}
+                  onClick={() => {
+                    if (!formReady || isSubmitting) return;
+                    (document.getElementById("login-form") as HTMLFormElement | null)?.requestSubmit();
+                  }}
                 >
+                  <LogIn className="w-4 h-4" />
                   {isSubmitting ? t("login.signingIn") : t("login.signIn")}
-                </LoginSquareButton>
+                </SidebarButton>
               </div>
             </form>
           </div>
@@ -472,13 +476,17 @@ export default function Login() {
               button lines up under "Sign In to Portal" at the exact same
               width. */}
           <div className={cn("mt-5 pt-4 px-6 border-t", isDark ? "border-white/20" : "border-gray-200")}>
-            <LoginSquareButton
-              type="button"
-              onClick={() => navigate("/visitor")}
+            <SidebarButton
+              isActive={false}
               testId="button-continue-as-visitor"
+              branded={branded}
+              brandPrimary={brand.primary}
+              brandAccent={brand.accent}
+              onClick={() => navigate("/visitor")}
             >
+              <UserPlus className="w-4 h-4" />
               {t("visitor.continueAsVisitor")}
-            </LoginSquareButton>
+            </SidebarButton>
           </div>
 
           {/* Dev-only affordances. Mirrors the gating used by the

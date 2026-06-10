@@ -45,12 +45,10 @@ vi.mock("@/components/pill-bg", () => ({
   default: () => null,
 }));
 
-// `bluePill` resolves through the @assets alias to a PNG that vite/jsdom
-// can't decode. The pill-bg mock above already drops the only consumer,
-// so we just need the import to succeed.
-vi.mock("@assets/NewPillPallet_0001s_0017_900x229_blue_Pill.png", () => ({
-  default: "blue-pill.png",
-}));
+vi.mock("@/lib/pill-palette-assets", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/pill-palette-assets")>();
+  return { ...actual, pillBlue: "blue-pill.png" };
+});
 
 // Mutable handlers seeded per test. `data` lets us swap roster snapshots
 // between calls so a "silent refresh" assertion can show the chip

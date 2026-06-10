@@ -108,10 +108,7 @@ function StatusBadge({ status }: { status: string }) {
     revoked: { labelKey: "approvals.status.revoked", tone: "red" },
   };
   const cfg = map[status] ?? map.pending_review;
-  // BrandRolePill only knows "amber" | "green" | "grey" — fold "red"
-  // back to "grey" so we never break the build, and flag it with the
-  // explicit testid so e2e tests can still assert the variant.
-  const tone = cfg.tone === "red" ? "grey" : cfg.tone;
+  const tone = cfg.tone;
   return (
     <BrandRolePill
       tone={tone}

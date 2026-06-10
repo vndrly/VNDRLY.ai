@@ -100,27 +100,55 @@ export interface TicketStatusMeta {
 // must not pollute the `Record<TicketStatus, …>` typing below.
 export type CrewAckStatus = "pending" | "confirmed" | "declined";
 
+// User-assigned lifecycle color buckets. Custom PNG artwork for each step
+// lives in `artifacts/vndrly/src/lib/ticket-status-palette.ts`
+// (`ticketStatusLifecycleArt`).
+export const TICKET_LIFECYCLE_SPECTRUM: Record<
+  TicketStatus,
+  TicketStatusBadgeColor
+> = {
+  awaiting_acceptance: "orange",
+  draft: "grey",
+  initiated: "babyBlue",
+  in_progress: "blue",
+  pending_review: "amber",
+  completed: "grey",
+  submitted: "lime",
+  approved: "green",
+  awaiting_payment: "green",
+  funds_dispersed: "darkGreen",
+  denied: "red",
+  kicked_back: "red",
+  cancelled: "red",
+};
+
+/** Hidden from the dashboard Tracking Status Breakdown chart. */
+export const TICKET_LIFECYCLE_CHART_EXCLUDED: ReadonlySet<TicketStatus> = new Set([
+  "draft",
+  "completed",
+]);
+
 const ticketLifecycleMeta: Record<TicketStatus, TicketStatusMeta> = {
   draft: {
-    badgeColor: "grey",
+    badgeColor: TICKET_LIFECYCLE_SPECTRUM.draft,
     badgeLabelKey: "tickets.draft",
     testIdStem: "draft",
     actionPill: null,
   },
   initiated: {
-    badgeColor: "babyBlue",
+    badgeColor: TICKET_LIFECYCLE_SPECTRUM.initiated,
     badgeLabelKey: "tickets.initiated",
     testIdStem: "initiated",
     actionPill: null,
   },
   in_progress: {
-    badgeColor: "blue",
+    badgeColor: TICKET_LIFECYCLE_SPECTRUM.in_progress,
     badgeLabelKey: "tickets.inProgress",
     testIdStem: "in-progress",
     actionPill: null,
   },
   pending_review: {
-    badgeColor: "purple",
+    badgeColor: TICKET_LIFECYCLE_SPECTRUM.pending_review,
     badgeLabelKey: "tickets.pendingReview",
     testIdStem: "pending-review",
     actionPill: {
@@ -130,13 +158,13 @@ const ticketLifecycleMeta: Record<TicketStatus, TicketStatusMeta> = {
     },
   },
   completed: {
-    badgeColor: "teal",
+    badgeColor: TICKET_LIFECYCLE_SPECTRUM.completed,
     badgeLabelKey: "tickets.completed",
     testIdStem: "completed",
     actionPill: null,
   },
   submitted: {
-    badgeColor: "amber",
+    badgeColor: TICKET_LIFECYCLE_SPECTRUM.submitted,
     badgeLabelKey: "tickets.submitted",
     testIdStem: "submitted",
     actionPill: {
@@ -146,7 +174,7 @@ const ticketLifecycleMeta: Record<TicketStatus, TicketStatusMeta> = {
     },
   },
   kicked_back: {
-    badgeColor: "red",
+    badgeColor: TICKET_LIFECYCLE_SPECTRUM.kicked_back,
     badgeLabelKey: "tickets.kickedBack",
     testIdStem: "kicked-back",
     actionPill: {
@@ -156,7 +184,7 @@ const ticketLifecycleMeta: Record<TicketStatus, TicketStatusMeta> = {
     },
   },
   approved: {
-    badgeColor: "lime",
+    badgeColor: TICKET_LIFECYCLE_SPECTRUM.approved,
     badgeLabelKey: "tickets.approved",
     testIdStem: "approved",
     actionPill: {
@@ -165,11 +193,8 @@ const ticketLifecycleMeta: Record<TicketStatus, TicketStatusMeta> = {
       labelKey: "ticketDetail.approved",
     },
   },
-  // Task #576: amber matches the "needs office attention" treatment we
-  // already use for submitted tickets — awaiting_payment is the same
-  // shape of work-blocked-on-someone-else from the office's perspective.
   awaiting_payment: {
-    badgeColor: "orange",
+    badgeColor: TICKET_LIFECYCLE_SPECTRUM.awaiting_payment,
     badgeLabelKey: "tickets.awaitingPaymentStatus",
     testIdStem: "awaiting-payment",
     actionPill: {
@@ -179,7 +204,7 @@ const ticketLifecycleMeta: Record<TicketStatus, TicketStatusMeta> = {
     },
   },
   funds_dispersed: {
-    badgeColor: "darkGreen",
+    badgeColor: TICKET_LIFECYCLE_SPECTRUM.funds_dispersed,
     badgeLabelKey: "tickets.fundsDispersed",
     testIdStem: "funds-dispersed",
     actionPill: {
@@ -189,7 +214,7 @@ const ticketLifecycleMeta: Record<TicketStatus, TicketStatusMeta> = {
     },
   },
   cancelled: {
-    badgeColor: "darkRed",
+    badgeColor: TICKET_LIFECYCLE_SPECTRUM.cancelled,
     badgeLabelKey: "tickets.cancelled",
     testIdStem: "cancelled",
     actionPill: {
@@ -204,13 +229,13 @@ const ticketLifecycleMeta: Record<TicketStatus, TicketStatusMeta> = {
   // shared status badge. These statuses still get lifecycle colors so
   // list views and analytics bars can distinguish them at a glance.
   awaiting_acceptance: {
-    badgeColor: "grey",
+    badgeColor: TICKET_LIFECYCLE_SPECTRUM.awaiting_acceptance,
     badgeLabelKey: "tickets.awaitingAcceptance",
     testIdStem: "awaiting-acceptance",
     actionPill: null,
   },
   denied: {
-    badgeColor: "pink",
+    badgeColor: TICKET_LIFECYCLE_SPECTRUM.denied,
     badgeLabelKey: "tickets.denied",
     testIdStem: "denied",
     actionPill: null,

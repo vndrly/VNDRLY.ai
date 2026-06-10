@@ -16,8 +16,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogLogoHeader } from "@/components/ui/dialog";
 import { ShoppingCart, Plus, Pencil, Trash2, ArrowUp, ArrowDown, ArrowUpDown, Download, Upload } from "lucide-react";
 import { PngPillButton } from "@/components/png-pill-rollover";
+import ContentPaneBackLink from "@/components/content-pane-back-link";
 import { PillColorLayer } from "@/components/png-pill-chrome";
-import bluePill from "@assets/NewPillPallet_0001s_0017_900x229_blue_Pill.png";
+import { pillBlue } from "@/lib/pill-palette-assets";
 import AfePill from "@/components/afe-pill";
 import { useToast } from "@/hooks/use-toast";
 import { translateApiError } from "@/lib/api-error";
@@ -867,7 +868,7 @@ export default function Catalog() {
                                 </span>
                               </span>
                               <div className="relative h-[23px] w-32 shrink-0">
-                                <PillColorLayer src={bluePill} />
+                                <PillColorLayer src={pillBlue} />
                                 <Input
                                   value={value}
                                   onChange={(e) =>
@@ -908,9 +909,12 @@ export default function Catalog() {
   return (
     <div className="space-y-6" data-testid="catalog-page">
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
+        <div className="flex items-center gap-3">
+          <ContentPaneBackLink href="/" />
+          <div>
           <h1 className="text-2xl font-bold tracking-tight" data-testid="text-page-title">{t("catalog.title")}</h1>
           <p className="text-muted-foreground text-sm mt-1">{t("catalog.subtitle")}</p>
+          </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <PngPillButton color="blue" className="px-3" onClick={handleExport} data-testid="button-export-csv">

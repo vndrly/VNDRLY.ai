@@ -45,6 +45,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { MessageSquareOff, RefreshCcw, ExternalLink } from "lucide-react";
+import ContentPaneBackLink from "@/components/content-pane-back-link";
 
 type RemovedComment = {
   source: "ticket" | "hotlist";
@@ -142,6 +143,7 @@ export default function AdminRemovedComments() {
     <div className="p-6 space-y-6" data-testid="page-admin-removed-comments">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3">
+          <ContentPaneBackLink href="/" />
           <MessageSquareOff className="h-6 w-6 text-muted-foreground" />
           <div>
             <h1 className="text-2xl font-semibold">Removed comments</h1>

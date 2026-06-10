@@ -4,9 +4,9 @@ import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "wouter";
 import SphereBackButton from "@/components/sphere-back-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import PngPill, {
+import ImagePill, { type ImagePillColor } from "@/components/image-pill";
+import {
   PngPillButton,
-  type PngPillColor,
 } from "@/components/png-pill-rollover";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
@@ -60,7 +60,7 @@ type StatementResponse = {
 
 function statusPillColor(
   status: StatementRow["status"],
-): PngPillColor {
+): ImagePillColor {
   switch (status) {
     case "paid":
       return "green";
@@ -73,7 +73,7 @@ function statusPillColor(
       return "amber";
     case "draft":
     default:
-      return "brand";
+      return "blue";
   }
 }
 
@@ -519,9 +519,9 @@ export default function StatementPage() {
                           {formatDate(r.periodEnd)}
                         </TableCell>
                         <TableCell>
-                          <PngPill color={statusPillColor(r.status)}>
+                          <ImagePill color={statusPillColor(r.status)}>
                             {t(`invoices.status.${r.status}`)}
-                          </PngPill>
+                          </ImagePill>
                         </TableCell>
                         <TableCell className="text-right tabular-nums">
                           {formatMoney(r.total)}

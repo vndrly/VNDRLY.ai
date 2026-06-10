@@ -6,7 +6,8 @@ import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import { Badge } from "@/components/ui/badge";
-import PngPill, { PngPillButton, type PngPillColor } from "@/components/png-pill-rollover";
+import ImagePill, { type ImagePillColor } from "@/components/image-pill";
+import { PngPillButton } from "@/components/png-pill-rollover";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -256,7 +257,7 @@ function statusVariant(
   }
 }
 
-function statusPillColor(status: InvoiceDetail["status"]): PngPillColor {
+function statusPillColor(status: InvoiceDetail["status"]): ImagePillColor {
   switch (status) {
     case "paid":
       return "green";
@@ -267,7 +268,7 @@ function statusPillColor(status: InvoiceDetail["status"]): PngPillColor {
     case "cancelled":
       return "red";
     default:
-      return "brand";
+      return "blue";
   }
 }
 
@@ -981,11 +982,11 @@ export default function InvoiceDetailPage({ id }: { id: number }) {
             <SphereBackButton size={32} />
           </Link>
           <h1 className="text-2xl font-semibold">{data.invoiceNumber}</h1>
-          <PngPill color={statusPillColor(data.status)} data-testid="badge-status">
+          <ImagePill color={statusPillColor(data.status)} data-testid="badge-status">
             {t(`invoices.status.${data.status}`)}
-          </PngPill>
+          </ImagePill>
           {showAgingBadge && data.dueDate && (
-            <PngPill color="red" data-testid="badge-aging">
+            <ImagePill color="red" data-testid="badge-aging">
               {t("invoices.agingBadge", {
                 // Calendar-day diff (UTC) so the badge label matches the
                 // server-side aging worker's day count regardless of
@@ -1009,7 +1010,7 @@ export default function InvoiceDetailPage({ id }: { id: number }) {
                   );
                 })(),
               })}
-            </PngPill>
+            </ImagePill>
           )}
         </div>
         <div className="flex items-center gap-2 flex-wrap">

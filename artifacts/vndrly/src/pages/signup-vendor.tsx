@@ -265,16 +265,6 @@ export default function SignupVendor() {
                         className="h-10 flex-1"
                         data-testid="signup-input-brand-primary-color"
                       />
-                      {form.brandPrimaryColor && (
-                        <button
-                          type="button"
-                          onClick={() => update("brandPrimaryColor", "")}
-                          className="text-xs text-gray-500 hover:text-destructive"
-                          data-testid="signup-button-clear-brand-primary-color"
-                        >
-                          Clear
-                        </button>
-                      )}
                     </div>
                     {form.brandPrimaryColor && getContrastWarning(form.brandPrimaryColor) && (
                       <p
@@ -302,16 +292,6 @@ export default function SignupVendor() {
                         className="h-10 flex-1"
                         data-testid="signup-input-brand-accent-color"
                       />
-                      {form.brandAccentColor && (
-                        <button
-                          type="button"
-                          onClick={() => update("brandAccentColor", "")}
-                          className="text-xs text-gray-500 hover:text-destructive"
-                          data-testid="signup-button-clear-brand-accent-color"
-                        >
-                          Clear
-                        </button>
-                      )}
                     </div>
                     {form.brandAccentColor && getContrastWarning(form.brandAccentColor) && (
                       <p

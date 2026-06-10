@@ -20,7 +20,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { ShieldCheck, Pencil, Trash2 } from "lucide-react";
-import PngPill, { PngPillButton } from "@/components/png-pill-rollover";
+import ImagePill from "@/components/image-pill";
+import { PngPillButton } from "@/components/png-pill-rollover";
 import { translateApiError } from "@/lib/api-error";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -31,16 +32,26 @@ function isSafeUrl(url: string | null | undefined): boolean {
 }
 
 function statusBadge(expirationDate: string | null) {
-  if (!expirationDate) return <span className="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-700">No expiration</span>;
+  if (!expirationDate) {
+    return <ImagePill color="grey">No expiration</ImagePill>;
+  }
   const days = (new Date(expirationDate + "T00:00:00").getTime() - Date.now()) / (1000 * 60 * 60 * 24);
-  if (days < 0) return <span className="text-xs px-2 py-0.5 rounded bg-red-100 text-red-700">Expired {Math.abs(Math.floor(days))}d ago</span>;
-  if (days <= 60) return <span className="text-xs px-2 py-0.5 rounded bg-amber-100 text-amber-800">Expires in {Math.ceil(days)}d</span>;
-  return <PngPill color="green">Valid</PngPill>;
+  if (days < 0) {
+    return (
+      <ImagePill color="red">
+        Expired {Math.abs(Math.floor(days))}d ago
+      </ImagePill>
+    );
+  }
+  if (days <= 60) {
+    return <ImagePill color="amber">Expires in {Math.ceil(days)}d</ImagePill>;
+  }
+  return <ImagePill color="green">Valid</ImagePill>;
 }
 
 function verifyBadge(c: EmployeeCertification) {
   if (c.vendorVerifiedAt) return null;
-  return <span className="text-xs px-2 py-0.5 rounded bg-orange-100 text-orange-800">Unverified</span>;
+  return <ImagePill color="amber">Unverified</ImagePill>;
 }
 
 type FormState = {

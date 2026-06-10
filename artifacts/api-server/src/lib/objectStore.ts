@@ -1,6 +1,7 @@
 import fsp from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import ws from "ws";
 import type { ObjectAclPolicy } from "./objectAcl";
 import {
   localGetObject,
@@ -103,8 +104,12 @@ class SupabaseObjectStore implements ObjectStore {
   private bucketReady: Promise<void> | null = null;
 
   constructor(url: string, serviceKey: string, bucket: string) {
+    // Node < 22 has no native WebSocket; @supabase/realtime-js throws on
+    // createClient without an explicit transport (breaks storage uploads on
+    // local dev where the API runs on Node 20 LTS).
     this.client = createClient(url, serviceKey, {
       auth: { persistSession: false, autoRefreshToken: false },
+      realtime: { transport: ws as unknown as typeof WebSocket },
     });
     this.bucket = bucket;
   }

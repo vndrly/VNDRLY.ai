@@ -8,6 +8,8 @@ import PngPill, { PngPillButton } from "@/components/png-pill-rollover";
 import LanguageToggle from "@/components/language-toggle";
 import { cn } from "@/lib/utils";
 import { usePortalBase } from "@/lib/portal-base";
+import ContentPaneBackLink from "@/components/content-pane-back-link";
+import { FIELD_OPS_PAGE_CLASS } from "@/lib/field-ops-content-pane";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -67,7 +69,10 @@ export default function FieldProfile() {
   };
 
   return (
-    <div className="px-4 pt-6 pb-6 max-w-2xl mx-auto w-full" data-testid="field-profile">
+    <div className={FIELD_OPS_PAGE_CLASS} data-testid="field-profile">
+      <div className="mb-4">
+        <ContentPaneBackLink href={portalBase} ariaLabel={t("common.back")} />
+      </div>
       <div className="flex flex-col items-center pt-2 pb-6">
         <div className="relative">
           {photoUrl ? (

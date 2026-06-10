@@ -21,6 +21,8 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import ImagePill from "@/components/image-pill";
+import TicketLifecyclePill from "@/components/ticket-lifecycle-pill";
 import TicketStatusBadge from "@/components/ticket-status-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
@@ -38,7 +40,7 @@ import { AssistantMetricsCard } from "@/components/assistant-metrics-card";
 import { RateLimitBudgetsCard } from "@/components/rate-limit-budgets-card";
 import { RateLimitTripsCard } from "@/components/rate-limit-trips-card";
 import { VerticalPillBarShape } from "@/components/vertical-pill-bar-shape";
-import { TICKET_LIFECYCLE_ORDER } from "@workspace/ticket-status-meta";
+import { TICKET_LIFECYCLE_CHART_EXCLUDED, TICKET_LIFECYCLE_ORDER } from "@workspace/ticket-status-meta";
 import { ticketStatusMeta } from "@/lib/ticket-status-meta";
 import { formatStatusLabel } from "@/lib/format-status";
 import { Link, useLocation } from "wouter";
@@ -47,6 +49,7 @@ import { useTranslation } from "react-i18next";
 import { useBrand } from "@/hooks/use-brand";
 import { useToast } from "@/hooks/use-toast";
 import { brandImagePillSrc } from "@/components/png-pill-rollover";
+import ContentPaneBackLink from "@/components/content-pane-back-link";
 
 // Maps a raw ticket status key to the same i18n label that the
 // tracking-page "All Status" jump list (`pages/tickets.tsx` →
@@ -178,7 +181,7 @@ export default function Dashboard() {
     const orderIndex = new Map<string, number>(
       TICKET_LIFECYCLE_ORDER.map((s, i) => [s, i]),
     );
-    return [...stats].filter((row) => row.status !== "draft").sort((a, b) => {
+    return [...stats].filter((row) => !TICKET_LIFECYCLE_CHART_EXCLUDED.has(row.status as typeof TICKET_LIFECYCLE_ORDER[number])).sort((a, b) => {
       const ai = orderIndex.get(a.status) ?? Number.MAX_SAFE_INTEGER;
       const bi = orderIndex.get(b.status) ?? Number.MAX_SAFE_INTEGER;
       return ai - bi;
@@ -564,9 +567,12 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6" data-testid="dashboard-page">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight" data-testid="text-page-title">{t("dashboard.title")}</h1>
-        <p className="text-muted-foreground text-sm mt-1">{t("dashboard.subtitle")}</p>
+      <div className="flex items-center gap-3">
+        <ContentPaneBackLink href="/" />
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight" data-testid="text-page-title">{t("dashboard.title")}</h1>
+          <p className="text-muted-foreground text-sm mt-1">{t("dashboard.subtitle")}</p>
+        </div>
       </div>
 
       {rateLimited && (
@@ -842,6 +848,7 @@ export default function Dashboard() {
                     <Link
                       key={item.id}
                       href={item.ticketId ? `/tickets/${item.ticketId}` : "#"}
+                      data-recent-activity-row
                       className={`group flex items-start gap-3 p-2 rounded-md transition-colors cursor-pointer ${
                         item.needsAttention
                           ? "bg-amber-50 hover:bg-amber-100 border border-amber-200"
@@ -850,7 +857,7 @@ export default function Dashboard() {
                       data-testid={`activity-item-${item.id}`}
                     >
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate transition-colors group-hover:[color:var(--brand-primary)]">
+                        <p className="recent-activity-title text-sm font-medium truncate transition-[color,text-shadow]">
                           {item.description}
                         </p>
                         <div className="flex items-center gap-2 flex-wrap">
@@ -858,12 +865,9 @@ export default function Dashboard() {
                             {new Date(item.timestamp).toLocaleString()}
                           </p>
                           {item.needsAttention && (
-                            <span
-                              className="inline-flex items-center px-3 h-[23px] rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-xs font-normal whitespace-nowrap"
-                              data-testid={`badge-needs-attention-${item.id}`}
-                            >
+                            <ImagePill color="amber" data-testid={`badge-needs-attention-${item.id}`}>
                               ⚠ Needs attention
-                            </span>
+                            </ImagePill>
                           )}
                         </div>
                       </div>
@@ -880,42 +884,11 @@ export default function Dashboard() {
                           updatedAt={item.timestamp}
                           data-testid={`activity-status-${item.id}`}
                         />
-                        {item.lifecycleState === "pending_arrival" && (
-                          <span
-                            className="inline-flex items-center px-3 h-[23px] rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-xs font-normal whitespace-nowrap"
-                            data-testid={`activity-pending-arrival-${item.id}`}
-                            title={t("tickets.lifecyclePendingArrivalTitle", { defaultValue: "Field employee has not arrived yet" })}
-                          >
-                            {t("tickets.lifecyclePendingArrival", { defaultValue: "Pending Arrival" })}
-                          </span>
-                        )}
-                        {item.lifecycleState === "en_route" && (
-                          <span
-                            className="inline-flex items-center px-3 h-[23px] rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-xs font-normal whitespace-nowrap"
-                            data-testid={`activity-en-route-${item.id}`}
-                            title={t("tickets.lifecycleEnRouteTitle", { defaultValue: "Field employee is en route" })}
-                          >
-                            {t("tickets.lifecycleEnRoute", { defaultValue: "En Route" })}
-                          </span>
-                        )}
-                        {item.lifecycleState === "on_site" && (
-                          <span
-                            className="inline-flex items-center px-3 h-[23px] rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-xs font-normal whitespace-nowrap"
-                            data-testid={`activity-on-site-${item.id}`}
-                            title={t("tickets.lifecycleOnSiteTitle", { defaultValue: "Field employee is on site" })}
-                          >
-                            {t("tickets.lifecycleOnSite", { defaultValue: "On Site" })}
-                          </span>
-                        )}
-                        {item.lifecycleState === "off_site" && (
-                          <span
-                            className="inline-flex items-center px-3 h-[23px] rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-xs font-normal whitespace-nowrap"
-                            data-testid={`activity-off-site-${item.id}`}
-                            title={t("tickets.lifecycleOffSiteTitle", { defaultValue: "Field employee has left the site" })}
-                          >
-                            {t("tickets.lifecycleOffSite", { defaultValue: "Off Site" })}
-                          </span>
-                        )}
+                        <TicketLifecyclePill
+                          state={item.lifecycleState}
+                          testIdPrefix="activity"
+                          idSuffix={item.id}
+                        />
                       </div>
                     </Link>
                   ))}
@@ -1013,7 +986,7 @@ function DashboardAnalyticsCards({
         if (!card.href || loading) return <div key={card.key}>{body}</div>;
 
         return (
-          <Link key={card.key} href={card.href} className="block h-full">
+          <Link key={card.key} href={card.href} className="block h-full" data-link-surface>
             {body}
           </Link>
         );

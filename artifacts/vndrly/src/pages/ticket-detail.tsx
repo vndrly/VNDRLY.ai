@@ -79,6 +79,7 @@ import AmberButton from "@/components/amber-button";
 import GreyButton from "@/components/grey-button";
 import CommentsPanel from "@/components/comments-panel";
 import TicketStatusActionPill from "@/components/ticket-status-action-pill";
+import ImagePill from "@/components/image-pill";
 import TicketStatusBadge from "@/components/ticket-status-badge";
 import ScheduleTicketDialog from "@/components/schedule-ticket-dialog";
 import LiveConnectionPill, { type LiveConnectionStatus } from "@/components/live-connection-pill";
@@ -89,14 +90,14 @@ import { translateApiError } from "@/lib/api-error";
 import { isForemanPersona } from "@/lib/portal-base";
 import { buildGpsTimelineCsv } from "@/lib/gps-timeline-csv";
 import { cn } from "@/lib/utils";
-import { PillColorLayer, PillGlossOverlay } from "@/components/png-pill-chrome";
+import { PillColorLayer } from "@/components/png-pill-chrome";
 import {
   PILL_HEIGHT_CLASS,
   PILL_HEIGHT_PX,
   PILL_LABEL_CLASS,
   PILL_MIN_HEIGHT_CLASS,
-  PILL_TEXT_SHADOW,
   PILL_WRAPPER_CLASS,
+  pillLabelToneClass,
 } from "@/lib/pill-doctrine";
 import { ticketLifecyclePillForStatus } from "@/lib/ticket-status-palette";
 
@@ -125,25 +126,19 @@ const ApprovalActionButton = forwardRef<
         PILL_WRAPPER_CLASS,
         PILL_HEIGHT_CLASS,
         "min-w-[118px] border-0 bg-transparent p-0",
-        "transition-transform active:scale-[0.98]",
         "disabled:cursor-not-allowed disabled:opacity-60",
         className,
       )}
       style={{ height: PILL_HEIGHT_PX }}
       {...props}
     >
-      <PillColorLayer
-        src={cfg.src}
-        className="group-hover:opacity-100"
-      />
-      <PillGlossOverlay />
+      <PillColorLayer src={cfg.src} />
       <span
         className={cn(
           PILL_LABEL_CLASS,
           "h-full gap-1.5",
-          cfg.light ? "text-gray-700" : "text-white",
+          pillLabelToneClass(cfg.light),
         )}
-        style={cfg.light ? undefined : { textShadow: PILL_TEXT_SHADOW }}
       >
         {children}
       </span>
@@ -1403,7 +1398,7 @@ export default function TicketDetail({ id }: { id: number }) {
                   e.preventDefault();
                   document.getElementById("unlock-history")?.scrollIntoView({ behavior: "smooth", block: "start" });
                 }}
-                className="inline-flex items-center gap-1 px-3 h-[23px] rounded-full border border-amber-400 bg-amber-50 text-amber-700 text-xs font-normal hover:bg-amber-100"
+                className="inline-flex"
                 title={
                   ticket.unlockCount > 1
                     ? t("ticketDetail.reopenedByTitleCount", { name: ticket.unlockedByName ?? t("ticketDetail.adminFallback"), when: new Date(ticket.unlockedAt).toLocaleString(), count: ticket.unlockCount })
@@ -1411,9 +1406,11 @@ export default function TicketDetail({ id }: { id: number }) {
                 }
                 data-testid="badge-reopened-by-admin"
               >
-                <RotateCcw className="w-3 h-3" />
-                {t("ticketDetail.reopenedBy", { name: ticket.unlockedByName ?? t("ticketDetail.adminFallback") })}
-                {ticket.unlockCount > 1 ? t("ticketDetail.reopenedByCount", { count: ticket.unlockCount }) : ""}
+                <ImagePill color="amber">
+                  <RotateCcw className="w-3 h-3" />
+                  {t("ticketDetail.reopenedBy", { name: ticket.unlockedByName ?? t("ticketDetail.adminFallback") })}
+                  {ticket.unlockCount > 1 ? t("ticketDetail.reopenedByCount", { count: ticket.unlockCount }) : ""}
+                </ImagePill>
               </a>
             )}
           </div>
@@ -2610,12 +2607,13 @@ export default function TicketDetail({ id }: { id: number }) {
                         {headlineByKind[kind]}
                       </span>
                       {isPaymentReversed && (
-                        <span
-                          className="inline-flex items-center h-[23px] rounded-full bg-red-100 text-red-800 text-xs font-normal uppercase tracking-wide px-3 border border-red-200"
+                        <ImagePill
+                          color="red"
+                          className="uppercase tracking-wide"
                           data-testid={`audit-trail-payment-reversed-badge-${entry.id}`}
                         >
                           {t("ticketDetail.auditPaymentReversedBadge")}
-                        </span>
+                        </ImagePill>
                       )}
                       <span className="text-xs text-muted-foreground">
                         {new Date(entry.createdAt).toLocaleString()}

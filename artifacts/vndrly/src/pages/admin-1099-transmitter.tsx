@@ -26,6 +26,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatPhone, handlePhoneInput, stripPhone } from "@/lib/utils";
+import ContentPaneBackLink from "@/components/content-pane-back-link";
 
 type FormState = {
   tcc: string;
@@ -160,7 +161,9 @@ export default function Admin1099Transmitter() {
 
   return (
     <div className="container mx-auto p-6 max-w-3xl space-y-6">
-      <div>
+      <div className="flex items-center gap-3">
+        <ContentPaneBackLink href="/" />
+        <div>
         <h1 className="text-2xl font-bold">1099 FIRE transmitter</h1>
         <p className="text-sm text-muted-foreground mt-1">
           Used for the IRS T record on every 1099 FIRE submission. Every
@@ -170,6 +173,7 @@ export default function Admin1099Transmitter() {
           (non-test) FIRE submissions are blocked until every field on
           this page is saved.
         </p>
+        </div>
       </div>
 
       {isLoading ? (

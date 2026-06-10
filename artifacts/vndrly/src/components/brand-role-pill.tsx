@@ -13,8 +13,9 @@ import { PILL_HEIGHT_PX } from "@/lib/pill-doctrine";
  * tone → color mapping:
  *   - "amber"  → amber pill
  *   - "green"  → green pill
- *   - "grey"   → grey pillBase (no shadow, light text)
- *   - "brand"  → blue pill (canonical primary fill from the new palette)
+ *   - "red"    → red pill
+ *   - "grey"   → grey idle pill
+ *   - "brand"  → blue pill
  */
 export const AMBER_PILL_HEX = "#F59E0B";
 export const GREEN_PILL_HEX = "#15803D";
@@ -28,7 +29,7 @@ export default function BrandRolePill({
   testId,
 }: {
   children: React.ReactNode;
-  tone?: "brand" | "amber" | "green" | "grey";
+  tone?: "brand" | "amber" | "green" | "red" | "grey";
   height?: number;
   className?: string;
   testId?: string;
@@ -38,9 +39,11 @@ export default function BrandRolePill({
       ? "amber"
       : tone === "green"
         ? "green"
-        : tone === "grey"
-          ? "grey"
-          : "blue";
+        : tone === "red"
+          ? "red"
+          : tone === "grey"
+            ? "grey"
+            : "blue";
   const isRest = tone === "grey";
   return (
     <ImagePill

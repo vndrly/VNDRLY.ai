@@ -3,9 +3,7 @@ import { useBrand } from "@/hooks/use-brand";
 import SplitToggleHalf from "@/components/split-toggle-half";
 import {
   pickTogglePillSrc,
-  splitToggleActiveTextClass,
   splitToggleDividerClass,
-  splitToggleIdleTextClass,
   TOGGLE_IDLE_PILL_SRC,
   type SplitToggleVariant,
 } from "@/lib/pick-toggle-pill";
@@ -29,8 +27,6 @@ export default function DarkLightToggle({
   };
   const brand = useBrand();
   const activePillSrc = pickTogglePillSrc(brand.primary, brand.name);
-  const activeText = splitToggleActiveTextClass(variant);
-  const idleText = splitToggleIdleTextClass(variant);
   const dividerClass = splitToggleDividerClass(variant);
 
   return (
@@ -43,8 +39,8 @@ export default function DarkLightToggle({
     >
       <SplitToggleHalf
         side="left"
+        active={mode === "dark"}
         pillSrc={mode === "dark" ? activePillSrc : TOGGLE_IDLE_PILL_SRC}
-        textClassName={mode === "dark" ? activeText : idleText}
         onClick={() => set("dark")}
         data-testid="theme-dark"
         aria-pressed={mode === "dark"}
@@ -54,8 +50,8 @@ export default function DarkLightToggle({
       <span aria-hidden className={cn("w-px shrink-0 self-stretch", dividerClass)} />
       <SplitToggleHalf
         side="right"
+        active={mode === "light"}
         pillSrc={mode === "light" ? activePillSrc : TOGGLE_IDLE_PILL_SRC}
-        textClassName={mode === "light" ? activeText : idleText}
         onClick={() => set("light")}
         data-testid="theme-light"
         aria-pressed={mode === "light"}

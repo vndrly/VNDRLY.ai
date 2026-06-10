@@ -13,16 +13,20 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Flame, Plus, MapPin, Calendar, Clock, Trash2, Award, FileText, Copy, ExternalLink, Printer, Undo2, ListChecks, MessageCircle } from "lucide-react";
+import ImagePill, { type ImagePillColor } from "@/components/image-pill";
 import RemovePill from "@/components/remove-pill";
-import PngPill, { PngPillButton, type PngPillColor } from "@/components/png-pill-rollover";
-import { PILL_HEIGHT_CLASS, PILL_HEIGHT_PX, PILL_LABEL_CLASS, PILL_TEXT_SHADOW, PILL_WRAPPER_CLASS } from "@/lib/pill-doctrine";
-import { PillColorLayer, PillGlossOverlay } from "@/components/png-pill-chrome";
-import statusPillAmber from "@assets/900x229_Amber_Pill_v4_1778504507024.png";
-import statusPillBlue from "@assets/NewPillPallet_0001s_0017_900x229_blue_Pill.png";
-import statusPillGreen from "@assets/NewPillPallet_0001s_0051_900x229_green_Pill_v3.png";
-import statusPillRed from "@assets/900x229_red_Pill_v2_1777847855327.png";
-import statusPillLightGrey from "@assets/Vndrly_900x229_Light_Grey_Pill1_1777664658767.png";
-import directAwardActivePill from "@assets/NewPillPallet_0001s_0037_900x229_orange_Pill_v2.png";
+import CommentsPanel from "@/components/comments-panel";
+import { PngPillButton } from "@/components/png-pill-rollover";
+import { PILL_HEIGHT_CLASS, PILL_HEIGHT_PX, PILL_LABEL_CLASS, PILL_WRAPPER_CLASS, pillLabelToneClass } from "@/lib/pill-doctrine";
+import { PillColorLayer } from "@/components/png-pill-chrome";
+import {
+  pillAmber,
+  pillBlue,
+  pillGreen,
+  pillOrange,
+  pillRed,
+  PILL_IDLE,
+} from "@/lib/pill-palette-assets";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
@@ -83,109 +87,122 @@ const HOTLIST_STATUS_PILL_COLOR: Record<
   declined: "red",
 };
 
-const PILL_COLOR_TO_TOGGLE: Partial<Record<PillColor, PngPillColor>> = {
-  green: "green",
-  amber: "amber",
-  blue: "blue",
-  red: "red",
+const HOTLIST_STATUS_COLOR: Record<
+  HotlistJobStatus | HotlistBidStatus,
+  ImagePillColor
+> = {
+  open: "green",
+  pending: "amber",
+  awarded: "blue",
+  declined: "red",
 };
 
-function StatusBadge({ status }: { status: HotlistJobStatus | HotlistBidStatus }) {
-  const color: PillColor = HOTLIST_STATUS_PILL_COLOR[status] ?? "grey";
-  const toggleColor = PILL_COLOR_TO_TOGGLE[color];
+function HotlistStatusPill({ status, className }: { status: HotlistJobStatus | HotlistBidStatus; className?: string }) {
+  const color = HOTLIST_STATUS_COLOR[status] ?? "grey";
   return (
-    <PngPill
-      color={toggleColor ?? "brand"}
-      rest={!toggleColor}
-      height={PILL_HEIGHT_PX}
-      className="w-[100px]"
+    <ImagePill
+      color={color}
+      className={cn("min-w-[98px] pointer-events-none", className)}
       data-testid={`badge-status-${status}`}
     >
       {toTitleCase(status)}
-    </PngPill>
+    </ImagePill>
+  );
+}
+
+function HotlistBidCountBadge({ count }: { count: number }) {
+  return (
+    <Badge variant="outline" className="text-xs pointer-events-none">
+      {count} bid{count === 1 ? "" : "s"}
+    </Badge>
   );
 }
 
 /**
- * Glossy status pill rendered with the new 900x229 oval pill images.
- * Uses the same 3-slice PillBg renderer as the action buttons so the
- * rounded corners stay crisp at any width.
+ * Task #51 — outline chip (same family as bid count) that opens the job's
+ * comment thread. The panel loads every comment on the job, including
+ * the viewer's own posts; unread count is a hint only and clears once
+ * the thread fetch runs markAllSeen.
  */
-type HotlistPillCfg = { src: string; light?: boolean };
+function HotlistCommentsLink({
+  jobId,
+  unreadCount = 0,
+  onClick,
+}: {
+  jobId: number;
+  unreadCount?: number;
+  onClick: (e: React.MouseEvent) => void;
+}) {
+  const unread = unreadCount ?? 0;
+  const label =
+    unread > 0
+      ? `${unread} unread comment${unread === 1 ? "" : "s"}`
+      : "View comments";
+  const text = unread > 0 ? `${unread} comment${unread === 1 ? "" : "s"}` : "Comments";
 
-// Same drift-prevention pattern as `HOTLIST_STATUS_PILL_COLOR` above —
-// keying this by the union of generated enums means an `awarded` /
-// `declined` (or any future) status added to the OpenAPI spec breaks
-// the typecheck until someone picks a pill image for it.
-//
-// Unused-but-imported pill assets (`statusPillIndigo`, `statusPillOrange`,
-// `statusPillPurple`, `statusPillDarkGrey`) are intentionally left in
-// the import list so they remain easy to re-introduce when the
-// `HotlistJobStatus` / `HotlistBidStatus` enums grow `submitted` /
-// `expired` / `archived` / `closed` (the four statuses that used to
-// have placeholder pill renderings before this map was tightened).
-const HOTLIST_STATUS_PILL_IMAGE: Record<
-  HotlistJobStatus | HotlistBidStatus,
-  HotlistPillCfg
-> = {
-  open:     { src: statusPillGreen },
-  pending:  { src: statusPillAmber },
-  awarded:  { src: statusPillBlue },
-  declined: { src: statusPillRed },
-};
-
-function HotlistStatusPill({ status }: { status: HotlistJobStatus | HotlistBidStatus }) {
-  const cfg: HotlistPillCfg =
-    HOTLIST_STATUS_PILL_IMAGE[status] ?? { src: statusPillLightGrey, light: true };
   return (
-    <span
+    <button
+      type="button"
+      onClick={onClick}
       className={cn(
-        PILL_WRAPPER_CLASS,
-        PILL_HEIGHT_CLASS,
-        "pointer-events-none min-w-[98px]",
+        "inline-flex items-center gap-1 text-xs text-muted-foreground p-0 bg-transparent border-0",
+        "hover:text-[color:var(--brand-primary)] transition-colors cursor-pointer",
+        unread > 0 && "font-medium",
       )}
-      style={{ height: PILL_HEIGHT_PX }}
-      data-testid={`badge-status-${status}`}
-    >
-      <PillColorLayer
-        src={cfg.src}
-        className={cfg.light ? "opacity-50" : undefined}
-      />
-      <PillGlossOverlay />
-      <span
-        className={cn(
-          PILL_LABEL_CLASS,
-          "h-full",
-          cfg.light ? "text-gray-700" : "text-white",
-        )}
-        style={cfg.light ? undefined : { textShadow: PILL_TEXT_SHADOW }}
-      >
-        {toTitleCase(status)}
-      </span>
-    </span>
-  );
-}
-
-/**
- * Task #51 — small badge that signals "you have N unread comments on
- * this hotlist job's thread". Rendered next to the title in each role's
- * job card. Hidden when count is 0/undefined. Clears automatically once
- * the user opens the job detail (which marks comments as seen via
- * `markAllSeen`) and the hotlist list re-fetches.
- */
-function UnreadCommentBadge({ count, jobId }: { count: number | undefined; jobId: number }) {
-  if (!count || count <= 0) return null;
-  const label = `${count} unread comment${count === 1 ? "" : "s"}`;
-  return (
-    <span
-      className="inline-flex items-center gap-1 h-[23px] px-3 rounded-full border border-gray-300 bg-gray-50 text-gray-600 text-xs font-normal whitespace-nowrap"
       title={label}
       aria-label={label}
-      data-testid={`badge-unread-comments-${jobId}`}
+      data-testid={`link-hotlist-comments-${jobId}`}
     >
-      <MessageCircle className="w-3 h-3" />
-      {count}
-    </span>
+      <MessageCircle className="w-3 h-3 shrink-0" />
+      <span>{text}</span>
+    </button>
+  );
+}
+
+function HotlistJobMetaBadges({
+  job,
+  onOpenComments,
+}: {
+  job: HotlistJobRow;
+  onOpenComments: (e: React.MouseEvent) => void;
+}) {
+  return (
+    <>
+      <HotlistBidCountBadge count={job.bidCount ?? 0} />
+      <HotlistCommentsLink
+        jobId={job.id}
+        unreadCount={job.unreadCommentCount}
+        onClick={onOpenComments}
+      />
+    </>
+  );
+}
+
+function scrollToHotlistComments(jobId: number) {
+  const el = document.getElementById(`hotlist-comments-${jobId}`);
+  if (el) {
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  const hash = typeof window !== "undefined" ? window.location.hash.replace(/^#/, "") : "";
+  if (hash.startsWith("comment-")) {
+    const target = document.getElementById(hash);
+    target?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+}
+
+function HotlistCommentsSection({ jobId }: { jobId: number }) {
+  return (
+    <div
+      id={`hotlist-comments-${jobId}`}
+      className="border-t pt-3 mt-3"
+      data-testid={`section-hotlist-comments-${jobId}`}
+    >
+      <CommentsPanel
+        source="hotlist"
+        parentId={jobId}
+        testIdPrefix={`hotlist-job-${jobId}-comments`}
+      />
+    </div>
   );
 }
 
@@ -360,8 +377,18 @@ function PartnerHotlist({ focusedJobId }: { focusedJobId: number | null }) {
   const [postOpen, setPostOpen] = useState(false);
   const [form, setForm] = useState({ title: "", description: "", locationAddress: "", deadline: "", estimatedDurationDays: "" });
   const [expanded, setExpanded] = useState<number | null>(focusedJobId);
+  const [commentsFocusJobId, setCommentsFocusJobId] = useState<number | null>(
+    focusedJobId != null && typeof window !== "undefined" && window.location.hash.startsWith("#comment-")
+      ? focusedJobId
+      : null,
+  );
   useEffect(() => {
-    if (focusedJobId != null) setExpanded(focusedJobId);
+    if (focusedJobId != null) {
+      setExpanded(focusedJobId);
+      if (typeof window !== "undefined" && window.location.hash.startsWith("#comment-")) {
+        setCommentsFocusJobId(focusedJobId);
+      }
+    }
   }, [focusedJobId]);
 
   const createJob = useMutation({
@@ -453,8 +480,21 @@ function PartnerHotlist({ focusedJobId }: { focusedJobId: number | null }) {
                 key={j.id}
                 job={j}
                 expanded={expanded === j.id}
+                commentsFocus={commentsFocusJobId === j.id}
                 isFocused={focusedJobId === j.id}
-                onToggle={() => setExpanded(expanded === j.id ? null : j.id)}
+                onToggle={() => {
+                  if (expanded === j.id) {
+                    setExpanded(null);
+                    setCommentsFocusJobId((prev) => (prev === j.id ? null : prev));
+                  } else {
+                    setExpanded(j.id);
+                  }
+                }}
+                onOpenComments={(e) => {
+                  e.stopPropagation();
+                  setExpanded(j.id);
+                  setCommentsFocusJobId(j.id);
+                }}
                 onDelete={() => deleteJob.mutate(j.id)}
               />
             ))}
@@ -465,7 +505,23 @@ function PartnerHotlist({ focusedJobId }: { focusedJobId: number | null }) {
   );
 }
 
-function PartnerJobCard({ job, expanded, isFocused, onToggle, onDelete }: { job: HotlistJobRow; expanded: boolean; isFocused?: boolean; onToggle: () => void; onDelete: () => void }) {
+function PartnerJobCard({
+  job,
+  expanded,
+  commentsFocus,
+  isFocused,
+  onToggle,
+  onOpenComments,
+  onDelete,
+}: {
+  job: HotlistJobRow;
+  expanded: boolean;
+  commentsFocus?: boolean;
+  isFocused?: boolean;
+  onToggle: () => void;
+  onOpenComments: (e: React.MouseEvent) => void;
+  onDelete: () => void;
+}) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const { t } = useTranslation();
@@ -477,6 +533,11 @@ function PartnerJobCard({ job, expanded, isFocused, onToggle, onDelete }: { job:
       ref.current.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   }, [isFocused]);
+  useEffect(() => {
+    if (!expanded || !commentsFocus) return;
+    const t = window.setTimeout(() => scrollToHotlistComments(job.id), 150);
+    return () => window.clearTimeout(t);
+  }, [expanded, commentsFocus, job.id]);
   const [includeUnaffiliated, setIncludeUnaffiliated] = useState(false);
   const { data: detail } = useQuery({
     queryKey: ["hotlist", "job", job.id, { includeUnaffiliated }],
@@ -503,7 +564,7 @@ function PartnerJobCard({ job, expanded, isFocused, onToggle, onDelete }: { job:
       <div className="group p-3 flex items-center gap-3 cursor-pointer bg-muted/50 hover:bg-muted transition-colors" onClick={onToggle}>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-medium truncate transition-colors group-hover:[color:var(--brand-primary)]" data-testid={`text-job-title-${job.id}`}>{job.title}</span>
+            <span className="hotlist-job-title font-medium truncate transition-[color,text-shadow]" data-testid={`text-job-title-${job.id}`}>{job.title}</span>
             {job.partnerLogoUrl ? (
               <img
                 src={job.partnerLogoUrl}
@@ -514,9 +575,10 @@ function PartnerJobCard({ job, expanded, isFocused, onToggle, onDelete }: { job:
             ) : (
               job.partnerName && <span className="text-xs text-muted-foreground">· {job.partnerName}</span>
             )}
-            <StatusBadge status={job.status} />
-            <Badge variant="outline" className="text-xs">{job.bidCount ?? 0} bid{(job.bidCount ?? 0) === 1 ? "" : "s"}</Badge>
-            <UnreadCommentBadge count={job.unreadCommentCount} jobId={job.id} />
+            <HotlistStatusPill status={job.status} className="w-[100px]" />
+            <span onClick={(e) => e.stopPropagation()} className="inline-flex items-center gap-2 flex-wrap">
+              <HotlistJobMetaBadges job={job} onOpenComments={onOpenComments} />
+            </span>
           </div>
           <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mt-1">
             <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{job.locationAddress}</span>
@@ -597,7 +659,7 @@ function PartnerJobCard({ job, expanded, isFocused, onToggle, onDelete }: { job:
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <Link href={`/vendors/${b.vendorId}`} className="text-sm font-medium text-primary hover:underline">{b.vendorName ?? `Vendor #${b.vendorId}`}</Link>
-                        <StatusBadge status={b.status} />
+                        <HotlistStatusPill status={b.status} className="w-[100px]" />
                         <RelationshipBadge status={b.relationshipStatus ?? null} />
                         {distanceLabel && (
                           <Badge
@@ -664,6 +726,7 @@ function PartnerJobCard({ job, expanded, isFocused, onToggle, onDelete }: { job:
               })}
             </div>
           )}
+          {commentsFocus && <HotlistCommentsSection jobId={job.id} />}
         </div>
       )}
     </div>
@@ -764,7 +827,7 @@ function DirectAwardButton({ job }: { job: HotlistJobRow }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <PngPillButton color="amber" activeSrc={directAwardActivePill} activeTextShadowClass="drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)]" hoverTextShadowClass="group-hover:drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)]" data-testid={`button-direct-award-${job.id}`}>
+        <PngPillButton color="amber" activeSrc={pillOrange} data-testid={`button-direct-award-${job.id}`}>
           <Award className="w-3 h-3" />Direct Award
         </PngPillButton>
       </DialogTrigger>
@@ -1201,6 +1264,16 @@ function VendorHotlist({ focusedJobId }: { focusedJobId: number | null }) {
     helloEventName: "ticket.hello",
     onHelloWithGap: refetchVendorHotlist,
   });
+  const [commentsFocusJobId, setCommentsFocusJobId] = useState<number | null>(
+    focusedJobId != null && typeof window !== "undefined" && window.location.hash.startsWith("#comment-")
+      ? focusedJobId
+      : null,
+  );
+  useEffect(() => {
+    if (focusedJobId != null && typeof window !== "undefined" && window.location.hash.startsWith("#comment-")) {
+      setCommentsFocusJobId(focusedJobId);
+    }
+  }, [focusedJobId]);
 
   if (isLoading) {
     return (
@@ -1314,7 +1387,15 @@ function VendorHotlist({ focusedJobId }: { focusedJobId: number | null }) {
             {inRadius.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-3">No open jobs in your operating area right now.</p>
             ) : (
-              inRadius.map((j) => <VendorJobCard key={j.id} job={j} isFocused={focusedJobId === j.id} />)
+              inRadius.map((j) => (
+                <VendorJobCard
+                  key={j.id}
+                  job={j}
+                  isFocused={focusedJobId === j.id}
+                  commentsFocus={commentsFocusJobId === j.id}
+                  onOpenComments={() => setCommentsFocusJobId(j.id)}
+                />
+              ))
             )}
             {outOfRadius.length > 0 && (
               <details className="border rounded-md" data-testid="section-out-of-radius" open={outOfRadius.some((j) => focusedJobId === j.id)}>
@@ -1322,7 +1403,16 @@ function VendorHotlist({ focusedJobId }: { focusedJobId: number | null }) {
                   Show {outOfRadius.length} job{outOfRadius.length === 1 ? "" : "s"} outside your radius
                 </summary>
                 <div className="space-y-2 p-2 border-t">
-                  {outOfRadius.map((j) => <VendorJobCard key={j.id} job={j} radiusMiles={data.vendor!.operatingRadiusMiles!} isFocused={focusedJobId === j.id} />)}
+                  {outOfRadius.map((j) => (
+                    <VendorJobCard
+                      key={j.id}
+                      job={j}
+                      radiusMiles={data.vendor!.operatingRadiusMiles!}
+                      isFocused={focusedJobId === j.id}
+                      commentsFocus={commentsFocusJobId === j.id}
+                      onOpenComments={() => setCommentsFocusJobId(j.id)}
+                    />
+                  ))}
                 </div>
               </details>
             )}
@@ -1333,19 +1423,40 @@ function VendorHotlist({ focusedJobId }: { focusedJobId: number | null }) {
   );
 }
 
-function VendorJobCard({ job, radiusMiles, isFocused }: { job: HotlistJobRow; radiusMiles?: number; isFocused?: boolean }) {
+function VendorJobCard({
+  job,
+  radiusMiles,
+  isFocused,
+  commentsFocus,
+  onOpenComments,
+}: {
+  job: HotlistJobRow;
+  radiusMiles?: number;
+  isFocused?: boolean;
+  commentsFocus?: boolean;
+  onOpenComments: () => void;
+}) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const { t } = useTranslation();
   const { toast } = useToast();
   const listKey = ["hotlist", "list", "vendor", user?.vendorId];
   const [open, setOpen] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(!!commentsFocus);
   const ref = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     if (isFocused && ref.current) {
       ref.current.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   }, [isFocused]);
+  useEffect(() => {
+    if (commentsFocus) setCommentsOpen(true);
+  }, [commentsFocus]);
+  useEffect(() => {
+    if (!commentsOpen) return;
+    const timer = window.setTimeout(() => scrollToHotlistComments(job.id), 150);
+    return () => window.clearTimeout(timer);
+  }, [commentsOpen, job.id]);
   const [form, setForm] = useState({
     amountUsd: job.myBid?.amountUsd ?? "",
     etaDays: job.myBid?.etaDays != null ? String(job.myBid.etaDays) : "",
@@ -1373,13 +1484,14 @@ function VendorJobCard({ job, radiusMiles, isFocused }: { job: HotlistJobRow; ra
   return (
     <div
       ref={ref}
-      className={`border rounded-md p-3 flex items-center gap-3 ${outOfRadius ? "opacity-60" : ""}`}
-      style={isFocused ? { boxShadow: "0 0 0 2px var(--brand-primary)" } : undefined}
+      className={outOfRadius ? "opacity-60" : undefined}
+      style={isFocused ? { boxShadow: "0 0 0 2px var(--brand-primary)", borderRadius: "0.375rem" } : undefined}
       data-testid={`hotlist-job-${job.id}`}
     >
+      <div className="group border rounded-md p-3 flex items-center gap-3">
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-medium truncate">{job.title}</span>
+          <span className="hotlist-job-title font-medium truncate transition-[color,text-shadow]">{job.title}</span>
           {job.partnerLogoUrl ? (
             <img
               src={job.partnerLogoUrl}
@@ -1393,7 +1505,14 @@ function VendorJobCard({ job, radiusMiles, isFocused }: { job: HotlistJobRow; ra
           {job.distanceMiles != null && (
             <Badge variant="outline" className={`text-xs ${outOfRadius ? "border-amber-400 text-amber-700" : ""}`}>{job.distanceMiles} mi</Badge>
           )}
-          <UnreadCommentBadge count={job.unreadCommentCount} jobId={job.id} />
+          <HotlistJobMetaBadges
+            job={job}
+            onOpenComments={(e) => {
+              e.stopPropagation();
+              setCommentsOpen(true);
+              onOpenComments();
+            }}
+          />
         </div>
         <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mt-1">
           <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{job.locationAddress}</span>
@@ -1412,7 +1531,7 @@ function VendorJobCard({ job, radiusMiles, isFocused }: { job: HotlistJobRow; ra
           </p>
         )}
         {job.myBid && (
-          <div className="text-xs mt-1"><span className="text-muted-foreground">Your bid:</span> <span className="font-semibold">{formatMoney(job.myBid.amountUsd)}</span> <StatusBadge status={job.myBid.status} /></div>
+          <div className="text-xs mt-1"><span className="text-muted-foreground">Your bid:</span> <span className="font-semibold">{formatMoney(job.myBid.amountUsd)}</span> <HotlistStatusPill status={job.myBid.status} className="w-[100px]" /></div>
         )}
       </div>
       {outOfRadius ? (
@@ -1438,6 +1557,12 @@ function VendorJobCard({ job, radiusMiles, isFocused }: { job: HotlistJobRow; ra
         </DialogContent>
       </Dialog>
       )}
+      </div>
+      {commentsOpen && (
+        <div className="border border-t-0 rounded-b-md px-3 pb-3 bg-muted/20">
+          <HotlistCommentsSection jobId={job.id} />
+        </div>
+      )}
     </div>
   );
 }
@@ -1460,6 +1585,7 @@ function AdminHotlist() {
   });
   const [confirmRemoveId, setConfirmRemoveId] = useState<number | null>(null);
   const [detailJobId, setDetailJobId] = useState<number | null>(null);
+  const [detailScrollToComments, setDetailScrollToComments] = useState(false);
 
   const listKey = ["hotlist", "list", "admin", showRemoved];
   // Task #699 — see PartnerHotlist for the gate rationale; same shape.
@@ -1499,8 +1625,15 @@ function AdminHotlist() {
   useEffect(() => {
     if (detailJobId != null && !jobs.some((j) => j.id === detailJobId)) {
       setDetailJobId(null);
+      setDetailScrollToComments(false);
     }
   }, [detailJobId, jobs]);
+
+  useEffect(() => {
+    if (detailJobId == null || !detailScrollToComments) return;
+    const timer = window.setTimeout(() => scrollToHotlistComments(detailJobId), 200);
+    return () => window.clearTimeout(timer);
+  }, [detailJobId, detailScrollToComments]);
 
   const { data: partners } = useListPartners();
 
@@ -1641,7 +1774,7 @@ function AdminHotlist() {
                       <button
                         type="button"
                         onClick={() => setDetailJobId(j.id)}
-                        className={`font-semibold text-gray-700 truncate text-left transition-colors cursor-pointer focus:outline-none focus-visible:[color:var(--brand-primary)] group-hover:[color:var(--brand-primary)] ${isRemoved ? "line-through" : ""}`}
+                        className={`hotlist-job-title font-semibold text-gray-700 truncate text-left transition-[color,text-shadow] cursor-pointer focus:outline-none focus-visible:[color:var(--brand-primary)] ${isRemoved ? "line-through" : ""}`}
                         data-testid={`link-job-title-${j.id}`}
                         title={j.description ?? j.title}
                       >
@@ -1658,7 +1791,14 @@ function AdminHotlist() {
                         j.partnerName && <span className="text-xs text-muted-foreground">· {j.partnerName}</span>
                       )}
                       {isRemoved && <Badge variant="outline" className="text-xs border-red-300 text-red-700">Removed</Badge>}
-                      <UnreadCommentBadge count={j.unreadCommentCount} jobId={j.id} />
+                      <HotlistJobMetaBadges
+                        job={j}
+                        onOpenComments={(e) => {
+                          e.stopPropagation();
+                          setDetailJobId(j.id);
+                          setDetailScrollToComments(true);
+                        }}
+                      />
                     </div>
                     <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mt-1">
                       <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{j.locationAddress}</span>
@@ -1680,9 +1820,7 @@ function AdminHotlist() {
                       <RemovePill
                         onClick={() => setConfirmRemoveId(j.id)}
                         data-testid={`button-remove-job-${j.id}`}
-                      >
-                        <Trash2 className="w-4 h-4" />Remove
-                      </RemovePill>
+                      />
                     )}
                   </div>
                 </div>
@@ -1692,8 +1830,16 @@ function AdminHotlist() {
         )}
       </CardContent>
 
-      <Dialog open={detailJobId != null} onOpenChange={(open) => { if (!open) setDetailJobId(null); }}>
-        <DialogContent data-testid="dialog-job-particulars">
+      <Dialog
+        open={detailJobId != null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDetailJobId(null);
+            setDetailScrollToComments(false);
+          }
+        }}
+      >
+        <DialogContent data-testid="dialog-job-particulars" className="max-h-[90vh] overflow-y-auto">
           {(() => {
             const j = detailJobId != null ? jobs.find((x) => x.id === detailJobId) ?? null : null;
             if (!j) return null;
@@ -1713,10 +1859,16 @@ function AdminHotlist() {
                   <DialogTitle style={{ color: "var(--brand-primary)" }}>{j.title}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-3 text-sm">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <HotlistStatusPill status={j.status} />
                     {j.deletedAt && <Badge variant="outline" className="text-xs border-red-300 text-red-700">Removed</Badge>}
-                    <span className="text-xs text-muted-foreground">{j.bidCount ?? 0} bid{(j.bidCount ?? 0) === 1 ? "" : "s"}</span>
+                    <HotlistJobMetaBadges
+                      job={j}
+                      onOpenComments={(e) => {
+                        e.stopPropagation();
+                        scrollToHotlistComments(j.id);
+                      }}
+                    />
                   </div>
                   {j.partnerName && (
                     <div><span className="font-semibold text-gray-700">Partner:</span> <span className="text-gray-900">{j.partnerName}</span></div>
@@ -1734,6 +1886,7 @@ function AdminHotlist() {
                       {j.description?.trim() ? j.description : <span className="text-muted-foreground italic">No description provided.</span>}
                     </div>
                   </div>
+                  <HotlistCommentsSection jobId={j.id} />
                 </div>
               </>
             );

@@ -1,31 +1,37 @@
 import type { CSSProperties } from "react";
-import tanPill from "@assets/button-palette/900x229_tan_Pill-v3.png";
+import {
+  PILL_ACTION,
+  PILL_BRAND,
+  PILL_IDLE,
+  PILL_TOGGLE_IDLE,
+  pillAmber,
+  pillBlue,
+  pillGreen,
+  pillRed,
+} from "@/lib/pill-palette-assets";
 import { isWinchesterBrand } from "@/lib/portal-branding";
-// Toggle pills MUST share one canvas size (500×127) so active + idle
-// halves scale to the same height under the 200% background clip.
-import amberPill from "@assets/900x229_Amber_Pill_v3.png";
-import bluePill from "@assets/900x229_blue_Pill_v3.png";
-import greenPill from "@assets/900x229_green_Pill_v3_1777847855324.png";
-import redPill from "@assets/900x229_red_Pill_v2_1777847855327.png";
-import greyPill from "@assets/Vndrly_900x229_Light_Grey_Pill1_1777664658767.png";
-import whitePill from "@assets/900x229_white_Pill2_1778850026167.png";
+import {
+  PILL_LABEL_ON_COLOR_CLASS,
+  PILL_LABEL_ON_LIGHT_CLASS,
+  splitToggleLabelClass,
+} from "@/lib/pill-doctrine";
 
 type PaletteEntry = { hex: string; src: string };
 
 const TOGGLE_PILL_PALETTE: PaletteEntry[] = [
-  { hex: "#D80B0B", src: redPill },
-  { hex: "#F39C1A", src: amberPill },
-  { hex: "#149F3D", src: greenPill },
-  { hex: "#1E5BD0", src: bluePill },
+  { hex: "#D80B0B", src: pillRed },
+  { hex: "#F39C1A", src: pillAmber },
+  { hex: "#149F3D", src: pillGreen },
+  { hex: "#1E5BD0", src: pillBlue },
 ];
 
-const NEUTRAL_TOGGLE_PILL_SRC = greyPill;
+const NEUTRAL_TOGGLE_PILL_SRC = PILL_IDLE;
 
 /** Natural width:height of the canonical 500×127 toggle pill PNGs. */
 export const TOGGLE_PILL_IMAGE_ASPECT = 500 / 127;
 
 /** Canonical white pill for the inactive half of split toggles. */
-export const TOGGLE_IDLE_PILL_SRC = whitePill;
+export const TOGGLE_IDLE_PILL_SRC = PILL_TOGGLE_IDLE;
 
 /** CSS background for one half of a split toggle pill. */
 export function toggleHalfPillBgStyle(
@@ -40,28 +46,23 @@ export function toggleHalfPillBgStyle(
   };
 }
 
-export const SPLIT_TOGGLE_ACTIVE_TEXT_SHADOW =
-  "drop-shadow-[0_1px_2px_rgba(0,0,0,0.65)] drop-shadow-[0_2px_4px_rgba(0,0,0,0.45)]";
-
-/** Inactive half label — fixed dark grey on light surfaces. */
-export const SPLIT_TOGGLE_IDLE_TEXT_CLASS = "text-gray-700";
+/** Inactive half label — nav square idle treatment. */
+export const SPLIT_TOGGLE_IDLE_TEXT_CLASS = PILL_LABEL_ON_LIGHT_CLASS;
 
 export type SplitToggleVariant = "dark" | "light";
 
-/** Active half label — no drop shadow on dark surfaces so the pill art reads crisp. */
-export function splitToggleActiveTextClass(variant: SplitToggleVariant): string {
-  if (variant === "dark") return "text-white";
-  return `text-white ${SPLIT_TOGGLE_ACTIVE_TEXT_SHADOW}`;
+/** Active half label — nav square active treatment. */
+export function splitToggleActiveTextClass(_variant?: SplitToggleVariant): string {
+  return splitToggleLabelClass(true);
 }
 
-/** Inactive half label — high contrast on dark chrome, grey on light. */
-export function splitToggleIdleTextClass(variant: SplitToggleVariant): string {
-  if (variant === "dark") return "text-neutral-100";
-  return SPLIT_TOGGLE_IDLE_TEXT_CLASS;
+/** Inactive half label. */
+export function splitToggleIdleTextClass(_variant?: SplitToggleVariant): string {
+  return splitToggleLabelClass(false);
 }
 
-export function splitToggleDividerClass(variant: SplitToggleVariant): string {
-  return variant === "dark" ? "bg-white/45" : "bg-gray-400";
+export function splitToggleDividerClass(_variant?: SplitToggleVariant): string {
+  return "bg-gray-400";
 }
 
 function hexToRgb(hex: string): [number, number, number] | null {
@@ -114,7 +115,10 @@ export function pickTogglePillSrc(
   brandColor: string | null | undefined,
   brandName?: string | null,
 ): string {
-  if (isWinchesterBrand(brandName)) return tanPill;
+  if (isWinchesterBrand(brandName)) return PILL_BRAND.winchester;
+  const name = brandName?.toLowerCase() ?? "";
+  if (name.includes("baker")) return PILL_BRAND.baker;
+  if (name.includes("vndrly")) return PILL_BRAND.vndrly;
   if (!brandColor) return NEUTRAL_TOGGLE_PILL_SRC;
   const rgb = hexToRgb(brandColor);
   if (!rgb) return NEUTRAL_TOGGLE_PILL_SRC;

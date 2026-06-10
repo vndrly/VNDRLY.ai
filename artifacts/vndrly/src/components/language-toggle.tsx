@@ -6,9 +6,7 @@ import { useBrand } from "@/hooks/use-brand";
 import SplitToggleHalf from "@/components/split-toggle-half";
 import {
   pickTogglePillSrc,
-  splitToggleActiveTextClass,
   splitToggleDividerClass,
-  splitToggleIdleTextClass,
   TOGGLE_IDLE_PILL_SRC,
   type SplitToggleVariant,
 } from "@/lib/pick-toggle-pill";
@@ -50,8 +48,6 @@ export default function LanguageToggle({ className, variant = "dark" }: { classN
   };
   const brand = useBrand();
   const activePillSrc = pickTogglePillSrc(brand.primary, brand.name);
-  const activeText = splitToggleActiveTextClass(variant);
-  const idleText = splitToggleIdleTextClass(variant);
   const dividerClass = splitToggleDividerClass(variant);
 
   return (
@@ -64,8 +60,8 @@ export default function LanguageToggle({ className, variant = "dark" }: { classN
     >
       <SplitToggleHalf
         side="left"
+        active={current === "en"}
         pillSrc={current === "en" ? activePillSrc : TOGGLE_IDLE_PILL_SRC}
-        textClassName={current === "en" ? activeText : idleText}
         onClick={() => set("en")}
         data-testid="lang-en"
         aria-pressed={current === "en"}
@@ -75,8 +71,8 @@ export default function LanguageToggle({ className, variant = "dark" }: { classN
       <span aria-hidden className={cn("w-px shrink-0 self-stretch", dividerClass)} />
       <SplitToggleHalf
         side="right"
+        active={current === "es"}
         pillSrc={current === "es" ? activePillSrc : TOGGLE_IDLE_PILL_SRC}
-        textClassName={current === "es" ? activeText : idleText}
         onClick={() => set("es")}
         data-testid="lang-es"
         aria-pressed={current === "es"}

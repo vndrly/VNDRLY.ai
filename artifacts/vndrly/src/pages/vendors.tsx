@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import BlueButton from "@/components/blue-button";
+import CountBadgePill from "@/components/count-badge-pill";
 import BrandPillButton from "@/components/brand-pill-button";
 import { PngPillButton } from "@/components/png-pill-rollover";
 import { useBrand } from "@/hooks/use-brand";
@@ -634,23 +635,24 @@ export default function Vendors() {
                     <TableCell>{v.contactPhone ? formatPhone(v.contactPhone) : "-"}</TableCell>
                     <TableCell>
                       {v.accountingReconciliationNotificationsEnabled ? (
-                        <span
+                        <CountBadgePill
+                          icon={BellRing}
+                          color="green"
                           data-testid={`recon-status-${v.id}`}
-                          data-recon-enabled="true"
-                          className="inline-flex items-center h-[23px] gap-1 rounded-full bg-emerald-50 px-3 text-xs font-normal text-emerald-800 border border-emerald-200"
+                          aria-label={t("vendors.reconAlertStatusOn", { defaultValue: "On" })}
                         >
-                          <BellRing className="w-3 h-3" />
                           {t("vendors.reconAlertStatusOn", { defaultValue: "On" })}
-                        </span>
+                        </CountBadgePill>
                       ) : (
-                        <span
+                        <CountBadgePill
+                          icon={BellOff}
+                          color="grey"
+                          rest
                           data-testid={`recon-status-${v.id}`}
-                          data-recon-enabled="false"
-                          className="inline-flex items-center h-[23px] gap-1 rounded-full bg-muted px-3 text-xs font-normal text-muted-foreground border border-border"
+                          aria-label={t("vendors.reconAlertStatusOff", { defaultValue: "Off" })}
                         >
-                          <BellOff className="w-3 h-3" />
                           {t("vendors.reconAlertStatusOff", { defaultValue: "Off" })}
-                        </span>
+                        </CountBadgePill>
                       )}
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">{new Date(v.createdAt).toLocaleDateString()}</TableCell>

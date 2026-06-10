@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useListEmployeeCertifications, getListEmployeeCertificationsQueryKey } from "@workspace/api-client-react";
 import { Camera, ShieldCheck } from "lucide-react";
-import PngPill from "@/components/png-pill-rollover";
+import ImagePill from "@/components/image-pill";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -25,11 +25,11 @@ type Props = {
 // family. Expired / Expires-soon / No-expiration branches intentionally
 // left as plain styled <span>s — same scope rule as the cert section.
 function statusFor(expirationDate: string | null | undefined) {
-  if (!expirationDate) return <span className="text-xs font-semibold px-2 py-1 rounded bg-gray-100 text-gray-700">No expiration</span>;
+  if (!expirationDate) return <ImagePill color="grey">No expiration</ImagePill>;
   const days = (new Date(expirationDate + "T00:00:00").getTime() - Date.now()) / (1000 * 60 * 60 * 24);
-  if (days < 0) return <span className="text-xs font-semibold px-2 py-1 rounded bg-red-100 text-red-700">Expired</span>;
-  if (days <= 60) return <span className="text-xs font-semibold px-2 py-1 rounded bg-amber-100 text-amber-800">Expires in {Math.ceil(days)}d</span>;
-  return <PngPill color="green">Valid</PngPill>;
+  if (days < 0) return <ImagePill color="red">Expired</ImagePill>;
+  if (days <= 60) return <ImagePill color="amber">Expires in {Math.ceil(days)}d</ImagePill>;
+  return <ImagePill color="green">Valid</ImagePill>;
 }
 
 export function ComplianceCard({ employeeId, firstName, lastName, jobTitle, vendorName, vendorLogoUrl, photoUrl, profilePhotoPath }: Props) {

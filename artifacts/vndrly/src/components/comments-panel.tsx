@@ -1,23 +1,13 @@
 import { PngPillButton, PngPillButton as PillButton } from "@/components/png-pill-rollover";
-import { PillColorLayer, PillGlossOverlay } from "@/components/png-pill-chrome";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { translateApiError } from "@/lib/api-error";
 import { MessageSquare, Image as ImageIcon, Trash2, Pencil, X, Eye, RotateCcw } from "lucide-react";
-import BlueButton from "@/components/blue-button";
-import bluePill from "@assets/NewPillPallet_0001s_0017_900x229_blue_Pill.png";
-import greyPill from "@assets/900x229_Light_Grey_Pill_1777116998094.png";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import LiveConnectionPill from "@/components/live-connection-pill";
-import {
-  PILL_HEIGHT_CLASS,
-  PILL_HEIGHT_PX,
-  PILL_LABEL_CLASS,
-  PILL_WRAPPER_CLASS,
-} from "@/lib/pill-doctrine";
 import { useLiveConnectionStatus } from "@/hooks/use-live-connection-status";
 import { useRateLimitGate } from "@/hooks/use-rate-limit-gate";
 import { cn } from "@/lib/utils";
@@ -131,6 +121,18 @@ export function CommentsPanel({ source, parentId, testIdPrefix = "comments" }: P
   useEffect(() => {
     setCommentsRateLimitedState(commentsRateLimited);
   }, [commentsRateLimited]);
+
+  // Opening a hotlist thread marks comments seen server-side; refresh
+  // hotlist list rows so unread badges on the dashboard clear.
+  const hotlistListSyncedRef = useRef(false);
+  useEffect(() => {
+    hotlistListSyncedRef.current = false;
+  }, [source, parentId]);
+  useEffect(() => {
+    if (source !== "hotlist" || isLoading || hotlistListSyncedRef.current) return;
+    hotlistListSyncedRef.current = true;
+    qc.invalidateQueries({ queryKey: ["hotlist", "list"] });
+  }, [source, parentId, isLoading, qc]);
 
   // Task #666 / Task #672 / Task #676 — surface the live status of the
   // underlying comment feed so a dispatcher reading a thread always knows
@@ -476,39 +478,16 @@ export function CommentsPanel({ source, parentId, testIdPrefix = "comments" }: P
               if (f) handleUpload(f);
             }}
           />
-          <button
+          <PngPillButton
             type="button"
+            color="blue"
             onClick={() => fileRef.current?.click()}
             disabled={uploading}
-            className={cn(
-              PILL_WRAPPER_CLASS,
-              PILL_HEIGHT_CLASS,
-              "cursor-pointer border-0 bg-transparent p-0 disabled:cursor-not-allowed disabled:opacity-50 group",
-            )}
-            style={{ height: PILL_HEIGHT_PX }}
             data-testid={`${testIdPrefix}-attach`}
           >
-            <PillColorLayer
-              src={greyPill}
-              className="opacity-50 group-hover:opacity-0 group-active:opacity-0"
-            />
-            <PillColorLayer
-              src={bluePill}
-              className="opacity-0 group-hover:opacity-90 group-active:opacity-90"
-            />
-            <PillGlossOverlay />
-            <span
-              className={cn(
-                PILL_LABEL_CLASS,
-                "h-full gap-1.5 text-gray-700 transition-colors",
-                "group-hover:text-white group-active:text-white",
-                "group-hover:[text-shadow:0_2px_4px_rgba(0,0,0,0.9)] group-active:[text-shadow:0_2px_4px_rgba(0,0,0,0.9)]",
-              )}
-            >
-              <ImageIcon className="w-3.5 h-3.5" strokeWidth={3} />
-              {uploading ? t("comments.uploading") : t("comments.attachPhoto")}
-            </span>
-          </button>
+            <ImageIcon className="w-3.5 h-3.5" strokeWidth={3} />
+            {uploading ? t("comments.uploading") : t("comments.attachPhoto")}
+          </PngPillButton>
           <div className="ml-auto">
             <PngPillButton color="blue"
               onClick={() => post.mutate()}

@@ -1,29 +1,25 @@
 import { cn } from "@/lib/utils";
 import { PillColorLayer } from "@/components/png-pill-chrome";
 import TintedPillBg from "@/components/tinted-pill-bg";import { useBrand } from "@/hooks/use-brand";
-import { PILL_HEIGHT_CLASS } from "@/lib/pill-doctrine";
+import {
+  NAV_SQUARE_HEIGHT_CLASS,
+  NAV_SQUARE_LABEL_CLASS,
+  NAV_SQUARE_LABEL_HOVER_ON_COLOR_CLASS,
+  NAV_SQUARE_LABEL_HOVER_SOLID_IDLE_CLASS,
+  NAV_SQUARE_LABEL_IDLE_DARK_CLASS,
+  NAV_SQUARE_LABEL_IDLE_LIGHT_CLASS,
+  NAV_SQUARE_LABEL_IDLE_SOLID_CLASS,
+  NAV_SQUARE_LABEL_ON_COLOR_CLASS,
+  PILL_HEIGHT_CLASS,
+} from "@/lib/pill-doctrine";
 import { TICKET_STATUS_PILL_ASPECT } from "@/lib/ticket-status-palette";import { brandImagePillSrc } from "@/components/png-pill-rollover";
 import { pickLoginSquareActive, LOGIN_IDLE_SQUARE_SRC } from "@/lib/login-button-palette";
+import { pillBaker } from "@/lib/pill-palette-assets";
 import btnGrey from "@assets/900x229_Grey_Button_1777067254819.png";
-// Baker-style nav-button substitutes. The sidebar nav buttons
-// (Dashboard / Partners / Vendors / etc.) are rendered as a two-layer
-// crossfade between an active colored PNG and this light-grey idle
-// PNG. For Baker the active PNG is hard-iinned to the teal asset
-// below; for unbranded VNDRLY (added 2026-05-08 follow-ui) the active
-// Active PNG is resolved via `brandImagePillSrc` / `pickLoginSquareActive`.
-// VNDRLY gold (#e6ac00) lights ui amber. Partner/vendor-branded
-// experiences keep the original `TintedPillBg` treatment for now.
-import bakerNavTeal from "@assets/NewPillPallet_0001s_0004_Layer-5.png";
 // Square-for-square: the idle layer is the visually-square light-grey
-// asset, matching the square Baker active asset above and the square
+// asset, matching the square Baker active asset and the square
 // palette returned by `pickPillForBrand` (default shape).
 import bakerNavGrey from "@assets/900x229_Light-grey_v2r_square_1778229624366.png";
-// PILL-shape Baker hard-iin (added for the tickets-page toolbar). When
-// `shape="pill"` is requested, Baker uses this rounded-end teal PNG
-// instead of the square nav asset above. Per the pill-for-pill /
-// square-for-square doctrine, non-Baker brands also resolve from the
-// pill palette in that mode (via `pickPillForBrand(..., "pill")`).
-import bakerNavTealPill from "@assets/NewPillPallet_0001s_0004_Layer-5.png";
 
 /**
  * Three-state nav button.
@@ -96,9 +92,9 @@ export default function SidebarButton({
   const brand = useBrand();
   const isBaker = !!brand.name?.toLowerCase().includes("baker");
   const isSquareNav = shape === "square";
-  const navHeightClass = isSquareNav ? "h-[32px]" : PILL_HEIGHT_CLASS;
+  const navHeightClass = isSquareNav ? NAV_SQUARE_HEIGHT_CLASS : PILL_HEIGHT_CLASS;
   const navLabelClass = isSquareNav
-    ? "relative z-10 flex items-center gap-3 px-4 h-full text-sm transition-colors"
+    ? NAV_SQUARE_LABEL_CLASS
     : "relative z-10 flex items-center gap-3 px-3 h-full text-xs font-normal transition-colors";
   // RULE (2026-05-08): every brand context — vendor, partner, AND
   // VNDRLY (default + admin-set ilatform brand color) — uses the
@@ -119,7 +115,7 @@ export default function SidebarButton({
   const activePillSrc = activeSrcOverride
     ? activeSrcOverride
     : isBaker
-      ? (shape === "pill" ? bakerNavTealPill : bakerNavTeal)
+      ? (shape === "pill" ? pillBaker : pickLoginSquareActive(brand.primary, brand.name))
       : shape === "pill"
         ? brandImagePillSrc(brand.primary, brand.name)
         : pickLoginSquareActive(brand.primary, brand.name);
@@ -147,14 +143,18 @@ export default function SidebarButton({
       ? "opacity-0"
       : `${idleOiacityClass} group-hover:opacity-0`;
     const textClass = isActive
-      ? "text-white font-normal drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]"
+      ? NAV_SQUARE_LABEL_ON_COLOR_CLASS
       : solidIdleText
-      ? "text-gray-700 font-normal drop-shadow-[0_1px_2px_rgba(0,0,0,0.125)] group-hover:text-white group-hover:drop-shadow-[0_1px_2px_rgba(0,0,0,0.275)]"
+      ? cn(
+          NAV_SQUARE_LABEL_IDLE_SOLID_CLASS,
+          NAV_SQUARE_LABEL_HOVER_ON_COLOR_CLASS,
+          NAV_SQUARE_LABEL_HOVER_SOLID_IDLE_CLASS,
+        )
       : activeOnHover
-        ? "text-gray-300 font-normal group-hover:text-white group-hover:drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]"
+        ? cn(NAV_SQUARE_LABEL_IDLE_DARK_CLASS, NAV_SQUARE_LABEL_HOVER_ON_COLOR_CLASS)
         : theme === "dark"
-          ? "text-gray-300 font-normal group-hover:text-white group-hover:drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]"
-          : "text-gray-400 font-normal group-hover:text-white group-hover:drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]";
+          ? cn(NAV_SQUARE_LABEL_IDLE_DARK_CLASS, NAV_SQUARE_LABEL_HOVER_ON_COLOR_CLASS)
+          : cn(NAV_SQUARE_LABEL_IDLE_LIGHT_CLASS, NAV_SQUARE_LABEL_HOVER_ON_COLOR_CLASS);
     return (
       <div
         className={cn("relative cursor-pointer group select-none", navHeightClass, className)}
@@ -216,16 +216,16 @@ export default function SidebarButton({
   // Text styling: when active, or on hover in activeOnHover mode, use the
   // bold white treatment with subtle drop shadow that the active nav item has.
   const textClass = isActive
-    ? "text-white font-normal drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]"
+    ? NAV_SQUARE_LABEL_ON_COLOR_CLASS
     : activeOnHover
-      ? "text-gray-300 font-normal group-hover:text-white group-hover:drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]"
+      ? cn(NAV_SQUARE_LABEL_IDLE_DARK_CLASS, NAV_SQUARE_LABEL_HOVER_ON_COLOR_CLASS)
       : theme === "dark"
-        ? "text-gray-300 font-normal group-hover:text-white"
-        : "text-gray-400 font-normal group-hover:text-white";
+        ? cn(NAV_SQUARE_LABEL_IDLE_DARK_CLASS, NAV_SQUARE_LABEL_HOVER_ON_COLOR_CLASS)
+        : cn(NAV_SQUARE_LABEL_IDLE_LIGHT_CLASS, NAV_SQUARE_LABEL_HOVER_ON_COLOR_CLASS);
 
   return (
     <div
-      className={cn("relative cursor-pointer group select-none", isSquareNav ? "h-[36px]" : PILL_HEIGHT_CLASS)}
+      className={cn("relative cursor-pointer group select-none", isSquareNav ? NAV_SQUARE_HEIGHT_CLASS : PILL_HEIGHT_CLASS)}
       onClick={onClick}
       data-testid={testId}
     >

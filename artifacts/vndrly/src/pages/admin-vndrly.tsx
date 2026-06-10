@@ -24,6 +24,9 @@ import {
   getListDemoUserLabelsQueryKey,
   type UpdatePlatformSettingsBody,
 } from "@workspace/api-client-react";
+import { SuspendedPill } from "@/components/account-actions";
+import ContentPaneBackLink from "@/components/content-pane-back-link";
+import ImagePill from "@/components/image-pill";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import { PngPillButton } from "@/components/png-pill-rollover";
@@ -77,6 +80,7 @@ const EMPTY_FORM: FormState = {
 async function uploadImageAndGetUrl(file: File): Promise<string> {
   const res = await fetch(`${API_BASE}/api/storage/uploads/request-url`, {
     method: "POST",
+    credentials: "include",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name: file.name, size: file.size, contentType: file.type }),
   });
@@ -300,12 +304,15 @@ export default function AdminVndrly() {
         }}
         onClose={() => setPendingSquareLogoFile(null)}
       />
-      <div>
+      <div className="flex items-center gap-3">
+        <ContentPaneBackLink href="/" />
+        <div>
         <p className="text-sm font-medium text-muted-foreground">VNDRLY</p>
         <h1 className="text-2xl font-bold tracking-tight" data-testid="text-page-title">VNDRLY Settings</h1>
         <p className="text-muted-foreground text-sm mt-1">
           Manage VNDRLY's company information, branding, and system administrators.
         </p>
+        </div>
       </div>
 
       <Card>
@@ -374,11 +381,6 @@ export default function AdminVndrly() {
                       placeholder="#f59e0b"
                       className="font-mono"
                     />
-                    {form.brandPrimaryColor && (
-                      <PillButton type="button" color="image" onClick={() => setForm({ ...form, brandPrimaryColor: "" })} className="min-w-[28px] px-0">
-                        <X className="w-4 h-4" />
-                      </PillButton>
-                    )}
                   </div>
                 </div>
                 <div>
@@ -397,11 +399,6 @@ export default function AdminVndrly() {
                       placeholder="#616161"
                       className="font-mono"
                     />
-                    {form.brandAccentColor && (
-                      <PillButton type="button" color="image" onClick={() => setForm({ ...form, brandAccentColor: "" })} className="min-w-[28px] px-0">
-                        <X className="w-4 h-4" />
-                      </PillButton>
-                    )}
                   </div>
                 </div>
               </div>
@@ -437,7 +434,7 @@ export default function AdminVndrly() {
               </div>
               <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => onLogoFile(e, "main")} data-testid="input-logo-file" />
               <div className="flex gap-2">
-                <PillButton type="button" color="image" onClick={() => logoInputRef.current?.click()} disabled={uploadingLogo} data-testid="button-upload-logo">
+                <PillButton type="button" color="blue" onClick={() => logoInputRef.current?.click()} disabled={uploadingLogo} data-testid="button-upload-logo">
                   <Upload className="w-4 h-4 mr-1" />{uploadingLogo ? "Uploading..." : settings?.logoUrl ? "Replace" : "Upload"}
                 </PillButton>
                 {settings?.logoUrl && (
@@ -460,7 +457,7 @@ export default function AdminVndrly() {
               </div>
               <input ref={squareLogoInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => onLogoFile(e, "square")} data-testid="input-logo-square-file" />
               <div className="flex gap-2">
-                <PillButton type="button" color="image" onClick={() => squareLogoInputRef.current?.click()} disabled={uploadingSquareLogo} data-testid="button-upload-logo-square">
+                <PillButton type="button" color="blue" onClick={() => squareLogoInputRef.current?.click()} disabled={uploadingSquareLogo} data-testid="button-upload-logo-square">
                   <Upload className="w-4 h-4 mr-1" />{uploadingSquareLogo ? "Uploading..." : settings?.logoSquareUrl ? "Replace" : "Upload"}
                 </PillButton>
                 {settings?.logoSquareUrl && (
@@ -552,9 +549,9 @@ export default function AdminVndrly() {
                     <TableCell>{a.email ?? a.username}</TableCell>
                     <TableCell>
                       {a.suspendedAt ? (
-                        <span className="inline-flex items-center h-[23px] px-3 text-xs font-normal rounded-full bg-muted text-muted-foreground">Suspended</span>
+                        <SuspendedPill />
                       ) : (
-                        <span className="inline-flex items-center h-[23px] px-3 text-xs font-normal rounded-full bg-green-100 text-green-800">Active</span>
+                        <ImagePill color="green">Active</ImagePill>
                       )}
                     </TableCell>
                   </TableRow>

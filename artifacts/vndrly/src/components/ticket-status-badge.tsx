@@ -1,16 +1,27 @@
 import { useTranslation } from "react-i18next";
 
+
+
 import { cn } from "@/lib/utils";
 
-import { PillColorLayer, PillGlossOverlay } from "@/components/png-pill-chrome";
+
+
+import { PillColorLayer } from "@/components/png-pill-chrome";
+
 import {
+
   ticketStatusMeta,
+
   type TicketStatusBadgeColor,
+
 } from "@/lib/ticket-status-meta";
-import { ticketLifecyclePills } from "@/lib/ticket-status-palette";
+
+import { ticketLifecyclePillForStatus } from "@/lib/ticket-status-palette";
+
 import {
 
   PILL_HEIGHT_PX,
+
   PILL_HEIGHT_CLASS,
 
   PILL_LABEL_CLASS,
@@ -19,9 +30,9 @@ import {
 
   PILL_STATUS_MIN_WIDTH_CLASS,
 
-  PILL_TEXT_SHADOW,
-
   PILL_WRAPPER_CLASS,
+
+  pillLabelToneClass,
 
 } from "@/lib/pill-doctrine";
 
@@ -32,8 +43,6 @@ interface TicketStatusBadgeProps {
   status: string;
 
   updatedAt?: string | Date | null;
-
-  /** Narrower pill for tight layouts (e.g. foreman pick-ticket modal). */
 
   compact?: boolean;
 
@@ -63,6 +72,8 @@ export default function TicketStatusBadge({
 
   const label = meta ? t(meta.badgeLabelKey) : status;
 
+
+
   let color: TicketStatusBadgeColor | null = meta?.badgeColor ?? null;
 
 
@@ -83,7 +94,7 @@ export default function TicketStatusBadge({
 
 
 
-  const cfg = ticketLifecyclePills[color];
+  const cfg = ticketLifecyclePillForStatus(status);
 
 
 
@@ -115,8 +126,6 @@ export default function TicketStatusBadge({
 
       <PillColorLayer src={cfg.src} />
 
-      <PillGlossOverlay />
-
       <span
 
         className={cn(
@@ -125,11 +134,9 @@ export default function TicketStatusBadge({
 
           compact ? "leading-tight text-center whitespace-normal" : "h-full",
 
-          cfg.light ? "text-gray-700" : "text-white",
+          pillLabelToneClass(cfg.light),
 
         )}
-
-        style={cfg.light ? undefined : { textShadow: PILL_TEXT_SHADOW }}
 
       >
 

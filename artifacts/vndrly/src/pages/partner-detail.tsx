@@ -2,7 +2,7 @@ import { Fragment, useState, useRef, useMemo, useEffect } from "react";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
-import { formatPhone, handlePhoneInput, stripPhone } from "@/lib/utils";
+import { cn, formatPhone, handlePhoneInput, stripPhone } from "@/lib/utils";
 import {
   compressMainLogo,
   fitImageIntoSquare,
@@ -47,13 +47,17 @@ import { useTranslation } from "react-i18next";
 import { translateApiError } from "@/lib/api-error";
 import { useToast } from "@/hooks/use-toast";
 import BlueButton from "@/components/blue-button";
+import BrandPill from "@/components/brand-pill";
 import BrandPillButton from "@/components/brand-pill-button";
-import PngPill, { PngPillButton, brandImagePillSrc } from "@/components/png-pill-rollover";
+import CountBadgePill from "@/components/count-badge-pill";
+import { PngPillButton, brandImagePillSrc } from "@/components/png-pill-rollover";
 import { useBrand } from "@/hooks/use-brand";
 import RedButton from "@/components/red-button";
 import { PhotoUploadField } from "@/components/photo-upload-field";
 import SphereBackButton from "@/components/sphere-back-button";
+import { splitToggleLabelClass } from "@/lib/pill-doctrine";
 import BrandRolePill from "@/components/brand-role-pill";
+import CompanyRolePill from "@/components/company-role-pill";
 import { useAuth } from "@/hooks/use-auth";
 import OrgMembersCard from "@/components/org-members-card";
 import PartnerVendorApprovalsCard from "@/components/partner-vendor-approvals-card";
@@ -90,31 +94,15 @@ function RoleMultiSelect({ value, onChange, testIdPrefix }: { value: string[]; o
         const active = value.includes(role);
         const testId = `${testIdPrefix}-${role.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`;
         const label = translateCompanyRole(t, role);
-        if (active) {
-          return (
-            <button
-              key={role}
-              type="button"
-              onClick={() => toggle(role)}
-              aria-pressed={true}
-              data-testid={testId}
-              className="bg-transparent border-0 p-0 cursor-pointer select-none transition-transform active:scale-[0.98]"
-            >
-              <PngPill color="brand">
-                {label}
-              </PngPill>
-            </button>
-          );
-        }
         return (
-          <PngPillButton
+          <BrandPill
             key={role}
-            color="brand"
+            active={active}
             onClick={() => toggle(role)}
-            data-testid={testId}
+            testId={testId}
           >
             {label}
-          </PngPillButton>
+          </BrandPill>
         );
       })}
     </div>
@@ -665,8 +653,8 @@ function PartnerProductServiceCatalogCard({
                         <TableCell className="font-medium align-top">
                           <div className="flex items-center gap-2">
                             <span>{it.name}</span>
-                            <PngPill
-                              color="brand"
+                            <CountBadgePill
+                              color="blue"
                               rest={it.vendorCount === 0}
                               className="shrink-0"
                               data-testid={`badge-catalog-vendor-count-${it.workTypeId}`}
@@ -676,7 +664,7 @@ function PartnerProductServiceCatalogCard({
                               )}
                             >
                               {it.vendorCount}
-                            </PngPill>
+                            </CountBadgePill>
                           </div>
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground align-top">
@@ -968,7 +956,11 @@ function Partner1099TotalsCard({ partnerId }: { partnerId: number }) {
             <button
               type="button"
               onClick={() => setMode("year")}
-              className={`px-3 h-[23px] rounded-full text-xs font-normal ${mode === "year" ? "bg-[var(--brand-primary)] text-white" : "text-gray-700"}`}
+              className={cn(
+                "px-3 h-[23px] rounded-full text-xs",
+                mode === "year" && "bg-[var(--brand-primary)]",
+                splitToggleLabelClass(mode === "year"),
+              )}
               data-testid="button-1099-totals-mode-year"
             >
               {t("partners.totals1099.modeYear", { defaultValue: "Year" })}
@@ -976,7 +968,11 @@ function Partner1099TotalsCard({ partnerId }: { partnerId: number }) {
             <button
               type="button"
               onClick={() => setMode("custom")}
-              className={`px-3 h-[23px] rounded-full text-xs font-normal ${mode === "custom" ? "bg-[var(--brand-primary)] text-white" : "text-gray-700"}`}
+              className={cn(
+                "px-3 h-[23px] rounded-full text-xs",
+                mode === "custom" && "bg-[var(--brand-primary)]",
+                splitToggleLabelClass(mode === "custom"),
+              )}
               data-testid="button-1099-totals-mode-custom"
             >
               {t("partners.totals1099.modeCustom", {
@@ -1930,16 +1926,6 @@ export default function PartnerDetail({ id }: { id: number }) {
                           className="flex-1"
                           data-testid="input-brand-primary-color"
                         />
-                        {form.brandPrimaryColor && (
-                          <button
-                            type="button"
-                            onClick={() => setForm({ ...form, brandPrimaryColor: "" })}
-                            className="text-xs text-muted-foreground hover:text-destructive"
-                            data-testid="button-clear-brand-primary-color"
-                          >
-                            {t("partners.clear")}
-                          </button>
-                        )}
                       </div>
                       {form.brandPrimaryColor && (() => {
                         const w = getContrastWarningKind(form.brandPrimaryColor);
@@ -1981,16 +1967,6 @@ export default function PartnerDetail({ id }: { id: number }) {
                           className="flex-1"
                           data-testid="input-brand-accent-color"
                         />
-                        {form.brandAccentColor && (
-                          <button
-                            type="button"
-                            onClick={() => setForm({ ...form, brandAccentColor: "" })}
-                            className="text-xs text-muted-foreground hover:text-destructive"
-                            data-testid="button-clear-brand-accent-color"
-                          >
-                            {t("partners.clear")}
-                          </button>
-                        )}
                       </div>
                       {form.brandAccentColor && (() => {
                         const w = getContrastWarningKind(form.brandAccentColor);
@@ -2323,7 +2299,7 @@ export default function PartnerDetail({ id }: { id: number }) {
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
                         {(c.roles ?? []).map((r) => (
-                          <BrandRolePill key={r}>{translateCompanyRole(t, r)}</BrandRolePill>
+                          <CompanyRolePill key={r}>{translateCompanyRole(t, r)}</CompanyRolePill>
                         ))}
                       </div>
                     </TableCell>
@@ -2382,7 +2358,7 @@ export default function PartnerDetail({ id }: { id: number }) {
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
                         {(c.roles ?? []).map((r) => (
-                          <BrandRolePill key={r}>{translateCompanyRole(t, r)}</BrandRolePill>
+                          <CompanyRolePill key={r}>{translateCompanyRole(t, r)}</CompanyRolePill>
                         ))}
                       </div>
                     </TableCell>

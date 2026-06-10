@@ -56,7 +56,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import BlueButton from "@/components/blue-button";
 import { PngPillButton, brandImagePillSrc } from "@/components/png-pill-rollover";
-import btnBakerTealPill from "@assets/button-palette/900x229_baker_teal_Pill.png";
+import { pillBaker } from "@/lib/pill-palette-assets";
 import { useBrand } from "@/hooks/use-brand";
 import GreyButton from "@/components/grey-button";
 import BrandPillButton from "@/components/brand-pill-button";
@@ -967,16 +967,6 @@ export default function VendorDetail({ id }: { id: number }) {
                           className="flex-1"
                           data-testid="input-brand-primary-color"
                         />
-                        {editForm.brandPrimaryColor && (
-                          <button
-                            type="button"
-                            onClick={() => setEditForm({ ...editForm, brandPrimaryColor: "" })}
-                            className="text-xs text-muted-foreground hover:text-destructive"
-                            data-testid="button-clear-brand-primary-color"
-                          >
-                            {t("vendors.clear")}
-                          </button>
-                        )}
                       </div>
                     </div>
                     <div>
@@ -996,16 +986,6 @@ export default function VendorDetail({ id }: { id: number }) {
                           className="flex-1"
                           data-testid="input-brand-accent-color"
                         />
-                        {editForm.brandAccentColor && (
-                          <button
-                            type="button"
-                            onClick={() => setEditForm({ ...editForm, brandAccentColor: "" })}
-                            className="text-xs text-muted-foreground hover:text-destructive"
-                            data-testid="button-clear-brand-accent-color"
-                          >
-                            {t("vendors.clear")}
-                          </button>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -1015,7 +995,7 @@ export default function VendorDetail({ id }: { id: number }) {
                   color="image"
                   activeSrc={
                     vendor?.name?.toLowerCase().includes("baker")
-                      ? btnBakerTealPill
+                      ? pillBaker
                       : brandImagePillSrc(brand.primary, brand.name)
                   }
                   attention={editFormDirty}

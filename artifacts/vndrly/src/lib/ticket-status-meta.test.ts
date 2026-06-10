@@ -1,8 +1,14 @@
 import { describe, expect, it } from "vitest";
 
 import { TicketStatus } from "@workspace/api-client-react";
+import {
+  TICKET_LIFECYCLE_ORDER,
+  TICKET_LIFECYCLE_SPECTRUM,
+  TICKET_LIFECYCLE_CHART_EXCLUDED,
+} from "@workspace/ticket-status-meta";
 
 import en from "./locales/en.json";
+import { ticketLifecyclePillForStatus } from "./ticket-status-palette";
 import { ticketStatusMeta } from "./ticket-status-meta";
 
 // ---------------------------------------------------------------------------
@@ -102,6 +108,22 @@ const backendStatuses = Object.values(TicketStatus);
 describe("ticketStatusMeta — Task #641 drift guard", () => {
   it("includes at least one entry (sanity check)", () => {
     expect(metaEntries.length).toBeGreaterThan(0);
+  });
+
+  it("keeps badgeColor aligned with the ROYGBIV lifecycle spectrum", () => {
+    for (const status of Object.values(TicketStatus)) {
+      expect(
+        ticketStatusMeta[status]?.badgeColor,
+        `ticketStatusMeta["${status}"].badgeColor must match TICKET_LIFECYCLE_SPECTRUM`,
+      ).toBe(TICKET_LIFECYCLE_SPECTRUM[status]);
+    }
+  });
+
+  it("assigns a distinct lifecycle PNG to every visible chart step", () => {
+    const chartSrcs = TICKET_LIFECYCLE_ORDER.filter(
+      (status) => !TICKET_LIFECYCLE_CHART_EXCLUDED.has(status),
+    ).map((status) => ticketLifecyclePillForStatus(status).src);
+    expect(new Set(chartSrcs).size).toBe(chartSrcs.length);
   });
 
   it("covers every backend ticket status (or allow-lists it)", () => {

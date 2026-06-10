@@ -23,8 +23,8 @@ import {
   useClearStaleFieldEmployeeSelection,
 } from "@/hooks/use-eligible-vendor-field-employees";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import PngPill, { PngPillButton as PillButton } from "@/components/png-pill-rollover";
-import btnBluePill from "@assets/button-palette/900x229_blue_Pill_v3.png";
+import ImagePill from "@/components/image-pill";
+import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import GreenButton from "@/components/green-button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -67,7 +67,7 @@ function money(n: number) { return `$${n.toFixed(2)}`; }
 
 function CrewPill({ name, employeeId, onRemove, removeLabel }: { name: string; employeeId?: number; onRemove?: () => void; removeLabel?: string }) {
   return (
-    <PngPill
+    <ImagePill
       color="blue"
       interactive
       className="min-w-[100px]"
@@ -85,7 +85,7 @@ function CrewPill({ name, employeeId, onRemove, removeLabel }: { name: string; e
           <X className="w-3 h-3" strokeWidth={3} />
         </button>
       )}
-    </PngPill>
+    </ImagePill>
   );
 }
 
@@ -94,9 +94,6 @@ function AddCrewPill({ label, onClick, disabled }: { label: string; onClick: () 
     <PillButton
       type="button"
       color="blue"
-      idleSrc={btnBluePill}
-      activeSrc={btnBluePill}
-      idleOpacity={1}
       onClick={onClick}
       disabled={disabled}
       className="min-w-[110px]"

@@ -1,22 +1,13 @@
 import PillBg from "@/components/pill-bg";
 import { cn } from "@/lib/utils";
-import {
-  TICKET_STATUS_PILL_ASPECT,
-  ticketLifecyclePillGloss,
-} from "@/lib/ticket-status-palette";
+import { TICKET_STATUS_PILL_ASPECT } from "@/lib/ticket-status-palette";
 
-/** Diagonal gloss overlay — same layer as Crew Tracker status pills. */
-export function PillGlossOverlay({ className }: { className?: string }) {
-  return (
-    <PillBg
-      src={ticketLifecyclePillGloss}
-      stretch
-      className={cn("opacity-60", className)}
-    />
-  );
+/** @deprecated Gloss is baked into PillsV1 PNGs — overlay removed site-wide. */
+export function PillGlossOverlay(_props?: { className?: string }) {
+  return null;
 }
 
-/** Colored/grey PNG base — same aspect + opacity as TicketStatusBadge. */
+/** Colored/grey PNG base at full opacity — no CSS dimming or transitions. */
 export function PillColorLayer({
   src,
   className,
@@ -33,7 +24,7 @@ export function PillColorLayer({
       src={src}
       imageAspect={imageAspect}
       stretch={stretch}
-      className={cn("opacity-90 transition-opacity", className)}
+      className={cn(className)}
     />
   );
 }

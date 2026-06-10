@@ -51,7 +51,8 @@ import LightGreyRedButton from "@/components/light-grey-red-button";
 import GreenV2Button from "@/components/green-v2-button";
 import AmberButton from "@/components/amber-button";
 import BrandPill from "@/components/brand-pill";
-import PngPill, { PngPillButton } from "@/components/png-pill-rollover";
+import ImagePill from "@/components/image-pill";
+import { PngPillButton } from "@/components/png-pill-rollover";
 import BrandPillButton from "@/components/brand-pill-button";
 import SphereBackButton from "@/components/sphere-back-button";
 import AfePill from "@/components/afe-pill";
@@ -1439,15 +1440,14 @@ export default function SiteLocationDetail({ id }: { id: number }) {
                           )}
                         </TableCell>
                         <TableCell>
-                          {statusTone ? (
-                            <PngPill color={statusTone} className="min-w-[90px]" data-testid={`badge-direct-status-${a.id}`}>
-                              {t(`directAssignment.status.${a.status}`)}
-                            </PngPill>
-                          ) : (
-                            <PngPill rest className="min-w-[90px]" data-testid={`badge-direct-status-${a.id}`}>
-                              {t(`directAssignment.status.${a.status}`)}
-                            </PngPill>
-                          )}
+                          <ImagePill
+                            color={statusTone ?? "grey"}
+                            rest={!statusTone}
+                            className="min-w-[90px]"
+                            data-testid={`badge-direct-status-${a.id}`}
+                          >
+                            {t(`directAssignment.status.${a.status}`)}
+                          </ImagePill>
                         </TableCell>
                         {canManageAssignments && (
                           <TableCell className="text-right">

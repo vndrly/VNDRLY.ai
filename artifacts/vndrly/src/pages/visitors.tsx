@@ -12,7 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import BrandPillButton from "@/components/brand-pill-button";
 import SphereBackButton from "@/components/sphere-back-button";
-import PngPill, { PngPillButton } from "@/components/png-pill-rollover";
+import CountBadgePill from "@/components/count-badge-pill";
+import { PngPillButton } from "@/components/png-pill-rollover";
 import {
   Select,
   SelectContent,
@@ -193,13 +194,13 @@ export default function VisitorsPage() {
                     color — replaces the prior glossy red PNG pill
                     so the on-site counter visually ties to the
                     rest of the brand-tinted chrome. */}
-                <PngPill
-                  color="brand"
+                <CountBadgePill
+                  color="blue"
                   className="align-middle"
                   data-testid="badge-currently-on-site-count"
                 >
                   {active.length}
-                </PngPill>
+                </CountBadgePill>
               </CardTitle>
             </CardHeader>
             <CardContent>

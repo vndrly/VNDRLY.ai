@@ -19,6 +19,7 @@ import {
 import { notificationsApi, type NotificationRow } from "@/lib/notifications-api";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
+import ContentPaneBackLink from "@/components/content-pane-back-link";
 
 const CATEGORY_IDS = ["all", "tickets", "hotlist", "compliance", "crew", "visitor", "system"] as const;
 
@@ -89,7 +90,10 @@ export default function NotificationsInboxPage() {
   return (
     <div className="max-w-3xl mx-auto p-6">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-semibold">{t("notifications.title")}</h1>
+        <div className="flex items-center gap-3">
+          <ContentPaneBackLink href="/" />
+          <h1 className="text-2xl font-semibold">{t("notifications.title")}</h1>
+        </div>
         <div className="flex gap-2">
           <Link href="/notifications/preferences">
             <PillButton color="image" data-testid="link-prefs-from-inbox">

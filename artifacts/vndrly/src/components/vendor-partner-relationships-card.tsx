@@ -6,7 +6,7 @@ import { Handshake, Receipt } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import BrandRolePill from "@/components/brand-role-pill";
-import PngPill from "@/components/png-pill-rollover";
+import ImagePill from "@/components/image-pill";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -48,13 +48,13 @@ function StatusBadge({ status }: { status: string }) {
   // "no action / no status" instead of a saturated grey chip.
   if (cfg === map.unaffiliated) {
     return (
-      <PngPill
+      <ImagePill
+        color="grey"
         rest
-
         data-testid={`badge-relationship-${status}`}
       >
         {cfg.label}
-      </PngPill>
+      </ImagePill>
     );
   }
   return (

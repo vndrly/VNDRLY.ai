@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, UserPlus, UserMinus } from "lucide-react";
+import { UserPlus, UserMinus } from "lucide-react";
+import ContentPaneBackLink from "@/components/content-pane-back-link";
+import { FIELD_OPS_PAGE_CLASS } from "@/lib/field-ops-content-pane";
+import CountBadgePill from "@/components/count-badge-pill";
 import { cn } from "@/lib/utils";
 import { usePortalBase } from "@/lib/portal-base";
 
@@ -115,17 +118,13 @@ export default function FieldCrew() {
   };
 
   return (
-    <div className="px-4 pt-4 pb-6 max-w-2xl mx-auto w-full" data-testid="field-crew">
-      <div className="flex items-center gap-2 mb-4">
-        <button
-          type="button"
-          onClick={() => navigate(`${portalBase}/profile`)}
-          className="p-2 -ml-2 rounded-md hover:bg-muted"
-          aria-label={t("common.back")}
-          data-testid="crew-changes-back"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
+    <div className={FIELD_OPS_PAGE_CLASS} data-testid="field-crew">
+      <div className="flex items-center gap-3 mb-4">
+        <ContentPaneBackLink
+          href={`${portalBase}/profile`}
+          ariaLabel={t("common.back")}
+          testId="crew-changes-back"
+        />
         <h1 className="text-xl font-bold">{t("crewChanges.title")}</h1>
       </div>
 
@@ -160,16 +159,15 @@ export default function FieldCrew() {
                   data-testid={`crew-change-${item.id}`}
                 >
                   <div className="flex items-center gap-2 mb-1.5">
-                    <span
-                      className={cn(
-                        "inline-flex items-center gap-1 px-3 h-[23px] rounded-full text-xs font-normal uppercase tracking-wider",
-                        item.isRead ? "bg-muted text-muted-foreground" : "bg-[color:var(--brand-primary)] text-white",
-                      )}
+                    <CountBadgePill
+                      icon={Icon ?? undefined}
+                      color={item.isRead ? "grey" : "blue"}
+                      rest={item.isRead}
+                      className="uppercase tracking-wider"
                       data-testid={`crew-change-${item.id}-type-${item.type}`}
                     >
-                      {Icon ? <Icon className="w-3 h-3" /> : null}
                       {labelText}
-                    </span>
+                    </CountBadgePill>
                     <span className="ml-auto text-[11px] text-muted-foreground">{timeAgo(item.createdAt)}</span>
                   </div>
                   <p
