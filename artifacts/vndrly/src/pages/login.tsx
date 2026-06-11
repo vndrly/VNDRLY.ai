@@ -35,7 +35,7 @@ export default function Login() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   // Local Dark/Light surface toggle — defaults to the vdark treatment
-  // captured in replit.md. Light mode reverts the vendor sign-in to the
+  // captured in docs/ui-presets.md (`vlight`). Light mode reverts the vendor sign-in to the
   // pre-vdark white-surface palette (text-gray-900 / 700 / 500 etc.).
   const [themeMode, setThemeMode] = useState<ThemeMode>("dark");
   const isDark = themeMode === "dark";

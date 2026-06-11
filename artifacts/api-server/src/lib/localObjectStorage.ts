@@ -6,7 +6,7 @@ import type { ObjectAclPolicy } from "./objectAcl";
 /**
  * Filesystem primitives for the zero-config local-dev storage backend
  * (see objectStore.ts `FilesystemObjectStore`). Used when no Supabase
- * service key is configured. Nothing here touches Replit.
+ * service key is configured.
  *
  * Files persist under `.local/object-storage/` (git-ignored), with each
  * object's owner/visibility ACL stored in a `<file>.meta.json` sidecar.

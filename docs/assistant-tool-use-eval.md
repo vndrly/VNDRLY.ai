@@ -58,7 +58,7 @@ completes in well under a minute. Each call is hard-bounded to 60 s
 and 600 max tokens.
 
 The suite uses a vanilla `Anthropic` SDK client pointed at
-`api.anthropic.com`, not the Replit AI proxy — same reasoning as
+`api.anthropic.com` directly — same reasoning as
 the language eval (a developer with a raw API key can run it
 without provisioning the in-product integration).
 

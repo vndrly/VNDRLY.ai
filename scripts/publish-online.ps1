@@ -42,8 +42,7 @@ function Push-VndrlyGitHub {
 
 $root = (& git rev-parse --show-toplevel).Trim()
 Set-Location $root
-$env:Path = "C:\Program Files\nodejs;$env:APPDATA\npm;" + $env:Path
-$env:NODE_OPTIONS = "--use-system-ca"
+Initialize-ShipEnvironment
 
 if (-not $SkipTypecheck) {
   Write-Host ""

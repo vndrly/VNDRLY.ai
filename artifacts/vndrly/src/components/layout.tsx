@@ -99,6 +99,7 @@ function useNavItems(user: { role: string; vendorId: number | null; partnerId: n
     return [
       ...baseNavItems,
       crewMapItem,
+      { href: "/site-map", label: t("nav.siteMap"), icon: MapIcon, key: "site-map" },
       visitorsItem,
       invoicesItem,
       statementsItem,

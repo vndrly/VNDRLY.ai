@@ -25,7 +25,7 @@ import { loginAsAdmin } from "../helpers/auth";
 //     delayed for ~3s so the banner stays visible long enough to assert.
 //     Once the fetch resolves with [], the page clears the banner.
 //
-// Login uses the seed admin (admin/admin123) — see replit.md.
+// Login uses the seed admin (admin/admin123) — see docs/canonical-credentials.md.
 
 const STUB_SCRIPT = `
 (() => {

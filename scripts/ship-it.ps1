@@ -8,9 +8,7 @@ $ErrorActionPreference = "Stop"
 
 $Root = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 Set-Location $Root
-$env:Path = "C:\Program Files\nodejs;$env:APPDATA\npm;" + $env:Path
-$env:NODE_OPTIONS = "--use-system-ca"
-$env:EAS_BUILD_NO_EXPO_GO_WARNING = "true"
+Initialize-ShipEnvironment
 
 $Summary = @{}
 

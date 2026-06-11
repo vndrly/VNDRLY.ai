@@ -39,7 +39,7 @@ typically completes in well under a minute. Each call is hard-bounded
 to 60 s and 512 max tokens.
 
 The suite uses a vanilla `Anthropic` SDK client pointed at
-`api.anthropic.com`, not the Replit AI proxy — so a developer with
+`api.anthropic.com` directly — so a developer with
 their own raw API key can run it without provisioning the in-product
 integration. Production traffic continues to flow through the proxy
 via `@workspace/integrations-anthropic-ai`.
@@ -144,7 +144,7 @@ on demand via the **Run workflow** button on the Actions tab.
    Actions → New repository secret**.
 2. Name it `ANTHROPIC_API_KEY` and paste a raw Anthropic API key
    (`sk-ant-...`). The eval intentionally calls `api.anthropic.com`
-   directly, not the Replit AI proxy — see `language.eval.ts` for
+   directly — see `language.eval.ts` for
    the rationale. The key only needs Messages API permission; a
    read-only "evals" key is ideal so a leak can be revoked without
    touching production.

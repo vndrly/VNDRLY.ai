@@ -15,6 +15,7 @@ import OnboardingVerificationBanner from "@/components/onboarding-verification-b
 import LanguageToggle from "@/components/language-toggle";
 import { onboardingApi } from "@/lib/onboarding-api";
 import { handlePhoneInput, stripPhone } from "@/lib/utils";
+import { Card, CardContent } from "@/components/ui/card";
 
 type StepKey =
   | "company-basics"
@@ -630,7 +631,7 @@ export default function OnboardingVendor() {
           />
         )}
 
-        <div className="bg-white rounded-xl border-2 border-gray-200 shadow-sm p-6">
+        <Card><CardContent className="p-6 pt-6">
           <OnboardingStepper steps={STEPS} currentIndex={stepIndex} completedKeys={completed} skippedKeys={skipped} className="mb-8" />
 
           {currentStep.key === "company-basics" && (
@@ -1028,7 +1029,7 @@ export default function OnboardingVendor() {
               )}
             </div>
           </div>
-        </div>
+        </CardContent></Card>
 
         <p className="text-center text-xs text-gray-500 mt-4">
           Step {stepIndex + 1} of {STEPS.length}. Your progress is saved automatically.

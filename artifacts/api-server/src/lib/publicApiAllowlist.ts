@@ -67,5 +67,4 @@ export const PUBLIC_UNAUTHENTICATED_ALLOWLIST: ApiAllowRule[] = [
   // Public ACL uploads (logos) must load on the sign-in page after logout.
   { method: "GET", pattern: /^\/api\/storage\/objects\/.+$/ },
   { method: "PUT", pattern: /^\/api\/storage\/upload\/[^/]+\/?$/ },
-  { method: "POST", pattern: /^\/api\/webhooks\/sendgrid\/?$/ },
 ];

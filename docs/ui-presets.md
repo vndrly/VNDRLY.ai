@@ -1,6 +1,6 @@
 # UI Presets — vdark & vlight
 
-Detailed reference for the named visual treatments. Short pointers in `replit.md`
+Detailed reference for the named visual treatments. Short pointers in `AGENTS.md`
 under "vdark" / "vlight" preset entries; the canonical detail lives here.
 
 ## vdark — vendor sign-in dark treatment (May 2026)

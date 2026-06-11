@@ -2,7 +2,6 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
-import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 
 const rawPort = process.env.PORT;
 
@@ -22,24 +21,7 @@ if (!basePath) {
 
 export default defineConfig({
   base: basePath,
-  plugins: [
-    react(),
-    tailwindcss(),
-    runtimeErrorOverlay(),
-    ...(process.env.NODE_ENV !== "production" &&
-    process.env.REPL_ID !== undefined
-      ? [
-          await import("@replit/vite-plugin-cartographer").then((m) =>
-            m.cartographer({
-              root: path.resolve(import.meta.dirname, ".."),
-            }),
-          ),
-          await import("@replit/vite-plugin-dev-banner").then((m) =>
-            m.devBanner(),
-          ),
-        ]
-      : []),
-  ],
+  plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "src"),
@@ -61,9 +43,8 @@ export default defineConfig({
       deny: ["**/.*"],
     },
     // Optional dev-only proxy for /api so end-to-end tests (which hit the
-    // vite dev server directly rather than going through Replit's path-
-    // based artifact proxy) can reach the api-server. No effect when
-    // VITE_API_PROXY_TARGET is unset, which preserves prior behavior.
+    // vite dev server directly) can reach the api-server. No effect when
+    // VITE_API_PROXY_TARGET is unset.
     ...(process.env.VITE_API_PROXY_TARGET
       ? {
           proxy: {

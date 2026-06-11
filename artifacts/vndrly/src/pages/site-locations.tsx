@@ -22,6 +22,8 @@ import BrandPillButton from "@/components/brand-pill-button";
 import { PhotoUploadField } from "@/components/photo-upload-field";
 import { SiteLocationMap } from "@/components/site-location-map";
 import { forwardGeocode, reverseGeocode } from "@/lib/geocoding";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SiteLocationsMapTab } from "@/components/site-locations-map-tab";
 import { useAuth } from "@/hooks/use-auth";
 
 // Field-ops default geofence: 1 mile (1,609 m). Picked because well
@@ -578,6 +580,13 @@ export default function SiteLocations() {
         </div>
       </div>
 
+      <Tabs defaultValue="list" className="space-y-4">
+        <TabsList data-testid="site-locations-view-tabs">
+          <TabsTrigger value="list">{t("siteLocations.tabList", "List")}</TabsTrigger>
+          <TabsTrigger value="map">{t("siteLocations.tabMap", "Map")}</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="list" className="space-y-4 mt-0">
       {!isLoading && sortedSites.length > 0 && (
         <div className="flex flex-wrap items-center gap-3" data-testid="site-locations-filters">
           <div className="relative">
@@ -735,6 +744,12 @@ export default function SiteLocations() {
           )}
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="map" className="mt-0">
+          <SiteLocationsMapTab sites={filteredSites} />
+        </TabsContent>
+      </Tabs>
 
       <Dialog
         open={radiusEditingSite !== null}

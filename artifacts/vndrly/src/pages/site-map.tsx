@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
 import {
-  Circle,
   MapContainer,
   Marker,
   Popup,
@@ -28,6 +27,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { BatteryLow, Gauge, MapPin, Navigation, RefreshCw } from "lucide-react";
+import LiveConnectionPill, { type LiveConnectionStatus } from "@/components/live-connection-pill";
+import { GeofenceCirclesLayer, type GeofenceSite } from "@/components/map/geofence-circles-layer";
+import { resolveSiteMapRadiusMeters } from "@workspace/map-utils";
+import { Checkbox } from "@/components/ui/checkbox";
+import { RecentTripsCard } from "@/components/map/recent-trips-card";
 import {
   useListSiteLocations,
   getListSiteLocationsQueryKey,
@@ -37,15 +41,14 @@ import { BrandZoomControl } from "@/components/brand-zoom-control";
 
 const LOW_BATTERY_THRESHOLD = 0.2;
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
-// Quarter-mile radius (~402 m) is the default search ring around the
-// selected site location.
-const DEFAULT_RADIUS_METERS = 402.336;
 const METERS_PER_MILE = 1609.344;
 const MPS_TO_MPH = 2.23694;
-// How often we re-poll the nearby endpoint while a site is selected.
-const POLL_INTERVAL_MS = 15_000;
-// Speed below which we report the employee as parked instead of showing mph.
+const NEARBY_FALLBACK_POLL_MS = 60_000;
 const SPEED_MIN_MOVING_MPS = 1.8;
+
+function todayISO(): string {
+  return new Date().toISOString().slice(0, 10);
+}
 
 type ActiveTicket = {
   ticketId: number;
@@ -81,6 +84,18 @@ type SiteMapResponse = {
   };
   radiusMeters: number;
   employees: NearbyEmployee[];
+};
+
+type OverviewSite = GeofenceSite & {
+  nearbyCount: number;
+  radiusMeters: number;
+  address?: string | null;
+  siteCode?: string | null;
+};
+
+type OverviewResponse = {
+  sites: OverviewSite[];
+  employees: Array<NearbyEmployee & { nearestSiteId: number; ticketId: number; lifecycleState: string | null }>;
 };
 
 function formatSpeed(mps: number | null): string {
@@ -226,6 +241,9 @@ export default function SiteMapPage() {
   // (any site). Vendor / field-employee users would only ever see 403s from
   // the API, so block at the page level for a cleaner UX.
   const allowed = user?.role === "partner" || user?.role === "admin";
+  const initialSiteId = typeof window !== "undefined"
+    ? Number(new URLSearchParams(window.location.search).get("siteId"))
+    : NaN;
   const { data: sitesResp } = useListSiteLocations(undefined, {
     query: {
       enabled: allowed,
@@ -249,10 +267,13 @@ export default function SiteMapPage() {
   }, [sitesResp]);
 
   const [selectedSiteId, setSelectedSiteId] = useState<number | null>(null);
+  const [viewMode, setViewMode] = useState<"single" | "all">("single");
   const [data, setData] = useState<SiteMapResponse | null>(null);
+  const [overview, setOverview] = useState<OverviewResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loadedAt, setLoadedAt] = useState<Date | null>(null);
   const [loading, setLoading] = useState(false);
+  const [liveStatus, setLiveStatus] = useState<LiveConnectionStatus>("connecting");
   const fetchSeqRef = useRef(0);
   // Held by the MapContainer ref so the custom BrandZoomControl
   // overlay (rendered as a sibling of MapContainer) can call
@@ -263,14 +284,36 @@ export default function SiteMapPage() {
   // lands on a usable map without an extra click.
   useEffect(() => {
     if (selectedSiteId == null && sites.length > 0) {
-      setSelectedSiteId(Number(sites[0].id));
+      const fromUrl = Number.isFinite(initialSiteId) && initialSiteId > 0 ? initialSiteId : null;
+      const pick = fromUrl && sites.some((s: any) => Number(s.id) === fromUrl)
+        ? fromUrl
+        : Number(sites[0].id);
+      setSelectedSiteId(pick);
     }
-  }, [sites, selectedSiteId]);
+  }, [sites, selectedSiteId, initialSiteId]);
 
   const selectedSite = useMemo(
     () => sites.find((s: any) => Number(s.id) === selectedSiteId) ?? null,
     [sites, selectedSiteId],
   );
+
+  async function fetchOverview(opts: { silent?: boolean } = {}) {
+    if (!opts.silent) setLoading(true);
+    const seq = ++fetchSeqRef.current;
+    try {
+      const r = await fetch(`${API_BASE}/api/site-map/overview`, { credentials: "include" });
+      if (!r.ok) throw new Error(`Failed to load (${r.status})`);
+      const json = (await r.json()) as OverviewResponse;
+      if (seq !== fetchSeqRef.current) return;
+      setOverview(json);
+      setError(null);
+      setLoadedAt(new Date());
+    } catch (e: any) {
+      if (seq === fetchSeqRef.current) setError(e?.message ?? "Failed to load");
+    } finally {
+      if (seq === fetchSeqRef.current && !opts.silent) setLoading(false);
+    }
+  }
 
   async function fetchNearby(siteId: number, opts: { silent?: boolean } = {}) {
     if (!opts.silent) setLoading(true);
@@ -306,19 +349,47 @@ export default function SiteMapPage() {
   // simpler than wiring up a second SSE channel and is plenty responsive
   // for "who is near my site right now".
   useEffect(() => {
+    if (!allowed) return;
+    if (viewMode === "all") {
+      fetchOverview();
+      const id = window.setInterval(() => fetchOverview({ silent: true }), NEARBY_FALLBACK_POLL_MS);
+      return () => window.clearInterval(id);
+    }
     if (selectedSiteId == null) return;
     fetchNearby(selectedSiteId);
     const id = window.setInterval(() => {
       fetchNearby(selectedSiteId, { silent: true });
-    }, POLL_INTERVAL_MS);
+    }, NEARBY_FALLBACK_POLL_MS);
     return () => window.clearInterval(id);
-  }, [selectedSiteId]);
+  }, [selectedSiteId, viewMode, allowed]);
+
+  useEffect(() => {
+    if (!allowed || viewMode !== "single" || selectedSiteId == null) return;
+    let es: EventSource | null = null;
+    try {
+      es = new EventSource(`${API_BASE}/api/live-locations/events`, { withCredentials: true });
+      es.onopen = () => setLiveStatus("live");
+      es.onerror = () => setLiveStatus("reconnecting");
+      es.addEventListener("location.ping", () => {
+        setLiveStatus("live");
+        fetchNearby(selectedSiteId, { silent: true });
+      });
+    } catch {
+      setLiveStatus("reconnecting");
+    }
+    return () => {
+      es?.close();
+    };
+  }, [allowed, viewMode, selectedSiteId]);
 
   const center: [number, number] | null = data?.site.latitude != null && data?.site.longitude != null
     ? [data.site.latitude, data.site.longitude]
     : selectedSite
       ? [Number(selectedSite.latitude), Number(selectedSite.longitude)]
       : null;
+
+  // placeholder — recomputed below after geofenceSites
+  let mapCenter = center;
 
   // Active visitors across ALL of the partner's site locations.
   // The /api/visits list endpoint is partner-scoped server-side
@@ -350,9 +421,57 @@ export default function SiteMapPage() {
     );
   }, [visitorsResp]);
 
-  const employees = data?.employees ?? [];
-  const radiusMeters = data?.radiusMeters ?? DEFAULT_RADIUS_METERS;
+  const employees = viewMode === "all"
+    ? (overview?.employees ?? []).map((e) => ({
+        employeeId: e.employeeId,
+        employeeName: e.employeeName,
+        vendorId: null,
+        latitude: e.latitude,
+        longitude: e.longitude,
+        distanceMeters: e.distanceMeters,
+        batteryLevel: e.batteryLevel,
+        heading: e.heading ?? null,
+        speedMps: e.speedMps,
+        recordedAt: e.recordedAt,
+        activeTicket: {
+          ticketId: e.ticketId,
+          lifecycleState: e.lifecycleState,
+          siteLocationId: e.nearestSiteId,
+          siteName: sites.find((s: any) => Number(s.id) === e.nearestSiteId)?.name ?? null,
+          siteCode: null,
+        },
+      }))
+    : (data?.employees ?? []);
+  const radiusMeters = viewMode === "all"
+    ? resolveSiteMapRadiusMeters(selectedSite?.siteRadiusMeters ?? null)
+    : (data?.radiusMeters ?? resolveSiteMapRadiusMeters(selectedSite?.siteRadiusMeters ?? null));
   const radiusMiles = radiusMeters / METERS_PER_MILE;
+  const geofenceSites: GeofenceSite[] = useMemo(() => {
+    if (viewMode === "all" && overview?.sites?.length) {
+      return overview.sites.map((s) => ({
+        id: s.id,
+        name: s.name,
+        latitude: s.latitude,
+        longitude: s.longitude,
+        siteRadiusMeters: s.siteRadiusMeters,
+      }));
+    }
+    return sites.map((s: any) => ({
+      id: Number(s.id),
+      name: s.name,
+      latitude: Number(s.latitude),
+      longitude: Number(s.longitude),
+      siteRadiusMeters: s.siteRadiusMeters ?? null,
+    }));
+  }, [viewMode, overview, sites]);
+
+  if (viewMode === "all" && geofenceSites.length > 0) {
+    const lat = geofenceSites.reduce((s, g) => s + g.latitude, 0) / geofenceSites.length;
+    const lng = geofenceSites.reduce((s, g) => s + g.longitude, 0) / geofenceSites.length;
+    mapCenter = [lat, lng];
+  } else {
+    mapCenter = center;
+  }
 
   // Guard: a partner without sites should still see a clear empty state
   // instead of a broken-looking map.
@@ -383,6 +502,9 @@ export default function SiteMapPage() {
             <h1 className="text-2xl font-semibold" data-testid="text-site-map-title">
               {t("siteMap.title", "Site Map")}
             </h1>
+            <div className="flex items-center gap-2">
+              <LiveConnectionPill status={liveStatus} testId="site-map-live-connection-pill" />
+            </div>
             <p className="text-sm text-muted-foreground">
               {t(
                 "siteMap.subtitle",
@@ -410,6 +532,16 @@ export default function SiteMapPage() {
 
       <Card>
         <CardContent className="p-3 flex items-center gap-3 flex-wrap">
+          <label className="inline-flex items-center gap-2 text-sm cursor-pointer">
+            <Checkbox
+              checked={viewMode === "all"}
+              onCheckedChange={(v) => setViewMode(v === true ? "all" : "single")}
+              data-testid="checkbox-site-map-all-sites"
+            />
+            {t("siteMap.allSitesView", "All sites overview")}
+          </label>
+          {viewMode === "single" && (
+          <>
           <label className="text-sm font-medium" htmlFor="site-map-site-select">
             {t("siteMap.siteLabel", "Site location")}
           </label>
@@ -453,6 +585,8 @@ export default function SiteMapPage() {
               {selectedSite.address ? selectedSite.address : null}
             </div>
           )}
+          </>
+          )}
         </CardContent>
       </Card>
 
@@ -474,35 +608,26 @@ export default function SiteMapPage() {
           <Card className="border-2" style={{ borderColor: "var(--brand-primary)" }}>
             <CardContent className="p-0">
               <div className="relative" style={{ height: 520 }}>
-                {center ? (
+                {mapCenter ? (
                   <MapContainer
-                    center={center}
-                    zoom={15}
+                    center={mapCenter}
+                    zoom={viewMode === "all" ? 8 : 15}
                     zoomControl={false}
                     ref={mapRef}
                     style={{ height: "100%", width: "100%" }}
                   >
-                    <RecenterMap center={center} zoom={15} />
+                    <RecenterMap center={mapCenter} zoom={viewMode === "all" ? 8 : 15} />
                     <TileLayer
                       attribution="Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community"
                       url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
                       maxZoom={19}
                     />
-                    {/* The 1/4-mile search radius around the site, drawn as
-                        a translucent blue ring so partners can see exactly
-                        where the "on site" cutoff is. */}
-                    <Circle
-                      center={center}
-                      radius={radiusMeters}
-                      pathOptions={{
-                        color: "#2563eb",
-                        weight: 2,
-                        opacity: 0.6,
-                        fillColor: "#2563eb",
-                        fillOpacity: 0.08,
-                      }}
+                    <GeofenceCirclesLayer
+                      sites={geofenceSites}
+                      highlightSiteId={viewMode === "single" ? selectedSiteId : null}
                     />
-                    <Marker position={center} icon={siteIcon()}>
+                    {viewMode === "single" && mapCenter && (
+                    <Marker position={mapCenter} icon={siteIcon()}>
                       <Popup>
                         <div className="text-sm space-y-1 min-w-[180px]">
                           <div className="font-semibold flex items-center gap-1">
@@ -520,6 +645,7 @@ export default function SiteMapPage() {
                         </div>
                       </Popup>
                     </Marker>
+                    )}
                     {/* Brand-tinted pins for anyone currently
                         checked in at one of this partner's site
                         locations. Independent of the selected
@@ -663,7 +789,7 @@ export default function SiteMapPage() {
                     z-[1000] sits above leaflet panes (which top
                     out around z-index 700) but below modal
                     overlays. */}
-                {center && (
+                {mapCenter && (
                   <div className="absolute top-3 right-3 z-[1000] pointer-events-auto">
                     <BrandZoomControl
                       onZoomIn={() => mapRef.current?.zoomIn()}
@@ -753,6 +879,12 @@ export default function SiteMapPage() {
                         {formatDistance(emp.distanceMeters)} ·{" "}
                         {timeAgo(emp.recordedAt)}
                       </div>
+                      <Link
+                        href={`/crew-map/${emp.employeeId}?date=${todayISO()}`}
+                        className="text-xs underline mt-1 inline-block"
+                      >
+                        {t("crewMap.replayToday", "Replay today")}
+                      </Link>
                     </div>
                   );
                 })
@@ -765,6 +897,10 @@ export default function SiteMapPage() {
               )}
             </CardContent>
           </Card>
+
+          <RecentTripsCard
+            siteLocationId={viewMode === "single" ? selectedSiteId : null}
+          />
         </div>
       </div>
       {/* user is referenced solely so unused-imports stays quiet; the page

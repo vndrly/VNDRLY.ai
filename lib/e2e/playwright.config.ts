@@ -7,7 +7,7 @@ const baseURL =
 // Resolve a chromium binary so the spec is runnable from the root
 // `pnpm test` chain without the caller having to set PLAYWRIGHT_CHROMIUM
 // or run `playwright install chromium` first. We prefer (1) the explicit
-// override env var, then (2) the system chromium that the Replit Nix
+// override env var, then (2) the system chromium from the Nix
 // environment ships with (which matches what dev uses), and finally
 // fall back to Playwright's bundled headless-shell.
 function resolveChromiumPath(): string | undefined {

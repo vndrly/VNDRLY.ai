@@ -1,7 +1,0 @@
-2026/05/28-05:45:53.771 b9e8 Reusing MANIFEST C:\Users\JohnElerick\Desktop\vndrly\lib\e2e\scripts\.replit-profile\Default\Local Storage\leveldb/MANIFEST-000001
-2026/05/28-05:45:53.821 b9e8 Recovering log #4
-2026/05/28-05:45:53.822 b9e8 Level-0 table #7: started
-2026/05/28-05:45:53.987 b9e8 Level-0 table #7: 13666 bytes OK
-2026/05/28-05:45:53.989 b9e8 Recovering log #7
-2026/05/28-05:45:54.067 b9e8 Reusing old log C:\Users\JohnElerick\Desktop\vndrly\lib\e2e\scripts\.replit-profile\Default\Local Storage\leveldb/000007.log 
-2026/05/28-05:45:54.254 b9e8 Delete type=0 #4

@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import OnboardingStepper, { type StepperStep } from "@/components/onboarding-stepper";
 import { onboardingApi } from "@/lib/onboarding-api";
 import { handlePhoneInput, stripPhone } from "@/lib/utils";
+import { Card, CardContent } from "@/components/ui/card";
 
 type StepKey = "personal-info" | "photo-certs" | "set-password";
 
@@ -328,7 +329,7 @@ export default function OnboardingField() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border-2 border-gray-200 shadow-sm p-6">
+        <Card><CardContent className="p-6 pt-6">
           <OnboardingStepper steps={STEPS} currentIndex={stepIndex} completedKeys={completed} skippedKeys={skipped} className="mb-8" />
 
           {currentStep.key === "personal-info" && (
@@ -432,7 +433,7 @@ export default function OnboardingField() {
               )}
             </div>
           </div>
-        </div>
+        </CardContent></Card>
       </div>
     </div>
   );

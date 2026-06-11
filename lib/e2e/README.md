@@ -22,7 +22,7 @@ pnpm --filter @workspace/e2e run test
 ```
 
 Override the web base URL with `E2E_BASE_URL` if the web workflow is
-exposed on a different host/port (e.g. behind the Replit proxy).
+exposed on a different host/port (e.g. behind a reverse proxy).
 
 ## What is covered
 

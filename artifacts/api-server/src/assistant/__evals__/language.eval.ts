@@ -128,7 +128,7 @@ describe.skipIf(!HAS_KEY)("language drift eval (live Anthropic)", () => {
   beforeAll(() => {
     // Construct a vanilla SDK client against api.anthropic.com.
     // The integrations package exposes a pre-wired `anthropic` that
-    // points at the Replit AI proxy, but importing it would crash
+    // points at a hosted AI proxy, but importing it would crash
     // on machines without AI_INTEGRATIONS_ANTHROPIC_BASE_URL set
     // (which is the common case for a developer running this eval
     // locally with their own raw API key). Constructing our own

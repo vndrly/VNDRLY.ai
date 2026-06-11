@@ -11,6 +11,7 @@ import {
   vendorsTable,
   ticketAssignmentRatesTable,
   ticketCrewTable,
+  gpsLogsTable,
 } from "@workspace/db";
 import { formatTicketTrackingNumber } from "@workspace/db/format";
 
@@ -18,6 +19,14 @@ import { SESSION_SECRET } from "../lib/session";
 import { logger } from "../lib/logger";
 import { regenerateAutoLaborLines } from "../lib/auto-labor-lines";
 import { notifyUsers } from "./notifications";
+import {
+  checkInDistanceMeters,
+  computeOnSiteMinutes,
+  computeTravelMinutes,
+  minutesBetween,
+  pickReplayDate,
+} from "../lib/recent-trips-format";
+import { resolveGeofenceRadiusMeters } from "@workspace/map-utils";
 
 const COOKIE_NAME = "vndrly_session";
 type Session = { userId: number; role: string; vendorId: number | null; partnerId: number | null };
@@ -769,6 +778,260 @@ router.get("/tickets/:id/crew-sessions", async (req, res): Promise<void> => {
     .where(eq(ticketCheckInsTable.ticketId, ticketId))
     .orderBy(ticketCheckInsTable.checkInAt);
   res.json(rows);
+});
+
+// GET /tickets/:id/site-visit-summary — map + on-site audit for billing/disputes.
+// All underlying facts are read from Supabase Postgres (DATABASE_URL) via Drizzle:
+//   tickets          — lead lifecycle timestamps + check-in/out coords
+//   ticket_check_ins — crew sessions + per-person GPS at punch in/out
+//   gps_logs         — live_ping / tracking pings + lifecycle milestone events
+//   site_locations   — site pin + geofence radius
+// Derived fields (on-site minutes, travel time, geofence match) are computed on read.
+router.get("/tickets/:id/site-visit-summary", async (req, res): Promise<void> => {
+  const ticketId = Number(req.params.id);
+  if (!Number.isFinite(ticketId)) {
+    res.status(400).json({ error: "Invalid id", code: "validation.invalid_id" });
+    return;
+  }
+  if (!(await ensureCrewRead(req, res, ticketId))) return;
+
+  const [ticketRow] = await db
+    .select({
+      id: ticketsTable.id,
+      fieldEmployeeId: ticketsTable.fieldEmployeeId,
+      leadFirst: vendorPeopleTable.firstName,
+      leadLast: vendorPeopleTable.lastName,
+      lifecycleState: ticketsTable.lifecycleState,
+      status: ticketsTable.status,
+      enRouteAt: ticketsTable.enRouteAt,
+      onLocationAt: ticketsTable.onLocationAt,
+      arrivedAt: ticketsTable.arrivedAt,
+      checkInTime: ticketsTable.checkInTime,
+      checkOutTime: ticketsTable.checkOutTime,
+      checkInLatitude: ticketsTable.checkInLatitude,
+      checkInLongitude: ticketsTable.checkInLongitude,
+      checkOutLatitude: ticketsTable.checkOutLatitude,
+      checkOutLongitude: ticketsTable.checkOutLongitude,
+      siteName: siteLocationsTable.name,
+      siteCode: siteLocationsTable.siteCode,
+      siteLatitude: siteLocationsTable.latitude,
+      siteLongitude: siteLocationsTable.longitude,
+      siteRadiusMeters: siteLocationsTable.siteRadiusMeters,
+    })
+    .from(ticketsTable)
+    .leftJoin(vendorPeopleTable, eq(vendorPeopleTable.id, ticketsTable.fieldEmployeeId))
+    .leftJoin(siteLocationsTable, eq(siteLocationsTable.id, ticketsTable.siteLocationId))
+    .where(eq(ticketsTable.id, ticketId));
+
+  if (!ticketRow) {
+    res.status(404).json({ error: "Ticket not found", code: "ticket.not_found" });
+    return;
+  }
+
+  const siteLat = ticketRow.siteLatitude == null ? null : Number(ticketRow.siteLatitude);
+  const siteLng = ticketRow.siteLongitude == null ? null : Number(ticketRow.siteLongitude);
+  const geofenceMeters = resolveGeofenceRadiusMeters(
+    ticketRow.siteRadiusMeters == null ? null : Number(ticketRow.siteRadiusMeters),
+  );
+
+  const gpsRows = await db
+    .select({
+      id: gpsLogsTable.id,
+      latitude: gpsLogsTable.latitude,
+      longitude: gpsLogsTable.longitude,
+      eventType: gpsLogsTable.eventType,
+      recordedAt: gpsLogsTable.recordedAt,
+    })
+    .from(gpsLogsTable)
+    .where(eq(gpsLogsTable.ticketId, ticketId))
+    .orderBy(gpsLogsTable.recordedAt);
+
+  // Full persisted ping trail — includes live_ping/tracking plus milestone
+  // events (en_route, on_location, check_in, check_out) written by ticket
+  // lifecycle handlers and POST /api/location-pings.
+  const route = gpsRows.map((g) => ({
+    id: g.id,
+    latitude: Number(g.latitude),
+    longitude: Number(g.longitude),
+    eventType: g.eventType,
+    recordedAt: g.recordedAt.toISOString(),
+  }));
+
+  const crewRows = await db
+    .select({
+      id: ticketCheckInsTable.id,
+      employeeId: ticketCheckInsTable.employeeId,
+      employeeName: sql<string>`trim(${vendorPeopleTable.firstName} || ' ' || ${vendorPeopleTable.lastName})`,
+      checkInAt: ticketCheckInsTable.checkInAt,
+      checkOutAt: ticketCheckInsTable.checkOutAt,
+      checkInLatitude: ticketCheckInsTable.checkInLatitude,
+      checkInLongitude: ticketCheckInsTable.checkInLongitude,
+      checkOutLatitude: ticketCheckInsTable.checkOutLatitude,
+      checkOutLongitude: ticketCheckInsTable.checkOutLongitude,
+      source: ticketCheckInsTable.source,
+    })
+    .from(ticketCheckInsTable)
+    .leftJoin(vendorPeopleTable, eq(ticketCheckInsTable.employeeId, vendorPeopleTable.id))
+    .where(eq(ticketCheckInsTable.ticketId, ticketId))
+    .orderBy(ticketCheckInsTable.checkInAt);
+
+  type Person = {
+    key: string;
+    role: "lead" | "crew";
+    sessionId: number | null;
+    employeeId: number;
+    employeeName: string;
+    checkInAt: string | null;
+    checkOutAt: string | null;
+    onSiteMinutes: number | null;
+    travelMinutes: number | null;
+    checkInLatitude: number | null;
+    checkInLongitude: number | null;
+    checkOutLatitude: number | null;
+    checkOutLongitude: number | null;
+    checkInDistanceMeters: number | null;
+    insideGeofence: boolean | null;
+    replayDate: string | null;
+    source: string | null;
+  };
+
+  const people: Person[] = [];
+
+  if (ticketRow.fieldEmployeeId) {
+    const checkInLat =
+      ticketRow.checkInLatitude == null ? null : Number(ticketRow.checkInLatitude);
+    const checkInLng =
+      ticketRow.checkInLongitude == null ? null : Number(ticketRow.checkInLongitude);
+    const dist = checkInDistanceMeters({
+      checkInLatitude: checkInLat,
+      checkInLongitude: checkInLng,
+      siteLatitude: siteLat,
+      siteLongitude: siteLng,
+    });
+    const hasLeadActivity =
+      ticketRow.checkInTime ||
+      ticketRow.arrivedAt ||
+      ticketRow.enRouteAt ||
+      ticketRow.onLocationAt;
+    if (hasLeadActivity) {
+      people.push({
+        key: `lead-${ticketRow.fieldEmployeeId}`,
+        role: "lead",
+        sessionId: null,
+        employeeId: ticketRow.fieldEmployeeId,
+        employeeName:
+          [ticketRow.leadFirst, ticketRow.leadLast].filter(Boolean).join(" ") ||
+          `Employee #${ticketRow.fieldEmployeeId}`,
+        checkInAt: ticketRow.checkInTime?.toISOString() ?? ticketRow.arrivedAt?.toISOString() ?? null,
+        checkOutAt: ticketRow.checkOutTime?.toISOString() ?? null,
+        onSiteMinutes: computeOnSiteMinutes({
+          checkInTime: ticketRow.checkInTime,
+          checkOutTime: ticketRow.checkOutTime,
+          arrivedAt: ticketRow.arrivedAt,
+        }),
+        travelMinutes: computeTravelMinutes({
+          enRouteAt: ticketRow.enRouteAt,
+          arrivedAt: ticketRow.arrivedAt,
+          checkInTime: ticketRow.checkInTime,
+          onLocationAt: ticketRow.onLocationAt,
+        }),
+        checkInLatitude: checkInLat,
+        checkInLongitude: checkInLng,
+        checkOutLatitude:
+          ticketRow.checkOutLatitude == null ? null : Number(ticketRow.checkOutLatitude),
+        checkOutLongitude:
+          ticketRow.checkOutLongitude == null ? null : Number(ticketRow.checkOutLongitude),
+        checkInDistanceMeters: dist,
+        insideGeofence: dist == null ? null : dist <= geofenceMeters,
+        replayDate: pickReplayDate(
+          ticketRow.checkInTime,
+          ticketRow.enRouteAt,
+          ticketRow.arrivedAt,
+          ticketRow.checkOutTime ?? ticketRow.checkInTime,
+        ),
+        source: "ticket",
+      });
+    }
+  }
+
+  for (const s of crewRows) {
+    const checkInLat = s.checkInLatitude == null ? null : Number(s.checkInLatitude);
+    const checkInLng = s.checkInLongitude == null ? null : Number(s.checkInLongitude);
+    const dist = checkInDistanceMeters({
+      checkInLatitude: checkInLat,
+      checkInLongitude: checkInLng,
+      siteLatitude: siteLat,
+      siteLongitude: siteLng,
+    });
+    people.push({
+      key: `crew-${s.id}`,
+      role: "crew",
+      sessionId: s.id,
+      employeeId: s.employeeId,
+      employeeName: s.employeeName || `Employee #${s.employeeId}`,
+      checkInAt: s.checkInAt.toISOString(),
+      checkOutAt: s.checkOutAt?.toISOString() ?? null,
+      onSiteMinutes: computeOnSiteMinutes({
+        checkInTime: s.checkInAt,
+        checkOutTime: s.checkOutAt,
+        arrivedAt: null,
+      }),
+      travelMinutes: null,
+      checkInLatitude: checkInLat,
+      checkInLongitude: checkInLng,
+      checkOutLatitude:
+        s.checkOutLatitude == null ? null : Number(s.checkOutLatitude),
+      checkOutLongitude:
+        s.checkOutLongitude == null ? null : Number(s.checkOutLongitude),
+      checkInDistanceMeters: dist,
+      insideGeofence: dist == null ? null : dist <= geofenceMeters,
+      replayDate: pickReplayDate(s.checkInAt, null, null, s.checkOutAt ?? s.checkInAt),
+      source: s.source,
+    });
+  }
+
+  const totalOnSiteMinutes = people.reduce(
+    (sum, p) => sum + (p.onSiteMinutes ?? 0),
+    0,
+  );
+  const leadTravel = people.find((p) => p.role === "lead")?.travelMinutes ?? null;
+  const firstRoute = route[0]?.recordedAt ?? null;
+  const lastRoute = route.length > 0 ? route[route.length - 1]!.recordedAt : null;
+  const routeSpanMinutes =
+    firstRoute && lastRoute ? minutesBetween(firstRoute, lastRoute) : null;
+
+  res.json({
+    ticketId,
+    trackingNumber: formatTicketTrackingNumber(ticketId),
+    lifecycleState: ticketRow.lifecycleState,
+    status: ticketRow.status,
+    site:
+      siteLat != null && siteLng != null
+        ? {
+            name: ticketRow.siteName,
+            siteCode: ticketRow.siteCode,
+            latitude: siteLat,
+            longitude: siteLng,
+            siteRadiusMeters: geofenceMeters,
+          }
+        : null,
+    timeline: {
+      enRouteAt: ticketRow.enRouteAt?.toISOString() ?? null,
+      onLocationAt: ticketRow.onLocationAt?.toISOString() ?? null,
+      arrivedAt: ticketRow.arrivedAt?.toISOString() ?? null,
+      checkInTime: ticketRow.checkInTime?.toISOString() ?? null,
+      checkOutTime: ticketRow.checkOutTime?.toISOString() ?? null,
+    },
+    route,
+    people,
+    totals: {
+      peopleCount: people.length,
+      totalOnSiteMinutes,
+      leadTravelMinutes: leadTravel,
+      routePointCount: route.length,
+      routeSpanMinutes,
+    },
+  });
 });
 
 type LaborSession = {

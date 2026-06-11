@@ -1,6 +1,6 @@
 /**
  * Loads repo-root `.env.local` into `process.env` for local development.
- * Does not override variables already set (Replit Secrets win in production).
+ * Does not override variables already set in the shell.
  */
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";

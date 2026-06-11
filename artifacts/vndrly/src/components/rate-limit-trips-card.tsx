@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CARD_INNER_TILE_CLASS, CARD_TITLE_ICON_CLASS } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 import { Activity, AlertTriangle } from "lucide-react";
+import { useBrand } from "@/hooks/use-brand";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -53,6 +55,9 @@ const WINDOW_LABELS: Record<string, string> = {
  * could have been evicted.
  */
 export function RateLimitTripsCard() {
+  const brand = useBrand();
+  const accentColor = brand.isOrgBranded ? brand.primary : "#f59e0b";
+  const iconStyle = { color: accentColor };
   const [data, setData] = useState<TripsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -91,7 +96,7 @@ export function RateLimitTripsCard() {
     <Card data-testid="card-rate-limit-trips">
       <CardHeader>
         <CardTitle className="text-lg flex items-center gap-2">
-          <Activity className="w-5 h-5 text-primary" />
+          <Activity className={CARD_TITLE_ICON_CLASS} style={iconStyle} />
           Tickets API rate-limit trips
         </CardTitle>
       </CardHeader>
@@ -152,7 +157,7 @@ function TripWindowSection({ window: w }: { window: TripWindow }) {
   const hasTrips = w.totalTrips > 0;
   return (
     <section
-      className="rounded-md border border-border p-3 space-y-2"
+      className={cn(CARD_INNER_TILE_CLASS, "space-y-2")}
       data-testid={`section-rate-limit-trips-${w.key}`}
     >
       <header className="flex items-baseline justify-between gap-2">

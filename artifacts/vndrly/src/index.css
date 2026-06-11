@@ -138,10 +138,11 @@
     2px 3px 0 rgb(0 0 0 / 0.13),
     4px 10px 20px rgb(0 0 0 / 0.20);
 
-  /* Unified hover drop shadow — content pane branded links (nav excluded). */
-  --drop-shadow-hover:
-    1px 1px 0 rgb(0 0 0 / 0.35),
-    1.5px 2px 1px rgb(0 0 0 / 0.27);
+  /* Branded Lucide icons in card headers / stat rows. */
+  --card-icon-drop-shadow: drop-shadow(0 1px 2px rgb(0 0 0 / 0.28));
+
+  /* Branded link/title hover text shadow — same depth as card icons, softer blur. */
+  --drop-shadow-hover: 0 1px 4px rgb(0 0 0 / 0.28);
 
   --shadow-2xs: 1px 1px 0 rgb(0 0 0 / 0.06);
   --shadow-xs: 1px 1px 0 rgb(0 0 0 / 0.07), 0 1px 3px rgb(0 0 0 / 0.10);
@@ -201,6 +202,15 @@
 /* Mobile bottom nav uses bg-card but should not lift on hover. */
 :root:not(.dark) nav.bg-card:hover {
   box-shadow: none;
+}
+
+/* Card header / stat-row Lucide icons — subtle depth on brand tint. */
+.card-icon-drop-shadow {
+  filter: var(--card-icon-drop-shadow);
+}
+
+[data-slot="card-title"] > svg {
+  filter: var(--card-icon-drop-shadow);
 }
 
 /* Global dark-mode "VNDRLY-00000239 timeline" treatment for any soft
@@ -584,8 +594,17 @@
   }
 }
 
-/* Pill/button CSS shadows removed — PillsV1 PNGs carry baked-in chrome.
-   A unified global pill look will be reintroduced in a follow-up pass. */
+/* Read-only PNG pills — silhouette drop-shadow (PillsV1 PNGs carry baked chrome). */
+.pointer-events-none.select-none.inline-flex,
+main :is(button, a, span).relative.inline-flex.items-center.select-none {
+  filter: drop-shadow(0 0.9px 0.9px rgb(0 0 0 / 0.198))
+    drop-shadow(0 1.8px 3.6px rgb(0 0 0 / 0.162));
+}
+button:hover .pointer-events-none.select-none.inline-flex,
+main :is(button, a).relative.inline-flex.items-center.select-none:hover {
+  filter: drop-shadow(0 1.8px 1.8px rgb(0 0 0 / 0.252))
+    drop-shadow(0 3.6px 7.2px rgb(0 0 0 / 0.18));
+}
 
 /* Button + pill label weight: always normal. Do not use font-bold or
    font-semibold on interactive buttons or PNG pill labels unless the
@@ -629,8 +648,7 @@
     transition: color 0.15s ease, text-shadow 0.15s ease;
   }
 
-  main .group:hover .hotlist-job-title,
-  main .group:hover [class*="group-hover:text-"] {
+  main .group:hover .hotlist-job-title {
     color: var(--brand-primary, hsl(var(--primary))) !important;
     text-shadow: var(--drop-shadow-hover);
     transition: color 0.15s ease, text-shadow 0.15s ease;
@@ -645,17 +663,6 @@
     .pointer-events-none.select-none.inline-flex
   ) {
     color: inherit !important;
-    text-shadow: none !important;
-  }
-
-  /* Recent Activity rows — shadow + brand color on title line only. */
-  main a[data-recent-activity-row]:hover .recent-activity-title {
-    color: var(--brand-primary, hsl(var(--primary))) !important;
-    text-shadow: var(--drop-shadow-hover);
-    transition: color 0.15s ease, text-shadow 0.15s ease;
-  }
-
-  main a[data-recent-activity-row]:hover :is(.text-muted-foreground, [class*="text-muted-foreground"]) {
     text-shadow: none !important;
   }
 }

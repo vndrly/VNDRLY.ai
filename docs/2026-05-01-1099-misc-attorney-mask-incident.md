@@ -2,7 +2,7 @@
 
 **Task:** #810 — Check whether past 1099-MISC attorney payments were filed in the wrong IRS slot
 **Date:** May 1, 2026
-**Owner:** Replit Agent (Tax Operations)
+**Owner:** Tax Operations
 **Decision:** No corrected ("G") FIRE return is required. No further action needed.
 
 ---

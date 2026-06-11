@@ -28,7 +28,7 @@ export const DEFAULT_TEST_COOKIE_NAME = "vndrly_session";
  * one explicitly. This is intentionally a hard-coded literal — we deliberately
  * do **not** read `process.env.SESSION_SECRET` here.
  *
- * In Replit (and other shared dev environments) the shell sets a real
+ * In shared dev environments the shell may set a real
  * `SESSION_SECRET` that does not match what tests rely on. If this helper
  * silently honored that env var, route tests that mock
  * `lib/session.SESSION_SECRET` to `"test-secret"` would sign cookies with the

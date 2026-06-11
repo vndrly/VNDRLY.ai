@@ -340,6 +340,29 @@
       "failedBody": "Inténtalo de nuevo.",
       "recent": "Recordatorios recientes",
       "noMessage": "Estado: {{status}}"
+    },
+    "siteVisitSummary": {
+      "title": "Resumen de visita al sitio",
+      "subtitle": "Ruta, tiempo en sitio y verificaciones de geocerca para todos los que trabajaron este ticket — para facturación y revisión de disputas.",
+      "loading": "Cargando resumen de visita al sitio…",
+      "failed": "No se pudo cargar el resumen de visita al sitio.",
+      "onSiteCount": "En sitio",
+      "totalOnSite": "Total en sitio",
+      "travel": "Viaje",
+      "routePoints": "Puntos de ruta",
+      "peopleOnSite": "Todos en sitio",
+      "noPeople": "Aún no hay registros de entrada para este ticket.",
+      "lead": "Líder",
+      "crew": "Equipo",
+      "checkInDistance": "{{m}} m del sitio al registrarse",
+      "routeReplay": "Reproducir ruta",
+      "checkInPin": "Entrada en mapa",
+      "enRoute": "En ruta",
+      "arrived": "Llegó",
+      "checkIn": "Entrada registrada",
+      "checkOut": "Salida registrada",
+      "minutes": "{{min}} min",
+      "hoursMinutes": "{{hr}}h {{min}}m"
     }
   },
   "language": {

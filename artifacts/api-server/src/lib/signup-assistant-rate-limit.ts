@@ -98,7 +98,7 @@ export function __setSignupAssistantStoreForTests(
 
 /**
  * Best-effort client-IP extraction. Reads the leftmost
- * `x-forwarded-for` entry (Replit's edge proxy populates this with
+ * `x-forwarded-for` entry (reverse proxies populate this with
  * the visitor's IP), falling back to the socket's remote address if
  * no header is present.
  *

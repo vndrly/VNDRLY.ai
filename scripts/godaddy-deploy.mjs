@@ -134,13 +134,6 @@ async function main() {
   const akMatch = localEnv.match(/^AI_INTEGRATIONS_ANTHROPIC_API_KEY=(.+)$/m);
   if (akMatch) anthropicKey = akMatch[1].trim();
 
-  const sendgridKey =
-    localEnv.match(/^SENDGRID_API_KEY=(.+)$/m)?.[1]?.trim() || "";
-  const sendgridFrom =
-    localEnv.match(/^SENDGRID_FROM_EMAIL=(.+)$/m)?.[1]?.trim() ||
-    localEnv.match(/^OPS_ALERT_EMAIL=(.+)$/m)?.[1]?.trim() ||
-    "admin@vndrly.ai";
-
   const supabaseUrl =
     localEnv.match(/^SUPABASE_URL=(.+)$/m)?.[1]?.trim() ||
     "https://bihjmgbdzbhcnsuhzzwo.supabase.co";
@@ -164,9 +157,9 @@ async function main() {
     `SUPABASE_STORAGE_BUCKET=${storageBucket}`,
     "AI_INTEGRATIONS_ANTHROPIC_BASE_URL=https://api.anthropic.com",
     anthropicKey ? `AI_INTEGRATIONS_ANTHROPIC_API_KEY=${anthropicKey}` : "",
-    sendgridKey ? `SENDGRID_API_KEY=${sendgridKey}` : "",
-    sendgridKey ? `SENDGRID_FROM_EMAIL=${sendgridFrom}` : "",
     "OPS_ALERT_EMAIL=admin@vndrly.ai",
+    "PUBLIC_APP_URL=https://vndrly.ai",
+    "APP_BASE_URL=https://vndrly.ai",
   ].filter(Boolean);
 
   const bootstrapB64 = b64(readFileSync(BOOTSTRAP, "utf8").replace(/\r\n/g, "\n"));

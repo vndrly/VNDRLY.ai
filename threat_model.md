@@ -12,14 +12,14 @@ Production scope for this scan is the API server plus the primary web and mobile
 - **Operational field data** -- tickets, GPS logs, site visits, field employee profiles, notes, certifications, and site assignments. This includes sensitive location and workforce data.
 - **Multi-tenant business data** -- partner, vendor, invoice, hotlist, analytics, and 1099/reporting data. Cross-tenant disclosure or tampering would impact customers directly.
 - **Uploaded files and profile photos** -- private object-storage content, profile photos, logos, and any future uploads stored under the object-storage bucket.
-- **Third-party integration secrets** -- SendGrid credentials, QuickBooks/OpenAccountant tokens, object-storage credentials, and database/session secrets.
+- **Third-party integration secrets** -- QuickBooks/OpenAccountant tokens, object-storage credentials, and database/session secrets.
 
 ## Trust Boundaries
 
 - **Browser/mobile client → API** -- all client input is untrusted. The API must authenticate and authorize every state-changing or data-returning endpoint server-side.
 - **API → PostgreSQL** -- route handlers translate user requests into database reads and writes. Broken authorization here becomes direct cross-tenant data access or tampering.
 - **API → object storage** -- uploaded files and object fetches cross a boundary where private/public visibility and per-object ACLs must be enforced server-side.
-- **API → external services** -- QuickBooks, OpenAccountant, SendGrid, Expo push, weather APIs, and Replit sidecars all receive data or credentials from trusted server code.
+- **API → external services** -- QuickBooks, OpenAccountant, Expo push, and weather APIs all receive data or credentials from trusted server code.
 - **Public / guest / authenticated / admin roles** -- the app has meaningful privilege separation between unauthenticated visitors, guest check-in users, field employees, vendor users, partner users, and system admins.
 - **Vendor / partner tenant boundary** -- authenticated users must only access the organizations and records tied to their active membership or role.
 

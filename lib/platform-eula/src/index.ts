@@ -213,7 +213,7 @@ Non-public information about another Organization's jobs, pricing, sites, crew l
 
 16. Third-Party Services
 
-The Service relies on third-party infrastructure and services, which may include cloud hosting/database (Supabase), email delivery (SendGrid), mobile distribution (Apple, Expo), error reporting (Sentry, if enabled), maps (e.g., ArcGIS, Google Maps links), and AI providers (Anthropic). Your use may be subject to those providers' terms and privacy policies.
+The Service relies on third-party infrastructure and services, which may include cloud hosting/database (Supabase), email delivery providers (when enabled for paid tiers), mobile distribution (Apple, Expo), error reporting (Sentry, if enabled), maps (e.g., ArcGIS, Google Maps links), and AI providers (Anthropic). Your use may be subject to those providers' terms and privacy policies.
 
 VNDRLY is not responsible for third-party outages beyond our reasonable control.
 

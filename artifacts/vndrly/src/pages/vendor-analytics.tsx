@@ -8,7 +8,7 @@ import {
   useGetVendorTransitionAggregate,
   getGetVendorTransitionAggregateQueryKey,
 } from "@workspace/api-client-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CARD_MINI_CONTENT_CLASS, CARD_ICON_ROW_CLASS, CARD_ICON_CLASS } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { TexturedPie, TexturedPieLegend, type PieColor } from "@/components/textured-pie";
@@ -99,9 +99,9 @@ export default function VendorAnalytics({ vendorId }: { vendorId: number }) {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         {statCards.map((stat) => (
           <Card key={stat.label} data-testid={`card-stat-${stat.label}`}>
-            <CardContent className="p-4 h-24 flex flex-col">
-              <div className="flex items-center gap-2">
-                <stat.icon className="w-4 h-4" style={iconStyle} />
+            <CardContent className={CARD_MINI_CONTENT_CLASS}>
+              <div className={CARD_ICON_ROW_CLASS}>
+                <stat.icon className={CARD_ICON_CLASS} style={iconStyle} />
                 <span className="text-xs text-gray-700 font-medium">{stat.label}</span>
               </div>
               <p className="text-lg font-bold mt-auto text-center">{stat.value}</p>

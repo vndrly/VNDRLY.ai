@@ -39,7 +39,6 @@ import demoProdSeedRouter from "./demoProdSeed";
 import adminRecoveryRouter from "./adminRecovery";
 import platformSettingsRouter from "./platformSettings";
 import fireTransmitterSettingsRouter from "./fireTransmitterSettings";
-import webhooksSendgridRouter from "./webhooksSendgrid";
 import ticketNudgeRouter from "./ticketNudge";
 
 const router: IRouter = Router();
@@ -99,6 +98,5 @@ router.use(platformSettingsRouter);
 router.use(fireTransmitterSettingsRouter);
 router.use(onboardingRouter);
 router.use(assistantRouter);
-router.use(webhooksSendgridRouter);
 
 export default router;

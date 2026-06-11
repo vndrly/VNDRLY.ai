@@ -8,9 +8,8 @@ alwaysApply: true
 # Database
 
 - **Single database:** Supabase Postgres, project ref `bihjmgbdzbhcnsuhzzwo`.
-- **Local dev:** `.env.local` at repo root (`DATABASE_URL`). On Windows use the **transaction pooler** URL (`aws-1-us-west-2:6543`); Replit uses the direct host.
-- **Production (Replit):** same Supabase DB via `DATABASE_URL` in Replit Secrets (direct connection string).
-- **Do not** reference or configure old Replit-hosted Postgres URLs.
+- **Local dev:** `.env.local` at repo root (`DATABASE_URL`). On Windows use the **transaction pooler** URL (`aws-1-us-west-2:6543`); production VPS uses the direct host.
+- **Production:** same Supabase DB via `DATABASE_URL` in `/var/www/vndrly/.env.production` (written by `scripts/godaddy-deploy.mjs`).
 - **Details:** `docs/database.md`
 
 When the user asks about "the database", "dev DB", or "production DB", they mean this one Supabase instance unless they explicitly say otherwise.

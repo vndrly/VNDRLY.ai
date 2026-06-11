@@ -11,8 +11,7 @@ import {
 } from "./localObjectStorage";
 
 /**
- * Backend-agnostic object storage. Two implementations, neither tied to
- * Replit:
+ * Backend-agnostic object storage. Two implementations:
  *
  *  - SupabaseObjectStore  → durable, used in every environment once
  *    SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY are set. Files + their ACL

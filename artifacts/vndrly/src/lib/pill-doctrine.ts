@@ -34,6 +34,8 @@ export const PILL_LABEL_CLASS =
 
 export const PILL_LABEL_INNER_CLASS = "px-3 text-xs font-normal whitespace-nowrap";
 
+export const PILL_TEXT_SHADOW = "0 2px 4px rgba(0,0,0,0.9)";
+
 
 
 /**
@@ -137,7 +139,9 @@ export const PILL_WRAPPER_CLASS =
 
   "group relative inline-flex items-center select-none align-middle";
 
-
+/** Read-only status/chip pills � no `group` so row/link hover cannot crossfade PNG layers. */
+export const PILL_READONLY_WRAPPER_CLASS =
+  "relative inline-flex items-center select-none align-middle pointer-events-none";
 
 /** CSS-only pill chips (rounded-full status/tag surfaces). */
 

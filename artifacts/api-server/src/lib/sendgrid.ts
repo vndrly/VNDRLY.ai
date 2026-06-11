@@ -1,90 +1,9 @@
-// SendGrid integration: direct env vars on VPS/production, Replit Connectors on Replit.
-import sgMail from "@sendgrid/mail";
-import {
-  formatPushWarningLine,
-  formatPushWarningsForCopy,
-  type PushWarning,
-} from "@workspace/api-zod";
+// Outbound email delivery is disabled (not configured yet).
+// Call sites remain so paid-tier email can be wired later without API churn.
+import { type PushWarning } from "@workspace/api-zod";
+import { logger } from "./logger";
 
-interface SendGridConnectionSettings {
-  api_key?: string;
-  from_email?: string;
-}
-
-interface SendGridConnection {
-  settings: SendGridConnectionSettings;
-}
-
-interface ConnectionsResponse {
-  items?: SendGridConnection[];
-}
-
-let connectionSettings: SendGridConnection | undefined;
-
-/** Env-based credentials for GoDaddy VPS and other non-Replit hosts. */
-function getEnvCredentials(): { apiKey: string; email: string } | null {
-  const apiKey = process.env.SENDGRID_API_KEY?.trim();
-  const email =
-    process.env.SENDGRID_FROM_EMAIL?.trim() ||
-    process.env.OPS_ALERT_EMAIL?.trim() ||
-    "admin@vndrly.ai";
-  if (!apiKey) return null;
-  return { apiKey, email };
-}
-
-async function getReplitConnectorCredentials(): Promise<{
-  apiKey: string;
-  email: string;
-}> {
-  const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
-  const xReplitToken = process.env.REPL_IDENTITY
-    ? "repl " + process.env.REPL_IDENTITY
-    : process.env.WEB_REPL_RENEWAL
-      ? "depl " + process.env.WEB_REPL_RENEWAL
-      : null;
-
-  if (!xReplitToken || !hostname) {
-    throw new Error(
-      "SendGrid not configured: set SENDGRID_API_KEY (and optionally SENDGRID_FROM_EMAIL) or run on Replit with the SendGrid connector",
-    );
-  }
-
-  const response = await fetch(
-    "https://" + hostname + "/api/v2/connection?include_secrets=true&connector_names=sendgrid",
-    {
-      headers: {
-        Accept: "application/json",
-        "X-Replit-Token": xReplitToken,
-      },
-    },
-  );
-  const data = (await response.json()) as ConnectionsResponse;
-  connectionSettings = data.items?.[0];
-
-  if (
-    !connectionSettings ||
-    !connectionSettings.settings.api_key ||
-    !connectionSettings.settings.from_email
-  ) {
-    throw new Error("SendGrid not connected");
-  }
-  return {
-    apiKey: connectionSettings.settings.api_key,
-    email: connectionSettings.settings.from_email,
-  };
-}
-
-async function getCredentials() {
-  const envCreds = getEnvCredentials();
-  if (envCreds) return envCreds;
-  return getReplitConnectorCredentials();
-}
-
-export async function getUncachableSendGridClient() {
-  const { apiKey, email } = await getCredentials();
-  sgMail.setApiKey(apiKey);
-  return { client: sgMail, fromEmail: email };
-}
+const SKIP = "Outbound email skipped (email delivery disabled)";
 
 export type EmailLocale = "en" | "es";
 
@@ -135,49 +54,8 @@ export interface SendInvoiceEmailInput {
 export async function sendInvoiceEmail(
   input: SendInvoiceEmailInput,
 ): Promise<{ messageId: string | undefined }> {
-  const { client, fromEmail } = await getUncachableSendGridClient();
-  const c = INVOICE_COPY[input.locale ?? "en"];
-  const subject = c.subject(input.vendorName, input.invoiceNumber, input.totalDue);
-  const dueLine = input.dueDate ? c.dueOn(input.dueDate) : c.dueOnReceipt;
-  const notes = input.notesFromSender
-    ? `\n\n${c.note} ${input.vendorName}:\n${input.notesFromSender}\n`
-    : "";
-  const html = `
-    <div style="font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 540px; margin: 0 auto; padding: 24px; color: #111827;">
-      <div style="background:#111827; color:#f59e0b; padding:16px 20px; border-radius:8px 8px 0 0;">
-        <div style="font-weight:700; font-size:18px;">VNDRLY</div>
-        <div style="color:#fef3c7; font-size:12px;">${c.bandSubtitle}</div>
-      </div>
-      <div style="border:1px solid #e5e7eb; border-top:0; padding:20px; border-radius:0 0 8px 8px;">
-        <p>${c.greet(input.partnerName)}</p>
-        <p>${c.body(input.vendorName, input.invoiceNumber)}</p>
-        <p style="background:#fef3c7; padding:12px 16px; border-radius:6px; font-weight:700; color:#92400e;">
-          ${input.totalDue} — ${dueLine}
-        </p>
-        ${input.notesFromSender ? `<p style="white-space:pre-wrap;color:#374151;">${input.notesFromSender}</p>` : ""}
-        <p style="color:#6b7280; font-size:12px; margin-top:24px;">${c.closing}</p>
-        <p style="color:#9ca3af; font-size:12px;">— VNDRLY</p>
-      </div>
-    </div>`;
-  const text = `${c.greet(input.partnerName)}\n\n${c.bodyText(input.vendorName, input.invoiceNumber)}\n\n${input.totalDue} — ${dueLine}.${notes}\n\n— VNDRLY`;
-  const [resp] = await client.send({
-    to: input.to,
-    cc: input.cc && input.cc.length > 0 ? input.cc : undefined,
-    from: fromEmail,
-    subject,
-    text,
-    html,
-    attachments: [
-      {
-        content: input.pdfBuf.toString("base64"),
-        filename: `invoice-${input.invoiceNumber}.pdf`,
-        type: "application/pdf",
-        disposition: "attachment",
-      },
-    ],
-  });
-  const messageId = resp?.headers?.["x-message-id"] as string | undefined;
-  return { messageId };
+  logger.debug({ fn: "sendInvoiceEmail" }, SKIP);
+  return { messageId: undefined };
 }
 
 const REMINDER_COPY = {
@@ -237,46 +115,8 @@ export interface SendInvoiceReminderInput {
 export async function sendInvoiceReminderEmail(
   input: SendInvoiceReminderInput,
 ): Promise<{ messageId: string | undefined }> {
-  const { client, fromEmail } = await getUncachableSendGridClient();
-  const c = REMINDER_COPY[input.locale ?? "en"];
-  const overdueText =
-    input.daysPastDue && input.daysPastDue > 0
-      ? c.overdueText(input.daysPastDue)
-      : input.dueDate
-      ? c.dueOn(input.dueDate)
-      : c.dueOnReceipt;
-  const subject =
-    input.daysPastDue && input.daysPastDue > 0
-      ? c.subjectOverdue(input.invoiceNumber, overdueText)
-      : c.subject(input.invoiceNumber);
-  const html = `
-    <div style="font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 540px; margin: 0 auto; padding: 24px; color: #111827;">
-      <div style="background:#111827; color:#f59e0b; padding:16px 20px; border-radius:8px 8px 0 0;">
-        <div style="font-weight:700; font-size:18px;">VNDRLY</div>
-        <div style="color:#fef3c7; font-size:12px;">${c.bandSubtitle}</div>
-      </div>
-      <div style="border:1px solid #e5e7eb; border-top:0; padding:20px; border-radius:0 0 8px 8px;">
-        <p>${c.greet(input.partnerName)}</p>
-        <p>${c.body(input.vendorName, input.invoiceNumber)}</p>
-        <p style="background:#fef3c7; padding:12px 16px; border-radius:6px; font-weight:700; color:#92400e;">
-          ${c.balanceLine(input.balanceDue, overdueText)}
-        </p>
-        ${input.notesFromSender ? `<p style="white-space:pre-wrap;color:#374151;">${input.notesFromSender}</p>` : ""}
-        <p style="color:#6b7280; font-size:12px; margin-top:24px;">${c.closing}</p>
-        <p style="color:#9ca3af; font-size:12px;">— VNDRLY</p>
-      </div>
-    </div>`;
-  const text = `${c.greet(input.partnerName)}\n\n${c.bodyText(input.vendorName, input.invoiceNumber, input.balanceDue, overdueText)}${input.notesFromSender ? `\n\n${c.note}: ${input.notesFromSender}` : ""}\n\n— VNDRLY`;
-  const [resp] = await client.send({
-    to: input.to,
-    cc: input.cc && input.cc.length > 0 ? input.cc : undefined,
-    from: fromEmail,
-    subject,
-    text,
-    html,
-  });
-  const messageId = resp?.headers?.["x-message-id"] as string | undefined;
-  return { messageId };
+  logger.debug({ fn: "sendInvoiceReminderEmail" }, SKIP);
+  return { messageId: undefined };
 }
 
 // ─── 1099 recipient e-delivery ─────────────────────────────────
@@ -346,75 +186,8 @@ export function substitute1099Placeholders(
 export async function send1099RecipientEmail(
   input: Send1099RecipientEmailInput,
 ): Promise<{ messageId: string | undefined }> {
-  const { client, fromEmail } = await getUncachableSendGridClient();
-  const formLabel = `1099-${input.formType}`;
-  const subjectVars = {
-    vendorName: input.vendorName,
-    partnerName: input.partnerName,
-    taxYear: input.taxYear,
-    formType: input.formType,
-    totalReportable: input.totalReportable,
-  };
-  const customSubject = input.subjectTemplate?.trim();
-  const subject = customSubject
-    ? substitute1099Placeholders(customSubject, subjectVars)
-    : `${input.partnerName} — ${formLabel} statement for ${input.taxYear}`;
-  const filename = `${formLabel.toLowerCase()}-${input.taxYear}-${input.vendorName.replace(/[^A-Za-z0-9]+/g, "_")}.pdf`;
-  const customBody = input.bodyTemplate?.trim();
-  let html: string;
-  let text: string;
-  if (customBody) {
-    const rendered = substitute1099Placeholders(customBody, subjectVars);
-    text = rendered;
-    html = `
-    <div style="font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 540px; margin: 0 auto; padding: 24px; color: #111827;">
-      <div style="background:#111827; color:#f59e0b; padding:16px 20px; border-radius:8px 8px 0 0;">
-        <div style="font-weight:700; font-size:18px;">VNDRLY</div>
-        <div style="color:#fef3c7; font-size:12px;">Tax Year ${input.taxYear} ${formLabel}</div>
-      </div>
-      <div style="border:1px solid #e5e7eb; border-top:0; padding:20px; border-radius:0 0 8px 8px;">
-        <p style="white-space:pre-wrap;color:#111827;">${escapeHtml(rendered)}</p>
-        <p style="color:#9ca3af; font-size:12px;">— VNDRLY</p>
-      </div>
-    </div>`;
-  } else {
-    html = `
-    <div style="font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 540px; margin: 0 auto; padding: 24px; color: #111827;">
-      <div style="background:#111827; color:#f59e0b; padding:16px 20px; border-radius:8px 8px 0 0;">
-        <div style="font-weight:700; font-size:18px;">VNDRLY</div>
-        <div style="color:#fef3c7; font-size:12px;">Tax Year ${input.taxYear} ${formLabel}</div>
-      </div>
-      <div style="border:1px solid #e5e7eb; border-top:0; padding:20px; border-radius:0 0 8px 8px;">
-        <p>Hi ${input.vendorName},</p>
-        <p>Attached is your <strong>Form ${formLabel}</strong> for tax year <strong>${input.taxYear}</strong> from <strong>${input.partnerName}</strong>, delivered electronically per the consent you provided.</p>
-        <p style="background:#fef3c7; padding:12px 16px; border-radius:6px; font-weight:700; color:#92400e;">
-          Total reportable: $${input.totalReportable}
-        </p>
-        <p style="color:#374151; font-size:13px;">If you believe any amount is incorrect, reply to this email and we'll work with the payer to reconcile.</p>
-        <p style="color:#6b7280; font-size:12px; margin-top:24px;">Keep this PDF for your records. Copy A is filed separately with the IRS.</p>
-        <p style="color:#9ca3af; font-size:12px;">— VNDRLY</p>
-      </div>
-    </div>`;
-    text = `Hi ${input.vendorName},\n\nAttached is your Form ${formLabel} for tax year ${input.taxYear} from ${input.partnerName}, delivered electronically per the consent you provided.\n\nTotal reportable: $${input.totalReportable}\n\nIf you believe any amount is incorrect, reply to this email and we'll work with the payer to reconcile.\n\n— VNDRLY`;
-  }
-  const [resp] = await client.send({
-    to: input.to,
-    from: fromEmail,
-    subject,
-    text,
-    html,
-    customArgs: input.customArgs,
-    attachments: [
-      {
-        content: input.pdfBuf.toString("base64"),
-        filename,
-        type: "application/pdf",
-        disposition: "attachment",
-      },
-    ],
-  });
-  const messageId = resp?.headers?.["x-message-id"] as string | undefined;
-  return { messageId };
+  logger.debug({ fn: "send1099RecipientEmail" }, SKIP);
+  return { messageId: undefined };
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -568,162 +341,8 @@ function escapeHtml(s: string): string {
 export async function sendAccountingPushDigestEmail(
   input: AccountingPushDigestInput,
 ): Promise<{ messageId: string | undefined } | null> {
-  if (input.recipients.length === 0) return null;
-  const totalFailed =
-    input.countsByKind.customer +
-    input.countsByKind.vendor +
-    input.countsByKind.invoice;
-  if (totalFailed === 0) return null;
-  const { client, fromEmail } = await getUncachableSendGridClient();
-  // Group recipients by locale so each language batch gets a localized copy.
-  const byLocale = new Map<EmailLocale, string[]>();
-  for (const r of input.recipients) {
-    const loc = r.locale ?? "en";
-    const arr = byLocale.get(loc) ?? [];
-    arr.push(r.email);
-    byLocale.set(loc, arr);
-  }
-  let lastMessageId: string | undefined;
-  for (const [locale, emails] of byLocale.entries()) {
-    const c = ACCOUNTING_DIGEST_COPY[locale];
-    const subject = c.subject(input.provider, totalFailed);
-    const kindRows = (
-      ["customer", "vendor", "invoice"] as Array<"customer" | "vendor" | "invoice">
-    )
-      .filter((k) => input.countsByKind[k] > 0)
-      .map(
-        (k) =>
-          `<tr><td style="padding:4px 12px 4px 0;color:#374151;">${c.kind[k]}</td><td style="padding:4px 0;font-weight:600;color:#92400e;">${input.countsByKind[k]}</td></tr>`,
-      )
-      .join("");
-    const kindRowsText = (
-      ["customer", "vendor", "invoice"] as Array<"customer" | "vendor" | "invoice">
-    )
-      .filter((k) => input.countsByKind[k] > 0)
-      .map((k) => `  ${c.kind[k]}: ${input.countsByKind[k]}`)
-      .join("\n");
-    const syncedRows = [
-      input.customersCreated > 0 ? c.syncedCustomers(input.customersCreated) : null,
-      input.vendorsCreated > 0 ? c.syncedVendors(input.vendorsCreated) : null,
-      input.invoicesCreated > 0 ? c.syncedInvoices(input.invoicesCreated) : null,
-    ].filter((s): s is string => s !== null);
-    const syncedHtml =
-      syncedRows.length > 0
-        ? `<p style="color:#6b7280;font-size:13px;margin-top:16px;"><strong>${c.syncedHeading}:</strong> ${syncedRows.join(" · ")}</p>`
-        : "";
-    // Render the per-row warning lines exactly like the Reports page
-    // "Copy all" button so admins see the same wording in their inbox.
-    const visibleWarnings = input.warnings.slice(0, MAX_EMAIL_WARNING_LINES);
-    const truncatedCount = input.warnings.length - visibleWarnings.length;
-    const warningsBlockText = formatPushWarningsForCopy(visibleWarnings);
-    const warningsBlockHtml = visibleWarnings
-      .map(
-        (w) =>
-          `<div style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:#92400e;padding:4px 0;border-bottom:1px solid #fde68a;">${escapeHtml(
-            formatPushWarningLine(w),
-          )}</div>`,
-      )
-      .join("");
-    const truncatedNote =
-      truncatedCount > 0
-        ? `<p style="color:#6b7280;font-size:11px;margin:8px 0 0;">+${truncatedCount} more — open audit details for the full list.</p>`
-        : "";
-    const truncatedNoteText =
-      truncatedCount > 0
-        ? `\n+${truncatedCount} more — open audit details for the full list.`
-        : "";
-    const warningsHtml =
-      visibleWarnings.length > 0
-        ? `<h4 style="font-size:13px;color:#111827;margin:16px 0 4px;">${c.warningsHeading}</h4>
-        <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:8px 12px;max-height:340px;overflow:auto;">${warningsBlockHtml}</div>${truncatedNote}`
-        : "";
-    // Reconciliation call-out: only rendered when the same push that
-    // produced per-row failures also surfaced reconciliation drift. The
-    // section uses a distinct blue colour-band so admins notice it as a
-    // separate signal from the failed rows above.
-    const recon = input.reconciliation;
-    const reconTotal = recon
-      ? recon.countsByBucket.perInvoice +
-        recon.countsByBucket.perState +
-        recon.countsByBucket.fetchSkipped
-      : 0;
-    const reconBulletPairs: Array<[string, number]> = recon
-      ? [
-          [c.reconciliationPerInvoice(recon.countsByBucket.perInvoice), recon.countsByBucket.perInvoice],
-          [c.reconciliationPerState(recon.countsByBucket.perState), recon.countsByBucket.perState],
-          [c.reconciliationFetchSkipped(recon.countsByBucket.fetchSkipped), recon.countsByBucket.fetchSkipped],
-        ]
-      : [];
-    const reconBullets = reconBulletPairs.filter(([, n]) => n > 0).map(([label]) => label);
-    const reconVisibleWarnings = recon
-      ? recon.warnings.slice(0, MAX_EMAIL_WARNING_LINES)
-      : [];
-    const reconWarningsBlockHtml = reconVisibleWarnings
-      .map(
-        (w) =>
-          `<div style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:#1e3a8a;padding:4px 0;border-bottom:1px solid #bfdbfe;">${escapeHtml(
-            formatPushWarningLine(w),
-          )}</div>`,
-      )
-      .join("");
-    const reconWarningsBlockText = formatPushWarningsForCopy(reconVisibleWarnings);
-    const reconHtml =
-      reconTotal > 0
-        ? `<div style="margin-top:20px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:12px 16px;">
-          <h4 style="font-size:13px;color:#1d4ed8;margin:0 0 6px;">${c.reconciliationHeading}</h4>
-          <p style="color:#1e3a8a;font-size:13px;margin:0 0 8px;">${c.reconciliationBlurb(input.provider)}</p>
-          <ul style="margin:0;padding-left:20px;color:#1e3a8a;font-size:13px;">${reconBullets
-            .map((b) => `<li>${b}</li>`)
-            .join("")}</ul>
-          ${reconVisibleWarnings.length > 0 ? `<div style="margin-top:8px;max-height:240px;overflow:auto;">${reconWarningsBlockHtml}</div>` : ""}
-        </div>`
-        : "";
-    const reconText =
-      reconTotal > 0
-        ? `\n${c.reconciliationHeading}:\n${c.reconciliationBlurb(input.provider)}\n${reconBullets.map((b) => `  - ${b}`).join("\n")}${reconVisibleWarnings.length > 0 ? `\n${reconWarningsBlockText}` : ""}\n`
-        : "";
-    const html = `
-    <div style="font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 540px; margin: 0 auto; padding: 24px; color: #111827;">
-      <div style="background:#111827; color:#f59e0b; padding:16px 20px; border-radius:8px 8px 0 0;">
-        <div style="font-weight:700; font-size:18px;">VNDRLY</div>
-        <div style="color:#fef3c7; font-size:12px;">${c.bandSubtitle}</div>
-      </div>
-      <div style="border:1px solid #e5e7eb; border-top:0; padding:20px; border-radius:0 0 8px 8px;">
-        <p>${c.greet}</p>
-        <p>${c.intro(input.provider, input.vendorName, input.periodLabel)}</p>
-        <h4 style="font-size:13px;color:#111827;margin:16px 0 4px;">${c.countsHeading}</h4>
-        <table style="border-collapse:collapse;font-size:14px;">
-          ${kindRows}
-        </table>
-        ${warningsHtml}
-        ${reconHtml}
-        ${syncedHtml}
-        <p style="margin: 24px 0;">
-          <a href="${input.auditDetailUrl}" style="background:#f59e0b; color:#111827; font-weight:600; padding:10px 18px; border-radius:8px; text-decoration:none; display:inline-block;">${c.cta}</a>
-        </p>
-        ${
-          input.auditWarningsUrl
-            ? `<p style="margin: 0 0 24px;"><a href="${input.auditWarningsUrl}" style="color:#b45309; font-weight:600; text-decoration:underline; font-size:13px;">${c.warningsListCta} →</a></p>`
-            : ""
-        }
-        <p style="color:#6b7280; font-size:12px;">${c.closing}</p>
-        <p style="color:#9ca3af; font-size:11px; margin-top:24px;">${c.note}</p>
-        <p style="color:#9ca3af; font-size:12px;">— VNDRLY</p>
-      </div>
-    </div>`;
-    const text = `${c.greet}\n\n${c.introText(input.provider, input.vendorName, input.periodLabel)}\n\n${c.countsHeading}:\n${kindRowsText}\n${visibleWarnings.length > 0 ? `\n${c.warningsHeading}:\n${warningsBlockText}${truncatedNoteText}\n` : ""}${reconText}${syncedRows.length > 0 ? `\n${c.syncedHeading}: ${syncedRows.join(" · ")}\n` : ""}\n${c.cta}: ${input.auditDetailUrl}\n${input.auditWarningsUrl ? `${c.warningsListCta}: ${input.auditWarningsUrl}\n` : ""}\n${c.closing}\n\n${c.note}\n\n— VNDRLY`;
-    // BCC the batch so admins don't see each other's addresses.
-    const [resp] = await client.send({
-      to: fromEmail,
-      bcc: emails,
-      from: fromEmail,
-      subject,
-      text,
-      html,
-    });
-    lastMessageId = resp?.headers?.["x-message-id"] as string | undefined;
-  }
-  return { messageId: lastMessageId };
+  logger.debug({ fn: "sendAccountingPushDigestEmail" }, SKIP);
+  return { messageId: undefined };
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -823,117 +442,8 @@ export interface AccountingReconciliationDigestInput {
 export async function sendAccountingReconciliationDigestEmail(
   input: AccountingReconciliationDigestInput,
 ): Promise<{ messageId: string | undefined } | null> {
-  if (input.recipients.length === 0) return null;
-  const totalDrift =
-    input.countsByBucket.perInvoice +
-    input.countsByBucket.perState +
-    input.countsByBucket.fetchSkipped;
-  if (totalDrift === 0) return null;
-  const { client, fromEmail } = await getUncachableSendGridClient();
-  const byLocale = new Map<EmailLocale, string[]>();
-  for (const r of input.recipients) {
-    const loc = r.locale ?? "en";
-    const arr = byLocale.get(loc) ?? [];
-    arr.push(r.email);
-    byLocale.set(loc, arr);
-  }
-  let lastMessageId: string | undefined;
-  for (const [locale, emails] of byLocale.entries()) {
-    const c = RECONCILIATION_DIGEST_COPY[locale];
-    const subject = c.subject(input.provider, totalDrift);
-    const bucketRows = (
-      [
-        ["perInvoice", c.perInvoiceLabel],
-        ["perState", c.perStateLabel],
-        ["fetchSkipped", c.fetchSkippedLabel],
-      ] as Array<["perInvoice" | "perState" | "fetchSkipped", string]>
-    )
-      .filter(([k]) => input.countsByBucket[k] > 0)
-      .map(
-        ([k, label]) =>
-          `<tr><td style="padding:4px 12px 4px 0;color:#374151;">${label}</td><td style="padding:4px 0;font-weight:600;color:#1d4ed8;">${input.countsByBucket[k]}</td></tr>`,
-      )
-      .join("");
-    const bucketRowsText = (
-      [
-        ["perInvoice", c.perInvoiceLabel],
-        ["perState", c.perStateLabel],
-        ["fetchSkipped", c.fetchSkippedLabel],
-      ] as Array<["perInvoice" | "perState" | "fetchSkipped", string]>
-    )
-      .filter(([k]) => input.countsByBucket[k] > 0)
-      .map(([k, label]) => `  ${label}: ${input.countsByBucket[k]}`)
-      .join("\n");
-    const syncedRows = [
-      input.customersCreated > 0 ? c.syncedCustomers(input.customersCreated) : null,
-      input.vendorsCreated > 0 ? c.syncedVendors(input.vendorsCreated) : null,
-      input.invoicesCreated > 0 ? c.syncedInvoices(input.invoicesCreated) : null,
-    ].filter((s): s is string => s !== null);
-    const syncedHtml =
-      syncedRows.length > 0
-        ? `<p style="color:#6b7280;font-size:13px;margin-top:16px;"><strong>${c.syncedHeading}:</strong> ${syncedRows.join(" · ")}</p>`
-        : "";
-    const visibleWarnings = input.warnings.slice(0, MAX_EMAIL_WARNING_LINES);
-    const truncatedCount = input.warnings.length - visibleWarnings.length;
-    const warningsBlockText = formatPushWarningsForCopy(visibleWarnings);
-    const warningsBlockHtml = visibleWarnings
-      .map(
-        (w) =>
-          `<div style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:#1e3a8a;padding:4px 0;border-bottom:1px solid #bfdbfe;">${escapeHtml(
-            formatPushWarningLine(w),
-          )}</div>`,
-      )
-      .join("");
-    const truncatedNote =
-      truncatedCount > 0
-        ? `<p style="color:#6b7280;font-size:11px;margin:8px 0 0;">+${truncatedCount} more — open audit details for the full list.</p>`
-        : "";
-    const truncatedNoteText =
-      truncatedCount > 0
-        ? `\n+${truncatedCount} more — open audit details for the full list.`
-        : "";
-    const warningsHtml =
-      visibleWarnings.length > 0
-        ? `<h4 style="font-size:13px;color:#111827;margin:16px 0 4px;">${c.warningsHeading}</h4>
-        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:8px 12px;max-height:340px;overflow:auto;">${warningsBlockHtml}</div>${truncatedNote}`
-        : "";
-    const html = `
-    <div style="font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 540px; margin: 0 auto; padding: 24px; color: #111827;">
-      <div style="background:#111827; color:#60a5fa; padding:16px 20px; border-radius:8px 8px 0 0;">
-        <div style="font-weight:700; font-size:18px;">VNDRLY</div>
-        <div style="color:#dbeafe; font-size:12px;">${c.bandSubtitle}</div>
-      </div>
-      <div style="border:1px solid #e5e7eb; border-top:0; padding:20px; border-radius:0 0 8px 8px;">
-        <p>${c.greet}</p>
-        <p>${c.intro(input.provider, input.vendorName, input.periodLabel)}</p>
-        <h4 style="font-size:13px;color:#111827;margin:16px 0 4px;">${c.diagnosisHeading}</h4>
-        <p style="color:#374151;font-size:13px;margin:4px 0 12px;">${c.diagnosisBody}</p>
-        <h4 style="font-size:13px;color:#111827;margin:16px 0 4px;">${c.countsHeading}</h4>
-        <table style="border-collapse:collapse;font-size:14px;">
-          ${bucketRows}
-        </table>
-        ${warningsHtml}
-        ${syncedHtml}
-        <p style="margin: 24px 0;">
-          <a href="${input.auditDetailUrl}" style="background:#3b82f6; color:#ffffff; font-weight:600; padding:10px 18px; border-radius:8px; text-decoration:none; display:inline-block;">${c.cta}</a>
-        </p>
-        <p style="color:#6b7280; font-size:12px;">${c.closing}</p>
-        <p style="color:#9ca3af; font-size:11px; margin-top:24px;">${c.note}</p>
-        <p style="color:#9ca3af; font-size:12px;">— VNDRLY</p>
-      </div>
-    </div>`;
-    const text = `${c.greet}\n\n${c.introText(input.provider, input.vendorName, input.periodLabel)}\n\n${c.diagnosisHeading}:\n${c.diagnosisBody}\n\n${c.countsHeading}:\n${bucketRowsText}\n${visibleWarnings.length > 0 ? `\n${c.warningsHeading}:\n${warningsBlockText}${truncatedNoteText}\n` : ""}${syncedRows.length > 0 ? `\n${c.syncedHeading}: ${syncedRows.join(" · ")}\n` : ""}\n${c.cta}: ${input.auditDetailUrl}\n\n${c.closing}\n\n${c.note}\n\n— VNDRLY`;
-    const [resp] = await client.send({
-      to: fromEmail,
-      bcc: emails,
-      from: fromEmail,
-      subject,
-      text,
-      html,
-    });
-    lastMessageId = resp?.headers?.["x-message-id"] as string | undefined;
-  }
-  return { messageId: lastMessageId };
+  logger.debug({ fn: "sendAccountingReconciliationDigestEmail" }, SKIP);
+  return { messageId: undefined };
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -1040,145 +550,12 @@ export interface ReconciliationWeeklyRecapInput {
 export async function sendReconciliationWeeklyRecapEmail(
   input: ReconciliationWeeklyRecapInput,
 ): Promise<{ messageId: string | undefined } | null> {
-  if (input.recipients.length === 0) return null;
-  if (input.totalWarnings === 0) return null;
-  const { client, fromEmail } = await getUncachableSendGridClient();
-  const byLocale = new Map<EmailLocale, string[]>();
-  for (const r of input.recipients) {
-    const loc = r.locale ?? "en";
-    const arr = byLocale.get(loc) ?? [];
-    arr.push(r.email);
-    byLocale.set(loc, arr);
-  }
-  let lastMessageId: string | undefined;
-  for (const [locale, emails] of byLocale.entries()) {
-    const c = RECONCILIATION_WEEKLY_RECAP_COPY[locale];
-    const subject = c.subject(
-      input.vendorName,
-      input.weekLabel,
-      input.totalWarnings,
-    );
-    const bucketRows = (
-      [
-        ["perInvoice", c.perInvoiceLabel],
-        ["perState", c.perStateLabel],
-        ["fetchSkipped", c.fetchSkippedLabel],
-      ] as Array<["perInvoice" | "perState" | "fetchSkipped", string]>
-    )
-      .filter(([k]) => input.countsByBucket[k] > 0)
-      .map(
-        ([k, label]) =>
-          `<tr><td style="padding:4px 12px 4px 0;color:#374151;">${label}</td><td style="padding:4px 0;font-weight:600;color:#1d4ed8;">${input.countsByBucket[k]}</td></tr>`,
-      )
-      .join("");
-    const bucketRowsText = (
-      [
-        ["perInvoice", c.perInvoiceLabel],
-        ["perState", c.perStateLabel],
-        ["fetchSkipped", c.fetchSkippedLabel],
-      ] as Array<["perInvoice" | "perState" | "fetchSkipped", string]>
-    )
-      .filter(([k]) => input.countsByBucket[k] > 0)
-      .map(([k, label]) => `  ${label}: ${input.countsByBucket[k]}`)
-      .join("\n");
-    const perDayRowsHtml = input.perDay
-      .map(
-        (d) =>
-          `<tr><td style="padding:4px 12px 4px 0;color:#374151;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;">${escapeHtml(d.date)}</td><td style="padding:4px 0;font-weight:600;color:${d.warningCount > 0 ? "#1d4ed8" : "#9ca3af"};">${d.warningCount}</td></tr>`,
-      )
-      .join("");
-    const perDayRowsText = input.perDay
-      .map((d) => `  ${d.date}: ${d.warningCount}`)
-      .join("\n");
-    const worstRowsHtml = input.worstInvoices
-      .map(
-        (w) =>
-          `<tr><td style="padding:4px 12px 4px 0;color:#1e3a8a;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;">${escapeHtml(w.identifier)}</td><td style="padding:4px 0;color:#374151;">${escapeHtml(c.worstInvoiceCount(w.warningCount))}</td></tr>`,
-      )
-      .join("");
-    const worstRowsText = input.worstInvoices
-      .map((w) => `  ${w.identifier} — ${c.worstInvoiceCount(w.warningCount)}`)
-      .join("\n");
-    const worstHtml =
-      input.worstInvoices.length > 0
-        ? `<h4 style="font-size:13px;color:#111827;margin:16px 0 4px;">${c.worstHeading}</h4>
-        <table style="border-collapse:collapse;font-size:13px;">${worstRowsHtml}</table>`
-        : "";
-    const html = `
-    <div style="font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 540px; margin: 0 auto; padding: 24px; color: #111827;">
-      <div style="background:#111827; color:#60a5fa; padding:16px 20px; border-radius:8px 8px 0 0;">
-        <div style="font-weight:700; font-size:18px;">VNDRLY</div>
-        <div style="color:#dbeafe; font-size:12px;">${c.bandSubtitle} — ${escapeHtml(input.weekLabel)}</div>
-      </div>
-      <div style="border:1px solid #e5e7eb; border-top:0; padding:20px; border-radius:0 0 8px 8px;">
-        <p>${c.greet}</p>
-        <p>${c.intro(input.vendorName, input.windowLabel, input.totalWarnings, input.pushCount)}</p>
-        <h4 style="font-size:13px;color:#111827;margin:16px 0 4px;">${c.perDayHeading}</h4>
-        <table style="border-collapse:collapse;font-size:14px;">${perDayRowsHtml}</table>
-        <h4 style="font-size:13px;color:#111827;margin:16px 0 4px;">${c.countsHeading}</h4>
-        <table style="border-collapse:collapse;font-size:14px;">${bucketRows}</table>
-        ${worstHtml}
-        <p style="margin: 24px 0;">
-          <a href="${input.recapUrl}" style="background:#3b82f6; color:#ffffff; font-weight:600; padding:10px 18px; border-radius:8px; text-decoration:none; display:inline-block;">${c.cta}</a>
-        </p>
-        <p style="color:#6b7280; font-size:12px;">${c.closing}</p>
-        <p style="color:#9ca3af; font-size:11px; margin-top:24px;">${c.note}</p>
-        <p style="color:#9ca3af; font-size:12px;">— VNDRLY</p>
-      </div>
-    </div>`;
-    const text = `${c.greet}
-
-${c.introText(input.vendorName, input.windowLabel, input.totalWarnings, input.pushCount)}
-
-${c.perDayHeading}:
-${perDayRowsText}
-
-${c.countsHeading}:
-${bucketRowsText}
-${
-  input.worstInvoices.length > 0
-    ? `\n${c.worstHeading}:\n${worstRowsText}\n`
-    : ""
-}
-${c.cta}: ${input.recapUrl}
-
-${c.closing}
-
-${c.note}
-
-— VNDRLY`;
-    const [resp] = await client.send({
-      to: fromEmail,
-      bcc: emails,
-      from: fromEmail,
-      subject,
-      text,
-      html,
-    });
-    lastMessageId = resp?.headers?.["x-message-id"] as string | undefined;
-  }
-  return { messageId: lastMessageId };
+  logger.debug({ fn: "sendReconciliationWeeklyRecapEmail" }, SKIP);
+  return { messageId: undefined };
 }
 
 export async function sendPasswordResetEmail(toEmail: string, resetUrl: string, displayName: string) {
-  const { client, fromEmail } = await getUncachableSendGridClient();
-  await client.send({
-    to: toEmail,
-    from: fromEmail,
-    subject: "VNDRLY — Reset your password",
-    text: `Hi ${displayName},\n\nWe received a request to reset your VNDRLY Field Employee Portal password.\n\nClick the link below to choose a new password. This link expires in 1 hour.\n\n${resetUrl}\n\nIf you did not request this, you can safely ignore this email.\n\n— VNDRLY`,
-    html: `
-      <div style="font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; color: #111827;">
-        <h2 style="color: #111827; margin: 0 0 8px;">Reset your VNDRLY password</h2>
-        <p style="color: #4b5563; font-size: 14px;">Hi ${displayName}, we received a request to reset your VNDRLY Field Employee Portal password.</p>
-        <p style="margin: 24px 0;">
-          <a href="${resetUrl}" style="background: #f59e0b; color: #111827; font-weight: 600; padding: 12px 20px; border-radius: 8px; text-decoration: none; display: inline-block;">Reset Password</a>
-        </p>
-        <p style="color: #6b7280; font-size: 12px;">This link expires in 1 hour. If you did not request a password reset, you can safely ignore this email.</p>
-        <p style="color: #9ca3af; font-size: 12px; margin-top: 24px;">— VNDRLY</p>
-      </div>
-    `,
-  });
+  return;
 }
 
 // ─── Admin-issued temporary password ─────────────────────────────
@@ -1224,35 +601,8 @@ export interface SendAdminResetPasswordEmailInput {
 export async function sendAdminResetPasswordEmail(
   input: SendAdminResetPasswordEmailInput,
 ): Promise<{ messageId: string | undefined }> {
-  const { client, fromEmail } = await getUncachableSendGridClient();
-  const c = ADMIN_RESET_COPY[input.locale ?? "en"];
-  const html = `
-    <div style="font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 540px; margin: 0 auto; padding: 24px; color: #111827;">
-      <div style="background:#111827; color:#f59e0b; padding:16px 20px; border-radius:8px 8px 0 0;">
-        <div style="font-weight:700; font-size:18px;">VNDRLY</div>
-        <div style="color:#fef3c7; font-size:12px;">${c.bandSubtitle}</div>
-      </div>
-      <div style="border:1px solid #e5e7eb; border-top:0; padding:20px; border-radius:0 0 8px 8px;">
-        <p>${c.greet(input.displayName)}</p>
-        <p>${c.intro(input.adminDisplayName)}</p>
-        <p style="margin:20px 0;">
-          <span style="display:block;font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em;">${c.tempLabel}</span>
-          <span style="display:inline-block;background:#fef3c7;color:#92400e;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:18px;font-weight:700;padding:10px 14px;border-radius:6px;margin-top:6px;">${escapeHtml(input.tempPassword)}</span>
-        </p>
-        <p style="color:#6b7280; font-size:12px; margin-top:24px;">${c.note}</p>
-        <p style="color:#9ca3af; font-size:12px;">— VNDRLY</p>
-      </div>
-    </div>`;
-  const text = `${c.greet(input.displayName)}\n\n${c.introText(input.adminDisplayName)}\n\n${c.tempLabel}: ${input.tempPassword}\n\n${c.note}\n\n— VNDRLY`;
-  const [resp] = await client.send({
-    to: input.to,
-    from: fromEmail,
-    subject: c.subject,
-    text,
-    html,
-  });
-  const messageId = resp?.headers?.["x-message-id"] as string | undefined;
-  return { messageId };
+  logger.debug({ fn: "sendAdminResetPasswordEmail" }, SKIP);
+  return { messageId: undefined };
 }
 
 // ─── Bulk-action expiry warning email ──────────────────────────
@@ -1312,17 +662,8 @@ export function renderBulkActionExpiringEmail(
 export async function sendBulkActionExpiringEmail(
   input: SendBulkActionExpiringEmailInput,
 ): Promise<{ messageId: string | undefined }> {
-  const { client, fromEmail } = await getUncachableSendGridClient();
-  const { subject, html, text } = renderBulkActionExpiringEmail(input);
-  const [resp] = await client.send({
-    to: input.to,
-    from: fromEmail,
-    subject,
-    text,
-    html,
-  });
-  const messageId = resp?.headers?.["x-message-id"] as string | undefined;
-  return { messageId };
+  logger.debug({ fn: "sendBulkActionExpiringEmail" }, SKIP);
+  return { messageId: undefined };
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -1372,117 +713,7 @@ export interface SendSignupAssistantAbuseDigestEmailInput {
 export async function sendSignupAssistantAbuseDigestEmail(
   input: SendSignupAssistantAbuseDigestEmailInput,
 ): Promise<{ messageId: string | undefined } | null> {
-  if (input.recipients.length === 0) return null;
-  const { client, fromEmail } = await getUncachableSendGridClient();
-  const usedPct = input.budget > 0
-    ? Math.min(100, Math.round((input.used / input.budget) * 100))
-    : 0;
-  const breakerTripped = input.breakerTripped > 0;
-  const subject =
-    input.reason === "high_usage"
-      ? breakerTripped
-        ? `VNDRLY signup assistant — daily budget exhausted (${input.used}/${input.budget})`
-        : `VNDRLY signup assistant — high usage (${usedPct}% of daily budget)`
-      : `VNDRLY signup assistant — daily summary (${input.used}/${input.budget})`;
-
-  const bandSubtitle =
-    input.reason === "high_usage"
-      ? "Heads up — possible abuse"
-      : "Daily abuse-control summary";
-
-  const reasonLine =
-    input.reason === "high_usage"
-      ? breakerTripped
-        ? `The signup-assistant <strong>daily circuit breaker tripped</strong> for ${input.dayKey}. New requests are being short-circuited until UTC midnight.`
-        : `The signup-assistant has used <strong>${usedPct}%</strong> of today's call budget (${input.used}/${input.budget}). At this rate the daily circuit breaker may trip soon.`
-      : `Here's how the signup-assistant did on <strong>${input.dayKey}</strong>. The daily circuit breaker ${
-          breakerTripped ? "TRIPPED at least once" : "did not trip"
-        }.`;
-  const reasonLineText =
-    input.reason === "high_usage"
-      ? breakerTripped
-        ? `The signup-assistant daily circuit breaker tripped for ${input.dayKey}. New requests are being short-circuited until UTC midnight.`
-        : `The signup-assistant has used ${usedPct}% of today's call budget (${input.used}/${input.budget}). At this rate the daily circuit breaker may trip soon.`
-      : `Here's how the signup-assistant did on ${input.dayKey}. The daily circuit breaker ${
-          breakerTripped ? "TRIPPED at least once" : "did not trip"
-        }.`;
-
-  const stats: Array<[string, string]> = [
-    ["Total requests", String(input.totalRequests)],
-    ["Dispatched to Anthropic", `${input.used} / ${input.budget} (${usedPct}%)`],
-    ["Per-IP rate-limit rejections", String(input.ipBlocks)],
-    ["Breaker-tripped rejections", String(input.breakerTripped)],
-    ["Unique source IPs (capped)", String(input.uniqueIps)],
-  ];
-  const statsRows = stats
-    .map(
-      ([k, v]) =>
-        `<tr><td style="padding:4px 12px 4px 0;color:#374151;">${escapeHtml(k)}</td><td style="padding:4px 0;font-weight:600;color:#92400e;">${escapeHtml(v)}</td></tr>`,
-    )
-    .join("");
-  const statsText = stats.map(([k, v]) => `  ${k}: ${v}`).join("\n");
-
-  const topIpsRows =
-    input.topIps.length > 0
-      ? input.topIps
-          .map(
-            (t) =>
-              `<tr><td style="padding:4px 12px 4px 0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#111827;">${escapeHtml(t.ip)}</td><td style="padding:4px 12px 4px 0;color:#374151;">${t.requests} request${t.requests === 1 ? "" : "s"}</td><td style="padding:4px 0;color:#374151;">${t.dispatched} dispatched</td></tr>`,
-          )
-          .join("")
-      : `<tr><td colspan="3" style="padding:4px 0;color:#6b7280;font-style:italic;">No source IPs recorded today.</td></tr>`;
-  const topIpsText =
-    input.topIps.length > 0
-      ? input.topIps
-          .map(
-            (t) =>
-              `  ${t.ip} — ${t.requests} request${t.requests === 1 ? "" : "s"} (${t.dispatched} dispatched)`,
-          )
-          .join("\n")
-      : "  (none)";
-
-  const ctaHtml =
-    input.metricsUrl
-      ? `<p style="margin: 24px 0;">
-          <a href="${input.metricsUrl}" style="background:#f59e0b; color:#111827; font-weight:600; padding:10px 18px; border-radius:8px; text-decoration:none; display:inline-block;">Open assistant metrics</a>
-        </p>`
-      : "";
-  const ctaText = input.metricsUrl ? `\nOpen assistant metrics: ${input.metricsUrl}\n` : "";
-
-  const html = `
-    <div style="font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 560px; margin: 0 auto; padding: 24px; color: #111827;">
-      <div style="background:#111827; color:#f59e0b; padding:16px 20px; border-radius:8px 8px 0 0;">
-        <div style="font-weight:700; font-size:18px;">VNDRLY</div>
-        <div style="color:#fef3c7; font-size:12px;">${escapeHtml(bandSubtitle)}</div>
-      </div>
-      <div style="border:1px solid #e5e7eb; border-top:0; padding:20px; border-radius:0 0 8px 8px;">
-        <p>Hi,</p>
-        <p>${reasonLine}</p>
-        <h4 style="font-size:13px;color:#111827;margin:16px 0 4px;">Today's numbers</h4>
-        <table style="border-collapse:collapse;font-size:14px;">${statsRows}</table>
-        <h4 style="font-size:13px;color:#111827;margin:16px 0 4px;">Top source IPs</h4>
-        <table style="border-collapse:collapse;font-size:13px;">${topIpsRows}</table>
-        ${ctaHtml}
-        <p style="color:#6b7280; font-size:12px; margin-top:24px;">Source IPs come from the leftmost <code>x-forwarded-for</code> entry. They're spoofable per-request, but the daily budget cap above is the real cost ceiling.</p>
-        <p style="color:#9ca3af; font-size:11px;">Sent by the signup-assistant abuse-control digest. Tune the threshold with <code>SIGNUP_ASSISTANT_DIGEST_HIGH_USAGE_THRESHOLD</code>, or stop these notifications by turning off system notifications in your account preferences.</p>
-        <p style="color:#9ca3af; font-size:12px;">— VNDRLY</p>
-      </div>
-    </div>`;
-  const text = `Hi,\n\n${reasonLineText}\n\nToday's numbers:\n${statsText}\n\nTop source IPs:\n${topIpsText}\n${ctaText}\n— VNDRLY`;
-
-  // BCC the batch so admins don't see each other's addresses, mirroring
-  // the accounting digest pattern. `to` is set to the from-address so
-  // SendGrid still has a primary recipient.
-  const [resp] = await client.send({
-    to: fromEmail,
-    bcc: input.recipients,
-    from: fromEmail,
-    subject,
-    text,
-    html,
-  });
-  const messageId = resp?.headers?.["x-message-id"] as string | undefined;
-  return { messageId };
+  return null;
 }
 
 // ─── Awaiting payment weekly digest (Task #505) ─────────────────
@@ -1582,112 +813,8 @@ const MAX_DIGEST_TICKET_LINES = 25;
 export async function sendAwaitingPaymentDigestEmail(
   input: SendAwaitingPaymentDigestInput,
 ): Promise<{ messageId: string | undefined } | null> {
-  if (input.recipients.length === 0) return null;
-  if (input.tickets.length === 0) return null;
-
-  const { client, fromEmail } = await getUncachableSendGridClient();
-
-  // Group recipients by locale so each language batch gets a localized copy.
-  const byLocale = new Map<EmailLocale, string[]>();
-  for (const r of input.recipients) {
-    const loc = r.locale ?? "en";
-    const arr = byLocale.get(loc) ?? [];
-    arr.push(r.email);
-    byLocale.set(loc, arr);
-  }
-
-  const visibleTickets = input.tickets.slice(0, MAX_DIGEST_TICKET_LINES);
-  const overflow = input.tickets.length - visibleTickets.length;
-
-  let lastMessageId: string | undefined;
-  for (const [locale, emails] of byLocale.entries()) {
-    const c = AP_DIGEST_COPY[locale];
-    const subject = c.subject(input.partnerName, input.tickets.length);
-    const tableRows = visibleTickets
-      .map(
-        (t) =>
-          `<tr>
-            <td style="padding:6px 12px 6px 0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#111827;">
-              <a href="${t.detailUrl}" style="color:#92400e;text-decoration:none;">#${escapeHtml(t.trackingNumber)}</a>
-            </td>
-            <td style="padding:6px 12px 6px 0;color:#374151;">${escapeHtml(t.approvedOnLabel)}</td>
-            <td style="padding:6px 12px 6px 0;color:#92400e;font-weight:600;">${escapeHtml(c.daysAgo(t.daysWaiting))}</td>
-            <td style="padding:6px 0;color:#111827;font-weight:600;">${escapeHtml(t.amountLabel)}</td>
-          </tr>`,
-      )
-      .join("");
-    const overflowHtml =
-      overflow > 0
-        ? `<p style="color:#6b7280;font-size:12px;margin:8px 0 0;">${escapeHtml(c.overflow(overflow))}</p>`
-        : "";
-    const overflowText = overflow > 0 ? `\n${c.overflow(overflow)}` : "";
-    const ticketLinesText = visibleTickets
-      .map(
-        (t) =>
-          `  #${t.trackingNumber}  ${t.approvedOnLabel}  ${c.daysAgo(t.daysWaiting)}  ${t.amountLabel}`,
-      )
-      .join("\n");
-    const html = `
-    <div style="font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 620px; margin: 0 auto; padding: 24px; color: #111827;">
-      <div style="background:#111827; color:#f59e0b; padding:16px 20px; border-radius:8px 8px 0 0;">
-        <div style="font-weight:700; font-size:18px;">VNDRLY</div>
-        <div style="color:#fef3c7; font-size:12px;">${c.bandSubtitle}</div>
-      </div>
-      <div style="border:1px solid #e5e7eb; border-top:0; padding:20px; border-radius:0 0 8px 8px;">
-        <p>${c.greet}</p>
-        <p>${c.intro(escapeHtml(input.partnerName), input.tickets.length, input.thresholdDays)}</p>
-        <p style="background:#fef3c7; padding:12px 16px; border-radius:6px; font-weight:700; color:#92400e;">
-          ${escapeHtml(c.totalLine(input.totalAmountLabel))}
-        </p>
-        <table style="border-collapse:collapse;font-size:14px;width:100%;">
-          <thead>
-            <tr style="text-align:left;color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:0.05em;">
-              <th style="padding:6px 12px 6px 0;">${c.headerTracking}</th>
-              <th style="padding:6px 12px 6px 0;">${c.headerApproved}</th>
-              <th style="padding:6px 12px 6px 0;">${c.headerDays}</th>
-              <th style="padding:6px 0;">${c.headerAmount}</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${tableRows}
-          </tbody>
-        </table>
-        ${overflowHtml}
-        <p style="margin: 24px 0;">
-          <a href="${input.queueUrl}" style="background:#f59e0b; color:#111827; font-weight:600; padding:10px 18px; border-radius:8px; text-decoration:none; display:inline-block;">${c.cta}</a>
-        </p>
-        <p style="color:#6b7280; font-size:12px;">${c.closing}</p>
-        <p style="color:#9ca3af; font-size:11px; margin-top:24px;">${c.note}</p>
-        <p style="color:#9ca3af; font-size:12px;">— VNDRLY</p>
-      </div>
-    </div>`;
-    const text = `${c.greet}
-
-${c.introText(input.partnerName, input.tickets.length, input.thresholdDays)}
-
-${c.totalLine(input.totalAmountLabel)}
-
-${ticketLinesText}${overflowText}
-
-${c.cta}: ${input.queueUrl}
-
-${c.closing}
-
-${c.note}
-
-— VNDRLY`;
-    // BCC the batch so recipients don't see each other's addresses.
-    const [resp] = await client.send({
-      to: fromEmail,
-      bcc: emails,
-      from: fromEmail,
-      subject,
-      text,
-      html,
-    });
-    lastMessageId = resp?.headers?.["x-message-id"] as string | undefined;
-  }
-  return { messageId: lastMessageId };
+  logger.debug({ fn: "sendAwaitingPaymentDigestEmail" }, SKIP);
+  return { messageId: undefined };
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -1720,69 +847,8 @@ export interface SendDashboard1099MonthlyEmailInput {
 export async function sendDashboard1099MonthlyEmail(
   input: SendDashboard1099MonthlyEmailInput,
 ): Promise<{ messageId: string | undefined } | null> {
-  if (input.recipients.length === 0) return null;
-  if (input.attachments.length === 0) return null;
-  const { client, fromEmail } = await getUncachableSendGridClient();
-
-  const subjectScope =
-    input.scope === "admin"
-      ? "All payers"
-      : input.partnerName ?? input.scopeLabel;
-  const subject = `1099-K monthly breakout — ${subjectScope} (TY ${input.taxYear})`;
-  const cadenceLine =
-    input.cadence === "weekly"
-      ? "Weekly January cadence — sent while AP staff assemble year-end packets."
-      : "Monthly cadence — sent on the 1st each month outside of January.";
-
-  const formats = input.attachments
-    .map((a) => a.filename.split(".").pop()?.toUpperCase() ?? "FILE")
-    .join(" + ");
-
-  const html = `
-    <div style="font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 540px; margin: 0 auto; padding: 24px; color: #111827;">
-      <div style="background:#111827; color:#f59e0b; padding:16px 20px; border-radius:8px 8px 0 0;">
-        <div style="font-weight:700; font-size:18px;">VNDRLY</div>
-        <div style="color:#fef3c7; font-size:12px;">1099-K monthly breakout — Tax Year ${input.taxYear}</div>
-      </div>
-      <div style="border:1px solid #e5e7eb; border-top:0; padding:20px; border-radius:0 0 8px 8px;">
-        <p>Hi,</p>
-        <p>Attached is the year-end <strong>1099-K monthly breakout</strong> for <strong>${escapeHtml(subjectScope)}</strong> covering tax year <strong>${input.taxYear}</strong>.</p>
-        <p style="background:#fef3c7; padding:12px 16px; border-radius:6px; font-weight:700; color:#92400e;">
-          ${escapeHtml(formats)} attached
-        </p>
-        <p style="color:#374151; font-size:13px;">${escapeHtml(cadenceLine)}</p>
-        <p style="color:#6b7280; font-size:12px;">For record-keeping only — not for IRS submission. To opt out or change recipients, open the Reports page and edit the 1099-K email schedule.</p>
-        <p style="color:#9ca3af; font-size:12px;">— VNDRLY</p>
-      </div>
-    </div>`;
-  const text = `Hi,
-
-Attached is the year-end 1099-K monthly breakout for ${subjectScope} covering tax year ${input.taxYear}.
-
-${formats} attached.
-
-${cadenceLine}
-
-For record-keeping only — not for IRS submission. To opt out or change recipients, open the Reports page and edit the 1099-K email schedule.
-
-— VNDRLY`;
-
-  const [resp] = await client.send({
-    to: fromEmail,
-    bcc: input.recipients,
-    from: fromEmail,
-    subject,
-    text,
-    html,
-    attachments: input.attachments.map((a) => ({
-      content: a.contentBase64,
-      filename: a.filename,
-      type: a.type,
-      disposition: "attachment",
-    })),
-  });
-  const messageId = resp?.headers?.["x-message-id"] as string | undefined;
-  return { messageId };
+  logger.debug({ fn: "sendDashboard1099MonthlyEmail" }, SKIP);
+  return { messageId: undefined };
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -1897,131 +963,8 @@ const MAX_PAYMENT_REVERSED_RECIPIENTS_PER_BATCH = 200;
 export async function sendPaymentReversedEmail(
   input: SendPaymentReversedEmailInput,
 ): Promise<{ messageId: string | undefined } | null> {
-  // Build the full recipient set: AP contacts + the vendor billing email
-  // (if any). De-dupe case-insensitively so a vendor who is also tagged
-  // as an AP contact only gets one copy.
-  type Bucket = { email: string; locale: EmailLocale; isVendor: boolean };
-  const seen = new Map<string, Bucket>();
-  for (const r of input.apRecipients) {
-    const key = r.email.trim().toLowerCase();
-    if (!key) continue;
-    if (!seen.has(key)) {
-      seen.set(key, { email: r.email.trim(), locale: r.locale ?? "en", isVendor: false });
-    }
-  }
-  if (input.vendorBillingEmail) {
-    const key = input.vendorBillingEmail.trim().toLowerCase();
-    if (key && !seen.has(key)) {
-      // Vendor billing locale isn't tracked on vendors.contact_email so
-      // default to English. AP contacts have their own locale flag and
-      // win the de-dupe above when they overlap.
-      seen.set(key, {
-        email: input.vendorBillingEmail.trim(),
-        locale: "en",
-        isVendor: true,
-      });
-    }
-  }
-  if (seen.size === 0) return null;
-
-  const { client, fromEmail } = await getUncachableSendGridClient();
-
-  // Group by locale so each language batch gets a fully-translated copy.
-  const byLocale = new Map<EmailLocale, string[]>();
-  for (const b of seen.values()) {
-    const arr = byLocale.get(b.locale) ?? [];
-    arr.push(b.email);
-    byLocale.set(b.locale, arr);
-  }
-
-  let lastMessageId: string | undefined;
-  for (const [locale, emails] of byLocale.entries()) {
-    const c = PAYMENT_REVERSED_COPY[locale];
-    const dateLocale = locale === "es" ? "es-MX" : "en-US";
-    const reversedAtLabel = input.reversedAt.toLocaleString(dateLocale, {
-      dateStyle: "medium",
-      timeStyle: "short",
-    });
-    const dispersedOnLabel = input.originalPayment.dispersedAt
-      ? input.originalPayment.dispersedAt.toLocaleString(dateLocale, {
-          dateStyle: "medium",
-          timeStyle: "short",
-        })
-      : c.notRecorded;
-    const methodLabel = input.originalPayment.method ?? c.notRecorded;
-    const referenceLabel = input.originalPayment.reference ?? c.notRecorded;
-    const subject = c.subject(input.vendorName, input.ticketTrackingNumber);
-
-    const detailRow = (label: string, value: string) =>
-      `<tr><td style="padding:4px 12px 4px 0;color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:0.05em;white-space:nowrap;">${escapeHtml(label)}</td><td style="padding:4px 0;color:#111827;font-size:14px;">${escapeHtml(value)}</td></tr>`;
-
-    const html = `
-    <div style="font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 560px; margin: 0 auto; padding: 24px; color: #111827;">
-      <div style="background:#111827; color:#f59e0b; padding:16px 20px; border-radius:8px 8px 0 0;">
-        <div style="font-weight:700; font-size:18px;">VNDRLY</div>
-        <div style="color:#fef3c7; font-size:12px;">${c.bandSubtitle}</div>
-      </div>
-      <div style="border:1px solid #e5e7eb; border-top:0; padding:20px; border-radius:0 0 8px 8px;">
-        <p>${c.greet}</p>
-        <p>${c.intro(escapeHtml(input.vendorName), escapeHtml(input.partnerName), escapeHtml(input.ticketTrackingNumber))}</p>
-        <h4 style="font-size:13px;color:#111827;margin:20px 0 6px;">${c.originalHeading}</h4>
-        <table style="border-collapse:collapse;">
-          ${detailRow(c.fieldMethod, methodLabel)}
-          ${detailRow(c.fieldReference, referenceLabel)}
-          ${detailRow(c.fieldAmount, input.originalPayment.amountLabel)}
-          ${detailRow(c.fieldDispersedOn, dispersedOnLabel)}
-        </table>
-        <h4 style="font-size:13px;color:#111827;margin:20px 0 6px;">${c.reversalHeading}</h4>
-        <table style="border-collapse:collapse;">
-          ${detailRow(c.fieldReversedBy, input.reversedByName)}
-          ${detailRow(c.fieldReversedAt, reversedAtLabel)}
-        </table>
-        <p style="background:#fef3c7; padding:12px 16px; border-radius:6px; margin-top:12px; color:#92400e;">
-          <strong>${escapeHtml(c.fieldReason)}:</strong> ${escapeHtml(input.reason)}
-        </p>
-        <p style="margin: 24px 0;">
-          <a href="${input.ticketDetailUrl}" style="background:#f59e0b; color:#111827; font-weight:600; padding:10px 18px; border-radius:8px; text-decoration:none; display:inline-block;">${c.cta}</a>
-        </p>
-        <p style="color:#6b7280; font-size:12px;">${c.closing}</p>
-        <p style="color:#9ca3af; font-size:11px; margin-top:24px;">${c.note}</p>
-        <p style="color:#9ca3af; font-size:12px;">— VNDRLY</p>
-      </div>
-    </div>`;
-    const text = `${c.greet}
-
-${c.introText(input.vendorName, input.partnerName, input.ticketTrackingNumber)}
-
-${c.originalHeading}:
-  ${c.fieldMethod}: ${methodLabel}
-  ${c.fieldReference}: ${referenceLabel}
-  ${c.fieldAmount}: ${input.originalPayment.amountLabel}
-  ${c.fieldDispersedOn}: ${dispersedOnLabel}
-
-${c.reversalHeading}:
-  ${c.fieldReversedBy}: ${input.reversedByName}
-  ${c.fieldReversedAt}: ${reversedAtLabel}
-  ${c.fieldReason}: ${input.reason}
-
-${c.cta}: ${input.ticketDetailUrl}
-
-${c.closing}
-
-${c.note}
-
-— VNDRLY`;
-
-    const bcc = emails.slice(0, MAX_PAYMENT_REVERSED_RECIPIENTS_PER_BATCH);
-    const [resp] = await client.send({
-      to: fromEmail,
-      bcc,
-      from: fromEmail,
-      subject,
-      text,
-      html,
-    });
-    lastMessageId = resp?.headers?.["x-message-id"] as string | undefined;
-  }
-  return { messageId: lastMessageId };
+  logger.debug({ fn: "sendPaymentReversedEmail" }, SKIP);
+  return { messageId: undefined };
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -2100,52 +1043,8 @@ export interface SendNotificationAlertEmailInput {
 export async function sendNotificationAlertEmail(
   input: SendNotificationAlertEmailInput,
 ): Promise<{ messageId: string | undefined }> {
-  const { client, fromEmail } = await getUncachableSendGridClient();
-  const categoryLabel = notificationCategoryLabel(input.category);
-  const priorityTag = input.highPriority ? "[Alert] " : "";
-  const subject = `${priorityTag}${categoryLabel}: ${input.title}`;
-  const greeting = input.recipientName?.trim()
-    ? `Hi ${input.recipientName.trim()},`
-    : "Hi,";
-  const deepLink = buildNotificationDeepLink(input.link);
-  const buttonHtml = deepLink
-    ? `<p style="margin:20px 0;"><a href="${escapeHtml(deepLink)}" style="display:inline-block;background:#111827;color:#f59e0b;padding:10px 18px;border-radius:6px;text-decoration:none;font-weight:600;">Open in VNDRLY</a></p>`
-    : "";
-  const buttonText = deepLink ? `\n\nOpen in VNDRLY: ${deepLink}` : "";
-  const bodyHtml = input.body
-    ? `<p style="color:#374151;white-space:pre-wrap;">${escapeHtml(input.body)}</p>`
-    : "";
-  const bodyText = input.body ? `\n\n${input.body}` : "";
-  const priorityBadge = input.highPriority
-    ? `<span style="display:inline-block;background:#f59e0b;color:#111827;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;margin-left:8px;text-transform:uppercase;letter-spacing:0.04em;">Priority</span>`
-    : "";
-  const html = `
-    <div style="font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 540px; margin: 0 auto; padding: 24px; color: #111827;">
-      <div style="background:#111827; color:#f59e0b; padding:16px 20px; border-radius:8px 8px 0 0;">
-        <div style="font-weight:700; font-size:18px;">VNDRLY${priorityBadge}</div>
-        <div style="color:#fef3c7; font-size:12px;">${escapeHtml(categoryLabel)} alert</div>
-      </div>
-      <div style="border:1px solid #e5e7eb; border-top:0; padding:20px; border-radius:0 0 8px 8px;">
-        <p>${escapeHtml(greeting)}</p>
-        <p style="font-weight:600;font-size:16px;color:#111827;">${escapeHtml(input.title)}</p>
-        ${bodyHtml}
-        ${buttonHtml}
-        <p style="color:#6b7280; font-size:12px; margin-top:24px;">You're receiving this because email delivery is enabled for ${escapeHtml(categoryLabel.toLowerCase())} alerts. Manage your preferences in VNDRLY → Notifications.</p>
-        <p style="color:#9ca3af; font-size:12px;">— VNDRLY</p>
-      </div>
-    </div>`;
-  const text =
-    `${greeting}\n\n${input.title}${bodyText}${buttonText}\n\n` +
-    `You're receiving this because email delivery is enabled for ${categoryLabel.toLowerCase()} alerts. Manage your preferences in VNDRLY → Notifications.\n\n— VNDRLY`;
-  const [resp] = await client.send({
-    to: input.to,
-    from: fromEmail,
-    subject,
-    text,
-    html,
-  });
-  const messageId = resp?.headers?.["x-message-id"] as string | undefined;
-  return { messageId };
+  logger.debug({ fn: "sendNotificationAlertEmail" }, SKIP);
+  return { messageId: undefined };
 }
 
 export interface NotificationDigestItem {
@@ -2169,92 +1068,8 @@ export interface SendNotificationDigestEmailInput {
 export async function sendNotificationDigestEmail(
   input: SendNotificationDigestEmailInput,
 ): Promise<{ messageId: string | undefined } | null> {
-  if (input.items.length === 0) return null;
-  const { client, fromEmail } = await getUncachableSendGridClient();
-  const count = input.items.length;
-  const subject = `VNDRLY daily digest — ${count} update${count === 1 ? "" : "s"} (${input.dayLabel})`;
-  const greeting = input.recipientName?.trim()
-    ? `Hi ${input.recipientName.trim()},`
-    : "Hi,";
-
-  // Group by category so the digest reads like a tidy newsletter
-  // ("Tickets: 3 updates / Compliance: 1 update") rather than a
-  // chronological dump that mixes contexts.
-  const byCategory = new Map<string, NotificationDigestItem[]>();
-  for (const item of input.items) {
-    const list = byCategory.get(item.category) ?? [];
-    list.push(item);
-    byCategory.set(item.category, list);
-  }
-
-  const sectionsHtml = Array.from(byCategory.entries())
-    .map(([cat, items]) => {
-      const label = notificationCategoryLabel(cat);
-      const rows = items
-        .map((item) => {
-          const link = buildNotificationDeepLink(item.link);
-          const titleHtml = link
-            ? `<a href="${escapeHtml(link)}" style="color:#111827;text-decoration:none;font-weight:600;">${escapeHtml(item.title)}</a>`
-            : `<span style="color:#111827;font-weight:600;">${escapeHtml(item.title)}</span>`;
-          const bodyHtml = item.body
-            ? `<div style="color:#374151;font-size:13px;margin-top:2px;white-space:pre-wrap;">${escapeHtml(item.body)}</div>`
-            : "";
-          return `<li style="padding:8px 0;border-bottom:1px solid #f3f4f6;">${titleHtml}${bodyHtml}</li>`;
-        })
-        .join("");
-      return `<div style="margin-top:18px;">
-        <div style="font-weight:700;color:#111827;font-size:14px;text-transform:uppercase;letter-spacing:0.04em;">${escapeHtml(label)}</div>
-        <ul style="list-style:none;padding:0;margin:6px 0 0;">${rows}</ul>
-      </div>`;
-    })
-    .join("");
-
-  const sectionsText = Array.from(byCategory.entries())
-    .map(([cat, items]) => {
-      const label = notificationCategoryLabel(cat);
-      const lines = items
-        .map((item) => {
-          const link = buildNotificationDeepLink(item.link);
-          const linkSuffix = link ? ` (${link})` : "";
-          const bodyLine = item.body ? `\n      ${item.body.replace(/\n/g, "\n      ")}` : "";
-          return `  • ${item.title}${linkSuffix}${bodyLine}`;
-        })
-        .join("\n");
-      return `${label.toUpperCase()}\n${lines}`;
-    })
-    .join("\n\n");
-
-  const html = `
-    <div style="font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #111827;">
-      <div style="background:#111827; color:#f59e0b; padding:16px 20px; border-radius:8px 8px 0 0;">
-        <div style="font-weight:700; font-size:18px;">VNDRLY</div>
-        <div style="color:#fef3c7; font-size:12px;">Daily notifications digest — ${escapeHtml(input.dayLabel)}</div>
-      </div>
-      <div style="border:1px solid #e5e7eb; border-top:0; padding:20px; border-radius:0 0 8px 8px;">
-        <p>${escapeHtml(greeting)}</p>
-        <p>You have <strong>${count} update${count === 1 ? "" : "s"}</strong> from VNDRLY for ${escapeHtml(input.dayLabel)}.</p>
-        ${sectionsHtml}
-        <p style="color:#6b7280; font-size:12px; margin-top:24px;">You're receiving this digest because the daily summary option is on. Switch to instant emails (or turn email off entirely) in VNDRLY → Notifications.</p>
-        <p style="color:#9ca3af; font-size:12px;">— VNDRLY</p>
-      </div>
-    </div>`;
-
-  const text =
-    `${greeting}\n\n` +
-    `You have ${count} update${count === 1 ? "" : "s"} from VNDRLY for ${input.dayLabel}.\n\n` +
-    `${sectionsText}\n\n` +
-    `You're receiving this digest because the daily summary option is on. ` +
-    `Switch to instant emails (or turn email off entirely) in VNDRLY → Notifications.\n\n— VNDRLY`;
-
-  const [resp] = await client.send({
-    to: input.to,
-    from: fromEmail,
-    subject,
-    text,
-    html,
-  });
-  const messageId = resp?.headers?.["x-message-id"] as string | undefined;
-  return { messageId };
+  logger.debug({ fn: "sendNotificationDigestEmail" }, SKIP);
+  return { messageId: undefined };
 }
 
 
@@ -2392,119 +1207,15 @@ function renderCertDigestRows(
 export async function sendCertExpirationVendorDigestEmail(
   input: SendCertExpirationVendorDigestInput,
 ): Promise<{ messageId: string | undefined } | null> {
-  if (input.recipients.length === 0) return null;
-  if (input.rows.length === 0) return null;
-  const { client, fromEmail } = await getUncachableSendGridClient();
-  const { html: tableHtml, text: tableText, overflow } = renderCertDigestRows(
-    input.rows,
-    false,
-  );
-  const subject = `${input.vendorName} — ${input.rows.length} certification${
-    input.rows.length === 1 ? "" : "s"
-  } expiring soon`;
-  const overflowHtml =
-    overflow > 0
-      ? `<p style="color:#6b7280;font-size:12px;margin:8px 0 0;">+${overflow} more — open the field employees page for the full list.</p>`
-      : "";
-  const overflowText =
-    overflow > 0 ? `\n+${overflow} more — open the field employees page for the full list.` : "";
-  const html = `
-    <div style="font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 640px; margin: 0 auto; padding: 24px; color: #111827;">
-      <div style="background:#111827; color:#f59e0b; padding:16px 20px; border-radius:8px 8px 0 0;">
-        <div style="font-weight:700; font-size:18px;">VNDRLY</div>
-        <div style="color:#fef3c7; font-size:12px;">Certification Expirations</div>
-      </div>
-      <div style="border:1px solid #e5e7eb; border-top:0; padding:20px; border-radius:0 0 8px 8px;">
-        <p>Hi,</p>
-        <p>The following certifications for <strong>${escapeHtml(
-          input.vendorName,
-        )}</strong> employees are expiring soon. Renew them before the expiration date to keep your crew compliant in the field.</p>
-        ${tableHtml}
-        ${overflowHtml}
-        <p style="color:#6b7280; font-size:12px; margin-top:24px;">Click an employee name above to open their certifications.</p>
-        <p style="color:#9ca3af; font-size:11px; margin-top:24px;">You can mute this email under Notification Preferences → Compliance.</p>
-        <p style="color:#9ca3af; font-size:12px;">— VNDRLY</p>
-      </div>
-    </div>`;
-  const text = `Hi,
-
-The following certifications for ${input.vendorName} employees are expiring soon:
-
-${tableText}${overflowText}
-
-You can mute this email under Notification Preferences -> Compliance.
-
-— VNDRLY`;
-  const [resp] = await client.send({
-    to: fromEmail,
-    bcc: input.recipients,
-    from: fromEmail,
-    subject,
-    text,
-    html,
-  });
-  return { messageId: resp?.headers?.["x-message-id"] as string | undefined };
+  logger.debug({ fn: "sendCertExpirationVendorDigestEmail" }, SKIP);
+  return { messageId: undefined };
 }
 
 export async function sendCertExpirationAdminDigestEmail(
   input: SendCertExpirationAdminDigestInput,
 ): Promise<{ messageId: string | undefined } | null> {
-  if (input.recipients.length === 0) return null;
-  if (input.rows.length === 0) return null;
-  const { client, fromEmail } = await getUncachableSendGridClient();
-  const { html: tableHtml, text: tableText, overflow } = renderCertDigestRows(
-    input.rows,
-    true,
-  );
-  const subject = `Compliance — ${input.rows.length} certification${
-    input.rows.length === 1 ? "" : "s"
-  } expiring across ${input.vendorCount} vendor${
-    input.vendorCount === 1 ? "" : "s"
-  }`;
-  const overflowHtml =
-    overflow > 0
-      ? `<p style="color:#6b7280;font-size:12px;margin:8px 0 0;">+${overflow} more — open the admin field employees page for the full list.</p>`
-      : "";
-  const overflowText =
-    overflow > 0 ? `\n+${overflow} more — open the admin field employees page for the full list.` : "";
-  const html = `
-    <div style="font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 720px; margin: 0 auto; padding: 24px; color: #111827;">
-      <div style="background:#111827; color:#f59e0b; padding:16px 20px; border-radius:8px 8px 0 0;">
-        <div style="font-weight:700; font-size:18px;">VNDRLY</div>
-        <div style="color:#fef3c7; font-size:12px;">Compliance — Certification Expirations</div>
-      </div>
-      <div style="border:1px solid #e5e7eb; border-top:0; padding:20px; border-radius:0 0 8px 8px;">
-        <p>Hi,</p>
-        <p>The following certifications across <strong>${input.vendorCount}</strong> vendor${
-          input.vendorCount === 1 ? "" : "s"
-        } are approaching expiration. Vendors have already been notified for their own employees; this digest is the global view.</p>
-        ${tableHtml}
-        ${overflowHtml}
-        <p style="color:#6b7280; font-size:12px; margin-top:24px;">Click an employee name above to open their certifications.</p>
-        <p style="color:#9ca3af; font-size:11px; margin-top:24px;">You can mute this email under Notification Preferences → Compliance.</p>
-        <p style="color:#9ca3af; font-size:12px;">— VNDRLY</p>
-      </div>
-    </div>`;
-  const text = `Hi,
-
-The following certifications across ${input.vendorCount} vendor${
-    input.vendorCount === 1 ? "" : "s"
-  } are approaching expiration:
-
-${tableText}${overflowText}
-
-You can mute this email under Notification Preferences -> Compliance.
-
-— VNDRLY`;
-  const [resp] = await client.send({
-    to: fromEmail,
-    bcc: input.recipients,
-    from: fromEmail,
-    subject,
-    text,
-    html,
-  });
-  return { messageId: resp?.headers?.["x-message-id"] as string | undefined };
+  logger.debug({ fn: "sendCertExpirationAdminDigestEmail" }, SKIP);
+  return { messageId: undefined };
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -2532,67 +1243,8 @@ export interface SendOaConnectionReminderInput {
 export async function sendOaConnectionReminderEmail(
   input: SendOaConnectionReminderInput,
 ): Promise<{ messageId: string | undefined }> {
-  const { client, fromEmail } = await getUncachableSendGridClient();
-  const greet = input.recipientName?.trim()
-    ? `Hi ${input.recipientName.trim()},`
-    : "Hi,";
-  const isRevoked = input.reason === "revoked";
-  const subject = isRevoked
-    ? `Action needed — OpenAccountant connection revoked for ${input.vendorName}`
-    : `Heads up — OpenAccountant connection looks stale for ${input.vendorName}`;
-  const headline = isRevoked
-    ? "OpenAccountant connection revoked"
-    : "OpenAccountant connection expiring soon";
-  const body = isRevoked
-    ? `Your VNDRLY connection to OpenAccountant for <strong>${escapeHtml(
-        input.vendorName,
-      )}</strong> (<em>${escapeHtml(
-        input.connectionLabel,
-      )}</em>) was revoked the last time we tried to refresh its access token. Future "Sync to OpenAccountant" pushes will fail until the connection is restored.`
-    : `Your VNDRLY connection to OpenAccountant for <strong>${escapeHtml(
-        input.vendorName,
-      )}</strong> (<em>${escapeHtml(
-        input.connectionLabel,
-      )}</em>) is approaching expiration — its access token expires within ${input.expiringSoonWindowDays} days and it hasn't been refreshed in over ${input.staleRefreshDays} days. Please reconnect to make sure your next push doesn't fail.`;
-  const bodyText = isRevoked
-    ? `Your VNDRLY connection to OpenAccountant for ${input.vendorName} (${input.connectionLabel}) was revoked the last time we tried to refresh its access token. Future "Sync to OpenAccountant" pushes will fail until the connection is restored.`
-    : `Your VNDRLY connection to OpenAccountant for ${input.vendorName} (${input.connectionLabel}) is approaching expiration — its access token expires within ${input.expiringSoonWindowDays} days and it hasn't been refreshed in over ${input.staleRefreshDays} days. Please reconnect to make sure your next push doesn't fail.`;
-  const html = `
-    <div style="font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #111827;">
-      <div style="background:#111827; color:#f59e0b; padding:16px 20px; border-radius:8px 8px 0 0;">
-        <div style="font-weight:700; font-size:18px;">VNDRLY</div>
-        <div style="color:#fef3c7; font-size:12px;">${escapeHtml(headline)}</div>
-      </div>
-      <div style="border:1px solid #e5e7eb; border-top:0; padding:20px; border-radius:0 0 8px 8px;">
-        <p>${escapeHtml(greet)}</p>
-        <p>${body}</p>
-        <p style="margin: 24px 0;">
-          <a href="${escapeHtml(input.reportsUrl)}" style="display:inline-block;background:#111827;color:#f59e0b;padding:10px 18px;border-radius:6px;text-decoration:none;font-weight:600;">Open Reports</a>
-        </p>
-        <p style="color:#6b7280; font-size:12px;">From the Reports page, click <strong>Connect OpenAccountant</strong> in the sync card to refresh the credentials.</p>
-        <p style="color:#9ca3af; font-size:11px; margin-top:24px;">You're receiving this because you installed this OpenAccountant connection. Manage in-app alerts in VNDRLY → Notification Preferences.</p>
-        <p style="color:#9ca3af; font-size:12px;">— VNDRLY</p>
-      </div>
-    </div>`;
-  const text = `${greet}
-
-${bodyText}
-
-Open Reports: ${input.reportsUrl}
-
-From the Reports page, click "Connect OpenAccountant" in the sync card to refresh the credentials.
-
-You're receiving this because you installed this OpenAccountant connection.
-
-— VNDRLY`;
-  const [resp] = await client.send({
-    to: input.to,
-    from: fromEmail,
-    subject,
-    text,
-    html,
-  });
-  return { messageId: resp?.headers?.["x-message-id"] as string | undefined };
+  logger.debug({ fn: "sendOaConnectionReminderEmail" }, SKIP);
+  return { messageId: undefined };
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -2637,101 +1289,6 @@ export interface SendCommentReplyDigestEmailInput {
 export async function sendCommentReplyDigestEmail(
   input: SendCommentReplyDigestEmailInput,
 ): Promise<{ messageId: string | undefined } | null> {
-  if (input.items.length === 0) return null;
-  const { client, fromEmail } = await getUncachableSendGridClient();
-  const count = input.items.length;
-  const subject =
-    count === 1
-      ? "VNDRLY — 1 new comment"
-      : `VNDRLY — ${count} new comments`;
-  const greeting = input.recipientName?.trim()
-    ? `Hi ${input.recipientName.trim()},`
-    : "Hi,";
-
-  // Group by thread so a reader sees "Tracking #0123: 3 replies" rather
-  // than three separate rows for the same thread.
-  const byThread = new Map<string, CommentReplyDigestItem[]>();
-  for (const item of input.items) {
-    const key = `${item.source}:${item.threadLabel}`;
-    const list = byThread.get(key) ?? [];
-    list.push(item);
-    byThread.set(key, list);
-  }
-
-  const SOURCE_LABEL: Record<CommentReplyDigestItem["source"], string> = {
-    ticket: "Ticket",
-    hotlist: "Hotlist",
-  };
-
-  const sectionsHtml = Array.from(byThread.values())
-    .map((items) => {
-      const head = items[0];
-      const link = buildNotificationDeepLink(head.link);
-      const headLabelHtml = link
-        ? `<a href="${escapeHtml(link)}" style="color:#111827;text-decoration:none;">${escapeHtml(head.threadLabel)}</a>`
-        : `${escapeHtml(head.threadLabel)}`;
-      const replyRows = items
-        .map((item) => {
-          const bodyHtml = item.body
-            ? `<div style="color:#374151;font-size:13px;margin-top:2px;white-space:pre-wrap;">${escapeHtml(item.body)}</div>`
-            : "";
-          return `<li style="padding:6px 0;border-bottom:1px solid #f3f4f6;">
-            <div style="color:#111827;font-size:13px;font-weight:600;">${escapeHtml(item.authorLine)}</div>
-            ${bodyHtml}
-          </li>`;
-        })
-        .join("");
-      return `<div style="margin-top:18px;">
-        <div style="font-weight:700;color:#111827;font-size:13px;text-transform:uppercase;letter-spacing:0.04em;">${escapeHtml(SOURCE_LABEL[head.source])}: ${headLabelHtml}</div>
-        <ul style="list-style:none;padding:0;margin:6px 0 0;">${replyRows}</ul>
-      </div>`;
-    })
-    .join("");
-
-  const sectionsText = Array.from(byThread.values())
-    .map((items) => {
-      const head = items[0];
-      const link = buildNotificationDeepLink(head.link);
-      const linkSuffix = link ? ` (${link})` : "";
-      const lines = items
-        .map((item) => {
-          const bodyLine = item.body ? `\n      ${item.body.replace(/\n/g, "\n      ")}` : "";
-          return `  • ${item.authorLine}${bodyLine}`;
-        })
-        .join("\n");
-      return `${SOURCE_LABEL[head.source].toUpperCase()}: ${head.threadLabel}${linkSuffix}\n${lines}`;
-    })
-    .join("\n\n");
-
-  const html = `
-    <div style="font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #111827;">
-      <div style="background:#111827; color:#f59e0b; padding:16px 20px; border-radius:8px 8px 0 0;">
-        <div style="font-weight:700; font-size:18px;">VNDRLY</div>
-        <div style="color:#fef3c7; font-size:12px;">New replies on threads you're on</div>
-      </div>
-      <div style="border:1px solid #e5e7eb; border-top:0; padding:20px; border-radius:0 0 8px 8px;">
-        <p>${escapeHtml(greeting)}</p>
-        <p>You have <strong>${count} new ${count === 1 ? "reply" : "replies"}</strong> on tickets and hotlist jobs you're a participant on.</p>
-        ${sectionsHtml}
-        <p style="color:#6b7280; font-size:12px; margin-top:24px;">You're receiving this because reply emails are on. Mentions are emailed instantly — replies are batched every few minutes so a busy thread doesn't fill your inbox. Manage in VNDRLY → Notifications.</p>
-        <p style="color:#9ca3af; font-size:12px;">— VNDRLY</p>
-      </div>
-    </div>`;
-
-  const text =
-    `${greeting}\n\n` +
-    `You have ${count} new ${count === 1 ? "reply" : "replies"} on tickets and hotlist jobs you're a participant on.\n\n` +
-    `${sectionsText}\n\n` +
-    `You're receiving this because reply emails are on. Mentions are emailed instantly — replies are batched every few minutes. ` +
-    `Manage in VNDRLY → Notifications.\n\n— VNDRLY`;
-
-  const [resp] = await client.send({
-    to: input.to,
-    from: fromEmail,
-    subject,
-    text,
-    html,
-  });
-  const messageId = resp?.headers?.["x-message-id"] as string | undefined;
-  return { messageId };
+  logger.debug({ fn: "sendCommentReplyDigestEmail" }, SKIP);
+  return { messageId: undefined };
 }

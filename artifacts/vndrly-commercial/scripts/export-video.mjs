@@ -2,7 +2,7 @@
 /**
  * Export the VNDRLY commercial to an MP4 file via CHUNKED capture.
  *
- * Why chunked? The Replit workspace's bash tool kills detached processes
+ * Why chunked? Long-running detached export processes can be killed by
  * shortly after the parent shell exits, and its max foreground timeout is
  * 120 s. The full 240 s commercial cannot be captured in a single bash call.
  *

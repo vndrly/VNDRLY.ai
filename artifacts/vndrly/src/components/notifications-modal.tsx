@@ -149,6 +149,14 @@ export default function NotificationsModal({ open, onOpenChange }: Props) {
             <div className="flex items-center justify-between gap-3">
               <DialogTitle className="text-base">{t("notifications.heading")}</DialogTitle>
               <div className="flex items-center gap-2">
+                <Link
+                  href="/notifications/preferences"
+                  className="text-xs text-muted-foreground hover:underline"
+                  onClick={() => onOpenChange(false)}
+                  data-testid="link-modal-notification-prefs"
+                >
+                  {t("notifications.settings")}
+                </Link>
                 {(list?.some((n) => !n.isRead) || count > 0) && (
                   <button
                     type="button"

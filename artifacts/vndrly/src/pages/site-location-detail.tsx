@@ -901,12 +901,20 @@ export default function SiteLocationDetail({ id }: { id: number }) {
                   draggable here; geofence radius circle is rendered
                   when the site has one configured. */}
               <SiteLocationMap
-                lat={site.latitude}
-                lng={site.longitude}
+                lat={editingCoords ? parseFloat(editLat) || site.latitude : site.latitude}
+                lng={editingCoords ? parseFloat(editLng) || site.longitude : site.longitude}
                 radiusMeters={site.siteRadiusMeters ?? null}
                 aspectRatio="4 / 3"
                 tileLayer="satellite"
-                draggable={false}
+                draggable={editingCoords && canManageAssignments}
+                onMove={
+                  editingCoords
+                    ? (lat, lng) => {
+                        setEditLat(lat.toFixed(6));
+                        setEditLng(lng.toFixed(6));
+                      }
+                    : undefined
+                }
               />
             </div>
           </CardContent>

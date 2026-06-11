@@ -2,13 +2,13 @@
 
 **Task:** #111 — Pre-Demo End-to-End Smoke Test
 **Date:** April 22, 2026
-**Tester:** Replit Agent
+**Tester:** Internal QA
 **Build under test:**
 - API server (`@workspace/api-server`) — running clean on :8080
 - Web app (`@workspace/vndrly`) — running clean on :23539
 - Mobile (`@workspace/vndrly-mobile`, Expo) — workflow not started; **device walkthrough cannot be performed in this environment** (no physical iOS / Android device, no Expo Go session). Mobile coverage below is limited to (a) verifying the API contracts the mobile client consumes and (b) static review of the mobile screens. **iOS and Android device passes are listed as PENDING.**
 
-**Demo accounts:** see `replit.md` → Demo Readiness Baseline → Demo accounts. Credentials live in `artifacts/api-server/scripts/` seed scripts and are not duplicated here.
+**Demo accounts:** see `docs/canonical-credentials.md` and seed scripts under `artifacts/api-server/scripts/`.
 
 **Demo-critical site QR codes:** `SITE-PB42EX01`, `SITE-EFA1EX02`, `SITE-DB07CH03`, `SITE-9F5DBAD8`.
 
@@ -119,7 +119,7 @@ The gap-warning UI exists in `crew-map.tsx` but was not stress-tested under mult
 ## What was changed in-session
 
 - `partners` row for ExxonMobil: set `brand_primary_color = #0F4C81`, `brand_accent_color = #F4B400`.
-- `replit.md`: added "Demo Readiness Baseline (Apr 22, 2026)" section pointing to this document.
+- `AGENTS.md`: project handbook and agent safety rules.
 - This file (`docs/demo-readiness-2026-04-22.md`) added as the durable smoke-test record.
 
 ## Follow-ups filed

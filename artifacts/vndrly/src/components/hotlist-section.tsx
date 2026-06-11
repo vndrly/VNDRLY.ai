@@ -1,7 +1,7 @@
 import { useCallback, useState, useEffect, useRef } from "react";
 import { useSearch, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CARD_INNER_RULE_CLASS, CARD_INNER_TILE_CLASS, CARD_INNER_TILE_CLICKABLE_CLASS, CARD_SUBCARD_META_ICON_CLASS, CARD_TITLE_ICON_CLASS } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import LiveConnectionPill, { type LiveConnectionStatus } from "@/components/live-connection-pill";
 import { useLiveConnectionStatus } from "@/hooks/use-live-connection-status";
@@ -55,6 +55,11 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const NEW_PILL_ASPECT = 900 / 229;
+
+const hotlistSubcardMetaIconProps = {
+  className: CARD_SUBCARD_META_ICON_CLASS,
+  style: { color: "var(--brand-primary)" },
+} as const;
 
 function formatMoney(n: string | number) {
   const v = typeof n === "string" ? parseFloat(n) : n;
@@ -307,7 +312,7 @@ function HotlistHeader({
     <CardHeader className="flex flex-row items-center justify-between">
       <div>
         <CardTitle className="text-lg flex items-center gap-2">
-          <Flame className="w-5 h-5" style={{ color: "var(--brand-primary)" }} />
+          <Flame className={CARD_TITLE_ICON_CLASS} style={{ color: "var(--brand-primary)" }} />
           Hotlist
           {/* Live pill sits LEFT-aligned next to the title per the
               global Live-indicator placement doctrine. */}
@@ -557,11 +562,13 @@ function PartnerJobCard({
   return (
     <div
       ref={ref}
-      className="border rounded-md"
-      style={isFocused ? { boxShadow: "0 0 0 2px var(--brand-primary)" } : undefined}
+      className={cn(
+        CARD_INNER_TILE_CLICKABLE_CLASS,
+        "overflow-hidden p-0",
+      )}
       data-testid={`hotlist-job-${job.id}`}
     >
-      <div className="group p-3 flex items-center gap-3 cursor-pointer bg-muted/50 hover:bg-muted transition-colors" onClick={onToggle}>
+      <div className="group p-3 flex items-center gap-3 cursor-pointer" onClick={onToggle}>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="hotlist-job-title font-medium truncate transition-[color,text-shadow]" data-testid={`text-job-title-${job.id}`}>{job.title}</span>
@@ -581,9 +588,9 @@ function PartnerJobCard({
             </span>
           </div>
           <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mt-1">
-            <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{job.locationAddress}</span>
-            {job.deadline && <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{job.deadline}</span>}
-            {job.estimatedDurationDays != null && <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{job.estimatedDurationDays}d</span>}
+            <span className="flex items-start gap-1"><MapPin {...hotlistSubcardMetaIconProps} />{job.locationAddress}</span>
+            {job.deadline && <span className="flex items-start gap-1"><Calendar {...hotlistSubcardMetaIconProps} />{job.deadline}</span>}
+            {job.estimatedDurationDays != null && <span className="flex items-start gap-1"><Clock {...hotlistSubcardMetaIconProps} />{job.estimatedDurationDays}d</span>}
           </div>
         </div>
         {job.status === "open" && (
@@ -596,7 +603,7 @@ function PartnerJobCard({
         )}
       </div>
       {expanded && (
-        <div className="border-t px-3 py-3 space-y-2 bg-muted/20">
+        <div className={cn(CARD_INNER_RULE_CLASS, "px-3 py-3 space-y-2")}>
           {job.description && <p className="text-sm text-muted-foreground">{job.description}</p>}
           <div className="flex items-center justify-between flex-wrap gap-2">
             <p className="text-xs font-medium text-muted-foreground">
@@ -1398,7 +1405,7 @@ function VendorHotlist({ focusedJobId }: { focusedJobId: number | null }) {
               ))
             )}
             {outOfRadius.length > 0 && (
-              <details className="border rounded-md" data-testid="section-out-of-radius" open={outOfRadius.some((j) => focusedJobId === j.id)}>
+              <details className={cn(CARD_INNER_TILE_CLASS, "p-0")} data-testid="section-out-of-radius" open={outOfRadius.some((j) => focusedJobId === j.id)}>
                 <summary className="cursor-pointer px-3 py-2 text-xs text-muted-foreground hover:bg-muted/40">
                   Show {outOfRadius.length} job{outOfRadius.length === 1 ? "" : "s"} outside your radius
                 </summary>
@@ -1484,11 +1491,14 @@ function VendorJobCard({
   return (
     <div
       ref={ref}
-      className={outOfRadius ? "opacity-60" : undefined}
-      style={isFocused ? { boxShadow: "0 0 0 2px var(--brand-primary)", borderRadius: "0.375rem" } : undefined}
+      className={cn(
+        CARD_INNER_TILE_CLICKABLE_CLASS,
+        "group overflow-hidden p-0",
+        outOfRadius && "opacity-60",
+      )}
       data-testid={`hotlist-job-${job.id}`}
     >
-      <div className="group border rounded-md p-3 flex items-center gap-3">
+      <div className="p-3 flex items-center gap-3">
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="hotlist-job-title font-medium truncate transition-[color,text-shadow]">{job.title}</span>
@@ -1515,9 +1525,9 @@ function VendorJobCard({
           />
         </div>
         <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mt-1">
-          <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{job.locationAddress}</span>
-          {job.deadline && <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{job.deadline}</span>}
-          {job.estimatedDurationDays != null && <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{job.estimatedDurationDays}d</span>}
+          <span className="flex items-start gap-1"><MapPin {...hotlistSubcardMetaIconProps} />{job.locationAddress}</span>
+          {job.deadline && <span className="flex items-start gap-1"><Calendar {...hotlistSubcardMetaIconProps} />{job.deadline}</span>}
+          {job.estimatedDurationDays != null && <span className="flex items-start gap-1"><Clock {...hotlistSubcardMetaIconProps} />{job.estimatedDurationDays}d</span>}
         </div>
         {job.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{job.description}</p>}
         {outOfRadius && (
@@ -1559,7 +1569,7 @@ function VendorJobCard({
       )}
       </div>
       {commentsOpen && (
-        <div className="border border-t-0 rounded-b-md px-3 pb-3 bg-muted/20">
+        <div className={cn(CARD_INNER_RULE_CLASS, "px-3 pb-3")}>
           <HotlistCommentsSection jobId={job.id} />
         </div>
       )}
@@ -1764,9 +1774,11 @@ function AdminHotlist() {
               return (
                 <div
                   key={j.id}
-                  className={`group border rounded-md p-3 flex items-center gap-3 transition-colors ${
-                    isRemoved ? "opacity-60 bg-muted/30" : "bg-muted/50 hover:bg-muted"
-                  }`}
+                  className={cn(
+                    CARD_INNER_TILE_CLICKABLE_CLASS,
+                    "group flex items-center gap-3",
+                    isRemoved && "opacity-60",
+                  )}
                   data-testid={`hotlist-job-${j.id}`}
                 >
                   <div className="flex-1 min-w-0">
@@ -1801,8 +1813,8 @@ function AdminHotlist() {
                       />
                     </div>
                     <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mt-1">
-                      <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{j.locationAddress}</span>
-                      {j.deadline && <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{j.deadline}</span>}
+                      <span className="flex items-start gap-1"><MapPin {...hotlistSubcardMetaIconProps} />{j.locationAddress}</span>
+                      {j.deadline && <span className="flex items-start gap-1"><Calendar {...hotlistSubcardMetaIconProps} />{j.deadline}</span>}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">

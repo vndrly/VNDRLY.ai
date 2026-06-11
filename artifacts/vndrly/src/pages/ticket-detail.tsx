@@ -46,6 +46,7 @@ import { formatTicketTrackingNumber } from "@workspace/db/format";
 import StarRating from "@/components/star-rating";
 import TicketStatusStepper from "@/components/ticket-status-stepper";
 import { TicketRouteMap } from "@/components/ticket-route-map";
+import { TicketSiteVisitSummaryCard } from "@/components/ticket-site-visit-summary-card";
 import { CrewTimeSection } from "@/components/crew-time-section";
 import { TicketNudgePanel } from "@/components/ticket-nudge-panel";
 import { getGoogleMapsUrl } from "@/lib/maps";
@@ -1803,6 +1804,8 @@ export default function TicketDetail({ id }: { id: number }) {
             )}
           </CardContent>
         </Card>
+
+        <TicketSiteVisitSummaryCard ticketId={id} />
 
         <Card>
           <CardHeader>

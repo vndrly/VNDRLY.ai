@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { BrandProvider } from "@/hooks/use-brand";
 import { ThemeProvider } from "@/hooks/use-theme";
+import { NotificationsModalProvider } from "@/components/notifications-modal-context";
 import Layout from "@/components/layout";
 import { AssistantLauncher } from "@/components/assistant-panel";
 import ContextPickerModal from "@/components/context-picker-modal";
@@ -185,6 +186,8 @@ function AuthenticatedRouter() {
               <Route path="/foreman/new-ticket" component={FieldNewTicket} />
               <Route path="/foreman/scan" component={FieldNewTicket} />
               <Route path="/account/location" component={AccountLocation} />
+              <Route path="/notifications/preferences" component={NotificationPreferencesPage} />
+              <Route path="/notifications" component={NotificationsInboxPage} />
               <Route path="/tickets/:id">{(params) => <TicketDetail id={parseInt(params.id)} />}</Route>
               <Route path="/">
                 <ForemanRootRedirect />
@@ -209,6 +212,8 @@ function AuthenticatedRouter() {
                   external links / docs / tab match logic don't drift. */}
               <Route path="/field/scan" component={FieldNewTicket} />
               <Route path="/account/location" component={AccountLocation} />
+              <Route path="/notifications/preferences" component={NotificationPreferencesPage} />
+              <Route path="/notifications" component={NotificationsInboxPage} />
               <Route path="/tickets/:id">{(params) => <TicketDetail id={parseInt(params.id)} />}</Route>
               <Route path="/*splat" component={FieldHome} />
             </Switch>
@@ -311,9 +316,11 @@ function App() {
         <AuthProvider>
           <BrandProvider>
             <ThemeProvider>
-              <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-                <AuthenticatedRouter />
-              </WouterRouter>
+              <NotificationsModalProvider>
+                <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+                  <AuthenticatedRouter />
+                </WouterRouter>
+              </NotificationsModalProvider>
               <Toaster />
             </ThemeProvider>
           </BrandProvider>

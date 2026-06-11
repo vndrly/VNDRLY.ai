@@ -4,6 +4,7 @@ import { eq, and, isNull, gt, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { sendPasswordResetEmail } from "../lib/sendgrid";
+import { getAppOrigin } from "../lib/appOrigin";
 import { logger } from "../lib/logger";
 import { apiError, sendApiError } from "../lib/apiError";
 
@@ -16,12 +17,7 @@ function hashToken(token: string): string {
 }
 
 function buildResetUrl(token: string): string {
-  const origin =
-    process.env.PUBLIC_APP_URL ||
-    (process.env.REPLIT_DEV_DOMAIN
-      ? `https://${process.env.REPLIT_DEV_DOMAIN}`
-      : "http://localhost");
-  return `${origin}/reset-password?token=${token}`;
+  return `${getAppOrigin()}/reset-password?token=${token}`;
 }
 
 router.post("/auth/forgot-password", async (req, res) => {

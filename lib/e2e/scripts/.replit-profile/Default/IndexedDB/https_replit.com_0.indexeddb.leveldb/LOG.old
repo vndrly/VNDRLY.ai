@@ -1,5 +1,0 @@
-2026/05/28-05:45:58.154 8068 Reusing MANIFEST C:\Users\JohnElerick\Desktop\vndrly\lib\e2e\scripts\.replit-profile\Default\IndexedDB\https_replit.com_0.indexeddb.leveldb/MANIFEST-000001
-2026/05/28-05:45:58.155 8068 Recovering log #9
-2026/05/28-05:45:58.156 8068 Reusing old log C:\Users\JohnElerick\Desktop\vndrly\lib\e2e\scripts\.replit-profile\Default\IndexedDB\https_replit.com_0.indexeddb.leveldb/000009.log 
-2026/05/28-05:45:58.157 8068 Delete type=2 #8
-2026/05/28-05:45:59.414 9e28 Manual compaction at level-0 from '\x00\x07\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x08\x00\x00\x00' @ 0 : 0; will stop at (end)

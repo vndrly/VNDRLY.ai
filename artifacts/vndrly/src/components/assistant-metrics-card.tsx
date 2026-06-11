@@ -1,9 +1,22 @@
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CARD_ICON_ROW_CLASS,
+  CARD_INNER_RULE_CLASS,
+  CARD_INNER_TILE_HOVER_CLASS,
+  CARD_SUBCARD_ICON_CLASS,
+  CARD_TITLE_ICON_CLASS,
+} from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 import { Sparkles, MessageSquare, AlertOctagon, Zap, CheckCircle2, ShieldAlert } from "lucide-react";
+import { useBrand } from "@/hooks/use-brand";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+const SPARK_IDLE_BAR = "#d1d5db"; /* gray-300 — matches card outline */
 
 interface DayBucket {
   day: string;
@@ -33,8 +46,14 @@ interface AssistantMetrics {
  * dashboard for `user.role === "admin"` only. Fetches the read-only
  * `/api/assistant/metrics` endpoint, which is itself admin-gated, so
  * a misplaced render still 403s instead of leaking data.
+ *
+ * Inner stat tiles use CARD_INNER_TILE_HOVER_CLASS (grey outline + hover shadow).
+ * Spark bars use brand color when count &gt; 0, grey when zero.
  */
 export function AssistantMetricsCard() {
+  const brand = useBrand();
+  const accentColor = brand.isOrgBranded ? brand.primary : "#f59e0b";
+  const iconStyle = { color: accentColor };
   const [data, setData] = useState<AssistantMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -74,7 +93,7 @@ export function AssistantMetricsCard() {
     <Card data-testid="card-assistant-metrics">
       <CardHeader>
         <CardTitle className="text-lg flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-primary" />
+          <Sparkles className={CARD_TITLE_ICON_CLASS} style={iconStyle} />
           Ask VNDRLY usage (last 7 days)
         </CardTitle>
       </CardHeader>
@@ -92,6 +111,7 @@ export function AssistantMetricsCard() {
                 value={totalSessions}
                 hint={data.sessionsByDay.length > 0 ? `${data.sessionsByDay.length} active days` : "none yet"}
                 testid="metric-sessions"
+                accentColor={accentColor}
               />
               <Stat
                 icon={MessageSquare}
@@ -99,6 +119,7 @@ export function AssistantMetricsCard() {
                 value={totalMessages}
                 hint={`${(totalMessages / Math.max(1, totalSessions)).toFixed(1)} per session`}
                 testid="metric-messages"
+                accentColor={accentColor}
               />
               <Stat
                 icon={AlertOctagon}
@@ -106,6 +127,7 @@ export function AssistantMetricsCard() {
                 value={data.refusalCount}
                 hint={`${refusalRate}% of messages`}
                 testid="metric-refusals"
+                accentColor={accentColor}
               />
               <Stat
                 icon={Zap}
@@ -117,6 +139,7 @@ export function AssistantMetricsCard() {
                     : "no samples"
                 }
                 testid="metric-ttft"
+                accentColor={accentColor}
               />
               <Stat
                 icon={CheckCircle2}
@@ -128,16 +151,13 @@ export function AssistantMetricsCard() {
                     : "none yet"
                 }
                 testid="metric-onboarded"
+                accentColor={accentColor}
               />
             </div>
             {data.signupAssistant ? (
-              <SignupAbuseTile usage={data.signupAssistant} />
+              <SignupAbuseTile usage={data.signupAssistant} accentColor={accentColor} />
             ) : null}
-            {/* Tiny per-day spark of *sessions* — that's the headline
-                "Assistant usage" signal called out in the task brief.
-                Bars are proportional to the max value in the window so
-                a slow day still renders something visible. */}
-            <Spark days={data.sessionsByDay} rangeDays={data.rangeDays} />
+            <Spark days={data.sessionsByDay} rangeDays={data.rangeDays} accentColor={accentColor} />
           </div>
         ) : null}
       </CardContent>
@@ -151,17 +171,19 @@ function Stat({
   value,
   hint,
   testid,
+  accentColor,
 }: {
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
   label: string;
   value: number | string;
   hint: string;
   testid: string;
+  accentColor: string;
 }) {
   return (
-    <div className="rounded-md border bg-muted/20 p-3" data-testid={testid}>
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Icon className="w-3.5 h-3.5" />
+    <div className={CARD_INNER_TILE_HOVER_CLASS} data-testid={testid}>
+      <div className={`${CARD_ICON_ROW_CLASS} text-xs text-muted-foreground`}>
+        <Icon className={CARD_SUBCARD_ICON_CLASS} style={{ color: accentColor }} />
         <span className="font-medium uppercase tracking-wide">{label}</span>
       </div>
       <p className="mt-1 text-lg font-bold leading-none">{value}</p>
@@ -170,29 +192,32 @@ function Stat({
   );
 }
 
-function SignupAbuseTile({ usage }: { usage: SignupAssistantUsage }) {
-  // Highlight when today's anonymous signup-assistant volume crosses
-  // 75% of the daily budget so admins notice script abuse before the
-  // circuit breaker trips. Below that we render in muted colour.
+function SignupAbuseTile({ usage, accentColor }: { usage: SignupAssistantUsage; accentColor: string }) {
   const pct =
     usage.todayBudget > 0
       ? Math.min(100, Math.round((usage.todayUsed / usage.todayBudget) * 100))
       : 0;
   const tripped = usage.todayUsed >= usage.todayBudget && usage.todayBudget > 0;
   const elevated = pct >= 75;
-  const tone = tripped
-    ? "border-destructive/40 bg-destructive/10"
-    : elevated
-      ? "border-amber-400/40 bg-amber-100/40 dark:bg-amber-500/10"
-      : "border-border bg-muted/20";
   const windowMinutes = Math.max(1, Math.round(usage.ipWindowMs / 60000));
   return (
     <div
-      className={`rounded-md border p-3 ${tone}`}
+      className={cn(
+        CARD_INNER_TILE_HOVER_CLASS,
+        tripped && "border-destructive/60 bg-destructive/5",
+        !tripped && elevated && "border-amber-400/70 bg-amber-50/50",
+      )}
       data-testid="metric-signup-assistant"
     >
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <ShieldAlert className="w-3.5 h-3.5" />
+      <div className={`${CARD_ICON_ROW_CLASS} text-xs text-muted-foreground`}>
+        <ShieldAlert
+          className={cn(
+            CARD_SUBCARD_ICON_CLASS,
+            tripped && "text-destructive",
+            !tripped && elevated && "text-amber-600",
+          )}
+          style={!tripped && !elevated ? { color: accentColor } : undefined}
+        />
         <span className="font-medium uppercase tracking-wide">
           Signup help (today)
         </span>
@@ -216,9 +241,15 @@ function SignupAbuseTile({ usage }: { usage: SignupAssistantUsage }) {
   );
 }
 
-function Spark({ days, rangeDays }: { days: DayBucket[]; rangeDays: number }) {
-  // Build a contiguous buckets array so missing days render as zero
-  // bars (otherwise the spark looks artificially dense).
+function Spark({
+  days,
+  rangeDays,
+  accentColor,
+}: {
+  days: DayBucket[];
+  rangeDays: number;
+  accentColor: string;
+}) {
   const today = new Date();
   const buckets: DayBucket[] = [];
   const lookup = new Map(days.map((d) => [d.day, d.count]));
@@ -230,15 +261,21 @@ function Spark({ days, rangeDays }: { days: DayBucket[]; rangeDays: number }) {
   }
   const max = Math.max(1, ...buckets.map((b) => b.count));
   return (
-    <div className="flex items-end gap-1 h-12" data-testid="metric-spark">
-      {buckets.map((b) => (
-        <div
-          key={b.day}
-          className="flex-1 bg-primary/70 rounded-t"
-          style={{ height: `${(b.count / max) * 100}%`, minHeight: "2px" }}
-          title={`${b.day}: ${b.count} session${b.count === 1 ? "" : "s"}`}
-        />
-      ))}
+    <div className={cn("pt-1", CARD_INNER_RULE_CLASS)} data-testid="metric-spark">
+      <div className="flex items-end gap-1 h-12 mt-1">
+        {buckets.map((b) => (
+          <div
+            key={b.day}
+            className="flex-1 rounded-t opacity-90"
+            style={{
+              height: `${(b.count / max) * 100}%`,
+              minHeight: "2px",
+              backgroundColor: b.count > 0 ? accentColor : SPARK_IDLE_BAR,
+            }}
+            title={`${b.day}: ${b.count} session${b.count === 1 ? "" : "s"}`}
+          />
+        ))}
+      </div>
     </div>
   );
 }

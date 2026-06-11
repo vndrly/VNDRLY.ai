@@ -33,6 +33,7 @@ import InPageHeader from "@/components/InPageHeader";
 import TogglePill2 from "@/components/TogglePill2";
 import LiveLocationStatusPill from "@/components/LiveLocationStatusPill";
 import { TicketRouteMap } from "@/components/TicketRouteMap";
+import TicketSiteVisitSummary from "@/components/TicketSiteVisitSummary";
 import { TicketTrackingTimeline } from "@/components/TicketTrackingTimeline";
 import CrewTimeSection, { type CrewTimeSectionHandle } from "@/components/CrewTimeSection";
 import ScheduleTicketPanel from "@/components/ScheduleTicketPanel";
@@ -163,6 +164,7 @@ type SiteLocation = {
   name?: string | null;
   latitude?: number | null;
   longitude?: number | null;
+  siteRadiusMeters?: number | null;
 };
 
 type GpsLog = {
@@ -669,7 +671,10 @@ export default function TicketDetailScreen() {
     // bouncing GPS reading at the boundary doesn't double-fire.
     let attempted = false;
     let sub: Location.LocationSubscription | null = null;
-    const radius = 150; // metres; matches server default
+    const radius =
+      siteLocation.siteRadiusMeters != null && siteLocation.siteRadiusMeters > 0
+        ? siteLocation.siteRadiusMeters
+        : 150;
     const destLat = siteLocation.latitude;
     const destLng = siteLocation.longitude;
 
@@ -3290,6 +3295,8 @@ export default function TicketDetailScreen() {
           </View>
         </View>
       </Modal>
+
+      <TicketSiteVisitSummary ticketId={ticketId} refreshKey={lastLoadedAt} />
 
       <Text style={[styles.section, { color: colors.foreground }]}>
         {t("tickets.routeSection")}

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import L from "leaflet";
-import { MapContainer, Marker, Polyline, Popup, TileLayer, useMap } from "react-leaflet";
+import { MapContainer, Marker, Polyline, Popup, TileLayer, useMap, Circle } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { cn } from "@/lib/utils";
 import { useBrand } from "@/hooks/use-brand";
@@ -44,6 +44,14 @@ type Props = {
   // indicator when the device didn't move). Used by the day-replay view to
   // mirror the live Crew Map.
   showHeadings?: boolean;
+  siteRadiusMeters?: number | null;
+  visitPins?: Array<{
+    key: string;
+    latitude: number;
+    longitude: number;
+    label: string;
+    title?: string;
+  }>;
 };
 
 function makePinIcon(color: string, label: string) {
@@ -238,6 +246,8 @@ export function TicketRouteMap({
   onSelectTracking,
   longStopThresholdMs = DEFAULT_LONG_DWELL_MS,
   showHeadings = false,
+  siteRadiusMeters = null,
+  visitPins = [],
 }: Props) {
   const { t } = useTranslation();
   const validSite = site && isValidLatLng(site.latitude, site.longitude) ? site : null;
@@ -267,8 +277,13 @@ export function TicketRouteMap({
   const allPoints = useMemo<[number, number][]>(() => {
     const pts: [number, number][] = [...pathPoints];
     if (validSite) pts.push([validSite.latitude, validSite.longitude]);
+    for (const pin of visitPins ?? []) {
+      if (isValidLatLng(pin.latitude, pin.longitude)) {
+        pts.push([pin.latitude, pin.longitude]);
+      }
+    }
     return pts;
-  }, [pathPoints, validSite]);
+  }, [pathPoints, validSite, visitPins]);
 
   const siteIcon = useMemo(() => makePinIcon("#f59e0b", t("ticketRouteMap.sitePinLabel")), [t]);
   const checkInIcon = useMemo(() => makePinIcon("#16a34a", t("ticketRouteMap.checkInPinLabel")), [t]);
@@ -478,6 +493,34 @@ export function TicketRouteMap({
             </Popup>
           </Marker>
         )}
+        {validSite && siteRadiusMeters != null && siteRadiusMeters > 0 && (
+          <Circle
+            center={[validSite.latitude, validSite.longitude]}
+            radius={siteRadiusMeters}
+            pathOptions={{
+              color: "#2563eb",
+              weight: 2,
+              opacity: 0.55,
+              fillColor: "#2563eb",
+              fillOpacity: 0.07,
+            }}
+          />
+        )}
+        {(visitPins ?? []).map((pin) => {
+          if (!isValidLatLng(pin.latitude, pin.longitude)) return null;
+          const icon = makePinIcon("#6366f1", pin.label);
+          return (
+            <Marker
+              key={pin.key}
+              position={[pin.latitude, pin.longitude]}
+              icon={icon}
+            >
+              <Popup>
+                <div className="text-xs font-semibold">{pin.title ?? pin.label}</div>
+              </Popup>
+            </Marker>
+          );
+        })}
         {validCheckIn && (
           <Marker position={[validCheckIn.latitude, validCheckIn.longitude]} icon={checkInIcon}>
             <Popup>

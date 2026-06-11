@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CARD_INNER_TILE_CLASS, CARD_TITLE_ICON_CLASS } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import { Gauge, Database, MemoryStick } from "lucide-react";
+import { useBrand } from "@/hooks/use-brand";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -47,6 +49,9 @@ interface RateLimitBudgetsResponse {
  * in the wild.
  */
 export function RateLimitBudgetsCard() {
+  const brand = useBrand();
+  const accentColor = brand.isOrgBranded ? brand.primary : "#f59e0b";
+  const iconStyle = { color: accentColor };
   const [data, setData] = useState<RateLimitBudgetsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -81,7 +86,7 @@ export function RateLimitBudgetsCard() {
     <Card data-testid="card-rate-limit-budgets">
       <CardHeader>
         <CardTitle className="text-lg flex items-center gap-2">
-          <Gauge className="w-5 h-5 text-primary" />
+          <Gauge className={CARD_TITLE_ICON_CLASS} style={iconStyle} />
           API rate-limit budgets
         </CardTitle>
       </CardHeader>
@@ -120,7 +125,7 @@ function BackingStoreNote({ store }: { store: ResolvedStoreInfo }) {
   const Icon = isRedis ? Database : MemoryStick;
   return (
     <div
-      className="flex items-start gap-2 rounded border border-border bg-muted/40 p-2"
+      className={cn(CARD_INNER_TILE_CLASS, "flex items-start gap-2 p-2")}
       data-testid="rate-limit-backing-store"
     >
       <Icon className="w-4 h-4 mt-0.5 text-muted-foreground" />

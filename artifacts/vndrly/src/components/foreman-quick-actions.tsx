@@ -5,10 +5,11 @@ import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 
 import { useBrand } from "@/hooks/use-brand";
+import { cn } from "@/lib/utils";
 
 import { useNotificationsModal } from "@/components/notifications-modal-context";
 
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CARD_MINI_CONTENT_CLASS, CARD_ICON_ROW_CLASS, CARD_ICON_CLASS, CARD_SURFACE_LINK_HOVER_CLASS } from "@/components/ui/card";
 
 
 
@@ -146,9 +147,9 @@ export default function ForemanQuickActions({
 
             >
 
-              <Card className="h-full">
+              <Card className={cn("h-full", CARD_SURFACE_LINK_HOVER_CLASS)}>
 
-                <CardContent className="p-4 h-24 flex flex-col relative">
+                <CardContent className={cn(CARD_MINI_CONTENT_CLASS, "relative")}>
 
                   {tile.badge != null && tile.badge > 0 ? (
 
@@ -160,9 +161,9 @@ export default function ForemanQuickActions({
 
                   ) : null}
 
-                  <div className="flex items-center gap-2">
+                  <div className={CARD_ICON_ROW_CLASS}>
 
-                    <Icon className="w-4 h-4 shrink-0" style={iconStyle} />
+                    <Icon className={CARD_ICON_CLASS} style={iconStyle} />
 
                     <span className="text-xs font-medium text-gray-700">{tile.label}</span>
 

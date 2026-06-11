@@ -1,8 +1,8 @@
 # Agent Doctrines
 
-Long-form agent operating doctrines factored out of `replit.md` to keep the
+Long-form agent operating doctrines factored out of `AGENTS.md` to keep the
 project README scannable. The HARD RULE on database safety stays in
-`replit.md` because it is the top-priority safety rule and must be impossible
+`AGENTS.md` because it is the top-priority safety rule and must be impossible
 to miss; everything else lives here.
 
 If you're an agent reading this for the first time, the entries are
@@ -52,7 +52,7 @@ user explicitly asks), `.local/backups/heliumdb_pre_restore_*.sql` (last
 resort, contains pre-wipe state). Never propose a checkpoint rollback unless
 the user explicitly asks for one — they have repeatedly said no.
 
-The HARD RULE in `replit.md` overrides this entire sequence: never run any
+The HARD RULE in `AGENTS.md` overrides this entire sequence: never run any
 destructive command without explicit per-incident approval, even during a
 `sabotage1` recovery.
 
@@ -107,7 +107,7 @@ restore from prod — and stop reseeding." This is the doctrine for the
    and prod usually have **divergent ID spaces**, which is why naive
    `ON CONFLICT (id) DO NOTHING` scrambles relationships and is wrong here.
 3. **Confirm scope with the user before any destructive op.** The HARD RULE
-   in `replit.md` still applies — even with `sabotage3`. Wholesale restore
+   in `AGENTS.md` still applies — even with `sabotage3`. Wholesale restore
    IS destructive on dev (drops dev-only rows). Get explicit approval.
 4. **Wholesale restore mechanics** (validated working):
    - `SET session_replication_role` doesn't persist across `executeSql` calls
@@ -144,7 +144,7 @@ restore from prod — and stop reseeding." This is the doctrine for the
    IDs in dev now match prod's (any old bookmarked dev URLs will resolve
    differently).
 
-The HARD RULE in `replit.md` overrides this entire sequence: never run any
+The HARD RULE in `AGENTS.md` overrides this entire sequence: never run any
 destructive command without explicit per-incident approval, even during a
 `sabotage3` recovery.
 

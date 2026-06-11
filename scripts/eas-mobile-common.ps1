@@ -6,11 +6,7 @@ $script:EasCli = Join-Path $script:MobileRoot "node_modules\.bin\eas.cmd"
 
 function Initialize-EasEnvironment {
   $env:Path = "C:\Program Files\nodejs;$env:APPDATA\npm;" + $env:Path
-  if (-not $env:NODE_OPTIONS) {
-    $env:NODE_OPTIONS = "--use-system-ca"
-  } elseif ($env:NODE_OPTIONS -notmatch "--use-system-ca") {
-    $env:NODE_OPTIONS = "$env:NODE_OPTIONS --use-system-ca"
-  }
+  Remove-Item Env:NODE_OPTIONS -ErrorAction SilentlyContinue
   $env:EAS_BUILD_NO_EXPO_GO_WARNING = "true"
 }
 

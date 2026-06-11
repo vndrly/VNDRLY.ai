@@ -16,6 +16,12 @@ import { useListSiteLocations, getListSiteLocationsQueryKey } from "@workspace/a
 import LiveConnectionPill, { type LiveConnectionStatus } from "@/components/live-connection-pill";
 import { PngPillButton } from "@/components/png-pill-rollover";
 import { useRateLimitGate } from "@/hooks/use-rate-limit-gate";
+import { GeofenceCirclesLayer, type GeofenceSite } from "@/components/map/geofence-circles-layer";
+import {
+  isProblemCrewMember,
+} from "@workspace/map-utils";
+import { Checkbox } from "@/components/ui/checkbox";
+import { RecentTripsCard } from "@/components/map/recent-trips-card";
 
 const LOW_BATTERY_THRESHOLD = 0.2;
 
@@ -376,6 +382,8 @@ export default function CrewMapPage({ portalMode = "default" }: CrewMapPageProps
       return "all";
     }
   });
+  const [problemFilterOnly, setProblemFilterOnly] = useState(false);
+  const [showGeofences, setShowGeofences] = useState(true);
   useEffect(() => {
     try {
       window.localStorage.setItem("vndrly:crew-map:site-filter", siteFilter);
@@ -411,6 +419,42 @@ export default function CrewMapPage({ portalMode = "default" }: CrewMapPageProps
   }, [isForemanPortal]);
   const sites = isForemanPortal ? fieldSites : vendorSites;
   const selectedSiteId = siteFilter === "all" ? null : Number(siteFilter);
+
+  const geofenceSites = useMemo((): GeofenceSite[] => {
+    const raw = (sites as any)?.items ?? sites;
+    if (!Array.isArray(raw)) return [];
+    return raw
+      .filter(
+        (s: any) =>
+          s.latitude != null &&
+          s.longitude != null &&
+          Number.isFinite(Number(s.latitude)) &&
+          Number.isFinite(Number(s.longitude)),
+      )
+      .map((s: any) => ({
+        id: Number(s.id),
+        name: s.name,
+        latitude: Number(s.latitude),
+        longitude: Number(s.longitude),
+        siteRadiusMeters: s.siteRadiusMeters ?? null,
+      }));
+  }, [sites]);
+
+  const displayedLocations = useMemo(() => {
+    if (!problemFilterOnly) return locations;
+    return locations.filter((loc) =>
+      isProblemCrewMember({
+        batteryLevel: loc.batteryLevel,
+        recordedAt: loc.recordedAt,
+        lifecycleState: loc.lifecycleState,
+        siteLatitude: loc.siteLatitude,
+        siteLongitude: loc.siteLongitude,
+        latitude: loc.latitude,
+        longitude: loc.longitude,
+        speedMps: loc.speedMps,
+      }),
+    );
+  }, [locations, problemFilterOnly]);
 
   // Task #710 — per-resource gates. The fetchers below early-return
   // while parked, but we also stash the latest `rateLimited` flag in a
@@ -845,6 +889,25 @@ export default function CrewMapPage({ portalMode = "default" }: CrewMapPageProps
         </div>
       </div>
 
+      <div className="flex flex-wrap items-center gap-4 text-sm">
+        <label className="inline-flex items-center gap-2 cursor-pointer">
+          <Checkbox
+            checked={problemFilterOnly}
+            onCheckedChange={(v) => setProblemFilterOnly(v === true)}
+            data-testid="checkbox-problem-filter"
+          />
+          {t("crewMap.problemFilter", "Needs attention only")}
+        </label>
+        <label className="inline-flex items-center gap-2 cursor-pointer">
+          <Checkbox
+            checked={showGeofences}
+            onCheckedChange={(v) => setShowGeofences(v === true)}
+            data-testid="checkbox-show-geofences"
+          />
+          {t("crewMap.showGeofences", "Show site geofences")}
+        </label>
+      </div>
+
       <Card className="border-dashed">
         <CardContent className="py-3 text-xs text-muted-foreground flex items-start gap-2">
           <Shield className="h-4 w-4 mt-0.5 shrink-0" />
@@ -953,7 +1016,13 @@ export default function CrewMapPage({ portalMode = "default" }: CrewMapPageProps
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                   />
-                  {locations.map((loc) => {
+                  {showGeofences && geofenceSites.length > 0 && (
+                    <GeofenceCirclesLayer
+                      sites={geofenceSites}
+                      highlightSiteId={selectedSiteId}
+                    />
+                  )}
+                  {displayedLocations.map((loc) => {
                     const lowBattery = loc.batteryLevel != null && loc.batteryLevel <= LOW_BATTERY_THRESHOLD;
                     const eta = etaMinutes(
                       loc.latitude,
@@ -1168,13 +1237,13 @@ export default function CrewMapPage({ portalMode = "default" }: CrewMapPageProps
         <div>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base">{t("crewMap.onShiftNow", { count: locations.length })}</CardTitle>
+              <CardTitle className="text-base">{t("crewMap.onShiftNow", { count: displayedLocations.length })}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 max-h-[520px] overflow-y-auto">
-              {locations.length === 0 ? (
+              {displayedLocations.length === 0 ? (
                 <div className="text-sm text-muted-foreground">{t("crewMap.nobodyOnClock")}</div>
               ) : (
-                locations.map((loc) => {
+                displayedLocations.map((loc) => {
                   const lowBattery = loc.batteryLevel != null && loc.batteryLevel <= LOW_BATTERY_THRESHOLD;
                   return (
                   <div
@@ -1224,6 +1293,11 @@ export default function CrewMapPage({ portalMode = "default" }: CrewMapPageProps
               )}
             </CardContent>
           </Card>
+
+          <RecentTripsCard
+            siteLocationId={selectedSiteId}
+            vendorId={user?.role === "vendor" && user.vendorId ? user.vendorId : undefined}
+          />
 
           {!isForemanPortal && visitors.length > 0 && (
             <Card className="mt-4">

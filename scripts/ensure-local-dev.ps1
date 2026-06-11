@@ -4,6 +4,7 @@
 param(
   [switch]$OpenBrowser,
   [switch]$RefreshApi,
+  [switch]$Recover,
   [switch]$Strict
 )
 
@@ -67,14 +68,21 @@ function Wait-ForApiHealth {
 $apiScript = Join-Path $Repo "scripts/start-api-dev.ps1"
 $viteScript = Join-Path $Repo "scripts/start-vite-dev.ps1"
 
+if ($Recover) {
+  Write-Host "Recovering local dev - stopping listeners on :8080 and :5173..."
+  Stop-PortListener -Port 8080
+  Stop-PortListener -Port 5173
+  Start-Sleep -Seconds 2
+}
+
 if (-not (Test-Path "$Repo/artifacts/api-server/dist/index.mjs")) {
   Write-Host "Building API (first run)..."
   Set-Location $Repo
   npm exec --yes pnpm@9.15.9 -- --filter @workspace/api-server run build
 }
 
-$apiUp = Test-PortListening -Port 8080
-$viteUp = Test-PortListening -Port 5173
+$apiUp = if ($Recover) { $false } else { Test-PortListening -Port 8080 }
+$viteUp = if ($Recover) { $false } else { Test-PortListening -Port 5173 }
 $viteStarted = $false
 
 if ($RefreshApi -and $apiUp) {
@@ -117,5 +125,5 @@ Write-Host ""
 Write-Host "Local dev ready: http://localhost:5173/ (API http://localhost:8080/)"
 
 if ($OpenBrowser -or $viteStarted) {
-  Start-Process "http://localhost:5173/"
+  Start-Process 'http://localhost:5173/'
 }

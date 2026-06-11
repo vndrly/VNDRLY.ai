@@ -20,7 +20,7 @@ import {
 
   PILL_LABEL_CLASS,
 
-  PILL_WRAPPER_CLASS,
+  PILL_READONLY_WRAPPER_CLASS,
 
   pillLabelToneClass,
 
@@ -107,10 +107,10 @@ export default function ImagePill({
 
       className={cn(
 
-        PILL_WRAPPER_CLASS,
+        PILL_READONLY_WRAPPER_CLASS,
 
         "min-w-[70px]",
-        !interactive && "pointer-events-none",
+        interactive && "pointer-events-auto",
 
         className,
 

@@ -118,7 +118,7 @@ export default function VisitorEntryPage() {
         <LanguageToggle variant={isDark ? "dark" : "light"} />
       </div>
       <div className="flex-1 flex items-start justify-center px-4 pb-10 relative z-10">
-        <Card className="w-full max-w-md border-2 border-gray-200 shadow-xl">
+        <Card className="w-full max-w-md">
           <CardHeader>
             <div className="flex items-center gap-3 mb-2">
               <img src={vndrlyLogo} alt="VNDRLY" className="h-10 w-10" />

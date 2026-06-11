@@ -743,8 +743,8 @@ router.post("/vendors/:id/merge-into", async (req, res): Promise<void> => {
     }
     const moved = totalMoved(counts);
     const dropped = totalConflictDeleted(counts);
-    // Forwarded-for first hop is the original client when behind the
-    // Replit proxy; fall back to the socket address otherwise.
+    // Forwarded-for first hop is the original client when behind a reverse
+    // proxy; fall back to the socket address otherwise.
     const fwd = req.headers["x-forwarded-for"];
     const ip = (Array.isArray(fwd) ? fwd[0] : fwd?.split(",")[0]?.trim()) ||
       req.socket?.remoteAddress ||

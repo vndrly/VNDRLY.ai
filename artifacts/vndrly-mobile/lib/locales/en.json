@@ -340,6 +340,29 @@
       "failedBody": "Please try again.",
       "recent": "Recent nudges",
       "noMessage": "Status was {{status}}"
+    },
+    "siteVisitSummary": {
+      "title": "Site visit summary",
+      "subtitle": "Route, time on site, and geofence checks for everyone who worked this ticket — for billing and dispute review.",
+      "loading": "Loading site visit summary…",
+      "failed": "Could not load site visit summary.",
+      "onSiteCount": "On site",
+      "totalOnSite": "Total on-site",
+      "travel": "Travel",
+      "routePoints": "Route points",
+      "peopleOnSite": "Everyone on site",
+      "noPeople": "No check-ins recorded for this ticket yet.",
+      "lead": "Lead",
+      "crew": "Crew",
+      "checkInDistance": "{{m}} m from site at check-in",
+      "routeReplay": "Route replay",
+      "checkInPin": "Check-in on map",
+      "enRoute": "En route",
+      "arrived": "Arrived",
+      "checkIn": "Checked in",
+      "checkOut": "Checked out",
+      "minutes": "{{min}} min",
+      "hoursMinutes": "{{hr}}h {{min}}m"
     }
   },
   "language": {

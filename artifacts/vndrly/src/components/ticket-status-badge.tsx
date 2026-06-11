@@ -30,7 +30,7 @@ import {
 
   PILL_STATUS_MIN_WIDTH_CLASS,
 
-  PILL_WRAPPER_CLASS,
+  PILL_READONLY_WRAPPER_CLASS,
 
   pillLabelToneClass,
 
@@ -104,9 +104,7 @@ export default function TicketStatusBadge({
 
       className={cn(
 
-        PILL_WRAPPER_CLASS,
-
-        "pointer-events-none",
+        PILL_READONLY_WRAPPER_CLASS,
 
         compact
 

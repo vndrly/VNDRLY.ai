@@ -23,6 +23,7 @@ import {
 import { SESSION_SECRET, getSessionFromRequest } from "../lib/session";
 import { addMembership } from "../lib/membership-sync";
 import { logger } from "../lib/logger";
+import { getAppOrigin } from "../lib/appOrigin";
 import { ObjectStorageService } from "../lib/objectStorage";
 import { absoluteUploadUrl } from "../lib/uploadUrl";
 import { normalizeVendorName } from "../lib/vendor-match";
@@ -129,7 +130,7 @@ async function ensureProgressRow(args: {
 // /verify-email/:token link. Used during onboarding (account
 // creation) and via the in-wizard "Resend" button. Failures are
 // swallowed to logs because verification is best-effort — the user
-// can still keep onboarding even if SendGrid is down.
+// can still keep onboarding even if outbound email is unavailable.
 // ─────────────────────────────────────────────────────────────────
 async function issueAndEmailVerification(args: {
   userId: number;
@@ -151,35 +152,8 @@ async function issueAndEmailVerification(args: {
     return { tokenIssued: false, emailSent: false };
   }
 
-  const baseUrl =
-    process.env.APP_BASE_URL ||
-    `https://${process.env.REPLIT_DEV_DOMAIN ?? "localhost"}`;
-  const url = `${baseUrl}/api/onboarding/verify-email/${encodeURIComponent(token)}`;
-  const escapeHtml = (s: string) =>
-    s
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#39;");
-  const safeName = escapeHtml(args.displayName);
-  const safeUrl = escapeHtml(url);
-
-  try {
-    const { getUncachableSendGridClient } = await import("../lib/sendgrid");
-    const { client, fromEmail } = await getUncachableSendGridClient();
-    await client.send({
-      to: args.email,
-      from: fromEmail,
-      subject: "Confirm your VNDRLY account",
-      text: `Hi ${args.displayName},\n\nThanks for creating your VNDRLY account. Please confirm your email by visiting:\n\n${url}\n\nThis link expires in 24 hours. If you didn't sign up, you can ignore this email.`,
-      html: `<p>Hi <strong>${safeName}</strong>,</p><p>Thanks for creating your VNDRLY account. Please confirm your email by clicking the button below — this helps us prove you're not a bot and lets you receive notifications.</p><p><a href="${safeUrl}" style="display:inline-block;padding:10px 18px;background:#1d4ed8;color:#fff;border-radius:6px;text-decoration:none">Confirm my email</a></p><p>Or copy this link into your browser:<br/><a href="${safeUrl}">${safeUrl}</a></p><p style="color:#6b7280;font-size:12px">This link expires in 24 hours. If you didn't sign up, you can safely ignore this email.</p>`,
-    });
-    return { tokenIssued: true, emailSent: true };
-  } catch (err) {
-    logger.warn({ err, userId: args.userId }, "verify-email: email send failed");
-    return { tokenIssued: true, emailSent: false };
-  }
+  logger.debug({ userId: args.userId, email: args.email }, "verify-email: outbound email disabled");
+  return { tokenIssued: true, emailSent: false };
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -716,7 +690,7 @@ async function issueAndEmailFieldInvite(employeeId: number): Promise<{ token: st
     defaultStep: "personal-info",
   });
 
-  const baseUrl = process.env.APP_BASE_URL || `https://${process.env.REPLIT_DEV_DOMAIN ?? "localhost"}`;
+  const baseUrl = getAppOrigin();
   const url = `${baseUrl}/onboarding/field/${token}`;
 
   const [employee] = await db
@@ -727,20 +701,7 @@ async function issueAndEmailFieldInvite(employeeId: number): Promise<{ token: st
 
   let emailSent = false;
   if (employee?.email) {
-    try {
-      const { getUncachableSendGridClient } = await import("../lib/sendgrid");
-      const { client, fromEmail } = await getUncachableSendGridClient();
-      await client.send({
-        to: employee.email,
-        from: fromEmail,
-        subject: "Finish setting up your VNDRLY account",
-        text: `Hi ${employee.firstName},\n\nYour employer invited you to join VNDRLY. Tap the link below to set your password and complete a quick 3-step setup:\n\n${url}\n\nThe link expires once you've completed setup.`,
-        html: `<p>Hi ${employee.firstName},</p><p>Your employer invited you to join VNDRLY. Tap the link below to set your password and complete a quick 3-step setup:</p><p><a href="${url}">${url}</a></p><p>The link expires once you've completed setup.</p>`,
-      });
-      emailSent = true;
-    } catch (err) {
-      logger.warn({ err, employeeId }, "Failed to email field onboarding invite");
-    }
+    logger.debug({ employeeId, email: employee.email }, "field onboarding invite email disabled");
   }
 
   return { token, url, emailSent };
@@ -1014,10 +975,9 @@ router.post("/onboarding/:orgType/:orgId/complete", async (req: Request, res: Re
       return;
     }
 
-    // Issue + email the onboarding invite outside the transaction so a
-    // SendGrid hiccup doesn't roll back canonical writes. Best-effort:
-    // helper logs+swallows email failures; admin can re-issue from the
-    // employees screen.
+    // Issue the onboarding invite outside the transaction so an email
+    // failure doesn't roll back canonical writes. Best-effort: admin can
+    // re-issue from the employees screen when outbound email is enabled.
     if (firstEmployeeId !== null && firstEmployeeNeedsInvite) {
       try {
         await issueAndEmailFieldInvite(firstEmployeeId);
@@ -1048,7 +1008,7 @@ async function issueAndEmailPartnerContactInvite(contactId: number): Promise<{ t
     .set({ inviteToken: token, inviteSentAt: new Date(), acceptedAt: null })
     .where(eq(partnerContactsTable.id, contactId));
 
-  const baseUrl = process.env.APP_BASE_URL || `https://${process.env.REPLIT_DEV_DOMAIN ?? "localhost"}`;
+  const baseUrl = getAppOrigin();
   const url = `${baseUrl}/onboarding/partner-contact/${token}`;
 
   const [contact] = await db
@@ -1059,27 +1019,7 @@ async function issueAndEmailPartnerContactInvite(contactId: number): Promise<{ t
 
   let emailSent = false;
   if (contact?.email) {
-    try {
-      const [partner] = await db
-        .select({ name: partnersTable.name })
-        .from(partnersTable)
-        .where(eq(partnersTable.id, contact.partnerId))
-        .limit(1);
-      const orgName = partner?.name ?? "your organization";
-      const firstName = contact.name.split(" ")[0] ?? contact.name;
-      const { getUncachableSendGridClient } = await import("../lib/sendgrid");
-      const { client, fromEmail } = await getUncachableSendGridClient();
-      await client.send({
-        to: contact.email,
-        from: fromEmail,
-        subject: `Set up your VNDRLY login for ${orgName}`,
-        text: `Hi ${firstName},\n\n${orgName} invited you to manage your VNDRLY account. Tap the link below to set your password:\n\n${url}\n\nThe link expires once you've completed setup.`,
-        html: `<p>Hi ${firstName},</p><p>${orgName} invited you to manage your VNDRLY account. Tap the link below to set your password:</p><p><a href="${url}">${url}</a></p><p>The link expires once you've completed setup.</p>`,
-      });
-      emailSent = true;
-    } catch (err) {
-      logger.warn({ err, contactId }, "Failed to email partner-contact onboarding invite");
-    }
+    logger.debug({ contactId, email: contact.email }, "partner-contact invite email disabled");
   }
 
   return { token, url, emailSent };
@@ -1672,47 +1612,11 @@ router.post("/onboarding/refer", async (req: Request, res: Response): Promise<vo
     return;
   }
 
-  const baseUrl =
-    process.env.APP_BASE_URL ||
-    `https://${process.env.REPLIT_DEV_DOMAIN ?? "localhost"}`;
-  const url = `${baseUrl}/signup`;
-
-  const referrerName =
-    (await db
-      .select({ displayName: usersTable.displayName })
-      .from(usersTable)
-      .where(eq(usersTable.id, session.userId!))
-      .limit(1))[0]?.displayName ?? "A teammate";
-
-  // Escape user-controlled and URL strings before HTML interpolation
-  // to prevent HTML/phishing injection in outbound invite emails.
-  const escapeHtml = (s: string) =>
-    s
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#39;");
-  const safeName = escapeHtml(referrerName);
-  const safeUrl = escapeHtml(url);
-
-  try {
-    const { getUncachableSendGridClient } = await import("../lib/sendgrid");
-    const { client, fromEmail } = await getUncachableSendGridClient();
-    await client.send({
-      to: email,
-      from: fromEmail,
-      subject: "You're invited to join VNDRLY",
-      text: `Hi,\n\n${referrerName} invited you to join VNDRLY — a field-operations platform for oil & gas partners and vendors.\n\nGet started here:\n${url}\n\nYou'll be able to choose whether to onboard your organization as a vendor or as a partner.`,
-      html: `<p>Hi,</p><p><strong>${safeName}</strong> invited you to join VNDRLY — a field-operations platform for oil &amp; gas partners and vendors.</p><p>Get started here: <a href="${safeUrl}">${safeUrl}</a></p><p>You'll be able to choose whether to onboard your organization as a vendor or as a partner.</p>`,
-    });
-    res.json({ ok: true, sentTo: email });
-  } catch (err) {
-    logger.warn({ err, email, referrerId: session.userId }, "refer-to-vndrly: email send failed");
-    res
-      .status(503)
-      .json({ error: "Email service unavailable", code: "onboarding.refer_send_failed" });
-  }
+  logger.debug({ email, referrerId: session.userId }, "refer-to-vndrly: outbound email disabled");
+  res.status(503).json({
+    error: "Outbound email is not enabled",
+    code: "onboarding.refer_send_failed",
+  });
 });
 
 export default router;

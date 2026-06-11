@@ -45,6 +45,7 @@ import {
   type PushWarning,
 } from "@workspace/api-zod";
 import { logger } from "./logger";
+import { getAppOrigin } from "./appOrigin";
 import {
   sendReconciliationWeeklyRecapEmail,
   type AccountingDigestRecipient,
@@ -120,11 +121,7 @@ export function buildReconciliationRecapUrl(
   start: Date,
   end: Date,
 ): string {
-  const origin =
-    process.env.PUBLIC_APP_URL ||
-    (process.env.REPLIT_DEV_DOMAIN
-      ? `https://${process.env.REPLIT_DEV_DOMAIN}`
-      : "http://localhost");
+  const origin = getAppOrigin();
   // Param names match `parseAuditFiltersFromUrl` on the Reports page:
   // `from`/`to` (YYYY-MM-DD) seed the audit-log date range and
   // `onlyWarnings=1` pre-toggles the "show only syncs with warnings"

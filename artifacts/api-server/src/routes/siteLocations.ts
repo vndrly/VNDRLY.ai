@@ -6,6 +6,7 @@ import { getSessionFromRequest, type SessionPayload } from "../lib/session";
 import { notifyUsers } from "./notifications";
 import { publishTicketUnblocked } from "../lib/ticket-events";
 import { logger } from "../lib/logger";
+import { getAppOrigin } from "../lib/appOrigin";
 import {
   CreateSiteLocationBody,
   GetSiteLocationParams,
@@ -555,8 +556,7 @@ router.get("/site-locations/:id/qr-code", async (req, res): Promise<void> => {
   }
   if (!(await verifySiteReadAccess(session, req, res, site.partnerId, site.id))) return;
 
-  const host = process.env.REPLIT_DEV_DOMAIN || "localhost";
-  const portalUrl = `https://${host}/portal/${site.siteCode}`;
+  const portalUrl = `${getAppOrigin()}/portal/${site.siteCode}`;
   const qrCodeUrl = await QRCode.toDataURL(portalUrl, { width: 300, margin: 2 });
 
   sendResponse(res, GetSiteLocationQrCodeResponse, {

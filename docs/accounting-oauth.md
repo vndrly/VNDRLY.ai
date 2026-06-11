@@ -41,10 +41,9 @@ In the OpenAccountant admin console:
      https://<your-vndrly-host>/api/accounting/oa/callback
      ```
 
-     For Replit deployments use the published domain
-     (`$REPLIT_DOMAINS`) — for example
-     `https://vndrly.example.com/api/accounting/oa/callback`. The path
-     `/api/accounting/oa/callback` is fixed; only the host changes per
+     For production use `https://vndrly.ai/api/accounting/oa/callback`.
+     For local dev use `http://localhost:8080/api/accounting/oa/callback`.
+     The path `/api/accounting/oa/callback` is fixed; only the host changes per
      environment.
    - **Scopes** — request at minimum `accounting.write` (the default
      scope VNDRLY asks for). If you scope down further, set
@@ -60,8 +59,8 @@ and use the matching redirect URI.
 
 ## 2. Set the environment variables
 
-Set the following on the API server via the Replit secrets pane (or
-your deployment's environment configuration). The first three are
+Set the following on the API server via `.env.local` / production
+`.env.production` (written by `scripts/godaddy-deploy.mjs`). The first three are
 **required**; the last two are optional and have safe defaults.
 
 | Variable | Required | Description |

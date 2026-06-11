@@ -1,11 +1,11 @@
 # Keeps Windows from sleeping while this window is open, and restarts local
-# dev (API :8080 + web :5173) if either port goes down.
+# dev (API :8080 + web :5173) if either port goes down or stops responding.
 #
-# Run once after boot / crash / sleep:
-#   pnpm wake          — start servers + open browser
-#   pnpm dev:watch     — same + keep PC awake + auto-restart if servers die
+# Run once after boot (or install autostart — see install-local-dev-autostart.ps1):
+#   pnpm dev:watch     — keep PC awake + auto-restart if servers die
+#   pnpm wake          — one-shot start + browser (no watch)
 #
-# Close this window to allow normal sleep again.
+# Close this window to allow normal sleep again (unless autostart is installed).
 
 $ErrorActionPreference = "Stop"
 
@@ -36,20 +36,26 @@ function Test-DevHealthy {
   if (-not (Test-PortListening -Port 8080)) { return $false }
   if (-not (Test-PortListening -Port 5173)) { return $false }
   try {
-    $resp = Invoke-WebRequest -Uri "http://localhost:8080/api/health" -UseBasicParsing -TimeoutSec 3
-    return $resp.StatusCode -eq 200
+    $api = Invoke-WebRequest -Uri "http://localhost:8080/api/health" -UseBasicParsing -TimeoutSec 5
+    if ($api.StatusCode -ne 200) { return $false }
   } catch {
     return $false
   }
+  try {
+    $web = Invoke-WebRequest -Uri "http://localhost:5173/" -UseBasicParsing -TimeoutSec 5
+    if ($web.StatusCode -lt 200 -or $web.StatusCode -ge 400) { return $false }
+  } catch {
+    return $false
+  }
+  return $true
 }
 
 Write-Host ""
 Write-Host "VNDRLY dev watch — PC will not sleep while this window stays open."
 Write-Host "Servers: http://localhost:5173/  (API http://localhost:8080/)"
-Write-Host "Close this window to allow sleep again."
+Write-Host "Auto-restarts hung/offline servers every 45s. Close window to allow sleep."
 Write-Host ""
 
-# First boot: ensure servers are up (no browser — use pnpm wake for that).
 & $ensureScript
 
 $checkSeconds = 45
@@ -58,8 +64,8 @@ while ($true) {
 
   if (-not (Test-DevHealthy)) {
     $stamp = Get-Date -Format "HH:mm:ss"
-    Write-Host "[$stamp] Dev servers offline — restarting..."
-    & $ensureScript
+    Write-Host "[$stamp] Dev servers offline or hung — recovering..."
+    & $ensureScript -Recover
   }
 
   Start-Sleep -Seconds $checkSeconds

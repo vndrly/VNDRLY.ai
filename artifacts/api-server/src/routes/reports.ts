@@ -53,6 +53,7 @@ import {
 import { sendResponse } from "../lib/typed-response";
 import { getSessionFromRequest as getSession, requireAdmin } from "../lib/session";
 import { logger } from "../lib/logger";
+import { getAppOrigin } from "../lib/appOrigin";
 import { resolvePeriod, periodQuerySchema, formatPeriod, type Period } from "../lib/reports/period";
 import { agingForVendor, agingForPartner } from "../lib/reports/aging";
 import {
@@ -4400,12 +4401,7 @@ async function loadVendorAdminEmailRecipients(
  *  reads `?auditId=<n>` and auto-opens the matching "Sync details" dialog.
  *  Falls back to the dev origin when there is no canonical app URL. */
 function buildAuditDetailUrl(auditLogId: number): string {
-  const origin =
-    process.env.PUBLIC_APP_URL ||
-    (process.env.REPLIT_DEV_DOMAIN
-      ? `https://${process.env.REPLIT_DEV_DOMAIN}`
-      : "http://localhost");
-  return `${origin.replace(/\/+$/, "")}/reports?auditId=${auditLogId}`;
+  return `${getAppOrigin()}/reports?auditId=${auditLogId}`;
 }
 
 /** Build the secondary deep link the failure-digest email uses for its
@@ -4416,12 +4412,7 @@ function buildAuditDetailUrl(auditLogId: number): string {
  *  click instead of having to flip the switch themselves after opening
  *  the per-row deep link. */
 function buildAuditWarningsUrl(): string {
-  const origin =
-    process.env.PUBLIC_APP_URL ||
-    (process.env.REPLIT_DEV_DOMAIN
-      ? `https://${process.env.REPLIT_DEV_DOMAIN}`
-      : "http://localhost");
-  return `${origin.replace(/\/+$/, "")}/reports?onlyWarnings=1`;
+  return `${getAppOrigin()}/reports?onlyWarnings=1`;
 }
 
 /** Fire-and-forget the accounting push failure digest email. Honours the

@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
+import { useNotificationsModal } from "@/components/notifications-modal-context";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { notificationsApi, type NotificationPreferences } from "@/lib/notifications-api";
 import { Switch } from "@/components/ui/switch";
@@ -87,6 +88,7 @@ const CATEGORY_KEYS: {
 
 export default function NotificationPreferencesPage() {
   const { t } = useTranslation();
+  const notificationsModal = useNotificationsModal();
   const qc = useQueryClient();
   const { toast } = useToast();
   // Task #48 — browser-pop-up alerts opt-in. Stored per-browser
@@ -122,14 +124,15 @@ export default function NotificationPreferencesPage() {
   return (
     <div className="max-w-2xl mx-auto p-6">
       <div className="flex items-start gap-4 mb-6">
-        <Link
-          href="/notifications"
-          className="group inline-flex items-center shrink-0 mt-1"
+        <button
+          type="button"
+          className="group inline-flex shrink-0 items-center mt-1"
           aria-label="Back"
           data-testid="button-back"
+          onClick={() => notificationsModal?.openNotifications()}
         >
           <SphereBackButton size={32} />
-        </Link>
+        </button>
         <div>
           <h1 className="text-2xl font-semibold mb-1">{t("notifications.prefs.title")}</h1>
           <p className="text-sm text-muted-foreground">

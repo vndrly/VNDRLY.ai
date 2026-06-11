@@ -19,14 +19,15 @@ import {
   getListTicketsQueryKey,
 } from "@workspace/api-client-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { Card, CardContent, CardHeader, CardTitle, CARD_ICON_CLASS, CARD_ICON_ROW_CLASS, CARD_INNER_TILE_CLICKABLE_CLASS, CARD_MINI_CONTENT_CLASS, CARD_SURFACE_LINK_HOVER_CLASS, CARD_TITLE_ICON_CLASS } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import ImagePill from "@/components/image-pill";
 import TicketLifecyclePill from "@/components/ticket-lifecycle-pill";
 import TicketStatusBadge from "@/components/ticket-status-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-import { Handshake, Users, MapPin, FileText, Clock, CheckCircle2, AlertTriangle, Flame, BarChart3, ChevronUp, ChevronDown, Wallet, ArrowRight, Repeat2, Send, CalendarDays, TimerReset, UserCheck, RotateCcw, Landmark, ShieldAlert, Hourglass } from "lucide-react";
+import { Handshake, Users, MapPin, FileText, Clock, CheckCircle2, AlertTriangle, Flame, BarChart3, ChevronUp, ChevronDown, Wallet, ArrowRight, Repeat2, Send, CalendarDays, TimerReset, UserCheck, RotateCcw, Landmark, ShieldAlert, Hourglass, Droplet } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import RedButton from "@/components/red-button";
@@ -740,26 +741,17 @@ export default function Dashboard() {
       )}
 
       {isAdmin && <AssistantMetricsCard />}
-      {isAdmin && <RateLimitBudgetsCard />}
-      {isAdmin && <RateLimitTripsCard />}
-      {isAdmin && (
-        <ReassignmentsTile
-          loading={reassignmentsLoading}
-          data={reassignments ?? null}
-          accentColor={accentColor}
-        />
-      )}
 
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
         {statCards.map((stat) => (
           <Card key={stat.key} data-testid={`card-stat-${stat.key}`}>
-            <CardContent className="p-4 h-24 flex flex-col">
+            <CardContent className={CARD_MINI_CONTENT_CLASS}>
               {summaryLoading ? (
                 <Skeleton className="h-10 w-full" />
               ) : (
                 <>
-                  <div className="flex items-center gap-2">
-                    <stat.icon className="w-4 h-4" style={iconStyle} />
+                  <div className={CARD_ICON_ROW_CLASS}>
+                    <stat.icon className={CARD_ICON_CLASS} style={iconStyle} />
                     <span className="text-xs text-gray-700 font-medium">{stat.label}</span>
                   </div>
                   <p
@@ -778,9 +770,9 @@ export default function Dashboard() {
       <HotlistSection />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="bg-white text-gray-900 dark:bg-white dark:text-gray-900" data-testid="card-ticket-stats">
+        <Card data-testid="card-ticket-stats">
           <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2"><BarChart3 className="w-5 h-5" style={iconStyle} />{t("dashboard.trackingStatus")}</CardTitle>
+            <CardTitle className="text-lg flex items-center gap-2"><BarChart3 className={CARD_TITLE_ICON_CLASS} style={iconStyle} />{t("dashboard.trackingStatus")}</CardTitle>
           </CardHeader>
           <CardContent>
             {statsLoading ? (
@@ -830,9 +822,9 @@ export default function Dashboard() {
       />
 
       <div className="grid grid-cols-1 gap-6">
-        <Card className="bg-white text-gray-900 dark:bg-white dark:text-gray-900" data-testid="card-recent-activity">
+        <Card data-testid="card-recent-activity">
           <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2"><Clock className="w-5 h-5" style={iconStyle} />{t("dashboard.recentActivity")}</CardTitle>
+            <CardTitle className="text-lg flex items-center gap-2"><Clock className={CARD_TITLE_ICON_CLASS} style={iconStyle} />{t("dashboard.recentActivity")}</CardTitle>
           </CardHeader>
           <CardContent>
             {activityLoading ? (
@@ -849,15 +841,14 @@ export default function Dashboard() {
                       key={item.id}
                       href={item.ticketId ? `/tickets/${item.ticketId}` : "#"}
                       data-recent-activity-row
-                      className={`group flex items-start gap-3 p-2 rounded-md transition-colors cursor-pointer ${
-                        item.needsAttention
-                          ? "bg-amber-50 hover:bg-amber-100 border border-amber-200"
-                          : "bg-muted/50 hover:bg-muted"
-                      }`}
+                      className={cn(
+                        CARD_INNER_TILE_CLICKABLE_CLASS,
+                        "group flex items-start gap-3",
+                      )}
                       data-testid={`activity-item-${item.id}`}
                     >
                       <div className="flex-1 min-w-0">
-                        <p className="recent-activity-title text-sm font-medium truncate transition-[color,text-shadow]">
+                        <p className="hotlist-job-title text-sm font-medium truncate transition-[color,text-shadow]">
                           {item.description}
                         </p>
                         <div className="flex items-center gap-2 flex-wrap">
@@ -931,6 +922,16 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {isAdmin && <RateLimitBudgetsCard />}
+      {isAdmin && <RateLimitTripsCard />}
+      {isAdmin && (
+        <ReassignmentsTile
+          loading={reassignmentsLoading}
+          data={reassignments ?? null}
+          accentColor={accentColor}
+        />
+      )}
     </div>
   );
 }
@@ -948,9 +949,10 @@ function DashboardAnalyticsCards({
     <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3" data-testid="dashboard-analytics-prototypes">
       {cards.map((card) => {
         const Icon = card.icon;
+        const clickable = Boolean(card.href) && !loading;
         const body = (
           <Card
-            className="h-full bg-white text-gray-900 transition-shadow hover:shadow-md dark:bg-white dark:text-gray-900"
+            className={cn("h-full", clickable && CARD_SURFACE_LINK_HOVER_CLASS)}
             data-testid={`card-analytics-${card.key}`}
           >
             <CardContent className="flex h-full min-h-[128px] flex-col p-4">
@@ -962,11 +964,11 @@ function DashboardAnalyticsCards({
                 </div>
               ) : (
                 <>
-                  <div className="flex items-center justify-between gap-3">
+                  <div className={CARD_ICON_ROW_CLASS}>
+                    <Icon className={CARD_ICON_CLASS} style={{ color: accentColor }} />
                     <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
                       {card.title}
                     </p>
-                    <Icon className="h-4 w-4 shrink-0" style={{ color: accentColor }} />
                   </div>
                   <p className="mt-3 truncate text-xl font-bold text-gray-950">
                     {card.value}
@@ -1010,10 +1012,10 @@ function SiteLocationSnapshotCard({
   const maxActive = Math.max(1, ...rows.map((row) => row.activeCount));
 
   return (
-    <Card className="bg-white text-gray-900 dark:bg-white dark:text-gray-900" data-testid="card-site-location-snapshot">
+    <Card data-testid="card-site-location-snapshot">
       <CardHeader>
         <CardTitle className="text-lg flex items-center gap-2">
-          <MapPin className="w-5 h-5" style={{ color: accentColor }} />
+          <MapPin className={CARD_TITLE_ICON_CLASS} style={{ color: accentColor }} />
           {t("dashboard.siteSnapshot.title", { defaultValue: "Site Location Snapshot" })}
         </CardTitle>
       </CardHeader>
@@ -1032,27 +1034,20 @@ function SiteLocationSnapshotCard({
           <div className="space-y-3">
             {rows.map((row) => {
               const width = Math.max(8, Math.round((row.activeCount / maxActive) * 100));
-              const needsAttention = row.pendingReviewCount > 0 || row.awaitingPaymentCount > 0;
               return (
                 <Link
                   key={row.siteId}
                   href={`/site-locations/${row.siteId}`}
-                  className="group block rounded-md border border-gray-200 px-3 py-2 transition-colors hover:bg-muted/50"
+                  className={cn(CARD_INNER_TILE_CLICKABLE_CLASS, "group block")}
                   data-testid={`link-site-snapshot-${row.siteId}`}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="truncate text-sm font-semibold transition-colors group-hover:[color:var(--brand-primary)]">
+                      <div className={CARD_ICON_ROW_CLASS}>
+                        <Droplet className={CARD_ICON_CLASS} style={{ color: accentColor }} />
+                        <p className="hotlist-job-title truncate text-sm font-semibold transition-[color,text-shadow]">
                           {row.siteName}
                         </p>
-                        {needsAttention && (
-                          <AlertTriangle
-                            className="h-3.5 w-3.5 shrink-0"
-                            style={{ color: accentColor }}
-                            aria-label={t("dashboard.siteSnapshot.needsAttention", { defaultValue: "Needs attention" })}
-                          />
-                        )}
                       </div>
                       <div className="mt-2 h-2 overflow-hidden rounded-full bg-gray-100">
                         <div className="relative h-full rounded-full overflow-hidden" style={{ width: `${width}%` }}>

@@ -123,7 +123,7 @@ const adminUser: AuthUser = {
   preferredLanguage: "en",
   activeMembershipId: 3,
   availableMemberships: [
-    { id: 3, role: "admin", entityType: "admin", entityId: 0, entityName: "Replit" },
+    { id: 3, role: "admin", entityType: "admin", entityId: 0, entityName: "VNDRLY" },
   ],
   requiresContextChoice: false,
 };
