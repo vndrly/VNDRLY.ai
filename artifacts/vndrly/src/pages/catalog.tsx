@@ -1,12 +1,11 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  useListWorkTypes,
   useListVendors,
-  getListWorkTypesQueryKey,
   getGetVendorSiteAfesQueryOptions,
 } from "@workspace/api-client-react";
-import { useQueries, useQueryClient } from "@tanstack/react-query";
+import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,7 +13,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogLogoHeader } from "@/components/ui/dialog";
-import { ShoppingCart, Plus, Pencil, Trash2, ArrowUp, ArrowDown, ArrowUpDown, Download, Upload } from "lucide-react";
+import { ShoppingCart, Plus, Pencil, Trash2, ArrowUp, ArrowDown, ArrowUpDown, Download, Upload, Activity } from "lucide-react";
+import { CARD_TITLE_ICON_CLASS } from "@/components/ui/card";
+import { useBrand } from "@/hooks/use-brand";
 import { PngPillButton } from "@/components/png-pill-rollover";
 import ContentPaneBackLink from "@/components/content-pane-back-link";
 import { PillColorLayer } from "@/components/png-pill-chrome";
@@ -152,14 +153,35 @@ interface WorkType {
   description: string | null;
   estimatedDuration: string | null;
   estimatedPrice: string | null;
+  requiredCertifications: string[] | null;
+  blockingCertifications: string[] | null;
   vendors: { id: number; name: string }[];
 }
+
+function parseCertList(raw: string): string[] | null {
+  const items = raw
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return items.length > 0 ? items : null;
+}
+
+const PLATFORM_WORK_TYPES_KEY = ["work-types", "platform"] as const;
 
 export default function Catalog() {
   const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { data: rawWorkTypes, isLoading } = useListWorkTypes();
+  const brand = useBrand();
+  const iconStyle = { color: brand.isOrgBranded ? brand.primary : "#f59e0b" };
+  const { data: rawWorkTypes, isLoading } = useQuery({
+    queryKey: PLATFORM_WORK_TYPES_KEY,
+    queryFn: async () => {
+      const res = await apiFetch("/api/work-types?scope=platform");
+      if (!res.ok) throw new Error(`status ${res.status}`);
+      return res.json() as Promise<WorkType[]>;
+    },
+  });
   const { data: allVendors } = useListVendors();
   const [workTypes, setWorkTypes] = useState<WorkType[]>([]);
   const [addOpen, setAddOpen] = useState(false);
@@ -179,6 +201,8 @@ export default function Catalog() {
     vendorIds: [] as number[],
     vendorSiteAfes: {} as Record<number, Record<number, string>>,
     siteLocationIds: [] as number[],
+    requiredCertifications: "",
+    blockingCertifications: "",
   });
   // Snapshot at modal open used to send only changed rows on save.
   const [initialVendorSiteAfes, setInitialVendorSiteAfes] = useState<
@@ -295,7 +319,8 @@ export default function Catalog() {
     return m;
   }, [workTypes, uniqueVendorIds, vendorAfeQueries]);
 
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: getListWorkTypesQueryKey() });
+  const invalidate = () =>
+    queryClient.invalidateQueries({ queryKey: PLATFORM_WORK_TYPES_KEY });
 
   const resetForm = () => {
     setForm({
@@ -307,6 +332,8 @@ export default function Catalog() {
       vendorIds: [],
       vendorSiteAfes: {},
       siteLocationIds: [],
+      requiredCertifications: "",
+      blockingCertifications: "",
     });
     setInitialVendorSiteAfes({});
     setSiteLocOptions([]);
@@ -453,6 +480,8 @@ export default function Catalog() {
           description: form.description || null,
           estimatedDuration: form.estimatedDuration || null,
           estimatedPrice: form.estimatedPrice || null,
+          requiredCertifications: parseCertList(form.requiredCertifications),
+          blockingCertifications: parseCertList(form.blockingCertifications),
           vendorIds: form.vendorIds,
         }),
       });
@@ -501,6 +530,8 @@ export default function Catalog() {
           description: form.description || null,
           estimatedDuration: form.estimatedDuration || null,
           estimatedPrice: form.estimatedPrice || null,
+          requiredCertifications: parseCertList(form.requiredCertifications),
+          blockingCertifications: parseCertList(form.blockingCertifications),
           vendorIds: form.vendorIds,
         }),
       });
@@ -598,6 +629,8 @@ export default function Catalog() {
       vendorIds: wt.vendors?.map((v) => v.id) || [],
       vendorSiteAfes,
       siteLocationIds: siteLocs.map((s) => s.id),
+      requiredCertifications: (wt.requiredCertifications ?? []).join(", "),
+      blockingCertifications: (wt.blockingCertifications ?? []).join(", "),
     });
     setInitialVendorSiteAfes(snapshot);
     setSiteLocOptions(siteLocs);
@@ -690,11 +723,11 @@ export default function Catalog() {
       invalidate();
       toast({
         title: t("catalog.importDoneTitle"),
-        description: t("catalog.importDoneSummary", {
+        description: `${t("catalog.importDoneSummary", {
           created: summary.created,
           updated: summary.updated,
           errors: summary.errors.length,
-        }),
+        })} ${t("catalog.importVendorsNotified")}`,
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : t("catalog.importFailed");
@@ -786,6 +819,28 @@ export default function Catalog() {
       <div>
         <Label>{t("catalog.description")}</Label>
         <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder={t("catalog.descriptionPlaceholder")} data-testid={`${prefix}-input-description`} />
+      </div>
+      <div>
+        <Label>{t("catalog.requiredCertifications")}</Label>
+        <Input
+          value={form.requiredCertifications}
+          onChange={(e) =>
+            setForm({ ...form, requiredCertifications: e.target.value })
+          }
+          placeholder={t("catalog.certificationsPlaceholder")}
+          data-testid={`${prefix}-input-required-certs`}
+        />
+      </div>
+      <div>
+        <Label>{t("catalog.blockingCertifications")}</Label>
+        <Input
+          value={form.blockingCertifications}
+          onChange={(e) =>
+            setForm({ ...form, blockingCertifications: e.target.value })
+          }
+          placeholder={t("catalog.certificationsPlaceholder")}
+          data-testid={`${prefix}-input-blocking-certs`}
+        />
       </div>
       <div>
         <Label>{t("catalog.siteLocations")}</Label>
@@ -912,11 +967,19 @@ export default function Catalog() {
         <div className="flex items-center gap-3">
           <ContentPaneBackLink href="/" />
           <div>
-          <h1 className="text-2xl font-bold tracking-tight" data-testid="text-page-title">{t("catalog.title")}</h1>
+          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2" data-testid="text-page-title">
+            <ShoppingCart className={CARD_TITLE_ICON_CLASS} style={iconStyle} />
+            {t("catalog.title")}
+          </h1>
           <p className="text-muted-foreground text-sm mt-1">{t("catalog.subtitle")}</p>
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
+          <Link href="/catalog-health">
+            <PngPillButton color="blue" className="px-3" data-testid="button-catalog-health">
+              <Activity className="w-4 h-4" />{t("catalog.healthLink")}
+            </PngPillButton>
+          </Link>
           <PngPillButton color="blue" className="px-3" onClick={handleExport} data-testid="button-export-csv">
             <Download className="w-4 h-4" />{t("catalog.exportCsv")}
           </PngPillButton>

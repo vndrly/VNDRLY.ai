@@ -7,7 +7,9 @@ import { Link } from "wouter";
 import SphereBackButton from "@/components/sphere-back-button";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useBrand } from "@/hooks/use-brand";
+import { Card, CardContent, CardHeader, CardTitle, CARD_INNER_TILE_HOVER_CLASS, CARD_TITLE_ICON_CLASS } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertTriangle, BatteryLow, Clock, Gauge, MapPin, Navigation, RefreshCw, Shield, UserCheck } from "lucide-react";
@@ -266,6 +268,8 @@ export default function CrewMapPage({ portalMode = "default" }: CrewMapPageProps
   const isForemanPortal = portalMode === "foreman";
   const { t } = useTranslation();
   const { user } = useAuth();
+  const brand = useBrand();
+  const iconStyle = { color: brand.isOrgBranded ? brand.primary : "#f59e0b" };
   const [locations, setLocations] = useState<LiveLocation[]>([]);
   const [visitors, setVisitors] = useState<VisitorRow[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -1237,7 +1241,10 @@ export default function CrewMapPage({ portalMode = "default" }: CrewMapPageProps
         <div>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base">{t("crewMap.onShiftNow", { count: displayedLocations.length })}</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className={CARD_TITLE_ICON_CLASS} style={iconStyle} />
+                {t("crewMap.onShiftNow", { count: displayedLocations.length })}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 max-h-[520px] overflow-y-auto">
               {displayedLocations.length === 0 ? (
@@ -1248,7 +1255,11 @@ export default function CrewMapPage({ portalMode = "default" }: CrewMapPageProps
                   return (
                   <div
                     key={loc.employeeId}
-                    className={`border rounded p-2 text-sm${flashingEmployeeIds.has(loc.employeeId) ? " lifecycle-flash" : ""}`}
+                    className={cn(
+                      CARD_INNER_TILE_HOVER_CLASS,
+                      "text-sm",
+                      flashingEmployeeIds.has(loc.employeeId) && "lifecycle-flash",
+                    )}
                     data-testid={`crew-row-${loc.employeeId}`}
                   >
                     <div className="font-medium flex items-center gap-1.5">

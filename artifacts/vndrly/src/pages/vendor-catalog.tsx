@@ -421,6 +421,17 @@ export default function VendorCatalog() {
           {vendorRecord?.name ? `${vendorRecord.name} Catalog` : t("vendorCatalog.title")}
         </h1>
       </div>
+      {missingPriceCount > 0 ? (
+        <p
+          className="text-sm text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3"
+          data-testid="banner-set-rates"
+        >
+          {t("vendorCatalog.onboardingRatesBanner")}{" "}
+          <span className="font-medium">
+            {t("vendorCatalog.missingPriceHelp")}
+          </span>
+        </p>
+      ) : null}
       <Card>
         <CardHeader>
           <p className="text-xs text-muted-foreground">

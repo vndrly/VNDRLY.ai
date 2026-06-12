@@ -10,6 +10,7 @@
     "audit:1099-overrides": "tsx ./src/audit-1099-category-overrides.ts",
     "aggregate:language-eval": "tsx ./src/aggregate-language-eval.ts",
     "lint:i18n": "tsx ./src/lint-i18n.ts",
+    "apply:canonical-passwords": "tsx ./src/apply-canonical-passwords.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {

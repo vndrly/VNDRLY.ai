@@ -2708,8 +2708,10 @@ export default function Tickets() {
                                 <TableCell>{tk.fieldEmployeeName || "-"}</TableCell>
                                 <TableCell>
                                   <div className="flex flex-col items-start gap-1">
-                                    <TicketStatusBadge status={tk.status} updatedAt={tk.updatedAt} />
-                                    <TicketLifecyclePill state={tk.lifecycleState} idSuffix={tk.id} />
+                                    <div className="flex items-center gap-2">
+                                      <TicketStatusBadge status={tk.status} updatedAt={tk.updatedAt} />
+                                      <TicketLifecyclePill state={tk.lifecycleState} idSuffix={tk.id} />
+                                    </div>
                                   </div>
                                 </TableCell>
                                 <TableCell className="text-muted-foreground text-sm">{new Date(tk.createdAt).toLocaleString()}</TableCell>
@@ -2724,7 +2726,25 @@ export default function Tickets() {
               })()}
             </div>
           ) : filteredTickets.length > 0 ? (
-            <Table>
+            <Table className="table-fixed [&_td]:px-1.5 [&_th]:px-1.5">
+              <colgroup>
+                {isAdmin && <col style={{ width: "28px" }} />}
+                <col style={{ width: "28px" }} />
+                <col style={{ width: "28px" }} />
+                <col style={{ width: "9%" }} />
+                <col style={{ width: isPartner && awaitingPayment ? "11%" : "14%" }} />
+                <col style={{ width: "9%" }} />
+                {!isVendor && <col style={{ width: "8%" }} />}
+                <col style={{ width: "9%" }} />
+                <col style={{ width: isPartner && awaitingPayment ? "18%" : "23%" }} />
+                <col style={{ width: "6%" }} />
+                {isPartner && awaitingPayment && (
+                  <>
+                    <col style={{ width: "7%" }} />
+                    <col style={{ width: "5%" }} />
+                  </>
+                )}
+              </colgroup>
               <TableHeader>
                 <TableRow>
                   {/* Task #1029 — admin-only multi-select column for the
@@ -2870,10 +2890,10 @@ export default function Tickets() {
                             );
                           })()}
                         </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Link href={`/tickets/${tk.id}`} className="font-medium text-gray-700 hover:underline hover:text-[var(--brand-primary)]" data-testid={`link-ticket-${tk.id}`}>
-                              <div className="flex items-center gap-2"><FileText className="w-4 h-4" style={{ color: brand.primary }} />#{String(tk.id).padStart(8, '0')}</div>
+                        <TableCell className="max-w-0">
+                          <div className="flex items-center gap-1 min-w-0">
+                            <Link href={`/tickets/${tk.id}`} className="font-medium text-gray-700 hover:underline hover:text-[var(--brand-primary)] min-w-0 shrink" data-testid={`link-ticket-${tk.id}`}>
+                              <div className="flex items-center gap-1 whitespace-nowrap"><FileText className="w-3.5 h-3.5 shrink-0" style={{ color: brand.primary }} />#{String(tk.id).padStart(8, '0')}</div>
                             </Link>
                             {hasGpsData && (
                               <span title={t("tickets.gpsDataRecorded", { defaultValue: "GPS data recorded" })}>
@@ -2890,8 +2910,8 @@ export default function Tickets() {
                                 detail page (its comments fetch runs
                                 markAllSeen) and the list re-fetches. */}
                             {tk.unreadCommentCount > 0 && (
-                              <CountBadgePill
-                                icon={MessageCircle}
+                              <span
+                                className="inline-flex items-center gap-1 text-xs text-muted-foreground font-medium"
                                 title={t("tickets.unreadComments", {
                                   defaultValue: "{{count}} unread comment(s)",
                                   count: tk.unreadCommentCount,
@@ -2902,32 +2922,39 @@ export default function Tickets() {
                                 })}
                                 data-testid={`badge-unread-comments-${tk.id}`}
                               >
-                                {tk.unreadCommentCount}
-                              </CountBadgePill>
+                                <MessageCircle className="w-3.5 h-3.5 shrink-0" />
+                                <span>{tk.unreadCommentCount}</span>
+                              </span>
                             )}
                           </div>
                         </TableCell>
-                        <TableCell>{tk.siteName || "-"}</TableCell>
-                        <TableCell>{tk.workTypeName || "-"}</TableCell>
-                        {!isVendor && <TableCell>{tk.vendorName || "-"}</TableCell>}
-                        <TableCell>{tk.fieldEmployeeName || "-"}</TableCell>
+                        <TableCell className="max-w-0">
+                          <span className="block truncate" title={tk.siteName || undefined}>{tk.siteName || "-"}</span>
+                        </TableCell>
+                        <TableCell className="max-w-0">
+                          <span className="block truncate" title={tk.workTypeName || undefined}>{tk.workTypeName || "-"}</span>
+                        </TableCell>
+                        {!isVendor && (
+                          <TableCell className="max-w-0">
+                            <span className="block truncate" title={tk.vendorName || undefined}>{tk.vendorName || "-"}</span>
+                          </TableCell>
+                        )}
+                        <TableCell className="max-w-0">
+                          <span className="block truncate" title={tk.fieldEmployeeName || undefined}>{tk.fieldEmployeeName || "-"}</span>
+                        </TableCell>
                         <TableCell>
-                          <div className="flex items-start gap-2">
-                            <div className="flex flex-col items-start gap-1">
-                            <TicketStatusBadge status={tk.status} updatedAt={tk.updatedAt} data-testid={`badge-status-${tk.id}`} />
-                            {/* Lifecycle pill (secondary status) and the
-                                admin-only Reverse / void payment pill
-                                (tertiary status, Task #863) share one
-                                row so the destructive action sits to the
-                                right of the lifecycle badge with a small
-                                gap, instead of stacking under it. */}
-                            <div className="flex items-center gap-2">
-                              <TicketLifecyclePill state={tk.lifecycleState} idSuffix={tk.id} />
+                          <div className="flex items-start gap-1 min-w-0">
+                            <div className="flex flex-col items-start gap-1 min-w-0">
+                              <div className="flex items-center gap-1 flex-wrap">
+                                <TicketStatusBadge status={tk.status} updatedAt={tk.updatedAt} compact data-testid={`badge-status-${tk.id}`} />
+                                <TicketLifecyclePill state={tk.lifecycleState} idSuffix={tk.id} />
+                              </div>
                               {isAdmin && tk.status === "funds_dispersed" && (
                                 <span onClick={(e) => e.stopPropagation()}>
                                   <PngPillButton
                                     type="button"
                                     color="red"
+                                    className="max-w-full"
                                     onClick={() => {
                                       setReverseFundsReason("");
                                       setReverseFundsTicketId(tk.id);
@@ -2939,7 +2966,6 @@ export default function Tickets() {
                                   </PngPillButton>
                                 </span>
                               )}
-                            </div>
                             </div>
                             {tk.unlockedAt && (
                               <Link
@@ -2960,7 +2986,7 @@ export default function Tickets() {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className="text-muted-foreground text-sm">{new Date(tk.createdAt).toLocaleDateString()}</TableCell>
+                        <TableCell className="text-muted-foreground text-xs whitespace-nowrap">{new Date(tk.createdAt).toLocaleDateString()}</TableCell>
                         {/* Task #865 — partner AP queue: per-row
                             "Approved on" date and integer "Days waiting"
                             (now − approvedAt, floored). Falls back to

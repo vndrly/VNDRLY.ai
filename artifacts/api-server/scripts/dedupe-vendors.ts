@@ -22,7 +22,8 @@
  * the loser's row instead of moving it (so we never violate the constraint).
  *
  * The actual FK rewrite + partial-conflict preflight logic lives in
- * `src/lib/vendor-merge.ts` so the admin "Merge into another vendor…"
+ * `src/lib/vendor-merge.ts` (the admin UI/API merge flow was removed;
+ * this script is the supported path for engineer-run dedupe).
  * UI shares the exact same code path. This script is the bulk batch
  * driver for the known legacy demo duplicates.
  *

@@ -155,7 +155,8 @@
       "notYetHelp": "Ticket starts as Pending Arrival. Tap En Route on the ticket when you head out.",
       "noSites": "No approved sites for your vendor yet.",
       "siteUnavailableRefreshed": "That site is no longer available. We refreshed your list — please pick a different one.",
-      "workTypeUnavailableRefreshed": "That work type is no longer approved for this site. We refreshed your list — please pick a different one.",
+      "workTypeUnavailableRefreshed": "Your company is no longer assigned to that service at this site. We refreshed the list — pick another, or ask your vendor admin to update site assignments.",
+      "workTypeContactAdmin": "If you expected this service, contact your vendor admin to add it to your company's catalog or site assignment.",
       "missingInfoTitle": "Missing info",
       "missingInfoBody": "Pick a site and at least one work type.",
       "workTypesLoading": "Work types are still loading for this site. Wait a moment and try again.",
@@ -362,7 +363,8 @@
       "checkIn": "Checked in",
       "checkOut": "Checked out",
       "minutes": "{{min}} min",
-      "hoursMinutes": "{{hr}}h {{min}}m"
+      "hoursMinutes": "{{hr}}h {{min}}m",
+      "directionsToSite": "Get directions to site"
     }
   },
   "language": {
@@ -1203,6 +1205,14 @@
     "chooseLibrary": "Choose from library",
     "couldNotUpload": "Could not upload photo"
   },
+  "services": {
+    "title": "Company services",
+    "readOnlyHelp": "Services your company offers in VNDRLY. Contact your vendor admin to change selections or rates.",
+    "loadError": "Could not load company services.",
+    "empty": "No services are configured for your company yet.",
+    "uncategorized": "Uncategorized",
+    "noPrice": "No price set"
+  },
   "profile": {
     "language": "Language",
     "locationSharing": "Location sharing",
@@ -1215,6 +1225,7 @@
     "editProfile": "Edit Profile",
     "complianceCard": "Compliance Card",
     "manageEmployees": "Manage employees",
+    "companyServices": "Company services",
     "crewChanges": "My Crew Changes",
     "couldNotUpdate": "Could not update",
     "languageSavedToast": "Saved — {{language}}",

@@ -1,9 +1,13 @@
 import { pgTable, text, serial, timestamp, integer, doublePrecision, date } from "drizzle-orm/pg-core";
 import { partnersTable } from "./partners";
+import { workTypesTable } from "./workTypes";
 
 export const hotlistJobsTable = pgTable("hotlist_jobs", {
   id: serial("id").primaryKey(),
   partnerId: integer("partner_id").notNull().references(() => partnersTable.id, { onDelete: "cascade" }),
+  workTypeId: integer("work_type_id").references(() => workTypesTable.id, {
+    onDelete: "set null",
+  }),
   title: text("title").notNull(),
   description: text("description"),
   locationAddress: text("location_address").notNull(),

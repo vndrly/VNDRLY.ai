@@ -431,6 +431,21 @@ export default function ProfileScreen() {
         </LayeredPillButton>
       ) : null}
 
+      {user?.vendorId ? (
+        <LayeredPillButton
+          onPress={() => router.push("/services")}
+          height={40}
+          style={styles.actionBtn}
+          testID="button-company-services"
+        >
+          <Feather name="briefcase" size={16} color="#ffffff" style={styles.pillIconShadow} />
+          <Text style={[styles.actionText, styles.pillTextShadow]}>
+            {t("profile.companyServices")}
+          </Text>
+          <Feather name="chevron-right" size={18} color="#ffffff" style={[styles.actionChevron, styles.pillIconShadow]} />
+        </LayeredPillButton>
+      ) : null}
+
       <LayeredPillButton
         onPress={() => router.push("/compliance")}
         height={40}

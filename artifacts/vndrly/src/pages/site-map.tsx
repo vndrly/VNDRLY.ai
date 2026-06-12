@@ -31,7 +31,7 @@ import LiveConnectionPill, { type LiveConnectionStatus } from "@/components/live
 import { GeofenceCirclesLayer, type GeofenceSite } from "@/components/map/geofence-circles-layer";
 import { resolveSiteMapRadiusMeters } from "@workspace/map-utils";
 import { Checkbox } from "@/components/ui/checkbox";
-import { RecentTripsCard } from "@/components/map/recent-trips-card";
+import { RecentTicketsCard } from "@/components/map/recent-tickets-card";
 import {
   useListSiteLocations,
   getListSiteLocationsQueryKey,
@@ -898,7 +898,7 @@ export default function SiteMapPage() {
             </CardContent>
           </Card>
 
-          <RecentTripsCard
+          <RecentTicketsCard
             siteLocationId={viewMode === "single" ? selectedSiteId : null}
           />
         </div>

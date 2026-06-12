@@ -33,6 +33,7 @@ import { useQueryClient, useQuery, useMutation } from "@tanstack/react-query";
 import { Link, useLocation, useSearch } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
+import RemovePill from "@/components/remove-pill";
 import StatusBadge from "@/components/status-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -120,6 +121,7 @@ type WorkTypeCatalogItem = {
   // work-type name so admins can see at a glance how much vendor
   // coverage exists before expanding the row.
   vendorCount: number;
+  partnerScoped?: boolean;
 };
 
 type VendorOffer = {
@@ -324,7 +326,7 @@ function CatalogRowVendorOffers({
   );
 }
 
-function PartnerProductServiceCatalogCard({
+export function PartnerProductServiceCatalogCard({
   partnerId,
   canManage,
   canAddToCatalog,
@@ -392,7 +394,7 @@ function PartnerProductServiceCatalogCard({
         estimatedPrice = n.toFixed(2);
       }
 
-      const res = await fetch(`${API_BASE}/api/work-types`, {
+      const res = await fetch(`${API_BASE}/api/partners/${partnerId}/work-types`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -474,20 +476,12 @@ function PartnerProductServiceCatalogCard({
     queryKey: summaryQueryKey,
     queryFn: async () => {
       const res = await fetch(
-        `${API_BASE}/api/partners/${partnerId}/work-type-afes`,
+        `${API_BASE}/api/partners/${partnerId}/work-type-approval-summary`,
         { credentials: "include" },
       );
-      if (!res.ok) return { approved: 0 };
-      // The count comes from the per-row vendor-offers endpoint. To
-      // avoid N+1 here we just compute "approved per work type" lazily
-      // — when a row is expanded its child fetch updates the cache.
-      // Until expansion happens we report 0 known approvals. This is
-      // intentionally conservative; an explicit summary endpoint can
-      // be added later if the count needs to be accurate before any
-      // expansion.
-      return { approved: 0 };
+      if (!res.ok) return { approved: 0, total: 0 };
+      return res.json() as Promise<{ approved: number; total: number }>;
     },
-    staleTime: Infinity,
   });
 
   // Task #1108: persist the AFE catalog filter in the URL so leaving and
@@ -578,6 +572,9 @@ function PartnerProductServiceCatalogCard({
         <p className="text-sm text-muted-foreground">
           {t("partners.productServiceCatalog.description")}
         </p>
+        <p className="text-xs text-muted-foreground border-l-2 border-[var(--brand-primary)] pl-3">
+          {t("partners.productServiceCatalog.approvalLayersHelp")}
+        </p>
         <div className="flex items-center gap-3 flex-wrap">
           <div className="relative inline-flex items-center h-[23px] w-[180px] rounded-full bg-white border border-black/10">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500 pointer-events-none" />
@@ -651,8 +648,15 @@ function PartnerProductServiceCatalogCard({
                           {it.category || "-"}
                         </TableCell>
                         <TableCell className="font-medium align-top">
-                          <div className="flex items-center gap-2">
-                            <span>{it.name}</span>
+                          <div className="flex items-center justify-between gap-3 w-full">
+                            <span className="min-w-0 pr-2 flex items-center gap-2 flex-wrap">
+                              {it.name}
+                              {it.partnerScoped ? (
+                                <span className="text-[10px] uppercase tracking-wide font-semibold text-[var(--brand-primary)]">
+                                  {t("partners.productServiceCatalog.partnerScopedBadge")}
+                                </span>
+                              ) : null}
+                            </span>
                             <CountBadgePill
                               color="blue"
                               rest={it.vendorCount === 0}
@@ -2303,13 +2307,11 @@ export default function PartnerDetail({ id }: { id: number }) {
                         ))}
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
                       {canEditPartner && (
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <PillButton color="image" className="min-w-[28px] px-0" data-testid={`button-delete-contact-${c.id}`}>
-                              <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive transition-colors" />
-                            </PillButton>
+                            <RemovePill data-testid={`button-delete-contact-${c.id}`} />
                           </AlertDialogTrigger>
                           <AlertDialogContent onClick={(e) => e.stopPropagation()}>
                             <AlertDialogHeader>
@@ -2402,9 +2404,16 @@ export default function PartnerDetail({ id }: { id: number }) {
         partnerId={id}
         canManage={
           authUser?.role === "admin" ||
-          (authUser?.role === "partner" && authUser.partnerId === id)
+          (authUser?.availableMemberships ?? []).some(
+            (m) => m.orgType === "partner" && m.orgId === id && m.role === "admin",
+          )
         }
-        canAddToCatalog={isAdmin}
+        canAddToCatalog={
+          authUser?.role === "admin" ||
+          (authUser?.availableMemberships ?? []).some(
+            (m) => m.orgType === "partner" && m.orgId === id && m.role === "admin",
+          )
+        }
       />
 
       <PartnerVendorApprovalsCard
@@ -2451,9 +2460,7 @@ export default function PartnerDetail({ id }: { id: number }) {
                     <p className="text-sm whitespace-pre-wrap">{note.content}</p>
                     <p className="text-xs text-muted-foreground mt-1">{new Date(note.createdAt).toLocaleString()}</p>
                   </div>
-                  <PillButton color="image" className="min-w-[28px] px-0" onClick={() => handleDeleteNote(note.id)} data-testid={`button-delete-note-${note.id}`}>
-                    <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive transition-colors" />
-                  </PillButton>
+                  <RemovePill onClick={() => handleDeleteNote(note.id)} data-testid={`button-delete-note-${note.id}`} />
                 </div>
               ))}
             </div>

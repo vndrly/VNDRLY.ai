@@ -1,7 +1,8 @@
 /**
- * Shared vendor-merge primitives used by both the legacy
- * `scripts/dedupe-vendors.ts` batch job and the admin-facing
- * `POST /vendors/:id/merge-into` HTTP endpoint.
+ * Shared vendor-merge primitives used by the engineer-run
+ * `scripts/dedupe-vendors.ts` batch job. The admin HTTP merge
+ * endpoints were removed from production; this lib remains for
+ * offline dedupe if needed.
  *
  * The merge re-points every vendor-scoped FK row from a "loser" vendor
  * onto a chosen "survivor" vendor, dropping rows whose unique-scope

@@ -1,10 +1,13 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
 import { useTranslation } from "react-i18next";
+import { formatTicketTrackingNumber } from "@workspace/db/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import { TicketRouteMap } from "@/components/ticket-route-map";
-import { MapPin, Route, Clock, Users, Navigation, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { buildGpsTimelineCsv } from "@/lib/gps-timeline-csv";
+import { MapPin, Route, Clock, Users, Navigation, AlertTriangle, CheckCircle2, FileText } from "lucide-react";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -147,12 +150,46 @@ export function TicketSiteVisitSummaryCard({ ticketId }: { ticketId: number }) {
 
   const lead = data?.people.find((p) => p.role === "lead");
 
+  const handleGpsExport = useCallback(() => {
+    if (!data?.route.length || typeof window === "undefined") return;
+    const csv = buildGpsTimelineCsv(
+      data.route.map((p) => ({
+        latitude: p.latitude,
+        longitude: p.longitude,
+        recordedAt: p.recordedAt,
+      })),
+    );
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${formatTicketTrackingNumber(ticketId)}-gps-timeline.csv`;
+    a.rel = "noopener";
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+  }, [data?.route, ticketId]);
+
   return (
     <Card data-testid="card-site-visit-summary">
       <CardHeader className="pb-2">
         <CardTitle className="flex flex-wrap items-center gap-2 text-base">
           <MapPin className="w-5 h-5" style={{ color: "var(--brand-primary, #f59e0b)" }} />
           {t("ticketDetail.siteVisitSummary.title")}
+          <PillButton
+            type="button"
+            color="image"
+            className="ml-auto h-7 px-2 text-xs"
+            onClick={handleGpsExport}
+            disabled={!data?.route.length}
+            data-testid="button-gps-timeline-export"
+            title={t("ticketDetail.gpsTimelineExportTitle")}
+          >
+            <FileText className="w-3.5 h-3.5 mr-1" />
+            {t("ticketDetail.gpsTimelineExport")}
+          </PillButton>
         </CardTitle>
         <p className="text-sm text-muted-foreground">{t("ticketDetail.siteVisitSummary.subtitle")}</p>
       </CardHeader>

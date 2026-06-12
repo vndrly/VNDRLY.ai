@@ -140,6 +140,33 @@ export default function SiteLocationDetail({ id }: { id: number }) {
   const cancelDirectAssignment = useCancelDirectAssignment();
   const [expandOpen, setExpandOpen] = useState(false);
   const [expandVendorId, setExpandVendorId] = useState<string>("");
+  const apiBase = (import.meta.env.BASE_URL || "/").replace(/\/$/, "");
+  const expandTargetVendorId =
+    isVendor && user?.vendorId
+      ? user.vendorId
+      : expandVendorId
+        ? parseInt(expandVendorId, 10)
+        : null;
+  const { data: vendorCatalogIds } = useQuery({
+    queryKey: ["vendor-catalog-selected-ids", expandTargetVendorId],
+    queryFn: async () => {
+      const res = await fetch(
+        `${apiBase}/api/vendors/${expandTargetVendorId}/work-types`,
+        { credentials: "include" },
+      );
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = (await res.json()) as {
+        items: { id: number; selected: boolean }[];
+      };
+      return new Set(
+        (json.items ?? []).filter((it) => it.selected).map((it) => it.id),
+      );
+    },
+    enabled:
+      expandOpen &&
+      expandTargetVendorId != null &&
+      Number.isFinite(expandTargetVendorId),
+  });
   const [expandChecked, setExpandChecked] = useState<Set<number>>(new Set());
   const [expandInitial, setExpandInitial] = useState<Set<number>>(new Set());
   const [expandSaving, setExpandSaving] = useState(false);
@@ -1055,15 +1082,15 @@ export default function SiteLocationDetail({ id }: { id: number }) {
           <div className="flex items-center gap-2">
             <Dialog open={expandOpen} onOpenChange={setExpandOpen}>
               <DialogTrigger asChild>
-                <BrandPillButton tone="blue" onClick={handleOpenExpand} data-testid="button-expand-catalog"><ListChecks className="w-4 h-4" />{t("siteLocations.expandCatalog")}</BrandPillButton>
+                <BrandPillButton tone="blue" onClick={handleOpenExpand} data-testid="button-expand-catalog"><ListChecks className="w-4 h-4" />{t("siteLocations.addSiteAssignments")}</BrandPillButton>
               </DialogTrigger>
               <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
                 <DialogHeader>
-                  <DialogTitle>{t("siteLocations.expandCatalog")}</DialogTitle>
+                  <DialogTitle>{t("siteLocations.addSiteAssignments")}</DialogTitle>
                   <p className="text-sm text-muted-foreground">
                     {isVendor
-                      ? t("siteLocations.expandCatalogVendorIntro")
-                      : t("siteLocations.expandCatalogAdminIntro")}
+                      ? t("siteLocations.addSiteAssignmentsVendorIntro")
+                      : t("siteLocations.addSiteAssignmentsAdminIntro")}
                   </p>
                 </DialogHeader>
                 {!isVendor && (
@@ -1083,8 +1110,12 @@ export default function SiteLocationDetail({ id }: { id: number }) {
                     const existingIds = new Set(
                       (site.assignments ?? []).filter((a: any) => a.vendorId === targetVendorId).map((a: any) => a.workTypeId),
                     );
+                    const eligibleWorkTypes = (workTypes ?? []).filter(
+                      (wt) =>
+                        !targetVendorId || vendorCatalogIds?.has(wt.id),
+                    );
                     const grouped: Record<string, typeof workTypes> = {};
-                    (workTypes ?? []).forEach((wt) => {
+                    eligibleWorkTypes.forEach((wt) => {
                       const cat = wt.category || "Other";
                       if (!grouped[cat]) grouped[cat] = [];
                       grouped[cat]!.push(wt);
@@ -1092,6 +1123,19 @@ export default function SiteLocationDetail({ id }: { id: number }) {
                     const categories = Object.keys(grouped).sort();
                     if (!targetVendorId && !isVendor) {
                       return <p className="text-sm text-muted-foreground py-4 text-center">{t("siteLocations.selectVendorPrompt")}</p>;
+                    }
+                    if (targetVendorId && vendorCatalogIds && eligibleWorkTypes.length === 0) {
+                      return (
+                        <p className="text-sm text-muted-foreground py-4 text-center">
+                          {t("siteLocations.noVendorCatalogServices")}{" "}
+                          <Link
+                            href={`/vendor-catalog${isVendor ? "" : `?vendorId=${targetVendorId}`}`}
+                            className="text-[var(--brand-primary)] hover:underline"
+                          >
+                            {t("siteLocations.manageVendorServices")}
+                          </Link>
+                        </p>
+                      );
                     }
                     return categories.map((cat) => (
                       <div key={cat}>

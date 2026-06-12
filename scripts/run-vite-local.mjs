@@ -10,10 +10,27 @@ import { fileURLToPath } from "node:url";
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const webDir = path.resolve(repoRoot, "artifacts/vndrly");
 
-const child = spawn(
-  "pnpm",
-  ["exec", "vite", "--config", "vite.config.ts", "--host", "0.0.0.0"],
-  { cwd: webDir, stdio: "inherit", shell: true },
-);
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
-child.on("exit", (code) => process.exit(code ?? 1));
+async function runOnce() {
+  return new Promise((resolve) => {
+    const child = spawn(
+      "pnpm",
+      ["exec", "vite", "--config", "vite.config.ts", "--host", "0.0.0.0"],
+      { cwd: webDir, stdio: "inherit", shell: true },
+    );
+    child.on("exit", (code) => resolve(code ?? 1));
+  });
+}
+
+// Restart automatically if Vite exits unexpectedly.
+while (true) {
+  const code = await runOnce();
+  if (code === 0) {
+    process.exit(0);
+  }
+  console.error(`[vndrly-web] Vite exited with code ${code}; restarting in 3s...`);
+  await sleep(3000);
+}

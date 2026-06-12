@@ -1,9 +1,21 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { Link, useLocation } from "wouter";
+import { Link } from "wouter";
+import {
+  useListPartners,
+  useListVendors,
+} from "@workspace/api-client-react";
 import SphereBackButton from "@/components/sphere-back-button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CARD_ICON_CLASS,
+  CARD_ICON_ROW_CLASS,
+  CARD_TITLE_ICON_CLASS,
+} from "@/components/ui/card";
 import ImagePill, { type ImagePillColor } from "@/components/image-pill";
 import {
   PngPillButton,
@@ -26,8 +38,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Printer, Receipt } from "lucide-react";
+import {
+  BadgePercent,
+  CircleDollarSign,
+  FileText,
+  Printer,
+  Receipt,
+  Scale,
+  ScrollText,
+  SlidersHorizontal,
+} from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useBrand } from "@/hooks/use-brand";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -144,8 +166,16 @@ type CounterpartyOption = { id: number; name: string };
 export default function StatementPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const [, navigate] = useLocation();
+  const brand = useBrand();
+  const iconStyle = { color: brand.isOrgBranded ? brand.primary : "#f59e0b" };
+  const isAdmin = user?.role === "admin";
   const initial = useMemo(() => readQuery(), []);
+  const { data: vendors } = useListVendors({
+    query: { enabled: isAdmin },
+  });
+  const { data: partners } = useListPartners({
+    query: { enabled: isAdmin },
+  });
 
   const defaultRole: "vendor" | "partner" =
     user?.role === "partner" ? "partner" : "vendor";
@@ -167,6 +197,15 @@ export default function StatementPage() {
   const [scope, setScope] = useState<"open" | "all">(initial.scope);
   const [from, setFrom] = useState(initial.from);
   const [to, setTo] = useState(initial.to);
+
+  const partyOptions = useMemo(() => {
+    const list = role === "vendor" ? (vendors ?? []) : (partners ?? []);
+    return [...list].sort((a, b) =>
+      (a.name ?? "").localeCompare(b.name ?? "", undefined, {
+        sensitivity: "base",
+      }),
+    );
+  }, [role, vendors, partners]);
 
   // Keep URL in sync so the page is shareable / printable.
   useEffect(() => {
@@ -252,9 +291,6 @@ export default function StatementPage() {
     enabled: !!partyId,
   });
 
-  // Locked role-id when scoped user.
-  const canSwitchRole = user?.role === "admin";
-
   return (
     <div className="p-6 space-y-6 print:p-0">
       <div className="flex items-center justify-between flex-wrap gap-3 print:hidden">
@@ -279,17 +315,25 @@ export default function StatementPage() {
 
       <Card className="print:shadow-none print:border-0">
         <CardHeader>
-          <CardTitle className="text-base print:hidden">
+          <CardTitle className="text-base print:hidden flex items-center gap-2">
+            <SlidersHorizontal
+              className={CARD_TITLE_ICON_CLASS}
+              style={iconStyle}
+            />
             {t("statement.filters")}
           </CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-3 print:hidden">
-          {canSwitchRole && (
+        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-3 print:hidden">
+          {isAdmin && (
             <div>
               <Label>{t("statement.role")}</Label>
               <Select
                 value={role}
-                onValueChange={(v) => setRole(v as "vendor" | "partner")}
+                onValueChange={(v) => {
+                  setRole(v as "vendor" | "partner");
+                  setPartyId(null);
+                  setCounterpartyId(null);
+                }}
               >
                 <SelectTrigger data-testid="select-statement-role">
                   <SelectValue />
@@ -305,65 +349,39 @@ export default function StatementPage() {
               </Select>
             </div>
           )}
-          {canSwitchRole && (
+          {isAdmin && (
             <div>
-              <Label>{t("statement.partyId")}</Label>
-              <Input
-                type="number"
-                value={partyId ?? ""}
-                onChange={(e) =>
-                  setPartyId(e.target.value ? Number(e.target.value) : null)
-                }
-                data-testid="input-statement-party-id"
-              />
+              <Label>
+                {role === "vendor"
+                  ? t("statement.roles.vendor")
+                  : t("statement.roles.partner")}
+              </Label>
+              <Select
+                value={partyId != null ? String(partyId) : ""}
+                onValueChange={(v) => {
+                  setPartyId(Number(v));
+                  setCounterpartyId(null);
+                }}
+              >
+                <SelectTrigger data-testid="select-statement-party">
+                  <SelectValue
+                    placeholder={
+                      role === "vendor"
+                        ? t("statement.selectPartyVendor")
+                        : t("statement.selectPartyPartner")
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {partyOptions.map((p) => (
+                    <SelectItem key={p.id} value={String(p.id)}>
+                      {p.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           )}
-          <div>
-            <Label>
-              {role === "vendor"
-                ? t("statement.counterparty.partner")
-                : t("statement.counterparty.vendor")}
-            </Label>
-            <Select
-              value={counterpartyId ? String(counterpartyId) : "all"}
-              onValueChange={(v) =>
-                setCounterpartyId(v === "all" ? null : Number(v))
-              }
-            >
-              <SelectTrigger data-testid="select-statement-counterparty">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">
-                  {t("statement.counterparty.all")}
-                </SelectItem>
-                {counterpartyOptions.map((c) => (
-                  <SelectItem key={c.id} value={String(c.id)}>
-                    {c.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>{t("statement.scope.label")}</Label>
-            <Select
-              value={scope}
-              onValueChange={(v) => setScope(v as "open" | "all")}
-            >
-              <SelectTrigger data-testid="select-statement-scope">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="open">
-                  {t("statement.scope.open")}
-                </SelectItem>
-                <SelectItem value="all">
-                  {t("statement.scope.all")}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
           <div>
             <Label>{t("statement.from")}</Label>
             <Input
@@ -381,6 +399,34 @@ export default function StatementPage() {
               onChange={(e) => setTo(e.target.value)}
               data-testid="input-statement-to"
             />
+          </div>
+          <div>
+            <Label>
+              {role === "vendor"
+                ? t("statement.counterparty.partner")
+                : t("statement.counterparty.vendor")}
+            </Label>
+            <Select
+              value={counterpartyId ? String(counterpartyId) : "all"}
+              onValueChange={(v) =>
+                setCounterpartyId(v === "all" ? null : Number(v))
+              }
+              disabled={!partyId}
+            >
+              <SelectTrigger data-testid="select-statement-counterparty">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">
+                  {t("statement.counterparty.all")}
+                </SelectItem>
+                {counterpartyOptions.map((c) => (
+                  <SelectItem key={c.id} value={String(c.id)}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
@@ -409,7 +455,11 @@ export default function StatementPage() {
         <>
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">
+              <CardTitle className="text-base flex items-center gap-2">
+                <ScrollText
+                  className={CARD_TITLE_ICON_CLASS}
+                  style={iconStyle}
+                />
                 {data.party?.name ?? t("statement.unknownParty")} ·{" "}
                 {formatDate(data.periodStart)} –{" "}
                 {formatDate(data.periodEnd)}
@@ -417,19 +467,28 @@ export default function StatementPage() {
             </CardHeader>
             <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div>
-                <div className="text-muted-foreground">
-                  {t("statement.totals.invoiced")}
+                <div className={CARD_ICON_ROW_CLASS}>
+                  <FileText className={CARD_ICON_CLASS} style={iconStyle} />
+                  <div className="text-muted-foreground">
+                    {t("statement.totals.invoiced")}
+                  </div>
                 </div>
-                <div className="font-bold text-lg tabular-nums">
+                <div className="font-bold text-lg tabular-nums mt-1">
                   {formatMoney(data.totals.invoiced)}
                 </div>
               </div>
               <div>
-                <div className="text-muted-foreground">
-                  {t("statement.totals.paid")}
+                <div className={CARD_ICON_ROW_CLASS}>
+                  <CircleDollarSign
+                    className={CARD_ICON_CLASS}
+                    style={iconStyle}
+                  />
+                  <div className="text-muted-foreground">
+                    {t("statement.totals.paid")}
+                  </div>
                 </div>
                 <div
-                  className={`font-bold text-lg tabular-nums ${
+                  className={`font-bold text-lg tabular-nums mt-1 ${
                     Number(data.totals.paid) > 0 ? "text-[#15803D]" : ""
                   }`}
                 >
@@ -437,11 +496,14 @@ export default function StatementPage() {
                 </div>
               </div>
               <div>
-                <div className="text-muted-foreground">
-                  {t("statement.totals.credited")}
+                <div className={CARD_ICON_ROW_CLASS}>
+                  <BadgePercent className={CARD_ICON_CLASS} style={iconStyle} />
+                  <div className="text-muted-foreground">
+                    {t("statement.totals.credited")}
+                  </div>
                 </div>
                 <div
-                  className={`font-bold text-lg tabular-nums ${
+                  className={`font-bold text-lg tabular-nums mt-1 ${
                     Number(data.totals.credited) > 0 ? "text-[#3260CD]" : ""
                   }`}
                 >
@@ -449,11 +511,14 @@ export default function StatementPage() {
                 </div>
               </div>
               <div>
-                <div className="text-muted-foreground">
-                  {t("statement.totals.outstanding")}
+                <div className={CARD_ICON_ROW_CLASS}>
+                  <Scale className={CARD_ICON_CLASS} style={iconStyle} />
+                  <div className="text-muted-foreground">
+                    {t("statement.totals.outstanding")}
+                  </div>
                 </div>
                 <div
-                  className={`font-bold text-lg tabular-nums ${
+                  className={`font-bold text-lg tabular-nums mt-1 ${
                     Number(data.totals.outstanding) > 0
                       ? "text-[#DC2626]"
                       : "text-[#15803D]"
@@ -467,6 +532,12 @@ export default function StatementPage() {
           </Card>
 
           <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Receipt className={CARD_TITLE_ICON_CLASS} style={iconStyle} />
+                {t("statement.invoices")}
+              </CardTitle>
+            </CardHeader>
             <CardContent className="p-0">
               <Table>
                 <TableHeader>

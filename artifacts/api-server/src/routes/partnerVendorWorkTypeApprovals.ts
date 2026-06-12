@@ -13,6 +13,7 @@ import {
   workTypesTable,
   vendorWorkTypesTable,
   partnerVendorWorkTypeApprovalsTable,
+  userOrgMembershipsTable,
 } from "@workspace/db";
 import { getSessionFromRequest } from "../lib/session";
 
@@ -46,11 +47,28 @@ function canSeePartner(req: Request, partnerId: number): boolean {
   return false;
 }
 
-function canManagePartner(req: Request, partnerId: number): boolean {
-  // Same gate as canSeePartner today; kept distinct so the rules can
-  // diverge later (e.g. allow read for vendor portal but only write
-  // for admin / partner-self).
-  return canSeePartner(req, partnerId);
+async function canManagePartner(
+  req: Request,
+  partnerId: number,
+): Promise<boolean> {
+  const session = getSessionFromRequest(req);
+  if (!session?.userId) return false;
+  if (session.role === "admin") return true;
+  if (session.role !== "partner" || session.partnerId !== partnerId) {
+    return false;
+  }
+  const [row] = await db
+    .select({ role: userOrgMembershipsTable.role })
+    .from(userOrgMembershipsTable)
+    .where(
+      and(
+        eq(userOrgMembershipsTable.userId, session.userId),
+        eq(userOrgMembershipsTable.orgType, "partner"),
+        eq(userOrgMembershipsTable.partnerId, partnerId),
+      ),
+    )
+    .limit(1);
+  return row?.role === "admin";
 }
 
 router.get(
@@ -141,7 +159,7 @@ router.post(
       res.status(400).json({ error: "Invalid id" });
       return;
     }
-    if (!canManagePartner(req, partnerId)) {
+    if (!(await canManagePartner(req, partnerId))) {
       res.status(403).json({ error: "Forbidden" });
       return;
     }

@@ -1,12 +1,18 @@
-import { pgTable, text, serial, numeric, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, numeric, uniqueIndex, integer } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
+import { partnersTable } from "./partners";
 
 export const workTypesTable = pgTable(
   "work_types",
   {
     id: serial("id").primaryKey(),
+    // NULL = platform-wide (admin master catalog). Non-null = partner-
+    // scoped product/service visible only on that partner's catalog.
+    partnerId: integer("partner_id").references(() => partnersTable.id, {
+      onDelete: "cascade",
+    }),
     name: text("name").notNull(),
     category: text("category").notNull(),
     description: text("description"),
@@ -38,9 +44,16 @@ export const workTypesTable = pgTable(
     // work-type rows. Stored as an expression index (not a generated
     // column) so existing application code that reads/writes `name`
     // keeps the user's exact casing and whitespace.
-    uniqCanonicalName: uniqueIndex("work_types_canonical_name_unique").on(
-      sql`lower(btrim(${t.name}))`,
-    ),
+    uniqGlobalCanonicalName: uniqueIndex(
+      "work_types_global_canonical_name_unique",
+    )
+      .on(sql`lower(btrim(${t.name}))`)
+      .where(sql`${t.partnerId} IS NULL`),
+    uniqPartnerCanonicalName: uniqueIndex(
+      "work_types_partner_canonical_name_unique",
+    )
+      .on(t.partnerId, sql`lower(btrim(${t.name}))`)
+      .where(sql`${t.partnerId} IS NOT NULL`),
   }),
 );
 

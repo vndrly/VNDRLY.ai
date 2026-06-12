@@ -32,6 +32,8 @@ import { FieldPortalLayout } from "@/components/field-portal-layout";
 import { ForemanPortalLayout } from "@/components/foreman-portal-layout";
 import { isForemanPersona } from "@/lib/portal-base";
 import Catalog from "@/pages/catalog";
+import CatalogHealth from "@/pages/catalog-health";
+import PartnerCatalog from "@/pages/partner-catalog";
 import VendorCatalog from "@/pages/vendor-catalog";
 import VendorAnalytics from "@/pages/vendor-analytics";
 import PartnerAnalytics from "@/pages/partner-analytics";
@@ -74,7 +76,6 @@ import SignupPartner from "@/pages/signup-partner";
 import NotFound from "@/pages/not-found";
 import AdminVndrly from "@/pages/admin-vndrly";
 import AdminRateLimits from "@/pages/admin-rate-limits";
-import AdminVendorMerges from "@/pages/admin-vendor-merges";
 import AdminRemovedComments from "@/pages/admin-removed-comments";
 import Admin1099Transmitter from "@/pages/admin-1099-transmitter";
 
@@ -115,6 +116,8 @@ function AdminRoutes() {
         <Route path="/crew-map/:id">{(params) => <CrewReplayPage employeeId={parseInt(params.id)} />}</Route>
         <Route path="/site-map" component={SiteMapPage} />
         <Route path="/catalog" component={Catalog} />
+        <Route path="/catalog-health" component={CatalogHealth} />
+        <Route path="/partner-catalog" component={PartnerCatalog} />
         <Route path="/vendor-catalog" component={VendorCatalog} />
         <Route path="/analytics/vendor/:id">{(params) => <VendorAnalytics vendorId={parseInt(params.id)} />}</Route>
         <Route path="/analytics/partner/:id">{(params) => <PartnerAnalytics partnerId={parseInt(params.id)} />}</Route>
@@ -130,7 +133,6 @@ function AdminRoutes() {
         <Route path="/visits/:id">{(params) => <VisitDetailPage id={params.id} />}</Route>
         <Route path="/admin/vndrly" component={AdminVndrly} />
         <Route path="/admin/rate-limits" component={AdminRateLimits} />
-        <Route path="/admin/vendor-merges" component={AdminVendorMerges} />
         <Route path="/admin/removed-comments" component={AdminRemovedComments} />
         <Route path="/admin/1099-transmitter" component={Admin1099Transmitter} />
         <Route component={NotFound} />

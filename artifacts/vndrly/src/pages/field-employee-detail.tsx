@@ -8,6 +8,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
+import RemovePill from "@/components/remove-pill";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -840,9 +841,7 @@ export default function FieldEmployeeDetail({ id }: { id: number }) {
                     <p className="text-sm whitespace-pre-wrap">{note.content}</p>
                     <p className="text-xs text-muted-foreground mt-1">{new Date(note.createdAt).toLocaleString()}</p>
                   </div>
-                  <PillButton color="image" className="min-w-[28px] px-0" onClick={() => handleDeleteNote(note.id)} data-testid={`button-delete-note-${note.id}`}>
-                    <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive transition-colors" />
-                  </PillButton>
+                  <RemovePill onClick={() => handleDeleteNote(note.id)} data-testid={`button-delete-note-${note.id}`} />
                 </div>
               ))}
             </div>

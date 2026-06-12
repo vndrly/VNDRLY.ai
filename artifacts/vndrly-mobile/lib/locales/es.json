@@ -155,7 +155,8 @@
       "notYetHelp": "El ticket inicia como Pendiente de Llegada. Toca En Camino cuando salgas.",
       "noSites": "Aún no hay sitios aprobados para tu proveedor.",
       "siteUnavailableRefreshed": "Ese sitio ya no está disponible. Actualizamos tu lista — elige otro.",
-      "workTypeUnavailableRefreshed": "Ese tipo de trabajo ya no está aprobado para este sitio. Actualizamos tu lista — elige otro.",
+      "workTypeUnavailableRefreshed": "Su empresa ya no está asignada a ese servicio en este sitio. Actualizamos la lista — elija otro o pida a su administrador que actualice las asignaciones.",
+      "workTypeContactAdmin": "Si esperaba este servicio, contacte al administrador de su proveedor para agregarlo al catálogo o a la asignación del sitio.",
       "missingInfoTitle": "Falta información",
       "missingInfoBody": "Elige un sitio y al menos un tipo de trabajo.",
       "workTypesLoading": "Los tipos de trabajo de este sitio aún se están cargando. Espera un momento e inténtalo de nuevo.",
@@ -362,7 +363,8 @@
       "checkIn": "Entrada registrada",
       "checkOut": "Salida registrada",
       "minutes": "{{min}} min",
-      "hoursMinutes": "{{hr}}h {{min}}m"
+      "hoursMinutes": "{{hr}}h {{min}}m",
+      "directionsToSite": "Cómo llegar al sitio"
     }
   },
   "language": {
@@ -1203,6 +1205,14 @@
     "chooseLibrary": "Elegir de la galería",
     "couldNotUpload": "No se pudo subir la foto"
   },
+  "services": {
+    "title": "Servicios de la empresa",
+    "readOnlyHelp": "Servicios que su empresa ofrece en VNDRLY. Contacte al administrador de su proveedor para cambiar selecciones o tarifas.",
+    "loadError": "No se pudieron cargar los servicios de la empresa.",
+    "empty": "Aún no hay servicios configurados para su empresa.",
+    "uncategorized": "Sin categoría",
+    "noPrice": "Sin precio"
+  },
   "profile": {
     "language": "Idioma",
     "locationSharing": "Compartir ubicación",
@@ -1215,6 +1225,7 @@
     "editProfile": "Editar Perfil",
     "complianceCard": "Tarjeta de Cumplimiento",
     "manageEmployees": "Administrar empleados",
+    "companyServices": "Servicios de la empresa",
     "crewChanges": "Mis cambios de cuadrilla",
     "couldNotUpdate": "No se pudo actualizar",
     "languageSavedToast": "Guardado — {{language}}",

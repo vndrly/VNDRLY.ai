@@ -380,7 +380,30 @@ function PartnerHotlist({ focusedJobId }: { focusedJobId: number | null }) {
     onHelloWithGap: refetchHotlist,
   });
   const [postOpen, setPostOpen] = useState(false);
-  const [form, setForm] = useState({ title: "", description: "", locationAddress: "", deadline: "", estimatedDurationDays: "" });
+  const [form, setForm] = useState({
+    title: "",
+    description: "",
+    locationAddress: "",
+    deadline: "",
+    estimatedDurationDays: "",
+    workTypeId: "",
+  });
+  const { data: partnerCatalogItems } = useQuery({
+    queryKey: ["partner-hotlist-work-types", partnerId],
+    queryFn: async () => {
+      const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+      const res = await fetch(
+        `${base}/api/partners/${partnerId}/work-type-afes`,
+        { credentials: "include" },
+      );
+      if (!res.ok) throw new Error(`status ${res.status}`);
+      const json = (await res.json()) as {
+        items: { workTypeId: number; name: string; category: string }[];
+      };
+      return json.items ?? [];
+    },
+    enabled: !!partnerId,
+  });
   const [expanded, setExpanded] = useState<number | null>(focusedJobId);
   const [commentsFocusJobId, setCommentsFocusJobId] = useState<number | null>(
     focusedJobId != null && typeof window !== "undefined" && window.location.hash.startsWith("#comment-")
@@ -403,12 +426,22 @@ function PartnerHotlist({ focusedJobId }: { focusedJobId: number | null }) {
         description: form.description || null,
         locationAddress: form.locationAddress,
         deadline: form.deadline || null,
-        estimatedDurationDays: form.estimatedDurationDays ? parseInt(form.estimatedDurationDays) : null,
+        estimatedDurationDays: form.estimatedDurationDays
+          ? parseInt(form.estimatedDurationDays)
+          : null,
+        workTypeId: form.workTypeId ? parseInt(form.workTypeId, 10) : null,
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: listKey });
       setPostOpen(false);
-      setForm({ title: "", description: "", locationAddress: "", deadline: "", estimatedDurationDays: "" });
+      setForm({
+        title: "",
+        description: "",
+        locationAddress: "",
+        deadline: "",
+        estimatedDurationDays: "",
+        workTypeId: "",
+      });
       toast({ title: "Hotlist job posted" });
     },
     onError: (e) => toast({ title: translateApiError(e, t, t("hotlist.errorToasts.postFailed")), variant: "destructive" }),
@@ -460,6 +493,27 @@ function PartnerHotlist({ focusedJobId }: { focusedJobId: number | null }) {
                 className="space-y-4"
               >
                 <div><Label>Title</Label><Input required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} data-testid="input-hotlist-title" /></div>
+                <div>
+                  <Label>{t("hotlist.productOrService", { defaultValue: "Product or service" })}</Label>
+                  <Select
+                    value={form.workTypeId || "__none__"}
+                    onValueChange={(v) =>
+                      setForm({ ...form, workTypeId: v === "__none__" ? "" : v })
+                    }
+                  >
+                    <SelectTrigger data-testid="select-hotlist-work-type">
+                      <SelectValue placeholder={t("hotlist.selectProductOrService", { defaultValue: "Optional — link to catalog" })} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">{t("hotlist.noProductOrService", { defaultValue: "None (free text)" })}</SelectItem>
+                      {(partnerCatalogItems ?? []).map((it) => (
+                        <SelectItem key={it.workTypeId} value={String(it.workTypeId)}>
+                          {it.name}{it.category ? ` · ${it.category}` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div><Label>Description</Label><Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} data-testid="input-hotlist-description" /></div>
                 <div><Label>Location Address</Label><Input required value={form.locationAddress} onChange={(e) => setForm({ ...form, locationAddress: e.target.value })} placeholder="Street, City, State" data-testid="input-hotlist-address" /></div>
                 <div className="grid grid-cols-2 gap-4">

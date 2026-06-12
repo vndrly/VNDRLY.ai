@@ -1,14 +1,22 @@
 import { Router, type IRouter, type Request, type Response, type NextFunction } from "express";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, or, isNull, sql } from "drizzle-orm";
 import {
   db,
   partnersTable,
   workTypesTable,
   partnerWorkTypeAfesTable,
   vendorWorkTypesTable,
+  partnerVendorWorkTypeApprovalsTable,
+  userOrgMembershipsTable,
+  insertWorkTypeSchema,
 } from "@workspace/db";
-import { getSessionFromRequest, requireAdmin } from "../lib/session";
+import {
+  getSessionFromRequest,
+  requireAdmin,
+  type SessionPayload,
+} from "../lib/session";
 import { sendApiError } from "../lib/apiError";
+import { sendValidationFailed } from "../lib/validation-error";
 
 const router: IRouter = Router();
 
@@ -21,6 +29,94 @@ function requireSession(req: Request, res: Response, next: NextFunction): void {
   next();
 }
 
+function canSeePartner(session: SessionPayload, partnerId: number): boolean {
+  if (session.role === "admin") return true;
+  return session.role === "partner" && session.partnerId === partnerId;
+}
+
+async function requirePartnerAdmin(
+  req: Request,
+  partnerId: number,
+): Promise<
+  | { ok: true; session: SessionPayload; isSystemAdmin: boolean }
+  | { ok: false; status: number; code: string; error: string }
+> {
+  const session = getSessionFromRequest(req);
+  if (!session?.userId) {
+    return {
+      ok: false,
+      status: 401,
+      code: "auth.required",
+      error: "Authentication required",
+    };
+  }
+  if (session.role === "admin") {
+    return { ok: true, session, isSystemAdmin: true };
+  }
+  const [active] = await db
+    .select({ role: userOrgMembershipsTable.role })
+    .from(userOrgMembershipsTable)
+    .where(
+      and(
+        eq(userOrgMembershipsTable.userId, session.userId),
+        eq(userOrgMembershipsTable.orgType, "partner"),
+        eq(userOrgMembershipsTable.partnerId, partnerId),
+      ),
+    )
+    .limit(1);
+  if (active?.role === "admin") {
+    return { ok: true, session, isSystemAdmin: false };
+  }
+  return {
+    ok: false,
+    status: 403,
+    code: "auth.partner_admin_required",
+    error: "Partner admin access required",
+  };
+}
+
+async function handlePartnerWorkTypeNameConflict(
+  err: unknown,
+  submittedName: string,
+  partnerId: number,
+  res: Response,
+): Promise<boolean> {
+  const cause = (err as { cause?: { code?: string; constraint?: string } })
+    .cause;
+  const constraints = new Set([
+    "work_types_partner_canonical_name_unique",
+    "work_types_global_canonical_name_unique",
+    "work_types_canonical_name_unique",
+  ]);
+  if (cause?.code !== "23505" || !constraints.has(cause.constraint ?? "")) {
+    return false;
+  }
+  let conflictName = submittedName;
+  try {
+    const [existing] = await db
+      .select({ name: workTypesTable.name })
+      .from(workTypesTable)
+      .where(
+        and(
+          eq(workTypesTable.partnerId, partnerId),
+          sql`lower(btrim(${workTypesTable.name})) = lower(btrim(${submittedName}))`,
+        ),
+      )
+      .limit(1);
+    if (existing?.name) conflictName = existing.name;
+  } catch {
+    /* ignore */
+  }
+  sendApiError(
+    res,
+    409,
+    "work_type.duplicate_name",
+    `A work type named "${conflictName}" already exists for this partner.`,
+    { details: { name: conflictName } },
+  );
+  return true;
+}
+
 router.get(
   "/partners/:partnerId/work-type-afes",
   requireSession,
@@ -28,6 +124,11 @@ router.get(
     const partnerId = parseInt(String(req.params.partnerId), 10);
     if (isNaN(partnerId)) {
       sendApiError(res, 400, "partner.invalid_id", "Invalid partner id");
+      return;
+    }
+    const session = getSessionFromRequest(req);
+    if (!session || !canSeePartner(session, partnerId)) {
+      sendApiError(res, 403, "auth.forbidden", "Forbidden");
       return;
     }
 
@@ -44,6 +145,9 @@ router.get(
     const workTypes = await db
       .select()
       .from(workTypesTable)
+      .where(
+        or(isNull(workTypesTable.partnerId), eq(workTypesTable.partnerId, partnerId)),
+      )
       .orderBy(workTypesTable.category, workTypesTable.name);
 
     const mappings = await db
@@ -75,9 +179,98 @@ router.get(
       description: wt.description ?? "",
       afe: afeByWorkType.get(wt.id) ?? "",
       vendorCount: vendorCountByWorkType.get(wt.id) ?? 0,
+      partnerScoped: wt.partnerId != null,
     }));
 
     res.json({ partnerId, items });
+  },
+);
+
+router.get(
+  "/partners/:partnerId/work-type-approval-summary",
+  requireSession,
+  async (req, res): Promise<void> => {
+    const partnerId = parseInt(String(req.params.partnerId), 10);
+    if (isNaN(partnerId)) {
+      sendApiError(res, 400, "partner.invalid_id", "Invalid partner id");
+      return;
+    }
+    const session = getSessionFromRequest(req);
+    if (!session || !canSeePartner(session, partnerId)) {
+      sendApiError(res, 403, "auth.forbidden", "Forbidden");
+      return;
+    }
+
+    const workTypes = await db
+      .select({ id: workTypesTable.id })
+      .from(workTypesTable)
+      .where(
+        or(isNull(workTypesTable.partnerId), eq(workTypesTable.partnerId, partnerId)),
+      );
+    const total = workTypes.length;
+
+    const approvedWorkTypeIds = await db
+      .selectDistinct({ workTypeId: partnerVendorWorkTypeApprovalsTable.workTypeId })
+      .from(partnerVendorWorkTypeApprovalsTable)
+      .where(eq(partnerVendorWorkTypeApprovalsTable.partnerId, partnerId));
+
+    res.json({
+      partnerId,
+      total,
+      approved: approvedWorkTypeIds.length,
+    });
+  },
+);
+
+router.post(
+  "/partners/:partnerId/work-types",
+  requireSession,
+  async (req, res): Promise<void> => {
+    const partnerId = parseInt(String(req.params.partnerId), 10);
+    if (isNaN(partnerId)) {
+      sendApiError(res, 400, "partner.invalid_id", "Invalid partner id");
+      return;
+    }
+    const auth = await requirePartnerAdmin(req, partnerId);
+    if (!auth.ok) {
+      sendApiError(res, auth.status, auth.code, auth.error);
+      return;
+    }
+
+    const [partner] = await db
+      .select({ id: partnersTable.id })
+      .from(partnersTable)
+      .where(eq(partnersTable.id, partnerId))
+      .limit(1);
+    if (!partner) {
+      sendApiError(res, 404, "partner.not_found", "Partner not found");
+      return;
+    }
+
+    const body = insertWorkTypeSchema.safeParse(req.body);
+    if (!body.success) {
+      sendValidationFailed(res, body.error);
+      return;
+    }
+
+    let created;
+    try {
+      [created] = await db
+        .insert(workTypesTable)
+        .values({ ...body.data, partnerId })
+        .returning();
+    } catch (err) {
+      const handled = await handlePartnerWorkTypeNameConflict(
+        err,
+        body.data.name,
+        partnerId,
+        res,
+      );
+      if (handled) return;
+      throw err;
+    }
+
+    res.status(201).json(created);
   },
 );
 

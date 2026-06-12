@@ -591,6 +591,16 @@ export default function NewTicketScreen() {
               >
                 {t("tickets.newJob.workTypeUnavailableRefreshed")}
               </Text>
+              <Text
+                style={{
+                  color: colors.accentForeground,
+                  fontFamily: "Inter_400Regular",
+                  fontSize: 12,
+                  marginTop: 6,
+                }}
+              >
+                {t("tickets.newJob.workTypeContactAdmin")}
+              </Text>
             </View>
           ) : null}
           {workTypesLoading ? (

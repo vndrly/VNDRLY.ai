@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 
+import LayeredPillButton from "@/components/LayeredPillButton";
 import { TicketRouteMap } from "@/components/TicketRouteMap";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
@@ -206,6 +207,26 @@ export default function TicketSiteVisitSummary({ ticketId, refreshKey }: Props) 
             tracking={routePoints}
             height={260}
           />
+
+          {data.site ? (
+            <LayeredPillButton
+              onPress={() =>
+                openInMaps(
+                  data.site!.latitude,
+                  data.site!.longitude,
+                  data.site!.name ?? t("tickets.siteLocationFallback", { defaultValue: "Site" }),
+                )
+              }
+              height={40}
+              style={{ marginTop: 12 }}
+              testID="button-get-directions-site"
+            >
+              <Feather name="navigation" size={16} color="#ffffff" />
+              <Text style={{ color: "#ffffff", fontFamily: "Inter_600SemiBold", marginLeft: 8 }}>
+                {t("ticketDetail.siteVisitSummary.directionsToSite")}
+              </Text>
+            </LayeredPillButton>
+          ) : null}
 
           <View style={[styles.peopleCard, { borderColor: colors.border }]}>
             <Text style={[styles.peopleHeader, { color: colors.foreground }]}>

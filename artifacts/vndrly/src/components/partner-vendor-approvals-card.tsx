@@ -2,12 +2,22 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { translateApiError } from "@/lib/api-error";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CARD_INNER_TILE_HOVER_CLASS, CARD_TITLE_ICON_CLASS } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Dialog,
   DialogContent,
@@ -18,11 +28,13 @@ import {
 } from "@/components/ui/dialog";
 import { Users, Receipt, AlertTriangle } from "lucide-react";
 import { PngPillButton } from "@/components/png-pill-rollover";
-import BrandRolePill from "@/components/brand-role-pill";
+import ImagePill, { type ImagePillColor } from "@/components/image-pill";
+import RemovePill from "@/components/remove-pill";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { resolveEulaDisplayText } from "@workspace/platform-eula";
+import { cn } from "@/lib/utils";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -94,29 +106,28 @@ function StatusBadge({ status }: { status: string }) {
   const { t } = useTranslation();
   const map: Record<
     string,
-    { labelKey: string; tone: "amber" | "green" | "grey" | "red" }
+    { labelKey: string; color: ImagePillColor }
   > = {
-    approved: { labelKey: "approvals.status.approved", tone: "green" },
+    approved: { labelKey: "approvals.status.approved", color: "green" },
     pending_review: {
       labelKey: "approvals.status.pending_review",
-      tone: "amber",
+      color: "amber",
     },
     auto_unapproved: {
       labelKey: "approvals.status.auto_unapproved",
-      tone: "amber",
+      color: "amber",
     },
-    revoked: { labelKey: "approvals.status.revoked", tone: "red" },
+    revoked: { labelKey: "approvals.status.revoked", color: "red" },
   };
   const cfg = map[status] ?? map.pending_review;
-  const tone = cfg.tone;
   return (
-    <BrandRolePill
-      tone={tone}
-
-      testId={`badge-relationship-${status}`}
+    <ImagePill
+      color={cfg.color}
+      className="min-w-[98px] pointer-events-none"
+      data-testid={`badge-relationship-${status}`}
     >
       {t(cfg.labelKey)}
-    </BrandRolePill>
+    </ImagePill>
   );
 }
 
@@ -524,6 +535,12 @@ export default function PartnerVendorApprovalsCard({
   const items = useMemo(() => data?.items ?? [], [data]);
   const [pending, setPending] = useState<RelRow | null>(null);
   const [diffing, setDiffing] = useState<RelRow | null>(null);
+  const [confirmRevokeVendorId, setConfirmRevokeVendorId] = useState<number | null>(null);
+
+  const vendorPendingRevoke = useMemo(
+    () => items.find((r) => r.vendorId === confirmRevokeVendorId) ?? null,
+    [items, confirmRevokeVendorId],
+  );
 
   // Vendors currently on `auto_unapproved` after a catalog/compliance
   // change. Surfaced as a single "re-approve all" affordance so a
@@ -557,11 +574,36 @@ export default function PartnerVendorApprovalsCard({
       }),
   });
 
+  const revokeRelationship = useMutation({
+    mutationFn: (vendorId: number) =>
+      jsonFetch(
+        `/api/partners/${partnerId}/vendor-relationships/${vendorId}`,
+        {
+          method: "PUT",
+          body: JSON.stringify({ status: "revoked" }),
+        },
+      ),
+    onSuccess: (_data, vendorId) => {
+      const name =
+        items.find((r) => r.vendorId === vendorId)?.vendorName ?? "";
+      toast({
+        title: t("approvals.revokedToast", { name }),
+      });
+      setConfirmRevokeVendorId(null);
+      qc.invalidateQueries({ queryKey });
+    },
+    onError: (e: Error) =>
+      toast({
+        title: translateApiError(e, t, t("approvals.revokeFailedToast")),
+        variant: "destructive",
+      }),
+  });
+
   return (
     <Card data-testid="card-partner-vendor-approvals">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Users className="w-5 h-5" style={{ color: "var(--brand-primary)" }} />
+          <Users className={CARD_TITLE_ICON_CLASS} style={{ color: "var(--brand-primary)" }} />
           {t("approvals.vendorApprovals", { count: items.length })}
         </CardTitle>
       </CardHeader>
@@ -617,7 +659,7 @@ export default function PartnerVendorApprovalsCard({
         {isLoading ? (
           <Skeleton className="h-16 w-full" />
         ) : items.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground text-center py-6">
             {t("approvals.noVendorRelationships")}
           </p>
         ) : (
@@ -631,18 +673,22 @@ export default function PartnerVendorApprovalsCard({
               return (
                 <div
                   key={r.vendorId}
-                  className="border rounded-md p-3 flex items-start gap-3"
+                  className={cn(
+                    CARD_INNER_TILE_HOVER_CLASS,
+                    "group flex items-center gap-3",
+                    r.status === "revoked" && "opacity-60",
+                  )}
                   data-testid={`row-vendor-relationship-${r.vendorId}`}
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <Link
                         href={`/vendors/${r.vendorId}`}
-                        className="font-medium text-gray-700 hover:text-[var(--brand-primary)] hover:underline transition-colors"
+                        className="hotlist-job-title font-semibold text-gray-700 truncate text-left transition-[color,text-shadow] hover:text-[var(--brand-primary)]"
+                        data-testid={`link-vendor-relationship-${r.vendorId}`}
                       >
                         {r.vendorName}
                       </Link>
-                      <StatusBadge status={r.status} />
                       {versionDrift ? (
                         <span
                           className="text-xs text-amber-700"
@@ -691,9 +737,6 @@ export default function PartnerVendorApprovalsCard({
                         </Link>
                       </div>
                     ) : canManage ? (
-                      // Partner admins of this partner org get the same
-                      // editor under a partner-side test-id so e2e flows
-                      // can target it independently from the admin link.
                       <div className="mt-2">
                         <Link
                           href={`/billing-settings/${r.vendorId}/${partnerId}`}
@@ -706,11 +749,10 @@ export default function PartnerVendorApprovalsCard({
                       </div>
                     ) : null}
                   </div>
-                  <div className="flex flex-col gap-2 items-end">
+                  <div className="flex items-center gap-2 shrink-0">
                     {r.approvedCatalogVersionId &&
                     r.currentCatalogVersionId &&
-                    r.approvedCatalogVersionId !==
-                      r.currentCatalogVersionId ? (
+                    r.approvedCatalogVersionId !== r.currentCatalogVersionId ? (
                       <button
                         type="button"
                         onClick={() => setDiffing(r)}
@@ -720,10 +762,10 @@ export default function PartnerVendorApprovalsCard({
                         {t("approvals.viewDiffButton")}
                       </button>
                     ) : null}
-                    {canManage && r.status !== "approved" && (
+                    <StatusBadge status={r.status} />
+                    {canManage && r.status !== "approved" && r.status !== "revoked" && (
                       <PngPillButton
                         color="green"
-
                         className="min-w-[120px]"
                         onClick={() => setPending(r)}
                         data-testid={`button-approve-vendor-${r.vendorId}`}
@@ -732,6 +774,12 @@ export default function PartnerVendorApprovalsCard({
                           ? t("approvals.reapproveButton")
                           : t("approvals.approveButton")}
                       </PngPillButton>
+                    )}
+                    {canManage && r.status !== "revoked" && (
+                      <RemovePill
+                        onClick={() => setConfirmRevokeVendorId(r.vendorId)}
+                        data-testid={`button-revoke-vendor-${r.vendorId}`}
+                      />
                     )}
                   </div>
                 </div>
@@ -758,6 +806,45 @@ export default function PartnerVendorApprovalsCard({
           onOpenChange={(v) => !v && setDiffing(null)}
         />
       )}
+
+      <AlertDialog
+        open={confirmRevokeVendorId != null}
+        onOpenChange={(open) => {
+          if (!open) setConfirmRevokeVendorId(null);
+        }}
+      >
+        <AlertDialogContent data-testid="dialog-confirm-revoke-vendor">
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {vendorPendingRevoke
+                ? t("approvals.revokeTitle", { name: vendorPendingRevoke.vendorName })
+                : t("approvals.revokeTitleGeneric")}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("approvals.revokeDescription")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-revoke-vendor">
+              {t("common.cancel", { defaultValue: "Cancel" })}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (confirmRevokeVendorId != null) {
+                  revokeRelationship.mutate(confirmRevokeVendorId);
+                }
+              }}
+              disabled={revokeRelationship.isPending}
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+              data-testid="button-confirm-revoke-vendor"
+            >
+              {revokeRelationship.isPending
+                ? t("approvals.saving")
+                : t("common.remove", { defaultValue: "Remove" })}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

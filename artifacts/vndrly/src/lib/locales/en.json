@@ -54,6 +54,9 @@
     "visitors": "Visitors",
     "analytics": "Analytics",
     "catalog": "Product/Service Catalog",
+    "platformCatalog": "Platform catalog",
+    "yourServices": "Your services & rates",
+    "partnerCatalog": "Products & services",
     "vendorCatalog": "Vendor Catalog",
     "invoices": "Invoices",
     "signOut": "Sign Out",
@@ -383,7 +386,10 @@
       "approveFailedTitle": "Could not save approval",
       "addToCatalog": "Add to Catalog",
       "addModalTitle": "Add to Catalog",
-      "addModalDescription": "Create a new product or service so vendors can immediately attach prices to it.",
+      "addModalDescription": "Create a product or service for this partner only. It will not appear on other partners' catalogs.",
+      "approvalLayersHelp": "Per-service approval confirms you agree to use a vendor at their listed price. Vendor relationship approval (on the Approvals card) accepts their published catalog version and EULA.",
+      "partnerOnly": "Sign in as a partner to view this catalog.",
+      "partnerScopedBadge": "Partner-only",
       "addNameLabel": "Name",
       "addNamePlaceholder": "e.g. Frac Crew",
       "addCategoryLabel": "Category",
@@ -507,6 +513,9 @@
     "employeeUpdatedToast": "Employee updated"
   },
   "hotlist": {
+    "productOrService": "Product or service",
+    "selectProductOrService": "Optional — link to catalog",
+    "noProductOrService": "None (free text)",
     "errorToasts": {
       "postFailed": "Failed to post",
       "awardFailed": "Failed to award",
@@ -794,6 +803,11 @@
     "printVisitorQr": "Print Visitor QR",
     "workAssignmentsCount": "Work Assignments ({{count}})",
     "expandCatalog": "Expand Catalog",
+    "addSiteAssignments": "Add site assignments",
+    "addSiteAssignmentsVendorIntro": "Choose services from your company catalog to assign at this site. Already-assigned items are pre-checked.",
+    "addSiteAssignmentsAdminIntro": "Select a vendor, then choose from services already on their catalog.",
+    "noVendorCatalogServices": "This vendor has no services on their catalog yet.",
+    "manageVendorServices": "Manage their services",
     "expandCatalogVendorIntro": "Check the additional jobs you can perform at this site. Already-assigned work types are pre-checked.",
     "expandCatalogAdminIntro": "Select a vendor and check the jobs they can perform at this site.",
     "vendor": "Vendor",
@@ -1037,8 +1051,12 @@
     "noNotes": "No notes yet"
   },
   "catalog": {
-    "title": "Product/Service Catalog",
-    "subtitle": "Manage available products and services",
+    "title": "Platform catalog",
+    "subtitle": "Manage platform-wide products and services (shared across all partners)",
+    "healthLink": "Catalog health",
+    "requiredCertifications": "Required certifications",
+    "blockingCertifications": "Blocking certifications",
+    "certificationsPlaceholder": "Comma-separated, e.g. H2S, Hot Work",
     "addItem": "Add Product/Service",
     "addNew": "Add Product/Service",
     "editItem": "Edit Product/Service",
@@ -1090,9 +1108,28 @@
     "importUnknownVendors": "Unknown vendors (skipped): {{names}}",
     "importErrors": "Errors:",
     "importErrorRow": "Row {{row}}: {{message}}",
+    "importVendorsNotified": "Vendors attached in this import should set rates on Your services & rates.",
     "importFailed": "Import failed",
     "exportEmpty": "Nothing to export yet.",
     "duplicateNameInline": "A work type with this name already exists."
+  },
+  "catalogHealth": {
+    "title": "Catalog health",
+    "subtitle": "Data-quality issues across platform catalog, vendor selections, and site assignments.",
+    "loadError": "Could not load catalog health.",
+    "issuesTitle": "Open issues",
+    "noVendors": "Platform services with no vendor offers",
+    "missingPrice": "Vendor selections missing a unit price",
+    "swaWithoutCatalog": "Site assignments without a matching vendor catalog row",
+    "swaRow": "Site #{{siteId}} · vendor #{{vendorId}} · service #{{workTypeId}}",
+    "backToCatalog": "Back to platform catalog",
+    "totals": {
+      "platformWorkTypes": "Platform services",
+      "vendorSelections": "Vendor selections",
+      "siteAssignments": "Site assignments",
+      "approvals": "Partner approvals",
+      "vendorsWithCatalog": "Vendors with catalog"
+    }
   },
   "visitor": {
     "continueAsVisitor": "Continue as Visitor",
@@ -1549,7 +1586,7 @@
     "disperseFundsSubmitting": "Recording...",
     "disperseFundsSuccess": "Funds dispersed.",
     "disperseFundsForbidden": "Only Accounts Payable can disperse funds.",
-    "reverseFunds": "Reverse / void payment",
+    "reverseFunds": "Reverse payment",
     "reverseFundsTitle": "Reverse fund dispersal",
     "reverseFundsHelp": "Reversing returns this ticket to Approved and clears the payment fields. Both Accounts Payable and the vendor will be notified.",
     "reverseFundsReason": "Reason",
@@ -1762,6 +1799,14 @@
       "hoursMinutes": "{{hr}}h {{min}}m"
     }
   },
+  "siteMap": {
+    "recentTickets": {
+      "title": "Recent tickets",
+      "loading": "Loading recent tickets…",
+      "empty": "No tickets for this site yet.",
+      "pickSite": "Select a site location to see recent tickets."
+    }
+  },
   "comments": {
     "log": "Log",
     "noteCount_one": "{{count}} note",
@@ -1859,8 +1904,9 @@
     "viewSatellite": "Satellite"
   },
   "vendorCatalog": {
-    "title": "Vendor Catalog",
-    "subtitle": "Select every work type your company performs. Partners will see this on your vendor profile and use it to filter the hotlist.",
+    "title": "Your services & rates",
+    "subtitle": "Select every service your company performs and set rates. Partners use this for approvals, site assignments, and Hotlist matching.",
+    "onboardingRatesBanner": "Set unit prices for the services you selected during onboarding.",
     "uncategorized": "Uncategorized",
     "empty": "No work types are configured yet. Ask a VNDRLY admin to add some.",
     "noVendor": "You must be signed in as a vendor to manage work types.",
@@ -1969,6 +2015,11 @@
     "bulkReapproveAction": "Re-approve all",
     "bulkReapproveToast": "Re-approved {{count}} vendor relationships.",
     "bulkReapproveFailedToast": "Bulk re-approval failed",
+    "revokeTitle": "Revoke {{name}}?",
+    "revokeTitleGeneric": "Revoke vendor approval?",
+    "revokeDescription": "This vendor will lose approved status for your organization. You can re-approve them later if needed.",
+    "revokedToast": "{{name}} approval revoked.",
+    "revokeFailedToast": "Could not revoke vendor approval",
     "reasons": {
       "vendor_catalog_published": "Vendor published a new catalog",
       "vendor_compliance_updated": "Vendor compliance details changed",
@@ -2470,13 +2521,15 @@
     "title": "Statement",
     "filters": "Filters",
     "role": "View as",
-    "partyId": "Party ID",
+    "selectPartyVendor": "Select a vendor",
+    "selectPartyPartner": "Select a partner",
     "from": "From",
     "to": "To",
-    "noParty": "Select a party to load the statement.",
+    "noParty": "Select a vendor or partner to load the statement.",
     "unknownParty": "Unknown party",
     "loadError": "Failed to load statement.",
     "empty": "No invoices in this period.",
+    "invoices": "Invoices",
     "roles": {
       "vendor": "Vendor",
       "partner": "Partner"

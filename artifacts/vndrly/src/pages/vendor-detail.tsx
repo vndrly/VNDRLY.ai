@@ -30,9 +30,6 @@ import {
   useUpsertVendorRating,
   useDeleteVendorRating,
   getGetVendorRatingsQueryKey,
-  useListVendors,
-  previewVendorMerge,
-  mergeVendor,
   getListFieldEmployeesQueryKey,
   matchVendor,
 } from "@workspace/api-client-react";
@@ -42,6 +39,7 @@ import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
+import RemovePill from "@/components/remove-pill";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -215,92 +213,6 @@ export default function VendorDetail({ id }: { id: number }) {
   // its source. Set by handleSquareLogoUpload for non-square inputs;
   // cleared by the dialog's onClose / onConfirm.
   const [pendingSquareLogoFile, setPendingSquareLogoFile] = useState<File | null>(null);
-
-  // ── Vendor merge (admin only) ───────────────────────────────────
-  // Two-step UX: open dialog → pick survivor → fetch preview counts →
-  // confirm. We keep all transient state local; preview & merge mutate
-  // the server (preview just runs inside a rolled-back transaction so
-  // it stays read-only). The dialog is only mounted under the admin
-  // gate below, but every state hook lives at the top level so React's
-  // hook order stays stable when the gate flips.
-  const [mergeOpen, setMergeOpen] = useState(false);
-  const [mergeSurvivorId, setMergeSurvivorId] = useState<string>("");
-  const [mergePreview, setMergePreview] = useState<{
-    survivorVendorId: number;
-    survivorVendorName: string;
-    loserVendorId: number;
-    loserVendorName: string;
-    counts: Record<string, { move: number; conflictDelete: number }>;
-    totalMoved: number;
-    totalConflictDeleted: number;
-  } | null>(null);
-  const [mergePreviewLoading, setMergePreviewLoading] = useState(false);
-  const [mergeApplying, setMergeApplying] = useState(false);
-  const [mergeError, setMergeError] = useState<string | null>(null);
-  const { data: allVendors } = useListVendors({
-    query: { enabled: mergeOpen && authUser?.role === "admin", queryKey: getListVendorsQueryKey() },
-  });
-  const resetMergeDialog = () => {
-    setMergeSurvivorId("");
-    setMergePreview(null);
-    setMergePreviewLoading(false);
-    setMergeApplying(false);
-    setMergeError(null);
-  };
-  const handleLoadMergePreview = async () => {
-    const survivorId = Number(mergeSurvivorId);
-    if (!Number.isInteger(survivorId) || survivorId <= 0) {
-      setMergeError("Pick a survivor vendor first.");
-      return;
-    }
-    if (survivorId === id) {
-      setMergeError("Survivor must be a different vendor.");
-      return;
-    }
-    setMergeError(null);
-    setMergePreview(null);
-    setMergePreviewLoading(true);
-    try {
-      const res = await previewVendorMerge(id, { survivorVendorId: survivorId });
-      setMergePreview(res);
-    } catch (err: any) {
-      const msg =
-        err?.response?.data?.error ||
-        err?.data?.error ||
-        err?.message ||
-        "Failed to preview merge";
-      setMergeError(msg);
-    } finally {
-      setMergePreviewLoading(false);
-    }
-  };
-  const handleConfirmMerge = async () => {
-    if (!mergePreview) return;
-    setMergeError(null);
-    setMergeApplying(true);
-    try {
-      const res = await mergeVendor(id, {
-        survivorVendorId: mergePreview.survivorVendorId,
-      });
-      queryClient.invalidateQueries({ queryKey: getListVendorsQueryKey() });
-      toast({
-        title: "Vendors merged",
-        description: `${res.totalMoved} row(s) moved, ${res.totalConflictDeleted} conflict row(s) dropped.`,
-      });
-      setMergeOpen(false);
-      resetMergeDialog();
-      navigate(`/vendors/${res.survivorVendorId}`);
-    } catch (err: any) {
-      const msg =
-        err?.response?.data?.error ||
-        err?.data?.error ||
-        err?.message ||
-        "Failed to merge vendors";
-      setMergeError(msg);
-    } finally {
-      setMergeApplying(false);
-    }
-  };
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -1126,13 +1038,11 @@ export default function VendorDetail({ id }: { id: number }) {
                     <TableCell>
                       <PecStatusBadge expirationDate={c.pecExpirationDate || null} />
                     </TableCell>
-                    <TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
                       {canEditVendor && (
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <PillButton color="image" className="group min-w-[28px] px-0" data-testid={`button-delete-contact-${c.id}`}>
-                              <Trash2 className="w-4 h-4 text-muted-foreground group-hover:text-destructive transition-colors" />
-                            </PillButton>
+                            <RemovePill data-testid={`button-delete-contact-${c.id}`} />
                           </AlertDialogTrigger>
                           <AlertDialogContent onClick={(e) => e.stopPropagation()}>
                             <AlertDialogHeader>
@@ -1192,13 +1102,11 @@ export default function VendorDetail({ id }: { id: number }) {
                     <TableCell>
                       <PecStatusBadge expirationDate={emp.pecExpirationDate || null} />
                     </TableCell>
-                    <TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
                       {canEditVendor && (
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <PillButton color="image" className="group min-w-[28px] px-0" data-testid={`button-delete-employee-${emp.id}`}>
-                              <Trash2 className="w-4 h-4 text-muted-foreground group-hover:text-destructive transition-colors" />
-                            </PillButton>
+                            <RemovePill data-testid={`button-delete-employee-${emp.id}`} />
                           </AlertDialogTrigger>
                           <AlertDialogContent onClick={(e) => e.stopPropagation()}>
                             <AlertDialogHeader>
@@ -1279,9 +1187,7 @@ export default function VendorDetail({ id }: { id: number }) {
                     <p className="text-sm whitespace-pre-wrap">{note.content}</p>
                     <p className="text-xs text-muted-foreground mt-1">{new Date(note.createdAt).toLocaleString()}</p>
                   </div>
-                  <PillButton color="image" className="min-w-[28px] px-0" onClick={() => handleDeleteNote(note.id)} data-testid={`button-delete-note-${note.id}`}>
-                    <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive transition-colors" />
-                  </PillButton>
+                  <RemovePill onClick={() => handleDeleteNote(note.id)} data-testid={`button-delete-note-${note.id}`} />
                 </div>
               ))}
             </div>
@@ -1292,140 +1198,11 @@ export default function VendorDetail({ id }: { id: number }) {
       </Card>
 
       {authUser?.role === "admin" && (
-        <div className="flex justify-end gap-2">
-          <PngPillButton
-            onClick={() => { resetMergeDialog(); setMergeOpen(true); }}
-            data-testid="button-merge-vendor"
-          >
-            <Users className="w-4 h-4" />Merge into another vendor…
-          </PngPillButton>
+        <div className="flex justify-end">
           <PngPillButton color="red" onClick={handleRemoveVendor} disabled={removeVendor.isPending} data-testid="button-remove-vendor">
             <Trash2 className="w-4 h-4" />{removeVendor.isPending ? "Removing..." : "Remove Vendor"}
           </PngPillButton>
         </div>
-      )}
-
-      {authUser?.role === "admin" && (
-        <Dialog
-          open={mergeOpen}
-          onOpenChange={(open) => {
-            if (mergeApplying) return;
-            setMergeOpen(open);
-            if (!open) resetMergeDialog();
-          }}
-        >
-          <DialogContent className="max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Merge "{vendor.name}" into another vendor</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                This vendor will be deleted. Every row that references it
-                (tickets, invoices, ratings, billing settings, etc.) will be
-                re-pointed to the survivor inside a single transaction.
-                Conflict rows on duplicate unique keys are dropped.
-              </p>
-              <div>
-                <Label>Survivor vendor</Label>
-                <Select
-                  value={mergeSurvivorId}
-                  onValueChange={(v) => { setMergeSurvivorId(v); setMergePreview(null); setMergeError(null); }}
-                  disabled={mergeApplying}
-                >
-                  <SelectTrigger data-testid="select-merge-survivor">
-                    <SelectValue placeholder="Pick a vendor to absorb this one…" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(allVendors ?? [])
-                      .filter((v) => v.id !== id)
-                      .sort((a, b) => a.name.localeCompare(b.name))
-                      .map((v) => (
-                        <SelectItem key={v.id} value={String(v.id)}>
-                          {v.name} (#{v.id})
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              {mergeError && (
-                <div className="text-sm text-destructive" data-testid="text-merge-error">
-                  {mergeError}
-                </div>
-              )}
-              {!mergePreview ? (
-                <div className="flex justify-end">
-                  <PngPillButton color="blue"
-                    onClick={handleLoadMergePreview}
-                    disabled={mergePreviewLoading || !mergeSurvivorId}
-                    data-testid="button-load-merge-preview"
-                  >
-                    {mergePreviewLoading ? "Loading…" : "Preview merge"}
-                  </PngPillButton>
-                </div>
-              ) : (
-                <div className="space-y-3" data-testid="merge-preview-block">
-                  <div className="text-sm">
-                    Merging <strong>#{mergePreview.loserVendorId} {mergePreview.loserVendorName}</strong>
-                    {" → "}
-                    <strong>#{mergePreview.survivorVendorId} {mergePreview.survivorVendorName}</strong>
-                  </div>
-                  <div className="rounded border">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Table</TableHead>
-                          <TableHead className="text-right">Rows moved</TableHead>
-                          <TableHead className="text-right">Conflict rows dropped</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {Object.entries(mergePreview.counts)
-                          .filter(([, c]) => c.move > 0 || c.conflictDelete > 0)
-                          .sort(([a], [b]) => a.localeCompare(b))
-                          .map(([table, c]) => (
-                            <TableRow key={table} data-testid={`row-merge-count-${table}`}>
-                              <TableCell className="font-mono text-xs">{table}</TableCell>
-                              <TableCell className="text-right">{c.move}</TableCell>
-                              <TableCell className="text-right">{c.conflictDelete}</TableCell>
-                            </TableRow>
-                          ))}
-                        {Object.values(mergePreview.counts).every(
-                          (c) => c.move === 0 && c.conflictDelete === 0,
-                        ) && (
-                          <TableRow>
-                            <TableCell colSpan={3} className="text-center text-muted-foreground text-sm">
-                              No FK rows reference this vendor. Only the vendor row itself will be deleted.
-                            </TableCell>
-                          </TableRow>
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
-                  <div className="text-sm" data-testid="text-merge-totals">
-                    Total: <strong>{mergePreview.totalMoved}</strong> row(s) moved,{" "}
-                    <strong>{mergePreview.totalConflictDeleted}</strong> conflict row(s) dropped.
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    <PngPillButton
-                      onClick={() => { setMergePreview(null); }}
-                      disabled={mergeApplying}
-                      data-testid="button-merge-back"
-                    >
-                      Back
-                    </PngPillButton>
-                    <PngPillButton color="red"
-                      onClick={handleConfirmMerge}
-                      disabled={mergeApplying}
-                      data-testid="button-confirm-merge"
-                    >
-                      {mergeApplying ? "Merging…" : "Confirm merge"}
-                    </PngPillButton>
-                  </div>
-                </div>
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
       )}
 
       <Dialog open={editContactOpen} onOpenChange={tryCloseEditContact}>
@@ -2138,11 +1915,21 @@ function VendorServicesAndPricingCard({ vendorId }: { vendorId: number }) {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-row items-center justify-between gap-2 flex-wrap">
         <CardTitle className="flex items-center gap-2">
           <ShoppingCart className="w-5 h-5" style={{ color: "var(--brand-primary)" }} />
           Services &amp; Pricing ({selectedCount})
         </CardTitle>
+        <div className="flex items-center gap-2">
+        {canEdit ? (
+          <Link
+            href={`/vendor-catalog?vendorId=${vendorId}`}
+            className="text-xs text-[var(--brand-primary)] hover:underline"
+            data-testid="link-manage-vendor-catalog"
+          >
+            Manage full catalog
+          </Link>
+        ) : null}
         {missingPriceCount > 0 ? (
           <span
             className="text-xs text-amber-700"
@@ -2151,6 +1938,7 @@ function VendorServicesAndPricingCard({ vendorId }: { vendorId: number }) {
             {missingPriceCount} without a price
           </span>
         ) : null}
+        </div>
       </CardHeader>
       <CardContent>
         {isLoading ? (

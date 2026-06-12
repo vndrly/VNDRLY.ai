@@ -1,6 +1,15 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CARD_INNER_TILE_CLICKABLE_CLASS,
+  CARD_TITLE_ICON_CLASS,
+} from "@/components/ui/card";
+import { useBrand } from "@/hooks/use-brand";
+import { cn } from "@/lib/utils";
 import { History } from "lucide-react";
 import { RecentTripDetailDialog } from "./recent-trip-detail-dialog";
 
@@ -60,6 +69,8 @@ function formatWhen(iso: string | null): string {
 
 export function RecentTripsCard({ siteLocationId, vendorId, className }: Props) {
   const { t } = useTranslation();
+  const brand = useBrand();
+  const iconStyle = { color: brand.isOrgBranded ? brand.primary : "#f59e0b" };
   const [trips, setTrips] = useState<RecentTrip[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -111,8 +122,8 @@ export function RecentTripsCard({ siteLocationId, vendorId, className }: Props) 
     <>
       <Card className={className ?? "mt-4"} data-testid="card-recent-trips">
         <CardHeader className="pb-2">
-          <CardTitle className="text-base flex items-center gap-1.5">
-            <History className="h-4 w-4" />
+          <CardTitle className="flex items-center gap-2">
+            <History className={CARD_TITLE_ICON_CLASS} style={iconStyle} />
             {t("crewMap.recentTrips.title", "Recent trips")} ({trips.length})
           </CardTitle>
         </CardHeader>
@@ -130,7 +141,7 @@ export function RecentTripsCard({ siteLocationId, vendorId, className }: Props) 
               <button
                 key={`${trip.ticketId}-${trip.lastActivityAt}`}
                 type="button"
-                className="w-full text-left border rounded p-2 text-sm hover:border-[var(--brand-primary)] hover:bg-muted/30 transition-colors"
+                className={cn(CARD_INNER_TILE_CLICKABLE_CLASS, "w-full text-left text-sm")}
                 onClick={() => openTrip(trip)}
                 data-testid={`recent-trip-row-${trip.ticketId}`}
               >

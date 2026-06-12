@@ -2,18 +2,26 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
-import { Clock } from "lucide-react";
+import { ArrowDown, ArrowUp, Clock, History, UserCheck } from "lucide-react";
 import { useListSiteLocations } from "@workspace/api-client-react";
 import { visitsApi, type VisitorRow } from "@/lib/visits-api";
 import { useRateLimitGate } from "@/hooks/use-rate-limit-gate";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent, CARD_TITLE_ICON_CLASS } from "@/components/ui/card";
+import { useBrand } from "@/hooks/use-brand";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import BrandPillButton from "@/components/brand-pill-button";
 import SphereBackButton from "@/components/sphere-back-button";
-import CountBadgePill from "@/components/count-badge-pill";
-import { PngPillButton } from "@/components/png-pill-rollover";
+import { PngPillButton, brandImagePillSrc } from "@/components/png-pill-rollover";
+import { PillColorLayer } from "@/components/png-pill-chrome";
+import {
+  PILL_HEIGHT_PX,
+  PILL_LABEL_CLASS,
+  PILL_READONLY_WRAPPER_CLASS,
+  pillLabelToneClass,
+} from "@/lib/pill-doctrine";
+import { cn } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -30,6 +38,8 @@ function fmt(ts: string | null) {
 export default function VisitorsPage() {
   const { t } = useTranslation();
   const [, setLocation] = useLocation();
+  const brand = useBrand();
+  const iconStyle = { color: brand.isOrgBranded ? brand.primary : "#f59e0b" };
   const initialSiteFilter = (() => {
     if (typeof window === "undefined") return "all";
     const sp = new URLSearchParams(window.location.search);
@@ -188,19 +198,13 @@ export default function VisitorsPage() {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2">
+                <UserCheck className={CARD_TITLE_ICON_CLASS} style={iconStyle} />
                 {t("visitor.currentlyOnSite")}{" "}
-                {/* Canonical TogglePill in the partner's brand
-                    color — replaces the prior glossy red PNG pill
-                    so the on-site counter visually ties to the
-                    rest of the brand-tinted chrome. */}
-                <CountBadgePill
-                  color="blue"
-                  className="align-middle"
+                <BrandedCountPill
+                  count={active.length}
                   data-testid="badge-currently-on-site-count"
-                >
-                  {active.length}
-                </CountBadgePill>
+                />
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -218,7 +222,10 @@ export default function VisitorsPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">{t("visitor.recent")}</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <History className={CARD_TITLE_ICON_CLASS} style={iconStyle} />
+                {t("visitor.recent")}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               {past.length === 0 ? (
@@ -238,6 +245,85 @@ export default function VisitorsPage() {
   );
 }
 
+function BrandedCountPill({
+  count,
+  "data-testid": testId,
+}: {
+  count: number;
+  "data-testid"?: string;
+}) {
+  const brand = useBrand();
+  const pillSrc = brandImagePillSrc(brand.primary, brand.name);
+  return (
+    <span
+      className={cn(
+        PILL_READONLY_WRAPPER_CLASS,
+        "min-w-[70px] whitespace-nowrap pointer-events-none align-middle",
+      )}
+      style={{ height: PILL_HEIGHT_PX }}
+      data-testid={testId}
+    >
+      <PillColorLayer src={pillSrc} />
+      <span
+        className={cn(PILL_LABEL_CLASS, "h-full gap-1.5", pillLabelToneClass(false))}
+      >
+        {count}
+      </span>
+    </span>
+  );
+}
+
+type VisitSortKey =
+  | "visitor"
+  | "company"
+  | "site"
+  | "host"
+  | "purpose"
+  | "checkIn"
+  | "checkOut";
+type VisitSortDir = "asc" | "desc";
+
+function visitorName(r: VisitorRow) {
+  return `${r.lastName} ${r.firstName}`.trim();
+}
+
+function hostName(r: VisitorRow) {
+  return r.hostType === "partner" ? r.hostPartnerName ?? "" : r.hostVendorName ?? "";
+}
+
+function compareVisitRows(
+  a: VisitorRow,
+  b: VisitorRow,
+  key: VisitSortKey,
+  dir: VisitSortDir,
+): number {
+  const mul = dir === "asc" ? 1 : -1;
+  switch (key) {
+    case "visitor":
+      return visitorName(a).localeCompare(visitorName(b)) * mul;
+    case "company":
+      return (a.company ?? "").localeCompare(b.company ?? "") * mul;
+    case "site":
+      return (a.siteName ?? "").localeCompare(b.siteName ?? "") * mul;
+    case "host":
+      return hostName(a).localeCompare(hostName(b)) * mul;
+    case "purpose":
+      return (a.purpose ?? "").localeCompare(b.purpose ?? "") * mul;
+    case "checkIn":
+      return (
+        (new Date(a.checkInTime).getTime() - new Date(b.checkInTime).getTime()) *
+        mul
+      );
+    case "checkOut": {
+      const aOut = a.checkOutTime ? new Date(a.checkOutTime).getTime() : 0;
+      const bOut = b.checkOutTime ? new Date(b.checkOutTime).getTime() : 0;
+      return (aOut - bOut) * mul;
+    }
+    default:
+      return 0;
+  }
+}
+
 function VisitTable({
   rows,
   showCheckOut,
@@ -248,22 +334,101 @@ function VisitTable({
   onRowClick: (id: number) => void;
 }) {
   const { t } = useTranslation();
+  const brand = useBrand();
+  const iconStyle = { color: brand.isOrgBranded ? brand.primary : "#f59e0b" };
+  const [sort, setSort] = useState<{ key: VisitSortKey; dir: VisitSortDir }>(() =>
+    showCheckOut
+      ? { key: "checkOut", dir: "desc" }
+      : { key: "checkIn", dir: "desc" },
+  );
+
+  const sortedRows = useMemo(
+    () =>
+      [...rows].sort((a, b) => compareVisitRows(a, b, sort.key, sort.dir)),
+    [rows, sort],
+  );
+
+  const toggleSort = (key: VisitSortKey) => {
+    setSort((prev) =>
+      prev.key === key
+        ? { key, dir: prev.dir === "asc" ? "desc" : "asc" }
+        : { key, dir: "asc" },
+    );
+  };
+
+  const SortableTh = ({
+    column,
+    label,
+    testId,
+  }: {
+    column: VisitSortKey;
+    label: string;
+    testId: string;
+  }) => (
+    <th
+      className="py-2 pr-3 cursor-pointer select-none"
+      onClick={() => toggleSort(column)}
+      data-testid={testId}
+    >
+      <div className="flex items-center gap-1">
+        {label}
+        {sort.key === column ? (
+          sort.dir === "asc" ? (
+            <ArrowUp className="w-3 h-3" style={iconStyle} />
+          ) : (
+            <ArrowDown className="w-3 h-3" style={iconStyle} />
+          )
+        ) : null}
+      </div>
+    </th>
+  );
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
           <tr className="text-left border-b">
-            <th className="py-2 pr-3">{t("visitor.table.visitor")}</th>
-            <th className="py-2 pr-3">{t("visitor.table.company")}</th>
-            <th className="py-2 pr-3">{t("visitor.table.site")}</th>
-            <th className="py-2 pr-3">{t("visitor.table.host")}</th>
-            <th className="py-2 pr-3">{t("visitor.table.purpose")}</th>
-            <th className="py-2 pr-3">{t("visitor.table.checkedIn")}</th>
-            {showCheckOut && <th className="py-2 pr-3">{t("visitor.table.checkedOut")}</th>}
+            <SortableTh
+              column="visitor"
+              label={t("visitor.table.visitor")}
+              testId="th-sort-visitor"
+            />
+            <SortableTh
+              column="company"
+              label={t("visitor.table.company")}
+              testId="th-sort-company"
+            />
+            <SortableTh
+              column="site"
+              label={t("visitor.table.site")}
+              testId="th-sort-site"
+            />
+            <SortableTh
+              column="host"
+              label={t("visitor.table.host")}
+              testId="th-sort-host"
+            />
+            <SortableTh
+              column="purpose"
+              label={t("visitor.table.purpose")}
+              testId="th-sort-purpose"
+            />
+            <SortableTh
+              column="checkIn"
+              label={t("visitor.table.checkedIn")}
+              testId="th-sort-checked-in"
+            />
+            {showCheckOut && (
+              <SortableTh
+                column="checkOut"
+                label={t("visitor.table.checkedOut")}
+                testId="th-sort-checked-out"
+              />
+            )}
           </tr>
         </thead>
         <tbody>
-          {rows.map((r) => (
+          {sortedRows.map((r) => (
             <tr
               key={r.id}
               className="group border-b last:border-0 cursor-pointer hover:bg-muted/40"

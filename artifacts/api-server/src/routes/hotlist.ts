@@ -237,6 +237,7 @@ router.get("/hotlist/jobs", async (req, res) => {
       .select({
         id: hotlistJobsTable.id,
         partnerId: hotlistJobsTable.partnerId,
+        workTypeId: hotlistJobsTable.workTypeId,
         title: hotlistJobsTable.title,
         description: hotlistJobsTable.description,
         locationAddress: hotlistJobsTable.locationAddress,
@@ -282,20 +283,32 @@ router.get("/hotlist/jobs", async (req, res) => {
     // `?includeAll=1` returns the full list; otherwise we filter it
     // down and surface the hidden count so the UI can prompt them.
     const catalogRows = await db
-      .select({ name: workTypesTable.name, category: workTypesTable.category })
+      .select({
+        workTypeId: vendorWorkTypesTable.workTypeId,
+        name: workTypesTable.name,
+        category: workTypesTable.category,
+      })
       .from(vendorWorkTypesTable)
       .innerJoin(
         workTypesTable,
         eq(vendorWorkTypesTable.workTypeId, workTypesTable.id),
       )
       .where(eq(vendorWorkTypesTable.vendorId, session.vendorId));
+    const catalogWorkTypeIds = new Set(catalogRows.map((r) => r.workTypeId));
     const catalogTerms = new Set<string>();
     for (const r of catalogRows) {
       if (r.name) catalogTerms.add(r.name.trim().toLowerCase());
       if (r.category) catalogTerms.add(r.category.trim().toLowerCase());
     }
-    const matchesCatalog = (j: { title: string; description: string | null }) => {
-      if (catalogTerms.size === 0) return true;
+    const matchesCatalog = (j: {
+      title: string;
+      description: string | null;
+      workTypeId: number | null;
+    }) => {
+      if (catalogWorkTypeIds.size === 0) return true;
+      if (j.workTypeId != null && catalogWorkTypeIds.has(j.workTypeId)) {
+        return true;
+      }
       const hay = `${j.title} ${j.description ?? ""}`.toLowerCase();
       for (const term of catalogTerms) {
         if (term.length >= 3 && hay.includes(term)) return true;
@@ -342,7 +355,7 @@ router.get("/hotlist/jobs", async (req, res) => {
         operatingRadiusMiles: vendor.operatingRadiusMiles,
       },
       catalog: {
-        size: catalogTerms.size,
+        size: catalogWorkTypeIds.size,
         filteredCount: catalogFilteredCount,
         includeAll,
       },
@@ -395,7 +408,15 @@ router.post("/hotlist/jobs", async (req, res) => {
   const session = getSession(req);
   if (!session) return sendApiError(res, 401, "auth.not_authenticated", "Unauthorized");
 
-  const { title, description, locationAddress, deadline, estimatedDurationDays, partnerId: bodyPartnerId } = req.body ?? {};
+  const {
+    title,
+    description,
+    locationAddress,
+    deadline,
+    estimatedDurationDays,
+    partnerId: bodyPartnerId,
+    workTypeId: bodyWorkTypeId,
+  } = req.body ?? {};
   if (!title || !locationAddress) return sendApiError(res, 400, "hotlist.title_required", "title and locationAddress are required");
 
   let partnerId: number;
@@ -413,11 +434,29 @@ router.post("/hotlist/jobs", async (req, res) => {
     return sendApiError(res, 403, "hotlist.partner_only_post", "Only partners or admins may post Hotlist jobs");
   }
 
+  let workTypeId: number | null = null;
+  if (bodyWorkTypeId != null && bodyWorkTypeId !== "") {
+    const wtId = Number(bodyWorkTypeId);
+    if (!Number.isFinite(wtId) || wtId <= 0) {
+      return sendApiError(res, 400, "hotlist.invalid_work_type", "Invalid workTypeId");
+    }
+    const [wt] = await db
+      .select({ id: workTypesTable.id })
+      .from(workTypesTable)
+      .where(eq(workTypesTable.id, wtId))
+      .limit(1);
+    if (!wt) {
+      return sendApiError(res, 400, "hotlist.work_type_not_found", "Work type not found");
+    }
+    workTypeId = wtId;
+  }
+
   const geo = await geocode(locationAddress);
   const [row] = await db
     .insert(hotlistJobsTable)
     .values({
       partnerId,
+      workTypeId,
       title,
       description: description || null,
       locationAddress,

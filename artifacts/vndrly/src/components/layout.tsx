@@ -19,7 +19,6 @@ import {
   ScrollText,
   BookOpen,
   Gauge,
-  GitMerge,
   MessageSquareOff,
 } from "lucide-react";
 import React, { useState } from "react";
@@ -76,7 +75,7 @@ function useNavItems(user: { role: string; vendorId: number | null; partnerId: n
       invoicesItem,
       statementsItem,
       reportsItem,
-      { href: "/vendor-catalog", label: t("nav.vendorCatalog"), icon: ShoppingCart, key: "vendor-catalog" },
+      { href: "/vendor-catalog", label: t("nav.yourServices"), icon: ShoppingCart, key: "vendor-catalog" },
       { href: `/analytics/vendor/${user.vendorId}`, label: t("nav.analytics"), icon: BarChart3, key: "analytics" },
     ];
   }
@@ -92,6 +91,7 @@ function useNavItems(user: { role: string; vendorId: number | null; partnerId: n
       billsItem,
       statementsItem,
       reportsItem,
+      { href: "/partner-catalog", label: t("nav.partnerCatalog"), icon: ShoppingCart, key: "partner-catalog" },
       { href: `/analytics/partner/${user.partnerId}`, label: t("nav.analytics"), icon: BarChart3, key: "analytics" },
     ];
   }
@@ -104,7 +104,7 @@ function useNavItems(user: { role: string; vendorId: number | null; partnerId: n
       invoicesItem,
       statementsItem,
       reportsItem,
-      { href: "/catalog", label: t("nav.catalog"), icon: ShoppingCart, key: "catalog" },
+      { href: "/catalog", label: t("nav.platformCatalog"), icon: ShoppingCart, key: "catalog" },
       // VNDRLY self-management page — only shown to system admins.
       // Lets them edit the platform's own company info, branding, and
       // manage other system administrators.
@@ -114,10 +114,6 @@ function useNavItems(user: { role: string; vendorId: number | null; partnerId: n
       // override took effect after rolling the API process,
       // without grepping logs or tripping a 429.
       { href: "/admin/rate-limits", label: "Rate limits", icon: Gauge, key: "admin-rate-limits" },
-      // Vendor merge audit history (Task #453). Surfaces every
-      // successful "Merge into another vendor…" so support can
-      // investigate "what happened to vendor #X?" without psql.
-      { href: "/admin/vendor-merges", label: "Vendor merges", icon: GitMerge, key: "admin-vendor-merges" },
       // Soft-deleted ticket + hotlist comments audit (Task #52). Lets
       // admins see who removed a comment, view the original content,
       // and (from the parent record's comments panel) restore it.

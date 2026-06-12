@@ -1,8 +1,7 @@
-import { PngPillButton } from "@/components/png-pill-rollover";
+﻿import { PngPillButton } from "@/components/png-pill-rollover";
 import type { TicketTransition } from "@workspace/api-client-react";
 import {
   useGetTicket,
-  useGetTicketGpsLogs,
   useGetCrewSessions,
   useGetSiteLocation,
   useGetTicketNoteLogs,
@@ -34,7 +33,6 @@ import {
   getGetTicketQueryKey,
   getGetTicketNoteLogsQueryKey,
   getGetTicketLineItemsQueryKey,
-  getGetTicketGpsLogsQueryKey,
   getGetCrewSessionsQueryKey,
   getGetSiteLocationQueryKey,
   getGetTaxRateByStateQueryKey,
@@ -45,7 +43,6 @@ import {
 import { formatTicketTrackingNumber } from "@workspace/db/format";
 import StarRating from "@/components/star-rating";
 import TicketStatusStepper from "@/components/ticket-status-stepper";
-import { TicketRouteMap } from "@/components/ticket-route-map";
 import { TicketSiteVisitSummaryCard } from "@/components/ticket-site-visit-summary-card";
 import { CrewTimeSection } from "@/components/crew-time-section";
 import { TicketNudgePanel } from "@/components/ticket-nudge-panel";
@@ -89,7 +86,6 @@ import { useTicketNudgeFlash } from "@/hooks/use-ticket-nudge-flash";
 import { useTranslation } from "react-i18next";
 import { translateApiError } from "@/lib/api-error";
 import { isForemanPersona } from "@/lib/portal-base";
-import { buildGpsTimelineCsv } from "@/lib/gps-timeline-csv";
 import { cn } from "@/lib/utils";
 import { PillColorLayer } from "@/components/png-pill-chrome";
 import {
@@ -188,13 +184,13 @@ function CrewTrackerSection({ ticketId, canSee }: { ticketId: number; canSee: bo
   if (!canSee) return null;
 
   function fmtDistance(m: number | null) {
-    if (m == null) return "—";
+    if (m == null) return "â€”";
     if (m < 1609) return `${Math.round(m / 0.3048)} ft`;
     const mi = m / 1609.344;
     return `${mi < 10 ? mi.toFixed(1) : Math.round(mi)} mi`;
   }
   function fmtEta(min: number | null) {
-    if (min == null) return "—";
+    if (min == null) return "â€”";
     if (min < 1) return t("crewTracker.etaNow");
     if (min < 60) return t("crewTracker.etaMins", { min });
     const h = Math.floor(min / 60);
@@ -202,7 +198,7 @@ function CrewTrackerSection({ ticketId, canSee }: { ticketId: number; canSee: bo
     return r === 0 ? t("crewTracker.etaHrs", { h }) : t("crewTracker.etaHrsMins", { h, min: r });
   }
   function fmtAge(iso: string | null) {
-    if (!iso) return "—";
+    if (!iso) return "â€”";
     const ms = Date.now() - new Date(iso).getTime();
     const min = Math.round(ms / 60000);
     if (min < 1) return t("crewTracker.justNow");
@@ -254,7 +250,7 @@ function CrewTrackerSection({ ticketId, canSee }: { ticketId: number; canSee: bo
                   </span>
                   <span className="text-xs ml-auto">
                     {t("crewTracker.distance", { d: fmtDistance(row.distanceMeters) })}
-                    {" · "}
+                    {" Â· "}
                     {t("crewTracker.eta", { eta: fmtEta(row.etaMinutes) })}
                   </span>
                   {directionsHref && (
@@ -355,7 +351,7 @@ export default function TicketDetail({ id }: { id: number }) {
   // `site_vendor_mismatch` or `work_type_not_allowed`, the partner has
   // pulled the vendor's site/work-type assignment out from under an
   // in-flight ticket. Pinning that as a generic 400 toast invites the
-  // dispatcher to keep retrying the same button — instead, surface a
+  // dispatcher to keep retrying the same button â€” instead, surface a
   // banner with the same "contact partner / cancel ticket" affordance
   // the field crew sees on mobile, and grey out Submit / Send for
   // Review until the assignment comes back (or the ticket is cancelled).
@@ -368,7 +364,7 @@ export default function TicketDetail({ id }: { id: number }) {
   // `ticket.unblocked` handler (whose closure is captured once per
   // EventSource lifetime) can read the latest banner state without
   // re-creating the subscription on every state flip. Used to gate
-  // the assignment-restored confirmation toast — we only acknowledge
+  // the assignment-restored confirmation toast â€” we only acknowledge
   // restores when the dispatcher was actively blocked, mirroring
   // mobile (Task #623). Without this gate, the toast would fire on
   // every unblock event for the open ticket and spam dispatchers
@@ -386,7 +382,7 @@ export default function TicketDetail({ id }: { id: number }) {
   // of waiting for the operator to navigate away or refocus the tab.
   // When the banner is not active we fall back to react-query's default
   // (no polling) so we don't add background load to every ticket page.
-  // Task #675 — track per-session rate-limit cooldown for the detail
+  // Task #675 â€” track per-session rate-limit cooldown for the detail
   // query the same way the list page does. While `detailRateLimited`
   // is true we set `enabled: false` on this query so neither the
   // assignment-removed 7s poll nor SSE-driven invalidations re-fire
@@ -402,7 +398,7 @@ export default function TicketDetail({ id }: { id: number }) {
       queryKey: getGetTicketQueryKey(id),
       refetchInterval: assignmentRemoved && !detailRateLimitedState ? 7000 : false,
       refetchIntervalInBackground: false,
-      // Disable retries on 429 — burning the budget further when
+      // Disable retries on 429 â€” burning the budget further when
       // we're already throttled never recovers faster. Other errors
       // keep react-query's default (3 retries with backoff) so a
       // transient network blip doesn't strand the page.
@@ -419,17 +415,16 @@ export default function TicketDetail({ id }: { id: number }) {
     setDetailRateLimitedState(detailRateLimited);
   }, [detailRateLimited]);
   const ticketDataUpdatedAt = ticketQuery.dataUpdatedAt;
-  const { data: gpsLogs } = useGetTicketGpsLogs(id, { query: { enabled: !!id, queryKey: getGetTicketGpsLogsQueryKey(id) } });
   const { data: crewSessions } = useGetCrewSessions(id, { query: { enabled: !!id, refetchInterval: 60000, queryKey: getGetCrewSessionsQueryKey(id) } });
   const { data: siteLocation } = useGetSiteLocation(ticket?.siteLocationId ?? 0, { query: { enabled: !!ticket?.siteLocationId, queryKey: getGetSiteLocationQueryKey(ticket?.siteLocationId ?? 0) } });
   const { data: noteLogs } = useGetTicketNoteLogs(id, { query: { enabled: !!id, queryKey: getGetTicketNoteLogsQueryKey(id) } });
   const { data: unlockHistory } = useGetTicketUnlocks(id, { query: { enabled: !!id, queryKey: getGetTicketUnlocksQueryKey(id) } });
   // Task #501: invite/accept/deny/reinvite audit trail. Always loaded for
-  // any role allowed to view the ticket detail surface — partners are the
+  // any role allowed to view the ticket detail surface â€” partners are the
   // primary audience, but vendors/admins/field employees benefit from the
   // same chronology when debugging why a job took multiple invites.
   // Task #857: pass `undefined` for params (the JSON form has no
-  // server-side filters — the filter chips are local; only the CSV
+  // server-side filters â€” the filter chips are local; only the CSV
   // export round-trips its filter set as a query string). The third
   // arg is the React Query options object. The route's response type
   // is `TicketTransition[] | string` (the string is the CSV variant);
@@ -505,7 +500,7 @@ export default function TicketDetail({ id }: { id: number }) {
     // Use a hidden anchor so the browser respects the
     // Content-Disposition filename and we keep cookies (the audit-trail
     // route is auth-gated). A `window.open` would also work but pops a
-    // tab — anchor-click is the conventional CSV-download pattern.
+    // tab â€” anchor-click is the conventional CSV-download pattern.
     const a = document.createElement("a");
     a.href = url;
     a.rel = "noopener";
@@ -550,11 +545,11 @@ export default function TicketDetail({ id }: { id: number }) {
   const cancelTicket = useCancelTicket();
   const reactivateTicket = useReactivateTicket();
   const disperseFunds = useDisperseFundsTicket();
-  // Task #504 — admin-only escape hatch to reverse a `funds_dispersed`
+  // Task #504 â€” admin-only escape hatch to reverse a `funds_dispersed`
   // ticket back to `approved`. Lives next to the disperse mutation so the
   // Payment Details card can offer both write paths from one place.
   const reverseFundsDispersal = useReverseFundsDispersal();
-  // Task #853 — AP-self-service reversal. Mirrors `reverseFundsDispersal`
+  // Task #853 â€” AP-self-service reversal. Mirrors `reverseFundsDispersal`
   // but talks to POST /tickets/:id/reverse-dispersal so a partner-AP
   // viewer (not just an admin) can correct their own miskeyed dispersal.
   // The trigger is gated on `ticket.viewerCanReverseDispersal` below.
@@ -580,7 +575,7 @@ export default function TicketDetail({ id }: { id: number }) {
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [unlockOpen, setUnlockOpen] = useState(false);
   const [unlockReason, setUnlockReason] = useState("");
-  // Task #587 — Mark Awaiting Payment dialog state. Web counterpart to the
+  // Task #587 â€” Mark Awaiting Payment dialog state. Web counterpart to the
   // mobile sheet added in Task #575. Lets vendors and admins flip an
   // in-progress ticket into `awaiting_payment` from the desktop without
   // grabbing their phone. The note is optional and capped at 500 chars to
@@ -588,14 +583,14 @@ export default function TicketDetail({ id }: { id: number }) {
   const [awaitingPaymentOpen, setAwaitingPaymentOpen] = useState(false);
   const [awaitingPaymentNote, setAwaitingPaymentNote] = useState("");
   const [awaitingPaymentPending, setAwaitingPaymentPending] = useState(false);
-  // Task #497 — Disperse Funds dialog state. Pulled out of the dialog body
+  // Task #497 â€” Disperse Funds dialog state. Pulled out of the dialog body
   // so we can reset on close and gate the Confirm button on the
   // method/reference combination.
   const [disperseOpen, setDisperseOpen] = useState(false);
   const [disperseMethod, setDisperseMethod] = useState<"etf" | "check" | "other">("etf");
   const [disperseRef, setDisperseRef] = useState("");
   const [disperseNote, setDisperseNote] = useState("");
-  // Task #852 — optional proof-of-payment image. AP can attach a check
+  // Task #852 â€” optional proof-of-payment image. AP can attach a check
   // stub / wire confirmation / signed receipt by picking a file from
   // the desktop modal; the upload happens immediately and we cache the
   // resulting object path here, then ship it as `paymentReceiptUrl` on
@@ -604,13 +599,13 @@ export default function TicketDetail({ id }: { id: number }) {
   const [disperseReceiptUrl, setDisperseReceiptUrl] = useState<string | null>(null);
   const [disperseReceiptUploading, setDisperseReceiptUploading] = useState(false);
   const disperseReceiptInputRef = useRef<HTMLInputElement>(null);
-  // Task #504 — Reverse / void payment dialog state. Admin-only confirm
+  // Task #504 â€” Reverse / void payment dialog state. Admin-only confirm
   // step that requires a non-empty reason; mirrors disperseOpen so the
   // dialog resets cleanly on close and doesn't keep stale text from the
   // last attempt around.
   const [reverseFundsOpen, setReverseFundsOpen] = useState(false);
   const [reverseFundsReason, setReverseFundsReason] = useState("");
-  // Task #853 — local state for the AP-self-service reverse-dispersal
+  // Task #853 â€” local state for the AP-self-service reverse-dispersal
   // confirm dialog. Kept separate from the admin reverseFunds* state so
   // the two flows (admin escape hatch / AP self-service) don't share
   // form fields and never fight over which mutation is in flight.
@@ -629,52 +624,6 @@ export default function TicketDetail({ id }: { id: number }) {
   const [rateOpen, setRateOpen] = useState(false);
   const [draftRating, setDraftRating] = useState(0);
   const [draftReview, setDraftReview] = useState("");
-  const [selectedTrackingId, setSelectedTrackingId] = useState<number | string | null>(null);
-  const longStopThresholdMs = 5 * 60 * 1000;
-
-  const trackingPoints = useMemo(
-    () =>
-      gpsLogs
-        ?.filter((l) => l.eventType === "tracking")
-        .map((l) => ({
-          id: l.id,
-          latitude: l.latitude,
-          longitude: l.longitude,
-          recordedAt: l.recordedAt,
-        })) ?? [],
-    [gpsLogs],
-  );
-
-  // Task #26 — CSV export of the GPS tracking timeline. Reviewers
-  // (auditors / payroll / dispute resolvers) sometimes need to share or
-  // archive a ticket's trail outside the app, so we expose the same
-  // points that drive the on-screen timeline as a downloadable CSV.
-  // The data is already in the client-side react-query cache, so we
-  // build the file in the browser instead of round-tripping a new API
-  // route. Filename embeds the canonical tracking number (e.g.
-  // `VNDRLY-00000009-gps-timeline.csv`) so it's self-describing once
-  // attached to an email or ticketing system. Row serialization /
-  // ordering / Excel framing live in `lib/gps-timeline-csv.ts` so they
-  // can be unit-tested without rendering the whole ticket page.
-  const handleGpsTimelineExport = useCallback(() => {
-    if (typeof window === "undefined") return;
-    if (trackingPoints.length === 0) return;
-    const csv = buildGpsTimelineCsv(trackingPoints);
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const trackingNumber = formatTicketTrackingNumber(id);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${trackingNumber}-gps-timeline.csv`;
-    a.rel = "noopener";
-    a.style.display = "none";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    // Defer revoke so Safari/Firefox have time to start the download.
-    setTimeout(() => URL.revokeObjectURL(url), 0);
-  }, [trackingPoints, id]);
-
   const isPartner = user?.role === "partner";
   const activeMembership = user?.availableMemberships?.find(
     (membership) => membership.id === user.activeMembershipId,
@@ -702,7 +651,7 @@ export default function TicketDetail({ id }: { id: number }) {
   // eligibility hook (Task #516) instead of fetching the unscoped list and
   // filtering inline. We pass `ticket?.vendorId` because the viewer here
   // may be admin / partner (whose active membership doesn't match the
-  // ticket's vendor) — the hook fetches the vendor-scoped, active-only
+  // ticket's vendor) â€” the hook fetches the vendor-scoped, active-only
   // set and re-asserts vendorId for the same stale-cache reasons that
   // back the phone-intake / Create New Job pickers, so this dropdown
   // can't surface a foreman the Task #507 server tenancy guard would
@@ -757,7 +706,7 @@ export default function TicketDetail({ id }: { id: number }) {
   // and re-runs `load()` while the screen is mounted; the web has no push
   // channel, so we listen on the `/api/tickets/events` SSE stream wired up
   // for this purpose. On a `ticket.unblocked` event matching this page's
-  // ticket id, invalidate the ticket query — the existing clear-on-refresh
+  // ticket id, invalidate the ticket query â€” the existing clear-on-refresh
   // effect above (which dismisses the banner once `dataUpdatedAt` advances
   // past the snapshot the banner captured) does the rest, so we don't need
   // any extra "is the banner up?" branching here. Pings for other tickets
@@ -766,13 +715,13 @@ export default function TicketDetail({ id }: { id: number }) {
   // The 7-second poll added in Task #607 is still the safety net: if the
   // SSE channel is down or the proxy strips the long-lived stream, the
   // banner still clears within ~7s of the partner re-granting access.
-  // Task #661 — same SSE health pill as the list page. Tracks the
+  // Task #661 â€” same SSE health pill as the list page. Tracks the
   // EventSource lifecycle and surfaces it via a small "Live /
-  // Reconnecting… / Reconnected — refreshed" pill rendered in the
+  // Reconnectingâ€¦ / Reconnected â€” refreshed" pill rendered in the
   // header below.
   const [liveStatus, setLiveStatus] = useState<LiveConnectionStatus>("connecting");
   const liveRefreshedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Task #659 — when EventSource auto-reconnects with a Last-Event-ID
+  // Task #659 â€” when EventSource auto-reconnects with a Last-Event-ID
   // older than the current global ticket-events sequence, the server's
   // one-shot `ticket.hello` carries `gap: true` to signal that one or
   // more `ticket.*` pushes were missed while we were disconnected.
@@ -795,7 +744,7 @@ export default function TicketDetail({ id }: { id: number }) {
   // the banner-raised snapshot.
   const ticketDataUpdatedAtRef = useRef<number>(0);
   ticketDataUpdatedAtRef.current = ticketQuery.dataUpdatedAt;
-  // Task #659 — drop the live-gap banner once the refetch we triggered
+  // Task #659 â€” drop the live-gap banner once the refetch we triggered
   // in response to the gap-flagged hello has actually landed (which
   // advances `dataUpdatedAt` past the snapshot we captured when the
   // banner went up). If the user clicked the inline "Refresh now"
@@ -807,7 +756,7 @@ export default function TicketDetail({ id }: { id: number }) {
       setLiveGap(false);
     }
   }, [ticketDataUpdatedAt, liveGap]);
-  // Task #667 — lifted out of the SSE effect so the connection pill's
+  // Task #667 â€” lifted out of the SSE effect so the connection pill's
   // manual "Refresh now" button (rendered in the header below) can
   // call them directly. The behavior matches the gap-flagged hello
   // path: invalidate this ticket's query, then briefly flash the
@@ -815,17 +764,17 @@ export default function TicketDetail({ id }: { id: number }) {
   // they'd see after an automatic gap-recovery.
   const invalidateTicketNow = useCallback(() => {
     if (!Number.isFinite(id) || id <= 0) return;
-    // Task #675 — while the per-session rate limit is active, swallow
+    // Task #675 â€” while the per-session rate limit is active, swallow
     // invalidations so SSE pushes / manual refresh don't immediately
     // re-fire /api/tickets/:id and re-trip the limiter. The query is
     // also `enabled: false` during the cooldown, so invalidate alone
-    // won't refetch — but skipping it entirely also avoids needlessly
+    // won't refetch â€” but skipping it entirely also avoids needlessly
     // marking the cache stale and forcing an unnecessary fetch the
     // instant the gate clears.
     if (detailRateLimitedRef.current) return;
     queryClient.invalidateQueries({ queryKey: getGetTicketQueryKey(id) });
   }, [id, queryClient]);
-  // "Refreshed" is a transient confirmation — flip back to "live"
+  // "Refreshed" is a transient confirmation â€” flip back to "live"
   // after a short hold so the pill doesn't sit on the success
   // copy forever.
   const flashRefreshed = useCallback(() => {
@@ -836,7 +785,7 @@ export default function TicketDetail({ id }: { id: number }) {
       setLiveStatus((prev) => (prev === "refreshed" ? "live" : prev));
     }, 3000);
   }, []);
-  // Task #667 — handler the pill calls when a dispatcher clicks
+  // Task #667 â€” handler the pill calls when a dispatcher clicks
   // "Refresh now" on the offline state. Same payload as the gap
   // hello: invalidate this ticket + flash the success state.
   const handleManualRefresh = useCallback(() => {
@@ -879,13 +828,13 @@ export default function TicketDetail({ id }: { id: number }) {
           // cleared and they can retry the action button without
           // re-mashing it. If the banner wasn't up (the operator just
           // happened to have this ticket open while a partner re-granted
-          // assignments en masse), we stay silent — toasting on every
+          // assignments en masse), we stay silent â€” toasting on every
           // unblock would spam an office juggling dozens of tickets.
           // Mirrors the mobile gate from Task #623.
           const wasShowingBanner = assignmentRemovedRef.current !== null;
           // Re-fetch the ticket so the clear-on-refresh effect dismisses
           // the assignment-removed banner. We deliberately don't touch
-          // any other queries here — the unblock signal is purely a
+          // any other queries here â€” the unblock signal is purely a
           // refresh hint for the ticket itself.
           invalidateTicketNow();
           if (wasShowingBanner) {
@@ -901,12 +850,12 @@ export default function TicketDetail({ id }: { id: number }) {
             });
           }
         } catch {
-          /* malformed payload — ignore */
+          /* malformed payload â€” ignore */
         }
       };
       // Task #657: the server's one-shot `ticket.hello` reports
       // `gap === true` whenever EventSource auto-reconnects with a
-      // Last-Event-ID older than the current global sequence — i.e.
+      // Last-Event-ID older than the current global sequence â€” i.e.
       // we missed at least one ticket.* event while disconnected.
       // Re-fetch this ticket so a missed unblock (or any other
       // server-side state change reflected in the ticket payload)
@@ -919,7 +868,7 @@ export default function TicketDetail({ id }: { id: number }) {
           };
           if (parsed.type !== "ticket.hello") return;
           if (parsed.gap === true) {
-            // Task #659 — capture the current dataUpdatedAt before
+            // Task #659 â€” capture the current dataUpdatedAt before
             // the invalidate fires so the clear-effect below knows
             // whether the resulting refetch has landed yet. The
             // banner stays up until that happens (or the user
@@ -927,13 +876,13 @@ export default function TicketDetail({ id }: { id: number }) {
             liveGapRaisedAtRef.current = ticketDataUpdatedAtRef.current;
             setLiveGap(true);
             invalidateTicketNow();
-            // Task #661 — only flash "refreshed" when we *did* miss
+            // Task #661 â€” only flash "refreshed" when we *did* miss
             // events. The first hello on a fresh subscription has
             // gap=false; in that case we just stay on "live".
             flashRefreshed();
           }
         } catch {
-          /* malformed payload — ignore */
+          /* malformed payload â€” ignore */
         }
       };
       es.addEventListener("ticket.unblocked", onUnblocked as EventListener);
@@ -942,7 +891,7 @@ export default function TicketDetail({ id }: { id: number }) {
       // EventSource isn't available (e.g. some test environments). The
       // 7s poll fallback in `useGetTicket` still clears the banner.
       // Surface the offline state instead of leaving the pill stuck
-      // on "Connecting…" forever.
+      // on "Connectingâ€¦" forever.
       es = null;
       setLiveStatus("reconnecting");
     }
@@ -957,8 +906,8 @@ export default function TicketDetail({ id }: { id: number }) {
 
   // Default mutation error handler. Surfaces the structured error code
   // returned by ticket-mutation endpoints (Task #527) so partners and
-  // vendors see a precise, localized message — e.g. "Only the invited
-  // vendor can act on this ticket" — instead of a generic "Action failed".
+  // vendors see a precise, localized message â€” e.g. "Only the invited
+  // vendor can act on this ticket" â€” instead of a generic "Action failed".
   // Falls back to the legacy generic toast when the response carries no
   // recognizable code.
   const showError = (err: unknown, fallbackKey = "ticketDetail.toastActionFailed") =>
@@ -1057,7 +1006,7 @@ export default function TicketDetail({ id }: { id: number }) {
           paymentMethod: disperseMethod,
           paymentReference: ref || null,
           note: disperseNote.trim() || null,
-          // Task #852 — optional proof-of-payment image. Already
+          // Task #852 â€” optional proof-of-payment image. Already
           // uploaded above (we hold the resulting object path on
           // state) so this is just a string pass-through. Server
           // trims + null-fallback so an empty string from a cleared
@@ -1077,8 +1026,8 @@ export default function TicketDetail({ id }: { id: number }) {
         },
         onError: (err: unknown) => {
           // Task #527: structured codes from /disperse-funds now drive the
-          // toast — payment_reference_required, forbidden_not_ap,
-          // ticket_not_approved — falling back to the generic AP message
+          // toast â€” payment_reference_required, forbidden_not_ap,
+          // ticket_not_approved â€” falling back to the generic AP message
           // for legacy 403s without a code, then to the generic action
           // failed string.
           const status = (err as { status?: number; response?: { status?: number } })
@@ -1095,7 +1044,7 @@ export default function TicketDetail({ id }: { id: number }) {
     );
   };
   const handleReactivate = () => reactivateTicket.mutate({ id }, { onSuccess: () => { invalidate(); toast({ title: t("ticketDetail.toastTrackingRestored") }); }, onError });
-  // Task #504 — Reverse / void payment. Admin-only escape hatch for
+  // Task #504 â€” Reverse / void payment. Admin-only escape hatch for
   // miskeyed payment refs / wrong vendor / wrong method. Server enforces
   // role + status, this just hides the trigger from non-admins. On
   // success we invalidate the ticket query so the Payment Details card
@@ -1134,7 +1083,7 @@ export default function TicketDetail({ id }: { id: number }) {
       },
     );
   };
-  // Task #853 — partner-AP self-service reversal handler. Same
+  // Task #853 â€” partner-AP self-service reversal handler. Same
   // success/error plumbing as the admin reverseFunds* flow above (toast
   // messages key off the new `reverseDispersal*` locale strings) so the
   // two paths share one mental model. Keeps a separate mutation in
@@ -1176,8 +1125,8 @@ export default function TicketDetail({ id }: { id: number }) {
   // Task #587: POST /tickets/:id/awaiting-payment from the desktop dialog.
   // No generated react-query hook exists for this endpoint yet, so we
   // hand-roll the fetch + error shape (status + parsed body) to feed
-  // translateApiError so server codes — invalid_awaiting_payment_body,
-  // forbidden_not_assigned, ticket_not_in_progress — surface in the
+  // translateApiError so server codes â€” invalid_awaiting_payment_body,
+  // forbidden_not_assigned, ticket_not_in_progress â€” surface in the
   // viewer's locale via the existing `errors.*` keys. On success we close
   // the dialog, reset the note, and invalidate the ticket query so the
   // new `awaiting_payment` status renders without a manual refresh.
@@ -1372,16 +1321,16 @@ export default function TicketDetail({ id }: { id: number }) {
         <div>
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-lg font-bold" data-testid="text-ticket-id">{formatTicketTrackingNumber(ticket.id)}</h1>
-            {/* Task #661 — small SSE health pill so the dispatcher
+            {/* Task #661 â€” small SSE health pill so the dispatcher
                 knows whether the live ticket feed is connected. Sits
                 inline with the ticket id; doesn't shift layout
                 between states (fixed min width).
-                Task #667 — when offline, the pill becomes a clickable
+                Task #667 â€” when offline, the pill becomes a clickable
                 "Refresh now" affordance that re-fetches this ticket
                 without a full page reload. The pill briefly flashes
                 "Refreshed" on success, mirroring the gap-recovery
                 confirmation. */}
-            {/* Task #675 — when the per-session rate limit trips, surface
+            {/* Task #675 â€” when the per-session rate limit trips, surface
                 the cooldown via the existing "reconnecting" state on the
                 pill so the user gets the same visual treatment as a
                 normal SSE outage, and disable manual refresh so they
@@ -1448,15 +1397,15 @@ export default function TicketDetail({ id }: { id: number }) {
         </CardContent>
       </Card>
 
-      {/* ── Task #659: Live updates gap banner ──
+      {/* â”€â”€ Task #659: Live updates gap banner â”€â”€
           When the SSE channel reconnects after a long enough drop that
           the server reports a gap (`ticket.hello` payload with
           `gap: true`), surface a subtle inline banner so the
           dispatcher knows the page may have been showing stale data
           and is being refreshed. The connection pill above the
-          stepper already flashes "Reconnected — refreshed", but the
+          stepper already flashes "Reconnected â€” refreshed", but the
           pill is small and easy to miss while focused on the ticket
-          body — this banner is the more explicit cue. Mirrors the
+          body â€” this banner is the more explicit cue. Mirrors the
           pattern the Crew Map uses for its `location.hello` /
           `visitor.hello` gaps. */}
       {liveGap && (
@@ -1470,7 +1419,7 @@ export default function TicketDetail({ id }: { id: number }) {
           <span data-testid="text-ticket-live-gap-message">
             {t("ticketDetail.liveGapWarning", {
               defaultValue:
-                "Reconnected to live updates — some changes may have been missed. Refreshing now…",
+                "Reconnected to live updates â€” some changes may have been missed. Refreshing nowâ€¦",
             })}
           </span>
           <button
@@ -1486,7 +1435,7 @@ export default function TicketDetail({ id }: { id: number }) {
         </div>
       )}
 
-      {/* ── Task #593: Assignment-removed banner ──
+      {/* â”€â”€ Task #593: Assignment-removed banner â”€â”€
           Mirrors the mobile banner (Task #572): when a state-change POST
           returned `site_vendor_mismatch` or `work_type_not_allowed`,
           the partner pulled this vendor's site/work-type assignment
@@ -1518,7 +1467,7 @@ export default function TicketDetail({ id }: { id: number }) {
               <PngPillButton color="red"
                 onClick={() => {
                   // Self-contained confirm so the banner's cancel works
-                  // for any role that can hit it — the existing cancel
+                  // for any role that can hit it â€” the existing cancel
                   // Dialog is only rendered inside the vendor / partner /
                   // admin branches of the actions footer, so a
                   // field_employee viewing this page on the web would
@@ -1542,10 +1491,10 @@ export default function TicketDetail({ id }: { id: number }) {
         </Card>
       )}
 
-      {/* ── Task #494: Vendor Accept/Deny banner ──
+      {/* â”€â”€ Task #494: Vendor Accept/Deny banner â”€â”€
           Visible to members of the invited vendor org while the partner-self-service
           ticket is still in `awaiting_acceptance`. Two actions: Accept (transitions to
-          `initiated` so the standard En-Route → Check-In flow takes over) or Deny
+          `initiated` so the standard En-Route â†’ Check-In flow takes over) or Deny
           (requires a written reason and transitions to `denied`). */}
       {ticket.status === "awaiting_acceptance"
         && user?.role === "vendor"
@@ -1599,7 +1548,7 @@ export default function TicketDetail({ id }: { id: number }) {
         </Card>
       )}
 
-      {/* ── Task #494: Partner "Find another Vendor" banner ──
+      {/* â”€â”€ Task #494: Partner "Find another Vendor" banner â”€â”€
           Owning partner can launch the alternate-vendor sheet any time
           before work actually starts (vendor check-in flips status to
           `in_progress`). That covers `awaiting_acceptance` (invite still
@@ -1607,7 +1556,7 @@ export default function TicketDetail({ id }: { id: number }) {
           accepted but has not checked in yet). */}
       {/* Partners only ever load tickets the server has already scoped to
           their owning partner, so a viewer with role === "partner" is
-          implicitly the owning partner — no extra partnerId compare needed
+          implicitly the owning partner â€” no extra partnerId compare needed
           (and the Ticket payload doesn't expose partnerId). */}
       {(ticket.status === "denied"
           || ticket.status === "awaiting_acceptance"
@@ -1700,7 +1649,7 @@ export default function TicketDetail({ id }: { id: number }) {
                 <span className="text-muted-foreground">{t("ticketDetail.closedBy")}</span><br/>
                 <span className="font-medium" data-testid="text-closed-by">{ticket.closedByName || "-"}</span>
               </div>
-              {/* Task #538 — Restore the on-page assign / reassign picker for the
+              {/* Task #538 â€” Restore the on-page assign / reassign picker for the
                   ticket's lead field employee. The supporting state, eligibility
                   hook, and stale-selection cleanup were kept by Tasks #515/#525
                   but the rendered Select widget was lost in an earlier
@@ -1806,292 +1755,9 @@ export default function TicketDetail({ id }: { id: number }) {
         </Card>
 
         <TicketSiteVisitSummaryCard ticketId={id} />
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex flex-wrap items-center gap-2">
-              <MapPin className="w-5 h-5" style={{ color: "var(--brand-primary, #f59e0b)" }} />
-              {t("ticketDetail.timelineGps")}
-              <PillButton
-                type="button"
-                color="image"
-                className="ml-auto h-7 px-2 text-xs"
-                onClick={handleGpsTimelineExport}
-                disabled={trackingPoints.length === 0}
-                data-testid="button-gps-timeline-export"
-                title={t("ticketDetail.gpsTimelineExportTitle")}
-              >
-                <FileText className="w-3.5 h-3.5 mr-1" />
-                {t("ticketDetail.gpsTimelineExport")}
-              </PillButton>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <TicketRouteMap
-              site={
-                siteLocation && siteLocation.latitude != null && siteLocation.longitude != null
-                  ? { latitude: siteLocation.latitude, longitude: siteLocation.longitude, name: ticket.siteName ?? undefined }
-                  : null
-              }
-              checkIn={
-                ticket.checkInLatitude != null && ticket.checkInLongitude != null
-                  ? { latitude: ticket.checkInLatitude, longitude: ticket.checkInLongitude, time: ticket.checkInTime }
-                  : null
-              }
-              checkOut={
-                ticket.checkOutLatitude != null && ticket.checkOutLongitude != null
-                  ? { latitude: ticket.checkOutLatitude, longitude: ticket.checkOutLongitude, time: ticket.checkOutTime }
-                  : null
-              }
-              tracking={trackingPoints}
-              selectedTrackingId={selectedTrackingId}
-              onSelectTracking={setSelectedTrackingId}
-              longStopThresholdMs={longStopThresholdMs}
-            />
-            {siteLocation && (
-              <div className="flex items-start gap-3 p-2 rounded bg-muted/50 dark:bg-transparent dark:border" style={{ borderColor: "var(--brand-primary, #f59e0b)" }}>
-                <MapPin className="w-4 h-4 mt-0.5 text-amber-500" />
-                <div>
-                  <p className="text-sm font-medium">{t("ticketDetail.siteLocationGps")}</p>
-                  <p className="text-xs text-muted-foreground">{siteLocation.latitude.toFixed(4)}, {siteLocation.longitude.toFixed(4)}</p>
-                </div>
-              </div>
-            )}
-            {(() => {
-              const sessions = (crewSessions ?? []).slice().sort(
-                (a, b) => new Date(a.checkInAt).getTime() - new Date(b.checkInAt).getTime(),
-              );
-              const fmtHM = (mins: number) => {
-                const h = Math.floor(mins / 60);
-                const m = mins % 60;
-                return h > 0 ? `${h}h ${m}m` : `${m}m`;
-              };
-              if (sessions.length > 0) {
-                const intervals = sessions
-                  .map((s) => {
-                    const a = new Date(s.checkInAt).getTime();
-                    const b = s.checkOutAt
-                      ? new Date(s.checkOutAt).getTime()
-                      : Date.now();
-                    return [a, b] as [number, number];
-                  })
-                  .filter(([a, b]) => b > a)
-                  .sort((x, y) => x[0] - y[0]);
-                const merged: Array<[number, number]> = [];
-                for (const iv of intervals) {
-                  const last = merged[merged.length - 1];
-                  if (last && iv[0] <= last[1]) {
-                    last[1] = Math.max(last[1], iv[1]);
-                  } else {
-                    merged.push([iv[0], iv[1]]);
-                  }
-                }
-                const totalMin = Math.round(
-                  merged.reduce((sum, [a, b]) => sum + (b - a), 0) / 60000,
-                );
-                const anyOpen = sessions.some((s) => !s.checkOutAt);
-                return (
-                  <>
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium px-1 flex items-center gap-2">
-                        <span>{t("ticketDetail.checkInOutLog")}</span>
-                        {anyOpen && (
-                          <span className="inline-flex items-center gap-1 text-xs text-green-600">
-                            <span className="inline-block w-2 h-2 rounded-full bg-green-500" />
-                            {t("ticketDetail.live")}
-                          </span>
-                        )}
-                      </p>
-                      <div className="space-y-2">
-                        {sessions.map((s) => {
-                          const inAt = new Date(s.checkInAt);
-                          const outAt = s.checkOutAt ? new Date(s.checkOutAt) : null;
-                          const durMin = Math.round(
-                            ((outAt ? outAt.getTime() : Date.now()) - inAt.getTime()) / 60000,
-                          );
-                          const hasSite =
-                            siteLocation?.latitude != null &&
-                            siteLocation?.longitude != null;
-                          const hasIn =
-                            s.checkInLatitude != null &&
-                            s.checkInLongitude != null;
-                          const distKm =
-                            hasSite && hasIn
-                              ? getDistanceKm(
-                                  siteLocation!.latitude,
-                                  siteLocation!.longitude,
-                                  s.checkInLatitude!,
-                                  s.checkInLongitude!,
-                                )
-                              : null;
-                          const gpsMatch =
-                            distKm == null ? null : distKm <= GPS_MATCH_THRESHOLD_KM;
-                          const pinColor =
-                            gpsMatch === true
-                              ? "text-green-600"
-                              : gpsMatch === false
-                                ? "text-red-600"
-                                : outAt
-                                  ? "text-amber-500"
-                                  : "text-green-600";
-                          return (
-                            <div
-                              key={s.id}
-                              className="flex items-start gap-3 p-2 rounded bg-muted/50 dark:bg-transparent dark:border" style={{ borderColor: "var(--brand-primary, #f59e0b)" }}
-                              data-testid={`crew-session-${s.id}`}
-                            >
-                              <MapPin className={`w-4 h-4 mt-0.5 ${pinColor}`} />
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium truncate">
-                                  {s.employeeName || t("ticketDetail.employeeFallback", { id: s.employeeId })}
-                                  {!outAt && (
-                                    <span className="ml-2 inline-flex items-center gap-1 text-xs text-green-600">
-                                      <span className="inline-block w-2 h-2 rounded-full bg-green-500" />
-                                      {t("ticketDetail.live")}
-                                    </span>
-                                  )}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                  {t("ticketDetail.inAt", { when: inAt.toLocaleString() })}
-                                  {outAt
-                                    ? t("ticketDetail.outAt", { when: outAt.toLocaleString() })
-                                    : t("ticketDetail.stillOnSite")}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                  {t("ticketDetail.duration", { value: fmtHM(durMin) })}
-                                  {(() => {
-                                    const hasSite =
-                                      siteLocation?.latitude != null &&
-                                      siteLocation?.longitude != null;
-                                    const hasIn =
-                                      s.checkInLatitude != null &&
-                                      s.checkInLongitude != null;
-                                    if (!hasSite || !hasIn) return null;
-                                    const d = getDistanceKm(
-                                      siteLocation!.latitude,
-                                      siteLocation!.longitude,
-                                      s.checkInLatitude!,
-                                      s.checkInLongitude!,
-                                    );
-                                    const match = d <= GPS_MATCH_THRESHOLD_KM;
-                                    return (
-                                      <span
-                                        className={`ml-2 font-medium ${match ? "text-green-600" : "text-red-600"}`}
-                                        title={d < 1.609344 ? t("ticketDetail.fromSiteFeet", { ft: ((d * 1000) / 0.3048).toFixed(0) }) : t("ticketDetail.fromSiteMiles", { mi: (d / 1.609344).toFixed(2) })}
-                                      >
-                                        · {match ? t("ticketDetail.gpsMatch") : t("ticketDetail.gpsMismatch")}
-                                      </span>
-                                    );
-                                  })()}
-                                </p>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3 p-2 rounded bg-muted/50 dark:bg-transparent dark:border" style={{ borderColor: "var(--brand-primary, #f59e0b)" }}>
-                      <MapPin className="w-4 h-4 mt-0.5 text-blue-600" />
-                      <div>
-                        <p className="text-sm font-medium">
-                          {anyOpen ? t("ticketDetail.timeOnSiteLive") : t("ticketDetail.timeOnSite")}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {t("ticketDetail.totalAcrossSession", { count: sessions.length, hm: fmtHM(totalMin), hours: (totalMin / 60).toFixed(2) })}
-                        </p>
-                      </div>
-                    </div>
-                  </>
-                );
-              }
-              return (
-                <>
-                  {(ticket.checkInTime || ticket.checkOutTime) && (
-                    <div className="flex gap-4">
-                      {ticket.checkInTime && (
-                        <div className="flex items-start gap-3 p-2 rounded bg-muted/50 dark:bg-transparent dark:border flex-1" style={{ borderColor: "var(--brand-primary, #f59e0b)" }}>
-                          <MapPin className="w-4 h-4 mt-0.5 text-green-600" />
-                          <div>
-                            {ticket.fieldEmployeeName && <p className="text-xs text-muted-foreground">{ticket.fieldEmployeeName}</p>}
-                            <p className="text-sm font-medium">{t("ticketDetail.checkedInLabel")}</p>
-                            <p className="text-xs text-muted-foreground">{new Date(ticket.checkInTime).toLocaleString()}</p>
-                            {ticket.checkInLatitude != null && ticket.checkInLongitude != null && (
-                              <>
-                                <p className="text-xs text-muted-foreground">{t("ticketDetail.latLong", { lat: ticket.checkInLatitude.toFixed(4), lng: ticket.checkInLongitude.toFixed(4) })}</p>
-                                <a
-                                  href={getGoogleMapsUrl(ticket.checkInLatitude, ticket.checkInLongitude)}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-xs hover:underline"
-                                  style={{ color: "var(--brand-primary, #f59e0b)" }}
-                                >
-                                  {t("ticketDetail.viewOnGoogleMaps")}
-                                </a>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                      {ticket.checkOutTime && (
-                        <div className="flex items-start gap-3 p-2 rounded bg-muted/50 dark:bg-transparent dark:border flex-1" style={{ borderColor: "var(--brand-primary, #f59e0b)" }}>
-                          <MapPin className="w-4 h-4 mt-0.5 text-red-600" />
-                          <div>
-                            {ticket.fieldEmployeeName && <p className="text-xs text-muted-foreground">{ticket.fieldEmployeeName}</p>}
-                            <p className="text-sm font-medium">{t("ticketDetail.checkedOutLabel")}</p>
-                            <p className="text-xs text-muted-foreground">{new Date(ticket.checkOutTime).toLocaleString()}</p>
-                            {ticket.checkOutLatitude != null && ticket.checkOutLongitude != null && (
-                              <>
-                                <p className="text-xs text-muted-foreground">{t("ticketDetail.latLong", { lat: ticket.checkOutLatitude.toFixed(4), lng: ticket.checkOutLongitude.toFixed(4) })}</p>
-                                <a
-                                  href={getGoogleMapsUrl(ticket.checkOutLatitude, ticket.checkOutLongitude)}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-xs hover:underline"
-                                  style={{ color: "var(--brand-primary, #f59e0b)" }}
-                                >
-                                  {t("ticketDetail.viewOnGoogleMaps")}
-                                </a>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  {ticket.checkInTime && ticket.checkOutTime && (
-                    <div className="flex items-start gap-3 p-2 rounded bg-muted/50 dark:bg-transparent dark:border" style={{ borderColor: "var(--brand-primary, #f59e0b)" }}>
-                      <MapPin className="w-4 h-4 mt-0.5 text-blue-600" />
-                      <div>
-                        <p className="text-sm font-medium">{t("ticketDetail.timeOnSite")}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {fmtHM(
-                            Math.round(
-                              (new Date(ticket.checkOutTime).getTime() -
-                                new Date(ticket.checkInTime).getTime()) /
-                                60000,
-                            ),
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </>
-              );
-            })()}
-            {!ticket.checkInLatitude && !ticket.checkInTime && siteLocation && (crewSessions ?? []).length === 0 && (
-              <div className="flex items-start gap-3 p-3 rounded border border-gray-500" style={{ background: "linear-gradient(180deg, #6b7280 0%, #4b5563 100%)" }}>
-                <AlertTriangle className="w-5 h-5 mt-0.5 text-amber-400 shrink-0" />
-                <div>
-                  <p className="text-sm font-semibold text-amber-400">{t("ticketDetail.gpsMismatchCheckIn")}</p>
-                  <p className="text-xs text-white/90 mt-0.5">{t("ticketDetail.noCheckInGps")}</p>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
       </div>
 
-      {/* Task #497 — Read-only payment summary. Visible to both vendor and
+      {/* Task #497 â€” Read-only payment summary. Visible to both vendor and
           partner once funds have actually been dispersed. We anchor on
           paymentDispersedAt rather than status so a future loosening of the
           status enum (e.g. an extra terminal step) still surfaces the row. */}
@@ -2111,7 +1777,7 @@ export default function TicketDetail({ id }: { id: number }) {
                   {ticket.paymentMethod === "etf" && t("ticketDetail.disperseFundsMethodEtf")}
                   {ticket.paymentMethod === "check" && t("ticketDetail.disperseFundsMethodCheck")}
                   {ticket.paymentMethod === "other" && t("ticketDetail.disperseFundsMethodOther")}
-                  {!ticket.paymentMethod && "—"}
+                  {!ticket.paymentMethod && "â€”"}
                 </span>
               </div>
               {ticket.paymentReference && (
@@ -2141,7 +1807,7 @@ export default function TicketDetail({ id }: { id: number }) {
                 <span data-testid="payment-note">{ticket.paymentNote}</span>
               </div>
             )}
-            {/* Task #852 — proof-of-payment receipt thumbnail. The
+            {/* Task #852 â€” proof-of-payment receipt thumbnail. The
                 stored value is either an objectPath like
                 `/objects/uploads/abc` (mobile sends raw paths) or a
                 full URL (legacy / web sends the prefixed form). We
@@ -2178,7 +1844,7 @@ export default function TicketDetail({ id }: { id: number }) {
                 })()}
               </div>
             )}
-            {/* Task #504 — Reverse / void payment. Admin-only escape
+            {/* Task #504 â€” Reverse / void payment. Admin-only escape
                 hatch surfaced inside the Payment Details card so it sits
                 next to the columns it will clear. We only render the
                 action while the ticket is still in `funds_dispersed`;
@@ -2248,7 +1914,7 @@ export default function TicketDetail({ id }: { id: number }) {
                 </Dialog>
               </div>
             )}
-            {/* Task #853 — AP-self-service "Reverse dispersal" link.
+            {/* Task #853 â€” AP-self-service "Reverse dispersal" link.
                 Surfaced whenever the server flag
                 `viewerCanReverseDispersal` is true (admin OR partner-AP
                 viewer + ticket still in `funds_dispersed`). The admin
@@ -2483,14 +2149,14 @@ export default function TicketDetail({ id }: { id: number }) {
               data-testid="audit-trail-timeline"
             >
               {filteredTransitions.map((entry) => {
-                // Pick a row label/icon based on the (fromStatus → toStatus)
+                // Pick a row label/icon based on the (fromStatus â†’ toStatus)
                 // shape. Mirrors the server-side categories that
                 // `recordTicketTransition()` writes today: invite sent /
                 // invite accepted / invite denied / reinvited (vendor swap)
                 // / cancelled / reactivated / reopened (admin unlock) /
-                // payment_reversed (Task #504 — admin voids a payment via
+                // payment_reversed (Task #504 â€” admin voids a payment via
                 // /reverse-funds-dispersal which writes a distinct
-                // `funds_dispersed → approved` row whose reason starts
+                // `funds_dispersed â†’ approved` row whose reason starts
                 // with `Reversed:`).
                 const reasonForKind = entry.displayReason ?? entry.reason ?? "";
                 let kind: "created" | "invite_sent" | "accepted" | "denied" | "reinvited" | "cancelled" | "reactivated" | "reopened" | "payment_reversed" | "other" = "other";
@@ -2544,7 +2210,7 @@ export default function TicketDetail({ id }: { id: number }) {
                   other: t("ticketDetail.auditTransition", {
                     from:
                       statusLabels[entry.fromStatus ?? ""] ??
-                      (entry.fromStatus ?? "—").replace(/_/g, " "),
+                      (entry.fromStatus ?? "â€”").replace(/_/g, " "),
                     to:
                       statusLabels[entry.toStatus] ??
                       entry.toStatus.replace(/_/g, " "),
@@ -2566,18 +2232,18 @@ export default function TicketDetail({ id }: { id: number }) {
                 )[kind];
 
                 // Hide the raw `reason` for kinds whose body is already
-                // rendered above (denied → kickback reason becomes the
-                // headline/body; reinvited → vendor swap is in the
+                // rendered above (denied â†’ kickback reason becomes the
+                // headline/body; reinvited â†’ vendor swap is in the
                 // headline). For the rest, surface either the
                 // server-rewritten `displayReason` or fall back to the
                 // raw text. Skip the synthetic `direct_award_from_hotlist`
-                // marker — that's an internal tag, not a partner-facing
+                // marker â€” that's an internal tag, not a partner-facing
                 // explanation.
                 const HIDE_REASON_KINDS = new Set(["reinvited", "invite_sent", "accepted", "created"]);
                 const rawReason = entry.displayReason ?? entry.reason ?? null;
                 // Reversed payments are stored as `Reversed: <admin reason>`
                 // by /reverse-funds-dispersal. Strip the marker so the
-                // body shows just the human reason — the headline + the
+                // body shows just the human reason â€” the headline + the
                 // distinct "Reversal reason:" label already convey that
                 // this is a reversal.
                 const reasonText =
@@ -2847,7 +2513,7 @@ export default function TicketDetail({ id }: { id: number }) {
         <CardContent className="flex gap-3 flex-wrap items-center">
           {user?.role === "field_employee" ? (
             <>
-              {/* Task #620 — status pill mapping moved into the shared
+              {/* Task #620 â€” status pill mapping moved into the shared
                   TicketStatusActionPill component so admin / vendor / field
                   views always agree on color, icon, label, and data-testid.
                   This subsumes the per-status pill blocks added in
@@ -2856,7 +2522,7 @@ export default function TicketDetail({ id }: { id: number }) {
               <TicketStatusActionPill status={ticket.status} />
               {(ticket.status === "in_progress" || ticket.status === "kicked_back") && (
                 // Task #593: grey out while the assignment-removed banner is
-                // showing — re-tapping just re-raises the banner.
+                // showing â€” re-tapping just re-raises the banner.
                 <PngPillButton color="blue"
                   onClick={handleSendForReview}
                   disabled={checkOutTicket.isPending || !!assignmentRemoved}
@@ -2869,10 +2535,10 @@ export default function TicketDetail({ id }: { id: number }) {
             </>
           ) : user?.role === "vendor" ? (
             <>
-              {/* Task #620 — see TicketStatusActionPill for the unified
+              {/* Task #620 â€” see TicketStatusActionPill for the unified
                   status-to-pill mapping shared with the field and admin
                   branches. This also subsumes Tasks #599 (awaiting_payment
-                  pill) and #619 (funds_dispersed pill on the vendor view) —
+                  pill) and #619 (funds_dispersed pill on the vendor view) â€”
                   the shared component renders both. */}
               <TicketStatusActionPill status={ticket.status} />
               {(ticket.status === "draft" || ticket.status === "in_progress" || ticket.status === "pending_review" || ticket.status === "completed" || ticket.status === "kicked_back") && (
@@ -2924,7 +2590,7 @@ export default function TicketDetail({ id }: { id: number }) {
                   )}
                 </>
               )}
-              {/* Task #587 — Mark Awaiting Payment (vendor side). Mirrors the
+              {/* Task #587 â€” Mark Awaiting Payment (vendor side). Mirrors the
                   mobile sheet from Task #575 so vendor office staff can flip
                   an in-progress ticket into the awaiting-payment queue from
                   the desktop. The server's POST /tickets/:id/awaiting-payment
@@ -2944,19 +2610,19 @@ export default function TicketDetail({ id }: { id: number }) {
             </>
           ) : (
             <>
-              {/* Task #620 — admin / office shares the same status-pill
+              {/* Task #620 â€” admin / office shares the same status-pill
                   mapping as the field and vendor branches via
                   TicketStatusActionPill. Action buttons (disperse funds,
                   approve, kickback, etc.) stay role-specific below. */}
               <TicketStatusActionPill status={ticket.status} />
-              {/* Task #497 — Disperse Funds (AP / admin only). Server returns
+              {/* Task #497 â€” Disperse Funds (AP / admin only). Server returns
                   `viewerCanDisperseFunds` on the GET /tickets/:id response by
                   evaluating admin role OR partner contact in the Accounts
                   Payable role on the owning partner. We gate on that capability
                   flag rather than the broad role so non-AP partners never see
                   the action. The POST endpoint re-checks on submit, but
                   hiding the button matches the AP-only UX requirement.
-                  Task #595 — also surface the action on awaiting_payment so AP
+                  Task #595 â€” also surface the action on awaiting_payment so AP
                   can close the loop on tickets parked in that state without
                   needing them to bounce back through `approved`. */}
               {(
@@ -2969,7 +2635,7 @@ export default function TicketDetail({ id }: { id: number }) {
                     setDisperseRef("");
                     setDisperseNote("");
                     setDisperseMethod("etf");
-                    // Task #852 — clear the staged receipt so a
+                    // Task #852 â€” clear the staged receipt so a
                     // re-open of the modal starts fresh.
                     setDisperseReceiptUrl(null);
                     setDisperseReceiptUploading(false);
@@ -3029,7 +2695,7 @@ export default function TicketDetail({ id }: { id: number }) {
                           data-testid="input-disperse-note"
                         />
                       </div>
-                      {/* Task #852 — optional proof-of-payment image. We
+                      {/* Task #852 â€” optional proof-of-payment image. We
                           upload immediately on file pick (so the modal
                           submit only ships a single string) and stash
                           the resulting object path. The hidden <input>
@@ -3187,7 +2853,7 @@ export default function TicketDetail({ id }: { id: number }) {
                   </DialogContent>
                 </Dialog>
               )}
-              {/* Task #620 — funds_dispersed, awaiting_payment, kicked_back,
+              {/* Task #620 â€” funds_dispersed, awaiting_payment, kicked_back,
                   and submitted status pills are rendered by the shared
                   TicketStatusActionPill at the top of this branch. */}
               {ticket.status === "submitted" && canUseApproval1 && (
@@ -3363,7 +3029,7 @@ export default function TicketDetail({ id }: { id: number }) {
                   {reactivateTicket.isPending ? t("ticketDetail.restoring") : t("ticketDetail.restoreUndoCancel")}
                 </PngPillButton>
               )}
-              {/* Task #587 / Task #729 — Mark Awaiting Payment (admin + partner-AP).
+              {/* Task #587 / Task #729 â€” Mark Awaiting Payment (admin + partner-AP).
                   Same shared dialog state as the vendor branch above. Admins
                   can park `in_progress` or `approved`; partner AP users see
                   it on `approved` so they can confirm receipt before
@@ -3389,7 +3055,7 @@ export default function TicketDetail({ id }: { id: number }) {
               )}
             </>
           )}
-          {/* Task #587 — Shared confirmation dialog for both the vendor and
+          {/* Task #587 â€” Shared confirmation dialog for both the vendor and
               admin "Mark Awaiting Payment" buttons. Note is optional and
               capped at 500 chars to stay inside the server's
               `invalid_awaiting_payment_body` validator (Task #551). */}
@@ -3460,7 +3126,7 @@ export default function TicketDetail({ id }: { id: number }) {
         userRole={user?.role}
       />
 
-      {/* ── Task #494: Find another Vendor sheet ── */}
+      {/* â”€â”€ Task #494: Find another Vendor sheet â”€â”€ */}
       <FindAnotherVendorSheet
         open={findVendorOpen}
         onOpenChange={setFindVendorOpen}

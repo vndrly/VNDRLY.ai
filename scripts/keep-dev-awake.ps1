@@ -53,12 +53,12 @@ function Test-DevHealthy {
 Write-Host ""
 Write-Host "VNDRLY dev watch — PC will not sleep while this window stays open."
 Write-Host "Servers: http://localhost:5173/  (API http://localhost:8080/)"
-Write-Host "Auto-restarts hung/offline servers every 45s. Close window to allow sleep."
+Write-Host "Auto-restarts hung/offline servers every ${checkSeconds}s. Close window to allow sleep."
 Write-Host ""
 
 & $ensureScript
 
-$checkSeconds = 45
+$checkSeconds = 30
 while ($true) {
   [void][VndrlyPower]::SetThreadExecutionState($KEEP_AWAKE_FLAGS)
 

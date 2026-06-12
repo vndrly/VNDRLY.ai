@@ -150,7 +150,7 @@ export const hotlistApi = {
     jsonFetch<HotlistJobDetail>(
       `/api/hotlist/jobs/${id}${opts?.includeUnaffiliated ? "?includeUnaffiliated=1" : ""}`,
     ),
-  createJob: (body: { title: string; description?: string | null; locationAddress: string; deadline?: string | null; estimatedDurationDays?: number | null; partnerId?: number }) =>
+  createJob: (body: { title: string; description?: string | null; locationAddress: string; deadline?: string | null; estimatedDurationDays?: number | null; partnerId?: number; workTypeId?: number | null }) =>
     jsonFetch<HotlistJobRow>("/api/hotlist/jobs", { method: "POST", body: JSON.stringify(body) }),
   deleteJob: (id: number) => jsonFetch<void>(`/api/hotlist/jobs/${id}`, { method: "DELETE" }),
   restoreJob: (id: number) => jsonFetch<HotlistJobRow>(`/api/hotlist/jobs/${id}/restore`, { method: "POST" }),

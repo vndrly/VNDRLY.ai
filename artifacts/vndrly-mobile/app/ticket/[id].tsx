@@ -32,9 +32,7 @@ import FreshnessPill from "@/components/FreshnessPill";
 import InPageHeader from "@/components/InPageHeader";
 import TogglePill2 from "@/components/TogglePill2";
 import LiveLocationStatusPill from "@/components/LiveLocationStatusPill";
-import { TicketRouteMap } from "@/components/TicketRouteMap";
 import TicketSiteVisitSummary from "@/components/TicketSiteVisitSummary";
-import { TicketTrackingTimeline } from "@/components/TicketTrackingTimeline";
 import CrewTimeSection, { type CrewTimeSectionHandle } from "@/components/CrewTimeSection";
 import ScheduleTicketPanel from "@/components/ScheduleTicketPanel";
 import TicketNudgePanel from "@/components/TicketNudgePanel";
@@ -276,9 +274,6 @@ export default function TicketDetailScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
   const [scheduleOpen, setScheduleOpen] = useState(false);
-  const [selectedTrackingId, setSelectedTrackingId] = useState<
-    number | string | null
-  >(null);
 
   // line item form
   const [itemType, setItemType] = useState<(typeof ITEM_TYPES)[number]>("part");
@@ -3297,86 +3292,6 @@ export default function TicketDetailScreen() {
       </Modal>
 
       <TicketSiteVisitSummary ticketId={ticketId} refreshKey={lastLoadedAt} />
-
-      <Text style={[styles.section, { color: colors.foreground }]}>
-        {t("tickets.routeSection")}
-      </Text>
-      <TicketRouteMap
-        site={
-          siteLocation &&
-          siteLocation.latitude != null &&
-          siteLocation.longitude != null
-            ? {
-                latitude: siteLocation.latitude,
-                longitude: siteLocation.longitude,
-                name: siteLocation.name ?? ticket.siteName ?? null,
-              }
-            : null
-        }
-        checkIn={
-          ticket.checkInLatitude != null && ticket.checkInLongitude != null
-            ? {
-                latitude: ticket.checkInLatitude,
-                longitude: ticket.checkInLongitude,
-                time: ticket.checkInTime ?? null,
-              }
-            : null
-        }
-        checkOut={
-          ticket.checkOutLatitude != null && ticket.checkOutLongitude != null
-            ? {
-                latitude: ticket.checkOutLatitude,
-                longitude: ticket.checkOutLongitude,
-                time: ticket.checkOutTime ?? null,
-              }
-            : null
-        }
-        tracking={gpsLogs
-          .filter((g) => g.eventType === "tracking")
-          .map((g) => ({
-            id: g.id,
-            latitude: g.latitude,
-            longitude: g.longitude,
-            recordedAt: g.recordedAt,
-          }))}
-        selectedTrackingId={selectedTrackingId}
-        onSelectTracking={setSelectedTrackingId}
-      />
-      {siteLocation &&
-        siteLocation.latitude != null &&
-        siteLocation.longitude != null && (
-          <LayeredPillButton
-            onPress={() =>
-              openInMaps(
-                siteLocation.latitude as number,
-                siteLocation.longitude as number,
-                siteLocation.name ?? ticket.siteName ?? t("tickets.siteLocationFallback"),
-              )
-            }
-            height={40}
-            style={[styles.actionBtnFull, { marginTop: 12 }]}
-            testID="button-get-directions"
-          >
-            <Feather name="navigation" size={16} color="#ffffff" style={styles.actionBtnIconShadow} />
-            <Text
-              style={[styles.directionsBtnText, styles.actionBtnTextShadow, { color: "#ffffff" }]}
-            >
-              Get Directions to Site
-            </Text>
-          </LayeredPillButton>
-        )}
-      <TicketTrackingTimeline
-        tracking={gpsLogs
-          .filter((g) => g.eventType === "tracking")
-          .map((g) => ({
-            id: g.id,
-            latitude: g.latitude,
-            longitude: g.longitude,
-            recordedAt: g.recordedAt,
-          }))}
-        selectedTrackingId={selectedTrackingId}
-        onSelectTracking={setSelectedTrackingId}
-      />
 
       <TicketNudgePanel
         ticketId={ticket.id}

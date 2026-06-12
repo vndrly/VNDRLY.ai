@@ -54,6 +54,9 @@
     "visitors": "Visitantes",
     "analytics": "Analítica",
     "catalog": "Catálogo de Productos/Servicios",
+    "platformCatalog": "Catálogo de plataforma",
+    "yourServices": "Sus servicios y tarifas",
+    "partnerCatalog": "Productos y servicios",
     "vendorCatalog": "Catálogo de Proveedor",
     "invoices": "Facturas",
     "signOut": "Cerrar Sesión",
@@ -383,7 +386,10 @@
       "approveFailedTitle": "No se pudo guardar la aprobación",
       "addToCatalog": "Agregar al Catálogo",
       "addModalTitle": "Agregar al Catálogo",
-      "addModalDescription": "Crea un nuevo producto o servicio para que los proveedores puedan adjuntar precios de inmediato.",
+      "addModalDescription": "Crea un producto o servicio solo para este socio. No aparecerá en los catálogos de otros socios.",
+      "approvalLayersHelp": "La aprobación por servicio confirma que acepta usar a un proveedor al precio indicado. La aprobación de relación con el proveedor (tarjeta de Aprobaciones) acepta su versión publicada del catálogo y el EULA.",
+      "partnerOnly": "Inicie sesión como socio para ver este catálogo.",
+      "partnerScopedBadge": "Solo socio",
       "addNameLabel": "Nombre",
       "addNamePlaceholder": "ej. Cuadrilla de Fractura",
       "addCategoryLabel": "Categoría",
@@ -507,6 +513,9 @@
     "employeeUpdatedToast": "Empleado actualizado"
   },
   "hotlist": {
+    "productOrService": "Producto o servicio",
+    "selectProductOrService": "Opcional — vincular al catálogo",
+    "noProductOrService": "Ninguno (texto libre)",
     "errorToasts": {
       "postFailed": "No se pudo publicar",
       "awardFailed": "No se pudo adjudicar",
@@ -794,6 +803,11 @@
     "printVisitorQr": "Imprimir QR de Visitante",
     "workAssignmentsCount": "Asignaciones de Trabajo ({{count}})",
     "expandCatalog": "Ampliar Catálogo",
+    "addSiteAssignments": "Agregar asignaciones de sitio",
+    "addSiteAssignmentsVendorIntro": "Elija servicios del catálogo de su empresa para asignar en este sitio. Los ya asignados aparecen marcados.",
+    "addSiteAssignmentsAdminIntro": "Seleccione un proveedor y elija entre los servicios ya en su catálogo.",
+    "noVendorCatalogServices": "Este proveedor aún no tiene servicios en su catálogo.",
+    "manageVendorServices": "Administrar sus servicios",
     "expandCatalogVendorIntro": "Marca los trabajos adicionales que puedes realizar en este sitio. Los tipos ya asignados aparecen marcados.",
     "expandCatalogAdminIntro": "Selecciona un proveedor y marca los trabajos que puede realizar en este sitio.",
     "vendor": "Proveedor",
@@ -1037,8 +1051,12 @@
     "noNotes": "Aún no hay notas"
   },
   "catalog": {
-    "title": "Catálogo de Productos/Servicios",
-    "subtitle": "Administra los productos y servicios disponibles",
+    "title": "Catálogo de plataforma",
+    "subtitle": "Administra productos y servicios de toda la plataforma (compartidos entre socios)",
+    "healthLink": "Salud del catálogo",
+    "requiredCertifications": "Certificaciones requeridas",
+    "blockingCertifications": "Certificaciones bloqueantes",
+    "certificationsPlaceholder": "Separadas por comas, ej. H2S, Trabajo en caliente",
     "addItem": "Agregar Producto/Servicio",
     "addNew": "Agregar Producto/Servicio",
     "editItem": "Editar Producto/Servicio",
@@ -1092,7 +1110,26 @@
     "importErrorRow": "Fila {{row}}: {{message}}",
     "importFailed": "Falló la importación",
     "exportEmpty": "No hay nada para exportar todavía.",
-    "duplicateNameInline": "Ya existe un tipo de trabajo con este nombre."
+    "duplicateNameInline": "Ya existe un tipo de trabajo con este nombre.",
+    "importVendorsNotified": "Los proveedores adjuntos en esta importación deben fijar tarifas en Sus servicios y tarifas."
+  },
+  "catalogHealth": {
+    "title": "Salud del catálogo",
+    "subtitle": "Problemas de calidad de datos en catálogo, selecciones de proveedores y asignaciones de sitio.",
+    "loadError": "No se pudo cargar la salud del catálogo.",
+    "issuesTitle": "Problemas abiertos",
+    "noVendors": "Servicios de plataforma sin ofertas de proveedores",
+    "missingPrice": "Selecciones de proveedor sin precio unitario",
+    "swaWithoutCatalog": "Asignaciones de sitio sin fila coincidente en el catálogo del proveedor",
+    "swaRow": "Sitio #{{siteId}} · proveedor #{{vendorId}} · servicio #{{workTypeId}}",
+    "backToCatalog": "Volver al catálogo de plataforma",
+    "totals": {
+      "platformWorkTypes": "Servicios de plataforma",
+      "vendorSelections": "Selecciones de proveedor",
+      "siteAssignments": "Asignaciones de sitio",
+      "approvals": "Aprobaciones de socio",
+      "vendorsWithCatalog": "Proveedores con catálogo"
+    }
   },
   "visitor": {
     "continueAsVisitor": "Continuar como Visitante",
@@ -1549,7 +1586,7 @@
     "disperseFundsSubmitting": "Registrando...",
     "disperseFundsSuccess": "Fondos liberados.",
     "disperseFundsForbidden": "Solo Cuentas por Pagar puede liberar fondos.",
-    "reverseFunds": "Revertir / anular pago",
+    "reverseFunds": "Revertir pago",
     "reverseFundsTitle": "Revertir liberación de fondos",
     "reverseFundsHelp": "Revertir devuelve este ticket a Aprobado y borra los datos del pago. Se notificará tanto a Cuentas por Pagar como al proveedor.",
     "reverseFundsReason": "Motivo",
@@ -1731,6 +1768,14 @@
       "completed": "completado"
     }
   },
+  "siteMap": {
+    "recentTickets": {
+      "title": "Tickets recientes",
+      "loading": "Cargando tickets recientes…",
+      "empty": "Aún no hay tickets para este sitio.",
+      "pickSite": "Seleccione un sitio para ver los tickets recientes."
+    }
+  },
   "comments": {
     "log": "Registro",
     "noteCount_one": "{{count}} nota",
@@ -1828,8 +1873,9 @@
     "viewSatellite": "Satélite"
   },
   "vendorCatalog": {
-    "title": "Catálogo de Proveedor",
-    "subtitle": "Selecciona cada tipo de trabajo que tu empresa realiza. Los socios lo verán en tu perfil de proveedor y lo usarán para filtrar la lista activa.",
+    "title": "Sus servicios y tarifas",
+    "subtitle": "Seleccione cada servicio que realiza su empresa y fije tarifas. Los socios lo usan para aprobaciones, asignaciones de sitio y la hotlist.",
+    "onboardingRatesBanner": "Fije precios unitarios para los servicios que seleccionó durante el registro.",
     "uncategorized": "Sin categoría",
     "empty": "Aún no hay tipos de trabajo configurados. Pide a un administrador de VNDRLY que los agregue.",
     "noVendor": "Debes iniciar sesión como proveedor para gestionar los tipos de trabajo.",
@@ -1938,6 +1984,11 @@
     "bulkReapproveAction": "Reaprobar todos",
     "bulkReapproveToast": "Se reaprobaron {{count}} relaciones de proveedor.",
     "bulkReapproveFailedToast": "Error en la reaprobación masiva",
+    "revokeTitle": "¿Revocar {{name}}?",
+    "revokeTitleGeneric": "¿Revocar la aprobación del proveedor?",
+    "revokeDescription": "Este proveedor perderá el estado aprobado para su organización. Puede volver a aprobarlo más tarde si es necesario.",
+    "revokedToast": "Se revocó la aprobación de {{name}}.",
+    "revokeFailedToast": "No se pudo revocar la aprobación del proveedor",
     "reasons": {
       "vendor_catalog_published": "El proveedor publicó un catálogo nuevo",
       "vendor_compliance_updated": "Los datos de cumplimiento del proveedor cambiaron",
@@ -2439,13 +2490,15 @@
     "title": "Estado de cuenta",
     "filters": "Filtros",
     "role": "Ver como",
-    "partyId": "ID",
+    "selectPartyVendor": "Seleccione un proveedor",
+    "selectPartyPartner": "Seleccione un socio",
     "from": "Desde",
     "to": "Hasta",
-    "noParty": "Selecciona una parte para cargar el estado de cuenta.",
+    "noParty": "Seleccione un proveedor o socio para cargar el estado de cuenta.",
     "unknownParty": "Parte desconocida",
     "loadError": "Error al cargar el estado de cuenta.",
     "empty": "Sin facturas en este periodo.",
+    "invoices": "Facturas",
     "roles": {
       "vendor": "Proveedor",
       "partner": "Socio"

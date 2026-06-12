@@ -302,10 +302,13 @@ router.post("/auth/login", async (req, res) => {
       });
     }
 
+    const loginKey = String(username).trim().toLowerCase();
     const [user] = await db
       .select()
       .from(usersTable)
-      .where(sql`lower(${usersTable.username}) = lower(${username})`)
+      .where(
+        sql`lower(coalesce(${usersTable.email}, ${usersTable.username})) = ${loginKey}`,
+      )
       .limit(1);
 
     if (!user) {

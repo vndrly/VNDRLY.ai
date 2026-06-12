@@ -9,7 +9,7 @@ import {
   siteLocationsTable,
   partnersTable,
 } from "@workspace/db";
-import { eq, asc, inArray, sql } from "drizzle-orm";
+import { eq, asc, inArray, isNull, sql } from "drizzle-orm";
 import { ListWorkTypesResponse } from "@workspace/api-zod";
 import { requireAdmin, requireSession } from "../lib/session";
 import { sendApiError } from "../lib/apiError";
@@ -31,10 +31,12 @@ async function handleWorkTypeNameConflict(
 ): Promise<boolean> {
   const cause = (err as { cause?: { code?: string; constraint?: string } })
     .cause;
-  if (
-    cause?.code !== "23505" ||
-    cause?.constraint !== "work_types_canonical_name_unique"
-  ) {
+  const constraints = new Set([
+    "work_types_global_canonical_name_unique",
+    "work_types_canonical_name_unique",
+    "work_types_partner_canonical_name_unique",
+  ]);
+  if (cause?.code !== "23505" || !constraints.has(cause.constraint ?? "")) {
     return false;
   }
   // Best-effort: look up the persisted row so the response shows the
@@ -64,8 +66,19 @@ async function handleWorkTypeNameConflict(
   return true;
 }
 
-router.get("/work-types", requireSession, async (_req, res): Promise<void> => {
-  const workTypes = await db.select().from(workTypesTable).orderBy(workTypesTable.category, workTypesTable.name);
+router.get("/work-types", requireSession, async (req, res): Promise<void> => {
+  const scope = String(req.query.scope ?? "");
+  const workTypes =
+    scope === "platform"
+      ? await db
+          .select()
+          .from(workTypesTable)
+          .where(isNull(workTypesTable.partnerId))
+          .orderBy(workTypesTable.category, workTypesTable.name)
+      : await db
+          .select()
+          .from(workTypesTable)
+          .orderBy(workTypesTable.category, workTypesTable.name);
 
   const vendorLinks = await db
     .select({
@@ -91,7 +104,7 @@ router.get("/work-types", requireSession, async (_req, res): Promise<void> => {
 });
 
 router.post("/work-types", requireAdmin, async (req, res): Promise<void> => {
-  const { vendorIds, ...rest } = req.body;
+  const { vendorIds, partnerId: _ignoredPartnerId, ...rest } = req.body;
   const body = insertWorkTypeSchema.safeParse(rest);
   if (!body.success) {
     sendValidationFailed(res, body.error);
@@ -99,7 +112,10 @@ router.post("/work-types", requireAdmin, async (req, res): Promise<void> => {
   }
   let created;
   try {
-    [created] = await db.insert(workTypesTable).values(body.data).returning();
+    [created] = await db
+      .insert(workTypesTable)
+      .values({ ...body.data, partnerId: null })
+      .returning();
   } catch (err) {
     // The DB unique index `work_types_canonical_name_unique` (on
     // lower(btrim(name)), added in task #450) catches case- and

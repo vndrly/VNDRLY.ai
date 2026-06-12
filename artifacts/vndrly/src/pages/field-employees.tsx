@@ -736,8 +736,8 @@ export default function FieldEmployees() {
           {isAdmin && (
             <Card data-testid="removed-employees-section">
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="flex items-center gap-2 text-muted-foreground">
-                  <RotateCcw className="w-5 h-5" />
+                <CardTitle className="flex items-center gap-2">
+                  <RotateCcw className="w-5 h-5" style={iconStyle} />
                   {t("fieldEmployees.removedEmployees", { count: removedRows?.length ?? 0 })}
                 </CardTitle>
               </CardHeader>
