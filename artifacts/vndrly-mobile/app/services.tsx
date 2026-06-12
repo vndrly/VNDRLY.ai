@@ -39,13 +39,11 @@ export default function ServicesScreen() {
         return;
       }
       try {
-        const res = await apiFetch(
+        const json = await apiFetch<{ items: CatalogItem[] }>(
           `/api/vendors/${user.vendorId}/work-types`,
         );
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = (await res.json()) as { items: CatalogItem[] };
         if (!cancelled) {
-          setItems((json.items ?? []).filter((it) => it.selected));
+          setItems((json?.items ?? []).filter((it) => it.selected));
         }
       } catch {
         if (!cancelled) {

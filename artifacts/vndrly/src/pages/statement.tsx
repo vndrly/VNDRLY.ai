@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import {
+  getListPartnersQueryKey,
+  getListVendorsQueryKey,
   useListPartners,
   useListVendors,
 } from "@workspace/api-client-react";
@@ -171,10 +173,10 @@ export default function StatementPage() {
   const isAdmin = user?.role === "admin";
   const initial = useMemo(() => readQuery(), []);
   const { data: vendors } = useListVendors({
-    query: { enabled: isAdmin },
+    query: { enabled: isAdmin, queryKey: getListVendorsQueryKey() },
   });
   const { data: partners } = useListPartners({
-    query: { enabled: isAdmin },
+    query: { enabled: isAdmin, queryKey: getListPartnersQueryKey() },
   });
 
   const defaultRole: "vendor" | "partner" =
