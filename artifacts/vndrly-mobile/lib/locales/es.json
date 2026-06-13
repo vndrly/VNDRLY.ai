@@ -503,6 +503,10 @@
       "not_found": "No se encontró ese empleado.",
       "vendor_mismatch": "Ese empleado no pertenece al proveedor de este ticket."
     },
+    "certification": {
+      "cert_number_required": "Se requiere el número de certificado.",
+      "verify_forbidden": "Solo el administrador del proveedor puede verificar certificaciones."
+    },
     "crew": {
       "already_checked_in": "Ese empleado ya tiene entrada registrada en este ticket.",
       "no_open_check_in": "No hay una entrada abierta para ese empleado.",

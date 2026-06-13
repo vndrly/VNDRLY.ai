@@ -791,6 +791,29 @@ router.post("/notifications/:id/read", async (req, res) => {
   return res.status(204).send();
 });
 
+router.post("/notifications/:id/unread", async (req, res) => {
+  const session = getSession(req);
+  if (!session) return sendApiError(res, 401, "auth.not_authenticated", "Unauthorized");
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) return sendApiError(res, 400, "validation.invalid_id", "Invalid id");
+  await db
+    .update(notificationsTable)
+    .set({ isRead: false })
+    .where(and(eq(notificationsTable.id, id), eq(notificationsTable.userId, session.userId)));
+  return res.status(204).send();
+});
+
+router.delete("/notifications/:id", async (req, res) => {
+  const session = getSession(req);
+  if (!session) return sendApiError(res, 401, "auth.not_authenticated", "Unauthorized");
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) return sendApiError(res, 400, "validation.invalid_id", "Invalid id");
+  await db
+    .delete(notificationsTable)
+    .where(and(eq(notificationsTable.id, id), eq(notificationsTable.userId, session.userId)));
+  return res.status(204).send();
+});
+
 router.post("/notifications/read-all", async (req, res) => {
   const session = getSession(req);
   if (!session) return sendApiError(res, 401, "auth.not_authenticated", "Unauthorized");

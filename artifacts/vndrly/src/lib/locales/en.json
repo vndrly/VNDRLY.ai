@@ -102,6 +102,32 @@
     "skipForNow": "Skip for now",
     "resume": "Resume"
   },
+  "onboardingWelcome": {
+    "title": "Congratulations! Your account has been successfully created!",
+    "subtitle": "Your {{org}} account is ready. A few more steps will unlock the full platform.",
+    "subtitleNamed": "{{name}} is registered as a {{org}} on VNDRLY.",
+    "orgPartner": "partner",
+    "orgVendor": "vendor",
+    "resumeHint": "You can explore the dashboard now and finish setup anytime — click the progress stepper at the top of any page to continue where you left off.",
+    "continueOnboarding": "Continue onboarding",
+    "goToDashboard": "Go to VNDRLY.ai now"
+  },
+  "onboardingProgress": {
+    "bannerTitle": "Finish setting up your account",
+    "bannerHint": "Explore the platform while you gather info — click any step below or Resume to continue onboarding anytime.",
+    "onboardingLabel": "onboarding",
+    "stepsDone": "done",
+    "currentStep": "Current",
+    "clickToContinue": "click to continue",
+    "finishStep": "Finish",
+    "dismiss": "Dismiss",
+    "hotlistBidLocked": "Complete Service Area & Work Types in onboarding to unlock bidding.",
+    "continueSetup": "Continue setup",
+    "finishSetupFirst": "Finish setup"
+  },
+  "platformEula": {
+    "viewButton": "View Platform Agreement"
+  },
   "fieldOnboarding": {
     "welcomeTitle": "Welcome to {{vendorName}}",
     "welcomeSubtitle": "Let's get your account ready in 3 quick steps.",
@@ -1289,6 +1315,10 @@
     "viewAll": "View all notifications",
     "preferences": "Preferences",
     "markAllRead": "Mark all read",
+    "markRead": "Mark read",
+    "markUnread": "Mark unread",
+    "delete": "Delete",
+    "sendTo": "Send to",
     "noNotifications": "Nothing here.",
     "loading": "Loading…",
     "categories": {
@@ -1297,23 +1327,50 @@
       "hotlist": "Hotlist",
       "compliance": "Compliance",
       "crew": "Crew",
+      "comments": "Comments",
       "visitor": "Visitors",
       "system": "System"
     },
     "types": {
+      "default": "Alert",
       "ticket_assigned": "Assigned to you",
+      "ticket_kicked_back": "Kicked back",
+      "ticket_rejected": "Rejected",
+      "ticket_approved": "Approved",
+      "funds_dispersed": "Funds dispersed",
+      "ticket_pending_long": "Pending too long",
+      "ticket_inactive": "Inactive ticket",
+      "ticket_note_added": "New note",
+      "ticket_unblocked": "Unblocked",
+      "direct_assignment_offered": "Work offered",
+      "direct_assignment_committed": "Work committed",
+      "direct_assignment_passed": "Work passed",
+      "direct_assignment_cancelled": "Work cancelled",
       "workflow_nudge": "Workflow nudge",
       "crew_added": "Added to crew",
       "schedule_changed": "Schedule changed",
       "crew_removed": "Removed from crew",
+      "crew_punch_in": "Crew punch in",
+      "crew_punch_out": "Crew punch out",
+      "ptt_message": "Voice message",
       "hotlist_match": "Hotlist match",
+      "bid_placed": "Bid placed",
+      "bid_updated": "Bid updated",
+      "bid_declined": "Bid declined",
       "bid_outbid": "Outbid",
       "job_awarded": "Job awarded",
       "cert_expiring": "Cert expiring",
       "cert_expired": "Cert expired",
       "long_checkin": "Long check-in",
       "low_battery": "Low battery",
-      "rating_received": "New rating"
+      "rating_received": "New rating",
+      "oa_connection_revoked": "Accounting disconnected",
+      "oa_connection_expiring": "Accounting expiring",
+      "visitor_checked_in": "Visitor check-in",
+      "visitor_checked_out": "Visitor check-out",
+      "comment_mention": "Mention",
+      "comment_added": "Comment reply",
+      "hotlist_comment_added": "Hotlist reply"
     },
     "slowDown": {
       "brief": "Slowing down briefly to keep things smooth.",
@@ -1400,6 +1457,8 @@
     "pings": "{{count}} pings",
     "failed": "Failed",
     "legendTitle": "Map legend",
+    "legendHeading": "Heading",
+    "legendRoute": "Solid line = GPS route",
     "legendArrow": "Arrow = direction of travel",
     "legendStationary": "Dashed ring = stationary ping"
   },
@@ -2545,7 +2604,8 @@
       "all": "All invoices"
     },
     "actions": {
-      "print": "Print"
+      "print": "Print",
+      "exportAccounting": "Export this period"
     },
     "totals": {
       "invoiced": "Invoiced",
@@ -3081,6 +3141,35 @@
         "actions": "Actions"
       }
     },
+    "accountingExport": {
+      "title": "Accounting export hub",
+      "descriptionVendor": "Pick a period, review billed hours, parts, and tax at a glance, then download line-detail CSV or QuickBooks / OpenAccountant packages.",
+      "descriptionPartner": "Pick a period, review spend and tax at a glance, then download line-detail CSV or a bundled accounting ZIP.",
+      "summaryError": "Couldn't load period summary",
+      "downloadLineDetail": "Line detail (CSV)",
+      "downloadQboZip": "QuickBooks Online (ZIP)",
+      "downloadQboIif": "QuickBooks Desktop (IIF)",
+      "downloadOaZip": "OpenAccountant (ZIP)",
+      "downloadBundle": "Accounting bundle (ZIP)",
+      "chip": {
+        "invoices": "Invoices",
+        "hours": "Labor hours",
+        "parts": "Parts & equip.",
+        "tax": "Tax",
+        "total": "Billed total"
+      }
+    },
+    "vendorQbMapping": {
+      "title": "Chart of accounts mapping",
+      "description": "Override how your invoice line types map to QuickBooks accounts for exports and pushes. Defaults apply unless you customize them here.",
+      "allPartners": "All partners (vendor default)",
+      "partnerId": "Partner #{{id}}",
+      "saved": "Account mapping saved",
+      "saveError": "Couldn't save account mapping",
+      "reset": "Reverted to default",
+      "saveBtn": "Save",
+      "resetBtn": "Reset"
+    },
     "quickbooks": {
       "title": "QuickBooks export",
       "description": "Export the period's customers, vendors, and invoices for import into QuickBooks Desktop (IIF) or QuickBooks Online (3-CSV ZIP).",
@@ -3516,6 +3605,10 @@
       "not_assigned": "You're not assigned to this ticket.",
       "not_scheduled": "This ticket isn't scheduled yet.",
       "certifications_blocked": "One or more crew members are missing certifications required to schedule this work type."
+    },
+    "certification": {
+      "cert_number_required": "Certificate number is required.",
+      "verify_forbidden": "Only vendor admin can verify certifications."
     },
     "crew": {
       "already_checked_in": "That employee is already checked in to this ticket.",

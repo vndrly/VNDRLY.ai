@@ -70,6 +70,9 @@ vi.mock("@/hooks/use-auth", () => ({
 vi.mock("@assets/VNDRLY_Header_Blur_4_1776220762025.png", () => ({
   default: "header.png",
 }));
+vi.mock("@assets/VNDRLY_Header_Blur_Dark_1778850026167.png", () => ({
+  default: "header-dark.png",
+}));
 
 // useEligibleVendorFieldEmployeesByVendorId — return a small eligible
 // list so the crew checkbox section renders. The dialog reads

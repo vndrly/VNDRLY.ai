@@ -1,15 +1,22 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import { CheckCircle2, Circle } from "lucide-react";
-import { onboardingApi, type OnboardingProgressRow } from "@/lib/onboarding-api";
+import { type OnboardingProgressRow } from "@/lib/onboarding-api";
 import { useTranslation } from "react-i18next";
 import { useBrand } from "@/hooks/use-brand";
+import { useOnboardingProgress } from "@/hooks/use-onboarding-progress";
+import {
+  isOnboardingIncomplete,
+  onboardingResumeHref,
+  onboardingStepHref,
+} from "@/lib/onboarding-progress-utils";
 
 type StepEntry = { key: string; label: string; href: string };
 
 const PARTNER_STEPS: Record<string, { label: string; href: string }> = {
+  "platform-eula": { label: "Accept the VNDRLY Platform Agreement", href: "/onboarding/partner?step=platform-eula" },
   branding: { label: "Add your logo and brand colors", href: "/onboarding/partner?step=branding" },
   "first-site": { label: "Set up your first site", href: "/onboarding/partner?step=first-site" },
   "tax-billing": { label: "Add tax IDs and billing address", href: "/onboarding/partner?step=tax-billing" },
@@ -18,11 +25,12 @@ const PARTNER_STEPS: Record<string, { label: string; href: string }> = {
 };
 
 const VENDOR_STEPS: Record<string, { label: string; href: string }> = {
+  "platform-eula": { label: "Accept the VNDRLY Platform Agreement", href: "/onboarding/vendor?step=platform-eula" },
+  branding: { label: "Add your vendor logo and brand color", href: "/onboarding/vendor?step=branding" },
   "tax-ids": { label: "Add tax IDs and billing address", href: "/onboarding/vendor?step=tax-ids" },
   "work-types": { label: "Set service area and work types", href: "/onboarding/vendor?step=work-types" },
   compliance: { label: "Upload your insurance certificate", href: "/onboarding/vendor?step=compliance" },
   rates: { label: "Set your rates and 1099 delivery", href: "/onboarding/vendor?step=rates" },
-  branding: { label: "Add your vendor logo and brand color", href: "/onboarding/vendor?step=branding" },
   "first-employee": { label: "Add your first field employee", href: "/onboarding/vendor?step=first-employee" },
 };
 
@@ -33,6 +41,7 @@ const VENDOR_STEPS: Record<string, { label: string; href: string }> = {
 const STEPS_BY_ORG: Record<"partner" | "vendor", { key: string; label: string }[]> = {
   partner: [
     { key: "company-basics", label: "Company Basics" },
+    { key: "platform-eula", label: "Platform Agreement" },
     { key: "branding", label: "Branding" },
     { key: "first-site", label: "First Site" },
     { key: "tax-billing", label: "Tax & Billing" },
@@ -41,11 +50,12 @@ const STEPS_BY_ORG: Record<"partner" | "vendor", { key: string; label: string }[
   ],
   vendor: [
     { key: "company-basics", label: "Company Basics" },
+    { key: "platform-eula", label: "Platform Agreement" },
+    { key: "branding", label: "Branding" },
     { key: "tax-ids", label: "Tax IDs" },
     { key: "work-types", label: "Service & Work Types" },
     { key: "compliance", label: "Compliance" },
     { key: "rates", label: "Rates & 1099" },
-    { key: "branding", label: "Branding" },
     { key: "first-employee", label: "First Employee" },
   ],
 };
@@ -59,17 +69,20 @@ const STEPS_BY_ORG: Record<"partner" | "vendor", { key: string; label: string }[
 // completed" without needing to read this key.
 const DISMISS_STORAGE_KEY = "vndrly:finishSetup:dismissed";
 
-export default function FinishSetupWidget() {
+interface FinishSetupWidgetProps {
+  progressOverride?: OnboardingProgressRow | null;
+}
+
+export default function FinishSetupWidget({
+  progressOverride,
+}: FinishSetupWidgetProps = {}): React.ReactElement | null {
   const [, navigate] = useLocation();
   const { t } = useTranslation();
   const brand = useBrand();
-  // Tint the widget border, bullet dots, and "Finish / Resume" link
-  // text with the active brand primary so vendors who have set a brand
-  // color see their own palette instead of the default amber. Defaults
-  // to VNDRLY gold (#e6ac00) when no brand is loaded, which keeps the
-  // existing amber look for unbranded users.
   const tint = brand.primary;
-  const [progress, setProgress] = useState<OnboardingProgressRow | null>(null);
+  const { progress: fetchedProgress } = useOnboardingProgress();
+  const progress =
+    progressOverride !== undefined ? progressOverride : fetchedProgress;
   // Lazily seed `hidden` from sessionStorage so a dismissed widget
   // stays dismissed across in-app navigation/refresh within the same
   // tab, but reappears on the next login (sessionStorage is per-tab
@@ -96,21 +109,6 @@ export default function FinishSetupWidget() {
     }
   };
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const me = await onboardingApi.getMine();
-        if (!cancelled) setProgress(me.progress);
-      } catch {
-        // anonymous / errored — render nothing
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
   const items: StepEntry[] = useMemo(() => {
     if (!progress) return [];
     const map = progress.orgType === "partner" ? PARTNER_STEPS : progress.orgType === "vendor" ? VENDOR_STEPS : {};
@@ -122,48 +120,47 @@ export default function FinishSetupWidget() {
       .filter((x): x is StepEntry => x !== null);
   }, [progress]);
 
-  // Resume CTA — when the user quit the wizard partway through (no
-  // completedAt yet) we surface a single "Resume onboarding" entry
-  // that deep-links back to their current step. This handles both the
-  // "Save & Quit" path and the "closed the tab" path.
-  const resumeHref: string | null = useMemo(() => {
-    if (!progress || progress.completedAt) return null;
-    if (progress.orgType !== "partner" && progress.orgType !== "vendor") return null;
-    const step = progress.currentStep ?? "";
-    const qs = step ? `?step=${encodeURIComponent(step)}` : "";
-    return `/onboarding/${progress.orgType}${qs}`;
-  }, [progress]);
+  const incomplete = isOnboardingIncomplete(progress);
+  const resumeHref =
+    progress && incomplete ? onboardingResumeHref(progress) : null;
 
-  // Build the horizontal stepper data — only meaningful for partner/
-  // vendor orgs (field employees use a separate dedicated wizard, not
-  // the dashboard widget). Each step is marked done when it appears in
-  // either completedSteps or skippedSteps so the count matches what the
-  // wizard's /complete endpoint will accept.
   const stepper = useMemo(() => {
-    if (!progress) return null;
-    if (progress.orgType !== "partner" && progress.orgType !== "vendor") return null;
+    if (!progress || !incomplete) return null;
+    if (progress.orgType !== "partner" && progress.orgType !== "vendor") {
+      return null;
+    }
     const steps = STEPS_BY_ORG[progress.orgType];
-    const done = new Set([...(progress.completedSteps ?? []), ...(progress.skippedSteps ?? [])]);
+    const done = new Set([
+      ...(progress.completedSteps ?? []),
+      ...(progress.skippedSteps ?? []),
+    ]);
     const currentIdx = steps.findIndex((s) => s.key === progress.currentStep);
     const doneCount = steps.filter((s) => done.has(s.key)).length;
     const currentLabel =
-      currentIdx >= 0 ? steps[currentIdx].label : steps.find((s) => !done.has(s.key))?.label ?? null;
+      currentIdx >= 0
+        ? steps[currentIdx].label
+        : (steps.find((s) => !done.has(s.key))?.label ?? null);
     return { steps, done, currentIdx, doneCount, currentLabel };
-  }, [progress]);
+  }, [progress, incomplete]);
 
   if (hidden || !progress) return null;
-  if (items.length === 0 && !resumeHref) return null;
+  if (!incomplete && items.length === 0) return null;
+
+  const goToStep = (stepKey: string) => {
+    if (progress.orgType !== "partner" && progress.orgType !== "vendor") return;
+    navigate(onboardingStepHref(progress.orgType, stepKey));
+  };
 
   return (
     <Card
-      className="border-2 bg-amber-50/30"
+      className="border-2 bg-amber-50/30 mb-4"
       style={{ borderColor: tint }}
       data-testid="finish-setup-widget"
     >
       <CardHeader className="pt-3 pb-2">
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="text-base leading-tight">
-            Finish setting up your account
+            {t("onboardingProgress.bannerTitle")}
           </CardTitle>
           <div className="flex items-center gap-1 shrink-0">
             {resumeHref && (
@@ -182,10 +179,15 @@ export default function FinishSetupWidget() {
               data-testid="button-dismiss-finish-setup"
               className="h-7 px-2"
             >
-              Dismiss
+              {t("onboardingProgress.dismiss")}
             </PillButton>
           </div>
         </div>
+        {incomplete && (
+          <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+            {t("onboardingProgress.bannerHint")}
+          </p>
+        )}
       </CardHeader>
       <CardContent className="pb-3">
         {stepper && (
@@ -195,10 +197,11 @@ export default function FinishSetupWidget() {
           >
             <div className="flex items-center justify-between text-xs text-gray-600">
               <span className="font-medium uppercase tracking-wide">
-                {progress.orgType} onboarding
+                {progress.orgType} {t("onboardingProgress.onboardingLabel")}
               </span>
               <span>
-                {stepper.doneCount} / {stepper.steps.length} done
+                {stepper.doneCount} / {stepper.steps.length}{" "}
+                {t("onboardingProgress.stepsDone")}
               </span>
             </div>
             <div className="flex items-center gap-1">
@@ -206,10 +209,12 @@ export default function FinishSetupWidget() {
                 const isDone = stepper.done.has(s.key);
                 const isCurrent = !isDone && i === stepper.currentIdx;
                 return (
-                  <div
+                  <button
                     key={s.key}
-                    className="flex-1 flex items-center gap-1"
-                    title={s.label}
+                    type="button"
+                    onClick={() => goToStep(s.key)}
+                    className="flex-1 flex items-center gap-1 min-w-0 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1"
+                    title={`${s.label} — ${t("onboardingProgress.clickToContinue")}`}
                     data-testid={`finish-setup-stepper-${s.key}`}
                   >
                     {isDone ? (
@@ -231,20 +236,31 @@ export default function FinishSetupWidget() {
                         style={{ backgroundColor: isDone ? tint : "rgb(229 231 235)" }}
                       />
                     )}
-                  </div>
+                  </button>
                 );
               })}
             </div>
             {stepper.currentLabel && (
               <div className="text-xs text-gray-600">
-                Current:{" "}
-                <span className="font-medium text-gray-800">
+                {t("onboardingProgress.currentStep")}:{" "}
+                <button
+                  type="button"
+                  className="font-medium text-gray-800 underline-offset-2 hover:underline"
+                  onClick={() => {
+                    const key =
+                      stepper.currentIdx >= 0
+                        ? stepper.steps[stepper.currentIdx].key
+                        : stepper.steps.find((s) => !stepper.done.has(s.key))?.key;
+                    if (key) goToStep(key);
+                  }}
+                >
                   {stepper.currentLabel}
-                </span>
+                </button>
               </div>
             )}
           </div>
         )}
+        {items.length > 0 && (
         <ul className="space-y-2">
           {items.map((it) => (
             <li
@@ -265,12 +281,22 @@ export default function FinishSetupWidget() {
                 onClick={() => navigate(it.href)}
                 data-testid={`button-finish-step-${it.key}`}
               >
-                Finish
+                {t("onboardingProgress.finishStep")}
               </PillButton>
             </li>
           ))}
         </ul>
+        )}
       </CardContent>
     </Card>
   );
+}
+
+/** Top-of-layout banner — hidden on signup/onboarding wizard routes. */
+export function OnboardingProgressBanner(): React.ReactElement | null {
+  const [location] = useLocation();
+  const onWizard =
+    location.startsWith("/onboarding/") || location.startsWith("/signup/");
+  if (onWizard) return null;
+  return <FinishSetupWidget />;
 }

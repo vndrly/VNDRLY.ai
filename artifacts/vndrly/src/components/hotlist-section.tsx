@@ -33,6 +33,12 @@ import { useTranslation } from "react-i18next";
 import { translateApiError } from "@/lib/api-error";
 import { cn } from "@/lib/utils";
 import { hotlistApi, isVendorListResponse, type HotlistJobRow, type HotlistBidRow } from "@/lib/hotlist-api";
+import { useOnboardingProgress } from "@/hooks/use-onboarding-progress";
+import {
+  vendorFeatureUnlockMessage,
+  vendorFeatureUnlocked,
+} from "@/lib/onboarding-progress-utils";
+import type { OnboardingProgressRow } from "@/lib/onboarding-api";
 import { Link } from "wouter";
 import {
   useListPartners,
@@ -1288,6 +1294,7 @@ function ConvertToTicketButton({ job, bid }: { job: HotlistJobRow; bid: HotlistB
 
 function VendorHotlist({ focusedJobId }: { focusedJobId: number | null }) {
   const { user } = useAuth();
+  const { progress: onboardingProgress } = useOnboardingProgress();
   const qc = useQueryClient();
   // Task #727 — vendors see only jobs that match their work-type catalog
   // by default. The "Show all" pill flips includeAll=1 so the API
@@ -1452,6 +1459,7 @@ function VendorHotlist({ focusedJobId }: { focusedJobId: number | null }) {
                 <VendorJobCard
                   key={j.id}
                   job={j}
+                  onboardingProgress={onboardingProgress}
                   isFocused={focusedJobId === j.id}
                   commentsFocus={commentsFocusJobId === j.id}
                   onOpenComments={() => setCommentsFocusJobId(j.id)}
@@ -1468,6 +1476,7 @@ function VendorHotlist({ focusedJobId }: { focusedJobId: number | null }) {
                     <VendorJobCard
                       key={j.id}
                       job={j}
+                      onboardingProgress={onboardingProgress}
                       radiusMiles={data.vendor!.operatingRadiusMiles!}
                       isFocused={focusedJobId === j.id}
                       commentsFocus={commentsFocusJobId === j.id}
@@ -1486,18 +1495,21 @@ function VendorHotlist({ focusedJobId }: { focusedJobId: number | null }) {
 
 function VendorJobCard({
   job,
+  onboardingProgress,
   radiusMiles,
   isFocused,
   commentsFocus,
   onOpenComments,
 }: {
   job: HotlistJobRow;
+  onboardingProgress?: OnboardingProgressRow | null;
   radiusMiles?: number;
   isFocused?: boolean;
   commentsFocus?: boolean;
   onOpenComments: () => void;
 }) {
   const { user } = useAuth();
+  const [, navigate] = useLocation();
   const qc = useQueryClient();
   const { t } = useTranslation();
   const { toast } = useToast();
@@ -1524,11 +1536,14 @@ function VendorJobCard({
     notes: job.myBid?.notes ?? "",
   });
   const outOfRadius = !!(job as any).outOfRadius;
-  // Task #495 — only vendors with an Approved/Preferred relationship to the
-  // posting partner may bid. The API surfaces myTier per job (see
-  // hotlist.ts vendor list endpoint). Pre_onboarded and unapproved tiers
-  // get a disabled CTA + an inline explainer; the row itself stays
-  // visible so the vendor can see what work exists with that partner.
+  const onboardingBidLocked = !vendorFeatureUnlocked(
+    onboardingProgress,
+    "hotlist_bid_area",
+  );
+  const onboardingUnlock = vendorFeatureUnlockMessage(
+    onboardingProgress,
+    "hotlist_bid_area",
+  );
   const myTier: "approved" | "unapproved" | "pre_onboarded" = (job as any).myTier ?? "pre_onboarded";
   const tierBlocked = myTier !== "approved";
 
@@ -1589,7 +1604,22 @@ function VendorJobCard({
             Outside your operating radius ({job.distanceMiles} mi away{radiusMiles ? `, limit ${radiusMiles} mi` : ""}). Increase your radius to bid.
           </p>
         )}
-        {!outOfRadius && tierBlocked && (
+        {!outOfRadius && onboardingBidLocked && onboardingUnlock && (
+          <p className="text-xs text-amber-700 mt-1" data-testid={`text-onboarding-bid-locked-${job.id}`}>
+            {t("onboardingProgress.hotlistBidLocked")}{" "}
+            <button
+              type="button"
+              className="font-medium underline underline-offset-2"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(onboardingUnlock.href);
+              }}
+            >
+              {t("onboardingProgress.continueSetup")}
+            </button>
+          </p>
+        )}
+        {!outOfRadius && !onboardingBidLocked && tierBlocked && (
           <p className="text-xs text-amber-700 mt-1" data-testid={`text-tier-blocked-${job.id}`}>
             Only approved vendors can bid on hotlist jobs. Reach out to {job.partnerName ?? "the partner"} to request approval.
           </p>
@@ -1600,6 +1630,14 @@ function VendorJobCard({
       </div>
       {outOfRadius ? (
         <PngPillButton disabled className="mr-2" data-testid={`button-bid-disabled-${job.id}`}>Out of radius</PngPillButton>
+      ) : onboardingBidLocked ? (
+        <PngPillButton
+          disabled
+          className="mr-2"
+          data-testid={`button-bid-onboarding-locked-${job.id}`}
+        >
+          {t("onboardingProgress.finishSetupFirst")}
+        </PngPillButton>
       ) : tierBlocked ? (
         <PngPillButton disabled className="mr-2" data-testid={`button-bid-blocked-${job.id}`}>Approval needed</PngPillButton>
       ) : (

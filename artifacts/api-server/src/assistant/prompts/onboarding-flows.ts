@@ -50,18 +50,30 @@ const partnerFlow: StepSpec[] = [
       "The legal name is already set from signup. Confirm it back to the user; if they need to change it, point them to the company-basics step in the wizard. Then mark this step complete and move on.",
   },
   {
-    step: "branding",
-    title: "Branding",
+    step: "platform-eula",
+    title: "Platform agreement",
     required: true,
-    purpose: "Capture brand colors and logos used across the partner UI, ticket headers, and visitor portal.",
+    purpose: "Accept the VNDRLY Platform End User License Agreement before using the product.",
     fields: [
-      { path: "brandPrimaryColor", label: "Primary brand color", hint: "Hex (e.g. #1F6FEB)", required: true },
-      { path: "brandAccentColor", label: "Accent brand color", hint: "Hex", required: true },
-      { path: "logoUrl", label: "Horizontal logo URL", hint: "Used in sidebar and ticket headers", required: true },
-      { path: "logoSquareUrl", label: "Square logo URL", hint: "Used for 64x64 favicon and visitor portal poster", required: true },
+      { path: "platformEula.accepted", label: "Accept platform EULA", required: true },
+      { path: "platformEula.version", label: "EULA version", hint: "Must match current platform version", required: true },
     ],
     guidance:
-      "Both the horizontal and square logos are required — the visitor portal poster will look wrong without the square one. If the user only has one, ask whether they'd like help cropping a square version.",
+      "The user must scroll the agreement and check the acceptance box. This is mandatory — do not offer to skip. Use set_onboarding_field to set platformEula.accepted=true and platformEula.version to the current version.",
+  },
+  {
+    step: "branding",
+    title: "Branding",
+    required: false,
+    purpose: "Optional logos and colors for the partner UI, ticket headers, and visitor portal.",
+    fields: [
+      { path: "brandPrimaryColor", label: "Primary brand color", hint: "Hex (e.g. #1F6FEB)", required: false },
+      { path: "brandAccentColor", label: "Accent brand color", hint: "Hex", required: false },
+      { path: "logoUrl", label: "Horizontal logo URL", hint: "Used in sidebar and ticket headers", required: false },
+      { path: "logoSquareUrl", label: "Square logo URL", hint: "Used for 64x64 favicon and visitor portal poster", required: false },
+    ],
+    guidance:
+      "Optional but encouraged — uploading a logo flips the live header preview and we can suggest brand colors. If they only have one logo, offer to help crop a square version. They can skip and finish from the dashboard later.",
   },
   {
     step: "first-site",
@@ -124,6 +136,30 @@ const vendorFlow: StepSpec[] = [
       "Already captured at signup. Confirm and move on.",
   },
   {
+    step: "platform-eula",
+    title: "Platform agreement",
+    required: true,
+    purpose: "Accept the VNDRLY Platform End User License Agreement before using the product.",
+    fields: [
+      { path: "platformEula.accepted", label: "Accept platform EULA", required: true },
+      { path: "platformEula.version", label: "EULA version", hint: "Must match current platform version", required: true },
+    ],
+    guidance:
+      "Mandatory — the user must read and accept the platform agreement. Do not offer to skip.",
+  },
+  {
+    step: "branding",
+    title: "Vendor branding",
+    required: false,
+    purpose: "Optional logo and colors — the header preview flips live when uploaded.",
+    fields: [
+      { path: "branding.brandPrimaryColor", label: "Primary brand color (optional)", required: false },
+      { path: "branding.logoUrl", label: "Logo (optional)", required: false },
+    ],
+    guidance:
+      "Skippable but encouraged. Uploading a logo suggests brand colors automatically. Vendors without branding keep VNDRLY defaults until they finish this from the dashboard.",
+  },
+  {
     step: "tax-ids",
     title: "Tax IDs and addresses",
     required: true,
@@ -176,22 +212,6 @@ const vendorFlow: StepSpec[] = [
     ],
     guidance:
       "eDeliveryConsent must be an explicit boolean — don't infer 'yes' from silence. Ask plainly: 'Do you consent to receive 1099s electronically instead of paper?'",
-  },
-  {
-    step: "branding",
-    title: "Vendor branding",
-    required: false,
-    purpose: "Optional logo and color for invoices/portal.",
-    fields: [
-      // Vendor branding is nested under `branding.*` (see VendorPayload
-      // in onboarding-vendor.tsx). Partner branding lives at the top
-      // level of the payload, but vendor branding does NOT — keep
-      // these paths nested or set_onboarding_field will be rejected
-      // by the wizard's PAYLOAD_TOP_KEYS guard.
-      { path: "branding.brandPrimaryColor", label: "Primary brand color (optional)", required: false },
-      { path: "branding.logoUrl", label: "Logo URL (optional)", required: false },
-    ],
-    guidance: "Skippable. Vendors without branding fall back to neutral defaults.",
   },
   {
     step: "first-employee",

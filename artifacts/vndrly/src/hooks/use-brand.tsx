@@ -36,7 +36,7 @@ export interface Brand {
   isOrgBranded: boolean;
 }
 
-const DEFAULT_BRAND: Brand = {
+export const DEFAULT_BRAND: Brand = {
   primary: DEFAULT_BRAND_PRIMARY,
   accent: DEFAULT_BRAND_ACCENT,
   logoUrl: null,
@@ -44,6 +44,12 @@ const DEFAULT_BRAND: Brand = {
   name: null,
   isOrgBranded: false,
 };
+
+function isPublicSignupPath(): boolean {
+  if (typeof window === "undefined") return false;
+  const path = window.location.pathname.replace(/\/$/, "") || "/";
+  return path === "/signup" || path.startsWith("/signup/");
+}
 
 const BrandContext = createContext<Brand>(DEFAULT_BRAND);
 
@@ -193,6 +199,11 @@ export function BrandProvider({ children }: { children: ReactNode }) {
       }
     }
     if (!user) {
+      // Signup / onboarding flows start on VNDRLY branding; org colours
+      // and logos preview locally on the wizard pages once entered.
+      if (isPublicSignupPath()) {
+        return DEFAULT_BRAND;
+      }
       if (loginBrand?.isOrgBranded) {
         return brandFromPublicOrgPayload(loginBrand);
       }

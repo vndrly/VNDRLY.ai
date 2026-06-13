@@ -21,7 +21,8 @@
     "seed:demo-lifecycle:advance": "tsx scripts/seed-demo-lifecycle.ts --loop --advance",
     "demo:start": "tsx scripts/seed-demo-lifecycle.ts --start",
     "demo:stop": "tsx scripts/seed-demo-lifecycle.ts --cleanup",
-    "seed:permian-realdata": "tsx scripts/seed-permian-basin.ts && tsx scripts/seed-partner-branding.ts && tsx scripts/seed-vendor-branding.ts && tsx scripts/seed-mach-site-locations.ts && tsx scripts/seed-permian-site-locations.ts"
+    "seed:permian-realdata": "tsx scripts/seed-permian-basin.ts && tsx scripts/seed-partner-branding.ts && tsx scripts/seed-vendor-branding.ts && tsx scripts/seed-mach-site-locations.ts && tsx scripts/seed-permian-site-locations.ts",
+    "setup:dev-testing-access": "tsx scripts/setup-dev-testing-access.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",

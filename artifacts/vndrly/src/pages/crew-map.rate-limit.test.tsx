@@ -179,9 +179,16 @@ describe("crew map — rate-limit gate (Task #710)", () => {
     // must keep them from firing inside the cooldown — even when
     // an inter-poll trigger (e.g. tab becoming visible again, which
     // calls `fetchLocations()`) tries to refetch.
-    fetchMock.mockImplementationOnce(async () =>
-      rateLimitResponse("live_locations.rate_limited", 120),
-    );
+    fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (/\/api\/live-locations\b/.test(url) && !/\/events/.test(url)) {
+        return rateLimitResponse("live_locations.rate_limited", 120);
+      }
+      if (url.includes("/api/map/recent-trips")) {
+        return new Response(JSON.stringify({ trips: [] }), { status: 200 });
+      }
+      return new Response(JSON.stringify({ locations: [] }), { status: 200 });
+    });
 
     render(<CrewMapPage />);
 

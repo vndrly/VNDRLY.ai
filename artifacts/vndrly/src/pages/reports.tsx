@@ -142,6 +142,8 @@ import {
   type QbBulkActionCleanupAuditResponse,
 } from "./reports/bulk-actions-history";
 import { QbAccountMappingAuditCard } from "./reports/qb-mapping-audit";
+import { AccountingExportHub } from "@/components/accounting-export-hub";
+import { VendorQbAccountMappingCard } from "@/components/vendor-qb-account-mapping-card";
 
 // Re-export so existing test imports (./reports) keep resolving after
 // the split into ./reports/* sub-modules (see task #395).
@@ -4810,6 +4812,13 @@ function VendorReports({
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold">{t("reports.section.vendor")}</h2>
+      <AccountingExportHub
+        role="vendor"
+        orgId={vendorId}
+        deepLink={
+          deepLink?.cardId === "accountingExport" ? deepLink : null
+        }
+      />
       <ReportCard
         icon={Clock}
         title={t("reports.aging.title")}
@@ -5112,6 +5121,7 @@ function VendorReports({
         }}
       />
       <EDeliveryConsentCard vendorId={vendorId} />
+      <VendorQbAccountMappingCard vendorId={vendorId} />
       <QbExportCard vendorId={vendorId} />
     </div>
   );
@@ -5129,6 +5139,13 @@ function PartnerReports({
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold">{t("reports.section.partner")}</h2>
+      <AccountingExportHub
+        role="partner"
+        orgId={partnerId}
+        deepLink={
+          deepLink?.cardId === "accountingExport" ? deepLink : null
+        }
+      />
       <ReportCard
         icon={Clock}
         title={t("reports.aging.titleAp")}

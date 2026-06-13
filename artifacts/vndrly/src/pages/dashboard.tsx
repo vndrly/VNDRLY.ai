@@ -36,7 +36,6 @@ import LightGreyRedButton from "@/components/light-grey-red-button";
 import { useRateLimitGate } from "@/hooks/use-rate-limit-gate";
 import HotlistSection from "@/components/hotlist-section";
 import { PillColorLayer } from "@/components/png-pill-chrome";
-import FinishSetupWidget from "@/components/finish-setup-widget";
 import { AssistantMetricsCard } from "@/components/assistant-metrics-card";
 import { RateLimitBudgetsCard } from "@/components/rate-limit-budgets-card";
 import { RateLimitTripsCard } from "@/components/rate-limit-trips-card";
@@ -591,8 +590,6 @@ export default function Dashboard() {
           </span>
         </div>
       )}
-
-      <FinishSetupWidget />
 
       {isVendor && (pendingDirectAssignments ?? []).length > 0 && (
         <Card data-testid="card-pending-direct-assignments">

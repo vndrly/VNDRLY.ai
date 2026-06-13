@@ -18,6 +18,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import AmberButton from "@/components/AmberButton";
 import LanguageToggle from "@/components/LanguageToggle";
+import { VNDRLY_LOGO_SQUARE } from "@/lib/vndrly-brand-assets";
 import { useColors } from "@/hooks/useColors";
 import { login } from "@/lib/api";
 import { translateApiError } from "@/lib/apiErrors";
@@ -167,37 +168,22 @@ export default function LoginScreen() {
               testers can switch between EN and ES before signing in;
               the choice persists via AsyncStorage in lib/i18n.ts. */}
           <View style={styles.topBar}>
-            <View
-              style={[
-                styles.topBarLogo,
-                {
-                  backgroundColor: colors.primary,
-                  borderRadius: 10,
-                  alignItems: "center",
-                  justifyContent: "center",
-                },
-              ]}
+            <Image
+              source={VNDRLY_LOGO_SQUARE}
+              style={styles.topBarLogo}
+              resizeMode="contain"
               accessibilityLabel="VNDRLY"
-            >
-              <Text style={{ color: "#ffffff", fontFamily: "Inter_700Bold", fontSize: 18 }}>V</Text>
-            </View>
+            />
             <LanguageToggle />
           </View>
 
           <View style={styles.brand}>
-            <View
-              style={[
-                styles.logoImage,
-                {
-                  backgroundColor: colors.primary,
-                  borderRadius: 20,
-                  alignItems: "center",
-                  justifyContent: "center",
-                },
-              ]}
-            >
-              <Text style={{ color: "#ffffff", fontFamily: "Inter_700Bold", fontSize: 56 }}>V</Text>
-            </View>
+            <Image
+              source={VNDRLY_LOGO_SQUARE}
+              style={styles.logoImage}
+              resizeMode="contain"
+              accessibilityLabel="VNDRLY"
+            />
             <Text style={[styles.title, { color: colors.foreground }]}>VNDRLY</Text>
             <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
               {t("login.title")}

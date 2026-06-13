@@ -3,6 +3,7 @@ import { ActivityIndicator, Image, StyleSheet, View } from "react-native";
 
 import colors from "@/constants/colors";
 import { getCachedBrand } from "@/hooks/use-brand";
+import { VNDRLY_LOGO_SQUARE } from "@/lib/vndrly-brand-assets";
 
 export default function SplashLogo() {
   const palette = colors.dark;
@@ -17,7 +18,7 @@ export default function SplashLogo() {
   return (
     <View style={[styles.container, { backgroundColor: palette.background }]}>
       <Image
-        source={require("@/assets/images/vndrly-logo-amber.png")}
+        source={VNDRLY_LOGO_SQUARE}
         style={styles.logo}
         resizeMode="contain"
       />

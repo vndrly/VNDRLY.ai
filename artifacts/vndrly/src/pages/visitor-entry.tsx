@@ -15,7 +15,9 @@ import { visitsApi, type PublicSite } from "@/lib/visits-api";
 import { RolePill } from "@/components/role-pill";
 import { MapPin, Loader2 } from "lucide-react";
 import { VNDRLY_LOGO_SQUARE as vndrlyLogo } from "@/lib/vndrly-brand-assets";
-import headerBg from "@assets/VNDRLY_Header_Blur_4_1776220762025.png";
+import { NAV_PANE_DARK_BG } from "@/components/nav-pane-tokens";
+import { NavPaneHalftoneBackground } from "@/components/nav-pane-halftone-background";
+import { NavPaneHeaderBlur } from "@/components/nav-pane-header-blur";
 import backButtonImg from "@assets/Amber-back-button-logo-tuned.png";
 
 type GeoState =
@@ -100,19 +102,9 @@ export default function VisitorEntryPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col relative" style={{ backgroundColor: isDark ? "#3a3d42" : "#f9fafb" }}>
-      <div
-        className="absolute top-0 left-0 right-0 pointer-events-none z-0"
-        style={{
-          backgroundImage: `url(${headerBg})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center top",
-          opacity: 0.85,
-          height: "240px",
-          maskImage: "linear-gradient(to bottom, black 0%, transparent 100%)",
-          WebkitMaskImage: "linear-gradient(to bottom, black 0%, transparent 100%)",
-        }}
-      />
+    <div className="min-h-screen flex flex-col relative overflow-hidden" style={{ backgroundColor: isDark ? NAV_PANE_DARK_BG : "#f9fafb" }}>
+      <NavPaneHalftoneBackground enabled={isDark} variant="auth" />
+      {isDark && <NavPaneHeaderBlur height={240} />}
       <div className="flex justify-between items-center p-4 relative z-20">
         <DarkLightToggle mode={themeMode} onChange={setThemeMode} variant={isDark ? "dark" : "light"} />
         <LanguageToggle variant={isDark ? "dark" : "light"} />

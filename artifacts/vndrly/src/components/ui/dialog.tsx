@@ -3,7 +3,8 @@ import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import dialogAccent from "@assets/VNDRLY_Header_Blur_4_1776220762025.png"
+import { appModalTheme, type AppModalTheme } from "@/components/app-modal-tokens"
+import { useTheme } from "@/hooks/use-theme"
 import { useAuth } from "@/hooks/use-auth"
 import { useGetPartner, useGetVendor, getGetPartnerQueryKey, getGetVendorQueryKey } from "@workspace/api-client-react"
 
@@ -19,6 +20,13 @@ type DialogLogoContextValue = {
 }
 
 const DialogLogoContext = React.createContext<DialogLogoContextValue | null>(null)
+
+const ModalThemeContext = React.createContext<AppModalTheme | null>(null)
+
+export function useModalTheme(): AppModalTheme {
+  const ctx = React.useContext(ModalThemeContext)
+  return ctx ?? appModalTheme("light")
+}
 
 function useAutoEntityLogo(): DialogLogoSpec | null {
   const { user } = useAuth()
@@ -118,44 +126,52 @@ const DialogContent = React.forwardRef<
 >(({ className, children, bare = false, hideClose = false, ...props }, ref) => {
   const [customLogo, setCustomLogo] = React.useState<DialogLogoSpec | null>(null)
   const ctxValue = React.useMemo<DialogLogoContextValue>(() => ({ setCustomLogo }), [])
+  const { resolved } = useTheme()
+  const modalTheme = appModalTheme(resolved)
+
   return (
     <DialogPortal>
       <DialogOverlay />
-      <DialogPrimitive.Content
-        ref={ref}
-        className={cn(
-          "fixed left-[50%] top-[50%] z-50 flex max-h-[calc(100vh-2rem)] w-[600px] max-w-[calc(100vw-2rem)] translate-x-[-50%] translate-y-[-50%] flex-col overflow-hidden rounded-2xl border-2 bg-background shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]",
-          className
-        )}
-        {...props}
-        style={{ borderColor: "var(--brand-primary)", ...props.style }}
-      >
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[1.5in] bg-cover bg-top bg-no-repeat opacity-40"
-          style={{
-            backgroundImage: `url(${dialogAccent})`,
-            WebkitMaskImage: "linear-gradient(to bottom, black 0%, transparent 100%)",
-            maskImage: "linear-gradient(to bottom, black 0%, transparent 100%)",
-          }}
-        />
-        {bare ? (
-          children
-        ) : (
-          <DialogLogoContext.Provider value={ctxValue}>
-            <DialogLogoArea customLogo={customLogo} />
-            <div className="relative z-10 grid min-h-0 flex-1 gap-4 overflow-y-auto p-6 pt-0">
-              {children}
-            </div>
-          </DialogLogoContext.Provider>
-        )}
-        {!hideClose && (
-          <DialogPrimitive.Close className="absolute right-4 top-4 z-30 rounded-sm text-white opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-            <X className="h-4 w-4" />
-            <span className="sr-only">Close</span>
-          </DialogPrimitive.Close>
-        )}
-      </DialogPrimitive.Content>
+      <ModalThemeContext.Provider value={modalTheme}>
+        <DialogPrimitive.Content
+          ref={ref}
+          className={cn(
+            "fixed left-[50%] top-[50%] z-50 flex max-h-[calc(100vh-2rem)] w-[600px] max-w-[calc(100vw-2rem)] translate-x-[-50%] translate-y-[-50%] flex-col overflow-hidden rounded-2xl border-2 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]",
+            modalTheme.shellChromeClassName,
+            className
+          )}
+          {...props}
+          style={{ ...modalTheme.shellStyle, ...props.style }}
+        >
+          <div
+            aria-hidden
+            className={modalTheme.accentHeaderClassName}
+            style={modalTheme.accentHeaderStyle}
+            data-testid="modal-accent-header"
+          />
+          {bare ? (
+            children
+          ) : (
+            <DialogLogoContext.Provider value={ctxValue}>
+              <DialogLogoArea customLogo={customLogo} />
+              <div
+                className={cn(
+                  "relative z-10 grid min-h-0 flex-1 gap-4 overflow-y-auto p-6 pt-0",
+                  modalTheme.bodyWrapperClassName,
+                )}
+              >
+                {children}
+              </div>
+            </DialogLogoContext.Provider>
+          )}
+          {!hideClose && (
+            <DialogPrimitive.Close className="absolute right-4 top-4 z-30 rounded-sm text-white opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </DialogPrimitive.Close>
+          )}
+        </DialogPrimitive.Content>
+      </ModalThemeContext.Provider>
     </DialogPortal>
   )
 })
@@ -192,28 +208,35 @@ DialogFooter.displayName = "DialogFooter"
 const DialogTitle = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Title>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
->(({ className, ...props }, ref) => (
-  <DialogPrimitive.Title
-    ref={ref}
-    className={cn(
-      "text-lg font-semibold leading-none tracking-tight",
-      className
-    )}
-    {...props}
-  />
-))
+>(({ className, ...props }, ref) => {
+  const modalTheme = useModalTheme()
+  return (
+    <DialogPrimitive.Title
+      ref={ref}
+      className={cn(
+        "text-lg font-semibold leading-none tracking-tight",
+        modalTheme.titleClassName,
+        className
+      )}
+      {...props}
+    />
+  )
+})
 DialogTitle.displayName = DialogPrimitive.Title.displayName
 
 const DialogDescription = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Description>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
->(({ className, ...props }, ref) => (
-  <DialogPrimitive.Description
-    ref={ref}
-    className={cn("text-sm text-muted-foreground", className)}
-    {...props}
-  />
-))
+>(({ className, ...props }, ref) => {
+  const modalTheme = useModalTheme()
+  return (
+    <DialogPrimitive.Description
+      ref={ref}
+      className={cn("text-sm text-muted-foreground", modalTheme.descriptionClassName, className)}
+      {...props}
+    />
+  )
+})
 DialogDescription.displayName = DialogPrimitive.Description.displayName
 
 interface DialogLogoHeaderProps {

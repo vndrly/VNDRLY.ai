@@ -1,11 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
-import { VNDRLY_LOGO_SQUARE as vndrlyLogo } from "@/lib/vndrly-brand-assets";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import { Checkbox } from "@/components/ui/checkbox";
 import OnboardingPillButton from "@/components/onboarding-pill-button";
 import { useToast } from "@/hooks/use-toast";
@@ -13,12 +11,26 @@ import { AlertTriangle } from "lucide-react";
 import OnboardingStepper, { type StepperStep } from "@/components/onboarding-stepper";
 import OnboardingVerificationBanner from "@/components/onboarding-verification-banner";
 import LanguageToggle from "@/components/language-toggle";
+import {
+  OnboardingBrandHeader,
+  type OnboardingBrandPreview,
+} from "@/components/onboarding-brand-header";
+import { OnboardingBrandFields } from "@/components/onboarding-brand-fields";
+import { OnboardingAccountCreatedDialog } from "@/components/onboarding-account-created-dialog";
+import {
+  OnboardingPlatformEulaStep,
+  type PlatformEulaAcceptanceValue,
+} from "@/components/onboarding-platform-eula-step";
+import { PLATFORM_EULA_VERSION } from "@workspace/platform-eula";
+import { brandStyleVars, DEFAULT_BRAND } from "@/hooks/use-brand";
 import { onboardingApi } from "@/lib/onboarding-api";
+import { uploadOnboardingLogo } from "@/lib/onboarding-logo-upload";
 import { handlePhoneInput, stripPhone } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 
 type StepKey =
   | "company-basics"
+  | "platform-eula"
   | "tax-ids"
   | "work-types"
   | "compliance"
@@ -33,11 +45,12 @@ type StepKey =
 // dashboard so the vendor can finish later from there.
 const STEPS: (StepperStep & { key: StepKey })[] = [
   { key: "company-basics", label: "Account" },
+  { key: "platform-eula", label: "Platform Agreement" },
+  { key: "branding", label: "Branding" },
   { key: "tax-ids", label: "Tax IDs" },
   { key: "work-types", label: "Service Area & Work Types" },
   { key: "compliance", label: "Compliance" },
   { key: "rates", label: "Rates & 1099" },
-  { key: "branding", label: "Branding" },
   { key: "first-employee", label: "First Employee" },
 ];
 
@@ -49,7 +62,7 @@ const STEPS: (StepperStep & { key: StepKey })[] = [
 // from the dashboard's Finish-setup widget. Required data is still
 // enforced at /complete time (the user can't actually finalise
 // onboarding without it), but they're free to walk away in between.
-const REQUIRED_STEPS = new Set<StepKey>(["company-basics"]);
+const REQUIRED_STEPS = new Set<StepKey>(["company-basics", "platform-eula"]);
 
 interface VendorPayload {
   taxIds?: { federalTaxId?: string; stateTaxId?: string; physicalAddress?: string; billingAddress?: string };
@@ -59,6 +72,7 @@ interface VendorPayload {
   rates?: { hourlyRate?: string; dailyOtHours?: string; weeklyOtHours?: string; overtimeMultiplier?: string };
   eDeliveryConsent?: boolean;
   branding?: { brandPrimaryColor?: string; logoUrl?: string };
+  platformEula?: { accepted?: boolean; version?: string };
   firstEmployee?: { firstName?: string; lastName?: string; email?: string; phone?: string };
 }
 
@@ -119,7 +133,12 @@ export default function OnboardingVendor() {
   // colour and the vendor logo on invoices. Both fields are optional;
   // skipping this step adds it to the dashboard's Finish-setup widget.
   const [vendorBranding, setVendorBranding] = useState({ brandPrimaryColor: "", logoUrl: "" });
+  const [platformEula, setPlatformEula] = useState<PlatformEulaAcceptanceValue>({
+    accepted: false,
+    version: PLATFORM_EULA_VERSION,
+  });
   const [firstEmp, setFirstEmp] = useState({ firstName: "", lastName: "", email: "", phone: "" });
+  const [showAccountCreated, setShowAccountCreated] = useState(false);
 
   const currentStep = STEPS[stepIndex];
 
@@ -194,6 +213,12 @@ export default function OnboardingVendor() {
           setVendorBranding({
             brandPrimaryColor: p.branding.brandPrimaryColor ?? "",
             logoUrl: p.branding.logoUrl ?? "",
+          });
+        }
+        if (p.platformEula?.accepted) {
+          setPlatformEula({
+            accepted: true,
+            version: p.platformEula.version ?? PLATFORM_EULA_VERSION,
           });
         }
         if (p.firstEmployee) {
@@ -365,11 +390,29 @@ export default function OnboardingVendor() {
       setCompleted(["company-basics"]);
       setStepIndex(1);
       await onboardingApi.updateProgress("vendor", resp.orgId, {
-        currentStep: "tax-ids",
+        currentStep: "platform-eula",
         completedSteps: ["company-basics"],
       });
+      setShowAccountCreated(true);
     } catch (err) {
       toast({ title: (err as Error).message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const uploadLogo = async (
+    file: File,
+    _slot: "horizontal" | "square",
+  ): Promise<void> => {
+    setLoading(true);
+    try {
+      const finalUrl = await uploadOnboardingLogo(file, "public");
+      setVendorBranding((b) => ({ ...b, logoUrl: finalUrl }));
+      toast({ title: "Logo uploaded." });
+    } catch (err) {
+      toast({ title: (err as Error).message, variant: "destructive" });
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -411,6 +454,11 @@ export default function OnboardingVendor() {
   // circuits navigation and surfaces the failure to the user.
   const validateCurrentStep = (): string | null => {
     switch (currentStep.key) {
+      case "platform-eula":
+        if (!platformEula.accepted) {
+          return "You must accept the VNDRLY Platform Agreement to continue.";
+        }
+        return null;
       case "tax-ids":
         if (!taxIds.federalTaxId.trim() || !taxIds.stateTaxId.trim()) return "Federal and state tax IDs are required.";
         if (!taxIds.physicalAddress.trim() || !taxIds.billingAddress.trim()) return "Physical and billing addresses are required.";
@@ -578,13 +626,17 @@ export default function OnboardingVendor() {
             ? { rates, eDeliveryConsent }
             : { rates };
         case "branding":
-          // Persist whatever the user has typed; an empty payload here
-          // is fine because the Skip path explicitly goes through
-          // skipStep() and adds the step to skippedSteps.
           return {
             branding: {
               brandPrimaryColor: vendorBranding.brandPrimaryColor.trim() || undefined,
               logoUrl: vendorBranding.logoUrl.trim() || undefined,
+            },
+          };
+        case "platform-eula":
+          return {
+            platformEula: {
+              accepted: platformEula.accepted,
+              version: PLATFORM_EULA_VERSION,
             },
           };
         case "first-employee":
@@ -593,7 +645,7 @@ export default function OnboardingVendor() {
           return {};
       }
     };
-  }, [currentStep.key, taxIds, selectedWtIds, serviceRadius, compliance, rates, eDeliveryConsent, vendorBranding, firstEmp]);
+  }, [currentStep.key, taxIds, selectedWtIds, serviceRadius, compliance, rates, eDeliveryConsent, vendorBranding, platformEula, firstEmp]);
 
   // Group work-types by category so the picker is scannable instead of
   // a 60-item flat list.
@@ -607,19 +659,50 @@ export default function OnboardingVendor() {
     return Array.from(groups.entries()).sort(([a], [b]) => a.localeCompare(b));
   }, [workTypes]);
 
+  const brandPreview = useMemo((): OnboardingBrandPreview | null => {
+    const primary =
+      vendorBranding.brandPrimaryColor.trim() ||
+      payload.branding?.brandPrimaryColor?.trim() ||
+      "";
+    const logo =
+      vendorBranding.logoUrl.trim() || payload.branding?.logoUrl?.trim() || "";
+    if (!primary && !logo) return null;
+    return {
+      name: basics.name.trim() || null,
+      logoUrl: logo || null,
+      primaryColor: primary || null,
+    };
+  }, [vendorBranding, payload.branding, basics.name]);
+
+  const pageBrand = useMemo(() => {
+    if (!brandPreview?.primaryColor) return DEFAULT_BRAND;
+    return {
+      ...DEFAULT_BRAND,
+      primary: brandPreview.primaryColor,
+      accent: brandPreview.primaryColor,
+      logoUrl: brandPreview.logoUrl ?? null,
+      name: brandPreview.name ?? null,
+      isOrgBranded: true,
+    };
+  }, [brandPreview]);
+
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-8 relative">
+    <div
+      className="min-h-screen bg-gray-50 px-4 py-8 relative"
+      style={brandStyleVars(pageBrand)}
+    >
       <div className="absolute top-4 right-4 z-20">
         <LanguageToggle variant="light" />
       </div>
       <div className="max-w-2xl mx-auto">
-        <div className="flex items-center gap-3 mb-6">
-          <img src={vndrlyLogo} alt="VNDRLY" className="w-12 h-12 rounded-lg" />
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Vendor Onboarding</h1>
-            <p className="text-sm text-gray-500">A short setup flow so you can start taking work.</p>
-          </div>
-        </div>
+        <OnboardingBrandHeader
+          title="Vendor Onboarding"
+          subtitle="A short setup flow so you can start taking work."
+          preview={brandPreview}
+          onBack={() =>
+            stepIndex === 0 ? navigate("/signup") : prevStep()
+          }
+        />
 
         {/* Email-verification banner — appears once an account
             exists. Hidden on the anonymous step-1 visit so it doesn't
@@ -907,39 +990,35 @@ export default function OnboardingVendor() {
             </div>
           )}
 
+          {currentStep.key === "platform-eula" && (
+            <OnboardingPlatformEulaStep
+              value={platformEula}
+              onChange={setPlatformEula}
+              disabled={loading}
+            />
+          )}
+
           {currentStep.key === "branding" && (
             <div className="space-y-4" data-testid="step-branding-body">
-              <h2 className="text-lg font-semibold text-gray-900">Vendor branding (optional)</h2>
-              <p className="text-sm text-gray-500">Adds your colour and logo to the vendor portal and invoice PDFs. You can skip this and add it later from the dashboard.</p>
-              <div>
-                <Label>Brand primary colour</Label>
-                <div className="flex items-center gap-3">
-                  <Input
-                    type="color"
-                    value={vendorBranding.brandPrimaryColor || "#0070f3"}
-                    onChange={(e) => setVendorBranding({ ...vendorBranding, brandPrimaryColor: e.target.value })}
-                    className="w-16 h-10 p-1"
-                    data-testid="input-vendor-brand-color"
-                  />
-                  <Input
-                    value={vendorBranding.brandPrimaryColor}
-                    onChange={(e) => setVendorBranding({ ...vendorBranding, brandPrimaryColor: e.target.value })}
-                    placeholder="#0070f3"
-                    className="max-w-[180px]"
-                    data-testid="input-vendor-brand-color-hex"
-                  />
-                </div>
-              </div>
-              <div>
-                <Label>Logo URL</Label>
-                <Input
-                  value={vendorBranding.logoUrl}
-                  onChange={(e) => setVendorBranding({ ...vendorBranding, logoUrl: e.target.value })}
-                  placeholder="https://… (paste a URL or skip and upload later)"
-                  data-testid="input-vendor-logo-url"
-                />
-                <p className="text-xs text-gray-500 mt-1">If you don't have a hosted logo handy, skip this and upload one from the dashboard.</p>
-              </div>
+              <h2 className="text-lg font-semibold text-gray-900">Make it yours</h2>
+              <p className="text-sm text-gray-500">
+                Upload your logo and pick your brand color — the header above
+                updates live. We&apos;ll suggest colors from your logo. This step
+                is optional; skip it and finish anytime from the dashboard.
+              </p>
+              <OnboardingBrandFields
+                variant="vendor"
+                value={vendorBranding}
+                onChange={setVendorBranding}
+                disabled={loading}
+                onUploadLogo={uploadLogo}
+                onSuggestColors={(colors) => {
+                  setVendorBranding((b) => ({
+                    ...b,
+                    brandPrimaryColor: colors.primary,
+                  }));
+                }}
+              />
             </div>
           )}
 
@@ -968,27 +1047,7 @@ export default function OnboardingVendor() {
             </div>
           )}
 
-          <div className="mt-8 flex items-center justify-between gap-3">
-            {/* Back button: from step 2 onwards we render a real pill so it
-                visually anchors the row alongside the right-side actions.
-                On step 1 (account creation) it stays a quiet ghost link
-                pointing back to /signup so the entry path doesn't feel
-                like an in-flow action. */}
-            {stepIndex === 0 ? (
-              <PillButton color="image" onClick={() => navigate("/signup")} disabled={loading} data-testid="button-back">
-                ← Back
-              </PillButton>
-            ) : (
-              <OnboardingPillButton
-                tone="secondary"
-                onClick={prevStep}
-                disabled={loading}
-                data-testid="button-back"
-                className="px-5"
-              >
-                ← Back
-              </OnboardingPillButton>
-            )}
+          <div className="mt-8 flex items-center justify-end gap-3">
             <div className="flex items-center gap-2">
               {stepIndex > 0 && !REQUIRED_STEPS.has(currentStep.key as StepKey) && (
                 <OnboardingPillButton
@@ -1042,6 +1101,14 @@ export default function OnboardingVendor() {
           Step {stepIndex + 1} of {STEPS.length}. Your progress is saved automatically.
         </p>
       </div>
+
+      <OnboardingAccountCreatedDialog
+        open={showAccountCreated}
+        orgType="vendor"
+        companyName={basics.name.trim()}
+        onContinue={() => setShowAccountCreated(false)}
+        onGoToDashboard={() => navigate("/")}
+      />
     </div>
   );
 }

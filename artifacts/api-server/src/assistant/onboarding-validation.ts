@@ -10,19 +10,21 @@
 //
 // All exports here are pure: no DB, no I/O, no env reads.
 
+import { PLATFORM_EULA_VERSION } from "@workspace/platform-eula";
+
 export type Persona = "partner" | "vendor" | "field_employee";
 
 export const REQUIRED_STEPS: Record<Persona, readonly string[]> = {
-  partner: ["company-basics", "branding", "first-site", "tax-billing"],
-  vendor: ["company-basics", "tax-ids", "work-types", "compliance", "rates", "first-employee"],
+  partner: ["company-basics", "platform-eula", "first-site", "tax-billing"],
+  vendor: ["company-basics", "platform-eula", "tax-ids", "work-types", "compliance", "rates", "first-employee"],
   field_employee: ["personal-info", "photo-certs", "set-password"],
 };
 
 // Full canonical sequence the wizard renders. Mirrors STEP_KEYS in
 // the route. "done" is always the terminal pseudo-step.
 export const STEP_KEYS: Record<Persona, readonly string[]> = {
-  partner: ["company-basics", "branding", "first-site", "tax-billing", "preferences", "invite-team", "done"],
-  vendor: ["company-basics", "tax-ids", "work-types", "compliance", "rates", "branding", "first-employee", "done"],
+  partner: ["company-basics", "platform-eula", "branding", "first-site", "tax-billing", "preferences", "invite-team", "done"],
+  vendor: ["company-basics", "platform-eula", "branding", "tax-ids", "work-types", "compliance", "rates", "first-employee", "done"],
   field_employee: ["personal-info", "photo-certs", "set-password", "done"],
 };
 
@@ -32,7 +34,7 @@ export const STEP_KEYS: Record<Persona, readonly string[]> = {
 // `firstSite.name` looks up `payload.firstSite.name`.
 export const STEP_REQUIRED_FIELDS: Record<Persona, Record<string, readonly string[]>> = {
   partner: {
-    "branding": ["brandPrimaryColor", "brandAccentColor", "logoUrl", "logoSquareUrl"],
+    "platform-eula": ["platformEula.accepted", "platformEula.version"],
     "first-site": ["firstSite.name", "firstSite.address", "firstSite.siteCode", "firstSite.siteRadiusMeters"],
     "tax-billing": [
       "taxBilling.federalTaxId",
@@ -43,6 +45,7 @@ export const STEP_REQUIRED_FIELDS: Record<Persona, Record<string, readonly strin
     "company-basics": [],
   },
   vendor: {
+    "platform-eula": ["platformEula.accepted", "platformEula.version"],
     "tax-ids": [
       "taxIds.federalTaxId",
       "taxIds.stateTaxId",
@@ -82,12 +85,14 @@ export const PAYLOAD_TOP_KEYS: Record<Persona, readonly string[]> = {
     "brandAccentColor",
     "logoUrl",
     "logoSquareUrl",
+    "platformEula",
     "firstSite",
     "taxBilling",
     "preferences",
     "inviteEmails",
   ],
   vendor: [
+    "platformEula",
     "taxIds",
     "serviceArea",
     "workTypeIds",
@@ -257,8 +262,10 @@ function setPath(obj: Record<string, unknown>, path: string, value: unknown) {
 
 function sampleValue(path: string): unknown {
   const leaf = path.split(".").pop() ?? "";
+  if (/^accepted$/i.test(leaf)) return true;
   if (/Hours|Multiplier|Radius|Miles/i.test(leaf)) return 1;
   if (/Consent/i.test(leaf)) return true;
   if (/^workTypeIds$/.test(leaf)) return ["1"];
+  if (/^version$/i.test(leaf)) return PLATFORM_EULA_VERSION;
   return "value";
 }

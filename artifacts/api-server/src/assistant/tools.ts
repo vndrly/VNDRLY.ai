@@ -38,7 +38,9 @@ export const DEEP_LINK_SCREENS = [
   "vendor-analytics",
   "partner-analytics",
   "vendor-catalog",
+  "partner-catalog",
   "catalog",
+  "catalog-health",
   "crew-map",
   "crew-replay",
   "site-map",
@@ -197,9 +199,54 @@ export const TOOLS: Anthropic.Tool[] = [
     },
   },
   {
+    name: "query_sales_tax_by_state",
+    description:
+      "Returns sales tax collected by US state for a calendar period — taxable sales, exempt sales, tax collected, and effective rate per state. Uses the same engine as Reports → Sales tax. Scoped to the caller's vendor or partner org. Use for questions like 'how much sales tax did we pay in Texas YTD?' or 'sales tax by state this year'. Optional state filter (e.g. 'TX'). Field employees are blocked.",
+    input_schema: {
+      type: "object",
+      properties: {
+        preset: {
+          type: "string",
+          enum: ["this_month", "last_month", "this_quarter", "last_quarter", "this_year", "last_year", "ytd"],
+          description: "Period shortcut. Defaults to 'ytd'.",
+        },
+        state: { type: "string", description: "Optional two-letter state code filter (e.g. 'TX', 'NM')." },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "query_nec1099_summary",
+    description:
+      "Returns 1099-NEC payment totals for a calendar year — same aggregation as Reports → 1099. Vendors see totals paid to them per partner; partners see totals paid to each vendor; admins see platform-wide (capped). Includes the $600 IRS threshold context. Use for 'how much did we pay vendor X on 1099-NEC this year?' or 'YTD 1099 totals'. Field employees are blocked.",
+    input_schema: {
+      type: "object",
+      properties: {
+        year: { type: "number", description: "Calendar tax year (e.g. 2026). Defaults to the current UTC year." },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "mark_notifications_read",
+    description:
+      "Marks one notification or all unread notifications as read for the signed-in user — the same action as the bell inbox Mark all read button. Use when the user asks to clear their notification badge or mark alerts as read. Requires explicit user intent; do not call proactively.",
+    input_schema: {
+      type: "object",
+      properties: {
+        notificationId: { type: "number", description: "Mark a single notification read by id." },
+        markAll: {
+          type: "boolean",
+          description: "When true (default if notificationId omitted), mark every unread notification read.",
+        },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
     name: "deep_link_to",
     description:
-      "Returns a URL the user can navigate to in this web app for a given screen. Use this instead of describing 'click X then Y' when a single link will do. Detail screens (ticket-detail, vendor-detail, partner-detail, invoice-detail, vendor-analytics, partner-analytics, crew-replay) require `id`. Field-employee onboarding requires the invite `token`.",
+      "Returns a URL the user can navigate to in this web app for a given screen. Use this instead of describing 'click X then Y' when a single link will do. Detail screens (ticket-detail, vendor-detail, partner-detail, invoice-detail, vendor-analytics, partner-analytics, crew-replay) require `id`. Field-employee onboarding requires the invite `token`. For Reports, pass reportCard (e.g. salesTaxByState) and optional reportPreset (ytd, this_year, …) plus highlightState (e.g. TX) to open the matching card scrolled into view.",
     input_schema: {
       type: "object",
       properties: {
@@ -210,6 +257,20 @@ export const TOOLS: Anthropic.Tool[] = [
         id: { type: "number", description: "Required for detail screens (e.g. ticket-detail, vendor-analytics, partner-analytics, crew-replay)." },
         token: { type: "string", description: "Required for onboarding-field — the invite token from the email link." },
         step: { type: "string", description: "Optional ?step= query for onboarding deep-links." },
+        reportCard: {
+          type: "string",
+          enum: ["salesTaxByState", "accountingExport"],
+          description: "When screen is reports, scroll to this report card with a period preset.",
+        },
+        reportPreset: {
+          type: "string",
+          enum: ["this_month", "last_month", "this_quarter", "last_quarter", "this_year", "last_year", "ytd"],
+          description: "Period for report deep links. Defaults to ytd.",
+        },
+        highlightState: {
+          type: "string",
+          description: "Optional two-letter state to highlight on salesTaxByState (e.g. TX).",
+        },
       },
       required: ["screen"],
       additionalProperties: false,

@@ -12,6 +12,7 @@ export default function CountBadgePill({
   title,
   "aria-label": ariaLabel,
   "data-testid": testId,
+  "data-recon-enabled": reconEnabled,
 }: {
   children: React.ReactNode;
   icon?: LucideIcon;
@@ -21,18 +22,20 @@ export default function CountBadgePill({
   title?: string;
   "aria-label"?: string;
   "data-testid"?: string;
+  "data-recon-enabled"?: string;
 }) {
   return (
-    <ImagePill
-      color={color}
-      rest={rest}
-      className={cn("whitespace-nowrap pointer-events-none", className)}
-      title={title}
-      aria-label={ariaLabel}
-      data-testid={testId}
-    >
-      {Icon ? <Icon className="w-3 h-3" /> : null}
-      {children}
-    </ImagePill>
+    <span data-testid={testId} data-recon-enabled={reconEnabled}>
+      <ImagePill
+        color={color}
+        rest={rest}
+        className={cn("whitespace-nowrap pointer-events-none", className)}
+        title={title}
+        aria-label={ariaLabel}
+      >
+        {Icon ? <Icon className="w-3 h-3" /> : null}
+        {children}
+      </ImagePill>
+    </span>
   );
 }

@@ -102,6 +102,32 @@
     "skipForNow": "Omitir por ahora",
     "resume": "Reanudar"
   },
+  "onboardingWelcome": {
+    "title": "¡Felicitaciones! Su cuenta se creó correctamente.",
+    "subtitle": "Su cuenta de {{org}} está lista. Unos pasos más desbloquearán la plataforma completa.",
+    "subtitleNamed": "{{name}} está registrado como {{org}} en VNDRLY.",
+    "orgPartner": "socio",
+    "orgVendor": "proveedor",
+    "resumeHint": "Puede explorar el panel ahora y terminar la configuración cuando quiera — haga clic en el stepper de progreso en la parte superior de cualquier página para continuar donde lo dejó.",
+    "continueOnboarding": "Continuar configuración",
+    "goToDashboard": "Ir a VNDRLY.ai ahora"
+  },
+  "onboardingProgress": {
+    "bannerTitle": "Termine de configurar su cuenta",
+    "bannerHint": "Explore la plataforma mientras reúne la información — haga clic en cualquier paso abajo o en Reanudar para continuar cuando quiera.",
+    "onboardingLabel": "configuración",
+    "stepsDone": "listos",
+    "currentStep": "Actual",
+    "clickToContinue": "clic para continuar",
+    "finishStep": "Terminar",
+    "dismiss": "Descartar",
+    "hotlistBidLocked": "Complete Área de servicio y tipos de trabajo en la configuración para desbloquear ofertas.",
+    "continueSetup": "Continuar configuración",
+    "finishSetupFirst": "Terminar configuración"
+  },
+  "platformEula": {
+    "viewButton": "Ver acuerdo de plataforma"
+  },
   "fieldOnboarding": {
     "welcomeTitle": "Bienvenido a {{vendorName}}",
     "welcomeSubtitle": "Vamos a preparar tu cuenta en 3 pasos rápidos.",
@@ -1108,10 +1134,10 @@
     "importUnknownVendors": "Proveedores desconocidos (omitidos): {{names}}",
     "importErrors": "Errores:",
     "importErrorRow": "Fila {{row}}: {{message}}",
+    "importVendorsNotified": "Los proveedores adjuntos en esta importación deben fijar tarifas en Sus servicios y tarifas.",
     "importFailed": "Falló la importación",
     "exportEmpty": "No hay nada para exportar todavía.",
-    "duplicateNameInline": "Ya existe un tipo de trabajo con este nombre.",
-    "importVendorsNotified": "Los proveedores adjuntos en esta importación deben fijar tarifas en Sus servicios y tarifas."
+    "duplicateNameInline": "Ya existe un tipo de trabajo con este nombre."
   },
   "catalogHealth": {
     "title": "Salud del catálogo",
@@ -1289,6 +1315,10 @@
     "viewAll": "Ver todas las notificaciones",
     "preferences": "Preferencias",
     "markAllRead": "Marcar todas como leídas",
+    "markRead": "Marcar como leída",
+    "markUnread": "Marcar como no leída",
+    "delete": "Eliminar",
+    "sendTo": "Enviar a",
     "noNotifications": "No hay nada aquí.",
     "loading": "Cargando…",
     "categories": {
@@ -1297,23 +1327,50 @@
       "hotlist": "Hotlist",
       "compliance": "Cumplimiento",
       "crew": "Cuadrilla",
+      "comments": "Comentarios",
       "visitor": "Visitantes",
       "system": "Sistema"
     },
     "types": {
+      "default": "Alerta",
       "ticket_assigned": "Asignado a ti",
+      "ticket_kicked_back": "Devuelto",
+      "ticket_rejected": "Rechazado",
+      "ticket_approved": "Aprobado",
+      "funds_dispersed": "Fondos dispersados",
+      "ticket_pending_long": "Pendiente demasiado tiempo",
+      "ticket_inactive": "Ticket inactivo",
+      "ticket_note_added": "Nota nueva",
+      "ticket_unblocked": "Desbloqueado",
+      "direct_assignment_offered": "Trabajo ofrecido",
+      "direct_assignment_committed": "Trabajo confirmado",
+      "direct_assignment_passed": "Trabajo rechazado",
+      "direct_assignment_cancelled": "Trabajo cancelado",
       "workflow_nudge": "Recordatorio de flujo",
       "crew_added": "Añadido a la cuadrilla",
       "schedule_changed": "Horario actualizado",
       "crew_removed": "Retirado de la cuadrilla",
+      "crew_punch_in": "Entrada de cuadrilla",
+      "crew_punch_out": "Salida de cuadrilla",
+      "ptt_message": "Mensaje de voz",
       "hotlist_match": "Coincidencia de hotlist",
+      "bid_placed": "Oferta enviada",
+      "bid_updated": "Oferta actualizada",
+      "bid_declined": "Oferta rechazada",
       "bid_outbid": "Oferta superada",
       "job_awarded": "Trabajo adjudicado",
       "cert_expiring": "Certificación por vencer",
       "cert_expired": "Certificación vencida",
       "long_checkin": "Check-in prolongado",
       "low_battery": "Batería baja",
-      "rating_received": "Nueva calificación"
+      "rating_received": "Nueva calificación",
+      "oa_connection_revoked": "Contabilidad desconectada",
+      "oa_connection_expiring": "Contabilidad por vencer",
+      "visitor_checked_in": "Entrada de visitante",
+      "visitor_checked_out": "Salida de visitante",
+      "comment_mention": "Mención",
+      "comment_added": "Respuesta a comentario",
+      "hotlist_comment_added": "Respuesta en hotlist"
     },
     "slowDown": {
       "brief": "Reduciendo el ritmo brevemente para mantener todo fluido.",
@@ -1400,6 +1457,8 @@
     "pings": "{{count}} pings",
     "failed": "Falló",
     "legendTitle": "Leyenda del mapa",
+    "legendHeading": "Rumbo",
+    "legendRoute": "Línea sólida = ruta GPS",
     "legendArrow": "Flecha = dirección del recorrido",
     "legendStationary": "Anillo punteado = ping estacionario"
   },
@@ -1749,6 +1808,8 @@
     "lowBattery": "Batería baja ({{pct}}%)",
     "directions": "Cómo llegar",
     "replayToday": "Reproducir hoy",
+    "problemFilter": "Solo requieren atención",
+    "showGeofences": "Mostrar geocercas del sitio",
     "onShiftNow": "En turno ahora ({{count}})",
     "nobodyOnClock": "Nadie está en turno en este momento.",
     "updated": "Actualizado {{time}}",
@@ -1766,6 +1827,35 @@
       "on_site": "en sitio",
       "off_site": "fuera del sitio",
       "completed": "completado"
+    },
+    "recentTrips": {
+      "title": "Viajes recientes",
+      "loading": "Cargando viajes recientes…",
+      "empty": "Aún no hay viajes recientes en su ámbito.",
+      "failed": "No se pudieron cargar los viajes recientes.",
+      "notAllowed": "Los viajes recientes no están disponibles para su rol.",
+      "unknownSite": "Sitio desconocido",
+      "onSiteShort": "{{min}} min en sitio",
+      "onSite": "Tiempo en sitio",
+      "travel": "Tiempo de viaje",
+      "gpsPings": "Pings GPS",
+      "checkInDistance": "Distancia de entrada",
+      "metersFromSite": "{{m}} m del pin del sitio",
+      "insideGeofence": "Dentro de la geocerca (≤ {{m}} m)",
+      "outsideGeofence": "Fuera de la geocerca (radio {{m}} m)",
+      "timeline": "Línea de tiempo del viaje",
+      "enRoute": "En camino",
+      "onLocation": "En ubicación",
+      "arrived": "Llegada (geocerca)",
+      "checkIn": "Entrada registrada",
+      "checkOut": "Salida registrada",
+      "vendor": "Proveedor",
+      "status": "Estado del ticket",
+      "routeReplay": "Reproducir ruta",
+      "openTicket": "Abrir ticket",
+      "checkInPin": "Pin de entrada",
+      "minutes": "{{min}} min",
+      "hoursMinutes": "{{hr}}h {{min}}m"
     }
   },
   "siteMap": {
@@ -2514,7 +2604,8 @@
       "all": "Todas las facturas"
     },
     "actions": {
-      "print": "Imprimir"
+      "print": "Imprimir",
+      "exportAccounting": "Exportar este período"
     },
     "totals": {
       "invoiced": "Facturado",
@@ -3050,6 +3141,35 @@
         "actions": "Acciones"
       }
     },
+    "accountingExport": {
+      "title": "Centro de exportación contable",
+      "descriptionVendor": "Elige un período, revisa horas, repuestos e impuestos facturados y descarga el CSV de detalle o paquetes para QuickBooks / OpenAccountant.",
+      "descriptionPartner": "Elige un período, revisa gasto e impuestos y descarga el CSV de detalle o un ZIP contable combinado.",
+      "summaryError": "No se pudo cargar el resumen del período",
+      "downloadLineDetail": "Detalle de líneas (CSV)",
+      "downloadQboZip": "QuickBooks Online (ZIP)",
+      "downloadQboIif": "QuickBooks Desktop (IIF)",
+      "downloadOaZip": "OpenAccountant (ZIP)",
+      "downloadBundle": "Paquete contable (ZIP)",
+      "chip": {
+        "invoices": "Facturas",
+        "hours": "Horas de mano de obra",
+        "parts": "Repuestos y equip.",
+        "tax": "Impuesto",
+        "total": "Total facturado"
+      }
+    },
+    "vendorQbMapping": {
+      "title": "Mapeo del plan de cuentas",
+      "description": "Personaliza cómo tus tipos de línea de factura se mapean a cuentas de QuickBooks en exportaciones y envíos. Los valores predeterminados aplican hasta que los cambies aquí.",
+      "allPartners": "Todos los socios (predeterminado del proveedor)",
+      "partnerId": "Socio #{{id}}",
+      "saved": "Mapeo de cuenta guardado",
+      "saveError": "No se pudo guardar el mapeo de cuenta",
+      "reset": "Restaurado al predeterminado",
+      "saveBtn": "Guardar",
+      "resetBtn": "Restablecer"
+    },
     "quickbooks": {
       "title": "Exportar a QuickBooks",
       "description": "Exporta clientes, proveedores y facturas del período para importar a QuickBooks Desktop (IIF) o QuickBooks Online (ZIP de 3 CSV).",
@@ -3485,6 +3605,10 @@
       "not_assigned": "No estás asignado a este ticket.",
       "not_scheduled": "Este ticket aún no está programado.",
       "certifications_blocked": "Uno o más miembros de la cuadrilla no tienen las certificaciones requeridas para programar este tipo de trabajo."
+    },
+    "certification": {
+      "cert_number_required": "Se requiere el número de certificado.",
+      "verify_forbidden": "Solo el administrador del proveedor puede verificar certificaciones."
     },
     "crew": {
       "already_checked_in": "Ese empleado ya tiene entrada registrada en este ticket.",

@@ -1,8 +1,6 @@
 import { cn } from "@/lib/utils";
 import { useBrand } from "@/hooks/use-brand";
-import { pickAskVLogo } from "@/lib/pick-askv-logo";
-
-const BRIGHT_FILTER = "saturate(1.45) brightness(1.08) contrast(1.05)";
+import { pickAskVLogo, pickAskVLogoIdle } from "@/lib/pick-askv-logo";
 
 /** Floating launcher footprint — matches 1024×512 AskV PNG aspect (2:1). */
 export const ASKV_LAUNCHER_WIDTH = 64;
@@ -13,12 +11,8 @@ interface AskVLogoProps {
   size?: number;
   width?: number;
   height?: number;
-  /** Full vibrancy — modal header icon. */
+  /** Full vibrancy — modal header icon (active asset, no crossfade). */
   bright?: boolean;
-  /** Slow opacity breathe (optional idle motion). */
-  breathing?: boolean;
-  /** Gentle vertical float while idle. */
-  bob?: boolean;
   engaged?: boolean;
   panelOpen?: boolean;
   className?: string;
@@ -29,8 +23,6 @@ export function AskVLogo({
   width,
   height,
   bright = false,
-  breathing = false,
-  bob = false,
   engaged = false,
   panelOpen = false,
   className,
@@ -38,32 +30,75 @@ export function AskVLogo({
   const brand = useBrand();
   const w = width ?? size;
   const h = height ?? size;
+  const activeSrc = pickAskVLogo(brand.primary, brand.name);
 
-  const motionClass =
-    bob && !engaged && !panelOpen
-      ? "assistant-launcher-bob"
-      : breathing && !engaged && !panelOpen
-        ? "assistant-launcher-breathe-6s"
-        : undefined;
+  if (bright) {
+    return (
+      <img
+        src={activeSrc}
+        alt=""
+        aria-hidden="true"
+        draggable={false}
+        className={cn("pointer-events-none object-contain", className)}
+        style={{ width: w, height: h }}
+      />
+    );
+  }
 
   return (
-    <img
-      src={pickAskVLogo(brand.primary, brand.name)}
-      alt=""
-      aria-hidden="true"
-      draggable={false}
-      className={cn("pointer-events-none object-contain", motionClass, className)}
-      style={{
-        width: w,
-        height: h,
-        opacity: bright ? 1 : panelOpen ? 0.35 : engaged ? 1 : undefined,
-        filter: bright || engaged ? BRIGHT_FILTER : undefined,
-      }}
+    <AskVLogoCrossfade
+      width={w}
+      height={h}
+      showActive={engaged || panelOpen}
+      className={className}
     />
   );
 }
 
-/** Launcher mark — logo only (no ring ripples; idle bob handled on the img). */
+function AskVLogoCrossfade({
+  width,
+  height,
+  showActive,
+  className,
+}: {
+  width: number;
+  height: number;
+  showActive: boolean;
+  className?: string;
+}) {
+  const brand = useBrand();
+  const idleSrc = pickAskVLogoIdle(brand.primary, brand.name);
+  const activeSrc = pickAskVLogo(brand.primary, brand.name);
+
+  return (
+    <span
+      className={cn("relative inline-block shrink-0", className)}
+      style={{ width, height }}
+      aria-hidden="true"
+    >
+      <img
+        src={idleSrc}
+        alt=""
+        draggable={false}
+        className={cn(
+          "pointer-events-none absolute inset-0 h-full w-full object-contain transition-opacity duration-200",
+          showActive ? "opacity-0" : "opacity-100",
+        )}
+      />
+      <img
+        src={activeSrc}
+        alt=""
+        draggable={false}
+        className={cn(
+          "pointer-events-none absolute inset-0 h-full w-full object-contain transition-opacity duration-200",
+          showActive ? "opacity-100" : "opacity-0",
+        )}
+      />
+    </span>
+  );
+}
+
+/** Launcher mark — grey bubble at rest, brand bubble on hover / open. */
 export function AskVFloatingLauncherMark({
   engaged = false,
   panelOpen = false,
@@ -71,13 +106,10 @@ export function AskVFloatingLauncherMark({
   engaged?: boolean;
   panelOpen?: boolean;
 }) {
-  const idle = !engaged && !panelOpen;
-
   return (
     <AskVLogo
       width={ASKV_LAUNCHER_WIDTH}
       height={ASKV_LAUNCHER_HEIGHT}
-      bob={idle}
       engaged={engaged}
       panelOpen={panelOpen}
     />

@@ -38,9 +38,11 @@ import {
   clampMetricsDays,
 } from "../assistant/permissions";
 import { buildDeepLink } from "../assistant/deep-links";
+import { parsePageContext } from "../assistant/page-context";
 import { classifyRefusal } from "../assistant/refusal";
 import { TOOLS } from "../assistant/tools";
 import { isDataTool, runDataTool } from "../assistant/data-tools";
+import { isWriteTool, runWriteTool } from "../assistant/write-tools";
 import {
   consumeDailyBudget,
   getClientIp,
@@ -557,13 +559,12 @@ const STEP_KEYS = STEP_KEYS_DATA;
 // in routes/onboarding.ts — the wizard's `/complete` endpoint will
 // reject the org if any of these step's fields are missing, so the
 // assistant must not advertise those steps as skippable.
-//   Partner.required = company-basics, branding (brand colors+logos),
-//                      first-site, tax-billing
+//   Partner.required = company-basics, first-site, tax-billing
 //   Vendor.required  = company-basics, tax-ids, work-types, compliance,
 //                      rates, first-employee
 //   Field.required   = personal-info, photo-certs, set-password
-// (everything else — partner `preferences`/`invite-team`, vendor
-// `branding` — is optional and can be skipped during the wizard.)
+// (everything else — partner/vendor `branding`, partner `preferences`/
+// `invite-team` — is optional and can be skipped during the wizard.)
 const REQUIRED_STEPS = REQUIRED_STEPS_DATA;
 const STEP_REQUIRED_FIELDS = STEP_REQUIRED_FIELDS_DATA;
 const PAYLOAD_TOP_KEYS = PAYLOAD_TOP_KEYS_DATA;
@@ -622,6 +623,14 @@ async function runTool(
     return JSON.stringify({
       error: `Tool '${name}' is not available in field-employee invite mode. Stick to onboarding tools and deep links.`,
     });
+  }
+  if (isTokenMode && isWriteTool(name)) {
+    return JSON.stringify({
+      error: `Tool '${name}' is not available in field-employee invite mode.`,
+    });
+  }
+  if (isWriteTool(name)) {
+    return runWriteTool(name, input, session);
   }
   try {
     switch (name) {
@@ -862,7 +871,15 @@ async function runTool(
       }
 
       case "deep_link_to": {
-        const args = (input ?? {}) as { screen?: string; id?: number; token?: string; step?: string };
+        const args = (input ?? {}) as {
+          screen?: string;
+          id?: number;
+          token?: string;
+          step?: string;
+          reportCard?: string;
+          reportPreset?: string;
+          highlightState?: string;
+        };
         if (!args.screen) return JSON.stringify({ error: "Missing 'screen'." });
         // Role-aware gate (P0 fix from assistant review): the assistant
         // must never hand out a link to a screen the caller can't load.
@@ -875,7 +892,15 @@ async function runTool(
         if (!gate.ok) {
           return JSON.stringify({ error: gate.error });
         }
-        const link = buildDeepLink({ screen: args.screen, id: args.id, token: args.token, step: args.step });
+        const link = buildDeepLink({
+          screen: args.screen,
+          id: args.id,
+          token: args.token,
+          step: args.step,
+          reportCard: args.reportCard,
+          reportPreset: args.reportPreset,
+          highlightState: args.highlightState,
+        });
         if (typeof link === "string") return JSON.stringify({ url: link });
         return JSON.stringify(link);
       }
@@ -977,6 +1002,7 @@ async function handleConversationMessage(
   const onboardingActive = !!(onboardingProgressRow && !onboardingProgressRow.completedAt);
 
   const preferredLanguage = (user?.preferredLanguage as "en" | "es" | null) ?? null;
+  const pageContext = parsePageContext(req.body?.pageContext);
   const systemPrompt = buildSystemPrompt({
     user: {
       userId: session.userId!,
@@ -994,6 +1020,7 @@ async function handleConversationMessage(
       completedSteps: onboardingProgressRow?.completedSteps ?? [],
       skippedSteps: onboardingProgressRow?.skippedSteps ?? [],
     },
+    pageContext,
   });
 
   // ── SSE setup ─────────────────────────────────────────────────

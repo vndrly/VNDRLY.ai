@@ -1,7 +1,8 @@
-import { pgTable, text, serial, timestamp, integer, doublePrecision, numeric, jsonb, boolean, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, doublePrecision, numeric, jsonb, boolean, uniqueIndex, foreignKey } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
+import { usersTable } from "./users";
 
 export const vendorsTable = pgTable("vendors", {
   id: serial("id").primaryKey(),
@@ -150,6 +151,10 @@ export const vendorsTable = pgTable("vendors", {
   )
     .notNull()
     .default("per_push"),
+  platformEulaAcceptedAt: timestamp("platform_eula_accepted_at", { withTimezone: true }),
+  platformEulaVersion: text("platform_eula_version"),
+  platformEulaHash: text("platform_eula_hash"),
+  platformEulaAcceptedByUserId: integer("platform_eula_accepted_by_user_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (t) => ({
   // Case-insensitive uniqueness on the trimmed display name. Prevents
@@ -162,6 +167,11 @@ export const vendorsTable = pgTable("vendors", {
   uniqCanonicalName: uniqueIndex("vendors_canonical_name_unique").on(
     sql`lower(btrim(${t.name}))`,
   ),
+  platformEulaAcceptedByUserFk: foreignKey({
+    name: "vendors_platform_eula_accepted_by_user_id_fkey",
+    columns: [t.platformEulaAcceptedByUserId],
+    foreignColumns: [usersTable.id],
+  }).onDelete("set null"),
 }));
 
 export const insertVendorSchema = createInsertSchema(vendorsTable).omit({ id: true, createdAt: true });

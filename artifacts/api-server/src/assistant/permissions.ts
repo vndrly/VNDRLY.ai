@@ -30,6 +30,7 @@ export const ROLE_ALLOWED_SCREENS: Record<AssistantRole, Set<string> | null> = {
     "statement",
     "reports",
     "partner-analytics",
+    "partner-catalog",
     "notification-preferences",
     "notifications-inbox",
   ]),

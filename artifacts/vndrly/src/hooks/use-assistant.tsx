@@ -104,6 +104,11 @@ type StreamEvent =
 
 export interface AssistantOptions {
   /**
+   * Current browser path (from wouter) so the server can inject page
+   * context into the system prompt. Ignored in token/signup modes.
+   */
+  pageContext?: { path: string; entityId?: number | null };
+  /**
    * When set, the hook talks to the unauthenticated field-employee
    * invite-token endpoint instead of the session-authenticated
    * conversations endpoints. In token mode there is no DB persistence:
@@ -135,6 +140,8 @@ export interface AssistantOptions {
 export function useAssistant(opts: AssistantOptions = {}) {
   const tokenMode = opts.tokenMode ?? null;
   const signupMode = opts.signupMode ?? null;
+  const pageContextRef = useRef(opts.pageContext);
+  pageContextRef.current = opts.pageContext;
   // Both tokenMode and signupMode are stateless/anonymous — they
   // share the same "no DB conversation row, history replayed each
   // turn" behaviour, just hitting different endpoints. Collapsing
@@ -330,7 +337,10 @@ export function useAssistant(opts: AssistantOptions = {}) {
             }
           : stateless
             ? { message: trimmed, history: priorHistory }
-            : { message: trimmed };
+            : {
+                message: trimmed,
+                ...(pageContextRef.current ? { pageContext: pageContextRef.current } : {}),
+              };
         const res = await fetch(url, {
           method: "POST",
           credentials: "include",

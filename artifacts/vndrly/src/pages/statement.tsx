@@ -49,6 +49,7 @@ import {
   Scale,
   ScrollText,
   SlidersHorizontal,
+  Download,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useBrand } from "@/hooks/use-brand";
@@ -293,6 +294,11 @@ export default function StatementPage() {
     enabled: !!partyId,
   });
 
+  const accountingExportHref =
+    partyId && from && to
+      ? `/reports?card=accountingExport&periodStart=${encodeURIComponent(from)}&periodEnd=${encodeURIComponent(to)}`
+      : null;
+
   return (
     <div className="p-6 space-y-6 print:p-0">
       <div className="flex items-center justify-between flex-wrap gap-3 print:hidden">
@@ -303,6 +309,17 @@ export default function StatementPage() {
           </h1>
         </div>
         <div className="flex items-center gap-2">
+          {accountingExportHref && (
+            <Link href={accountingExportHref}>
+              <PngPillButton
+                color="green"
+                data-testid="button-export-accounting"
+              >
+                <Download className="w-3.5 h-3.5" />
+                {t("statement.actions.exportAccounting")}
+              </PngPillButton>
+            </Link>
+          )}
           <PngPillButton
             color="blue"
 

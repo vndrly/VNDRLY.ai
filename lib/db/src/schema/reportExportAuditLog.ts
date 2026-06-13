@@ -36,6 +36,7 @@ export const REPORT_EXPORT_FORMATS = [
   "iif",
   "qbo_zip",
   "oa_zip",
+  "accounting_bundle_zip",
   "1099_csv",
   "1099_pdf",
   // Live API pushes — no file is downloaded but we still record one row

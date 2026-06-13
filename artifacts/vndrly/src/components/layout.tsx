@@ -36,7 +36,9 @@ import ReferToVndrlyDialog from "@/components/refer-to-vndrly-dialog";
 import { PoweredByVndrly } from "@/components/powered-by-vndrly";
 import { VNDRLY_LOGO_SQUARE as vndrlyLogo } from "@/lib/vndrly-brand-assets";
 import NotificationsBell from "@/components/notifications-bell";
-import sidebarBg from "@assets/VNDRLY_Header_Blur_4_1776220762025.png";
+import { NAV_PANE_DARK_BG } from "@/components/nav-pane-tokens";
+import { NavPaneHalftoneBackground } from "@/components/nav-pane-halftone-background";
+import { NavPaneHeaderBlur } from "@/components/nav-pane-header-blur";
 
 import logoUnderlay from "@assets/logo-underrlay_1778217900673.png";
 import logoOverlay from "@assets/logo-overlay_1778217860263.png";
@@ -46,6 +48,7 @@ import {
   shouldUseLayeredPortalLogo,
 } from "@/lib/portal-branding";
 import { AssistantLauncher } from "@/components/assistant-panel";
+import { OnboardingProgressBanner } from "@/components/finish-setup-widget";
 
 function useNavItems(user: { role: string; vendorId: number | null; partnerId: number | null } | null) {
   const { t } = useTranslation();
@@ -170,7 +173,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   // authenticated admin / partner / vendor viewer. Uses the same
   // nav-pane background as the left sidebar; hosts Ask V + powered-by.
   const showAskVPane = !!user;
-  const navPaneStyle = { backgroundColor: "#3a3d42" } as const;
+  const navPaneStyle = { backgroundColor: NAV_PANE_DARK_BG } as const;
 
   return (
     <div
@@ -185,18 +188,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           sidebarOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
-        <div
-          className="absolute top-0 left-0 right-0 pointer-events-none z-0"
-          style={{
-            backgroundImage: `url(${sidebarBg})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center top",
-            opacity: 0.85,
-            height: "200px",
-            maskImage: "linear-gradient(to bottom, black 0%, transparent 100%)",
-            WebkitMaskImage: "linear-gradient(to bottom, black 0%, transparent 100%)",
-          }}
-        />
+        <NavPaneHalftoneBackground variant="sidebar" />
+        <NavPaneHeaderBlur />
         <div className="relative z-10 px-4 pt-4 pb-1 border-b border-sidebar-border">
         <div className="flex items-start gap-3">
           {usingSquareLogo ? (
@@ -392,6 +385,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             FIXED_APP_CHROME ? "min-h-0 overflow-y-auto" : "overflow-auto",
           )}
         >
+          <OnboardingProgressBanner />
           {children}
         </main>
       </div>

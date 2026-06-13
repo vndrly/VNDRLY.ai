@@ -27,7 +27,9 @@ import {
   getGetVendorQueryKey,
   getGetVendorRatingsQueryKey,
 } from "@workspace/api-client-react";
-import sidebarBg from "@assets/VNDRLY_Header_Blur_4_1776220762025.png";
+import { NAV_PANE_DARK_BG } from "@/components/nav-pane-tokens";
+import { NavPaneHalftoneBackground } from "@/components/nav-pane-halftone-background";
+import { NavPaneHeaderBlur } from "@/components/nav-pane-header-blur";
 
 import logoUnderlay from "@assets/logo-underrlay_1778217900673.png";
 import logoOverlay from "@assets/logo-overlay_1778217860263.png";
@@ -112,7 +114,7 @@ export function FieldOpsPortalShell({
   const useLayeredLogo = shouldUseLayeredPortalLogo(brand);
   const orgName = brand.name || vendor?.name || vendorName;
   const displayUserName = user?.displayName?.trim() || employeeName;
-  const navPaneStyle = { backgroundColor: "#3a3d42" } as const;
+  const navPaneStyle = { backgroundColor: NAV_PANE_DARK_BG } as const;
 
   const logoNode = useLayeredLogo ? (
     <div className="relative w-16 h-16 shrink-0 mt-[2px] rounded-lg overflow-hidden">
@@ -168,18 +170,8 @@ export function FieldOpsPortalShell({
           sidebarOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
-        <div
-          className="absolute top-0 left-0 right-0 pointer-events-none z-0"
-          style={{
-            backgroundImage: `url(${sidebarBg})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center top",
-            opacity: 0.85,
-            height: "200px",
-            maskImage: "linear-gradient(to bottom, black 0%, transparent 100%)",
-            WebkitMaskImage: "linear-gradient(to bottom, black 0%, transparent 100%)",
-          }}
-        />
+        <NavPaneHalftoneBackground variant="sidebar" />
+        <NavPaneHeaderBlur />
         <div className="relative z-10 px-4 pt-4 pb-1 border-b border-sidebar-border">
           <div className="flex items-start gap-3">
             {logoNode}

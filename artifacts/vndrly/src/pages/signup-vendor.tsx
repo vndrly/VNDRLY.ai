@@ -14,6 +14,8 @@ import GreyButton from "@/components/grey-button";
 import LanguageToggle from "@/components/language-toggle";
 import DarkLightToggle, { type ThemeMode } from "@/components/dark-light-toggle";
 import { cn } from "@/lib/utils";
+import { NAV_PANE_DARK_BG } from "@/components/nav-pane-tokens";
+import { NavPaneHalftoneBackground } from "@/components/nav-pane-halftone-background";
 import backIcon from "@assets/Amber-back-button-logo-tuned.png";
 import { getContrastWarning, getColorPairWarning } from "@/lib/brand-color";
 import { translateApiError } from "@/lib/api-error";
@@ -163,7 +165,8 @@ export default function SignupVendor() {
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
-      <div className="flex-1 flex items-center justify-center px-6 py-12 lg:px-16 relative" style={{ backgroundColor: isDark ? "#3a3d42" : "#ffffff" }}>
+      <div className="flex-1 flex items-center justify-center px-6 py-12 lg:px-16 relative overflow-hidden" style={{ backgroundColor: isDark ? NAV_PANE_DARK_BG : "#ffffff" }}>
+        <NavPaneHalftoneBackground enabled={isDark} variant="auth" />
         <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/8 to-transparent pointer-events-none" />
         <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/8 to-transparent pointer-events-none" />
         <div className="absolute top-4 right-4 z-20">

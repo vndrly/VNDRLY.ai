@@ -472,6 +472,9 @@ describe("BulkActionDetailsDialog", () => {
       .spyOn(global, "fetch")
       .mockImplementation((input: RequestInfo | URL) => {
         const url = typeof input === "string" ? input : input.toString();
+        if (!url.includes("/bulk-actions/")) {
+          return Promise.resolve(jsonResponse([]));
+        }
         const idMatch = url.match(/bulk-actions\/(\d+)\?/);
         const id = Number(idMatch?.[1] ?? 0);
         const params = new URL(url, "http://x").searchParams;

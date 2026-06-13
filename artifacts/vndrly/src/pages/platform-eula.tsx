@@ -3,6 +3,8 @@ import { VNDRLY_LOGO_SQUARE as vndrlyLogo } from "@/lib/vndrly-brand-assets";
 import DarkLightToggle, { type ThemeMode } from "@/components/dark-light-toggle";
 import LanguageToggle from "@/components/language-toggle";
 import { cn } from "@/lib/utils";
+import { NAV_PANE_DARK_BG } from "@/components/nav-pane-tokens";
+import { NavPaneHalftoneBackground } from "@/components/nav-pane-halftone-background";
 import { useState } from "react";
 import {
   PLATFORM_EULA_LAST_UPDATED,
@@ -18,9 +20,10 @@ export default function PlatformEulaPage() {
 
   return (
     <div
-      className="min-h-screen flex flex-col px-6 py-12 lg:px-16 relative"
-      style={{ backgroundColor: isDark ? "#3a3d42" : "#f9fafb" }}
+      className="min-h-screen flex flex-col px-6 py-12 lg:px-16 relative overflow-hidden"
+      style={{ backgroundColor: isDark ? NAV_PANE_DARK_BG : "#f9fafb" }}
     >
+      <NavPaneHalftoneBackground enabled={isDark} variant="auth" />
       <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
         <DarkLightToggle mode={themeMode} onChange={setThemeMode} variant={isDark ? "dark" : "light"} />
         <LanguageToggle variant={isDark ? "dark" : "light"} />

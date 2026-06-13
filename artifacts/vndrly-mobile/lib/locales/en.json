@@ -503,6 +503,10 @@
       "not_found": "That employee wasn't found.",
       "vendor_mismatch": "That employee isn't part of this ticket's vendor."
     },
+    "certification": {
+      "cert_number_required": "Certificate number is required.",
+      "verify_forbidden": "Only vendor admin can verify certifications."
+    },
     "crew": {
       "already_checked_in": "That employee is already checked in to this ticket.",
       "no_open_check_in": "There's no open check-in for that employee.",

@@ -34,6 +34,7 @@ import { useBrand } from "@/hooks/use-brand";
 import { useColors } from "@/hooks/useColors";
 import { useTicketsRateLimitGate } from "@/hooks/use-tickets-rate-limit-gate";
 import { apiFetch } from "@/lib/api";
+import { VNDRLY_LOGO_SQUARE } from "@/lib/vndrly-brand-assets";
 import { setHomeBadge } from "@/lib/tabBadges";
 import { registerForPushNotifications } from "@/lib/push";
 import { isRateLimited, noteRateLimit } from "@/lib/rateLimitGate";
@@ -707,20 +708,12 @@ export default function HomeScreen() {
               accessibilityLabel={brand.name ?? t("home.brandWordmark")}
             />
           ) : (
-            <View
-              style={[
-                styles.brandLogo,
-                {
-                  backgroundColor: brand.primary,
-                  borderRadius: 12,
-                  alignItems: "center",
-                  justifyContent: "center",
-                },
-              ]}
+            <Image
+              source={VNDRLY_LOGO_SQUARE}
+              style={styles.brandLogo}
+              resizeMode="contain"
               accessibilityLabel={t("home.brandWordmark")}
-            >
-              <Text style={{ color: "#ffffff", fontFamily: "Inter_700Bold", fontSize: 32 }}>V</Text>
-            </View>
+            />
           )}
           {(me?.displayName || orgName) ? (
             <View style={styles.brandIdentity}>

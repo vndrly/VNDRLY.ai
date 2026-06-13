@@ -1,7 +1,7 @@
-// Ask V launcher logos — hue-matched like login/pill buttons, with
-// Winchester and Baker cutouts by org name.
+// Ask V launcher logos — grey idle bubble + hue-matched active bubble.
 
-import askVAmber from "@assets/askv/AskV_VNDRLY_Amber_v1.png";
+import askVAmber from "@assets/askv/AskV_VNDRLY_Amber_v3.png";
+import askVGrey from "@assets/askv/AskV_VNDRLY_Grey_v2.png";
 import askVBaker from "@assets/askv/AskV_VNDRLY_Baker_v1.png";
 import askVBlue from "@assets/askv/AskV_VNDRLY_Blue_v1.png";
 import askVGreen from "@assets/askv/AskV_VNDRLY_Green_v1.png";
@@ -23,7 +23,15 @@ const ASKV_PALETTE: PaletteEntry[] = [
   { hex: "#6B1FB8", src: askVPurple },
 ];
 
+/** VNDRLY platform active bubble (amber v3). */
 export const ASKV_DEFAULT_SRC = askVAmber;
+
+/** Shared idle bubble until per-brand grey assets exist. */
+export const ASKV_IDLE_SRC = askVGrey;
+
+function isVndrlyBrand(brandName?: string | null): boolean {
+  return brandName?.toLowerCase().includes("vndrly") ?? false;
+}
 
 function hexToRgb(hex: string): [number, number, number] | null {
   const cleaned = hex.trim().replace(/^#/, "");
@@ -67,13 +75,22 @@ function hueDistance(a: number, b: number): number {
   return d > 180 ? 360 - d : d;
 }
 
-/** Resolve the Ask V speech-bubble logo for a brand primary + name. */
+/** Idle Ask V speech-bubble (grey). Per-brand greys can slot in later. */
+export function pickAskVLogoIdle(
+  _brandColor?: string | null,
+  _brandName?: string | null,
+): string {
+  return ASKV_IDLE_SRC;
+}
+
+/** Active Ask V speech-bubble on hover / panel open. */
 export function pickAskVLogo(
   brandColor: string | null | undefined,
   brandName?: string | null,
 ): string {
   if (isBakerBrand(brandName)) return askVBaker;
   if (isWinchesterBrand(brandName)) return askVWinchester;
+  if (isVndrlyBrand(brandName)) return askVAmber;
   if (!brandColor) return ASKV_DEFAULT_SRC;
   const rgb = hexToRgb(brandColor);
   if (!rgb) return ASKV_DEFAULT_SRC;

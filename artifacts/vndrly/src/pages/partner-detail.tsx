@@ -61,7 +61,9 @@ import BrandRolePill from "@/components/brand-role-pill";
 import CompanyRolePill from "@/components/company-role-pill";
 import { useAuth } from "@/hooks/use-auth";
 import OrgMembersCard from "@/components/org-members-card";
+import GreyButton from "@/components/grey-button";
 import PartnerVendorApprovalsCard from "@/components/partner-vendor-approvals-card";
+import { PlatformEulaModal } from "@/components/platform-eula-modal";
 import { getContrastWarningKind, getColorPairWarningKind, getSidebarContrastWarningKind } from "@/lib/brand-color";
 import { PosterPreview } from "@/components/poster-preview";
 
@@ -1128,6 +1130,7 @@ export default function PartnerDetail({ id }: { id: number }) {
   const { toast } = useToast();
   const [, navigate] = useLocation();
   const [editOpen, setEditOpen] = useState(false);
+  const [platformEulaOpen, setPlatformEulaOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
   const [editContactOpen, setEditContactOpen] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
@@ -2066,7 +2069,19 @@ export default function PartnerDetail({ id }: { id: number }) {
       </div>
 
       <Card>
-        <CardHeader><CardTitle className="flex items-center gap-2"><Handshake className="w-5 h-5" style={{ color: "var(--brand-primary)" }} />{t("partners.partnerInformation")}</CardTitle></CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between gap-2">
+          <CardTitle className="flex items-center gap-2"><Handshake className="w-5 h-5" style={{ color: "var(--brand-primary)" }} />{t("partners.partnerInformation")}</CardTitle>
+          {(isOwnPartner || isAdmin) && (
+            <GreyButton
+              type="button"
+              data-testid="button-view-platform-eula"
+              onClick={() => setPlatformEulaOpen(true)}
+            >
+              <FileText className="w-4 h-4" />
+              {t("platformEula.viewButton")}
+            </GreyButton>
+          )}
+        </CardHeader>
         <CardContent className="space-y-2">
           <div><span className="text-sm text-muted-foreground">{t("partners.physicalAddressLabel")}</span> <span className="font-medium">{partner.physicalAddress || "-"}</span></div>
           <div><span className="text-sm text-muted-foreground">{t("partners.billingAddressLabel")}</span> <span className="font-medium">{partner.billingAddress || "-"}</span></div>
@@ -2513,6 +2528,8 @@ export default function PartnerDetail({ id }: { id: number }) {
           </form>
         </DialogContent>
       </Dialog>
+
+      <PlatformEulaModal open={platformEulaOpen} onOpenChange={setPlatformEulaOpen} />
     </div>
   );
 }

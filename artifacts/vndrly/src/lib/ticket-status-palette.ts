@@ -260,9 +260,13 @@ const ticketStatusLifecycleArt: Partial<Record<string, string>> = {
 
   funds_dispersed: pillLifecycleApproval3,
 
+  denied: pillDarkRed,
+
+  kicked_back: pillRed,
+
+  cancelled: pillHotPink,
+
 };
-
-
 
 export function statusToTicketLifecycleColor(status: string): TicketLifecycleColor {
 

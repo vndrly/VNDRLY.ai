@@ -33,6 +33,7 @@ import {
   TAX_1099_FILING_STATUSES,
   TAX_1099_FILING_METHODS,
   TAX_1099_CORRECTION_STATUSES,
+  type ReportExportFormat,
   type FirePayeeSnapshot,
   tax1099CorrectionAuditLogTable,
   dashboard1099EmailSettingsTable,
@@ -142,6 +143,7 @@ import {
   parseQbMappingCsv,
   classifyCsvImport,
   MAPPABLE_LINE_TYPES,
+  fetchQbMappingFormItems,
 } from "../lib/reports/qb-mapping";
 import {
   oaCustomersCsv,
@@ -150,6 +152,11 @@ import {
   readmeOa,
 } from "../lib/reports/oa-csv";
 import { buildZip } from "../lib/reports/zip";
+import {
+  lineDetailRows,
+  lineDetailToCsv,
+  accountingExportSummary,
+} from "../lib/reports/line-detail";
 import { recordExport } from "../lib/reports/audit";
 import {
   getConnection,
@@ -282,15 +289,7 @@ async function sendBufferAndAudit(
     contentType: string;
     filename: string;
     reportKind: string;
-    format:
-      | "csv"
-      | "pdf"
-      | "iif"
-      | "qbo_zip"
-      | "oa_zip"
-      | "1099_csv"
-      | "1099_pdf"
-      | "1099_fire_txt";
+    format: ReportExportFormat;
     scope: Record<string, unknown>;
     rowCount: number | null;
   },
@@ -1675,6 +1674,169 @@ router.get(
       });
       return;
     }
+  },
+);
+
+// GET /reports/partner/:partnerId/accounting-export-summary
+router.get(
+  "/reports/partner/:partnerId/accounting-export-summary",
+  async (req, res): Promise<void> => {
+    const partnerId = Number(req.params.partnerId);
+    if (!Number.isInteger(partnerId)) {
+      res.status(400).json({ error: "Bad partnerId", code: "partner.invalid_id" });
+      return;
+    }
+    if (!rbacPartner(req, res, partnerId)) return;
+    const period = parsePeriodOrError(req, res);
+    if (!period) return;
+    const summary = await accountingExportSummary({ partnerId, period });
+    res.json({
+      period: {
+        start: period.start.toISOString(),
+        end: period.end.toISOString(),
+        label: period.label,
+        display: formatPeriod(period),
+      },
+      ...summary,
+    });
+  },
+);
+
+// GET /reports/partner/:partnerId/line-detail-export?format=csv
+router.get(
+  "/reports/partner/:partnerId/line-detail-export",
+  async (req, res): Promise<void> => {
+    const partnerId = Number(req.params.partnerId);
+    if (!Number.isInteger(partnerId)) {
+      res.status(400).json({ error: "Bad partnerId", code: "partner.invalid_id" });
+      return;
+    }
+    if (!rbacPartner(req, res, partnerId)) return;
+    const period = parsePeriodOrError(req, res);
+    if (!period) return;
+    const fmt = parseFormat(z.enum(["json", "csv"]), req.query.format, "csv");
+    const rows = await lineDetailRows({ partnerId, period });
+    const scope = {
+      partnerId,
+      periodStart: period.start.toISOString(),
+      periodEnd: period.end.toISOString(),
+    };
+    if (fmt === "json") {
+      res.json({ rows, period: formatPeriod(period) });
+      return;
+    }
+    const csv = lineDetailToCsv(rows);
+    await sendBufferAndAudit(req, res, {
+      buffer: Buffer.from(csv, "utf-8"),
+      contentType: "text/csv; charset=utf-8",
+      filename: csvFilename([
+        "line-detail",
+        `partner-${partnerId}`,
+        period.label.replace(/\s+/g, "_"),
+      ]),
+      reportKind: "partner.lineDetail",
+      format: "csv",
+      scope,
+      rowCount: rows.length,
+    });
+  },
+);
+
+// GET /reports/partner/:partnerId/accounting-bundle — ZIP of spend, tax, line detail
+router.get(
+  "/reports/partner/:partnerId/accounting-bundle",
+  async (req, res): Promise<void> => {
+    const partnerId = Number(req.params.partnerId);
+    if (!Number.isInteger(partnerId)) {
+      res.status(400).json({ error: "Bad partnerId", code: "partner.invalid_id" });
+      return;
+    }
+    if (!rbacPartner(req, res, partnerId)) return;
+    const period = parsePeriodOrError(req, res);
+    if (!period) return;
+
+    const [spendRows, { rows: taxRows, totals: taxTotals }, detailRows] =
+      await Promise.all([
+        spendByVendor({ partnerId, period }),
+        salesTaxByState({ partnerId, period }),
+        lineDetailRows({ partnerId, period }),
+      ]);
+
+    const spendCsv = toCsv(
+      ["Vendor", "InvoiceCount", "Subtotal", "Tax", "Total"],
+      [
+        ...spendRows.map((r) => [
+          r.vendorName ?? `Vendor ${r.vendorId}`,
+          r.invoiceCount,
+          r.subtotal,
+          r.taxTotal,
+          r.total,
+        ]),
+        [
+          `TOTAL (${spendRows.length} vendors)`,
+          sumIntColumn(spendRows, (r) => r.invoiceCount),
+          sumColumn(spendRows, (r) => r.subtotal),
+          sumColumn(spendRows, (r) => r.taxTotal),
+          sumColumn(spendRows, (r) => r.total),
+        ],
+      ],
+    );
+
+    const taxCsv = toCsv(
+      ["State", "TaxableSpend", "ExemptSpend", "TaxPaid", "EffectiveRate"],
+      [
+        ...taxRows.map((r) => [
+          r.state,
+          r.taxableSales,
+          r.exemptSales,
+          r.taxCollected,
+          r.effectiveRate,
+        ]),
+        [
+          "TOTAL",
+          taxTotals.taxableSales,
+          taxTotals.exemptSales,
+          taxTotals.taxCollected,
+          taxTotals.effectiveRate,
+        ],
+      ],
+    );
+
+    const detailCsv = lineDetailToCsv(detailRows);
+    const periodLabel = formatPeriod(period);
+    const readme =
+      `VNDRLY Partner Accounting Bundle\r\n` +
+      `Partner ID: ${partnerId}\r\n` +
+      `Period: ${periodLabel}\r\n\r\n` +
+      `Files:\r\n` +
+      `  spend-by-vendor.csv — invoice totals grouped by vendor\r\n` +
+      `  sales-tax-by-state.csv — taxable/exempt spend and tax by state\r\n` +
+      `  line-detail.csv — one row per billed invoice line\r\n`;
+
+    const zip = await buildZip([
+      { name: "spend-by-vendor.csv", content: spendCsv },
+      { name: "sales-tax-by-state.csv", content: taxCsv },
+      { name: "line-detail.csv", content: detailCsv },
+      { name: "README.txt", content: readme },
+    ]);
+
+    const scope = {
+      partnerId,
+      periodStart: period.start.toISOString(),
+      periodEnd: period.end.toISOString(),
+    };
+    await sendBufferAndAudit(req, res, {
+      buffer: zip,
+      contentType: "application/zip",
+      filename: csvFilename(
+        ["accounting-bundle", `partner-${partnerId}`, period.label],
+        "zip",
+      ),
+      reportKind: "partner.accountingBundle",
+      format: "accounting_bundle_zip",
+      scope,
+      rowCount: detailRows.length,
+    });
   },
 );
 
@@ -4204,6 +4366,71 @@ router.get(
   },
 );
 
+// GET /reports/vendor/:vendorId/accounting-export-summary
+router.get(
+  "/reports/vendor/:vendorId/accounting-export-summary",
+  async (req, res): Promise<void> => {
+    const vendorId = Number(req.params.vendorId);
+    if (!Number.isInteger(vendorId)) {
+      res.status(400).json({ error: "Bad vendorId", code: "vendor.invalid_id" });
+      return;
+    }
+    if (!rbacVendor(req, res, vendorId)) return;
+    const period = parsePeriodOrError(req, res);
+    if (!period) return;
+    const summary = await accountingExportSummary({ vendorId, period });
+    res.json({
+      period: {
+        start: period.start.toISOString(),
+        end: period.end.toISOString(),
+        label: period.label,
+        display: formatPeriod(period),
+      },
+      ...summary,
+    });
+  },
+);
+
+// GET /reports/vendor/:vendorId/line-detail-export?format=csv
+router.get(
+  "/reports/vendor/:vendorId/line-detail-export",
+  async (req, res): Promise<void> => {
+    const vendorId = Number(req.params.vendorId);
+    if (!Number.isInteger(vendorId)) {
+      res.status(400).json({ error: "Bad vendorId", code: "vendor.invalid_id" });
+      return;
+    }
+    if (!rbacVendor(req, res, vendorId)) return;
+    const period = parsePeriodOrError(req, res);
+    if (!period) return;
+    const fmt = parseFormat(z.enum(["json", "csv"]), req.query.format, "csv");
+    const rows = await lineDetailRows({ vendorId, period });
+    const scope = {
+      vendorId,
+      periodStart: period.start.toISOString(),
+      periodEnd: period.end.toISOString(),
+    };
+    if (fmt === "json") {
+      res.json({ rows, period: formatPeriod(period) });
+      return;
+    }
+    const csv = lineDetailToCsv(rows);
+    await sendBufferAndAudit(req, res, {
+      buffer: Buffer.from(csv, "utf-8"),
+      contentType: "text/csv; charset=utf-8",
+      filename: csvFilename([
+        "line-detail",
+        `vendor-${vendorId}`,
+        period.label.replace(/\s+/g, "_"),
+      ]),
+      reportKind: "vendor.lineDetail",
+      format: "csv",
+      scope,
+      rowCount: rows.length,
+    });
+  },
+);
+
 // GET /reports/vendor/:vendorId/quickbooks-export?format=iif|zip
 router.get(
   "/reports/vendor/:vendorId/quickbooks-export",
@@ -6171,10 +6398,9 @@ router.get("/reports/admin/sales-tax", requireAdmin, async (req, res): Promise<v
 });
 
 // ──────────────────────────────────────────────────────────────────
-// QB ACCOUNT MAPPING (admin-only) — overrides the built-in COA defaults
-// per vendor, partner, or vendor+partner. The export endpoints look up
-// the most-specific match before falling back to the defaults shipped
-// in qb-mapping.ts.
+// QB ACCOUNT MAPPING — overrides the built-in COA defaults per vendor,
+// partner, or vendor+partner. Admins manage any scope; vendor admins can
+// manage their own vendor scope only (see vendor-scoped routes below).
 // ──────────────────────────────────────────────────────────────────
 
 const MAPPABLE_KEYS = new Set(MAPPABLE_LINE_TYPES.map((m) => m.key));
@@ -6183,6 +6409,167 @@ const QbMappingScopeQuery = z.object({
   vendorId: z.coerce.number().int().optional(),
   partnerId: z.coerce.number().int().optional(),
 });
+
+const VendorQbMappingPartnerQuery = z.object({
+  partnerId: z.coerce.number().int().optional(),
+});
+
+// GET /reports/vendor/:vendorId/qb-account-mapping?partnerId=
+router.get(
+  "/reports/vendor/:vendorId/qb-account-mapping",
+  async (req, res): Promise<void> => {
+    const vendorId = Number(req.params.vendorId);
+    if (!Number.isInteger(vendorId)) {
+      res.status(400).json({ error: "Bad vendorId", code: "vendor.invalid_id" });
+      return;
+    }
+    if (!rbacVendor(req, res, vendorId)) return;
+    const q = VendorQbMappingPartnerQuery.safeParse(req.query);
+    if (!q.success) {
+      sendValidationFailed(res, q.error, { code: "validation.invalid_input" });
+      return;
+    }
+    const partnerId = q.data.partnerId ?? null;
+    const payload = await fetchQbMappingFormItems({ vendorId, partnerId });
+    res.json(payload);
+  },
+);
+
+const VendorQbMappingUpsertBody = z.object({
+  partnerId: z.number().int().nullable().optional(),
+  lineType: z.string().min(1),
+  accountName: z.string().min(1).max(200),
+  accountNumber: z.string().max(50).nullable().optional(),
+});
+
+// PUT /reports/vendor/:vendorId/qb-account-mapping
+router.put(
+  "/reports/vendor/:vendorId/qb-account-mapping",
+  async (req, res): Promise<void> => {
+    const vendorId = Number(req.params.vendorId);
+    if (!Number.isInteger(vendorId)) {
+      res.status(400).json({ error: "Bad vendorId", code: "vendor.invalid_id" });
+      return;
+    }
+    if (!rbacVendor(req, res, vendorId)) return;
+    const body = VendorQbMappingUpsertBody.safeParse(req.body);
+    if (!body.success) {
+      sendValidationFailed(res, body.error, { code: "validation.invalid_input" });
+      return;
+    }
+    if (!MAPPABLE_KEYS.has(body.data.lineType)) {
+      res.status(400).json({ error: "Unknown lineType", code: "report.unknown_line_type" });
+      return;
+    }
+    const partnerId = body.data.partnerId ?? null;
+    const accountNumber = body.data.accountNumber?.trim() || null;
+    const accountName = body.data.accountName.trim();
+
+    const existing = await db
+      .select()
+      .from(qbAccountMappingTable)
+      .where(
+        and(
+          eq(qbAccountMappingTable.vendorId, vendorId),
+          partnerId == null
+            ? isNull(qbAccountMappingTable.partnerId)
+            : eq(qbAccountMappingTable.partnerId, partnerId),
+          eq(qbAccountMappingTable.lineType, body.data.lineType),
+        ),
+      );
+    if (existing.length > 0) {
+      const prev = existing[0];
+      const [updated] = await db
+        .update(qbAccountMappingTable)
+        .set({ accountName, accountNumber })
+        .where(eq(qbAccountMappingTable.id, prev.id))
+        .returning();
+      if (
+        prev.accountName !== accountName ||
+        (prev.accountNumber ?? null) !== accountNumber
+      ) {
+        await recordMappingAudit({
+          req,
+          action: "update",
+          mappingId: updated.id,
+          vendorId,
+          partnerId,
+          lineType: body.data.lineType,
+          oldValues: {
+            accountName: prev.accountName,
+            accountNumber: prev.accountNumber ?? null,
+          },
+          newValues: { accountName, accountNumber },
+        });
+      }
+      res.json({ override: updated });
+      return;
+    }
+    const [created] = await db
+      .insert(qbAccountMappingTable)
+      .values({
+        vendorId,
+        partnerId,
+        lineType: body.data.lineType,
+        accountName,
+        accountNumber,
+      })
+      .returning();
+    await recordMappingAudit({
+      req,
+      action: "insert",
+      mappingId: created.id,
+      vendorId,
+      partnerId,
+      lineType: body.data.lineType,
+      oldValues: null,
+      newValues: { accountName, accountNumber },
+    });
+    res.json({ override: created });
+  },
+);
+
+// DELETE /reports/vendor/:vendorId/qb-account-mapping/:id
+router.delete(
+  "/reports/vendor/:vendorId/qb-account-mapping/:id",
+  async (req, res): Promise<void> => {
+    const vendorId = Number(req.params.vendorId);
+    const id = Number(req.params.id);
+    if (!Number.isInteger(vendorId) || !Number.isInteger(id)) {
+      res.status(400).json({ error: "Bad id", code: "validation.invalid_id" });
+      return;
+    }
+    if (!rbacVendor(req, res, vendorId)) return;
+    const result = await db
+      .delete(qbAccountMappingTable)
+      .where(
+        and(
+          eq(qbAccountMappingTable.id, id),
+          eq(qbAccountMappingTable.vendorId, vendorId),
+        ),
+      )
+      .returning();
+    if (result.length === 0) {
+      res.status(404).json({ error: "Not found", code: "common.not_found" });
+      return;
+    }
+    const removed = result[0];
+    await recordMappingAudit({
+      req,
+      action: "delete",
+      mappingId: removed.id,
+      vendorId: removed.vendorId ?? null,
+      partnerId: removed.partnerId ?? null,
+      lineType: removed.lineType,
+      oldValues: {
+        accountName: removed.accountName,
+        accountNumber: removed.accountNumber ?? null,
+      },
+      newValues: null,
+    });
+    res.json({ ok: true });
+  },
+);
 
 // GET /reports/qb-account-mapping?vendorId=&partnerId=
 // Returns one row per known line type, merging the override (if any) over
@@ -6198,41 +6585,8 @@ router.get(
     }
     const vendorId = q.data.vendorId ?? null;
     const partnerId = q.data.partnerId ?? null;
-    // Find an exact-scope override row per line type so the UI can show
-    // which rows are user-customised vs. inherited from defaults. Filter
-    // in the DB so this stays cheap even if the mapping table grows large.
-    const rows = await db
-      .select()
-      .from(qbAccountMappingTable)
-      .where(
-        and(
-          vendorId == null
-            ? isNull(qbAccountMappingTable.vendorId)
-            : eq(qbAccountMappingTable.vendorId, vendorId),
-          partnerId == null
-            ? isNull(qbAccountMappingTable.partnerId)
-            : eq(qbAccountMappingTable.partnerId, partnerId),
-        ),
-      );
-    const exactByLineType = new Map<string, typeof rows[number]>();
-    for (const r of rows) {
-      exactByLineType.set(r.lineType, r);
-    }
-    const items = MAPPABLE_LINE_TYPES.map((m) => {
-      const def = defaultAccountForKey(m.key);
-      const ov = exactByLineType.get(m.key);
-      return {
-        lineType: m.key,
-        label: m.label,
-        defaultAccountName: def.name,
-        defaultAccountNumber: def.number,
-        accountName: ov?.accountName ?? def.name,
-        accountNumber: ov?.accountNumber ?? def.number,
-        isOverride: Boolean(ov),
-        overrideId: ov?.id ?? null,
-      };
-    });
-    res.json({ scope: { vendorId, partnerId }, items });
+    const payload = await fetchQbMappingFormItems({ vendorId, partnerId });
+    res.json(payload);
   },
 );
 

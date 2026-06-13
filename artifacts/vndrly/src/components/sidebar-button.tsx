@@ -1,6 +1,8 @@
 import { cn } from "@/lib/utils";
 import { PillColorLayer } from "@/components/png-pill-chrome";
-import TintedPillBg from "@/components/tinted-pill-bg";import { useBrand } from "@/hooks/use-brand";
+import TintedPillBg from "@/components/tinted-pill-bg";
+import { NAV_PANE_DARK_BG } from "@/components/nav-pane-tokens";
+import { useBrand } from "@/hooks/use-brand";
 import {
   NAV_SQUARE_HEIGHT_CLASS,
   NAV_SQUARE_LABEL_CLASS,
@@ -20,6 +22,18 @@ import btnGrey from "@assets/900x229_Grey_Button_1777067254819.png";
 // asset, matching the square Baker active asset and the square
 // palette returned by `pickPillForBrand` (default shape).
 import bakerNavGrey from "@assets/900x229_Light-grey_v2r_square_1778229624366.png";
+
+/** Solid pane fill so 35% idle PNGs blend against #3a3d42, not halftone dots. */
+function NavPaneButtonBackdrop({ theme }: { theme: "dark" | "light" }) {
+  if (theme !== "dark") return null;
+  return (
+    <div
+      className="absolute inset-0 z-0 pointer-events-none"
+      style={{ backgroundColor: NAV_PANE_DARK_BG }}
+      aria-hidden
+    />
+  );
+}
 
 /**
  * Three-state nav button.
@@ -161,6 +175,7 @@ export default function SidebarButton({
         onClick={onClick}
         data-testid={testId}
       >
+        <NavPaneButtonBackdrop theme={theme} />
         {/* Active layer — colored pill PNG (Baker teal, or the closest
             match for the VNDRLY brand-primary color), hidden at rest,
             fades in on isActive (or on hover when activeOnHover is on). */}
@@ -229,6 +244,7 @@ export default function SidebarButton({
       onClick={onClick}
       data-testid={testId}
     >
+      <NavPaneButtonBackdrop theme={theme} />
       {/* Active layer — brand primary fill */}
       <TintedPillBg
         src={btnGrey}

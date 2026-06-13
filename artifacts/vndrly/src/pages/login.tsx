@@ -9,7 +9,9 @@ import { useToast } from "@/hooks/use-toast";
 import { translateApiError } from "@/lib/api-error";
 import { Spinner } from "@/components/ui/spinner";
 import { VNDRLY_LOGO_SQUARE as vndrlyLogo } from "@/lib/vndrly-brand-assets";
-import headerBg from "@assets/VNDRLY_Header_Blur_4_1776220762025.png";
+import { NAV_PANE_DARK_BG } from "@/components/nav-pane-tokens";
+import { NavPaneHalftoneBackground } from "@/components/nav-pane-halftone-background";
+import { NavPaneHeaderBlur } from "@/components/nav-pane-header-blur";
 import SidebarButton from "@/components/sidebar-button";
 import LanguageToggle from "@/components/language-toggle";
 import DarkLightToggle, { type ThemeMode } from "@/components/dark-light-toggle";
@@ -269,19 +271,9 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row" style={brandStyleVars(brand)}>
-      <div className="flex-1 flex items-center justify-center px-6 py-12 lg:px-16 relative" style={{ backgroundColor: isDark ? "#3a3d42" : "#ffffff" }}>
-        <div
-          className="absolute top-0 left-0 right-0 pointer-events-none z-0"
-          style={{
-            backgroundImage: `url(${headerBg})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center top",
-            opacity: 0.85,
-            height: "240px",
-            maskImage: "linear-gradient(to bottom, black 0%, transparent 100%)",
-            WebkitMaskImage: "linear-gradient(to bottom, black 0%, transparent 100%)",
-          }}
-        />
+      <div className="flex-1 flex items-center justify-center px-6 py-12 lg:px-16 relative overflow-hidden" style={{ backgroundColor: isDark ? NAV_PANE_DARK_BG : "#ffffff" }}>
+        <NavPaneHalftoneBackground enabled={isDark} variant="auth" />
+        {isDark && <NavPaneHeaderBlur height={240} />}
         <PoweredByVndrly
           className={cn("absolute bottom-4 right-4 z-20", isDark ? "text-gray-300" : "text-gray-500")}
         />
@@ -405,6 +397,9 @@ export default function Login() {
                 </div>
               </div>
               <div className="pt-2">
+                <button type="submit" className="sr-only" tabIndex={-1} disabled={!formReady || isSubmitting}>
+                  {t("login.signIn")}
+                </button>
                 <SidebarButton
                   isActive={false}
                   testId="button-login"

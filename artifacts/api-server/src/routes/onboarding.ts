@@ -22,6 +22,11 @@ import {
 } from "@workspace/api-zod";
 import { SESSION_SECRET, getSessionFromRequest } from "../lib/session";
 import { addMembership } from "../lib/membership-sync";
+import { syncOnboardingStepSideEffects } from "../lib/onboarding-step-sync";
+import {
+  buildPlatformEulaAcceptancePatch,
+  isPlatformEulaPayloadAccepted,
+} from "../lib/platform-eula-acceptance";
 import { logger } from "../lib/logger";
 import { getAppOrigin } from "../lib/appOrigin";
 import { ObjectStorageService } from "../lib/objectStorage";
@@ -630,7 +635,11 @@ router.put("/onboarding/:orgType/:orgId/progress", async (req: Request, res: Res
     vendorId: orgType === "vendor" ? orgId : null,
     defaultStep: "company-basics",
   });
-  const updated = await applyProgressPatch(existing, parsed.data);
+  const updated = await applyProgressPatch(
+    existing,
+    parsed.data,
+    getSessionFromRequest(req)?.userId ?? null,
+  );
   res.json(serializeProgress(updated));
 });
 
@@ -638,18 +647,35 @@ router.put("/onboarding/:orgType/:orgId/progress", async (req: Request, res: Res
 async function applyProgressPatch(
   existing: typeof onboardingProgressTable.$inferSelect,
   patch: { currentStep?: string; completedSteps?: string[]; skippedSteps?: string[]; payload?: Record<string, unknown> },
+  acceptedByUserId?: number | null,
 ) {
   const updates: Partial<typeof onboardingProgressTable.$inferInsert> = {};
   if (patch.currentStep !== undefined) updates.currentStep = patch.currentStep;
   if (patch.completedSteps !== undefined) updates.completedSteps = patch.completedSteps;
   if (patch.skippedSteps !== undefined) updates.skippedSteps = patch.skippedSteps;
+  let mergedPayload = (existing.payload ?? {}) as Record<string, unknown>;
   if (patch.payload !== undefined) {
-    // Shallow merge so a step can patch a slice without clobbering
-    // sibling-step state.
-    updates.payload = {
-      ...((existing.payload ?? {}) as Record<string, unknown>),
+    mergedPayload = {
+      ...mergedPayload,
       ...(patch.payload as Record<string, unknown>),
     };
+    updates.payload = mergedPayload;
+  }
+  if (
+    patch.completedSteps !== undefined &&
+    (existing.orgType === "partner" || existing.orgType === "vendor")
+  ) {
+    const orgId = existing.partnerId ?? existing.vendorId;
+    if (orgId != null) {
+      await syncOnboardingStepSideEffects({
+        orgType: existing.orgType,
+        orgId,
+        previousCompletedSteps: existing.completedSteps ?? [],
+        nextCompletedSteps: patch.completedSteps,
+        payload: mergedPayload,
+        acceptedByUserId: acceptedByUserId ?? null,
+      });
+    }
   }
   const [row] = await db
     .update(onboardingProgressTable)
@@ -709,13 +735,10 @@ async function issueAndEmailFieldInvite(employeeId: number): Promise<{ token: st
 
 function validatePartnerPayload(p: Record<string, unknown>): string[] {
   const missing: string[] = [];
-  if (!trim(p.brandPrimaryColor)) missing.push("brandPrimaryColor");
-  if (!trim(p.brandAccentColor)) missing.push("brandAccentColor");
-  // Both logos are spec must-haves: horizontal renders in the sidebar
-  // and ticket headers; square renders in 64×64 favicons and the
-  // visitor portal poster.
-  if (!trim(p.logoUrl)) missing.push("logoUrl");
-  if (!trim(p.logoSquareUrl)) missing.push("logoSquareUrl");
+  if (!isPlatformEulaPayloadAccepted(p)) missing.push("platformEula");
+  // Branding (colors + logos) is optional — partners can finish setup
+  // later from the dashboard progress stepper. VNDRLY defaults apply
+  // until they upload their own.
   const site = (p.firstSite ?? {}) as Record<string, unknown>;
   if (!trim(site.name)) missing.push("firstSite.name");
   if (!trim(site.address)) missing.push("firstSite.address");
@@ -735,6 +758,7 @@ function validatePartnerPayload(p: Record<string, unknown>): string[] {
 
 function validateVendorPayload(p: Record<string, unknown>): string[] {
   const missing: string[] = [];
+  if (!isPlatformEulaPayloadAccepted(p)) missing.push("platformEula");
   const tax = (p.taxIds ?? {}) as Record<string, unknown>;
   if (!trim(tax.federalTaxId)) missing.push("taxIds.federalTaxId");
   if (!trim(tax.stateTaxId)) missing.push("taxIds.stateTaxId");
@@ -792,6 +816,8 @@ router.post("/onboarding/:orgType/:orgId/complete", async (req: Request, res: Re
     return;
   }
   if (!authorizeOrgAccess(req, res, orgType, orgId)) return;
+  const session = getSessionFromRequest(req);
+  const acceptingUserId = session?.userId;
   const existing = await ensureProgressRow({
     orgType,
     partnerId: orgType === "partner" ? orgId : null,
@@ -819,15 +845,33 @@ router.post("/onboarding/:orgType/:orgId/complete", async (req: Request, res: Re
     if (Number.isFinite(prefRadius) && prefRadius > 0) {
       prefsPatch.operatingRadiusMiles = Math.round(prefRadius);
     }
+    const brandingPatch: {
+      brandPrimaryColor?: string;
+      brandAccentColor?: string;
+      logoUrl?: string;
+      logoSquareUrl?: string;
+    } = {};
+    if (trim(payload.brandPrimaryColor)) {
+      brandingPatch.brandPrimaryColor = trim(payload.brandPrimaryColor);
+    }
+    if (trim(payload.brandAccentColor)) {
+      brandingPatch.brandAccentColor = trim(payload.brandAccentColor);
+    }
+    if (trim(payload.logoUrl)) brandingPatch.logoUrl = trim(payload.logoUrl);
+    if (trim(payload.logoSquareUrl)) {
+      brandingPatch.logoSquareUrl = trim(payload.logoSquareUrl);
+    }
+    const platformEulaPatch =
+      acceptingUserId && isPlatformEulaPayloadAccepted(payload)
+        ? buildPlatformEulaAcceptancePatch(acceptingUserId)
+        : {};
     try {
       await db.transaction(async (tx) => {
         await tx
           .update(partnersTable)
           .set({
-            brandPrimaryColor: trim(payload.brandPrimaryColor),
-            brandAccentColor: trim(payload.brandAccentColor),
-            logoUrl: trim(payload.logoUrl),
-            logoSquareUrl: trim(payload.logoSquareUrl),
+            ...brandingPatch,
+            ...platformEulaPatch,
             federalTaxId: trim((payload.taxBilling as Record<string, unknown>).federalTaxId),
             stateTaxId: trim((payload.taxBilling as Record<string, unknown>).stateTaxId),
             physicalAddress: trim((payload.taxBilling as Record<string, unknown>).physicalAddress),
@@ -886,6 +930,10 @@ router.post("/onboarding/:orgType/:orgId/complete", async (req: Request, res: Re
     if (typeof branding.logoUrl === "string" && branding.logoUrl.trim()) {
       brandingPatch.logoUrl = branding.logoUrl.trim();
     }
+    const platformEulaPatch =
+      acceptingUserId && isPlatformEulaPayloadAccepted(payload)
+        ? buildPlatformEulaAcceptancePatch(acceptingUserId)
+        : {};
     // Re-coerce + dedupe here so the DB write matches what the
     // validator counted. Anything non-numeric is dropped silently.
     const wtIds = Array.from(
@@ -928,6 +976,7 @@ router.post("/onboarding/:orgType/:orgId/complete", async (req: Request, res: Re
             // actually filled it. Skipping the step leaves existing
             // values untouched.
             ...brandingPatch,
+            ...platformEulaPatch,
           })
           .where(eq(vendorsTable.id, orgId));
 

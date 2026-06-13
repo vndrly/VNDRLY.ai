@@ -1935,7 +1935,7 @@ export function BulkActionDetailsDialog({
             <PillButton
               color="blue"
               disabled={loading || safePage >= totalPages - 1}
-              onClick={() => setPage((p) => p + 1)}
+              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
               data-testid="button-details-next"
             >
               {t("reports.qbMapping.bulkActionsHistory.next")}

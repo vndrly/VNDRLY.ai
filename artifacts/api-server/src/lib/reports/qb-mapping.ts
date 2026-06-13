@@ -106,6 +106,57 @@ export function defaultAccountForKey(key: string): QbAccount {
   return LINE_TYPE_TO_ACCOUNT[key] ?? FALLBACK_ACCOUNT;
 }
 
+export interface QbMappingFormItem {
+  lineType: string;
+  label: string;
+  defaultAccountName: string;
+  defaultAccountNumber: string;
+  accountName: string;
+  accountNumber: string;
+  isOverride: boolean;
+  overrideId: number | null;
+}
+
+/** Load mapping form rows for a vendor/partner scope (exact match only). */
+export async function fetchQbMappingFormItems(scope: {
+  vendorId: number | null;
+  partnerId: number | null;
+}): Promise<{ scope: typeof scope; items: QbMappingFormItem[] }> {
+  const { vendorId, partnerId } = scope;
+  const rows = await db
+    .select()
+    .from(qbAccountMappingTable)
+    .where(
+      and(
+        vendorId == null
+          ? isNull(qbAccountMappingTable.vendorId)
+          : eq(qbAccountMappingTable.vendorId, vendorId),
+        partnerId == null
+          ? isNull(qbAccountMappingTable.partnerId)
+          : eq(qbAccountMappingTable.partnerId, partnerId),
+      ),
+    );
+  const exactByLineType = new Map<string, (typeof rows)[number]>();
+  for (const r of rows) {
+    exactByLineType.set(r.lineType, r);
+  }
+  const items = MAPPABLE_LINE_TYPES.map((m) => {
+    const def = defaultAccountForKey(m.key);
+    const ov = exactByLineType.get(m.key);
+    return {
+      lineType: m.key,
+      label: m.label,
+      defaultAccountName: def.name,
+      defaultAccountNumber: def.number,
+      accountName: ov?.accountName ?? def.name,
+      accountNumber: ov?.accountNumber ?? def.number,
+      isOverride: Boolean(ov),
+      overrideId: ov?.id ?? null,
+    };
+  });
+  return { scope: { vendorId, partnerId }, items };
+}
+
 // ── Override loading & resolution ───────────────────────────────────────
 
 export interface QbAccountOverride {

@@ -55,7 +55,11 @@ import {
   clampMetricsDays,
   type AssistantRole,
 } from "../../api-server/src/assistant/permissions";
-import { URL_PATTERN_TO_SCREEN } from "../../api-server/src/assistant/deep-links";
+import { URL_PATTERN_TO_SCREEN, buildDeepLink } from "../../api-server/src/assistant/deep-links";
+import { DATA_TOOL_NAMES } from "../../api-server/src/assistant/data-tools";
+import { WRITE_TOOL_NAMES } from "../../api-server/src/assistant/write-tools";
+import { parsePageContext } from "../../api-server/src/assistant/page-context";
+import { parseAssistantPageContext } from "../src/components/assistant-panel";
 
 // ─── Knowledge corpus invariants ──────────────────────────────────
 describe("knowledge corpus", () => {
@@ -506,14 +510,14 @@ describe("onboarding flows", () => {
   const ERROR_PATHS: Record<OrgPersona, ErrorCase[]> = {
     partner: [
       {
-        label: "skip a required step (branding)",
+        label: "skip a required step (first-site)",
         run: () =>
           validateStepCompletion({
             persona: "partner",
-            step: "branding",
-            nextStep: "first-site",
+            step: "first-site",
+            nextStep: "tax-billing",
             skipped: true,
-            existing: { currentStep: "branding", payload: {} },
+            existing: { currentStep: "first-site", payload: {} },
           }),
         expectedCode: "required_step_skipped",
       },
@@ -542,14 +546,14 @@ describe("onboarding flows", () => {
         expectedCode: "out_of_sequence_step",
       },
       {
-        label: "complete branding with empty payload",
+        label: "complete first-site with empty payload",
         run: () =>
           validateStepCompletion({
             persona: "partner",
-            step: "branding",
-            nextStep: "first-site",
+            step: "first-site",
+            nextStep: "tax-billing",
             skipped: false,
-            existing: { currentStep: "branding", payload: {} },
+            existing: { currentStep: "first-site", payload: {} },
           }),
         expectedCode: "missing_required_fields",
       },
@@ -578,7 +582,7 @@ describe("onboarding flows", () => {
           validateStepCompletion({
             persona: "vendor",
             step: "rates",
-            nextStep: "branding",
+            nextStep: "first-employee",
             skipped: false,
             existing: { currentStep: "rates", payload: { rates: {} } },
           }),
@@ -1128,6 +1132,69 @@ describe("refusal-shape directive in GROUND RULES", () => {
   });
 });
 
+// ─── askV page context + metric catalog smoke pins ────────────────
+describe("askV page context and metric tools", () => {
+  it("parsePageContext and parseAssistantPageContext agree on entity ids", () => {
+    expect(parseAssistantPageContext("/reports")).toEqual({ path: "/reports" });
+    expect(parseAssistantPageContext("/tickets/123")).toEqual({ path: "/tickets/123", entityId: 123 });
+    expect(parsePageContext({ path: "/catalog-health" })).toEqual({ path: "/catalog-health" });
+  });
+
+  it("buildSystemPrompt injects CURRENT PAGE when pageContext is set", () => {
+    const prompt = buildSystemPrompt({
+      user: {
+        userId: 1,
+        role: "partner",
+        displayName: "Test",
+        partnerId: 1,
+        vendorId: null,
+        preferredLanguage: "en",
+      },
+      docs: [],
+      onboarding: {
+        active: false,
+        orgType: null,
+        currentStep: null,
+        completedSteps: [],
+        skippedSteps: [],
+      },
+      pageContext: { path: "/reports", entityId: null },
+    });
+    expect(prompt).toMatch(/CURRENT PAGE/);
+    expect(prompt).toContain("`/reports`");
+  });
+
+  it("selectDocs retrieves sales tax capability for Texas YTD question", () => {
+    const docs = selectDocs("partner", "How much sales tax did we collect in Texas YTD?");
+    const found = docs.some((d) =>
+      `${d.title} ${d.body}`.toLowerCase().includes("sales tax"),
+    );
+    expect(found).toBe(true);
+  });
+
+  it("data tool catalog includes report-backed metric tools", () => {
+    expect(DATA_TOOL_NAMES).toContain("query_sales_tax_by_state");
+    expect(DATA_TOOL_NAMES).toContain("query_nec1099_summary");
+  });
+
+  it("write tool catalog includes bounded notification action", () => {
+    expect(WRITE_TOOL_NAMES).toContain("mark_notifications_read");
+  });
+
+  it("reports deep link builds salesTaxByState YTD URL", () => {
+    const url = buildDeepLink({
+      screen: "reports",
+      reportCard: "salesTaxByState",
+      reportPreset: "ytd",
+      highlightState: "TX",
+    });
+    expect(typeof url).toBe("string");
+    expect(url as string).toMatch(/^\/reports\?/);
+    expect(url as string).toContain("card=salesTaxByState");
+    expect(url as string).toContain("state=TX");
+  });
+});
+
 // ─── Route-level message envelope wiring ────────────────────────
 // `composeAssistantMessages` is the single seam both assistant
 // routes (authenticated and token-mode field-employee) call to build
@@ -1533,6 +1600,8 @@ describe("knowledge corpus references the live app", () => {
     "visitor-qr": "Visitor",
     "visitor-scan": null,
     "catalog-admin": "Catalog",
+    "catalog-health": "Catalog health",
+    "partner-catalog": "Products",
     "vendor-catalog": "Vendor Catalog",
     "analytics-partner": "Analytics",
     "analytics-vendor": "Analytics",

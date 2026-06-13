@@ -34,6 +34,9 @@ import {
   invoicesTable,
 } from "@workspace/db";
 import type { SessionPayload } from "../lib/session";
+import { resolvePeriod, PERIOD_PRESETS, type PeriodPreset } from "../lib/reports/period";
+import { salesTaxByState } from "../lib/reports/sales-tax";
+import { nec1099Rows, NEC_THRESHOLD_USD } from "../lib/reports/nec1099";
 
 // ─────────────────────────────────────────────────────────────────
 // Helpers
@@ -509,6 +512,107 @@ async function queryInvoiceSummary(
 }
 
 // ─────────────────────────────────────────────────────────────────
+// Tool: query_sales_tax_by_state
+// ─────────────────────────────────────────────────────────────────
+
+interface QuerySalesTaxByStateInput {
+  preset?: string;
+  state?: string;
+}
+
+async function querySalesTaxByState(
+  input: QuerySalesTaxByStateInput,
+  session: SessionPayload,
+): Promise<string> {
+  const blocked = blockFieldEmployee(session, "query_sales_tax_by_state");
+  if (blocked) return blocked;
+
+  const presetRaw = typeof input.preset === "string" ? input.preset : "ytd";
+  const preset: PeriodPreset = (PERIOD_PRESETS as readonly string[]).includes(presetRaw)
+    ? (presetRaw as PeriodPreset)
+    : "ytd";
+  const period = resolvePeriod({ preset });
+
+  let vendorId: number | undefined;
+  let partnerId: number | undefined;
+  if (session.role === "vendor" && session.vendorId) {
+    vendorId = session.vendorId;
+  } else if (session.role === "partner" && session.partnerId) {
+    partnerId = session.partnerId;
+  } else if (session.role !== "admin") {
+    return err("No org scope on this session.");
+  }
+
+  const { rows, totals } = await salesTaxByState({ vendorId, partnerId, period });
+
+  let filtered = rows;
+  if (typeof input.state === "string" && input.state.trim().length > 0) {
+    const st = input.state.trim().toUpperCase();
+    filtered = rows.filter(
+      (r) => r.state.toUpperCase() === st || r.state.toUpperCase().startsWith(st),
+    );
+  }
+
+  return JSON.stringify({
+    periodLabel: period.label,
+    preset,
+    rows: filtered.slice(0, MAX_LIMIT),
+    totals,
+    rowCount: filtered.length,
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Tool: query_nec1099_summary
+// ─────────────────────────────────────────────────────────────────
+
+interface QueryNec1099SummaryInput {
+  year?: number;
+}
+
+async function queryNec1099Summary(
+  input: QueryNec1099SummaryInput,
+  session: SessionPayload,
+): Promise<string> {
+  const blocked = blockFieldEmployee(session, "query_nec1099_summary");
+  if (blocked) return blocked;
+
+  const nowYear = new Date().getUTCFullYear();
+  const year =
+    typeof input.year === "number" && Number.isFinite(input.year)
+      ? Math.min(2100, Math.max(2000, Math.floor(input.year)))
+      : nowYear;
+
+  let rows;
+  if (session.role === "vendor" && session.vendorId) {
+    rows = await nec1099Rows({ year, vendorId: session.vendorId });
+  } else if (session.role === "partner" && session.partnerId) {
+    rows = await nec1099Rows({ year, payerPartnerId: session.partnerId });
+  } else if (session.role === "admin") {
+    rows = await nec1099Rows({ year });
+  } else {
+    return err("No org scope on this session.");
+  }
+
+  const totalNecPaid = rows.reduce((s, r) => s + Number(r.totalPaid), 0);
+
+  return JSON.stringify({
+    year,
+    thresholdUsd: NEC_THRESHOLD_USD,
+    recipientCount: rows.length,
+    totalNecPaid: totalNecPaid.toFixed(2),
+    rows: rows.slice(0, MAX_LIMIT).map((r) => ({
+      vendorId: r.vendorId,
+      vendorName: r.vendorName,
+      payerPartnerId: r.payerPartnerId,
+      payerPartnerName: r.payerPartnerName,
+      totalPaid: r.totalPaid,
+      sharedEinWarning: r.sharedEinWarning,
+    })),
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────
 // Public dispatcher
 // ─────────────────────────────────────────────────────────────────
 
@@ -519,6 +623,8 @@ export const DATA_TOOL_NAMES = [
   "query_visits",
   "query_field_metrics",
   "query_invoice_summary",
+  "query_sales_tax_by_state",
+  "query_nec1099_summary",
 ] as const;
 
 export type DataToolName = (typeof DATA_TOOL_NAMES)[number];
@@ -546,5 +652,9 @@ export async function runDataTool(
       return queryFieldMetrics(args as QueryFieldMetricsInput, session);
     case "query_invoice_summary":
       return queryInvoiceSummary(args as QueryInvoiceSummaryInput, session);
+    case "query_sales_tax_by_state":
+      return querySalesTaxByState(args as QuerySalesTaxByStateInput, session);
+    case "query_nec1099_summary":
+      return queryNec1099Summary(args as QueryNec1099SummaryInput, session);
   }
 }

@@ -639,6 +639,7 @@ export default function Vendors() {
                           icon={BellRing}
                           color="green"
                           data-testid={`recon-status-${v.id}`}
+                          data-recon-enabled="true"
                           aria-label={t("vendors.reconAlertStatusOn", { defaultValue: "On" })}
                         >
                           {t("vendors.reconAlertStatusOn", { defaultValue: "On" })}
@@ -649,6 +650,7 @@ export default function Vendors() {
                           color="grey"
                           rest
                           data-testid={`recon-status-${v.id}`}
+                          data-recon-enabled="false"
                           aria-label={t("vendors.reconAlertStatusOff", { defaultValue: "Off" })}
                         >
                           {t("vendors.reconAlertStatusOff", { defaultValue: "Off" })}

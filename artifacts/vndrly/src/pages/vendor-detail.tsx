@@ -71,6 +71,7 @@ import { useQuery } from "@tanstack/react-query";
 import { hotlistApi } from "@/lib/hotlist-api";
 import { useTranslation } from "react-i18next";
 import { translateApiError } from "@/lib/api-error";
+import { PlatformEulaModal } from "@/components/platform-eula-modal";
 
 
 export default function VendorDetail({ id }: { id: number }) {
@@ -105,6 +106,7 @@ export default function VendorDetail({ id }: { id: number }) {
   const { toast } = useToast();
   const [, navigate] = useLocation();
   const [editOpen, setEditOpen] = useState(false);
+  const [platformEulaOpen, setPlatformEulaOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
   const [editContactOpen, setEditContactOpen] = useState(false);
   const [editEmployeeOpen, setEditEmployeeOpen] = useState(false);
@@ -925,7 +927,19 @@ export default function VendorDetail({ id }: { id: number }) {
       </div>
 
       <Card>
-        <CardHeader><CardTitle className="flex items-center gap-2"><Users className="w-5 h-5" style={{ color: "var(--brand-primary)" }} />Vendor Information</CardTitle></CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between gap-2">
+          <CardTitle className="flex items-center gap-2"><Users className="w-5 h-5" style={{ color: "var(--brand-primary)" }} />Vendor Information</CardTitle>
+          {(isOwnVendor || authUser?.role === "admin") && (
+            <GreyButton
+              type="button"
+              data-testid="button-view-platform-eula"
+              onClick={() => setPlatformEulaOpen(true)}
+            >
+              <FileText className="w-4 h-4" />
+              {t("platformEula.viewButton")}
+            </GreyButton>
+          )}
+        </CardHeader>
         <CardContent className="space-y-2">
           <div><span className="text-sm text-muted-foreground">Physical Address:</span> <span className="font-medium">{vendor.physicalAddress || "-"}</span></div>
           <div><span className="text-sm text-muted-foreground">Billing Address:</span> <span className="font-medium">{vendor.billingAddress || "-"}</span></div>
@@ -1362,6 +1376,8 @@ export default function VendorDetail({ id }: { id: number }) {
           </form>
         </DialogContent>
       </Dialog>
+
+      <PlatformEulaModal open={platformEulaOpen} onOpenChange={setPlatformEulaOpen} />
     </div>
   );
 }

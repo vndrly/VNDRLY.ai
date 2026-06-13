@@ -16,6 +16,7 @@
     "test:api": "pnpm --filter @workspace/api-server run test",
     "test:e2e": "pnpm --filter @workspace/e2e exec playwright test",
     "lint:i18n": "pnpm --filter @workspace/scripts run lint:i18n",
+    "swap:logo": "node scripts/swap-vndrly-logo.mjs",
     "ship it": "powershell -ExecutionPolicy Bypass -File scripts/ship-it.ps1",
     "save": "powershell -ExecutionPolicy Bypass -File scripts/ship-it.ps1",
     "publish:online": "powershell -ExecutionPolicy Bypass -File scripts/publish-online.ps1",

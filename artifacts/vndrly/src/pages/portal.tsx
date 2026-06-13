@@ -37,6 +37,8 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import SphereBackButton from "@/components/sphere-back-button";
 import { VNDRLY_LOGO_SQUARE as vndrlyLogo } from "@/lib/vndrly-brand-assets";
+import { NAV_PANE_DARK_BG } from "@/components/nav-pane-tokens";
+import { NavPaneHalftoneBackground } from "@/components/nav-pane-halftone-background";
 import sidebarBg from "@assets/VNDRLY_Header_Blur_4_1776220762025.png";
 import GreyButton from "@/components/grey-button";
 import PortalButton from "@/components/portal-button";
@@ -313,7 +315,7 @@ export default function Portal({ siteCode }: { siteCode: string }) {
   // vdark preset) to white.
   const [themeMode, setThemeMode] = useState<ThemeMode>("dark");
   const isDark = themeMode === "dark";
-  const portalBg = isDark ? "#3a3d42" : "#ffffff";
+  const portalBg = isDark ? NAV_PANE_DARK_BG : "#ffffff";
 
   if (isLoading) {
     return (
@@ -345,7 +347,7 @@ export default function Portal({ siteCode }: { siteCode: string }) {
 
   return (
     <div
-      className="min-h-screen"
+      className="min-h-screen relative overflow-hidden"
       data-testid="portal-page"
       // Scope partner brand colors to this page so var(--brand-primary)
       // resolves to the SITE owner's color for everything inside (icons,
@@ -354,12 +356,13 @@ export default function Portal({ siteCode }: { siteCode: string }) {
       // applies, which is what we want for things like the toaster.
       style={{ ...partnerBrandStyle, backgroundColor: portalBg }}
     >
+      <NavPaneHalftoneBackground enabled={isDark} variant="auth" />
       <div className="absolute top-4 left-4 z-30">
         <DarkLightToggle mode={themeMode} onChange={setThemeMode} variant={isDark ? "dark" : "light"} />
       </div>
       <div className="relative overflow-hidden" style={{ backgroundColor: "hsl(220 10% 25%)" }}>
         <div
-          className="absolute inset-0 pointer-events-none"
+          className="absolute inset-0 pointer-events-none z-[1]"
           style={{
             backgroundImage: `url(${sidebarBg})`,
             backgroundSize: "cover",

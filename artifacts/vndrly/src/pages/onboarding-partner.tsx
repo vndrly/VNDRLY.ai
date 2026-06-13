@@ -2,7 +2,6 @@ import { PngPillButton } from "@/components/png-pill-rollover";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
-import { VNDRLY_LOGO_SQUARE as vndrlyLogo } from "@/lib/vndrly-brand-assets";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,12 +14,26 @@ import { AlertTriangle } from "lucide-react";
 import OnboardingStepper, { type StepperStep } from "@/components/onboarding-stepper";
 import OnboardingVerificationBanner from "@/components/onboarding-verification-banner";
 import LanguageToggle from "@/components/language-toggle";
+import {
+  OnboardingBrandHeader,
+  type OnboardingBrandPreview,
+} from "@/components/onboarding-brand-header";
+import { OnboardingBrandFields } from "@/components/onboarding-brand-fields";
+import { OnboardingAccountCreatedDialog } from "@/components/onboarding-account-created-dialog";
+import {
+  OnboardingPlatformEulaStep,
+  type PlatformEulaAcceptanceValue,
+} from "@/components/onboarding-platform-eula-step";
+import { PLATFORM_EULA_VERSION } from "@workspace/platform-eula";
+import { brandStyleVars, DEFAULT_BRAND } from "@/hooks/use-brand";
 import { onboardingApi } from "@/lib/onboarding-api";
+import { uploadOnboardingLogo } from "@/lib/onboarding-logo-upload";
 import { handlePhoneInput, stripPhone } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 
 type StepKey =
   | "company-basics"
+  | "platform-eula"
   | "branding"
   | "first-site"
   | "tax-billing"
@@ -29,6 +42,7 @@ type StepKey =
 
 const STEPS: (StepperStep & { key: StepKey })[] = [
   { key: "company-basics", label: "Company Basics" },
+  { key: "platform-eula", label: "Platform Agreement" },
   { key: "branding", label: "Branding" },
   { key: "first-site", label: "First Site" },
   { key: "tax-billing", label: "Tax & Billing" },
@@ -36,24 +50,19 @@ const STEPS: (StepperStep & { key: StepKey })[] = [
   { key: "invite-team", label: "Invite Team" },
 ];
 
-// Per spec: brand colors+logo, first site, and tax IDs are
-// "must-haves" — the wizard cannot finish without them. Operating
-// preferences (hours, radius) and inviting the rest of the team are
-// "should-haves" — skipping them adds the step to the dashboard's
-// Finish-setup widget so the partner admin can finish later.
+// Per spec: first site and tax IDs are must-haves at /complete.
+// Branding (logos + colors) is a should-have — skippable during the
+// wizard and finishable later from the dashboard progress stepper.
 // Only the account-creation step is required up-front. Every step
 // after that may be skipped so the user can quit and finish later
 // from the dashboard's Finish-setup widget. Required data is still
 // enforced at /complete time (the user can't actually finalise
 // onboarding without it), but they're free to walk away in between.
-const REQUIRED_STEPS = new Set<StepKey>(["company-basics"]);
+const REQUIRED_STEPS = new Set<StepKey>(["company-basics", "platform-eula"]);
 
 interface PartnerPayload {
   brandPrimaryColor?: string;
   brandAccentColor?: string;
-  // Two logos, both must-have per spec: horizontal renders in the
-  // sidebar and ticket headers, square renders in 64×64 favicons and
-  // the visitor-portal poster.
   logoUrl?: string;
   logoSquareUrl?: string;
   firstSite?: { name?: string; address?: string; siteCode?: string; siteRadiusMeters?: number };
@@ -62,6 +71,7 @@ interface PartnerPayload {
   // visitor portal + default vendor-matching radius).
   preferences?: { hoursOfOperation?: string; operatingRadiusMiles?: number };
   inviteEmails?: string[];
+  platformEula?: { accepted?: boolean; version?: string };
 }
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -108,12 +118,17 @@ export default function OnboardingPartner() {
   const [checkedName, setCheckedName] = useState<string | null>("");
   const [confirmDifferentPartner, setConfirmDifferentPartner] = useState(false);
 
-  // Step 2 — Branding. Both logos are spec must-haves.
+  // Step 2 — Branding (optional). Logos/colors flip the live header
+  // preview; skipping adds this step to the dashboard finish-setup widget.
   const [branding, setBranding] = useState({
     brandPrimaryColor: "",
     brandAccentColor: "",
     logoUrl: "" as string,
     logoSquareUrl: "" as string,
+  });
+  const [platformEula, setPlatformEula] = useState<PlatformEulaAcceptanceValue>({
+    accepted: false,
+    version: PLATFORM_EULA_VERSION,
   });
 
   // Step 3 — First site.
@@ -128,6 +143,7 @@ export default function OnboardingPartner() {
 
   // Step 6 — Invite team.
   const [inviteText, setInviteText] = useState("");
+  const [showAccountCreated, setShowAccountCreated] = useState(false);
 
   const currentStep = STEPS[stepIndex];
 
@@ -173,6 +189,12 @@ export default function OnboardingPartner() {
             brandAccentColor: p.brandAccentColor ?? "",
             logoUrl: p.logoUrl ?? "",
             logoSquareUrl: p.logoSquareUrl ?? "",
+          });
+        }
+        if (p.platformEula?.accepted) {
+          setPlatformEula({
+            accepted: true,
+            version: p.platformEula.version ?? PLATFORM_EULA_VERSION,
           });
         }
         if (p.firstSite) {
@@ -358,9 +380,10 @@ export default function OnboardingPartner() {
       setCompleted(["company-basics"]);
       setStepIndex(1);
       await onboardingApi.updateProgress("partner", resp.orgId, {
-        currentStep: "branding",
+        currentStep: "platform-eula",
         completedSteps: ["company-basics"],
       });
+      setShowAccountCreated(true);
     } catch (err) {
       toast({ title: (err as Error).message, variant: "destructive" });
     } finally {
@@ -374,30 +397,21 @@ export default function OnboardingPartner() {
   const uploadLogo = async (file: File, slot: "horizontal" | "square") => {
     setLoading(true);
     try {
-      const r = await fetch(`${BASE}/api/storage/uploads/request-url`, {
-        credentials: "include",
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: file.name, size: file.size, contentType: file.type }),
+      const finalUrl = await uploadOnboardingLogo(file, "public");
+      setBranding((b) =>
+        slot === "square"
+          ? { ...b, logoSquareUrl: finalUrl }
+          : { ...b, logoUrl: finalUrl },
+      );
+      toast({
+        title:
+          slot === "square"
+            ? "Square logo uploaded."
+            : "Horizontal logo uploaded.",
       });
-      if (!r.ok) throw new Error("Could not get upload URL");
-      const { uploadURL, objectPath } = (await r.json()) as { uploadURL: string; objectPath: string };
-      const put = await fetch(uploadURL, { method: "PUT", body: file, headers: { "Content-Type": file.type } });
-      if (!put.ok) throw new Error("Upload failed");
-      const fin = await fetch(`${BASE}/api/storage/uploads/finalize`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ objectURL: uploadURL, visibility: "public" }),
-      });
-      if (!fin.ok) throw new Error("Finalize failed");
-      const { objectPath: finalPath } = (await fin.json()) as { objectPath: string };
-      const path = finalPath || objectPath;
-      const finalUrl = path.startsWith("/") ? `${BASE}/api/storage${path}` : path;
-      setBranding((b) => slot === "square" ? { ...b, logoSquareUrl: finalUrl } : { ...b, logoUrl: finalUrl });
-      toast({ title: slot === "square" ? "Square logo uploaded." : "Horizontal logo uploaded." });
     } catch (err) {
       toast({ title: (err as Error).message, variant: "destructive" });
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -406,15 +420,9 @@ export default function OnboardingPartner() {
   // ─── Per-step required-field validation ─────────────────────────
   const validateCurrentStep = (): string | null => {
     switch (currentStep.key) {
-      case "branding":
-        if (!branding.brandPrimaryColor.trim() || !branding.brandAccentColor.trim()) {
-          return "Pick a primary and an accent color.";
-        }
-        if (!branding.logoUrl.trim()) {
-          return "Upload your horizontal logo to continue.";
-        }
-        if (!branding.logoSquareUrl.trim()) {
-          return "Upload your square logo to continue.";
+      case "platform-eula":
+        if (!platformEula.accepted) {
+          return "You must accept the VNDRLY Platform Agreement to continue.";
         }
         return null;
       case "first-site":
@@ -469,7 +477,12 @@ export default function OnboardingPartner() {
   // dropped on the way out.
   const currentStepPatch = (): Partial<PartnerPayload> => {
     const patch: Partial<PartnerPayload> = {};
-    if (currentStep.key === "branding") {
+    if (currentStep.key === "platform-eula") {
+      patch.platformEula = {
+        accepted: platformEula.accepted,
+        version: PLATFORM_EULA_VERSION,
+      };
+    } else if (currentStep.key === "branding") {
       patch.brandPrimaryColor = branding.brandPrimaryColor || undefined;
       patch.brandAccentColor = branding.brandAccentColor || undefined;
       patch.logoUrl = branding.logoUrl || undefined;
@@ -581,19 +594,56 @@ export default function OnboardingPartner() {
     [inviteText],
   );
 
+  const brandPreview = useMemo((): OnboardingBrandPreview | null => {
+    const primary =
+      branding.brandPrimaryColor.trim() ||
+      payload.brandPrimaryColor?.trim() ||
+      "";
+    const logo =
+      branding.logoSquareUrl.trim() ||
+      branding.logoUrl.trim() ||
+      payload.logoSquareUrl?.trim() ||
+      payload.logoUrl?.trim() ||
+      "";
+    if (!primary && !logo) return null;
+    return {
+      name: basics.name.trim() || null,
+      logoUrl: branding.logoUrl.trim() || payload.logoUrl || null,
+      logoSquareUrl: branding.logoSquareUrl.trim() || payload.logoSquareUrl || null,
+      primaryColor: primary || null,
+    };
+  }, [branding, payload, basics.name]);
+
+  const pageBrand = useMemo(() => {
+    if (!brandPreview?.primaryColor) return DEFAULT_BRAND;
+    return {
+      ...DEFAULT_BRAND,
+      primary: brandPreview.primaryColor,
+      accent: branding.brandAccentColor.trim() || brandPreview.primaryColor,
+      logoUrl: brandPreview.logoUrl ?? null,
+      logoSquareUrl: brandPreview.logoSquareUrl ?? null,
+      name: brandPreview.name ?? null,
+      isOrgBranded: true,
+    };
+  }, [brandPreview, branding.brandAccentColor]);
+
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-8 relative">
+    <div
+      className="min-h-screen bg-gray-50 px-4 py-8 relative"
+      style={brandStyleVars(pageBrand)}
+    >
       <div className="absolute top-4 right-4 z-20">
         <LanguageToggle variant="light" />
       </div>
       <div className="max-w-2xl mx-auto">
-        <div className="flex items-center gap-3 mb-6">
-          <img src={vndrlyLogo} alt="VNDRLY" className="w-12 h-12 rounded-lg" />
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Partner Onboarding</h1>
-            <p className="text-sm text-gray-500">Get your team set up in 5 quick steps.</p>
-          </div>
-        </div>
+        <OnboardingBrandHeader
+          title="Partner Onboarding"
+          subtitle="Get your team set up in 5 quick steps."
+          preview={brandPreview}
+          onBack={() =>
+            stepIndex === 0 ? navigate("/signup") : prevStep()
+          }
+        />
 
         {/* Email-verification banner — appears once an account
             exists. Hidden on the anonymous step-1 visit so it doesn't
@@ -683,54 +733,37 @@ export default function OnboardingPartner() {
             </div>
           )}
 
+          {currentStep.key === "platform-eula" && (
+            <OnboardingPlatformEulaStep
+              value={platformEula}
+              onChange={setPlatformEula}
+              disabled={loading}
+            />
+          )}
+
           {currentStep.key === "branding" && (
             <div className="space-y-4" data-testid="step-branding-body">
               <h2 className="text-lg font-semibold text-gray-900">Make it yours</h2>
-              <p className="text-sm text-gray-500">Logos and colors appear on visitor sign-in posters and printable docs.</p>
-              <div>
-                <Label>Horizontal logo *</Label>
-                <p className="text-xs text-gray-500 mb-1">Used in the sidebar and ticket headers.</p>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => e.target.files?.[0] && uploadLogo(e.target.files[0], "horizontal")}
-                    data-testid="input-logo"
-                    className="text-sm"
-                  />
-                  {branding.logoUrl && <img src={branding.logoUrl} alt="logo preview" className="h-12 max-w-[160px] object-contain border rounded" />}
-                </div>
-              </div>
-              <div>
-                <Label>Square logo *</Label>
-                <p className="text-xs text-gray-500 mb-1">Used in 64×64 favicons and the visitor portal poster.</p>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => e.target.files?.[0] && uploadLogo(e.target.files[0], "square")}
-                    data-testid="input-logo-square"
-                    className="text-sm"
-                  />
-                  {branding.logoSquareUrl && <img src={branding.logoSquareUrl} alt="square logo preview" className="h-12 w-12 object-contain border rounded" />}
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label>Primary color *</Label>
-                  <div className="flex items-center gap-2">
-                    <input type="color" value={branding.brandPrimaryColor || "#1f7ae0"} onChange={(e) => setBranding({ ...branding, brandPrimaryColor: e.target.value })} className="h-10 w-12 rounded border cursor-pointer" data-testid="input-brand-primary-picker" />
-                    <Input value={branding.brandPrimaryColor} onChange={(e) => setBranding({ ...branding, brandPrimaryColor: e.target.value })} placeholder="#1f7ae0" data-testid="input-brand-primary" />
-                  </div>
-                </div>
-                <div>
-                  <Label>Accent color *</Label>
-                  <div className="flex items-center gap-2">
-                    <input type="color" value={branding.brandAccentColor || "#f59e0b"} onChange={(e) => setBranding({ ...branding, brandAccentColor: e.target.value })} className="h-10 w-12 rounded border cursor-pointer" data-testid="input-brand-accent-picker" />
-                    <Input value={branding.brandAccentColor} onChange={(e) => setBranding({ ...branding, brandAccentColor: e.target.value })} placeholder="#f59e0b" data-testid="input-brand-accent" />
-                  </div>
-                </div>
-              </div>
+              <p className="text-sm text-gray-500">
+                Upload your logo and pick brand colors — the header above
+                updates live on visitor posters, tickets, and your portal.
+                We&apos;ll suggest colors from your logo. This step is optional;
+                you can skip and finish anytime from the dashboard.
+              </p>
+              <OnboardingBrandFields
+                variant="partner"
+                value={branding}
+                onChange={setBranding}
+                disabled={loading}
+                onUploadLogo={uploadLogo}
+                onSuggestColors={(colors) => {
+                  setBranding((b) => ({
+                    ...b,
+                    brandPrimaryColor: colors.primary,
+                    brandAccentColor: colors.accent,
+                  }));
+                }}
+              />
             </div>
           )}
 
@@ -839,15 +872,7 @@ export default function OnboardingPartner() {
             </div>
           )}
 
-          <div className="mt-8 flex items-center justify-between gap-3">
-            <PillButton
-              color="image"
-              onClick={() => (stepIndex === 0 ? navigate("/signup") : prevStep())}
-              disabled={loading}
-              data-testid="button-back"
-            >
-              ← Back
-            </PillButton>
+          <div className="mt-8 flex items-center justify-end gap-3">
             <div className="flex items-center gap-2">
               {stepIndex > 0 && !REQUIRED_STEPS.has(currentStep.key as StepKey) && (
                 <PngPillButton onClick={skipStep} disabled={loading} data-testid="button-skip" className="px-4 h-10">
@@ -904,6 +929,14 @@ export default function OnboardingPartner() {
           Step {stepIndex + 1} of {STEPS.length}. Your progress is saved automatically.
         </p>
       </div>
+
+      <OnboardingAccountCreatedDialog
+        open={showAccountCreated}
+        orgType="partner"
+        companyName={basics.name.trim()}
+        onContinue={() => setShowAccountCreated(false)}
+        onGoToDashboard={() => navigate("/")}
+      />
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocation } from "wouter";
 import { Sparkles, Search, Trash2, Loader2, Download, CheckCircle2, Circle, Plus, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AskVFloatingLauncherMark, AskVLogo, ASKV_LAUNCHER_HEIGHT, ASKV_LAUNCHER_WIDTH } from "@/components/askv-logo";
@@ -21,6 +22,19 @@ import {
   type PendingSignupChat,
 } from "@/hooks/use-assistant";
 import { AssistantMarkdown } from "@/components/assistant-markdown";
+
+/** Derive askV page context from the current wouter path. */
+export function parseAssistantPageContext(path: string): {
+  path: string;
+  entityId?: number;
+} {
+  const normalized = path.split("?")[0] || "/";
+  const idMatch = normalized.match(/\/(\d+)(?:\/|$)/);
+  const entityId = idMatch ? Number(idMatch[1]) : undefined;
+  return entityId != null && Number.isFinite(entityId)
+    ? { path: normalized, entityId }
+    : { path: normalized };
+}
 
 /**
  * Pick the initial signup-mode language from the visitor's browser.
@@ -85,6 +99,7 @@ const QUICK_ACTIONS: Record<string, QuickAction[]> = {
 // pages (onboarding-{partner,vendor}.tsx) and must stay in sync.
 const STEP_LABELS: Record<string, string> = {
   "company-basics": "Company basics",
+  "platform-eula": "Platform agreement",
   "branding": "Branding",
   "first-site": "First site",
   "tax-billing": "Tax & billing",
@@ -99,8 +114,8 @@ const STEP_LABELS: Record<string, string> = {
 };
 
 const STEPS_BY_ORG: Record<"partner" | "vendor" | "field_employee", string[]> = {
-  partner: ["company-basics", "branding", "first-site", "tax-billing", "preferences", "invite-team"],
-  vendor: ["company-basics", "tax-ids", "work-types", "compliance", "rates", "branding", "first-employee"],
+  partner: ["company-basics", "platform-eula", "branding", "first-site", "tax-billing", "preferences", "invite-team"],
+  vendor: ["company-basics", "platform-eula", "branding", "tax-ids", "work-types", "compliance", "rates", "first-employee"],
   field_employee: ["personal-info", "photo-certs", "set-password"],
 };
 
@@ -111,8 +126,8 @@ const STEPS_BY_ORG: Record<"partner" | "vendor" | "field_employee", string[]> = 
 // suppresses the "Skip this step" quick chip when the current step is
 // required so the user is never offered an action the server refuses.
 const REQUIRED_STEPS: Record<"partner" | "vendor" | "field_employee", Set<string>> = {
-  partner: new Set(["company-basics", "branding", "first-site", "tax-billing"]),
-  vendor: new Set(["company-basics", "tax-ids", "work-types", "compliance", "rates", "first-employee"]),
+  partner: new Set(["company-basics", "platform-eula", "first-site", "tax-billing"]),
+  vendor: new Set(["company-basics", "platform-eula", "tax-ids", "work-types", "compliance", "rates", "first-employee"]),
   field_employee: new Set(["personal-info", "photo-certs", "set-password"]),
 };
 
@@ -181,14 +196,15 @@ const SIGNUP_QUICK_ACTIONS: Record<
 };
 
 // Small per-brand Ask V icon at full vibrancy (modal header).
-function AskVBrightIcon({ size = 24 }: { size?: number }) {
+function AskVBrightIcon({ height = 48 }: { height?: number }) {
+  const width = height * 2;
   return (
     <span
       aria-hidden="true"
       className="relative inline-block shrink-0"
-      style={{ width: size, height: size }}
+      style={{ width, height }}
     >
-      <AskVLogo size={size} bright />
+      <AskVLogo width={width} height={height} bright />
     </span>
   );
 }
@@ -234,6 +250,11 @@ function HeaderChromeButton({
 export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: AssistantPanelProps) {
   const { user } = useAuth();
   const brand = useBrand();
+  const [location] = useLocation();
+  const pageContext = useMemo(
+    () => (tokenMode || signupMode ? undefined : parseAssistantPageContext(location)),
+    [location, tokenMode, signupMode],
+  );
   const isBaker = !!brand.name?.toLowerCase().includes("baker");
   // Signup-mode language: derived from `navigator.language` on first
   // render and overridable via the EN/ES toggle in the header. Held
@@ -262,7 +283,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
     loadLatest,
     resetRestoreGuard,
     adoptSignupHistory,
-  } = useAssistant({ tokenMode, signupMode: effectiveSignupMode });
+  } = useAssistant({ tokenMode, signupMode: effectiveSignupMode, pageContext });
   const [input, setInput] = useState("");
   const [progress, setProgress] = useState<OnboardingProgress | null>(null);
   const [tokenName, setTokenName] = useState<string | null>(null);
@@ -482,7 +503,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         bare
-        className="sm:max-w-lg h-[min(80vh,640ix)] bg-[#3a3d42] text-gray-100 border-white/20"
+        className="sm:max-w-lg h-[min(80vh,640px)] bg-[#3a3d42] text-gray-100"
         data-testid="assistant-panel"
         hideClose
       >
@@ -494,8 +515,8 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
           )}
         >
           <div className="flex items-center gap-2">
-            <AskVBrightIcon size={42} />
-            <DialogTitle className="text-base text-white">Ask VNDRLY</DialogTitle>
+            <AskVBrightIcon height={48} />
+            <DialogTitle className="sr-only">AskV</DialogTitle>
             <DialogDescription className="sr-only">
               Conversational assistant for VNDRLY. Ask questions about
               your account, tickets, sites, and onboarding.
@@ -650,16 +671,15 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
               <div
                 className={
                   m.role === "user"
-                    ? "relative max-w-[85%] text-white px-4 py-2 text-sm"
+                    ? "max-w-[85%] rounded-2xl px-3 py-2 text-sm text-white"
                     : "max-w-[90%] rounded-2xl bg-white/10 text-gray-100 px-3 py-2"
                 }
+                style={
+                  m.role === "user"
+                    ? { backgroundColor: "var(--brand-primary)" }
+                    : undefined
+                }
               >
-                {m.role === "user" && (
-                  <PillColorLayer
-                    src={isBaker ? pillBaker : brandImagePillSrc(brand.primary, brand.name)}
-                    imageAspect={TICKET_STATUS_PILL_ASPECT}
-                  />
-                )}
                 {m.role === "assistant" ? (
                   m.content ? (
                     <AssistantMarkdown text={m.content} />
@@ -670,7 +690,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
                     </div>
                   )
                 ) : (
-                  <span className="relative z-10 block whitespace-pre-wrap">{m.content}</span>
+                  <span className="block whitespace-pre-wrap">{m.content}</span>
                 )}
               </div>
             </div>

@@ -9,19 +9,19 @@ export const KNOWLEDGE_DOCS: KnowledgeDoc[] = [
     id: "nav-overview",
     title: "App navigation overview",
     roles: ["any"],
-    body: `VNDRLY's web app uses a left sidebar with role-aware links. Admins see Dashboard, Hotlist, Partners, Vendors, Field Employees, Site Locations, Tracking (tickets), Crew Map, Visitors, Invoices, Statements, Reports, Catalog. Partners see their own Partner page, Site Locations, Tracking, Site Map, Visitors, Bills to Pay, Statements, Reports, Analytics. Vendors see their own Vendor page, Site Locations, Tracking, Crew Map, Visitors, Invoices, Statements, Reports, Vendor Catalog, Analytics. Field employees use a separate field portal designed for on-the-go mobile work.`,
+    body: `VNDRLY's web app uses a left sidebar with role-aware links. Admins see Dashboard (includes the Hotlist jobs panel), Partners, Vendors, Field Employees, Site Locations, Tracking (tickets), Crew Map, Visitors, Invoices, Statements, Reports, and Platform Catalog (Catalog Health is linked from the catalog page). Partners see their Partner page, Site Locations, Tracking, Site Map, Visitors, Bills to Pay, Statements, Reports, Partner Catalog, and Analytics. Vendors see their Vendor page, Site Locations, Tracking, Crew Map, Visitors, Invoices, Statements, Reports, Your Services (vendor catalog), and Analytics. Field employees use the separate field portal for on-the-go mobile work — see the field portal home doc.`,
   },
   {
     id: "ask-vndrly",
     title: "About this assistant",
     roles: ["any"],
-    body: `I'm the VNDRLY assistant ("askV"). I can answer questions about the app, walk you through onboarding step by step, AND pull live numbers from your account's database. Ask me things like "how many tickets are open at site X this week?", "what's our average vendor rating this month?", "show me the GPS trail for ticket 1234", or "how much have we billed in the last 30 days?". I never make changes you can't make yourself, and I always stay scoped to your organization — I can't see other partners' or vendors' data.`,
+    body: `I'm the VNDRLY assistant ("askV"). I'm a full help guide — not a gatekeeper. I answer how-to questions, walk you through onboarding step by step, and pull live numbers from your account when you ask. Examples: "how many tickets are open at site X this week?", "what's our average vendor rating this month?", "show me the GPS trail for ticket 1234", "how much have we billed YTD?", or "how much sales tax did we collect in Texas this year?". I use read-only data tools scoped to your org — I never invent totals and I can't see other partners' or vendors' data. I don't make changes you can't make yourself (no silent writes).`,
   },
   {
     id: "data-tools-overview",
     title: "Live data lookups (askV can query the database)",
     roles: ["admin", "partner", "vendor"],
-    body: `I have read-only tools that query the live VNDRLY database scoped to your account. Available lookups: (1) "query_tickets" — list or count tickets filtered by status / vendor / site / date window. (2) "query_field_metrics" — operational KPIs: completion rate, kickback rate, average on-site minutes, total miles logged via odometer, and how many tickets had a mobile GPS trail. (3) "query_vendor_performance" — average partner rating (1-5), kickback rate over a window. (4) "query_gps_trail" — for one ticket: number of GPS points, max speed, lowest battery, last known position. (5) "query_visits" — guest check-in totals at your sites. (6) "query_invoice_summary" — billed / paid / open / past-due totals. All windows are clamped to 1-365 days; results are capped at 50 rows. I will refuse cross-org reads.`,
+    body: `I have read-only tools that query the live VNDRLY database scoped to your account. Available lookups: (1) query_tickets — list or count tickets by status / vendor / site / date window. (2) query_field_metrics — completion rate, kickback rate, average on-site minutes, odometer miles, GPS trail counts. (3) query_vendor_performance — partner ratings (1-5) and kickback rate. (4) query_gps_trail — GPS summary for one ticket. (5) query_visits — guest check-in counts at your sites. (6) query_invoice_summary — billed / paid / open / past-due totals. (7) query_sales_tax_by_state — sales tax collected by state for a period preset (ytd, this_year, last_year, etc.); optional state filter (e.g. TX). (8) query_nec1099_summary — year-to-date 1099-NEC payment totals per vendor/payer (same engine as Reports → 1099). Ticket/metric windows clamp to 1-365 days; row lists cap at 50. Field employees cannot run aggregate org metrics. I refuse cross-org reads. Bounded write: mark_notifications_read clears your bell badge when you ask.`,
   },
   {
     id: "metrics-collected",
@@ -34,13 +34,13 @@ export const KNOWLEDGE_DOCS: KnowledgeDoc[] = [
     id: "onboarding-partner",
     title: "Partner onboarding wizard",
     roles: ["partner", "admin"],
-    body: `New partners go through a 6-step wizard at /onboarding/partner: 1) Company basics (name, primary contact). 2) Branding (primary + accent colors, square + horizontal logo) — required. 3) First site (name, address, site code, geofence radius) — required. 4) Tax & Billing (federal + state tax IDs, physical + billing addresses) — required. 5) Preferences (hours of operation, default operating radius) — skippable. 6) Invite team — skippable. Skipped should-have steps appear in the dashboard's "Finish setup" card.`,
+    body: `Partner onboarding wizard at /onboarding/partner — 8 steps: 1) Company basics (legal name from signup). 2) Platform agreement (platform EULA — mandatory, cannot skip). 3) Branding (primary + accent colors, square + horizontal logo — optional). 4) First site (name, address, site code, geofence radius — required). 5) Tax & Billing (federal + state tax IDs, physical + billing addresses — required). 6) Preferences (notification defaults — skippable). 7) Invite team — skippable. 8) Done. Skipped optional steps appear in the dashboard "Finish setting up your account" card; resume with ?step=<key> deep links.`,
   },
   {
     id: "onboarding-vendor",
     title: "Vendor onboarding wizard",
     roles: ["vendor", "admin"],
-    body: `New vendors go through a 7-step wizard at /onboarding/vendor: 1) Company basics. 2) Tax IDs + addresses. 3) Service area + work types (which jobs you'll bid). 4) Compliance (insurance carrier, policy #, COI expiration, COI document upload). 5) Rates (hourly, daily OT hours, weekly OT hours, OT multiplier, 1099 e-delivery consent). 6) Branding (vendor logo + primary color) — skippable. 7) First field employee (name, email, phone, hourly rate). Skipped steps appear in the dashboard's "Finish setup" card.`,
+    body: `Vendor onboarding wizard at /onboarding/vendor — 9 steps: 1) Company basics. 2) Platform agreement (platform EULA — mandatory). 3) Branding (logo + primary color — skippable). 4) Tax IDs + addresses (required). 5) Service area + work types (operating radius miles + catalog work type selections — required). 6) Compliance (insurance carrier, policy #, COI expiration, COI upload — required). 7) Rates (hourly rate, daily OT hours, weekly OT hours, OT multiplier, 1099 e-delivery consent — required). 8) First field employee (name, email — required). 9) Done. Skipped optional steps appear on the dashboard Finish setup card.`,
   },
   {
     id: "onboarding-field",
@@ -107,8 +107,8 @@ export const KNOWLEDGE_DOCS: KnowledgeDoc[] = [
   {
     id: "hotlist",
     title: "Hotlist (jobs in flight)",
-    roles: ["partner", "admin"],
-    body: `The Hotlist (sidebar) is a focused live view of in-flight jobs across all your sites — typically what dispatchers and supervisors watch during the day. Group by status, site, or vendor. Clicking a row opens the underlying ticket.`,
+    roles: ["partner", "vendor", "admin"],
+    body: `The Hotlist is a live jobs panel on the Dashboard (/) — not a separate sidebar link. Partners and admins use it to watch open Hotlist marketplace jobs and in-flight work across sites. Vendors see matching jobs they can bid on (filtered by service area and catalog work types). Click a row to open the job or underlying ticket.`,
   },
   // ===================== CREW + LOCATION =====================
   {
@@ -213,13 +213,25 @@ export const KNOWLEDGE_DOCS: KnowledgeDoc[] = [
     id: "catalog-admin",
     title: "Master catalog (admin)",
     roles: ["admin"],
-    body: `/catalog manages the master list of work types, equipment, and materials available across the platform. Vendors then opt into the work types they offer; partners pick from the same list when creating tickets.`,
+    body: `/catalog manages the master list of work types, equipment, and materials available across the platform. Vendors opt into work types in their Vendor catalog; partners pick from the same list when creating tickets and managing Partner Catalog approvals. Open Catalog Health from the catalog page (/catalog-health) to find platform work types with no vendor coverage, vendor selections missing prices, or site assignments without a catalog row.`,
+  },
+  {
+    id: "catalog-health",
+    title: "Catalog Health (admin)",
+    roles: ["admin"],
+    body: `/catalog-health is an admin diagnostics page (linked from /catalog) that surfaces catalog drift: platform work types with zero vendor selections, vendor catalog rows missing prices, and site assignments pointing at work types a vendor hasn't listed. Use it to clean up data before partners see missing services or bad Hotlist matches.`,
+  },
+  {
+    id: "partner-catalog",
+    title: "Partner product & service catalog",
+    roles: ["partner", "admin"],
+    body: `/partner-catalog is where partners review and approve vendor work types and pricing for their organization. Vendors publish services in their vendor catalog; partners approve them here before those services can be assigned at sites or bid on Hotlist jobs. Partner admins manage the catalog; members can view it.`,
   },
   {
     id: "vendor-catalog",
     title: "Vendor catalog",
     roles: ["vendor"],
-    body: `/vendor-catalog is your vendor's selection of work types from the master catalog plus per-partner pricing overrides. Toggle which work types you offer and what your rate is for each partner.`,
+    body: `/vendor-catalog is your vendor's authoritative service list (vendor_work_types): which work types you offer, your rates, and per-partner pricing overrides. This catalog drives site assignments, Hotlist job visibility, and partner approvals. Toggle work types on and set pricing — each partner approves your selections in their Partner Catalog before you can be assigned at their sites.`,
   },
   // ===================== ANALYTICS + COMMS =====================
   // Split per-persona so the role-gating lint can prove each URL is

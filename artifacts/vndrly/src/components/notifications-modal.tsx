@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link } from "wouter";
+import { useEffect, useMemo, useState, type ButtonHTMLAttributes } from "react";
+import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -15,6 +15,21 @@ import {
   CalendarX,
   Star,
   BatteryLow,
+  MessageSquare,
+  AtSign,
+  Mic,
+  StickyNote,
+  TimerOff,
+  CheckCircle,
+  XCircle,
+  RotateCcw,
+  Banknote,
+  Unlock,
+  HandCoins,
+  UserCheck,
+  LogIn,
+  LogOut,
+  Plug,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -26,19 +41,43 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
 import { notificationsApi, type NotificationRow } from "@/lib/notifications-api";
+import { buildNotificationMailtoUrl } from "@/lib/notification-mailto";
 import { useRateLimitGate } from "@/hooks/use-rate-limit-gate";
 import { cn } from "@/lib/utils";
 import { PILL_HEIGHT_CLASS, PILL_MIN_HEIGHT_CLASS } from "@/lib/pill-doctrine";
+import { useBrand } from "@/hooks/use-brand";
+import { portalDisplayLogo } from "@/lib/portal-branding";
+import { VNDRLY_LOGO_SQUARE } from "@/lib/vndrly-brand-assets";
+import { notificationsModalTheme, type NotificationsModalTheme } from "@/components/notifications-modal-tokens";
+import { useTheme } from "@/hooks/use-theme";
 
-const CATEGORY_IDS = ["all", "tickets", "hotlist", "compliance", "crew", "visitor", "system"] as const;
+const CATEGORY_IDS = ["all", "tickets", "hotlist", "compliance", "crew", "comments", "visitor", "system"] as const;
 
 const TYPE_META: Record<string, { Icon: LucideIcon; labelKey: string }> = {
   ticket_assigned: { Icon: Briefcase, labelKey: "notifications.types.ticket_assigned" },
+  ticket_kicked_back: { Icon: RotateCcw, labelKey: "notifications.types.ticket_kicked_back" },
+  ticket_rejected: { Icon: XCircle, labelKey: "notifications.types.ticket_rejected" },
+  ticket_approved: { Icon: CheckCircle, labelKey: "notifications.types.ticket_approved" },
+  funds_dispersed: { Icon: Banknote, labelKey: "notifications.types.funds_dispersed" },
+  ticket_pending_long: { Icon: Clock, labelKey: "notifications.types.ticket_pending_long" },
+  ticket_inactive: { Icon: TimerOff, labelKey: "notifications.types.ticket_inactive" },
+  ticket_note_added: { Icon: StickyNote, labelKey: "notifications.types.ticket_note_added" },
+  ticket_unblocked: { Icon: Unlock, labelKey: "notifications.types.ticket_unblocked" },
+  direct_assignment_offered: { Icon: Briefcase, labelKey: "notifications.types.direct_assignment_offered" },
+  direct_assignment_committed: { Icon: CheckCircle, labelKey: "notifications.types.direct_assignment_committed" },
+  direct_assignment_passed: { Icon: XCircle, labelKey: "notifications.types.direct_assignment_passed" },
+  direct_assignment_cancelled: { Icon: XCircle, labelKey: "notifications.types.direct_assignment_cancelled" },
   workflow_nudge: { Icon: BellRing, labelKey: "notifications.types.workflow_nudge" },
   crew_added: { Icon: UserPlus, labelKey: "notifications.types.crew_added" },
   schedule_changed: { Icon: CalendarClock, labelKey: "notifications.types.schedule_changed" },
   crew_removed: { Icon: UserMinus, labelKey: "notifications.types.crew_removed" },
+  crew_punch_in: { Icon: LogIn, labelKey: "notifications.types.crew_punch_in" },
+  crew_punch_out: { Icon: LogOut, labelKey: "notifications.types.crew_punch_out" },
+  ptt_message: { Icon: Mic, labelKey: "notifications.types.ptt_message" },
   hotlist_match: { Icon: Flame, labelKey: "notifications.types.hotlist_match" },
+  bid_placed: { Icon: HandCoins, labelKey: "notifications.types.bid_placed" },
+  bid_updated: { Icon: HandCoins, labelKey: "notifications.types.bid_updated" },
+  bid_declined: { Icon: XCircle, labelKey: "notifications.types.bid_declined" },
   bid_outbid: { Icon: TrendingDown, labelKey: "notifications.types.bid_outbid" },
   job_awarded: { Icon: Trophy, labelKey: "notifications.types.job_awarded" },
   cert_expiring: { Icon: CalendarClock, labelKey: "notifications.types.cert_expiring" },
@@ -46,7 +85,20 @@ const TYPE_META: Record<string, { Icon: LucideIcon; labelKey: string }> = {
   long_checkin: { Icon: Clock, labelKey: "notifications.types.long_checkin" },
   low_battery: { Icon: BatteryLow, labelKey: "notifications.types.low_battery" },
   rating_received: { Icon: Star, labelKey: "notifications.types.rating_received" },
+  oa_connection_revoked: { Icon: Plug, labelKey: "notifications.types.oa_connection_revoked" },
+  oa_connection_expiring: { Icon: Plug, labelKey: "notifications.types.oa_connection_expiring" },
+  visitor_checked_in: { Icon: UserCheck, labelKey: "notifications.types.visitor_checked_in" },
+  visitor_checked_out: { Icon: UserCheck, labelKey: "notifications.types.visitor_checked_out" },
+  comment_mention: { Icon: AtSign, labelKey: "notifications.types.comment_mention" },
+  comment_added: { Icon: MessageSquare, labelKey: "notifications.types.comment_added" },
+  hotlist_comment_added: { Icon: MessageSquare, labelKey: "notifications.types.hotlist_comment_added" },
 };
+
+const DEFAULT_TYPE_META = { Icon: BellRing, labelKey: "notifications.types.default" };
+
+function typeMetaFor(type: string) {
+  return TYPE_META[type] ?? DEFAULT_TYPE_META;
+}
 
 function useTimeAgo() {
   const { t } = useTranslation();
@@ -63,6 +115,66 @@ function useTimeAgo() {
   };
 }
 
+type FlatBubbleTone = "brand" | "grey" | "danger";
+
+function flatBubbleToneClass(theme: NotificationsModalTheme, tone: FlatBubbleTone) {
+  if (tone === "brand") return theme.flatActionBrandClassName;
+  if (tone === "danger") return theme.flatActionDangerClassName;
+  return theme.flatActionGreyClassName;
+}
+
+function FlatBubbleButton({
+  theme,
+  tone = "grey",
+  className,
+  ...props
+}: ButtonHTMLAttributes<HTMLButtonElement> & {
+  theme: NotificationsModalTheme;
+  tone?: FlatBubbleTone;
+}) {
+  return (
+    <button
+      type="button"
+      className={cn(
+        theme.flatActionBaseClassName,
+        flatBubbleToneClass(theme, tone),
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+function FlatBubbleLink({
+  theme,
+  tone = "brand",
+  className,
+  ...props
+}: React.AnchorHTMLAttributes<HTMLAnchorElement> & {
+  theme: NotificationsModalTheme;
+  tone?: FlatBubbleTone;
+}) {
+  return (
+    <a
+      className={cn(
+        theme.flatActionBaseClassName,
+        flatBubbleToneClass(theme, tone),
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+function stopRowAction(e: React.MouseEvent) {
+  e.preventDefault();
+  e.stopPropagation();
+}
+
+function stopRowBubble(e: React.MouseEvent) {
+  e.stopPropagation();
+}
+
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -72,6 +184,11 @@ export default function NotificationsModal({ open, onOpenChange }: Props) {
   const { t } = useTranslation();
   const timeAgo = useTimeAgo();
   const { user } = useAuth();
+  const brand = useBrand();
+  const displayLogo = portalDisplayLogo(brand, VNDRLY_LOGO_SQUARE);
+  const { resolved: themeResolved } = useTheme();
+  const modalTheme = notificationsModalTheme(themeResolved);
+  const [, navigate] = useLocation();
   const qc = useQueryClient();
   const [activeTab, setActiveTab] = useState<string>("all");
   const categories = CATEGORY_IDS.map((id) => ({ id, label: t(`notifications.categories.${id}`) }));
@@ -127,6 +244,22 @@ export default function NotificationsModal({ open, onOpenChange }: Props) {
     },
   });
 
+  const markUnread = useMutation({
+    mutationFn: (id: number) => notificationsApi.markUnread(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["notifications", "count", user?.userId] });
+      qc.invalidateQueries({ queryKey: ["notifications", "list", user?.userId] });
+    },
+  });
+
+  const deleteNotification = useMutation({
+    mutationFn: (id: number) => notificationsApi.delete(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["notifications", "count", user?.userId] });
+      qc.invalidateQueries({ queryKey: ["notifications", "list", user?.userId] });
+    },
+  });
+
   const markAllRead = useMutation({
     mutationFn: () => notificationsApi.markAllRead(),
     onSuccess: () => {
@@ -141,31 +274,43 @@ export default function NotificationsModal({ open, onOpenChange }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         bare
-        className="w-[min(100vw-2rem,42rem)] max-h-[min(100vh-2rem,40rem)] p-0"
+        className={modalTheme.shellClassName}
         data-testid="modal-notifications"
       >
-        <div className="flex min-h-0 flex-1 flex-col">
-          <DialogHeader className="border-b px-4 py-3 pr-12">
-            <div className="flex items-center justify-between gap-3">
-              <DialogTitle className="text-base">{t("notifications.heading")}</DialogTitle>
-              <div className="flex items-center gap-2">
-                <Link
-                  href="/notifications/preferences"
-                  className="text-xs text-muted-foreground hover:underline"
-                  onClick={() => onOpenChange(false)}
+        <div className="relative z-10 flex min-h-0 flex-1 flex-col">
+          <DialogHeader className={modalTheme.toolbarClassName}>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex min-w-0 items-center gap-2 sm:gap-2.5">
+                <img
+                  src={displayLogo}
+                  alt={brand.name ? `${brand.name} logo` : "VNDRLY logo"}
+                  className={modalTheme.logoClassName}
+                  draggable={false}
+                  data-testid="modal-notifications-logo"
+                />
+                <DialogTitle className={modalTheme.titleClassName}>{t("notifications.heading")}</DialogTitle>
+              </div>
+              <div className="flex shrink-0 flex-wrap items-center gap-1.5">
+                <FlatBubbleButton
+                  theme={modalTheme}
+                  tone="brand"
+                  onClick={() => {
+                    onOpenChange(false);
+                    navigate("/notifications/preferences");
+                  }}
                   data-testid="link-modal-notification-prefs"
                 >
                   {t("notifications.settings")}
-                </Link>
+                </FlatBubbleButton>
                 {(list?.some((n) => !n.isRead) || count > 0) && (
-                  <button
-                    type="button"
-                    className="text-xs text-primary hover:underline"
+                  <FlatBubbleButton
+                    theme={modalTheme}
+                    tone="brand"
                     onClick={() => markAllRead.mutate()}
                     data-testid="button-modal-mark-all-read"
                   >
                     {t("notifications.markAllRead")}
-                  </button>
+                  </FlatBubbleButton>
                 )}
               </div>
             </div>
@@ -173,7 +318,7 @@ export default function NotificationsModal({ open, onOpenChange }: Props) {
 
           {rateLimited && (
             <div
-              className="flex items-center gap-1.5 border-b bg-amber-50 px-4 py-1.5 text-[11px] text-amber-800"
+              className={modalTheme.rateLimitedBannerClassName}
               data-testid="modal-notifications-slow-down"
               role="status"
             >
@@ -186,8 +331,8 @@ export default function NotificationsModal({ open, onOpenChange }: Props) {
             </div>
           )}
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex min-h-0 flex-1 flex-col">
-            <TabsList className="h-auto w-full justify-start gap-1.5 overflow-x-auto rounded-none border-b bg-transparent px-3 py-2">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className={cn("flex min-h-0 flex-1 flex-col", modalTheme.bodySurfaceClassName)}>
+            <TabsList className={modalTheme.tabsListClassName}>
               {categories.map((c) => {
                 const items = grouped[c.id] ?? [];
                 const unread = items.filter((n) => !n.isRead).length;
@@ -198,9 +343,9 @@ export default function NotificationsModal({ open, onOpenChange }: Props) {
                     className={cn(
                       PILL_HEIGHT_CLASS,
                       PILL_MIN_HEIGHT_CLASS,
-                      "group shrink-0 rounded-full border px-3 text-xs font-normal shadow-none",
-                      "data-[state=active]:!border-[color:var(--brand-primary)] data-[state=active]:!bg-[color:var(--brand-primary)] data-[state=active]:!text-white data-[state=active]:drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.55)]",
-                      "data-[state=inactive]:!border-[color:var(--brand-primary)]/35 data-[state=inactive]:!bg-[color:color-mix(in_srgb,var(--brand-primary)_18%,white)] data-[state=inactive]:!text-[color:var(--brand-primary)]",
+                      modalTheme.tabTriggerExtraClassName,
+                      modalTheme.tabTriggerActiveClassName,
+                      modalTheme.tabTriggerInactiveClassName,
                     )}
                     data-testid={`modal-tab-notif-${c.id}`}
                   >
@@ -209,7 +354,7 @@ export default function NotificationsModal({ open, onOpenChange }: Props) {
                       <span
                         className={cn(
                           "ml-1 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[9px] font-normal",
-                          "bg-[color:var(--brand-primary)] text-white group-data-[state=active]:bg-white/30",
+                          modalTheme.tabUnreadBadgeClassName,
                         )}
                       >
                         {unread}
@@ -223,7 +368,7 @@ export default function NotificationsModal({ open, onOpenChange }: Props) {
             {categories.map((c) => {
               const items = grouped[c.id] ?? [];
               return (
-                <TabsContent key={c.id} value={c.id} className="m-0 min-h-0 flex-1 overflow-y-auto">
+                <TabsContent key={c.id} value={c.id} className={modalTheme.tabsContentClassName}>
                   {!list ? (
                     <p className="px-4 py-8 text-center text-xs text-muted-foreground">
                       {t("notifications.loading")}
@@ -234,11 +379,11 @@ export default function NotificationsModal({ open, onOpenChange }: Props) {
                     </p>
                   ) : (
                     items.map((n) => {
-                      const meta = TYPE_META[n.type];
-                      const Icon = meta?.Icon;
+                      const meta = typeMetaFor(n.type);
+                      const Icon = meta.Icon;
                       const inner = (
                         <div
-                          className={`cursor-pointer border-b px-4 py-3 hover:bg-muted/40 ${!n.isRead ? "bg-amber-50" : ""}`}
+                          className={modalTheme.rowHoverClassName}
                           onClick={() => {
                             if (!n.isRead) markRead.mutate(n.id);
                             if (n.link) onOpenChange(false);
@@ -247,29 +392,64 @@ export default function NotificationsModal({ open, onOpenChange }: Props) {
                         >
                           <div className="flex items-start gap-2">
                             {!n.isRead && (
-                              <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-amber-500" />
+                              <span className={cn("mt-1 h-2 w-2 shrink-0 rounded-full", modalTheme.unreadDotClassName)} />
                             )}
-                            <div className="min-w-0 flex-1">
-                              {meta && Icon && (
+                            <div className="flex min-w-0 flex-1 items-start justify-between gap-2">
+                              <div className="min-w-0 flex-1">
                                 <span
-                                  className={`mb-1 inline-flex h-[23px] items-center gap-1 rounded-full px-3 text-xs font-normal uppercase tracking-wide ${
+                                  className={cn(
+                                    "mb-1 inline-flex max-w-full h-[23px] items-center gap-1 rounded-full px-2 text-[10px] font-normal uppercase tracking-wide sm:px-3 sm:text-xs",
                                     !n.isRead
-                                      ? "bg-amber-500 text-white"
-                                      : "bg-muted text-muted-foreground"
-                                  }`}
+                                      ? modalTheme.unreadTypeBadgeClassName
+                                      : modalTheme.readTypeBadgeClassName,
+                                  )}
                                   data-testid={`modal-notification-${n.id}-type-${n.type}`}
                                 >
                                   <Icon className="h-3 w-3" />
                                   {t(meta.labelKey)}
                                 </span>
-                              )}
-                              <p className="text-sm font-medium">{n.title}</p>
-                              {n.body && (
-                                <p className="mt-0.5 text-xs text-muted-foreground">{n.body}</p>
-                              )}
-                              <p className="mt-0.5 text-[10px] text-muted-foreground">
-                                {timeAgo(n.createdAt)}
-                              </p>
+                                <p className="text-sm font-medium">{n.title}</p>
+                                {n.body && (
+                                  <p className="mt-0.5 text-xs text-muted-foreground">{n.body}</p>
+                                )}
+                                <p className="mt-0.5 text-[10px] text-muted-foreground">
+                                  {timeAgo(n.createdAt)}
+                                </p>
+                              </div>
+                              <div className="flex shrink-0 flex-wrap items-start justify-end gap-1.5">
+                                <FlatBubbleButton
+                                  theme={modalTheme}
+                                  tone="grey"
+                                  onClick={(e) => {
+                                    stopRowAction(e);
+                                    if (n.isRead) markUnread.mutate(n.id);
+                                    else markRead.mutate(n.id);
+                                  }}
+                                  data-testid={`modal-notification-${n.id}-toggle-read`}
+                                >
+                                  {n.isRead ? t("notifications.markUnread") : t("notifications.markRead")}
+                                </FlatBubbleButton>
+                                <FlatBubbleButton
+                                  theme={modalTheme}
+                                  tone="danger"
+                                  onClick={(e) => {
+                                    stopRowAction(e);
+                                    deleteNotification.mutate(n.id);
+                                  }}
+                                  data-testid={`modal-notification-${n.id}-delete`}
+                                >
+                                  {t("notifications.delete")}
+                                </FlatBubbleButton>
+                                <FlatBubbleLink
+                                  theme={modalTheme}
+                                  tone="brand"
+                                  href={buildNotificationMailtoUrl(n, t(meta.labelKey))}
+                                  onClick={stopRowBubble}
+                                  data-testid={`modal-notification-${n.id}-send-to`}
+                                >
+                                  {t("notifications.sendTo")}
+                                </FlatBubbleLink>
+                              </div>
                             </div>
                           </div>
                         </div>

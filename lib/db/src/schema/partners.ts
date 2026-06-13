@@ -1,7 +1,8 @@
-import { pgTable, text, serial, timestamp, integer, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, uniqueIndex, foreignKey } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
+import { usersTable } from "./users";
 
 export const partnersTable = pgTable("partners", {
   id: serial("id").primaryKey(),
@@ -42,6 +43,10 @@ export const partnersTable = pgTable("partners", {
   // text part uses the body verbatim.
   email1099Subject: text("email_1099_subject"),
   email1099Body: text("email_1099_body"),
+  platformEulaAcceptedAt: timestamp("platform_eula_accepted_at", { withTimezone: true }),
+  platformEulaVersion: text("platform_eula_version"),
+  platformEulaHash: text("platform_eula_hash"),
+  platformEulaAcceptedByUserId: integer("platform_eula_accepted_by_user_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (t) => ({
   // Case-insensitive uniqueness on the trimmed display name. Mirrors
@@ -56,6 +61,11 @@ export const partnersTable = pgTable("partners", {
   uniqCanonicalName: uniqueIndex("partners_canonical_name_unique").on(
     sql`lower(btrim(${t.name}))`,
   ),
+  platformEulaAcceptedByUserFk: foreignKey({
+    name: "partners_platform_eula_accepted_by_user_id_fkey",
+    columns: [t.platformEulaAcceptedByUserId],
+    foreignColumns: [usersTable.id],
+  }).onDelete("set null"),
 }));
 
 export const insertPartnerSchema = createInsertSchema(partnersTable).omit({ id: true, createdAt: true });
