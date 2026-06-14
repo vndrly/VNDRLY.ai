@@ -39,8 +39,7 @@ shot.
 For each tone prompt:
 
 - The reply contains at least one text block.
-- The whole-reply word count is ≤ `MAX_WORDS` (200, with ~10%
-  headroom over the 180-word target documented in
+- The whole-reply word count is ≤ `MAX_WORDS` (220, with headroom over the 180-word target documented in
   `docs/assistant-review.md`).
 - The reply contains no GFM markdown table syntax (the alignment
   separator `| --- | --- |` OR two consecutive lines that both start

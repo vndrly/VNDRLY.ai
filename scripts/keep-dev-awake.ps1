@@ -19,9 +19,19 @@ public static class VndrlyPower {
 "@
 
 # ES_CONTINUOUS | ES_SYSTEM_REQUIRED — block system sleep while script runs.
-$ES_CONTINUOUS = 0x80000000
-$ES_SYSTEM_REQUIRED = 0x00000001
+# Use decimal [uint32] literals: hex 0x80000000 overflows signed int32 in PS 5.1
+# before the cast and throws "too large or too small for UInt32".
+$ES_CONTINUOUS = [uint32]2147483648
+$ES_SYSTEM_REQUIRED = [uint32]1
 $KEEP_AWAKE_FLAGS = $ES_CONTINUOUS -bor $ES_SYSTEM_REQUIRED
+
+function Set-KeepAwake {
+  try {
+    [void][VndrlyPower]::SetThreadExecutionState($KEEP_AWAKE_FLAGS)
+  } catch {
+    # Non-fatal — auto-restart of :5173/:8080 matters more than anti-sleep.
+  }
+}
 
 $Repo = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $ensureScript = Join-Path $Repo "scripts/ensure-local-dev.ps1"
@@ -60,7 +70,7 @@ Write-Host ""
 
 & $ensureScript
 while ($true) {
-  [void][VndrlyPower]::SetThreadExecutionState($KEEP_AWAKE_FLAGS)
+  Set-KeepAwake
 
   if (-not (Test-DevHealthy)) {
     $stamp = Get-Date -Format "HH:mm:ss"
