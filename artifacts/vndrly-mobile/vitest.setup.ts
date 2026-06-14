@@ -324,6 +324,10 @@ vi.mock("expo-file-system/legacy", () => ({
   writeAsStringAsync: vi.fn(async () => undefined),
 }));
 
+vi.mock("@/components/ScheduleTicketPanel", () => ({
+  default: () => null,
+}));
+
 vi.mock("expo-sharing", () => ({
   isAvailableAsync: vi.fn(async () => true),
   shareAsync: vi.fn(async () => undefined),

@@ -13,7 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import ScreenSafeArea from "@/components/ScreenSafeArea";
 
 import EmployeePortalLoginPanel from "@/components/EmployeePortalLoginPanel";
 import EmployeeCertificationsPanel from "@/components/EmployeeCertificationsPanel";
@@ -124,16 +124,24 @@ export default function EmployeeEditScreen() {
 
   if (loading || !form) {
     return (
-      <SafeAreaView style={[styles.flex, { backgroundColor: colors.background }]}>
+      <ScreenSafeArea
+        style={[styles.flex, { backgroundColor: colors.background }]}
+        edges={["bottom"]}
+        includeTopGap={false}
+      >
         <Stack.Screen options={{ headerShown: false }} />
         <InPageHeader title={t("employees.editTitle")} />
         <ActivityIndicator color={colors.primary} style={{ marginTop: 24 }} />
-      </SafeAreaView>
+      </ScreenSafeArea>
     );
   }
 
   return (
-    <SafeAreaView style={[styles.flex, { backgroundColor: colors.background }]}>
+    <ScreenSafeArea
+      style={[styles.flex, { backgroundColor: colors.background }]}
+      edges={["bottom"]}
+      includeTopGap={false}
+    >
       <Stack.Screen options={{ headerShown: false }} />
       <InPageHeader title={t("employees.editTitle")} />
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
@@ -187,7 +195,7 @@ export default function EmployeeEditScreen() {
           </LayeredPillButton>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </ScreenSafeArea>
   );
 }
 

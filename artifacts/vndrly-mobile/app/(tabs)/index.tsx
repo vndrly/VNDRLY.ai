@@ -17,7 +17,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useScreenTopPadding } from "@/lib/screen-insets";
 
 import { formatTicketTrackingNumber } from "@workspace/db/format";
 
@@ -34,6 +34,18 @@ import { useBrand } from "@/hooks/use-brand";
 import { useColors } from "@/hooks/useColors";
 import { useTicketsRateLimitGate } from "@/hooks/use-tickets-rate-limit-gate";
 import { apiFetch } from "@/lib/api";
+import {
+  fetchPortalTicketsForHome,
+  type MobileOpenTicket,
+} from "@/lib/portal-tickets";
+import {
+  isFieldEmployeeUser,
+  isForemanEmployeeUser,
+  isOfficeMobileViewer,
+  isPartnerOfficeUser,
+  isVendorOfficeUser,
+  isAdminOfficeUser,
+} from "@/lib/mobile-viewer";
 import { VNDRLY_LOGO_SQUARE } from "@/lib/vndrly-brand-assets";
 import { setHomeBadge } from "@/lib/tabBadges";
 import { registerForPushNotifications } from "@/lib/push";
@@ -47,35 +59,9 @@ import {
   ticketStatusLabel,
   ticketStatusPillStyle,
 } from "@/lib/ticketStatusLabels";
-import { PILL_CHIP_LAYOUT, PILL_TEXT } from "@/lib/pill-doctrine";
+import { PILL_CHIP_LAYOUT, PILL_TEXT, SCREEN_SUBTITLE_TEXT, SCREEN_TITLE_TEXT, TEXT_SHADOW } from "@/lib/pill-doctrine";
 
-type OpenTicket = {
-  id: number;
-  status: string;
-  siteLocationId: number | null;
-  siteName: string | null;
-  partnerName: string | null;
-  workTypeName: string | null;
-  // Vendor-admin viewers (Task: expand mobile for vendor admins) need
-  // to see WHICH field employee owns each open ticket so they can
-  // survey team activity at a glance. Field-employee viewers don't
-  // surface this field — every row is theirs by definition.
-  fieldEmployeeId: number | null;
-  fieldEmployeeFirstName: string | null;
-  fieldEmployeeLastName: string | null;
-  crewNames?: string[];
-  createdAt: string;
-  // Task #605: drives the 7-day inactivity escalation in the status
-  // pill so a draft / in_progress / pending_review / kicked_back
-  // ticket that's gone cold turns amber on mobile, matching the web
-  // dispatcher view.
-  updatedAt: string | null;
-  // Task #51 — count of unread comments on this ticket's thread for
-  // the signed-in viewer. Drives the home-screen unread badge that
-  // clears once they tap into the ticket detail (which marks the
-  // thread as seen) and the home screen re-fetches.
-  unreadCommentCount: number;
-};
+type OpenTicket = MobileOpenTicket;
 
 export default function HomeScreen() {
   const colors = useColors();
@@ -92,7 +78,7 @@ export default function HomeScreen() {
       throw new Error("switchContext not provided");
     },
   } = useAuth();
-  const insets = useSafeAreaInsets();
+  const topPadding = useScreenTopPadding();
   const [tickets, setTickets] = useState<OpenTicket[]>([]);
   // Task #498 — recent history rows used to broaden adjacent-ticket CTA
   // eligibility to "currently assigned to OR recently checked-in to a
@@ -209,7 +195,19 @@ export default function HomeScreen() {
       setFallbackOrgName(null);
       return;
     }
-    if (me?.role !== "field_employee") return;
+    if (me?.role !== "field_employee") {
+      let cancelled = false;
+      apiFetch<{ vendorName?: string | null; partnerName?: string | null }>("/api/field/me")
+        .then((fm) => {
+          if (!cancelled) {
+            setFallbackOrgName(fm?.vendorName ?? fm?.partnerName ?? null);
+          }
+        })
+        .catch(() => undefined);
+      return () => {
+        cancelled = true;
+      };
+    }
     let cancelled = false;
     apiFetch<{ vendorName: string | null }>("/api/field/me")
       .then((fm) => {
@@ -232,10 +230,13 @@ export default function HomeScreen() {
   // vendor admins log in to see all open tickets across their team
   // (read-only). Use this flag everywhere those field-only affordances
   // would otherwise create dead ends or 401 errors.
-  const isFieldEmployee = me?.role === "field_employee";
-  const isForemanEmployee =
-    isFieldEmployee &&
-    (me?.vendorRole === "foreman" || me?.vendorRole === "both");
+  const isFieldEmployee = isFieldEmployeeUser(me);
+  const isForemanEmployee = isForemanEmployeeUser(me);
+  const isOfficeViewer = isOfficeMobileViewer(me);
+  const isPartnerViewer = isPartnerOfficeUser(me);
+  const isVendorOfficeViewer = isVendorOfficeUser(me);
+  const isAdminViewer = isAdminOfficeUser(me);
+  const usesPortalTicketList = isOfficeViewer;
   // Direct assignments are vendor-side (offered to a vendor org). Surface
   // for any user whose active org is a vendor (admin, member, or field).
   const isVendorViewer = orgType === "vendor";
@@ -336,7 +337,9 @@ export default function HomeScreen() {
         const openTicketsPath = isForemanEmployee
           ? "/api/field/open-tickets?vendorWide=1"
           : "/api/field/open-tickets";
-        const data = await apiFetch<OpenTicket[]>(openTicketsPath);
+        const data = usesPortalTicketList
+          ? await fetchPortalTicketsForHome()
+          : await apiFetch<OpenTicket[]>(openTicketsPath);
         setTickets(data || []);
         // Task #691: a successful load means we're no longer in an
         // error state — clear so the gate hook doesn't re-fire on
@@ -400,7 +403,7 @@ export default function HomeScreen() {
       void loadPendingDirect();
       return ok;
     },
-    [loadUnread, loadPendingDirect, loadPendingSchedule, isFieldEmployee, isForemanEmployee, t],
+    [loadUnread, loadPendingDirect, loadPendingSchedule, isFieldEmployee, isForemanEmployee, usesPortalTicketList, t],
   );
 
   // Task #668 — surgical per-row refresh used by the foreground push
@@ -678,7 +681,7 @@ export default function HomeScreen() {
       <View
         style={[
           styles.brandRow,
-          { borderBottomColor: colors.border, paddingTop: insets.top + 8 },
+          { borderBottomColor: colors.border, paddingTop: topPadding },
         ]}
       >
         <View style={styles.brandLeft}>
@@ -881,9 +884,27 @@ export default function HomeScreen() {
       ) : (
         <>
           <View style={styles.headerRow}>
-            <Text style={[styles.heading, { color: colors.foreground }]} numberOfLines={1}>
-              {t("tickets.title")}
-            </Text>
+            <View style={{ flex: 1, marginRight: 8 }}>
+              <Text style={[styles.heading, { color: colors.foreground }]} numberOfLines={1}>
+                {isPartnerViewer
+                  ? t("partnerHome.openTickets")
+                  : isVendorOfficeViewer
+                    ? t("vendorHome.openTickets")
+                    : t("tickets.title")}
+              </Text>
+              {isOfficeViewer ? (
+                <Text
+                  style={[styles.officeSubtitle, { color: colors.mutedForeground }]}
+                  numberOfLines={2}
+                >
+                  {isPartnerViewer
+                    ? t("partnerHome.subtitle")
+                    : isVendorOfficeViewer
+                      ? t("vendorHome.subtitle")
+                      : t("adminHome.subtitle")}
+                </Text>
+              ) : null}
+            </View>
             <View style={styles.freshnessRow}>
               <FreshnessPill
                 lastLoadedAt={lastLoadedAt}
@@ -895,7 +916,42 @@ export default function HomeScreen() {
             </View>
           </View>
           <View style={styles.actionsRow}>
-            <View style={{ flex: 1 }} />
+            <LayeredPillButton
+              testID="button-tickets-history"
+              onPress={() => router.push("/history")}
+              inactive
+              height={40}
+              style={styles.officeActionPill}
+            >
+              <Feather name="clock" size={14} color="#ffffff" style={styles.btnIconShadow} />
+              <Text style={[styles.newBtnText, { color: "#ffffff" }]} numberOfLines={1}>
+                {t("tickets.history")}
+              </Text>
+            </LayeredPillButton>
+            <LayeredPillButton
+              testID="button-new-ticket"
+              onPress={() => router.push("/new-ticket")}
+              height={40}
+              style={styles.officeActionPill}
+            >
+              <Feather name="plus" size={16} color="#ffffff" style={styles.btnIconShadow} />
+              <Text style={[styles.newBtnText, { color: "#ffffff" }]} numberOfLines={1}>
+                {t("tickets.newTicket")}
+              </Text>
+            </LayeredPillButton>
+            {isPartnerViewer || isAdminViewer ? (
+              <LayeredPillButton
+                testID="button-add-site"
+                onPress={() => router.push("/add-site-location")}
+                height={40}
+                style={styles.officeActionPill}
+              >
+                <Feather name="map-pin" size={14} color="#ffffff" style={styles.btnIconShadow} />
+                <Text style={[styles.newBtnText, { color: "#ffffff" }]} numberOfLines={1}>
+                  {t("siteLocations.addSite")}
+                </Text>
+              </LayeredPillButton>
+            ) : null}
             <LayeredPillButton
               onPress={onHeaderRefresh}
               disabled={headerRefreshing || refreshing || rateLimited}
@@ -1276,14 +1332,14 @@ export default function HomeScreen() {
                 </Text>
                 <Text style={[styles.cardMeta, { color: colors.mutedForeground }]}>
                   {item.workTypeName || t("tickets.workTypeFallbackPlaceholder")}
-                  {item.partnerName
-                    ? t("tickets.partnerSuffix", { partner: item.partnerName })
-                    : ""}
+                  {isPartnerViewer && item.vendorName
+                    ? t("tickets.vendorSuffix", { vendor: item.vendorName })
+                    : item.partnerName
+                      ? t("tickets.partnerSuffix", { partner: item.partnerName })
+                      : ""}
                 </Text>
-                {/* Vendor admins need to see WHICH field employee owns
-                    each ticket; field-employee viewers don't (every
-                    row is theirs). */}
-                {!isFieldEmployee || isForemanEmployee ? (
+                {/* Office viewers see crew / assignee context on each row. */}
+                {isOfficeViewer || isForemanEmployee ? (
                   crewLine ? (
                   <Text
                     style={[styles.cardMeta, { color: colors.mutedForeground }]}
@@ -1588,16 +1644,19 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_700Bold",
     fontSize: 18,
     letterSpacing: 1,
+    ...SCREEN_TITLE_TEXT,
   },
   brandName: {
     fontFamily: "Inter_700Bold",
     fontSize: 16,
     marginTop: 2,
+    ...SCREEN_TITLE_TEXT,
   },
   brandVendor: {
     fontFamily: "Inter_400Regular",
     fontSize: 12,
     marginTop: 1,
+    ...SCREEN_SUBTITLE_TEXT,
   },
   orgRow: {
     flexDirection: "row",
@@ -1668,6 +1727,12 @@ const styles = StyleSheet.create({
   },
   freshnessRow: { flexDirection: "row", alignItems: "center" },
   heading: { fontFamily: "Inter_700Bold", fontSize: 22 },
+  officeSubtitle: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: 4,
+  },
   activeJobsHeader: {
     paddingHorizontal: 16,
     paddingTop: 12,
@@ -1684,6 +1749,10 @@ const styles = StyleSheet.create({
   },
   foremanPillFull: {
     flex: 1,
+  },
+  officeActionPill: {
+    flex: 1,
+    minWidth: 0,
   },
   simplePill: {
     flex: 1,
@@ -1747,6 +1816,7 @@ const styles = StyleSheet.create({
   actionsRow: {
     flexDirection: "row",
     alignItems: "center",
+    flexWrap: "wrap",
     gap: 8,
     paddingHorizontal: 16,
     paddingBottom: 8,
@@ -1766,19 +1836,13 @@ const styles = StyleSheet.create({
   newBtnText: {
     fontFamily: "Inter_400Regular",
     fontSize: 13,
-    textShadowColor: "rgba(0, 0, 0, 0.63)",
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
+    ...TEXT_SHADOW.deep,
   },
   // Feather icons render as Text glyphs from an icon font, so the same
   // textShadow* properties used on `newBtnText` apply cleanly here.
   // Keeping the shadow values identical means the icon and the label
   // sit on the same visual depth plane on the brand-colored pill.
-  btnIconShadow: {
-    textShadowColor: "rgba(0, 0, 0, 0.63)",
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
-  },
+  btnIconShadow: TEXT_SHADOW.deep,
   // Task #669: header refresh icon button.
   // Square-ish so the icon is centered; the border matches the
   // adjacent History button so the row reads as a coherent action

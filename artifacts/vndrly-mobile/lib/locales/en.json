@@ -78,6 +78,10 @@
     "forget": "Forget {{label}}",
     "eulaLink": "End User License Agreement"
   },
+  "contextPicker": {
+    "title": "Choose your organization",
+    "body": "You belong to multiple organizations. Pick one to start with — you can switch any time from your profile."
+  },
   "directAssignment": {
     "vendorInboxTitle": "Pending work offers ({{count}})",
     "commit": "Commit",
@@ -168,7 +172,9 @@
       "foremanLabel": "Foreman",
       "foremanHelp": "Suggested: you. Tap a teammate to assign someone else.",
       "foremanSelf": "Me",
-      "foremanSelfSuffix": "(you)"
+      "foremanSelfSuffix": "(you)",
+      "vendorLabel": "Vendor",
+      "pickVendor": "Pick a vendor before starting a ticket."
     },
     "errorLoadOpen": "Couldn't load your open tickets. Pull to refresh.",
     "errorLoadHistory": "Couldn't load your job history. Pull to refresh.",
@@ -288,7 +294,8 @@
     "unreadCommentsA11y": "{{count}} unread comments",
     "siteFallbackPlaceholder": "—",
     "workTypeFallbackPlaceholder": "—",
-    "partnerSuffix": " · {{partner}}"
+    "partnerSuffix": " · {{partner}}",
+    "vendorSuffix": " · {{vendor}}"
   },
   "ticketDetail": {
     "paymentDetails": "Payment Details",
@@ -341,6 +348,17 @@
       "failedBody": "Please try again.",
       "recent": "Recent nudges",
       "noMessage": "Status was {{status}}"
+    },
+    "flag": {
+      "title": "Flag ticket",
+      "help": "Flag this job for attention. Everyone on the ticket gets notified.",
+      "reasonPlaceholder": "Why flag this job? (optional)",
+      "reasonLabel": "Reason",
+      "submit": "Flag job",
+      "clear": "Clear flag",
+      "flaggedTitle": "Ticket flagged",
+      "flaggedBody": "The team has been notified.",
+      "clearedTitle": "Flag cleared"
     },
     "siteVisitSummary": {
       "title": "Site visit summary",
@@ -678,6 +696,9 @@
     "invalid_ticket_id": "That ticket id is invalid.",
     "ticket_not_found": "Ticket not found.",
     "ticket_en_route_invalid_state": "You can't mark this ticket en route in its current state.",
+    "ticket_on_location_invalid_state": "You can't mark this ticket on location in its current state.",
+    "ticket_not_submittable": "This ticket isn't ready to submit yet.",
+    "ticket_not_kickbackable": "Only submitted or approved tickets can be kicked back.",
     "ticket_not_awaiting_acceptance": "This invite has already been responded to.",
     "ticket_state_changed": "Ticket state changed — please refresh and try again.",
     "ticket_not_checkinable": "This ticket can't be checked in right now.",
@@ -1274,6 +1295,18 @@
     "onShiftNow": "On shift now ({{count}})",
     "nobodyOnClock": "No crew are actively sharing location right now."
   },
+  "partnerMap": {
+    "title": "Site crew map",
+    "subtitle": "See who's on your sites and which vendor they're with — without visiting the field.",
+    "selectSite": "Site",
+    "allSites": "All sites",
+    "onSiteNow": "Near your sites ({{count}})",
+    "nobodyNearby": "No crews are sharing location near your sites right now."
+  },
+  "partnerSchedule": {
+    "empty": "No upcoming scheduled vendor work at your sites.",
+    "vendor": "Vendor: {{name}}"
+  },
   "crew": {
     "title": "Crew & Time",
     "crewOnSite": "Crew on Site",
@@ -1351,9 +1384,47 @@
     "noUnreadNotifications": "No unread notifications",
     "brandWordmark": "VNDRLY"
   },
+  "askv": {
+    "title": "AskV",
+    "subtitle": "Your VNDRLY guide — how-to, live lookups, and onboarding help.",
+    "greetingFallback": "there",
+    "greetingField": "Hi {{name}}! I can walk you through tickets, GPS, profile, and notifications on the field app. What can I help with?",
+    "greetingForeman": "Hi {{name}}! I can help with crew check-in, schedule, map, and ticket workflows. What do you need?",
+    "greetingPartner": "Hi {{name}}! Ask about sites, tickets, visitors, payables, and partner workflows.",
+    "greetingVendor": "Hi {{name}}! Ask about invoices, field employees, catalog, and vendor workflows.",
+    "greetingAdmin": "Hi {{name}}! Ask about platform setup, tickets, 1099, and admin workflows.",
+    "quickActionsLabel": "Quick actions",
+    "inputPlaceholder": "Ask anything about VNDRLY…",
+    "send": "Send",
+    "thinking": "Thinking…",
+    "usingTool": "Looking up {{tool}}…",
+    "clearTitle": "Clear conversation?",
+    "clearBody": "This deletes the chat history for this session.",
+    "clearConfirm": "Clear",
+    "errorGeneric": "The assistant is having trouble right now. Please try again.",
+    "quickActions": {
+      "fieldStatus": "Update ticket status",
+      "fieldPhoto": "Profile photo & certs",
+      "fieldGps": "Pause GPS tracking",
+      "foremanCrew": "Crew check-in/out",
+      "foremanSchedule": "Schedule tab help",
+      "foremanMap": "Crew map help",
+      "vendorOnboarding": "Finish vendor onboarding",
+      "vendorInvoices": "Open invoices",
+      "vendorEmployee": "Add field employee",
+      "partnerOnboarding": "Finish partner onboarding",
+      "partnerQr": "Print visitor QR",
+      "partnerStatement": "Run a statement",
+      "adminPartner": "Onboard a partner",
+      "adminUnlock": "Unlock a closed ticket",
+      "admin1099": "1099 e-delivery report"
+    }
+  },
   "tabs": {
+    "askv": "AskV",
     "home": "Home",
     "schedule": "Schedule",
+    "flagged": "Flagged",
     "crewMap": "Map",
     "crews": "Crews",
     "comms": "Comms",
@@ -1388,8 +1459,40 @@
     "pttSendFailed": "Could not send voice message.",
     "pttPlayFailed": "Could not play this clip."
   },
+  "vendorHome": {
+    "portal": "Vendor Portal",
+    "openTickets": "Team tickets",
+    "subtitle": "Monitor open jobs across your field team. Tap a ticket for details, comments, and approvals."
+  },
+  "partnerHome": {
+    "portal": "Partner Portal",
+    "openTickets": "Site tickets",
+    "subtitle": "Review active field work on your sites. Tap a ticket for status, vendor activity, and approvals."
+  },
+  "adminHome": {
+    "portal": "Admin Portal",
+    "subtitle": "Platform-wide open ticket overview. Use the web portal for full admin tools."
+  },
+  "siteLocations": {
+    "addSite": "Add site",
+    "nameLabel": "Site name",
+    "namePlaceholder": "e.g. Pad 12",
+    "addressLabel": "Address",
+    "addressPlaceholder": "Street address or legal description",
+    "useMyLocation": "Use my current location",
+    "coordsHint": "Location: {{lat}}, {{lng}}",
+    "createSite": "Create site",
+    "createdTitle": "Site created",
+    "createdBody": "The new site is available for assignments and tickets.",
+    "createFailed": "Could not create the site.",
+    "missingFields": "Enter a name, address, and location.",
+    "partnerRequired": "Partner context is required to add a site.",
+    "locationDenied": "Location permission is required to pin the site.",
+    "locationFailed": "Could not read your location."
+  },
   "scanScreen": {
     "cameraDenied": "Camera access is required to scan QR codes.",
+    "loadingPermission": "Checking camera access…",
     "grantPermission": "Grant Permission",
     "invalidQrTitle": "Invalid QR",
     "invalidQrBody": "Unrecognized QR code:\n{{data}}",
@@ -1616,5 +1719,11 @@
     "emailPasswordRequired": "Email required and password must be 8+ characters",
     "forcePasswordChange": "Require password change at next sign-in",
     "forcePasswordChangeHelp": "The employee must choose a new password before using the app or portal."
+  },
+  "flagged": {
+    "title": "Flagged jobs",
+    "subtitle": "Tickets flagged for attention.",
+    "empty": "No flagged tickets right now.",
+    "unknownSite": "Unknown site"
   }
 }

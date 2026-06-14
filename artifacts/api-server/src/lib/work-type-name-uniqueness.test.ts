@@ -95,7 +95,7 @@ describe.runIf(haveRealDb)("work_types.name canonical uniqueness", () => {
 
     await expectUniqueViolation(
       db.insert(s.workTypesTable).values({ name, category: "Completions" }),
-      "work_types_canonical_name_unique",
+      "work_types_global_canonical_name_unique",
     );
   });
 
@@ -112,7 +112,7 @@ describe.runIf(haveRealDb)("work_types.name canonical uniqueness", () => {
         name: `  ${name.toUpperCase()}  `,
         category: "Completions",
       }),
-      "work_types_canonical_name_unique",
+      "work_types_global_canonical_name_unique",
     );
   });
 

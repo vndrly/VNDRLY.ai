@@ -2,6 +2,7 @@ import { useId } from "react";
 import {
   type TicketLifecycleColor,
   ticketLifecyclePillForStatus,
+  ticketLifecyclePills,
 } from "@/lib/ticket-status-palette";
 
 // Same canonical 900×229 pill PNGs used by `TicketStatusBadge` and
@@ -69,7 +70,9 @@ export function VerticalPillBarShape(props: VerticalPillBarShapeProps) {
   if (width <= 0 || height <= 0) return null;
 
   const status = payload?.status ?? "";
-  const pill = ticketLifecyclePillForStatus(status);
+  const pill = status
+    ? ticketLifecyclePillForStatus(status)
+    : ticketLifecyclePills[payload?.color ?? fallbackColor];
   const r = Math.min(width / 2, height);
 
   // Bar outline path. `flatBottom` keeps the bottom edge butted to

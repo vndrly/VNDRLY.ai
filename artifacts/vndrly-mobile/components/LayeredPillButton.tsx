@@ -12,7 +12,7 @@ import {
 import Pill9Slice from "@/components/Pill9Slice";
 import { useBrand } from "@/hooks/use-brand";
 import { GREY_PILL_OPACITY } from "@/lib/pill-opacity";
-import { PILL_HEIGHT_PX } from "@/lib/pill-doctrine";
+import { PILL_HEIGHT_PX, TEXT_SHADOW } from "@/lib/pill-doctrine";
 import { pickTogglePillSrc, TOGGLE_IDLE_PILL_SRC } from "@/lib/pick-toggle-pill";
 
 const GREY_PILL = require("@/assets/pill-stack/light-grey.png");
@@ -76,6 +76,7 @@ export const LAYERED_PILL_BUTTON_TEXT = {
   fontFamily: "Inter_400Regular",
   fontSize: 12,
   color: "#ffffff",
+  ...TEXT_SHADOW.deep,
 } as const;
 
 export interface LayeredPillButtonProps {
@@ -97,7 +98,7 @@ export interface LayeredPillButtonProps {
  * Active = brand-matched colored pill. `inactive` = grey pill at 80% opacity.
  * Disabled/loading (without `inactive`) = grey asset dimmed to 50%.
  *
- * Site doctrine: every pill is exactly 23px tall (matches web Crew Tracker).
+ * Site doctrine: every pill is exactly {@link PILL_HEIGHT_PX}px tall on iOS.
  */
 export default function LayeredPillButton({
   children,
@@ -106,7 +107,7 @@ export default function LayeredPillButton({
   loading,
   style,
   testID,
-  height: _heightProp = PILL_HEIGHT_PX,
+  height: _heightProp,
   color,
   inactive,
 }: LayeredPillButtonProps) {

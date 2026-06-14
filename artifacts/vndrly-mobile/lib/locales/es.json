@@ -78,6 +78,10 @@
     "forget": "Olvidar {{label}}",
     "eulaLink": "Acuerdo de licencia de usuario final"
   },
+  "contextPicker": {
+    "title": "Elija su organización",
+    "body": "Pertenece a varias organizaciones. Elija una para comenzar — puede cambiar en cualquier momento desde su perfil."
+  },
   "directAssignment": {
     "vendorInboxTitle": "Ofertas de trabajo pendientes ({{count}})",
     "commit": "Aceptar",
@@ -168,7 +172,9 @@
       "foremanLabel": "Capataz",
       "foremanHelp": "Sugerido: tú. Toca a un compañero para asignar a otra persona.",
       "foremanSelf": "Yo",
-      "foremanSelfSuffix": "(tú)"
+      "foremanSelfSuffix": "(tú)",
+      "vendorLabel": "Proveedor",
+      "pickVendor": "Seleccione un proveedor antes de iniciar un ticket."
     },
     "errorLoadOpen": "No se pudieron cargar tus tickets abiertos. Desliza para refrescar.",
     "errorLoadHistory": "No se pudo cargar tu historial. Desliza para refrescar.",
@@ -288,7 +294,8 @@
     "unreadCommentsA11y": "{{count}} comentarios sin leer",
     "siteFallbackPlaceholder": "—",
     "workTypeFallbackPlaceholder": "—",
-    "partnerSuffix": " · {{partner}}"
+    "partnerSuffix": " · {{partner}}",
+    "vendorSuffix": " · {{vendor}}"
   },
   "ticketDetail": {
     "paymentDetails": "Detalles del Pago",
@@ -341,6 +348,17 @@
       "failedBody": "Inténtalo de nuevo.",
       "recent": "Recordatorios recientes",
       "noMessage": "Estado: {{status}}"
+    },
+    "flag": {
+      "title": "Marcar ticket",
+      "help": "Marca este trabajo para atención. Todos en el ticket reciben una notificación.",
+      "reasonPlaceholder": "¿Por qué marcar? (opcional)",
+      "reasonLabel": "Motivo",
+      "submit": "Marcar trabajo",
+      "clear": "Quitar marca",
+      "flaggedTitle": "Ticket marcado",
+      "flaggedBody": "Se notificó al equipo.",
+      "clearedTitle": "Marca quitada"
     },
     "siteVisitSummary": {
       "title": "Resumen de visita al sitio",
@@ -678,6 +696,9 @@
     "invalid_ticket_id": "El ID del ticket no es válido.",
     "ticket_not_found": "No se encontró el ticket.",
     "ticket_en_route_invalid_state": "No puedes marcar este ticket en ruta en su estado actual.",
+    "ticket_on_location_invalid_state": "No puedes marcar este ticket en sitio en su estado actual.",
+    "ticket_not_submittable": "Este ticket aún no está listo para enviar.",
+    "ticket_not_kickbackable": "Solo los tickets enviados o aprobados pueden devolverse.",
     "ticket_not_awaiting_acceptance": "Esta invitación ya fue respondida.",
     "ticket_state_changed": "El estado del ticket cambió — actualiza e inténtalo de nuevo.",
     "ticket_not_checkinable": "Este ticket no se puede registrar entrada en este momento.",
@@ -1274,6 +1295,18 @@
     "onShiftNow": "En turno ahora ({{count}})",
     "nobodyOnClock": "Ningún miembro de la cuadrilla comparte ubicación en este momento."
   },
+  "partnerMap": {
+    "title": "Mapa de sitio y cuadrilla",
+    "subtitle": "Vea quién está en sus sitios y de qué proveedor — sin ir al campo.",
+    "selectSite": "Sitio",
+    "allSites": "Todos los sitios",
+    "onSiteNow": "Cerca de sus sitios ({{count}})",
+    "nobodyNearby": "Ninguna cuadrilla comparte ubicación cerca de sus sitios ahora."
+  },
+  "partnerSchedule": {
+    "empty": "No hay trabajo programado próximo de proveedores en sus sitios.",
+    "vendor": "Proveedor: {{name}}"
+  },
   "crew": {
     "title": "Cuadrilla y Tiempo",
     "crewOnSite": "Cuadrilla en sitio",
@@ -1351,9 +1384,47 @@
     "noUnreadNotifications": "Sin notificaciones sin leer",
     "brandWordmark": "VNDRLY"
   },
+  "askv": {
+    "title": "AskV",
+    "subtitle": "Tu guía de VNDRLY — cómo hacerlo, consultas en vivo y ayuda de incorporación.",
+    "greetingFallback": "ahí",
+    "greetingField": "¡Hola, {{name}}! Puedo ayudarte con tickets, GPS, perfil y notificaciones en la app de campo. ¿En qué te ayudo?",
+    "greetingForeman": "¡Hola, {{name}}! Puedo ayudarte con entrada/salida de cuadrilla, horario, mapa y flujos de tickets. ¿Qué necesitas?",
+    "greetingPartner": "¡Hola, {{name}}! Pregunta sobre sitios, tickets, visitantes, cuentas por pagar y flujos de socio.",
+    "greetingVendor": "¡Hola, {{name}}! Pregunta sobre facturas, empleados de campo, catálogo y flujos de proveedor.",
+    "greetingAdmin": "¡Hola, {{name}}! Pregunta sobre configuración de plataforma, tickets, 1099 y flujos de administrador.",
+    "quickActionsLabel": "Acciones rápidas",
+    "inputPlaceholder": "Pregunta lo que quieras sobre VNDRLY…",
+    "send": "Enviar",
+    "thinking": "Pensando…",
+    "usingTool": "Consultando {{tool}}…",
+    "clearTitle": "¿Borrar conversación?",
+    "clearBody": "Esto elimina el historial del chat de esta sesión.",
+    "clearConfirm": "Borrar",
+    "errorGeneric": "El asistente tiene problemas ahora. Inténtalo de nuevo.",
+    "quickActions": {
+      "fieldStatus": "Actualizar estado del ticket",
+      "fieldPhoto": "Foto de perfil y certificados",
+      "fieldGps": "Pausar seguimiento GPS",
+      "foremanCrew": "Entrada/salida de cuadrilla",
+      "foremanSchedule": "Ayuda de la pestaña Horario",
+      "foremanMap": "Ayuda del mapa de cuadrilla",
+      "vendorOnboarding": "Terminar incorporación de proveedor",
+      "vendorInvoices": "Facturas abiertas",
+      "vendorEmployee": "Agregar empleado de campo",
+      "partnerOnboarding": "Terminar incorporación de socio",
+      "partnerQr": "Imprimir QR de visitantes",
+      "partnerStatement": "Generar un estado de cuenta",
+      "adminPartner": "Incorporar un socio",
+      "adminUnlock": "Desbloquear ticket cerrado",
+      "admin1099": "Informe 1099 e-delivery"
+    }
+  },
   "tabs": {
+    "askv": "AskV",
     "home": "Inicio",
     "schedule": "Agenda",
+    "flagged": "Marcados",
     "crewMap": "Mapa",
     "crews": "Cuadrillas",
     "comms": "Comunicación",
@@ -1388,8 +1459,40 @@
     "pttSendFailed": "No se pudo enviar el mensaje de voz.",
     "pttPlayFailed": "No se pudo reproducir este clip."
   },
+  "vendorHome": {
+    "portal": "Portal del proveedor",
+    "openTickets": "Tickets del equipo",
+    "subtitle": "Supervise trabajos abiertos de su equipo de campo. Toque un ticket para ver detalles, comentarios y aprobaciones."
+  },
+  "partnerHome": {
+    "portal": "Portal del socio",
+    "openTickets": "Tickets del sitio",
+    "subtitle": "Revise el trabajo de campo activo en sus sitios. Toque un ticket para ver estado, actividad del proveedor y aprobaciones."
+  },
+  "adminHome": {
+    "portal": "Portal de administración",
+    "subtitle": "Vista general de tickets abiertos en la plataforma. Use el portal web para herramientas administrativas completas."
+  },
+  "siteLocations": {
+    "addSite": "Agregar sitio",
+    "nameLabel": "Nombre del sitio",
+    "namePlaceholder": "p. ej. Pad 12",
+    "addressLabel": "Dirección",
+    "addressPlaceholder": "Dirección o descripción legal",
+    "useMyLocation": "Usar mi ubicación actual",
+    "coordsHint": "Ubicación: {{lat}}, {{lng}}",
+    "createSite": "Crear sitio",
+    "createdTitle": "Sitio creado",
+    "createdBody": "El nuevo sitio está disponible para asignaciones y tickets.",
+    "createFailed": "No se pudo crear el sitio.",
+    "missingFields": "Ingrese nombre, dirección y ubicación.",
+    "partnerRequired": "Se requiere contexto de socio para agregar un sitio.",
+    "locationDenied": "Se necesita permiso de ubicación para fijar el sitio.",
+    "locationFailed": "No se pudo leer su ubicación."
+  },
   "scanScreen": {
     "cameraDenied": "Se necesita acceso a la cámara para escanear códigos QR.",
+    "loadingPermission": "Comprobando acceso a la cámara…",
     "grantPermission": "Conceder permiso",
     "invalidQrTitle": "Código QR inválido",
     "invalidQrBody": "Código QR no reconocido:\n{{data}}",
@@ -1616,5 +1719,11 @@
     "emailPasswordRequired": "Se requiere correo y contraseña de al menos 8 caracteres",
     "forcePasswordChange": "Requerir cambio de contraseña en el próximo inicio de sesión",
     "forcePasswordChangeHelp": "El empleado debe elegir una nueva contraseña antes de usar la app o el portal."
+  },
+  "flagged": {
+    "title": "Trabajos marcados",
+    "subtitle": "Tickets marcados para atención.",
+    "empty": "No hay tickets marcados ahora.",
+    "unknownSite": "Sitio desconocido"
   }
 }

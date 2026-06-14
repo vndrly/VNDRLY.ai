@@ -172,6 +172,7 @@ const ticketAssignmentRow = {
   workTypeId: WORK_TYPE_ID,
 };
 const acceptedTicketRow = { status: "in_progress" };
+const pendingReviewTicketRow = { status: "pending_review" };
 
 beforeEach(async () => {
   selectQueue = [];
@@ -285,19 +286,21 @@ describe("POST /tickets/:id/check-in — Task #572 assignment guard", () => {
 //   1. ensureFieldOwnership  → ticket-with-siteLocations join
 //   2. getFieldEmployeeForSession → vendorPeople row
 //   3. ensureAccepted → ticket (status only)
-//   4. ensureFieldAssignmentForFieldEmployee → ticket (vendor/site/wt)
-//   5. ensureFieldAssignmentForFieldEmployee → assignments (combined)
-//   6. (only when 5 missed) ensureFieldAssignmentForFieldEmployee →
+//   4. submit pre-status guard → ticket (status only)
+//   5. ensureFieldAssignmentForFieldEmployee → ticket (vendor/site/wt)
+//   6. ensureFieldAssignmentForFieldEmployee → assignments (combined)
+//   7. (only when 6 missed) ensureFieldAssignmentForFieldEmployee →
 //      assignments narrowed to (vendor, site)
 describe("POST /tickets/:id/submit — Task #572 assignment guard", () => {
   it("emits site_vendor_mismatch when vendor lost their site assignment mid-job", async () => {
     selectQueue = [
       ownershipRow,            // (1) ensureFieldOwnership
       vendorPersonRow,         // (2) getFieldEmployeeForSession
-      acceptedTicketRow,       // (3) ensureAccepted
-      ticketAssignmentRow,     // (4) re-read for assignment check
-      null,                    // (5) combined → missing
-      null,                    // (6) narrowing (vendor, site) → also missing
+      pendingReviewTicketRow,  // (3) ensureAccepted
+      pendingReviewTicketRow,  // (4) submit pre-status guard
+      ticketAssignmentRow,     // (5) re-read for assignment check
+      null,                    // (6) combined → missing
+      null,                    // (7) narrowing (vendor, site) → also missing
     ];
     const r = await request(app)
       .post(`/api/tickets/${TICKET_ID}/submit`)
@@ -312,7 +315,8 @@ describe("POST /tickets/:id/submit — Task #572 assignment guard", () => {
     selectQueue = [
       ownershipRow,
       vendorPersonRow,
-      acceptedTicketRow,
+      pendingReviewTicketRow,
+      pendingReviewTicketRow,
       ticketAssignmentRow,
       null,
       { id: 88 },
@@ -350,14 +354,15 @@ describe("POST /tickets/:id/en-route — Task #572 assignment guard", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────
-// POST /tickets/:id/check-out — same guard wiring as submit.
-// ─────────────────────────────────────────────────────────────────────────
+// POST /tickets/:id/check-out — same guard wiring as submit, plus an
+// in_progress pre-check before the assignment guard.
 describe("POST /tickets/:id/check-out — Task #572 assignment guard", () => {
   it("emits work_type_not_allowed when only the work type was removed", async () => {
     selectQueue = [
       ownershipRow,
       vendorPersonRow,
-      acceptedTicketRow,
+      acceptedTicketRow,       // ensureAccepted
+      acceptedTicketRow,       // must be checked in (in_progress)
       ticketAssignmentRow,
       null,
       { id: 88 },

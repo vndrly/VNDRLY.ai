@@ -17,7 +17,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import ScreenSafeArea from "@/components/ScreenSafeArea";
 
 import AmberButton from "@/components/AmberButton";
 import VisitorHostPicker from "@/components/VisitorHostPicker";
@@ -249,7 +249,7 @@ export default function VisitorCheckInScreen() {
     // link to the staff login) or any of the in-flight forms. The visitor
     // is at the front desk and just needs one obvious action.
     return (
-      <SafeAreaView style={[styles.flex, { backgroundColor: colors.background }]}>
+      <ScreenSafeArea style={[styles.flex, { backgroundColor: colors.background }]}>
         <View style={[styles.container, styles.sessionExpiredContainer]}>
           <View
             testID="session-expired-card"
@@ -271,12 +271,12 @@ export default function VisitorCheckInScreen() {
             </AmberButton>
           </View>
         </View>
-      </SafeAreaView>
+      </ScreenSafeArea>
     );
   }
 
   return (
-    <SafeAreaView style={[styles.flex, { backgroundColor: colors.background }]}>
+    <ScreenSafeArea style={[styles.flex, { backgroundColor: colors.background }]}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
           <View style={styles.header}>
@@ -402,7 +402,7 @@ export default function VisitorCheckInScreen() {
           )}
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </ScreenSafeArea>
   );
 }
 

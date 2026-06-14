@@ -56,6 +56,9 @@
 //   - `ticket_en_route_invalid_state`  — en-route was attempted on a
 //                                        ticket whose lifecycle/status
 //                                        no longer permits it.
+//   - `ticket_on_location_invalid_state` — on-location was attempted on
+//                                        a ticket whose lifecycle/status
+//                                        no longer permits it.
 export const TICKET_NOT_ACCEPTED = "ticket_not_accepted" as const;
 export const TICKET_NOT_AWAITING_ACCEPTANCE =
   "ticket_not_awaiting_acceptance" as const;
@@ -63,6 +66,8 @@ export const TICKET_STATE_CHANGED = "ticket_state_changed" as const;
 export const TICKET_NOT_CHECKINABLE = "ticket_not_checkinable" as const;
 export const TICKET_EN_ROUTE_INVALID_STATE =
   "ticket_en_route_invalid_state" as const;
+export const TICKET_ON_LOCATION_INVALID_STATE =
+  "ticket_on_location_invalid_state" as const;
 
 export const TICKET_STATE_CONFLICT_CODES = [
   TICKET_NOT_ACCEPTED,
@@ -70,6 +75,7 @@ export const TICKET_STATE_CONFLICT_CODES = [
   TICKET_STATE_CHANGED,
   TICKET_NOT_CHECKINABLE,
   TICKET_EN_ROUTE_INVALID_STATE,
+  TICKET_ON_LOCATION_INVALID_STATE,
 ] as const;
 
 export type TicketStateConflictCode =

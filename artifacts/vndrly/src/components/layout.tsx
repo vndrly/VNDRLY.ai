@@ -20,6 +20,7 @@ import {
   BookOpen,
   Gauge,
   MessageSquareOff,
+  Flag,
 } from "lucide-react";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -59,6 +60,7 @@ function useNavItems(user: { role: string; vendorId: number | null; partnerId: n
     { href: "/field-employees", label: t("nav.employees"), icon: UserCheck, key: "employees" },
     { href: "/site-locations", label: t("nav.siteLocations"), icon: MapPin, key: "site-locations" },
     { href: "/tickets", label: t("nav.tracking"), icon: FileText, key: "tracking" },
+    { href: "/flagged", label: t("nav.flagged"), icon: Flag, key: "flagged" },
   ];
   // Crew Map is only meaningful for vendor + admin (server returns 403 for partners).
   const crewMapItem = { href: "/crew-map", label: t("nav.crewMap"), icon: MapIcon, key: "crew-map" };

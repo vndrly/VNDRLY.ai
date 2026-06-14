@@ -15,6 +15,7 @@ import {
 import Pill9Slice from "@/components/Pill9Slice";
 import { useBrand } from "@/hooks/use-brand";
 import { GREY_PILL_OPACITY } from "@/lib/pill-opacity";
+import { PILL_HEIGHT_PX, TEXT_SHADOW } from "@/lib/pill-doctrine";
 import { pickTogglePillSrc, TOGGLE_IDLE_PILL_SRC } from "@/lib/pick-toggle-pill";
 
 const BLUE_PILL = require("@/assets/pill-stack/mid-blue.png");
@@ -57,7 +58,7 @@ export default function TogglePillButton({
   style,
   textStyle,
   testID,
-  height = 36,
+  height: _heightProp,
   color = "brand",
   inactive,
   solid,
@@ -66,6 +67,7 @@ export default function TogglePillButton({
   const isDisabled = disabled || loading;
   const lockToRest = !!inactive || !!loading;
   const lockToColored = !!solid && !lockToRest;
+  const height = PILL_HEIGHT_PX;
   const radius = height / 2;
   const activeSrc = coloredSrc(color, brand.primary ?? "#1f9a3d", brand.name ?? "");
   const restSrc = TOGGLE_IDLE_PILL_SRC;
@@ -150,9 +152,5 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     textAlign: "center",
   },
-  labelColoredShadow: {
-    textShadowColor: "rgba(0,0,0,0.55)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-  },
+  labelColoredShadow: TEXT_SHADOW.onColor,
 });

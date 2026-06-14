@@ -32,6 +32,7 @@ export * from "./ticketNoteLogs";
 export * from "./ticketUnlocks";
 export * from "./ticketStatusHistory";
 export * from "./ticketNudges";
+export * from "./ticketFlags";
 export * from "./gpsLogs";
 export * from "./users";
 export * from "./userOrgMemberships";

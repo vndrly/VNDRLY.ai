@@ -2,18 +2,23 @@ import { router, useFocusEffect, Stack } from "expo-router";
 import React, { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  ActivityIndicator,
   Alert,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
 } from "react-native";
+import ScreenSafeArea from "@/components/ScreenSafeArea";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Feather } from "@expo/vector-icons";
 
 import ActiveOrgIndicator from "@/components/ActiveOrgIndicator";
 import AmberButton from "@/components/AmberButton";
 import InPageHeader from "@/components/InPageHeader";
 import { useColors } from "@/hooks/useColors";
+import { screenTopPadding } from "@/lib/screen-insets";
 
 // `expo-camera` ships a native view manager. On a host build that wasn't
 // rebuilt after the dependency was added (Expo Go, an old dev client) the
@@ -49,7 +54,8 @@ class CameraBoundary extends React.Component<
     // swallow — we render the fallback below
   }
   render() {
-    return this.state.failed ? this.props.fallback : this.props.children;
+    if (this.state.failed) return this.props.fallback;
+    return <View style={styles.cameraStage}>{this.props.children}</View>;
   }
 }
 
@@ -66,13 +72,77 @@ function extractSiteCode(raw: string): string | null {
   return /^[A-Za-z0-9_-]+$/.test(trimmed) ? trimmed : null;
 }
 
+/** Bottom inset so permission CTAs clear the tab bar. */
+function useTabBarClearance(): number {
+  const insets = useSafeAreaInsets();
+  // Tab bar (~49) + home indicator; InPageHeader already handles top inset.
+  return Math.max(insets.bottom, 12) + 56;
+}
+
+function ScanPermissionPanel({
+  colors,
+  t,
+  message,
+  onGrant,
+  loading,
+}: {
+  colors: ReturnType<typeof useColors>;
+  t: ReturnType<typeof useTranslation>["t"];
+  message: string;
+  onGrant?: () => void;
+  loading?: boolean;
+}) {
+  const tabClearance = useTabBarClearance();
+  return (
+    <ScreenSafeArea
+      style={[styles.flex, { backgroundColor: colors.background }]}
+      edges={["left", "right"]}
+      includeTopGap={false}
+    >
+      <Stack.Screen options={{ headerShown: false }} />
+      <InPageHeader
+        title={t("tabs.scan")}
+        hideBack
+        right={<ActiveOrgIndicator />}
+      />
+      <ScrollView
+        contentContainerStyle={[
+          styles.permissionScroll,
+          { paddingBottom: tabClearance },
+        ]}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.permissionBody}>
+          <Feather name="camera" size={40} color={colors.primary} />
+          <Text style={[styles.msg, { color: colors.foreground }]}>{message}</Text>
+          {loading ? (
+            <ActivityIndicator color={colors.primary} style={{ marginTop: 8 }} />
+          ) : onGrant ? (
+            <AmberButton
+              onPress={onGrant}
+              style={styles.grantBtn}
+              testID="button-grant-camera-permission"
+            >
+              {t("scanScreen.grantPermission")}
+            </AmberButton>
+          ) : null}
+        </View>
+      </ScrollView>
+    </ScreenSafeArea>
+  );
+}
+
 export default function ScanScreen() {
   const colors = useColors();
   const { t } = useTranslation();
 
   if (!CameraModule) {
     return (
-      <View style={[styles.flex, { backgroundColor: colors.background }]}>
+      <ScreenSafeArea
+        style={[styles.flex, { backgroundColor: colors.background }]}
+        edges={["left", "right"]}
+        includeTopGap={false}
+      >
         <Stack.Screen options={{ headerShown: false }} />
         <InPageHeader
           title={t("tabs.scan")}
@@ -86,7 +156,7 @@ export default function ScanScreen() {
             router.push({ pathname: "/new-ticket", params: { siteCode: code } })
           }
         />
-      </View>
+      </ScreenSafeArea>
     );
   }
 
@@ -113,6 +183,7 @@ function ScanScreenWithCamera({
   CameraView: NonNullable<typeof CameraModule>["CameraView"];
   useCameraPermissions: NonNullable<typeof CameraModule>["useCameraPermissions"];
 }) {
+  const insets = useSafeAreaInsets();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
 
@@ -124,40 +195,25 @@ function ScanScreenWithCamera({
 
   if (!permission) {
     return (
-      <View style={[styles.flex, { backgroundColor: colors.background }]}>
-        <Stack.Screen options={{ headerShown: false }} />
-        <InPageHeader
-          title={t("tabs.scan")}
-          hideBack
-          right={<ActiveOrgIndicator />}
-        />
-        <View style={styles.center} />
-      </View>
+      <ScanPermissionPanel
+        colors={colors}
+        t={t}
+        message={t("scanScreen.loadingPermission", {
+          defaultValue: "Checking camera access…",
+        })}
+        loading
+      />
     );
   }
+
   if (!permission.granted) {
     return (
-      <View style={[styles.flex, { backgroundColor: colors.background }]}>
-        <Stack.Screen options={{ headerShown: false }} />
-        <InPageHeader
-          title={t("tabs.scan")}
-          hideBack
-          right={<ActiveOrgIndicator />}
-        />
-        <View style={styles.center}>
-          <Text style={[styles.msg, { color: colors.foreground }]}>
-            {t("scanScreen.cameraDenied")}
-          </Text>
-          <AmberButton
-            onPress={requestPermission}
-            height={44}
-            style={styles.btn}
-            textStyle={styles.btnText}
-          >
-            {t("scanScreen.grantPermission")}
-          </AmberButton>
-        </View>
-      </View>
+      <ScanPermissionPanel
+        colors={colors}
+        t={t}
+        message={t("scanScreen.cameraDenied")}
+        onGrant={requestPermission}
+      />
     );
   }
 
@@ -179,43 +235,51 @@ function ScanScreenWithCamera({
   return (
     <View style={styles.flex}>
       <Stack.Screen options={{ headerShown: false }} />
-      <InPageHeader
-        title={t("tabs.scan")}
-        hideBack
-        right={<ActiveOrgIndicator />}
-        style={{ position: "absolute", top: 0, left: 0, right: 0, zIndex: 2 }}
-      />
-      <View style={styles.container}>
-      <CameraBoundary
-        fallback={
-          <ManualSiteCodeFallback
-            colors={colors}
-            t={t}
-            onSubmit={(code) =>
-              router.push({ pathname: "/new-ticket", params: { siteCode: code } })
-            }
+      <View style={styles.cameraRoot}>
+        <CameraBoundary
+          fallback={
+            <ManualSiteCodeFallback
+              colors={colors}
+              t={t}
+              onSubmit={(code) =>
+                router.push({ pathname: "/new-ticket", params: { siteCode: code } })
+              }
+            />
+          }
+        >
+          <CameraView
+            style={styles.cameraFill}
+            facing="back"
+            barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
+            onBarcodeScanned={scanned ? undefined : onScanned}
           />
-        }
-      >
-        <CameraView
-          style={StyleSheet.absoluteFill}
-          facing="back"
-          barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
-          onBarcodeScanned={scanned ? undefined : onScanned}
-        />
-        <View style={styles.overlay} pointerEvents="none">
-          <View style={[styles.frame, { borderColor: colors.primary }]} />
-          <Text style={styles.hint}>{t("tickets.newTicket")}</Text>
-        </View>
-      </CameraBoundary>
+          <View style={styles.scanOverlay} pointerEvents="box-none">
+            <View
+              style={[
+                styles.headerOverlay,
+                { paddingTop: screenTopPadding(insets.top), backgroundColor: colors.background },
+              ]}
+            >
+              <InPageHeader
+                title={t("tabs.scan")}
+                hideBack
+                right={<ActiveOrgIndicator />}
+                suppressTopInset
+                style={{ backgroundColor: "transparent" }}
+              />
+            </View>
+            <View style={styles.overlayCenter} pointerEvents="none">
+              <View style={[styles.frame, { borderColor: colors.primary }]} />
+              <Text style={styles.hint}>{t("tickets.newTicket")}</Text>
+            </View>
+          </View>
+        </CameraBoundary>
       </View>
     </View>
   );
 }
 
 // Manual site-code entry shown when the native camera module is missing.
-// Mirrors the existing permission-denied layout so the screen stays visually
-// consistent with the rest of the scan tab.
 function ManualSiteCodeFallback({
   colors,
   t,
@@ -226,59 +290,87 @@ function ManualSiteCodeFallback({
   onSubmit: (code: string) => void;
 }) {
   const [value, setValue] = useState("");
+  const tabClearance = useTabBarClearance();
   const trimmed = value.trim();
   const valid = /^[A-Za-z0-9_-]+$/.test(trimmed);
   return (
-    <View style={styles.center}>
-      <Text style={[styles.msg, { color: colors.foreground }]}>
-        Camera unavailable in this build. Enter the site code from the QR
-        poster instead.
-      </Text>
-      <TextInput
-        value={value}
-        onChangeText={setValue}
-        autoCapitalize="characters"
-        autoCorrect={false}
-        placeholder="SITE-XXXXXXXX"
-        placeholderTextColor={colors.mutedForeground}
-        style={[
-          styles.input,
-          {
-            color: colors.foreground,
-            borderColor: colors.border,
-            backgroundColor: colors.card,
-          },
-        ]}
-      />
-      <AmberButton
-        onPress={() => valid && onSubmit(trimmed)}
-        disabled={!valid}
-        height={44}
-        style={styles.btn}
-        textStyle={styles.btnText}
-      >
-        {t("tickets.newTicket")}
-      </AmberButton>
-    </View>
+    <ScrollView
+      contentContainerStyle={[
+        styles.permissionScroll,
+        { paddingBottom: tabClearance },
+      ]}
+      keyboardShouldPersistTaps="handled"
+    >
+      <View style={styles.permissionBody}>
+        <Text style={[styles.msg, { color: colors.foreground }]}>
+          Camera unavailable in this build. Enter the site code from the QR poster instead.
+        </Text>
+        <TextInput
+          value={value}
+          onChangeText={setValue}
+          autoCapitalize="characters"
+          autoCorrect={false}
+          placeholder="SITE-XXXXXXXX"
+          placeholderTextColor={colors.mutedForeground}
+          style={[
+            styles.input,
+            {
+              color: colors.foreground,
+              borderColor: colors.border,
+              backgroundColor: colors.card,
+            },
+          ]}
+        />
+        <AmberButton
+          onPress={() => valid && onSubmit(trimmed)}
+          disabled={!valid}
+          style={styles.grantBtn}
+        >
+          {t("tickets.newTicket")}
+        </AmberButton>
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  container: { flex: 1, backgroundColor: "#000" },
-  center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24 },
+  cameraRoot: { flex: 1, backgroundColor: "#000" },
+  cameraStage: { flex: 1, overflow: "hidden" },
+  cameraFill: { flex: 1, width: "100%" },
+  scanOverlay: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  headerOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 2,
+  },
+  permissionScroll: {
+    flexGrow: 1,
+    justifyContent: "center",
+    paddingHorizontal: 24,
+  },
+  permissionBody: {
+    alignItems: "center",
+    gap: 16,
+  },
+  overlayCenter: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   msg: {
     fontFamily: "Inter_500Medium",
     fontSize: 15,
-    marginBottom: 16,
     textAlign: "center",
   },
-  btn: {
-    paddingHorizontal: 18,
-    paddingVertical: 12,
-    borderRadius: 10,
+  grantBtn: {
+    alignSelf: "stretch",
+    maxWidth: 320,
   },
-  btnText: { fontFamily: "Inter_600SemiBold", fontSize: 14 },
   input: {
     width: "100%",
     maxWidth: 320,
@@ -288,13 +380,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontFamily: "Inter_500Medium",
     fontSize: 15,
-    marginBottom: 16,
     textAlign: "center",
-  },
-  overlay: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
   },
   frame: {
     width: 240,

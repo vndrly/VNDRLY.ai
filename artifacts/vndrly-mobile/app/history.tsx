@@ -19,6 +19,11 @@ import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/useColors";
 import { useTicketsRateLimitGate } from "@/hooks/use-tickets-rate-limit-gate";
 import { apiFetch } from "@/lib/api";
+import { isFieldEmployeeUser } from "@/lib/mobile-viewer";
+import {
+  fetchPortalTicketsForHome,
+  type MobileOpenTicket,
+} from "@/lib/portal-tickets";
 import {
   mergeOpenAndRecentClosedJobs,
   type ClosedJobRow,
@@ -35,14 +40,15 @@ import {
   ticketStatusPillStyle,
 } from "@/lib/ticketStatusLabels";
 
-type OpenJobTicket = OpenJobRow;
+type OpenJobTicket = OpenJobRow | MobileOpenTicket;
 type ClosedJobTicket = ClosedJobRow;
 
 export default function HistoryScreen() {
   const colors = useColors();
   const { t } = useTranslation();
   const { user: me } = useAuth();
-  const isFieldEmployee = me?.role === "field_employee";
+  const isFieldEmployee = isFieldEmployeeUser(me);
+  const usesPortalTicketList = !isFieldEmployee;
   const [tickets, setTickets] = useState<JobHistoryRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -54,7 +60,9 @@ export default function HistoryScreen() {
   const load = useCallback(async (): Promise<boolean> => {
     try {
       if (isTicketsRateLimited()) return false;
-      const openPromise = apiFetch<OpenJobTicket[]>("/api/field/open-tickets");
+      const openPromise = usesPortalTicketList
+        ? fetchPortalTicketsForHome()
+        : apiFetch<OpenJobTicket[]>("/api/field/open-tickets");
       const closedPromise = isFieldEmployee
         ? apiFetch<ClosedJobTicket[]>("/api/field/history").catch(() => [] as ClosedJobTicket[])
         : Promise.resolve([] as ClosedJobTicket[]);
@@ -72,7 +80,7 @@ export default function HistoryScreen() {
     } finally {
       setLoading(false);
     }
-  }, [isFieldEmployee, t]);
+  }, [isFieldEmployee, usesPortalTicketList, t]);
 
   useEffect(() => {
     void load();

@@ -35,6 +35,21 @@ import {
   ticketStatusPillStyle,
 } from "@/lib/ticketStatusLabels";
 import { PILL_CHIP_LAYOUT, PILL_TEXT } from "@/lib/pill-doctrine";
+import { isPartnerOfficeUser } from "@/lib/mobile-viewer";
+
+type PortalScheduledRow = {
+  id: number;
+  status: string;
+  scheduledStartAt: string | null;
+  scheduledDurationMinutes: number | null;
+  siteName: string | null;
+  siteAddress?: string | null;
+  siteLatitude?: number | string | null;
+  siteLongitude?: number | string | null;
+  vendorName: string | null;
+  workTypeName: string | null;
+  updatedAt: string | null;
+};
 
 function formatWhen(iso: string | null): string {
   if (!iso) return "—";
@@ -56,6 +71,7 @@ export default function ScheduleScreen() {
   const isForeman =
     user?.role === "field_employee" &&
     (user.vendorRole === "foreman" || user.vendorRole === "both");
+  const isPartner = isPartnerOfficeUser(user);
   const [tickets, setTickets] = useState<ScheduledTicket[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -64,15 +80,57 @@ export default function ScheduleScreen() {
 
   const load = useCallback(async () => {
     try {
-      const r = await apiFetch<UpcomingScheduleResponse>("/api/me/upcoming-schedule?days=14");
-      setTickets(r?.tickets ?? []);
+      if (isPartner) {
+        const horizon = Date.now() + 14 * 24 * 60 * 60 * 1000;
+        const windowStart = Date.now() - 60 * 60 * 1000;
+        const rows = await apiFetch<PortalScheduledRow[]>("/api/tickets");
+        const upcoming = (rows ?? [])
+          .filter((row) => {
+            if (!row.scheduledStartAt) return false;
+            const ts = Date.parse(row.scheduledStartAt);
+            return Number.isFinite(ts) && ts >= windowStart && ts <= horizon;
+          })
+          .sort(
+            (a, b) =>
+              Date.parse(a.scheduledStartAt!) - Date.parse(b.scheduledStartAt!),
+          )
+          .map(
+            (row): ScheduledTicket => ({
+              id: row.id,
+              scheduledStartAt: row.scheduledStartAt,
+              scheduledDurationMinutes: row.scheduledDurationMinutes,
+              status: row.status as ScheduledTicket["status"],
+              updatedAt: row.updatedAt,
+              siteName: row.siteName,
+              siteAddress: row.siteAddress ?? null,
+              siteLatitude:
+                row.siteLatitude == null ? null : Number(row.siteLatitude),
+              siteLongitude:
+                row.siteLongitude == null ? null : Number(row.siteLongitude),
+              partnerName: null,
+              vendorName: row.vendorName,
+              workTypeName: row.workTypeName,
+              foremanUserId: null,
+              foremanName: "",
+              isForeman: false,
+              myAckStatus: null,
+              crew: [],
+            }),
+          );
+        setTickets(upcoming);
+      } else {
+        const r = await apiFetch<UpcomingScheduleResponse>(
+          "/api/me/upcoming-schedule?days=14",
+        );
+        setTickets(r?.tickets ?? []);
+      }
     } catch {
       setTickets([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [isPartner]);
 
   useFocusEffect(
     useCallback(() => {
@@ -94,8 +152,12 @@ export default function ScheduleScreen() {
   // Tab badge: count jobs that need a scheduling response from the
   // current user (pending ack). Updates live as acks resolve.
   useEffect(() => {
+    if (isPartner) {
+      setScheduleBadge(tickets.length);
+      return;
+    }
     setScheduleBadge(tickets.filter((tk) => tk.myAckStatus === "pending").length);
-  }, [tickets]);
+  }, [isPartner, tickets]);
 
   async function ack(ticketId: number, status: "confirmed" | "declined") {
     try {
@@ -183,7 +245,11 @@ export default function ScheduleScreen() {
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       ListEmptyComponent={
         <Text style={{ color: colors.mutedForeground, textAlign: "center", marginTop: 40 }}>
-          {isForeman ? t("foremanSchedule.emptyForeman") : t("mySchedule.empty")}
+          {isPartner
+            ? t("partnerSchedule.empty")
+            : isForeman
+              ? t("foremanSchedule.emptyForeman")
+              : t("mySchedule.empty")}
         </Text>
       }
       renderItem={({ item }) => {
@@ -270,10 +336,20 @@ export default function ScheduleScreen() {
               <View style={styles.metaRow}>
                 <Feather name="map-pin" size={14} color={colors.mutedForeground} />
                 <Text style={[styles.meta, { color: colors.mutedForeground }]} numberOfLines={2}>
-                  {[item.partnerName, item.siteName].filter(Boolean).join(" — ") || "—"}
-                  {item.siteAddress ? `\n${item.siteAddress}` : ""}
+                  {isPartner
+                    ? [item.siteName, item.siteAddress].filter(Boolean).join("\n") || "—"
+                    : [item.partnerName, item.siteName].filter(Boolean).join(" — ") || "—"}
+                  {!isPartner && item.siteAddress ? `\n${item.siteAddress}` : ""}
                 </Text>
               </View>
+              {isPartner && item.vendorName ? (
+                <View style={styles.metaRow}>
+                  <Feather name="briefcase" size={14} color={colors.mutedForeground} />
+                  <Text style={[styles.meta, { color: colors.mutedForeground }]}>
+                    {t("partnerSchedule.vendor", { name: item.vendorName })}
+                  </Text>
+                </View>
+              ) : null}
               {item.foremanName ? (
                 <View style={styles.metaRow}>
                   <Feather name="user-check" size={14} color={colors.mutedForeground} />
@@ -299,7 +375,7 @@ export default function ScheduleScreen() {
               ) : null}
             </TouchableOpacity>
 
-            {ackStatus != null && ackStatus !== "confirmed" ? (
+            {ackStatus != null && ackStatus !== "confirmed" && !isPartner ? (
               <View style={styles.ackRow}>
                 {ackStatus === "pending" ? (
                   <LayeredPillButton
@@ -330,7 +406,7 @@ export default function ScheduleScreen() {
               </View>
             ) : null}
 
-            {item.isForeman ? (
+            {!isPartner && item.isForeman ? (
               <LayeredPillButton
                 onPress={() => router.push(`/ticket/${item.id}/crew-tracker`)}
                 height={40}
@@ -361,16 +437,17 @@ export default function ScheduleScreen() {
               </LayeredPillButton>
             ) : null}
 
-            <LayeredPillButton
-              onPress={() => void addToCalendar(item.id)}
-              height={40}
-              inactive
-              style={styles.foremanBtnPill}
-              testID={`button-calendar-${item.id}`}
-            >
-              <Feather name="calendar" size={14} color="#ffffff" />
-              <Text style={styles.ackPillBtnText}>{t("mySchedule.addToCalendar")}</Text>
-            </LayeredPillButton>
+            {!isPartner ? (
+              <LayeredPillButton
+                onPress={() => void addToCalendar(item.id)}
+                inactive
+                style={styles.foremanBtnPill}
+                testID={`button-calendar-${item.id}`}
+              >
+                <Feather name="calendar" size={14} color="#ffffff" />
+                <Text style={styles.ackPillBtnText}>{t("mySchedule.addToCalendar")}</Text>
+              </LayeredPillButton>
+            ) : null}
           </View>
         );
       }}

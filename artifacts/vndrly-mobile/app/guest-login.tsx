@@ -13,7 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import ScreenSafeArea from "@/components/ScreenSafeArea";
 
 import AmberButton from "@/components/AmberButton";
 import LanguageToggle from "@/components/LanguageToggle";
@@ -96,7 +96,7 @@ export default function GuestLoginScreen() {
   const hintStyle = [styles.hint, { color: colors.destructive }];
 
   return (
-    <SafeAreaView style={[styles.flex, { backgroundColor: colors.background }]}>
+    <ScreenSafeArea style={[styles.flex, { backgroundColor: colors.background }]}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
           {/* Signed-out language switcher mirrors the mobile login screen
@@ -183,7 +183,7 @@ export default function GuestLoginScreen() {
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </ScreenSafeArea>
   );
 }
 

@@ -12,6 +12,7 @@ import BluePillButton from "@/components/BluePillButton";
 import Pill9Slice from "@/components/Pill9Slice";
 import { apiFetch } from "@/lib/api";
 import { getApiErrorCode, inlineErrorForTicketAction } from "@/lib/apiErrors";
+import { PILL_HEIGHT_PX } from "@/lib/pill-doctrine";
 
 const BLUE_PILL = require("@/assets/pill-stack/blue-hot.png");
 
@@ -35,7 +36,7 @@ function CrewChip({
   removeLabel?: string;
   testID?: string;
 }) {
-  const height = 28;
+  const height = PILL_HEIGHT_PX;
   return (
     <View style={[chipStyles.chip, { height }]} testID={testID}>
       <Pill9Slice source={BLUE_PILL} height={height} borderRadius={height / 2} />
@@ -59,7 +60,6 @@ function CrewChip({
 function AddChip({ label, onPress, disabled, testID }: { label: string; onPress: () => void; disabled?: boolean; testID?: string }) {
   return (
     <BluePillButton
-      height={28}
       onPress={onPress}
       disabled={disabled}
       testID={testID}

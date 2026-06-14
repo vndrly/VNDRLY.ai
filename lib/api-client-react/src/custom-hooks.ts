@@ -813,7 +813,7 @@ export const useDeleteFieldEmployee = <TError = ErrorType<unknown>, TContext = u
 
 export interface VendorAnalytics {
   statusBreakdown: { status: string; count: number }[];
-  revenueByType: { type: string; total: number }[];
+  revenueByType: { type: string; label: string; total: number }[];
   revenueByMonth: { month: string; total: number }[];
   revenueByYear: { year: string; total: number }[];
   totalRevenue: number;
@@ -821,10 +821,51 @@ export interface VendorAnalytics {
   approvedTickets: number;
   kickedBackTickets: number;
   kickbackRate: number;
+  revenuePipeline: {
+    pendingReview: { count: number; total: number };
+    awaitingPayment: { count: number; total: number };
+    approvedUnpaid: { count: number; total: number };
+  };
+  kickbackTrendByMonth: {
+    month: string;
+    kickbackCount: number;
+    ticketCount: number;
+    kickbackRate: number;
+  }[];
   gpsCompliance: { total: number; mismatches: number; rate: number };
-  employeePerformance: { employeeId: number; name: string; jobTitle: string | null; ticketCount: number; approvedCount: number; revenue: number }[];
+  employeePerformance: {
+    employeeId: number;
+    name: string;
+    jobTitle: string | null;
+    ticketCount: number;
+    approvedCount: number;
+    kickedBackCount: number;
+    kickbackRate: number;
+    avgRevenuePerTicket: number;
+    revenue: number;
+  }[];
   topWorkTypes: { workType: string; count: number; revenue: number }[];
   bySite: { siteId: number; siteName: string; ticketCount: number; revenue: number }[];
+  invoiceAging: {
+    totals: {
+      current: number;
+      bucket1_15: number;
+      bucket16_30: number;
+      bucket31_60: number;
+      bucket60_plus: number;
+      total: number;
+    };
+    topPartners: { partnerId: number; partnerName: string | null; total: number }[];
+    partnerCount: number;
+  };
+  nec1099Exposure: {
+    year: number;
+    threshold: number;
+    partnerCount: number;
+    totalPaid: number;
+    partners: { partnerId: number; partnerName: string; totalPaid: number }[];
+  };
+  spendByAfe: { afe: string; ticketCount: number; total: number }[];
 }
 
 export interface PartnerAnalytics {
@@ -834,14 +875,60 @@ export interface PartnerAnalytics {
   kickedBackTickets: number;
   submittedTickets: number;
   activeTickets: number;
+  kickbackRate: number;
   totalCost: number;
-  costByVendor: { vendorId: number; vendorName: string; ticketCount: number; totalCost: number; approvedCount: number; kickedBackCount: number }[];
+  spendPipeline: {
+    pendingReview: { count: number; total: number };
+    awaitingPayment: { count: number; total: number };
+    approvedUnpaid: { count: number; total: number };
+  };
+  kickbackTrendByMonth: {
+    month: string;
+    kickbackCount: number;
+    ticketCount: number;
+    kickbackRate: number;
+  }[];
+  costByVendor: {
+    vendorId: number;
+    vendorName: string;
+    ticketCount: number;
+    totalCost: number;
+    approvedCount: number;
+    kickedBackCount: number;
+    kickbackRate: number;
+    avgCostPerTicket: number;
+  }[];
   costBySite: { siteId: number; siteName: string; ticketCount: number; totalCost: number }[];
   costByMonth: { month: string; total: number }[];
   costByYear: { year: string; total: number }[];
-  costByType: { type: string; total: number }[];
+  costByType: { type: string; label: string; total: number }[];
   gpsCompliance: { total: number; mismatches: number; rate: number };
   topWorkTypes: { workType: string; count: number; cost: number }[];
+  spendByAfe: { afe: string; ticketCount: number; total: number }[];
+  invoiceAging: {
+    totals: {
+      current: number;
+      bucket1_15: number;
+      bucket16_30: number;
+      bucket31_60: number;
+      bucket60_plus: number;
+      total: number;
+    };
+    topVendors: { vendorId: number; vendorName: string | null; total: number }[];
+    vendorCount: number;
+  };
+  nec1099Exposure: {
+    year: number;
+    threshold: number;
+    vendorCount: number;
+    totalPaid: number;
+    vendors: {
+      vendorId: number;
+      vendorName: string;
+      totalPaid: number;
+      sharedEinWarning: boolean;
+    }[];
+  };
 }
 
 export const getVendorAnalytics = async (
@@ -907,6 +994,72 @@ export const usePartnerAnalytics = <
     getPartnerAnalytics(partnerId, { signal, ...options?.request });
   const queryOptions = { queryKey, queryFn, enabled: !!partnerId, ...options?.query } as UseQueryOptions<
     PartnerAnalytics, TError, TData
+  > & { queryKey: QueryKey };
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  return { ...query, queryKey };
+};
+
+export interface ForemanAnalytics {
+  statusBreakdown: { status: string; count: number }[];
+  totalTickets: number;
+  approvedTickets: number;
+  kickedBackTickets: number;
+  submittedTickets: number;
+  activeTickets: number;
+  onSiteToday: number;
+  kickbackRate: number;
+  kickbackTrendByMonth: {
+    month: string;
+    kickbackCount: number;
+    ticketCount: number;
+    kickbackRate: number;
+  }[];
+  bySite: {
+    siteId: number;
+    siteName: string;
+    ticketCount: number;
+    activeCount: number;
+  }[];
+  employeePerformance: {
+    employeeId: number;
+    name: string;
+    ticketCount: number;
+    approvedCount: number;
+    kickedBackCount: number;
+    kickbackRate: number;
+    activeCount: number;
+  }[];
+}
+
+export const getForemanAnalytics = async (
+  userId: number,
+  options?: RequestInit,
+): Promise<ForemanAnalytics> => {
+  return customFetch<ForemanAnalytics>(`/api/analytics/foreman/${userId}`, {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getForemanAnalyticsQueryKey = (userId: number) => {
+  return [`/api/analytics/foreman/${userId}`] as const;
+};
+
+export const useForemanAnalytics = <
+  TData = ForemanAnalytics,
+  TError = ErrorType<unknown>,
+>(
+  userId: number,
+  options?: {
+    query?: UseQueryOptions<ForemanAnalytics, TError, TData>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } => {
+  const queryKey = getForemanAnalyticsQueryKey(userId);
+  const queryFn: QueryFunction<ForemanAnalytics> = ({ signal }) =>
+    getForemanAnalytics(userId, { signal, ...options?.request });
+  const queryOptions = { queryKey, queryFn, enabled: !!userId, ...options?.query } as UseQueryOptions<
+    ForemanAnalytics, TError, TData
   > & { queryKey: QueryKey };
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
   return { ...query, queryKey };

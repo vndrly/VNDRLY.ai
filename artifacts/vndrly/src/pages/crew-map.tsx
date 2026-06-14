@@ -24,6 +24,7 @@ import {
 } from "@workspace/map-utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RecentTripsCard } from "@/components/map/recent-trips-card";
+import { MapComplianceIssuesCard } from "@/components/map/map-compliance-issues-card";
 
 const LOW_BATTERY_THRESHOLD = 0.2;
 
@@ -1309,6 +1310,8 @@ export default function CrewMapPage({ portalMode = "default" }: CrewMapPageProps
             siteLocationId={selectedSiteId}
             vendorId={user?.role === "vendor" && user.vendorId ? user.vendorId : undefined}
           />
+
+          <MapComplianceIssuesCard siteLocationId={selectedSiteId} />
 
           {!isForemanPortal && visitors.length > 0 && (
             <Card className="mt-4">

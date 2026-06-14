@@ -14,7 +14,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import ScreenSafeArea from "@/components/ScreenSafeArea";
 
 import AmberButton from "@/components/AmberButton";
 import ProfilePhotoImage from "@/components/ProfilePhotoImage";
@@ -170,7 +170,11 @@ export default function EditProfileScreen() {
   const hasPhoto = !!(photoPath || directPhotoUrl);
 
   return (
-    <SafeAreaView style={[styles.flex, { backgroundColor: colors.background }]} edges={["bottom"]}>
+    <ScreenSafeArea
+      style={[styles.flex, { backgroundColor: colors.background }]}
+      edges={["bottom"]}
+      includeTopGap={false}
+    >
       <Stack.Screen options={{ headerShown: false }} />
       <InPageHeader title={t("stack.editProfile")} />
       <KeyboardAvoidingView
@@ -305,7 +309,7 @@ export default function EditProfileScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </ScreenSafeArea>
   );
 }
 

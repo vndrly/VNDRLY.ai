@@ -27,7 +27,7 @@ export const KNOWLEDGE_DOCS: KnowledgeDoc[] = [
     id: "metrics-collected",
     title: "What numbers VNDRLY captures (web + mobile)",
     roles: ["admin", "partner", "vendor"],
-    body: `Tickets capture: lifecycle status (initiated → in_progress → pending_review → submitted → approved → completed → closed, plus kicked_back / cancelled / funds_dispersed), check-in/check-out timestamps + GPS, en-route + on-location timestamps + GPS, starting/ending odometer (miles, mobile-prompted), unlock count, payment method/reference/receipt photo. Mobile-only capture: high-frequency GPS pings during in-progress tickets (lat, lng, event_type, speed in m/s, battery 0.0-1.0), location consent audit log per device, push tokens, biometric session enrollment. Visitor portal captures: name, company, vehicle plate, purpose, host (partner OR vendor), check-in/out GPS, safety acknowledgment timestamp, auto-checkout flag. Vendor performance: 1-5 ratings tied to a specific ticket (one per ticket) plus standalone partner-on-vendor ratings. Invoices: total, paid amount, due date, status, line items with quantity/unit_price/tax_rate. Hotlist jobs: location, deadline, estimated duration, awarded bid, converted ticket id.`,
+    body: `Tickets use two axes: office \`status\` (accounting workflow) and field \`lifecycleState\` (GPS phase). Office flow: awaiting_acceptance → initiated → in_progress → pending_review/completed → submitted → approved → awaiting_payment → funds_dispersed (plus kicked_back, denied, cancelled). Field GPS: pending_arrival → en_route → on_location → on_site → off_site. Rule of thumb: in_progress pairs with on_site; terminal office statuses pair with off_site. Captured data: check-in/check-out timestamps + GPS, en-route + on-location timestamps + GPS, starting/ending odometer (miles, mobile-prompted), unlock count, payment method/reference/receipt photo. Mobile-only: high-frequency GPS pings during live-tracked lifecycle states, location consent audit log, push tokens, biometric session enrollment. Visitor portal: name, company, vehicle plate, purpose, host, check-in/out GPS, safety acknowledgment. Vendor performance ratings, invoices, hotlist jobs as elsewhere in VNDRLY.`,
   },
   // ===================== ONBOARDING =====================
   {
@@ -68,7 +68,7 @@ export const KNOWLEDGE_DOCS: KnowledgeDoc[] = [
     id: "ticket-detail",
     title: "Ticket detail and status stepper",
     roles: ["any"],
-    body: `Ticket detail at /tickets/:id shows the status stepper at the top (Created → Assigned → En Route → On Site → Complete → Closed), crew tracker map, line items, comments, and audit log. Field employees update status from the field portal.`,
+    body: `Ticket detail at /tickets/:id shows the office status stepper, field lifecycle phase (pending arrival → en route → on location → on site → off site), crew tracker map, line items, comments, and audit log. Field employees use the mobile app for full GPS lifecycle actions; the web field portal supports check-out (Send for Review) and line-item edits. Once a ticket is submitted or otherwise closed to field edits, it is read-only until an admin unlocks it.`,
   },
   {
     id: "field-portal-home",
@@ -244,13 +244,19 @@ export const KNOWLEDGE_DOCS: KnowledgeDoc[] = [
     id: "analytics-partner",
     title: "Partner analytics dashboard",
     roles: ["partner", "admin"],
-    body: `/analytics/partner/:id shows historical trends for a partner — ticket volume, average duration, top vendors, kickback rate. Charts render with Recharts.`,
+    body: `/analytics/partner/:id is the partner analytics dashboard: stat tiles (total tickets, active, kickback rate, GPS compliance), spend pipeline (pending review / awaiting payment / approved-unpaid $), kickback trend, spend by line type, monthly/yearly spend, vendor scorecard (kickback rate + average cost per ticket), cost by site, spend by AFE, open bills aging (A/P buckets), and YTD 1099-NEC exposure by vendor. Links out to /bills-to-pay and /reports for detail.`,
   },
   {
     id: "analytics-vendor",
     title: "Vendor analytics dashboard",
     roles: ["vendor", "admin"],
-    body: `/analytics/vendor/:id shows historical trends for a vendor — ticket volume, revenue, top partners, kickback rate. Charts render with Recharts.`,
+    body: `/analytics/vendor/:id is the vendor analytics dashboard: stat tiles, revenue pipeline, kickback trend, revenue by line type, monthly/yearly revenue, employee scorecard, activity by site, revenue by AFE, open invoices aging (A/R buckets), and YTD 1099-NEC income by partner. Links out to /invoices and /reports for detail.`,
+  },
+  {
+    id: "analytics-foreman",
+    title: "Foreman crew analytics",
+    roles: ["admin", "vendor"],
+    body: `The foreman portal Analytics tab shows operational KPIs for tickets you foreman: active and on-site today counts, status breakdown, kickback trend, crew performance by field employee, and tickets by site. Vendor admins can open the same dashboard for a foreman user from the web app.`,
   },
   {
     id: "notifications",

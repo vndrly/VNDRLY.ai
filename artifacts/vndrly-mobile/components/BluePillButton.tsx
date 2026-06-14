@@ -12,6 +12,7 @@ import {
 } from "react-native";
 
 import Pill9Slice from "@/components/Pill9Slice";
+import { PILL_HEIGHT_PX, TEXT_SHADOW } from "@/lib/pill-doctrine";
 
 const BLUE_PILL = require("@/assets/pill-stack/mid-blue.png");
 
@@ -39,9 +40,10 @@ export default function BluePillButton({
   style,
   textStyle,
   testID,
-  height = 36,
+  height: _heightProp,
 }: BluePillButtonProps) {
   const isDisabled = disabled || loading;
+  const height = PILL_HEIGHT_PX;
   const radius = height / 2;
 
   return (
@@ -94,9 +96,7 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontSize: 14,
     fontFamily: "Inter_600SemiBold",
-    textShadowColor: "rgba(0,0,0,0.55)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    ...TEXT_SHADOW.onColor,
   },
   disabled: {
     opacity: 0.45,

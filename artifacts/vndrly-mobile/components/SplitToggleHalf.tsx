@@ -11,8 +11,9 @@ import {
 
 import Pill9Slice from "@/components/Pill9Slice";
 import { GREY_PILL_OPACITY } from "@/lib/pill-opacity";
+import { PILL_HEIGHT_PX } from "@/lib/pill-doctrine";
 
-export const SPLIT_TOGGLE_PILL_HEIGHT_PX = 23;
+export const SPLIT_TOGGLE_PILL_HEIGHT_PX = PILL_HEIGHT_PX;
 
 type Props = {
   side: "left" | "right";

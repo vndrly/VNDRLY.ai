@@ -14,7 +14,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import ScreenSafeArea from "@/components/ScreenSafeArea";
 
 import AmberButton from "@/components/AmberButton";
 import LanguageToggle from "@/components/LanguageToggle";
@@ -50,7 +50,7 @@ export default function LoginScreen() {
   ) => {
     setBusy(true);
     try {
-      await login(emailVal.trim(), passwordVal);
+      const user = await login(emailVal.trim(), passwordVal);
       if (options.offerEnable && capability?.available && capability.enrolled && !biometricEnabled) {
         Alert.alert(
           t("login.biometricEnableTitle", { label: capability.label }),
@@ -135,7 +135,7 @@ export default function LoginScreen() {
     !!capability?.available && capability.enrolled && biometricEnabled && Platform.OS !== "web";
 
   return (
-    <SafeAreaView style={[styles.flex, { backgroundColor: colors.background }]}>
+    <ScreenSafeArea style={[styles.flex, { backgroundColor: colors.background }]}>
       {/* Decorative header background — a blurred field-ops photo
           anchored to the top of the screen, fading from 80% opacity
           at the very top to 0% over roughly the top two inches
@@ -326,7 +326,7 @@ export default function LoginScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </ScreenSafeArea>
   );
 }
 

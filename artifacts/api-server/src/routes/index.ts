@@ -41,6 +41,7 @@ import adminRecoveryRouter from "./adminRecovery";
 import platformSettingsRouter from "./platformSettings";
 import fireTransmitterSettingsRouter from "./fireTransmitterSettings";
 import ticketNudgeRouter from "./ticketNudge";
+import ticketFlagsRouter from "./ticketFlags";
 
 const router: IRouter = Router();
 
@@ -75,6 +76,7 @@ router.use(directAssignmentsRouter);
 router.use(fieldEmployeesRouter);
 router.use(ticketsRouter);
 router.use(ticketNudgeRouter);
+router.use(ticketFlagsRouter);
 router.use(crewRouter);
 router.use(ticketScheduleRouter);
 router.use(employeeCertificationsRouter);

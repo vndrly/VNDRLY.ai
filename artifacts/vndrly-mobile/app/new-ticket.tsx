@@ -16,9 +16,11 @@ import {
 
 import { Feather } from "@expo/vector-icons";
 import LayeredPillButton from "@/components/LayeredPillButton";
+import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
 import { getApiErrorCode, translateApiError } from "@/lib/apiErrors";
+import { isFieldEmployeeUser, isPartnerOfficeUser } from "@/lib/mobile-viewer";
 
 type Site = {
   id: number;
@@ -53,9 +55,22 @@ type FieldMe = {
   vendorId: number;
 };
 
+type VendorOption = { id: number; name: string };
+
+type SiteAssignment = {
+  workTypeId: number;
+  workTypeName: string;
+  workTypeCategory: string | null;
+  vendorId: number;
+  vendorName: string;
+};
+
 export default function NewTicketScreen() {
   const colors = useColors();
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const isFieldFlow = isFieldEmployeeUser(user);
+  const isPartnerFlow = isPartnerOfficeUser(user);
   const { siteCode, siteId: siteIdParam, adjacent } = useLocalSearchParams<{
     siteCode?: string;
     siteId?: string;
@@ -115,6 +130,10 @@ export default function NewTicketScreen() {
   // stay disabled until the new site's list has loaded.
   const [workTypesSiteId, setWorkTypesSiteId] = useState<number | null>(null);
   const [workTypesLoading, setWorkTypesLoading] = useState(false);
+  const [vendors, setVendors] = useState<VendorOption[]>([]);
+  const [selectedVendorId, setSelectedVendorId] = useState<number | null>(
+    user?.vendorId ?? null,
+  );
   const siteErrorCode =
     fieldErrorCode === "site_not_found" ||
     fieldErrorCode === "site_vendor_mismatch"
@@ -124,25 +143,87 @@ export default function NewTicketScreen() {
     fieldErrorCode === "work_type_not_allowed" ? fieldErrorCode : "";
 
   const loadSites = useCallback(async (): Promise<Site[]> => {
-    const data = await apiFetch<Site[]>("/api/field/sites");
-    const next = data || [];
+    if (isFieldFlow) {
+      const data = await apiFetch<Site[]>("/api/field/sites");
+      const next = data || [];
+      setSites(next);
+      return next;
+    }
+    const data = await apiFetch<
+      Array<{
+        id: number;
+        name: string;
+        address: string | null;
+        state: string | null;
+        siteCode: string;
+        partnerName: string | null;
+      }>
+    >("/api/site-locations");
+    const next = (data ?? []).map((row) => ({
+      id: row.id,
+      name: row.name,
+      address: row.address,
+      state: row.state,
+      siteCode: row.siteCode,
+      partnerName: row.partnerName ?? null,
+    }));
     setSites(next);
     return next;
-  }, []);
+  }, [isFieldFlow]);
+
+  useEffect(() => {
+    if (!isPartnerFlow) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const rows = await apiFetch<VendorOption[]>("/api/vendors");
+        if (!cancelled) setVendors(Array.isArray(rows) ? rows : []);
+      } catch {
+        if (!cancelled) setVendors([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isPartnerFlow]);
 
   // Task #560: extracted so the post-submit recovery path can re-use it
   // when the server emits `work_type_not_allowed`. Returns the fresh
   // list so the caller can prune any selected ids that disappeared.
   const loadWorkTypes = useCallback(
     async (forSiteId: number): Promise<WorkType[]> => {
-      const data = await apiFetch<WorkType[]>(
-        `/api/field/sites/${forSiteId}/work-types`,
+      if (isFieldFlow) {
+        const data = await apiFetch<WorkType[]>(
+          `/api/field/sites/${forSiteId}/work-types`,
+        );
+        const next = data || [];
+        setWorkTypes(next);
+        return next;
+      }
+      const assignments = await apiFetch<SiteAssignment[]>(
+        `/api/site-locations/${forSiteId}/assignments`,
       );
-      const next = data || [];
+      const vendorScope =
+        user?.role === "partner" ? selectedVendorId : user?.vendorId ?? null;
+      const filtered =
+        vendorScope != null
+          ? (assignments ?? []).filter((row) => row.vendorId === vendorScope)
+          : assignments ?? [];
+      const seen = new Set<number>();
+      const next: WorkType[] = [];
+      for (const row of filtered) {
+        if (seen.has(row.workTypeId)) continue;
+        seen.add(row.workTypeId);
+        next.push({
+          id: row.workTypeId,
+          name: row.workTypeName,
+          category: row.workTypeCategory,
+        });
+      }
       setWorkTypes(next);
       return next;
     },
-    [],
+    [isFieldFlow, selectedVendorId, user?.role, user?.vendorId],
   );
 
   useEffect(() => {
@@ -238,7 +319,11 @@ export default function NewTicketScreen() {
     return () => {
       cancelled = true;
     };
-  }, [siteId, t, loadWorkTypes]);
+  }, [siteId, t, loadWorkTypes, selectedVendorId, user?.vendorId]);
+
+  useEffect(() => {
+    if (user?.vendorId != null) setSelectedVendorId(user.vendorId);
+  }, [user?.vendorId]);
 
   const toggleWorkType = (id: number) => {
     setSelectedWorkTypeIds((prev) =>
@@ -276,40 +361,57 @@ export default function NewTicketScreen() {
     try {
       let lat: number | null = null;
       let lng: number | null = null;
-      const perm = await Location.requestForegroundPermissionsAsync();
-      if (perm.status === "granted") {
-        const pos = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-        });
-        lat = pos.coords.latitude;
-        lng = pos.coords.longitude;
+      if (isFieldFlow) {
+        const perm = await Location.requestForegroundPermissionsAsync();
+        if (perm.status === "granted") {
+          const pos = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+          });
+          lat = pos.coords.latitude;
+          lng = pos.coords.longitude;
+        }
+      }
+
+      const ticketVendorId =
+        user?.role === "partner" ? selectedVendorId : user?.vendorId ?? null;
+      if (!isFieldFlow && (ticketVendorId == null || !Number.isFinite(ticketVendorId))) {
+        Alert.alert(t("common.error"), t("tickets.newJob.pickVendor"));
+        setCreating(false);
+        return;
       }
 
       const results = await Promise.allSettled(
         selectedWorkTypeIds.map((wtId) =>
-          apiFetch<{ id: number }>("/api/field/tickets", {
-            method: "POST",
-            body: JSON.stringify({
-              siteLocationId: siteId,
-              workTypeId: wtId,
-              latitude: lat,
-              longitude: lng,
-              description: description || null,
-              initialState: onSiteNow ? "on_site" : "pending_arrival",
-              // Task #498: forward the adjacent flag so the server lands
-              // the new ticket directly in_progress (the crew is already
-              // on-site for the parent ticket — no geofence required).
-              adjacent: isAdjacent,
-              // Task #498: in adjacent mode the picker may have changed
-              // foreman attribution off the default (= self). We only
-              // forward the field when an explicit pick is set so the
-              // non-adjacent flow continues to omit it entirely (the
-              // server defaults to session.userId in that case).
-              ...(isAdjacent && foremanUserId != null
-                ? { foremanUserId }
-                : {}),
-            }),
-          }),
+          isFieldFlow
+            ? apiFetch<{ id: number }>("/api/field/tickets", {
+                method: "POST",
+                body: JSON.stringify({
+                  siteLocationId: siteId,
+                  workTypeId: wtId,
+                  latitude: lat,
+                  longitude: lng,
+                  description: description || null,
+                  initialState: onSiteNow ? "on_site" : "pending_arrival",
+                  adjacent: isAdjacent,
+                  ...(isAdjacent && foremanUserId != null
+                    ? { foremanUserId }
+                    : {}),
+                }),
+              })
+            : apiFetch<{ id: number }>("/api/tickets", {
+                method: "POST",
+                body: JSON.stringify({
+                  siteLocationId: siteId,
+                  vendorId: ticketVendorId,
+                  workTypeId: wtId,
+                  description: description || null,
+                  initialState: onSiteNow ? "on_site" : "pending_arrival",
+                  intakeChannel:
+                    user?.role === "partner"
+                      ? "office_on_behalf_of_partner"
+                      : null,
+                }),
+              }),
         ),
       );
 
@@ -437,7 +539,8 @@ export default function NewTicketScreen() {
     creating ||
     !siteId ||
     !workTypesReady ||
-    selectedWorkTypeIds.length === 0;
+    selectedWorkTypeIds.length === 0 ||
+    (isPartnerFlow && selectedVendorId == null);
 
   return (
     <ScrollView
@@ -487,6 +590,38 @@ export default function NewTicketScreen() {
             {t("tickets.newJob.siteUnavailableRefreshed")}
           </Text>
         </View>
+      ) : null}
+      {isPartnerFlow ? (
+        <>
+          <Text style={[styles.label, { color: colors.foreground }]}>
+            {t("tickets.newJob.vendorLabel")}
+          </Text>
+          <View style={styles.chips}>
+            {vendors.map((v) => (
+              <TouchableOpacity
+                key={v.id}
+                onPress={() => setSelectedVendorId(v.id)}
+                style={[
+                  styles.chip,
+                  {
+                    borderColor: colors.border,
+                    backgroundColor:
+                      selectedVendorId === v.id ? colors.primary : colors.card,
+                  },
+                ]}
+              >
+                <Text
+                  style={{
+                    color: selectedVendorId === v.id ? "#ffffff" : colors.foreground,
+                    fontFamily: "Inter_500Medium",
+                  }}
+                >
+                  {v.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </>
       ) : null}
       <Text style={[styles.label, { color: colors.foreground }]}>
         {t("tickets.site")}

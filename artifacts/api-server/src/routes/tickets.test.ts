@@ -443,10 +443,8 @@ describe("POST /tickets/:id/check-in — geofence rejection (Task #145)", () => 
     expect(recordTransitionMock).not.toHaveBeenCalled();
   });
 
-  it("falls back to the default 150m radius when the site has no override", async () => {
-    // siteRadiusMeters = null on the row → default 150m used; coords
-    // still ~111km away so the rejection radius reported back must be
-    // the 150m default the route picks.
+  it("falls back to the default site radius when the site has no override", async () => {
+    // siteRadiusMeters = null on the row → DEFAULT_SITE_RADIUS_METERS used
     selectQueue = [
       { latitude: SITE_LAT, longitude: SITE_LNG, siteRadiusMeters: null },
     ];
@@ -459,8 +457,8 @@ describe("POST /tickets/:id/check-in — geofence rejection (Task #145)", () => 
       });
     expect(res.status).toBe(403);
     expect(res.body.code).toBe("off_geofence");
-    expect(res.body.radiusMeters).toBe(150);
-    expect(res.body.distanceMeters).toBeGreaterThan(150);
+    expect(res.body.radiusMeters).toBe(1609);
+    expect(res.body.distanceMeters).toBeGreaterThan(1609);
   });
 
   it("accepts the check-in when coords are inside the geofence", async () => {

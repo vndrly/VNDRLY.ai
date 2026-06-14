@@ -32,6 +32,7 @@ import { GeofenceCirclesLayer, type GeofenceSite } from "@/components/map/geofen
 import { resolveSiteMapRadiusMeters } from "@workspace/map-utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RecentTicketsCard } from "@/components/map/recent-tickets-card";
+import { MapComplianceIssuesCard } from "@/components/map/map-compliance-issues-card";
 import {
   useListSiteLocations,
   getListSiteLocationsQueryKey,
@@ -899,6 +900,10 @@ export default function SiteMapPage() {
           </Card>
 
           <RecentTicketsCard
+            siteLocationId={viewMode === "single" ? selectedSiteId : null}
+          />
+
+          <MapComplianceIssuesCard
             siteLocationId={viewMode === "single" ? selectedSiteId : null}
           />
         </div>

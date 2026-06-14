@@ -5,6 +5,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import SphereBackButton from "@/components/SphereBackButton";
 import { useColors } from "@/hooks/useColors";
+import { screenTopPadding } from "@/lib/screen-insets";
+import { SCREEN_TITLE_TEXT } from "@/lib/pill-doctrine";
 
 type Props = {
   title: string;
@@ -14,6 +16,8 @@ type Props = {
   onBack?: () => void;
   /** Hide the back affordance entirely (use on tab roots). */
   hideBack?: boolean;
+  /** Parent already applied status-bar inset — skip safe-area top padding. */
+  suppressTopInset?: boolean;
   style?: ViewStyle;
   testID?: string;
 };
@@ -34,6 +38,7 @@ export default function InPageHeader({
   right,
   onBack,
   hideBack,
+  suppressTopInset,
   style,
   testID,
 }: Props) {
@@ -54,7 +59,7 @@ export default function InPageHeader({
     <View
       style={[
         {
-          paddingTop: insets.top + 8,
+          paddingTop: suppressTopInset ? 0 : screenTopPadding(insets.top),
           paddingBottom: 8,
           paddingHorizontal: 12,
           backgroundColor: colors.background,
@@ -82,6 +87,7 @@ export default function InPageHeader({
           color: colors.foreground,
           fontSize: 17,
           fontFamily: "Inter_600SemiBold",
+          ...SCREEN_TITLE_TEXT,
         }}
         testID="in-page-header-title"
       >

@@ -191,6 +191,9 @@ function buildStoredUser(
     activeMembershipId:
       typeof data.activeMembershipId === "number" ? data.activeMembershipId : null,
     availableMemberships: normalizeMemberships(data.availableMemberships),
+    requiresContextChoice: Boolean(
+      (data as { requiresContextChoice?: boolean }).requiresContextChoice,
+    ),
   };
   return { user, preferredLanguage };
 }

@@ -1,6 +1,18 @@
 import { Router, type IRouter } from "express";
-import { sql, eq, and } from "drizzle-orm";
+import { sql, eq, and, inArray } from "drizzle-orm";
 import { getSessionFromRequest } from "../lib/session";
+import {
+  queryKickbackTrendByMonth,
+  queryRevenuePipeline,
+  computeKickbackRate,
+  querySpendByAfe,
+  queryPartnerInvoiceAging,
+  queryPartnerNec1099Exposure,
+  queryVendorInvoiceAging,
+  queryVendorNec1099Exposure,
+  querySpendByAfeForVendor,
+} from "../lib/analytics-rollups";
+import { aggregateSpendByLineType } from "@workspace/db/line-types";
 import {
   db,
   ticketsTable,
@@ -138,6 +150,7 @@ router.get("/analytics/vendor/:vendorId", async (req, res): Promise<void> => {
       jobTitle: fieldEmployeesTable.jobTitle,
       ticketCount: sql<number>`count(${ticketsTable.id})::int`,
       approvedCount: sql<number>`count(*) FILTER (WHERE ${ticketsTable.status} = 'approved')::int`,
+      kickedBackCount: sql<number>`count(*) FILTER (WHERE ${ticketsTable.status} = 'kicked_back')::int`,
       revenue: sql<string>`COALESCE(SUM(sub.line_total), 0)::numeric(12,2)`,
     })
     .from(fieldEmployeesTable)
@@ -185,29 +198,49 @@ router.get("/analytics/vendor/:vendorId", async (req, res): Promise<void> => {
     .groupBy(siteLocationsTable.id, siteLocationsTable.name)
     .orderBy(sql`count(*) DESC`);
 
+  const vendorScope = eq(ticketsTable.vendorId, vendorId);
+  const revenuePipeline = await queryRevenuePipeline(vendorScope);
+  const kickbackTrendByMonth = await queryKickbackTrendByMonth(vendorScope);
+
+  const [invoiceAging, nec1099Exposure, spendByAfe] = await Promise.all([
+    queryVendorInvoiceAging(vendorId),
+    queryVendorNec1099Exposure(vendorId),
+    querySpendByAfeForVendor(vendorId),
+  ]);
+
   res.json({
     statusBreakdown,
-    revenueByType: revenueByType.map(r => ({ type: r.type, total: parseFloat(r.total) })),
+    revenueByType: aggregateSpendByLineType(
+      revenueByType.map((r) => ({ type: r.type, total: parseFloat(r.total) })),
+    ),
     revenueByMonth: revenueByMonth.rows.map((r: any) => ({ month: r.month, total: parseFloat(r.total) })),
     revenueByYear: revenueByYear.rows.map((r: any) => ({ year: r.year, total: parseFloat(r.total) })),
     totalRevenue: parseFloat(totalRevenue.total),
     totalTickets: ticketTotals.total,
     approvedTickets: ticketTotals.approved,
     kickedBackTickets: ticketTotals.kickedBack,
-    kickbackRate: ticketTotals.total > 0 ? Math.round((ticketTotals.kickedBack / ticketTotals.total) * 100) : 0,
+    kickbackRate: computeKickbackRate(ticketTotals.kickedBack, ticketTotals.total),
+    revenuePipeline,
+    kickbackTrendByMonth,
     gpsCompliance: {
       total: gpsTotal.count,
       mismatches: gpsMismatchCount[0].count,
       rate: gpsTotal.count > 0 ? Math.round(((gpsTotal.count - gpsMismatchCount[0].count) / gpsTotal.count) * 100) : 100,
     },
-    employeePerformance: employeeTicketCounts.map(e => ({
-      employeeId: e.employeeId,
-      name: `${e.firstName} ${e.lastName}`,
-      jobTitle: e.jobTitle,
-      ticketCount: e.ticketCount,
-      approvedCount: e.approvedCount,
-      revenue: parseFloat(e.revenue),
-    })),
+    employeePerformance: employeeTicketCounts.map((e) => {
+      const revenue = parseFloat(e.revenue);
+      return {
+        employeeId: e.employeeId,
+        name: `${e.firstName} ${e.lastName}`,
+        jobTitle: e.jobTitle,
+        ticketCount: e.ticketCount,
+        approvedCount: e.approvedCount,
+        kickedBackCount: e.kickedBackCount,
+        kickbackRate: computeKickbackRate(e.kickedBackCount, e.ticketCount),
+        avgRevenuePerTicket: e.ticketCount > 0 ? revenue / e.ticketCount : 0,
+        revenue,
+      };
+    }),
     topWorkTypes: topWorkTypes.map(w => ({
       workType: w.workType,
       count: w.count,
@@ -219,6 +252,9 @@ router.get("/analytics/vendor/:vendorId", async (req, res): Promise<void> => {
       ticketCount: s.ticketCount,
       revenue: parseFloat(s.revenue),
     })),
+    invoiceAging,
+    nec1099Exposure,
+    spendByAfe,
   });
 });
 
@@ -245,6 +281,12 @@ router.get("/analytics/partner/:partnerId", async (req, res): Promise<void> => {
     res.status(403).json({ error: "Access denied" });
     return;
   }
+
+  const partnerSiteRows = await db
+    .select({ id: siteLocationsTable.id })
+    .from(siteLocationsTable)
+    .where(eq(siteLocationsTable.partnerId, partnerId));
+  const partnerSiteIds = partnerSiteRows.map((row) => row.id);
 
   const partnerSites = db
     .select({ id: siteLocationsTable.id })
@@ -397,6 +439,25 @@ router.get("/analytics/partner/:partnerId", async (req, res): Promise<void> => {
     .orderBy(sql`count(*) DESC`)
     .limit(10);
 
+  const partnerScope =
+    partnerSiteIds.length > 0
+      ? inArray(ticketsTable.siteLocationId, partnerSiteIds)
+      : sql`false`;
+  const spendPipeline = await queryRevenuePipeline(partnerScope);
+  const kickbackTrendByMonth = partnerSiteIds.length > 0
+    ? await queryKickbackTrendByMonth(
+        sql`${ticketsTable.siteLocationId} IN (${sql.join(partnerSiteIds.map((id) => sql`${id}`), sql`, `)})`,
+      )
+    : [];
+
+  const kickbackRate = computeKickbackRate(ticketTotals.kickedBack, ticketTotals.total);
+
+  const [spendByAfe, invoiceAging, nec1099Exposure] = await Promise.all([
+    querySpendByAfe(partnerSiteIds),
+    queryPartnerInvoiceAging(partnerId),
+    queryPartnerNec1099Exposure(partnerId),
+  ]);
+
   res.json({
     statusBreakdown,
     totalTickets: ticketTotals.total,
@@ -404,15 +465,24 @@ router.get("/analytics/partner/:partnerId", async (req, res): Promise<void> => {
     kickedBackTickets: ticketTotals.kickedBack,
     submittedTickets: ticketTotals.submitted,
     activeTickets: ticketTotals.inProgress,
+    kickbackRate,
     totalCost: parseFloat(totalCost.total),
-    costByVendor: costByVendor.map(v => ({
-      vendorId: v.vendorId,
-      vendorName: v.vendorName,
-      ticketCount: v.ticketCount,
-      totalCost: parseFloat(v.totalCost),
-      approvedCount: v.approvedCount,
-      kickedBackCount: v.kickedBackCount,
-    })),
+    spendPipeline,
+    kickbackTrendByMonth,
+    costByVendor: costByVendor.map((v) => {
+      const totalCost = parseFloat(v.totalCost);
+      return {
+        vendorId: v.vendorId,
+        vendorName: v.vendorName,
+        ticketCount: v.ticketCount,
+        totalCost,
+        approvedCount: v.approvedCount,
+        kickedBackCount: v.kickedBackCount,
+        kickbackRate:
+          v.ticketCount > 0 ? Math.round((v.kickedBackCount / v.ticketCount) * 100) : 0,
+        avgCostPerTicket: v.ticketCount > 0 ? totalCost / v.ticketCount : 0,
+      };
+    }),
     costBySite: costBySite.map(s => ({
       siteId: s.siteId,
       siteName: s.siteName,
@@ -421,7 +491,9 @@ router.get("/analytics/partner/:partnerId", async (req, res): Promise<void> => {
     })),
     costByMonth: costByMonthRaw.rows.map(m => ({ month: m.month, total: parseFloat(m.total) })),
     costByYear: costByYearRaw.rows.map(y => ({ year: y.year, total: parseFloat(y.total) })),
-    costByType: costByType.map(t => ({ type: t.type, total: parseFloat(t.total) })),
+    costByType: aggregateSpendByLineType(
+      costByType.map((t) => ({ type: t.type, total: parseFloat(t.total) })),
+    ),
     gpsCompliance: {
       total: gpsTotal.count,
       mismatches: gpsMismatchCount[0].count,
@@ -431,6 +503,127 @@ router.get("/analytics/partner/:partnerId", async (req, res): Promise<void> => {
       workType: w.workType,
       count: w.count,
       cost: parseFloat(w.cost),
+    })),
+    spendByAfe,
+    invoiceAging,
+    nec1099Exposure,
+  });
+});
+
+router.get("/analytics/foreman/:userId", async (req, res): Promise<void> => {
+  const session = getSessionFromRequest(req);
+  if (!session || !session.role || session.role === "guest") {
+    res.status(401).json({ error: "Authentication required" });
+    return;
+  }
+
+  const userId = parseInt(req.params.userId);
+  if (isNaN(userId)) {
+    res.status(400).json({ error: "Invalid user ID" });
+    return;
+  }
+
+  const isForeman =
+    session.vendorRole === "foreman" || session.vendorRole === "both";
+
+  if (session.role === "field_employee") {
+    if (!isForeman) {
+      res.status(403).json({ error: "Access denied" });
+      return;
+    }
+    if ((session.userId ?? null) !== userId) {
+      res.status(403).json({ error: "Access denied" });
+      return;
+    }
+  } else if (session.role !== "admin") {
+    res.status(403).json({ error: "Access denied" });
+    return;
+  }
+
+  const foremanScope = sql`(${ticketsTable.foremanUserId} = ${userId} OR ${ticketsTable.actingForemanUserId} = ${userId})`;
+
+  const statusBreakdown = await db
+    .select({
+      status: ticketsTable.status,
+      count: sql<number>`count(*)::int`,
+    })
+    .from(ticketsTable)
+    .where(foremanScope)
+    .groupBy(ticketsTable.status);
+
+  const [ticketTotals] = await db
+    .select({
+      total: sql<number>`count(*)::int`,
+      approved: sql<number>`count(*) FILTER (WHERE ${ticketsTable.status} = 'approved')::int`,
+      kickedBack: sql<number>`count(*) FILTER (WHERE ${ticketsTable.status} = 'kicked_back')::int`,
+      submitted: sql<number>`count(*) FILTER (WHERE ${ticketsTable.status} = 'submitted')::int`,
+      inProgress: sql<number>`count(*) FILTER (WHERE ${ticketsTable.status} IN ('initiated', 'draft', 'in_progress', 'pending_review'))::int`,
+      onSiteToday: sql<number>`count(*) FILTER (WHERE ${ticketsTable.status} IN ('in_progress', 'pending_review') AND ${ticketsTable.checkInTime} >= date_trunc('day', now()))::int`,
+    })
+    .from(ticketsTable)
+    .where(foremanScope);
+
+  const bySite = await db
+    .select({
+      siteId: siteLocationsTable.id,
+      siteName: siteLocationsTable.name,
+      ticketCount: sql<number>`count(*)::int`,
+      activeCount: sql<number>`count(*) FILTER (WHERE ${ticketsTable.status} IN ('initiated', 'draft', 'in_progress', 'pending_review', 'submitted'))::int`,
+    })
+    .from(ticketsTable)
+    .innerJoin(siteLocationsTable, eq(ticketsTable.siteLocationId, siteLocationsTable.id))
+    .where(foremanScope)
+    .groupBy(siteLocationsTable.id, siteLocationsTable.name)
+    .orderBy(sql`count(*) DESC`)
+    .limit(10);
+
+  const kickbackTrendByMonth = await queryKickbackTrendByMonth(foremanScope);
+
+  const employeePerformance = await db
+    .select({
+      employeeId: fieldEmployeesTable.id,
+      firstName: fieldEmployeesTable.firstName,
+      lastName: fieldEmployeesTable.lastName,
+      ticketCount: sql<number>`count(${ticketsTable.id})::int`,
+      approvedCount: sql<number>`count(*) FILTER (WHERE ${ticketsTable.status} = 'approved')::int`,
+      kickedBackCount: sql<number>`count(*) FILTER (WHERE ${ticketsTable.status} = 'kicked_back')::int`,
+      activeCount: sql<number>`count(*) FILTER (WHERE ${ticketsTable.status} IN ('initiated', 'draft', 'in_progress', 'pending_review', 'submitted'))::int`,
+    })
+    .from(ticketsTable)
+    .innerJoin(fieldEmployeesTable, eq(ticketsTable.fieldEmployeeId, fieldEmployeesTable.id))
+    .where(and(foremanScope, sql`${ticketsTable.fieldEmployeeId} IS NOT NULL`))
+    .groupBy(
+      fieldEmployeesTable.id,
+      fieldEmployeesTable.firstName,
+      fieldEmployeesTable.lastName,
+    )
+    .orderBy(sql`count(${ticketsTable.id}) DESC`)
+    .limit(10);
+
+  res.json({
+    statusBreakdown,
+    totalTickets: ticketTotals.total,
+    approvedTickets: ticketTotals.approved,
+    kickedBackTickets: ticketTotals.kickedBack,
+    submittedTickets: ticketTotals.submitted,
+    activeTickets: ticketTotals.inProgress,
+    onSiteToday: ticketTotals.onSiteToday,
+    kickbackRate: computeKickbackRate(ticketTotals.kickedBack, ticketTotals.total),
+    kickbackTrendByMonth,
+    bySite: bySite.map((site) => ({
+      siteId: site.siteId,
+      siteName: site.siteName,
+      ticketCount: site.ticketCount,
+      activeCount: site.activeCount,
+    })),
+    employeePerformance: employeePerformance.map((employee) => ({
+      employeeId: employee.employeeId,
+      name: `${employee.firstName} ${employee.lastName}`,
+      ticketCount: employee.ticketCount,
+      approvedCount: employee.approvedCount,
+      kickedBackCount: employee.kickedBackCount,
+      kickbackRate: computeKickbackRate(employee.kickedBackCount, employee.ticketCount),
+      activeCount: employee.activeCount,
     })),
   });
 });

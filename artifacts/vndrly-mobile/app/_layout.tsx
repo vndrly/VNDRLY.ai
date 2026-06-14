@@ -24,6 +24,7 @@ import SafeKeyboardProvider from "@/components/SafeKeyboardProvider";
 import SplashLogo from "@/components/SplashLogo";
 import { AuthProvider } from "@/hooks/use-auth";
 import { BrandProvider } from "@/hooks/use-brand";
+import ContextPickerModal from "@/components/ContextPickerModal";
 import { initApi } from "@/lib/api";
 import { getCachedToken, getCachedRole, getToken, isTokenCacheReady, subscribeToken, getUser } from "@/lib/auth";
 import { hasActiveConsentForThisDevice, isConsentDeclined } from "@/lib/locationConsent";
@@ -215,6 +216,7 @@ function AuthGate() {
       <Stack.Screen name="guest-login" options={{ headerShown: false }} />
       <Stack.Screen name="visitor-checkin" options={{ headerShown: false }} />
       <Stack.Screen name="new-ticket" options={{ title: t("stack.newTicket") }} />
+      <Stack.Screen name="add-site-location" options={{ title: t("siteLocations.addSite") }} />
       <Stack.Screen name="ticket/[id]" options={{ title: t("stack.tracking") }} />
       <Stack.Screen name="ticket/[id]/crew-tracker" options={{ title: t("stack.crewTracker") }} />
       <Stack.Screen name="invoice/[id]" options={{ title: t("stack.invoice") }} />
@@ -260,6 +262,7 @@ function RootLayout() {
               <GestureHandlerRootView style={{ flex: 1 }}>
                 <SafeKeyboardProvider>
                   <AuthGate />
+                  <ContextPickerModal />
                 </SafeKeyboardProvider>
               </GestureHandlerRootView>
             </BrandProvider>

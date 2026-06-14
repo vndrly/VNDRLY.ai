@@ -31,6 +31,7 @@ interface AuthContextValue {
   availableMemberships: MembershipSummary[];
   activeMembershipId: number | null;
   activeMembership: MembershipSummary | null;
+  requiresContextChoice: boolean;
   switchContext: (membershipId: number) => Promise<StoredUser>;
   refresh: () => Promise<void>;
 }
@@ -112,6 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       availableMemberships: memberships,
       activeMembershipId,
       activeMembership,
+      requiresContextChoice: Boolean(user?.requiresContextChoice),
       switchContext,
       refresh,
     };

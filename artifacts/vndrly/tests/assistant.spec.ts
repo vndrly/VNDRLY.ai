@@ -1605,6 +1605,7 @@ describe("knowledge corpus references the live app", () => {
     "vendor-catalog": "Vendor Catalog",
     "analytics-partner": "Analytics",
     "analytics-vendor": "Analytics",
+    "analytics-foreman": "Crew analytics",
     notifications: "Notification",
     comments: null,
     "auth-context": null,

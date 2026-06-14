@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import ActiveOrgIndicator from "@/components/ActiveOrgIndicator";
 import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/useColors";
+import { crewMapTabVisible, homeTabTitleKey, isForemanEmployeeUser } from "@/lib/mobile-viewer";
 import { useTabBadges } from "@/lib/tabBadges";
 
 export default function TabLayout() {
@@ -13,13 +14,8 @@ export default function TabLayout() {
   const { t } = useTranslation();
   const badges = useTabBadges();
   const { user } = useAuth();
-  const isFieldOnlyEmployee =
-    user?.role === "field_employee" &&
-    user.vendorRole !== "foreman" &&
-    user.vendorRole !== "both";
-  const isForemanEmployee =
-    user?.role === "field_employee" &&
-    (user.vendorRole === "foreman" || user.vendorRole === "both");
+  const isForemanEmployee = isForemanEmployeeUser(user);
+  const showsCrewMap = crewMapTabVisible(user);
   return (
     <Tabs
       screenOptions={{
@@ -47,9 +43,19 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
+        name="askv"
+        options={{
+          title: t("tabs.askv"),
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="zap" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="index"
         options={{
-          title: isForemanEmployee ? t("foremanHome.portal") : t("tabs.home"),
+          title: t(homeTabTitleKey(user)),
           headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Feather name="home" size={size} color={color} />
@@ -63,7 +69,6 @@ export default function TabLayout() {
         options={{
           title: t("tabs.schedule"),
           headerShown: false,
-          href: isFieldOnlyEmployee ? null : undefined,
           tabBarIcon: ({ color, size }) => (
             <Feather name="calendar" size={size} color={color} />
           ),
@@ -72,11 +77,23 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="flagged"
+        options={{
+          title: t("tabs.flagged"),
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="flag" size={size} color={color} />
+          ),
+          tabBarBadge: badges.flagged > 0 ? (badges.flagged > 99 ? "99+" : badges.flagged) : undefined,
+          tabBarBadgeStyle: { backgroundColor: "#f59e0b", color: "#ffffff" },
+        }}
+      />
+      <Tabs.Screen
         name="crew-map"
         options={{
           title: t("tabs.crewMap"),
           headerShown: false,
-          href: isForemanEmployee ? undefined : null,
+          href: showsCrewMap ? undefined : null,
           tabBarIcon: ({ color, size }) => (
             <Feather name="map-pin" size={size} color={color} />
           ),

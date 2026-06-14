@@ -5,27 +5,18 @@ import request from "supertest";
 import { attachTestErrorMiddleware, expectStatus } from "../test-utils/route-app";
 import { buildTestCookie } from "../test-utils/session";
 
-// Coverage for the "vendor admin can read open tickets on the iOS field app"
-// expansion. The previous behavior of GET /api/field/open-tickets and
-// GET /api/field/open-tickets/:id was hard-gated to `requireFieldUser`,
-// which 401'd anyone whose session role wasn't `field_employee`. We now
-// route both endpoints through `requireFieldOrVendor` so a vendor admin
-// session (role `vendor` + a vendorId) can read the same denormalized
-// rows scoped to their own vendor. The field-employee path is unchanged
-// — it still applies the `fieldEmployeeId` filter.
-//
-// These tests pin three things that would otherwise only show up in
-// production:
-//   1. A vendor-admin session sees a 200 (not 401) on both endpoints.
-//   2. The vendor-admin path drops the `fieldEmployeeId` filter (so it
-//      sees tickets across the team) but keeps the vendorId scope.
-//   3. A non-field/non-vendor session (e.g. partner) still gets 401 so
-//      the expansion does not accidentally widen access to other roles.
+// Coverage for the mobile open-tickets expansion across roles:
+// field_employee, vendor admin, partner, and platform admin. Each
+// role gets a tailored iOS experience while sharing the same
+// denormalized row shape on GET /api/field/open-tickets and
+// GET /api/field/open-tickets/:id.
 
 const FIELD_USER_ID = 200;
 const VENDOR_USER_ID = 201;
 const PARTNER_USER_ID = 202;
 const VENDOR_ID = 3;
+
+const PARTNER_ID = 7;
 
 const fieldCookie = buildTestCookie({
   userId: FIELD_USER_ID,
@@ -204,6 +195,10 @@ function vendorRow(overrides: Record<string, unknown> = {}) {
   return { id: VENDOR_ID, name: "Winchester", ...overrides };
 }
 
+function partnerRow(overrides: Record<string, unknown> = {}) {
+  return { id: PARTNER_ID, name: "ACME Partner", ...overrides };
+}
+
 function ticketRow(overrides: Record<string, unknown> = {}) {
   return {
     id: 101,
@@ -228,11 +223,17 @@ describe("GET /api/field/open-tickets — auth gating", () => {
     expect(res.status).toBe(401);
   });
 
-  it("401s when session role is partner (not field_employee or vendor)", async () => {
+  it("returns 200 for a partner session scoped to partner sites", async () => {
+    selectQueue = [
+      () => [partnerRow()],
+      () => [ticketRow({ id: 201, vendorName: "Winchester" })],
+    ];
     const res = await request(app)
       .get("/api/field/open-tickets")
       .set("Cookie", partnerCookie);
-    expect(res.status).toBe(401);
+    expectStatus(res, 200);
+    expect(res.body).toHaveLength(1);
+    expect(res.body[0].id).toBe(201);
   });
 });
 
@@ -412,10 +413,26 @@ describe("GET /api/field/me — vendor admin mode", () => {
     expect(res.status).toBe(401);
   });
 
-  it("401s for a partner session", async () => {
+  it("returns viewerRole=partner with partner info for a partner session", async () => {
+    selectQueue = [
+      () => [partnerRow({ name: "Globex Partner" })],
+      () => [{ logoUrl: null, name: "Globex Partner" }],
+    ];
     const res = await request(app)
       .get("/api/field/me")
       .set("Cookie", partnerCookie);
-    expect(res.status).toBe(401);
+    expectStatus(res, 200);
+    expect(res.body.viewerRole).toBe("partner");
+    expect(res.body.partnerId).toBe(PARTNER_ID);
+    expect(res.body.partnerName).toBe("Globex Partner");
+    expect(res.body.employeeId).toBeNull();
+  });
+
+  it("403s when the partner row is missing", async () => {
+    selectQueue = [() => []];
+    const res = await request(app)
+      .get("/api/field/open-tickets")
+      .set("Cookie", partnerCookie);
+    expect(res.status).toBe(403);
   });
 });

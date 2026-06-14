@@ -46,6 +46,7 @@ import TicketStatusStepper from "@/components/ticket-status-stepper";
 import { TicketSiteVisitSummaryCard } from "@/components/ticket-site-visit-summary-card";
 import { CrewTimeSection } from "@/components/crew-time-section";
 import { TicketNudgePanel } from "@/components/ticket-nudge-panel";
+import { TicketFlagPanel } from "@/components/ticket-flag-panel";
 import { getGoogleMapsUrl } from "@/lib/maps";
 import { forwardRef, useState, useEffect, useMemo, useRef, useCallback, type ButtonHTMLAttributes } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -3121,6 +3122,12 @@ export default function TicketDetail({ id }: { id: number }) {
       </Card>
 
       <TicketNudgePanel
+        ticketId={ticket.id}
+        ticketStatus={ticket.status}
+        userRole={user?.role}
+      />
+
+      <TicketFlagPanel
         ticketId={ticket.id}
         ticketStatus={ticket.status}
         userRole={user?.role}

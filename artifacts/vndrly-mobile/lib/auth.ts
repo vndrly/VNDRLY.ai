@@ -31,6 +31,7 @@ export type StoredUser = {
   // can switch contexts from the profile screen.
   activeMembershipId?: number | null;
   availableMemberships?: MembershipSummary[];
+  requiresContextChoice?: boolean;
 };
 
 const userListeners = new Set<(user: StoredUser | null) => void>();

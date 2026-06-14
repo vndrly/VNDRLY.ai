@@ -208,12 +208,18 @@ import {
   REINVITE_ELIGIBLE_STATUSES,
   type IntakeChannel,
 } from "../lib/intake-status";
+import {
+  lifecycleStateForOfficeStatus,
+  KICKBACK_ALLOWED_STATUSES,
+  SUBMIT_ALLOWED_STATUSES,
+} from "../lib/ticket-lifecycle-coherence";
 import { getForemanVendorPersonId, userIsVendorOffice } from "../lib/office-role";
 import {
   TICKET_EN_ROUTE_INVALID_STATE,
   TICKET_NOT_ACCEPTED,
   TICKET_NOT_AWAITING_ACCEPTANCE,
   TICKET_NOT_CHECKINABLE,
+  TICKET_ON_LOCATION_INVALID_STATE,
   TICKET_STATE_CHANGED,
 } from "@workspace/ticket-state-conflict-codes";
 import {
@@ -1682,7 +1688,6 @@ router.post("/tickets/:id/check-in", async (req, res): Promise<void> => {
     "draft",
     "initiated",
     "in_progress",
-    "on_route",
     "kicked_back",
   ]);
 
@@ -1938,7 +1943,7 @@ router.post("/tickets/:id/on-location", async (req, res): Promise<void> => {
     !allowedStatus.includes(existing.status)
   ) {
     res.status(409).json({
-      error: "on_location_invalid_state",
+      error: TICKET_ON_LOCATION_INVALID_STATE,
       code: "ticket.on_location_invalid_state",
       message: "Ticket is not in a state that allows on-location",
     });
@@ -1998,11 +2003,12 @@ router.post("/tickets/:id/check-out", async (req, res): Promise<void> => {
       .select({ status: ticketsTable.status })
       .from(ticketsTable)
       .where(eq(ticketsTable.id, params.data.id));
-    if (t && t.status !== "in_progress") {
+    if (!t || t.status !== "in_progress") {
+      const statusLabel = (t?.status ?? "unknown").replace(/_/g, " ");
       res.status(409).json({
         code: "ticket.not_checked_in",
         error: "ticket_not_checked_in",
-        message: `Ticket is ${t.status.replace(/_/g, " ")}; it must be checked in before check-out`,
+        message: `Ticket is ${statusLabel}; it must be checked in before check-out`,
       });
       return;
     }
@@ -2138,6 +2144,25 @@ router.post("/tickets/:id/submit", async (req, res): Promise<void> => {
   if (!(await ensureFieldOwnership(req, res, params.data.id))) return;
   // Task #494: cannot submit work on a ticket that has not been accepted yet.
   if (!(await ensureAccepted(req, res, params.data.id))) return;
+
+  const [submitExisting] = await db
+    .select({ status: ticketsTable.status })
+    .from(ticketsTable)
+    .where(eq(ticketsTable.id, params.data.id));
+  if (!submitExisting) {
+    res.status(404).json({ code: "ticket.not_found", error: "ticket_not_found", message: "Ticket not found" });
+    return;
+  }
+  if (!SUBMIT_ALLOWED_STATUSES.has(submitExisting.status)) {
+    const statusLabel = (submitExisting.status ?? "unknown").replace(/_/g, " ");
+    res.status(409).json({
+      code: "ticket.not_submittable",
+      error: "ticket_not_submittable",
+      message: `Ticket is ${statusLabel} and cannot be submitted yet`,
+    });
+    return;
+  }
+
   // Task #572: same assignment-removed handling as the other state changes.
   if (!(await ensureFieldAssignmentForFieldEmployee(req, res, params.data.id))) return;
 
@@ -3129,6 +3154,23 @@ router.post("/tickets/:id/kickback", async (req, res): Promise<void> => {
   const parsed = KickbackTicketBody.safeParse(req.body);
   if (!parsed.success) {
     sendValidationFailed(res, parsed.error);
+    return;
+  }
+  const [kickbackExisting] = await db
+    .select({ status: ticketsTable.status })
+    .from(ticketsTable)
+    .where(eq(ticketsTable.id, params.data.id));
+  if (!kickbackExisting) {
+    res.status(404).json({ code: "ticket.not_found", error: "ticket_not_found", message: "Ticket not found" });
+    return;
+  }
+  if (!KICKBACK_ALLOWED_STATUSES.has(kickbackExisting.status)) {
+    const statusLabel = (kickbackExisting.status ?? "unknown").replace(/_/g, " ");
+    res.status(409).json({
+      code: "ticket.not_kickbackable",
+      error: "ticket_not_kickbackable",
+      message: `Ticket is ${statusLabel} and cannot be kicked back`,
+    });
     return;
   }
   const kickbackSession = getSession(req);
@@ -4532,6 +4574,7 @@ router.post("/tickets/:id/unlock", async (req, res): Promise<void> => {
       .update(ticketsTable)
       .set({
         status: "in_progress",
+        lifecycleState: "on_site",
         unlockedAt: new Date(),
         unlockedById: session.userId,
         unlockCount: sql`${ticketsTable.unlockCount} + 1`,
@@ -5087,6 +5130,7 @@ router.post("/tickets/:id/cancel", async (req, res): Promise<void> => {
       .update(ticketsTable)
       .set({
         status: "cancelled",
+        lifecycleState: "off_site",
         preCancelStatus: existing.status,
         cancelledAt: new Date(),
         cancelledById: session?.userId ?? null,
@@ -5148,11 +5192,13 @@ router.post("/tickets/:id/reactivate", async (req, res): Promise<void> => {
   // was the legacy fallback but is not a valid value in the lifecycle set
   // and would orphan the ticket from every status-aware reader.
   const restoredStatus = existing.preCancelStatus ?? "initiated";
+  const restoredLifecycle = lifecycleStateForOfficeStatus(restoredStatus);
   await db.transaction(async (tx) => {
     await tx
       .update(ticketsTable)
       .set({
         status: restoredStatus,
+        lifecycleState: restoredLifecycle,
         preCancelStatus: null,
         cancelledAt: null,
         cancelledById: null,

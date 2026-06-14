@@ -916,3 +916,34 @@ describe("POST /tickets/:id/awaiting-payment (Task #551 codes)", () => {
     expect(typeof r.body.message).toBe("string");
   });
 });
+
+describe("POST /tickets/:id/submit — pre-status guard", () => {
+  it("emits ticket_not_submittable when status is initiated", async () => {
+    ticketRow = makeTicketRow({ id: 123, status: "initiated", vendorId: 11 });
+    const r = await request(app)
+      .post("/api/tickets/123/submit")
+      .set("Cookie", vendorCookie)
+      .send({});
+    expect(r.status).toBe(409);
+    expect(r.body.error).toBe("ticket_not_submittable");
+    expect(r.body.code).toBe("ticket.not_submittable");
+  });
+});
+
+describe("POST /tickets/:id/kickback — pre-status guard", () => {
+  it("emits ticket_not_kickbackable when status is pending_review", async () => {
+    ticketRow = makeTicketRow({
+      id: 123,
+      status: "pending_review",
+      vendorId: 11,
+      partnerId: 5,
+    });
+    const r = await request(app)
+      .post("/api/tickets/123/kickback")
+      .set("Cookie", partnerCookie)
+      .send({ reason: "Missing photos" });
+    expect(r.status).toBe(409);
+    expect(r.body.error).toBe("ticket_not_kickbackable");
+    expect(r.body.code).toBe("ticket.not_kickbackable");
+  });
+});

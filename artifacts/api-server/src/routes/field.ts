@@ -276,21 +276,7 @@ function endOfLocalDay(d: Date): Date {
   return x;
 }
 
-/**
- * Field-employee OR vendor-admin gate.
- *
- * Some "field" endpoints (open-tickets list/detail and `/field/me`) are
- * useful read-only for a vendor admin who wants to see all open tickets
- * across their team from the iOS app. We accept both roles here and
- * return a discriminated union so callers can branch on `mode`:
- *
- *   - `field`  — full field-employee context (vendorPeople row, etc.)
- *   - `vendor` — minimal vendor context (vendorId + vendorName); no
- *                vendor_people row exists for an office-side admin.
- *
- * Anything else (admin, partner, no session) gets a 401.
- */
-async function requireFieldOrVendor(req: any, res: any): Promise<
+type MobileViewerContext =
   | {
       mode: "field";
       session: Session;
@@ -304,8 +290,38 @@ async function requireFieldOrVendor(req: any, res: any): Promise<
       vendorId: number;
       vendorName: string | null;
     }
-  | null
-> {
+  | {
+      mode: "partner";
+      session: Session;
+      partnerId: number;
+      partnerName: string | null;
+    }
+  | {
+      mode: "admin";
+      session: Session;
+    };
+
+const OPEN_NARROW_STATUSES = ["initiated", "in_progress"] as const;
+const OPEN_BROAD_STATUSES = [
+  "initiated",
+  "draft",
+  "in_progress",
+  "kicked_back",
+  "pending_review",
+] as const;
+
+/**
+ * Mobile viewer gate for shared iOS endpoints (open-tickets, /field/me).
+ *
+ * Each role gets a tailored mobile experience while reusing the same
+ * denormalized ticket row shape:
+ *
+ *   - `field`   — field employee (vendorPeople row, scoped tickets)
+ *   - `vendor`  — vendor office admin (all open tickets on their vendor)
+ *   - `partner` — partner office user (open tickets on their sites)
+ *   - `admin`   — platform admin (all open tickets)
+ */
+async function requireFieldOrVendor(req: any, res: any): Promise<MobileViewerContext | null> {
   const session = getSession(req);
   if (!session) {
     res.status(401).json({
@@ -349,23 +365,46 @@ async function requireFieldOrVendor(req: any, res: any): Promise<
     };
   }
 
+  if (session.role === "partner" && session.partnerId != null) {
+    const [partner] = await db
+      .select({ id: partnersTable.id, name: partnersTable.name })
+      .from(partnersTable)
+      .where(eq(partnersTable.id, session.partnerId));
+    if (!partner) {
+      res.status(403).json({
+        code: "field.partner_not_found",
+        error: "field_partner_not_found",
+        message: "Partner not found",
+      });
+      return null;
+    }
+    return {
+      mode: "partner",
+      session,
+      partnerId: partner.id,
+      partnerName: partner.name ?? null,
+    };
+  }
+
+  if (session.role === "admin") {
+    return { mode: "admin", session };
+  }
+
   res.status(401).json({
-    code: "field.field_or_vendor_login_required",
-    error: "field_or_vendor_login_required",
-    message: "Field employee or vendor login required",
+    code: "field.mobile_viewer_login_required",
+    error: "field_mobile_viewer_login_required",
+    message: "Login required",
   });
   return null;
 }
 
 const router: IRouter = Router();
 
-// ── GET /api/field/me — current field employee, or vendor admin shape ──
+// ── GET /api/field/me — mobile profile shape for every viewer role ──
 //
-// Accepts both field-employee and vendor-admin sessions. For a vendor
-// admin (no vendor_people row exists for office-side users), returns a
-// minimal payload with `viewerRole: "vendor"`, `vendorId`, and
-// `vendorName` so the mobile profile/header can render without 401-ing
-// out. All field-employee-specific fields are nulled in vendor mode.
+// Field employees get the full vendor_people payload. Office-side
+// vendor, partner, and admin sessions get a minimal `viewerRole`
+// discriminator so the iOS profile/header can render without 401-ing.
 router.get("/field/me", async (req, res): Promise<void> => {
   const ctx = await requireFieldOrVendor(req, res);
   if (!ctx) return;
@@ -383,12 +422,64 @@ router.get("/field/me", async (req, res): Promise<void> => {
       lastName: null,
       email: null,
       vendorId: ctx.vendorId,
+      partnerId: null,
       vendorName: vendor?.name ?? ctx.vendorName,
+      partnerName: null,
       jobTitle: null,
       phone: null,
       pecExpirationDate: null,
       pecCertification: false,
       vendorLogoUrl: vendor?.logoUrl ?? null,
+      profilePhotoPath: null,
+      photoUrl: null,
+    });
+    return;
+  }
+
+  if (ctx.mode === "partner") {
+    const [partner] = await db
+      .select({ logoUrl: partnersTable.logoUrl, name: partnersTable.name })
+      .from(partnersTable)
+      .where(eq(partnersTable.id, ctx.partnerId));
+    res.json({
+      viewerRole: "partner",
+      employeeId: null,
+      userId: ctx.session.userId,
+      firstName: ctx.session.displayName ?? null,
+      lastName: null,
+      email: null,
+      vendorId: null,
+      partnerId: ctx.partnerId,
+      vendorName: null,
+      partnerName: partner?.name ?? ctx.partnerName,
+      jobTitle: null,
+      phone: null,
+      pecExpirationDate: null,
+      pecCertification: false,
+      vendorLogoUrl: null,
+      profilePhotoPath: null,
+      photoUrl: null,
+    });
+    return;
+  }
+
+  if (ctx.mode === "admin") {
+    res.json({
+      viewerRole: "admin",
+      employeeId: null,
+      userId: ctx.session.userId,
+      firstName: ctx.session.displayName ?? null,
+      lastName: null,
+      email: null,
+      vendorId: null,
+      partnerId: null,
+      vendorName: null,
+      partnerName: null,
+      jobTitle: null,
+      phone: null,
+      pecExpirationDate: null,
+      pecCertification: false,
+      vendorLogoUrl: null,
       profilePhotoPath: null,
       photoUrl: null,
     });
@@ -730,13 +821,11 @@ function attachOpenTicketCrewNames<T extends { id: number; foremanUserId?: numbe
 
 // ── GET /api/field/open-tickets — open tickets for this viewer ──
 //
-// Accepts both field-employee and vendor-admin sessions:
-//   * field_employee → tickets owned by this employee on their vendor.
-//   * vendor (admin)  → ALL open tickets for this vendor across every
-//                       field employee. Lets a vendor admin survey
-//                       team activity from the iOS app, read-only.
-// Both modes apply the same open-status filter and the same vendorId
-// scope, so a vendor admin never sees tickets outside their org.
+// Role-specific mobile home lists:
+//   * field_employee → own tickets (foreman may widen with ?vendorWide=1)
+//   * vendor         → all open tickets on their vendor
+//   * partner        → all open tickets on their partner sites
+//   * admin          → all open tickets platform-wide
 router.get("/field/open-tickets", async (req, res): Promise<void> => {
   // Task #761: share the per-session tickets rate-limit budget so a
   // runaway client can't hammer the field-specific list endpoint and
@@ -746,44 +835,23 @@ router.get("/field/open-tickets", async (req, res): Promise<void> => {
   const ctx = await requireFieldOrVendor(req, res);
   if (!ctx) return;
 
-  // Field employees AND foremen only see tickets that are still
-  // actively in their court: `initiated` and `in_progress`. Anything
-  // past that (`pending_review`, `kicked_back`, `submitted`, etc.) is
-  // off their list. A `kicked_back` ticket only comes back into view
-  // after office staff explicitly re-opens it (which moves the status
-  // back to `in_progress`). Vendor office admins on mobile keep the
-  // broader list so they can survey team activity including review
-  // queues.
-  //
-  // We treat the viewer as "narrow" if EITHER:
-  //   - the route resolved them as field-mode (top-level role
-  //     field_employee), OR
-  //   - their session carries vendorRole === "foreman" (a foreman who
-  //     was hydrated through the vendor branch — e.g. a foreman whose
-  //     top-level role is `vendor` on a particular membership).
-  // This way a foreman never sees pending_review/kicked_back regardless
-  // of which auth path their session walked.
   const isForemanSession =
     ctx.session.vendorRole === "foreman" || ctx.session.vendorRole === "both";
   const vendorWide =
     (req.query.vendorWide === "1" || req.query.vendorWide === "true") &&
     isForemanSession;
   const isNarrowViewer = ctx.mode === "field" || isForemanSession;
-  const narrowStatuses = ["initiated", "in_progress"];
-  const broadStatuses = [
-    "initiated",
-    "draft",
-    "in_progress",
-    "kicked_back",
-    "pending_review",
-  ];
-  const conditions = [
-    eq(ticketsTable.vendorId, ctx.vendorId),
+  const conditions: ReturnType<typeof eq>[] = [
     inArray(
       ticketsTable.status,
-      isNarrowViewer ? narrowStatuses : broadStatuses,
+      isNarrowViewer ? [...OPEN_NARROW_STATUSES] : [...OPEN_BROAD_STATUSES],
     ),
   ];
+  if (ctx.mode === "field" || ctx.mode === "vendor") {
+    conditions.push(eq(ticketsTable.vendorId, ctx.vendorId));
+  } else if (ctx.mode === "partner") {
+    conditions.push(eq(siteLocationsTable.partnerId, ctx.partnerId));
+  }
   if (ctx.mode === "field" && !vendorWide) {
     if (isForemanSession) {
       const crewRows = await db
@@ -814,6 +882,7 @@ router.get("/field/open-tickets", async (req, res): Promise<void> => {
       siteLocationId: ticketsTable.siteLocationId,
       siteName: siteLocationsTable.name,
       partnerName: partnersTable.name,
+      vendorName: vendorsTable.name,
       workTypeId: ticketsTable.workTypeId,
       workTypeName: workTypesTable.name,
       fieldEmployeeId: ticketsTable.fieldEmployeeId,
@@ -837,6 +906,7 @@ router.get("/field/open-tickets", async (req, res): Promise<void> => {
     .from(ticketsTable)
     .leftJoin(siteLocationsTable, eq(ticketsTable.siteLocationId, siteLocationsTable.id))
     .leftJoin(partnersTable, eq(siteLocationsTable.partnerId, partnersTable.id))
+    .leftJoin(vendorsTable, eq(ticketsTable.vendorId, vendorsTable.id))
     .leftJoin(workTypesTable, eq(ticketsTable.workTypeId, workTypesTable.id))
     .leftJoin(vendorPeopleTable, eq(ticketsTable.fieldEmployeeId, vendorPeopleTable.id))
     .where(and(...conditions))
@@ -882,17 +952,15 @@ router.get("/field/open-tickets/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const conditions = [
+  const conditions: ReturnType<typeof eq>[] = [
     eq(ticketsTable.id, ticketId),
-    eq(ticketsTable.vendorId, ctx.vendorId),
-    inArray(ticketsTable.status, [
-      "initiated",
-      "draft",
-      "in_progress",
-      "kicked_back",
-      "pending_review",
-    ]),
+    inArray(ticketsTable.status, [...OPEN_BROAD_STATUSES]),
   ];
+  if (ctx.mode === "field" || ctx.mode === "vendor") {
+    conditions.push(eq(ticketsTable.vendorId, ctx.vendorId));
+  } else if (ctx.mode === "partner") {
+    conditions.push(eq(siteLocationsTable.partnerId, ctx.partnerId));
+  }
   if (ctx.mode === "field") {
     conditions.push(eq(ticketsTable.fieldEmployeeId, ctx.employee.id));
   }
@@ -905,6 +973,7 @@ router.get("/field/open-tickets/:id", async (req, res): Promise<void> => {
       siteLocationId: ticketsTable.siteLocationId,
       siteName: siteLocationsTable.name,
       partnerName: partnersTable.name,
+      vendorName: vendorsTable.name,
       workTypeId: ticketsTable.workTypeId,
       workTypeName: workTypesTable.name,
       fieldEmployeeId: ticketsTable.fieldEmployeeId,
@@ -926,6 +995,7 @@ router.get("/field/open-tickets/:id", async (req, res): Promise<void> => {
     .from(ticketsTable)
     .leftJoin(siteLocationsTable, eq(ticketsTable.siteLocationId, siteLocationsTable.id))
     .leftJoin(partnersTable, eq(siteLocationsTable.partnerId, partnersTable.id))
+    .leftJoin(vendorsTable, eq(ticketsTable.vendorId, vendorsTable.id))
     .leftJoin(workTypesTable, eq(ticketsTable.workTypeId, workTypesTable.id))
     .leftJoin(vendorPeopleTable, eq(ticketsTable.fieldEmployeeId, vendorPeopleTable.id))
     .where(and(...conditions));
@@ -1244,8 +1314,15 @@ router.post("/field/tickets", async (req, res): Promise<void> => {
 
 // ── POST /api/field/push-token — register expo push token for current user ──
 router.post("/field/push-token", async (req, res): Promise<void> => {
-  const ctx = await requireFieldUser(req, res);
-  if (!ctx) return;
+  const session = getSession(req);
+  if (!session) {
+    res.status(401).json({
+      code: "auth.required",
+      error: "login_required",
+      message: "Login required",
+    });
+    return;
+  }
   const { token, platform } = req.body ?? {};
   if (!token || typeof token !== "string") {
     res.status(400).json({
@@ -1257,18 +1334,25 @@ router.post("/field/push-token", async (req, res): Promise<void> => {
   }
   await db
     .insert(fieldPushTokensTable)
-    .values({ userId: ctx.session.userId, expoToken: token, platform: platform ?? null })
+    .values({ userId: session.userId, expoToken: token, platform: platform ?? null })
     .onConflictDoUpdate({
       target: fieldPushTokensTable.expoToken,
-      set: { userId: ctx.session.userId, platform: platform ?? null },
+      set: { userId: session.userId, platform: platform ?? null },
     });
   res.status(204).send();
 });
 
 // ── DELETE /api/field/push-token — unregister expo push token ──
 router.delete("/field/push-token", async (req, res): Promise<void> => {
-  const ctx = await requireFieldUser(req, res);
-  if (!ctx) return;
+  const session = getSession(req);
+  if (!session) {
+    res.status(401).json({
+      code: "auth.required",
+      error: "login_required",
+      message: "Login required",
+    });
+    return;
+  }
   const { token } = req.body ?? {};
   if (!token) {
     res.status(400).json({

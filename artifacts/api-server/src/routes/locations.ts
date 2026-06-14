@@ -1460,4 +1460,76 @@ router.get("/site-map/:siteLocationId/nearby", async (req: Request, res: Respons
   });
 });
 
+/** GET /api/site-map/:siteLocationId/compliance-issues — cert gaps for on-site crew. */
+router.get(
+  "/site-map/:siteLocationId/compliance-issues",
+  async (req: Request, res: Response): Promise<void> => {
+    const session = getSession(req);
+    if (!session) {
+      res.status(401).json({ code: "auth.unauthenticated", error: "unauthenticated" });
+      return;
+    }
+    const siteId = Number(req.params.siteLocationId);
+    if (!Number.isFinite(siteId) || siteId <= 0) {
+      res.status(400).json({ code: "visitor.invalid_site_location_id", error: "invalid_siteLocationId" });
+      return;
+    }
+    const limit = req.query.limit ? Math.min(Number(req.query.limit), 50) : 5;
+
+    const [site] = await db
+      .select({
+        id: siteLocationsTable.id,
+        partnerId: siteLocationsTable.partnerId,
+      })
+      .from(siteLocationsTable)
+      .where(eq(siteLocationsTable.id, siteId));
+    if (!site) {
+      res.status(404).json({ code: "site.not_found", error: "site_not_found" });
+      return;
+    }
+    const { assertSiteMapPartnerAccess, buildSiteMapComplianceIssues } = await import(
+      "../lib/site-map-compliance"
+    );
+    const allowed = await assertSiteMapPartnerAccess(session, site.partnerId);
+    if (!allowed) {
+      res.status(403).json({ code: "visitor.forbidden", error: "forbidden" });
+      return;
+    }
+
+    const activeTickets = await db
+      .select({
+        ticketId: ticketsTable.id,
+        lifecycleState: ticketsTable.lifecycleState,
+        employeeId: fieldEmployeesTable.id,
+        employeeName: sql<string>`trim(coalesce(${fieldEmployeesTable.firstName}, '') || ' ' || coalesce(${fieldEmployeesTable.lastName}, ''))`,
+        vendorName: vendorsTable.name,
+      })
+      .from(ticketsTable)
+      .innerJoin(fieldEmployeesTable, eq(ticketsTable.fieldEmployeeId, fieldEmployeesTable.id))
+      .leftJoin(vendorsTable, eq(ticketsTable.vendorId, vendorsTable.id))
+      .where(
+        and(
+          eq(ticketsTable.siteLocationId, siteId),
+          inArray(ticketsTable.lifecycleState, [...ACTIVE_LIFECYCLE_STATES]),
+        ),
+      );
+
+    const issues = await buildSiteMapComplianceIssues({
+      siteLocationId: siteId,
+      employees: activeTickets.map((row) => ({
+        employeeId: row.employeeId,
+        employeeName: row.employeeName?.trim() || `Employee #${row.employeeId}`,
+        vendorName: row.vendorName,
+        activeTicket: {
+          ticketId: row.ticketId,
+          lifecycleState: row.lifecycleState,
+        },
+      })),
+      limit: Number.isFinite(limit) ? limit : 5,
+    });
+
+    res.json({ issues, siteLocationId: siteId });
+  },
+);
+
 export default router;

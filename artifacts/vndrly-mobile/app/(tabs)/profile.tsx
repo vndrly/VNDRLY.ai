@@ -19,6 +19,7 @@ import LayeredPillButton from "@/components/LayeredPillButton";
 import ProfilePhotoImage from "@/components/ProfilePhotoImage";
 import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/useColors";
+import { isForemanEmployeeUser } from "@/lib/mobile-viewer";
 import { apiFetch, logout, updatePreferredLanguage } from "@/lib/api";
 import type { MembershipSummary } from "@/lib/auth";
 import { setLanguage, SUPPORTED_LANGUAGES, type SupportedLanguage } from "@/lib/i18n";
@@ -35,11 +36,13 @@ import {
 } from "@/lib/liveLocationReporter";
 
 type FieldMe = {
-  employeeId: number;
-  firstName: string;
-  lastName: string;
-  email: string;
+  viewerRole?: "field_employee" | "vendor" | "partner" | "admin";
+  employeeId: number | null;
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
   vendorName: string | null;
+  partnerName?: string | null;
   profilePhotoPath: string | null;
   photoUrl: string | null;
 };
@@ -53,9 +56,7 @@ export default function ProfileScreen() {
     activeMembershipId,
     switchContext,
   } = useAuth();
-  const isForemanEmployee =
-    user?.role === "field_employee" &&
-    (user.vendorRole === "foreman" || user.vendorRole === "both");
+  const isForemanEmployee = isForemanEmployeeUser(user);
   const canManageEmployees = user?.role === "vendor" || isForemanEmployee;
   const [photoPath, setPhotoPath] = useState<string | null>(null);
   const [directPhotoUrl, setDirectPhotoUrl] = useState<string | null>(null);

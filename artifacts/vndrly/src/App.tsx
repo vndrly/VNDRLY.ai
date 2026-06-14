@@ -45,6 +45,7 @@ import BillingSettingsPage from "@/pages/billing-settings";
 import BillsToPayPage from "@/pages/bills-to-pay";
 import StatementPage from "@/pages/statement";
 import ReportsPage from "@/pages/reports";
+import FlaggedTicketsPage from "@/pages/flagged-tickets";
 import CrewMapPage from "@/pages/crew-map";
 import CrewReplayPage from "@/pages/crew-replay";
 import SiteMapPage from "@/pages/site-map";
@@ -62,6 +63,7 @@ import FieldHome from "@/pages/field-home";
 import ForemanHome from "@/pages/foreman-home";
 import ForemanCrews from "@/pages/foreman-crews";
 import ForemanCrewMapPage from "@/pages/foreman-crew-map";
+import ForemanAnalytics from "@/pages/foreman-analytics";
 import FieldNewTicket from "@/pages/field-new-ticket";
 import AccountLocation from "@/pages/account-location";
 import Signup from "@/pages/signup";
@@ -111,6 +113,7 @@ function AdminRoutes() {
         <Route path="/site-locations" component={SiteLocations} />
         <Route path="/site-locations/:id">{(params) => <SiteLocationDetail id={parseInt(params.id)} />}</Route>
         <Route path="/tickets" component={Tickets} />
+        <Route path="/flagged" component={FlaggedTicketsPage} />
         <Route path="/tickets/:id">{(params) => <TicketDetail id={parseInt(params.id)} />}</Route>
         <Route path="/crew-map">{() => <CrewMapPage />}</Route>
         <Route path="/crew-map/:id">{(params) => <CrewReplayPage employeeId={parseInt(params.id)} />}</Route>
@@ -181,6 +184,7 @@ function AuthenticatedRouter() {
               <Route path="/foreman/schedule" component={FieldSchedule} />
               <Route path="/foreman/map" component={ForemanCrewMapPage} />
               <Route path="/foreman/crews" component={ForemanCrews} />
+              <Route path="/foreman/analytics" component={ForemanAnalytics} />
               <Route path="/foreman/profile" component={FieldProfile} />
               <Route path="/foreman/profile/edit" component={FieldEditProfile} />
               <Route path="/foreman/compliance" component={FieldCompliance} />

@@ -36,6 +36,7 @@ import TicketSiteVisitSummary from "@/components/TicketSiteVisitSummary";
 import CrewTimeSection, { type CrewTimeSectionHandle } from "@/components/CrewTimeSection";
 import ScheduleTicketPanel from "@/components/ScheduleTicketPanel";
 import TicketNudgePanel from "@/components/TicketNudgePanel";
+import TicketFlagPanel from "@/components/TicketFlagPanel";
 import NudgeFlashOverlay from "@/components/NudgeFlashOverlay";
 import CommentsPanel from "@/components/CommentsPanel";
 import TicketStatusStepper from "@/components/TicketStatusStepper";
@@ -57,7 +58,7 @@ import { nudgeLiveLocationReporter } from "@/lib/liveLocationReporter";
 import { MAP_TILE_SIZE, getOsmTile, openInMaps } from "@/lib/maps";
 import { captureAndUploadImage } from "@/lib/photos";
 import { ticketStatusLabel, ticketStatusPillStyle } from "@/lib/ticketStatusLabels";
-import { PILL_CHIP_LAYOUT, PILL_TEXT } from "@/lib/pill-doctrine";
+import { PILL_CHIP_LAYOUT, PILL_TEXT, PILL_HEIGHT_PX } from "@/lib/pill-doctrine";
 
 type Ticket = {
   id: number;
@@ -1855,7 +1856,7 @@ export default function TicketDetailScreen() {
               alignSelf: "flex-start",
               marginTop: 4,
               paddingHorizontal: 12,
-              height: 22,
+              height: PILL_HEIGHT_PX,
               justifyContent: "center",
               borderRadius: 999,
               overflow: "hidden",
@@ -1864,7 +1865,7 @@ export default function TicketDetailScreen() {
           >
             <Pill9Slice
               source={require("@/assets/pill-stack/blue-hot.png")}
-              height={22}
+              height={PILL_HEIGHT_PX}
             />
             <Text
               style={{
@@ -1895,7 +1896,7 @@ export default function TicketDetailScreen() {
                   styles.statusPill,
                   {
                     paddingHorizontal: 12,
-                    height: 22,
+                    height: PILL_HEIGHT_PX,
                     justifyContent: "center",
                     overflow: "hidden",
                     position: "relative",
@@ -1905,7 +1906,7 @@ export default function TicketDetailScreen() {
               >
                 <Pill9Slice
                   source={require("@/assets/pill-stack/blue-hot.png")}
-                  height={22}
+                  height={PILL_HEIGHT_PX}
                 />
                 <Text
                   style={[
@@ -3294,6 +3295,12 @@ export default function TicketDetailScreen() {
       <TicketSiteVisitSummary ticketId={ticketId} refreshKey={lastLoadedAt} />
 
       <TicketNudgePanel
+        ticketId={ticket.id}
+        ticketStatus={ticket.status}
+        userRole={currentUser?.role}
+      />
+
+      <TicketFlagPanel
         ticketId={ticket.id}
         ticketStatus={ticket.status}
         userRole={currentUser?.role}
