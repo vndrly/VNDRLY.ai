@@ -1,6 +1,5 @@
 import { Feather } from "@expo/vector-icons";
-import { useFocusEffect } from "expo-router";
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
@@ -50,11 +49,9 @@ export default function AskVScreen() {
     loadLatest,
   } = useAssistant();
 
-  useFocusEffect(
-    useCallback(() => {
-      void loadLatest();
-    }, [loadLatest]),
-  );
+  useEffect(() => {
+    void loadLatest();
+  }, [loadLatest]);
 
   const quickActions = useMemo(() => quickActionsForUser(user), [user]);
 
