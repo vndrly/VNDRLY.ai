@@ -6,6 +6,7 @@
 .cache
 .codex
 .cursor
+.vs
 .tmp_*
 .tmp_combined*
 **/*.err.log
