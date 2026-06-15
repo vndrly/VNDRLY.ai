@@ -95,14 +95,16 @@
           "cameraPermission": "VNDRLY uses the camera to capture work-site photos."
         }
       ],
-      "expo-notifications",
-      {
-        "sounds": [
-          "./assets/sounds/vndrly_bell_ring.wav",
-          "./assets/sounds/vndrly_bell_toll.wav"
-        ],
-        "enableBackgroundRemoteNotifications": true
-      },
+      [
+        "expo-notifications",
+        {
+          "sounds": [
+            "./assets/sounds/vndrly_bell_ring.wav",
+            "./assets/sounds/vndrly_bell_toll.wav"
+          ],
+          "enableBackgroundRemoteNotifications": true
+        }
+      ],
       "expo-secure-store",
       [
         "expo-local-authentication",
