@@ -24,6 +24,9 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.vndrly.field",
+      "entitlements": {
+        "com.apple.developer.usernotifications.time-sensitive": true
+      },
       "infoPlist": {
         "NSCameraUsageDescription": "VNDRLY uses the camera to scan site QR codes and capture work-site photos.",
         "NSPhotoLibraryUsageDescription": "VNDRLY uses your photo library to attach photos to tracking tickets.",
