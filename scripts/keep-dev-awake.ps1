@@ -9,27 +9,23 @@
 
 $ErrorActionPreference = "Stop"
 
-Add-Type @"
+function Set-KeepAwake {
+  # Best-effort anti-sleep. SetThreadExecutionState flag math is fragile on
+  # Windows PowerShell 5.1 (signed/unsigned overflow). Never let this crash
+  # the auto-restart loop — that is the part that keeps :5173 alive.
+  try {
+    Add-Type @"
 using System;
 using System.Runtime.InteropServices;
 public static class VndrlyPower {
   [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
   public static extern uint SetThreadExecutionState(uint esFlags);
 }
-"@
-
-# ES_CONTINUOUS | ES_SYSTEM_REQUIRED — block system sleep while script runs.
-# Use decimal [uint32] literals: hex 0x80000000 overflows signed int32 in PS 5.1
-# before the cast and throws "too large or too small for UInt32".
-$ES_CONTINUOUS = [uint32]2147483648
-$ES_SYSTEM_REQUIRED = [uint32]1
-$KEEP_AWAKE_FLAGS = $ES_CONTINUOUS -bor $ES_SYSTEM_REQUIRED
-
-function Set-KeepAwake {
-  try {
-    [void][VndrlyPower]::SetThreadExecutionState($KEEP_AWAKE_FLAGS)
+"@ -ErrorAction Stop
+    $flags = [uint32]([uint32]2147483648 -bor [uint32]1)
+    [void][VndrlyPower]::SetThreadExecutionState($flags)
   } catch {
-    # Non-fatal — auto-restart of :5173/:8080 matters more than anti-sleep.
+    # ignore — dev auto-restart still runs
   }
 }
 
@@ -63,9 +59,9 @@ function Test-DevHealthy {
 $checkSeconds = 30
 
 Write-Host ""
-Write-Host "VNDRLY dev watch - PC will not sleep while this window stays open."
+Write-Host "VNDRLY dev watch - auto-restarts hung/offline servers every ${checkSeconds}s."
 Write-Host "Servers: http://localhost:5173/  (API http://localhost:8080/)"
-Write-Host "Auto-restarts hung/offline servers every ${checkSeconds}s. Close window to allow sleep."
+Write-Host "Close this window to stop watching."
 Write-Host ""
 
 & $ensureScript
