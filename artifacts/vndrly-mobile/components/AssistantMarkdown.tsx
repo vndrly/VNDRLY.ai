@@ -1,9 +1,20 @@
 import { router } from "expo-router";
 import React from "react";
-import { Linking, StyleSheet, Text, View } from "react-native";
+import {
+  Linking,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  type TextStyle,
+} from "react-native";
 
 import { useColors } from "@/hooks/useColors";
 import { resolveAssistantLink } from "@/lib/assistant-deep-links";
+import {
+  parseAssistantInlineSegments,
+  type AssistantInlineSegment,
+} from "@/lib/assistant-markdown-inline";
 
 function openAssistantLink(href: string): void {
   const target = resolveAssistantLink(href);
@@ -15,102 +26,110 @@ function openAssistantLink(href: string): void {
   void Linking.openURL(target.url);
 }
 
-function renderInline(
-  s: string,
-  colors: ReturnType<typeof useColors>,
-): React.ReactNode[] {
-  const nodes: React.ReactNode[] = [];
-  let rest = s;
-  let key = 0;
+function hrefIsNavigable(href: string): boolean {
+  if (resolveAssistantLink(href)) return true;
+  if (href.startsWith("/") && !href.startsWith("//")) return true;
+  return /^(https?:|mailto:|tel:)/i.test(href);
+}
 
-  while (rest.length > 0) {
-    const linkMatch = /\[([^\]]+)\]\(([^)]+)\)/.exec(rest);
-    const boldMatch = /\*\*([^*]+)\*\*/.exec(rest);
-    const codeMatch = /`([^`]+)`/.exec(rest);
-
-    const candidates = [
-      linkMatch ? { idx: linkMatch.index, len: linkMatch[0].length, kind: "link" as const, m: linkMatch } : null,
-      boldMatch ? { idx: boldMatch.index, len: boldMatch[0].length, kind: "bold" as const, m: boldMatch } : null,
-      codeMatch ? { idx: codeMatch.index, len: codeMatch[0].length, kind: "code" as const, m: codeMatch } : null,
-    ].filter(Boolean) as Array<{
-      idx: number;
-      len: number;
-      kind: "link" | "bold" | "code";
-      m: RegExpExecArray;
-    }>;
-
-    if (candidates.length === 0) {
-      nodes.push(<Text key={key++}>{rest}</Text>);
-      break;
-    }
-
-    candidates.sort((a, b) => a.idx - b.idx);
-    const next = candidates[0];
-    if (next.idx > 0) {
-      nodes.push(<Text key={key++}>{rest.slice(0, next.idx)}</Text>);
-    }
-
-    if (next.kind === "link") {
-      const label = next.m[1];
-      const href = next.m[2].trim();
-      const isSafeAbsolute = /^(https?:|mailto:|tel:)/i.test(href);
-      const resolved = resolveAssistantLink(href);
-
-      if (resolved || (href.startsWith("/") && !href.startsWith("//")) || isSafeAbsolute) {
-        nodes.push(
-          <Text
-            key={key++}
-            style={{ color: colors.primary, textDecorationLine: "underline" }}
-            onPress={() => {
-              if (resolved) {
-                openAssistantLink(href);
-                return;
-              }
-              if (href.startsWith("/") && !href.startsWith("//")) {
-                openAssistantLink(href);
-                return;
-              }
-              if (isSafeAbsolute) {
-                void Linking.openURL(href);
-              }
-            }}
-          >
-            {label}
-          </Text>,
-        );
-      } else {
-        nodes.push(<Text key={key++}>{label}</Text>);
-      }
-    } else if (next.kind === "bold") {
-      nodes.push(
-        <Text key={key++} style={{ fontFamily: "Inter_600SemiBold" }}>
-          {next.m[1]}
-        </Text>,
-      );
-    } else {
-      nodes.push(
-        <Text
-          key={key++}
-          style={{
-            fontFamily: "Inter_500Medium",
-            backgroundColor: colors.muted,
-            fontSize: 13,
-          }}
-        >
-          {next.m[1]}
-        </Text>,
-      );
-    }
-
-    rest = rest.slice(next.idx + next.len);
+function onLinkPress(href: string): void {
+  const resolved = resolveAssistantLink(href);
+  if (resolved) {
+    openAssistantLink(href);
+    return;
   }
+  if (href.startsWith("/") && !href.startsWith("//")) {
+    openAssistantLink(href);
+    return;
+  }
+  if (/^(https?:|mailto:|tel:)/i.test(href)) {
+    void Linking.openURL(href);
+  }
+}
 
-  return nodes;
+function InlineRow({
+  segments,
+  colors,
+  bodyStyle,
+  testIDPrefix,
+}: {
+  segments: AssistantInlineSegment[];
+  colors: ReturnType<typeof useColors>;
+  bodyStyle: TextStyle;
+  testIDPrefix?: string;
+}) {
+  return (
+    <View style={styles.inlineRow}>
+      {segments.map((seg, i) => {
+        const key = `${testIDPrefix ?? "inline"}-${i}`;
+        if (seg.kind === "link" && hrefIsNavigable(seg.href)) {
+          return (
+            <Pressable
+              key={key}
+              onPress={() => onLinkPress(seg.href)}
+              hitSlop={6}
+              accessibilityRole="link"
+              testID={`${key}-link`}
+            >
+              <Text
+                style={[
+                  bodyStyle,
+                  styles.link,
+                  { color: colors.primary },
+                ]}
+              >
+                {seg.label}
+              </Text>
+            </Pressable>
+          );
+        }
+        if (seg.kind === "bold") {
+          return (
+            <Text
+              key={key}
+              style={[bodyStyle, { fontFamily: "Inter_600SemiBold" }]}
+            >
+              {seg.text}
+            </Text>
+          );
+        }
+        if (seg.kind === "code") {
+          return (
+            <Text
+              key={key}
+              style={[
+                bodyStyle,
+                {
+                  fontFamily: "Inter_500Medium",
+                  backgroundColor: colors.muted,
+                  fontSize: 13,
+                },
+              ]}
+            >
+              {seg.text}
+            </Text>
+          );
+        }
+        if (seg.kind === "text") {
+          return (
+            <Text key={key} style={bodyStyle}>
+              {seg.text}
+            </Text>
+          );
+        }
+        return null;
+      })}
+    </View>
+  );
 }
 
 export default function AssistantMarkdown({ text }: { text: string }) {
   const colors = useColors();
   const paragraphs = text.replace(/\r\n/g, "\n").split(/\n\n+/);
+  const bodyStyle: TextStyle = {
+    ...styles.body,
+    color: colors.foreground,
+  };
 
   return (
     <View style={styles.wrap}>
@@ -124,18 +143,29 @@ export default function AssistantMarkdown({ text }: { text: string }) {
               {lines.map((l, j) => (
                 <View key={j} style={styles.listRow}>
                   <Text style={[styles.bullet, { color: colors.foreground }]}>•</Text>
-                  <Text style={[styles.body, { color: colors.foreground }]}>
-                    {renderInline(l.replace(/^\s*[-*]\s+/, ""), colors)}
-                  </Text>
+                  <View style={styles.listBody}>
+                    <InlineRow
+                      segments={parseAssistantInlineSegments(
+                        l.replace(/^\s*[-*]\s+/, ""),
+                      )}
+                      colors={colors}
+                      bodyStyle={bodyStyle}
+                      testIDPrefix={`list-${i}-${j}`}
+                    />
+                  </View>
                 </View>
               ))}
             </View>
           );
         }
         return (
-          <Text key={i} style={[styles.body, { color: colors.foreground }]}>
-            {renderInline(para, colors)}
-          </Text>
+          <InlineRow
+            key={i}
+            segments={parseAssistantInlineSegments(para)}
+            colors={colors}
+            bodyStyle={bodyStyle}
+            testIDPrefix={`para-${i}`}
+          />
         );
       })}
     </View>
@@ -145,7 +175,14 @@ export default function AssistantMarkdown({ text }: { text: string }) {
 const styles = StyleSheet.create({
   wrap: { gap: 8 },
   body: { fontSize: 15, lineHeight: 22, fontFamily: "Inter_400Regular" },
+  inlineRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "flex-start",
+  },
+  link: { textDecorationLine: "underline" },
   list: { gap: 4 },
   listRow: { flexDirection: "row", gap: 8, alignItems: "flex-start" },
+  listBody: { flex: 1 },
   bullet: { fontSize: 15, lineHeight: 22, width: 12 },
 });

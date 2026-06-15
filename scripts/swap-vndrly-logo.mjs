@@ -6,7 +6,7 @@
  * Usage:
  *   node scripts/swap-vndrly-logo.mjs [path-to-square-logo.png]
  *
- * Default source: attached_assets/VNDRLY-Logo-v6.png
+ * Default source: attached_assets/VNDRLY-Logo-v7.png
  */
 import { cpSync, existsSync, readFileSync } from "node:fs";
 import path from "node:path";
@@ -16,7 +16,7 @@ import { spawnSync } from "node:child_process";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
 
-const defaultSrc = path.join(ROOT, "attached_assets", "VNDRLY-Logo-v6.png");
+const defaultSrc = path.join(ROOT, "attached_assets", "VNDRLY-Logo-v7.png");
 const src = path.resolve(process.argv[2] ?? defaultSrc);
 
 if (!existsSync(src)) {
@@ -25,6 +25,7 @@ if (!existsSync(src)) {
 }
 
 const copyTargets = [
+  path.join(ROOT, "attached_assets", "VNDRLY-Logo-v7.png"),
   path.join(ROOT, "attached_assets", "VNDRLY-Logo-v6.png"),
   path.join(ROOT, "attached_assets", "vndrlylogo7.png"),
   path.join(ROOT, "attached_assets", "vndrlylogo7_1778217520404.png"),
@@ -33,9 +34,11 @@ const copyTargets = [
   path.join(ROOT, "artifacts", "vndrly", "public", "default.png"),
   path.join(ROOT, "artifacts", "vndrly-mobile", "assets", "images", "vndrly-logo-amber.png"),
   path.join(ROOT, "artifacts", "vndrly-mobile", "assets", "images", "icon.png"),
+  path.join(ROOT, "artifacts", "vndrly-mobile", "assets", "icons", "vndrly.png"),
 ];
 
 for (const dest of copyTargets) {
+  if (path.resolve(dest) === path.resolve(src)) continue;
   cpSync(src, dest);
 }
 console.log(`Copied ${path.basename(src)} → ${copyTargets.length} bundled locations`);

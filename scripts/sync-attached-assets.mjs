@@ -59,9 +59,10 @@ const fromPalletRoot = copyTree(PALLET, OUT);
 const fromPalletBtn = copyTree(PALLET, path.join(OUT, "button-palette"));
 
 const aliases = [
-  alias("vndrlylogo7.png", "VNDRLY-Logo-v6.png", "vndrlylogo7_1778217520404.png", "VNDRLY-Logo-5.png"),
+  alias("vndrlylogo7.png", "VNDRLY-Logo-v7.png", "VNDRLY-Logo-v6.png", "vndrlylogo7_1778217520404.png", "VNDRLY-Logo-5.png"),
   alias(
     "512_Vndrly_Logo_2_1777147855089.png",
+    "VNDRLY-Logo-v7.png",
     "VNDRLY-Logo-v6.png",
     "VNDRLY-Logo-5.png",
     "vndrlylogo7_1778217520404.png",
