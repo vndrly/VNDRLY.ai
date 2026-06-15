@@ -2,9 +2,11 @@ import * as SecureStore from "expo-secure-store";
 import Constants from "expo-constants";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
-import { Platform } from "react-native";
+import { AppState, Platform } from "react-native";
 
 import { apiFetch } from "./api";
+import { handleForegroundNotificationSound, PUSH_NOTIFICATION_SOUND } from "./notificationSounds";
+import { applyPushBadgeFromPayload } from "./notificationBadge";
 import { isExpoGo } from "./runtime";
 
 // expo-notifications in SDK 54 dropped remote push support inside
@@ -14,17 +16,31 @@ import { isExpoGo } from "./runtime";
 // and additionally skip remote-push surfaces under Expo Go entirely.
 try {
   Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowAlert: true,
-      shouldPlaySound: true,
-      shouldSetBadge: false,
-      shouldShowBanner: true,
-      shouldShowList: true,
-    }),
+    handleNotification: async (notification) => {
+      // Background/minimized: iOS plays the custom sound from the push
+      // payload (PUSH_NOTIFICATION_SOUND). Foreground: we toll via
+      // handleForegroundNotificationSound in the root listener instead
+      // of the system notification chime.
+      const isForeground = AppState.currentState === "active";
+      if (isForeground) {
+        handleForegroundNotificationSound();
+      }
+      const data = notification.request.content.data as Record<string, unknown> | undefined;
+      void applyPushBadgeFromPayload(data);
+      return {
+        shouldShowAlert: true,
+        shouldPlaySound: !isForeground,
+        shouldSetBadge: true,
+        shouldShowBanner: true,
+        shouldShowList: true,
+      };
+    },
   });
 } catch {
   // ignore — host (Expo Go on SDK 54+) doesn't support the handler
 }
+
+export { PUSH_NOTIFICATION_SOUND };
 
 const LAST_PUSH_TOKEN_KEY = "vndrly_last_push_token";
 
@@ -58,6 +74,7 @@ export async function registerForPushNotifications(): Promise<string | null> {
     await Notifications.setNotificationChannelAsync("default", {
       name: "default",
       importance: Notifications.AndroidImportance.DEFAULT,
+      sound: PUSH_NOTIFICATION_SOUND,
     });
   }
 

@@ -19,9 +19,8 @@ import {
   ticketCrewTable,
   vendorCrewPresetsTable,
 } from "@workspace/db";
-import { sendPushToFieldEmployee } from "../lib/expo-push";
 import { markEmployeeProfilePendingReview } from "../lib/employee-profile-review";
-import { notifyUsers } from "./notifications";
+import { notifyUsers, notifyFieldEmployee } from "./notifications";
 import { removeMembership } from "../lib/membership-sync";
 import { recordTicketTransition } from "../lib/ticket-transitions";
 import { isGeofenceBypassActive } from "../lib/geo";
@@ -1294,11 +1293,13 @@ router.post("/field/tickets", async (req, res): Promise<void> => {
     });
   }
 
-  // Push notification to the field employee that a tracking number is now assigned to them.
-  void sendPushToFieldEmployee(ctx.employee.id, {
+  // In-app + push via notifyUsers (prefs, badge, bell sound).
+  void notifyFieldEmployee(ctx.employee.id, {
+    type: "ticket_assigned",
     title: "New Tracking Started",
     body: `Tracking #${String(ticket.id).padStart(4, "0")} is now in progress.`,
-    data: { ticketId: ticket.id, type: "ticket_assigned" },
+    link: `/tickets/${ticket.id}`,
+    pushData: { ticketId: ticket.id, type: "ticket_assigned" },
   });
 
   res.status(201).json(ticket);

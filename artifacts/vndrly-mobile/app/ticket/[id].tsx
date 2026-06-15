@@ -488,8 +488,12 @@ export default function TicketDetailScreen() {
   }, [ticketId, t]);
 
   useEffect(() => {
+    if (!Number.isFinite(ticketId) || ticketId <= 0) {
+      setLoading(false);
+      return;
+    }
     load();
-  }, [load]);
+  }, [load, ticketId]);
 
   // Task #686: auto-recover from a rate-limit cooldown on initial
   // mount. If the user navigated to this screen while the shared
@@ -1730,7 +1734,26 @@ export default function TicketDetailScreen() {
   const taxAmount = subtotal * taxRate;
   const grandTotal = subtotal + taxAmount;
 
-  if (loading || !ticket) {
+  const ticketIdValid = Number.isFinite(ticketId) && ticketId > 0;
+
+  if (!ticketIdValid) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
+        <Stack.Screen options={{ headerShown: false }} />
+        <InPageHeader title={t("stack.tracking")} />
+        <View
+          style={[styles.center, { flex: 1, paddingHorizontal: 24 }]}
+          testID="ticket-detail-invalid-id"
+        >
+          <Text style={{ color: colors.foreground, textAlign: "center" }}>
+            {t("tickets.errorLoadDetail")}
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
+  if (loading || (rateLimited && !ticket)) {
     // Task #686: when the screen mounts during an active rate-limit
     // cooldown there's no ticket data to render, but we still owe the
     // user a clear "we're paused, will retry shortly" affordance —
@@ -1740,28 +1763,61 @@ export default function TicketDetailScreen() {
     // consistent across the parked-while-loaded and parked-on-mount
     // cases.
     return (
-      <View
-        style={[styles.center, { backgroundColor: colors.background }]}
-        testID="ticket-detail-loading"
-      >
-        <ActivityIndicator color={colors.primary} />
-        {rateLimited ? (
-          <View
-            style={[
-              styles.restoredToast,
-              styles.rateLimitedToast,
-              { marginTop: 16 },
-            ]}
-            testID="toast-ticket-rate-limited"
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
+        <Stack.Screen options={{ headerShown: false }} />
+        <InPageHeader title={t("stack.tracking")} />
+        <View
+          style={[styles.center, { flex: 1 }]}
+          testID="ticket-detail-loading"
+        >
+          <ActivityIndicator color={colors.primary} />
+          {rateLimited ? (
+            <View
+              style={[
+                styles.restoredToast,
+                styles.rateLimitedToast,
+                { marginTop: 16 },
+              ]}
+              testID="toast-ticket-rate-limited"
+            >
+              <Feather name="clock" size={16} color="#ffffff" />
+              <Text style={styles.restoredToastText}>
+                {t("tickets.rateLimitedToast", {
+                  seconds: retryAfterSeconds ?? 0,
+                })}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+      </View>
+    );
+  }
+
+  if (!ticket) {
+    const errorMessage = loadError
+      ? translateApiError(loadError, t, t("tickets.errorLoadDetail"))
+      : t("tickets.errorLoadDetail");
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
+        <Stack.Screen options={{ headerShown: false }} />
+        <InPageHeader title={t("stack.tracking")} />
+        <View
+          style={[styles.center, { flex: 1, gap: 16, paddingHorizontal: 24 }]}
+          testID="ticket-detail-load-failed"
+        >
+          <Text style={{ color: colors.foreground, textAlign: "center" }}>
+            {errorMessage}
+          </Text>
+          <AmberButton
+            testID="button-retry-ticket-detail"
+            onPress={() => {
+              setLoading(true);
+              void load();
+            }}
           >
-            <Feather name="clock" size={16} color="#ffffff" />
-            <Text style={styles.restoredToastText}>
-              {t("tickets.rateLimitedToast", {
-                seconds: retryAfterSeconds ?? 0,
-              })}
-            </Text>
-          </View>
-        ) : null}
+            {t("tickets.retryLoad")}
+          </AmberButton>
+        </View>
       </View>
     );
   }

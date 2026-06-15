@@ -491,8 +491,7 @@ import {
 import { siteWorkAssignmentsTable, partnerVendorRelationshipsTable, vendorWorkTypesTable, hotlistJobsTable } from "@workspace/db";
 import { sendResponse, sendResponseStatus } from "../lib/typed-response";
 import { sendValidationFailed } from "../lib/validation-error";
-import { notifyUsers, findVendorUserIds, findPartnerUserIds } from "./notifications";
-import { sendPushToFieldEmployee } from "../lib/expo-push";
+import { notifyUsers, findVendorUserIds, findPartnerUserIds, notifyFieldEmployee } from "./notifications";
 import { enqueueInvoiceGenerationForTicket } from "../lib/invoice-generator";
 import { regenerateAutoLaborLines } from "../lib/auto-labor-lines";
 import {
@@ -1421,10 +1420,12 @@ router.post("/tickets", async (req, res): Promise<void> => {
 
   const [result] = await ticketQuery().where(eq(ticketsTable.id, ticket.id));
   if (parsed.data.fieldEmployeeId) {
-    void sendPushToFieldEmployee(parsed.data.fieldEmployeeId, {
+    void notifyFieldEmployee(parsed.data.fieldEmployeeId, {
+      type: "ticket_assigned",
       title: "New Tracking Assigned",
       body: `Tracking #${String(ticket.id).padStart(4, "0")} has been assigned to you.`,
-      data: { ticketId: ticket.id, type: "ticket_assigned" },
+      link: `/tickets/${ticket.id}`,
+      pushData: { ticketId: ticket.id, type: "ticket_assigned" },
     });
   }
 
@@ -1609,10 +1610,12 @@ router.patch("/tickets/:id", async (req, res): Promise<void> => {
     parsed.data.fieldEmployeeId &&
     parsed.data.fieldEmployeeId !== existingTicket?.fieldEmployeeId
   ) {
-    void sendPushToFieldEmployee(parsed.data.fieldEmployeeId, {
+    void notifyFieldEmployee(parsed.data.fieldEmployeeId, {
+      type: "ticket_assigned",
       title: "Tracking Assigned",
       body: `Tracking #${String(updated.id).padStart(4, "0")} has been assigned to you.`,
-      data: { ticketId: updated.id, type: "ticket_assigned" },
+      link: `/tickets/${updated.id}`,
+      pushData: { ticketId: updated.id, type: "ticket_assigned" },
     });
   }
   sendResponse(res, UpdateTicketResponse, result);
@@ -3212,10 +3215,12 @@ router.post("/tickets/:id/kickback", async (req, res): Promise<void> => {
     });
   }
   if (updated.fieldEmployeeId) {
-    void sendPushToFieldEmployee(updated.fieldEmployeeId, {
+    void notifyFieldEmployee(updated.fieldEmployeeId, {
+      type: "ticket_kicked_back",
       title: "Tracking Kicked Back",
       body: `Tracking #${String(updated.id).padStart(4, "0")} needs corrections: ${parsed.data.reason}`,
-      data: { ticketId: updated.id, type: "ticket_kicked_back" },
+      link: `/tickets/${updated.id}`,
+      pushData: { ticketId: updated.id, type: "ticket_kicked_back" },
     });
   }
   sendResponse(res, KickbackTicketResponse, result);
@@ -4613,10 +4618,12 @@ router.post("/tickets/:id/unlock", async (req, res): Promise<void> => {
     return;
   }
   if (updated.fieldEmployeeId) {
-    void sendPushToFieldEmployee(updated.fieldEmployeeId, {
+    void notifyFieldEmployee(updated.fieldEmployeeId, {
+      type: "ticket_unlocked",
       title: "Tracking Unlocked",
       body: `Tracking #${String(updated.id).padStart(4, "0")} was unlocked for editing.`,
-      data: { ticketId: updated.id, type: "ticket_unlocked" },
+      link: `/tickets/${updated.id}`,
+      pushData: { ticketId: updated.id, type: "ticket_unlocked" },
     });
   }
   const [result] = await ticketQuery().where(eq(ticketsTable.id, updated.id));

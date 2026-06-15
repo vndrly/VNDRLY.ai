@@ -17,15 +17,14 @@ import {
   gpsLogsTable,
   scheduleCertOverrideAuditLogTable,
 } from "@workspace/db";
-import { sendPushToUser } from "../lib/expo-push";
-import { logger } from "../lib/logger";
-import { SESSION_SECRET } from "../lib/session";
+import { formatTicketTrackingNumber } from "@workspace/db/format";
 import {
   CREW_INVALID_FOR_VENDOR,
   FOREMAN_NOT_IN_CREW,
 } from "@workspace/crew-validation-codes";
-import { formatTicketTrackingNumber } from "@workspace/db/format";
-import { notifyUsers } from "./notifications";
+import { logger } from "../lib/logger";
+import { SESSION_SECRET } from "../lib/session";
+import { notifyUsers, fanOutPushToUser } from "./notifications";
 import { notifyRemovedCrewMember } from "./crew";
 
 // ── Geo helpers ─────────────────────────────────────────────────────────
@@ -683,21 +682,13 @@ router.post("/tickets/:id/schedule", async (req, res): Promise<void> => {
     }
   });
 
-  // Best-effort immediate confirmation push to each crew member with a login.
+  // Task #625 / #642 / #649: persistent inbox + push via notifyUsers below
+  // (no duplicate in-memory-only ticket_scheduled push).
   const jobLabel = workType?.name ?? "Job";
   const siteLabel = site?.name ?? "site";
-  const partnerLabel = partner?.name ?? "";
   const whenLabel = scheduledStartAt.toLocaleString("en-US", {
     month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
   });
-  for (const r of crewRows) {
-    if (!r.userId) continue;
-    void sendPushToUser(r.userId, {
-      title: `Scheduled: ${jobLabel}`,
-      body: `${partnerLabel ? partnerLabel + " — " : ""}${siteLabel} on ${whenLabel}`,
-      data: { type: "ticket_scheduled", ticketId, link: `/tickets/${ticketId}` },
-    }).catch(() => undefined);
-  }
 
   // Task #625 / Task #642 / Task #649: write a persistent notification
   // per crew member so the inbox/badge surfaces it (the
@@ -989,12 +980,6 @@ router.post("/tickets/:id/schedule/resend-notifications", async (req, res): Prom
       continue;
     }
     if (r.userId === auth.session.userId) continue;
-
-    void sendPushToUser(r.userId, {
-      title: `Scheduled: ${jobLabel}`,
-      body: `${partnerLabel ? partnerLabel + " — " : ""}${siteLabel} on ${whenLabel}`,
-      data: { type: "ticket_scheduled", ticketId, link: `/tickets/${ticketId}` },
-    }).catch(() => undefined);
 
     try {
       const n = await notifyUsers([r.userId], {
@@ -1734,15 +1719,13 @@ async function dispatchDueNotifications(): Promise<void> {
         logger.warn({ err, ticketId, userId: item.userId, kind: item.kind }, "scheduled notif insert failed");
       }
 
-      // Best-effort push — respects neither DND nor push_enabled here because
-      // this is a scheduled, ticket-critical reminder. The notifications
-      // route's notifyUsers() honors prefs for general-purpose notifications;
-      // for scheduled job warnings we always push so field crews don't miss
-      // a job they explicitly opted into.
-      void sendPushToUser(item.userId, {
+      void fanOutPushToUser(item.userId, {
+        type: "ticket_warning",
         title,
         body,
-        data: { type: "ticket_warning", ticketId, kind: item.kind, link: `/tickets/${ticketId}` },
+        link: `/tickets/${ticketId}`,
+        category: "tickets",
+        pushData: { ticketId, kind: item.kind, type: "ticket_warning" },
       }).catch(() => undefined);
     }
   }
@@ -1860,10 +1843,13 @@ async function dispatchLateCheckInNudges(): Promise<void> {
       } catch (err) {
         logger.warn({ err, ticketId, userId: member.userId }, "late nudge insert failed");
       }
-      void sendPushToUser(member.userId, {
+      void fanOutPushToUser(member.userId, {
+        type: "late_check_in_nudge",
         title,
         body,
-        data: { type: "late_check_in_nudge", ticketId, link: `/tickets/${ticketId}` },
+        link: `/tickets/${ticketId}`,
+        category: "crew",
+        pushData: { ticketId, type: "late_check_in_nudge" },
       }).catch(() => undefined);
       anyNudged = true;
     }

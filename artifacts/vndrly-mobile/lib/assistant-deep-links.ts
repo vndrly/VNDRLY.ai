@@ -74,6 +74,11 @@ function webUrl(path: string): string {
   return path.startsWith("http") ? path : `${base}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
+function parsePositiveTicketId(raw: string): number | null {
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
 /** Extract a ticket id from any href shape AskV might emit. */
 export function parseTicketIdFromHref(href: string): number | null {
   const trimmed = href.trim();
@@ -88,17 +93,17 @@ export function parseTicketIdFromHref(href: string): number | null {
   ];
   for (const re of deepPatterns) {
     const m = re.exec(trimmed);
-    if (m) return Number(m[1]);
+    if (m) return parsePositiveTicketId(m[1]);
   }
 
   const pathMatch = trimmed.match(/\/tickets?\/(\d+)/i);
-  if (pathMatch) return Number(pathMatch[1]);
+  if (pathMatch) return parsePositiveTicketId(pathMatch[1]);
 
   if (/^https?:\/\//i.test(trimmed)) {
     try {
       const u = new URL(trimmed);
       const urlMatch = u.pathname.match(/\/tickets?\/(\d+)/i);
-      if (urlMatch) return Number(urlMatch[1]);
+      if (urlMatch) return parsePositiveTicketId(urlMatch[1]);
     } catch {
       // ignore
     }

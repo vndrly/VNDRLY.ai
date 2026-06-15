@@ -29,7 +29,15 @@ import { initApi } from "@/lib/api";
 import { getCachedToken, getCachedRole, getToken, isTokenCacheReady, subscribeToken, getUser } from "@/lib/auth";
 import { hasActiveConsentForThisDevice, isConsentDeclined } from "@/lib/locationConsent";
 import { startLiveLocationReporter, stopLiveLocationReporter } from "@/lib/liveLocationReporter";
+import { ensureNotificationSoundLifecycle } from "@/lib/notificationSounds";
+import { syncAppIconBadge } from "@/lib/notificationBadge";
+import {
+  notificationIdFromPushData,
+  routeForPushData,
+} from "@/lib/pushDeepLinks";
+import { registerForPushNotifications } from "@/lib/push";
 import { initSentry, setSentryUser, wrapRoot } from "@/lib/sentry";
+import "@/lib/push";
 import "@/lib/i18n";
 
 void SplashScreen.preventAutoHideAsync().catch(() => undefined);
@@ -157,40 +165,48 @@ function AuthGate() {
     return () => { cancelled = true; };
   }, [checked, hasAuth, role, segments]);
 
-  // Deep-link from push notifications: route by payload.type.
+  // Deep-link from push notifications: route by payload.type / link.
   useEffect(() => {
     if (!checked || !hasAuth) return;
-    // expo-notifications has no web implementation for
-    // getLastNotificationResponseAsync / addNotificationResponseReceivedListener
-    // and throws "method or property is not available on web". Push deep-links
-    // only matter on native, so bail out on web.
     if (Platform.OS === "web") return;
-    function routeForData(data: unknown): string | null {
-      if (!data || typeof data !== "object") return null;
-      const d = data as Record<string, unknown>;
-      // Removed-from-crew push deep-links to the tickets list (the removed
-      // member no longer has access to the ticket detail).
-      if (d.type === "crew_removed") return "/(tabs)";
-      const ticketId =
-        typeof d.ticketId === "number"
-          ? d.ticketId
-          : typeof d.ticketId === "string"
-            ? Number(d.ticketId)
-            : null;
-      if (!ticketId || !Number.isFinite(ticketId)) return null;
-      return `/ticket/${ticketId}`;
+
+    async function handlePushOpen(data: unknown) {
+      const notifId = notificationIdFromPushData(data);
+      if (notifId != null) {
+        try {
+          const { apiFetch } = await import("@/lib/api");
+          await apiFetch(`/api/notifications/${notifId}/read`, { method: "POST" });
+        } catch {
+          // ignore
+        }
+      }
+      const route = routeForPushData(data);
+      if (route.type === "route") {
+        router.push(route.path as never);
+      }
+      void syncAppIconBadge();
     }
+
     const sub = Notifications.addNotificationResponseReceivedListener((resp) => {
-      const path = routeForData(resp.notification.request.content.data);
-      if (path) router.push(path as never);
+      void handlePushOpen(resp.notification.request.content.data);
     });
     void Notifications.getLastNotificationResponseAsync().then((resp) => {
       if (!resp) return;
-      const path = routeForData(resp.notification.request.content.data);
-      if (path) router.push(path as never);
+      void handlePushOpen(resp.notification.request.content.data);
     });
     return () => sub.remove();
   }, [checked, hasAuth]);
+
+  // Register push token for any authenticated role (not only Home tab).
+  useEffect(() => {
+    if (!checked || !hasAuth || role === "guest") return;
+    registerForPushNotifications().catch(() => undefined);
+    void syncAppIconBadge();
+  }, [checked, hasAuth, role]);
+
+  // Stop in-app bell tolling when the user backgrounds the app (push
+  // sound takes over) or when the sound lifecycle hook cleans up.
+  useEffect(() => ensureNotificationSoundLifecycle(), []);
 
   if (!checked) {
     return <SplashLogo />;

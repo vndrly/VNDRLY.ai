@@ -6,6 +6,7 @@ import {
   notificationPreferencesTable,
   userOrgMembershipsTable,
   usersTable,
+  vendorPeopleTable,
 } from "@workspace/db";
 import crypto from "crypto";
 import { sendPushToUser } from "../lib/expo-push";
@@ -64,6 +65,10 @@ export type NotificationCategory =
 
 const TYPE_TO_CATEGORY: Record<string, NotificationCategory> = {
   ticket_assigned: "tickets",
+  ticket_unlocked: "tickets",
+  ticket_warning: "tickets",
+  ticket_scheduled: "crew",
+  late_check_in_nudge: "crew",
   ticket_kicked_back: "tickets",
   ticket_rejected: "tickets",
   ticket_approved: "tickets",
@@ -267,6 +272,12 @@ export const HIGH_PRIORITY_NOTIFICATION_TYPES: ReadonlySet<string> = new Set([
   "cert_expired",
   "job_awarded",
   "comment_mention",
+  "crew_added",
+  "schedule_changed",
+  "ticket_assigned",
+  "ticket_scheduled",
+  "late_check_in_nudge",
+  "ticket_warning",
   // Direct assignment offers + responses ride the high-priority lane:
   // the partner is waiting on a yes/no before they can re-assign, and a
   // vendor sitting on a pending offer is blocking schedule planning.
@@ -306,6 +317,92 @@ export type NotifyInput = {
   // routes by `data.ticketId`, not by `link`). See `vndrly-mobile/app/_layout.tsx`.
   pushData?: Record<string, unknown>;
 };
+
+/** Unread inbox count for push badge (matches GET /notifications/unread-count). */
+export async function countUnreadForUser(
+  userId: number,
+  commentsEnabled = true,
+): Promise<number> {
+  const conds = [
+    eq(notificationsTable.userId, userId),
+    eq(notificationsTable.isRead, false),
+  ];
+  if (!commentsEnabled) {
+    conds.push(sql`${notificationsTable.category} <> 'comments'`);
+  }
+  const [row] = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(notificationsTable)
+    .where(and(...conds));
+  return row?.n ?? 0;
+}
+
+export async function countUnreadForUsers(
+  userIds: number[],
+  prefs: Map<number, typeof DEFAULT_PREFS>,
+): Promise<Map<number, number>> {
+  const map = new Map<number, number>();
+  if (!userIds.length) return map;
+  await Promise.all(
+    userIds.map(async (uid) => {
+      const p = prefs.get(uid) ?? DEFAULT_PREFS;
+      map.set(uid, await countUnreadForUser(uid, p.commentsEnabled));
+    }),
+  );
+  return map;
+}
+
+/** Notify a field employee by vendor_people id (prefs + inbox + push). */
+export async function notifyFieldEmployee(
+  fieldEmployeeId: number,
+  notif: NotifyInput,
+): Promise<number> {
+  const [fe] = await db
+    .select({ userId: vendorPeopleTable.userId })
+    .from(vendorPeopleTable)
+    .where(eq(vendorPeopleTable.id, fieldEmployeeId));
+  if (!fe?.userId) return 0;
+  return notifyUsers([fe.userId], notif);
+}
+
+/**
+ * Push for a notification row that was inserted outside `notifyUsers()`
+ * (scheduled workers). Honors the same push / DND / category prefs.
+ */
+export async function fanOutPushToUser(
+  userId: number,
+  notif: {
+    type: string;
+    title: string;
+    body?: string | null;
+    link?: string | null;
+    category?: NotificationCategory;
+    pushData?: Record<string, unknown>;
+    notificationId?: number;
+  },
+): Promise<void> {
+  const category = notif.category ?? categoryForType(notif.type);
+  const prefs = await getPrefsForUsers([userId]);
+  const p = prefs.get(userId)!;
+  const now = new Date();
+  if (!p.pushEnabled || inDndWindow(p, now) || !categoryEnabled(p, category)) return;
+
+  const badge = await countUnreadForUser(userId, p.commentsEnabled);
+  const { sendPushToUser } = await import("../lib/expo-push");
+  await sendPushToUser(userId, {
+    title: notif.title,
+    body: notif.body ?? "",
+    badge,
+    data: {
+      type: notif.type,
+      link: notif.link ?? null,
+      category,
+      ...(notif.notificationId != null ? { notificationId: notif.notificationId } : {}),
+      badge,
+      ...(notif.pushData ?? {}),
+    },
+  });
+}
 
 // Insert notifications honoring preferences and fan out push.
 export async function notifyUsers(userIds: number[], notif: NotifyInput): Promise<number> {
@@ -395,6 +492,10 @@ export async function notifyUsers(userIds: number[], notif: NotifyInput): Promis
   // Fan out push notifications (best-effort) for newly inserted rows only,
   // respecting per-user push + DND prefs.
   const now = new Date();
+  const unreadByUser = await countUnreadForUsers(
+    inserted.map((r) => r.userId),
+    prefs,
+  );
   for (const r of inserted) {
     const p = prefs.get(r.userId)!;
     if (!p.pushEnabled || inDndWindow(p, now)) continue;
@@ -406,10 +507,13 @@ export async function notifyUsers(userIds: number[], notif: NotifyInput): Promis
     void sendPushToUser(r.userId, {
       title: notif.title,
       body: notif.body ?? "",
+      badge: unreadByUser.get(r.userId) ?? 0,
       data: {
         type: notif.type,
         link: notif.link ?? null,
         category,
+        notificationId: r.id,
+        badge: unreadByUser.get(r.userId) ?? 0,
         ...(notif.pushData ?? {}),
       },
     }).catch(() => undefined);

@@ -178,6 +178,8 @@
     },
     "errorLoadOpen": "No se pudieron cargar tus tickets abiertos. Desliza para refrescar.",
     "errorLoadHistory": "No se pudo cargar tu historial. Desliza para refrescar.",
+    "errorLoadDetail": "No se pudo cargar este número de seguimiento.",
+    "retryLoad": "Intentar de nuevo",
     "refreshDetailAccessibility": "Actualizar este ticket",
     "refreshDetailAccessibilityHint": "Obtiene los detalles, ítems, notas y seguimiento más recientes del servidor.",
     "refreshHistoryAccessibility": "Actualizar lista de trabajos",
@@ -1144,6 +1146,11 @@
     "slowDown": {
       "brief": "Reduciendo el ritmo brevemente para mantener todo fluido.",
       "retryIn": "Reduciendo el ritmo — reintentando en {{seconds}}s."
+    },
+    "toast": {
+      "crewAdded": "Añadido a la cuadrilla en {{ticket}}",
+      "scheduleChanged": "Horario actualizado para {{ticket}}",
+      "trackingFallback": "un número de seguimiento"
     },
     "rows": {
       "tickets": "Tickets",

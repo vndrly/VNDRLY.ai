@@ -365,10 +365,10 @@ describe("Phase 2 schedule + crew tracker flow (Task #229)", () => {
     // to the success state (which opens the crew tracker).
     expect(res.body.requiresConfirm).toBeUndefined();
 
-    // Each crew member with a linked user got an in-memory confirmation
-    // push (Scheduled: Hot Oil…). With both crew members linked to a
-    // login that's two pushes.
-    expect(sendPushToUserMock).toHaveBeenCalledTimes(crew.length);
+    // Each crew member with a linked user gets a persistent crew_added
+    // notification (inbox + push via notifyUsers) — no duplicate
+    // in-memory-only ticket_scheduled push.
+    expect(sendPushToUserMock).not.toHaveBeenCalled();
 
     // The persistent `crew_added` fan-out fires once per genuinely-new
     // crew member, skipping anyone whose user id matches the scheduler

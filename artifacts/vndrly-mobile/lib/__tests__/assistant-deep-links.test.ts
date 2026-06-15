@@ -12,8 +12,9 @@ describe("parseTicketIdFromHref", () => {
     "VNDRLY-deep-link:tickets/42",
     "https://vndrly.ai/tickets/99",
     "https://vndrly.ai/ticket/99",
+    "/tickets/123#comment-100",
   ])("extracts id from %s", (href) => {
-    const id = href.includes("99") ? 99 : 42;
+    const id = href.includes("99") ? 99 : href.includes("123") ? 123 : 42;
     expect(parseTicketIdFromHref(href)).toBe(id);
   });
 });

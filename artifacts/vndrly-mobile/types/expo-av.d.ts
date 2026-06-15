@@ -25,6 +25,10 @@ declare module "expo-av" {
       }>;
     }
     class Sound {
+      static createAsync(
+        source: number | { uri: string },
+      ): Promise<{ sound: Sound }>;
+      stopAsync(): Promise<void>;
       playAsync(): Promise<void>;
       unloadAsync(): Promise<void>;
       setOnPlaybackStatusUpdate(
@@ -39,6 +43,6 @@ declare module "expo-av" {
     function getPermissionsAsync(): Promise<{ status: string }>;
     function requestPermissionsAsync(): Promise<{ status: string }>;
     function setAudioModeAsync(mode: Record<string, unknown>): Promise<void>;
-    function createAsync(source: { uri: string }): Promise<{ sound: Sound }>;
+    function createAsync(source: number | { uri: string }): Promise<{ sound: Sound }>;
   }
 }

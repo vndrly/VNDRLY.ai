@@ -48,7 +48,7 @@ import {
 } from "@/lib/mobile-viewer";
 import { VNDRLY_LOGO_SQUARE } from "@/lib/vndrly-brand-assets";
 import { setHomeBadge } from "@/lib/tabBadges";
-import { registerForPushNotifications } from "@/lib/push";
+import { syncAppIconBadge } from "@/lib/notificationBadge";
 import { isRateLimited, noteRateLimit } from "@/lib/rateLimitGate";
 import {
   isTicketsRateLimited,
@@ -105,6 +105,7 @@ export default function HomeScreen() {
   // gets a clear signal that the office restored their access. The
   // payload includes the formatted tracking number so the worker knows
   // which ticket was unblocked.
+  const [crewToastMessage, setCrewToastMessage] = useState<string | null>(null);
   const [restoredToastMessage, setRestoredToastMessage] = useState<string | null>(
     null,
   );
@@ -295,6 +296,7 @@ export default function HomeScreen() {
     try {
       const r = await apiFetch<{ count: number }>("/api/notifications/unread-count");
       setUnreadCount(r?.count ?? 0);
+      void syncAppIconBadge();
     } catch (e) {
       // Park the badge poll if the limiter tripped. The notifications
       // screen instance also subscribes to this same resource via the
@@ -515,11 +517,7 @@ export default function HomeScreen() {
     void load();
   }, [rateLimited, load]);
 
-  useEffect(() => {
-    registerForPushNotifications().catch(() => undefined);
-  }, []);
-
-  // Task #630: foreground `ticket_unblocked` confirmation toast.
+  // Task #630: foreground push toasts (assignment restored, crew, schedule).
   //
   // Task #592 fans out a `ticket_unblocked` push the moment the office
   // restores a vendor's site/work-type assignment. Task #623 surfaces a
@@ -551,37 +549,73 @@ export default function HomeScreen() {
       const data = n.request.content.data as Record<string, unknown> | null;
       if (!data || typeof data !== "object") return;
 
+      void syncAppIconBadge();
+
       if (data.type === "workflow_nudge") {
         handlePushData(data);
         return;
       }
 
-      if (data.type !== "ticket_unblocked") return;
-      const incoming =
+      const incomingTicketId =
         typeof data.ticketId === "number"
           ? data.ticketId
           : typeof data.ticketId === "string"
             ? Number(data.ticketId)
             : null;
-      if (
-        incoming === null ||
-        !Number.isFinite(incoming) ||
-        !Number.isInteger(incoming) ||
-        incoming < 1
-      )
+      const validTicketId =
+        incomingTicketId != null &&
+        Number.isFinite(incomingTicketId) &&
+        Number.isInteger(incomingTicketId) &&
+        incomingTicketId >= 1
+          ? incomingTicketId
+          : null;
+
+      if (data.type === "crew_added") {
+        setCrewToastMessage(
+          t("notifications.toast.crewAdded", {
+            ticket: validTicketId
+              ? formatTicketTrackingNumber(validTicketId)
+              : t("notifications.toast.trackingFallback"),
+          }),
+        );
+        void loadUnread();
+        if (validTicketId) void refreshTicketRow(validTicketId);
         return;
+      }
+
+      if (data.type === "schedule_changed" || data.type === "ticket_scheduled") {
+        setCrewToastMessage(
+          t("notifications.toast.scheduleChanged", {
+            ticket: validTicketId
+              ? formatTicketTrackingNumber(validTicketId)
+              : t("notifications.toast.trackingFallback"),
+          }),
+        );
+        void loadUnread();
+        if (validTicketId) void refreshTicketRow(validTicketId);
+        return;
+      }
+
+      if (data.type !== "ticket_unblocked") return;
+      if (!validTicketId) return;
       setRestoredToastMessage(
         t("tickets.assignmentRestoredToastForList", {
-          ticket: formatTicketTrackingNumber(incoming),
+          ticket: formatTicketTrackingNumber(validTicketId),
         }),
       );
-      void refreshTicketRow(incoming);
+      void refreshTicketRow(validTicketId);
     });
     } catch {
       return;
     }
     return () => sub?.remove();
-  }, [refreshTicketRow, t, handlePushData]);
+  }, [refreshTicketRow, t, handlePushData, loadUnread]);
+
+  useEffect(() => {
+    if (!crewToastMessage) return;
+    const handle = setTimeout(() => setCrewToastMessage(null), 3000);
+    return () => clearTimeout(handle);
+  }, [crewToastMessage]);
 
   useEffect(() => {
     if (!nudgeToastMessage) return;
@@ -1357,11 +1391,31 @@ export default function HomeScreen() {
           </View>
         </View>
       ) : null}
-      {nudgeToastMessage ? (
+      {crewToastMessage ? (
         <View
           style={[
             styles.restoredToastContainer,
             { bottom: restoredToastMessage ? 80 : 32 },
+          ]}
+          pointerEvents="none"
+          testID="toast-crew-notification"
+        >
+          <View style={[styles.restoredToast, styles.nudgeToast]}>
+            <Feather name="users" size={16} color="#ffffff" />
+            <Text style={styles.restoredToastText}>{crewToastMessage}</Text>
+          </View>
+        </View>
+      ) : null}
+      {nudgeToastMessage ? (
+        <View
+          style={[
+            styles.restoredToastContainer,
+            {
+              bottom:
+                (restoredToastMessage ? 80 : 0) +
+                (crewToastMessage ? 80 : 0) +
+                (restoredToastMessage || crewToastMessage ? 0 : 32),
+            },
           ]}
           pointerEvents="none"
           testID="toast-nudge-received"

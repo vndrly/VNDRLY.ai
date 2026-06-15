@@ -1,5 +1,5 @@
 import { Feather } from "@expo/vector-icons";
-import { router, Stack } from "expo-router";
+import { router, Stack, useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -17,6 +17,9 @@ import InPageHeader from "@/components/InPageHeader";
 import { useRateLimitGate } from "@/hooks/use-rate-limit-gate";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
+import { parseTicketIdFromHref } from "@/lib/assistant-deep-links";
+import { stopBellTolling } from "@/lib/notificationSounds";
+import { syncAppIconBadge } from "@/lib/notificationBadge";
 
 type NotificationRow = {
   id: number;
@@ -101,6 +104,7 @@ export default function NotificationsScreen() {
     try {
       const data = await apiFetch<NotificationRow[]>("/api/notifications");
       setItems(data || []);
+      void syncAppIconBadge();
       // Clear any stale error so the gate can disarm on a successful
       // recovery fetch (the hook only re-arms when it sees a *new*
       // error reference, but holding onto an old 429 here would block
@@ -131,30 +135,25 @@ export default function NotificationsScreen() {
     load();
   }, [load, rateLimited]);
 
+  useFocusEffect(
+    useCallback(() => {
+      stopBellTolling();
+    }, []),
+  );
+
   const markRead = async (id: number) => {
     try {
       await apiFetch(`/api/notifications/${id}/read`, { method: "POST" });
       setItems((xs) => xs.map((x) => (x.id === id ? { ...x, isRead: true } : x)));
+      void syncAppIconBadge();
     } catch (e) {
       console.warn("markRead", e);
     }
   };
 
-  // The server stores notification links in web format (e.g. "/tickets/123").
-  // The mobile route is "/ticket/[id]" (singular). Translate ticket links to
-  // the mobile route. Non-ticket links (invoices, vendors, etc.) have no
-  // mobile screen yet, so they just mark-as-read.
-  const ticketIdFromLink = (link: string | null): number | null => {
-    if (!link) return null;
-    const m = link.match(/^\/tickets?\/(\d+)/);
-    if (!m) return null;
-    const n = Number(m[1]);
-    return Number.isFinite(n) && n > 0 ? n : null;
-  };
-
   const onCardPress = (item: NotificationRow) => {
     if (!item.isRead) markRead(item.id);
-    const ticketId = ticketIdFromLink(item.link);
+    const ticketId = parseTicketIdFromHref(item.link ?? "");
     if (ticketId !== null) {
       router.push(`/ticket/${ticketId}`);
     }
@@ -164,6 +163,7 @@ export default function NotificationsScreen() {
     try {
       await apiFetch("/api/notifications/read-all", { method: "POST" });
       setItems((xs) => xs.map((x) => ({ ...x, isRead: true })));
+      void syncAppIconBadge();
     } catch (e) {
       console.warn("markAll", e);
     }

@@ -178,6 +178,8 @@
     },
     "errorLoadOpen": "Couldn't load your open tickets. Pull to refresh.",
     "errorLoadHistory": "Couldn't load your job history. Pull to refresh.",
+    "errorLoadDetail": "Couldn't load this tracking number.",
+    "retryLoad": "Try again",
     "refreshDetailAccessibility": "Refresh this ticket",
     "refreshDetailAccessibilityHint": "Pulls the latest details, items, notes, and tracking from the server.",
     "refreshHistoryAccessibility": "Refresh jobs list",
@@ -1144,6 +1146,11 @@
     "slowDown": {
       "brief": "Slowing down briefly to keep things smooth.",
       "retryIn": "Slowing down — retrying in {{seconds}}s."
+    },
+    "toast": {
+      "crewAdded": "Added to crew on {{ticket}}",
+      "scheduleChanged": "Schedule updated for {{ticket}}",
+      "trackingFallback": "a tracking number"
     },
     "rows": {
       "tickets": "Tickets",
