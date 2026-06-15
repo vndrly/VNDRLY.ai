@@ -12,6 +12,15 @@ $ErrorActionPreference = "Stop"
 Initialize-EasEnvironment
 Assert-EasCli
 
+$ascKeyPath = Join-Path $script:RepoRoot ".local\AuthKey_C7YFYCR72K.p8"
+if (Test-Path $ascKeyPath) {
+  $env:EXPO_ASC_API_KEY_PATH = $ascKeyPath
+  $env:EXPO_ASC_KEY_ID = "C7YFYCR72K"
+  $env:EXPO_ASC_ISSUER_ID = "0bb5c187-d2b0-4058-91b2-b1cccccaac53"
+  $env:EXPO_APPLE_TEAM_ID = "CM253WWQW2"
+  $env:EXPO_APPLE_TEAM_TYPE = "INDIVIDUAL"
+}
+
 Write-EasStep "Checking Expo login"
 Invoke-Eas @("whoami", "--non-interactive")
 
@@ -23,6 +32,13 @@ if (-not $SkipTypecheck) {
     Write-Host "Typecheck failed." -ForegroundColor Red
     exit 1
   }
+}
+
+Write-EasStep "Refreshing App Store provisioning profile"
+node (Join-Path $script:MobileRoot "scripts/refresh-ios-appstore-provisioning.cjs")
+if ($LASTEXITCODE -ne 0) {
+  Write-Host "Provisioning refresh failed." -ForegroundColor Red
+  exit 1
 }
 
 Write-EasStep "Starting iOS production build on EAS"
