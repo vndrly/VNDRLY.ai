@@ -102,7 +102,7 @@ function ScanPermissionPanel({
       <Stack.Screen options={{ headerShown: false }} />
       <InPageHeader
         title={t("tabs.scan")}
-        hideBack
+        onBack={() => router.push("/(tabs)" as never)}
         right={<ActiveOrgIndicator />}
       />
       <ScrollView
@@ -146,7 +146,7 @@ export default function ScanScreen() {
         <Stack.Screen options={{ headerShown: false }} />
         <InPageHeader
           title={t("tabs.scan")}
-          hideBack
+          onBack={() => router.push("/(tabs)" as never)}
           right={<ActiveOrgIndicator />}
         />
         <ManualSiteCodeFallback
@@ -262,7 +262,7 @@ function ScanScreenWithCamera({
             >
               <InPageHeader
                 title={t("tabs.scan")}
-                hideBack
+                onBack={() => router.push("/(tabs)" as never)}
                 right={<ActiveOrgIndicator />}
                 suppressTopInset
                 style={{ backgroundColor: "transparent" }}

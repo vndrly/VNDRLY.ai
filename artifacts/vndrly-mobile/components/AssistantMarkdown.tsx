@@ -3,6 +3,17 @@ import React from "react";
 import { Linking, StyleSheet, Text, View } from "react-native";
 
 import { useColors } from "@/hooks/useColors";
+import { resolveAssistantLink } from "@/lib/assistant-deep-links";
+
+function openAssistantLink(href: string): void {
+  const target = resolveAssistantLink(href);
+  if (!target) return;
+  if (target.type === "route") {
+    router.push(target.path as never);
+    return;
+  }
+  void Linking.openURL(target.url);
+}
 
 function renderInline(
   s: string,
@@ -42,34 +53,27 @@ function renderInline(
     if (next.kind === "link") {
       const label = next.m[1];
       const href = next.m[2].trim();
-      const isInternal = href.startsWith("/") && !href.startsWith("//");
       const isSafeAbsolute = /^(https?:|mailto:|tel:)/i.test(href);
-      if (isInternal) {
+      const resolved = resolveAssistantLink(href);
+
+      if (resolved || (href.startsWith("/") && !href.startsWith("//")) || isSafeAbsolute) {
         nodes.push(
           <Text
             key={key++}
             style={{ color: colors.primary, textDecorationLine: "underline" }}
             onPress={() => {
-              const ticketMatch = href.match(/^\/tickets\/(\d+)/);
-              if (ticketMatch) {
-                router.push(`/ticket/${ticketMatch[1]}`);
+              if (resolved) {
+                openAssistantLink(href);
                 return;
               }
-              if (href === "/field" || href.startsWith("/foreman")) {
-                router.push("/(tabs)");
+              if (href.startsWith("/") && !href.startsWith("//")) {
+                openAssistantLink(href);
                 return;
+              }
+              if (isSafeAbsolute) {
+                void Linking.openURL(href);
               }
             }}
-          >
-            {label}
-          </Text>,
-        );
-      } else if (isSafeAbsolute) {
-        nodes.push(
-          <Text
-            key={key++}
-            style={{ color: colors.primary, textDecorationLine: "underline" }}
-            onPress={() => void Linking.openURL(href)}
           >
             {label}
           </Text>,

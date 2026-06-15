@@ -15,12 +15,18 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useScreenTopPadding } from "@/lib/screen-insets";
 import { WebView } from "react-native-webview";
 
+import InPageHeader from "@/components/InPageHeader";
+import LayeredPillButton, { LAYERED_PILL_BUTTON_TEXT } from "@/components/LayeredPillButton";
+import { useAuth } from "@/hooks/use-auth";
 import { useBrand } from "@/hooks/use-brand";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
+import {
+  isAdminOfficeUser,
+  isPartnerOfficeUser,
+} from "@/lib/mobile-viewer";
 import { translateApiError } from "@/lib/apiErrors";
 import {
   buildCrewMapHtml,
@@ -77,7 +83,9 @@ export default function PartnerSiteCrewMapScreen() {
   const colors = useColors();
   const brand = useBrand();
   const { t } = useTranslation();
-  const topPadding = useScreenTopPadding();
+  const { user } = useAuth();
+  const showAddSite =
+    isPartnerOfficeUser(user) || isAdminOfficeUser(user);
   const [sites, setSites] = useState<OverviewSite[]>([]);
   const [allSites, setAllSites] = useState<OverviewSite[]>([]);
   const [locations, setLocations] = useState<CrewMapLocation[]>([]);
@@ -229,21 +237,39 @@ export default function PartnerSiteCrewMapScreen() {
   }
 
   return (
-    <ScrollView
-      style={[styles.root, { backgroundColor: colors.background }]}
-      contentContainerStyle={[styles.content, { paddingTop: topPadding }]}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={() => {
-            setRefreshing(true);
-            void load();
-          }}
-          tintColor={colors.primary}
-        />
-      }
-    >
-      <Text style={[styles.title, { color: colors.foreground }]}>{t("partnerMap.title")}</Text>
+    <View style={[styles.root, { backgroundColor: colors.background }]}>
+      <InPageHeader
+        title={t("partnerMap.title")}
+        onBack={() => router.push("/(tabs)" as never)}
+        right={
+          showAddSite ? (
+            <LayeredPillButton
+              testID="button-add-site"
+              onPress={() => router.push("/add-site-location")}
+              height={36}
+            >
+              <Feather name="map-pin" size={14} color="#ffffff" />
+              <Text style={LAYERED_PILL_BUTTON_TEXT} numberOfLines={1}>
+                {t("siteLocations.addSite")}
+              </Text>
+            </LayeredPillButton>
+          ) : null
+        }
+      />
+      <ScrollView
+        style={styles.flex}
+        contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => {
+              setRefreshing(true);
+              void load();
+            }}
+            tintColor={colors.primary}
+          />
+        }
+      >
       <Text style={[styles.sub, { color: colors.mutedForeground }]}>{t("partnerMap.subtitle")}</Text>
 
       <Text style={[styles.siteLabel, { color: colors.mutedForeground }]}>
@@ -418,14 +444,15 @@ export default function PartnerSiteCrewMapScreen() {
           </Pressable>
         ))
       )}
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  flex: { flex: 1 },
   content: { paddingHorizontal: 16, paddingBottom: 32 },
-  title: { fontFamily: "Inter_700Bold", fontSize: 22, marginBottom: 4, ...SCREEN_TITLE_TEXT },
   sub: { fontFamily: "Inter_400Regular", fontSize: 14, marginBottom: 12, ...SCREEN_SUBTITLE_TEXT },
   siteLabel: {
     fontFamily: "Inter_500Medium",

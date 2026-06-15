@@ -218,7 +218,7 @@ export default function ProfileScreen() {
     <View style={[styles.flex, { backgroundColor: colors.background }]}>
       <InPageHeader
         title={t("tabs.profile")}
-        hideBack
+        onBack={() => router.push("/(tabs)" as never)}
         right={<ActiveOrgIndicator />}
       />
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -447,16 +447,18 @@ export default function ProfileScreen() {
         </LayeredPillButton>
       ) : null}
 
-      <LayeredPillButton
-        onPress={() => router.push("/compliance")}
-        height={40}
-        style={styles.actionBtn}
-        testID="button-compliance-card"
-      >
-        <Feather name="shield" size={16} color="#ffffff" style={styles.pillIconShadow} />
-        <Text style={[styles.actionText, styles.pillTextShadow]}>{t("profile.complianceCard")}</Text>
-        <Feather name="chevron-right" size={18} color="#ffffff" style={[styles.actionChevron, styles.pillIconShadow]} />
-      </LayeredPillButton>
+      {user?.role !== "partner" ? (
+        <LayeredPillButton
+          onPress={() => router.push("/compliance")}
+          height={40}
+          style={styles.actionBtn}
+          testID="button-compliance-card"
+        >
+          <Feather name="shield" size={16} color="#ffffff" style={styles.pillIconShadow} />
+          <Text style={[styles.actionText, styles.pillTextShadow]}>{t("profile.complianceCard")}</Text>
+          <Feather name="chevron-right" size={18} color="#ffffff" style={[styles.actionChevron, styles.pillIconShadow]} />
+        </LayeredPillButton>
+      ) : null}
 
       <LayeredPillButton
         onPress={onLogout}

@@ -1,4 +1,5 @@
 import { Feather } from "@expo/vector-icons";
+import { router } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -25,7 +26,6 @@ import { useBrand } from "@/hooks/use-brand";
 import { useColors } from "@/hooks/useColors";
 import { quickActionsForUser } from "@/lib/assistant-quick-actions";
 import { isForemanEmployeeUser } from "@/lib/mobile-viewer";
-import { useScreenTopPadding } from "@/lib/screen-insets";
 import { SCREEN_SUBTITLE_TEXT, SCREEN_TITLE_TEXT } from "@/lib/pill-doctrine";
 
 export default function AskVScreen() {
@@ -34,7 +34,6 @@ export default function AskVScreen() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
-  const topPadding = useScreenTopPadding();
   const scrollRef = useRef<ScrollView>(null);
   const [draft, setDraft] = useState("");
 
@@ -90,10 +89,10 @@ export default function AskVScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={Platform.OS === "ios" ? 88 : 0}
     >
-      <View style={[styles.headerWrap, { paddingTop: topPadding }]}>
+      <View style={styles.headerWrap}>
         <InPageHeader
           title={t("askv.title")}
-          hideBack
+          onBack={() => router.push("/(tabs)" as never)}
           right={<ActiveOrgIndicator />}
           testID="askv-header"
         />

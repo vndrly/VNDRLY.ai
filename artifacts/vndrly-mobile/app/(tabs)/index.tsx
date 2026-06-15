@@ -939,19 +939,6 @@ export default function HomeScreen() {
                 {t("tickets.newTicket")}
               </Text>
             </LayeredPillButton>
-            {isPartnerViewer || isAdminViewer ? (
-              <LayeredPillButton
-                testID="button-add-site"
-                onPress={() => router.push("/add-site-location")}
-                height={40}
-                style={styles.officeActionPill}
-              >
-                <Feather name="map-pin" size={14} color="#ffffff" style={styles.btnIconShadow} />
-                <Text style={[styles.newBtnText, { color: "#ffffff" }]} numberOfLines={1}>
-                  {t("siteLocations.addSite")}
-                </Text>
-              </LayeredPillButton>
-            ) : null}
             <LayeredPillButton
               onPress={onHeaderRefresh}
               disabled={headerRefreshing || refreshing || rateLimited}

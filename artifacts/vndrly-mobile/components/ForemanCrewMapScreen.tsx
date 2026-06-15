@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Feather } from "@expo/vector-icons";
+import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
@@ -12,10 +13,9 @@ import {
   Text,
   View,
 } from "react-native";
-import { useScreenTopPadding } from "@/lib/screen-insets";
-import { router } from "expo-router";
 import { WebView } from "react-native-webview";
 
+import InPageHeader from "@/components/InPageHeader";
 import { useBrand } from "@/hooks/use-brand";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
@@ -43,7 +43,6 @@ export default function ForemanCrewMapScreen() {
   const colors = useColors();
   const brand = useBrand();
   const { t } = useTranslation();
-  const topPadding = useScreenTopPadding();
   const [locations, setLocations] = useState<LiveLocation[]>([]);
   const [sites, setSites] = useState<FieldSite[]>([]);
   const [loading, setLoading] = useState(true);
@@ -131,28 +130,32 @@ export default function ForemanCrewMapScreen() {
   }
 
   return (
-    <ScrollView
-      style={[styles.root, { backgroundColor: colors.background }]}
-      contentContainerStyle={[styles.content, { paddingTop: topPadding }]}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={() => {
-            setRefreshing(true);
-            void load();
-          }}
-          tintColor={colors.primary}
-        />
-      }
-    >
-      <View style={styles.titleRow}>
-        <Text style={[styles.title, { color: colors.foreground }]}>{t("foremanMap.title")}</Text>
-        <View style={[styles.livePill, { backgroundColor: liveStatus === "live" ? "#dcfce7" : "#fef3c7" }]}>
-          <Text style={{ fontSize: 11, fontWeight: "600", color: liveStatus === "live" ? "#166534" : "#92400e" }}>
-            {liveStatus === "live" ? t("foremanMap.live", "Live") : t("foremanMap.connecting", "Connecting…")}
-          </Text>
-        </View>
-      </View>
+    <View style={[styles.root, { backgroundColor: colors.background }]}>
+      <InPageHeader
+        title={t("foremanMap.title")}
+        onBack={() => router.push("/(tabs)" as never)}
+        right={
+          <View style={[styles.livePill, { backgroundColor: liveStatus === "live" ? "#dcfce7" : "#fef3c7" }]}>
+            <Text style={{ fontSize: 11, fontWeight: "600", color: liveStatus === "live" ? "#166534" : "#92400e" }}>
+              {liveStatus === "live" ? t("foremanMap.live", "Live") : t("foremanMap.connecting", "Connecting…")}
+            </Text>
+          </View>
+        }
+      />
+      <ScrollView
+        style={styles.flex}
+        contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => {
+              setRefreshing(true);
+              void load();
+            }}
+            tintColor={colors.primary}
+          />
+        }
+      >
       <Text style={[styles.sub, { color: colors.mutedForeground }]}>{t("foremanMap.subtitle")}</Text>
 
       <View style={[styles.mapWrap, { borderColor: colors.border }]} testID="foreman-crew-map">
@@ -237,15 +240,15 @@ export default function ForemanCrewMapScreen() {
           </Pressable>
         ))
       )}
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  flex: { flex: 1 },
   content: { paddingHorizontal: 16, paddingBottom: 32 },
-  titleRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
-  title: { fontFamily: "Inter_700Bold", fontSize: 22, marginBottom: 4, flex: 1, ...SCREEN_TITLE_TEXT },
   livePill: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
   sub: { fontFamily: "Inter_400Regular", fontSize: 14, marginBottom: 12, ...SCREEN_SUBTITLE_TEXT },
   mapWrap: { height: 320, borderRadius: 12, borderWidth: 1, overflow: "hidden", marginBottom: 16 },

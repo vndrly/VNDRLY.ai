@@ -17,8 +17,7 @@ import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
 import { translateApiError } from "@/lib/apiErrors";
 import { setFlaggedBadge } from "@/lib/tabBadges";
-import { SCREEN_SUBTITLE_TEXT, SCREEN_TITLE_TEXT, TEXT_SHADOW } from "@/lib/pill-doctrine";
-import { useScreenTopPadding } from "@/lib/screen-insets";
+import { SCREEN_SUBTITLE_TEXT, TEXT_SHADOW } from "@/lib/pill-doctrine";
 
 type FlaggedTicket = {
   ticketId: number;
@@ -34,7 +33,6 @@ type FlaggedTicket = {
 export default function FlaggedTab() {
   const colors = useColors();
   const { t } = useTranslation();
-  const topPadding = useScreenTopPadding();
   const [tickets, setTickets] = useState<FlaggedTicket[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -64,14 +62,18 @@ export default function FlaggedTab() {
   );
 
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: colors.background }}
-      contentContainerStyle={{ paddingTop: topPadding, paddingHorizontal: 16, paddingBottom: 32 }}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); void load(); }} tintColor={colors.primary} />
-      }
-    >
-      <Text style={[styles.title, { color: colors.foreground }]}>{t("flagged.title")}</Text>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <InPageHeader
+        title={t("flagged.title")}
+        onBack={() => router.push("/(tabs)" as never)}
+      />
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); void load(); }} tintColor={colors.primary} />
+        }
+      >
       <Text style={[styles.sub, { color: colors.mutedForeground }]}>{t("flagged.subtitle")}</Text>
 
       {error ? <Text style={[styles.error, { color: colors.destructive ?? "#dc2626" }]}>{error}</Text> : null}
@@ -106,12 +108,12 @@ export default function FlaggedTab() {
           </Pressable>
         ))
       )}
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  title: { fontFamily: "Inter_700Bold", fontSize: 22, marginBottom: 4, ...SCREEN_TITLE_TEXT },
   sub: { fontFamily: "Inter_400Regular", fontSize: 14, marginBottom: 16, ...SCREEN_SUBTITLE_TEXT },
   row: {
     flexDirection: "row",

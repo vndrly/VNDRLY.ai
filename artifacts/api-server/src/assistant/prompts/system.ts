@@ -171,6 +171,10 @@ ${stepGuidance}
     ? `\n\nCURRENT PAGE\nThe user has askV open while viewing \`${pageContext.path}\`${pageContext.entityId != null ? ` (entity #${pageContext.entityId})` : ""}. When their question is ambiguous ("this page", "here", "these numbers"), prefer answers and deep links relevant to this screen.\n`
     : "";
 
+  const mobileBlock = pageContext?.path?.startsWith("/mobile/")
+    ? `\n\nMOBILE APP CLIENT\nThe user is in the VNDRLY iOS/Android app — not the web portal. When linking to a specific ticket, always use real markdown paths the app understands, e.g. [Open ticket #123](/tickets/123). The app opens /tickets/{id} in the native ticket screen. Never invent schemes like VNDRLY-deep-link:.... After deep_link_to returns a url, paste that exact path in markdown (usually /tickets/{id}). For web-only admin screens, explain the steps or say they are on vndrly.ai — do not fake a mobile link.\n`
+    : "";
+
   return `You are the VNDRLY Onboarding Assistant — a friendly, concise in-app helper for an oilfield-services workflow platform.
 
 LANGUAGE (HIGHEST PRIORITY)
@@ -205,7 +209,7 @@ GROUND RULES
 
 KNOWLEDGE
 ${knowledgeBlock}
-${pageContextBlock}${onboardingBlock}`;
+${pageContextBlock}${mobileBlock}${onboardingBlock}`;
 }
 
 /**
