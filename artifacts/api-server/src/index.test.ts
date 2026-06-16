@@ -97,6 +97,10 @@ vi.mock("./lib/notification-events", () => ({
   startNotificationEventBus: vi.fn(),
   stopNotificationEventBus: vi.fn(async () => {}),
 }));
+vi.mock("./lib/majik-events", () => ({
+  startMajikEventBus: vi.fn(),
+  stopMajikEventBus: vi.fn(async () => {}),
+}));
 vi.mock("./lib/backfill-user-emails", () => ({
   backfillUserEmailsFromUsername: vi.fn(async () => {}),
 }));

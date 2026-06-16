@@ -22,7 +22,11 @@
     "demo:start": "tsx scripts/seed-demo-lifecycle.ts --start",
     "demo:stop": "tsx scripts/seed-demo-lifecycle.ts --cleanup",
     "seed:permian-realdata": "tsx scripts/seed-permian-basin.ts && tsx scripts/seed-partner-branding.ts && tsx scripts/seed-vendor-branding.ts && tsx scripts/seed-mach-site-locations.ts && tsx scripts/seed-permian-site-locations.ts",
-    "setup:dev-testing-access": "tsx scripts/setup-dev-testing-access.ts"
+    "setup:dev-testing-access": "tsx scripts/setup-dev-testing-access.ts",
+    "provision:vndrly-master-admin": "tsx scripts/provision-vndrly-master-admin.ts",
+    "ensure:majik-circle": "tsx scripts/ensure-majik-circle.ts",
+    "ensure:majik-members": "tsx scripts/ensure-majik-members.ts",
+    "prune:majik-members": "tsx scripts/prune-majik-members.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",
@@ -33,6 +37,7 @@
     "@workspace/db": "workspace:*",
     "@workspace/form1099": "workspace:*",
     "@workspace/integrations-anthropic-ai": "workspace:*",
+    "@workspace/majik": "workspace:*",
     "@workspace/ticket-state-conflict-codes": "workspace:*",
     "@workspace/ticket-status-meta": "workspace:*",
     "@workspace/platform-eula": "workspace:*",

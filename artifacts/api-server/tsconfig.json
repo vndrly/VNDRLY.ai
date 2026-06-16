@@ -8,6 +8,12 @@
   "include": ["src", "scripts"],
   "references": [
     {
+      "path": "../../lib/majik"
+    },
+    {
+      "path": "../../lib/db"
+    },
+    {
       "path": "../../lib/api-zod"
     },
     {

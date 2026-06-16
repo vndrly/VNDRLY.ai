@@ -87,3 +87,4 @@ export * from "./assistantMessages";
 export * from "./eventSequences";
 export * from "./signupAssistantCounters";
 export * from "./demoUserLabels";
+export * from "./majik";

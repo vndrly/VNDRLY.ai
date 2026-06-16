@@ -57,6 +57,8 @@ app.use(
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
+  "http://localhost:1420",
+  "https://tauri.localhost",
   "https://vndrly.ai",
 ];
 

@@ -23,6 +23,10 @@ import {
   startNotificationEventBus,
   stopNotificationEventBus,
 } from "./lib/notification-events";
+import {
+  startMajikEventBus,
+  stopMajikEventBus,
+} from "./lib/majik-events";
 import { backfillUserEmailsFromUsername } from "./lib/backfill-user-emails";
 import { backfillPartnerVendorRelationshipsFromTickets } from "./lib/backfill-partner-vendor-relationships";
 import { applyDemoPasswordOverride } from "./lib/demo-password-override";
@@ -133,6 +137,7 @@ function onListening(): void {
   startTicketEventBus();
   startHotlistCommentEventBus();
   startNotificationEventBus();
+  startMajikEventBus();
   startScheduledNotificationWorker();
   startInvoicePeriodWorker();
   startInvoiceAgingWorker();
@@ -211,6 +216,7 @@ function shutdown(signal: NodeJS.Signals): void {
   void stopTicketEventBus();
   void stopHotlistCommentEventBus();
   void stopNotificationEventBus();
+  void stopMajikEventBus();
   server.close((err) => {
     if (err) {
       logger.error({ err }, "Error during server shutdown");
