@@ -155,7 +155,7 @@ async function main() {
 
   const entitlements = await getIntrospectedEntitlementsAsync();
 
-  console.log("Syncing iOS capabilities on Apple (time-sensitive + push)…");
+  console.log(`Syncing iOS capabilities on Apple (${Object.keys(entitlements).join(", ")})…`);
   const context = getRequestContext(authCtx);
   await ensureBundleIdExistsAsync(authCtx, {
     accountName: account.name,
