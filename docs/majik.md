@@ -91,3 +91,65 @@ Window height scales with roster size (see `majikWidgetHeightPx` in `@workspace/
 - 7–8 → ~320px
 
 Width stays ~280px.
+
+## Window behavior
+
+- **Always on top** — widget stays above other windows (`alwaysOnTop: true` in `tauri.conf.json`).
+- **Title bar `–`** — minimizes to the taskbar (does not quit).
+- **OS close (if shown)** — minimizes to taskbar; app keeps running.
+- **Title bar `×`** — signs out of VNDRLY (session cleared); does not quit the app.
+
+## System tray
+
+The tray icon (bundled `icons/icon.ico`) is always available while Majik is running.
+
+| Action | Effect |
+|--------|--------|
+| **Left-click tray** | Toggle show / hide |
+| **Show Majik** | Restore window and focus |
+| **Hide Majik** | Hide window (app keeps running) |
+| **Quit** | Exit Majik completely |
+
+Use **Quit** from the tray when you want to stop the app. Minimize and hide keep SSE connected in the background.
+
+## Ship checklist
+
+Repeatable steps to bootstrap DB, build, and distribute v1:
+
+1. **Push schema** (idempotent):
+
+   ```bash
+   pnpm --filter @workspace/db run push
+   ```
+
+2. **Seed circle + default members + build API/UI**:
+
+   ```bash
+   pnpm setup:majik
+   ```
+
+   Override default member logins with `MAJIK_MEMBER_LOGINS=you@company.com,other@company.com` when running `ensure-majik-members` if needed.
+
+3. **Point the desktop build at production** (or keep `http://localhost:8080` for local-only):
+
+   ```bash
+   # artifacts/majik-desktop/.env
+   VITE_VNDRLY_API_URL=https://vndrly.ai
+   ```
+
+4. **Build Windows installer** (requires Rust + Windows SDK):
+
+   ```bash
+   pnpm build:majik
+   ```
+
+   Output: `artifacts/majik-desktop/src-tauri/target/release/bundle/` (`.msi` / `.nsis`).
+
+5. **Two-machine smoke test**
+
+   - Install on two PCs with different Majik members.
+   - Log in with VNDRLY credentials.
+   - Click **I'm Up** on machine A → machine B shows green within ~1s (SSE).
+   - Presence older than 4 hours shows **stale** (gray), not counted in `upCount`.
+
+6. **Deploy API** — ensure production VPS is running the commit that includes `/api/majik/*` routes (`pnpm deploy:production` per your usual workflow).

@@ -37,7 +37,9 @@
     "pack:machine-transfer": "powershell -ExecutionPolicy Bypass -File scripts/create-machine-transfer-pack.ps1",
     "check:live": "node scripts/check-live.mjs",
     "check:vps": "node scripts/check-vps-api.mjs",
-    "setup:majik": "node scripts/setup-majik.mjs"
+    "setup:majik": "node scripts/setup-majik.mjs",
+    "build:majik": "pnpm --filter @workspace/majik-desktop run tauri:build",
+    "tauri:build": "pnpm --filter @workspace/majik-desktop run tauri:build"
   },
   "private": true,
   "devDependencies": {

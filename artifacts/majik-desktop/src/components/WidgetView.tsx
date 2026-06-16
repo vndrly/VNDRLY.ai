@@ -43,8 +43,8 @@ export function WidgetView({
           <button
             type="button"
             className="icon-btn"
-            aria-label="Hide"
-            onClick={() => void getCurrentWindow().hide()}
+            aria-label="Minimize"
+            onClick={() => void getCurrentWindow().minimize()}
           >
             –
           </button>
