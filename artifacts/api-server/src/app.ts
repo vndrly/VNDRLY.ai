@@ -59,18 +59,32 @@ const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:1420",
   "https://tauri.localhost",
+  "http://tauri.localhost",
+  "https://asset.localhost",
+  "http://asset.localhost",
+  "https://ipc.localhost",
+  "http://ipc.localhost",
   "https://vndrly.ai",
+  "https://www.vndrly.ai",
 ];
+
+function isAllowedCorsOrigin(origin: string | undefined): boolean {
+  if (!origin) return true;
+  if (allowedOrigins.includes(origin)) return true;
+  // Tauri 2 desktop webview (Windows/macOS/Linux packaged builds).
+  if (/^https?:\/\/(tauri|asset|ipc)\.localhost(:\d+)?$/i.test(origin)) {
+    return true;
+  }
+  if (/^tauri:\/\/localhost/i.test(origin)) return true;
+  return false;
+}
 
 app.use(cors({
   credentials: true,
   origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-
-    if (allowedOrigins.includes(origin)) {
+    if (isAllowedCorsOrigin(origin)) {
       return callback(null, true);
     }
-
     return callback(new Error("Not allowed by CORS"));
   }
 }));
