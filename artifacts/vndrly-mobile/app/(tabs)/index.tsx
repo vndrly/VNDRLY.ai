@@ -913,6 +913,19 @@ export default function HomeScreen() {
                 </Text>
               </LayeredPillButton>
             ) : null}
+            <LayeredPillButton
+              onPress={onHeaderRefresh}
+              disabled={headerRefreshing || refreshing || rateLimited}
+              loading={headerRefreshing}
+              height={36}
+              testID="button-refresh-tickets"
+            >
+              {headerRefreshing ? (
+                <ActivityIndicator size="small" color="#ffffff" />
+              ) : (
+                <Feather name="refresh-cw" size={16} color="#ffffff" style={styles.btnIconShadow} />
+              )}
+            </LayeredPillButton>
           </View>
         </View>
       ) : (

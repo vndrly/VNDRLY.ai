@@ -32,7 +32,8 @@
     },
     "error": "Algo salió mal",
     "required": "Obligatorio",
-    "tryAgain": "Inténtalo de nuevo."
+    "tryAgain": "Inténtalo de nuevo.",
+    "refresh": "Actualizar"
   },
   "languageToggle": {
     "english": "English",

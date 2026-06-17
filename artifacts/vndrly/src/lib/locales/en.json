@@ -32,7 +32,8 @@
     },
     "error": "Something went wrong",
     "required": "Required",
-    "tryAgain": "Please try again."
+    "tryAgain": "Please try again.",
+    "refresh": "Refresh"
   },
   "languageToggle": {
     "english": "English",

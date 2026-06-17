@@ -80,7 +80,8 @@ describe("ticketStatusPillStyle", () => {
         "cancelled",
       ].map((s) => ticketStatusPillStyle(s).background),
     );
-    expect(colors.size).toBe(5);
+    // kicked_back and cancelled both map to red; four unique buckets remain.
+    expect(colors.size).toBe(4);
   });
 });
 
@@ -97,7 +98,7 @@ describe("ticketStatusPillStyle inactivity escalation", () => {
     NOW.getTime() - (TICKET_INACTIVE_DAYS + 1) * dayMs,
   ).toISOString();
   const fresh = new Date(NOW.getTime() - 1 * dayMs).toISOString();
-  const amberBg = ticketStatusPillStyle("submitted").background;
+  const staleEscalationBg = ticketStatusPillStyle("pending_review").background;
 
   beforeEach(() => {
     vi.useFakeTimers();
@@ -113,7 +114,7 @@ describe("ticketStatusPillStyle inactivity escalation", () => {
     // amber bucket when stale would visually demote a tense status.
     // See INACTIVE_ESCALATION_STATUSES in ticketStatusLabels.ts.
     for (const status of ["draft", "pending_review", "in_progress"]) {
-      expect(ticketStatusPillStyle(status, stale).background).toBe(amberBg);
+      expect(ticketStatusPillStyle(status, stale).background).toBe(staleEscalationBg);
     }
   });
 

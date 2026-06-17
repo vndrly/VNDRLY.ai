@@ -33,6 +33,21 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("node_modules/leaflet") || id.includes("node_modules/react-leaflet")) {
+            return "vendor-leaflet";
+          }
+          if (id.includes("node_modules/recharts")) {
+            return "vendor-recharts";
+          }
+          if (id.includes("node_modules/jspdf") || id.includes("node_modules/svg2pdf")) {
+            return "vendor-pdf";
+          }
+        },
+      },
+    },
   },
   server: {
     port,

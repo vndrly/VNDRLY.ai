@@ -47,6 +47,27 @@ vi.mock("react-i18next", () => ({
   useTranslation: () => useTranslationReturn,
 }));
 
+const fieldEmployeeUser = {
+  userId: 42,
+  role: "field_employee" as const,
+  vendorId: 11,
+  vendorRole: "field" as const,
+  displayName: "Field Op",
+  partnerId: null,
+  preferredLanguage: "en" as const,
+};
+
+vi.mock("@/hooks/use-auth", () => ({
+  useAuth: () => ({
+    user: fieldEmployeeUser,
+    isLoading: false,
+    login: async () => {},
+    logout: async () => {},
+    setPreferredLanguage: () => {},
+    switchContext: async () => {},
+  }),
+}));
+
 const {
   requestForegroundPermissionsAsyncMock,
   getCurrentPositionAsyncMock,

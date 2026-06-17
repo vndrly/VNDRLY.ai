@@ -102,8 +102,17 @@ vi.mock("@/lib/push", () => ({
 
 vi.mock("@/hooks/use-auth", () => ({
   useAuth: () => ({
-    user: { id: 99, role: "vendor", displayName: "Vendor Admin" },
-    activeMembership: { orgName: "Acme Vendor", orgType: "vendor" },
+    user: {
+      userId: 99,
+      role: "field_employee",
+      vendorId: 11,
+      vendorRole: "field",
+      displayName: "Field Op",
+    },
+    activeMembership: null,
+    activeMembershipId: null,
+    availableMemberships: [],
+    switchContext: async () => {},
   }),
 }));
 

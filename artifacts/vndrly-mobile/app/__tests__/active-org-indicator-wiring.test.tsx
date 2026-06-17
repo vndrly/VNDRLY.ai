@@ -139,6 +139,7 @@ vi.mock("@tanstack/react-query", () => ({
   QueryCache: class {},
   MutationCache: class {},
   QueryClientProvider: ({ children }: { children: React.ReactNode }) => children,
+  useQueryClient: () => ({ invalidateQueries: vi.fn(), setQueryData: vi.fn() }),
 }));
 
 vi.mock("react-native-gesture-handler", () => ({

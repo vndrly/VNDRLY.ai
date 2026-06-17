@@ -277,7 +277,13 @@ vi.mock("expo-splash-screen", () => ({
 // exposes `data-variant` (`amber` vs `grey`) for assignment-removed tests.
 vi.mock("@/components/LayeredPillButton", async () => {
   const ReactLib = (await import("react")).default;
+  const LAYERED_PILL_BUTTON_TEXT = {
+    fontFamily: "Inter_400Regular",
+    fontSize: 12,
+    color: "#ffffff",
+  } as const;
   return {
+    LAYERED_PILL_BUTTON_TEXT,
     default: ({
       children,
       onPress,

@@ -1,5 +1,5 @@
 import { Switch, Route, Router as WouterRouter, useLocation, useRoute } from "wouter";
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,7 +12,6 @@ import { AssistantLauncher } from "@/components/assistant-panel";
 import ContextPickerModal from "@/components/context-picker-modal";
 import ChangePasswordModal from "@/components/change-password-modal";
 import Login from "@/pages/login";
-import Dashboard from "@/pages/dashboard";
 import Partners from "@/pages/partners";
 import PartnerDetail from "@/pages/partner-detail";
 import Vendors from "@/pages/vendors";
@@ -35,8 +34,6 @@ import Catalog from "@/pages/catalog";
 import CatalogHealth from "@/pages/catalog-health";
 import PartnerCatalog from "@/pages/partner-catalog";
 import VendorCatalog from "@/pages/vendor-catalog";
-import VendorAnalytics from "@/pages/vendor-analytics";
-import PartnerAnalytics from "@/pages/partner-analytics";
 import NotificationPreferencesPage from "@/pages/notification-preferences";
 import NotificationsInboxPage from "@/pages/notifications-inbox";
 import InvoicesPage from "@/pages/invoices";
@@ -44,26 +41,15 @@ import InvoiceDetailPage from "@/pages/invoice-detail";
 import BillingSettingsPage from "@/pages/billing-settings";
 import BillsToPayPage from "@/pages/bills-to-pay";
 import StatementPage from "@/pages/statement";
-import ReportsPage from "@/pages/reports";
 import FlaggedTicketsPage from "@/pages/flagged-tickets";
-import CrewMapPage from "@/pages/crew-map";
-import CrewReplayPage from "@/pages/crew-replay";
-import SiteMapPage from "@/pages/site-map";
 import Portal from "@/pages/portal";
 import VisitPublicPage from "@/pages/visit-public";
 import VerifyEmployeePage from "@/pages/verify-employee";
 import VisitorEntryPage from "@/pages/visitor-entry";
 import VisitorsPage from "@/pages/visitors";
-import VisitDetailPage from "@/pages/visit-detail";
-import PrintVisitorQrPage from "@/pages/print-visitor-qr";
-import PrintVisitorQrsPage from "@/pages/print-visitor-qrs";
-import PrintTicketPage from "@/pages/print-ticket";
-import PrintHotlistPage from "@/pages/print-hotlist";
 import FieldHome from "@/pages/field-home";
 import ForemanHome from "@/pages/foreman-home";
 import ForemanCrews from "@/pages/foreman-crews";
-import ForemanCrewMapPage from "@/pages/foreman-crew-map";
-import ForemanAnalytics from "@/pages/foreman-analytics";
 import FieldNewTicket from "@/pages/field-new-ticket";
 import AccountLocation from "@/pages/account-location";
 import Signup from "@/pages/signup";
@@ -79,7 +65,30 @@ import NotFound from "@/pages/not-found";
 import AdminVndrly from "@/pages/admin-vndrly";
 import AdminRateLimits from "@/pages/admin-rate-limits";
 import AdminRemovedComments from "@/pages/admin-removed-comments";
-import Admin1099Transmitter from "@/pages/admin-1099-transmitter";
+
+const Dashboard = lazy(() => import("@/pages/dashboard"));
+const VendorAnalytics = lazy(() => import("@/pages/vendor-analytics"));
+const PartnerAnalytics = lazy(() => import("@/pages/partner-analytics"));
+const ReportsPage = lazy(() => import("@/pages/reports"));
+const CrewMapPage = lazy(() => import("@/pages/crew-map"));
+const CrewReplayPage = lazy(() => import("@/pages/crew-replay"));
+const SiteMapPage = lazy(() => import("@/pages/site-map"));
+const VisitDetailPage = lazy(() => import("@/pages/visit-detail"));
+const PrintVisitorQrPage = lazy(() => import("@/pages/print-visitor-qr"));
+const PrintVisitorQrsPage = lazy(() => import("@/pages/print-visitor-qrs"));
+const PrintTicketPage = lazy(() => import("@/pages/print-ticket"));
+const PrintHotlistPage = lazy(() => import("@/pages/print-hotlist"));
+const ForemanCrewMapPage = lazy(() => import("@/pages/foreman-crew-map"));
+const ForemanAnalytics = lazy(() => import("@/pages/foreman-analytics"));
+const Admin1099Transmitter = lazy(() => import("@/pages/admin-1099-transmitter"));
+
+function RouteFallback() {
+  return (
+    <div className="min-h-[40vh] flex items-center justify-center">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500" />
+    </div>
+  );
+}
 
 const queryClient = new QueryClient();
 
@@ -102,7 +111,8 @@ function LoginRedirect() {
 function AdminRoutes() {
   return (
     <Layout>
-      <Switch>
+      <Suspense fallback={<RouteFallback />}>
+        <Switch>
         <Route path="/" component={Dashboard} />
         <Route path="/partners" component={Partners} />
         <Route path="/partners/:id">{(params) => <PartnerDetail id={parseInt(params.id)} />}</Route>
@@ -139,7 +149,8 @@ function AdminRoutes() {
         <Route path="/admin/removed-comments" component={AdminRemovedComments} />
         <Route path="/admin/1099-transmitter" component={Admin1099Transmitter} />
         <Route component={NotFound} />
-      </Switch>
+        </Switch>
+      </Suspense>
     </Layout>
   );
 }
@@ -157,7 +168,8 @@ function AuthenticatedRouter() {
 
   return (
     <>
-      <Switch>
+      <Suspense fallback={<RouteFallback />}>
+        <Switch>
         <Route path="/portal/:siteCode">{(params) => <Portal siteCode={params.siteCode} />}</Route>
         <Route path="/visit/:siteCode">{(params) => <VisitPublicPage siteCode={params.siteCode} />}</Route>
         <Route path="/verify/employee/:token">{(params) => <VerifyEmployeePage token={params.token} />}</Route>
@@ -231,7 +243,8 @@ function AuthenticatedRouter() {
             <Route path="/*splat" component={AdminRoutes} />
           </>
         )}
-      </Switch>
+        </Switch>
+      </Suspense>
       {/* Picker self-gates on requiresContextChoice + memberships >= 2,
           so render it for every authed user — including field-employee
           default contexts that may also have a partner/admin membership. */}

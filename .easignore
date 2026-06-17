@@ -12,9 +12,22 @@
 **/*.err.log
 eval-summary.json
 tsconfig.zip
-lib/db/drizzle/batches
+lib/db/drizzle
 
 lib/e2e
+lib/api-spec
+lib/form1099
+lib/majik
+lib/integrations-anthropic-ai
+
+scripts
+docs
+snapshots
+.github
+
+# Desktop Tauri app + Rust build artifacts (5+ GB locally; not used by mobile).
+artifacts/majik-desktop
+**/src-tauri/target
 
 .env
 .env.local

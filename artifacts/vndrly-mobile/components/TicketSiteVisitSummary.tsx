@@ -62,6 +62,28 @@ type SiteVisitSummary = {
   };
 };
 
+function normalizeSiteVisitSummary(
+  json: Partial<SiteVisitSummary> & Record<string, unknown>,
+): SiteVisitSummary {
+  return {
+    site: json.site ?? null,
+    timeline: json.timeline ?? {
+      enRouteAt: null,
+      arrivedAt: null,
+      checkInTime: null,
+      checkOutTime: null,
+    },
+    route: Array.isArray(json.route) ? json.route : [],
+    people: Array.isArray(json.people) ? json.people : [],
+    totals: json.totals ?? {
+      peopleCount: 0,
+      totalOnSiteMinutes: 0,
+      leadTravelMinutes: null,
+      routePointCount: 0,
+    },
+  };
+}
+
 function fmtMinutes(
   min: number | null,
   t: (k: string, o?: Record<string, unknown>) => string,
@@ -101,7 +123,7 @@ export default function TicketSiteVisitSummary({ ticketId, refreshKey }: Props) 
     apiFetch<SiteVisitSummary>(`/api/tickets/${ticketId}/site-visit-summary`)
       .then((json) => {
         if (!cancelled) {
-          setData(json);
+          setData(normalizeSiteVisitSummary(json));
           setError(null);
         }
       })

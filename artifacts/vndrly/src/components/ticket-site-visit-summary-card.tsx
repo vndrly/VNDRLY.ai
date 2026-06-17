@@ -67,6 +67,34 @@ export type SiteVisitSummary = {
   };
 };
 
+function normalizeSiteVisitSummary(
+  json: Partial<SiteVisitSummary> & Record<string, unknown>,
+): SiteVisitSummary {
+  return {
+    ticketId: typeof json.ticketId === "number" ? json.ticketId : 0,
+    trackingNumber: typeof json.trackingNumber === "string" ? json.trackingNumber : "",
+    lifecycleState: (json.lifecycleState as string | null) ?? null,
+    status: typeof json.status === "string" ? json.status : "",
+    site: json.site ?? null,
+    timeline: json.timeline ?? {
+      enRouteAt: null,
+      onLocationAt: null,
+      arrivedAt: null,
+      checkInTime: null,
+      checkOutTime: null,
+    },
+    route: Array.isArray(json.route) ? json.route : [],
+    people: Array.isArray(json.people) ? json.people : [],
+    totals: json.totals ?? {
+      peopleCount: 0,
+      totalOnSiteMinutes: 0,
+      leadTravelMinutes: null,
+      routePointCount: 0,
+      routeSpanMinutes: null,
+    },
+  };
+}
+
 function fmtMinutes(min: number | null, t: (k: string, o?: Record<string, unknown>) => string): string {
   if (min == null) return "—";
   if (min < 60) return t("ticketDetail.siteVisitSummary.minutes", { min });
@@ -101,7 +129,7 @@ export function TicketSiteVisitSummaryCard({ ticketId }: { ticketId: number }) {
       })
       .then((json) => {
         if (!cancelled) {
-          setData(json as SiteVisitSummary);
+          setData(normalizeSiteVisitSummary(json as Partial<SiteVisitSummary> & Record<string, unknown>));
           setError(null);
         }
       })

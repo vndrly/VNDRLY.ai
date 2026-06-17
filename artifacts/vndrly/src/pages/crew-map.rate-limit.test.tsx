@@ -120,6 +120,10 @@ vi.mock("@workspace/api-client-react", () => ({
   getListSiteLocationsQueryKey: () => ["site-locations"],
 }));
 
+vi.mock("@/components/map/map-compliance-issues-card", () => ({
+  MapComplianceIssuesCard: () => null,
+}));
+
 import { render, act, screen, waitFor } from "@testing-library/react";
 import CrewMapPage from "./crew-map";
 
