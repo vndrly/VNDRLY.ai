@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { getApiBase } from "@/lib/api";
-import { getToken } from "@/lib/auth";
+import { getToken, setToken, setUser } from "@/lib/auth";
 import {
   readAssistantErrorMessage,
   readAssistantStreamResponse,
@@ -18,6 +18,25 @@ export interface ConversationSummary {
   id: number;
   title: string;
   updatedAt: string;
+}
+
+const SESSION_DEAD_CODES = new Set([
+  "auth.unauthenticated",
+  "auth.not_authenticated",
+  "auth.session_invalid",
+  "auth.session_expired",
+  "auth.session_invalidated",
+  "auth.token_invalid",
+]);
+
+async function clearAuthIfSessionDead(res: Response, data: { code?: string } | null): Promise<void> {
+  if (res.status !== 401 || !data?.code || !SESSION_DEAD_CODES.has(data.code)) return;
+  try {
+    await setToken(null);
+    await setUser(null);
+  } catch {
+    // best effort
+  }
 }
 
 async function assistantFetch(
@@ -168,14 +187,23 @@ export function useAssistant() {
         }
 
         if (!res.ok) {
+          let errData: { code?: string; message?: string; error?: string } | null = null;
+          try {
+            errData = (await res.clone().json()) as typeof errData;
+          } catch {
+            // ignore
+          }
+          await clearAuthIfSessionDead(res, errData);
           throw new Error(await readAssistantErrorMessage(res));
         }
 
         let sawDone = false;
         let sawError = false;
+        let accumulatedContent = "";
 
         const streamResult = await readAssistantStreamResponse(res, ac.signal, (evt) => {
           if (evt.type === "token") {
+            accumulatedContent += evt.delta;
             setMessages((prev) =>
               prev.map((m) =>
                 m.id === assistantId
@@ -187,6 +215,7 @@ export function useAssistant() {
             setActiveTool(evt.status === "start" ? evt.name : null);
           } else if (evt.type === "done") {
             sawDone = true;
+            accumulatedContent = evt.content || accumulatedContent;
             setMessages((prev) =>
               prev.map((m) =>
                 m.id === assistantId
@@ -209,13 +238,15 @@ export function useAssistant() {
           setMessages((prev) =>
             prev.map((m) => {
               if (m.id !== assistantId) return m;
-              if (m.content.trim().length > 0) {
+              if (accumulatedContent.trim().length > 0) {
                 return { ...m, pending: false };
               }
               return m;
             }),
           );
-          setError("askv.errorGeneric");
+          if (accumulatedContent.trim().length === 0) {
+            setError("askv.errorGeneric");
+          }
         }
       } catch (err) {
         if ((err as Error).name === "AbortError") return;

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   consumeAssistantSseFromText,
+  prefersBufferedAssistantSse,
   readAssistantStreamResponse,
 } from "../assistant-sse";
 
@@ -47,22 +48,6 @@ describe("consumeAssistantSseFromText", () => {
 });
 
 describe("readAssistantStreamResponse", () => {
-  it("falls back to buffered text when response body is null", async () => {
-    const res = {
-      ok: true,
-      body: null,
-      text: async () => 'event: done\ndata: {"content":"Buffered reply"}\n\n',
-    } as unknown as Response;
-
-    let content = "";
-    const result = await readAssistantStreamResponse(res, new AbortController().signal, (evt) => {
-      if (evt.type === "done") content = evt.content;
-    });
-
-    expect(content).toBe("Buffered reply");
-    expect(result.receivedDone).toBe(true);
-  });
-
   it("reads a streaming body when getReader is available", async () => {
     const encoder = new TextEncoder();
     const chunks = [
@@ -88,5 +73,64 @@ describe("readAssistantStreamResponse", () => {
 
     expect(tokens).toEqual(["Hi"]);
     expect(result.receivedDone).toBe(true);
+  });
+
+  it("falls back to buffered text when response body is null", async () => {
+    const res = {
+      ok: true,
+      body: null,
+      text: async () => 'event: done\ndata: {"content":"Buffered reply"}\n\n',
+    } as unknown as Response;
+
+    let content = "";
+    const result = await readAssistantStreamResponse(res, new AbortController().signal, (evt) => {
+      if (evt.type === "done") content = evt.content;
+    });
+
+    expect(content).toBe("Buffered reply");
+    expect(result.receivedDone).toBe(true);
+  });
+
+  it("prefers buffered text on React Native even when getReader exists", async () => {
+    const originalNavigator = globalThis.navigator;
+    Object.defineProperty(globalThis, "navigator", {
+      configurable: true,
+      value: { product: "ReactNative" },
+    });
+
+    try {
+      expect(prefersBufferedAssistantSse()).toBe(true);
+
+      const encoder = new TextEncoder();
+      let readCalls = 0;
+      const body = {
+        getReader: () => ({
+          read: async () => {
+            readCalls += 1;
+            return { done: true, value: encoder.encode('event: done\ndata: {"content":"RN buffered"}\n\n') };
+          },
+        }),
+      };
+
+      const res = {
+        ok: true,
+        body,
+        text: async () => 'event: done\ndata: {"content":"RN buffered"}\n\n',
+      } as unknown as Response;
+
+      let content = "";
+      const result = await readAssistantStreamResponse(res, new AbortController().signal, (evt) => {
+        if (evt.type === "done") content = evt.content;
+      });
+
+      expect(readCalls).toBe(0);
+      expect(content).toBe("RN buffered");
+      expect(result.receivedDone).toBe(true);
+    } finally {
+      Object.defineProperty(globalThis, "navigator", {
+        configurable: true,
+        value: originalNavigator,
+      });
+    }
   });
 });
