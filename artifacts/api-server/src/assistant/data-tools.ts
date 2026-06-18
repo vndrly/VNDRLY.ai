@@ -15,9 +15,9 @@
 //                     ratings; cross-vendor reads are filtered to
 //                     vendors that have worked at this partner's sites
 //   vendor          → only their own vendorId's tickets/ratings/crew
-//   field_employee  → only their own assigned tickets; aggregated KPIs
-//                     are refused (privacy: a single field employee
-//                     shouldn't see crew-wide numbers)
+//   field_employee  → tickets they are assigned to, on crew for, or
+//                     foreman on; ticket-scoped drill-down tools OK;
+//                     org-wide financial aggregates refused
 //
 // Every result is capped (LIMIT 50 max) and date ranges are clamped
 // to [1, 365] days so a runaway model call can't OOM the DB pool.
@@ -37,69 +37,16 @@ import type { SessionPayload } from "../lib/session";
 import { resolvePeriod, PERIOD_PRESETS, type PeriodPreset } from "../lib/reports/period";
 import { salesTaxByState } from "../lib/reports/sales-tax";
 import { nec1099Rows, NEC_THRESHOLD_USD } from "../lib/reports/nec1099";
-
-// ─────────────────────────────────────────────────────────────────
-// Helpers
-// ─────────────────────────────────────────────────────────────────
-
-const MAX_LIMIT = 50;
-const DEFAULT_LIMIT = 10;
-const MAX_SINCE_DAYS = 365;
-const DEFAULT_SINCE_DAYS = 30;
-
-function clampLimit(raw: unknown): number {
-  const n = Number(raw);
-  if (!Number.isFinite(n) || n <= 0) return DEFAULT_LIMIT;
-  return Math.min(MAX_LIMIT, Math.max(1, Math.floor(n)));
-}
-
-function clampSinceDays(raw: unknown): number {
-  const n = Number(raw);
-  if (!Number.isFinite(n) || n <= 0) return DEFAULT_SINCE_DAYS;
-  return Math.min(MAX_SINCE_DAYS, Math.max(1, Math.floor(n)));
-}
-
-function sinceDate(days: number): Date {
-  const d = new Date();
-  d.setUTCDate(d.getUTCDate() - days);
-  return d;
-}
-
-function err(message: string): string {
-  return JSON.stringify({ error: message });
-}
-
-// Block field employees from aggregate org-wide metrics — they should
-// never see crew-wide numbers from a chat surface, only their own
-// ticket data.
-function blockFieldEmployee(session: SessionPayload, capability: string): string | null {
-  if (session.role === "field_employee") {
-    return err(`The '${capability}' tool is not available to field employees. Open the field portal home to see your own tickets.`);
-  }
-  return null;
-}
-
-// Build the org-scoping ticket filter for the caller. Returns an array
-// of drizzle conditions that the caller `and(...)`s into their WHERE.
-// Returns null if the caller has no resolvable org scope (refused
-// upstream by the calling tool).
-function ticketScopeFilters(session: SessionPayload): unknown[] | null {
-  if (session.role === "admin") return [];
-  if (session.role === "partner" && session.partnerId) {
-    return [
-      sql`${ticketsTable.siteLocationId} IN (SELECT id FROM site_locations WHERE partner_id = ${session.partnerId})`,
-    ];
-  }
-  if (session.role === "vendor" && session.vendorId) {
-    return [eq(ticketsTable.vendorId, session.vendorId)];
-  }
-  if (session.role === "field_employee" && session.vendorPeopleId) {
-    return [
-      sql`${ticketsTable.fieldEmployeeId} IN (SELECT id FROM field_employees WHERE vendor_people_id = ${session.vendorPeopleId})`,
-    ];
-  }
-  return null;
-}
+import {
+  blockFieldEmployee,
+  clampLimit,
+  clampSinceDays,
+  DEFAULT_SINCE_DAYS,
+  err,
+  MAX_LIMIT,
+  sinceDate,
+  ticketScopeFilters,
+} from "./data-tools-helpers";
 
 // ─────────────────────────────────────────────────────────────────
 // Tool: query_tickets
@@ -147,7 +94,7 @@ async function queryTickets(input: QueryTicketsInput, session: SessionPayload): 
     return JSON.stringify({ count: row?.n ?? 0, sinceDays: days });
   }
 
-  const limit = clampLimit(input.limit ?? DEFAULT_LIMIT);
+  const limit = clampLimit(input.limit);
   const rows = await db
     .select({
       id: ticketsTable.id,
@@ -616,6 +563,12 @@ async function queryNec1099Summary(
 // Public dispatcher
 // ─────────────────────────────────────────────────────────────────
 
+import {
+  EXT_DATA_TOOL_NAMES,
+  isExtDataTool,
+  runExtDataTool,
+} from "./data-tools-ext";
+
 export const DATA_TOOL_NAMES = [
   "query_tickets",
   "query_gps_trail",
@@ -625,6 +578,7 @@ export const DATA_TOOL_NAMES = [
   "query_invoice_summary",
   "query_sales_tax_by_state",
   "query_nec1099_summary",
+  ...EXT_DATA_TOOL_NAMES,
 ] as const;
 
 export type DataToolName = (typeof DATA_TOOL_NAMES)[number];
@@ -639,6 +593,9 @@ export async function runDataTool(
   session: SessionPayload,
 ): Promise<string> {
   const args = (input ?? {}) as Record<string, unknown>;
+  if (isExtDataTool(name)) {
+    return runExtDataTool(name, args, session);
+  }
   switch (name) {
     case "query_tickets":
       return queryTickets(args as QueryTicketsInput, session);

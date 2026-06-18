@@ -22,6 +22,8 @@
     "demo:start": "tsx scripts/seed-demo-lifecycle.ts --start",
     "demo:stop": "tsx scripts/seed-demo-lifecycle.ts --cleanup",
     "seed:permian-realdata": "tsx scripts/seed-permian-basin.ts && tsx scripts/seed-partner-branding.ts && tsx scripts/seed-vendor-branding.ts && tsx scripts/seed-mach-site-locations.ts && tsx scripts/seed-permian-site-locations.ts",
+    "seed:askv-qa": "tsx scripts/seed-askv-qa-tickets.ts",
+    "seed:askv-qa:cleanup": "tsx scripts/seed-askv-qa-tickets.ts -- --cleanup",
     "setup:dev-testing-access": "tsx scripts/setup-dev-testing-access.ts",
     "provision:vndrly-master-admin": "tsx scripts/provision-vndrly-master-admin.ts",
     "set:majik-team-passwords": "tsx scripts/set-majik-team-passwords.ts",

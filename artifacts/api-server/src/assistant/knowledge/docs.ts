@@ -21,7 +21,13 @@ export const KNOWLEDGE_DOCS: KnowledgeDoc[] = [
     id: "data-tools-overview",
     title: "Live data lookups (askV can query the database)",
     roles: ["admin", "partner", "vendor"],
-    body: `I have read-only tools that query the live VNDRLY database scoped to your account. Available lookups: (1) query_tickets — list or count tickets by status / vendor / site / date window. (2) query_field_metrics — completion rate, kickback rate, average on-site minutes, odometer miles, GPS trail counts. (3) query_vendor_performance — partner ratings (1-5) and kickback rate. (4) query_gps_trail — GPS summary for one ticket. (5) query_visits — guest check-in counts at your sites. (6) query_invoice_summary — billed / paid / open / past-due totals. (7) query_sales_tax_by_state — sales tax collected by state for a period preset (ytd, this_year, last_year, etc.); optional state filter (e.g. TX). (8) query_nec1099_summary — year-to-date 1099-NEC payment totals per vendor/payer (same engine as Reports → 1099). Ticket/metric windows clamp to 1-365 days; row lists cap at 50. Field employees cannot run aggregate org metrics. I refuse cross-org reads. Bounded write: mark_notifications_read clears your bell badge when you ask.`,
+    body: `I have read-only tools that query the live VNDRLY database scoped to your account. Ticket lookups: query_tickets, query_ticket_detail, query_ticket_crew, query_ticket_labor, query_ticket_notes, query_work_type_history, query_gps_trail. Org metrics: query_field_metrics, query_vendor_performance, query_visits. Financial: query_invoice_summary, query_invoices, query_invoice_lines, query_ar_aging, query_revenue_summary, query_crew_cost (vendors), query_sales_tax_by_state, query_nec1099_summary, query_1099_k_summary, query_1099_misc_summary. Field employees and foremen can use ticket-scoped tools for jobs they are on, crew for, or foreman — not org-wide financial aggregates. Row lists cap at 50; date windows clamp to 1-365 days. I refuse cross-org reads. Bounded write: mark_notifications_read.`,
+  },
+  {
+    id: "data-tools-field",
+    title: "Field employee & foreman data lookups",
+    roles: ["field_employee"],
+    body: `On mobile AskV I can pull live data for tickets you work on, are crew on, or foreman: query_ticket_detail (status, miles, crew count, notes/photos count), query_ticket_crew (who is on the job), query_ticket_labor (hours and estimated labor cost per person), query_ticket_notes (notes and attachment URLs), query_work_type_history ("when was maintenance last done at this site?"), query_tickets (list/count), query_gps_trail (GPS summary). Ask with a ticket number when you have one. I cannot see other vendors' data or org-wide invoice/1099 totals.`,
   },
   {
     id: "metrics-collected",

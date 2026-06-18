@@ -227,6 +227,169 @@ export const TOOLS: Anthropic.Tool[] = [
       additionalProperties: false,
     },
   },
+  // ── Field / foreman ticket drill-down (mobile-friendly) ─────────
+  {
+    name: "query_ticket_detail",
+    description:
+      "Returns a rich summary for one ticket: work type, site, status, check-in/out, odometer miles, crew count, note/attachment counts, payment receipt flag. Field employees and foremen may call this for any ticket they are assigned to, on the crew roster for, or foreman on. Vendors/partners/admins see tickets in their org scope.",
+    input_schema: {
+      type: "object",
+      properties: { ticketId: { type: "number" } },
+      required: ["ticketId"],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "query_ticket_crew",
+    description:
+      "Lists active crew members on a ticket: names, roles, acknowledgment status, when added. Use for 'how many field employees on this job', 'who is on the crew', 'did everyone ack'. Scoped to the same ticket visibility as query_ticket_detail.",
+    input_schema: {
+      type: "object",
+      properties: { ticketId: { type: "number" } },
+      required: ["ticketId"],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "query_ticket_labor",
+    description:
+      "Per-person hours and estimated labor cost for one ticket from check-in records, plus ticket odometer miles. Use for 'total hours on ticket #', 'labor cost for this crew', 'how many miles we drove'. Scoped like query_ticket_detail — field employees see tickets they work or foreman.",
+    input_schema: {
+      type: "object",
+      properties: { ticketId: { type: "number" } },
+      required: ["ticketId"],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "query_ticket_notes",
+    description:
+      "Returns recent ticket notes and photo/document attachment URLs. Use for 'were there pictures on this job', 'what notes were left', 'maintenance notes from last visit'. Scoped like query_ticket_detail.",
+    input_schema: {
+      type: "object",
+      properties: {
+        ticketId: { type: "number" },
+        limit: { type: "number", description: "1-50, defaults to 10." },
+      },
+      required: ["ticketId"],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "query_work_type_history",
+    description:
+      "Lists recent tickets for a work type (e.g. 'Maintenance', 'Frac') optionally at one site. Answers 'when was maintenance last performed', 'last time we did X at this pad', with ticket numbers and dates. Field employees see only tickets in their scope; vendors/partners see their org's jobs.",
+    input_schema: {
+      type: "object",
+      properties: {
+        workTypeName: { type: "string", description: "Partial match on work type name, e.g. 'Maintenance'." },
+        workTypeId: { type: "number" },
+        siteId: { type: "number" },
+        sinceDays: { type: "number", description: "1-365, defaults to 365." },
+        limit: { type: "number", description: "1-50, defaults to 10." },
+      },
+      additionalProperties: false,
+    },
+  },
+  // ── Vendor / partner financial toolbox ────────────────────────
+  {
+    name: "query_invoices",
+    description:
+      "Lists individual invoices (number, status, amounts, due date) in the caller's scope. Use when the user needs specific invoice numbers or a list, not just totals. Field employees blocked.",
+    input_schema: {
+      type: "object",
+      properties: {
+        sinceDays: { type: "number", description: "1-365, defaults to 90." },
+        status: { type: "string", description: "e.g. open, paid, sent, overdue." },
+        limit: { type: "number", description: "1-50, defaults to 20." },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "query_invoice_lines",
+    description:
+      "Line-level invoice detail for a period (same engine as Reports exports): labor, mileage, parts, tax, 1099 category per line. Use for 'break down this invoice', 'show labor lines YTD', 'what was billed for ticket X on invoices'. Field employees blocked.",
+    input_schema: {
+      type: "object",
+      properties: {
+        preset: {
+          type: "string",
+          enum: ["this_month", "last_month", "this_quarter", "last_quarter", "this_year", "last_year", "ytd"],
+          description: "Period shortcut. Defaults to ytd.",
+        },
+        limit: { type: "number", description: "1-50, defaults to 25." },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "query_ar_aging",
+    description:
+      "Accounts-receivable aging buckets (current, 1-15, 16-30, 31-60, 60+ days past due). Vendors see what each partner owes them; partners see what they owe each vendor. Field employees blocked.",
+    input_schema: { type: "object", properties: {}, additionalProperties: false },
+  },
+  {
+    name: "query_revenue_summary",
+    description:
+      "Revenue/spend breakdown for a period. Vendors: by work type (default) or by partner. Partners: by work type or by vendor. Use for 'revenue by service type YTD', 'how much did we spend with vendor X'. Field employees blocked.",
+    input_schema: {
+      type: "object",
+      properties: {
+        preset: {
+          type: "string",
+          enum: ["this_month", "last_month", "this_quarter", "last_quarter", "this_year", "last_year", "ytd"],
+          description: "Defaults to ytd.",
+        },
+        breakdown: {
+          type: "string",
+          enum: ["work_type", "partner", "vendor"],
+          description: "Vendors: work_type or partner. Partners: work_type or vendor.",
+        },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "query_crew_cost",
+    description:
+      "Crew hours billed vs internal labor cost and margin per employee (vendor only). Same engine as Reports crew-cost card. Use for 'labor margin', 'what did we bill vs pay the crew'. Field employees blocked.",
+    input_schema: {
+      type: "object",
+      properties: {
+        preset: {
+          type: "string",
+          enum: ["this_month", "last_month", "this_quarter", "last_quarter", "this_year", "last_year", "ytd"],
+          description: "Defaults to ytd.",
+        },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "query_1099_k_summary",
+    description:
+      "1099-K card-payment totals for a tax year (gross amount, transaction count). Same engine as Reports → 1099-K. Field employees blocked.",
+    input_schema: {
+      type: "object",
+      properties: {
+        year: { type: "number", description: "Tax year. Defaults to current UTC year." },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "query_1099_misc_summary",
+    description:
+      "1099-MISC box totals (rents, royalties, other income, medical, attorney) for a tax year. Same engine as Reports → 1099-MISC. Field employees blocked.",
+    input_schema: {
+      type: "object",
+      properties: {
+        year: { type: "number", description: "Tax year. Defaults to current UTC year." },
+      },
+      additionalProperties: false,
+    },
+  },
   {
     name: "mark_notifications_read",
     description:
