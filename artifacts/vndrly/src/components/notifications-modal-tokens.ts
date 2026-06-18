@@ -32,6 +32,8 @@ export type NotificationsModalTheme = AppModalTheme & {
 
   rowHoverClassName: string;
 
+  rowSelectedClassName: string;
+
   unreadDotClassName: string;
 
   unreadTypeBadgeClassName: string;
@@ -85,6 +87,8 @@ export const NOTIFICATIONS_MODAL_LIGHT: NotificationsModalTheme = {
     "flex items-center gap-1.5 border-b bg-[color:color-mix(in_srgb,var(--brand-primary)_12%,white)] px-4 py-1.5 text-[11px] text-[color:color-mix(in_srgb,var(--brand-primary)_70%,black)]",
 
   rowHoverClassName: "cursor-pointer border-b px-4 py-3 hover:bg-muted/40",
+
+  rowSelectedClassName: "bg-muted/40",
 
   unreadDotClassName: "bg-[color:var(--brand-primary)]",
 
@@ -167,6 +171,8 @@ export const NOTIFICATIONS_MODAL_DARK: NotificationsModalTheme = {
   rowHoverClassName:
 
     "cursor-pointer border-b border-gray-400/60 px-4 py-3 hover:bg-[#c4c8ce]",
+
+  rowSelectedClassName: "bg-[#c4c8ce]",
 
   unreadDotClassName: "bg-[color:var(--brand-primary)]",
 

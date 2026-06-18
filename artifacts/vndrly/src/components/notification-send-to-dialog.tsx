@@ -27,6 +27,12 @@ import {
   type SendToGroupId,
   type SendToRecipientGroups,
 } from "@/lib/ticket-send-to-api";
+import {
+  recipientDetail,
+  recipientHeadline,
+  selectedRecipientUserIds,
+  sendToRowKey,
+} from "@/lib/send-to-display";
 import type { NotificationRow } from "@/lib/notifications-api";
 
 type Props = {
@@ -100,7 +106,7 @@ export default function NotificationSendToDialog({
   const { resolved: themeResolved } = useTheme();
   const modalTheme = notificationsModalTheme(themeResolved);
   const displayLogo = portalDisplayLogo(brand, VNDRLY_LOGO_SQUARE);
-  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [message, setMessage] = useState("");
 
   const ticketId = notification?.link ? parseTicketIdFromHref(notification.link) : null;
@@ -135,19 +141,24 @@ export default function NotificationSendToDialog({
     [groups],
   );
 
-  const toggle = (userId: number) => {
+  const toggle = (rowKey: string) => {
     setSelected((prev) => {
       const next = new Set(prev);
-      if (next.has(userId)) next.delete(userId);
-      else next.add(userId);
+      if (next.has(rowKey)) next.delete(rowKey);
+      else next.add(rowKey);
       return next;
     });
   };
 
+  const recipientUserIds = useMemo(
+    () => selectedRecipientUserIds(selected),
+    [selected],
+  );
+
   const send = useMutation({
     mutationFn: async () => {
       if (!notification) throw new Error("No notification");
-      const recipientUserIds = [...selected];
+      const recipientUserIds = selectedRecipientUserIds(selected);
       const payload = {
         recipientUserIds,
         message: message.trim() || null,
@@ -178,7 +189,8 @@ export default function NotificationSendToDialog({
     },
   });
 
-  const canSend = selected.size > 0 && !send.isPending && !recipientsQuery.isLoading;
+  const canSend =
+    recipientUserIds.length > 0 && !send.isPending && !recipientsQuery.isLoading;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -199,16 +211,16 @@ export default function NotificationSendToDialog({
             </div>
           </DialogHeader>
 
-          <div className={cn("min-h-0 flex-1 overflow-y-auto px-4 py-3", modalTheme.bodySurfaceClassName)}>
+          <div className={cn("min-h-0 flex-1 overflow-y-auto", modalTheme.bodySurfaceClassName)}>
             {ticketId === null ? (
-              <p className="text-sm text-muted-foreground">{t("notifications.sendToNoTicket")}</p>
+              <p className="px-4 py-3 text-sm text-muted-foreground">{t("notifications.sendToNoTicket")}</p>
             ) : recipientsQuery.isLoading || recipientsQuery.isFetching ? (
-              <div className="flex items-center justify-center py-8 text-muted-foreground">
+              <div className="flex items-center justify-center px-4 py-8 text-muted-foreground">
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 {t("notifications.loading")}
               </div>
             ) : recipientsQuery.isError ? (
-              <div className="space-y-3 py-4 text-center">
+              <div className="space-y-3 px-4 py-4 text-center">
                 <p className="text-sm text-muted-foreground">
                   {sendToRecipientsErrorMessage(recipientsQuery.error, t)}
                 </p>
@@ -224,12 +236,12 @@ export default function NotificationSendToDialog({
                 </ModalFooterPill>
               </div>
             ) : allRecipients.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{t("notifications.sendToEmpty")}</p>
+              <p className="px-4 py-3 text-sm text-muted-foreground">{t("notifications.sendToEmpty")}</p>
             ) : (
-              <div className="space-y-4">
-                <p className="text-xs text-muted-foreground">{t("notifications.sendToCoopNote")}</p>
+              <div className="space-y-4 pb-3">
+                <p className="px-4 pt-3 text-xs text-muted-foreground">{t("notifications.sendToCoopNote")}</p>
                 {notification?.title ? (
-                  <div className="rounded-md border border-gray-400/50 bg-black/5 px-3 py-2 text-xs dark:border-gray-500/60 dark:bg-black/10">
+                  <div className="mx-4 rounded-md border border-gray-400/50 bg-black/5 px-3 py-2 text-xs dark:border-gray-500/60 dark:bg-black/10">
                     {typeLabel ? (
                       <p className="mb-1 font-medium uppercase tracking-wide text-muted-foreground">
                         {typeLabel}
@@ -244,31 +256,34 @@ export default function NotificationSendToDialog({
 
                 {groups.map((group) => (
                   <div key={group.id}>
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    <p className="mb-2 px-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                       {t(GROUP_LABEL_KEYS[group.id])}
                     </p>
-                    <ul className="space-y-2">
+                    <ul>
                       {group.recipients.map((r) => {
-                        const checked = selected.has(r.userId);
+                        const rowKey = sendToRowKey(group.id, r.userId);
+                        const checked = selected.has(rowKey);
                         return (
-                          <li key={r.userId}>
+                          <li key={rowKey}>
                             <label
                               className={cn(
-                                "flex cursor-pointer items-start gap-3 rounded-md border px-3 py-2",
-                                checked
-                                  ? "border-[color:var(--brand-primary)] bg-[color:color-mix(in_srgb,var(--brand-primary)_12%,white)]"
-                                  : "border-gray-400/60 bg-background/80",
+                                "flex items-start gap-2",
+                                modalTheme.rowHoverClassName,
+                                checked && modalTheme.rowSelectedClassName,
                               )}
                             >
                               <Checkbox
+                                className="mt-0.5"
                                 checked={checked}
-                                onCheckedChange={() => toggle(r.userId)}
-                                data-testid={`send-to-recipient-${r.userId}`}
+                                onCheckedChange={() => toggle(rowKey)}
+                                data-testid={`send-to-recipient-${rowKey}`}
                               />
                               <span className="min-w-0 flex-1">
-                                <span className="block text-sm font-medium">{r.displayName}</span>
+                                <span className="block text-sm font-medium">
+                                  {recipientHeadline(r)}
+                                </span>
                                 <span className="block text-xs text-muted-foreground">
-                                  {r.roleLabel}
+                                  {recipientDetail(r)}
                                 </span>
                               </span>
                             </label>
@@ -279,7 +294,7 @@ export default function NotificationSendToDialog({
                   </div>
                 ))}
 
-                <div>
+                <div className="px-4">
                   <Label htmlFor="send-to-message">{t("notifications.sendToMessageLabel")}</Label>
                   <Textarea
                     id="send-to-message"
@@ -323,7 +338,7 @@ export default function NotificationSendToDialog({
                   {t("notifications.sendToSending")}
                 </>
               ) : (
-                t("notifications.sendToSubmit", { count: selected.size })
+                t("notifications.sendToSubmit", { count: recipientUserIds.length })
               )}
             </ModalFooterPill>
           </div>

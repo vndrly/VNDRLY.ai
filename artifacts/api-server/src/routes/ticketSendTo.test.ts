@@ -59,7 +59,20 @@ describe("GET /api/notifications/:id/send-to-recipients", () => {
     actorCanSendToTicketMock.mockReset();
     actorCanSendToTicketMock.mockResolvedValue(true);
     listSendToRecipientsMock.mockResolvedValue([
-      { id: "on_ticket", recipients: [{ userId: 99, displayName: "Bob", email: null, group: "on_ticket", roleLabel: "On ticket" }] },
+      {
+        id: "on_ticket",
+        recipients: [
+          {
+            userId: 99,
+            displayName: "Bob",
+            email: null,
+            group: "on_ticket",
+            roleLabel: "Acme · on this ticket",
+            headline: "Bob",
+            detail: "Acme · on this ticket",
+          },
+        ],
+      },
     ]);
 
     const { default: ticketSendToRouter } = await import("./ticketSendTo");
@@ -90,7 +103,9 @@ describe("GET /api/notifications/:id/send-to-recipients", () => {
               displayName: "Bob",
               email: null,
               group: "on_ticket",
-              roleLabel: "On ticket",
+              roleLabel: "Acme · on this ticket",
+              headline: "Bob",
+              detail: "Acme · on this ticket",
             },
           ],
         },

@@ -17,6 +17,8 @@ export type SendToRecipient = {
   email: string | null;
   group: SendToGroupId;
   roleLabel: string;
+  headline?: string;
+  detail?: string;
 };
 
 export type SendToRecipientGroups = {

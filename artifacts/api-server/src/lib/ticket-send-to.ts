@@ -2,11 +2,13 @@ import { and, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 import {
   db,
   partnerContactsTable,
+  partnersTable,
   ticketCrewTable,
   ticketNoteLogsTable,
   userOrgMembershipsTable,
   usersTable,
   vendorPeopleTable,
+  vendorsTable,
 } from "@workspace/db";
 import { formatTicketTrackingNumber } from "@workspace/db/format";
 import {
@@ -20,6 +22,7 @@ import {
   loadFieldTicketAccessRow,
   ticketParticipantUserIdsExpanded,
 } from "./field-ticket-access";
+import { formatSendToDetail, personHeadline } from "./send-to-display";
 
 export type SendToGroup =
   | "on_ticket"
@@ -37,7 +40,10 @@ export type SendToRecipient = {
   displayName: string;
   email: string | null;
   group: SendToGroup;
+  /** @deprecated use detail — kept for older clients */
   roleLabel: string;
+  headline: string;
+  detail: string;
 };
 
 export type SendToRecipientGroups = {
@@ -186,7 +192,8 @@ function pushRecipient(
   group: SendToGroup,
   userId: number,
   profile: { displayName: string; email: string | null },
-  roleLabel: string,
+  headline: string,
+  detail: string,
   excludeUserId: number,
 ) {
   if (userId === excludeUserId) return;
@@ -197,8 +204,100 @@ function pushRecipient(
     displayName: profile.displayName,
     email: profile.email,
     group,
-    roleLabel,
+    roleLabel: detail,
+    headline,
+    detail,
   });
+}
+
+async function loadOrgNames(vendorId: number | null, partnerId: number | null) {
+  let vendorName: string | null = null;
+  let partnerName: string | null = null;
+  if (vendorId) {
+    const [row] = await db
+      .select({ name: vendorsTable.name })
+      .from(vendorsTable)
+      .where(eq(vendorsTable.id, vendorId));
+    vendorName = row?.name ?? null;
+  }
+  if (partnerId) {
+    const [row] = await db
+      .select({ name: partnersTable.name })
+      .from(partnersTable)
+      .where(eq(partnersTable.id, partnerId));
+    partnerName = row?.name ?? null;
+  }
+  return { vendorName, partnerName };
+}
+
+async function loadUserOrgSides(
+  userIds: number[],
+  vendorId: number | null,
+  partnerId: number | null,
+): Promise<Map<number, "vendor" | "partner" | "platform" | "unknown">> {
+  const sides = new Map<number, "vendor" | "partner" | "platform" | "unknown">();
+  if (!userIds.length) return sides;
+
+  const rows = await db
+    .select({
+      userId: userOrgMembershipsTable.userId,
+      orgType: userOrgMembershipsTable.orgType,
+      vendorId: userOrgMembershipsTable.vendorId,
+      partnerId: userOrgMembershipsTable.partnerId,
+    })
+    .from(userOrgMembershipsTable)
+    .where(inArray(userOrgMembershipsTable.userId, userIds));
+
+  for (const id of userIds) sides.set(id, "unknown");
+
+  for (const row of rows) {
+    if (row.orgType === "vendor" && vendorId != null && row.vendorId === vendorId) {
+      sides.set(row.userId, "vendor");
+    } else if (row.orgType === "partner" && partnerId != null && row.partnerId === partnerId) {
+      sides.set(row.userId, "partner");
+    }
+  }
+
+  const adminRows = await db
+    .select({ id: usersTable.id })
+    .from(usersTable)
+    .where(and(inArray(usersTable.id, userIds), eq(usersTable.role, "admin")));
+  for (const row of adminRows) {
+    if (sides.get(row.id) === "unknown") sides.set(row.id, "platform");
+  }
+
+  return sides;
+}
+
+async function loadVendorPeopleHeadlines(
+  vendorId: number,
+  userIds: number[],
+): Promise<Map<number, string>> {
+  const map = new Map<number, string>();
+  if (!userIds.length) return map;
+  const rows = await db
+    .select({
+      userId: vendorPeopleTable.userId,
+      firstName: vendorPeopleTable.firstName,
+      lastName: vendorPeopleTable.lastName,
+      jobTitle: vendorPeopleTable.jobTitle,
+    })
+    .from(vendorPeopleTable)
+    .where(
+      and(
+        eq(vendorPeopleTable.vendorId, vendorId),
+        inArray(vendorPeopleTable.userId, userIds),
+        isNull(vendorPeopleTable.deletedAt),
+      ),
+    );
+  for (const row of rows) {
+    if (!row.userId) continue;
+    const name =
+      row.jobTitle?.trim() ||
+      [row.firstName, row.lastName].filter(Boolean).join(" ").trim();
+    if (name) map.set(row.userId, name);
+  }
+  return map;
 }
 
 function contactIsAp(roles: string[] | null | undefined): boolean {
@@ -340,12 +439,31 @@ export async function listSendToRecipients(
   }
 
   const profiles = await loadUserProfiles([...allUserIds]);
+  const { vendorName, partnerName } = await loadOrgNames(vendorId, partnerId);
+  const participantIds = allowed.includes("on_ticket")
+    ? (await ticketParticipantUserIdsExpanded(ticketId)).ids
+    : [];
+  const orgSides = await loadUserOrgSides(participantIds, vendorId, partnerId);
+  const vendorPeopleHeadlines =
+    vendorId != null
+      ? await loadVendorPeopleHeadlines(vendorId, [...allUserIds])
+      : new Map<number, string>();
 
   if (allowed.includes("on_ticket")) {
-    for (const userId of (await ticketParticipantUserIdsExpanded(ticketId)).ids) {
+    for (const userId of participantIds) {
       const profile = profiles.get(userId);
       if (!profile) continue;
-      pushRecipient(buckets, "on_ticket", userId, profile, "On ticket", actor.userId);
+      const headline = personHeadline(
+        profile,
+        vendorPeopleHeadlines.get(userId) ?? null,
+      );
+      const detail = formatSendToDetail({
+        group: "on_ticket",
+        vendorName,
+        partnerName,
+        orgSide: orgSides.get(userId) ?? "unknown",
+      });
+      pushRecipient(buckets, "on_ticket", userId, profile, headline, detail, actor.userId);
     }
   }
 
@@ -353,12 +471,21 @@ export async function listSendToRecipients(
     if (ticket.foremanUserId) {
       const profile = profiles.get(ticket.foremanUserId);
       if (profile) {
+        const foremanHeadline = personHeadline(
+          profile,
+          vendorPeopleHeadlines.get(ticket.foremanUserId) ?? "Foreman",
+        );
         pushRecipient(
           buckets,
           "vendor_poc_field",
           ticket.foremanUserId,
           profile,
-          "Vendor POC (foreman)",
+          foremanHeadline,
+          formatSendToDetail({
+            group: "vendor_poc_field",
+            vendorName,
+            pocRole: foremanHeadline,
+          }),
           actor.userId,
         );
       }
@@ -366,12 +493,21 @@ export async function listSendToRecipients(
     if (ticket.actingForemanUserId && ticket.actingForemanUserId !== ticket.foremanUserId) {
       const profile = profiles.get(ticket.actingForemanUserId);
       if (profile) {
+        const actingHeadline = personHeadline(
+          profile,
+          vendorPeopleHeadlines.get(ticket.actingForemanUserId) ?? "Acting foreman",
+        );
         pushRecipient(
           buckets,
           "vendor_poc_field",
           ticket.actingForemanUserId,
           profile,
-          "Vendor POC (acting foreman)",
+          actingHeadline,
+          formatSendToDetail({
+            group: "vendor_poc_field",
+            vendorName,
+            pocRole: actingHeadline,
+          }),
           actor.userId,
         );
       }
@@ -388,12 +524,21 @@ export async function listSendToRecipients(
       if (fe?.userId) {
         const profile = profiles.get(fe.userId);
         if (profile) {
+          const fieldHeadline = personHeadline(
+            profile,
+            vendorRoleLabel(fe.vendorRole, fe.jobTitle),
+          );
           pushRecipient(
             buckets,
             "vendor_poc_field",
             fe.userId,
             profile,
-            vendorRoleLabel(fe.vendorRole, fe.jobTitle),
+            fieldHeadline,
+            formatSendToDetail({
+              group: "vendor_poc_field",
+              vendorName,
+              pocRole: fieldHeadline,
+            }),
             actor.userId,
           );
         }
@@ -403,12 +548,21 @@ export async function listSendToRecipients(
       if (!row.userId) continue;
       const profile = profiles.get(row.userId);
       if (!profile) continue;
+      const crewHeadline = personHeadline(
+        profile,
+        vendorRoleLabel(row.vendorRole, row.jobTitle),
+      );
       pushRecipient(
         buckets,
         "vendor_poc_field",
         row.userId,
         profile,
-        vendorRoleLabel(row.vendorRole, row.jobTitle),
+        crewHeadline,
+        formatSendToDetail({
+          group: "vendor_poc_field",
+          vendorName,
+          pocRole: crewHeadline,
+        }),
         actor.userId,
       );
     }
@@ -428,12 +582,18 @@ export async function listSendToRecipients(
     for (const row of admins) {
       const profile = profiles.get(row.userId);
       if (!profile) continue;
+      const adminHeadline = personHeadline(profile, "Vendor admin");
       pushRecipient(
         buckets,
         "vendor_poc_office",
         row.userId,
         profile,
-        "Vendor office POC",
+        adminHeadline,
+        formatSendToDetail({
+          group: "vendor_poc_office",
+          vendorName,
+          pocRole: adminHeadline,
+        }),
         actor.userId,
       );
     }
@@ -455,12 +615,16 @@ export async function listSendToRecipients(
     for (const row of memberships) {
       const profile = profiles.get(row.userId);
       if (!profile) continue;
+      const membershipLabel =
+        row.role === "admin" ? "Vendor admin" : "Vendor office";
+      const headline = personHeadline(profile, membershipLabel);
       pushRecipient(
         buckets,
         "vendor_office",
         row.userId,
         profile,
-        row.role === "admin" ? "Vendor admin" : "Vendor office",
+        headline,
+        formatSendToDetail({ group: "vendor_office", vendorName }),
         actor.userId,
       );
     }
@@ -483,9 +647,21 @@ export async function listSendToRecipients(
         if (!contact.userId) continue;
         const profile = profiles.get(contact.userId);
         if (!profile) continue;
-        const label = contact.jobTitle || contact.name;
+        const headline = personHeadline(profile, contact.jobTitle || contact.name);
         if (allowed.includes("partner_poc_ap") && contactIsAp(contact.roles)) {
-          pushRecipient(buckets, "partner_poc_ap", contact.userId, profile, label, actor.userId);
+          pushRecipient(
+            buckets,
+            "partner_poc_ap",
+            contact.userId,
+            profile,
+            headline,
+            formatSendToDetail({
+              group: "partner_poc_ap",
+              partnerName,
+              pocRole: headline,
+            }),
+            actor.userId,
+          );
         }
         if (allowed.includes("partner_poc_operations") && contactIsOps(contact.roles)) {
           pushRecipient(
@@ -493,7 +669,12 @@ export async function listSendToRecipients(
             "partner_poc_operations",
             contact.userId,
             profile,
-            label,
+            headline,
+            formatSendToDetail({
+              group: "partner_poc_operations",
+              partnerName,
+              pocRole: headline,
+            }),
             actor.userId,
           );
         }
@@ -511,18 +692,40 @@ export async function listSendToRecipients(
         const profile = profiles.get(row.userId);
         if (!profile) continue;
         if (allowed.includes("partner_poc_ap") && row.role === "ap") {
-          pushRecipient(buckets, "partner_poc_ap", row.userId, profile, "Partner AP", actor.userId);
+          const headline = personHeadline(profile, "Partner AP");
+          pushRecipient(
+            buckets,
+            "partner_poc_ap",
+            row.userId,
+            profile,
+            headline,
+            formatSendToDetail({
+              group: "partner_poc_ap",
+              partnerName,
+              pocRole: headline,
+            }),
+            actor.userId,
+          );
         }
         if (
           allowed.includes("partner_poc_operations") &&
           (row.role === "admin" || row.role === "member")
         ) {
+          const headline = personHeadline(
+            profile,
+            row.role === "admin" ? "Partner admin" : "Partner operations",
+          );
           pushRecipient(
             buckets,
             "partner_poc_operations",
             row.userId,
             profile,
-            row.role === "admin" ? "Partner admin" : "Partner operations",
+            headline,
+            formatSendToDetail({
+              group: "partner_poc_operations",
+              partnerName,
+              pocRole: headline,
+            }),
             actor.userId,
           );
         }
@@ -545,16 +748,20 @@ export async function listSendToRecipients(
       for (const row of memberships) {
         const profile = profiles.get(row.userId);
         if (!profile) continue;
+        const membershipLabel =
+          row.role === "ap"
+            ? "Partner AP"
+            : row.role === "admin"
+              ? "Partner admin"
+              : "Partner office";
+        const headline = personHeadline(profile, membershipLabel);
         pushRecipient(
           buckets,
           "partner_office",
           row.userId,
           profile,
-          row.role === "ap"
-            ? "Partner AP"
-            : row.role === "admin"
-              ? "Partner admin"
-              : "Partner office",
+          headline,
+          formatSendToDetail({ group: "partner_office", partnerName }),
           actor.userId,
         );
       }
@@ -566,12 +773,21 @@ export async function listSendToRecipients(
       if (!row.userId) continue;
       const profile = profiles.get(row.userId);
       if (!profile) continue;
+      const crewHeadline = personHeadline(
+        profile,
+        vendorRoleLabel(row.vendorRole, row.jobTitle),
+      );
       pushRecipient(
         buckets,
         "field_crew",
         row.userId,
         profile,
-        vendorRoleLabel(row.vendorRole, row.jobTitle),
+        crewHeadline,
+        formatSendToDetail({
+          group: "field_crew",
+          vendorName,
+          pocRole: crewHeadline,
+        }),
         actor.userId,
       );
     }
@@ -583,12 +799,15 @@ export async function listSendToRecipients(
       .from(usersTable)
       .where(eq(usersTable.role, "admin"));
     for (const row of admins) {
+      const profile = { displayName: row.displayName, email: row.email };
+      const headline = personHeadline(profile, "VNDRLY staff");
       pushRecipient(
         buckets,
         "vndrly_office",
         row.id,
-        { displayName: row.displayName, email: row.email },
-        "VNDRLY staff",
+        profile,
+        headline,
+        formatSendToDetail({ group: "vndrly_office" }),
         actor.userId,
       );
     }

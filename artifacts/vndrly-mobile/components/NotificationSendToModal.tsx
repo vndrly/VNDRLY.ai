@@ -20,7 +20,11 @@ import type { NotificationRow } from "@/lib/notifications-ui";
 import {
   fetchSendToRecipients,
   SEND_TO_GROUP_LABEL_KEYS,
+  recipientDetail,
+  recipientHeadline,
+  selectedRecipientUserIds,
   sendNotificationToRecipients,
+  sendToRowKey,
   type SendToRecipientGroups,
 } from "@/lib/ticket-send-to";
 
@@ -44,7 +48,7 @@ export default function NotificationSendToModal({
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [groups, setGroups] = useState<SendToRecipientGroups>([]);
-  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [message, setMessage] = useState("");
 
   const ticketId = item?.link ? parseTicketIdFromHref(item.link) : null;
@@ -73,21 +77,26 @@ export default function NotificationSendToModal({
 
   const allRecipients = useMemo(() => groups.flatMap((g) => g.recipients), [groups]);
 
-  const toggle = (userId: number) => {
+  const toggle = (rowKey: string) => {
     setSelected((prev) => {
       const next = new Set(prev);
-      if (next.has(userId)) next.delete(userId);
-      else next.add(userId);
+      if (next.has(rowKey)) next.delete(rowKey);
+      else next.add(rowKey);
       return next;
     });
   };
 
+  const recipientUserIds = useMemo(
+    () => selectedRecipientUserIds(selected),
+    [selected],
+  );
+
   const handleSend = async () => {
-    if (!item || selected.size === 0 || sending) return;
+    if (!item || recipientUserIds.length === 0 || sending) return;
     setSending(true);
     try {
       const result = await sendNotificationToRecipients(item.id, {
-        recipientUserIds: [...selected],
+        recipientUserIds,
         message: message.trim() || null,
       });
       Alert.alert(
@@ -163,10 +172,11 @@ export default function NotificationSendToModal({
                     {t(SEND_TO_GROUP_LABEL_KEYS[group.id])}
                   </Text>
                   {group.recipients.map((r) => {
-                    const checked = selected.has(r.userId);
+                    const rowKey = sendToRowKey(group.id, r.userId);
+                    const checked = selected.has(rowKey);
                     return (
                       <Pressable
-                        key={r.userId}
+                        key={rowKey}
                         style={[
                           styles.recipientRow,
                           {
@@ -174,8 +184,8 @@ export default function NotificationSendToModal({
                             backgroundColor: checked ? `${colors.primary}14` : "transparent",
                           },
                         ]}
-                        onPress={() => toggle(r.userId)}
-                        testID={`send-to-recipient-${r.userId}`}
+                        onPress={() => toggle(rowKey)}
+                        testID={`send-to-recipient-${rowKey}`}
                       >
                         <Feather
                           name={checked ? "check-square" : "square"}
@@ -184,10 +194,10 @@ export default function NotificationSendToModal({
                         />
                         <View style={styles.recipientText}>
                           <Text style={[styles.recipientName, { color: colors.foreground }]}>
-                            {r.displayName}
+                            {recipientHeadline(r)}
                           </Text>
                           <Text style={[styles.recipientRole, { color: colors.mutedForeground }]}>
-                            {r.roleLabel}
+                            {recipientDetail(r)}
                           </Text>
                         </View>
                       </Pressable>
@@ -225,14 +235,14 @@ export default function NotificationSendToModal({
             <TogglePillButton
               color="brand"
               solid
-              disabled={selected.size === 0 || sending || loading || ticketId === null}
+              disabled={recipientUserIds.length === 0 || sending || loading || ticketId === null}
               onPress={() => void handleSend()}
               testID="send-to-submit"
               style={styles.actionBtn}
             >
               {sending
                 ? t("notifications.sendToSending")
-                : t("notifications.sendToSubmit", { count: selected.size })}
+                : t("notifications.sendToSubmit", { count: recipientUserIds.length })}
             </TogglePillButton>
           </View>
         </Pressable>
