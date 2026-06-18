@@ -20,6 +20,8 @@ export const assistantMessagesTable = pgTable(
     // canned refusal (cross-tenant lookup, role-gated tool, etc.). Used
     // by the admin metrics card to surface friction.
     refusal: boolean("refusal").notNull().default(false),
+    // Explicit user thumbs-up/down on an assistant turn (session chat only).
+    feedbackRating: text("feedback_rating"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => ({

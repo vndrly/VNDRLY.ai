@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { Sparkles, MessageSquare, AlertOctagon, Zap, CheckCircle2, ShieldAlert } from "lucide-react";
+import { Sparkles, MessageSquare, AlertOctagon, Zap, CheckCircle2, ShieldAlert, ThumbsUp } from "lucide-react";
 import { useBrand } from "@/hooks/use-brand";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -36,6 +36,9 @@ interface AssistantMetrics {
   sessionsByDay: DayBucket[];
   messagesByDay: DayBucket[];
   refusalCount: number;
+  helpfulCount: number;
+  unhelpfulCount: number;
+  feedbackCount: number;
   ttftMs: { avg: number | null; p95: number | null; sample: number };
   completedOnboardingByOrg: { orgType: string; count: number }[];
   signupAssistant?: SignupAssistantUsage;
@@ -86,6 +89,10 @@ export function AssistantMetricsCard() {
   const totalMessages = data?.messagesByDay.reduce((s, d) => s + d.count, 0) ?? 0;
   const refusalRate =
     totalMessages > 0 && data ? Math.round((data.refusalCount / totalMessages) * 1000) / 10 : 0;
+  const helpfulRatio =
+    data && data.feedbackCount > 0
+      ? Math.round((data.helpfulCount / data.feedbackCount) * 1000) / 10
+      : null;
   const completedTotal =
     data?.completedOnboardingByOrg.reduce((s, b) => s + b.count, 0) ?? 0;
 
@@ -104,7 +111,7 @@ export function AssistantMetricsCard() {
           <p className="text-sm text-muted-foreground">Couldn't load metrics: {error}</p>
         ) : data ? (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
               <Stat
                 icon={Sparkles}
                 label="Sessions"
@@ -127,6 +134,18 @@ export function AssistantMetricsCard() {
                 value={data.refusalCount}
                 hint={`${refusalRate}% of messages`}
                 testid="metric-refusals"
+                accentColor={accentColor}
+              />
+              <Stat
+                icon={ThumbsUp}
+                label="Helpful ratio"
+                value={helpfulRatio !== null ? `${helpfulRatio}%` : "—"}
+                hint={
+                  data.feedbackCount > 0
+                    ? `${data.helpfulCount} helpful · ${data.unhelpfulCount} unhelpful`
+                    : "no ratings yet"
+                }
+                testid="metric-helpful-ratio"
                 accentColor={accentColor}
               />
               <Stat

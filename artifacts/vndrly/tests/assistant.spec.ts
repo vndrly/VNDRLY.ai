@@ -911,6 +911,9 @@ describe.skipIf(!apiReachable)("/assistant/metrics endpoint (live)", () => {
       sessionsByDay: expect.any(Array),
       messagesByDay: expect.any(Array),
       refusalCount: expect.any(Number),
+      helpfulCount: expect.any(Number),
+      unhelpfulCount: expect.any(Number),
+      feedbackCount: expect.any(Number),
       ttftMs: expect.objectContaining({
         avg: expect.anything(), // number | null
         p95: expect.anything(),

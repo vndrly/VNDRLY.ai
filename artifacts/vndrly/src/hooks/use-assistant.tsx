@@ -4,10 +4,15 @@ export type SignupAssistantLang = "en" | "es";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
+export type AssistantFeedbackRating = "helpful" | "unhelpful";
+
 export interface AssistantMessage {
   id: string;
   role: "user" | "assistant";
   content: string;
+  /** DB row id for persisted session turns (enables feedback). */
+  serverId?: number;
+  feedbackRating?: AssistantFeedbackRating | null;
   // Tool calls only attached to assistant messages once the stream
   // finishes. Used by the panel to render a "Used tool: …" footer.
   toolCalls?: Array<{ name: string; input: unknown; output: string }>;
@@ -99,7 +104,7 @@ export interface ConversationSummary {
 type StreamEvent =
   | { type: "token"; delta: string }
   | { type: "tool"; name: string; status: "start" | "end" }
-  | { type: "done"; content: string }
+  | { type: "done"; content: string; assistantMessageId?: number }
   | { type: "error"; message: string };
 
 export interface AssistantOptions {
@@ -248,7 +253,12 @@ export function useAssistant(opts: AssistantOptions = {}) {
       if (!detailRes.ok || myVersion !== restoreVersionRef.current) return;
       const detail = (await detailRes.json()) as {
         id: number;
-        messages: Array<{ id: number; role: "user" | "assistant"; content: string }>;
+        messages: Array<{
+          id: number;
+          role: "user" | "assistant";
+          content: string;
+          feedbackRating?: AssistantFeedbackRating | null;
+        }>;
       };
       // Final stale-check after the second await. If anything mutated
       // local state in the meantime (startNew, clear, or a send) we
@@ -260,8 +270,10 @@ export function useAssistant(opts: AssistantOptions = {}) {
         .filter((m) => m.role === "user" || m.content.trim().length > 0)
         .map((m) => ({
           id: `db-${m.id}`,
+          serverId: m.id,
           role: m.role,
           content: m.content,
+          feedbackRating: m.feedbackRating ?? null,
         }));
       setConversationId(detail.id);
       setMessages(restored);
@@ -364,7 +376,13 @@ export function useAssistant(opts: AssistantOptions = {}) {
             setMessages((prev) =>
               prev.map((m) =>
                 m.id === assistantId
-                  ? { ...m, content: evt.content || m.content, pending: false }
+                  ? {
+                      ...m,
+                      id: evt.assistantMessageId ? `db-${evt.assistantMessageId}` : m.id,
+                      serverId: evt.assistantMessageId,
+                      content: evt.content || m.content,
+                      pending: false,
+                    }
                   : m,
               ),
             );
@@ -487,6 +505,30 @@ export function useAssistant(opts: AssistantOptions = {}) {
     [stateless],
   );
 
+  const submitFeedback = useCallback(
+    async (messageId: number, rating: AssistantFeedbackRating): Promise<boolean> => {
+      if (stateless) return false;
+      try {
+        const res = await fetch(`${BASE}/api/assistant/messages/${messageId}/feedback`, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ rating }),
+        });
+        if (!res.ok) return false;
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.serverId === messageId ? { ...m, feedbackRating: rating } : m,
+          ),
+        );
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    [stateless],
+  );
+
   return {
     conversationId,
     messages,
@@ -499,6 +541,7 @@ export function useAssistant(opts: AssistantOptions = {}) {
     loadLatest,
     resetRestoreGuard,
     adoptSignupHistory,
+    submitFeedback,
   };
 }
 

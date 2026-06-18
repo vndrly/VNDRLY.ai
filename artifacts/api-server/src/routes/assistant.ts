@@ -321,6 +321,7 @@ router.get("/assistant/conversations/:id", async (req, res) => {
       role: m.role,
       content: m.content,
       toolCalls: m.toolCalls ?? [],
+      feedbackRating: m.feedbackRating ?? null,
       createdAt: m.createdAt,
     })),
   });
@@ -388,6 +389,26 @@ router.get("/assistant/metrics", async (req, res) => {
     .where(sql`${assistantMessagesTable.createdAt} >= ${since} AND ${assistantMessagesTable.refusal} = true`);
   const refusalCount = refusalRows[0]?.refusalCount ?? 0;
 
+  const feedbackRows = await db.execute<{
+    helpful_count: number;
+    unhelpful_count: number;
+  }>(sql`
+    SELECT
+      count(*) FILTER (WHERE feedback_rating = 'helpful')::int AS helpful_count,
+      count(*) FILTER (WHERE feedback_rating = 'unhelpful')::int AS unhelpful_count
+    FROM assistant_messages
+    WHERE created_at >= ${since}
+      AND role = 'assistant'
+      AND feedback_rating IS NOT NULL
+  `);
+  const feedbackResult: Array<{ helpful_count: number; unhelpful_count: number }> =
+    Array.isArray(feedbackRows)
+      ? (feedbackRows as Array<{ helpful_count: number; unhelpful_count: number }>)
+      : ((feedbackRows as { rows?: Array<{ helpful_count: number; unhelpful_count: number }> }).rows ?? []);
+  const helpfulCount = feedbackResult[0]?.helpful_count ?? 0;
+  const unhelpfulCount = feedbackResult[0]?.unhelpful_count ?? 0;
+  const feedbackCount = helpfulCount + unhelpfulCount;
+
   // TTFT stats — average + p95 — over assistant rows that recorded a
   // first-token timestamp. The percentile_cont aggregate is a stock
   // Postgres function so this works on the dev and prod DBs alike.
@@ -438,6 +459,9 @@ router.get("/assistant/metrics", async (req, res) => {
     sessionsByDay,
     messagesByDay,
     refusalCount,
+    helpfulCount,
+    unhelpfulCount,
+    feedbackCount,
     ttftMs: {
       avg: ttft?.avg_ms ?? null,
       p95: ttft?.p95_ms ?? null,
@@ -453,6 +477,53 @@ router.get("/assistant/metrics", async (req, res) => {
       ipWindowMs: signupAssistant.ipWindowMs,
     },
   });
+});
+
+// Record thumbs-up/down on a persisted assistant turn. Session chat
+// only — anonymous token/signup modes never get DB message ids.
+router.post("/assistant/messages/:id/feedback", async (req, res) => {
+  const session = requireSession(req, res);
+  if (!session) return;
+  const messageId = Number(req.params.id);
+  if (!Number.isFinite(messageId)) {
+    res.status(400).json({ error: "Invalid id", code: "validation.invalid_id" });
+    return;
+  }
+  const rating = req.body?.rating;
+  if (rating !== "helpful" && rating !== "unhelpful") {
+    res.status(400).json({ error: "Invalid rating", code: "assistant.invalid_feedback_rating" });
+    return;
+  }
+
+  const rows = await db
+    .select({
+      messageId: assistantMessagesTable.id,
+      role: assistantMessagesTable.role,
+      ownerUserId: assistantConversationsTable.userId,
+    })
+    .from(assistantMessagesTable)
+    .innerJoin(
+      assistantConversationsTable,
+      eq(assistantMessagesTable.conversationId, assistantConversationsTable.id),
+    )
+    .where(eq(assistantMessagesTable.id, messageId))
+    .limit(1);
+  const row = rows[0];
+  if (!row || row.ownerUserId !== session.userId) {
+    res.status(404).json({ error: "Not found", code: "common.not_found" });
+    return;
+  }
+  if (row.role !== "assistant") {
+    res.status(400).json({ error: "Only assistant turns can be rated", code: "assistant.feedback_assistant_only" });
+    return;
+  }
+
+  await db
+    .update(assistantMessagesTable)
+    .set({ feedbackRating: rating })
+    .where(eq(assistantMessagesTable.id, messageId));
+
+  res.json({ ok: true, rating });
 });
 
 // Tool definitions visible to Claude live in `../assistant/tools.ts`
@@ -1143,7 +1214,7 @@ async function handleConversationMessage(
     // separately as the trace). firstTokenMs and refusal are
     // best-effort telemetry feeding the admin metrics card; failing
     // to record them must not change user-visible behaviour.
-    await db
+    const [savedAssistantMsg] = await db
       .insert(assistantMessagesTable)
       .values({
         conversationId: conv.id,
@@ -1152,7 +1223,8 @@ async function handleConversationMessage(
         toolCalls: toolCallTrace,
         firstTokenMs: firstTokenMs,
         refusal: classifyRefusal(finalText),
-      });
+      })
+      .returning({ id: assistantMessagesTable.id });
     // Bump conversation updatedAt for sidebar ordering.
     await db
       .update(assistantConversationsTable)
@@ -1166,7 +1238,7 @@ async function handleConversationMessage(
       logger.warn({ err, conversationId: conv.id }, "pruneOldMessages failed"),
     );
 
-    send("done", { content: finalText, userMessageId: savedUserMsg.id });
+    send("done", { content: finalText, assistantMessageId: savedAssistantMsg.id });
     res.end();
   } catch (err) {
     logger.error({ err, conversationId: conv.id }, "assistant stream failed");

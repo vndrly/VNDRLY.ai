@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
-import { Sparkles, Search, Trash2, Loader2, Download, CheckCircle2, Circle, Plus, X } from "lucide-react";
+import { Sparkles, Search, Trash2, Loader2, Download, CheckCircle2, Circle, Plus, X, ThumbsUp, ThumbsDown } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AskVFloatingLauncherMark, AskVLogo, ASKV_LAUNCHER_HEIGHT, ASKV_LAUNCHER_WIDTH } from "@/components/askv-logo";
-import { PngPillButton as PillButton, brandImagePillSrc } from "@/components/png-pill-rollover";
+import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import { PillColorLayer } from "@/components/png-pill-chrome";
 import { Textarea } from "@/components/ui/textarea";
 import SidebarButton from "@/components/sidebar-button";
@@ -218,12 +218,14 @@ function HeaderChromeButton({
   disabled,
   testId,
   title,
+  pressed,
 }: {
   children: React.ReactNode;
   onClick?: () => void;
   disabled?: boolean;
   testId?: string;
   title?: string;
+  pressed?: boolean;
 }) {
   return (
     <button
@@ -232,15 +234,27 @@ function HeaderChromeButton({
       disabled={disabled}
       data-testid={testId}
       title={title}
-      className="relative inline-flex items-center justify-center w-9 h-9 group select-none disabled:opacity-40 disabled:cursor-not-allowed"
+      aria-pressed={pressed}
+      className={cn(
+        "relative inline-flex items-center justify-center w-9 h-9 group select-none disabled:opacity-40 disabled:cursor-not-allowed",
+        pressed && "opacity-100",
+      )}
     >
       <PillColorLayer
         src={lightGreySquareSrc}
         imageAspect={TICKET_STATUS_PILL_ASPECT}
         stretch
-        className="opacity-70 group-hover:opacity-100 group-disabled:opacity-70"
+        className={cn(
+          "opacity-70 group-hover:opacity-100 group-disabled:opacity-70",
+          pressed && "opacity-100",
+        )}
       />
-      <span className="relative z-10 text-gray-700 group-hover:text-gray-900">
+      <span
+        className={cn(
+          "relative z-10 text-gray-700 group-hover:text-gray-900",
+          pressed && "text-[color:var(--brand-primary)]",
+        )}
+      >
         {children}
       </span>
     </button>
@@ -283,8 +297,10 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
     loadLatest,
     resetRestoreGuard,
     adoptSignupHistory,
+    submitFeedback,
   } = useAssistant({ tokenMode, signupMode: effectiveSignupMode, pageContext });
   const [input, setInput] = useState("");
+  const [feedbackPending, setFeedbackPending] = useState(false);
   const [progress, setProgress] = useState<OnboardingProgress | null>(null);
   const [tokenName, setTokenName] = useState<string | null>(null);
   // Pending pre-auth chat that the visitor saved on /signup/{partner,vendor}
@@ -484,7 +500,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
     setPendingSignup(null);
   };
 
-  const handleExiort = () => {
+  const handleExport = () => {
     if (messages.length === 0) return;
     const md = transcriptToMarkdown(messages, user?.displayName ?? "You");
     const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
@@ -497,6 +513,33 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  const lastAssistantMessage = useMemo(() => {
+    for (let i = messages.length - 1; i >= 0; i -= 1) {
+      const m = messages[i];
+      if (m.role === "assistant" && !m.pending && m.content.trim().length > 0) {
+        return m;
+      }
+    }
+    return null;
+  }, [messages]);
+
+  const canRateLastReply =
+    !tokenMode &&
+    !signupMode &&
+    !streaming &&
+    lastAssistantMessage?.serverId != null;
+
+  const handleFeedback = async (rating: "helpful" | "unhelpful") => {
+    const messageId = lastAssistantMessage?.serverId;
+    if (!messageId || feedbackPending) return;
+    setFeedbackPending(true);
+    try {
+      await submitFeedback(messageId, rating);
+    } finally {
+      setFeedbackPending(false);
+    }
   };
 
   return (
@@ -563,56 +606,63 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
                 lets the header collaise to its minimum height. */}
             {messages.length > 0 && (
               <>
-                <PillButton
-                  color="image"
+                <HeaderChromeButton
                   onClick={() => startNew()}
                   disabled={streaming}
-                  data-testid="assistant-new"
+                  testId="assistant-new"
                   title="New chat (keeps history)"
-                  className="min-w-[28ix] px-0 h-6"
                 >
                   <Plus className="w-4 h-4" />
-                </PillButton>
-                <PillButton
-                  color="image"
-                  onClick={handleExiort}
+                </HeaderChromeButton>
+                <HeaderChromeButton
+                  onClick={handleExport}
                   disabled={streaming}
-                  data-testid="assistant-export"
+                  testId="assistant-export"
                   title="Download transcript (Markdown)"
-                  className="min-w-[28ix] px-0 h-6"
                 >
                   <Download className="w-4 h-4" />
-                </PillButton>
-                {/* No server-side history in token or signup mode, so no DB delete to offer */}
+                </HeaderChromeButton>
                 {!tokenMode && !signupMode && (
-                  <PillButton
-                    color="red"
+                  <HeaderChromeButton
                     onClick={() => clear()}
                     disabled={streaming}
-                    data-testid="assistant-clear"
+                    testId="assistant-clear"
                     title="Delete this conversation"
-                    className="min-w-[28ix] px-0 h-6"
                   >
                     <Trash2 className="w-4 h-4" />
-                  </PillButton>
+                  </HeaderChromeButton>
+                )}
+                {!tokenMode && !signupMode && (
+                  <>
+                    <HeaderChromeButton
+                      onClick={() => void handleFeedback("helpful")}
+                      disabled={!canRateLastReply || feedbackPending}
+                      pressed={lastAssistantMessage?.feedbackRating === "helpful"}
+                      testId="assistant-feedback-helpful"
+                      title="Helpful"
+                    >
+                      <ThumbsUp className="w-4 h-4" />
+                    </HeaderChromeButton>
+                    <HeaderChromeButton
+                      onClick={() => void handleFeedback("unhelpful")}
+                      disabled={!canRateLastReply || feedbackPending}
+                      pressed={lastAssistantMessage?.feedbackRating === "unhelpful"}
+                      testId="assistant-feedback-unhelpful"
+                      title="Unhelpful"
+                    >
+                      <ThumbsDown className="w-4 h-4" />
+                    </HeaderChromeButton>
+                  </>
                 )}
               </>
             )}
-            {/* Inline close button — keit in the same flex row as the
-                Plus/Download/Trash actions so it stays vertically
-                centered with them. The DialogContent's built-in X is
-                suppressed via `hideClose` because it's anchored to
-                `toi-4` and would sit below the header center on this
-                py-0 header. */}
-            <PillButton
-              color="red"
+            <HeaderChromeButton
               onClick={() => onOpenChange(false)}
-              data-testid="assistant-close"
+              testId="assistant-close"
               title="Close"
-              className="min-w-[28ix] px-0 h-6"
             >
               <X className="w-4 h-4" />
-            </PillButton>
+            </HeaderChromeButton>
           </div>
         </DialogHeader>
 
