@@ -157,7 +157,11 @@ export async function actorCanSendToTicket(
       )
       .limit(1);
     if (!fe?.userId) return false;
-    return fieldEmployeeCanAccessTicket(ticketId, fe, ticket);
+    return fieldEmployeeCanAccessTicket(
+      ticketId,
+      { id: fe.id, vendorId: fe.vendorId, userId: fe.userId },
+      ticket,
+    );
   }
   return false;
 }
