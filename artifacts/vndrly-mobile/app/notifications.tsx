@@ -14,62 +14,18 @@ import {
 } from "react-native";
 
 import InPageHeader from "@/components/InPageHeader";
+import NotificationActionModal from "@/components/NotificationActionModal";
+import NotificationSendToModal from "@/components/NotificationSendToModal";
 import { useRateLimitGate } from "@/hooks/use-rate-limit-gate";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
-import { parseTicketIdFromHref } from "@/lib/assistant-deep-links";
 import { stopBellTolling } from "@/lib/notificationSounds";
 import { syncAppIconBadge } from "@/lib/notificationBadge";
-
-type NotificationRow = {
-  id: number;
-  type: string;
-  category: string;
-  title: string;
-  body: string | null;
-  link: string | null;
-  isRead: boolean;
-  createdAt: string;
-};
-
-// Map known notification `category` values to an i18n label key. Used as the
-// fallback badge text when a row's `type` doesn't have a richer entry in
-// TYPE_META below — keeps the badge readable in Spanish (and matches the
-// labels already used in the notification preferences screen) instead of
-// shouting the raw English enum like "TICKETS" or "COMPLIANCE".
-const CATEGORY_LABEL_KEYS: Record<string, string> = {
-  ticket: "notifications.rows.tickets",
-  tickets: "notifications.rows.tickets",
-  hotlist: "notifications.rows.hotlist",
-  compliance: "notifications.rows.compliance",
-  crew: "notifications.rows.crew",
-  system: "notifications.rows.system",
-  comment: "notifications.rows.comments",
-  comments: "notifications.rows.comments",
-};
-
-// Map known notification `type` values to a recognizable icon + i18n label.
-// Unknown types fall back to the category badge (handled at the call site).
-type FeatherName = React.ComponentProps<typeof Feather>["name"];
-const TYPE_META: Record<string, { icon: FeatherName; labelKey: string }> = {
-  ticket_assigned: { icon: "briefcase", labelKey: "notifications.types.ticket_assigned" },
-  crew_added: { icon: "user-plus", labelKey: "notifications.types.crew_added" },
-  // Task #649 — distinguish a re-schedule of an already-on-roster crew
-  // member from a fresh add so the badge tells the worker what changed.
-  schedule_changed: { icon: "clock", labelKey: "notifications.types.schedule_changed" },
-  // Task #639: also surface crew_removed in the bell list with a
-  // matching icon. The dedicated /crew-changes screen filters down
-  // to just these two types, but a worker who jumps straight to the
-  // general inbox should still see the same recognizable badge.
-  crew_removed: { icon: "user-minus", labelKey: "notifications.types.crew_removed" },
-  hotlist_match: { icon: "zap", labelKey: "notifications.types.hotlist_match" },
-  bid_outbid: { icon: "trending-down", labelKey: "notifications.types.bid_outbid" },
-  job_awarded: { icon: "award", labelKey: "notifications.types.job_awarded" },
-  cert_expiring: { icon: "calendar", labelKey: "notifications.types.cert_expiring" },
-  cert_expired: { icon: "alert-octagon", labelKey: "notifications.types.cert_expired" },
-  long_checkin: { icon: "clock", labelKey: "notifications.types.long_checkin" },
-  rating_received: { icon: "star", labelKey: "notifications.types.rating_received" },
-};
+import {
+  NOTIFICATION_TYPE_META,
+  notificationTypeLabel,
+  type NotificationRow,
+} from "@/lib/notifications-ui";
 
 export default function NotificationsScreen() {
   const colors = useColors();
@@ -77,11 +33,8 @@ export default function NotificationsScreen() {
   const [items, setItems] = useState<NotificationRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  // Task #699 — surface a friendly slow-down banner when the
-  // /api/notifications endpoint returns 429 with code
-  // "notifications.rate_limited", and skip the load() call until the
-  // server-supplied window resets so we don't immediately re-trip the
-  // limiter on focus or pull-to-refresh.
+  const [selected, setSelected] = useState<NotificationRow | null>(null);
+  const [sendToItem, setSendToItem] = useState<NotificationRow | null>(null);
   const [loadError, setLoadError] = useState<unknown>(null);
   const { rateLimited, retryAfterSeconds } = useRateLimitGate(
     loadError,
@@ -105,16 +58,8 @@ export default function NotificationsScreen() {
       const data = await apiFetch<NotificationRow[]>("/api/notifications");
       setItems(data || []);
       void syncAppIconBadge();
-      // Clear any stale error so the gate can disarm on a successful
-      // recovery fetch (the hook only re-arms when it sees a *new*
-      // error reference, but holding onto an old 429 here would block
-      // future loads from looking error-free).
       setLoadError(null);
     } catch (e) {
-      // Park on rate-limit instead of popping a blocking modal — the
-      // gate hook reads this error and surfaces the slow-down banner.
-      // Generic load failures still pop the existing alert so users
-      // know the screen is stale.
       const status = (e as { status?: unknown })?.status;
       if (status === 429) {
         setLoadError(e);
@@ -128,9 +73,6 @@ export default function NotificationsScreen() {
   }, [t]);
 
   useEffect(() => {
-    // Don't kick off another load while we're parked — the gate's
-    // auto-clear timer flips `rateLimited` back to false at the end of
-    // the window, which re-runs this effect and re-issues the fetch.
     if (rateLimited) return;
     load();
   }, [load, rateLimited]);
@@ -141,22 +83,44 @@ export default function NotificationsScreen() {
     }, []),
   );
 
+  const updateItem = (id: number, patch: Partial<NotificationRow>) => {
+    setItems((xs) => xs.map((x) => (x.id === id ? { ...x, ...patch } : x)));
+    setSelected((cur) => (cur?.id === id ? { ...cur, ...patch } : cur));
+  };
+
   const markRead = async (id: number) => {
     try {
       await apiFetch(`/api/notifications/${id}/read`, { method: "POST" });
-      setItems((xs) => xs.map((x) => (x.id === id ? { ...x, isRead: true } : x)));
+      updateItem(id, { isRead: true });
       void syncAppIconBadge();
-    } catch (e) {
-      console.warn("markRead", e);
+    } catch {
+      Alert.alert(t("common.error"), t("notifications.actionFailed"));
+    }
+  };
+
+  const markUnread = async (id: number) => {
+    try {
+      await apiFetch(`/api/notifications/${id}/unread`, { method: "POST" });
+      updateItem(id, { isRead: false });
+      void syncAppIconBadge();
+    } catch {
+      Alert.alert(t("common.error"), t("notifications.actionFailed"));
+    }
+  };
+
+  const deleteNotification = async (id: number) => {
+    try {
+      await apiFetch(`/api/notifications/${id}`, { method: "DELETE" });
+      setItems((xs) => xs.filter((x) => x.id !== id));
+      setSelected((cur) => (cur?.id === id ? null : cur));
+      void syncAppIconBadge();
+    } catch {
+      Alert.alert(t("common.error"), t("notifications.actionFailed"));
     }
   };
 
   const onCardPress = (item: NotificationRow) => {
-    if (!item.isRead) markRead(item.id);
-    const ticketId = parseTicketIdFromHref(item.link ?? "");
-    if (ticketId !== null) {
-      router.push(`/ticket/${ticketId}`);
-    }
+    setSelected(item);
   };
 
   const markAll = async () => {
@@ -227,11 +191,6 @@ export default function NotificationsScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={() => {
-                // Task #699 — pull-to-refresh during cooldown would
-                // immediately re-trip the limiter and reset the user's
-                // window. Snap the spinner back instead so the gesture
-                // feels acknowledged but no fetch goes out; the gate's
-                // auto-clear timer will resume polling on its own.
                 if (rateLimited) return;
                 setRefreshing(true);
                 load();
@@ -244,13 +203,8 @@ export default function NotificationsScreen() {
             </Text>
           }
           renderItem={({ item }) => {
-            const meta = TYPE_META[item.type];
-            const categoryKey = CATEGORY_LABEL_KEYS[item.category];
-            const labelText = meta
-              ? t(meta.labelKey)
-              : categoryKey
-                ? t(categoryKey)
-                : item.category.toUpperCase();
+            const meta = NOTIFICATION_TYPE_META[item.type];
+            const labelText = notificationTypeLabel(item, t);
             return (
               <TouchableOpacity
                 onPress={() => onCardPress(item)}
@@ -282,7 +236,11 @@ export default function NotificationsScreen() {
                       <Text
                         style={[
                           styles.typeBadgeText,
-                          { color: item.isRead ? colors.mutedForeground : colors.primaryForeground },
+                          {
+                            color: item.isRead
+                              ? colors.mutedForeground
+                              : colors.primaryForeground,
+                          },
                         ]}
                       >
                         {labelText}
@@ -294,7 +252,12 @@ export default function NotificationsScreen() {
                     </Text>
                   )}
                 </View>
-                <Text style={[styles.cardTitle, { color: item.isRead ? colors.mutedForeground : colors.primary }]}>
+                <Text
+                  style={[
+                    styles.cardTitle,
+                    { color: item.isRead ? colors.mutedForeground : colors.primary },
+                  ]}
+                >
                   {item.title}
                 </Text>
                 {item.body ? (
@@ -310,6 +273,30 @@ export default function NotificationsScreen() {
           }}
         />
       )}
+
+      <NotificationActionModal
+        visible={selected !== null}
+        item={selected}
+        typeLabel={selected ? notificationTypeLabel(selected, t) : ""}
+        timeAgoLabel={selected ? timeAgo(selected.createdAt) : ""}
+        onClose={() => setSelected(null)}
+        onMarkRead={markRead}
+        onMarkUnread={markUnread}
+        onDelete={deleteNotification}
+        onSendTo={() => {
+          if (selected) {
+            setSendToItem(selected);
+            setSelected(null);
+          }
+        }}
+      />
+
+      <NotificationSendToModal
+        visible={sendToItem !== null}
+        item={sendToItem}
+        typeLabel={sendToItem ? notificationTypeLabel(sendToItem, t) : ""}
+        onClose={() => setSendToItem(null)}
+      />
     </View>
   );
 }

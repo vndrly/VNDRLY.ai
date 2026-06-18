@@ -25,6 +25,7 @@ import {
   RotateCcw,
   Banknote,
   Unlock,
+  Send,
   Flag,
   HandCoins,
   UserCheck,
@@ -43,6 +44,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
 import { notificationsApi, type NotificationRow } from "@/lib/notifications-api";
 import { buildNotificationMailtoUrl } from "@/lib/notification-mailto";
+import NotificationSendToDialog from "@/components/notification-send-to-dialog";
+import { parseTicketIdFromHref } from "@/lib/ticket-send-to-api";
 import { useRateLimitGate } from "@/hooks/use-rate-limit-gate";
 import { cn } from "@/lib/utils";
 import { PILL_HEIGHT_CLASS, PILL_MIN_HEIGHT_CLASS } from "@/lib/pill-doctrine";
@@ -63,6 +66,7 @@ const TYPE_META: Record<string, { Icon: LucideIcon; labelKey: string }> = {
   ticket_pending_long: { Icon: Clock, labelKey: "notifications.types.ticket_pending_long" },
   ticket_inactive: { Icon: TimerOff, labelKey: "notifications.types.ticket_inactive" },
   ticket_note_added: { Icon: StickyNote, labelKey: "notifications.types.ticket_note_added" },
+  ticket_forwarded: { Icon: Send, labelKey: "notifications.types.ticket_forwarded" },
   ticket_unblocked: { Icon: Unlock, labelKey: "notifications.types.ticket_unblocked" },
   ticket_flagged: { Icon: Flag, labelKey: "notifications.types.ticket_flagged" },
   direct_assignment_offered: { Icon: Briefcase, labelKey: "notifications.types.direct_assignment_offered" },
@@ -193,6 +197,7 @@ export default function NotificationsModal({ open, onOpenChange }: Props) {
   const [, navigate] = useLocation();
   const qc = useQueryClient();
   const [activeTab, setActiveTab] = useState<string>("all");
+  const [sendToNotification, setSendToNotification] = useState<NotificationRow | null>(null);
   const categories = CATEGORY_IDS.map((id) => ({ id, label: t(`notifications.categories.${id}`) }));
   const enabled = !!user && open;
   const [rateLimitedState, setRateLimitedState] = useState(false);
@@ -273,6 +278,7 @@ export default function NotificationsModal({ open, onOpenChange }: Props) {
   const count = countData?.count ?? 0;
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         bare
@@ -442,14 +448,27 @@ export default function NotificationsModal({ open, onOpenChange }: Props) {
                                 >
                                   {t("notifications.delete")}
                                 </FlatBubbleButton>
+                                {parseTicketIdFromHref(n.link ?? "") !== null ? (
+                                  <FlatBubbleButton
+                                    theme={modalTheme}
+                                    tone="brand"
+                                    onClick={(e) => {
+                                      stopRowAction(e);
+                                      setSendToNotification(n);
+                                    }}
+                                    data-testid={`modal-notification-${n.id}-send-to`}
+                                  >
+                                    {t("notifications.sendTo")}
+                                  </FlatBubbleButton>
+                                ) : null}
                                 <FlatBubbleLink
                                   theme={modalTheme}
-                                  tone="brand"
+                                  tone="grey"
                                   href={buildNotificationMailtoUrl(n, t(meta.labelKey))}
                                   onClick={stopRowBubble}
-                                  data-testid={`modal-notification-${n.id}-send-to`}
+                                  data-testid={`modal-notification-${n.id}-share-email`}
                                 >
-                                  {t("notifications.sendTo")}
+                                  {t("notifications.shareViaEmail")}
                                 </FlatBubbleLink>
                               </div>
                             </div>
@@ -479,5 +498,16 @@ export default function NotificationsModal({ open, onOpenChange }: Props) {
         </div>
       </DialogContent>
     </Dialog>
+    <NotificationSendToDialog
+      open={sendToNotification !== null}
+      onOpenChange={(next) => {
+        if (!next) setSendToNotification(null);
+      }}
+      notification={sendToNotification}
+      typeLabel={
+        sendToNotification ? t(typeMetaFor(sendToNotification.type).labelKey) : undefined
+      }
+    />
+    </>
   );
 }
