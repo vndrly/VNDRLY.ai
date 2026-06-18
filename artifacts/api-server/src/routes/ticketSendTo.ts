@@ -1,18 +1,16 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { and, eq } from "drizzle-orm";
-import crypto from "crypto";
+import { and, eq, isNull } from "drizzle-orm";
 import { db, notificationsTable, vendorPeopleTable } from "@workspace/db";
 import { parseTicketIdFromHref } from "../lib/parse-ticket-href";
 import { sendApiError } from "../lib/apiError";
-import { SESSION_SECRET } from "../lib/session";
+import { getSessionFromRequest } from "../lib/session";
+import { logger } from "../lib/logger";
 import {
   actorCanSendToTicket,
   listSendToRecipients,
   sendTicketForward,
   type SendToActor,
 } from "../lib/ticket-send-to";
-
-const COOKIE_NAME = "vndrly_session";
 
 type Session = {
   userId: number;
@@ -23,28 +21,15 @@ type Session = {
 };
 
 function getSession(req: Request): Session | null {
-  const cookie = (req as any).cookies?.[COOKIE_NAME];
-  if (!cookie) return null;
-  const lastDot = cookie.lastIndexOf(".");
-  if (lastDot === -1) return null;
-  const payload = cookie.slice(0, lastDot);
-  const sig = cookie.slice(lastDot + 1);
-  const expected = crypto.createHmac("sha256", SESSION_SECRET).update(payload).digest("hex");
-  try {
-    if (!crypto.timingSafeEqual(Buffer.from(sig, "hex"), Buffer.from(expected, "hex"))) {
-      return null;
-    }
-  } catch {
-    return null;
-  }
-  try {
-    const obj = JSON.parse(Buffer.from(payload, "base64").toString("utf-8"));
-    const now = Math.floor(Date.now() / 1000);
-    if (!obj || typeof obj.exp !== "number" || obj.exp < now) return null;
-    return obj;
-  } catch {
-    return null;
-  }
+  const session = getSessionFromRequest(req);
+  if (!session?.userId || typeof session.role !== "string") return null;
+  return {
+    userId: session.userId,
+    role: session.role,
+    vendorId: typeof session.vendorId === "number" ? session.vendorId : null,
+    partnerId: typeof session.partnerId === "number" ? session.partnerId : null,
+    displayName: typeof session.displayName === "string" ? session.displayName : undefined,
+  };
 }
 
 async function getFieldEmployeeForSession(req: Request) {
@@ -61,6 +46,7 @@ async function getFieldEmployeeForSession(req: Request) {
       and(
         eq(vendorPeopleTable.userId, session.userId),
         eq(vendorPeopleTable.isActive, true),
+        isNull(vendorPeopleTable.deletedAt),
       ),
     );
   if (!fe?.userId) return null;
@@ -110,8 +96,13 @@ router.get("/tickets/:id/send-to-recipients", async (req: Request, res: Response
     return;
   }
 
-  const groups = await listSendToRecipients(ticketId, actor);
-  res.json({ groups });
+  try {
+    const groups = await listSendToRecipients(ticketId, actor);
+    res.json({ groups });
+  } catch (err) {
+    logger.error({ err, ticketId, userId: session.userId }, "send-to recipients lookup failed");
+    sendApiError(res, 500, "send_to.load_failed", "Could not load send-to recipients");
+  }
 });
 
 /** POST /api/tickets/:id/send-to — forward ticket context to selected users. */
@@ -214,8 +205,16 @@ router.get("/notifications/:id/send-to-recipients", async (req: Request, res: Re
     return;
   }
 
-  const groups = await listSendToRecipients(ticketId, actor);
-  res.json({ ticketId, groups });
+  try {
+    const groups = await listSendToRecipients(ticketId, actor);
+    res.json({ ticketId, groups });
+  } catch (err) {
+    logger.error(
+      { err, ticketId, notificationId, userId: session.userId },
+      "send-to recipients lookup failed",
+    );
+    sendApiError(res, 500, "send_to.load_failed", "Could not load send-to recipients");
+  }
 });
 
 /** POST /api/notifications/:id/send-to — forward an inbox row's context. */

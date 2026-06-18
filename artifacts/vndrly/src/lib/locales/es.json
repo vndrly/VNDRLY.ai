@@ -1415,6 +1415,10 @@
     "sendToSuccess": "Enviado a {{count}} destinatario(s)",
     "sendToFailed": "No se pudo enviar la actualización.",
     "sendToLoadFailed": "No se pudieron cargar los destinatarios.",
+    "sendToForbidden": "No tienes acceso para reenviar desde este ticket.",
+    "sendToNotificationMissing": "Esa notificación ya no está en tu bandeja.",
+    "sendToAuthRequired": "Tu sesión expiró — actualiza la página e inicia sesión de nuevo.",
+    "sendToSessionExpired": "Tu sesión expiró — cierra sesión, vuelve a entrar e intenta Enviar a de nuevo.",
     "sendToGroups": {
       "onTicket": "En este ticket",
       "vendorPocField": "POC del proveedor — campo y trabajos",
@@ -1427,6 +1431,7 @@
       "vndrlyOffice": "Personal VNDRLY"
     },
     "noNotifications": "No hay nada aquí.",
+    "loadFailed": "No se pudieron cargar las notificaciones. Inténtalo de nuevo en un momento.",
     "loading": "Cargando…",
     "categories": {
       "all": "Todas",

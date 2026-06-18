@@ -122,13 +122,36 @@ export async function actorCanSendToTicket(
   if (!ticket?.vendorId) return false;
   if (actor.role === "admin") return true;
   if (actor.role === "vendor") {
-    return actor.vendorId != null && actor.vendorId === ticket.vendorId;
+    if (actor.vendorId != null && actor.vendorId === ticket.vendorId) return true;
+    const vendorUserIds = await findVendorUserIds(ticket.vendorId);
+    return vendorUserIds.includes(actor.userId);
   }
   if (actor.role === "partner") {
-    return actor.partnerId != null && actor.partnerId === ticket.partnerId;
+    if (ticket.partnerId == null) return false;
+    if (actor.partnerId != null && actor.partnerId === ticket.partnerId) return true;
+    const partnerUserIds = await findPartnerUserIds(ticket.partnerId);
+    return partnerUserIds.includes(actor.userId);
   }
-  if (actor.role === "field_employee" && actor.fieldEmployee) {
-    return fieldEmployeeCanAccessTicket(ticketId, actor.fieldEmployee, ticket);
+  if (actor.role === "field_employee") {
+    if (actor.fieldEmployee) {
+      return fieldEmployeeCanAccessTicket(ticketId, actor.fieldEmployee, ticket);
+    }
+    const [fe] = await db
+      .select({
+        id: vendorPeopleTable.id,
+        vendorId: vendorPeopleTable.vendorId,
+        userId: vendorPeopleTable.userId,
+      })
+      .from(vendorPeopleTable)
+      .where(
+        and(
+          eq(vendorPeopleTable.userId, actor.userId),
+          isNull(vendorPeopleTable.deletedAt),
+        ),
+      )
+      .limit(1);
+    if (!fe?.userId) return false;
+    return fieldEmployeeCanAccessTicket(ticketId, fe, ticket);
   }
   return false;
 }

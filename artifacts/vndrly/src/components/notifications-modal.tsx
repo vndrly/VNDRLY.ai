@@ -213,20 +213,31 @@ export default function NotificationsModal({ open, onOpenChange }: Props) {
     },
   });
 
-  const { data: list, error: listError } = useQuery({
+  const listQueryEnabled = enabled && !rateLimitedState;
+  const {
+    data: list,
+    error: listError,
+    isPending: listPending,
+    isFetching: listFetching,
+    isError: listIsError,
+    refetch: refetchList,
+  } = useQuery({
     queryKey: ["notifications", "list", user?.userId],
     queryFn: () => notificationsApi.list(),
-    enabled: enabled && !rateLimitedState,
+    enabled: listQueryEnabled,
     retry: (failureCount: number, err: unknown) => {
       const status = (err as { status?: number } | null)?.status;
       if (status === 429) return false;
       return failureCount < 3;
     },
   });
+  const listLoading =
+    listQueryEnabled && !listIsError && (listPending || listFetching);
 
   const countGate = useRateLimitGate(countError, "notifications.rate_limited");
   const listGate = useRateLimitGate(listError, "notifications.rate_limited");
   const rateLimited = countGate.rateLimited || listGate.rateLimited;
+  const listLoadFailed = listIsError && !rateLimited;
   const retryAfterSeconds =
     Math.max(countGate.retryAfterSeconds ?? 0, listGate.retryAfterSeconds ?? 0) || null;
 
@@ -377,9 +388,31 @@ export default function NotificationsModal({ open, onOpenChange }: Props) {
               const items = grouped[c.id] ?? [];
               return (
                 <TabsContent key={c.id} value={c.id} className={modalTheme.tabsContentClassName}>
-                  {!list ? (
+                  {listLoading ? (
                     <p className="px-4 py-8 text-center text-xs text-muted-foreground">
                       {t("notifications.loading")}
+                    </p>
+                  ) : listLoadFailed ? (
+                    <div className="space-y-3 px-4 py-8 text-center">
+                      <p className="text-xs text-muted-foreground">
+                        {t("notifications.loadFailed")}
+                      </p>
+                      <FlatBubbleButton
+                        theme={modalTheme}
+                        tone="brand"
+                        onClick={() => {
+                          void refetchList();
+                        }}
+                        data-testid="modal-notifications-retry"
+                      >
+                        {t("common.refresh")}
+                      </FlatBubbleButton>
+                    </div>
+                  ) : rateLimited && list === undefined ? (
+                    <p className="px-4 py-8 text-center text-xs text-muted-foreground">
+                      {retryAfterSeconds != null
+                        ? t("notifications.slowDown.retryIn", { seconds: retryAfterSeconds })
+                        : t("notifications.slowDown.brief")}
                     </p>
                   ) : items.length === 0 ? (
                     <p className="px-4 py-8 text-center text-xs text-muted-foreground">

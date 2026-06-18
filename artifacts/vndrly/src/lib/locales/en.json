@@ -1415,6 +1415,10 @@
     "sendToSuccess": "Sent to {{count}} recipient(s)",
     "sendToFailed": "Could not send the update.",
     "sendToLoadFailed": "Could not load recipients.",
+    "sendToForbidden": "You do not have access to forward from this ticket.",
+    "sendToNotificationMissing": "That notification is no longer in your inbox.",
+    "sendToAuthRequired": "Your session expired — refresh the page and sign in again.",
+    "sendToSessionExpired": "Your session expired — sign out and sign in again, then retry Send to.",
     "sendToGroups": {
       "onTicket": "On this ticket",
       "vendorPocField": "Vendor POC — field & jobs",
@@ -1427,6 +1431,7 @@
       "vndrlyOffice": "VNDRLY staff"
     },
     "noNotifications": "Nothing here.",
+    "loadFailed": "Could not load notifications. Try again in a moment.",
     "loading": "Loading…",
     "categories": {
       "all": "All",

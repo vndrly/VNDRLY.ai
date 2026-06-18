@@ -62,4 +62,8 @@ describe("parseTicketIdFromHref", () => {
     expect(parseTicketIdFromHref("/hotlist")).toBeNull();
     expect(parseTicketIdFromHref("")).toBeNull();
   });
+
+  it("parses ticket ids before hash fragments", () => {
+    expect(parseTicketIdFromHref("/tickets/123#comment-456")).toBe(123);
+  });
 });

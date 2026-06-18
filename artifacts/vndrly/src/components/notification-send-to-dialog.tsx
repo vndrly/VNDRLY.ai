@@ -1,11 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ButtonHTMLAttributes } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Loader2, Send } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -14,6 +13,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { useBrand } from "@/hooks/use-brand";
+import { useTheme } from "@/hooks/use-theme";
+import { portalDisplayLogo } from "@/lib/portal-branding";
+import { VNDRLY_LOGO_SQUARE } from "@/lib/vndrly-brand-assets";
+import {
+  notificationsModalTheme,
+  type NotificationsModalTheme,
+} from "@/components/notifications-modal-tokens";
 import {
   parseTicketIdFromHref,
   ticketSendToApi,
@@ -41,6 +48,46 @@ const GROUP_LABEL_KEYS: Record<SendToGroupId, string> = {
   vndrly_office: "notifications.sendToGroups.vndrlyOffice",
 };
 
+type FooterPillTone = "cancel" | "submit";
+
+function footerPillClass(theme: NotificationsModalTheme, tone: FooterPillTone) {
+  if (tone === "cancel") return theme.flatActionGreyHoverRedClassName;
+  return theme.flatActionGreyHoverBlueClassName;
+}
+
+function ModalFooterPill({
+  theme,
+  tone,
+  className,
+  ...props
+}: ButtonHTMLAttributes<HTMLButtonElement> & {
+  theme: NotificationsModalTheme;
+  tone: FooterPillTone;
+}) {
+  return (
+    <button
+      type="button"
+      className={cn(theme.flatActionBaseClassName, footerPillClass(theme, tone), className)}
+      {...props}
+    />
+  );
+}
+
+function sendToRecipientsErrorMessage(err: unknown, t: (key: string) => string): string {
+  const data = (err as { data?: { code?: string } } | null)?.data;
+  const code = data?.code;
+  if (code === "send_to.forbidden") return t("notifications.sendToForbidden");
+  if (code === "send_to.no_ticket") return t("notifications.sendToNoTicket");
+  if (code === "notification.not_found") return t("notifications.sendToNotificationMissing");
+  if (code === "auth.required" || code === "auth.not_authenticated" || code === "auth.unauthenticated") {
+    return t("notifications.sendToAuthRequired");
+  }
+  if (code === "auth.session_invalidated") {
+    return t("notifications.sendToSessionExpired");
+  }
+  return t("notifications.sendToLoadFailed");
+}
+
 export default function NotificationSendToDialog({
   open,
   onOpenChange,
@@ -49,6 +96,10 @@ export default function NotificationSendToDialog({
 }: Props) {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const brand = useBrand();
+  const { resolved: themeResolved } = useTheme();
+  const modalTheme = notificationsModalTheme(themeResolved);
+  const displayLogo = portalDisplayLogo(brand, VNDRLY_LOGO_SQUARE);
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [message, setMessage] = useState("");
 
@@ -131,107 +182,152 @@ export default function NotificationSendToDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] overflow-hidden sm:max-w-lg" data-testid="dialog-send-to">
-        <DialogHeader>
-          <DialogTitle>{t("notifications.sendToTitle")}</DialogTitle>
-        </DialogHeader>
-
-        {ticketId === null ? (
-          <p className="text-sm text-muted-foreground">{t("notifications.sendToNoTicket")}</p>
-        ) : recipientsQuery.isLoading ? (
-          <div className="flex items-center justify-center py-8 text-muted-foreground">
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            {t("notifications.loading")}
-          </div>
-        ) : allRecipients.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t("notifications.sendToEmpty")}</p>
-        ) : (
-          <div className="max-h-[50vh] space-y-4 overflow-y-auto pr-1">
-            <p className="text-xs text-muted-foreground">{t("notifications.sendToCoopNote")}</p>
-            {notification?.title ? (
-              <div className="rounded-md border bg-muted/30 px-3 py-2 text-xs">
-                {typeLabel ? (
-                  <p className="mb-1 font-medium uppercase tracking-wide text-muted-foreground">
-                    {typeLabel}
-                  </p>
-                ) : null}
-                <p className="font-medium">{notification.title}</p>
-                {notification.body ? (
-                  <p className="mt-1 text-muted-foreground">{notification.body}</p>
-                ) : null}
-              </div>
-            ) : null}
-
-            {groups.map((group) => (
-              <div key={group.id}>
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  {t(GROUP_LABEL_KEYS[group.id])}
-                </p>
-                <ul className="space-y-2">
-                  {group.recipients.map((r) => {
-                    const checked = selected.has(r.userId);
-                    return (
-                      <li key={r.userId}>
-                        <label
-                          className={cn(
-                            "flex cursor-pointer items-start gap-3 rounded-md border px-3 py-2",
-                            checked && "border-primary bg-primary/5",
-                          )}
-                        >
-                          <Checkbox
-                            checked={checked}
-                            onCheckedChange={() => toggle(r.userId)}
-                            data-testid={`send-to-recipient-${r.userId}`}
-                          />
-                          <span className="min-w-0 flex-1">
-                            <span className="block text-sm font-medium">{r.displayName}</span>
-                            <span className="block text-xs text-muted-foreground">{r.roleLabel}</span>
-                          </span>
-                        </label>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            ))}
-
-            <div>
-              <Label htmlFor="send-to-message">{t("notifications.sendToMessageLabel")}</Label>
-              <Textarea
-                id="send-to-message"
-                value={message}
-                onChange={(e) => setMessage(e.target.value.slice(0, 500))}
-                placeholder={t("notifications.sendToMessagePlaceholder")}
-                className="mt-1.5 min-h-[72px]"
-                data-testid="send-to-message"
+      <DialogContent bare className={modalTheme.shellClassName} data-testid="dialog-send-to">
+        <div className="relative z-10 flex min-h-0 flex-1 flex-col">
+          <DialogHeader className={modalTheme.toolbarClassName}>
+            <div className="flex min-w-0 items-center gap-2 sm:gap-2.5">
+              <img
+                src={displayLogo}
+                alt={brand.name ? `${brand.name} logo` : "VNDRLY logo"}
+                className={modalTheme.logoClassName}
+                draggable={false}
+                data-testid="dialog-send-to-logo"
               />
+              <DialogTitle className={modalTheme.titleClassName}>
+                {t("notifications.sendToTitle")}
+              </DialogTitle>
             </div>
-          </div>
-        )}
+          </DialogHeader>
 
-        <DialogFooter className="gap-2 sm:gap-0">
-          <button
-            type="button"
-            className="inline-flex h-9 items-center justify-center rounded-md border px-4 text-sm"
-            onClick={() => onOpenChange(false)}
-          >
-            {t("common.cancel")}
-          </button>
-          <button
-            type="button"
-            disabled={!canSend}
-            className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm text-primary-foreground disabled:opacity-50"
-            onClick={() => send.mutate()}
-            data-testid="send-to-submit"
-          >
-            {send.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+          <div className={cn("min-h-0 flex-1 overflow-y-auto px-4 py-3", modalTheme.bodySurfaceClassName)}>
+            {ticketId === null ? (
+              <p className="text-sm text-muted-foreground">{t("notifications.sendToNoTicket")}</p>
+            ) : recipientsQuery.isLoading || recipientsQuery.isFetching ? (
+              <div className="flex items-center justify-center py-8 text-muted-foreground">
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {t("notifications.loading")}
+              </div>
+            ) : recipientsQuery.isError ? (
+              <div className="space-y-3 py-4 text-center">
+                <p className="text-sm text-muted-foreground">
+                  {sendToRecipientsErrorMessage(recipientsQuery.error, t)}
+                </p>
+                <ModalFooterPill
+                  theme={modalTheme}
+                  tone="submit"
+                  onClick={() => {
+                    void recipientsQuery.refetch();
+                  }}
+                  data-testid="send-to-retry"
+                >
+                  {t("common.refresh")}
+                </ModalFooterPill>
+              </div>
+            ) : allRecipients.length === 0 ? (
+              <p className="text-sm text-muted-foreground">{t("notifications.sendToEmpty")}</p>
             ) : (
-              <Send className="h-4 w-4" />
+              <div className="space-y-4">
+                <p className="text-xs text-muted-foreground">{t("notifications.sendToCoopNote")}</p>
+                {notification?.title ? (
+                  <div className="rounded-md border border-gray-400/50 bg-black/5 px-3 py-2 text-xs dark:border-gray-500/60 dark:bg-black/10">
+                    {typeLabel ? (
+                      <p className="mb-1 font-medium uppercase tracking-wide text-muted-foreground">
+                        {typeLabel}
+                      </p>
+                    ) : null}
+                    <p className="font-medium">{notification.title}</p>
+                    {notification.body ? (
+                      <p className="mt-1 text-muted-foreground">{notification.body}</p>
+                    ) : null}
+                  </div>
+                ) : null}
+
+                {groups.map((group) => (
+                  <div key={group.id}>
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      {t(GROUP_LABEL_KEYS[group.id])}
+                    </p>
+                    <ul className="space-y-2">
+                      {group.recipients.map((r) => {
+                        const checked = selected.has(r.userId);
+                        return (
+                          <li key={r.userId}>
+                            <label
+                              className={cn(
+                                "flex cursor-pointer items-start gap-3 rounded-md border px-3 py-2",
+                                checked
+                                  ? "border-[color:var(--brand-primary)] bg-[color:color-mix(in_srgb,var(--brand-primary)_12%,white)]"
+                                  : "border-gray-400/60 bg-background/80",
+                              )}
+                            >
+                              <Checkbox
+                                checked={checked}
+                                onCheckedChange={() => toggle(r.userId)}
+                                data-testid={`send-to-recipient-${r.userId}`}
+                              />
+                              <span className="min-w-0 flex-1">
+                                <span className="block text-sm font-medium">{r.displayName}</span>
+                                <span className="block text-xs text-muted-foreground">
+                                  {r.roleLabel}
+                                </span>
+                              </span>
+                            </label>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                ))}
+
+                <div>
+                  <Label htmlFor="send-to-message">{t("notifications.sendToMessageLabel")}</Label>
+                  <Textarea
+                    id="send-to-message"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value.slice(0, 500))}
+                    placeholder={t("notifications.sendToMessagePlaceholder")}
+                    className="mt-1.5 min-h-[72px] bg-background"
+                    data-testid="send-to-message"
+                  />
+                </div>
+              </div>
             )}
-            {t("notifications.sendToSubmit", { count: selected.size })}
-          </button>
-        </DialogFooter>
+          </div>
+
+          <div
+            className={cn(
+              "flex shrink-0 flex-wrap items-center justify-end gap-2 border-t px-4 py-3",
+              modalTheme.sectionBorderClassName,
+              modalTheme.bodySurfaceClassName,
+            )}
+          >
+            <ModalFooterPill
+              theme={modalTheme}
+              tone="cancel"
+              onClick={() => onOpenChange(false)}
+              data-testid="send-to-cancel"
+            >
+              {t("common.cancel")}
+            </ModalFooterPill>
+            <ModalFooterPill
+              theme={modalTheme}
+              tone="submit"
+              disabled={!canSend}
+              className={cn(!canSend && "pointer-events-none opacity-50")}
+              onClick={() => send.mutate()}
+              data-testid="send-to-submit"
+            >
+              {send.isPending ? (
+                <>
+                  <Loader2 className="mr-1 inline h-3 w-3 animate-spin" />
+                  {t("notifications.sendToSending")}
+                </>
+              ) : (
+                t("notifications.sendToSubmit", { count: selected.size })
+              )}
+            </ModalFooterPill>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -53,11 +53,41 @@ async function jsonFetch<T>(input: string, init?: RequestInit): Promise<T> {
 export function parseTicketIdFromHref(href: string): number | null {
   const trimmed = href.trim();
   if (!trimmed) return null;
+
+  const deepPatterns = [
+    /^vndrly-deep-link:ticket-detail\/(\d+)/i,
+    /^vndrly-deep-link:ticket-detail:(\d+)/i,
+    /^vndrly-deep-link:ticket-detail\?id=(\d+)/i,
+    /^vndrly-deep-link:ticket-detail\?(\d+)/i,
+    /^vndrly-deep-link:tickets\/(\d+)/i,
+  ];
+  for (const re of deepPatterns) {
+    const m = re.exec(trimmed);
+    if (m) {
+      const id = Number(m[1]);
+      if (Number.isInteger(id) && id > 0) return id;
+    }
+  }
+
   const pathMatch = trimmed.match(/\/tickets?\/(\d+)/i);
   if (pathMatch) {
     const id = Number(pathMatch[1]);
     if (Number.isInteger(id) && id > 0) return id;
   }
+
+  if (/^https?:\/\//i.test(trimmed)) {
+    try {
+      const u = new URL(trimmed);
+      const urlMatch = u.pathname.match(/\/tickets?\/(\d+)/i);
+      if (urlMatch) {
+        const id = Number(urlMatch[1]);
+        if (Number.isInteger(id) && id > 0) return id;
+      }
+    } catch {
+      // ignore
+    }
+  }
+
   return null;
 }
 

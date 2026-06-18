@@ -46,6 +46,10 @@ export type NotificationsModalTheme = AppModalTheme & {
 
   flatActionDangerClassName: string;
 
+  flatActionGreyHoverRedClassName: string;
+
+  flatActionGreyHoverBlueClassName: string;
+
   tabTriggerExtraClassName: string;
 
   tabTriggerActiveClassName: string;
@@ -107,6 +111,14 @@ export const NOTIFICATIONS_MODAL_LIGHT: NotificationsModalTheme = {
   flatActionDangerClassName:
 
     "bg-red-600 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)] hover:opacity-90",
+
+  flatActionGreyHoverRedClassName:
+
+    "bg-gray-400 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)] hover:bg-red-600 hover:opacity-100",
+
+  flatActionGreyHoverBlueClassName:
+
+    "bg-gray-400 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)] hover:bg-blue-600 hover:opacity-100",
 
   tabTriggerExtraClassName:
 
@@ -181,6 +193,14 @@ export const NOTIFICATIONS_MODAL_DARK: NotificationsModalTheme = {
   flatActionDangerClassName:
 
     "bg-red-600 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)] hover:opacity-90",
+
+  flatActionGreyHoverRedClassName:
+
+    "bg-gray-500 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)] hover:bg-red-600 hover:opacity-100",
+
+  flatActionGreyHoverBlueClassName:
+
+    "bg-gray-500 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)] hover:bg-blue-600 hover:opacity-100",
 
   tabTriggerExtraClassName:
 
