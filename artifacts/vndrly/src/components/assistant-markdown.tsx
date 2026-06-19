@@ -1,4 +1,8 @@
 import { Link } from "wouter";
+import {
+  normalizeAssistantLinkHref,
+  normalizeAssistantMarkdownInput,
+} from "@/lib/assistant-link-href";
 
 /**
  * Tiny markdown renderer for assistant messages. Supports the subset
@@ -10,8 +14,9 @@ import { Link } from "wouter";
  * need for the small subset above.
  */
 export function AssistantMarkdown({ text }: { text: string }) {
+  const normalized = normalizeAssistantMarkdownInput(text.replace(/\r\n/g, "\n"));
   // Strip Windows newlines and split into paragraph blocks.
-  const paragraphs = text.replace(/\r\n/g, "\n").split(/\n\n+/);
+  const paragraphs = normalized.split(/\n\n+/);
   return (
     <div className="space-y-2 text-sm leading-relaxed">
       {paragraphs.map((para, i) => {
@@ -50,7 +55,7 @@ function renderInline(s: string): React.ReactNode {
     {
       re: /\[([^\]]+)\]\(([^)]+)\)/,
       render: (m) => {
-        const href = m[2].trim();
+        const href = normalizeAssistantLinkHref(m[2]) ?? m[2].trim();
         // Hard-allowlist the protocol so a model-emitted
         // `[Click](javascript:alert(1))` can't execute on click. We
         // accept three shapes only:

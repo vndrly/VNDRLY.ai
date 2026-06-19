@@ -506,13 +506,16 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
     return -1;
   }, [messages]);
 
-  /** Only the assistant reply to the latest user turn is rateable — resets thumbs when a new question is sent. */
+  /** Only the assistant reply after the latest user turn is rateable. */
   const rateableAssistantMessage = useMemo(() => {
-    for (let i = messages.length - 1; i >= 0; i -= 1) {
-      const m = messages[i];
-      if (m.role === "assistant" && !m.pending && m.content.trim().length > 0) {
-        return i > lastUserMessageIndex ? m : null;
-      }
+    if (lastUserMessageIndex < 0) return null;
+    const reply = messages[lastUserMessageIndex + 1];
+    if (
+      reply?.role === "assistant" &&
+      !reply.pending &&
+      reply.content.trim().length > 0
+    ) {
+      return reply;
     }
     return null;
   }, [messages, lastUserMessageIndex]);

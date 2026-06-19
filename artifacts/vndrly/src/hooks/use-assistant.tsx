@@ -586,7 +586,14 @@ async function consumeSse(
       }
       if (eventName === "token") onEvent({ type: "token", delta: (parsed as { delta: string }).delta });
       else if (eventName === "tool") onEvent({ type: "tool", ...(parsed as { name: string; status: "start" | "end" }) });
-      else if (eventName === "done") onEvent({ type: "done", content: (parsed as { content: string }).content });
+      else if (eventName === "done") {
+        const payload = parsed as { content: string; assistantMessageId?: number };
+        onEvent({
+          type: "done",
+          content: payload.content,
+          assistantMessageId: payload.assistantMessageId,
+        });
+      }
       else if (eventName === "error") onEvent({ type: "error", message: (parsed as { message: string }).message });
     }
   }

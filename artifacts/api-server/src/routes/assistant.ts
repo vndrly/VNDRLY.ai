@@ -38,6 +38,7 @@ import {
   clampMetricsDays,
 } from "../assistant/permissions";
 import { buildDeepLink } from "../assistant/deep-links";
+import { ensureDeepLinksInAssistantReply } from "../assistant/deep-link-markdown";
 import { parsePageContext } from "../assistant/page-context";
 import { classifyRefusal } from "../assistant/refusal";
 import { TOOLS } from "../assistant/tools";
@@ -1209,6 +1210,8 @@ async function handleConversationMessage(
       }
       messages.push({ role: "user", content: results });
     }
+
+    finalText = ensureDeepLinksInAssistantReply(finalText, toolCallTrace);
 
     // Persist the assistant turn (text only — tool blocks recorded
     // separately as the trace). firstTokenMs and refusal are
