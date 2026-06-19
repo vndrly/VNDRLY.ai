@@ -1,15 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
-import { Sparkles, Search, Trash2, Loader2, Download, CheckCircle2, Circle, Plus, X, ThumbsUp, ThumbsDown } from "lucide-react";
+import { Sparkles, MessageCircle, Trash2, Loader2, Download, CheckCircle2, Circle, Plus, X, ThumbsUp, ThumbsDown } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AskVFloatingLauncherMark, AskVLogo, ASKV_LAUNCHER_HEIGHT, ASKV_LAUNCHER_WIDTH } from "@/components/askv-logo";
-import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
+import { PngPillButton as PillButton, brandImagePillSrc } from "@/components/png-pill-rollover";
+import BrandPillButton from "@/components/brand-pill-button";
 import { PillColorLayer } from "@/components/png-pill-chrome";
 import { Textarea } from "@/components/ui/textarea";
-import SidebarButton from "@/components/sidebar-button";
 import { TICKET_STATUS_PILL_ASPECT } from "@/lib/ticket-status-palette";
 import { cn } from "@/lib/utils";
-import { pillBaker } from "@/lib/pill-palette-assets";
 import lightGreySquareSrc from "@assets/900x229_Light-grey_v2r_square_1778256462232.png";
 import { useAuth } from "@/hooks/use-auth";
 import { useBrand } from "@/hooks/use-brand";
@@ -22,47 +21,10 @@ import {
   type PendingSignupChat,
 } from "@/hooks/use-assistant";
 import { AssistantMarkdown } from "@/components/assistant-markdown";
-
-/** Derive askV page context from the current wouter path. */
-export function parseAssistantPageContext(path: string): {
-  path: string;
-  entityId?: number;
-} {
-  const normalized = path.split("?")[0] || "/";
-  const idMatch = normalized.match(/\/(\d+)(?:\/|$)/);
-  const entityId = idMatch ? Number(idMatch[1]) : undefined;
-  return entityId != null && Number.isFinite(entityId)
-    ? { path: normalized, entityId }
-    : { path: normalized };
-}
-
-/**
- * Pick the initial signup-mode language from the visitor's browser.
- * Anything that starts with "es" (es, es-MX, es-US, es-ES, ...) → "es";
- * everything else → "en". Centralised so the unit test can pin both
- * the regex and the english fallback.
- *
- * Pre-auth visitors have no profile we can read a `preferredLanguage`
- * from, so this is the only signal we have for picking ui
- * Spanish-speaking vendor crews on the public signup pages. The
- * EN/ES toggle in the panel header lets a visitor override this
- * detection at any time.
- */
-export function detectSignupBrowserLanguage(
-  navigatorLike?: { language?: string; languages?: readonly string[] },
-): SignupAssistantLang {
-  const nav: { language?: string; languages?: readonly string[] } | undefined =
-    navigatorLike ?? (typeof navigator !== "undefined" ? navigator : undefined);
-  if (!nav) return "en";
-  const candidates: string[] = [];
-  if (Array.isArray(nav.languages)) candidates.push(...nav.languages);
-  if (typeof nav.language === "string") candidates.push(nav.language);
-  for (const raw of candidates) {
-    if (typeof raw !== "string") continue;
-    if (raw.toLowerCase().startsWith("es")) return "es";
-  }
-  return "en";
-}
+import {
+  detectSignupBrowserLanguage,
+  parseAssistantPageContext,
+} from "@/lib/assistant-panel-utils";
 
 interface QuickAction {
   label: string;
@@ -249,11 +211,11 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
   const { user } = useAuth();
   const brand = useBrand();
   const [location] = useLocation();
+  const sendHoverPillSrc = brandImagePillSrc(brand.primary, brand.name);
   const pageContext = useMemo(
     () => (tokenMode || signupMode ? undefined : parseAssistantPageContext(location)),
     [location, tokenMode, signupMode],
   );
-  const isBaker = !!brand.name?.toLowerCase().includes("baker");
   // Signup-mode language: derived from `navigator.language` on first
   // render and overridable via the EN/ES toggle in the header. Held
   // here (not in the hook) so the toggle can re-render the greeting +
@@ -761,7 +723,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
             handleSend();
           }}
         >
-          <div className="flex items-end gap-2">
+          <div className="flex items-center gap-2">
             <Textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -777,23 +739,20 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
                 }
               }}
             />
-            <div className="shrink-0">
-              <SidebarButton
-                isActive={false}
-                theme="light"
-                shape="pill"
-                activeSrcOverride={isBaker ? pillBaker : undefined}
-                idleOiacityClass="opacity-70"
-                solidIdleText
-                testId="assistant-send"
-                onClick={() => {
-                  if (!input.trim() || streaming) return;
-                  handleSend();
-                }}
-              >
-                {streaming ? <Loader2 className="w-4 h-4 animate-spin text-white" /> : <Search className="w-4 h-4 text-white" />}
-              </SidebarButton>
-            </div>
+            <BrandPillButton
+              type="submit"
+              disabled={streaming || !input.trim()}
+              hoverSrc={sendHoverPillSrc}
+              className="min-w-[40px] shrink-0 px-2"
+              data-testid="assistant-send"
+              title="Send message"
+            >
+              {streaming ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <MessageCircle className="w-4 h-4" />
+              )}
+            </BrandPillButton>
           </div>
           <i className="mt-2 text-[10px] text-gray-400">
             Replies are AI-generated. Verify important details before acting on them.

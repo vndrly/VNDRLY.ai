@@ -35,7 +35,7 @@ import {
   buildLanguagePrimerMessages,
   composeAssistantMessages,
 } from "../../api-server/src/assistant/prompts/system";
-import { detectSignupBrowserLanguage } from "../src/components/assistant-panel";
+import { detectSignupBrowserLanguage } from "../src/lib/assistant-panel-utils";
 // Source-of-truth imports — the same constants and validator the API
 // server runs on every assistant turn. By driving the tests through
 // these imports we guarantee zero drift between the regression catalog
@@ -59,7 +59,7 @@ import { URL_PATTERN_TO_SCREEN, buildDeepLink } from "../../api-server/src/assis
 import { DATA_TOOL_NAMES } from "../../api-server/src/assistant/data-tools";
 import { WRITE_TOOL_NAMES } from "../../api-server/src/assistant/write-tools";
 import { parsePageContext } from "../../api-server/src/assistant/page-context";
-import { parseAssistantPageContext } from "../src/components/assistant-panel";
+import { parseAssistantPageContext } from "../src/lib/assistant-panel-utils";
 
 // ─── Knowledge corpus invariants ──────────────────────────────────
 describe("knowledge corpus", () => {

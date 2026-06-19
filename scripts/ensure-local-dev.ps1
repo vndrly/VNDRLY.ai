@@ -47,6 +47,15 @@ function Stop-PortListener {
     }
 }
 
+function Test-ViteApiProxy {
+  try {
+    $resp = Invoke-WebRequest -Uri "http://localhost:5173/api/healthz" -UseBasicParsing -TimeoutSec 5
+    return $resp.StatusCode -eq 200
+  } catch {
+    return $false
+  }
+}
+
 function Wait-ForApiHealth {
   param([int]$TimeoutSeconds = 180)
   $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
@@ -106,6 +115,13 @@ if (-not $apiUp) {
   Write-Host "Local API already running on :8080"
 }
 
+if ($viteUp -and -not (Test-ViteApiProxy)) {
+  Write-Host "Vite is up but /api proxy is not wired - restarting web on :5173..."
+  Stop-PortListener -Port 5173
+  Start-Sleep -Seconds 2
+  $viteUp = $false
+}
+
 if (-not $viteUp) {
   Write-Host "Starting local web on :5173..."
   Start-Process powershell -ArgumentList @(
@@ -116,9 +132,13 @@ if (-not $viteUp) {
     Write-Host "Web did not start on :5173 within 1 minute." -ForegroundColor $(if ($Strict) { "Red" } else { "Yellow" })
     if ($Strict) { exit 1 }
   }
+  if (-not (Test-ViteApiProxy)) {
+    Write-Host "Web started but /api proxy check failed (http://localhost:5173/api/healthz)." -ForegroundColor Yellow
+    Write-Host "  Start web via pnpm wake - not raw vite without VITE_API_PROXY_TARGET."
+  }
   $viteStarted = $true
 } else {
-  Write-Host "Local web already running on :5173"
+  Write-Host "Local web already running on :5173 (api proxy ok)"
 }
 
 Write-Host ""

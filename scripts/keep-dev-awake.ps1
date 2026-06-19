@@ -53,6 +53,12 @@ function Test-DevHealthy {
   } catch {
     return $false
   }
+  try {
+    $proxy = Invoke-WebRequest -Uri "http://localhost:5173/api/healthz" -UseBasicParsing -TimeoutSec 5
+    if ($proxy.StatusCode -ne 200) { return $false }
+  } catch {
+    return $false
+  }
   return $true
 }
 
@@ -70,8 +76,13 @@ while ($true) {
 
   if (-not (Test-DevHealthy)) {
     $stamp = Get-Date -Format "HH:mm:ss"
-    Write-Host "[$stamp] Dev servers offline or hung - recovering..."
-    & $ensureScript -Recover
+    Write-Host "[$stamp] Dev servers offline or hung - restarting (keeping ports when possible)..."
+    & $ensureScript
+    Start-Sleep -Seconds 5
+    if (-not (Test-DevHealthy)) {
+      Write-Host "[$stamp] Still unhealthy - full recover (stop :8080 and :5173, then restart)..."
+      & $ensureScript -Recover
+    }
   }
 
   Start-Sleep -Seconds $checkSeconds

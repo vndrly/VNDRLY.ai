@@ -90,7 +90,13 @@ function RouteFallback() {
   );
 }
 
-const queryClient = new QueryClient();
+const queryClient =
+  (import.meta.hot?.data.queryClient as QueryClient | undefined) ??
+  new QueryClient();
+
+if (import.meta.hot) {
+  import.meta.hot.data.queryClient = queryClient;
+}
 
 function ForemanRootRedirect() {
   const [, navigate] = useLocation();

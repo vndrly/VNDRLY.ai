@@ -7,6 +7,7 @@ describe("AssistantMarkdown links", () => {
     render(<AssistantMarkdown text="[Open bills to pay](bills-to-pay)" />);
     const link = screen.getByRole("link", { name: "Open bills to pay" });
     expect(link.getAttribute("href")).toBe("/bills-to-pay");
+    expect(link.className).toContain("var(--brand-primary)");
   });
 
   it("unwraps bold-wrapped markdown links", () => {

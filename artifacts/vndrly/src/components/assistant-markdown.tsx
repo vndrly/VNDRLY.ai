@@ -68,9 +68,11 @@ function renderInline(s: string): React.ReactNode {
         // a clickable element.
         const isInternal = href.startsWith("/") && !href.startsWith("//");
         const isSafeAbsolute = /^(https?:|mailto:|tel:)/i.test(href);
+        const linkClassName =
+          "underline text-[color:var(--brand-primary)] hover:opacity-80 font-medium";
         if (isInternal) {
           return (
-            <Link href={href} key={key++} className="underline text-primary hover:text-primary/80">
+            <Link href={href} key={key++} className={linkClassName}>
               {m[1]}
             </Link>
           );
@@ -82,7 +84,7 @@ function renderInline(s: string): React.ReactNode {
               href={href}
               target="_blank"
               rel="noreferrer noopener"
-              className="underline text-primary hover:text-primary/80"
+              className={linkClassName}
             >
               {m[1]}
             </a>

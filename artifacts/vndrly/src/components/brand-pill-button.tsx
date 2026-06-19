@@ -58,9 +58,14 @@ interface BrandPillButtonProps {
 
   tone?: "image" | "brand" | "blue" | "green" | "red" | "amber";
 
+  /** Grey idle pill crossfades to this PNG on hover — no gloss or scale. */
+  hoverSrc?: string;
+
   height?: number;
 
   attention?: boolean;
+
+  title?: string;
 
   "data-testid"?: string;
 
@@ -106,9 +111,13 @@ export default function BrandPillButton({
 
   tone = "image",
 
+  hoverSrc,
+
   height = PILL_HEIGHT_PX,
 
   attention: _attention = false,
+
+  title,
 
   ...props
 
@@ -128,16 +137,17 @@ export default function BrandPillButton({
 
   const sharedStyle: React.CSSProperties = { height };
 
-  const actionHoverSrc =
+  const toneHoverSrc =
     tone === "blue" ? pillBlue : tone === "red" ? pillRed : undefined;
-  const actionHoverReveal = !!actionHoverSrc;
+  const hoverRevealSrc = hoverSrc ?? toneHoverSrc;
+  const hoverReveal = !!hoverRevealSrc;
   const src = TONE_PILL[tone];
-  const light = actionHoverReveal || src === PILL_IDLE;
+  const light = hoverReveal || src === PILL_IDLE;
 
-  const inner = actionHoverReveal ? (
+  const inner = hoverReveal ? (
     <>
       <PillColorLayer
-        src={actionHoverSrc}
+        src={hoverRevealSrc}
         className="opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-active:opacity-100 group-disabled:opacity-0"
       />
       <PillColorLayer
@@ -215,6 +225,8 @@ export default function BrandPillButton({
       onClick={onClick}
 
       disabled={disabled}
+
+      title={title}
 
       className={sharedClassName}
 

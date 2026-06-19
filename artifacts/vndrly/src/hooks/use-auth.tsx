@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from "react";
 import i18n from "@/lib/i18n";
 
 type AuthErrorBody = { error?: string; code?: string; message?: string };
@@ -166,11 +166,34 @@ function fromResponse(input: unknown): AuthUser {
   };
 }
 
+type AuthHmrData = {
+  user?: AuthUser | null;
+  authChecked?: boolean;
+};
+
+function readAuthHmrState(): { user: AuthUser | null; authChecked: boolean } {
+  const data = import.meta.hot?.data as AuthHmrData | undefined;
+  if (data?.authChecked) {
+    return { user: data.user ?? null, authChecked: true };
+  }
+  return { user: null, authChecked: false };
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const initialAuthRef = useRef(readAuthHmrState());
+  const [user, setUser] = useState<AuthUser | null>(() => initialAuthRef.current.user);
+  const [isLoading, setIsLoading] = useState(() => !initialAuthRef.current.authChecked);
 
   useEffect(() => {
+    if (!import.meta.hot) return;
+    import.meta.hot.dispose((data: AuthHmrData) => {
+      data.user = user;
+      data.authChecked = !isLoading;
+    });
+  }, [user, isLoading]);
+
+  useEffect(() => {
+    if (initialAuthRef.current.authChecked) return;
     fetch(`${BASE}/api/auth/me`, { credentials: "include" })
       .then(async (r) => {
         if (r.ok) return r.json();
@@ -284,7 +307,10 @@ const FALLBACK_AUTH: AuthContextType = {
   login: async () => {
     throw new Error("useAuth: login called outside AuthProvider");
   },
-  logout: async () => {},
+  logout: async () => {
+    // HMR can detach AuthProvider briefly; still force a hard reset to login.
+    window.location.replace(`${import.meta.env.BASE_URL.replace(/\/$/, "")}/`);
+  },
   setPreferredLanguage: () => {},
   switchContext: async () => {
     throw new Error("useAuth: switchContext called outside AuthProvider");
