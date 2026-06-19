@@ -209,10 +209,8 @@ function AskVBrightIcon({ height = 48 }: { height?: number }) {
   );
 }
 
-// Header icon-only "bubble" button for the Ask VNDRLY modal. Renders the
-// shared light-grey square chrome PNG at 70% (matching the inactive Search
-// pill) with the icon overlaid; bumis to 100% on hover.
-function HeaderChromeButton({
+// Header icon-only control — no pill/square chrome, just the glyph on the modal bar.
+function HeaderIconButton({
   children,
   onClick,
   disabled,
@@ -236,27 +234,13 @@ function HeaderChromeButton({
       title={title}
       aria-pressed={pressed}
       className={cn(
-        "relative inline-flex items-center justify-center w-9 h-9 group select-none disabled:opacity-40 disabled:cursor-not-allowed",
-        pressed && "opacity-100",
+        "inline-flex h-9 w-9 items-center justify-center rounded-sm text-gray-300 transition-colors select-none",
+        "hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40",
+        "disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:text-gray-300",
+        pressed && "text-[color:var(--brand-primary)]",
       )}
     >
-      <PillColorLayer
-        src={lightGreySquareSrc}
-        imageAspect={TICKET_STATUS_PILL_ASPECT}
-        stretch
-        className={cn(
-          "opacity-70 group-hover:opacity-100 group-disabled:opacity-70",
-          pressed && "opacity-100",
-        )}
-      />
-      <span
-        className={cn(
-          "relative z-10 text-gray-700 group-hover:text-gray-900",
-          pressed && "text-[color:var(--brand-primary)]",
-        )}
-      >
-        {children}
-      </span>
+      {children}
     </button>
   );
 }
@@ -515,24 +499,32 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
     URL.revokeObjectURL(url);
   };
 
-  const lastAssistantMessage = useMemo(() => {
+  const lastUserMessageIndex = useMemo(() => {
+    for (let i = messages.length - 1; i >= 0; i -= 1) {
+      if (messages[i].role === "user") return i;
+    }
+    return -1;
+  }, [messages]);
+
+  /** Only the assistant reply to the latest user turn is rateable — resets thumbs when a new question is sent. */
+  const rateableAssistantMessage = useMemo(() => {
     for (let i = messages.length - 1; i >= 0; i -= 1) {
       const m = messages[i];
       if (m.role === "assistant" && !m.pending && m.content.trim().length > 0) {
-        return m;
+        return i > lastUserMessageIndex ? m : null;
       }
     }
     return null;
-  }, [messages]);
+  }, [messages, lastUserMessageIndex]);
 
   const canRateLastReply =
     !tokenMode &&
     !signupMode &&
     !streaming &&
-    lastAssistantMessage?.serverId != null;
+    rateableAssistantMessage?.serverId != null;
 
   const handleFeedback = async (rating: "helpful" | "unhelpful") => {
-    const messageId = lastAssistantMessage?.serverId;
+    const messageId = rateableAssistantMessage?.serverId;
     if (!messageId || feedbackPending) return;
     setFeedbackPending(true);
     try {
@@ -606,63 +598,63 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
                 lets the header collaise to its minimum height. */}
             {messages.length > 0 && (
               <>
-                <HeaderChromeButton
+                {!tokenMode && !signupMode && (
+                  <>
+                    <HeaderIconButton
+                      onClick={() => void handleFeedback("helpful")}
+                      disabled={!canRateLastReply || feedbackPending}
+                      pressed={rateableAssistantMessage?.feedbackRating === "helpful"}
+                      testId="assistant-feedback-helpful"
+                      title="Helpful"
+                    >
+                      <ThumbsUp className="w-4 h-4" />
+                    </HeaderIconButton>
+                    <HeaderIconButton
+                      onClick={() => void handleFeedback("unhelpful")}
+                      disabled={!canRateLastReply || feedbackPending}
+                      pressed={rateableAssistantMessage?.feedbackRating === "unhelpful"}
+                      testId="assistant-feedback-unhelpful"
+                      title="Unhelpful"
+                    >
+                      <ThumbsDown className="w-4 h-4" />
+                    </HeaderIconButton>
+                  </>
+                )}
+                <HeaderIconButton
                   onClick={() => startNew()}
                   disabled={streaming}
                   testId="assistant-new"
                   title="New chat (keeps history)"
                 >
                   <Plus className="w-4 h-4" />
-                </HeaderChromeButton>
-                <HeaderChromeButton
+                </HeaderIconButton>
+                <HeaderIconButton
                   onClick={handleExport}
                   disabled={streaming}
                   testId="assistant-export"
                   title="Download transcript (Markdown)"
                 >
                   <Download className="w-4 h-4" />
-                </HeaderChromeButton>
+                </HeaderIconButton>
                 {!tokenMode && !signupMode && (
-                  <HeaderChromeButton
+                  <HeaderIconButton
                     onClick={() => clear()}
                     disabled={streaming}
                     testId="assistant-clear"
                     title="Delete this conversation"
                   >
                     <Trash2 className="w-4 h-4" />
-                  </HeaderChromeButton>
-                )}
-                {!tokenMode && !signupMode && (
-                  <>
-                    <HeaderChromeButton
-                      onClick={() => void handleFeedback("helpful")}
-                      disabled={!canRateLastReply || feedbackPending}
-                      pressed={lastAssistantMessage?.feedbackRating === "helpful"}
-                      testId="assistant-feedback-helpful"
-                      title="Helpful"
-                    >
-                      <ThumbsUp className="w-4 h-4" />
-                    </HeaderChromeButton>
-                    <HeaderChromeButton
-                      onClick={() => void handleFeedback("unhelpful")}
-                      disabled={!canRateLastReply || feedbackPending}
-                      pressed={lastAssistantMessage?.feedbackRating === "unhelpful"}
-                      testId="assistant-feedback-unhelpful"
-                      title="Unhelpful"
-                    >
-                      <ThumbsDown className="w-4 h-4" />
-                    </HeaderChromeButton>
-                  </>
+                  </HeaderIconButton>
                 )}
               </>
             )}
-            <HeaderChromeButton
+            <HeaderIconButton
               onClick={() => onOpenChange(false)}
               testId="assistant-close"
               title="Close"
             >
               <X className="w-4 h-4" />
-            </HeaderChromeButton>
+            </HeaderIconButton>
           </div>
         </DialogHeader>
 
