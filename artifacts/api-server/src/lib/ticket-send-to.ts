@@ -927,3 +927,501 @@ export async function sendTicketForward(
 
   return { ok: true, notifiedCount, trackingNumber };
 }
+
+export function actorCanSendToOrg(actor: SendToActor): boolean {
+  if (actor.role === "admin") return true;
+  if (actor.role === "partner" && actor.partnerId != null) return true;
+  if (actor.role === "vendor" && actor.vendorId != null) return true;
+  if (actor.role === "field_employee") {
+    return actor.fieldEmployee != null || actor.vendorId != null;
+  }
+  return false;
+}
+
+export async function actorCanSendToContext(
+  ticketId: number | null,
+  actor: SendToActor,
+): Promise<boolean> {
+  if (ticketId != null) return actorCanSendToTicket(ticketId, actor);
+  return actorCanSendToOrg(actor);
+}
+
+async function loadVendorForemanUsers(vendorId: number) {
+  return db
+    .select({
+      userId: vendorPeopleTable.userId,
+      vendorRole: vendorPeopleTable.vendorRole,
+      jobTitle: vendorPeopleTable.jobTitle,
+    })
+    .from(vendorPeopleTable)
+    .where(
+      and(
+        eq(vendorPeopleTable.vendorId, vendorId),
+        eq(vendorPeopleTable.isActive, true),
+        isNull(vendorPeopleTable.deletedAt),
+        inArray(vendorPeopleTable.vendorRole, ["foreman", "both"]),
+        isNotNull(vendorPeopleTable.userId),
+      ),
+    );
+}
+
+/** Recipient roster when there is no ticket anchor (dashboard AskV share). */
+export async function listSendToRecipientsForOrg(
+  actor: SendToActor,
+): Promise<SendToRecipientGroups> {
+  const vendorId = actor.vendorId;
+  const partnerId = actor.partnerId;
+  if (!vendorId && !partnerId && actor.role !== "admin") return [];
+
+  const allowed = allowedSendToGroups(actor.role).filter((g) => g !== "on_ticket");
+  const buckets = emptyBuckets(allowed);
+  const allUserIds = new Set<number>();
+
+  const collectIds = (ids: Iterable<number | null | undefined>) => {
+    for (const id of ids) {
+      if (typeof id === "number" && id > 0) allUserIds.add(id);
+    }
+  };
+
+  if (allowed.includes("vendor_office") && vendorId) {
+    collectIds(await findVendorUserIds(vendorId));
+  }
+  if (allowed.includes("partner_office") && partnerId) {
+    collectIds(await findPartnerUserIds(partnerId));
+  }
+  if (allowed.includes("vendor_poc_field") && vendorId) {
+    collectIds((await loadVendorForemanUsers(vendorId)).map((r) => r.userId));
+  }
+  if (allowed.includes("vendor_poc_office") && vendorId) {
+    const admins = await db
+      .select({ userId: userOrgMembershipsTable.userId })
+      .from(userOrgMembershipsTable)
+      .where(
+        and(
+          eq(userOrgMembershipsTable.orgType, "vendor"),
+          eq(userOrgMembershipsTable.vendorId, vendorId),
+          eq(userOrgMembershipsTable.role, "admin"),
+        ),
+      );
+    collectIds(admins.map((r) => r.userId));
+  }
+  if (allowed.includes("field_crew") && vendorId) {
+    collectIds((await loadVendorFieldCrewUsers(vendorId)).map((r) => r.userId));
+  }
+  if ((allowed.includes("partner_poc_operations") || allowed.includes("partner_poc_ap")) && partnerId) {
+    const contacts = await db
+      .select({ userId: partnerContactsTable.userId })
+      .from(partnerContactsTable)
+      .where(
+        and(eq(partnerContactsTable.partnerId, partnerId), isNull(partnerContactsTable.deletedAt)),
+      );
+    collectIds(contacts.map((c) => c.userId));
+    const partnerStaff = await db
+      .select({ userId: userOrgMembershipsTable.userId })
+      .from(userOrgMembershipsTable)
+      .where(
+        and(
+          eq(userOrgMembershipsTable.orgType, "partner"),
+          eq(userOrgMembershipsTable.partnerId, partnerId),
+        ),
+      );
+    collectIds(partnerStaff.map((r) => r.userId));
+  }
+  if (allowed.includes("vndrly_office")) {
+    const admins = await db
+      .select({ id: usersTable.id })
+      .from(usersTable)
+      .where(eq(usersTable.role, "admin"));
+    collectIds(admins.map((r) => r.id));
+  }
+
+  const profiles = await loadUserProfiles([...allUserIds]);
+  const { vendorName, partnerName } = await loadOrgNames(vendorId, partnerId);
+  const vendorPeopleHeadlines =
+    vendorId != null
+      ? await loadVendorPeopleHeadlines(vendorId, [...allUserIds])
+      : new Map<number, string>();
+
+  if (allowed.includes("vendor_poc_field") && vendorId) {
+    for (const row of await loadVendorForemanUsers(vendorId)) {
+      if (!row.userId) continue;
+      const profile = profiles.get(row.userId);
+      if (!profile) continue;
+      const foremanHeadline = personHeadline(
+        profile,
+        vendorPeopleHeadlines.get(row.userId) ??
+          vendorRoleLabel(row.vendorRole, row.jobTitle),
+      );
+      pushRecipient(
+        buckets,
+        "vendor_poc_field",
+        row.userId,
+        profile,
+        foremanHeadline,
+        formatSendToDetail({
+          group: "vendor_poc_field",
+          vendorName,
+          pocRole: foremanHeadline,
+        }),
+        actor.userId,
+      );
+    }
+  }
+
+  if (allowed.includes("vendor_poc_office") && vendorId) {
+    const admins = await db
+      .select({ userId: userOrgMembershipsTable.userId })
+      .from(userOrgMembershipsTable)
+      .where(
+        and(
+          eq(userOrgMembershipsTable.orgType, "vendor"),
+          eq(userOrgMembershipsTable.vendorId, vendorId),
+          eq(userOrgMembershipsTable.role, "admin"),
+        ),
+      );
+    for (const row of admins) {
+      const profile = profiles.get(row.userId);
+      if (!profile) continue;
+      const adminHeadline = personHeadline(profile, "Vendor admin");
+      pushRecipient(
+        buckets,
+        "vendor_poc_office",
+        row.userId,
+        profile,
+        adminHeadline,
+        formatSendToDetail({
+          group: "vendor_poc_office",
+          vendorName,
+          pocRole: adminHeadline,
+        }),
+        actor.userId,
+      );
+    }
+  }
+
+  if (allowed.includes("vendor_office") && vendorId) {
+    const memberships = await db
+      .select({
+        userId: userOrgMembershipsTable.userId,
+        role: userOrgMembershipsTable.role,
+      })
+      .from(userOrgMembershipsTable)
+      .where(
+        and(
+          eq(userOrgMembershipsTable.orgType, "vendor"),
+          eq(userOrgMembershipsTable.vendorId, vendorId),
+        ),
+      );
+    for (const row of memberships) {
+      const profile = profiles.get(row.userId);
+      if (!profile) continue;
+      const membershipLabel =
+        row.role === "admin" ? "Vendor admin" : "Vendor office";
+      const headline = personHeadline(profile, membershipLabel);
+      pushRecipient(
+        buckets,
+        "vendor_office",
+        row.userId,
+        profile,
+        headline,
+        formatSendToDetail({ group: "vendor_office", vendorName }),
+        actor.userId,
+      );
+    }
+  }
+
+  if (partnerId) {
+    if (allowed.includes("partner_poc_operations") || allowed.includes("partner_poc_ap")) {
+      const contacts = await db
+        .select({
+          userId: partnerContactsTable.userId,
+          jobTitle: partnerContactsTable.jobTitle,
+          name: partnerContactsTable.name,
+          roles: partnerContactsTable.roles,
+        })
+        .from(partnerContactsTable)
+        .where(
+          and(eq(partnerContactsTable.partnerId, partnerId), isNull(partnerContactsTable.deletedAt)),
+        );
+      for (const contact of contacts) {
+        if (!contact.userId) continue;
+        const profile = profiles.get(contact.userId);
+        if (!profile) continue;
+        const headline = personHeadline(profile, contact.jobTitle || contact.name);
+        if (allowed.includes("partner_poc_ap") && contactIsAp(contact.roles)) {
+          pushRecipient(
+            buckets,
+            "partner_poc_ap",
+            contact.userId,
+            profile,
+            headline,
+            formatSendToDetail({
+              group: "partner_poc_ap",
+              partnerName,
+              pocRole: headline,
+            }),
+            actor.userId,
+          );
+        }
+        if (allowed.includes("partner_poc_operations") && contactIsOps(contact.roles)) {
+          pushRecipient(
+            buckets,
+            "partner_poc_operations",
+            contact.userId,
+            profile,
+            headline,
+            formatSendToDetail({
+              group: "partner_poc_operations",
+              partnerName,
+              pocRole: headline,
+            }),
+            actor.userId,
+          );
+        }
+      }
+      const partnerStaff = await db
+        .select({ userId: userOrgMembershipsTable.userId, role: userOrgMembershipsTable.role })
+        .from(userOrgMembershipsTable)
+        .where(
+          and(
+            eq(userOrgMembershipsTable.orgType, "partner"),
+            eq(userOrgMembershipsTable.partnerId, partnerId),
+          ),
+        );
+      for (const row of partnerStaff) {
+        const profile = profiles.get(row.userId);
+        if (!profile) continue;
+        if (allowed.includes("partner_poc_ap") && row.role === "ap") {
+          const headline = personHeadline(profile, "Partner AP");
+          pushRecipient(
+            buckets,
+            "partner_poc_ap",
+            row.userId,
+            profile,
+            headline,
+            formatSendToDetail({
+              group: "partner_poc_ap",
+              partnerName,
+              pocRole: headline,
+            }),
+            actor.userId,
+          );
+        }
+        if (
+          allowed.includes("partner_poc_operations") &&
+          (row.role === "admin" || row.role === "member")
+        ) {
+          const headline = personHeadline(
+            profile,
+            row.role === "admin" ? "Partner admin" : "Partner operations",
+          );
+          pushRecipient(
+            buckets,
+            "partner_poc_operations",
+            row.userId,
+            profile,
+            headline,
+            formatSendToDetail({
+              group: "partner_poc_operations",
+              partnerName,
+              pocRole: headline,
+            }),
+            actor.userId,
+          );
+        }
+      }
+    }
+
+    if (allowed.includes("partner_office")) {
+      const memberships = await db
+        .select({
+          userId: userOrgMembershipsTable.userId,
+          role: userOrgMembershipsTable.role,
+        })
+        .from(userOrgMembershipsTable)
+        .where(
+          and(
+            eq(userOrgMembershipsTable.orgType, "partner"),
+            eq(userOrgMembershipsTable.partnerId, partnerId),
+          ),
+        );
+      for (const row of memberships) {
+        const profile = profiles.get(row.userId);
+        if (!profile) continue;
+        const membershipLabel =
+          row.role === "ap"
+            ? "Partner AP"
+            : row.role === "admin"
+              ? "Partner admin"
+              : "Partner office";
+        const headline = personHeadline(profile, membershipLabel);
+        pushRecipient(
+          buckets,
+          "partner_office",
+          row.userId,
+          profile,
+          headline,
+          formatSendToDetail({ group: "partner_office", partnerName }),
+          actor.userId,
+        );
+      }
+    }
+  }
+
+  if (allowed.includes("field_crew") && vendorId) {
+    for (const row of await loadVendorFieldCrewUsers(vendorId)) {
+      if (!row.userId) continue;
+      const profile = profiles.get(row.userId);
+      if (!profile) continue;
+      const crewHeadline = personHeadline(
+        profile,
+        vendorRoleLabel(row.vendorRole, row.jobTitle),
+      );
+      pushRecipient(
+        buckets,
+        "field_crew",
+        row.userId,
+        profile,
+        crewHeadline,
+        formatSendToDetail({
+          group: "field_crew",
+          vendorName,
+          pocRole: crewHeadline,
+        }),
+        actor.userId,
+      );
+    }
+  }
+
+  if (allowed.includes("vndrly_office")) {
+    const admins = await db
+      .select({ id: usersTable.id, displayName: usersTable.displayName, email: usersTable.email })
+      .from(usersTable)
+      .where(eq(usersTable.role, "admin"));
+    for (const row of admins) {
+      const profile = { displayName: row.displayName, email: row.email };
+      const headline = personHeadline(profile, "VNDRLY staff");
+      pushRecipient(
+        buckets,
+        "vndrly_office",
+        row.id,
+        profile,
+        headline,
+        formatSendToDetail({ group: "vndrly_office" }),
+        actor.userId,
+      );
+    }
+  }
+
+  return GROUP_ORDER.filter((g) => allowed.includes(g as (typeof allowed)[number]))
+    .map((id) => ({
+      id,
+      recipients: [...(buckets[id]?.values() ?? [])],
+    }))
+    .filter((g) => g.recipients.length > 0);
+}
+
+export async function listSendToRecipientsForContext(
+  ticketId: number | null,
+  actor: SendToActor,
+): Promise<SendToRecipientGroups> {
+  if (ticketId != null) return listSendToRecipients(ticketId, actor);
+  return listSendToRecipientsForOrg(actor);
+}
+
+export async function validateSendToRecipientsForContext(
+  ticketId: number | null,
+  actor: SendToActor,
+  recipientUserIds: number[],
+): Promise<{ ok: true } | { ok: false; code: string; message: string }> {
+  if (!recipientUserIds.length) {
+    return { ok: false, code: "send_to.no_recipients", message: "Select at least one recipient" };
+  }
+  if (recipientUserIds.length > 25) {
+    return { ok: false, code: "send_to.too_many", message: "Too many recipients (max 25)" };
+  }
+
+  const groups = await listSendToRecipientsForContext(ticketId, actor);
+  const allowedIds = new Set<number>();
+  for (const g of groups) {
+    for (const r of g.recipients) allowedIds.add(r.userId);
+  }
+
+  for (const id of recipientUserIds) {
+    if (!allowedIds.has(id)) {
+      return {
+        ok: false,
+        code: "send_to.forbidden_recipient",
+        message: "One or more recipients are not allowed",
+      };
+    }
+  }
+
+  return { ok: true };
+}
+
+export type SendAskVShareInput = {
+  ticketId: number | null;
+  actor: SendToActor;
+  recipientUserIds: number[];
+  message?: string | null;
+  sourceTitle: string;
+  sourceBody: string;
+  pagePath?: string | null;
+  messageId: number;
+};
+
+export async function sendAskVShare(input: SendAskVShareInput): Promise<SendTicketForwardResult> {
+  const allowed = await actorCanSendToContext(input.ticketId, input.actor);
+  if (!allowed) {
+    return { ok: false, code: "send_to.forbidden", message: "Not allowed to share this message" };
+  }
+
+  if (input.ticketId != null) {
+    return sendTicketForward({
+      ticketId: input.ticketId,
+      actor: input.actor,
+      recipientUserIds: input.recipientUserIds,
+      message: input.message,
+      sourceTitle: input.sourceTitle,
+      sourceBody: input.sourceBody,
+    });
+  }
+
+  const validation = await validateSendToRecipientsForContext(
+    null,
+    input.actor,
+    input.recipientUserIds,
+  );
+  if (!validation.ok) {
+    return { ok: false, code: validation.code, message: validation.message };
+  }
+
+  const actorName = input.actor.displayName?.trim() || "Someone";
+  const note =
+    typeof input.message === "string" && input.message.trim()
+      ? input.message.trim().slice(0, 500)
+      : null;
+
+  const bodyLines = [
+    note ? `${actorName}: ${note}` : null,
+    input.sourceTitle,
+    input.sourceBody,
+  ].filter(Boolean);
+
+  const title = `${actorName} shared an AskV message with you`;
+  const body = bodyLines.join("\n\n").slice(0, 2000);
+  const link = input.pagePath?.trim() || "/";
+  const dedupeBase = Date.now();
+
+  const notifiedCount = await notifyUsers(input.recipientUserIds, {
+    type: "askv_shared",
+    title,
+    body,
+    link,
+    dedupeKey: `askv_shared:${input.messageId}:${input.actor.userId}:${dedupeBase}`,
+    pushData: { type: "askv_shared", messageId: input.messageId },
+  });
+
+  return { ok: true, notifiedCount, trackingNumber: "AskV" };
+}

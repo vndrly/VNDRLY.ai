@@ -1169,6 +1169,7 @@
       "ticket_assigned": "Assigned to you",
       "ticket_note_added": "New note",
       "ticket_forwarded": "Ticket update sent",
+      "askv_shared": "AskV message shared",
       "crew_added": "Added to crew",
       "schedule_changed": "Schedule changed",
       "crew_removed": "Removed from crew",

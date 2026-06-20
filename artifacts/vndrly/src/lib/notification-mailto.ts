@@ -34,3 +34,32 @@ export function buildNotificationMailtoUrl(
   const body = lines.filter((line) => line != null).join("\n");
   return `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
+
+export type AssistantShareMailtoInput = {
+  question: string;
+  answer: string;
+  pagePath: string;
+  typeLabel?: string;
+};
+
+function absoluteAppLink(path: string): string {
+  const origin = appOrigin();
+  const normalized = path.startsWith("/") ? path : `/${path}`;
+  return `${origin}${normalized}`;
+}
+
+/** Pre-filled mailto for sharing an AskV Q&A outside the in-app Send to roster. */
+export function buildAssistantShareMailtoUrl(input: AssistantShareMailtoInput): string {
+  const subject = `AskV — ${input.question.trim() || "Shared answer"}`.slice(0, 200);
+  const lines = [
+    input.typeLabel ?? "AskV message",
+    "",
+    `Question: ${input.question.trim() || "—"}`,
+    "",
+    input.answer.trim(),
+    "",
+    `View in VNDRLY: ${absoluteAppLink(input.pagePath)}`,
+  ];
+  const body = lines.filter((line) => line.length > 0).join("\n");
+  return `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}

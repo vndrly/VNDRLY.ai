@@ -77,6 +77,7 @@ const TYPE_TO_CATEGORY: Record<string, NotificationCategory> = {
   ticket_inactive: "tickets",
   ticket_note_added: "tickets",
   ticket_forwarded: "tickets",
+  askv_shared: "system",
   ticket_unblocked: "tickets",
   // Direct (Partner→Vendor) work assignment lifecycle. Routed through the
   // `tickets` category so they share the same per-user opt-in toggle as

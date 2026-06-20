@@ -7,7 +7,7 @@ import askVBlue from "@assets/askv/AskV_VNDRLY_Blue_v1.png";
 import askVGreen from "@assets/askv/AskV_VNDRLY_Green_v1.png";
 import askVOrange from "@assets/askv/AskV_VNDRLY_Orange_v1.png";
 import askVPurple from "@assets/askv/AskV_VNDRLY_Purple_v1.png";
-import askVRed from "@assets/askv/AskV_VNDRLY_Red_v1.png";
+import askVRed from "@assets/askv/AskV_VNDRLY_Red_v3.png";
 import askVWinchester from "@assets/askv/AskV_VNDRLY_Winchester_v2.png";
 
 import { isBakerBrand, isWinchesterBrand } from "@/lib/portal-branding";

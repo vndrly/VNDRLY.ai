@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
-import { Sparkles, MessageCircle, Trash2, Loader2, Download, CheckCircle2, Circle, Plus, X, ThumbsUp, ThumbsDown } from "lucide-react";
+import { Sparkles, MessageCircle, Trash2, Loader2, Download, CheckCircle2, Circle, Plus, X, ThumbsUp, ThumbsDown, Send, Mail } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AskVFloatingLauncherMark, AskVLogo, ASKV_LAUNCHER_HEIGHT, ASKV_LAUNCHER_WIDTH } from "@/components/askv-logo";
 import { PngPillButton as PillButton, brandImagePillSrc } from "@/components/png-pill-rollover";
@@ -25,6 +26,11 @@ import {
   detectSignupBrowserLanguage,
   parseAssistantPageContext,
 } from "@/lib/assistant-panel-utils";
+import NotificationSendToDialog, {
+  type AssistantShareContext,
+} from "@/components/notification-send-to-dialog";
+import { parseTicketIdFromHref } from "@/lib/ticket-send-to-api";
+import { buildAssistantShareMailtoUrl } from "@/lib/notification-mailto";
 
 interface QuickAction {
   label: string;
@@ -172,6 +178,11 @@ function AskVBrightIcon({ height = 48 }: { height?: number }) {
 }
 
 // Header icon-only control — no pill/square chrome, just the glyph on the modal bar.
+const headerIconClassName = cn(
+  "inline-flex h-9 w-9 items-center justify-center rounded-sm text-gray-300 transition-colors select-none",
+  "hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40",
+);
+
 function HeaderIconButton({
   children,
   onClick,
@@ -196,8 +207,7 @@ function HeaderIconButton({
       title={title}
       aria-pressed={pressed}
       className={cn(
-        "inline-flex h-9 w-9 items-center justify-center rounded-sm text-gray-300 transition-colors select-none",
-        "hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40",
+        headerIconClassName,
         "disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:text-gray-300",
         pressed && "text-[color:var(--brand-primary)]",
       )}
@@ -207,7 +217,31 @@ function HeaderIconButton({
   );
 }
 
+function HeaderIconLink({
+  children,
+  href,
+  testId,
+  title,
+}: {
+  children: React.ReactNode;
+  href: string;
+  testId?: string;
+  title?: string;
+}) {
+  return (
+    <a
+      href={href}
+      data-testid={testId}
+      title={title}
+      className={headerIconClassName}
+    >
+      {children}
+    </a>
+  );
+}
+
 export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: AssistantPanelProps) {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const brand = useBrand();
   const [location] = useLocation();
@@ -216,6 +250,15 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
     () => (tokenMode || signupMode ? undefined : parseAssistantPageContext(location)),
     [location, tokenMode, signupMode],
   );
+  const ticketIdFromPage = useMemo(() => {
+    if (!pageContext) return null;
+    const fromPath = parseTicketIdFromHref(pageContext.path);
+    if (fromPath != null) return fromPath;
+    if (/\/tickets?\//i.test(pageContext.path) && pageContext.entityId) {
+      return pageContext.entityId;
+    }
+    return null;
+  }, [pageContext]);
   // Signup-mode language: derived from `navigator.language` on first
   // render and overridable via the EN/ES toggle in the header. Held
   // here (not in the hook) so the toggle can re-render the greeting +
@@ -246,7 +289,8 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
     submitFeedback,
   } = useAssistant({ tokenMode, signupMode: effectiveSignupMode, pageContext });
   const [input, setInput] = useState("");
-  const [feedbackPending, setFeedbackPending] = useState(false);
+  const [feedbackPendingId, setFeedbackPendingId] = useState<number | null>(null);
+  const [assistantShare, setAssistantShare] = useState<AssistantShareContext | null>(null);
   const [progress, setProgress] = useState<OnboardingProgress | null>(null);
   const [tokenName, setTokenName] = useState<string | null>(null);
   // Pending pre-auth chat that the visitor saved on /signup/{partner,vendor}
@@ -461,45 +505,66 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
     URL.revokeObjectURL(url);
   };
 
-  const lastUserMessageIndex = useMemo(() => {
-    for (let i = messages.length - 1; i >= 0; i -= 1) {
-      if (messages[i].role === "user") return i;
-    }
-    return -1;
-  }, [messages]);
-
-  /** Only the assistant reply after the latest user turn is rateable. */
-  const rateableAssistantMessage = useMemo(() => {
-    if (lastUserMessageIndex < 0) return null;
-    const reply = messages[lastUserMessageIndex + 1];
-    if (
-      reply?.role === "assistant" &&
-      !reply.pending &&
-      reply.content.trim().length > 0
-    ) {
-      return reply;
-    }
-    return null;
-  }, [messages, lastUserMessageIndex]);
-
-  const canRateLastReply =
-    !tokenMode &&
-    !signupMode &&
-    !streaming &&
-    rateableAssistantMessage?.serverId != null;
-
-  const handleFeedback = async (rating: "helpful" | "unhelpful") => {
-    const messageId = rateableAssistantMessage?.serverId;
-    if (!messageId || feedbackPending) return;
-    setFeedbackPending(true);
+  const handleFeedback = async (
+    messageId: number,
+    rating: "helpful" | "unhelpful",
+  ) => {
+    if (feedbackPendingId != null) return;
+    setFeedbackPendingId(messageId);
     try {
       await submitFeedback(messageId, rating);
     } finally {
-      setFeedbackPending(false);
+      setFeedbackPendingId(null);
     }
   };
 
+  const truncateSharePreview = (text: string, max: number) => {
+    const trimmed = text.trim();
+    if (trimmed.length <= max) return trimmed;
+    return `${trimmed.slice(0, max - 1)}…`;
+  };
+
+  const resolveAssistantShareParts = (messageIndex: number, message: AssistantMessage) => {
+    let priorQuestion = "Shared AskV answer";
+    for (let i = messageIndex - 1; i >= 0; i -= 1) {
+      const prior = messages[i];
+      if (prior?.role === "user" && prior.content.trim()) {
+        priorQuestion = prior.content.trim();
+        break;
+      }
+    }
+    const pagePath = pageContext?.path ?? (location.split("?")[0] || "/");
+    return {
+      question: priorQuestion,
+      answer: message.content.trim(),
+      pagePath,
+      previewTitle: truncateSharePreview(`AskV — ${priorQuestion}`, 200),
+      previewBody: truncateSharePreview(message.content, 500),
+    };
+  };
+
+  const openSendToForMessage = (messageIndex: number, message: AssistantMessage) => {
+    if (message.serverId == null || !message.content.trim()) return;
+    const parts = resolveAssistantShareParts(messageIndex, message);
+    setAssistantShare({
+      messageId: message.serverId,
+      previewTitle: parts.previewTitle,
+      previewBody: parts.previewBody,
+      ticketId: ticketIdFromPage,
+      pagePath: parts.pagePath,
+    });
+  };
+
+  const mailtoForMessage = (messageIndex: number, message: AssistantMessage) =>
+    buildAssistantShareMailtoUrl({
+      ...resolveAssistantShareParts(messageIndex, message),
+      typeLabel: t("notifications.sendToAskVPreviewLabel"),
+    });
+
+  const showMessageFeedback = !tokenMode && !signupMode;
+
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         bare
@@ -563,28 +628,6 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
                 lets the header collaise to its minimum height. */}
             {messages.length > 0 && (
               <>
-                {!tokenMode && !signupMode && (
-                  <>
-                    <HeaderIconButton
-                      onClick={() => void handleFeedback("helpful")}
-                      disabled={!canRateLastReply || feedbackPending}
-                      pressed={rateableAssistantMessage?.feedbackRating === "helpful"}
-                      testId="assistant-feedback-helpful"
-                      title="Helpful"
-                    >
-                      <ThumbsUp className="w-4 h-4" />
-                    </HeaderIconButton>
-                    <HeaderIconButton
-                      onClick={() => void handleFeedback("unhelpful")}
-                      disabled={!canRateLastReply || feedbackPending}
-                      pressed={rateableAssistantMessage?.feedbackRating === "unhelpful"}
-                      testId="assistant-feedback-unhelpful"
-                      title="Unhelpful"
-                    >
-                      <ThumbsDown className="w-4 h-4" />
-                    </HeaderIconButton>
-                  </>
-                )}
                 <HeaderIconButton
                   onClick={() => startNew()}
                   disabled={streaming}
@@ -665,7 +708,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
             </div>
           )}
 
-          {messages.map((m) => (
+          {messages.map((m, messageIndex) => (
             <div
               key={m.id}
               className={
@@ -689,7 +732,51 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
               >
                 {m.role === "assistant" ? (
                   m.content ? (
-                    <AssistantMarkdown text={m.content} />
+                    <>
+                      <AssistantMarkdown text={m.content} />
+                      {showMessageFeedback &&
+                        !m.pending &&
+                        m.serverId != null &&
+                        m.content.trim().length > 0 && (
+                          <div
+                            className="mt-2 pt-2 border-t border-white/10 flex justify-end gap-0.5"
+                            data-testid={`assistant-msg-feedback-${m.serverId}`}
+                          >
+                            <HeaderIconButton
+                              onClick={() => void handleFeedback(m.serverId!, "helpful")}
+                              disabled={feedbackPendingId != null}
+                              pressed={m.feedbackRating === "helpful"}
+                              testId={`assistant-feedback-helpful-${m.serverId}`}
+                              title="Helpful"
+                            >
+                              <ThumbsUp className="w-4 h-4" />
+                            </HeaderIconButton>
+                            <HeaderIconButton
+                              onClick={() => void handleFeedback(m.serverId!, "unhelpful")}
+                              disabled={feedbackPendingId != null}
+                              pressed={m.feedbackRating === "unhelpful"}
+                              testId={`assistant-feedback-unhelpful-${m.serverId}`}
+                              title="Unhelpful"
+                            >
+                              <ThumbsDown className="w-4 h-4" />
+                            </HeaderIconButton>
+                            <HeaderIconButton
+                              onClick={() => openSendToForMessage(messageIndex, m)}
+                              testId={`assistant-send-to-${m.serverId}`}
+                              title="Send to"
+                            >
+                              <Send className="w-4 h-4" />
+                            </HeaderIconButton>
+                            <HeaderIconLink
+                              href={mailtoForMessage(messageIndex, m)}
+                              testId={`assistant-share-email-${m.serverId}`}
+                              title={t("notifications.shareViaEmail")}
+                            >
+                              <Mail className="w-4 h-4" />
+                            </HeaderIconLink>
+                          </div>
+                        )}
+                    </>
                   ) : (
                     <div className="flex items-center gap-2 text-xs text-muted-foreground py-1">
                       <Loader2 className="w-3 h-3 animate-spin" />
@@ -728,7 +815,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask anything about VNDRLY..."
-              className="resize-none min-h-[40px] max-h-32 bg-white text-gray-900"
+              className="resize-none min-h-[40px] max-h-32 rounded-2xl bg-white text-gray-900"
               rows={1}
               disabled={streaming}
               data-testid="assistant-input"
@@ -760,6 +847,14 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
         </form>
       </DialogContent>
     </Dialog>
+    <NotificationSendToDialog
+      open={assistantShare !== null}
+      onOpenChange={(next) => {
+        if (!next) setAssistantShare(null);
+      }}
+      assistantShare={assistantShare}
+    />
+    </>
   );
 }
 

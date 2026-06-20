@@ -35,11 +35,20 @@ import {
 } from "@/lib/send-to-display";
 import type { NotificationRow } from "@/lib/notifications-api";
 
+export type AssistantShareContext = {
+  messageId: number;
+  previewTitle: string;
+  previewBody: string;
+  ticketId: number | null;
+  pagePath: string;
+};
+
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  notification: NotificationRow | null;
+  notification?: NotificationRow | null;
   typeLabel?: string;
+  assistantShare?: AssistantShareContext | null;
 };
 
 const GROUP_LABEL_KEYS: Record<SendToGroupId, string> = {
@@ -80,6 +89,8 @@ function ModalFooterPill({
 }
 
 function sendToRecipientsErrorMessage(err: unknown, t: (key: string) => string): string {
+  const status = (err as { status?: number } | null)?.status;
+  if (status === 404) return t("notifications.sendToApiStale");
   const data = (err as { data?: { code?: string } } | null)?.data;
   const code = data?.code;
   if (code === "send_to.forbidden") return t("notifications.sendToForbidden");
@@ -97,8 +108,9 @@ function sendToRecipientsErrorMessage(err: unknown, t: (key: string) => string):
 export default function NotificationSendToDialog({
   open,
   onOpenChange,
-  notification,
+  notification = null,
   typeLabel,
+  assistantShare = null,
 }: Props) {
   const { t } = useTranslation();
   const { toast } = useToast();
@@ -109,11 +121,25 @@ export default function NotificationSendToDialog({
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [message, setMessage] = useState("");
 
-  const ticketId = notification?.link ? parseTicketIdFromHref(notification.link) : null;
+  const ticketId =
+    assistantShare?.ticketId ??
+    (notification?.link ? parseTicketIdFromHref(notification.link) : null);
+  const hasSendContext = assistantShare != null || ticketId !== null;
 
   const recipientsQuery = useQuery({
-    queryKey: ["send-to-recipients", notification?.id, ticketId],
+    queryKey: [
+      "send-to-recipients",
+      assistantShare?.messageId ?? notification?.id,
+      ticketId,
+      assistantShare ? "assistant" : "notification",
+    ],
     queryFn: async () => {
+      if (assistantShare) {
+        return ticketSendToApi.listRecipientsForAssistantMessage(
+          assistantShare.messageId,
+          assistantShare.ticketId,
+        );
+      }
       if (!notification) return null;
       if (notification.id && ticketId) {
         return ticketSendToApi.listRecipientsForNotification(notification.id);
@@ -124,7 +150,7 @@ export default function NotificationSendToDialog({
       }
       return null;
     },
-    enabled: open && !!notification && ticketId !== null,
+    enabled: open && hasSendContext && (assistantShare != null || !!notification),
   });
 
   useEffect(() => {
@@ -157,12 +183,19 @@ export default function NotificationSendToDialog({
 
   const send = useMutation({
     mutationFn: async () => {
-      if (!notification) throw new Error("No notification");
       const recipientUserIds = selectedRecipientUserIds(selected);
       const payload = {
         recipientUserIds,
         message: message.trim() || null,
       };
+      if (assistantShare) {
+        return ticketSendToApi.sendFromAssistantMessage(assistantShare.messageId, {
+          ...payload,
+          ticketId: assistantShare.ticketId,
+          pagePath: assistantShare.pagePath,
+        });
+      }
+      if (!notification) throw new Error("No notification");
       if (notification.id) {
         return ticketSendToApi.sendFromNotification(notification.id, payload);
       }
@@ -212,7 +245,7 @@ export default function NotificationSendToDialog({
           </DialogHeader>
 
           <div className={cn("min-h-0 flex-1 overflow-y-auto", modalTheme.bodySurfaceClassName)}>
-            {ticketId === null ? (
+            {!hasSendContext ? (
               <p className="px-4 py-3 text-sm text-muted-foreground">{t("notifications.sendToNoTicket")}</p>
             ) : recipientsQuery.isLoading || recipientsQuery.isFetching ? (
               <div className="flex items-center justify-center px-4 py-8 text-muted-foreground">
@@ -240,7 +273,15 @@ export default function NotificationSendToDialog({
             ) : (
               <div className="space-y-4 pb-3">
                 <p className="px-4 pt-3 text-xs text-muted-foreground">{t("notifications.sendToCoopNote")}</p>
-                {notification?.title ? (
+                {assistantShare ? (
+                  <div className="mx-4 rounded-md border border-gray-400/50 bg-black/5 px-3 py-2 text-xs dark:border-gray-500/60 dark:bg-black/10">
+                    <p className="mb-1 font-medium uppercase tracking-wide text-muted-foreground">
+                      {t("notifications.sendToAskVPreviewLabel")}
+                    </p>
+                    <p className="font-medium">{assistantShare.previewTitle}</p>
+                    <p className="mt-1 text-muted-foreground">{assistantShare.previewBody}</p>
+                  </div>
+                ) : notification?.title ? (
                   <div className="mx-4 rounded-md border border-gray-400/50 bg-black/5 px-3 py-2 text-xs dark:border-gray-500/60 dark:bg-black/10">
                     {typeLabel ? (
                       <p className="mb-1 font-medium uppercase tracking-wide text-muted-foreground">

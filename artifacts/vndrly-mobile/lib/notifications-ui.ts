@@ -29,6 +29,7 @@ export const NOTIFICATION_TYPE_META: Record<string, { icon: FeatherName; labelKe
   ticket_assigned: { icon: "briefcase", labelKey: "notifications.types.ticket_assigned" },
   ticket_note_added: { icon: "file-text", labelKey: "notifications.types.ticket_note_added" },
   ticket_forwarded: { icon: "send", labelKey: "notifications.types.ticket_forwarded" },
+  askv_shared: { icon: "send", labelKey: "notifications.types.askv_shared" },
   crew_added: { icon: "user-plus", labelKey: "notifications.types.crew_added" },
   schedule_changed: { icon: "clock", labelKey: "notifications.types.schedule_changed" },
   crew_removed: { icon: "user-minus", labelKey: "notifications.types.crew_removed" },

@@ -67,6 +67,7 @@ const TYPE_META: Record<string, { Icon: LucideIcon; labelKey: string }> = {
   ticket_inactive: { Icon: TimerOff, labelKey: "notifications.types.ticket_inactive" },
   ticket_note_added: { Icon: StickyNote, labelKey: "notifications.types.ticket_note_added" },
   ticket_forwarded: { Icon: Send, labelKey: "notifications.types.ticket_forwarded" },
+  askv_shared: { Icon: Send, labelKey: "notifications.types.askv_shared" },
   ticket_unblocked: { Icon: Unlock, labelKey: "notifications.types.ticket_unblocked" },
   ticket_flagged: { Icon: Flag, labelKey: "notifications.types.ticket_flagged" },
   direct_assignment_offered: { Icon: Briefcase, labelKey: "notifications.types.direct_assignment_offered" },

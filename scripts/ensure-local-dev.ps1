@@ -47,6 +47,22 @@ function Stop-PortListener {
     }
 }
 
+function Stop-OrphanVitePorts {
+  # Vite falls back to 5174/5175 when strictPort was off — kill strays so
+  # Edge/Chrome always use the canonical http://localhost:5173/ URL.
+  foreach ($port in 5174, 5175, 5176) {
+    Stop-PortListener -Port $port
+  }
+}
+
+function Stop-DuplicateViteWatchers {
+  Get-CimInstance Win32_Process -Filter "Name='node.exe'" -ErrorAction SilentlyContinue |
+    Where-Object { $_.CommandLine -match 'run-vite-local\.mjs' } |
+    ForEach-Object {
+      Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue
+    }
+}
+
 function Test-ViteApiProxy {
   try {
     $resp = Invoke-WebRequest -Uri "http://localhost:5173/api/healthz" -UseBasicParsing -TimeoutSec 5
@@ -79,8 +95,10 @@ $viteScript = Join-Path $Repo "scripts/start-vite-dev.ps1"
 
 if ($Recover) {
   Write-Host "Recovering local dev - stopping listeners on :8080 and :5173..."
+  Stop-DuplicateViteWatchers
   Stop-PortListener -Port 8080
   Stop-PortListener -Port 5173
+  Stop-OrphanVitePorts
   Start-Sleep -Seconds 2
 }
 
@@ -140,6 +158,8 @@ if (-not $viteUp) {
 } else {
   Write-Host "Local web already running on :5173 (api proxy ok)"
 }
+
+Stop-OrphanVitePorts
 
 Write-Host ""
 Write-Host "Local dev ready: http://localhost:5173/ (API http://localhost:8080/)"
