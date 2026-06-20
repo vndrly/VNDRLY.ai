@@ -6,13 +6,13 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type GetTicketTransitionsActorRoleItem =
-  (typeof GetTicketTransitionsActorRoleItem)[keyof typeof GetTicketTransitionsActorRoleItem];
+export type GetTicketTransitionsActorRoleItem = typeof GetTicketTransitionsActorRoleItem[keyof typeof GetTicketTransitionsActorRoleItem];
+
 
 export const GetTicketTransitionsActorRoleItem = {
-  admin: "admin",
-  partner: "partner",
-  vendor: "vendor",
-  field_employee: "field_employee",
-  system: "system",
+  admin: 'admin',
+  partner: 'partner',
+  vendor: 'vendor',
+  field_employee: 'field_employee',
+  system: 'system',
 } as const;

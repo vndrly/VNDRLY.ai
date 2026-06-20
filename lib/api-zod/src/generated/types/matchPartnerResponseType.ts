@@ -5,7 +5,7 @@
  * VNDRLY Field Operations API
  * OpenAPI spec version: 0.1.0
  */
-import type { MatchPartnerResponseItemType } from "./matchPartnerResponseItemType";
+import type { MatchPartnerResponseItemType } from './matchPartnerResponseItemType';
 
 export interface MatchPartnerResponseType {
   matches: MatchPartnerResponseItemType[];

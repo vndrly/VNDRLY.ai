@@ -5,21 +5,21 @@
  * VNDRLY Field Operations API
  * OpenAPI spec version: 0.1.0
  */
-import type { GetExportsAuditLogHasWarnings } from "./getExportsAuditLogHasWarnings";
+import type { GetExportsAuditLogHasWarnings } from './getExportsAuditLogHasWarnings';
 
 export type GetExportsAuditLogParams = {
-  /**
-   * 1-based page index (default 1).
-   * @minimum 1
-   */
-  page?: number;
-  /**
-   * Rows per page (default 100, max 500).
-   * @minimum 1
-   * @maximum 500
-   */
-  pageSize?: number;
-  /**
+/**
+ * 1-based page index (default 1).
+ * @minimum 1
+ */
+page?: number;
+/**
+ * Rows per page (default 100, max 500).
+ * @minimum 1
+ * @maximum 500
+ */
+pageSize?: number;
+/**
  * Legacy synonym for `pageSize`. When `pageSize` is omitted
 but `limit` is set, `limit` is used as the page size and
 `page` is forced to 1.
@@ -27,8 +27,8 @@ but `limit` is set, `limit` is used as the page size and
  * @minimum 1
  * @maximum 500
  */
-  limit?: number;
-  /**
+limit?: number;
+/**
  * Audit row id the caller wants to jump to. The server
 computes the page that contains it under the active filter
 and returns that page instead of `page`. If the anchor row
@@ -37,21 +37,21 @@ is filtered out the server falls back to page 1 and sets
 
  * @minimum 1
  */
-  anchorId?: number;
-  /**
+anchorId?: number;
+/**
  * Inclusive lower bound on `createdAt` (ISO-8601 with
 offset).
 
  */
-  from?: Date;
-  /**
+from?: Date;
+/**
  * Exclusive upper bound on `createdAt` (ISO-8601 with
 offset). Matches the half-open convention used by other
 reporting periods.
 
  */
-  to?: Date;
-  /**
+to?: Date;
+/**
  * When `true`, restricts the visible rows on the current
 page to those whose `detailJson.warnings` array is
 non-empty. Filtered-out chain participants are still
@@ -59,5 +59,5 @@ returned in `chainRows` so the bidirectional badges keep
 working.
 
  */
-  hasWarnings?: GetExportsAuditLogHasWarnings;
+hasWarnings?: GetExportsAuditLogHasWarnings;
 };

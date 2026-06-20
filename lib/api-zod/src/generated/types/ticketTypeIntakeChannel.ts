@@ -16,6 +16,7 @@ export type TicketTypeIntakeChannel =
 
 export const TicketTypeIntakeChannel = {
   partner_self_service: "partner_self_service",
+  partner_hotlist: "partner_hotlist",
   office_on_behalf_of_partner: "office_on_behalf_of_partner",
   office_on_behalf_of_field_employee: "office_on_behalf_of_field_employee",
   vendor_field_self_service: "vendor_field_self_service",

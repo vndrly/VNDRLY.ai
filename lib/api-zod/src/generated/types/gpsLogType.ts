@@ -5,7 +5,7 @@
  * VNDRLY Field Operations API
  * OpenAPI spec version: 0.1.0
  */
-import type { GpsLogTypeEventType } from "./gpsLogTypeEventType";
+import type { GpsLogTypeEventType } from './gpsLogTypeEventType';
 
 export interface GpsLogType {
   id: number;

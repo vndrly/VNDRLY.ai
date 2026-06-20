@@ -9,10 +9,10 @@
 /**
  * Cadence for the reconciliation-drift digest. "per_push" sends one email immediately after every push that surfaces drift (legacy behavior). "weekly_recap" suppresses the per-push email and instead lets a background worker aggregate the past 7 days of reconciliation warnings into a single summary email per week. Only meaningful when accountingReconciliationNotificationsEnabled is true.
  */
-export type VendorTypeAccountingReconciliationDigestCadence = typeof VendorTypeAccountingReconciliationDigestCadence[keyof typeof VendorTypeAccountingReconciliationDigestCadence];
-
+export type VendorTypeAccountingReconciliationDigestCadence =
+  (typeof VendorTypeAccountingReconciliationDigestCadence)[keyof typeof VendorTypeAccountingReconciliationDigestCadence];
 
 export const VendorTypeAccountingReconciliationDigestCadence = {
-  per_push: 'per_push',
-  weekly_recap: 'weekly_recap',
+  per_push: "per_push",
+  weekly_recap: "weekly_recap",
 } as const;

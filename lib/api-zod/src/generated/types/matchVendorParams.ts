@@ -7,5 +7,5 @@
  */
 
 export type MatchVendorParams = {
-  name: string;
+name: string;
 };

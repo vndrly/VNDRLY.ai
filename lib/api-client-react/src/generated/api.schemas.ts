@@ -1886,6 +1886,7 @@ export type TicketIntakeChannel =
 
 export const TicketIntakeChannel = {
   partner_self_service: "partner_self_service",
+  partner_hotlist: "partner_hotlist",
   office_on_behalf_of_partner: "office_on_behalf_of_partner",
   office_on_behalf_of_field_employee: "office_on_behalf_of_field_employee",
   vendor_field_self_service: "vendor_field_self_service",
@@ -2123,6 +2124,7 @@ export type CreateTicketBodyIntakeChannel =
 
 export const CreateTicketBodyIntakeChannel = {
   partner_self_service: "partner_self_service",
+  partner_hotlist: "partner_hotlist",
   office_on_behalf_of_partner: "office_on_behalf_of_partner",
   office_on_behalf_of_field_employee: "office_on_behalf_of_field_employee",
   vendor_field_self_service: "vendor_field_self_service",

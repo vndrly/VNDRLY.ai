@@ -6,17 +6,17 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type GetTicketTransitionsKindItem =
-  (typeof GetTicketTransitionsKindItem)[keyof typeof GetTicketTransitionsKindItem];
+export type GetTicketTransitionsKindItem = typeof GetTicketTransitionsKindItem[keyof typeof GetTicketTransitionsKindItem];
+
 
 export const GetTicketTransitionsKindItem = {
-  created: "created",
-  invite_sent: "invite_sent",
-  accepted: "accepted",
-  denied: "denied",
-  reinvited: "reinvited",
-  cancelled: "cancelled",
-  reactivated: "reactivated",
-  reopened: "reopened",
-  other: "other",
+  created: 'created',
+  invite_sent: 'invite_sent',
+  accepted: 'accepted',
+  denied: 'denied',
+  reinvited: 'reinvited',
+  cancelled: 'cancelled',
+  reactivated: 'reactivated',
+  reopened: 'reopened',
+  other: 'other',
 } as const;

@@ -5929,7 +5929,7 @@ components:
           type: ["integer", "null"]
         intakeChannel:
           type: ["string", "null"]
-          enum: [partner_self_service, office_on_behalf_of_partner, office_on_behalf_of_field_employee, vendor_field_self_service, null]
+          enum: [partner_self_service, partner_hotlist, office_on_behalf_of_partner, office_on_behalf_of_field_employee, vendor_field_self_service, null]
           description: "How this ticket was opened. Drives the Source badge in the ticket list (globe / phone / boots)."
         approvedAt:
           description: |
@@ -6034,7 +6034,7 @@ components:
           description: "Hint from client: 'on_site' = check in immediately; 'pending_arrival' = create without check-in. Server still verifies geofence."
         intakeChannel:
           type: ["string", "null"]
-          enum: [partner_self_service, office_on_behalf_of_partner, office_on_behalf_of_field_employee, vendor_field_self_service, null]
+          enum: [partner_self_service, partner_hotlist, office_on_behalf_of_partner, office_on_behalf_of_field_employee, vendor_field_self_service, null]
           description: "Optional explicit intake channel. Server validates the caller is allowed to claim it; unauthorized values fall back to the role-default channel."
         acceptanceImplicit:
           type: ["boolean", "null"]

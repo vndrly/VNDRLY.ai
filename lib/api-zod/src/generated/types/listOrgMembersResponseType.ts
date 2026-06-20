@@ -5,8 +5,8 @@
  * VNDRLY Field Operations API
  * OpenAPI spec version: 0.1.0
  */
-import type { ListOrgMembersResponseTypeOrgType } from "./listOrgMembersResponseTypeOrgType";
-import type { OrgMemberRowType } from "./orgMemberRowType";
+import type { ListOrgMembersResponseTypeOrgType } from './listOrgMembersResponseTypeOrgType';
+import type { OrgMemberRowType } from './orgMemberRowType';
 
 /**
  * Result of `GET /orgs/{orgType}/{orgId}/members`. `orgType`

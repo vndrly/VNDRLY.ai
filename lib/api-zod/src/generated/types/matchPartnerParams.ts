@@ -7,5 +7,5 @@
  */
 
 export type MatchPartnerParams = {
-  name: string;
+name: string;
 };

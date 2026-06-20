@@ -5,13 +5,11 @@
  * VNDRLY Field Operations API
  * OpenAPI spec version: 0.1.0
  */
-import type { FireTransmitterSettingsHistoryFieldChangeType } from "./fireTransmitterSettingsHistoryFieldChangeType";
+import type { FireTransmitterSettingsHistoryFieldChangeType } from './fireTransmitterSettingsHistoryFieldChangeType';
 
 /**
  * Map of changed-column-name → `{ before, after }`. Only
 columns whose value actually changed in this save appear.
 
  */
-export type FireTransmitterSettingsHistoryEntryTypeChanges = {
-  [key: string]: FireTransmitterSettingsHistoryFieldChangeType;
-};
+export type FireTransmitterSettingsHistoryEntryTypeChanges = {[key: string]: FireTransmitterSettingsHistoryFieldChangeType};

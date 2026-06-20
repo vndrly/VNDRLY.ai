@@ -7,15 +7,15 @@
  */
 
 export type ListFireTransmitterSettingsHistoryParams = {
-  /**
-   * Max rows to return. Default 50, capped at 200.
-   * @minimum 1
-   * @maximum 200
-   */
-  limit?: number;
-  /**
-   * Skip this many rows before returning. Default 0.
-   * @minimum 0
-   */
-  offset?: number;
+/**
+ * Max rows to return. Default 50, capped at 200.
+ * @minimum 1
+ * @maximum 200
+ */
+limit?: number;
+/**
+ * Skip this many rows before returning. Default 0.
+ * @minimum 0
+ */
+offset?: number;
 };

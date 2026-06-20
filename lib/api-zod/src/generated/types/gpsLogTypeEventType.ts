@@ -6,14 +6,14 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type GpsLogTypeEventType =
-  (typeof GpsLogTypeEventType)[keyof typeof GpsLogTypeEventType];
+export type GpsLogTypeEventType = typeof GpsLogTypeEventType[keyof typeof GpsLogTypeEventType];
+
 
 export const GpsLogTypeEventType = {
-  check_in: "check_in",
-  check_out: "check_out",
-  tracking: "tracking",
-  live_ping: "live_ping",
-  en_route: "en_route",
-  on_location: "on_location",
+  check_in: 'check_in',
+  check_out: 'check_out',
+  tracking: 'tracking',
+  live_ping: 'live_ping',
+  en_route: 'en_route',
+  on_location: 'on_location',
 } as const;

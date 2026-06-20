@@ -13,11 +13,11 @@ flow flips the winning bid to `awarded` and the rest on the
 same job to `declined`.
 
  */
-export type HotlistBidStatusType =
-  (typeof HotlistBidStatusType)[keyof typeof HotlistBidStatusType];
+export type HotlistBidStatusType = typeof HotlistBidStatusType[keyof typeof HotlistBidStatusType];
+
 
 export const HotlistBidStatusType = {
-  pending: "pending",
-  awarded: "awarded",
-  declined: "declined",
+  pending: 'pending',
+  awarded: 'awarded',
+  declined: 'declined',
 } as const;

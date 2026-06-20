@@ -440,9 +440,6 @@ describe("GET /api/tickets", () => {
   });
 
   it("partner happy path (tenant-scoped): response body parses cleanly against ListTicketsResponse", async () => {
-    // Partner sessions add `eq(siteLocationsTable.partnerId,
-    // session.partnerId)` on top of the same `ticketQuery()`. Same
-    // shape, same risk of `ticketSelect` drift — covered here.
     ticketRows = [fullTicketRow()];
 
     const res = await request(app)
@@ -459,6 +456,24 @@ describe("GET /api/tickets", () => {
       expect(parsed.data).toHaveLength(1);
       expect(parsed.data[0].id).toBe(TICKET_ID);
       expect(parsed.data[0].partnerName).toBe("ACME Energy");
+    }
+  });
+
+  it("accepts partner_hotlist intakeChannel on list rows", async () => {
+    ticketRows = [fullTicketRow({ intakeChannel: "partner_hotlist" })];
+
+    const res = await request(app)
+      .get("/api/tickets")
+      .set("Cookie", partnerCookie);
+
+    expectStatus(res, 200);
+    const parsed = ListTicketsResponse.safeParse(res.body);
+    expect(
+      parsed.success,
+      parsed.success ? "" : JSON.stringify(parsed.error.issues),
+    ).toBe(true);
+    if (parsed.success) {
+      expect(parsed.data[0]?.intakeChannel).toBe("partner_hotlist");
     }
   });
 

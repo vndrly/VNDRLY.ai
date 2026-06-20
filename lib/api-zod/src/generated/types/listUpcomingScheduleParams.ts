@@ -7,12 +7,12 @@
  */
 
 export type ListUpcomingScheduleParams = {
-  /**
+/**
  * Look-ahead horizon in days (clamped to `[1, 60]`,
 defaulting to `14` when omitted or non-numeric).
 
  * @minimum 1
  * @maximum 60
  */
-  days?: number;
+days?: number;
 };

@@ -6,10 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type ListOrgMembersResponseTypeOrgType =
-  (typeof ListOrgMembersResponseTypeOrgType)[keyof typeof ListOrgMembersResponseTypeOrgType];
+export type ListOrgMembersResponseTypeOrgType = typeof ListOrgMembersResponseTypeOrgType[keyof typeof ListOrgMembersResponseTypeOrgType];
+
 
 export const ListOrgMembersResponseTypeOrgType = {
-  partner: "partner",
-  vendor: "vendor",
+  partner: 'partner',
+  vendor: 'vendor',
 } as const;

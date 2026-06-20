@@ -7,12 +7,12 @@
  */
 
 export type GetDirectAwardCandidatesParams = {
-  /**
-   * @minimum 1
-   */
-  workTypeId: number;
-  /**
-   * @minimum 1
-   */
-  siteLocationId: number;
+/**
+ * @minimum 1
+ */
+workTypeId: number;
+/**
+ * @minimum 1
+ */
+siteLocationId: number;
 };

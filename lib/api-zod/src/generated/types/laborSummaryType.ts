@@ -5,8 +5,8 @@
  * VNDRLY Field Operations API
  * OpenAPI spec version: 0.1.0
  */
-import type { LaborSummaryPersonType } from "./laborSummaryPersonType";
-import type { LaborSummaryTypeTotals } from "./laborSummaryTypeTotals";
+import type { LaborSummaryPersonType } from './laborSummaryPersonType';
+import type { LaborSummaryTypeTotals } from './laborSummaryTypeTotals';
 
 export interface LaborSummaryType {
   ticketId: number;

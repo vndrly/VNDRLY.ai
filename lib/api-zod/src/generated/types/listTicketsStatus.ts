@@ -6,21 +6,21 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type ListTicketsStatus =
-  (typeof ListTicketsStatus)[keyof typeof ListTicketsStatus];
+export type ListTicketsStatus = typeof ListTicketsStatus[keyof typeof ListTicketsStatus];
+
 
 export const ListTicketsStatus = {
-  draft: "draft",
-  initiated: "initiated",
-  in_progress: "in_progress",
-  pending_review: "pending_review",
-  completed: "completed",
-  submitted: "submitted",
-  approved: "approved",
-  kicked_back: "kicked_back",
-  cancelled: "cancelled",
-  awaiting_acceptance: "awaiting_acceptance",
-  denied: "denied",
-  awaiting_payment: "awaiting_payment",
-  funds_dispersed: "funds_dispersed",
+  draft: 'draft',
+  initiated: 'initiated',
+  in_progress: 'in_progress',
+  pending_review: 'pending_review',
+  completed: 'completed',
+  submitted: 'submitted',
+  approved: 'approved',
+  kicked_back: 'kicked_back',
+  cancelled: 'cancelled',
+  awaiting_acceptance: 'awaiting_acceptance',
+  denied: 'denied',
+  awaiting_payment: 'awaiting_payment',
+  funds_dispersed: 'funds_dispersed',
 } as const;

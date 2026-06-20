@@ -5,7 +5,7 @@
  * VNDRLY Field Operations API
  * OpenAPI spec version: 0.1.0
  */
-import type { FireTransmitterSettingsHistoryEntryTypeChanges } from "./fireTransmitterSettingsHistoryEntryTypeChanges";
+import type { FireTransmitterSettingsHistoryEntryTypeChanges } from './fireTransmitterSettingsHistoryEntryTypeChanges';
 
 /**
  * One row from `fire_transmitter_settings_audit_log` joined to

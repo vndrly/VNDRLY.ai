@@ -7,5 +7,5 @@
  */
 
 export type ListSiteLocationsParams = {
-  partnerId?: number;
+partnerId?: number;
 };

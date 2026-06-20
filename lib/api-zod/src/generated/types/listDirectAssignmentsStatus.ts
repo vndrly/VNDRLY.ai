@@ -6,12 +6,12 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type ListDirectAssignmentsStatus =
-  (typeof ListDirectAssignmentsStatus)[keyof typeof ListDirectAssignmentsStatus];
+export type ListDirectAssignmentsStatus = typeof ListDirectAssignmentsStatus[keyof typeof ListDirectAssignmentsStatus];
+
 
 export const ListDirectAssignmentsStatus = {
-  pending: "pending",
-  committed: "committed",
-  passed: "passed",
-  cancelled: "cancelled",
+  pending: 'pending',
+  committed: 'committed',
+  passed: 'passed',
+  cancelled: 'cancelled',
 } as const;

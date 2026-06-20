@@ -6,10 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type GetExportsAuditLogHasWarnings =
-  (typeof GetExportsAuditLogHasWarnings)[keyof typeof GetExportsAuditLogHasWarnings];
+export type GetExportsAuditLogHasWarnings = typeof GetExportsAuditLogHasWarnings[keyof typeof GetExportsAuditLogHasWarnings];
+
 
 export const GetExportsAuditLogHasWarnings = {
-  true: "true",
-  false: "false",
+  true: 'true',
+  false: 'false',
 } as const;

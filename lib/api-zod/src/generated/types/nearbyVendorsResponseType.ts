@@ -5,7 +5,7 @@
  * VNDRLY Field Operations API
  * OpenAPI spec version: 0.1.0
  */
-import type { NearbyVendorCandidateType } from "./nearbyVendorCandidateType";
+import type { NearbyVendorCandidateType } from './nearbyVendorCandidateType';
 
 export interface NearbyVendorsResponseType {
   siteLatitude: number;

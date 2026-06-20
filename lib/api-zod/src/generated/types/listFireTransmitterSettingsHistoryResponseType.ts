@@ -5,7 +5,7 @@
  * VNDRLY Field Operations API
  * OpenAPI spec version: 0.1.0
  */
-import type { FireTransmitterSettingsHistoryEntryType } from "./fireTransmitterSettingsHistoryEntryType";
+import type { FireTransmitterSettingsHistoryEntryType } from './fireTransmitterSettingsHistoryEntryType';
 
 export interface ListFireTransmitterSettingsHistoryResponseType {
   items: FireTransmitterSettingsHistoryEntryType[];

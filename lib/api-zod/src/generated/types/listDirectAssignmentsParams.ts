@@ -5,8 +5,8 @@
  * VNDRLY Field Operations API
  * OpenAPI spec version: 0.1.0
  */
-import type { ListDirectAssignmentsStatus } from "./listDirectAssignmentsStatus";
+import type { ListDirectAssignmentsStatus } from './listDirectAssignmentsStatus';
 
 export type ListDirectAssignmentsParams = {
-  status?: ListDirectAssignmentsStatus;
+status?: ListDirectAssignmentsStatus;
 };

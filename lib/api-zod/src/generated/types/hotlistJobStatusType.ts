@@ -12,10 +12,10 @@ state when a partner posts a job; `awarded` is set when a bid
 wins (either via the bid auction or via partner direct-award).
 
  */
-export type HotlistJobStatusType =
-  (typeof HotlistJobStatusType)[keyof typeof HotlistJobStatusType];
+export type HotlistJobStatusType = typeof HotlistJobStatusType[keyof typeof HotlistJobStatusType];
+
 
 export const HotlistJobStatusType = {
-  open: "open",
-  awarded: "awarded",
+  open: 'open',
+  awarded: 'awarded',
 } as const;

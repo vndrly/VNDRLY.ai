@@ -7,13 +7,13 @@
  */
 
 export type ListFieldEmployeesParams = {
-  vendorId?: number;
-  /**
-   * Admin only — include soft-deleted employees in the result.
-   */
-  includeDeleted?: boolean;
-  /**
-   * Include employees whose `isActive` flag is false. Defaults to false so consumer pickers don't have to re-filter on the client.
-   */
-  includeInactive?: boolean;
+vendorId?: number;
+/**
+ * Admin only — include soft-deleted employees in the result.
+ */
+includeDeleted?: boolean;
+/**
+ * Include employees whose `isActive` flag is false. Defaults to false so consumer pickers don't have to re-filter on the client.
+ */
+includeInactive?: boolean;
 };
