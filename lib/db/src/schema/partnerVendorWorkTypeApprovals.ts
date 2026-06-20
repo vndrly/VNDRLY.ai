@@ -37,6 +37,7 @@ export const partnerVendorWorkTypeApprovalsTable = pgTable(
       () => usersTable.id,
       { onDelete: "set null" },
     ),
+    taxTreatment: text("tax_treatment"),
   },
   (t) => ({
     uniqApproval: uniqueIndex(

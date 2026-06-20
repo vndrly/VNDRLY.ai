@@ -5,15 +5,17 @@
  * VNDRLY Field Operations API
  * OpenAPI spec version: 0.1.0
  */
-import * as zod from "zod";
+import * as zod from 'zod';
+
 
 /**
  * Returns server health status
  * @summary Health check
  */
 export const HealthCheckResponse = zod.object({
-  status: zod.string(),
-});
+  "status": zod.string()
+})
+
 
 /**
  * Returns the closest existing partners for the given `name`, sorted
@@ -25,18 +27,17 @@ Shares its normalization rules with `/vendors/match`. Admin-only.
  * @summary Fuzzy-match a candidate partner name against existing partners
  */
 export const MatchPartnerQueryParams = zod.object({
-  name: zod.coerce.string(),
-});
+  "name": zod.coerce.string()
+})
 
 export const MatchPartnerResponse = zod.object({
-  matches: zod.array(
-    zod.object({
-      id: zod.number(),
-      name: zod.string(),
-      score: zod.number(),
-    }),
-  ),
-});
+  "matches": zod.array(zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "score": zod.number()
+}))
+})
+
 
 /**
  * Public counterpart of `matchPartner` for the unauthenticated
@@ -49,281 +50,154 @@ Mirrors `/vendors/check-name`. No auth required.
  * @summary Public name-only fuzzy match for partner self-signup
  */
 export const CheckPartnerNameQueryParams = zod.object({
-  name: zod.coerce.string(),
-});
+  "name": zod.coerce.string()
+})
 
 export const CheckPartnerNameResponse = zod.object({
-  matches: zod.array(
-    zod.object({
-      name: zod.string(),
-      score: zod.number(),
-    }),
-  ),
-});
+  "matches": zod.array(zod.object({
+  "name": zod.string(),
+  "score": zod.number()
+}))
+})
+
 
 /**
  * @summary List all partners
  */
 export const ListPartnersResponseItem = zod.object({
-  id: zod.number(),
-  name: zod.string(),
-  contactName: zod.string(),
-  contactEmail: zod.string(),
-  contactPhone: zod.string().nullable(),
-  physicalAddress: zod.string().nullable(),
-  billingAddress: zod.string().nullable(),
-  businessPhone: zod.string().nullable(),
-  hoursOfOperation: zod.string().nullable(),
-  stateTaxId: zod.string().nullable(),
-  federalTaxId: zod.string().nullable(),
-  blurb: zod.string().nullable(),
-  operatingRadiusMiles: zod.number().nullable(),
-  logoUrl: zod
-    .string()
-    .nullable()
-    .describe(
-      "Main logo. May be any aspect ratio. Used in modals and other places that have room for an irregular\/larger logo.",
-    ),
-  logoSquareUrl: zod
-    .string()
-    .nullable()
-    .describe(
-      "Square (1:1) logo used for tightly-bounded badges such as the navigation sidebar (rendered at 64x64). Falls back to logoUrl when null.",
-    ),
-  brandPrimaryColor: zod
-    .string()
-    .nullable()
-    .describe(
-      'Hex color string like \"#1f7ae0\" used for poster borders\/accents.',
-    ),
-  brandAccentColor: zod
-    .string()
-    .nullable()
-    .describe(
-      "Hex color string used for secondary accents on branded outputs.",
-    ),
-  email1099Subject: zod
-    .string()
-    .nullable()
-    .describe(
-      "Optional partner-customized subject line for 1099 statement emails sent\nto consenting vendors. Supports the placeholders `{{vendorName}}`,\n`{{partnerName}}`, `{{taxYear}}`, `{{formType}}`, `{{formLabel}}`, and\n`{{totalReportable}}`. When null\/blank the deliver endpoint falls back\nto the hardcoded English default.\n",
-    ),
-  email1099Body: zod
-    .string()
-    .nullable()
-    .describe(
-      "Optional partner-customized plain-text body for 1099 statement emails.\nSame placeholders as `email1099Subject`. Newlines are preserved.\n",
-    ),
-  createdAt: zod.coerce.date(),
-});
-export const ListPartnersResponse = zod.array(ListPartnersResponseItem);
+  "id": zod.number(),
+  "name": zod.string(),
+  "contactName": zod.string(),
+  "contactEmail": zod.string(),
+  "contactPhone": zod.string().nullable(),
+  "physicalAddress": zod.string().nullable(),
+  "billingAddress": zod.string().nullable(),
+  "businessPhone": zod.string().nullable(),
+  "hoursOfOperation": zod.string().nullable(),
+  "stateTaxId": zod.string().nullable(),
+  "federalTaxId": zod.string().nullable(),
+  "blurb": zod.string().nullable(),
+  "operatingRadiusMiles": zod.number().nullable(),
+  "logoUrl": zod.string().nullable().describe('Main logo. May be any aspect ratio. Used in modals and other places that have room for an irregular\/larger logo.'),
+  "logoSquareUrl": zod.string().nullable().describe('Square (1:1) logo used for tightly-bounded badges such as the navigation sidebar (rendered at 64x64). Falls back to logoUrl when null.'),
+  "brandPrimaryColor": zod.string().nullable().describe('Hex color string like \"#1f7ae0\" used for poster borders\/accents.'),
+  "brandAccentColor": zod.string().nullable().describe('Hex color string used for secondary accents on branded outputs.'),
+  "email1099Subject": zod.string().nullable().describe('Optional partner-customized subject line for 1099 statement emails sent\nto consenting vendors. Supports the placeholders `{{vendorName}}`,\n`{{partnerName}}`, `{{taxYear}}`, `{{formType}}`, `{{formLabel}}`, and\n`{{totalReportable}}`. When null\/blank the deliver endpoint falls back\nto the hardcoded English default.\n'),
+  "email1099Body": zod.string().nullable().describe('Optional partner-customized plain-text body for 1099 statement emails.\nSame placeholders as `email1099Subject`. Newlines are preserved.\n'),
+  "createdAt": zod.coerce.date()
+})
+export const ListPartnersResponse = zod.array(ListPartnersResponseItem)
+
 
 /**
  * @summary Create a new partner
  */
-export const createPartnerBodyBrandPrimaryColorRegExp = new RegExp(
-  "^#[0-9a-fA-F]{6}$",
-);
-export const createPartnerBodyBrandAccentColorRegExp = new RegExp(
-  "^#[0-9a-fA-F]{6}$",
-);
+export const createPartnerBodyBrandPrimaryColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const createPartnerBodyBrandAccentColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+
 
 export const CreatePartnerBody = zod.object({
-  name: zod.string(),
-  contactName: zod.string(),
-  contactEmail: zod.string(),
-  contactPhone: zod.string().nullish(),
-  physicalAddress: zod.string().nullish(),
-  billingAddress: zod.string().nullish(),
-  brandPrimaryColor: zod
-    .string()
-    .regex(createPartnerBodyBrandPrimaryColorRegExp)
-    .nullish()
-    .describe(
-      'Hex color string like \"#1f7ae0\" used for poster borders\/accents.',
-    ),
-  brandAccentColor: zod
-    .string()
-    .regex(createPartnerBodyBrandAccentColorRegExp)
-    .nullish()
-    .describe(
-      "Hex color string used for secondary accents on branded outputs.",
-    ),
-});
+  "name": zod.string(),
+  "contactName": zod.string(),
+  "contactEmail": zod.string(),
+  "contactPhone": zod.string().nullish(),
+  "physicalAddress": zod.string().nullish(),
+  "billingAddress": zod.string().nullish(),
+  "brandPrimaryColor": zod.string().regex(createPartnerBodyBrandPrimaryColorRegExp).nullish().describe('Hex color string like \"#1f7ae0\" used for poster borders\/accents.'),
+  "brandAccentColor": zod.string().regex(createPartnerBodyBrandAccentColorRegExp).nullish().describe('Hex color string used for secondary accents on branded outputs.')
+})
+
 
 /**
  * @summary Get partner by ID
  */
 export const GetPartnerParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
 export const GetPartnerResponse = zod.object({
-  id: zod.number(),
-  name: zod.string(),
-  contactName: zod.string(),
-  contactEmail: zod.string(),
-  contactPhone: zod.string().nullable(),
-  physicalAddress: zod.string().nullable(),
-  billingAddress: zod.string().nullable(),
-  businessPhone: zod.string().nullable(),
-  hoursOfOperation: zod.string().nullable(),
-  stateTaxId: zod.string().nullable(),
-  federalTaxId: zod.string().nullable(),
-  blurb: zod.string().nullable(),
-  operatingRadiusMiles: zod.number().nullable(),
-  logoUrl: zod
-    .string()
-    .nullable()
-    .describe(
-      "Main logo. May be any aspect ratio. Used in modals and other places that have room for an irregular\/larger logo.",
-    ),
-  logoSquareUrl: zod
-    .string()
-    .nullable()
-    .describe(
-      "Square (1:1) logo used for tightly-bounded badges such as the navigation sidebar (rendered at 64x64). Falls back to logoUrl when null.",
-    ),
-  brandPrimaryColor: zod
-    .string()
-    .nullable()
-    .describe(
-      'Hex color string like \"#1f7ae0\" used for poster borders\/accents.',
-    ),
-  brandAccentColor: zod
-    .string()
-    .nullable()
-    .describe(
-      "Hex color string used for secondary accents on branded outputs.",
-    ),
-  email1099Subject: zod
-    .string()
-    .nullable()
-    .describe(
-      "Optional partner-customized subject line for 1099 statement emails sent\nto consenting vendors. Supports the placeholders `{{vendorName}}`,\n`{{partnerName}}`, `{{taxYear}}`, `{{formType}}`, `{{formLabel}}`, and\n`{{totalReportable}}`. When null\/blank the deliver endpoint falls back\nto the hardcoded English default.\n",
-    ),
-  email1099Body: zod
-    .string()
-    .nullable()
-    .describe(
-      "Optional partner-customized plain-text body for 1099 statement emails.\nSame placeholders as `email1099Subject`. Newlines are preserved.\n",
-    ),
-  createdAt: zod.coerce.date(),
-});
+  "id": zod.number(),
+  "name": zod.string(),
+  "contactName": zod.string(),
+  "contactEmail": zod.string(),
+  "contactPhone": zod.string().nullable(),
+  "physicalAddress": zod.string().nullable(),
+  "billingAddress": zod.string().nullable(),
+  "businessPhone": zod.string().nullable(),
+  "hoursOfOperation": zod.string().nullable(),
+  "stateTaxId": zod.string().nullable(),
+  "federalTaxId": zod.string().nullable(),
+  "blurb": zod.string().nullable(),
+  "operatingRadiusMiles": zod.number().nullable(),
+  "logoUrl": zod.string().nullable().describe('Main logo. May be any aspect ratio. Used in modals and other places that have room for an irregular\/larger logo.'),
+  "logoSquareUrl": zod.string().nullable().describe('Square (1:1) logo used for tightly-bounded badges such as the navigation sidebar (rendered at 64x64). Falls back to logoUrl when null.'),
+  "brandPrimaryColor": zod.string().nullable().describe('Hex color string like \"#1f7ae0\" used for poster borders\/accents.'),
+  "brandAccentColor": zod.string().nullable().describe('Hex color string used for secondary accents on branded outputs.'),
+  "email1099Subject": zod.string().nullable().describe('Optional partner-customized subject line for 1099 statement emails sent\nto consenting vendors. Supports the placeholders `{{vendorName}}`,\n`{{partnerName}}`, `{{taxYear}}`, `{{formType}}`, `{{formLabel}}`, and\n`{{totalReportable}}`. When null\/blank the deliver endpoint falls back\nto the hardcoded English default.\n'),
+  "email1099Body": zod.string().nullable().describe('Optional partner-customized plain-text body for 1099 statement emails.\nSame placeholders as `email1099Subject`. Newlines are preserved.\n'),
+  "createdAt": zod.coerce.date()
+})
+
 
 /**
  * @summary Update a partner
  */
 export const UpdatePartnerParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
-export const updatePartnerBodyBrandPrimaryColorRegExp = new RegExp(
-  "^#[0-9a-fA-F]{6}$",
-);
-export const updatePartnerBodyBrandAccentColorRegExp = new RegExp(
-  "^#[0-9a-fA-F]{6}$",
-);
+export const updatePartnerBodyBrandPrimaryColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const updatePartnerBodyBrandAccentColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const updatePartnerBodyEmail1099SubjectMax = 200;
 
 export const updatePartnerBodyEmail1099BodyMax = 5000;
 
+
+
 export const UpdatePartnerBody = zod.object({
-  name: zod.string().optional(),
-  contactName: zod.string().optional(),
-  contactEmail: zod.string().optional(),
-  contactPhone: zod.string().nullish(),
-  physicalAddress: zod.string().nullish(),
-  billingAddress: zod.string().nullish(),
-  businessPhone: zod.string().nullish(),
-  hoursOfOperation: zod.string().nullish(),
-  stateTaxId: zod.string().nullish(),
-  federalTaxId: zod.string().nullish(),
-  blurb: zod.string().nullish(),
-  operatingRadiusMiles: zod.number().nullish(),
-  logoUrl: zod.string().nullish(),
-  logoSquareUrl: zod
-    .string()
-    .nullish()
-    .describe(
-      "Square (1:1) logo for the navigation sidebar (rendered at 64x64). Falls back to logoUrl when null.",
-    ),
-  brandPrimaryColor: zod
-    .string()
-    .regex(updatePartnerBodyBrandPrimaryColorRegExp)
-    .nullish(),
-  brandAccentColor: zod
-    .string()
-    .regex(updatePartnerBodyBrandAccentColorRegExp)
-    .nullish(),
-  email1099Subject: zod
-    .string()
-    .max(updatePartnerBodyEmail1099SubjectMax)
-    .nullish()
-    .describe(
-      "Partner-customized subject line for 1099 statement emails. Supports\nthe placeholders `{{vendorName}}`, `{{partnerName}}`, `{{taxYear}}`,\n`{{formType}}`, `{{formLabel}}`, and `{{totalReportable}}`.\n",
-    ),
-  email1099Body: zod
-    .string()
-    .max(updatePartnerBodyEmail1099BodyMax)
-    .nullish()
-    .describe(
-      "Partner-customized plain-text body for 1099 statement emails. Same\nplaceholders as `email1099Subject`. Newlines are preserved.\n",
-    ),
-});
+  "name": zod.string().optional(),
+  "contactName": zod.string().optional(),
+  "contactEmail": zod.string().optional(),
+  "contactPhone": zod.string().nullish(),
+  "physicalAddress": zod.string().nullish(),
+  "billingAddress": zod.string().nullish(),
+  "businessPhone": zod.string().nullish(),
+  "hoursOfOperation": zod.string().nullish(),
+  "stateTaxId": zod.string().nullish(),
+  "federalTaxId": zod.string().nullish(),
+  "blurb": zod.string().nullish(),
+  "operatingRadiusMiles": zod.number().nullish(),
+  "logoUrl": zod.string().nullish(),
+  "logoSquareUrl": zod.string().nullish().describe('Square (1:1) logo for the navigation sidebar (rendered at 64x64). Falls back to logoUrl when null.'),
+  "brandPrimaryColor": zod.string().regex(updatePartnerBodyBrandPrimaryColorRegExp).nullish(),
+  "brandAccentColor": zod.string().regex(updatePartnerBodyBrandAccentColorRegExp).nullish(),
+  "email1099Subject": zod.string().max(updatePartnerBodyEmail1099SubjectMax).nullish().describe('Partner-customized subject line for 1099 statement emails. Supports\nthe placeholders `{{vendorName}}`, `{{partnerName}}`, `{{taxYear}}`,\n`{{formType}}`, `{{formLabel}}`, and `{{totalReportable}}`.\n'),
+  "email1099Body": zod.string().max(updatePartnerBodyEmail1099BodyMax).nullish().describe('Partner-customized plain-text body for 1099 statement emails. Same\nplaceholders as `email1099Subject`. Newlines are preserved.\n')
+})
 
 export const UpdatePartnerResponse = zod.object({
-  id: zod.number(),
-  name: zod.string(),
-  contactName: zod.string(),
-  contactEmail: zod.string(),
-  contactPhone: zod.string().nullable(),
-  physicalAddress: zod.string().nullable(),
-  billingAddress: zod.string().nullable(),
-  businessPhone: zod.string().nullable(),
-  hoursOfOperation: zod.string().nullable(),
-  stateTaxId: zod.string().nullable(),
-  federalTaxId: zod.string().nullable(),
-  blurb: zod.string().nullable(),
-  operatingRadiusMiles: zod.number().nullable(),
-  logoUrl: zod
-    .string()
-    .nullable()
-    .describe(
-      "Main logo. May be any aspect ratio. Used in modals and other places that have room for an irregular\/larger logo.",
-    ),
-  logoSquareUrl: zod
-    .string()
-    .nullable()
-    .describe(
-      "Square (1:1) logo used for tightly-bounded badges such as the navigation sidebar (rendered at 64x64). Falls back to logoUrl when null.",
-    ),
-  brandPrimaryColor: zod
-    .string()
-    .nullable()
-    .describe(
-      'Hex color string like \"#1f7ae0\" used for poster borders\/accents.',
-    ),
-  brandAccentColor: zod
-    .string()
-    .nullable()
-    .describe(
-      "Hex color string used for secondary accents on branded outputs.",
-    ),
-  email1099Subject: zod
-    .string()
-    .nullable()
-    .describe(
-      "Optional partner-customized subject line for 1099 statement emails sent\nto consenting vendors. Supports the placeholders `{{vendorName}}`,\n`{{partnerName}}`, `{{taxYear}}`, `{{formType}}`, `{{formLabel}}`, and\n`{{totalReportable}}`. When null\/blank the deliver endpoint falls back\nto the hardcoded English default.\n",
-    ),
-  email1099Body: zod
-    .string()
-    .nullable()
-    .describe(
-      "Optional partner-customized plain-text body for 1099 statement emails.\nSame placeholders as `email1099Subject`. Newlines are preserved.\n",
-    ),
-  createdAt: zod.coerce.date(),
-});
+  "id": zod.number(),
+  "name": zod.string(),
+  "contactName": zod.string(),
+  "contactEmail": zod.string(),
+  "contactPhone": zod.string().nullable(),
+  "physicalAddress": zod.string().nullable(),
+  "billingAddress": zod.string().nullable(),
+  "businessPhone": zod.string().nullable(),
+  "hoursOfOperation": zod.string().nullable(),
+  "stateTaxId": zod.string().nullable(),
+  "federalTaxId": zod.string().nullable(),
+  "blurb": zod.string().nullable(),
+  "operatingRadiusMiles": zod.number().nullable(),
+  "logoUrl": zod.string().nullable().describe('Main logo. May be any aspect ratio. Used in modals and other places that have room for an irregular\/larger logo.'),
+  "logoSquareUrl": zod.string().nullable().describe('Square (1:1) logo used for tightly-bounded badges such as the navigation sidebar (rendered at 64x64). Falls back to logoUrl when null.'),
+  "brandPrimaryColor": zod.string().nullable().describe('Hex color string like \"#1f7ae0\" used for poster borders\/accents.'),
+  "brandAccentColor": zod.string().nullable().describe('Hex color string used for secondary accents on branded outputs.'),
+  "email1099Subject": zod.string().nullable().describe('Optional partner-customized subject line for 1099 statement emails sent\nto consenting vendors. Supports the placeholders `{{vendorName}}`,\n`{{partnerName}}`, `{{taxYear}}`, `{{formType}}`, `{{formLabel}}`, and\n`{{totalReportable}}`. When null\/blank the deliver endpoint falls back\nto the hardcoded English default.\n'),
+  "email1099Body": zod.string().nullable().describe('Optional partner-customized plain-text body for 1099 statement emails.\nSame placeholders as `email1099Subject`. Newlines are preserved.\n'),
+  "createdAt": zod.coerce.date()
+})
+
 
 /**
  * Returns the partner's contacts. Visible to admins, the owning
@@ -332,148 +206,93 @@ partner, and vendors with an active relationship to the partner.
  * @summary List a partner's contacts
  */
 export const ListPartnerContactsParams = zod.object({
-  partnerId: zod.coerce.number(),
-});
+  "partnerId": zod.coerce.number()
+})
 
 export const ListPartnerContactsQueryParams = zod.object({
-  includeDeleted: zod.coerce
-    .boolean()
-    .optional()
-    .describe("Admin only — include soft-deleted contacts in the result."),
-});
+  "includeDeleted": zod.coerce.boolean().optional().describe('Admin only — include soft-deleted contacts in the result.')
+})
 
 export const ListPartnerContactsResponseItem = zod.object({
-  id: zod.number(),
-  partnerId: zod.number(),
-  jobTitle: zod.string(),
-  name: zod.string(),
-  email: zod.string(),
-  phone: zod.string().nullable(),
-  roles: zod.array(zod.string()),
-  photoUrl: zod.string().nullish(),
-  createdAt: zod.coerce.date(),
-  deletedAt: zod.coerce
-    .date()
-    .nullish()
-    .describe(
-      "When set, the contact has been soft-deleted and is hidden unless `includeDeleted=true` is passed (admin only).",
-    ),
-  deletedBy: zod
-    .string()
-    .nullish()
-    .describe(
-      "`role:userId` audit string identifying who soft-deleted this contact.",
-    ),
-});
-export const ListPartnerContactsResponse = zod.array(
-  ListPartnerContactsResponseItem,
-);
+  "id": zod.number(),
+  "partnerId": zod.number(),
+  "jobTitle": zod.string(),
+  "name": zod.string(),
+  "email": zod.string(),
+  "phone": zod.string().nullable(),
+  "roles": zod.array(zod.string()),
+  "photoUrl": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "deletedAt": zod.coerce.date().nullish().describe('When set, the contact has been soft-deleted and is hidden unless `includeDeleted=true` is passed (admin only).'),
+  "deletedBy": zod.string().nullish().describe('`role:userId` audit string identifying who soft-deleted this contact.')
+})
+export const ListPartnerContactsResponse = zod.array(ListPartnerContactsResponseItem)
+
 
 /**
  * Clears `deletedAt`/`deletedBy` so the contact reappears in the default (non-`includeDeleted`) listing.
  * @summary Restore a soft-deleted partner contact (admin only)
  */
 export const RestorePartnerContactParams = zod.object({
-  partnerId: zod.coerce.number(),
-  contactId: zod.coerce.number(),
-});
+  "partnerId": zod.coerce.number(),
+  "contactId": zod.coerce.number()
+})
+
 
 /**
  * @summary List all vendors
  */
 export const ListVendorsResponseItem = zod.object({
-  id: zod.number(),
-  name: zod.string(),
-  contactName: zod.string(),
-  contactEmail: zod.string(),
-  contactPhone: zod.string().nullable(),
-  physicalAddress: zod.string().nullable(),
-  billingAddress: zod.string().nullable(),
-  stateTaxId: zod.string().nullable(),
-  federalTaxId: zod.string().nullable(),
-  businessPhone: zod.string().nullable(),
-  hoursOfOperation: zod.string().nullable(),
-  blurb: zod.string().nullable(),
-  logoUrl: zod.string().nullable(),
-  logoSquareUrl: zod
-    .string()
-    .nullable()
-    .describe(
-      "Square (1:1) logo used wherever the UI needs a tightly-bounded badge — e.g. the navigation sidebar at 64x64. Falls back to logoUrl when null.",
-    ),
-  brandPrimaryColor: zod
-    .string()
-    .nullable()
-    .describe(
-      'Hex color string like \"#1f7ae0\" used to brand vendor cards and outputs.',
-    ),
-  brandAccentColor: zod
-    .string()
-    .nullable()
-    .describe(
-      "Hex color string used for secondary accents on branded vendor outputs.",
-    ),
-  accountingFailureNotificationsEnabled: zod
-    .boolean()
-    .describe(
-      "When true, vendor admins are emailed a digest after a QBO\/OA push that produced per-row warnings.",
-    ),
-  accountingReconciliationNotificationsEnabled: zod
-    .boolean()
-    .describe(
-      "When true, vendor admins are emailed a digest after a QBO\/OA push that posted every row successfully but where the post-push reconciler found drift between VNDRLY's totals\/per-state tax and what the accounting system stored. Defaults to false (opt-in).",
-    ),
-  accountingReconciliationDigestCadence: zod
-    .enum(["per_push", "weekly_recap"])
-    .describe(
-      'Cadence for the reconciliation-drift digest. \"per_push\" sends one email immediately after every push that surfaces drift (legacy behavior). \"weekly_recap\" suppresses the per-push email and instead lets a background worker aggregate the past 7 days of reconciliation warnings into a single summary email per week. Only meaningful when accountingReconciliationNotificationsEnabled is true.',
-    ),
-  createdAt: zod.coerce.date(),
-});
-export const ListVendorsResponse = zod.array(ListVendorsResponseItem);
+  "id": zod.number(),
+  "name": zod.string(),
+  "contactName": zod.string(),
+  "contactEmail": zod.string(),
+  "contactPhone": zod.string().nullable(),
+  "physicalAddress": zod.string().nullable(),
+  "billingAddress": zod.string().nullable(),
+  "stateTaxId": zod.string().nullable(),
+  "federalTaxId": zod.string().nullable(),
+  "businessPhone": zod.string().nullable(),
+  "hoursOfOperation": zod.string().nullable(),
+  "blurb": zod.string().nullable(),
+  "logoUrl": zod.string().nullable(),
+  "logoSquareUrl": zod.string().nullable().describe('Square (1:1) logo used wherever the UI needs a tightly-bounded badge — e.g. the navigation sidebar at 64x64. Falls back to logoUrl when null.'),
+  "brandPrimaryColor": zod.string().nullable().describe('Hex color string like \"#1f7ae0\" used to brand vendor cards and outputs.'),
+  "brandAccentColor": zod.string().nullable().describe('Hex color string used for secondary accents on branded vendor outputs.'),
+  "accountingFailureNotificationsEnabled": zod.boolean().describe('When true, vendor admins are emailed a digest after a QBO\/OA push that produced per-row warnings.'),
+  "accountingReconciliationNotificationsEnabled": zod.boolean().describe('When true, vendor admins are emailed a digest after a QBO\/OA push that posted every row successfully but where the post-push reconciler found drift between VNDRLY\'s totals\/per-state tax and what the accounting system stored. Defaults to false (opt-in).'),
+  "accountingReconciliationDigestCadence": zod.enum(['per_push', 'weekly_recap']).describe('Cadence for the reconciliation-drift digest. \"per_push\" sends one email immediately after every push that surfaces drift (legacy behavior). \"weekly_recap\" suppresses the per-push email and instead lets a background worker aggregate the past 7 days of reconciliation warnings into a single summary email per week. Only meaningful when accountingReconciliationNotificationsEnabled is true.'),
+  "createdAt": zod.coerce.date()
+})
+export const ListVendorsResponse = zod.array(ListVendorsResponseItem)
+
 
 /**
  * @summary Create a new vendor
  */
-export const createVendorBodyBrandPrimaryColorRegExp = new RegExp(
-  "^#[0-9a-fA-F]{6}$",
-);
-export const createVendorBodyBrandAccentColorRegExp = new RegExp(
-  "^#[0-9a-fA-F]{6}$",
-);
+export const createVendorBodyBrandPrimaryColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const createVendorBodyBrandAccentColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+
 
 export const CreateVendorBody = zod.object({
-  name: zod.string(),
-  contactName: zod.string(),
-  contactEmail: zod.string(),
-  contactPhone: zod.string().nullish(),
-  physicalAddress: zod.string().nullish(),
-  billingAddress: zod.string().nullish(),
-  stateTaxId: zod.string().nullish(),
-  federalTaxId: zod.string().nullish(),
-  businessPhone: zod.string().nullish(),
-  hoursOfOperation: zod.string().nullish(),
-  blurb: zod.string().nullish(),
-  brandPrimaryColor: zod
-    .string()
-    .regex(createVendorBodyBrandPrimaryColorRegExp)
-    .nullish()
-    .describe(
-      'Hex color string like \"#1f7ae0\" used to brand vendor cards and outputs.',
-    ),
-  brandAccentColor: zod
-    .string()
-    .regex(createVendorBodyBrandAccentColorRegExp)
-    .nullish()
-    .describe(
-      "Hex color string used for secondary accents on branded vendor outputs.",
-    ),
-  accountingFailureNotificationsEnabled: zod.boolean().optional(),
-  accountingReconciliationNotificationsEnabled: zod.boolean().optional(),
-  accountingReconciliationDigestCadence: zod
-    .enum(["per_push", "weekly_recap"])
-    .optional(),
-});
+  "name": zod.string(),
+  "contactName": zod.string(),
+  "contactEmail": zod.string(),
+  "contactPhone": zod.string().nullish(),
+  "physicalAddress": zod.string().nullish(),
+  "billingAddress": zod.string().nullish(),
+  "stateTaxId": zod.string().nullish(),
+  "federalTaxId": zod.string().nullish(),
+  "businessPhone": zod.string().nullish(),
+  "hoursOfOperation": zod.string().nullish(),
+  "blurb": zod.string().nullish(),
+  "brandPrimaryColor": zod.string().regex(createVendorBodyBrandPrimaryColorRegExp).nullish().describe('Hex color string like \"#1f7ae0\" used to brand vendor cards and outputs.'),
+  "brandAccentColor": zod.string().regex(createVendorBodyBrandAccentColorRegExp).nullish().describe('Hex color string used for secondary accents on branded vendor outputs.'),
+  "accountingFailureNotificationsEnabled": zod.boolean().optional(),
+  "accountingReconciliationNotificationsEnabled": zod.boolean().optional(),
+  "accountingReconciliationDigestCadence": zod.enum(['per_push', 'weekly_recap']).optional()
+})
+
 
 /**
  * Returns the closest existing vendors for the given `name`, sorted
@@ -485,18 +304,17 @@ Admin-only.
  * @summary Fuzzy-match a candidate vendor name against existing vendors
  */
 export const MatchVendorQueryParams = zod.object({
-  name: zod.coerce.string(),
-});
+  "name": zod.coerce.string()
+})
 
 export const MatchVendorResponse = zod.object({
-  matches: zod.array(
-    zod.object({
-      id: zod.number(),
-      name: zod.string(),
-      score: zod.number(),
-    }),
-  ),
-});
+  "matches": zod.array(zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "score": zod.number()
+}))
+})
+
 
 /**
  * Public counterpart of `matchVendor` for the unauthenticated
@@ -508,178 +326,103 @@ an account before they create a duplicate. No auth required.
  * @summary Public name-only fuzzy match for vendor self-signup
  */
 export const CheckVendorNameQueryParams = zod.object({
-  name: zod.coerce.string(),
-});
+  "name": zod.coerce.string()
+})
 
 export const CheckVendorNameResponse = zod.object({
-  matches: zod.array(
-    zod.object({
-      name: zod.string(),
-      score: zod.number(),
-    }),
-  ),
-});
+  "matches": zod.array(zod.object({
+  "name": zod.string(),
+  "score": zod.number()
+}))
+})
+
 
 /**
  * @summary Get vendor by ID
  */
 export const GetVendorParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
 export const GetVendorResponse = zod.object({
-  id: zod.number(),
-  name: zod.string(),
-  contactName: zod.string(),
-  contactEmail: zod.string(),
-  contactPhone: zod.string().nullable(),
-  physicalAddress: zod.string().nullable(),
-  billingAddress: zod.string().nullable(),
-  stateTaxId: zod.string().nullable(),
-  federalTaxId: zod.string().nullable(),
-  businessPhone: zod.string().nullable(),
-  hoursOfOperation: zod.string().nullable(),
-  blurb: zod.string().nullable(),
-  logoUrl: zod.string().nullable(),
-  logoSquareUrl: zod
-    .string()
-    .nullable()
-    .describe(
-      "Square (1:1) logo used wherever the UI needs a tightly-bounded badge — e.g. the navigation sidebar at 64x64. Falls back to logoUrl when null.",
-    ),
-  brandPrimaryColor: zod
-    .string()
-    .nullable()
-    .describe(
-      'Hex color string like \"#1f7ae0\" used to brand vendor cards and outputs.',
-    ),
-  brandAccentColor: zod
-    .string()
-    .nullable()
-    .describe(
-      "Hex color string used for secondary accents on branded vendor outputs.",
-    ),
-  accountingFailureNotificationsEnabled: zod
-    .boolean()
-    .describe(
-      "When true, vendor admins are emailed a digest after a QBO\/OA push that produced per-row warnings.",
-    ),
-  accountingReconciliationNotificationsEnabled: zod
-    .boolean()
-    .describe(
-      "When true, vendor admins are emailed a digest after a QBO\/OA push that posted every row successfully but where the post-push reconciler found drift between VNDRLY's totals\/per-state tax and what the accounting system stored. Defaults to false (opt-in).",
-    ),
-  accountingReconciliationDigestCadence: zod
-    .enum(["per_push", "weekly_recap"])
-    .describe(
-      'Cadence for the reconciliation-drift digest. \"per_push\" sends one email immediately after every push that surfaces drift (legacy behavior). \"weekly_recap\" suppresses the per-push email and instead lets a background worker aggregate the past 7 days of reconciliation warnings into a single summary email per week. Only meaningful when accountingReconciliationNotificationsEnabled is true.',
-    ),
-  createdAt: zod.coerce.date(),
-});
+  "id": zod.number(),
+  "name": zod.string(),
+  "contactName": zod.string(),
+  "contactEmail": zod.string(),
+  "contactPhone": zod.string().nullable(),
+  "physicalAddress": zod.string().nullable(),
+  "billingAddress": zod.string().nullable(),
+  "stateTaxId": zod.string().nullable(),
+  "federalTaxId": zod.string().nullable(),
+  "businessPhone": zod.string().nullable(),
+  "hoursOfOperation": zod.string().nullable(),
+  "blurb": zod.string().nullable(),
+  "logoUrl": zod.string().nullable(),
+  "logoSquareUrl": zod.string().nullable().describe('Square (1:1) logo used wherever the UI needs a tightly-bounded badge — e.g. the navigation sidebar at 64x64. Falls back to logoUrl when null.'),
+  "brandPrimaryColor": zod.string().nullable().describe('Hex color string like \"#1f7ae0\" used to brand vendor cards and outputs.'),
+  "brandAccentColor": zod.string().nullable().describe('Hex color string used for secondary accents on branded vendor outputs.'),
+  "accountingFailureNotificationsEnabled": zod.boolean().describe('When true, vendor admins are emailed a digest after a QBO\/OA push that produced per-row warnings.'),
+  "accountingReconciliationNotificationsEnabled": zod.boolean().describe('When true, vendor admins are emailed a digest after a QBO\/OA push that posted every row successfully but where the post-push reconciler found drift between VNDRLY\'s totals\/per-state tax and what the accounting system stored. Defaults to false (opt-in).'),
+  "accountingReconciliationDigestCadence": zod.enum(['per_push', 'weekly_recap']).describe('Cadence for the reconciliation-drift digest. \"per_push\" sends one email immediately after every push that surfaces drift (legacy behavior). \"weekly_recap\" suppresses the per-push email and instead lets a background worker aggregate the past 7 days of reconciliation warnings into a single summary email per week. Only meaningful when accountingReconciliationNotificationsEnabled is true.'),
+  "createdAt": zod.coerce.date()
+})
+
 
 /**
  * @summary Update a vendor
  */
 export const UpdateVendorParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
-export const updateVendorBodyBrandPrimaryColorRegExp = new RegExp(
-  "^#[0-9a-fA-F]{6}$",
-);
-export const updateVendorBodyBrandAccentColorRegExp = new RegExp(
-  "^#[0-9a-fA-F]{6}$",
-);
+export const updateVendorBodyBrandPrimaryColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const updateVendorBodyBrandAccentColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+
 
 export const UpdateVendorBody = zod.object({
-  name: zod.string().optional(),
-  contactName: zod.string().optional(),
-  contactEmail: zod.string().optional(),
-  contactPhone: zod.string().nullish(),
-  physicalAddress: zod.string().nullish(),
-  billingAddress: zod.string().nullish(),
-  stateTaxId: zod.string().nullish(),
-  federalTaxId: zod.string().nullish(),
-  businessPhone: zod.string().nullish(),
-  hoursOfOperation: zod.string().nullish(),
-  blurb: zod.string().nullish(),
-  logoUrl: zod.string().nullish(),
-  logoSquareUrl: zod
-    .string()
-    .nullish()
-    .describe(
-      "Square (1:1) logo used in the navigation sidebar. Falls back to logoUrl when null.",
-    ),
-  brandPrimaryColor: zod
-    .string()
-    .regex(updateVendorBodyBrandPrimaryColorRegExp)
-    .nullish()
-    .describe(
-      'Hex color string like \"#1f7ae0\" used to brand vendor cards and outputs.',
-    ),
-  brandAccentColor: zod
-    .string()
-    .regex(updateVendorBodyBrandAccentColorRegExp)
-    .nullish()
-    .describe(
-      "Hex color string used for secondary accents on branded vendor outputs.",
-    ),
-  accountingFailureNotificationsEnabled: zod.boolean().optional(),
-  accountingReconciliationNotificationsEnabled: zod.boolean().optional(),
-  accountingReconciliationDigestCadence: zod
-    .enum(["per_push", "weekly_recap"])
-    .optional(),
-});
+  "name": zod.string().optional(),
+  "contactName": zod.string().optional(),
+  "contactEmail": zod.string().optional(),
+  "contactPhone": zod.string().nullish(),
+  "physicalAddress": zod.string().nullish(),
+  "billingAddress": zod.string().nullish(),
+  "stateTaxId": zod.string().nullish(),
+  "federalTaxId": zod.string().nullish(),
+  "businessPhone": zod.string().nullish(),
+  "hoursOfOperation": zod.string().nullish(),
+  "blurb": zod.string().nullish(),
+  "logoUrl": zod.string().nullish(),
+  "logoSquareUrl": zod.string().nullish().describe('Square (1:1) logo used in the navigation sidebar. Falls back to logoUrl when null.'),
+  "brandPrimaryColor": zod.string().regex(updateVendorBodyBrandPrimaryColorRegExp).nullish().describe('Hex color string like \"#1f7ae0\" used to brand vendor cards and outputs.'),
+  "brandAccentColor": zod.string().regex(updateVendorBodyBrandAccentColorRegExp).nullish().describe('Hex color string used for secondary accents on branded vendor outputs.'),
+  "accountingFailureNotificationsEnabled": zod.boolean().optional(),
+  "accountingReconciliationNotificationsEnabled": zod.boolean().optional(),
+  "accountingReconciliationDigestCadence": zod.enum(['per_push', 'weekly_recap']).optional()
+})
 
 export const UpdateVendorResponse = zod.object({
-  id: zod.number(),
-  name: zod.string(),
-  contactName: zod.string(),
-  contactEmail: zod.string(),
-  contactPhone: zod.string().nullable(),
-  physicalAddress: zod.string().nullable(),
-  billingAddress: zod.string().nullable(),
-  stateTaxId: zod.string().nullable(),
-  federalTaxId: zod.string().nullable(),
-  businessPhone: zod.string().nullable(),
-  hoursOfOperation: zod.string().nullable(),
-  blurb: zod.string().nullable(),
-  logoUrl: zod.string().nullable(),
-  logoSquareUrl: zod
-    .string()
-    .nullable()
-    .describe(
-      "Square (1:1) logo used wherever the UI needs a tightly-bounded badge — e.g. the navigation sidebar at 64x64. Falls back to logoUrl when null.",
-    ),
-  brandPrimaryColor: zod
-    .string()
-    .nullable()
-    .describe(
-      'Hex color string like \"#1f7ae0\" used to brand vendor cards and outputs.',
-    ),
-  brandAccentColor: zod
-    .string()
-    .nullable()
-    .describe(
-      "Hex color string used for secondary accents on branded vendor outputs.",
-    ),
-  accountingFailureNotificationsEnabled: zod
-    .boolean()
-    .describe(
-      "When true, vendor admins are emailed a digest after a QBO\/OA push that produced per-row warnings.",
-    ),
-  accountingReconciliationNotificationsEnabled: zod
-    .boolean()
-    .describe(
-      "When true, vendor admins are emailed a digest after a QBO\/OA push that posted every row successfully but where the post-push reconciler found drift between VNDRLY's totals\/per-state tax and what the accounting system stored. Defaults to false (opt-in).",
-    ),
-  accountingReconciliationDigestCadence: zod
-    .enum(["per_push", "weekly_recap"])
-    .describe(
-      'Cadence for the reconciliation-drift digest. \"per_push\" sends one email immediately after every push that surfaces drift (legacy behavior). \"weekly_recap\" suppresses the per-push email and instead lets a background worker aggregate the past 7 days of reconciliation warnings into a single summary email per week. Only meaningful when accountingReconciliationNotificationsEnabled is true.',
-    ),
-  createdAt: zod.coerce.date(),
-});
+  "id": zod.number(),
+  "name": zod.string(),
+  "contactName": zod.string(),
+  "contactEmail": zod.string(),
+  "contactPhone": zod.string().nullable(),
+  "physicalAddress": zod.string().nullable(),
+  "billingAddress": zod.string().nullable(),
+  "stateTaxId": zod.string().nullable(),
+  "federalTaxId": zod.string().nullable(),
+  "businessPhone": zod.string().nullable(),
+  "hoursOfOperation": zod.string().nullable(),
+  "blurb": zod.string().nullable(),
+  "logoUrl": zod.string().nullable(),
+  "logoSquareUrl": zod.string().nullable().describe('Square (1:1) logo used wherever the UI needs a tightly-bounded badge — e.g. the navigation sidebar at 64x64. Falls back to logoUrl when null.'),
+  "brandPrimaryColor": zod.string().nullable().describe('Hex color string like \"#1f7ae0\" used to brand vendor cards and outputs.'),
+  "brandAccentColor": zod.string().nullable().describe('Hex color string used for secondary accents on branded vendor outputs.'),
+  "accountingFailureNotificationsEnabled": zod.boolean().describe('When true, vendor admins are emailed a digest after a QBO\/OA push that produced per-row warnings.'),
+  "accountingReconciliationNotificationsEnabled": zod.boolean().describe('When true, vendor admins are emailed a digest after a QBO\/OA push that posted every row successfully but where the post-push reconciler found drift between VNDRLY\'s totals\/per-state tax and what the accounting system stored. Defaults to false (opt-in).'),
+  "accountingReconciliationDigestCadence": zod.enum(['per_push', 'weekly_recap']).describe('Cadence for the reconciliation-drift digest. \"per_push\" sends one email immediately after every push that surfaces drift (legacy behavior). \"weekly_recap\" suppresses the per-push email and instead lets a background worker aggregate the past 7 days of reconciliation warnings into a single summary email per week. Only meaningful when accountingReconciliationNotificationsEnabled is true.'),
+  "createdAt": zod.coerce.date()
+})
+
 
 /**
  * Returns every work type defined in the system, each annotated with
@@ -690,33 +433,23 @@ and the per-vendor "Services & Pricing" section in vendor-detail.
  * @summary List the full work-type catalog with this vendor's selections + pricing
  */
 export const ListVendorWorkTypeCatalogParams = zod.object({
-  vendorId: zod.coerce.number(),
-});
+  "vendorId": zod.coerce.number()
+})
 
 export const ListVendorWorkTypeCatalogResponse = zod.object({
-  vendorId: zod.number(),
-  items: zod.array(
-    zod.object({
-      id: zod.number(),
-      name: zod.string(),
-      category: zod.string().nullable(),
-      selected: zod.boolean(),
-      unitPrice: zod
-        .string()
-        .nullable()
-        .describe('numeric(12,2) as a string, e.g. \"125.00\"'),
-      unit: zod.union([
-        zod.enum(["per_hour", "per_day", "per_job", "lump_sum"]),
-        zod.null(),
-      ]),
-      currency: zod
-        .string()
-        .nullable()
-        .describe("ISO 4217 currency code (defaults USD)"),
-      notes: zod.string().nullable(),
-    }),
-  ),
-});
+  "vendorId": zod.number(),
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "category": zod.string().nullable(),
+  "selected": zod.boolean(),
+  "unitPrice": zod.string().nullable().describe('numeric(12,2) as a string, e.g. \"125.00\"'),
+  "unit": zod.union([zod.enum(['per_hour', 'per_day', 'per_job', 'lump_sum']),zod.null()]),
+  "currency": zod.string().nullable().describe('ISO 4217 currency code (defaults USD)'),
+  "notes": zod.string().nullable()
+}))
+})
+
 
 /**
  * Replace-all semantics. Accepts either the legacy `workTypeIds`
@@ -729,41 +462,27 @@ only.
  * @summary Replace the vendor's work-type catalog (with optional pricing)
  */
 export const SetVendorWorkTypeCatalogParams = zod.object({
-  vendorId: zod.coerce.number(),
-});
+  "vendorId": zod.coerce.number()
+})
 
-export const SetVendorWorkTypeCatalogBody = zod
-  .object({
-    items: zod
-      .array(
-        zod.object({
-          workTypeId: zod.number(),
-          unitPrice: zod
-            .union([zod.string(), zod.number(), zod.null()])
-            .optional(),
-          unit: zod
-            .union([
-              zod.enum(["per_hour", "per_day", "per_job", "lump_sum"]),
-              zod.null(),
-            ])
-            .optional(),
-          currency: zod.string().nullish(),
-          notes: zod.string().nullish(),
-        }),
-      )
-      .optional(),
-    workTypeIds: zod.array(zod.number()).optional(),
-  })
-  .describe(
-    "Provide `items` for the preferred per-row pricing shape, or\n`workTypeIds` for the legacy presence-only shape. At least one\nof the two must be present.\n",
-  );
+export const SetVendorWorkTypeCatalogBody = zod.object({
+  "items": zod.array(zod.object({
+  "workTypeId": zod.number(),
+  "unitPrice": zod.union([zod.string(),zod.number(),zod.null()]).optional(),
+  "unit": zod.union([zod.enum(['per_hour', 'per_day', 'per_job', 'lump_sum']),zod.null()]).optional(),
+  "currency": zod.string().nullish(),
+  "notes": zod.string().nullish()
+})).optional(),
+  "workTypeIds": zod.array(zod.number()).optional()
+}).describe('Provide `items` for the preferred per-row pricing shape, or\n`workTypeIds` for the legacy presence-only shape. At least one\nof the two must be present.\n')
 
 export const SetVendorWorkTypeCatalogResponse = zod.object({
-  vendorId: zod.number(),
-  added: zod.number(),
-  removed: zod.number(),
-  updated: zod.number(),
-});
+  "vendorId": zod.number(),
+  "added": zod.number(),
+  "removed": zod.number(),
+  "updated": zod.number()
+})
+
 
 /**
  * Returns the site assignments for the given vendor + work type, each
@@ -773,24 +492,23 @@ vendor portal Product/Service catalog to show AFE pills.
  * @summary List a vendor's per-site AFE assignments for a specific work type
  */
 export const GetVendorWorkTypeSiteAfesParams = zod.object({
-  vendorId: zod.coerce.number(),
-  workTypeId: zod.coerce.number(),
-});
+  "vendorId": zod.coerce.number(),
+  "workTypeId": zod.coerce.number()
+})
 
 export const GetVendorWorkTypeSiteAfesResponse = zod.object({
-  vendorId: zod.number(),
-  workTypeId: zod.number(),
-  items: zod.array(
-    zod.object({
-      assignmentId: zod.number(),
-      siteLocationId: zod.number(),
-      siteCode: zod.string(),
-      siteName: zod.string(),
-      partnerName: zod.string().nullable(),
-      afe: zod.string().nullable(),
-    }),
-  ),
-});
+  "vendorId": zod.number(),
+  "workTypeId": zod.number(),
+  "items": zod.array(zod.object({
+  "assignmentId": zod.number(),
+  "siteLocationId": zod.number(),
+  "siteCode": zod.string(),
+  "siteName": zod.string(),
+  "partnerName": zod.string().nullable(),
+  "afe": zod.string().nullable()
+}))
+})
+
 
 /**
  * Returns every (work_type_id, site_assignment) pair for this vendor in
@@ -801,23 +519,22 @@ per-work-type requests.
  * @summary Bulk list a vendor's per-site AFE assignments across all work types
  */
 export const GetVendorSiteAfesParams = zod.object({
-  vendorId: zod.coerce.number(),
-});
+  "vendorId": zod.coerce.number()
+})
 
 export const GetVendorSiteAfesResponse = zod.object({
-  vendorId: zod.number(),
-  items: zod.array(
-    zod.object({
-      workTypeId: zod.number(),
-      assignmentId: zod.number(),
-      siteLocationId: zod.number(),
-      siteCode: zod.string(),
-      siteName: zod.string(),
-      partnerName: zod.string().nullable(),
-      afe: zod.string().nullable(),
-    }),
-  ),
-});
+  "vendorId": zod.number(),
+  "items": zod.array(zod.object({
+  "workTypeId": zod.number(),
+  "assignmentId": zod.number(),
+  "siteLocationId": zod.number(),
+  "siteCode": zod.string(),
+  "siteName": zod.string(),
+  "partnerName": zod.string().nullable(),
+  "afe": zod.string().nullable()
+}))
+})
+
 
 /**
  * Returns the vendor's non-field office contacts. Field/foreman rows
@@ -828,62 +545,34 @@ active relationship to the vendor.
  * @summary List a vendor's office contacts
  */
 export const ListVendorContactsParams = zod.object({
-  vendorId: zod.coerce.number(),
-});
+  "vendorId": zod.coerce.number()
+})
 
 export const ListVendorContactsQueryParams = zod.object({
-  includeDeleted: zod.coerce
-    .boolean()
-    .optional()
-    .describe("Admin only — include soft-deleted contacts in the result."),
-});
+  "includeDeleted": zod.coerce.boolean().optional().describe('Admin only — include soft-deleted contacts in the result.')
+})
 
 export const ListVendorContactsResponseItem = zod.object({
-  id: zod.number(),
-  vendorId: zod.number(),
-  vendorRole: zod
-    .string()
-    .describe(
-      "Office role (e.g. `office`, `accounts_payable`). Field\/foreman rows are excluded from this collection.",
-    ),
-  roles: zod.array(zod.string()).optional(),
-  jobTitle: zod
-    .string()
-    .nullable()
-    .describe(
-      "Underlying `vendor_people.job_title` column is nullable, so callers must guard against `null`.",
-    ),
-  firstName: zod.string(),
-  lastName: zod.string(),
-  email: zod.string(),
-  phone: zod.string().nullable(),
-  isActive: zod.boolean(),
-  pecCertification: zod.boolean().optional(),
-  pecExpirationDate: zod.string().nullish(),
-  photoUrl: zod.string().nullish(),
-  createdAt: zod.coerce.date(),
-  deletedAt: zod.coerce
-    .date()
-    .nullish()
-    .describe(
-      "When set, the contact has been soft-deleted and is hidden unless `includeDeleted=true` is passed (admin only).",
-    ),
-  deletedBy: zod
-    .string()
-    .nullish()
-    .describe(
-      "`role:userId` audit string identifying who soft-deleted this contact.",
-    ),
-  profilePendingReviewAt: zod.coerce
-    .date()
-    .nullish()
-    .describe(
-      "Set when this person updates their own profile or certifications.",
-    ),
-});
-export const ListVendorContactsResponse = zod.array(
-  ListVendorContactsResponseItem,
-);
+  "id": zod.number(),
+  "vendorId": zod.number(),
+  "vendorRole": zod.string().describe('Office role (e.g. `office`, `accounts_payable`). Field\/foreman rows are excluded from this collection.'),
+  "roles": zod.array(zod.string()).optional(),
+  "jobTitle": zod.string().nullable().describe('Underlying `vendor_people.job_title` column is nullable, so callers must guard against `null`.'),
+  "firstName": zod.string(),
+  "lastName": zod.string(),
+  "email": zod.string(),
+  "phone": zod.string().nullable(),
+  "isActive": zod.boolean(),
+  "pecCertification": zod.boolean().optional(),
+  "pecExpirationDate": zod.string().nullish(),
+  "photoUrl": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "deletedAt": zod.coerce.date().nullish().describe('When set, the contact has been soft-deleted and is hidden unless `includeDeleted=true` is passed (admin only).'),
+  "deletedBy": zod.string().nullish().describe('`role:userId` audit string identifying who soft-deleted this contact.'),
+  "profilePendingReviewAt": zod.coerce.date().nullish().describe('Set when this person updates their own profile or certifications.')
+})
+export const ListVendorContactsResponse = zod.array(ListVendorContactsResponseItem)
+
 
 /**
  * Clears `deletedAt`/`deletedBy` and re-activates the contact
@@ -893,291 +582,306 @@ those through `/field-employees/{id}/restore` instead.
  * @summary Restore a soft-deleted vendor contact (admin only)
  */
 export const RestoreVendorContactParams = zod.object({
-  vendorId: zod.coerce.number(),
-  contactId: zod.coerce.number(),
-});
+  "vendorId": zod.coerce.number(),
+  "contactId": zod.coerce.number()
+})
+
 
 /**
  * @summary List all available work types
  */
 export const ListWorkTypesResponseItem = zod.object({
-  id: zod.number(),
-  name: zod.string(),
-  category: zod.string(),
-  description: zod.string().nullable(),
-});
-export const ListWorkTypesResponse = zod.array(ListWorkTypesResponseItem);
+  "id": zod.number(),
+  "name": zod.string(),
+  "category": zod.string(),
+  "description": zod.string().nullable(),
+  "taxTreatment": zod.enum(['exempt_labor', 'taxable_repair_service', 'taxable_all']).nullable()
+})
+export const ListWorkTypesResponse = zod.array(ListWorkTypesResponseItem)
+
 
 /**
  * @summary List all site locations
  */
 export const ListSiteLocationsQueryParams = zod.object({
-  partnerId: zod.coerce.number().optional(),
-});
+  "partnerId": zod.coerce.number().optional()
+})
 
 export const ListSiteLocationsResponseItem = zod.object({
-  id: zod.number(),
-  partnerId: zod.number(),
-  name: zod.string(),
-  address: zod.string(),
-  latitude: zod.number(),
-  longitude: zod.number(),
-  siteCode: zod.string(),
-  state: zod.string().nullable(),
-  isActive: zod.boolean(),
-  status: zod.enum(["active", "inactive", "standby", "offline"]),
-  partnerName: zod.string().nullable(),
-  siteRadiusMeters: zod.number().nullable(),
-  afe: zod.string().nullable(),
-  photoUrl: zod.string().nullable(),
-  createdAt: zod.coerce.date(),
-});
-export const ListSiteLocationsResponse = zod.array(
-  ListSiteLocationsResponseItem,
-);
+  "id": zod.number(),
+  "partnerId": zod.number(),
+  "name": zod.string(),
+  "address": zod.string(),
+  "latitude": zod.number(),
+  "longitude": zod.number(),
+  "siteCode": zod.string(),
+  "state": zod.string().nullable(),
+  "isActive": zod.boolean(),
+  "status": zod.enum(['active', 'inactive', 'standby', 'offline']),
+  "partnerName": zod.string().nullable(),
+  "siteRadiusMeters": zod.number().nullable(),
+  "afe": zod.string().nullable(),
+  "photoUrl": zod.string().nullable(),
+  "taxJurisdictionPostalCode": zod.string().nullable().describe('USPS ZIP resolved from site coordinates for sales tax jurisdiction'),
+  "taxJurisdictionCounty": zod.string().nullable(),
+  "taxJurisdictionCity": zod.string().nullable(),
+  "taxJurisdictionLabel": zod.string().nullable().describe('Human-readable situs label with combined rate'),
+  "stateTaxRate": zod.string().nullable(),
+  "localTaxRate": zod.string().nullable(),
+  "combinedTaxRate": zod.string().nullable().describe('Combined situs rate for all taxable lines at this site'),
+  "merchandiseTaxRate": zod.string().nullable().describe('Legacy alias of combinedTaxRate'),
+  "laborTaxRate": zod.string().nullable().describe('Legacy alias of stateTaxRate (informational)'),
+  "taxJurisdictionResolvedAt": zod.coerce.date().nullable(),
+  "taxProvider": zod.enum(['rubric_fallback', 'county_seat', 'fallback']).nullable(),
+  "createdAt": zod.coerce.date()
+})
+export const ListSiteLocationsResponse = zod.array(ListSiteLocationsResponseItem)
+
 
 /**
  * @summary Create a new site location
  */
 export const CreateSiteLocationBody = zod.object({
-  partnerId: zod.number(),
-  name: zod.string(),
-  address: zod.string(),
-  latitude: zod.number(),
-  longitude: zod.number(),
-  state: zod.string().nullish(),
-  siteRadiusMeters: zod.number().nullish(),
-  photoUrl: zod.string().nullish(),
-  afe: zod.string().nullish(),
-  autoAssignAllVendors: zod
-    .boolean()
-    .nullish()
-    .describe(
-      "When true, after the site row is created the server copies every\n(vendor_id, work_type_id) pair already approved on this partner\n(from `partner_vendor_work_type_approvals`) into\n`site_work_assignments` for the new site. Lets a partner stand\nup a site that is immediately visible on mobile to every\nalready-approved vendor without manually re-assigning each one.\nDefault false: site is created with zero assignments and the\npartner is expected to assign vendors from the site detail page.\n",
-    ),
-});
+  "partnerId": zod.number(),
+  "name": zod.string(),
+  "address": zod.string(),
+  "latitude": zod.number(),
+  "longitude": zod.number(),
+  "state": zod.string().nullish(),
+  "siteRadiusMeters": zod.number().nullish(),
+  "photoUrl": zod.string().nullish(),
+  "afe": zod.string().nullish(),
+  "autoAssignAllVendors": zod.boolean().nullish().describe('When true, after the site row is created the server copies every\n(vendor_id, work_type_id) pair already approved on this partner\n(from `partner_vendor_work_type_approvals`) into\n`site_work_assignments` for the new site. Lets a partner stand\nup a site that is immediately visible on mobile to every\nalready-approved vendor without manually re-assigning each one.\nDefault false: site is created with zero assignments and the\npartner is expected to assign vendors from the site detail page.\n')
+})
+
 
 /**
  * @summary Get site location by ID
  */
 export const GetSiteLocationParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
 export const GetSiteLocationResponse = zod.object({
-  id: zod.number(),
-  partnerId: zod.number(),
-  name: zod.string(),
-  address: zod.string(),
-  latitude: zod.number(),
-  longitude: zod.number(),
-  siteCode: zod.string(),
-  state: zod.string().nullable(),
-  isActive: zod.boolean(),
-  status: zod.enum(["active", "inactive", "standby", "offline"]),
-  partnerName: zod.string().nullable(),
-  siteRadiusMeters: zod.number().nullable(),
-  afe: zod.string().nullable(),
-  photoUrl: zod.string().nullable(),
-  hidden: zod.boolean(),
-  supersededAt: zod.coerce.date().nullable(),
-  sourceType: zod.string(),
-  createdAt: zod.coerce.date(),
-  assignments: zod.array(
-    zod.object({
-      id: zod.number(),
-      siteLocationId: zod.number(),
-      workTypeId: zod.number(),
-      vendorId: zod.number(),
-      workTypeName: zod.string(),
-      workTypeCategory: zod.string(),
-      vendorName: zod.string(),
-      afe: zod.string().nullable(),
-    }),
-  ),
-});
+  "id": zod.number(),
+  "partnerId": zod.number(),
+  "name": zod.string(),
+  "address": zod.string(),
+  "latitude": zod.number(),
+  "longitude": zod.number(),
+  "siteCode": zod.string(),
+  "state": zod.string().nullable(),
+  "isActive": zod.boolean(),
+  "status": zod.enum(['active', 'inactive', 'standby', 'offline']),
+  "partnerName": zod.string().nullable(),
+  "siteRadiusMeters": zod.number().nullable(),
+  "afe": zod.string().nullable(),
+  "photoUrl": zod.string().nullable(),
+  "taxJurisdictionPostalCode": zod.string().nullable(),
+  "taxJurisdictionCounty": zod.string().nullable(),
+  "taxJurisdictionCity": zod.string().nullable(),
+  "taxJurisdictionLabel": zod.string().nullable(),
+  "stateTaxRate": zod.string().nullable(),
+  "localTaxRate": zod.string().nullable(),
+  "combinedTaxRate": zod.string().nullable(),
+  "merchandiseTaxRate": zod.string().nullable(),
+  "laborTaxRate": zod.string().nullable(),
+  "taxJurisdictionResolvedAt": zod.coerce.date().nullable(),
+  "taxProvider": zod.enum(['rubric_fallback', 'county_seat', 'fallback']).nullable(),
+  "hidden": zod.boolean(),
+  "supersededAt": zod.coerce.date().nullable(),
+  "sourceType": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "assignments": zod.array(zod.object({
+  "id": zod.number(),
+  "siteLocationId": zod.number(),
+  "workTypeId": zod.number(),
+  "vendorId": zod.number(),
+  "workTypeName": zod.string(),
+  "workTypeCategory": zod.string(),
+  "vendorName": zod.string(),
+  "afe": zod.string().nullable()
+}))
+})
+
 
 /**
  * @summary Update a site location
  */
 export const UpdateSiteLocationParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
 export const updateSiteLocationBodySiteRadiusMetersMax = 10000;
 
+
+
 export const UpdateSiteLocationBody = zod.object({
-  name: zod.string().optional(),
-  address: zod.string().optional(),
-  latitude: zod.number().optional(),
-  longitude: zod.number().optional(),
-  state: zod.string().nullish(),
-  isActive: zod.boolean().optional(),
-  status: zod.enum(["active", "inactive", "standby", "offline"]).optional(),
-  afe: zod.string().nullish(),
-  hidden: zod
-    .boolean()
-    .optional()
-    .describe(
-      "Admin-only. Set to false to restore a hidden\/superseded site (e.g. county-area anchor superseded by ingested wells); supersededAt is cleared automatically when hidden is set to false.",
-    ),
-  siteRadiusMeters: zod
-    .number()
-    .min(1)
-    .max(updateSiteLocationBodySiteRadiusMetersMax)
-    .nullish()
-    .describe(
-      "Geofence radius in meters used for vendor check-in. Null means use the default.",
-    ),
-  photoUrl: zod
-    .string()
-    .nullish()
-    .describe(
-      "URL to a photo of the wellhead at this location, used for visual identification.",
-    ),
-});
+  "name": zod.string().optional(),
+  "address": zod.string().optional(),
+  "latitude": zod.number().optional(),
+  "longitude": zod.number().optional(),
+  "state": zod.string().nullish(),
+  "isActive": zod.boolean().optional(),
+  "status": zod.enum(['active', 'inactive', 'standby', 'offline']).optional(),
+  "afe": zod.string().nullish(),
+  "hidden": zod.boolean().optional().describe('Admin-only. Set to false to restore a hidden\/superseded site (e.g. county-area anchor superseded by ingested wells); supersededAt is cleared automatically when hidden is set to false.'),
+  "siteRadiusMeters": zod.number().min(1).max(updateSiteLocationBodySiteRadiusMetersMax).nullish().describe('Geofence radius in meters used for vendor check-in. Null means use the default.'),
+  "photoUrl": zod.string().nullish().describe('URL to a photo of the wellhead at this location, used for visual identification.')
+})
 
 export const UpdateSiteLocationResponse = zod.object({
-  id: zod.number(),
-  partnerId: zod.number(),
-  name: zod.string(),
-  address: zod.string(),
-  latitude: zod.number(),
-  longitude: zod.number(),
-  siteCode: zod.string(),
-  state: zod.string().nullable(),
-  isActive: zod.boolean(),
-  status: zod.enum(["active", "inactive", "standby", "offline"]),
-  partnerName: zod.string().nullable(),
-  siteRadiusMeters: zod.number().nullable(),
-  afe: zod.string().nullable(),
-  photoUrl: zod.string().nullable(),
-  createdAt: zod.coerce.date(),
-});
+  "id": zod.number(),
+  "partnerId": zod.number(),
+  "name": zod.string(),
+  "address": zod.string(),
+  "latitude": zod.number(),
+  "longitude": zod.number(),
+  "siteCode": zod.string(),
+  "state": zod.string().nullable(),
+  "isActive": zod.boolean(),
+  "status": zod.enum(['active', 'inactive', 'standby', 'offline']),
+  "partnerName": zod.string().nullable(),
+  "siteRadiusMeters": zod.number().nullable(),
+  "afe": zod.string().nullable(),
+  "photoUrl": zod.string().nullable(),
+  "taxJurisdictionPostalCode": zod.string().nullable().describe('USPS ZIP resolved from site coordinates for sales tax jurisdiction'),
+  "taxJurisdictionCounty": zod.string().nullable(),
+  "taxJurisdictionCity": zod.string().nullable(),
+  "taxJurisdictionLabel": zod.string().nullable().describe('Human-readable situs label with combined rate'),
+  "stateTaxRate": zod.string().nullable(),
+  "localTaxRate": zod.string().nullable(),
+  "combinedTaxRate": zod.string().nullable().describe('Combined situs rate for all taxable lines at this site'),
+  "merchandiseTaxRate": zod.string().nullable().describe('Legacy alias of combinedTaxRate'),
+  "laborTaxRate": zod.string().nullable().describe('Legacy alias of stateTaxRate (informational)'),
+  "taxJurisdictionResolvedAt": zod.coerce.date().nullable(),
+  "taxProvider": zod.enum(['rubric_fallback', 'county_seat', 'fallback']).nullable(),
+  "createdAt": zod.coerce.date()
+})
+
 
 /**
  * @summary Get QR code for a site location
  */
 export const GetSiteLocationQrCodeParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
 export const GetSiteLocationQrCodeResponse = zod.object({
-  siteCode: zod.string(),
-  qrCodeUrl: zod.string(),
-  portalUrl: zod.string(),
-});
+  "siteCode": zod.string(),
+  "qrCodeUrl": zod.string(),
+  "portalUrl": zod.string()
+})
+
 
 /**
  * @summary List work type assignments for a site
  */
 export const ListSiteAssignmentsParams = zod.object({
-  siteId: zod.coerce.number(),
-});
+  "siteId": zod.coerce.number()
+})
 
 export const ListSiteAssignmentsResponseItem = zod.object({
-  id: zod.number(),
-  siteLocationId: zod.number(),
-  workTypeId: zod.number(),
-  vendorId: zod.number(),
-  workTypeName: zod.string(),
-  workTypeCategory: zod.string(),
-  vendorName: zod.string(),
-  afe: zod.string().nullable(),
-});
-export const ListSiteAssignmentsResponse = zod.array(
-  ListSiteAssignmentsResponseItem,
-);
+  "id": zod.number(),
+  "siteLocationId": zod.number(),
+  "workTypeId": zod.number(),
+  "vendorId": zod.number(),
+  "workTypeName": zod.string(),
+  "workTypeCategory": zod.string(),
+  "vendorName": zod.string(),
+  "afe": zod.string().nullable()
+})
+export const ListSiteAssignmentsResponse = zod.array(ListSiteAssignmentsResponseItem)
+
 
 /**
  * @summary Assign work type and vendor to a site
  */
 export const CreateSiteAssignmentParams = zod.object({
-  siteId: zod.coerce.number(),
-});
+  "siteId": zod.coerce.number()
+})
 
 export const CreateSiteAssignmentBody = zod.object({
-  workTypeId: zod.number(),
-  vendorId: zod.number(),
-  afe: zod.string().nullish(),
-});
+  "workTypeId": zod.number(),
+  "vendorId": zod.number(),
+  "afe": zod.string().nullish()
+})
+
 
 /**
  * @summary Update a work assignment (e.g. AFE)
  */
 export const UpdateSiteAssignmentParams = zod.object({
-  siteId: zod.coerce.number(),
-  assignmentId: zod.coerce.number(),
-});
+  "siteId": zod.coerce.number(),
+  "assignmentId": zod.coerce.number()
+})
 
 export const UpdateSiteAssignmentBody = zod.object({
-  afe: zod.string().nullish(),
-});
+  "afe": zod.string().nullish()
+})
 
 export const UpdateSiteAssignmentResponse = zod.object({
-  id: zod.number(),
-  siteLocationId: zod.number(),
-  workTypeId: zod.number(),
-  vendorId: zod.number(),
-  workTypeName: zod.string(),
-  workTypeCategory: zod.string(),
-  vendorName: zod.string(),
-  afe: zod.string().nullable(),
-});
+  "id": zod.number(),
+  "siteLocationId": zod.number(),
+  "workTypeId": zod.number(),
+  "vendorId": zod.number(),
+  "workTypeName": zod.string(),
+  "workTypeCategory": zod.string(),
+  "vendorName": zod.string(),
+  "afe": zod.string().nullable()
+})
+
 
 /**
  * @summary Remove a work assignment from a site
  */
 export const DeleteSiteAssignmentParams = zod.object({
-  siteId: zod.coerce.number(),
-  assignmentId: zod.coerce.number(),
-});
+  "siteId": zod.coerce.number(),
+  "assignmentId": zod.coerce.number()
+})
+
 
 /**
  * @summary List direct assignments offered for a site (partner view)
  */
 export const ListSiteDirectAssignmentsParams = zod.object({
-  siteId: zod.coerce.number(),
-});
+  "siteId": zod.coerce.number()
+})
 
-export const ListSiteDirectAssignmentsResponseItem = zod
-  .object({
-    id: zod.number(),
-    partnerId: zod.number(),
-    siteLocationId: zod.number(),
-    vendorId: zod.number(),
-    siteName: zod.string(),
-    partnerName: zod.string(),
-    vendorName: zod.string(),
-    scopeOfWork: zod.string().nullable(),
-    startDate: zod.string().describe("ISO date (YYYY-MM-DD)"),
-    endDate: zod.string().describe("ISO date (YYYY-MM-DD)"),
-    status: zod.enum(["pending", "committed", "passed", "cancelled"]),
-    passReason: zod.string().nullable(),
-    respondedAt: zod.coerce.date().nullable(),
-    createdAt: zod.coerce.date(),
-    updatedAt: zod.coerce.date(),
-  })
-  .describe(
-    "A time-bound direct work offer from a partner to a single\nvendor. Status flows pending → committed | passed | cancelled.\nJoined fields (`siteName`, `partnerName`, `vendorName`) are\npopulated by the API for list\/detail responses so clients can\nrender rows without a follow-up lookup.\n",
-  );
-export const ListSiteDirectAssignmentsResponse = zod.array(
-  ListSiteDirectAssignmentsResponseItem,
-);
+export const ListSiteDirectAssignmentsResponseItem = zod.object({
+  "id": zod.number(),
+  "partnerId": zod.number(),
+  "siteLocationId": zod.number(),
+  "vendorId": zod.number(),
+  "siteName": zod.string(),
+  "partnerName": zod.string(),
+  "vendorName": zod.string(),
+  "scopeOfWork": zod.string().nullable(),
+  "startDate": zod.string().describe('ISO date (YYYY-MM-DD)'),
+  "endDate": zod.string().describe('ISO date (YYYY-MM-DD)'),
+  "status": zod.enum(['pending', 'committed', 'passed', 'cancelled']),
+  "passReason": zod.string().nullable(),
+  "respondedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}).describe('A time-bound direct work offer from a partner to a single\nvendor. Status flows pending → committed | passed | cancelled.\nJoined fields (`siteName`, `partnerName`, `vendorName`) are\npopulated by the API for list\/detail responses so clients can\nrender rows without a follow-up lookup.\n')
+export const ListSiteDirectAssignmentsResponse = zod.array(ListSiteDirectAssignmentsResponseItem)
+
 
 /**
  * @summary Offer a direct work assignment to a vendor for this site
  */
 export const CreateSiteDirectAssignmentParams = zod.object({
-  siteId: zod.coerce.number(),
-});
+  "siteId": zod.coerce.number()
+})
 
 export const CreateSiteDirectAssignmentBody = zod.object({
-  vendorId: zod.number(),
-  startDate: zod.string().describe("ISO date (YYYY-MM-DD)"),
-  endDate: zod.string().describe("ISO date (YYYY-MM-DD)"),
-  scopeOfWork: zod.string().nullish(),
-});
+  "vendorId": zod.number(),
+  "startDate": zod.string().describe('ISO date (YYYY-MM-DD)'),
+  "endDate": zod.string().describe('ISO date (YYYY-MM-DD)'),
+  "scopeOfWork": zod.string().nullish()
+})
+
 
 /**
  * @summary List direct assignments visible to the caller. Partner role
@@ -1186,304 +890,224 @@ their org. Optional `status` filter for the vendor inbox view.
 
  */
 export const ListDirectAssignmentsQueryParams = zod.object({
-  status: zod.enum(["pending", "committed", "passed", "cancelled"]).optional(),
-});
+  "status": zod.enum(['pending', 'committed', 'passed', 'cancelled']).optional()
+})
 
-export const ListDirectAssignmentsResponseItem = zod
-  .object({
-    id: zod.number(),
-    partnerId: zod.number(),
-    siteLocationId: zod.number(),
-    vendorId: zod.number(),
-    siteName: zod.string(),
-    partnerName: zod.string(),
-    vendorName: zod.string(),
-    scopeOfWork: zod.string().nullable(),
-    startDate: zod.string().describe("ISO date (YYYY-MM-DD)"),
-    endDate: zod.string().describe("ISO date (YYYY-MM-DD)"),
-    status: zod.enum(["pending", "committed", "passed", "cancelled"]),
-    passReason: zod.string().nullable(),
-    respondedAt: zod.coerce.date().nullable(),
-    createdAt: zod.coerce.date(),
-    updatedAt: zod.coerce.date(),
-  })
-  .describe(
-    "A time-bound direct work offer from a partner to a single\nvendor. Status flows pending → committed | passed | cancelled.\nJoined fields (`siteName`, `partnerName`, `vendorName`) are\npopulated by the API for list\/detail responses so clients can\nrender rows without a follow-up lookup.\n",
-  );
-export const ListDirectAssignmentsResponse = zod.array(
-  ListDirectAssignmentsResponseItem,
-);
+export const ListDirectAssignmentsResponseItem = zod.object({
+  "id": zod.number(),
+  "partnerId": zod.number(),
+  "siteLocationId": zod.number(),
+  "vendorId": zod.number(),
+  "siteName": zod.string(),
+  "partnerName": zod.string(),
+  "vendorName": zod.string(),
+  "scopeOfWork": zod.string().nullable(),
+  "startDate": zod.string().describe('ISO date (YYYY-MM-DD)'),
+  "endDate": zod.string().describe('ISO date (YYYY-MM-DD)'),
+  "status": zod.enum(['pending', 'committed', 'passed', 'cancelled']),
+  "passReason": zod.string().nullable(),
+  "respondedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}).describe('A time-bound direct work offer from a partner to a single\nvendor. Status flows pending → committed | passed | cancelled.\nJoined fields (`siteName`, `partnerName`, `vendorName`) are\npopulated by the API for list\/detail responses so clients can\nrender rows without a follow-up lookup.\n')
+export const ListDirectAssignmentsResponse = zod.array(ListDirectAssignmentsResponseItem)
+
 
 /**
  * @summary Vendor accepts a pending direct assignment offer
  */
 export const CommitDirectAssignmentParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
-export const CommitDirectAssignmentResponse = zod
-  .object({
-    id: zod.number(),
-    partnerId: zod.number(),
-    siteLocationId: zod.number(),
-    vendorId: zod.number(),
-    siteName: zod.string(),
-    partnerName: zod.string(),
-    vendorName: zod.string(),
-    scopeOfWork: zod.string().nullable(),
-    startDate: zod.string().describe("ISO date (YYYY-MM-DD)"),
-    endDate: zod.string().describe("ISO date (YYYY-MM-DD)"),
-    status: zod.enum(["pending", "committed", "passed", "cancelled"]),
-    passReason: zod.string().nullable(),
-    respondedAt: zod.coerce.date().nullable(),
-    createdAt: zod.coerce.date(),
-    updatedAt: zod.coerce.date(),
-  })
-  .describe(
-    "A time-bound direct work offer from a partner to a single\nvendor. Status flows pending → committed | passed | cancelled.\nJoined fields (`siteName`, `partnerName`, `vendorName`) are\npopulated by the API for list\/detail responses so clients can\nrender rows without a follow-up lookup.\n",
-  );
+export const CommitDirectAssignmentResponse = zod.object({
+  "id": zod.number(),
+  "partnerId": zod.number(),
+  "siteLocationId": zod.number(),
+  "vendorId": zod.number(),
+  "siteName": zod.string(),
+  "partnerName": zod.string(),
+  "vendorName": zod.string(),
+  "scopeOfWork": zod.string().nullable(),
+  "startDate": zod.string().describe('ISO date (YYYY-MM-DD)'),
+  "endDate": zod.string().describe('ISO date (YYYY-MM-DD)'),
+  "status": zod.enum(['pending', 'committed', 'passed', 'cancelled']),
+  "passReason": zod.string().nullable(),
+  "respondedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}).describe('A time-bound direct work offer from a partner to a single\nvendor. Status flows pending → committed | passed | cancelled.\nJoined fields (`siteName`, `partnerName`, `vendorName`) are\npopulated by the API for list\/detail responses so clients can\nrender rows without a follow-up lookup.\n')
+
 
 /**
  * @summary Vendor declines a pending direct assignment offer
  */
 export const PassDirectAssignmentParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
 export const PassDirectAssignmentBody = zod.object({
-  reason: zod
-    .string()
-    .nullish()
-    .describe(
-      "Optional free-text reason a vendor provides when passing on\nan offer. Surfaced to the partner in the in-app + email\nnotification so they know why the offer was declined.\n",
-    ),
-});
+  "reason": zod.string().nullish().describe('Optional free-text reason a vendor provides when passing on\nan offer. Surfaced to the partner in the in-app + email\nnotification so they know why the offer was declined.\n')
+})
 
-export const PassDirectAssignmentResponse = zod
-  .object({
-    id: zod.number(),
-    partnerId: zod.number(),
-    siteLocationId: zod.number(),
-    vendorId: zod.number(),
-    siteName: zod.string(),
-    partnerName: zod.string(),
-    vendorName: zod.string(),
-    scopeOfWork: zod.string().nullable(),
-    startDate: zod.string().describe("ISO date (YYYY-MM-DD)"),
-    endDate: zod.string().describe("ISO date (YYYY-MM-DD)"),
-    status: zod.enum(["pending", "committed", "passed", "cancelled"]),
-    passReason: zod.string().nullable(),
-    respondedAt: zod.coerce.date().nullable(),
-    createdAt: zod.coerce.date(),
-    updatedAt: zod.coerce.date(),
-  })
-  .describe(
-    "A time-bound direct work offer from a partner to a single\nvendor. Status flows pending → committed | passed | cancelled.\nJoined fields (`siteName`, `partnerName`, `vendorName`) are\npopulated by the API for list\/detail responses so clients can\nrender rows without a follow-up lookup.\n",
-  );
+export const PassDirectAssignmentResponse = zod.object({
+  "id": zod.number(),
+  "partnerId": zod.number(),
+  "siteLocationId": zod.number(),
+  "vendorId": zod.number(),
+  "siteName": zod.string(),
+  "partnerName": zod.string(),
+  "vendorName": zod.string(),
+  "scopeOfWork": zod.string().nullable(),
+  "startDate": zod.string().describe('ISO date (YYYY-MM-DD)'),
+  "endDate": zod.string().describe('ISO date (YYYY-MM-DD)'),
+  "status": zod.enum(['pending', 'committed', 'passed', 'cancelled']),
+  "passReason": zod.string().nullable(),
+  "respondedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}).describe('A time-bound direct work offer from a partner to a single\nvendor. Status flows pending → committed | passed | cancelled.\nJoined fields (`siteName`, `partnerName`, `vendorName`) are\npopulated by the API for list\/detail responses so clients can\nrender rows without a follow-up lookup.\n')
+
 
 /**
  * @summary Partner cancels a pending direct assignment offer
  */
 export const CancelDirectAssignmentParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
-export const CancelDirectAssignmentResponse = zod
-  .object({
-    id: zod.number(),
-    partnerId: zod.number(),
-    siteLocationId: zod.number(),
-    vendorId: zod.number(),
-    siteName: zod.string(),
-    partnerName: zod.string(),
-    vendorName: zod.string(),
-    scopeOfWork: zod.string().nullable(),
-    startDate: zod.string().describe("ISO date (YYYY-MM-DD)"),
-    endDate: zod.string().describe("ISO date (YYYY-MM-DD)"),
-    status: zod.enum(["pending", "committed", "passed", "cancelled"]),
-    passReason: zod.string().nullable(),
-    respondedAt: zod.coerce.date().nullable(),
-    createdAt: zod.coerce.date(),
-    updatedAt: zod.coerce.date(),
-  })
-  .describe(
-    "A time-bound direct work offer from a partner to a single\nvendor. Status flows pending → committed | passed | cancelled.\nJoined fields (`siteName`, `partnerName`, `vendorName`) are\npopulated by the API for list\/detail responses so clients can\nrender rows without a follow-up lookup.\n",
-  );
+export const CancelDirectAssignmentResponse = zod.object({
+  "id": zod.number(),
+  "partnerId": zod.number(),
+  "siteLocationId": zod.number(),
+  "vendorId": zod.number(),
+  "siteName": zod.string(),
+  "partnerName": zod.string(),
+  "vendorName": zod.string(),
+  "scopeOfWork": zod.string().nullable(),
+  "startDate": zod.string().describe('ISO date (YYYY-MM-DD)'),
+  "endDate": zod.string().describe('ISO date (YYYY-MM-DD)'),
+  "status": zod.enum(['pending', 'committed', 'passed', 'cancelled']),
+  "passReason": zod.string().nullable(),
+  "respondedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}).describe('A time-bound direct work offer from a partner to a single\nvendor. Status flows pending → committed | passed | cancelled.\nJoined fields (`siteName`, `partnerName`, `vendorName`) are\npopulated by the API for list\/detail responses so clients can\nrender rows without a follow-up lookup.\n')
+
 
 /**
  * @summary List field employees
  */
 export const ListFieldEmployeesQueryParams = zod.object({
-  vendorId: zod.coerce.number().optional(),
-  includeDeleted: zod.coerce
-    .boolean()
-    .optional()
-    .describe("Admin only — include soft-deleted employees in the result."),
-  includeInactive: zod.coerce
-    .boolean()
-    .optional()
-    .describe(
-      "Include employees whose `isActive` flag is false. Defaults to false so consumer pickers don't have to re-filter on the client.",
-    ),
-});
+  "vendorId": zod.coerce.number().optional(),
+  "includeDeleted": zod.coerce.boolean().optional().describe('Admin only — include soft-deleted employees in the result.'),
+  "includeInactive": zod.coerce.boolean().optional().describe('Include employees whose `isActive` flag is false. Defaults to false so consumer pickers don\'t have to re-filter on the client.')
+})
 
 export const ListFieldEmployeesResponseItem = zod.object({
-  id: zod.number(),
-  vendorId: zod.number(),
-  vendorRole: zod.string().nullish(),
-  jobTitle: zod.string().nullish(),
-  firstName: zod.string(),
-  lastName: zod.string(),
-  email: zod.string(),
-  phone: zod.string().nullable(),
-  userId: zod.number().nullish(),
-  vendorName: zod.string().nullable(),
-  vendorLogoUrl: zod.string().nullish(),
-  isActive: zod.boolean(),
-  pecCertification: zod.boolean(),
-  pecExpirationDate: zod.string().nullable(),
-  photoUrl: zod.string().nullish(),
-  profilePhotoPath: zod.string().nullish(),
-  createdAt: zod.coerce.date(),
-  deletedAt: zod.coerce.date().nullish(),
-  deletedBy: zod.string().nullish(),
-  suspendedAt: zod.coerce
-    .date()
-    .nullish()
-    .describe("When set, this user is suspended and cannot log in."),
-  hasLogin: zod
-    .boolean()
-    .optional()
-    .describe("True when this employee has a linked login account."),
-  mustChangePassword: zod
-    .boolean()
-    .optional()
-    .describe(
-      "True when an admin set a temporary password and the user must change it on next login.",
-    ),
-  preferredLanguage: zod
-    .union([zod.literal("en"), zod.literal("es"), zod.literal(null)])
-    .nullish()
-    .describe(
-      'Preferred UI\/assistant language for this field employee. Mirrors the\n`vendor_people.preferred_language` column the token-mode onboarding\nassistant reads, and is kept in sync with `users.preferred_language`\nfor the linked login (when one exists). `null` means \"let the\nuser\/device decide\".\n',
-    ),
-  profilePendingReviewAt: zod.coerce
-    .date()
-    .nullish()
-    .describe(
-      "Set when the employee updates their own profile or certifications.\nVendor office\/admin sees a review indicator until they open and save\nthe employee record.\n",
-    ),
-});
-export const ListFieldEmployeesResponse = zod.array(
-  ListFieldEmployeesResponseItem,
-);
+  "id": zod.number(),
+  "vendorId": zod.number(),
+  "vendorRole": zod.string().nullish(),
+  "jobTitle": zod.string().nullish(),
+  "firstName": zod.string(),
+  "lastName": zod.string(),
+  "email": zod.string(),
+  "phone": zod.string().nullable(),
+  "userId": zod.number().nullish(),
+  "vendorName": zod.string().nullable(),
+  "vendorLogoUrl": zod.string().nullish(),
+  "isActive": zod.boolean(),
+  "pecCertification": zod.boolean(),
+  "pecExpirationDate": zod.string().nullable(),
+  "photoUrl": zod.string().nullish(),
+  "profilePhotoPath": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "deletedAt": zod.coerce.date().nullish(),
+  "deletedBy": zod.string().nullish(),
+  "suspendedAt": zod.coerce.date().nullish().describe('When set, this user is suspended and cannot log in.'),
+  "hasLogin": zod.boolean().optional().describe('True when this employee has a linked login account.'),
+  "mustChangePassword": zod.boolean().optional().describe('True when an admin set a temporary password and the user must change it on next login.'),
+  "preferredLanguage": zod.union([zod.literal('en'),zod.literal('es'),zod.literal(null)]).nullish().describe('Preferred UI\/assistant language for this field employee. Mirrors the\n`vendor_people.preferred_language` column the token-mode onboarding\nassistant reads, and is kept in sync with `users.preferred_language`\nfor the linked login (when one exists). `null` means \"let the\nuser\/device decide\".\n'),
+  "profilePendingReviewAt": zod.coerce.date().nullish().describe('Set when the employee updates their own profile or certifications.\nVendor office\/admin sees a review indicator until they open and save\nthe employee record.\n')
+})
+export const ListFieldEmployeesResponse = zod.array(ListFieldEmployeesResponseItem)
+
 
 /**
  * @summary Create a field employee
  */
 export const CreateFieldEmployeeBody = zod.object({
-  vendorId: zod.number(),
-  vendorRole: zod.string().optional(),
-  jobTitle: zod.string().nullish(),
-  firstName: zod.string(),
-  lastName: zod.string(),
-  email: zod.string(),
-  phone: zod.string().nullish(),
-  pecCertification: zod.boolean().optional(),
-  pecExpirationDate: zod.string().nullish(),
-  roles: zod.array(zod.string()).optional(),
-});
+  "vendorId": zod.number(),
+  "vendorRole": zod.string().optional(),
+  "jobTitle": zod.string().nullish(),
+  "firstName": zod.string(),
+  "lastName": zod.string(),
+  "email": zod.string(),
+  "phone": zod.string().nullish(),
+  "pecCertification": zod.boolean().optional(),
+  "pecExpirationDate": zod.string().nullish(),
+  "roles": zod.array(zod.string()).optional()
+})
+
 
 /**
  * @summary Restore a soft-deleted field employee (admin only)
  */
 export const RestoreFieldEmployeeParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
+
 
 /**
  * @summary Get field employee by ID
  */
 export const GetFieldEmployeeParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
 export const GetFieldEmployeeResponse = zod.object({
-  id: zod.number(),
-  vendorId: zod.number(),
-  vendorRole: zod.string().nullish(),
-  jobTitle: zod.string().nullish(),
-  firstName: zod.string(),
-  lastName: zod.string(),
-  email: zod.string(),
-  phone: zod.string().nullable(),
-  userId: zod.number().nullish(),
-  vendorName: zod.string().nullable(),
-  vendorLogoUrl: zod.string().nullish(),
-  isActive: zod.boolean(),
-  pecCertification: zod.boolean(),
-  pecExpirationDate: zod.string().nullable(),
-  photoUrl: zod.string().nullish(),
-  profilePhotoPath: zod.string().nullish(),
-  createdAt: zod.coerce.date(),
-  deletedAt: zod.coerce.date().nullish(),
-  deletedBy: zod.string().nullish(),
-  suspendedAt: zod.coerce
-    .date()
-    .nullish()
-    .describe("When set, this user is suspended and cannot log in."),
-  hasLogin: zod
-    .boolean()
-    .optional()
-    .describe("True when this employee has a linked login account."),
-  mustChangePassword: zod
-    .boolean()
-    .optional()
-    .describe(
-      "True when an admin set a temporary password and the user must change it on next login.",
-    ),
-  preferredLanguage: zod
-    .union([zod.literal("en"), zod.literal("es"), zod.literal(null)])
-    .nullish()
-    .describe(
-      'Preferred UI\/assistant language for this field employee. Mirrors the\n`vendor_people.preferred_language` column the token-mode onboarding\nassistant reads, and is kept in sync with `users.preferred_language`\nfor the linked login (when one exists). `null` means \"let the\nuser\/device decide\".\n',
-    ),
-  profilePendingReviewAt: zod.coerce
-    .date()
-    .nullish()
-    .describe(
-      "Set when the employee updates their own profile or certifications.\nVendor office\/admin sees a review indicator until they open and save\nthe employee record.\n",
-    ),
-});
+  "id": zod.number(),
+  "vendorId": zod.number(),
+  "vendorRole": zod.string().nullish(),
+  "jobTitle": zod.string().nullish(),
+  "firstName": zod.string(),
+  "lastName": zod.string(),
+  "email": zod.string(),
+  "phone": zod.string().nullable(),
+  "userId": zod.number().nullish(),
+  "vendorName": zod.string().nullable(),
+  "vendorLogoUrl": zod.string().nullish(),
+  "isActive": zod.boolean(),
+  "pecCertification": zod.boolean(),
+  "pecExpirationDate": zod.string().nullable(),
+  "photoUrl": zod.string().nullish(),
+  "profilePhotoPath": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "deletedAt": zod.coerce.date().nullish(),
+  "deletedBy": zod.string().nullish(),
+  "suspendedAt": zod.coerce.date().nullish().describe('When set, this user is suspended and cannot log in.'),
+  "hasLogin": zod.boolean().optional().describe('True when this employee has a linked login account.'),
+  "mustChangePassword": zod.boolean().optional().describe('True when an admin set a temporary password and the user must change it on next login.'),
+  "preferredLanguage": zod.union([zod.literal('en'),zod.literal('es'),zod.literal(null)]).nullish().describe('Preferred UI\/assistant language for this field employee. Mirrors the\n`vendor_people.preferred_language` column the token-mode onboarding\nassistant reads, and is kept in sync with `users.preferred_language`\nfor the linked login (when one exists). `null` means \"let the\nuser\/device decide\".\n'),
+  "profilePendingReviewAt": zod.coerce.date().nullish().describe('Set when the employee updates their own profile or certifications.\nVendor office\/admin sees a review indicator until they open and save\nthe employee record.\n')
+})
+
 
 /**
  * @summary Get the login status for a field employee
  */
 export const GetFieldEmployeeLoginParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
-export const GetFieldEmployeeLoginResponse = zod
-  .object({
-    hasLogin: zod.boolean(),
-    portalLoginEnabled: zod
-      .boolean()
-      .optional()
-      .describe(
-        "When true, email\/password portal login is active for this employee.",
-      ),
-    email: zod.string().optional(),
-    userId: zod.number().optional(),
-    mustChangePassword: zod
-      .boolean()
-      .optional()
-      .describe(
-        "When true, the employee must set a new password on next sign-in before using the app.",
-      ),
-  })
-  .describe(
-    "Whether the field employee has a linked login user, and that user's email\/id when present.",
-  );
+export const GetFieldEmployeeLoginResponse = zod.object({
+  "hasLogin": zod.boolean(),
+  "portalLoginEnabled": zod.boolean().optional().describe('When true, email\/password portal login is active for this employee.'),
+  "email": zod.string().optional(),
+  "userId": zod.number().optional(),
+  "mustChangePassword": zod.boolean().optional().describe('When true, the employee must set a new password on next sign-in before using the app.')
+}).describe('Whether the field employee has a linked login user, and that user\'s email\/id when present.')
+
 
 /**
  * Sets (or rotates) the email/password used by this field employee to
@@ -1496,58 +1120,38 @@ stored preference.
  * @summary Create or update a field employee's login credentials
  */
 export const SetFieldEmployeeLoginParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
 export const setFieldEmployeeLoginBodyPasswordMin = 8;
 
+
+
 export const SetFieldEmployeeLoginBody = zod.object({
-  email: zod.string(),
-  password: zod
-    .string()
-    .min(setFieldEmployeeLoginBodyPasswordMin)
-    .optional()
-    .describe(
-      "Required when enabling login for the first time. Optional when updating an existing login (omit to keep the current password).",
-    ),
-  portalLoginEnabled: zod
-    .boolean()
-    .optional()
-    .describe("When false, disable portal login for this employee."),
-  displayName: zod
-    .string()
-    .optional()
-    .describe(
-      'Optional override; defaults to the employee\'s \"First Last\" name (or the email if unnamed).',
-    ),
-  preferredLanguage: zod
-    .enum(["en", "es"])
-    .nullish()
-    .describe(
-      "Default UI language for the linked login. Omit to leave any existing preference unchanged.",
-    ),
-  mustChangePassword: zod
-    .boolean()
-    .optional()
-    .describe(
-      "When true, require the employee to change this password on first sign-in. Defaults to false when omitted.",
-    ),
-});
+  "email": zod.string(),
+  "password": zod.string().min(setFieldEmployeeLoginBodyPasswordMin).optional().describe('Required when enabling login for the first time. Optional when updating an existing login (omit to keep the current password).'),
+  "portalLoginEnabled": zod.boolean().optional().describe('When false, disable portal login for this employee.'),
+  "displayName": zod.string().optional().describe('Optional override; defaults to the employee\'s \"First Last\" name (or the email if unnamed).'),
+  "preferredLanguage": zod.enum(['en', 'es']).nullish().describe('Default UI language for the linked login. Omit to leave any existing preference unchanged.'),
+  "mustChangePassword": zod.boolean().optional().describe('When true, require the employee to change this password on first sign-in. Defaults to false when omitted.')
+})
 
 export const SetFieldEmployeeLoginResponse = zod.object({
-  employeeId: zod.number(),
-  userId: zod.number(),
-  email: zod.string(),
-  status: zod.enum(["created", "updated"]),
-  preferredLanguage: zod.enum(["en", "es"]).nullable(),
-});
+  "employeeId": zod.number(),
+  "userId": zod.number(),
+  "email": zod.string(),
+  "status": zod.enum(['created', 'updated']),
+  "preferredLanguage": zod.enum(['en', 'es']).nullable()
+})
+
 
 /**
  * @summary Disable a field employee's login (deletes the linked user)
  */
 export const DeleteFieldEmployeeLoginParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
+
 
 /**
  * Batch variant of `POST /field-employees/{id}/login` for CSV-style
@@ -1561,141 +1165,124 @@ export const bulkSetFieldEmployeeLoginsBodyRowsItemPasswordMin = 8;
 
 export const bulkSetFieldEmployeeLoginsBodyRowsMax = 500;
 
+
+
 export const BulkSetFieldEmployeeLoginsBody = zod.object({
-  rows: zod
-    .array(
-      zod.object({
-        employeeId: zod.number(),
-        email: zod.string(),
-        password: zod
-          .string()
-          .min(bulkSetFieldEmployeeLoginsBodyRowsItemPasswordMin),
-        displayName: zod.string().optional(),
-        preferredLanguage: zod.enum(["en", "es"]).nullish(),
-        language: zod
-          .enum(["en", "es"])
-          .nullish()
-          .describe(
-            "Legacy alias for `preferredLanguage`. Used when `preferredLanguage` is not provided.",
-          ),
-      }),
-    )
-    .max(bulkSetFieldEmployeeLoginsBodyRowsMax),
-});
+  "rows": zod.array(zod.object({
+  "employeeId": zod.number(),
+  "email": zod.string(),
+  "password": zod.string().min(bulkSetFieldEmployeeLoginsBodyRowsItemPasswordMin),
+  "displayName": zod.string().optional(),
+  "preferredLanguage": zod.enum(['en', 'es']).nullish(),
+  "language": zod.enum(['en', 'es']).nullish().describe('Legacy alias for `preferredLanguage`. Used when `preferredLanguage` is not provided.')
+})).max(bulkSetFieldEmployeeLoginsBodyRowsMax)
+})
 
 export const BulkSetFieldEmployeeLoginsResponse = zod.object({
-  created: zod.number(),
-  updated: zod.number(),
-  errors: zod.number(),
-  results: zod.array(
-    zod
-      .object({
-        index: zod.number(),
-        employeeId: zod.number().optional(),
-        userId: zod.number().optional(),
-        email: zod.string().optional(),
-        status: zod.enum(["created", "updated", "error"]),
-        message: zod.string().optional(),
-        preferredLanguage: zod.enum(["en", "es"]).nullish(),
-      })
-      .describe(
-        "Per-row outcome. On success, `status` is `created` or `updated` and\n`userId`\/`email`\/`preferredLanguage` are populated. On failure,\n`status` is `error` and `message` describes why.\n",
-      ),
-  ),
-});
+  "created": zod.number(),
+  "updated": zod.number(),
+  "errors": zod.number(),
+  "results": zod.array(zod.object({
+  "index": zod.number(),
+  "employeeId": zod.number().optional(),
+  "userId": zod.number().optional(),
+  "email": zod.string().optional(),
+  "status": zod.enum(['created', 'updated', 'error']),
+  "message": zod.string().optional(),
+  "preferredLanguage": zod.enum(['en', 'es']).nullish()
+}).describe('Per-row outcome. On success, `status` is `created` or `updated` and\n`userId`\/`email`\/`preferredLanguage` are populated. On failure,\n`status` is `error` and `message` describes why.\n'))
+})
+
 
 /**
  * @summary List certifications for a field employee
  */
 export const ListEmployeeCertificationsParams = zod.object({
-  employeeId: zod.coerce.number(),
-});
+  "employeeId": zod.coerce.number()
+})
 
 export const ListEmployeeCertificationsResponseItem = zod.object({
-  id: zod.number(),
-  employeeId: zod.number(),
-  name: zod.string(),
-  issuer: zod.string().nullable(),
-  certNumber: zod.string().nullable(),
-  issuedDate: zod.string().nullable(),
-  expirationDate: zod.string().nullable(),
-  documentUrl: zod.string().nullable(),
-  documentPath: zod.string().nullable(),
-  vendorVerifiedAt: zod.coerce.date().nullish(),
-  vendorVerifiedByUserId: zod.number().nullish(),
-  createdAt: zod.coerce.date(),
-  deletedAt: zod.coerce.date().nullish(),
-  deletedBy: zod.string().nullish(),
-});
-export const ListEmployeeCertificationsResponse = zod.array(
-  ListEmployeeCertificationsResponseItem,
-);
+  "id": zod.number(),
+  "employeeId": zod.number(),
+  "name": zod.string(),
+  "issuer": zod.string().nullable(),
+  "certNumber": zod.string().nullable(),
+  "issuedDate": zod.string().nullable(),
+  "expirationDate": zod.string().nullable(),
+  "documentUrl": zod.string().nullable(),
+  "documentPath": zod.string().nullable(),
+  "vendorVerifiedAt": zod.coerce.date().nullish(),
+  "vendorVerifiedByUserId": zod.number().nullish(),
+  "createdAt": zod.coerce.date(),
+  "deletedAt": zod.coerce.date().nullish(),
+  "deletedBy": zod.string().nullish()
+})
+export const ListEmployeeCertificationsResponse = zod.array(ListEmployeeCertificationsResponseItem)
+
 
 /**
  * @summary Add a certification
  */
 export const CreateEmployeeCertificationParams = zod.object({
-  employeeId: zod.coerce.number(),
-});
+  "employeeId": zod.coerce.number()
+})
 
 export const CreateEmployeeCertificationBody = zod.object({
-  name: zod.string(),
-  issuer: zod.string().nullish(),
-  certNumber: zod.string().nullable(),
-  issuedDate: zod.string().nullish(),
-  expirationDate: zod.string().nullish(),
-  documentUrl: zod.string().nullish(),
-  documentPath: zod.string().nullish(),
-});
+  "name": zod.string(),
+  "issuer": zod.string().nullish(),
+  "certNumber": zod.string().nullable(),
+  "issuedDate": zod.string().nullish(),
+  "expirationDate": zod.string().nullish(),
+  "documentUrl": zod.string().nullish(),
+  "documentPath": zod.string().nullish()
+})
+
 
 /**
  * @summary Update a certification
  */
 export const UpdateEmployeeCertificationParams = zod.object({
-  employeeId: zod.coerce.number(),
-  certId: zod.coerce.number(),
-});
+  "employeeId": zod.coerce.number(),
+  "certId": zod.coerce.number()
+})
 
 export const UpdateEmployeeCertificationBody = zod.object({
-  name: zod.string().optional(),
-  issuer: zod.string().nullish(),
-  certNumber: zod.string().nullish(),
-  issuedDate: zod.string().nullish(),
-  expirationDate: zod.string().nullish(),
-  documentUrl: zod.string().nullish(),
-  documentPath: zod.string().nullish(),
-  vendorVerified: zod
-    .boolean()
-    .optional()
-    .describe(
-      "Vendor\/admin only. When true, marks the certification as verified.\nWhen false, clears verification (e.g. after employee edits).\n",
-    ),
-});
+  "name": zod.string().optional(),
+  "issuer": zod.string().nullish(),
+  "certNumber": zod.string().nullish(),
+  "issuedDate": zod.string().nullish(),
+  "expirationDate": zod.string().nullish(),
+  "documentUrl": zod.string().nullish(),
+  "documentPath": zod.string().nullish(),
+  "vendorVerified": zod.boolean().optional().describe('Vendor\/admin only. When true, marks the certification as verified.\nWhen false, clears verification (e.g. after employee edits).\n')
+})
 
 export const UpdateEmployeeCertificationResponse = zod.object({
-  id: zod.number(),
-  employeeId: zod.number(),
-  name: zod.string(),
-  issuer: zod.string().nullable(),
-  certNumber: zod.string().nullable(),
-  issuedDate: zod.string().nullable(),
-  expirationDate: zod.string().nullable(),
-  documentUrl: zod.string().nullable(),
-  documentPath: zod.string().nullable(),
-  vendorVerifiedAt: zod.coerce.date().nullish(),
-  vendorVerifiedByUserId: zod.number().nullish(),
-  createdAt: zod.coerce.date(),
-  deletedAt: zod.coerce.date().nullish(),
-  deletedBy: zod.string().nullish(),
-});
+  "id": zod.number(),
+  "employeeId": zod.number(),
+  "name": zod.string(),
+  "issuer": zod.string().nullable(),
+  "certNumber": zod.string().nullable(),
+  "issuedDate": zod.string().nullable(),
+  "expirationDate": zod.string().nullable(),
+  "documentUrl": zod.string().nullable(),
+  "documentPath": zod.string().nullable(),
+  "vendorVerifiedAt": zod.coerce.date().nullish(),
+  "vendorVerifiedByUserId": zod.number().nullish(),
+  "createdAt": zod.coerce.date(),
+  "deletedAt": zod.coerce.date().nullish(),
+  "deletedBy": zod.string().nullish()
+})
+
 
 /**
  * @summary Soft-delete a certification
  */
 export const DeleteEmployeeCertificationParams = zod.object({
-  employeeId: zod.coerce.number(),
-  certId: zod.coerce.number(),
-});
+  "employeeId": zod.coerce.number(),
+  "certId": zod.coerce.number()
+})
+
 
 /**
  * Returns a sorted, de-duplicated list of certification names drawn from
@@ -1703,1972 +1290,1024 @@ work-type requirements and existing employee certifications.
 
  * @summary Known certification names for dropdown pickers
  */
-export const ListCertificationNamesResponseItem = zod.string();
-export const ListCertificationNamesResponse = zod.array(
-  ListCertificationNamesResponseItem,
-);
+export const ListCertificationNamesResponseItem = zod.string()
+export const ListCertificationNamesResponse = zod.array(ListCertificationNamesResponseItem)
+
 
 /**
  * @summary Get a signed verify-token for this employee's compliance card
  */
 export const GetComplianceTokenParams = zod.object({
-  employeeId: zod.coerce.number(),
-});
+  "employeeId": zod.coerce.number()
+})
 
 export const GetComplianceTokenResponse = zod.object({
-  token: zod.string(),
-  verifyUrl: zod.string(),
-});
+  "token": zod.string(),
+  "verifyUrl": zod.string()
+})
+
 
 /**
  * @summary Public compliance verification endpoint (scan-from-QR)
  */
 export const VerifyEmployeeComplianceParams = zod.object({
-  token: zod.coerce.string(),
-});
+  "token": zod.coerce.string()
+})
 
 export const VerifyEmployeeComplianceResponse = zod.object({
-  verified: zod.boolean(),
-  employeeId: zod.number(),
-  firstName: zod.string(),
-  lastName: zod.string(),
-  photoUrl: zod.string().nullable(),
-  employerName: zod.string().nullable(),
-  jobTitle: zod.string().nullable(),
-  active: zod.boolean(),
-  certifications: zod.array(
-    zod.object({
-      name: zod.string(),
-      issuer: zod.string().nullable(),
-      expirationDate: zod.string().nullable(),
-      status: zod.enum(["valid", "expiring", "expired", "no_expiration"]),
-    }),
-  ),
-  verifiedAt: zod.coerce.date(),
-});
+  "verified": zod.boolean(),
+  "employeeId": zod.number(),
+  "firstName": zod.string(),
+  "lastName": zod.string(),
+  "photoUrl": zod.string().nullable(),
+  "employerName": zod.string().nullable(),
+  "jobTitle": zod.string().nullable(),
+  "active": zod.boolean(),
+  "certifications": zod.array(zod.object({
+  "name": zod.string(),
+  "issuer": zod.string().nullable(),
+  "expirationDate": zod.string().nullable(),
+  "status": zod.enum(['valid', 'expiring', 'expired', 'no_expiration'])
+})),
+  "verifiedAt": zod.coerce.date()
+})
+
 
 /**
  * @summary Get site info for field employee portal (QR code landing)
  */
 export const GetPortalInfoParams = zod.object({
-  siteCode: zod.coerce.string(),
-});
+  "siteCode": zod.coerce.string()
+})
 
 export const GetPortalInfoResponse = zod.object({
-  siteLocation: zod.object({
-    id: zod.number(),
-    partnerId: zod.number(),
-    name: zod.string(),
-    address: zod.string(),
-    latitude: zod.number(),
-    longitude: zod.number(),
-    siteCode: zod.string(),
-    state: zod.string().nullable(),
-    isActive: zod.boolean(),
-    status: zod.enum(["active", "inactive", "standby", "offline"]),
-    partnerName: zod.string().nullable(),
-    siteRadiusMeters: zod.number().nullable(),
-    afe: zod.string().nullable(),
-    photoUrl: zod.string().nullable(),
-    createdAt: zod.coerce.date(),
-  }),
-  availableWorkTypes: zod.array(
-    zod.object({
-      id: zod.number(),
-      siteLocationId: zod.number(),
-      workTypeId: zod.number(),
-      vendorId: zod.number(),
-      workTypeName: zod.string(),
-      workTypeCategory: zod.string(),
-      vendorName: zod.string(),
-      afe: zod.string().nullable(),
-    }),
-  ),
-  partnerBrand: zod.union([
-    zod.null(),
-    zod.object({
-      id: zod.number(),
-      name: zod.string(),
-      logoUrl: zod.string().nullable(),
-      logoSquareUrl: zod.string().nullable(),
-      brandPrimaryColor: zod.string().nullable(),
-      brandAccentColor: zod.string().nullable(),
-    }),
-  ]),
-});
+  "siteLocation": zod.object({
+  "id": zod.number(),
+  "partnerId": zod.number(),
+  "name": zod.string(),
+  "address": zod.string(),
+  "latitude": zod.number(),
+  "longitude": zod.number(),
+  "siteCode": zod.string(),
+  "state": zod.string().nullable(),
+  "isActive": zod.boolean(),
+  "status": zod.enum(['active', 'inactive', 'standby', 'offline']),
+  "partnerName": zod.string().nullable(),
+  "siteRadiusMeters": zod.number().nullable(),
+  "afe": zod.string().nullable(),
+  "photoUrl": zod.string().nullable(),
+  "taxJurisdictionPostalCode": zod.string().nullable().describe('USPS ZIP resolved from site coordinates for sales tax jurisdiction'),
+  "taxJurisdictionCounty": zod.string().nullable(),
+  "taxJurisdictionCity": zod.string().nullable(),
+  "taxJurisdictionLabel": zod.string().nullable().describe('Human-readable situs label with combined rate'),
+  "stateTaxRate": zod.string().nullable(),
+  "localTaxRate": zod.string().nullable(),
+  "combinedTaxRate": zod.string().nullable().describe('Combined situs rate for all taxable lines at this site'),
+  "merchandiseTaxRate": zod.string().nullable().describe('Legacy alias of combinedTaxRate'),
+  "laborTaxRate": zod.string().nullable().describe('Legacy alias of stateTaxRate (informational)'),
+  "taxJurisdictionResolvedAt": zod.coerce.date().nullable(),
+  "taxProvider": zod.enum(['rubric_fallback', 'county_seat', 'fallback']).nullable(),
+  "createdAt": zod.coerce.date()
+}),
+  "availableWorkTypes": zod.array(zod.object({
+  "id": zod.number(),
+  "siteLocationId": zod.number(),
+  "workTypeId": zod.number(),
+  "vendorId": zod.number(),
+  "workTypeName": zod.string(),
+  "workTypeCategory": zod.string(),
+  "vendorName": zod.string(),
+  "afe": zod.string().nullable()
+})),
+  "partnerBrand": zod.union([zod.null(),zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "logoUrl": zod.string().nullable(),
+  "logoSquareUrl": zod.string().nullable(),
+  "brandPrimaryColor": zod.string().nullable(),
+  "brandAccentColor": zod.string().nullable()
+})])
+})
+
 
 /**
  * @summary Get open tickets for a site (for continue ticket)
  */
 export const GetPortalOpenTicketsParams = zod.object({
-  siteCode: zod.coerce.string(),
-});
+  "siteCode": zod.coerce.string()
+})
 
 export const GetPortalOpenTicketsQueryParams = zod.object({
-  vendorId: zod.coerce.number().optional(),
-});
+  "vendorId": zod.coerce.number().optional()
+})
 
 export const getPortalOpenTicketsResponseUnreadCommentCountMin = 0;
 
+
+
 export const GetPortalOpenTicketsResponseItem = zod.object({
-  id: zod.number(),
-  siteLocationId: zod.number(),
-  vendorId: zod.number(),
-  fieldEmployeeId: zod.number().nullable(),
-  workTypeId: zod.number(),
-  status: zod
-    .enum([
-      "draft",
-      "initiated",
-      "in_progress",
-      "pending_review",
-      "completed",
-      "submitted",
-      "approved",
-      "kicked_back",
-      "cancelled",
-      "awaiting_acceptance",
-      "denied",
-      "awaiting_payment",
-      "funds_dispersed",
-    ])
-    .describe(
-      "Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app's ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp's status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n",
-    ),
-  description: zod.string().nullable(),
-  notes: zod.string().nullable(),
-  kickbackReason: zod.string().nullable(),
-  checkInTime: zod.coerce.date().nullable(),
-  checkOutTime: zod.coerce.date().nullable(),
-  checkInLatitude: zod.number().nullable(),
-  checkInLongitude: zod.number().nullable(),
-  checkOutLatitude: zod.number().nullable(),
-  checkOutLongitude: zod.number().nullable(),
-  siteName: zod.string().nullable(),
-  vendorName: zod.string().nullable(),
-  workTypeName: zod.string().nullable(),
-  fieldEmployeeName: zod.string().nullable(),
-  partnerName: zod.string().nullable(),
-  partnerLogoUrl: zod.string().nullable(),
-  vendorLogoUrl: zod.string().nullable(),
-  createdAt: zod.coerce.date(),
-  updatedAt: zod.coerce.date(),
-  unlockedAt: zod.coerce.date().nullable(),
-  unlockedById: zod.number().nullable(),
-  unlockedByName: zod.string().nullable(),
-  unlockCount: zod.number(),
-  createdById: zod.number().nullable(),
-  createdByName: zod.string().nullable(),
-  closedById: zod.number().nullable(),
-  closedByName: zod.string().nullable(),
-  lifecycleState: zod
-    .union([
-      zod.literal("pending_arrival"),
-      zod.literal("en_route"),
-      zod.literal("on_location"),
-      zod.literal("on_site"),
-      zod.literal("off_site"),
-      zod.literal(null),
-    ])
-    .nullable(),
-  enRouteAt: zod.coerce.date().nullable(),
-  arrivedAt: zod.coerce.date().nullable(),
-  departureLatitude: zod.number().nullable(),
-  departureLongitude: zod.number().nullable(),
-  siteLatitude: zod.number().nullable(),
-  siteLongitude: zod.number().nullable(),
-  siteRadiusMeters: zod.number().nullable(),
-  afe: zod.string().nullable(),
-  scheduledStartAt: zod.coerce.date().nullable(),
-  scheduledDurationMinutes: zod.number().nullable(),
-  foremanUserId: zod.number().nullable(),
-  intakeChannel: zod
-    .union([
-      zod.literal("partner_self_service"),
-      zod.literal("office_on_behalf_of_partner"),
-      zod.literal("office_on_behalf_of_field_employee"),
-      zod.literal("vendor_field_self_service"),
-      zod.literal(null),
-    ])
-    .nullable()
-    .describe(
-      "How this ticket was opened. Drives the Source badge in the ticket list (globe \/ phone \/ boots).",
-    ),
-  approvedAt: zod.coerce
-    .date()
-    .nullish()
-    .describe(
-      'Task #865 — timestamp the ticket was approved by a partner \/\nadmin. Set the moment status flips to `approved`. Powers the\n\"Approved on\" \/ \"Days waiting\" columns the partner AP queue\nrenders when filtering by `awaitingPayment=true`. Stays\npopulated after dispersal so the ticket history is preserved.\n',
-    ),
-  paymentMethod: zod
-    .union([
-      zod.literal("etf"),
-      zod.literal("ach"),
-      zod.literal("check"),
-      zod.literal("other"),
-      zod.literal(null),
-    ])
-    .nullable(),
-  paymentReference: zod.string().nullable(),
-  paymentNote: zod.string().nullable(),
-  paymentDispersedAt: zod.coerce.date().nullable(),
-  paymentDispersedById: zod.number().nullable(),
-  paymentDispersedByName: zod.string().nullable(),
-  paymentReceiptUrl: zod
-    .string()
-    .nullable()
-    .describe(
-      "Optional proof-of-payment image attached at dispersal time\n(Task #852). Stored as an object-storage path\/URL returned by\nthe upload helper; renders inline in the read-only Payment\nDetails panel on both web and mobile.\n",
-    ),
-  startingMileage: zod
-    .string()
-    .nullish()
-    .describe(
-      "Odometer reading captured at En Route. Stored as a numeric\nstring with one decimal so the UI can render it verbatim\nwithout float drift. Null until the field employee submits\nthe value on the En Route modal.\n",
-    ),
-  endingMileage: zod
-    .string()
-    .nullish()
-    .describe(
-      "Odometer reading captured at Check Out. Same numeric-string\nshape as `startingMileage`. Null until the Check Out modal\npersists the value.\n",
-    ),
-  unreadCommentCount: zod
-    .number()
-    .min(getPortalOpenTicketsResponseUnreadCommentCountMin)
-    .describe(
-      "Task #51 — number of comments on this ticket's thread that\nthe signed-in viewer has not yet seen, used to render an\nunread badge on the tickets-list page. Excludes\nsoft-deleted comments and the viewer's own messages.\nAlways 0 when the request has no signed-in viewer (e.g.\nanonymous portal access).\n",
-    ),
-  viewerCanDisperseFunds: zod
-    .boolean()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call POST \/tickets\/:id\/disperse-funds\nfor this ticket (admin OR partner contact in the Accounts Payable role\non the owning partner). List responses omit this field.\n",
-    ),
-  viewerCanReverseDispersal: zod
-    .boolean()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call\nPOST \/tickets\/:id\/reverse-dispersal for this ticket — i.e.\nthe same admin \/ partner-AP gate as `viewerCanDisperseFunds`\nAND the ticket is currently in `funds_dispersed`. List\nresponses omit this field.\n",
-    ),
-  phoneIntakeCallerName: zod
-    .string()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. The human caller's\nname captured by office phone intake on the ticket's initial\nstatus transition (extracted from\n`ticket_status_history.reason` formatted as\n`phone_intake_caller:<name>`). Null for tickets that weren't\nopened via phone intake. List responses omit this field.\n",
-    ),
-});
-export const GetPortalOpenTicketsResponse = zod.array(
-  GetPortalOpenTicketsResponseItem,
-);
+  "id": zod.number(),
+  "siteLocationId": zod.number(),
+  "vendorId": zod.number(),
+  "fieldEmployeeId": zod.number().nullable(),
+  "workTypeId": zod.number(),
+  "status": zod.enum(['draft', 'initiated', 'in_progress', 'pending_review', 'completed', 'submitted', 'approved', 'kicked_back', 'cancelled', 'awaiting_acceptance', 'denied', 'awaiting_payment', 'funds_dispersed']).describe('Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app\'s ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp\'s status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n'),
+  "description": zod.string().nullable(),
+  "notes": zod.string().nullable(),
+  "kickbackReason": zod.string().nullable(),
+  "checkInTime": zod.coerce.date().nullable(),
+  "checkOutTime": zod.coerce.date().nullable(),
+  "checkInLatitude": zod.number().nullable(),
+  "checkInLongitude": zod.number().nullable(),
+  "checkOutLatitude": zod.number().nullable(),
+  "checkOutLongitude": zod.number().nullable(),
+  "siteName": zod.string().nullable(),
+  "vendorName": zod.string().nullable(),
+  "workTypeName": zod.string().nullable(),
+  "workTypeCategory": zod.string().nullish(),
+  "workTypeTaxTreatment": zod.union([zod.literal('exempt_labor'),zod.literal('taxable_repair_service'),zod.literal('taxable_all'),zod.literal(null)]).nullish().describe('Explicit tax classification set on the platform catalog work type.\nNull when the engine infers treatment from category + state rubric.\nPopulated on single-ticket GET only.\n'),
+  "effectiveTaxTreatment": zod.union([zod.literal('exempt_labor'),zod.literal('taxable_repair_service'),zod.literal('taxable_all'),zod.literal(null)]).nullish().describe('Resolved tax classification for this ticket after partner, vendor,\nand work-type overrides. Populated on single-ticket GET only.\n'),
+  "fieldEmployeeName": zod.string().nullable(),
+  "partnerName": zod.string().nullable(),
+  "partnerLogoUrl": zod.string().nullable(),
+  "vendorLogoUrl": zod.string().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "unlockedAt": zod.coerce.date().nullable(),
+  "unlockedById": zod.number().nullable(),
+  "unlockedByName": zod.string().nullable(),
+  "unlockCount": zod.number(),
+  "createdById": zod.number().nullable(),
+  "createdByName": zod.string().nullable(),
+  "closedById": zod.number().nullable(),
+  "closedByName": zod.string().nullable(),
+  "lifecycleState": zod.union([zod.literal('pending_arrival'),zod.literal('en_route'),zod.literal('on_location'),zod.literal('on_site'),zod.literal('off_site'),zod.literal(null)]).nullable(),
+  "enRouteAt": zod.coerce.date().nullable(),
+  "arrivedAt": zod.coerce.date().nullable(),
+  "departureLatitude": zod.number().nullable(),
+  "departureLongitude": zod.number().nullable(),
+  "siteLatitude": zod.number().nullable(),
+  "siteLongitude": zod.number().nullable(),
+  "siteRadiusMeters": zod.number().nullable(),
+  "afe": zod.string().nullable(),
+  "scheduledStartAt": zod.coerce.date().nullable(),
+  "scheduledDurationMinutes": zod.number().nullable(),
+  "foremanUserId": zod.number().nullable(),
+  "intakeChannel": zod.union([zod.literal('partner_self_service'),zod.literal('office_on_behalf_of_partner'),zod.literal('office_on_behalf_of_field_employee'),zod.literal('vendor_field_self_service'),zod.literal(null)]).nullable().describe('How this ticket was opened. Drives the Source badge in the ticket list (globe \/ phone \/ boots).'),
+  "approvedAt": zod.coerce.date().nullish().describe('Task #865 — timestamp the ticket was approved by a partner \/\nadmin. Set the moment status flips to `approved`. Powers the\n\"Approved on\" \/ \"Days waiting\" columns the partner AP queue\nrenders when filtering by `awaitingPayment=true`. Stays\npopulated after dispersal so the ticket history is preserved.\n'),
+  "paymentMethod": zod.union([zod.literal('etf'),zod.literal('ach'),zod.literal('check'),zod.literal('other'),zod.literal(null)]).nullable(),
+  "paymentReference": zod.string().nullable(),
+  "paymentNote": zod.string().nullable(),
+  "paymentDispersedAt": zod.coerce.date().nullable(),
+  "paymentDispersedById": zod.number().nullable(),
+  "paymentDispersedByName": zod.string().nullable(),
+  "paymentReceiptUrl": zod.string().nullable().describe('Optional proof-of-payment image attached at dispersal time\n(Task #852). Stored as an object-storage path\/URL returned by\nthe upload helper; renders inline in the read-only Payment\nDetails panel on both web and mobile.\n'),
+  "startingMileage": zod.string().nullish().describe('Odometer reading captured at En Route. Stored as a numeric\nstring with one decimal so the UI can render it verbatim\nwithout float drift. Null until the field employee submits\nthe value on the En Route modal.\n'),
+  "endingMileage": zod.string().nullish().describe('Odometer reading captured at Check Out. Same numeric-string\nshape as `startingMileage`. Null until the Check Out modal\npersists the value.\n'),
+  "unreadCommentCount": zod.number().min(getPortalOpenTicketsResponseUnreadCommentCountMin).describe('Task #51 — number of comments on this ticket\'s thread that\nthe signed-in viewer has not yet seen, used to render an\nunread badge on the tickets-list page. Excludes\nsoft-deleted comments and the viewer\'s own messages.\nAlways 0 when the request has no signed-in viewer (e.g.\nanonymous portal access).\n'),
+  "viewerCanDisperseFunds": zod.boolean().nullish().describe('Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call POST \/tickets\/:id\/disperse-funds\nfor this ticket (admin OR partner contact in the Accounts Payable role\non the owning partner). List responses omit this field.\n'),
+  "viewerCanReverseDispersal": zod.boolean().nullish().describe('Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call\nPOST \/tickets\/:id\/reverse-dispersal for this ticket — i.e.\nthe same admin \/ partner-AP gate as `viewerCanDisperseFunds`\nAND the ticket is currently in `funds_dispersed`. List\nresponses omit this field.\n'),
+  "phoneIntakeCallerName": zod.string().nullish().describe('Set on the single-ticket GET response only. The human caller\'s\nname captured by office phone intake on the ticket\'s initial\nstatus transition (extracted from\n`ticket_status_history.reason` formatted as\n`phone_intake_caller:<name>`). Null for tickets that weren\'t\nopened via phone intake. List responses omit this field.\n')
+})
+export const GetPortalOpenTicketsResponse = zod.array(GetPortalOpenTicketsResponseItem)
+
 
 /**
  * @summary List tickets with optional filters
  */
 export const ListTicketsQueryParams = zod.object({
-  status: zod
-    .enum([
-      "draft",
-      "initiated",
-      "in_progress",
-      "pending_review",
-      "completed",
-      "submitted",
-      "approved",
-      "kicked_back",
-      "cancelled",
-      "awaiting_acceptance",
-      "denied",
-      "awaiting_payment",
-      "funds_dispersed",
-    ])
-    .optional(),
-  siteLocationId: zod.coerce.number().optional(),
-  vendorId: zod.coerce.number().optional(),
-  partnerId: zod.coerce.number().optional(),
-  awaitingPayment: zod.coerce
-    .boolean()
-    .optional()
-    .describe(
-      "When true, returns only tickets that are approved and not yet funds_dispersed (the AP queue).",
-    ),
-});
+  "status": zod.enum(['draft', 'initiated', 'in_progress', 'pending_review', 'completed', 'submitted', 'approved', 'kicked_back', 'cancelled', 'awaiting_acceptance', 'denied', 'awaiting_payment', 'funds_dispersed']).optional(),
+  "siteLocationId": zod.coerce.number().optional(),
+  "vendorId": zod.coerce.number().optional(),
+  "partnerId": zod.coerce.number().optional(),
+  "awaitingPayment": zod.coerce.boolean().optional().describe('When true, returns only tickets that are approved and not yet funds_dispersed (the AP queue).')
+})
 
 export const listTicketsResponseUnreadCommentCountMin = 0;
 
+
+
 export const ListTicketsResponseItem = zod.object({
-  id: zod.number(),
-  siteLocationId: zod.number(),
-  vendorId: zod.number(),
-  fieldEmployeeId: zod.number().nullable(),
-  workTypeId: zod.number(),
-  status: zod
-    .enum([
-      "draft",
-      "initiated",
-      "in_progress",
-      "pending_review",
-      "completed",
-      "submitted",
-      "approved",
-      "kicked_back",
-      "cancelled",
-      "awaiting_acceptance",
-      "denied",
-      "awaiting_payment",
-      "funds_dispersed",
-    ])
-    .describe(
-      "Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app's ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp's status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n",
-    ),
-  description: zod.string().nullable(),
-  notes: zod.string().nullable(),
-  kickbackReason: zod.string().nullable(),
-  checkInTime: zod.coerce.date().nullable(),
-  checkOutTime: zod.coerce.date().nullable(),
-  checkInLatitude: zod.number().nullable(),
-  checkInLongitude: zod.number().nullable(),
-  checkOutLatitude: zod.number().nullable(),
-  checkOutLongitude: zod.number().nullable(),
-  siteName: zod.string().nullable(),
-  vendorName: zod.string().nullable(),
-  workTypeName: zod.string().nullable(),
-  fieldEmployeeName: zod.string().nullable(),
-  partnerName: zod.string().nullable(),
-  partnerLogoUrl: zod.string().nullable(),
-  vendorLogoUrl: zod.string().nullable(),
-  createdAt: zod.coerce.date(),
-  updatedAt: zod.coerce.date(),
-  unlockedAt: zod.coerce.date().nullable(),
-  unlockedById: zod.number().nullable(),
-  unlockedByName: zod.string().nullable(),
-  unlockCount: zod.number(),
-  createdById: zod.number().nullable(),
-  createdByName: zod.string().nullable(),
-  closedById: zod.number().nullable(),
-  closedByName: zod.string().nullable(),
-  lifecycleState: zod
-    .union([
-      zod.literal("pending_arrival"),
-      zod.literal("en_route"),
-      zod.literal("on_location"),
-      zod.literal("on_site"),
-      zod.literal("off_site"),
-      zod.literal(null),
-    ])
-    .nullable(),
-  enRouteAt: zod.coerce.date().nullable(),
-  arrivedAt: zod.coerce.date().nullable(),
-  departureLatitude: zod.number().nullable(),
-  departureLongitude: zod.number().nullable(),
-  siteLatitude: zod.number().nullable(),
-  siteLongitude: zod.number().nullable(),
-  siteRadiusMeters: zod.number().nullable(),
-  afe: zod.string().nullable(),
-  scheduledStartAt: zod.coerce.date().nullable(),
-  scheduledDurationMinutes: zod.number().nullable(),
-  foremanUserId: zod.number().nullable(),
-  intakeChannel: zod
-    .union([
-      zod.literal("partner_self_service"),
-      zod.literal("office_on_behalf_of_partner"),
-      zod.literal("office_on_behalf_of_field_employee"),
-      zod.literal("vendor_field_self_service"),
-      zod.literal(null),
-    ])
-    .nullable()
-    .describe(
-      "How this ticket was opened. Drives the Source badge in the ticket list (globe \/ phone \/ boots).",
-    ),
-  approvedAt: zod.coerce
-    .date()
-    .nullish()
-    .describe(
-      'Task #865 — timestamp the ticket was approved by a partner \/\nadmin. Set the moment status flips to `approved`. Powers the\n\"Approved on\" \/ \"Days waiting\" columns the partner AP queue\nrenders when filtering by `awaitingPayment=true`. Stays\npopulated after dispersal so the ticket history is preserved.\n',
-    ),
-  paymentMethod: zod
-    .union([
-      zod.literal("etf"),
-      zod.literal("ach"),
-      zod.literal("check"),
-      zod.literal("other"),
-      zod.literal(null),
-    ])
-    .nullable(),
-  paymentReference: zod.string().nullable(),
-  paymentNote: zod.string().nullable(),
-  paymentDispersedAt: zod.coerce.date().nullable(),
-  paymentDispersedById: zod.number().nullable(),
-  paymentDispersedByName: zod.string().nullable(),
-  paymentReceiptUrl: zod
-    .string()
-    .nullable()
-    .describe(
-      "Optional proof-of-payment image attached at dispersal time\n(Task #852). Stored as an object-storage path\/URL returned by\nthe upload helper; renders inline in the read-only Payment\nDetails panel on both web and mobile.\n",
-    ),
-  startingMileage: zod
-    .string()
-    .nullish()
-    .describe(
-      "Odometer reading captured at En Route. Stored as a numeric\nstring with one decimal so the UI can render it verbatim\nwithout float drift. Null until the field employee submits\nthe value on the En Route modal.\n",
-    ),
-  endingMileage: zod
-    .string()
-    .nullish()
-    .describe(
-      "Odometer reading captured at Check Out. Same numeric-string\nshape as `startingMileage`. Null until the Check Out modal\npersists the value.\n",
-    ),
-  unreadCommentCount: zod
-    .number()
-    .min(listTicketsResponseUnreadCommentCountMin)
-    .describe(
-      "Task #51 — number of comments on this ticket's thread that\nthe signed-in viewer has not yet seen, used to render an\nunread badge on the tickets-list page. Excludes\nsoft-deleted comments and the viewer's own messages.\nAlways 0 when the request has no signed-in viewer (e.g.\nanonymous portal access).\n",
-    ),
-  viewerCanDisperseFunds: zod
-    .boolean()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call POST \/tickets\/:id\/disperse-funds\nfor this ticket (admin OR partner contact in the Accounts Payable role\non the owning partner). List responses omit this field.\n",
-    ),
-  viewerCanReverseDispersal: zod
-    .boolean()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call\nPOST \/tickets\/:id\/reverse-dispersal for this ticket — i.e.\nthe same admin \/ partner-AP gate as `viewerCanDisperseFunds`\nAND the ticket is currently in `funds_dispersed`. List\nresponses omit this field.\n",
-    ),
-  phoneIntakeCallerName: zod
-    .string()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. The human caller's\nname captured by office phone intake on the ticket's initial\nstatus transition (extracted from\n`ticket_status_history.reason` formatted as\n`phone_intake_caller:<name>`). Null for tickets that weren't\nopened via phone intake. List responses omit this field.\n",
-    ),
-});
-export const ListTicketsResponse = zod.array(ListTicketsResponseItem);
+  "id": zod.number(),
+  "siteLocationId": zod.number(),
+  "vendorId": zod.number(),
+  "fieldEmployeeId": zod.number().nullable(),
+  "workTypeId": zod.number(),
+  "status": zod.enum(['draft', 'initiated', 'in_progress', 'pending_review', 'completed', 'submitted', 'approved', 'kicked_back', 'cancelled', 'awaiting_acceptance', 'denied', 'awaiting_payment', 'funds_dispersed']).describe('Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app\'s ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp\'s status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n'),
+  "description": zod.string().nullable(),
+  "notes": zod.string().nullable(),
+  "kickbackReason": zod.string().nullable(),
+  "checkInTime": zod.coerce.date().nullable(),
+  "checkOutTime": zod.coerce.date().nullable(),
+  "checkInLatitude": zod.number().nullable(),
+  "checkInLongitude": zod.number().nullable(),
+  "checkOutLatitude": zod.number().nullable(),
+  "checkOutLongitude": zod.number().nullable(),
+  "siteName": zod.string().nullable(),
+  "vendorName": zod.string().nullable(),
+  "workTypeName": zod.string().nullable(),
+  "workTypeCategory": zod.string().nullish(),
+  "workTypeTaxTreatment": zod.union([zod.literal('exempt_labor'),zod.literal('taxable_repair_service'),zod.literal('taxable_all'),zod.literal(null)]).nullish().describe('Explicit tax classification set on the platform catalog work type.\nNull when the engine infers treatment from category + state rubric.\nPopulated on single-ticket GET only.\n'),
+  "effectiveTaxTreatment": zod.union([zod.literal('exempt_labor'),zod.literal('taxable_repair_service'),zod.literal('taxable_all'),zod.literal(null)]).nullish().describe('Resolved tax classification for this ticket after partner, vendor,\nand work-type overrides. Populated on single-ticket GET only.\n'),
+  "fieldEmployeeName": zod.string().nullable(),
+  "partnerName": zod.string().nullable(),
+  "partnerLogoUrl": zod.string().nullable(),
+  "vendorLogoUrl": zod.string().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "unlockedAt": zod.coerce.date().nullable(),
+  "unlockedById": zod.number().nullable(),
+  "unlockedByName": zod.string().nullable(),
+  "unlockCount": zod.number(),
+  "createdById": zod.number().nullable(),
+  "createdByName": zod.string().nullable(),
+  "closedById": zod.number().nullable(),
+  "closedByName": zod.string().nullable(),
+  "lifecycleState": zod.union([zod.literal('pending_arrival'),zod.literal('en_route'),zod.literal('on_location'),zod.literal('on_site'),zod.literal('off_site'),zod.literal(null)]).nullable(),
+  "enRouteAt": zod.coerce.date().nullable(),
+  "arrivedAt": zod.coerce.date().nullable(),
+  "departureLatitude": zod.number().nullable(),
+  "departureLongitude": zod.number().nullable(),
+  "siteLatitude": zod.number().nullable(),
+  "siteLongitude": zod.number().nullable(),
+  "siteRadiusMeters": zod.number().nullable(),
+  "afe": zod.string().nullable(),
+  "scheduledStartAt": zod.coerce.date().nullable(),
+  "scheduledDurationMinutes": zod.number().nullable(),
+  "foremanUserId": zod.number().nullable(),
+  "intakeChannel": zod.union([zod.literal('partner_self_service'),zod.literal('office_on_behalf_of_partner'),zod.literal('office_on_behalf_of_field_employee'),zod.literal('vendor_field_self_service'),zod.literal(null)]).nullable().describe('How this ticket was opened. Drives the Source badge in the ticket list (globe \/ phone \/ boots).'),
+  "approvedAt": zod.coerce.date().nullish().describe('Task #865 — timestamp the ticket was approved by a partner \/\nadmin. Set the moment status flips to `approved`. Powers the\n\"Approved on\" \/ \"Days waiting\" columns the partner AP queue\nrenders when filtering by `awaitingPayment=true`. Stays\npopulated after dispersal so the ticket history is preserved.\n'),
+  "paymentMethod": zod.union([zod.literal('etf'),zod.literal('ach'),zod.literal('check'),zod.literal('other'),zod.literal(null)]).nullable(),
+  "paymentReference": zod.string().nullable(),
+  "paymentNote": zod.string().nullable(),
+  "paymentDispersedAt": zod.coerce.date().nullable(),
+  "paymentDispersedById": zod.number().nullable(),
+  "paymentDispersedByName": zod.string().nullable(),
+  "paymentReceiptUrl": zod.string().nullable().describe('Optional proof-of-payment image attached at dispersal time\n(Task #852). Stored as an object-storage path\/URL returned by\nthe upload helper; renders inline in the read-only Payment\nDetails panel on both web and mobile.\n'),
+  "startingMileage": zod.string().nullish().describe('Odometer reading captured at En Route. Stored as a numeric\nstring with one decimal so the UI can render it verbatim\nwithout float drift. Null until the field employee submits\nthe value on the En Route modal.\n'),
+  "endingMileage": zod.string().nullish().describe('Odometer reading captured at Check Out. Same numeric-string\nshape as `startingMileage`. Null until the Check Out modal\npersists the value.\n'),
+  "unreadCommentCount": zod.number().min(listTicketsResponseUnreadCommentCountMin).describe('Task #51 — number of comments on this ticket\'s thread that\nthe signed-in viewer has not yet seen, used to render an\nunread badge on the tickets-list page. Excludes\nsoft-deleted comments and the viewer\'s own messages.\nAlways 0 when the request has no signed-in viewer (e.g.\nanonymous portal access).\n'),
+  "viewerCanDisperseFunds": zod.boolean().nullish().describe('Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call POST \/tickets\/:id\/disperse-funds\nfor this ticket (admin OR partner contact in the Accounts Payable role\non the owning partner). List responses omit this field.\n'),
+  "viewerCanReverseDispersal": zod.boolean().nullish().describe('Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call\nPOST \/tickets\/:id\/reverse-dispersal for this ticket — i.e.\nthe same admin \/ partner-AP gate as `viewerCanDisperseFunds`\nAND the ticket is currently in `funds_dispersed`. List\nresponses omit this field.\n'),
+  "phoneIntakeCallerName": zod.string().nullish().describe('Set on the single-ticket GET response only. The human caller\'s\nname captured by office phone intake on the ticket\'s initial\nstatus transition (extracted from\n`ticket_status_history.reason` formatted as\n`phone_intake_caller:<name>`). Null for tickets that weren\'t\nopened via phone intake. List responses omit this field.\n')
+})
+export const ListTicketsResponse = zod.array(ListTicketsResponseItem)
+
 
 /**
  * @summary Create a new ticket (field employee check-in)
  */
 export const CreateTicketBody = zod.object({
-  siteLocationId: zod.number(),
-  vendorId: zod.number(),
-  fieldEmployeeId: zod.number().nullish(),
-  workTypeId: zod.number(),
-  description: zod.string().nullish(),
-  checkInLatitude: zod.number().nullish(),
-  checkInLongitude: zod.number().nullish(),
-  initialState: zod
-    .union([
-      zod.literal("pending_arrival"),
-      zod.literal("on_site"),
-      zod.literal(null),
-    ])
-    .nullish()
-    .describe(
-      "Hint from client: 'on_site' = check in immediately; 'pending_arrival' = create without check-in. Server still verifies geofence.",
-    ),
-  intakeChannel: zod
-    .union([
-      zod.literal("partner_self_service"),
-      zod.literal("office_on_behalf_of_partner"),
-      zod.literal("office_on_behalf_of_field_employee"),
-      zod.literal("vendor_field_self_service"),
-      zod.literal(null),
-    ])
-    .nullish()
-    .describe(
-      "Optional explicit intake channel. Server validates the caller is allowed to claim it; unauthorized values fall back to the role-default channel.",
-    ),
-  acceptanceImplicit: zod
-    .boolean()
-    .nullish()
-    .describe(
-      "Office phone-intake only. When true on office_on_behalf_of_partner, skip the vendor-accept gate and start at initiated\/in_progress (the partner has already coordinated).",
-    ),
-  phoneIntakeCallerName: zod
-    .string()
-    .nullish()
-    .describe(
-      "Office phone-intake only. Free-text caller name persisted to ticket_status_history.reason as `phone_intake_caller:<name>`.",
-    ),
-  foremanUserId: zod
-    .number()
-    .nullish()
-    .describe(
-      "Optional foreman assignment. Office_on_behalf_of_field_employee uses this to mark the named FE as foreman.",
-    ),
-  scheduledStartAt: zod.coerce.date().nullish(),
-  scheduledDurationMinutes: zod.number().nullish(),
-});
+  "siteLocationId": zod.number(),
+  "vendorId": zod.number(),
+  "fieldEmployeeId": zod.number().nullish(),
+  "workTypeId": zod.number(),
+  "description": zod.string().nullish(),
+  "checkInLatitude": zod.number().nullish(),
+  "checkInLongitude": zod.number().nullish(),
+  "initialState": zod.union([zod.literal('pending_arrival'),zod.literal('on_site'),zod.literal(null)]).nullish().describe('Hint from client: \'on_site\' = check in immediately; \'pending_arrival\' = create without check-in. Server still verifies geofence.'),
+  "intakeChannel": zod.union([zod.literal('partner_self_service'),zod.literal('office_on_behalf_of_partner'),zod.literal('office_on_behalf_of_field_employee'),zod.literal('vendor_field_self_service'),zod.literal(null)]).nullish().describe('Optional explicit intake channel. Server validates the caller is allowed to claim it; unauthorized values fall back to the role-default channel.'),
+  "acceptanceImplicit": zod.boolean().nullish().describe('Office phone-intake only. When true on office_on_behalf_of_partner, skip the vendor-accept gate and start at initiated\/in_progress (the partner has already coordinated).'),
+  "phoneIntakeCallerName": zod.string().nullish().describe('Office phone-intake only. Free-text caller name persisted to ticket_status_history.reason as `phone_intake_caller:<name>`.'),
+  "foremanUserId": zod.number().nullish().describe('Optional foreman assignment. Office_on_behalf_of_field_employee uses this to mark the named FE as foreman.'),
+  "scheduledStartAt": zod.coerce.date().nullish(),
+  "scheduledDurationMinutes": zod.number().nullish()
+})
+
 
 /**
  * @summary Get ticket by ID
  */
 export const GetTicketParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
 export const getTicketResponseUnreadCommentCountMin = 0;
 
+
+
 export const GetTicketResponse = zod.object({
-  id: zod.number(),
-  siteLocationId: zod.number(),
-  vendorId: zod.number(),
-  fieldEmployeeId: zod.number().nullable(),
-  workTypeId: zod.number(),
-  status: zod
-    .enum([
-      "draft",
-      "initiated",
-      "in_progress",
-      "pending_review",
-      "completed",
-      "submitted",
-      "approved",
-      "kicked_back",
-      "cancelled",
-      "awaiting_acceptance",
-      "denied",
-      "awaiting_payment",
-      "funds_dispersed",
-    ])
-    .describe(
-      "Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app's ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp's status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n",
-    ),
-  description: zod.string().nullable(),
-  notes: zod.string().nullable(),
-  kickbackReason: zod.string().nullable(),
-  checkInTime: zod.coerce.date().nullable(),
-  checkOutTime: zod.coerce.date().nullable(),
-  checkInLatitude: zod.number().nullable(),
-  checkInLongitude: zod.number().nullable(),
-  checkOutLatitude: zod.number().nullable(),
-  checkOutLongitude: zod.number().nullable(),
-  siteName: zod.string().nullable(),
-  vendorName: zod.string().nullable(),
-  workTypeName: zod.string().nullable(),
-  fieldEmployeeName: zod.string().nullable(),
-  partnerName: zod.string().nullable(),
-  partnerLogoUrl: zod.string().nullable(),
-  vendorLogoUrl: zod.string().nullable(),
-  createdAt: zod.coerce.date(),
-  updatedAt: zod.coerce.date(),
-  unlockedAt: zod.coerce.date().nullable(),
-  unlockedById: zod.number().nullable(),
-  unlockedByName: zod.string().nullable(),
-  unlockCount: zod.number(),
-  createdById: zod.number().nullable(),
-  createdByName: zod.string().nullable(),
-  closedById: zod.number().nullable(),
-  closedByName: zod.string().nullable(),
-  lifecycleState: zod
-    .union([
-      zod.literal("pending_arrival"),
-      zod.literal("en_route"),
-      zod.literal("on_location"),
-      zod.literal("on_site"),
-      zod.literal("off_site"),
-      zod.literal(null),
-    ])
-    .nullable(),
-  enRouteAt: zod.coerce.date().nullable(),
-  arrivedAt: zod.coerce.date().nullable(),
-  departureLatitude: zod.number().nullable(),
-  departureLongitude: zod.number().nullable(),
-  siteLatitude: zod.number().nullable(),
-  siteLongitude: zod.number().nullable(),
-  siteRadiusMeters: zod.number().nullable(),
-  afe: zod.string().nullable(),
-  scheduledStartAt: zod.coerce.date().nullable(),
-  scheduledDurationMinutes: zod.number().nullable(),
-  foremanUserId: zod.number().nullable(),
-  intakeChannel: zod
-    .union([
-      zod.literal("partner_self_service"),
-      zod.literal("office_on_behalf_of_partner"),
-      zod.literal("office_on_behalf_of_field_employee"),
-      zod.literal("vendor_field_self_service"),
-      zod.literal(null),
-    ])
-    .nullable()
-    .describe(
-      "How this ticket was opened. Drives the Source badge in the ticket list (globe \/ phone \/ boots).",
-    ),
-  approvedAt: zod.coerce
-    .date()
-    .nullish()
-    .describe(
-      'Task #865 — timestamp the ticket was approved by a partner \/\nadmin. Set the moment status flips to `approved`. Powers the\n\"Approved on\" \/ \"Days waiting\" columns the partner AP queue\nrenders when filtering by `awaitingPayment=true`. Stays\npopulated after dispersal so the ticket history is preserved.\n',
-    ),
-  paymentMethod: zod
-    .union([
-      zod.literal("etf"),
-      zod.literal("ach"),
-      zod.literal("check"),
-      zod.literal("other"),
-      zod.literal(null),
-    ])
-    .nullable(),
-  paymentReference: zod.string().nullable(),
-  paymentNote: zod.string().nullable(),
-  paymentDispersedAt: zod.coerce.date().nullable(),
-  paymentDispersedById: zod.number().nullable(),
-  paymentDispersedByName: zod.string().nullable(),
-  paymentReceiptUrl: zod
-    .string()
-    .nullable()
-    .describe(
-      "Optional proof-of-payment image attached at dispersal time\n(Task #852). Stored as an object-storage path\/URL returned by\nthe upload helper; renders inline in the read-only Payment\nDetails panel on both web and mobile.\n",
-    ),
-  startingMileage: zod
-    .string()
-    .nullish()
-    .describe(
-      "Odometer reading captured at En Route. Stored as a numeric\nstring with one decimal so the UI can render it verbatim\nwithout float drift. Null until the field employee submits\nthe value on the En Route modal.\n",
-    ),
-  endingMileage: zod
-    .string()
-    .nullish()
-    .describe(
-      "Odometer reading captured at Check Out. Same numeric-string\nshape as `startingMileage`. Null until the Check Out modal\npersists the value.\n",
-    ),
-  unreadCommentCount: zod
-    .number()
-    .min(getTicketResponseUnreadCommentCountMin)
-    .describe(
-      "Task #51 — number of comments on this ticket's thread that\nthe signed-in viewer has not yet seen, used to render an\nunread badge on the tickets-list page. Excludes\nsoft-deleted comments and the viewer's own messages.\nAlways 0 when the request has no signed-in viewer (e.g.\nanonymous portal access).\n",
-    ),
-  viewerCanDisperseFunds: zod
-    .boolean()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call POST \/tickets\/:id\/disperse-funds\nfor this ticket (admin OR partner contact in the Accounts Payable role\non the owning partner). List responses omit this field.\n",
-    ),
-  viewerCanReverseDispersal: zod
-    .boolean()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call\nPOST \/tickets\/:id\/reverse-dispersal for this ticket — i.e.\nthe same admin \/ partner-AP gate as `viewerCanDisperseFunds`\nAND the ticket is currently in `funds_dispersed`. List\nresponses omit this field.\n",
-    ),
-  phoneIntakeCallerName: zod
-    .string()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. The human caller's\nname captured by office phone intake on the ticket's initial\nstatus transition (extracted from\n`ticket_status_history.reason` formatted as\n`phone_intake_caller:<name>`). Null for tickets that weren't\nopened via phone intake. List responses omit this field.\n",
-    ),
-});
+  "id": zod.number(),
+  "siteLocationId": zod.number(),
+  "vendorId": zod.number(),
+  "fieldEmployeeId": zod.number().nullable(),
+  "workTypeId": zod.number(),
+  "status": zod.enum(['draft', 'initiated', 'in_progress', 'pending_review', 'completed', 'submitted', 'approved', 'kicked_back', 'cancelled', 'awaiting_acceptance', 'denied', 'awaiting_payment', 'funds_dispersed']).describe('Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app\'s ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp\'s status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n'),
+  "description": zod.string().nullable(),
+  "notes": zod.string().nullable(),
+  "kickbackReason": zod.string().nullable(),
+  "checkInTime": zod.coerce.date().nullable(),
+  "checkOutTime": zod.coerce.date().nullable(),
+  "checkInLatitude": zod.number().nullable(),
+  "checkInLongitude": zod.number().nullable(),
+  "checkOutLatitude": zod.number().nullable(),
+  "checkOutLongitude": zod.number().nullable(),
+  "siteName": zod.string().nullable(),
+  "vendorName": zod.string().nullable(),
+  "workTypeName": zod.string().nullable(),
+  "workTypeCategory": zod.string().nullish(),
+  "workTypeTaxTreatment": zod.union([zod.literal('exempt_labor'),zod.literal('taxable_repair_service'),zod.literal('taxable_all'),zod.literal(null)]).nullish().describe('Explicit tax classification set on the platform catalog work type.\nNull when the engine infers treatment from category + state rubric.\nPopulated on single-ticket GET only.\n'),
+  "effectiveTaxTreatment": zod.union([zod.literal('exempt_labor'),zod.literal('taxable_repair_service'),zod.literal('taxable_all'),zod.literal(null)]).nullish().describe('Resolved tax classification for this ticket after partner, vendor,\nand work-type overrides. Populated on single-ticket GET only.\n'),
+  "fieldEmployeeName": zod.string().nullable(),
+  "partnerName": zod.string().nullable(),
+  "partnerLogoUrl": zod.string().nullable(),
+  "vendorLogoUrl": zod.string().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "unlockedAt": zod.coerce.date().nullable(),
+  "unlockedById": zod.number().nullable(),
+  "unlockedByName": zod.string().nullable(),
+  "unlockCount": zod.number(),
+  "createdById": zod.number().nullable(),
+  "createdByName": zod.string().nullable(),
+  "closedById": zod.number().nullable(),
+  "closedByName": zod.string().nullable(),
+  "lifecycleState": zod.union([zod.literal('pending_arrival'),zod.literal('en_route'),zod.literal('on_location'),zod.literal('on_site'),zod.literal('off_site'),zod.literal(null)]).nullable(),
+  "enRouteAt": zod.coerce.date().nullable(),
+  "arrivedAt": zod.coerce.date().nullable(),
+  "departureLatitude": zod.number().nullable(),
+  "departureLongitude": zod.number().nullable(),
+  "siteLatitude": zod.number().nullable(),
+  "siteLongitude": zod.number().nullable(),
+  "siteRadiusMeters": zod.number().nullable(),
+  "afe": zod.string().nullable(),
+  "scheduledStartAt": zod.coerce.date().nullable(),
+  "scheduledDurationMinutes": zod.number().nullable(),
+  "foremanUserId": zod.number().nullable(),
+  "intakeChannel": zod.union([zod.literal('partner_self_service'),zod.literal('office_on_behalf_of_partner'),zod.literal('office_on_behalf_of_field_employee'),zod.literal('vendor_field_self_service'),zod.literal(null)]).nullable().describe('How this ticket was opened. Drives the Source badge in the ticket list (globe \/ phone \/ boots).'),
+  "approvedAt": zod.coerce.date().nullish().describe('Task #865 — timestamp the ticket was approved by a partner \/\nadmin. Set the moment status flips to `approved`. Powers the\n\"Approved on\" \/ \"Days waiting\" columns the partner AP queue\nrenders when filtering by `awaitingPayment=true`. Stays\npopulated after dispersal so the ticket history is preserved.\n'),
+  "paymentMethod": zod.union([zod.literal('etf'),zod.literal('ach'),zod.literal('check'),zod.literal('other'),zod.literal(null)]).nullable(),
+  "paymentReference": zod.string().nullable(),
+  "paymentNote": zod.string().nullable(),
+  "paymentDispersedAt": zod.coerce.date().nullable(),
+  "paymentDispersedById": zod.number().nullable(),
+  "paymentDispersedByName": zod.string().nullable(),
+  "paymentReceiptUrl": zod.string().nullable().describe('Optional proof-of-payment image attached at dispersal time\n(Task #852). Stored as an object-storage path\/URL returned by\nthe upload helper; renders inline in the read-only Payment\nDetails panel on both web and mobile.\n'),
+  "startingMileage": zod.string().nullish().describe('Odometer reading captured at En Route. Stored as a numeric\nstring with one decimal so the UI can render it verbatim\nwithout float drift. Null until the field employee submits\nthe value on the En Route modal.\n'),
+  "endingMileage": zod.string().nullish().describe('Odometer reading captured at Check Out. Same numeric-string\nshape as `startingMileage`. Null until the Check Out modal\npersists the value.\n'),
+  "unreadCommentCount": zod.number().min(getTicketResponseUnreadCommentCountMin).describe('Task #51 — number of comments on this ticket\'s thread that\nthe signed-in viewer has not yet seen, used to render an\nunread badge on the tickets-list page. Excludes\nsoft-deleted comments and the viewer\'s own messages.\nAlways 0 when the request has no signed-in viewer (e.g.\nanonymous portal access).\n'),
+  "viewerCanDisperseFunds": zod.boolean().nullish().describe('Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call POST \/tickets\/:id\/disperse-funds\nfor this ticket (admin OR partner contact in the Accounts Payable role\non the owning partner). List responses omit this field.\n'),
+  "viewerCanReverseDispersal": zod.boolean().nullish().describe('Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call\nPOST \/tickets\/:id\/reverse-dispersal for this ticket — i.e.\nthe same admin \/ partner-AP gate as `viewerCanDisperseFunds`\nAND the ticket is currently in `funds_dispersed`. List\nresponses omit this field.\n'),
+  "phoneIntakeCallerName": zod.string().nullish().describe('Set on the single-ticket GET response only. The human caller\'s\nname captured by office phone intake on the ticket\'s initial\nstatus transition (extracted from\n`ticket_status_history.reason` formatted as\n`phone_intake_caller:<name>`). Null for tickets that weren\'t\nopened via phone intake. List responses omit this field.\n')
+})
+
 
 /**
  * @summary Update ticket details
  */
 export const UpdateTicketParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
 export const UpdateTicketBody = zod.object({
-  description: zod.string().nullish(),
-  notes: zod.string().nullish(),
-  fieldEmployeeId: zod.number().nullish(),
-});
+  "description": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "fieldEmployeeId": zod.number().nullish()
+})
 
 export const updateTicketResponseUnreadCommentCountMin = 0;
 
+
+
 export const UpdateTicketResponse = zod.object({
-  id: zod.number(),
-  siteLocationId: zod.number(),
-  vendorId: zod.number(),
-  fieldEmployeeId: zod.number().nullable(),
-  workTypeId: zod.number(),
-  status: zod
-    .enum([
-      "draft",
-      "initiated",
-      "in_progress",
-      "pending_review",
-      "completed",
-      "submitted",
-      "approved",
-      "kicked_back",
-      "cancelled",
-      "awaiting_acceptance",
-      "denied",
-      "awaiting_payment",
-      "funds_dispersed",
-    ])
-    .describe(
-      "Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app's ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp's status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n",
-    ),
-  description: zod.string().nullable(),
-  notes: zod.string().nullable(),
-  kickbackReason: zod.string().nullable(),
-  checkInTime: zod.coerce.date().nullable(),
-  checkOutTime: zod.coerce.date().nullable(),
-  checkInLatitude: zod.number().nullable(),
-  checkInLongitude: zod.number().nullable(),
-  checkOutLatitude: zod.number().nullable(),
-  checkOutLongitude: zod.number().nullable(),
-  siteName: zod.string().nullable(),
-  vendorName: zod.string().nullable(),
-  workTypeName: zod.string().nullable(),
-  fieldEmployeeName: zod.string().nullable(),
-  partnerName: zod.string().nullable(),
-  partnerLogoUrl: zod.string().nullable(),
-  vendorLogoUrl: zod.string().nullable(),
-  createdAt: zod.coerce.date(),
-  updatedAt: zod.coerce.date(),
-  unlockedAt: zod.coerce.date().nullable(),
-  unlockedById: zod.number().nullable(),
-  unlockedByName: zod.string().nullable(),
-  unlockCount: zod.number(),
-  createdById: zod.number().nullable(),
-  createdByName: zod.string().nullable(),
-  closedById: zod.number().nullable(),
-  closedByName: zod.string().nullable(),
-  lifecycleState: zod
-    .union([
-      zod.literal("pending_arrival"),
-      zod.literal("en_route"),
-      zod.literal("on_location"),
-      zod.literal("on_site"),
-      zod.literal("off_site"),
-      zod.literal(null),
-    ])
-    .nullable(),
-  enRouteAt: zod.coerce.date().nullable(),
-  arrivedAt: zod.coerce.date().nullable(),
-  departureLatitude: zod.number().nullable(),
-  departureLongitude: zod.number().nullable(),
-  siteLatitude: zod.number().nullable(),
-  siteLongitude: zod.number().nullable(),
-  siteRadiusMeters: zod.number().nullable(),
-  afe: zod.string().nullable(),
-  scheduledStartAt: zod.coerce.date().nullable(),
-  scheduledDurationMinutes: zod.number().nullable(),
-  foremanUserId: zod.number().nullable(),
-  intakeChannel: zod
-    .union([
-      zod.literal("partner_self_service"),
-      zod.literal("office_on_behalf_of_partner"),
-      zod.literal("office_on_behalf_of_field_employee"),
-      zod.literal("vendor_field_self_service"),
-      zod.literal(null),
-    ])
-    .nullable()
-    .describe(
-      "How this ticket was opened. Drives the Source badge in the ticket list (globe \/ phone \/ boots).",
-    ),
-  approvedAt: zod.coerce
-    .date()
-    .nullish()
-    .describe(
-      'Task #865 — timestamp the ticket was approved by a partner \/\nadmin. Set the moment status flips to `approved`. Powers the\n\"Approved on\" \/ \"Days waiting\" columns the partner AP queue\nrenders when filtering by `awaitingPayment=true`. Stays\npopulated after dispersal so the ticket history is preserved.\n',
-    ),
-  paymentMethod: zod
-    .union([
-      zod.literal("etf"),
-      zod.literal("ach"),
-      zod.literal("check"),
-      zod.literal("other"),
-      zod.literal(null),
-    ])
-    .nullable(),
-  paymentReference: zod.string().nullable(),
-  paymentNote: zod.string().nullable(),
-  paymentDispersedAt: zod.coerce.date().nullable(),
-  paymentDispersedById: zod.number().nullable(),
-  paymentDispersedByName: zod.string().nullable(),
-  paymentReceiptUrl: zod
-    .string()
-    .nullable()
-    .describe(
-      "Optional proof-of-payment image attached at dispersal time\n(Task #852). Stored as an object-storage path\/URL returned by\nthe upload helper; renders inline in the read-only Payment\nDetails panel on both web and mobile.\n",
-    ),
-  startingMileage: zod
-    .string()
-    .nullish()
-    .describe(
-      "Odometer reading captured at En Route. Stored as a numeric\nstring with one decimal so the UI can render it verbatim\nwithout float drift. Null until the field employee submits\nthe value on the En Route modal.\n",
-    ),
-  endingMileage: zod
-    .string()
-    .nullish()
-    .describe(
-      "Odometer reading captured at Check Out. Same numeric-string\nshape as `startingMileage`. Null until the Check Out modal\npersists the value.\n",
-    ),
-  unreadCommentCount: zod
-    .number()
-    .min(updateTicketResponseUnreadCommentCountMin)
-    .describe(
-      "Task #51 — number of comments on this ticket's thread that\nthe signed-in viewer has not yet seen, used to render an\nunread badge on the tickets-list page. Excludes\nsoft-deleted comments and the viewer's own messages.\nAlways 0 when the request has no signed-in viewer (e.g.\nanonymous portal access).\n",
-    ),
-  viewerCanDisperseFunds: zod
-    .boolean()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call POST \/tickets\/:id\/disperse-funds\nfor this ticket (admin OR partner contact in the Accounts Payable role\non the owning partner). List responses omit this field.\n",
-    ),
-  viewerCanReverseDispersal: zod
-    .boolean()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call\nPOST \/tickets\/:id\/reverse-dispersal for this ticket — i.e.\nthe same admin \/ partner-AP gate as `viewerCanDisperseFunds`\nAND the ticket is currently in `funds_dispersed`. List\nresponses omit this field.\n",
-    ),
-  phoneIntakeCallerName: zod
-    .string()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. The human caller's\nname captured by office phone intake on the ticket's initial\nstatus transition (extracted from\n`ticket_status_history.reason` formatted as\n`phone_intake_caller:<name>`). Null for tickets that weren't\nopened via phone intake. List responses omit this field.\n",
-    ),
-});
+  "id": zod.number(),
+  "siteLocationId": zod.number(),
+  "vendorId": zod.number(),
+  "fieldEmployeeId": zod.number().nullable(),
+  "workTypeId": zod.number(),
+  "status": zod.enum(['draft', 'initiated', 'in_progress', 'pending_review', 'completed', 'submitted', 'approved', 'kicked_back', 'cancelled', 'awaiting_acceptance', 'denied', 'awaiting_payment', 'funds_dispersed']).describe('Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app\'s ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp\'s status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n'),
+  "description": zod.string().nullable(),
+  "notes": zod.string().nullable(),
+  "kickbackReason": zod.string().nullable(),
+  "checkInTime": zod.coerce.date().nullable(),
+  "checkOutTime": zod.coerce.date().nullable(),
+  "checkInLatitude": zod.number().nullable(),
+  "checkInLongitude": zod.number().nullable(),
+  "checkOutLatitude": zod.number().nullable(),
+  "checkOutLongitude": zod.number().nullable(),
+  "siteName": zod.string().nullable(),
+  "vendorName": zod.string().nullable(),
+  "workTypeName": zod.string().nullable(),
+  "workTypeCategory": zod.string().nullish(),
+  "workTypeTaxTreatment": zod.union([zod.literal('exempt_labor'),zod.literal('taxable_repair_service'),zod.literal('taxable_all'),zod.literal(null)]).nullish().describe('Explicit tax classification set on the platform catalog work type.\nNull when the engine infers treatment from category + state rubric.\nPopulated on single-ticket GET only.\n'),
+  "effectiveTaxTreatment": zod.union([zod.literal('exempt_labor'),zod.literal('taxable_repair_service'),zod.literal('taxable_all'),zod.literal(null)]).nullish().describe('Resolved tax classification for this ticket after partner, vendor,\nand work-type overrides. Populated on single-ticket GET only.\n'),
+  "fieldEmployeeName": zod.string().nullable(),
+  "partnerName": zod.string().nullable(),
+  "partnerLogoUrl": zod.string().nullable(),
+  "vendorLogoUrl": zod.string().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "unlockedAt": zod.coerce.date().nullable(),
+  "unlockedById": zod.number().nullable(),
+  "unlockedByName": zod.string().nullable(),
+  "unlockCount": zod.number(),
+  "createdById": zod.number().nullable(),
+  "createdByName": zod.string().nullable(),
+  "closedById": zod.number().nullable(),
+  "closedByName": zod.string().nullable(),
+  "lifecycleState": zod.union([zod.literal('pending_arrival'),zod.literal('en_route'),zod.literal('on_location'),zod.literal('on_site'),zod.literal('off_site'),zod.literal(null)]).nullable(),
+  "enRouteAt": zod.coerce.date().nullable(),
+  "arrivedAt": zod.coerce.date().nullable(),
+  "departureLatitude": zod.number().nullable(),
+  "departureLongitude": zod.number().nullable(),
+  "siteLatitude": zod.number().nullable(),
+  "siteLongitude": zod.number().nullable(),
+  "siteRadiusMeters": zod.number().nullable(),
+  "afe": zod.string().nullable(),
+  "scheduledStartAt": zod.coerce.date().nullable(),
+  "scheduledDurationMinutes": zod.number().nullable(),
+  "foremanUserId": zod.number().nullable(),
+  "intakeChannel": zod.union([zod.literal('partner_self_service'),zod.literal('office_on_behalf_of_partner'),zod.literal('office_on_behalf_of_field_employee'),zod.literal('vendor_field_self_service'),zod.literal(null)]).nullable().describe('How this ticket was opened. Drives the Source badge in the ticket list (globe \/ phone \/ boots).'),
+  "approvedAt": zod.coerce.date().nullish().describe('Task #865 — timestamp the ticket was approved by a partner \/\nadmin. Set the moment status flips to `approved`. Powers the\n\"Approved on\" \/ \"Days waiting\" columns the partner AP queue\nrenders when filtering by `awaitingPayment=true`. Stays\npopulated after dispersal so the ticket history is preserved.\n'),
+  "paymentMethod": zod.union([zod.literal('etf'),zod.literal('ach'),zod.literal('check'),zod.literal('other'),zod.literal(null)]).nullable(),
+  "paymentReference": zod.string().nullable(),
+  "paymentNote": zod.string().nullable(),
+  "paymentDispersedAt": zod.coerce.date().nullable(),
+  "paymentDispersedById": zod.number().nullable(),
+  "paymentDispersedByName": zod.string().nullable(),
+  "paymentReceiptUrl": zod.string().nullable().describe('Optional proof-of-payment image attached at dispersal time\n(Task #852). Stored as an object-storage path\/URL returned by\nthe upload helper; renders inline in the read-only Payment\nDetails panel on both web and mobile.\n'),
+  "startingMileage": zod.string().nullish().describe('Odometer reading captured at En Route. Stored as a numeric\nstring with one decimal so the UI can render it verbatim\nwithout float drift. Null until the field employee submits\nthe value on the En Route modal.\n'),
+  "endingMileage": zod.string().nullish().describe('Odometer reading captured at Check Out. Same numeric-string\nshape as `startingMileage`. Null until the Check Out modal\npersists the value.\n'),
+  "unreadCommentCount": zod.number().min(updateTicketResponseUnreadCommentCountMin).describe('Task #51 — number of comments on this ticket\'s thread that\nthe signed-in viewer has not yet seen, used to render an\nunread badge on the tickets-list page. Excludes\nsoft-deleted comments and the viewer\'s own messages.\nAlways 0 when the request has no signed-in viewer (e.g.\nanonymous portal access).\n'),
+  "viewerCanDisperseFunds": zod.boolean().nullish().describe('Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call POST \/tickets\/:id\/disperse-funds\nfor this ticket (admin OR partner contact in the Accounts Payable role\non the owning partner). List responses omit this field.\n'),
+  "viewerCanReverseDispersal": zod.boolean().nullish().describe('Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call\nPOST \/tickets\/:id\/reverse-dispersal for this ticket — i.e.\nthe same admin \/ partner-AP gate as `viewerCanDisperseFunds`\nAND the ticket is currently in `funds_dispersed`. List\nresponses omit this field.\n'),
+  "phoneIntakeCallerName": zod.string().nullish().describe('Set on the single-ticket GET response only. The human caller\'s\nname captured by office phone intake on the ticket\'s initial\nstatus transition (extracted from\n`ticket_status_history.reason` formatted as\n`phone_intake_caller:<name>`). Null for tickets that weren\'t\nopened via phone intake. List responses omit this field.\n')
+})
+
 
 /**
  * @summary Mark field employee as en route to the site (returns Maps URL)
  */
 export const EnRouteTicketParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
 export const EnRouteTicketBody = zod.object({
-  latitude: zod.number().nullish(),
-  longitude: zod.number().nullish(),
-});
+  "latitude": zod.number().nullish(),
+  "longitude": zod.number().nullish()
+})
 
 export const enRouteTicketResponseTicketUnreadCommentCountMin = 0;
 
+
+
 export const EnRouteTicketResponse = zod.object({
-  ticket: zod.object({
-    id: zod.number(),
-    siteLocationId: zod.number(),
-    vendorId: zod.number(),
-    fieldEmployeeId: zod.number().nullable(),
-    workTypeId: zod.number(),
-    status: zod
-      .enum([
-        "draft",
-        "initiated",
-        "in_progress",
-        "pending_review",
-        "completed",
-        "submitted",
-        "approved",
-        "kicked_back",
-        "cancelled",
-        "awaiting_acceptance",
-        "denied",
-        "awaiting_payment",
-        "funds_dispersed",
-      ])
-      .describe(
-        "Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app's ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp's status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n",
-      ),
-    description: zod.string().nullable(),
-    notes: zod.string().nullable(),
-    kickbackReason: zod.string().nullable(),
-    checkInTime: zod.coerce.date().nullable(),
-    checkOutTime: zod.coerce.date().nullable(),
-    checkInLatitude: zod.number().nullable(),
-    checkInLongitude: zod.number().nullable(),
-    checkOutLatitude: zod.number().nullable(),
-    checkOutLongitude: zod.number().nullable(),
-    siteName: zod.string().nullable(),
-    vendorName: zod.string().nullable(),
-    workTypeName: zod.string().nullable(),
-    fieldEmployeeName: zod.string().nullable(),
-    partnerName: zod.string().nullable(),
-    partnerLogoUrl: zod.string().nullable(),
-    vendorLogoUrl: zod.string().nullable(),
-    createdAt: zod.coerce.date(),
-    updatedAt: zod.coerce.date(),
-    unlockedAt: zod.coerce.date().nullable(),
-    unlockedById: zod.number().nullable(),
-    unlockedByName: zod.string().nullable(),
-    unlockCount: zod.number(),
-    createdById: zod.number().nullable(),
-    createdByName: zod.string().nullable(),
-    closedById: zod.number().nullable(),
-    closedByName: zod.string().nullable(),
-    lifecycleState: zod
-      .union([
-        zod.literal("pending_arrival"),
-        zod.literal("en_route"),
-        zod.literal("on_location"),
-        zod.literal("on_site"),
-        zod.literal("off_site"),
-        zod.literal(null),
-      ])
-      .nullable(),
-    enRouteAt: zod.coerce.date().nullable(),
-    arrivedAt: zod.coerce.date().nullable(),
-    departureLatitude: zod.number().nullable(),
-    departureLongitude: zod.number().nullable(),
-    siteLatitude: zod.number().nullable(),
-    siteLongitude: zod.number().nullable(),
-    siteRadiusMeters: zod.number().nullable(),
-    afe: zod.string().nullable(),
-    scheduledStartAt: zod.coerce.date().nullable(),
-    scheduledDurationMinutes: zod.number().nullable(),
-    foremanUserId: zod.number().nullable(),
-    intakeChannel: zod
-      .union([
-        zod.literal("partner_self_service"),
-        zod.literal("office_on_behalf_of_partner"),
-        zod.literal("office_on_behalf_of_field_employee"),
-        zod.literal("vendor_field_self_service"),
-        zod.literal(null),
-      ])
-      .nullable()
-      .describe(
-        "How this ticket was opened. Drives the Source badge in the ticket list (globe \/ phone \/ boots).",
-      ),
-    approvedAt: zod.coerce
-      .date()
-      .nullish()
-      .describe(
-        'Task #865 — timestamp the ticket was approved by a partner \/\nadmin. Set the moment status flips to `approved`. Powers the\n\"Approved on\" \/ \"Days waiting\" columns the partner AP queue\nrenders when filtering by `awaitingPayment=true`. Stays\npopulated after dispersal so the ticket history is preserved.\n',
-      ),
-    paymentMethod: zod
-      .union([
-        zod.literal("etf"),
-        zod.literal("ach"),
-        zod.literal("check"),
-        zod.literal("other"),
-        zod.literal(null),
-      ])
-      .nullable(),
-    paymentReference: zod.string().nullable(),
-    paymentNote: zod.string().nullable(),
-    paymentDispersedAt: zod.coerce.date().nullable(),
-    paymentDispersedById: zod.number().nullable(),
-    paymentDispersedByName: zod.string().nullable(),
-    paymentReceiptUrl: zod
-      .string()
-      .nullable()
-      .describe(
-        "Optional proof-of-payment image attached at dispersal time\n(Task #852). Stored as an object-storage path\/URL returned by\nthe upload helper; renders inline in the read-only Payment\nDetails panel on both web and mobile.\n",
-      ),
-    startingMileage: zod
-      .string()
-      .nullish()
-      .describe(
-        "Odometer reading captured at En Route. Stored as a numeric\nstring with one decimal so the UI can render it verbatim\nwithout float drift. Null until the field employee submits\nthe value on the En Route modal.\n",
-      ),
-    endingMileage: zod
-      .string()
-      .nullish()
-      .describe(
-        "Odometer reading captured at Check Out. Same numeric-string\nshape as `startingMileage`. Null until the Check Out modal\npersists the value.\n",
-      ),
-    unreadCommentCount: zod
-      .number()
-      .min(enRouteTicketResponseTicketUnreadCommentCountMin)
-      .describe(
-        "Task #51 — number of comments on this ticket's thread that\nthe signed-in viewer has not yet seen, used to render an\nunread badge on the tickets-list page. Excludes\nsoft-deleted comments and the viewer's own messages.\nAlways 0 when the request has no signed-in viewer (e.g.\nanonymous portal access).\n",
-      ),
-    viewerCanDisperseFunds: zod
-      .boolean()
-      .nullish()
-      .describe(
-        "Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call POST \/tickets\/:id\/disperse-funds\nfor this ticket (admin OR partner contact in the Accounts Payable role\non the owning partner). List responses omit this field.\n",
-      ),
-    viewerCanReverseDispersal: zod
-      .boolean()
-      .nullish()
-      .describe(
-        "Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call\nPOST \/tickets\/:id\/reverse-dispersal for this ticket — i.e.\nthe same admin \/ partner-AP gate as `viewerCanDisperseFunds`\nAND the ticket is currently in `funds_dispersed`. List\nresponses omit this field.\n",
-      ),
-    phoneIntakeCallerName: zod
-      .string()
-      .nullish()
-      .describe(
-        "Set on the single-ticket GET response only. The human caller's\nname captured by office phone intake on the ticket's initial\nstatus transition (extracted from\n`ticket_status_history.reason` formatted as\n`phone_intake_caller:<name>`). Null for tickets that weren't\nopened via phone intake. List responses omit this field.\n",
-      ),
-  }),
-  mapsUrl: zod.string(),
-});
+  "ticket": zod.object({
+  "id": zod.number(),
+  "siteLocationId": zod.number(),
+  "vendorId": zod.number(),
+  "fieldEmployeeId": zod.number().nullable(),
+  "workTypeId": zod.number(),
+  "status": zod.enum(['draft', 'initiated', 'in_progress', 'pending_review', 'completed', 'submitted', 'approved', 'kicked_back', 'cancelled', 'awaiting_acceptance', 'denied', 'awaiting_payment', 'funds_dispersed']).describe('Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app\'s ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp\'s status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n'),
+  "description": zod.string().nullable(),
+  "notes": zod.string().nullable(),
+  "kickbackReason": zod.string().nullable(),
+  "checkInTime": zod.coerce.date().nullable(),
+  "checkOutTime": zod.coerce.date().nullable(),
+  "checkInLatitude": zod.number().nullable(),
+  "checkInLongitude": zod.number().nullable(),
+  "checkOutLatitude": zod.number().nullable(),
+  "checkOutLongitude": zod.number().nullable(),
+  "siteName": zod.string().nullable(),
+  "vendorName": zod.string().nullable(),
+  "workTypeName": zod.string().nullable(),
+  "workTypeCategory": zod.string().nullish(),
+  "workTypeTaxTreatment": zod.union([zod.literal('exempt_labor'),zod.literal('taxable_repair_service'),zod.literal('taxable_all'),zod.literal(null)]).nullish().describe('Explicit tax classification set on the platform catalog work type.\nNull when the engine infers treatment from category + state rubric.\nPopulated on single-ticket GET only.\n'),
+  "effectiveTaxTreatment": zod.union([zod.literal('exempt_labor'),zod.literal('taxable_repair_service'),zod.literal('taxable_all'),zod.literal(null)]).nullish().describe('Resolved tax classification for this ticket after partner, vendor,\nand work-type overrides. Populated on single-ticket GET only.\n'),
+  "fieldEmployeeName": zod.string().nullable(),
+  "partnerName": zod.string().nullable(),
+  "partnerLogoUrl": zod.string().nullable(),
+  "vendorLogoUrl": zod.string().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "unlockedAt": zod.coerce.date().nullable(),
+  "unlockedById": zod.number().nullable(),
+  "unlockedByName": zod.string().nullable(),
+  "unlockCount": zod.number(),
+  "createdById": zod.number().nullable(),
+  "createdByName": zod.string().nullable(),
+  "closedById": zod.number().nullable(),
+  "closedByName": zod.string().nullable(),
+  "lifecycleState": zod.union([zod.literal('pending_arrival'),zod.literal('en_route'),zod.literal('on_location'),zod.literal('on_site'),zod.literal('off_site'),zod.literal(null)]).nullable(),
+  "enRouteAt": zod.coerce.date().nullable(),
+  "arrivedAt": zod.coerce.date().nullable(),
+  "departureLatitude": zod.number().nullable(),
+  "departureLongitude": zod.number().nullable(),
+  "siteLatitude": zod.number().nullable(),
+  "siteLongitude": zod.number().nullable(),
+  "siteRadiusMeters": zod.number().nullable(),
+  "afe": zod.string().nullable(),
+  "scheduledStartAt": zod.coerce.date().nullable(),
+  "scheduledDurationMinutes": zod.number().nullable(),
+  "foremanUserId": zod.number().nullable(),
+  "intakeChannel": zod.union([zod.literal('partner_self_service'),zod.literal('office_on_behalf_of_partner'),zod.literal('office_on_behalf_of_field_employee'),zod.literal('vendor_field_self_service'),zod.literal(null)]).nullable().describe('How this ticket was opened. Drives the Source badge in the ticket list (globe \/ phone \/ boots).'),
+  "approvedAt": zod.coerce.date().nullish().describe('Task #865 — timestamp the ticket was approved by a partner \/\nadmin. Set the moment status flips to `approved`. Powers the\n\"Approved on\" \/ \"Days waiting\" columns the partner AP queue\nrenders when filtering by `awaitingPayment=true`. Stays\npopulated after dispersal so the ticket history is preserved.\n'),
+  "paymentMethod": zod.union([zod.literal('etf'),zod.literal('ach'),zod.literal('check'),zod.literal('other'),zod.literal(null)]).nullable(),
+  "paymentReference": zod.string().nullable(),
+  "paymentNote": zod.string().nullable(),
+  "paymentDispersedAt": zod.coerce.date().nullable(),
+  "paymentDispersedById": zod.number().nullable(),
+  "paymentDispersedByName": zod.string().nullable(),
+  "paymentReceiptUrl": zod.string().nullable().describe('Optional proof-of-payment image attached at dispersal time\n(Task #852). Stored as an object-storage path\/URL returned by\nthe upload helper; renders inline in the read-only Payment\nDetails panel on both web and mobile.\n'),
+  "startingMileage": zod.string().nullish().describe('Odometer reading captured at En Route. Stored as a numeric\nstring with one decimal so the UI can render it verbatim\nwithout float drift. Null until the field employee submits\nthe value on the En Route modal.\n'),
+  "endingMileage": zod.string().nullish().describe('Odometer reading captured at Check Out. Same numeric-string\nshape as `startingMileage`. Null until the Check Out modal\npersists the value.\n'),
+  "unreadCommentCount": zod.number().min(enRouteTicketResponseTicketUnreadCommentCountMin).describe('Task #51 — number of comments on this ticket\'s thread that\nthe signed-in viewer has not yet seen, used to render an\nunread badge on the tickets-list page. Excludes\nsoft-deleted comments and the viewer\'s own messages.\nAlways 0 when the request has no signed-in viewer (e.g.\nanonymous portal access).\n'),
+  "viewerCanDisperseFunds": zod.boolean().nullish().describe('Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call POST \/tickets\/:id\/disperse-funds\nfor this ticket (admin OR partner contact in the Accounts Payable role\non the owning partner). List responses omit this field.\n'),
+  "viewerCanReverseDispersal": zod.boolean().nullish().describe('Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call\nPOST \/tickets\/:id\/reverse-dispersal for this ticket — i.e.\nthe same admin \/ partner-AP gate as `viewerCanDisperseFunds`\nAND the ticket is currently in `funds_dispersed`. List\nresponses omit this field.\n'),
+  "phoneIntakeCallerName": zod.string().nullish().describe('Set on the single-ticket GET response only. The human caller\'s\nname captured by office phone intake on the ticket\'s initial\nstatus transition (extracted from\n`ticket_status_history.reason` formatted as\n`phone_intake_caller:<name>`). Null for tickets that weren\'t\nopened via phone intake. List responses omit this field.\n')
+}),
+  "mapsUrl": zod.string()
+})
+
 
 /**
  * @summary Check in to site for a ticket (captures GPS)
  */
 export const CheckInTicketParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
 export const CheckInTicketBody = zod.object({
-  latitude: zod.number(),
-  longitude: zod.number(),
-});
+  "latitude": zod.number(),
+  "longitude": zod.number()
+})
 
 export const checkInTicketResponseUnreadCommentCountMin = 0;
 
+
+
 export const CheckInTicketResponse = zod.object({
-  id: zod.number(),
-  siteLocationId: zod.number(),
-  vendorId: zod.number(),
-  fieldEmployeeId: zod.number().nullable(),
-  workTypeId: zod.number(),
-  status: zod
-    .enum([
-      "draft",
-      "initiated",
-      "in_progress",
-      "pending_review",
-      "completed",
-      "submitted",
-      "approved",
-      "kicked_back",
-      "cancelled",
-      "awaiting_acceptance",
-      "denied",
-      "awaiting_payment",
-      "funds_dispersed",
-    ])
-    .describe(
-      "Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app's ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp's status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n",
-    ),
-  description: zod.string().nullable(),
-  notes: zod.string().nullable(),
-  kickbackReason: zod.string().nullable(),
-  checkInTime: zod.coerce.date().nullable(),
-  checkOutTime: zod.coerce.date().nullable(),
-  checkInLatitude: zod.number().nullable(),
-  checkInLongitude: zod.number().nullable(),
-  checkOutLatitude: zod.number().nullable(),
-  checkOutLongitude: zod.number().nullable(),
-  siteName: zod.string().nullable(),
-  vendorName: zod.string().nullable(),
-  workTypeName: zod.string().nullable(),
-  fieldEmployeeName: zod.string().nullable(),
-  partnerName: zod.string().nullable(),
-  partnerLogoUrl: zod.string().nullable(),
-  vendorLogoUrl: zod.string().nullable(),
-  createdAt: zod.coerce.date(),
-  updatedAt: zod.coerce.date(),
-  unlockedAt: zod.coerce.date().nullable(),
-  unlockedById: zod.number().nullable(),
-  unlockedByName: zod.string().nullable(),
-  unlockCount: zod.number(),
-  createdById: zod.number().nullable(),
-  createdByName: zod.string().nullable(),
-  closedById: zod.number().nullable(),
-  closedByName: zod.string().nullable(),
-  lifecycleState: zod
-    .union([
-      zod.literal("pending_arrival"),
-      zod.literal("en_route"),
-      zod.literal("on_location"),
-      zod.literal("on_site"),
-      zod.literal("off_site"),
-      zod.literal(null),
-    ])
-    .nullable(),
-  enRouteAt: zod.coerce.date().nullable(),
-  arrivedAt: zod.coerce.date().nullable(),
-  departureLatitude: zod.number().nullable(),
-  departureLongitude: zod.number().nullable(),
-  siteLatitude: zod.number().nullable(),
-  siteLongitude: zod.number().nullable(),
-  siteRadiusMeters: zod.number().nullable(),
-  afe: zod.string().nullable(),
-  scheduledStartAt: zod.coerce.date().nullable(),
-  scheduledDurationMinutes: zod.number().nullable(),
-  foremanUserId: zod.number().nullable(),
-  intakeChannel: zod
-    .union([
-      zod.literal("partner_self_service"),
-      zod.literal("office_on_behalf_of_partner"),
-      zod.literal("office_on_behalf_of_field_employee"),
-      zod.literal("vendor_field_self_service"),
-      zod.literal(null),
-    ])
-    .nullable()
-    .describe(
-      "How this ticket was opened. Drives the Source badge in the ticket list (globe \/ phone \/ boots).",
-    ),
-  approvedAt: zod.coerce
-    .date()
-    .nullish()
-    .describe(
-      'Task #865 — timestamp the ticket was approved by a partner \/\nadmin. Set the moment status flips to `approved`. Powers the\n\"Approved on\" \/ \"Days waiting\" columns the partner AP queue\nrenders when filtering by `awaitingPayment=true`. Stays\npopulated after dispersal so the ticket history is preserved.\n',
-    ),
-  paymentMethod: zod
-    .union([
-      zod.literal("etf"),
-      zod.literal("ach"),
-      zod.literal("check"),
-      zod.literal("other"),
-      zod.literal(null),
-    ])
-    .nullable(),
-  paymentReference: zod.string().nullable(),
-  paymentNote: zod.string().nullable(),
-  paymentDispersedAt: zod.coerce.date().nullable(),
-  paymentDispersedById: zod.number().nullable(),
-  paymentDispersedByName: zod.string().nullable(),
-  paymentReceiptUrl: zod
-    .string()
-    .nullable()
-    .describe(
-      "Optional proof-of-payment image attached at dispersal time\n(Task #852). Stored as an object-storage path\/URL returned by\nthe upload helper; renders inline in the read-only Payment\nDetails panel on both web and mobile.\n",
-    ),
-  startingMileage: zod
-    .string()
-    .nullish()
-    .describe(
-      "Odometer reading captured at En Route. Stored as a numeric\nstring with one decimal so the UI can render it verbatim\nwithout float drift. Null until the field employee submits\nthe value on the En Route modal.\n",
-    ),
-  endingMileage: zod
-    .string()
-    .nullish()
-    .describe(
-      "Odometer reading captured at Check Out. Same numeric-string\nshape as `startingMileage`. Null until the Check Out modal\npersists the value.\n",
-    ),
-  unreadCommentCount: zod
-    .number()
-    .min(checkInTicketResponseUnreadCommentCountMin)
-    .describe(
-      "Task #51 — number of comments on this ticket's thread that\nthe signed-in viewer has not yet seen, used to render an\nunread badge on the tickets-list page. Excludes\nsoft-deleted comments and the viewer's own messages.\nAlways 0 when the request has no signed-in viewer (e.g.\nanonymous portal access).\n",
-    ),
-  viewerCanDisperseFunds: zod
-    .boolean()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call POST \/tickets\/:id\/disperse-funds\nfor this ticket (admin OR partner contact in the Accounts Payable role\non the owning partner). List responses omit this field.\n",
-    ),
-  viewerCanReverseDispersal: zod
-    .boolean()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call\nPOST \/tickets\/:id\/reverse-dispersal for this ticket — i.e.\nthe same admin \/ partner-AP gate as `viewerCanDisperseFunds`\nAND the ticket is currently in `funds_dispersed`. List\nresponses omit this field.\n",
-    ),
-  phoneIntakeCallerName: zod
-    .string()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. The human caller's\nname captured by office phone intake on the ticket's initial\nstatus transition (extracted from\n`ticket_status_history.reason` formatted as\n`phone_intake_caller:<name>`). Null for tickets that weren't\nopened via phone intake. List responses omit this field.\n",
-    ),
-});
+  "id": zod.number(),
+  "siteLocationId": zod.number(),
+  "vendorId": zod.number(),
+  "fieldEmployeeId": zod.number().nullable(),
+  "workTypeId": zod.number(),
+  "status": zod.enum(['draft', 'initiated', 'in_progress', 'pending_review', 'completed', 'submitted', 'approved', 'kicked_back', 'cancelled', 'awaiting_acceptance', 'denied', 'awaiting_payment', 'funds_dispersed']).describe('Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app\'s ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp\'s status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n'),
+  "description": zod.string().nullable(),
+  "notes": zod.string().nullable(),
+  "kickbackReason": zod.string().nullable(),
+  "checkInTime": zod.coerce.date().nullable(),
+  "checkOutTime": zod.coerce.date().nullable(),
+  "checkInLatitude": zod.number().nullable(),
+  "checkInLongitude": zod.number().nullable(),
+  "checkOutLatitude": zod.number().nullable(),
+  "checkOutLongitude": zod.number().nullable(),
+  "siteName": zod.string().nullable(),
+  "vendorName": zod.string().nullable(),
+  "workTypeName": zod.string().nullable(),
+  "workTypeCategory": zod.string().nullish(),
+  "workTypeTaxTreatment": zod.union([zod.literal('exempt_labor'),zod.literal('taxable_repair_service'),zod.literal('taxable_all'),zod.literal(null)]).nullish().describe('Explicit tax classification set on the platform catalog work type.\nNull when the engine infers treatment from category + state rubric.\nPopulated on single-ticket GET only.\n'),
+  "effectiveTaxTreatment": zod.union([zod.literal('exempt_labor'),zod.literal('taxable_repair_service'),zod.literal('taxable_all'),zod.literal(null)]).nullish().describe('Resolved tax classification for this ticket after partner, vendor,\nand work-type overrides. Populated on single-ticket GET only.\n'),
+  "fieldEmployeeName": zod.string().nullable(),
+  "partnerName": zod.string().nullable(),
+  "partnerLogoUrl": zod.string().nullable(),
+  "vendorLogoUrl": zod.string().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "unlockedAt": zod.coerce.date().nullable(),
+  "unlockedById": zod.number().nullable(),
+  "unlockedByName": zod.string().nullable(),
+  "unlockCount": zod.number(),
+  "createdById": zod.number().nullable(),
+  "createdByName": zod.string().nullable(),
+  "closedById": zod.number().nullable(),
+  "closedByName": zod.string().nullable(),
+  "lifecycleState": zod.union([zod.literal('pending_arrival'),zod.literal('en_route'),zod.literal('on_location'),zod.literal('on_site'),zod.literal('off_site'),zod.literal(null)]).nullable(),
+  "enRouteAt": zod.coerce.date().nullable(),
+  "arrivedAt": zod.coerce.date().nullable(),
+  "departureLatitude": zod.number().nullable(),
+  "departureLongitude": zod.number().nullable(),
+  "siteLatitude": zod.number().nullable(),
+  "siteLongitude": zod.number().nullable(),
+  "siteRadiusMeters": zod.number().nullable(),
+  "afe": zod.string().nullable(),
+  "scheduledStartAt": zod.coerce.date().nullable(),
+  "scheduledDurationMinutes": zod.number().nullable(),
+  "foremanUserId": zod.number().nullable(),
+  "intakeChannel": zod.union([zod.literal('partner_self_service'),zod.literal('office_on_behalf_of_partner'),zod.literal('office_on_behalf_of_field_employee'),zod.literal('vendor_field_self_service'),zod.literal(null)]).nullable().describe('How this ticket was opened. Drives the Source badge in the ticket list (globe \/ phone \/ boots).'),
+  "approvedAt": zod.coerce.date().nullish().describe('Task #865 — timestamp the ticket was approved by a partner \/\nadmin. Set the moment status flips to `approved`. Powers the\n\"Approved on\" \/ \"Days waiting\" columns the partner AP queue\nrenders when filtering by `awaitingPayment=true`. Stays\npopulated after dispersal so the ticket history is preserved.\n'),
+  "paymentMethod": zod.union([zod.literal('etf'),zod.literal('ach'),zod.literal('check'),zod.literal('other'),zod.literal(null)]).nullable(),
+  "paymentReference": zod.string().nullable(),
+  "paymentNote": zod.string().nullable(),
+  "paymentDispersedAt": zod.coerce.date().nullable(),
+  "paymentDispersedById": zod.number().nullable(),
+  "paymentDispersedByName": zod.string().nullable(),
+  "paymentReceiptUrl": zod.string().nullable().describe('Optional proof-of-payment image attached at dispersal time\n(Task #852). Stored as an object-storage path\/URL returned by\nthe upload helper; renders inline in the read-only Payment\nDetails panel on both web and mobile.\n'),
+  "startingMileage": zod.string().nullish().describe('Odometer reading captured at En Route. Stored as a numeric\nstring with one decimal so the UI can render it verbatim\nwithout float drift. Null until the field employee submits\nthe value on the En Route modal.\n'),
+  "endingMileage": zod.string().nullish().describe('Odometer reading captured at Check Out. Same numeric-string\nshape as `startingMileage`. Null until the Check Out modal\npersists the value.\n'),
+  "unreadCommentCount": zod.number().min(checkInTicketResponseUnreadCommentCountMin).describe('Task #51 — number of comments on this ticket\'s thread that\nthe signed-in viewer has not yet seen, used to render an\nunread badge on the tickets-list page. Excludes\nsoft-deleted comments and the viewer\'s own messages.\nAlways 0 when the request has no signed-in viewer (e.g.\nanonymous portal access).\n'),
+  "viewerCanDisperseFunds": zod.boolean().nullish().describe('Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call POST \/tickets\/:id\/disperse-funds\nfor this ticket (admin OR partner contact in the Accounts Payable role\non the owning partner). List responses omit this field.\n'),
+  "viewerCanReverseDispersal": zod.boolean().nullish().describe('Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call\nPOST \/tickets\/:id\/reverse-dispersal for this ticket — i.e.\nthe same admin \/ partner-AP gate as `viewerCanDisperseFunds`\nAND the ticket is currently in `funds_dispersed`. List\nresponses omit this field.\n'),
+  "phoneIntakeCallerName": zod.string().nullish().describe('Set on the single-ticket GET response only. The human caller\'s\nname captured by office phone intake on the ticket\'s initial\nstatus transition (extracted from\n`ticket_status_history.reason` formatted as\n`phone_intake_caller:<name>`). Null for tickets that weren\'t\nopened via phone intake. List responses omit this field.\n')
+})
+
 
 /**
  * @summary Check out from site for a ticket (captures GPS)
  */
 export const CheckOutTicketParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
 export const CheckOutTicketBody = zod.object({
-  latitude: zod.number().nullish(),
-  longitude: zod.number().nullish(),
-  workCompleted: zod.boolean().optional(),
-  endingMileage: zod.number().nullish(),
-});
+  "latitude": zod.number().nullish(),
+  "longitude": zod.number().nullish(),
+  "workCompleted": zod.boolean().optional(),
+  "endingMileage": zod.number().nullish()
+})
 
 export const checkOutTicketResponseUnreadCommentCountMin = 0;
 
+
+
 export const CheckOutTicketResponse = zod.object({
-  id: zod.number(),
-  siteLocationId: zod.number(),
-  vendorId: zod.number(),
-  fieldEmployeeId: zod.number().nullable(),
-  workTypeId: zod.number(),
-  status: zod
-    .enum([
-      "draft",
-      "initiated",
-      "in_progress",
-      "pending_review",
-      "completed",
-      "submitted",
-      "approved",
-      "kicked_back",
-      "cancelled",
-      "awaiting_acceptance",
-      "denied",
-      "awaiting_payment",
-      "funds_dispersed",
-    ])
-    .describe(
-      "Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app's ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp's status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n",
-    ),
-  description: zod.string().nullable(),
-  notes: zod.string().nullable(),
-  kickbackReason: zod.string().nullable(),
-  checkInTime: zod.coerce.date().nullable(),
-  checkOutTime: zod.coerce.date().nullable(),
-  checkInLatitude: zod.number().nullable(),
-  checkInLongitude: zod.number().nullable(),
-  checkOutLatitude: zod.number().nullable(),
-  checkOutLongitude: zod.number().nullable(),
-  siteName: zod.string().nullable(),
-  vendorName: zod.string().nullable(),
-  workTypeName: zod.string().nullable(),
-  fieldEmployeeName: zod.string().nullable(),
-  partnerName: zod.string().nullable(),
-  partnerLogoUrl: zod.string().nullable(),
-  vendorLogoUrl: zod.string().nullable(),
-  createdAt: zod.coerce.date(),
-  updatedAt: zod.coerce.date(),
-  unlockedAt: zod.coerce.date().nullable(),
-  unlockedById: zod.number().nullable(),
-  unlockedByName: zod.string().nullable(),
-  unlockCount: zod.number(),
-  createdById: zod.number().nullable(),
-  createdByName: zod.string().nullable(),
-  closedById: zod.number().nullable(),
-  closedByName: zod.string().nullable(),
-  lifecycleState: zod
-    .union([
-      zod.literal("pending_arrival"),
-      zod.literal("en_route"),
-      zod.literal("on_location"),
-      zod.literal("on_site"),
-      zod.literal("off_site"),
-      zod.literal(null),
-    ])
-    .nullable(),
-  enRouteAt: zod.coerce.date().nullable(),
-  arrivedAt: zod.coerce.date().nullable(),
-  departureLatitude: zod.number().nullable(),
-  departureLongitude: zod.number().nullable(),
-  siteLatitude: zod.number().nullable(),
-  siteLongitude: zod.number().nullable(),
-  siteRadiusMeters: zod.number().nullable(),
-  afe: zod.string().nullable(),
-  scheduledStartAt: zod.coerce.date().nullable(),
-  scheduledDurationMinutes: zod.number().nullable(),
-  foremanUserId: zod.number().nullable(),
-  intakeChannel: zod
-    .union([
-      zod.literal("partner_self_service"),
-      zod.literal("office_on_behalf_of_partner"),
-      zod.literal("office_on_behalf_of_field_employee"),
-      zod.literal("vendor_field_self_service"),
-      zod.literal(null),
-    ])
-    .nullable()
-    .describe(
-      "How this ticket was opened. Drives the Source badge in the ticket list (globe \/ phone \/ boots).",
-    ),
-  approvedAt: zod.coerce
-    .date()
-    .nullish()
-    .describe(
-      'Task #865 — timestamp the ticket was approved by a partner \/\nadmin. Set the moment status flips to `approved`. Powers the\n\"Approved on\" \/ \"Days waiting\" columns the partner AP queue\nrenders when filtering by `awaitingPayment=true`. Stays\npopulated after dispersal so the ticket history is preserved.\n',
-    ),
-  paymentMethod: zod
-    .union([
-      zod.literal("etf"),
-      zod.literal("ach"),
-      zod.literal("check"),
-      zod.literal("other"),
-      zod.literal(null),
-    ])
-    .nullable(),
-  paymentReference: zod.string().nullable(),
-  paymentNote: zod.string().nullable(),
-  paymentDispersedAt: zod.coerce.date().nullable(),
-  paymentDispersedById: zod.number().nullable(),
-  paymentDispersedByName: zod.string().nullable(),
-  paymentReceiptUrl: zod
-    .string()
-    .nullable()
-    .describe(
-      "Optional proof-of-payment image attached at dispersal time\n(Task #852). Stored as an object-storage path\/URL returned by\nthe upload helper; renders inline in the read-only Payment\nDetails panel on both web and mobile.\n",
-    ),
-  startingMileage: zod
-    .string()
-    .nullish()
-    .describe(
-      "Odometer reading captured at En Route. Stored as a numeric\nstring with one decimal so the UI can render it verbatim\nwithout float drift. Null until the field employee submits\nthe value on the En Route modal.\n",
-    ),
-  endingMileage: zod
-    .string()
-    .nullish()
-    .describe(
-      "Odometer reading captured at Check Out. Same numeric-string\nshape as `startingMileage`. Null until the Check Out modal\npersists the value.\n",
-    ),
-  unreadCommentCount: zod
-    .number()
-    .min(checkOutTicketResponseUnreadCommentCountMin)
-    .describe(
-      "Task #51 — number of comments on this ticket's thread that\nthe signed-in viewer has not yet seen, used to render an\nunread badge on the tickets-list page. Excludes\nsoft-deleted comments and the viewer's own messages.\nAlways 0 when the request has no signed-in viewer (e.g.\nanonymous portal access).\n",
-    ),
-  viewerCanDisperseFunds: zod
-    .boolean()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call POST \/tickets\/:id\/disperse-funds\nfor this ticket (admin OR partner contact in the Accounts Payable role\non the owning partner). List responses omit this field.\n",
-    ),
-  viewerCanReverseDispersal: zod
-    .boolean()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call\nPOST \/tickets\/:id\/reverse-dispersal for this ticket — i.e.\nthe same admin \/ partner-AP gate as `viewerCanDisperseFunds`\nAND the ticket is currently in `funds_dispersed`. List\nresponses omit this field.\n",
-    ),
-  phoneIntakeCallerName: zod
-    .string()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. The human caller's\nname captured by office phone intake on the ticket's initial\nstatus transition (extracted from\n`ticket_status_history.reason` formatted as\n`phone_intake_caller:<name>`). Null for tickets that weren't\nopened via phone intake. List responses omit this field.\n",
-    ),
-});
+  "id": zod.number(),
+  "siteLocationId": zod.number(),
+  "vendorId": zod.number(),
+  "fieldEmployeeId": zod.number().nullable(),
+  "workTypeId": zod.number(),
+  "status": zod.enum(['draft', 'initiated', 'in_progress', 'pending_review', 'completed', 'submitted', 'approved', 'kicked_back', 'cancelled', 'awaiting_acceptance', 'denied', 'awaiting_payment', 'funds_dispersed']).describe('Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app\'s ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp\'s status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n'),
+  "description": zod.string().nullable(),
+  "notes": zod.string().nullable(),
+  "kickbackReason": zod.string().nullable(),
+  "checkInTime": zod.coerce.date().nullable(),
+  "checkOutTime": zod.coerce.date().nullable(),
+  "checkInLatitude": zod.number().nullable(),
+  "checkInLongitude": zod.number().nullable(),
+  "checkOutLatitude": zod.number().nullable(),
+  "checkOutLongitude": zod.number().nullable(),
+  "siteName": zod.string().nullable(),
+  "vendorName": zod.string().nullable(),
+  "workTypeName": zod.string().nullable(),
+  "workTypeCategory": zod.string().nullish(),
+  "workTypeTaxTreatment": zod.union([zod.literal('exempt_labor'),zod.literal('taxable_repair_service'),zod.literal('taxable_all'),zod.literal(null)]).nullish().describe('Explicit tax classification set on the platform catalog work type.\nNull when the engine infers treatment from category + state rubric.\nPopulated on single-ticket GET only.\n'),
+  "effectiveTaxTreatment": zod.union([zod.literal('exempt_labor'),zod.literal('taxable_repair_service'),zod.literal('taxable_all'),zod.literal(null)]).nullish().describe('Resolved tax classification for this ticket after partner, vendor,\nand work-type overrides. Populated on single-ticket GET only.\n'),
+  "fieldEmployeeName": zod.string().nullable(),
+  "partnerName": zod.string().nullable(),
+  "partnerLogoUrl": zod.string().nullable(),
+  "vendorLogoUrl": zod.string().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "unlockedAt": zod.coerce.date().nullable(),
+  "unlockedById": zod.number().nullable(),
+  "unlockedByName": zod.string().nullable(),
+  "unlockCount": zod.number(),
+  "createdById": zod.number().nullable(),
+  "createdByName": zod.string().nullable(),
+  "closedById": zod.number().nullable(),
+  "closedByName": zod.string().nullable(),
+  "lifecycleState": zod.union([zod.literal('pending_arrival'),zod.literal('en_route'),zod.literal('on_location'),zod.literal('on_site'),zod.literal('off_site'),zod.literal(null)]).nullable(),
+  "enRouteAt": zod.coerce.date().nullable(),
+  "arrivedAt": zod.coerce.date().nullable(),
+  "departureLatitude": zod.number().nullable(),
+  "departureLongitude": zod.number().nullable(),
+  "siteLatitude": zod.number().nullable(),
+  "siteLongitude": zod.number().nullable(),
+  "siteRadiusMeters": zod.number().nullable(),
+  "afe": zod.string().nullable(),
+  "scheduledStartAt": zod.coerce.date().nullable(),
+  "scheduledDurationMinutes": zod.number().nullable(),
+  "foremanUserId": zod.number().nullable(),
+  "intakeChannel": zod.union([zod.literal('partner_self_service'),zod.literal('office_on_behalf_of_partner'),zod.literal('office_on_behalf_of_field_employee'),zod.literal('vendor_field_self_service'),zod.literal(null)]).nullable().describe('How this ticket was opened. Drives the Source badge in the ticket list (globe \/ phone \/ boots).'),
+  "approvedAt": zod.coerce.date().nullish().describe('Task #865 — timestamp the ticket was approved by a partner \/\nadmin. Set the moment status flips to `approved`. Powers the\n\"Approved on\" \/ \"Days waiting\" columns the partner AP queue\nrenders when filtering by `awaitingPayment=true`. Stays\npopulated after dispersal so the ticket history is preserved.\n'),
+  "paymentMethod": zod.union([zod.literal('etf'),zod.literal('ach'),zod.literal('check'),zod.literal('other'),zod.literal(null)]).nullable(),
+  "paymentReference": zod.string().nullable(),
+  "paymentNote": zod.string().nullable(),
+  "paymentDispersedAt": zod.coerce.date().nullable(),
+  "paymentDispersedById": zod.number().nullable(),
+  "paymentDispersedByName": zod.string().nullable(),
+  "paymentReceiptUrl": zod.string().nullable().describe('Optional proof-of-payment image attached at dispersal time\n(Task #852). Stored as an object-storage path\/URL returned by\nthe upload helper; renders inline in the read-only Payment\nDetails panel on both web and mobile.\n'),
+  "startingMileage": zod.string().nullish().describe('Odometer reading captured at En Route. Stored as a numeric\nstring with one decimal so the UI can render it verbatim\nwithout float drift. Null until the field employee submits\nthe value on the En Route modal.\n'),
+  "endingMileage": zod.string().nullish().describe('Odometer reading captured at Check Out. Same numeric-string\nshape as `startingMileage`. Null until the Check Out modal\npersists the value.\n'),
+  "unreadCommentCount": zod.number().min(checkOutTicketResponseUnreadCommentCountMin).describe('Task #51 — number of comments on this ticket\'s thread that\nthe signed-in viewer has not yet seen, used to render an\nunread badge on the tickets-list page. Excludes\nsoft-deleted comments and the viewer\'s own messages.\nAlways 0 when the request has no signed-in viewer (e.g.\nanonymous portal access).\n'),
+  "viewerCanDisperseFunds": zod.boolean().nullish().describe('Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call POST \/tickets\/:id\/disperse-funds\nfor this ticket (admin OR partner contact in the Accounts Payable role\non the owning partner). List responses omit this field.\n'),
+  "viewerCanReverseDispersal": zod.boolean().nullish().describe('Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call\nPOST \/tickets\/:id\/reverse-dispersal for this ticket — i.e.\nthe same admin \/ partner-AP gate as `viewerCanDisperseFunds`\nAND the ticket is currently in `funds_dispersed`. List\nresponses omit this field.\n'),
+  "phoneIntakeCallerName": zod.string().nullish().describe('Set on the single-ticket GET response only. The human caller\'s\nname captured by office phone intake on the ticket\'s initial\nstatus transition (extracted from\n`ticket_status_history.reason` formatted as\n`phone_intake_caller:<name>`). Null for tickets that weren\'t\nopened via phone intake. List responses omit this field.\n')
+})
+
 
 /**
  * @summary Vendor submits ticket for partner review
  */
 export const SubmitTicketParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
 export const submitTicketResponseUnreadCommentCountMin = 0;
 
+
+
 export const SubmitTicketResponse = zod.object({
-  id: zod.number(),
-  siteLocationId: zod.number(),
-  vendorId: zod.number(),
-  fieldEmployeeId: zod.number().nullable(),
-  workTypeId: zod.number(),
-  status: zod
-    .enum([
-      "draft",
-      "initiated",
-      "in_progress",
-      "pending_review",
-      "completed",
-      "submitted",
-      "approved",
-      "kicked_back",
-      "cancelled",
-      "awaiting_acceptance",
-      "denied",
-      "awaiting_payment",
-      "funds_dispersed",
-    ])
-    .describe(
-      "Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app's ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp's status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n",
-    ),
-  description: zod.string().nullable(),
-  notes: zod.string().nullable(),
-  kickbackReason: zod.string().nullable(),
-  checkInTime: zod.coerce.date().nullable(),
-  checkOutTime: zod.coerce.date().nullable(),
-  checkInLatitude: zod.number().nullable(),
-  checkInLongitude: zod.number().nullable(),
-  checkOutLatitude: zod.number().nullable(),
-  checkOutLongitude: zod.number().nullable(),
-  siteName: zod.string().nullable(),
-  vendorName: zod.string().nullable(),
-  workTypeName: zod.string().nullable(),
-  fieldEmployeeName: zod.string().nullable(),
-  partnerName: zod.string().nullable(),
-  partnerLogoUrl: zod.string().nullable(),
-  vendorLogoUrl: zod.string().nullable(),
-  createdAt: zod.coerce.date(),
-  updatedAt: zod.coerce.date(),
-  unlockedAt: zod.coerce.date().nullable(),
-  unlockedById: zod.number().nullable(),
-  unlockedByName: zod.string().nullable(),
-  unlockCount: zod.number(),
-  createdById: zod.number().nullable(),
-  createdByName: zod.string().nullable(),
-  closedById: zod.number().nullable(),
-  closedByName: zod.string().nullable(),
-  lifecycleState: zod
-    .union([
-      zod.literal("pending_arrival"),
-      zod.literal("en_route"),
-      zod.literal("on_location"),
-      zod.literal("on_site"),
-      zod.literal("off_site"),
-      zod.literal(null),
-    ])
-    .nullable(),
-  enRouteAt: zod.coerce.date().nullable(),
-  arrivedAt: zod.coerce.date().nullable(),
-  departureLatitude: zod.number().nullable(),
-  departureLongitude: zod.number().nullable(),
-  siteLatitude: zod.number().nullable(),
-  siteLongitude: zod.number().nullable(),
-  siteRadiusMeters: zod.number().nullable(),
-  afe: zod.string().nullable(),
-  scheduledStartAt: zod.coerce.date().nullable(),
-  scheduledDurationMinutes: zod.number().nullable(),
-  foremanUserId: zod.number().nullable(),
-  intakeChannel: zod
-    .union([
-      zod.literal("partner_self_service"),
-      zod.literal("office_on_behalf_of_partner"),
-      zod.literal("office_on_behalf_of_field_employee"),
-      zod.literal("vendor_field_self_service"),
-      zod.literal(null),
-    ])
-    .nullable()
-    .describe(
-      "How this ticket was opened. Drives the Source badge in the ticket list (globe \/ phone \/ boots).",
-    ),
-  approvedAt: zod.coerce
-    .date()
-    .nullish()
-    .describe(
-      'Task #865 — timestamp the ticket was approved by a partner \/\nadmin. Set the moment status flips to `approved`. Powers the\n\"Approved on\" \/ \"Days waiting\" columns the partner AP queue\nrenders when filtering by `awaitingPayment=true`. Stays\npopulated after dispersal so the ticket history is preserved.\n',
-    ),
-  paymentMethod: zod
-    .union([
-      zod.literal("etf"),
-      zod.literal("ach"),
-      zod.literal("check"),
-      zod.literal("other"),
-      zod.literal(null),
-    ])
-    .nullable(),
-  paymentReference: zod.string().nullable(),
-  paymentNote: zod.string().nullable(),
-  paymentDispersedAt: zod.coerce.date().nullable(),
-  paymentDispersedById: zod.number().nullable(),
-  paymentDispersedByName: zod.string().nullable(),
-  paymentReceiptUrl: zod
-    .string()
-    .nullable()
-    .describe(
-      "Optional proof-of-payment image attached at dispersal time\n(Task #852). Stored as an object-storage path\/URL returned by\nthe upload helper; renders inline in the read-only Payment\nDetails panel on both web and mobile.\n",
-    ),
-  startingMileage: zod
-    .string()
-    .nullish()
-    .describe(
-      "Odometer reading captured at En Route. Stored as a numeric\nstring with one decimal so the UI can render it verbatim\nwithout float drift. Null until the field employee submits\nthe value on the En Route modal.\n",
-    ),
-  endingMileage: zod
-    .string()
-    .nullish()
-    .describe(
-      "Odometer reading captured at Check Out. Same numeric-string\nshape as `startingMileage`. Null until the Check Out modal\npersists the value.\n",
-    ),
-  unreadCommentCount: zod
-    .number()
-    .min(submitTicketResponseUnreadCommentCountMin)
-    .describe(
-      "Task #51 — number of comments on this ticket's thread that\nthe signed-in viewer has not yet seen, used to render an\nunread badge on the tickets-list page. Excludes\nsoft-deleted comments and the viewer's own messages.\nAlways 0 when the request has no signed-in viewer (e.g.\nanonymous portal access).\n",
-    ),
-  viewerCanDisperseFunds: zod
-    .boolean()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call POST \/tickets\/:id\/disperse-funds\nfor this ticket (admin OR partner contact in the Accounts Payable role\non the owning partner). List responses omit this field.\n",
-    ),
-  viewerCanReverseDispersal: zod
-    .boolean()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call\nPOST \/tickets\/:id\/reverse-dispersal for this ticket — i.e.\nthe same admin \/ partner-AP gate as `viewerCanDisperseFunds`\nAND the ticket is currently in `funds_dispersed`. List\nresponses omit this field.\n",
-    ),
-  phoneIntakeCallerName: zod
-    .string()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. The human caller's\nname captured by office phone intake on the ticket's initial\nstatus transition (extracted from\n`ticket_status_history.reason` formatted as\n`phone_intake_caller:<name>`). Null for tickets that weren't\nopened via phone intake. List responses omit this field.\n",
-    ),
-});
+  "id": zod.number(),
+  "siteLocationId": zod.number(),
+  "vendorId": zod.number(),
+  "fieldEmployeeId": zod.number().nullable(),
+  "workTypeId": zod.number(),
+  "status": zod.enum(['draft', 'initiated', 'in_progress', 'pending_review', 'completed', 'submitted', 'approved', 'kicked_back', 'cancelled', 'awaiting_acceptance', 'denied', 'awaiting_payment', 'funds_dispersed']).describe('Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app\'s ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp\'s status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n'),
+  "description": zod.string().nullable(),
+  "notes": zod.string().nullable(),
+  "kickbackReason": zod.string().nullable(),
+  "checkInTime": zod.coerce.date().nullable(),
+  "checkOutTime": zod.coerce.date().nullable(),
+  "checkInLatitude": zod.number().nullable(),
+  "checkInLongitude": zod.number().nullable(),
+  "checkOutLatitude": zod.number().nullable(),
+  "checkOutLongitude": zod.number().nullable(),
+  "siteName": zod.string().nullable(),
+  "vendorName": zod.string().nullable(),
+  "workTypeName": zod.string().nullable(),
+  "workTypeCategory": zod.string().nullish(),
+  "workTypeTaxTreatment": zod.union([zod.literal('exempt_labor'),zod.literal('taxable_repair_service'),zod.literal('taxable_all'),zod.literal(null)]).nullish().describe('Explicit tax classification set on the platform catalog work type.\nNull when the engine infers treatment from category + state rubric.\nPopulated on single-ticket GET only.\n'),
+  "effectiveTaxTreatment": zod.union([zod.literal('exempt_labor'),zod.literal('taxable_repair_service'),zod.literal('taxable_all'),zod.literal(null)]).nullish().describe('Resolved tax classification for this ticket after partner, vendor,\nand work-type overrides. Populated on single-ticket GET only.\n'),
+  "fieldEmployeeName": zod.string().nullable(),
+  "partnerName": zod.string().nullable(),
+  "partnerLogoUrl": zod.string().nullable(),
+  "vendorLogoUrl": zod.string().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "unlockedAt": zod.coerce.date().nullable(),
+  "unlockedById": zod.number().nullable(),
+  "unlockedByName": zod.string().nullable(),
+  "unlockCount": zod.number(),
+  "createdById": zod.number().nullable(),
+  "createdByName": zod.string().nullable(),
+  "closedById": zod.number().nullable(),
+  "closedByName": zod.string().nullable(),
+  "lifecycleState": zod.union([zod.literal('pending_arrival'),zod.literal('en_route'),zod.literal('on_location'),zod.literal('on_site'),zod.literal('off_site'),zod.literal(null)]).nullable(),
+  "enRouteAt": zod.coerce.date().nullable(),
+  "arrivedAt": zod.coerce.date().nullable(),
+  "departureLatitude": zod.number().nullable(),
+  "departureLongitude": zod.number().nullable(),
+  "siteLatitude": zod.number().nullable(),
+  "siteLongitude": zod.number().nullable(),
+  "siteRadiusMeters": zod.number().nullable(),
+  "afe": zod.string().nullable(),
+  "scheduledStartAt": zod.coerce.date().nullable(),
+  "scheduledDurationMinutes": zod.number().nullable(),
+  "foremanUserId": zod.number().nullable(),
+  "intakeChannel": zod.union([zod.literal('partner_self_service'),zod.literal('office_on_behalf_of_partner'),zod.literal('office_on_behalf_of_field_employee'),zod.literal('vendor_field_self_service'),zod.literal(null)]).nullable().describe('How this ticket was opened. Drives the Source badge in the ticket list (globe \/ phone \/ boots).'),
+  "approvedAt": zod.coerce.date().nullish().describe('Task #865 — timestamp the ticket was approved by a partner \/\nadmin. Set the moment status flips to `approved`. Powers the\n\"Approved on\" \/ \"Days waiting\" columns the partner AP queue\nrenders when filtering by `awaitingPayment=true`. Stays\npopulated after dispersal so the ticket history is preserved.\n'),
+  "paymentMethod": zod.union([zod.literal('etf'),zod.literal('ach'),zod.literal('check'),zod.literal('other'),zod.literal(null)]).nullable(),
+  "paymentReference": zod.string().nullable(),
+  "paymentNote": zod.string().nullable(),
+  "paymentDispersedAt": zod.coerce.date().nullable(),
+  "paymentDispersedById": zod.number().nullable(),
+  "paymentDispersedByName": zod.string().nullable(),
+  "paymentReceiptUrl": zod.string().nullable().describe('Optional proof-of-payment image attached at dispersal time\n(Task #852). Stored as an object-storage path\/URL returned by\nthe upload helper; renders inline in the read-only Payment\nDetails panel on both web and mobile.\n'),
+  "startingMileage": zod.string().nullish().describe('Odometer reading captured at En Route. Stored as a numeric\nstring with one decimal so the UI can render it verbatim\nwithout float drift. Null until the field employee submits\nthe value on the En Route modal.\n'),
+  "endingMileage": zod.string().nullish().describe('Odometer reading captured at Check Out. Same numeric-string\nshape as `startingMileage`. Null until the Check Out modal\npersists the value.\n'),
+  "unreadCommentCount": zod.number().min(submitTicketResponseUnreadCommentCountMin).describe('Task #51 — number of comments on this ticket\'s thread that\nthe signed-in viewer has not yet seen, used to render an\nunread badge on the tickets-list page. Excludes\nsoft-deleted comments and the viewer\'s own messages.\nAlways 0 when the request has no signed-in viewer (e.g.\nanonymous portal access).\n'),
+  "viewerCanDisperseFunds": zod.boolean().nullish().describe('Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call POST \/tickets\/:id\/disperse-funds\nfor this ticket (admin OR partner contact in the Accounts Payable role\non the owning partner). List responses omit this field.\n'),
+  "viewerCanReverseDispersal": zod.boolean().nullish().describe('Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call\nPOST \/tickets\/:id\/reverse-dispersal for this ticket — i.e.\nthe same admin \/ partner-AP gate as `viewerCanDisperseFunds`\nAND the ticket is currently in `funds_dispersed`. List\nresponses omit this field.\n'),
+  "phoneIntakeCallerName": zod.string().nullish().describe('Set on the single-ticket GET response only. The human caller\'s\nname captured by office phone intake on the ticket\'s initial\nstatus transition (extracted from\n`ticket_status_history.reason` formatted as\n`phone_intake_caller:<name>`). Null for tickets that weren\'t\nopened via phone intake. List responses omit this field.\n')
+})
+
 
 /**
  * @summary Partner approves ticket for payment
  */
 export const ApproveTicketParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
 export const approveTicketResponseUnreadCommentCountMin = 0;
 
+
+
 export const ApproveTicketResponse = zod.object({
-  id: zod.number(),
-  siteLocationId: zod.number(),
-  vendorId: zod.number(),
-  fieldEmployeeId: zod.number().nullable(),
-  workTypeId: zod.number(),
-  status: zod
-    .enum([
-      "draft",
-      "initiated",
-      "in_progress",
-      "pending_review",
-      "completed",
-      "submitted",
-      "approved",
-      "kicked_back",
-      "cancelled",
-      "awaiting_acceptance",
-      "denied",
-      "awaiting_payment",
-      "funds_dispersed",
-    ])
-    .describe(
-      "Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app's ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp's status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n",
-    ),
-  description: zod.string().nullable(),
-  notes: zod.string().nullable(),
-  kickbackReason: zod.string().nullable(),
-  checkInTime: zod.coerce.date().nullable(),
-  checkOutTime: zod.coerce.date().nullable(),
-  checkInLatitude: zod.number().nullable(),
-  checkInLongitude: zod.number().nullable(),
-  checkOutLatitude: zod.number().nullable(),
-  checkOutLongitude: zod.number().nullable(),
-  siteName: zod.string().nullable(),
-  vendorName: zod.string().nullable(),
-  workTypeName: zod.string().nullable(),
-  fieldEmployeeName: zod.string().nullable(),
-  partnerName: zod.string().nullable(),
-  partnerLogoUrl: zod.string().nullable(),
-  vendorLogoUrl: zod.string().nullable(),
-  createdAt: zod.coerce.date(),
-  updatedAt: zod.coerce.date(),
-  unlockedAt: zod.coerce.date().nullable(),
-  unlockedById: zod.number().nullable(),
-  unlockedByName: zod.string().nullable(),
-  unlockCount: zod.number(),
-  createdById: zod.number().nullable(),
-  createdByName: zod.string().nullable(),
-  closedById: zod.number().nullable(),
-  closedByName: zod.string().nullable(),
-  lifecycleState: zod
-    .union([
-      zod.literal("pending_arrival"),
-      zod.literal("en_route"),
-      zod.literal("on_location"),
-      zod.literal("on_site"),
-      zod.literal("off_site"),
-      zod.literal(null),
-    ])
-    .nullable(),
-  enRouteAt: zod.coerce.date().nullable(),
-  arrivedAt: zod.coerce.date().nullable(),
-  departureLatitude: zod.number().nullable(),
-  departureLongitude: zod.number().nullable(),
-  siteLatitude: zod.number().nullable(),
-  siteLongitude: zod.number().nullable(),
-  siteRadiusMeters: zod.number().nullable(),
-  afe: zod.string().nullable(),
-  scheduledStartAt: zod.coerce.date().nullable(),
-  scheduledDurationMinutes: zod.number().nullable(),
-  foremanUserId: zod.number().nullable(),
-  intakeChannel: zod
-    .union([
-      zod.literal("partner_self_service"),
-      zod.literal("office_on_behalf_of_partner"),
-      zod.literal("office_on_behalf_of_field_employee"),
-      zod.literal("vendor_field_self_service"),
-      zod.literal(null),
-    ])
-    .nullable()
-    .describe(
-      "How this ticket was opened. Drives the Source badge in the ticket list (globe \/ phone \/ boots).",
-    ),
-  approvedAt: zod.coerce
-    .date()
-    .nullish()
-    .describe(
-      'Task #865 — timestamp the ticket was approved by a partner \/\nadmin. Set the moment status flips to `approved`. Powers the\n\"Approved on\" \/ \"Days waiting\" columns the partner AP queue\nrenders when filtering by `awaitingPayment=true`. Stays\npopulated after dispersal so the ticket history is preserved.\n',
-    ),
-  paymentMethod: zod
-    .union([
-      zod.literal("etf"),
-      zod.literal("ach"),
-      zod.literal("check"),
-      zod.literal("other"),
-      zod.literal(null),
-    ])
-    .nullable(),
-  paymentReference: zod.string().nullable(),
-  paymentNote: zod.string().nullable(),
-  paymentDispersedAt: zod.coerce.date().nullable(),
-  paymentDispersedById: zod.number().nullable(),
-  paymentDispersedByName: zod.string().nullable(),
-  paymentReceiptUrl: zod
-    .string()
-    .nullable()
-    .describe(
-      "Optional proof-of-payment image attached at dispersal time\n(Task #852). Stored as an object-storage path\/URL returned by\nthe upload helper; renders inline in the read-only Payment\nDetails panel on both web and mobile.\n",
-    ),
-  startingMileage: zod
-    .string()
-    .nullish()
-    .describe(
-      "Odometer reading captured at En Route. Stored as a numeric\nstring with one decimal so the UI can render it verbatim\nwithout float drift. Null until the field employee submits\nthe value on the En Route modal.\n",
-    ),
-  endingMileage: zod
-    .string()
-    .nullish()
-    .describe(
-      "Odometer reading captured at Check Out. Same numeric-string\nshape as `startingMileage`. Null until the Check Out modal\npersists the value.\n",
-    ),
-  unreadCommentCount: zod
-    .number()
-    .min(approveTicketResponseUnreadCommentCountMin)
-    .describe(
-      "Task #51 — number of comments on this ticket's thread that\nthe signed-in viewer has not yet seen, used to render an\nunread badge on the tickets-list page. Excludes\nsoft-deleted comments and the viewer's own messages.\nAlways 0 when the request has no signed-in viewer (e.g.\nanonymous portal access).\n",
-    ),
-  viewerCanDisperseFunds: zod
-    .boolean()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call POST \/tickets\/:id\/disperse-funds\nfor this ticket (admin OR partner contact in the Accounts Payable role\non the owning partner). List responses omit this field.\n",
-    ),
-  viewerCanReverseDispersal: zod
-    .boolean()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call\nPOST \/tickets\/:id\/reverse-dispersal for this ticket — i.e.\nthe same admin \/ partner-AP gate as `viewerCanDisperseFunds`\nAND the ticket is currently in `funds_dispersed`. List\nresponses omit this field.\n",
-    ),
-  phoneIntakeCallerName: zod
-    .string()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. The human caller's\nname captured by office phone intake on the ticket's initial\nstatus transition (extracted from\n`ticket_status_history.reason` formatted as\n`phone_intake_caller:<name>`). Null for tickets that weren't\nopened via phone intake. List responses omit this field.\n",
-    ),
-});
+  "id": zod.number(),
+  "siteLocationId": zod.number(),
+  "vendorId": zod.number(),
+  "fieldEmployeeId": zod.number().nullable(),
+  "workTypeId": zod.number(),
+  "status": zod.enum(['draft', 'initiated', 'in_progress', 'pending_review', 'completed', 'submitted', 'approved', 'kicked_back', 'cancelled', 'awaiting_acceptance', 'denied', 'awaiting_payment', 'funds_dispersed']).describe('Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app\'s ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp\'s status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n'),
+  "description": zod.string().nullable(),
+  "notes": zod.string().nullable(),
+  "kickbackReason": zod.string().nullable(),
+  "checkInTime": zod.coerce.date().nullable(),
+  "checkOutTime": zod.coerce.date().nullable(),
+  "checkInLatitude": zod.number().nullable(),
+  "checkInLongitude": zod.number().nullable(),
+  "checkOutLatitude": zod.number().nullable(),
+  "checkOutLongitude": zod.number().nullable(),
+  "siteName": zod.string().nullable(),
+  "vendorName": zod.string().nullable(),
+  "workTypeName": zod.string().nullable(),
+  "workTypeCategory": zod.string().nullish(),
+  "workTypeTaxTreatment": zod.union([zod.literal('exempt_labor'),zod.literal('taxable_repair_service'),zod.literal('taxable_all'),zod.literal(null)]).nullish().describe('Explicit tax classification set on the platform catalog work type.\nNull when the engine infers treatment from category + state rubric.\nPopulated on single-ticket GET only.\n'),
+  "effectiveTaxTreatment": zod.union([zod.literal('exempt_labor'),zod.literal('taxable_repair_service'),zod.literal('taxable_all'),zod.literal(null)]).nullish().describe('Resolved tax classification for this ticket after partner, vendor,\nand work-type overrides. Populated on single-ticket GET only.\n'),
+  "fieldEmployeeName": zod.string().nullable(),
+  "partnerName": zod.string().nullable(),
+  "partnerLogoUrl": zod.string().nullable(),
+  "vendorLogoUrl": zod.string().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "unlockedAt": zod.coerce.date().nullable(),
+  "unlockedById": zod.number().nullable(),
+  "unlockedByName": zod.string().nullable(),
+  "unlockCount": zod.number(),
+  "createdById": zod.number().nullable(),
+  "createdByName": zod.string().nullable(),
+  "closedById": zod.number().nullable(),
+  "closedByName": zod.string().nullable(),
+  "lifecycleState": zod.union([zod.literal('pending_arrival'),zod.literal('en_route'),zod.literal('on_location'),zod.literal('on_site'),zod.literal('off_site'),zod.literal(null)]).nullable(),
+  "enRouteAt": zod.coerce.date().nullable(),
+  "arrivedAt": zod.coerce.date().nullable(),
+  "departureLatitude": zod.number().nullable(),
+  "departureLongitude": zod.number().nullable(),
+  "siteLatitude": zod.number().nullable(),
+  "siteLongitude": zod.number().nullable(),
+  "siteRadiusMeters": zod.number().nullable(),
+  "afe": zod.string().nullable(),
+  "scheduledStartAt": zod.coerce.date().nullable(),
+  "scheduledDurationMinutes": zod.number().nullable(),
+  "foremanUserId": zod.number().nullable(),
+  "intakeChannel": zod.union([zod.literal('partner_self_service'),zod.literal('office_on_behalf_of_partner'),zod.literal('office_on_behalf_of_field_employee'),zod.literal('vendor_field_self_service'),zod.literal(null)]).nullable().describe('How this ticket was opened. Drives the Source badge in the ticket list (globe \/ phone \/ boots).'),
+  "approvedAt": zod.coerce.date().nullish().describe('Task #865 — timestamp the ticket was approved by a partner \/\nadmin. Set the moment status flips to `approved`. Powers the\n\"Approved on\" \/ \"Days waiting\" columns the partner AP queue\nrenders when filtering by `awaitingPayment=true`. Stays\npopulated after dispersal so the ticket history is preserved.\n'),
+  "paymentMethod": zod.union([zod.literal('etf'),zod.literal('ach'),zod.literal('check'),zod.literal('other'),zod.literal(null)]).nullable(),
+  "paymentReference": zod.string().nullable(),
+  "paymentNote": zod.string().nullable(),
+  "paymentDispersedAt": zod.coerce.date().nullable(),
+  "paymentDispersedById": zod.number().nullable(),
+  "paymentDispersedByName": zod.string().nullable(),
+  "paymentReceiptUrl": zod.string().nullable().describe('Optional proof-of-payment image attached at dispersal time\n(Task #852). Stored as an object-storage path\/URL returned by\nthe upload helper; renders inline in the read-only Payment\nDetails panel on both web and mobile.\n'),
+  "startingMileage": zod.string().nullish().describe('Odometer reading captured at En Route. Stored as a numeric\nstring with one decimal so the UI can render it verbatim\nwithout float drift. Null until the field employee submits\nthe value on the En Route modal.\n'),
+  "endingMileage": zod.string().nullish().describe('Odometer reading captured at Check Out. Same numeric-string\nshape as `startingMileage`. Null until the Check Out modal\npersists the value.\n'),
+  "unreadCommentCount": zod.number().min(approveTicketResponseUnreadCommentCountMin).describe('Task #51 — number of comments on this ticket\'s thread that\nthe signed-in viewer has not yet seen, used to render an\nunread badge on the tickets-list page. Excludes\nsoft-deleted comments and the viewer\'s own messages.\nAlways 0 when the request has no signed-in viewer (e.g.\nanonymous portal access).\n'),
+  "viewerCanDisperseFunds": zod.boolean().nullish().describe('Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call POST \/tickets\/:id\/disperse-funds\nfor this ticket (admin OR partner contact in the Accounts Payable role\non the owning partner). List responses omit this field.\n'),
+  "viewerCanReverseDispersal": zod.boolean().nullish().describe('Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call\nPOST \/tickets\/:id\/reverse-dispersal for this ticket — i.e.\nthe same admin \/ partner-AP gate as `viewerCanDisperseFunds`\nAND the ticket is currently in `funds_dispersed`. List\nresponses omit this field.\n'),
+  "phoneIntakeCallerName": zod.string().nullish().describe('Set on the single-ticket GET response only. The human caller\'s\nname captured by office phone intake on the ticket\'s initial\nstatus transition (extracted from\n`ticket_status_history.reason` formatted as\n`phone_intake_caller:<name>`). Null for tickets that weren\'t\nopened via phone intake. List responses omit this field.\n')
+})
+
 
 /**
  * @summary Partner AP records the payment that closes the ticket loop (status → funds_dispersed)
  */
 export const DisperseFundsTicketParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
 export const DisperseFundsTicketBody = zod.object({
-  paymentMethod: zod.enum(["etf", "ach", "check", "other"]),
-  paymentReference: zod
-    .string()
-    .nullish()
-    .describe(
-      "Required for paymentMethod=check (check no.); optional for etf\/ach\/other.",
-    ),
-  note: zod
-    .string()
-    .nullish()
-    .describe("Free-text note recorded on the status_history entry."),
-  paymentReceiptUrl: zod
-    .string()
-    .nullish()
-    .describe(
-      "Optional proof-of-payment image (Task #852). Object-storage\npath\/URL returned by the upload helper — typically a check\nstub, wire confirmation, or signed receipt snapped from the\nmobile Disperse Funds modal. Persisted alongside the other\npayment columns and surfaced read-only on the Payment Details\npanel.\n",
-    ),
-});
+  "paymentMethod": zod.enum(['etf', 'ach', 'check', 'other']),
+  "paymentReference": zod.string().nullish().describe('Required for paymentMethod=check (check no.); optional for etf\/ach\/other.'),
+  "note": zod.string().nullish().describe('Free-text note recorded on the status_history entry.'),
+  "paymentReceiptUrl": zod.string().nullish().describe('Optional proof-of-payment image (Task #852). Object-storage\npath\/URL returned by the upload helper — typically a check\nstub, wire confirmation, or signed receipt snapped from the\nmobile Disperse Funds modal. Persisted alongside the other\npayment columns and surfaced read-only on the Payment Details\npanel.\n')
+})
 
 export const disperseFundsTicketResponseUnreadCommentCountMin = 0;
 
+
+
 export const DisperseFundsTicketResponse = zod.object({
-  id: zod.number(),
-  siteLocationId: zod.number(),
-  vendorId: zod.number(),
-  fieldEmployeeId: zod.number().nullable(),
-  workTypeId: zod.number(),
-  status: zod
-    .enum([
-      "draft",
-      "initiated",
-      "in_progress",
-      "pending_review",
-      "completed",
-      "submitted",
-      "approved",
-      "kicked_back",
-      "cancelled",
-      "awaiting_acceptance",
-      "denied",
-      "awaiting_payment",
-      "funds_dispersed",
-    ])
-    .describe(
-      "Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app's ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp's status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n",
-    ),
-  description: zod.string().nullable(),
-  notes: zod.string().nullable(),
-  kickbackReason: zod.string().nullable(),
-  checkInTime: zod.coerce.date().nullable(),
-  checkOutTime: zod.coerce.date().nullable(),
-  checkInLatitude: zod.number().nullable(),
-  checkInLongitude: zod.number().nullable(),
-  checkOutLatitude: zod.number().nullable(),
-  checkOutLongitude: zod.number().nullable(),
-  siteName: zod.string().nullable(),
-  vendorName: zod.string().nullable(),
-  workTypeName: zod.string().nullable(),
-  fieldEmployeeName: zod.string().nullable(),
-  partnerName: zod.string().nullable(),
-  partnerLogoUrl: zod.string().nullable(),
-  vendorLogoUrl: zod.string().nullable(),
-  createdAt: zod.coerce.date(),
-  updatedAt: zod.coerce.date(),
-  unlockedAt: zod.coerce.date().nullable(),
-  unlockedById: zod.number().nullable(),
-  unlockedByName: zod.string().nullable(),
-  unlockCount: zod.number(),
-  createdById: zod.number().nullable(),
-  createdByName: zod.string().nullable(),
-  closedById: zod.number().nullable(),
-  closedByName: zod.string().nullable(),
-  lifecycleState: zod
-    .union([
-      zod.literal("pending_arrival"),
-      zod.literal("en_route"),
-      zod.literal("on_location"),
-      zod.literal("on_site"),
-      zod.literal("off_site"),
-      zod.literal(null),
-    ])
-    .nullable(),
-  enRouteAt: zod.coerce.date().nullable(),
-  arrivedAt: zod.coerce.date().nullable(),
-  departureLatitude: zod.number().nullable(),
-  departureLongitude: zod.number().nullable(),
-  siteLatitude: zod.number().nullable(),
-  siteLongitude: zod.number().nullable(),
-  siteRadiusMeters: zod.number().nullable(),
-  afe: zod.string().nullable(),
-  scheduledStartAt: zod.coerce.date().nullable(),
-  scheduledDurationMinutes: zod.number().nullable(),
-  foremanUserId: zod.number().nullable(),
-  intakeChannel: zod
-    .union([
-      zod.literal("partner_self_service"),
-      zod.literal("office_on_behalf_of_partner"),
-      zod.literal("office_on_behalf_of_field_employee"),
-      zod.literal("vendor_field_self_service"),
-      zod.literal(null),
-    ])
-    .nullable()
-    .describe(
-      "How this ticket was opened. Drives the Source badge in the ticket list (globe \/ phone \/ boots).",
-    ),
-  approvedAt: zod.coerce
-    .date()
-    .nullish()
-    .describe(
-      'Task #865 — timestamp the ticket was approved by a partner \/\nadmin. Set the moment status flips to `approved`. Powers the\n\"Approved on\" \/ \"Days waiting\" columns the partner AP queue\nrenders when filtering by `awaitingPayment=true`. Stays\npopulated after dispersal so the ticket history is preserved.\n',
-    ),
-  paymentMethod: zod
-    .union([
-      zod.literal("etf"),
-      zod.literal("ach"),
-      zod.literal("check"),
-      zod.literal("other"),
-      zod.literal(null),
-    ])
-    .nullable(),
-  paymentReference: zod.string().nullable(),
-  paymentNote: zod.string().nullable(),
-  paymentDispersedAt: zod.coerce.date().nullable(),
-  paymentDispersedById: zod.number().nullable(),
-  paymentDispersedByName: zod.string().nullable(),
-  paymentReceiptUrl: zod
-    .string()
-    .nullable()
-    .describe(
-      "Optional proof-of-payment image attached at dispersal time\n(Task #852). Stored as an object-storage path\/URL returned by\nthe upload helper; renders inline in the read-only Payment\nDetails panel on both web and mobile.\n",
-    ),
-  startingMileage: zod
-    .string()
-    .nullish()
-    .describe(
-      "Odometer reading captured at En Route. Stored as a numeric\nstring with one decimal so the UI can render it verbatim\nwithout float drift. Null until the field employee submits\nthe value on the En Route modal.\n",
-    ),
-  endingMileage: zod
-    .string()
-    .nullish()
-    .describe(
-      "Odometer reading captured at Check Out. Same numeric-string\nshape as `startingMileage`. Null until the Check Out modal\npersists the value.\n",
-    ),
-  unreadCommentCount: zod
-    .number()
-    .min(disperseFundsTicketResponseUnreadCommentCountMin)
-    .describe(
-      "Task #51 — number of comments on this ticket's thread that\nthe signed-in viewer has not yet seen, used to render an\nunread badge on the tickets-list page. Excludes\nsoft-deleted comments and the viewer's own messages.\nAlways 0 when the request has no signed-in viewer (e.g.\nanonymous portal access).\n",
-    ),
-  viewerCanDisperseFunds: zod
-    .boolean()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call POST \/tickets\/:id\/disperse-funds\nfor this ticket (admin OR partner contact in the Accounts Payable role\non the owning partner). List responses omit this field.\n",
-    ),
-  viewerCanReverseDispersal: zod
-    .boolean()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call\nPOST \/tickets\/:id\/reverse-dispersal for this ticket — i.e.\nthe same admin \/ partner-AP gate as `viewerCanDisperseFunds`\nAND the ticket is currently in `funds_dispersed`. List\nresponses omit this field.\n",
-    ),
-  phoneIntakeCallerName: zod
-    .string()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. The human caller's\nname captured by office phone intake on the ticket's initial\nstatus transition (extracted from\n`ticket_status_history.reason` formatted as\n`phone_intake_caller:<name>`). Null for tickets that weren't\nopened via phone intake. List responses omit this field.\n",
-    ),
-});
+  "id": zod.number(),
+  "siteLocationId": zod.number(),
+  "vendorId": zod.number(),
+  "fieldEmployeeId": zod.number().nullable(),
+  "workTypeId": zod.number(),
+  "status": zod.enum(['draft', 'initiated', 'in_progress', 'pending_review', 'completed', 'submitted', 'approved', 'kicked_back', 'cancelled', 'awaiting_acceptance', 'denied', 'awaiting_payment', 'funds_dispersed']).describe('Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app\'s ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp\'s status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n'),
+  "description": zod.string().nullable(),
+  "notes": zod.string().nullable(),
+  "kickbackReason": zod.string().nullable(),
+  "checkInTime": zod.coerce.date().nullable(),
+  "checkOutTime": zod.coerce.date().nullable(),
+  "checkInLatitude": zod.number().nullable(),
+  "checkInLongitude": zod.number().nullable(),
+  "checkOutLatitude": zod.number().nullable(),
+  "checkOutLongitude": zod.number().nullable(),
+  "siteName": zod.string().nullable(),
+  "vendorName": zod.string().nullable(),
+  "workTypeName": zod.string().nullable(),
+  "workTypeCategory": zod.string().nullish(),
+  "workTypeTaxTreatment": zod.union([zod.literal('exempt_labor'),zod.literal('taxable_repair_service'),zod.literal('taxable_all'),zod.literal(null)]).nullish().describe('Explicit tax classification set on the platform catalog work type.\nNull when the engine infers treatment from category + state rubric.\nPopulated on single-ticket GET only.\n'),
+  "effectiveTaxTreatment": zod.union([zod.literal('exempt_labor'),zod.literal('taxable_repair_service'),zod.literal('taxable_all'),zod.literal(null)]).nullish().describe('Resolved tax classification for this ticket after partner, vendor,\nand work-type overrides. Populated on single-ticket GET only.\n'),
+  "fieldEmployeeName": zod.string().nullable(),
+  "partnerName": zod.string().nullable(),
+  "partnerLogoUrl": zod.string().nullable(),
+  "vendorLogoUrl": zod.string().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "unlockedAt": zod.coerce.date().nullable(),
+  "unlockedById": zod.number().nullable(),
+  "unlockedByName": zod.string().nullable(),
+  "unlockCount": zod.number(),
+  "createdById": zod.number().nullable(),
+  "createdByName": zod.string().nullable(),
+  "closedById": zod.number().nullable(),
+  "closedByName": zod.string().nullable(),
+  "lifecycleState": zod.union([zod.literal('pending_arrival'),zod.literal('en_route'),zod.literal('on_location'),zod.literal('on_site'),zod.literal('off_site'),zod.literal(null)]).nullable(),
+  "enRouteAt": zod.coerce.date().nullable(),
+  "arrivedAt": zod.coerce.date().nullable(),
+  "departureLatitude": zod.number().nullable(),
+  "departureLongitude": zod.number().nullable(),
+  "siteLatitude": zod.number().nullable(),
+  "siteLongitude": zod.number().nullable(),
+  "siteRadiusMeters": zod.number().nullable(),
+  "afe": zod.string().nullable(),
+  "scheduledStartAt": zod.coerce.date().nullable(),
+  "scheduledDurationMinutes": zod.number().nullable(),
+  "foremanUserId": zod.number().nullable(),
+  "intakeChannel": zod.union([zod.literal('partner_self_service'),zod.literal('office_on_behalf_of_partner'),zod.literal('office_on_behalf_of_field_employee'),zod.literal('vendor_field_self_service'),zod.literal(null)]).nullable().describe('How this ticket was opened. Drives the Source badge in the ticket list (globe \/ phone \/ boots).'),
+  "approvedAt": zod.coerce.date().nullish().describe('Task #865 — timestamp the ticket was approved by a partner \/\nadmin. Set the moment status flips to `approved`. Powers the\n\"Approved on\" \/ \"Days waiting\" columns the partner AP queue\nrenders when filtering by `awaitingPayment=true`. Stays\npopulated after dispersal so the ticket history is preserved.\n'),
+  "paymentMethod": zod.union([zod.literal('etf'),zod.literal('ach'),zod.literal('check'),zod.literal('other'),zod.literal(null)]).nullable(),
+  "paymentReference": zod.string().nullable(),
+  "paymentNote": zod.string().nullable(),
+  "paymentDispersedAt": zod.coerce.date().nullable(),
+  "paymentDispersedById": zod.number().nullable(),
+  "paymentDispersedByName": zod.string().nullable(),
+  "paymentReceiptUrl": zod.string().nullable().describe('Optional proof-of-payment image attached at dispersal time\n(Task #852). Stored as an object-storage path\/URL returned by\nthe upload helper; renders inline in the read-only Payment\nDetails panel on both web and mobile.\n'),
+  "startingMileage": zod.string().nullish().describe('Odometer reading captured at En Route. Stored as a numeric\nstring with one decimal so the UI can render it verbatim\nwithout float drift. Null until the field employee submits\nthe value on the En Route modal.\n'),
+  "endingMileage": zod.string().nullish().describe('Odometer reading captured at Check Out. Same numeric-string\nshape as `startingMileage`. Null until the Check Out modal\npersists the value.\n'),
+  "unreadCommentCount": zod.number().min(disperseFundsTicketResponseUnreadCommentCountMin).describe('Task #51 — number of comments on this ticket\'s thread that\nthe signed-in viewer has not yet seen, used to render an\nunread badge on the tickets-list page. Excludes\nsoft-deleted comments and the viewer\'s own messages.\nAlways 0 when the request has no signed-in viewer (e.g.\nanonymous portal access).\n'),
+  "viewerCanDisperseFunds": zod.boolean().nullish().describe('Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call POST \/tickets\/:id\/disperse-funds\nfor this ticket (admin OR partner contact in the Accounts Payable role\non the owning partner). List responses omit this field.\n'),
+  "viewerCanReverseDispersal": zod.boolean().nullish().describe('Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call\nPOST \/tickets\/:id\/reverse-dispersal for this ticket — i.e.\nthe same admin \/ partner-AP gate as `viewerCanDisperseFunds`\nAND the ticket is currently in `funds_dispersed`. List\nresponses omit this field.\n'),
+  "phoneIntakeCallerName": zod.string().nullish().describe('Set on the single-ticket GET response only. The human caller\'s\nname captured by office phone intake on the ticket\'s initial\nstatus transition (extracted from\n`ticket_status_history.reason` formatted as\n`phone_intake_caller:<name>`). Null for tickets that weren\'t\nopened via phone intake. List responses omit this field.\n')
+})
+
 
 /**
  * @summary Admin reverses a funds_dispersed ticket back to approved (clears payment columns)
  */
 export const ReverseFundsDispersalParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
 export const reverseFundsDispersalBodyReasonMax = 500;
 
+
+
 export const ReverseFundsDispersalBody = zod.object({
-  reason: zod
-    .string()
-    .min(1)
-    .max(reverseFundsDispersalBodyReasonMax)
-    .describe(
-      "Required free-text reason recorded on the status_history reversal entry. Surfaces in the audit trail and notifications to AP\/vendor.",
-    ),
-});
+  "reason": zod.string().min(1).max(reverseFundsDispersalBodyReasonMax).describe('Required free-text reason recorded on the status_history reversal entry. Surfaces in the audit trail and notifications to AP\/vendor.')
+})
 
 export const reverseFundsDispersalResponseUnreadCommentCountMin = 0;
 
+
+
 export const ReverseFundsDispersalResponse = zod.object({
-  id: zod.number(),
-  siteLocationId: zod.number(),
-  vendorId: zod.number(),
-  fieldEmployeeId: zod.number().nullable(),
-  workTypeId: zod.number(),
-  status: zod
-    .enum([
-      "draft",
-      "initiated",
-      "in_progress",
-      "pending_review",
-      "completed",
-      "submitted",
-      "approved",
-      "kicked_back",
-      "cancelled",
-      "awaiting_acceptance",
-      "denied",
-      "awaiting_payment",
-      "funds_dispersed",
-    ])
-    .describe(
-      "Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app's ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp's status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n",
-    ),
-  description: zod.string().nullable(),
-  notes: zod.string().nullable(),
-  kickbackReason: zod.string().nullable(),
-  checkInTime: zod.coerce.date().nullable(),
-  checkOutTime: zod.coerce.date().nullable(),
-  checkInLatitude: zod.number().nullable(),
-  checkInLongitude: zod.number().nullable(),
-  checkOutLatitude: zod.number().nullable(),
-  checkOutLongitude: zod.number().nullable(),
-  siteName: zod.string().nullable(),
-  vendorName: zod.string().nullable(),
-  workTypeName: zod.string().nullable(),
-  fieldEmployeeName: zod.string().nullable(),
-  partnerName: zod.string().nullable(),
-  partnerLogoUrl: zod.string().nullable(),
-  vendorLogoUrl: zod.string().nullable(),
-  createdAt: zod.coerce.date(),
-  updatedAt: zod.coerce.date(),
-  unlockedAt: zod.coerce.date().nullable(),
-  unlockedById: zod.number().nullable(),
-  unlockedByName: zod.string().nullable(),
-  unlockCount: zod.number(),
-  createdById: zod.number().nullable(),
-  createdByName: zod.string().nullable(),
-  closedById: zod.number().nullable(),
-  closedByName: zod.string().nullable(),
-  lifecycleState: zod
-    .union([
-      zod.literal("pending_arrival"),
-      zod.literal("en_route"),
-      zod.literal("on_location"),
-      zod.literal("on_site"),
-      zod.literal("off_site"),
-      zod.literal(null),
-    ])
-    .nullable(),
-  enRouteAt: zod.coerce.date().nullable(),
-  arrivedAt: zod.coerce.date().nullable(),
-  departureLatitude: zod.number().nullable(),
-  departureLongitude: zod.number().nullable(),
-  siteLatitude: zod.number().nullable(),
-  siteLongitude: zod.number().nullable(),
-  siteRadiusMeters: zod.number().nullable(),
-  afe: zod.string().nullable(),
-  scheduledStartAt: zod.coerce.date().nullable(),
-  scheduledDurationMinutes: zod.number().nullable(),
-  foremanUserId: zod.number().nullable(),
-  intakeChannel: zod
-    .union([
-      zod.literal("partner_self_service"),
-      zod.literal("office_on_behalf_of_partner"),
-      zod.literal("office_on_behalf_of_field_employee"),
-      zod.literal("vendor_field_self_service"),
-      zod.literal(null),
-    ])
-    .nullable()
-    .describe(
-      "How this ticket was opened. Drives the Source badge in the ticket list (globe \/ phone \/ boots).",
-    ),
-  approvedAt: zod.coerce
-    .date()
-    .nullish()
-    .describe(
-      'Task #865 — timestamp the ticket was approved by a partner \/\nadmin. Set the moment status flips to `approved`. Powers the\n\"Approved on\" \/ \"Days waiting\" columns the partner AP queue\nrenders when filtering by `awaitingPayment=true`. Stays\npopulated after dispersal so the ticket history is preserved.\n',
-    ),
-  paymentMethod: zod
-    .union([
-      zod.literal("etf"),
-      zod.literal("ach"),
-      zod.literal("check"),
-      zod.literal("other"),
-      zod.literal(null),
-    ])
-    .nullable(),
-  paymentReference: zod.string().nullable(),
-  paymentNote: zod.string().nullable(),
-  paymentDispersedAt: zod.coerce.date().nullable(),
-  paymentDispersedById: zod.number().nullable(),
-  paymentDispersedByName: zod.string().nullable(),
-  paymentReceiptUrl: zod
-    .string()
-    .nullable()
-    .describe(
-      "Optional proof-of-payment image attached at dispersal time\n(Task #852). Stored as an object-storage path\/URL returned by\nthe upload helper; renders inline in the read-only Payment\nDetails panel on both web and mobile.\n",
-    ),
-  startingMileage: zod
-    .string()
-    .nullish()
-    .describe(
-      "Odometer reading captured at En Route. Stored as a numeric\nstring with one decimal so the UI can render it verbatim\nwithout float drift. Null until the field employee submits\nthe value on the En Route modal.\n",
-    ),
-  endingMileage: zod
-    .string()
-    .nullish()
-    .describe(
-      "Odometer reading captured at Check Out. Same numeric-string\nshape as `startingMileage`. Null until the Check Out modal\npersists the value.\n",
-    ),
-  unreadCommentCount: zod
-    .number()
-    .min(reverseFundsDispersalResponseUnreadCommentCountMin)
-    .describe(
-      "Task #51 — number of comments on this ticket's thread that\nthe signed-in viewer has not yet seen, used to render an\nunread badge on the tickets-list page. Excludes\nsoft-deleted comments and the viewer's own messages.\nAlways 0 when the request has no signed-in viewer (e.g.\nanonymous portal access).\n",
-    ),
-  viewerCanDisperseFunds: zod
-    .boolean()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call POST \/tickets\/:id\/disperse-funds\nfor this ticket (admin OR partner contact in the Accounts Payable role\non the owning partner). List responses omit this field.\n",
-    ),
-  viewerCanReverseDispersal: zod
-    .boolean()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call\nPOST \/tickets\/:id\/reverse-dispersal for this ticket — i.e.\nthe same admin \/ partner-AP gate as `viewerCanDisperseFunds`\nAND the ticket is currently in `funds_dispersed`. List\nresponses omit this field.\n",
-    ),
-  phoneIntakeCallerName: zod
-    .string()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. The human caller's\nname captured by office phone intake on the ticket's initial\nstatus transition (extracted from\n`ticket_status_history.reason` formatted as\n`phone_intake_caller:<name>`). Null for tickets that weren't\nopened via phone intake. List responses omit this field.\n",
-    ),
-});
+  "id": zod.number(),
+  "siteLocationId": zod.number(),
+  "vendorId": zod.number(),
+  "fieldEmployeeId": zod.number().nullable(),
+  "workTypeId": zod.number(),
+  "status": zod.enum(['draft', 'initiated', 'in_progress', 'pending_review', 'completed', 'submitted', 'approved', 'kicked_back', 'cancelled', 'awaiting_acceptance', 'denied', 'awaiting_payment', 'funds_dispersed']).describe('Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app\'s ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp\'s status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n'),
+  "description": zod.string().nullable(),
+  "notes": zod.string().nullable(),
+  "kickbackReason": zod.string().nullable(),
+  "checkInTime": zod.coerce.date().nullable(),
+  "checkOutTime": zod.coerce.date().nullable(),
+  "checkInLatitude": zod.number().nullable(),
+  "checkInLongitude": zod.number().nullable(),
+  "checkOutLatitude": zod.number().nullable(),
+  "checkOutLongitude": zod.number().nullable(),
+  "siteName": zod.string().nullable(),
+  "vendorName": zod.string().nullable(),
+  "workTypeName": zod.string().nullable(),
+  "workTypeCategory": zod.string().nullish(),
+  "workTypeTaxTreatment": zod.union([zod.literal('exempt_labor'),zod.literal('taxable_repair_service'),zod.literal('taxable_all'),zod.literal(null)]).nullish().describe('Explicit tax classification set on the platform catalog work type.\nNull when the engine infers treatment from category + state rubric.\nPopulated on single-ticket GET only.\n'),
+  "effectiveTaxTreatment": zod.union([zod.literal('exempt_labor'),zod.literal('taxable_repair_service'),zod.literal('taxable_all'),zod.literal(null)]).nullish().describe('Resolved tax classification for this ticket after partner, vendor,\nand work-type overrides. Populated on single-ticket GET only.\n'),
+  "fieldEmployeeName": zod.string().nullable(),
+  "partnerName": zod.string().nullable(),
+  "partnerLogoUrl": zod.string().nullable(),
+  "vendorLogoUrl": zod.string().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "unlockedAt": zod.coerce.date().nullable(),
+  "unlockedById": zod.number().nullable(),
+  "unlockedByName": zod.string().nullable(),
+  "unlockCount": zod.number(),
+  "createdById": zod.number().nullable(),
+  "createdByName": zod.string().nullable(),
+  "closedById": zod.number().nullable(),
+  "closedByName": zod.string().nullable(),
+  "lifecycleState": zod.union([zod.literal('pending_arrival'),zod.literal('en_route'),zod.literal('on_location'),zod.literal('on_site'),zod.literal('off_site'),zod.literal(null)]).nullable(),
+  "enRouteAt": zod.coerce.date().nullable(),
+  "arrivedAt": zod.coerce.date().nullable(),
+  "departureLatitude": zod.number().nullable(),
+  "departureLongitude": zod.number().nullable(),
+  "siteLatitude": zod.number().nullable(),
+  "siteLongitude": zod.number().nullable(),
+  "siteRadiusMeters": zod.number().nullable(),
+  "afe": zod.string().nullable(),
+  "scheduledStartAt": zod.coerce.date().nullable(),
+  "scheduledDurationMinutes": zod.number().nullable(),
+  "foremanUserId": zod.number().nullable(),
+  "intakeChannel": zod.union([zod.literal('partner_self_service'),zod.literal('office_on_behalf_of_partner'),zod.literal('office_on_behalf_of_field_employee'),zod.literal('vendor_field_self_service'),zod.literal(null)]).nullable().describe('How this ticket was opened. Drives the Source badge in the ticket list (globe \/ phone \/ boots).'),
+  "approvedAt": zod.coerce.date().nullish().describe('Task #865 — timestamp the ticket was approved by a partner \/\nadmin. Set the moment status flips to `approved`. Powers the\n\"Approved on\" \/ \"Days waiting\" columns the partner AP queue\nrenders when filtering by `awaitingPayment=true`. Stays\npopulated after dispersal so the ticket history is preserved.\n'),
+  "paymentMethod": zod.union([zod.literal('etf'),zod.literal('ach'),zod.literal('check'),zod.literal('other'),zod.literal(null)]).nullable(),
+  "paymentReference": zod.string().nullable(),
+  "paymentNote": zod.string().nullable(),
+  "paymentDispersedAt": zod.coerce.date().nullable(),
+  "paymentDispersedById": zod.number().nullable(),
+  "paymentDispersedByName": zod.string().nullable(),
+  "paymentReceiptUrl": zod.string().nullable().describe('Optional proof-of-payment image attached at dispersal time\n(Task #852). Stored as an object-storage path\/URL returned by\nthe upload helper; renders inline in the read-only Payment\nDetails panel on both web and mobile.\n'),
+  "startingMileage": zod.string().nullish().describe('Odometer reading captured at En Route. Stored as a numeric\nstring with one decimal so the UI can render it verbatim\nwithout float drift. Null until the field employee submits\nthe value on the En Route modal.\n'),
+  "endingMileage": zod.string().nullish().describe('Odometer reading captured at Check Out. Same numeric-string\nshape as `startingMileage`. Null until the Check Out modal\npersists the value.\n'),
+  "unreadCommentCount": zod.number().min(reverseFundsDispersalResponseUnreadCommentCountMin).describe('Task #51 — number of comments on this ticket\'s thread that\nthe signed-in viewer has not yet seen, used to render an\nunread badge on the tickets-list page. Excludes\nsoft-deleted comments and the viewer\'s own messages.\nAlways 0 when the request has no signed-in viewer (e.g.\nanonymous portal access).\n'),
+  "viewerCanDisperseFunds": zod.boolean().nullish().describe('Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call POST \/tickets\/:id\/disperse-funds\nfor this ticket (admin OR partner contact in the Accounts Payable role\non the owning partner). List responses omit this field.\n'),
+  "viewerCanReverseDispersal": zod.boolean().nullish().describe('Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call\nPOST \/tickets\/:id\/reverse-dispersal for this ticket — i.e.\nthe same admin \/ partner-AP gate as `viewerCanDisperseFunds`\nAND the ticket is currently in `funds_dispersed`. List\nresponses omit this field.\n'),
+  "phoneIntakeCallerName": zod.string().nullish().describe('Set on the single-ticket GET response only. The human caller\'s\nname captured by office phone intake on the ticket\'s initial\nstatus transition (extracted from\n`ticket_status_history.reason` formatted as\n`phone_intake_caller:<name>`). Null for tickets that weren\'t\nopened via phone intake. List responses omit this field.\n')
+})
+
 
 /**
  * Same payment-column clearing semantics as
@@ -3681,512 +2320,271 @@ from the field without paging an admin. Snapshots actor + reason
  * @summary Admin or partner-AP reverses a funds_dispersed ticket (Task
  */
 export const ReverseDispersalParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
 export const reverseDispersalBodyReasonMax = 500;
 
+
+
 export const ReverseDispersalBody = zod.object({
-  reason: zod
-    .string()
-    .min(1)
-    .max(reverseDispersalBodyReasonMax)
-    .describe(
-      "Required free-text reason snapshot into the payment_audit row alongside the cleared payment columns and the actor.",
-    ),
-});
+  "reason": zod.string().min(1).max(reverseDispersalBodyReasonMax).describe('Required free-text reason snapshot into the payment_audit row alongside the cleared payment columns and the actor.')
+})
 
 export const reverseDispersalResponseUnreadCommentCountMin = 0;
 
+
+
 export const ReverseDispersalResponse = zod.object({
-  id: zod.number(),
-  siteLocationId: zod.number(),
-  vendorId: zod.number(),
-  fieldEmployeeId: zod.number().nullable(),
-  workTypeId: zod.number(),
-  status: zod
-    .enum([
-      "draft",
-      "initiated",
-      "in_progress",
-      "pending_review",
-      "completed",
-      "submitted",
-      "approved",
-      "kicked_back",
-      "cancelled",
-      "awaiting_acceptance",
-      "denied",
-      "awaiting_payment",
-      "funds_dispersed",
-    ])
-    .describe(
-      "Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app's ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp's status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n",
-    ),
-  description: zod.string().nullable(),
-  notes: zod.string().nullable(),
-  kickbackReason: zod.string().nullable(),
-  checkInTime: zod.coerce.date().nullable(),
-  checkOutTime: zod.coerce.date().nullable(),
-  checkInLatitude: zod.number().nullable(),
-  checkInLongitude: zod.number().nullable(),
-  checkOutLatitude: zod.number().nullable(),
-  checkOutLongitude: zod.number().nullable(),
-  siteName: zod.string().nullable(),
-  vendorName: zod.string().nullable(),
-  workTypeName: zod.string().nullable(),
-  fieldEmployeeName: zod.string().nullable(),
-  partnerName: zod.string().nullable(),
-  partnerLogoUrl: zod.string().nullable(),
-  vendorLogoUrl: zod.string().nullable(),
-  createdAt: zod.coerce.date(),
-  updatedAt: zod.coerce.date(),
-  unlockedAt: zod.coerce.date().nullable(),
-  unlockedById: zod.number().nullable(),
-  unlockedByName: zod.string().nullable(),
-  unlockCount: zod.number(),
-  createdById: zod.number().nullable(),
-  createdByName: zod.string().nullable(),
-  closedById: zod.number().nullable(),
-  closedByName: zod.string().nullable(),
-  lifecycleState: zod
-    .union([
-      zod.literal("pending_arrival"),
-      zod.literal("en_route"),
-      zod.literal("on_location"),
-      zod.literal("on_site"),
-      zod.literal("off_site"),
-      zod.literal(null),
-    ])
-    .nullable(),
-  enRouteAt: zod.coerce.date().nullable(),
-  arrivedAt: zod.coerce.date().nullable(),
-  departureLatitude: zod.number().nullable(),
-  departureLongitude: zod.number().nullable(),
-  siteLatitude: zod.number().nullable(),
-  siteLongitude: zod.number().nullable(),
-  siteRadiusMeters: zod.number().nullable(),
-  afe: zod.string().nullable(),
-  scheduledStartAt: zod.coerce.date().nullable(),
-  scheduledDurationMinutes: zod.number().nullable(),
-  foremanUserId: zod.number().nullable(),
-  intakeChannel: zod
-    .union([
-      zod.literal("partner_self_service"),
-      zod.literal("office_on_behalf_of_partner"),
-      zod.literal("office_on_behalf_of_field_employee"),
-      zod.literal("vendor_field_self_service"),
-      zod.literal(null),
-    ])
-    .nullable()
-    .describe(
-      "How this ticket was opened. Drives the Source badge in the ticket list (globe \/ phone \/ boots).",
-    ),
-  approvedAt: zod.coerce
-    .date()
-    .nullish()
-    .describe(
-      'Task #865 — timestamp the ticket was approved by a partner \/\nadmin. Set the moment status flips to `approved`. Powers the\n\"Approved on\" \/ \"Days waiting\" columns the partner AP queue\nrenders when filtering by `awaitingPayment=true`. Stays\npopulated after dispersal so the ticket history is preserved.\n',
-    ),
-  paymentMethod: zod
-    .union([
-      zod.literal("etf"),
-      zod.literal("ach"),
-      zod.literal("check"),
-      zod.literal("other"),
-      zod.literal(null),
-    ])
-    .nullable(),
-  paymentReference: zod.string().nullable(),
-  paymentNote: zod.string().nullable(),
-  paymentDispersedAt: zod.coerce.date().nullable(),
-  paymentDispersedById: zod.number().nullable(),
-  paymentDispersedByName: zod.string().nullable(),
-  paymentReceiptUrl: zod
-    .string()
-    .nullable()
-    .describe(
-      "Optional proof-of-payment image attached at dispersal time\n(Task #852). Stored as an object-storage path\/URL returned by\nthe upload helper; renders inline in the read-only Payment\nDetails panel on both web and mobile.\n",
-    ),
-  startingMileage: zod
-    .string()
-    .nullish()
-    .describe(
-      "Odometer reading captured at En Route. Stored as a numeric\nstring with one decimal so the UI can render it verbatim\nwithout float drift. Null until the field employee submits\nthe value on the En Route modal.\n",
-    ),
-  endingMileage: zod
-    .string()
-    .nullish()
-    .describe(
-      "Odometer reading captured at Check Out. Same numeric-string\nshape as `startingMileage`. Null until the Check Out modal\npersists the value.\n",
-    ),
-  unreadCommentCount: zod
-    .number()
-    .min(reverseDispersalResponseUnreadCommentCountMin)
-    .describe(
-      "Task #51 — number of comments on this ticket's thread that\nthe signed-in viewer has not yet seen, used to render an\nunread badge on the tickets-list page. Excludes\nsoft-deleted comments and the viewer's own messages.\nAlways 0 when the request has no signed-in viewer (e.g.\nanonymous portal access).\n",
-    ),
-  viewerCanDisperseFunds: zod
-    .boolean()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call POST \/tickets\/:id\/disperse-funds\nfor this ticket (admin OR partner contact in the Accounts Payable role\non the owning partner). List responses omit this field.\n",
-    ),
-  viewerCanReverseDispersal: zod
-    .boolean()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call\nPOST \/tickets\/:id\/reverse-dispersal for this ticket — i.e.\nthe same admin \/ partner-AP gate as `viewerCanDisperseFunds`\nAND the ticket is currently in `funds_dispersed`. List\nresponses omit this field.\n",
-    ),
-  phoneIntakeCallerName: zod
-    .string()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. The human caller's\nname captured by office phone intake on the ticket's initial\nstatus transition (extracted from\n`ticket_status_history.reason` formatted as\n`phone_intake_caller:<name>`). Null for tickets that weren't\nopened via phone intake. List responses omit this field.\n",
-    ),
-});
+  "id": zod.number(),
+  "siteLocationId": zod.number(),
+  "vendorId": zod.number(),
+  "fieldEmployeeId": zod.number().nullable(),
+  "workTypeId": zod.number(),
+  "status": zod.enum(['draft', 'initiated', 'in_progress', 'pending_review', 'completed', 'submitted', 'approved', 'kicked_back', 'cancelled', 'awaiting_acceptance', 'denied', 'awaiting_payment', 'funds_dispersed']).describe('Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app\'s ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp\'s status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n'),
+  "description": zod.string().nullable(),
+  "notes": zod.string().nullable(),
+  "kickbackReason": zod.string().nullable(),
+  "checkInTime": zod.coerce.date().nullable(),
+  "checkOutTime": zod.coerce.date().nullable(),
+  "checkInLatitude": zod.number().nullable(),
+  "checkInLongitude": zod.number().nullable(),
+  "checkOutLatitude": zod.number().nullable(),
+  "checkOutLongitude": zod.number().nullable(),
+  "siteName": zod.string().nullable(),
+  "vendorName": zod.string().nullable(),
+  "workTypeName": zod.string().nullable(),
+  "workTypeCategory": zod.string().nullish(),
+  "workTypeTaxTreatment": zod.union([zod.literal('exempt_labor'),zod.literal('taxable_repair_service'),zod.literal('taxable_all'),zod.literal(null)]).nullish().describe('Explicit tax classification set on the platform catalog work type.\nNull when the engine infers treatment from category + state rubric.\nPopulated on single-ticket GET only.\n'),
+  "effectiveTaxTreatment": zod.union([zod.literal('exempt_labor'),zod.literal('taxable_repair_service'),zod.literal('taxable_all'),zod.literal(null)]).nullish().describe('Resolved tax classification for this ticket after partner, vendor,\nand work-type overrides. Populated on single-ticket GET only.\n'),
+  "fieldEmployeeName": zod.string().nullable(),
+  "partnerName": zod.string().nullable(),
+  "partnerLogoUrl": zod.string().nullable(),
+  "vendorLogoUrl": zod.string().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "unlockedAt": zod.coerce.date().nullable(),
+  "unlockedById": zod.number().nullable(),
+  "unlockedByName": zod.string().nullable(),
+  "unlockCount": zod.number(),
+  "createdById": zod.number().nullable(),
+  "createdByName": zod.string().nullable(),
+  "closedById": zod.number().nullable(),
+  "closedByName": zod.string().nullable(),
+  "lifecycleState": zod.union([zod.literal('pending_arrival'),zod.literal('en_route'),zod.literal('on_location'),zod.literal('on_site'),zod.literal('off_site'),zod.literal(null)]).nullable(),
+  "enRouteAt": zod.coerce.date().nullable(),
+  "arrivedAt": zod.coerce.date().nullable(),
+  "departureLatitude": zod.number().nullable(),
+  "departureLongitude": zod.number().nullable(),
+  "siteLatitude": zod.number().nullable(),
+  "siteLongitude": zod.number().nullable(),
+  "siteRadiusMeters": zod.number().nullable(),
+  "afe": zod.string().nullable(),
+  "scheduledStartAt": zod.coerce.date().nullable(),
+  "scheduledDurationMinutes": zod.number().nullable(),
+  "foremanUserId": zod.number().nullable(),
+  "intakeChannel": zod.union([zod.literal('partner_self_service'),zod.literal('office_on_behalf_of_partner'),zod.literal('office_on_behalf_of_field_employee'),zod.literal('vendor_field_self_service'),zod.literal(null)]).nullable().describe('How this ticket was opened. Drives the Source badge in the ticket list (globe \/ phone \/ boots).'),
+  "approvedAt": zod.coerce.date().nullish().describe('Task #865 — timestamp the ticket was approved by a partner \/\nadmin. Set the moment status flips to `approved`. Powers the\n\"Approved on\" \/ \"Days waiting\" columns the partner AP queue\nrenders when filtering by `awaitingPayment=true`. Stays\npopulated after dispersal so the ticket history is preserved.\n'),
+  "paymentMethod": zod.union([zod.literal('etf'),zod.literal('ach'),zod.literal('check'),zod.literal('other'),zod.literal(null)]).nullable(),
+  "paymentReference": zod.string().nullable(),
+  "paymentNote": zod.string().nullable(),
+  "paymentDispersedAt": zod.coerce.date().nullable(),
+  "paymentDispersedById": zod.number().nullable(),
+  "paymentDispersedByName": zod.string().nullable(),
+  "paymentReceiptUrl": zod.string().nullable().describe('Optional proof-of-payment image attached at dispersal time\n(Task #852). Stored as an object-storage path\/URL returned by\nthe upload helper; renders inline in the read-only Payment\nDetails panel on both web and mobile.\n'),
+  "startingMileage": zod.string().nullish().describe('Odometer reading captured at En Route. Stored as a numeric\nstring with one decimal so the UI can render it verbatim\nwithout float drift. Null until the field employee submits\nthe value on the En Route modal.\n'),
+  "endingMileage": zod.string().nullish().describe('Odometer reading captured at Check Out. Same numeric-string\nshape as `startingMileage`. Null until the Check Out modal\npersists the value.\n'),
+  "unreadCommentCount": zod.number().min(reverseDispersalResponseUnreadCommentCountMin).describe('Task #51 — number of comments on this ticket\'s thread that\nthe signed-in viewer has not yet seen, used to render an\nunread badge on the tickets-list page. Excludes\nsoft-deleted comments and the viewer\'s own messages.\nAlways 0 when the request has no signed-in viewer (e.g.\nanonymous portal access).\n'),
+  "viewerCanDisperseFunds": zod.boolean().nullish().describe('Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call POST \/tickets\/:id\/disperse-funds\nfor this ticket (admin OR partner contact in the Accounts Payable role\non the owning partner). List responses omit this field.\n'),
+  "viewerCanReverseDispersal": zod.boolean().nullish().describe('Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call\nPOST \/tickets\/:id\/reverse-dispersal for this ticket — i.e.\nthe same admin \/ partner-AP gate as `viewerCanDisperseFunds`\nAND the ticket is currently in `funds_dispersed`. List\nresponses omit this field.\n'),
+  "phoneIntakeCallerName": zod.string().nullish().describe('Set on the single-ticket GET response only. The human caller\'s\nname captured by office phone intake on the ticket\'s initial\nstatus transition (extracted from\n`ticket_status_history.reason` formatted as\n`phone_intake_caller:<name>`). Null for tickets that weren\'t\nopened via phone intake. List responses omit this field.\n')
+})
+
 
 /**
  * @summary Partner kicks back ticket to vendor for correction
  */
 export const KickbackTicketParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
 export const KickbackTicketBody = zod.object({
-  reason: zod.string(),
-});
+  "reason": zod.string()
+})
 
 export const kickbackTicketResponseUnreadCommentCountMin = 0;
 
+
+
 export const KickbackTicketResponse = zod.object({
-  id: zod.number(),
-  siteLocationId: zod.number(),
-  vendorId: zod.number(),
-  fieldEmployeeId: zod.number().nullable(),
-  workTypeId: zod.number(),
-  status: zod
-    .enum([
-      "draft",
-      "initiated",
-      "in_progress",
-      "pending_review",
-      "completed",
-      "submitted",
-      "approved",
-      "kicked_back",
-      "cancelled",
-      "awaiting_acceptance",
-      "denied",
-      "awaiting_payment",
-      "funds_dispersed",
-    ])
-    .describe(
-      "Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app's ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp's status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n",
-    ),
-  description: zod.string().nullable(),
-  notes: zod.string().nullable(),
-  kickbackReason: zod.string().nullable(),
-  checkInTime: zod.coerce.date().nullable(),
-  checkOutTime: zod.coerce.date().nullable(),
-  checkInLatitude: zod.number().nullable(),
-  checkInLongitude: zod.number().nullable(),
-  checkOutLatitude: zod.number().nullable(),
-  checkOutLongitude: zod.number().nullable(),
-  siteName: zod.string().nullable(),
-  vendorName: zod.string().nullable(),
-  workTypeName: zod.string().nullable(),
-  fieldEmployeeName: zod.string().nullable(),
-  partnerName: zod.string().nullable(),
-  partnerLogoUrl: zod.string().nullable(),
-  vendorLogoUrl: zod.string().nullable(),
-  createdAt: zod.coerce.date(),
-  updatedAt: zod.coerce.date(),
-  unlockedAt: zod.coerce.date().nullable(),
-  unlockedById: zod.number().nullable(),
-  unlockedByName: zod.string().nullable(),
-  unlockCount: zod.number(),
-  createdById: zod.number().nullable(),
-  createdByName: zod.string().nullable(),
-  closedById: zod.number().nullable(),
-  closedByName: zod.string().nullable(),
-  lifecycleState: zod
-    .union([
-      zod.literal("pending_arrival"),
-      zod.literal("en_route"),
-      zod.literal("on_location"),
-      zod.literal("on_site"),
-      zod.literal("off_site"),
-      zod.literal(null),
-    ])
-    .nullable(),
-  enRouteAt: zod.coerce.date().nullable(),
-  arrivedAt: zod.coerce.date().nullable(),
-  departureLatitude: zod.number().nullable(),
-  departureLongitude: zod.number().nullable(),
-  siteLatitude: zod.number().nullable(),
-  siteLongitude: zod.number().nullable(),
-  siteRadiusMeters: zod.number().nullable(),
-  afe: zod.string().nullable(),
-  scheduledStartAt: zod.coerce.date().nullable(),
-  scheduledDurationMinutes: zod.number().nullable(),
-  foremanUserId: zod.number().nullable(),
-  intakeChannel: zod
-    .union([
-      zod.literal("partner_self_service"),
-      zod.literal("office_on_behalf_of_partner"),
-      zod.literal("office_on_behalf_of_field_employee"),
-      zod.literal("vendor_field_self_service"),
-      zod.literal(null),
-    ])
-    .nullable()
-    .describe(
-      "How this ticket was opened. Drives the Source badge in the ticket list (globe \/ phone \/ boots).",
-    ),
-  approvedAt: zod.coerce
-    .date()
-    .nullish()
-    .describe(
-      'Task #865 — timestamp the ticket was approved by a partner \/\nadmin. Set the moment status flips to `approved`. Powers the\n\"Approved on\" \/ \"Days waiting\" columns the partner AP queue\nrenders when filtering by `awaitingPayment=true`. Stays\npopulated after dispersal so the ticket history is preserved.\n',
-    ),
-  paymentMethod: zod
-    .union([
-      zod.literal("etf"),
-      zod.literal("ach"),
-      zod.literal("check"),
-      zod.literal("other"),
-      zod.literal(null),
-    ])
-    .nullable(),
-  paymentReference: zod.string().nullable(),
-  paymentNote: zod.string().nullable(),
-  paymentDispersedAt: zod.coerce.date().nullable(),
-  paymentDispersedById: zod.number().nullable(),
-  paymentDispersedByName: zod.string().nullable(),
-  paymentReceiptUrl: zod
-    .string()
-    .nullable()
-    .describe(
-      "Optional proof-of-payment image attached at dispersal time\n(Task #852). Stored as an object-storage path\/URL returned by\nthe upload helper; renders inline in the read-only Payment\nDetails panel on both web and mobile.\n",
-    ),
-  startingMileage: zod
-    .string()
-    .nullish()
-    .describe(
-      "Odometer reading captured at En Route. Stored as a numeric\nstring with one decimal so the UI can render it verbatim\nwithout float drift. Null until the field employee submits\nthe value on the En Route modal.\n",
-    ),
-  endingMileage: zod
-    .string()
-    .nullish()
-    .describe(
-      "Odometer reading captured at Check Out. Same numeric-string\nshape as `startingMileage`. Null until the Check Out modal\npersists the value.\n",
-    ),
-  unreadCommentCount: zod
-    .number()
-    .min(kickbackTicketResponseUnreadCommentCountMin)
-    .describe(
-      "Task #51 — number of comments on this ticket's thread that\nthe signed-in viewer has not yet seen, used to render an\nunread badge on the tickets-list page. Excludes\nsoft-deleted comments and the viewer's own messages.\nAlways 0 when the request has no signed-in viewer (e.g.\nanonymous portal access).\n",
-    ),
-  viewerCanDisperseFunds: zod
-    .boolean()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call POST \/tickets\/:id\/disperse-funds\nfor this ticket (admin OR partner contact in the Accounts Payable role\non the owning partner). List responses omit this field.\n",
-    ),
-  viewerCanReverseDispersal: zod
-    .boolean()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call\nPOST \/tickets\/:id\/reverse-dispersal for this ticket — i.e.\nthe same admin \/ partner-AP gate as `viewerCanDisperseFunds`\nAND the ticket is currently in `funds_dispersed`. List\nresponses omit this field.\n",
-    ),
-  phoneIntakeCallerName: zod
-    .string()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. The human caller's\nname captured by office phone intake on the ticket's initial\nstatus transition (extracted from\n`ticket_status_history.reason` formatted as\n`phone_intake_caller:<name>`). Null for tickets that weren't\nopened via phone intake. List responses omit this field.\n",
-    ),
-});
+  "id": zod.number(),
+  "siteLocationId": zod.number(),
+  "vendorId": zod.number(),
+  "fieldEmployeeId": zod.number().nullable(),
+  "workTypeId": zod.number(),
+  "status": zod.enum(['draft', 'initiated', 'in_progress', 'pending_review', 'completed', 'submitted', 'approved', 'kicked_back', 'cancelled', 'awaiting_acceptance', 'denied', 'awaiting_payment', 'funds_dispersed']).describe('Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app\'s ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp\'s status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n'),
+  "description": zod.string().nullable(),
+  "notes": zod.string().nullable(),
+  "kickbackReason": zod.string().nullable(),
+  "checkInTime": zod.coerce.date().nullable(),
+  "checkOutTime": zod.coerce.date().nullable(),
+  "checkInLatitude": zod.number().nullable(),
+  "checkInLongitude": zod.number().nullable(),
+  "checkOutLatitude": zod.number().nullable(),
+  "checkOutLongitude": zod.number().nullable(),
+  "siteName": zod.string().nullable(),
+  "vendorName": zod.string().nullable(),
+  "workTypeName": zod.string().nullable(),
+  "workTypeCategory": zod.string().nullish(),
+  "workTypeTaxTreatment": zod.union([zod.literal('exempt_labor'),zod.literal('taxable_repair_service'),zod.literal('taxable_all'),zod.literal(null)]).nullish().describe('Explicit tax classification set on the platform catalog work type.\nNull when the engine infers treatment from category + state rubric.\nPopulated on single-ticket GET only.\n'),
+  "effectiveTaxTreatment": zod.union([zod.literal('exempt_labor'),zod.literal('taxable_repair_service'),zod.literal('taxable_all'),zod.literal(null)]).nullish().describe('Resolved tax classification for this ticket after partner, vendor,\nand work-type overrides. Populated on single-ticket GET only.\n'),
+  "fieldEmployeeName": zod.string().nullable(),
+  "partnerName": zod.string().nullable(),
+  "partnerLogoUrl": zod.string().nullable(),
+  "vendorLogoUrl": zod.string().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "unlockedAt": zod.coerce.date().nullable(),
+  "unlockedById": zod.number().nullable(),
+  "unlockedByName": zod.string().nullable(),
+  "unlockCount": zod.number(),
+  "createdById": zod.number().nullable(),
+  "createdByName": zod.string().nullable(),
+  "closedById": zod.number().nullable(),
+  "closedByName": zod.string().nullable(),
+  "lifecycleState": zod.union([zod.literal('pending_arrival'),zod.literal('en_route'),zod.literal('on_location'),zod.literal('on_site'),zod.literal('off_site'),zod.literal(null)]).nullable(),
+  "enRouteAt": zod.coerce.date().nullable(),
+  "arrivedAt": zod.coerce.date().nullable(),
+  "departureLatitude": zod.number().nullable(),
+  "departureLongitude": zod.number().nullable(),
+  "siteLatitude": zod.number().nullable(),
+  "siteLongitude": zod.number().nullable(),
+  "siteRadiusMeters": zod.number().nullable(),
+  "afe": zod.string().nullable(),
+  "scheduledStartAt": zod.coerce.date().nullable(),
+  "scheduledDurationMinutes": zod.number().nullable(),
+  "foremanUserId": zod.number().nullable(),
+  "intakeChannel": zod.union([zod.literal('partner_self_service'),zod.literal('office_on_behalf_of_partner'),zod.literal('office_on_behalf_of_field_employee'),zod.literal('vendor_field_self_service'),zod.literal(null)]).nullable().describe('How this ticket was opened. Drives the Source badge in the ticket list (globe \/ phone \/ boots).'),
+  "approvedAt": zod.coerce.date().nullish().describe('Task #865 — timestamp the ticket was approved by a partner \/\nadmin. Set the moment status flips to `approved`. Powers the\n\"Approved on\" \/ \"Days waiting\" columns the partner AP queue\nrenders when filtering by `awaitingPayment=true`. Stays\npopulated after dispersal so the ticket history is preserved.\n'),
+  "paymentMethod": zod.union([zod.literal('etf'),zod.literal('ach'),zod.literal('check'),zod.literal('other'),zod.literal(null)]).nullable(),
+  "paymentReference": zod.string().nullable(),
+  "paymentNote": zod.string().nullable(),
+  "paymentDispersedAt": zod.coerce.date().nullable(),
+  "paymentDispersedById": zod.number().nullable(),
+  "paymentDispersedByName": zod.string().nullable(),
+  "paymentReceiptUrl": zod.string().nullable().describe('Optional proof-of-payment image attached at dispersal time\n(Task #852). Stored as an object-storage path\/URL returned by\nthe upload helper; renders inline in the read-only Payment\nDetails panel on both web and mobile.\n'),
+  "startingMileage": zod.string().nullish().describe('Odometer reading captured at En Route. Stored as a numeric\nstring with one decimal so the UI can render it verbatim\nwithout float drift. Null until the field employee submits\nthe value on the En Route modal.\n'),
+  "endingMileage": zod.string().nullish().describe('Odometer reading captured at Check Out. Same numeric-string\nshape as `startingMileage`. Null until the Check Out modal\npersists the value.\n'),
+  "unreadCommentCount": zod.number().min(kickbackTicketResponseUnreadCommentCountMin).describe('Task #51 — number of comments on this ticket\'s thread that\nthe signed-in viewer has not yet seen, used to render an\nunread badge on the tickets-list page. Excludes\nsoft-deleted comments and the viewer\'s own messages.\nAlways 0 when the request has no signed-in viewer (e.g.\nanonymous portal access).\n'),
+  "viewerCanDisperseFunds": zod.boolean().nullish().describe('Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call POST \/tickets\/:id\/disperse-funds\nfor this ticket (admin OR partner contact in the Accounts Payable role\non the owning partner). List responses omit this field.\n'),
+  "viewerCanReverseDispersal": zod.boolean().nullish().describe('Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call\nPOST \/tickets\/:id\/reverse-dispersal for this ticket — i.e.\nthe same admin \/ partner-AP gate as `viewerCanDisperseFunds`\nAND the ticket is currently in `funds_dispersed`. List\nresponses omit this field.\n'),
+  "phoneIntakeCallerName": zod.string().nullish().describe('Set on the single-ticket GET response only. The human caller\'s\nname captured by office phone intake on the ticket\'s initial\nstatus transition (extracted from\n`ticket_status_history.reason` formatted as\n`phone_intake_caller:<name>`). Null for tickets that weren\'t\nopened via phone intake. List responses omit this field.\n')
+})
+
 
 /**
  * @summary Admin unlocks a submitted or approved ticket so it can be edited again
  */
 export const UnlockTicketParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
 export const unlockTicketBodyReasonMax = 500;
 
+
+
 export const UnlockTicketBody = zod.object({
-  reason: zod.string().min(1).max(unlockTicketBodyReasonMax),
-});
+  "reason": zod.string().min(1).max(unlockTicketBodyReasonMax)
+})
 
 export const unlockTicketResponseUnreadCommentCountMin = 0;
 
+
+
 export const UnlockTicketResponse = zod.object({
-  id: zod.number(),
-  siteLocationId: zod.number(),
-  vendorId: zod.number(),
-  fieldEmployeeId: zod.number().nullable(),
-  workTypeId: zod.number(),
-  status: zod
-    .enum([
-      "draft",
-      "initiated",
-      "in_progress",
-      "pending_review",
-      "completed",
-      "submitted",
-      "approved",
-      "kicked_back",
-      "cancelled",
-      "awaiting_acceptance",
-      "denied",
-      "awaiting_payment",
-      "funds_dispersed",
-    ])
-    .describe(
-      "Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app's ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp's status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n",
-    ),
-  description: zod.string().nullable(),
-  notes: zod.string().nullable(),
-  kickbackReason: zod.string().nullable(),
-  checkInTime: zod.coerce.date().nullable(),
-  checkOutTime: zod.coerce.date().nullable(),
-  checkInLatitude: zod.number().nullable(),
-  checkInLongitude: zod.number().nullable(),
-  checkOutLatitude: zod.number().nullable(),
-  checkOutLongitude: zod.number().nullable(),
-  siteName: zod.string().nullable(),
-  vendorName: zod.string().nullable(),
-  workTypeName: zod.string().nullable(),
-  fieldEmployeeName: zod.string().nullable(),
-  partnerName: zod.string().nullable(),
-  partnerLogoUrl: zod.string().nullable(),
-  vendorLogoUrl: zod.string().nullable(),
-  createdAt: zod.coerce.date(),
-  updatedAt: zod.coerce.date(),
-  unlockedAt: zod.coerce.date().nullable(),
-  unlockedById: zod.number().nullable(),
-  unlockedByName: zod.string().nullable(),
-  unlockCount: zod.number(),
-  createdById: zod.number().nullable(),
-  createdByName: zod.string().nullable(),
-  closedById: zod.number().nullable(),
-  closedByName: zod.string().nullable(),
-  lifecycleState: zod
-    .union([
-      zod.literal("pending_arrival"),
-      zod.literal("en_route"),
-      zod.literal("on_location"),
-      zod.literal("on_site"),
-      zod.literal("off_site"),
-      zod.literal(null),
-    ])
-    .nullable(),
-  enRouteAt: zod.coerce.date().nullable(),
-  arrivedAt: zod.coerce.date().nullable(),
-  departureLatitude: zod.number().nullable(),
-  departureLongitude: zod.number().nullable(),
-  siteLatitude: zod.number().nullable(),
-  siteLongitude: zod.number().nullable(),
-  siteRadiusMeters: zod.number().nullable(),
-  afe: zod.string().nullable(),
-  scheduledStartAt: zod.coerce.date().nullable(),
-  scheduledDurationMinutes: zod.number().nullable(),
-  foremanUserId: zod.number().nullable(),
-  intakeChannel: zod
-    .union([
-      zod.literal("partner_self_service"),
-      zod.literal("office_on_behalf_of_partner"),
-      zod.literal("office_on_behalf_of_field_employee"),
-      zod.literal("vendor_field_self_service"),
-      zod.literal(null),
-    ])
-    .nullable()
-    .describe(
-      "How this ticket was opened. Drives the Source badge in the ticket list (globe \/ phone \/ boots).",
-    ),
-  approvedAt: zod.coerce
-    .date()
-    .nullish()
-    .describe(
-      'Task #865 — timestamp the ticket was approved by a partner \/\nadmin. Set the moment status flips to `approved`. Powers the\n\"Approved on\" \/ \"Days waiting\" columns the partner AP queue\nrenders when filtering by `awaitingPayment=true`. Stays\npopulated after dispersal so the ticket history is preserved.\n',
-    ),
-  paymentMethod: zod
-    .union([
-      zod.literal("etf"),
-      zod.literal("ach"),
-      zod.literal("check"),
-      zod.literal("other"),
-      zod.literal(null),
-    ])
-    .nullable(),
-  paymentReference: zod.string().nullable(),
-  paymentNote: zod.string().nullable(),
-  paymentDispersedAt: zod.coerce.date().nullable(),
-  paymentDispersedById: zod.number().nullable(),
-  paymentDispersedByName: zod.string().nullable(),
-  paymentReceiptUrl: zod
-    .string()
-    .nullable()
-    .describe(
-      "Optional proof-of-payment image attached at dispersal time\n(Task #852). Stored as an object-storage path\/URL returned by\nthe upload helper; renders inline in the read-only Payment\nDetails panel on both web and mobile.\n",
-    ),
-  startingMileage: zod
-    .string()
-    .nullish()
-    .describe(
-      "Odometer reading captured at En Route. Stored as a numeric\nstring with one decimal so the UI can render it verbatim\nwithout float drift. Null until the field employee submits\nthe value on the En Route modal.\n",
-    ),
-  endingMileage: zod
-    .string()
-    .nullish()
-    .describe(
-      "Odometer reading captured at Check Out. Same numeric-string\nshape as `startingMileage`. Null until the Check Out modal\npersists the value.\n",
-    ),
-  unreadCommentCount: zod
-    .number()
-    .min(unlockTicketResponseUnreadCommentCountMin)
-    .describe(
-      "Task #51 — number of comments on this ticket's thread that\nthe signed-in viewer has not yet seen, used to render an\nunread badge on the tickets-list page. Excludes\nsoft-deleted comments and the viewer's own messages.\nAlways 0 when the request has no signed-in viewer (e.g.\nanonymous portal access).\n",
-    ),
-  viewerCanDisperseFunds: zod
-    .boolean()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call POST \/tickets\/:id\/disperse-funds\nfor this ticket (admin OR partner contact in the Accounts Payable role\non the owning partner). List responses omit this field.\n",
-    ),
-  viewerCanReverseDispersal: zod
-    .boolean()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call\nPOST \/tickets\/:id\/reverse-dispersal for this ticket — i.e.\nthe same admin \/ partner-AP gate as `viewerCanDisperseFunds`\nAND the ticket is currently in `funds_dispersed`. List\nresponses omit this field.\n",
-    ),
-  phoneIntakeCallerName: zod
-    .string()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. The human caller's\nname captured by office phone intake on the ticket's initial\nstatus transition (extracted from\n`ticket_status_history.reason` formatted as\n`phone_intake_caller:<name>`). Null for tickets that weren't\nopened via phone intake. List responses omit this field.\n",
-    ),
-});
+  "id": zod.number(),
+  "siteLocationId": zod.number(),
+  "vendorId": zod.number(),
+  "fieldEmployeeId": zod.number().nullable(),
+  "workTypeId": zod.number(),
+  "status": zod.enum(['draft', 'initiated', 'in_progress', 'pending_review', 'completed', 'submitted', 'approved', 'kicked_back', 'cancelled', 'awaiting_acceptance', 'denied', 'awaiting_payment', 'funds_dispersed']).describe('Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app\'s ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp\'s status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n'),
+  "description": zod.string().nullable(),
+  "notes": zod.string().nullable(),
+  "kickbackReason": zod.string().nullable(),
+  "checkInTime": zod.coerce.date().nullable(),
+  "checkOutTime": zod.coerce.date().nullable(),
+  "checkInLatitude": zod.number().nullable(),
+  "checkInLongitude": zod.number().nullable(),
+  "checkOutLatitude": zod.number().nullable(),
+  "checkOutLongitude": zod.number().nullable(),
+  "siteName": zod.string().nullable(),
+  "vendorName": zod.string().nullable(),
+  "workTypeName": zod.string().nullable(),
+  "workTypeCategory": zod.string().nullish(),
+  "workTypeTaxTreatment": zod.union([zod.literal('exempt_labor'),zod.literal('taxable_repair_service'),zod.literal('taxable_all'),zod.literal(null)]).nullish().describe('Explicit tax classification set on the platform catalog work type.\nNull when the engine infers treatment from category + state rubric.\nPopulated on single-ticket GET only.\n'),
+  "effectiveTaxTreatment": zod.union([zod.literal('exempt_labor'),zod.literal('taxable_repair_service'),zod.literal('taxable_all'),zod.literal(null)]).nullish().describe('Resolved tax classification for this ticket after partner, vendor,\nand work-type overrides. Populated on single-ticket GET only.\n'),
+  "fieldEmployeeName": zod.string().nullable(),
+  "partnerName": zod.string().nullable(),
+  "partnerLogoUrl": zod.string().nullable(),
+  "vendorLogoUrl": zod.string().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "unlockedAt": zod.coerce.date().nullable(),
+  "unlockedById": zod.number().nullable(),
+  "unlockedByName": zod.string().nullable(),
+  "unlockCount": zod.number(),
+  "createdById": zod.number().nullable(),
+  "createdByName": zod.string().nullable(),
+  "closedById": zod.number().nullable(),
+  "closedByName": zod.string().nullable(),
+  "lifecycleState": zod.union([zod.literal('pending_arrival'),zod.literal('en_route'),zod.literal('on_location'),zod.literal('on_site'),zod.literal('off_site'),zod.literal(null)]).nullable(),
+  "enRouteAt": zod.coerce.date().nullable(),
+  "arrivedAt": zod.coerce.date().nullable(),
+  "departureLatitude": zod.number().nullable(),
+  "departureLongitude": zod.number().nullable(),
+  "siteLatitude": zod.number().nullable(),
+  "siteLongitude": zod.number().nullable(),
+  "siteRadiusMeters": zod.number().nullable(),
+  "afe": zod.string().nullable(),
+  "scheduledStartAt": zod.coerce.date().nullable(),
+  "scheduledDurationMinutes": zod.number().nullable(),
+  "foremanUserId": zod.number().nullable(),
+  "intakeChannel": zod.union([zod.literal('partner_self_service'),zod.literal('office_on_behalf_of_partner'),zod.literal('office_on_behalf_of_field_employee'),zod.literal('vendor_field_self_service'),zod.literal(null)]).nullable().describe('How this ticket was opened. Drives the Source badge in the ticket list (globe \/ phone \/ boots).'),
+  "approvedAt": zod.coerce.date().nullish().describe('Task #865 — timestamp the ticket was approved by a partner \/\nadmin. Set the moment status flips to `approved`. Powers the\n\"Approved on\" \/ \"Days waiting\" columns the partner AP queue\nrenders when filtering by `awaitingPayment=true`. Stays\npopulated after dispersal so the ticket history is preserved.\n'),
+  "paymentMethod": zod.union([zod.literal('etf'),zod.literal('ach'),zod.literal('check'),zod.literal('other'),zod.literal(null)]).nullable(),
+  "paymentReference": zod.string().nullable(),
+  "paymentNote": zod.string().nullable(),
+  "paymentDispersedAt": zod.coerce.date().nullable(),
+  "paymentDispersedById": zod.number().nullable(),
+  "paymentDispersedByName": zod.string().nullable(),
+  "paymentReceiptUrl": zod.string().nullable().describe('Optional proof-of-payment image attached at dispersal time\n(Task #852). Stored as an object-storage path\/URL returned by\nthe upload helper; renders inline in the read-only Payment\nDetails panel on both web and mobile.\n'),
+  "startingMileage": zod.string().nullish().describe('Odometer reading captured at En Route. Stored as a numeric\nstring with one decimal so the UI can render it verbatim\nwithout float drift. Null until the field employee submits\nthe value on the En Route modal.\n'),
+  "endingMileage": zod.string().nullish().describe('Odometer reading captured at Check Out. Same numeric-string\nshape as `startingMileage`. Null until the Check Out modal\npersists the value.\n'),
+  "unreadCommentCount": zod.number().min(unlockTicketResponseUnreadCommentCountMin).describe('Task #51 — number of comments on this ticket\'s thread that\nthe signed-in viewer has not yet seen, used to render an\nunread badge on the tickets-list page. Excludes\nsoft-deleted comments and the viewer\'s own messages.\nAlways 0 when the request has no signed-in viewer (e.g.\nanonymous portal access).\n'),
+  "viewerCanDisperseFunds": zod.boolean().nullish().describe('Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call POST \/tickets\/:id\/disperse-funds\nfor this ticket (admin OR partner contact in the Accounts Payable role\non the owning partner). List responses omit this field.\n'),
+  "viewerCanReverseDispersal": zod.boolean().nullish().describe('Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call\nPOST \/tickets\/:id\/reverse-dispersal for this ticket — i.e.\nthe same admin \/ partner-AP gate as `viewerCanDisperseFunds`\nAND the ticket is currently in `funds_dispersed`. List\nresponses omit this field.\n'),
+  "phoneIntakeCallerName": zod.string().nullish().describe('Set on the single-ticket GET response only. The human caller\'s\nname captured by office phone intake on the ticket\'s initial\nstatus transition (extracted from\n`ticket_status_history.reason` formatted as\n`phone_intake_caller:<name>`). Null for tickets that weren\'t\nopened via phone intake. List responses omit this field.\n')
+})
+
 
 /**
  * @summary Get the full unlock history for a ticket
  */
 export const GetTicketUnlocksParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
 export const GetTicketUnlocksResponseItem = zod.object({
-  id: zod.number(),
-  ticketId: zod.number(),
-  unlockedAt: zod.coerce.date(),
-  unlockedById: zod.number().nullish(),
-  unlockedByName: zod.string().nullish(),
-  previousStatus: zod.string(),
-  reason: zod.string(),
-});
-export const GetTicketUnlocksResponse = zod.array(GetTicketUnlocksResponseItem);
+  "id": zod.number(),
+  "ticketId": zod.number(),
+  "unlockedAt": zod.coerce.date(),
+  "unlockedById": zod.number().nullish(),
+  "unlockedByName": zod.string().nullish(),
+  "previousStatus": zod.string(),
+  "reason": zod.string()
+})
+export const GetTicketUnlocksResponse = zod.array(GetTicketUnlocksResponseItem)
+
 
 /**
  * @summary Chronological audit trail of every status transition recorded for
@@ -4204,75 +2602,32 @@ is requested by appending `?format=csv` to the same URL.
 
  */
 export const GetTicketTransitionsParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
 export const GetTicketTransitionsQueryParams = zod.object({
-  kind: zod
-    .array(
-      zod.enum([
-        "created",
-        "invite_sent",
-        "accepted",
-        "denied",
-        "reinvited",
-        "cancelled",
-        "reactivated",
-        "reopened",
-        "other",
-      ]),
-    )
-    .optional()
-    .describe(
-      "Restrict to one or more derived transition kinds. The kind is\ncomputed server-side from `(fromStatus → toStatus)` so the UI\nand CSV agree on the categorization. Repeat the parameter to\nrequest multiple kinds (e.g. `?kind=denied&kind=cancelled`).\n",
-    ),
-  actorRole: zod
-    .array(zod.enum(["admin", "partner", "vendor", "field_employee", "system"]))
-    .optional()
-    .describe(
-      "Restrict to rows whose `actorRole` matches. Repeat the\nparameter to request multiple roles. Use the literal value\n`system` to match rows with a NULL actor (system-generated\ntransitions such as automatic re-opens).\n",
-    ),
-  from: zod
-    .date()
-    .optional()
-    .describe("Inclusive lower bound on `createdAt` (ISO-8601)."),
-  to: zod
-    .date()
-    .optional()
-    .describe("Inclusive upper bound on `createdAt` (ISO-8601)."),
-});
+  "kind": zod.array(zod.enum(['created', 'invite_sent', 'accepted', 'denied', 'reinvited', 'cancelled', 'reactivated', 'reopened', 'other'])).optional().describe('Restrict to one or more derived transition kinds. The kind is\ncomputed server-side from `(fromStatus → toStatus)` so the UI\nand CSV agree on the categorization. Repeat the parameter to\nrequest multiple kinds (e.g. `?kind=denied&kind=cancelled`).\n'),
+  "actorRole": zod.array(zod.enum(['admin', 'partner', 'vendor', 'field_employee', 'system'])).optional().describe('Restrict to rows whose `actorRole` matches. Repeat the\nparameter to request multiple roles. Use the literal value\n`system` to match rows with a NULL actor (system-generated\ntransitions such as automatic re-opens).\n'),
+  "from": zod.date().optional().describe('Inclusive lower bound on `createdAt` (ISO-8601).'),
+  "to": zod.date().optional().describe('Inclusive upper bound on `createdAt` (ISO-8601).')
+})
 
-export const GetTicketTransitionsResponseItem = zod
-  .object({
-    id: zod.number(),
-    ticketId: zod.number(),
-    fromStatus: zod.string().nullish(),
-    toStatus: zod.string(),
-    actorUserId: zod.number().nullish(),
-    actorName: zod.string().nullish(),
-    actorRole: zod.string().nullish(),
-    reason: zod.string().nullish(),
-    displayReason: zod.string().nullish(),
-    fromVendorName: zod
-      .string()
-      .nullish()
-      .describe(
-        "Set on partner-self-service reinvite rows. Resolved from the\n`vendor #X` token at the start of the reason text.\n",
-      ),
-    toVendorName: zod
-      .string()
-      .nullish()
-      .describe(
-        "Set on partner-self-service reinvite rows. Resolved from the\n`vendor #Y` token at the end of the reason text.\n",
-      ),
-    createdAt: zod.coerce.date(),
-  })
-  .describe(
-    "One row from `ticket_status_history`. `displayReason` is the\nserver-rewritten copy of `reason` with the partner-self-service\nreinvite vendor IDs (`vendor #N`) substituted for human-readable\nvendor names. `reason` is preserved for tooling\/debugging.\n",
-  );
-export const GetTicketTransitionsResponse = zod.array(
-  GetTicketTransitionsResponseItem,
-);
+export const GetTicketTransitionsResponseItem = zod.object({
+  "id": zod.number(),
+  "ticketId": zod.number(),
+  "fromStatus": zod.string().nullish(),
+  "toStatus": zod.string(),
+  "actorUserId": zod.number().nullish(),
+  "actorName": zod.string().nullish(),
+  "actorRole": zod.string().nullish(),
+  "reason": zod.string().nullish(),
+  "displayReason": zod.string().nullish(),
+  "fromVendorName": zod.string().nullish().describe('Set on partner-self-service reinvite rows. Resolved from the\n`vendor #X` token at the start of the reason text.\n'),
+  "toVendorName": zod.string().nullish().describe('Set on partner-self-service reinvite rows. Resolved from the\n`vendor #Y` token at the end of the reason text.\n'),
+  "createdAt": zod.coerce.date()
+}).describe('One row from `ticket_status_history`. `displayReason` is the\nserver-rewritten copy of `reason` with the partner-self-service\nreinvite vendor IDs (`vendor #N`) substituted for human-readable\nvendor names. `reason` is preserved for tooling\/debugging.\n')
+export const GetTicketTransitionsResponse = zod.array(GetTicketTransitionsResponseItem)
+
 
 /**
  * @summary Task #858 — vendor scorecard rollup of `ticket_status_history`.
@@ -4283,33 +2638,19 @@ vendor responded to.
 
  */
 export const GetVendorTransitionAggregateParams = zod.object({
-  vendorId: zod.coerce.number(),
-});
+  "vendorId": zod.coerce.number()
+})
 
-export const GetVendorTransitionAggregateResponse = zod
-  .object({
-    topDenialReasons: zod
-      .array(
-        zod.object({
-          reason: zod.string(),
-          count: zod.number(),
-        }),
-      )
-      .describe(
-        "Top 5 deny-transition reasons attributed to this vendor's users.",
-      ),
-    acceptCount: zod.number(),
-    denyCount: zod.number(),
-    acceptRatePercent: zod
-      .number()
-      .nullable()
-      .describe(
-        "Integer percent (0–100). Null when there were no decisions to derive a rate from.",
-      ),
-  })
-  .describe(
-    'Task #858 — vendor scorecard rollup over `ticket_status_history`.\nDenial reasons are normalised to lower-case before grouping so\n\"No truck available\" and \"no truck available\" collapse into one\nbucket. `acceptCount`\/`denyCount` are counted from the same\nactor-attributed transitions used to derive the rate.\n',
-  );
+export const GetVendorTransitionAggregateResponse = zod.object({
+  "topDenialReasons": zod.array(zod.object({
+  "reason": zod.string(),
+  "count": zod.number()
+})).describe('Top 5 deny-transition reasons attributed to this vendor\'s users.'),
+  "acceptCount": zod.number(),
+  "denyCount": zod.number(),
+  "acceptRatePercent": zod.number().nullable().describe('Integer percent (0–100). Null when there were no decisions to derive a rate from.')
+}).describe('Task #858 — vendor scorecard rollup over `ticket_status_history`.\nDenial reasons are normalised to lower-case before grouping so\n\"No truck available\" and \"no truck available\" collapse into one\nbucket. `acceptCount`\/`denyCount` are counted from the same\nactor-attributed transitions used to derive the rate.\n')
+
 
 /**
  * @summary Task #858 — partner KPI rollup of `ticket_status_history`.
@@ -4320,24 +2661,14 @@ the partner's sites.
 
  */
 export const GetPartnerTransitionAggregateParams = zod.object({
-  partnerId: zod.coerce.number(),
-});
+  "partnerId": zod.coerce.number()
+})
 
-export const GetPartnerTransitionAggregateResponse = zod
-  .object({
-    meanTimeToAcceptanceSeconds: zod
-      .number()
-      .nullable()
-      .describe(
-        "Mean delta in whole seconds between an `\* → awaiting_acceptance`\ntransition and the immediately following `awaiting_acceptance →\ninitiated` transition for the same ticket. Null when no invites\nhave been accepted yet.\n",
-      ),
-    acceptedInviteCount: zod
-      .number()
-      .describe("Number of accept transitions averaged into the mean."),
-  })
-  .describe(
-    "Task #858 — partner KPI rollup over `ticket_status_history`. The\nmean is computed across every accepted invite at any of the\npartner's sites; tickets that were never accepted are excluded.\n",
-  );
+export const GetPartnerTransitionAggregateResponse = zod.object({
+  "meanTimeToAcceptanceSeconds": zod.number().nullable().describe('Mean delta in whole seconds between an `\* → awaiting_acceptance`\ntransition and the immediately following `awaiting_acceptance →\ninitiated` transition for the same ticket. Null when no invites\nhave been accepted yet.\n'),
+  "acceptedInviteCount": zod.number().describe('Number of accept transitions averaged into the mean.')
+}).describe('Task #858 — partner KPI rollup over `ticket_status_history`. The\nmean is computed across every accepted invite at any of the\npartner\'s sites; tickets that were never accepted are excluded.\n')
+
 
 /**
  * @summary Task #858 — admin "Reassignments" tile rollup of
@@ -4347,591 +2678,319 @@ and returns a drilldown of the most-bounced tickets so the
 admin can click through to the per-ticket audit trail.
 
  */
-export const GetAdminReassignmentAggregateResponse = zod
-  .object({
-    reassignedTicketCount: zod.number(),
-    tickets: zod
-      .array(
-        zod.object({
-          ticketId: zod.number(),
-          vendorInviteCount: zod.number(),
-          status: zod.string(),
-          currentVendorId: zod.number().nullable(),
-          currentVendorName: zod.string().nullable(),
-          lastInviteAt: zod.coerce.date(),
-        }),
-      )
-      .describe(
-        "Up to 50 tickets, ordered by invite count desc then most recent invite.",
-      ),
-  })
-  .describe(
-    'Task #858 — admin reassignment tile rollup. A ticket is counted\nas \"bounced\" once it has accumulated 2+ `awaiting_acceptance`\nrows in `ticket_status_history`, regardless of whether it has\nbeen accepted yet. The drilldown lists the top offenders so the\nadmin can click through to the per-ticket audit trail.\n',
-  );
+export const GetAdminReassignmentAggregateResponse = zod.object({
+  "reassignedTicketCount": zod.number(),
+  "tickets": zod.array(zod.object({
+  "ticketId": zod.number(),
+  "vendorInviteCount": zod.number(),
+  "status": zod.string(),
+  "currentVendorId": zod.number().nullable(),
+  "currentVendorName": zod.string().nullable(),
+  "lastInviteAt": zod.coerce.date()
+})).describe('Up to 50 tickets, ordered by invite count desc then most recent invite.')
+}).describe('Task #858 — admin reassignment tile rollup. A ticket is counted\nas \"bounced\" once it has accumulated 2+ `awaiting_acceptance`\nrows in `ticket_status_history`, regardless of whether it has\nbeen accepted yet. The drilldown lists the top offenders so the\nadmin can click through to the per-ticket audit trail.\n')
+
 
 /**
  * @summary Vendor accepts a partner-self-service invite (awaiting_acceptance → initiated)
  */
 export const AcceptTicketParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
 export const acceptTicketResponseUnreadCommentCountMin = 0;
 
+
+
 export const AcceptTicketResponse = zod.object({
-  id: zod.number(),
-  siteLocationId: zod.number(),
-  vendorId: zod.number(),
-  fieldEmployeeId: zod.number().nullable(),
-  workTypeId: zod.number(),
-  status: zod
-    .enum([
-      "draft",
-      "initiated",
-      "in_progress",
-      "pending_review",
-      "completed",
-      "submitted",
-      "approved",
-      "kicked_back",
-      "cancelled",
-      "awaiting_acceptance",
-      "denied",
-      "awaiting_payment",
-      "funds_dispersed",
-    ])
-    .describe(
-      "Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app's ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp's status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n",
-    ),
-  description: zod.string().nullable(),
-  notes: zod.string().nullable(),
-  kickbackReason: zod.string().nullable(),
-  checkInTime: zod.coerce.date().nullable(),
-  checkOutTime: zod.coerce.date().nullable(),
-  checkInLatitude: zod.number().nullable(),
-  checkInLongitude: zod.number().nullable(),
-  checkOutLatitude: zod.number().nullable(),
-  checkOutLongitude: zod.number().nullable(),
-  siteName: zod.string().nullable(),
-  vendorName: zod.string().nullable(),
-  workTypeName: zod.string().nullable(),
-  fieldEmployeeName: zod.string().nullable(),
-  partnerName: zod.string().nullable(),
-  partnerLogoUrl: zod.string().nullable(),
-  vendorLogoUrl: zod.string().nullable(),
-  createdAt: zod.coerce.date(),
-  updatedAt: zod.coerce.date(),
-  unlockedAt: zod.coerce.date().nullable(),
-  unlockedById: zod.number().nullable(),
-  unlockedByName: zod.string().nullable(),
-  unlockCount: zod.number(),
-  createdById: zod.number().nullable(),
-  createdByName: zod.string().nullable(),
-  closedById: zod.number().nullable(),
-  closedByName: zod.string().nullable(),
-  lifecycleState: zod
-    .union([
-      zod.literal("pending_arrival"),
-      zod.literal("en_route"),
-      zod.literal("on_location"),
-      zod.literal("on_site"),
-      zod.literal("off_site"),
-      zod.literal(null),
-    ])
-    .nullable(),
-  enRouteAt: zod.coerce.date().nullable(),
-  arrivedAt: zod.coerce.date().nullable(),
-  departureLatitude: zod.number().nullable(),
-  departureLongitude: zod.number().nullable(),
-  siteLatitude: zod.number().nullable(),
-  siteLongitude: zod.number().nullable(),
-  siteRadiusMeters: zod.number().nullable(),
-  afe: zod.string().nullable(),
-  scheduledStartAt: zod.coerce.date().nullable(),
-  scheduledDurationMinutes: zod.number().nullable(),
-  foremanUserId: zod.number().nullable(),
-  intakeChannel: zod
-    .union([
-      zod.literal("partner_self_service"),
-      zod.literal("office_on_behalf_of_partner"),
-      zod.literal("office_on_behalf_of_field_employee"),
-      zod.literal("vendor_field_self_service"),
-      zod.literal(null),
-    ])
-    .nullable()
-    .describe(
-      "How this ticket was opened. Drives the Source badge in the ticket list (globe \/ phone \/ boots).",
-    ),
-  approvedAt: zod.coerce
-    .date()
-    .nullish()
-    .describe(
-      'Task #865 — timestamp the ticket was approved by a partner \/\nadmin. Set the moment status flips to `approved`. Powers the\n\"Approved on\" \/ \"Days waiting\" columns the partner AP queue\nrenders when filtering by `awaitingPayment=true`. Stays\npopulated after dispersal so the ticket history is preserved.\n',
-    ),
-  paymentMethod: zod
-    .union([
-      zod.literal("etf"),
-      zod.literal("ach"),
-      zod.literal("check"),
-      zod.literal("other"),
-      zod.literal(null),
-    ])
-    .nullable(),
-  paymentReference: zod.string().nullable(),
-  paymentNote: zod.string().nullable(),
-  paymentDispersedAt: zod.coerce.date().nullable(),
-  paymentDispersedById: zod.number().nullable(),
-  paymentDispersedByName: zod.string().nullable(),
-  paymentReceiptUrl: zod
-    .string()
-    .nullable()
-    .describe(
-      "Optional proof-of-payment image attached at dispersal time\n(Task #852). Stored as an object-storage path\/URL returned by\nthe upload helper; renders inline in the read-only Payment\nDetails panel on both web and mobile.\n",
-    ),
-  startingMileage: zod
-    .string()
-    .nullish()
-    .describe(
-      "Odometer reading captured at En Route. Stored as a numeric\nstring with one decimal so the UI can render it verbatim\nwithout float drift. Null until the field employee submits\nthe value on the En Route modal.\n",
-    ),
-  endingMileage: zod
-    .string()
-    .nullish()
-    .describe(
-      "Odometer reading captured at Check Out. Same numeric-string\nshape as `startingMileage`. Null until the Check Out modal\npersists the value.\n",
-    ),
-  unreadCommentCount: zod
-    .number()
-    .min(acceptTicketResponseUnreadCommentCountMin)
-    .describe(
-      "Task #51 — number of comments on this ticket's thread that\nthe signed-in viewer has not yet seen, used to render an\nunread badge on the tickets-list page. Excludes\nsoft-deleted comments and the viewer's own messages.\nAlways 0 when the request has no signed-in viewer (e.g.\nanonymous portal access).\n",
-    ),
-  viewerCanDisperseFunds: zod
-    .boolean()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call POST \/tickets\/:id\/disperse-funds\nfor this ticket (admin OR partner contact in the Accounts Payable role\non the owning partner). List responses omit this field.\n",
-    ),
-  viewerCanReverseDispersal: zod
-    .boolean()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call\nPOST \/tickets\/:id\/reverse-dispersal for this ticket — i.e.\nthe same admin \/ partner-AP gate as `viewerCanDisperseFunds`\nAND the ticket is currently in `funds_dispersed`. List\nresponses omit this field.\n",
-    ),
-  phoneIntakeCallerName: zod
-    .string()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. The human caller's\nname captured by office phone intake on the ticket's initial\nstatus transition (extracted from\n`ticket_status_history.reason` formatted as\n`phone_intake_caller:<name>`). Null for tickets that weren't\nopened via phone intake. List responses omit this field.\n",
-    ),
-});
+  "id": zod.number(),
+  "siteLocationId": zod.number(),
+  "vendorId": zod.number(),
+  "fieldEmployeeId": zod.number().nullable(),
+  "workTypeId": zod.number(),
+  "status": zod.enum(['draft', 'initiated', 'in_progress', 'pending_review', 'completed', 'submitted', 'approved', 'kicked_back', 'cancelled', 'awaiting_acceptance', 'denied', 'awaiting_payment', 'funds_dispersed']).describe('Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app\'s ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp\'s status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n'),
+  "description": zod.string().nullable(),
+  "notes": zod.string().nullable(),
+  "kickbackReason": zod.string().nullable(),
+  "checkInTime": zod.coerce.date().nullable(),
+  "checkOutTime": zod.coerce.date().nullable(),
+  "checkInLatitude": zod.number().nullable(),
+  "checkInLongitude": zod.number().nullable(),
+  "checkOutLatitude": zod.number().nullable(),
+  "checkOutLongitude": zod.number().nullable(),
+  "siteName": zod.string().nullable(),
+  "vendorName": zod.string().nullable(),
+  "workTypeName": zod.string().nullable(),
+  "workTypeCategory": zod.string().nullish(),
+  "workTypeTaxTreatment": zod.union([zod.literal('exempt_labor'),zod.literal('taxable_repair_service'),zod.literal('taxable_all'),zod.literal(null)]).nullish().describe('Explicit tax classification set on the platform catalog work type.\nNull when the engine infers treatment from category + state rubric.\nPopulated on single-ticket GET only.\n'),
+  "effectiveTaxTreatment": zod.union([zod.literal('exempt_labor'),zod.literal('taxable_repair_service'),zod.literal('taxable_all'),zod.literal(null)]).nullish().describe('Resolved tax classification for this ticket after partner, vendor,\nand work-type overrides. Populated on single-ticket GET only.\n'),
+  "fieldEmployeeName": zod.string().nullable(),
+  "partnerName": zod.string().nullable(),
+  "partnerLogoUrl": zod.string().nullable(),
+  "vendorLogoUrl": zod.string().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "unlockedAt": zod.coerce.date().nullable(),
+  "unlockedById": zod.number().nullable(),
+  "unlockedByName": zod.string().nullable(),
+  "unlockCount": zod.number(),
+  "createdById": zod.number().nullable(),
+  "createdByName": zod.string().nullable(),
+  "closedById": zod.number().nullable(),
+  "closedByName": zod.string().nullable(),
+  "lifecycleState": zod.union([zod.literal('pending_arrival'),zod.literal('en_route'),zod.literal('on_location'),zod.literal('on_site'),zod.literal('off_site'),zod.literal(null)]).nullable(),
+  "enRouteAt": zod.coerce.date().nullable(),
+  "arrivedAt": zod.coerce.date().nullable(),
+  "departureLatitude": zod.number().nullable(),
+  "departureLongitude": zod.number().nullable(),
+  "siteLatitude": zod.number().nullable(),
+  "siteLongitude": zod.number().nullable(),
+  "siteRadiusMeters": zod.number().nullable(),
+  "afe": zod.string().nullable(),
+  "scheduledStartAt": zod.coerce.date().nullable(),
+  "scheduledDurationMinutes": zod.number().nullable(),
+  "foremanUserId": zod.number().nullable(),
+  "intakeChannel": zod.union([zod.literal('partner_self_service'),zod.literal('office_on_behalf_of_partner'),zod.literal('office_on_behalf_of_field_employee'),zod.literal('vendor_field_self_service'),zod.literal(null)]).nullable().describe('How this ticket was opened. Drives the Source badge in the ticket list (globe \/ phone \/ boots).'),
+  "approvedAt": zod.coerce.date().nullish().describe('Task #865 — timestamp the ticket was approved by a partner \/\nadmin. Set the moment status flips to `approved`. Powers the\n\"Approved on\" \/ \"Days waiting\" columns the partner AP queue\nrenders when filtering by `awaitingPayment=true`. Stays\npopulated after dispersal so the ticket history is preserved.\n'),
+  "paymentMethod": zod.union([zod.literal('etf'),zod.literal('ach'),zod.literal('check'),zod.literal('other'),zod.literal(null)]).nullable(),
+  "paymentReference": zod.string().nullable(),
+  "paymentNote": zod.string().nullable(),
+  "paymentDispersedAt": zod.coerce.date().nullable(),
+  "paymentDispersedById": zod.number().nullable(),
+  "paymentDispersedByName": zod.string().nullable(),
+  "paymentReceiptUrl": zod.string().nullable().describe('Optional proof-of-payment image attached at dispersal time\n(Task #852). Stored as an object-storage path\/URL returned by\nthe upload helper; renders inline in the read-only Payment\nDetails panel on both web and mobile.\n'),
+  "startingMileage": zod.string().nullish().describe('Odometer reading captured at En Route. Stored as a numeric\nstring with one decimal so the UI can render it verbatim\nwithout float drift. Null until the field employee submits\nthe value on the En Route modal.\n'),
+  "endingMileage": zod.string().nullish().describe('Odometer reading captured at Check Out. Same numeric-string\nshape as `startingMileage`. Null until the Check Out modal\npersists the value.\n'),
+  "unreadCommentCount": zod.number().min(acceptTicketResponseUnreadCommentCountMin).describe('Task #51 — number of comments on this ticket\'s thread that\nthe signed-in viewer has not yet seen, used to render an\nunread badge on the tickets-list page. Excludes\nsoft-deleted comments and the viewer\'s own messages.\nAlways 0 when the request has no signed-in viewer (e.g.\nanonymous portal access).\n'),
+  "viewerCanDisperseFunds": zod.boolean().nullish().describe('Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call POST \/tickets\/:id\/disperse-funds\nfor this ticket (admin OR partner contact in the Accounts Payable role\non the owning partner). List responses omit this field.\n'),
+  "viewerCanReverseDispersal": zod.boolean().nullish().describe('Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call\nPOST \/tickets\/:id\/reverse-dispersal for this ticket — i.e.\nthe same admin \/ partner-AP gate as `viewerCanDisperseFunds`\nAND the ticket is currently in `funds_dispersed`. List\nresponses omit this field.\n'),
+  "phoneIntakeCallerName": zod.string().nullish().describe('Set on the single-ticket GET response only. The human caller\'s\nname captured by office phone intake on the ticket\'s initial\nstatus transition (extracted from\n`ticket_status_history.reason` formatted as\n`phone_intake_caller:<name>`). Null for tickets that weren\'t\nopened via phone intake. List responses omit this field.\n')
+})
+
 
 /**
  * @summary Vendor denies a partner-self-service invite (awaiting_acceptance → denied)
  */
 export const DenyTicketParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
 export const denyTicketBodyReasonMax = 500;
 
+
+
 export const DenyTicketBody = zod.object({
-  reason: zod.string().min(1).max(denyTicketBodyReasonMax),
-});
+  "reason": zod.string().min(1).max(denyTicketBodyReasonMax)
+})
 
 export const denyTicketResponseUnreadCommentCountMin = 0;
 
+
+
 export const DenyTicketResponse = zod.object({
-  id: zod.number(),
-  siteLocationId: zod.number(),
-  vendorId: zod.number(),
-  fieldEmployeeId: zod.number().nullable(),
-  workTypeId: zod.number(),
-  status: zod
-    .enum([
-      "draft",
-      "initiated",
-      "in_progress",
-      "pending_review",
-      "completed",
-      "submitted",
-      "approved",
-      "kicked_back",
-      "cancelled",
-      "awaiting_acceptance",
-      "denied",
-      "awaiting_payment",
-      "funds_dispersed",
-    ])
-    .describe(
-      "Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app's ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp's status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n",
-    ),
-  description: zod.string().nullable(),
-  notes: zod.string().nullable(),
-  kickbackReason: zod.string().nullable(),
-  checkInTime: zod.coerce.date().nullable(),
-  checkOutTime: zod.coerce.date().nullable(),
-  checkInLatitude: zod.number().nullable(),
-  checkInLongitude: zod.number().nullable(),
-  checkOutLatitude: zod.number().nullable(),
-  checkOutLongitude: zod.number().nullable(),
-  siteName: zod.string().nullable(),
-  vendorName: zod.string().nullable(),
-  workTypeName: zod.string().nullable(),
-  fieldEmployeeName: zod.string().nullable(),
-  partnerName: zod.string().nullable(),
-  partnerLogoUrl: zod.string().nullable(),
-  vendorLogoUrl: zod.string().nullable(),
-  createdAt: zod.coerce.date(),
-  updatedAt: zod.coerce.date(),
-  unlockedAt: zod.coerce.date().nullable(),
-  unlockedById: zod.number().nullable(),
-  unlockedByName: zod.string().nullable(),
-  unlockCount: zod.number(),
-  createdById: zod.number().nullable(),
-  createdByName: zod.string().nullable(),
-  closedById: zod.number().nullable(),
-  closedByName: zod.string().nullable(),
-  lifecycleState: zod
-    .union([
-      zod.literal("pending_arrival"),
-      zod.literal("en_route"),
-      zod.literal("on_location"),
-      zod.literal("on_site"),
-      zod.literal("off_site"),
-      zod.literal(null),
-    ])
-    .nullable(),
-  enRouteAt: zod.coerce.date().nullable(),
-  arrivedAt: zod.coerce.date().nullable(),
-  departureLatitude: zod.number().nullable(),
-  departureLongitude: zod.number().nullable(),
-  siteLatitude: zod.number().nullable(),
-  siteLongitude: zod.number().nullable(),
-  siteRadiusMeters: zod.number().nullable(),
-  afe: zod.string().nullable(),
-  scheduledStartAt: zod.coerce.date().nullable(),
-  scheduledDurationMinutes: zod.number().nullable(),
-  foremanUserId: zod.number().nullable(),
-  intakeChannel: zod
-    .union([
-      zod.literal("partner_self_service"),
-      zod.literal("office_on_behalf_of_partner"),
-      zod.literal("office_on_behalf_of_field_employee"),
-      zod.literal("vendor_field_self_service"),
-      zod.literal(null),
-    ])
-    .nullable()
-    .describe(
-      "How this ticket was opened. Drives the Source badge in the ticket list (globe \/ phone \/ boots).",
-    ),
-  approvedAt: zod.coerce
-    .date()
-    .nullish()
-    .describe(
-      'Task #865 — timestamp the ticket was approved by a partner \/\nadmin. Set the moment status flips to `approved`. Powers the\n\"Approved on\" \/ \"Days waiting\" columns the partner AP queue\nrenders when filtering by `awaitingPayment=true`. Stays\npopulated after dispersal so the ticket history is preserved.\n',
-    ),
-  paymentMethod: zod
-    .union([
-      zod.literal("etf"),
-      zod.literal("ach"),
-      zod.literal("check"),
-      zod.literal("other"),
-      zod.literal(null),
-    ])
-    .nullable(),
-  paymentReference: zod.string().nullable(),
-  paymentNote: zod.string().nullable(),
-  paymentDispersedAt: zod.coerce.date().nullable(),
-  paymentDispersedById: zod.number().nullable(),
-  paymentDispersedByName: zod.string().nullable(),
-  paymentReceiptUrl: zod
-    .string()
-    .nullable()
-    .describe(
-      "Optional proof-of-payment image attached at dispersal time\n(Task #852). Stored as an object-storage path\/URL returned by\nthe upload helper; renders inline in the read-only Payment\nDetails panel on both web and mobile.\n",
-    ),
-  startingMileage: zod
-    .string()
-    .nullish()
-    .describe(
-      "Odometer reading captured at En Route. Stored as a numeric\nstring with one decimal so the UI can render it verbatim\nwithout float drift. Null until the field employee submits\nthe value on the En Route modal.\n",
-    ),
-  endingMileage: zod
-    .string()
-    .nullish()
-    .describe(
-      "Odometer reading captured at Check Out. Same numeric-string\nshape as `startingMileage`. Null until the Check Out modal\npersists the value.\n",
-    ),
-  unreadCommentCount: zod
-    .number()
-    .min(denyTicketResponseUnreadCommentCountMin)
-    .describe(
-      "Task #51 — number of comments on this ticket's thread that\nthe signed-in viewer has not yet seen, used to render an\nunread badge on the tickets-list page. Excludes\nsoft-deleted comments and the viewer's own messages.\nAlways 0 when the request has no signed-in viewer (e.g.\nanonymous portal access).\n",
-    ),
-  viewerCanDisperseFunds: zod
-    .boolean()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call POST \/tickets\/:id\/disperse-funds\nfor this ticket (admin OR partner contact in the Accounts Payable role\non the owning partner). List responses omit this field.\n",
-    ),
-  viewerCanReverseDispersal: zod
-    .boolean()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call\nPOST \/tickets\/:id\/reverse-dispersal for this ticket — i.e.\nthe same admin \/ partner-AP gate as `viewerCanDisperseFunds`\nAND the ticket is currently in `funds_dispersed`. List\nresponses omit this field.\n",
-    ),
-  phoneIntakeCallerName: zod
-    .string()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. The human caller's\nname captured by office phone intake on the ticket's initial\nstatus transition (extracted from\n`ticket_status_history.reason` formatted as\n`phone_intake_caller:<name>`). Null for tickets that weren't\nopened via phone intake. List responses omit this field.\n",
-    ),
-});
+  "id": zod.number(),
+  "siteLocationId": zod.number(),
+  "vendorId": zod.number(),
+  "fieldEmployeeId": zod.number().nullable(),
+  "workTypeId": zod.number(),
+  "status": zod.enum(['draft', 'initiated', 'in_progress', 'pending_review', 'completed', 'submitted', 'approved', 'kicked_back', 'cancelled', 'awaiting_acceptance', 'denied', 'awaiting_payment', 'funds_dispersed']).describe('Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app\'s ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp\'s status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n'),
+  "description": zod.string().nullable(),
+  "notes": zod.string().nullable(),
+  "kickbackReason": zod.string().nullable(),
+  "checkInTime": zod.coerce.date().nullable(),
+  "checkOutTime": zod.coerce.date().nullable(),
+  "checkInLatitude": zod.number().nullable(),
+  "checkInLongitude": zod.number().nullable(),
+  "checkOutLatitude": zod.number().nullable(),
+  "checkOutLongitude": zod.number().nullable(),
+  "siteName": zod.string().nullable(),
+  "vendorName": zod.string().nullable(),
+  "workTypeName": zod.string().nullable(),
+  "workTypeCategory": zod.string().nullish(),
+  "workTypeTaxTreatment": zod.union([zod.literal('exempt_labor'),zod.literal('taxable_repair_service'),zod.literal('taxable_all'),zod.literal(null)]).nullish().describe('Explicit tax classification set on the platform catalog work type.\nNull when the engine infers treatment from category + state rubric.\nPopulated on single-ticket GET only.\n'),
+  "effectiveTaxTreatment": zod.union([zod.literal('exempt_labor'),zod.literal('taxable_repair_service'),zod.literal('taxable_all'),zod.literal(null)]).nullish().describe('Resolved tax classification for this ticket after partner, vendor,\nand work-type overrides. Populated on single-ticket GET only.\n'),
+  "fieldEmployeeName": zod.string().nullable(),
+  "partnerName": zod.string().nullable(),
+  "partnerLogoUrl": zod.string().nullable(),
+  "vendorLogoUrl": zod.string().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "unlockedAt": zod.coerce.date().nullable(),
+  "unlockedById": zod.number().nullable(),
+  "unlockedByName": zod.string().nullable(),
+  "unlockCount": zod.number(),
+  "createdById": zod.number().nullable(),
+  "createdByName": zod.string().nullable(),
+  "closedById": zod.number().nullable(),
+  "closedByName": zod.string().nullable(),
+  "lifecycleState": zod.union([zod.literal('pending_arrival'),zod.literal('en_route'),zod.literal('on_location'),zod.literal('on_site'),zod.literal('off_site'),zod.literal(null)]).nullable(),
+  "enRouteAt": zod.coerce.date().nullable(),
+  "arrivedAt": zod.coerce.date().nullable(),
+  "departureLatitude": zod.number().nullable(),
+  "departureLongitude": zod.number().nullable(),
+  "siteLatitude": zod.number().nullable(),
+  "siteLongitude": zod.number().nullable(),
+  "siteRadiusMeters": zod.number().nullable(),
+  "afe": zod.string().nullable(),
+  "scheduledStartAt": zod.coerce.date().nullable(),
+  "scheduledDurationMinutes": zod.number().nullable(),
+  "foremanUserId": zod.number().nullable(),
+  "intakeChannel": zod.union([zod.literal('partner_self_service'),zod.literal('office_on_behalf_of_partner'),zod.literal('office_on_behalf_of_field_employee'),zod.literal('vendor_field_self_service'),zod.literal(null)]).nullable().describe('How this ticket was opened. Drives the Source badge in the ticket list (globe \/ phone \/ boots).'),
+  "approvedAt": zod.coerce.date().nullish().describe('Task #865 — timestamp the ticket was approved by a partner \/\nadmin. Set the moment status flips to `approved`. Powers the\n\"Approved on\" \/ \"Days waiting\" columns the partner AP queue\nrenders when filtering by `awaitingPayment=true`. Stays\npopulated after dispersal so the ticket history is preserved.\n'),
+  "paymentMethod": zod.union([zod.literal('etf'),zod.literal('ach'),zod.literal('check'),zod.literal('other'),zod.literal(null)]).nullable(),
+  "paymentReference": zod.string().nullable(),
+  "paymentNote": zod.string().nullable(),
+  "paymentDispersedAt": zod.coerce.date().nullable(),
+  "paymentDispersedById": zod.number().nullable(),
+  "paymentDispersedByName": zod.string().nullable(),
+  "paymentReceiptUrl": zod.string().nullable().describe('Optional proof-of-payment image attached at dispersal time\n(Task #852). Stored as an object-storage path\/URL returned by\nthe upload helper; renders inline in the read-only Payment\nDetails panel on both web and mobile.\n'),
+  "startingMileage": zod.string().nullish().describe('Odometer reading captured at En Route. Stored as a numeric\nstring with one decimal so the UI can render it verbatim\nwithout float drift. Null until the field employee submits\nthe value on the En Route modal.\n'),
+  "endingMileage": zod.string().nullish().describe('Odometer reading captured at Check Out. Same numeric-string\nshape as `startingMileage`. Null until the Check Out modal\npersists the value.\n'),
+  "unreadCommentCount": zod.number().min(denyTicketResponseUnreadCommentCountMin).describe('Task #51 — number of comments on this ticket\'s thread that\nthe signed-in viewer has not yet seen, used to render an\nunread badge on the tickets-list page. Excludes\nsoft-deleted comments and the viewer\'s own messages.\nAlways 0 when the request has no signed-in viewer (e.g.\nanonymous portal access).\n'),
+  "viewerCanDisperseFunds": zod.boolean().nullish().describe('Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call POST \/tickets\/:id\/disperse-funds\nfor this ticket (admin OR partner contact in the Accounts Payable role\non the owning partner). List responses omit this field.\n'),
+  "viewerCanReverseDispersal": zod.boolean().nullish().describe('Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call\nPOST \/tickets\/:id\/reverse-dispersal for this ticket — i.e.\nthe same admin \/ partner-AP gate as `viewerCanDisperseFunds`\nAND the ticket is currently in `funds_dispersed`. List\nresponses omit this field.\n'),
+  "phoneIntakeCallerName": zod.string().nullish().describe('Set on the single-ticket GET response only. The human caller\'s\nname captured by office phone intake on the ticket\'s initial\nstatus transition (extracted from\n`ticket_status_history.reason` formatted as\n`phone_intake_caller:<name>`). Null for tickets that weren\'t\nopened via phone intake. List responses omit this field.\n')
+})
+
 
 /**
  * @summary Partner reassigns a denied or awaiting_acceptance ticket to a different vendor
  */
 export const ReinviteTicketParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
 export const ReinviteTicketBody = zod.object({
-  vendorId: zod.number(),
-});
+  "vendorId": zod.number()
+})
 
 export const reinviteTicketResponseUnreadCommentCountMin = 0;
 
+
+
 export const ReinviteTicketResponse = zod.object({
-  id: zod.number(),
-  siteLocationId: zod.number(),
-  vendorId: zod.number(),
-  fieldEmployeeId: zod.number().nullable(),
-  workTypeId: zod.number(),
-  status: zod
-    .enum([
-      "draft",
-      "initiated",
-      "in_progress",
-      "pending_review",
-      "completed",
-      "submitted",
-      "approved",
-      "kicked_back",
-      "cancelled",
-      "awaiting_acceptance",
-      "denied",
-      "awaiting_payment",
-      "funds_dispersed",
-    ])
-    .describe(
-      "Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app's ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp's status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n",
-    ),
-  description: zod.string().nullable(),
-  notes: zod.string().nullable(),
-  kickbackReason: zod.string().nullable(),
-  checkInTime: zod.coerce.date().nullable(),
-  checkOutTime: zod.coerce.date().nullable(),
-  checkInLatitude: zod.number().nullable(),
-  checkInLongitude: zod.number().nullable(),
-  checkOutLatitude: zod.number().nullable(),
-  checkOutLongitude: zod.number().nullable(),
-  siteName: zod.string().nullable(),
-  vendorName: zod.string().nullable(),
-  workTypeName: zod.string().nullable(),
-  fieldEmployeeName: zod.string().nullable(),
-  partnerName: zod.string().nullable(),
-  partnerLogoUrl: zod.string().nullable(),
-  vendorLogoUrl: zod.string().nullable(),
-  createdAt: zod.coerce.date(),
-  updatedAt: zod.coerce.date(),
-  unlockedAt: zod.coerce.date().nullable(),
-  unlockedById: zod.number().nullable(),
-  unlockedByName: zod.string().nullable(),
-  unlockCount: zod.number(),
-  createdById: zod.number().nullable(),
-  createdByName: zod.string().nullable(),
-  closedById: zod.number().nullable(),
-  closedByName: zod.string().nullable(),
-  lifecycleState: zod
-    .union([
-      zod.literal("pending_arrival"),
-      zod.literal("en_route"),
-      zod.literal("on_location"),
-      zod.literal("on_site"),
-      zod.literal("off_site"),
-      zod.literal(null),
-    ])
-    .nullable(),
-  enRouteAt: zod.coerce.date().nullable(),
-  arrivedAt: zod.coerce.date().nullable(),
-  departureLatitude: zod.number().nullable(),
-  departureLongitude: zod.number().nullable(),
-  siteLatitude: zod.number().nullable(),
-  siteLongitude: zod.number().nullable(),
-  siteRadiusMeters: zod.number().nullable(),
-  afe: zod.string().nullable(),
-  scheduledStartAt: zod.coerce.date().nullable(),
-  scheduledDurationMinutes: zod.number().nullable(),
-  foremanUserId: zod.number().nullable(),
-  intakeChannel: zod
-    .union([
-      zod.literal("partner_self_service"),
-      zod.literal("office_on_behalf_of_partner"),
-      zod.literal("office_on_behalf_of_field_employee"),
-      zod.literal("vendor_field_self_service"),
-      zod.literal(null),
-    ])
-    .nullable()
-    .describe(
-      "How this ticket was opened. Drives the Source badge in the ticket list (globe \/ phone \/ boots).",
-    ),
-  approvedAt: zod.coerce
-    .date()
-    .nullish()
-    .describe(
-      'Task #865 — timestamp the ticket was approved by a partner \/\nadmin. Set the moment status flips to `approved`. Powers the\n\"Approved on\" \/ \"Days waiting\" columns the partner AP queue\nrenders when filtering by `awaitingPayment=true`. Stays\npopulated after dispersal so the ticket history is preserved.\n',
-    ),
-  paymentMethod: zod
-    .union([
-      zod.literal("etf"),
-      zod.literal("ach"),
-      zod.literal("check"),
-      zod.literal("other"),
-      zod.literal(null),
-    ])
-    .nullable(),
-  paymentReference: zod.string().nullable(),
-  paymentNote: zod.string().nullable(),
-  paymentDispersedAt: zod.coerce.date().nullable(),
-  paymentDispersedById: zod.number().nullable(),
-  paymentDispersedByName: zod.string().nullable(),
-  paymentReceiptUrl: zod
-    .string()
-    .nullable()
-    .describe(
-      "Optional proof-of-payment image attached at dispersal time\n(Task #852). Stored as an object-storage path\/URL returned by\nthe upload helper; renders inline in the read-only Payment\nDetails panel on both web and mobile.\n",
-    ),
-  startingMileage: zod
-    .string()
-    .nullish()
-    .describe(
-      "Odometer reading captured at En Route. Stored as a numeric\nstring with one decimal so the UI can render it verbatim\nwithout float drift. Null until the field employee submits\nthe value on the En Route modal.\n",
-    ),
-  endingMileage: zod
-    .string()
-    .nullish()
-    .describe(
-      "Odometer reading captured at Check Out. Same numeric-string\nshape as `startingMileage`. Null until the Check Out modal\npersists the value.\n",
-    ),
-  unreadCommentCount: zod
-    .number()
-    .min(reinviteTicketResponseUnreadCommentCountMin)
-    .describe(
-      "Task #51 — number of comments on this ticket's thread that\nthe signed-in viewer has not yet seen, used to render an\nunread badge on the tickets-list page. Excludes\nsoft-deleted comments and the viewer's own messages.\nAlways 0 when the request has no signed-in viewer (e.g.\nanonymous portal access).\n",
-    ),
-  viewerCanDisperseFunds: zod
-    .boolean()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call POST \/tickets\/:id\/disperse-funds\nfor this ticket (admin OR partner contact in the Accounts Payable role\non the owning partner). List responses omit this field.\n",
-    ),
-  viewerCanReverseDispersal: zod
-    .boolean()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call\nPOST \/tickets\/:id\/reverse-dispersal for this ticket — i.e.\nthe same admin \/ partner-AP gate as `viewerCanDisperseFunds`\nAND the ticket is currently in `funds_dispersed`. List\nresponses omit this field.\n",
-    ),
-  phoneIntakeCallerName: zod
-    .string()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. The human caller's\nname captured by office phone intake on the ticket's initial\nstatus transition (extracted from\n`ticket_status_history.reason` formatted as\n`phone_intake_caller:<name>`). Null for tickets that weren't\nopened via phone intake. List responses omit this field.\n",
-    ),
-});
+  "id": zod.number(),
+  "siteLocationId": zod.number(),
+  "vendorId": zod.number(),
+  "fieldEmployeeId": zod.number().nullable(),
+  "workTypeId": zod.number(),
+  "status": zod.enum(['draft', 'initiated', 'in_progress', 'pending_review', 'completed', 'submitted', 'approved', 'kicked_back', 'cancelled', 'awaiting_acceptance', 'denied', 'awaiting_payment', 'funds_dispersed']).describe('Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app\'s ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp\'s status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n'),
+  "description": zod.string().nullable(),
+  "notes": zod.string().nullable(),
+  "kickbackReason": zod.string().nullable(),
+  "checkInTime": zod.coerce.date().nullable(),
+  "checkOutTime": zod.coerce.date().nullable(),
+  "checkInLatitude": zod.number().nullable(),
+  "checkInLongitude": zod.number().nullable(),
+  "checkOutLatitude": zod.number().nullable(),
+  "checkOutLongitude": zod.number().nullable(),
+  "siteName": zod.string().nullable(),
+  "vendorName": zod.string().nullable(),
+  "workTypeName": zod.string().nullable(),
+  "workTypeCategory": zod.string().nullish(),
+  "workTypeTaxTreatment": zod.union([zod.literal('exempt_labor'),zod.literal('taxable_repair_service'),zod.literal('taxable_all'),zod.literal(null)]).nullish().describe('Explicit tax classification set on the platform catalog work type.\nNull when the engine infers treatment from category + state rubric.\nPopulated on single-ticket GET only.\n'),
+  "effectiveTaxTreatment": zod.union([zod.literal('exempt_labor'),zod.literal('taxable_repair_service'),zod.literal('taxable_all'),zod.literal(null)]).nullish().describe('Resolved tax classification for this ticket after partner, vendor,\nand work-type overrides. Populated on single-ticket GET only.\n'),
+  "fieldEmployeeName": zod.string().nullable(),
+  "partnerName": zod.string().nullable(),
+  "partnerLogoUrl": zod.string().nullable(),
+  "vendorLogoUrl": zod.string().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "unlockedAt": zod.coerce.date().nullable(),
+  "unlockedById": zod.number().nullable(),
+  "unlockedByName": zod.string().nullable(),
+  "unlockCount": zod.number(),
+  "createdById": zod.number().nullable(),
+  "createdByName": zod.string().nullable(),
+  "closedById": zod.number().nullable(),
+  "closedByName": zod.string().nullable(),
+  "lifecycleState": zod.union([zod.literal('pending_arrival'),zod.literal('en_route'),zod.literal('on_location'),zod.literal('on_site'),zod.literal('off_site'),zod.literal(null)]).nullable(),
+  "enRouteAt": zod.coerce.date().nullable(),
+  "arrivedAt": zod.coerce.date().nullable(),
+  "departureLatitude": zod.number().nullable(),
+  "departureLongitude": zod.number().nullable(),
+  "siteLatitude": zod.number().nullable(),
+  "siteLongitude": zod.number().nullable(),
+  "siteRadiusMeters": zod.number().nullable(),
+  "afe": zod.string().nullable(),
+  "scheduledStartAt": zod.coerce.date().nullable(),
+  "scheduledDurationMinutes": zod.number().nullable(),
+  "foremanUserId": zod.number().nullable(),
+  "intakeChannel": zod.union([zod.literal('partner_self_service'),zod.literal('office_on_behalf_of_partner'),zod.literal('office_on_behalf_of_field_employee'),zod.literal('vendor_field_self_service'),zod.literal(null)]).nullable().describe('How this ticket was opened. Drives the Source badge in the ticket list (globe \/ phone \/ boots).'),
+  "approvedAt": zod.coerce.date().nullish().describe('Task #865 — timestamp the ticket was approved by a partner \/\nadmin. Set the moment status flips to `approved`. Powers the\n\"Approved on\" \/ \"Days waiting\" columns the partner AP queue\nrenders when filtering by `awaitingPayment=true`. Stays\npopulated after dispersal so the ticket history is preserved.\n'),
+  "paymentMethod": zod.union([zod.literal('etf'),zod.literal('ach'),zod.literal('check'),zod.literal('other'),zod.literal(null)]).nullable(),
+  "paymentReference": zod.string().nullable(),
+  "paymentNote": zod.string().nullable(),
+  "paymentDispersedAt": zod.coerce.date().nullable(),
+  "paymentDispersedById": zod.number().nullable(),
+  "paymentDispersedByName": zod.string().nullable(),
+  "paymentReceiptUrl": zod.string().nullable().describe('Optional proof-of-payment image attached at dispersal time\n(Task #852). Stored as an object-storage path\/URL returned by\nthe upload helper; renders inline in the read-only Payment\nDetails panel on both web and mobile.\n'),
+  "startingMileage": zod.string().nullish().describe('Odometer reading captured at En Route. Stored as a numeric\nstring with one decimal so the UI can render it verbatim\nwithout float drift. Null until the field employee submits\nthe value on the En Route modal.\n'),
+  "endingMileage": zod.string().nullish().describe('Odometer reading captured at Check Out. Same numeric-string\nshape as `startingMileage`. Null until the Check Out modal\npersists the value.\n'),
+  "unreadCommentCount": zod.number().min(reinviteTicketResponseUnreadCommentCountMin).describe('Task #51 — number of comments on this ticket\'s thread that\nthe signed-in viewer has not yet seen, used to render an\nunread badge on the tickets-list page. Excludes\nsoft-deleted comments and the viewer\'s own messages.\nAlways 0 when the request has no signed-in viewer (e.g.\nanonymous portal access).\n'),
+  "viewerCanDisperseFunds": zod.boolean().nullish().describe('Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call POST \/tickets\/:id\/disperse-funds\nfor this ticket (admin OR partner contact in the Accounts Payable role\non the owning partner). List responses omit this field.\n'),
+  "viewerCanReverseDispersal": zod.boolean().nullish().describe('Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call\nPOST \/tickets\/:id\/reverse-dispersal for this ticket — i.e.\nthe same admin \/ partner-AP gate as `viewerCanDisperseFunds`\nAND the ticket is currently in `funds_dispersed`. List\nresponses omit this field.\n'),
+  "phoneIntakeCallerName": zod.string().nullish().describe('Set on the single-ticket GET response only. The human caller\'s\nname captured by office phone intake on the ticket\'s initial\nstatus transition (extracted from\n`ticket_status_history.reason` formatted as\n`phone_intake_caller:<name>`). Null for tickets that weren\'t\nopened via phone intake. List responses omit this field.\n')
+})
+
 
 /**
  * @summary List vendors whose operating radius covers the site, split by partner-relationship status
  */
 export const GetNearbyVendorsParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
 export const GetNearbyVendorsResponse = zod.object({
-  siteLatitude: zod.number(),
-  siteLongitude: zod.number(),
-  workTypeReferencePrice: zod.string().nullable(),
-  currentVendorId: zod.number(),
-  approved: zod.array(
-    zod.object({
-      id: zod.number(),
-      name: zod.string(),
-      distanceMiles: zod.number(),
-      operatingRadiusMiles: zod.number(),
-      logoUrl: zod.string().nullable(),
-      coversWorkType: zod.boolean(),
-      insuranceStatus: zod.enum([
-        "valid",
-        "expiring_soon",
-        "expired",
-        "missing",
-      ]),
-      insuranceExpirationDate: zod.string().nullable(),
-      estimatedPrice: zod.string().nullable(),
-      relationshipStatus: zod
-        .union([
-          zod.literal("preferred"),
-          zod.literal("approved"),
-          zod.literal(null),
-        ])
-        .nullable(),
-      isCurrentlyInvited: zod.boolean(),
-    }),
-  ),
-  unapproved: zod.array(
-    zod.object({
-      id: zod.number(),
-      name: zod.string(),
-      distanceMiles: zod.number(),
-      operatingRadiusMiles: zod.number(),
-      logoUrl: zod.string().nullable(),
-      coversWorkType: zod.boolean(),
-      insuranceStatus: zod.enum([
-        "valid",
-        "expiring_soon",
-        "expired",
-        "missing",
-      ]),
-      insuranceExpirationDate: zod.string().nullable(),
-      estimatedPrice: zod.string().nullable(),
-      relationshipStatus: zod
-        .union([
-          zod.literal("preferred"),
-          zod.literal("approved"),
-          zod.literal(null),
-        ])
-        .nullable(),
-      isCurrentlyInvited: zod.boolean(),
-    }),
-  ),
-});
+  "siteLatitude": zod.number(),
+  "siteLongitude": zod.number(),
+  "workTypeReferencePrice": zod.string().nullable(),
+  "currentVendorId": zod.number(),
+  "approved": zod.array(zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "distanceMiles": zod.number(),
+  "operatingRadiusMiles": zod.number(),
+  "logoUrl": zod.string().nullable(),
+  "coversWorkType": zod.boolean(),
+  "insuranceStatus": zod.enum(['valid', 'expiring_soon', 'expired', 'missing']),
+  "insuranceExpirationDate": zod.string().nullable(),
+  "estimatedPrice": zod.string().nullable(),
+  "relationshipStatus": zod.union([zod.literal('preferred'),zod.literal('approved'),zod.literal(null)]).nullable(),
+  "isCurrentlyInvited": zod.boolean()
+})),
+  "unapproved": zod.array(zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "distanceMiles": zod.number(),
+  "operatingRadiusMiles": zod.number(),
+  "logoUrl": zod.string().nullable(),
+  "coversWorkType": zod.boolean(),
+  "insuranceStatus": zod.enum(['valid', 'expiring_soon', 'expired', 'missing']),
+  "insuranceExpirationDate": zod.string().nullable(),
+  "estimatedPrice": zod.string().nullable(),
+  "relationshipStatus": zod.union([zod.literal('preferred'),zod.literal('approved'),zod.literal(null)]).nullable(),
+  "isCurrentlyInvited": zod.boolean()
+}))
+})
+
 
 /**
  * @summary Partner direct-awards a hotlist job to a hand-picked vendor (skip bid auction)
  */
 export const directAwardTicketBodyScheduledDurationMinutesMin = 0;
 
+
+
 export const DirectAwardTicketBody = zod.object({
-  hotlistJobId: zod.number(),
-  vendorId: zod.number(),
-  siteLocationId: zod.number(),
-  workTypeId: zod.number(),
-  scheduledStartAt: zod.coerce.date().nullish(),
-  scheduledDurationMinutes: zod
-    .number()
-    .min(directAwardTicketBodyScheduledDurationMinutesMin)
-    .nullish(),
-});
+  "hotlistJobId": zod.number(),
+  "vendorId": zod.number(),
+  "siteLocationId": zod.number(),
+  "workTypeId": zod.number(),
+  "scheduledStartAt": zod.coerce.date().nullish(),
+  "scheduledDurationMinutes": zod.number().min(directAwardTicketBodyScheduledDurationMinutesMin).nullish()
+})
+
 
 /**
  * Returns every vendor onboarded for the requested work type, with
@@ -4946,702 +3005,539 @@ aren't pickable. Partner-role only.
  * @summary List vendor candidates a partner can direct-award for a hotlist job
  */
 
+
+
+
 export const GetDirectAwardCandidatesQueryParams = zod.object({
-  workTypeId: zod.coerce.number().min(1),
-  siteLocationId: zod.coerce.number().min(1),
-});
+  "workTypeId": zod.coerce.number().min(1),
+  "siteLocationId": zod.coerce.number().min(1)
+})
 
 export const GetDirectAwardCandidatesResponseItem = zod.object({
-  id: zod.number(),
-  name: zod.string(),
-  tier: zod.enum(["pre_onboarded", "unapproved", "approved"]),
-  distanceMiles: zod.number().nullable(),
-  operatingRadiusMiles: zod.number().nullable(),
-  inRadius: zod.boolean(),
-  compliancePassed: zod.boolean(),
-  eligible: zod.boolean(),
-  ineligibleReason: zod.union([
-    zod.enum([
-      "vendor_no_operating_area",
-      "site_not_geocoded",
-      "vendor_out_of_radius",
-      "missing_coi_document",
-      "missing_insurance_expiration",
-      "expired_insurance",
-      "missing_federal_tax_id",
-    ]),
-    zod.null(),
-  ]),
-  ineligibleMessage: zod.string().nullable(),
-});
-export const GetDirectAwardCandidatesResponse = zod.array(
-  GetDirectAwardCandidatesResponseItem,
-);
+  "id": zod.number(),
+  "name": zod.string(),
+  "tier": zod.enum(['pre_onboarded', 'unapproved', 'approved']),
+  "distanceMiles": zod.number().nullable(),
+  "operatingRadiusMiles": zod.number().nullable(),
+  "inRadius": zod.boolean(),
+  "compliancePassed": zod.boolean(),
+  "eligible": zod.boolean(),
+  "ineligibleReason": zod.union([zod.enum(['vendor_no_operating_area', 'site_not_geocoded', 'vendor_out_of_radius', 'missing_coi_document', 'missing_insurance_expiration', 'expired_insurance', 'missing_federal_tax_id']),zod.null()]),
+  "ineligibleMessage": zod.string().nullable()
+})
+export const GetDirectAwardCandidatesResponse = zod.array(GetDirectAwardCandidatesResponseItem)
+
 
 /**
  * @summary Cancel a ticket
  */
 export const CancelTicketParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
 export const cancelTicketResponseUnreadCommentCountMin = 0;
 
+
+
 export const CancelTicketResponse = zod.object({
-  id: zod.number(),
-  siteLocationId: zod.number(),
-  vendorId: zod.number(),
-  fieldEmployeeId: zod.number().nullable(),
-  workTypeId: zod.number(),
-  status: zod
-    .enum([
-      "draft",
-      "initiated",
-      "in_progress",
-      "pending_review",
-      "completed",
-      "submitted",
-      "approved",
-      "kicked_back",
-      "cancelled",
-      "awaiting_acceptance",
-      "denied",
-      "awaiting_payment",
-      "funds_dispersed",
-    ])
-    .describe(
-      "Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app's ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp's status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n",
-    ),
-  description: zod.string().nullable(),
-  notes: zod.string().nullable(),
-  kickbackReason: zod.string().nullable(),
-  checkInTime: zod.coerce.date().nullable(),
-  checkOutTime: zod.coerce.date().nullable(),
-  checkInLatitude: zod.number().nullable(),
-  checkInLongitude: zod.number().nullable(),
-  checkOutLatitude: zod.number().nullable(),
-  checkOutLongitude: zod.number().nullable(),
-  siteName: zod.string().nullable(),
-  vendorName: zod.string().nullable(),
-  workTypeName: zod.string().nullable(),
-  fieldEmployeeName: zod.string().nullable(),
-  partnerName: zod.string().nullable(),
-  partnerLogoUrl: zod.string().nullable(),
-  vendorLogoUrl: zod.string().nullable(),
-  createdAt: zod.coerce.date(),
-  updatedAt: zod.coerce.date(),
-  unlockedAt: zod.coerce.date().nullable(),
-  unlockedById: zod.number().nullable(),
-  unlockedByName: zod.string().nullable(),
-  unlockCount: zod.number(),
-  createdById: zod.number().nullable(),
-  createdByName: zod.string().nullable(),
-  closedById: zod.number().nullable(),
-  closedByName: zod.string().nullable(),
-  lifecycleState: zod
-    .union([
-      zod.literal("pending_arrival"),
-      zod.literal("en_route"),
-      zod.literal("on_location"),
-      zod.literal("on_site"),
-      zod.literal("off_site"),
-      zod.literal(null),
-    ])
-    .nullable(),
-  enRouteAt: zod.coerce.date().nullable(),
-  arrivedAt: zod.coerce.date().nullable(),
-  departureLatitude: zod.number().nullable(),
-  departureLongitude: zod.number().nullable(),
-  siteLatitude: zod.number().nullable(),
-  siteLongitude: zod.number().nullable(),
-  siteRadiusMeters: zod.number().nullable(),
-  afe: zod.string().nullable(),
-  scheduledStartAt: zod.coerce.date().nullable(),
-  scheduledDurationMinutes: zod.number().nullable(),
-  foremanUserId: zod.number().nullable(),
-  intakeChannel: zod
-    .union([
-      zod.literal("partner_self_service"),
-      zod.literal("office_on_behalf_of_partner"),
-      zod.literal("office_on_behalf_of_field_employee"),
-      zod.literal("vendor_field_self_service"),
-      zod.literal(null),
-    ])
-    .nullable()
-    .describe(
-      "How this ticket was opened. Drives the Source badge in the ticket list (globe \/ phone \/ boots).",
-    ),
-  approvedAt: zod.coerce
-    .date()
-    .nullish()
-    .describe(
-      'Task #865 — timestamp the ticket was approved by a partner \/\nadmin. Set the moment status flips to `approved`. Powers the\n\"Approved on\" \/ \"Days waiting\" columns the partner AP queue\nrenders when filtering by `awaitingPayment=true`. Stays\npopulated after dispersal so the ticket history is preserved.\n',
-    ),
-  paymentMethod: zod
-    .union([
-      zod.literal("etf"),
-      zod.literal("ach"),
-      zod.literal("check"),
-      zod.literal("other"),
-      zod.literal(null),
-    ])
-    .nullable(),
-  paymentReference: zod.string().nullable(),
-  paymentNote: zod.string().nullable(),
-  paymentDispersedAt: zod.coerce.date().nullable(),
-  paymentDispersedById: zod.number().nullable(),
-  paymentDispersedByName: zod.string().nullable(),
-  paymentReceiptUrl: zod
-    .string()
-    .nullable()
-    .describe(
-      "Optional proof-of-payment image attached at dispersal time\n(Task #852). Stored as an object-storage path\/URL returned by\nthe upload helper; renders inline in the read-only Payment\nDetails panel on both web and mobile.\n",
-    ),
-  startingMileage: zod
-    .string()
-    .nullish()
-    .describe(
-      "Odometer reading captured at En Route. Stored as a numeric\nstring with one decimal so the UI can render it verbatim\nwithout float drift. Null until the field employee submits\nthe value on the En Route modal.\n",
-    ),
-  endingMileage: zod
-    .string()
-    .nullish()
-    .describe(
-      "Odometer reading captured at Check Out. Same numeric-string\nshape as `startingMileage`. Null until the Check Out modal\npersists the value.\n",
-    ),
-  unreadCommentCount: zod
-    .number()
-    .min(cancelTicketResponseUnreadCommentCountMin)
-    .describe(
-      "Task #51 — number of comments on this ticket's thread that\nthe signed-in viewer has not yet seen, used to render an\nunread badge on the tickets-list page. Excludes\nsoft-deleted comments and the viewer's own messages.\nAlways 0 when the request has no signed-in viewer (e.g.\nanonymous portal access).\n",
-    ),
-  viewerCanDisperseFunds: zod
-    .boolean()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call POST \/tickets\/:id\/disperse-funds\nfor this ticket (admin OR partner contact in the Accounts Payable role\non the owning partner). List responses omit this field.\n",
-    ),
-  viewerCanReverseDispersal: zod
-    .boolean()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call\nPOST \/tickets\/:id\/reverse-dispersal for this ticket — i.e.\nthe same admin \/ partner-AP gate as `viewerCanDisperseFunds`\nAND the ticket is currently in `funds_dispersed`. List\nresponses omit this field.\n",
-    ),
-  phoneIntakeCallerName: zod
-    .string()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. The human caller's\nname captured by office phone intake on the ticket's initial\nstatus transition (extracted from\n`ticket_status_history.reason` formatted as\n`phone_intake_caller:<name>`). Null for tickets that weren't\nopened via phone intake. List responses omit this field.\n",
-    ),
-});
+  "id": zod.number(),
+  "siteLocationId": zod.number(),
+  "vendorId": zod.number(),
+  "fieldEmployeeId": zod.number().nullable(),
+  "workTypeId": zod.number(),
+  "status": zod.enum(['draft', 'initiated', 'in_progress', 'pending_review', 'completed', 'submitted', 'approved', 'kicked_back', 'cancelled', 'awaiting_acceptance', 'denied', 'awaiting_payment', 'funds_dispersed']).describe('Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app\'s ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp\'s status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n'),
+  "description": zod.string().nullable(),
+  "notes": zod.string().nullable(),
+  "kickbackReason": zod.string().nullable(),
+  "checkInTime": zod.coerce.date().nullable(),
+  "checkOutTime": zod.coerce.date().nullable(),
+  "checkInLatitude": zod.number().nullable(),
+  "checkInLongitude": zod.number().nullable(),
+  "checkOutLatitude": zod.number().nullable(),
+  "checkOutLongitude": zod.number().nullable(),
+  "siteName": zod.string().nullable(),
+  "vendorName": zod.string().nullable(),
+  "workTypeName": zod.string().nullable(),
+  "workTypeCategory": zod.string().nullish(),
+  "workTypeTaxTreatment": zod.union([zod.literal('exempt_labor'),zod.literal('taxable_repair_service'),zod.literal('taxable_all'),zod.literal(null)]).nullish().describe('Explicit tax classification set on the platform catalog work type.\nNull when the engine infers treatment from category + state rubric.\nPopulated on single-ticket GET only.\n'),
+  "effectiveTaxTreatment": zod.union([zod.literal('exempt_labor'),zod.literal('taxable_repair_service'),zod.literal('taxable_all'),zod.literal(null)]).nullish().describe('Resolved tax classification for this ticket after partner, vendor,\nand work-type overrides. Populated on single-ticket GET only.\n'),
+  "fieldEmployeeName": zod.string().nullable(),
+  "partnerName": zod.string().nullable(),
+  "partnerLogoUrl": zod.string().nullable(),
+  "vendorLogoUrl": zod.string().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "unlockedAt": zod.coerce.date().nullable(),
+  "unlockedById": zod.number().nullable(),
+  "unlockedByName": zod.string().nullable(),
+  "unlockCount": zod.number(),
+  "createdById": zod.number().nullable(),
+  "createdByName": zod.string().nullable(),
+  "closedById": zod.number().nullable(),
+  "closedByName": zod.string().nullable(),
+  "lifecycleState": zod.union([zod.literal('pending_arrival'),zod.literal('en_route'),zod.literal('on_location'),zod.literal('on_site'),zod.literal('off_site'),zod.literal(null)]).nullable(),
+  "enRouteAt": zod.coerce.date().nullable(),
+  "arrivedAt": zod.coerce.date().nullable(),
+  "departureLatitude": zod.number().nullable(),
+  "departureLongitude": zod.number().nullable(),
+  "siteLatitude": zod.number().nullable(),
+  "siteLongitude": zod.number().nullable(),
+  "siteRadiusMeters": zod.number().nullable(),
+  "afe": zod.string().nullable(),
+  "scheduledStartAt": zod.coerce.date().nullable(),
+  "scheduledDurationMinutes": zod.number().nullable(),
+  "foremanUserId": zod.number().nullable(),
+  "intakeChannel": zod.union([zod.literal('partner_self_service'),zod.literal('office_on_behalf_of_partner'),zod.literal('office_on_behalf_of_field_employee'),zod.literal('vendor_field_self_service'),zod.literal(null)]).nullable().describe('How this ticket was opened. Drives the Source badge in the ticket list (globe \/ phone \/ boots).'),
+  "approvedAt": zod.coerce.date().nullish().describe('Task #865 — timestamp the ticket was approved by a partner \/\nadmin. Set the moment status flips to `approved`. Powers the\n\"Approved on\" \/ \"Days waiting\" columns the partner AP queue\nrenders when filtering by `awaitingPayment=true`. Stays\npopulated after dispersal so the ticket history is preserved.\n'),
+  "paymentMethod": zod.union([zod.literal('etf'),zod.literal('ach'),zod.literal('check'),zod.literal('other'),zod.literal(null)]).nullable(),
+  "paymentReference": zod.string().nullable(),
+  "paymentNote": zod.string().nullable(),
+  "paymentDispersedAt": zod.coerce.date().nullable(),
+  "paymentDispersedById": zod.number().nullable(),
+  "paymentDispersedByName": zod.string().nullable(),
+  "paymentReceiptUrl": zod.string().nullable().describe('Optional proof-of-payment image attached at dispersal time\n(Task #852). Stored as an object-storage path\/URL returned by\nthe upload helper; renders inline in the read-only Payment\nDetails panel on both web and mobile.\n'),
+  "startingMileage": zod.string().nullish().describe('Odometer reading captured at En Route. Stored as a numeric\nstring with one decimal so the UI can render it verbatim\nwithout float drift. Null until the field employee submits\nthe value on the En Route modal.\n'),
+  "endingMileage": zod.string().nullish().describe('Odometer reading captured at Check Out. Same numeric-string\nshape as `startingMileage`. Null until the Check Out modal\npersists the value.\n'),
+  "unreadCommentCount": zod.number().min(cancelTicketResponseUnreadCommentCountMin).describe('Task #51 — number of comments on this ticket\'s thread that\nthe signed-in viewer has not yet seen, used to render an\nunread badge on the tickets-list page. Excludes\nsoft-deleted comments and the viewer\'s own messages.\nAlways 0 when the request has no signed-in viewer (e.g.\nanonymous portal access).\n'),
+  "viewerCanDisperseFunds": zod.boolean().nullish().describe('Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call POST \/tickets\/:id\/disperse-funds\nfor this ticket (admin OR partner contact in the Accounts Payable role\non the owning partner). List responses omit this field.\n'),
+  "viewerCanReverseDispersal": zod.boolean().nullish().describe('Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call\nPOST \/tickets\/:id\/reverse-dispersal for this ticket — i.e.\nthe same admin \/ partner-AP gate as `viewerCanDisperseFunds`\nAND the ticket is currently in `funds_dispersed`. List\nresponses omit this field.\n'),
+  "phoneIntakeCallerName": zod.string().nullish().describe('Set on the single-ticket GET response only. The human caller\'s\nname captured by office phone intake on the ticket\'s initial\nstatus transition (extracted from\n`ticket_status_history.reason` formatted as\n`phone_intake_caller:<name>`). Null for tickets that weren\'t\nopened via phone intake. List responses omit this field.\n')
+})
+
 
 /**
  * @summary Reactivate a cancelled ticket (admin only)
  */
 export const ReactivateTicketParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
 export const reactivateTicketResponseUnreadCommentCountMin = 0;
 
+
+
 export const ReactivateTicketResponse = zod.object({
-  id: zod.number(),
-  siteLocationId: zod.number(),
-  vendorId: zod.number(),
-  fieldEmployeeId: zod.number().nullable(),
-  workTypeId: zod.number(),
-  status: zod
-    .enum([
-      "draft",
-      "initiated",
-      "in_progress",
-      "pending_review",
-      "completed",
-      "submitted",
-      "approved",
-      "kicked_back",
-      "cancelled",
-      "awaiting_acceptance",
-      "denied",
-      "awaiting_payment",
-      "funds_dispersed",
-    ])
-    .describe(
-      "Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app's ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp's status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n",
-    ),
-  description: zod.string().nullable(),
-  notes: zod.string().nullable(),
-  kickbackReason: zod.string().nullable(),
-  checkInTime: zod.coerce.date().nullable(),
-  checkOutTime: zod.coerce.date().nullable(),
-  checkInLatitude: zod.number().nullable(),
-  checkInLongitude: zod.number().nullable(),
-  checkOutLatitude: zod.number().nullable(),
-  checkOutLongitude: zod.number().nullable(),
-  siteName: zod.string().nullable(),
-  vendorName: zod.string().nullable(),
-  workTypeName: zod.string().nullable(),
-  fieldEmployeeName: zod.string().nullable(),
-  partnerName: zod.string().nullable(),
-  partnerLogoUrl: zod.string().nullable(),
-  vendorLogoUrl: zod.string().nullable(),
-  createdAt: zod.coerce.date(),
-  updatedAt: zod.coerce.date(),
-  unlockedAt: zod.coerce.date().nullable(),
-  unlockedById: zod.number().nullable(),
-  unlockedByName: zod.string().nullable(),
-  unlockCount: zod.number(),
-  createdById: zod.number().nullable(),
-  createdByName: zod.string().nullable(),
-  closedById: zod.number().nullable(),
-  closedByName: zod.string().nullable(),
-  lifecycleState: zod
-    .union([
-      zod.literal("pending_arrival"),
-      zod.literal("en_route"),
-      zod.literal("on_location"),
-      zod.literal("on_site"),
-      zod.literal("off_site"),
-      zod.literal(null),
-    ])
-    .nullable(),
-  enRouteAt: zod.coerce.date().nullable(),
-  arrivedAt: zod.coerce.date().nullable(),
-  departureLatitude: zod.number().nullable(),
-  departureLongitude: zod.number().nullable(),
-  siteLatitude: zod.number().nullable(),
-  siteLongitude: zod.number().nullable(),
-  siteRadiusMeters: zod.number().nullable(),
-  afe: zod.string().nullable(),
-  scheduledStartAt: zod.coerce.date().nullable(),
-  scheduledDurationMinutes: zod.number().nullable(),
-  foremanUserId: zod.number().nullable(),
-  intakeChannel: zod
-    .union([
-      zod.literal("partner_self_service"),
-      zod.literal("office_on_behalf_of_partner"),
-      zod.literal("office_on_behalf_of_field_employee"),
-      zod.literal("vendor_field_self_service"),
-      zod.literal(null),
-    ])
-    .nullable()
-    .describe(
-      "How this ticket was opened. Drives the Source badge in the ticket list (globe \/ phone \/ boots).",
-    ),
-  approvedAt: zod.coerce
-    .date()
-    .nullish()
-    .describe(
-      'Task #865 — timestamp the ticket was approved by a partner \/\nadmin. Set the moment status flips to `approved`. Powers the\n\"Approved on\" \/ \"Days waiting\" columns the partner AP queue\nrenders when filtering by `awaitingPayment=true`. Stays\npopulated after dispersal so the ticket history is preserved.\n',
-    ),
-  paymentMethod: zod
-    .union([
-      zod.literal("etf"),
-      zod.literal("ach"),
-      zod.literal("check"),
-      zod.literal("other"),
-      zod.literal(null),
-    ])
-    .nullable(),
-  paymentReference: zod.string().nullable(),
-  paymentNote: zod.string().nullable(),
-  paymentDispersedAt: zod.coerce.date().nullable(),
-  paymentDispersedById: zod.number().nullable(),
-  paymentDispersedByName: zod.string().nullable(),
-  paymentReceiptUrl: zod
-    .string()
-    .nullable()
-    .describe(
-      "Optional proof-of-payment image attached at dispersal time\n(Task #852). Stored as an object-storage path\/URL returned by\nthe upload helper; renders inline in the read-only Payment\nDetails panel on both web and mobile.\n",
-    ),
-  startingMileage: zod
-    .string()
-    .nullish()
-    .describe(
-      "Odometer reading captured at En Route. Stored as a numeric\nstring with one decimal so the UI can render it verbatim\nwithout float drift. Null until the field employee submits\nthe value on the En Route modal.\n",
-    ),
-  endingMileage: zod
-    .string()
-    .nullish()
-    .describe(
-      "Odometer reading captured at Check Out. Same numeric-string\nshape as `startingMileage`. Null until the Check Out modal\npersists the value.\n",
-    ),
-  unreadCommentCount: zod
-    .number()
-    .min(reactivateTicketResponseUnreadCommentCountMin)
-    .describe(
-      "Task #51 — number of comments on this ticket's thread that\nthe signed-in viewer has not yet seen, used to render an\nunread badge on the tickets-list page. Excludes\nsoft-deleted comments and the viewer's own messages.\nAlways 0 when the request has no signed-in viewer (e.g.\nanonymous portal access).\n",
-    ),
-  viewerCanDisperseFunds: zod
-    .boolean()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call POST \/tickets\/:id\/disperse-funds\nfor this ticket (admin OR partner contact in the Accounts Payable role\non the owning partner). List responses omit this field.\n",
-    ),
-  viewerCanReverseDispersal: zod
-    .boolean()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call\nPOST \/tickets\/:id\/reverse-dispersal for this ticket — i.e.\nthe same admin \/ partner-AP gate as `viewerCanDisperseFunds`\nAND the ticket is currently in `funds_dispersed`. List\nresponses omit this field.\n",
-    ),
-  phoneIntakeCallerName: zod
-    .string()
-    .nullish()
-    .describe(
-      "Set on the single-ticket GET response only. The human caller's\nname captured by office phone intake on the ticket's initial\nstatus transition (extracted from\n`ticket_status_history.reason` formatted as\n`phone_intake_caller:<name>`). Null for tickets that weren't\nopened via phone intake. List responses omit this field.\n",
-    ),
-});
+  "id": zod.number(),
+  "siteLocationId": zod.number(),
+  "vendorId": zod.number(),
+  "fieldEmployeeId": zod.number().nullable(),
+  "workTypeId": zod.number(),
+  "status": zod.enum(['draft', 'initiated', 'in_progress', 'pending_review', 'completed', 'submitted', 'approved', 'kicked_back', 'cancelled', 'awaiting_acceptance', 'denied', 'awaiting_payment', 'funds_dispersed']).describe('Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app\'s ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp\'s status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n'),
+  "description": zod.string().nullable(),
+  "notes": zod.string().nullable(),
+  "kickbackReason": zod.string().nullable(),
+  "checkInTime": zod.coerce.date().nullable(),
+  "checkOutTime": zod.coerce.date().nullable(),
+  "checkInLatitude": zod.number().nullable(),
+  "checkInLongitude": zod.number().nullable(),
+  "checkOutLatitude": zod.number().nullable(),
+  "checkOutLongitude": zod.number().nullable(),
+  "siteName": zod.string().nullable(),
+  "vendorName": zod.string().nullable(),
+  "workTypeName": zod.string().nullable(),
+  "workTypeCategory": zod.string().nullish(),
+  "workTypeTaxTreatment": zod.union([zod.literal('exempt_labor'),zod.literal('taxable_repair_service'),zod.literal('taxable_all'),zod.literal(null)]).nullish().describe('Explicit tax classification set on the platform catalog work type.\nNull when the engine infers treatment from category + state rubric.\nPopulated on single-ticket GET only.\n'),
+  "effectiveTaxTreatment": zod.union([zod.literal('exempt_labor'),zod.literal('taxable_repair_service'),zod.literal('taxable_all'),zod.literal(null)]).nullish().describe('Resolved tax classification for this ticket after partner, vendor,\nand work-type overrides. Populated on single-ticket GET only.\n'),
+  "fieldEmployeeName": zod.string().nullable(),
+  "partnerName": zod.string().nullable(),
+  "partnerLogoUrl": zod.string().nullable(),
+  "vendorLogoUrl": zod.string().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "unlockedAt": zod.coerce.date().nullable(),
+  "unlockedById": zod.number().nullable(),
+  "unlockedByName": zod.string().nullable(),
+  "unlockCount": zod.number(),
+  "createdById": zod.number().nullable(),
+  "createdByName": zod.string().nullable(),
+  "closedById": zod.number().nullable(),
+  "closedByName": zod.string().nullable(),
+  "lifecycleState": zod.union([zod.literal('pending_arrival'),zod.literal('en_route'),zod.literal('on_location'),zod.literal('on_site'),zod.literal('off_site'),zod.literal(null)]).nullable(),
+  "enRouteAt": zod.coerce.date().nullable(),
+  "arrivedAt": zod.coerce.date().nullable(),
+  "departureLatitude": zod.number().nullable(),
+  "departureLongitude": zod.number().nullable(),
+  "siteLatitude": zod.number().nullable(),
+  "siteLongitude": zod.number().nullable(),
+  "siteRadiusMeters": zod.number().nullable(),
+  "afe": zod.string().nullable(),
+  "scheduledStartAt": zod.coerce.date().nullable(),
+  "scheduledDurationMinutes": zod.number().nullable(),
+  "foremanUserId": zod.number().nullable(),
+  "intakeChannel": zod.union([zod.literal('partner_self_service'),zod.literal('office_on_behalf_of_partner'),zod.literal('office_on_behalf_of_field_employee'),zod.literal('vendor_field_self_service'),zod.literal(null)]).nullable().describe('How this ticket was opened. Drives the Source badge in the ticket list (globe \/ phone \/ boots).'),
+  "approvedAt": zod.coerce.date().nullish().describe('Task #865 — timestamp the ticket was approved by a partner \/\nadmin. Set the moment status flips to `approved`. Powers the\n\"Approved on\" \/ \"Days waiting\" columns the partner AP queue\nrenders when filtering by `awaitingPayment=true`. Stays\npopulated after dispersal so the ticket history is preserved.\n'),
+  "paymentMethod": zod.union([zod.literal('etf'),zod.literal('ach'),zod.literal('check'),zod.literal('other'),zod.literal(null)]).nullable(),
+  "paymentReference": zod.string().nullable(),
+  "paymentNote": zod.string().nullable(),
+  "paymentDispersedAt": zod.coerce.date().nullable(),
+  "paymentDispersedById": zod.number().nullable(),
+  "paymentDispersedByName": zod.string().nullable(),
+  "paymentReceiptUrl": zod.string().nullable().describe('Optional proof-of-payment image attached at dispersal time\n(Task #852). Stored as an object-storage path\/URL returned by\nthe upload helper; renders inline in the read-only Payment\nDetails panel on both web and mobile.\n'),
+  "startingMileage": zod.string().nullish().describe('Odometer reading captured at En Route. Stored as a numeric\nstring with one decimal so the UI can render it verbatim\nwithout float drift. Null until the field employee submits\nthe value on the En Route modal.\n'),
+  "endingMileage": zod.string().nullish().describe('Odometer reading captured at Check Out. Same numeric-string\nshape as `startingMileage`. Null until the Check Out modal\npersists the value.\n'),
+  "unreadCommentCount": zod.number().min(reactivateTicketResponseUnreadCommentCountMin).describe('Task #51 — number of comments on this ticket\'s thread that\nthe signed-in viewer has not yet seen, used to render an\nunread badge on the tickets-list page. Excludes\nsoft-deleted comments and the viewer\'s own messages.\nAlways 0 when the request has no signed-in viewer (e.g.\nanonymous portal access).\n'),
+  "viewerCanDisperseFunds": zod.boolean().nullish().describe('Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call POST \/tickets\/:id\/disperse-funds\nfor this ticket (admin OR partner contact in the Accounts Payable role\non the owning partner). List responses omit this field.\n'),
+  "viewerCanReverseDispersal": zod.boolean().nullish().describe('Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call\nPOST \/tickets\/:id\/reverse-dispersal for this ticket — i.e.\nthe same admin \/ partner-AP gate as `viewerCanDisperseFunds`\nAND the ticket is currently in `funds_dispersed`. List\nresponses omit this field.\n'),
+  "phoneIntakeCallerName": zod.string().nullish().describe('Set on the single-ticket GET response only. The human caller\'s\nname captured by office phone intake on the ticket\'s initial\nstatus transition (extracted from\n`ticket_status_history.reason` formatted as\n`phone_intake_caller:<name>`). Null for tickets that weren\'t\nopened via phone intake. List responses omit this field.\n')
+})
+
 
 /**
  * @summary Get note logs for a ticket
  */
 export const GetTicketNoteLogsParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
 export const GetTicketNoteLogsResponseItem = zod.object({
-  id: zod.number(),
-  ticketId: zod.number(),
-  content: zod.string(),
-  createdAt: zod.coerce.date(),
-  createdById: zod.number().nullish(),
-  createdByName: zod.string().nullish(),
-  createdByRole: zod.string().nullish(),
-});
-export const GetTicketNoteLogsResponse = zod.array(
-  GetTicketNoteLogsResponseItem,
-);
+  "id": zod.number(),
+  "ticketId": zod.number(),
+  "content": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "createdById": zod.number().nullish(),
+  "createdByName": zod.string().nullish(),
+  "createdByRole": zod.string().nullish()
+})
+export const GetTicketNoteLogsResponse = zod.array(GetTicketNoteLogsResponseItem)
+
 
 /**
  * @summary Log a note on a ticket
  */
 export const CreateTicketNoteLogParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
 export const CreateTicketNoteLogBody = zod.object({
-  content: zod.string(),
-});
+  "content": zod.string()
+})
+
 
 /**
  * @summary Delete a note log from a ticket
  */
 export const DeleteTicketNoteLogParams = zod.object({
-  id: zod.coerce.number(),
-  noteId: zod.coerce.number(),
-});
+  "id": zod.coerce.number(),
+  "noteId": zod.coerce.number()
+})
 
 export const DeleteTicketNoteLogResponse = zod.object({
-  success: zod.boolean(),
-});
+  "success": zod.boolean()
+})
+
 
 /**
  * @summary Get line items for a ticket
  */
 export const GetTicketLineItemsParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
 export const GetTicketLineItemsResponseItem = zod.object({
-  id: zod.number(),
-  ticketId: zod.number(),
-  type: zod.enum(["part", "labor", "equipment", "other"]),
-  description: zod.string(),
-  quantity: zod.string(),
-  unitPrice: zod.string(),
-  createdAt: zod.coerce.date(),
-});
-export const GetTicketLineItemsResponse = zod.array(
-  GetTicketLineItemsResponseItem,
-);
+  "id": zod.number(),
+  "ticketId": zod.number(),
+  "type": zod.enum(['part', 'labor', 'equipment', 'other']),
+  "description": zod.string(),
+  "quantity": zod.string(),
+  "unitPrice": zod.string(),
+  "taxableOverride": zod.boolean().nullable().describe('Manual taxability override; null applies state rubric'),
+  "createdAt": zod.coerce.date()
+})
+export const GetTicketLineItemsResponse = zod.array(GetTicketLineItemsResponseItem)
+
 
 /**
  * @summary Add a line item to a ticket
  */
 export const CreateTicketLineItemParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
 export const CreateTicketLineItemBody = zod.object({
-  type: zod.enum(["part", "labor", "equipment", "other"]),
-  description: zod.string(),
-  quantity: zod.string(),
-  unitPrice: zod.string(),
-});
+  "type": zod.enum(['part', 'labor', 'equipment', 'other']),
+  "description": zod.string(),
+  "quantity": zod.string(),
+  "unitPrice": zod.string(),
+  "taxableOverride": zod.boolean().nullish()
+})
+
 
 /**
  * @summary Delete a line item from a ticket
  */
 export const DeleteTicketLineItemParams = zod.object({
-  id: zod.coerce.number(),
-  lineItemId: zod.coerce.number(),
-});
+  "id": zod.coerce.number(),
+  "lineItemId": zod.coerce.number()
+})
 
 export const DeleteTicketLineItemResponse = zod.object({
-  success: zod.boolean(),
-});
+  "success": zod.boolean()
+})
+
 
 /**
  * @summary Get all tax rates
  */
 export const GetTaxRatesResponseItem = zod.object({
-  id: zod.number(),
-  state: zod.string(),
-  stateName: zod.string(),
-  rate: zod.string(),
-});
-export const GetTaxRatesResponse = zod.array(GetTaxRatesResponseItem);
+  "id": zod.number(),
+  "state": zod.string(),
+  "stateName": zod.string(),
+  "rate": zod.string()
+})
+export const GetTaxRatesResponse = zod.array(GetTaxRatesResponseItem)
+
 
 /**
  * @summary Get tax rate for a state
  */
 export const GetTaxRateByStateParams = zod.object({
-  state: zod.coerce.string(),
-});
+  "state": zod.coerce.string()
+})
 
 export const GetTaxRateByStateResponse = zod.object({
-  id: zod.number(),
-  state: zod.string(),
-  stateName: zod.string(),
-  rate: zod.string(),
-});
+  "id": zod.number(),
+  "state": zod.string(),
+  "stateName": zod.string(),
+  "rate": zod.string()
+})
+
 
 /**
  * @summary Get GPS tracking logs for a ticket
  */
 export const GetTicketGpsLogsParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
 export const GetTicketGpsLogsResponseItem = zod.object({
-  id: zod.number(),
-  ticketId: zod.number(),
-  latitude: zod.number(),
-  longitude: zod.number(),
-  eventType: zod.enum([
-    "check_in",
-    "check_out",
-    "tracking",
-    "live_ping",
-    "en_route",
-    "on_location",
-  ]),
-  recordedAt: zod.coerce.date(),
-});
-export const GetTicketGpsLogsResponse = zod.array(GetTicketGpsLogsResponseItem);
+  "id": zod.number(),
+  "ticketId": zod.number(),
+  "latitude": zod.number(),
+  "longitude": zod.number(),
+  "eventType": zod.enum(['check_in', 'check_out', 'tracking', 'live_ping', 'en_route', 'on_location']),
+  "recordedAt": zod.coerce.date()
+})
+export const GetTicketGpsLogsResponse = zod.array(GetTicketGpsLogsResponseItem)
+
 
 /**
  * @summary Check a specific crew member into the ticket
  */
 export const CrewCheckInParams = zod.object({
-  id: zod.coerce.number(),
-  employeeId: zod.coerce.number(),
-});
+  "id": zod.coerce.number(),
+  "employeeId": zod.coerce.number()
+})
 
 export const CrewCheckInBody = zod.object({
-  latitude: zod.number().nullish(),
-  longitude: zod.number().nullish(),
-  hourlyRateAtTime: zod.number().nullish(),
-});
+  "latitude": zod.number().nullish(),
+  "longitude": zod.number().nullish(),
+  "hourlyRateAtTime": zod.number().nullish()
+})
+
 
 /**
  * @summary Check a specific crew member out of the ticket
  */
 export const CrewCheckOutParams = zod.object({
-  id: zod.coerce.number(),
-  employeeId: zod.coerce.number(),
-});
+  "id": zod.coerce.number(),
+  "employeeId": zod.coerce.number()
+})
 
 export const CrewCheckOutBody = zod.object({
-  latitude: zod.number().optional(),
-  longitude: zod.number().optional(),
-});
+  "latitude": zod.number().optional(),
+  "longitude": zod.number().optional()
+})
 
 export const CrewCheckOutResponse = zod.object({
-  id: zod.number(),
-  ticketId: zod.number(),
-  employeeId: zod.number(),
-  employeeName: zod.string().nullish(),
-  checkInAt: zod.coerce.date(),
-  checkOutAt: zod.coerce.date().nullish(),
-  checkInLatitude: zod.number().nullish(),
-  checkInLongitude: zod.number().nullish(),
-  checkOutLatitude: zod.number().nullish(),
-  checkOutLongitude: zod.number().nullish(),
-  hourlyRateAtTime: zod.string().nullish(),
-  source: zod.string(),
-  correctedById: zod.number().nullish(),
-  correctedReason: zod.string().nullish(),
-});
+  "id": zod.number(),
+  "ticketId": zod.number(),
+  "employeeId": zod.number(),
+  "employeeName": zod.string().nullish(),
+  "checkInAt": zod.coerce.date(),
+  "checkOutAt": zod.coerce.date().nullish(),
+  "checkInLatitude": zod.number().nullish(),
+  "checkInLongitude": zod.number().nullish(),
+  "checkOutLatitude": zod.number().nullish(),
+  "checkOutLongitude": zod.number().nullish(),
+  "hourlyRateAtTime": zod.string().nullish(),
+  "source": zod.string(),
+  "correctedById": zod.number().nullish(),
+  "correctedReason": zod.string().nullish()
+})
+
 
 /**
  * @summary List active crew members on the roster for a ticket
  */
 export const GetCrewRosterParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
 export const GetCrewRosterResponseItem = zod.object({
-  id: zod.number(),
-  ticketId: zod.number(),
-  employeeId: zod.number(),
-  employeeName: zod.string().nullish(),
-  vendorRole: zod.string().nullish(),
-  addedAt: zod.coerce.date(),
-  addedByUserId: zod.number().nullish(),
-});
-export const GetCrewRosterResponse = zod.array(GetCrewRosterResponseItem);
+  "id": zod.number(),
+  "ticketId": zod.number(),
+  "employeeId": zod.number(),
+  "employeeName": zod.string().nullish(),
+  "vendorRole": zod.string().nullish(),
+  "addedAt": zod.coerce.date(),
+  "addedByUserId": zod.number().nullish()
+})
+export const GetCrewRosterResponse = zod.array(GetCrewRosterResponseItem)
+
 
 /**
  * @summary Add a vendor employee to the on-site crew roster
  */
 export const AddCrewRosterEntryParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
 export const AddCrewRosterEntryBody = zod.object({
-  employeeId: zod.number(),
-});
+  "employeeId": zod.number()
+})
+
 
 /**
  * @summary Remove a crew member from the on-site roster
  */
 export const RemoveCrewRosterEntryParams = zod.object({
-  id: zod.coerce.number(),
-  employeeId: zod.coerce.number(),
-});
+  "id": zod.coerce.number(),
+  "employeeId": zod.coerce.number()
+})
+
 
 /**
  * @summary List all crew check-in sessions for a ticket
  */
 export const GetCrewSessionsParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
 export const GetCrewSessionsResponseItem = zod.object({
-  id: zod.number(),
-  ticketId: zod.number(),
-  employeeId: zod.number(),
-  employeeName: zod.string().nullish(),
-  checkInAt: zod.coerce.date(),
-  checkOutAt: zod.coerce.date().nullish(),
-  checkInLatitude: zod.number().nullish(),
-  checkInLongitude: zod.number().nullish(),
-  checkOutLatitude: zod.number().nullish(),
-  checkOutLongitude: zod.number().nullish(),
-  hourlyRateAtTime: zod.string().nullish(),
-  source: zod.string(),
-  correctedById: zod.number().nullish(),
-  correctedReason: zod.string().nullish(),
-});
-export const GetCrewSessionsResponse = zod.array(GetCrewSessionsResponseItem);
+  "id": zod.number(),
+  "ticketId": zod.number(),
+  "employeeId": zod.number(),
+  "employeeName": zod.string().nullish(),
+  "checkInAt": zod.coerce.date(),
+  "checkOutAt": zod.coerce.date().nullish(),
+  "checkInLatitude": zod.number().nullish(),
+  "checkInLongitude": zod.number().nullish(),
+  "checkOutLatitude": zod.number().nullish(),
+  "checkOutLongitude": zod.number().nullish(),
+  "hourlyRateAtTime": zod.string().nullish(),
+  "source": zod.string(),
+  "correctedById": zod.number().nullish(),
+  "correctedReason": zod.string().nullish()
+})
+export const GetCrewSessionsResponse = zod.array(GetCrewSessionsResponseItem)
+
 
 /**
  * @summary Supervisor correction to a crew session
  */
 export const CorrectCrewSessionParams = zod.object({
-  id: zod.coerce.number(),
-  sessionId: zod.coerce.number(),
-});
+  "id": zod.coerce.number(),
+  "sessionId": zod.coerce.number()
+})
 
 export const CorrectCrewSessionBody = zod.object({
-  reason: zod.string(),
-  checkInAt: zod.coerce.date().nullish(),
-  checkOutAt: zod.coerce.date().nullish(),
-  hourlyRateAtTime: zod.number().nullish(),
-});
+  "reason": zod.string(),
+  "checkInAt": zod.coerce.date().nullish(),
+  "checkOutAt": zod.coerce.date().nullish(),
+  "hourlyRateAtTime": zod.number().nullish()
+})
 
 export const CorrectCrewSessionResponse = zod.object({
-  id: zod.number(),
-  ticketId: zod.number(),
-  employeeId: zod.number(),
-  employeeName: zod.string().nullish(),
-  checkInAt: zod.coerce.date(),
-  checkOutAt: zod.coerce.date().nullish(),
-  checkInLatitude: zod.number().nullish(),
-  checkInLongitude: zod.number().nullish(),
-  checkOutLatitude: zod.number().nullish(),
-  checkOutLongitude: zod.number().nullish(),
-  hourlyRateAtTime: zod.string().nullish(),
-  source: zod.string(),
-  correctedById: zod.number().nullish(),
-  correctedReason: zod.string().nullish(),
-});
+  "id": zod.number(),
+  "ticketId": zod.number(),
+  "employeeId": zod.number(),
+  "employeeName": zod.string().nullish(),
+  "checkInAt": zod.coerce.date(),
+  "checkOutAt": zod.coerce.date().nullish(),
+  "checkInLatitude": zod.number().nullish(),
+  "checkInLongitude": zod.number().nullish(),
+  "checkOutLatitude": zod.number().nullish(),
+  "checkOutLongitude": zod.number().nullish(),
+  "hourlyRateAtTime": zod.string().nullish(),
+  "source": zod.string(),
+  "correctedById": zod.number().nullish(),
+  "correctedReason": zod.string().nullish()
+})
+
 
 /**
  * @summary Per-person and total labor hours / cost (with OT split)
  */
 export const GetLaborSummaryParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
 export const GetLaborSummaryResponse = zod.object({
-  ticketId: zod.number(),
-  dailyOtHours: zod.number(),
-  weeklyOtHours: zod.number(),
-  longSessionHours: zod.number(),
-  people: zod.array(
-    zod.object({
-      employeeId: zod.number(),
-      employeeName: zod.string(),
-      rate: zod.number(),
-      regularHours: zod.number(),
-      overtimeHours: zod.number(),
-      totalHours: zod.number(),
-      regularCost: zod.number(),
-      overtimeCost: zod.number(),
-      totalCost: zod.number(),
-      sessions: zod.array(
-        zod.object({
-          id: zod.number(),
-          employeeId: zod.number(),
-          employeeName: zod.string(),
-          checkInAt: zod.coerce.date(),
-          checkOutAt: zod.coerce.date().nullish(),
-          hours: zod.number(),
-          rate: zod.number(),
-          cost: zod.number(),
-          isOpen: zod.boolean(),
-          longSession: zod.boolean(),
-          source: zod.string(),
-        }),
-      ),
-    }),
-  ),
-  totals: zod.object({
-    regularHours: zod.number(),
-    overtimeHours: zod.number(),
-    totalHours: zod.number(),
-    regularCost: zod.number(),
-    overtimeCost: zod.number(),
-    totalCost: zod.number(),
-  }),
-});
+  "ticketId": zod.number(),
+  "dailyOtHours": zod.number(),
+  "weeklyOtHours": zod.number(),
+  "longSessionHours": zod.number(),
+  "people": zod.array(zod.object({
+  "employeeId": zod.number(),
+  "employeeName": zod.string(),
+  "rate": zod.number(),
+  "regularHours": zod.number(),
+  "overtimeHours": zod.number(),
+  "totalHours": zod.number(),
+  "regularCost": zod.number(),
+  "overtimeCost": zod.number(),
+  "totalCost": zod.number(),
+  "sessions": zod.array(zod.object({
+  "id": zod.number(),
+  "employeeId": zod.number(),
+  "employeeName": zod.string(),
+  "checkInAt": zod.coerce.date(),
+  "checkOutAt": zod.coerce.date().nullish(),
+  "hours": zod.number(),
+  "rate": zod.number(),
+  "cost": zod.number(),
+  "isOpen": zod.boolean(),
+  "longSession": zod.boolean(),
+  "source": zod.string()
+}))
+})),
+  "totals": zod.object({
+  "regularHours": zod.number(),
+  "overtimeHours": zod.number(),
+  "totalHours": zod.number(),
+  "regularCost": zod.number(),
+  "overtimeCost": zod.number(),
+  "totalCost": zod.number()
+})
+})
+
 
 /**
  * @summary Generate (or regenerate) labor line items from crew sessions, preserving manual rows
  */
 export const GenerateLaborLineItemsParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
 export const GenerateLaborLineItemsResponse = zod.object({
-  created: zod.number(),
-});
+  "created": zod.number()
+})
+
 
 /**
  * @summary Get dashboard summary stats
  */
 export const GetDashboardSummaryResponse = zod.object({
-  totalPartners: zod.number(),
-  totalVendors: zod.number(),
-  totalSiteLocations: zod.number(),
-  totalTickets: zod.number(),
-  activeTickets: zod.number(),
-  pendingApproval: zod.number(),
-  approvedThisMonth: zod.number(),
-  hotlistBids: zod.number().optional(),
-});
+  "totalPartners": zod.number(),
+  "totalVendors": zod.number(),
+  "totalSiteLocations": zod.number(),
+  "totalTickets": zod.number(),
+  "activeTickets": zod.number(),
+  "pendingApproval": zod.number(),
+  "approvedThisMonth": zod.number(),
+  "hotlistBids": zod.number().optional()
+})
+
 
 /**
  * Partner-only roll-up that powers the "Awaiting payment" dashboard
@@ -5652,60 +3548,37 @@ oldest one. Non-partner sessions get an empty roll-up.
 
  * @summary Get partner-side AP queue roll-up
  */
-export const GetAwaitingPaymentSummaryResponse = zod
-  .object({
-    count: zod
-      .number()
-      .describe("Number of approved tickets that have not been dispersed yet."),
-    totalApprovedAmount: zod
-      .string()
-      .describe(
-        'Sum of quantity\*unit_price across ticket_line_items for the\ntickets in `count`. Encoded as a numeric string with two\ndecimals (e.g. \"1234.56\") so clients don\'t lose precision when\nJSON-decoded into JS numbers. Always present; \"0.00\" when no\ntickets qualify.\n',
-      ),
-    oldestApprovedAt: zod.coerce
-      .date()
-      .nullable()
-      .describe(
-        "approvedAt of the oldest qualifying ticket, or null when none qualify.",
-      ),
-  })
-  .describe(
-    'Partner-side AP queue roll-up powering the dashboard \"Awaiting\npayment\" tile. Always returns numeric defaults (zeroes \/ null) so\nclients can render a stable shape regardless of whether the\npartner has anything pending.\n',
-  );
+export const GetAwaitingPaymentSummaryResponse = zod.object({
+  "count": zod.number().describe('Number of approved tickets that have not been dispersed yet.'),
+  "totalApprovedAmount": zod.string().describe('Sum of quantity\*unit_price across ticket_line_items for the\ntickets in `count`. Encoded as a numeric string with two\ndecimals (e.g. \"1234.56\") so clients don\'t lose precision when\nJSON-decoded into JS numbers. Always present; \"0.00\" when no\ntickets qualify.\n'),
+  "oldestApprovedAt": zod.coerce.date().nullable().describe('approvedAt of the oldest qualifying ticket, or null when none qualify.')
+}).describe('Partner-side AP queue roll-up powering the dashboard \"Awaiting\npayment\" tile. Always returns numeric defaults (zeroes \/ null) so\nclients can render a stable shape regardless of whether the\npartner has anything pending.\n')
+
 
 /**
  * @summary Get recent ticket activity
  */
 export const GetRecentActivityResponseItem = zod.object({
-  id: zod.number(),
-  ticketId: zod.number(),
-  action: zod.string(),
-  description: zod.string(),
-  timestamp: zod.coerce.date(),
-  needsAttention: zod
-    .boolean()
-    .describe(
-      "True when the underlying ticket has had no activity for 30+ days and is still in an active workflow status.",
-    ),
-  lifecycleState: zod
-    .string()
-    .nullable()
-    .describe(
-      "Field-employee lifecycle state for the underlying ticket\n(`pending_arrival` \/ `en_route` \/ `on_site` \/ `off_site`).\nSurfaced on the dashboard so the Recent Activity card can\nrender the same secondary status chip as the tracking page\nstatus column.\n",
-    ),
-});
-export const GetRecentActivityResponse = zod.array(
-  GetRecentActivityResponseItem,
-);
+  "id": zod.number(),
+  "ticketId": zod.number(),
+  "action": zod.string(),
+  "description": zod.string(),
+  "timestamp": zod.coerce.date(),
+  "needsAttention": zod.boolean().describe('True when the underlying ticket has had no activity for 30+ days and is still in an active workflow status.'),
+  "lifecycleState": zod.string().nullable().describe('Field-employee lifecycle state for the underlying ticket\n(`pending_arrival` \/ `en_route` \/ `on_site` \/ `off_site`).\nSurfaced on the dashboard so the Recent Activity card can\nrender the same secondary status chip as the tracking page\nstatus column.\n')
+})
+export const GetRecentActivityResponse = zod.array(GetRecentActivityResponseItem)
+
 
 /**
  * @summary Get ticket status breakdown
  */
 export const GetTicketStatsResponseItem = zod.object({
-  status: zod.string(),
-  count: zod.number(),
-});
-export const GetTicketStatsResponse = zod.array(GetTicketStatsResponseItem);
+  "status": zod.string(),
+  "count": zod.number()
+})
+export const GetTicketStatsResponse = zod.array(GetTicketStatsResponseItem)
+
 
 /**
  * Public endpoint for the partner self-signup wizard. Creates the
@@ -5717,13 +3590,16 @@ subsequent wizard steps run as that admin.
  */
 export const createPartnerOnboardingBodyPasswordMin = 8;
 
+
+
 export const CreatePartnerOnboardingBody = zod.object({
-  name: zod.string(),
-  contactName: zod.string(),
-  contactEmail: zod.string(),
-  contactPhone: zod.string(),
-  password: zod.string().min(createPartnerOnboardingBodyPasswordMin),
-});
+  "name": zod.string(),
+  "contactName": zod.string(),
+  "contactEmail": zod.string(),
+  "contactPhone": zod.string(),
+  "password": zod.string().min(createPartnerOnboardingBodyPasswordMin)
+})
+
 
 /**
  * Public endpoint for the vendor self-signup wizard. Mirrors the
@@ -5733,13 +3609,16 @@ partner flow.
  */
 export const createVendorOnboardingBodyPasswordMin = 8;
 
+
+
 export const CreateVendorOnboardingBody = zod.object({
-  name: zod.string(),
-  contactName: zod.string(),
-  contactEmail: zod.string(),
-  contactPhone: zod.string(),
-  password: zod.string().min(createVendorOnboardingBodyPasswordMin),
-});
+  "name": zod.string(),
+  "contactName": zod.string(),
+  "contactEmail": zod.string(),
+  "contactPhone": zod.string(),
+  "password": zod.string().min(createVendorOnboardingBodyPasswordMin)
+})
+
 
 /**
  * Returns the `onboarding_progress` row for the caller's active
@@ -5749,103 +3628,102 @@ widget.
 
  * @summary Get the active org's onboarding progress
  */
-export const GetMyOnboardingResponse = zod
-  .object({
-    progress: zod.union([
-      zod.object({
-        id: zod.number(),
-        orgType: zod.string(),
-        partnerId: zod.number().nullish(),
-        vendorId: zod.number().nullish(),
-        vendorPeopleId: zod.number().nullish(),
-        currentStep: zod.string(),
-        completedSteps: zod.array(zod.string()),
-        skippedSteps: zod.array(zod.string()),
-        payload: zod.record(zod.string(), zod.unknown()),
-        startedAt: zod.coerce.date(),
-        completedAt: zod.coerce.date().nullish(),
-        updatedAt: zod.coerce.date(),
-      }),
-      zod.null(),
-    ]),
-  })
-  .describe("Wrapper so the field can be null when no row exists.");
+export const GetMyOnboardingResponse = zod.object({
+  "progress": zod.union([zod.object({
+  "id": zod.number(),
+  "orgType": zod.string(),
+  "partnerId": zod.number().nullish(),
+  "vendorId": zod.number().nullish(),
+  "vendorPeopleId": zod.number().nullish(),
+  "currentStep": zod.string(),
+  "completedSteps": zod.array(zod.string()),
+  "skippedSteps": zod.array(zod.string()),
+  "payload": zod.record(zod.string(), zod.unknown()),
+  "startedAt": zod.coerce.date(),
+  "completedAt": zod.coerce.date().nullish(),
+  "updatedAt": zod.coerce.date()
+}),zod.null()])
+}).describe('Wrapper so the field can be null when no row exists.')
+
 
 /**
  * @summary Get an org's onboarding progress
  */
 export const GetOnboardingProgressParams = zod.object({
-  orgType: zod.enum(["partner", "vendor"]),
-  orgId: zod.coerce.number(),
-});
+  "orgType": zod.enum(['partner', 'vendor']),
+  "orgId": zod.coerce.number()
+})
 
 export const GetOnboardingProgressResponse = zod.object({
-  id: zod.number(),
-  orgType: zod.string(),
-  partnerId: zod.number().nullish(),
-  vendorId: zod.number().nullish(),
-  vendorPeopleId: zod.number().nullish(),
-  currentStep: zod.string(),
-  completedSteps: zod.array(zod.string()),
-  skippedSteps: zod.array(zod.string()),
-  payload: zod.record(zod.string(), zod.unknown()),
-  startedAt: zod.coerce.date(),
-  completedAt: zod.coerce.date().nullish(),
-  updatedAt: zod.coerce.date(),
-});
+  "id": zod.number(),
+  "orgType": zod.string(),
+  "partnerId": zod.number().nullish(),
+  "vendorId": zod.number().nullish(),
+  "vendorPeopleId": zod.number().nullish(),
+  "currentStep": zod.string(),
+  "completedSteps": zod.array(zod.string()),
+  "skippedSteps": zod.array(zod.string()),
+  "payload": zod.record(zod.string(), zod.unknown()),
+  "startedAt": zod.coerce.date(),
+  "completedAt": zod.coerce.date().nullish(),
+  "updatedAt": zod.coerce.date()
+})
+
 
 /**
  * @summary Upsert step state + payload
  */
 export const UpdateOnboardingProgressParams = zod.object({
-  orgType: zod.enum(["partner", "vendor"]),
-  orgId: zod.coerce.number(),
-});
+  "orgType": zod.enum(['partner', 'vendor']),
+  "orgId": zod.coerce.number()
+})
 
 export const UpdateOnboardingProgressBody = zod.object({
-  currentStep: zod.string().optional(),
-  completedSteps: zod.array(zod.string()).optional(),
-  skippedSteps: zod.array(zod.string()).optional(),
-  payload: zod.record(zod.string(), zod.unknown()).optional(),
-});
+  "currentStep": zod.string().optional(),
+  "completedSteps": zod.array(zod.string()).optional(),
+  "skippedSteps": zod.array(zod.string()).optional(),
+  "payload": zod.record(zod.string(), zod.unknown()).optional()
+})
 
 export const UpdateOnboardingProgressResponse = zod.object({
-  id: zod.number(),
-  orgType: zod.string(),
-  partnerId: zod.number().nullish(),
-  vendorId: zod.number().nullish(),
-  vendorPeopleId: zod.number().nullish(),
-  currentStep: zod.string(),
-  completedSteps: zod.array(zod.string()),
-  skippedSteps: zod.array(zod.string()),
-  payload: zod.record(zod.string(), zod.unknown()),
-  startedAt: zod.coerce.date(),
-  completedAt: zod.coerce.date().nullish(),
-  updatedAt: zod.coerce.date(),
-});
+  "id": zod.number(),
+  "orgType": zod.string(),
+  "partnerId": zod.number().nullish(),
+  "vendorId": zod.number().nullish(),
+  "vendorPeopleId": zod.number().nullish(),
+  "currentStep": zod.string(),
+  "completedSteps": zod.array(zod.string()),
+  "skippedSteps": zod.array(zod.string()),
+  "payload": zod.record(zod.string(), zod.unknown()),
+  "startedAt": zod.coerce.date(),
+  "completedAt": zod.coerce.date().nullish(),
+  "updatedAt": zod.coerce.date()
+})
+
 
 /**
  * @summary Mark onboarding complete
  */
 export const CompleteOnboardingParams = zod.object({
-  orgType: zod.enum(["partner", "vendor"]),
-  orgId: zod.coerce.number(),
-});
+  "orgType": zod.enum(['partner', 'vendor']),
+  "orgId": zod.coerce.number()
+})
 
 export const CompleteOnboardingResponse = zod.object({
-  id: zod.number(),
-  orgType: zod.string(),
-  partnerId: zod.number().nullish(),
-  vendorId: zod.number().nullish(),
-  vendorPeopleId: zod.number().nullish(),
-  currentStep: zod.string(),
-  completedSteps: zod.array(zod.string()),
-  skippedSteps: zod.array(zod.string()),
-  payload: zod.record(zod.string(), zod.unknown()),
-  startedAt: zod.coerce.date(),
-  completedAt: zod.coerce.date().nullish(),
-  updatedAt: zod.coerce.date(),
-});
+  "id": zod.number(),
+  "orgType": zod.string(),
+  "partnerId": zod.number().nullish(),
+  "vendorId": zod.number().nullish(),
+  "vendorPeopleId": zod.number().nullish(),
+  "currentStep": zod.string(),
+  "completedSteps": zod.array(zod.string()),
+  "skippedSteps": zod.array(zod.string()),
+  "payload": zod.record(zod.string(), zod.unknown()),
+  "startedAt": zod.coerce.date(),
+  "completedAt": zod.coerce.date().nullish(),
+  "updatedAt": zod.coerce.date()
+})
+
 
 /**
  * Public endpoint. Given a one-time invite token, returns the
@@ -5856,34 +3734,35 @@ from an emailed invite link.
  * @summary Resolve a field-employee invite token
  */
 export const GetFieldOnboardingByTokenParams = zod.object({
-  token: zod.coerce.string(),
-});
+  "token": zod.coerce.string()
+})
 
 export const GetFieldOnboardingByTokenResponse = zod.object({
-  vendorPeopleId: zod.number(),
-  vendorId: zod.number(),
-  vendorName: zod.string(),
-  firstName: zod.string(),
-  lastName: zod.string(),
-  email: zod.string(),
-  phone: zod.string().nullish(),
-  photoUrl: zod.string().nullish(),
-  preferredLanguage: zod.enum(["en", "es"]).nullish(),
-  progress: zod.object({
-    id: zod.number(),
-    orgType: zod.string(),
-    partnerId: zod.number().nullish(),
-    vendorId: zod.number().nullish(),
-    vendorPeopleId: zod.number().nullish(),
-    currentStep: zod.string(),
-    completedSteps: zod.array(zod.string()),
-    skippedSteps: zod.array(zod.string()),
-    payload: zod.record(zod.string(), zod.unknown()),
-    startedAt: zod.coerce.date(),
-    completedAt: zod.coerce.date().nullish(),
-    updatedAt: zod.coerce.date(),
-  }),
-});
+  "vendorPeopleId": zod.number(),
+  "vendorId": zod.number(),
+  "vendorName": zod.string(),
+  "firstName": zod.string(),
+  "lastName": zod.string(),
+  "email": zod.string(),
+  "phone": zod.string().nullish(),
+  "photoUrl": zod.string().nullish(),
+  "preferredLanguage": zod.enum(['en', 'es']).nullish(),
+  "progress": zod.object({
+  "id": zod.number(),
+  "orgType": zod.string(),
+  "partnerId": zod.number().nullish(),
+  "vendorId": zod.number().nullish(),
+  "vendorPeopleId": zod.number().nullish(),
+  "currentStep": zod.string(),
+  "completedSteps": zod.array(zod.string()),
+  "skippedSteps": zod.array(zod.string()),
+  "payload": zod.record(zod.string(), zod.unknown()),
+  "startedAt": zod.coerce.date(),
+  "completedAt": zod.coerce.date().nullish(),
+  "updatedAt": zod.coerce.date()
+})
+})
+
 
 /**
  * Public endpoint. Lets a still-anonymous field-employee
@@ -5895,16 +3774,17 @@ this column to prime in Spanish from the very first turn.
  * @summary Persist the invitee's English/Español toggle pre-auth
  */
 export const UpdateFieldOnboardingLanguageParams = zod.object({
-  token: zod.coerce.string(),
-});
+  "token": zod.coerce.string()
+})
 
 export const UpdateFieldOnboardingLanguageBody = zod.object({
-  preferredLanguage: zod.enum(["en", "es"]).nullable(),
-});
+  "preferredLanguage": zod.enum(['en', 'es']).nullable()
+})
 
 export const UpdateFieldOnboardingLanguageResponse = zod.object({
-  preferredLanguage: zod.enum(["en", "es"]).nullable(),
-});
+  "preferredLanguage": zod.enum(['en', 'es']).nullable()
+})
+
 
 /**
  * Public endpoint. Accepts the wizard payload (personal info,
@@ -5916,42 +3796,45 @@ signed in.
  * @summary Finish field-employee onboarding (set credentials, log in)
  */
 export const CompleteFieldOnboardingParams = zod.object({
-  token: zod.coerce.string(),
-});
+  "token": zod.coerce.string()
+})
 
 export const completeFieldOnboardingBodyPasswordMin = 8;
 
+
+
 export const CompleteFieldOnboardingBody = zod.object({
-  firstName: zod.string(),
-  lastName: zod.string(),
-  phone: zod.string().nullish(),
-  photoUrl: zod.string().nullish(),
-  password: zod.string().min(completeFieldOnboardingBodyPasswordMin),
-  preferredLanguage: zod.enum(["en", "es"]).nullish(),
-  pecCertification: zod.boolean().nullish(),
-  pecExpirationDate: zod.string().nullish(),
-  vendorRole: zod.enum(["field", "foreman", "office", "both"]),
-});
+  "firstName": zod.string(),
+  "lastName": zod.string(),
+  "phone": zod.string().nullish(),
+  "photoUrl": zod.string().nullish(),
+  "password": zod.string().min(completeFieldOnboardingBodyPasswordMin),
+  "preferredLanguage": zod.enum(['en', 'es']).nullish(),
+  "pecCertification": zod.boolean().nullish(),
+  "pecExpirationDate": zod.string().nullish(),
+  "vendorRole": zod.enum(['field', 'foreman', 'office', 'both'])
+})
 
 export const CompleteFieldOnboardingResponse = zod.object({
-  orgType: zod.enum(["partner", "vendor", "field_employee"]),
-  orgId: zod.number(),
-  userId: zod.number(),
-  progress: zod.object({
-    id: zod.number(),
-    orgType: zod.string(),
-    partnerId: zod.number().nullish(),
-    vendorId: zod.number().nullish(),
-    vendorPeopleId: zod.number().nullish(),
-    currentStep: zod.string(),
-    completedSteps: zod.array(zod.string()),
-    skippedSteps: zod.array(zod.string()),
-    payload: zod.record(zod.string(), zod.unknown()),
-    startedAt: zod.coerce.date(),
-    completedAt: zod.coerce.date().nullish(),
-    updatedAt: zod.coerce.date(),
-  }),
-});
+  "orgType": zod.enum(['partner', 'vendor', 'field_employee']),
+  "orgId": zod.number(),
+  "userId": zod.number(),
+  "progress": zod.object({
+  "id": zod.number(),
+  "orgType": zod.string(),
+  "partnerId": zod.number().nullish(),
+  "vendorId": zod.number().nullish(),
+  "vendorPeopleId": zod.number().nullish(),
+  "currentStep": zod.string(),
+  "completedSteps": zod.array(zod.string()),
+  "skippedSteps": zod.array(zod.string()),
+  "payload": zod.record(zod.string(), zod.unknown()),
+  "startedAt": zod.coerce.date(),
+  "completedAt": zod.coerce.date().nullish(),
+  "updatedAt": zod.coerce.date()
+})
+})
+
 
 /**
  * Returns a one-time presigned PUT URL the caller can stream
@@ -5962,15 +3845,16 @@ only — never the file itself.
  * @summary Request a presigned upload URL
  */
 export const RequestUploadUrlBody = zod.object({
-  name: zod.string(),
-  size: zod.number(),
-  contentType: zod.string(),
-});
+  "name": zod.string(),
+  "size": zod.number(),
+  "contentType": zod.string()
+})
 
 export const RequestUploadUrlResponse = zod.object({
-  uploadURL: zod.string(),
-  objectPath: zod.string(),
-});
+  "uploadURL": zod.string(),
+  "objectPath": zod.string()
+})
+
 
 /**
  * Called after the client PUTs the file bytes to the
@@ -5980,13 +3864,14 @@ object can be served back through `GET /storage/objects/*`.
  * @summary Stamp ACL on a freshly-uploaded object
  */
 export const FinalizeUploadBody = zod.object({
-  objectURL: zod.string(),
-  visibility: zod.enum(["public", "private"]).optional(),
-});
+  "objectURL": zod.string(),
+  "visibility": zod.enum(['public', 'private']).optional()
+})
 
 export const FinalizeUploadResponse = zod.object({
-  objectPath: zod.string(),
-});
+  "objectPath": zod.string()
+})
+
 
 /**
  * Generates (or rotates) a one-time invite token for the
@@ -5996,15 +3881,16 @@ to their address. Admin or vendor-admin only.
  * @summary Generate a field-employee onboarding invite link
  */
 export const CreateFieldOnboardingInviteParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
 export const CreateFieldOnboardingInviteResponse = zod.object({
-  employeeId: zod.number(),
-  token: zod.string(),
-  url: zod.string(),
-  emailSent: zod.boolean(),
-});
+  "employeeId": zod.number(),
+  "token": zod.string(),
+  "url": zod.string(),
+  "emailSent": zod.boolean()
+})
+
 
 /**
  * Returns every `user_org_memberships` row attached to the
@@ -6023,56 +3909,27 @@ caller must hold an admin-role membership in this org.
  * @summary List members attached to an org
  */
 export const ListOrgMembersParams = zod.object({
-  orgType: zod.enum(["partner", "vendor"]),
-  orgId: zod.coerce.number(),
-});
+  "orgType": zod.enum(['partner', 'vendor']),
+  "orgId": zod.coerce.number()
+})
 
-export const ListOrgMembersResponse = zod
-  .object({
-    orgType: zod.enum(["partner", "vendor"]),
-    orgId: zod.number(),
-    members: zod.array(
-      zod
-        .object({
-          membershipId: zod.number(),
-          userId: zod.number(),
-          username: zod.string(),
-          displayName: zod.string(),
-          role: zod.enum(["admin", "member", "ap", "field_employee"]),
-          legacyRole: zod.string(),
-          jobTitle: zod
-            .string()
-            .nullish()
-            .describe(
-              "Free-text job title from the matching `vendor_people`\nrow, or null when the member has no field-employee\nrecord on this vendor (or the org is a partner).\n",
-            ),
-          photoUrl: zod
-            .string()
-            .nullish()
-            .describe(
-              "Profile photo URL from the matching `vendor_people`\nrow, or null when the member has no field-employee\nrecord on this vendor (or the org is a partner).\n",
-            ),
-          phone: zod
-            .string()
-            .nullish()
-            .describe(
-              "E.164-ish phone string from the matching `vendor_people`\nrow, or null when the member has no field-employee\nrecord on this vendor (or the org is a partner).\n",
-            ),
-          pecExpirationDate: zod.coerce
-            .date()
-            .nullish()
-            .describe(
-              "ISO date (YYYY-MM-DD) of the matching `vendor_people`\nPEC expiration, or null when the member has no field-\nemployee record on this vendor (or the org is a partner,\nor the field-employee row has no PEC certification).\n",
-            ),
-        })
-        .describe(
-          "Single row in the listing returned by\n`GET \/orgs\/{orgType}\/{orgId}\/members`. `role` includes\n`field_employee` because the listing surfaces field-employee\nmemberships read-only — they exist on the org but are\nmanaged via the field-employee tools (the add \/ remove \/\npatch endpoints reject `field_employee` rows). `legacyRole`\nis the `users.role` column kept for back-compat with older\nsession-derived role checks (e.g. `admin`, `partner`,\n`vendor`, `field_employee`); the canonical per-org role is\n`role`.\n\nFor vendor orgs the row is LEFT JOIN'd against\n`vendor_people` on `user_id` (and `vendor_id = orgId`) so\nadmins \/ members who also happen to be a field-employee\nrecord on the same vendor surface their `phone` and\n`pec_expiration_date` here. Both fields are nullable and\nalways null for partner-org members (partners have no\nfield-employee records).\n",
-        ),
-    ),
-  })
-  .describe(
-    "Result of `GET \/orgs\/{orgType}\/{orgId}\/members`. `orgType`\nand `orgId` echo the path params back so the client can\nsanity-check the response matches the request it sent.\n`members` is ordered by membership id (insertion order).\n",
-  );
+export const ListOrgMembersResponse = zod.object({
+  "orgType": zod.enum(['partner', 'vendor']),
+  "orgId": zod.number(),
+  "members": zod.array(zod.object({
+  "membershipId": zod.number(),
+  "userId": zod.number(),
+  "username": zod.string(),
+  "displayName": zod.string(),
+  "role": zod.enum(['admin', 'member', 'ap', 'field_employee']),
+  "legacyRole": zod.string(),
+  "jobTitle": zod.string().nullish().describe('Free-text job title from the matching `vendor_people`\nrow, or null when the member has no field-employee\nrecord on this vendor (or the org is a partner).\n'),
+  "photoUrl": zod.string().nullish().describe('Profile photo URL from the matching `vendor_people`\nrow, or null when the member has no field-employee\nrecord on this vendor (or the org is a partner).\n'),
+  "phone": zod.string().nullish().describe('E.164-ish phone string from the matching `vendor_people`\nrow, or null when the member has no field-employee\nrecord on this vendor (or the org is a partner).\n'),
+  "pecExpirationDate": zod.coerce.date().nullish().describe('ISO date (YYYY-MM-DD) of the matching `vendor_people`\nPEC expiration, or null when the member has no field-\nemployee record on this vendor (or the org is a partner,\nor the field-employee row has no PEC certification).\n')
+}).describe('Single row in the listing returned by\n`GET \/orgs\/{orgType}\/{orgId}\/members`. `role` includes\n`field_employee` because the listing surfaces field-employee\nmemberships read-only — they exist on the org but are\nmanaged via the field-employee tools (the add \/ remove \/\npatch endpoints reject `field_employee` rows). `legacyRole`\nis the `users.role` column kept for back-compat with older\nsession-derived role checks (e.g. `admin`, `partner`,\n`vendor`, `field_employee`); the canonical per-org role is\n`role`.\n\nFor vendor orgs the row is LEFT JOIN\'d against\n`vendor_people` on `user_id` (and `vendor_id = orgId`) so\nadmins \/ members who also happen to be a field-employee\nrecord on the same vendor surface their `phone` and\n`pec_expiration_date` here. Both fields are nullable and\nalways null for partner-org members (partners have no\nfield-employee records).\n'))
+}).describe('Result of `GET \/orgs\/{orgType}\/{orgId}\/members`. `orgType`\nand `orgId` echo the path params back so the client can\nsanity-check the response matches the request it sent.\n`members` is ordered by membership id (insertion order).\n')
+
 
 /**
  * Attaches a login to a Partner or Vendor org via
@@ -6093,32 +3950,25 @@ membership sync.
  * @summary Add a member to an org
  */
 export const AddOrgMemberParams = zod.object({
-  orgType: zod.enum(["partner", "vendor"]),
-  orgId: zod.coerce.number(),
-});
+  "orgType": zod.enum(['partner', 'vendor']),
+  "orgId": zod.coerce.number()
+})
 
-export const AddOrgMemberBody = zod
-  .object({
-    email: zod.string(),
-    role: zod.enum(["admin", "member", "ap"]).optional(),
-    password: zod.string().optional(),
-    displayName: zod.string().optional(),
-  })
-  .describe(
-    "Body for `POST \/orgs\/{orgType}\/{orgId}\/members`. `password`\nand `displayName` are only consulted when `email` does not\nmatch an existing login — they are silently ignored if a\nuser already exists, so an org admin can't reset\ncredentials for any login they happen to know the email\nof. `role` defaults to `member` when omitted; `ap` is\npartner-only.\n",
-  );
+export const AddOrgMemberBody = zod.object({
+  "email": zod.string(),
+  "role": zod.enum(['admin', 'member', 'ap']).optional(),
+  "password": zod.string().optional(),
+  "displayName": zod.string().optional()
+}).describe('Body for `POST \/orgs\/{orgType}\/{orgId}\/members`. `password`\nand `displayName` are only consulted when `email` does not\nmatch an existing login — they are silently ignored if a\nuser already exists, so an org admin can\'t reset\ncredentials for any login they happen to know the email\nof. `role` defaults to `member` when omitted; `ap` is\npartner-only.\n')
 
-export const AddOrgMemberResponse = zod
-  .object({
-    membershipId: zod.number(),
-    userId: zod.number(),
-    username: zod.string(),
-    role: zod.enum(["admin", "member", "ap"]),
-    createdUser: zod.boolean(),
-  })
-  .describe(
-    "Result of `POST \/orgs\/{orgType}\/{orgId}\/members`.\n`createdUser` distinguishes a brand-new login (returned\nwith HTTP 201) from an existing login that was just\nattached \/ had its membership role updated (HTTP 200).\n`field_employee` never appears here — those memberships are\nrejected with `members.is_field_employee` before this\nresponse is produced.\n",
-  );
+export const AddOrgMemberResponse = zod.object({
+  "membershipId": zod.number(),
+  "userId": zod.number(),
+  "username": zod.string(),
+  "role": zod.enum(['admin', 'member', 'ap']),
+  "createdUser": zod.boolean()
+}).describe('Result of `POST \/orgs\/{orgType}\/{orgId}\/members`.\n`createdUser` distinguishes a brand-new login (returned\nwith HTTP 201) from an existing login that was just\nattached \/ had its membership role updated (HTTP 200).\n`field_employee` never appears here — those memberships are\nrejected with `members.is_field_employee` before this\nresponse is produced.\n')
+
 
 /**
  * Lets an org admin promote an existing teammate to Accounts
@@ -6135,28 +3985,21 @@ patch UI optimistically without a 304 round-trip.
  * @summary Update an org member's role
  */
 export const UpdateOrgMemberRoleParams = zod.object({
-  orgType: zod.enum(["partner", "vendor"]),
-  orgId: zod.coerce.number(),
-  membershipId: zod.coerce.number(),
-});
+  "orgType": zod.enum(['partner', 'vendor']),
+  "orgId": zod.coerce.number(),
+  "membershipId": zod.coerce.number()
+})
 
-export const UpdateOrgMemberRoleBody = zod
-  .object({
-    role: zod.enum(["admin", "member", "ap"]),
-  })
-  .describe(
-    "Body for `PATCH \/orgs\/{orgType}\/{orgId}\/members\/{membershipId}`.\n`ap` is partner-only; vendor orgs reject it with\n`members.invalid_role`.\n",
-  );
+export const UpdateOrgMemberRoleBody = zod.object({
+  "role": zod.enum(['admin', 'member', 'ap'])
+}).describe('Body for `PATCH \/orgs\/{orgType}\/{orgId}\/members\/{membershipId}`.\n`ap` is partner-only; vendor orgs reject it with\n`members.invalid_role`.\n')
 
-export const UpdateOrgMemberRoleResponse = zod
-  .object({
-    membershipId: zod.number(),
-    userId: zod.number(),
-    role: zod.enum(["admin", "member", "ap"]),
-  })
-  .describe(
-    "Updated membership row returned by\n`PATCH \/orgs\/{orgType}\/{orgId}\/members\/{membershipId}`.\n`field_employee` never appears here — those memberships are\nrejected with `members.field_only` before this response is\nproduced.\n",
-  );
+export const UpdateOrgMemberRoleResponse = zod.object({
+  "membershipId": zod.number(),
+  "userId": zod.number(),
+  "role": zod.enum(['admin', 'member', 'ap'])
+}).describe('Updated membership row returned by\n`PATCH \/orgs\/{orgType}\/{orgId}\/members\/{membershipId}`.\n`field_employee` never appears here — those memberships are\nrejected with `members.field_only` before this response is\nproduced.\n')
+
 
 /**
  * Detaches the membership from the org. The user account
@@ -6174,10 +4017,11 @@ membership and lock themselves out
  * @summary Remove a member from an org
  */
 export const RemoveOrgMemberParams = zod.object({
-  orgType: zod.enum(["partner", "vendor"]),
-  orgId: zod.coerce.number(),
-  membershipId: zod.coerce.number(),
-});
+  "orgType": zod.enum(['partner', 'vendor']),
+  "orgId": zod.coerce.number(),
+  "membershipId": zod.coerce.number()
+})
+
 
 /**
  * Returns the merged vendor_people + vendors row used by the
@@ -6186,25 +4030,22 @@ determine which vendor the user belongs to.
 
  * @summary Get the current field employee's profile
  */
-export const GetFieldMeResponse = zod
-  .object({
-    employeeId: zod.number(),
-    firstName: zod.string(),
-    lastName: zod.string(),
-    email: zod.string().nullable(),
-    vendorId: zod.number().nullable(),
-    vendorName: zod.string().nullable(),
-    jobTitle: zod.string().nullable(),
-    phone: zod.string().nullable(),
-    pecExpirationDate: zod.string().nullable(),
-    pecCertification: zod.boolean(),
-    vendorLogoUrl: zod.string().nullable(),
-    profilePhotoPath: zod.string().nullable(),
-    photoUrl: zod.string().nullable(),
-  })
-  .describe(
-    "Current field employee profile, returned by `GET \/field\/me`.\nMerges columns from `vendor_people` and the linked `vendors`\nrow so the mobile profile screen can render in a single round\ntrip.\n",
-  );
+export const GetFieldMeResponse = zod.object({
+  "employeeId": zod.number(),
+  "firstName": zod.string(),
+  "lastName": zod.string(),
+  "email": zod.string().nullable(),
+  "vendorId": zod.number().nullable(),
+  "vendorName": zod.string().nullable(),
+  "jobTitle": zod.string().nullable(),
+  "phone": zod.string().nullable(),
+  "pecExpirationDate": zod.string().nullable(),
+  "pecCertification": zod.boolean(),
+  "vendorLogoUrl": zod.string().nullable(),
+  "profilePhotoPath": zod.string().nullable(),
+  "photoUrl": zod.string().nullable()
+}).describe('Current field employee profile, returned by `GET \/field\/me`.\nMerges columns from `vendor_people` and the linked `vendors`\nrow so the mobile profile screen can render in a single round\ntrip.\n')
+
 
 /**
  * Partial update — only fields present in the body are written.
@@ -6214,32 +4055,25 @@ true. Name changes are mirrored to the linked `users.displayName`.
 
  * @summary Update the current field employee's profile
  */
-export const UpdateFieldMeBody = zod
-  .object({
-    profilePhotoPath: zod.string().nullish(),
-    firstName: zod.string().optional(),
-    lastName: zod.string().optional(),
-    jobTitle: zod.string().nullish(),
-    phone: zod.string().nullish(),
-    pecExpirationDate: zod.string().nullish(),
-  })
-  .describe(
-    "Partial-update body for `PATCH \/field\/me`. Only fields present\nin the body are written. `pecExpirationDate` must be a\n`YYYY-MM-DD` string when non-null; passing null clears the\ndate and flips `pecCertification` to false.\n",
-  );
+export const UpdateFieldMeBody = zod.object({
+  "profilePhotoPath": zod.string().nullish(),
+  "firstName": zod.string().optional(),
+  "lastName": zod.string().optional(),
+  "jobTitle": zod.string().nullish(),
+  "phone": zod.string().nullish(),
+  "pecExpirationDate": zod.string().nullish()
+}).describe('Partial-update body for `PATCH \/field\/me`. Only fields present\nin the body are written. `pecExpirationDate` must be a\n`YYYY-MM-DD` string when non-null; passing null clears the\ndate and flips `pecCertification` to false.\n')
 
-export const UpdateFieldMeResponse = zod
-  .object({
-    profilePhotoPath: zod.string().nullish(),
-    jobTitle: zod.string().nullish(),
-    phone: zod.string().nullish(),
-    firstName: zod.string().optional(),
-    lastName: zod.string().optional(),
-    pecExpirationDate: zod.string().nullish(),
-    pecCertification: zod.boolean().optional(),
-  })
-  .describe(
-    "Response shape from `PATCH \/field\/me` — the post-update subset\nof the profile that the client needs to refresh local state.\n",
-  );
+export const UpdateFieldMeResponse = zod.object({
+  "profilePhotoPath": zod.string().nullish(),
+  "jobTitle": zod.string().nullish(),
+  "phone": zod.string().nullish(),
+  "firstName": zod.string().optional(),
+  "lastName": zod.string().optional(),
+  "pecExpirationDate": zod.string().nullish(),
+  "pecCertification": zod.boolean().optional()
+}).describe('Response shape from `PATCH \/field\/me` — the post-update subset\nof the profile that the client needs to refresh local state.\n')
+
 
 /**
  * Verifies `currentPassword` then writes a new bcrypt hash. New
@@ -6249,10 +4083,13 @@ password must be at least 8 characters. Returns 204 on success.
  */
 export const changeFieldPasswordBodyNewPasswordMin = 8;
 
+
+
 export const ChangeFieldPasswordBody = zod.object({
-  currentPassword: zod.string(),
-  newPassword: zod.string().min(changeFieldPasswordBodyNewPasswordMin),
-});
+  "currentPassword": zod.string(),
+  "newPassword": zod.string().min(changeFieldPasswordBodyNewPasswordMin)
+})
+
 
 /**
  * Returns up to 100 of the most recent tickets owned by the
@@ -6262,47 +4099,21 @@ screen.
 
  * @summary List closed/past tickets for the current field employee
  */
-export const ListFieldHistoryResponseItem = zod
-  .object({
-    id: zod.number(),
-    status: zod
-      .enum([
-        "draft",
-        "initiated",
-        "in_progress",
-        "pending_review",
-        "completed",
-        "submitted",
-        "approved",
-        "kicked_back",
-        "cancelled",
-        "awaiting_acceptance",
-        "denied",
-        "awaiting_payment",
-        "funds_dispersed",
-      ])
-      .describe(
-        "Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app's ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp's status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n",
-      ),
-    checkInTime: zod.coerce.date().nullable(),
-    checkOutTime: zod.coerce.date().nullable(),
-    siteLocationId: zod.number().nullable(),
-    siteName: zod.string().nullable(),
-    partnerName: zod.string().nullable(),
-    workTypeId: zod.number().nullable(),
-    workTypeName: zod.string().nullable(),
-    createdAt: zod.coerce.date(),
-    updatedAt: zod.coerce
-      .date()
-      .nullable()
-      .describe(
-        "Last write to the underlying ticket row. Drives the mobile\nhistory pill's 7-day inactivity escalation (see\nartifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts), mirroring\nthe web TicketStatusBadge behavior.\n",
-      ),
-  })
-  .describe(
-    'Denormalized \"past ticket\" row returned by `GET \/field\/history`\nfor the mobile history screen.\n',
-  );
-export const ListFieldHistoryResponse = zod.array(ListFieldHistoryResponseItem);
+export const ListFieldHistoryResponseItem = zod.object({
+  "id": zod.number(),
+  "status": zod.enum(['draft', 'initiated', 'in_progress', 'pending_review', 'completed', 'submitted', 'approved', 'kicked_back', 'cancelled', 'awaiting_acceptance', 'denied', 'awaiting_payment', 'funds_dispersed']).describe('Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app\'s ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp\'s status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n'),
+  "checkInTime": zod.coerce.date().nullable(),
+  "checkOutTime": zod.coerce.date().nullable(),
+  "siteLocationId": zod.number().nullable(),
+  "siteName": zod.string().nullable(),
+  "partnerName": zod.string().nullable(),
+  "workTypeId": zod.number().nullable(),
+  "workTypeName": zod.string().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date().nullable().describe('Last write to the underlying ticket row. Drives the mobile\nhistory pill\'s 7-day inactivity escalation (see\nartifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts), mirroring\nthe web TicketStatusBadge behavior.\n')
+}).describe('Denormalized \"past ticket\" row returned by `GET \/field\/history`\nfor the mobile history screen.\n')
+export const ListFieldHistoryResponse = zod.array(ListFieldHistoryResponseItem)
+
 
 /**
  * Distinct `site_locations` rows that have at least one
@@ -6311,20 +4122,17 @@ Powers the site picker in the new-ticket flow.
 
  * @summary List sites this field employee's vendor is assigned to
  */
-export const ListFieldSitesResponseItem = zod
-  .object({
-    id: zod.number(),
-    name: zod.string(),
-    address: zod.string().nullish(),
-    state: zod.string().nullish(),
-    siteCode: zod.string().nullish(),
-    partnerId: zod.number().nullish(),
-    partnerName: zod.string().nullish(),
-  })
-  .describe(
-    "Vendor-approved site row returned by `GET \/field\/sites`. One\nrow per `site_locations` row that has at least one\n`site_work_assignments` row for the calling employee's vendor.\n",
-  );
-export const ListFieldSitesResponse = zod.array(ListFieldSitesResponseItem);
+export const ListFieldSitesResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "address": zod.string().nullish(),
+  "state": zod.string().nullish(),
+  "siteCode": zod.string().nullish(),
+  "partnerId": zod.number().nullish(),
+  "partnerName": zod.string().nullish()
+}).describe('Vendor-approved site row returned by `GET \/field\/sites`. One\nrow per `site_locations` row that has at least one\n`site_work_assignments` row for the calling employee\'s vendor.\n')
+export const ListFieldSitesResponse = zod.array(ListFieldSitesResponseItem)
+
 
 /**
  * Work types that the calling employee's vendor is approved to
@@ -6334,21 +4142,16 @@ new-ticket flow after a site has been chosen.
  * @summary List approved work types for a site (for the calling vendor)
  */
 export const ListFieldSiteWorkTypesParams = zod.object({
-  siteId: zod.coerce.number(),
-});
+  "siteId": zod.coerce.number()
+})
 
-export const ListFieldSiteWorkTypesResponseItem = zod
-  .object({
-    id: zod.number(),
-    name: zod.string(),
-    category: zod.string(),
-  })
-  .describe(
-    "Work-type row returned by\n`GET \/field\/sites\/{siteId}\/work-types` for the new-ticket\nflow's work-type picker.\n",
-  );
-export const ListFieldSiteWorkTypesResponse = zod.array(
-  ListFieldSiteWorkTypesResponseItem,
-);
+export const ListFieldSiteWorkTypesResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "category": zod.string()
+}).describe('Work-type row returned by\n`GET \/field\/sites\/{siteId}\/work-types` for the new-ticket\nflow\'s work-type picker.\n')
+export const ListFieldSiteWorkTypesResponse = zod.array(ListFieldSiteWorkTypesResponseItem)
+
 
 /**
  * Returns the tickets owned by the calling employee whose status
@@ -6360,51 +4163,28 @@ pending_review}, newest first. Drives the home screen's
  */
 export const listFieldOpenTicketsResponseUnreadCommentCountMin = 0;
 
-export const ListFieldOpenTicketsResponseItem = zod
-  .object({
-    id: zod.number(),
-    status: zod.enum([
-      "initiated",
-      "draft",
-      "in_progress",
-      "kicked_back",
-      "pending_review",
-    ]),
-    checkInTime: zod.coerce.date().nullable(),
-    siteLocationId: zod.number().nullable(),
-    siteName: zod.string().nullable(),
-    partnerName: zod.string().nullable(),
-    workTypeId: zod.number().nullable(),
-    workTypeName: zod.string().nullable(),
-    fieldEmployeeId: zod.number().nullable(),
-    fieldEmployeeFirstName: zod.string().nullable(),
-    fieldEmployeeLastName: zod.string().nullable(),
-    createdAt: zod.coerce.date(),
-    scheduledStartAt: zod.coerce.date().nullable(),
-    updatedAt: zod.coerce
-      .date()
-      .nullable()
-      .describe(
-        "Last write to the underlying ticket row. Drives the mobile\nopen-tickets pill's 7-day inactivity escalation (see\nartifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts), mirroring\nthe web TicketStatusBadge behavior.\n",
-      ),
-    unreadCommentCount: zod
-      .number()
-      .min(listFieldOpenTicketsResponseUnreadCommentCountMin)
-      .describe(
-        "Task #51 — count of comments on this ticket's thread that\nthe signed-in field viewer has not yet seen, used to render\nan unread badge on the mobile home-screen ticket card.\nExcludes deleted comments and the viewer's own posts.\nDrops to 0 the next time the list re-fetches after the\ndetail screen runs `markAllSeen` on its comments thread.\n",
-      ),
-    crewNames: zod
-      .array(zod.string())
-      .describe(
-        "Active scheduled crew on this ticket (from ticket_crew).\nThe assigned foreman is listed first; remaining crew are\nsorted alphabetically. Empty when no crew is assigned yet;\nthe Today\/home card falls back to the assigned field employee.\n",
-      ),
-  })
-  .describe(
-    'Denormalized \"open ticket\" row used by the mobile home screen,\nreturned by both the list (`GET \/field\/open-tickets`) and the\nsurgical per-id refresh (`GET \/field\/open-tickets\/{id}`). The\ntwo endpoints are guaranteed to share this shape so a row\nproduced by one can replace a row produced by the other in\nlocal state.\n',
-  );
-export const ListFieldOpenTicketsResponse = zod.array(
-  ListFieldOpenTicketsResponseItem,
-);
+
+
+export const ListFieldOpenTicketsResponseItem = zod.object({
+  "id": zod.number(),
+  "status": zod.enum(['initiated', 'draft', 'in_progress', 'kicked_back', 'pending_review']),
+  "checkInTime": zod.coerce.date().nullable(),
+  "siteLocationId": zod.number().nullable(),
+  "siteName": zod.string().nullable(),
+  "partnerName": zod.string().nullable(),
+  "workTypeId": zod.number().nullable(),
+  "workTypeName": zod.string().nullable(),
+  "fieldEmployeeId": zod.number().nullable(),
+  "fieldEmployeeFirstName": zod.string().nullable(),
+  "fieldEmployeeLastName": zod.string().nullable(),
+  "createdAt": zod.coerce.date(),
+  "scheduledStartAt": zod.coerce.date().nullable(),
+  "updatedAt": zod.coerce.date().nullable().describe('Last write to the underlying ticket row. Drives the mobile\nopen-tickets pill\'s 7-day inactivity escalation (see\nartifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts), mirroring\nthe web TicketStatusBadge behavior.\n'),
+  "unreadCommentCount": zod.number().min(listFieldOpenTicketsResponseUnreadCommentCountMin).describe('Task #51 — count of comments on this ticket\'s thread that\nthe signed-in field viewer has not yet seen, used to render\nan unread badge on the mobile home-screen ticket card.\nExcludes deleted comments and the viewer\'s own posts.\nDrops to 0 the next time the list re-fetches after the\ndetail screen runs `markAllSeen` on its comments thread.\n'),
+  "crewNames": zod.array(zod.string()).describe('Active scheduled crew on this ticket (from ticket_crew).\nThe assigned foreman is listed first; remaining crew are\nsorted alphabetically. Empty when no crew is assigned yet;\nthe Today\/home card falls back to the assigned field employee.\n')
+}).describe('Denormalized \"open ticket\" row used by the mobile home screen,\nreturned by both the list (`GET \/field\/open-tickets`) and the\nsurgical per-id refresh (`GET \/field\/open-tickets\/{id}`). The\ntwo endpoints are guaranteed to share this shape so a row\nproduced by one can replace a row produced by the other in\nlocal state.\n')
+export const ListFieldOpenTicketsResponse = zod.array(ListFieldOpenTicketsResponseItem)
+
 
 /**
  * Companion to `GET /field/open-tickets` that returns the same
@@ -6424,53 +4204,32 @@ worker closed it in another tab).
  * @summary Get a single open-ticket row for the current field employee
  */
 export const GetFieldOpenTicketParams = zod.object({
-  id: zod.coerce.number(),
-});
+  "id": zod.coerce.number()
+})
 
 export const getFieldOpenTicketResponseUnreadCommentCountMin = 0;
 
-export const GetFieldOpenTicketResponse = zod
-  .object({
-    id: zod.number(),
-    status: zod.enum([
-      "initiated",
-      "draft",
-      "in_progress",
-      "kicked_back",
-      "pending_review",
-    ]),
-    checkInTime: zod.coerce.date().nullable(),
-    siteLocationId: zod.number().nullable(),
-    siteName: zod.string().nullable(),
-    partnerName: zod.string().nullable(),
-    workTypeId: zod.number().nullable(),
-    workTypeName: zod.string().nullable(),
-    fieldEmployeeId: zod.number().nullable(),
-    fieldEmployeeFirstName: zod.string().nullable(),
-    fieldEmployeeLastName: zod.string().nullable(),
-    createdAt: zod.coerce.date(),
-    scheduledStartAt: zod.coerce.date().nullable(),
-    updatedAt: zod.coerce
-      .date()
-      .nullable()
-      .describe(
-        "Last write to the underlying ticket row. Drives the mobile\nopen-tickets pill's 7-day inactivity escalation (see\nartifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts), mirroring\nthe web TicketStatusBadge behavior.\n",
-      ),
-    unreadCommentCount: zod
-      .number()
-      .min(getFieldOpenTicketResponseUnreadCommentCountMin)
-      .describe(
-        "Task #51 — count of comments on this ticket's thread that\nthe signed-in field viewer has not yet seen, used to render\nan unread badge on the mobile home-screen ticket card.\nExcludes deleted comments and the viewer's own posts.\nDrops to 0 the next time the list re-fetches after the\ndetail screen runs `markAllSeen` on its comments thread.\n",
-      ),
-    crewNames: zod
-      .array(zod.string())
-      .describe(
-        "Active scheduled crew on this ticket (from ticket_crew).\nThe assigned foreman is listed first; remaining crew are\nsorted alphabetically. Empty when no crew is assigned yet;\nthe Today\/home card falls back to the assigned field employee.\n",
-      ),
-  })
-  .describe(
-    'Denormalized \"open ticket\" row used by the mobile home screen,\nreturned by both the list (`GET \/field\/open-tickets`) and the\nsurgical per-id refresh (`GET \/field\/open-tickets\/{id}`). The\ntwo endpoints are guaranteed to share this shape so a row\nproduced by one can replace a row produced by the other in\nlocal state.\n',
-  );
+
+
+export const GetFieldOpenTicketResponse = zod.object({
+  "id": zod.number(),
+  "status": zod.enum(['initiated', 'draft', 'in_progress', 'kicked_back', 'pending_review']),
+  "checkInTime": zod.coerce.date().nullable(),
+  "siteLocationId": zod.number().nullable(),
+  "siteName": zod.string().nullable(),
+  "partnerName": zod.string().nullable(),
+  "workTypeId": zod.number().nullable(),
+  "workTypeName": zod.string().nullable(),
+  "fieldEmployeeId": zod.number().nullable(),
+  "fieldEmployeeFirstName": zod.string().nullable(),
+  "fieldEmployeeLastName": zod.string().nullable(),
+  "createdAt": zod.coerce.date(),
+  "scheduledStartAt": zod.coerce.date().nullable(),
+  "updatedAt": zod.coerce.date().nullable().describe('Last write to the underlying ticket row. Drives the mobile\nopen-tickets pill\'s 7-day inactivity escalation (see\nartifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts), mirroring\nthe web TicketStatusBadge behavior.\n'),
+  "unreadCommentCount": zod.number().min(getFieldOpenTicketResponseUnreadCommentCountMin).describe('Task #51 — count of comments on this ticket\'s thread that\nthe signed-in field viewer has not yet seen, used to render\nan unread badge on the mobile home-screen ticket card.\nExcludes deleted comments and the viewer\'s own posts.\nDrops to 0 the next time the list re-fetches after the\ndetail screen runs `markAllSeen` on its comments thread.\n'),
+  "crewNames": zod.array(zod.string()).describe('Active scheduled crew on this ticket (from ticket_crew).\nThe assigned foreman is listed first; remaining crew are\nsorted alphabetically. Empty when no crew is assigned yet;\nthe Today\/home card falls back to the assigned field employee.\n')
+}).describe('Denormalized \"open ticket\" row used by the mobile home screen,\nreturned by both the list (`GET \/field\/open-tickets`) and the\nsurgical per-id refresh (`GET \/field\/open-tickets\/{id}`). The\ntwo endpoints are guaranteed to share this shape so a row\nproduced by one can replace a row produced by the other in\nlocal state.\n')
+
 
 /**
  * Creates a `vendor_field_self_service` ticket and, if the
@@ -6487,33 +4246,16 @@ surface the validation under the correct picker.
 
  * @summary Create a ticket as the current field employee (with auto check-in)
  */
-export const CreateFieldTicketBody = zod
-  .object({
-    siteLocationId: zod.number(),
-    workTypeId: zod.number(),
-    latitude: zod.number().nullish(),
-    longitude: zod.number().nullish(),
-    description: zod.string().nullish(),
-    initialState: zod
-      .union([
-        zod.literal("pending_arrival"),
-        zod.literal("on_site"),
-        zod.literal(null),
-      ])
-      .nullish()
-      .describe(
-        "Hint from client: `on_site` (default) attempts an immediate\ncheck-in subject to the geofence; `pending_arrival` skips\nthe check-in regardless of GPS.\n",
-      ),
-    adjacent: zod
-      .boolean()
-      .nullish()
-      .describe(
-        'When true, treat this as an adjacent ticket alongside an\nexisting on-site ticket on the same site — auto-check-in\nunconditionally (Task #498).\nNote: the server also tolerates the legacy string value\n`\"1\"` (treated as `true`) for older form-style callers,\nbut typed SDK clients should always send a boolean.\n',
-      ),
-  })
-  .describe(
-    "Request body for `POST \/field\/tickets`. `latitude`\/`longitude`\nare the device's current GPS fix and are used both for the\ngeofence check and (when the check-in succeeds) for the\ninitial `gps_logs` `check_in` event. `adjacent` flags an\nimplicit check-in for a second ticket on the same site the\nemployee is already on (Task #498) — those bypass the\ngeofence requirement.\n",
-  );
+export const CreateFieldTicketBody = zod.object({
+  "siteLocationId": zod.number(),
+  "workTypeId": zod.number(),
+  "latitude": zod.number().nullish(),
+  "longitude": zod.number().nullish(),
+  "description": zod.string().nullish(),
+  "initialState": zod.union([zod.literal('pending_arrival'),zod.literal('on_site'),zod.literal(null)]).nullish().describe('Hint from client: `on_site` (default) attempts an immediate\ncheck-in subject to the geofence; `pending_arrival` skips\nthe check-in regardless of GPS.\n'),
+  "adjacent": zod.boolean().nullish().describe('When true, treat this as an adjacent ticket alongside an\nexisting on-site ticket on the same site — auto-check-in\nunconditionally (Task #498).\nNote: the server also tolerates the legacy string value\n`\"1\"` (treated as `true`) for older form-style callers,\nbut typed SDK clients should always send a boolean.\n')
+}).describe('Request body for `POST \/field\/tickets`. `latitude`\/`longitude`\nare the device\'s current GPS fix and are used both for the\ngeofence check and (when the check-in succeeds) for the\ninitial `gps_logs` `check_in` event. `adjacent` flags an\nimplicit check-in for a second ticket on the same site the\nemployee is already on (Task #498) — those bypass the\ngeofence requirement.\n')
+
 
 /**
  * Upserts an `expo_token` row keyed on the token string so the
@@ -6522,14 +4264,11 @@ call repeatedly on every app launch.
 
  * @summary Register an Expo push token for the current field employee
  */
-export const RegisterFieldPushTokenBody = zod
-  .object({
-    token: zod.string(),
-    platform: zod.string().nullish(),
-  })
-  .describe(
-    'Body for `POST \/field\/push-token`. `platform` is an opaque\nclient-provided string (typically `\"ios\"` or `\"android\"`) used\nby the dispatcher to pick the right push payload shape.\n',
-  );
+export const RegisterFieldPushTokenBody = zod.object({
+  "token": zod.string(),
+  "platform": zod.string().nullish()
+}).describe('Body for `POST \/field\/push-token`. `platform` is an opaque\nclient-provided string (typically `\"ios\"` or `\"android\"`) used\nby the dispatcher to pick the right push payload shape.\n')
+
 
 /**
  * Deletes the row for the given Expo token (typically called on
@@ -6537,11 +4276,10 @@ sign-out so future pushes don't continue going to the device).
 
  * @summary Unregister a previously-registered Expo push token
  */
-export const DeleteFieldPushTokenBody = zod
-  .object({
-    token: zod.string(),
-  })
-  .describe("Body for `DELETE \/field\/push-token` (sign-out cleanup).");
+export const DeleteFieldPushTokenBody = zod.object({
+  "token": zod.string()
+}).describe('Body for `DELETE \/field\/push-token` (sign-out cleanup).')
+
 
 /**
  * Returns tickets the calling user is either the foreman of or
@@ -6561,114 +4299,40 @@ starting.
 export const listUpcomingScheduleQueryDaysDefault = 14;
 export const listUpcomingScheduleQueryDaysMax = 60;
 
-export const ListUpcomingScheduleQueryParams = zod.object({
-  days: zod.coerce
-    .number()
-    .min(1)
-    .max(listUpcomingScheduleQueryDaysMax)
-    .default(listUpcomingScheduleQueryDaysDefault)
-    .describe(
-      "Look-ahead horizon in days (clamped to `[1, 60]`,\ndefaulting to `14` when omitted or non-numeric).\n",
-    ),
-});
 
-export const ListUpcomingScheduleResponse = zod
-  .object({
-    tickets: zod.array(
-      zod
-        .object({
-          id: zod.number(),
-          scheduledStartAt: zod.coerce.date().nullable(),
-          scheduledDurationMinutes: zod.number().nullable(),
-          status: zod
-            .enum([
-              "draft",
-              "initiated",
-              "in_progress",
-              "pending_review",
-              "completed",
-              "submitted",
-              "approved",
-              "kicked_back",
-              "cancelled",
-              "awaiting_acceptance",
-              "denied",
-              "awaiting_payment",
-              "funds_dispersed",
-            ])
-            .describe(
-              "Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app's ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp's status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n",
-            ),
-          updatedAt: zod.coerce
-            .date()
-            .nullable()
-            .describe(
-              "Last write to the underlying ticket row. Drives the mobile\nschedule pill's 7-day inactivity escalation (see\nartifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts), mirroring\nthe web TicketStatusBadge behavior. Added by Task #605.\n",
-            ),
-          siteName: zod.string().nullable(),
-          siteAddress: zod.string().nullable(),
-          siteLatitude: zod.number().nullable(),
-          siteLongitude: zod.number().nullable(),
-          partnerName: zod.string().nullable(),
-          vendorName: zod.string().nullable(),
-          workTypeName: zod.string().nullable(),
-          foremanUserId: zod.number().nullable(),
-          foremanName: zod
-            .string()
-            .describe(
-              "`users.displayName` of the assigned foreman. Empty string\nwhen the ticket has no foreman or the foreman row has no\ndisplay name set.\n",
-            ),
-          isForeman: zod
-            .boolean()
-            .describe(
-              "True when the ticket's foremanUserId matches the calling session user.",
-            ),
-          myAckStatus: zod
-            .union([
-              zod
-                .enum(["pending", "confirmed", "declined"])
-                .describe(
-                  "Per-(crew, ticket) acknowledgement status. `pending` is the\ndefault for a freshly-rostered crew member; `confirmed` and\n`declined` are written by `POST \/tickets\/{id}\/crew\/ack` from\nthe mobile Schedule tab.\n",
-                ),
-              zod.null(),
-            ])
-            .describe(
-              "The calling user's own `ticket_crew.ackStatus` for this\nticket, or `null` when the user is the foreman-only (not\nalso a crew member) and therefore has no ack row.\n",
-            ),
-          crew: zod.array(
-            zod
-              .object({
-                employeeId: zod.number(),
-                userId: zod.number().nullable(),
-                name: zod
-                  .string()
-                  .describe(
-                    "`firstName + lastName` (trimmed). Empty string when the\nunderlying `vendor_people` row has neither set.\n",
-                  ),
-                isMe: zod
-                  .boolean()
-                  .describe(
-                    "True when this crew row's `userId` matches the calling session user.",
-                  ),
-                ackStatus: zod
-                  .enum(["pending", "confirmed", "declined"])
-                  .describe(
-                    "Per-(crew, ticket) acknowledgement status. `pending` is the\ndefault for a freshly-rostered crew member; `confirmed` and\n`declined` are written by `POST \/tickets\/{id}\/crew\/ack` from\nthe mobile Schedule tab.\n",
-                  ),
-              })
-              .describe(
-                "One active `ticket_crew` row, denormalized with the matching\n`vendor_people` name. Returned inside `ScheduledTicket.crew`\nso the mobile Schedule tab can render crewmate names and\nper-person ack pills next to the calling user's own row.\n",
-              ),
-          ),
-        })
-        .describe(
-          'Denormalized \"upcoming scheduled ticket\" row returned by\n`GET \/me\/upcoming-schedule` for the mobile Schedule tab.\nCombines the ticket row with site, partner, vendor, work-type,\nforeman, and active crew so the mobile screen can render the\nfull card without follow-up fetches.\n',
-        ),
-    ),
-  })
-  .describe(
-    "Envelope returned by `GET \/me\/upcoming-schedule`. The list is\nalways present (empty when the calling user has no upcoming\nscheduled tickets) so the mobile Schedule tab can render the\nempty state without a separate null check.\n",
-  );
+
+export const ListUpcomingScheduleQueryParams = zod.object({
+  "days": zod.coerce.number().min(1).max(listUpcomingScheduleQueryDaysMax).default(listUpcomingScheduleQueryDaysDefault).describe('Look-ahead horizon in days (clamped to `[1, 60]`,\ndefaulting to `14` when omitted or non-numeric).\n')
+})
+
+export const ListUpcomingScheduleResponse = zod.object({
+  "tickets": zod.array(zod.object({
+  "id": zod.number(),
+  "scheduledStartAt": zod.coerce.date().nullable(),
+  "scheduledDurationMinutes": zod.number().nullable(),
+  "status": zod.enum(['draft', 'initiated', 'in_progress', 'pending_review', 'completed', 'submitted', 'approved', 'kicked_back', 'cancelled', 'awaiting_acceptance', 'denied', 'awaiting_payment', 'funds_dispersed']).describe('Canonical lifecycle state of a ticket. Single source of truth\nfor the office web app\'s ticket-status badge \/ action-pill\n(`artifacts\/vndrly\/src\/components\/ticket-status-badge.tsx`,\nwhich derives its color buckets and labels from this enum\nvia `@workspace\/ticket-status-meta`) and the field mobile\napp\'s status pill\n(`artifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts`). Adding\na new status here automatically forces a meta entry on both\nplatforms via the typed `Record<TicketStatus, …>` map in the\nshared lib; missing entries surface as a typecheck error so\nthe UI cannot silently fall back to a raw snake_case string.\n'),
+  "updatedAt": zod.coerce.date().nullable().describe('Last write to the underlying ticket row. Drives the mobile\nschedule pill\'s 7-day inactivity escalation (see\nartifacts\/vndrly-mobile\/lib\/ticketStatusLabels.ts), mirroring\nthe web TicketStatusBadge behavior. Added by Task #605.\n'),
+  "siteName": zod.string().nullable(),
+  "siteAddress": zod.string().nullable(),
+  "siteLatitude": zod.number().nullable(),
+  "siteLongitude": zod.number().nullable(),
+  "partnerName": zod.string().nullable(),
+  "vendorName": zod.string().nullable(),
+  "workTypeName": zod.string().nullable(),
+  "foremanUserId": zod.number().nullable(),
+  "foremanName": zod.string().describe('`users.displayName` of the assigned foreman. Empty string\nwhen the ticket has no foreman or the foreman row has no\ndisplay name set.\n'),
+  "isForeman": zod.boolean().describe('True when the ticket\'s foremanUserId matches the calling session user.'),
+  "myAckStatus": zod.union([zod.enum(['pending', 'confirmed', 'declined']).describe('Per-(crew, ticket) acknowledgement status. `pending` is the\ndefault for a freshly-rostered crew member; `confirmed` and\n`declined` are written by `POST \/tickets\/{id}\/crew\/ack` from\nthe mobile Schedule tab.\n'),zod.null()]).describe('The calling user\'s own `ticket_crew.ackStatus` for this\nticket, or `null` when the user is the foreman-only (not\nalso a crew member) and therefore has no ack row.\n'),
+  "crew": zod.array(zod.object({
+  "employeeId": zod.number(),
+  "userId": zod.number().nullable(),
+  "name": zod.string().describe('`firstName + lastName` (trimmed). Empty string when the\nunderlying `vendor_people` row has neither set.\n'),
+  "isMe": zod.boolean().describe('True when this crew row\'s `userId` matches the calling session user.'),
+  "ackStatus": zod.enum(['pending', 'confirmed', 'declined']).describe('Per-(crew, ticket) acknowledgement status. `pending` is the\ndefault for a freshly-rostered crew member; `confirmed` and\n`declined` are written by `POST \/tickets\/{id}\/crew\/ack` from\nthe mobile Schedule tab.\n')
+}).describe('One active `ticket_crew` row, denormalized with the matching\n`vendor_people` name. Returned inside `ScheduledTicket.crew`\nso the mobile Schedule tab can render crewmate names and\nper-person ack pills next to the calling user\'s own row.\n'))
+}).describe('Denormalized \"upcoming scheduled ticket\" row returned by\n`GET \/me\/upcoming-schedule` for the mobile Schedule tab.\nCombines the ticket row with site, partner, vendor, work-type,\nforeman, and active crew so the mobile screen can render the\nfull card without follow-up fetches.\n'))
+}).describe('Envelope returned by `GET \/me\/upcoming-schedule`. The list is\nalways present (empty when the calling user has no upcoming\nscheduled tickets) so the mobile Schedule tab can render the\nempty state without a separate null check.\n')
+
 
 /**
  * Admin-only. Returns one row per externally-shareable artifact
@@ -6714,191 +4378,74 @@ export const getExportsAuditLogQueryPageSizeMax = 500;
 
 export const getExportsAuditLogQueryLimitMax = 500;
 
-export const GetExportsAuditLogQueryParams = zod.object({
-  page: zod.coerce
-    .number()
-    .min(1)
-    .default(getExportsAuditLogQueryPageDefault)
-    .describe("1-based page index (default 1)."),
-  pageSize: zod.coerce
-    .number()
-    .min(1)
-    .max(getExportsAuditLogQueryPageSizeMax)
-    .default(getExportsAuditLogQueryPageSizeDefault)
-    .describe("Rows per page (default 100, max 500)."),
-  limit: zod.coerce
-    .number()
-    .min(1)
-    .max(getExportsAuditLogQueryLimitMax)
-    .optional()
-    .describe(
-      "Legacy synonym for `pageSize`. When `pageSize` is omitted\nbut `limit` is set, `limit` is used as the page size and\n`page` is forced to 1.\n",
-    ),
-  anchorId: zod.coerce
-    .number()
-    .min(1)
-    .optional()
-    .describe(
-      "Audit row id the caller wants to jump to. The server\ncomputes the page that contains it under the active filter\nand returns that page instead of `page`. If the anchor row\nis filtered out the server falls back to page 1 and sets\n`anchorOutsideFilter: true`.\n",
-    ),
-  from: zod
-    .date()
-    .optional()
-    .describe(
-      "Inclusive lower bound on `createdAt` (ISO-8601 with\noffset).\n",
-    ),
-  to: zod
-    .date()
-    .optional()
-    .describe(
-      "Exclusive upper bound on `createdAt` (ISO-8601 with\noffset). Matches the half-open convention used by other\nreporting periods.\n",
-    ),
-  hasWarnings: zod
-    .enum(["true", "false"])
-    .optional()
-    .describe(
-      "When `true`, restricts the visible rows on the current\npage to those whose `detailJson.warnings` array is\nnon-empty. Filtered-out chain participants are still\nreturned in `chainRows` so the bidirectional badges keep\nworking.\n",
-    ),
-});
 
-export const GetExportsAuditLogResponse = zod
-  .object({
-    rows: zod.array(
-      zod
-        .object({
-          id: zod.number(),
-          reportKind: zod.string(),
-          format: zod.string(),
-          scope: zod
-            .record(zod.string(), zod.unknown())
-            .describe(
-              "Free-form jsonb blob describing the filter parameters used\nto build the export. Shape varies per `reportKind`.\n",
-            ),
-          detailJson: zod
-            .object({
-              warnings: zod
-                .array(
-                  zod
-                    .object({
-                      kind: zod.string().optional(),
-                      identifier: zod.string().optional(),
-                      message: zod.string().optional(),
-                    })
-                    .describe(
-                      "Single per-row warning attached to an accounting push audit row.\nMirrors the `PushWarning` shape defined in\n`lib\/api-zod\/src\/push-warnings.ts` and consumed by the digest\nemails — but every field is optional and additional keys are\nallowed so historic \/ legacy \/ partially-shaped warnings (some\nof which predate the current contract) are still echoed back to\nadmins instead of 500ing the audit page.\n",
-                    ),
-                )
-                .optional(),
-            })
-            .nullable()
-            .describe(
-              "Free-form per-row detail blob. Today this is only populated for\naccounting pushes (QBO \/ OA \/ re-syncs) and carries the\nstructured `warnings` list so the admin UI can show exactly\nwhich rows failed for a given push and re-sync just those rows.\nStays nullable because the great majority of audit rows\n(downloads) have nothing extra to record. Additional keys are\npermitted so new push kinds can extend the blob without an\nOpenAPI change.\n",
-            ),
-          rowCount: zod.number().nullable(),
-          fileBytes: zod.number(),
-          downloadedByUserId: zod.number().nullable(),
-          userRole: zod.string(),
-          userIp: zod.string().nullable(),
-          userAgent: zod.string().nullable(),
-          accountingDigestEmailedAt: zod.coerce.date().nullable(),
-          accountingReconciliationDigestEmailedAt: zod.coerce.date().nullable(),
-          createdAt: zod.coerce.date(),
-          retryChain: zod
-            .array(zod.number())
-            .optional()
-            .describe(
-              "Ordered list of audit ids in this row's connected retry\ncomponent (oldest → newest, inclusive of self). Omitted\nentirely when the row is not part of any chain.\n",
-            ),
-        })
-        .describe(
-          "One row in the `report_export_audit_log` table, returned by\n`GET \/reports\/exports\/audit`. `scope` is the free-form filter\nblob the report was built with (e.g. vendor \/ partner \/ period\nids); `detailJson` carries the after-the-fact warnings list for\naccounting pushes. `retryChain` is present only when the row\nparticipates in a multi-step retry chain.\n",
-        ),
-    ),
-    chainRows: zod
-      .array(
-        zod
-          .object({
-            id: zod.number(),
-            reportKind: zod.string(),
-            format: zod.string(),
-            scope: zod
-              .record(zod.string(), zod.unknown())
-              .describe(
-                "Free-form jsonb blob describing the filter parameters used\nto build the export. Shape varies per `reportKind`.\n",
-              ),
-            detailJson: zod
-              .object({
-                warnings: zod
-                  .array(
-                    zod
-                      .object({
-                        kind: zod.string().optional(),
-                        identifier: zod.string().optional(),
-                        message: zod.string().optional(),
-                      })
-                      .describe(
-                        "Single per-row warning attached to an accounting push audit row.\nMirrors the `PushWarning` shape defined in\n`lib\/api-zod\/src\/push-warnings.ts` and consumed by the digest\nemails — but every field is optional and additional keys are\nallowed so historic \/ legacy \/ partially-shaped warnings (some\nof which predate the current contract) are still echoed back to\nadmins instead of 500ing the audit page.\n",
-                      ),
-                  )
-                  .optional(),
-              })
-              .nullable()
-              .describe(
-                "Free-form per-row detail blob. Today this is only populated for\naccounting pushes (QBO \/ OA \/ re-syncs) and carries the\nstructured `warnings` list so the admin UI can show exactly\nwhich rows failed for a given push and re-sync just those rows.\nStays nullable because the great majority of audit rows\n(downloads) have nothing extra to record. Additional keys are\npermitted so new push kinds can extend the blob without an\nOpenAPI change.\n",
-              ),
-            rowCount: zod.number().nullable(),
-            fileBytes: zod.number(),
-            downloadedByUserId: zod.number().nullable(),
-            userRole: zod.string(),
-            userIp: zod.string().nullable(),
-            userAgent: zod.string().nullable(),
-            accountingDigestEmailedAt: zod.coerce.date().nullable(),
-            accountingReconciliationDigestEmailedAt: zod.coerce
-              .date()
-              .nullable(),
-            createdAt: zod.coerce.date(),
-            retryChain: zod
-              .array(zod.number())
-              .optional()
-              .describe(
-                "Ordered list of audit ids in this row's connected retry\ncomponent (oldest → newest, inclusive of self). Omitted\nentirely when the row is not part of any chain.\n",
-              ),
-          })
-          .describe(
-            "One row in the `report_export_audit_log` table, returned by\n`GET \/reports\/exports\/audit`. `scope` is the free-form filter\nblob the report was built with (e.g. vendor \/ partner \/ period\nids); `detailJson` carries the after-the-fact warnings list for\naccounting pushes. `retryChain` is present only when the row\nparticipates in a multi-step retry chain.\n",
-          ),
-      )
-      .describe(
-        "Chain participants outside the visible page (out-of-window\nancestors \/ descendants, in-window rows the warnings\nfilter hid, in-window rows on a different page). Singleton\n(non-chain) rows are never included here.\n",
-      ),
-    page: zod
-      .number()
-      .describe(
-        "1-based page index actually returned. May differ from the\nrequested `page` when `anchorId` was supplied and the\nserver resolved the anchor to a different page.\n",
-      ),
-    pageSize: zod.number(),
-    totalRows: zod.number().describe("Total rows matching the active filter."),
-    totalWithWarnings: zod
-      .number()
-      .describe(
-        "Count of unfiltered rows on the current page whose\n`detailJson.warnings` array is non-empty. Always computed\nover the unfiltered page so the header badge stays\nmeaningful when `hasWarnings=true` is on.\n",
-      ),
-    anchorId: zod
-      .number()
-      .optional()
-      .describe(
-        "Echo of the `anchorId` query parameter when one was\nsupplied. Omitted otherwise.\n",
-      ),
-    anchorOutsideFilter: zod
-      .boolean()
-      .optional()
-      .describe(
-        "True when an `anchorId` was supplied but no row matching\nit survived the active filter, in which case the server\nreturned page 1 instead of the resolved anchor page.\nOmitted when false.\n",
-      ),
-  })
-  .describe(
-    'Envelope returned by `GET \/reports\/exports\/audit`. `rows` is\nthe visible page after applying every filter; `chainRows`\ncarries chain participants the page or filter would otherwise\nhide so the UI can render full retry-chain metadata and\nbidirectional \"Retried by #N\" badges in a single round-trip.\n',
-  );
+
+
+export const GetExportsAuditLogQueryParams = zod.object({
+  "page": zod.coerce.number().min(1).default(getExportsAuditLogQueryPageDefault).describe('1-based page index (default 1).'),
+  "pageSize": zod.coerce.number().min(1).max(getExportsAuditLogQueryPageSizeMax).default(getExportsAuditLogQueryPageSizeDefault).describe('Rows per page (default 100, max 500).'),
+  "limit": zod.coerce.number().min(1).max(getExportsAuditLogQueryLimitMax).optional().describe('Legacy synonym for `pageSize`. When `pageSize` is omitted\nbut `limit` is set, `limit` is used as the page size and\n`page` is forced to 1.\n'),
+  "anchorId": zod.coerce.number().min(1).optional().describe('Audit row id the caller wants to jump to. The server\ncomputes the page that contains it under the active filter\nand returns that page instead of `page`. If the anchor row\nis filtered out the server falls back to page 1 and sets\n`anchorOutsideFilter: true`.\n'),
+  "from": zod.date().optional().describe('Inclusive lower bound on `createdAt` (ISO-8601 with\noffset).\n'),
+  "to": zod.date().optional().describe('Exclusive upper bound on `createdAt` (ISO-8601 with\noffset). Matches the half-open convention used by other\nreporting periods.\n'),
+  "hasWarnings": zod.enum(['true', 'false']).optional().describe('When `true`, restricts the visible rows on the current\npage to those whose `detailJson.warnings` array is\nnon-empty. Filtered-out chain participants are still\nreturned in `chainRows` so the bidirectional badges keep\nworking.\n')
+})
+
+export const GetExportsAuditLogResponse = zod.object({
+  "rows": zod.array(zod.object({
+  "id": zod.number(),
+  "reportKind": zod.string(),
+  "format": zod.string(),
+  "scope": zod.record(zod.string(), zod.unknown()).describe('Free-form jsonb blob describing the filter parameters used\nto build the export. Shape varies per `reportKind`.\n'),
+  "detailJson": zod.object({
+  "warnings": zod.array(zod.object({
+  "kind": zod.string().optional(),
+  "identifier": zod.string().optional(),
+  "message": zod.string().optional()
+}).describe('Single per-row warning attached to an accounting push audit row.\nMirrors the `PushWarning` shape defined in\n`lib\/api-zod\/src\/push-warnings.ts` and consumed by the digest\nemails — but every field is optional and additional keys are\nallowed so historic \/ legacy \/ partially-shaped warnings (some\nof which predate the current contract) are still echoed back to\nadmins instead of 500ing the audit page.\n')).optional()
+}).nullable().describe('Free-form per-row detail blob. Today this is only populated for\naccounting pushes (QBO \/ OA \/ re-syncs) and carries the\nstructured `warnings` list so the admin UI can show exactly\nwhich rows failed for a given push and re-sync just those rows.\nStays nullable because the great majority of audit rows\n(downloads) have nothing extra to record. Additional keys are\npermitted so new push kinds can extend the blob without an\nOpenAPI change.\n'),
+  "rowCount": zod.number().nullable(),
+  "fileBytes": zod.number(),
+  "downloadedByUserId": zod.number().nullable(),
+  "userRole": zod.string(),
+  "userIp": zod.string().nullable(),
+  "userAgent": zod.string().nullable(),
+  "accountingDigestEmailedAt": zod.coerce.date().nullable(),
+  "accountingReconciliationDigestEmailedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date(),
+  "retryChain": zod.array(zod.number()).optional().describe('Ordered list of audit ids in this row\'s connected retry\ncomponent (oldest → newest, inclusive of self). Omitted\nentirely when the row is not part of any chain.\n')
+}).describe('One row in the `report_export_audit_log` table, returned by\n`GET \/reports\/exports\/audit`. `scope` is the free-form filter\nblob the report was built with (e.g. vendor \/ partner \/ period\nids); `detailJson` carries the after-the-fact warnings list for\naccounting pushes. `retryChain` is present only when the row\nparticipates in a multi-step retry chain.\n')),
+  "chainRows": zod.array(zod.object({
+  "id": zod.number(),
+  "reportKind": zod.string(),
+  "format": zod.string(),
+  "scope": zod.record(zod.string(), zod.unknown()).describe('Free-form jsonb blob describing the filter parameters used\nto build the export. Shape varies per `reportKind`.\n'),
+  "detailJson": zod.object({
+  "warnings": zod.array(zod.object({
+  "kind": zod.string().optional(),
+  "identifier": zod.string().optional(),
+  "message": zod.string().optional()
+}).describe('Single per-row warning attached to an accounting push audit row.\nMirrors the `PushWarning` shape defined in\n`lib\/api-zod\/src\/push-warnings.ts` and consumed by the digest\nemails — but every field is optional and additional keys are\nallowed so historic \/ legacy \/ partially-shaped warnings (some\nof which predate the current contract) are still echoed back to\nadmins instead of 500ing the audit page.\n')).optional()
+}).nullable().describe('Free-form per-row detail blob. Today this is only populated for\naccounting pushes (QBO \/ OA \/ re-syncs) and carries the\nstructured `warnings` list so the admin UI can show exactly\nwhich rows failed for a given push and re-sync just those rows.\nStays nullable because the great majority of audit rows\n(downloads) have nothing extra to record. Additional keys are\npermitted so new push kinds can extend the blob without an\nOpenAPI change.\n'),
+  "rowCount": zod.number().nullable(),
+  "fileBytes": zod.number(),
+  "downloadedByUserId": zod.number().nullable(),
+  "userRole": zod.string(),
+  "userIp": zod.string().nullable(),
+  "userAgent": zod.string().nullable(),
+  "accountingDigestEmailedAt": zod.coerce.date().nullable(),
+  "accountingReconciliationDigestEmailedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date(),
+  "retryChain": zod.array(zod.number()).optional().describe('Ordered list of audit ids in this row\'s connected retry\ncomponent (oldest → newest, inclusive of self). Omitted\nentirely when the row is not part of any chain.\n')
+}).describe('One row in the `report_export_audit_log` table, returned by\n`GET \/reports\/exports\/audit`. `scope` is the free-form filter\nblob the report was built with (e.g. vendor \/ partner \/ period\nids); `detailJson` carries the after-the-fact warnings list for\naccounting pushes. `retryChain` is present only when the row\nparticipates in a multi-step retry chain.\n')).describe('Chain participants outside the visible page (out-of-window\nancestors \/ descendants, in-window rows the warnings\nfilter hid, in-window rows on a different page). Singleton\n(non-chain) rows are never included here.\n'),
+  "page": zod.number().describe('1-based page index actually returned. May differ from the\nrequested `page` when `anchorId` was supplied and the\nserver resolved the anchor to a different page.\n'),
+  "pageSize": zod.number(),
+  "totalRows": zod.number().describe('Total rows matching the active filter.'),
+  "totalWithWarnings": zod.number().describe('Count of unfiltered rows on the current page whose\n`detailJson.warnings` array is non-empty. Always computed\nover the unfiltered page so the header badge stays\nmeaningful when `hasWarnings=true` is on.\n'),
+  "anchorId": zod.number().optional().describe('Echo of the `anchorId` query parameter when one was\nsupplied. Omitted otherwise.\n'),
+  "anchorOutsideFilter": zod.boolean().optional().describe('True when an `anchorId` was supplied but no row matching\nit survived the active filter, in which case the server\nreturned page 1 instead of the resolved anchor page.\nOmitted when false.\n')
+}).describe('Envelope returned by `GET \/reports\/exports\/audit`. `rows` is\nthe visible page after applying every filter; `chainRows`\ncarries chain participants the page or filter would otherwise\nhide so the UI can render full retry-chain metadata and\nbidirectional \"Retried by #N\" badges in a single round-trip.\n')
+
 
 /**
  * Returns the minimal brand-only subset of the platform_settings
@@ -6912,30 +4459,18 @@ web `useGetPlatformSettings` already provides.
 
  * @summary Public VNDRLY platform brand (no auth)
  */
-export const getPublicPlatformBrandResponseBrandPrimaryColorRegExp = new RegExp(
-  "^#[0-9a-fA-F]{6}$",
-);
-export const getPublicPlatformBrandResponseBrandAccentColorRegExp = new RegExp(
-  "^#[0-9a-fA-F]{6}$",
-);
+export const getPublicPlatformBrandResponseBrandPrimaryColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const getPublicPlatformBrandResponseBrandAccentColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 
-export const GetPublicPlatformBrandResponse = zod
-  .object({
-    name: zod.string(),
-    brandPrimaryColor: zod
-      .string()
-      .regex(getPublicPlatformBrandResponseBrandPrimaryColorRegExp)
-      .nullish(),
-    brandAccentColor: zod
-      .string()
-      .regex(getPublicPlatformBrandResponseBrandAccentColorRegExp)
-      .nullish(),
-    logoUrl: zod.string().nullish(),
-    logoSquareUrl: zod.string().nullish(),
-  })
-  .describe(
-    "Brand-only subset of platform_settings exposed via the public\nunauthenticated `\/public\/platform-brand` endpoint. Intentionally\nomits sensitive admin fields (contact info, addresses, QB\nretention overrides, etc.) so pre-auth mobile\/web surfaces can\nread VNDRLY's brand without leaking platform configuration.\n",
-  );
+
+export const GetPublicPlatformBrandResponse = zod.object({
+  "name": zod.string(),
+  "brandPrimaryColor": zod.string().regex(getPublicPlatformBrandResponseBrandPrimaryColorRegExp).nullish(),
+  "brandAccentColor": zod.string().regex(getPublicPlatformBrandResponseBrandAccentColorRegExp).nullish(),
+  "logoUrl": zod.string().nullish(),
+  "logoSquareUrl": zod.string().nullish()
+}).describe('Brand-only subset of platform_settings exposed via the public\nunauthenticated `\/public\/platform-brand` endpoint. Intentionally\nomits sensitive admin fields (contact info, addresses, QB\nretention overrides, etc.) so pre-auth mobile\/web surfaces can\nread VNDRLY\'s brand without leaking platform configuration.\n')
+
 
 /**
  * Returns the platform_settings row (id=1). Available to any
@@ -6945,176 +4480,101 @@ admin role via PATCH.
 
  * @summary Get VNDRLY platform settings (singleton)
  */
-export const getPlatformSettingsResponseBrandPrimaryColorRegExp = new RegExp(
-  "^#[0-9a-fA-F]{6}$",
-);
-export const getPlatformSettingsResponseBrandAccentColorRegExp = new RegExp(
-  "^#[0-9a-fA-F]{6}$",
-);
+export const getPlatformSettingsResponseBrandPrimaryColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const getPlatformSettingsResponseBrandAccentColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const getPlatformSettingsResponseQbBulkActionRetentionDaysMax = 1825;
 
+
+
 export const GetPlatformSettingsResponse = zod.object({
-  id: zod.number(),
-  name: zod.string(),
-  contactName: zod.string().nullish(),
-  contactEmail: zod.string().nullish(),
-  contactPhone: zod.string().nullish(),
-  physicalAddress: zod.string().nullish(),
-  billingAddress: zod.string().nullish(),
-  businessPhone: zod.string().nullish(),
-  hoursOfOperation: zod.string().nullish(),
-  blurb: zod.string().nullish(),
-  logoUrl: zod.string().nullish(),
-  logoSquareUrl: zod.string().nullish(),
-  brandPrimaryColor: zod
-    .string()
-    .regex(getPlatformSettingsResponseBrandPrimaryColorRegExp)
-    .nullish(),
-  brandAccentColor: zod
-    .string()
-    .regex(getPlatformSettingsResponseBrandAccentColorRegExp)
-    .nullish(),
-  qbBulkActionRetentionDays: zod
-    .number()
-    .min(1)
-    .max(getPlatformSettingsResponseQbBulkActionRetentionDaysMax)
-    .nullish()
-    .describe(
-      "Admin-tunable override for the QuickBooks bulk-action undo\nretention window (in days). When null, the server falls back\nto the QB_BULK_ACTION_RETENTION_DAYS env var (which itself\ndefaults to 90 days). Allowed range: 1..1825 (5 years).\n",
-    ),
-  qbBulkActionRetentionLastChange: zod
-    .union([
-      zod
-        .object({
-          changedAt: zod.coerce.date(),
-          actorUserId: zod.number().nullable(),
-          actorDisplayName: zod
-            .string()
-            .nullable()
-            .describe(
-              "Display name of the actor at audit-write time. Null when the user has since been deleted.",
-            ),
-          actorRole: zod.string(),
-          prevValue: zod.string().nullable(),
-          newValue: zod.string().nullable(),
-        })
-        .describe(
-          'Most-recent change record for a single audited field on the\nplatform_settings singleton. `prevValue`\/`newValue` are the\nstringified before\/after values; null means \"no override \/ fall\nback to the system default\".\n',
-        ),
-      zod.null(),
-    ])
-    .describe(
-      "Most recent change to `qbBulkActionRetentionDays`, sourced\nfrom `platform_settings_audit_log`. Null when the override\nhas never been set or cleared by an admin (i.e. the value\nhas only ever been the system default).\n",
-    ),
-  updatedAt: zod.coerce.date(),
-});
+  "id": zod.number(),
+  "name": zod.string(),
+  "contactName": zod.string().nullish(),
+  "contactEmail": zod.string().nullish(),
+  "contactPhone": zod.string().nullish(),
+  "physicalAddress": zod.string().nullish(),
+  "billingAddress": zod.string().nullish(),
+  "businessPhone": zod.string().nullish(),
+  "hoursOfOperation": zod.string().nullish(),
+  "blurb": zod.string().nullish(),
+  "logoUrl": zod.string().nullish(),
+  "logoSquareUrl": zod.string().nullish(),
+  "brandPrimaryColor": zod.string().regex(getPlatformSettingsResponseBrandPrimaryColorRegExp).nullish(),
+  "brandAccentColor": zod.string().regex(getPlatformSettingsResponseBrandAccentColorRegExp).nullish(),
+  "qbBulkActionRetentionDays": zod.number().min(1).max(getPlatformSettingsResponseQbBulkActionRetentionDaysMax).nullish().describe('Admin-tunable override for the QuickBooks bulk-action undo\nretention window (in days). When null, the server falls back\nto the QB_BULK_ACTION_RETENTION_DAYS env var (which itself\ndefaults to 90 days). Allowed range: 1..1825 (5 years).\n'),
+  "qbBulkActionRetentionLastChange": zod.union([zod.object({
+  "changedAt": zod.coerce.date(),
+  "actorUserId": zod.number().nullable(),
+  "actorDisplayName": zod.string().nullable().describe('Display name of the actor at audit-write time. Null when the user has since been deleted.'),
+  "actorRole": zod.string(),
+  "prevValue": zod.string().nullable(),
+  "newValue": zod.string().nullable()
+}).describe('Most-recent change record for a single audited field on the\nplatform_settings singleton. `prevValue`\/`newValue` are the\nstringified before\/after values; null means \"no override \/ fall\nback to the system default\".\n'),zod.null()]).describe('Most recent change to `qbBulkActionRetentionDays`, sourced\nfrom `platform_settings_audit_log`. Null when the override\nhas never been set or cleared by an admin (i.e. the value\nhas only ever been the system default).\n'),
+  "updatedAt": zod.coerce.date()
+})
+
 
 /**
  * Admin-only. Partial update of the singleton row.
  * @summary Update VNDRLY platform settings
  */
 
-export const updatePlatformSettingsBodyBrandPrimaryColorRegExp = new RegExp(
-  "^#[0-9a-fA-F]{6}$",
-);
-export const updatePlatformSettingsBodyBrandAccentColorRegExp = new RegExp(
-  "^#[0-9a-fA-F]{6}$",
-);
+export const updatePlatformSettingsBodyBrandPrimaryColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const updatePlatformSettingsBodyBrandAccentColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const updatePlatformSettingsBodyQbBulkActionRetentionDaysMax = 1825;
 
-export const UpdatePlatformSettingsBody = zod.object({
-  name: zod.string().min(1).optional(),
-  contactName: zod.string().nullish(),
-  contactEmail: zod.string().nullish(),
-  contactPhone: zod.string().nullish(),
-  physicalAddress: zod.string().nullish(),
-  billingAddress: zod.string().nullish(),
-  businessPhone: zod.string().nullish(),
-  hoursOfOperation: zod.string().nullish(),
-  blurb: zod.string().nullish(),
-  logoUrl: zod.string().nullish(),
-  logoSquareUrl: zod.string().nullish(),
-  brandPrimaryColor: zod
-    .string()
-    .regex(updatePlatformSettingsBodyBrandPrimaryColorRegExp)
-    .nullish(),
-  brandAccentColor: zod
-    .string()
-    .regex(updatePlatformSettingsBodyBrandAccentColorRegExp)
-    .nullish(),
-  qbBulkActionRetentionDays: zod
-    .number()
-    .min(1)
-    .max(updatePlatformSettingsBodyQbBulkActionRetentionDaysMax)
-    .nullish()
-    .describe(
-      "Admin-tunable override for the QuickBooks bulk-action undo\nretention window (in days). Pass null to clear the override\nand fall back to the env-var \/ 90-day default.\n",
-    ),
-});
 
-export const updatePlatformSettingsResponseBrandPrimaryColorRegExp = new RegExp(
-  "^#[0-9a-fA-F]{6}$",
-);
-export const updatePlatformSettingsResponseBrandAccentColorRegExp = new RegExp(
-  "^#[0-9a-fA-F]{6}$",
-);
+
+export const UpdatePlatformSettingsBody = zod.object({
+  "name": zod.string().min(1).optional(),
+  "contactName": zod.string().nullish(),
+  "contactEmail": zod.string().nullish(),
+  "contactPhone": zod.string().nullish(),
+  "physicalAddress": zod.string().nullish(),
+  "billingAddress": zod.string().nullish(),
+  "businessPhone": zod.string().nullish(),
+  "hoursOfOperation": zod.string().nullish(),
+  "blurb": zod.string().nullish(),
+  "logoUrl": zod.string().nullish(),
+  "logoSquareUrl": zod.string().nullish(),
+  "brandPrimaryColor": zod.string().regex(updatePlatformSettingsBodyBrandPrimaryColorRegExp).nullish(),
+  "brandAccentColor": zod.string().regex(updatePlatformSettingsBodyBrandAccentColorRegExp).nullish(),
+  "qbBulkActionRetentionDays": zod.number().min(1).max(updatePlatformSettingsBodyQbBulkActionRetentionDaysMax).nullish().describe('Admin-tunable override for the QuickBooks bulk-action undo\nretention window (in days). Pass null to clear the override\nand fall back to the env-var \/ 90-day default.\n')
+})
+
+export const updatePlatformSettingsResponseBrandPrimaryColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const updatePlatformSettingsResponseBrandAccentColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const updatePlatformSettingsResponseQbBulkActionRetentionDaysMax = 1825;
 
+
+
 export const UpdatePlatformSettingsResponse = zod.object({
-  id: zod.number(),
-  name: zod.string(),
-  contactName: zod.string().nullish(),
-  contactEmail: zod.string().nullish(),
-  contactPhone: zod.string().nullish(),
-  physicalAddress: zod.string().nullish(),
-  billingAddress: zod.string().nullish(),
-  businessPhone: zod.string().nullish(),
-  hoursOfOperation: zod.string().nullish(),
-  blurb: zod.string().nullish(),
-  logoUrl: zod.string().nullish(),
-  logoSquareUrl: zod.string().nullish(),
-  brandPrimaryColor: zod
-    .string()
-    .regex(updatePlatformSettingsResponseBrandPrimaryColorRegExp)
-    .nullish(),
-  brandAccentColor: zod
-    .string()
-    .regex(updatePlatformSettingsResponseBrandAccentColorRegExp)
-    .nullish(),
-  qbBulkActionRetentionDays: zod
-    .number()
-    .min(1)
-    .max(updatePlatformSettingsResponseQbBulkActionRetentionDaysMax)
-    .nullish()
-    .describe(
-      "Admin-tunable override for the QuickBooks bulk-action undo\nretention window (in days). When null, the server falls back\nto the QB_BULK_ACTION_RETENTION_DAYS env var (which itself\ndefaults to 90 days). Allowed range: 1..1825 (5 years).\n",
-    ),
-  qbBulkActionRetentionLastChange: zod
-    .union([
-      zod
-        .object({
-          changedAt: zod.coerce.date(),
-          actorUserId: zod.number().nullable(),
-          actorDisplayName: zod
-            .string()
-            .nullable()
-            .describe(
-              "Display name of the actor at audit-write time. Null when the user has since been deleted.",
-            ),
-          actorRole: zod.string(),
-          prevValue: zod.string().nullable(),
-          newValue: zod.string().nullable(),
-        })
-        .describe(
-          'Most-recent change record for a single audited field on the\nplatform_settings singleton. `prevValue`\/`newValue` are the\nstringified before\/after values; null means \"no override \/ fall\nback to the system default\".\n',
-        ),
-      zod.null(),
-    ])
-    .describe(
-      "Most recent change to `qbBulkActionRetentionDays`, sourced\nfrom `platform_settings_audit_log`. Null when the override\nhas never been set or cleared by an admin (i.e. the value\nhas only ever been the system default).\n",
-    ),
-  updatedAt: zod.coerce.date(),
-});
+  "id": zod.number(),
+  "name": zod.string(),
+  "contactName": zod.string().nullish(),
+  "contactEmail": zod.string().nullish(),
+  "contactPhone": zod.string().nullish(),
+  "physicalAddress": zod.string().nullish(),
+  "billingAddress": zod.string().nullish(),
+  "businessPhone": zod.string().nullish(),
+  "hoursOfOperation": zod.string().nullish(),
+  "blurb": zod.string().nullish(),
+  "logoUrl": zod.string().nullish(),
+  "logoSquareUrl": zod.string().nullish(),
+  "brandPrimaryColor": zod.string().regex(updatePlatformSettingsResponseBrandPrimaryColorRegExp).nullish(),
+  "brandAccentColor": zod.string().regex(updatePlatformSettingsResponseBrandAccentColorRegExp).nullish(),
+  "qbBulkActionRetentionDays": zod.number().min(1).max(updatePlatformSettingsResponseQbBulkActionRetentionDaysMax).nullish().describe('Admin-tunable override for the QuickBooks bulk-action undo\nretention window (in days). When null, the server falls back\nto the QB_BULK_ACTION_RETENTION_DAYS env var (which itself\ndefaults to 90 days). Allowed range: 1..1825 (5 years).\n'),
+  "qbBulkActionRetentionLastChange": zod.union([zod.object({
+  "changedAt": zod.coerce.date(),
+  "actorUserId": zod.number().nullable(),
+  "actorDisplayName": zod.string().nullable().describe('Display name of the actor at audit-write time. Null when the user has since been deleted.'),
+  "actorRole": zod.string(),
+  "prevValue": zod.string().nullable(),
+  "newValue": zod.string().nullable()
+}).describe('Most-recent change record for a single audited field on the\nplatform_settings singleton. `prevValue`\/`newValue` are the\nstringified before\/after values; null means \"no override \/ fall\nback to the system default\".\n'),zod.null()]).describe('Most recent change to `qbBulkActionRetentionDays`, sourced\nfrom `platform_settings_audit_log`. Null when the override\nhas never been set or cleared by an admin (i.e. the value\nhas only ever been the system default).\n'),
+  "updatedAt": zod.coerce.date()
+})
+
 
 /**
  * Admin-only. Returns the singleton fire_transmitter_settings row
@@ -7127,57 +4587,21 @@ e-file route enforces.
 
  * @summary Get IRS FIRE transmitter settings (singleton)
  */
-export const GetFireTransmitterSettingsResponse = zod
-  .object({
-    tcc: zod
-      .string()
-      .nullable()
-      .describe("5-character Transmitter Control Code assigned by the IRS."),
-    ein: zod
-      .string()
-      .nullable()
-      .describe("Transmitter EIN (9 digits, no dashes)."),
-    name: zod
-      .string()
-      .nullable()
-      .describe(
-        "Transmitter legal name (40 chars, written into the T record).",
-      ),
-    address: zod
-      .string()
-      .nullable()
-      .describe(
-        "Single-line transmitter mailing address — the FIRE\ngenerator parses it into street\/city\/state\/zip.\n",
-      ),
-    contactName: zod.string().nullable(),
-    contactEmail: zod.string().nullable(),
-    contactPhone: zod
-      .string()
-      .nullable()
-      .describe("Digits only, 10-character US phone number."),
-    updatedAt: zod.coerce.date().nullable(),
-    updatedByUserId: zod.number().nullable(),
-    updatedByName: zod
-      .string()
-      .nullable()
-      .describe(
-        "Display name of the admin who last saved the row, joined\nfrom `users.display_name`. Null when no row has been saved\nyet or when the linked user has been deleted.\n",
-      ),
-    updatedByEmail: zod
-      .string()
-      .nullable()
-      .describe(
-        "Email of the admin who last saved the row, used as a\nfallback in the UI when `updatedByName` is blank.\n",
-      ),
-    missing: zod
-      .array(zod.string())
-      .describe(
-        "Field names that are still blank\/unparseable and would\nblock a real (non-test) FIRE submission. Empty when every\nrequired value is set and the address parses cleanly.\n",
-      ),
-  })
-  .describe(
-    "Singleton row of IRS FIRE transmitter info. Each value is null\nwhen not yet saved (UI shows it as blank); a save replaces all\nseven values together.\n",
-  );
+export const GetFireTransmitterSettingsResponse = zod.object({
+  "tcc": zod.string().nullable().describe('5-character Transmitter Control Code assigned by the IRS.'),
+  "ein": zod.string().nullable().describe('Transmitter EIN (9 digits, no dashes).'),
+  "name": zod.string().nullable().describe('Transmitter legal name (40 chars, written into the T record).'),
+  "address": zod.string().nullable().describe('Single-line transmitter mailing address — the FIRE\ngenerator parses it into street\/city\/state\/zip.\n'),
+  "contactName": zod.string().nullable(),
+  "contactEmail": zod.string().nullable(),
+  "contactPhone": zod.string().nullable().describe('Digits only, 10-character US phone number.'),
+  "updatedAt": zod.coerce.date().nullable(),
+  "updatedByUserId": zod.number().nullable(),
+  "updatedByName": zod.string().nullable().describe('Display name of the admin who last saved the row, joined\nfrom `users.display_name`. Null when no row has been saved\nyet or when the linked user has been deleted.\n'),
+  "updatedByEmail": zod.string().nullable().describe('Email of the admin who last saved the row, used as a\nfallback in the UI when `updatedByName` is blank.\n'),
+  "missing": zod.array(zod.string()).describe('Field names that are still blank\/unparseable and would\nblock a real (non-test) FIRE submission. Empty when every\nrequired value is set and the address parses cleanly.\n')
+}).describe('Singleton row of IRS FIRE transmitter info. Each value is null\nwhen not yet saved (UI shows it as blank); a save replaces all\nseven values together.\n')
+
 
 /**
  * Admin-only. Replaces every column on the singleton row in one
@@ -7190,71 +4614,39 @@ into city/state/zip — so a successful save means a real
  * @summary Save IRS FIRE transmitter settings
  */
 
-export const UpdateFireTransmitterSettingsBody = zod
-  .object({
-    tcc: zod.string().min(1),
-    ein: zod.string().min(1),
-    name: zod.string().min(1),
-    address: zod.string().min(1),
-    contactName: zod.string().min(1),
-    contactEmail: zod.string().min(1),
-    contactPhone: zod.string().min(1),
-  })
-  .describe(
-    "Replaces every column on the singleton transmitter row. All\nseven fields are required and validated by the same rules the\ne-file route enforces (non-blank; address must parse into\nstreet\/city\/state\/zip).\n",
-  );
 
-export const UpdateFireTransmitterSettingsResponse = zod
-  .object({
-    tcc: zod
-      .string()
-      .nullable()
-      .describe("5-character Transmitter Control Code assigned by the IRS."),
-    ein: zod
-      .string()
-      .nullable()
-      .describe("Transmitter EIN (9 digits, no dashes)."),
-    name: zod
-      .string()
-      .nullable()
-      .describe(
-        "Transmitter legal name (40 chars, written into the T record).",
-      ),
-    address: zod
-      .string()
-      .nullable()
-      .describe(
-        "Single-line transmitter mailing address — the FIRE\ngenerator parses it into street\/city\/state\/zip.\n",
-      ),
-    contactName: zod.string().nullable(),
-    contactEmail: zod.string().nullable(),
-    contactPhone: zod
-      .string()
-      .nullable()
-      .describe("Digits only, 10-character US phone number."),
-    updatedAt: zod.coerce.date().nullable(),
-    updatedByUserId: zod.number().nullable(),
-    updatedByName: zod
-      .string()
-      .nullable()
-      .describe(
-        "Display name of the admin who last saved the row, joined\nfrom `users.display_name`. Null when no row has been saved\nyet or when the linked user has been deleted.\n",
-      ),
-    updatedByEmail: zod
-      .string()
-      .nullable()
-      .describe(
-        "Email of the admin who last saved the row, used as a\nfallback in the UI when `updatedByName` is blank.\n",
-      ),
-    missing: zod
-      .array(zod.string())
-      .describe(
-        "Field names that are still blank\/unparseable and would\nblock a real (non-test) FIRE submission. Empty when every\nrequired value is set and the address parses cleanly.\n",
-      ),
-  })
-  .describe(
-    "Singleton row of IRS FIRE transmitter info. Each value is null\nwhen not yet saved (UI shows it as blank); a save replaces all\nseven values together.\n",
-  );
+
+
+
+
+
+
+
+export const UpdateFireTransmitterSettingsBody = zod.object({
+  "tcc": zod.string().min(1),
+  "ein": zod.string().min(1),
+  "name": zod.string().min(1),
+  "address": zod.string().min(1),
+  "contactName": zod.string().min(1),
+  "contactEmail": zod.string().min(1),
+  "contactPhone": zod.string().min(1)
+}).describe('Replaces every column on the singleton transmitter row. All\nseven fields are required and validated by the same rules the\ne-file route enforces (non-blank; address must parse into\nstreet\/city\/state\/zip).\n')
+
+export const UpdateFireTransmitterSettingsResponse = zod.object({
+  "tcc": zod.string().nullable().describe('5-character Transmitter Control Code assigned by the IRS.'),
+  "ein": zod.string().nullable().describe('Transmitter EIN (9 digits, no dashes).'),
+  "name": zod.string().nullable().describe('Transmitter legal name (40 chars, written into the T record).'),
+  "address": zod.string().nullable().describe('Single-line transmitter mailing address — the FIRE\ngenerator parses it into street\/city\/state\/zip.\n'),
+  "contactName": zod.string().nullable(),
+  "contactEmail": zod.string().nullable(),
+  "contactPhone": zod.string().nullable().describe('Digits only, 10-character US phone number.'),
+  "updatedAt": zod.coerce.date().nullable(),
+  "updatedByUserId": zod.number().nullable(),
+  "updatedByName": zod.string().nullable().describe('Display name of the admin who last saved the row, joined\nfrom `users.display_name`. Null when no row has been saved\nyet or when the linked user has been deleted.\n'),
+  "updatedByEmail": zod.string().nullable().describe('Email of the admin who last saved the row, used as a\nfallback in the UI when `updatedByName` is blank.\n'),
+  "missing": zod.array(zod.string()).describe('Field names that are still blank\/unparseable and would\nblock a real (non-test) FIRE submission. Empty when every\nrequired value is set and the address parses cleanly.\n')
+}).describe('Singleton row of IRS FIRE transmitter info. Each value is null\nwhen not yet saved (UI shows it as blank); a save replaces all\nseven values together.\n')
+
 
 /**
  * Admin-only history view over `fire_transmitter_settings_audit_log`.
@@ -7275,65 +4667,33 @@ export const listFireTransmitterSettingsHistoryQueryLimitMax = 200;
 
 export const listFireTransmitterSettingsHistoryQueryOffsetMin = 0;
 
+
+
 export const ListFireTransmitterSettingsHistoryQueryParams = zod.object({
-  limit: zod.coerce
-    .number()
-    .min(1)
-    .max(listFireTransmitterSettingsHistoryQueryLimitMax)
-    .optional()
-    .describe("Max rows to return. Default 50, capped at 200."),
-  offset: zod.coerce
-    .number()
-    .min(listFireTransmitterSettingsHistoryQueryOffsetMin)
-    .optional()
-    .describe("Skip this many rows before returning. Default 0."),
-});
+  "limit": zod.coerce.number().min(1).max(listFireTransmitterSettingsHistoryQueryLimitMax).optional().describe('Max rows to return. Default 50, capped at 200.'),
+  "offset": zod.coerce.number().min(listFireTransmitterSettingsHistoryQueryOffsetMin).optional().describe('Skip this many rows before returning. Default 0.')
+})
 
 export const ListFireTransmitterSettingsHistoryResponse = zod.object({
-  items: zod.array(
-    zod
-      .object({
-        id: zod.number(),
-        createdAt: zod.coerce.date(),
-        changes: zod
-          .record(
-            zod.string(),
-            zod
-              .object({
-                before: zod.string().nullable(),
-                after: zod.string().nullable(),
-              })
-              .describe(
-                "Per-field `{ before, after }` diff entry. Both sides are\nrendered as strings in the UI; `before` is null when the\ncolumn had never been saved before this change.\n",
-              ),
-          )
-          .describe(
-            "Map of changed-column-name → `{ before, after }`. Only\ncolumns whose value actually changed in this save appear.\n",
-          ),
-        actorUserId: zod.number().nullish(),
-        actorDisplayName: zod
-          .string()
-          .nullish()
-          .describe(
-            "`users.display_name` of the actor at read time. NULL if\nthe user has since been deleted (the FK is\n`ON DELETE SET NULL`).\n",
-          ),
-        actorEmail: zod.string().nullish(),
-        actorRole: zod.string(),
-        actorIp: zod.string().nullish(),
-        actorUserAgent: zod.string().nullish(),
-      })
-      .describe(
-        "One row from `fire_transmitter_settings_audit_log` joined to\n`users` for actor display name + email at read time. Each row\nis a single save that changed at least one column.\n",
-      ),
-  ),
-  total: zod
-    .number()
-    .describe(
-      "Total number of rows in\n`fire_transmitter_settings_audit_log` (independent of the\ncurrent `limit` \/ `offset`).\n",
-    ),
-  limit: zod.number(),
-  offset: zod.number(),
-});
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "createdAt": zod.coerce.date(),
+  "changes": zod.record(zod.string(), zod.object({
+  "before": zod.string().nullable(),
+  "after": zod.string().nullable()
+}).describe('Per-field `{ before, after }` diff entry. Both sides are\nrendered as strings in the UI; `before` is null when the\ncolumn had never been saved before this change.\n')).describe('Map of changed-column-name → `{ before, after }`. Only\ncolumns whose value actually changed in this save appear.\n'),
+  "actorUserId": zod.number().nullish(),
+  "actorDisplayName": zod.string().nullish().describe('`users.display_name` of the actor at read time. NULL if\nthe user has since been deleted (the FK is\n`ON DELETE SET NULL`).\n'),
+  "actorEmail": zod.string().nullish(),
+  "actorRole": zod.string(),
+  "actorIp": zod.string().nullish(),
+  "actorUserAgent": zod.string().nullish()
+}).describe('One row from `fire_transmitter_settings_audit_log` joined to\n`users` for actor display name + email at read time. Each row\nis a single save that changed at least one column.\n')),
+  "total": zod.number().describe('Total number of rows in\n`fire_transmitter_settings_audit_log` (independent of the\ncurrent `limit` \/ `offset`).\n'),
+  "limit": zod.number(),
+  "offset": zod.number()
+})
+
 
 /**
  * Admin-only. Returns every demo account (canonical list lives in
@@ -7346,33 +4706,16 @@ at runtime.
  * @summary List demo accounts with their per-locale label overrides
  */
 export const ListDemoUserLabelsResponse = zod.object({
-  locales: zod
-    .array(zod.string())
-    .describe("Supported locales the editor should render columns for."),
-  entries: zod.array(
-    zod
-      .object({
-        username: zod.string(),
-        displayName: zod.string(),
-        role: zod
-          .string()
-          .describe(
-            "Demo account role (admin, partner, vendor, field_employee).",
-          ),
-        defaults: zod
-          .record(zod.string(), zod.string())
-          .describe("Baked-in default label per locale, from source code."),
-        overrides: zod
-          .record(zod.string(), zod.string())
-          .describe(
-            "Per-locale override labels currently set in the DB. Missing\nlocales are unset and the corresponding `defaults` value\ntakes effect.\n",
-          ),
-      })
-      .describe(
-        "One demo account with its baked-in default label per supported\nlocale and any per-locale admin override loaded from\n`demo_user_label_overrides`. The frontend renders this as a row\nin the per-language editor; an unset locale in `overrides`\nmeans the source default is in effect.\n",
-      ),
-  ),
-});
+  "locales": zod.array(zod.string()).describe('Supported locales the editor should render columns for.'),
+  "entries": zod.array(zod.object({
+  "username": zod.string(),
+  "displayName": zod.string(),
+  "role": zod.string().describe('Demo account role (admin, partner, vendor, field_employee).'),
+  "defaults": zod.record(zod.string(), zod.string()).describe('Baked-in default label per locale, from source code.'),
+  "overrides": zod.record(zod.string(), zod.string()).describe('Per-locale override labels currently set in the DB. Missing\nlocales are unset and the corresponding `defaults` value\ntakes effect.\n')
+}).describe('One demo account with its baked-in default label per supported\nlocale and any per-locale admin override loaded from\n`demo_user_label_overrides`. The frontend renders this as a row\nin the per-language editor; an unset locale in `overrides`\nmeans the source default is in effect.\n'))
+})
+
 
 /**
  * Admin-only. Upserts the override row for one (username, locale)
@@ -7385,69 +4728,40 @@ fall back to the source-of-truth default.
 
 export const upsertDemoUserLabelBodyLocaleMin = 2;
 
+
+
 export const UpsertDemoUserLabelBody = zod.object({
-  username: zod
-    .string()
-    .min(1)
-    .describe(
-      "Demo account username (must match a row in source `DEMO_USERS`).",
-    ),
-  locale: zod
-    .string()
-    .min(upsertDemoUserLabelBodyLocaleMin)
-    .describe(
-      'Locale to override (e.g. \"en\", \"es\"). Must be a supported demo locale.',
-    ),
-  label: zod
-    .string()
-    .nullable()
-    .describe(
-      "New override label. Pass null (or an empty string after\ntrimming) to delete the override row and fall back to the\nsource-code default for this (username, locale).\n",
-    ),
-});
+  "username": zod.string().min(1).describe('Demo account username (must match a row in source `DEMO_USERS`).'),
+  "locale": zod.string().min(upsertDemoUserLabelBodyLocaleMin).describe('Locale to override (e.g. \"en\", \"es\"). Must be a supported demo locale.'),
+  "label": zod.string().nullable().describe('New override label. Pass null (or an empty string after\ntrimming) to delete the override row and fall back to the\nsource-code default for this (username, locale).\n')
+})
 
 export const UpsertDemoUserLabelResponse = zod.object({
-  locales: zod
-    .array(zod.string())
-    .describe("Supported locales the editor should render columns for."),
-  entries: zod.array(
-    zod
-      .object({
-        username: zod.string(),
-        displayName: zod.string(),
-        role: zod
-          .string()
-          .describe(
-            "Demo account role (admin, partner, vendor, field_employee).",
-          ),
-        defaults: zod
-          .record(zod.string(), zod.string())
-          .describe("Baked-in default label per locale, from source code."),
-        overrides: zod
-          .record(zod.string(), zod.string())
-          .describe(
-            "Per-locale override labels currently set in the DB. Missing\nlocales are unset and the corresponding `defaults` value\ntakes effect.\n",
-          ),
-      })
-      .describe(
-        "One demo account with its baked-in default label per supported\nlocale and any per-locale admin override loaded from\n`demo_user_label_overrides`. The frontend renders this as a row\nin the per-language editor; an unset locale in `overrides`\nmeans the source default is in effect.\n",
-      ),
-  ),
-});
+  "locales": zod.array(zod.string()).describe('Supported locales the editor should render columns for.'),
+  "entries": zod.array(zod.object({
+  "username": zod.string(),
+  "displayName": zod.string(),
+  "role": zod.string().describe('Demo account role (admin, partner, vendor, field_employee).'),
+  "defaults": zod.record(zod.string(), zod.string()).describe('Baked-in default label per locale, from source code.'),
+  "overrides": zod.record(zod.string(), zod.string()).describe('Per-locale override labels currently set in the DB. Missing\nlocales are unset and the corresponding `defaults` value\ntakes effect.\n')
+}).describe('One demo account with its baked-in default label per supported\nlocale and any per-locale admin override loaded from\n`demo_user_label_overrides`. The frontend renders this as a row\nin the per-language editor; an unset locale in `overrides`\nmeans the source default is in effect.\n'))
+})
+
 
 /**
  * Admin-only. Returns all users with role=admin.
  * @summary List VNDRLY system administrators
  */
 export const ListAdminUsersResponseItem = zod.object({
-  id: zod.number(),
-  displayName: zod.string(),
-  email: zod.string().nullish(),
-  username: zod.string(),
-  suspendedAt: zod.coerce.date().nullish(),
-  createdAt: zod.coerce.date(),
-});
-export const ListAdminUsersResponse = zod.array(ListAdminUsersResponseItem);
+  "id": zod.number(),
+  "displayName": zod.string(),
+  "email": zod.string().nullish(),
+  "username": zod.string(),
+  "suspendedAt": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date()
+})
+export const ListAdminUsersResponse = zod.array(ListAdminUsersResponseItem)
+
 
 /**
  * Admin-only. Creates a `users` row with role=admin and the
@@ -7458,7 +4772,11 @@ creating admin can hand it off out-of-band.
  * @summary Create a VNDRLY system administrator
  */
 
+
+
 export const CreateAdminUserBody = zod.object({
-  displayName: zod.string().min(1),
-  email: zod.string().email(),
-});
+  "displayName": zod.string().min(1),
+  "email": zod.string().email()
+})
+
+

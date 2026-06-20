@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, integer, doublePrecision, boolean, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, doublePrecision, boolean, uniqueIndex, numeric } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
@@ -19,6 +19,19 @@ export const siteLocationsTable = pgTable("site_locations", {
   siteRadiusMeters: integer("site_radius_meters"),
   afe: text("afe"),
   photoUrl: text("photo_url"),
+  // Resolved from lat/lng at create/update via situs lookup + state rubric.
+  taxJurisdictionPostalCode: text("tax_jurisdiction_postal_code"),
+  taxJurisdictionCounty: text("tax_jurisdiction_county"),
+  taxJurisdictionCity: text("tax_jurisdiction_city"),
+  taxJurisdictionLabel: text("tax_jurisdiction_label"),
+  stateTaxRate: numeric("state_tax_rate", { precision: 6, scale: 4 }),
+  localTaxRate: numeric("local_tax_rate", { precision: 6, scale: 4 }),
+  combinedTaxRate: numeric("combined_tax_rate", { precision: 6, scale: 4 }),
+  // Legacy aliases kept in sync: merchandise=combined, labor=state (informational).
+  merchandiseTaxRate: numeric("merchandise_tax_rate", { precision: 6, scale: 4 }),
+  laborTaxRate: numeric("labor_tax_rate", { precision: 6, scale: 4 }),
+  taxJurisdictionResolvedAt: timestamp("tax_jurisdiction_resolved_at", { withTimezone: true }),
+  taxProvider: text("tax_provider"),
   // Provenance for sites populated by an automated pipeline (RRC, OCC,
   // FracTracker, manual entry, county-area aggregate, etc).
   // Values: 'manual' (default), 'area-anchor', 'rrc', 'occ'.

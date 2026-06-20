@@ -14,5 +14,10 @@ export interface TicketLineItemType {
   description: string;
   quantity: string;
   unitPrice: string;
+  /**
+   * Manual taxability override; null applies state rubric
+   * @nullable
+   */
+  taxableOverride: boolean | null;
   createdAt: Date;
 }

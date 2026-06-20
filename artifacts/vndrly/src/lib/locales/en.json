@@ -944,9 +944,13 @@
     "coordsUpdated": "Coordinates updated",
     "coordsUpdateFailed": "Failed to update coordinates",
     "afeLabel": "AFE:",
+    "taxJurisdictionLabel": "Tax jurisdiction:",
+    "taxJurisdictionPending": "Pending resolution",
+    "taxJurisdictionZipLabel": "Reference ZIP:",
     "afeColumn": "AFE",
     "afeOptional": "AFE (optional)",
     "afeNotSet": "Not set",
+    "removeWorkAssignment": "Remove work assignment",
     "afePlaceholder": "AFE-2026-000123",
     "afeHelp": "Optional. You can also set or change this later from the site detail page.",
     "recentVisitorsTitle": "Recent visitors",
@@ -1221,7 +1225,15 @@
     "importVendorsNotified": "Vendors attached in this import should set rates on Your services & rates.",
     "importFailed": "Import failed",
     "exportEmpty": "Nothing to export yet.",
-    "duplicateNameInline": "A work type with this name already exists."
+    "duplicateNameInline": "A work type with this name already exists.",
+    "taxTreatment": "Tax classification",
+    "taxTreatmentHelp": "Controls whether crew labor is taxed at the site situs rate. Auto infers from category name (e.g. repair → tax labor)."
+  },
+  "taxTreatment": {
+    "auto": "Auto (from category)",
+    "exempt_labor": "Field labor exempt",
+    "taxable_repair_service": "Repair / maintenance (tax labor)",
+    "taxable_all": "All taxable (GRT / broad service)"
   },
   "catalogHealth": {
     "title": "Catalog health",
@@ -1716,6 +1728,11 @@
     "noLineItems": "No line items added yet.",
     "subtotal": "Subtotal",
     "taxLabel": "Tax ({{state}} — {{pct}}%)",
+    "taxLabelMerchandise": "Tax — goods ({{label}} — {{pct}}%)",
+    "taxLabelLabor": "Tax — labor ({{label}} — {{pct}}%)",
+    "taxLabelLaborExempt": "Labor (exempt — {{state}} field services)",
+    "taxClassification": "Tax classification",
+    "taxTotal": "Tax total",
     "totalRow": "Total",
     "actions": "Actions",
     "nudge": {

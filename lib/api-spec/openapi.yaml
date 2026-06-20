@@ -4822,7 +4822,10 @@ components:
           type: string
         description:
           type: ["string", "null"]
-      required: [id, name, category, description]
+        taxTreatment:
+          type: ["string", "null"]
+          enum: [exempt_labor, taxable_repair_service, taxable_all]
+      required: [id, name, category, description, taxTreatment]
 
     # ── Site Location ──
     SiteLocationStatus:
@@ -4860,10 +4863,39 @@ components:
           type: ["string", "null"]
         photoUrl:
           type: ["string", "null"]
+        taxJurisdictionPostalCode:
+          type: ["string", "null"]
+          description: USPS ZIP resolved from site coordinates for sales tax jurisdiction
+        taxJurisdictionCounty:
+          type: ["string", "null"]
+        taxJurisdictionCity:
+          type: ["string", "null"]
+        taxJurisdictionLabel:
+          type: ["string", "null"]
+          description: Human-readable situs label with combined rate
+        stateTaxRate:
+          type: ["string", "null"]
+        localTaxRate:
+          type: ["string", "null"]
+        combinedTaxRate:
+          type: ["string", "null"]
+          description: Combined situs rate for all taxable lines at this site
+        merchandiseTaxRate:
+          type: ["string", "null"]
+          description: Legacy alias of combinedTaxRate
+        laborTaxRate:
+          type: ["string", "null"]
+          description: Legacy alias of stateTaxRate (informational)
+        taxJurisdictionResolvedAt:
+          type: ["string", "null"]
+          format: date-time
+        taxProvider:
+          type: ["string", "null"]
+          enum: [rubric_fallback, county_seat, fallback]
         createdAt:
           type: string
           format: date-time
-      required: [id, partnerId, name, address, latitude, longitude, siteCode, state, isActive, status, partnerName, siteRadiusMeters, afe, photoUrl, createdAt]
+      required: [id, partnerId, name, address, latitude, longitude, siteCode, state, isActive, status, partnerName, siteRadiusMeters, afe, photoUrl, taxJurisdictionPostalCode, taxJurisdictionCounty, taxJurisdictionCity, taxJurisdictionLabel, stateTaxRate, localTaxRate, combinedTaxRate, merchandiseTaxRate, laborTaxRate, taxJurisdictionResolvedAt, taxProvider, createdAt]
 
     SiteLocationDetail:
       type: object
@@ -4896,6 +4928,30 @@ components:
           type: ["string", "null"]
         photoUrl:
           type: ["string", "null"]
+        taxJurisdictionPostalCode:
+          type: ["string", "null"]
+        taxJurisdictionCounty:
+          type: ["string", "null"]
+        taxJurisdictionCity:
+          type: ["string", "null"]
+        taxJurisdictionLabel:
+          type: ["string", "null"]
+        stateTaxRate:
+          type: ["string", "null"]
+        localTaxRate:
+          type: ["string", "null"]
+        combinedTaxRate:
+          type: ["string", "null"]
+        merchandiseTaxRate:
+          type: ["string", "null"]
+        laborTaxRate:
+          type: ["string", "null"]
+        taxJurisdictionResolvedAt:
+          type: ["string", "null"]
+          format: date-time
+        taxProvider:
+          type: ["string", "null"]
+          enum: [rubric_fallback, county_seat, fallback]
         hidden:
           type: boolean
         supersededAt:
@@ -4910,7 +4966,7 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/SiteWorkAssignment"
-      required: [id, partnerId, name, address, latitude, longitude, siteCode, state, isActive, status, partnerName, siteRadiusMeters, afe, photoUrl, hidden, supersededAt, sourceType, createdAt, assignments]
+      required: [id, partnerId, name, address, latitude, longitude, siteCode, state, isActive, status, partnerName, siteRadiusMeters, afe, photoUrl, taxJurisdictionPostalCode, taxJurisdictionCounty, taxJurisdictionCity, taxJurisdictionLabel, stateTaxRate, localTaxRate, combinedTaxRate, merchandiseTaxRate, laborTaxRate, taxJurisdictionResolvedAt, taxProvider, hidden, supersededAt, sourceType, createdAt, assignments]
 
     CreateSiteLocationBody:
       type: object
@@ -5797,6 +5853,21 @@ components:
           type: ["string", "null"]
         workTypeName:
           type: ["string", "null"]
+        workTypeCategory:
+          type: ["string", "null"]
+        workTypeTaxTreatment:
+          type: ["string", "null"]
+          enum: [exempt_labor, taxable_repair_service, taxable_all, null]
+          description: |
+            Explicit tax classification set on the platform catalog work type.
+            Null when the engine infers treatment from category + state rubric.
+            Populated on single-ticket GET only.
+        effectiveTaxTreatment:
+          type: ["string", "null"]
+          enum: [exempt_labor, taxable_repair_service, taxable_all, null]
+          description: |
+            Resolved tax classification for this ticket after partner, vendor,
+            and work-type overrides. Populated on single-ticket GET only.
         fieldEmployeeName:
           type: ["string", "null"]
         partnerName:
@@ -6585,10 +6656,13 @@ components:
           type: string
         unitPrice:
           type: string
+        taxableOverride:
+          type: ["boolean", "null"]
+          description: Manual taxability override; null applies state rubric
         createdAt:
           type: string
           format: date-time
-      required: [id, ticketId, type, description, quantity, unitPrice, createdAt]
+      required: [id, ticketId, type, description, quantity, unitPrice, taxableOverride, createdAt]
 
     CreateTicketLineItemBody:
       type: object
@@ -6602,6 +6676,8 @@ components:
           type: string
         unitPrice:
           type: string
+        taxableOverride:
+          type: ["boolean", "null"]
       required: [type, description, quantity, unitPrice]
 
     TaxRate:

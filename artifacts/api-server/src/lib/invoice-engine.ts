@@ -3,8 +3,9 @@ import type {
   InvoiceLineType,
   InvoiceLineIncomeCategory,
   IncomeCategoryOverrideMap,
+  TaxTreatment,
 } from "@workspace/db";
-import { INVOICE_LINE_INCOME_CATEGORIES } from "@workspace/db";
+import { INVOICE_LINE_INCOME_CATEGORIES, resolveLineTaxability } from "@workspace/db";
 
 // Pure, deterministic invoice generation. No I/O. All money in fixed-precision
 // strings to avoid float drift. The orchestrator (invoice-generator.ts) loads
@@ -24,10 +25,11 @@ import { INVOICE_LINE_INCOME_CATEGORIES } from "@workspace/db";
 //     correct OT regardless of order
 //   * OT lines use overtimeMultiplier (default 1.5) on top of the base rate
 //
-// Tax:
-//   * Tax state = site.state. If null, tax_rate = 0 and tax_state = null
-//   * Per-line `taxable` defaults to true for labor, materials, equipment;
-//     false for mileage, per-diem, discount; markup mirrors its target.
+// Tax (TX, OK, NM rubrics):
+//   * Site situs combined rate applies to all taxable lines.
+//   * Labor taxability follows work-type treatment + state rubric (TX/OK exempt by default).
+//   * TPP (parts/equipment) taxable at combined rate unless line override.
+//   * Mileage/per-diem/discount always exempt.
 
 export type EngineVendor = {
   id: number;
@@ -49,7 +51,21 @@ export type EnginePartner = {
 
 export type EngineTaxRate = {
   state: string;
-  rate: string; // numeric string from tax_rates.rate
+  rate: string; // numeric string from tax_rates.rate (legacy)
+};
+
+/** Situs tax snapshot on the site at create/update time. */
+export type EngineTaxJurisdiction = {
+  state: string | null;
+  postalCode: string | null;
+  jurisdictionLabel: string | null;
+  stateTaxRate: string;
+  localTaxRate: string;
+  combinedTaxRate: string;
+  /** @deprecated use combinedTaxRate */
+  laborTaxRate: string;
+  /** @deprecated use combinedTaxRate */
+  merchandiseTaxRate: string;
 };
 
 export type EngineCheckIn = {
@@ -75,6 +91,7 @@ export type EngineLineItem = {
   description: string;
   quantity: string;
   unitPrice: string;
+  taxableOverride?: boolean | null;
 };
 
 export type EngineBillingSettings = {
@@ -101,10 +118,16 @@ export type EngineTicketContext = {
   afe: string | null;
   workTypeName: string | null;
   workTypeCategory: string | null;
+  workTypeTaxTreatment: TaxTreatment | null;
+  vendorWorkTypeTaxTreatment: TaxTreatment | null;
+  partnerWorkTypeTaxTreatment: TaxTreatment | null;
+  effectiveTaxTreatment: TaxTreatment;
   vendor: EngineVendor;
   site: EngineSite;
   partner: EnginePartner;
-  taxRate: EngineTaxRate | null; // for site.state, or null when no rate seeded
+  /** @deprecated use taxJurisdiction — kept for tests migrating gradually */
+  taxRate: EngineTaxRate | null;
+  taxJurisdiction: EngineTaxJurisdiction | null;
   billing: EngineBillingSettings;
   checkIns: EngineCheckIn[];
   assignmentRates: EngineAssignmentRate[];
@@ -147,8 +170,16 @@ export type EngineSnapshot = {
   partnerId: number;
   siteId: number;
   siteState: string | null;
+  taxPostalCode: string | null;
+  taxJurisdictionLabel: string | null;
+  stateTaxRate: string | null;
+  localTaxRate: string | null;
+  combinedTaxRate: string | null;
+  laborTaxRate: string | null;
+  merchandiseTaxRate: string | null;
+  effectiveTaxTreatment: TaxTreatment;
   taxRate: string | null;
-  taxRateSource: "tax_rates_table" | "none";
+  taxRateSource: "site_jurisdiction" | "tax_rates_table" | "none";
   overtimeMultiplier: string;
   dailyOtHours: string;
   weeklyOtHours: string;
@@ -439,23 +470,35 @@ function splitOvertime(
 }
 
 // ──────────────────────────────────────────────────────────────────
-// Taxability defaults per line type
+// Taxability + rate per line (state rubrics TX / OK / NM)
 // ──────────────────────────────────────────────────────────────────
 
-function defaultTaxableForLineType(lineType: InvoiceLineType): boolean {
-  switch (lineType) {
-    case "mileage":
-    case "per_diem":
-    case "discount":
-      return false;
-    case "labor_regular":
-    case "labor_overtime":
-    case "equipment":
-    case "materials":
-    case "markup":
-    case "other":
-      return true;
-  }
+function combinedTaxRateUnits(ctx: EngineTicketContext): bigint {
+  const j = ctx.taxJurisdiction;
+  if (j?.combinedTaxRate) return toFixedUnits(j.combinedTaxRate);
+  if (j?.merchandiseTaxRate) return toFixedUnits(j.merchandiseTaxRate);
+  return toFixedUnits(ctx.taxRate?.rate ?? "0");
+}
+
+function isLineTaxable(
+  lineType: InvoiceLineType,
+  ctx: EngineTicketContext,
+  taxableOverride?: boolean | null,
+): boolean {
+  return resolveLineTaxability({
+    lineType,
+    state: ctx.site.state,
+    taxTreatment: ctx.effectiveTaxTreatment,
+    taxableOverride,
+  });
+}
+
+function taxRateUnitsForLineType(
+  lineType: InvoiceLineType,
+  ctx: EngineTicketContext,
+): bigint {
+  if (!isLineTaxable(lineType, ctx)) return 0n;
+  return combinedTaxRateUnits(ctx);
 }
 
 // Built-in default mapping from invoice line_type → 1099 income_category.
@@ -560,9 +603,8 @@ export function buildInvoiceLinesForTicket(ctx: EngineTicketContext): EngineResu
   const otMultiplier = ctx.billing.overtimeMultiplier || "1.50";
   const incomeOverrides = ctx.billing.incomeCategoryOverrides ?? null;
 
-  const taxRateStr = ctx.taxRate?.rate ?? "0";
-  const taxState = ctx.site.state;
-  const taxRateUnits = toFixedUnits(taxRateStr);
+  const taxState = ctx.taxJurisdiction?.state ?? ctx.site.state;
+  const taxPostalCode = ctx.taxJurisdiction?.postalCode ?? null;
 
   const rateLookups: EngineSnapshot["rateLookups"] = [];
 
@@ -592,11 +634,12 @@ export function buildInvoiceLinesForTicket(ctx: EngineTicketContext): EngineResu
     const rateUnits = toFixedUnits(shift.rate);
     const otRateUnits = mulUnits(rateUnits, toFixedUnits(otMultiplier));
     const labelEmp = shift.employeeName ?? `Employee #${shift.employeeId}`;
-    const taxable = defaultTaxableForLineType("labor_regular");
+    const taxable = isLineTaxable("labor_regular", ctx);
+    const lineTaxUnits = taxRateUnitsForLineType("labor_regular", ctx);
 
     if (regular > 0n) {
       const amountUnits = mulUnits(regular, rateUnits);
-      const taxAmt = taxable ? mulUnits(amountUnits, taxRateUnits) : 0n;
+      const taxAmt = taxable ? mulUnits(amountUnits, lineTaxUnits) : 0n;
       lines.push({
         ticketId: ctx.ticketId,
         sourceType: "check_in_labor",
@@ -610,7 +653,7 @@ export function buildInvoiceLinesForTicket(ctx: EngineTicketContext): EngineResu
         amount: unitsToString2(amountUnits),
         taxable,
         taxState: taxable ? taxState : null,
-        taxRate: taxable && taxState ? unitsToString4(taxRateUnits) : null,
+        taxRate: taxable && taxState ? unitsToString4(lineTaxUnits) : null,
         taxAmount: unitsToString2(taxAmt),
         incomeCategory: resolveIncomeCategory("labor_regular", incomeOverrides),
         sortOrder: sortIdx++,
@@ -618,8 +661,9 @@ export function buildInvoiceLinesForTicket(ctx: EngineTicketContext): EngineResu
     }
     if (overtime > 0n) {
       const amountUnits = mulUnits(overtime, otRateUnits);
-      const otTaxable = defaultTaxableForLineType("labor_overtime");
-      const taxAmt = otTaxable ? mulUnits(amountUnits, taxRateUnits) : 0n;
+      const otTaxable = isLineTaxable("labor_overtime", ctx);
+      const otTaxUnits = taxRateUnitsForLineType("labor_overtime", ctx);
+      const taxAmt = otTaxable ? mulUnits(amountUnits, otTaxUnits) : 0n;
       lines.push({
         ticketId: ctx.ticketId,
         sourceType: "check_in_overtime",
@@ -633,7 +677,7 @@ export function buildInvoiceLinesForTicket(ctx: EngineTicketContext): EngineResu
         amount: unitsToString2(amountUnits),
         taxable: otTaxable,
         taxState: otTaxable ? taxState : null,
-        taxRate: otTaxable && taxState ? unitsToString4(taxRateUnits) : null,
+        taxRate: otTaxable && taxState ? unitsToString4(otTaxUnits) : null,
         taxAmount: unitsToString2(taxAmt),
         incomeCategory: resolveIncomeCategory("labor_overtime", incomeOverrides),
         sortOrder: sortIdx++,
@@ -648,8 +692,9 @@ export function buildInvoiceLinesForTicket(ctx: EngineTicketContext): EngineResu
     const qtyUnits = toFixedUnits(li.quantity);
     const priceUnits = toFixedUnits(li.unitPrice);
     const amountUnits = mulUnits(qtyUnits, priceUnits);
-    const taxable = defaultTaxableForLineType(cls.lineType);
-    const taxAmt = taxable ? mulUnits(amountUnits, taxRateUnits) : 0n;
+    const taxable = isLineTaxable(cls.lineType, ctx, li.taxableOverride);
+    const lineTaxUnits = taxable ? combinedTaxRateUnits(ctx) : 0n;
+    const taxAmt = taxable ? mulUnits(amountUnits, lineTaxUnits) : 0n;
     lines.push({
       ticketId: ctx.ticketId,
       sourceType: "ticket_line_item",
@@ -663,7 +708,7 @@ export function buildInvoiceLinesForTicket(ctx: EngineTicketContext): EngineResu
       amount: unitsToString2(amountUnits),
       taxable,
       taxState: taxable ? taxState : null,
-      taxRate: taxable && taxState ? unitsToString4(taxRateUnits) : null,
+      taxRate: taxable && taxState ? unitsToString4(lineTaxUnits) : null,
       taxAmount: unitsToString2(taxAmt),
       incomeCategory: resolveIncomeCategory(cls.lineType, incomeOverrides),
       sortOrder: sortIdx++,
@@ -686,7 +731,7 @@ export function buildInvoiceLinesForTicket(ctx: EngineTicketContext): EngineResu
       const qtyUnits = toFixedUnits(ctx.totalGpsMiles.toFixed(4));
       const priceUnits = toFixedUnits(ctx.billing.mileageRate);
       const amountUnits = mulUnits(qtyUnits, priceUnits);
-      const taxable = defaultTaxableForLineType("mileage");
+      const taxable = isLineTaxable("mileage", ctx);
       lines.push({
         ticketId: ctx.ticketId,
         sourceType: "mileage_auto",
@@ -713,8 +758,22 @@ export function buildInvoiceLinesForTicket(ctx: EngineTicketContext): EngineResu
     partnerId: ctx.partner.id,
     siteId: ctx.site.id,
     siteState: taxState,
-    taxRate: ctx.taxRate?.rate ?? null,
-    taxRateSource: ctx.taxRate ? "tax_rates_table" : "none",
+    taxPostalCode,
+    taxJurisdictionLabel: ctx.taxJurisdiction?.jurisdictionLabel ?? null,
+    stateTaxRate: ctx.taxJurisdiction?.stateTaxRate ?? ctx.taxRate?.rate ?? null,
+    localTaxRate: ctx.taxJurisdiction?.localTaxRate ?? null,
+    combinedTaxRate:
+      ctx.taxJurisdiction?.combinedTaxRate ?? ctx.taxRate?.rate ?? null,
+    laborTaxRate: ctx.taxJurisdiction?.stateTaxRate ?? ctx.taxRate?.rate ?? null,
+    merchandiseTaxRate:
+      ctx.taxJurisdiction?.combinedTaxRate ?? ctx.taxRate?.rate ?? null,
+    effectiveTaxTreatment: ctx.effectiveTaxTreatment,
+    taxRate: ctx.taxJurisdiction?.combinedTaxRate ?? ctx.taxRate?.rate ?? null,
+    taxRateSource: ctx.taxJurisdiction
+      ? "site_jurisdiction"
+      : ctx.taxRate
+        ? "tax_rates_table"
+        : "none",
     overtimeMultiplier: otMultiplier,
     dailyOtHours: dailyOtStr,
     weeklyOtHours: weeklyOtStr,

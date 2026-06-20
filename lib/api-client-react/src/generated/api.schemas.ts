@@ -881,6 +881,8 @@ Per-code meaning:
     ticket whose status no longer permits it.
   * `ticket_en_route_invalid_state` — en-route was attempted on
     a ticket whose lifecycle/status no longer permits it.
+  * `ticket_on_location_invalid_state` — on-location was attempted
+    on a ticket whose lifecycle/status no longer permits it.
 
 Source of truth: the shared workspace lib
 `@workspace/ticket-state-conflict-codes`
@@ -898,6 +900,7 @@ export const TicketStateConflictCode = {
   ticket_state_changed: "ticket_state_changed",
   ticket_not_checkinable: "ticket_not_checkinable",
   ticket_en_route_invalid_state: "ticket_en_route_invalid_state",
+  ticket_on_location_invalid_state: "ticket_on_location_invalid_state",
 } as const;
 
 /**
@@ -921,12 +924,27 @@ for backwards compatibility; prefer the `error` field.
   code?: string;
 }
 
+/**
+ * @nullable
+ */
+export type WorkTypeTaxTreatment =
+  | (typeof WorkTypeTaxTreatment)[keyof typeof WorkTypeTaxTreatment]
+  | null;
+
+export const WorkTypeTaxTreatment = {
+  exempt_labor: "exempt_labor",
+  taxable_repair_service: "taxable_repair_service",
+  taxable_all: "taxable_all",
+} as const;
+
 export interface WorkType {
   id: number;
   name: string;
   category: string;
   /** @nullable */
   description: string | null;
+  /** @nullable */
+  taxTreatment: WorkTypeTaxTreatment;
 }
 
 export type SiteLocationStatus =
@@ -937,6 +955,19 @@ export const SiteLocationStatus = {
   inactive: "inactive",
   standby: "standby",
   offline: "offline",
+} as const;
+
+/**
+ * @nullable
+ */
+export type SiteLocationTaxProvider =
+  | (typeof SiteLocationTaxProvider)[keyof typeof SiteLocationTaxProvider]
+  | null;
+
+export const SiteLocationTaxProvider = {
+  rubric_fallback: "rubric_fallback",
+  county_seat: "county_seat",
+  fallback: "fallback",
 } as const;
 
 export interface SiteLocation {
@@ -959,8 +990,58 @@ export interface SiteLocation {
   afe: string | null;
   /** @nullable */
   photoUrl: string | null;
+  /**
+   * USPS ZIP resolved from site coordinates for sales tax jurisdiction
+   * @nullable
+   */
+  taxJurisdictionPostalCode: string | null;
+  /** @nullable */
+  taxJurisdictionCounty: string | null;
+  /** @nullable */
+  taxJurisdictionCity: string | null;
+  /**
+   * Human-readable situs label with combined rate
+   * @nullable
+   */
+  taxJurisdictionLabel: string | null;
+  /** @nullable */
+  stateTaxRate: string | null;
+  /** @nullable */
+  localTaxRate: string | null;
+  /**
+   * Combined situs rate for all taxable lines at this site
+   * @nullable
+   */
+  combinedTaxRate: string | null;
+  /**
+   * Legacy alias of combinedTaxRate
+   * @nullable
+   */
+  merchandiseTaxRate: string | null;
+  /**
+   * Legacy alias of stateTaxRate (informational)
+   * @nullable
+   */
+  laborTaxRate: string | null;
+  /** @nullable */
+  taxJurisdictionResolvedAt: string | null;
+  /** @nullable */
+  taxProvider: SiteLocationTaxProvider;
   createdAt: string;
 }
+
+/**
+ * @nullable
+ */
+export type SiteLocationDetailTaxProvider =
+  | (typeof SiteLocationDetailTaxProvider)[keyof typeof SiteLocationDetailTaxProvider]
+  | null;
+
+export const SiteLocationDetailTaxProvider = {
+  rubric_fallback: "rubric_fallback",
+  county_seat: "county_seat",
+  fallback: "fallback",
+} as const;
 
 export interface SiteWorkAssignment {
   id: number;
@@ -994,6 +1075,28 @@ export interface SiteLocationDetail {
   afe: string | null;
   /** @nullable */
   photoUrl: string | null;
+  /** @nullable */
+  taxJurisdictionPostalCode: string | null;
+  /** @nullable */
+  taxJurisdictionCounty: string | null;
+  /** @nullable */
+  taxJurisdictionCity: string | null;
+  /** @nullable */
+  taxJurisdictionLabel: string | null;
+  /** @nullable */
+  stateTaxRate: string | null;
+  /** @nullable */
+  localTaxRate: string | null;
+  /** @nullable */
+  combinedTaxRate: string | null;
+  /** @nullable */
+  merchandiseTaxRate: string | null;
+  /** @nullable */
+  laborTaxRate: string | null;
+  /** @nullable */
+  taxJurisdictionResolvedAt: string | null;
+  /** @nullable */
+  taxProvider: SiteLocationDetailTaxProvider;
   hidden: boolean;
   /** @nullable */
   supersededAt: string | null;
@@ -1726,6 +1829,39 @@ export const TicketStatus = {
 } as const;
 
 /**
+ * Explicit tax classification set on the platform catalog work type.
+Null when the engine infers treatment from category + state rubric.
+Populated on single-ticket GET only.
+
+ * @nullable
+ */
+export type TicketWorkTypeTaxTreatment =
+  | (typeof TicketWorkTypeTaxTreatment)[keyof typeof TicketWorkTypeTaxTreatment]
+  | null;
+
+export const TicketWorkTypeTaxTreatment = {
+  exempt_labor: "exempt_labor",
+  taxable_repair_service: "taxable_repair_service",
+  taxable_all: "taxable_all",
+} as const;
+
+/**
+ * Resolved tax classification for this ticket after partner, vendor,
+and work-type overrides. Populated on single-ticket GET only.
+
+ * @nullable
+ */
+export type TicketEffectiveTaxTreatment =
+  | (typeof TicketEffectiveTaxTreatment)[keyof typeof TicketEffectiveTaxTreatment]
+  | null;
+
+export const TicketEffectiveTaxTreatment = {
+  exempt_labor: "exempt_labor",
+  taxable_repair_service: "taxable_repair_service",
+  taxable_all: "taxable_all",
+} as const;
+
+/**
  * @nullable
  */
 export type TicketLifecycleState =
@@ -1801,6 +1937,23 @@ export interface Ticket {
   vendorName: string | null;
   /** @nullable */
   workTypeName: string | null;
+  /** @nullable */
+  workTypeCategory?: string | null;
+  /**
+   * Explicit tax classification set on the platform catalog work type.
+Null when the engine infers treatment from category + state rubric.
+Populated on single-ticket GET only.
+
+   * @nullable
+   */
+  workTypeTaxTreatment?: TicketWorkTypeTaxTreatment;
+  /**
+   * Resolved tax classification for this ticket after partner, vendor,
+and work-type overrides. Populated on single-ticket GET only.
+
+   * @nullable
+   */
+  effectiveTaxTreatment?: TicketEffectiveTaxTreatment;
   /** @nullable */
   fieldEmployeeName: string | null;
   /** @nullable */
@@ -2470,6 +2623,11 @@ export interface TicketLineItem {
   description: string;
   quantity: string;
   unitPrice: string;
+  /**
+   * Manual taxability override; null applies state rubric
+   * @nullable
+   */
+  taxableOverride: boolean | null;
   createdAt: string;
 }
 
@@ -2488,6 +2646,8 @@ export interface CreateTicketLineItemBody {
   description: string;
   quantity: string;
   unitPrice: string;
+  /** @nullable */
+  taxableOverride?: boolean | null;
 }
 
 export interface TaxRate {

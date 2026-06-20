@@ -29,6 +29,8 @@ Per-code meaning:
     ticket whose status no longer permits it.
   * `ticket_en_route_invalid_state` — en-route was attempted on
     a ticket whose lifecycle/status no longer permits it.
+  * `ticket_on_location_invalid_state` — on-location was attempted
+    on a ticket whose lifecycle/status no longer permits it.
 
 Source of truth: the shared workspace lib
 `@workspace/ticket-state-conflict-codes`
@@ -46,4 +48,5 @@ export const TicketStateConflictCodeType = {
   ticket_state_changed: "ticket_state_changed",
   ticket_not_checkinable: "ticket_not_checkinable",
   ticket_en_route_invalid_state: "ticket_en_route_invalid_state",
+  ticket_on_location_invalid_state: "ticket_on_location_invalid_state",
 } as const;

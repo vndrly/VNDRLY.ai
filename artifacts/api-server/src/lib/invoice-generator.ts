@@ -29,6 +29,10 @@ import {
   invoiceTicketLinksTable,
   invoiceRateCardSnapshotsTable,
   vendorPartnerBillingSettingsTable,
+  vendorWorkTypesTable,
+  partnerVendorWorkTypeApprovalsTable,
+  resolveEffectiveTaxTreatment,
+  type TaxTreatment,
   type Invoice,
   type LateFeeRule,
 } from "@workspace/db";
@@ -214,6 +218,82 @@ async function generateInvoiceForTicketInner(
       )[0]
     : undefined;
 
+  const combined =
+    site.combinedTaxRate != null
+      ? String(site.combinedTaxRate)
+      : site.merchandiseTaxRate != null
+        ? String(site.merchandiseTaxRate)
+        : taxRateRow?.rate ?? null;
+  const stateRate =
+    site.stateTaxRate != null
+      ? String(site.stateTaxRate)
+      : site.laborTaxRate != null
+        ? String(site.laborTaxRate)
+        : taxRateRow?.rate ?? null;
+  const localRate =
+    site.localTaxRate != null ? String(site.localTaxRate) : "0.0000";
+
+  const taxJurisdiction =
+    combined && stateRate
+      ? {
+          state: site.state ?? null,
+          postalCode: site.taxJurisdictionPostalCode ?? null,
+          jurisdictionLabel: site.taxJurisdictionLabel ?? null,
+          stateTaxRate: stateRate,
+          localTaxRate: localRate,
+          combinedTaxRate: combined,
+          laborTaxRate: stateRate,
+          merchandiseTaxRate: combined,
+        }
+      : taxRateRow
+        ? {
+            state: taxRateRow.state,
+            postalCode: site.taxJurisdictionPostalCode ?? null,
+            jurisdictionLabel: site.taxJurisdictionLabel ?? null,
+            stateTaxRate: taxRateRow.rate,
+            localTaxRate: "0.0000",
+            combinedTaxRate: taxRateRow.rate,
+            laborTaxRate: taxRateRow.rate,
+            merchandiseTaxRate: taxRateRow.rate,
+          }
+        : null;
+
+  const [vendorWorkTypeRow] = await executor
+    .select({ taxTreatment: vendorWorkTypesTable.taxTreatment })
+    .from(vendorWorkTypesTable)
+    .where(
+      and(
+        eq(vendorWorkTypesTable.vendorId, ticket.vendorId),
+        eq(vendorWorkTypesTable.workTypeId, ticket.workTypeId),
+      ),
+    )
+    .limit(1);
+
+  const [partnerApprovalRow] = await executor
+    .select({ taxTreatment: partnerVendorWorkTypeApprovalsTable.taxTreatment })
+    .from(partnerVendorWorkTypeApprovalsTable)
+    .where(
+      and(
+        eq(partnerVendorWorkTypeApprovalsTable.partnerId, site.partnerId),
+        eq(partnerVendorWorkTypeApprovalsTable.vendorId, ticket.vendorId),
+        eq(partnerVendorWorkTypeApprovalsTable.workTypeId, ticket.workTypeId),
+      ),
+    )
+    .limit(1);
+
+  const workTypeTaxTreatment = (workType?.taxTreatment ?? null) as TaxTreatment | null;
+  const vendorWorkTypeTaxTreatment = (vendorWorkTypeRow?.taxTreatment ??
+    null) as TaxTreatment | null;
+  const partnerWorkTypeTaxTreatment = (partnerApprovalRow?.taxTreatment ??
+    null) as TaxTreatment | null;
+  const effectiveTaxTreatment = resolveEffectiveTaxTreatment({
+    partnerTreatment: partnerWorkTypeTaxTreatment,
+    vendorTreatment: vendorWorkTypeTaxTreatment,
+    workTypeTreatment: workTypeTaxTreatment,
+    workTypeCategory: workType?.category ?? null,
+    state: site.state,
+  });
+
   // Billing settings: load or default.
   const [billingRow] = await executor
     .select()
@@ -238,6 +318,10 @@ async function generateInvoiceForTicketInner(
     afe,
     workTypeName: workType?.name ?? null,
     workTypeCategory: workType?.category ?? null,
+    workTypeTaxTreatment,
+    vendorWorkTypeTaxTreatment,
+    partnerWorkTypeTaxTreatment,
+    effectiveTaxTreatment,
     vendor: {
       id: vendor.id,
       name: vendor.name,
@@ -247,6 +331,7 @@ async function generateInvoiceForTicketInner(
     site: { id: site.id, name: site.name, state: site.state ?? null },
     partner: { id: partner.id, name: partner.name },
     taxRate: taxRateRow ? { state: taxRateRow.state, rate: taxRateRow.rate } : null,
+    taxJurisdiction,
     billing: {
       cadence,
       paymentTermsDays,
@@ -282,6 +367,7 @@ async function generateInvoiceForTicketInner(
       description: r.description,
       quantity: r.quantity,
       unitPrice: r.unitPrice,
+      taxableOverride: r.taxableOverride,
     })),
     totalGpsMiles: null,
   };

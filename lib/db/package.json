@@ -7,7 +7,9 @@
     ".": "./src/index.ts",
     "./schema": "./src/schema/index.ts",
     "./format": "./src/format/index.ts",
-    "./line-types": "./src/line-types/index.ts"
+    "./line-types": "./src/line-types/index.ts",
+    "./ticket-tax-preview": "./src/ticket-tax-preview.ts",
+    "./sales-tax": "./src/sales-tax/index.ts"
   },
   "scripts": {
     "push": "drizzle-kit push --config ./drizzle.config.ts",

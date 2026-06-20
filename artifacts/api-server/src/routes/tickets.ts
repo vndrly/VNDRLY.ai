@@ -493,6 +493,7 @@ import { sendResponse, sendResponseStatus } from "../lib/typed-response";
 import { sendValidationFailed } from "../lib/validation-error";
 import { notifyUsers, findVendorUserIds, findPartnerUserIds, notifyFieldEmployee } from "./notifications";
 import { enqueueInvoiceGenerationForTicket } from "../lib/invoice-generator";
+import { loadTicketTaxTreatmentContext } from "../lib/ticket-tax-treatment";
 import { regenerateAutoLaborLines } from "../lib/auto-labor-lines";
 import {
   recordTicketTransition,
@@ -552,6 +553,7 @@ const ticketSelect = {
   vendorName: vendorsTable.name,
   vendorLogoUrl: vendorsTable.logoUrl,
   workTypeName: workTypesTable.name,
+  workTypeCategory: workTypesTable.category,
   fieldEmployeeName: sql<string | null>`CASE WHEN ${fieldEmployeesTable.firstName} IS NOT NULL THEN ${fieldEmployeesTable.firstName} || ' ' || ${fieldEmployeesTable.lastName} ELSE NULL END`,
   partnerName: partnersTable.name,
   partnerLogoUrl: partnersTable.logoUrl,
@@ -806,6 +808,17 @@ router.get("/portal/:siteCode", async (req, res): Promise<void> => {
       siteRadiusMeters: siteLocationsTable.siteRadiusMeters,
       afe: siteLocationsTable.afe,
       photoUrl: siteLocationsTable.photoUrl,
+      taxJurisdictionPostalCode: siteLocationsTable.taxJurisdictionPostalCode,
+      taxJurisdictionCounty: siteLocationsTable.taxJurisdictionCounty,
+      taxJurisdictionCity: siteLocationsTable.taxJurisdictionCity,
+      taxJurisdictionLabel: siteLocationsTable.taxJurisdictionLabel,
+      stateTaxRate: siteLocationsTable.stateTaxRate,
+      localTaxRate: siteLocationsTable.localTaxRate,
+      combinedTaxRate: siteLocationsTable.combinedTaxRate,
+      merchandiseTaxRate: siteLocationsTable.merchandiseTaxRate,
+      laborTaxRate: siteLocationsTable.laborTaxRate,
+      taxJurisdictionResolvedAt: siteLocationsTable.taxJurisdictionResolvedAt,
+      taxProvider: siteLocationsTable.taxProvider,
       partnerName: partnersTable.name,
       // Partner brand assets surfaced on the portal so QR-code field
       // employees see the site owner's branding even when their own auth
@@ -1526,11 +1539,18 @@ router.get("/tickets/:id", async (req, res): Promise<void> => {
     initialTransition?.reason && initialTransition.reason.startsWith(PHONE_INTAKE_PREFIX)
       ? initialTransition.reason.slice(PHONE_INTAKE_PREFIX.length).trim() || null
       : null;
+  const taxTreatmentCtx = await loadTicketTaxTreatmentContext({
+    vendorId: ticket.vendorId,
+    workTypeId: ticket.workTypeId,
+    siteLocationId: ticket.siteLocationId,
+  });
   sendResponse(res, GetTicketResponse, {
     ...ticket,
     viewerCanDisperseFunds,
     viewerCanReverseDispersal,
     phoneIntakeCallerName,
+    workTypeTaxTreatment: taxTreatmentCtx.workTypeTaxTreatment,
+    effectiveTaxTreatment: taxTreatmentCtx.effectiveTaxTreatment,
   });
 });
 

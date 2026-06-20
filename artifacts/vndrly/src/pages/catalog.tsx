@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogLogoHeader } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ShoppingCart, Plus, Pencil, Trash2, ArrowUp, ArrowDown, ArrowUpDown, Download, Upload, Activity } from "lucide-react";
 import { CARD_TITLE_ICON_CLASS } from "@/components/ui/card";
 import { useBrand } from "@/hooks/use-brand";
@@ -155,7 +156,15 @@ interface WorkType {
   estimatedPrice: string | null;
   requiredCertifications: string[] | null;
   blockingCertifications: string[] | null;
+  taxTreatment: string | null;
   vendors: { id: number; name: string }[];
+}
+
+const TAX_TREATMENT_AUTO = "__auto__";
+
+function taxTreatmentForApi(raw: string): string | null {
+  if (!raw || raw === TAX_TREATMENT_AUTO) return null;
+  return raw;
 }
 
 function parseCertList(raw: string): string[] | null {
@@ -203,6 +212,7 @@ export default function Catalog() {
     siteLocationIds: [] as number[],
     requiredCertifications: "",
     blockingCertifications: "",
+    taxTreatment: "",
   });
   // Snapshot at modal open used to send only changed rows on save.
   const [initialVendorSiteAfes, setInitialVendorSiteAfes] = useState<
@@ -334,6 +344,7 @@ export default function Catalog() {
       siteLocationIds: [],
       requiredCertifications: "",
       blockingCertifications: "",
+      taxTreatment: "",
     });
     setInitialVendorSiteAfes({});
     setSiteLocOptions([]);
@@ -482,6 +493,7 @@ export default function Catalog() {
           estimatedPrice: form.estimatedPrice || null,
           requiredCertifications: parseCertList(form.requiredCertifications),
           blockingCertifications: parseCertList(form.blockingCertifications),
+          taxTreatment: taxTreatmentForApi(form.taxTreatment),
           vendorIds: form.vendorIds,
         }),
       });
@@ -532,6 +544,7 @@ export default function Catalog() {
           estimatedPrice: form.estimatedPrice || null,
           requiredCertifications: parseCertList(form.requiredCertifications),
           blockingCertifications: parseCertList(form.blockingCertifications),
+          taxTreatment: taxTreatmentForApi(form.taxTreatment),
           vendorIds: form.vendorIds,
         }),
       });
@@ -631,6 +644,7 @@ export default function Catalog() {
       siteLocationIds: siteLocs.map((s) => s.id),
       requiredCertifications: (wt.requiredCertifications ?? []).join(", "),
       blockingCertifications: (wt.blockingCertifications ?? []).join(", "),
+      taxTreatment: wt.taxTreatment ?? "",
     });
     setInitialVendorSiteAfes(snapshot);
     setSiteLocOptions(siteLocs);
@@ -805,6 +819,31 @@ export default function Catalog() {
             {categories.map((c) => <option key={c} value={c} />)}
           </datalist>
         )}
+      </div>
+      <div>
+        <Label>{t("catalog.taxTreatment")}</Label>
+        <Select
+          value={form.taxTreatment || TAX_TREATMENT_AUTO}
+          onValueChange={(value) =>
+            setForm((prev) => ({
+              ...prev,
+              taxTreatment: value === TAX_TREATMENT_AUTO ? "" : value,
+            }))
+          }
+        >
+          <SelectTrigger data-testid={`${prefix}-select-tax-treatment`}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={TAX_TREATMENT_AUTO}>{t("taxTreatment.auto")}</SelectItem>
+            <SelectItem value="exempt_labor">{t("taxTreatment.exempt_labor")}</SelectItem>
+            <SelectItem value="taxable_repair_service">
+              {t("taxTreatment.taxable_repair_service")}
+            </SelectItem>
+            <SelectItem value="taxable_all">{t("taxTreatment.taxable_all")}</SelectItem>
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-muted-foreground mt-1">{t("catalog.taxTreatmentHelp")}</p>
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>

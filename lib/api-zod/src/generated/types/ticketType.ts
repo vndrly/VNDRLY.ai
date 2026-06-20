@@ -6,9 +6,11 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { TicketStatusType } from "./ticketStatusType";
+import type { TicketTypeEffectiveTaxTreatment } from "./ticketTypeEffectiveTaxTreatment";
 import type { TicketTypeIntakeChannel } from "./ticketTypeIntakeChannel";
 import type { TicketTypeLifecycleState } from "./ticketTypeLifecycleState";
 import type { TicketTypePaymentMethod } from "./ticketTypePaymentMethod";
+import type { TicketTypeWorkTypeTaxTreatment } from "./ticketTypeWorkTypeTaxTreatment";
 
 export interface TicketType {
   id: number;
@@ -42,6 +44,23 @@ export interface TicketType {
   vendorName: string | null;
   /** @nullable */
   workTypeName: string | null;
+  /** @nullable */
+  workTypeCategory?: string | null;
+  /**
+   * Explicit tax classification set on the platform catalog work type.
+Null when the engine infers treatment from category + state rubric.
+Populated on single-ticket GET only.
+
+   * @nullable
+   */
+  workTypeTaxTreatment?: TicketTypeWorkTypeTaxTreatment;
+  /**
+   * Resolved tax classification for this ticket after partner, vendor,
+and work-type overrides. Populated on single-ticket GET only.
+
+   * @nullable
+   */
+  effectiveTaxTreatment?: TicketTypeEffectiveTaxTreatment;
   /** @nullable */
   fieldEmployeeName: string | null;
   /** @nullable */

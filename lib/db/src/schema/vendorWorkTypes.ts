@@ -48,6 +48,7 @@ export const vendorWorkTypesTable = pgTable(
     // when the row was added/removed without a pricing edit. Acts as
     // a lightweight audit trail without a dedicated history table.
     lastPriceChangeReason: text("last_price_change_reason"),
+    taxTreatment: text("tax_treatment"),
   },
   (t) => ({
     uniqVendorWorkType: uniqueIndex("vendor_work_types_vendor_work_type_unique").on(

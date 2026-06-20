@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, integer, numeric } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, numeric, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { ticketsTable } from "./tickets";
@@ -16,6 +16,8 @@ export const ticketLineItemsTable = pgTable("ticket_line_items", {
   // taxable carry a value. Invoice generation multiplies (quantity *
   // unit_price * tax_rate) and surfaces the tax as a separate sub-row.
   taxRate: numeric("tax_rate", { precision: 6, scale: 4 }),
+  // null = apply rubric; true/false = AP manual override (Phase 2).
+  taxableOverride: boolean("taxable_override"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

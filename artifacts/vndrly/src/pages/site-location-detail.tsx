@@ -3,7 +3,6 @@ import {
   useGetSiteLocation,
   useGetSiteLocationQrCode,
   useCreateSiteAssignment,
-  useUpdateSiteAssignment,
   useDeleteSiteAssignment,
   useUpdateSiteLocation,
   useDeleteSiteLocation,
@@ -63,7 +62,6 @@ export default function SiteLocationDetail({ id }: { id: number }) {
   const { data: workTypes } = useListWorkTypes();
   const { data: vendors } = useListVendors();
   const createAssignment = useCreateSiteAssignment();
-  const updateAssignment = useUpdateSiteAssignment();
   const deleteAssignment = useDeleteSiteAssignment();
   const deleteSite = useDeleteSiteLocation();
   const updateSite = useUpdateSiteLocation();
@@ -90,8 +88,6 @@ export default function SiteLocationDetail({ id }: { id: number }) {
   const [editLng, setEditLng] = useState("");
   const [editingAfe, setEditingAfe] = useState(false);
   const [editAfe, setEditAfe] = useState("");
-  const [editingAssignmentAfeId, setEditingAssignmentAfeId] = useState<number | null>(null);
-  const [editAssignmentAfe, setEditAssignmentAfe] = useState("");
   const [statusOpen, setStatusOpen] = useState(false);
   const statusRef = useRef<HTMLDivElement>(null);
   const [geoLocating, setGeoLocating] = useState(false);
@@ -107,10 +103,9 @@ export default function SiteLocationDetail({ id }: { id: number }) {
     vendorId: number;
     workTypeName: string;
     vendorName: string;
-    afe: string | null;
   } | null>(null);
   const [catalogConfirmSaving, setCatalogConfirmSaving] = useState(false);
-  const [form, setForm] = useState({ workTypeId: "", vendorId: "", afe: "" });
+  const [form, setForm] = useState({ workTypeId: "", vendorId: "" });
   // Direct work assignments (Partner → Vendor offer with Commit/Pass loop).
   // Lives alongside the work-types catalog above but is its own independent
   // surface — partner sets a date range + optional scope, vendor responds.
@@ -291,32 +286,24 @@ export default function SiteLocationDetail({ id }: { id: number }) {
   // `error: 'work_type_not_in_vendor_catalog'` when it doesn't. We
   // capture that here, surface a confirm dialog, and on accept add the
   // row to the vendor's catalog before retrying the original SWA write.
-  const submitAssignment = (
-    workTypeId: number,
-    vendorId: number,
-    afe: string | null,
-  ) => {
+  const submitAssignment = (workTypeId: number, vendorId: number) => {
     createAssignment.mutate(
-      { siteId: id, data: { workTypeId, vendorId, afe } },
+      { siteId: id, data: { workTypeId, vendorId } },
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getGetSiteLocationQueryKey(id) });
           setOpen(false);
-          setForm({ workTypeId: "", vendorId: "", afe: "" });
+          setForm({ workTypeId: "", vendorId: "" });
           toast({ title: t("siteLocations.assignmentAdded") });
         },
         onError: (err: any) => {
           const data = err?.response?.data ?? err?.data ?? null;
           if (data?.code === "work_type_not_in_vendor_catalog" || data?.error === "work_type_not_in_vendor_catalog") {
-            // Stash payload — the dialog will replay this with the
-            // same (workTypeId, vendorId, afe) once the vendor row is
-            // inserted.
             setCatalogConflict({
               workTypeId: Number(data.workTypeId ?? workTypeId),
               vendorId: Number(data.vendorId ?? vendorId),
               workTypeName: String(data.workTypeName ?? ""),
               vendorName: String(data.vendorName ?? ""),
-              afe,
             });
             return;
           }
@@ -333,12 +320,7 @@ export default function SiteLocationDetail({ id }: { id: number }) {
 
   const handleAddAssignment = (e: React.FormEvent) => {
     e.preventDefault();
-    const trimmedAfe = form.afe.trim();
-    submitAssignment(
-      parseInt(form.workTypeId),
-      parseInt(form.vendorId),
-      trimmedAfe === "" ? null : trimmedAfe,
-    );
+    submitAssignment(parseInt(form.workTypeId), parseInt(form.vendorId));
   };
 
   // Submit a direct Partner→Vendor work offer for this site. The server
@@ -476,7 +458,7 @@ export default function SiteLocationDetail({ id }: { id: number }) {
       if (!appendRes.ok) throw new Error(`HTTP ${appendRes.status}`);
       const conflict = catalogConflict;
       setCatalogConflict(null);
-      submitAssignment(conflict.workTypeId, conflict.vendorId, conflict.afe);
+      submitAssignment(conflict.workTypeId, conflict.vendorId);
     } catch {
       toast({
         title: t("siteLocations.catalogAddFailed", {
@@ -551,24 +533,6 @@ export default function SiteLocationDetail({ id }: { id: number }) {
             }),
             variant: "destructive",
           });
-        },
-      },
-    );
-  };
-
-  const handleSaveAssignmentAfe = (assignmentId: number) => {
-    const trimmed = editAssignmentAfe.trim();
-    updateAssignment.mutate(
-      { siteId: id, assignmentId, data: { afe: trimmed === "" ? null : trimmed } },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getGetSiteLocationQueryKey(id) });
-          queryClient.invalidateQueries({ queryKey: getListSiteAssignmentsQueryKey(id) });
-          toast({ title: t("siteLocations.assignmentAfeUpdated") });
-          setEditingAssignmentAfeId(null);
-        },
-        onError: () => {
-          toast({ title: t("siteLocations.assignmentAfeUpdateFailed"), variant: "destructive" });
         },
       },
     );
@@ -768,6 +732,24 @@ export default function SiteLocationDetail({ id }: { id: number }) {
                 </div>
               )}
             </div>
+            <div className="flex items-center gap-2" data-testid="text-site-tax-jurisdiction">
+              <span className="text-sm text-muted-foreground">{t("siteLocations.taxJurisdictionLabel")}</span>
+              {site.taxJurisdictionLabel ? (
+                <span className="text-sm font-medium">{site.taxJurisdictionLabel}</span>
+              ) : site.combinedTaxRate ? (
+                <span className="text-sm font-medium">
+                  {(parseFloat(String(site.combinedTaxRate)) * 100).toFixed(2)}%
+                </span>
+              ) : (
+                <span className="text-xs italic text-muted-foreground">{t("siteLocations.taxJurisdictionPending")}</span>
+              )}
+            </div>
+            {site.taxJurisdictionPostalCode ? (
+              <div className="flex items-center gap-2" data-testid="text-site-tax-jurisdiction-zip">
+                <span className="text-sm text-muted-foreground">{t("siteLocations.taxJurisdictionZipLabel")}</span>
+                <span className="text-sm font-medium">{site.taxJurisdictionPostalCode}</span>
+              </div>
+            ) : null}
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">{t("siteLocations.coordinatesLabel")}</span>
@@ -1212,15 +1194,6 @@ export default function SiteLocationDetail({ id }: { id: number }) {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div>
-                    <Label>{t("siteLocations.afeOptional")}</Label>
-                    <Input
-                      value={form.afe}
-                      onChange={(e) => setForm({ ...form, afe: e.target.value })}
-                      placeholder={t("siteLocations.afePlaceholder")}
-                      data-testid="input-add-assignment-afe"
-                    />
-                  </div>
                   <PngPillButton color="blue" type="submit" disabled={createAssignment.isPending} data-testid="button-submit-assignment" className="w-full">{createAssignment.isPending ? t("siteLocations.addingAssignment") : t("siteLocations.addAssignment")}</PngPillButton>
                 </form>
               </DialogContent>
@@ -1251,41 +1224,25 @@ export default function SiteLocationDetail({ id }: { id: number }) {
                       <TableCell><span className="font-medium">{a.workTypeName}</span></TableCell>
                       {!isVendor && <TableCell>{a.vendorName}</TableCell>}
                       <TableCell>
-                        {editingAssignmentAfeId === a.id ? (
-                          <div className="flex items-center gap-1">
-                            <Input
-                              value={editAssignmentAfe}
-                              onChange={(e) => setEditAssignmentAfe(e.target.value)}
-                              className="w-40 h-7 text-xs"
-                              placeholder={t("siteLocations.afePlaceholder")}
-                              data-testid={`input-edit-assignment-afe-${a.id}`}
-                            />
-                            <button className="text-green-600 hover:text-green-700" onClick={() => handleSaveAssignmentAfe(a.id)} data-testid={`button-save-assignment-afe-${a.id}`}><Save className="w-4 h-4" /></button>
-                            <button className="text-muted-foreground hover:text-foreground" onClick={() => setEditingAssignmentAfeId(null)} data-testid={`button-cancel-assignment-afe-${a.id}`}><X className="w-4 h-4" /></button>
-                          </div>
+                        {site.afe ? (
+                          <AfePill data-testid={`text-assignment-afe-${a.id}`}>{site.afe}</AfePill>
                         ) : (
-                          <div className="flex items-center gap-2">
-                            {a.afe ? (
-                              <AfePill data-testid={`text-assignment-afe-${a.id}`}>{a.afe}</AfePill>
-                            ) : (
-                              <span className="text-xs italic text-muted-foreground" data-testid={`text-assignment-afe-empty-${a.id}`}>{t("siteLocations.afeNotSet")}</span>
-                            )}
-                            {canManageAssignments && (
-                              <button
-                                onClick={() => { setEditAssignmentAfe(a.afe ?? ""); setEditingAssignmentAfeId(a.id); }}
-                                data-testid={`button-edit-assignment-afe-${a.id}`}
-                              >
-                                <Pencil className="w-3.5 h-3.5 text-muted-foreground hover:text-[var(--brand-primary)] transition-colors" />
-                              </button>
-                            )}
-                          </div>
+                          <span className="text-xs italic text-muted-foreground" data-testid={`text-assignment-afe-empty-${a.id}`}>
+                            {t("siteLocations.afeNotSet")}
+                          </span>
                         )}
                       </TableCell>
                       {canManageAssignments && (
                         <TableCell>
-                          <PillButton color="image" className="min-w-[28px] px-0" onClick={() => handleDeleteAssignment(a.id)} data-testid={`button-delete-assignment-${a.id}`}>
-                            <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive transition-colors" />
-                          </PillButton>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteAssignment(a.id)}
+                            className="text-muted-foreground hover:text-destructive transition-colors"
+                            aria-label={t("siteLocations.removeWorkAssignment")}
+                            data-testid={`button-delete-assignment-${a.id}`}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </TableCell>
                       )}
                     </TableRow>

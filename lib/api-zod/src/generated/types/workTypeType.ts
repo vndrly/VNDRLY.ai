@@ -5,6 +5,7 @@
  * VNDRLY Field Operations API
  * OpenAPI spec version: 0.1.0
  */
+import type { WorkTypeTypeTaxTreatment } from "./workTypeTypeTaxTreatment";
 
 export interface WorkTypeType {
   id: number;
@@ -12,4 +13,6 @@ export interface WorkTypeType {
   category: string;
   /** @nullable */
   description: string | null;
+  /** @nullable */
+  taxTreatment: WorkTypeTypeTaxTreatment;
 }

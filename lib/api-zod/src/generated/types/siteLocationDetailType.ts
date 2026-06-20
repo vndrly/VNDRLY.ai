@@ -5,6 +5,7 @@
  * VNDRLY Field Operations API
  * OpenAPI spec version: 0.1.0
  */
+import type { SiteLocationDetailTypeTaxProvider } from "./siteLocationDetailTypeTaxProvider";
 import type { SiteLocationStatusType } from "./siteLocationStatusType";
 import type { SiteWorkAssignmentType } from "./siteWorkAssignmentType";
 
@@ -28,6 +29,28 @@ export interface SiteLocationDetailType {
   afe: string | null;
   /** @nullable */
   photoUrl: string | null;
+  /** @nullable */
+  taxJurisdictionPostalCode: string | null;
+  /** @nullable */
+  taxJurisdictionCounty: string | null;
+  /** @nullable */
+  taxJurisdictionCity: string | null;
+  /** @nullable */
+  taxJurisdictionLabel: string | null;
+  /** @nullable */
+  stateTaxRate: string | null;
+  /** @nullable */
+  localTaxRate: string | null;
+  /** @nullable */
+  combinedTaxRate: string | null;
+  /** @nullable */
+  merchandiseTaxRate: string | null;
+  /** @nullable */
+  laborTaxRate: string | null;
+  /** @nullable */
+  taxJurisdictionResolvedAt: Date | null;
+  /** @nullable */
+  taxProvider: SiteLocationDetailTypeTaxProvider;
   hidden: boolean;
   /** @nullable */
   supersededAt: Date | null;

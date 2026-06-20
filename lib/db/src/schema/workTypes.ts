@@ -33,6 +33,9 @@ export const workTypesTable = pgTable(
     // `required_certifications` so a single work type can mix warn-only
     // and blocking entries without a schema migration per cert.
     blockingCertifications: text("blocking_certifications").array(),
+    // Sales/GRT tax classification for tickets at this work type (Phase 2).
+    // null → infer from category + state rubric.
+    taxTreatment: text("tax_treatment"),
   },
   (t) => ({
     // Case-insensitive uniqueness on the trimmed display name. Mirrors

@@ -38,10 +38,15 @@ function makeCtx(overrides: Partial<EngineTicketContext> = {}): EngineTicketCont
     afe: "AFE-2026-001",
     workTypeName: "Wireline",
     workTypeCategory: "operations",
+    workTypeTaxTreatment: null,
+    vendorWorkTypeTaxTreatment: null,
+    partnerWorkTypeTaxTreatment: null,
+    effectiveTaxTreatment: "exempt_labor",
     vendor: VENDOR,
     site: SITE_TX,
     partner: PARTNER,
     taxRate: TX_RATE,
+    taxJurisdiction: null,
     billing: DEFAULT_BILLING,
     checkIns: [],
     assignmentRates: [],
@@ -52,6 +57,48 @@ function makeCtx(overrides: Partial<EngineTicketContext> = {}): EngineTicketCont
 }
 
 describe("invoice-engine", () => {
+  it("taxes equipment at combined situs rate while TX crew labor stays exempt", () => {
+    const ctx = makeCtx({
+      taxJurisdiction: {
+        state: "TX",
+        postalCode: "79701",
+        jurisdictionLabel: "Midland (8.25%)",
+        stateTaxRate: "0.0625",
+        localTaxRate: "0.0200",
+        combinedTaxRate: "0.0825",
+        laborTaxRate: "0.0625",
+        merchandiseTaxRate: "0.0825",
+      },
+      checkIns: [
+        {
+          id: 1,
+          ticketId: 100,
+          employeeId: 5,
+          employeeName: "Matt",
+          checkInAt: new Date("2026-04-20T13:00:00Z"),
+          checkOutAt: new Date("2026-04-20T21:00:00Z"),
+          hourlyRateAtTime: "100.00",
+        },
+      ],
+      lineItems: [
+        {
+          id: 10,
+          ticketId: 100,
+          type: "equipment",
+          description: "Tool rental",
+          quantity: "1",
+          unitPrice: "200.00",
+        },
+      ],
+    });
+    const { lines } = buildInvoiceLinesForTicket(ctx);
+    const labor = lines.find((l) => l.lineType === "labor_regular");
+    const equip = lines.find((l) => l.lineType === "equipment");
+    expect(labor?.taxable).toBe(false);
+    expect(labor?.taxAmount).toBe("0.00");
+    expect(equip?.taxAmount).toBe("16.50");
+  });
+
   it("emits a regular labor line for a single 8-hour shift, no OT", () => {
     const ctx = makeCtx({
       checkIns: [
@@ -72,9 +119,9 @@ describe("invoice-engine", () => {
     expect(lines[0].quantity).toBe("8.0000");
     expect(lines[0].unitPrice).toBe("75.0000");
     expect(lines[0].amount).toBe("600.00");
-    expect(lines[0].taxable).toBe(true);
-    expect(lines[0].taxState).toBe("TX");
-    expect(lines[0].taxAmount).toBe("37.50"); // 600 * 0.0625
+    expect(lines[0].taxable).toBe(false);
+    expect(lines[0].taxState).toBe(null);
+    expect(lines[0].taxAmount).toBe("0.00");
     expect(lines[0].afe).toBe("AFE-2026-001");
   });
 
@@ -197,6 +244,7 @@ describe("invoice-engine", () => {
   it("computes tax only on taxable lines and uses the site state, not vendor's", () => {
     const ctx = makeCtx({
       site: SITE_NM,
+      effectiveTaxTreatment: "taxable_all",
       taxRate: { state: "NM", rate: "0.0813" },
       lineItems: [
         // mileage and per_diem are non-taxable by default

@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { SiteLocationStatusType } from "./siteLocationStatusType";
+import type { SiteLocationTypeTaxProvider } from "./siteLocationTypeTaxProvider";
 
 export interface SiteLocationType {
   id: number;
@@ -27,5 +28,42 @@ export interface SiteLocationType {
   afe: string | null;
   /** @nullable */
   photoUrl: string | null;
+  /**
+   * USPS ZIP resolved from site coordinates for sales tax jurisdiction
+   * @nullable
+   */
+  taxJurisdictionPostalCode: string | null;
+  /** @nullable */
+  taxJurisdictionCounty: string | null;
+  /** @nullable */
+  taxJurisdictionCity: string | null;
+  /**
+   * Human-readable situs label with combined rate
+   * @nullable
+   */
+  taxJurisdictionLabel: string | null;
+  /** @nullable */
+  stateTaxRate: string | null;
+  /** @nullable */
+  localTaxRate: string | null;
+  /**
+   * Combined situs rate for all taxable lines at this site
+   * @nullable
+   */
+  combinedTaxRate: string | null;
+  /**
+   * Legacy alias of combinedTaxRate
+   * @nullable
+   */
+  merchandiseTaxRate: string | null;
+  /**
+   * Legacy alias of stateTaxRate (informational)
+   * @nullable
+   */
+  laborTaxRate: string | null;
+  /** @nullable */
+  taxJurisdictionResolvedAt: Date | null;
+  /** @nullable */
+  taxProvider: SiteLocationTypeTaxProvider;
   createdAt: Date;
 }

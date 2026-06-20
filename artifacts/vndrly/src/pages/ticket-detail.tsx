@@ -29,18 +29,17 @@ import {
   useGetTicketLineItems,
   useCreateTicketLineItem,
   useDeleteTicketLineItem,
-  useGetTaxRateByState,
   getGetTicketQueryKey,
   getGetTicketNoteLogsQueryKey,
   getGetTicketLineItemsQueryKey,
   getGetCrewSessionsQueryKey,
   getGetSiteLocationQueryKey,
-  getGetTaxRateByStateQueryKey,
   useGetVendorRatings,
   useUpsertVendorRating,
   getGetVendorRatingsQueryKey,
 } from "@workspace/api-client-react";
 import { formatTicketTrackingNumber } from "@workspace/db/format";
+import { computeTicketTaxPreview } from "@workspace/db/ticket-tax-preview";
 import StarRating from "@/components/star-rating";
 import TicketStatusStepper from "@/components/ticket-status-stepper";
 import { TicketSiteVisitSummaryCard } from "@/components/ticket-site-visit-summary-card";
@@ -530,7 +529,6 @@ export default function TicketDetail({ id }: { id: number }) {
     return undefined;
   }, [unlockHistory]);
   const { data: lineItems } = useGetTicketLineItems(id, { query: { enabled: !!id, queryKey: getGetTicketLineItemsQueryKey(id) } });
-  const { data: taxRate } = useGetTaxRateByState(siteLocation?.state ?? "", { query: { enabled: !!siteLocation?.state, queryKey: getGetTaxRateByStateQueryKey(siteLocation?.state ?? "") } });
   const createNoteLog = useCreateTicketNoteLog();
   const createLineItem = useCreateTicketLineItem();
   const deleteLineItem = useDeleteTicketLineItem();
@@ -1283,14 +1281,50 @@ export default function TicketDetail({ id }: { id: number }) {
     );
   };
 
-  const subtotal = useMemo(() => {
-    if (!lineItems || lineItems.length === 0) return 0;
-    return lineItems.reduce((sum, item) => sum + (parseFloat(item.quantity) * parseFloat(item.unitPrice)), 0);
-  }, [lineItems]);
+  const taxPreview = useMemo(() => {
+    if (!lineItems?.length) {
+      return {
+        subtotal: 0,
+        taxAmount: 0,
+        grandTotal: 0,
+        laborTax: 0,
+        merchandiseTax: 0,
+        taxableSubtotal: 0,
+        exemptSubtotal: 0,
+        laborSubtotal: 0,
+      };
+    }
+    const combinedTaxRate = siteLocation?.combinedTaxRate
+      ? parseFloat(String(siteLocation.combinedTaxRate))
+      : siteLocation?.merchandiseTaxRate
+        ? parseFloat(String(siteLocation.merchandiseTaxRate))
+        : 0;
+    return computeTicketTaxPreview({
+      lineItems,
+      combinedTaxRate,
+      state: siteLocation?.state ?? null,
+      jurisdictionLabel: siteLocation?.taxJurisdictionLabel ?? null,
+      workTypeCategory: ticket?.workTypeCategory ?? null,
+      effectiveTaxTreatment: ticket?.effectiveTaxTreatment ?? null,
+    });
+  }, [
+    lineItems,
+    siteLocation?.combinedTaxRate,
+    siteLocation?.merchandiseTaxRate,
+    siteLocation?.state,
+    siteLocation?.taxJurisdictionLabel,
+    ticket?.workTypeCategory,
+    ticket?.effectiveTaxTreatment,
+  ]);
 
-  const taxRateValue = taxRate ? parseFloat(taxRate.rate) : 0;
-  const taxAmount = subtotal * taxRateValue;
-  const grandTotal = subtotal + taxAmount;
+  const subtotal = taxPreview.subtotal;
+  const taxAmount = taxPreview.taxAmount;
+  const grandTotal = taxPreview.grandTotal;
+  const combinedTaxRateValue = siteLocation?.combinedTaxRate
+    ? parseFloat(String(siteLocation.combinedTaxRate))
+    : siteLocation?.merchandiseTaxRate
+      ? parseFloat(String(siteLocation.merchandiseTaxRate))
+      : 0;
 
   const canEdit = !!ticket && ticket.status !== "approved" && ticket.status !== "cancelled";
   const canEditDetails = canEdit && user?.role !== "partner" && user?.role !== "admin";
@@ -2491,15 +2525,50 @@ export default function TicketDetail({ id }: { id: number }) {
           )}
 
           <div className="border-t pt-3 space-y-1">
+            {ticket?.effectiveTaxTreatment ? (
+              <div className="flex justify-between text-xs text-muted-foreground pb-1">
+                <span>{t("ticketDetail.taxClassification")}</span>
+                <span data-testid="text-ticket-tax-classification">
+                  {t(`taxTreatment.${ticket.effectiveTaxTreatment}`)}
+                </span>
+              </div>
+            ) : null}
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">{t("ticketDetail.subtotal")}</span>
               <span className="font-medium">${subtotal.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">
-                {t("ticketDetail.taxLabel", { state: siteLocation?.state || "N/A", pct: (taxRateValue * 100).toFixed(2) })}
+                {t("ticketDetail.taxLabelMerchandise", {
+                  label: siteLocation?.taxJurisdictionLabel || siteLocation?.state || "—",
+                  pct: (combinedTaxRateValue * 100).toFixed(2),
+                })}
               </span>
-              <span className="font-medium">${taxAmount.toFixed(2)}</span>
+              <span className="font-medium">${taxPreview.merchandiseTax.toFixed(2)}</span>
+            </div>
+            {taxPreview.laborTax > 0 ? (
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">
+                  {t("ticketDetail.taxLabelLabor", {
+                    label: siteLocation?.taxJurisdictionLabel || siteLocation?.state || "—",
+                    pct: (combinedTaxRateValue * 100).toFixed(2),
+                  })}
+                </span>
+                <span className="font-medium">${taxPreview.laborTax.toFixed(2)}</span>
+              </div>
+            ) : taxPreview.laborSubtotal > 0 ? (
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">
+                  {t("ticketDetail.taxLabelLaborExempt", {
+                    state: siteLocation?.state || "N/A",
+                  })}
+                </span>
+                <span className="font-medium">$0.00</span>
+              </div>
+            ) : null}
+            <div className="flex justify-between text-sm font-medium">
+              <span className="text-muted-foreground">{t("ticketDetail.taxTotal")}</span>
+              <span>${taxAmount.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-base font-bold border-t pt-2">
               <span>{t("ticketDetail.totalRow")}</span>

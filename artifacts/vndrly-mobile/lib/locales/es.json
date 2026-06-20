@@ -221,6 +221,11 @@
     "reopenedByCount": "Reabierto por {{name}} · {{count}}×",
     "viewOnMap": "Ver en el mapa",
     "taxLabel": "Impuesto ({{state}} · {{pct}}%)",
+    "taxLabelMerchandise": "Impuesto — bienes ({{label}} · {{pct}}%)",
+    "taxLabelLabor": "Impuesto — mano de obra ({{label}} · {{pct}}%)",
+    "taxLabelLaborExempt": "Mano de obra (exenta — servicios de campo {{state}})",
+    "taxClassification": "Clasificación fiscal",
+    "taxTotal": "Impuesto total",
     "missingTitle": "Falta información",
     "missingDescription": "La descripción es obligatoria.",
     "errorAddLineItem": "No se pudo agregar el ítem",
@@ -1772,5 +1777,11 @@
     "subtitle": "Tickets marcados para atención.",
     "empty": "No hay tickets marcados ahora.",
     "unknownSite": "Sitio desconocido"
+  },
+  "taxTreatment": {
+    "auto": "Auto (desde categoría)",
+    "exempt_labor": "Mano de obra de campo exenta",
+    "taxable_repair_service": "Reparación / mantenimiento (gravar mano de obra)",
+    "taxable_all": "Todo gravable (IGB / servicio amplio)"
   }
 }

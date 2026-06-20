@@ -944,9 +944,13 @@
     "coordsUpdated": "Coordenadas actualizadas",
     "coordsUpdateFailed": "No se pudieron actualizar las coordenadas",
     "afeLabel": "AFE:",
+    "taxJurisdictionLabel": "Jurisdicción fiscal:",
+    "taxJurisdictionPending": "Pendiente de resolución",
+    "taxJurisdictionZipLabel": "ZIP de referencia:",
     "afeColumn": "AFE",
     "afeOptional": "AFE (opcional)",
     "afeNotSet": "Sin asignar",
+    "removeWorkAssignment": "Quitar asignación de trabajo",
     "afePlaceholder": "AFE-2026-000123",
     "afeHelp": "Opcional. También puedes establecerlo o cambiarlo más tarde desde la página de detalle del sitio.",
     "recentVisitorsTitle": "Visitantes recientes",
@@ -1221,7 +1225,15 @@
     "importVendorsNotified": "Los proveedores adjuntos en esta importación deben fijar tarifas en Sus servicios y tarifas.",
     "importFailed": "Falló la importación",
     "exportEmpty": "No hay nada para exportar todavía.",
-    "duplicateNameInline": "Ya existe un tipo de trabajo con este nombre."
+    "duplicateNameInline": "Ya existe un tipo de trabajo con este nombre.",
+    "taxTreatment": "Clasificación fiscal",
+    "taxTreatmentHelp": "Define si la mano de obra del equipo se grava con la tasa del sitio. Auto infiere del nombre de categoría (p. ej. reparación → gravar mano de obra)."
+  },
+  "taxTreatment": {
+    "auto": "Auto (desde categoría)",
+    "exempt_labor": "Mano de obra de campo exenta",
+    "taxable_repair_service": "Reparación / mantenimiento (gravar mano de obra)",
+    "taxable_all": "Todo gravable (IGB / servicio amplio)"
   },
   "catalogHealth": {
     "title": "Salud del catálogo",
@@ -1716,6 +1728,11 @@
     "noLineItems": "Aún no se han agregado partidas.",
     "subtotal": "Subtotal",
     "taxLabel": "Impuesto ({{state}} — {{pct}}%)",
+    "taxLabelMerchandise": "Impuesto — bienes ({{label}} — {{pct}}%)",
+    "taxLabelLabor": "Impuesto — mano de obra ({{label}} — {{pct}}%)",
+    "taxLabelLaborExempt": "Mano de obra (exenta — servicios de campo {{state}})",
+    "taxClassification": "Clasificación fiscal",
+    "taxTotal": "Impuesto total",
     "totalRow": "Total",
     "actions": "Acciones",
     "nudge": {

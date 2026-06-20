@@ -22,6 +22,7 @@ import {
 } from "react-native";
 
 import { formatTicketTrackingNumber } from "@workspace/db/format";
+import { computeTicketTaxPreview } from "@workspace/db/ticket-tax-preview";
 
 import ActiveOrgIndicator from "@/components/ActiveOrgIndicator";
 import AmberButton from "@/components/AmberButton";
@@ -126,6 +127,12 @@ type Ticket = {
   // ticket status is `funds_dispersed`). Drives the "Reverse dispersal"
   // action on the Payment Details card; `null`/`false` keeps it hidden.
   viewerCanReverseDispersal?: boolean | null;
+  workTypeCategory?: string | null;
+  effectiveTaxTreatment?:
+    | "exempt_labor"
+    | "taxable_repair_service"
+    | "taxable_all"
+    | null;
 };
 
 type TicketUnlock = {
@@ -161,9 +168,15 @@ type SiteLocation = {
   afe?: string | null;
   id: number;
   name?: string | null;
+  state?: string | null;
   latitude?: number | null;
   longitude?: number | null;
   siteRadiusMeters?: number | null;
+  taxJurisdictionPostalCode?: string | null;
+  taxJurisdictionLabel?: string | null;
+  laborTaxRate?: string | null;
+  merchandiseTaxRate?: string | null;
+  combinedTaxRate?: string | null;
 };
 
 type GpsLog = {
@@ -196,14 +209,13 @@ function objectUrl(objectPath: string): string {
   return `${base}/api/storage/objects/${suffix}`;
 }
 
-type TaxRate = { state: string; rate: string };
-
 type LineItem = {
   id: number;
   type: string;
   description: string;
   quantity: string | number;
   unitPrice: string | number;
+  taxableOverride?: boolean | null;
 };
 
 type NoteLog = {
@@ -270,7 +282,6 @@ export default function TicketDetailScreen() {
   const [transitions, setTransitions] = useState<TicketTransition[]>([]);
   const scrollRef = React.useRef<ScrollView | null>(null);
   const unlockHistoryY = React.useRef<number>(0);
-  const [taxRate, setTaxRate] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
@@ -449,16 +460,6 @@ export default function TicketDetailScreen() {
         }
       } else {
         setSiteLocation(null);
-      }
-      if (tk?.state) {
-        try {
-          const rate = await apiFetch<TaxRate>(
-            `/api/tax-rates/by-state/${encodeURIComponent(tk.state)}`,
-          );
-          setTaxRate(rate?.rate ? parseFloat(rate.rate) : 0);
-        } catch {
-          setTaxRate(0);
-        }
       }
       return true;
     } catch (e) {
@@ -1726,13 +1727,27 @@ export default function TicketDetailScreen() {
       (currentUser?.role === "field_employee" &&
         (currentUser.vendorRole === "foreman" || currentUser.vendorRole === "both")));
 
-  const subtotal = items.reduce((sum, it) => {
-    const q = typeof it.quantity === "string" ? parseFloat(it.quantity) : it.quantity;
-    const p = typeof it.unitPrice === "string" ? parseFloat(it.unitPrice) : it.unitPrice;
-    return sum + (q || 0) * (p || 0);
-  }, 0);
-  const taxAmount = subtotal * taxRate;
-  const grandTotal = subtotal + taxAmount;
+  const combinedTaxRate = siteLocation?.combinedTaxRate
+    ? parseFloat(String(siteLocation.combinedTaxRate))
+    : siteLocation?.merchandiseTaxRate
+      ? parseFloat(String(siteLocation.merchandiseTaxRate))
+      : 0;
+  const taxPreview = computeTicketTaxPreview({
+    lineItems: items.map((it) => ({
+      type: it.type,
+      quantity: String(it.quantity),
+      unitPrice: String(it.unitPrice),
+      taxableOverride: it.taxableOverride ?? null,
+    })),
+    combinedTaxRate,
+    state: siteLocation?.state ?? null,
+    jurisdictionLabel: siteLocation?.taxJurisdictionLabel ?? null,
+    workTypeCategory: ticket?.workTypeCategory ?? null,
+    effectiveTaxTreatment: ticket?.effectiveTaxTreatment ?? null,
+  });
+  const subtotal = taxPreview.subtotal;
+  const taxAmount = taxPreview.taxAmount;
+  const grandTotal = taxPreview.grandTotal;
 
   const ticketIdValid = Number.isFinite(ticketId) && ticketId > 0;
 
@@ -3948,6 +3963,16 @@ export default function TicketDetailScreen() {
           { borderColor: colors.border, backgroundColor: colors.card },
         ]}
       >
+        {ticket?.effectiveTaxTreatment ? (
+          <View style={styles.totalRow} testID="text-ticket-tax-classification">
+            <Text style={{ color: colors.mutedForeground, fontSize: 12 }}>
+              {t("tickets.taxClassification")}
+            </Text>
+            <Text style={{ color: colors.mutedForeground, fontSize: 12 }}>
+              {t(`taxTreatment.${ticket.effectiveTaxTreatment}`)}
+            </Text>
+          </View>
+        ) : null}
         <View style={styles.totalRow}>
           <Text style={{ color: colors.mutedForeground }}>{t("tickets.subtotal")}</Text>
           <Text style={{ color: colors.foreground, fontFamily: "Inter_600SemiBold" }}>
@@ -3956,8 +3981,41 @@ export default function TicketDetailScreen() {
         </View>
         <View style={styles.totalRow}>
           <Text style={{ color: colors.mutedForeground }}>
-            {t("tickets.taxLabel", { state: ticket.state || "—", pct: (taxRate * 100).toFixed(2) })}
+            {t("tickets.taxLabelMerchandise", {
+              label: siteLocation?.taxJurisdictionLabel || siteLocation?.state || "—",
+              pct: (combinedTaxRate * 100).toFixed(2),
+            })}
           </Text>
+          <Text style={{ color: colors.foreground, fontFamily: "Inter_600SemiBold" }}>
+            ${taxPreview.merchandiseTax.toFixed(2)}
+          </Text>
+        </View>
+        {taxPreview.laborTax > 0 ? (
+          <View style={styles.totalRow}>
+            <Text style={{ color: colors.mutedForeground }}>
+              {t("tickets.taxLabelLabor", {
+                label: siteLocation?.taxJurisdictionLabel || siteLocation?.state || "—",
+                pct: (combinedTaxRate * 100).toFixed(2),
+              })}
+            </Text>
+            <Text style={{ color: colors.foreground, fontFamily: "Inter_600SemiBold" }}>
+              ${taxPreview.laborTax.toFixed(2)}
+            </Text>
+          </View>
+        ) : taxPreview.laborSubtotal > 0 ? (
+          <View style={styles.totalRow}>
+            <Text style={{ color: colors.mutedForeground }}>
+              {t("tickets.taxLabelLaborExempt", {
+                state: siteLocation?.state || ticket.state || "—",
+              })}
+            </Text>
+            <Text style={{ color: colors.foreground, fontFamily: "Inter_600SemiBold" }}>
+              $0.00
+            </Text>
+          </View>
+        ) : null}
+        <View style={styles.totalRow}>
+          <Text style={{ color: colors.mutedForeground }}>{t("tickets.taxTotal")}</Text>
           <Text style={{ color: colors.foreground, fontFamily: "Inter_600SemiBold" }}>
             ${taxAmount.toFixed(2)}
           </Text>

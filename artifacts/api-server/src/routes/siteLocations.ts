@@ -8,6 +8,11 @@ import { publishTicketUnblocked } from "../lib/ticket-events";
 import { logger } from "../lib/logger";
 import { getAppOrigin } from "../lib/appOrigin";
 import {
+  loadSiteAssignmentAfe,
+  syncSiteAfeToAssignments,
+} from "../lib/resolve-site-assignment-afe";
+import { backfillSiteAssignmentAfes } from "../lib/backfill-site-assignment-afes";
+import {
   CreateSiteLocationBody,
   GetSiteLocationParams,
   GetSiteLocationResponse,
@@ -33,9 +38,39 @@ import { randomBytes } from "crypto";
 import QRCode from "qrcode";
 import { getStateFromCoordinates } from "../utils/latlong-to-state";
 import { sendApiError } from "../lib/apiError";
+import { persistSiteTaxJurisdiction } from "../lib/tax-jurisdiction";
 
 import { sendValidationFailed } from "../lib/validation-error";
 const router: IRouter = Router();
+
+const siteLocationPublicSelect = {
+  id: siteLocationsTable.id,
+  partnerId: siteLocationsTable.partnerId,
+  name: siteLocationsTable.name,
+  address: siteLocationsTable.address,
+  latitude: siteLocationsTable.latitude,
+  longitude: siteLocationsTable.longitude,
+  siteCode: siteLocationsTable.siteCode,
+  state: siteLocationsTable.state,
+  isActive: siteLocationsTable.isActive,
+  status: siteLocationsTable.status,
+  partnerName: partnersTable.name,
+  siteRadiusMeters: siteLocationsTable.siteRadiusMeters,
+  afe: siteLocationsTable.afe,
+  photoUrl: siteLocationsTable.photoUrl,
+  taxJurisdictionPostalCode: siteLocationsTable.taxJurisdictionPostalCode,
+  taxJurisdictionCounty: siteLocationsTable.taxJurisdictionCounty,
+  taxJurisdictionCity: siteLocationsTable.taxJurisdictionCity,
+  taxJurisdictionLabel: siteLocationsTable.taxJurisdictionLabel,
+  stateTaxRate: siteLocationsTable.stateTaxRate,
+  localTaxRate: siteLocationsTable.localTaxRate,
+  combinedTaxRate: siteLocationsTable.combinedTaxRate,
+  merchandiseTaxRate: siteLocationsTable.merchandiseTaxRate,
+  laborTaxRate: siteLocationsTable.laborTaxRate,
+  taxJurisdictionResolvedAt: siteLocationsTable.taxJurisdictionResolvedAt,
+  taxProvider: siteLocationsTable.taxProvider,
+  createdAt: siteLocationsTable.createdAt,
+} as const;
 
 function generateSiteCode(): string {
   return "SITE-" + randomBytes(4).toString("hex").toUpperCase();
@@ -120,23 +155,7 @@ router.get("/site-locations", async (req, res): Promise<void> => {
     vendorId = vp.vendorId;
   }
 
-  const siteSelect = {
-    id: siteLocationsTable.id,
-    partnerId: siteLocationsTable.partnerId,
-    name: siteLocationsTable.name,
-    address: siteLocationsTable.address,
-    latitude: siteLocationsTable.latitude,
-    longitude: siteLocationsTable.longitude,
-    siteCode: siteLocationsTable.siteCode,
-    state: siteLocationsTable.state,
-    isActive: siteLocationsTable.isActive,
-    status: siteLocationsTable.status,
-    partnerName: partnersTable.name,
-    siteRadiusMeters: siteLocationsTable.siteRadiusMeters,
-    afe: siteLocationsTable.afe,
-    photoUrl: siteLocationsTable.photoUrl,
-    createdAt: siteLocationsTable.createdAt,
-  };
+  const siteSelect = siteLocationPublicSelect;
 
   let results;
 
@@ -246,26 +265,23 @@ router.post("/site-locations", async (req, res): Promise<void> => {
       WHERE partner_id = ${parsed.data.partnerId}
       ON CONFLICT (vendor_id, work_type_id, site_location_id) DO NOTHING
     `);
+    await backfillSiteAssignmentAfes({ siteLocationId: site.id });
+  }
+
+  try {
+    await persistSiteTaxJurisdiction(
+      site.id,
+      site.latitude,
+      site.longitude,
+      site.state,
+      site.address,
+    );
+  } catch (err) {
+    logger.warn({ err, siteId: site.id }, "site tax jurisdiction resolve failed on create");
   }
 
   const [result] = await db
-    .select({
-      id: siteLocationsTable.id,
-      partnerId: siteLocationsTable.partnerId,
-      name: siteLocationsTable.name,
-      address: siteLocationsTable.address,
-      latitude: siteLocationsTable.latitude,
-      longitude: siteLocationsTable.longitude,
-      siteCode: siteLocationsTable.siteCode,
-      state: siteLocationsTable.state,
-      isActive: siteLocationsTable.isActive,
-      status: siteLocationsTable.status,
-      partnerName: partnersTable.name,
-      siteRadiusMeters: siteLocationsTable.siteRadiusMeters,
-      afe: siteLocationsTable.afe,
-      photoUrl: siteLocationsTable.photoUrl,
-      createdAt: siteLocationsTable.createdAt,
-    })
+    .select(siteLocationPublicSelect)
     .from(siteLocationsTable)
     .leftJoin(partnersTable, eq(siteLocationsTable.partnerId, partnersTable.id))
     .where(eq(siteLocationsTable.id, site.id));
@@ -291,24 +307,10 @@ router.get("/site-locations/:id", async (req, res): Promise<void> => {
 
   const [site] = await db
     .select({
-      id: siteLocationsTable.id,
-      partnerId: siteLocationsTable.partnerId,
-      name: siteLocationsTable.name,
-      address: siteLocationsTable.address,
-      latitude: siteLocationsTable.latitude,
-      longitude: siteLocationsTable.longitude,
-      siteCode: siteLocationsTable.siteCode,
-      state: siteLocationsTable.state,
-      isActive: siteLocationsTable.isActive,
-      status: siteLocationsTable.status,
-      partnerName: partnersTable.name,
-      siteRadiusMeters: siteLocationsTable.siteRadiusMeters,
-      afe: siteLocationsTable.afe,
-      photoUrl: siteLocationsTable.photoUrl,
+      ...siteLocationPublicSelect,
       hidden: siteLocationsTable.hidden,
       supersededAt: siteLocationsTable.supersededAt,
       sourceType: siteLocationsTable.sourceType,
-      createdAt: siteLocationsTable.createdAt,
     })
     .from(siteLocationsTable)
     .leftJoin(partnersTable, eq(siteLocationsTable.partnerId, partnersTable.id))
@@ -468,24 +470,32 @@ router.patch("/site-locations/:id", async (req, res): Promise<void> => {
     return;
   }
 
+  const coordsChanged =
+    parsed.data.latitude !== undefined && parsed.data.longitude !== undefined;
+  if (coordsChanged) {
+    try {
+      await persistSiteTaxJurisdiction(
+        site.id,
+        site.latitude,
+        site.longitude,
+        site.state,
+        site.address,
+      );
+    } catch (err) {
+      logger.warn({ err, siteId: site.id }, "site tax jurisdiction resolve failed on update");
+    }
+  }
+
+  if (parsed.data.afe !== undefined) {
+    try {
+      await syncSiteAfeToAssignments({ siteLocationId: site.id });
+    } catch (err) {
+      logger.warn({ err, siteId: site.id }, "site AFE sync to assignments failed");
+    }
+  }
+
   const [result] = await db
-    .select({
-      id: siteLocationsTable.id,
-      partnerId: siteLocationsTable.partnerId,
-      name: siteLocationsTable.name,
-      address: siteLocationsTable.address,
-      latitude: siteLocationsTable.latitude,
-      longitude: siteLocationsTable.longitude,
-      siteCode: siteLocationsTable.siteCode,
-      state: siteLocationsTable.state,
-      isActive: siteLocationsTable.isActive,
-      status: siteLocationsTable.status,
-      partnerName: partnersTable.name,
-      siteRadiusMeters: siteLocationsTable.siteRadiusMeters,
-      afe: siteLocationsTable.afe,
-      photoUrl: siteLocationsTable.photoUrl,
-      createdAt: siteLocationsTable.createdAt,
-    })
+    .select(siteLocationPublicSelect)
     .from(siteLocationsTable)
     .leftJoin(partnersTable, eq(siteLocationsTable.partnerId, partnersTable.id))
     .where(eq(siteLocationsTable.id, site.id));
@@ -890,9 +900,18 @@ router.post("/site-locations/:siteId/assignments", async (req, res): Promise<voi
     return;
   }
 
+  const resolvedAfe = await loadSiteAssignmentAfe({
+    siteLocationId: params.data.siteId,
+  });
+
   const [assignment] = await db
     .insert(siteWorkAssignmentsTable)
-    .values({ ...parsed.data, siteLocationId: params.data.siteId })
+    .values({
+      workTypeId: parsed.data.workTypeId,
+      vendorId: parsed.data.vendorId,
+      siteLocationId: params.data.siteId,
+      afe: resolvedAfe,
+    })
     .returning();
 
   const [result] = await db

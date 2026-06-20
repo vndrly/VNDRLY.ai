@@ -12,4 +12,6 @@ export interface CreateTicketLineItemBodyType {
   description: string;
   quantity: string;
   unitPrice: string;
+  /** @nullable */
+  taxableOverride?: boolean | null;
 }

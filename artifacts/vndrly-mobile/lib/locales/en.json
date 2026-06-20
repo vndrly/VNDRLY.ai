@@ -221,6 +221,11 @@
     "reopenedByCount": "Reopened by {{name}} · {{count}}×",
     "viewOnMap": "View on map",
     "taxLabel": "Tax ({{state}} · {{pct}}%)",
+    "taxLabelMerchandise": "Tax — goods ({{label}} · {{pct}}%)",
+    "taxLabelLabor": "Tax — labor ({{label}} · {{pct}}%)",
+    "taxLabelLaborExempt": "Labor (exempt — {{state}} field services)",
+    "taxClassification": "Tax classification",
+    "taxTotal": "Tax total",
     "missingTitle": "Missing",
     "missingDescription": "Description is required.",
     "errorAddLineItem": "Failed to add line item",
@@ -1772,5 +1777,11 @@
     "subtitle": "Tickets flagged for attention.",
     "empty": "No flagged tickets right now.",
     "unknownSite": "Unknown site"
+  },
+  "taxTreatment": {
+    "auto": "Auto (from category)",
+    "exempt_labor": "Field labor exempt",
+    "taxable_repair_service": "Repair / maintenance (tax labor)",
+    "taxable_all": "All taxable (GRT / broad service)"
   }
 }
