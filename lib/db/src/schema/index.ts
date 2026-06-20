@@ -69,6 +69,7 @@ export * from "./reportExportAuditLog";
 export * from "./reconciliationWeeklyRecapLog";
 export * from "./vendorMergeAuditLog";
 export * from "./siteLocationAdminAuditLog";
+export * from "./safetyEvents";
 export * from "./scheduleCertOverrideAuditLog";
 export * from "./qbAccountMapping";
 export * from "./accountingConnections";

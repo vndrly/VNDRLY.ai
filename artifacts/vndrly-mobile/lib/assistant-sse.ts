@@ -1,7 +1,7 @@
 export type StreamEvent =
   | { type: "token"; delta: string }
   | { type: "tool"; name: string; status: "start" | "end" }
-  | { type: "done"; content: string }
+  | { type: "done"; content: string; assistantMessageId?: number }
   | { type: "error"; message: string };
 
 export type SseConsumeResult = {
@@ -32,7 +32,12 @@ function dispatchSseBlock(raw: string, onEvent: (evt: StreamEvent) => void): voi
       ...(parsed as { name: string; status: "start" | "end" }),
     });
   } else if (eventName === "done") {
-    onEvent({ type: "done", content: (parsed as { content: string }).content });
+    const payload = parsed as { content: string; assistantMessageId?: number };
+    onEvent({
+      type: "done",
+      content: payload.content,
+      assistantMessageId: payload.assistantMessageId,
+    });
   } else if (eventName === "error") {
     onEvent({ type: "error", message: (parsed as { message: string }).message });
   }

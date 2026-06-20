@@ -1122,6 +1122,17 @@ router.post("/field/tickets", async (req, res): Promise<void> => {
     return;
   }
 
+  const { assertSiteActiveForWork } = await import("../lib/safety-site-gate");
+  const inactiveMsg = await assertSiteActiveForWork(Number(siteLocationId));
+  if (inactiveMsg) {
+    res.status(409).json({
+      code: "safety.site_inactive",
+      error: "site_inactive",
+      message: inactiveMsg,
+    });
+    return;
+  }
+
   // Task #528: split the legacy single 403 ("Not approved for this
   // site & work type") into structured codes so the mobile new-ticket
   // screen can surface the validation inline on the right picker.

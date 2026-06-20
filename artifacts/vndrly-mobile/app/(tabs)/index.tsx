@@ -911,6 +911,29 @@ export default function HomeScreen() {
               </LayeredPillButton>
             ) : null}
             <LayeredPillButton
+              testID="button-safety-report"
+              onPress={() => router.push("/safety-report")}
+              inactive
+              height={40}
+              style={isForemanEmployee ? styles.foremanPillFull : styles.foremanPillHalf}
+            >
+              <Feather name="shield" size={14} color="#ffffff" style={styles.btnIconShadow} />
+              <Text style={[styles.newBtnText, { color: "#ffffff" }]} numberOfLines={1}>
+                {t("safety.reportTitle")}
+              </Text>
+            </LayeredPillButton>
+            <LayeredPillButton
+              testID="button-safety-my-reports"
+              onPress={() => router.push("/safety-my-reports")}
+              inactive
+              height={36}
+              style={{ marginTop: 8 }}
+            >
+              <Text style={[styles.newBtnText, { color: "#ffffff" }]} numberOfLines={1}>
+                {t("safety.myReportsTitle")}
+              </Text>
+            </LayeredPillButton>
+            <LayeredPillButton
               onPress={onHeaderRefresh}
               disabled={headerRefreshing || refreshing || rateLimited}
               loading={headerRefreshing}

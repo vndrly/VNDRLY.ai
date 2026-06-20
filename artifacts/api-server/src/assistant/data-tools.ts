@@ -568,6 +568,11 @@ import {
   isExtDataTool,
   runExtDataTool,
 } from "./data-tools-ext";
+import {
+  OPS_DATA_TOOL_NAMES,
+  isOpsDataTool,
+  runOpsDataTool,
+} from "./data-tools-ops";
 
 export const DATA_TOOL_NAMES = [
   "query_tickets",
@@ -579,6 +584,7 @@ export const DATA_TOOL_NAMES = [
   "query_sales_tax_by_state",
   "query_nec1099_summary",
   ...EXT_DATA_TOOL_NAMES,
+  ...OPS_DATA_TOOL_NAMES,
 ] as const;
 
 export type DataToolName = (typeof DATA_TOOL_NAMES)[number];
@@ -595,6 +601,9 @@ export async function runDataTool(
   const args = (input ?? {}) as Record<string, unknown>;
   if (isExtDataTool(name)) {
     return runExtDataTool(name, args, session);
+  }
+  if (isOpsDataTool(name)) {
+    return runOpsDataTool(name, args, session);
   }
   switch (name) {
     case "query_tickets":

@@ -1038,13 +1038,21 @@ router.post("/tickets", async (req, res): Promise<void> => {
     .from(siteLocationsTable)
     .where(eq(siteLocationsTable.id, parsed.data.siteLocationId));
   if (!site) {
-    // Task #517: structured error code so the office intake form can
-    // surface this inline on the site picker rather than showing the
-    // generic "Failed to create phone intake ticket" toast.
     res.status(400).json({
       code: "site.not_found",
       error: "site_not_found",
       message: "Site not found.",
+    });
+    return;
+  }
+
+  const { assertSiteActiveForWork } = await import("../lib/safety-site-gate");
+  const siteInactiveMsg = await assertSiteActiveForWork(site.id);
+  if (siteInactiveMsg) {
+    res.status(409).json({
+      code: "safety.site_inactive",
+      error: "site_inactive",
+      message: siteInactiveMsg,
     });
     return;
   }

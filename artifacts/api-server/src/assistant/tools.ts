@@ -48,6 +48,8 @@ export const DEEP_LINK_SCREENS = [
   "notification-preferences",
   "notifications-inbox",
   "field-home",
+  "safety-inbox",
+  "safety-event-detail",
 ] as const;
 
 export const TOOLS: Anthropic.Tool[] = [
@@ -387,6 +389,172 @@ export const TOOLS: Anthropic.Tool[] = [
       properties: {
         year: { type: "number", description: "Tax year. Defaults to current UTC year." },
       },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "query_safety_events",
+    description: "List or count safety events (near miss, injury, stop-work) in the caller's scope. Filters: status, siteId, openOnly, sinceDays, countOnly.",
+    input_schema: {
+      type: "object",
+      properties: {
+        status: { type: "string" },
+        siteId: { type: "number" },
+        openOnly: { type: "boolean" },
+        sinceDays: { type: "number" },
+        limit: { type: "number" },
+        countOnly: { type: "boolean" },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "lookup_safety_metrics",
+    description: "Returns safety score (0-100), days without recordable, open HiPo count, and formula explanation for org or site.",
+    input_schema: {
+      type: "object",
+      properties: { siteId: { type: "number" } },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "lookup_site_operational_status",
+    description: "Returns whether a site is active/inactive and the last stop-work safety event if any.",
+    input_schema: {
+      type: "object",
+      properties: { siteId: { type: "number" } },
+      required: ["siteId"],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "query_site_locations",
+    description: "Lists site locations in scope with active/inactive status, AFE, site code. Optional search and inactiveOnly filter.",
+    input_schema: {
+      type: "object",
+      properties: {
+        search: { type: "string" },
+        inactiveOnly: { type: "boolean" },
+        limit: { type: "number" },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "lookup_site_detail",
+    description: "Site detail: geofence, status, assigned vendors, last stop-work link.",
+    input_schema: {
+      type: "object",
+      properties: { siteId: { type: "number" } },
+      required: ["siteId"],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "query_notifications",
+    description: "Lists recent unread (or all) in-app notifications for the signed-in user.",
+    input_schema: {
+      type: "object",
+      properties: {
+        unreadOnly: { type: "boolean" },
+        limit: { type: "number" },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "query_live_crew",
+    description: "Tickets currently en route, on location, or on site — live crew map snapshot.",
+    input_schema: {
+      type: "object",
+      properties: { siteId: { type: "number" }, limit: { type: "number" } },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "query_hotlist_jobs",
+    description: "Open hotlist marketplace jobs visible to the caller.",
+    input_schema: {
+      type: "object",
+      properties: { limit: { type: "number" } },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "query_hotlist_bids",
+    description: "Vendor's hotlist bids with job titles and status.",
+    input_schema: {
+      type: "object",
+      properties: { limit: { type: "number" } },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "query_vendor_catalog",
+    description: "Vendor work-type catalog with unit pricing.",
+    input_schema: {
+      type: "object",
+      properties: { vendorId: { type: "number" }, limit: { type: "number" } },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "query_partner_approvals",
+    description: "Partner-vendor work type approval rows in scope.",
+    input_schema: {
+      type: "object",
+      properties: { limit: { type: "number" } },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "query_certifications",
+    description: "Employee certifications expiring within N days.",
+    input_schema: {
+      type: "object",
+      properties: { expiringWithinDays: { type: "number" }, limit: { type: "number" } },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "lookup_org_contacts",
+    description: "Find org contacts by company role pill (default HSE / Safety Officer).",
+    input_schema: {
+      type: "object",
+      properties: { role: { type: "string" }, limit: { type: "number" } },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "query_flagged_tickets",
+    description: "Open ticket flags awaiting review.",
+    input_schema: {
+      type: "object",
+      properties: { limit: { type: "number" } },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "lookup_ticket_payment_status",
+    description: "Payment/disbursement status for one ticket.",
+    input_schema: {
+      type: "object",
+      properties: { ticketId: { type: "number" } },
+      required: ["ticketId"],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "lookup_accounting_connection",
+    description: "QuickBooks / OpenAccountant connection status for vendor.",
+    input_schema: { type: "object", properties: {}, additionalProperties: false },
+  },
+  {
+    name: "query_active_visitors",
+    description: "Guests currently checked in at sites (no check-out yet).",
+    input_schema: {
+      type: "object",
+      properties: { siteId: { type: "number" }, limit: { type: "number" } },
       additionalProperties: false,
     },
   },

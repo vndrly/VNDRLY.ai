@@ -7,11 +7,15 @@ import {
   readAssistantStreamResponse,
 } from "@/lib/assistant-sse";
 
+export type AssistantFeedbackRating = "helpful" | "unhelpful";
+
 export interface AssistantMessage {
   id: string;
   role: "user" | "assistant";
   content: string;
   pending?: boolean;
+  serverId?: number;
+  feedbackRating?: AssistantFeedbackRating | null;
 }
 
 export interface ConversationSummary {
@@ -103,7 +107,12 @@ export function useAssistant() {
       }
       const detail = (await detailRes.json()) as {
         id: number;
-        messages: Array<{ id: number; role: "user" | "assistant"; content: string }>;
+        messages: Array<{
+          id: number;
+          role: "user" | "assistant";
+          content: string;
+          feedbackRating?: AssistantFeedbackRating | null;
+        }>;
       };
       if (myVersion !== restoreVersionRef.current || streamingRef.current) return;
 
@@ -111,8 +120,10 @@ export function useAssistant() {
         .filter((m) => m.role === "user" || m.content.trim().length > 0)
         .map((m) => ({
           id: `db-${m.id}`,
+          serverId: m.id,
           role: m.role,
           content: m.content,
+          feedbackRating: m.feedbackRating ?? null,
         }));
       conversationIdRef.current = detail.id;
       setConversationId(detail.id);
@@ -219,7 +230,13 @@ export function useAssistant() {
             setMessages((prev) =>
               prev.map((m) =>
                 m.id === assistantId
-                  ? { ...m, content: evt.content || m.content, pending: false }
+                  ? {
+                      ...m,
+                      id: evt.assistantMessageId ? `db-${evt.assistantMessageId}` : m.id,
+                      serverId: evt.assistantMessageId,
+                      content: evt.content || m.content,
+                      pending: false,
+                    }
                   : m,
               ),
             );
@@ -267,6 +284,27 @@ export function useAssistant() {
 
   useEffect(() => () => abortRef.current?.abort(), []);
 
+  const submitFeedback = useCallback(
+    async (messageId: number, rating: AssistantFeedbackRating): Promise<boolean> => {
+      try {
+        const res = await assistantFetch(`/api/assistant/messages/${messageId}/feedback`, {
+          method: "POST",
+          body: JSON.stringify({ rating }),
+        });
+        if (!res.ok) return false;
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.serverId === messageId ? { ...m, feedbackRating: rating } : m,
+          ),
+        );
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    [],
+  );
+
   return {
     conversationId,
     messages,
@@ -277,5 +315,6 @@ export function useAssistant() {
     clear,
     startNew,
     loadLatest,
+    submitFeedback,
   };
 }

@@ -216,13 +216,20 @@ async function main(): Promise<void> {
     TEST_DATABASE_URL: resolved.testUrl,
   };
 
-  const checkCode = await spawnChild(
-    "pnpm",
-    ["--filter", "@workspace/db", "run", "check-schema"],
-    env,
-  );
-  if (checkCode !== 0) {
-    process.exit(checkCode);
+  const skipDriftCheck = process.env.SKIP_SCHEMA_DRIFT_CHECK === "1";
+  if (!skipDriftCheck) {
+    const checkCode = await spawnChild(
+      "pnpm",
+      ["--filter", "@workspace/db", "run", "check-schema"],
+      env,
+    );
+    if (checkCode !== 0) {
+      process.exit(checkCode);
+    }
+  } else {
+    process.stdout.write(
+      "[test-db] SKIP_SCHEMA_DRIFT_CHECK=1 — skipping check-schema (pooler introspection workaround).\n",
+    );
   }
 
   const code = await spawnChild(childArgs[0]!, childArgs.slice(1), env);

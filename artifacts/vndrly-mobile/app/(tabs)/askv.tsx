@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -18,15 +19,59 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import ActiveOrgIndicator from "@/components/ActiveOrgIndicator";
 import AssistantMarkdown from "@/components/AssistantMarkdown";
+import AssistantSendToModal, {
+  type AssistantShareContext,
+} from "@/components/AssistantSendToModal";
 import InPageHeader from "@/components/InPageHeader";
 import LayeredPillButton from "@/components/LayeredPillButton";
 import { useAuth } from "@/hooks/use-auth";
-import { useAssistant } from "@/hooks/use-assistant";
+import {
+  useAssistant,
+  type AssistantMessage,
+} from "@/hooks/use-assistant";
 import { useBrand } from "@/hooks/use-brand";
 import { useColors } from "@/hooks/useColors";
 import { quickActionsForUser } from "@/lib/assistant-quick-actions";
+import { shareAssistantTranscript } from "@/lib/assistant-transcript";
 import { isForemanEmployeeUser } from "@/lib/mobile-viewer";
+import { buildAssistantShareMailtoUrl } from "@/lib/notification-mailto";
 import { SCREEN_SUBTITLE_TEXT, SCREEN_TITLE_TEXT } from "@/lib/pill-doctrine";
+
+function truncateSharePreview(text: string, max: number) {
+  const trimmed = text.trim();
+  if (trimmed.length <= max) return trimmed;
+  return `${trimmed.slice(0, max - 1)}…`;
+}
+
+function BubbleIconButton({
+  name,
+  onPress,
+  disabled,
+  pressed,
+  color,
+  activeColor,
+  testID,
+}: {
+  name: React.ComponentProps<typeof Feather>["name"];
+  onPress?: () => void;
+  disabled?: boolean;
+  pressed?: boolean;
+  color: string;
+  activeColor: string;
+  testID?: string;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      hitSlop={8}
+      testID={testID}
+      style={styles.bubbleIconBtn}
+    >
+      <Feather name={name} size={16} color={pressed ? activeColor : color} />
+    </Pressable>
+  );
+}
 
 export default function AskVScreen() {
   const colors = useColors();
@@ -36,6 +81,8 @@ export default function AskVScreen() {
   const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollView>(null);
   const [draft, setDraft] = useState("");
+  const [feedbackPendingId, setFeedbackPendingId] = useState<number | null>(null);
+  const [assistantShare, setAssistantShare] = useState<AssistantShareContext | null>(null);
 
   const {
     messages,
@@ -46,6 +93,7 @@ export default function AskVScreen() {
     clear,
     startNew,
     loadLatest,
+    submitFeedback,
   } = useAssistant();
 
   useEffect(() => {
@@ -65,6 +113,8 @@ export default function AskVScreen() {
     return t("askv.greetingField", { name });
   }, [user, t]);
 
+  const userName = user?.displayName?.split(" ")[0] ?? t("askv.greetingFallback");
+
   const onSend = () => {
     const text = draft.trim();
     if (!text) return;
@@ -83,6 +133,113 @@ export default function AskVScreen() {
     ]);
   };
 
+  const onExport = () => {
+    void shareAssistantTranscript(messages, userName, t).catch(() => {
+      Alert.alert(t("askv.transcriptErrorTitle"), t("askv.transcriptShareUnavailable"));
+    });
+  };
+
+  const handleFeedback = async (
+    messageId: number,
+    rating: "helpful" | "unhelpful",
+  ) => {
+    if (feedbackPendingId != null) return;
+    setFeedbackPendingId(messageId);
+    try {
+      await submitFeedback(messageId, rating);
+    } finally {
+      setFeedbackPendingId(null);
+    }
+  };
+
+  const resolveAssistantShareParts = (messageIndex: number, message: AssistantMessage) => {
+    let priorQuestion = t("askv.sharedAnswerFallback");
+    for (let i = messageIndex - 1; i >= 0; i -= 1) {
+      const prior = messages[i];
+      if (prior?.role === "user" && prior.content.trim()) {
+        priorQuestion = prior.content.trim();
+        break;
+      }
+    }
+    return {
+      question: priorQuestion,
+      answer: message.content.trim(),
+      pagePath: "/mobile/askv",
+      previewTitle: truncateSharePreview(`AskV — ${priorQuestion}`, 200),
+      previewBody: truncateSharePreview(message.content, 500),
+    };
+  };
+
+  const openSendToForMessage = (messageIndex: number, message: AssistantMessage) => {
+    if (message.serverId == null || !message.content.trim()) return;
+    const parts = resolveAssistantShareParts(messageIndex, message);
+    setAssistantShare({
+      messageId: message.serverId,
+      previewTitle: parts.previewTitle,
+      previewBody: parts.previewBody,
+      ticketId: null,
+      pagePath: parts.pagePath,
+    });
+  };
+
+  const openMailto = async (messageIndex: number, message: AssistantMessage) => {
+    const url = buildAssistantShareMailtoUrl({
+      ...resolveAssistantShareParts(messageIndex, message),
+      typeLabel: t("notifications.sendToAskVPreviewLabel"),
+    });
+    try {
+      const canOpen = await Linking.canOpenURL(url);
+      if (!canOpen) {
+        Alert.alert(t("common.error"), t("notifications.shareUnavailable"));
+        return;
+      }
+      await Linking.openURL(url);
+    } catch {
+      Alert.alert(t("common.error"), t("notifications.shareUnavailable"));
+    }
+  };
+
+  const headerIcons = (
+    <View style={styles.headerIcons}>
+      {messages.length > 0 ? (
+        <>
+          <Pressable
+            onPress={() => startNew()}
+            disabled={streaming}
+            hitSlop={8}
+            testID="askv-new-chat"
+          >
+            <Feather name="plus" size={18} color={colors.mutedForeground} />
+          </Pressable>
+          <Pressable
+            onPress={onExport}
+            disabled={streaming}
+            hitSlop={8}
+            testID="askv-download-transcript"
+          >
+            <Feather name="download" size={18} color={colors.mutedForeground} />
+          </Pressable>
+          <Pressable
+            onPress={onClear}
+            disabled={streaming || messages.length === 0}
+            hitSlop={8}
+            testID="askv-clear-chat"
+          >
+            <Feather name="trash-2" size={18} color={colors.mutedForeground} />
+          </Pressable>
+        </>
+      ) : null}
+      <Pressable
+        onPress={() => router.push("/(tabs)" as never)}
+        hitSlop={8}
+        testID="askv-close"
+      >
+        <Feather name="x" size={18} color={colors.mutedForeground} />
+      </Pressable>
+      <ActiveOrgIndicator />
+    </View>
+  );
+
   return (
     <KeyboardAvoidingView
       style={[styles.flex, { backgroundColor: colors.background }]}
@@ -93,7 +250,7 @@ export default function AskVScreen() {
         <InPageHeader
           title={t("askv.title")}
           onBack={() => router.push("/(tabs)" as never)}
-          right={<ActiveOrgIndicator />}
+          right={headerIcons}
           testID="askv-header"
         />
         <Text style={[styles.subtitle, { color: colors.mutedForeground }, SCREEN_SUBTITLE_TEXT]}>
@@ -149,7 +306,7 @@ export default function AskVScreen() {
           </View>
         ) : null}
 
-        {messages.map((m) => (
+        {messages.map((m, messageIndex) => (
           <View
             key={m.id}
             style={[
@@ -161,6 +318,7 @@ export default function AskVScreen() {
                 borderColor: colors.border,
               },
             ]}
+            testID={`askv-msg-${m.role}`}
           >
             {m.role === "assistant" && m.pending && !m.content ? (
               <View style={styles.thinkingRow}>
@@ -172,7 +330,50 @@ export default function AskVScreen() {
                 </Text>
               </View>
             ) : m.role === "assistant" ? (
-              <AssistantMarkdown text={m.content || (m.pending ? "…" : "")} />
+              <>
+                <AssistantMarkdown text={m.content || (m.pending ? "…" : "")} />
+                {!m.pending &&
+                  m.serverId != null &&
+                  m.content.trim().length > 0 && (
+                    <View
+                      style={[styles.messageActions, { borderTopColor: colors.border }]}
+                      testID={`askv-msg-feedback-${m.serverId}`}
+                    >
+                      <BubbleIconButton
+                        name="thumbs-up"
+                        onPress={() => void handleFeedback(m.serverId!, "helpful")}
+                        disabled={feedbackPendingId != null}
+                        pressed={m.feedbackRating === "helpful"}
+                        color={colors.mutedForeground}
+                        activeColor={brand.primary}
+                        testID={`askv-feedback-helpful-${m.serverId}`}
+                      />
+                      <BubbleIconButton
+                        name="thumbs-down"
+                        onPress={() => void handleFeedback(m.serverId!, "unhelpful")}
+                        disabled={feedbackPendingId != null}
+                        pressed={m.feedbackRating === "unhelpful"}
+                        color={colors.mutedForeground}
+                        activeColor={brand.primary}
+                        testID={`askv-feedback-unhelpful-${m.serverId}`}
+                      />
+                      <BubbleIconButton
+                        name="send"
+                        onPress={() => openSendToForMessage(messageIndex, m)}
+                        color={colors.mutedForeground}
+                        activeColor={brand.primary}
+                        testID={`askv-send-to-${m.serverId}`}
+                      />
+                      <BubbleIconButton
+                        name="mail"
+                        onPress={() => void openMailto(messageIndex, m)}
+                        color={colors.mutedForeground}
+                        activeColor={brand.primary}
+                        testID={`askv-share-email-${m.serverId}`}
+                      />
+                    </View>
+                  )}
+              </>
             ) : (
               <Text style={[styles.userText, { color: "#ffffff" }]}>{m.content}</Text>
             )}
@@ -196,52 +397,45 @@ export default function AskVScreen() {
           },
         ]}
       >
-        <View style={styles.composerActions}>
-          <Pressable
-            onPress={() => startNew()}
-            disabled={streaming}
-            hitSlop={8}
-            testID="askv-new-chat"
+        <View style={styles.composerRow}>
+          <TextInput
+            value={draft}
+            onChangeText={setDraft}
+            placeholder={t("askv.inputPlaceholder")}
+            placeholderTextColor={colors.mutedForeground}
+            multiline
+            style={[
+              styles.input,
+              {
+                color: colors.foreground,
+                borderColor: colors.border,
+                backgroundColor: colors.card,
+              },
+            ]}
+            editable={!streaming}
+            testID="askv-input"
+          />
+          <LayeredPillButton
+            onPress={onSend}
+            disabled={streaming || !draft.trim()}
+            height={44}
+            style={styles.sendBtn}
+            testID="askv-send"
           >
-            <Feather name="plus-circle" size={22} color={colors.mutedForeground} />
-          </Pressable>
-          <Pressable
-            onPress={onClear}
-            disabled={streaming || messages.length === 0}
-            hitSlop={8}
-            testID="askv-clear-chat"
-          >
-            <Feather name="trash-2" size={20} color={colors.mutedForeground} />
-          </Pressable>
+            {streaming ? (
+              <ActivityIndicator size="small" color="#ffffff" />
+            ) : (
+              <Feather name="message-circle" size={18} color="#ffffff" />
+            )}
+          </LayeredPillButton>
         </View>
-        <TextInput
-          value={draft}
-          onChangeText={setDraft}
-          placeholder={t("askv.inputPlaceholder")}
-          placeholderTextColor={colors.mutedForeground}
-          multiline
-          style={[
-            styles.input,
-            {
-              color: colors.foreground,
-              borderColor: colors.border,
-              backgroundColor: colors.card,
-            },
-          ]}
-          editable={!streaming}
-          testID="askv-input"
-        />
-        <LayeredPillButton
-          onPress={onSend}
-          disabled={streaming || !draft.trim()}
-          height={44}
-          style={styles.sendBtn}
-          testID="askv-send"
-        >
-          <Feather name="send" size={16} color="#ffffff" />
-          <Text style={styles.sendText}>{t("askv.send")}</Text>
-        </LayeredPillButton>
       </View>
+
+      <AssistantSendToModal
+        visible={assistantShare !== null}
+        share={assistantShare}
+        onClose={() => setAssistantShare(null)}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -249,6 +443,7 @@ export default function AskVScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   headerWrap: { paddingHorizontal: 16 },
+  headerIcons: { flexDirection: "row", alignItems: "center", gap: 12 },
   subtitle: { fontSize: 13, lineHeight: 18, marginTop: -4, marginBottom: 8 },
   scrollContent: { paddingHorizontal: 16, paddingBottom: 16, gap: 12 },
   greetingCard: {
@@ -282,24 +477,41 @@ const styles = StyleSheet.create({
   },
   userText: { fontSize: 15, lineHeight: 22, fontFamily: "Inter_400Regular" },
   thinkingRow: { flexDirection: "row", alignItems: "center" },
+  messageActions: {
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: 2,
+  },
+  bubbleIconBtn: {
+    width: 32,
+    height: 32,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   errorText: { fontSize: 13, lineHeight: 18 },
   composer: {
     borderTopWidth: 1,
     paddingHorizontal: 12,
     paddingTop: 10,
+  },
+  composerRow: {
+    flexDirection: "row",
+    alignItems: "flex-end",
     gap: 8,
   },
-  composerActions: { flexDirection: "row", gap: 16, paddingHorizontal: 4 },
   input: {
+    flex: 1,
     minHeight: 44,
     maxHeight: 120,
     borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 12,
+    borderRadius: 20,
+    paddingHorizontal: 14,
     paddingVertical: 10,
     fontSize: 15,
     fontFamily: "Inter_400Regular",
   },
-  sendBtn: { alignSelf: "flex-end", minWidth: 100 },
-  sendText: { color: "#ffffff", fontFamily: "Inter_600SemiBold", fontSize: 14 },
+  sendBtn: { minWidth: 44, width: 44, paddingHorizontal: 0 },
 });

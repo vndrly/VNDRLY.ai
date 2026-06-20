@@ -119,6 +119,11 @@ const TYPE_TO_CATEGORY: Record<string, NotificationCategory> = {
   oa_connection_expiring: "system",
   visitor_checked_in: "visitor",
   visitor_checked_out: "visitor",
+  safety_event_submitted: "compliance",
+  safety_stop_work: "compliance",
+  safety_event_hipo: "compliance",
+  safety_event_update: "compliance",
+  safety_event_closed: "compliance",
   // Task #50 — comments thread fan-out. `comment_mention` covers BOTH
   // ticket and hotlist mentions (the route just varies the dedupeKey
   // and link); `comment_added` and `hotlist_comment_added` are

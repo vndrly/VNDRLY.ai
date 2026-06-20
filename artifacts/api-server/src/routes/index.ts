@@ -43,6 +43,7 @@ import fireTransmitterSettingsRouter from "./fireTransmitterSettings";
 import ticketNudgeRouter from "./ticketNudge";
 import ticketSendToRouter from "./ticketSendTo";
 import ticketFlagsRouter from "./ticketFlags";
+import safetyRouter from "./safety";
 import majikRouter from "./majik";
 
 const router: IRouter = Router();
@@ -105,6 +106,7 @@ router.use(platformSettingsRouter);
 router.use(fireTransmitterSettingsRouter);
 router.use(onboardingRouter);
 router.use(assistantRouter);
+router.use(safetyRouter);
 router.use(majikRouter);
 
 export default router;

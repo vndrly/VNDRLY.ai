@@ -76,3 +76,33 @@ export async function sendNotificationToRecipients(
     { method: "POST", body: JSON.stringify(body) },
   );
 }
+
+export async function fetchAssistantSendToRecipients(
+  messageId: number,
+  ticketId: number | null,
+) {
+  const qs = ticketId != null ? `?ticketId=${encodeURIComponent(String(ticketId))}` : "";
+  return apiFetch<{ ticketId: number | null; groups: SendToRecipientGroups }>(
+    `/api/assistant/messages/${messageId}/send-to-recipients${qs}`,
+  );
+}
+
+export async function sendFromAssistantMessage(
+  messageId: number,
+  body: {
+    recipientUserIds: number[];
+    message?: string | null;
+    ticketId?: number | null;
+    pagePath?: string | null;
+  },
+) {
+  return apiFetch<{
+    ok: true;
+    notifiedCount: number;
+    trackingNumber: string;
+    ticketId: number | null;
+  }>(`/api/assistant/messages/${messageId}/send-to`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}

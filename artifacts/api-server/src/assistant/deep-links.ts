@@ -122,6 +122,8 @@ export const DEEP_LINK_SCREENS: ReadonlyArray<DeepLinkScreenDef> = [
   { screen: "notification-preferences", pattern: "/notifications/preferences" },
   { screen: "notifications-inbox", pattern: "/notifications" },
   { screen: "field-home", pattern: "/field" },
+  { screen: "safety-inbox", pattern: "/safety" },
+  { screen: "safety-event-detail", pattern: "/safety/:id", requiresId: true },
 ];
 
 // Lookup from screen name → definition. Built once at module load.

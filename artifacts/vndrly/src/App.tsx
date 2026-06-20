@@ -42,6 +42,8 @@ import BillingSettingsPage from "@/pages/billing-settings";
 import BillsToPayPage from "@/pages/bills-to-pay";
 import StatementPage from "@/pages/statement";
 import FlaggedTicketsPage from "@/pages/flagged-tickets";
+import SafetyInboxPage from "@/pages/safety-inbox";
+import SafetyEventDetailPage from "@/pages/safety-event-detail";
 import Portal from "@/pages/portal";
 import VisitPublicPage from "@/pages/visit-public";
 import VerifyEmployeePage from "@/pages/verify-employee";
@@ -130,6 +132,8 @@ function AdminRoutes() {
         <Route path="/site-locations/:id">{(params) => <SiteLocationDetail id={parseInt(params.id)} />}</Route>
         <Route path="/tickets" component={Tickets} />
         <Route path="/flagged" component={FlaggedTicketsPage} />
+        <Route path="/safety" component={SafetyInboxPage} />
+        <Route path="/safety/:id" component={SafetyEventDetailPage} />
         <Route path="/tickets/:id">{(params) => <TicketDetail id={parseInt(params.id)} />}</Route>
         <Route path="/crew-map">{() => <CrewMapPage />}</Route>
         <Route path="/crew-map/:id">{(params) => <CrewReplayPage employeeId={parseInt(params.id)} />}</Route>

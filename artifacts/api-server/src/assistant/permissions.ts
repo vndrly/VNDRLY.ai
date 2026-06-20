@@ -33,6 +33,8 @@ export const ROLE_ALLOWED_SCREENS: Record<AssistantRole, Set<string> | null> = {
     "partner-catalog",
     "notification-preferences",
     "notifications-inbox",
+    "safety-inbox",
+    "safety-event-detail",
   ]),
   vendor: new Set([
     "dashboard",
@@ -57,11 +59,15 @@ export const ROLE_ALLOWED_SCREENS: Record<AssistantRole, Set<string> | null> = {
     "catalog",
     "notification-preferences",
     "notifications-inbox",
+    "safety-inbox",
+    "safety-event-detail",
   ]),
   field_employee: new Set([
     "onboarding-field",
     "field-home",
     "ticket-detail",
+    "safety-inbox",
+    "safety-event-detail",
   ]),
   any: null,
 };

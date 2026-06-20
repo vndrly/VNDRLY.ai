@@ -75,6 +75,15 @@ vi.mock("../lib/geo", () => ({
   radiusMilesBetween: vi.fn(),
 }));
 
+vi.mock("../lib/safety-site-gate", () => ({
+  assertSiteActiveForWork: vi.fn(async () => null),
+  loadSiteActiveState: vi.fn(async () => ({
+    isActive: true,
+    status: "active",
+    name: "Test Site",
+  })),
+}));
+
 vi.mock("@workspace/db", () => {
   const tableTag = (name: string) =>
     new Proxy(
