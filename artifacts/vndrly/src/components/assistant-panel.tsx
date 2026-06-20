@@ -568,7 +568,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         bare
-        className="sm:max-w-lg h-[min(80vh,640px)] bg-[#3a3d42] text-gray-100"
+        className="sm:max-w-[38.59rem] h-[min(80vh,640px)] bg-[#3a3d42] text-gray-100"
         data-testid="assistant-panel"
         hideClose
       >
@@ -841,9 +841,32 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
               )}
             </BrandPillButton>
           </div>
-          <i className="mt-2 text-[10px] text-gray-400">
-            Replies are AI-generated. Verify important details before acting on them.
-          </i>
+          <p
+            className="mt-2 inline-flex items-center justify-center gap-1 text-[10px] italic text-gray-400"
+            data-testid="assistant-footer-disclaimer"
+          >
+            <span>
+              Replies are AI-generated. Verify important details before acting on them.
+              {showMessageFeedback && (
+                <> Help us improve AskV with feedback</>
+              )}
+            </span>
+            {showMessageFeedback && (
+              <span
+                className="inline-flex shrink-0 items-center gap-0.5 not-italic"
+                data-testid="assistant-feedback-hint"
+              >
+                <ThumbsUp
+                  className="h-3 w-3 text-[color:var(--brand-primary)]"
+                  aria-hidden="true"
+                />
+                <ThumbsDown
+                  className="h-3 w-3 text-[color:var(--brand-primary)]"
+                  aria-hidden="true"
+                />
+              </span>
+            )}
+          </p>
         </form>
       </DialogContent>
     </Dialog>
