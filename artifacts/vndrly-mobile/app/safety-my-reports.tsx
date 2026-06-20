@@ -42,14 +42,16 @@ export default function SafetyMyReportsScreen() {
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <InPageHeader title={t("safety.myReportsTitle")} onBack={() => router.back()} />
       <View style={{ padding: 16 }}>
-        <LayeredPillButton label={t("safety.reportTitle")} onPress={() => router.push("/safety-report")} />
+        <LayeredPillButton onPress={() => router.push("/safety-report")}>
+          <Text style={{ color: "#ffffff" }}>{t("safety.reportTitle")}</Text>
+        </LayeredPillButton>
       </View>
       <FlatList
         data={rows}
         keyExtractor={(item) => String(item.id)}
         refreshing={loading}
         onRefresh={load}
-        ListEmptyComponent={<Text style={{ padding: 16, color: colors.textSecondary }}>{t("safety.inboxEmpty")}</Text>}
+        ListEmptyComponent={<Text style={{ padding: 16, color: colors.mutedForeground }}>{t("safety.inboxEmpty")}</Text>}
         renderItem={({ item }) => (
           <TouchableOpacity
             style={{ padding: 16, borderBottomWidth: 1, borderBottomColor: colors.border }}
@@ -57,7 +59,7 @@ export default function SafetyMyReportsScreen() {
           >
             <Text style={{ fontWeight: "600", color: colors.text }}>{item.eventNumber}</Text>
             <Text style={{ color: colors.text }}>{item.title}</Text>
-            <Text style={{ color: colors.textSecondary, marginTop: 4 }}>
+            <Text style={{ color: colors.mutedForeground, marginTop: 4 }}>
               {item.status} · {item.eventType}
             </Text>
           </TouchableOpacity>

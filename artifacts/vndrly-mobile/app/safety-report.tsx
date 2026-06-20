@@ -61,7 +61,7 @@ export default function SafetyReportScreen() {
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <InPageHeader title={t("safety.reportTitle")} onBack={() => router.back()} />
       <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
-        <Text style={{ color: colors.textSecondary }}>{t("safety.reportSubtitle")}</Text>
+        <Text style={{ color: colors.mutedForeground }}>{t("safety.reportSubtitle")}</Text>
         <TextInput
           placeholder={t("safety.siteIdPlaceholder")}
           value={siteLocationId}
@@ -115,7 +115,11 @@ export default function SafetyReportScreen() {
           <Text style={{ color: colors.text }}>{t("safety.stopWork")}</Text>
           <Switch value={isStopWork} onValueChange={setIsStopWork} />
         </View>
-        <LayeredPillButton label={submitting ? t("common.loading") : t("safety.submit")} onPress={submit} disabled={submitting} />
+        <LayeredPillButton onPress={submit} disabled={submitting}>
+          <Text style={{ color: "#ffffff" }}>
+            {submitting ? t("common.loading") : t("safety.submit")}
+          </Text>
+        </LayeredPillButton>
       </ScrollView>
     </View>
   );
