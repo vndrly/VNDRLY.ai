@@ -1,6 +1,16 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-import { isBackgroundAudioSessionError, isPttComment, isRecordingBusyError, pttDurationLabel } from "./ptt";
+import {
+  isBackgroundAudioSessionError,
+  isPttComment,
+  isRecordingBusyError,
+  pttAttachmentPlayUri,
+  pttDurationLabel,
+} from "./ptt";
+
+vi.mock("./api", () => ({
+  getApiBase: () => "https://vndrly.ai",
+}));
 
 describe("isBackgroundAudioSessionError", () => {
   it("detects expo-av background session errors", () => {
@@ -37,5 +47,16 @@ describe("ptt comment helpers", () => {
   it("parses duration labels", () => {
     expect(pttDurationLabel("[ptt:12s]")).toBe("12s");
     expect(pttDurationLabel("nope")).toBeNull();
+  });
+});
+
+describe("pttAttachmentPlayUri", () => {
+  it("prefixes storage paths with the API base", () => {
+    expect(pttAttachmentPlayUri("/api/storage/objects/foo.m4a")).toBe(
+      "https://vndrly.ai/api/storage/objects/foo.m4a",
+    );
+    expect(pttAttachmentPlayUri("https://cdn.example.com/x.m4a")).toBe(
+      "https://cdn.example.com/x.m4a",
+    );
   });
 });

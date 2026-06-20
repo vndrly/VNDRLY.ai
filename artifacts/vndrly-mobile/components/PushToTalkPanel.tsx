@@ -18,7 +18,7 @@ import {
 import LayeredPillButton from "@/components/LayeredPillButton";
 import { useBrand } from "@/hooks/use-brand";
 import { useColors } from "@/hooks/useColors";
-import { apiFetch, getApiBase } from "@/lib/api";
+import { apiFetch } from "@/lib/api";
 import {
   createPttRecorder,
   isBackgroundAudioSessionError,
@@ -26,6 +26,7 @@ import {
   isRecordingBusyError,
   playPttUri,
   postPttMessage,
+  pttAttachmentPlayUri,
   PttMicPermissionError,
   pttDurationLabel,
   warmUpPttSession,
@@ -44,13 +45,6 @@ type Props = {
   ticketId: number;
   ticketLabel: string;
 };
-
-function attachmentPlayUri(url: string): string {
-  if (url.startsWith("http")) return url;
-  const base = getApiBase().replace(/\/$/, "");
-  if (url.startsWith("/api/storage/")) return `${base}${url}`;
-  return url;
-}
 
 export default function PushToTalkPanel({ ticketId, ticketLabel }: Props) {
   const colors = useColors();
@@ -218,7 +212,7 @@ export default function PushToTalkPanel({ ticketId, ticketLabel }: Props) {
     if (!url) return;
     setPlayingId(msg.id);
     try {
-      await playPttUri(attachmentPlayUri(url));
+      await playPttUri(pttAttachmentPlayUri(url));
     } catch {
       Alert.alert(t("foremanHome.pttPlayFailed"));
     } finally {

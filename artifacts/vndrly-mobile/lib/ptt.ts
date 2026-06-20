@@ -41,6 +41,14 @@ export function pttDurationLabel(content: string): string | null {
   return m?.[1] ?? null;
 }
 
+/** Resolve a stored attachment path to a playable URL for expo-av. */
+export function pttAttachmentPlayUri(url: string): string {
+  if (url.startsWith("http")) return url;
+  const base = getApiBase().replace(/\/$/, "");
+  if (url.startsWith("/api/storage/")) return `${base}${url}`;
+  return url;
+}
+
 export function isBackgroundAudioSessionError(err: unknown): boolean {
   const msg = err instanceof Error ? err.message : String(err ?? "");
   return BACKGROUND_AUDIO_RE.test(msg);

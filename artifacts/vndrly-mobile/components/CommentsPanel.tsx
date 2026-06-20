@@ -22,6 +22,12 @@ import { useColors } from "@/hooks/useColors";
 import { apiFetch, getApiBase } from "@/lib/api";
 import { translateApiError } from "@/lib/apiErrors";
 import { getUser, type StoredUser } from "@/lib/auth";
+import {
+  isPttComment,
+  playPttUri,
+  pttAttachmentPlayUri,
+  pttDurationLabel,
+} from "@/lib/ptt";
 import { captureAndUploadImage, pickAndUploadImage } from "@/lib/photos";
 
 type Comment = {
@@ -45,6 +51,8 @@ type Props = {
   source: "ticket" | "hotlist";
   parentId: number;
   isEditable?: boolean;
+  hideHeader?: boolean;
+  onCommentsChanged?: () => void;
 };
 
 const PHOTO_PREFIX = "[photo] ";
@@ -76,10 +84,17 @@ function timeAgo(iso: string, t: (key: string, opts?: Record<string, unknown>) =
   return t("comments.ago.day", { n: d });
 }
 
-export default function CommentsPanel({ source, parentId, isEditable = true }: Props) {
+export default function CommentsPanel({
+  source,
+  parentId,
+  isEditable = true,
+  hideHeader = false,
+  onCommentsChanged,
+}: Props) {
   const colors = useColors();
   const { t } = useTranslation();
   const [me, setMe] = useState<StoredUser | null>(null);
+  const [playingPttId, setPlayingPttId] = useState<number | null>(null);
   useEffect(() => { getUser().then(setMe).catch(() => {}); }, []);
 
   const basePath = source === "ticket"
@@ -132,7 +147,8 @@ export default function CommentsPanel({ source, parentId, isEditable = true }: P
       });
       setContent("");
       setAttachments([]);
-      load();
+      await load();
+      onCommentsChanged?.();
     } catch (e: unknown) {
       Alert.alert(
         t("comments.couldntPost"),
@@ -178,13 +194,28 @@ export default function CommentsPanel({ source, parentId, isEditable = true }: P
     }
   };
 
+  const playPttComment = async (comment: Comment) => {
+    const url = comment.attachments?.[0];
+    if (!url) return;
+    setPlayingPttId(comment.id);
+    try {
+      await playPttUri(pttAttachmentPlayUri(url));
+    } catch {
+      Alert.alert(t("foremanHome.pttPlayFailed"));
+    } finally {
+      setPlayingPttId(null);
+    }
+  };
+
   if (loading) {
     return <ActivityIndicator color={colors.primary} style={{ marginVertical: 16 }} />;
   }
 
   return (
     <View style={{ marginTop: 12 }}>
-      <Text style={[styles.section, { color: colors.foreground }]}>{t("comments.log")}</Text>
+      {hideHeader ? null : (
+        <Text style={[styles.section, { color: colors.foreground }]}>{t("comments.log")}</Text>
+      )}
 
       {rateLimited ? (
         <View
@@ -210,14 +241,23 @@ export default function CommentsPanel({ source, parentId, isEditable = true }: P
           : legacyPhotoUrl(c.content)
             ? [legacyPhotoUrl(c.content)!]
             : [];
+        const isPtt = isPttComment(c.content);
+        const pttUrl =
+          !c.deletedAt && c.attachments?.[0] && (isPtt || /\.m4a|\.mp3|audio/i.test(c.attachments[0]))
+            ? c.attachments[0]
+            : null;
         const isAuthor = c.createdById === me?.id;
         const isAdmin = me?.role === "admin";
         const canDelete = (isAuthor || isAdmin) && !c.deletedAt;
         const showText = c.attachments && c.attachments.length
-          ? c.content
+          ? isPtt
+            ? null
+            : c.content
           : legacyPhotoUrl(c.content)
             ? null
-            : c.content;
+            : isPtt
+              ? null
+              : c.content;
         return (
           <View
             key={c.id}
@@ -235,6 +275,31 @@ export default function CommentsPanel({ source, parentId, isEditable = true }: P
                   <Text style={{ color: colors.foreground, fontStyle: c.deletedAt ? "italic" : "normal" }}>
                     {showText}
                   </Text>
+                ) : null}
+                {pttUrl ? (
+                  <Pressable
+                    onPress={() => void playPttComment(c)}
+                    style={[styles.pttRow, { borderColor: colors.border }]}
+                    testID={`comment-ptt-${c.id}`}
+                    accessibilityRole="button"
+                    accessibilityLabel={t("foremanHome.pttVoice")}
+                  >
+                    <View
+                      style={[
+                        styles.pttPlayCircle,
+                        { backgroundColor: `${colors.primary}33` },
+                      ]}
+                    >
+                      {playingPttId === c.id ? (
+                        <ActivityIndicator size="small" color={colors.primary} />
+                      ) : (
+                        <Feather name="play" size={16} color={colors.primary} />
+                      )}
+                    </View>
+                    <Text style={{ color: colors.foreground, fontFamily: "Inter_500Medium", fontSize: 14 }}>
+                      {pttDurationLabel(c.content) ?? t("foremanHome.pttVoice")}
+                    </Text>
+                  </Pressable>
                 ) : null}
                 {photoUrls.length > 0 && !c.deletedAt && (
                   <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 6 }}>
@@ -358,4 +423,21 @@ const styles = StyleSheet.create({
   input: { borderWidth: 1, borderRadius: 6, padding: 8 },
   smallBtn: { paddingHorizontal: 10, paddingVertical: 8, borderRadius: 6, alignItems: "center", justifyContent: "center" },
   iconBtn: { padding: 6 },
+  pttRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginTop: 4,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 8,
+  },
+  pttPlayCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
 });

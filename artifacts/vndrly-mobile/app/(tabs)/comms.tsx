@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   FlatList,
   RefreshControl,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -13,6 +14,7 @@ import {
 } from "react-native";
 
 import ActiveOrgIndicator from "@/components/ActiveOrgIndicator";
+import CommentsPanel from "@/components/CommentsPanel";
 import InPageHeader from "@/components/InPageHeader";
 import PushToTalkPanel from "@/components/PushToTalkPanel";
 import NudgeFlashOverlay from "@/components/NudgeFlashOverlay";
@@ -147,14 +149,30 @@ export default function CommsScreen() {
                     active={nudgeFlashingTicketIds.has(item.id)}
                     borderRadius={10}
                   />
-                  <Text
-                    style={[
-                      styles.chipNum,
-                      { color: active ? colors.primary : colors.foreground },
-                    ]}
-                  >
-                    #{String(item.id).padStart(4, "0")}
-                  </Text>
+                  <View style={styles.chipHeader}>
+                    <Text
+                      style={[
+                        styles.chipNum,
+                        { color: active ? colors.primary : colors.foreground },
+                      ]}
+                    >
+                      #{String(item.id).padStart(4, "0")}
+                    </Text>
+                    {item.unreadCommentCount > 0 ? (
+                      <View
+                        style={styles.unreadBadge}
+                        accessibilityLabel={t("tickets.unreadCommentsA11y", {
+                          count: item.unreadCommentCount,
+                        })}
+                        testID={`comms-unread-badge-${item.id}`}
+                      >
+                        <Feather name="message-circle" size={11} color="#1a1d23" />
+                        <Text style={styles.unreadBadgeText}>
+                          {item.unreadCommentCount}
+                        </Text>
+                      </View>
+                    ) : null}
+                  </View>
                   <Text
                     style={[styles.chipSite, { color: colors.mutedForeground }]}
                     numberOfLines={1}
@@ -175,10 +193,21 @@ export default function CommsScreen() {
           />
 
           {selected ? (
-            <View style={styles.panelWrap}>
+            <ScrollView
+              style={styles.panelScroll}
+              contentContainerStyle={styles.panelContent}
+              keyboardShouldPersistTaps="handled"
+            >
               <PushToTalkPanel
                 ticketId={selected.id}
                 ticketLabel={`#${String(selected.id).padStart(4, "0")} · ${selected.siteName ?? ""}`}
+              />
+              <CommentsPanel
+                key={selected.id}
+                source="ticket"
+                parentId={selected.id}
+                hideHeader
+                onCommentsChanged={() => void load()}
               />
               <TouchableOpacity
                 onPress={() => router.push(`/ticket/${selected.id}`)}
@@ -190,7 +219,7 @@ export default function CommsScreen() {
                   {t("foremanHome.openTicketDetail")}
                 </Text>
               </TouchableOpacity>
-            </View>
+            </ScrollView>
           ) : null}
         </>
       )}
@@ -237,9 +266,28 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
     overflow: "hidden",
   },
+  chipHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
   chipNum: {
     fontFamily: "Inter_700Bold",
     fontSize: 14,
+  },
+  unreadBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    backgroundColor: "#f4f4f5",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 999,
+  },
+  unreadBadgeText: {
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 11,
+    color: "#1a1d23",
   },
   chipSite: {
     fontFamily: "Inter_400Regular",
@@ -251,9 +299,12 @@ const styles = StyleSheet.create({
     fontSize: 11,
     marginTop: 2,
   },
-  panelWrap: {
-    paddingHorizontal: 12,
+  panelScroll: {
     flex: 1,
+    paddingHorizontal: 12,
+  },
+  panelContent: {
+    paddingBottom: 24,
   },
   openTicket: {
     flexDirection: "row",
