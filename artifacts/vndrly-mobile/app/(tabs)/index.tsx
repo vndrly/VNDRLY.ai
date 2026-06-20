@@ -34,10 +34,7 @@ import { useBrand } from "@/hooks/use-brand";
 import { useColors } from "@/hooks/useColors";
 import { useTicketsRateLimitGate } from "@/hooks/use-tickets-rate-limit-gate";
 import { apiFetch } from "@/lib/api";
-import {
-  fetchPortalTicketsForHome,
-  type MobileOpenTicket,
-} from "@/lib/portal-tickets";
+import { type MobileOpenTicket } from "@/lib/portal-tickets";
 import {
   isFieldEmployeeUser,
   isForemanEmployeeUser,
@@ -237,7 +234,6 @@ export default function HomeScreen() {
   const isPartnerViewer = isPartnerOfficeUser(me);
   const isVendorOfficeViewer = isVendorOfficeUser(me);
   const isAdminViewer = isAdminOfficeUser(me);
-  const usesPortalTicketList = isOfficeViewer;
   // Direct assignments are vendor-side (offered to a vendor org). Surface
   // for any user whose active org is a vendor (admin, member, or field).
   const isVendorViewer = orgType === "vendor";
@@ -339,9 +335,7 @@ export default function HomeScreen() {
         const openTicketsPath = isForemanEmployee
           ? "/api/field/open-tickets?vendorWide=1"
           : "/api/field/open-tickets";
-        const data = usesPortalTicketList
-          ? await fetchPortalTicketsForHome()
-          : await apiFetch<OpenTicket[]>(openTicketsPath);
+        const data = await apiFetch<OpenTicket[]>(openTicketsPath);
         setTickets(data || []);
         // Task #691: a successful load means we're no longer in an
         // error state — clear so the gate hook doesn't re-fire on
@@ -405,7 +399,7 @@ export default function HomeScreen() {
       void loadPendingDirect();
       return ok;
     },
-    [loadUnread, loadPendingDirect, loadPendingSchedule, isFieldEmployee, isForemanEmployee, usesPortalTicketList, t],
+    [loadUnread, loadPendingDirect, loadPendingSchedule, isFieldEmployee, isForemanEmployee, t],
   );
 
   // Task #668 — surgical per-row refresh used by the foreground push

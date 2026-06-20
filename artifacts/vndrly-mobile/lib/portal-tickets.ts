@@ -73,15 +73,12 @@ export function mapPortalTicket(row: PortalTicketRow): MobileOpenTicket {
   };
 }
 
-/** Partner / vendor / admin ticket lists — uses the portal API already live in prod. */
+/** Partner / vendor / admin open-ticket lists — mobile field API (open statuses only). */
 export async function fetchPortalTicketsForHome(): Promise<MobileOpenTicket[]> {
-  const rows = await apiFetch<PortalTicketRow[]>("/api/tickets");
-  return (rows ?? [])
-    .filter((row) => !HOME_EXCLUDED_STATUSES.has(row.status))
-    .map(mapPortalTicket)
-    .sort((a, b) => {
-      const aTs = Date.parse(a.updatedAt ?? a.createdAt);
-      const bTs = Date.parse(b.updatedAt ?? b.createdAt);
-      return (Number.isFinite(bTs) ? bTs : 0) - (Number.isFinite(aTs) ? aTs : 0);
-    });
+  const rows = await apiFetch<MobileOpenTicket[]>("/api/field/open-tickets");
+  return (rows ?? []).sort((a, b) => {
+    const aTs = Date.parse(a.updatedAt ?? a.createdAt);
+    const bTs = Date.parse(b.updatedAt ?? b.createdAt);
+    return (Number.isFinite(bTs) ? bTs : 0) - (Number.isFinite(aTs) ? aTs : 0);
+  });
 }

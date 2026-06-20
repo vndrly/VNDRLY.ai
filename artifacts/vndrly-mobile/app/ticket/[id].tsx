@@ -476,7 +476,7 @@ export default function TicketDetailScreen() {
       // while the assignment-removed banner is up. The next successful
       // poll (or any user-initiated load) restores normal alerting.
       if (!silent && rlSeconds == null) {
-        Alert.alert(t("common.error"), translateApiError(e, t, t("tickets.errorLoadOpen")));
+        Alert.alert(t("common.error"), translateApiError(e, t, t("tickets.errorLoadDetail")));
       }
       // Task #623: even when we suppress the alert, callers that gate
       // confirmation toasts on the return value need to know the
