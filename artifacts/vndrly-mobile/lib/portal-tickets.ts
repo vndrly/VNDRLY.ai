@@ -18,7 +18,7 @@ export type MobileOpenTicket = {
   unreadCommentCount: number;
 };
 
-type PortalTicketRow = {
+export type PortalTicketRow = {
   id: number;
   status: string;
   siteLocationId: number;
@@ -71,10 +71,10 @@ export function mapPortalTicket(row: PortalTicketRow): MobileOpenTicket {
   };
 }
 
-/** Partner / vendor / admin Site tickets — server applies full list rule (non-completed + completed ≤30d). */
+/** Partner/vendor/admin Site tickets — same list as web Tracking (`GET /api/tickets`). */
 export async function fetchPortalTicketsForHome(): Promise<MobileOpenTicket[]> {
-  const rows = await apiFetch<MobileOpenTicket[]>("/api/field/open-tickets");
-  return (rows ?? []).sort((a, b) => {
+  const rows = await apiFetch<PortalTicketRow[]>("/api/tickets");
+  return (rows ?? []).map(mapPortalTicket).sort((a, b) => {
     const aTs = Date.parse(a.updatedAt ?? a.createdAt);
     const bTs = Date.parse(b.updatedAt ?? b.createdAt);
     return (Number.isFinite(bTs) ? bTs : 0) - (Number.isFinite(aTs) ? aTs : 0);

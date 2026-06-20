@@ -34,7 +34,7 @@ import { useBrand } from "@/hooks/use-brand";
 import { useColors } from "@/hooks/useColors";
 import { useTicketsRateLimitGate } from "@/hooks/use-tickets-rate-limit-gate";
 import { apiFetch } from "@/lib/api";
-import { type MobileOpenTicket } from "@/lib/portal-tickets";
+import { type MobileOpenTicket, type PortalTicketRow, fetchPortalTicketsForHome, mapPortalTicket } from "@/lib/portal-tickets";
 import {
   isFieldEmployeeUser,
   isForemanEmployeeUser,
@@ -332,10 +332,13 @@ export default function HomeScreen() {
         // cooldown expires; the recovery effect below then re-invokes
         // load() so the screen converges naturally.
         if (isTicketsRateLimited()) return false;
-        const openTicketsPath = isForemanEmployee
-          ? "/api/field/open-tickets?vendorWide=1"
-          : "/api/field/open-tickets";
-        const data = await apiFetch<OpenTicket[]>(openTicketsPath);
+        const data = isOfficeViewer
+          ? await fetchPortalTicketsForHome()
+          : await apiFetch<OpenTicket[]>(
+              isForemanEmployee
+                ? "/api/field/open-tickets?vendorWide=1"
+                : "/api/field/open-tickets",
+            );
         setTickets(data || []);
         // Task #691: a successful load means we're no longer in an
         // error state — clear so the gate hook doesn't re-fire on
@@ -399,7 +402,7 @@ export default function HomeScreen() {
       void loadPendingDirect();
       return ok;
     },
-    [loadUnread, loadPendingDirect, loadPendingSchedule, isFieldEmployee, isForemanEmployee, t],
+    [loadUnread, loadPendingDirect, loadPendingSchedule, isFieldEmployee, isForemanEmployee, isOfficeViewer, t],
   );
 
   // Task #668 — surgical per-row refresh used by the foreground push
@@ -451,9 +454,9 @@ export default function HomeScreen() {
       // into the gate hook through the silent load() fallback.
       if (isTicketsRateLimited()) return;
       try {
-        const fresh = await apiFetch<OpenTicket>(
-          `/api/field/open-tickets/${ticketId}`,
-        );
+        const fresh = isOfficeViewer
+          ? mapPortalTicket(await apiFetch<PortalTicketRow>(`/api/tickets/${ticketId}`))
+          : await apiFetch<OpenTicket>(`/api/field/open-tickets/${ticketId}`);
         if (!fresh || typeof fresh.id !== "number") {
           await load({ silent: true });
           return;
@@ -476,7 +479,7 @@ export default function HomeScreen() {
       }
       void loadUnread();
     },
-    [load, loadUnread],
+    [load, loadUnread, isOfficeViewer],
   );
 
   useFocusEffect(

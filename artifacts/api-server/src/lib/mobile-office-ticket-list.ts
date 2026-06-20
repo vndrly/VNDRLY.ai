@@ -14,9 +14,12 @@ export function cutoffDateForMobileOfficeCompleted(
 }
 
 /**
- * Mobile office ticket list visibility (partner / vendor / admin on iOS):
+ * Office ticket list visibility (partner / vendor / admin):
  * every ticket except `completed`, plus `completed` tickets within the
  * retention window (checkout → updated → created).
+ *
+ * Applied on GET /api/tickets (web Tracking + iOS Site tickets) and kept
+ * on GET /api/field/open-tickets for field-employee mobile paths.
  */
 export function mobileOfficeTicketVisibilityCondition(
   now = new Date(),

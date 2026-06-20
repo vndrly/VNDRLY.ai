@@ -513,6 +513,7 @@ import {
 import { userHasApRole, findPartnerApContactEmails } from "../lib/ap-role";
 import { sendPaymentReversedEmail } from "../lib/sendgrid";
 import { enforceTicketsRateLimit } from "../lib/tickets-rate-limit";
+import { mobileOfficeTicketVisibilityCondition } from "../lib/mobile-office-ticket-list";
 import { radiusMilesBetween, isGeofenceBypassActive } from "../lib/geo";
 import {
   checkComplianceFloor,
@@ -992,6 +993,16 @@ router.get("/tickets", async (req, res): Promise<void> => {
     // Unknown/unhandled roles see no tickets.
     sendResponse(res, ListTicketsResponse, []);
     return;
+  }
+
+  // Partner / vendor / admin list rule (web Tracking + iOS Site tickets):
+  // every ticket except `completed`, plus `completed` within 30 days.
+  if (
+    session.role === "partner" ||
+    session.role === "vendor" ||
+    session.role === "admin"
+  ) {
+    conditions.push(mobileOfficeTicketVisibilityCondition());
   }
 
   // Task #51 — pass the viewer so each row carries an accurate
