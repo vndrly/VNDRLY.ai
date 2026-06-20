@@ -26,6 +26,7 @@ import { recordTicketTransition } from "../lib/ticket-transitions";
 import { isGeofenceBypassActive } from "../lib/geo";
 import { unreadTicketCommentCountSql } from "../lib/unread-comments";
 import { enforceTicketsRateLimit } from "../lib/tickets-rate-limit";
+import { mobileOfficeTicketVisibilityCondition } from "../lib/mobile-office-ticket-list";
 
 import { SESSION_SECRET } from "../lib/session";
 import {
@@ -316,9 +317,9 @@ const OPEN_BROAD_STATUSES = [
  * denormalized ticket row shape:
  *
  *   - `field`   — field employee (vendorPeople row, scoped tickets)
- *   - `vendor`  — vendor office admin (all open tickets on their vendor)
- *   - `partner` — partner office user (open tickets on their sites)
- *   - `admin`   — platform admin (all open tickets)
+ *   - `vendor`  — vendor office admin (mobileOfficeTicketVisibilityCondition)
+ *   - `partner` — partner office user (same visibility rule on their sites)
+ *   - `admin`   — platform admin (same visibility rule)
  */
 async function requireFieldOrVendor(req: any, res: any): Promise<MobileViewerContext | null> {
   const session = getSession(req);
@@ -818,13 +819,12 @@ function attachOpenTicketCrewNames<T extends { id: number; foremanUserId?: numbe
   }));
 }
 
-// ── GET /api/field/open-tickets — open tickets for this viewer ──
+// ── GET /api/field/open-tickets — ticket list for this viewer ──
 //
 // Role-specific mobile home lists:
 //   * field_employee → own tickets (foreman may widen with ?vendorWide=1)
-//   * vendor         → all open tickets on their vendor
-//   * partner        → all open tickets on their partner sites
-//   * admin          → all open tickets platform-wide
+//   * vendor / partner / admin → all non-completed tickets plus completed
+//     within MOBILE_OFFICE_COMPLETED_RETENTION_DAYS (30) for audit/review
 router.get("/field/open-tickets", async (req, res): Promise<void> => {
   // Task #761: share the per-session tickets rate-limit budget so a
   // runaway client can't hammer the field-specific list endpoint and
@@ -840,12 +840,14 @@ router.get("/field/open-tickets", async (req, res): Promise<void> => {
     (req.query.vendorWide === "1" || req.query.vendorWide === "true") &&
     isForemanSession;
   const isNarrowViewer = ctx.mode === "field" || isForemanSession;
-  const conditions: ReturnType<typeof eq>[] = [
-    inArray(
-      ticketsTable.status,
-      isNarrowViewer ? [...OPEN_NARROW_STATUSES] : [...OPEN_BROAD_STATUSES],
-    ),
-  ];
+  const statusFilter =
+    ctx.mode === "partner" || ctx.mode === "vendor" || ctx.mode === "admin"
+      ? mobileOfficeTicketVisibilityCondition()
+      : inArray(
+          ticketsTable.status,
+          isNarrowViewer ? [...OPEN_NARROW_STATUSES] : [...OPEN_BROAD_STATUSES],
+        );
+  const conditions: ReturnType<typeof eq>[] = [statusFilter];
   if (ctx.mode === "field" || ctx.mode === "vendor") {
     conditions.push(eq(ticketsTable.vendorId, ctx.vendorId));
   } else if (ctx.mode === "partner") {
@@ -927,7 +929,9 @@ router.get("/field/open-tickets", async (req, res): Promise<void> => {
 // Visibility rules mirror the list endpoint exactly:
 //   * field_employee → scoped to (this employee's vendor, this employee's id)
 //   * vendor (admin)  → scoped to vendorId only (any employee on that vendor)
-//   * status restricted to the same five "open" statuses
+//   * partner / vendor / admin office viewers → same list visibility as
+//       GET /field/open-tickets (all non-completed + recent completed)
+//   * field_employee → scoped + narrow/broad open statuses
 // A ticket that fails either check responds 404 so the client knows the
 // row should be dropped from local state (e.g. the office reassigned
 // the ticket to a different field employee, or the worker closed it
@@ -951,9 +955,13 @@ router.get("/field/open-tickets/:id", async (req, res): Promise<void> => {
     return;
   }
 
+  const statusFilter =
+    ctx.mode === "partner" || ctx.mode === "vendor" || ctx.mode === "admin"
+      ? mobileOfficeTicketVisibilityCondition()
+      : inArray(ticketsTable.status, [...OPEN_BROAD_STATUSES]);
   const conditions: ReturnType<typeof eq>[] = [
     eq(ticketsTable.id, ticketId),
-    inArray(ticketsTable.status, [...OPEN_BROAD_STATUSES]),
+    statusFilter,
   ];
   if (ctx.mode === "field" || ctx.mode === "vendor") {
     conditions.push(eq(ticketsTable.vendorId, ctx.vendorId));

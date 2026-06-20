@@ -13,7 +13,7 @@ describe("fetchPortalTicketsForHome", () => {
     apiFetch.mockReset();
   });
 
-  it("loads open tickets from the mobile field endpoint", async () => {
+  it("loads Site tickets from the mobile field list endpoint", async () => {
     apiFetch.mockResolvedValue([
       {
         id: 2,

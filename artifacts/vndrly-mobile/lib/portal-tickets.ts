@@ -33,8 +33,6 @@ type PortalTicketRow = {
   unreadCommentCount?: number;
 };
 
-const HOME_EXCLUDED_STATUSES = new Set(["cancelled", "denied"]);
-
 function splitEmployeeName(full: string | null | undefined): {
   first: string | null;
   last: string | null;
@@ -73,7 +71,7 @@ export function mapPortalTicket(row: PortalTicketRow): MobileOpenTicket {
   };
 }
 
-/** Partner / vendor / admin open-ticket lists — mobile field API (open statuses only). */
+/** Partner / vendor / admin Site tickets — server applies full list rule (non-completed + completed ≤30d). */
 export async function fetchPortalTicketsForHome(): Promise<MobileOpenTicket[]> {
   const rows = await apiFetch<MobileOpenTicket[]>("/api/field/open-tickets");
   return (rows ?? []).sort((a, b) => {

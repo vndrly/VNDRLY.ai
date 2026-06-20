@@ -226,14 +226,20 @@ describe("GET /api/field/open-tickets — auth gating", () => {
   it("returns 200 for a partner session scoped to partner sites", async () => {
     selectQueue = [
       () => [partnerRow()],
-      () => [ticketRow({ id: 201, vendorName: "Winchester" })],
+      () => [
+        ticketRow({ id: 201, status: "kicked_back", vendorName: "Winchester" }),
+        ticketRow({ id: 202, status: "submitted", vendorName: "Winchester" }),
+        ticketRow({ id: 203, status: "approved", vendorName: "Winchester" }),
+        ticketRow({ id: 204, status: "awaiting_payment", vendorName: "Winchester" }),
+        ticketRow({ id: 205, status: "completed", vendorName: "Winchester" }),
+      ],
     ];
     const res = await request(app)
       .get("/api/field/open-tickets")
       .set("Cookie", partnerCookie);
     expectStatus(res, 200);
-    expect(res.body).toHaveLength(1);
-    expect(res.body[0].id).toBe(201);
+    expect(res.body).toHaveLength(5);
+    expect(res.body.map((r: { id: number }) => r.id).sort()).toEqual([201, 202, 203, 204, 205]);
   });
 });
 
