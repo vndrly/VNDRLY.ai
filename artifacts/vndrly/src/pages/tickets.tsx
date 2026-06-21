@@ -2707,11 +2707,9 @@ export default function Tickets() {
                                 <TableCell>{tk.workTypeName || "-"}</TableCell>
                                 <TableCell>{tk.fieldEmployeeName || "-"}</TableCell>
                                 <TableCell>
-                                  <div className="flex flex-col items-start gap-1">
-                                    <div className="flex items-center gap-2">
-                                      <TicketStatusBadge status={tk.status} updatedAt={tk.updatedAt} />
-                                      <TicketLifecyclePill state={tk.lifecycleState} idSuffix={tk.id} />
-                                    </div>
+                                  <div className="flex flex-col items-start gap-0.5">
+                                    <TicketStatusBadge status={tk.status} updatedAt={tk.updatedAt} />
+                                    <TicketLifecyclePill state={tk.lifecycleState} idSuffix={tk.id} />
                                   </div>
                                 </TableCell>
                                 <TableCell className="text-muted-foreground text-sm">{new Date(tk.createdAt).toLocaleString()}</TableCell>
@@ -2726,18 +2724,18 @@ export default function Tickets() {
               })()}
             </div>
           ) : filteredTickets.length > 0 ? (
-            <Table className="table-fixed [&_td]:px-1.5 [&_th]:px-1.5">
+            <Table className="table-fixed [&_td:not(.col-icon)]:px-1.5 [&_th:not(.col-icon)]:px-1.5">
               <colgroup>
-                {isAdmin && <col style={{ width: "28px" }} />}
-                <col style={{ width: "28px" }} />
-                <col style={{ width: "28px" }} />
-                <col style={{ width: "9%" }} />
-                <col style={{ width: isPartner && awaitingPayment ? "11%" : "14%" }} />
-                <col style={{ width: "9%" }} />
-                {!isVendor && <col style={{ width: "8%" }} />}
-                <col style={{ width: "9%" }} />
-                <col style={{ width: isPartner && awaitingPayment ? "18%" : "23%" }} />
-                <col style={{ width: "6%" }} />
+                {isAdmin && <col style={{ width: "2%" }} />}
+                <col style={{ width: "2%" }} />
+                <col style={{ width: "4.6%" }} />
+                <col style={{ width: "12%" }} />
+                <col style={{ width: isPartner && awaitingPayment ? "13%" : "14%" }} />
+                <col style={{ width: "12%" }} />
+                {!isVendor && <col style={{ width: "10%" }} />}
+                <col style={{ width: "12%" }} />
+                <col style={{ width: isPartner && awaitingPayment ? "13%" : "16%" }} />
+                <col style={{ width: isAdmin ? "15.4%" : isPartner && awaitingPayment ? "7.4%" : "17.4%" }} />
                 {isPartner && awaitingPayment && (
                   <>
                     <col style={{ width: "7%" }} />
@@ -2773,8 +2771,11 @@ export default function Tickets() {
                       />
                     </TableHead>
                   )}
-                  <TableHead className="w-10"></TableHead>
-                  <TableHead className="w-10" aria-label={t("tickets.source", { defaultValue: "Source" })} />
+                  <TableHead className="col-icon !p-0 overflow-hidden" />
+                  <TableHead
+                    className="col-icon !p-0 overflow-hidden"
+                    aria-label={t("tickets.source", { defaultValue: "Source" })}
+                  />
                   <SortableHead label={t("tickets.ticketNumber") + " #"} column="ticket" />
                   <SortableHead label={t("tickets.site")} column="site" />
                   <TableHead>{t("tickets.workType", { defaultValue: "Work Type" })}</TableHead>
@@ -2838,67 +2839,65 @@ export default function Tickets() {
                             ) : null}
                           </TableCell>
                         )}
-                        <TableCell className="w-10">
+                        <TableCell className="col-icon !p-0 overflow-hidden whitespace-nowrap">
                           <button
                             type="button"
                             onClick={() => setExpandedTicketId(isExpanded ? null : tk.id)}
                             aria-label={isExpanded ? t("tickets.hideMap", { defaultValue: "Hide map" }) : t("tickets.showMap", { defaultValue: "Show map" })}
-                            className="p-1 rounded hover:bg-muted text-muted-foreground"
+                            className="p-0 rounded hover:bg-muted text-muted-foreground leading-none"
                             data-testid={`button-toggle-map-${tk.id}`}
                           >
                             <ChevronRight className={`w-4 h-4 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
                           </button>
                         </TableCell>
-                        <TableCell className="w-10">
-                          {(() => {
-                            // Task #498: Source column. Three icons:
-                            //   - Globe   = self-service (web/mobile portal)
-                            //   - Phone   = office phone intake
-                            //   - HardHat = field employee on the ground
-                            const ch = tk.intakeChannel;
-                            if (!ch) return null;
-                            const isOffice =
-                              ch === "office_on_behalf_of_partner" ||
-                              ch === "office_on_behalf_of_field_employee";
-                            const isField = ch === "vendor_field_self_service";
-                            const Icon = isOffice ? Phone : isField ? HardHat : Globe;
-                            const tone = isOffice
-                              ? "text-amber-600"
-                              : isField
-                                ? "text-emerald-600"
-                                : "text-blue-600";
-                            const label = t(`tickets.source_${ch}`, {
-                              defaultValue:
-                                ch === "partner_self_service"
-                                  ? "Partner self-service"
-                                  : ch === "office_on_behalf_of_partner"
-                                    ? "Phone intake (partner)"
-                                    : ch === "office_on_behalf_of_field_employee"
-                                      ? "Phone intake (field employee)"
-                                      : "Field self-service",
-                            });
-                            return (
-                              <span
-                                className="inline-flex items-center justify-center"
-                                title={label}
-                                aria-label={label}
-                                data-testid={`source-icon-${tk.id}`}
-                                data-source={ch}
-                              >
-                                <Icon className={`w-4 h-4 ${tone}`} />
-                              </span>
-                            );
-                          })()}
-                        </TableCell>
-                        <TableCell className="max-w-0">
-                          <div className="flex items-center gap-1 min-w-0">
-                            <Link href={`/tickets/${tk.id}`} className="font-medium text-gray-700 hover:underline hover:text-[var(--brand-primary)] min-w-0 shrink" data-testid={`link-ticket-${tk.id}`}>
-                              <div className="flex items-center gap-1 whitespace-nowrap"><FileText className="w-3.5 h-3.5 shrink-0" style={{ color: brand.primary }} />#{String(tk.id).padStart(8, '0')}</div>
-                            </Link>
+                        <TableCell className="col-icon !p-0 overflow-hidden whitespace-nowrap">
+                          <span className="inline-flex items-center gap-px max-w-[45px]">
+                            {(() => {
+                              // Task #498: Source column. Three icons:
+                              //   - Globe   = self-service (web/mobile portal)
+                              //   - Phone   = office phone intake
+                              //   - HardHat = field employee on the ground
+                              const ch = tk.intakeChannel;
+                              if (!ch) return null;
+                              const isOffice =
+                                ch === "office_on_behalf_of_partner" ||
+                                ch === "office_on_behalf_of_field_employee";
+                              const isField = ch === "vendor_field_self_service";
+                              const Icon = isOffice ? Phone : isField ? HardHat : Globe;
+                              const tone = isOffice
+                                ? "text-amber-600"
+                                : isField
+                                  ? "text-emerald-600"
+                                  : "text-blue-600";
+                              const label = t(`tickets.source_${ch}`, {
+                                defaultValue:
+                                  ch === "partner_self_service"
+                                    ? "Partner self-service"
+                                    : ch === "office_on_behalf_of_partner"
+                                      ? "Phone intake (partner)"
+                                      : ch === "office_on_behalf_of_field_employee"
+                                        ? "Phone intake (field employee)"
+                                        : "Field self-service",
+                              });
+                              return (
+                                <span
+                                  className="inline-flex items-center justify-center shrink-0"
+                                  title={label}
+                                  aria-label={label}
+                                  data-testid={`source-icon-${tk.id}`}
+                                  data-source={ch}
+                                >
+                                  <Icon className={`w-3 h-3 ${tone}`} />
+                                </span>
+                              );
+                            })()}
                             {hasGpsData && (
-                              <span title={t("tickets.gpsDataRecorded", { defaultValue: "GPS data recorded" })}>
+                              <span
+                                className="shrink-0"
+                                title={t("tickets.gpsDataRecorded", { defaultValue: "GPS data recorded" })}
+                              >
                                 <Navigation
-                                  className="w-3.5 h-3.5"
+                                  className="w-3 h-3"
                                   style={{ color: brand.primary }}
                                   aria-label={t("tickets.gpsDataRecorded", { defaultValue: "GPS data recorded" })}
                                   data-testid={`icon-gps-${tk.id}`}
@@ -2911,7 +2910,7 @@ export default function Tickets() {
                                 markAllSeen) and the list re-fetches. */}
                             {tk.unreadCommentCount > 0 && (
                               <span
-                                className="inline-flex items-center gap-1 text-xs text-muted-foreground font-medium"
+                                className="inline-flex items-center gap-px shrink-0 text-[10px] leading-none text-muted-foreground font-medium tabular-nums"
                                 title={t("tickets.unreadComments", {
                                   defaultValue: "{{count}} unread comment(s)",
                                   count: tk.unreadCommentCount,
@@ -2922,11 +2921,16 @@ export default function Tickets() {
                                 })}
                                 data-testid={`badge-unread-comments-${tk.id}`}
                               >
-                                <MessageCircle className="w-3.5 h-3.5 shrink-0" />
+                                <MessageCircle className="w-3 h-3 shrink-0" />
                                 <span>{tk.unreadCommentCount}</span>
                               </span>
                             )}
-                          </div>
+                          </span>
+                        </TableCell>
+                        <TableCell className="max-w-0">
+                          <Link href={`/tickets/${tk.id}`} className="font-medium text-gray-700 hover:underline hover:text-[var(--brand-primary)] min-w-0" data-testid={`link-ticket-${tk.id}`}>
+                            <div className="flex items-center gap-1 whitespace-nowrap"><FileText className="w-3.5 h-3.5 shrink-0" style={{ color: brand.primary }} />#{String(tk.id).padStart(8, '0')}</div>
+                          </Link>
                         </TableCell>
                         <TableCell className="max-w-0">
                           <span className="block truncate" title={tk.siteName || undefined}>{tk.siteName || "-"}</span>
@@ -2942,13 +2946,11 @@ export default function Tickets() {
                         <TableCell className="max-w-0">
                           <span className="block truncate" title={tk.fieldEmployeeName || undefined}>{tk.fieldEmployeeName || "-"}</span>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="max-w-0">
                           <div className="flex items-start gap-1 min-w-0">
-                            <div className="flex flex-col items-start gap-1 min-w-0">
-                              <div className="flex items-center gap-1 flex-wrap">
-                                <TicketStatusBadge status={tk.status} updatedAt={tk.updatedAt} compact data-testid={`badge-status-${tk.id}`} />
-                                <TicketLifecyclePill state={tk.lifecycleState} idSuffix={tk.id} />
-                              </div>
+                            <div className="flex flex-col items-start gap-0.5 min-w-0">
+                              <TicketStatusBadge status={tk.status} updatedAt={tk.updatedAt} compact data-testid={`badge-status-${tk.id}`} />
+                              <TicketLifecyclePill state={tk.lifecycleState} idSuffix={tk.id} />
                               {isAdmin && tk.status === "funds_dispersed" && (
                                 <span onClick={(e) => e.stopPropagation()}>
                                   <PngPillButton
