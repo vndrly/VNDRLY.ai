@@ -1,4 +1,7 @@
-import { parseTicketIdFromHref } from "@/lib/assistant-deep-links";
+import {
+  parseSafetyEventIdFromHref,
+  parseTicketIdFromNotificationLink,
+} from "@/lib/notification-link";
 
 export type PushRoute =
   | { type: "route"; path: string }
@@ -24,7 +27,12 @@ export function routeForPushData(data: unknown): PushRoute {
   }
 
   if (typeof d.link === "string") {
-    const ticketId = parseTicketIdFromHref(d.link);
+    const safetyId = parseSafetyEventIdFromHref(d.link);
+    if (safetyId != null) {
+      return { type: "route", path: `/safety-event/${safetyId}` };
+    }
+
+    const ticketId = parseTicketIdFromNotificationLink(d.link);
     if (ticketId != null) {
       return { type: "route", path: `/ticket/${ticketId}` };
     }
@@ -33,7 +41,18 @@ export function routeForPushData(data: unknown): PushRoute {
     }
   }
 
-  // Crew / schedule / ticket alerts without a ticket id still belong in inbox.
+  const safetyTypes = new Set([
+    "safety_event_submitted",
+    "safety_stop_work",
+    "safety_event_hipo",
+    "safety_event_update",
+    "safety_event_closed",
+  ]);
+  const pushType = typeof d.type === "string" ? d.type : "";
+  if (safetyTypes.has(pushType)) {
+    return { type: "route", path: "/notifications?category=safety" };
+  }
+
   const inboxTypes = new Set([
     "crew_added",
     "schedule_changed",
@@ -44,7 +63,6 @@ export function routeForPushData(data: unknown): PushRoute {
     "comment_mention",
     "comment_added",
   ]);
-  const pushType = typeof d.type === "string" ? d.type : "";
   if (inboxTypes.has(pushType)) {
     return { type: "route", path: "/notifications" };
   }

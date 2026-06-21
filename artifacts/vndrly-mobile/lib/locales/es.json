@@ -1166,6 +1166,10 @@
     },
     "openTicket": "Abrir ticket",
     "openTickets": "Abrir tickets",
+    "openSafetyEvent": "Abrir incidente de seguridad",
+    "siteLocationLink": "Sitio: {{name}}",
+    "siteLocationFallback": "Ver ubicación del sitio",
+    "siteLocationNoAccess": "Abra el ticket vinculado o use el portal web para administrar este sitio.",
     "actionTitle": "Notificación",
     "deleteConfirmTitle": "¿Eliminar notificación?",
     "deleteConfirmBody": "Esto la quita de tu bandeja.",
@@ -1189,7 +1193,22 @@
       "long_checkin": "Check-in prolongado",
       "rating_received": "Nueva calificación",
       "comment_added": "Nuevo comentario",
-      "comment_mention": "Te mencionaron"
+      "comment_mention": "Te mencionaron",
+      "safety_event_submitted": "Incidente de seguridad",
+      "safety_stop_work": "Paro de trabajo",
+      "safety_event_hipo": "Incidente de alto potencial",
+      "safety_event_update": "Actualización de seguridad",
+      "safety_event_closed": "Seguridad cerrada"
+    },
+    "categories": {
+      "all": "Todas",
+      "tickets": "Tickets",
+      "hotlist": "Hotlist",
+      "compliance": "Cumplimiento",
+      "crew": "Cuadrilla",
+      "comments": "Comentarios",
+      "system": "Sistema",
+      "safety": "Incidentes de seguridad"
     },
     "slowDown": {
       "brief": "Reduciendo el ritmo brevemente para mantener todo fluido.",
@@ -1213,6 +1232,8 @@
       "systemDesc": "Calificaciones y otros avisos.",
       "comments": "Comentarios y menciones",
       "commentsDesc": "@menciones y respuestas en tickets y hilos de Hotlist en los que participas.",
+      "safety": "Incidentes de seguridad",
+      "safetyDesc": "Paros de trabajo, incidentes y actualizaciones de HSE.",
       "commentMentionEmail": "Enviarme correo cuando me @mencionen",
       "commentMentionEmailDesc": "Envía un correo de inmediato cuando alguien te @mencione en un comentario de un ticket o de Hotlist.",
       "commentReplyEmail": "Resumen de respuestas por correo",
@@ -1799,6 +1820,11 @@
     "unknownSite": "Sitio desconocido"
   },
   "safety": {
+    "dashboardTitle": "Programa de seguridad",
+    "score": "Puntaje de seguridad",
+    "daysClean": "Días sin incidente registrable",
+    "openEvents": "Eventos abiertos",
+    "openHipo": "HiPo abiertos",
     "inboxEmpty": "Aún no hay reportes de seguridad.",
     "stopWork": "Paro de trabajo",
     "reportTitle": "Reportar incidente de seguridad",

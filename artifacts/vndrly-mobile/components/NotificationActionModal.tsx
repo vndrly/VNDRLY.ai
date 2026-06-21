@@ -16,9 +16,14 @@ import {
 import TogglePillButton from "@/components/TogglePillButton";
 import { useBrand } from "@/hooks/use-brand";
 import { useColors } from "@/hooks/useColors";
-import { parseTicketIdFromHref } from "@/lib/assistant-deep-links";
 import { buildNotificationMailtoUrl } from "@/lib/notification-mailto";
-import { navigateFromNotificationLink } from "@/lib/notification-navigation";
+import {
+  navigateFromNotificationLink,
+  parseSafetyEventIdFromHref,
+  parseSiteLocationFromHref,
+  parseTicketIdFromNotificationLink,
+} from "@/lib/notification-navigation";
+import { fetchSafetyCapabilities, reactivateSiteLocation } from "@/lib/safety-api";
 import type { NotificationRow } from "@/lib/notifications-ui";
 import { NOTIFICATION_TYPE_META } from "@/lib/notifications-ui";
 
@@ -53,8 +58,11 @@ export default function NotificationActionModal({
   if (!item) return null;
 
   const meta = NOTIFICATION_TYPE_META[item.type];
-  const ticketId = parseTicketIdFromHref(item.link ?? "");
+  const ticketId = parseTicketIdFromNotificationLink(item.link ?? "");
+  const safetyEventId = parseSafetyEventIdFromHref(item.link ?? "");
+  const siteLocation = item.link ? parseSiteLocationFromHref(item.link) : null;
   const canOpenTicket = ticketId !== null || item.link === "/tickets";
+  const canOpenSafetyEvent = safetyEventId !== null;
   const canSendTo = ticketId !== null && !!onSendTo;
   const logoUri = brand.logoSquareUrl ?? brand.logoUrl;
 
@@ -116,6 +124,45 @@ export default function NotificationActionModal({
   const handleOpenTicket = () => {
     onClose();
     navigateFromNotificationLink(item.link);
+  };
+
+  const handleOpenSafetyEvent = () => {
+    onClose();
+    navigateFromNotificationLink(item.link);
+  };
+
+  const handleSiteLocationPress = () => {
+    if (!siteLocation) return;
+    if (ticketId !== null) {
+      onClose();
+      navigateFromNotificationLink(item.link);
+      return;
+    }
+    void (async () => {
+      try {
+        const caps = await fetchSafetyCapabilities();
+        if (!caps.isPartnerHse) {
+          Alert.alert(t("common.error"), t("notifications.siteLocationNoAccess"));
+          return;
+        }
+        Alert.alert(
+          t("siteLocations.reactivateSiteConfirmTitle"),
+          t("siteLocations.reactivateSiteConfirmDescription"),
+          [
+            { text: t("common.cancel"), style: "cancel" },
+            {
+              text: t("siteLocations.reactivateSite"),
+              onPress: () =>
+                void reactivateSiteLocation(siteLocation.id)
+                  .then(() => Alert.alert(t("siteLocations.reactivateSuccess")))
+                  .catch((e) => Alert.alert(t("siteLocations.reactivateFailed"), String(e))),
+            },
+          ],
+        );
+      } catch {
+        Alert.alert(t("common.error"), t("notifications.actionFailed"));
+      }
+    })();
   };
 
   return (
@@ -186,6 +233,15 @@ export default function NotificationActionModal({
             {item.body ? (
               <Text style={[styles.body, { color: colors.mutedForeground }]}>{item.body}</Text>
             ) : null}
+            {siteLocation ? (
+              <Pressable onPress={handleSiteLocationPress} testID="notification-action-site-link">
+                <Text style={[styles.siteLink, { color: colors.primary }]}>
+                  {t("notifications.siteLocationLink", {
+                    name: siteLocation.name ?? t("notifications.siteLocationFallback"),
+                  })}
+                </Text>
+              </Pressable>
+            ) : null}
             <Text style={[styles.meta, { color: colors.mutedForeground }]}>{timeAgoLabel}</Text>
           </ScrollView>
 
@@ -235,6 +291,19 @@ export default function NotificationActionModal({
             >
               {t("notifications.shareViaEmail")}
             </TogglePillButton>
+
+            {canOpenSafetyEvent ? (
+              <TogglePillButton
+                color="blue"
+                solid
+                disabled={busy}
+                onPress={handleOpenSafetyEvent}
+                testID="notification-action-open-safety-event"
+                style={styles.actionBtn}
+              >
+                {t("notifications.openSafetyEvent")}
+              </TogglePillButton>
+            ) : null}
 
             {canOpenTicket ? (
               <TogglePillButton
@@ -334,6 +403,11 @@ const styles = StyleSheet.create({
   meta: {
     fontFamily: "Inter_400Regular",
     fontSize: 11,
+  },
+  siteLink: {
+    fontFamily: "Inter_500Medium",
+    fontSize: 13,
+    marginBottom: 8,
   },
   actions: {
     gap: 8,

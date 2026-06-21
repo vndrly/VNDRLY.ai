@@ -1,12 +1,13 @@
 import { Feather } from "@expo/vector-icons";
-import { router, Stack, useFocusEffect } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import { router, Stack, useFocusEffect, useLocalSearchParams } from "expo-router";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
   FlatList,
   RefreshControl,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -22,6 +23,8 @@ import { apiFetch } from "@/lib/api";
 import { stopBellTolling } from "@/lib/notificationSounds";
 import { syncAppIconBadge } from "@/lib/notificationBadge";
 import {
+  effectiveNotificationCategory,
+  NOTIFICATION_CATEGORY_IDS,
   NOTIFICATION_TYPE_META,
   notificationTypeLabel,
   type NotificationRow,
@@ -30,6 +33,12 @@ import {
 export default function NotificationsScreen() {
   const colors = useColors();
   const { t } = useTranslation();
+  const { category: categoryParam } = useLocalSearchParams<{ category?: string }>();
+  const initialCategory =
+    categoryParam && NOTIFICATION_CATEGORY_IDS.includes(categoryParam as (typeof NOTIFICATION_CATEGORY_IDS)[number])
+      ? categoryParam
+      : "all";
+  const [activeCategory, setActiveCategory] = useState(initialCategory);
   const [items, setItems] = useState<NotificationRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -82,6 +91,26 @@ export default function NotificationsScreen() {
       stopBellTolling();
     }, []),
   );
+
+  useEffect(() => {
+    setActiveCategory(initialCategory);
+  }, [initialCategory]);
+
+  const filteredItems = useMemo(() => {
+    if (activeCategory === "all") return items;
+    return items.filter((item) => effectiveNotificationCategory(item) === activeCategory);
+  }, [activeCategory, items]);
+
+  const categoryUnread = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const item of items) {
+      if (item.isRead) continue;
+      const cat = effectiveNotificationCategory(item);
+      counts[cat] = (counts[cat] ?? 0) + 1;
+      counts.all = (counts.all ?? 0) + 1;
+    }
+    return counts;
+  }, [items]);
 
   const updateItem = (id: number, patch: Partial<NotificationRow>) => {
     setItems((xs) => xs.map((x) => (x.id === id ? { ...x, ...patch } : x)));
@@ -180,11 +209,47 @@ export default function NotificationsScreen() {
         </View>
       ) : null}
 
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.categoryRow}
+        style={styles.categoryScroll}
+      >
+        {NOTIFICATION_CATEGORY_IDS.map((id) => {
+          const selected = activeCategory === id;
+          const unread = categoryUnread[id] ?? 0;
+          return (
+            <TouchableOpacity
+              key={id}
+              onPress={() => setActiveCategory(id)}
+              style={[
+                styles.categoryChip,
+                {
+                  backgroundColor: selected ? colors.primary : colors.muted,
+                  borderColor: selected ? colors.primary : colors.border,
+                },
+              ]}
+              testID={`notifications-tab-${id}`}
+            >
+              <Text
+                style={[
+                  styles.categoryChipText,
+                  { color: selected ? colors.primaryForeground : colors.foreground },
+                ]}
+              >
+                {t(`notifications.categories.${id}`)}
+                {unread > 0 ? ` (${unread})` : ""}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
+
       {loading ? (
         <ActivityIndicator style={{ marginTop: 40 }} color={colors.primary} />
       ) : (
         <FlatList
-          data={items}
+          data={filteredItems}
           keyExtractor={(item) => String(item.id)}
           contentContainerStyle={{ padding: 16 }}
           refreshControl={
@@ -304,6 +369,18 @@ export default function NotificationsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   iconBtn: { padding: 8 },
+  categoryScroll: { flexGrow: 0, marginBottom: 4 },
+  categoryRow: { paddingHorizontal: 12, gap: 8, paddingBottom: 8 },
+  categoryChip: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  categoryChipText: {
+    fontFamily: "Inter_500Medium",
+    fontSize: 12,
+  },
   slowDownBanner: {
     flexDirection: "row",
     alignItems: "center",

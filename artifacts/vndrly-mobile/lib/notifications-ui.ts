@@ -14,6 +14,27 @@ export type NotificationRow = {
 
 type FeatherName = React.ComponentProps<typeof Feather>["name"];
 
+export const NOTIFICATION_CATEGORY_IDS = [
+  "all",
+  "tickets",
+  "hotlist",
+  "compliance",
+  "crew",
+  "comments",
+  "system",
+  "safety",
+] as const;
+
+export type NotificationCategoryId = (typeof NOTIFICATION_CATEGORY_IDS)[number];
+
+export const SAFETY_NOTIFICATION_TYPES = new Set([
+  "safety_event_submitted",
+  "safety_stop_work",
+  "safety_event_hipo",
+  "safety_event_update",
+  "safety_event_closed",
+]);
+
 export const NOTIFICATION_CATEGORY_LABEL_KEYS: Record<string, string> = {
   ticket: "notifications.rows.tickets",
   tickets: "notifications.rows.tickets",
@@ -23,7 +44,13 @@ export const NOTIFICATION_CATEGORY_LABEL_KEYS: Record<string, string> = {
   system: "notifications.rows.system",
   comment: "notifications.rows.comments",
   comments: "notifications.rows.comments",
+  safety: "notifications.rows.safety",
 };
+
+export function effectiveNotificationCategory(n: NotificationRow): string {
+  if (SAFETY_NOTIFICATION_TYPES.has(n.type) || n.category === "safety") return "safety";
+  return n.category ?? "system";
+}
 
 export const NOTIFICATION_TYPE_META: Record<string, { icon: FeatherName; labelKey: string }> = {
   ticket_assigned: { icon: "briefcase", labelKey: "notifications.types.ticket_assigned" },
@@ -42,6 +69,11 @@ export const NOTIFICATION_TYPE_META: Record<string, { icon: FeatherName; labelKe
   rating_received: { icon: "star", labelKey: "notifications.types.rating_received" },
   comment_added: { icon: "message-square", labelKey: "notifications.types.comment_added" },
   comment_mention: { icon: "at-sign", labelKey: "notifications.types.comment_mention" },
+  safety_event_submitted: { icon: "shield", labelKey: "notifications.types.safety_event_submitted" },
+  safety_stop_work: { icon: "shield", labelKey: "notifications.types.safety_stop_work" },
+  safety_event_hipo: { icon: "shield", labelKey: "notifications.types.safety_event_hipo" },
+  safety_event_update: { icon: "shield", labelKey: "notifications.types.safety_event_update" },
+  safety_event_closed: { icon: "shield", labelKey: "notifications.types.safety_event_closed" },
 };
 
 export function notificationTypeLabel(

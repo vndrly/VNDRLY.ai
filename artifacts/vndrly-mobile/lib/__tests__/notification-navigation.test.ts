@@ -14,6 +14,7 @@ vi.mock("expo-router", () => ({
 
 import {
   navigateFromNotificationLink,
+  navigateToSafetyEventFromNotification,
   navigateToTicketFromNotification,
 } from "../notification-navigation";
 
@@ -36,5 +37,15 @@ describe("notification-navigation", () => {
     expect(dismissMock).toHaveBeenCalledTimes(1);
     await Promise.resolve();
     expect(pushMock).toHaveBeenCalledWith("/(tabs)");
+  });
+
+  it("routes safety event links to safety-event detail", async () => {
+    navigateFromNotificationLink("/safety/42?siteLocationId=7&ticketId=10950");
+    expect(dismissMock).toHaveBeenCalledTimes(1);
+    await Promise.resolve();
+    expect(pushMock).toHaveBeenCalledWith({
+      pathname: "/safety-event/[id]",
+      params: { id: "42" },
+    });
   });
 });

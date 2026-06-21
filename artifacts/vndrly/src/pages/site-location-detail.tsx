@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   useGetSiteLocation,
   useGetSiteLocationQrCode,
@@ -7,7 +7,6 @@ import {
   useUpdateSiteLocation,
   useDeleteSiteLocation,
   SiteLocationStatus,
-  type SiteLocationStatus as SiteLocationStatusType,
   useListWorkTypes,
   useListVendors,
   useListTickets,
@@ -25,7 +24,7 @@ import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { visitsApi, type VisitorRow } from "@/lib/visits-api";
-import { reactivateSiteLocation, useSafetyCapabilities } from "@/lib/safety-api";
+import { reactivateSiteLocation, useSafetyCapabilities, fetchOpenStopWorkEvents, closeStopWorkAndReactivateSite } from "@/lib/safety-api";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
@@ -48,7 +47,6 @@ import BlueButton from "@/components/blue-button";
 import RedButton from "@/components/red-button";
 import GreyButton from "@/components/grey-button";
 import LightGreyRedButton from "@/components/light-grey-red-button";
-import GreenV2Button from "@/components/green-v2-button";
 import AmberButton from "@/components/amber-button";
 import BrandPill from "@/components/brand-pill";
 import ImagePill from "@/components/image-pill";
@@ -56,6 +54,8 @@ import { PngPillButton } from "@/components/png-pill-rollover";
 import BrandPillButton from "@/components/brand-pill-button";
 import SphereBackButton from "@/components/sphere-back-button";
 import AfePill from "@/components/afe-pill";
+import SiteStatusToggle from "@/components/site-status-toggle";
+import SiteSafetyReactivateDialog from "@/components/site-safety-reactivate-dialog";
 
 export default function SiteLocationDetail({ id }: { id: number }) {
   const { data: site, isLoading } = useGetSiteLocation(id, { query: { enabled: !!id, queryKey: getGetSiteLocationQueryKey(id) } });
@@ -89,10 +89,10 @@ export default function SiteLocationDetail({ id }: { id: number }) {
   const [editLng, setEditLng] = useState("");
   const [editingAfe, setEditingAfe] = useState(false);
   const [editAfe, setEditAfe] = useState("");
-  const [statusOpen, setStatusOpen] = useState(false);
   const [reactivateOpen, setReactivateOpen] = useState(false);
+  const [deactivateOpen, setDeactivateOpen] = useState(false);
+  const [safetyReactivateOpen, setSafetyReactivateOpen] = useState(false);
   const [reactivating, setReactivating] = useState(false);
-  const statusRef = useRef<HTMLDivElement>(null);
   const [geoLocating, setGeoLocating] = useState(false);
   const [editingRadius, setEditingRadius] = useState(false);
   const [editRadius, setEditRadius] = useState("");
@@ -199,32 +199,36 @@ export default function SiteLocationDetail({ id }: { id: number }) {
     </TableHead>
   );
 
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (statusRef.current && !statusRef.current.contains(event.target as Node)) {
-        setStatusOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
   const isAdmin = user?.role === "admin";
   const { data: safetyCaps } = useSafetyCapabilities();
   const canReactivateSite =
     isAdmin || (user?.role === "partner" && safetyCaps?.isPartnerHse === true);
   const siteIsInactive = site?.status === "inactive" || site?.isActive === false;
-  const statusOptions = (Object.values(SiteLocationStatus) as SiteLocationStatusType[]).filter(
-    (s) => !(siteIsInactive && s === SiteLocationStatus.active && !canReactivateSite),
-  );
-  const showStatusDropdown = canManageAssignments && !(siteIsInactive && !canReactivateSite);
+  const siteIsActive = !siteIsInactive && site?.status === SiteLocationStatus.active;
+  const isActiveInactiveStatus =
+    site?.status === SiteLocationStatus.active || site?.status === SiteLocationStatus.inactive;
+  const canToggleActive = siteIsInactive && canReactivateSite;
+  const canToggleInactive = siteIsActive && canManageAssignments;
+  const statusToggleReadOnly = !canToggleActive && !canToggleInactive;
+
+  const { data: openStopWorkEvents = [] } = useQuery({
+    queryKey: ["safety-stop-work", id],
+    queryFn: () => fetchOpenStopWorkEvents(id),
+    enabled: !!id && siteIsInactive && canReactivateSite,
+    staleTime: 30_000,
+  });
+
+  const invalidateSiteQueries = () => {
+    queryClient.invalidateQueries({ queryKey: getGetSiteLocationQueryKey(id) });
+    queryClient.invalidateQueries({ queryKey: getListSiteLocationsQueryKey() });
+    queryClient.invalidateQueries({ queryKey: ["safety-stop-work", id] });
+  };
 
   const handleReactivate = () => {
     setReactivating(true);
     reactivateSiteLocation(id)
       .then(() => {
-        queryClient.invalidateQueries({ queryKey: getGetSiteLocationQueryKey(id) });
-        queryClient.invalidateQueries({ queryKey: getListSiteLocationsQueryKey() });
+        invalidateSiteQueries();
         toast({ title: t("siteLocations.reactivateSuccess") });
         setReactivateOpen(false);
       })
@@ -232,6 +236,54 @@ export default function SiteLocationDetail({ id }: { id: number }) {
         toast({ title: t("siteLocations.reactivateFailed"), variant: "destructive" });
       })
       .finally(() => setReactivating(false));
+  };
+
+  const handleCloseStopWorkAndReactivate = (resolutionNote: string) => {
+    setReactivating(true);
+    closeStopWorkAndReactivateSite(id, openStopWorkEvents, resolutionNote)
+      .then(() => {
+        invalidateSiteQueries();
+        toast({ title: t("siteLocations.safetyReactivateSuccess") });
+        setSafetyReactivateOpen(false);
+      })
+      .catch((err: Error) => {
+        toast({
+          title: t("siteLocations.safetyReactivateFailed"),
+          description: err.message,
+          variant: "destructive",
+        });
+      })
+      .finally(() => setReactivating(false));
+  };
+
+  const handleDeactivate = () => {
+    updateSite.mutate(
+      { id, data: { status: SiteLocationStatus.inactive, isActive: false } },
+      {
+        onSuccess: () => {
+          invalidateSiteQueries();
+          toast({ title: t("siteLocations.deactivateSuccess") });
+          setDeactivateOpen(false);
+        },
+        onError: () => {
+          toast({ title: t("siteLocations.deactivateFailed"), variant: "destructive" });
+        },
+      },
+    );
+  };
+
+  const handleStatusActiveClick = () => {
+    if (!canToggleActive || siteIsActive) return;
+    if (openStopWorkEvents.length > 0) {
+      setSafetyReactivateOpen(true);
+      return;
+    }
+    setReactivateOpen(true);
+  };
+
+  const handleStatusInactiveClick = () => {
+    if (!canToggleInactive || siteIsInactive) return;
+    setDeactivateOpen(true);
   };
 
   const handleUnhide = () => {
@@ -245,23 +297,6 @@ export default function SiteLocationDetail({ id }: { id: number }) {
         },
         onError: () => {
           toast({ title: t("siteLocations.unhideFailed"), variant: "destructive" });
-        },
-      },
-    );
-  };
-
-  const handleStatusChange = (newStatus: SiteLocationStatusType) => {
-    updateSite.mutate(
-      { id, data: { status: newStatus } },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getGetSiteLocationQueryKey(id) });
-          queryClient.invalidateQueries({ queryKey: getListSiteLocationsQueryKey() });
-          toast({ title: t("siteLocations.statusUpdated", { status: newStatus.charAt(0).toUpperCase() + newStatus.slice(1) }) });
-          setStatusOpen(false);
-        },
-        onError: () => {
-          toast({ title: t("siteLocations.statusUpdateFailed"), variant: "destructive" });
         },
       },
     );
@@ -894,52 +929,61 @@ export default function SiteLocationDetail({ id }: { id: number }) {
                 </p>
               ) : null}
             </div>
-            <div className="flex items-center gap-2 flex-wrap" ref={statusRef}>
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="text-sm text-muted-foreground">{t("siteLocations.statusLabel")}</span>
-              {showStatusDropdown ? (
-                <div className="relative">
-                  <div className="cursor-pointer flex items-center gap-1" onClick={() => setStatusOpen(!statusOpen)} data-testid="button-status-dropdown">
-                    <StatusBadge status={site.status} className="w-[100px] justify-center" />
-                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                  </div>
-                  {statusOpen && (
-                    <div className="absolute left-0 top-[32px] z-50 bg-white border rounded-lg shadow-lg p-2 space-y-1">
-                      {statusOptions.map((s) => (
-                        <div key={s} className="cursor-pointer" onClick={() => handleStatusChange(s)} data-testid={`status-option-${s}`}>
-                          <StatusBadge status={s} className="w-[100px] justify-center" />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+              {isActiveInactiveStatus ? (
+                <>
+                  <SiteStatusToggle
+                    active={siteIsActive}
+                    readOnly={statusToggleReadOnly}
+                    disabled={reactivating || updateSite.isPending}
+                    onActiveClick={handleStatusActiveClick}
+                    onInactiveClick={handleStatusInactiveClick}
+                  />
+                  {siteIsInactive && openStopWorkEvents.length > 0 ? (
+                    <span className="text-xs text-red-600" data-testid="text-stop-work-hint">
+                      {t("siteLocations.stopWorkInactiveHint")}
+                    </span>
+                  ) : null}
+                </>
               ) : (
                 <StatusBadge status={site.status} className="w-[100px] justify-center" />
               )}
-              {siteIsInactive && canReactivateSite ? (
-                <>
-                  <GreenV2Button
-                    type="button"
-                    onClick={() => setReactivateOpen(true)}
-                    data-testid="button-reactivate-site"
-                  >
-                    {t("siteLocations.reactivateSite")}
-                  </GreenV2Button>
-                  <AlertDialog open={reactivateOpen} onOpenChange={(o) => { if (!reactivating) setReactivateOpen(o); }}>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>{t("siteLocations.reactivateSiteConfirmTitle")}</AlertDialogTitle>
-                        <AlertDialogDescription>{t("siteLocations.reactivateSiteConfirmDescription")}</AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel disabled={reactivating}>{t("siteLocations.cancel")}</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleReactivate} disabled={reactivating} data-testid="button-confirm-reactivate-site">
-                          {reactivating ? t("siteLocations.reactivating") : t("siteLocations.reactivateSite")}
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </>
-              ) : null}
+              <AlertDialog open={reactivateOpen} onOpenChange={(o) => { if (!reactivating) setReactivateOpen(o); }}>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>{t("siteLocations.reactivateSiteConfirmTitle")}</AlertDialogTitle>
+                    <AlertDialogDescription>{t("siteLocations.reactivateSiteConfirmDescription")}</AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel disabled={reactivating}>{t("siteLocations.cancel")}</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleReactivate} disabled={reactivating} data-testid="button-confirm-reactivate-site">
+                      {reactivating ? t("siteLocations.reactivating") : t("siteLocations.reactivateSite")}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              <AlertDialog open={deactivateOpen} onOpenChange={(o) => { if (!updateSite.isPending) setDeactivateOpen(o); }}>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>{t("siteLocations.deactivateSiteConfirmTitle")}</AlertDialogTitle>
+                    <AlertDialogDescription>{t("siteLocations.deactivateSiteConfirmDescription")}</AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel disabled={updateSite.isPending}>{t("siteLocations.cancel")}</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeactivate} disabled={updateSite.isPending} data-testid="button-confirm-deactivate-site">
+                      {updateSite.isPending ? t("siteLocations.deactivating") : t("siteLocations.deactivateSite")}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              <SiteSafetyReactivateDialog
+                open={safetyReactivateOpen}
+                onOpenChange={setSafetyReactivateOpen}
+                events={openStopWorkEvents}
+                busy={reactivating}
+                onConfirm={handleCloseStopWorkAndReactivate}
+              />
             </div>
             <div className="pt-2">
               <div className="flex items-center justify-between mb-2">

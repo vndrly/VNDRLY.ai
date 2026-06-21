@@ -130,7 +130,8 @@ Legend: ✅ 200 · ⚠️ wrong status · ❌ fail · 🔍 not tested · 🌐 SP
 | Safety ticket-detail pre-fill (iOS) | Not wired |
 | Soft training banner (iOS Home) | API only on web dashboard |
 | OpenAPI regen for safety | Not blocking runtime |
-| `/api/tickets/events` SSE | Long-lived; not fully probed |
+| `/api/tickets/events` SSE | Long-lived; **do not probe with Invoke-WebRequest** — hung ~13 min then connection drop |
+| `/api/reports/partner/1/aging` | ⚠️ **502** after SSE probe (likely nginx timeout side-effect; re-probe in isolation) |
 
 ---
 
@@ -142,7 +143,8 @@ Legend: ✅ 200 · ⚠️ wrong status · ❌ fail · 🔍 not tested · 🌐 SP
 | `artifacts/api-server/src/routes/index.ts` | Mount `ticketFlagsRouter` **before** `ticketsRouter` so `/tickets/flagged` is not captured by `/tickets/:id` |
 | `artifacts/vndrly-mobile/lib/locales/en.json` | Removed unused `safety.inboxTitle` / `inboxSubtitle` (web-only keys) |
 | `artifacts/vndrly-mobile/lib/locales/es.json` | Same orphan cleanup |
-| `scripts/smoke-prod-api.ps1` | Added reusable production API probe script |
+| `scripts/smoke-prod-api.ps1` | Earlier reusable production API probe script |
+| `docs/_smoke-api-prod.ps1` | Session-matrix probe ([Production API session smoke test](e3878ef3-7c16-4c2d-9d28-3995715cf85b)) |
 | `docs/_smoke-api-results.txt` | Raw API probe output |
 | `docs/_smoke-web-results.txt` | Raw HTTP web fetch output ([Web fetch production pages](38ae7134-05f7-4687-8dbf-dcb1d3d54dbd)) |
 

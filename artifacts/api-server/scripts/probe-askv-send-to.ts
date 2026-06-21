@@ -13,7 +13,7 @@ import {
   userOrgMembershipsTable,
   usersTable,
 } from "@workspace/db";
-import { listSendToRecipientsForOrg } from "../src/lib/ticket-send-to.ts";
+import { listSendToRecipientsForOrg } from "../src/lib/ticket-send-to";
 
 const API_BASE = process.env.PROBE_API_BASE ?? "http://localhost:8080";
 

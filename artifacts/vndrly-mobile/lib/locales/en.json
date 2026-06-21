@@ -1166,6 +1166,10 @@
     },
     "openTicket": "Open ticket",
     "openTickets": "Open tickets",
+    "openSafetyEvent": "Open safety event",
+    "siteLocationLink": "Site: {{name}}",
+    "siteLocationFallback": "View site location",
+    "siteLocationNoAccess": "Open the linked ticket or use the web portal to manage this site.",
     "actionTitle": "Notification",
     "deleteConfirmTitle": "Delete notification?",
     "deleteConfirmBody": "This removes the notification from your inbox.",
@@ -1189,7 +1193,22 @@
       "long_checkin": "Long check-in",
       "rating_received": "New rating",
       "comment_added": "New comment",
-      "comment_mention": "Mentioned you"
+      "comment_mention": "Mentioned you",
+      "safety_event_submitted": "Safety incident",
+      "safety_stop_work": "Stop work",
+      "safety_event_hipo": "High-potential incident",
+      "safety_event_update": "Safety update",
+      "safety_event_closed": "Safety closed"
+    },
+    "categories": {
+      "all": "All",
+      "tickets": "Tickets",
+      "hotlist": "Hotlist",
+      "compliance": "Compliance",
+      "crew": "Crew",
+      "comments": "Comments",
+      "system": "System",
+      "safety": "Safety Incidents"
     },
     "slowDown": {
       "brief": "Slowing down briefly to keep things smooth.",
@@ -1213,6 +1232,8 @@
       "systemDesc": "Ratings and other notices.",
       "comments": "Comments & mentions",
       "commentsDesc": "@mentions and replies on tickets and hotlist threads you're on.",
+      "safety": "Safety Incidents",
+      "safetyDesc": "Stop-work orders, incidents, and HSE updates.",
       "commentMentionEmail": "Email me when @mentioned",
       "commentMentionEmailDesc": "Send an email immediately when someone @mentions you in a ticket or hotlist comment.",
       "commentReplyEmail": "Email reply digest",
@@ -1799,6 +1820,11 @@
     "unknownSite": "Unknown site"
   },
   "safety": {
+    "dashboardTitle": "Safety program",
+    "score": "Safety score",
+    "daysClean": "Days without recordable",
+    "openEvents": "Open events",
+    "openHipo": "Open HiPo",
     "inboxEmpty": "No safety reports yet.",
     "stopWork": "Stop work",
     "reportTitle": "Report safety issue",

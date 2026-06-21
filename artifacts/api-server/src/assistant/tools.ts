@@ -559,6 +559,38 @@ export const TOOLS: Anthropic.Tool[] = [
     },
   },
   {
+    name: "get_stock_quote",
+    description:
+      "Returns the latest US equity quote for a ticker symbol. Use for questions like 'what is Exxon trading at?' — pass symbol XOM (not the company name). Finnhub is preferred when FINNHUB_API_KEY is set (near real-time); otherwise falls back to Alpha Vantage end-of-day GLOBAL_QUOTE. Available to all signed-in users; not scoped to org data.",
+    input_schema: {
+      type: "object",
+      properties: {
+        symbol: {
+          type: "string",
+          description: "US stock ticker, e.g. XOM (Exxon Mobil), CVX, COP.",
+        },
+      },
+      required: ["symbol"],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "get_crude_oil_price",
+    description:
+      "Returns the latest West Texas Intermediate (WTI) light sweet crude oil price in USD per barrel from EIA data via Alpha Vantage. Use for 'price of a barrel of crude', 'WTI price', 'oil price today'. Requires ALPHA_VANTAGE_API_KEY. Free tier returns daily (default), weekly, or monthly snapshots — not a live NYMEX futures tick.",
+    input_schema: {
+      type: "object",
+      properties: {
+        interval: {
+          type: "string",
+          enum: ["daily", "weekly", "monthly"],
+          description: "Defaults to daily (most recent trading day).",
+        },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
     name: "mark_notifications_read",
     description:
       "Marks one notification or all unread notifications as read for the signed-in user — the same action as the bell inbox Mark all read button. Use when the user asks to clear their notification badge or mark alerts as read. Requires explicit user intent; do not call proactively.",

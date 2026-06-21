@@ -15,7 +15,7 @@ import {
 
 import TogglePillButton from "@/components/TogglePillButton";
 import { useColors } from "@/hooks/useColors";
-import { parseTicketIdFromHref } from "@/lib/assistant-deep-links";
+import { parseTicketIdFromNotificationLink } from "@/lib/notification-link";
 import type { NotificationRow } from "@/lib/notifications-ui";
 import {
   fetchSendToRecipients,
@@ -51,7 +51,7 @@ export default function NotificationSendToModal({
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [message, setMessage] = useState("");
 
-  const ticketId = item?.link ? parseTicketIdFromHref(item.link) : null;
+  const ticketId = item?.link ? parseTicketIdFromNotificationLink(item.link) : null;
 
   const loadRecipients = useCallback(async () => {
     if (!item || ticketId === null) return;

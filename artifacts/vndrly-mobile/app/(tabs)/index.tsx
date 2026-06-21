@@ -27,6 +27,7 @@ import ForemanScheduleTicketsModal from "@/components/ForemanScheduleTicketsModa
 import FreshnessPill from "@/components/FreshnessPill";
 import LayeredPillButton from "@/components/LayeredPillButton";
 import SafetyTrainingBanner from "@/components/SafetyTrainingBanner";
+import SafetyDashboardCard from "@/components/SafetyDashboardCard";
 import NudgeFlashOverlay from "@/components/NudgeFlashOverlay";
 import { useAuth } from "@/hooks/use-auth";
 import { useTicketNudgeFlash } from "@/hooks/useTicketNudgeFlash";
@@ -875,6 +876,12 @@ export default function HomeScreen() {
       <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
         <SafetyTrainingBanner />
       </View>
+
+      {(isPartnerViewer || isVendorOfficeViewer) && !isFieldEmployee ? (
+        <View style={{ paddingHorizontal: 16 }}>
+          <SafetyDashboardCard />
+        </View>
+      ) : null}
 
       {isForemanEmployee ? (
         <ForemanQuickActions

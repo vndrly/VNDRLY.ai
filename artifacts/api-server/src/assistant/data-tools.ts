@@ -573,6 +573,11 @@ import {
   isOpsDataTool,
   runOpsDataTool,
 } from "./data-tools-ops";
+import {
+  MARKET_DATA_TOOL_NAMES,
+  isMarketDataTool,
+  runMarketDataTool,
+} from "./data-tools-market";
 
 export const DATA_TOOL_NAMES = [
   "query_tickets",
@@ -585,6 +590,7 @@ export const DATA_TOOL_NAMES = [
   "query_nec1099_summary",
   ...EXT_DATA_TOOL_NAMES,
   ...OPS_DATA_TOOL_NAMES,
+  ...MARKET_DATA_TOOL_NAMES,
 ] as const;
 
 export type DataToolName = (typeof DATA_TOOL_NAMES)[number];
@@ -604,6 +610,9 @@ export async function runDataTool(
   }
   if (isOpsDataTool(name)) {
     return runOpsDataTool(name, args, session);
+  }
+  if (isMarketDataTool(name)) {
+    return runMarketDataTool(name, args, session);
   }
   switch (name) {
     case "query_tickets":

@@ -21,10 +21,22 @@ export type SafetyCapabilities = {
   isPartnerHse: boolean;
 };
 
+export type SafetyMetrics = {
+  safetyScore: number;
+  daysWithoutRecordable: number | null;
+  openEventCount: number;
+  openHipoCount: number;
+};
+
 type ApiEnvelope<T> = { success?: boolean; data: T };
 
 export async function fetchSafetyCapabilities(): Promise<SafetyCapabilities> {
   const json = await apiFetch<ApiEnvelope<SafetyCapabilities>>("/api/safety/capabilities");
+  return json.data;
+}
+
+export async function fetchSafetyMetrics(): Promise<SafetyMetrics> {
+  const json = await apiFetch<ApiEnvelope<SafetyMetrics>>("/api/safety/metrics");
   return json.data;
 }
 
