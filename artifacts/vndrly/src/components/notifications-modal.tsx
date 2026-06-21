@@ -32,6 +32,7 @@ import {
   LogIn,
   LogOut,
   Plug,
+  ShieldAlert,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -45,7 +46,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { notificationsApi, type NotificationRow } from "@/lib/notifications-api";
 import { buildNotificationMailtoUrl } from "@/lib/notification-mailto";
 import NotificationSendToDialog from "@/components/notification-send-to-dialog";
-import { parseTicketIdFromHref } from "@/lib/ticket-send-to-api";
+import { parseTicketIdFromNotificationLink } from "@/lib/ticket-send-to-api";
 import { useRateLimitGate } from "@/hooks/use-rate-limit-gate";
 import { cn } from "@/lib/utils";
 import { PILL_HEIGHT_CLASS, PILL_MIN_HEIGHT_CLASS } from "@/lib/pill-doctrine";
@@ -55,7 +56,37 @@ import { VNDRLY_LOGO_SQUARE } from "@/lib/vndrly-brand-assets";
 import { notificationsModalTheme, type NotificationsModalTheme } from "@/components/notifications-modal-tokens";
 import { useTheme } from "@/hooks/use-theme";
 
-const CATEGORY_IDS = ["all", "tickets", "hotlist", "compliance", "crew", "comments", "visitor", "system"] as const;
+const CATEGORY_IDS = ["all", "tickets", "hotlist", "compliance", "crew", "comments", "visitor", "system", "safety"] as const;
+
+const SAFETY_NOTIFICATION_TYPES = new Set([
+  "safety_event_submitted",
+  "safety_stop_work",
+  "safety_event_hipo",
+  "safety_event_update",
+  "safety_event_closed",
+]);
+
+function effectiveNotificationCategory(n: NotificationRow): string {
+  if (SAFETY_NOTIFICATION_TYPES.has(n.type) || n.category === "safety") return "safety";
+  return n.category ?? "system";
+}
+
+function stripLinkQuery(href: string): string {
+  const idx = href.indexOf("?");
+  return idx >= 0 ? href.slice(0, idx) : href;
+}
+
+function parseSiteLocationFromHref(href: string): { id: number; name: string | null } | null {
+  try {
+    const url = new URL(href, "https://vndrly.ai");
+    const rawId = url.searchParams.get("siteLocationId");
+    if (!rawId || !Number.isFinite(Number(rawId))) return null;
+    const name = url.searchParams.get("siteName");
+    return { id: Number(rawId), name: name ?? null };
+  } catch {
+    return null;
+  }
+}
 
 const TYPE_META: Record<string, { Icon: LucideIcon; labelKey: string }> = {
   ticket_assigned: { Icon: Briefcase, labelKey: "notifications.types.ticket_assigned" },
@@ -99,6 +130,11 @@ const TYPE_META: Record<string, { Icon: LucideIcon; labelKey: string }> = {
   comment_mention: { Icon: AtSign, labelKey: "notifications.types.comment_mention" },
   comment_added: { Icon: MessageSquare, labelKey: "notifications.types.comment_added" },
   hotlist_comment_added: { Icon: MessageSquare, labelKey: "notifications.types.hotlist_comment_added" },
+  safety_event_submitted: { Icon: ShieldAlert, labelKey: "notifications.types.safety_event_submitted" },
+  safety_stop_work: { Icon: ShieldAlert, labelKey: "notifications.types.safety_stop_work" },
+  safety_event_hipo: { Icon: ShieldAlert, labelKey: "notifications.types.safety_event_hipo" },
+  safety_event_update: { Icon: ShieldAlert, labelKey: "notifications.types.safety_event_update" },
+  safety_event_closed: { Icon: ShieldAlert, labelKey: "notifications.types.safety_event_closed" },
 };
 
 const DEFAULT_TYPE_META = { Icon: BellRing, labelKey: "notifications.types.default" };
@@ -185,9 +221,10 @@ function stopRowBubble(e: React.MouseEvent) {
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialTab?: string;
 };
 
-export default function NotificationsModal({ open, onOpenChange }: Props) {
+export default function NotificationsModal({ open, onOpenChange, initialTab = "all" }: Props) {
   const { t } = useTranslation();
   const timeAgo = useTimeAgo();
   const { user } = useAuth();
@@ -246,10 +283,14 @@ export default function NotificationsModal({ open, onOpenChange }: Props) {
     setRateLimitedState(rateLimited);
   }, [rateLimited]);
 
+  useEffect(() => {
+    if (open) setActiveTab(initialTab);
+  }, [open, initialTab]);
+
   const grouped = useMemo(() => {
     const map: Record<string, NotificationRow[]> = { all: list ?? [] };
     for (const n of list ?? []) {
-      const cat = n.category ?? "system";
+      const cat = effectiveNotificationCategory(n);
       (map[cat] = map[cat] || []).push(n);
     }
     return map;
@@ -423,12 +464,14 @@ export default function NotificationsModal({ open, onOpenChange }: Props) {
                     items.map((n) => {
                       const meta = typeMetaFor(n.type);
                       const Icon = meta.Icon;
+                      const rowHref = n.link ? stripLinkQuery(n.link) : null;
+                      const siteLocation = n.link ? parseSiteLocationFromHref(n.link) : null;
                       const inner = (
                         <div
                           className={modalTheme.rowHoverClassName}
                           onClick={() => {
                             if (!n.isRead) markRead.mutate(n.id);
-                            if (n.link) onOpenChange(false);
+                            if (rowHref) onOpenChange(false);
                           }}
                           data-testid={`modal-notification-${n.id}`}
                         >
@@ -453,6 +496,21 @@ export default function NotificationsModal({ open, onOpenChange }: Props) {
                                 <p className="text-sm font-medium">{n.title}</p>
                                 {n.body && (
                                   <p className="mt-0.5 text-xs text-muted-foreground">{n.body}</p>
+                                )}
+                                {siteLocation && (
+                                  <Link
+                                    href={`/site-locations/${siteLocation.id}`}
+                                    className="mt-1 inline-block text-xs font-medium text-primary hover:underline"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      onOpenChange(false);
+                                    }}
+                                    data-testid={`modal-notification-${n.id}-site-link`}
+                                  >
+                                    {t("notifications.siteLocationLink", {
+                                      name: siteLocation.name ?? t("notifications.siteLocationFallback"),
+                                    })}
+                                  </Link>
                                 )}
                                 <p className="mt-0.5 text-[10px] text-muted-foreground">
                                   {timeAgo(n.createdAt)}
@@ -482,7 +540,7 @@ export default function NotificationsModal({ open, onOpenChange }: Props) {
                                 >
                                   {t("notifications.delete")}
                                 </FlatBubbleButton>
-                                {parseTicketIdFromHref(n.link ?? "") !== null ? (
+                                {parseTicketIdFromNotificationLink(n.link ?? "") !== null ? (
                                   <FlatBubbleButton
                                     theme={modalTheme}
                                     tone="brand"
@@ -509,10 +567,10 @@ export default function NotificationsModal({ open, onOpenChange }: Props) {
                           </div>
                         </div>
                       );
-                      return n.link ? (
+                      return rowHref ? (
                         <Link
                           key={n.id}
-                          href={n.link}
+                          href={rowHref}
                           onClick={() => {
                             if (!n.isRead) markRead.mutate(n.id);
                             onOpenChange(false);

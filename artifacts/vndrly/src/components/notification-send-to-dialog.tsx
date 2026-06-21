@@ -22,7 +22,7 @@ import {
   type NotificationsModalTheme,
 } from "@/components/notifications-modal-tokens";
 import {
-  parseTicketIdFromHref,
+  parseTicketIdFromNotificationLink,
   ticketSendToApi,
   type SendToGroupId,
   type SendToRecipientGroups,
@@ -123,7 +123,7 @@ export default function NotificationSendToDialog({
 
   const ticketId =
     assistantShare?.ticketId ??
-    (notification?.link ? parseTicketIdFromHref(notification.link) : null);
+    (notification?.link ? parseTicketIdFromNotificationLink(notification.link) : null);
   const hasSendContext = assistantShare != null || ticketId !== null;
 
   const recipientsQuery = useQuery({

@@ -61,7 +61,8 @@ export type NotificationCategory =
   | "crew"
   | "system"
   | "visitor"
-  | "comments";
+  | "comments"
+  | "safety";
 
 const TYPE_TO_CATEGORY: Record<string, NotificationCategory> = {
   ticket_assigned: "tickets",
@@ -119,11 +120,11 @@ const TYPE_TO_CATEGORY: Record<string, NotificationCategory> = {
   oa_connection_expiring: "system",
   visitor_checked_in: "visitor",
   visitor_checked_out: "visitor",
-  safety_event_submitted: "compliance",
-  safety_stop_work: "compliance",
-  safety_event_hipo: "compliance",
-  safety_event_update: "compliance",
-  safety_event_closed: "compliance",
+  safety_event_submitted: "safety",
+  safety_stop_work: "safety",
+  safety_event_hipo: "safety",
+  safety_event_update: "safety",
+  safety_event_closed: "safety",
   // Task #50 — comments thread fan-out. `comment_mention` covers BOTH
   // ticket and hotlist mentions (the route just varies the dedupeKey
   // and link); `comment_added` and `hotlist_comment_added` are
@@ -237,6 +238,7 @@ function categoryEnabled(prefs: typeof DEFAULT_PREFS, cat: NotificationCategory)
     case "system": return prefs.systemEnabled;
     case "visitor": return prefs.visitorEnabled;
     case "comments": return prefs.commentsEnabled;
+  case "safety": return prefs.complianceEnabled;
   }
 }
 
@@ -263,6 +265,7 @@ function categoryEmailEnabled(
       // don't accidentally start emailing about something we forgot
       // to map (e.g. a future "comment_reaction").
       return prefs.commentMentionEmailEnabled || prefs.commentReplyEmailEnabled;
+    case "safety": return prefs.complianceEmailEnabled;
   }
 }
 
@@ -295,6 +298,9 @@ export const HIGH_PRIORITY_NOTIFICATION_TYPES: ReadonlySet<string> = new Set([
   "ptt_message",
   "workflow_nudge",
   "ticket_flagged",
+  "safety_event_submitted",
+  "safety_stop_work",
+  "safety_event_hipo",
 ]);
 
 export function isHighPriorityNotificationType(type: string): boolean {

@@ -1461,8 +1461,11 @@
       "crew": "Crew",
       "comments": "Comments",
       "visitor": "Visitors",
-      "system": "System"
+      "system": "System",
+      "safety": "Safety Incidents"
     },
+    "siteLocationLink": "Site: {{name}}",
+    "siteLocationFallback": "View site location",
     "types": {
       "default": "Alert",
       "ticket_assigned": "Assigned to you",
@@ -1505,7 +1508,12 @@
       "visitor_checked_out": "Visitor check-out",
       "comment_mention": "Mention",
       "comment_added": "Comment reply",
-      "hotlist_comment_added": "Hotlist reply"
+      "hotlist_comment_added": "Hotlist reply",
+      "safety_event_submitted": "Safety incident",
+      "safety_stop_work": "Stop-work",
+      "safety_event_hipo": "High-potential incident",
+      "safety_event_update": "Safety update",
+      "safety_event_closed": "Safety closed"
     },
     "slowDown": {
       "brief": "Slowing down briefly to keep things smooth.",

@@ -3,15 +3,24 @@ import NotificationsModal from "@/components/notifications-modal";
 
 type NotificationsModalContextValue = {
   openNotifications: () => void;
+  openNotificationsWithCategory: (category: string) => void;
 };
 
 const NotificationsModalContext = createContext<NotificationsModalContextValue | null>(null);
 
 export function NotificationsModalProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
+  const [initialTab, setInitialTab] = useState("all");
   const value = useMemo(
     () => ({
-      openNotifications: () => setOpen(true),
+      openNotifications: () => {
+        setInitialTab("all");
+        setOpen(true);
+      },
+      openNotificationsWithCategory: (category: string) => {
+        setInitialTab(category);
+        setOpen(true);
+      },
     }),
     [],
   );
@@ -19,7 +28,7 @@ export function NotificationsModalProvider({ children }: { children: ReactNode }
   return (
     <NotificationsModalContext.Provider value={value}>
       {children}
-      <NotificationsModal open={open} onOpenChange={setOpen} />
+      <NotificationsModal open={open} onOpenChange={setOpen} initialTab={initialTab} />
     </NotificationsModalContext.Provider>
   );
 }

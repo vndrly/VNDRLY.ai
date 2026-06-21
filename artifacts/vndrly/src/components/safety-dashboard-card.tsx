@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "wouter";
 import { useTranslation } from "react-i18next";
 import { ShieldAlert } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CARD_INNER_TILE_CLICKABLE_CLASS } from "@/components/ui/card";
+import { useNotificationsModal } from "@/components/notifications-modal-context";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -15,6 +15,7 @@ type Metrics = {
 
 export function SafetyDashboardCard() {
   const { t } = useTranslation();
+  const notificationsModal = useNotificationsModal();
   const { data, isLoading } = useQuery({
     queryKey: ["safety-metrics"],
     queryFn: async () => {
@@ -37,7 +38,12 @@ export function SafetyDashboardCard() {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <Link href="/safety" className={CARD_INNER_TILE_CLICKABLE_CLASS + " block text-sm"}>
+        <button
+          type="button"
+          className={CARD_INNER_TILE_CLICKABLE_CLASS + " block w-full text-left text-sm"}
+          onClick={() => notificationsModal?.openNotificationsWithCategory("safety")}
+          data-testid="safety-dashboard-open-notifications"
+        >
           <div className="grid grid-cols-2 gap-3">
             <div>
               <div className="text-xs text-muted-foreground">{t("safety.score")}</div>
@@ -56,7 +62,7 @@ export function SafetyDashboardCard() {
               <div className="text-lg font-semibold">{data.openHipoCount}</div>
             </div>
           </div>
-        </Link>
+        </button>
       </CardContent>
     </Card>
   );

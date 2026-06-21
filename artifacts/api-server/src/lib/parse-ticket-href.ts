@@ -39,3 +39,22 @@ export function parseTicketIdFromHref(href: string): number | null {
 
   return null;
 }
+
+/** Ticket id from notification link — path (`/tickets/42`) or query (`?ticketId=42`). */
+export function parseTicketIdFromNotificationLink(href: string): number | null {
+  const fromPath = parseTicketIdFromHref(href);
+  if (fromPath !== null) return fromPath;
+  const trimmed = href.trim();
+  if (!trimmed) return null;
+  try {
+    const url = trimmed.startsWith("http") ? new URL(trimmed) : new URL(trimmed, "https://vndrly.ai");
+    const raw = url.searchParams.get("ticketId");
+    if (raw) {
+      const id = Number(raw);
+      if (Number.isInteger(id) && id > 0) return id;
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+}

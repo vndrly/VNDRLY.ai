@@ -7,7 +7,7 @@ import {
   notificationsTable,
   vendorPeopleTable,
 } from "@workspace/db";
-import { parseTicketIdFromHref } from "../lib/parse-ticket-href";
+import { parseTicketIdFromNotificationLink } from "../lib/parse-ticket-href";
 import { sendApiError } from "../lib/apiError";
 import { getSessionFromRequest } from "../lib/session";
 import { logger } from "../lib/logger";
@@ -246,7 +246,7 @@ router.get("/notifications/:id/send-to-recipients", async (req: Request, res: Re
     return;
   }
 
-  const ticketId = parseTicketIdFromHref(row.link ?? "");
+  const ticketId = parseTicketIdFromNotificationLink(row.link ?? "");
   if (ticketId === null) {
     sendApiError(
       res,
@@ -307,7 +307,7 @@ router.post("/notifications/:id/send-to", async (req: Request, res: Response): P
     return;
   }
 
-  const ticketId = parseTicketIdFromHref(row.link ?? "");
+  const ticketId = parseTicketIdFromNotificationLink(row.link ?? "");
   if (ticketId === null) {
     sendApiError(
       res,

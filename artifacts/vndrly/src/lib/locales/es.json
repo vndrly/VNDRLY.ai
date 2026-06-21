@@ -1461,8 +1461,11 @@
       "crew": "Cuadrilla",
       "comments": "Comentarios",
       "visitor": "Visitantes",
-      "system": "Sistema"
+      "system": "Sistema",
+      "safety": "Incidentes de seguridad"
     },
+    "siteLocationLink": "Sitio: {{name}}",
+    "siteLocationFallback": "Ver ubicación del sitio",
     "types": {
       "default": "Alerta",
       "ticket_assigned": "Asignado a ti",
@@ -1505,7 +1508,12 @@
       "visitor_checked_out": "Salida de visitante",
       "comment_mention": "Mención",
       "comment_added": "Respuesta a comentario",
-      "hotlist_comment_added": "Respuesta en hotlist"
+      "hotlist_comment_added": "Respuesta en hotlist",
+      "safety_event_submitted": "Incidente de seguridad",
+      "safety_stop_work": "Paro de trabajo",
+      "safety_event_hipo": "Incidente de alto potencial",
+      "safety_event_update": "Actualización de seguridad",
+      "safety_event_closed": "Seguridad cerrada"
     },
     "slowDown": {
       "brief": "Reduciendo el ritmo brevemente para mantener todo fluido.",
