@@ -21,6 +21,7 @@ import {
   View,
 } from "react-native";
 
+import { fetchSafetyCapabilities, reactivateSiteLocation } from "@/lib/safety-api";
 import { formatTicketTrackingNumber } from "@workspace/db/format";
 import { computeTicketTaxPreview } from "@workspace/db/ticket-tax-preview";
 
@@ -168,6 +169,8 @@ type SiteLocation = {
   afe?: string | null;
   id: number;
   name?: string | null;
+  status?: string | null;
+  isActive?: boolean | null;
   state?: string | null;
   latitude?: number | null;
   longitude?: number | null;
@@ -238,6 +241,20 @@ export default function TicketDetailScreen() {
   const colors = useColors();
   const [currentUser, setCurrentUser] = useState<StoredUser | null>(null);
   useEffect(() => { getUser().then(setCurrentUser).catch(() => {}); }, []);
+  useEffect(() => {
+    if (!currentUser) return;
+    if (currentUser.role === "admin") {
+      setIsPartnerHse(true);
+      return;
+    }
+    if (currentUser.role !== "partner") {
+      setIsPartnerHse(false);
+      return;
+    }
+    void fetchSafetyCapabilities()
+      .then((caps) => setIsPartnerHse(caps.isPartnerHse))
+      .catch(() => setIsPartnerHse(false));
+  }, [currentUser]);
   // Pre-warm location permission + a cached fix on mount, so En Route /
   // Check In / Check Out don't have to wait on a cold permission dialog
   // queued behind a closing modal.
@@ -271,6 +288,8 @@ export default function TicketDetailScreen() {
 
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [siteLocation, setSiteLocation] = useState<SiteLocation | null>(null);
+  const [isPartnerHse, setIsPartnerHse] = useState(false);
+  const [reactivatingSite, setReactivatingSite] = useState(false);
   const [items, setItems] = useState<LineItem[]>([]);
   const [notes, setNotes] = useState<NoteLog[]>([]);
   const [gpsLogs, setGpsLogs] = useState<GpsLog[]>([]);
@@ -2044,7 +2063,87 @@ export default function TicketDetailScreen() {
             </Text>
           </TouchableOpacity>
         ) : null}
+        {siteLocation && (siteLocation.status === "inactive" || siteLocation.isActive === false) ? (
+          <View
+            style={{
+              alignSelf: "flex-start",
+              marginTop: 8,
+              paddingHorizontal: 10,
+              paddingVertical: 4,
+              borderRadius: 999,
+              backgroundColor: "#fef2f2",
+              borderWidth: 1,
+              borderColor: "#fecaca",
+            }}
+            testID="badge-site-inactive"
+          >
+            <Text style={{ color: "#b91c1c", fontFamily: "Inter_600SemiBold", fontSize: 12 }}>
+              {t("siteLocations.statusInactive")}
+            </Text>
+          </View>
+        ) : null}
       </View>
+
+      {ticket.siteLocationId ? (
+        <LayeredPillButton
+          testID="button-safety-report"
+          inactive
+          height={40}
+          style={{ marginBottom: 12 }}
+          onPress={() =>
+            router.push(
+              `/safety-report?siteLocationId=${ticket.siteLocationId}&ticketId=${ticket.id}`,
+            )
+          }
+        >
+          <Feather name="shield" size={16} color="#ffffff" style={styles.actionBtnIconShadow} />
+          <Text style={[styles.actionBtnText, styles.actionBtnTextShadow, { color: "#ffffff" }]} numberOfLines={1}>
+            {t("ticketDetail.safetyReport")}
+          </Text>
+        </LayeredPillButton>
+      ) : null}
+
+      {siteLocation &&
+      (siteLocation.status === "inactive" || siteLocation.isActive === false) &&
+      isPartnerHse &&
+      ticket.siteLocationId ? (
+        <LayeredPillButton
+          testID="button-reactivate-site"
+          height={40}
+          style={{ marginBottom: 12 }}
+          loading={reactivatingSite}
+          disabled={reactivatingSite}
+          onPress={() => {
+            Alert.alert(
+              t("siteLocations.reactivateSiteConfirmTitle"),
+              t("siteLocations.reactivateSiteConfirmDescription"),
+              [
+                { text: t("common.cancel"), style: "cancel" },
+                {
+                  text: t("siteLocations.reactivateSite"),
+                  onPress: () => {
+                    setReactivatingSite(true);
+                    void reactivateSiteLocation(ticket.siteLocationId!)
+                      .then(async () => {
+                        const site = await apiFetch<SiteLocation>(
+                          `/api/site-locations/${ticket.siteLocationId}`,
+                        );
+                        setSiteLocation(site || null);
+                        Alert.alert(t("siteLocations.reactivateSuccess"));
+                      })
+                      .catch((e) => Alert.alert(t("siteLocations.reactivateFailed"), String(e)))
+                      .finally(() => setReactivatingSite(false));
+                  },
+                },
+              ],
+            );
+          }}
+        >
+          <Text style={[styles.actionBtnText, styles.actionBtnTextShadow, { color: "#ffffff" }]} numberOfLines={1}>
+            {reactivatingSite ? t("siteLocations.reactivating") : t("siteLocations.reactivateSite")}
+          </Text>
+        </LayeredPillButton>
+      ) : null}
 
       {/* ── Task #572: Assignment-removed banner ── */}
       {assignmentRemoved ? (

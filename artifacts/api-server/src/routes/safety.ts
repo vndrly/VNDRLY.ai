@@ -126,6 +126,12 @@ router.get("/safety/metrics", requireSession, async (req, res): Promise<void> =>
   res.json({ success: true, data: metrics });
 });
 
+router.get("/safety/capabilities", requireSession, async (req, res): Promise<void> => {
+  const session = readSession(req);
+  const isPartnerHse = await sessionHasPartnerHse(session);
+  res.json({ success: true, data: { isPartnerHse } });
+});
+
 router.get("/safety/training/status", requireSession, async (req, res): Promise<void> => {
   const session = readSession(req);
   if (!session.userId) {

@@ -306,6 +306,7 @@
     "vendorSuffix": " · {{vendor}}"
   },
   "ticketDetail": {
+    "safetyReport": "Reporte de seguridad",
     "paymentDetails": "Detalles del Pago",
     "disperseFunds": "Liberar Fondos",
     "disperseFundsTitle": "Liberar Fondos",
@@ -1552,7 +1553,14 @@
     "missingFields": "Ingrese nombre, dirección y ubicación.",
     "partnerRequired": "Se requiere contexto de socio para agregar un sitio.",
     "locationDenied": "Se necesita permiso de ubicación para fijar el sitio.",
-    "locationFailed": "No se pudo leer su ubicación."
+    "locationFailed": "No se pudo leer su ubicación.",
+    "statusInactive": "Inactivo",
+    "reactivateSite": "Reactivar sitio",
+    "reactivating": "Reactivando…",
+    "reactivateSuccess": "Sitio reactivado.",
+    "reactivateFailed": "No se pudo reactivar el sitio.",
+    "reactivateSiteConfirmTitle": "¿Reactivar este sitio?",
+    "reactivateSiteConfirmDescription": "Las cuadrillas podrán iniciar nuevo trabajo aquí."
   },
   "scanScreen": {
     "cameraDenied": "Se necesita acceso a la cámara para escanear códigos QR.",
@@ -1791,8 +1799,6 @@
     "unknownSite": "Sitio desconocido"
   },
   "safety": {
-    "inboxTitle": "Bandeja de seguridad",
-    "inboxSubtitle": "Cuasi accidentes, lesiones y paros de trabajo.",
     "inboxEmpty": "Aún no hay reportes de seguridad.",
     "stopWork": "Paro de trabajo",
     "reportTitle": "Reportar incidente de seguridad",
@@ -1807,7 +1813,16 @@
     "anonymous": "Reportar anónimamente",
     "submit": "Enviar reporte",
     "myReportsTitle": "Mis reportes de seguridad",
-    "details": "Detalles del evento"
+    "details": "Detalles del evento",
+    "trainingBannerTitle": "Complete el video de seguridad requerido",
+    "trainingBannerTap": "Toque para ver y marcar como completado",
+    "trainingPageTitle": "Capacitación en seguridad",
+    "trainingPageSubtitle": "Los videos requeridos para su rol deben completarse antes del trabajo de campo.",
+    "trainingWatchVideo": "Ver video",
+    "trainingMarkComplete": "Marcar completado",
+    "trainingCompleteToast": "Capacitación marcada como completada.",
+    "trainingCompleteFailed": "No se pudo marcar la capacitación como completada.",
+    "trainingAllComplete": "Toda la capacitación requerida está completa."
   },
   "taxTreatment": {
     "auto": "Auto (desde categoría)",

@@ -26,6 +26,7 @@ import ForemanQuickActions from "@/components/ForemanQuickActions";
 import ForemanScheduleTicketsModal from "@/components/ForemanScheduleTicketsModal";
 import FreshnessPill from "@/components/FreshnessPill";
 import LayeredPillButton from "@/components/LayeredPillButton";
+import SafetyTrainingBanner from "@/components/SafetyTrainingBanner";
 import NudgeFlashOverlay from "@/components/NudgeFlashOverlay";
 import { useAuth } from "@/hooks/use-auth";
 import { useTicketNudgeFlash } from "@/hooks/useTicketNudgeFlash";
@@ -869,6 +870,10 @@ export default function HomeScreen() {
             ) : null}
           </TouchableOpacity>
         ) : null}
+      </View>
+
+      <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
+        <SafetyTrainingBanner />
       </View>
 
       {isForemanEmployee ? (

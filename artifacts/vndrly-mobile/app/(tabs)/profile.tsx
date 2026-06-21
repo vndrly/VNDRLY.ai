@@ -16,6 +16,7 @@ import ActiveOrgIndicator from "@/components/ActiveOrgIndicator";
 import AmberButton from "@/components/AmberButton";
 import InPageHeader from "@/components/InPageHeader";
 import LayeredPillButton from "@/components/LayeredPillButton";
+import SafetyTrainingBanner from "@/components/SafetyTrainingBanner";
 import ProfilePhotoImage from "@/components/ProfilePhotoImage";
 import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/useColors";
@@ -222,6 +223,7 @@ export default function ProfileScreen() {
         right={<ActiveOrgIndicator />}
       />
       <ScrollView contentContainerStyle={styles.scrollContent}>
+      <SafetyTrainingBanner />
       <View style={styles.header}>
         <TouchableOpacity onPress={onChangePhoto} style={styles.avatarWrap}>
           {hasPhoto ? (

@@ -25,6 +25,7 @@ import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { visitsApi, type VisitorRow } from "@/lib/visits-api";
+import { reactivateSiteLocation, useSafetyCapabilities } from "@/lib/safety-api";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
@@ -89,6 +90,8 @@ export default function SiteLocationDetail({ id }: { id: number }) {
   const [editingAfe, setEditingAfe] = useState(false);
   const [editAfe, setEditAfe] = useState("");
   const [statusOpen, setStatusOpen] = useState(false);
+  const [reactivateOpen, setReactivateOpen] = useState(false);
+  const [reactivating, setReactivating] = useState(false);
   const statusRef = useRef<HTMLDivElement>(null);
   const [geoLocating, setGeoLocating] = useState(false);
   const [editingRadius, setEditingRadius] = useState(false);
@@ -207,6 +210,30 @@ export default function SiteLocationDetail({ id }: { id: number }) {
   }, []);
 
   const isAdmin = user?.role === "admin";
+  const { data: safetyCaps } = useSafetyCapabilities();
+  const canReactivateSite =
+    isAdmin || (user?.role === "partner" && safetyCaps?.isPartnerHse === true);
+  const siteIsInactive = site?.status === "inactive" || site?.isActive === false;
+  const statusOptions = (Object.values(SiteLocationStatus) as SiteLocationStatusType[]).filter(
+    (s) => !(siteIsInactive && s === SiteLocationStatus.active && !canReactivateSite),
+  );
+  const showStatusDropdown = canManageAssignments && !(siteIsInactive && !canReactivateSite);
+
+  const handleReactivate = () => {
+    setReactivating(true);
+    reactivateSiteLocation(id)
+      .then(() => {
+        queryClient.invalidateQueries({ queryKey: getGetSiteLocationQueryKey(id) });
+        queryClient.invalidateQueries({ queryKey: getListSiteLocationsQueryKey() });
+        toast({ title: t("siteLocations.reactivateSuccess") });
+        setReactivateOpen(false);
+      })
+      .catch(() => {
+        toast({ title: t("siteLocations.reactivateFailed"), variant: "destructive" });
+      })
+      .finally(() => setReactivating(false));
+  };
+
   const handleUnhide = () => {
     updateSite.mutate(
       { id, data: { hidden: false } },
@@ -867,9 +894,9 @@ export default function SiteLocationDetail({ id }: { id: number }) {
                 </p>
               ) : null}
             </div>
-            <div className="flex items-center gap-2" ref={statusRef}>
+            <div className="flex items-center gap-2 flex-wrap" ref={statusRef}>
               <span className="text-sm text-muted-foreground">{t("siteLocations.statusLabel")}</span>
-              {canManageAssignments ? (
+              {showStatusDropdown ? (
                 <div className="relative">
                   <div className="cursor-pointer flex items-center gap-1" onClick={() => setStatusOpen(!statusOpen)} data-testid="button-status-dropdown">
                     <StatusBadge status={site.status} className="w-[100px] justify-center" />
@@ -877,7 +904,7 @@ export default function SiteLocationDetail({ id }: { id: number }) {
                   </div>
                   {statusOpen && (
                     <div className="absolute left-0 top-[32px] z-50 bg-white border rounded-lg shadow-lg p-2 space-y-1">
-                      {(Object.values(SiteLocationStatus) as SiteLocationStatusType[]).map((s) => (
+                      {statusOptions.map((s) => (
                         <div key={s} className="cursor-pointer" onClick={() => handleStatusChange(s)} data-testid={`status-option-${s}`}>
                           <StatusBadge status={s} className="w-[100px] justify-center" />
                         </div>
@@ -888,6 +915,31 @@ export default function SiteLocationDetail({ id }: { id: number }) {
               ) : (
                 <StatusBadge status={site.status} className="w-[100px] justify-center" />
               )}
+              {siteIsInactive && canReactivateSite ? (
+                <>
+                  <GreenV2Button
+                    type="button"
+                    onClick={() => setReactivateOpen(true)}
+                    data-testid="button-reactivate-site"
+                  >
+                    {t("siteLocations.reactivateSite")}
+                  </GreenV2Button>
+                  <AlertDialog open={reactivateOpen} onOpenChange={(o) => { if (!reactivating) setReactivateOpen(o); }}>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>{t("siteLocations.reactivateSiteConfirmTitle")}</AlertDialogTitle>
+                        <AlertDialogDescription>{t("siteLocations.reactivateSiteConfirmDescription")}</AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel disabled={reactivating}>{t("siteLocations.cancel")}</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleReactivate} disabled={reactivating} data-testid="button-confirm-reactivate-site">
+                          {reactivating ? t("siteLocations.reactivating") : t("siteLocations.reactivateSite")}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </>
+              ) : null}
             </div>
             <div className="pt-2">
               <div className="flex items-center justify-between mb-2">

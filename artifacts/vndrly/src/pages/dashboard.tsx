@@ -34,7 +34,9 @@ import RedButton from "@/components/red-button";
 import { PngPillButton } from "@/components/png-pill-rollover";
 import LightGreyRedButton from "@/components/light-grey-red-button";
 import { useRateLimitGate } from "@/hooks/use-rate-limit-gate";
+import HotlistSection from "@/components/hotlist-section";
 import { SafetyDashboardCard } from "@/components/safety-dashboard-card";
+import { SafetyTrainingBanner } from "@/components/safety-training-banner";
 import { PillColorLayer } from "@/components/png-pill-chrome";
 import { AssistantMetricsCard } from "@/components/assistant-metrics-card";
 import { RateLimitBudgetsCard } from "@/components/rate-limit-budgets-card";
@@ -765,6 +767,8 @@ export default function Dashboard() {
       </div>
 
       <HotlistSection />
+
+      <SafetyTrainingBanner />
 
       {(isPartner || isVendor) && <SafetyDashboardCard />}
 

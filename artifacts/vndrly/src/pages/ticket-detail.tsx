@@ -57,7 +57,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
-import { CheckCircle2, XCircle, Send, RotateCcw, MapPin, Pencil, Save, X, AlertTriangle, ShieldCheck, FileText, ClipboardList, BookOpen, DollarSign, Plus, Trash2, Printer, CalendarClock, Users, History, UserPlus, UserCheck, UserX, Repeat, Ban, Play, Undo2, Camera, Receipt } from "lucide-react";
+import { CheckCircle2, XCircle, Send, RotateCcw, MapPin, Pencil, Save, X, AlertTriangle, ShieldCheck, ShieldAlert, FileText, ClipboardList, BookOpen, DollarSign, Plus, Trash2, Printer, CalendarClock, Users, History, UserPlus, UserCheck, UserX, Repeat, Ban, Play, Undo2, Camera, Receipt } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
@@ -2581,6 +2581,14 @@ export default function TicketDetail({ id }: { id: number }) {
       <Card>
         <CardHeader><CardTitle>{t("ticketDetail.actions")}</CardTitle></CardHeader>
         <CardContent className="flex gap-3 flex-wrap items-center">
+          {ticket.siteLocationId ? (
+            <Link href={`/safety-report?siteLocationId=${ticket.siteLocationId}&ticketId=${ticket.id}`}>
+              <PngPillButton color="image" data-testid="button-safety-report">
+                <ShieldAlert className="w-4 h-4" />
+                {t("ticketDetail.safetyReport")}
+              </PngPillButton>
+            </Link>
+          ) : null}
           {user?.role === "field_employee" ? (
             <>
               {/* Task #620 â€” status pill mapping moved into the shared

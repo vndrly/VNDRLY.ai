@@ -23,6 +23,8 @@ import { PhotoUploadField } from "@/components/photo-upload-field";
 import { SiteLocationMap } from "@/components/site-location-map";
 import { forwardGeocode, reverseGeocode } from "@/lib/geocoding";
 import { useAuth } from "@/hooks/use-auth";
+import { reactivateSiteLocation, useSafetyCapabilities } from "@/lib/safety-api";
+import GreenV2Button from "@/components/green-v2-button";
 
 // Field-ops default geofence: 1 mile (1,609 m). Picked because well
 // access roads + rig pads frequently sprawl beyond a tight 500 m
@@ -76,6 +78,10 @@ export default function SiteLocations() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [, navigate] = useLocation();
+  const { data: safetyCaps } = useSafetyCapabilities();
+  const canReactivateSite =
+    user?.role === "admin" || (user?.role === "partner" && safetyCaps?.isPartnerHse === true);
+  const [reactivatingId, setReactivatingId] = useState<number | null>(null);
   const [open, setOpen] = useState(false);
   const initialPartnerId = isPartner ? String(user!.partnerId!) : "";
   const [form, setForm] = useState<AddSiteForm>(() => emptyForm(initialPartnerId));
@@ -123,6 +129,19 @@ export default function SiteLocations() {
   const updateCoords = (lat: number, lng: number, opts?: { fillAddress?: boolean }) => {
     setForm((prev) => ({ ...prev, latitude: String(lat.toFixed(6)), longitude: String(lng.toFixed(6)) }));
     if (opts?.fillAddress) reverseFromCoords(lat, lng);
+  };
+
+  const handleReactivateSite = (siteId: number) => {
+    setReactivatingId(siteId);
+    reactivateSiteLocation(siteId)
+      .then(() => {
+        queryClient.invalidateQueries({ queryKey: getListSiteLocationsQueryKey(siteParams) });
+        toast({ title: t("siteLocations.reactivateSuccess") });
+      })
+      .catch(() => {
+        toast({ title: t("siteLocations.reactivateFailed"), variant: "destructive" });
+      })
+      .finally(() => setReactivatingId(null));
   };
 
   const handleUseMyLocation = () => {
@@ -695,7 +714,21 @@ export default function SiteLocations() {
                     <TableCell>{s.partnerName || "-"}</TableCell>
                     <TableCell className="max-w-[200px] truncate">{s.address}</TableCell>
                     <TableCell><code className="text-xs bg-muted px-2 py-1 rounded">{s.siteCode}</code></TableCell>
-                    <TableCell><StatusBadge status={s.status} className="w-[100px] justify-center" /></TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <StatusBadge status={s.status} className="w-[100px] justify-center" />
+                        {(s.status === "inactive" || s.isActive === false) && canReactivateSite ? (
+                          <GreenV2Button
+                            type="button"
+                            onClick={() => handleReactivateSite(s.id)}
+                            disabled={reactivatingId === s.id}
+                            data-testid={`button-reactivate-site-${s.id}`}
+                          >
+                            {reactivatingId === s.id ? t("siteLocations.reactivating") : t("siteLocations.reactivateSite")}
+                          </GreenV2Button>
+                        ) : null}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <span className="text-sm text-muted-foreground" data-testid={`text-radius-${s.id}`}>

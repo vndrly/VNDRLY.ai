@@ -306,6 +306,7 @@
     "vendorSuffix": " · {{vendor}}"
   },
   "ticketDetail": {
+    "safetyReport": "Safety report",
     "paymentDetails": "Payment Details",
     "disperseFunds": "Disperse Funds",
     "disperseFundsTitle": "Disperse Funds",
@@ -1552,7 +1553,14 @@
     "missingFields": "Enter a name, address, and location.",
     "partnerRequired": "Partner context is required to add a site.",
     "locationDenied": "Location permission is required to pin the site.",
-    "locationFailed": "Could not read your location."
+    "locationFailed": "Could not read your location.",
+    "statusInactive": "Inactive",
+    "reactivateSite": "Reactivate site",
+    "reactivating": "Reactivating…",
+    "reactivateSuccess": "Site reactivated.",
+    "reactivateFailed": "Could not reactivate site.",
+    "reactivateSiteConfirmTitle": "Reactivate this site?",
+    "reactivateSiteConfirmDescription": "Field crews will be able to start new work here again."
   },
   "scanScreen": {
     "cameraDenied": "Camera access is required to scan QR codes.",
@@ -1791,8 +1799,6 @@
     "unknownSite": "Unknown site"
   },
   "safety": {
-    "inboxTitle": "Safety inbox",
-    "inboxSubtitle": "Near misses, injuries, and stop-work events.",
     "inboxEmpty": "No safety reports yet.",
     "stopWork": "Stop work",
     "reportTitle": "Report safety issue",
@@ -1807,7 +1813,16 @@
     "anonymous": "Report anonymously",
     "submit": "Submit report",
     "myReportsTitle": "My safety reports",
-    "details": "Event details"
+    "details": "Event details",
+    "trainingBannerTitle": "Complete required safety video",
+    "trainingBannerTap": "Tap to watch and mark complete",
+    "trainingPageTitle": "Safety training",
+    "trainingPageSubtitle": "Required videos for your role must be completed before field work.",
+    "trainingWatchVideo": "Watch video",
+    "trainingMarkComplete": "Mark complete",
+    "trainingCompleteToast": "Training marked complete.",
+    "trainingCompleteFailed": "Could not mark training complete.",
+    "trainingAllComplete": "All required training is complete."
   },
   "taxTreatment": {
     "auto": "Auto (from category)",
