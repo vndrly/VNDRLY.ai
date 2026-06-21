@@ -1,14 +1,15 @@
 type LiveLocationsSession = {
   role: string;
   vendorId: number | null;
+  partnerId?: number | null;
   vendorRole?: string | null;
 };
 
 export type LiveLocationsScope =
-  | { ok: true; scopedVendorId: number | null }
+  | { ok: true; scopedVendorId: number | null; scopedPartnerId: number | null }
   | { ok: false; status: number; body: { code: string; error: string } };
 
-/** Who may read `/api/live-locations` (+ SSE) and how vendor scope is applied. */
+/** Who may read `/api/live-locations` (+ SSE) and how vendor/partner scope is applied. */
 export function resolveLiveLocationsScope(
   session: LiveLocationsSession,
   filterVendorId: number | null,
@@ -20,10 +21,16 @@ export function resolveLiveLocationsScope(
     if (filterVendorId && filterVendorId !== session.vendorId) {
       return { ok: false, status: 403, body: { code: "visitor.wrong_vendor", error: "wrong_vendor" } };
     }
-    return { ok: true, scopedVendorId: session.vendorId };
+    return { ok: true, scopedVendorId: session.vendorId, scopedPartnerId: null };
   }
   if (session.role === "admin") {
-    return { ok: true, scopedVendorId: filterVendorId };
+    return { ok: true, scopedVendorId: filterVendorId, scopedPartnerId: null };
+  }
+  if (session.role === "partner") {
+    if (!session.partnerId) {
+      return { ok: false, status: 403, body: { code: "visitor.forbidden", error: "forbidden" } };
+    }
+    return { ok: true, scopedVendorId: null, scopedPartnerId: session.partnerId };
   }
   if (session.role === "field_employee") {
     const isForeman =
@@ -37,7 +44,7 @@ export function resolveLiveLocationsScope(
     if (filterVendorId && filterVendorId !== session.vendorId) {
       return { ok: false, status: 403, body: { code: "visitor.wrong_vendor", error: "wrong_vendor" } };
     }
-    return { ok: true, scopedVendorId: session.vendorId };
+    return { ok: true, scopedVendorId: session.vendorId, scopedPartnerId: null };
   }
   return { ok: false, status: 403, body: { code: "visitor.forbidden", error: "forbidden" } };
 }

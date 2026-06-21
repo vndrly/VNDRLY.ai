@@ -129,12 +129,15 @@ vi.mock("drizzle-orm", () => {
 });
 
 
-function cookieFor(role: string, opts: { userId?: number; vendorId?: number | null } = {}) {
+function cookieFor(
+  role: string,
+  opts: { userId?: number; vendorId?: number | null; partnerId?: number | null } = {},
+) {
   return buildTestCookie({
     userId: opts.userId ?? 10,
     role,
     vendorId: opts.vendorId === undefined ? null : opts.vendorId,
-    partnerId: null,
+    partnerId: opts.partnerId === undefined ? null : opts.partnerId,
   });
 }
 
@@ -286,17 +289,41 @@ describe("Crew Map live SSE pipeline", () => {
     expect(body.code).toBe("auth.unauthenticated");
   });
 
-  it("rejects field_employee role and partner role from subscribing", async () => {
+  it("rejects field_employee role from subscribing", async () => {
     const fe = await fetch(`${baseUrl}/api/live-locations/events`, {
       headers: { cookie: cookieFor("field_employee", { vendorId: 1 }) },
     });
     expect(fe.status).toBe(403);
     expect(((await fe.json()) as { code?: string }).code).toBe("visitor.forbidden");
-    const partner = await fetch(`${baseUrl}/api/live-locations/events`, {
-      headers: { cookie: cookieFor("partner", { vendorId: null }) },
+  });
+
+  it("partner subscriber only sees pings at their own partner sites", async () => {
+    const partner = openSseClient(
+      "/api/live-locations/events",
+      cookieFor("partner", { partnerId: 7 }),
+    );
+    await partner.ready;
+
+    await postPing(cookieFor("field_employee", { userId: 200, vendorId: 2 }), {
+      ticketId: 20,
+      latitude: 30,
+      longitude: -100,
+      deviceId: "dev-2",
     });
-    expect(partner.status).toBe(403);
-    expect(((await partner.json()) as { code?: string }).code).toBe("visitor.forbidden");
+
+    const own = await postPing(cookieFor("field_employee", { userId: 100, vendorId: 1 }), {
+      ticketId: 10,
+      latitude: 32,
+      longitude: -103,
+      deviceId: "dev-1",
+    });
+    expectStatus(own, 201);
+
+    const evt = await partner.waitFor((e) => e.event === "location.ping");
+    expect(evt.data.location.sitePartnerId).toBe(7);
+    expect(evt.data.location.ticketId).toBe(10);
+
+    partner.close();
   });
 
   it("admin subscriber receives a ping after POST /api/location-pings, with the full payload shape", async () => {

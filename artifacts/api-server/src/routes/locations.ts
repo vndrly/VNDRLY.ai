@@ -474,12 +474,14 @@ router.get("/live-locations", async (req: Request, res: Response) => {
     return;
   }
   const scopedVendorId = scope.scopedVendorId;
+  const scopedPartnerId = scope.scopedPartnerId;
 
   const sinceTs = new Date(Date.now() - LIVE_PING_FRESH_MS);
   const ticketFilters = [
     inArray(ticketsTable.lifecycleState, ACTIVE_LIFECYCLE_STATES as unknown as string[]),
   ];
   if (scopedVendorId) ticketFilters.push(eq(ticketsTable.vendorId, scopedVendorId));
+  if (scopedPartnerId) ticketFilters.push(eq(siteLocationsTable.partnerId, scopedPartnerId));
   if (filterSiteLocationId) ticketFilters.push(eq(ticketsTable.siteLocationId, filterSiteLocationId));
 
   // Latest live_ping per ticket in freshness window — proper "latest per group"
@@ -640,11 +642,13 @@ router.get("/live-locations/events", async (req: Request, res: Response): Promis
     return;
   }
   const scopedVendorId = scope.scopedVendorId;
+  const scopedPartnerId = scope.scopedPartnerId;
 
   const visible = (ev: PublishedLocationEvent): boolean => {
     const loc = ev.location;
     if (!ACTIVE_LIFECYCLE_STATES.includes(loc.lifecycleState as any)) return false;
     if (scopedVendorId && loc.vendorId !== scopedVendorId) return false;
+    if (scopedPartnerId != null && loc.sitePartnerId !== scopedPartnerId) return false;
     if (filterSiteLocationId && loc.siteLocationId !== filterSiteLocationId) return false;
     return true;
   };
