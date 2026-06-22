@@ -20,7 +20,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/useColors";
 import { useTicketsRateLimitGate } from "@/hooks/use-tickets-rate-limit-gate";
 import { apiFetch } from "@/lib/api";
-import { APP_SCREEN_ROOT } from "@/lib/nav-pane-tokens";
 import { isFieldEmployeeUser } from "@/lib/mobile-viewer";
 import {
   fetchPortalTicketsForHome,
@@ -149,10 +148,10 @@ export default function HistoryScreen() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: APP_SCREEN_ROOT }}>
+      <View style={{ flex: 1, backgroundColor: "transparent" }}>
         <Stack.Screen options={{ headerShown: false }} />
         <InPageHeader title={t("tickets.history")} right={headerRight()} />
-        <View style={[styles.center, { backgroundColor: APP_SCREEN_ROOT }]}>
+        <View style={[styles.center, { backgroundColor: "transparent" }]}>
           <ActivityIndicator color={colors.primary} />
         </View>
       </View>
@@ -160,11 +159,11 @@ export default function HistoryScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: APP_SCREEN_ROOT }}>
+    <View style={{ flex: 1, backgroundColor: "transparent" }}>
       <Stack.Screen options={{ headerShown: false }} />
       <InPageHeader title={t("tickets.history")} right={headerRight()} />
       <FlatList
-        style={{ backgroundColor: APP_SCREEN_ROOT }}
+        style={{ backgroundColor: "transparent" }}
         contentContainerStyle={{ padding: 16 }}
         data={tickets}
         keyExtractor={(item) => String(item.id)}

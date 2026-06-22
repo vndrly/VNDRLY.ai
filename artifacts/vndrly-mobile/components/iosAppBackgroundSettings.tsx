@@ -1,0 +1,170 @@
+import React from "react";
+import {
+  Dimensions,
+  Image as RNImage,
+  StyleSheet,
+  View,
+  type StyleProp,
+  type ViewStyle,
+} from "react-native";
+import Svg, {
+  Defs,
+  Image as SvgImage,
+  LinearGradient,
+  Mask,
+  RadialGradient,
+  Rect,
+  Stop,
+} from "react-native-svg";
+import { SvgXml } from "react-native-svg";
+
+/**
+ * iOS app background — ONLY these three elements (user settings):
+ * 1. Background color
+ * 2. Header image (fade into color)
+ * 3. Halftone pattern
+ */
+export const IOS_APP_BACKGROUND_SETTINGS = {
+  backgroundColor: "#2e3135",
+  headerImage: require("@/assets/images/ios-app-background-header.png"),
+  headerHeight: 200,
+  headerOpacity: 0.85,
+  halftoneOpacity: 0.22,
+  halftoneScaleWidth: 2.85,
+  halftoneScaleHeight: 1.95,
+  topCalmStops: [
+    { offset: "0", opacity: 0.72 },
+    { offset: "0.22", opacity: 0.2 },
+    { offset: "0.42", opacity: 0 },
+  ],
+  halftoneVignetteStops: [
+    { offset: "0.18", opacity: 0 },
+    { offset: "0.5", opacity: 0.25 },
+    { offset: "1", opacity: 1 },
+  ],
+} as const;
+
+const HALFTONE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 959 593" fill="none"><defs><pattern id="us-halftone-dots" width="7" height="7" patternUnits="userSpaceOnUse"><circle cx="3.5" cy="3.5" r="1.35" fill="#ffffff" fill-opacity="0.95"/></pattern></defs><path d="M57.4,45.0 L101.2,45.0 L147.0,45.0 L162.2,45.0 L209.3,45.0 L254.8,45.0 L301.2,45.0 L347.5,45.0 L400.0,45.0 L452.8,44.9 L484.8,45.0 L484.8,36.9 L490.0,36.8 L492.8,48.3 L497.6,51.9 L508.4,53.2 L524.1,56.5 L539.1,63.0 L551.6,60.3 L570.6,65.7 L575.7,65.5 L589.5,59.6 L604.0,67.2 L619.1,75.3 L631.6,82.3 L643.5,89.0 L645.0,94.5 L648.7,96.6 L647.7,98.6 L651.9,99.3 L654.9,97.1 L655.6,102.1 L658.8,105.4 L663.0,105.4 L665.3,108.0 L663.4,111.7 L679.4,121.5 L682.7,140.5 L685.8,158.8 L681.3,171.2 L674.1,182.7 L670.7,190.0 L670.3,192.2 L672.0,195.2 L677.3,198.5 L681.2,198.5 L699.1,187.3 L715.0,184.0 L735.2,173.6 L735.5,171.5 L734.1,165.1 L731.6,161.0 L738.6,157.6 L753.8,157.5 L767.9,157.6 L772.9,149.4 L774.8,147.8 L791.1,132.7 L798.1,128.8 L821.5,128.7 L850.0,128.6 L851.5,123.5 L856.5,122.4 L863.0,119.2 L868.5,109.6 L873.2,93.3 L885.0,77.5 L890.1,83.0 L900.5,79.4 L907.4,85.5 L907.3,114.1 L917.4,125.9 L920.1,132.8 L903.6,143.0 L887.8,150.2 L871.4,156.4 L863.3,168.8 L860.7,173.6 L860.5,184.7 L865.6,195.8 L872.0,196.3 L870.4,188.7 L875.0,193.3 L873.8,199.3 L863.4,202.7 L855.9,202.3 L844.5,205.9 L837.8,207.0 L828.8,208.0 L816.0,214.1 L838.6,210.1 L843.2,214.1 L821.6,220.4 L811.8,220.5 L812.2,217.9 L807.5,223.7 L812.1,224.7 L808.7,239.7 L797.5,255.8 L796.3,250.5 L792.9,249.4 L787.9,244.1 L791.1,255.4 L794.9,259.1 L795.2,267.1 L790.2,275.2 L781.5,292.0 L780.1,291.1 L784.9,276.9 L777.0,268.8 L775.2,251.4 L772.2,260.5 L775.5,273.8 L765.3,270.5 L775.9,277.3 L776.6,297.2 L781.0,298.7 L782.6,305.9 L784.8,326.9 L775.0,342.4 L759.0,348.7 L748.9,360.9 L741.2,362.3 L733.3,370.0 L731.1,377.0 L714.2,390.6 L705.5,400.6 L698.2,413.0 L695.8,427.9 L698.5,442.5 L703.7,460.4 L710.6,475.3 L710.6,484.3 L718.0,508.6 L717.5,522.8 L716.8,530.9 L712.9,543.7 L708.3,546.4 L700.7,543.8 L698.3,534.6 L692.4,529.8 L684.2,511.8 L677.1,495.7 L674.7,487.5 L677.9,473.6 L673.6,462.1 L661.6,444.6 L655.5,441.3 L639.9,450.9 L637.2,449.8 L629.7,440.0 L620.0,434.8 L602.6,437.5 L588.9,435.2 L577.1,436.6 L570.7,439.9 L573.5,445.4 L573.2,453.9 L576.5,458.1 L573.6,460.8 L567.8,457.8 L562.0,461.7 L550.8,461.1 L539.3,450.0 L525.8,452.6 L514.6,447.8 L505.0,449.2 L492.0,454.1 L478.0,469.7 L462.6,478.7 L454.2,488.7 L450.6,498.2 L450.5,512.6 L451.2,522.7 L454.2,529.8 L448.2,530.4 L437.2,525.8 L425.1,519.3 L420.8,509.5 L417.4,494.8 L408.3,482.8 L403.0,470.6 L395.2,456.2 L384.3,447.9 L371.7,448.3 L362.0,464.8 L349.2,458.5 L341.2,452.2 L337.4,440.7 L332.2,429.7 L323.1,420.5 L315.2,413.9 L309.5,406.5 L282.8,406.4 L282.8,415.1 L270.5,415.1 L239.8,415.3 L204.6,400.5 L181.3,390.3 L182.7,386.2 L163.1,388.5 L145.6,390.1 L143.0,379.4 L132.9,367.3 L125.7,364.8 L124.1,358.8 L115.4,357.7 L109.9,352.1 L95.5,350.0 L91.6,346.6 L89.7,335.1 L74.7,314.1 L61.9,284.9 L62.4,280.1 L55.6,273.2 L43.7,255.6 L41.5,238.5 L33.3,227.1 L36.7,209.7 L36.1,191.7 L31.2,175.6 L37.2,155.9 L39.1,136.9 L41.0,117.8 L38.2,89.7 L33.3,71.8 L28.8,62.1 L30.7,58.0 L53.0,65.1 L61.3,84.9 L65.1,79.3 L62.6,62.2 L57.4,45.0 Z" fill="url(#us-halftone-dots)"/></svg>`;
+
+const HEADER_IMAGE_URI = RNImage.resolveAssetSource(
+  IOS_APP_BACKGROUND_SETTINGS.headerImage,
+).uri;
+
+type Props = {
+  style?: StyleProp<ViewStyle>;
+};
+
+/** Renders the three authorized background layers only. Mount once in app/_layout.tsx. */
+export default function IosAppBackgroundStack({ style }: Props) {
+  const { width, height } = Dimensions.get("window");
+  const s = IOS_APP_BACKGROUND_SETTINGS;
+  const halftoneWidth = width * s.halftoneScaleWidth;
+  const halftoneHeight = height * s.halftoneScaleHeight;
+  const halftoneLeft = width / 2 - halftoneWidth / 2;
+  const halftoneTop = height / 2 - halftoneHeight / 2;
+
+  return (
+    <View
+      style={[StyleSheet.absoluteFill, { backgroundColor: s.backgroundColor }, style]}
+      pointerEvents="none"
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      testID="ios-app-background-stack"
+    >
+      <Svg
+        width={width}
+        height={s.headerHeight}
+        style={[styles.headerBand, { height: s.headerHeight }]}
+        pointerEvents="none"
+      >
+        <Defs>
+          <LinearGradient id="iosHeaderFade" x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0" stopColor="white" stopOpacity="1" />
+            <Stop offset="1" stopColor="white" stopOpacity="0" />
+          </LinearGradient>
+          <Mask id="iosHeaderFadeMask">
+            <Rect
+              x={0}
+              y={0}
+              width={width}
+              height={s.headerHeight}
+              fill="url(#iosHeaderFade)"
+            />
+          </Mask>
+        </Defs>
+        <SvgImage
+          href={HEADER_IMAGE_URI}
+          x={0}
+          y={0}
+          width={width}
+          height={s.headerHeight}
+          preserveAspectRatio="xMidYMin slice"
+          opacity={s.headerOpacity}
+          mask="url(#iosHeaderFadeMask)"
+        />
+      </Svg>
+
+      <View style={styles.halftoneLayer}>
+        <SvgXml
+          xml={HALFTONE_SVG}
+          width={halftoneWidth}
+          height={halftoneHeight}
+          style={{
+            position: "absolute",
+            left: halftoneLeft,
+            top: halftoneTop,
+            opacity: s.halftoneOpacity,
+          }}
+        />
+        <Svg width={width} height={height} style={StyleSheet.absoluteFill}>
+          <Defs>
+            <LinearGradient id="iosHalftoneTopCalm" x1="0" y1="0" x2="0" y2="1">
+              {s.topCalmStops.map((stop) => (
+                <Stop
+                  key={stop.offset}
+                  offset={stop.offset}
+                  stopColor={s.backgroundColor}
+                  stopOpacity={stop.opacity}
+                />
+              ))}
+            </LinearGradient>
+            <RadialGradient
+              id="iosHalftoneVignette"
+              cx="50%"
+              cy="52%"
+              rx="47.5%"
+              ry="42.5%"
+              gradientUnits="objectBoundingBox"
+            >
+              {s.halftoneVignetteStops.map((stop) => (
+                <Stop
+                  key={stop.offset}
+                  offset={stop.offset}
+                  stopColor={s.backgroundColor}
+                  stopOpacity={stop.opacity}
+                />
+              ))}
+            </RadialGradient>
+          </Defs>
+          <Rect x={0} y={0} width={width} height={height} fill="url(#iosHalftoneTopCalm)" />
+          <Rect x={0} y={0} width={width} height={height} fill="url(#iosHalftoneVignette)" />
+        </Svg>
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  headerBand: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1,
+  },
+  halftoneLayer: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 2,
+    overflow: "hidden",
+  },
+});

@@ -22,7 +22,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { useTicketNudgeFlash } from "@/hooks/useTicketNudgeFlash";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
-import { APP_SCREEN_ROOT } from "@/lib/nav-pane-tokens";
 import { setCommsBadge } from "@/lib/tabBadges";
 
 type OpenTicket = {
@@ -97,7 +96,7 @@ export default function CommsScreen() {
   const selected = tickets.find((tk) => tk.id === selectedId);
 
   return (
-    <View style={[styles.container, { backgroundColor: APP_SCREEN_ROOT }]}>
+    <View style={[styles.container, { backgroundColor: "transparent" }]}>
       <Stack.Screen options={{ headerShown: false }} />
       <InPageHeader
         title={t("foremanHome.crewCommsTitle")}

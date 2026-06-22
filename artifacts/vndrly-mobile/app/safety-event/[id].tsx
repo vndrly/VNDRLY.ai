@@ -4,7 +4,6 @@ import { ScrollView, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
-import { APP_SCREEN_ROOT } from "@/lib/nav-pane-tokens";
 import InPageHeader from "@/components/InPageHeader";
 
 export default function SafetyEventDetailScreen() {
@@ -22,7 +21,7 @@ export default function SafetyEventDetailScreen() {
 
   if (!event) {
     return (
-      <View style={{ flex: 1, backgroundColor: APP_SCREEN_ROOT }}>
+      <View style={{ flex: 1, backgroundColor: "transparent" }}>
         <InPageHeader title={t("safety.details")} onBack={() => router.back()} />
         <Text style={{ padding: 16, color: colors.mutedForeground }}>{t("common.loading")}</Text>
       </View>
@@ -30,7 +29,7 @@ export default function SafetyEventDetailScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: APP_SCREEN_ROOT }}>
+    <View style={{ flex: 1, backgroundColor: "transparent" }}>
       <InPageHeader title={String(event.eventNumber ?? t("safety.details"))} onBack={() => router.back()} />
       <ScrollView contentContainerStyle={{ padding: 16, gap: 8 }}>
         <Text style={{ fontSize: 18, fontWeight: "600", color: colors.text }}>{String(event.title ?? "")}</Text>

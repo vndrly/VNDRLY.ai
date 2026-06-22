@@ -15,7 +15,6 @@ import {
 import InPageHeader from "@/components/InPageHeader";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
-import { APP_SCREEN_ROOT } from "@/lib/nav-pane-tokens";
 import { translateApiError } from "@/lib/apiErrors";
 import { setFlaggedBadge } from "@/lib/tabBadges";
 import { SCREEN_SUBTITLE_TEXT, TEXT_SHADOW } from "@/lib/pill-doctrine";
@@ -63,7 +62,7 @@ export default function FlaggedTab() {
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: APP_SCREEN_ROOT }}>
+    <View style={{ flex: 1, backgroundColor: "transparent" }}>
       <InPageHeader
         title={t("flagged.title")}
         onBack={() => router.push("/(tabs)" as never)}

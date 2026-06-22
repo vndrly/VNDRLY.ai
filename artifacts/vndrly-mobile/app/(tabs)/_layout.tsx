@@ -7,7 +7,6 @@ import ActiveOrgIndicator from "@/components/ActiveOrgIndicator";
 import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/useColors";
 import { crewMapTabVisible, homeTabTitleKey, isForemanEmployeeUser } from "@/lib/mobile-viewer";
-import { APP_SCREEN_ROOT } from "@/lib/nav-pane-tokens";
 import { useTabBadges } from "@/lib/tabBadges";
 
 export default function TabLayout() {
@@ -22,7 +21,7 @@ export default function TabLayout() {
       screenOptions={{
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.mutedForeground,
-        sceneStyle: { backgroundColor: APP_SCREEN_ROOT },
+        sceneStyle: { backgroundColor: "transparent" },
         headerStyle: { backgroundColor: colors.background },
         headerTitleStyle: {
           fontFamily: "Inter_600SemiBold",

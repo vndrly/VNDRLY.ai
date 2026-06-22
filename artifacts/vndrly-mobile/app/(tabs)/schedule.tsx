@@ -25,7 +25,6 @@ import LayeredPillButton from "@/components/LayeredPillButton";
 import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
-import { APP_SCREEN_ROOT } from "@/lib/nav-pane-tokens";
 import { setScheduleBadge } from "@/lib/tabBadges";
 import { openScheduleIcs } from "@/lib/openScheduleIcs";
 import { translateApiError } from "@/lib/apiErrors";
@@ -217,7 +216,7 @@ export default function ScheduleScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: APP_SCREEN_ROOT }}>
+    <View style={{ flex: 1, backgroundColor: "transparent" }}>
       <Stack.Screen options={{ headerShown: false }} />
       <InPageHeader
         title={t("tabs.schedule")}

@@ -19,7 +19,6 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
 import ActiveOrgIndicator from "@/components/ActiveOrgIndicator";
-import NavPaneChromeBackground from "@/components/NavPaneChromeBackground";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import SafeKeyboardProvider from "@/components/SafeKeyboardProvider";
 import SplashLogo from "@/components/SplashLogo";
@@ -36,7 +35,9 @@ import {
   notificationIdFromPushData,
   routeForPushData,
 } from "@/lib/pushDeepLinks";
-import { APP_SCREEN_BACKGROUND, APP_SCREEN_ROOT } from "@/lib/nav-pane-tokens";
+import IosAppBackgroundStack, {
+  IOS_APP_BACKGROUND_SETTINGS,
+} from "@/components/iosAppBackgroundSettings";
 import { registerForPushNotifications } from "@/lib/push";
 import { initSentry, setSentryUser, wrapRoot } from "@/lib/sentry";
 import "@/lib/push";
@@ -248,7 +249,7 @@ function AuthGate() {
         options={{
           headerShown: false,
           presentation: "modal",
-          contentStyle: { backgroundColor: APP_SCREEN_BACKGROUND },
+          contentStyle: { backgroundColor: "transparent" },
         }}
       />
       <Stack.Screen name="notification-preferences" options={{ headerShown: false }} />
@@ -285,11 +286,13 @@ function RootLayout() {
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
             <BrandProvider>
-              <GestureHandlerRootView style={{ flex: 1, backgroundColor: APP_SCREEN_BACKGROUND }}>
+              <GestureHandlerRootView
+                style={{ flex: 1, backgroundColor: IOS_APP_BACKGROUND_SETTINGS.backgroundColor }}
+              >
                 <SafeKeyboardProvider>
                   <View style={{ flex: 1 }}>
-                    <NavPaneChromeBackground />
-                    <View style={{ flex: 1, backgroundColor: APP_SCREEN_ROOT }}>
+                    <IosAppBackgroundStack />
+                    <View style={{ flex: 1 }}>
                       <AuthGate />
                     </View>
                   </View>

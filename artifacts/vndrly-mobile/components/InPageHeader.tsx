@@ -5,7 +5,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import SphereBackButton from "@/components/SphereBackButton";
 import { useColors } from "@/hooks/useColors";
-import { APP_SCREEN_ROOT } from "@/lib/nav-pane-tokens";
 import { screenTopPadding } from "@/lib/screen-insets";
 import { SCREEN_TITLE_TEXT } from "@/lib/pill-doctrine";
 
@@ -17,7 +16,7 @@ type Props = {
   onBack?: () => void;
   /** Hide the back affordance entirely (use on tab roots). */
   hideBack?: boolean;
-  /** Shrink top padding (px) so stacked chrome below fits without clipping. */
+  /** Shrink top padding (px) so stacked header rows below fit without clipping. */
   compactVertical?: number;
   /** Parent already applied status-bar inset — skip safe-area top padding. */
   suppressTopInset?: boolean;
@@ -69,7 +68,7 @@ export default function InPageHeader({
           paddingTop: topPadding,
           paddingBottom: 8,
           paddingHorizontal: 12,
-          backgroundColor: APP_SCREEN_ROOT,
+          backgroundColor: "transparent",
           flexDirection: "row",
           alignItems: "center",
           gap: 8,

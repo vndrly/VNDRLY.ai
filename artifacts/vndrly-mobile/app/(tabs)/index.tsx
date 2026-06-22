@@ -29,7 +29,6 @@ import HeaderRefreshPillButton from "@/components/HeaderRefreshPillButton";
 import LayeredPillButton from "@/components/LayeredPillButton";
 import SafetyTrainingBanner from "@/components/SafetyTrainingBanner";
 import SafetyDashboardCard from "@/components/SafetyDashboardCard";
-import { APP_SCREEN_ROOT } from "@/lib/nav-pane-tokens";
 import NotificationsBellButton from "@/components/NotificationsBellButton";
 import NudgeFlashOverlay from "@/components/NudgeFlashOverlay";
 import { useAuth } from "@/hooks/use-auth";
@@ -707,7 +706,7 @@ export default function HomeScreen() {
   const canSwitchOrg = availableMemberships.length >= 2;
 
   return (
-    <View style={[styles.container, { backgroundColor: APP_SCREEN_ROOT }]}>
+    <View style={[styles.container, { backgroundColor: "transparent" }]}>
       <View
         style={[
           styles.brandRow,
