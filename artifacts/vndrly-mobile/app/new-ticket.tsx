@@ -19,6 +19,7 @@ import LayeredPillButton from "@/components/LayeredPillButton";
 import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
+import { SCREEN_ROOT_BACKGROUND } from "@/lib/nav-pane-tokens";
 import { getApiErrorCode, translateApiError } from "@/lib/apiErrors";
 import { isFieldEmployeeUser, isPartnerOfficeUser } from "@/lib/mobile-viewer";
 
@@ -523,7 +524,7 @@ export default function NewTicketScreen() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <View style={{ flex: 1, backgroundColor: SCREEN_ROOT_BACKGROUND }}>
         <Stack.Screen options={{ headerShown: false }} />
         <InPageHeader title={t("stack.newTicket")} />
         <View style={[styles.center, { backgroundColor: colors.background }]}>

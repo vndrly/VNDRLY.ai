@@ -17,6 +17,7 @@ import {
 
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
+import { SCREEN_ROOT_BACKGROUND } from "@/lib/nav-pane-tokens";
 import { translateApiError } from "@/lib/apiErrors";
 import { openInMaps } from "@/lib/maps";
 import { ticketStatusPillStyle } from "@/lib/ticketStatusLabels";
@@ -117,7 +118,7 @@ export default function CrewTrackerScreen() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <View style={{ flex: 1, backgroundColor: SCREEN_ROOT_BACKGROUND }}>
         <Stack.Screen options={{ headerShown: false }} />
         <InPageHeader title={t("crewTrackerMobile.title")} />
         <View style={[styles.center, { backgroundColor: colors.background }]}>

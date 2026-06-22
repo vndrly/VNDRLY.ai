@@ -24,6 +24,7 @@ import {
 import { fetchSafetyCapabilities, reactivateSiteLocation } from "@/lib/safety-api";
 import { formatTicketTrackingNumber } from "@workspace/db/format";
 import { computeTicketTaxPreview } from "@workspace/db/ticket-tax-preview";
+import { SCREEN_ROOT_BACKGROUND } from "@/lib/nav-pane-tokens";
 
 import ActiveOrgIndicator from "@/components/ActiveOrgIndicator";
 import AmberButton from "@/components/AmberButton";
@@ -1773,7 +1774,7 @@ export default function TicketDetailScreen() {
 
   if (!ticketIdValid) {
     return (
-      <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <View style={{ flex: 1, backgroundColor: SCREEN_ROOT_BACKGROUND }}>
         <Stack.Screen options={{ headerShown: false }} />
         <InPageHeader title={t("stack.tracking")} />
         <View
@@ -1798,7 +1799,7 @@ export default function TicketDetailScreen() {
     // consistent across the parked-while-loaded and parked-on-mount
     // cases.
     return (
-      <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <View style={{ flex: 1, backgroundColor: SCREEN_ROOT_BACKGROUND }}>
         <Stack.Screen options={{ headerShown: false }} />
         <InPageHeader title={t("stack.tracking")} />
         <View
@@ -1833,7 +1834,7 @@ export default function TicketDetailScreen() {
       ? translateApiError(loadError, t, t("tickets.errorLoadDetail"))
       : t("tickets.errorLoadDetail");
     return (
-      <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <View style={{ flex: 1, backgroundColor: SCREEN_ROOT_BACKGROUND }}>
         <Stack.Screen options={{ headerShown: false }} />
         <InPageHeader title={t("stack.tracking")} />
         <View
@@ -1858,7 +1859,7 @@ export default function TicketDetailScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={{ flex: 1, backgroundColor: SCREEN_ROOT_BACKGROUND }}>
     <NudgeFlashOverlay active={isNudgeFlashing} borderRadius={0} />
     {/* ── Task #669: header refresh button ──
         We render this via Stack.Screen.headerRight so it lives in the
@@ -1901,7 +1902,7 @@ export default function TicketDetailScreen() {
     />
     <ScrollView
       ref={scrollRef}
-      style={{ flex: 1, backgroundColor: colors.background }}
+      style={{ flex: 1, backgroundColor: SCREEN_ROOT_BACKGROUND }}
       contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
       refreshControl={
         <RefreshControl

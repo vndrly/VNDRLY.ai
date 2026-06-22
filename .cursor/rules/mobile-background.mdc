@@ -1,0 +1,12 @@
+---
+description: iOS mobile app background color and nav-pane chrome — do not drift to black
+globs: artifacts/vndrly-mobile/**
+alwaysApply: false
+---
+
+# Mobile background colors
+
+- iOS dark-mode app surface is **`#3a3d42`** (`NAV_PANE_DARK_BG` in `artifacts/vndrly-mobile/lib/nav-pane-tokens.ts`) — the same value as the web askV / nav-pane header bar. It is **not** pure black.
+- **Never** change `colors.dark.background`, `NAV_PANE_DARK_BG`, or user-provided surface colors to a generic “dark mode” black/grey without explicit user instruction.
+- Global decorative chrome (`AppChromeShell` + `NavPaneChromeBackground`) sits behind screens. Outermost screen roots use `SCREEN_ROOT_BACKGROUND` (`transparent`) so halftone + header blur remain visible.
+- Cards, modals, inputs, and tab bars may use `colors.card` / `colors.background` where a solid surface is required; do not paint full-screen opaque layers over the chrome unless the user asks.

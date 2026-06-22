@@ -19,6 +19,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
 import ActiveOrgIndicator from "@/components/ActiveOrgIndicator";
+import AppChromeShell from "@/components/AppChromeShell";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import SafeKeyboardProvider from "@/components/SafeKeyboardProvider";
 import SplashLogo from "@/components/SplashLogo";
@@ -35,6 +36,7 @@ import {
   notificationIdFromPushData,
   routeForPushData,
 } from "@/lib/pushDeepLinks";
+import { NAV_PANE_DARK_BG } from "@/lib/nav-pane-tokens";
 import { registerForPushNotifications } from "@/lib/push";
 import { initSentry, setSentryUser, wrapRoot } from "@/lib/sentry";
 import "@/lib/push";
@@ -225,6 +227,7 @@ function AuthGate() {
       screenOptions={{
         headerBackTitle: t("stack.back"),
         headerRight: () => <ActiveOrgIndicator />,
+        contentStyle: { backgroundColor: "transparent" },
       }}
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -275,9 +278,11 @@ function RootLayout() {
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
             <BrandProvider>
-              <GestureHandlerRootView style={{ flex: 1 }}>
+              <GestureHandlerRootView style={{ flex: 1, backgroundColor: NAV_PANE_DARK_BG }}>
                 <SafeKeyboardProvider>
-                  <AuthGate />
+                  <AppChromeShell>
+                    <AuthGate />
+                  </AppChromeShell>
                   <ContextPickerModal />
                 </SafeKeyboardProvider>
               </GestureHandlerRootView>

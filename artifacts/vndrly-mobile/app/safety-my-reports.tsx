@@ -4,6 +4,7 @@ import { FlatList, Text, TouchableOpacity, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
+import { SCREEN_ROOT_BACKGROUND } from "@/lib/nav-pane-tokens";
 import InPageHeader from "@/components/InPageHeader";
 import LayeredPillButton from "@/components/LayeredPillButton";
 
@@ -39,7 +40,7 @@ export default function SafetyMyReportsScreen() {
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={{ flex: 1, backgroundColor: SCREEN_ROOT_BACKGROUND }}>
       <InPageHeader title={t("safety.myReportsTitle")} onBack={() => router.back()} />
       <View style={{ padding: 16 }}>
         <LayeredPillButton onPress={() => router.push("/safety-report")}>

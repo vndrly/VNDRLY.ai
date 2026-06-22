@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Alert, Linking, ScrollView, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useColors } from "@/hooks/useColors";
+import { SCREEN_ROOT_BACKGROUND } from "@/lib/nav-pane-tokens";
 import InPageHeader from "@/components/InPageHeader";
 import LayeredPillButton from "@/components/LayeredPillButton";
 import {
@@ -48,7 +49,7 @@ export default function SafetyTrainingScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={{ flex: 1, backgroundColor: SCREEN_ROOT_BACKGROUND }}>
       <InPageHeader title={t("safety.trainingPageTitle")} onBack={() => router.back()} />
       <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
         <Text style={{ color: colors.mutedForeground }}>{t("safety.trainingPageSubtitle")}</Text>

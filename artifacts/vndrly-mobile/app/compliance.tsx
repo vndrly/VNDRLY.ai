@@ -17,6 +17,7 @@ import EmployeeCertificationsPanel from "@/components/EmployeeCertificationsPane
 import ProfilePhotoImage from "@/components/ProfilePhotoImage";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
+import { SCREEN_ROOT_BACKGROUND } from "@/lib/nav-pane-tokens";
 
 type FieldMe = {
   employeeId: number;

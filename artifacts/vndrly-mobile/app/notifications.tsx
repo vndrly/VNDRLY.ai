@@ -20,6 +20,7 @@ import NotificationSendToModal from "@/components/NotificationSendToModal";
 import { useRateLimitGate } from "@/hooks/use-rate-limit-gate";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
+import { SCREEN_ROOT_BACKGROUND } from "@/lib/nav-pane-tokens";
 import { stopBellTolling } from "@/lib/notificationSounds";
 import { syncAppIconBadge } from "@/lib/notificationBadge";
 import {
@@ -163,7 +164,7 @@ export default function NotificationsScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: SCREEN_ROOT_BACKGROUND }]}>
       <Stack.Screen options={{ headerShown: false }} />
       <InPageHeader
         title={t("notifications.title")}
@@ -210,49 +211,53 @@ export default function NotificationsScreen() {
         </View>
       ) : null}
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.categoryRow}
-        style={styles.categoryScroll}
-      >
-        {NOTIFICATION_CATEGORY_IDS.map((id) => {
-          const selected = activeCategory === id;
-          const unread = categoryUnread[id] ?? 0;
-          return (
-            <TouchableOpacity
-              key={id}
-              onPress={() => setActiveCategory(id)}
-              style={[
-                styles.categoryChip,
-                {
-                  backgroundColor: selected ? colors.primary : colors.muted,
-                  borderColor: selected ? colors.primary : colors.border,
-                },
-              ]}
-              testID={`notifications-tab-${id}`}
-            >
-              <Text
+      <View style={styles.tabsSection}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.categoryRow}
+          style={styles.categoryScroll}
+        >
+          {NOTIFICATION_CATEGORY_IDS.map((id) => {
+            const selected = activeCategory === id;
+            const unread = categoryUnread[id] ?? 0;
+            return (
+              <TouchableOpacity
+                key={id}
+                onPress={() => setActiveCategory(id)}
                 style={[
-                  styles.categoryChipText,
-                  { color: selected ? colors.primaryForeground : colors.foreground },
+                  styles.categoryChip,
+                  {
+                    backgroundColor: selected ? colors.primary : colors.muted,
+                    borderColor: selected ? colors.primary : colors.border,
+                  },
                 ]}
+                testID={`notifications-tab-${id}`}
               >
-                {t(`notifications.categories.${id}`)}
-                {unread > 0 ? ` (${unread})` : ""}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
+                <Text
+                  style={[
+                    styles.categoryChipText,
+                    { color: selected ? colors.primaryForeground : colors.foreground },
+                  ]}
+                >
+                  {t(`notifications.categories.${id}`)}
+                  {unread > 0 ? ` (${unread})` : ""}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
 
+      <View style={styles.listSection}>
       {loading ? (
         <ActivityIndicator style={{ marginTop: 40 }} color={colors.primary} />
       ) : (
         <FlatList
           data={filteredItems}
           keyExtractor={(item) => String(item.id)}
-          contentContainerStyle={{ padding: 16 }}
+          contentContainerStyle={styles.listContent}
+          style={styles.list}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -339,6 +344,7 @@ export default function NotificationsScreen() {
           }}
         />
       )}
+      </View>
 
       <NotificationActionModal
         visible={selected !== null}
@@ -370,13 +376,36 @@ export default function NotificationsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   iconBtn: { padding: 8 },
-  categoryScroll: { flexGrow: 0, marginBottom: 4 },
-  categoryRow: { paddingHorizontal: 12, gap: 8, paddingBottom: 8 },
+  tabsSection: {
+    paddingBottom: 4,
+    overflow: "visible",
+  },
+  categoryScroll: { flexGrow: 0 },
+  categoryRow: {
+    paddingHorizontal: 12,
+    gap: 8,
+    paddingTop: 4,
+    paddingBottom: 12,
+    alignItems: "center",
+  },
   categoryChip: {
     borderWidth: 1,
     borderRadius: 999,
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 8,
+  },
+  listSection: {
+    flex: 1,
+    marginTop: 8,
+  },
+  list: {
+    flex: 1,
+    backgroundColor: SCREEN_ROOT_BACKGROUND,
+  },
+  listContent: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 16,
   },
   categoryChipText: {
     fontFamily: "Inter_500Medium",

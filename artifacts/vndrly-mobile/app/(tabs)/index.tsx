@@ -29,7 +29,7 @@ import HeaderRefreshPillButton from "@/components/HeaderRefreshPillButton";
 import LayeredPillButton from "@/components/LayeredPillButton";
 import SafetyTrainingBanner from "@/components/SafetyTrainingBanner";
 import SafetyDashboardCard from "@/components/SafetyDashboardCard";
-import NavPaneChromeBackground from "@/components/NavPaneChromeBackground";
+import { SCREEN_ROOT_BACKGROUND } from "@/lib/nav-pane-tokens";
 import LayeredPortalLogo from "@/components/LayeredPortalLogo";
 import { shouldUseLayeredPortalLogo } from "@/lib/portal-branding";
 import NudgeFlashOverlay from "@/components/NudgeFlashOverlay";
@@ -52,10 +52,6 @@ import {
 import { VNDRLY_LOGO_SQUARE } from "@/lib/vndrly-brand-assets";
 import { setHomeBadge } from "@/lib/tabBadges";
 import { syncAppIconBadge } from "@/lib/notificationBadge";
-import {
-  NOTIFICATION_BADGE_MIN_WIDTH,
-  NOTIFICATION_BELL_MARGIN_RIGHT,
-} from "@/lib/notification-bell-layout";
 import { isRateLimited, noteRateLimit } from "@/lib/rateLimitGate";
 import {
   isTicketsRateLimited,
@@ -718,8 +714,7 @@ export default function HomeScreen() {
   const badgeText = String(unreadCount);
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {isOfficeViewer && !isFieldEmployee ? <NavPaneChromeBackground /> : null}
+    <View style={[styles.container, { backgroundColor: SCREEN_ROOT_BACKGROUND }]}>
       <View
         style={[
           styles.brandRow,
@@ -1786,8 +1781,10 @@ const styles = StyleSheet.create({
   },
   bellBtn: {
     padding: 6,
-    flexShrink: 0,
-    marginRight: NOTIFICATION_BELL_MARGIN_RIGHT,
+    // Scoot the bell ~10px to the left of the right edge so the
+    // notification badge has breathing room and isn't crowded against
+    // the screen edge / parent padding.
+    marginRight: 10,
     position: "relative",
     overflow: "visible",
   },
@@ -1795,7 +1792,14 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: -2,
     right: -4,
-    minWidth: NOTIFICATION_BADGE_MIN_WIDTH,
+    // Pill that grows naturally with the digit count. minWidth keeps a
+    // perfect circle at "1" while paddingHorizontal lets "12" or "99+"
+    // stretch into a properly-proportioned rounded rectangle instead of
+    // clipping. Height stays fixed so the pill silhouette is consistent.
+    // paddingHorizontal bumped from 6 → 8 so two-digit counts ("12",
+    // "47", "99+") get enough horizontal room that the second digit
+    // isn't visually clipped by the rounded cap.
+    minWidth: 18,
     height: 18,
     borderRadius: 9,
     paddingHorizontal: 8,

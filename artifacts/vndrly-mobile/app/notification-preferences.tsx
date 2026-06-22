@@ -16,6 +16,7 @@ import AmberButton from "@/components/AmberButton";
 import InPageHeader from "@/components/InPageHeader";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
+import { SCREEN_ROOT_BACKGROUND } from "@/lib/nav-pane-tokens";
 
 type Prefs = {
   ticketsEnabled: boolean;
@@ -102,7 +103,7 @@ export default function NotificationPreferencesScreen() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: SCREEN_ROOT_BACKGROUND }]}>
       <Stack.Screen options={{ headerShown: false }} />
       <InPageHeader title={t("notifications.preferencesTitle")} />
 

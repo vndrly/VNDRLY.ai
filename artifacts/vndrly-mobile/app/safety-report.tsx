@@ -4,6 +4,7 @@ import { Alert, ScrollView, Switch, Text, TextInput, TouchableOpacity, View } fr
 import { useTranslation } from "react-i18next";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
+import { SCREEN_ROOT_BACKGROUND } from "@/lib/nav-pane-tokens";
 import InPageHeader from "@/components/InPageHeader";
 import LayeredPillButton from "@/components/LayeredPillButton";
 
@@ -58,7 +59,7 @@ export default function SafetyReportScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={{ flex: 1, backgroundColor: SCREEN_ROOT_BACKGROUND }}>
       <InPageHeader title={t("safety.reportTitle")} onBack={() => router.back()} />
       <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
         <Text style={{ color: colors.mutedForeground }}>{t("safety.reportSubtitle")}</Text>

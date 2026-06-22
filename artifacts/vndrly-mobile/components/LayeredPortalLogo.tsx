@@ -13,21 +13,21 @@ type Props = {
 };
 
 /**
- * Three-layer branded square logo frame — mirrors web nav-pane / vdark login:
- * grey vignette underlay, partner logo, white glossy overlay.
+ * Three-layer branded square logo frame — direct port of web `layout.tsx`
+ * sidebar logo block (vdark / nav pane).
  */
 export default function LayeredPortalLogo({ uri, fallback, accessibilityLabel }: Props) {
   return (
     <View style={styles.frame} accessibilityLabel={accessibilityLabel}>
       <Image
-        source={require("@/assets/images/logo-underlay.png")}
+        source={require("@/assets/images/logo-underrlay_1778217900673.png")}
         style={[styles.layer, { opacity: 0.5 }]}
         resizeMode="cover"
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
       />
       <Image
-        source={require("@/assets/images/logo-overlay.png")}
+        source={require("@/assets/images/logo-overlay_1778217860263.png")}
         style={[styles.layer, { opacity: 0.7 }]}
         resizeMode="cover"
         accessibilityElementsHidden

@@ -13,6 +13,7 @@ import InPageHeader from "@/components/InPageHeader";
 import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
+import { SCREEN_ROOT_BACKGROUND } from "@/lib/nav-pane-tokens";
 
 type CatalogItem = {
   id: number;
@@ -66,7 +67,7 @@ export default function ServicesScreen() {
   }, {});
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={{ flex: 1, backgroundColor: SCREEN_ROOT_BACKGROUND }}>
       <Stack.Screen options={{ headerShown: false }} />
       <InPageHeader title={t("services.title")} onBack={() => router.back()} />
       <ScrollView contentContainerStyle={styles.content}>
