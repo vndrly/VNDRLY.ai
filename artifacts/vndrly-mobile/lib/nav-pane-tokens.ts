@@ -1,5 +1,5 @@
-/** Dark nav-pane surface — matches web `NAV_PANE_DARK_BG` / askV header bar. */
-export const NAV_PANE_DARK_BG = "#313438";
+/** iOS app screen background — sampled from web AskV pane (#3a3d42), 20% darker. */
+export const APP_SCREEN_BACKGROUND = "#2e3135";
 
-/** Outermost screen roots stay transparent so global halftone chrome shows through. */
-export const SCREEN_ROOT_BACKGROUND = "transparent" as const;
+/** Screen roots stay transparent so header blur + halftone show through. */
+export const APP_SCREEN_ROOT = "transparent" as const;

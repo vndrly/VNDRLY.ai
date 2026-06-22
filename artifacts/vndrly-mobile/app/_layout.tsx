@@ -12,14 +12,14 @@ import { Stack, router, useSegments } from "expo-router";
 import * as Notifications from "expo-notifications";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useState } from "react";
-import { Platform } from "react-native";
+import { Platform, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { useTranslation } from "react-i18next";
 
 import ActiveOrgIndicator from "@/components/ActiveOrgIndicator";
-import AppChromeShell from "@/components/AppChromeShell";
+import NavPaneChromeBackground from "@/components/NavPaneChromeBackground";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import SafeKeyboardProvider from "@/components/SafeKeyboardProvider";
 import SplashLogo from "@/components/SplashLogo";
@@ -36,7 +36,7 @@ import {
   notificationIdFromPushData,
   routeForPushData,
 } from "@/lib/pushDeepLinks";
-import { NAV_PANE_DARK_BG } from "@/lib/nav-pane-tokens";
+import { APP_SCREEN_BACKGROUND, APP_SCREEN_ROOT } from "@/lib/nav-pane-tokens";
 import { registerForPushNotifications } from "@/lib/push";
 import { initSentry, setSentryUser, wrapRoot } from "@/lib/sentry";
 import "@/lib/push";
@@ -248,7 +248,7 @@ function AuthGate() {
         options={{
           headerShown: false,
           presentation: "modal",
-          contentStyle: { backgroundColor: NAV_PANE_DARK_BG },
+          contentStyle: { backgroundColor: APP_SCREEN_BACKGROUND },
         }}
       />
       <Stack.Screen name="notification-preferences" options={{ headerShown: false }} />
@@ -285,11 +285,14 @@ function RootLayout() {
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
             <BrandProvider>
-              <GestureHandlerRootView style={{ flex: 1, backgroundColor: NAV_PANE_DARK_BG }}>
+              <GestureHandlerRootView style={{ flex: 1, backgroundColor: APP_SCREEN_BACKGROUND }}>
                 <SafeKeyboardProvider>
-                  <AppChromeShell>
-                    <AuthGate />
-                  </AppChromeShell>
+                  <View style={{ flex: 1 }}>
+                    <NavPaneChromeBackground />
+                    <View style={{ flex: 1, backgroundColor: APP_SCREEN_ROOT }}>
+                      <AuthGate />
+                    </View>
+                  </View>
                   <ContextPickerModal />
                 </SafeKeyboardProvider>
               </GestureHandlerRootView>

@@ -16,7 +16,7 @@ import ActiveOrgIndicator from "@/components/ActiveOrgIndicator";
 import InPageHeader from "@/components/InPageHeader";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
-import { SCREEN_ROOT_BACKGROUND } from "@/lib/nav-pane-tokens";
+import { APP_SCREEN_ROOT } from "@/lib/nav-pane-tokens";
 
 // Task #639 — a focused "My crew changes" feed for field employees.
 // Backed by the existing `notifications` rows with type
@@ -183,7 +183,7 @@ export default function CrewChangesScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: SCREEN_ROOT_BACKGROUND }]}>
+    <View style={[styles.container, { backgroundColor: APP_SCREEN_ROOT }]}>
       <Stack.Screen options={{ headerShown: false }} />
       <InPageHeader
         title={t("crewChanges.title")}

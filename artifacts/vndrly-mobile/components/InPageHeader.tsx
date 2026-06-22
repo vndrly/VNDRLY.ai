@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import SphereBackButton from "@/components/SphereBackButton";
 import { useColors } from "@/hooks/useColors";
-import { SCREEN_ROOT_BACKGROUND } from "@/lib/nav-pane-tokens";
+import { APP_SCREEN_ROOT } from "@/lib/nav-pane-tokens";
 import { screenTopPadding } from "@/lib/screen-insets";
 import { SCREEN_TITLE_TEXT } from "@/lib/pill-doctrine";
 
@@ -69,7 +69,7 @@ export default function InPageHeader({
           paddingTop: topPadding,
           paddingBottom: 8,
           paddingHorizontal: 12,
-          backgroundColor: SCREEN_ROOT_BACKGROUND,
+          backgroundColor: APP_SCREEN_ROOT,
           flexDirection: "row",
           alignItems: "center",
           gap: 8,

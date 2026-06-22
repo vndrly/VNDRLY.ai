@@ -14,7 +14,7 @@ import { WebView } from "react-native-webview";
 import InPageHeader from "@/components/InPageHeader";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
-import { SCREEN_ROOT_BACKGROUND } from "@/lib/nav-pane-tokens";
+import { APP_SCREEN_ROOT } from "@/lib/nav-pane-tokens";
 import { translateApiError } from "@/lib/apiErrors";
 
 type Ping = {
@@ -85,7 +85,7 @@ export default function CrewReplayScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <InPageHeader title={t("crewReplay.dayReplayTitle", { name: name || t("crewReplay.employeeFallback") })} onBack={() => router.back()} />
-      <ScrollView style={{ flex: 1, backgroundColor: SCREEN_ROOT_BACKGROUND }} contentContainerStyle={styles.content}>
+      <ScrollView style={{ flex: 1, backgroundColor: APP_SCREEN_ROOT }} contentContainerStyle={styles.content}>
         <Text style={{ color: colors.mutedForeground, marginBottom: 8 }}>{t("crewReplay.subtitle")}</Text>
         <TextInput
           value={date}

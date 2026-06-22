@@ -29,7 +29,7 @@ import HeaderRefreshPillButton from "@/components/HeaderRefreshPillButton";
 import LayeredPillButton from "@/components/LayeredPillButton";
 import SafetyTrainingBanner from "@/components/SafetyTrainingBanner";
 import SafetyDashboardCard from "@/components/SafetyDashboardCard";
-import { SCREEN_ROOT_BACKGROUND } from "@/lib/nav-pane-tokens";
+import { APP_SCREEN_ROOT } from "@/lib/nav-pane-tokens";
 import LayeredPortalLogo from "@/components/LayeredPortalLogo";
 import { shouldUseLayeredPortalLogo } from "@/lib/portal-branding";
 import NudgeFlashOverlay from "@/components/NudgeFlashOverlay";
@@ -714,7 +714,7 @@ export default function HomeScreen() {
   const badgeText = String(unreadCount);
 
   return (
-    <View style={[styles.container, { backgroundColor: SCREEN_ROOT_BACKGROUND }]}>
+    <View style={[styles.container, { backgroundColor: APP_SCREEN_ROOT }]}>
       <View
         style={[
           styles.brandRow,
