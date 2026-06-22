@@ -30,8 +30,7 @@ import LayeredPillButton from "@/components/LayeredPillButton";
 import SafetyTrainingBanner from "@/components/SafetyTrainingBanner";
 import SafetyDashboardCard from "@/components/SafetyDashboardCard";
 import { APP_SCREEN_ROOT } from "@/lib/nav-pane-tokens";
-import LayeredPortalLogo from "@/components/LayeredPortalLogo";
-import { shouldUseLayeredPortalLogo } from "@/lib/portal-branding";
+import NotificationsBellButton from "@/components/NotificationsBellButton";
 import NudgeFlashOverlay from "@/components/NudgeFlashOverlay";
 import { useAuth } from "@/hooks/use-auth";
 import { useTicketNudgeFlash } from "@/hooks/useTicketNudgeFlash";
@@ -300,11 +299,7 @@ export default function HomeScreen() {
       setUnreadCount(r?.count ?? 0);
       void syncAppIconBadge();
     } catch (e) {
-      // Park the badge poll if the limiter tripped. The notifications
-      // screen instance also subscribes to this same resource via the
-      // shared cooldown, so both sides park together.
       noteRateLimit(e, "notifications.rate_limited");
-      // Silent otherwise — header badge just hides if unavailable.
     }
   }, []);
 
@@ -711,8 +706,6 @@ export default function HomeScreen() {
   // so we don't add a tap target that does nothing.
   const canSwitchOrg = availableMemberships.length >= 2;
 
-  const badgeText = String(unreadCount);
-
   return (
     <View style={[styles.container, { backgroundColor: APP_SCREEN_ROOT }]}>
       <View
@@ -723,55 +716,39 @@ export default function HomeScreen() {
       >
         <View style={styles.brandLeft}>
           {brand.isOrgBranded && (brand.logoSquareUrl || brand.logoUrl) ? (
-            shouldUseLayeredPortalLogo(brand) ? (
-              <LayeredPortalLogo
-                uri={(brand.logoSquareUrl ?? brand.logoUrl) as string}
-                fallback={
-                  <View
-                    style={[
-                      styles.brandLogo,
-                      {
-                        backgroundColor: brand.primary,
-                        borderRadius: 12,
-                        alignItems: "center",
-                        justifyContent: "center",
-                      },
-                    ]}
-                    accessibilityLabel={brand.name ?? t("home.brandWordmark")}
-                  >
-                    <Text style={{ color: "#ffffff", fontFamily: "Inter_700Bold", fontSize: 32 }}>
-                      {(brand.name?.[0] ?? "V").toUpperCase()}
-                    </Text>
-                  </View>
-                }
-                accessibilityLabel={brand.name ?? t("home.brandWordmark")}
-              />
-            ) : (
-              <AuthedImage
-                uri={(brand.logoSquareUrl ?? brand.logoUrl) as string}
-                fallback={
-                  <View
-                    style={[
-                      styles.brandLogo,
-                      {
-                        backgroundColor: brand.primary,
-                        borderRadius: 12,
-                        alignItems: "center",
-                        justifyContent: "center",
-                      },
-                    ]}
-                    accessibilityLabel={brand.name ?? t("home.brandWordmark")}
-                  >
-                    <Text style={{ color: "#ffffff", fontFamily: "Inter_700Bold", fontSize: 32 }}>
-                      {(brand.name?.[0] ?? "V").toUpperCase()}
-                    </Text>
-                  </View>
-                }
-                style={styles.brandLogo}
-                resizeMode="contain"
-                accessibilityLabel={brand.name ?? t("home.brandWordmark")}
-              />
-            )
+              <View style={styles.brandLogoFrame}>
+                <Image
+                  source={require("@/assets/images/branded-logo-placeholder.png")}
+                  style={styles.brandLogoPlaceholder}
+                  resizeMode="cover"
+                  accessibilityElementsHidden
+                  importantForAccessibility="no-hide-descendants"
+                />
+                <AuthedImage
+                  uri={(brand.logoSquareUrl ?? brand.logoUrl) as string}
+                  fallback={
+                    <View
+                      style={[
+                        styles.brandLogo,
+                        {
+                          backgroundColor: brand.primary,
+                          borderRadius: 12,
+                          alignItems: "center",
+                          justifyContent: "center",
+                        },
+                      ]}
+                      accessibilityLabel={brand.name ?? t("home.brandWordmark")}
+                    >
+                      <Text style={{ color: "#ffffff", fontFamily: "Inter_700Bold", fontSize: 32 }}>
+                        {(brand.name?.[0] ?? "V").toUpperCase()}
+                      </Text>
+                    </View>
+                  }
+                  style={styles.brandLogo}
+                  resizeMode="contain"
+                  accessibilityLabel={brand.name ?? t("home.brandWordmark")}
+                />
+              </View>
           ) : (
             <Image
               source={VNDRLY_LOGO_SQUARE}
@@ -881,24 +858,14 @@ export default function HomeScreen() {
           ) : null}
         </View>
         {!isForemanEmployee ? (
-          <TouchableOpacity
+          <NotificationsBellButton
+            count={unreadCount}
             onPress={() => router.push("/notifications")}
             accessibilityLabel={t("nav.notifications")}
             accessibilityHint={
               unreadCount > 0 ? t("home.unreadNotifications", { count: unreadCount }) : t("home.noUnreadNotifications")
             }
-            style={styles.bellBtn}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <Feather name="bell" size={28} color="#ffffff" />
-            {unreadCount > 0 ? (
-              <View style={[styles.badge, { backgroundColor: "#dc2626", borderColor: colors.background }]}>
-                <Text style={[styles.badgeText, { color: "#ffffff" }]} numberOfLines={1}>
-                  {badgeText}
-                </Text>
-              </View>
-            ) : null}
-          </TouchableOpacity>
+          />
         ) : null}
       </View>
 
@@ -1735,6 +1702,8 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
   },
+  brandLogoFrame: { width: 64, height: 64 },
+  brandLogoPlaceholder: { ...StyleSheet.absoluteFillObject },
   brandLogo: { width: 64, height: 64 },
   brandIdentity: {
     marginLeft: 10,
@@ -1778,40 +1747,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
     textTransform: "uppercase",
     color: "#ffffff",
-  },
-  bellBtn: {
-    padding: 6,
-    // Scoot the bell ~10px to the left of the right edge so the
-    // notification badge has breathing room and isn't crowded against
-    // the screen edge / parent padding.
-    marginRight: 10,
-    position: "relative",
-    overflow: "visible",
-  },
-  badge: {
-    position: "absolute",
-    top: -2,
-    right: -4,
-    // Pill that grows naturally with the digit count. minWidth keeps a
-    // perfect circle at "1" while paddingHorizontal lets "12" or "99+"
-    // stretch into a properly-proportioned rounded rectangle instead of
-    // clipping. Height stays fixed so the pill silhouette is consistent.
-    // paddingHorizontal bumped from 6 → 8 so two-digit counts ("12",
-    // "47", "99+") get enough horizontal room that the second digit
-    // isn't visually clipped by the rounded cap.
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
-    paddingHorizontal: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1.5,
-    overflow: "visible",
-  },
-  badgeText: {
-    fontFamily: "Inter_700Bold",
-    fontSize: 10,
-    lineHeight: 12,
   },
   // Heading row holds JUST the page title and the freshness ("Live")
   // pill, with the pill aligned right so the eye scans

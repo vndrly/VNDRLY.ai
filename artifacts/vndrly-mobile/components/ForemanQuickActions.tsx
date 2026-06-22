@@ -4,8 +4,10 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
+import NotificationCountPill from "@/components/NotificationCountPill";
 import { useBrand } from "@/hooks/use-brand";
 import { useColors } from "@/hooks/useColors";
+import { NOTIFICATION_TILE_BADGE } from "@/lib/notifications-bell-ui";
 
 type Props = {
   unreadAlerts?: number;
@@ -76,6 +78,13 @@ export default function ForemanQuickActions({
             testID={tile.testID}
             accessibilityRole="button"
           >
+            {"badge" in tile && tile.badge != null && tile.badge > 0 ? (
+              <NotificationCountPill
+                count={tile.badge}
+                style={styles.tileBadge}
+                testID={`${tile.testID}-badge`}
+              />
+            ) : null}
             <View
               style={[
                 styles.iconCircle,
@@ -83,13 +92,6 @@ export default function ForemanQuickActions({
               ]}
             >
               <Feather name={tile.icon} size={22} color={brand.primary} />
-              {tile.badge != null && tile.badge > 0 ? (
-                <View style={[styles.badge, { backgroundColor: "#dc2626" }]}>
-                  <Text style={styles.badgeText}>
-                    {tile.badge > 99 ? "99+" : tile.badge}
-                  </Text>
-                </View>
-              ) : null}
             </View>
             <Text
               style={[styles.label, { color: colors.foreground }]}
@@ -128,6 +130,12 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 14,
     minHeight: 96,
+    position: "relative",
+  },
+  tileBadge: {
+    position: "absolute",
+    top: NOTIFICATION_TILE_BADGE.top,
+    right: NOTIFICATION_TILE_BADGE.right,
   },
   iconCircle: {
     width: 44,
@@ -136,22 +144,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 8,
-  },
-  badge: {
-    position: "absolute",
-    top: -4,
-    right: -4,
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 4,
-  },
-  badgeText: {
-    color: "#fff",
-    fontSize: 10,
-    fontFamily: "Inter_600SemiBold",
   },
   label: {
     fontFamily: "Inter_500Medium",
