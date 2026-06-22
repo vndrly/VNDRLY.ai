@@ -167,6 +167,7 @@ export default function NotificationsScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <InPageHeader
         title={t("notifications.title")}
+        compactVertical={7}
         right={
           <View style={{ flexDirection: "row", gap: 4 }}>
             <TouchableOpacity

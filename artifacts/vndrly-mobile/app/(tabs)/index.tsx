@@ -28,6 +28,9 @@ import FreshnessPill from "@/components/FreshnessPill";
 import LayeredPillButton from "@/components/LayeredPillButton";
 import SafetyTrainingBanner from "@/components/SafetyTrainingBanner";
 import SafetyDashboardCard from "@/components/SafetyDashboardCard";
+import NavPaneChromeBackground from "@/components/NavPaneChromeBackground";
+import LayeredPortalLogo from "@/components/LayeredPortalLogo";
+import { shouldUseLayeredPortalLogo } from "@/lib/portal-branding";
 import NudgeFlashOverlay from "@/components/NudgeFlashOverlay";
 import { useAuth } from "@/hooks/use-auth";
 import { useTicketNudgeFlash } from "@/hooks/useTicketNudgeFlash";
@@ -711,6 +714,7 @@ export default function HomeScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      {isOfficeViewer && !isFieldEmployee ? <NavPaneChromeBackground /> : null}
       <View
         style={[
           styles.brandRow,
@@ -719,30 +723,55 @@ export default function HomeScreen() {
       >
         <View style={styles.brandLeft}>
           {brand.isOrgBranded && (brand.logoSquareUrl || brand.logoUrl) ? (
-            <AuthedImage
-              uri={(brand.logoSquareUrl ?? brand.logoUrl) as string}
-              fallback={
-                <View
-                  style={[
-                    styles.brandLogo,
-                    {
-                      backgroundColor: brand.primary,
-                      borderRadius: 12,
-                      alignItems: "center",
-                      justifyContent: "center",
-                    },
-                  ]}
-                  accessibilityLabel={brand.name ?? t("home.brandWordmark")}
-                >
-                  <Text style={{ color: "#ffffff", fontFamily: "Inter_700Bold", fontSize: 32 }}>
-                    {(brand.name?.[0] ?? "V").toUpperCase()}
-                  </Text>
-                </View>
-              }
-              style={styles.brandLogo}
-              resizeMode="contain"
-              accessibilityLabel={brand.name ?? t("home.brandWordmark")}
-            />
+            shouldUseLayeredPortalLogo(brand) ? (
+              <LayeredPortalLogo
+                uri={(brand.logoSquareUrl ?? brand.logoUrl) as string}
+                fallback={
+                  <View
+                    style={[
+                      styles.brandLogo,
+                      {
+                        backgroundColor: brand.primary,
+                        borderRadius: 12,
+                        alignItems: "center",
+                        justifyContent: "center",
+                      },
+                    ]}
+                    accessibilityLabel={brand.name ?? t("home.brandWordmark")}
+                  >
+                    <Text style={{ color: "#ffffff", fontFamily: "Inter_700Bold", fontSize: 32 }}>
+                      {(brand.name?.[0] ?? "V").toUpperCase()}
+                    </Text>
+                  </View>
+                }
+                accessibilityLabel={brand.name ?? t("home.brandWordmark")}
+              />
+            ) : (
+              <AuthedImage
+                uri={(brand.logoSquareUrl ?? brand.logoUrl) as string}
+                fallback={
+                  <View
+                    style={[
+                      styles.brandLogo,
+                      {
+                        backgroundColor: brand.primary,
+                        borderRadius: 12,
+                        alignItems: "center",
+                        justifyContent: "center",
+                      },
+                    ]}
+                    accessibilityLabel={brand.name ?? t("home.brandWordmark")}
+                  >
+                    <Text style={{ color: "#ffffff", fontFamily: "Inter_700Bold", fontSize: 32 }}>
+                      {(brand.name?.[0] ?? "V").toUpperCase()}
+                    </Text>
+                  </View>
+                }
+                style={styles.brandLogo}
+                resizeMode="contain"
+                accessibilityLabel={brand.name ?? t("home.brandWordmark")}
+              />
+            )
           ) : (
             <Image
               source={VNDRLY_LOGO_SQUARE}
@@ -861,7 +890,11 @@ export default function HomeScreen() {
             style={styles.bellBtn}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Feather name="bell" size={28} color={colors.primary} />
+            <Feather
+              name="bell"
+              size={28}
+              color={unreadCount > 0 ? "#ffffff" : "#9ca3af"}
+            />
             {unreadCount > 0 ? (
               <View style={[styles.badge, { backgroundColor: "#dc2626", borderColor: colors.background }]}>
                 <Text style={[styles.badgeText, { color: "#ffffff" }]} numberOfLines={1}>
@@ -1766,10 +1799,8 @@ const styles = StyleSheet.create({
   },
   bellBtn: {
     padding: 6,
-    // Scoot the bell ~10px to the left of the right edge so the
-    // notification badge has breathing room and isn't crowded against
-    // the screen edge / parent padding.
-    marginRight: 10,
+    // Inset from the right edge so the notification badge has room (web bell).
+    marginRight: 18,
     position: "relative",
     overflow: "visible",
   },
