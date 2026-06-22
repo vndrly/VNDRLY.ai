@@ -77,7 +77,7 @@ export default function NavPaneChromeBackground({ style }: Props) {
 
       <View style={[styles.headerLayer, { height: HEADER_BLUR_HEIGHT }]}>
         <Image
-          source={require("@/assets/images/vndrly-header-blur-4.png")}
+          source={require("@/assets/images/vndrly-header-blur-dark.png")}
           style={styles.headerImage}
           resizeMode="cover"
         />

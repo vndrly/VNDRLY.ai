@@ -12,23 +12,13 @@ type Props = {
   accessibilityLabel?: string;
 };
 
-/**
- * Three-layer branded square logo frame — direct port of web `layout.tsx`
- * sidebar logo block (vdark / nav pane).
- */
+/** User underlay image behind the branded square logo only — no overlay layer. */
 export default function LayeredPortalLogo({ uri, fallback, accessibilityLabel }: Props) {
   return (
     <View style={styles.frame} accessibilityLabel={accessibilityLabel}>
       <Image
-        source={require("@/assets/images/logo-underrlay_1778217900673.png")}
-        style={[styles.layer, { opacity: 0.5 }]}
-        resizeMode="cover"
-        accessibilityElementsHidden
-        importantForAccessibility="no-hide-descendants"
-      />
-      <Image
         source={require("@/assets/images/logo-overlay_1778217860263.png")}
-        style={[styles.layer, { opacity: 0.7 }]}
+        style={styles.underlay}
         resizeMode="cover"
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
@@ -53,7 +43,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     overflow: "hidden",
   },
-  layer: {
+  underlay: {
     ...StyleSheet.absoluteFillObject,
   },
   logoInset: {

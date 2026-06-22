@@ -20,7 +20,6 @@ import NotificationSendToModal from "@/components/NotificationSendToModal";
 import { useRateLimitGate } from "@/hooks/use-rate-limit-gate";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
-import { SCREEN_ROOT_BACKGROUND } from "@/lib/nav-pane-tokens";
 import { stopBellTolling } from "@/lib/notificationSounds";
 import { syncAppIconBadge } from "@/lib/notificationBadge";
 import {
@@ -164,11 +163,12 @@ export default function NotificationsScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: SCREEN_ROOT_BACKGROUND }]}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
       <InPageHeader
         title={t("notifications.title")}
         compactVertical={7}
+        style={{ backgroundColor: colors.background }}
         right={
           <View style={{ flexDirection: "row", gap: 4 }}>
             <TouchableOpacity
@@ -257,7 +257,7 @@ export default function NotificationsScreen() {
           data={filteredItems}
           keyExtractor={(item) => String(item.id)}
           contentContainerStyle={styles.listContent}
-          style={styles.list}
+          style={[styles.list, { backgroundColor: colors.background }]}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -400,7 +400,6 @@ const styles = StyleSheet.create({
   },
   list: {
     flex: 1,
-    backgroundColor: SCREEN_ROOT_BACKGROUND,
   },
   listContent: {
     paddingHorizontal: 16,

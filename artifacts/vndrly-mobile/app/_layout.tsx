@@ -243,7 +243,14 @@ function AuthGate() {
       <Stack.Screen name="edit-profile" options={{ title: t("stack.editProfile") }} />
       <Stack.Screen name="crew-changes" options={{ headerShown: false }} />
       <Stack.Screen name="compliance" options={{ headerShown: false }} />
-      <Stack.Screen name="notifications" options={{ headerShown: false, presentation: "modal" }} />
+      <Stack.Screen
+        name="notifications"
+        options={{
+          headerShown: false,
+          presentation: "modal",
+          contentStyle: { backgroundColor: NAV_PANE_DARK_BG },
+        }}
+      />
       <Stack.Screen name="notification-preferences" options={{ headerShown: false }} />
       <Stack.Screen name="location-consent" options={{ headerShown: false }} />
     </Stack>
