@@ -297,7 +297,7 @@ export default function NotificationsScreen() {
                       <Feather
                         name={meta.icon}
                         size={12}
-                        color={item.isRead ? colors.mutedForeground : colors.primaryForeground}
+                        color={item.isRead ? colors.mutedForeground : "#ffffff"}
                       />
                       <Text
                         style={[
@@ -305,7 +305,7 @@ export default function NotificationsScreen() {
                           {
                             color: item.isRead
                               ? colors.mutedForeground
-                              : colors.primaryForeground,
+                              : "#ffffff",
                           },
                         ]}
                       >

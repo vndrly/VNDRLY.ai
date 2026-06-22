@@ -212,13 +212,13 @@ export default function NotificationActionModal({
                 <Feather
                   name={meta.icon}
                   size={12}
-                  color={item.isRead ? colors.mutedForeground : colors.primaryForeground}
+                  color={item.isRead ? colors.mutedForeground : "#ffffff"}
                 />
                 <Text
                   style={[
                     styles.typeBadgeText,
                     {
-                      color: item.isRead ? colors.mutedForeground : colors.primaryForeground,
+                      color: item.isRead ? colors.mutedForeground : "#ffffff",
                     },
                   ]}
                 >

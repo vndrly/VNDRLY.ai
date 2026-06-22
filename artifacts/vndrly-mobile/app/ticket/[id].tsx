@@ -27,6 +27,7 @@ import { computeTicketTaxPreview } from "@workspace/db/ticket-tax-preview";
 
 import ActiveOrgIndicator from "@/components/ActiveOrgIndicator";
 import AmberButton from "@/components/AmberButton";
+import HeaderRefreshPillButton from "@/components/HeaderRefreshPillButton";
 import LayeredPillButton from "@/components/LayeredPillButton";
 import Pill9Slice from "@/components/Pill9Slice";
 import BlueButton from "@/components/BlueButton";
@@ -1887,30 +1888,14 @@ export default function TicketDetailScreen() {
             rateLimited={rateLimited}
             testID="ticket-detail-freshness-pill"
           />
-          <TouchableOpacity
+          <HeaderRefreshPillButton
             onPress={onHeaderRefresh}
             disabled={headerRefreshing || refreshing || rateLimited}
-            accessibilityRole="button"
+            loading={headerRefreshing}
             accessibilityLabel={t("tickets.refreshDetailAccessibility")}
             accessibilityHint={t("tickets.refreshDetailAccessibilityHint")}
-            accessibilityState={{
-              disabled: headerRefreshing || refreshing || rateLimited,
-              busy: headerRefreshing,
-            }}
             testID="button-refresh-ticket-detail"
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            style={{
-              paddingHorizontal: 8,
-              paddingVertical: 6,
-              opacity: headerRefreshing || refreshing || rateLimited ? 0.6 : 1,
-            }}
-          >
-            {headerRefreshing ? (
-              <ActivityIndicator size="small" color={colors.primary} />
-            ) : (
-              <Feather name="refresh-cw" size={20} color={colors.primary} />
-            )}
-          </TouchableOpacity>
+          />
         </>
       }
     />

@@ -25,6 +25,7 @@ import AuthedImage from "@/components/AuthedImage";
 import ForemanQuickActions from "@/components/ForemanQuickActions";
 import ForemanScheduleTicketsModal from "@/components/ForemanScheduleTicketsModal";
 import FreshnessPill from "@/components/FreshnessPill";
+import HeaderRefreshPillButton from "@/components/HeaderRefreshPillButton";
 import LayeredPillButton from "@/components/LayeredPillButton";
 import SafetyTrainingBanner from "@/components/SafetyTrainingBanner";
 import SafetyDashboardCard from "@/components/SafetyDashboardCard";
@@ -51,6 +52,10 @@ import {
 import { VNDRLY_LOGO_SQUARE } from "@/lib/vndrly-brand-assets";
 import { setHomeBadge } from "@/lib/tabBadges";
 import { syncAppIconBadge } from "@/lib/notificationBadge";
+import {
+  NOTIFICATION_BADGE_MIN_WIDTH,
+  NOTIFICATION_BELL_MARGIN_RIGHT,
+} from "@/lib/notification-bell-layout";
 import { isRateLimited, noteRateLimit } from "@/lib/rateLimitGate";
 import {
   isTicketsRateLimited,
@@ -710,7 +715,7 @@ export default function HomeScreen() {
   // so we don't add a tap target that does nothing.
   const canSwitchOrg = availableMemberships.length >= 2;
 
-  const badgeText = unreadCount > 99 ? "99+" : String(unreadCount);
+  const badgeText = String(unreadCount);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -890,11 +895,7 @@ export default function HomeScreen() {
             style={styles.bellBtn}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Feather
-              name="bell"
-              size={28}
-              color={unreadCount > 0 ? "#ffffff" : "#9ca3af"}
-            />
+            <Feather name="bell" size={28} color="#ffffff" />
             {unreadCount > 0 ? (
               <View style={[styles.badge, { backgroundColor: "#dc2626", borderColor: colors.background }]}>
                 <Text style={[styles.badgeText, { color: "#ffffff" }]} numberOfLines={1}>
@@ -978,19 +979,12 @@ export default function HomeScreen() {
                 {t("safety.myReportsTitle")}
               </Text>
             </LayeredPillButton>
-            <LayeredPillButton
+            <HeaderRefreshPillButton
               onPress={onHeaderRefresh}
               disabled={headerRefreshing || refreshing || rateLimited}
               loading={headerRefreshing}
-              height={36}
               testID="button-refresh-tickets"
-            >
-              {headerRefreshing ? (
-                <ActivityIndicator size="small" color="#ffffff" />
-              ) : (
-                <Feather name="refresh-cw" size={16} color="#ffffff" style={styles.btnIconShadow} />
-              )}
-            </LayeredPillButton>
+            />
           </View>
         </View>
       ) : (
@@ -1051,19 +1045,12 @@ export default function HomeScreen() {
                 {t("tickets.newTicket")}
               </Text>
             </LayeredPillButton>
-            <LayeredPillButton
+            <HeaderRefreshPillButton
               onPress={onHeaderRefresh}
               disabled={headerRefreshing || refreshing || rateLimited}
               loading={headerRefreshing}
-              height={36}
               testID="button-refresh-tickets"
-            >
-              {headerRefreshing ? (
-                <ActivityIndicator size="small" color="#ffffff" />
-              ) : (
-                <Feather name="refresh-cw" size={16} color="#ffffff" style={styles.btnIconShadow} />
-              )}
-            </LayeredPillButton>
+            />
           </View>
         </>
       )}
@@ -1799,8 +1786,8 @@ const styles = StyleSheet.create({
   },
   bellBtn: {
     padding: 6,
-    // Inset from the right edge so the notification badge has room (web bell).
-    marginRight: 18,
+    flexShrink: 0,
+    marginRight: NOTIFICATION_BELL_MARGIN_RIGHT,
     position: "relative",
     overflow: "visible",
   },
@@ -1808,14 +1795,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: -2,
     right: -4,
-    // Pill that grows naturally with the digit count. minWidth keeps a
-    // perfect circle at "1" while paddingHorizontal lets "12" or "99+"
-    // stretch into a properly-proportioned rounded rectangle instead of
-    // clipping. Height stays fixed so the pill silhouette is consistent.
-    // paddingHorizontal bumped from 6 → 8 so two-digit counts ("12",
-    // "47", "99+") get enough horizontal room that the second digit
-    // isn't visually clipped by the rounded cap.
-    minWidth: 18,
+    minWidth: NOTIFICATION_BADGE_MIN_WIDTH,
     height: 18,
     borderRadius: 9,
     paddingHorizontal: 8,
@@ -1960,18 +1940,6 @@ const styles = StyleSheet.create({
   // Keeping the shadow values identical means the icon and the label
   // sit on the same visual depth plane on the brand-colored pill.
   btnIconShadow: TEXT_SHADOW.deep,
-  // Task #669: header refresh icon button.
-  // Square-ish so the icon is centered; the border matches the
-  // adjacent History button so the row reads as a coherent action
-  // cluster.
-  refreshBtn: {
-    width: 36,
-    height: 36,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderRadius: 10,
-  },
   adjacentRow: {
     paddingHorizontal: 16,
     paddingBottom: 8,
