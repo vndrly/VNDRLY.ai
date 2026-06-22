@@ -10,3 +10,10 @@ alwaysApply: false
 - **Never** change `colors.dark.background`, `NAV_PANE_DARK_BG`, or user-provided surface colors to a generic “dark mode” black/grey without explicit user instruction.
 - Global decorative chrome (`AppChromeShell` + `NavPaneChromeBackground`) sits behind screens. Outermost screen roots use `SCREEN_ROOT_BACKGROUND` (`transparent`) so halftone + header blur remain visible.
 - Cards, modals, inputs, and tab bars may use `colors.card` / `colors.background` where a solid surface is required; do not paint full-screen opaque layers over the chrome unless the user asks.
+
+# Header blur (authenticated screens)
+
+- The **only** header background image is **`VNDRLY_Header_Blur_Dark`** (`attached_assets/VNDRLY_Header_Blur_Dark_1778850026167.png`), imported via `artifacts/vndrly-mobile/lib/header-blur-asset.ts` → `vndrly-header-blur-dark.png`.
+- **Never** use `vndrly-logo-amber`, `vndrlylogo7`, `VNDRLY_Header_Blur_4`, `login-header-bg`, or any VNDRLY logo PNG as a header/background layer.
+- **Never** add a fallback that substitutes a logo when the blur asset is missing — fix the asset path instead.
+- Do not re-add SVG/logo overlay layers on top of the header blur band unless the user explicitly asks.

@@ -11,6 +11,7 @@ import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { SvgXml } from "react-native-svg";
 
 import { NAV_PANE_HALFTONE_SVG } from "@/assets/nav-pane-us-halftone";
+import { HEADER_BLUR_DARK } from "@/lib/header-blur-asset";
 import { NAV_PANE_DARK_BG } from "@/lib/nav-pane-tokens";
 
 /** Matches web `NavPaneHeaderBlur` default height. */
@@ -27,10 +28,7 @@ type Props = {
   style?: StyleProp<ViewStyle>;
 };
 
-/**
- * Decorative nav-pane chrome — halftone body + top header blur PNG.
- * Mirrors web `NavPaneHalftoneBackground` + `NavPaneHeaderBlur`.
- */
+/** Halftone body + user Header Blur Dark PNG at the top — no logo PNGs. */
 export default function NavPaneChromeBackground({ style }: Props) {
   const { width, height } = Dimensions.get("window");
   const halftoneWidth = width * 2.85;
@@ -77,29 +75,10 @@ export default function NavPaneChromeBackground({ style }: Props) {
 
       <View style={[styles.headerLayer, { height: HEADER_BLUR_HEIGHT }]}>
         <Image
-          source={require("@/assets/images/vndrly-header-blur-dark.png")}
+          source={HEADER_BLUR_DARK}
           style={styles.headerImage}
           resizeMode="cover"
         />
-        <Svg
-          width={width}
-          height={HEADER_BLUR_HEIGHT}
-          style={StyleSheet.absoluteFill}
-        >
-          <Defs>
-            <LinearGradient id="headerBlurFade" x1="0" y1="0" x2="0" y2="1">
-              <Stop offset="0" stopColor={NAV_PANE_DARK_BG} stopOpacity={0} />
-              <Stop offset="1" stopColor={NAV_PANE_DARK_BG} stopOpacity={1} />
-            </LinearGradient>
-          </Defs>
-          <Rect
-            x={0}
-            y={0}
-            width={width}
-            height={HEADER_BLUR_HEIGHT}
-            fill="url(#headerBlurFade)"
-          />
-        </Svg>
       </View>
     </View>
   );
