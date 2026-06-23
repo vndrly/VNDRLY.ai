@@ -3685,6 +3685,20 @@ export type ListTicketsParams = {
    * When true, returns only tickets that are approved and not yet funds_dispersed (the AP queue).
    */
   awaitingPayment?: boolean;
+  limit?: number;
+  offset?: number;
+  search?: string;
+  lifecycleState?: string;
+  sortBy?: "ticket" | "site" | "vendor" | "fieldEmployee" | "status" | "created" | "daysWaiting";
+  sortDir?: "asc" | "desc";
+};
+
+export type ListTicketsResponse = {
+  items: Ticket[];
+  /**
+   * Total rows matching filters before pagination.
+   */
+  total: number;
 };
 
 export type ListTicketsStatus =

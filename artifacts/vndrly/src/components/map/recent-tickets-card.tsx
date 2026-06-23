@@ -29,21 +29,22 @@ export function RecentTicketsCard({ siteLocationId, className }: Props) {
   const brand = useBrand();
   const iconStyle = { color: brand.isOrgBranded ? brand.primary : "#f59e0b" };
   const listParams =
-    siteLocationId != null ? { siteLocationId } : undefined;
+    siteLocationId != null ? { siteLocationId, limit: 100, offset: 0 } : undefined;
 
-  const { data: tickets, isLoading } = useListTickets(listParams, {
+  const { data: ticketsPage, isLoading } = useListTickets(listParams, {
     query: {
       enabled: siteLocationId != null,
       queryKey: getListTicketsQueryKey(listParams),
+      staleTime: 30_000,
     },
   });
 
   const recentTickets = useMemo(() => {
-    if (!tickets) return [];
+    const tickets = ticketsPage?.items ?? [];
     return [...tickets]
       .sort((a, b) => b.id - a.id)
       .slice(0, 100);
-  }, [tickets]);
+  }, [ticketsPage]);
 
   return (
     <Card className={className ?? "mt-4"} data-testid="card-recent-tickets">

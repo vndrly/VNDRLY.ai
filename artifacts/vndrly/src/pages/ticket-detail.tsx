@@ -301,6 +301,10 @@ const AUDIT_ROLE_FILTERS = [
 ] as const;
 type AuditRoleFilter = (typeof AUDIT_ROLE_FILTERS)[number];
 
+const DETAIL_PRIMARY_STALE_MS = 15_000;
+const DETAIL_AUX_STALE_MS = 30_000;
+const DETAIL_STATIC_STALE_MS = 5 * 60_000;
+
 function deriveTransitionKind(
   fromStatus: string | null | undefined,
   toStatus: string | null | undefined,
@@ -398,6 +402,7 @@ export default function TicketDetail({ id }: { id: number }) {
       queryKey: getGetTicketQueryKey(id),
       refetchInterval: assignmentRemoved && !detailRateLimitedState ? 7000 : false,
       refetchIntervalInBackground: false,
+      staleTime: assignmentRemoved ? 0 : DETAIL_PRIMARY_STALE_MS,
       // Disable retries on 429 â€” burning the budget further when
       // we're already throttled never recovers faster. Other errors
       // keep react-query's default (3 retries with backoff) so a
@@ -415,10 +420,10 @@ export default function TicketDetail({ id }: { id: number }) {
     setDetailRateLimitedState(detailRateLimited);
   }, [detailRateLimited]);
   const ticketDataUpdatedAt = ticketQuery.dataUpdatedAt;
-  const { data: crewSessions } = useGetCrewSessions(id, { query: { enabled: !!id, refetchInterval: 60000, queryKey: getGetCrewSessionsQueryKey(id) } });
-  const { data: siteLocation } = useGetSiteLocation(ticket?.siteLocationId ?? 0, { query: { enabled: !!ticket?.siteLocationId, queryKey: getGetSiteLocationQueryKey(ticket?.siteLocationId ?? 0) } });
-  const { data: noteLogs } = useGetTicketNoteLogs(id, { query: { enabled: !!id, queryKey: getGetTicketNoteLogsQueryKey(id) } });
-  const { data: unlockHistory } = useGetTicketUnlocks(id, { query: { enabled: !!id, queryKey: getGetTicketUnlocksQueryKey(id) } });
+  const { data: crewSessions } = useGetCrewSessions(id, { query: { enabled: !!id, refetchInterval: 60000, queryKey: getGetCrewSessionsQueryKey(id), staleTime: DETAIL_AUX_STALE_MS } });
+  const { data: siteLocation } = useGetSiteLocation(ticket?.siteLocationId ?? 0, { query: { enabled: !!ticket?.siteLocationId, queryKey: getGetSiteLocationQueryKey(ticket?.siteLocationId ?? 0), staleTime: DETAIL_STATIC_STALE_MS } });
+  const { data: noteLogs } = useGetTicketNoteLogs(id, { query: { enabled: !!id, queryKey: getGetTicketNoteLogsQueryKey(id), staleTime: DETAIL_AUX_STALE_MS } });
+  const { data: unlockHistory } = useGetTicketUnlocks(id, { query: { enabled: !!id, queryKey: getGetTicketUnlocksQueryKey(id), staleTime: DETAIL_AUX_STALE_MS } });
   // Task #501: invite/accept/deny/reinvite audit trail. Always loaded for
   // any role allowed to view the ticket detail surface â€” partners are the
   // primary audience, but vendors/admins/field employees benefit from the
@@ -434,7 +439,7 @@ export default function TicketDetail({ id }: { id: number }) {
     id,
     undefined,
     {
-      query: { enabled: !!id, queryKey: getGetTicketTransitionsQueryKey(id) },
+      query: { enabled: !!id, queryKey: getGetTicketTransitionsQueryKey(id), staleTime: DETAIL_AUX_STALE_MS },
     },
   );
 
@@ -528,7 +533,7 @@ export default function TicketDetail({ id }: { id: number }) {
     }
     return undefined;
   }, [unlockHistory]);
-  const { data: lineItems } = useGetTicketLineItems(id, { query: { enabled: !!id, queryKey: getGetTicketLineItemsQueryKey(id) } });
+  const { data: lineItems } = useGetTicketLineItems(id, { query: { enabled: !!id, queryKey: getGetTicketLineItemsQueryKey(id), staleTime: DETAIL_AUX_STALE_MS } });
   const createNoteLog = useCreateTicketNoteLog();
   const createLineItem = useCreateTicketLineItem();
   const deleteLineItem = useDeleteTicketLineItem();

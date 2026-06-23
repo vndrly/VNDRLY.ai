@@ -170,7 +170,9 @@ export default function SiteLocationDetail({ id }: { id: number }) {
   const [expandSaving, setExpandSaving] = useState(false);
   const expandDirty = expandChecked.size !== expandInitial.size || Array.from(expandChecked).some((id) => !expandInitial.has(id));
   const canRemove = user?.role === "admin" || user?.role === "partner";
-  const { data: siteTickets, isLoading: ticketsLoading } = useListTickets({ siteLocationId: id }, { query: { enabled: !!id, queryKey: getListTicketsQueryKey({ siteLocationId: id }) } });
+  const siteTicketsParams = { siteLocationId: id, limit: 100, offset: 0 };
+  const { data: siteTicketsPage, isLoading: ticketsLoading } = useListTickets(siteTicketsParams, { query: { enabled: !!id, queryKey: getListTicketsQueryKey(siteTicketsParams), staleTime: 30_000 } });
+  const siteTickets = siteTicketsPage?.items ?? [];
 
   type RecentSortKey = "tracking" | "workType" | "employee" | "status" | "date";
   const [recentSortKey, setRecentSortKey] = useState<RecentSortKey>("date");

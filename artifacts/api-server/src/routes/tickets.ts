@@ -991,7 +991,7 @@ router.get("/tickets", async (req, res): Promise<void> => {
     conditions.push(eq(ticketsTable.fieldEmployeeId, fe.id));
   } else if (session.role !== "admin") {
     // Unknown/unhandled roles see no tickets.
-    sendResponse(res, ListTicketsResponse, []);
+    sendResponse(res, ListTicketsResponse, { items: [], total: 0 });
     return;
   }
 
@@ -1005,12 +1005,35 @@ router.get("/tickets", async (req, res): Promise<void> => {
     conditions.push(mobileOfficeTicketVisibilityCondition());
   }
 
+  const limit = query.success && typeof query.data.limit === "number"
+    ? Math.max(0, Math.min(500, Math.floor(query.data.limit)))
+    : 500;
+  const offset = query.success && typeof query.data.offset === "number"
+    ? Math.max(0, Math.floor(query.data.offset))
+    : 0;
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+  const countQuery = db
+    .select({ value: sql<number>`count(distinct ${ticketsTable.id})::int` })
+    .from(ticketsTable)
+    .leftJoin(siteLocationsTable, eq(ticketsTable.siteLocationId, siteLocationsTable.id));
+  const [countRow] = whereClause ? await countQuery.where(whereClause) : await countQuery;
+
   // Task #51 — pass the viewer so each row carries an accurate
   // `unreadCommentCount` for the badge on the tickets-list page.
-  const tickets = conditions.length > 0
-    ? await ticketQuery(session.userId).where(and(...conditions)).orderBy(desc(ticketsTable.createdAt))
-    : await ticketQuery(session.userId).orderBy(desc(ticketsTable.createdAt));
-  sendResponse(res, ListTicketsResponse, tickets);
+  const items = limit > 0
+    ? whereClause
+      ? await ticketQuery(session.userId)
+        .where(whereClause)
+        .orderBy(desc(ticketsTable.createdAt))
+        .limit(limit)
+        .offset(offset)
+      : await ticketQuery(session.userId)
+        .orderBy(desc(ticketsTable.createdAt))
+        .limit(limit)
+        .offset(offset)
+    : [];
+  const total = Number(countRow?.value ?? 0);
+  sendResponse(res, ListTicketsResponse, { items, total });
 });
 
 router.post("/tickets", async (req, res): Promise<void> => {

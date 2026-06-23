@@ -1480,10 +1480,16 @@ export const ListTicketsQueryParams = zod.object({
   "siteLocationId": zod.coerce.number().optional(),
   "vendorId": zod.coerce.number().optional(),
   "partnerId": zod.coerce.number().optional(),
-  "awaitingPayment": zod.coerce.boolean().optional().describe('When true, returns only tickets that are approved and not yet funds_dispersed (the AP queue).')
+  "awaitingPayment": zod.coerce.boolean().optional().describe('When true, returns only tickets that are approved and not yet funds_dispersed (the AP queue).'),
+  "limit": zod.coerce.number().optional(),
+  "offset": zod.coerce.number().optional(),
+  "search": zod.string().optional(),
+  "lifecycleState": zod.string().optional(),
+  "sortBy": zod.enum(['ticket', 'site', 'vendor', 'fieldEmployee', 'status', 'created', 'daysWaiting']).optional(),
+  "sortDir": zod.enum(['asc', 'desc']).optional()
 })
 
-export const listTicketsResponseUnreadCommentCountMin = 0;
+export const listTicketsResponseItemsItemUnreadCommentCountMin = 0;
 
 
 
@@ -1546,12 +1552,15 @@ export const ListTicketsResponseItem = zod.object({
   "paymentReceiptUrl": zod.string().nullable().describe('Optional proof-of-payment image attached at dispersal time\n(Task #852). Stored as an object-storage path\/URL returned by\nthe upload helper; renders inline in the read-only Payment\nDetails panel on both web and mobile.\n'),
   "startingMileage": zod.string().nullish().describe('Odometer reading captured at En Route. Stored as a numeric\nstring with one decimal so the UI can render it verbatim\nwithout float drift. Null until the field employee submits\nthe value on the En Route modal.\n'),
   "endingMileage": zod.string().nullish().describe('Odometer reading captured at Check Out. Same numeric-string\nshape as `startingMileage`. Null until the Check Out modal\npersists the value.\n'),
-  "unreadCommentCount": zod.number().min(listTicketsResponseUnreadCommentCountMin).describe('Task #51 — number of comments on this ticket\'s thread that\nthe signed-in viewer has not yet seen, used to render an\nunread badge on the tickets-list page. Excludes\nsoft-deleted comments and the viewer\'s own messages.\nAlways 0 when the request has no signed-in viewer (e.g.\nanonymous portal access).\n'),
+  "unreadCommentCount": zod.number().min(listTicketsResponseItemsItemUnreadCommentCountMin).describe('Task #51 — number of comments on this ticket\'s thread that\nthe signed-in viewer has not yet seen, used to render an\nunread badge on the tickets-list page. Excludes\nsoft-deleted comments and the viewer\'s own messages.\nAlways 0 when the request has no signed-in viewer (e.g.\nanonymous portal access).\n'),
   "viewerCanDisperseFunds": zod.boolean().nullish().describe('Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call POST \/tickets\/:id\/disperse-funds\nfor this ticket (admin OR partner contact in the Accounts Payable role\non the owning partner). List responses omit this field.\n'),
   "viewerCanReverseDispersal": zod.boolean().nullish().describe('Set on the single-ticket GET response only. True when the\nauthenticated viewer is allowed to call\nPOST \/tickets\/:id\/reverse-dispersal for this ticket — i.e.\nthe same admin \/ partner-AP gate as `viewerCanDisperseFunds`\nAND the ticket is currently in `funds_dispersed`. List\nresponses omit this field.\n'),
   "phoneIntakeCallerName": zod.string().nullish().describe('Set on the single-ticket GET response only. The human caller\'s\nname captured by office phone intake on the ticket\'s initial\nstatus transition (extracted from\n`ticket_status_history.reason` formatted as\n`phone_intake_caller:<name>`). Null for tickets that weren\'t\nopened via phone intake. List responses omit this field.\n')
 })
-export const ListTicketsResponse = zod.array(ListTicketsResponseItem)
+export const ListTicketsResponse = zod.object({
+  "items": zod.array(ListTicketsResponseItem),
+  "total": zod.number().describe('Total rows matching filters before pagination.')
+})
 
 
 /**

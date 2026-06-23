@@ -89,14 +89,30 @@ function makeChain(
   projection: Record<string, any> | undefined,
   rowsProvider: () => any[],
 ) {
-  const run = () => projectRows(projection, rowsProvider());
+  let limitValue: number | null = null;
+  let offsetValue = 0;
+  const run = () => {
+    const keys = new Set(Object.keys(projection ?? {}));
+    if (keys.has("value")) return [{ value: rowsProvider().length }];
+    const rows = projectRows(projection, rowsProvider());
+    const start = Math.max(0, offsetValue);
+    const end = limitValue == null ? undefined : start + Math.max(0, limitValue);
+    return rows.slice(start, end);
+  };
   const chain: any = {};
   chain.from = () => chain;
   chain.leftJoin = () => chain;
   chain.innerJoin = () => chain;
   chain.where = () => chain;
   chain.orderBy = () => chain;
-  chain.limit = () => chain;
+  chain.limit = (value: number) => {
+    limitValue = value;
+    return chain;
+  };
+  chain.offset = (value: number) => {
+    offsetValue = value;
+    return chain;
+  };
   chain.then = (resolve: any, reject: any) =>
     Promise.resolve(run()).then(resolve, reject);
   chain.catch = (reject: any) => Promise.resolve(run()).catch(reject);
@@ -112,6 +128,7 @@ function makeChain(
 function pickProvider(projection?: Record<string, any>): () => any[] {
   if (!projection) return () => [];
   const keys = new Set(Object.keys(projection));
+  if (keys.has("value")) return () => ticketRows;
   // ticketSelect — the canonical projection driving the response shape.
   if (keys.has("id") && keys.has("siteLocationId") && keys.has("vendorId")) {
     return () => ticketRows;
@@ -329,13 +346,14 @@ describe("GET /api/tickets", () => {
       parsed.success ? "" : JSON.stringify(parsed.error.issues),
     ).toBe(true);
     if (parsed.success) {
-      expect(parsed.data).toHaveLength(2);
-      expect(parsed.data[0].id).toBe(TICKET_ID);
-      expect(parsed.data[0].siteName).toBe("Test Pad 12");
-      expect(parsed.data[0].vendorName).toBe("Permian Pumpers");
-      expect(parsed.data[0].intakeChannel).toBe("office_on_behalf_of_partner");
-      expect(parsed.data[1].status).toBe("initiated");
-      expect(parsed.data[1].lifecycleState).toBe("pending_arrival");
+      expect(parsed.data.total).toBe(2);
+      expect(parsed.data.items).toHaveLength(2);
+      expect(parsed.data.items[0].id).toBe(TICKET_ID);
+      expect(parsed.data.items[0].siteName).toBe("Test Pad 12");
+      expect(parsed.data.items[0].vendorName).toBe("Permian Pumpers");
+      expect(parsed.data.items[0].intakeChannel).toBe("office_on_behalf_of_partner");
+      expect(parsed.data.items[1].status).toBe("initiated");
+      expect(parsed.data.items[1].lifecycleState).toBe("pending_arrival");
     }
   });
 
@@ -350,7 +368,7 @@ describe("GET /api/tickets", () => {
     const parsed = ListTicketsResponse.safeParse(res.body);
     expect(parsed.success).toBe(true);
     if (parsed.success) {
-      expect(parsed.data).toEqual([]);
+      expect(parsed.data).toEqual({ items: [], total: 0 });
     }
   });
 
@@ -433,9 +451,10 @@ describe("GET /api/tickets", () => {
       parsed.success ? "" : JSON.stringify(parsed.error.issues),
     ).toBe(true);
     if (parsed.success) {
-      expect(parsed.data).toHaveLength(1);
-      expect(parsed.data[0].id).toBe(TICKET_ID);
-      expect(parsed.data[0].vendorId).toBe(VENDOR_ID);
+      expect(parsed.data.total).toBe(1);
+      expect(parsed.data.items).toHaveLength(1);
+      expect(parsed.data.items[0].id).toBe(TICKET_ID);
+      expect(parsed.data.items[0].vendorId).toBe(VENDOR_ID);
     }
   });
 
@@ -453,9 +472,10 @@ describe("GET /api/tickets", () => {
       parsed.success ? "" : JSON.stringify(parsed.error.issues),
     ).toBe(true);
     if (parsed.success) {
-      expect(parsed.data).toHaveLength(1);
-      expect(parsed.data[0].id).toBe(TICKET_ID);
-      expect(parsed.data[0].partnerName).toBe("ACME Energy");
+      expect(parsed.data.total).toBe(1);
+      expect(parsed.data.items).toHaveLength(1);
+      expect(parsed.data.items[0].id).toBe(TICKET_ID);
+      expect(parsed.data.items[0].partnerName).toBe("ACME Energy");
     }
   });
 
@@ -473,7 +493,7 @@ describe("GET /api/tickets", () => {
       parsed.success ? "" : JSON.stringify(parsed.error.issues),
     ).toBe(true);
     if (parsed.success) {
-      expect(parsed.data[0]?.intakeChannel).toBe("partner_hotlist");
+      expect(parsed.data.items[0]?.intakeChannel).toBe("partner_hotlist");
     }
   });
 

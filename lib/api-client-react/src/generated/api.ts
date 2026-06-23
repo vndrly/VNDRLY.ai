@@ -105,6 +105,7 @@ import type {
   ListPartnerContactsParams,
   ListSiteLocationsParams,
   ListTicketsParams,
+  ListTicketsResponse,
   ListUpcomingScheduleParams,
   ListVendorContactsParams,
   MatchPartnerParams,
@@ -5229,8 +5230,8 @@ export const getListTicketsUrl = (params?: ListTicketsParams) => {
 export const listTickets = async (
   params?: ListTicketsParams,
   options?: RequestInit,
-): Promise<Ticket[]> => {
-  return customFetch<Ticket[]>(getListTicketsUrl(params), {
+): Promise<ListTicketsResponse> => {
+  return customFetch<ListTicketsResponse>(getListTicketsUrl(params), {
     ...options,
     method: "GET",
   });

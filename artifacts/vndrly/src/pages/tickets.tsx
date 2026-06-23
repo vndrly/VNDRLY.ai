@@ -398,7 +398,7 @@ export default function Tickets() {
   ];
   type TicketStatus = (typeof validStatuses)[number];
   const isValidStatus = (s: string): s is TicketStatus => validStatuses.includes(s as TicketStatus);
-  const listParams: Record<string, any> = {};
+  const listParams: Record<string, any> = { limit: 500, offset: 0 };
   if (statusFilter !== "all" && isValidStatus(statusFilter)) listParams.status = statusFilter;
   if (isVendor) listParams.vendorId = user.vendorId!;
   if (isPartner) listParams.partnerId = user.partnerId!;
@@ -453,7 +453,9 @@ export default function Tickets() {
       },
     },
   );
-  const { data: tickets, isLoading, error: ticketsListError } = ticketsListQuery;
+  const { data: ticketsPage, isLoading, error: ticketsListError } = ticketsListQuery;
+  const tickets = ticketsPage?.items ?? [];
+  type TicketsPageData = NonNullable<typeof ticketsPage>;
   const { rateLimited: listRateLimited } = useTicketsRateLimitGate(ticketsListError);
   useEffect(() => {
     setListRateLimitedState(listRateLimited);
@@ -572,17 +574,17 @@ export default function Tickets() {
             const listKey = getListTicketsQueryKey(
               Object.keys(lp).length > 0 ? lp : undefined,
             );
-            const cachedList = queryClient.getQueryData<Ticket[]>(listKey);
-            if (cachedList && cachedList.some((t) => t.id === tid)) {
+            const cachedList = queryClient.getQueryData<TicketsPageData>(listKey);
+            if (cachedList && cachedList.items.some((t) => t.id === tid)) {
               queryClient
                 .fetchQuery({
                   queryKey: getGetTicketQueryKey(tid),
                   queryFn: ({ signal }) => getTicket(tid, { signal }),
                 })
                 .then((fresh) => {
-                  queryClient.setQueryData<Ticket[]>(listKey, (old) =>
+                  queryClient.setQueryData<TicketsPageData>(listKey, (old) =>
                     old
-                      ? old.map((t) => (t.id === tid ? fresh : t))
+                      ? { ...old, items: old.items.map((t) => (t.id === tid ? fresh : t)) }
                       : old,
                   );
                 })
@@ -857,8 +859,8 @@ export default function Tickets() {
         const listKey = getListTicketsQueryKey(
           Object.keys(lp).length > 0 ? lp : undefined,
         );
-        const cachedList = queryClient.getQueryData<Ticket[]>(listKey);
-        if (!cachedList || !cachedList.some((t) => t.id === ticketId)) {
+        const cachedList = queryClient.getQueryData<TicketsPageData>(listKey);
+        if (!cachedList || !cachedList.items.some((t) => t.id === ticketId)) {
           // Row isn't in the current view — nothing to patch and no
           // toast to fire either. Acknowledging restores for tickets
           // outside the dispatcher's filtered view would just be noise.
@@ -884,9 +886,9 @@ export default function Tickets() {
             queryFn: ({ signal }) => getTicket(ticketId, { signal }),
           })
           .then((fresh) => {
-            queryClient.setQueryData<Ticket[]>(listKey, (old) =>
+            queryClient.setQueryData<TicketsPageData>(listKey, (old) =>
               old
-                ? old.map((t) => (t.id === ticketId ? fresh : t))
+                ? { ...old, items: old.items.map((t) => (t.id === ticketId ? fresh : t)) }
                 : old,
             );
           })
@@ -944,7 +946,6 @@ export default function Tickets() {
   }, [queryClient, invalidateListNow, flashRefreshed]);
 
   useEffect(() => {
-    if (!tickets) return;
     const seenIds = new Set<number>();
     for (const tk of tickets) {
       seenIds.add(tk.id);
@@ -1447,7 +1448,6 @@ export default function Tickets() {
   };
 
   const filteredTickets = useMemo(() => {
-    if (!tickets) return [];
     let result = [...tickets];
     if (searchQuery.trim()) {
       const query = searchQuery.replace(/^#/, "").replace(/^0+/, "");

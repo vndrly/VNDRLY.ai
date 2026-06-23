@@ -217,17 +217,21 @@ export default function Dashboard() {
   });
   const siteTicketParams =
     isPartner && user?.partnerId
-      ? { partnerId: user.partnerId }
+      ? { partnerId: user.partnerId, limit: 500, offset: 0 }
       : isVendor && user?.vendorId
-      ? { vendorId: user.vendorId }
+      ? { vendorId: user.vendorId, limit: 500, offset: 0 }
+      : isAdmin
+      ? { limit: 500, offset: 0 }
       : undefined;
   const siteTicketsQuery = useListTickets(siteTicketParams, {
     query: {
       queryKey: getListTicketsQueryKey(siteTicketParams),
       enabled: !rateLimitedState,
       retry: sharedRetry,
+      staleTime: 15_000,
     },
   });
+  const siteTickets = siteTicketsQuery.data?.items ?? [];
   // Vendor inbox of pending direct work offers (Task: direct assignments).
   // Surfaced ABOVE every other dashboard section so vendors see it first.
   const { data: pendingDirectAssignments, refetch: refetchPendingDirect } =
@@ -272,7 +276,7 @@ export default function Dashboard() {
   const { toast } = useToast();
   const siteWorkloadRows = useMemo<SiteWorkloadRow[]>(() => {
     const sites = siteListQuery.data ?? [];
-    const tickets = siteTicketsQuery.data ?? [];
+    const tickets = siteTickets;
     const ticketsBySite = new Map<number, typeof tickets>();
 
     for (const ticket of tickets) {
@@ -331,7 +335,7 @@ export default function Dashboard() {
         return a.siteName.localeCompare(b.siteName);
       })
       .slice(0, 5);
-  }, [isPartner, isVendor, siteListQuery.data, siteTicketsQuery.data, user?.partnerId]);
+  }, [isPartner, isVendor, siteListQuery.data, siteTickets, user?.partnerId]);
   // Resolves a chart status key to the same display label used by the
   // tracking-page jump list, with a graceful chain of fallbacks so a
   // newly-added enum value can never render as `undefined`.
@@ -346,7 +350,7 @@ export default function Dashboard() {
     [t],
   );
   const analyticsCards = useMemo<DashboardAnalyticsCard[]>(() => {
-    const tickets = siteTicketsQuery.data ?? [];
+    const tickets = siteTickets;
     const activeStatuses = new Set([
       "initiated",
       "awaiting_acceptance",
@@ -494,7 +498,7 @@ export default function Dashboard() {
         href: "/tickets",
       },
     ];
-  }, [formatChartStatusLabel, siteTicketsQuery.data, siteWorkloadRows]);
+  }, [formatChartStatusLabel, siteTickets, siteWorkloadRows]);
 
   // Email-verification redirect handler. The /api/onboarding/verify-email/:token
   // endpoint redirects here with ?verify=ok|already|expired|invalid. We
