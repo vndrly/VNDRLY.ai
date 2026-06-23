@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useState } from "react";
+import { lazy, Suspense, type ReactNode, useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { LogOut, Menu, type LucideIcon } from "lucide-react";
@@ -14,7 +14,6 @@ import ReferToVndrlyDialog from "@/components/refer-to-vndrly-dialog";
 import { PoweredByVndrly } from "@/components/powered-by-vndrly";
 import ContextSwitcher from "@/components/context-switcher";
 import StarRating from "@/components/star-rating";
-import { AssistantLauncher } from "@/components/assistant-panel";
 import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import {
   portalDisplayLogo,
@@ -33,6 +32,12 @@ import { NavPaneHeaderBlur } from "@/components/nav-pane-header-blur";
 
 import logoUnderlay from "@assets/logo-underrlay_1778217900673.png";
 import logoOverlay from "@assets/logo-overlay_1778217860263.png";
+
+const AssistantLauncher = lazy(() =>
+  import("@/components/assistant-panel").then((mod) => ({
+    default: mod.AssistantLauncher,
+  })),
+);
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -291,7 +296,9 @@ export function FieldOpsPortalShell({
           data-testid="askv-pane"
         >
           <div className="flex items-center overflow-visible">
-            <AssistantLauncher placement="askv-pane" />
+            <Suspense fallback={null}>
+              <AssistantLauncher placement="askv-pane" />
+            </Suspense>
           </div>
           <ReferToVndrlyDialog
             trigger={

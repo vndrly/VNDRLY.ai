@@ -8,69 +8,71 @@ import { BrandProvider } from "@/hooks/use-brand";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { NotificationsModalProvider } from "@/components/notifications-modal-context";
 import Layout from "@/components/layout";
-import { AssistantLauncher } from "@/components/assistant-panel";
 import ContextPickerModal from "@/components/context-picker-modal";
 import ChangePasswordModal from "@/components/change-password-modal";
-import Login from "@/pages/login";
-import Partners from "@/pages/partners";
-import PartnerDetail from "@/pages/partner-detail";
-import Vendors from "@/pages/vendors";
-import VendorDetail from "@/pages/vendor-detail";
-import FieldEmployees from "@/pages/field-employees";
-import FieldEmployeeDetail from "@/pages/field-employee-detail";
-import SiteLocations from "@/pages/site-locations";
-import SiteLocationDetail from "@/pages/site-location-detail";
-import Tickets from "@/pages/tickets";
-import TicketDetail from "@/pages/ticket-detail";
-import FieldSchedule from "@/pages/field-schedule";
-import FieldProfile from "@/pages/field-profile";
-import FieldEditProfile from "@/pages/field-edit-profile";
-import FieldCompliance from "@/pages/field-compliance";
-import FieldCrew from "@/pages/field-crew";
 import { FieldPortalLayout } from "@/components/field-portal-layout";
 import { ForemanPortalLayout } from "@/components/foreman-portal-layout";
 import { isForemanPersona } from "@/lib/portal-base";
-import Catalog from "@/pages/catalog";
-import CatalogHealth from "@/pages/catalog-health";
-import PartnerCatalog from "@/pages/partner-catalog";
-import VendorCatalog from "@/pages/vendor-catalog";
-import NotificationPreferencesPage from "@/pages/notification-preferences";
-import NotificationsInboxPage from "@/pages/notifications-inbox";
-import InvoicesPage from "@/pages/invoices";
-import InvoiceDetailPage from "@/pages/invoice-detail";
-import BillingSettingsPage from "@/pages/billing-settings";
-import BillsToPayPage from "@/pages/bills-to-pay";
-import StatementPage from "@/pages/statement";
-import FlaggedTicketsPage from "@/pages/flagged-tickets";
-import SafetyInboxPage from "@/pages/safety-inbox";
-import SafetyEventDetailPage from "@/pages/safety-event-detail";
-import SafetyReportPage from "@/pages/safety-report";
-import SafetyTrainingPage from "@/pages/safety-training";
-import Portal from "@/pages/portal";
-import VisitPublicPage from "@/pages/visit-public";
-import VerifyEmployeePage from "@/pages/verify-employee";
-import VisitorEntryPage from "@/pages/visitor-entry";
-import VisitorsPage from "@/pages/visitors";
-import FieldHome from "@/pages/field-home";
-import ForemanHome from "@/pages/foreman-home";
-import ForemanCrews from "@/pages/foreman-crews";
-import FieldNewTicket from "@/pages/field-new-ticket";
-import AccountLocation from "@/pages/account-location";
-import Signup from "@/pages/signup";
-import OnboardingPartner from "@/pages/onboarding-partner";
-import OnboardingVendor from "@/pages/onboarding-vendor";
-import OnboardingField from "@/pages/onboarding-field";
-import ForgotPassword from "@/pages/forgot-password";
-import PlatformEulaPage from "@/pages/platform-eula";
-import ResetPassword from "@/pages/reset-password";
-import SignupVendor from "@/pages/signup-vendor";
-import SignupPartner from "@/pages/signup-partner";
-import NotFound from "@/pages/not-found";
-import AdminVndrly from "@/pages/admin-vndrly";
-import AdminRateLimits from "@/pages/admin-rate-limits";
-import AdminRemovedComments from "@/pages/admin-removed-comments";
 
 const Dashboard = lazy(() => import("@/pages/dashboard"));
+const Login = lazy(() => import("@/pages/login"));
+const Partners = lazy(() => import("@/pages/partners"));
+const PartnerDetail = lazy(() => import("@/pages/partner-detail"));
+const Vendors = lazy(() => import("@/pages/vendors"));
+const VendorDetail = lazy(() => import("@/pages/vendor-detail"));
+const FieldEmployees = lazy(() => import("@/pages/field-employees"));
+const FieldEmployeeDetail = lazy(() => import("@/pages/field-employee-detail"));
+const SiteLocations = lazy(() => import("@/pages/site-locations"));
+const SiteLocationDetail = lazy(() => import("@/pages/site-location-detail"));
+const Tickets = lazy(() => import("@/pages/tickets"));
+const TicketDetail = lazy(() => import("@/pages/ticket-detail"));
+const FieldSchedule = lazy(() => import("@/pages/field-schedule"));
+const FieldProfile = lazy(() => import("@/pages/field-profile"));
+const FieldEditProfile = lazy(() => import("@/pages/field-edit-profile"));
+const FieldCompliance = lazy(() => import("@/pages/field-compliance"));
+const FieldCrew = lazy(() => import("@/pages/field-crew"));
+const Catalog = lazy(() => import("@/pages/catalog"));
+const CatalogHealth = lazy(() => import("@/pages/catalog-health"));
+const PartnerCatalog = lazy(() => import("@/pages/partner-catalog"));
+const VendorCatalog = lazy(() => import("@/pages/vendor-catalog"));
+const NotificationPreferencesPage = lazy(() => import("@/pages/notification-preferences"));
+const NotificationsInboxPage = lazy(() => import("@/pages/notifications-inbox"));
+const InvoicesPage = lazy(() => import("@/pages/invoices"));
+const InvoiceDetailPage = lazy(() => import("@/pages/invoice-detail"));
+const BillingSettingsPage = lazy(() => import("@/pages/billing-settings"));
+const BillsToPayPage = lazy(() => import("@/pages/bills-to-pay"));
+const StatementPage = lazy(() => import("@/pages/statement"));
+const FlaggedTicketsPage = lazy(() => import("@/pages/flagged-tickets"));
+const SafetyInboxPage = lazy(() => import("@/pages/safety-inbox"));
+const SafetyEventDetailPage = lazy(() => import("@/pages/safety-event-detail"));
+const SafetyReportPage = lazy(() => import("@/pages/safety-report"));
+const SafetyTrainingPage = lazy(() => import("@/pages/safety-training"));
+const Portal = lazy(() => import("@/pages/portal"));
+const VisitPublicPage = lazy(() => import("@/pages/visit-public"));
+const VerifyEmployeePage = lazy(() => import("@/pages/verify-employee"));
+const VisitorEntryPage = lazy(() => import("@/pages/visitor-entry"));
+const VisitorsPage = lazy(() => import("@/pages/visitors"));
+const FieldHome = lazy(() => import("@/pages/field-home"));
+const ForemanHome = lazy(() => import("@/pages/foreman-home"));
+const ForemanCrews = lazy(() => import("@/pages/foreman-crews"));
+const FieldNewTicket = lazy(() => import("@/pages/field-new-ticket"));
+const AccountLocation = lazy(() => import("@/pages/account-location"));
+const Signup = lazy(() => import("@/pages/signup"));
+const OnboardingPartner = lazy(() => import("@/pages/onboarding-partner"));
+const OnboardingVendor = lazy(() => import("@/pages/onboarding-vendor"));
+const OnboardingField = lazy(() => import("@/pages/onboarding-field"));
+const ForgotPassword = lazy(() => import("@/pages/forgot-password"));
+const PlatformEulaPage = lazy(() => import("@/pages/platform-eula"));
+const ResetPassword = lazy(() => import("@/pages/reset-password"));
+const NotFound = lazy(() => import("@/pages/not-found"));
+const AdminVndrly = lazy(() => import("@/pages/admin-vndrly"));
+const AdminRateLimits = lazy(() => import("@/pages/admin-rate-limits"));
+const AdminRemovedComments = lazy(() => import("@/pages/admin-removed-comments"));
+const AssistantLauncher = lazy(() =>
+  import("@/components/assistant-panel").then((mod) => ({
+    default: mod.AssistantLauncher,
+  })),
+);
 const VendorAnalytics = lazy(() => import("@/pages/vendor-analytics"));
 const PartnerAnalytics = lazy(() => import("@/pages/partner-analytics"));
 const ReportsPage = lazy(() => import("@/pages/reports"));
@@ -291,7 +293,11 @@ function GlobalAssistantLauncher({ authenticated }: { authenticated: boolean }) 
   // token to the panel and use the public chat endpoint.
   const [isFieldInvite, fieldInviteParams] = useRoute("/onboarding/field/:token");
   if (isFieldInvite && fieldInviteParams?.token) {
-    return <AssistantLauncher tokenMode={{ token: fieldInviteParams.token }} />;
+    return (
+      <Suspense fallback={null}>
+        <AssistantLauncher tokenMode={{ token: fieldInviteParams.token }} />
+      </Suspense>
+    );
   }
   // Signup-mode: the public partner/vendor signup pages are also
   // pre-login. Mount the launcher in persona-scoped signup mode so a
@@ -304,7 +310,11 @@ function GlobalAssistantLauncher({ authenticated }: { authenticated: boolean }) 
   const [isSignupVendor] = useRoute("/signup/vendor");
   if (!authenticated && (isSignupPartner || isSignupVendor)) {
     const persona: "partner" | "vendor" = isSignupPartner ? "partner" : "vendor";
-    return <AssistantLauncher signupMode={{ persona }} />;
+    return (
+      <Suspense fallback={null}>
+        <AssistantLauncher signupMode={{ persona }} />
+      </Suspense>
+    );
   }
   if (!authenticated) return null;
   // Use boundary-aware checks so e.g. `/visitors` (the authenticated
@@ -339,7 +349,11 @@ function GlobalAssistantLauncher({ authenticated }: { authenticated: boolean }) 
       return null;
     }
   }
-  return <AssistantLauncher />;
+  return (
+    <Suspense fallback={null}>
+      <AssistantLauncher />
+    </Suspense>
+  );
 }
 
 function App() {

@@ -22,7 +22,7 @@ import {
   MessageSquareOff,
   Flag,
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { Suspense, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import { useAuth } from "@/hooks/use-auth";
@@ -48,8 +48,13 @@ import {
   portalDisplayLogo,
   shouldUseLayeredPortalLogo,
 } from "@/lib/portal-branding";
-import { AssistantLauncher } from "@/components/assistant-panel";
 import { OnboardingProgressBanner } from "@/components/finish-setup-widget";
+
+const AssistantLauncher = React.lazy(() =>
+  import("@/components/assistant-panel").then((mod) => ({
+    default: mod.AssistantLauncher,
+  })),
+);
 
 function useNavItems(user: { role: string; vendorId: number | null; partnerId: number | null } | null) {
   const { t } = useTranslation();
@@ -360,7 +365,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           data-testid="askv-pane"
         >
           <div className="flex items-center overflow-visible">
-            <AssistantLauncher placement="askv-pane" />
+            <Suspense fallback={null}>
+              <AssistantLauncher placement="askv-pane" />
+            </Suspense>
           </div>
           <ReferToVndrlyDialog
             trigger={
