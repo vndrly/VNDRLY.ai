@@ -9,7 +9,7 @@ alwaysApply: false
 The iOS app background is **only** these three elements, defined in `artifacts/vndrly-mobile/components/iosAppBackgroundSettings.tsx`:
 
 1. Background color (`#2e3135`)
-2. Header image (`ios-app-background-header.png`) fading into the color
+2. Header image (`VNDRLY_Header_Blur_Dark_1778850026167.png`) fading into the color
 3. Halftone pattern
 
 Mount `IosAppBackgroundStack` **once** in `app/_layout.tsx` only.

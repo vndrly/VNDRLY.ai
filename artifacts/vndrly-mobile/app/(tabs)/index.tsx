@@ -717,8 +717,8 @@ export default function HomeScreen() {
           {brand.isOrgBranded && (brand.logoSquareUrl || brand.logoUrl) ? (
               <View style={styles.brandLogoFrame}>
                 <Image
-                  source={require("@/assets/images/branded-logo-placeholder.png")}
-                  style={styles.brandLogoPlaceholder}
+                  source={require("@/assets/images/logo-underrlay_1778217900673.png")}
+                  style={styles.brandLogoLayer}
                   resizeMode="cover"
                   accessibilityElementsHidden
                   importantForAccessibility="no-hide-descendants"
@@ -746,6 +746,13 @@ export default function HomeScreen() {
                   style={styles.brandLogo}
                   resizeMode="contain"
                   accessibilityLabel={brand.name ?? t("home.brandWordmark")}
+                />
+                <Image
+                  source={require("@/assets/images/logo-overlay_1778217860263.png")}
+                  style={styles.brandLogoOverlay}
+                  resizeMode="cover"
+                  accessibilityElementsHidden
+                  importantForAccessibility="no-hide-descendants"
                 />
               </View>
           ) : (
@@ -1701,9 +1708,15 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
   },
-  brandLogoFrame: { width: 64, height: 64 },
-  brandLogoPlaceholder: { ...StyleSheet.absoluteFillObject },
-  brandLogo: { width: 64, height: 64 },
+  brandLogoFrame: {
+    width: 64,
+    height: 64,
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+  brandLogoLayer: { ...StyleSheet.absoluteFillObject, opacity: 0.5 },
+  brandLogoOverlay: { ...StyleSheet.absoluteFillObject, opacity: 0.7 },
+  brandLogo: { ...StyleSheet.absoluteFillObject, padding: 8 },
   brandIdentity: {
     marginLeft: 10,
     flex: 1,

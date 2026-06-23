@@ -24,7 +24,7 @@ import { SvgXml } from "react-native-svg";
  */
 export const IOS_APP_BACKGROUND_SETTINGS = {
   backgroundColor: "#2e3135",
-  headerImage: require("@/assets/images/ios-app-background-header.png"),
+  headerImage: require("@/assets/images/VNDRLY_Header_Blur_Dark_1778850026167.png"),
   headerHeight: 200,
   headerOpacity: 0.85,
   halftoneOpacity: 0.22,
