@@ -1,0 +1,22 @@
+{
+  "name": "VNDRLY",
+  "short_name": "VNDRLY",
+  "description": "Field operations management for partners, vendors, and field crews.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#e29f03",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}

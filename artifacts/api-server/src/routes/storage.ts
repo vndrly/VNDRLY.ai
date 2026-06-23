@@ -33,6 +33,16 @@ router.put(
       res.status(400).json({ error: "Invalid upload id" });
       return;
     }
+    if (
+      !getObjectStore().validateUploadURL(
+        uploadId,
+        typeof req.query.expires === "string" ? req.query.expires : undefined,
+        typeof req.query.signature === "string" ? req.query.signature : undefined,
+      )
+    ) {
+      res.status(403).json({ error: "Invalid or expired upload URL" });
+      return;
+    }
     const body = Buffer.isBuffer(req.body) ? req.body : Buffer.alloc(0);
     if (body.length === 0) {
       res.status(400).json({ error: "Empty body" });

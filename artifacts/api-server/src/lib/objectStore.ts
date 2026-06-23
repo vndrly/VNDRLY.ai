@@ -1,5 +1,5 @@
 import fsp from "node:fs/promises";
-import { randomUUID } from "node:crypto";
+import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import ws from "ws";
 import type { ObjectAclPolicy } from "./objectAcl";
@@ -27,6 +27,7 @@ import {
 
 /** Our own proxy endpoint the client PUTs raw bytes to. */
 export const UPLOAD_ROUTE = "/api/storage/upload";
+const UPLOAD_URL_TTL_MS = 15 * 60 * 1000;
 
 export interface StoredObject {
   contentType: string;
@@ -39,6 +40,8 @@ export interface ObjectStore {
   readonly kind: "supabase" | "filesystem";
   /** Issue an upload URL (our proxy) + the canonical /objects path. */
   getUploadDescriptor(): { uploadURL: string; objectPath: string };
+  /** Validate a signed upload URL before accepting raw bytes. */
+  validateUploadURL(uploadId: string, expires: string | undefined, signature: string | undefined): boolean;
   /** Persist uploaded bytes for an `upload/:id` PUT. */
   putUpload(uploadId: string, contentType: string, body: Buffer): Promise<void>;
   /** Map the upload URL echoed at finalize-time back to the object path. */
@@ -69,6 +72,43 @@ export interface ObjectStore {
 
 function uploadIdToObjectPath(uploadId: string): string {
   return `/objects/uploads/${uploadId}`;
+}
+
+function uploadSigningSecret(): string {
+  const secret = process.env.UPLOAD_URL_SECRET || process.env.SESSION_SECRET;
+  if (secret) return secret;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("UPLOAD_URL_SECRET or SESSION_SECRET is required for signed uploads");
+  }
+  return "dev-upload-url-secret";
+}
+
+function signUploadURL(uploadId: string, expires: number): string {
+  return createHmac("sha256", uploadSigningSecret())
+    .update(`${uploadId}.${expires}`)
+    .digest("hex");
+}
+
+function signedUploadURL(uploadId: string): string {
+  const expires = Date.now() + UPLOAD_URL_TTL_MS;
+  const signature = signUploadURL(uploadId, expires);
+  return `${UPLOAD_ROUTE}/${uploadId}?expires=${expires}&signature=${signature}`;
+}
+
+function validateSignedUploadURL(
+  uploadId: string,
+  expiresRaw: string | undefined,
+  signature: string | undefined,
+): boolean {
+  if (!expiresRaw || !signature || !/^[0-9a-f]{64}$/i.test(signature)) return false;
+  const expires = Number(expiresRaw);
+  if (!Number.isFinite(expires) || expires < Date.now()) return false;
+  const expected = signUploadURL(uploadId, expires);
+  try {
+    return timingSafeEqual(Buffer.from(signature, "hex"), Buffer.from(expected, "hex"));
+  } catch {
+    return false;
+  }
 }
 
 function uploadUrlToObjectPathShared(uploadURL: string): string {
@@ -135,9 +175,13 @@ class SupabaseObjectStore implements ObjectStore {
   getUploadDescriptor(): { uploadURL: string; objectPath: string } {
     const id = randomUUID();
     return {
-      uploadURL: `${UPLOAD_ROUTE}/${id}`,
+      uploadURL: signedUploadURL(id),
       objectPath: uploadIdToObjectPath(id),
     };
+  }
+
+  validateUploadURL(uploadId: string, expires: string | undefined, signature: string | undefined): boolean {
+    return validateSignedUploadURL(uploadId, expires, signature);
   }
 
   uploadUrlToObjectPath(uploadURL: string): string {
@@ -270,9 +314,13 @@ class FilesystemObjectStore implements ObjectStore {
   getUploadDescriptor(): { uploadURL: string; objectPath: string } {
     const id = randomUUID();
     return {
-      uploadURL: `${UPLOAD_ROUTE}/${id}`,
+      uploadURL: signedUploadURL(id),
       objectPath: uploadIdToObjectPath(id),
     };
+  }
+
+  validateUploadURL(uploadId: string, expires: string | undefined, signature: string | undefined): boolean {
+    return validateSignedUploadURL(uploadId, expires, signature);
   }
 
   uploadUrlToObjectPath(uploadURL: string): string {

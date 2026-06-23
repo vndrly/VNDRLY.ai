@@ -299,6 +299,10 @@ router.get("/visits/site-context/:siteCode", async (req, res): Promise<void> => 
   });
 });
 
+function roundPublicCoordinate(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
 // ---------- GET /api/visits/public-sites (public; no auth required) ----------
 router.get("/visits/public-sites", async (_req, res): Promise<void> => {
   const rows = await db
@@ -314,8 +318,16 @@ router.get("/visits/public-sites", async (_req, res): Promise<void> => {
     })
     .from(siteLocationsTable)
     .leftJoin(partnersTable, eq(siteLocationsTable.partnerId, partnersTable.id))
-    .where(sql`${siteLocationsTable.isActive} = true AND ${siteLocationsTable.hidden} = false`);
-  res.json(rows);
+    .where(sql`${siteLocationsTable.isActive} = true AND ${siteLocationsTable.hidden} = false`)
+    .orderBy(siteLocationsTable.name)
+    .limit(50);
+  res.json(
+    rows.map((site) => ({
+      ...site,
+      latitude: roundPublicCoordinate(site.latitude),
+      longitude: roundPublicCoordinate(site.longitude),
+    })),
+  );
 });
 
 function distanceMeters(aLat: number, aLng: number, bLat: number, bLng: number): number {
