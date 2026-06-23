@@ -84,7 +84,7 @@ export default function CrewReplayScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <InPageHeader title={t("crewReplay.dayReplayTitle", { name: name || t("crewReplay.employeeFallback") })} onBack={() => router.back()} />
-      <ScrollView style={{ flex: 1, backgroundColor: "transparent" }} contentContainerStyle={styles.content}>
+      <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={styles.content}>
         <Text style={{ color: colors.mutedForeground, marginBottom: 8 }}>{t("crewReplay.subtitle")}</Text>
         <TextInput
           value={date}

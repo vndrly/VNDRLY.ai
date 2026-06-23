@@ -27,7 +27,6 @@ import { computeTicketTaxPreview } from "@workspace/db/ticket-tax-preview";
 
 import ActiveOrgIndicator from "@/components/ActiveOrgIndicator";
 import AmberButton from "@/components/AmberButton";
-import HeaderRefreshPillButton from "@/components/HeaderRefreshPillButton";
 import LayeredPillButton from "@/components/LayeredPillButton";
 import Pill9Slice from "@/components/Pill9Slice";
 import BlueButton from "@/components/BlueButton";
@@ -1773,7 +1772,7 @@ export default function TicketDetailScreen() {
 
   if (!ticketIdValid) {
     return (
-      <View style={{ flex: 1, backgroundColor: "transparent" }}>
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
         <Stack.Screen options={{ headerShown: false }} />
         <InPageHeader title={t("stack.tracking")} />
         <View
@@ -1798,7 +1797,7 @@ export default function TicketDetailScreen() {
     // consistent across the parked-while-loaded and parked-on-mount
     // cases.
     return (
-      <View style={{ flex: 1, backgroundColor: "transparent" }}>
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
         <Stack.Screen options={{ headerShown: false }} />
         <InPageHeader title={t("stack.tracking")} />
         <View
@@ -1833,7 +1832,7 @@ export default function TicketDetailScreen() {
       ? translateApiError(loadError, t, t("tickets.errorLoadDetail"))
       : t("tickets.errorLoadDetail");
     return (
-      <View style={{ flex: 1, backgroundColor: "transparent" }}>
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
         <Stack.Screen options={{ headerShown: false }} />
         <InPageHeader title={t("stack.tracking")} />
         <View
@@ -1858,7 +1857,7 @@ export default function TicketDetailScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: "transparent" }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
     <NudgeFlashOverlay active={isNudgeFlashing} borderRadius={0} />
     {/* ── Task #669: header refresh button ──
         We render this via Stack.Screen.headerRight so it lives in the
@@ -1888,20 +1887,36 @@ export default function TicketDetailScreen() {
             rateLimited={rateLimited}
             testID="ticket-detail-freshness-pill"
           />
-          <HeaderRefreshPillButton
+          <TouchableOpacity
             onPress={onHeaderRefresh}
             disabled={headerRefreshing || refreshing || rateLimited}
-            loading={headerRefreshing}
+            accessibilityRole="button"
             accessibilityLabel={t("tickets.refreshDetailAccessibility")}
             accessibilityHint={t("tickets.refreshDetailAccessibilityHint")}
+            accessibilityState={{
+              disabled: headerRefreshing || refreshing || rateLimited,
+              busy: headerRefreshing,
+            }}
             testID="button-refresh-ticket-detail"
-          />
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            style={{
+              paddingHorizontal: 8,
+              paddingVertical: 6,
+              opacity: headerRefreshing || refreshing || rateLimited ? 0.6 : 1,
+            }}
+          >
+            {headerRefreshing ? (
+              <ActivityIndicator size="small" color={colors.primary} />
+            ) : (
+              <Feather name="refresh-cw" size={20} color={colors.primary} />
+            )}
+          </TouchableOpacity>
         </>
       }
     />
     <ScrollView
       ref={scrollRef}
-      style={{ flex: 1, backgroundColor: "transparent" }}
+      style={{ flex: 1, backgroundColor: colors.background }}
       contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
       refreshControl={
         <RefreshControl

@@ -136,6 +136,24 @@ export default function LoginScreen() {
 
   return (
     <ScreenSafeArea style={[styles.flex, { backgroundColor: colors.background }]}>
+      {/* Decorative header background — a blurred field-ops photo
+          anchored to the top of the screen, fading from 80% opacity
+          at the very top to 0% over roughly the top two inches
+          (~200pt) so it dissolves into the dark login chrome.
+          `pointerEvents="none"` + first-child render order means
+          the form sits visually OVER it but never blocks taps and
+          the image itself can never receive touches. */}
+      <View pointerEvents="none" style={styles.headerBgWrap}>
+        <Image
+          source={require("@/assets/images/login-header-bg.png")}
+          style={styles.headerBgImage}
+          resizeMode="cover"
+        />
+        <View
+          pointerEvents="none"
+          style={[StyleSheet.absoluteFill, { backgroundColor: colors.background, opacity: 0.6 }]}
+        />
+      </View>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -314,6 +332,22 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  // ~200pt ≈ "top two inches" on a typical phone. Absolute so it sits
+  // behind every later sibling in z-order and the form can scroll
+  // freely on top of it.
+  headerBgWrap: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 200,
+    overflow: "hidden",
+  },
+  headerBgImage: {
+    width: "100%",
+    height: "100%",
+    opacity: 0.8,
+  },
   container: { flexGrow: 1, padding: 24, justifyContent: "center" },
   languageToggleRow: {
     flexDirection: "row",

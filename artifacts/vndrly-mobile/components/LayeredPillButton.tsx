@@ -4,7 +4,6 @@ import {
   Pressable,
   StyleSheet,
   View,
-  type AccessibilityState,
   type GestureResponderEvent,
   type StyleProp,
   type ViewStyle,
@@ -92,9 +91,6 @@ export interface LayeredPillButtonProps {
   color?: string;
   /** Grey idle pill — no color overlay. */
   inactive?: boolean;
-  accessibilityLabel?: string;
-  accessibilityHint?: string;
-  accessibilityState?: AccessibilityState;
 }
 
 /**
@@ -114,9 +110,6 @@ export default function LayeredPillButton({
   height: _heightProp,
   color,
   inactive,
-  accessibilityLabel,
-  accessibilityHint,
-  accessibilityState,
 }: LayeredPillButtonProps) {
   const brand = useBrand();
   const targetHex = color ?? brand.primary ?? "#1f9a3d";
@@ -134,10 +127,6 @@ export default function LayeredPillButton({
       onPress={onPress}
       disabled={disabled || loading}
       testID={testID}
-      accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel}
-      accessibilityHint={accessibilityHint}
-      accessibilityState={accessibilityState}
       style={({ pressed }) => [
         styles.wrap,
         { height, minWidth: height + 12, borderRadius: radius },

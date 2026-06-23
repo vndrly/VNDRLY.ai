@@ -21,7 +21,6 @@ export default function TabLayout() {
       screenOptions={{
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.mutedForeground,
-        sceneStyle: { backgroundColor: "transparent" },
         headerStyle: { backgroundColor: colors.background },
         headerTitleStyle: {
           fontFamily: "Inter_600SemiBold",

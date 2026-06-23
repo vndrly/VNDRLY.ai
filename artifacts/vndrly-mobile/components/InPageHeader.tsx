@@ -16,8 +16,6 @@ type Props = {
   onBack?: () => void;
   /** Hide the back affordance entirely (use on tab roots). */
   hideBack?: boolean;
-  /** Shrink top padding (px) so stacked header rows below fit without clipping. */
-  compactVertical?: number;
   /** Parent already applied status-bar inset — skip safe-area top padding. */
   suppressTopInset?: boolean;
   style?: ViewStyle;
@@ -40,16 +38,12 @@ export default function InPageHeader({
   right,
   onBack,
   hideBack,
-  compactVertical = 0,
   suppressTopInset,
   style,
   testID,
 }: Props) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const topPadding = suppressTopInset
-    ? 0
-    : Math.max(insets.top, screenTopPadding(insets.top) - compactVertical);
 
   const handleBack = () => {
     if (onBack) {
@@ -65,10 +59,10 @@ export default function InPageHeader({
     <View
       style={[
         {
-          paddingTop: topPadding,
+          paddingTop: suppressTopInset ? 0 : screenTopPadding(insets.top),
           paddingBottom: 8,
           paddingHorizontal: 12,
-          backgroundColor: "transparent",
+          backgroundColor: colors.background,
           flexDirection: "row",
           alignItems: "center",
           gap: 8,

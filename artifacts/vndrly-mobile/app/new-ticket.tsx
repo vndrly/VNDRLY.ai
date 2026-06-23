@@ -523,7 +523,7 @@ export default function NewTicketScreen() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: "transparent" }}>
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
         <Stack.Screen options={{ headerShown: false }} />
         <InPageHeader title={t("stack.newTicket")} />
         <View style={[styles.center, { backgroundColor: colors.background }]}>

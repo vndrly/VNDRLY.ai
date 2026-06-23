@@ -12,7 +12,7 @@ import { Stack, router, useSegments } from "expo-router";
 import * as Notifications from "expo-notifications";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useState } from "react";
-import { Platform, View } from "react-native";
+import { Platform } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
@@ -35,9 +35,6 @@ import {
   notificationIdFromPushData,
   routeForPushData,
 } from "@/lib/pushDeepLinks";
-import IosAppBackgroundStack, {
-  IOS_APP_BACKGROUND_SETTINGS,
-} from "@/components/iosAppBackgroundSettings";
 import { registerForPushNotifications } from "@/lib/push";
 import { initSentry, setSentryUser, wrapRoot } from "@/lib/sentry";
 import "@/lib/push";
@@ -228,7 +225,6 @@ function AuthGate() {
       screenOptions={{
         headerBackTitle: t("stack.back"),
         headerRight: () => <ActiveOrgIndicator />,
-        contentStyle: { backgroundColor: "transparent" },
       }}
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -244,14 +240,7 @@ function AuthGate() {
       <Stack.Screen name="edit-profile" options={{ title: t("stack.editProfile") }} />
       <Stack.Screen name="crew-changes" options={{ headerShown: false }} />
       <Stack.Screen name="compliance" options={{ headerShown: false }} />
-      <Stack.Screen
-        name="notifications"
-        options={{
-          headerShown: false,
-          presentation: "modal",
-          contentStyle: { backgroundColor: "transparent" },
-        }}
-      />
+      <Stack.Screen name="notifications" options={{ headerShown: false, presentation: "modal" }} />
       <Stack.Screen name="notification-preferences" options={{ headerShown: false }} />
       <Stack.Screen name="location-consent" options={{ headerShown: false }} />
     </Stack>
@@ -286,16 +275,9 @@ function RootLayout() {
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
             <BrandProvider>
-              <GestureHandlerRootView
-                style={{ flex: 1, backgroundColor: IOS_APP_BACKGROUND_SETTINGS.backgroundColor }}
-              >
+              <GestureHandlerRootView style={{ flex: 1 }}>
                 <SafeKeyboardProvider>
-                  <View style={{ flex: 1 }}>
-                    <IosAppBackgroundStack />
-                    <View style={{ flex: 1 }}>
-                      <AuthGate />
-                    </View>
-                  </View>
+                  <AuthGate />
                   <ContextPickerModal />
                 </SafeKeyboardProvider>
               </GestureHandlerRootView>

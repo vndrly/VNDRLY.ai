@@ -96,7 +96,7 @@ export default function CommsScreen() {
   const selected = tickets.find((tk) => tk.id === selectedId);
 
   return (
-    <View style={[styles.container, { backgroundColor: "transparent" }]}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
       <InPageHeader
         title={t("foremanHome.crewCommsTitle")}

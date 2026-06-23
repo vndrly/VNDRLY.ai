@@ -14,7 +14,6 @@ import {
 } from "react-native";
 
 import ActiveOrgIndicator from "@/components/ActiveOrgIndicator";
-import HeaderRefreshPillButton from "@/components/HeaderRefreshPillButton";
 import InPageHeader from "@/components/InPageHeader";
 import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/useColors";
@@ -133,25 +132,41 @@ export default function HistoryScreen() {
     () => (
       <>
         <ActiveOrgIndicator />
-        <HeaderRefreshPillButton
+        <TouchableOpacity
           onPress={onHeaderRefresh}
           disabled={headerRefreshing || refreshing || rateLimited}
-          loading={headerRefreshing}
+          accessibilityRole="button"
           accessibilityLabel={t("tickets.refreshHistoryAccessibility")}
           accessibilityHint={t("tickets.refreshHistoryAccessibilityHint")}
+          accessibilityState={{
+            disabled: headerRefreshing || refreshing || rateLimited,
+            busy: headerRefreshing,
+          }}
           testID="button-refresh-history"
-        />
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          style={{
+            paddingHorizontal: 8,
+            paddingVertical: 6,
+            opacity: headerRefreshing || refreshing || rateLimited ? 0.6 : 1,
+          }}
+        >
+          {headerRefreshing ? (
+            <ActivityIndicator size="small" color={colors.primary} />
+          ) : (
+            <Feather name="refresh-cw" size={20} color={colors.primary} />
+          )}
+        </TouchableOpacity>
       </>
     ),
-    [onHeaderRefresh, headerRefreshing, refreshing, rateLimited, t],
+    [onHeaderRefresh, headerRefreshing, refreshing, rateLimited, t, colors.primary],
   );
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: "transparent" }}>
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
         <Stack.Screen options={{ headerShown: false }} />
         <InPageHeader title={t("tickets.history")} right={headerRight()} />
-        <View style={[styles.center, { backgroundColor: "transparent" }]}>
+        <View style={[styles.center, { backgroundColor: colors.background }]}>
           <ActivityIndicator color={colors.primary} />
         </View>
       </View>
@@ -159,11 +174,11 @@ export default function HistoryScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: "transparent" }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <Stack.Screen options={{ headerShown: false }} />
       <InPageHeader title={t("tickets.history")} right={headerRight()} />
       <FlatList
-        style={{ backgroundColor: "transparent" }}
+        style={{ backgroundColor: colors.background }}
         contentContainerStyle={{ padding: 16 }}
         data={tickets}
         keyExtractor={(item) => String(item.id)}
