@@ -26,6 +26,7 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { BrandProvider } from "@/hooks/use-brand";
 import ContextPickerModal from "@/components/ContextPickerModal";
 import { initApi } from "@/lib/api";
+import VndrlyPageBackground from "@/components/VndrlyPageBackground";
 import { getCachedToken, getCachedRole, getToken, isTokenCacheReady, subscribeToken, getUser } from "@/lib/auth";
 import { hasActiveConsentForThisDevice, isConsentDeclined } from "@/lib/locationConsent";
 import { startLiveLocationReporter, stopLiveLocationReporter } from "@/lib/liveLocationReporter";
@@ -277,8 +278,10 @@ function RootLayout() {
             <BrandProvider>
               <GestureHandlerRootView style={{ flex: 1 }}>
                 <SafeKeyboardProvider>
-                  <AuthGate />
-                  <ContextPickerModal />
+                  <VndrlyPageBackground>
+                    <AuthGate />
+                    <ContextPickerModal />
+                  </VndrlyPageBackground>
                 </SafeKeyboardProvider>
               </GestureHandlerRootView>
             </BrandProvider>
