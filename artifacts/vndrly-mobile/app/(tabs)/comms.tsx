@@ -78,7 +78,7 @@ export default function CommsScreen() {
 
   if (!isForeman) {
     return (
-      <View style={[styles.centered, { backgroundColor: colors.background }]}>
+      <View style={[styles.centered, { backgroundColor: colors.pageBackground }]}>
         <Stack.Screen options={{ headerShown: false }} />
         <InPageHeader
           title={t("foremanHome.crewCommsTitle")}
@@ -96,7 +96,7 @@ export default function CommsScreen() {
   const selected = tickets.find((tk) => tk.id === selectedId);
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: colors.pageBackground }]}>
       <Stack.Screen options={{ headerShown: false }} />
       <InPageHeader
         title={t("foremanHome.crewCommsTitle")}

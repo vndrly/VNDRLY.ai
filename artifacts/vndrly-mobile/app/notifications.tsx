@@ -163,7 +163,7 @@ export default function NotificationsScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: colors.pageBackground }]}>
       <Stack.Screen options={{ headerShown: false }} />
       <InPageHeader
         title={t("notifications.title")}

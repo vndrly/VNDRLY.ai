@@ -54,7 +54,7 @@ export default function LocationConsentScreen() {
   };
 
   return (
-    <View style={[styles.flex, { backgroundColor: colors.background }]}>
+    <View style={[styles.flex, { backgroundColor: colors.pageBackground }]}>
       <Stack.Screen options={{ headerShown: false }} />
       <InPageHeader
         title={t("consent.title")}

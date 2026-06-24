@@ -163,10 +163,10 @@ export default function HistoryScreen() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <View style={{ flex: 1, backgroundColor: colors.pageBackground }}>
         <Stack.Screen options={{ headerShown: false }} />
         <InPageHeader title={t("tickets.history")} right={headerRight()} />
-        <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <View style={[styles.center, { backgroundColor: colors.pageBackground }]}>
           <ActivityIndicator color={colors.primary} />
         </View>
       </View>
@@ -174,11 +174,11 @@ export default function HistoryScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={{ flex: 1, backgroundColor: colors.pageBackground }}>
       <Stack.Screen options={{ headerShown: false }} />
       <InPageHeader title={t("tickets.history")} right={headerRight()} />
       <FlatList
-        style={{ backgroundColor: colors.background }}
+        style={{ backgroundColor: colors.pageBackground }}
         contentContainerStyle={{ padding: 16 }}
         data={tickets}
         keyExtractor={(item) => String(item.id)}

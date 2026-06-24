@@ -66,8 +66,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "stretch",
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: PILL_OUTLINE,
+    flexShrink: 0,
     borderRadius: 999,
     overflow: "hidden",
   },

@@ -125,7 +125,7 @@ export default function EmployeeEditScreen() {
   if (loading || !form) {
     return (
       <ScreenSafeArea
-        style={[styles.flex, { backgroundColor: colors.background }]}
+        style={[styles.flex, { backgroundColor: colors.pageBackground }]}
         edges={["bottom"]}
         includeTopGap={false}
       >
@@ -138,7 +138,7 @@ export default function EmployeeEditScreen() {
 
   return (
     <ScreenSafeArea
-      style={[styles.flex, { backgroundColor: colors.background }]}
+      style={[styles.flex, { backgroundColor: colors.pageBackground }]}
       edges={["bottom"]}
       includeTopGap={false}
     >

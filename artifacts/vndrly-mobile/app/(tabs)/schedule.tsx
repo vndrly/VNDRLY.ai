@@ -204,7 +204,7 @@ export default function ScheduleScreen() {
 
   if (loading) {
     return (
-      <View style={[styles.center, { backgroundColor: colors.background }]}>
+      <View style={[styles.center, { backgroundColor: colors.pageBackground }]}>
         <Stack.Screen options={{ headerShown: false }} />
         <InPageHeader
           title={t("tabs.schedule")}
@@ -216,7 +216,7 @@ export default function ScheduleScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={{ flex: 1, backgroundColor: colors.pageBackground }}>
       <Stack.Screen options={{ headerShown: false }} />
       <InPageHeader
         title={t("tabs.schedule")}

@@ -523,10 +523,10 @@ export default function NewTicketScreen() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <View style={{ flex: 1, backgroundColor: colors.pageBackground }}>
         <Stack.Screen options={{ headerShown: false }} />
         <InPageHeader title={t("stack.newTicket")} />
-        <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <View style={[styles.center, { backgroundColor: colors.pageBackground }]}>
           <ActivityIndicator color={colors.primary} />
         </View>
       </View>
@@ -544,7 +544,7 @@ export default function NewTicketScreen() {
 
   return (
     <ScrollView
-      style={[styles.flex, { backgroundColor: colors.background }]}
+      style={[styles.flex, { backgroundColor: colors.pageBackground }]}
       contentContainerStyle={{ paddingBottom: 40 }}
       stickyHeaderIndices={[0]}
     >

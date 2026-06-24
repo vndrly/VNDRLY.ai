@@ -226,6 +226,7 @@ function AuthGate() {
       screenOptions={{
         headerBackTitle: t("stack.back"),
         headerRight: () => <ActiveOrgIndicator />,
+        contentStyle: { backgroundColor: "transparent" },
       }}
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

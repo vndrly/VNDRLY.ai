@@ -1,10 +1,11 @@
-import greyPill from "@/assets/pill-stack/light-grey.png";
-import amberPill from "@/assets/pill-stack/mid-orange.png";
-import bluePill from "@/assets/pill-stack/mid-blue.png";
-import greenPill from "@/assets/pill-stack/mid-green-v3.png";
-import redPill from "@/assets/pill-stack/mid-red-v2.png";
-import tanPill from "@/assets/pill-stack/mid-tan-v3.png";
-import tealPill from "@/assets/pill-stack/mid-teal.png";
+import amberPill from "@/assets/pills/pill_amber.png";
+import bakerPill from "@/assets/pills/pill_baker.png";
+import bluePill from "@/assets/pills/pill_blue.png";
+import greenPill from "@/assets/pills/pill_green.png";
+import redPill from "@/assets/pills/pill_red.png";
+import vndrlyPill from "@/assets/pills/pill_vndrly.png";
+import whitePill from "@/assets/pills/pill_white.png";
+import winchesterPill from "@/assets/pills/pill_winchester.png";
 
 type PaletteEntry = { hex: string; src: number };
 
@@ -15,11 +16,11 @@ const TOGGLE_PILL_PALETTE: PaletteEntry[] = [
   { hex: "#1E5BD0", src: bluePill },
 ];
 
-/** Inactive half of EN/ES toggles — light pill PNG (web white idle half). */
-export const TOGGLE_IDLE_PILL_SRC = greyPill;
+/** Inactive half of EN/ES toggles — same white idle half used by the web nav pane. */
+export const TOGGLE_IDLE_PILL_SRC = whitePill;
 
 /** Neutral grey for disabled status chips. */
-export const NEUTRAL_PILL_SRC = greyPill;
+export const NEUTRAL_PILL_SRC = whitePill;
 
 function hexToRgb(hex: string): [number, number, number] | null {
   const cleaned = hex.trim().replace(/^#/, "");
@@ -69,13 +70,14 @@ export function pickTogglePillSrc(
   brandName?: string | null,
 ): number {
   const name = brandName?.toLowerCase() ?? "";
-  if (name.includes("winchester")) return tanPill;
-  if (name.includes("baker")) return tealPill;
-  if (!brandColor) return bluePill;
+  if (name.includes("winchester")) return winchesterPill;
+  if (name.includes("baker")) return bakerPill;
+  if (name.includes("vndrly")) return vndrlyPill;
+  if (!brandColor) return vndrlyPill;
   const rgb = hexToRgb(brandColor);
-  if (!rgb) return bluePill;
+  if (!rgb) return vndrlyPill;
   const [h, s, l] = rgbToHsl(rgb[0], rgb[1], rgb[2]);
-  if (s < 0.12) return greyPill;
+  if (s < 0.12) return whitePill;
   let bestSrc = TOGGLE_PILL_PALETTE[0].src;
   let bestScore = Infinity;
   for (const entry of TOGGLE_PILL_PALETTE) {

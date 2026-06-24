@@ -1772,7 +1772,7 @@ export default function TicketDetailScreen() {
 
   if (!ticketIdValid) {
     return (
-      <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <View style={{ flex: 1, backgroundColor: colors.pageBackground }}>
         <Stack.Screen options={{ headerShown: false }} />
         <InPageHeader title={t("stack.tracking")} />
         <View
@@ -1797,7 +1797,7 @@ export default function TicketDetailScreen() {
     // consistent across the parked-while-loaded and parked-on-mount
     // cases.
     return (
-      <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <View style={{ flex: 1, backgroundColor: colors.pageBackground }}>
         <Stack.Screen options={{ headerShown: false }} />
         <InPageHeader title={t("stack.tracking")} />
         <View
@@ -1832,7 +1832,7 @@ export default function TicketDetailScreen() {
       ? translateApiError(loadError, t, t("tickets.errorLoadDetail"))
       : t("tickets.errorLoadDetail");
     return (
-      <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <View style={{ flex: 1, backgroundColor: colors.pageBackground }}>
         <Stack.Screen options={{ headerShown: false }} />
         <InPageHeader title={t("stack.tracking")} />
         <View
@@ -1857,7 +1857,7 @@ export default function TicketDetailScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={{ flex: 1, backgroundColor: colors.pageBackground }}>
     <NudgeFlashOverlay active={isNudgeFlashing} borderRadius={0} />
     {/* ── Task #669: header refresh button ──
         We render this via Stack.Screen.headerRight so it lives in the
@@ -1916,7 +1916,7 @@ export default function TicketDetailScreen() {
     />
     <ScrollView
       ref={scrollRef}
-      style={{ flex: 1, backgroundColor: colors.background }}
+      style={{ flex: 1, backgroundColor: colors.pageBackground }}
       contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
       refreshControl={
         <RefreshControl

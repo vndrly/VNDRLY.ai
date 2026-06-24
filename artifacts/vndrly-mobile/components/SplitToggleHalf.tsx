@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import {
   Pressable,
+  Image,
   StyleSheet,
   Text,
   View,
@@ -9,11 +10,7 @@ import {
   type ViewStyle,
 } from "react-native";
 
-import Pill9Slice from "@/components/Pill9Slice";
-import { GREY_PILL_OPACITY } from "@/lib/pill-opacity";
-import { PILL_HEIGHT_PX } from "@/lib/pill-doctrine";
-
-export const SPLIT_TOGGLE_PILL_HEIGHT_PX = PILL_HEIGHT_PX;
+export const SPLIT_TOGGLE_PILL_HEIGHT_PX = 23;
 
 type Props = {
   side: "left" | "right";
@@ -24,7 +21,7 @@ type Props = {
   style?: StyleProp<ViewStyle>;
   testID?: string;
   accessibilityState?: { selected?: boolean };
-  /** Unselected grey pill half — rendered at {@link GREY_PILL_OPACITY}. */
+  /** Unselected grey pill half. Kept for API parity with callers. */
   greyPill?: boolean;
 };
 
@@ -41,10 +38,10 @@ export default function SplitToggleHalf({
   style,
   testID,
   accessibilityState,
-  greyPill,
+  greyPill: _greyPill,
 }: Props) {
   const height = SPLIT_TOGGLE_PILL_HEIGHT_PX;
-  const radius = height / 2;
+  const clipRadius = side === "left" ? styles.leftClipRadius : styles.rightClipRadius;
   const [halfW, setHalfW] = useState(0);
 
   return (
@@ -57,14 +54,15 @@ export default function SplitToggleHalf({
         const nw = e.nativeEvent.layout.width;
         if (nw !== halfW) setHalfW(nw);
       }}
-      style={[styles.half, { height }, greyPill ? styles.greyPill : null, style]}
+      style={[styles.half, { height }, style]}
     >
       {halfW > 0 ? (
         <View
           pointerEvents="none"
           style={[
             StyleSheet.absoluteFillObject,
-            { overflow: "hidden", borderRadius: radius },
+            styles.clip,
+            clipRadius,
           ]}
         >
           <View
@@ -76,7 +74,17 @@ export default function SplitToggleHalf({
               left: side === "left" ? 0 : -halfW,
             }}
           >
-            <Pill9Slice source={pillSrc} height={height} borderRadius={radius} />
+            <Image
+              source={pillSrc}
+              resizeMode="stretch"
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: halfW * 2,
+                height,
+              }}
+            />
           </View>
         </View>
       ) : null}
@@ -88,20 +96,30 @@ export default function SplitToggleHalf({
 const styles = StyleSheet.create({
   half: {
     position: "relative",
-    paddingHorizontal: 10,
-    minWidth: 36,
+    paddingHorizontal: 8,
+    minWidth: 32,
+    minHeight: SPLIT_TOGGLE_PILL_HEIGHT_PX,
+    maxHeight: SPLIT_TOGGLE_PILL_HEIGHT_PX,
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
   },
+  clip: {
+    overflow: "hidden",
+  },
+  leftClipRadius: {
+    borderTopLeftRadius: SPLIT_TOGGLE_PILL_HEIGHT_PX / 2,
+    borderBottomLeftRadius: SPLIT_TOGGLE_PILL_HEIGHT_PX / 2,
+  },
+  rightClipRadius: {
+    borderTopRightRadius: SPLIT_TOGGLE_PILL_HEIGHT_PX / 2,
+    borderBottomRightRadius: SPLIT_TOGGLE_PILL_HEIGHT_PX / 2,
+  },
   label: {
     position: "relative",
     zIndex: 1,
-    fontFamily: "Inter_700Bold",
-    fontSize: 11,
-    letterSpacing: 0.5,
-  },
-  greyPill: {
-    opacity: GREY_PILL_OPACITY,
+    fontFamily: "Inter_400Regular",
+    fontSize: 12,
+    letterSpacing: 0,
   },
 });

@@ -218,7 +218,7 @@ export default function SignupVendorScreen() {
   const labelStyle = [styles.label, { color: colors.foreground }];
 
   return (
-    <ScreenSafeArea style={[styles.flex, { backgroundColor: colors.background }]}>
+    <ScreenSafeArea style={[styles.flex, { backgroundColor: colors.pageBackground }]}>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === "ios" ? "padding" : undefined}

@@ -138,6 +138,13 @@ export default function HomeScreen() {
   // pause cleanly instead of falling back to a generic alert + tight
   // retry that would just re-trip the limit.
   const [loadError, setLoadError] = useState<unknown>(null);
+  const loadInFlightRef = React.useRef<Promise<boolean> | null>(null);
+  const loadRetryTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const loadRetryAttemptRef = React.useRef(0);
+  const loadRef = React.useRef<
+    (opts?: { silent?: boolean }) => Promise<boolean>
+  >(() => Promise.resolve(false));
+  const LOAD_RETRY_DELAYS_MS = [2000, 5000, 12000] as const;
   // Direct Partner→Vendor work offers (Task: direct assignments). Vendor
   // admins / vendor field employees who own a vendor org membership see a
   // Pending section above the open-tickets list with Commit / Pass actions.
@@ -317,95 +324,107 @@ export default function HomeScreen() {
     }
   }, [isForemanEmployee]);
 
-  // `silent` callers (e.g. Task #630's push-triggered refresh) suppress
-  // the failure Alert so a transient network blip doesn't pop a blocking
-  // modal on top of the brief "assignment restored" confirmation toast.
-  // Returns `true` only when the primary `/api/field/open-tickets` fetch
-  // succeeded — Task #669 callers gate the "Refreshed" confirmation toast
-  // on this so a failed manual refresh never falsely confirms.
+  const clearLoadRetry = useCallback(() => {
+    if (loadRetryTimerRef.current != null) {
+      clearTimeout(loadRetryTimerRef.current);
+      loadRetryTimerRef.current = null;
+    }
+    loadRetryAttemptRef.current = 0;
+  }, []);
+
+  const scheduleLoadRetry = useCallback(() => {
+    if (isTicketsRateLimited()) return;
+    const attempt = loadRetryAttemptRef.current;
+    if (attempt >= LOAD_RETRY_DELAYS_MS.length) return;
+    const delay = LOAD_RETRY_DELAYS_MS[attempt];
+    loadRetryAttemptRef.current = attempt + 1;
+    if (loadRetryTimerRef.current != null) {
+      clearTimeout(loadRetryTimerRef.current);
+    }
+    loadRetryTimerRef.current = setTimeout(() => {
+      loadRetryTimerRef.current = null;
+      void loadRef.current({ silent: true });
+    }, delay);
+  }, []);
+
+  useEffect(() => () => clearLoadRetry(), [clearLoadRetry]);
+
+  // Returns `true` only when the primary ticket-list fetch succeeded.
+  // Task #669 callers gate the "Refreshed" confirmation toast on this.
+  // Failures never raise a blocking Alert — FreshnessPill + optional
+  // rate-limit toast carry status; we auto-retry transient errors.
   const load = useCallback(
     async ({ silent = false }: { silent?: boolean } = {}): Promise<boolean> => {
-      let ok = false;
-      try {
-        // Task #691: short-circuit if the shared tickets rate-limit
-        // cooldown is already active. Firing another /api/field/...
-        // request now would just re-trip the limiter and indefinitely
-        // extend the window. The hook above re-renders when the
-        // cooldown expires; the recovery effect below then re-invokes
-        // load() so the screen converges naturally.
-        if (isTicketsRateLimited()) return false;
-        const data = isOfficeViewer
-          ? await fetchPortalTicketsForHome()
-          : await apiFetch<OpenTicket[]>(
-              isForemanEmployee
-                ? "/api/field/open-tickets?vendorWide=1"
-                : "/api/field/open-tickets",
-            );
-        setTickets(data || []);
-        // Task #691: a successful load means we're no longer in an
-        // error state — clear so the gate hook doesn't re-fire on
-        // stale references.
-        setLoadError(null);
-        // Task #678 — bump the freshness timestamp only on a confirmed
-        // primary fetch. Auxiliary fetches (history, unread count) are
-        // best-effort and don't represent the on-screen ticket list, so
-        // leaving the pill green when only the history fetch succeeded
-        // would be misleading.
-        setLastLoadedAt(Date.now());
-        ok = true;
-      } catch (e) {
-        // Task #691: arm the rate-limit gate BEFORE deciding whether
-        // to alert. We always feed the error through `setLoadError`
-        // so the hook can park the screen for the cooldown — and we
-        // suppress the modal alert on a 429 (silent or not), since
-        // the bottom-of-screen reconnecting toast is the right
-        // affordance and a blocking modal on top of it would be
-        // noisy and redundant.
-        const rlSeconds = noteTicketsRateLimit(e);
-        setLoadError(e);
-        if (!silent && rlSeconds == null) {
-          Alert.alert(t("common.error"), t("tickets.errorLoadOpen"));
-        }
-      } finally {
-        setLoading(false);
-        setRefreshing(false);
+      if (loadInFlightRef.current) {
+        return loadInFlightRef.current;
       }
-      // Task #498 — fire-and-forget refresh of recent history so the
-      // adjacent-ticket CTA can also fire when the field employee just
-      // checked out (within the last 4 hours) and no longer has an
-      // open ticket on that site. Tolerated silently — a failure here
-      // simply means the CTA falls back to the open-tickets-only path.
-      // Vendor admins don't get the adjacent-ticket CTA at all (it
-      // initiates a new field-employee ticket on behalf of the caller),
-      // so skip the history fetch for them — it would 401 anyway.
-      // Task #691: also skip while the tickets rate-limit cooldown is
-      // active — /api/field/history shares the same per-session budget,
-      // and there's no point burning a slot on the optional CTA hint
-      // while we're trying to recover the primary list.
-      if (isFieldEmployee && !isTicketsRateLimited()) {
-        void (async () => {
-          try {
-            const hist = await apiFetch<typeof recentHistory>(
-              "/api/field/history",
-            );
-            setRecentHistory(hist || []);
-          } catch (e) {
-            // Soft-fail for the CTA — but if this call is what tripped
-            // the limiter, still arm the shared cooldown so the next
-            // primary load() short-circuits instead of re-tripping it.
-            noteTicketsRateLimit(e);
+
+      const run = (async (): Promise<boolean> => {
+        let ok = false;
+        try {
+          if (isTicketsRateLimited()) return false;
+          const data = isOfficeViewer
+            ? await fetchPortalTicketsForHome()
+            : await apiFetch<OpenTicket[]>(
+                isForemanEmployee
+                  ? "/api/field/open-tickets?vendorWide=1"
+                  : "/api/field/open-tickets",
+              );
+          setTickets(data || []);
+          setLoadError(null);
+          clearLoadRetry();
+          setLastLoadedAt(Date.now());
+          ok = true;
+        } catch (e) {
+          const rlSeconds = noteTicketsRateLimit(e);
+          setLoadError(e);
+          if (rlSeconds == null) {
+            scheduleLoadRetry();
           }
-        })();
+        } finally {
+          setLoading(false);
+          setRefreshing(false);
+        }
+        if (isFieldEmployee && !isTicketsRateLimited()) {
+          void (async () => {
+            try {
+              const hist = await apiFetch<typeof recentHistory>(
+                "/api/field/history",
+              );
+              setRecentHistory(hist || []);
+            } catch (e) {
+              noteTicketsRateLimit(e);
+            }
+          })();
+        }
+        void loadUnread();
+        void loadPendingSchedule();
+        void loadPendingDirect();
+        return ok;
+      })();
+
+      loadInFlightRef.current = run;
+      try {
+        return await run;
+      } finally {
+        if (loadInFlightRef.current === run) {
+          loadInFlightRef.current = null;
+        }
       }
-      void loadUnread();
-      void loadPendingSchedule();
-      // Direct work assignments inbox refresh — vendor-only, silent. The
-      // UI just hides the section when empty so any failure here is fine.
-      void loadPendingDirect();
-      return ok;
     },
-    [loadUnread, loadPendingDirect, loadPendingSchedule, isFieldEmployee, isForemanEmployee, isOfficeViewer, t],
+    [
+      loadUnread,
+      loadPendingDirect,
+      loadPendingSchedule,
+      isFieldEmployee,
+      isForemanEmployee,
+      isOfficeViewer,
+      clearLoadRetry,
+      scheduleLoadRetry,
+    ],
   );
+
+  loadRef.current = load;
 
   // Task #668 — surgical per-row refresh used by the foreground push
   // path. The web tickets page uses the same pattern for both
@@ -643,8 +662,8 @@ export default function HomeScreen() {
   // button and the existing pull-to-refresh gesture. Mirrors the web
   // dispatcher's "Refresh now" flow (Task #667): trigger the same fetch
   // the auto-poll uses, then flash a brief "Refreshed" toast on success
-  // so the user knows the list is current. Failures fall through to the
-  // existing Alert from `load()` so we never confirm a stale view.
+  // so the user knows the list is current. Failures stay silent — the
+  // FreshnessPill shows stale/reconnecting and load() auto-retries.
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     void (async () => {
@@ -710,7 +729,7 @@ export default function HomeScreen() {
   const badgeText = unreadCount > 99 ? "99+" : String(unreadCount);
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: colors.pageBackground }]}>
       <View
         style={[
           styles.brandRow,

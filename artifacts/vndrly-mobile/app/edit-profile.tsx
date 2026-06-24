@@ -171,7 +171,7 @@ export default function EditProfileScreen() {
 
   return (
     <ScreenSafeArea
-      style={[styles.flex, { backgroundColor: colors.background }]}
+      style={[styles.flex, { backgroundColor: colors.pageBackground }]}
       edges={["bottom"]}
       includeTopGap={false}
     >

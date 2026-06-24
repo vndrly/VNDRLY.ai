@@ -48,7 +48,7 @@ export default function SafetyTrainingScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={{ flex: 1, backgroundColor: colors.pageBackground }}>
       <InPageHeader title={t("safety.trainingPageTitle")} onBack={() => router.back()} />
       <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
         <Text style={{ color: colors.mutedForeground }}>{t("safety.trainingPageSubtitle")}</Text>

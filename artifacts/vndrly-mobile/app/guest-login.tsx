@@ -96,7 +96,7 @@ export default function GuestLoginScreen() {
   const hintStyle = [styles.hint, { color: colors.destructive }];
 
   return (
-    <ScreenSafeArea style={[styles.flex, { backgroundColor: colors.background }]}>
+    <ScreenSafeArea style={[styles.flex, { backgroundColor: colors.pageBackground }]}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
           {/* Signed-out language switcher mirrors the mobile login screen
