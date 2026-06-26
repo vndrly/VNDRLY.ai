@@ -1652,7 +1652,7 @@
     "successBody": "Your vendor account is created. You can now sign in.",
     "error": "Sign-up failed",
     "requireFields": "Please enter a company name, contact name, valid email, phone, and matching passwords (8+ characters).",
-    "signUpAsVendor": "Sign up as a Vendor",
+    "signUpAsVendor": "Start onboarding your company as our newest Vendor/Partner today",
     "duplicateWarningTitle": "This name looks similar to existing vendors.",
     "duplicateWarningSuggestion": "Did you mean: ",
     "duplicateConfirmLabel": "I'm sure this is a different company — sign up anyway.",

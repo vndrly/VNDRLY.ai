@@ -1,7 +1,7 @@
 import React, { useEffect, type ReactNode } from "react";
 import { Image, Platform, StyleSheet, View } from "react-native";
 
-const BACKGROUND = "#111111";
+const BACKGROUND = "#3a3d42";
 
 type Props = {
   children: ReactNode;

@@ -22,7 +22,7 @@ const colors = {
   dark: {
     text: "#ececec",
     tint: "#ececec",
-    background: "#111111",
+    background: "#3a3d42",
     pageBackground: "transparent",
     foreground: "#ffffff",
     card: "#1c1c1e",

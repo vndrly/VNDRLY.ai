@@ -370,7 +370,13 @@ const styles = StyleSheet.create({
   },
   biometricText: { fontFamily: "Inter_600SemiBold", fontSize: 15 },
   linkButton: { marginTop: 10, alignItems: "center" },
-  linkText: { fontFamily: "Inter_400Regular", fontSize: 12 },
+  linkText: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 12,
+    lineHeight: 17,
+    maxWidth: 300,
+    textAlign: "center",
+  },
   divider: { height: 1, marginVertical: 16, opacity: 0.5 },
   helper: {
     marginTop: 16,
