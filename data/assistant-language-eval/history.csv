@@ -359,3 +359,23 @@ run_at,run_id,commit,prompt,role,language,expected,detected,pass
 2026-06-25T11:34:20.820Z,28167045063,76a51669834f0c1333f13ed46269927bb9d03a3a,How do I add a comment to a ticket?,field_employee,es,es,es,1
 2026-06-25T11:34:20.820Z,28167045063,76a51669834f0c1333f13ed46269927bb9d03a3a,How do I switch between English and Spanish?,field_employee,en,en,en,1
 2026-06-25T11:34:20.820Z,28167045063,76a51669834f0c1333f13ed46269927bb9d03a3a,How do I switch between English and Spanish?,field_employee,es,es,es,1
+2026-06-26T11:40:27.975Z,28235616320,41580fe8b2c2827ad7dda2c11f0b347922ed44c3,How do I finish my partner onboarding?,partner,en,en,en,1
+2026-06-26T11:40:27.975Z,28235616320,41580fe8b2c2827ad7dda2c11f0b347922ed44c3,How do I finish my partner onboarding?,partner,es,es,es,1
+2026-06-26T11:40:27.975Z,28235616320,41580fe8b2c2827ad7dda2c11f0b347922ed44c3,Where do I see my open invoices?,vendor,en,en,en,1
+2026-06-26T11:40:27.975Z,28235616320,41580fe8b2c2827ad7dda2c11f0b347922ed44c3,Where do I see my open invoices?,vendor,es,es,es,1
+2026-06-26T11:40:27.975Z,28235616320,41580fe8b2c2827ad7dda2c11f0b347922ed44c3,How do I print visitor QR posters?,partner,en,en,en,1
+2026-06-26T11:40:27.975Z,28235616320,41580fe8b2c2827ad7dda2c11f0b347922ed44c3,How do I print visitor QR posters?,partner,es,es,es,1
+2026-06-26T11:40:27.975Z,28235616320,41580fe8b2c2827ad7dda2c11f0b347922ed44c3,How do I add a field employee?,vendor,en,en,en,1
+2026-06-26T11:40:27.975Z,28235616320,41580fe8b2c2827ad7dda2c11f0b347922ed44c3,How do I add a field employee?,vendor,es,es,es,1
+2026-06-26T11:40:27.975Z,28235616320,41580fe8b2c2827ad7dda2c11f0b347922ed44c3,Where can I see vendor analytics?,vendor,en,en,en,1
+2026-06-26T11:40:27.975Z,28235616320,41580fe8b2c2827ad7dda2c11f0b347922ed44c3,Where can I see vendor analytics?,vendor,es,es,es,1
+2026-06-26T11:40:27.975Z,28235616320,41580fe8b2c2827ad7dda2c11f0b347922ed44c3,How do I update my profile photo?,field_employee,en,en,en,1
+2026-06-26T11:40:27.975Z,28235616320,41580fe8b2c2827ad7dda2c11f0b347922ed44c3,How do I update my profile photo?,field_employee,es,es,es,1
+2026-06-26T11:40:27.975Z,28235616320,41580fe8b2c2827ad7dda2c11f0b347922ed44c3,How do I see crew on the map?,vendor,en,en,en,1
+2026-06-26T11:40:27.975Z,28235616320,41580fe8b2c2827ad7dda2c11f0b347922ed44c3,How do I see crew on the map?,vendor,es,es,es,1
+2026-06-26T11:40:27.975Z,28235616320,41580fe8b2c2827ad7dda2c11f0b347922ed44c3,Where do I review tickets pending approval?,partner,en,en,en,1
+2026-06-26T11:40:27.975Z,28235616320,41580fe8b2c2827ad7dda2c11f0b347922ed44c3,Where do I review tickets pending approval?,partner,es,es,es,1
+2026-06-26T11:40:27.975Z,28235616320,41580fe8b2c2827ad7dda2c11f0b347922ed44c3,How do I add a comment to a ticket?,field_employee,en,en,en,1
+2026-06-26T11:40:27.975Z,28235616320,41580fe8b2c2827ad7dda2c11f0b347922ed44c3,How do I add a comment to a ticket?,field_employee,es,es,es,1
+2026-06-26T11:40:27.975Z,28235616320,41580fe8b2c2827ad7dda2c11f0b347922ed44c3,How do I switch between English and Spanish?,field_employee,en,en,en,1
+2026-06-26T11:40:27.975Z,28235616320,41580fe8b2c2827ad7dda2c11f0b347922ed44c3,How do I switch between English and Spanish?,field_employee,es,es,es,1
