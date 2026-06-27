@@ -130,7 +130,7 @@ export default function ForemanCrewMapScreen() {
   }
 
   return (
-    <View style={[styles.root, { backgroundColor: colors.background }]}>
+    <View style={styles.root}>
       <InPageHeader
         title={t("foremanMap.title")}
         onBack={() => router.push("/(tabs)" as never)}

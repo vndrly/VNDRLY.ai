@@ -11,7 +11,7 @@ export default function NotFoundScreen() {
   return (
     <>
       <Stack.Screen options={{ title: t("notFound.title") }} />
-      <View style={[styles.container, { backgroundColor: colors.pageBackground }]}>
+      <View style={styles.container}>
         <Text style={[styles.title, { color: colors.foreground }]}>
           {t("notFound.doesNotExist")}
         </Text>

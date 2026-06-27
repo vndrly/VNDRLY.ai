@@ -182,7 +182,7 @@ export default function CrewChangesScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.pageBackground }]}>
+    <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
       <InPageHeader
         title={t("crewChanges.title")}

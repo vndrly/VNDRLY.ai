@@ -117,10 +117,10 @@ export default function CrewTrackerScreen() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: colors.pageBackground }}>
+      <View style={{ flex: 1 }}>
         <Stack.Screen options={{ headerShown: false }} />
         <InPageHeader title={t("crewTrackerMobile.title")} />
-        <View style={[styles.center, { backgroundColor: colors.pageBackground }]}>
+        <View style={styles.center}>
           <ActivityIndicator color={colors.primary} />
         </View>
       </View>
@@ -129,7 +129,6 @@ export default function CrewTrackerScreen() {
 
   return (
     <ScrollView
-      style={{ backgroundColor: colors.pageBackground }}
       contentContainerStyle={{ padding: 16 }}
       refreshControl={
         <RefreshControl

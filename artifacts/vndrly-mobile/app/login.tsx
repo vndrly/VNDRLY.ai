@@ -135,7 +135,7 @@ export default function LoginScreen() {
     !!capability?.available && capability.enrolled && biometricEnabled && Platform.OS !== "web";
 
   return (
-    <ScreenSafeArea style={[styles.flex, { backgroundColor: colors.pageBackground }]}>
+    <ScreenSafeArea style={styles.flex}>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === "ios" ? "padding" : undefined}

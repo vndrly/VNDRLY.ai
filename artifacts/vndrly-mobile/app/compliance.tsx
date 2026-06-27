@@ -64,7 +64,7 @@ export default function ComplianceScreen() {
   const hasPhoto = !!(me?.profilePhotoPath || me?.photoUrl);
 
   return (
-    <View style={[styles.container, { backgroundColor: c.pageBackground }]}>
+    <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
       <InPageHeader title={t("compliance.title")} />
 

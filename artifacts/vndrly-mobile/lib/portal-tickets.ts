@@ -33,6 +33,10 @@ export type PortalTicketRow = {
   unreadCommentCount?: number;
 };
 
+type PortalTicketsResponse = PortalTicketRow[] | {
+  items?: PortalTicketRow[];
+};
+
 function splitEmployeeName(full: string | null | undefined): {
   first: string | null;
   last: string | null;
@@ -73,7 +77,8 @@ export function mapPortalTicket(row: PortalTicketRow): MobileOpenTicket {
 
 /** Partner/vendor/admin Site tickets — same list as web Tracking (`GET /api/tickets`). */
 export async function fetchPortalTicketsForHome(): Promise<MobileOpenTicket[]> {
-  const rows = await apiFetch<PortalTicketRow[]>("/api/tickets");
+  const response = await apiFetch<PortalTicketsResponse>("/api/tickets");
+  const rows = Array.isArray(response) ? response : response?.items ?? [];
   return (rows ?? []).map(mapPortalTicket).sort((a, b) => {
     const aTs = Date.parse(a.updatedAt ?? a.createdAt);
     const bTs = Date.parse(b.updatedAt ?? b.createdAt);

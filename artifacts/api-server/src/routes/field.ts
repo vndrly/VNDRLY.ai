@@ -301,7 +301,6 @@ type MobileViewerContext =
       session: Session;
     };
 
-const OPEN_NARROW_STATUSES = ["initiated", "in_progress"] as const;
 const OPEN_BROAD_STATUSES = [
   "initiated",
   "draft",
@@ -839,13 +838,12 @@ router.get("/field/open-tickets", async (req, res): Promise<void> => {
   const vendorWide =
     (req.query.vendorWide === "1" || req.query.vendorWide === "true") &&
     isForemanSession;
-  const isNarrowViewer = ctx.mode === "field" || isForemanSession;
   const statusFilter =
     ctx.mode === "partner" || ctx.mode === "vendor" || ctx.mode === "admin"
       ? mobileOfficeTicketVisibilityCondition()
       : inArray(
           ticketsTable.status,
-          isNarrowViewer ? [...OPEN_NARROW_STATUSES] : [...OPEN_BROAD_STATUSES],
+          [...OPEN_BROAD_STATUSES],
         );
   const conditions: ReturnType<typeof eq>[] = [statusFilter];
   if (ctx.mode === "field" || ctx.mode === "vendor") {

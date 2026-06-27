@@ -51,6 +51,10 @@ type PortalScheduledRow = {
   updatedAt: string | null;
 };
 
+type PortalScheduledResponse = PortalScheduledRow[] | {
+  items?: PortalScheduledRow[];
+};
+
 function formatWhen(iso: string | null): string {
   if (!iso) return "—";
   const d = new Date(iso);
@@ -83,7 +87,8 @@ export default function ScheduleScreen() {
       if (isPartner) {
         const horizon = Date.now() + 14 * 24 * 60 * 60 * 1000;
         const windowStart = Date.now() - 60 * 60 * 1000;
-        const rows = await apiFetch<PortalScheduledRow[]>("/api/tickets");
+        const response = await apiFetch<PortalScheduledResponse>("/api/tickets");
+        const rows = Array.isArray(response) ? response : response?.items ?? [];
         const upcoming = (rows ?? [])
           .filter((row) => {
             if (!row.scheduledStartAt) return false;
@@ -204,7 +209,7 @@ export default function ScheduleScreen() {
 
   if (loading) {
     return (
-      <View style={[styles.center, { backgroundColor: colors.pageBackground }]}>
+      <View style={styles.center}>
         <Stack.Screen options={{ headerShown: false }} />
         <InPageHeader
           title={t("tabs.schedule")}
@@ -216,7 +221,7 @@ export default function ScheduleScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.pageBackground }}>
+    <View style={{ flex: 1 }}>
       <Stack.Screen options={{ headerShown: false }} />
       <InPageHeader
         title={t("tabs.schedule")}

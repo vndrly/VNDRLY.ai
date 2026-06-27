@@ -95,7 +95,7 @@ function ScanPermissionPanel({
   const tabClearance = useTabBarClearance();
   return (
     <ScreenSafeArea
-      style={[styles.flex, { backgroundColor: colors.pageBackground }]}
+      style={styles.flex}
       edges={["left", "right"]}
       includeTopGap={false}
     >
@@ -139,7 +139,7 @@ export default function ScanScreen() {
   if (!CameraModule) {
     return (
       <ScreenSafeArea
-        style={[styles.flex, { backgroundColor: colors.pageBackground }]}
+        style={styles.flex}
         edges={["left", "right"]}
         includeTopGap={false}
       >

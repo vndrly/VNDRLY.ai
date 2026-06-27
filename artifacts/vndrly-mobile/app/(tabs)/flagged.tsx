@@ -62,7 +62,7 @@ export default function FlaggedTab() {
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.pageBackground }}>
+    <View style={{ flex: 1 }}>
       <InPageHeader
         title={t("flagged.title")}
         onBack={() => router.push("/(tabs)" as never)}

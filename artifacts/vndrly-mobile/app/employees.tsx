@@ -73,7 +73,7 @@ export default function EmployeesScreen() {
   const canEdit = (p: Person) => !isForemanOnly || p.vendorRole !== "admin";
 
   return (
-    <View style={[styles.flex, { backgroundColor: colors.pageBackground }]}>
+    <View style={styles.flex}>
       <Stack.Screen options={{ headerShown: false }} />
       <InPageHeader title={t("employees.title")} right={<ActiveOrgIndicator />} />
 

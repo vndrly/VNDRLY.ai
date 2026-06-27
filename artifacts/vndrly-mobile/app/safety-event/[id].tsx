@@ -21,7 +21,7 @@ export default function SafetyEventDetailScreen() {
 
   if (!event) {
     return (
-      <View style={{ flex: 1, backgroundColor: colors.pageBackground }}>
+      <View style={{ flex: 1 }}>
         <InPageHeader title={t("safety.details")} onBack={() => router.back()} />
         <Text style={{ padding: 16, color: colors.mutedForeground }}>{t("common.loading")}</Text>
       </View>
@@ -29,7 +29,7 @@ export default function SafetyEventDetailScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.pageBackground }}>
+    <View style={{ flex: 1 }}>
       <InPageHeader title={String(event.eventNumber ?? t("safety.details"))} onBack={() => router.back()} />
       <ScrollView contentContainerStyle={{ padding: 16, gap: 8 }}>
         <Text style={{ fontSize: 18, fontWeight: "600", color: colors.text }}>{String(event.title ?? "")}</Text>

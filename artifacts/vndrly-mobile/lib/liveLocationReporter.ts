@@ -34,6 +34,9 @@ const PING_STARTUP_GRACE_MS = 2 * 60 * 1000;
 export const LIVE_LOCATION_TASK = "vndrly-live-location";
 
 type ActiveTicket = { id: number; lifecycleState: string | null; fieldEmployeeId: number | null };
+type ActiveTicketsResponse = ActiveTicket[] | {
+  items?: ActiveTicket[];
+};
 type FieldMe = { employeeId: number };
 
 let pollTimer: ReturnType<typeof setInterval> | null = null;
@@ -92,8 +95,8 @@ async function findActiveTickets(): Promise<number[] | null> {
     // caller leaves the previous active set in place — the next poll
     // (60s later, after the cooldown) picks the truth back up.
     if (isTicketsRateLimited()) return null;
-    const tickets = await apiFetch<ActiveTicket[]>("/api/tickets");
-    if (!Array.isArray(tickets)) return [];
+    const response = await apiFetch<ActiveTicketsResponse>("/api/tickets");
+    const tickets = Array.isArray(response) ? response : response?.items ?? [];
     return tickets
       .filter((t) =>
         t.fieldEmployeeId === empId &&

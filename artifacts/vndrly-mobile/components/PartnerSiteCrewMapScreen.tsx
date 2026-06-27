@@ -237,7 +237,7 @@ export default function PartnerSiteCrewMapScreen() {
   }
 
   return (
-    <View style={[styles.root, { backgroundColor: colors.background }]}>
+    <View style={styles.root}>
       <InPageHeader
         title={t("partnerMap.title")}
         onBack={() => router.push("/(tabs)" as never)}

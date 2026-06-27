@@ -290,7 +290,7 @@ export default function InvoiceDetailScreen() {
   if (loading) {
     return (
       <View
-        style={[styles.center, { backgroundColor: colors.pageBackground }]}
+        style={styles.center}
         testID="invoice-detail-loading"
       >
         <Stack.Screen options={{ headerShown: false }} />
@@ -302,7 +302,7 @@ export default function InvoiceDetailScreen() {
   if (loadError || !data) {
     return (
       <View
-        style={[styles.center, { backgroundColor: colors.pageBackground }]}
+        style={styles.center}
         testID="invoice-detail-error"
       >
         <Stack.Screen options={{ headerShown: false }} />
@@ -316,7 +316,6 @@ export default function InvoiceDetailScreen() {
 
   return (
     <ScrollView
-      style={{ backgroundColor: colors.pageBackground }}
       contentContainerStyle={styles.container}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />

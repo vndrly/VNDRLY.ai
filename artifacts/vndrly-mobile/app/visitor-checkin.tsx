@@ -249,7 +249,7 @@ export default function VisitorCheckInScreen() {
     // link to the staff login) or any of the in-flight forms. The visitor
     // is at the front desk and just needs one obvious action.
     return (
-      <ScreenSafeArea style={[styles.flex, { backgroundColor: colors.pageBackground }]}>
+      <ScreenSafeArea style={styles.flex}>
         <View style={[styles.container, styles.sessionExpiredContainer]}>
           <View
             testID="session-expired-card"
@@ -276,7 +276,7 @@ export default function VisitorCheckInScreen() {
   }
 
   return (
-    <ScreenSafeArea style={[styles.flex, { backgroundColor: colors.pageBackground }]}>
+    <ScreenSafeArea style={styles.flex}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
           <View style={styles.header}>

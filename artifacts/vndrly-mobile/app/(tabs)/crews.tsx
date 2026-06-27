@@ -58,7 +58,7 @@ export default function CrewsScreen() {
   }
 
   return (
-    <View style={[styles.flex, { backgroundColor: colors.pageBackground }]}>
+    <View style={styles.flex}>
       <Stack.Screen options={{ headerShown: false }} />
       <InPageHeader title={t("tabs.crews")} right={<ActiveOrgIndicator />} />
 

@@ -89,7 +89,7 @@ export default function AddSiteLocationScreen() {
   };
 
   return (
-    <ScrollView style={[styles.flex, { backgroundColor: colors.pageBackground }]}>
+    <ScrollView style={styles.flex}>
       <Stack.Screen options={{ headerShown: false }} />
       <InPageHeader title={t("siteLocations.addSite")} />
       <View style={{ padding: 16, gap: 12 }}>

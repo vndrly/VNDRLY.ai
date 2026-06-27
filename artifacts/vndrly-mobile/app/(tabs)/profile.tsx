@@ -216,7 +216,7 @@ export default function ProfileScreen() {
   const hasPhoto = !!(photoPath || directPhotoUrl);
 
   return (
-    <View style={[styles.flex, { backgroundColor: colors.pageBackground }]}>
+    <View style={styles.flex}>
       <InPageHeader
         title={t("tabs.profile")}
         onBack={() => router.push("/(tabs)" as never)}

@@ -729,7 +729,7 @@ export default function HomeScreen() {
   const badgeText = unreadCount > 99 ? "99+" : String(unreadCount);
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.pageBackground }]}>
+    <View style={styles.container}>
       <View
         style={[
           styles.brandRow,

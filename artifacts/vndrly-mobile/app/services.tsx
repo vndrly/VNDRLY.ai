@@ -66,7 +66,7 @@ export default function ServicesScreen() {
   }, {});
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.pageBackground }}>
+    <View style={{ flex: 1 }}>
       <Stack.Screen options={{ headerShown: false }} />
       <InPageHeader title={t("services.title")} onBack={() => router.back()} />
       <ScrollView contentContainerStyle={styles.content}>
