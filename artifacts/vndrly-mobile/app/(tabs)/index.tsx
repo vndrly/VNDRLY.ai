@@ -733,7 +733,7 @@ export default function HomeScreen() {
       <View
         style={[
           styles.brandRow,
-          { borderBottomColor: colors.border, paddingTop: topPadding },
+          { paddingTop: topPadding },
         ]}
       >
         <View style={styles.brandLeft}>
@@ -1731,7 +1731,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingBottom: 8,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    backgroundColor: "transparent",
   },
   brandLeft: {
     flexDirection: "row",

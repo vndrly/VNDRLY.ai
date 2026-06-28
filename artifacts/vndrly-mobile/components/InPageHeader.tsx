@@ -62,7 +62,7 @@ export default function InPageHeader({
           paddingTop: suppressTopInset ? 0 : screenTopPadding(insets.top),
           paddingBottom: 8,
           paddingHorizontal: 12,
-          backgroundColor: colors.background,
+          backgroundColor: "transparent",
           flexDirection: "row",
           alignItems: "center",
           gap: 8,
