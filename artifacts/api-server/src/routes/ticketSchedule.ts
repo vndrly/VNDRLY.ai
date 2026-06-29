@@ -238,7 +238,7 @@ async function ensureScheduleOrCrewAuth(
 }
 
 // ── POST /api/tickets/:id/schedule ─────────────────────────────────────
-router.post("/tickets/:id/schedule", async (req, res): Promise<void> => {
+export async function handleScheduleTicketRequest(req: any, res: any): Promise<void> {
   const ticketId = Number(req.params.id);
   if (!Number.isFinite(ticketId)) { res.status(400).json({ error: "invalid_ticket_id", message: "Invalid id", code: "validation.invalid_id" }); return; }
   const auth = await ensureSchedulerAuth(req, res, ticketId);
@@ -813,7 +813,9 @@ router.post("/tickets/:id/schedule", async (req, res): Promise<void> => {
     certWarnings,
     certExpiringSoon,
   });
-});
+}
+
+router.post("/tickets/:id/schedule", handleScheduleTicketRequest);
 
 // ── GET /api/tickets/:id/schedule ─────────────────────────────────────
 // Returns the current schedule + crew + warnings for a ticket. Same auth

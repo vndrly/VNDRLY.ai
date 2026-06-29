@@ -20,6 +20,14 @@ vi.mock("@/hooks/use-brand", () => ({
   useBrand: () => ({ primary: "#f59e0b" }),
 }));
 
+vi.mock("@/lib/api", () => ({
+  apiFetch: vi.fn(async () => []),
+}));
+
+vi.mock("@tanstack/react-query", () => ({
+  useQuery: () => ({ data: null }),
+}));
+
 const tIdentity = (k: string) => k;
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: tIdentity }),
@@ -39,14 +47,14 @@ describe("ForemanQuickActions", () => {
       "foreman-action-alerts",
       "foreman-action-start-job",
       "foreman-action-schedule",
-      "foreman-action-comms",
+      "foreman-action-safety-reports",
     ].map((id) => screen.getByTestId(id).getAttribute("data-testid"));
 
     expect(ids).toEqual([
       "foreman-action-alerts",
       "foreman-action-start-job",
       "foreman-action-schedule",
-      "foreman-action-comms",
+      "foreman-action-safety-reports",
     ]);
   });
 });

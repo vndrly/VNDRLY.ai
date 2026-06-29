@@ -1,7 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import * as Notifications from "expo-notifications";
 import { router, useFocusEffect } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
@@ -79,19 +79,6 @@ export default function HomeScreen() {
   } = useAuth();
   const topPadding = useScreenTopPadding();
   const [tickets, setTickets] = useState<OpenTicket[]>([]);
-  // Task #498 — recent history rows used to broaden adjacent-ticket CTA
-  // eligibility to "currently assigned to OR recently checked-in to a
-  // site" per the task spec. We only need the most recent few rows
-  // (the CTA picks the freshest one with a `siteLocationId` and a
-  // checkout within the last 4 hours), so the regular /api/field/history
-  // limit of 100 is plenty. We tolerate any fetch failure silently —
-  // the CTA simply degrades to the open-tickets-only path.
-  const [recentHistory, setRecentHistory] = useState<{
-    id: number;
-    siteLocationId: number | null;
-    siteName: string | null;
-    checkOutTime: string | null;
-  }[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -230,10 +217,16 @@ export default function HomeScreen() {
   const orgType: "partner" | "vendor" | null =
     activeMembership?.orgType ??
     (me?.role === "field_employee" || me?.role === "vendor" ? "vendor" : me?.role === "partner" ? "partner" : null);
+  const headerBrandLogoUri =
+    (brand.isOrgBranded ? (brand.logoSquareUrl ?? brand.logoUrl) : null) ??
+    activeMembership?.orgLogoUrl ??
+    null;
+  const headerBrandName =
+    brand.name ?? activeMembership?.orgName ?? t("home.brandWordmark");
 
   // The mobile home screen has historically been a field-employee
-  // workspace: "New Ticket", "History", and the adjacent-ticket CTA
-  // all assume a vendor_people row backs the session. We now also let
+  // workspace: "New Ticket" and "History" assume a vendor_people row
+  // backs the session. We now also let
   // vendor admins log in to see all open tickets across their team
   // (read-only). Use this flag everywhere those field-only affordances
   // would otherwise create dead ends or 401 errors.
@@ -246,6 +239,13 @@ export default function HomeScreen() {
   // Direct assignments are vendor-side (offered to a vendor org). Surface
   // for any user whose active org is a vendor (admin, member, or field).
   const isVendorViewer = orgType === "vendor";
+  const latestTicketForQuickActions = useMemo(() => {
+    return [...tickets].sort((a, b) => {
+      const aTs = Date.parse(a.updatedAt ?? a.createdAt);
+      const bTs = Date.parse(b.updatedAt ?? b.createdAt);
+      return (Number.isFinite(bTs) ? bTs : 0) - (Number.isFinite(aTs) ? aTs : 0);
+    })[0] ?? null;
+  }, [tickets]);
 
   const loadPendingDirect = useCallback(async () => {
     if (!isVendorViewer) return;
@@ -384,18 +384,6 @@ export default function HomeScreen() {
         } finally {
           setLoading(false);
           setRefreshing(false);
-        }
-        if (isFieldEmployee && !isTicketsRateLimited()) {
-          void (async () => {
-            try {
-              const hist = await apiFetch<typeof recentHistory>(
-                "/api/field/history",
-              );
-              setRecentHistory(hist || []);
-            } catch (e) {
-              noteTicketsRateLimit(e);
-            }
-          })();
         }
         void loadUnread();
         void loadPendingSchedule();
@@ -737,9 +725,9 @@ export default function HomeScreen() {
         ]}
       >
         <View style={styles.brandLeft}>
-          {brand.isOrgBranded && (brand.logoSquareUrl || brand.logoUrl) ? (
+          {headerBrandLogoUri ? (
             <AuthedImage
-              uri={(brand.logoSquareUrl ?? brand.logoUrl) as string}
+              uri={headerBrandLogoUri}
               fallback={
                 <View
                   style={[
@@ -751,16 +739,16 @@ export default function HomeScreen() {
                       justifyContent: "center",
                     },
                   ]}
-                  accessibilityLabel={brand.name ?? t("home.brandWordmark")}
+                  accessibilityLabel={headerBrandName}
                 >
                   <Text style={{ color: "#ffffff", fontFamily: "Inter_700Bold", fontSize: 32 }}>
-                    {(brand.name?.[0] ?? "V").toUpperCase()}
+                    {(headerBrandName[0] ?? "V").toUpperCase()}
                   </Text>
                 </View>
               }
               style={styles.brandLogo}
               resizeMode="contain"
-              accessibilityLabel={brand.name ?? t("home.brandWordmark")}
+              accessibilityLabel={headerBrandName}
             />
           ) : (
             <Image
@@ -904,6 +892,7 @@ export default function HomeScreen() {
 
       {isForemanEmployee ? (
         <ForemanQuickActions
+          latestTicket={latestTicketForQuickActions}
           unreadAlerts={unreadCount}
           pendingSchedule={pendingScheduleCount}
           onSchedulePress={() => setSchedulePickerOpen(true)}
@@ -951,17 +940,6 @@ export default function HomeScreen() {
               <Feather name="shield" size={14} color="#ffffff" style={styles.btnIconShadow} />
               <Text style={[styles.newBtnText, { color: "#ffffff" }]} numberOfLines={1}>
                 {t("safety.reportTitle")}
-              </Text>
-            </LayeredPillButton>
-            <LayeredPillButton
-              testID="button-safety-my-reports"
-              onPress={() => router.push("/safety-my-reports")}
-              inactive
-              height={36}
-              style={{ marginTop: 8 }}
-            >
-              <Text style={[styles.newBtnText, { color: "#ffffff" }]} numberOfLines={1}>
-                {t("safety.myReportsTitle")}
               </Text>
             </LayeredPillButton>
             <LayeredPillButton
@@ -1054,89 +1032,6 @@ export default function HomeScreen() {
         </>
       )}
 
-      {/*
-        Task #498 — "Initiate adjacent ticket" CTA on the dashboard.
-        Spec eligibility: the field employee is "currently assigned to
-        OR recently checked-in to a site." We satisfy both halves:
-
-        - "currently assigned" = any open ticket on a site
-          (/api/field/open-tickets is already scoped to non-closed
-          statuses, so we just need a siteLocationId on the row).
-        - "recently checked-in" = the most recent history row whose
-          checkOutTime is within the last RECENT_CHECKIN_WINDOW_MS.
-          This covers the common case of a worker who just checked
-          out of one ticket and is still physically on site, ready to
-          open a parallel ticket on the same location.
-
-        We prefer the open-ticket case because it's the freshest signal
-        ("you're literally working there right now"), and only fall
-        back to the recent-history case when no open row points at a
-        site. Either way the CTA's destination is identical — the new-
-        ticket form prefills `siteLocationId` and the server attributes
-        the new ticket to the field employee as foreman by default.
-      */}
-      {(() => {
-        // Vendor admins are read-only on mobile — they can't initiate
-        // an adjacent ticket on a field employee's behalf, so the CTA
-        // is hidden entirely for them. Field employees keep the
-        // existing "currently assigned OR recently checked-in" eligibility.
-        if (!isFieldEmployee) return null;
-        const RECENT_CHECKIN_WINDOW_MS = 4 * 60 * 60 * 1000;
-        const fromOpen = tickets.find((tk) => tk.siteLocationId != null);
-        let activeSiteId: number | null = null;
-        let activeSiteName: string | null = null;
-        if (fromOpen) {
-          activeSiteId = fromOpen.siteLocationId;
-          activeSiteName = fromOpen.siteName ?? null;
-        } else {
-          const cutoff = Date.now() - RECENT_CHECKIN_WINDOW_MS;
-          const fromHistory = recentHistory.find((h) => {
-            if (h.siteLocationId == null || !h.checkOutTime) return false;
-            const ts = Date.parse(h.checkOutTime);
-            return Number.isFinite(ts) && ts >= cutoff;
-          });
-          if (fromHistory) {
-            activeSiteId = fromHistory.siteLocationId;
-            activeSiteName = fromHistory.siteName ?? null;
-          }
-        }
-        if (activeSiteId == null) return null;
-        const activeTicket = { siteLocationId: activeSiteId, siteName: activeSiteName };
-        return (
-          <View style={styles.adjacentRow}>
-            <LayeredPillButton
-              testID="button-initiate-adjacent-ticket"
-              onPress={() =>
-                router.push({
-                  pathname: "/new-ticket",
-                  params: {
-                    siteId: String(activeTicket.siteLocationId),
-                    adjacent: "1",
-                  },
-                })
-              }
-              height={44}
-              style={styles.adjacentBtn}
-            >
-              <View style={styles.adjacentBtnTop}>
-                <Feather name="link" size={14} color="#ffffff" style={styles.btnIconShadow} />
-                <Text style={[styles.adjacentBtnText, { color: "#ffffff" }]}>
-                  {t("tickets.initiateAdjacent")}
-                </Text>
-              </View>
-              {activeTicket.siteName ? (
-                <Text
-                  style={[styles.adjacentBtnHint, { color: "rgba(255,255,255,0.85)" }]}
-                  numberOfLines={1}
-                >
-                  {t("tickets.adjacentSiteHint", { site: activeTicket.siteName })}
-                </Text>
-              ) : null}
-            </LayeredPillButton>
-          </View>
-        );
-      })()}
-
       {/* Pending direct work assignments — vendor org sessions only.
           Shown above the open-tickets list so the offer is the first
           thing a vendor sees on the home tab. Hidden when empty. */}
@@ -1144,7 +1039,7 @@ export default function HomeScreen() {
         <View
           style={[
             styles.directSection,
-            { borderColor: colors.border, backgroundColor: colors.card },
+            { borderColor: brand.primary, backgroundColor: colors.card },
           ]}
           testID="section-pending-direct-assignments"
         >
@@ -1158,7 +1053,7 @@ export default function HomeScreen() {
             return (
               <View
                 key={a.id}
-                style={[styles.directCard, { borderColor: colors.border }]}
+                style={[styles.directCard, { borderColor: brand.primary }]}
                 testID={`card-pending-direct-${a.id}`}
               >
                 <Text style={[styles.directPartner, { color: colors.foreground }]}>
@@ -1326,9 +1221,7 @@ export default function HomeScreen() {
                   styles.card,
                   {
                     backgroundColor: colors.card,
-                    borderColor: isForemanEmployee ? `${brand.primary}55` : colors.border,
-                    borderLeftColor: isForemanEmployee ? brand.primary : colors.border,
-                    borderLeftWidth: isForemanEmployee ? 4 : 1,
+                    borderColor: brand.primary,
                   },
                 ]}
                 testID={`card-ticket-${item.id}`}
@@ -1948,9 +1841,7 @@ const styles = StyleSheet.create({
   // sit on the same visual depth plane on the brand-colored pill.
   btnIconShadow: TEXT_SHADOW.deep,
   // Task #669: header refresh icon button.
-  // Square-ish so the icon is centered; the border matches the
-  // adjacent History button so the row reads as a coherent action
-  // cluster.
+  // Square-ish so the icon is centered in the action cluster.
   refreshBtn: {
     width: 36,
     height: 36,
@@ -1958,28 +1849,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderWidth: 1,
     borderRadius: 10,
-  },
-  adjacentRow: {
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-  },
-  adjacentBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderRadius: 20,
-    gap: 4,
-  },
-  adjacentBtnTop: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  adjacentBtnText: { fontFamily: "Inter_400Regular", fontSize: 13 },
-  adjacentBtnHint: {
-    fontFamily: "Inter_400Regular",
-    fontSize: 12,
-    flexShrink: 1,
   },
   empty: {
     textAlign: "center",

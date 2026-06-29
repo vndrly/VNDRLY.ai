@@ -607,6 +607,30 @@ export const TOOLS: Anthropic.Tool[] = [
     },
   },
   {
+    name: "schedule_ticket_crew",
+    description:
+      "Schedules one active crew member onto a ticket using the same server workflow as the ticket Schedule modal: scope checks, conflict detection, certification checks, schedule reminders, and crew notifications. Use for requests like 'schedule Daniel Elerick to ticket #10959 for 8am tomorrow'. Before calling, confirm the exact ticket, crew member, and scheduled date/time with the user. Pass confirmed:true only after that confirmation. If the tool returns requiresConfirm/conflicts, summarize the conflict and ask before re-calling with force:true.",
+    input_schema: {
+      type: "object",
+      properties: {
+        ticketId: { type: "number", description: "Ticket number/id, e.g. 10959." },
+        crewEmployeeId: { type: "number", description: "Optional exact vendor_people crew employee id when known." },
+        crewMemberName: { type: "string", description: "Crew member name or email to resolve on the ticket vendor's active roster." },
+        scheduledStartAt: { type: "string", description: "Exact ISO timestamp for the start time after resolving relative language like tomorrow 8am." },
+        scheduledDurationMinutes: { type: "number", description: "Optional duration in minutes. Omit/null when unknown." },
+        warningKinds: {
+          type: "array",
+          items: { type: "string", enum: ["3d", "2d", "1d", "12h", "4h", "1h", "start"] },
+          description: "Optional reminder offsets. Defaults to 1d, 12h, and 1h.",
+        },
+        force: { type: "boolean", description: "Only true after the user confirms they want to override returned scheduling conflicts." },
+        confirmed: { type: "boolean", description: "Must be true only after explicit user confirmation of ticket, crew member, and exact start time." },
+      },
+      required: ["ticketId", "scheduledStartAt", "confirmed"],
+      additionalProperties: false,
+    },
+  },
+  {
     name: "deep_link_to",
     description:
       "Returns a URL the user can navigate to in this web app for a given screen. Use this instead of describing 'click X then Y' when a single link will do. Detail screens (ticket-detail, vendor-detail, partner-detail, invoice-detail, vendor-analytics, partner-analytics, crew-replay) require `id`. Field-employee onboarding requires the invite `token`. For Reports, pass reportCard (e.g. salesTaxByState) and optional reportPreset (ytd, this_year, …) plus highlightState (e.g. TX) to open the matching card scrolled into view.",

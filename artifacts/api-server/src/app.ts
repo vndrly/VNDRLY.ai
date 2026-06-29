@@ -55,7 +55,7 @@ app.use(
     },
   }),
 );
-app.use(cors({
+const corsMiddleware = cors({
   credentials: true,
   origin: function (origin, callback) {
     if (isAllowedCorsOrigin(origin)) {
@@ -63,7 +63,10 @@ app.use(cors({
     }
     return callback(null, false);
   }
-}));
+});
+
+app.use(corsMiddleware);
+app.options(/^\/api\//, corsMiddleware);
 app.use(helmet());
 app.use(cookieParser());
 app.use(express.json({ limit: "1mb" }));

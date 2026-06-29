@@ -5,12 +5,14 @@ import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 
+import { useBrand } from "@/hooks/use-brand";
 import { useColors } from "@/hooks/useColors";
 import { fetchSafetyMetrics } from "@/lib/safety-api";
 
 export default function SafetyDashboardCard() {
   const { t } = useTranslation();
   const colors = useColors();
+  const brand = useBrand();
   const { data, isLoading } = useQuery({
     queryKey: ["safety-metrics"],
     queryFn: fetchSafetyMetrics,
@@ -22,7 +24,7 @@ export default function SafetyDashboardCard() {
   return (
     <Pressable
       onPress={() => router.push({ pathname: "/notifications", params: { category: "safety" } })}
-      style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
+      style={[styles.card, { backgroundColor: colors.card, borderColor: brand.primary }]}
       testID="safety-dashboard-open-notifications"
     >
       <View style={styles.headerRow}>
