@@ -19,10 +19,8 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        sceneStyle: { backgroundColor: "transparent" },
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.mutedForeground,
-        headerStyle: { backgroundColor: colors.background },
         headerTitleStyle: {
           fontFamily: "Inter_600SemiBold",
           color: colors.foreground,
@@ -37,7 +35,6 @@ export default function TabLayout() {
         // the default header already does keeps working.
         headerRight: () => <ActiveOrgIndicator />,
         tabBarStyle: {
-          backgroundColor: colors.background,
           borderTopColor: colors.border,
         },
         tabBarLabelStyle: { fontFamily: "Inter_500Medium" },

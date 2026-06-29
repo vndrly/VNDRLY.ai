@@ -8,7 +8,7 @@ import {
   useFonts,
 } from "@expo-google-fonts/inter";
 import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Stack, router, useSegments } from "expo-router";
+import { Slot, router, useSegments } from "expo-router";
 import * as Notifications from "expo-notifications";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useState } from "react";
@@ -16,9 +16,6 @@ import { Platform } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
-import { useTranslation } from "react-i18next";
-
-import ActiveOrgIndicator from "@/components/ActiveOrgIndicator";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import SafeKeyboardProvider from "@/components/SafeKeyboardProvider";
 import SplashLogo from "@/components/SplashLogo";
@@ -65,7 +62,6 @@ const queryClient = new QueryClient({
 });
 
 function AuthGate() {
-  const { t } = useTranslation();
   const segments = useSegments();
   const [checked, setChecked] = useState(isTokenCacheReady());
   const [hasAuth, setHasAuth] = useState(!!getCachedToken());
@@ -213,40 +209,7 @@ function AuthGate() {
     return <SplashLogo />;
   }
 
-  return (
-    // Task #186: surface the active-organization indicator on every
-    // authenticated stack screen too — Notifications, History, New
-    // Ticket, Ticket detail, Edit Profile, etc. The tab navigator
-    // sets the same `headerRight` so dual-role users get a consistent
-    // reminder no matter where they navigate. The component self-
-    // hides for single-membership users and screens that suppress
-    // the header (login, guest-login, visitor-checkin, the (tabs)
-    // host) so this opt-in is harmless on those routes.
-    <Stack
-      screenOptions={{
-        headerBackTitle: t("stack.back"),
-        headerRight: () => <ActiveOrgIndicator />,
-        contentStyle: { backgroundColor: "transparent" },
-      }}
-    >
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="login" options={{ headerShown: false }} />
-      <Stack.Screen name="guest-login" options={{ headerShown: false }} />
-      <Stack.Screen name="visitor-checkin" options={{ headerShown: false }} />
-      <Stack.Screen name="new-ticket" options={{ title: t("stack.newTicket") }} />
-      <Stack.Screen name="add-site-location" options={{ title: t("siteLocations.addSite") }} />
-      <Stack.Screen name="ticket/[id]" options={{ title: t("stack.tracking") }} />
-      <Stack.Screen name="ticket/[id]/crew-tracker" options={{ title: t("stack.crewTracker") }} />
-      <Stack.Screen name="invoice/[id]" options={{ title: t("stack.invoice") }} />
-      <Stack.Screen name="history" options={{ title: t("stack.history") }} />
-      <Stack.Screen name="edit-profile" options={{ title: t("stack.editProfile") }} />
-      <Stack.Screen name="crew-changes" options={{ headerShown: false }} />
-      <Stack.Screen name="compliance" options={{ headerShown: false }} />
-      <Stack.Screen name="notifications" options={{ headerShown: false, presentation: "modal" }} />
-      <Stack.Screen name="notification-preferences" options={{ headerShown: false }} />
-      <Stack.Screen name="location-consent" options={{ headerShown: false }} />
-    </Stack>
-  );
+  return <Slot />;
 }
 
 function RootLayout() {
@@ -262,14 +225,6 @@ function RootLayout() {
       void SplashScreen.hideAsync().catch(() => undefined);
     }
   }, [fontsLoaded, fontError]);
-
-  if (!fontsLoaded && !fontError) {
-    return (
-      <SafeAreaProvider>
-        <SplashLogo />
-      </SafeAreaProvider>
-    );
-  }
 
   return (
     <SafeAreaProvider>

@@ -1731,7 +1731,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingBottom: 8,
-    backgroundColor: "transparent",
   },
   brandLeft: {
     flexDirection: "row",

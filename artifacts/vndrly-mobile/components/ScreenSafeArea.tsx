@@ -28,7 +28,7 @@ export default function ScreenSafeArea({
 
   if (!includeTopGap) {
     return (
-      <SafeAreaView style={[style, styles.transparent]} edges={edges} {...rest}>
+      <SafeAreaView style={style} edges={edges} {...rest}>
         {children}
       </SafeAreaView>
     );
@@ -39,14 +39,10 @@ export default function ScreenSafeArea({
     : edges ?? (["left", "right", "bottom"] as const);
 
   return (
-    <SafeAreaView style={[{ flex: 1 }, style, styles.transparent]} edges={sideEdges} {...rest}>
+    <SafeAreaView style={[{ flex: 1 }, style]} edges={sideEdges} {...rest}>
       <View style={{ flex: 1, paddingTop: screenTopPadding(insets.top) }}>
         {children}
       </View>
     </SafeAreaView>
   );
 }
-
-const styles = {
-  transparent: { backgroundColor: "transparent" },
-} as const;

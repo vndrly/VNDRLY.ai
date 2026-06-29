@@ -1,27 +1,11 @@
-import React, { useEffect, type ReactNode } from "react";
-import { Image, Platform, StyleSheet, View } from "react-native";
-
-const BACKGROUND = "#3a3d42";
+import React, { type ReactNode } from "react";
+import { Image, StyleSheet, View } from "react-native";
 
 type Props = {
   children: ReactNode;
 };
 
 export default function VndrlyPageBackground({ children }: Props) {
-  useEffect(() => {
-    if (Platform.OS !== "web") return;
-    const styleId = "vndrly-mobile-transparent-scenes";
-    if (document.getElementById(styleId)) return;
-    const style = document.createElement("style");
-    style.id = styleId;
-    style.textContent = `
-      div[class*="r-position-u8s1d"][class*="r-bottom-1p0dtai"][class*="r-top-ipm5af"] {
-        background-color: transparent !important;
-      }
-    `;
-    document.head.appendChild(style);
-  }, []);
-
   return (
     <View style={styles.root}>
       <Image
@@ -29,7 +13,7 @@ export default function VndrlyPageBackground({ children }: Props) {
         style={styles.backgroundImage}
         resizeMode="cover"
       />
-      <View style={styles.content}>{children}</View>
+      {children}
     </View>
   );
 }
@@ -37,7 +21,6 @@ export default function VndrlyPageBackground({ children }: Props) {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: BACKGROUND,
   },
   backgroundImage: {
     position: "absolute",
@@ -47,9 +30,5 @@ const styles = StyleSheet.create({
     right: 0,
     width: "100%",
     height: "100%",
-  },
-  content: {
-    flex: 1,
-    backgroundColor: "transparent",
   },
 });

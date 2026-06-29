@@ -1,12 +1,10 @@
 import React from "react";
 import { ActivityIndicator, Image, StyleSheet, View } from "react-native";
 
-import colors from "@/constants/colors";
 import { getCachedBrand } from "@/hooks/use-brand";
 import { VNDRLY_LOGO_SQUARE } from "@/lib/vndrly-brand-assets";
 
 export default function SplashLogo() {
-  const palette = colors.dark;
   // Read the cached brand synchronously so the splash can show the most
   // recent org's primary color while the auth context re-hydrates. With
   // no cached org brand, brand.primary already defaults to the VNDRLY
@@ -16,7 +14,7 @@ export default function SplashLogo() {
   const brand = getCachedBrand();
   const spinnerColor = brand.primary;
   return (
-    <View style={[styles.container, { backgroundColor: palette.background }]}>
+    <View style={styles.container}>
       <Image
         source={VNDRLY_LOGO_SQUARE}
         style={styles.logo}
