@@ -472,6 +472,48 @@ export const TOOLS: Anthropic.Tool[] = [
     },
   },
   {
+    name: "lookup_crew_member_status",
+    description:
+      "Find one crew member by name/email/id and return their current active ticket, lifecycle/check-in state, latest GPS point, distance to site, and location source. Use for 'where is Bob', 'is Daniel on site', or 'show me Joe's current status'. Vendor admins, foremen, partners, and admins only. Current GPS is ticket-scoped, so if multiple workers share a ticket the response says so.",
+    input_schema: {
+      type: "object",
+      properties: {
+        crewEmployeeId: { type: "number" },
+        crewMemberName: { type: "string" },
+        ticketId: { type: "number", description: "Optional ticket to disambiguate the active job." },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "query_crew_eta",
+    description:
+      "Estimate a crew member ETA to their active ticket site from the latest ticket GPS point and current GPS speed when available. Use for 'what is Bob's ETA', 'how long until Daniel gets here', or 'how far out is Joe'. Vendor admins, foremen, partners, and admins only.",
+    input_schema: {
+      type: "object",
+      properties: {
+        crewEmployeeId: { type: "number" },
+        crewMemberName: { type: "string" },
+        ticketId: { type: "number", description: "Optional ticket to disambiguate the active job." },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "query_crew_route_summary",
+    description:
+      "Summarize the GPS route for a ticket or for one crew member's active ticket: approximate route miles, first/last GPS point, duration, active check-in, and site. Use for mileage/travel questions like 'how many miles has Bob driven' or 'route summary for ticket #10959'. Current GPS is ticket-scoped.",
+    input_schema: {
+      type: "object",
+      properties: {
+        ticketId: { type: "number" },
+        crewEmployeeId: { type: "number" },
+        crewMemberName: { type: "string" },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
     name: "query_hotlist_jobs",
     description: "Open hotlist marketplace jobs visible to the caller.",
     input_schema: {
@@ -627,6 +669,37 @@ export const TOOLS: Anthropic.Tool[] = [
         confirmed: { type: "boolean", description: "Must be true only after explicit user confirmation of ticket, crew member, and exact start time." },
       },
       required: ["ticketId", "scheduledStartAt", "confirmed"],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "set_ticket_flag",
+    description:
+      "Flags or clears a flag on a ticket using the same server workflow as the Flagged tab: ticket access checks, terminal-ticket protection, and flag notifications. Use for explicit requests like 'flag ticket #10959 for safety follow-up' or 'clear the flag on #10959'. Before calling, confirm the exact ticket and whether the user wants it flagged or unflagged. Pass confirmed:true only after that confirmation.",
+    input_schema: {
+      type: "object",
+      properties: {
+        ticketId: { type: "number", description: "Ticket number/id, e.g. 10959." },
+        flagged: { type: "boolean", description: "true to flag the ticket; false to clear the active flag." },
+        reason: { type: "string", description: "Optional reason for a new flag. Keep concise; ignored when clearing a flag." },
+        confirmed: { type: "boolean", description: "Must be true only after explicit user confirmation of the ticket and flag/unflag action." },
+      },
+      required: ["ticketId", "flagged", "confirmed"],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "post_ticket_comment",
+    description:
+      "Posts a text comment into a ticket's Crew Comms/comments thread and notifies ticket participants. Use for explicit requests like 'tell the crew on #10959 I am running 20 minutes late'. Before calling, confirm the exact ticket and exact message text. Pass confirmed:true only after confirmation.",
+    input_schema: {
+      type: "object",
+      properties: {
+        ticketId: { type: "number", description: "Ticket number/id, e.g. 10959." },
+        content: { type: "string", description: "Exact comment text to post." },
+        confirmed: { type: "boolean", description: "Must be true only after explicit user confirmation of ticket and message text." },
+      },
+      required: ["ticketId", "content", "confirmed"],
       additionalProperties: false,
     },
   },

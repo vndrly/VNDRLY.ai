@@ -1679,6 +1679,9 @@
     "couldNotSave": "Could not save your choice"
   },
   "mySchedule": {
+    "upcomingTitle": "Upcoming Scheduled Work",
+    "recentTitle": "Recently Scheduled Work",
+    "recentEmpty": "No scheduled work in the last 14 days.",
     "empty": "No upcoming jobs in the next 14 days.",
     "untitledJob": "Job",
     "foreman": "Foreman: {{name}}",

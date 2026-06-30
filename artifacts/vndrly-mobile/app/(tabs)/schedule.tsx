@@ -23,6 +23,7 @@ import ForemanScheduleTicketsModal from "@/components/ForemanScheduleTicketsModa
 import InPageHeader from "@/components/InPageHeader";
 import LayeredPillButton from "@/components/LayeredPillButton";
 import { useAuth } from "@/hooks/use-auth";
+import { useBrand } from "@/hooks/use-brand";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
 import { setScheduleBadge } from "@/lib/tabBadges";
@@ -55,6 +56,32 @@ type PortalScheduledResponse = PortalScheduledRow[] | {
   items?: PortalScheduledRow[];
 };
 
+type ScheduleResponseWithHistory = UpcomingScheduleResponse & {
+  recentTickets?: ScheduledTicket[];
+};
+
+function mapPortalScheduledRow(row: PortalScheduledRow): ScheduledTicket {
+  return {
+    id: row.id,
+    scheduledStartAt: row.scheduledStartAt,
+    scheduledDurationMinutes: row.scheduledDurationMinutes,
+    status: row.status as ScheduledTicket["status"],
+    updatedAt: row.updatedAt,
+    siteName: row.siteName,
+    siteAddress: row.siteAddress ?? null,
+    siteLatitude: row.siteLatitude == null ? null : Number(row.siteLatitude),
+    siteLongitude: row.siteLongitude == null ? null : Number(row.siteLongitude),
+    partnerName: null,
+    vendorName: row.vendorName,
+    workTypeName: row.workTypeName,
+    foremanUserId: null,
+    foremanName: "",
+    isForeman: false,
+    myAckStatus: null,
+    crew: [],
+  };
+}
+
 function formatWhen(iso: string | null): string {
   if (!iso) return "—";
   const d = new Date(iso);
@@ -70,13 +97,15 @@ function formatWhen(iso: string | null): string {
 
 export default function ScheduleScreen() {
   const colors = useColors();
+  const brand = useBrand();
   const { t } = useTranslation();
   const { user } = useAuth();
   const isForeman =
     user?.role === "field_employee" &&
     (user.vendorRole === "foreman" || user.vendorRole === "both");
   const isPartner = isPartnerOfficeUser(user);
-  const [tickets, setTickets] = useState<ScheduledTicket[]>([]);
+  const [upcomingTickets, setUpcomingTickets] = useState<ScheduledTicket[]>([]);
+  const [recentTickets, setRecentTickets] = useState<ScheduledTicket[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [vendorId, setVendorId] = useState<number | null>(null);
@@ -85,52 +114,50 @@ export default function ScheduleScreen() {
   const load = useCallback(async () => {
     try {
       if (isPartner) {
+        const now = Date.now();
         const horizon = Date.now() + 14 * 24 * 60 * 60 * 1000;
-        const windowStart = Date.now() - 60 * 60 * 1000;
+        const historyStart = Date.now() - 14 * 24 * 60 * 60 * 1000;
         const response = await apiFetch<PortalScheduledResponse>("/api/tickets");
         const rows = Array.isArray(response) ? response : response?.items ?? [];
-        const upcoming = (rows ?? [])
+        const scheduledRows = (rows ?? [])
           .filter((row) => {
             if (!row.scheduledStartAt) return false;
             const ts = Date.parse(row.scheduledStartAt);
-            return Number.isFinite(ts) && ts >= windowStart && ts <= horizon;
+            return Number.isFinite(ts) && ts >= historyStart && ts <= horizon;
           })
-          .sort(
-            (a, b) =>
-              Date.parse(a.scheduledStartAt!) - Date.parse(b.scheduledStartAt!),
-          )
-          .map(
-            (row): ScheduledTicket => ({
-              id: row.id,
-              scheduledStartAt: row.scheduledStartAt,
-              scheduledDurationMinutes: row.scheduledDurationMinutes,
-              status: row.status as ScheduledTicket["status"],
-              updatedAt: row.updatedAt,
-              siteName: row.siteName,
-              siteAddress: row.siteAddress ?? null,
-              siteLatitude:
-                row.siteLatitude == null ? null : Number(row.siteLatitude),
-              siteLongitude:
-                row.siteLongitude == null ? null : Number(row.siteLongitude),
-              partnerName: null,
-              vendorName: row.vendorName,
-              workTypeName: row.workTypeName,
-              foremanUserId: null,
-              foremanName: "",
-              isForeman: false,
-              myAckStatus: null,
-              crew: [],
-            }),
-          );
-        setTickets(upcoming);
-      } else {
-        const r = await apiFetch<UpcomingScheduleResponse>(
-          "/api/me/upcoming-schedule?days=14",
+          .map(mapPortalScheduledRow);
+        setUpcomingTickets(
+          scheduledRows
+            .filter((row) => {
+              const ts = row.scheduledStartAt ? Date.parse(row.scheduledStartAt) : 0;
+              return ts >= now && ts <= horizon;
+            })
+            .sort(
+              (a, b) =>
+                Date.parse(a.scheduledStartAt!) - Date.parse(b.scheduledStartAt!),
+            ),
         );
-        setTickets(r?.tickets ?? []);
+        setRecentTickets(
+          scheduledRows
+            .filter((row) => {
+              const ts = row.scheduledStartAt ? Date.parse(row.scheduledStartAt) : 0;
+              return ts < now && ts >= historyStart;
+            })
+            .sort(
+              (a, b) =>
+                Date.parse(b.scheduledStartAt!) - Date.parse(a.scheduledStartAt!),
+            ),
+        );
+      } else {
+        const r = await apiFetch<ScheduleResponseWithHistory>(
+          "/api/me/upcoming-schedule?days=14&historyDays=14",
+        );
+        setUpcomingTickets(r?.tickets ?? []);
+        setRecentTickets(r?.recentTickets ?? []);
       }
     } catch {
-      setTickets([]);
+      setUpcomingTickets([]);
+      setRecentTickets([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -158,11 +185,11 @@ export default function ScheduleScreen() {
   // current user (pending ack). Updates live as acks resolve.
   useEffect(() => {
     if (isPartner) {
-      setScheduleBadge(tickets.length);
+      setScheduleBadge(upcomingTickets.length);
       return;
     }
-    setScheduleBadge(tickets.filter((tk) => tk.myAckStatus === "pending").length);
-  }, [isPartner, tickets]);
+    setScheduleBadge(upcomingTickets.filter((tk) => tk.myAckStatus === "pending").length);
+  }, [isPartner, upcomingTickets]);
 
   async function ack(ticketId: number, status: "confirmed" | "declined") {
     try {
@@ -170,9 +197,10 @@ export default function ScheduleScreen() {
         method: "POST",
         body: JSON.stringify({ status }),
       });
-      setTickets((prev) =>
-        prev.map((tk) => (tk.id === ticketId ? { ...tk, myAckStatus: status } : tk)),
-      );
+      const updateAck = (prev: ScheduledTicket[]) =>
+        prev.map((tk) => (tk.id === ticketId ? { ...tk, myAckStatus: status } : tk));
+      setUpcomingTickets(updateAck);
+      setRecentTickets(updateAck);
     } catch (e) {
       Alert.alert(
         t("mySchedule.ackErrorTitle"),
@@ -242,221 +270,71 @@ export default function ScheduleScreen() {
           </LayeredPillButton>
         </View>
       ) : null}
-    <FlatList
-      style={{ flex: 1 }}
-      contentContainerStyle={{ padding: 16 }}
-      data={tickets}
-      keyExtractor={(item) => String(item.id)}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
-      ListEmptyComponent={
-        <Text style={{ color: colors.mutedForeground, textAlign: "center", marginTop: 40 }}>
-          {isPartner
-            ? t("partnerSchedule.empty")
-            : isForeman
-              ? t("foremanSchedule.emptyForeman")
-              : t("mySchedule.empty")}
-        </Text>
-      }
-      renderItem={({ item }) => {
-        const crewNames = item.crew
-          .filter((c: { isMe?: boolean }) => !c.isMe)
-          .map((c: { name?: string | null }) => c.name)
-          .filter(Boolean);
-        const canDirections = item.siteLatitude != null && item.siteLongitude != null;
-        const ackStatus = item.myAckStatus;
-        // Override the generic grey fallback so "awaiting your reply"
-        // (pending) reads as purple, matching the new pill palette
-        // alongside red Decline / green Confirm. Confirmed/declined
-        // keep their semantic green/red.
-        const ackPill =
-          ackStatus === "pending"
-            ? { background: "#7c3aed", foreground: "#ffffff" }
-            : ackStatus === "confirmed"
-              ? { background: "#16a34a", foreground: "#ffffff" }
-              : ackStatus === "declined"
-                ? { background: "#dc2626", foreground: "#ffffff" }
-                : null;
-        const ackLabel = ackStatus === "confirmed"
-          ? t("mySchedule.ackConfirmed")
-          : ackStatus === "declined"
-            ? t("mySchedule.ackDeclined")
-            : t("mySchedule.ackPending");
-        return (
-          <View
-            style={[
-              styles.card,
-              { backgroundColor: colors.card, borderColor: colors.border },
-            ]}
-          >
-            <TouchableOpacity onPress={() => router.push(`/ticket/${item.id}`)}>
-              <View style={styles.row}>
-                <Text style={[styles.id, { color: colors.foreground }]}>
-                  #{String(item.id).padStart(4, "0")}
-                </Text>
-                {(() => {
-                  // Local override: surface "draft" tickets in purple
-                  // so they share the "needs your attention" palette
-                  // with the pending-ack pill below. The shared helper
-                  // returns grey for draft to stay neutral elsewhere
-                  // in the app — only the schedule view promotes it.
-                  const basePill = ticketStatusPillStyle(item.status, item.updatedAt);
-                  const pill =
-                    item.status === "draft"
-                      ? { background: "#7c3aed", foreground: "#ffffff" }
-                      : basePill;
-                  const staleDays = ticketStaleDays(item.status, item.updatedAt);
-                  return (
-                    <View style={styles.statusGroup}>
-                      {staleDays != null ? (
-                        <Text
-                          style={[styles.staleText, { color: colors.mutedForeground }]}
-                          accessibilityLabel={t("tickets.staleSuffixA11y", { days: staleDays })}
-                          testID={`text-schedule-stale-${item.id}`}
-                        >
-                          {t("tickets.staleSuffix", { days: staleDays })}
-                        </Text>
-                      ) : null}
-                      <View
-                        style={[styles.badge, { backgroundColor: pill.background }]}
-                        testID={`badge-schedule-status-${item.id}`}
-                      >
-                        <Text style={[styles.badgeText, { color: pill.foreground }]}>
-                          {ticketStatusLabel(item.status, t)}
-                        </Text>
-                      </View>
-                    </View>
-                  );
-                })()}
-              </View>
-              <Text style={[styles.title, { color: colors.foreground }]}>
-                {item.workTypeName || t("mySchedule.untitledJob")}
+      <View style={styles.scheduleSections}>
+        <View style={styles.upcomingSection}>
+          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+            {t("mySchedule.upcomingTitle")}
+          </Text>
+          <FlatList
+            style={styles.sectionList}
+            contentContainerStyle={styles.sectionListContent}
+            data={upcomingTickets}
+            keyExtractor={(item) => `upcoming-${item.id}`}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+            }
+            ListEmptyComponent={
+              <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
+                {isPartner
+                  ? t("partnerSchedule.empty")
+                  : isForeman
+                    ? t("foremanSchedule.emptyForeman")
+                    : t("mySchedule.empty")}
               </Text>
-              <View style={styles.metaRow}>
-                <Feather name="clock" size={14} color={colors.mutedForeground} />
-                <Text style={[styles.meta, { color: colors.mutedForeground }]}>
-                  {formatWhen(item.scheduledStartAt)}
-                  {item.scheduledDurationMinutes ? ` · ${item.scheduledDurationMinutes}m` : ""}
-                </Text>
-              </View>
-              <View style={styles.metaRow}>
-                <Feather name="map-pin" size={14} color={colors.mutedForeground} />
-                <Text style={[styles.meta, { color: colors.mutedForeground }]} numberOfLines={2}>
-                  {isPartner
-                    ? [item.siteName, item.siteAddress].filter(Boolean).join("\n") || "—"
-                    : [item.partnerName, item.siteName].filter(Boolean).join(" — ") || "—"}
-                  {!isPartner && item.siteAddress ? `\n${item.siteAddress}` : ""}
-                </Text>
-              </View>
-              {isPartner && item.vendorName ? (
-                <View style={styles.metaRow}>
-                  <Feather name="briefcase" size={14} color={colors.mutedForeground} />
-                  <Text style={[styles.meta, { color: colors.mutedForeground }]}>
-                    {t("partnerSchedule.vendor", { name: item.vendorName })}
-                  </Text>
-                </View>
-              ) : null}
-              {item.foremanName ? (
-                <View style={styles.metaRow}>
-                  <Feather name="user-check" size={14} color={colors.mutedForeground} />
-                  <Text style={[styles.meta, { color: colors.mutedForeground }]}>
-                    {t("mySchedule.foreman", { name: item.foremanName })}
-                  </Text>
-                </View>
-              ) : null}
-              {crewNames.length > 0 ? (
-                <View style={styles.metaRow}>
-                  <Feather name="users" size={14} color={colors.mutedForeground} />
-                  <Text style={[styles.meta, { color: colors.mutedForeground }]} numberOfLines={2}>
-                    {t("mySchedule.crewmates", { names: crewNames.join(", ") })}
-                  </Text>
-                </View>
-              ) : null}
-              {ackStatus != null && ackPill != null ? (
-                <View style={styles.metaRow}>
-                  <View style={[styles.ackPill, { backgroundColor: ackPill.background }]}>
-                    <Text style={[styles.ackPillText, { color: ackPill.foreground }]}>{ackLabel}</Text>
-                  </View>
-                </View>
-              ) : null}
-            </TouchableOpacity>
-
-            {ackStatus != null && ackStatus !== "confirmed" && !isPartner ? (
-              <View style={styles.ackRow}>
-                {ackStatus === "pending" ? (
-                  <LayeredPillButton
-                    onPress={() => confirmDecline(item.id)}
-                    height={40}
-                    color="#dc2626"
-                    style={styles.ackBtnPill}
-                    testID={`button-decline-${item.id}`}
-                  >
-                    <Feather name="x" size={14} color="#ffffff" style={styles.pillIconShadow} />
-                    <Text style={[styles.ackPillBtnText, styles.pillTextShadow]}>
-                      {t("mySchedule.decline")}
-                    </Text>
-                  </LayeredPillButton>
-                ) : null}
-                <LayeredPillButton
-                  onPress={() => void ack(item.id, "confirmed")}
-                  height={40}
-                  color="#16a34a"
-                  style={styles.ackBtnPill}
-                  testID={`button-confirm-${item.id}`}
-                >
-                  <Feather name="check" size={14} color="#ffffff" style={styles.pillIconShadow} />
-                  <Text style={[styles.ackPillBtnText, styles.pillTextShadow]}>
-                    {t("mySchedule.confirm")}
-                  </Text>
-                </LayeredPillButton>
-              </View>
-            ) : null}
-
-            {!isPartner && item.isForeman ? (
-              <LayeredPillButton
-                onPress={() => router.push(`/ticket/${item.id}/crew-tracker`)}
-                height={40}
-                inactive
-                style={styles.foremanBtnPill}
-                testID={`button-foreman-view-${item.id}`}
-              >
-                <Feather name="users" size={14} color="#ffffff" />
-                <Text style={styles.ackPillBtnText}>
-                  {t("mySchedule.foremanView")}
-                </Text>
-              </LayeredPillButton>
-            ) : null}
-
-            {canDirections ? (
-              <LayeredPillButton
-                onPress={() =>
-                  openInMaps(item.siteLatitude!, item.siteLongitude!, item.siteName ?? undefined)
-                }
-                height={40}
-                style={styles.directionsBtnPill}
-                testID={`button-directions-${item.id}`}
-              >
-                <Feather name="navigation" size={14} color="#ffffff" style={styles.pillIconShadow} />
-                <Text style={[styles.ackPillBtnText, styles.pillTextShadow]}>
-                  {t("mySchedule.getDirections")}
-                </Text>
-              </LayeredPillButton>
-            ) : null}
-
-            {!isPartner ? (
-              <LayeredPillButton
-                onPress={() => void addToCalendar(item.id)}
-                inactive
-                style={styles.foremanBtnPill}
-                testID={`button-calendar-${item.id}`}
-              >
-                <Feather name="calendar" size={14} color="#ffffff" />
-                <Text style={styles.ackPillBtnText}>{t("mySchedule.addToCalendar")}</Text>
-              </LayeredPillButton>
-            ) : null}
-          </View>
-        );
-      }}
-    />
+            }
+            renderItem={({ item }) => (
+              <ScheduleTicketCard
+                item={item}
+                colors={colors}
+                brandColor={brand.primary}
+                isPartner={isPartner}
+                t={t}
+                onAck={ack}
+                onDecline={confirmDecline}
+                onAddToCalendar={addToCalendar}
+              />
+            )}
+          />
+        </View>
+        <View style={styles.recentSection}>
+          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+            {t("mySchedule.recentTitle")}
+          </Text>
+          <FlatList
+            style={styles.sectionList}
+            contentContainerStyle={styles.sectionListContent}
+            data={recentTickets}
+            keyExtractor={(item) => `recent-${item.id}`}
+            ListEmptyComponent={
+              <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
+                {t("mySchedule.recentEmpty")}
+              </Text>
+            }
+            renderItem={({ item }) => (
+              <ScheduleTicketCard
+                item={item}
+                colors={colors}
+                brandColor={brand.primary}
+                isPartner={isPartner}
+                t={t}
+                onAck={ack}
+                onDecline={confirmDecline}
+                onAddToCalendar={addToCalendar}
+              />
+            )}
+          />
+        </View>
+      </View>
     {isForeman && vendorId != null ? (
       <ForemanScheduleTicketsModal
         visible={pickTicketOpen}
@@ -472,11 +350,240 @@ export default function ScheduleScreen() {
   );
 }
 
+type ScheduleTicketCardProps = {
+  item: ScheduledTicket;
+  colors: ReturnType<typeof useColors>;
+  brandColor: string;
+  isPartner: boolean;
+  t: ReturnType<typeof useTranslation>["t"];
+  onAck: (ticketId: number, status: "confirmed" | "declined") => Promise<void>;
+  onDecline: (ticketId: number) => void;
+  onAddToCalendar: (ticketId: number) => Promise<void>;
+};
+
+function ScheduleTicketCard({
+  item,
+  colors,
+  brandColor,
+  isPartner,
+  t,
+  onAck,
+  onDecline,
+  onAddToCalendar,
+}: ScheduleTicketCardProps) {
+  const crewNames = item.crew
+    .filter((c: { isMe?: boolean }) => !c.isMe)
+    .map((c: { name?: string | null }) => c.name)
+    .filter(Boolean);
+  const canDirections = item.siteLatitude != null && item.siteLongitude != null;
+  const ackStatus = item.myAckStatus;
+  const ackPill =
+    ackStatus === "pending"
+      ? { background: "#7c3aed", foreground: "#ffffff" }
+      : ackStatus === "confirmed"
+        ? { background: "#16a34a", foreground: "#ffffff" }
+        : ackStatus === "declined"
+          ? { background: "#dc2626", foreground: "#ffffff" }
+          : null;
+  const ackLabel = ackStatus === "confirmed"
+    ? t("mySchedule.ackConfirmed")
+    : ackStatus === "declined"
+      ? t("mySchedule.ackDeclined")
+      : t("mySchedule.ackPending");
+  const basePill = ticketStatusPillStyle(item.status, item.updatedAt);
+  const statusPill =
+    item.status === "draft"
+      ? { background: "#7c3aed", foreground: "#ffffff" }
+      : basePill;
+  const staleDays = ticketStaleDays(item.status, item.updatedAt);
+
+  return (
+    <View
+      style={[
+        styles.card,
+        { backgroundColor: colors.card, borderColor: brandColor },
+      ]}
+    >
+      <TouchableOpacity onPress={() => router.push(`/ticket/${item.id}`)}>
+        <View style={styles.row}>
+          <Text style={[styles.id, { color: colors.foreground }]}>
+            #{String(item.id).padStart(4, "0")}
+          </Text>
+          <View style={styles.statusGroup}>
+            {staleDays != null ? (
+              <Text
+                style={[styles.staleText, { color: colors.mutedForeground }]}
+                accessibilityLabel={t("tickets.staleSuffixA11y", { days: staleDays })}
+                testID={`text-schedule-stale-${item.id}`}
+              >
+                {t("tickets.staleSuffix", { days: staleDays })}
+              </Text>
+            ) : null}
+            <View
+              style={[styles.badge, { backgroundColor: statusPill.background }]}
+              testID={`badge-schedule-status-${item.id}`}
+            >
+              <Text style={[styles.badgeText, { color: statusPill.foreground }]}>
+                {ticketStatusLabel(item.status, t)}
+              </Text>
+            </View>
+          </View>
+        </View>
+        <Text style={[styles.title, { color: colors.foreground }]}>
+          {item.siteName || t("tickets.siteFallbackPlaceholder")}
+        </Text>
+        <Text style={[styles.meta, { color: colors.mutedForeground }]}>
+          {item.workTypeName || t("tickets.workTypeFallbackPlaceholder")}
+          {isPartner && item.vendorName
+            ? t("tickets.vendorSuffix", { vendor: item.vendorName })
+            : item.partnerName
+              ? t("tickets.partnerSuffix", { partner: item.partnerName })
+              : ""}
+        </Text>
+        <View style={styles.metaRow}>
+          <Feather name="clock" size={14} color={colors.mutedForeground} />
+          <Text style={[styles.meta, { color: colors.mutedForeground }]}>
+            {formatWhen(item.scheduledStartAt)}
+            {item.scheduledDurationMinutes ? ` · ${item.scheduledDurationMinutes}m` : ""}
+          </Text>
+        </View>
+        {item.foremanName ? (
+          <View style={styles.metaRow}>
+            <Feather name="user-check" size={14} color={colors.mutedForeground} />
+            <Text style={[styles.meta, { color: colors.mutedForeground }]}>
+              {t("mySchedule.foreman", { name: item.foremanName })}
+            </Text>
+          </View>
+        ) : null}
+        {crewNames.length > 0 ? (
+          <View style={styles.metaRow}>
+            <Feather name="users" size={14} color={colors.mutedForeground} />
+            <Text style={[styles.meta, { color: colors.mutedForeground }]} numberOfLines={2}>
+              {t("mySchedule.crewmates", { names: crewNames.join(", ") })}
+            </Text>
+          </View>
+        ) : null}
+        {ackStatus != null && ackPill != null ? (
+          <View style={styles.metaRow}>
+            <View style={[styles.ackPill, { backgroundColor: ackPill.background }]}>
+              <Text style={[styles.ackPillText, { color: ackPill.foreground }]}>{ackLabel}</Text>
+            </View>
+          </View>
+        ) : null}
+      </TouchableOpacity>
+
+      {ackStatus != null && ackStatus !== "confirmed" && !isPartner ? (
+        <View style={styles.ackRow}>
+          {ackStatus === "pending" ? (
+            <LayeredPillButton
+              onPress={() => onDecline(item.id)}
+              height={40}
+              color="#dc2626"
+              style={styles.ackBtnPill}
+              testID={`button-decline-${item.id}`}
+            >
+              <Feather name="x" size={14} color="#ffffff" style={styles.pillIconShadow} />
+              <Text style={[styles.ackPillBtnText, styles.pillTextShadow]}>
+                {t("mySchedule.decline")}
+              </Text>
+            </LayeredPillButton>
+          ) : null}
+          <LayeredPillButton
+            onPress={() => void onAck(item.id, "confirmed")}
+            height={40}
+            color="#16a34a"
+            style={styles.ackBtnPill}
+            testID={`button-confirm-${item.id}`}
+          >
+            <Feather name="check" size={14} color="#ffffff" style={styles.pillIconShadow} />
+            <Text style={[styles.ackPillBtnText, styles.pillTextShadow]}>
+              {t("mySchedule.confirm")}
+            </Text>
+          </LayeredPillButton>
+        </View>
+      ) : null}
+
+      {!isPartner && item.isForeman ? (
+        <LayeredPillButton
+          onPress={() => router.push(`/ticket/${item.id}/crew-tracker`)}
+          height={40}
+          inactive
+          style={styles.foremanBtnPill}
+          testID={`button-foreman-view-${item.id}`}
+        >
+          <Feather name="users" size={14} color="#ffffff" />
+          <Text style={styles.ackPillBtnText}>{t("mySchedule.foremanView")}</Text>
+        </LayeredPillButton>
+      ) : null}
+
+      {canDirections ? (
+        <LayeredPillButton
+          onPress={() =>
+            openInMaps(item.siteLatitude!, item.siteLongitude!, item.siteName ?? undefined)
+          }
+          height={40}
+          style={styles.directionsBtnPill}
+          testID={`button-directions-${item.id}`}
+        >
+          <Feather name="navigation" size={14} color="#ffffff" style={styles.pillIconShadow} />
+          <Text style={[styles.ackPillBtnText, styles.pillTextShadow]}>
+            {t("mySchedule.getDirections")}
+          </Text>
+        </LayeredPillButton>
+      ) : null}
+
+      {!isPartner ? (
+        <LayeredPillButton
+          onPress={() => void onAddToCalendar(item.id)}
+          inactive
+          style={styles.foremanBtnPill}
+          testID={`button-calendar-${item.id}`}
+        >
+          <Feather name="calendar" size={14} color="#ffffff" />
+          <Text style={styles.ackPillBtnText}>{t("mySchedule.addToCalendar")}</Text>
+        </LayeredPillButton>
+      ) : null}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   foremanBar: { paddingHorizontal: 16, paddingBottom: 8 },
   foremanAddBtn: { alignSelf: "stretch" },
   foremanAddText: { color: "#ffffff", fontFamily: "Inter_600SemiBold", fontSize: 15 },
+  scheduleSections: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+    gap: 10,
+  },
+  upcomingSection: {
+    flex: 2,
+    minHeight: 0,
+  },
+  recentSection: {
+    flex: 1,
+    minHeight: 0,
+  },
+  sectionTitle: {
+    fontFamily: "Inter_700Bold",
+    fontSize: 18,
+    marginBottom: 8,
+  },
+  sectionList: {
+    flex: 1,
+  },
+  sectionListContent: {
+    paddingBottom: 8,
+  },
+  emptyText: {
+    textAlign: "center",
+    marginTop: 24,
+    fontFamily: "Inter_400Regular",
+    fontSize: 13,
+    lineHeight: 18,
+  },
   card: {
     borderWidth: 1,
     borderRadius: 12,

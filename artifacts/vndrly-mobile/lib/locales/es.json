@@ -1679,6 +1679,9 @@
     "couldNotSave": "No se pudo guardar tu elección"
   },
   "mySchedule": {
+    "upcomingTitle": "Trabajo programado próximo",
+    "recentTitle": "Trabajo programado reciente",
+    "recentEmpty": "No hay trabajo programado en los últimos 14 días.",
     "empty": "No hay trabajos próximos en los próximos 14 días.",
     "untitledJob": "Trabajo",
     "foreman": "Capataz: {{name}}",

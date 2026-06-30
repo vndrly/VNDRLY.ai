@@ -1004,12 +1004,15 @@ router.post("/tickets/:id/schedule/resend-notifications", async (req, res): Prom
   res.status(200).json({ ok: true, notified, skippedNoLogin, crewCount: crewRows.length });
 });
 
-// ── GET /api/me/upcoming-schedule?days=14 ─────────────────────────────
+// ── GET /api/me/upcoming-schedule?days=14&historyDays=14 ───────────────
 router.get("/me/upcoming-schedule", async (req, res): Promise<void> => {
   const session = getSession(req);
   if (!session) { res.status(401).json({ error: "Not authenticated", code: "auth.not_authenticated" }); return; }
   const days = Math.min(60, Math.max(1, Number(req.query.days) || 14));
+  const historyDays = Math.min(60, Math.max(1, Number(req.query.historyDays) || 14));
+  const now = new Date();
   const horizon = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+  const historyStart = new Date(Date.now() - historyDays * 24 * 60 * 60 * 1000);
 
   // Find vendor_people row for this user (if any), so we can resolve which
   // tickets they are crewed onto.
@@ -1062,8 +1065,8 @@ router.get("/me/upcoming-schedule", async (req, res): Promise<void> => {
     .leftJoin(workTypesTable, eq(ticketsTable.workTypeId, workTypesTable.id))
     .where(and(
       inArray(ticketsTable.id, ticketIds),
-      // upcoming only: scheduled_start_at in [now - 1h, horizon]
-      gte(ticketsTable.scheduledStartAt, new Date(Date.now() - 60 * 60 * 1000)),
+      // Schedule tab needs both upcoming work and a recent history window.
+      gte(ticketsTable.scheduledStartAt, historyStart),
       lte(ticketsTable.scheduledStartAt, horizon),
     ))
     .orderBy(asc(ticketsTable.scheduledStartAt));
@@ -1121,7 +1124,23 @@ router.get("/me/upcoming-schedule", async (req, res): Promise<void> => {
       })),
   }));
 
-  res.json({ tickets });
+  const upcomingTickets = tickets.filter((ticket) => {
+    if (!ticket.scheduledStartAt) return false;
+    return new Date(ticket.scheduledStartAt).getTime() >= now.getTime();
+  });
+  const recentTickets = tickets
+    .filter((ticket) => {
+      if (!ticket.scheduledStartAt) return false;
+      const ts = new Date(ticket.scheduledStartAt).getTime();
+      return ts < now.getTime() && ts >= historyStart.getTime();
+    })
+    .sort((a, b) => {
+      const aTs = a.scheduledStartAt ? new Date(a.scheduledStartAt).getTime() : 0;
+      const bTs = b.scheduledStartAt ? new Date(b.scheduledStartAt).getTime() : 0;
+      return bTs - aTs;
+    });
+
+  res.json({ tickets: upcomingTickets, recentTickets });
 });
 
 // ── POST /api/tickets/:id/crew/ack ─────────────────────────────────────

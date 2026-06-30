@@ -1,12 +1,13 @@
 // AskV read-only tools — safety, sites, ops, hotlist, catalog, notifications.
 
-import { and, desc, eq, gte, ilike, inArray, isNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, ilike, inArray, isNull, sql } from "drizzle-orm";
 import {
   db,
   safetyEventsTable,
   siteLocationsTable,
   notificationsTable,
   ticketsTable,
+  gpsLogsTable,
   hotlistJobsTable,
   hotlistBidsTable,
   vendorWorkTypesTable,
@@ -14,6 +15,8 @@ import {
   partnerVendorWorkTypeApprovalsTable,
   employeeCertificationsTable,
   vendorPeopleTable,
+  ticketCrewTable,
+  ticketCheckInsTable,
   partnerContactsTable,
   ticketFlagsTable,
   siteVisitsTable,
@@ -31,6 +34,7 @@ import {
   err,
   MAX_LIMIT,
   sinceDate,
+  ticketScopeFilters,
 } from "./data-tools-helpers";
 import { LIVE_TRACKED_LIFECYCLE_STATES } from "@workspace/ticket-status-meta";
 
@@ -42,6 +46,9 @@ export const OPS_DATA_TOOL_NAMES = [
   "lookup_site_detail",
   "query_notifications",
   "query_live_crew",
+  "lookup_crew_member_status",
+  "query_crew_eta",
+  "query_crew_route_summary",
   "query_hotlist_jobs",
   "query_hotlist_bids",
   "query_vendor_catalog",
@@ -258,6 +265,315 @@ async function queryLiveCrew(args: Record<string, unknown>, session: SessionPayl
     .orderBy(desc(ticketsTable.updatedAt))
     .limit(limit);
   return JSON.stringify({ rows, limit });
+}
+
+function canUseCrewOps(session: SessionPayload): boolean {
+  if (session.role === "admin" || session.role === "partner" || session.role === "vendor") return true;
+  return session.role === "field_employee" && (session.vendorRole === "foreman" || session.vendorRole === "both");
+}
+
+function milesBetween(
+  a: { latitude: number; longitude: number },
+  b: { latitude: number; longitude: number },
+): number {
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const rMiles = 3958.7613;
+  const dLat = toRad(b.latitude - a.latitude);
+  const dLon = toRad(b.longitude - a.longitude);
+  const lat1 = toRad(a.latitude);
+  const lat2 = toRad(b.latitude);
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+  return 2 * rMiles * Math.asin(Math.sqrt(h));
+}
+
+function normalizeEmployeeSearch(raw: unknown): string {
+  return typeof raw === "string" ? raw.trim().toLowerCase() : "";
+}
+
+async function resolveCrewMember(args: Record<string, unknown>, session: SessionPayload) {
+  const filters = [
+    eq(vendorPeopleTable.isActive, true),
+    isNull(vendorPeopleTable.deletedAt),
+  ];
+  const crewEmployeeId = Number(args.crewEmployeeId ?? args.employeeId);
+  if (Number.isFinite(crewEmployeeId) && crewEmployeeId > 0) {
+    filters.push(eq(vendorPeopleTable.id, Math.floor(crewEmployeeId)));
+  } else {
+    const search = normalizeEmployeeSearch(args.crewMemberName ?? args.employeeName ?? args.name);
+    if (!search) return { error: "crewEmployeeId or crewMemberName is required." } as const;
+    const needle = `%${search}%`;
+    filters.push(sql`(
+      LOWER(TRIM(COALESCE(${vendorPeopleTable.firstName}, '') || ' ' || COALESCE(${vendorPeopleTable.lastName}, ''))) LIKE ${needle}
+      OR LOWER(${vendorPeopleTable.email}) LIKE ${needle}
+    )`);
+  }
+  if ((session.role === "vendor" || session.role === "field_employee") && session.vendorId) {
+    filters.push(eq(vendorPeopleTable.vendorId, session.vendorId));
+  } else if (session.role === "partner" && session.partnerId) {
+    filters.push(sql`EXISTS (
+      SELECT 1
+      FROM ticket_crew tc
+      INNER JOIN tickets t ON t.id = tc.ticket_id
+      INNER JOIN site_locations sl ON sl.id = t.site_location_id
+      WHERE tc.employee_id = ${vendorPeopleTable.id}
+        AND tc.removed_at IS NULL
+        AND sl.partner_id = ${session.partnerId}
+    )`);
+  } else if (session.role !== "admin") {
+    return { error: "No crew scope on this session." } as const;
+  }
+
+  const matches = await db
+    .select({
+      id: vendorPeopleTable.id,
+      vendorId: vendorPeopleTable.vendorId,
+      firstName: vendorPeopleTable.firstName,
+      lastName: vendorPeopleTable.lastName,
+      email: vendorPeopleTable.email,
+      vendorRole: vendorPeopleTable.vendorRole,
+      userId: vendorPeopleTable.userId,
+    })
+    .from(vendorPeopleTable)
+    .where(and(...filters))
+    .orderBy(vendorPeopleTable.firstName, vendorPeopleTable.lastName)
+    .limit(5);
+
+  if (matches.length === 0) return { error: "Crew member not found in your scope." } as const;
+  if (matches.length > 1) {
+    return {
+      error: "Multiple crew members matched. Ask which one.",
+      matches: matches.map((m) => ({
+        crewEmployeeId: m.id,
+        name: `${m.firstName} ${m.lastName}`.trim(),
+        email: m.email,
+      })),
+    } as const;
+  }
+  return { employee: matches[0] } as const;
+}
+
+async function loadEmployeeActiveTicket(employeeId: number, session: SessionPayload, explicitTicketId?: number) {
+  const scope = ticketScopeFilters(session);
+  if (scope === null) return null;
+  const filters: unknown[] = [
+    ...scope,
+    sql`${ticketsTable.status} NOT IN ('cancelled','funds_dispersed','denied','completed','closed')`,
+  ];
+  if (Number.isFinite(explicitTicketId) && explicitTicketId! > 0) {
+    filters.push(eq(ticketsTable.id, Math.floor(explicitTicketId!)));
+  } else {
+    filters.push(
+      sql`(
+        ${ticketsTable.fieldEmployeeId} = ${employeeId}
+        OR EXISTS (
+          SELECT 1 FROM ticket_crew tc
+          WHERE tc.ticket_id = ${ticketsTable.id}
+            AND tc.employee_id = ${employeeId}
+            AND tc.removed_at IS NULL
+        )
+      )`,
+    );
+  }
+  const [ticket] = await db
+    .select({
+      ticketId: ticketsTable.id,
+      status: ticketsTable.status,
+      lifecycleState: ticketsTable.lifecycleState,
+      siteLocationId: ticketsTable.siteLocationId,
+      siteName: siteLocationsTable.name,
+      siteLatitude: siteLocationsTable.latitude,
+      siteLongitude: siteLocationsTable.longitude,
+      siteRadiusMeters: siteLocationsTable.siteRadiusMeters,
+      scheduledStartAt: ticketsTable.scheduledStartAt,
+      checkInTime: ticketsTable.checkInTime,
+      checkOutTime: ticketsTable.checkOutTime,
+      enRouteAt: ticketsTable.enRouteAt,
+      onLocationAt: ticketsTable.onLocationAt,
+    })
+    .from(ticketsTable)
+    .innerJoin(siteLocationsTable, eq(ticketsTable.siteLocationId, siteLocationsTable.id))
+    .where(and(...(filters as Parameters<typeof and>)))
+    .orderBy(desc(ticketsTable.updatedAt))
+    .limit(1);
+  return ticket ?? null;
+}
+
+async function loadLatestGps(ticketId: number) {
+  const [last] = await db
+    .select({
+      latitude: gpsLogsTable.latitude,
+      longitude: gpsLogsTable.longitude,
+      eventType: gpsLogsTable.eventType,
+      speedMps: gpsLogsTable.speedMps,
+      batteryLevel: gpsLogsTable.batteryLevel,
+      recordedAt: gpsLogsTable.recordedAt,
+    })
+    .from(gpsLogsTable)
+    .where(eq(gpsLogsTable.ticketId, ticketId))
+    .orderBy(desc(gpsLogsTable.recordedAt))
+    .limit(1);
+  return last ?? null;
+}
+
+async function lookupCrewMemberStatus(args: Record<string, unknown>, session: SessionPayload) {
+  if (!canUseCrewOps(session)) return err("Crew status lookup is available to vendor admins, foremen, partners, and admins.");
+  const resolved = await resolveCrewMember(args, session);
+  if ("error" in resolved) return JSON.stringify(resolved);
+  const ticket = await loadEmployeeActiveTicket(resolved.employee.id, session, Number(args.ticketId));
+  if (!ticket) {
+    return JSON.stringify({
+      employee: {
+        crewEmployeeId: resolved.employee.id,
+        name: `${resolved.employee.firstName} ${resolved.employee.lastName}`.trim(),
+        email: resolved.employee.email,
+      },
+      activeTicket: null,
+      status: "No active ticket found in scope.",
+    });
+  }
+  const lastGps = await loadLatestGps(ticket.ticketId);
+  const distanceToSiteMiles =
+    lastGps && ticket.siteLatitude != null && ticket.siteLongitude != null
+      ? milesBetween(lastGps, { latitude: ticket.siteLatitude, longitude: ticket.siteLongitude })
+      : null;
+  return JSON.stringify({
+    employee: {
+      crewEmployeeId: resolved.employee.id,
+      name: `${resolved.employee.firstName} ${resolved.employee.lastName}`.trim(),
+      email: resolved.employee.email,
+    },
+    activeTicket: ticket,
+    lastGps,
+    distanceToSiteMiles,
+    locationSource: "ticket_gps_trail",
+    note: "Current schema stores GPS by ticket, not by employee. If multiple crew members are on this ticket, location is the active ticket trail.",
+  });
+}
+
+async function queryCrewEta(args: Record<string, unknown>, session: SessionPayload) {
+  if (!canUseCrewOps(session)) return err("Crew ETA lookup is available to vendor admins, foremen, partners, and admins.");
+  const resolved = await resolveCrewMember(args, session);
+  if ("error" in resolved) return JSON.stringify(resolved);
+  const ticket = await loadEmployeeActiveTicket(resolved.employee.id, session, Number(args.ticketId));
+  if (!ticket) return err("No active ticket found for that crew member in your scope.");
+  const lastGps = await loadLatestGps(ticket.ticketId);
+  if (!lastGps) return err(`No GPS points found for ticket ${ticket.ticketId}.`);
+  const distanceToSiteMiles = milesBetween(lastGps, {
+    latitude: ticket.siteLatitude,
+    longitude: ticket.siteLongitude,
+  });
+  const speedMph = lastGps.speedMps && lastGps.speedMps > 0
+    ? lastGps.speedMps * 2.2369362921
+    : null;
+  const fallbackMph = 45;
+  const etaMinutes = Math.round((distanceToSiteMiles / (speedMph && speedMph >= 5 ? speedMph : fallbackMph)) * 60);
+  const etaAt = new Date(Date.now() + etaMinutes * 60_000);
+  return JSON.stringify({
+    employee: {
+      crewEmployeeId: resolved.employee.id,
+      name: `${resolved.employee.firstName} ${resolved.employee.lastName}`.trim(),
+    },
+    ticketId: ticket.ticketId,
+    siteName: ticket.siteName,
+    lastGps,
+    distanceToSiteMiles,
+    speedMph,
+    etaMinutes,
+    etaAt,
+    estimateBasis: speedMph && speedMph >= 5 ? "current_gps_speed" : "fallback_45_mph",
+    locationSource: "ticket_gps_trail",
+  });
+}
+
+async function queryCrewRouteSummary(args: Record<string, unknown>, session: SessionPayload) {
+  if (!canUseCrewOps(session)) return err("Crew route summary is available to vendor admins, foremen, partners, and admins.");
+  let ticketId = Number(args.ticketId);
+  let employee: { id: number; firstName: string; lastName: string; email: string } | null = null;
+  if (!Number.isFinite(ticketId) || ticketId <= 0) {
+    const resolved = await resolveCrewMember(args, session);
+    if ("error" in resolved) return JSON.stringify(resolved);
+    employee = resolved.employee;
+    const ticket = await loadEmployeeActiveTicket(resolved.employee.id, session);
+    if (!ticket) return err("No active ticket found for that crew member in your scope.");
+    ticketId = ticket.ticketId;
+  }
+  const scope = ticketScopeFilters(session);
+  if (scope === null) return err("No org scope on this session.");
+  const [ticket] = await db
+    .select({
+      ticketId: ticketsTable.id,
+      siteName: siteLocationsTable.name,
+      siteLatitude: siteLocationsTable.latitude,
+      siteLongitude: siteLocationsTable.longitude,
+      enRouteAt: ticketsTable.enRouteAt,
+      onLocationAt: ticketsTable.onLocationAt,
+      checkInTime: ticketsTable.checkInTime,
+      checkOutTime: ticketsTable.checkOutTime,
+    })
+    .from(ticketsTable)
+    .innerJoin(siteLocationsTable, eq(ticketsTable.siteLocationId, siteLocationsTable.id))
+    .where(and(eq(ticketsTable.id, Math.floor(ticketId)), ...(scope as Parameters<typeof and>)))
+    .limit(1);
+  if (!ticket) return err(`Ticket ${Math.floor(ticketId)} not visible to your account.`);
+
+  const points = await db
+    .select({
+      latitude: gpsLogsTable.latitude,
+      longitude: gpsLogsTable.longitude,
+      eventType: gpsLogsTable.eventType,
+      speedMps: gpsLogsTable.speedMps,
+      batteryLevel: gpsLogsTable.batteryLevel,
+      recordedAt: gpsLogsTable.recordedAt,
+    })
+    .from(gpsLogsTable)
+    .where(eq(gpsLogsTable.ticketId, Math.floor(ticketId)))
+    .orderBy(asc(gpsLogsTable.recordedAt))
+    .limit(500);
+  let miles = 0;
+  for (let i = 1; i < points.length; i += 1) {
+    miles += milesBetween(points[i - 1], points[i]);
+  }
+  const first = points[0] ?? null;
+  const last = points[points.length - 1] ?? null;
+  const durationMinutes =
+    first && last
+      ? Math.round((new Date(last.recordedAt).getTime() - new Date(first.recordedAt).getTime()) / 60_000)
+      : null;
+  const [activeCheckIn] = employee
+    ? await db
+        .select({
+          checkInAt: ticketCheckInsTable.checkInAt,
+          checkOutAt: ticketCheckInsTable.checkOutAt,
+          source: ticketCheckInsTable.source,
+        })
+        .from(ticketCheckInsTable)
+        .where(and(
+          eq(ticketCheckInsTable.ticketId, Math.floor(ticketId)),
+          eq(ticketCheckInsTable.employeeId, employee.id),
+          isNull(ticketCheckInsTable.checkOutAt),
+        ))
+        .orderBy(desc(ticketCheckInsTable.checkInAt))
+        .limit(1)
+    : [];
+  return JSON.stringify({
+    ticket,
+    employee: employee
+      ? {
+          crewEmployeeId: employee.id,
+          name: `${employee.firstName} ${employee.lastName}`.trim(),
+          email: employee.email,
+        }
+      : null,
+    points: points.length,
+    first,
+    last,
+    routeMilesApprox: Math.round(miles * 10) / 10,
+    durationMinutes,
+    activeCheckIn: activeCheckIn ?? null,
+    locationSource: "ticket_gps_trail",
+  });
 }
 
 async function queryHotlistJobs(args: Record<string, unknown>, session: SessionPayload) {
@@ -561,6 +877,12 @@ export async function runOpsDataTool(
       return queryNotifications(args, session);
     case "query_live_crew":
       return queryLiveCrew(args, session);
+    case "lookup_crew_member_status":
+      return lookupCrewMemberStatus(args, session);
+    case "query_crew_eta":
+      return queryCrewEta(args, session);
+    case "query_crew_route_summary":
+      return queryCrewRouteSummary(args, session);
     case "query_hotlist_jobs":
       return queryHotlistJobs(args, session);
     case "query_hotlist_bids":
