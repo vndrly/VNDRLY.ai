@@ -17,9 +17,9 @@
       "checkAutomatically": "ON_ERROR_RECOVERY"
     },
     "splash": {
-      "image": "./assets/images/icon.png",
+      "image": "./assets/images/vndrly-splash-logo-greyscale.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#2a2d31"
     },
     "ios": {
       "supportsTablet": false,
@@ -60,6 +60,15 @@
       "favicon": "./assets/images/icon.png"
     },
     "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#2a2d31",
+          "image": "./assets/images/vndrly-splash-logo-greyscale.png",
+          "imageWidth": 168,
+          "resizeMode": "contain"
+        }
+      ],
       "./plugins/withKotlinJvmTarget",
       [
         "expo-router",

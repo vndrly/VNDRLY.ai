@@ -1,41 +1,79 @@
-import React from "react";
-import { ActivityIndicator, Image, StyleSheet, View } from "react-native";
+import React, { useEffect, useRef } from "react";
+import { Animated, Image, StyleSheet, View } from "react-native";
 
-import { getCachedBrand } from "@/hooks/use-brand";
-import { VNDRLY_LOGO_SQUARE } from "@/lib/vndrly-brand-assets";
+import {
+  SPLASH_BACKGROUND_GREYSCALE,
+  SPLASH_LOGO_CYCLE_MS,
+  SPLASH_LOGO_FULLCOLOR,
+  SPLASH_LOGO_GREYSCALE,
+} from "@/lib/splash-assets";
+
+const LOGO_SIZE = 168;
 
 export default function SplashLogo() {
-  // Read the cached brand synchronously so the splash can show the most
-  // recent org's primary color while the auth context re-hydrates. With
-  // no cached org brand, brand.primary already defaults to the VNDRLY
-  // brand gold (#e6ac00) via DEFAULT_BRAND_PRIMARY — so we always trust
-  // brand.primary instead of falling back to the neutral palette token,
-  // which would render the spinner as washed-out light grey.
-  const brand = getCachedBrand();
-  const spinnerColor = brand.primary;
+  const cycle = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.timing(cycle, {
+        toValue: 1,
+        duration: SPLASH_LOGO_CYCLE_MS,
+        useNativeDriver: true,
+      }),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [cycle]);
+
+  // 0–0.5s greyscale visible → 0.5–1.5s full color (~1s) → 1.5–2s greyscale back.
+  const greyscaleOpacity = cycle.interpolate({
+    inputRange: [0, 0.25, 0.75, 1],
+    outputRange: [1, 0, 0, 1],
+  });
+
   return (
-    <View style={styles.container}>
+    <View style={styles.root}>
       <Image
-        source={VNDRLY_LOGO_SQUARE}
-        style={styles.logo}
-        resizeMode="contain"
+        source={SPLASH_BACKGROUND_GREYSCALE}
+        style={styles.background}
+        resizeMode="cover"
       />
-      <ActivityIndicator color={spinnerColor} style={styles.spinner} />
+      <View style={styles.logoStack}>
+        <Image
+          source={SPLASH_LOGO_FULLCOLOR}
+          style={styles.logo}
+          resizeMode="contain"
+        />
+        <Animated.Image
+          source={SPLASH_LOGO_GREYSCALE}
+          style={[styles.logo, styles.logoOverlay, { opacity: greyscaleOpacity }]}
+          resizeMode="contain"
+        />
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  root: {
+    flex: 1,
+    backgroundColor: "#2a2d31",
+  },
+  background: {
+    ...StyleSheet.absoluteFillObject,
+    width: "100%",
+    height: "100%",
+  },
+  logoStack: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
   },
   logo: {
-    width: 140,
-    height: 140,
+    width: LOGO_SIZE,
+    height: LOGO_SIZE,
   },
-  spinner: {
-    marginTop: 28,
+  logoOverlay: {
+    position: "absolute",
   },
 });

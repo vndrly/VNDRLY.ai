@@ -35,6 +35,7 @@ import {
 } from "@/lib/pushDeepLinks";
 import { registerForPushNotifications } from "@/lib/push";
 import { initSentry, setSentryUser, wrapRoot } from "@/lib/sentry";
+import { SPLASH_MIN_DURATION_MS } from "@/lib/splash-assets";
 import "@/lib/push";
 import "@/lib/i18n";
 
@@ -66,6 +67,12 @@ function AuthGate() {
   const [checked, setChecked] = useState(isTokenCacheReady());
   const [hasAuth, setHasAuth] = useState(!!getCachedToken());
   const [role, setRole] = useState<string | null>(getCachedRole());
+  const [minSplashElapsed, setMinSplashElapsed] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setMinSplashElapsed(true), SPLASH_MIN_DURATION_MS);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (checked) return;
@@ -205,7 +212,7 @@ function AuthGate() {
   // sound takes over) or when the sound lifecycle hook cleans up.
   useEffect(() => ensureNotificationSoundLifecycle(), []);
 
-  if (!checked) {
+  if (!checked || !minSplashElapsed) {
     return <SplashLogo />;
   }
 
