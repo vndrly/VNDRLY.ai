@@ -134,6 +134,10 @@ async function main() {
   const akMatch = localEnv.match(/^AI_INTEGRATIONS_ANTHROPIC_API_KEY=(.+)$/m);
   if (akMatch) anthropicKey = akMatch[1].trim();
 
+  let openaiKey = "";
+  const oaiMatch = localEnv.match(/^OPENAI_API_KEY=(.+)$/m);
+  if (oaiMatch) openaiKey = oaiMatch[1].trim();
+
   const finnhubKey = localEnv.match(/^FINNHUB_API_KEY=(.+)$/m)?.[1]?.trim() ?? "";
   const alphaVantageKey =
     localEnv.match(/^ALPHA_VANTAGE_API_KEY=(.+)$/m)?.[1]?.trim() ?? "";
@@ -161,6 +165,7 @@ async function main() {
     `SUPABASE_STORAGE_BUCKET=${storageBucket}`,
     "AI_INTEGRATIONS_ANTHROPIC_BASE_URL=https://api.anthropic.com",
     anthropicKey ? `AI_INTEGRATIONS_ANTHROPIC_API_KEY=${anthropicKey}` : "",
+    openaiKey ? `OPENAI_API_KEY=${openaiKey}` : "",
     finnhubKey ? `FINNHUB_API_KEY=${finnhubKey}` : "",
     alphaVantageKey ? `ALPHA_VANTAGE_API_KEY=${alphaVantageKey}` : "",
     "OPS_ALERT_EMAIL=admin@vndrly.ai",

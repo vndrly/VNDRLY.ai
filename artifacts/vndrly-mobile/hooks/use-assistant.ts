@@ -56,7 +56,14 @@ async function assistantFetch(
   return fetch(`${getApiBase()}${path}`, { ...init, headers });
 }
 
-export function useAssistant() {
+export interface UseAssistantOptions {
+  /** Called when a streamed assistant reply finishes (for TTS). */
+  onAssistantReply?: (text: string) => void;
+}
+
+export function useAssistant(opts: UseAssistantOptions = {}) {
+  const onAssistantReplyRef = useRef(opts.onAssistantReply);
+  onAssistantReplyRef.current = opts.onAssistantReply;
   const [conversationId, setConversationId] = useState<number | null>(null);
   const [messages, setMessages] = useState<AssistantMessage[]>([]);
   const [streaming, setStreaming] = useState(false);
@@ -241,6 +248,8 @@ export function useAssistant() {
               ),
             );
             setActiveTool(null);
+            const spoken = (evt.content || accumulatedContent).trim();
+            if (spoken) onAssistantReplyRef.current?.(spoken);
           } else if (evt.type === "error") {
             sawError = true;
             setError(evt.message);

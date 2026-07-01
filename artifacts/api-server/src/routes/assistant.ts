@@ -51,6 +51,7 @@ import {
   recordIpHit,
   recordSignupAssistantDigestHit,
 } from "../lib/signup-assistant-rate-limit";
+import { transcribeAudioBuffer } from "../lib/openai-whisper";
 
 const router: IRouter = Router();
 
@@ -1703,6 +1704,55 @@ router.post("/assistant/signup/:persona/chat", async (req, res) => {
     logger.error({ err, persona }, "signup-mode assistant stream failed");
     send("error", { message: "Something went wrong while answering. Please try again." });
     res.end();
+  }
+});
+
+// Voice input: mobile records audio → Whisper STT → text fed into normal AskV chat.
+router.post("/assistant/transcribe", async (req, res) => {
+  const session = requireSession(req, res);
+  if (!session) return;
+
+  const apiKey = process.env.OPENAI_API_KEY?.trim();
+  if (!apiKey) {
+    res.status(503).json({
+      error: "Voice input is not configured",
+      code: "assistant.transcribe_unavailable",
+    });
+    return;
+  }
+
+  const audioBase64 = typeof req.body?.audioBase64 === "string" ? req.body.audioBase64.trim() : "";
+  if (!audioBase64) {
+    res.status(400).json({ error: "Missing audio", code: "assistant.missing_audio" });
+    return;
+  }
+
+  let audio: Buffer;
+  try {
+    audio = Buffer.from(audioBase64, "base64");
+  } catch {
+    res.status(400).json({ error: "Invalid audio", code: "assistant.invalid_audio" });
+    return;
+  }
+
+  if (audio.length > 4 * 1024 * 1024) {
+    res.status(400).json({ error: "Audio too large", code: "assistant.audio_too_large" });
+    return;
+  }
+
+  try {
+    const text = await transcribeAudioBuffer(audio, "askv.m4a", apiKey);
+    if (!text) {
+      res.status(422).json({ error: "No speech detected", code: "assistant.no_speech" });
+      return;
+    }
+    res.json({ text });
+  } catch (err) {
+    logger.error({ err, userId: session.userId }, "assistant transcribe failed");
+    res.status(502).json({
+      error: "Transcription failed",
+      code: "assistant.transcribe_failed",
+    });
   }
 });
 

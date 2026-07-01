@@ -1488,6 +1488,8 @@
     "disclaimer": "Las respuestas son generadas por IA. Verifique los detalles importantes antes de actuar. Ayúdenos a mejorar AskV con sus comentarios.",
     "transcriptErrorTitle": "No se pudo exportar la transcripción",
     "transcriptShareUnavailable": "Compartir no está disponible en este dispositivo.",
+    "transcribeFailed": "No pude entender eso. Inténtalo de nuevo o escribe tu pregunta.",
+    "holdToTalkHint": "Mantén el micrófono, habla y suelta para enviar.",
     "quickActions": {
       "fieldStatus": "Actualizar estado del ticket",
       "fieldPhoto": "Foto de perfil y certificados",

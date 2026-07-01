@@ -1488,6 +1488,8 @@
     "disclaimer": "Replies are AI-generated. Verify important details before acting on them. Help us improve AskV with feedback.",
     "transcriptErrorTitle": "Could not export transcript",
     "transcriptShareUnavailable": "Sharing is not available on this device.",
+    "transcribeFailed": "Couldn't understand that. Try again or type your question.",
+    "holdToTalkHint": "Hold the mic, speak, then release to send.",
     "quickActions": {
       "fieldStatus": "Update ticket status",
       "fieldPhoto": "Profile photo & certs",

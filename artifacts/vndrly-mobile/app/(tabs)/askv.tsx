@@ -32,7 +32,14 @@ import {
 import { useBrand } from "@/hooks/use-brand";
 import { useColors } from "@/hooks/useColors";
 import { quickActionsForUser } from "@/lib/assistant-quick-actions";
+import { isAskVSpeaking, speakAskV, stopAskVSpeech } from "@/lib/askv-speech";
+import { transcribeAskVRecording } from "@/lib/askv-transcribe";
 import { shareAssistantTranscript } from "@/lib/assistant-transcript";
+import {
+  createPttRecorder,
+  PttMicPermissionError,
+  type PttRecorder,
+} from "@/lib/ptt";
 import { isForemanEmployeeUser } from "@/lib/mobile-viewer";
 import { buildAssistantShareMailtoUrl } from "@/lib/notification-mailto";
 import { SCREEN_SUBTITLE_TEXT, SCREEN_TITLE_TEXT } from "@/lib/pill-doctrine";
@@ -80,7 +87,14 @@ export default function AskVScreen() {
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollView>(null);
+  const voiceRecorderRef = useRef<PttRecorder | null>(null);
   const [draft, setDraft] = useState("");
+  const [readAloud, setReadAloud] = useState(true);
+  const readAloudRef = useRef(readAloud);
+  readAloudRef.current = readAloud;
+  const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
+  const [voiceRecording, setVoiceRecording] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
   const [feedbackPendingId, setFeedbackPendingId] = useState<number | null>(null);
   const [assistantShare, setAssistantShare] = useState<AssistantShareContext | null>(null);
 
@@ -94,7 +108,31 @@ export default function AskVScreen() {
     startNew,
     loadLatest,
     submitFeedback,
-  } = useAssistant();
+  } = useAssistant({
+    onAssistantReply: (text) => {
+      if (!readAloudRef.current) return;
+      setSpeakingMessageId("auto");
+      speakAskV(text);
+    },
+  });
+
+  useEffect(() => {
+    return () => {
+      stopAskVSpeech();
+      void voiceRecorderRef.current?.dispose();
+      voiceRecorderRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!speakingMessageId) return;
+    const timer = setInterval(() => {
+      void isAskVSpeaking().then((speaking) => {
+        if (!speaking) setSpeakingMessageId(null);
+      });
+    }, 400);
+    return () => clearInterval(timer);
+  }, [speakingMessageId]);
 
   useEffect(() => {
     void loadLatest();
@@ -120,6 +158,81 @@ export default function AskVScreen() {
     if (!text) return;
     setDraft("");
     void send(text);
+  };
+
+  const toggleReadAloud = () => {
+    setReadAloud((prev) => {
+      if (prev) stopAskVSpeech();
+      return !prev;
+    });
+    setSpeakingMessageId(null);
+  };
+
+  const onSpeakMessage = (message: AssistantMessage) => {
+    if (!message.content.trim()) return;
+    if (speakingMessageId === message.id) {
+      stopAskVSpeech();
+      setSpeakingMessageId(null);
+      return;
+    }
+    setSpeakingMessageId(message.id);
+    speakAskV(message.content);
+  };
+
+  const onVoicePressIn = () => {
+    if (streaming || transcribing || voiceRecording) return;
+    void (async () => {
+      try {
+        stopAskVSpeech();
+        setSpeakingMessageId(null);
+        await voiceRecorderRef.current?.dispose();
+        const recorder = await createPttRecorder();
+        voiceRecorderRef.current = recorder;
+        await recorder.start();
+        setVoiceRecording(true);
+      } catch (err) {
+        voiceRecorderRef.current = null;
+        if (err instanceof PttMicPermissionError) {
+          Alert.alert(
+            t("foremanHome.pttMicDeniedTitle"),
+            t("foremanHome.pttMicDeniedBody"),
+          );
+          return;
+        }
+        Alert.alert(t("common.error"), t("askv.transcribeFailed"));
+      }
+    })();
+  };
+
+  const onVoicePressOut = () => {
+    if (!voiceRecording) return;
+    void (async () => {
+      const recorder = voiceRecorderRef.current;
+      voiceRecorderRef.current = null;
+      setVoiceRecording(false);
+      if (!recorder) return;
+      try {
+        const { uri, durationSeconds } = await recorder.stop();
+        if (durationSeconds < 0.4) return;
+        setTranscribing(true);
+        const text = await transcribeAskVRecording(uri);
+        if (text.trim()) {
+          await send(text);
+        }
+      } catch (err) {
+        if (err instanceof PttMicPermissionError) {
+          Alert.alert(
+            t("foremanHome.pttMicDeniedTitle"),
+            t("foremanHome.pttMicDeniedBody"),
+          );
+        } else {
+          Alert.alert(t("common.error"), t("askv.transcribeFailed"));
+        }
+      } finally {
+        setTranscribing(false);
+        await recorder.dispose();
+      }
+    })();
   };
 
   const onClear = () => {
@@ -201,6 +314,17 @@ export default function AskVScreen() {
 
   const headerIcons = (
     <View style={styles.headerIcons}>
+      <Pressable
+        onPress={toggleReadAloud}
+        hitSlop={8}
+        testID="askv-read-aloud"
+      >
+        <Feather
+          name={readAloud ? "volume-2" : "volume-x"}
+          size={18}
+          color={readAloud ? brand.primary : colors.mutedForeground}
+        />
+      </Pressable>
       {messages.length > 0 ? (
         <>
           <Pressable
@@ -340,6 +464,14 @@ export default function AskVScreen() {
                       testID={`askv-msg-feedback-${m.serverId}`}
                     >
                       <BubbleIconButton
+                        name={speakingMessageId === m.id ? "square" : "volume-2"}
+                        onPress={() => onSpeakMessage(m)}
+                        color={colors.mutedForeground}
+                        activeColor={brand.primary}
+                        pressed={speakingMessageId === m.id}
+                        testID={`askv-speak-${m.serverId ?? m.id}`}
+                      />
+                      <BubbleIconButton
                         name="thumbs-up"
                         onPress={() => void handleFeedback(m.serverId!, "helpful")}
                         disabled={feedbackPendingId != null}
@@ -398,6 +530,29 @@ export default function AskVScreen() {
         ]}
       >
         <View style={styles.composerRow}>
+          <Pressable
+            onPressIn={onVoicePressIn}
+            onPressOut={onVoicePressOut}
+            disabled={streaming || transcribing}
+            style={[
+              styles.micBtn,
+              {
+                borderColor: colors.border,
+                backgroundColor: voiceRecording ? brand.primary : colors.card,
+              },
+            ]}
+            testID="askv-voice"
+          >
+            {transcribing ? (
+              <ActivityIndicator size="small" color={brand.primary} />
+            ) : (
+              <Feather
+                name="mic"
+                size={18}
+                color={voiceRecording ? "#ffffff" : colors.foreground}
+              />
+            )}
+          </Pressable>
           <TextInput
             value={draft}
             onChangeText={setDraft}
@@ -412,12 +567,12 @@ export default function AskVScreen() {
                 backgroundColor: colors.card,
               },
             ]}
-            editable={!streaming}
+            editable={!streaming && !transcribing}
             testID="askv-input"
           />
           <LayeredPillButton
             onPress={onSend}
-            disabled={streaming || !draft.trim()}
+            disabled={streaming || !draft.trim() || transcribing}
             height={44}
             style={styles.sendBtn}
             testID="askv-send"
@@ -514,4 +669,12 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_400Regular",
   },
   sendBtn: { minWidth: 44, width: 44, paddingHorizontal: 0 },
+  micBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
 });
