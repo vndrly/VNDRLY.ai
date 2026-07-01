@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
-import { Sparkles, MessageCircle, Trash2, Loader2, Download, CheckCircle2, Circle, Plus, X, ThumbsUp, ThumbsDown, Send, Mail } from "lucide-react";
+import { Sparkles, MessageCircle, Trash2, Loader2, Download, CheckCircle2, Circle, Plus, X, ThumbsUp, ThumbsDown, Send, Mail, Mic } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AskVFloatingLauncherMark, AskVLogo, ASKV_LAUNCHER_HEIGHT, ASKV_LAUNCHER_WIDTH } from "@/components/askv-logo";
@@ -32,6 +32,7 @@ import NotificationSendToDialog, {
 import { parseTicketIdFromHref } from "@/lib/ticket-send-to-api";
 import { buildAssistantShareMailtoUrl } from "@/lib/notification-mailto";
 import { speakAskV, stopAskVSpeech } from "@/lib/askv-speech";
+import { transcribeAskVRecording } from "@/lib/askv-transcribe";
 
 interface QuickAction {
   label: string;
@@ -241,6 +242,18 @@ function HeaderIconLink({
   );
 }
 
+function pickAskVRecordingMimeType(): string | undefined {
+  if (typeof MediaRecorder === "undefined") return undefined;
+  const preferred = [
+    "audio/webm;codecs=opus",
+    "audio/webm",
+    "audio/mp4",
+    "audio/mpeg",
+    "audio/wav",
+  ];
+  return preferred.find((type) => MediaRecorder.isTypeSupported(type));
+}
+
 export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: AssistantPanelProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -311,7 +324,15 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
   // to adopt one into.
   const [pendingSignup, setPendingSignup] = useState<PendingSignupChat | null>(null);
   const [adopting, setAdopting] = useState(false);
+  const [voiceRecording, setVoiceRecording] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const voiceRecorderRef = useRef<MediaRecorder | null>(null);
+  const voiceStreamRef = useRef<MediaStream | null>(null);
+  const voiceChunksRef = useRef<Blob[]>([]);
+  const voiceStartedAtRef = useRef(0);
+  const voiceCancelledRef = useRef(false);
 
   // In token mode the user isn't logged in so `useAuth` is null. Use
   // the field employee's name (resolved by /onboarding/field/by-token)
@@ -472,25 +493,171 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
     scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages, streaming]);
 
+  const cleanupVoiceStream = useCallback(() => {
+    voiceStreamRef.current?.getTracks().forEach((track) => track.stop());
+    voiceStreamRef.current = null;
+    voiceRecorderRef.current = null;
+  }, []);
+
+  const finishVoiceRecording = useCallback(
+    async (recordedMimeType: string) => {
+      const cancelled = voiceCancelledRef.current;
+      const chunks = voiceChunksRef.current;
+      const durationMs = performance.now() - voiceStartedAtRef.current;
+      voiceCancelledRef.current = false;
+      voiceChunksRef.current = [];
+      cleanupVoiceStream();
+      setVoiceRecording(false);
+
+      if (cancelled || chunks.length === 0 || durationMs < 400) return;
+
+      const mimeType =
+        recordedMimeType ||
+        chunks.find((chunk) => chunk.type)?.type ||
+        "audio/webm";
+      const blob = new Blob(chunks, { type: mimeType });
+      if (blob.size > 4 * 1024 * 1024) {
+        setVoiceError("Recording is too long. Try a shorter request.");
+        return;
+      }
+
+      setTranscribing(true);
+      setVoiceError(null);
+      try {
+        const text = await transcribeAskVRecording(blob);
+        if (voiceCancelledRef.current) return;
+        if (!text) {
+          setVoiceError("Couldn't understand that. Try again or type your question.");
+          return;
+        }
+        stopAskVSpeech();
+        setInput("");
+        await send(text);
+      } catch (err) {
+        const code = err instanceof Error ? err.message : "";
+        if (code === "assistant.no_speech") {
+          setVoiceError("Couldn't hear speech. Try again or type your question.");
+        } else if (code === "assistant.audio_too_large") {
+          setVoiceError("Recording is too long. Try a shorter request.");
+        } else if (code === "assistant.transcribe_unavailable") {
+          setVoiceError("Voice input is not configured on the server.");
+        } else {
+          setVoiceError("Couldn't understand that. Try again or type your question.");
+        }
+      } finally {
+        setTranscribing(false);
+      }
+    },
+    [cleanupVoiceStream, send],
+  );
+
+  const startVoiceRecording = useCallback(async () => {
+    if (streaming || transcribing || voiceRecording || tokenMode || signupMode) return;
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+      setVoiceError("Voice input is not supported in this browser.");
+      return;
+    }
+
+    stopAskVSpeech();
+    setVoiceError(null);
+    voiceCancelledRef.current = false;
+    voiceChunksRef.current = [];
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = pickAskVRecordingMimeType();
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+      voiceStreamRef.current = stream;
+      voiceRecorderRef.current = recorder;
+      voiceStartedAtRef.current = performance.now();
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) voiceChunksRef.current.push(event.data);
+      };
+      recorder.onerror = () => {
+        voiceCancelledRef.current = true;
+        setVoiceError("Microphone recording failed. Try again or type your question.");
+        if (recorder.state !== "inactive") {
+          recorder.stop();
+        } else {
+          cleanupVoiceStream();
+        }
+        setVoiceRecording(false);
+      };
+      recorder.onstop = () => {
+        void finishVoiceRecording(recorder.mimeType || mimeType || "");
+      };
+      recorder.start();
+      setVoiceRecording(true);
+    } catch (err) {
+      cleanupVoiceStream();
+      const name = err instanceof DOMException ? err.name : "";
+      if (name === "NotAllowedError" || name === "SecurityError") {
+        setVoiceError("Microphone permission denied. Allow microphone access and try again.");
+      } else {
+        setVoiceError("Could not start the microphone. Try again or type your question.");
+      }
+    }
+  }, [
+    cleanupVoiceStream,
+    finishVoiceRecording,
+    signupMode,
+    streaming,
+    tokenMode,
+    transcribing,
+    voiceRecording,
+  ]);
+
+  const stopVoiceRecording = useCallback(() => {
+    const recorder = voiceRecorderRef.current;
+    if (!recorder || recorder.state === "inactive") return;
+    recorder.stop();
+    setVoiceRecording(false);
+  }, []);
+
+  const cancelVoiceRecording = useCallback(() => {
+    voiceCancelledRef.current = true;
+    const recorder = voiceRecorderRef.current;
+    if (recorder && recorder.state !== "inactive") {
+      recorder.stop();
+    } else {
+      voiceChunksRef.current = [];
+      cleanupVoiceStream();
+    }
+    setVoiceRecording(false);
+  }, [cleanupVoiceStream]);
+
+  const handleVoiceClick = () => {
+    if (voiceRecording) {
+      stopVoiceRecording();
+    } else {
+      void startVoiceRecording();
+    }
+  };
+
   const handleSend = (text?: string) => {
     const v = (text ?? input).trim();
     if (!v) return;
+    cancelVoiceRecording();
     stopAskVSpeech();
+    setVoiceError(null);
     send(v);
     setInput("");
   };
 
   const handleStartNew = () => {
+    cancelVoiceRecording();
     stopAskVSpeech();
     startNew();
   };
 
   const handleClear = () => {
+    cancelVoiceRecording();
     stopAskVSpeech();
     clear();
   };
 
   const handleClose = () => {
+    cancelVoiceRecording();
     stopAskVSpeech();
     onOpenChange(false);
   };
@@ -590,11 +757,19 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
     });
 
   const showMessageFeedback = !tokenMode && !signupMode;
+  const showVoiceInput = !tokenMode && !signupMode;
+  const panelError = voiceError ?? error;
 
   useEffect(() => {
-    if (!open) stopAskVSpeech();
-    return () => stopAskVSpeech();
-  }, [open]);
+    if (!open) {
+      cancelVoiceRecording();
+      stopAskVSpeech();
+    }
+    return () => {
+      cancelVoiceRecording();
+      stopAskVSpeech();
+    };
+  }, [cancelVoiceRecording, open]);
 
   return (
     <>
@@ -829,9 +1004,9 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
             </div>
           )}
 
-          {error && (
+          {panelError && (
             <div className="rounded-lg border border-destructive/40 bg-destructive/5 text-destructive text-sm px-3 py-2">
-              {error}
+              {panelError}
             </div>
           )}
         </div>
@@ -850,7 +1025,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
               placeholder="Ask anything about VNDRLY..."
               className="resize-none min-h-[40px] max-h-32 rounded-2xl bg-white text-gray-900"
               rows={1}
-              disabled={streaming}
+              disabled={streaming || transcribing || voiceRecording}
               data-testid="assistant-input"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
@@ -859,9 +1034,33 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
                 }
               }}
             />
+            {showVoiceInput && (
+              <BrandPillButton
+                type="button"
+                onClick={handleVoiceClick}
+                disabled={streaming || transcribing}
+                hoverSrc={sendHoverPillSrc}
+                className="min-w-[40px] shrink-0 px-2"
+                data-testid="assistant-voice"
+                title={
+                  voiceRecording
+                    ? "Stop recording"
+                    : transcribing
+                      ? "Transcribing"
+                      : "Speak to AskV"
+                }
+                aria-pressed={voiceRecording}
+              >
+                {transcribing ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Mic className={cn("w-4 h-4", voiceRecording && "animate-pulse text-red-100")} />
+                )}
+              </BrandPillButton>
+            )}
             <BrandPillButton
               type="submit"
-              disabled={streaming || !input.trim()}
+              disabled={streaming || transcribing || voiceRecording || !input.trim()}
               hoverSrc={sendHoverPillSrc}
               className="min-w-[40px] shrink-0 px-2"
               data-testid="assistant-send"

@@ -17,6 +17,7 @@ export async function transcribeAudioBuffer(
   audio: Buffer,
   filename: string,
   apiKey: string,
+  mimeType = "audio/mp4",
 ): Promise<string> {
   if (audio.length > MAX_AUDIO_BYTES) {
     throw new Error("Audio too large");
@@ -26,7 +27,7 @@ export async function transcribeAudioBuffer(
   }
 
   const form = new FormData();
-  form.append("file", new Blob([new Uint8Array(audio)], { type: "audio/mp4" }), filename);
+  form.append("file", new Blob([new Uint8Array(audio)], { type: mimeType }), filename);
   form.append("model", "whisper-1");
   form.append("language", "en");
 

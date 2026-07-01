@@ -1708,7 +1708,22 @@ router.post("/assistant/signup/:persona/chat", async (req, res) => {
   }
 });
 
-// Voice input: mobile records audio → Whisper STT → text fed into normal AskV chat.
+function askvAudioFilenameForMimeType(mimeType: string | undefined): string {
+  const normalized = mimeType?.toLowerCase() ?? "";
+  if (normalized.includes("webm")) return "askv.webm";
+  if (normalized.includes("wav")) return "askv.wav";
+  if (normalized.includes("mpeg") || normalized.includes("mp3")) return "askv.mp3";
+  if (normalized.includes("ogg")) return "askv.ogg";
+  return "askv.m4a";
+}
+
+function askvOpenAiMimeType(mimeType: string | undefined): string {
+  const normalized = mimeType?.toLowerCase() ?? "";
+  if (normalized.startsWith("audio/")) return normalized.split(";")[0].trim();
+  return "audio/mp4";
+}
+
+// Voice input: mobile/web records audio → Whisper STT → text fed into normal AskV chat.
 router.post("/assistant/transcribe", async (req, res) => {
   const session = requireSession(req, res);
   if (!session) return;
@@ -1723,6 +1738,7 @@ router.post("/assistant/transcribe", async (req, res) => {
   }
 
   const audioBase64 = typeof req.body?.audioBase64 === "string" ? req.body.audioBase64.trim() : "";
+  const requestedMimeType = typeof req.body?.mimeType === "string" ? req.body.mimeType.trim() : undefined;
   if (!audioBase64) {
     res.status(400).json({ error: "Missing audio", code: "assistant.missing_audio" });
     return;
@@ -1742,7 +1758,9 @@ router.post("/assistant/transcribe", async (req, res) => {
   }
 
   try {
-    const text = await transcribeAudioBuffer(audio, "askv.m4a", apiKey);
+    const mimeType = askvOpenAiMimeType(requestedMimeType);
+    const filename = askvAudioFilenameForMimeType(mimeType);
+    const text = await transcribeAudioBuffer(audio, filename, apiKey, mimeType);
     if (!text) {
       res.status(422).json({ error: "No speech detected", code: "assistant.no_speech" });
       return;
