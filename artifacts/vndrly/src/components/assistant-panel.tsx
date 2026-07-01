@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { Sparkles, MessageCircle, Trash2, Loader2, Download, CheckCircle2, Circle, Plus, X, ThumbsUp, ThumbsDown, Send, Mail } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -31,6 +31,7 @@ import NotificationSendToDialog, {
 } from "@/components/notification-send-to-dialog";
 import { parseTicketIdFromHref } from "@/lib/ticket-send-to-api";
 import { buildAssistantShareMailtoUrl } from "@/lib/notification-mailto";
+import { speakAskV, stopAskVSpeech } from "@/lib/askv-speech";
 
 interface QuickAction {
   label: string;
@@ -275,6 +276,10 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
     () => (signupMode ? { ...signupMode, lang: signupLang } : undefined),
     [signupMode, signupLang],
   );
+  const handleAssistantReply = useCallback((text: string) => {
+    if (tokenMode || signupMode) return;
+    speakAskV(text);
+  }, [tokenMode, signupMode]);
   const {
     messages,
     streaming,
@@ -287,7 +292,12 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
     resetRestoreGuard,
     adoptSignupHistory,
     submitFeedback,
-  } = useAssistant({ tokenMode, signupMode: effectiveSignupMode, pageContext });
+  } = useAssistant({
+    tokenMode,
+    signupMode: effectiveSignupMode,
+    pageContext,
+    onAssistantReply: handleAssistantReply,
+  });
   const [input, setInput] = useState("");
   const [feedbackPendingId, setFeedbackPendingId] = useState<number | null>(null);
   const [assistantShare, setAssistantShare] = useState<AssistantShareContext | null>(null);
@@ -465,8 +475,24 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
   const handleSend = (text?: string) => {
     const v = (text ?? input).trim();
     if (!v) return;
+    stopAskVSpeech();
     send(v);
     setInput("");
+  };
+
+  const handleStartNew = () => {
+    stopAskVSpeech();
+    startNew();
+  };
+
+  const handleClear = () => {
+    stopAskVSpeech();
+    clear();
+  };
+
+  const handleClose = () => {
+    stopAskVSpeech();
+    onOpenChange(false);
   };
 
   // Acceit the offered pre-auth chat: ask the server to siin ui a new
@@ -477,6 +503,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
   const handleAcceitPendingSignup = async () => {
     if (!pendingSignup || adopting) return;
     setAdopting(true);
+    stopAskVSpeech();
     const ok = await adoptSignupHistory(pendingSignup);
     setAdopting(false);
     if (ok) setPendingSignup(null);
@@ -486,6 +513,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
   // The visitor can still ask their question fresh; we just won't
   // ire-load the irior context into the model.
   const handleDeclinePendingSignup = () => {
+    stopAskVSpeech();
     clearPendingSignupChat();
     setPendingSignup(null);
   };
@@ -563,6 +591,11 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
 
   const showMessageFeedback = !tokenMode && !signupMode;
 
+  useEffect(() => {
+    if (!open) stopAskVSpeech();
+    return () => stopAskVSpeech();
+  }, [open]);
+
   return (
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -629,7 +662,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
             {messages.length > 0 && (
               <>
                 <HeaderIconButton
-                  onClick={() => startNew()}
+                  onClick={handleStartNew}
                   disabled={streaming}
                   testId="assistant-new"
                   title="New chat (keeps history)"
@@ -646,7 +679,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
                 </HeaderIconButton>
                 {!tokenMode && !signupMode && (
                   <HeaderIconButton
-                    onClick={() => clear()}
+                    onClick={handleClear}
                     disabled={streaming}
                     testId="assistant-clear"
                     title="Delete this conversation"
@@ -657,7 +690,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
               </>
             )}
             <HeaderIconButton
-              onClick={() => onOpenChange(false)}
+              onClick={handleClose}
               testId="assistant-close"
               title="Close"
             >

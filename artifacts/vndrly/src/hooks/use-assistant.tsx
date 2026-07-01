@@ -136,6 +136,8 @@ export interface AssistantOptions {
    * — without re-mounting the panel or recreating the callback.
    */
   signupMode?: { persona: "partner" | "vendor"; lang?: SignupAssistantLang };
+  /** Called when a streamed assistant reply finishes. */
+  onAssistantReply?: (text: string) => void;
 }
 
 /**
@@ -145,6 +147,8 @@ export interface AssistantOptions {
 export function useAssistant(opts: AssistantOptions = {}) {
   const tokenMode = opts.tokenMode ?? null;
   const signupMode = opts.signupMode ?? null;
+  const onAssistantReplyRef = useRef(opts.onAssistantReply);
+  onAssistantReplyRef.current = opts.onAssistantReply;
   const pageContextRef = useRef(opts.pageContext);
   pageContextRef.current = opts.pageContext;
   // Both tokenMode and signupMode are stateless/anonymous — they
@@ -363,8 +367,10 @@ export function useAssistant(opts: AssistantOptions = {}) {
         if (!res.ok || !res.body) {
           throw new Error(`HTTP ${res.status}`);
         }
+        let accumulatedContent = "";
         await consumeSse(res.body, ac.signal, (evt) => {
           if (evt.type === "token") {
+            accumulatedContent += evt.delta;
             setMessages((prev) =>
               prev.map((m) =>
                 m.id === assistantId ? { ...m, content: m.content + evt.delta, pending: true } : m,
@@ -373,6 +379,7 @@ export function useAssistant(opts: AssistantOptions = {}) {
           } else if (evt.type === "tool") {
             setActiveTool(evt.status === "start" ? evt.name : null);
           } else if (evt.type === "done") {
+            const spoken = (evt.content || accumulatedContent).trim();
             setMessages((prev) =>
               prev.map((m) =>
                 m.id === assistantId
@@ -387,6 +394,7 @@ export function useAssistant(opts: AssistantOptions = {}) {
               ),
             );
             setActiveTool(null);
+            if (spoken) onAssistantReplyRef.current?.(spoken);
           } else if (evt.type === "error") {
             setError(evt.message);
             // Clear the "Thinking…" placeholder so the bubble doesn't
