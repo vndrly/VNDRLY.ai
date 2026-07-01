@@ -1778,11 +1778,19 @@ router.post("/assistant/tts", async (req, res) => {
     return;
   }
 
-  const voice = normalizeBuiltInTtsVoice(req.body?.voice ?? process.env.ASKV_TTS_VOICE);
+  const voice = normalizeBuiltInTtsVoice(process.env.ASKV_TTS_VOICE ?? req.body?.voice);
   const model = process.env.ASKV_TTS_MODEL?.trim() || "gpt-4o-mini-tts";
   const instructions =
     process.env.ASKV_TTS_INSTRUCTIONS?.trim() ||
-    "Speak as AskV, a calm field operations assistant. Sound concise, steady, clear, and useful. Do not add words that are not in the text.";
+    [
+      "Speak as AskV, a male American English field operations expert in his mid 30s.",
+      "Sound concise, professional, direct, capable, and positive.",
+      "These users are power users; avoid fluff, filler, overexplaining, hype, and long setup.",
+      "When possible, give the direct answer before any next steps.",
+      "If the app can perform the action, sound like the action is being handled.",
+      "If the user must do something manually, give short practical directions.",
+      "Do not add words, facts, or instructions that are not supported by the text being spoken.",
+    ].join(" ");
 
   try {
     const out = await synthesizeSpeechBuffer({
