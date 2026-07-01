@@ -51,7 +51,8 @@ import {
   recordIpHit,
   recordSignupAssistantDigestHit,
 } from "../lib/signup-assistant-rate-limit";
-import { transcribeAudioBuffer } from "../lib/openai-whisper";
+import { markdownToSpeechText, transcribeAudioBuffer } from "../lib/openai-whisper";
+import { normalizeBuiltInTtsVoice, synthesizeSpeechBuffer } from "../lib/openai-tts";
 
 const router: IRouter = Router();
 
@@ -1752,6 +1753,56 @@ router.post("/assistant/transcribe", async (req, res) => {
     res.status(502).json({
       error: "Transcription failed",
       code: "assistant.transcribe_failed",
+    });
+  }
+});
+
+// Voice output: mobile sends AskV reply text -> OpenAI TTS -> playable MP3.
+router.post("/assistant/tts", async (req, res) => {
+  const session = requireSession(req, res);
+  if (!session) return;
+
+  const apiKey = process.env.OPENAI_API_KEY?.trim();
+  if (!apiKey) {
+    res.status(503).json({
+      error: "Voice output is not configured",
+      code: "assistant.tts_unavailable",
+    });
+    return;
+  }
+
+  const rawText = typeof req.body?.text === "string" ? req.body.text : "";
+  const text = markdownToSpeechText(rawText);
+  if (!text) {
+    res.status(400).json({ error: "Missing text", code: "assistant.missing_text" });
+    return;
+  }
+
+  const voice = normalizeBuiltInTtsVoice(req.body?.voice ?? process.env.ASKV_TTS_VOICE);
+  const model = process.env.ASKV_TTS_MODEL?.trim() || "gpt-4o-mini-tts";
+  const instructions =
+    process.env.ASKV_TTS_INSTRUCTIONS?.trim() ||
+    "Speak as AskV, a calm field operations assistant. Sound concise, steady, clear, and useful. Do not add words that are not in the text.";
+
+  try {
+    const out = await synthesizeSpeechBuffer({
+      text,
+      apiKey,
+      voice,
+      model,
+      instructions,
+    });
+    res.json({
+      audioBase64: out.audio.toString("base64"),
+      mimeType: out.mimeType,
+      model: out.model,
+      voice: out.voice,
+    });
+  } catch (err) {
+    logger.error({ err, userId: session.userId }, "assistant tts failed");
+    res.status(502).json({
+      error: "Text to speech failed",
+      code: "assistant.tts_failed",
     });
   }
 });
