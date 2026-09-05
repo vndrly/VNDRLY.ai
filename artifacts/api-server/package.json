@@ -24,6 +24,7 @@
     "demo:start": "tsx scripts/seed-demo-lifecycle.ts --start",
     "demo:stop": "tsx scripts/seed-demo-lifecycle.ts --cleanup",
     "seed:permian-realdata": "tsx scripts/seed-permian-basin.ts && tsx scripts/seed-partner-branding.ts && tsx scripts/seed-vendor-branding.ts && tsx scripts/seed-mach-site-locations.ts && tsx scripts/seed-permian-site-locations.ts",
+    "seed:flywheel-energy": "tsx scripts/seed-flywheel-energy.ts",
     "seed:askv-qa": "tsx scripts/seed-askv-qa-tickets.ts",
     "seed:askv-qa:cleanup": "tsx scripts/seed-askv-qa-tickets.ts -- --cleanup",
     "backfill:crew-times": "tsx scripts/backfill-ticket-crew-times.ts",
