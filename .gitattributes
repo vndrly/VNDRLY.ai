@@ -1,1 +1,7 @@
 exports/vndrly-source.zip filter=lfs diff=lfs merge=lfs -text
+
+# Preserve exact upstream bytes and pinned hashes on Windows and macOS.
+artifacts/vndrly/public/askv-wake/runtime/** -text -whitespace
+artifacts/vndrly/public/askv-wake/model/** -text -whitespace
+artifacts/vndrly-mobile/assets/askv-wake/** -text -whitespace
+artifacts/vndrly-mobile/modules/askv-wake/THIRD_PARTY_NOTICES.md -text -whitespace

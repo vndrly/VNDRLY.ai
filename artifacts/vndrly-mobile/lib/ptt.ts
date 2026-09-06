@@ -5,6 +5,7 @@ import {
 } from "react-native";
 
 import { apiFetch, getApiBase } from "./api";
+import { askVMicrophone } from "@workspace/askv-wake";
 
 export type UploadResult = {
   objectPath: string;
@@ -86,14 +87,19 @@ function sleep(ms: number): Promise<void> {
 async function withBackgroundAudioRetry<T>(
   fn: () => Promise<T>,
   attempts = 4,
+  check: () => void = () => {},
 ): Promise<T> {
   let lastErr: unknown;
   for (let i = 0; i < attempts; i += 1) {
     try {
+      check();
       await waitForActiveAppState();
+      check();
       await runAfterInteractions();
+      check();
       return await fn();
     } catch (err) {
+      check();
       lastErr = err;
       if (!isBackgroundAudioSessionError(err) || i === attempts - 1) {
         throw err;
@@ -106,8 +112,10 @@ async function withBackgroundAudioRetry<T>(
 
 async function configureRecordingAudioMode(
   Audio: typeof import("expo-av").Audio,
+  check: () => void,
 ): Promise<void> {
   const av = await import("expo-av");
+  check();
   const mode: Record<string, unknown> = {
     allowsRecordingIOS: true,
     playsInSilentModeIOS: true,
@@ -128,59 +136,29 @@ async function configureRecordingAudioMode(
   await Audio.setAudioModeAsync(mode);
 }
 
-async function ensureMicPermission(
-  Audio: typeof import("expo-av").Audio,
-): Promise<void> {
-  const current = await Audio.getPermissionsAsync();
-  if (current.status === "granted") return;
-
-  const requested = await Audio.requestPermissionsAsync();
-  if (requested.status !== "granted") {
-    throw new PttMicPermissionError();
+async function ensureMicPermission(check: () => void = () => {}): Promise<void> {
+  // Share the permission-dialog counter with AskV's lifecycle observer.
+  const { requestAskVMicrophonePermission } = await import("./askv-audio-session");
+  check();
+  try { await requestAskVMicrophonePermission(check); }
+  catch (error) {
+    if (error instanceof Error && error.message === "askv.microphoneDenied") throw new PttMicPermissionError();
+    throw error;
   }
 }
 
-/** Tracks the one expo-av Recording instance allowed at a time. */
-let activeRecording: InstanceType<
-  typeof import("expo-av").Audio.Recording
-> | null = null;
-
-async function releaseActiveRecording(): Promise<void> {
-  if (!activeRecording) return;
-  try {
-    const status = await activeRecording.getStatusAsync();
-    if (status.isRecording || status.canRecord) {
-      await activeRecording.stopAndUnloadAsync();
-    }
-  } catch {
-    try {
-      await activeRecording.stopAndUnloadAsync();
-    } catch {
-      /* ignore */
-    }
-  }
-  activeRecording = null;
+async function deleteOwnedRecording(uri: string | null): Promise<void> {
+  if (!uri) return;
+  const FileSystem = await import("expo-file-system/legacy");
+  await FileSystem.deleteAsync(uri, { idempotent: true });
 }
 
-/** Pre-request mic permission when the Comms screen is focused. */
+/** Permission warm-up must not alter the audio mode or stop another microphone owner. */
 export async function warmUpPttSession(): Promise<void> {
   await waitForActiveAppState();
   await runAfterInteractions();
-  await releaseActiveRecording();
-  const { Audio } = await import("expo-av");
-  await ensureMicPermission(Audio);
-  await withBackgroundAudioRetry(() => configureRecordingAudioMode(Audio));
-}
-
-async function activateRecordingSession(): Promise<
-  typeof import("expo-av").Audio
-> {
+  await ensureMicPermission();
   await waitForActiveAppState();
-  await runAfterInteractions();
-  const { Audio } = await import("expo-av");
-  await ensureMicPermission(Audio);
-  await withBackgroundAudioRetry(() => configureRecordingAudioMode(Audio));
-  return Audio;
 }
 
 function resolveUploadUrl(uploadURL: string): string {
@@ -235,16 +213,18 @@ export async function postPttMessage(
   uri: string,
   durationSeconds: number,
 ): Promise<void> {
-  const uploaded = await uploadAudioBlob(uri, durationSeconds);
-  const attachment = `${getApiBase()}/api/storage${uploaded.objectPath}`;
-  const secs = Math.max(1, Math.round(durationSeconds));
-  await apiFetch(`/api/tickets/${ticketId}/comments`, {
-    method: "POST",
-    body: JSON.stringify({
-      content: `[ptt:${secs}s]`,
-      attachments: [attachment],
-    }),
-  });
+  try {
+    const uploaded = await uploadAudioBlob(uri, durationSeconds);
+    const attachment = `${getApiBase()}/api/storage${uploaded.objectPath}`;
+    const secs = Math.max(1, Math.round(durationSeconds));
+    await apiFetch(`/api/tickets/${ticketId}/comments`, {
+      method: "POST",
+      body: JSON.stringify({ content: `[ptt:${secs}s]`, attachments: [attachment] }),
+    });
+  } finally {
+    // A successful stop transfers this temporary file to the upload operation.
+    await deleteOwnedRecording(uri).catch(() => undefined);
+  }
 }
 
 export type PttRecorder = {
@@ -253,82 +233,185 @@ export type PttRecorder = {
   dispose: () => Promise<void>;
 };
 
-/** Lazy-load expo-av so web / tests without native module still compile. */
-export async function createPttRecorder(): Promise<PttRecorder> {
-  let recording: InstanceType<
-    typeof import("expo-av").Audio.Recording
-  > | null = null;
+export type PttRecorderOptions = { deleteOnDispose?: boolean };
+
+function cancelledRecording(): Error {
+  return Object.assign(new Error("Recording cancelled"), { name: "AbortError" });
+}
+
+/** Each recorder owns one coordinator lease and only its own native recording/files. */
+export async function createPttRecorder(options: PttRecorderOptions = {}): Promise<PttRecorder> {
+  type Recording = InstanceType<typeof import("expo-av").Audio.Recording>;
+  let recording: Recording | null = null;
   let startedAt = 0;
+  let generation = 0;
+  let disposed = false;
+  let starting: Promise<void> | null = null;
+  let nativeOperation: Promise<unknown> | null = null;
+  let cleanupOperation: Promise<void> | null = null;
+  let releaseLease: (() => Promise<void>) | null = null;
+  let appSubscription: { remove(): void } | null = null;
+  const returnedFiles = new Set<string>();
+
+  const stopOwned = async () => {
+    generation += 1;
+    // Called inside coordinator acquisition/release: never recursively release this lease.
+    releaseLease = null;
+    appSubscription?.remove(); appSubscription = null;
+    if (cleanupOperation) return cleanupOperation;
+    const cleanup = (async () => {
+      await nativeOperation?.catch(() => undefined);
+      const rec = recording; recording = null;
+      if (rec) {
+        try { await rec.stopAndUnloadAsync(); }
+        catch (error) {
+          const status = await rec.getStatusAsync().catch(() => null);
+          // Already-unloaded and never-prepared instances are safe. Unknown/live capture must block handoff.
+          if (!status || status.isRecording || status.canRecord) { recording = rec; throw error; }
+        }
+        await deleteOwnedRecording(rec.getURI()).catch(() => undefined);
+      }
+    })();
+    cleanupOperation = cleanup;
+    try { await cleanup; }
+    finally { if (cleanupOperation === cleanup) cleanupOperation = null; }
+  };
+  const dispose = async () => {
+    disposed = true;
+    const release = releaseLease; releaseLease = null;
+    await stopOwned();
+    await release?.();
+    for (const uri of returnedFiles) await deleteOwnedRecording(uri).catch(() => undefined);
+    returnedFiles.clear();
+  };
 
   return {
-    async start() {
-      await releaseActiveRecording();
-      const Audio = await activateRecordingSession();
-      await withBackgroundAudioRetry(async () => {
-        const { recording: rec } = await Audio.Recording.createAsync(
-          Audio.RecordingOptionsPresets.HIGH_QUALITY,
-        );
-        recording = rec;
-        activeRecording = rec;
-        startedAt = Date.now();
-      });
+    start() {
+      if (disposed) return Promise.reject(cancelledRecording());
+      if (starting || recording || nativeOperation) return Promise.reject(new Error("Recording already prepared"));
+      const current = ++generation;
+      const check = () => {
+        if (disposed || generation !== current) throw cancelledRecording();
+        if (AppState.currentState !== "active") throw new Error("App is not in the foreground");
+      };
+      const pending = (async () => {
+        try {
+          check();
+          const lease = await askVMicrophone.acquire("ptt", stopOwned);
+          if (disposed || generation !== current) { await lease(); throw cancelledRecording(); }
+          releaseLease = lease;
+          const { subscribeAskVAppState } = await import("./askv-audio-session");
+          check();
+          appSubscription = subscribeAskVAppState(() => {}, () => { void dispose().catch(() => undefined); });
+          await ensureMicPermission(() => { if (disposed || generation !== current) throw cancelledRecording(); });
+          if (disposed || generation !== current) throw cancelledRecording();
+          await waitForActiveAppState();
+          check();
+          const { Audio } = await import("expo-av");
+          check();
+          const operation = (async () => {
+            await withBackgroundAudioRetry(() => configureRecordingAudioMode(Audio, check), 4, check);
+            check();
+            // Own the instance before preparation, and check cancellation before native capture starts.
+            const rec = new Audio.Recording();
+            recording = rec;
+            await rec.prepareToRecordAsync(Object.assign({}, Audio.RecordingOptionsPresets.HIGH_QUALITY, { keepAudioActiveHint: true }));
+            check();
+            await rec.startAsync();
+            check();
+            startedAt = Date.now();
+          })();
+          nativeOperation = operation;
+          try { await operation; }
+          finally { if (nativeOperation === operation) nativeOperation = null; }
+        } catch (error) {
+          const release = releaseLease; releaseLease = null;
+          await stopOwned();
+          await release?.();
+          throw error;
+        }
+      })();
+      starting = pending;
+      void pending.finally(() => { if (starting === pending) starting = null; }).catch(() => undefined);
+      return pending;
     },
     async stop() {
-      if (!recording) throw new Error("Not recording");
+      if (!recording || starting || nativeOperation || disposed) throw new Error("Not recording");
+      const current = generation;
+      // Keep ownership visible during native stop so a handoff also waits for failed-stop cleanup.
       const rec = recording;
-      await rec.stopAndUnloadAsync();
-      const uri = rec.getURI();
-      recording = null;
-      if (activeRecording === rec) activeRecording = null;
-      if (!uri) throw new Error("No recording URI");
-      const durationSeconds = Math.max(0.5, (Date.now() - startedAt) / 1000);
-      return { uri, durationSeconds };
-    },
-    async dispose() {
-      if (recording) {
-        try {
-          await recording.stopAndUnloadAsync();
-        } catch {
-          /* ignore */
-        }
-        recording = null;
+      const operation = rec.stopAndUnloadAsync();
+      nativeOperation = operation;
+      let uri: string | null = null;
+      try {
+        await operation;
+        if (recording === rec) recording = null;
+        uri = rec.getURI();
+        if (disposed || generation !== current) throw cancelledRecording();
+        if (!uri) throw new Error("No recording URI");
+        if (options.deleteOnDispose) returnedFiles.add(uri);
+        const durationSeconds = Math.max(0.5, (Date.now() - startedAt) / 1000);
+        return { uri, durationSeconds };
+      } catch (error) {
+        // A failed stop can leave a native recorder prepared; unload it before releasing ownership.
+        const release = releaseLease; releaseLease = null;
+        await stopOwned();
+        await release?.();
+        await deleteOwnedRecording(uri ?? rec.getURI()).catch(() => undefined);
+        throw error;
+      } finally {
+        if (nativeOperation === operation) nativeOperation = null;
+        const release = releaseLease; releaseLease = null;
+        await release?.();
       }
-      if (activeRecording) {
-        await releaseActiveRecording();
-      }
     },
+    dispose,
   };
 }
 
 export async function playPttUri(uri: string): Promise<void> {
-  await releaseActiveRecording();
-  const { Audio } = await import("expo-av");
-  await withBackgroundAudioRetry(() =>
-    Audio.setAudioModeAsync({
-      allowsRecordingIOS: false,
-      playsInSilentModeIOS: true,
-      staysActiveInBackground: false,
-      shouldDuckAndroid: true,
-      playThroughEarpieceAndroid: false,
-    }),
-  );
-  const { sound } = await Audio.createAsync({ uri });
+  let cancelled = false;
+  let sound: import("expo-av").Audio.Sound | null = null;
+  let nativeOperation: Promise<unknown> | null = null;
+  let endPlayback: (() => void) | null = null;
+  const stopOwned = async () => {
+    cancelled = true;
+    await nativeOperation?.catch(() => undefined);
+    const owned = sound; sound = null;
+    try { await owned?.unloadAsync(); } catch { /* Already unloaded. */ }
+    endPlayback?.();
+  };
+  const check = () => { if (cancelled) throw cancelledRecording(); };
+  // Playback changes the shared iOS audio mode, so it participates in the same ownership handoff.
+  const release = await askVMicrophone.acquire("ptt-playback", stopOwned);
   try {
-    await sound.playAsync();
-    await new Promise<void>((resolve, reject) => {
-      sound.setOnPlaybackStatusUpdate((status) => {
-        if (!status.isLoaded) return;
-        if (status.didJustFinish) resolve();
-        if ("error" in status && status.error) {
-          reject(new Error(String(status.error)));
-        }
+    const { Audio } = await import("expo-av");
+    check();
+    const prepare = withBackgroundAudioRetry(async () => {
+      check();
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false, playsInSilentModeIOS: true, staysActiveInBackground: false,
+        shouldDuckAndroid: true, playThroughEarpieceAndroid: false,
       });
+      check();
+      const result = await Audio.Sound.createAsync({ uri });
+      sound = result.sound;
+      check();
+    }, 4, check);
+    nativeOperation = prepare;
+    try { await prepare; } finally { if (nativeOperation === prepare) nativeOperation = null; }
+    check();
+    const owned = sound!;
+    await new Promise<void>((resolve, reject) => {
+      endPlayback = resolve;
+      owned.setOnPlaybackStatusUpdate((status) => {
+        if (!status.isLoaded) {
+          if (status.error) reject(new Error(status.error));
+          return;
+        }
+        if (status.didJustFinish) resolve();
+      });
+      void owned.playAsync().catch(reject);
     });
-  } finally {
-    try {
-      await sound.unloadAsync();
-    } catch {
-      // ignore
-    }
-  }
+  } finally { await release(); }
 }

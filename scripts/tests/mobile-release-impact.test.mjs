@@ -145,3 +145,27 @@ test("workspace TypeScript package links are OTA-safe even when the lockfile cha
     await rm(root, { recursive: true, force: true });
   }
 });
+
+for (const [name, file] of [
+  ["local Expo module only", "artifacts/vndrly-mobile/modules/askv-wake/ios/AskVWakeModule.swift"],
+  ["bundled wake model only", "artifacts/vndrly-mobile/assets/askv-wake/encoder.onnx"],
+  ["native preparation script only", "scripts/prepare-askv-ios.mjs"],
+]) {
+  test(`${name} requires a native build without package or app config changes`, async () => {
+    const root = await createRepo();
+    try {
+      await mkdir(path.dirname(path.join(root, file)), { recursive: true });
+      await writeFile(path.join(root, file), "native input fixture\n");
+      git(root, "add", ".");
+      git(root, "commit", "--quiet", "-m", "native-only input");
+      const result = inspect(root, "HEAD^");
+      assert.equal(result.status, 2, result.stderr);
+      const report = JSON.parse(result.stdout);
+      assert.deepEqual(report.mobileFiles, [file]);
+      assert.deepEqual(report.nativeImpactFiles, [file]);
+      assert.equal(report.requiresNativeBuild, true);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+}

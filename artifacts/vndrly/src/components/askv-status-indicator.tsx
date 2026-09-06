@@ -1,4 +1,5 @@
 import { useAskVVoiceSession } from "@/hooks/use-askv-voice-session";
+import ImagePill from '@/components/image-pill';
 
 const LABELS: Record<string, string> = {
   listening: "Listening",
@@ -9,19 +10,23 @@ const LABELS: Record<string, string> = {
 };
 
 export default function AskVStatusIndicator() {
-  const { state, muted, acrossVndrly, wakeSupported } = useAskVVoiceSession();
+  const { state, muted, acrossVndrly, wakeReady, error } = useAskVVoiceSession();
   const label = muted
     ? "Muted"
-    : state === "wake-idle"
-      ? (wakeSupported && acrossVndrly ? "Wake enabled" : "AskV")
-      : LABELS[state];
+    : error ? "Voice unavailable"
+      : wakeReady && acrossVndrly ? "Listening for AskV"
+      : state === "connecting" ? "Connecting"
+      : state === "error" ? "Voice unavailable"
+      : state === "wake-idle" ? "Voice idle" : LABELS[state];
   if (!label) return null;
   return (
-    <span
+    <ImagePill
+      color={muted || state === 'error' ? 'red' : state === 'listening' || wakeReady ? 'green' : 'amber'}
       data-testid="askv-status-indicator"
-      className="inline-flex items-center rounded-full border border-sidebar-border px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide"
+      aria-label={label}
+      className="text-[11px]"
     >
       {label}
-    </span>
+    </ImagePill>
   );
 }

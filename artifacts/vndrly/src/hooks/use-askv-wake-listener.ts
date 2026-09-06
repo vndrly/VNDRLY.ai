@@ -1,103 +1,25 @@
-import { useEffect, useRef } from "react";
-import { isAskVWakePhrase } from "@/lib/askv-wake-phrase";
+import { useEffect, useRef, useState } from 'react';
+import type { WakeAudioSource } from '@workspace/askv-wake';
+import { localWakeSupported, startLocalWake } from '@/lib/askv-local-wake';
 
-interface SpeechRecognitionResultLike {
-  readonly transcript: string;
-  readonly confidence: number;
-}
-
-interface SpeechRecognitionEventLike {
-  readonly results: {
-    readonly length: number;
-    [index: number]: {
-      readonly length: number;
-      [index: number]: SpeechRecognitionResultLike;
-      readonly isFinal?: boolean;
-    };
-  };
-}
-
-interface SpeechRecognitionLike {
-  continuous: boolean;
-  interimResults: boolean;
-  lang: string;
-  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
-  onend: (() => void) | null;
-  onerror: (() => void) | null;
-  start(): void;
-  stop(): void;
-}
-
-type SpeechRecognitionCtor = new () => SpeechRecognitionLike;
-
-function getSpeechRecognitionCtor(): SpeechRecognitionCtor | null {
-  const win = window as unknown as {
-    SpeechRecognition?: SpeechRecognitionCtor;
-    webkitSpeechRecognition?: SpeechRecognitionCtor;
-  };
-  return win.SpeechRecognition ?? win.webkitSpeechRecognition ?? null;
-}
-
-export function useAskVWakeListener(args: {
-  enabled: boolean;
-  onWake: () => void;
-}): void {
-  const onWakeRef = useRef(args.onWake);
-  onWakeRef.current = args.onWake;
-
+export function useAskVWakeListener(args: { enabled: boolean; onWake: (source: WakeAudioSource) => void }) {
+  const latest = useRef(args); latest.current = args;
+  const [ready, setReady] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   useEffect(() => {
-    if (!args.enabled) return;
-    const Recognition = getSpeechRecognitionCtor();
-    if (!Recognition) return;
-
-    let stopped = false;
-    let wakeLocked = false;
-    const recognition = new Recognition();
-    recognition.continuous = true;
-    recognition.interimResults = false;
-    recognition.lang = "en-US";
-    recognition.onresult = (event) => {
-      for (let i = 0; i < event.results.length; i += 1) {
-        const result = event.results[i];
-        const alt = result?.[0];
-        if (!alt) continue;
-        if (isAskVWakePhrase(alt.transcript, alt.confidence)) {
-          if (wakeLocked) return;
-          wakeLocked = true;
-          recognition.stop();
-          onWakeRef.current();
-          window.setTimeout(() => {
-            wakeLocked = false;
-          }, 1000);
-          break;
-        }
-      }
-    };
-    recognition.onerror = () => undefined;
-    recognition.onend = () => {
-      if (!stopped) {
-        window.setTimeout(() => {
-          try {
-            recognition.start();
-          } catch {
-            // Browsers throw if start races with an existing recognition session.
-          }
-        }, 250);
-      }
-    };
-
-    try {
-      recognition.start();
-    } catch {
-      return;
-    }
-
-    return () => {
-      stopped = true;
-      recognition.onend = null;
-      recognition.onresult = null;
-      recognition.onerror = null;
-      recognition.stop();
-    };
+    setReady(false); setError(null);
+    if (!args.enabled || !localWakeSupported()) return;
+    const controller = new AbortController();
+    let listener: Awaited<ReturnType<typeof startLocalWake>> | undefined;
+    void startLocalWake({ signal: controller.signal,
+      onWake: source => { setReady(false); latest.current.onWake(source); },
+      onError: message => { setReady(false); setError(message); },
+    }).then(value => {
+      listener = value;
+      if (controller.signal.aborted && !value.transferred) void value.stop();
+      else if (!value.transferred) setReady(true);
+    }).catch(cause => { if (!controller.signal.aborted) setError(cause instanceof Error ? cause.message : 'Local wake detection is unavailable.'); });
+    return () => { controller.abort(); if (listener && !listener.transferred) void listener.stop(); };
   }, [args.enabled]);
+  return { ready, error, supported: localWakeSupported() };
 }

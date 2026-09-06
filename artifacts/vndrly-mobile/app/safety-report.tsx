@@ -1,11 +1,12 @@
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Alert, ScrollView, Switch, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
 import InPageHeader from "@/components/InPageHeader";
 import LayeredPillButton from "@/components/LayeredPillButton";
+import { readAskVSafetyDraft, registerAskVControl } from "@/lib/askv-client-tools";
 
 const EVENT_TYPES = [
   "near_miss",
@@ -19,14 +20,35 @@ const EVENT_TYPES = [
 export default function SafetyReportScreen() {
   const { t } = useTranslation();
   const colors = useColors();
-  const params = useLocalSearchParams<{ siteLocationId?: string; ticketId?: string }>();
-  const [eventType, setEventType] = useState<(typeof EVENT_TYPES)[number]>("near_miss");
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
+  const params = useLocalSearchParams<{ siteLocationId?: string; ticketId?: string; title?: string; description?: string; eventType?: string; askvDraftId?: string }>();
+  const initialDraft = useMemo(() => {
+    try { return readAskVSafetyDraft(params); } catch { return {}; }
+  }, [params.askvDraftId]);
+  const [eventType, setEventType] = useState<(typeof EVENT_TYPES)[number]>((initialDraft.eventType ?? "near_miss") as (typeof EVENT_TYPES)[number]);
+  const [title, setTitle] = useState(initialDraft.title ?? "");
+  const [description, setDescription] = useState(initialDraft.description ?? "");
   const [siteLocationId, setSiteLocationId] = useState(params.siteLocationId ?? "");
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isStopWork, setIsStopWork] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const titleRef = useRef<TextInput>(null);
+  const descriptionRef = useRef<TextInput>(null);
+  const siteRef = useRef<TextInput>(null);
+  const lastDraft = useRef(params.askvDraftId);
+  useEffect(() => {
+    if (!params.askvDraftId || params.askvDraftId === lastDraft.current) return;
+    lastDraft.current = params.askvDraftId;
+    setTitle(initialDraft.title ?? ""); setDescription(initialDraft.description ?? "");
+    setSiteLocationId(initialDraft.siteLocationId ?? "");
+    setEventType((initialDraft.eventType ?? "near_miss") as (typeof EVENT_TYPES)[number]);
+  }, [params.askvDraftId, initialDraft]);
+  useEffect(() => {
+    const registrations = [["title", titleRef], ["description", descriptionRef], ["siteLocationId", siteRef]] as const;
+    const remove = registrations.map(([id, ref]) => registerAskVControl("/safety-report", id, () => {
+      if (!ref.current) return false; ref.current.focus(); return true;
+    }));
+    return () => remove.forEach(unregister => unregister());
+  }, []);
 
   const submit = async () => {
     if (!title.trim() || !siteLocationId) {
@@ -63,6 +85,8 @@ export default function SafetyReportScreen() {
       <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
         <Text style={{ color: colors.mutedForeground }}>{t("safety.reportSubtitle")}</Text>
         <TextInput
+          ref={siteRef}
+          testID="safety-site"
           placeholder={t("safety.siteIdPlaceholder")}
           value={siteLocationId}
           onChangeText={setSiteLocationId}
@@ -86,12 +110,16 @@ export default function SafetyReportScreen() {
           ))}
         </ScrollView>
         <TextInput
+          ref={titleRef}
+          testID="safety-title"
           placeholder={t("safety.titlePlaceholder")}
           value={title}
           onChangeText={setTitle}
           style={{ borderWidth: 1, borderColor: colors.border, padding: 10, borderRadius: 8, color: colors.text }}
         />
         <TextInput
+          ref={descriptionRef}
+          testID="safety-description"
           placeholder={t("safety.descriptionPlaceholder")}
           value={description}
           onChangeText={setDescription}

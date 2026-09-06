@@ -867,21 +867,8 @@ async function query1099MiscSummary(
 // Public dispatcher
 // ─────────────────────────────────────────────────────────────────
 
-export const EXT_DATA_TOOL_NAMES = [
-  "query_ticket_detail",
-  "query_ticket_proof_packet",
-  "query_ticket_crew",
-  "query_ticket_labor",
-  "query_ticket_notes",
-  "query_work_type_history",
-  "query_invoices",
-  "query_invoice_lines",
-  "query_ar_aging",
-  "query_revenue_summary",
-  "query_crew_cost",
-  "query_1099_k_summary",
-  "query_1099_misc_summary",
-] as const;
+import { EXT_DATA_TOOL_NAMES } from "./tool-names";
+export { EXT_DATA_TOOL_NAMES } from "./tool-names";
 
 export type ExtDataToolName = (typeof EXT_DATA_TOOL_NAMES)[number];
 

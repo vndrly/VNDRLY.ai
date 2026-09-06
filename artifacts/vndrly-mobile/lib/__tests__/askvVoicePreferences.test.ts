@@ -9,13 +9,20 @@ import {
 } from "../askvVoicePreferences";
 
 const store = new Map<string, string>();
+vi.mock("react-native", () => ({ Platform: { OS: "ios" } }));
+function validateKey(key: string) {
+  // Expo SecureStore rejects colons on device, even though a Map accepts them.
+  if (!/^[\w.-]+$/.test(key)) throw new Error("Invalid SecureStore key");
+}
 
 vi.mock("expo-secure-store", () => ({
-  getItemAsync: vi.fn(async (key: string) => store.get(key) ?? null),
+  getItemAsync: vi.fn(async (key: string) => { validateKey(key); return store.get(key) ?? null; }),
   setItemAsync: vi.fn(async (key: string, value: string) => {
+    validateKey(key);
     store.set(key, value);
   }),
   deleteItemAsync: vi.fn(async (key: string) => {
+    validateKey(key);
     store.delete(key);
   }),
 }));

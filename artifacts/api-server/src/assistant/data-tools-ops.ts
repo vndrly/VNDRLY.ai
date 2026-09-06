@@ -41,34 +41,8 @@ import { LIVE_TRACKED_LIFECYCLE_STATES } from "@workspace/ticket-status-meta";
 import { normalizePlateState } from "@workspace/plate-state";
 import { estimateMapboxDrivingRoute } from "../lib/mapbox-routing";
 
-export const OPS_DATA_TOOL_NAMES = [
-  "query_safety_events",
-  "lookup_safety_metrics",
-  "lookup_site_operational_status",
-  "query_site_locations",
-  "lookup_site_detail",
-  "query_notifications",
-  "query_attention_briefing",
-  "query_live_crew",
-  "lookup_crew_member_status",
-  "query_crew_eta",
-  "query_crew_route_summary",
-  "lookup_map_origin",
-  "query_ticket_logged_miles",
-  "query_ticket_route_eta",
-  "query_ticket_mileage_audit",
-  "estimate_driving_route",
-  "query_hotlist_jobs",
-  "query_hotlist_bids",
-  "query_vendor_catalog",
-  "query_partner_approvals",
-  "query_certifications",
-  "lookup_org_contacts",
-  "query_flagged_tickets",
-  "lookup_ticket_payment_status",
-  "lookup_accounting_connection",
-  "query_active_visitors",
-] as const;
+import { OPS_DATA_TOOL_NAMES } from "./tool-names";
+export { OPS_DATA_TOOL_NAMES } from "./tool-names";
 
 export type OpsDataToolName = (typeof OPS_DATA_TOOL_NAMES)[number];
 

@@ -1598,6 +1598,32 @@
     "brandWordmark": "VNDRLY"
   },
   "askv": {
+    "mute": "Mute",
+      "unmute": "Unmute",
+      "acrossOn": "AskV across VNDRLY: On",
+      "acrossOff": "AskV across VNDRLY: Off",
+      "wakeUnavailable": "Wake listening is unavailable here. Open AskV manually to talk.",
+      "voiceFailed": "Voice is unavailable. You can keep typing or use the recording fallback.",
+      "naturalVoiceUnavailable": "Voice conversations are unavailable for this account. You can still type or hold the microphone to record.",
+      "voicePreferencesFailed": "AskV could not read or save voice preferences. Check your mute setting before continuing.",
+      "voiceHistoryFailed": "Voice history could not be saved. Retry before continuing by text.",
+      "voiceContextFailed": "AskV could not update its screen context. Open AskV again to continue.",
+      "voiceInterrupted": "Voice stopped after an audio or app interruption. Open AskV to resume.",
+      "microphoneDenied": "Microphone access is off. Enable it in device settings or keep typing.",
+      "recordingFallback": "Recording fallback: hold the microphone to record, then release to send.",
+      "entryUnavailable": "This ticket does not currently allow that entry. Review its status and permissions.",
+      "voiceState": {
+        "stopped": "Voice stopped",
+        "connecting": "Connecting",
+        "greeting": "Greeting",
+        "listening": "Listening",
+        "thinking": "Thinking",
+        "speaking": "Speaking",
+        "muted": "Muted",
+        "wake-idle": "Wake enabled",
+        "interrupted": "Voice interrupted",
+        "error": "Voice unavailable"
+      },
     "title": "AskV",
     "subtitle": "Your VNDRLY guide — how-to, live lookups, and onboarding help.",
     "greetingFallback": "there",
@@ -1619,13 +1645,6 @@
     "transcriptErrorTitle": "Could not export transcript",
     "transcriptShareUnavailable": "Sharing is not available on this device.",
     "transcribeFailed": "Couldn't understand that. Try again or type your question.",
-    "handsFree": {
-      "armed": "Hands-free is armed. Speak when the mic opens.",
-      "listening": "Listening for one AskV command…",
-      "thinking": "AskV is working on that command…",
-      "speaking": "AskV is answering aloud…",
-      "off": "Hands-free is off."
-    },
     "quickActions": {
       "fieldEtaTicket": "ETA to next ticket",
       "fieldNextTicket": "Closest ticket",

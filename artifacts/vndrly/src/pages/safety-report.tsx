@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { readAskVSafetyDraft, clearAskVClientDrafts } from '@/lib/askv-client-intents';
 import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
@@ -43,6 +44,18 @@ export default function SafetyReportPage() {
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isStopWork, setIsStopWork] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  useEffect(() => {
+    const applyDraft = () => {
+      const draft = readAskVSafetyDraft(); if (!draft) return;
+      if (typeof draft.title === 'string') setTitle(draft.title);
+      if (typeof draft.description === 'string') setDescription(draft.description);
+      if (EVENT_TYPES.includes(draft.eventType as typeof EVENT_TYPES[number])) setEventType(draft.eventType as typeof EVENT_TYPES[number]);
+      if (Number.isSafeInteger(draft.siteLocationId) && Number(draft.siteLocationId) > 0) setSiteLocationId(String(draft.siteLocationId));
+      clearAskVClientDrafts();
+    };
+    applyDraft(); window.addEventListener('askv:client-intent', applyDraft);
+    return () => window.removeEventListener('askv:client-intent', applyDraft);
+  }, []);
 
   const submit = async () => {
     if (!title.trim() || !siteLocationId) {

@@ -2,7 +2,7 @@
   "expo": {
     "name": "VNDRLY Field Mobile",
     "slug": "vndrly-mobile",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "default",
     "icon": "./assets/icons/vndrly.png",
     "scheme": "vndrly-mobile",

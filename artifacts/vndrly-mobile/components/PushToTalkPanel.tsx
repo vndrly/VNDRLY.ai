@@ -7,7 +7,6 @@ import {
   ActivityIndicator,
   Alert,
   AppState,
-  type AppStateStatus,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -19,6 +18,7 @@ import LayeredPillButton from "@/components/LayeredPillButton";
 import { useBrand } from "@/hooks/use-brand";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
+import { subscribeAskVAppState } from "@/lib/askv-audio-session";
 import {
   createPttRecorder,
   isBackgroundAudioSessionError,
@@ -61,12 +61,24 @@ export default function PushToTalkPanel({ ticketId, ticketLabel }: Props) {
   );
   const recorderRef = useRef<PttRecorder | null>(null);
 
-  useEffect(() => {
-    const sub = AppState.addEventListener("change", (next: AppStateStatus) => {
-      setAppForegrounded(next === "active");
-    });
-    return () => sub.remove();
+  const mountedRef = useRef(true);
+  const generationRef = useRef(0);
+  const phaseRef = useRef<"idle" | "starting" | "recording" | "sending">("idle");
+  const cancelRecording = useCallback(() => {
+    generationRef.current += 1;
+    phaseRef.current = "idle";
+    const recorder = recorderRef.current; recorderRef.current = null;
+    void recorder?.dispose().catch(() => undefined);
+    if (mountedRef.current) { setRecording(false); setSending(false); }
   }, []);
+
+  useEffect(() => {
+    const sub = subscribeAskVAppState(
+      () => setAppForegrounded(true),
+      () => { setAppForegrounded(false); cancelRecording(); },
+    );
+    return () => sub.remove();
+  }, [cancelRecording]);
 
   useFocusEffect(
     useCallback(() => {
@@ -82,8 +94,9 @@ export default function PushToTalkPanel({ ticketId, ticketLabel }: Props) {
       })();
       return () => {
         cancelled = true;
+        cancelRecording();
       };
-    }, []),
+    }, [cancelRecording]),
   );
 
   const load = useCallback(async () => {
@@ -111,99 +124,74 @@ export default function PushToTalkPanel({ ticketId, ticketLabel }: Props) {
   }, [load]);
 
   useEffect(() => {
-    return () => {
-      void recorderRef.current?.dispose();
-    };
-  }, []);
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; cancelRecording(); };
+  }, [cancelRecording]);
+  useEffect(() => () => cancelRecording(), [ticketId, cancelRecording]);
 
   const onPressIn = async () => {
-    if (sending || recording || !appForegrounded) return;
-    if (!micReady) {
-      try {
-        await warmUpPttSession();
-        setMicReady(true);
-      } catch (e) {
-        if (e instanceof PttMicPermissionError) {
-          Alert.alert(
-            t("foremanHome.pttMicDeniedTitle"),
-            t("foremanHome.pttMicDeniedBody"),
-          );
-        } else if (isBackgroundAudioSessionError(e)) {
-          Alert.alert(
-            t("foremanHome.pttNotReadyTitle"),
-            t("foremanHome.pttNotReadyBody"),
-          );
-        } else if (isRecordingBusyError(e)) {
-          await recorderRef.current?.dispose();
-          recorderRef.current = null;
-          Alert.alert(
-            t("foremanHome.pttMicDeniedTitle"),
-            t("foremanHome.pttBusyBody", {
-              defaultValue: "Microphone is busy. Wait a moment and try again.",
-            }),
-          );
-        } else {
-          Alert.alert(
-            t("foremanHome.pttMicDeniedTitle"),
-            e instanceof Error ? e.message : t("foremanHome.pttMicDeniedBody"),
-          );
-        }
-        return;
-      }
-    }
+    if (phaseRef.current !== "idle" || !appForegrounded) return;
+    phaseRef.current = "starting";
+    const current = ++generationRef.current;
+    const valid = () => mountedRef.current && generationRef.current === current;
+    let recorder: PttRecorder | null = null;
     try {
+      if (!micReady) {
+        await warmUpPttSession();
+        if (!valid()) return;
+        setMicReady(true);
+      }
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      const rec = await createPttRecorder();
-      recorderRef.current = rec;
-      await rec.start();
+      if (!valid()) return;
+      recorder = await createPttRecorder({ deleteOnDispose: true });
+      if (!valid()) { await recorder.dispose(); return; }
+      recorderRef.current = recorder;
+      await recorder.start();
+      if (!valid() || recorderRef.current !== recorder) { await recorder.dispose(); return; }
+      phaseRef.current = "recording";
       setRecording(true);
     } catch (e) {
+      if (recorderRef.current === recorder) recorderRef.current = null;
+      await recorder?.dispose().catch(() => undefined);
+      if (!valid()) return;
+      phaseRef.current = "idle";
+      setRecording(false);
+      if (e instanceof Error && e.name === "AbortError") return;
       if (e instanceof PttMicPermissionError) {
-        Alert.alert(
-          t("foremanHome.pttMicDeniedTitle"),
-          t("foremanHome.pttMicDeniedBody"),
-        );
+        Alert.alert(t("foremanHome.pttMicDeniedTitle"), t("foremanHome.pttMicDeniedBody"));
       } else if (isBackgroundAudioSessionError(e)) {
-        Alert.alert(
-          t("foremanHome.pttNotReadyTitle"),
-          t("foremanHome.pttNotReadyBody"),
-        );
+        Alert.alert(t("foremanHome.pttNotReadyTitle"), t("foremanHome.pttNotReadyBody"));
       } else if (isRecordingBusyError(e)) {
-        await recorderRef.current?.dispose();
-        recorderRef.current = null;
-        Alert.alert(
-          t("foremanHome.pttMicDeniedTitle"),
-          t("foremanHome.pttBusyBody", {
-            defaultValue: "Microphone is busy. Wait a moment and try again.",
-          }),
-        );
+        Alert.alert(t("foremanHome.pttMicDeniedTitle"), t("foremanHome.pttBusyBody", {
+          defaultValue: "Microphone is busy. Wait a moment and try again.",
+        }));
       } else {
-        Alert.alert(
-          t("foremanHome.pttMicDeniedTitle"),
-          e instanceof Error ? e.message : t("foremanHome.pttMicDeniedBody"),
-        );
+        Alert.alert(t("foremanHome.pttMicDeniedTitle"), e instanceof Error ? e.message : t("foremanHome.pttMicDeniedBody"));
       }
     }
   };
 
   const onPressOut = async () => {
-    if (!recording || !recorderRef.current) return;
+    if (phaseRef.current === "starting") { cancelRecording(); return; }
+    if (phaseRef.current !== "recording" || !recorderRef.current) return;
+    const recorder = recorderRef.current; recorderRef.current = null;
+    const current = generationRef.current;
+    const valid = () => mountedRef.current && generationRef.current === current;
+    phaseRef.current = "sending";
     setRecording(false);
     setSending(true);
     try {
-      const { uri, durationSeconds } = await recorderRef.current.stop();
+      const { uri, durationSeconds } = await recorder.stop();
+      if (!valid()) return;
       await postPttMessage(ticketId, uri, durationSeconds);
+      if (!valid()) return;
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      await load();
+      if (valid()) await load();
     } catch (e) {
-      Alert.alert(
-        t("common.error"),
-        e instanceof Error ? e.message : t("foremanHome.pttSendFailed"),
-      );
+      if (valid()) Alert.alert(t("common.error"), e instanceof Error ? e.message : t("foremanHome.pttSendFailed"));
     } finally {
-      setSending(false);
-      await recorderRef.current?.dispose();
-      recorderRef.current = null;
+      await recorder.dispose();
+      if (valid()) { phaseRef.current = "idle"; setSending(false); }
     }
   };
 

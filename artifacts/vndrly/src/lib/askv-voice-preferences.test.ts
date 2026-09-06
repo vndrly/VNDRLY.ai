@@ -39,4 +39,14 @@ describe("AskV web voice preferences", () => {
     expect(readAskVAcrossVndrly(11)).toBe(true);
     expect(readAskVTextOnly(11)).toBe(false);
   });
+  it('honors the old text-only preference until the user explicitly unmutes', () => {
+    writeAskVTextOnly(11, true); expect(readAskVMuted(11)).toBe(true);
+    writeAskVMuted(11, false); expect(readAskVMuted(11)).toBe(false);
+  });
+  it('broadcasts mute immediately even when browser storage fails', () => {
+    const listener = vi.fn(); window.addEventListener('askv:muted-changed', listener);
+    const storage = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('Blocked'); });
+    writeAskVMuted(11, true); expect(listener).toHaveBeenCalledOnce();
+    storage.mockRestore(); window.removeEventListener('askv:muted-changed', listener);
+  });
 });

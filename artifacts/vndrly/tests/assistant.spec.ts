@@ -56,8 +56,7 @@ import {
   type AssistantRole,
 } from "../../api-server/src/assistant/permissions";
 import { URL_PATTERN_TO_SCREEN, buildDeepLink } from "../../api-server/src/assistant/deep-links";
-import { DATA_TOOL_NAMES } from "../../api-server/src/assistant/data-tools";
-import { WRITE_TOOL_NAMES } from "../../api-server/src/assistant/write-tools";
+import { DATA_TOOL_NAMES, WRITE_TOOL_NAMES } from "../../api-server/src/assistant/tool-names";
 import { parsePageContext } from "../../api-server/src/assistant/page-context";
 import { parseAssistantPageContext } from "../src/lib/assistant-panel-utils";
 

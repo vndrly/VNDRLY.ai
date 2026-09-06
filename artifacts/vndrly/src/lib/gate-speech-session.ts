@@ -1,3 +1,4 @@
+import { askVMicrophone } from "@workspace/askv-wake";
 export type GateSpeechResult = {
   [index: number]: { transcript: string };
   isFinal?: boolean;
@@ -19,6 +20,8 @@ export type GateSpeechRecognition = {
   lang: string;
   start: () => void;
   stop: () => void;
+  abort?: () => void;
+  onstart?: (() => void) | null;
   onresult: ((event: GateSpeechResultEvent) => void) | null;
   onerror: ((event: GateSpeechErrorEvent) => void) | null;
   onend: (() => void) | null;
@@ -36,128 +39,249 @@ type GateSpeechSessionOptions = {
 };
 
 export type GateSpeechSession = {
-  dispose: () => void;
+  dispose: () => Promise<void>;
   isListening: () => boolean;
-  stop: () => void;
-  toggle: () => void;
+  stop: () => Promise<void>;
+  toggle: () => Promise<void>;
 };
 
-const FATAL_ERRORS = new Set(["audio-capture", "not-allowed", "service-not-allowed"]);
+const FATAL_ERRORS = new Set([
+  "audio-capture",
+  "not-allowed",
+  "service-not-allowed",
+]);
 
-/**
- * Owns a browser speech-recognition session until the user explicitly stops it.
- * Chromium may end a continuous recognizer after silence, so normal end events
- * are restarted while the requested listening state remains active.
- */
-export function createGateSpeechSession(options: GateSpeechSessionOptions): GateSpeechSession {
-  const scheduleRestart = options.scheduleRestart
-    ?? ((callback: () => void) => setTimeout(callback, 250));
+/** Continuous browser recognition sharing the same microphone lease as AskV. */
+export function createGateSpeechSession(
+  options: GateSpeechSessionOptions,
+): GateSpeechSession {
+  type Active = {
+    recognition: GateSpeechRecognition;
+    ended: Promise<void>;
+    resolveEnd: () => void;
+    stopping: boolean;
+  };
+  const scheduleRestart =
+    options.scheduleRestart ??
+    ((callback: () => void) => setTimeout(callback, 250));
   const cancelRestart = options.cancelRestart ?? clearTimeout;
-  let shouldListen = false;
-  let recognition: GateSpeechRecognition | null = null;
+  let desired = false;
+  let disposed = false;
+  let listening = false;
+  let generation = 0;
+  let active: Active | null = null;
+  let starting: Promise<void> | null = null;
   let restartHandle: RestartHandle | null = null;
+  let releaseLease: (() => Promise<void>) | null = null;
 
   const publishListening = (next: boolean) => {
+    if (listening === next) return;
+    listening = next;
     options.onListeningChange(next);
   };
-
   const cancelPendingRestart = () => {
-    if (restartHandle === null) return;
-    cancelRestart(restartHandle);
+    if (restartHandle !== null) cancelRestart(restartHandle);
     restartHandle = null;
   };
-
-  const stop = () => {
-    const active = recognition;
-    recognition = null;
-    shouldListen = false;
+  const releaseOwnership = async () => {
+    const release = releaseLease;
+    releaseLease = null;
+    if (release) await release();
+  };
+  const stopCapture = async () => {
+    if (desired) generation++;
+    desired = false;
     cancelPendingRestart();
-    if (active) {
-      active.onresult = null;
-      active.onerror = null;
-      active.onend = null;
-      try {
-        active.stop();
-      } catch {
-        // The browser may already have ended the recognizer.
-      }
-    }
     publishListening(false);
-  };
-
-  const startRecognition = () => {
-    if (!shouldListen || recognition) return;
-    let next: GateSpeechRecognition | null;
+    const current = active;
+    if (!current) return;
+    current.stopping = true;
+    current.recognition.onresult = null;
+    current.recognition.onerror = null;
     try {
-      next = options.createRecognition();
+      if (current.recognition.abort) current.recognition.abort();
+      else current.recognition.stop();
     } catch {
-      next = null;
+      // A recognizer that never started may throw InvalidStateError. Its late
+      // onstart handler still aborts it; do not launch another capture until end.
     }
-    if (!next) {
-      shouldListen = false;
-      publishListening(false);
-      options.onError("unavailable");
-      return;
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    try {
+      await Promise.race([
+        current.ended,
+        new Promise<never>((_, reject) => {
+          timeout = setTimeout(
+            () =>
+              reject(new Error("The microphone has not finished stopping.")),
+            2000,
+          );
+        }),
+      ]);
+    } finally {
+      if (timeout) clearTimeout(timeout);
     }
-
-    recognition = next;
-    next.continuous = true;
-    next.interimResults = false;
-    next.lang = "en-US";
-    next.onresult = (event) => {
-      const parts: string[] = [];
-      const firstResult = Math.max(0, event.resultIndex ?? 0);
-      for (let index = firstResult; index < event.results.length; index += 1) {
-        const result = event.results[index];
-        if (result.isFinal === false) continue;
-        const transcript = result[0]?.transcript?.trim();
-        if (transcript) parts.push(transcript);
+  };
+  const start = async (requestGeneration: number) => {
+    try {
+      const release = await askVMicrophone.acquire("gate", stopCapture);
+      if (disposed || !desired || generation !== requestGeneration) {
+        await release();
+        return;
       }
-      const transcript = parts.join(" ").trim();
-      if (transcript) options.onTranscript(transcript);
-    };
-    next.onerror = (event) => {
-      const code = event.error ?? "recognition-failed";
-      if (code === "no-speech" || code === "aborted") return;
-      options.onError(code);
-      if (FATAL_ERRORS.has(code)) stop();
-    };
-    next.onend = () => {
-      if (recognition !== next) return;
-      recognition = null;
-      if (!shouldListen) {
+      releaseLease = release;
+      const recognition = options.createRecognition();
+      if (!recognition) {
+        desired = false;
+        options.onError("unavailable");
+        await releaseOwnership();
+        return;
+      }
+      let resolveEnd!: () => void;
+      const current: Active = {
+        recognition,
+        ended: new Promise<void>((resolve) => {
+          resolveEnd = resolve;
+        }),
+        resolveEnd: () => resolveEnd(),
+        stopping: false,
+      };
+      active = current;
+      recognition.continuous = true;
+      recognition.interimResults = false;
+      recognition.lang = "en-US";
+      recognition.onstart = () => {
+        if (
+          disposed ||
+          !desired ||
+          generation !== requestGeneration ||
+          current.stopping
+        ) {
+          try {
+            if (recognition.abort) recognition.abort();
+            else recognition.stop();
+          } catch {
+            /* End handler retains ownership until stopped. */
+          }
+          return;
+        }
+        publishListening(true);
+      };
+      recognition.onresult = (event) => {
+        if (!desired || disposed || active !== current || current.stopping)
+          return;
+        const parts: string[] = [];
+        for (
+          let i = Math.max(0, event.resultIndex ?? 0);
+          i < event.results.length;
+          i++
+        ) {
+          const result = event.results[i];
+          if (result.isFinal !== false && result[0]?.transcript?.trim())
+            parts.push(result[0].transcript.trim());
+        }
+        if (parts.length) options.onTranscript(parts.join(" "));
+      };
+      recognition.onerror = (event) => {
+        const code = event.error ?? "recognition-failed";
+        if (code === "no-speech" || code === "aborted") return;
+        options.onError(code);
+        if (FATAL_ERRORS.has(code))
+          void stop().catch(() => options.onError("stop-failed"));
+      };
+      recognition.onend = () => {
+        current.resolveEnd();
+        recognition.onstart = null;
+        recognition.onresult = null;
+        recognition.onerror = null;
+        recognition.onend = null;
+        if (active !== current) return;
+        active = null;
         publishListening(false);
-        return;
+        const restart = desired && !disposed && !current.stopping;
+        desired = false;
+        const endedGeneration = generation;
+        // Release is queued without awaiting inside the coordinator's callback.
+        void releaseOwnership()
+          .then(() => {
+            if (
+              !restart ||
+              disposed ||
+              generation !== endedGeneration ||
+              askVMicrophone.owner !== null
+            )
+              return;
+            desired = true;
+            restartHandle = scheduleRestart(() => {
+              restartHandle = null;
+              if (desired && !disposed && generation === endedGeneration)
+                void beginStart();
+            });
+          })
+          .catch(() => {
+            if (!disposed) options.onError("stop-failed");
+          });
+      };
+      try {
+        recognition.start();
+      } catch {
+        active = null;
+        current.resolveEnd();
+        desired = false;
+        publishListening(false);
+        options.onError("start-failed");
+        await releaseOwnership();
       }
-      cancelPendingRestart();
-      restartHandle = scheduleRestart(() => {
-        restartHandle = null;
-        startRecognition();
-      });
-    };
-
-    try {
-      next.start();
     } catch {
-      recognition = null;
-      shouldListen = false;
+      desired = false;
       publishListening(false);
-      options.onError("start-failed");
+      if (!disposed) options.onError("start-failed");
+      try {
+        await releaseOwnership();
+      } catch {
+        if (!disposed) options.onError("stop-failed");
+      }
     }
   };
-
+  const beginStart = async () => {
+    const task = start(generation);
+    starting = task;
+    try {
+      await task;
+    } finally {
+      if (starting === task) starting = null;
+    }
+  };
+  const stop = async () => {
+    generation++;
+    desired = false;
+    try {
+      await stopCapture();
+      await releaseOwnership();
+    } catch {
+      // Keep the coordinator's owner until onend confirms capture has stopped.
+      // Public UI cleanup is fire-and-forget, so report without rejecting it.
+      if (!disposed) options.onError("stop-failed");
+    }
+  };
   return {
-    dispose: stop,
-    isListening: () => shouldListen,
+    dispose: async () => {
+      disposed = true;
+      await stop();
+    },
+    isListening: () => listening,
     stop,
-    toggle: () => {
-      if (shouldListen) {
-        stop();
+    toggle: async () => {
+      if (disposed) return;
+      if (active || starting) {
+        await stop();
         return;
       }
-      shouldListen = true;
-      publishListening(true);
-      startRecognition();
+      // An ended recognizer is visibly stopped while its restart is queued.
+      // A fresh click starts it now instead of cancelling the user's new request.
+      cancelPendingRestart();
+      desired = true;
+      generation++;
+      await beginStart();
     },
   };
 }

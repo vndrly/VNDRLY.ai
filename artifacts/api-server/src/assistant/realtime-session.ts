@@ -32,6 +32,11 @@ function buildRealtimeSessionConfig(args: CreateAskVRealtimeClientSecretArgs) {
     model: args.model,
     instructions: args.instructions,
     audio: {
+      input: {
+        format: { type: "audio/pcm", rate: 24000 },
+        transcription: { model: "gpt-4o-mini-transcribe" },
+        turn_detection: { type: "server_vad", create_response: true, interrupt_response: true },
+      },
       output: {
         voice: args.voice,
       },

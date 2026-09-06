@@ -1,4 +1,5 @@
 ﻿import { PngPillButton } from "@/components/png-pill-rollover";
+import { TicketVoiceEntry } from "@/components/ticket-voice-entry";
 import type { TicketTransition } from "@workspace/api-client-react";
 import {
   useGetTicket,
@@ -623,6 +624,12 @@ export default function TicketDetail({ id }: { id: number }) {
   const [editFieldEmployeeId, setEditFieldEmployeeId] = useState<string>("");
   const [lineItemType, setLineItemType] = useState<string>("labor");
   const [lineItemDesc, setLineItemDesc] = useState("");
+  const lineItemDescriptionRef = useRef<HTMLInputElement>(null);
+  const openVoiceLineItem = useCallback((kind: "parts" | "labor") => {
+    setLineItemType(kind === "parts" ? "part" : "labor");
+    document.getElementById("ticket-line-items")?.scrollIntoView?.({ behavior: "smooth", block: "center" });
+    lineItemDescriptionRef.current?.focus({ preventScroll: true });
+  }, []);
   const [lineItemQty, setLineItemQty] = useState("");
   const [lineItemPrice, setLineItemPrice] = useState("");
   const [lineItemsDirty, setLineItemsDirty] = useState(false);
@@ -1361,6 +1368,20 @@ export default function TicketDetail({ id }: { id: number }) {
       className={`space-y-6 relative ${isNudgeFlashing ? "nudge-flash-page" : ""}`}
       data-testid="ticket-detail-page"
     >
+      <TicketVoiceEntry
+        key={`${id}:${user?.userId}:${user?.activeMembershipId}`}
+        ticket={ticket}
+        role={user?.role}
+        accessAllowed={!assignmentRemoved && !!user && user.vendorId === ticket.vendorId}
+        onLineItem={openVoiceLineItem}
+        onSaved={() => {
+          invalidate();
+          queryClient.invalidateQueries({ queryKey: getGetTicketNoteLogsQueryKey(id) });
+          queryClient.invalidateQueries({ queryKey: getGetCrewSessionsQueryKey(id) });
+          queryClient.invalidateQueries({ queryKey: ["comments", "ticket", id] });
+          toast({ title: t("ticketVoiceEntry.saved") });
+        }}
+      />
       <div className="relative z-10 flex items-center gap-4">
         <Link href="/tickets" className="group inline-flex items-center gap-2" aria-label={t("ticketDetail.backAlt")} data-testid="button-back"><SphereBackButton size={40} /></Link>
         <div>
@@ -2501,7 +2522,7 @@ export default function TicketDetail({ id }: { id: number }) {
         />
       )}
 
-      <Card>
+      <Card id="ticket-line-items">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 flex-wrap">
             <DollarSign className="w-5 h-5" style={{ color: "var(--brand-primary, #f59e0b)" }} />{t("ticketDetail.partsLabor")}
@@ -2533,7 +2554,7 @@ export default function TicketDetail({ id }: { id: number }) {
                 </div>
                 <div className="col-span-5">
                   <span className="text-xs text-muted-foreground">{t("ticketDetail.descriptionShort")}</span>
-                  <Input value={lineItemDesc} onChange={(e) => setLineItemDesc(e.target.value)} placeholder={t("ticketDetail.descriptionPlaceholder")} />
+                  <Input ref={lineItemDescriptionRef} aria-label={t("ticketDetail.descriptionShort")} value={lineItemDesc} onChange={(e) => setLineItemDesc(e.target.value)} placeholder={t("ticketDetail.descriptionPlaceholder")} />
                 </div>
                 <div className="col-span-2">
                   <span className="text-xs text-muted-foreground">{t("ticketDetail.qty")}</span>

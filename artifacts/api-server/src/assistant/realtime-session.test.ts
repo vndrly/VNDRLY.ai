@@ -50,7 +50,7 @@ describe("AskV Realtime session", () => {
       session: {
         type: "realtime",
         model: "gpt-realtime-2",
-        audio: { output: { voice: "marin" } },
+        audio: { input: { format: { type: "audio/pcm", rate: 24000 }, transcription: { model: "gpt-4o-mini-transcribe" }, turn_detection: { type: "server_vad", create_response: true, interrupt_response: true } }, output: { voice: "marin" } },
         tool_choice: "auto",
         tools: [{ type: "function", name: "query_tickets" }],
       },
@@ -89,7 +89,7 @@ describe("AskV Realtime session", () => {
       type: "realtime",
       model: "gpt-realtime-2",
       instructions: "Keep it short.",
-      audio: { output: { voice: "marin" } },
+      audio: { input: { format: { type: "audio/pcm", rate: 24000 }, transcription: { model: "gpt-4o-mini-transcribe" }, turn_detection: { type: "server_vad", create_response: true, interrupt_response: true } }, output: { voice: "marin" } },
       tool_choice: "auto",
       tools: [{ type: "function", name: "query_tickets" }],
     });

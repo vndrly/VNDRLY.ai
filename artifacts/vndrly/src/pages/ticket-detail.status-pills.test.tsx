@@ -411,7 +411,9 @@ vi.mock("@/components/ui/select", () => {
     <>{children}</>
   );
   return {
-    Select: passthrough,
+    Select: ({ children, value }: React.PropsWithChildren<{ value?: string }>) => (
+      <div data-testid="selected-entry-type" data-value={value}>{children}</div>
+    ),
     SelectGroup: passthrough,
     SelectValue: () => null,
     SelectTrigger: () => null,
@@ -451,6 +453,7 @@ const ROLE_CASES: Array<{ label: string; user: unknown }> = [
 ];
 
 beforeEach(() => {
+  window.history.replaceState(null, "", `/tickets/${TICKET_ID}`);
   toastFn.mockReset();
   submitMutateMock.mockReset();
   checkOutMutateMock.mockReset();
@@ -490,6 +493,23 @@ describe("ticket-detail — Task #632 status-pill role coverage", () => {
           expect(screen.getByTestId(testId)).toBeTruthy();
         });
       }
+    });
+  }
+});
+
+// Exercise the real deep-link integration into the existing parts/labor editor.
+describe("ticket-detail voice entry integration", () => {
+  for (const [kind, expected] of [["parts", "part"], ["labor", "labor"]] as const) {
+    it(`focuses and selects ${kind} without submitting the form`, () => {
+      currentUser.value = fieldEmployeeUser;
+      ticketState.data = { ...baseTicket, status: "in_progress" };
+      window.history.replaceState(null, "", `/tickets/${TICKET_ID}?askvEntry=${kind}`);
+      render(<TicketDetail id={TICKET_ID} />);
+      const card = document.getElementById("ticket-line-items")!;
+      expect(card.querySelector('[data-testid="selected-entry-type"]')?.getAttribute("data-value")).toBe(expected);
+      expect(document.activeElement).toBe(card.querySelector("input"));
+      expect(createLineItemMock).not.toHaveBeenCalled();
+      expect(window.location.search).toBe("");
     });
   }
 });

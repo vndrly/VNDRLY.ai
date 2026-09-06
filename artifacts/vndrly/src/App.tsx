@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
+import { AskVVoiceBoundary } from "@/hooks/use-askv-voice-session";
 import { BrandProvider } from "@/hooks/use-brand";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { NotificationsModalProvider } from "@/components/notifications-modal-context";
@@ -402,7 +403,7 @@ function App() {
             <ThemeProvider>
               <NotificationsModalProvider>
                 <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-                  <AuthenticatedRouter />
+                  <AskVVoiceBoundary><AuthenticatedRouter /></AskVVoiceBoundary>
                 </WouterRouter>
               </NotificationsModalProvider>
               <Toaster />

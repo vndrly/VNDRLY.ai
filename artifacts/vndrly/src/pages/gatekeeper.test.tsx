@@ -437,8 +437,9 @@ describe("GatekeeperPage plate state", () => {
       onresult: ((event: any) => void) | null = null;
       onerror: (() => void) | null = null;
       onend: (() => void) | null = null;
-      start = vi.fn();
-      stop = vi.fn();
+      onstart: (() => void) | null = null;
+      start = vi.fn(() => this.onstart?.());
+      stop = vi.fn(() => this.onend?.());
 
       constructor() {
         recognitions.push(this);
@@ -449,8 +450,10 @@ describe("GatekeeperPage plate state", () => {
       value: FakeRecognition,
     });
     const speak = async (transcript: string) => {
-      window.dispatchEvent(new Event("vndrly:gate-voice"));
-      await waitFor(() => expect(recognitions.length).toBeGreaterThan(0));
+      if (!recognitions.at(-1)?.onresult) {
+        window.dispatchEvent(new Event("vndrly:gate-voice"));
+      }
+      await waitFor(() => expect(recognitions.at(-1)?.onresult).toBeTypeOf("function"));
       const recognition = recognitions.at(-1)!;
       recognition.onresult?.({
         results: { 0: { 0: { transcript } }, length: 1 },
@@ -474,6 +477,9 @@ describe("GatekeeperPage plate state", () => {
         ).toBeTruthy();
       });
 
+      // Model a slower render/assertion cycle where continuous recognition has
+      // already restarted. Feeding the live recognizer must not toggle it off.
+      await waitFor(() => expect(recognitions.at(-1)?.onresult).toBeTypeOf("function"));
       await speak("plate NEW 456 driver Jane Doe");
       await waitFor(() => {
         expect(

@@ -1,6 +1,6 @@
 import { Feather } from "@expo/vector-icons";
-import { router, useLocalSearchParams } from "expo-router";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
@@ -25,33 +25,23 @@ import AssistantSendToModal, {
 import InPageHeader from "@/components/InPageHeader";
 import LayeredPillButton from "@/components/LayeredPillButton";
 import { useAskVVoiceSession } from "@/hooks/use-askv-voice-session";
+import { useAskVRecording } from "@/hooks/use-askv-recording";
 import { useAuth } from "@/hooks/use-auth";
 import {
-  useAssistant,
   type AssistantMessage,
 } from "@/hooks/use-assistant";
 import { useBrand } from "@/hooks/use-brand";
 import { useColors } from "@/hooks/useColors";
 import { quickActionsForUser } from "@/lib/assistant-quick-actions";
 import { isAskVSpeaking, speakAskV, stopAskVSpeech } from "@/lib/askv-speech";
-import {
-  nextAskVHandsFreeAction,
-  nextAskVHandsFreePhaseAfterReply,
-  nextAskVHandsFreePhaseAfterSpeech,
-  type AskVHandsFreePhase,
-} from "@/lib/askvHandsFree";
-import { transcribeAskVRecording } from "@/lib/askv-transcribe";
 import { readAskVTextOnly, writeAskVTextOnly } from "@/lib/askvVoicePreferences";
 import { shareAssistantTranscript } from "@/lib/assistant-transcript";
 import { readInitialAskVPromptParam } from "@/lib/assistant-ticket-actions";
-import {
-  createPttRecorder,
-  PttMicPermissionError,
-  type PttRecorder,
-} from "@/lib/ptt";
+import { PttMicPermissionError } from "@/lib/ptt";
 import { isForemanEmployeeUser } from "@/lib/mobile-viewer";
 import { buildAssistantShareMailtoUrl } from "@/lib/notification-mailto";
 import { SCREEN_SUBTITLE_TEXT, SCREEN_TITLE_TEXT } from "@/lib/pill-doctrine";
+import { registerAskVControl } from "@/lib/askv-client-tools";
 
 function truncateSharePreview(text: string, max: number) {
   const trimmed = text.trim();
@@ -95,34 +85,35 @@ export default function AskVScreen() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const voiceSession = useAskVVoiceSession();
-  const startedVoiceRef = useRef(false);
-  useEffect(() => {
-    if (startedVoiceRef.current || voiceSession.muted) return;
-    startedVoiceRef.current = true;
-    void voiceSession.startConversation("open AskV", "/askv");
-  }, [voiceSession.muted, voiceSession.startConversation]);
+  const sessionRef = useRef(voiceSession);
+  const cancelRecordingRef = useRef(() => {});
+  sessionRef.current = voiceSession;
+  useFocusEffect(useCallback(() => {
+    if (voiceSession.preferencesReady && !sessionRef.current.muted) {
+      void voiceSession.startConversation("open AskV", "/askv");
+    }
+    return () => {
+      stopAskVSpeech();
+      cancelRecordingRef.current();
+      if (!sessionRef.current.acrossVndrly) void sessionRef.current.stop();
+    };
+  }, [voiceSession.preferencesReady, voiceSession.startConversation]));
   const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollView>(null);
   const params = useLocalSearchParams<{ prompt?: string | string[] }>();
   const autoPromptRef = useRef<string | null>(null);
-  const voiceRecorderRef = useRef<PttRecorder | null>(null);
-  const handsFreeStopTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [draft, setDraft] = useState("");
+  const inputRef = useRef<TextInput>(null);
+  useEffect(() => registerAskVControl("/askv", "message", () => {
+    if (!inputRef.current) return false; inputRef.current.focus(); return true;
+  }), []);
   const [readAloud, setReadAloud] = useState(true);
   const readAloudRef = useRef(readAloud);
   readAloudRef.current = readAloud;
   const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
-  const [voiceRecording, setVoiceRecording] = useState(false);
-  const [transcribing, setTranscribing] = useState(false);
-  const [handsFreePhase, setHandsFreePhase] = useState<AskVHandsFreePhase>("off");
   const [feedbackPendingId, setFeedbackPendingId] = useState<number | null>(null);
   const [assistantShare, setAssistantShare] = useState<AssistantShareContext | null>(null);
   const askVUserId = typeof user?.id === "number" ? user.id : null;
-  const handsFreeEnabled = handsFreePhase !== "off";
-  const handsFreeEnabledRef = useRef(handsFreeEnabled);
-  handsFreeEnabledRef.current = handsFreeEnabled;
-  const handsFreePhaseRef = useRef(handsFreePhase);
-  handsFreePhaseRef.current = handsFreePhase;
 
   const {
     messages,
@@ -134,23 +125,18 @@ export default function AskVScreen() {
     startNew,
     loadLatest,
     submitFeedback,
-  } = useAssistant({
-    onAssistantReply: (text) => {
-      setHandsFreePhase((phase) =>
-        nextAskVHandsFreePhaseAfterReply(phase, handsFreeEnabledRef.current),
-      );
-      if (!readAloudRef.current) return;
+  } = voiceSession.assistant;
+
+  useEffect(() => voiceSession.subscribeReplies((text) => {
+      if (!readAloudRef.current || sessionRef.current.muted) return;
       setSpeakingMessageId("auto");
       speakAskV(text);
-    },
-  });
+  }), [voiceSession.subscribeReplies]);
 
   useEffect(() => {
     return () => {
-      if (handsFreeStopTimerRef.current) clearTimeout(handsFreeStopTimerRef.current);
       stopAskVSpeech();
-      void voiceRecorderRef.current?.dispose();
-      voiceRecorderRef.current = null;
+      cancelRecordingRef.current();
     };
   }, []);
 
@@ -174,9 +160,6 @@ export default function AskVScreen() {
       void isAskVSpeaking().then((speaking) => {
         if (!speaking) {
           setSpeakingMessageId(null);
-          setHandsFreePhase((phase) =>
-            nextAskVHandsFreePhaseAfterSpeech(phase, handsFreeEnabledRef.current),
-          );
         }
       });
     }, 400);
@@ -220,7 +203,6 @@ export default function AskVScreen() {
     setReadAloud((prev) => {
       const next = !prev;
       if (!next) {
-        setHandsFreePhase("off");
         stopAskVSpeech();
       }
       if (askVUserId != null) void writeAskVTextOnly(askVUserId, !next);
@@ -230,36 +212,28 @@ export default function AskVScreen() {
   };
 
   const onSpeakMessage = (message: AssistantMessage) => {
-    if (!message.content.trim()) return;
+    if (!message.content.trim() || voiceSession.muted) return;
     if (speakingMessageId === message.id) {
       stopAskVSpeech();
       setSpeakingMessageId(null);
       return;
     }
-    setSpeakingMessageId(message.id);
-    speakAskV(message.content);
+    void voiceSession.stop().then(() => {
+      if (sessionRef.current.muted) return;
+      setSpeakingMessageId(message.id);
+      speakAskV(message.content);
+    });
   };
 
-  const startVoiceRecording = async (mode: "manual" | "hands-free") => {
-    if (streaming || transcribing || voiceRecording) return;
-    try {
+  const recordingFallback = useAskVRecording({
+    enabled: !voiceSession.muted && !streaming,
+    beforeStart: async () => {
+      await voiceSession.stop();
       stopAskVSpeech();
       setSpeakingMessageId(null);
-      await voiceRecorderRef.current?.dispose();
-      const recorder = await createPttRecorder();
-      voiceRecorderRef.current = recorder;
-      await recorder.start();
-      setVoiceRecording(true);
-      if (mode === "hands-free") {
-        setHandsFreePhase("listening");
-        if (handsFreeStopTimerRef.current) clearTimeout(handsFreeStopTimerRef.current);
-        handsFreeStopTimerRef.current = setTimeout(() => {
-          void finishVoiceRecording("hands-free");
-        }, 6500);
-      }
-    } catch (err) {
-      voiceRecorderRef.current = null;
-      if (mode === "hands-free") setHandsFreePhase("off");
+    },
+    onTranscript: send,
+    onError: err => {
       if (err instanceof PttMicPermissionError) {
         Alert.alert(
           t("foremanHome.pttMicDeniedTitle"),
@@ -268,97 +242,10 @@ export default function AskVScreen() {
         return;
       }
       Alert.alert(t("common.error"), t("askv.transcribeFailed"));
-    }
-  };
-
-  const finishVoiceRecording = async (mode: "manual" | "hands-free") => {
-    if (handsFreeStopTimerRef.current) {
-      clearTimeout(handsFreeStopTimerRef.current);
-      handsFreeStopTimerRef.current = null;
-    }
-      const recorder = voiceRecorderRef.current;
-      voiceRecorderRef.current = null;
-      setVoiceRecording(false);
-      if (!recorder) return;
-      try {
-        const { uri, durationSeconds } = await recorder.stop();
-        if (durationSeconds < 0.4) {
-          if (mode === "hands-free") setHandsFreePhase("off");
-          return;
-        }
-        setTranscribing(true);
-        const text = await transcribeAskVRecording(uri);
-        if (text.trim()) {
-          if (mode === "hands-free") setHandsFreePhase("thinking");
-          await send(text);
-        } else if (mode === "hands-free") {
-          setHandsFreePhase("off");
-        }
-      } catch (err) {
-        if (mode === "hands-free") setHandsFreePhase("off");
-        if (err instanceof PttMicPermissionError) {
-          Alert.alert(
-            t("foremanHome.pttMicDeniedTitle"),
-            t("foremanHome.pttMicDeniedBody"),
-          );
-        } else {
-          Alert.alert(t("common.error"), t("askv.transcribeFailed"));
-        }
-      } finally {
-        setTranscribing(false);
-        await recorder.dispose();
-      }
-  };
-
-  const onVoicePressIn = () => {
-    void startVoiceRecording("manual");
-  };
-
-  const onVoicePressOut = () => {
-    if (!voiceRecording) return;
-    void finishVoiceRecording("manual");
-  };
-
-  const toggleHandsFree = () => {
-    if (handsFreeEnabled) {
-      setHandsFreePhase("off");
-      if (handsFreeStopTimerRef.current) clearTimeout(handsFreeStopTimerRef.current);
-      void voiceRecorderRef.current?.dispose();
-      voiceRecorderRef.current = null;
-      setVoiceRecording(false);
-      stopAskVSpeech();
-      setSpeakingMessageId(null);
-      return;
-    }
-    if (!readAloud) {
-      setReadAloud(true);
-      if (askVUserId != null) void writeAskVTextOnly(askVUserId, false);
-    }
-    setHandsFreePhase("armed");
-  };
-
-  useEffect(() => {
-    const action = nextAskVHandsFreeAction({
-      enabled: handsFreeEnabled,
-      phase: handsFreePhase,
-      streaming,
-      transcribing,
-      speaking: speakingMessageId !== null,
-      voiceRecording,
-      readAloud,
-    });
-    if (action === "turn-off") {
-      setHandsFreePhase("off");
-      return;
-    }
-    if (action !== "start-listening") return;
-    const timer = setTimeout(() => {
-      if (handsFreePhaseRef.current === "armed") {
-        void startVoiceRecording("hands-free");
-      }
-    }, 600);
-    return () => clearTimeout(timer);
-  }, [handsFreeEnabled, handsFreePhase, readAloud, speakingMessageId, streaming, transcribing, voiceRecording]);
+    },
+  });
+  cancelRecordingRef.current = recordingFallback.cancel;
+  const { recording: voiceRecording, transcribing, pressIn: onVoicePressIn, pressOut: onVoicePressOut } = recordingFallback;
 
   const onClear = () => {
     Alert.alert(t("askv.clearTitle"), t("askv.clearBody"), [
@@ -437,22 +324,14 @@ export default function AskVScreen() {
     }
   };
 
-  const voiceStatusLabel = voiceSession.muted
-    ? "Muted"
-    : voiceSession.state === "listening"
-      ? "Listening"
-      : voiceSession.state === "thinking"
-        ? "Thinking"
-        : voiceSession.state === "speaking"
-          ? "Speaking"
-          : voiceSession.state === "wake-idle" && voiceSession.acrossVndrly && voiceSession.wakeSupported
-            ? "Wake enabled"
-            : null;
+  const fallbackAvailable = ["stopped", "error", "interrupted"].includes(voiceSession.state);
+  const voiceStatusLabel = t(`askv.voiceState.${voiceSession.muted ? "muted" : voiceSession.state}`);
 
   const headerIcons = (
     <View style={styles.headerIcons}>
       <Pressable
-        onPress={() => voiceSession.setMuted(!voiceSession.muted)}
+        onPress={() => { cancelRecordingRef.current(); voiceSession.setMuted(!voiceSession.muted); }}
+        accessibilityLabel={t(voiceSession.muted ? "askv.unmute" : "askv.mute")}
         hitSlop={8}
         testID="askv-mute"
       >
@@ -471,18 +350,6 @@ export default function AskVScreen() {
           name={readAloud ? "volume-2" : "volume-x"}
           size={18}
           color={readAloud ? brand.primary : colors.mutedForeground}
-        />
-      </Pressable>
-      <Pressable
-        onPress={toggleHandsFree}
-        disabled={streaming || transcribing}
-        hitSlop={8}
-        testID="askv-hands-free"
-      >
-        <Feather
-          name={handsFreeEnabled ? "radio" : "headphones"}
-          size={18}
-          color={handsFreeEnabled ? brand.primary : colors.mutedForeground}
         />
       </Pressable>
       {messages.length > 0 ? (
@@ -545,6 +412,19 @@ export default function AskVScreen() {
             {voiceStatusLabel}
           </Text>
         ) : null}
+        <Pressable
+          accessibilityRole="switch"
+          accessibilityState={{ checked: voiceSession.acrossVndrly }}
+          onPress={() => voiceSession.setAcrossVndrly(!voiceSession.acrossVndrly)}
+          testID="askv-across-vndrly"
+        >
+          <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
+            {t(voiceSession.acrossVndrly ? "askv.acrossOn" : "askv.acrossOff")}
+          </Text>
+        </Pressable>
+        {voiceSession.acrossVndrly && !voiceSession.wakeSupported ? (
+          <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>{t("askv.wakeUnavailable")}</Text>
+        ) : null}
       </View>
 
       <ScrollView
@@ -567,7 +447,7 @@ export default function AskVScreen() {
             </Text>
           </View>
           <Text style={[styles.greetingBody, { color: colors.mutedForeground }]}>
-            {greeting}
+            {voiceSession.greeting ?? greeting}
           </Text>
         </View>
 
@@ -677,17 +557,17 @@ export default function AskVScreen() {
           </View>
         ))}
 
-        {error ? (
+        {error || voiceSession.error ? (
           <Text style={[styles.errorText, { color: "#dc2626" }]}>
-            {error.startsWith("askv.") ? t(error) : error}
+            {t(error ?? voiceSession.error ?? "askv.errorGeneric", { defaultValue: t("askv.voiceFailed") })}
           </Text>
         ) : null}
-        {handsFreeEnabled ? (
+        {fallbackAvailable ? (
           <Text
             style={[styles.handsFreeStatus, { color: colors.mutedForeground }]}
-            testID="askv-hands-free-status"
+            testID="askv-recording-fallback"
           >
-            {t(`askv.handsFree.${handsFreePhase}`)}
+            {t("askv.recordingFallback")}
           </Text>
         ) : null}
       </ScrollView>
@@ -706,7 +586,8 @@ export default function AskVScreen() {
           <Pressable
             onPressIn={onVoicePressIn}
             onPressOut={onVoicePressOut}
-            disabled={streaming || transcribing || !readAloud}
+            disabled={streaming || transcribing || voiceSession.muted || !fallbackAvailable}
+            accessibilityLabel={t("askv.recordingFallback")}
             style={[
               styles.micBtn,
               {
@@ -727,6 +608,7 @@ export default function AskVScreen() {
             )}
           </Pressable>
           <TextInput
+            ref={inputRef}
             value={draft}
             onChangeText={setDraft}
             placeholder={t("askv.inputPlaceholder")}

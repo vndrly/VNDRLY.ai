@@ -1598,6 +1598,32 @@
     "brandWordmark": "VNDRLY"
   },
   "askv": {
+    "mute": "Silenciar",
+      "unmute": "Activar voz",
+      "acrossOn": "AskV en todo VNDRLY: Activado",
+      "acrossOff": "AskV en todo VNDRLY: Desactivado",
+      "wakeUnavailable": "La activación por voz no está disponible aquí. Abre AskV para hablar.",
+      "voiceFailed": "La voz no está disponible. Puedes seguir escribiendo o usar la grabación alternativa.",
+      "naturalVoiceUnavailable": "Las conversaciones de voz no están disponibles para esta cuenta. Puedes escribir o mantener presionado el micrófono para grabar.",
+      "voicePreferencesFailed": "AskV no pudo leer o guardar las preferencias de voz. Revisa el silencio antes de continuar.",
+      "voiceHistoryFailed": "No se pudo guardar el historial de voz. Vuelve a intentarlo antes de continuar por texto.",
+      "voiceContextFailed": "AskV no pudo actualizar el contexto de la pantalla. Abre AskV de nuevo para continuar.",
+      "voiceInterrupted": "La voz se detuvo por una interrupción de audio o de la aplicación. Abre AskV para continuar.",
+      "microphoneDenied": "El micrófono está desactivado. Actívalo en los ajustes del dispositivo o sigue escribiendo.",
+      "recordingFallback": "Grabación alternativa: mantén pulsado el micrófono para grabar y suéltalo para enviar.",
+      "entryUnavailable": "Este ticket no permite esa entrada ahora. Revisa su estado y tus permisos.",
+      "voiceState": {
+        "stopped": "Voz detenida",
+        "connecting": "Conectando",
+        "greeting": "Saludando",
+        "listening": "Escuchando",
+        "thinking": "Pensando",
+        "speaking": "Hablando",
+        "muted": "Silenciado",
+        "wake-idle": "Activación por voz habilitada",
+        "interrupted": "Voz interrumpida",
+        "error": "Voz no disponible"
+      },
     "title": "AskV",
     "subtitle": "Tu guía de VNDRLY — cómo hacerlo, consultas en vivo y ayuda de incorporación.",
     "greetingFallback": "ahí",
@@ -1619,13 +1645,6 @@
     "transcriptErrorTitle": "No se pudo exportar la transcripción",
     "transcriptShareUnavailable": "Compartir no está disponible en este dispositivo.",
     "transcribeFailed": "No pude entender eso. Inténtalo de nuevo o escribe tu pregunta.",
-    "handsFree": {
-      "armed": "Manos libres está listo. Habla cuando se abra el micrófono.",
-      "listening": "Escuchando un comando para AskV…",
-      "thinking": "AskV está trabajando en ese comando…",
-      "speaking": "AskV está respondiendo en voz alta…",
-      "off": "Manos libres está apagado."
-    },
     "quickActions": {
       "fieldEtaTicket": "ETA al próximo ticket",
       "fieldNextTicket": "Ticket más cercano",

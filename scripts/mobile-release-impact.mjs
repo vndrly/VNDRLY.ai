@@ -54,6 +54,7 @@ const nativeExact = new Set([
   "artifacts/vndrly-mobile/metro.config.js",
   "artifacts/vndrly-mobile/babel.config.js",
   "eas.json",
+  "scripts/prepare-askv-ios.mjs",
 ]);
 
 const packageJsonFiles = [
@@ -67,6 +68,8 @@ function isWorkspaceProtocol(value) {
 
 const nativePrefixes = [
   "artifacts/vndrly-mobile/plugins/",
+  "artifacts/vndrly-mobile/modules/",
+  "artifacts/vndrly-mobile/assets/askv-wake/",
   "artifacts/vndrly-mobile/ios/",
   "artifacts/vndrly-mobile/android/",
   "artifacts/vndrly-mobile/assets/icons/",
@@ -185,6 +188,7 @@ const mobileFiles = files.filter(
     file.startsWith("artifacts/vndrly-mobile/") ||
     file.startsWith("lib/") ||
     file.startsWith("packages/") ||
+    nativeExact.has(file) ||
     file === "pnpm-lock.yaml" ||
     file === "package.json",
 );

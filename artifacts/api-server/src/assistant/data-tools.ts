@@ -579,19 +579,8 @@ import {
   runMarketDataTool,
 } from "./data-tools-market";
 
-export const DATA_TOOL_NAMES = [
-  "query_tickets",
-  "query_gps_trail",
-  "query_vendor_performance",
-  "query_visits",
-  "query_field_metrics",
-  "query_invoice_summary",
-  "query_sales_tax_by_state",
-  "query_nec1099_summary",
-  ...EXT_DATA_TOOL_NAMES,
-  ...OPS_DATA_TOOL_NAMES,
-  ...MARKET_DATA_TOOL_NAMES,
-] as const;
+import { DATA_TOOL_NAMES } from "./tool-names";
+export { DATA_TOOL_NAMES } from "./tool-names";
 
 export type DataToolName = (typeof DATA_TOOL_NAMES)[number];
 

@@ -16,7 +16,7 @@ describe("AskV client intents", () => {
 
   it("navigates for open_screen without claiming the server did it", () => {
     const push = vi.spyOn(window.history, "pushState");
-    applyAskVClientIntent({ name: "open_screen", arguments: { screen: "gatekeeper" } });
+    applyAskVClientIntent({ name: "open_screen", arguments: { screen: "gatekeeper", path: "/gatekeeper" } });
     expect(push).toHaveBeenCalledWith({}, "", "/gatekeeper");
     push.mockRestore();
   });

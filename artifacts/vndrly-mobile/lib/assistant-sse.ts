@@ -1,6 +1,8 @@
 export type StreamEvent =
   | { type: "token"; delta: string }
   | { type: "tool"; name: string; status: "start" | "end" }
+  | { type: "client_intent"; intent: import("./askv-client-tools").AskVClientIntent }
+  | { type: "mutation" }
   | { type: "done"; content: string; assistantMessageId?: number }
   | { type: "error"; message: string };
 
@@ -31,6 +33,13 @@ function dispatchSseBlock(raw: string, onEvent: (evt: StreamEvent) => void): voi
       type: "tool",
       ...(parsed as { name: string; status: "start" | "end" }),
     });
+  } else if (eventName === "client_intent") {
+    const intent = (parsed as { intent?: unknown }).intent;
+    if (intent && typeof intent === "object" && typeof (intent as { name?: unknown }).name === "string") {
+      onEvent({ type: "client_intent", intent: intent as import("./askv-client-tools").AskVClientIntent });
+    }
+  } else if (eventName === "mutation") {
+    if (parsed && typeof parsed === "object" && (parsed as { mutation?: unknown }).mutation) onEvent({ type: "mutation" });
   } else if (eventName === "done") {
     const payload = parsed as { content: string; assistantMessageId?: number };
     onEvent({

@@ -23,6 +23,8 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { AskVVoiceProvider } from "@/hooks/use-askv-voice-session";
 import { BrandProvider } from "@/hooks/use-brand";
 import ContextPickerModal from "@/components/ContextPickerModal";
+import AskVVoiceIndicator from "@/components/AskVVoiceIndicator";
+import { subscribeAskVDataChanged } from "@/lib/askv-client-tools";
 import { initApi } from "@/lib/api";
 import VndrlyPageBackground from "@/components/VndrlyPageBackground";
 import { getCachedToken, getCachedRole, getToken, isTokenCacheReady, subscribeToken, getUser } from "@/lib/auth";
@@ -65,6 +67,7 @@ const queryClient = new QueryClient({
 });
 
 function AuthGate() {
+  useEffect(() => subscribeAskVDataChanged(() => { void queryClient.invalidateQueries(); }), []);
   const segments = useSegments();
   const [checked, setChecked] = useState(isTokenCacheReady());
   const [hasAuth, setHasAuth] = useState(!!getCachedToken());
@@ -256,16 +259,17 @@ function RootLayout() {
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
             <AskVVoiceProvider>
-            <BrandProvider>
+              <BrandProvider>
               <GestureHandlerRootView style={{ flex: 1 }}>
                 <SafeKeyboardProvider>
                   <VndrlyPageBackground>
                     <AuthGate />
                     <ContextPickerModal />
+                    <AskVVoiceIndicator />
                   </VndrlyPageBackground>
                 </SafeKeyboardProvider>
               </GestureHandlerRootView>
-            </BrandProvider>
+              </BrandProvider>
             </AskVVoiceProvider>
           </AuthProvider>
         </QueryClientProvider>

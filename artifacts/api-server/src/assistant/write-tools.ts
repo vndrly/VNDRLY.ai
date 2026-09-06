@@ -34,20 +34,8 @@ function confirmationErr(message: string): string {
   return JSON.stringify({ error: message, requiresConfirmation: true });
 }
 
-export const WRITE_TOOL_NAMES = [
-  "mark_notifications_read",
-  "schedule_ticket_crew",
-  "set_ticket_flag",
-  "post_ticket_comment",
-  "prepare_visitor_check_in",
-  "confirm_visitor_check_in",
-  "find_active_visitors",
-  "prepare_visitor_check_out",
-  "confirm_visitor_check_out",
-  "set_ticket_lifecycle",
-  "close_ticket_for_review",
-  "draft_safety_report",
-] as const;
+import { WRITE_TOOL_NAMES } from "./tool-names";
+export { WRITE_TOOL_NAMES } from "./tool-names";
 export type WriteToolName = (typeof WRITE_TOOL_NAMES)[number];
 
 export function isWriteTool(name: string): name is WriteToolName {
@@ -475,9 +463,9 @@ export async function runWriteTool(
     case "confirm_visitor_check_in":
       return confirmVisitorCheckIn(args, session);
     case "find_active_visitors":
-      return findActiveVisitors(args);
+      return findActiveVisitors(args, session);
     case "prepare_visitor_check_out":
-      return prepareVisitorCheckOut(args);
+      return prepareVisitorCheckOut(args, session);
     case "confirm_visitor_check_out":
       return confirmVisitorCheckOut(args, session);
     case "set_ticket_lifecycle":

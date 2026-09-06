@@ -60,6 +60,7 @@ import { askVActionsForTicket, askVPromptRoute } from "@/lib/assistant-ticket-ac
 import { nudgeLiveLocationReporter } from "@/lib/liveLocationReporter";
 import { MAP_TILE_SIZE, getOsmTile, openInMaps } from "@/lib/maps";
 import { captureAndUploadImage } from "@/lib/photos";
+import { registerAskVControl, subscribeAskVDataChanged } from "@/lib/askv-client-tools";
 import { buildTicketProofPacket } from "@/lib/proof-packet";
 import { ticketStatusLabel, ticketStatusPillStyle } from "@/lib/ticketStatusLabels";
 import { PILL_CHIP_LAYOUT, PILL_TEXT, PILL_HEIGHT_PX } from "@/lib/pill-doctrine";
@@ -285,7 +286,7 @@ export default function TicketDetailScreen() {
     })();
   }, []);
   const { t } = useTranslation();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, askvEntry, askvEntryId } = useLocalSearchParams<{ id: string; askvEntry?: string; askvEntryId?: string }>();
   const ticketId = Number(id);
   const { nudgeFlashingTicketIds, handlePushData } = useTicketNudgeFlash({
     enabled: Number.isFinite(ticketId) && ticketId > 0,
@@ -318,6 +319,10 @@ export default function TicketDetailScreen() {
   const [itemType, setItemType] = useState<(typeof ITEM_TYPES)[number]>("part");
   const [itemTypePickerOpen, setItemTypePickerOpen] = useState(false);
   const [itemDesc, setItemDesc] = useState("");
+  const itemDescriptionRef = React.useRef<TextInput>(null);
+  const itemFormY = React.useRef(0);
+  const handledAskVEntry = React.useRef<string | null>(null);
+  const [askVEntryNotice, setAskVEntryNotice] = useState<string | null>(null);
   const [qty, setQty] = useState("1");
   const [unitPrice, setUnitPrice] = useState("0");
 
@@ -1746,6 +1751,39 @@ export default function TicketDetailScreen() {
         ticket.status,
       )
     : false;
+
+  const askVRefreshRef = React.useRef(load);
+  askVRefreshRef.current = load;
+  useEffect(() => subscribeAskVDataChanged(() => { void askVRefreshRef.current(); }), []);
+  useEffect(() => registerAskVControl("/ticket/" + ticketId, "description", () => {
+    if (!itemDescriptionRef.current) return false;
+    scrollRef.current?.scrollTo({ y: itemFormY.current, animated: true });
+    itemDescriptionRef.current.focus(); return true;
+  }), [ticketId]);
+  useEffect(() => {
+    if (!askvEntry || !ticket || loading || !currentUser) return;
+    const request = [ticketId, askvEntry, askvEntryId].join(":");
+    if (handledAskVEntry.current === request) return;
+    handledAskVEntry.current = request;
+    const editableRole = ["admin", "vendor", "field_employee"].includes(currentUser.role);
+    if (!editableRole || assignmentRemoved || (!isEditable && askvEntry !== "mileage")) {
+      setAskVEntryNotice(t("askv.entryUnavailable")); return;
+    }
+    if (askvEntry === "photo") { void addPhotoNote(); return; }
+    if (askvEntry === "parts" || askvEntry === "labor") {
+      setItemType(askvEntry === "parts" ? "part" : "labor");
+      const timer = setTimeout(() => {
+        scrollRef.current?.scrollTo({ y: itemFormY.current, animated: true });
+        itemDescriptionRef.current?.focus();
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+    if (askvEntry === "mileage") {
+      if (ticket.status === "in_progress") checkOut();
+      else if (["pending_arrival", "en_route"].includes(ticket.lifecycleState ?? "") && !["cancelled", "denied", "awaiting_acceptance", "approved", "submitted", "funds_dispersed"].includes(ticket.status)) enRoute();
+      else setAskVEntryNotice(t("askv.entryUnavailable"));
+    }
+  }, [askvEntry, askvEntryId, ticket?.id, currentUser?.id, isEditable, loading, assignmentRemoved]);
 
   const canShowSchedule =
     isEditable &&
@@ -4015,6 +4053,7 @@ export default function TicketDetailScreen() {
       <Text style={[styles.section, { color: colors.foreground }]}>
         {t("tickets.partsAndLabor")}
       </Text>
+      {askVEntryNotice ? <Text testID="askv-entry-status" style={{ color: colors.destructive }}>{askVEntryNotice}</Text> : null}
       {items.length === 0 ? (
         <Text style={{ color: colors.mutedForeground, marginBottom: 8 }}>
           {t("common.noResults")}
@@ -4053,6 +4092,7 @@ export default function TicketDetailScreen() {
 
       {isEditable ? (
       <View
+        onLayout={event => { itemFormY.current = event.nativeEvent.layout.y; }}
         style={[
           styles.formCard,
           { borderColor: colors.border, backgroundColor: colors.card },
@@ -4124,6 +4164,8 @@ export default function TicketDetailScreen() {
         </Modal>
         <TextInput
           value={itemDesc}
+          ref={itemDescriptionRef}
+          testID="ticket-item-description"
           onChangeText={setItemDesc}
           placeholder={t("tickets.descriptionPlaceholder")}
           placeholderTextColor={colors.mutedForeground}

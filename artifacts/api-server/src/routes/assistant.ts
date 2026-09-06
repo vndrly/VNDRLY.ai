@@ -1,3 +1,4 @@
+import { runBoundTypedAskVTool, synchronizeTypedAskVContext, organizationKeyFromSession } from "../assistant/askv-pending-confirmation";
 import { Router, type IRouter, type Request, type Response } from "express";
 import { and, eq, desc, ne, inArray, lte, sql } from "drizzle-orm";
 import {
@@ -50,6 +51,7 @@ import {
   toActionAuditListRow,
 } from "../assistant/action-audit-query";
 import { classifyToolResult } from "../assistant/tool-result";
+import { voiceMutationHint } from "../assistant/voice-mutation";
 import { findAskVTool } from "../assistant/tool-registry";
 import { isDataTool, runDataTool } from "../assistant/data-tools";
 import { isWriteTool, runWriteTool } from "../assistant/write-tools";
@@ -788,10 +790,16 @@ export async function runTool(
     return runWriteTool(name, input, session);
   }
   if (isClientTool(name)) {
-    return runClientTool(name, input);
+    return runClientTool(name, input, session);
   }
   try {
     switch (name) {
+      case "select_tool_pack": {
+        const { isVoiceWorkflow, toolsForRealtime } = await import("../assistant/tool-packs");
+        const workflow = (input as { workflow?: unknown } | null)?.workflow;
+        if (!isVoiceWorkflow(workflow)) return JSON.stringify({ ok: false, error: "Choose a known tool workflow." });
+        return JSON.stringify({ ok: true, workflow, tools: toolsForRealtime({ role: session.role, workflow }).map((tool) => tool.name) });
+      }
       case "lookup_user_progress": {
         const scope = scopeFromSession(session);
         if (!scope) return JSON.stringify({ error: "No org scope on this session." });
@@ -1165,6 +1173,17 @@ async function handleConversationMessage(
     return;
   }
 
+  // A voice conversation remains bound to its original active organization,
+  // including later typed turns submitted through this existing endpoint.
+  const [voiceScope] = await db.select({ parsedIntent: assistantActionAuditTable.parsedIntent })
+    .from(assistantActionAuditTable)
+    .where(and(eq(assistantActionAuditTable.conversationId, conv.id), eq(assistantActionAuditTable.actionType, "askv_voice_conversation_scope")))
+    .limit(1);
+  if (voiceScope && (voiceScope.parsedIntent as { organizationKey?: string } | null)?.organizationKey !== organizationKeyFromSession(session)) {
+    res.status(404).json({ error: "Conversation not found in this organization.", code: "common.not_found" });
+    return;
+  }
+
   // Load the user's full record to pull preferredLanguage + displayName
   // for the system prompt. This is one extra query per turn but keeps
   // the prompt accurate when the user updates their language.
@@ -1220,6 +1239,8 @@ async function handleConversationMessage(
 
   const preferredLanguage = (user?.preferredLanguage as "en" | "es" | null) ?? null;
   const pageContext = parsePageContext(req.body?.pageContext);
+  const typedConfirmationContext = JSON.stringify(pageContext ?? {});
+  synchronizeTypedAskVContext(session, conv.id, typedConfirmationContext, userMessage);
   const systemPrompt = buildSystemPrompt({
     user: {
       userId: session.userId!,
@@ -1344,8 +1365,23 @@ async function handleConversationMessage(
       const results: Anthropic.ToolResultBlockParam[] = [];
       for (const tu of toolUses) {
         send("tool", { name: tu.name, status: "start" });
-        const out = await runTool(tu.name, tu.input, session, req.headers.cookie ?? "");
+        const out = await runBoundTypedAskVTool({
+          name: tu.name, input: tu.input, session, conversationId: conv.id, turnId: savedUserMsg.id,
+          contextKey: typedConfirmationContext, phrase: userMessage,
+          execute: (input) => runTool(tu.name, input, session, req.headers.cookie ?? ""),
+        });
+        const mutation = voiceMutationHint(tu.name, (tu.input ?? {}) as Record<string, unknown>, out,
+          classifyToolResult(out, findAskVTool(tu.name)?.mutating === true) === "success", false);
+        if (mutation) send("mutation", { mutation });
         send("tool", { name: tu.name, status: "end" });
+        // Only structured capability results may request client-side work.
+        // Text/model prose never becomes a navigation or device command.
+        try {
+          const clientResult = JSON.parse(out) as { execution?: string; intent?: { name?: string } };
+          if (clientResult.execution === "client" && clientResult.intent?.name) {
+            send("client_intent", { intent: clientResult.intent });
+          }
+        } catch { /* Ordinary text results carry no client capability. */ }
         toolCallTrace.push({ name: tu.name, input: tu.input, output: out });
         await auditToolCall({
           session,
@@ -1621,6 +1657,14 @@ router.post("/assistant/field-onboarding/:token/chat", async (req, res) => {
         // the model invents a call beyond the advertised tools.
         const out = await runTool(tu.name, tu.input, session, "", true);
         send("tool", { name: tu.name, status: "end" });
+        // Only structured capability results may request client-side work.
+        // Text/model prose never becomes a navigation or device command.
+        try {
+          const clientResult = JSON.parse(out) as { execution?: string; intent?: { name?: string } };
+          if (clientResult.execution === "client" && clientResult.intent?.name) {
+            send("client_intent", { intent: clientResult.intent });
+          }
+        } catch { /* Ordinary text results carry no client capability. */ }
         results.push({ type: "tool_result", tool_use_id: tu.id, content: out });
       }
       messages.push({ role: "user", content: results });

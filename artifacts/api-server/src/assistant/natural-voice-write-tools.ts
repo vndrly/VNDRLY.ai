@@ -1,46 +1,118 @@
-import { and, eq, ilike, isNull, or } from "drizzle-orm";
-import {
-  db,
-  siteLocationsTable,
-  siteVisitsTable,
-  ticketsTable,
-  vendorPeopleTable,
-} from "@workspace/db";
-import type { SessionPayload } from "../lib/session";
-import { fieldEmployeeCanAccessTicket, loadFieldTicketAccessRow } from "../lib/field-ticket-access";
-import { askvIdempotency } from "./askv-idempotency";
+import { createHmac } from "node:crypto";
+import { SESSION_SECRET, type SessionPayload } from "../lib/session";
 
 function err(message: string): string {
-  return JSON.stringify({ error: message });
+  return JSON.stringify({ ok: false, error: message });
 }
-
-function confirmationErr(message: string): string {
-  return JSON.stringify({ error: message, requiresConfirmation: true });
+function argsOf(input: unknown): Record<string, unknown> {
+  return input && typeof input === "object" && !Array.isArray(input)
+    ? (input as Record<string, unknown>)
+    : {};
 }
-
-function reuse(session: SessionPayload, key: string | undefined): string | null {
-  if (!session.userId || !key) return null;
-  const existing = askvIdempotency.peek(session.userId, key);
-  return existing == null ? null : JSON.stringify(existing);
+function positiveId(value: unknown): value is number {
+  return typeof value === "number" && Number.isSafeInteger(value) && value > 0;
 }
-
-function remember(session: SessionPayload, key: string | undefined, value: unknown): string {
-  if (!session.userId || !key) return JSON.stringify(value);
-  const stored = askvIdempotency.remember(session.userId, key, value);
-  return JSON.stringify(stored.value);
-}
-
-function missingCheckInFields(input: Record<string, unknown>): string[] {
+function missingCheckInFields(args: Record<string, unknown>): string[] {
   const missing: string[] = [];
-  if (!String(input.firstName ?? "").trim()) missing.push("firstName");
-  if (!String(input.lastName ?? "").trim()) missing.push("lastName");
-  if (typeof input.siteLocationId !== "number") missing.push("siteLocationId");
-  if (input.hostType !== "partner" && input.hostType !== "vendor") missing.push("hostType");
+  if (typeof args.firstName !== "string" || !args.firstName.trim())
+    missing.push("firstName");
+  if (typeof args.lastName !== "string" || !args.lastName.trim())
+    missing.push("lastName");
+  if (!positiveId(args.siteLocationId)) missing.push("siteLocationId");
+  if (args.hostType !== "partner" && args.hostType !== "vendor")
+    missing.push("hostType");
+  if (args.hostType === "partner" && !positiveId(args.hostPartnerId))
+    missing.push("hostPartnerId");
+  if (args.hostType === "vendor" && !positiveId(args.hostVendorId))
+    missing.push("hostVendorId");
+  if (
+    typeof args.latitude !== "number" ||
+    !Number.isFinite(args.latitude) ||
+    Math.abs(args.latitude) > 90
+  )
+    missing.push("latitude");
+  if (
+    typeof args.longitude !== "number" ||
+    !Number.isFinite(args.longitude) ||
+    Math.abs(args.longitude) > 180
+  )
+    missing.push("longitude");
   return missing;
 }
-
+/** Reuse the real API boundary: assignment, role, geofence, audit, GPS and events. */
+export async function callNaturalVoiceDomainApi(
+  path: string,
+  method: "GET" | "POST",
+  input: Record<string, unknown>,
+  session: SessionPayload,
+): Promise<Record<string, unknown> | unknown[]> {
+  if (!session.userId) return { ok: false, error: "You must be signed in." };
+  const now = Math.floor(Date.now() / 1000);
+  const payload = Buffer.from(
+    JSON.stringify({
+      ...session,
+      iat: session.iat ?? now,
+      exp: Math.min(session.exp ?? now + 60, now + 60),
+    }),
+  ).toString("base64");
+  const signature = createHmac("sha256", SESSION_SECRET)
+    .update(payload)
+    .digest("hex");
+  const port = /^\d+$/.test(process.env.PORT ?? "8080")
+    ? (process.env.PORT ?? "8080")
+    : "8080";
+  const {
+    confirmed: _confirmed,
+    idempotencyKey: _key,
+    voiceSessionId: _session,
+    ...body
+  } = input;
+  const response = await fetch(`http://127.0.0.1:${port}/api${path}`, {
+    method,
+    headers: {
+      "Content-Type": "application/json",
+      cookie: `vndrly_session=${payload}.${signature}`,
+    },
+    ...(method === "POST" ? { body: JSON.stringify(body) } : {}),
+    signal: AbortSignal.timeout(30_000),
+    redirect: "error",
+  });
+  const result = (await response.json()) as Record<string, unknown> | unknown[];
+  if (!response.ok) {
+    const failure = Array.isArray(result) ? {} : result;
+    return {
+      ok: false,
+      error: failure.message ?? failure.error ?? "The action did not complete.",
+      code: failure.code,
+      status: response.status,
+    };
+  }
+  return result;
+}
+function gatekeeper(session: SessionPayload): boolean {
+  return Boolean(
+    session.userId &&
+    session.role === "vendor" &&
+    session.vendorId &&
+    session.vendorRole === "gatekeeper",
+  );
+}
+function writeGuard(
+  args: Record<string, unknown>,
+  confirmed: boolean,
+): string | null {
+  if (confirmed && args.confirmed !== true)
+    return JSON.stringify({
+      ok: false,
+      error: "Please confirm the exact action first.",
+      requiresConfirmation: true,
+    });
+  if (typeof args.idempotencyKey !== "string" || !args.idempotencyKey.trim())
+    return err("An action idempotency key is required.");
+  return null;
+}
 export async function prepareVisitorCheckIn(input: unknown): Promise<string> {
-  const args = (input ?? {}) as Record<string, unknown>;
+  const args = argsOf(input);
   const missing = missingCheckInFields(args);
   return JSON.stringify({
     ok: missing.length === 0,
@@ -49,228 +121,256 @@ export async function prepareVisitorCheckIn(input: unknown): Promise<string> {
     draft: args,
   });
 }
-
-export async function confirmVisitorCheckIn(input: unknown, session: SessionPayload): Promise<string> {
-  const args = (input ?? {}) as Record<string, unknown>;
-  const cached = reuse(session, typeof args.idempotencyKey === "string" ? args.idempotencyKey : undefined);
-  if (cached) return cached;
-  if (args.confirmed !== true) return confirmationErr("Confirm visitor check-in before I commit it.");
+export async function confirmVisitorCheckIn(
+  input: unknown,
+  session: SessionPayload,
+): Promise<string> {
+  if (!gatekeeper(session))
+    return err("Visitor check-in requires your assigned Gatekeeper account.");
+  const args = argsOf(input);
+  const guard = writeGuard(args, true);
+  if (guard) return guard;
   const missing = missingCheckInFields(args);
   if (missing.length) return err(`Missing ${missing.join(", ")}.`);
-  if (!session.userId) return err("You must be signed in.");
-
-  const siteId = Number(args.siteLocationId);
-  const [site] = await db.select().from(siteLocationsTable).where(eq(siteLocationsTable.id, siteId)).limit(1);
-  if (!site) return err("Site not found.");
-
-  const [created] = await db
-    .insert(siteVisitsTable)
-    .values({
-      siteLocationId: siteId,
-      firstName: String(args.firstName).trim(),
-      lastName: String(args.lastName).trim(),
-      company: typeof args.company === "string" ? args.company : null,
-      vehiclePlate: typeof args.vehiclePlate === "string" ? args.vehiclePlate : null,
-      plateState: typeof args.plateState === "string" ? args.plateState : null,
-      purpose: typeof args.purpose === "string" ? args.purpose : null,
-      notes: typeof args.notes === "string" ? args.notes : null,
-      expectedDurationMinutes:
-        typeof args.expectedDurationMinutes === "number" ? args.expectedDurationMinutes : null,
-      hostType: args.hostType === "vendor" ? "vendor" : "partner",
-      hostPartnerId: args.hostType === "partner" ? (session.partnerId ?? site.partnerId) : null,
-      hostVendorId: args.hostType === "vendor" ? session.vendorId ?? null : null,
-      checkInLatitude: typeof args.latitude === "number" ? args.latitude : null,
-      checkInLongitude: typeof args.longitude === "number" ? args.longitude : null,
-      recordedByUserId: session.userId,
-    })
-    .returning({ id: siteVisitsTable.id });
-
-  return remember(session, typeof args.idempotencyKey === "string" ? args.idempotencyKey : undefined, {
-    ok: true,
-    visitId: created?.id,
-    refresh: ["gate", "visits"],
-  });
+  const result = (await callNaturalVoiceDomainApi(
+    "/visits/gate/check-in",
+    "POST",
+    args,
+    session,
+  )) as Record<string, unknown>;
+  return JSON.stringify(
+    result.error
+      ? result
+      : { ok: true, visitId: result.id, refresh: ["gate", "visits"] },
+  );
 }
-
-export async function findActiveVisitors(input: unknown): Promise<string> {
-  const args = (input ?? {}) as Record<string, unknown>;
-  const conds = [isNull(siteVisitsTable.checkOutTime)];
-  if (typeof args.siteLocationId === "number") {
-    conds.push(eq(siteVisitsTable.siteLocationId, args.siteLocationId));
-  }
-  if (typeof args.vehiclePlate === "string" && args.vehiclePlate.trim()) {
-    conds.push(ilike(siteVisitsTable.vehiclePlate, args.vehiclePlate.trim()));
-  }
-  if (typeof args.query === "string" && args.query.trim()) {
-    const q = `%${args.query.trim()}%`;
-    conds.push(
-      or(
-        ilike(siteVisitsTable.firstName, q),
-        ilike(siteVisitsTable.lastName, q),
-        ilike(siteVisitsTable.company, q),
-        ilike(siteVisitsTable.vehiclePlate, q),
-      )!,
-    );
-  }
-  const rows = await db
-    .select({
-      id: siteVisitsTable.id,
-      firstName: siteVisitsTable.firstName,
-      lastName: siteVisitsTable.lastName,
-      company: siteVisitsTable.company,
-      vehiclePlate: siteVisitsTable.vehiclePlate,
-      siteLocationId: siteVisitsTable.siteLocationId,
+export async function findActiveVisitors(
+  input: unknown,
+  session?: SessionPayload,
+): Promise<string> {
+  if (
+    !session?.userId ||
+    !["admin", "partner", "vendor"].includes(session.role ?? "")
+  )
+    return err("You cannot view visitor records.");
+  const args = argsOf(input);
+  const query = new URLSearchParams({ activeOnly: "true", limit: "1000" });
+  if (positiveId(args.siteLocationId))
+    query.set("siteLocationId", String(args.siteLocationId));
+  const result = await callNaturalVoiceDomainApi(
+    `/visits?${query}`,
+    "GET",
+    {},
+    session,
+  );
+  if (!Array.isArray(result)) return JSON.stringify(result);
+  const needle =
+    typeof args.query === "string" ? args.query.trim().toLowerCase() : "";
+  const plate =
+    typeof args.vehiclePlate === "string"
+      ? args.vehiclePlate.trim().toLowerCase()
+      : "";
+  const matches = result
+    .filter((row) => {
+      const r = argsOf(row);
+      return (
+        (!positiveId(args.visitId) || r.id === args.visitId) &&
+        (!plate || String(r.vehiclePlate ?? "").toLowerCase() === plate) &&
+        (!needle ||
+          [
+            r.firstName,
+            r.lastName,
+            `${r.firstName} ${r.lastName}`,
+            r.company,
+            r.vehiclePlate,
+          ].some((value) =>
+            String(value ?? "")
+              .toLowerCase()
+              .includes(needle),
+          ))
+      );
     })
-    .from(siteVisitsTable)
-    .where(and(...conds))
-    .limit(8);
-  return JSON.stringify({ ok: true, matches: rows, needsChoice: rows.length > 1 });
+    .slice(0, 8)
+    .map((row) => {
+      const r = argsOf(row);
+      return {
+        id: r.id,
+        firstName: r.firstName,
+        lastName: r.lastName,
+        company: r.company,
+        vehiclePlate: r.vehiclePlate,
+        siteLocationId: r.siteLocationId,
+      };
+    });
+  return JSON.stringify({ ok: true, matches, needsChoice: matches.length > 1 });
 }
-
-export async function prepareVisitorCheckOut(input: unknown): Promise<string> {
-  const found = JSON.parse(await findActiveVisitors(input)) as {
-    matches: Array<{ id: number }>;
-    needsChoice: boolean;
+export async function prepareVisitorCheckOut(
+  input: unknown,
+  session?: SessionPayload,
+): Promise<string> {
+  const found = JSON.parse(await findActiveVisitors(input, session)) as {
+    error?: string;
+    matches?: unknown[];
+    needsChoice?: boolean;
   };
+  if (found.error || !found.matches) return JSON.stringify(found);
   return JSON.stringify({
     ok: found.matches.length > 0,
     action: "prepare_visitor_check_out",
     matches: found.matches,
     needsChoice: found.needsChoice,
-    missing: found.matches.length === 0 ? ["visit"] : [],
+    missing: found.matches.length ? [] : ["visit"],
   });
 }
-
-export async function confirmVisitorCheckOut(input: unknown, session: SessionPayload): Promise<string> {
-  const args = (input ?? {}) as Record<string, unknown>;
-  const cached = reuse(session, typeof args.idempotencyKey === "string" ? args.idempotencyKey : undefined);
-  if (cached) return cached;
-  if (args.confirmed !== true) return confirmationErr("Confirm visitor check-out before I commit it.");
-  if (typeof args.visitId !== "number") return err("Missing visitId.");
-  const [updated] = await db
-    .update(siteVisitsTable)
-    .set({
-      checkOutTime: new Date(),
-      checkOutNotes: typeof args.notes === "string" ? args.notes : null,
-      checkOutLatitude: typeof args.latitude === "number" ? args.latitude : null,
-      checkOutLongitude: typeof args.longitude === "number" ? args.longitude : null,
-    })
-    .where(and(eq(siteVisitsTable.id, args.visitId), isNull(siteVisitsTable.checkOutTime)))
-    .returning({ id: siteVisitsTable.id });
-  if (!updated) return err("No matching active visit.");
-  return remember(session, typeof args.idempotencyKey === "string" ? args.idempotencyKey : undefined, {
-    ok: true,
-    visitId: updated.id,
-    refresh: ["gate", "visits"],
-  });
+export async function confirmVisitorCheckOut(
+  input: unknown,
+  session: SessionPayload,
+): Promise<string> {
+  if (!gatekeeper(session))
+    return err("Visitor check-out requires your assigned Gatekeeper account.");
+  const args = argsOf(input);
+  const guard = writeGuard(args, true);
+  if (guard) return guard;
+  if (!positiveId(args.visitId)) return err("A valid visitId is required.");
+  const result = (await callNaturalVoiceDomainApi(
+    `/visits/gate/${args.visitId}/check-out`,
+    "POST",
+    args,
+    session,
+  )) as Record<string, unknown>;
+  return JSON.stringify(
+    result.error
+      ? result
+      : { ok: true, visitId: result.id, refresh: ["gate", "visits"] },
+  );
 }
-
-async function canMutateTicket(ticketId: number, session: SessionPayload): Promise<boolean> {
-  const ticket = await loadFieldTicketAccessRow(ticketId);
-  if (!ticket) return false;
-  if (session.role === "admin") return true;
-  if (session.role === "vendor" && session.vendorId != null && session.vendorId === ticket.vendorId) {
-    return true;
-  }
-  if (session.role === "field_employee" && session.userId) {
-    const [employee] = await db
-      .select({
-        id: vendorPeopleTable.id,
-        vendorId: vendorPeopleTable.vendorId,
-        userId: vendorPeopleTable.userId,
-      })
-      .from(vendorPeopleTable)
-      .where(
-        and(
-          eq(vendorPeopleTable.userId, session.userId),
-          isNull(vendorPeopleTable.deletedAt),
-        ),
-      )
-      .limit(1);
-    if (!employee?.userId) return false;
-    return fieldEmployeeCanAccessTicket(ticketId, { ...employee, userId: employee.userId }, ticket);
-  }
-  return false;
+export async function setTicketLifecycle(
+  input: unknown,
+  session: SessionPayload,
+): Promise<string> {
+  const args = argsOf(input);
+  const guard = writeGuard(args, false);
+  if (guard) return guard;
+  if (
+    !session.userId ||
+    !["admin", "vendor", "field_employee"].includes(session.role ?? "")
+  )
+    return err("You cannot update tickets.");
+  if (!positiveId(args.ticketId)) return err("A valid ticketId is required.");
+  const endpoints: Record<string, string> = {
+    en_route: "en-route",
+    on_location: "on-location",
+    on_site: "check-in",
+    work_complete: "check-out",
+    off_site: "check-out",
+  };
+  const endpoint =
+    typeof args.phase === "string" ? endpoints[args.phase] : undefined;
+  if (!endpoint) return err("Unknown lifecycle phase.");
+  const result = (await callNaturalVoiceDomainApi(
+    `/tickets/${args.ticketId}/${endpoint}`,
+    "POST",
+    {
+      ...args,
+      ...(endpoint === "check-out" ? { workCompleted: true } : {}),
+    },
+    session,
+  )) as Record<string, unknown>;
+  return JSON.stringify(
+    result.error
+      ? result
+      : { ok: true, ticketId: args.ticketId, refresh: ["tickets", "crew-map"] },
+  );
 }
-
-const LIFECYCLE_TO_STATE: Record<string, string> = {
-  en_route: "en_route",
-  on_location: "on_location",
-  on_site: "on_site",
-  work_complete: "off_site",
-  off_site: "off_site",
-};
-
-export async function setTicketLifecycle(input: unknown, session: SessionPayload): Promise<string> {
-  const args = (input ?? {}) as Record<string, unknown>;
-  const cached = reuse(session, typeof args.idempotencyKey === "string" ? args.idempotencyKey : undefined);
-  if (cached) return cached;
-  if (typeof args.ticketId !== "number" || typeof args.phase !== "string") {
-    return err("ticketId and phase are required.");
-  }
-  const lifecycleState = LIFECYCLE_TO_STATE[args.phase];
-  if (!lifecycleState) return err("Unknown lifecycle phase.");
-  if (!(await canMutateTicket(args.ticketId, session))) {
-    return err("You cannot update this ticket.");
-  }
-  const [updated] = await db
-    .update(ticketsTable)
-    .set({
-      lifecycleState,
-      ...(args.phase === "en_route" ? { enRouteAt: new Date() } : {}),
-      ...(args.phase === "on_location" ? { arrivedAt: new Date() } : {}),
-      ...(args.phase === "on_site" ? { checkInTime: new Date(), status: "in_progress" } : {}),
-      ...(args.phase === "off_site" || args.phase === "work_complete"
-        ? { checkOutTime: new Date(), lifecycleState: "off_site" }
-        : {}),
-    })
-    .where(eq(ticketsTable.id, args.ticketId))
-    .returning({ id: ticketsTable.id, lifecycleState: ticketsTable.lifecycleState });
-  if (!updated) return err("Ticket not found.");
-  return remember(session, typeof args.idempotencyKey === "string" ? args.idempotencyKey : undefined, {
-    ok: true,
-    ticketId: updated.id,
-    lifecycleState: updated.lifecycleState,
-  });
+export async function closeTicketForReview(
+  input: unknown,
+  session: SessionPayload,
+): Promise<string> {
+  const args = argsOf(input);
+  const guard = writeGuard(args, true);
+  if (guard) return guard;
+  if (
+    !session.userId ||
+    !["admin", "vendor", "field_employee"].includes(session.role ?? "")
+  )
+    return err("You cannot close tickets.");
+  if (!positiveId(args.ticketId)) return err("A valid ticketId is required.");
+  const current = (await callNaturalVoiceDomainApi(
+    `/tickets/${args.ticketId}`,
+    "GET",
+    {},
+    session,
+  )) as Record<string, unknown>;
+  if (current.error) return JSON.stringify(current);
+  const status =
+    current.status ??
+    (current.ticket as Record<string, unknown> | undefined)?.status;
+  if (typeof status !== "string")
+    return err("The current ticket state could not be verified.");
+  const submit = ["completed", "pending_review", "kicked_back"].includes(
+    status,
+  );
+  const result = (await callNaturalVoiceDomainApi(
+    `/tickets/${args.ticketId}/${submit ? "submit" : "check-out"}`,
+    "POST",
+    { ...args, workCompleted: false },
+    session,
+  )) as Record<string, unknown>;
+  return JSON.stringify(
+    result.error
+      ? result
+      : {
+          ok: true,
+          ticketId: args.ticketId,
+          status: submit ? "submitted" : "pending_review",
+          refresh: ["tickets", "crew-map"],
+        },
+  );
 }
-
-export async function closeTicketForReview(input: unknown, session: SessionPayload): Promise<string> {
-  const args = (input ?? {}) as Record<string, unknown>;
-  const cached = reuse(session, typeof args.idempotencyKey === "string" ? args.idempotencyKey : undefined);
-  if (cached) return cached;
-  if (args.confirmed !== true) return confirmationErr("Confirm closing this ticket for review.");
-  if (typeof args.ticketId !== "number") return err("Missing ticketId.");
-  if (!(await canMutateTicket(args.ticketId, session))) {
-    return err("You cannot close this ticket.");
-  }
-  const [updated] = await db
-    .update(ticketsTable)
-    .set({
-      status: "pending_review",
-      lifecycleState: "off_site",
-      closedAt: new Date(),
-    })
-    .where(eq(ticketsTable.id, args.ticketId))
-    .returning({ id: ticketsTable.id, status: ticketsTable.status });
-  if (!updated) return err("Ticket not found.");
-  return remember(session, typeof args.idempotencyKey === "string" ? args.idempotencyKey : undefined, {
-    ok: true,
-    ticketId: updated.id,
-    status: updated.status,
-  });
-}
-
 export async function draftSafetyReport(input: unknown): Promise<string> {
-  const args = (input ?? {}) as Record<string, unknown>;
+  const args = argsOf(input);
   const missing: string[] = [];
-  if (!String(args.title ?? "").trim()) missing.push("title");
-  if (typeof args.siteLocationId !== "number") missing.push("siteLocationId");
-  if (!String(args.eventType ?? "").trim()) missing.push("eventType");
+  if (typeof args.title !== "string" || !args.title.trim())
+    missing.push("title");
+  if (!positiveId(args.siteLocationId)) missing.push("siteLocationId");
+  if (
+    ![
+      "near_miss",
+      "unsafe_condition",
+      "unsafe_act",
+      "injury",
+      "property_damage",
+      "observation",
+    ].includes(String(args.eventType))
+  )
+    missing.push("eventType");
+  const draft = Object.fromEntries(
+    ["title", "description", "eventType", "siteLocationId", "ticketId"]
+      .filter((key) => args[key] != null)
+      .map((key) => [key, args[key]]),
+  );
+  const query = new URLSearchParams();
+  if (positiveId(args.siteLocationId))
+    query.set("siteLocationId", String(args.siteLocationId));
+  if (positiveId(args.ticketId)) query.set("ticketId", String(args.ticketId));
   return JSON.stringify({
     ok: missing.length === 0,
     action: "draft_safety_report",
     submitted: false,
     missing,
-    draft: args,
+    draft,
+    ...(missing.length === 0
+      ? {
+          execution: "client",
+          intent: {
+            name: "prefill_draft",
+            arguments: {
+              form: "safety-report",
+              values: JSON.stringify(draft),
+              path: `/safety-report?${query}`,
+            },
+          },
+        }
+      : {}),
   });
 }

@@ -12,6 +12,7 @@ import { TICKET_STATUS_PILL_ASPECT } from "@/lib/ticket-status-palette";
 import { cn } from "@/lib/utils";
 import lightGreySquareSrc from "@assets/900x229_Light-grey_v2r_square_1778256462232.png";
 import AskVStatusIndicator from "@/components/askv-status-indicator";
+import { askVMicrophone } from '@workspace/askv-wake';
 import { useAskVVoiceSession } from "@/hooks/use-askv-voice-session";
 import { writeAskVAcrossVndrly } from "@/lib/askv-voice-preferences";
 import { useAuth } from "@/hooks/use-auth";
@@ -263,11 +264,12 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
   const { user } = useAuth();
   const voiceSession = useAskVVoiceSession();
   const brand = useBrand();
+  const [location] = useLocation();
   useEffect(() => {
     if (!open || tokenMode || signupMode || voiceSession.muted) return;
     void voiceSession.startConversation("open AskV", location);
-  }, [open, tokenMode, signupMode, voiceSession.muted, location, voiceSession.startConversation]);
-  const [location] = useLocation();
+    return () => voiceSession.closePanel();
+  }, [open, tokenMode, signupMode, voiceSession.muted, voiceSession.startConversation, voiceSession.closePanel]);
   const sendHoverPillSrc = brandImagePillSrc(brand.primary, brand.name);
   const pageContext = useMemo(
     () => (tokenMode || signupMode ? undefined : parseAssistantPageContext(location)),
@@ -304,24 +306,22 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
     if (tokenMode || signupMode || textOnly) return;
     speakAskV(text);
   }, [textOnly, tokenMode, signupMode]);
+  const legacyAssistant = useAssistant({ tokenMode, signupMode: effectiveSignupMode, pageContext, onAssistantReply: handleAssistantReply });
+  const sharedAssistant = !tokenMode && !signupMode ? voiceSession.assistant : undefined;
   const {
     messages,
     streaming,
     activeTool,
     error,
-    send,
+    send: legacySend,
     clear,
     startNew,
     loadLatest,
     resetRestoreGuard,
     adoptSignupHistory,
     submitFeedback,
-  } = useAssistant({
-    tokenMode,
-    signupMode: effectiveSignupMode,
-    pageContext,
-    onAssistantReply: handleAssistantReply,
-  });
+  } = sharedAssistant ?? legacyAssistant;
+  const send = sharedAssistant ? voiceSession.sendText : legacySend;
   const [input, setInput] = useState("");
   const [feedbackPendingId, setFeedbackPendingId] = useState<number | null>(null);
   const [assistantShare, setAssistantShare] = useState<AssistantShareContext | null>(null);
@@ -344,6 +344,8 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
   const voiceChunksRef = useRef<Blob[]>([]);
   const voiceStartedAtRef = useRef(0);
   const voiceCancelledRef = useRef(false);
+  const microphoneReleaseRef = useRef<(() => Promise<void>) | null>(null);
+  const recordingGeneration = useRef(0);
 
   useEffect(() => {
     if (askVUserId == null) {
@@ -376,7 +378,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
   // Effect deis are intentionally just `open` so messages.length /
   // streaming churn never retriggers the restore mid-conversation.
   useEffect(() => {
-    if (!open) return;
+    if (!open || (sharedAssistant && !voiceSession.muted)) return;
     void loadLatest();
     return () => {
       resetRestoreGuard();
@@ -525,6 +527,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
     voiceStreamRef.current?.getTracks().forEach((track) => track.stop());
     voiceStreamRef.current = null;
     voiceRecorderRef.current = null;
+    const release = microphoneReleaseRef.current; microphoneReleaseRef.current = null; void release?.();
   }, []);
 
   const finishVoiceRecording = useCallback(
@@ -591,8 +594,18 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
     voiceCancelledRef.current = false;
     voiceChunksRef.current = [];
 
+    const attempt = ++recordingGeneration.current;
     try {
+      microphoneReleaseRef.current = await askVMicrophone.acquire('ptt', async () => {
+        recordingGeneration.current++; voiceCancelledRef.current = true;
+        const active = voiceRecorderRef.current;
+        if (active && active.state !== 'inactive') active.stop();
+        voiceStreamRef.current?.getTracks().forEach(track => track.stop());
+        setVoiceRecording(false);
+      });
+      if (attempt !== recordingGeneration.current) { cleanupVoiceStream(); return; }
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      if (attempt !== recordingGeneration.current || voiceCancelledRef.current) { stream.getTracks().forEach(track => track.stop()); cleanupVoiceStream(); return; }
       const mimeType = pickAskVRecordingMimeType();
       const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
       voiceStreamRef.current = stream;
@@ -643,6 +656,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
   }, []);
 
   const cancelVoiceRecording = useCallback(() => {
+    recordingGeneration.current++;
     voiceCancelledRef.current = true;
     const recorder = voiceRecorderRef.current;
     if (recorder && recorder.state !== "inactive") {
@@ -673,18 +687,21 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
   };
 
   const handleStartNew = () => {
+    voiceSession.stop();
     cancelVoiceRecording();
     stopAskVSpeech();
     startNew();
   };
 
   const handleClear = () => {
+    voiceSession.stop();
     cancelVoiceRecording();
     stopAskVSpeech();
     clear();
   };
 
   const handleClose = () => {
+    voiceSession.closePanel();
     cancelVoiceRecording();
     stopAskVSpeech();
     onOpenChange(false);
@@ -796,7 +813,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
     });
 
   const showMessageFeedback = !tokenMode && !signupMode;
-  const showVoiceInput = !tokenMode && !signupMode && !textOnly;
+  const showVoiceInput = !tokenMode && !signupMode && !voiceSession.muted && (sharedAssistant ? voiceSession.state === "error" : !textOnly);
   const panelError = voiceError ?? error;
 
   useEffect(() => {
@@ -917,18 +934,10 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
                 <HeaderIconButton
                   onClick={() => writeAskVAcrossVndrly(askVUserId, !voiceSession.acrossVndrly)}
                   testId="assistant-across-vndrly"
-                  title={voiceSession.acrossVndrly ? "AskV across VNDRLY is on" : "AskV across VNDRLY is off"}
+                  title={voiceSession.acrossVndrly ? "Across VNDRLY is on: listen locally for AskV while the app is open" : "Enable AskV across VNDRLY: listen locally for AskV while the app is open"}
                   pressed={voiceSession.acrossVndrly}
                 >
                   <Sparkles className="w-4 h-4" />
-                </HeaderIconButton>
-                <HeaderIconButton
-                  onClick={handleToggleTextOnly}
-                  testId="assistant-text-only"
-                  title={textOnly ? "Text only is on" : "Voice responses are on"}
-                  pressed={textOnly}
-                >
-                  {textOnly ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
                 </HeaderIconButton>
               </>
             )}
@@ -944,6 +953,9 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
 
         {progress && (
           <OnboardingMiniStepper progress={progress} />
+        )}
+        {!tokenMode && !signupMode && voiceSession.error && (
+          <p role="status" className="px-4 py-2 text-sm text-destructive">{voiceSession.error}</p>
         )}
 
         {pendingSignup && (

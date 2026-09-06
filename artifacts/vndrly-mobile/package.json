@@ -20,9 +20,12 @@
     "eas:submit:android": "eas submit --platform android --latest",
     "eas:update": "powershell -ExecutionPolicy Bypass -File ../../scripts/mobile-ota-update.ps1 -Channel production -NonInteractive",
     "eas:update:preview": "powershell -ExecutionPolicy Bypass -File ../../scripts/mobile-ota-update.ps1 -Channel preview -NonInteractive",
-    "release-impact": "node ../../scripts/mobile-release-impact.mjs"
+    "release-impact": "node ../../scripts/mobile-release-impact.mjs",
+    "prepare:askv:ios": "node ../../scripts/prepare-askv-ios.mjs",
+    "check:askv:ios": "node ../../scripts/prepare-askv-ios.mjs --check"
   },
   "devDependencies": {
+    "@workspace/askv-wake": "workspace:*",
     "@babel/core": "^7.25.2",
     "@expo-google-fonts/inter": "^0.4.0",
     "@expo/cli": "54.0.23",

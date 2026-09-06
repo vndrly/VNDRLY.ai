@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { getApiBase } from "@/lib/api";
 import { getToken, setToken, setUser } from "@/lib/auth";
+import type { AskVClientIntent, AskVClientResult } from "@/lib/askv-client-tools";
 import {
   readAssistantErrorMessage,
   readAssistantStreamResponse,
@@ -63,11 +64,16 @@ async function assistantFetch(
 export interface UseAssistantOptions {
   /** Called when a streamed assistant reply finishes (for TTS). */
   onAssistantReply?: (text: string) => void;
+  onClientIntent?: (intent: AskVClientIntent) => Promise<AskVClientResult>;
+  onMutation?: () => void;
 }
 
 export function useAssistant(opts: UseAssistantOptions = {}) {
   const onAssistantReplyRef = useRef(opts.onAssistantReply);
   onAssistantReplyRef.current = opts.onAssistantReply;
+  const onClientIntentRef = useRef(opts.onClientIntent);
+  onClientIntentRef.current = opts.onClientIntent;
+  const onMutationRef = useRef(opts.onMutation); onMutationRef.current = opts.onMutation;
   const [conversationId, setConversationId] = useState<number | null>(null);
   const [messages, setMessages] = useState<AssistantMessage[]>([]);
   const [streaming, setStreaming] = useState(false);
@@ -79,6 +85,25 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
   const restoreVersionRef = useRef(0);
   const streamingRef = useRef(false);
   const conversationIdRef = useRef<number | null>(null);
+
+  const restoreConversation = useCallback((id: number, restored: AssistantMessage[]) => {
+    restoreVersionRef.current += 1;
+    hasRestoredRef.current = true;
+    conversationIdRef.current = id;
+    setConversationId(id);
+    setMessages(restored);
+  }, []);
+
+  const upsertMessage = useCallback((message: AssistantMessage) => {
+    hasRestoredRef.current = true;
+    setMessages(previous => {
+      const index = previous.findIndex(item => item.id === message.id);
+      if (index < 0) return [...previous, message];
+      return previous.map((item, i) => i === index ? { ...item, ...message } : item);
+    });
+  }, []);
+
+  const getConversationId = useCallback(() => conversationIdRef.current, []);
 
   useEffect(() => {
     conversationIdRef.current = conversationId;
@@ -163,6 +188,7 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
       if (!trimmed || streamingRef.current) return;
 
       restoreVersionRef.current += 1;
+      const sendVersion = restoreVersionRef.current;
       hasRestoredRef.current = true;
       setError(null);
 
@@ -202,6 +228,7 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
           );
 
         let res = await postChat(conversationIdRef.current);
+        if (ac.signal.aborted || sendVersion !== restoreVersionRef.current) return;
         if (res.status === 404 && conversationIdRef.current !== null) {
           conversationIdRef.current = null;
           setConversationId(null);
@@ -231,8 +258,11 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
         let sawDone = false;
         let sawError = false;
         let accumulatedContent = "";
+        let completedText = "";
+        const clientIntents: Promise<AskVClientResult>[] = [];
 
         const streamResult = await readAssistantStreamResponse(res, ac.signal, (evt) => {
+          if (ac.signal.aborted || sendVersion !== restoreVersionRef.current) return;
           if (evt.type === "token") {
             accumulatedContent += evt.delta;
             setMessages((prev) =>
@@ -244,6 +274,11 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
             );
           } else if (evt.type === "tool") {
             setActiveTool(evt.status === "start" ? evt.name : null);
+          } else if (evt.type === "client_intent") {
+            const execute = onClientIntentRef.current;
+            clientIntents.push(execute ? execute(evt.intent) : Promise.resolve({ ok: false, message: "This device cannot open that workflow." }));
+          } else if (evt.type === "mutation") {
+            onMutationRef.current?.();
           } else if (evt.type === "done") {
             sawDone = true;
             accumulatedContent = evt.content || accumulatedContent;
@@ -261,8 +296,7 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
               ),
             );
             setActiveTool(null);
-            const spoken = (evt.content || accumulatedContent).trim();
-            if (spoken) onAssistantReplyRef.current?.(spoken);
+            completedText = (evt.content || accumulatedContent).trim();
           } else if (evt.type === "error") {
             sawError = true;
             setError(evt.message);
@@ -272,6 +306,15 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
             setActiveTool(null);
           }
         });
+
+        const clientResults = await Promise.all(clientIntents);
+        if (ac.signal.aborted || sendVersion !== restoreVersionRef.current) return;
+        if (clientResults.length) {
+          completedText = clientResults.map(result => result.message).join(" ");
+          setMessages(previous => previous.map(message => message.id === assistantId || message === previous[previous.length - 1]
+            ? { ...message, content: completedText, pending: false } : message));
+        }
+        if (completedText && sawDone && !sawError) onAssistantReplyRef.current?.(completedText);
 
         if (!sawDone && !sawError && !streamResult.receivedDone && !streamResult.receivedError) {
           setMessages((prev) =>
@@ -295,6 +338,7 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
           prev.map((m) => (m.id === assistantId ? { ...m, pending: false } : m)),
         );
       } finally {
+        if (abortRef.current !== ac) return;
         setStreaming(false);
         streamingRef.current = false;
         setActiveTool(null);
@@ -338,5 +382,8 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
     startNew,
     loadLatest,
     submitFeedback,
+    getConversationId,
+    restoreConversation,
+    upsertMessage,
   };
 }

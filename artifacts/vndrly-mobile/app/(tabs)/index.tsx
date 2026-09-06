@@ -36,6 +36,7 @@ import { useBrand } from "@/hooks/use-brand";
 import { useColors } from "@/hooks/useColors";
 import { useTicketsRateLimitGate } from "@/hooks/use-tickets-rate-limit-gate";
 import { apiFetch } from "@/lib/api";
+import { subscribeAskVDataChanged } from "@/lib/askv-client-tools";
 import { type MobileOpenTicket, type PortalTicketRow, fetchPortalTicketsForHome, mapPortalTicket } from "@/lib/portal-tickets";
 import {
   isFieldEmployeeUser,
@@ -131,6 +132,7 @@ export default function HomeScreen() {
   const loadRef = React.useRef<
     (opts?: { silent?: boolean }) => Promise<boolean>
   >(() => Promise.resolve(false));
+  useEffect(() => subscribeAskVDataChanged(() => { void loadRef.current({ silent: true }); }), []);
   const LOAD_RETRY_DELAYS_MS = [2000, 5000, 12000] as const;
   // Direct Partner→Vendor work offers (Task: direct assignments). Vendor
   // admins / vendor field employees who own a vendor org membership see a

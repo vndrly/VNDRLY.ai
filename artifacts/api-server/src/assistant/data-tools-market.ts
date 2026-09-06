@@ -13,7 +13,8 @@ import {
   isFinnhubConfigured,
 } from "../lib/market-data/finnhub";
 
-export const MARKET_DATA_TOOL_NAMES = ["get_stock_quote", "get_crude_oil_price"] as const;
+import { MARKET_DATA_TOOL_NAMES } from "./tool-names";
+export { MARKET_DATA_TOOL_NAMES } from "./tool-names";
 
 export type MarketDataToolName = (typeof MARKET_DATA_TOOL_NAMES)[number];
 

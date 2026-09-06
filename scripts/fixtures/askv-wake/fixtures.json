@@ -1,0 +1,58 @@
+[
+  {
+    "voice": "Microsoft David Desktop",
+    "file": "ask-v-david.wav",
+    "text": "Ask V.",
+    "shouldWake": true,
+    "sha256": "6c684e2037c905590c6d71cf0aa5f82f4105044b6e2ef9f437542e6dcf6f47a6"
+  },
+  {
+    "voice": "Microsoft David Desktop",
+    "file": "ask-v-request-david.wav",
+    "text": "Ask V, show me my tickets.",
+    "shouldWake": true,
+    "sha256": "54ccd572b168b67a92d70de375304281a526b5002e041ae8cb4942de640a7d46"
+  },
+  {
+    "voice": "Microsoft David Desktop",
+    "file": "v-only-david.wav",
+    "text": "V.",
+    "shouldWake": false,
+    "sha256": "e256bdac58c0581be92c6c96a8c049c28cf7cdcb7fccc1c1f6f30fd95a9c09f1"
+  },
+  {
+    "voice": "Microsoft David Desktop",
+    "file": "unrelated-david.wav",
+    "text": "The crew is on location and the ticket is ready.",
+    "shouldWake": false,
+    "sha256": "160a3555094951be448efed65456328558e734a77dd25c4629ab03969fcf866f"
+  },
+  {
+    "voice": "Microsoft Zira Desktop",
+    "file": "ask-v-zira.wav",
+    "text": "Ask V.",
+    "shouldWake": true,
+    "sha256": "155e15d78cdf3bc2efac1e328e2b95443779b1e9ce48605a625cd5f7b06cf50d"
+  },
+  {
+    "voice": "Microsoft Zira Desktop",
+    "file": "ask-v-request-zira.wav",
+    "text": "Ask V, show me my tickets.",
+    "shouldWake": true,
+    "sha256": "b14aedd863b510d630ef3cece439dd049a22386c3586dcb19c357cfed3bbba2f"
+  },
+  {
+    "voice": "Microsoft Zira Desktop",
+    "file": "v-only-zira.wav",
+    "text": "V.",
+    "shouldWake": false,
+    "sha256": "6321963a6c4a5256fa7f523d7da9270c69ab67e50a4eee3507cf681bda86beff"
+  },
+  {
+    "voice": "Microsoft Zira Desktop",
+    "file": "unrelated-zira.wav",
+    "text": "The crew is on location and the ticket is ready.",
+    "shouldWake": false,
+    "sha256": "b7ad38e1b538ff1b72dd4bb95c173b0da44f850d38e91616796f49af9ad40f35"
+  }
+]

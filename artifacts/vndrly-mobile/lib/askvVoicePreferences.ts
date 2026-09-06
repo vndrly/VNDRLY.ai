@@ -11,24 +11,29 @@ export function askvTextOnlyKey(userId: number): string {
 }
 
 async function getItem(key: string): Promise<string | null> {
-  if (Platform.OS === "web") return memoryStore[key] ?? null;
-  return SecureStore.getItemAsync(key);
+  if (Platform.OS === "web") {
+    try { return globalThis.localStorage?.getItem(key) ?? memoryStore[key] ?? null; }
+    catch { return memoryStore[key] ?? null; }
+  }
+  return SecureStore.getItemAsync(key.replace(/:/g, "."));
 }
 
 async function setItem(key: string, value: string): Promise<void> {
   if (Platform.OS === "web") {
+    try { globalThis.localStorage?.setItem(key, value); } catch { /* Memory fallback for restricted storage. */ }
     memoryStore[key] = value;
     return;
   }
-  await SecureStore.setItemAsync(key, value);
+  await SecureStore.setItemAsync(key.replace(/:/g, "."), value);
 }
 
 async function removeItem(key: string): Promise<void> {
   if (Platform.OS === "web") {
+    try { globalThis.localStorage?.removeItem(key); } catch { /* Memory fallback for restricted storage. */ }
     delete memoryStore[key];
     return;
   }
-  await SecureStore.deleteItemAsync(key);
+  await SecureStore.deleteItemAsync(key.replace(/:/g, "."));
 }
 
 export async function readAskVTextOnly(userId: number): Promise<boolean> {

@@ -35,16 +35,18 @@ function readFlag(prefix: string, userId: number): boolean {
 function writeFlag(prefix: string, eventName: string, userId: number, enabled: boolean): void {
   try {
     const key = `${prefix}:${userId}`;
-    if (enabled) window.localStorage.setItem(key, "1");
-    else window.localStorage.removeItem(key);
-    window.dispatchEvent(new CustomEvent(eventName, { detail: { userId, enabled } }));
+    window.localStorage.setItem(key, enabled ? "1" : "0");
   } catch {
     // Preference persistence is best-effort.
   }
+  window.dispatchEvent(new CustomEvent(eventName, { detail: { userId, enabled } }));
 }
 
 export function readAskVMuted(userId: number): boolean {
-  return readFlag(MUTE_PREFIX, userId);
+  try {
+    const saved = window.localStorage.getItem(`${MUTE_PREFIX}:${userId}`);
+    return saved === null ? readAskVTextOnly(userId) : saved === "1";
+  } catch { return false; }
 }
 
 export function writeAskVMuted(userId: number, enabled: boolean): void {

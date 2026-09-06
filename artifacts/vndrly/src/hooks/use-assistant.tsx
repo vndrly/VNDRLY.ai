@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { applyAskVClientIntent, type AskVClientIntent } from '@/lib/askv-client-intents';
 import {
   type AskVLocationContext,
   readAskVCurrentLocationForMessage,
@@ -556,7 +557,34 @@ export function useAssistant(opts: AssistantOptions = {}) {
     [stateless],
   );
 
+  const prepareVoiceConversation = useCallback(async (signal: AbortSignal) => {
+    abortRef.current?.abort();
+    restoreVersionRef.current += 1;
+    hasRestoredRef.current = true;
+    setStreaming(false);
+    const response = await fetch(`${BASE}/api/assistant/voice/conversation`, {
+      method: "POST", credentials: "include", signal,
+      headers: { "Content-Type": "application/json" }, body: JSON.stringify({ conversationId }),
+    });
+    if (!response.ok) throw new Error("Could not restore your conversation.");
+    const result = await response.json() as { conversationId: number; messages: Array<{ id: number; role: "user" | "assistant"; content: string }> };
+    if (signal.aborted) throw new DOMException("Cancelled", "AbortError");
+    setConversationId(result.conversationId);
+    setMessages(result.messages.map(message => ({ ...message, id: `db-${message.id}`, serverId: message.id })));
+    return result;
+  }, [conversationId]);
+
+  const appendVoiceTranscript = useCallback((message: { eventId: string; role: "user" | "assistant"; content: string }, serverId?: number) => {
+    setMessages(previous => {
+      const existing = previous.find(item => item.id === message.eventId);
+      if (existing) return previous.map(item => item.id === message.eventId ? { ...item, serverId: serverId ?? item.serverId } : item);
+      return [...previous, { id: message.eventId, role: message.role, content: message.content, serverId }];
+    });
+  }, []);
+
   return {
+    prepareVoiceConversation,
+    appendVoiceTranscript,
     conversationId,
     messages,
     streaming,
@@ -611,7 +639,14 @@ async function consumeSse(
       } catch {
         continue;
       }
-      if (eventName === "token") onEvent({ type: "token", delta: (parsed as { delta: string }).delta });
+      if (eventName === 'mutation') {
+        window.dispatchEvent(new Event('askv:data-changed'));
+      }
+      else if (eventName === 'client_intent') {
+        const intent = (parsed as { intent?: AskVClientIntent }).intent;
+        if (intent?.name) applyAskVClientIntent(intent);
+      }
+      else if (eventName === "token") onEvent({ type: "token", delta: (parsed as { delta: string }).delta });
       else if (eventName === "tool") onEvent({ type: "tool", ...(parsed as { name: string; status: "start" | "end" }) });
       else if (eventName === "done") {
         const payload = parsed as { content: string; assistantMessageId?: number };

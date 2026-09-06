@@ -1,0 +1,76 @@
+// Pure catalog shared by execution modules and contract tests. No service initialization.
+export const EXT_DATA_TOOL_NAMES = [
+  "query_ticket_detail",
+  "query_ticket_proof_packet",
+  "query_ticket_crew",
+  "query_ticket_labor",
+  "query_ticket_notes",
+  "query_work_type_history",
+  "query_invoices",
+  "query_invoice_lines",
+  "query_ar_aging",
+  "query_revenue_summary",
+  "query_crew_cost",
+  "query_1099_k_summary",
+  "query_1099_misc_summary",
+] as const;
+
+export const OPS_DATA_TOOL_NAMES = [
+  "query_safety_events",
+  "lookup_safety_metrics",
+  "lookup_site_operational_status",
+  "query_site_locations",
+  "lookup_site_detail",
+  "query_notifications",
+  "query_attention_briefing",
+  "query_live_crew",
+  "lookup_crew_member_status",
+  "query_crew_eta",
+  "query_crew_route_summary",
+  "lookup_map_origin",
+  "query_ticket_logged_miles",
+  "query_ticket_route_eta",
+  "query_ticket_mileage_audit",
+  "estimate_driving_route",
+  "query_hotlist_jobs",
+  "query_hotlist_bids",
+  "query_vendor_catalog",
+  "query_partner_approvals",
+  "query_certifications",
+  "lookup_org_contacts",
+  "query_flagged_tickets",
+  "lookup_ticket_payment_status",
+  "lookup_accounting_connection",
+  "query_active_visitors",
+] as const;
+
+export const MARKET_DATA_TOOL_NAMES = ["get_stock_quote", "get_crude_oil_price"] as const;
+
+export const DATA_TOOL_NAMES = [
+  "query_tickets",
+  "query_gps_trail",
+  "query_vendor_performance",
+  "query_visits",
+  "query_field_metrics",
+  "query_invoice_summary",
+  "query_sales_tax_by_state",
+  "query_nec1099_summary",
+  ...EXT_DATA_TOOL_NAMES,
+  ...OPS_DATA_TOOL_NAMES,
+  ...MARKET_DATA_TOOL_NAMES,
+] as const;
+
+export const WRITE_TOOL_NAMES = [
+  "mark_notifications_read",
+  "schedule_ticket_crew",
+  "set_ticket_flag",
+  "post_ticket_comment",
+  "prepare_visitor_check_in",
+  "confirm_visitor_check_in",
+  "find_active_visitors",
+  "prepare_visitor_check_out",
+  "confirm_visitor_check_out",
+  "set_ticket_lifecycle",
+  "close_ticket_for_review",
+  "draft_safety_report",
+] as const;

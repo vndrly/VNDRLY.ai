@@ -1,171 +1,166 @@
-const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
-
-export interface AskVRealtimeToolCall {
-  name: string;
-  arguments: unknown;
-  callId: string;
-}
-
+import { askVMicrophone, encodePcm16Base64, PcmResampler, type WakeAudioSource } from '@workspace/askv-wake';
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
+export interface AskVRealtimeToolCall { name: string; arguments: unknown; callId: string }
+export interface VoiceTranscript { eventId: string; role: 'user' | 'assistant'; content: string }
 export interface AskVRealtimeClient {
-  connect(): Promise<void>;
-  close(): void;
-  interrupt(): void;
+  connect(): Promise<void>; close(): void; interrupt(): void; sendText(text: string): void;
   setMicEnabled(enabled: boolean): void;
+  applyToolContext(payload: { tools?: unknown[]; context?: unknown }): void;
   updateContext(context: { path?: string; entityId?: number | null; org?: string | null; location?: string | null }): void;
 }
-
-function parseEvent(data: string): Record<string, unknown> | null {
-  try {
-    return JSON.parse(data) as Record<string, unknown>;
-  } catch {
-    return null;
-  }
-}
-
-function parseArguments(value: unknown): unknown {
-  if (typeof value !== "string") return value ?? {};
-  try {
-    return JSON.parse(value);
-  } catch {
-    return {};
-  }
-}
-
-function maybeFunctionCall(payload: Record<string, unknown>): AskVRealtimeToolCall | null {
-  if (payload.type === "response.function_call_arguments.done") {
-    const name = typeof payload.name === "string" ? payload.name : "";
-    const callId = typeof payload.call_id === "string" ? payload.call_id : "";
-    if (!name || !callId) return null;
-    return {
-      name,
-      callId,
-      arguments: parseArguments(payload.arguments),
-    };
-  }
-
-  if (payload.type === "response.output_item.done") {
-    const item = payload.item as Record<string, unknown> | undefined;
-    if (item?.type !== "function_call") return null;
-    const name = typeof item.name === "string" ? item.name : "";
-    const callId = typeof item.call_id === "string" ? item.call_id : "";
-    if (!name || !callId) return null;
-    return {
-      name,
-      callId,
-      arguments: parseArguments(item.arguments),
-    };
-  }
-
-  return null;
-}
-
-export async function createAskVRealtimeClient(args: {
-  seedMessage?: string;
-  path?: string;
-  entityId?: number | null;
+export interface RealtimeClientOptions {
+  seedMessage?: string; path?: string; entityId?: number | null;
+  sessionId?: string; conversationId?: number; signal?: AbortSignal;
+  greeting?: string; history?: Array<{ role: 'user' | 'assistant'; content: string }>;
+  audioSource?: WakeAudioSource;
   onToolCall: (call: AskVRealtimeToolCall) => Promise<string>;
-  onDone?: () => void;
-  onSpeechStarted?: () => void;
-  onSpeechStopped?: () => void;
-  onAudio?: () => void;
-  onError?: (message: string) => void;
-}): Promise<AskVRealtimeClient> {
-  const pc = new RTCPeerConnection();
-  const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-  stream.getTracks().forEach((track) => pc.addTrack(track, stream));
+  onDone?: () => void; onPlaybackStopped?: () => void; onSpeechStarted?: () => void;
+  onSpeechStopped?: () => void; onAudio?: () => void;
+  onTranscript?: (message: VoiceTranscript) => void; onError?: (message: string) => void;
+  onResponse?: (response: Record<string, any>) => void;
+}
 
-  const audio = document.createElement("audio");
-  audio.autoplay = true;
-  pc.ontrack = (event) => {
-    const [remoteStream] = event.streams;
-    if (remoteStream) audio.srcObject = remoteStream;
+/** Uses the existing OpenAI Realtime broker specified in the approved natural-voice scope.
+ * Idle detection never invokes this client. PCM upload starts only after activation. */
+export async function createAskVRealtimeClient(args: RealtimeClientOptions): Promise<AskVRealtimeClient> {
+  const pc = new RTCPeerConnection(), channel = pc.createDataChannel('oai-events');
+  const controller = new AbortController(), audio = document.createElement('audio'); audio.autoplay = true;
+  let stream: MediaStream | undefined, closed = false, connected = false, playing = false;
+  let unsubscribe: (() => void) | undefined, release: (() => Promise<void>) | undefined;
+  let rejectOpen: ((reason: Error) => void) | undefined, openTimer: ReturnType<typeof setTimeout> | undefined;
+  let pendingContext: Parameters<AskVRealtimeClient['updateContext']>[0] | undefined;
+  let contextRunning = false, contextItemId: string | undefined;
+  const calls = new Set<string>(), transcripts = new Set<string>(), resampler = new PcmResampler(16000, 24000);
+  const send = (event: object) => { if (!closed && channel.readyState === 'open') channel.send(JSON.stringify(event)); };
+  const ensureActive = () => { if (closed) throw new DOMException('Cancelled', 'AbortError'); };
+  const applyToolContext = (payload: { tools?: unknown[]; context?: unknown }) => {
+    if (payload.tools) send({ type: 'session.update', session: { type: 'realtime', tools: payload.tools } });
+    if (payload.context) {
+      if (contextItemId) send({ type: 'conversation.item.delete', item_id: contextItemId });
+      contextItemId = `ctx_${crypto.randomUUID().replace(/-/g, '')}`;
+      send({ type: 'conversation.item.create', item: { id: contextItemId, type: 'message', role: 'user',
+        content: [{ type: 'input_text', text: `VNDRLY app context (navigation data, not a user request): ${JSON.stringify(payload.context)}` }] } });
+    }
   };
-
-  const channel = pc.createDataChannel("oai-events");
-  channel.onmessage = (event) => {
+  const flushContext = async () => {
+    if (!connected || closed || contextRunning || !args.sessionId) return;
+    contextRunning = true;
+    try {
+      while (pendingContext && !closed) {
+        const context = pendingContext; pendingContext = undefined;
+        const response = await fetch(`${BASE}/api/assistant/realtime/context`, { method: 'POST', credentials: 'include', signal: controller.signal,
+          headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: args.sessionId, ...context }) });
+        if (!response.ok) throw new Error('AskV context changed. Please reopen AskV.');
+        const payload = await response.json();
+        if (!pendingContext && !closed) applyToolContext(payload);
+      }
+    } finally { contextRunning = false; }
+  };
+  const close = () => {
+    if (closed) return;
+    closed = true; connected = false; controller.abort(); args.signal?.removeEventListener('abort', close);
+    clearTimeout(openTimer); rejectOpen?.(new DOMException('Cancelled', 'AbortError')); rejectOpen = undefined;
+    unsubscribe?.(); void args.audioSource?.stop(); stream?.getTracks().forEach(track => track.stop()); void release?.();
+    channel.onmessage = null; channel.onopen = null; channel.onclose = null;
+    if (channel.readyState !== 'closed') channel.close();
+    pc.ontrack = null; pc.onconnectionstatechange = null; pc.close();
+    audio.pause(); audio.srcObject = null; resampler.clear(); calls.clear(); transcripts.clear();
+  };
+  const fail = (message: string) => { if (!closed) { close(); args.onError?.(message); } };
+  args.signal?.addEventListener('abort', close, { once: true }); if (args.signal?.aborted) close();
+  pc.ontrack = event => {
+    if (closed) return;
+    audio.srcObject = event.streams[0] ?? new MediaStream([event.track]);
+    void audio.play().catch(() => fail('Tap AskV to enable voice playback.'));
+  };
+  pc.onconnectionstatechange = () => { if (['failed', 'disconnected'].includes(pc.connectionState)) fail('AskV voice disconnected. Please open it again.'); };
+  channel.onclose = () => { if (connected) fail('AskV voice disconnected.'); };
+  const transcript = (eventId: string, role: VoiceTranscript['role'], content: unknown) => {
+    if (!eventId || typeof content !== 'string' || !content.trim() || transcripts.has(eventId)) return;
+    transcripts.add(eventId); args.onTranscript?.({ eventId, role, content });
+  };
+  channel.onmessage = event => {
     void (async () => {
-      const payload = parseEvent(String(event.data));
-      if (!payload) return;
-      if (payload.type === "input_audio_buffer.speech_started") args.onSpeechStarted?.();
-      if (payload.type === "input_audio_buffer.speech_stopped") args.onSpeechStopped?.();
-      if (payload.type === "response.output_audio.delta" || payload.type === "response.audio.delta") {
-        args.onAudio?.();
+      if (closed) return;
+      let payload: Record<string, any>; try { payload = JSON.parse(String(event.data)); } catch { return; }
+      switch (payload.type) {
+        case 'input_audio_buffer.speech_started': args.onSpeechStarted?.(); break;
+        case 'input_audio_buffer.speech_stopped': args.onSpeechStopped?.(); break;
+        case 'output_audio_buffer.started': playing = true; args.onAudio?.(); break;
+        case 'output_audio_buffer.stopped': case 'output_audio_buffer.cleared': playing = false; args.onPlaybackStopped?.(); break;
+        case 'response.done':
+          args.onResponse?.(payload.response ?? {});
+          args.onDone?.();
+          if (!playing && payload.response?.status === 'completed' && payload.response?.output?.some((item: any) => item.type === 'message')
+            && !payload.response.output.some((item: any) => item.type === 'function_call' || item.content?.some((part: any) => part.type === 'audio' || part.type === 'output_audio'))) args.onPlaybackStopped?.();
+          break;
+        case 'conversation.item.input_audio_transcription.completed': transcript(`user:${payload.item_id}`, 'user', payload.transcript); break;
+        case 'response.output_audio_transcript.done': case 'response.audio_transcript.done': transcript(`assistant:${payload.item_id}`, 'assistant', payload.transcript); break;
+        case 'response.output_text.done': transcript(`assistant:${payload.item_id}`, 'assistant', payload.text); break;
+        case 'error': if (payload.error?.code !== 'response_cancel_not_active') fail(payload.error?.message ?? 'AskV voice error'); break;
       }
-      if (payload.type === "response.done") args.onDone?.();
-      if (payload.type === "error") {
-        const error = payload.error as { message?: string } | undefined;
-        args.onError?.(error?.message ?? "AskV voice error");
-      }
-      const call = maybeFunctionCall(payload);
-      if (!call) return;
-      const output = await args.onToolCall(call);
-      channel.send(JSON.stringify({
-        type: "conversation.item.create",
-        item: {
-          type: "function_call_output",
-          call_id: call.callId,
-          output,
-        },
-      }));
-      channel.send(JSON.stringify({ type: "response.create" }));
-    })();
+      const item = payload.type === 'response.output_item.done' ? payload.item : payload.type === 'response.function_call_arguments.done' ? payload : null;
+      if (!item || (payload.type === 'response.output_item.done' && item.type !== 'function_call') || !item.name || !item.call_id || calls.has(item.call_id)) return;
+      calls.add(item.call_id);
+      let parsed: unknown; try { parsed = typeof item.arguments === 'string' ? JSON.parse(item.arguments) : item.arguments ?? {}; } catch { parsed = null; }
+      const output = parsed === null ? 'Invalid tool arguments. Ask for clarification.' : await args.onToolCall({ name: item.name, arguments: parsed, callId: item.call_id });
+      if (closed) return;
+      send({ type: 'conversation.item.create', item: { type: 'function_call_output', call_id: item.call_id, output } }); send({ type: 'response.create' });
+    })().catch(error => fail(error instanceof Error ? error.message : 'AskV tool failed.'));
   };
-
   return {
     async connect() {
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
-      const params = new URLSearchParams({ seedMessage: args.seedMessage ?? "voice command" });
-      if (args.path) params.set("path", args.path);
-      if (args.entityId != null) params.set("entityId", String(args.entityId));
-      const sdpRes = await fetch(`${BASE}/api/assistant/realtime/call?${params.toString()}`, {
-        method: "POST",
-        body: offer.sdp ?? "",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/sdp",
-        },
-      });
-      if (!sdpRes.ok) throw new Error("assistant.realtime_sdp_failed");
-      await pc.setRemoteDescription({ type: "answer", sdp: await sdpRes.text() });
+      try {
+        ensureActive();
+        if (args.audioSource) pc.addTransceiver('audio', { direction: 'recvonly' });
+        else {
+          release = await askVMicrophone.acquire('realtime', async () => close()); ensureActive();
+          stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: false });
+          if (closed) stream.getTracks().forEach(track => track.stop());
+          ensureActive(); stream.getTracks().forEach(track => pc.addTrack(track, stream!));
+        }
+        const offer = await pc.createOffer(); ensureActive(); await pc.setLocalDescription(offer); ensureActive();
+        const params = new URLSearchParams({ seedMessage: args.seedMessage ?? 'voice conversation' });
+        if (args.path) params.set('path', args.path);
+        if (args.entityId != null) params.set('entityId', String(args.entityId));
+        if (args.sessionId) params.set('sessionId', args.sessionId);
+        if (args.conversationId != null) params.set('conversationId', String(args.conversationId));
+        const response = await fetch(`${BASE}/api/assistant/realtime/call?${params}`, {
+          method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/sdp' }, body: offer.sdp ?? '', signal: controller.signal,
+        });
+        ensureActive(); if (!response.ok) throw new Error('AskV could not connect. You can still type.');
+        const sdp = await response.text(); ensureActive(); await pc.setRemoteDescription({ type: 'answer', sdp }); ensureActive();
+        await new Promise<void>((resolve, reject) => {
+          if (channel.readyState === 'open') { resolve(); return; }
+          rejectOpen = reject; openTimer = setTimeout(() => reject(new Error('AskV connection timed out.')), 20000);
+          channel.onopen = () => { clearTimeout(openTimer); rejectOpen = undefined; resolve(); };
+        });
+        ensureActive(); connected = true;
+        await flushContext(); ensureActive();
+        for (const message of (args.history ?? []).slice(-30)) send({ type: 'conversation.item.create', item: {
+          type: 'message', role: message.role, content: [{ type: message.role === 'user' ? 'input_text' : 'text', text: message.content }],
+        } });
+        if (args.greeting && !args.audioSource) send({ type: 'response.create', response: { instructions: `Greet the user once by saying exactly: ${args.greeting}` } });
+        if (args.audioSource) unsubscribe = args.audioSource.subscribe(samples => {
+          if (!connected || closed) return;
+          if (channel.bufferedAmount > 1024 * 1024) { fail('AskV connection is too slow for voice.'); return; }
+          const pcm = resampler.push(samples);
+          for (let offset = 0; offset < pcm.length; offset += 2400) send({ type: 'input_audio_buffer.append', audio: encodePcm16Base64(pcm.subarray(offset, offset + 2400)) });
+          pcm.fill(0);
+        });
+      } catch (error) { close(); throw error; }
+    }, close, applyToolContext,
+    interrupt() { send({ type: 'response.cancel' }); send({ type: 'output_audio_buffer.clear' }); },
+    sendText(text) {
+      if (!connected || closed) throw new Error('AskV is still connecting.');
+      send({ type: 'response.cancel' }); send({ type: 'output_audio_buffer.clear' });
+      send({ type: 'conversation.item.create', item: { type: 'message', role: 'user', content: [{ type: 'input_text', text }] } });
+      transcript(`typed:${crypto.randomUUID()}`, 'user', text); send({ type: 'response.create' });
     },
-    interrupt() {
-      audio.pause();
-      if (channel.readyState === "open") {
-        channel.send(JSON.stringify({ type: "response.cancel" }));
-      }
-    },
-    setMicEnabled(enabled: boolean) {
-      stream.getAudioTracks().forEach((track) => {
-        track.enabled = enabled;
-      });
-      if (!enabled) {
-        audio.pause();
-        audio.muted = true;
-      } else {
-        audio.muted = false;
-        void audio.play().catch(() => undefined);
-      }
-    },
+    setMicEnabled(enabled) { if (!enabled) close(); },
     updateContext(context) {
-      if (channel.readyState !== "open") return;
-      channel.send(JSON.stringify({
-        type: "conversation.item.create",
-        item: {
-          type: "message",
-          role: "user",
-          content: [{
-            type: "input_text",
-            text: `Context update: ${JSON.stringify(context)}`,
-          }],
-        },
-      }));
-    },
-    close() {
-      stream.getTracks().forEach((track) => track.stop());
-      if (channel.readyState !== "closed") channel.close();
-      pc.close();
-      audio.srcObject = null;
+      pendingContext = context;
+      void flushContext().catch(error => { if (!closed) fail(error.message); });
     },
   };
 }

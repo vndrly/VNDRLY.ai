@@ -13,8 +13,9 @@ import { ObjectPermission } from "../lib/objectAcl";
 import { getSessionFromRequest } from "../lib/session";
 import { getObjectStore, UPLOAD_ROUTE } from "../lib/objectStore";
 import { absoluteUploadUrl } from "../lib/uploadUrl";
-import { db, siteLocationsTable, siteVisitsTable, siteWorkAssignmentsTable } from "@workspace/db";
+import { db, siteLocationsTable, siteVisitsTable, siteWorkAssignmentsTable, ticketNoteLogsTable } from "@workspace/db";
 import { and, eq, or } from "drizzle-orm";
+import { canReadTicketAttachment, ticketAttachmentReference } from "../lib/ticket-attachment-access";
 
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
@@ -33,7 +34,6 @@ function hasValidImageSignature(contentType: string, body: Buffer): boolean {
 
 async function canReadVisitEvidence(session: ReturnType<typeof getSessionFromRequest>, objectPath: string): Promise<boolean> {
   if (!session?.userId) return false;
-  if (session.role === "admin") return true;
   const [visit] = await db
     .select({
       siteLocationId: siteVisitsTable.siteLocationId,
@@ -45,6 +45,7 @@ async function canReadVisitEvidence(session: ReturnType<typeof getSessionFromReq
     .where(or(eq(siteVisitsTable.platePhotoUrl, objectPath), eq(siteVisitsTable.vehiclePhotoUrl, objectPath)))
     .limit(1);
   if (!visit) return false;
+  if (session.role === "admin") return true;
   if (session.role === "partner") return session.partnerId === visit.sitePartnerId;
   if (session.role !== "vendor" || !session.vendorId) return false;
   if (session.vendorRole !== "gatekeeper") return session.vendorId === visit.hostVendorId;
@@ -212,6 +213,12 @@ router.delete("/storage/uploads", async (req: Request, res: Response) => {
       res.status(409).json({ error: "Object is attached to a visit" });
       return;
     }
+    const [ticketReference] = await db.select({ id: ticketNoteLogsTable.id })
+      .from(ticketNoteLogsTable).where(ticketAttachmentReference(objectPath)).limit(1);
+    if (ticketReference) {
+      res.status(409).json({ error: "Object is attached to a ticket" });
+      return;
+    }
     await objectStorageService.deleteStoredObject(objectPath);
     res.status(204).end();
   } catch (error) {
@@ -271,7 +278,8 @@ router.get("/storage/objects/*path", async (req: Request, res: Response) => {
       object: obj,
       requestedPermission: ObjectPermission.READ,
     });
-    const canAccess = aclAccess || await canReadVisitEvidence(session, objectPath);
+    const canAccess = aclAccess || await canReadVisitEvidence(session, objectPath) ||
+      await canReadTicketAttachment(session, objectPath, obj.acl?.owner);
     if (!canAccess) {
       res.status(403).json({ error: "Forbidden" });
       return;

@@ -54,13 +54,15 @@ vi.mock("expo-linear-gradient", async () => {
   };
 });
 
-const { routerReplaceMock } = vi.hoisted(() => ({
+const { routerReplaceMock, askvRoute, capturePhoto } = vi.hoisted(() => ({
   routerReplaceMock: vi.fn(),
+  askvRoute: { entry: undefined as string | undefined },
+  capturePhoto: vi.fn(async () => null),
 }));
 vi.mock("expo-router", () => ({
   router: { replace: routerReplaceMock, push: vi.fn(), back: vi.fn() },
   Stack: { Screen: () => null },
-  useLocalSearchParams: () => ({ id: "777" }),
+  useLocalSearchParams: () => ({ id: "777", askvEntry: askvRoute.entry, askvEntryId: "test-entry" }),
   useFocusEffect: (cb: () => void | (() => void)) => {
     const React = require("react");
     React.useEffect(() => cb(), [cb]);
@@ -125,7 +127,7 @@ vi.mock("@/lib/maps", () => ({
 }));
 
 vi.mock("@/lib/photos", () => ({
-  captureAndUploadImage: vi.fn(async () => null),
+  captureAndUploadImage: capturePhoto,
 }));
 
 vi.mock("@workspace/db/format", () => ({
@@ -258,6 +260,7 @@ let alertSpy: ReturnType<typeof vi.spyOn>;
 
 beforeEach(() => {
   vi.clearAllMocks();
+  askvRoute.entry = undefined;
   requestForegroundPermissionsAsyncMock.mockResolvedValue({ status: "denied" });
   getForegroundPermissionsAsyncMock.mockResolvedValue({ status: "denied" });
   watchPositionAsyncMock.mockResolvedValue({ remove: vi.fn() });
@@ -392,6 +395,17 @@ async function tapAlertButton(callIndex: number, text: string): Promise<void> {
 }
 
 describe("TicketDetailScreen — Close for Review error handling (Task #555)", () => {
+  it.each(["parts", "labor", "photo", "mileage"])("opens the existing %s entry flow without submitting ticket changes", async kind => {
+    askvRoute.entry = kind;
+    getUserMock.mockResolvedValue({ id: 1, role: "admin", displayName: "A" });
+    apiFetchMock.mockImplementation((url: string) => Promise.resolve(url === `/api/tickets/${TICKET_ID}`
+      ? makeTicket({ status: "in_progress", lifecycleState: "on_site" }) : []));
+    await renderAndWaitForLoad();
+    if (kind === "photo") await waitFor(() => expect(capturePhoto).toHaveBeenCalledOnce());
+    else if (kind === "mileage") await waitFor(() => expect(firstByTestId("input-mileage")).toBeTruthy());
+    else await waitFor(() => expect(document.activeElement?.getAttribute("data-testid")).toBe("ticket-item-description"));
+    expect(apiFetchMock.mock.calls.filter(([, init]) => init?.method === "POST")).toHaveLength(0);
+  });
   it("pins a non-state-conflict submit error inline on the close button (no extra Alert)", async () => {
     // Task #532 path: from `pending_review` the user taps Close for
     // review. With no open crew sessions we go straight to the

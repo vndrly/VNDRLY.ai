@@ -40,7 +40,7 @@ const AssistantLauncher = lazy(() =>
   })),
 );
 import AskVStatusIndicator from "@/components/askv-status-indicator";
-import { AskVVoiceProvider, useAskVVoiceSession } from "@/hooks/use-askv-voice-session";
+import { useAskVVoiceSession } from "@/hooks/use-askv-voice-session";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -168,7 +168,7 @@ export function FieldOpsPortalShell({
   );
 
   return (
-    <AskVVoiceProvider>
+    <>
     <div
       className={cn("flex", FIXED_APP_CHROME ? "h-screen overflow-hidden" : "min-h-screen")}
       style={brandStyleVars(brand)}
@@ -377,7 +377,7 @@ export function FieldOpsPortalShell({
         </nav>
       </div>
     </div>
-    </AskVVoiceProvider>
+    </>
   );
 }
 

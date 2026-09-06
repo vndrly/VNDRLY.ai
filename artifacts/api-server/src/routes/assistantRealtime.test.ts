@@ -8,6 +8,13 @@ const mocks = vi.hoisted(() => ({
   createSecret: vi.fn(async () => ({ value: "ek_test", expires_at: 123 })),
   runTool: vi.fn(async () => JSON.stringify({ ok: true })),
   writeAudit: vi.fn(async () => undefined),
+  readConfirmation: vi.fn(async (): Promise<string | null> => null),
+  runMutation: vi.fn(
+    async (_scope: unknown, operation: () => Promise<string>) => ({
+      hit: false,
+      value: await operation(),
+    }),
+  ),
   session: {
     userId: 10,
     role: "vendor",
@@ -24,7 +31,20 @@ const mocks = vi.hoisted(() => ({
     displayName: string;
   },
 }));
+vi.mock("../assistant/askv-voice-confirmation", () => ({
+  readVoiceConfirmation: mocks.readConfirmation,
+}));
+beforeEach(() => {
+  mocks.readConfirmation.mockReset();
+  mocks.readConfirmation.mockResolvedValue(null);
+});
 
+vi.mock("../assistant/askv-idempotency", async () => ({
+  ...(await vi.importActual("../assistant/askv-idempotency")),
+  runPersistentAskVMutation: mocks.runMutation,
+}));
+let testSessionNumber = 0;
+let testSessionId = "session-0";
 vi.mock("../lib/session", () => ({
   getSessionFromRequest: () => mocks.session,
 }));
@@ -48,9 +68,9 @@ vi.mock("@workspace/db", () => ({
 }));
 
 vi.mock("../assistant/realtime-session", async () => {
-  const actual = await vi.importActual<typeof import("../assistant/realtime-session")>(
-    "../assistant/realtime-session",
-  );
+  const actual = await vi.importActual<
+    typeof import("../assistant/realtime-session")
+  >("../assistant/realtime-session");
   return {
     ...actual,
     createAskVRealtimeCall: mocks.createCall,
@@ -65,6 +85,7 @@ vi.mock("./assistant", () => ({
 vi.mock("../assistant/action-audit", () => ({
   writeAskVActionAudit: mocks.writeAudit,
 }));
+vi.mock("../lib/logger", () => ({ logger: { info: vi.fn(), error: vi.fn() } }));
 
 function app() {
   const app = express();
@@ -75,6 +96,8 @@ function app() {
 
 describe("AskV Realtime routes", () => {
   beforeEach(() => {
+    testSessionId = `route-test-${++testSessionNumber}`;
+    mocks.runMutation.mockClear();
     mocks.session = {
       userId: 10,
       role: "vendor",
@@ -96,11 +119,13 @@ describe("AskV Realtime routes", () => {
       .query({ timeZone: "America/Chicago" })
       .expect(200);
 
-    expect(res.body).toEqual(expect.objectContaining({
-      style: expect.stringMatching(/^(full|short)$/),
-      text: expect.any(String),
-      localDate: expect.any(String),
-    }));
+    expect(res.body).toEqual(
+      expect.objectContaining({
+        style: expect.stringMatching(/^(full|short)$/),
+        text: expect.any(String),
+        localDate: expect.any(String),
+      }),
+    );
     expect(JSON.stringify(res.body)).not.toMatch(/audio|wav|webm|pcm/i);
   });
 
@@ -139,10 +164,17 @@ describe("AskV Realtime routes", () => {
 
     const res = await request(app())
       .post("/assistant/realtime/client-secret")
-      .send({ seedMessage: "route me to ticket 42" })
+      .send({
+        sessionId: testSessionId,
+        callId: "call-1",
+        seedMessage: "route me to ticket 42",
+      })
       .expect(200);
 
-    expect(res.body.clientSecret).toEqual({ value: "ek_test", expires_at: 123 });
+    expect(res.body.clientSecret).toEqual({
+      value: "ek_test",
+      expires_at: 123,
+    });
     expect(res.body.toolMetadata).toContainEqual({
       name: "query_tickets",
       mutating: false,
@@ -176,6 +208,8 @@ describe("AskV Realtime routes", () => {
     const res = await request(app())
       .post("/assistant/realtime/tool-call")
       .send({
+        sessionId: testSessionId,
+        callId: "call-1",
         name: "query_invoice_summary",
         arguments: {},
         clientSurface: "ios",
@@ -191,6 +225,8 @@ describe("AskV Realtime routes", () => {
     const res = await request(app())
       .post("/assistant/realtime/tool-call")
       .send({
+        sessionId: testSessionId,
+        callId: "call-1",
         name: "mark_notifications_read",
         arguments: { markAll: true },
         clientSurface: "web",
@@ -212,9 +248,12 @@ describe("AskV Realtime routes", () => {
   });
 
   it("passes confirmed:true into realtime voice write tools after confirmation", async () => {
+    mocks.readConfirmation.mockResolvedValue("yes");
     await request(app())
       .post("/assistant/realtime/tool-call")
       .send({
+        sessionId: testSessionId,
+        callId: "call-1",
         name: "mark_notifications_read",
         arguments: { markAll: true },
         clientSurface: "ios",
@@ -224,6 +263,8 @@ describe("AskV Realtime routes", () => {
     const res = await request(app())
       .post("/assistant/realtime/tool-call")
       .send({
+        sessionId: testSessionId,
+        callId: "call-1",
         name: "mark_notifications_read",
         arguments: { markAll: true },
         confirmationPhrase: "yes",
@@ -234,7 +275,11 @@ describe("AskV Realtime routes", () => {
     expect(res.body).toMatchObject({ ok: true });
     expect(mocks.runTool).toHaveBeenCalledWith(
       "mark_notifications_read",
-      expect.objectContaining({ markAll: true, confirmed: true, idempotencyKey: expect.any(String) }),
+      expect.objectContaining({
+        markAll: true,
+        confirmed: true,
+        idempotencyKey: expect.any(String),
+      }),
       expect.objectContaining({ userId: 10, role: "vendor" }),
       expect.any(String),
     );
@@ -243,7 +288,10 @@ describe("AskV Realtime routes", () => {
         inputMode: "ios_voice",
         toolName: "mark_notifications_read",
         confirmationPhrase: "yes",
-        toolInput: expect.objectContaining({ markAll: true, confirmed: true }),
+        toolInput: expect.objectContaining({
+          markAll: true,
+          idempotencyKey: "call-1",
+        }),
         resultStatus: "success",
       }),
     );
@@ -253,8 +301,15 @@ describe("AskV Realtime routes", () => {
     const res = await request(app())
       .post("/assistant/realtime/tool-call")
       .send({
+        sessionId: testSessionId,
+        callId: "call-1",
         name: "confirm_visitor_check_in",
-        arguments: { firstName: "Bob", lastName: "Villa", siteLocationId: 9, hostType: "vendor" },
+        arguments: {
+          firstName: "Bob",
+          lastName: "Villa",
+          siteLocationId: 9,
+          hostType: "vendor",
+        },
         confirmationPhrase: "yes",
         clientSurface: "web",
       })
@@ -268,14 +323,20 @@ describe("AskV Realtime routes", () => {
   });
 
   it("audits structured confirmation refusals from realtime tools", async () => {
-    mocks.runTool.mockResolvedValueOnce(JSON.stringify({
-      error: "AskV needs explicit confirmation before marking notifications read.",
-      requiresConfirmation: true,
-    }));
+    mocks.readConfirmation.mockResolvedValue("yes");
+    mocks.runTool.mockResolvedValueOnce(
+      JSON.stringify({
+        error:
+          "AskV needs explicit confirmation before marking notifications read.",
+        requiresConfirmation: true,
+      }),
+    );
 
     await request(app())
       .post("/assistant/realtime/tool-call")
       .send({
+        sessionId: testSessionId,
+        callId: "call-1",
         name: "mark_notifications_read",
         arguments: { markAll: true },
         clientSurface: "web",
@@ -285,6 +346,8 @@ describe("AskV Realtime routes", () => {
     const res = await request(app())
       .post("/assistant/realtime/tool-call")
       .send({
+        sessionId: testSessionId,
+        callId: "call-1",
         name: "mark_notifications_read",
         arguments: { markAll: true },
         confirmationPhrase: "yes",
@@ -299,5 +362,204 @@ describe("AskV Realtime routes", () => {
         resultStatus: "requires_confirmation",
       }),
     );
+  });
+});
+
+describe("AskV Realtime safety regressions", () => {
+  it("returns authenticated context and allows a bounded workflow switch", async () => {
+    const context = await request(app())
+      .post("/assistant/realtime/context")
+      .send({
+        sessionId: "pack-context",
+        path: "/ticket/42?untrusted=ignored",
+        entityId: 42,
+        role: "admin",
+        organization: { vendorId: 99 },
+      })
+      .expect(200);
+    expect(context.body.context).toMatchObject({
+      path: "/ticket/42",
+      entityId: 42,
+      role: "vendor",
+      organization: { vendorId: 22 },
+      workflow: "tickets",
+    });
+    const selected = await request(app())
+      .post("/assistant/realtime/tool-call")
+      .send({
+        sessionId: "pack-context",
+        name: "select_tool_pack",
+        arguments: { workflow: "finance" },
+      })
+      .expect(200);
+    expect(selected.body.context.workflow).toBe("finance");
+    expect(
+      selected.body.tools.some(
+        (tool: { name: string }) => tool.name === "query_invoices",
+      ),
+    ).toBe(true);
+    expect(
+      selected.body.tools.some(
+        (tool: { name: string }) => tool.name === "confirm_visitor_check_in",
+      ),
+    ).toBe(false);
+    const moved = await request(app())
+      .post("/assistant/realtime/context")
+      .send({ sessionId: "pack-context", path: "/ticket/43" })
+      .expect(200);
+    expect(moved.body.context).toMatchObject({
+      entityId: 43,
+      workflow: "tickets",
+    });
+    const dashboard = await request(app())
+      .post("/assistant/realtime/context")
+      .send({ sessionId: "pack-context", path: "/dashboard" })
+      .expect(200);
+    expect(dashboard.body.context.entityId).toBeNull();
+  });
+  it("enforces server rollout flags even when a client posts Realtime requests directly", async () => {
+    vi.stubEnv("ASKV_NATURAL_VOICE_ENABLED", "0");
+    try {
+      const capabilities = await request(app())
+        .get("/assistant/voice/capabilities")
+        .expect(200);
+      expect(capabilities.body.enabled).toBe(false);
+      await request(app())
+        .post("/assistant/realtime/tool-call")
+        .send({ sessionId: "flag", name: "query_tickets", arguments: {} })
+        .expect(503);
+      await request(app())
+        .post("/assistant/realtime/client-secret")
+        .send({})
+        .expect(503);
+      await request(app())
+        .post("/assistant/realtime/end")
+        .send({ sessionId: "flag" })
+        .expect(200);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+  const highRisk = {
+    name: "confirm_visitor_check_out",
+    arguments: { visitId: 44 },
+    clientSurface: "web",
+  };
+  it("does not trust a posted confirmed boolean", async () => {
+    mocks.runTool.mockClear();
+    const res = await request(app())
+      .post("/assistant/realtime/tool-call")
+      .send({
+        ...highRisk,
+        sessionId: "boolean-bypass",
+        callId: "call-a",
+        confirmed: true,
+        arguments: { visitId: 44, confirmed: true },
+      });
+    expect(res.body.requiresConfirmation).toBe(true);
+    expect(mocks.runTool).not.toHaveBeenCalled();
+  });
+  it("requires a new confirmation after any arguments change", async () => {
+    mocks.runTool.mockClear();
+    const original = {
+      ...highRisk,
+      sessionId: "argument-binding",
+      callId: "call-a",
+    };
+    await request(app()).post("/assistant/realtime/tool-call").send(original);
+    const res = await request(app())
+      .post("/assistant/realtime/tool-call")
+      .send({
+        ...original,
+        arguments: { visitId: 99 },
+        confirmationPhrase: "yes",
+      });
+    expect(res.body.requiresConfirmation).toBe(true);
+    expect(mocks.runTool).not.toHaveBeenCalled();
+  });
+  it("cannot confirm a different session or a different context", async () => {
+    mocks.runTool.mockClear();
+    const original = {
+      ...highRisk,
+      sessionId: "context-a",
+      callId: "call-a",
+      path: "/gate",
+      entityId: 9,
+    };
+    await request(app()).post("/assistant/realtime/tool-call").send(original);
+    const other = await request(app())
+      .post("/assistant/realtime/tool-call")
+      .send({ ...original, sessionId: "context-b", confirmationPhrase: "yes" });
+    expect(other.body.requiresConfirmation).toBe(true);
+    await request(app())
+      .post("/assistant/realtime/context")
+      .send({ sessionId: "context-a", path: "/tickets/5", entityId: 5 });
+    const moved = await request(app())
+      .post("/assistant/realtime/tool-call")
+      .send({
+        ...original,
+        path: "/tickets/5",
+        entityId: 5,
+        confirmationPhrase: "yes",
+      });
+    expect(moved.body.requiresConfirmation).toBe(true);
+    expect(mocks.runTool).not.toHaveBeenCalled();
+  });
+  it("rejects ended sessions, missing mutation keys and deferred writes", async () => {
+    await request(app())
+      .post("/assistant/realtime/end")
+      .send({ sessionId: "ended" });
+    await request(app())
+      .post("/assistant/realtime/tool-call")
+      .send({ ...highRisk, sessionId: "ended", callId: "call-a" })
+      .expect(409);
+    await request(app())
+      .post("/assistant/realtime/tool-call")
+      .send({ ...highRisk, sessionId: "missing-key" })
+      .expect(400);
+    await request(app())
+      .post("/assistant/realtime/tool-call")
+      .send({
+        name: "schedule_ticket_crew",
+        sessionId: "deferred",
+        callId: "call-a",
+        confirmed: true,
+      })
+      .expect(403);
+  });
+  it("lets a confirmed exact retry reach durable duplicate protection", async () => {
+    mocks.readConfirmation.mockResolvedValue("yes");
+    mocks.runTool.mockClear();
+    mocks.runMutation.mockClear();
+    const original = {
+      ...highRisk,
+      sessionId: "exact-retry",
+      callId: "call-a",
+    };
+    await request(app()).post("/assistant/realtime/tool-call").send(original);
+    await request(app())
+      .post("/assistant/realtime/tool-call")
+      .send({ ...original, confirmationPhrase: "yes" });
+    const retry = await request(app())
+      .post("/assistant/realtime/tool-call")
+      .send(original);
+    expect(retry.body.requiresConfirmation).toBeUndefined();
+    expect(mocks.runMutation).toHaveBeenCalledTimes(2);
+    expect(mocks.runMutation.mock.calls[0][0]).toEqual(
+      mocks.runMutation.mock.calls[1][0],
+    );
+  });
+  it("accepts only transcript text fields before touching persistence", async () => {
+    await request(app())
+      .post("/assistant/voice/transcript")
+      .send({
+        conversationId: 1,
+        sessionId: "s",
+        eventId: "e",
+        role: "user",
+        content: "hello",
+        audio: "raw",
+      })
+      .expect(400);
   });
 });

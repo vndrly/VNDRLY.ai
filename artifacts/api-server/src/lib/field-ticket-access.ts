@@ -6,6 +6,40 @@ import {
   siteLocationsTable,
   vendorPeopleTable,
 } from "@workspace/db";
+import type { SessionPayload } from "./session";
+
+/** The same ticket tenancy and active roster rules used by ticket routes. */
+export async function canReadTicket(
+  session: SessionPayload | null,
+  ticketId: number,
+): Promise<boolean> {
+  if (!session?.userId || !Number.isSafeInteger(ticketId) || ticketId <= 0)
+    return false;
+  const ticket = await loadFieldTicketAccessRow(ticketId);
+  if (!ticket) return false;
+  if (session.role === "admin") return true;
+  if (session.role === "vendor")
+    return Boolean(session.vendorId && session.vendorId === ticket.vendorId);
+  if (session.role === "partner")
+    return Boolean(session.partnerId && session.partnerId === ticket.partnerId);
+  if (session.role !== "field_employee") return false;
+  const [employee] = await db
+    .select({ id: vendorPeopleTable.id, vendorId: vendorPeopleTable.vendorId })
+    .from(vendorPeopleTable)
+    .where(
+      and(
+        eq(vendorPeopleTable.userId, session.userId),
+        eq(vendorPeopleTable.isActive, true),
+        isNull(vendorPeopleTable.deletedAt),
+      ),
+    );
+  if (!employee) return false;
+  return fieldEmployeeCanAccessTicket(
+    ticketId,
+    { ...employee, userId: session.userId },
+    ticket,
+  );
+}
 
 export type FieldTicketAccessRow = {
   vendorId: number | null;
@@ -28,7 +62,10 @@ export async function loadFieldTicketAccessRow(
       partnerId: siteLocationsTable.partnerId,
     })
     .from(ticketsTable)
-    .leftJoin(siteLocationsTable, eq(ticketsTable.siteLocationId, siteLocationsTable.id))
+    .leftJoin(
+      siteLocationsTable,
+      eq(ticketsTable.siteLocationId, siteLocationsTable.id),
+    )
     .where(eq(ticketsTable.id, ticketId));
   return t ?? null;
 }
@@ -61,7 +98,9 @@ export async function fieldEmployeeCanAccessTicket(
 }
 
 /** User ids for ticket thread participants (vendor, partner, primary, foreman, crew). */
-export async function ticketParticipantUserIdsExpanded(ticketId: number): Promise<{
+export async function ticketParticipantUserIdsExpanded(
+  ticketId: number,
+): Promise<{
   ids: number[];
   vendorId: number | null;
   partnerId: number | null;
@@ -85,7 +124,10 @@ export async function ticketParticipantUserIdsExpanded(ticketId: number): Promis
   const crew = await db
     .select({ userId: vendorPeopleTable.userId })
     .from(ticketCrewTable)
-    .innerJoin(vendorPeopleTable, eq(ticketCrewTable.employeeId, vendorPeopleTable.id))
+    .innerJoin(
+      vendorPeopleTable,
+      eq(ticketCrewTable.employeeId, vendorPeopleTable.id),
+    )
     .where(
       and(
         eq(ticketCrewTable.ticketId, ticketId),

@@ -56,7 +56,6 @@ import { OnboardingProgressBanner } from "@/components/finish-setup-widget";
 import { withGateLogNav, canViewGateLog } from "@/lib/gate-ops-nav";
 import { visitsApi } from "@/lib/visits-api";
 import AskVStatusIndicator from "@/components/askv-status-indicator";
-import { AskVVoiceProvider } from "@/hooks/use-askv-voice-session";
 
 const AssistantLauncher = React.lazy(() =>
   import("@/components/assistant-panel").then((mod) => ({
@@ -217,7 +216,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const navPaneStyle = { backgroundColor: NAV_PANE_DARK_BG } as const;
 
   return (
-    <AskVVoiceProvider>
+    <>
     <div
       className={cn("flex", FIXED_APP_CHROME ? "h-screen overflow-hidden" : "min-h-screen")}
       style={brandStyleVars(brand)}
@@ -436,6 +435,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </main>
       </div>
     </div>
-    </AskVVoiceProvider>
+    </>
   );
 }
