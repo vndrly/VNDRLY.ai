@@ -1,4 +1,17 @@
 {
+  "askvMicrophone": {
+    "label": "Microphone",
+    "systemDefault": "System default",
+    "savedNotListed": "Saved microphone (not listed)",
+    "unnamed": "Microphone {{number}}",
+    "nextSession": "Changes apply the next time AskV starts listening. Mute, then unmute to use the new microphone now.",
+    "current": "Currently using: {{name}}",
+    "fallback": "The selected microphone is unavailable. AskV is using the system default.",
+    "level": "Microphone input level",
+    "inactive": "Microphone inactive",
+    "meterUnavailable": "Input meter unavailable",
+    "labelsAfterPermission": "Microphone names appear after you allow microphone access."
+  },
   "roles": {
     "admin": "Admin",
     "office": "Office",

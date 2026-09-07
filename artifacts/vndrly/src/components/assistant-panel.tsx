@@ -14,6 +14,8 @@ import lightGreySquareSrc from "@assets/900x229_Light-grey_v2r_square_1778256462
 import AskVStatusIndicator from "@/components/askv-status-indicator";
 import { askVMicrophone } from '@workspace/askv-wake';
 import { useAskVVoiceSession } from "@/hooks/use-askv-voice-session";
+import { AskVMicrophoneSettings } from "@/components/askv-microphone-settings";
+import { captureAskVMicrophone, meterAskVMicrophone } from "@/lib/askv-microphone";
 import { writeAskVAcrossVndrly } from "@/lib/askv-voice-preferences";
 import { useAuth } from "@/hooks/use-auth";
 import { useBrand } from "@/hooks/use-brand";
@@ -341,6 +343,8 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
   const scrollRef = useRef<HTMLDivElement>(null);
   const voiceRecorderRef = useRef<MediaRecorder | null>(null);
   const voiceStreamRef = useRef<MediaStream | null>(null);
+  const voiceMeterRef = useRef<ReturnType<typeof meterAskVMicrophone> | null>(null);
+  const voiceCaptureAbortRef = useRef<AbortController | null>(null);
   const voiceChunksRef = useRef<Blob[]>([]);
   const voiceStartedAtRef = useRef(0);
   const voiceCancelledRef = useRef(false);
@@ -524,6 +528,8 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
   }, [messages, streaming]);
 
   const cleanupVoiceStream = useCallback(() => {
+    voiceCaptureAbortRef.current?.abort(); voiceCaptureAbortRef.current = null;
+    voiceMeterRef.current?.stop(); voiceMeterRef.current = null;
     voiceStreamRef.current?.getTracks().forEach((track) => track.stop());
     voiceStreamRef.current = null;
     voiceRecorderRef.current = null;
@@ -595,20 +601,23 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
     voiceChunksRef.current = [];
 
     const attempt = ++recordingGeneration.current;
+    const captureAbort = new AbortController(); voiceCaptureAbortRef.current = captureAbort;
     try {
       microphoneReleaseRef.current = await askVMicrophone.acquire('ptt', async () => {
         recordingGeneration.current++; voiceCancelledRef.current = true;
+        captureAbort.abort(); voiceMeterRef.current?.stop();
         const active = voiceRecorderRef.current;
         if (active && active.state !== 'inactive') active.stop();
         voiceStreamRef.current?.getTracks().forEach(track => track.stop());
         setVoiceRecording(false);
       });
       if (attempt !== recordingGeneration.current) { cleanupVoiceStream(); return; }
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const capture = await captureAskVMicrophone(captureAbort.signal); const stream = capture.stream;
       if (attempt !== recordingGeneration.current || voiceCancelledRef.current) { stream.getTracks().forEach(track => track.stop()); cleanupVoiceStream(); return; }
+      voiceStreamRef.current = stream;
+      voiceMeterRef.current = meterAskVMicrophone(capture, true);
       const mimeType = pickAskVRecordingMimeType();
       const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
-      voiceStreamRef.current = stream;
       voiceRecorderRef.current = recorder;
       voiceStartedAtRef.current = performance.now();
       recorder.ondataavailable = (event) => {
@@ -631,6 +640,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
       setVoiceRecording(true);
     } catch (err) {
       cleanupVoiceStream();
+      if (captureAbort.signal.aborted && attempt !== recordingGeneration.current) return;
       const name = err instanceof DOMException ? err.name : "";
       if (name === "NotAllowedError" || name === "SecurityError") {
         setVoiceError("Microphone permission denied. Allow microphone access and try again.");
@@ -657,6 +667,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
 
   const cancelVoiceRecording = useCallback(() => {
     recordingGeneration.current++;
+    voiceCaptureAbortRef.current?.abort();
     voiceCancelledRef.current = true;
     const recorder = voiceRecorderRef.current;
     if (recorder && recorder.state !== "inactive") {
@@ -817,6 +828,10 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
   const panelError = voiceError ?? error;
 
   useEffect(() => {
+    if (voiceSession.muted) cancelVoiceRecording();
+  }, [voiceSession.muted, cancelVoiceRecording]);
+
+  useEffect(() => {
     if (!open) {
       cancelVoiceRecording();
       stopAskVSpeech();
@@ -950,6 +965,8 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
             </HeaderIconButton>
           </div>
         </DialogHeader>
+
+        {open && !tokenMode && !signupMode && askVUserId != null && <AskVMicrophoneSettings />}
 
         {progress && (
           <OnboardingMiniStepper progress={progress} />

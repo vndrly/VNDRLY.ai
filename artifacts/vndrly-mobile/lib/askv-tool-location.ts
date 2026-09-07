@@ -2,10 +2,11 @@ import * as Location from "expo-location";
 const gpsWrites = new Set(["set_ticket_lifecycle", "close_ticket_for_review", "prepare_visitor_check_in", "confirm_visitor_check_in", "confirm_visitor_check_out"]);
 const locationQueries = new Set(["lookup_map_origin", "query_ticket_route_eta", "query_ticket_mileage_audit", "estimate_driving_route"]);
 export type AskVCoordinates = { latitude: number; longitude: number };
+export function isAskVGpsWrite(name: string): boolean { return gpsWrites.has(name); }
 
 /** GPS comes from the device, never from model-invented coordinates. */
 export async function withAskVToolLocation(name: string, args: Record<string, unknown>, confirmedCoordinates?: AskVCoordinates): Promise<Record<string, unknown>> {
-  const write = gpsWrites.has(name);
+  const write = isAskVGpsWrite(name);
   if (!write && (!locationQueries.has(name) || args.origin === "shop")) return args;
   if (write && confirmedCoordinates) return { ...args, ...confirmedCoordinates };
   const previous = await Location.getForegroundPermissionsAsync();

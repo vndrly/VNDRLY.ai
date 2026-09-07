@@ -50,7 +50,7 @@ describe("AskV Realtime session", () => {
       session: {
         type: "realtime",
         model: "gpt-realtime-2",
-        audio: { input: { format: { type: "audio/pcm", rate: 24000 }, transcription: { model: "gpt-4o-mini-transcribe" }, turn_detection: { type: "server_vad", create_response: true, interrupt_response: true } }, output: { voice: "marin" } },
+        audio: { input: { format: { type: "audio/pcm", rate: 24000 }, transcription: { model: "gpt-4o-transcribe", language: "en", prompt: expect.stringContaining("VNDRLY") }, noise_reduction: { type: "near_field" }, turn_detection: { type: "semantic_vad", eagerness: "medium", create_response: true, interrupt_response: true } }, output: { voice: "marin" } },
         tool_choice: "auto",
         tools: [{ type: "function", name: "query_tickets" }],
       },
@@ -68,6 +68,7 @@ describe("AskV Realtime session", () => {
       instructions: "Keep it short.",
       tools: [{ type: "function", name: "query_tickets", description: "Query tickets", parameters: { type: "object" } }],
       sdp: "offer-sdp",
+      language: "es",
       fetchImpl,
     });
 
@@ -89,7 +90,7 @@ describe("AskV Realtime session", () => {
       type: "realtime",
       model: "gpt-realtime-2",
       instructions: "Keep it short.",
-      audio: { input: { format: { type: "audio/pcm", rate: 24000 }, transcription: { model: "gpt-4o-mini-transcribe" }, turn_detection: { type: "server_vad", create_response: true, interrupt_response: true } }, output: { voice: "marin" } },
+      audio: { input: { format: { type: "audio/pcm", rate: 24000 }, transcription: { model: "gpt-4o-transcribe", language: "es", prompt: expect.stringContaining("VNDRLY") }, noise_reduction: { type: "near_field" }, turn_detection: { type: "semantic_vad", eagerness: "medium", create_response: true, interrupt_response: true } }, output: { voice: "marin" } },
       tool_choice: "auto",
       tools: [{ type: "function", name: "query_tickets" }],
     });

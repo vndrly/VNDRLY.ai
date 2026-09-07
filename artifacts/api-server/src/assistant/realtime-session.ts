@@ -10,6 +10,7 @@ export interface CreateAskVRealtimeClientSecretArgs {
   voice: string;
   instructions: string;
   tools: OpenAIRealtimeTool[];
+  language?: "en" | "es";
   fetchImpl?: typeof fetch;
 }
 
@@ -34,8 +35,17 @@ function buildRealtimeSessionConfig(args: CreateAskVRealtimeClientSecretArgs) {
     audio: {
       input: {
         format: { type: "audio/pcm", rate: 24000 },
-        transcription: { model: "gpt-4o-mini-transcribe" },
-        turn_detection: { type: "server_vad", create_response: true, interrupt_response: true },
+        transcription: {
+          model: "gpt-4o-transcribe",
+          language: args.language ?? "en",
+          prompt: args.language === "es"
+            ? "Conversación en español sobre operaciones de campo: VNDRLY, AskV, incorporación, empleados de campo, facturas, órdenes de trabajo, matrículas. Conserva los nombres y números tal como se dicen; no completes palabras que no se oyen."
+            : "English field operations conversation: VNDRLY, AskV, onboarding, field employees, invoices, tickets, license plates. Preserve names and numbers as spoken; do not fill in words that are not audible.",
+        },
+        noise_reduction: { type: "near_field" },
+        // A short pause is not necessarily the end of a request. Semantic
+        // detection lets users finish while retaining automatic replies/barge-in.
+        turn_detection: { type: "semantic_vad", eagerness: "medium", create_response: true, interrupt_response: true },
       },
       output: {
         voice: args.voice,

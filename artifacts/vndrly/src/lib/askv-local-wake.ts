@@ -1,4 +1,5 @@
 import { askVMicrophone, isWakeKeyword, PcmRingBuffer, PcmResampler, type WakeAudioSource } from '@workspace/askv-wake';
+import { captureAskVMicrophone, meterAskVMicrophone } from './askv-microphone';
 
 export function localWakeSupported(): boolean {
   return Boolean(window.isSecureContext && window.Worker && window.AudioContext && window.AudioWorkletNode && navigator.mediaDevices?.getUserMedia);
@@ -13,6 +14,7 @@ export async function startLocalWake(args: {
   let media: MediaStream | undefined, context: AudioContext | undefined, worker: Worker | undefined;
   let worklet: AudioWorkletNode | undefined, release: (() => Promise<void>) | undefined;
   let sink: ((samples: Float32Array) => void) | undefined;
+  let meter: ReturnType<typeof meterAskVMicrophone> | undefined;
   const preRoll = new PcmRingBuffer(16000 * 2);
   const connectingAudio = new PcmRingBuffer(16000 * 15);
   let connectingSamples = 0;
@@ -20,7 +22,7 @@ export async function startLocalWake(args: {
     if (stopped) return;
     stopped = true;
     args.signal.removeEventListener('abort', abort);
-    worker?.terminate(); worklet?.disconnect();
+    meter?.stop(); worker?.terminate(); worklet?.disconnect();
     media?.getTracks().forEach(track => track.stop());
     preRoll.clear(); connectingAudio.clear(); sink = undefined;
     if (context && context.state !== 'closed') await context.close();
@@ -45,8 +47,9 @@ export async function startLocalWake(args: {
     });
     ensureActive();
     worker.onerror = () => { void stop(); args.onError('Local wake detection stopped unexpectedly.'); };
-    media = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: false });
+    const capture = await captureAskVMicrophone(args.signal); media = capture.stream;
     if (stopped || args.signal.aborted) { media.getTracks().forEach(track => track.stop()); ensureActive(); }
+    meter = meterAskVMicrophone(capture);
     context = new AudioContext();
     await context.audioWorklet.addModule(`${base}capture-worklet.js`); ensureActive();
     const resampler = new PcmResampler(context.sampleRate, 16000);
@@ -74,6 +77,7 @@ export async function startLocalWake(args: {
     worklet = new AudioWorkletNode(context, 'askv-capture');
     worklet.port.onmessage = ({ data }: MessageEvent<Float32Array>) => {
       if (stopped) return;
+      meter?.push(data);
       const samples = resampler.push(data); data.fill(0);
       try { if (transferred) {
         if (sink) sink(samples);

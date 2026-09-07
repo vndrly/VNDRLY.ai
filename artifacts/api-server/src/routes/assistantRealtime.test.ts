@@ -4,6 +4,7 @@ import express from "express";
 import assistantRealtimeRouter from "./assistantRealtime";
 
 const mocks = vi.hoisted(() => ({
+  userLanguage: null as string | null,
   createCall: vi.fn(async () => "answer-sdp"),
   createSecret: vi.fn(async () => ({ value: "ek_test", expires_at: 123 })),
   runTool: vi.fn(async () => JSON.stringify({ ok: true })),
@@ -52,9 +53,9 @@ vi.mock("../lib/session", () => ({
 vi.mock("@workspace/db", () => ({
   db: {
     select: vi.fn(() => ({
-      from: vi.fn(() => ({
+      from: vi.fn((table: { id?: string }) => ({
         where: vi.fn(() => ({
-          limit: vi.fn(async () => []),
+          limit: vi.fn(async () => table.id === "users.id" ? [{ preferredLanguage: mocks.userLanguage }] : []),
         })),
       })),
     })),
@@ -96,6 +97,7 @@ function app() {
 
 describe("AskV Realtime routes", () => {
   beforeEach(() => {
+    mocks.userLanguage = null;
     testSessionId = `route-test-${++testSessionNumber}`;
     mocks.runMutation.mockClear();
     mocks.session = {
@@ -127,6 +129,16 @@ describe("AskV Realtime routes", () => {
       }),
     );
     expect(JSON.stringify(res.body)).not.toMatch(/audio|wav|webm|pcm/i);
+  });
+
+  it.each([[null, "en"], ["es", "es"], ["unexpected", "en"]])("uses saved language %s consistently for audio and transcription", async (saved, expected) => {
+    mocks.userLanguage = saved;
+    vi.stubEnv("OPENAI_API_KEY", "sk-test");
+    await request(app()).post("/assistant/realtime/call").set("Content-Type", "application/sdp").send("offer-sdp").expect(200);
+    await request(app()).post("/assistant/realtime/client-secret").send({}).expect(200);
+    for (const create of [mocks.createCall, mocks.createSecret]) {
+      expect(create).toHaveBeenCalledWith(expect.objectContaining({ language: expected }));
+    }
   });
 
   it("creates a server-mediated Realtime WebRTC call from browser SDP", async () => {
@@ -248,7 +260,7 @@ describe("AskV Realtime routes", () => {
   });
 
   it("passes confirmed:true into realtime voice write tools after confirmation", async () => {
-    mocks.readConfirmation.mockResolvedValue("yes");
+    mocks.readConfirmation.mockResolvedValue("I confirm");
     await request(app())
       .post("/assistant/realtime/tool-call")
       .send({
@@ -287,7 +299,7 @@ describe("AskV Realtime routes", () => {
       expect.objectContaining({
         inputMode: "ios_voice",
         toolName: "mark_notifications_read",
-        confirmationPhrase: "yes",
+        confirmationPhrase: "I confirm",
         toolInput: expect.objectContaining({
           markAll: true,
           idempotencyKey: "call-1",
@@ -402,7 +414,7 @@ describe("AskV Realtime onboarding", () => {
     expect(forged.body.requiresConfirmation).toBe(true);
     expect(mocks.runTool).not.toHaveBeenCalled();
 
-    mocks.readConfirmation.mockResolvedValue("yes");
+    mocks.readConfirmation.mockResolvedValue("I confirm");
     const completed = await request(app()).post("/assistant/realtime/tool-call").send({
       ...original, confirmationEventId: "saved-user-turn",
     }).expect(200);
@@ -412,6 +424,19 @@ describe("AskV Realtime onboarding", () => {
     await request(app()).post("/assistant/realtime/tool-call").send(original).expect(200);
     expect(mocks.runMutation.mock.calls[1][0]).toEqual(firstScope);
     expect(mocks.writeAudit).toHaveBeenCalledWith(expect.objectContaining({ toolName: name, targetType: "onboarding", resultStatus: "success" }));
+  });
+
+  it("reports unclear approval separately from permissions and accepts the next clear saved reply", async () => {
+    const action = { sessionId: testSessionId, callId: "clear-reply", name: "complete_onboarding_step", arguments: { step: "first-employee", nextStep: "done", skipped: false } };
+    await request(app()).post("/assistant/realtime/tool-call").send(action).expect(200);
+    mocks.readConfirmation.mockResolvedValue("Can you still hear me?");
+    const unclear = await request(app()).post("/assistant/realtime/tool-call").send({ ...action, confirmationEventId: "audio-check" }).expect(200);
+    expect(unclear.body).toMatchObject({ requiresConfirmation: true, confirmationReason: "unclear_reply", suggestedReplies: ["I confirm", "Cancel"] });
+    expect(mocks.runTool).not.toHaveBeenCalled();
+    mocks.readConfirmation.mockResolvedValue("Yes, continue");
+    const accepted = await request(app()).post("/assistant/realtime/tool-call").send({ ...action, confirmationEventId: "clear-approval" }).expect(200);
+    expect(accepted.body.ok).toBe(true);
+    expect(mocks.runTool).toHaveBeenCalledOnce();
   });
 
   it("rejects field-employee finalization before running a domain action", async () => {

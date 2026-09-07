@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { startLocalWake, localWakeSupported } from './askv-local-wake';
 import { askVMicrophone, type WakeAudioSource } from '@workspace/askv-wake';
+import { getAskVMicrophoneState } from './askv-microphone';
 class WorkerFake {
   static last: WorkerFake; static autoReady = true;
   onmessage: ((event: { data: any }) => void) | null = null;
@@ -26,6 +27,7 @@ describe('local wake capture ownership', () => {
   let controller: AbortController, listener: Awaited<ReturnType<typeof startLocalWake>> | undefined;
   let track: { stop: ReturnType<typeof vi.fn> }, source: WakeAudioSource | undefined;
   beforeEach(() => {
+    localStorage.removeItem('askv:microphone-device');
     WorkerFake.autoReady = true; controller = new AbortController(); listener = undefined; source = undefined;
     track = { stop: vi.fn() };
     vi.stubGlobal('Worker', WorkerFake); vi.stubGlobal('AudioContext', ContextFake); vi.stubGlobal('AudioWorkletNode', WorkletFake);
@@ -33,6 +35,13 @@ describe('local wake capture ownership', () => {
     Object.defineProperty(navigator, 'mediaDevices', { configurable: true, value: { getUserMedia: vi.fn(async () => ({ getTracks: () => [track] })) } });
   });
   afterEach(async () => { controller.abort(); await source?.stop(); await listener?.stop(); vi.unstubAllGlobals(); });
+  it('uses the selected headset for local wake capture', async () => {
+    localStorage.setItem('askv:microphone-device', 'wired-headset');
+    listener = await startLocalWake({ signal: controller.signal, onWake: vi.fn(), onError: vi.fn() });
+    expect(navigator.mediaDevices.getUserMedia).toHaveBeenCalledWith({ audio: {
+      deviceId: { exact: 'wired-headset' }, echoCancellation: true, noiseSuppression: true, autoGainControl: true,
+    }, video: false });
+  });
   it('does not request a microphone on unsupported browsers', () => {
     vi.stubGlobal('Worker', undefined); expect(localWakeSupported()).toBe(false); expect(navigator.mediaDevices.getUserMedia).not.toHaveBeenCalled();
   });
@@ -55,6 +64,7 @@ describe('local wake capture ownership', () => {
     const wake = vi.fn((value: WakeAudioSource) => { source = value; });
     listener = await startLocalWake({ signal: controller.signal, onWake: wake, onError: vi.fn() });
     WorkletFake.last.emit(0.25); WorkerFake.last.emit({ type: 'consumed' });
+    expect(getAskVMicrophoneState().level).toBeGreaterThan(0);
     WorkerFake.last.emit({ type: 'wake', keyword: 'V' }); expect(wake).not.toHaveBeenCalled();
     WorkerFake.last.emit({ type: 'wake', keyword: 'ASKV' }); WorkerFake.last.emit({ type: 'wake', keyword: 'ASKV' });
     expect(wake).toHaveBeenCalledOnce(); expect(listener.transferred).toBe(true);
@@ -67,6 +77,7 @@ describe('local wake capture ownership', () => {
     expect(frames[1].some(value => value === 0.75)).toBe(true);
     expect(navigator.mediaDevices.getUserMedia).toHaveBeenCalledOnce();
     await source!.stop(); expect(track.stop).toHaveBeenCalledOnce();
+    expect(getAskVMicrophoneState()).toMatchObject({ active: false, level: 0 });
   });
   it('releases local capture before another VNDRLY feature can own the mic', async () => {
     listener = await startLocalWake({ signal: controller.signal, onWake: vi.fn(), onError: vi.fn() });

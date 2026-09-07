@@ -17,6 +17,8 @@ const env = vi.hoisted(() => ({
   wake: null as any,
   wakeCallbacks: null as any,
   navigate: vi.fn(),
+  locationPermission: vi.fn(),
+  locationPosition: vi.fn(),
 }));
 vi.mock("expo-router", () => ({ usePathname: () => env.path, router: { push: env.navigate } }));
 vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: env.user, isLoading: false }) }));
@@ -50,8 +52,9 @@ vi.mock("@/lib/askvVoicePreferences", () => ({
 vi.mock("@/lib/askv-realtime-client", () => ({ createAskVRealtimeClient: env.create }));
 vi.mock("@/lib/askv-local-wake", () => ({ createLocalAskVWakeDetector: (callbacks: any) => { env.wakeCallbacks = callbacks; return env.wake; } }));
 vi.mock("expo-location", () => ({
-  Accuracy: { Balanced: 3 }, getForegroundPermissionsAsync: async () => ({ status: "denied" }),
+  Accuracy: { Balanced: 3, High: 4 }, getForegroundPermissionsAsync: env.locationPermission,
   requestForegroundPermissionsAsync: async () => ({ status: "denied" }),
+  getCurrentPositionAsync: env.locationPosition,
 }));
 
 import { AskVVoiceProvider, useAskVVoiceSession } from "@/hooks/use-askv-voice-session";
@@ -78,6 +81,8 @@ beforeEach(() => {
   });
   env.release.mockReset().mockResolvedValue(undefined);
   env.configure.mockReset().mockResolvedValue(undefined);
+  env.locationPermission.mockReset().mockResolvedValue({ status: "denied" });
+  env.locationPosition.mockReset();
   vi.stubGlobal("fetch", vi.fn(async (url: string) => url.endsWith("/chat")
     ? new Response('event: done\ndata: {"content":"Typed reply","assistantMessageId":23}\n\n', { status: 200 })
     : new Response(JSON.stringify(
@@ -377,6 +382,7 @@ describe("mobile AskV session ownership", () => {
     expect(result.current.assistant.conversationId).toBeNull();
   });
   it("requires a later persisted user reply before forwarding a confirmation", async () => {
+    vi.useFakeTimers();
     const originalFetch = vi.mocked(fetch).getMockImplementation()!;
     let tools = 0;
     vi.mocked(fetch).mockImplementation(async (...args) => String(args[0]).endsWith("/tool-call")
@@ -388,7 +394,11 @@ describe("mobile AskV session ownership", () => {
     act(() => env.options[0].onTranscript({ eventId: "request-1:user", role: "user", content: "Change this item" }));
     await act(async () => { await env.options[0].onToolCall({ name: "edit_item", callId: "action-1", arguments: '{"id":1}' }); });
     let pending: string = "";
-    await act(async () => { pending = await env.options[0].onToolCall({ name: "edit_item", callId: "generated-2", arguments: '{"id":1,"idempotencyKey":"action-1","confirmationPhrase":"yes","confirmationEventId":"fabricated"}' }); });
+    await act(async () => {
+      const waiting = env.options[0].onToolCall({ name: "edit_item", callId: "generated-2", arguments: '{"id":1,"idempotencyKey":"action-1","confirmationPhrase":"yes","confirmationEventId":"fabricated"}' });
+      await vi.advanceTimersByTimeAsync(4_001);
+      pending = await waiting;
+    });
     expect(JSON.parse(pending).awaitingUserConfirmation).toBe(true);
     expect(tools).toBe(1);
     act(() => env.options[0].onTranscript({ eventId: "actual-reply:user", role: "user", content: "Yes, change it" }));
@@ -399,5 +409,221 @@ describe("mobile AskV session ownership", () => {
     const savedIndex = calls.findIndex(([url, init]) => String(url).endsWith("/transcript") && String(init?.body).includes("actual-reply:user"));
     expect(savedIndex).toBeGreaterThan(-1);
     expect(savedIndex).toBeLessThan(calls.indexOf(toolRequests[1]));
+  });
+});
+
+function captureConfirmationRequests() {
+  const requests: any[] = [];
+  const original = vi.mocked(fetch).getMockImplementation()!;
+  vi.mocked(fetch).mockImplementation(async (...args) => {
+    if (!String(args[0]).endsWith("/tool-call")) return original(...args);
+    const body = JSON.parse(String(args[1]?.body));
+    requests.push(body);
+    return new Response(JSON.stringify({
+      ok: false, requiresConfirmation: true, awaitingUserConfirmation: true,
+      name: body.name, arguments: body.arguments, sessionId: body.sessionId, callId: body.callId,
+      idempotencyKey: requests.length === 1 ? "server-pending-key" : body.idempotencyKey,
+      message: "Summarize this exact action and ask for confirmation.",
+    }));
+  });
+  return requests;
+}
+
+describe("mobile AskV pending action retries", () => {
+  it("waits for and saves the user's reply before reusing the server key on a new provider call", async () => {
+    vi.useFakeTimers();
+    const requests = captureConfirmationRequests();
+    const original = vi.mocked(fetch).getMockImplementation()!;
+    let saveReply!: () => void;
+    vi.mocked(fetch).mockImplementation(async (...args) => {
+      if (String(args[0]).endsWith("/transcript") && String(args[1]?.body).includes("approval:user")) {
+        await new Promise<void>(resolve => { saveReply = resolve; });
+      }
+      return original(...args);
+    });
+    const { result } = renderHook(useAskVVoiceSession, { wrapper }); await flush();
+    await act(async () => { await result.current.startConversation(); });
+    act(() => env.options[0].onTranscript({ eventId: "request:user", role: "user", content: "Change this item" }));
+    await act(async () => { await env.options[0].onToolCall({ name: "edit_item", callId: "provider-first", arguments: { id: 1, details: { name: "Bob", count: 2 } } }); });
+    let retry!: Promise<string>;
+    act(() => { retry = env.options[0].onToolCall({ name: "edit_item", callId: "provider-retry", arguments: {
+      details: { count: 2, name: "Bob" }, id: 1, confirmed: true,
+      confirmationPhrase: "yes", confirmationEventId: "invented", idempotencyKey: "invented-key", callId: "invented-call",
+    } }); });
+    await act(async () => { await vi.advanceTimersByTimeAsync(250); });
+    expect(requests).toHaveLength(1);
+    act(() => env.options[0].onTranscript({ eventId: "approval:user", role: "user", content: "I confirm" }));
+    await act(async () => { await vi.advanceTimersByTimeAsync(100); });
+    expect(requests).toHaveLength(1);
+    await act(async () => { saveReply(); await retry; });
+    expect(requests[1]).toMatchObject({ callId: "provider-retry", idempotencyKey: "server-pending-key",
+      confirmationEventId: "approval:user", arguments: { id: 1, details: { name: "Bob", count: 2 } } });
+    expect(requests[1]).not.toHaveProperty("confirmationPhrase");
+    expect(requests[1].arguments).toEqual({ id: 1, details: { name: "Bob", count: 2 } });
+  });
+
+  it("cannot replace a missing user reply with model confirmation metadata", async () => {
+    vi.useFakeTimers();
+    const requests = captureConfirmationRequests();
+    const { result } = renderHook(useAskVVoiceSession, { wrapper }); await flush();
+    await act(async () => { await result.current.startConversation(); });
+    await act(async () => { await env.options[0].onToolCall({ name: "edit_item", callId: "first", arguments: { id: 1 } }); });
+    let output = "";
+    await act(async () => {
+      const retry = env.options[0].onToolCall({ name: "edit_item", callId: "retry", arguments: { id: 1, confirmed: true, confirmationPhrase: "I confirm", confirmationEventId: "invented" } });
+      await vi.advanceTimersByTimeAsync(4_001);
+      output = await retry;
+    });
+    expect(requests).toHaveLength(1);
+    expect(JSON.parse(output)).toMatchObject({ requiresConfirmation: true, awaitingUserConfirmation: true });
+  });
+
+  it.each([
+    { name: "edit_item", arguments: { id: 2 } },
+    { name: "remove_item", arguments: { id: 1 } },
+  ])("requests fresh confirmation when the action changes to $name with $arguments", async next => {
+    const requests = captureConfirmationRequests();
+    const { result } = renderHook(useAskVVoiceSession, { wrapper }); await flush();
+    await act(async () => { await result.current.startConversation(); });
+    await act(async () => { await env.options[0].onToolCall({ name: "edit_item", callId: "first", arguments: { id: 1 } }); });
+    act(() => env.options[0].onTranscript({ eventId: "approval:user", role: "user", content: "I confirm" }));
+    await act(async () => { await env.options[0].onToolCall({ ...next, callId: "changed", arguments: { ...next.arguments, idempotencyKey: "server-pending-key", confirmed: true, confirmationPhrase: "I confirm" } }); });
+    expect(requests[1]).toMatchObject({ name: next.name, arguments: next.arguments, idempotencyKey: "changed" });
+    expect(requests[1]).not.toHaveProperty("confirmationEventId");
+    expect(requests[1]).not.toHaveProperty("confirmationPhrase");
+    expect(requests[1].arguments).toEqual(next.arguments);
+  });
+
+  it.each(["screen", "organization", "session"])("does not reuse a pending action across a %s change", async change => {
+    env.across = true;
+    const requests = captureConfirmationRequests();
+    const { result, rerender } = renderHook(useAskVVoiceSession, { wrapper }); await flush();
+    await act(async () => { await result.current.startConversation(); });
+    await act(async () => { await env.options[0].onToolCall({ name: "edit_item", callId: "first", arguments: { id: 1 } }); });
+    act(() => env.options[0].onTranscript({ eventId: "approval:user", role: "user", content: "I confirm" }));
+    if (change === "screen") { env.path = "/ticket/2"; rerender(); await flush(); }
+    else {
+      if (change === "organization") { env.user = { ...env.user, activeMembershipId: 2 }; rerender(); await flush(); }
+      else await act(async () => { await result.current.stop(); });
+      await act(async () => { await result.current.startConversation(); });
+    }
+    await act(async () => { await env.options.at(-1).onToolCall({ name: "edit_item", callId: "next-context", arguments: { id: 1, idempotencyKey: "server-pending-key" } }); });
+    expect(requests[1].idempotencyKey).toBe("next-context");
+    expect(requests[1]).not.toHaveProperty("confirmationEventId");
+  });
+
+  it("keeps the original device GPS snapshot only for the unchanged pending action", async () => {
+    env.locationPermission.mockResolvedValue({ status: "granted" });
+    env.locationPosition.mockResolvedValueOnce({ coords: { latitude: 35, longitude: -97 } })
+      .mockResolvedValue({ coords: { latitude: 36, longitude: -98 } });
+    const requests = captureConfirmationRequests();
+    const { result } = renderHook(useAskVVoiceSession, { wrapper }); await flush();
+    await act(async () => { await result.current.startConversation(); });
+    await act(async () => { await env.options[0].onToolCall({ name: "confirm_visitor_check_in", callId: "first", arguments: { firstName: "Bob", siteLocationId: 9 } }); });
+    act(() => env.options[0].onTranscript({ eventId: "approval:user", role: "user", content: "I confirm" }));
+    await act(async () => { await env.options[0].onToolCall({ name: "confirm_visitor_check_in", callId: "retry", arguments: { siteLocationId: 9, firstName: "Bob" } }); });
+    expect(requests[1]).toMatchObject({ idempotencyKey: "server-pending-key", confirmationEventId: "approval:user",
+      arguments: { firstName: "Bob", siteLocationId: 9, latitude: 35, longitude: -97 } });
+    expect(env.locationPosition).toHaveBeenCalledOnce();
+    await act(async () => { await env.options[0].onToolCall({ name: "confirm_visitor_check_in", callId: "changed", arguments: { siteLocationId: 9, firstName: "Eve" } }); });
+    expect(requests[2]).toMatchObject({ idempotencyKey: "changed", arguments: { firstName: "Eve", latitude: 36, longitude: -98 } });
+    expect(requests[2]).not.toHaveProperty("confirmationEventId");
+  });
+
+  it.each([
+    { latitude: 35, longitude: -97 },
+    { latitude: 12, longitude: 24 },
+  ])("keeps device-owned GPS when the retry echoes or changes coordinates: $latitude, $longitude", async coordinates => {
+    env.locationPermission.mockResolvedValue({ status: "granted" });
+    env.locationPosition.mockResolvedValueOnce({ coords: { latitude: 35, longitude: -97 } })
+      .mockResolvedValue({ coords: { latitude: 36, longitude: -98 } });
+    const requests = captureConfirmationRequests();
+    const { result } = renderHook(useAskVVoiceSession, { wrapper }); await flush();
+    await act(async () => { await result.current.startConversation(); });
+    await act(async () => { await env.options[0].onToolCall({ name: "confirm_visitor_check_in", callId: "first", arguments: {
+      firstName: "Bob", siteLocationId: 9, latitude: null, longitude: null,
+    } }); });
+    act(() => env.options[0].onTranscript({ eventId: "approval:user", role: "user", content: "I confirm" }));
+    await act(async () => { await env.options[0].onToolCall({ name: "confirm_visitor_check_in", callId: "retry", arguments: {
+      firstName: "Bob", siteLocationId: 9, ...coordinates,
+    } }); });
+    expect(requests[1]).toMatchObject({ idempotencyKey: "server-pending-key", confirmationEventId: "approval:user",
+      arguments: { firstName: "Bob", siteLocationId: 9, latitude: 35, longitude: -97 } });
+    expect(env.locationPosition).toHaveBeenCalledOnce();
+  });
+
+  it("keeps coordinate arguments bound for tools that do not use device GPS", async () => {
+    const requests = captureConfirmationRequests();
+    const { result } = renderHook(useAskVVoiceSession, { wrapper }); await flush();
+    await act(async () => { await result.current.startConversation(); });
+    await act(async () => { await env.options[0].onToolCall({ name: "edit_site", callId: "first", arguments: { id: 1, latitude: 35, longitude: -97 } }); });
+    act(() => env.options[0].onTranscript({ eventId: "approval:user", role: "user", content: "I confirm" }));
+    await act(async () => { await env.options[0].onToolCall({ name: "edit_site", callId: "changed-location", arguments: { id: 1, latitude: 36, longitude: -97 } }); });
+    expect(requests[1]).toMatchObject({ idempotencyKey: "changed-location", arguments: { id: 1, latitude: 36, longitude: -97 } });
+    expect(requests[1]).not.toHaveProperty("confirmationEventId");
+  });
+
+  it("does not confirm after navigation while the user reply is being saved", async () => {
+    env.across = true;
+    const requests = captureConfirmationRequests();
+    const original = vi.mocked(fetch).getMockImplementation()!;
+    let saveReply!: () => void;
+    vi.mocked(fetch).mockImplementation(async (...args) => {
+      if (String(args[0]).endsWith("/transcript")) await new Promise<void>(resolve => { saveReply = resolve; });
+      return original(...args);
+    });
+    const { result, rerender } = renderHook(useAskVVoiceSession, { wrapper }); await flush();
+    await act(async () => { await result.current.startConversation(); });
+    await act(async () => { await env.options[0].onToolCall({ name: "edit_item", callId: "first", arguments: { id: 1 } }); });
+    act(() => env.options[0].onTranscript({ eventId: "approval:user", role: "user", content: "I confirm" }));
+    let retry!: Promise<string>;
+    act(() => { retry = env.options[0].onToolCall({ name: "edit_item", callId: "retry", arguments: { id: 1 } }); });
+    await flush();
+    env.path = "/ticket/2"; rerender(); await flush();
+    let output = "";
+    await act(async () => { saveReply(); output = await retry; });
+    expect(requests).toHaveLength(1);
+    expect(JSON.parse(output)).toMatchObject({ ok: false, requiresConfirmation: true });
+  });
+
+  it("cannot confirm a user reply whose transcript could not be saved", async () => {
+    const requests = captureConfirmationRequests();
+    const original = vi.mocked(fetch).getMockImplementation()!;
+    vi.mocked(fetch).mockImplementation(async (...args) => {
+      if (String(args[0]).endsWith("/transcript")) throw new Error("offline");
+      return original(...args);
+    });
+    const { result } = renderHook(useAskVVoiceSession, { wrapper }); await flush();
+    await act(async () => { await result.current.startConversation(); });
+    await act(async () => { await env.options[0].onToolCall({ name: "edit_item", callId: "first", arguments: { id: 1 } }); });
+    act(() => env.options[0].onTranscript({ eventId: "approval:user", role: "user", content: "I confirm" }));
+    await flush();
+    let output = "";
+    await act(async () => { output = await env.options[0].onToolCall({ name: "edit_item", callId: "retry", arguments: { id: 1 } }); });
+    expect(requests).toHaveLength(1);
+    expect(JSON.parse(output)).toMatchObject({ ok: false, requiresConfirmation: true });
+  });
+
+  it("does not revive a pending draft from a response that arrives after navigation", async () => {
+    env.across = true;
+    const requests = captureConfirmationRequests();
+    const original = vi.mocked(fetch).getMockImplementation()!;
+    let returnDraft!: () => void;
+    vi.mocked(fetch).mockImplementation(async (...args) => {
+      const response = await original(...args);
+      if (String(args[0]).endsWith("/tool-call") && requests.length === 1) await new Promise<void>(resolve => { returnDraft = resolve; });
+      return response;
+    });
+    const { result, rerender } = renderHook(useAskVVoiceSession, { wrapper }); await flush();
+    await act(async () => { await result.current.startConversation(); });
+    let draft!: Promise<string>;
+    act(() => { draft = env.options[0].onToolCall({ name: "edit_item", callId: "first", arguments: { id: 1 } }); });
+    await flush();
+    env.path = "/ticket/2"; rerender(); await flush();
+    await act(async () => { returnDraft(); await draft; });
+    act(() => env.options[0].onTranscript({ eventId: "approval:user", role: "user", content: "I confirm" }));
+    await act(async () => { await env.options[0].onToolCall({ name: "edit_item", callId: "new-context", arguments: { id: 1 } }); });
+    expect(requests[1].idempotencyKey).toBe("new-context");
+    expect(requests[1]).not.toHaveProperty("confirmationEventId");
   });
 });

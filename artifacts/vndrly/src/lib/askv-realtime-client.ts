@@ -1,4 +1,5 @@
 import { askVMicrophone, encodePcm16Base64, PcmResampler, type WakeAudioSource } from '@workspace/askv-wake';
+import { captureAskVMicrophone, meterAskVMicrophone } from './askv-microphone';
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
 export interface AskVRealtimeToolCall { name: string; arguments: unknown; callId: string }
 export interface VoiceTranscript { eventId: string; role: 'user' | 'assistant'; content: string }
@@ -27,6 +28,7 @@ export async function createAskVRealtimeClient(args: RealtimeClientOptions): Pro
   const controller = new AbortController(), audio = document.createElement('audio'); audio.autoplay = true;
   let stream: MediaStream | undefined, closed = false, connected = false, playing = false;
   let unsubscribe: (() => void) | undefined, release: (() => Promise<void>) | undefined;
+  let meter: ReturnType<typeof meterAskVMicrophone> | undefined;
   let rejectOpen: ((reason: Error) => void) | undefined, openTimer: ReturnType<typeof setTimeout> | undefined;
   let pendingContext: Parameters<AskVRealtimeClient['updateContext']>[0] | undefined;
   let contextRunning = false, contextItemId: string | undefined;
@@ -65,7 +67,7 @@ export async function createAskVRealtimeClient(args: RealtimeClientOptions): Pro
     if (closed) return;
     closed = true; connected = false; controller.abort(); args.signal?.removeEventListener('abort', close);
     clearTimeout(openTimer); rejectOpen?.(new DOMException('Cancelled', 'AbortError')); rejectOpen = undefined;
-    unsubscribe?.(); void args.audioSource?.stop(); stream?.getTracks().forEach(track => track.stop()); void release?.();
+    meter?.stop(); unsubscribe?.(); void args.audioSource?.stop(); stream?.getTracks().forEach(track => { track.onended = null; track.stop(); }); void release?.();
     channel.onmessage = null; channel.onopen = null; channel.onclose = null;
     if (channel.readyState !== 'closed') channel.close();
     pc.ontrack = null; pc.onconnectionstatechange = null; pc.close();
@@ -120,9 +122,11 @@ export async function createAskVRealtimeClient(args: RealtimeClientOptions): Pro
         if (args.audioSource) pc.addTransceiver('audio', { direction: 'recvonly' });
         else {
           release = await askVMicrophone.acquire('realtime', async () => close()); ensureActive();
-          stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: false });
+          const capture = await captureAskVMicrophone(controller.signal); stream = capture.stream;
           if (closed) stream.getTracks().forEach(track => track.stop());
           ensureActive(); stream.getTracks().forEach(track => pc.addTrack(track, stream!));
+          meter = meterAskVMicrophone(capture, true);
+          stream.getTracks().forEach(track => { track.onended = () => fail('The microphone disconnected. Please open AskV again.'); });
         }
         const offer = await pc.createOffer(); ensureActive(); await pc.setLocalDescription(offer); ensureActive();
         const params = new URLSearchParams({ seedMessage: args.seedMessage ?? 'voice conversation' });

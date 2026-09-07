@@ -1,4 +1,17 @@
 {
+  "askvMicrophone": {
+    "label": "Micrófono",
+    "systemDefault": "Predeterminado del sistema",
+    "savedNotListed": "Micrófono guardado (no aparece en la lista)",
+    "unnamed": "Micrófono {{number}}",
+    "nextSession": "Los cambios se aplican la próxima vez que AskV empiece a escuchar. Silencia y vuelve a activar el audio para usar el nuevo micrófono ahora.",
+    "current": "En uso: {{name}}",
+    "fallback": "El micrófono seleccionado no está disponible. AskV está usando el predeterminado del sistema.",
+    "level": "Nivel de entrada del micrófono",
+    "inactive": "Micrófono inactivo",
+    "meterUnavailable": "Medidor de entrada no disponible",
+    "labelsAfterPermission": "Los nombres de los micrófonos aparecen después de permitir el acceso al micrófono."
+  },
   "roles": {
     "admin": "Administrador",
     "office": "Oficina",

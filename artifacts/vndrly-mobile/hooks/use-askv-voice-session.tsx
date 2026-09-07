@@ -9,7 +9,7 @@ import { configureAskVAudioSession, isAskVAppActive, releaseAskVAudioSession, re
 import { createLocalAskVWakeDetector, type LocalAskVWakeDetector } from "@/lib/askv-local-wake";
 import { stopAskVSpeech } from "@/lib/askv-speech";
 import { emitAskVDataChanged, executeAskVClientIntent } from "@/lib/askv-client-tools";
-import { withAskVToolLocation, type AskVCoordinates } from "@/lib/askv-tool-location";
+import { isAskVGpsWrite, withAskVToolLocation, type AskVCoordinates } from "@/lib/askv-tool-location";
 import { recordAskVMetric } from "@/lib/askv-voice-metrics";
 import { getApiBase } from "@/lib/api";
 import { ASKV_IDLE_MS, type AskVVoiceState } from "@/lib/askv-voice-state";
@@ -47,6 +47,25 @@ async function post(token: string, path: string, body: unknown, signal?: AbortSi
 }
 type LiveSession = { sessionId: string; conversationId: number; token: string; scope: string; generation: number; startedAt: number; turnStartedAt: number; woke: boolean; hadUserTurn: boolean; firstAudio: boolean };
 type PendingTranscript = AskVTranscript & { session: LiveSession };
+type PendingConfirmation = {
+  key: string;
+  name: string;
+  argumentsFingerprint: string;
+  afterEventId: string | null;
+  sessionId: string;
+  path: string;
+  contextVersion: number;
+  coordinates?: AskVCoordinates;
+};
+function stableToolArguments(value: unknown): string {
+  function sort(input: unknown): unknown {
+    if (Array.isArray(input)) return input.map(sort);
+    if (!input || typeof input !== "object") return input;
+    return Object.fromEntries(Object.entries(input).filter(([, item]) => item !== undefined)
+      .sort(([left], [right]) => left.localeCompare(right)).map(([key, item]) => [key, sort(item)]));
+  }
+  return JSON.stringify(sort(value));
+}
 
 export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -78,9 +97,9 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
   const cleanupRef = useRef<Promise<void>>(Promise.resolve());
   const idleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const userSpeakingRef = useRef(false);
-  const pendingCoordinates = useRef(new Map<string, AskVCoordinates>());
   const latestUserTranscript = useRef<{ sessionId: string; eventId: string } | null>(null);
-  const confirmationBoundary = useRef(new Map<string, string | null>());
+  // The server retains one exact pending action per user/organization/session.
+  const pendingConfirmation = useRef<PendingConfirmation | null>(null);
   const prefsRef = useRef<{ userId: number; promise: Promise<void> } | null>(null);
   const preferenceVersion = useRef(0);
   const pendingTranscripts = useRef<PendingTranscript[]>([]);
@@ -111,8 +130,8 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
     abortRef.current?.abort(); abortRef.current = null;
     clearIdle();
     userSpeakingRef.current = false;
-    pendingCoordinates.current.clear();
-    latestUserTranscript.current = null; confirmationBoundary.current.clear();
+    pendingConfirmation.current = null;
+    latestUserTranscript.current = null;
     clientRef.current?.close(); clientRef.current = null;
     stopAskVSpeech();
     const session = sessionRef.current; sessionRef.current = null;
@@ -319,48 +338,78 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
           onToolCall: async call => {
             check(); clearIdle(); writeState("thinking");
             const parsed = typeof call.arguments === "string" ? JSON.parse(call.arguments) : call.arguments;
-            const { confirmationPhrase, confirmationEventId: _untrustedEventId, idempotencyKey, callId, ...rawArguments } = parsed ?? {};
-            const stableKey = idempotencyKey ?? callId ?? call.callId;
+            const { confirmed: _untrustedConfirmed, confirmationPhrase: _untrustedPhrase,
+              confirmationEventId: _untrustedEventId, idempotencyKey: _untrustedKey, callId: _untrustedCallId,
+              ...rawArguments } = parsed ?? {};
+            // GPS writes replace model coordinates with the captured device
+            // location. Null schema fields and echoed GPS identify the same draft.
+            const { latitude: _latitude, longitude: _longitude, ...withoutDeviceCoordinates } = rawArguments;
+            const argumentsFingerprint = stableToolArguments(isAskVGpsWrite(call.name) ? withoutDeviceCoordinates : rawArguments);
+            const requestPath = pathRef.current, requestContextVersion = contextVersion.current;
+            const candidate = pendingConfirmation.current;
+            const pending = candidate?.sessionId === session.sessionId && candidate.path === requestPath
+              && candidate.contextVersion === requestContextVersion && candidate.name === call.name
+              && candidate.argumentsFingerprint === argumentsFingerprint ? candidate : undefined;
+            // Every provider tool call has a fresh ID. Only the server's exact
+            // pending draft can supply the stable key for a confirmation retry.
+            const stableKey = pending?.key ?? call.callId;
+            const sameContext = () => valid() && pathRef.current === requestPath && contextVersion.current === requestContextVersion
+              && (!pending || pendingConfirmation.current === pending);
+            const contextChanged = () => JSON.stringify({ ok: false, requiresConfirmation: true,
+              message: "The action or screen changed. Review the action again before confirming." });
             let confirmationEventId: string | undefined;
-            const confirming = confirmationBoundary.current.has(stableKey);
-            if (confirming) {
+            if (pending) {
+              const hasReply = () => latestUserTranscript.current?.sessionId === session.sessionId
+                && latestUserTranscript.current.eventId !== pending.afterEventId;
+              // Provider tool generation may arrive before the transcription.
+              // Wait briefly for actual user input; model metadata is never proof.
+              const deadline = Date.now() + 4000;
+              while (sameContext() && !hasReply() && Date.now() < deadline) {
+                await new Promise(resolve => setTimeout(resolve, 50));
+              }
+              if (!sameContext()) return contextChanged();
               const reply = latestUserTranscript.current;
-              if (!reply || reply.sessionId !== session.sessionId || reply.eventId === confirmationBoundary.current.get(stableKey)) {
+              if (!hasReply() || !reply) {
                 return JSON.stringify({ requiresConfirmation: true, awaitingUserConfirmation: true, idempotencyKey: stableKey,
                   message: "Wait for the user's spoken or typed reply before continuing." });
               }
               try { await flushTranscripts(); check(); }
               catch { return JSON.stringify({ ok: false, requiresConfirmation: true, message: "The confirmation could not be saved. Nothing was changed." }); }
+              if (!sameContext()) return contextChanged();
               confirmationEventId = reply.eventId;
             }
             let domainArguments: Record<string, unknown>;
             try {
-              domainArguments = await withAskVToolLocation(call.name, rawArguments,
-                confirming ? pendingCoordinates.current.get(stableKey) : undefined);
+              domainArguments = await withAskVToolLocation(call.name, rawArguments, pending?.coordinates);
             } catch (reason) { return JSON.stringify({ ok: false, error: reason instanceof Error ? reason.message : "Location unavailable. Nothing was changed." }); }
             check();
+            if (!sameContext()) return contextChanged();
             let data;
             try { data = await post(token, "realtime/tool-call", {
               name: call.name, arguments: domainArguments, clientSurface: "ios",
               sessionId: session.sessionId, conversationId: session.conversationId,
-              callId: callId ?? call.callId, idempotencyKey: stableKey,
+              callId: call.callId, idempotencyKey: stableKey,
               ...(confirmationEventId ? { confirmationEventId } : {}),
-              ...(typeof confirmationPhrase === "string" ? { confirmationPhrase } : {}),
             }, ac.signal); }
             catch (reason) {
               check();
               return JSON.stringify({ ok: false, error: reason instanceof Error ? reason.message : "The action did not complete." });
             }
             check();
+            if (!sameContext()) return contextChanged();
             if (data.tools || data.context) {
-              contextVersion.current += 1; confirmationBoundary.current.clear(); pendingCoordinates.current.clear();
+              contextVersion.current += 1; pendingConfirmation.current = null;
               clientRef.current?.updateContext({ ...data.context, tools: data.tools });
             }
-            if (data.requiresConfirmation) confirmationBoundary.current.set(stableKey, latestUserTranscript.current?.eventId ?? null);
-            else confirmationBoundary.current.delete(stableKey);
-            if (data.requiresConfirmation && typeof domainArguments.latitude === "number" && typeof domainArguments.longitude === "number") {
-              pendingCoordinates.current.set(stableKey, { latitude: domainArguments.latitude, longitude: domainArguments.longitude });
-            } else pendingCoordinates.current.delete(stableKey);
+            if (data.requiresConfirmation && typeof data.idempotencyKey === "string" && data.idempotencyKey) {
+              pendingConfirmation.current = {
+                key: data.idempotencyKey, name: call.name, argumentsFingerprint,
+                afterEventId: latestUserTranscript.current?.eventId ?? null, sessionId: session.sessionId,
+                path: requestPath, contextVersion: contextVersion.current,
+                ...(typeof domainArguments.latitude === "number" && typeof domainArguments.longitude === "number"
+                  ? { coordinates: { latitude: domainArguments.latitude, longitude: domainArguments.longitude } } : {}),
+              };
+            } else if (pendingConfirmation.current === pending) pendingConfirmation.current = null;
             let output = data;
             if (typeof data.output === "string") {
               try { output = JSON.parse(data.output); } catch { return data.output; }
@@ -522,8 +571,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
     if (!pathname.endsWith("/askv") && !acrossRef.current) { void disposeRef.current(); return; }
     const session = sessionRef.current;
     if (!session || mutedRef.current) return;
-    pendingCoordinates.current.clear();
-    confirmationBoundary.current.clear();
+    pendingConfirmation.current = null;
     void syncContext(session, pathname).catch(() => {
       if (sessionRef.current === session) { setError("askv.voiceContextFailed"); void disposeRef.current("error"); }
     });

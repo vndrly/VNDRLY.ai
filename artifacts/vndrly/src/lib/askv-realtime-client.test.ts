@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createAskVRealtimeClient, type AskVRealtimeClient } from './askv-realtime-client';
+import { getAskVMicrophoneState } from './askv-microphone';
 class FakeChannel {
   readyState = 'open'; bufferedAmount = 0;
   onmessage: ((event: { data: string }) => void) | null = null;
@@ -17,6 +18,7 @@ class FakePeer {
 describe('realtime transport lifecycle', () => {
   let peer: FakePeer, track: { stop: ReturnType<typeof vi.fn> }, client: AskVRealtimeClient;
   beforeEach(() => {
+    localStorage.removeItem('askv:microphone-device');
     peer = new FakePeer(); track = { stop: vi.fn() };
     vi.stubGlobal('RTCPeerConnection', class { constructor() { return peer; } });
     vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, text: async () => 'answer', json: async () => ({ tools: [] }) })));
@@ -24,6 +26,25 @@ describe('realtime transport lifecycle', () => {
     Object.defineProperty(navigator, 'mediaDevices', { configurable: true, value: { getUserMedia: vi.fn(async () => ({ getTracks: () => [track] })) } });
   });
   afterEach(() => { client?.close(); vi.restoreAllMocks(); });
+  it('captures the selected headset instead of the browser default', async () => {
+    localStorage.setItem('askv:microphone-device', 'wired-headset');
+    client = await createAskVRealtimeClient({ onToolCall: async () => '' });
+    await client.connect();
+    expect(navigator.mediaDevices.getUserMedia).toHaveBeenCalledWith({ audio: {
+      deviceId: { exact: 'wired-headset' }, echoCancellation: true, noiseSuppression: true, autoGainControl: true,
+    }, video: false });
+  });
+  it('closes realtime and clears the meter when the active microphone is unplugged', async () => {
+    const onError = vi.fn();
+    client = await createAskVRealtimeClient({ onToolCall: async () => '', onError });
+    await client.connect();
+    expect(getAskVMicrophoneState().active).toBe(true);
+    (track as unknown as { onended: () => void }).onended();
+    expect(peer.close).toHaveBeenCalledOnce(); expect(track.stop).toHaveBeenCalledOnce();
+    expect(onError).toHaveBeenCalledOnce();
+    expect(getAskVMicrophoneState()).toMatchObject({ active: false, level: 0 });
+    expect(navigator.mediaDevices.getUserMedia).toHaveBeenCalledOnce();
+  });
   it('keeps multiple turns open and waits for actual playback, including greeting', async () => {
     const onDone = vi.fn(), onPlaybackStopped = vi.fn(), onAudio = vi.fn();
     client = await createAskVRealtimeClient({ onToolCall: async () => '', onDone, onPlaybackStopped, onAudio, greeting: 'Good morning Brian.' });

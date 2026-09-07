@@ -10,6 +10,14 @@ const pending = {
   idempotencyKey: "call-a",
 };
 describe("AskV pending confirmation binding", () => {
+  it.each(["I confirm", "Yes, confirm.", "Yes, continue"])("binds natural approval %s to the exact action once", phrase => {
+    const store = new AskVPendingConfirmationStore();
+    expect(store.consume(phrase, pending)).toBeNull();
+    store.set(pending);
+    expect(store.consume(phrase, { ...pending, arguments: { firstName: "Eve", siteLocationId: 9 } })).toBeNull();
+    expect(store.consume(phrase, pending)).toEqual(pending);
+    expect(store.consume(phrase, pending)).toBeNull();
+  });
   it("requires the exact pending action, not just yes or a matching tool name", () => {
     const store = new AskVPendingConfirmationStore();
     expect(store.consume("yes", pending)).toBeNull();

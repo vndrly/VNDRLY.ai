@@ -82,7 +82,12 @@ describe.runIf(process.env.VNDRLY_TEST_DB_MODE === "fresh-local")("AskV onboardi
       const stale = await post("/assistant/realtime/tool-call", { ...action, confirmationEventId: "old-yes" }).expect(200);
       expect(stale.body.requiresConfirmation).toBe(true);
       now++;
-      await post("/assistant/voice/transcript", { conversationId, sessionId, eventId: "actual-yes", role: "user", content: "Yes." }).expect(200);
+      await post("/assistant/voice/transcript", { conversationId, sessionId, eventId: "audio-check", role: "user", content: "Can you still hear me?" }).expect(200);
+      const audioCheck = await post("/assistant/realtime/tool-call", { ...action, confirmationEventId: "audio-check" }).expect(200);
+      expect(audioCheck.body).toMatchObject({ requiresConfirmation: true, confirmationReason: "unclear_reply" });
+      expect((await progress()).currentStep).toBe("first-employee");
+      now++;
+      await post("/assistant/voice/transcript", { conversationId, sessionId, eventId: "actual-yes", role: "user", content: "I confirm" }).expect(200);
       const completed = await post("/assistant/realtime/tool-call", { ...action, confirmationEventId: "actual-yes" }).expect(200);
       expect(completed.body).toMatchObject({ ok: true, mutation: { refresh: ["onboarding"] } });
       const first = await progress();
