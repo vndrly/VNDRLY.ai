@@ -13,7 +13,7 @@ export function useAskVRealtime(args?: {
   prepareConversation?: (signal: AbortSignal) => Promise<Conversation>;
   onTranscript?: (message: VoiceTranscript, conversationId: number, sessionId: string) => void;
   flushTranscripts?: () => Promise<void>;
-  onMutation?: () => void;
+  onMutation?: (mutation: { name: string; refresh: string[] }) => void;
 }) {
   const latest = useRef(args); latest.current = args;
   const [state, setState] = useState<AskVVoiceState>('stopped');
@@ -103,7 +103,7 @@ export function useAskVRealtime(args?: {
               idempotencyKey: pending ? pending.key : call.callId,
               clientSurface: 'web' }) });
           const body = await result.json();
-          if (valid() && result.ok && body.mutation) latest.current?.onMutation?.();
+          if (valid() && result.ok && body.mutation) latest.current?.onMutation?.(body.mutation);
           if (body.tools || body.context) client.current?.applyToolContext(body);
           const output = body.output ?? (body.requiresConfirmation ? body : body.message ?? body.error ?? '');
           let parsed: Record<string, unknown> | undefined;

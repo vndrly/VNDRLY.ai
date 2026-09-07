@@ -1,5 +1,8 @@
 # AskV internal TestFlight acceptance
 
+Follow-up: [reported testing defects and iOS 1.0.2 corrections](askv-testflight-snag-two.md).
+The build record below is the preceding baseline; it does not include those corrections.
+
 Status: physical-device acceptance pending. iOS 1.0.1 build 157 was successfully uploaded to App Store Connect under the full-ship authorization. Apple processing/tester availability was not inferred. This checklist is a test record, not evidence that physical-device acceptance has passed.
 
 ## Submitted testing build
@@ -26,6 +29,9 @@ For every row, record Pass/Fail, device/build and any reproduction notes. Use de
 | Navigate with an active conversation | Route/record context follows navigation without duplicate sessions. Returning from Gate/PTT leaves only the intended microphone owner active. |
 | Five-minute idle | Wait five minutes after playback actually stops, with no further user input. The session closes. A new accepted turn before expiry restarts the idle interval. A long spoken answer is not cut off by the idle timer. |
 | Audio routes | Repeat a conversation on the device speaker, wired audio and Bluetooth; switch routes during a session and confirm recovery and intelligible audio. |
+| Speaker volume regression | With no headset connected, greeting and answers are clearly audible through the built-in loudspeaker at normal volume; opening WebRTC must not switch to the earpiece. |
+| Wake off and toggles | Opening AskV with Across VNDRLY off gives no wake-unavailable error. Turning it on transfers capture safely; turning it off during wake-idle releases the microphone. |
+| Voice onboarding | From AskV or an onboarding screen, use saved details, confirm the proposed step and final submission, and verify the wizard refreshes. Revisit skipped optional steps without losing newly supplied values. |
 | Interruptions and foreground | Test a phone interruption, screen lock and background/foreground transition. Capture stops where required, does not continue unexpectedly, and recovers through the intended interaction. |
 | Connectivity loss | Slow/offline/reconnected conditions show a recoverable state. Failed transcript saves recover without duplicate history, and an uncertain action is never blindly repeated. |
 | Identity and organization change | Logout or membership/account switching stops the old session and capture; the next session uses only the newly selected permissions/context. |

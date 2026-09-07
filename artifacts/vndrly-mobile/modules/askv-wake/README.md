@@ -30,6 +30,16 @@ new native iOS build; it is absent from Expo Go, Android, and older installation
 
 `requireOptionalNativeModule('AskVWake')` exposes:
 
+- `configureConversationAudio(): Promise<void>` sets the built-in speaker as the
+  default conversation output while preserving headset/Bluetooth routing. It
+  configures both AVAudioSession and WebRTC's saved policy, without activating
+  audio, starting capture, or loading the keyword model. Call after expo-av's
+  conversation mode and before `getUserMedia` / peer creation. Both capture paths
+  use WebRTC's same preferred hardware format; keyword PCM is still 16 kHz.
+- `releaseConversationAudio(): Promise<void>` restores the previous WebRTC policy
+  after closing the voice peer. The caller still restores expo-av's audio mode.
+  Capture failure/stop does not restore this policy because a manual conversation
+  may take over; module teardown does restore it.
 - `start({ modelDirectory: '' }): Promise<void>` resolves once microphone capture
   starts. Empty directory selects the resource bundle; an absolute local path or
   a file URL selects an explicitly prepared local model directory.
@@ -90,3 +100,10 @@ complete the remaining macOS/iOS validation:
 
 The preparation checks prove the pinned library inputs and packaging. They do
 not substitute for a native compilation or device microphone validation.
+
+The `AudioRoutingTests` CocoaPods test spec exercises the real AVAudioSession /
+WebRTC policy without starting capture: speaker defaults surviving WebRTC
+configuration, stable hardware preferences, idempotent release, and preserving
+a newer owner's policy. Run this iOS XCTest spec on macOS with Xcode. Physical
+device checks must also cover full-volume built-in-speaker playback and routing
+to/from wired headphones and Bluetooth; a simulator cannot prove audibility.

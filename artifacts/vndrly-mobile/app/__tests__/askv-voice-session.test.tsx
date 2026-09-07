@@ -12,6 +12,7 @@ const env = vi.hoisted(() => ({
   options: [] as any[],
   clients: [] as any[],
   create: vi.fn(),
+  configure: vi.fn(),
   release: vi.fn(),
   wake: null as any,
   wakeCallbacks: null as any,
@@ -30,7 +31,7 @@ vi.mock("@/lib/auth", () => ({
 vi.mock("@/lib/api", () => ({ getApiBase: () => "https://example.test" }));
 vi.mock("@/lib/askv-speech", () => ({ stopAskVSpeech: () => {} }));
 vi.mock("@/lib/askv-audio-session", () => ({
-  configureAskVAudioSession: async () => {},
+  configureAskVAudioSession: env.configure,
   requestAskVMicrophonePermission: async () => {},
   releaseAskVAudioSession: env.release,
   isAskVAppActive: () => true,
@@ -76,6 +77,7 @@ beforeEach(() => {
     const next = client(); env.clients.push(next); env.options.push(options); return next;
   });
   env.release.mockReset().mockResolvedValue(undefined);
+  env.configure.mockReset().mockResolvedValue(undefined);
   vi.stubGlobal("fetch", vi.fn(async (url: string) => url.endsWith("/chat")
     ? new Response('event: done\ndata: {"content":"Typed reply","assistantMessageId":23}\n\n', { status: 200 })
     : new Response(JSON.stringify(
@@ -233,6 +235,34 @@ describe("mobile AskV session ownership", () => {
     act(() => env.wakeCallbacks.onWake()); await flush();
     expect(env.clients).toHaveLength(2);
     expect(env.options[1].audioSource).toBe(env.options[0].audioSource);
+    act(() => env.wakeCallbacks.onError("AUDIO_INTERRUPTED"));
+    expect(env.clients[1].close).toHaveBeenCalled();
+    expect(result.current.state).toBe("interrupted");
+  });
+  it("stops idle wake capture immediately when across-VNDRLY is disabled on AskV", async () => {
+    vi.useFakeTimers(); env.across = true;
+    env.wake = { start: vi.fn().mockResolvedValue(undefined), stop: vi.fn().mockResolvedValue(undefined), setDetectionEnabled: vi.fn().mockResolvedValue(undefined), audioSource: {} };
+    const { result } = renderHook(useAskVVoiceSession, { wrapper }); await flush();
+    await act(async () => { await result.current.startConversation(); });
+    act(() => env.options[0].onDone());
+    await act(async () => { await vi.advanceTimersByTimeAsync(300_001); });
+    expect(result.current.state).toBe("wake-idle");
+    act(() => result.current.setAcrossVndrly(false)); await flush();
+    expect(env.wake.stop).toHaveBeenCalledOnce();
+    expect(result.current.state).toBe("stopped");
+  });
+  it("hands the manual microphone over before enabling across-VNDRLY wake capture", async () => {
+    vi.useFakeTimers();
+    env.wake = { start: vi.fn().mockResolvedValue(undefined), stop: vi.fn().mockResolvedValue(undefined), setDetectionEnabled: vi.fn().mockResolvedValue(undefined), audioSource: {} };
+    const { result } = renderHook(useAskVVoiceSession, { wrapper }); await flush();
+    await act(async () => { await result.current.startConversation(); });
+    env.wake.start.mockImplementation(async () => { expect(env.clients[0].close).toHaveBeenCalledOnce(); });
+    act(() => result.current.setAcrossVndrly(true)); await flush();
+    expect(env.clients).toHaveLength(2);
+    expect(env.options[1].audioSource).toBe(env.wake.audioSource);
+    act(() => env.options[1].onDone());
+    await act(async () => { await vi.advanceTimersByTimeAsync(300_001); });
+    expect(result.current.state).toBe("wake-idle");
   });
   it("does not let a late wake-idle transition overwrite mute", async () => {
     vi.useFakeTimers(); env.across = true;
@@ -247,14 +277,63 @@ describe("mobile AskV session ownership", () => {
     await act(async () => enable());
     expect(result.current.state).toBe("muted");
   });
-  it("retains manual realtime voice when the installed wake engine cannot start", async () => {
+  it("does not restart capture after a newer Stop while enabling across-VNDRLY", async () => {
+    env.wake = { start: vi.fn().mockResolvedValue(undefined), stop: vi.fn().mockResolvedValue(undefined), setDetectionEnabled: vi.fn().mockResolvedValue(undefined), audioSource: {} };
+    const { result } = renderHook(useAskVVoiceSession, { wrapper }); await flush();
+    await act(async () => { await result.current.startConversation(); });
+    let release!: () => void;
+    env.release.mockImplementationOnce(() => new Promise<void>(done => { release = done; }));
+    act(() => result.current.setAcrossVndrly(true)); await flush();
+    act(() => { void result.current.stop(); });
+    await act(async () => release()); await flush();
+    expect(env.clients).toHaveLength(1);
+    expect(env.wake.start).not.toHaveBeenCalled();
+    expect(result.current.state).toBe("stopped");
+  });
+  it("releases capture when across-VNDRLY is disabled during the transition to wake-idle", async () => {
+    vi.useFakeTimers(); env.across = true;
+    let enable!: () => void;
+    env.wake = { start: vi.fn().mockResolvedValue(undefined), stop: vi.fn().mockResolvedValue(undefined),
+      setDetectionEnabled: vi.fn((enabled: boolean) => enabled ? new Promise<void>(done => { enable = done; }) : Promise.resolve()), audioSource: {} };
+    const { result } = renderHook(useAskVVoiceSession, { wrapper }); await flush();
+    await act(async () => { await result.current.startConversation(); });
+    act(() => env.options[0].onDone());
+    await act(async () => { await vi.advanceTimersByTimeAsync(300_001); });
+    act(() => result.current.setAcrossVndrly(false));
+    await act(async () => enable());
+    expect(env.wake.stop).toHaveBeenCalledOnce();
+    expect(result.current.state).toBe("stopped");
+  });
+  it("opens manual voice without starting a wake detector when across-VNDRLY is off", async () => {
     env.wake = { start: vi.fn().mockRejectedValue(new Error("MODEL_INVALID")), stop: vi.fn().mockResolvedValue(undefined), setDetectionEnabled: vi.fn(), audioSource: {} };
     const { result } = renderHook(useAskVVoiceSession, { wrapper }); await flush();
     await act(async () => { await result.current.startConversation(); });
-    expect(result.current.wakeSupported).toBe(false);
-    expect(result.current.error).toBe("askv.wakeUnavailable");
+    expect(env.wake.start).not.toHaveBeenCalled();
+    expect(env.wakeCallbacks).toBeNull();
+    expect(result.current.error).toBeNull();
     expect(env.options[0].audioSource).toBeUndefined();
     expect(env.clients[0].connect).toHaveBeenCalled();
+    act(() => { env.options[0].onAudio(); env.options[0].onDone(); });
+    expect(result.current.state).toBe("listening");
+  });
+  it("restores conversation audio after an optional wake failure and ignores its late errors", async () => {
+    env.across = true;
+    const events: string[] = [];
+    env.configure.mockImplementation(async () => { events.push("configure"); });
+    env.wake = {
+      start: vi.fn(async () => { env.wakeCallbacks.onError("MODEL_INVALID"); throw new Error("MODEL_INVALID"); }),
+      stop: vi.fn(async () => { events.push("detector-stopped"); }), setDetectionEnabled: vi.fn(), audioSource: {},
+    };
+    const { result } = renderHook(useAskVVoiceSession, { wrapper }); await flush();
+    await act(async () => { await result.current.startConversation(); });
+    expect(result.current.wakeSupported).toBe(false);
+    expect(result.current.error).toBeNull();
+    expect(events).toEqual(["configure", "detector-stopped", "configure"]);
+    expect(env.options[0].audioSource).toBeUndefined();
+    act(() => { env.options[0].onAudio(); env.options[0].onDone(); env.wakeCallbacks.onError("AUDIO_INTERRUPTED"); });
+    expect(env.clients[0].close).not.toHaveBeenCalled();
+    expect(result.current.error).toBeNull();
+    expect(result.current.state).toBe("listening");
   });
   it("does not start idle while interrupted playback clears during a user utterance", async () => {
     vi.useFakeTimers();

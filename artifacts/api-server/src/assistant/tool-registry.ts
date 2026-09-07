@@ -50,6 +50,7 @@ type JsonSchema = Record<string, unknown>;
 const ALL_SIGNED_IN_ROLES: AskVRole[] = ["admin", "partner", "vendor", "field_employee"];
 const OFFICE_ROLES: AskVRole[] = ["admin", "partner", "vendor"];
 const VENDOR_FIELD_ROLES: AskVRole[] = ["admin", "vendor", "field_employee"];
+const ONBOARDING_ROLES: AskVRole[] = ["partner", "vendor", "field_employee"];
 
 const DEFAULT_METADATA: ToolMetadata = {
   roles: ALL_SIGNED_IN_ROLES,
@@ -62,10 +63,10 @@ const DEFAULT_METADATA: ToolMetadata = {
 
 const TOOL_METADATA: Record<string, Partial<ToolMetadata>> = {
   lookup_user_progress: { auditTarget: "onboarding" },
-  start_onboarding: { mutating: true, auditTarget: "onboarding" },
-  set_onboarding_field: { mutating: true, confirmation: "required", auditTarget: "onboarding" },
-  complete_onboarding_step: { mutating: true, confirmation: "required", auditTarget: "onboarding" },
-  finalize_onboarding: { mutating: true, confirmation: "required", auditTarget: "onboarding" },
+  start_onboarding: { roles: ONBOARDING_ROLES, mutating: true, pack: "screen", auditTarget: "onboarding" },
+  set_onboarding_field: { roles: ONBOARDING_ROLES, mutating: true, confirmation: "required", pack: "screen", auditTarget: "onboarding" },
+  complete_onboarding_step: { roles: ONBOARDING_ROLES, mutating: true, confirmation: "required", pack: "screen", auditTarget: "onboarding" },
+  finalize_onboarding: { roles: ["partner", "vendor"], mutating: true, confirmation: "required", pack: "screen", auditTarget: "onboarding" },
   lookup_open_invoices: { roles: OFFICE_ROLES, auditTarget: "invoice" },
   lookup_open_tickets: { auditTarget: "ticket" },
   query_tickets: { auditTarget: "ticket" },

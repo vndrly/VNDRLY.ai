@@ -1,4 +1,8 @@
 const REFRESH: Record<string, string[]> = {
+  start_onboarding: ["onboarding"],
+  set_onboarding_field: ["onboarding"],
+  complete_onboarding_step: ["onboarding"],
+  finalize_onboarding: ["onboarding", "auth", "site-locations", "field-employees"],
   confirm_visitor_check_in: ["gate", "visits"],
   confirm_visitor_check_out: ["gate", "visits"],
   set_ticket_lifecycle: ["tickets", "crew-map"],

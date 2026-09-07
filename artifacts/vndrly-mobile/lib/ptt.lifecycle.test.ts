@@ -8,6 +8,7 @@ const env = vi.hoisted(() => ({
   deleteFile: vi.fn(), apiFetch: vi.fn(), createSound: vi.fn(),
 }));
 vi.mock("react-native", () => ({
+  Platform: { OS: "ios" },
   AppState: {
     get currentState() { return env.appState.currentState; },
     addEventListener: (_event: string, listener: (state: string) => void) => {
@@ -25,6 +26,8 @@ vi.mock("expo-av", () => ({
   },
 }));
 vi.mock("expo-file-system/legacy", () => ({ deleteAsync: env.deleteFile }));
+// Legacy PTT also runs in older/Expo Go binaries without the optional module.
+vi.mock("@/modules/askv-wake/src/AskVWakeModule", () => ({ default: null }));
 vi.mock("./api", () => ({ apiFetch: env.apiFetch, getApiBase: () => "https://vndrly.ai" }));
 import { createPttRecorder, playPttUri, postPttMessage, warmUpPttSession } from "./ptt";
 

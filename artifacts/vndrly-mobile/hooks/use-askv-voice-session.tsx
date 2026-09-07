@@ -261,18 +261,23 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
         await configureAskVAudioSession(); check();
         let detector = detectorRef.current;
         let startingDetector = false;
-        if (!detector) detector = createLocalAskVWakeDetector({
+        if (!detector && acrossRef.current) detector = createLocalAskVWakeDetector({
           onWake: () => {
             if (stateRef.current === "wake-idle" && acrossRef.current && foregroundRef.current && !mutedRef.current) {
               void startRef.current("wake AskV", pathRef.current);
             }
           },
           onError: code => {
-            if (!mounted.current) return;
+            // Capture can outlive a conversation during wake-idle. Match the
+            // current detector rather than the generation of its first call.
+            if (!mounted.current || !detector || detectorRef.current !== detector) return;
             setWakeSupported(false);
-            setError(code === "APP_INACTIVE" || code === "AUDIO_INTERRUPTED" ? "askv.voiceInterrupted" : "askv.wakeUnavailable");
-            if (startingDetector && !sessionRef.current) return;
-            void disposeRef.current(code === "APP_INACTIVE" || code === "AUDIO_INTERRUPTED" ? "interrupted" : "error");
+            const interrupted = code === "APP_INACTIVE" || code === "AUDIO_INTERRUPTED";
+            // A failed optional keyword engine can fall back to the conversation
+            // microphone. A real interruption must still stop capture.
+            if (startingDetector && !sessionRef.current && !interrupted) return;
+            setError(interrupted ? "askv.voiceInterrupted" : "askv.voiceFailed");
+            void disposeRef.current(interrupted ? "interrupted" : "error");
           },
         });
         if (detector) {
@@ -286,7 +291,10 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
             check();
             await detector.stop().catch(() => undefined); check();
             detectorRef.current = null; detector = null;
-            setWakeSupported(false); setError("askv.wakeUnavailable");
+            setWakeSupported(false);
+            // Native detector shutdown releases its audio session. Restore the
+            // conversation policy before WebRTC acquires its own microphone.
+            await configureAskVAudioSession(); check();
           } finally { startingDetector = false; }
         } else setWakeSupported(false);
         const existing = assistantRef.current.getConversationId();
@@ -409,7 +417,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
         await client.connect(); check();
         recordAskVMetric(session, "session_start");
         if (session.woke) recordAskVMetric(session, "wake");
-        if (!detector) recordAskVMetric(session, "fallback", { reason: "unavailable" });
+        if (!detector && acrossRef.current) recordAskVMetric(session, "fallback", { reason: "unavailable" });
         // Route changes during connection must reach the model before the next turn.
         await syncContext(session, pathRef.current); check();
         // Only playback completion can enter listening and start the five-minute timer.
@@ -455,10 +463,24 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
     }
   }, [writeState]);
   const setAcrossVndrly = useCallback((enabled: boolean) => {
+    const changed = acrossRef.current !== enabled;
     acrossRef.current = enabled; setAcross(enabled);
     const id = userRef.current?.id;
     if (id != null) void writeAskVAcrossVndrly(id, enabled).catch(() => setError("askv.voicePreferencesFailed"));
-    if (!enabled && !pathRef.current.endsWith("/askv")) void disposeRef.current();
+    if (!enabled && ((!sessionRef.current && detectorRef.current) || !pathRef.current.endsWith("/askv"))) {
+      void disposeRef.current();
+    } else if (changed && enabled && !detectorRef.current && !mutedRef.current) {
+      const currentScope = scopeRef.current;
+      // Manual calls use WebRTC capture. Close it before starting the shared
+      // wake/conversation microphone so enabling wake never opens two inputs.
+      const closing = disposeRef.current();
+      const wakeGeneration = generation.current;
+      void (async () => {
+        await closing;
+        if (generation.current === wakeGeneration && mounted.current && foregroundRef.current && acrossRef.current && !mutedRef.current
+          && scopeRef.current === currentScope) await startRef.current(undefined, pathRef.current);
+      })();
+    }
   }, []);
   const subscribeReplies = useCallback((listener: (text: string) => void) => {
     replies.current.add(listener); return () => { replies.current.delete(listener); };

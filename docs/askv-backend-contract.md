@@ -29,7 +29,7 @@ send `context` as an app-context conversation item. That item is navigation data
 not a user request, and must not replace the base system instructions.
 
 The always-available `select_tool_pack` tool accepts `workflow`:
-`auto`, `gate`, `tickets`, `safety`, `operations`, `finance`, `reports`, `catalog`,
+`auto`, `gate`, `tickets`, `safety`, `onboarding`, `operations`, `finance`, `reports`, `catalog`,
 or `market`. Its tool-call response includes the same tools/context envelope.
 Clients apply that envelope before sending the function output and continuing
 the response. Every retained read-only data tool is discoverable through these
@@ -37,6 +37,8 @@ bounded packs. Office packs do not enable deferred mutations.
 
 Successful committed tools return a top-level `mutation` object with `name`,
 `refresh`, available positive `ticketId`/`visitId`/`siteLocationId`, and `replayed`.
+Onboarding start, field edits and step completion refresh `onboarding`; final
+submission also refreshes `auth`, `site-locations` and `field-employees`.
 Gate changes refresh `gate` and `visits`; ticket lifecycle/comments refresh
 `tickets` and `crew-map`; notification changes refresh `notifications`. Clients
 invalidate both active and history views. Pending, denied, failed, read-only and

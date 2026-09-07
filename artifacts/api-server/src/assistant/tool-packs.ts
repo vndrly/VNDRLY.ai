@@ -55,11 +55,19 @@ const SAFETY_SCREEN_TOOLS = new Set([
   "draft_safety_report",
 ]);
 
+const ONBOARDING_SCREEN_TOOLS = new Set([
+  "start_onboarding",
+  "set_onboarding_field",
+  "complete_onboarding_step",
+  "finalize_onboarding",
+]);
+
 export const VOICE_WORKFLOWS = [
   "auto",
   "gate",
   "tickets",
   "safety",
+  "onboarding",
   "operations",
   "finance",
   "reports",
@@ -77,6 +85,7 @@ const WORKFLOW_TOOLS: Record<Exclude<VoiceWorkflow, "auto">, Set<string>> = {
   gate: GATE_SCREEN_TOOLS,
   tickets: TICKET_SCREEN_TOOLS,
   safety: SAFETY_SCREEN_TOOLS,
+  onboarding: ONBOARDING_SCREEN_TOOLS,
   operations: new Set([
     "query_vendor_performance",
     "query_field_metrics",
@@ -143,6 +152,7 @@ const ROLE_READ_TOOLS: Record<AskVRole, Set<string>> = {
 };
 
 export function voiceWorkflowForPath(path: string): VoiceWorkflow {
+  if (/onboarding/i.test(path)) return "onboarding";
   if (/gate|visitor/i.test(path)) return "gate";
   if (/ticket/i.test(path)) return "tickets";
   if (/safety/i.test(path)) return "safety";

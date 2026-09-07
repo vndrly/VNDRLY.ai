@@ -105,6 +105,7 @@ private struct AskVPreroll {
 public final class AskVWakeModule: Module {
   private let dspQueue = DispatchQueue(label: "ai.vndrly.askv.wake", qos: .userInitiated)
   private let gate = AskVCaptureGate()
+  private let conversationAudio = AskVConversationAudio()
 
   // Main queue owns microphone/session state.
   private var audioEngine: AVAudioEngine?
@@ -126,6 +127,14 @@ public final class AskVWakeModule: Module {
     Events("onWake", "onAudio", "onError")
 
     OnCreate { self.onMain { self.observeLifecycle() } }
+
+    AsyncFunction("configureConversationAudio") {
+      try self.conversationAudio.configure()
+    }.runOnQueue(.main)
+
+    AsyncFunction("releaseConversationAudio") {
+      self.conversationAudio.releaseConfiguration()
+    }.runOnQueue(.main)
 
     AsyncFunction("start") { (options: AskVWakeOptions, promise: Promise) in
       self.start(options: options, promise: promise)
@@ -197,6 +206,7 @@ public final class AskVWakeModule: Module {
   private func teardown() {
     onMain {
       stopCapture()
+      conversationAudio.releaseConfiguration()
       for observer in observers { NotificationCenter.default.removeObserver(observer) }
       observers.removeAll()
     }
@@ -285,9 +295,9 @@ public final class AskVWakeModule: Module {
     }
     do {
       let session = AVAudioSession.sharedInstance()
-      try session.setCategory(.playAndRecord, mode: .voiceChat, options: [.defaultToSpeaker, .allowBluetooth])
-      try session.setPreferredSampleRate(16_000)
-      try session.setPreferredIOBufferDuration(0.032)
+      // Match WebRTC's eventual output configuration before installing the tap;
+      // conflicting preferences can invalidate an already-running input format.
+      try conversationAudio.configure()
       try session.setActive(true)
       ownsAudioSession = true
 

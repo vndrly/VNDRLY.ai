@@ -365,7 +365,68 @@ describe("AskV Realtime routes", () => {
   });
 });
 
+describe("AskV Realtime onboarding", () => {
+  beforeEach(() => {
+    mocks.session = { userId: 10, role: "vendor", vendorId: 22, partnerId: null, vendorPeopleId: null, displayName: "Vendor User" };
+    mocks.runTool.mockReset();
+    mocks.runTool.mockResolvedValue(JSON.stringify({ ok: true }));
+    mocks.runMutation.mockClear();
+    mocks.writeAudit.mockClear();
+    testSessionId = `onboarding-${++testSessionNumber}`;
+  });
+
+  it("can select onboarding while viewing Gate without adding deferred office writes", async () => {
+    const res = await request(app()).post("/assistant/realtime/tool-call").send({
+      sessionId: testSessionId, name: "select_tool_pack", path: "/gate",
+      arguments: { workflow: "onboarding" },
+    }).expect(200);
+    expect(res.body.context.workflow).toBe("onboarding");
+    expect(res.body.tools.map((tool: { name: string }) => tool.name)).toContain("complete_onboarding_step");
+    expect(res.body.tools.map((tool: { name: string }) => tool.name)).not.toContain("schedule_ticket_crew");
+  });
+
+  it.each([
+    ["set_onboarding_field", { path: "firstEmployee.firstName", value: "Morgan" }],
+    ["complete_onboarding_step", { step: "first-employee", nextStep: "done", skipped: false }],
+    ["finalize_onboarding", {}],
+  ])("requires a real saved user reply before executing %s and protects an exact retry", async (name, args) => {
+    const original = { sessionId: testSessionId, callId: "onboarding-call", name, arguments: args, path: "/gate", clientSurface: "web" };
+    const pending = await request(app()).post("/assistant/realtime/tool-call").send({
+      ...original, confirmed: true, confirmationPhrase: "yes",
+    }).expect(200);
+    expect(pending.body.requiresConfirmation).toBe(true);
+    expect(mocks.runTool).not.toHaveBeenCalled();
+    const forged = await request(app()).post("/assistant/realtime/tool-call").send({
+      ...original, confirmationPhrase: "yes", arguments: { ...args, confirmed: true },
+    }).expect(200);
+    expect(forged.body.requiresConfirmation).toBe(true);
+    expect(mocks.runTool).not.toHaveBeenCalled();
+
+    mocks.readConfirmation.mockResolvedValue("yes");
+    const completed = await request(app()).post("/assistant/realtime/tool-call").send({
+      ...original, confirmationEventId: "saved-user-turn",
+    }).expect(200);
+    expect(completed.body).toMatchObject({ ok: true, mutation: { name, refresh: expect.arrayContaining(["onboarding"]) } });
+    expect(mocks.runTool).toHaveBeenCalledWith(name, expect.objectContaining({ ...args, confirmed: true }), expect.objectContaining({ vendorId: 22 }), "");
+    const firstScope = mocks.runMutation.mock.calls[0][0];
+    await request(app()).post("/assistant/realtime/tool-call").send(original).expect(200);
+    expect(mocks.runMutation.mock.calls[1][0]).toEqual(firstScope);
+    expect(mocks.writeAudit).toHaveBeenCalledWith(expect.objectContaining({ toolName: name, targetType: "onboarding", resultStatus: "success" }));
+  });
+
+  it("rejects field-employee finalization before running a domain action", async () => {
+    mocks.session = { ...mocks.session, role: "field_employee", vendorPeopleId: 7 };
+    await request(app()).post("/assistant/realtime/tool-call").send({
+      sessionId: testSessionId, callId: "finalize", name: "finalize_onboarding", arguments: {},
+    }).expect(403);
+    expect(mocks.runTool).not.toHaveBeenCalled();
+  });
+});
+
 describe("AskV Realtime safety regressions", () => {
+  beforeEach(() => {
+    mocks.session = { userId: 10, role: "vendor", vendorId: 22, partnerId: null, vendorPeopleId: null, displayName: "Vendor User" };
+  });
   it("returns authenticated context and allows a bounded workflow switch", async () => {
     const context = await request(app())
       .post("/assistant/realtime/context")

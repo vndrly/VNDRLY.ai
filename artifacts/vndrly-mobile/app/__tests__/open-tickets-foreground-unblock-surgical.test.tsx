@@ -160,6 +160,9 @@ afterEach(() => {
 // Helper — drive the captured foreground push listener with a
 // well-formed `ticket_unblocked` payload for a given ticket id.
 async function dispatchUnblock(ticketId: number): Promise<void> {
+  // A visible row can precede the passive effect that updates ticketsRef.
+  // Finish that commit before capturing the current notification listener.
+  await act(async () => {});
   const listener = pushListeners[pushListeners.length - 1];
   await act(async () => {
     listener({

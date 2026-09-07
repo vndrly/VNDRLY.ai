@@ -23,6 +23,7 @@ import { PLATFORM_EULA_VERSION } from "@workspace/platform-eula";
 import { LEGAL_POLICY_VERSION } from "@/lib/legal-docs";
 import { DEFAULT_BRAND } from "@/hooks/use-brand";
 import { onboardingApi } from "@/lib/onboarding-api";
+import { useOnboardingRefresh } from "@/hooks/use-onboarding-progress";
 import { uploadOnboardingLogo } from "@/lib/onboarding-logo-upload";
 import { handlePhoneInput, stripPhone } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
@@ -78,6 +79,7 @@ interface PartnerPayload {
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 export default function OnboardingPartner() {
+  const onboardingRefresh = useOnboardingRefresh();
   const [, navigate] = useLocation();
   const { t } = useTranslation();
   const { toast } = useToast();
@@ -182,8 +184,9 @@ export default function OnboardingPartner() {
         // send them straight to the dashboard. If they still have
         // skipped items, allow re-entry so the dashboard's
         // Finish-setup widget deep-links back here to fill them in.
-        if (me.progress?.completedAt && (me.progress.skippedSteps?.length ?? 0) === 0) {
-          window.location.assign(`${BASE}/`);
+        if ((onboardingRefresh.revision === 0 || onboardingRefresh.finalized) && me.progress?.completedAt && (me.progress.skippedSteps?.length ?? 0) === 0) {
+          if (onboardingRefresh.revision > 0) navigate("/");
+          else window.location.assign(`${BASE}/`);
           return;
         }
         if (!me.progress || me.progress.orgType !== "partner") return;
@@ -191,11 +194,11 @@ export default function OnboardingPartner() {
         // currentStep so the dashboard's Finish-setup widget can jump
         // straight to a skipped should-have step.
         const params = new URLSearchParams(window.location.search);
-        const stepParam = params.get("step");
+        const stepParam = onboardingRefresh.followSavedStep ? null : params.get("step");
         const overrideIdx = stepParam ? STEPS.findIndex((s) => s.key === stepParam) : -1;
         const idx = overrideIdx !== -1 ? overrideIdx : STEPS.findIndex((s) => s.key === me.progress!.currentStep);
         setOrgId(me.progress.partnerId ?? null);
-        setStepIndex(idx === -1 ? 1 : idx);
+        setStepIndex(idx === -1 ? (me.progress.currentStep === "done" ? STEPS.length - 1 : 1) : idx);
         setCompleted(me.progress.completedSteps ?? []);
         setSkipped(me.progress.skippedSteps ?? []);
         const p = (me.progress.payload ?? {}) as PartnerPayload;
@@ -253,7 +256,7 @@ export default function OnboardingPartner() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [onboardingRefresh.revision]);
 
   // Debounced fuzzy lookup for the Step 1 Company Name input. Only
   // runs while the user is still on the anonymous step-1 view (no

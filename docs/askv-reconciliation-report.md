@@ -1,5 +1,9 @@
 # AskV implementation reconciliation
 
+See the [September 7 TestFlight follow-up](askv-testflight-snag-two.md) for the
+subsequent wake-warning, quiet-speaker and onboarding corrections. Earlier
+build/test totals below describe the original reconciliation baseline.
+
 Date: September 6, 2026. Branch: `codex/askv-cursor-reconcile`, based on Cursor's `d01cdf9`.
 
 This branch implements the approved natural-voice design using Cursor's work as its starting point. The final uninterrupted automated regression chain passed on compatibility checkpoint `bd0538f`: 3,714 passed, 56 documented skips and zero failures. Under the subsequent full-ship authorization, source `95791e5` was published to main and deployed to web/API; iOS 1.0.1 build 157 finished and was successfully uploaded to App Store Connect, and its production OTA was independently verified. The production voice smoke then exposed a missing audit table; the surgical deployment repair is described below. Physical-device and field acceptance remain testing on the internal build.

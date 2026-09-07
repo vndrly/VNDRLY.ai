@@ -85,6 +85,11 @@ export async function callNaturalVoiceDomainApi(
       error: failure.message ?? failure.error ?? "The action did not complete.",
       code: failure.code,
       status: response.status,
+      // Onboarding reports exact missing paths so AskV can repair the saved
+      // draft using the canonical validator's result.
+      ...(Array.isArray(failure.missing) && failure.missing.every((field) => typeof field === "string")
+        ? { missing: failure.missing }
+        : {}),
     };
   }
   return result;

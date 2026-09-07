@@ -51,7 +51,7 @@ export function AskVVoiceProvider({ children }: { children: ReactNode }) {
   const saveQueue = useRef(new AskVTranscriptQueue()); const mounted = useRef(true);
   const voice = useAskVRealtime({ acrossVndrly,
     // Canonical Gate and ticket mutations affect multiple lists, history and maps.
-    onMutation: () => { void queryClient.invalidateQueries(); },
+    onMutation: mutation => { window.dispatchEvent(new CustomEvent('askv:data-changed', { detail: mutation })); },
     flushTranscripts: () => saveQueue.current.flush(),
     prepareConversation: async signal => {
       await saveQueue.current.flush();

@@ -11,6 +11,7 @@ import AmberButton from "@/components/amber-button";
 import { useToast } from "@/hooks/use-toast";
 import OnboardingStepper, { type StepperStep } from "@/components/onboarding-stepper";
 import { onboardingApi } from "@/lib/onboarding-api";
+import { useOnboardingRefresh } from "@/hooks/use-onboarding-progress";
 import { handlePhoneInput, stripPhone } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -21,6 +22,7 @@ const STEP_KEYS: StepKey[] = ["personal-info", "photo-certs", "set-password"];
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 export default function OnboardingField() {
+  const onboardingRefresh = useOnboardingRefresh();
   const [, navigate] = useLocation();
   const [, params] = useRoute("/onboarding/field/:token");
   const token = params?.token ?? "";
@@ -93,7 +95,7 @@ export default function OnboardingField() {
         });
         if (resp.photoUrl) setPhotoUrl(resp.photoUrl);
         const idx = STEP_KEYS.findIndex((k) => k === resp.progress.currentStep);
-        setStepIndex(idx === -1 ? 0 : idx);
+        setStepIndex(idx === -1 ? (resp.progress.currentStep === "done" ? STEP_KEYS.length - 1 : 0) : idx);
         setCompleted(resp.progress.completedSteps ?? []);
         setSkipped(resp.progress.skippedSteps ?? []);
         // Re-hydrate any in-flight wizard state the invitee saved on a
@@ -125,7 +127,7 @@ export default function OnboardingField() {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
+  }, [token, onboardingRefresh.revision]);
 
   const currentStep = STEPS[stepIndex];
 

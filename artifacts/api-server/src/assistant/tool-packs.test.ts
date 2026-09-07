@@ -3,6 +3,31 @@ import { toolsForRealtime, VOICE_WORKFLOWS } from "./tool-packs";
 import { DATA_TOOL_NAMES } from "./tool-names";
 
 describe("AskV realtime tool packs", () => {
+  it("loads the existing onboarding workflow from its screen and from another screen", () => {
+    for (const args of [
+      { path: "/onboarding/vendor" },
+      { path: "/mobile/onboarding/partner" },
+      { path: "/gate", workflow: "onboarding" as const },
+    ]) {
+      const names = toolsForRealtime({ role: "vendor", ...args }).map((tool) => tool.name);
+      expect(names).toEqual(expect.arrayContaining([
+        "lookup_user_progress", "start_onboarding", "set_onboarding_field",
+        "complete_onboarding_step", "finalize_onboarding",
+      ]));
+      expect(names).not.toContain("schedule_ticket_crew");
+      expect(names).not.toContain("set_ticket_flag");
+    }
+  });
+
+  it("limits finalization to organization roles and keeps self onboarding for field employees", () => {
+    const names = (role: string) => toolsForRealtime({ role, path: "/onboarding/field" }).map((tool) => tool.name);
+    expect(names("field_employee")).toContain("set_onboarding_field");
+    expect(names("field_employee")).toContain("complete_onboarding_step");
+    expect(names("field_employee")).not.toContain("finalize_onboarding");
+    expect(names("admin")).not.toContain("set_onboarding_field");
+    expect(names("any")).not.toContain("set_onboarding_field");
+  });
+
   it("keeps every retained read-only data tool discoverable in a bounded workflow", () => {
     const names = new Set(
       VOICE_WORKFLOWS.flatMap((workflow) =>

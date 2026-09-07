@@ -19,6 +19,17 @@ vi.mock("@/lib/askv-realtime-client", () => ({
 import { useAskVRealtime } from "./use-askv-realtime";
 
 describe("useAskVRealtime", () => {
+  it("passes successful mutation refresh labels to the voice provider", async () => {
+    const mutation = { name: "complete_onboarding_step", refresh: ["onboarding"], replayed: false };
+    const onMutation = vi.fn();
+    const { result } = renderHook(() => useAskVRealtime({ onMutation }));
+    await act(async () => result.current.startConversation());
+    vi.mocked(fetch).mockResolvedValue({ ok: true, json: async () => ({ ok: true, output: '{"ok":true}', mutation }) } as Response);
+    const callbacks = vi.mocked(createAskVRealtimeClient).mock.calls.at(-1)![0];
+    await act(async () => { await callbacks.onToolCall({ name: "complete_onboarding_step", callId: "step", arguments: { step: "rates", nextStep: "first-employee" } }); });
+    expect(onMutation).toHaveBeenCalledWith(mutation);
+  });
+
   afterEach(() => vi.useRealTimers());
   beforeEach(() => {
     mocks.connect.mockClear();

@@ -71,12 +71,20 @@ export const TOOLS: Anthropic.Tool[] = [
   {
     name: "set_onboarding_field",
     description:
-      "Writes a single field into the onboarding payload. Use dot.notation for nested keys (e.g. 'firstSite.address'). When the user already provided the exact value (e.g. 'set my company name to Acme'), call this immediately and do not call lookup_user_progress first. Only pause to confirm when you inferred or guessed the value. Re-checks role permissions server-side.",
+      "Proposes writing a single field into the onboarding payload. Use dot.notation for nested keys (e.g. 'firstSite.address'). When the user already provided an explicit exact value, do not call lookup_user_progress first; call this to prepare the change. Summarize the exact field and value if the server requests confirmation, then wait for the user's reply. Never infer missing values or confirmation. Re-checks role permissions server-side.",
     input_schema: {
       type: "object",
       properties: {
         path: { type: "string", description: "Dot-path of the field to set (e.g. 'brandPrimaryColor', 'firstSite.address', 'rates.hourlyRate')." },
-        value: { description: "The value to write. Strings, numbers, booleans, and arrays of those are accepted." },
+        value: {
+          description: "The exact user-provided value. Write nested object fields individually using a dot-path.",
+          anyOf: [
+            { type: "string" },
+            { type: "number" },
+            { type: "boolean" },
+            { type: "array", items: { anyOf: [{ type: "string" }, { type: "number" }, { type: "boolean" }] } },
+          ],
+        },
       },
       required: ["path", "value"],
       additionalProperties: false,
@@ -998,10 +1006,10 @@ export const TOOLS: Anthropic.Tool[] = [
   },
   {
     name: "select_tool_pack",
-    description: "Load a focused set of permitted tools before a task. Choose gate for visits, tickets for field work, safety for drafts, operations for crew/site status, finance or reports for existing read-only office queries, catalog for read-only Hotlist/catalog queries, market for prices, or auto for the current screen. This changes available tools without navigating or writing domain records.",
+    description: "Load a focused set of permitted tools before a task. Choose onboarding to fill, advance, or finish the existing onboarding wizard, gate for visits, tickets for field work, safety for drafts, operations for crew/site status, finance or reports for existing read-only office queries, catalog for read-only Hotlist/catalog queries, market for prices, or auto for the current screen. This changes available tools without navigating or writing domain records.",
     input_schema: {
       type: "object",
-      properties: { workflow: { type: "string", enum: ["auto", "gate", "tickets", "safety", "operations", "finance", "reports", "catalog", "market"] } },
+      properties: { workflow: { type: "string", enum: ["auto", "gate", "tickets", "safety", "onboarding", "operations", "finance", "reports", "catalog", "market"] } },
       required: ["workflow"],
       additionalProperties: false,
     },

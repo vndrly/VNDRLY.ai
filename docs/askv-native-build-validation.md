@@ -1,5 +1,9 @@
 # AskV iOS native build validation
 
+The [September 7 testing follow-up](askv-testflight-snag-two.md) introduces new
+native audio routing and runtime 1.0.2. Build 157 below is historical evidence;
+the release handoff must independently verify the replacement build.
+
 Date: September 6, 2026 (local; September 7 UTC). The original sections record build-only validation of baseline 156. The subsequently authorized full ship produced and submitted final build 157, recorded immediately below. Signing credentials were preserved.
 
 ## Final submitted build 157

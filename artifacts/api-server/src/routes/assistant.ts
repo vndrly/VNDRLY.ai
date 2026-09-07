@@ -55,6 +55,7 @@ import { voiceMutationHint } from "../assistant/voice-mutation";
 import { findAskVTool } from "../assistant/tool-registry";
 import { isDataTool, runDataTool } from "../assistant/data-tools";
 import { isWriteTool, runWriteTool } from "../assistant/write-tools";
+import { callNaturalVoiceDomainApi } from "../assistant/natural-voice-write-tools";
 import { isClientTool, runClientTool } from "../assistant/client-tools";
 import {
   consumeDailyBudget,
@@ -948,24 +949,19 @@ export async function runTool(
         // Defer to the canonical /onboarding/:orgType/:orgId/complete
         // endpoint so all required-field validation and canonical
         // table writes (partners/siteLocations or vendors/...) happen
-        // through the same code path the wizard uses. Forwarding the
-        // user's session cookie keeps authz consistent with that route.
+        // through the same code path the wizard uses. Delegate the authenticated
+        // session through the existing short-lived loopback helper: mobile's
+        // Bearer shim populates req.cookies without a raw Cookie header.
         const orgId = scope.orgType === "partner" ? scope.partnerId! : scope.vendorId!;
-        const port = process.env.PORT ?? "8080";
-        const url = `http://127.0.0.1:${port}/api/onboarding/${scope.orgType}/${orgId}/complete`;
+        const path = `/onboarding/${scope.orgType}/${orgId}/complete`;
         try {
-          const r = await fetch(url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json", cookie: cookieHeader },
-            body: "{}",
-          });
-          const text = await r.text();
-          if (!r.ok) {
-            return JSON.stringify({ ok: false, status: r.status, error: text });
+          const result = await callNaturalVoiceDomainApi(path, "POST", {}, session);
+          if (!Array.isArray(result) && result.ok === false) {
+            return JSON.stringify(result);
           }
-          return JSON.stringify({ ok: true, response: text });
+          return JSON.stringify({ ok: true, response: JSON.stringify(result) });
         } catch (err) {
-          logger.error({ err, url }, "finalize_onboarding fetch failed");
+          logger.error({ err, path }, "finalize_onboarding fetch failed");
           return JSON.stringify({
             ok: false,
             error: "Couldn't reach the onboarding completion endpoint. Please try again from the wizard.",

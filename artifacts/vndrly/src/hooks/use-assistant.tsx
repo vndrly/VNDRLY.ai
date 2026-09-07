@@ -640,7 +640,7 @@ async function consumeSse(
         continue;
       }
       if (eventName === 'mutation') {
-        window.dispatchEvent(new Event('askv:data-changed'));
+        window.dispatchEvent(new CustomEvent('askv:data-changed', { detail: (parsed as { mutation?: unknown }).mutation }));
       }
       else if (eventName === 'client_intent') {
         const intent = (parsed as { intent?: AskVClientIntent }).intent;

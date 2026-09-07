@@ -1,5 +1,6 @@
 import { Audio } from "expo-av";
-import { AppState, type NativeEventSubscription } from "react-native";
+import { AppState, Platform, type NativeEventSubscription } from "react-native";
+import AskVWake from "@/modules/askv-wake/src/AskVWakeModule";
 
 // Audio-mode changes must retain call order when permission or app lifecycle work overlaps.
 let audioModeQueue: Promise<void> = Promise.resolve();
@@ -17,28 +18,39 @@ export async function requestAskVMicrophonePermission(check: () => void = () => 
     if (result.status !== "granted") throw new Error("askv.microphoneDenied");
   } finally { permissionPromptPending -= 1; }
 }
-function setMode(mode: Parameters<typeof Audio.setAudioModeAsync>[0]): Promise<void> {
-  const change = audioModeQueue.then(() => Audio.setAudioModeAsync(mode));
+function changeAudioSession(operation: () => Promise<void>): Promise<void> {
+  const change = audioModeQueue.then(operation);
   audioModeQueue = change.catch(() => undefined);
   return change;
 }
 
 export function configureAskVAudioSession(): Promise<void> {
-  return setMode({
-    allowsRecordingIOS: true,
-    playsInSilentModeIOS: true,
-    staysActiveInBackground: false,
-    interruptionModeIOS: 1,
-    shouldDuckAndroid: true,
-    playThroughEarpieceAndroid: false,
+  return changeAudioSession(async () => {
+    await Audio.setAudioModeAsync({
+      allowsRecordingIOS: true,
+      playsInSilentModeIOS: true,
+      staysActiveInBackground: false,
+      interruptionModeIOS: 1,
+      shouldDuckAndroid: true,
+      playThroughEarpieceAndroid: false,
+    });
+    // WebRTC applies its saved policy when it opens the peer connection. Keep
+    // that policy in sync with the active session, including on wake fallback.
+    if (Platform.OS === "ios") await AskVWake?.configureConversationAudio?.();
   });
 }
 
 export function releaseAskVAudioSession(): Promise<void> {
-  return setMode({
-    allowsRecordingIOS: false,
-    playsInSilentModeIOS: true,
-    staysActiveInBackground: false,
+  return changeAudioSession(async () => {
+    try {
+      if (Platform.OS === "ios") await AskVWake?.releaseConversationAudio?.();
+    } finally {
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+        playsInSilentModeIOS: true,
+        staysActiveInBackground: false,
+      });
+    }
   });
 }
 

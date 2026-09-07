@@ -8,6 +8,19 @@ import {
 } from "./tool-registry";
 
 describe("AskV tool registry", () => {
+  it("advertises provider-compatible values for onboarding fields and a selectable workflow", () => {
+    const tools = toRealtimeTools(ASK_V_TOOL_REGISTRY);
+    const field = tools.find((tool) => tool.name === "set_onboarding_field")!;
+    expect((field.parameters.properties as Record<string, unknown>).value).toMatchObject({
+      anyOf: [
+        { type: "string" }, { type: "number" }, { type: "boolean" },
+        { type: "array", items: { anyOf: [{ type: "string" }, { type: "number" }, { type: "boolean" }] } },
+      ],
+    });
+    const selector = tools.find((tool) => tool.name === "select_tool_pack")!;
+    expect((selector.parameters.properties as Record<string, unknown>).workflow).toMatchObject({ enum: expect.arrayContaining(["onboarding"]) });
+  });
+
   it("keeps existing AskV data and write tools in one registry", () => {
     const names = ASK_V_TOOL_REGISTRY.map((tool) => tool.name);
     expect(names).toContain("query_tickets");
