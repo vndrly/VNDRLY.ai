@@ -215,6 +215,26 @@ test("child guards reject target changes, missing provenance, and local-env over
     );
 });
 
+test("passwordless local targets survive URL normalization without accepting different credentials", () => {
+  for (const authority of ["tester@", "tester:@"]) {
+    const target = resolveFreshLocalTestDatabaseTarget({
+      ...environment,
+      VNDRLY_TEST_DB_MAINTENANCE_URL:
+        `postgresql://${authority}127.0.0.1:55439/postgres`,
+    });
+    const child = freshLocalChildEnvironment(environment, target);
+    assert.doesNotThrow(() => assertFreshLocalTestDatabaseEnvironment(child));
+    assert.doesNotThrow(() => assertIsolatedTestDatabaseEnvironment(child));
+    for (const key of ["TEST_DATABASE_URL", "LISTEN_NOTIFY_DATABASE_URL"]) {
+      const different = new URL(target.testUrl);
+      different.password = "different";
+      assert.throws(() =>
+        assertFreshLocalTestDatabaseEnvironment({ ...child, [key]: different.href }),
+      );
+    }
+  }
+});
+
 test("child environment discards inherited outbound credentials and PostgreSQL fallback settings", () => {
   const target = resolveFreshLocalTestDatabaseTarget(environment);
   const child = freshLocalChildEnvironment(

@@ -35,7 +35,8 @@ export function resolveFreshLocalTestDatabaseTarget(env) {
 }
 
 export function assertFreshLocalTestDatabaseEnvironment(env) {
-  const url = new URL(sanitizePostgresConnectionUrl(env.DATABASE_URL));
+  const databaseUrl = sanitizePostgresConnectionUrl(env.DATABASE_URL);
+  const url = new URL(databaseUrl);
   if (
     env.VNDRLY_TEST_DB_MODE !== "fresh-local" ||
     env.VNDRLY_ISOLATED_TEST_DB !== "1" ||
@@ -43,9 +44,9 @@ export function assertFreshLocalTestDatabaseEnvironment(env) {
     url.hostname !== "127.0.0.1" ||
     !url.username ||
     url.pathname !== `/${env.VNDRLY_FRESH_TEST_DB_NAME}` ||
-    sanitizePostgresConnectionUrl(env.TEST_DATABASE_URL) !== url.href ||
+    sanitizePostgresConnectionUrl(env.TEST_DATABASE_URL) !== databaseUrl ||
     sanitizePostgresConnectionUrl(env.LISTEN_NOTIFY_DATABASE_URL) !==
-      url.href ||
+      databaseUrl ||
     env.VNDRLY_LOAD_ENV_LOCAL !== "0"
   ) {
     throw new Error(
