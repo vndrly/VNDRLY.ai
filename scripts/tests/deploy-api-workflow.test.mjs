@@ -16,6 +16,7 @@ test("API deploy is a separate main workflow with guarded VPS access", () => {
   assert.match(workflow, /artifacts\/api-server\/\*\*/);
   assert.match(workflow, /lib\/db\/drizzle\/\*\*/);
   assert.match(workflow, /"scripts\/askv-greeting-migration\.mjs"/);
+  assert.match(workflow, /"scripts\/assistant-action-audit-migration\.mjs"/);
 
   for (const secret of ["VPS_HOST", "VPS_USER", "VPS_PASSWORD", "VPS_PORT"]) {
     assert.match(workflow, new RegExp(`secrets\\.${secret}`));

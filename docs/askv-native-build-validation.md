@@ -1,6 +1,18 @@
 # AskV iOS native build validation
 
-Date: September 6, 2026. Scope: native compilation/build validation only. No TestFlight submission, OTA publication, web/API deployment, push, production database change, or signing credential rotation.
+Date: September 6, 2026 (local; September 7 UTC). The original sections record build-only validation of baseline 156. The subsequently authorized full ship produced and submitted final build 157, recorded immediately below. Signing credentials were preserved.
+
+## Final submitted build 157
+
+The [full release workflow](https://github.com/vndrly/VNDRLY.ai/actions/runs/34081396462) completed successfully for exact source `95791e537f28f3547bfca643ffdbdc317206a705`. Its app code is identical to the fully verified `bd0538f` runtime checkpoint and includes the later audio batching, history and translation corrections.
+
+- EAS build `1622ae9c-e3e9-48f2-89e6-34bf63d19eaf`: `FINISHED`, IOS, production/STORE, version/runtime 1.0.1, build 157, device build.
+- Build created September 7 at 03:58:42.865 UTC and finished at 04:06:16.128 UTC.
+- Exact submission `118b6e46-56b5-417e-92f1-e80bf392bb49`: `FINISHED`, no error. Terminal output confirmed successful App Store Connect upload at 04:09:29.262 UTC.
+- [Signed final IPA](https://expo.dev/artifacts/eas/gpg2JLLYCsPnoODoZJSDTWE5ix6ZOQqXFSmkNObOe1U.ipa).
+- Production iOS OTA group `d144c043-9426-4ff9-a1ab-1e0074befa3c` was published for runtime 1.0.1 from the same exact source, with successful independent production-channel readback.
+
+Submission was verified by exact build/submission IDs, not a latest-build selector. No credential rotation or provisioning recreation was needed. Apple processing/tester availability and physical-device acceptance remain separate from successful upload.
 
 ## Reproducible source correction
 

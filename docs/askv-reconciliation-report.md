@@ -2,7 +2,7 @@
 
 Date: September 6, 2026. Branch: `codex/askv-cursor-reconcile`, based on Cursor's `d01cdf9`.
 
-This branch implements the approved natural-voice design using Cursor's work as its starting point. At the implementation-validation checkpoint it had not been deployed, merged, or shipped to TestFlight; the later full-ship authorization is recorded below. The native compilation baseline, live browser wake handoff, and authenticated full-application voice/resumed-history checks pass. The final uninterrupted automated regression chain passed on compatibility checkpoint `bd0538f`: 3,714 passed, 56 documented skips and zero failures. A final release binary and physical-device acceptance remain release work; a successful build is not a TestFlight submission.
+This branch implements the approved natural-voice design using Cursor's work as its starting point. The final uninterrupted automated regression chain passed on compatibility checkpoint `bd0538f`: 3,714 passed, 56 documented skips and zero failures. Under the subsequent full-ship authorization, source `95791e5` was published to main and deployed to web/API; iOS 1.0.1 build 157 finished and was successfully uploaded to App Store Connect, and its production OTA was independently verified. The production voice smoke then exposed a missing audit table; the surgical deployment repair is described below. Physical-device and field acceptance remain testing on the internal build.
 
 ## Scope coverage
 
@@ -61,12 +61,17 @@ unrelated local files and changes; implementation is isolated on the branch abov
 
 After the validation above, the user explicitly authorized an unattended full ship on September 6, 2026: commit/push/main, web, API with its guarded additive migration, iOS OTA and a final native build submitted to TestFlight. This report records the implementation preflight; production workflow results are recorded in the release handoff. Physical-device/field acceptance remains testing on the resulting internal build.
 
-## Remaining release work
+## Release verification
 
-Before TestFlight submission:
+- Source `95791e537f28f3547bfca643ffdbdc317206a705` was published to main without rewriting history. The final app code is unchanged from the verified `bd0538f` runtime checkpoint.
+- [Web Publish](https://github.com/vndrly/VNDRLY.ai/actions/runs/34081392103) and [API Deploy](https://github.com/vndrly/VNDRLY.ai/actions/runs/34081392094) succeeded. Public `/`, `/gate`, entry bundles and all pinned wake assets matched the exact web build artifact; the API was healthy and the guarded greeting migration completed.
+- [iOS build and submission](https://github.com/vndrly/VNDRLY.ai/actions/runs/34081396462) succeeded: version 1.0.1 build 157, EAS build `1622ae9c-e3e9-48f2-89e6-34bf63d19eaf`, submission `118b6e46-56b5-417e-92f1-e80bf392bb49`. App Store Connect upload completed September 7 at 04:09:29 UTC. Apple processing/tester availability is separate from upload success.
+- [Production OTA](https://github.com/vndrly/VNDRLY.ai/actions/runs/34081950528) succeeded and was independently read back: runtime 1.0.1, iOS, group `d144c043-9426-4ff9-a1ab-1e0074befa3c`, exact source `95791e5`. The workflow also passed all 646 mobile tests.
+- The internal natural-voice pilot is enabled for the canonical demo accounts. Existing credentials were preserved.
+- A production smoke found `public.assistant_action_audit` missing before the first provider connection. Its existing checked-in table/index migration was absent from both deployment paths. The follow-up adds an exact guarded migration and access restrictions before API restart; production audio verification must pass after that repair. No existing database is reset, restored or reseeded.
+- The repair passed seven focused migration/deployment checks and two real PostgreSQL migration runs in a new local database. The existing synthetic audit row survived; inherited and deliberately reintroduced browser grants were revoked. Actual `anon` and `authenticated` reads, inserts and sequence calls were denied in all six cases. The local cluster is stopped with test data retained.
 
-1. Produce a new iOS binary containing the final JavaScript fixes. The successful build 156 proves native compilation at `200ea71`, but predates the 50 ms audio batching, assistant-history protocol correction and latest translations. Do not submit that older binary as the final implementation.
-2. Under an explicit release command, deploy the matching web/API changes and guarded additive greeting migration, configure an internal `ASKV_NATURAL_VOICE_USER_IDS` pilot, and submit the final native build. None of these production changes or submission has occurred.
+## Remaining acceptance work
 
 During internal TestFlight acceptance, before wider rollout ([test worksheet](askv-testflight-acceptance.md)):
 

@@ -657,6 +657,7 @@ test("deployment migrates and verifies before the API restart without blind sche
   const plateState = commands.indexOf("migrate:plate-state");
   const notesAdmission = commands.indexOf("migrate:notes-admission");
   const askvGreeting = commands.indexOf("migrate:askv-greeting");
+  const actionAudit = commands.indexOf("migrate:assistant-action-audit");
   const restart = commands.indexOf("systemctl restart vndrly-api");
 
   assert.ok(plateState >= 0, "deployment must invoke the plate-state migration");
@@ -669,7 +670,11 @@ test("deployment migrates and verifies before the API restart without blind sche
     "deployment must invoke the guarded AskV greeting migration",
   );
   assert.ok(
-    restart > plateState && restart > notesAdmission && restart > askvGreeting,
+    actionAudit >= 0 && actionAudit < askvGreeting,
+    "the audit prerequisite must exist before AskV greeting and restart",
+  );
+  assert.ok(
+    restart > plateState && restart > notesAdmission && restart > askvGreeting && restart > actionAudit,
     "restart must happen only after all guarded migrations succeed",
   );
   assert.doesNotMatch(commands, /drizzle(?:-kit)?\s+push|DROP|TRUNCATE/i);

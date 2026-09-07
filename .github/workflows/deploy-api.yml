@@ -10,6 +10,7 @@ on:
       - "scripts/plate-state-migration.mjs"
       - "scripts/notes-admission-migration.mjs"
       - "scripts/askv-greeting-migration.mjs"
+      - "scripts/assistant-action-audit-migration.mjs"
       - ".github/workflows/deploy-api.yml"
   workflow_dispatch:
 
@@ -86,6 +87,7 @@ jobs:
           fi
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:plate-state
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:notes-admission
+          sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:assistant-action-audit
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:askv-greeting
           unset database_url
           sudo systemctl daemon-reload

@@ -1,12 +1,13 @@
 # AskV internal TestFlight acceptance
 
-Status: pending. This checklist is a test record, not evidence that physical-device acceptance has passed.
+Status: physical-device acceptance pending. iOS 1.0.1 build 157 was successfully uploaded to App Store Connect under the full-ship authorization. Apple processing/tester availability was not inferred. This checklist is a test record, not evidence that physical-device acceptance has passed.
 
-## Before submission
+## Submitted testing build
 
-- Use the final verified source checkpoint and matching web/API changes. Build 156 at `200ea71` is an older native compilation baseline and must not be submitted as the final implementation.
-- Under the release command, apply the guarded additive greeting migration, configure the internal `ASKV_NATURAL_VOICE_USER_IDS` pilot, and produce/submit the final iOS binary using existing signing credentials.
-- Record the source commit, API deployment, app version/build, device/iOS version and tester. Keep the Gate fallback available through acceptance.
+- Version 1.0.1 build 157, source `95791e537f28f3547bfca643ffdbdc317206a705`; [successful native build/submission workflow](https://github.com/vndrly/VNDRLY.ai/actions/runs/34081396462).
+- Production iOS OTA group `d144c043-9426-4ff9-a1ab-1e0074befa3c` uses the same source and runtime 1.0.1. Build 156 remains only the earlier compilation baseline.
+- Matching web/API deployment and the internal demo-account pilot are configured. Production smoke exposed a missing audit table, requiring the guarded backend repair and repeated live voice verification described in the reconciliation report.
+- Record the final API deployment, device/iOS version and tester with each case. Keep the Gate fallback available through acceptance.
 
 ## On the internal TestFlight build
 

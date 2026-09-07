@@ -28,7 +28,8 @@
 - [x] Finish available integrated verification and record exact evidence in `docs/askv-reconciliation-report.md`: full typecheck, web/mobile suites, safe API subset, shared audio tests, locale/build checks, and real browser/model execution.
 - [x] Complete database-backed API and Playwright gates using new local databases: full root chain passed on `bd0538f`, 3,714 tests passed / 56 documented skips / zero failures; no existing database reset.
 - [x] Complete authenticated full-app live voice and saved-history resumption with actual provider audio, real login/SQL persistence, persistent mute and sequential microphone ownership.
-- [ ] Produce the final native release binary and complete physical-device/field acceptance before wider production rollout; retain Gate fallback until parity is demonstrated.
+- [x] Produce and submit final native release binary: iOS 1.0.1 build 157 at `95791e5`, exact EAS build/submission both FINISHED; matching production OTA verified.
+- [ ] Complete physical-device/field acceptance before wider production rollout; retain Gate fallback until parity is demonstrated.
 
 ## Progress and decisions
 
