@@ -20,7 +20,8 @@ lib/form1099
 lib/majik
 lib/integrations-anthropic-ai
 
-scripts
+scripts/*
+!scripts/prepare-askv-ios.mjs
 docs
 snapshots
 .github
@@ -46,3 +47,6 @@ artifacts/vndrly-mobile/.expo-smoke-export
 # Leftover export archives and design sources — never needed on EAS.
 **/*.zip
 **/*.psd
+
+# Fetch and verify pinned native libraries during pod install.
+artifacts/vndrly-mobile/modules/askv-wake/ios/vendor
