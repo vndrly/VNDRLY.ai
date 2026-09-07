@@ -128,6 +128,7 @@ function makeRateLimitError(retryAfterSeconds = 12) {
 afterEach(() => {
   cleanup();
   __resetTicketsRateLimitForTests();
+  vi.useRealTimers();
 });
 
 beforeEach(() => {
@@ -138,10 +139,11 @@ beforeEach(() => {
 
 describe("HistoryScreen — Task #762 rate-limit gate", () => {
   it("surfaces the reconnecting toast when mounted while a cooldown is already active, then auto-recovers when the window expires", async () => {
+    vi.useFakeTimers();
     // Pre-arm the shared cooldown to simulate the home tab or
     // background reporter having already tripped a 429 just before
-    // the user opened the History tab. Use a short window so the test
-    // recovers quickly without fake-timer plumbing.
+    // the user opened the History tab. Own the clock so a busy CI
+    // worker cannot consume the cooldown before we inspect the UI.
     noteTicketsRateLimit(makeRateLimitError(1));
 
     // /api/field/history must NOT be hit while the cooldown is
@@ -157,15 +159,16 @@ describe("HistoryScreen — Task #762 rate-limit gate", () => {
       return Promise.resolve(null);
     });
 
-    render(<HistoryScreen />);
+    await act(async () => {
+      render(<HistoryScreen />);
+    });
 
     // The reconnecting toast must appear so the user understands the
     // pause instead of seeing a silent loading spinner.
-    await waitFor(() => {
-      expect(
-        screen.queryAllByTestId("toast-tickets-rate-limited").length,
-      ).toBeGreaterThan(0);
-    });
+    expect(
+      screen.queryAllByTestId("toast-tickets-rate-limited").length,
+    ).toBeGreaterThan(0);
+    expect(isElementDisabled(screen.getByTestId("button-refresh-history"))).toBe(true);
 
     // Sanity: the early-exit guard inside `load()` must short-circuit
     // before any /api/field/history call.
@@ -182,30 +185,29 @@ describe("HistoryScreen — Task #762 rate-limit gate", () => {
       return Promise.resolve(null);
     });
 
-    // Wait for the cooldown to expire and the recovery effect to
-    // fire /api/field/history at least once. The wall-clock window
-    // here covers (a) the 1s real-timer cooldown set above, plus
-    // (b) the React re-render + recovery effect that re-invokes
-    // load(). 8s mirrors the open-tickets test's budget so this
-    // assertion stays meaningful even when the full mobile vitest
-    // suite runs together and shares a thread pool.
-    await waitFor(
-      () => {
-        expect(
-          apiFetchMock.mock.calls.some(
-            ([u]) => u === "/api/field/open-tickets" || u === "/api/field/history",
-          ),
-        ).toBe(true);
-      },
-      { timeout: 8000 },
-    );
+    // The final millisecond still belongs to the cooldown. Neither
+    // endpoint may be retried early, even after other state updates.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(999);
+    });
+    expect(apiFetchMock.mock.calls.filter(
+      ([u]) => u === "/api/field/open-tickets" || u === "/api/field/history",
+    )).toHaveLength(0);
+    expect(screen.queryAllByTestId("toast-tickets-rate-limited").length).toBeGreaterThan(0);
+
+    // Expiry triggers the real hook and screen recovery effect, with
+    // no polling timeout or wall-clock scheduling assumption.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1);
+    });
+    expect(apiFetchMock.mock.calls.filter(([u]) => u === "/api/field/open-tickets")).toHaveLength(1);
+    expect(apiFetchMock.mock.calls.filter(([u]) => u === "/api/field/history")).toHaveLength(1);
 
     // And the reconnecting toast clears once we're back online.
-    await waitFor(() => {
-      expect(
-        screen.queryAllByTestId("toast-tickets-rate-limited").length,
-      ).toBe(0);
-    });
+    expect(
+      screen.queryAllByTestId("toast-tickets-rate-limited").length,
+    ).toBe(0);
+    expect(isElementDisabled(screen.getByTestId("button-refresh-history"))).toBe(false);
   });
 
   it("shows the reconnecting toast and disables the header refresh button when the shared cooldown arms", async () => {

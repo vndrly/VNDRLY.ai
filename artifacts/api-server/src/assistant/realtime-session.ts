@@ -36,7 +36,7 @@ function buildRealtimeSessionConfig(args: CreateAskVRealtimeClientSecretArgs) {
       input: {
         format: { type: "audio/pcm", rate: 24000 },
         transcription: {
-          model: "gpt-4o-transcribe",
+          model: "gpt-4o-mini-transcribe",
           language: args.language ?? "en",
           prompt: args.language === "es"
             ? "Conversación en español sobre operaciones de campo: VNDRLY, AskV, incorporación, empleados de campo, facturas, órdenes de trabajo, matrículas. Conserva los nombres y números tal como se dicen; no completes palabras que no se oyen."
