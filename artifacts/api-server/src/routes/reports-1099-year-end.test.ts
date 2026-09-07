@@ -427,7 +427,9 @@ async function seedFireTransmitterRow(
 }
 
 async function deleteFireTransmitterRow(): Promise<void> {
-  await dbModule.db.delete(dbModule.fireTransmitterSettingsTable);
+  await dbModule.db
+    .delete(dbModule.fireTransmitterSettingsTable)
+    .where(eq(dbModule.fireTransmitterSettingsTable.id, FIRE_TRANSMITTER_SETTINGS_ID));
 }
 
 describe.runIf(haveRealDb)("year-end 1099 dashboard + FIRE + filing status", () => {

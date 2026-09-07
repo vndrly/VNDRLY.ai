@@ -2,7 +2,7 @@
 
 Date: September 6, 2026. Branch: `codex/askv-cursor-reconcile`, based on Cursor's `d01cdf9`.
 
-This branch implements the approved natural-voice design using Cursor's work as its starting point. It has not been deployed, merged, or shipped to TestFlight. Native and real-service acceptance remain required before production use.
+This branch implements the approved natural-voice design using Cursor's work as its starting point. It has not been deployed, merged, or shipped to TestFlight. The native compilation baseline and live web provider checks now pass. Final-tree regression, authenticated application acceptance and physical-device checks remain release gates; a successful build is not a TestFlight submission.
 
 ## Scope coverage
 
@@ -26,7 +26,7 @@ This branch implements the approved natural-voice design using Cursor's work as 
 
 The overall Realtime direction, greeting migration, preference/UI starting points, tool-pack scaffolding, native WebRTC dependency/plugin setup, and separate Gate fallback remain. Their boundaries and behavior were corrected where review or testing found gaps. The local wake implementation is a real bundled inference/capture path; a phrase matcher alone is not treated as a working wake engine.
 
-Critical corrections include model-supplied confirmation bypasses, duplicate-write handling, missing server permissions and domain side effects, disconnected typed/voice histories, ignored client navigation/draft intents, navigation races, early idle timers, microphone ownership and cancellation, stale Gate recognition events, and private ticket-photo access.
+Critical corrections include model-supplied confirmation bypasses, duplicate-write handling, missing server permissions and domain side effects, disconnected typed/voice histories, ignored client navigation/draft intents, navigation races, early idle timers, microphone ownership and cancellation, stale Gate recognition events, and private ticket-photo access. Continued validation also found ignored native source/build-preparation files and an audio packet flood during actual wake handoff; packaging is corrected and both clients now batch PCM into 50 ms packets.
 
 ## Verification evidence
 
@@ -36,21 +36,21 @@ Completed verification for the reconciled code:
 - Full mobile Vitest suite: 97 files / 644 tests passed.
 - Focused API regressions: 18 files / 82 tests passed; permission, confirmation, idempotency, persistence, context, metrics, mutation refresh and private-photo boundaries included.
 - Shared microphone/PCM suite: 8 tests passed. Native release-impact classifier: 7 tests passed.
-- Locale parity: web 4,289 English/Spanish keys and mobile 1,740 English/Spanish keys passed.
+- Locale parity: web 4,294 English/Spanish keys and mobile 1,745 English/Spanish keys passed after adding the five missing AskV runtime-error translations; focused locale/API-error suites passed 100 web and 106 mobile tests.
 - Full web Vitest suite: 120 files / 872 tests passed, with 3 pre-existing skipped tests. The retained Gate sequential-plate fallback test passes in the full run after its recognizer restart timing was corrected.
 
 Additional runtime evidence:
 
 - Real shipped WASM/model inference: 9 of 9 cases passed, including two synthetic voices, Ask V with a question, V alone, unrelated speech and silence. The earlier incompatible model archive was replaced based on an actual inference failure.
 - Real Edge capture test: one synthetic microphone, shipped AudioWorklet/worker/model, wake detection, buffered continuous handoff and track shutdown passed; no API call or off-device upload occurred.
-- Native preparation: pinned framework archive checksum, corruption rejection, model parity and Expo module discovery verified. This is not an iOS compile or hardware test.
+- Native compilation: EAS build `1cfd7f1c-4e1c-49ce-9033-25b4e5fac9f7`, version 1.0.1 build 156, reached `FINISHED` with CLI exit 0 and a signed IPA. Exact source was `200ea71`; the later JavaScript batching fix and test-infrastructure patch were not in that binary. Native preparation, CocoaPods, Swift/Objective-C++ compilation, linking, signing and export passed. This is not physical-device acceptance or TestFlight submission.
 - Production web bundle built successfully. Existing bundle-size and dependency sourcemap warnings remain non-fatal.
 
-The API regression subset uses mocked persistence/domain boundaries. It does not replace database integration or prove real OpenAI audio behavior.
+The original API regression subset uses mocked persistence/domain boundaries. New PostgreSQL-backed tests now exercise real transactions, authentication signatures, concurrent greeting/transcript delivery, organization boundaries and durable reservations; their final gate result is recorded below when complete.
 
-The complete root `pnpm test` chain has not passed: its database integration and
-Playwright wrapper require a disposable database and run schema-reset operations.
-Those gates remain explicitly outstanding. No database was reset or migrated.
+Real provider verification now uses the production session builder and shipped browser client against OpenAI — no mocked WebRTC service. Opening greeting, VAD answer, typed follow-up, playback cancellation, local WASM wake handoff, actual spoken barge-in and capture shutdown passed. The sustained wake run lasted 67.2 seconds with one microphone/peer and no client errors. It exposed and verified the fix for tiny PCM packets flooding the data channel. Web 9 / mobile 8 focused transport tests and both app typechecks pass. This bridge test does not include authenticated application navigation, saved history, domain tools, five-minute owner timeout or physical iOS. See [live voice evidence](askv-live-voice-validation.md).
+
+The complete root `pnpm test` chain remains outstanding while the continued database/browser gates run. A new password-protected local PostgreSQL 17.11 cluster and `fresh-local` test mode now create unique empty test databases with additive schema provisioning. They never reset/reuse an existing database. Canonical password drift tests simulate comparison failure without storing noncanonical passwords. No existing or shared database was reset or migrated.
 The original documentation checkout and Cursor checkout retain their original
 unrelated local files and changes; implementation is isolated on the branch above.
 

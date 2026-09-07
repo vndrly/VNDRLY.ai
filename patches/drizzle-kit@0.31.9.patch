@@ -1,0 +1,44 @@
+diff --git a/api.js b/api.js
+index 3aafc5b45a9e264353ae3e8cc86b6b2b9097cc2c..7b9318361fe498c8aef2da8100cf374de0453908 100644
+--- a/api.js
++++ b/api.js
+@@ -75217,7 +75217,16 @@ var pushSchema = async (imports, drizzleInstance, schemaFilters, tablesFilter, e
+   );
+   const db = {
+     query: async (query, params) => {
+-      const res = await drizzleInstance.execute(sql.raw(query));
++      // Preserve PostgreSQL positional parameters during schema introspection.
++      const statement = params?.length
++        ? sql.join(query.split(/(\$\d+)/g).map((part) => {
++            if (!/^\$\d+$/.test(part)) return sql.raw(part);
++            const index = Number(part.slice(1)) - 1;
++            if (index < 0 || index >= params.length) throw new Error("Missing introspection query parameter");
++            return sql`${params[index]}`;
++          }), sql.raw(""))
++        : sql.raw(query);
++      const res = await drizzleInstance.execute(statement);
+       return res.rows;
+     }
+   };
+diff --git a/api.mjs b/api.mjs
+index ff8e047a384c62ad2b24b07131fadf4ecce8f420..52cccd652b8dfda8d896feea12b81a3df8159f1c 100644
+--- a/api.mjs
++++ b/api.mjs
+@@ -75250,7 +75250,16 @@ var pushSchema = async (imports, drizzleInstance, schemaFilters, tablesFilter, e
+   );
+   const db = {
+     query: async (query, params) => {
+-      const res = await drizzleInstance.execute(sql.raw(query));
++      // Preserve PostgreSQL positional parameters during schema introspection.
++      const statement = params?.length
++        ? sql.join(query.split(/(\$\d+)/g).map((part) => {
++            if (!/^\$\d+$/.test(part)) return sql.raw(part);
++            const index = Number(part.slice(1)) - 1;
++            if (index < 0 || index >= params.length) throw new Error("Missing introspection query parameter");
++            return sql`${params[index]}`;
++          }), sql.raw(""))
++        : sql.raw(query);
++      const res = await drizzleInstance.execute(statement);
+       return res.rows;
+     }
+   };

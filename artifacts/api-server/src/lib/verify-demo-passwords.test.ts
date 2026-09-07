@@ -17,20 +17,9 @@ import { assertIsolatedTestDatabaseEnvironment } from "../../../../scripts/e2e-i
 // drop the warning and the only signal would be silent 401s on the demo
 // login screen.
 //
-// This test:
-//   1. Seeds the demo users via `POST /api/auth/seed`.
-//   2. Calls `verifyDemoPasswords()` once with all hashes intact and asserts
-//      the warning does NOT fire.
-//   3. Manually overwrites `users.password_hash` for the `shell` demo user
-//      with a bogus bcrypt value that cannot match the canonical demo
-//      password.
-//   4. Spies on `logger.warn` and re-runs `verifyDemoPasswords()`, asserting
-//      the warning fires and the `drifted` payload includes `shell`.
-//
-// We deliberately mutate `shell` rather than `admin`: the sibling
-// `auth-seed-recovery.test.ts` mutates `admin` against the same shared DB,
-// and Vitest runs test files in parallel by default — using a different
-// demo user keeps the two suites independent.
+// The mismatch is simulated at the comparison boundary for one stored hash.
+// All actual database passwords remain canonical, and the self-check must
+// remain read-only even when it detects the simulated drift.
 //
 // Requires the isolated wrapper's marker plus identical sanitized `_test`
 // DATABASE_URL/TEST_DATABASE_URL values. The guard returns before opening a
@@ -46,7 +35,8 @@ async function checkRealDb(): Promise<boolean> {
     databaseUrl = assertIsolatedTestDatabaseEnvironment(
       process.env,
     ).databaseUrl;
-  } catch {
+  } catch (error) {
+    if (process.env.VNDRLY_TEST_DB_MODE === "fresh-local") throw error;
     return false;
   }
   const client = new pg.Client({ connectionString: databaseUrl });
@@ -55,12 +45,13 @@ async function checkRealDb(): Promise<boolean> {
     await client.query("SELECT 1");
     await client.end();
     return true;
-  } catch {
+  } catch (error) {
     try {
       await client.end();
     } catch {
       /* ignore */
     }
+    if (process.env.VNDRLY_TEST_DB_MODE === "fresh-local") throw error;
     return false;
   }
 }
@@ -90,7 +81,7 @@ describe.runIf(haveRealDb)("verifyDemoPasswords startup self-check", () => {
     app.use(express.json());
     app.use("/api", authRouter);
 
-    // Make sure the demo users exist before we start mutating them.
+    // Make sure the demo users exist before the read-only self-check.
     const seedRes = await request(app).post("/api/auth/seed");
     expect(seedRes.status).toBe(200);
   });
@@ -129,17 +120,16 @@ describe.runIf(haveRealDb)("verifyDemoPasswords startup self-check", () => {
   });
 
   it("warns and names the drifted username when a demo hash is stale", async () => {
-    // Overwrite the `shell` password hash with a value that cannot match
-    // the canonical demo password. We hash a different string rather than
-    // write a literal garbage byte sequence so the column stays a valid
-    // bcrypt blob — this matches the real failure mode (a stale import of
-    // a different environment's hash) more faithfully than a syntactically
-    // invalid hash would.
-    const bogusHash = bcrypt.hashSync("not-the-demo-password", 10);
-    await db
-      .update(usersTable)
-      .set({ passwordHash: bogusHash })
+    const [intact] = await db
+      .select({ passwordHash: usersTable.passwordHash })
+      .from(usersTable)
       .where(sql`lower(${usersTable.username}) = lower('shell')`);
+    const compare = bcrypt.compareSync;
+    const compareSpy = vi
+      .spyOn(bcrypt, "compareSync")
+      .mockImplementation((password, hash) =>
+        hash === intact.passwordHash ? false : compare(password, hash),
+      );
 
     const warnSpy = vi.spyOn(logger, "warn").mockImplementation(() => {});
     try {
@@ -163,14 +153,14 @@ describe.runIf(haveRealDb)("verifyDemoPasswords startup self-check", () => {
       const drifted = (payload as { drifted: string[] }).drifted;
       expect(drifted).toContain("shell");
     } finally {
+      compareSpy.mockRestore();
       warnSpy.mockRestore();
     }
 
-    // Restore the canonical hash so the subsequent self-check (and any
-    // tests loaded after this file) see a clean state. afterAll also
-    // re-seeds, but doing it here keeps the second assertion below
-    // independent of test ordering.
-    const reseed = await request(app).post("/api/auth/seed");
-    expect(reseed.status).toBe(200);
+    const [after] = await db
+      .select({ passwordHash: usersTable.passwordHash })
+      .from(usersTable)
+      .where(sql`lower(${usersTable.username}) = lower('shell')`);
+    expect(after.passwordHash).toBe(intact.passwordHash);
   });
 });

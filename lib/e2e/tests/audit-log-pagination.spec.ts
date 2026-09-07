@@ -24,8 +24,8 @@ import { loginAsAdmin } from "../helpers/auth";
 //      the badged root row scrolls into view.
 //
 // The deterministic fixture is provisioned by the dev-only
-// POST /api/auth/seed-audit-pagination-fixture endpoint, which truncates
-// the report_export_audit_log table and re-inserts a known 150-row mix
+// POST /api/auth/seed-audit-pagination-fixture endpoint, which replaces only
+// its own tagged rows in report_export_audit_log with a known 150-row mix
 // (1 chain root on page 2, 3 warning rows on page 1, 96 plain fillers
 // on page 1, 49 plain fillers on page 2, and 1 chain tip on page 1
 // pointing at the root via scope.retriedFromAuditId).

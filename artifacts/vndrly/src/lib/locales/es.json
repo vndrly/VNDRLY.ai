@@ -4022,7 +4022,12 @@
       "transcribe_failed": "No se pudo transcribir el audio. Inténtalo de nuevo.",
       "transcribe_unavailable": "La transcripción de voz no está disponible ahora.",
       "tts_failed": "No se pudo reproducir la respuesta de voz. Inténtalo de nuevo.",
-      "tts_unavailable": "La respuesta de voz no está disponible ahora."
+      "tts_unavailable": "La respuesta de voz no está disponible ahora.",
+      "voice_disabled": "La voz no está disponible para esta cuenta. Puedes seguir escribiendo.",
+      "tool_not_available": "Esa acción no está disponible aquí. Abre su pantalla o haz otra pregunta.",
+      "session_required": "Abre AskV para iniciar una nueva conversación por voz.",
+      "session_ended": "Esta conversación por voz ha terminado. Abre AskV para continuar.",
+      "idempotency_required": "AskV no pudo identificar esta acción de forma segura. Revisa el registro antes de volver a intentarlo."
     },
     "auth": {
       "admin_login_required": "Inicia sesión como administrador para continuar.",

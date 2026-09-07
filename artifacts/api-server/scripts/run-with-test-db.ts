@@ -20,6 +20,14 @@
  *
  * What it does
  * ------------
+ * With VNDRLY_TEST_DB_MODE=fresh-local, ignores inherited database URLs,
+ * creates a unique NEW database on the explicit loopback maintenance server,
+ * validates and applies only additive schema statements, and retains the DB.
+ * No existing database is reused or reset in this mode. See lib/e2e/README.md.
+ *
+ * The legacy mode below is preserved for existing callers; its schema reset
+ * is not authorized by the no-wipe local validation workflow.
+ *
  *   1. Resolves a test DB URL.
  *      - Honors `TEST_DATABASE_URL` only when it names a distinct `_test`
  *        target.
@@ -54,6 +62,11 @@ import type { PgDatabase } from "drizzle-orm/pg-core";
 import { pushSchema } from "drizzle-kit/api";
 import pg from "pg";
 import * as schema from "@workspace/db/schema";
+import {
+  freshLocalChildEnvironment,
+  provisionFreshLocalTestDatabase,
+  resolveFreshLocalTestDatabaseTarget,
+} from "../../../scripts/fresh-test-database.mjs";
 import {
   resolveIsolatedTestDatabaseTarget,
   stripLibpqTargetEnvironment,
@@ -133,7 +146,9 @@ function spawnChild(
     child.on("error", reject);
     child.on("close", (code, signal) => {
       if (signal) {
-        process.stderr.write(`[test-db] child terminated by signal ${signal}\n`);
+        process.stderr.write(
+          `[test-db] child terminated by signal ${signal}\n`,
+        );
         resolve(1);
         return;
       }
@@ -185,6 +200,40 @@ async function main(): Promise<void> {
     if (!(key in setupEnvironment)) {
       delete process.env[key];
     }
+  }
+
+  if (process.env.VNDRLY_TEST_DB_MODE === "fresh-local") {
+    const target = resolveFreshLocalTestDatabaseTarget(setupEnvironment);
+    const env = freshLocalChildEnvironment(setupEnvironment, target);
+    for (const key of Object.keys(process.env)) delete process.env[key];
+    Object.assign(process.env, env);
+    process.stdout.write(
+      `[test-db] Creating new local database "${target.testDbName}". It will be retained after this run.\n`,
+    );
+    await provisionFreshLocalTestDatabase(
+      target,
+      (url) => new pg.Client({ connectionString: url }),
+      async (client) =>
+        pushSchema(
+          schema as Record<string, unknown>,
+          drizzle(client, { schema }) as unknown as PgDatabase<never>,
+        ),
+    );
+    process.stdout.write(
+      "[test-db] Additive schema applied; checking schema before starting tests.\n",
+    );
+    const checkCode = await spawnChild(
+      "corepack",
+      ["pnpm", "--filter", "@workspace/db", "run", "check-schema"],
+      env,
+    );
+    if (checkCode !== 0) process.exit(checkCode);
+    process.exit(await spawnChild(childArgs[0]!, childArgs.slice(1), env));
+  }
+  if (process.env.VNDRLY_TEST_DB_MODE) {
+    throw new Error(
+      "Unknown VNDRLY_TEST_DB_MODE; supported explicit mode is fresh-local",
+    );
   }
 
   const resolved = resolveTestDbUrl();

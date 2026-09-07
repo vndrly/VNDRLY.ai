@@ -133,3 +133,15 @@ flow is documented in one place.
 | `site_not_found` | 400 | `POST /api/field/tickets` | We couldn't find that site. Pick a different one. | No encontramos ese sitio. Elige otro. |
 | `site_vendor_mismatch` | 400 | `POST /api/field/tickets` | Your vendor isn't assigned to work at this site. Pick a different one. | Tu proveedor no está asignado a trabajar en este sitio. Elige otro. |
 | `work_type_not_allowed` | 400 | `POST /api/field/tickets` | Your vendor isn't approved for this work type at this site. Pick a different one. | Tu proveedor no está aprobado para este tipo de trabajo en este sitio. Elige otro. |
+
+## AskV voice session codes
+
+These dotted `code` values from `assistantRealtime.ts` are translated under `errors.assistant` in both web and mobile EN/ES catalogs.
+
+| Code | HTTP | User recovery |
+| --- | --- | --- |
+| `assistant.idempotency_required` | 400 | Check the record before retrying an action whose identifier is missing. |
+| `assistant.session_ended` | 409 | Open AskV to begin another conversation. |
+| `assistant.session_required` | 400 | Open AskV to start a voice session. |
+| `assistant.tool_not_available` | 403 | Use the permitted screen or ask another question. |
+| `assistant.voice_disabled` | 503 | Continue with typed AskV while voice is unavailable for this account. |

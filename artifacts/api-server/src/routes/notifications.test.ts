@@ -253,7 +253,7 @@ describe.runIf(HAVE_DB)("notification recipient helpers (membership-backed)", ()
     // builds a Pool from it. Vitest's default `pool: 'forks'` runs each
     // test file in its own worker process, so this env mutation is
     // file-local and does not leak into other tests.
-    process.env.DATABASE_URL = handle.url;
+    handle.activate();
     dbModule = await import("@workspace/db");
     notifications = await import("./notifications");
     seeded = await seed();

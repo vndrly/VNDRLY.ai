@@ -20,6 +20,9 @@ const forceFromFile = process.env.VNDRLY_LOAD_ENV_LOCAL === "1";
 
 function parseEnvFile(filePath) {
   const out = {};
+  // Fresh local validation must never import machine-owned production secrets
+  // or override the wrapper's database target, including through child imports.
+  if (process.env.VNDRLY_TEST_DB_MODE === "fresh-local") return out;
   if (!existsSync(filePath)) return out;
   for (const line of readFileSync(filePath, "utf8").split(/\r?\n/)) {
     const trimmed = line.trim();

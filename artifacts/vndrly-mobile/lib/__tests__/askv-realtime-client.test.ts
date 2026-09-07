@@ -92,7 +92,7 @@ describe("mobile Realtime transport", () => {
     await client.connect();
     expect(rtc.getMedia).not.toHaveBeenCalled();
     expect(rtc.peers[0].addTransceiver).toHaveBeenCalledWith("audio", { direction: "recvonly" });
-    listeners.forEach((listener) => listener(new Float32Array(160).fill(0.2)));
+    listeners.forEach((listener) => listener(new Float32Array(1600).fill(0.2)));
     expect(rtc.channels[0].sent.some((event: any) => event.type === "input_audio_buffer.append" && event.audio.length > 0)).toBe(true);
     client.close();
     expect(listeners.size).toBe(0);
@@ -105,6 +105,30 @@ describe("mobile Realtime transport", () => {
     expect(packets.length).toBeGreaterThan(1);
     expect(packets.every((event: any) => event.audio.length <= 6400)).toBe(true);
     client.close();
+  });
+  it("batches small native frames after pre-roll without losing sample order", async () => {
+    let deliver!: (samples: Float32Array) => void;
+    const audioSource = { subscribe: (callback: typeof deliver) => { deliver = callback; callback(new Float32Array(8000).fill(0.25)); return vi.fn(); }, stop: vi.fn() };
+    const client = await createAskVRealtimeClient({ ...options(), audioSource });
+    await client.connect();
+    client.interrupt();
+    for (let i = 0; i < 100; i++) deliver(new Float32Array(80).fill(-0.25));
+    deliver(new Float32Array(1).fill(-0.25));
+    const packets = rtc.channels[0].sent.filter((event: any) => event.type === "input_audio_buffer.append");
+    expect(packets.length).toBeGreaterThanOrEqual(9);
+    expect(packets.length).toBeLessThanOrEqual(20);
+    const decoded = packets.flatMap((event: any) => {
+      const bytes = Uint8Array.from(atob(event.audio), character => character.charCodeAt(0));
+      const view = new DataView(bytes.buffer);
+      return Array.from({ length: bytes.length / 2 }, (_, index) => view.getInt16(index * 2, true));
+    });
+    expect(decoded).toHaveLength(24000);
+    expect(decoded.slice(0, 11998).every((value: number) => value === 8192)).toBe(true);
+    expect(decoded.slice(12002).every((value: number) => value === -8192)).toBe(true);
+    deliver(new Float32Array(10).fill(0.25));
+    client.close();
+    const count = rtc.channels[0].sent.length; deliver(new Float32Array(1600));
+    expect(rtc.channels[0].sent).toHaveLength(count);
   });
   it("rejects a stopped audio source during channel opening and closes the peer", async () => {
     const audioSource = { subscribe: () => { throw new Error("source stopped"); }, stop: vi.fn() };

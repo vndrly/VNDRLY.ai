@@ -17,7 +17,8 @@ import {
 //   - the stale-sweep targets only old `vitest_*` schemas, never anything else
 
 const HAVE_DB = await hasReachableDatabase();
-const HAVE_PG_DUMP = await hasPgDump();
+const FRESH_LOCAL = process.env.VNDRLY_TEST_DB_MODE === "fresh-local";
+const HAVE_PG_DUMP = FRESH_LOCAL ? false : await hasPgDump();
 
 function hasPgDump(): Promise<boolean> {
   return new Promise((resolve) => {
@@ -25,7 +26,7 @@ function hasPgDump(): Promise<boolean> {
   });
 }
 
-describe.runIf(HAVE_DB && HAVE_PG_DUMP)("db-harness", () => {
+describe.runIf(!FRESH_LOCAL && HAVE_DB && HAVE_PG_DUMP)("db-harness", () => {
   it("creates an isolated schema with the public schema's tables and confines writes to it", async () => {
     const handle = await createIsolatedSchema("harness-self-test");
     try {
@@ -126,9 +127,56 @@ describe.runIf(HAVE_DB && HAVE_PG_DUMP)("db-harness", () => {
   }, 60_000);
 });
 
-describe.skipIf(HAVE_DB && HAVE_PG_DUMP)("db-harness", () => {
+describe.skipIf(FRESH_LOCAL || (HAVE_DB && HAVE_PG_DUMP))("db-harness", () => {
   it.skip("requires a real Postgres DATABASE_URL and pg_dump on PATH", () => {
     // Skipped offline; the harness exists exclusively for tests that
     // need a real server to clone the public schema from.
   });
 });
+
+describe.runIf(FRESH_LOCAL && HAVE_DB)(
+  "db-harness fresh local retention",
+  () => {
+    it("confines fixture writes to a new database and retains them through teardown and stale cleanup", async () => {
+      const sourceUrl = process.env.DATABASE_URL;
+      const handle = await createIsolatedSchema("fresh-harness");
+      expect(handle.url).not.toBe(sourceUrl);
+      expect(new URL(handle.url).search).toBe("");
+      const isolated = new pg.Client({ connectionString: handle.url });
+      const source = new pg.Client({ connectionString: sourceUrl });
+      await isolated.connect();
+      await source.connect();
+      try {
+        await isolated.query(
+          "INSERT INTO partners (name, contact_name, contact_email) VALUES ('fresh-harness-owned', 'Fixture', 'fixture@example.test')",
+        );
+        expect(
+          (
+            await source.query(
+              "SELECT id FROM partners WHERE name = 'fresh-harness-owned'",
+            )
+          ).rowCount,
+        ).toBe(0);
+        handle.activate();
+        expect(process.env.DATABASE_URL).toBe(handle.url);
+        expect(process.env.TEST_DATABASE_URL).toBe(handle.url);
+        expect(process.env.LISTEN_NOTIFY_DATABASE_URL).toBe(handle.url);
+        expect(await dropStaleIsolatedSchemas(undefined, 0)).toEqual([]);
+        await handle.teardown();
+        expect(process.env.DATABASE_URL).toBe(sourceUrl);
+        expect(
+          (
+            await isolated.query(
+              "SELECT id FROM partners WHERE name = 'fresh-harness-owned'",
+            )
+          ).rowCount,
+        ).toBe(1);
+        await handle.teardown();
+      } finally {
+        await isolated.end();
+        await source.end();
+        await handle.teardown();
+      }
+    }, 60_000);
+  },
+);

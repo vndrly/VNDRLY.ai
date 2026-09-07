@@ -134,8 +134,24 @@ export async function runPersistentAskVMutation(
             "This action key was already used with different arguments.",
           );
         }
-        if (typeof prior.toolOutput === "string")
-          return { output: prior.toolOutput };
+        // A JSON-looking string in jsonb is decoded again by Drizzle after
+        // node-postgres reads it. Keep new results in an object envelope and
+        // accept completed legacy rows that were decoded to structured JSON.
+        if (prior.errorCode === null) {
+          const stored = prior.toolOutput;
+          if (typeof stored === "string") return { output: stored };
+          if (
+            stored &&
+            typeof stored === "object" &&
+            "format" in stored &&
+            stored.format === "askv-operation-result-v1" &&
+            "output" in stored &&
+            typeof stored.output === "string"
+          ) {
+            return { output: stored.output };
+          }
+          return { output: JSON.stringify(stored ?? null) };
+        }
         return {
           output: JSON.stringify({
             ok: false,
@@ -168,7 +184,7 @@ export async function runPersistentAskVMutation(
     await db
       .update(table)
       .set({
-        toolOutput: output,
+        toolOutput: { format: "askv-operation-result-v1", output },
         resultStatus: classifyToolResult(output, true),
         errorCode: null,
       })

@@ -4022,7 +4022,12 @@
       "transcribe_failed": "Couldn't transcribe the audio. Try again.",
       "transcribe_unavailable": "Speech transcription isn't available right now.",
       "tts_failed": "Couldn't play the voice response. Try again.",
-      "tts_unavailable": "Voice response isn't available right now."
+      "tts_unavailable": "Voice response isn't available right now.",
+      "voice_disabled": "Voice is unavailable for this account. You can still type.",
+      "tool_not_available": "That action isn't available here. Open its screen or ask a different question.",
+      "session_required": "Open AskV to start a new voice conversation.",
+      "session_ended": "This voice conversation has ended. Open AskV to continue.",
+      "idempotency_required": "AskV couldn't safely identify this action. Check the record before trying again."
     },
     "auth": {
       "admin_login_required": "Sign in as an administrator to continue.",

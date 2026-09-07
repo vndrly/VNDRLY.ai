@@ -82,6 +82,36 @@ describe('realtime transport lifecycle', () => {
     client.updateContext({ path: '/gatekeeper' }); await vi.waitFor(() => expect(peer.channel.sent).toContainEqual({ type: 'session.update', session: { type: 'realtime', tools: [] } }));
     expect(peer.channel.sent.some(event => event.item?.content?.[0]?.text === 'Earlier question')).toBe(true);
   });
+  it('batches tiny worklet frames without losing PCM order or flooding the data channel', async () => {
+    let deliver!: (samples: Float32Array) => void;
+    const stop = vi.fn();
+    client = await createAskVRealtimeClient({ onToolCall: async () => '', audioSource: {
+      stop, subscribe: callback => { deliver = callback; return vi.fn(); },
+    } });
+    await client.connect();
+    // Approximately one second of the small 16 kHz frames emitted by a 48 kHz
+    // AudioWorklet. One message per frame floods the real SCTP data channel.
+    for (let i = 0; i < 400; i++) {
+      if (i === 200) client.interrupt();
+      deliver(new Float32Array(40).fill(i < 200 ? 0.25 : -0.25));
+    }
+    deliver(new Float32Array(1).fill(-0.25)); // Complete the resampler's last interpolation.
+    const packets = peer.channel.sent.filter(event => event.type === 'input_audio_buffer.append');
+    expect(packets.length).toBeGreaterThanOrEqual(9);
+    expect(packets.length).toBeLessThanOrEqual(20);
+    const decoded = packets.flatMap(event => {
+      const bytes = Uint8Array.from(atob(event.audio), character => character.charCodeAt(0));
+      const view = new DataView(bytes.buffer);
+      return Array.from({ length: bytes.length / 2 }, (_, index) => view.getInt16(index * 2, true));
+    });
+    expect(decoded).toHaveLength(24000);
+    expect(decoded.slice(0, 11998).every(value => value === 8192)).toBe(true);
+    expect(decoded.slice(12002).every(value => value === -8192)).toBe(true);
+    deliver(new Float32Array(10).fill(0.25)); // Leave a partial packet to discard on close.
+    client.close();
+    const count = peer.channel.sent.length; deliver(new Float32Array(1600));
+    expect(peer.channel.sent).toHaveLength(count);
+  });
   it('retains startup navigation and serializes later context requests without applying stale tools', async () => {
     const contexts: Array<{ path: string; resolve: (response: any) => void }> = [];
     vi.mocked(fetch).mockImplementation(async (url, init) => {

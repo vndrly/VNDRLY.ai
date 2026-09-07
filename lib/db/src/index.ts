@@ -1,9 +1,14 @@
 import "../../../scripts/load-env-local.mjs";
+import { assertFreshLocalTestDatabaseEnvironment } from "../../../scripts/fresh-test-database.mjs";
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import * as schema from "./schema";
 
 const { Pool } = pg;
+
+if (process.env.VNDRLY_TEST_DB_MODE === "fresh-local") {
+  assertFreshLocalTestDatabaseEnvironment(process.env);
+}
 
 if (!process.env.DATABASE_URL) {
   throw new Error(

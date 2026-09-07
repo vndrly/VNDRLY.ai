@@ -1,5 +1,8 @@
 exports/vndrly-source.zip filter=lfs diff=lfs merge=lfs -text
 
+# pnpm patch hashes must stay identical across Windows and macOS checkouts.
+patches/*.patch text eol=lf
+
 # Preserve exact upstream bytes and pinned hashes on Windows and macOS.
 artifacts/vndrly/public/askv-wake/runtime/** -text -whitespace
 artifacts/vndrly/public/askv-wake/model/** -text -whitespace

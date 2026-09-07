@@ -31,6 +31,10 @@ export async function createAskVRealtimeClient(args: RealtimeClientOptions): Pro
   let pendingContext: Parameters<AskVRealtimeClient['updateContext']>[0] | undefined;
   let contextRunning = false, contextItemId: string | undefined;
   const calls = new Set<string>(), transcripts = new Set<string>(), resampler = new PcmResampler(16000, 24000);
+  // Worklet callbacks can arrive ~375 times/sec. Batch 50 ms of 24 kHz PCM
+  // so SCTP packet overhead cannot overwhelm an otherwise healthy connection.
+  const audioPacket = new Float32Array(1200);
+  let audioPacketLength = 0;
   const send = (event: object) => { if (!closed && channel.readyState === 'open') channel.send(JSON.stringify(event)); };
   const ensureActive = () => { if (closed) throw new DOMException('Cancelled', 'AbortError'); };
   const applyToolContext = (payload: { tools?: unknown[]; context?: unknown }) => {
@@ -64,7 +68,7 @@ export async function createAskVRealtimeClient(args: RealtimeClientOptions): Pro
     channel.onmessage = null; channel.onopen = null; channel.onclose = null;
     if (channel.readyState !== 'closed') channel.close();
     pc.ontrack = null; pc.onconnectionstatechange = null; pc.close();
-    audio.pause(); audio.srcObject = null; resampler.clear(); calls.clear(); transcripts.clear();
+    audio.pause(); audio.srcObject = null; resampler.clear(); audioPacket.fill(0); audioPacketLength = 0; calls.clear(); transcripts.clear();
   };
   const fail = (message: string) => { if (!closed) { close(); args.onError?.(message); } };
   args.signal?.addEventListener('abort', close, { once: true }); if (args.signal?.aborted) close();
@@ -143,10 +147,19 @@ export async function createAskVRealtimeClient(args: RealtimeClientOptions): Pro
         if (args.greeting && !args.audioSource) send({ type: 'response.create', response: { instructions: `Greet the user once by saying exactly: ${args.greeting}` } });
         if (args.audioSource) unsubscribe = args.audioSource.subscribe(samples => {
           if (!connected || closed) return;
-          if (channel.bufferedAmount > 1024 * 1024) { fail('AskV connection is too slow for voice.'); return; }
           const pcm = resampler.push(samples);
-          for (let offset = 0; offset < pcm.length; offset += 2400) send({ type: 'input_audio_buffer.append', audio: encodePcm16Base64(pcm.subarray(offset, offset + 2400)) });
-          pcm.fill(0);
+          try {
+            for (let offset = 0; offset < pcm.length;) {
+              const count = Math.min(audioPacket.length - audioPacketLength, pcm.length - offset);
+              audioPacket.set(pcm.subarray(offset, offset + count), audioPacketLength);
+              audioPacketLength += count; offset += count;
+              if (audioPacketLength === audioPacket.length) {
+                if (channel.bufferedAmount > 1024 * 1024) { fail('AskV connection is too slow for voice.'); return; }
+                send({ type: 'input_audio_buffer.append', audio: encodePcm16Base64(audioPacket) });
+                audioPacket.fill(0); audioPacketLength = 0;
+              }
+            }
+          } finally { pcm.fill(0); }
         });
       } catch (error) { close(); throw error; }
     }, close, applyToolContext,

@@ -250,7 +250,7 @@ describe.runIf(HAVE_DB)("1099 backend routing-rule apportioning", () => {
   beforeAll(async () => {
     await dropStaleIsolatedSchemas();
     handle = await createIsolatedSchema("1099-apportion");
-    process.env.DATABASE_URL = handle.url;
+    handle.activate();
     dbModule = await import("@workspace/db");
     nec1099Mod = await import("./nec1099");
     misc1099Mod = await import("./misc1099");

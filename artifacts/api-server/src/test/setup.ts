@@ -1,4 +1,9 @@
 import "../../../../scripts/load-env-local.mjs";
+import { assertFreshLocalTestDatabaseEnvironment } from "../../../../scripts/fresh-test-database.mjs";
+
+if (process.env.VNDRLY_TEST_DB_MODE === "fresh-local") {
+  assertFreshLocalTestDatabaseEnvironment(process.env);
+}
 
 // Pin SESSION_SECRET unconditionally so cookie signatures line up with the
 // literal `"test-secret"` default in `test-utils/session.ts`. A shared dev

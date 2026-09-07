@@ -1099,11 +1099,10 @@ if (process.env.NODE_ENV === "development") {
     requireIsolatedFixtureContext,
     async (_req, res) => {
       try {
-        // Reset prior fixture rows so the spec runs against an exact count.
-        // The isolation guard permits this only inside the wrapper-owned test
-        // database; it can never reach the shared development database.
+        // Only this fixture's own tagged rows can be replaced. Other audit
+        // history and sequence values are retained, even in an isolated DB.
         await db.execute(
-          sql`TRUNCATE TABLE report_export_audit_log RESTART IDENTITY`,
+          sql`DELETE FROM report_export_audit_log WHERE scope->>'period' IN ('audit-fixture-root', 'audit-fixture-filler', 'audit-fixture-tip') AND report_kind = 'qb_invoice_push' AND format = 'qbo_api_push'`,
         );
 
         // Build createdAt timestamps from oldest → newest so the desc(

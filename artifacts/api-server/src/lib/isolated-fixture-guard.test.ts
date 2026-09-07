@@ -3,6 +3,10 @@ import request from "supertest";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { requireIsolatedFixtureContext } from "./isolated-fixture-guard";
+import {
+  freshLocalChildEnvironment,
+  resolveFreshLocalTestDatabaseTarget,
+} from "../../../../scripts/fresh-test-database.mjs";
 
 const originalEnvironment = {
   DATABASE_URL: process.env.DATABASE_URL,
@@ -10,6 +14,9 @@ const originalEnvironment = {
   PGPORT: process.env.PGPORT,
   TEST_DATABASE_URL: process.env.TEST_DATABASE_URL,
   VNDRLY_ISOLATED_TEST_DB: process.env.VNDRLY_ISOLATED_TEST_DB,
+  VNDRLY_TEST_DB_MODE: process.env.VNDRLY_TEST_DB_MODE,
+  VNDRLY_FRESH_TEST_DB_NAME: process.env.VNDRLY_FRESH_TEST_DB_NAME,
+  VNDRLY_LOAD_ENV_LOCAL: process.env.VNDRLY_LOAD_ENV_LOCAL,
 };
 
 function restoreEnvironment(key: keyof typeof originalEnvironment): void {
@@ -27,6 +34,9 @@ afterEach(() => {
   restoreEnvironment("PGPORT");
   restoreEnvironment("TEST_DATABASE_URL");
   restoreEnvironment("VNDRLY_ISOLATED_TEST_DB");
+  restoreEnvironment("VNDRLY_TEST_DB_MODE");
+  restoreEnvironment("VNDRLY_FRESH_TEST_DB_NAME");
+  restoreEnvironment("VNDRLY_LOAD_ENV_LOCAL");
 });
 
 function fixtureApp(databaseAction: () => void) {
@@ -121,6 +131,8 @@ describe("requireIsolatedFixtureContext", () => {
   });
 
   it("permits the database action when the marker and exact safe URLs are present", async () => {
+    // This case intentionally covers the legacy marker contract.
+    delete process.env.VNDRLY_TEST_DB_MODE;
     process.env.VNDRLY_ISOLATED_TEST_DB = "1";
     process.env.DATABASE_URL =
       "postgres://runner:first@ISOLATED.EXAMPLE.TEST:5432/vndrly_test";
@@ -131,6 +143,33 @@ describe("requireIsolatedFixtureContext", () => {
     const response = await request(fixtureApp(databaseAction)).post("/fixture");
 
     expect(response.status).toBe(204);
+    expect(databaseAction).toHaveBeenCalledTimes(1);
+  });
+
+  it("permits fresh local provenance and rejects a redirected LISTEN/NOTIFY target before the action", async () => {
+    const target = resolveFreshLocalTestDatabaseTarget({
+      VNDRLY_TEST_DB_MODE: "fresh-local",
+      VNDRLY_TEST_DB_MAINTENANCE_URL:
+        "postgresql://runner:local@127.0.0.1:55439/postgres",
+    });
+    const fresh = freshLocalChildEnvironment({}, target);
+    for (const key of Object.keys(originalEnvironment) as Array<
+      keyof typeof originalEnvironment
+    >) {
+      const value = fresh[key];
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+    const databaseAction = vi.fn();
+    expect(
+      (await request(fixtureApp(databaseAction)).post("/fixture")).status,
+    ).toBe(204);
+    expect(databaseAction).toHaveBeenCalledTimes(1);
+    process.env.LISTEN_NOTIFY_DATABASE_URL =
+      "postgresql://runner:local@remote.example:55439/postgres";
+    expect(
+      (await request(fixtureApp(databaseAction)).post("/fixture")).status,
+    ).toBe(503);
     expect(databaseAction).toHaveBeenCalledTimes(1);
   });
 });

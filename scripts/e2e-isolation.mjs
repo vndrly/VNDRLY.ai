@@ -1,3 +1,5 @@
+import { assertFreshLocalTestDatabaseEnvironment } from "./fresh-test-database.mjs";
+
 export const LOCAL_E2E_BASE_URL = "http://localhost:23539";
 
 const CONTROL_CHARACTERS = /[\u0000-\u001f\u007f-\u009f]/u;
@@ -18,6 +20,7 @@ const LIBPQ_TARGET_ENVIRONMENT_VARIABLES = new Set([
   "PGSYSCONFDIR",
   "PGTARGETSESSIONATTRS",
   "PGLOADBALANCEHOSTS",
+  "PGOPTIONS",
 ]);
 
 function assertNoControlCharacters(value, label) {
@@ -332,6 +335,9 @@ export function assertIsolatedTestDatabaseEnvironment(environment) {
     );
   }
   assertTestDatabaseTarget(testDatabaseTarget, "Isolated E2E target");
+  if (env.VNDRLY_TEST_DB_MODE === "fresh-local") {
+    assertFreshLocalTestDatabaseEnvironment(env);
+  }
   return {
     databaseUrl: databaseTarget.connectionUrl,
     testDatabaseUrl: testDatabaseTarget.connectionUrl,

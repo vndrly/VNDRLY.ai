@@ -2,6 +2,9 @@
  * db-harness.ts
  *
  * Reusable per-test-file Postgres isolation for integration-style tests.
+ * In fresh-local mode, every handle owns a NEW loopback database and retains
+ * it at teardown. activate() switches the complete provenance environment.
+ * The schema-copy/reset workflow documented below is legacy-only.
  *
  * Why this exists
  * ---------------
@@ -67,6 +70,12 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import pg from "pg";
+import {
+  assertFreshLocalTestDatabaseEnvironment,
+  freshLocalChildEnvironment,
+  provisionFreshLocalTestDatabase,
+  resolveFreshLocalTestDatabaseTarget,
+} from "../../../../scripts/fresh-test-database.mjs";
 
 const execFileP = promisify(execFile);
 
@@ -90,6 +99,8 @@ export type IsolatedSchemaHandle = {
   url: string;
   /** The isolated schema name; useful for diagnostics & assertions. */
   schema: string;
+  /** Activate the complete database provenance before importing @workspace/db. */
+  activate: () => void;
   /** Drop the schema CASCADE. Safe to call more than once. */
   teardown: () => Promise<void>;
 };
@@ -103,21 +114,27 @@ export type IsolatedSchemaHandle = {
 export async function hasReachableDatabase(
   url: string | undefined = process.env.DATABASE_URL,
 ): Promise<boolean> {
-  if (!url) return false;
-  if (url.includes("test:test@localhost")) return false;
-  if (!(await hasPgDump())) return false;
+  if (process.env.VNDRLY_TEST_DB_MODE === "fresh-local") {
+    assertFreshLocalTestDatabaseEnvironment(process.env);
+    if (url !== process.env.DATABASE_URL)
+      throw new Error("Fresh connectivity probe must use the wrapper target");
+  } else {
+    if (!url || url.includes("test:test@localhost")) return false;
+    if (!(await hasPgDump())) return false;
+  }
   const client = new pg.Client({ connectionString: url });
   try {
     await client.connect();
     await client.query("SELECT 1");
     await client.end();
     return true;
-  } catch {
+  } catch (error) {
     try {
       await client.end();
     } catch {
       /* ignore */
     }
+    if (process.env.VNDRLY_TEST_DB_MODE === "fresh-local") throw error;
     return false;
   }
 }
@@ -136,6 +153,47 @@ export async function createIsolatedSchema(
   label: string,
   sourceUrl: string | undefined = process.env.DATABASE_URL,
 ): Promise<IsolatedSchemaHandle> {
+  if (process.env.VNDRLY_TEST_DB_MODE === "fresh-local") {
+    assertFreshLocalTestDatabaseEnvironment(process.env);
+    if (sourceUrl !== process.env.DATABASE_URL)
+      throw new Error("Fresh fixture source must be the wrapper target");
+    const target = resolveFreshLocalTestDatabaseTarget(process.env);
+    // Import schema definitions only: no source database connection or dump.
+    const schema = await import("@workspace/db/schema");
+    const { drizzle } = await import("drizzle-orm/node-postgres");
+    const { pushSchema } = await import("drizzle-kit/api");
+    await provisionFreshLocalTestDatabase(
+      target,
+      (url) => new pg.Client({ connectionString: url }),
+      async (client) =>
+        pushSchema(
+          schema,
+          drizzle(client, {
+            schema,
+          }) as unknown as import("drizzle-orm/pg-core").PgDatabase<never>,
+        ),
+    );
+    const original = { ...process.env };
+    let activated = false;
+    return {
+      url: target.testUrl,
+      schema: "public",
+      activate() {
+        const child = freshLocalChildEnvironment(original, target);
+        for (const key of Object.keys(process.env)) delete process.env[key];
+        Object.assign(process.env, child);
+        activated = true;
+      },
+      async teardown() {
+        // Retain every fresh database and its rows. Only restore process state.
+        if (activated) {
+          for (const key of Object.keys(process.env)) delete process.env[key];
+          Object.assign(process.env, original);
+          activated = false;
+        }
+      },
+    };
+  }
   if (!sourceUrl) {
     throw new Error(
       "createIsolatedSchema: DATABASE_URL is not set; cannot snapshot the public schema.",
@@ -171,6 +229,9 @@ export async function createIsolatedSchema(
   return {
     url: appendSearchPathOption(sourceUrl, schema),
     schema,
+    activate() {
+      process.env.DATABASE_URL = appendSearchPathOption(sourceUrl, schema);
+    },
     teardown: () => dropSchema(sourceUrl, schema),
   };
 }
@@ -184,6 +245,10 @@ export async function dropStaleIsolatedSchemas(
   sourceUrl: string | undefined = process.env.DATABASE_URL,
   maxAgeMs: number = STALE_SCHEMA_AGE_MS,
 ): Promise<string[]> {
+  if (process.env.VNDRLY_TEST_DB_MODE === "fresh-local") {
+    assertFreshLocalTestDatabaseEnvironment(process.env);
+    return [];
+  }
   if (!sourceUrl) return [];
   if (sourceUrl.includes("test:test@localhost")) return [];
 

@@ -13,7 +13,7 @@
 - No wake-idle audio leaves the device; buffered audio after activation is transient and cleared on cancellation.
 - The microphone has one owner. Mute, background, logout, account/membership changes cancel pending startup and capture.
 - Model/runtime assets are pinned, bundled, and attributed. No runtime CDN or wake API calls.
-- No deployment, DB mutation, or release is authorized by this implementation task.
+- No deployment, existing/shared database mutation, or release is authorized by this implementation task. Validation may provision new local test databases additively, retain them, and use only synthetic fixtures.
 
 ## Execution
 
@@ -38,3 +38,9 @@
 - OpenAI Realtime is the active-conversation provider already specified in the approved scope. This implementation adds no hosted wake-word service.
 - iOS runtime version is isolated at app version 1.0.1. Module/model/build-preparation changes require a native build, not an OTA update to older binaries.
 - Independent review found and corrected model-forged approval, stale context requests, transcript save loss, response-generation/playback timing confusion, and capture starting after cancellation. Retained Cursor code is covered by integrated regression checks rather than assumed correct.
+
+### Continued validation
+
+- Packaging checkpoint `200ea71` includes the previously ignored native module sources and required EAS preparation script. EAS build 156 for this exact baseline reached `FINISHED` and exported a signed IPA; nothing was submitted to TestFlight.
+- Real OpenAI/browser validation found capture callbacks flooding the Realtime data channel. Web and iOS now send bounded 50 ms PCM packets; decoded-audio/order/cancellation regressions and live wake handoff plus spoken interruption pass. The final JavaScript fix requires inclusion in the eventual release build.
+- A new local PostgreSQL cluster and guarded fresh-only test mode allow database integration without resetting an existing database. Full API and browser gates are in progress; the main reconciliation report records the final outcome.

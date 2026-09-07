@@ -6,6 +6,49 @@ the shared development or production database.
 
 ## Prerequisites
 
+For validation under the repository's no-wipe rule, use **fresh-local mode**:
+
+```powershell
+$env:VNDRLY_TEST_DB_MODE = 'fresh-local'
+$env:VNDRLY_TEST_DB_MAINTENANCE_URL = 'postgresql://LOCAL_ROLE:LOCAL_PASSWORD@127.0.0.1:55439/postgres'
+pnpm run test:api
+pnpm run test:e2e
+# The same environment also supports the complete root pnpm test chain.
+```
+
+Supply credentials for a newly provisioned local PostgreSQL instance. The URL
+must use the literal `127.0.0.1`, an explicit port, a username, and `/postgres`,
+with no query string or fragment. The wrapper verifies the server's actual
+address and database before creating anything. Each invocation creates a
+different `vndrly_<uuid>_test` database using `TEMPLATE template0`. A name
+collision fails; no existing database is opened for reuse. The complete schema
+plan must be additive and warning-free before any schema statement is applied.
+Schema drift verification still runs; the legacy skip flag is ignored.
+
+Fresh databases are retained after both success and failure. There is no
+automatic database cleanup. Only test-owned fixture rows are cleaned up with
+narrow predicates; counters use unique test namespaces. Fresh mode skips all
+machine env/secret files and removes inherited outbound-service credentials,
+database fallback settings, and demo password overrides before spawning tests.
+The database, LISTEN/NOTIFY URL, and provenance marker are checked again in the
+shared database module, API test setup, and E2E guards.
+
+Per-file integration isolation uses additional new databases in fresh mode and
+retains them at teardown; it does not use `pg_dump`, schema replacement, or the
+legacy stale-schema sweep. A narrow recorded patch to the existing
+`drizzle-kit@0.31.9` dependency preserves SQL bind values during composite
+primary-key introspection. `src/test/drizzle-parameter-binding.test.ts` in the
+API package verifies the fix against an actual fresh local PostgreSQL database.
+
+Run the provisioning safety tests without any database connection:
+
+```powershell
+node --test scripts/tests/fresh-test-database.test.mjs
+```
+
+The legacy URL behavior described below remains available for compatibility.
+It resets a schema and must not be used for the no-wipe validation workflow.
+
 - No API or web workflow may already own the dedicated E2E ports 18080 or
   23539. Playwright deliberately refuses to reuse servers whose database
   provenance is unknown; the normal development API on port 8080 may continue

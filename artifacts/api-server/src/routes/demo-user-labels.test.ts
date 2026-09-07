@@ -12,7 +12,15 @@
 // Skips offline (no real DATABASE_URL) the same way the other route
 // tests in this directory do.
 
-import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import express from "express";
 import cookieParser from "cookie-parser";
 import request from "supertest";
@@ -48,6 +56,9 @@ let adminUserId: number;
 let nonAdminUserId: number;
 const MARKER = `demo-labels-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 
+const SPANISH_OVERRIDE = `${MARKER} Súper Admin`;
+const TEMP_OVERRIDE = `${MARKER} Temp Override`;
+
 function adminCookie(userId: number): string {
   return buildTestCookie({ userId, role: "admin" });
 }
@@ -70,8 +81,11 @@ describe.runIf(haveRealDb)(
       app.use(express.json());
       app.use("/api", router);
 
-      // Wipe any prior overrides so each run starts from "no overrides".
-      await dbModule.db.execute(sql`DELETE FROM demo_user_label_overrides`);
+      // Fail on conflicting state rather than clearing rows owned elsewhere.
+      const existing = await dbModule.db.execute(
+        sql`SELECT id FROM demo_user_label_overrides WHERE username = 'admin' AND locale = 'es'`,
+      );
+      expect(existing.rows).toHaveLength(0);
 
       const [admin] = await dbModule.db
         .insert(dbModule.usersTable)
@@ -98,9 +112,9 @@ describe.runIf(haveRealDb)(
     }, 30_000);
 
     afterEach(async () => {
-      // Each test owns a clean slate of overrides so ordering doesn't
-      // matter. The seeded users are reused across tests.
-      await dbModule.db.execute(sql`DELETE FROM demo_user_label_overrides`);
+      await dbModule.db.execute(
+        sql`DELETE FROM demo_user_label_overrides WHERE username = 'admin' AND locale = 'es' AND label IN (${SPANISH_OVERRIDE}, ${TEMP_OVERRIDE})`,
+      );
     });
 
     afterAll(async () => {
@@ -111,7 +125,9 @@ describe.runIf(haveRealDb)(
         await dbModule.db
           .delete(dbModule.usersTable)
           .where(eq(dbModule.usersTable.id, nonAdminUserId));
-        await dbModule.db.execute(sql`DELETE FROM demo_user_label_overrides`);
+        await dbModule.db.execute(
+          sql`DELETE FROM demo_user_label_overrides WHERE username = 'admin' AND locale = 'es' AND label IN (${SPANISH_OVERRIDE}, ${TEMP_OVERRIDE})`,
+        );
       } catch {
         /* best-effort cleanup */
       }
@@ -146,12 +162,12 @@ describe.runIf(haveRealDb)(
       const put = await request(app)
         .put("/api/admin/demo-user-labels")
         .set("Cookie", adminCookie(adminUserId))
-        .send({ username: "admin", locale: "es", label: "Súper Admin" });
+        .send({ username: "admin", locale: "es", label: SPANISH_OVERRIDE });
       expect(put.status).toBe(200);
       const adminEntry = put.body.entries.find(
         (e: { username: string }) => e.username === "admin",
       );
-      expect(adminEntry.overrides.es).toBe("Súper Admin");
+      expect(adminEntry.overrides.es).toBe(SPANISH_OVERRIDE);
 
       // The admin read surface should now serve the override while
       // preserving the source defaults for every locale.
@@ -162,14 +178,14 @@ describe.runIf(haveRealDb)(
       const esAdmin = esRes.body.entries.find(
         (a: { username: string }) => a.username === "admin",
       );
-      expect(esAdmin.overrides.es).toBe("Súper Admin");
+      expect(esAdmin.overrides.es).toBe(SPANISH_OVERRIDE);
       expect(esAdmin.defaults.en).toBe("System Admin");
     });
 
     it("PUT with label=null clears the override and falls back to source", async () => {
       // Seed an override directly so we don't rely on the previous test.
       await dbModule.db.execute(
-        sql`INSERT INTO demo_user_label_overrides (username, locale, label) VALUES ('admin', 'es', 'Temp Override')`,
+        sql`INSERT INTO demo_user_label_overrides (username, locale, label) VALUES ('admin', 'es', ${TEMP_OVERRIDE})`,
       );
 
       const cleared = await request(app)

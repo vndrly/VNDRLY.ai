@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import pg from "pg";
+import { assertIsolatedTestDatabaseEnvironment } from "../../../scripts/e2e-isolation.mjs";
 
 // Shared database setup utilities for every Playwright spec under
 // lib/e2e/tests/.
@@ -19,6 +20,7 @@ import pg from "pg";
  * confusing pg connection error from the first query.
  */
 export function createPool(): pg.Pool {
+  assertIsolatedTestDatabaseEnvironment(process.env);
   if (!process.env.DATABASE_URL) {
     throw new Error(
       "DATABASE_URL is required to run this e2e test (it must point at the same database the api-server is using)",

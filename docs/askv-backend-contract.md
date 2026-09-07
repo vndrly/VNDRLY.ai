@@ -68,7 +68,7 @@ request routed to another instance loses pending approval and fails closed;
 clients must reconnect and obtain a new summary and user confirmation. Multiple
 API instances require session affinity until this transient state is shared.
 Durable write reservations and transcript records survive restart. A reservation
-with an uncertain outcome is not automatically executed again.
+with an uncertain outcome is not automatically executed again. Completed operation results use a versioned JSON envelope to preserve the exact serialized tool output through PostgreSQL/Drizzle decoding. Completed legacy rows remain readable; a pending/error reservation is always reported as uncertain even if it retains an output value.
 
 ## Operational metrics
 

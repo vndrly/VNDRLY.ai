@@ -9,7 +9,10 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import express from "express";
 import cookieParser from "cookie-parser";
 import request from "supertest";
-import { attachTestErrorMiddleware, expectStatus } from "../test-utils/route-app";
+import {
+  attachTestErrorMiddleware,
+  expectStatus,
+} from "../test-utils/route-app";
 import pg from "pg";
 import { eq } from "drizzle-orm";
 import { buildTestCookie } from "../test-utils/session";
@@ -79,10 +82,11 @@ describe.runIf(haveRealDb)(
       app.use("/api", router);
       attachTestErrorMiddleware(app);
 
-      // Wipe any prior singleton row + audit rows from earlier runs so
-      // each suite starts deterministic; the table is small.
-      await dbModule.db.delete(dbModule.fireTransmitterSettingsAuditLogTable);
-      await dbModule.db.delete(dbModule.fireTransmitterSettingsTable);
+      // An unexpected singleton is a test-isolation failure, not permission
+      // to clear another suite's state.
+      expect(
+        await dbModule.db.select().from(dbModule.fireTransmitterSettingsTable),
+      ).toHaveLength(0);
 
       // Seed an admin and a non-admin user for the gating test. Use
       // unique email markers so we can cleanup safely afterwards.
@@ -112,11 +116,23 @@ describe.runIf(haveRealDb)(
     }, 30_000);
 
     afterAll(async () => {
-      await dbModule.db.delete(
-        dbModule.fireTransmitterSettingsAuditLogTable,
-      );
-      await dbModule.db.delete(dbModule.fireTransmitterSettingsTable);
       if (adminUserId) {
+        await dbModule.db
+          .delete(dbModule.fireTransmitterSettingsAuditLogTable)
+          .where(
+            eq(
+              dbModule.fireTransmitterSettingsAuditLogTable.actorUserId,
+              adminUserId,
+            ),
+          );
+        await dbModule.db
+          .delete(dbModule.fireTransmitterSettingsTable)
+          .where(
+            eq(
+              dbModule.fireTransmitterSettingsTable.updatedByUserId,
+              adminUserId,
+            ),
+          );
         await dbModule.db
           .delete(dbModule.usersTable)
           .where(eq(dbModule.usersTable.id, adminUserId));
@@ -304,7 +320,10 @@ describe.runIf(haveRealDb)(
         actorRole: string;
         actorIp: string | null;
         actorUserAgent: string | null;
-        changes: Record<string, { before: string | null; after: string | null }>;
+        changes: Record<
+          string,
+          { before: string | null; after: string | null }
+        >;
       }>;
       expect(Object.keys(first.changes)).toEqual(["contactName"]);
       expect(first.changes.contactName).toEqual({

@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import express from "express";
 import cookieParser from "cookie-parser";
 import request from "supertest";
@@ -21,20 +21,31 @@ import { assertIsolatedTestDatabaseEnvironment } from "../../../../scripts/e2e-i
 // array. Without this branch, demo logins silently 401 and the only
 // recovery is hand-editing bcrypt hashes.
 //
-// This test:
-//   1. Seeds the demo users via `POST /api/auth/seed`.
-//   2. Manually overwrites `users.password_hash` for `admin` with a
-//      bogus value that cannot match the canonical demo password.
-//   3. Calls `POST /api/auth/seed` again and asserts:
-//        - the response's `passwordReset` array contains `admin`
-//        - the stored hash now verifies against `vndrly123`
-//        - `POST /api/auth/login` with the canonical credentials
-//          returns 200 (the recovery path actually restored login).
+// Recovery is exercised by simulating a failed comparison for one stored
+// hash. Stored demo passwords remain canonical throughout the test, including
+// when an assertion fails; the real seed route and persistence still run.
 //
 // Requires the isolated wrapper's marker plus identical sanitized `_test`
 // DATABASE_URL/TEST_DATABASE_URL values. The guard returns before opening a
 // client for every other environment, including a shared development URL.
 // ---------------------------------------------------------------------------
+
+async function withSimulatedPasswordDrift<T>(
+  hash: string,
+  action: () => Promise<T>,
+): Promise<T> {
+  const compare = bcrypt.compareSync;
+  const spy = vi
+    .spyOn(bcrypt, "compareSync")
+    .mockImplementation((password, candidate) =>
+      candidate === hash ? false : compare(password, candidate),
+    );
+  try {
+    return await action();
+  } finally {
+    spy.mockRestore();
+  }
+}
 
 const haveRealDb = await checkRealDb();
 
@@ -44,7 +55,8 @@ async function checkRealDb(): Promise<boolean> {
     databaseUrl = assertIsolatedTestDatabaseEnvironment(
       process.env,
     ).databaseUrl;
-  } catch {
+  } catch (error) {
+    if (process.env.VNDRLY_TEST_DB_MODE === "fresh-local") throw error;
     return false;
   }
   const client = new pg.Client({ connectionString: databaseUrl });
@@ -53,12 +65,13 @@ async function checkRealDb(): Promise<boolean> {
     await client.query("SELECT 1");
     await client.end();
     return true;
-  } catch {
+  } catch (error) {
     try {
       await client.end();
     } catch {
       /* ignore */
     }
+    if (process.env.VNDRLY_TEST_DB_MODE === "fresh-local") throw error;
     return false;
   }
 }
@@ -95,7 +108,7 @@ describe.runIf(haveRealDb)("POST /api/auth/seed demo password recovery", () => {
     app.use("/api", authRouter);
     attachTestErrorMiddleware(app);
 
-    // Make sure the demo users exist before we start mutating them.
+    // Make sure the demo users exist before exercising recovery.
     const seedRes = await request(app).post("/api/auth/seed");
     firstSeedStatus = seedRes.status;
     expectStatus(seedRes, 200);
@@ -188,35 +201,23 @@ describe.runIf(haveRealDb)("POST /api/auth/seed demo password recovery", () => {
     }
   });
 
-  it("re-hashes a drifted demo password and restores login", async () => {
+  it("recovers from a failed password comparison using the canonical password", async () => {
     // Sanity: admin currently logs in with the canonical password.
     const before = await request(app)
       .post("/api/auth/login")
       .send({ username: "admin", password: "vndrly123" });
     expectStatus(before, 200);
 
-    // Overwrite the admin password hash with a value that cannot match
-    // the canonical demo password. We hash a different string rather
-    // than write a literal garbage byte sequence so the column stays a
-    // valid bcrypt blob — this matches the real failure mode (a stale
-    // import of a different environment's hash) more faithfully than a
-    // syntactically invalid hash would.
-    const bogusHash = bcrypt.hashSync("not-the-demo-password", 10);
-    await db
-      .update(usersTable)
-      .set({ passwordHash: bogusHash })
+    const [intact] = await db
+      .select({ passwordHash: usersTable.passwordHash })
+      .from(usersTable)
       .where(sql`lower(${usersTable.username}) = lower('admin')`);
+    expect(bcrypt.compareSync("vndrly123", intact.passwordHash)).toBe(true);
 
-    // Confirm the drift actually broke login before we assert recovery.
-    const broken = await request(app)
-      .post("/api/auth/login")
-      .send({ username: "admin", password: "vndrly123" });
-    expect(broken.status).toBe(401);
-    expect(broken.body.code).toBe("auth.invalid_credentials");
-
-    // Re-run the seeder. The recovery branch should detect the drift
-    // and re-hash back to the canonical demo password.
-    const recovered = await request(app).post("/api/auth/seed");
+    const recovered = await withSimulatedPasswordDrift(
+      intact.passwordHash,
+      () => request(app).post("/api/auth/seed"),
+    );
     expectStatus(recovered, 200);
     expect(Array.isArray(recovered.body.passwordReset)).toBe(true);
     expect(recovered.body.passwordReset).toContain("admin");
@@ -227,6 +228,7 @@ describe.runIf(haveRealDb)("POST /api/auth/seed demo password recovery", () => {
       .from(usersTable)
       .where(sql`lower(${usersTable.username}) = lower('admin')`);
     expect(row).toBeDefined();
+    expect(row.passwordHash).not.toBe(intact.passwordHash);
     expect(bcrypt.compareSync("vndrly123", row.passwordHash)).toBe(true);
 
     // And the canonical login path returns 200 again.
@@ -249,7 +251,7 @@ describe.runIf(haveRealDb)("POST /api/auth/seed demo password recovery", () => {
 
   it("restores an email-identified canonical alias and preserves its session version and row fields", async () => {
     const username = "auth-seed-email-alias-regression";
-    const bogusHash = bcrypt.hashSync("not-the-demo-password", 10);
+    const canonicalHash = bcrypt.hashSync("vndrly123", 10);
     const [existing] = await db
       .select({ id: usersTable.id })
       .from(usersTable)
@@ -262,7 +264,7 @@ describe.runIf(haveRealDb)("POST /api/auth/seed demo password recovery", () => {
         .update(usersTable)
         .set({
           email: "ADMIN@VNDRLY.COM",
-          passwordHash: bogusHash,
+          passwordHash: canonicalHash,
           sessionVersion: 73,
           displayName: "Preserved Alias Display",
         })
@@ -273,7 +275,7 @@ describe.runIf(haveRealDb)("POST /api/auth/seed demo password recovery", () => {
         .values({
           username,
           email: "ADMIN@VNDRLY.COM",
-          passwordHash: bogusHash,
+          passwordHash: canonicalHash,
           role: "admin",
           displayName: "Preserved Alias Display",
           sessionVersion: 73,
@@ -282,7 +284,9 @@ describe.runIf(haveRealDb)("POST /api/auth/seed demo password recovery", () => {
       userId = created.id;
     }
 
-    const recovered = await request(app).post("/api/auth/seed");
+    const recovered = await withSimulatedPasswordDrift(canonicalHash, () =>
+      request(app).post("/api/auth/seed"),
+    );
     expectStatus(recovered, 200);
     expect(recovered.body.passwordReset).toContain("admin");
 
@@ -306,9 +310,9 @@ describe.runIf(haveRealDb)("POST /api/auth/seed demo password recovery", () => {
     expect(bcrypt.compareSync("vndrly123", row.passwordHash)).toBe(true);
   });
 
-  it("recovers an existing Joe Boggs hash without replacing his row or memberships and is idempotent", async () => {
+  it("recovers a simulated Joe Boggs hash mismatch without replacing his row or memberships and is idempotent", async () => {
     const identity = "joe.boggs@winchester.com";
-    const bogusHash = bcrypt.hashSync("not-the-canonical-joe-password", 10);
+    const canonicalHash = bcrypt.hashSync("winchester2", 10);
     const [existingJoe] = await db
       .select({ id: usersTable.id })
       .from(usersTable)
@@ -321,7 +325,7 @@ describe.runIf(haveRealDb)("POST /api/auth/seed demo password recovery", () => {
       userId = existingJoe.id;
       await db
         .update(usersTable)
-        .set({ passwordHash: bogusHash, mustChangePassword: true })
+        .set({ passwordHash: canonicalHash, mustChangePassword: true })
         .where(sql`${usersTable.id} = ${userId}`);
     } else {
       const [created] = await db
@@ -329,7 +333,7 @@ describe.runIf(haveRealDb)("POST /api/auth/seed demo password recovery", () => {
         .values({
           username: identity,
           email: null,
-          passwordHash: bogusHash,
+          passwordHash: canonicalHash,
           role: "field_employee",
           displayName: "Joe Boggs",
           preferredLanguage: "en",
@@ -344,7 +348,8 @@ describe.runIf(haveRealDb)("POST /api/auth/seed demo password recovery", () => {
       .select({ id: vendorsTable.id })
       .from(vendorsTable)
       .where(sql`lower(btrim(${vendorsTable.name})) = 'winchester'`);
-    if (!winchester) throw new Error("Expected the natural-key Winchester vendor");
+    if (!winchester)
+      throw new Error("Expected the natural-key Winchester vendor");
 
     const [existingMembership] = await db
       .select({ id: userOrgMembershipsTable.id })
@@ -389,7 +394,9 @@ describe.runIf(haveRealDb)("POST /api/auth/seed demo password recovery", () => {
         .where(sql`${userOrgMembershipsTable.userId} = ${userId}`)
     ).sort((left, right) => left.id - right.id);
 
-    const recovered = await request(app).post("/api/auth/seed");
+    const recovered = await withSimulatedPasswordDrift(canonicalHash, () =>
+      request(app).post("/api/auth/seed"),
+    );
     expectStatus(recovered, 200);
     expect(recovered.body.passwordReset).toContain(identity);
 
@@ -415,6 +422,7 @@ describe.runIf(haveRealDb)("POST /api/auth/seed demo password recovery", () => {
     } = userAfter;
     expect(preservedUserAfter).toEqual(userBefore);
     expect(recoveredMustChangePassword).toBe(false);
+    expect(recoveredHash).not.toBe(canonicalHash);
     expect(bcrypt.compareSync("winchester2", recoveredHash)).toBe(true);
 
     const membershipsAfter = (

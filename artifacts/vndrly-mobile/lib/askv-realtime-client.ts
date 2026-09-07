@@ -97,6 +97,9 @@ export async function createAskVRealtimeClient(args: AskVRealtimeOptions): Promi
   const transcriptEvents = new Set<string>();
   const abort = new AbortController();
   const resampler = new PcmResampler(16000, 24000);
+  // Match web: 50 ms packets avoid flooding SCTP with tiny capture callbacks.
+  const audioPacket = new Float32Array(1200);
+  let audioPacketLength = 0;
   const live = () => !closed && !args.signal?.aborted;
   const check = () => { if (!live()) throw abortError(); };
   const send = (event: unknown) => {
@@ -111,7 +114,7 @@ export async function createAskVRealtimeClient(args: AskVRealtimeOptions): Promi
     if (openTimer) clearTimeout(openTimer);
     rejectOpen?.(abortError()); rejectOpen = null;
     unsubscribeAudio?.(); unsubscribeAudio = null;
-    resampler.clear();
+    resampler.clear(); audioPacket.fill(0); audioPacketLength = 0;
     stream?.getTracks().forEach(track => track.stop()); stream = null;
     remoteTracks.forEach(track => track.stop()); remoteTracks.clear();
     if (channel) {
@@ -231,9 +234,15 @@ export async function createAskVRealtimeClient(args: AskVRealtimeOptions): Promi
               if (!micEnabled || !live()) return;
               const samples = resampler.push(frame);
               try {
-                for (let offset = 0; offset < samples.length; offset += 2400) {
-                  if ((dc.bufferedAmount ?? 0) > 1024 * 1024) { fail("assistant.realtime_connection_slow"); return; }
-                  send({ type: "input_audio_buffer.append", audio: encodePcm16Base64(samples.subarray(offset, offset + 2400)) });
+                for (let offset = 0; offset < samples.length;) {
+                  const count = Math.min(audioPacket.length - audioPacketLength, samples.length - offset);
+                  audioPacket.set(samples.subarray(offset, offset + count), audioPacketLength);
+                  audioPacketLength += count; offset += count;
+                  if (audioPacketLength === audioPacket.length) {
+                    if ((dc.bufferedAmount ?? 0) > 1024 * 1024) { fail("assistant.realtime_connection_slow"); return; }
+                    send({ type: "input_audio_buffer.append", audio: encodePcm16Base64(audioPacket) });
+                    audioPacket.fill(0); audioPacketLength = 0;
+                  }
                 }
               } finally { samples.fill(0); }
             });

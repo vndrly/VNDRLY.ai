@@ -69,12 +69,74 @@ describe("AskV durable replay reservations", () => {
       return JSON.stringify({ ok: true, visitId: 44 });
     });
     const result = await first.runPersistentAskVMutation(scope, operation);
+    expect(state.rows[0].toolOutput).toEqual({
+      format: "askv-operation-result-v1",
+      output: result.value,
+    });
     vi.resetModules();
     const second = await import("./askv-idempotency");
     const replay = await second.runPersistentAskVMutation(scope, operation);
     expect(replay.value).toBe(result.value);
     expect(operation).toHaveBeenCalledTimes(1);
   });
+  it("replays a completed legacy JSON result without executing it again", async () => {
+    const first = await import("./askv-idempotency");
+    await first.runPersistentAskVMutation(scope, async () =>
+      JSON.stringify({ ok: true, visitId: 44 }),
+    );
+    // The real PostgreSQL/Drizzle read path decodes legacy JSON strings into
+    // objects; this is the shape that previously became outcomeUnknown.
+    state.rows[0].toolOutput = { ok: true, visitId: 44 };
+    vi.resetModules();
+    const second = await import("./askv-idempotency");
+    const retry = vi.fn(async () => "duplicate");
+    const result = await second.runPersistentAskVMutation(scope, retry);
+    expect(result.hit).toBe(true);
+    expect(JSON.parse(result.value)).toEqual({ ok: true, visitId: 44 });
+    expect(retry).not.toHaveBeenCalled();
+  });
+  it.each([null, false, 0, ["result"]].map((value) => ({ value })))(
+    "replays a completed legacy JSON value %j",
+    async ({ value }) => {
+      const first = await import("./askv-idempotency");
+      await first.runPersistentAskVMutation(scope, async () =>
+        JSON.stringify(value),
+      );
+      state.rows[0].toolOutput = value;
+      vi.resetModules();
+      const second = await import("./askv-idempotency");
+      const retry = vi.fn(async () => "duplicate");
+      expect((await second.runPersistentAskVMutation(scope, retry)).value).toBe(
+        JSON.stringify(value),
+      );
+      expect(retry).not.toHaveBeenCalled();
+    },
+  );
+  it.each(
+    ["assistant.action_pending", "assistant.tool_failed"].flatMap((errorCode) =>
+      [
+        "stored result",
+        { format: "askv-operation-result-v1", output: "stored result" },
+        { ok: true },
+      ].map((toolOutput) => ({ errorCode, toolOutput })),
+    ),
+  )(
+    "does not treat a $errorCode reservation with retained output as completed",
+    async ({ errorCode, toolOutput }) => {
+      const first = await import("./askv-idempotency");
+      await first.runPersistentAskVMutation(
+        scope,
+        async () => "initial result",
+      );
+      Object.assign(state.rows[0], { errorCode, toolOutput });
+      vi.resetModules();
+      const second = await import("./askv-idempotency");
+      const retry = vi.fn(async () => "duplicate");
+      const result = await second.runPersistentAskVMutation(scope, retry);
+      expect(JSON.parse(result.value).outcomeUnknown).toBe(true);
+      expect(retry).not.toHaveBeenCalled();
+    },
+  );
   it("does not retry a write with an unknown outcome after interruption", async () => {
     const first = await import("./askv-idempotency");
     await expect(

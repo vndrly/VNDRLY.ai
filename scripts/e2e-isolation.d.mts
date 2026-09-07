@@ -3,6 +3,9 @@ export interface IsolatedDatabaseEnvironment {
   TEST_DATABASE_URL?: string;
   LISTEN_NOTIFY_DATABASE_URL?: string;
   VNDRLY_ISOLATED_TEST_DB?: string;
+  VNDRLY_TEST_DB_MODE?: string;
+  VNDRLY_FRESH_TEST_DB_NAME?: string;
+  VNDRLY_LOAD_ENV_LOCAL?: string;
 }
 
 export interface ResolvedIsolatedTestDatabaseTarget {
