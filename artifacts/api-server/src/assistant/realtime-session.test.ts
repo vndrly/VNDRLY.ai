@@ -29,7 +29,7 @@ describe("AskV Realtime session", () => {
       model: "gpt-realtime-2",
       voice: "marin",
       instructions: "Use AskV tools.",
-      tools: [{ type: "function", name: "query_tickets", description: "Query tickets", parameters: { type: "object" }, strict: true }],
+      tools: [{ type: "function", name: "query_tickets", description: "Query tickets", parameters: { type: "object" } }],
       fetchImpl,
     });
 
@@ -66,7 +66,7 @@ describe("AskV Realtime session", () => {
       model: "gpt-realtime-2",
       voice: "marin",
       instructions: "Keep it short.",
-      tools: [{ type: "function", name: "query_tickets", description: "Query tickets", parameters: { type: "object" }, strict: true }],
+      tools: [{ type: "function", name: "query_tickets", description: "Query tickets", parameters: { type: "object" } }],
       sdp: "offer-sdp",
       fetchImpl,
     });

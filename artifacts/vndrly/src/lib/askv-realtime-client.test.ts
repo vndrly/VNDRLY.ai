@@ -74,13 +74,15 @@ describe('realtime transport lifecycle', () => {
   it('keeps typed and spoken turns in one history and refreshes tools through the server', async () => {
     const onTranscript = vi.fn();
     client = await createAskVRealtimeClient({ sessionId: 'session', onToolCall: async () => '', onTranscript,
-      history: [{ role: 'user', content: 'Earlier question' }] });
+      history: [{ role: 'user', content: 'Earlier question' }, { role: 'assistant', content: 'Earlier answer' }] });
     await client.connect(); client.sendText('Next question');
     peer.channel.emit({ type: 'conversation.item.input_audio_transcription.completed', item_id: 'voice1', transcript: 'Spoken question' });
     peer.channel.emit({ type: 'conversation.item.input_audio_transcription.completed', item_id: 'voice1', transcript: 'Spoken question' });
     expect(onTranscript).toHaveBeenCalledTimes(2);
     client.updateContext({ path: '/gatekeeper' }); await vi.waitFor(() => expect(peer.channel.sent).toContainEqual({ type: 'session.update', session: { type: 'realtime', tools: [] } }));
     expect(peer.channel.sent.some(event => event.item?.content?.[0]?.text === 'Earlier question')).toBe(true);
+    expect(peer.channel.sent.find(event => event.item?.role === 'assistant')?.item.content)
+      .toEqual([{ type: 'output_text', text: 'Earlier answer' }]);
   });
   it('batches tiny worklet frames without losing PCM order or flooding the data channel', async () => {
     let deliver!: (samples: Float32Array) => void;
@@ -132,6 +134,19 @@ describe('realtime transport lifecycle', () => {
     expect(JSON.stringify(peer.channel.sent)).not.toContain('stale');
     expect(JSON.stringify(peer.channel.sent)).toContain('navigation data');
     expect(JSON.stringify(peer.channel.sent)).toContain('/gatekeeper');
+  });
+  it('replaces navigation context using unique provider IDs within the 32-character limit', async () => {
+    client = await createAskVRealtimeClient({ onToolCall: async () => '' });
+    await client.connect();
+    client.applyToolContext({ context: { path: '/tickets/1' } });
+    client.applyToolContext({ context: { path: '/tickets/2' } });
+    const items = peer.channel.sent.filter(event => event.type === 'conversation.item.create');
+    expect(items).toHaveLength(2);
+    const ids = items.map(event => event.item.id);
+    expect(ids.every(id => /^[A-Za-z0-9_-]{1,32}$/.test(id))).toBe(true);
+    expect(new Set(ids).size).toBe(2);
+    expect(peer.channel.sent.filter(event => event.type === 'conversation.item.delete'))
+      .toEqual([{ type: 'conversation.item.delete', item_id: ids[0] }]);
   });
   it('does not declare playback finished for cancelled or pending tool responses', async () => {
     const onPlaybackStopped = vi.fn(); client = await createAskVRealtimeClient({ onToolCall: async () => '', onPlaybackStopped }); await client.connect();

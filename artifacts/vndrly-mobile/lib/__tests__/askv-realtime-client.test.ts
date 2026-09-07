@@ -69,7 +69,22 @@ describe("mobile Realtime transport", () => {
     const sent = rtc.channels[0].sent;
     expect(sent[0].item.content[0].text).toBe("Use site Alpha");
     expect(sent[1].item.role).toBe("assistant");
+    expect(sent[1].item.content).toEqual([{ type: "output_text", text: "Site Alpha selected." }]);
     expect(sent.find((item: any) => item.type === "response.create").response.instructions).toContain("Good morning, Brian.");
+    client.close();
+  });
+
+  it("keeps typed IDs unique within the provider limit and lets the provider identify context and history", async () => {
+    const client = await createAskVRealtimeClient({ ...options(), history: [{ role: "user", content: "Earlier question" }] });
+    await client.connect();
+    client.updateContext({ path: "/tickets/1" });
+    const first = client.sendText("First typed question");
+    const second = client.sendText("Second typed question");
+    expect(first).not.toBe(second);
+    expect([first, second].every(id => typeof id === "string" && /^[A-Za-z0-9_-]{1,32}$/.test(id))).toBe(true);
+    const items = rtc.channels[0].sent.filter((event: any) => event.type === "conversation.item.create").map((event: any) => event.item);
+    expect(items.slice(0, 2).every((item: any) => !Object.hasOwn(item, "id"))).toBe(true);
+    expect(items.slice(2).map((item: any) => item.id)).toEqual([first, second]);
     client.close();
   });
 

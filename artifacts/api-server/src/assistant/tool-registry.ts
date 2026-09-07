@@ -35,7 +35,6 @@ export interface OpenAIRealtimeTool {
   name: string;
   description: string;
   parameters: Anthropic.Tool["input_schema"];
-  strict: true;
 }
 
 export interface OpenAIRealtimeToolMetadata {
@@ -245,7 +244,6 @@ export function toRealtimeTools(tools: AskVToolDefinition[]): OpenAIRealtimeTool
     name: tool.name,
     description: tool.description,
     parameters: toStrictRealtimeSchema(tool.inputSchema) as Anthropic.Tool["input_schema"],
-    strict: true,
   }));
 }
 

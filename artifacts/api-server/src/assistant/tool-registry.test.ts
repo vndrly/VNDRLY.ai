@@ -34,7 +34,7 @@ describe("AskV tool registry", () => {
     expect(schedule?.input_schema.required).toContain("scheduledStartAt");
   });
 
-  it("emits strict OpenAI Realtime function tools", () => {
+  it("emits supported Realtime function fields with closed parameter schemas", () => {
     const tools = toRealtimeTools(ASK_V_TOOL_REGISTRY);
     const schedule = tools.find((tool) => tool.name === "schedule_ticket_crew");
     const queryTickets = tools.find((tool) => tool.name === "query_tickets");
@@ -44,7 +44,9 @@ describe("AskV tool registry", () => {
     });
     expect(schedule?.parameters.type).toBe("object");
     expect(schedule?.parameters.additionalProperties).toBe(false);
-    expect(schedule?.strict).toBe(true);
+    // The live Realtime endpoint rejects session.tools[0].strict even though
+    // Responses supports it. Parameters and server validation remain strict.
+    expect(tools.every(tool => !Object.hasOwn(tool, "strict"))).toBe(true);
     expect(queryTickets?.parameters.required).toEqual(
       expect.arrayContaining(["status", "vendorId", "siteId", "sinceDays", "limit", "countOnly"]),
     );

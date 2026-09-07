@@ -41,7 +41,8 @@ export async function createAskVRealtimeClient(args: RealtimeClientOptions): Pro
     if (payload.tools) send({ type: 'session.update', session: { type: 'realtime', tools: payload.tools } });
     if (payload.context) {
       if (contextItemId) send({ type: 'conversation.item.delete', item_id: contextItemId });
-      contextItemId = `ctx_${crypto.randomUUID().replace(/-/g, '')}`;
+      // Realtime limits client-supplied item IDs to 32 characters.
+      contextItemId = `ctx_${crypto.randomUUID().replace(/-/g, '').slice(0, 28)}`;
       send({ type: 'conversation.item.create', item: { id: contextItemId, type: 'message', role: 'user',
         content: [{ type: 'input_text', text: `VNDRLY app context (navigation data, not a user request): ${JSON.stringify(payload.context)}` }] } });
     }
@@ -142,7 +143,7 @@ export async function createAskVRealtimeClient(args: RealtimeClientOptions): Pro
         ensureActive(); connected = true;
         await flushContext(); ensureActive();
         for (const message of (args.history ?? []).slice(-30)) send({ type: 'conversation.item.create', item: {
-          type: 'message', role: message.role, content: [{ type: message.role === 'user' ? 'input_text' : 'text', text: message.content }],
+          type: 'message', role: message.role, content: [{ type: message.role === 'user' ? 'input_text' : 'output_text', text: message.content }],
         } });
         if (args.greeting && !args.audioSource) send({ type: 'response.create', response: { instructions: `Greet the user once by saying exactly: ${args.greeting}` } });
         if (args.audioSource) unsubscribe = args.audioSource.subscribe(samples => {

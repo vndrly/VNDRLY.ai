@@ -224,7 +224,7 @@ export async function createAskVRealtimeClient(args: AskVRealtimeOptions): Promi
             if (openTimer) clearTimeout(openTimer); openTimer = null; rejectOpen = null;
             for (const item of args.history ?? []) {
               send({ type: "conversation.item.create", item: { type: "message", role: item.role,
-                content: [{ type: item.role === "user" ? "input_text" : "text", text: item.content }] } });
+                content: [{ type: item.role === "user" ? "input_text" : "output_text", text: item.content }] } });
             }
             if (latestContext) updateContext(latestContext);
             if (args.greeting) send({ type: "response.create", response: {
