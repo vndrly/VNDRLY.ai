@@ -1,0 +1,67 @@
+# AskV iOS native build validation
+
+Date: September 6, 2026. Scope: native compilation/build validation only. No TestFlight submission, OTA publication, web/API deployment, push, production database change, or signing credential rotation.
+
+## Reproducible source correction
+
+The prior checkpoint `d04b7c02e80ad7b99240593281dc2cbde26f68ad` did not contain the native implementation even though it existed in the working directory. The mobile `.gitignore` used an unanchored `ios/` rule, which hid `modules/askv-wake/ios` as well as generated app native projects. The EAS archive also excluded the root `scripts` directory, including the preparation script invoked by the podspec.
+
+Checkpoint `200ea71` corrects both boundaries:
+
+- Anchor the generated-project ignores to `/ios/` and `/android/`.
+- Track `AskVKeywordEngine.h`, `AskVKeywordEngine.mm`, `AskVWake.podspec`, and `AskVWakeModule.swift`.
+- Include only `scripts/prepare-askv-ios.mjs` from root scripts in the EAS archive.
+- Exclude generated `modules/askv-wake/ios/vendor` libraries so pod install downloads and verifies the pinned archive on the builder.
+
+The existing local source was preserved; the files were newly tracked, not newly invented during this build check.
+
+## Exact archive and module evidence
+
+A detached full-repository worktree at `200ea71` was created at `C:/Users/JohnElerick/AppData/Local/Temp/vndrly-askv-ios-build-200ea71`. Existing local dependency directories were linked for configuration resolution only; those directories are excluded from the upload.
+
+`eas build:inspect --platform ios --profile production --stage archive` exited 0. Its output is retained at `C:/Users/JohnElerick/AppData/Local/Temp/vndrly-askv-ios-archive-200ea71`.
+
+Sixteen required archive files were checked against the isolated source using SHA-256: workspace manifests, shared AskV/API-client package inputs, preparation script, local module config, all four native source/podspec files, and all five model files. All were present and identical. Dependency folders, generated native vendor frameworks, environment credential paths, and store credential paths were absent.
+
+Expo config resolved app version `1.0.1`, app-version runtime isolation, iOS bundle identifier `com.vndrly.field`, and the WebRTC plugin. Expo autolinking resolved package `askv-wake`, pod `AskVWake`, Swift module `AskVWake`, and Expo module `AskVWakeModule` from the isolated native source directory.
+
+## Remote build
+
+Direct installed EAS CLI 20.1.0 is used; the repository's TestFlight wrapper is intentionally not involved because it refreshes provisioning. Command:
+
+```text
+eas build --platform ios --profile production --non-interactive --freeze-credentials --wait --message "AskV 1.0.1 native compilation validation only, commit 200ea71"
+```
+
+Production profile: Node 22.14.0, pnpm 9.15.9, `sdk-54` macOS image, medium resource class, existing remote signing credentials, and version 1.0.1. EAS reserved build number 156 and reused the existing distribution certificate and active provisioning profile. EAS reported monthly included credits exhausted and account pay-as-you-go usage for the build.
+
+Build ID: `1cfd7f1c-4e1c-49ce-9033-25b4e5fac9f7`. [Build page](https://expo.dev/accounts/vndrlyadmin/projects/vndrly-mobile/builds/1cfd7f1c-4e1c-49ce-9033-25b4e5fac9f7).
+
+The remote record confirms `200ea71fd9f604b92682a05878d23dc0bb214ab9`, version 1.0.1, build 156, platform IOS, profile production, and STORE distribution. The 48.2 MB upload completed in 10 minutes 5 seconds. Cloud creation time: September 7, 2026, 02:14:54 UTC (September 6 locally).
+
+Observed cloud stages:
+
+- Dependency installation and Expo prebuild passed.
+- 02:16:01 UTC: pinned sherpa-onnx iOS engine 1.12.29 prepared and verified on macOS for device and simulator.
+- 02:16:11 UTC: `AskVWake (1.0.0)` pod installed.
+- 02:16:52 UTC: CocoaPods completed with 118 dependencies / 132 installed pods.
+- 02:17 UTC: Xcode/Fastlane archive started.
+- 02:19:07 UTC: `AskVWakeModels.bundle` created.
+- 02:20:55 UTC: AskV Swift compilation reached the audio-session code; only a deprecation warning was emitted.
+- 02:21:00 UTC: `AskVKeywordEngine.mm` compiled and `libAskVWake.a` packaged.
+- 02:21:17 UTC: the app binary linked.
+- 02:21:34 UTC: app signed and `Archive Succeeded` recorded.
+- 02:21:48 UTC: Fastlane confirmed the IPA exported and signed.
+- 02:22:02 UTC: artifact upload finished.
+
+Terminal status: **`FINISHED`, CLI exit 0**, independently confirmed by exact-ID `eas build:view`. Remote creation-to-completion time was 7 minutes 9 seconds; local build command to cloud completion was approximately 18 minutes, including the 10-minute source upload.
+
+[Signed IPA artifact](https://expo.dev/artifacts/eas/NlaBf_PrdXfQGe6QLCsYy98auHBTCnPinvWCTQvkzzU.ipa).
+
+No native compiler or linker fix was needed after correcting packaging. Non-fatal AskV warnings were the older `.allowBluetooth` option name (Apple recommends `.allowBluetoothHFP`) and mismatched parameter names in upstream C API documentation comments. The pinned upstream archive was not modified to silence warnings.
+
+The isolated build predates parallel live-voice JavaScript fixes and the separate API test dependency patch. Its result must not be described as a build of those later changes.
+
+## Remaining acceptance boundaries
+
+This successful signed device build proves preparation, native dependency installation, JavaScript bundling, compilation/linking, signing and archive/export for the exact uploaded source. It does not prove real iOS microphone or audio routing behavior, or a simulator compile. Physical iPhone/iPad validation still must cover permissions, pre-roll, ongoing conversation, foreground changes, phone interruption, route changes, speaker/echo, wired/Bluetooth devices, and model accuracy in representative field noise. TestFlight submission is a separate release action and was not authorized here.

@@ -66,10 +66,18 @@ capture later.
 
 ## Required iOS validation
 
-The implementation cannot be compiled or exercised against Apple audio hardware
-on Windows. Before shipping a native build, validate on macOS/iOS:
+The signed EAS iOS device build for source `200ea71` passed on September 6, 2026:
+version 1.0.1, build 156, EAS `1cfd7f1c-4e1c-49ce-9033-25b4e5fac9f7`, terminal
+`FINISHED` and CLI exit 0. Native preparation, pods, Swift/Objective-C++ compile,
+linking, signing and IPA export succeeded. See
+[`docs/askv-native-build-validation.md`](../../../../docs/askv-native-build-validation.md)
+for the exact source/artifact evidence and limits. No TestFlight submission occurred.
 
-1. Clean Expo prebuild/pod install, then build both iOS device and simulator.
+Apple audio hardware cannot be exercised locally on Windows. Before shipping,
+complete the remaining macOS/iOS validation:
+
+1. Build the iOS simulator target (device compile/prebuild/pods passed as above),
+   and build the final release snapshot after later application changes.
 2. Fresh-install permission approval/denial and stopping during the prompt.
 3. Exact phrase detection, room-noise false wakes, accent/distance, and speaker
    echo while playing the answer. Initial thresholds are score 1.0, probability
