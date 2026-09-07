@@ -47,7 +47,7 @@ jobs:
             echo "::error title=Missing Expo secret::EXPO_TOKEN is not configured"
             exit 1
           fi
-          pnpm --filter @workspace/vndrly-mobile exec eas whoami --non-interactive
+          pnpm --filter @workspace/vndrly-mobile exec eas whoami
 
       - name: Find installed production runtime commit
         id: production-build

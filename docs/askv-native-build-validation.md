@@ -65,3 +65,17 @@ The isolated build predates parallel live-voice JavaScript fixes and the separat
 ## Remaining acceptance boundaries
 
 This successful signed device build proves preparation, native dependency installation, JavaScript bundling, compilation/linking, signing and archive/export for the exact uploaded source. It does not prove real iOS microphone or audio routing behavior, or a simulator compile. Physical iPhone/iPad validation still must cover permissions, pre-roll, ongoing conversation, foreground changes, phone interruption, route changes, speaker/echo, wired/Bluetooth devices, and model accuracy in representative field noise. TestFlight submission is a separate release action and was not authorized here.
+
+## Final source packaging verification
+
+After the provider compatibility corrections, local EAS archive inspection at `bd0538fc7f1d4ed69fd4e6a359f1bdf87ddfa931` exited 0. The archive contains 863 files; all 43 selected required files matched the source SHA-256 exactly, including the Drizzle patch, lock/workspace manifests, final mobile client/session hook, English/Spanish translations, native sources, preparation script, model inputs, licenses and shared packages.
+
+- Detached checkout: `C:/Users/JohnElerick/AppData/Local/Temp/vndrly-askv-ios-package-bd0538f`.
+- Upload archive: `C:/Users/JohnElerick/AppData/Local/Temp/vndrly-askv-ios-archive-bd0538f`.
+- Per-file manifest: `C:/Users/JohnElerick/AppData/Local/Temp/askv-ios-package-bd0538f-hashes.json`.
+- Patch SHA-256: `96bbb4afefab511a6be03716400f1806e3ed34971020c8e57ca11928ef6b7fc2`.
+- Lockfile SHA-256: `e708ec5a5ab272be2d6dc3449607df821c414466744b1cd2560e3662aa19cf5e`.
+
+Current-source autolinking resolved the AskVWake pod/Swift module and AskVWakeModule. Cached preparation and its check both exited 0, verifying the pinned sherpa-onnx 1.12.29 device/simulator framework hashes. Real environment/credential/dependency/generated-vendor paths were absent from the upload archive; two example environment templates remain. No missing test-helper import exists in the actual included mobile build path. The detached checkout stayed clean.
+
+This check performed no cloud build or submission. Build 156 remains the earlier `200ea71` compilation proof; the subsequently authorized full ship must build and submit the final release source.

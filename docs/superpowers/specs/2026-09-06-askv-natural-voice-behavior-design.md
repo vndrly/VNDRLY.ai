@@ -1,7 +1,7 @@
 # AskV Natural Voice Behavior Design
 
 Date: 2026-09-06  
-Status: Product scope approved; implementation authorized in subsequent user requests and reconciled on `codex/askv-cursor-reconcile`. Native and live-service release validation remains pending; see `docs/askv-reconciliation-report.md`.
+Status: Product scope approved; implementation authorized in subsequent user requests and reconciled on `codex/askv-cursor-reconcile`. Native baseline compilation and authenticated live-service/resumed-history checks pass. A final release binary and physical-device/field acceptance remain; see `docs/askv-reconciliation-report.md`.
 
 ## Objective
 

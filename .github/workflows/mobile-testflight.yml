@@ -24,6 +24,8 @@ jobs:
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
 
       - uses: pnpm/action-setup@v4
         with:
@@ -44,25 +46,42 @@ jobs:
             echo "::error title=Missing Expo secret::EXPO_TOKEN is not configured"
             exit 1
           fi
-          pnpm --filter @workspace/vndrly-mobile exec eas whoami --non-interactive
+          pnpm --filter @workspace/vndrly-mobile exec eas whoami
 
-      - name: Build iOS production
+      - name: Build and verify release iOS artifact
+        id: build
+        working-directory: artifacts/vndrly-mobile
+        shell: bash
+        env:
+          BUILD_MESSAGE: ${{ inputs.message }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse --show-toplevel)" = "$GITHUB_WORKSPACE"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git diff --exit-code --quiet
+          git diff --cached --exit-code --quiet
+          pnpm exec eas build \
+            --platform ios \
+            --profile production \
+            --non-interactive \
+            --freeze-credentials \
+            --wait \
+            --message "$BUILD_MESSAGE ($GITHUB_SHA)" \
+            --json > "$RUNNER_TEMP/eas-ios-build.json"
+          build_id="$(node ../../scripts/verify-eas-ios-build.mjs "$RUNNER_TEMP/eas-ios-build.json" "$GITHUB_SHA")"
+          pnpm exec eas build:view "$build_id" --json > "$RUNNER_TEMP/eas-ios-build-verified.json"
+          verified_id="$(node ../../scripts/verify-eas-ios-build.mjs "$RUNNER_TEMP/eas-ios-build-verified.json" "$GITHUB_SHA" "$build_id")"
+          printf 'build_id=%s\n' "$verified_id" >> "$GITHUB_OUTPUT"
+          printf 'Verified iOS build `%s` for release `%s`.\n' "$verified_id" "$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Submit verified release build to TestFlight
         working-directory: artifacts/vndrly-mobile
         env:
-          EAS_NO_VCS: 1
-        run: >-
-          pnpm exec eas build
-          --platform ios
-          --profile production
-          --non-interactive
-          --wait
-          --message "${{ inputs.message }} (${{ github.sha }})"
-
-      - name: Submit latest iOS build to TestFlight
-        working-directory: artifacts/vndrly-mobile
+          EAS_BUILD_ID: ${{ steps.build.outputs.build_id }}
         run: >-
           pnpm exec eas submit
           --platform ios
-          --latest
+          --profile production
+          --id "$EAS_BUILD_ID"
           --non-interactive
           --wait

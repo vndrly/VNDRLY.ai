@@ -8,6 +8,14 @@ local wake engine also handed its existing microphone and buffered utterance int
 a real conversation. This test discovered and fixed an audio packet flood that
 the previous mocked transport tests could not reveal.
 
+The later authenticated full-application run also passed real login/session
+routes, the spoken daily greeting, automatic voice and typed replies, exact
+database history reload, and a second live session that recalled the earlier
+synthetic confirmation. That run found two additional provider rejections and
+prompted an assistant-history schema correction in both clients. Detailed
+evidence and reproduction are in
+[Authenticated AskV validation](askv-authenticated-live-validation.md).
+
 ## Test boundary
 
 `scripts/verify-askv-live-voice.mjs` imports the actual
@@ -103,7 +111,8 @@ files passed Git's whitespace/error check.
 ## Final integration regressions
 
 After the transport correction and local database-test infrastructure changes,
-the non-database integration gates passed on the current worktree:
+the following non-database integration gates passed before the later authenticated
+provider-contract corrections:
 
 | Gate | Result |
 | --- | --- |
@@ -135,6 +144,13 @@ The production web bundle was rebuilt successfully after these final translation
 Full command logs are retained locally under
 `%LOCALAPPDATA%/Temp/askv-final-gates-20260906/`.
 
+After the authenticated provider-contract corrections, focused server tests
+passed **15 tests in 3 files**, web transport passed **10 tests**, and mobile
+transport passed **9 tests**. All three affected application TypeScript checks
+passed. The final production web build passed in **18.79 seconds** (3,694 modules),
+with the same non-fatal sourcemap and chunk-size warnings. The separate final
+root-chain evidence is maintained in `docs/askv-validation-evidence.md`.
+
 ## Reproduce
 
 Run from the repository root with its existing dependencies and server credential
@@ -154,12 +170,21 @@ silence. The verifier never opens the physical microphone.
 
 ## Remaining acceptance boundaries
 
-This loopback test deliberately replaces the HTTP authentication/database broker
-with a narrowly authenticated local adapter around the production session
-builder. It therefore does **not** establish login/session authorization, daily
-greeting claims, database transcript persistence, navigation/context updates,
-or tool execution through the full application. Those require the separately
-isolated application/database integration gates.
+The first loopback tests replace the HTTP authentication/database broker with
+a narrow local adapter. The later authenticated run removes that limitation for
+the tested opening and resumed conversation: it uses the real Express app,
+cookie authentication, initial navigation context, daily greeting claim,
+transcript routes, PostgreSQL persistence, and the actual web panel. It receives
+150,877 audio bytes in the first session, reloads all five saved messages exactly,
+then opens one new session and successfully recalls the earlier confirmation,
+ending with eight messages in the same conversation. Both microphones/peers
+shut down; browser, API, Vite, database pool, and temporary audio cleanup passed.
+
+That authenticated run uses a newly created local database and synthetic admin
+only. It blocks every domain tool HTTP request and does not run the API entry
+point's demo provisioning or background workers. It therefore does not establish
+live domain mutation, production deployment, or background-worker behavior.
+Those remain distinct from the conversation proof and the separate route tests.
 
 The 40-second listening hold is not the five-minute session-owner idle test.
 Physical iPhone/iPad audio routing, Bluetooth, interruptions, background/lock,

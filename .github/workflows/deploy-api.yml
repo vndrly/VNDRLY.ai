@@ -9,6 +9,7 @@ on:
       - "lib/db/drizzle/**"
       - "scripts/plate-state-migration.mjs"
       - "scripts/notes-admission-migration.mjs"
+      - "scripts/askv-greeting-migration.mjs"
       - ".github/workflows/deploy-api.yml"
   workflow_dispatch:
 

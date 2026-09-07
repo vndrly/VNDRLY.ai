@@ -2,7 +2,7 @@
 
 Date: September 6, 2026. Branch: `codex/askv-cursor-reconcile`, based on Cursor's `d01cdf9`.
 
-This branch implements the approved natural-voice design using Cursor's work as its starting point. It has not been deployed, merged, or shipped to TestFlight. The native compilation baseline and live web provider checks now pass. Final-tree regression, authenticated application acceptance and physical-device checks remain release gates; a successful build is not a TestFlight submission.
+This branch implements the approved natural-voice design using Cursor's work as its starting point. At the implementation-validation checkpoint it had not been deployed, merged, or shipped to TestFlight; the later full-ship authorization is recorded below. The native compilation baseline, live browser wake handoff, and authenticated full-application voice/resumed-history checks pass. The final uninterrupted automated regression chain passed on compatibility checkpoint `bd0538f`: 3,714 passed, 56 documented skips and zero failures. A final release binary and physical-device acceptance remain release work; a successful build is not a TestFlight submission.
 
 ## Scope coverage
 
@@ -26,40 +26,53 @@ This branch implements the approved natural-voice design using Cursor's work as 
 
 The overall Realtime direction, greeting migration, preference/UI starting points, tool-pack scaffolding, native WebRTC dependency/plugin setup, and separate Gate fallback remain. Their boundaries and behavior were corrected where review or testing found gaps. The local wake implementation is a real bundled inference/capture path; a phrase matcher alone is not treated as a working wake engine.
 
-Critical corrections include model-supplied confirmation bypasses, duplicate-write handling, missing server permissions and domain side effects, disconnected typed/voice histories, ignored client navigation/draft intents, navigation races, early idle timers, microphone ownership and cancellation, stale Gate recognition events, and private ticket-photo access. Continued validation also found ignored native source/build-preparation files and an audio packet flood during actual wake handoff; packaging is corrected and both clients now batch PCM into 50 ms packets.
+Critical corrections include model-supplied confirmation bypasses, duplicate-write handling, missing server permissions and domain side effects, disconnected typed/voice histories, ignored client navigation/draft intents, navigation races, early idle timers, microphone ownership and cancellation, stale Gate recognition events, and private ticket-photo access. Continued validation also found ignored native source/build-preparation files and an audio packet flood during actual wake handoff; packaging is corrected and both clients now batch PCM into 50 ms packets. Full authenticated testing also exposed an unsupported Realtime tool field and an overlong web context ID; contract review found invalid assistant-history content types on both clients. All three provider compatibility defects are corrected and covered by regression tests.
 
 ## Verification evidence
 
 Completed verification for the reconciled code:
 
 - Full workspace `pnpm run typecheck`: passed for libraries, API, web, mobile, desktop and scripts.
-- Full mobile Vitest suite: 97 files / 644 tests passed.
-- Focused API regressions: 18 files / 82 tests passed; permission, confirmation, idempotency, persistence, context, metrics, mutation refresh and private-photo boundaries included.
+- Full mobile Vitest suite: 97 files / 646 tests passed.
+- Full API gate: 258 passing files / 2,107 passing tests, with 53 documented skips. Real PostgreSQL tests now cover authenticated signatures, concurrent greeting/transcript delivery, organization isolation, persisted confirmation and replay after module reload.
 - Shared microphone/PCM suite: 8 tests passed. Native release-impact classifier: 7 tests passed.
 - Locale parity: web 4,294 English/Spanish keys and mobile 1,745 English/Spanish keys passed after adding the five missing AskV runtime-error translations; focused locale/API-error suites passed 100 web and 106 mobile tests.
-- Full web Vitest suite: 120 files / 872 tests passed, with 3 pre-existing skipped tests. The retained Gate sequential-plate fallback test passes in the full run after its recognizer restart timing was corrected.
+- Full web Vitest suite: 120 files / 874 tests passed, with 3 pre-existing skipped tests. The retained Gate sequential-plate fallback test passes in the full run after its recognizer restart timing was corrected.
 
 Additional runtime evidence:
 
 - Real shipped WASM/model inference: 9 of 9 cases passed, including two synthetic voices, Ask V with a question, V alone, unrelated speech and silence. The earlier incompatible model archive was replaced based on an actual inference failure.
 - Real Edge capture test: one synthetic microphone, shipped AudioWorklet/worker/model, wake detection, buffered continuous handoff and track shutdown passed; no API call or off-device upload occurred.
-- Native compilation: EAS build `1cfd7f1c-4e1c-49ce-9033-25b4e5fac9f7`, version 1.0.1 build 156, reached `FINISHED` with CLI exit 0 and a signed IPA. Exact source was `200ea71`; the later JavaScript batching fix and test-infrastructure patch were not in that binary. Native preparation, CocoaPods, Swift/Objective-C++ compilation, linking, signing and export passed. This is not physical-device acceptance or TestFlight submission.
+- Native compilation: EAS build `1cfd7f1c-4e1c-49ce-9033-25b4e5fac9f7`, version 1.0.1 build 156, reached `FINISHED` with CLI exit 0 and a signed IPA. Exact source was `200ea71`; the later JavaScript batching/history fixes, translations and test-infrastructure patch were not in that binary. Native preparation, CocoaPods, Swift/Objective-C++ compilation, linking, signing and export passed. This is not physical-device acceptance or TestFlight submission.
+- Final native packaging at `bd0538f`: local EAS archive inspection passed; all 43 selected required files matched source SHA-256, current module discovery and cached pinned-framework preparation passed, and real credential paths were excluded. This is packaging/preparation evidence, not a new native compile. See [native evidence](askv-native-build-validation.md).
 - Production web bundle built successfully. Existing bundle-size and dependency sourcemap warnings remain non-fatal.
 
-The original API regression subset uses mocked persistence/domain boundaries. New PostgreSQL-backed tests now exercise real transactions, authentication signatures, concurrent greeting/transcript delivery, organization boundaries and durable reservations; their final gate result is recorded below when complete.
+The original API regression subset uses mocked persistence/domain boundaries. New PostgreSQL-backed tests now exercise real transactions, authentication signatures, concurrent greeting/transcript delivery, organization boundaries and durable reservations; all five PostgreSQL integration cases pass. The original replay failure exposed JSONB decoding of serialized tool results; versioned result envelopes and completed-legacy compatibility fix it while pending/error reservations still fail closed.
 
-Real provider verification now uses the production session builder and shipped browser client against OpenAI — no mocked WebRTC service. Opening greeting, VAD answer, typed follow-up, playback cancellation, local WASM wake handoff, actual spoken barge-in and capture shutdown passed. The sustained wake run lasted 67.2 seconds with one microphone/peer and no client errors. It exposed and verified the fix for tiny PCM packets flooding the data channel. Web 9 / mobile 8 focused transport tests and both app typechecks pass. This bridge test does not include authenticated application navigation, saved history, domain tools, five-minute owner timeout or physical iOS. See [live voice evidence](askv-live-voice-validation.md).
+Real provider verification now uses the production session builder and shipped browser client against OpenAI — no mocked WebRTC service. Opening greeting, VAD answer, typed follow-up, playback cancellation, local WASM wake handoff, actual spoken barge-in and capture shutdown passed. The sustained wake run lasted 67.2 seconds with one microphone/peer and no client errors. It exposed and verified the fix for tiny PCM packets flooding the data channel. The final compatibility corrections pass web 10 / mobile 9 focused transport tests and both app typechecks. This bridge test does not include authenticated application navigation, saved history, domain tools, five-minute owner timeout or physical iOS. See [live voice evidence](askv-live-voice-validation.md).
 
-The complete root `pnpm test` chain remains outstanding while the continued database/browser gates run. A new password-protected local PostgreSQL 17.11 cluster and `fresh-local` test mode now create unique empty test databases with additive schema provisioning. They never reset/reuse an existing database. Canonical password drift tests simulate comparison failure without storing noncanonical passwords. No existing or shared database was reset or migrated.
+The separate [authenticated full-app check](askv-authenticated-live-validation.md) now passes on the corrected code: actual login and anonymous rejection, a persisted full daily greeting claim, automatic spoken answer, typed voiced follow-up, exact database-backed history after reload, persistent mute with no capture on reload, and unmuted conversation resumption. The provider acknowledged all three restored assistant messages and recalled the earlier synthetic confirmation. Eight messages remained in one conversation, with exactly two sequential microphone/peer sessions, zero API/provider failures and zero domain tool invocations. Browser, API, Vite, connection pool and synthetic-audio cleanup all passed. This uses a fresh local database and synthetic speech; physical iOS, real field actions and representative field conditions remain acceptance work.
+
+The uninterrupted root `pnpm test` chain passed with exit 0 on `bd0538f`: **3,714 passed, 56 documented skips, zero failures**, including all 34 browser E2E scenarios. [Detailed evidence and skip accounting](askv-validation-evidence.md). A new password-protected local PostgreSQL 17.11 cluster and `fresh-local` test mode now create unique empty test databases with additive schema provisioning. They never reset/reuse an existing database. Canonical password drift tests simulate comparison failure without storing noncanonical passwords. No existing or shared database was reset or migrated during implementation validation. The temporary local PostgreSQL cluster is now stopped and its data is retained.
 The original documentation checkout and Cursor checkout retain their original
 unrelated local files and changes; implementation is isolated on the branch above.
 
-## Required before release
+## Release handoff
 
-1. Build the iOS 1.0.1 native binary and validate it in TestFlight. Test speaker, wired/Bluetooth audio, phone interruption, permission allow/deny/revoke, screen lock, background/foreground, and slow/offline connections on physical iPhone/iPad.
-2. Run an authenticated real Realtime conversation against the configured provider: opening greeting, automatic answer/follow-up, barge-in, mixed typing/voice, saved history, navigation and five-minute playback-based idle. Validate names, license plates, accents and noisy gate/truck conditions.
-3. Run the required API/database and browser end-to-end gates against an explicitly disposable test database. The repository's test wrapper drops its test schema; it was not run against the shared Supabase configuration under the no-database-wipe rule.
-4. Deploy the guarded additive greeting migration and web/API/native changes under a release command, enable an internal pilot with `ASKV_NATURAL_VOICE_USER_IDS`, and inspect latency, false activation, fallback, duplicate and cost observations. Retain the legacy Gate path until full parity is demonstrated.
+After the validation above, the user explicitly authorized an unattended full ship on September 6, 2026: commit/push/main, web, API with its guarded additive migration, iOS OTA and a final native build submitted to TestFlight. This report records the implementation preflight; production workflow results are recorded in the release handoff. Physical-device/field acceptance remains testing on the resulting internal build.
+
+## Remaining release work
+
+Before TestFlight submission:
+
+1. Produce a new iOS binary containing the final JavaScript fixes. The successful build 156 proves native compilation at `200ea71`, but predates the 50 ms audio batching, assistant-history protocol correction and latest translations. Do not submit that older binary as the final implementation.
+2. Under an explicit release command, deploy the matching web/API changes and guarded additive greeting migration, configure an internal `ASKV_NATURAL_VOICE_USER_IDS` pilot, and submit the final native build. None of these production changes or submission has occurred.
+
+During internal TestFlight acceptance, before wider rollout ([test worksheet](askv-testflight-acceptance.md)):
+
+- Test physical iPhone/iPad speaker and wired/Bluetooth audio, phone interruptions, microphone allow/deny/revoke, screen lock, foreground changes and slow/offline connections.
+- Validate Gate check-in/out and field actions, confirmation/correction, mixed voice/typing, navigation and five-minute playback-based idle in the actual app.
+- Measure real names, license plates, accents and noisy gate/truck conditions, plus false wakes, latency, fallback, duplicates and cost. Keep the legacy Gate path until parity is demonstrated.
 
 Metrics are estimates, not provider billing. Empty wake sessions and explicit correction phrases provide heuristic signals; representative field testing is necessary to establish real false-wake and recognition rates. The native wake layer targets foreground iOS; Android/background wake is not included in this approved scope. Pending approval/context state is process-local and fails closed after restart; multiple API instances need session affinity until that transient state is shared.
 
