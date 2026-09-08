@@ -40,6 +40,10 @@ test("API deploy builds, migrates, restarts, and health-checks without touching 
   assert.ok(workflow.indexOf('migrate:askv-greeting') < workflow.indexOf('systemctl restart vndrly-api'));
   assert.match(workflow, /systemctl restart vndrly-api/);
   assert.match(workflow, /vndrly\.ai\/api\/healthz/);
+  assert.match(workflow, /ASKV_NATURAL_VOICE_ENABLED=1/);
+  assert.match(workflow, /grep[^\n]+ASKV_NATURAL_VOICE_ENABLED/);
+  assert.match(workflow, /ASKV_NATURAL_VOICE_USER_IDS/);
+  assert.match(workflow, /sed[^\n]+ASKV_NATURAL_VOICE_USER_IDS[^\n]+\.env\.production/);
 
   assert.doesNotMatch(workflow, /rsync/);
   assert.doesNotMatch(workflow, /nginx|certbot/);

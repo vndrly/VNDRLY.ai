@@ -80,13 +80,27 @@ export function compactVoiceContext(
       : {}),
   };
 }
-export function naturalVoiceEnabledForUser(userId: number): boolean {
+export type NaturalVoiceRolloutStatus =
+  | "available"
+  | "disabled_globally"
+  | "disabled_for_account";
+
+export function naturalVoiceRolloutStatusForUser(
+  userId: number,
+): NaturalVoiceRolloutStatus {
   if (
     ["0", "false", "off"].includes(
       process.env.ASKV_NATURAL_VOICE_ENABLED?.trim().toLowerCase() ?? "",
     )
   )
-    return false;
+    return "disabled_globally";
   const pilot = process.env.ASKV_NATURAL_VOICE_USER_IDS?.trim();
-  return !pilot || pilot.split(",").some((id) => id.trim() === String(userId));
+  if (pilot && !pilot.split(",").some((id) => id.trim() === String(userId))) {
+    return "disabled_for_account";
+  }
+  return "available";
+}
+
+export function naturalVoiceEnabledForUser(userId: number): boolean {
+  return naturalVoiceRolloutStatusForUser(userId) === "available";
 }

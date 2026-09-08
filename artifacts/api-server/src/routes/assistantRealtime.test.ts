@@ -510,6 +510,10 @@ describe("AskV Realtime safety regressions", () => {
         .get("/assistant/voice/capabilities")
         .expect(200);
       expect(capabilities.body.enabled).toBe(false);
+      expect(capabilities.body.availability).toEqual({
+        status: "disabled_globally",
+        reason: "Natural voice is temporarily disabled for everyone.",
+      });
       await request(app())
         .post("/assistant/realtime/tool-call")
         .send({ sessionId: "flag", name: "query_tickets", arguments: {} })
@@ -522,6 +526,47 @@ describe("AskV Realtime safety regressions", () => {
         .post("/assistant/realtime/end")
         .send({ sessionId: "flag" })
         .expect(200);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+  it("explains account rollout denial separately from missing provider configuration", async () => {
+    vi.stubEnv("ASKV_NATURAL_VOICE_ENABLED", "1");
+    vi.stubEnv("ASKV_NATURAL_VOICE_USER_IDS", "4,5");
+    vi.stubEnv("OPENAI_API_KEY", "sk-test");
+    try {
+      const denied = await request(app())
+        .get("/assistant/voice/capabilities")
+        .expect(200);
+      expect(denied.body).toMatchObject({
+        enabled: false,
+        availability: {
+          status: "disabled_for_account",
+          reason: "Natural voice is not enabled for this account.",
+        },
+      });
+
+      vi.stubEnv("ASKV_NATURAL_VOICE_USER_IDS", "");
+      vi.stubEnv("OPENAI_API_KEY", "");
+      const unconfigured = await request(app())
+        .get("/assistant/voice/capabilities")
+        .expect(200);
+      expect(unconfigured.body).toMatchObject({
+        enabled: false,
+        availability: {
+          status: "missing_configuration",
+          reason: "Natural voice is not configured on the server.",
+        },
+      });
+
+      vi.stubEnv("OPENAI_API_KEY", "sk-test");
+      const available = await request(app())
+        .get("/assistant/voice/capabilities")
+        .expect(200);
+      expect(available.body).toMatchObject({
+        enabled: true,
+        availability: { status: "available", reason: null },
+      });
     } finally {
       vi.unstubAllEnvs();
     }

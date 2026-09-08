@@ -1,5 +1,6 @@
 import { askVMicrophone, encodePcm16Base64, PcmResampler, type WakeAudioSource } from '@workspace/askv-wake';
 import { captureAskVMicrophone, meterAskVMicrophone } from './askv-microphone';
+import { realtimeConnectionMessage } from './askv-voice-availability';
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
 export interface AskVRealtimeToolCall { name: string; arguments: unknown; callId: string }
 export interface VoiceTranscript { eventId: string; role: 'user' | 'assistant'; content: string }
@@ -138,7 +139,11 @@ export async function createAskVRealtimeClient(args: RealtimeClientOptions): Pro
         const response = await fetch(`${BASE}/api/assistant/realtime/call?${params}`, {
           method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/sdp' }, body: offer.sdp ?? '', signal: controller.signal,
         });
-        ensureActive(); if (!response.ok) throw new Error('AskV could not connect. You can still type.');
+        ensureActive();
+        if (!response.ok) {
+          const payload = await response.clone().json().catch(() => undefined) as { code?: string; error?: string } | undefined;
+          throw new Error(realtimeConnectionMessage(response.status, payload));
+        }
         const sdp = await response.text(); ensureActive(); await pc.setRemoteDescription({ type: 'answer', sdp }); ensureActive();
         await new Promise<void>((resolve, reject) => {
           if (channel.readyState === 'open') { resolve(); return; }

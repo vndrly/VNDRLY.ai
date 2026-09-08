@@ -87,6 +87,15 @@ jobs:
             echo "DATABASE_URL missing from .env.production; refusing API restart" >&2
             exit 1
           fi
+          openai_key="$(sudo sed -n 's/^OPENAI_API_KEY=//p' .env.production | head -n 1)"
+          if [ -z "$openai_key" ]; then
+            echo "OPENAI_API_KEY missing from .env.production; refusing to enable natural voice" >&2
+            exit 1
+          fi
+          sudo sed -i '/^ASKV_NATURAL_VOICE_USER_IDS=/d' .env.production
+          if ! sudo grep -q '^ASKV_NATURAL_VOICE_ENABLED=' .env.production; then
+            sudo sed -i '$aASKV_NATURAL_VOICE_ENABLED=1' .env.production
+          fi
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:plate-state
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:notes-admission
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:vendor-note-ownership
@@ -95,7 +104,7 @@ jobs:
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:assistant-action-audit
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:askv-greeting
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" APPLY_PUBLIC_DATA_API_HARDENING=1 pnpm --filter @workspace/api-server run migrate:public-data-api-hardening
-          unset database_url
+          unset database_url openai_key
           sudo systemctl daemon-reload
           sudo systemctl enable vndrly-api 2>/dev/null || true
           sudo systemctl restart vndrly-api

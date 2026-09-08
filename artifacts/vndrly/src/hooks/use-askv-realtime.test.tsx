@@ -57,6 +57,16 @@ describe("useAskVRealtime", () => {
     expect(mocks.close).not.toHaveBeenCalled();
   });
 
+  it("reports a microphone permission denial as an actionable browser setting", async () => {
+    mocks.connect.mockRejectedValueOnce(new DOMException("Permission denied", "NotAllowedError"));
+    const { result } = renderHook(() => useAskVRealtime());
+    await act(async () => result.current.startConversation());
+    expect(result.current.state).toBe("error");
+    expect(result.current.error).toBe(
+      "Microphone access is blocked for vndrly.ai. Allow it in your browser settings, then reopen AskV.",
+    );
+  });
+
   it("mutes capture immediately and can publish route context", async () => {
     const { result } = renderHook(() => useAskVRealtime({ acrossVndrly: true }));
     await act(async () => {

@@ -45,6 +45,7 @@ import {
   compactVoiceLocation,
   compactVoicePath,
   naturalVoiceEnabledForUser,
+  naturalVoiceRolloutStatusForUser,
   type VoiceLocation,
 } from "../assistant/voice-context";
 import {
@@ -441,8 +442,17 @@ router.post("/assistant/voice/greeting", async (req, res): Promise<void> => {
 router.get("/assistant/voice/capabilities", (req, res): void => {
   const session = requireSession(req, res);
   if (!session) return;
+  const rollout = naturalVoiceRolloutStatusForUser(session.userId!);
+  const availability = rollout === "disabled_globally"
+    ? { status: rollout, reason: "Natural voice is temporarily disabled for everyone." }
+    : rollout === "disabled_for_account"
+      ? { status: rollout, reason: "Natural voice is not enabled for this account." }
+      : !process.env.OPENAI_API_KEY?.trim()
+        ? { status: "missing_configuration", reason: "Natural voice is not configured on the server." }
+        : { status: "available", reason: null };
   res.json({
-    enabled: naturalVoiceEnabledForUser(session.userId!),
+    enabled: availability.status === "available",
+    availability,
     workflows: VOICE_WORKFLOWS,
     recordingFallback: true,
   });

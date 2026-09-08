@@ -132,8 +132,12 @@ export function useAskVRealtime(args?: {
       if (audioSource && current.current === 'listening') armIdle();
     } catch (cause) {
       if (!valid()) return;
-      metrics.current?.event('fallback', { reason: cause instanceof DOMException && cause.name === 'NotAllowedError' ? 'permission' : 'network' });
-      stop(); setError(cause instanceof Error ? cause.message : 'AskV voice could not start.'); transition('error');
+      const permissionDenied = !!cause && typeof cause === 'object' && 'name' in cause && cause.name === 'NotAllowedError';
+      metrics.current?.event('fallback', { reason: permissionDenied ? 'permission' : 'network' });
+      const message = permissionDenied
+        ? 'Microphone access is blocked for vndrly.ai. Allow it in your browser settings, then reopen AskV.'
+        : cause instanceof Error ? cause.message : 'AskV voice could not start.';
+      stop(); setError(message); transition('error');
     } finally { clearTimeout(deadline); }
   }, [armIdle, clearIdle, stop, transition]);
   const interrupt = useCallback(() => { client.current?.interrupt(); transition('listening'); armIdle(); }, [transition, armIdle]);
