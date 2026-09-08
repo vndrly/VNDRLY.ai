@@ -107,7 +107,10 @@ BEGIN
       SELECT FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
       WHERE n.nspname='public' AND c.relkind='S'
         AND NOT EXISTS (SELECT FROM pg_depend d WHERE d.classid='pg_class'::regclass AND d.objid=c.oid AND d.deptype='e')
-        AND has_sequence_privilege(blocked_role,c.oid,'USAGE,SELECT,UPDATE')
+        -- WHERE predicates may be reordered; the function rejects non-sequences.
+        AND CASE WHEN c.relkind='S'
+          THEN has_sequence_privilege(blocked_role,c.oid,'USAGE,SELECT,UPDATE')
+          ELSE false END
     ) THEN RAISE EXCEPTION 'Public Data API sequence verification failed for %', blocked_role; END IF;
     IF EXISTS (
       SELECT FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
