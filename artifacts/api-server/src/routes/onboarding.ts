@@ -11,7 +11,6 @@ import {
   userOrgMembershipsTable,
   onboardingProgressTable,
   siteLocationsTable,
-  vendorWorkTypesTable,
   partnerContactsTable,
 } from "@workspace/db";
 import {
@@ -23,6 +22,7 @@ import {
 import { SESSION_SECRET, getSessionFromRequest } from "../lib/session";
 import { addMembership } from "../lib/membership-sync";
 import { syncOnboardingStepSideEffects } from "../lib/onboarding-step-sync";
+import { addOnboardingCatalogSelections, onboardingCatalogSelection } from "../lib/onboarding-catalog";
 import {
   buildPlatformEulaAcceptancePatch,
   isPlatformEulaPayloadAccepted,
@@ -854,6 +854,10 @@ router.post("/onboarding/:orgType/:orgId/complete", async (req: Request, res: Re
     vendorId: orgType === "vendor" ? orgId : null,
     defaultStep: "done",
   });
+  if (existing.completedAt) {
+    res.json(serializeProgress(existing));
+    return;
+  }
   const payload = (existing.payload ?? {}) as Record<string, unknown>;
 
   if (orgType === "partner") {
@@ -975,6 +979,11 @@ router.post("/onboarding/:orgType/:orgId/complete", async (req: Request, res: Re
     );
     let firstEmployeeId: number | null = null;
     let firstEmployeeNeedsInvite = false;
+    const catalogIds = session ? await onboardingCatalogSelection(session, orgId, wtIds) : null;
+    if (catalogIds === null) {
+      res.status(400).json({ error: "Choose existing master services or services from an approved partner catalog", code: "onboarding.invalid_work_types" });
+      return;
+    }
     try {
       await db.transaction(async (tx) => {
         await tx
@@ -1010,14 +1019,7 @@ router.post("/onboarding/:orgType/:orgId/complete", async (req: Request, res: Re
           })
           .where(eq(vendorsTable.id, orgId));
 
-        // Replace the vendor's selected work types: delete existing
-        // mapping rows then insert the new set. Idempotent on resume.
-        await tx.delete(vendorWorkTypesTable).where(eq(vendorWorkTypesTable.vendorId, orgId));
-        if (wtIds.length > 0) {
-          await tx
-            .insert(vendorWorkTypesTable)
-            .values(wtIds.map((workTypeId) => ({ vendorId: orgId, workTypeId })));
-        }
+        await addOnboardingCatalogSelections(tx, orgId, catalogIds);
 
         // First employee: insert if no row with same email already
         // exists for this vendor (resume safety).

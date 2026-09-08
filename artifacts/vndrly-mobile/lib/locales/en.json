@@ -943,6 +943,8 @@
     },
     "approvals": {
       "invalid_target_status": "That approval status isn't valid.",
+      "compliance_incomplete": "Complete the vendor's tax ID and current insurance details before approval.",
+      "agreement_changed": "The agreement changed. Review the current agreement before accepting.",
       "not_preferred": "That vendor isn't on the preferred list.",
       "no_relationship": "That vendor doesn't have a relationship with this partner yet.",
       "vendor_no_catalog": "Vendor doesn't have any work types in their catalog yet.",
@@ -1034,6 +1036,7 @@
       "not_pushed": "This invoice hasn't been pushed to accounting yet."
     },
     "onboarding": {
+      "invalid_work_types": "Choose existing services or services from an approved partner catalog.",
       "complete_failed": "Couldn't complete onboarding. Please try again.",
       "create_partner_failed": "Couldn't create that partner. Please try again.",
       "create_vendor_failed": "Couldn't create that vendor. Please try again.",
@@ -1271,6 +1274,7 @@
       "no_offer": "No matching offer was found to approve."
     },
     "vendor_catalog": {
+      "partner_owned": "Catalogs belong to partners. Select your services and rates from an authorized partner's catalog.",
       "eula_required": "Accept the EULA before publishing your catalog.",
       "attestation_required": "Complete the attestation before publishing your catalog.",
       "compliance_incomplete": "Compliance information is incomplete. Finish the required fields.",

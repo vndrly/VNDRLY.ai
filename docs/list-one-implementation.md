@@ -1,7 +1,9 @@
 # List One implementation
 
-Authorized September 7, 2026. Implementation and verification are authorized;
-deployment is not requested. Preserve all existing data and credentials.
+Authorized September 7, 2026. The subsequent unattended release request explicitly
+authorizes commit, publication, web/API deployment, guarded migrations, OTA and
+TestFlight. Preserve all existing data and credentials. QuickBooks/OpenAccountant
+API access is deferred by the owner until tomorrow; see list-one-provider-handoff.md.
 
 ## Progress
 
@@ -9,7 +11,7 @@ Local implementation covers company isolation, partner catalogs, Gate Employees,
 combined Gate Log reporting/category capture, map tools, persistent AskV voice,
 branding and release feature controls. Schema-dependent features are not ready
 for live use until migrations pass. Payroll remains a gross-pay draft rather
-than a finished payroll/accounting integration. No deployment was requested.
+than a finished payroll/accounting integration. Release verification is underway.
 
 - [ ] 1. Company isolation: sites, vendor detail, private company notes, direct access and exports.
 - [ ] 2. Correct Midcon relationships with Warwick and Flywheel using guarded updates.
@@ -105,7 +107,16 @@ integration has not been completed.
 - Tax/accounting UI controls default hidden; payroll remains available. Scheduled
   1099 emails also require ENABLE_TAX_REPORTING=true. See list-one-release-features.md.
 
-## Release blockers and required follow-through
+## Earlier local handoff (superseded by release authorization)
+
+The following records the earlier stop state, not current deployment status.
+VPS access was subsequently located in the existing whitespace-formatted secrets
+configuration. Production read-only schema checks passed: 67 partners, 64 master
+services, no duplicate canonical service names, and a configured public Mapbox
+token. A new runner-local PostgreSQL cluster runs API/E2E tests without loading
+production credentials or resetting any existing database. The partner catalog
+migration regression passed there, including rerun preservation and renamed items.
+Current release outcomes belong in the final release evidence, not this baseline.
 
 1. No DATABASE_URL, disposable TEST_DATABASE_URL, Supabase management token or
    configured VPS login is available in this session. REST read access cannot

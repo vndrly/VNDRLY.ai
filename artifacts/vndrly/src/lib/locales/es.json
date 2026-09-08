@@ -4206,6 +4206,7 @@
       "not_pushed": "Esta factura aún no se ha enviado a contabilidad."
     },
     "onboarding": {
+      "invalid_work_types": "Seleccione servicios existentes o servicios del catálogo de un socio aprobado.",
       "complete_failed": "No pudimos finalizar el onboarding. Inténtalo de nuevo.",
       "create_partner_failed": "No pudimos crear la cuenta del socio. Inténtalo de nuevo.",
       "create_vendor_failed": "No pudimos crear la cuenta del proveedor. Inténtalo de nuevo.",
@@ -4348,6 +4349,8 @@
     },
     "approvals": {
       "invalid_target_status": "Ese estado de aprobación no es válido.",
+      "compliance_incomplete": "Complete el identificador fiscal y los datos de seguro vigente del proveedor antes de aprobarlo.",
+      "agreement_changed": "El acuerdo cambió. Revise el acuerdo actual antes de aceptarlo.",
       "not_preferred": "Ese proveedor no está en la lista preferida.",
       "no_relationship": "Ese proveedor aún no tiene una relación con este socio.",
       "vendor_no_catalog": "El proveedor aún no tiene tipos de trabajo en su catálogo.",
@@ -4522,6 +4525,7 @@
       "no_offer": "No se encontró una oferta coincidente para aprobar."
     },
     "vendor_catalog": {
+      "partner_owned": "Los catálogos pertenecen a los socios. Seleccione sus servicios y tarifas del catálogo de un socio autorizado.",
       "eula_required": "Acepte el EULA antes de publicar su catálogo.",
       "attestation_required": "Complete la atestación antes de publicar su catálogo.",
       "compliance_incomplete": "La información de cumplimiento está incompleta. Termine los campos requeridos.",

@@ -3,6 +3,14 @@ import { toolsForRealtime, VOICE_WORKFLOWS } from "./tool-packs";
 import { DATA_TOOL_NAMES } from "./tool-names";
 
 describe("AskV realtime tool packs", () => {
+  it("exposes Gate Report in gate and reports workflows only to office roles", () => {
+    for (const workflow of ["gate", "reports"] as const) {
+      for (const role of ["admin", "partner", "vendor"]) {
+        expect(toolsForRealtime({ role, workflow }).map(tool => tool.name)).toContain("query_gate_report");
+      }
+      expect(toolsForRealtime({ role: "field_employee", workflow }).map(tool => tool.name)).not.toContain("query_gate_report");
+    }
+  });
   it("loads the existing onboarding workflow from its screen and from another screen", () => {
     for (const args of [
       { path: "/onboarding/vendor" },

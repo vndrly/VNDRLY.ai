@@ -21,6 +21,7 @@ const CORE_TOOLS = new Set([
 ]);
 
 const GATE_SCREEN_TOOLS = new Set([
+  "query_gate_report",
   "prepare_visitor_check_in",
   "confirm_visitor_check_in",
   "find_active_visitors",
@@ -112,6 +113,7 @@ const WORKFLOW_TOOLS: Record<Exclude<VoiceWorkflow, "auto">, Set<string>> = {
     "lookup_accounting_connection",
   ]),
   reports: new Set([
+    "query_gate_report",
     "query_sales_tax_by_state",
     "query_nec1099_summary",
     "query_1099_k_summary",
