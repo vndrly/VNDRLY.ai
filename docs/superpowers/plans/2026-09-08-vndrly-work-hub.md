@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - Planning does not approve an audio, recording, or transcription provider; select one only through Task 12's decision gate before installing a package or configuring an account.
-- Microsoft 365 is optional and read-only for one selected Outlook/shared/company calendar; VNDRLY schedules remain authoritative.
+- Microsoft 365 is optional and one-way into VNDRLY only. Imports require administrator selection, staged preview/review, explicit activation, provenance, external identifiers, timestamps, idempotent deduplication, conflict and permission mapping, progress/errors, and audit. VNDRLY never writes back; after activation VNDRLY is authoritative.
 - Every tenant-owned read, mutation, event, search result, notification, file download, export, connector callback, and AskV source must pass the shared context-capability service.
 - Every client mutation requires a UUID idempotency key; versioned updates require the expected server version.
 - iOS must durably queue supported writes/uploads, bind them to user and organization, retry with backoff, and prevent duplicates.
@@ -38,6 +38,7 @@
 ### Task 1: Feature flags, shared contracts, and stable codes
 
 **Files:**
+
 - Create: `lib/api-zod/src/work-hub/common.ts`
 - Create: `lib/api-zod/src/work-hub/commands.ts`
 - Create: `lib/api-zod/src/work-hub/events.ts`
@@ -51,6 +52,7 @@
 - Modify: `artifacts/api-server/package.json`
 
 **Interfaces:**
+
 - Produces: `WorkHubOwner`, `WorkHubContextRef`, `WorkHubCapability`, `WorkHubCommandEnvelope<T>`, `WorkHubCommandResult<T>`, `WorkHubEventEnvelope`, `RealtimeAudioProvider`, `TranscriptionProvider`, `CalendarConnector`, and stable `work_hub.*` error codes.
 - Produces: platform flags `workHubEnabled`, `workHubMeetingRecordingEnabled`, `workHubMicrosoft365Enabled`, `workHubExportsEnabled` with false defaults.
 
@@ -62,15 +64,19 @@ import { workHubCommandEnvelopeSchema } from "./commands";
 
 describe("work hub command envelope", () => {
   it("requires a UUID operation id and explicit tenant owner", () => {
-    expect(workHubCommandEnvelopeSchema.safeParse({ operationId: "1" }).success).toBe(false);
-    expect(workHubCommandEnvelopeSchema.safeParse({
-      operationId: "60fb5c6d-4164-4b3f-baa1-1d7095426633",
-      owner: { type: "vendor", id: 12 },
-      context: { kind: "ticket", id: 481 },
-      expectedVersion: 1,
-      payloadVersion: 1,
-      payload: {},
-    }).success).toBe(true);
+    expect(
+      workHubCommandEnvelopeSchema.safeParse({ operationId: "1" }).success,
+    ).toBe(false);
+    expect(
+      workHubCommandEnvelopeSchema.safeParse({
+        operationId: "60fb5c6d-4164-4b3f-baa1-1d7095426633",
+        owner: { type: "vendor", id: 12 },
+        context: { kind: "ticket", id: 481 },
+        expectedVersion: 1,
+        payloadVersion: 1,
+        payload: {},
+      }).success,
+    ).toBe(true);
   });
 });
 ```
@@ -107,6 +113,7 @@ export const workHubCommandEnvelopeSchema = z.object({
 ### Task 2: Additive core collaboration schema
 
 **Files:**
+
 - Create: `lib/db/src/schema/workHubChannels.ts`
 - Create: `lib/db/src/schema/workHubMessages.ts`
 - Create: `lib/db/src/schema/workHubFiles.ts`
@@ -120,6 +127,7 @@ export const workHubCommandEnvelopeSchema = z.object({
 - Create: `artifacts/api-server/src/work-hub/schema-invariants.test.ts`
 
 **Interfaces:**
+
 - Consumes: Task 1 owner/context enum values.
 - Produces: core tables named exactly as the spec's collaboration/governance list and unique operation key `(user_id, command_kind, operation_id)`.
 
@@ -128,7 +136,9 @@ export const workHubCommandEnvelopeSchema = z.object({
 ```ts
 it("rejects a second channel for the same owner and context", async () => {
   await insertChannel(owner, context);
-  await expect(insertChannel(owner, context)).rejects.toMatchObject({ code: "23505" });
+  await expect(insertChannel(owner, context)).rejects.toMatchObject({
+    code: "23505",
+  });
 });
 ```
 
@@ -145,6 +155,7 @@ it("rejects a second channel for the same owner and context", async () => {
 ### Task 3: Central context authorization and audit
 
 **Files:**
+
 - Create: `artifacts/api-server/src/work-hub/context-access.ts`
 - Create: `artifacts/api-server/src/work-hub/context-access.test.ts`
 - Create: `artifacts/api-server/src/work-hub/audit.ts`
@@ -152,15 +163,22 @@ it("rejects a second channel for the same owner and context", async () => {
 - Create: `artifacts/api-server/src/work-hub/feature-access.ts`
 
 **Interfaces:**
+
 - Consumes: existing session, `user_org_memberships`, ticket/site/crew/gate relationship rules, and Task 2 governance tables.
 - Produces: `resolveWorkHubAccess(session, subject): Promise<WorkHubAccess>` and `requireWorkHubCapability(access, capability): void`.
 
 - [ ] **Step 1: Write a two-vendor/two-partner authorization matrix including shared ticket/site access, vendor-private organization/crew access, gate-company site scope, revoked membership, and cross-tenant ids**
 
 ```ts
-expect(await resolveWorkHubAccess(vendorAAdmin, vendorAChannel)).toContain("channel.manage");
-expect(await resolveWorkHubAccess(partnerShared, sharedTicketChannel)).toContain("channel.read");
-await expect(resolveWorkHubAccess(vendorBAdmin, vendorAChannel)).rejects.toMatchObject({
+expect(await resolveWorkHubAccess(vendorAAdmin, vendorAChannel)).toContain(
+  "channel.manage",
+);
+expect(
+  await resolveWorkHubAccess(partnerShared, sharedTicketChannel),
+).toContain("channel.read");
+await expect(
+  resolveWorkHubAccess(vendorBAdmin, vendorAChannel),
+).rejects.toMatchObject({
   status: 404,
   code: "work_hub.not_found",
 });
@@ -188,6 +206,7 @@ export type WorkHubAccess = Readonly<{
 ### Task 4: Idempotent commands, channels, messages, reactions, unread, and legacy projection
 
 **Files:**
+
 - Create: `artifacts/api-server/src/work-hub/commands.ts`
 - Create: `artifacts/api-server/src/work-hub/queries.ts`
 - Create: `artifacts/api-server/src/work-hub/legacy-comments.ts`
@@ -202,6 +221,7 @@ export type WorkHubAccess = Readonly<{
 - Regenerate: `lib/api-client-react/src/generated/api.schemas.ts`
 
 **Interfaces:**
+
 - Consumes: Tasks 1-3 contracts, capabilities, audit, and operations table.
 - Produces: `executeWorkHubCommand`, channel/message APIs, cursor pagination, per-user read cursors, and `publishWorkHubEvent`.
 
@@ -233,6 +253,7 @@ export async function executeWorkHubCommand<T>(
 ### Task 5: Private files, durable voice notes, and versioned notes
 
 **Files:**
+
 - Create: `artifacts/api-server/src/work-hub/files.ts`
 - Create: `artifacts/api-server/src/work-hub/notes.ts`
 - Create: `artifacts/api-server/src/routes/workHubFiles.ts`
@@ -245,6 +266,7 @@ export async function executeWorkHubCommand<T>(
 - Modify: OpenAPI source and regenerate API clients
 
 **Interfaces:**
+
 - Produces: reserve/finalize/download/delete file APIs and `updateWorkHubNote(noteId, expectedVersion, patch)`.
 - Consumes: Task 3 capabilities and Task 4 command/audit/event pipeline.
 
@@ -265,6 +287,7 @@ export async function executeWorkHubCommand<T>(
 ### Task 6: Notifications, deep links, and personal Home query
 
 **Files:**
+
 - Create: `artifacts/api-server/src/work-hub/notifications.ts`
 - Create: `artifacts/api-server/src/work-hub/home.ts`
 - Create: `artifacts/api-server/src/routes/workHubHome.ts`
@@ -279,6 +302,7 @@ export async function executeWorkHubCommand<T>(
 - Modify: `artifacts/vndrly/src/lib/notifications-api.ts`
 
 **Interfaces:**
+
 - Produces: category preferences for messages/tasks/announcements/schedule/meetings; canonical web/mobile links; `getWorkHubHome(actor, cursor)`.
 - Consumes: existing `notifyUsers`, notification SSE, email digest, Expo push, and Task 4 events.
 
@@ -299,6 +323,7 @@ export async function executeWorkHubCommand<T>(
 ### Task 7: Web communication experience
 
 **Files:**
+
 - Create: `artifacts/vndrly/src/features/work-hub/work-hub-shell.tsx`
 - Create: `artifacts/vndrly/src/features/work-hub/home-page.tsx`
 - Create: `artifacts/vndrly/src/features/work-hub/channel-page.tsx`
@@ -311,6 +336,7 @@ export async function executeWorkHubCommand<T>(
 - Modify: web `en.json` and `es.json`
 
 **Interfaces:**
+
 - Consumes: generated APIs from Tasks 4-6 and current brand/TogglePill/ImagePill/notification primitives.
 - Produces: `/work-hub`, `/work-hub/channels/:id`, and context-tab navigation.
 
@@ -329,6 +355,7 @@ export async function executeWorkHubCommand<T>(
 ### Task 8: Durable iOS sync/upload queue and communication experience
 
 **Files:**
+
 - Create: `artifacts/vndrly-mobile/features/work-hub/sync/types.ts`
 - Create: `artifacts/vndrly-mobile/features/work-hub/sync/store.ts`
 - Create: `artifacts/vndrly-mobile/features/work-hub/sync/runner.ts`
@@ -342,6 +369,7 @@ export async function executeWorkHubCommand<T>(
 - Modify: mobile `en.json` and `es.json`
 
 **Interfaces:**
+
 - Produces: `enqueueWorkHubCommand`, `enqueueWorkHubUpload`, `runWorkHubSync`, and Expo routes.
 - Consumes: Tasks 4-6 generated APIs and current auth/org-switch lifecycle.
 
@@ -374,6 +402,7 @@ export type QueuedWorkHubCommand = {
 ### Task 9: Tasks, checklists, forms, acknowledgements, approvals, and announcements
 
 **Files:**
+
 - Create: `lib/db/src/schema/workHubTasks.ts`
 - Create: `lib/db/src/schema/workHubForms.ts`
 - Create: `lib/db/src/schema/workHubAnnouncements.ts`
@@ -386,6 +415,7 @@ export type QueuedWorkHubCommand = {
 - Modify: OpenAPI source, generated clients, routes, and both locale pairs
 
 **Interfaces:**
+
 - Produces: versioned template/instance/submission APIs, task/approval lifecycle, recipient-snapshotted announcements, and recurrence expansion.
 - Consumes: Tasks 3-6 policy, commands, audit, notification, Home, files, and events.
 
@@ -415,6 +445,7 @@ const TASK_TRANSITIONS = {
 ### Task 10: Shifts, availability, conflicts, and unified calendar
 
 **Files:**
+
 - Create: `lib/db/src/schema/workHubSchedule.ts`
 - Create: `lib/db/drizzle/chunk_398_work_hub_schedule.sql`
 - Create: `artifacts/api-server/src/work-hub/shift-policy.ts`
@@ -428,6 +459,7 @@ const TASK_TRANSITIONS = {
 - Modify: OpenAPI/generated clients/locales
 
 **Interfaces:**
+
 - Produces: availability/shift/open-shift/claim/swap APIs, `evaluateShiftConflicts`, and unified `CalendarItem` with source/authority.
 - Consumes: current ticket scheduling, certification warnings, foreman schedule, Task 9 due/recurrence items.
 
@@ -448,6 +480,7 @@ const TASK_TRANSITIONS = {
 ### Task 11: Permission-aware search and AskV confirmation flows
 
 **Files:**
+
 - Create: `lib/db/src/schema/workHubSearchDocuments.ts`
 - Create: `lib/db/drizzle/chunk_399_work_hub_search.sql`
 - Create: `artifacts/api-server/src/work-hub/search.ts`
@@ -460,6 +493,7 @@ const TASK_TRANSITIONS = {
 - Create: `artifacts/vndrly-mobile/features/work-hub/search-screen.tsx`
 
 **Interfaces:**
+
 - Produces: filtered search/index/hydration and AskV read/suggest/confirm tools with source links.
 - Consumes: Task 3 visibility revision, Tasks 4-10 domain data, and existing AskV pending confirmation/action audit.
 
@@ -480,6 +514,7 @@ const TASK_TRANSITIONS = {
 ### Task 12: Audio provider decision gate and adapter contract tests
 
 **Files:**
+
 - Create: `docs/decisions/work-hub-audio-provider.md`
 - Create: `artifacts/api-server/src/work-hub/audio/provider.ts`
 - Create: `artifacts/api-server/src/work-hub/audio/provider-contract.test.ts`
@@ -487,6 +522,7 @@ const TASK_TRANSITIONS = {
 - Create: `artifacts/vndrly/src/features/work-hub/meetings/audio-adapter.ts`
 
 **Interfaces:**
+
 - Consumes: Task 1 provider contracts.
 - Produces: an approved decision record and one adapter implementation only after approval; clients receive VNDRLY join leases, never provider credentials.
 
@@ -505,6 +541,7 @@ const TASK_TRANSITIONS = {
 ### Task 13: Meeting lifecycle, consent, artifacts, and catch-up
 
 **Files:**
+
 - Create: `lib/db/src/schema/workHubMeetings.ts`
 - Create: `lib/db/drizzle/chunk_400_work_hub_meetings.sql`
 - Create: `artifacts/api-server/src/work-hub/meetings.ts`
@@ -518,6 +555,7 @@ const TASK_TRANSITIONS = {
 - Modify: OpenAPI/generated clients/locales
 
 **Interfaces:**
+
 - Consumes: approved Task 12 adapters, Task 3 capabilities, Task 6 notifications, Task 9 tasks, and Task 11 AskV confirmation.
 - Produces: immediate/scheduled/recurring meeting APIs, room roles, chat/hand raise, RSVP/reminders, attendance, consent, artifacts, and catch-up.
 
@@ -537,9 +575,10 @@ const TASK_TRANSITIONS = {
 
 - [ ] **Step 8: Commit `feat(work-hub): add audio meetings and catch-up`**
 
-### Task 14: Optional Microsoft 365 read-only calendar connector
+### Task 14: Optional Microsoft 365 one-way migration connector
 
 **Files:**
+
 - Create: `lib/db/src/schema/workHubCalendarConnectors.ts`
 - Create: `lib/db/drizzle/chunk_401_work_hub_calendar_connectors.sql`
 - Create: `artifacts/api-server/src/work-hub/connectors/calendar-connector.ts`
@@ -551,6 +590,7 @@ const TASK_TRANSITIONS = {
 - Create: `artifacts/vndrly-mobile/features/work-hub/admin/microsoft-365-connect-screen.tsx`
 
 **Interfaces:**
+
 - Produces: encrypted connection metadata, calendar selection, cursor sync, revoke/health, and external calendar items.
 - Consumes: Task 1 `CalendarConnector`, Task 3 `connector.manage`, and Task 10 calendar merge.
 
@@ -571,6 +611,7 @@ const TASK_TRANSITIONS = {
 ### Task 15: Retention, legal hold, exports, and observability
 
 **Files:**
+
 - Create: `artifacts/api-server/src/work-hub/retention.ts`
 - Create: `artifacts/api-server/src/work-hub/exports.ts`
 - Create: `artifacts/api-server/src/work-hub/metrics.ts`
@@ -582,6 +623,7 @@ const TASK_TRANSITIONS = {
 - Modify: deployment observability configuration/docs
 
 **Interfaces:**
+
 - Consumes: governance tables and all Work Hub subjects.
 - Produces: `evaluateRetentionCandidate`, asynchronous authorized exports, legal hold controls, and redacted metrics.
 
@@ -602,6 +644,7 @@ const TASK_TRANSITIONS = {
 ### Task 16: Adjacent AskV, Gate, gate-records, and commercial homepage checklist
 
 **Files:**
+
 - Modify: `artifacts/vndrly/src/components/askv-status-indicator.tsx`
 - Modify: corresponding AskV status tests
 - Modify: `artifacts/vndrly/src/pages/gate-log.tsx`
@@ -611,6 +654,7 @@ const TASK_TRANSITIONS = {
 - Modify: both web/mobile locale pairs
 
 **Interfaces:**
+
 - Consumes: current AskV state, brand resolver, TogglePill/ImagePill, Gate History, gate authorization/report endpoints, and public authentication routes.
 - Produces: no Work Hub service imports; these are adjacent release deliverables.
 
@@ -631,6 +675,7 @@ const TASK_TRANSITIONS = {
 ### Task 17: Integrated isolation, offline, accessibility, and performance verification
 
 **Files:**
+
 - Create: `lib/e2e/tests/work-hub-isolation.spec.ts`
 - Create: `lib/e2e/tests/work-hub-offline.spec.ts`
 - Create: `lib/e2e/tests/work-hub-meetings.spec.ts`
@@ -639,6 +684,7 @@ const TASK_TRANSITIONS = {
 - Update: `docs/communications-launch-readiness.md`
 
 **Interfaces:**
+
 - Consumes: all prior tasks.
 - Produces: release evidence for the exact integrated tree.
 
@@ -659,6 +705,7 @@ const TASK_TRANSITIONS = {
 ### Task 18: Production-safe migration rehearsal and one final release
 
 **Files:**
+
 - Modify: `.github/workflows/deploy-api.yml` to run every new guarded `migrate:work-hub-*` script in order
 - Modify: `.github/workflows/publish.yml` only if Work Hub build/runtime needs require it
 - Modify: `.github/workflows/mobile-ota.yml` and `.github/workflows/mobile-testflight.yml` only for demonstrated native/runtime needs
@@ -666,6 +713,7 @@ const TASK_TRANSITIONS = {
 - Create: `docs/work-hub-release-evidence.md`
 
 **Interfaces:**
+
 - Consumes: exact green tree and all feature/policy flags.
 - Produces: one integrated disabled-by-default production deployment and controlled enablement evidence.
 

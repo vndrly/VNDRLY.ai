@@ -9,7 +9,7 @@ The selected approach is a first-party Work Hub domain inside the existing VNDRL
 Two decisions are intentionally deferred until implementation evidence is available:
 
 1. The specialist provider for real-time audio, recording, and transcription. No provider package, account, or production configuration is approved by this specification.
-2. Whether Microsoft 365 expands beyond read-only calendar synchronization. Native Work Hub functionality cannot depend on Microsoft.
+2. Microsoft 365 is an optional, one-way, administrator-initiated migration source. Authorized administrators select supported calendar events, files/notes, conversation history where available, tasks/forms, and meeting metadata/artifacts; preview permission mappings and conflicts; and explicitly confirm activation. Imported content is copied into tenant-owned VNDRLY records with provenance, external identifiers, import timestamps, idempotent deduplication, progress/errors, and audit events. VNDRLY never writes changes back to Microsoft. After activation, VNDRLY is authoritative and native Work Hub functionality cannot depend on Microsoft.
 
 ## Goals
 
@@ -51,13 +51,13 @@ Cards deep-link to canonical objects. Home never caches or denormalizes authoriz
 
 A channel has exactly one owning organization and one context:
 
-| Context kind | Context key | Default audience |
-| --- | --- | --- |
-| `organization` | vendor or partner organization | active members of that organization |
-| `ticket` | ticket id | authorized ticket participants and administrators |
-| `site` | site-location id | authorized partner/vendor members assigned to the site |
-| `crew` | vendor crew key | authorized vendor administrators, foremen, and crew members |
-| `gate` | gate company plus optional site | authorized gate-company vendor administrators and assigned gate staff |
+| Context kind   | Context key                     | Default audience                                                      |
+| -------------- | ------------------------------- | --------------------------------------------------------------------- |
+| `organization` | vendor or partner organization  | active members of that organization                                   |
+| `ticket`       | ticket id                       | authorized ticket participants and administrators                     |
+| `site`         | site-location id                | authorized partner/vendor members assigned to the site                |
+| `crew`         | vendor crew key                 | authorized vendor administrators, foremen, and crew members           |
+| `gate`         | gate company plus optional site | authorized gate-company vendor administrators and assigned gate staff |
 
 The owning organization defines tenant scope. A partner and vendor may collaborate in a ticket/site channel only when the existing relationship and object access rules authorize both. Membership revocation immediately removes reads, writes, live events, search results, downloads, and AI sources.
 
@@ -154,7 +154,9 @@ The audio boundary is implemented before a provider is selected:
 ```ts
 interface RealtimeAudioProvider {
   createRoom(input: CreateAudioRoomInput): Promise<AudioRoomLease>;
-  createParticipantToken(input: ParticipantTokenInput): Promise<ParticipantToken>;
+  createParticipantToken(
+    input: ParticipantTokenInput,
+  ): Promise<ParticipantToken>;
   endRoom(input: EndAudioRoomInput): Promise<void>;
   startRecording(input: RecordingCommand): Promise<RecordingHandle>;
   stopRecording(input: RecordingCommand): Promise<void>;
@@ -365,17 +367,17 @@ No milestone is marketed or generally enabled independently. Rollback disables f
 
 ## Risks and mitigations
 
-| Risk | Mitigation |
-| --- | --- |
-| Cross-tenant disclosure through polymorphic contexts | One context-access service, owner columns, negative matrix tests, hydration recheck, opaque 404 behavior |
-| Scope breadth destabilizes launch | Internal milestone gates, disabled-by-default flag, one integration contract, no public partial launch |
-| Offline duplicates or wrong-org replay | Per-user command ids, active-org binding, dependency graph, server replay result, context revalidation |
-| Audio provider lock-in or privacy gap | Adapter-first boundary, decision record, export/delete requirements, signed webhooks, explicit consent/policy |
-| Search/AskV returns stale access | visibility revision, authorization at hydration, purge on revocation, cited source reauthorization |
-| Notification overload | category preferences, urgent/digest rules, dedupe, recipient snapshots, quiet-hour policy |
-| Calendar authority confusion | source badges, read-only external events, edits routed to owning domain, VNDRLY authoritative |
-| Retention deletes referenced evidence | legal hold, reference checks, dry-run metrics, audited two-stage metadata/byte deletion |
-| Existing comments regress | adapter projection, unchanged legacy endpoints, parity tests, no destructive migration |
+| Risk                                                 | Mitigation                                                                                                    |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Cross-tenant disclosure through polymorphic contexts | One context-access service, owner columns, negative matrix tests, hydration recheck, opaque 404 behavior      |
+| Scope breadth destabilizes launch                    | Internal milestone gates, disabled-by-default flag, one integration contract, no public partial launch        |
+| Offline duplicates or wrong-org replay               | Per-user command ids, active-org binding, dependency graph, server replay result, context revalidation        |
+| Audio provider lock-in or privacy gap                | Adapter-first boundary, decision record, export/delete requirements, signed webhooks, explicit consent/policy |
+| Search/AskV returns stale access                     | visibility revision, authorization at hydration, purge on revocation, cited source reauthorization            |
+| Notification overload                                | category preferences, urgent/digest rules, dedupe, recipient snapshots, quiet-hour policy                     |
+| Calendar authority confusion                         | source badges, read-only external events, edits routed to owning domain, VNDRLY authoritative                 |
+| Retention deletes referenced evidence                | legal hold, reference checks, dry-run metrics, audited two-stage metadata/byte deletion                       |
+| Existing comments regress                            | adapter projection, unchanged legacy endpoints, parity tests, no destructive migration                        |
 
 ## Acceptance criteria
 

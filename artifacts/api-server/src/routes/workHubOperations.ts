@@ -12,9 +12,12 @@ import {
   or,
 } from "drizzle-orm";
 import { z } from "zod/v4";
+import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import {
   db,
   workHubAcknowledgementsTable,
+  workHubApprovalRequestsTable,
+  workHubApprovalStepsTable,
   workHubAnnouncementRecipientsTable,
   workHubAnnouncementsTable,
   workHubExternalEventsTable,
@@ -26,12 +29,19 @@ import {
   workHubMeetingOccurrencesTable,
   workHubMeetingParticipantsTable,
   workHubMeetingsTable,
+  workHubImportBatchesTable,
+  workHubImportItemsTable,
   workHubSearchDocumentsTable,
   workHubShiftAssignmentsTable,
   workHubShiftRequestsTable,
   workHubShiftsTable,
   workHubTaskEventsTable,
   workHubTasksTable,
+  workHubChecklistTemplatesTable,
+  workHubChecklistInstancesTable,
+  workHubFormTemplatesTable,
+  workHubFormInstancesTable,
+  workHubFormSubmissionsTable,
   workHubTranscriptSegmentsTable,
 } from "@workspace/db";
 import {
@@ -57,6 +67,8 @@ import {
 import { validateVoiceNoteMetadata } from "../work-hub/file-policy";
 import { notifyUsers } from "./notifications";
 import { sessionCanSeeOwner } from "../work-hub/owner-boundary";
+import { appendWorkHubAudit } from "../work-hub/audit";
+import { microsoftImportStatus } from "../work-hub/microsoft-import";
 
 const router: IRouter = Router();
 const storage = new ObjectStorageService();
@@ -121,6 +133,27 @@ function ownerFilter(session: Actor) {
           ? and(
               eq(workHubTasksTable.ownerOrgType, "partner"),
               eq(workHubTasksTable.ownerOrgId, session.partnerId),
+            )
+          : undefined,
+      );
+}
+function ownerFilterFor(
+  session: Actor,
+  table: { ownerOrgType: AnyPgColumn; ownerOrgId: AnyPgColumn },
+) {
+  return session.role === "admin"
+    ? undefined
+    : or(
+        session.vendorId
+          ? and(
+              eq(table.ownerOrgType, "vendor"),
+              eq(table.ownerOrgId, session.vendorId),
+            )
+          : undefined,
+        session.partnerId
+          ? and(
+              eq(table.ownerOrgType, "partner"),
+              eq(table.ownerOrgId, session.partnerId),
             )
           : undefined,
       );
@@ -262,6 +295,730 @@ router.get("/work-hub/tasks", async (req, res) => {
       .limit(100),
   );
 });
+
+router.get("/work-hub/files", async (req, res) => {
+  const session = actor(req);
+  if (!session)
+    return sendApiError(
+      res,
+      401,
+      "auth.unauthenticated",
+      "Authentication required",
+    );
+  return res.json(
+    await db
+      .select()
+      .from(workHubFilesTable)
+      .where(
+        and(
+          ownerFilterFor(session, workHubFilesTable),
+          eq(workHubFilesTable.state, "finalized"),
+        ),
+      )
+      .orderBy(desc(workHubFilesTable.finalizedAt))
+      .limit(100),
+  );
+});
+
+router.get("/work-hub/admin", async (req, res) => {
+  const session = actor(req);
+  if (!session)
+    return sendApiError(
+      res,
+      401,
+      "auth.unauthenticated",
+      "Authentication required",
+    );
+  if (session.role !== "admin" && session.membershipRole !== "admin")
+    return sendApiError(
+      res,
+      403,
+      "work_hub.forbidden",
+      "Administrator access required",
+    );
+  const [checklists, forms, approvals, announcements] = await Promise.all([
+    db
+      .select()
+      .from(workHubChecklistTemplatesTable)
+      .where(ownerFilterFor(session, workHubChecklistTemplatesTable))
+      .orderBy(desc(workHubChecklistTemplatesTable.createdAt))
+      .limit(100),
+    db
+      .select()
+      .from(workHubFormTemplatesTable)
+      .where(ownerFilterFor(session, workHubFormTemplatesTable))
+      .orderBy(desc(workHubFormTemplatesTable.createdAt))
+      .limit(100),
+    db
+      .select()
+      .from(workHubApprovalRequestsTable)
+      .where(ownerFilterFor(session, workHubApprovalRequestsTable))
+      .orderBy(desc(workHubApprovalRequestsTable.createdAt))
+      .limit(100),
+    db
+      .select()
+      .from(workHubAnnouncementsTable)
+      .where(ownerFilterFor(session, workHubAnnouncementsTable))
+      .orderBy(desc(workHubAnnouncementsTable.publishedAt))
+      .limit(100),
+  ]);
+  const [checklistInstances, formInstances] = await Promise.all([
+    checklists.length
+      ? db
+          .select()
+          .from(workHubChecklistInstancesTable)
+          .where(
+            inArray(
+              workHubChecklistInstancesTable.templateId,
+              checklists.map((item) => item.id),
+            ),
+          )
+          .orderBy(desc(workHubChecklistInstancesTable.createdAt))
+          .limit(100)
+      : Promise.resolve([]),
+    forms.length
+      ? db
+          .select()
+          .from(workHubFormInstancesTable)
+          .where(
+            inArray(
+              workHubFormInstancesTable.templateId,
+              forms.map((item) => item.id),
+            ),
+          )
+          .orderBy(desc(workHubFormInstancesTable.createdAt))
+          .limit(100)
+      : Promise.resolve([]),
+  ]);
+  return res.json({
+    checklists,
+    checklistInstances,
+    forms,
+    formInstances,
+    approvals,
+    announcements,
+  });
+});
+
+router.get("/work-hub/required-actions", async (req, res) => {
+  const session = actor(req);
+  if (!session)
+    return sendApiError(
+      res,
+      401,
+      "auth.unauthenticated",
+      "Authentication required",
+    );
+  const [checklists, forms, approvals] = await Promise.all([
+    db
+      .select({
+        instance: workHubChecklistInstancesTable,
+        template: workHubChecklistTemplatesTable,
+      })
+      .from(workHubChecklistInstancesTable)
+      .innerJoin(
+        workHubChecklistTemplatesTable,
+        eq(
+          workHubChecklistTemplatesTable.id,
+          workHubChecklistInstancesTable.templateId,
+        ),
+      )
+      .where(
+        and(
+          eq(workHubChecklistInstancesTable.assigneeUserId, session.userId),
+          ownerFilterFor(session, workHubChecklistTemplatesTable),
+        ),
+      )
+      .orderBy(desc(workHubChecklistInstancesTable.createdAt)),
+    db
+      .select({
+        instance: workHubFormInstancesTable,
+        template: workHubFormTemplatesTable,
+      })
+      .from(workHubFormInstancesTable)
+      .innerJoin(
+        workHubFormTemplatesTable,
+        eq(workHubFormTemplatesTable.id, workHubFormInstancesTable.templateId),
+      )
+      .where(
+        and(
+          eq(workHubFormInstancesTable.assigneeUserId, session.userId),
+          ownerFilterFor(session, workHubFormTemplatesTable),
+        ),
+      )
+      .orderBy(desc(workHubFormInstancesTable.createdAt)),
+    db
+      .select({
+        request: workHubApprovalRequestsTable,
+        step: workHubApprovalStepsTable,
+      })
+      .from(workHubApprovalStepsTable)
+      .innerJoin(
+        workHubApprovalRequestsTable,
+        eq(
+          workHubApprovalRequestsTable.id,
+          workHubApprovalStepsTable.requestId,
+        ),
+      )
+      .where(
+        and(
+          eq(workHubApprovalStepsTable.approverUserId, session.userId),
+          ownerFilterFor(session, workHubApprovalRequestsTable),
+        ),
+      )
+      .orderBy(desc(workHubApprovalRequestsTable.createdAt)),
+  ]);
+  return res.json({ checklists, forms, approvals });
+});
+
+const templatePayload = z.object({
+  name: z.string().trim().min(1).max(200),
+  definition: z
+    .array(
+      z.object({
+        id: z.string().min(1).max(80),
+        label: z.string().trim().min(1).max(300),
+        type: z.enum(["checkbox", "text", "number", "date", "choice"]),
+        required: z.boolean().default(false),
+      }),
+    )
+    .min(1)
+    .max(100),
+});
+
+async function createTemplate(
+  req: Request,
+  res: Response,
+  kind: "checklist" | "form",
+) {
+  const session = actor(req);
+  if (!session)
+    return sendApiError(
+      res,
+      401,
+      "auth.unauthenticated",
+      "Authentication required",
+    );
+  try {
+    const envelope = workHubCommandEnvelopeSchema.parse(req.body);
+    ownAccess(session, envelope.owner, "task.assign");
+    const payload = templatePayload.parse(envelope.payload);
+    const result = await executeWorkHubCommand(
+      { userId: session.userId, source: clientSource(req) },
+      `${kind}.template.create`,
+      envelope,
+      async (tx) => {
+        const [record] =
+          kind === "checklist"
+            ? await tx
+                .insert(workHubChecklistTemplatesTable)
+                .values({
+                  ownerOrgType: envelope.owner.type,
+                  ownerOrgId: envelope.owner.id,
+                  name: payload.name,
+                  definition: payload.definition,
+                  createdById: session.userId,
+                })
+                .returning()
+            : await tx
+                .insert(workHubFormTemplatesTable)
+                .values({
+                  ownerOrgType: envelope.owner.type,
+                  ownerOrgId: envelope.owner.id,
+                  name: payload.name,
+                  definition: payload.definition,
+                  createdById: session.userId,
+                })
+                .returning();
+        await appendWorkHubAudit(
+          {
+            actorUserId: session.userId,
+            owner: envelope.owner,
+            action: `${kind}.template.created`,
+            subjectType: `${kind}_template`,
+            subjectId: record.id,
+            newVersion: 1,
+            source: clientSource(req),
+            operationId: envelope.operationId,
+          },
+          tx,
+        );
+        return record;
+      },
+    );
+    return res.status(result.replayed ? 200 : 201).json(result);
+  } catch (error) {
+    return failure(res, error);
+  }
+}
+
+router.post("/work-hub/admin/checklists", (req, res) =>
+  createTemplate(req, res, "checklist"),
+);
+router.post("/work-hub/admin/forms", (req, res) =>
+  createTemplate(req, res, "form"),
+);
+
+async function assignTemplate(
+  req: Request,
+  res: Response,
+  kind: "checklist" | "form",
+) {
+  const session = actor(req);
+  if (!session)
+    return sendApiError(
+      res,
+      401,
+      "auth.unauthenticated",
+      "Authentication required",
+    );
+  try {
+    const envelope = workHubCommandEnvelopeSchema.parse(req.body);
+    ownAccess(session, envelope.owner, "task.assign");
+    const templateId = String(req.params.id);
+    const payload = z
+      .object({
+        assigneeUserId: z.number().int().positive(),
+        channelId: z.string().uuid().nullable().optional(),
+        dueAt: z.iso.datetime().nullable().optional(),
+      })
+      .parse(envelope.payload);
+    const template =
+      kind === "checklist"
+        ? (
+            await db
+              .select()
+              .from(workHubChecklistTemplatesTable)
+              .where(
+                and(
+                  eq(workHubChecklistTemplatesTable.id, templateId),
+                  eq(
+                    workHubChecklistTemplatesTable.ownerOrgType,
+                    envelope.owner.type,
+                  ),
+                  eq(
+                    workHubChecklistTemplatesTable.ownerOrgId,
+                    envelope.owner.id,
+                  ),
+                ),
+              )
+              .limit(1)
+          )[0]
+        : (
+            await db
+              .select()
+              .from(workHubFormTemplatesTable)
+              .where(
+                and(
+                  eq(workHubFormTemplatesTable.id, templateId),
+                  eq(
+                    workHubFormTemplatesTable.ownerOrgType,
+                    envelope.owner.type,
+                  ),
+                  eq(workHubFormTemplatesTable.ownerOrgId, envelope.owner.id),
+                ),
+              )
+              .limit(1)
+          )[0];
+    if (!template) throw new WorkHubAccessError("not_found");
+    if (payload.channelId)
+      await resolveChannelAccess(session, payload.channelId, "task.assign");
+    const result = await executeWorkHubCommand(
+      { userId: session.userId, source: clientSource(req) },
+      `${kind}.assign`,
+      envelope,
+      async (tx) => {
+        const [record] =
+          kind === "checklist"
+            ? await tx
+                .insert(workHubChecklistInstancesTable)
+                .values({
+                  templateId: template.id,
+                  templateVersion: template.currentVersion,
+                  snapshot: template.definition,
+                  assigneeUserId: payload.assigneeUserId,
+                  channelId: payload.channelId ?? null,
+                  dueAt: payload.dueAt ? new Date(payload.dueAt) : null,
+                })
+                .returning()
+            : await tx
+                .insert(workHubFormInstancesTable)
+                .values({
+                  templateId: template.id,
+                  templateVersion: template.currentVersion,
+                  definitionSnapshot: template.definition,
+                  assigneeUserId: payload.assigneeUserId,
+                  channelId: payload.channelId ?? null,
+                  dueAt: payload.dueAt ? new Date(payload.dueAt) : null,
+                })
+                .returning();
+        await appendWorkHubAudit(
+          {
+            actorUserId: session.userId,
+            owner: envelope.owner,
+            action: `${kind}.assigned`,
+            subjectType: `${kind}_instance`,
+            subjectId: record.id,
+            newVersion: 1,
+            source: clientSource(req),
+            operationId: envelope.operationId,
+          },
+          tx,
+        );
+        return record;
+      },
+    );
+    if (!result.replayed)
+      await notifyUsers([payload.assigneeUserId], {
+        type: `work_hub_${kind}_assigned`,
+        category: "work_hub_tasks",
+        title: `${kind === "form" ? "Form" : "Checklist"} assigned`,
+        body: template.name,
+        link: `/work-hub/tasks?${kind}=${result.resource.id}`,
+        dedupeKey: `work-hub-${kind}:${result.resource.id}`,
+      });
+    return res.status(result.replayed ? 200 : 201).json(result);
+  } catch (error) {
+    return failure(res, error);
+  }
+}
+
+router.post("/work-hub/admin/checklists/:id/assign", (req, res) =>
+  assignTemplate(req, res, "checklist"),
+);
+router.post("/work-hub/admin/forms/:id/assign", (req, res) =>
+  assignTemplate(req, res, "form"),
+);
+
+router.post("/work-hub/checklists/:id/respond", async (req, res) => {
+  const session = actor(req);
+  if (!session)
+    return sendApiError(
+      res,
+      401,
+      "auth.unauthenticated",
+      "Authentication required",
+    );
+  try {
+    const envelope = workHubCommandEnvelopeSchema.parse(req.body);
+    const payload = z
+      .object({
+        responses: z.record(z.string(), z.unknown()),
+        complete: z.boolean().default(false),
+      })
+      .parse(envelope.payload);
+    const [record] = await db
+      .select({
+        instance: workHubChecklistInstancesTable,
+        template: workHubChecklistTemplatesTable,
+      })
+      .from(workHubChecklistInstancesTable)
+      .innerJoin(
+        workHubChecklistTemplatesTable,
+        eq(
+          workHubChecklistTemplatesTable.id,
+          workHubChecklistInstancesTable.templateId,
+        ),
+      )
+      .where(
+        and(
+          eq(workHubChecklistInstancesTable.id, String(req.params.id)),
+          eq(workHubChecklistInstancesTable.assigneeUserId, session.userId),
+          eq(workHubChecklistTemplatesTable.ownerOrgType, envelope.owner.type),
+          eq(workHubChecklistTemplatesTable.ownerOrgId, envelope.owner.id),
+        ),
+      )
+      .limit(1);
+    if (!record) throw new WorkHubAccessError("not_found");
+    const result = await executeWorkHubCommand(
+      { userId: session.userId, source: clientSource(req) },
+      "checklist.respond",
+      envelope,
+      async (tx) => {
+        const [updated] = await tx
+          .update(workHubChecklistInstancesTable)
+          .set({
+            responses: payload.responses,
+            status: payload.complete ? "completed" : "in_progress",
+          })
+          .where(eq(workHubChecklistInstancesTable.id, record.instance.id))
+          .returning();
+        await appendWorkHubAudit(
+          {
+            actorUserId: session.userId,
+            owner: envelope.owner,
+            action: payload.complete
+              ? "checklist.completed"
+              : "checklist.updated",
+            subjectType: "checklist_instance",
+            subjectId: updated.id,
+            source: clientSource(req),
+            operationId: envelope.operationId,
+          },
+          tx,
+        );
+        return updated;
+      },
+    );
+    return res.json(result);
+  } catch (error) {
+    return failure(res, error);
+  }
+});
+
+router.post("/work-hub/forms/:id/submit", async (req, res) => {
+  const session = actor(req);
+  if (!session)
+    return sendApiError(
+      res,
+      401,
+      "auth.unauthenticated",
+      "Authentication required",
+    );
+  try {
+    const envelope = workHubCommandEnvelopeSchema.parse(req.body);
+    const payload = z
+      .object({ values: z.record(z.string(), z.unknown()) })
+      .parse(envelope.payload);
+    const [record] = await db
+      .select({
+        instance: workHubFormInstancesTable,
+        template: workHubFormTemplatesTable,
+      })
+      .from(workHubFormInstancesTable)
+      .innerJoin(
+        workHubFormTemplatesTable,
+        eq(workHubFormTemplatesTable.id, workHubFormInstancesTable.templateId),
+      )
+      .where(
+        and(
+          eq(workHubFormInstancesTable.id, String(req.params.id)),
+          eq(workHubFormInstancesTable.assigneeUserId, session.userId),
+          eq(workHubFormTemplatesTable.ownerOrgType, envelope.owner.type),
+          eq(workHubFormTemplatesTable.ownerOrgId, envelope.owner.id),
+        ),
+      )
+      .limit(1);
+    if (!record) throw new WorkHubAccessError("not_found");
+    const result = await executeWorkHubCommand(
+      { userId: session.userId, source: clientSource(req) },
+      "form.submit",
+      envelope,
+      async (tx) => {
+        const prior = await tx
+          .select()
+          .from(workHubFormSubmissionsTable)
+          .where(eq(workHubFormSubmissionsTable.instanceId, record.instance.id))
+          .orderBy(desc(workHubFormSubmissionsTable.version))
+          .limit(1);
+        const [submission] = await tx
+          .insert(workHubFormSubmissionsTable)
+          .values({
+            instanceId: record.instance.id,
+            priorSubmissionId: prior[0]?.id ?? null,
+            version: (prior[0]?.version ?? 0) + 1,
+            submittedById: session.userId,
+            values: payload.values,
+          })
+          .returning();
+        await appendWorkHubAudit(
+          {
+            actorUserId: session.userId,
+            owner: envelope.owner,
+            action: "form.submitted",
+            subjectType: "form_submission",
+            subjectId: submission.id,
+            newVersion: submission.version,
+            source: clientSource(req),
+            operationId: envelope.operationId,
+          },
+          tx,
+        );
+        return submission;
+      },
+    );
+    return res.status(result.replayed ? 200 : 201).json(result);
+  } catch (error) {
+    return failure(res, error);
+  }
+});
+
+router.post("/work-hub/admin/approvals", async (req, res) => {
+  const session = actor(req);
+  if (!session)
+    return sendApiError(
+      res,
+      401,
+      "auth.unauthenticated",
+      "Authentication required",
+    );
+  try {
+    const envelope = workHubCommandEnvelopeSchema.parse(req.body);
+    ownAccess(session, envelope.owner, "task.assign");
+    const payload = z
+      .object({
+        subjectType: z.string().min(1).max(80),
+        subjectId: z.string().min(1).max(200),
+        subjectVersion: z.number().int().positive().default(1),
+        approverUserIds: z.array(z.number().int().positive()).min(1).max(50),
+        mode: z.enum(["ordered", "parallel"]).default("ordered"),
+      })
+      .parse(envelope.payload);
+    const approvers = [...new Set(payload.approverUserIds)];
+    const result = await executeWorkHubCommand(
+      { userId: session.userId, source: clientSource(req) },
+      "approval.create",
+      envelope,
+      async (tx) => {
+        const [request] = await tx
+          .insert(workHubApprovalRequestsTable)
+          .values({
+            ownerOrgType: envelope.owner.type,
+            ownerOrgId: envelope.owner.id,
+            subjectType: payload.subjectType,
+            subjectId: payload.subjectId,
+            subjectVersion: payload.subjectVersion,
+            mode: payload.mode,
+            requestedById: session.userId,
+          })
+          .returning();
+        await tx.insert(workHubApprovalStepsTable).values(
+          approvers.map((approverUserId, index) => ({
+            requestId: request.id,
+            stepOrder: payload.mode === "parallel" ? 1 : index + 1,
+            approverUserId,
+          })),
+        );
+        await appendWorkHubAudit(
+          {
+            actorUserId: session.userId,
+            owner: envelope.owner,
+            action: "approval.requested",
+            subjectType: "approval",
+            subjectId: request.id,
+            newVersion: 1,
+            source: clientSource(req),
+            operationId: envelope.operationId,
+          },
+          tx,
+        );
+        return request;
+      },
+    );
+    if (!result.replayed)
+      await notifyUsers(approvers, {
+        type: "work_hub_approval_requested",
+        category: "work_hub_tasks",
+        title: "Approval requested",
+        body: `${payload.subjectType} requires review`,
+        link: `/work-hub/tasks?approval=${result.resource.id}`,
+        dedupeKey: `work-hub-approval:${result.resource.id}`,
+      });
+    return res.status(result.replayed ? 200 : 201).json(result);
+  } catch (error) {
+    return failure(res, error);
+  }
+});
+
+router.post("/work-hub/admin/approvals/:id/decide", async (req, res) => {
+  const session = actor(req);
+  if (!session)
+    return sendApiError(
+      res,
+      401,
+      "auth.unauthenticated",
+      "Authentication required",
+    );
+  try {
+    const envelope = workHubCommandEnvelopeSchema.parse(req.body);
+    const payload = z
+      .object({
+        decision: z.enum(["approved", "rejected"]),
+        comment: z.string().max(5000).optional(),
+      })
+      .parse(envelope.payload);
+    const [request] = await db
+      .select()
+      .from(workHubApprovalRequestsTable)
+      .where(
+        and(
+          eq(workHubApprovalRequestsTable.id, req.params.id),
+          ownerFilterFor(session, workHubApprovalRequestsTable),
+        ),
+      )
+      .limit(1);
+    if (!request) throw new WorkHubAccessError("not_found");
+    if (
+      request.ownerOrgType !== envelope.owner.type ||
+      request.ownerOrgId !== envelope.owner.id
+    )
+      throw new WorkHubAccessError("not_found");
+    const [step] = await db
+      .select()
+      .from(workHubApprovalStepsTable)
+      .where(
+        and(
+          eq(workHubApprovalStepsTable.requestId, request.id),
+          eq(workHubApprovalStepsTable.approverUserId, session.userId),
+          isNull(workHubApprovalStepsTable.decision),
+        ),
+      )
+      .orderBy(asc(workHubApprovalStepsTable.stepOrder))
+      .limit(1);
+    if (!step) throw new WorkHubAccessError("forbidden");
+    const result = await executeWorkHubCommand(
+      { userId: session.userId, source: clientSource(req) },
+      "approval.decide",
+      envelope,
+      async (tx) => {
+        await tx
+          .update(workHubApprovalStepsTable)
+          .set({
+            decision: payload.decision,
+            comment: payload.comment,
+            decidedAt: new Date(),
+          })
+          .where(eq(workHubApprovalStepsTable.id, step.id));
+        const remaining = await tx
+          .select()
+          .from(workHubApprovalStepsTable)
+          .where(
+            and(
+              eq(workHubApprovalStepsTable.requestId, request.id),
+              isNull(workHubApprovalStepsTable.decision),
+            ),
+          );
+        const status =
+          payload.decision === "rejected"
+            ? "rejected"
+            : remaining.length === 0
+              ? "approved"
+              : "pending";
+        const [updated] = await tx
+          .update(workHubApprovalRequestsTable)
+          .set({ status })
+          .where(eq(workHubApprovalRequestsTable.id, request.id))
+          .returning();
+        await appendWorkHubAudit(
+          {
+            actorUserId: session.userId,
+            owner: envelope.owner,
+            action: `approval.${payload.decision}`,
+            subjectType: "approval",
+            subjectId: request.id,
+            source: clientSource(req),
+            operationId: envelope.operationId,
+          },
+          tx,
+        );
+        return updated;
+      },
+    );
+    return res.json(result);
+  } catch (error) {
+    return failure(res, error);
+  }
+});
 router.post("/work-hub/tasks", async (req, res) => {
   const session = actor(req);
   if (!session)
@@ -310,13 +1067,11 @@ router.post("/work-hub/tasks", async (req, res) => {
             createdById: session.userId,
           })
           .returning();
-        await tx
-          .insert(workHubTaskEventsTable)
-          .values({
-            taskId: task.id,
-            actorUserId: session.userId,
-            eventType: "created",
-          });
+        await tx.insert(workHubTaskEventsTable).values({
+          taskId: task.id,
+          actorUserId: session.userId,
+          eventType: "created",
+        });
         return task;
       },
     );
@@ -364,11 +1119,7 @@ router.patch("/work-hub/tasks/:id", async (req, res) => {
         if (
           current.ownerOrgType !== envelope.owner.type ||
           current.ownerOrgId !== envelope.owner.id ||
-          !sessionCanSeeOwner(
-            session,
-            current.ownerOrgType,
-            current.ownerOrgId,
-          )
+          !sessionCanSeeOwner(session, current.ownerOrgType, current.ownerOrgId)
         )
           throw new WorkHubAccessError("not_found");
         if (
@@ -389,13 +1140,11 @@ router.patch("/work-hub/tasks/:id", async (req, res) => {
           })
           .where(eq(workHubTasksTable.id, current.id))
           .returning();
-        await tx
-          .insert(workHubTaskEventsTable)
-          .values({
-            taskId: current.id,
-            actorUserId: session.userId,
-            eventType: `status.${payload.status}`,
-          });
+        await tx.insert(workHubTaskEventsTable).values({
+          taskId: current.id,
+          actorUserId: session.userId,
+          eventType: `status.${payload.status}`,
+        });
         return updated;
       },
     );
@@ -446,14 +1195,12 @@ router.post("/work-hub/announcements", async (req, res) => {
             expiresAt: payload.expiresAt ? new Date(payload.expiresAt) : null,
           })
           .returning();
-        await tx
-          .insert(workHubAnnouncementRecipientsTable)
-          .values(
-            recipients.map((userId) => ({
-              announcementId: announcement.id,
-              userId,
-            })),
-          );
+        await tx.insert(workHubAnnouncementRecipientsTable).values(
+          recipients.map((userId) => ({
+            announcementId: announcement.id,
+            userId,
+          })),
+        );
         return announcement;
       },
     );
@@ -723,8 +1470,7 @@ router.post("/work-hub/shifts/:id/claim", async (req, res) => {
     .select()
     .from(workHubShiftsTable)
     .where(eq(workHubShiftsTable.id, req.params.id));
-  if (!shift)
-    return sendApiError(res, 404, "work_hub.not_found", "Not found");
+  if (!shift) return sendApiError(res, 404, "work_hub.not_found", "Not found");
   if (!sessionCanSeeOwner(session, shift.ownerOrgType, shift.ownerOrgId))
     return sendApiError(res, 404, "work_hub.not_found", "Not found");
   if (!shift.open)
@@ -751,16 +1497,14 @@ router.post("/work-hub/shifts/:id/claim", async (req, res) => {
       "work_hub.invalid_operation",
       "Shift was already claimed by this user",
     );
-  await db
-    .insert(workHubShiftRequestsTable)
-    .values({
-      shiftId: shift.id,
-      requestType: "claim",
-      requestedById: session.userId,
-      status: "approved",
-      decidedById: session.userId,
-      decidedAt: new Date(),
-    });
+  await db.insert(workHubShiftRequestsTable).values({
+    shiftId: shift.id,
+    requestType: "claim",
+    requestedById: session.userId,
+    status: "approved",
+    decidedById: session.userId,
+    decidedAt: new Date(),
+  });
   return res.status(201).json(assignment);
 });
 
@@ -823,15 +1567,13 @@ router.post("/work-hub/meetings", async (req, res) => {
             endsAt: payload.endsAt ? new Date(payload.endsAt) : null,
           })
           .returning();
-        await tx
-          .insert(workHubMeetingParticipantsTable)
-          .values(
-            participants.map((userId) => ({
-              occurrenceId: occurrence.id,
-              userId,
-              role: userId === session.userId ? "host" : "participant",
-            })),
-          );
+        await tx.insert(workHubMeetingParticipantsTable).values(
+          participants.map((userId) => ({
+            occurrenceId: occurrence.id,
+            userId,
+            role: userId === session.userId ? "host" : "participant",
+          })),
+        );
         return { meeting, occurrence };
       },
     );
@@ -1214,16 +1956,36 @@ router.get("/work-hub/connectors/microsoft-365", async (req, res) => {
     process.env.MICROSOFT_365_CLIENT_ID &&
     process.env.MICROSOFT_365_CLIENT_SECRET,
   );
-  return res.json({
-    enabled: false,
-    configured,
-    capability: "calendar.read",
-    mode: "read_only",
-    authoritativeSource: "vndrly",
-    status: configured
-      ? "awaiting_admin_connection"
-      : "external_registration_required",
-  });
+  return res.json(microsoftImportStatus(configured));
+});
+router.get("/work-hub/connectors/microsoft-365/imports", async (req, res) => {
+  const session = actor(req);
+  if (!session)
+    return sendApiError(
+      res,
+      401,
+      "auth.unauthenticated",
+      "Authentication required",
+    );
+  const batches = await db
+    .select()
+    .from(workHubImportBatchesTable)
+    .where(ownerFilterFor(session, workHubImportBatchesTable))
+    .orderBy(desc(workHubImportBatchesTable.createdAt))
+    .limit(50);
+  const items = batches.length
+    ? await db
+        .select()
+        .from(workHubImportItemsTable)
+        .where(
+          inArray(
+            workHubImportItemsTable.batchId,
+            batches.map((batch) => batch.id),
+          ),
+        )
+        .orderBy(desc(workHubImportItemsTable.importedAt))
+    : [];
+  return res.json({ batches, items });
 });
 router.post("/work-hub/connectors/microsoft-365/connect", async (req, res) => {
   const session = actor(req);
@@ -1246,7 +2008,12 @@ router.post("/work-hub/connectors/microsoft-365/connect", async (req, res) => {
     503,
     "work_hub.provider_unavailable",
     "Microsoft 365 registration is required before connection",
-    { capability: "calendar.read", safeDisabled: true },
+    {
+      capability: "staged_import",
+      direction: "microsoft_to_vndrly",
+      writeBack: false,
+      safeDisabled: true,
+    },
   );
 });
 

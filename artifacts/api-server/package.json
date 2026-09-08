@@ -23,6 +23,7 @@
     "migrate:work-hub-core": "node scripts/apply-work-hub-core-migration.mjs",
     "migrate:work-hub-domains": "node scripts/apply-work-hub-domains-migration.mjs",
     "migrate:work-hub-notifications": "node scripts/apply-work-hub-notifications-migration.mjs",
+    "migrate:work-hub-imports": "node scripts/apply-work-hub-imports-migration.mjs",
     "eval": "vitest run --config vitest.eval.config.ts",
     "eval:tool-use": "vitest run --config vitest.eval.config.ts src/assistant/__evals__/tool-use.eval.ts",
     "eval:tone": "vitest run --config vitest.eval.config.ts src/assistant/__evals__/tone.eval.ts",
