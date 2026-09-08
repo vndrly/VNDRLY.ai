@@ -51,6 +51,8 @@ import ticketSendToRouter from "./ticketSendTo";
 import ticketFlagsRouter from "./ticketFlags";
 import safetyRouter from "./safety";
 import majikRouter from "./majik";
+import workHubChannelsRouter from "./workHubChannels";
+import workHubEventsRouter from "./workHubEvents";
 
 const router: IRouter = Router();
 
@@ -120,5 +122,7 @@ router.use(assistantRouter);
 router.use(assistantRealtimeRouter);
 router.use(safetyRouter);
 router.use(majikRouter);
+router.use(workHubChannelsRouter);
+router.use(workHubEventsRouter);
 
 export default router;
