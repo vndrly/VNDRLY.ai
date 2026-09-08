@@ -99,6 +99,8 @@ const PrintHotlistPage = lazy(() => import("@/pages/print-hotlist"));
 const ForemanCrewMapPage = lazy(() => import("@/pages/foreman-crew-map"));
 const ForemanAnalytics = lazy(() => import("@/pages/foreman-analytics"));
 const Admin1099Transmitter = lazy(() => import("@/pages/admin-1099-transmitter"));
+const WorkHubPage = lazy(() => import("@/pages/work-hub"));
+const MarketingHome = lazy(() => import("@/pages/marketing-home"));
 
 function RouteFallback() {
   return (
@@ -230,8 +232,14 @@ function AuthenticatedRouter() {
         <Route path="/onboarding/partner" component={OnboardingPartner} />
         <Route path="/onboarding/vendor" component={OnboardingVendor} />
         <Route path="/onboarding/field/:token" component={OnboardingField} />
+        <Route path="/work-hub/:module"><Layout><WorkHubPage /></Layout></Route>
+        <Route path="/work-hub"><Layout><WorkHubPage /></Layout></Route>
+        {!user && <Route path="/" component={MarketingHome} />}
         {!user ? (
-          <Route path="/*splat" component={Login} />
+          <>
+            <Route path="/login" component={Login} />
+            <Route path="/*splat" component={Login} />
+          </>
         ) : user.role === "vendor" && user.vendorRole === "gatekeeper" ? (
           <GatePortalLayout>
             <Switch>

@@ -24,6 +24,14 @@ import {
   Bot,
   MailCheck,
   ClipboardList,
+  BriefcaseBusiness,
+  CalendarDays,
+  CheckSquare2,
+  Files,
+  Search,
+  Settings,
+  Video,
+  ArrowLeft,
 } from "lucide-react";
 import React, { Suspense, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -57,6 +65,7 @@ import { withGateLogNav, canViewGateLog } from "@/lib/gate-ops-nav";
 import { visitsApi } from "@/lib/visits-api";
 import { ACCOUNTING_ENABLED, TAX_REPORTING_ENABLED } from "@/lib/release-features";
 import AskVStatusIndicator from "@/components/askv-status-indicator";
+import { getWorkHubNavItems, getWorkHubReturnPath, isWorkHubPath } from "@/lib/work-hub-nav";
 
 const AssistantLauncher = React.lazy(() =>
   import("@/components/assistant-panel").then((mod) => ({
@@ -86,6 +95,7 @@ function useNavItems(user: {
     { href: "/site-locations", label: t("nav.siteLocations"), icon: MapPin, key: "site-locations" },
     { href: "/tickets", label: t("nav.tracking"), icon: FileText, key: "tracking" },
     { href: "/flagged", label: t("nav.flagged"), icon: Flag, key: "flagged" },
+    { href: "/work-hub", label: "Work Hub", icon: BriefcaseBusiness, key: "work-hub" },
   ];
   // Crew Map is only meaningful for vendor + admin (server returns 403 for partners).
   const crewMapItem = { href: "/crew-map", label: t("nav.crewMap"), icon: MapIcon, key: "crew-map" };
@@ -183,7 +193,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const { t } = useTranslation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const navItems = useNavItems(user);
+  const standardNavItems = useNavItems(user);
+  const inWorkHub = isWorkHubPath(location);
+  const workHubIcons = { home: LayoutDashboard, channels: MessageSquareOff, calendar: CalendarDays, files: Files, tasks: CheckSquare2, meetings: Video, search: Search, settings: Settings };
+  const navItems = inWorkHub ? getWorkHubNavItems(user?.role).map((item) => ({ ...item, icon: workHubIcons[item.key as keyof typeof workHubIcons] })) : standardNavItems;
   const { data: vendor } = useGetVendor(user?.vendorId ?? 0, { query: { enabled: user?.role === "vendor" && !!user.vendorId, queryKey: getGetVendorQueryKey(user?.vendorId ?? 0) } });
   const { data: partner } = useGetPartner(user?.partnerId ?? 0, { query: { enabled: user?.role === "partner" && !!user.partnerId, queryKey: getGetPartnerQueryKey(user?.partnerId ?? 0) } });
   const { data: vendorRatings } = useGetVendorRatings(user?.vendorId ?? 0, {
@@ -333,12 +346,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             FIXED_APP_CHROME && "min-h-0 overflow-y-auto",
           )}
         >
+          {inWorkHub && <Link href={getWorkHubReturnPath(sessionStorage.getItem("vndrly.workHub.returnPath"))} onClick={() => setSidebarOpen(false)}><SidebarButton isActive={false} activeOnHover testId="nav-back-to-vndrly" branded={branded} brandPrimary={brand.primary} brandAccent={brand.accent}><ArrowLeft className="h-4 w-4"/>Back to VNDRLY</SidebarButton></Link>}
           {navItems.map((item) => {
             const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
             const Icon = item.icon;
             return (
               <React.Fragment key={item.href}>
-                <Link href={item.href} onClick={() => setSidebarOpen(false)}>
+                <Link href={item.href} onClick={() => { if (item.key === "work-hub" && !inWorkHub) sessionStorage.setItem("vndrly.workHub.returnPath", location); setSidebarOpen(false); }}>
                   <SidebarButton isActive={isActive} testId={`nav-${item.key}`} branded={branded} brandPrimary={brand.primary} brandAccent={brand.accent}>
                     {Icon && <Icon className="w-4 h-4" />}
                     {item.label}

@@ -16,6 +16,7 @@ const labels: AppNavigationLabels = {
   scan: "Scan",
   schedule: "Schedule",
   voice: "Voice",
+  workHub: "Work Hub",
 };
 const badges = { home: 4, schedule: 3, comms: 2, flagged: 1 };
 const user = (role: string, vendorRole?: string): StoredUser => ({
@@ -51,6 +52,7 @@ describe("buildAppNavigation", () => {
     expect(items.map((entry) => entry.key)).toEqual([
       "askv",
       "index",
+      "work-hub",
       "schedule",
       "flagged",
       "crew-map",
@@ -81,6 +83,7 @@ describe("buildAppNavigation", () => {
     expect(items.map((entry) => entry.key)).toEqual([
       "askv",
       "index",
+      "work-hub",
       "schedule",
       "flagged",
       "scan",

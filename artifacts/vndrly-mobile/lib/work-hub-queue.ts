@@ -1,0 +1,6 @@
+export type QueuedWorkHubCommand = { idempotencyKey: string; path: string; payload: unknown; queuedAt: string };
+export type QueueStore = { getItem(key: string): Promise<string | null>; setItem(key: string, value: string): Promise<void> };
+const KEY = "vndrly.workHub.commandQueue.v1";
+async function read(store: QueueStore): Promise<QueuedWorkHubCommand[]> { try { const raw = await store.getItem(KEY); return raw ? JSON.parse(raw) : []; } catch { return []; } }
+export async function enqueueWorkHubCommand(store: QueueStore, path: string, payload: unknown) { const item = { idempotencyKey: `mobile-${Date.now()}-${Math.random().toString(36).slice(2)}`, path, payload, queuedAt: new Date().toISOString() }; await store.setItem(KEY, JSON.stringify([...(await read(store)), item])); return item; }
+export async function flushWorkHubCommands(store: QueueStore, send: (item: QueuedWorkHubCommand) => Promise<void>) { const pending = await read(store); const remaining: QueuedWorkHubCommand[] = []; for (const item of pending) { try { await send(item); } catch { remaining.push(item); } } await store.setItem(KEY, JSON.stringify(remaining)); return { sent: pending.length - remaining.length, remaining: remaining.length }; }

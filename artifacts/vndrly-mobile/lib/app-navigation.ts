@@ -29,6 +29,7 @@ export type AppNavigationLabels = {
   scan: string;
   schedule: string;
   voice: string;
+  workHub: string;
 };
 
 export type AppNavigationBadges = {
@@ -61,6 +62,7 @@ export function buildAppNavigation({
   const result: AppNavigationItem[] = [
     item("askv", "/(tabs)/askv", labels.askv, "zap", "askv"),
     { ...item("index", "/(tabs)", labels.home, "home"), badge: badges.home },
+    item("work-hub", "/(tabs)/work-hub", labels.workHub, "briefcase"),
     {
       ...item("schedule", "/(tabs)/schedule", labels.schedule, "calendar"),
       badge: badges.schedule,

@@ -54,6 +54,7 @@ import majikRouter from "./majik";
 import workHubChannelsRouter from "./workHubChannels";
 import workHubEventsRouter from "./workHubEvents";
 import workHubOperationsRouter from "./workHubOperations";
+import publicAskVRouter from "./publicAskV";
 
 const router: IRouter = Router();
 
@@ -126,5 +127,6 @@ router.use(majikRouter);
 router.use(workHubChannelsRouter);
 router.use(workHubEventsRouter);
 router.use(workHubOperationsRouter);
+router.use(publicAskVRouter);
 
 export default router;

@@ -43,6 +43,7 @@ export default function TabLayout() {
       scan: t("tabs.scan"),
       schedule: t("tabs.schedule"),
       voice: t("gatekeeper.voiceEntry"),
+      workHub: "Work Hub",
     }),
     [t, user],
   );
