@@ -1,5 +1,6 @@
 import { Switch, Route, Router as WouterRouter, useLocation, useRoute } from "wouter";
 import { lazy, Suspense, useEffect } from "react";
+const PayrollPage = lazy(() => import("@/pages/payroll"));
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,6 +8,7 @@ import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { AskVVoiceBoundary } from "@/hooks/use-askv-voice-session";
 import { BrandProvider } from "@/hooks/use-brand";
 import { ThemeProvider } from "@/hooks/use-theme";
+import { ACCOUNTING_ENABLED, TAX_REPORTING_ENABLED } from "@/lib/release-features";
 import { NotificationsModalProvider } from "@/components/notifications-modal-context";
 import Layout from "@/components/layout";
 import ContextPickerModal from "@/components/context-picker-modal";
@@ -163,6 +165,7 @@ function AdminRoutes() {
         <Route path="/crew-map/:id">{(params) => <CrewReplayPage employeeId={parseInt(params.id)} />}</Route>
         <Route path="/site-map" component={SiteMapPage} />
         <Route path="/gate-log" component={GateLogPage} />
+        <Route path="/payroll" component={PayrollPage} />
         <Route path="/catalog" component={Catalog} />
         <Route path="/catalog-health" component={CatalogHealth} />
         <Route path="/partner-catalog" component={PartnerCatalog} />
@@ -171,20 +174,20 @@ function AdminRoutes() {
         <Route path="/analytics/partner/:id">{(params) => <PartnerAnalytics partnerId={parseInt(params.id)} />}</Route>
         <Route path="/notifications/preferences" component={NotificationPreferencesPage} />
         <Route path="/notifications" component={NotificationsInboxPage} />
-        <Route path="/invoices" component={InvoicesPage} />
-        <Route path="/invoices/:id">{(params) => <InvoiceDetailPage id={parseInt(params.id)} />}</Route>
-        <Route path="/billing-settings/:vendorId/:partnerId">{(params) => <BillingSettingsPage vendorId={parseInt(params.vendorId)} partnerId={parseInt(params.partnerId)} />}</Route>
-        <Route path="/bills-to-pay" component={BillsToPayPage} />
-        <Route path="/statement" component={StatementPage} />
+        <Route path="/invoices" component={ACCOUNTING_ENABLED ? InvoicesPage : NotFound} />
+        <Route path="/invoices/:id">{(params) => ACCOUNTING_ENABLED ? <InvoiceDetailPage id={parseInt(params.id)} /> : <NotFound />}</Route>
+        <Route path="/billing-settings/:vendorId/:partnerId">{(params) => ACCOUNTING_ENABLED ? <BillingSettingsPage vendorId={parseInt(params.vendorId)} partnerId={parseInt(params.partnerId)} /> : <NotFound />}</Route>
+        <Route path="/bills-to-pay" component={ACCOUNTING_ENABLED ? BillsToPayPage : NotFound} />
+        <Route path="/statement" component={ACCOUNTING_ENABLED ? StatementPage : NotFound} />
         <Route path="/reports" component={ReportsPage} />
-        <Route path="/visitors" component={VisitorsPage} />
+        <Route path="/visitors"><VisitorsPage /></Route>
         <Route path="/visits/:id">{(params) => <VisitDetailPage id={params.id} />}</Route>
         <Route path="/admin/vndrly" component={AdminVndrly} />
         <Route path="/admin/rate-limits" component={AdminRateLimits} />
         <Route path="/admin/removed-comments" component={AdminRemovedComments} />
         <Route path="/admin/askv-audit" component={AdminAskVAudit} />
         <Route path="/admin/communications-health" component={AdminCommunicationsHealth} />
-        <Route path="/admin/1099-transmitter" component={Admin1099Transmitter} />
+        <Route path="/admin/1099-transmitter" component={TAX_REPORTING_ENABLED ? Admin1099Transmitter : NotFound} />
         <Route component={NotFound} />
         </Switch>
       </Suspense>

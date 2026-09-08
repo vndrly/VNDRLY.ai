@@ -44,6 +44,7 @@ export const siteVisitsTable = pgTable(
     platePhotoUrl: text("plate_photo_url"),
     vehiclePhotoUrl: text("vehicle_photo_url"),
     purpose: text("purpose"),
+    entryCategory: text("entry_category"),
     notes: text("notes"),
     checkOutNotes: text("check_out_notes"),
     admissionStatus: text("admission_status"),

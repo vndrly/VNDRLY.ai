@@ -55,6 +55,7 @@ import {
 import { OnboardingProgressBanner } from "@/components/finish-setup-widget";
 import { withGateLogNav, canViewGateLog } from "@/lib/gate-ops-nav";
 import { visitsApi } from "@/lib/visits-api";
+import { ACCOUNTING_ENABLED, TAX_REPORTING_ENABLED } from "@/lib/release-features";
 import AskVStatusIndicator from "@/components/askv-status-indicator";
 
 const AssistantLauncher = React.lazy(() =>
@@ -94,7 +95,11 @@ function useNavItems(user: {
   const billsItem = { href: "/bills-to-pay", label: t("nav.billsToPay"), icon: Wallet, key: "bills-to-pay" };
   const reportsItem = { href: "/reports", label: t("nav.reports"), icon: BookOpen, key: "reports" };
   const wrap = (items: Array<{ href: string; label: string; key: string; icon?: React.ComponentType<{ className?: string }> }>) =>
-    withGateLogNav(items, {
+    withGateLogNav(items.filter((item) => {
+      if (item.key === "admin-1099-transmitter") return TAX_REPORTING_ENABLED;
+      if (["invoices", "statements", "bills-to-pay"].includes(item.key)) return ACCOUNTING_ENABLED;
+      return true;
+    }), {
       user,
       gatekeepingEnabled: gateEnabled.data?.enabled === true,
       label: t("nav.gateLog"),

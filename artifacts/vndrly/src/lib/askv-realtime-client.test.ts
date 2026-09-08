@@ -3,6 +3,9 @@ import { createAskVRealtimeClient, type AskVRealtimeClient } from './askv-realti
 import { getAskVMicrophoneState } from './askv-microphone';
 class FakeChannel {
   readyState = 'open'; bufferedAmount = 0;
+  onopen: (() => void) | null = null;
+  onclose: (() => void) | null = null;
+  onerror: (() => void) | null = null;
   onmessage: ((event: { data: string }) => void) | null = null;
   sent: Array<Record<string, any>> = [];
   send(data: string) { this.sent.push(JSON.parse(data)); }
@@ -26,6 +29,36 @@ describe('realtime transport lifecycle', () => {
     Object.defineProperty(navigator, 'mediaDevices', { configurable: true, value: { getUserMedia: vi.fn(async () => ({ getTracks: () => [track] })) } });
   });
   afterEach(() => { client?.close(); vi.restoreAllMocks(); });
+  it('waits for the data channel before reporting a ready connection', async () => {
+    peer.channel.readyState = 'connecting';
+    client = await createAskVRealtimeClient({ onToolCall: async () => '' });
+    let ready = false;
+    const pending = client.connect().then(() => { ready = true; });
+    await vi.waitFor(() => expect(peer.channel.onopen).toBeTypeOf('function'));
+    expect(ready).toBe(false);
+    peer.channel.readyState = 'open'; peer.channel.onopen?.();
+    await pending; expect(ready).toBe(true);
+  });
+  it.each(['close', 'error'] as const)('rejects a pending channel %s without waiting for timeout', async event => {
+    peer.channel.readyState = 'connecting';
+    const onError = vi.fn();
+    client = await createAskVRealtimeClient({ onToolCall: async () => '', onError });
+    const pending = client.connect();
+    const rejected = expect(pending).rejects.toMatchObject({ name: 'AbortError' });
+    await vi.waitFor(() => expect(peer.channel.onopen).toBeTypeOf('function'));
+    if (event === 'close') peer.channel.onclose?.(); else peer.channel.onerror?.();
+    await rejected;
+    expect(track.stop).toHaveBeenCalledOnce(); expect(onError).toHaveBeenCalledOnce();
+  });
+  it('cancels a pending channel connection and releases the microphone on close', async () => {
+    peer.channel.readyState = 'connecting';
+    client = await createAskVRealtimeClient({ onToolCall: async () => '' });
+    const pending = client.connect();
+    const rejected = expect(pending).rejects.toMatchObject({ name: 'AbortError' });
+    await vi.waitFor(() => expect(peer.channel.onopen).toBeTypeOf('function'));
+    client.close(); await rejected;
+    expect(track.stop).toHaveBeenCalledOnce();
+  });
   it('captures the selected headset instead of the browser default', async () => {
     localStorage.setItem('askv:microphone-device', 'wired-headset');
     client = await createAskVRealtimeClient({ onToolCall: async () => '' });

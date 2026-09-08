@@ -71,7 +71,9 @@ jobs:
           cd "$APP_DIR"
           sudo -u vndrly git remote set-url origin https://github.com/vndrly/VNDRLY.ai.git
           sudo -u vndrly git fetch origin main
-          sudo -u vndrly git reset --hard "$EXPECTED_SHA"
+          sudo -u vndrly git diff --exit-code --quiet
+          sudo -u vndrly git diff --cached --exit-code --quiet
+          sudo -u vndrly git switch --detach "$EXPECTED_SHA"
           actual="$(sudo -u vndrly git rev-parse HEAD)"
           if [ "$actual" != "$EXPECTED_SHA" ]; then
             echo "VPS HEAD $actual does not match $EXPECTED_SHA" >&2
@@ -87,6 +89,9 @@ jobs:
           fi
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:plate-state
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:notes-admission
+          sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:vendor-note-ownership
+          sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:visit-entry-category
+          sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" APPLY_PARTNER_OWNED_CATALOGS=1 pnpm --filter @workspace/api-server run migrate:partner-owned-catalogs
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:assistant-action-audit
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:askv-greeting
           unset database_url

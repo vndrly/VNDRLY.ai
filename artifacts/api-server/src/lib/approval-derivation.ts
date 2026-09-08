@@ -161,39 +161,8 @@ export function deriveStatus(input: DeriveStatusInput): DeriveStatusResult {
     };
   }
 
-  // Vendor catalog version comparison. Once the vendor publishes a
-  // fresh cut, every partner pointing at the previous version is
-  // dropped to `auto_unapproved` until they re-accept the new EULA.
-  // A partner who is still on the current cut AND has a matching
-  // EULA acceptance promotes to `approved`.
-  const onCurrentVersion =
-    input.vendorCurrentCatalogVersionId !== null &&
-    input.approvedCatalogVersionId === input.vendorCurrentCatalogVersionId;
-
-  if (input.currentStatus === "approved" && !onCurrentVersion) {
-    return {
-      status: "auto_unapproved",
-      reason: "vendor_catalog_published",
-      reasonDetail: {
-        previousVersionId: input.approvedCatalogVersionId,
-        currentVersionId: input.vendorCurrentCatalogVersionId,
-      },
-    };
-  }
-  if (
-    input.currentStatus === "approved" &&
-    onCurrentVersion &&
-    !input.hasCurrentEulaAcceptance
-  ) {
-    // Edge case: rel was promoted before EULA was bound to a version
-    // (legacy data). Drop to auto_unapproved so the partner gets the
-    // re-acceptance prompt.
-    return {
-      status: "auto_unapproved",
-      reason: "vendor_catalog_published",
-      reasonDetail: { missingEulaAcceptance: true },
-    };
-  }
+  // Partner-owned service prices do not revoke another partner's approval.
+  // Explicit promotion still requires recorded EULA acceptance in the route.
 
   // Hold the existing state when nothing forces a change. The route
   // layer's "promote on EULA accept" path is what flips

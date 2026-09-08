@@ -14,6 +14,7 @@ export type VisitorRow = {
   platePhotoUrl: string | null;
   vehiclePhotoUrl: string | null;
   purpose: string | null;
+  entryCategory?: "visitor" | "routine_vendor_work" | "partner_admin" | "vendor_admin" | null;
   notes?: string | null;
   checkOutNotes?: string | null;
   admissionStatus?: "pending" | "admitted";
@@ -165,6 +166,7 @@ export const visitsApi = {
     from?: string;
     to?: string;
     activeOnly?: boolean;
+    overlap?: boolean;
     limit?: number;
     offset?: number;
   }) => {
@@ -174,6 +176,7 @@ export const visitsApi = {
     if (params?.from) qs.push(`from=${encodeURIComponent(params.from)}`);
     if (params?.to) qs.push(`to=${encodeURIComponent(params.to)}`);
     if (params?.activeOnly) qs.push("activeOnly=true");
+    if (params?.overlap) qs.push("overlap=true");
     if (params?.limit) qs.push(`limit=${params.limit}`);
     if (params?.offset) qs.push(`offset=${params.offset}`);
     return jf<VisitorRow[]>(
@@ -191,7 +194,7 @@ export const visitsApi = {
       `/api/visits/sites/${siteId}/preferred-plate-states${proof}`,
     );
   },
-  listPublicSites: () => jf<PublicSite[]>(`/api/visits/public-sites`),
+  listPublicSites: (siteCode: string) => jf<PublicSite[]>(`/api/visits/public-sites?siteCode=${encodeURIComponent(siteCode)}`),
   startGuestSession: (input: {
     firstName: string;
     lastName: string;
@@ -245,6 +248,7 @@ export const visitsApi = {
     hostPartnerId?: number;
     hostVendorId?: number;
     purpose?: string;
+    entryCategory?: VisitorRow["entryCategory"];
     notes?: string;
     expectedDurationMinutes?: number;
     vehiclePlate?: string;
@@ -263,6 +267,8 @@ export const visitsApi = {
       method: "POST",
       body: JSON.stringify({ latitude, longitude, notes }),
     }),
+  setEntryCategory: (id: number, entryCategory: VisitorRow["entryCategory"]) =>
+    jf<{ id: number; entryCategory: VisitorRow["entryCategory"] }>(`/api/visits/${id}/entry-category`, { method: "PATCH", body: JSON.stringify({ entryCategory }) }),
   gateAdmit: (id: number) =>
     jf<VisitorRow>(`/api/visits/gate/${id}/admit`, {
       method: "POST",
@@ -302,11 +308,15 @@ export async function listAllVisits(params?: {
   from?: string;
   to?: string;
   activeOnly?: boolean;
+  overlap?: boolean;
 }): Promise<VisitorRow[]> {
   const rows: VisitorRow[] = [];
   const pageSize = 1000;
+  // Historical visitor browsing is bounded by default; Gate Log exports use
+  // the immutable combined report service instead of polling every old visit.
+  const boundedParams = { ...params, from: params?.from || new Date(Date.now() - 7 * 86_400_000).toISOString(), to: params?.to || new Date().toISOString() };
   for (let offset = 0; ; offset += pageSize) {
-    const page = await visitsApi.list({ ...params, limit: pageSize, offset });
+    const page = await visitsApi.list({ ...boundedParams, limit: pageSize, offset });
     rows.push(...page);
     if (page.length < pageSize) return rows;
   }

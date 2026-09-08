@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
 import type { FeatureCollection, Position } from "geojson";
 import mapboxgl, { type GeoJSONSource, type LngLatBoundsLike, type Map as MapboxMapInstance } from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import "./mapbox-map.css";
-import { getMapboxStyleUrl, readMapboxAccessToken, type MapboxMapStyle } from "@/lib/maps";
+import { getMapboxStyleUrl, loadMapboxAccessToken, readMapboxAccessToken, type MapboxMapStyle } from "@/lib/maps";
 
 export type MapboxPoint = {
   id: string;
@@ -127,7 +128,13 @@ export function MapboxMap({
   scrollZoom = true,
   onPointDrag,
 }: Props) {
-  const token = readMapboxAccessToken();
+  const configuration = useQuery({
+    queryKey: ["public-map-configuration"],
+    queryFn: loadMapboxAccessToken,
+    staleTime: 60_000,
+    retry: 1,
+  });
+  const token = configuration.data || readMapboxAccessToken();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapboxMapInstance | null>(null);
   const markerRefs = useRef<Map<string, mapboxgl.Marker>>(new Map());
@@ -138,6 +145,8 @@ export function MapboxMap({
     const first = points.find((p) => isValidLatLng(p.latitude, p.longitude));
     return first ? [first.longitude, first.latitude] : [-98.35, 39.5];
   }, [center, points]);
+  const initialCenterRef = useRef(initialCenter);
+  initialCenterRef.current = initialCenter;
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current || !token) return;
@@ -145,7 +154,7 @@ export function MapboxMap({
     const map = new mapboxgl.Map({
       container: containerRef.current,
       style: getMapboxStyleUrl(styleKind),
-      center: initialCenter,
+      center: initialCenterRef.current,
       zoom,
       attributionControl: true,
     });
@@ -191,11 +200,7 @@ export function MapboxMap({
       map.remove();
       mapRef.current = null;
     };
-  }, [initialCenter, scrollZoom, styleKind, token, zoom]);
-
-  useEffect(() => {
-    mapRef.current?.setStyle(getMapboxStyleUrl(styleKind));
-  }, [styleKind]);
+  }, [scrollZoom, styleKind, token, zoom]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -234,7 +239,7 @@ export function MapboxMap({
     };
     if (map.isStyleLoaded()) syncLayers();
     else map.once("load", syncLayers);
-  }, [circles, lines, styleKind]);
+  }, [circles, lines, styleKind, token, initialCenter, scrollZoom, zoom]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -285,7 +290,7 @@ export function MapboxMap({
         marker.setPopup(new mapboxgl.Popup({ offset: 18 }).setHTML(point.popupHtml));
       }
     }
-  }, [onPointDrag, points, selectedPointId]);
+  }, [onPointDrag, points, selectedPointId, token, initialCenter, scrollZoom, styleKind, zoom]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -307,7 +312,7 @@ export function MapboxMap({
     if (count === 0) return;
     if (count === 1) map.easeTo({ center: bounds.getCenter(), zoom });
     else map.fitBounds(bounds as LngLatBoundsLike, { padding: 36, maxZoom: 17 });
-  }, [fitToData, lines, points, zoom]);
+  }, [fitToData, lines, points, zoom, token, initialCenter, scrollZoom, styleKind]);
 
   const containerStyle: React.CSSProperties = {
     height: typeof height === "number" ? `${height}px` : height,
@@ -316,7 +321,7 @@ export function MapboxMap({
   if (!token) {
     return (
       <div className={`flex items-center justify-center bg-muted text-sm text-muted-foreground ${className ?? ""}`} style={containerStyle}>
-        Mapbox is not configured.
+        {configuration.isPending ? "Loading map..." : configuration.isError ? "Map configuration unavailable." : "Mapbox is not configured."}
       </div>
     );
   }

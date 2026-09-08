@@ -1,9 +1,12 @@
 import * as React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 const getVisit = vi.hoisted(() => vi.fn());
+const setEntryCategory = vi.hoisted(() => vi.fn().mockResolvedValue({ id: 88, entryCategory: "vendor_admin" }));
+vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: { userId: 1, role: "partner", partnerId: 7 } }) }));
+vi.mock("@/components/png-pill-rollover", () => ({ PngPillButton: ({ color: _color, children, ...props }: any) => <button {...props}>{children}</button> }));
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (key: string) => key }),
@@ -12,7 +15,7 @@ vi.mock("wouter", () => ({
   Link: ({ href, children }: { href: string; children: React.ReactNode }) =>
     React.createElement("a", { href }, children),
 }));
-vi.mock("@/lib/visits-api", () => ({ visitsApi: { get: getVisit } }));
+vi.mock("@/lib/visits-api", () => ({ visitsApi: { get: getVisit, setEntryCategory } }));
 
 import VisitDetailPage from "./visit-detail";
 
@@ -58,5 +61,8 @@ describe("VisitDetailPage plate display", () => {
     );
 
     expect((await screen.findByTestId("visit-detail")).textContent).toContain("TX • ABC123");
+    fireEvent.change(screen.getByLabelText("gateReport.category"), { target: { value: "vendor_admin" } });
+    fireEvent.click(screen.getByRole("button", { name: "gateReport.saveCategory" }));
+    await waitFor(() => expect(setEntryCategory).toHaveBeenCalledWith(88, "vendor_admin"));
   });
 });

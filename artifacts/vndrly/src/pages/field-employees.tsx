@@ -344,6 +344,7 @@ export default function FieldEmployees() {
 
   const [officeSort, setOfficeSort] = useState<{ key: SortKey; dir: SortDir }>({ key: "name", dir: "asc" });
   const [fieldSort, setFieldSort] = useState<{ key: SortKey; dir: SortDir }>({ key: "name", dir: "asc" });
+  const [gateSort, setGateSort] = useState<{ key: SortKey; dir: SortDir }>({ key: "name", dir: "asc" });
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
 
   const isAdmin = user?.role === "admin";
@@ -391,7 +392,12 @@ export default function FieldEmployees() {
     if (statusFilter === "inactive") return rows.filter((r) => r.isActive === false);
     return rows;
   };
-  const sortedOffice = useMemo(() => sortRows(filterByStatus((officeEmployees ?? []) as PersonRow[]), officeSort), [officeEmployees, officeSort, statusFilter]);
+  const sortedOffice = useMemo(() => sortRows(filterByStatus((officeEmployees ?? []).filter((person) => person.vendorRole !== "gatekeeper") as PersonRow[]), officeSort), [officeEmployees, officeSort, statusFilter]);
+  const sortedGate = useMemo(() => {
+    const people = [...(officeEmployees ?? []), ...(fieldEmployees ?? [])] as PersonRow[];
+    const gate = Array.from(new Map(people.filter((person) => person.vendorRole === "gatekeeper").map((person) => [person.id, person])).values());
+    return sortRows(filterByStatus(gate), gateSort);
+  }, [officeEmployees, fieldEmployees, gateSort, statusFilter]);
   const sortedField = useMemo(() => sortRows(filterByStatus((fieldEmployees ?? []) as PersonRow[]), fieldSort), [fieldEmployees, fieldSort, statusFilter]);
 
   const handleAdd = (e: React.FormEvent, defaultRole: string) => {
@@ -448,7 +454,7 @@ export default function FieldEmployees() {
     ["language", t("fieldEmployees.language"), "w-[80px]"],
   ];
 
-  const renderRow = (p: PersonRow, kind: "office" | "field") => {
+  const renderRow = (p: PersonRow, kind: "office" | "field" | "gate") => {
     const avatarUrl = resolveAvatarUrl(p);
     const avatar = avatarUrl ? (
       <img
@@ -731,6 +737,23 @@ export default function FieldEmployees() {
               ) : (
                 <div className="p-8 text-center text-muted-foreground"><p>{t("fieldEmployees.noField")}</p></div>
               )}
+            </CardContent>
+          </Card>
+
+          <Card data-testid="gate-employees-section">
+            <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2">
+              <CardTitle className="flex items-center gap-2"><UserCheck className="w-5 h-5" style={iconStyle} />{t("fieldEmployees.gateEmployees")} ({sortedGate.length})</CardTitle>
+              {isVendor && <PngPillButton color="image" activeSrc={brandImagePillSrc(brand.primary, brand.name)} onClick={() => { setForm((value) => ({ ...value, vendorRole: "gatekeeper" })); setAddOpen(true); }} aria-label={t("fieldEmployees.addGateEmployee")}>
+                <Plus className="h-4 w-4" />{t("fieldEmployees.addGateEmployee")}
+              </PngPillButton>}
+            </CardHeader>
+            <CardContent className="p-0">
+              {isLoadingOffice || isLoadingField ? <div className="p-6"><Skeleton className="h-10 w-full" /></div> : sortedGate.length ? (
+                <Table>
+                  {renderHeader(officeCols, gateSort, setGateSort)}
+                  <TableBody>{sortedGate.map((person) => renderRow(person, "gate"))}</TableBody>
+                </Table>
+              ) : <div className="p-6 text-center text-muted-foreground text-sm">{t("fieldEmployees.noGateEmployees")}</div>}
             </CardContent>
           </Card>
 

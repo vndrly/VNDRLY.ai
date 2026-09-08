@@ -154,7 +154,8 @@ describe("Gate Log page", () => {
     expect(screen.getByTestId("gate-log-on-site").textContent).toContain("Sam Visitor");
     expect(screen.getByTestId("gate-log-staff").textContent).toContain("Riley Gate");
     expect(screen.getByTestId("gate-log-staff").textContent).toContain("Winchester");
-    expect(screen.getByTestId("gate-log-recommendations").textContent).toMatch(/watchlist|Watchlist|placa/i);
+    expect(screen.getByTestId("gate-log-recommendations").textContent).toContain("Awaiting admission: 0");
+    expect(screen.getByTestId("gate-log-recommendations").textContent).toContain("Overdue: 1");
     expect(screen.getByTestId("gate-log-visits-by-day")).toBeTruthy();
     expect(screen.getByTestId("gate-log-top-companies").textContent).toContain("Acme Pump");
     expect(screen.getByTestId("gate-log-history").textContent).toContain("OK • OK-GATE1");

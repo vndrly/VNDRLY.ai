@@ -744,7 +744,7 @@ router.get("/field-employees/:id/day-track", async (req: Request, res: Response)
     return;
   }
   if (session.role === "vendor") {
-    if (session.vendorId !== emp.vendorId) {
+    if (!session.vendorId || session.vendorId !== emp.vendorId) {
       res.status(403).json({ code: "visitor.wrong_vendor", error: "wrong_vendor" });
       return;
     }
@@ -796,9 +796,12 @@ router.get("/field-employees/:id/day-track", async (req: Request, res: Response)
     })
     .from(gpsLogsTable)
     .innerJoin(ticketsTable, eq(ticketsTable.id, gpsLogsTable.ticketId))
+    .innerJoin(siteLocationsTable, eq(siteLocationsTable.id, ticketsTable.siteLocationId))
     .where(
       and(
         eq(ticketsTable.fieldEmployeeId, employeeId),
+        ...(session.role === "partner" ? [eq(siteLocationsTable.partnerId, session.partnerId!)] : []),
+        ...(["vendor", "field_employee"].includes(session.role) ? [eq(ticketsTable.vendorId, session.vendorId!)] : []),
         gte(gpsLogsTable.recordedAt, start),
         sql`${gpsLogsTable.recordedAt} < ${end}`,
       ),

@@ -734,6 +734,23 @@ export const TOOLS: Anthropic.Tool[] = [
     },
   },
   {
+    name: "query_gate_report",
+    description: "Authorized Gate Log snapshot combining visitor entries and employee ticket check-ins. Defaults to seven days, maximum 31 days, half-open overlap [from,to). Totals cover the entire filtered snapshot; rows are paginated: use snapshotId and nextOffset to continue. Identities mean employee IDs or guest sessions, not deduplicated people. Visitor categories reflect explicit staff entries only; legacy missing categories remain unclassified. Security screening is not recorded. Never infer roles from purpose text or claim their absence from missing evidence. Employee check-ins represent routine vendor work.",
+    input_schema: {
+      type: "object",
+      properties: {
+        from: { type: "string", description: "ISO timestamp with timezone" },
+        to: { type: "string", description: "Exclusive ISO timestamp with timezone" },
+        siteLocationId: { type: "number" }, partnerId: { type: "number" },
+        company: { type: "string" }, purpose: { type: "string" },
+        category: { type: "string", enum: ["all", "routine_vendor_work", "unclassified", "visitor", "partner_admin", "vendor_admin"] },
+        recordKind: { type: "string", enum: ["all", "visitor", "employee_checkin"], description: "Filter visitor records independently of unrecorded historical roles" },
+        snapshotId: { type: "string" }, offset: { type: "number" },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
     name: "get_stock_quote",
     description:
       "Returns the latest US equity quote for a ticker symbol. Use for questions like 'what is Exxon trading at?' — pass symbol XOM (not the company name). Finnhub is preferred when FINNHUB_API_KEY is set (near real-time); otherwise falls back to Alpha Vantage end-of-day GLOBAL_QUOTE. Available to all signed-in users; not scoped to org data.",

@@ -33,7 +33,7 @@ import RemovePill from "@/components/remove-pill";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { resolveEulaDisplayText } from "@workspace/platform-eula";
+import { resolveEulaDisplayText, PLATFORM_EULA_TEXT } from "@workspace/platform-eula";
 import { cn } from "@/lib/utils";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -203,12 +203,12 @@ function ApproveModal({
   const promote = useMutation({
     mutationFn: async () => {
       // 1) Record EULA acceptance pinned to the version id we showed.
-      if (current?.id) {
+      if (currentData) {
         await jsonFetch(
           `/api/partners/${partnerId}/vendor-relationships/${vendor.vendorId}/accept-eula`,
           {
             method: "POST",
-            body: JSON.stringify({ catalogVersionId: current.id }),
+            body: JSON.stringify({ catalogVersionId: current?.id ?? null }),
           },
         );
       }
@@ -244,7 +244,7 @@ function ApproveModal({
       }),
   });
 
-  const canSubmit = eulaAccepted && !promote.isPending && !loadingCurrent;
+  const canSubmit = !!currentData && eulaAccepted && !promote.isPending && !loadingCurrent;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -265,22 +265,15 @@ function ApproveModal({
             </Label>
             {loadingCurrent ? (
               <Skeleton className="h-24 w-full" />
-            ) : !current ? (
-              <p
-                className="text-sm text-muted-foreground"
-                data-testid="text-no-catalog-version"
-              >
-                {t("approvals.noCatalogVersion")}
-              </p>
             ) : (
               <>
-                <div className="text-xs text-muted-foreground">
+                {current && <div className="text-xs text-muted-foreground">
                   {t("approvals.eulaVersionLabel", {
                     version: current.version,
                     publishedAt: fmt(current.publishedAt),
                   })}
-                </div>
-                {current.changeSummary ? (
+                </div>}
+                {current?.changeSummary ? (
                   <div className="text-xs italic text-muted-foreground">
                     “{current.changeSummary}”
                   </div>
@@ -289,7 +282,7 @@ function ApproveModal({
                   className="whitespace-pre-wrap text-xs border rounded-md bg-background p-2 max-h-48 overflow-y-auto"
                   data-testid="text-eula-body"
                 >
-                  {resolveEulaDisplayText(current.eulaText)}
+                  {resolveEulaDisplayText(current?.eulaText ?? PLATFORM_EULA_TEXT)}
                 </pre>
                 <label className="flex items-start gap-2 text-sm pt-1">
                   <Checkbox

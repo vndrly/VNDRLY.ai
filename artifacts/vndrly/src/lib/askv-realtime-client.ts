@@ -68,7 +68,7 @@ export async function createAskVRealtimeClient(args: RealtimeClientOptions): Pro
     closed = true; connected = false; controller.abort(); args.signal?.removeEventListener('abort', close);
     clearTimeout(openTimer); rejectOpen?.(new DOMException('Cancelled', 'AbortError')); rejectOpen = undefined;
     meter?.stop(); unsubscribe?.(); void args.audioSource?.stop(); stream?.getTracks().forEach(track => { track.onended = null; track.stop(); }); void release?.();
-    channel.onmessage = null; channel.onopen = null; channel.onclose = null;
+    channel.onmessage = null; channel.onopen = null; channel.onclose = null; channel.onerror = null;
     if (channel.readyState !== 'closed') channel.close();
     pc.ontrack = null; pc.onconnectionstatechange = null; pc.close();
     audio.pause(); audio.srcObject = null; resampler.clear(); audioPacket.fill(0); audioPacketLength = 0; calls.clear(); transcripts.clear();
@@ -81,7 +81,8 @@ export async function createAskVRealtimeClient(args: RealtimeClientOptions): Pro
     void audio.play().catch(() => fail('Tap AskV to enable voice playback.'));
   };
   pc.onconnectionstatechange = () => { if (['failed', 'disconnected'].includes(pc.connectionState)) fail('AskV voice disconnected. Please open it again.'); };
-  channel.onclose = () => { if (connected) fail('AskV voice disconnected.'); };
+  channel.onclose = () => fail('AskV voice disconnected.');
+  channel.onerror = () => fail('AskV voice connection failed.');
   const transcript = (eventId: string, role: VoiceTranscript['role'], content: unknown) => {
     if (!eventId || typeof content !== 'string' || !content.trim() || transcripts.has(eventId)) return;
     transcripts.add(eventId); args.onTranscript?.({ eventId, role, content });

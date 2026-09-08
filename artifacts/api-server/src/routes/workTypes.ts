@@ -8,10 +8,11 @@ import {
   workTypeSiteLocationsTable,
   siteLocationsTable,
   partnersTable,
+  partnerVendorRelationshipsTable,
 } from "@workspace/db";
-import { eq, asc, inArray, isNull, sql } from "drizzle-orm";
+import { eq, asc, inArray, isNull, sql, and } from "drizzle-orm";
 import { ListWorkTypesResponse } from "@workspace/api-zod";
-import { requireAdmin, requireSession } from "../lib/session";
+import { requireAdmin, requireSession, getSessionFromRequest } from "../lib/session";
 import { sendApiError } from "../lib/apiError";
 
 import { sendValidationFailed } from "../lib/validation-error";
@@ -68,8 +69,22 @@ async function handleWorkTypeNameConflict(
 
 router.get("/work-types", requireSession, async (req, res): Promise<void> => {
   const scope = String(req.query.scope ?? "");
+  const session = getSessionFromRequest(req)!;
+  let partnerIds: number[] = [];
+  if (session.role === "partner" && session.partnerId) partnerIds = [session.partnerId];
+  if (session.role === "vendor" && session.vendorId) {
+    const relationships = await db.select({ partnerId: partnerVendorRelationshipsTable.partnerId })
+      .from(partnerVendorRelationshipsTable).where(and(
+        eq(partnerVendorRelationshipsTable.vendorId, session.vendorId),
+        eq(partnerVendorRelationshipsTable.status, "approved")));
+    partnerIds = relationships.map(row => row.partnerId);
+  }
   const workTypes =
-    scope === "platform"
+    session.role !== "admin"
+      ? partnerIds.length ? await db.select().from(workTypesTable)
+          .where(inArray(workTypesTable.partnerId, partnerIds))
+          .orderBy(workTypesTable.category, workTypesTable.name) : []
+      : scope === "platform"
       ? await db
           .select()
           .from(workTypesTable)
@@ -80,14 +95,16 @@ router.get("/work-types", requireSession, async (req, res): Promise<void> => {
           .from(workTypesTable)
           .orderBy(workTypesTable.category, workTypesTable.name);
 
-  const vendorLinks = await db
+  const vendorLinks = workTypes.length ? await db
     .select({
       workTypeId: vendorWorkTypesTable.workTypeId,
       vendorId: vendorsTable.id,
       vendorName: vendorsTable.name,
     })
     .from(vendorWorkTypesTable)
-    .innerJoin(vendorsTable, eq(vendorWorkTypesTable.vendorId, vendorsTable.id));
+    .innerJoin(vendorsTable, eq(vendorWorkTypesTable.vendorId, vendorsTable.id))
+    .where(and(inArray(vendorWorkTypesTable.workTypeId, workTypes.map(row => row.id)),
+      session.role === "vendor" ? eq(vendorWorkTypesTable.vendorId, session.vendorId!) : undefined)) : [];
 
   const vendorMap = new Map<number, { id: number; name: string }[]>();
   for (const vl of vendorLinks) {
@@ -208,7 +225,8 @@ router.post("/work-types/import", requireAdmin, async (req, res): Promise<void> 
   // existing canonical match differs only in case/whitespace would fall through
   // to an INSERT that now hits the unique-violation.
   const canonical = (s: string): string => s.trim().toLowerCase();
-  const allWorkTypes = await db.select({ id: workTypesTable.id, name: workTypesTable.name }).from(workTypesTable);
+  const allWorkTypes = await db.select({ id: workTypesTable.id, name: workTypesTable.name }).from(workTypesTable)
+    .where(isNull(workTypesTable.partnerId));
   const workTypeByCanonical = new Map<string, number>();
   for (const wt of allWorkTypes) workTypeByCanonical.set(canonical(wt.name), wt.id);
 
@@ -310,6 +328,11 @@ router.get(
   "/work-types/:id/site-locations",
   requireSession,
   async (req, res): Promise<void> => {
+    const session = getSessionFromRequest(req)!;
+    if (session.role !== "admin" && session.role !== "partner" && session.role !== "vendor") {
+      sendApiError(res, 403, "auth.forbidden", "Forbidden");
+      return;
+    }
     const id = parseInt(String(req.params.id), 10);
     if (isNaN(id)) {
       sendApiError(res, 400, "work_type.invalid_id", "Invalid work type id");
@@ -332,7 +355,9 @@ router.get(
         partnersTable,
         eq(siteLocationsTable.partnerId, partnersTable.id),
       )
-      .where(eq(workTypeSiteLocationsTable.workTypeId, id))
+      .where(and(eq(workTypeSiteLocationsTable.workTypeId, id),
+        session.role === "partner" ? eq(siteLocationsTable.partnerId, session.partnerId ?? -1) : undefined,
+        session.role === "vendor" ? sql`EXISTS (SELECT 1 FROM site_work_assignments assignment WHERE assignment.site_location_id = ${siteLocationsTable.id} AND assignment.vendor_id = ${session.vendorId ?? -1})` : undefined))
       .orderBy(asc(siteLocationsTable.id));
     res.json({ items: rows });
   },

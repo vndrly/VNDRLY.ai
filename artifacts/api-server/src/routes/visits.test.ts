@@ -115,6 +115,7 @@ const tables = {
     "notes",
     "checkOutNotes",
     "admissionStatus",
+    "entryCategory",
     "expectedDurationMinutes",
     "hostType",
     "hostPartnerId",
@@ -135,6 +136,7 @@ const tables = {
     "id",
     "name",
     "address",
+    "state",
     "siteCode",
     "latitude",
     "longitude",
@@ -754,6 +756,29 @@ async function startGuest(extras: Partial<Row> = {}) {
     body: res.body,
   };
 }
+
+describe("public site lookup isolation", () => {
+  it("never lists the public directory without an exact code", async () => {
+    seedScenario();
+    const response = await request(app).get("/api/visits/public-sites");
+    expectStatus(response, 200);
+    expect(response.body).toEqual([]);
+  });
+
+  it("returns only the site named by the visitor's code", async () => {
+    seedScenario();
+    const response = await request(app).get("/api/visits/public-sites?siteCode=SITE-A");
+    expectStatus(response, 200);
+    expect(response.body.map((row: Row) => row.id)).toEqual([10]);
+  });
+
+  it("does not fall back to a directory for an unknown code", async () => {
+    seedScenario();
+    const response = await request(app).get("/api/visits/public-sites?siteCode=UNKNOWN");
+    expectStatus(response, 200);
+    expect(response.body).toEqual([]);
+  });
+});
 
 describe("plate state persistence schema contract", () => {
   it("refuses a missing isolated-wrapper marker", () => {

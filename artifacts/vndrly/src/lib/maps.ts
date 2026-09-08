@@ -16,14 +16,28 @@ const MAPBOX_STYLES: Record<MapboxMapStyle, string> = {
 export const MAPBOX_ATTRIBUTION =
   '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
 
+let runtimeMapboxToken = "";
+
+export async function loadMapboxAccessToken(): Promise<string> {
+  const configured = readMapboxAccessToken();
+  if (configured) return configured;
+  const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+  const response = await fetch(`${base}/api/public-config`, { credentials: "include" });
+  if (!response.ok) throw new Error("Map configuration unavailable");
+  const config: { mapboxAccessToken?: unknown } = await response.json();
+  if (typeof config.mapboxAccessToken === "string" && config.mapboxAccessToken.startsWith("pk.")) {
+    runtimeMapboxToken = config.mapboxAccessToken;
+  }
+  return runtimeMapboxToken;
+}
+
 export function readMapboxAccessToken(): string {
   const env = import.meta.env as Record<string, string | undefined>;
-  return (
-    env.VITE_MAPBOX_ACCESS_TOKEN ||
-    env.VITE_MAPBOX_API_KEY ||
-    (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.MAPBOX_ACCESS_TOKEN ||
-    ""
-  ).trim();
+  return [
+    env.VITE_MAPBOX_ACCESS_TOKEN,
+    env.VITE_MAPBOX_API_KEY,
+    runtimeMapboxToken,
+  ].map((value) => value?.trim()).find((value) => value?.startsWith("pk.")) ?? "";
 }
 
 export function getMapboxStyleUrl(style: MapboxMapStyle = "satellite"): string {

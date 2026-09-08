@@ -1,6 +1,6 @@
 import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ASKV_NATURAL_VOICE_FLAG } from "@/lib/askv-natural-voice";
@@ -278,7 +278,7 @@ describe("GatekeeperPage plate state", () => {
 
     await userEvent.setup().click(trigger);
     expect(
-      screen
+      within(screen.getByRole("listbox"))
         .getAllByRole("option")
         .slice(0, 3)
         .map((option) => option.textContent),
@@ -296,7 +296,7 @@ describe("GatekeeperPage plate state", () => {
       .setup()
       .click(screen.getByRole("button", { name: "Select plate state" }));
     expect(
-      screen
+      within(screen.getByRole("listbox"))
         .getAllByRole("option")
         .slice(0, 3)
         .map((option) => option.textContent),
@@ -315,6 +315,9 @@ describe("GatekeeperPage plate state", () => {
     fireEvent.change(screen.getByTestId("input-gate-plate"), {
       target: { value: "4412" },
     });
+    fireEvent.change(document.getElementById("gate-entry-category")!, {
+      target: { value: "vendor_admin" },
+    });
     await waitFor(() => {
       expect(
         (
@@ -332,6 +335,7 @@ describe("GatekeeperPage plate state", () => {
     await waitFor(() => expect(api.gateCheckIn).toHaveBeenCalledTimes(1));
     expect(api.gateCheckIn.mock.calls[0][0]).toMatchObject({
       vehiclePlate: "4412",
+      entryCategory: "vendor_admin",
     });
     expect(api.gateCheckIn.mock.calls[0][0].plateState).toBeUndefined();
   });

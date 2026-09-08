@@ -12,11 +12,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 //   * a calm slow-down banner must appear in place of the error
 //     wall, so the user knows we're paused, not broken.
 
-vi.mock("@/lib/visits-api", () => ({
-  visitsApi: {
-    list: vi.fn(),
-  },
-}));
+vi.mock("@/lib/visits-api", () => {
+  const list = vi.fn();
+  return { visitsApi: { list }, listAllVisits: list };
+});
 vi.mock("@workspace/api-client-react", () => ({
   useListSiteLocations: () => ({ data: [] }),
 }));

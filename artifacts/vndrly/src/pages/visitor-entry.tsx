@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import LanguageToggle from "@/components/language-toggle";
 import DarkLightToggle, { type ThemeMode } from "@/components/dark-light-toggle";
 import { visitsApi, type PublicSite } from "@/lib/visits-api";
@@ -30,10 +31,13 @@ export default function VisitorEntryPage() {
   const [themeMode, setThemeMode] = useState<ThemeMode>("dark");
   const isDark = themeMode === "dark";
   const [geo, setGeo] = useState<GeoState>({ kind: "idle" });
+  const [siteCode, setSiteCode] = useState("");
+  const [lookupCode, setLookupCode] = useState("");
 
   const sitesQuery = useQuery<PublicSite[]>({
-    queryKey: ["public-sites"],
-    queryFn: () => visitsApi.listPublicSites(),
+    queryKey: ["public-sites", lookupCode],
+    queryFn: () => visitsApi.listPublicSites(lookupCode),
+    enabled: !!lookupCode,
   });
 
   useEffect(() => {
@@ -116,20 +120,20 @@ export default function VisitorEntryPage() {
                   </span>
                 )}
               </div>
-              <p className="text-xs text-gray-500">
-                {geo.kind === "denied"
-                  ? t("visitor.web.locationDenied")
-                  : geo.kind === "unavailable"
-                    ? t("visitor.web.locationUnavailable")
-                    : t("visitor.web.siteListHint")}
-              </p>
+              <form className="flex items-end gap-2" onSubmit={(event) => { event.preventDefault(); setLookupCode(siteCode.trim()); }}>
+                <div className="flex-1 min-w-0">
+                  <Label htmlFor="visitor-site-code">{t("visitor.web.siteCodeLabel")}</Label>
+                  <Input id="visitor-site-code" value={siteCode} onChange={(event) => setSiteCode(event.target.value)} maxLength={64} autoComplete="off" />
+                </div>
+                <PngPillButton type="submit" color="blue" disabled={!siteCode.trim()}>{t("visitor.web.findSite")}</PngPillButton>
+              </form>
 
               <div
                 className="border border-gray-200 rounded-md overflow-y-auto bg-white divide-y divide-gray-100"
                 style={{ maxHeight: 10 * 64 }}
                 data-testid="visitor-site-list"
               >
-                {sitesQuery.isLoading ? (
+                {sitesQuery.isFetching ? (
                   <div className="px-4 py-6 text-center text-sm text-gray-500">
                     <Loader2 className="h-4 w-4 animate-spin inline mr-2" />
                     {t("visitor.web.loadingSites")}

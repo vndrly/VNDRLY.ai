@@ -42,6 +42,7 @@ export const OPS_DATA_TOOL_NAMES = [
   "lookup_ticket_payment_status",
   "lookup_accounting_connection",
   "query_active_visitors",
+  "query_gate_report",
 ] as const;
 
 export const MARKET_DATA_TOOL_NAMES = ["get_stock_quote", "get_crude_oil_price"] as const;

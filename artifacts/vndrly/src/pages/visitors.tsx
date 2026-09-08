@@ -4,7 +4,7 @@ import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { ArrowDown, ArrowUp, Camera, Clock, History, Printer, UserCheck } from "lucide-react";
 import { useListSiteLocations } from "@workspace/api-client-react";
-import { visitsApi, type VisitorRow } from "@/lib/visits-api";
+import { listAllVisits, type VisitorRow } from "@/lib/visits-api";
 import { useRateLimitGate } from "@/hooks/use-rate-limit-gate";
 import { Card, CardHeader, CardTitle, CardContent, CARD_TITLE_ICON_CLASS } from "@/components/ui/card";
 import { useBrand } from "@/hooks/use-brand";
@@ -37,7 +37,7 @@ function fmt(ts: string | null) {
   return new Date(ts).toLocaleString();
 }
 
-export default function VisitorsPage() {
+export default function VisitorsPage({ embedded = false }: { embedded?: boolean }) {
   const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const brand = useBrand();
@@ -49,18 +49,20 @@ export default function VisitorsPage() {
     return s && /^\d+$/.test(s) ? s : "all";
   })();
   const [siteFilter, setSiteFilter] = useState<string>(initialSiteFilter);
-  const [from, setFrom] = useState<string>("");
-  const [to, setTo] = useState<string>("");
+  const [from, setFrom] = useState<string>(() => { const date = new Date(); date.setDate(date.getDate() - 6); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`; });
+  const [to, setTo] = useState<string>(() => { const date = new Date(); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`; });
+  const [company, setCompany] = useState("");
+  const [purpose, setPurpose] = useState("all");
 
   const { data: sites } = useListSiteLocations();
 
   const queryParams = useMemo(() => {
-    const p: { siteLocationId?: number; from?: string; to?: string } = {};
+    const p: { siteLocationId?: number; from?: string; to?: string; overlap: boolean } = { overlap: true };
     if (siteFilter !== "all") p.siteLocationId = parseInt(siteFilter, 10);
-    if (from) p.from = new Date(from).toISOString();
+    if (from) p.from = new Date(`${from}T00:00:00`).toISOString();
     if (to) {
-      const d = new Date(to);
-      d.setHours(23, 59, 59, 999);
+      const d = new Date(`${to}T00:00:00`);
+      d.setDate(d.getDate() + 1);
       p.to = d.toISOString();
     }
     return p;
@@ -76,8 +78,9 @@ export default function VisitorsPage() {
   const [rateLimitedState, setRateLimitedState] = useState(false);
   const { data, isLoading, error } = useQuery({
     queryKey: ["visits-list", queryParams],
-    queryFn: () => visitsApi.list(queryParams),
-    refetchInterval: rateLimitedState ? false : 30000,
+    queryFn: () => listAllVisits(queryParams),
+    refetchInterval: false,
+    refetchOnWindowFocus: false,
     enabled: !rateLimitedState,
     retry: (failureCount: number, err: unknown) => {
       const status = (err as { status?: number } | null)?.status;
@@ -92,25 +95,30 @@ export default function VisitorsPage() {
   useEffect(() => {
     setRateLimitedState(rateLimited);
   }, [rateLimited]);
-  const rows: VisitorRow[] = data ?? [];
-  const active = rows.filter((r) => !r.checkOutTime);
+  const rows: VisitorRow[] = (data ?? []).filter((row) =>
+    (!company.trim() || row.company?.toLowerCase().includes(company.trim().toLowerCase())) &&
+    (purpose === "all" || (row.purpose?.trim() || "unspecified") === purpose));
+  const purposes = [...new Set((data ?? []).map((row) => row.purpose?.trim() || "unspecified"))].sort();
+  const active = rows.filter((r) => !r.checkOutTime && r.admissionStatus !== "pending");
   const past = rows.filter((r) => r.checkOutTime);
 
   const onClear = () => {
     setSiteFilter("all");
     setFrom("");
     setTo("");
+    setCompany("");
+    setPurpose("all");
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className={embedded ? "space-y-4" : "p-6 max-w-6xl mx-auto"}>
       {/* Back affordance + page title on a single row. Sphere
           matches the rest of the app's back-button family (ticket /
           visit / partner detail). Uses browser history rather than
           a fixed route so the user returns to whatever page linked
           them in. Falls back to the home/portal route when there is
           no history (e.g. opened in a new tab). */}
-      <div className="flex items-center gap-3 mb-1">
+      {!embedded && <div className="flex items-center gap-3 mb-1">
         <button
           type="button"
           onClick={() => {
@@ -127,8 +135,7 @@ export default function VisitorsPage() {
           <SphereBackButton size={40} />
         </button>
         <h1 className="text-2xl font-semibold">{t("visitor.title")}</h1>
-      </div>
-      <p className="text-sm text-muted-foreground mb-4">{t("visitor.subtitle")}</p>
+      </div>}
 
       <Card className="mb-6">
         <CardContent className="pt-6">
@@ -171,6 +178,20 @@ export default function VisitorsPage() {
               <PngPillButton color="blue" onClick={onClear} data-testid="button-clear-filters">
                 {t("visitor.filters.clear")}
               </PngPillButton>
+            </div>
+            <div className="space-y-1">
+              <Label>{t("gateLog.company")}</Label>
+              <Input value={company} onChange={(event) => setCompany(event.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label>{t("gateLog.purposeFilter", { defaultValue: "Visit purpose" })}</Label>
+              <Select value={purpose} onValueChange={setPurpose}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t("common.all", { defaultValue: "All" })}</SelectItem>
+                  {purposes.map((value) => <SelectItem key={value} value={value}>{value === "unspecified" ? t("common.notSpecified", { defaultValue: "Not specified" }) : value}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <div className="mt-4 flex justify-end print:hidden">

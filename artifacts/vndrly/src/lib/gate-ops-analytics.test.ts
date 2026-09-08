@@ -55,6 +55,13 @@ describe("dwellMinutes", () => {
 });
 
 describe("buildGateOpsAnalytics", () => {
+  it("does not count pending admission as on-site or overdue", () => {
+    const stats = buildGateOpsAnalytics([
+      visit({ id: 20, admissionStatus: "pending", expectedDurationMinutes: 1, checkInTime: "2026-08-25T10:00:00.000Z" }),
+    ], new Date("2026-08-25T18:00:00.000Z"));
+    expect(stats.onSiteNow).toBe(0);
+    expect(stats.overdueNow).toBe(0);
+  });
   it("rolls live counts, dwell, daily volume, peak hour, and overdue visits", () => {
     const now = new Date("2026-08-25T18:00:00.000Z");
     const stats = buildGateOpsAnalytics(

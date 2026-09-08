@@ -144,7 +144,7 @@ function onListening(): void {
   startInvoicePeriodWorker();
   startInvoiceAgingWorker();
   startApPaymentDigestWorker();
-  startDashboard1099MonthlyEmailWorker();
+  if (process.env.ENABLE_TAX_REPORTING === "true") startDashboard1099MonthlyEmailWorker();
   // Task #368 — every-6h scan that aggregates the past 7 days of
   // reconciliation drift into one summary email per opted-in vendor
   // (cadence = "weekly_recap"). Per-push emails for the legacy

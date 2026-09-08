@@ -33,6 +33,8 @@ import { filterGateHistory } from "@/lib/gate-history";
 import { formatPlateForDisplay } from "@/lib/plate-display";
 import { buildGateOpsAnalytics, buildGateStaffHours, dwellMinutes } from "@/lib/gate-ops-analytics";
 import { visitsApi } from "@/lib/visits-api";
+import GateReport from "@/components/gate-report";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 const OPS_KEY = ["gate-ops"] as const;
@@ -51,6 +53,23 @@ function hourLabel(hour: number): string {
 }
 
 export default function GateLogPage() {
+  const { t } = useTranslation();
+  return (
+    <div className="p-6 max-w-6xl mx-auto">
+      <h1 className="text-2xl font-semibold mb-4">{t("gateLog.title")}</h1>
+      <Tabs defaultValue="operations">
+        <TabsList className="print:hidden">
+          <TabsTrigger value="operations">{t("gateLog.operationsTab", { defaultValue: "Operations" })}</TabsTrigger>
+          <TabsTrigger value="reports">{t("nav.reports")}</TabsTrigger>
+        </TabsList>
+        <TabsContent value="operations"><GateOperations /></TabsContent>
+        <TabsContent value="reports"><GateReport /></TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+function GateOperations() {
   const { t } = useTranslation();
   const brand = useBrand();
   const iconStyle = { color: brand.isOrgBranded ? brand.primary : "#f59e0b" };
@@ -91,7 +110,7 @@ export default function GateLogPage() {
     [now, ops.data],
   );
 
-  const onSite = visits.filter((visit) => !visit.checkOutTime);
+  const onSite = visits.filter((visit) => !visit.checkOutTime && visit.admissionStatus !== "pending");
   const history = useMemo(() => filterGateHistory(visits, query), [query, visits]);
   const liveFiltered = useMemo(() => filterGateHistory(onSite, query), [onSite, query]);
 
@@ -313,9 +332,7 @@ export default function GateLogPage() {
                   <TableHead>{t("gateLog.staffName")}</TableHead>
                   <TableHead>{t("gateLog.staffVendor")}</TableHead>
                   <TableHead className="text-center">{t("gateLog.daysWorked")}</TableHead>
-                  <TableHead className="text-center">{t("gateLog.hoursWorked")}</TableHead>
                   <TableHead className="text-center">{t("gateLog.hoursClocked")}</TableHead>
-                  <TableHead className="text-center">{t("gateLog.hoursOnBooth")}</TableHead>
                   <TableHead className="text-center">{t("gateLog.visitsProcessed")}</TableHead>
                   <TableHead className="text-right">{t("gateLog.lastSeen")}</TableHead>
                 </TableRow>
@@ -326,9 +343,7 @@ export default function GateLogPage() {
                     <TableCell className="font-medium">{row.name}</TableCell>
                     <TableCell>{row.vendorName ?? "—"}</TableCell>
                     <TableCell className="text-center">{row.daysWorked}</TableCell>
-                    <TableCell className="text-center">{row.hoursWorked}</TableCell>
                     <TableCell className="text-center">{row.hoursClocked}</TableCell>
-                    <TableCell className="text-center">{row.hoursOnBooth}</TableCell>
                     <TableCell className="text-center">{row.visitsProcessed}</TableCell>
                     <TableCell className="text-right text-xs">{fmt(row.lastSeenAt)}</TableCell>
                   </TableRow>
@@ -452,13 +467,9 @@ export default function GateLogPage() {
         </CardHeader>
         <CardContent>
           <ul className="list-disc space-y-2 pl-5 text-sm text-muted-foreground">
-            <li>{t("gateLog.recWatchlist")}</li>
-            <li>{t("gateLog.recTurnaways")}</li>
-            <li>{t("gateLog.recWaitTime")}</li>
-            <li>{t("gateLog.recCoverage")}</li>
-            <li>{t("gateLog.recDwell")}</li>
-            <li>{t("gateLog.recOrientation")}</li>
-            <li>{t("gateLog.recMix")}</li>
+            <li>{t("gateLog.pendingAdmission")}: {visits.filter((visit) => !visit.checkOutTime && visit.admissionStatus === "pending").length}</li>
+            <li>{t("gateLog.overdueNow")}: {analytics.overdueNow}</li>
+            <li>{t("gateLog.autoCheckedOut")}: {analytics.autoCheckedOut}</li>
           </ul>
         </CardContent>
       </Card>

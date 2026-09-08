@@ -9,6 +9,7 @@ import {
   partnerVendorWorkTypeApprovalsTable,
   userOrgMembershipsTable,
   insertWorkTypeSchema,
+  partnerVendorRelationshipsTable,
 } from "@workspace/db";
 import {
   getSessionFromRequest,
@@ -52,6 +53,9 @@ async function requirePartnerAdmin(
   }
   if (session.role === "admin") {
     return { ok: true, session, isSystemAdmin: true };
+  }
+  if (session.role !== "partner" || session.partnerId !== partnerId) {
+    return { ok: false, status: 403, code: "auth.forbidden", error: "Active partner access required" };
   }
   const [active] = await db
     .select({ role: userOrgMembershipsTable.role })
@@ -146,7 +150,7 @@ router.get(
       .select()
       .from(workTypesTable)
       .where(
-        or(isNull(workTypesTable.partnerId), eq(workTypesTable.partnerId, partnerId)),
+        eq(workTypesTable.partnerId, partnerId),
       )
       .orderBy(workTypesTable.category, workTypesTable.name);
 
@@ -168,6 +172,10 @@ router.get(
         n: sql<number>`count(*)::int`,
       })
       .from(vendorWorkTypesTable)
+      .innerJoin(partnerVendorRelationshipsTable, and(
+        eq(partnerVendorRelationshipsTable.vendorId, vendorWorkTypesTable.vendorId),
+        eq(partnerVendorRelationshipsTable.partnerId, partnerId),
+        eq(partnerVendorRelationshipsTable.status, "approved")))
       .groupBy(vendorWorkTypesTable.workTypeId);
     const vendorCountByWorkType = new Map<number, number>();
     for (const r of vendorCounts) vendorCountByWorkType.set(r.workTypeId, r.n);
@@ -177,6 +185,8 @@ router.get(
       name: wt.name,
       category: wt.category,
       description: wt.description ?? "",
+      estimatedDuration: wt.estimatedDuration,
+      estimatedPrice: wt.estimatedPrice,
       afe: afeByWorkType.get(wt.id) ?? "",
       vendorCount: vendorCountByWorkType.get(wt.id) ?? 0,
       partnerScoped: wt.partnerId != null,
@@ -205,14 +215,15 @@ router.get(
       .select({ id: workTypesTable.id })
       .from(workTypesTable)
       .where(
-        or(isNull(workTypesTable.partnerId), eq(workTypesTable.partnerId, partnerId)),
+        eq(workTypesTable.partnerId, partnerId),
       );
     const total = workTypes.length;
 
     const approvedWorkTypeIds = await db
       .selectDistinct({ workTypeId: partnerVendorWorkTypeApprovalsTable.workTypeId })
       .from(partnerVendorWorkTypeApprovalsTable)
-      .where(eq(partnerVendorWorkTypeApprovalsTable.partnerId, partnerId));
+      .innerJoin(workTypesTable, eq(workTypesTable.id, partnerVendorWorkTypeApprovalsTable.workTypeId))
+      .where(and(eq(partnerVendorWorkTypeApprovalsTable.partnerId, partnerId), eq(workTypesTable.partnerId, partnerId)));
 
     res.json({
       partnerId,
@@ -274,6 +285,28 @@ router.post(
   },
 );
 
+router.put("/partners/:partnerId/work-types/:workTypeId", requireSession, async (req, res): Promise<void> => {
+  const partnerId = Number(req.params.partnerId);
+  const workTypeId = Number(req.params.workTypeId);
+  if (!Number.isInteger(partnerId) || !Number.isInteger(workTypeId)) {
+    sendApiError(res, 400, "validation.invalid_id", "Invalid ID");
+    return;
+  }
+  const auth = await requirePartnerAdmin(req, partnerId);
+  if (!auth.ok) { sendApiError(res, auth.status, auth.code, auth.error); return; }
+  const body = insertWorkTypeSchema.omit({ partnerId: true }).partial().safeParse(req.body);
+  if (!body.success) { sendValidationFailed(res, body.error); return; }
+  try {
+    const [updated] = await db.update(workTypesTable).set(body.data)
+      .where(and(eq(workTypesTable.id, workTypeId), eq(workTypesTable.partnerId, partnerId))).returning();
+    if (!updated) { sendApiError(res, 404, "work_type.not_found", "Work type not found"); return; }
+    res.json(updated);
+  } catch (error) {
+    if (await handlePartnerWorkTypeNameConflict(error, body.data.name ?? "", partnerId, res)) return;
+    throw error;
+  }
+});
+
 router.post(
   "/partners/:partnerId/work-type-afes/import",
   requireAdmin,
@@ -303,7 +336,7 @@ router.post(
     // Build a lookup of catalog work types by lower-cased trimmed name.
     const catalog = await db
       .select({ id: workTypesTable.id, name: workTypesTable.name })
-      .from(workTypesTable);
+      .from(workTypesTable).where(eq(workTypesTable.partnerId, partnerId));
     const byName = new Map<string, number>();
     for (const wt of catalog) {
       byName.set(wt.name.trim().toLowerCase(), wt.id);
@@ -415,7 +448,8 @@ router.put(
       return;
     }
 
-    const workTypes = await db.select({ id: workTypesTable.id }).from(workTypesTable);
+    const workTypes = await db.select({ id: workTypesTable.id }).from(workTypesTable)
+      .where(eq(workTypesTable.partnerId, partnerId));
     const validIds = new Set(workTypes.map((w) => w.id));
 
     let saved = 0;

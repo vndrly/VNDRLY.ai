@@ -90,9 +90,9 @@ export default function VendorDetail({ id }: { id: number }) {
   // so the queryKey lines up with the existing
   // getListFieldEmployeesQueryKey({ vendorId: id }) invalidations below.
   const { eligibleForemen: employees } =
-    useEligibleVendorFieldEmployeesByVendorId(id);
+    useEligibleVendorFieldEmployeesByVendorId(id, canEditVendor);
   const { data: contacts } = useListVendorContacts(id, undefined, { query: { enabled: !!id, queryKey: getListVendorContactsQueryKey(id) } });
-  const { data: notes } = useListVendorNotes(id, { query: { enabled: !!id, queryKey: getListVendorNotesQueryKey(id) } });
+  const { data: notes } = useListVendorNotes(id, { query: { enabled: !!id && (authUser?.role === "admin" || authUser?.role === "partner" || isOwnVendor), queryKey: [...getListVendorNotesQueryKey(id), authUser?.role, authUser?.partnerId, authUser?.vendorId] } });
   const updateVendor = useUpdateVendor();
   const removeVendor = useDeleteVendor();
   const createContact = useCreateVendorContact();
@@ -1084,7 +1084,7 @@ export default function VendorDetail({ id }: { id: number }) {
         </CardContent>
       </Card>
 
-      <Card>
+      {canEditVendor && <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2"><UserCheck className="w-5 h-5" style={{ color: "var(--brand-primary)" }} />Field Employees ({employees?.length ?? 0})</CardTitle>
           {canEditVendor && (
@@ -1146,13 +1146,12 @@ export default function VendorDetail({ id }: { id: number }) {
             <div className="p-8 text-center text-muted-foreground"><p>No field employees yet</p></div>
           )}
         </CardContent>
-      </Card>
-
+      </Card>}
       {/* Hide the Members card unless the viewer is a system admin or
           has an admin-role membership in THIS vendor — mirrors the
           backend authz so non-admin org members don't see a card that
           would 403 on every action. */}
-      <OrgMembersCard
+      {canEditVendor && <OrgMembersCard
         orgType="vendor"
         orgId={id}
         canManage={
@@ -1166,9 +1165,9 @@ export default function VendorDetail({ id }: { id: number }) {
           const emp = employees?.find((e) => e.userId === m.userId);
           if (emp) openEditEmployeeDialog(emp);
         } : undefined}
-      />
+      />}
 
-      <VendorPartnerRelationshipsCard vendorId={id} />
+      {canEditVendor && <VendorPartnerRelationshipsCard vendorId={id} />}
 
       <VendorServicesAndPricingCard vendorId={id} />
 
@@ -1641,6 +1640,8 @@ function VendorRatingsCard({ vendorId }: { vendorId: number }) {
 
 type ServicesItem = {
   id: number;
+  partnerId: number;
+  partnerName: string;
   name: string;
   category: string | null;
   selected: boolean;
@@ -1680,19 +1681,15 @@ const PRICING_UNIT_OPTIONS = [
 
 // Small modal that lets a vendor admin (or system admin) put a price on
 // a row that's currently rendering the amber "No price" placeholder.
-// The vendor work-types PUT is a full-replace, so we send back every
-// currently-selected row with this one's pricing fields swapped — that
-// preserves siblings instead of nuking them.
+// The dedicated price endpoint updates only this selection.
 function ServicePriceEditModal({
   vendorId,
   item,
-  allSelected,
   open,
   onOpenChange,
 }: {
   vendorId: number;
   item: ServicesItem;
-  allSelected: ServicesItem[];
   open: boolean;
   onOpenChange: (v: boolean) => void;
 }) {
@@ -1722,28 +1719,18 @@ function ServicePriceEditModal({
   const save = useMutation({
     mutationFn: async () => {
       const trimmedReason = priceChangeReason.trim();
-      const items = allSelected.map((row) => {
-        const isTarget = row.id === item.id;
-        return {
-          workTypeId: row.id,
-          unitPrice: isTarget
-            ? unitPrice.trim() === ""
-              ? null
-              : unitPrice.trim()
-            : row.unitPrice,
-          unit: isTarget ? (unit === "" ? null : unit) : row.unit,
-          currency: isTarget ? currency.trim().toUpperCase() : row.currency,
-          notes: isTarget ? (notes.trim() === "" ? null : notes) : row.notes,
-          ...(isTarget && trimmedReason !== ""
-            ? { priceChangeReason: trimmedReason }
-            : {}),
-        };
-      });
-      const res = await fetch(`${base}/api/vendors/${vendorId}/work-types`, {
+      const res = await fetch(`${base}/api/vendors/${vendorId}/work-types/${item.id}/price`, {
         method: "PUT",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items }),
+        body: JSON.stringify({
+          partnerId: item.partnerId,
+          unitPrice: unitPrice.trim(),
+          unit: unit === "" ? null : unit,
+          currency: currency.trim().toUpperCase(),
+          notes: notes.trim() || null,
+          ...(trimmedReason ? { priceChangeReason: trimmedReason } : {}),
+        }),
       });
       if (!res.ok) {
         let msg = `HTTP ${res.status}`;
@@ -1850,8 +1837,7 @@ function ServicePriceEditModal({
             />
           </label>
           <p className="text-xs text-muted-foreground">
-            Saved as a draft on your catalog. Publish a new catalog version
-            from the Catalog page so partners can re-approve.
+            Saved to this partner's services and pricing.
           </p>
         </div>
         <div className="flex items-stretch gap-2 pt-2">
@@ -1893,13 +1879,13 @@ function VendorServicesAndPricingCard({ vendorId }: { vendorId: number }) {
   // server will reject. Server is still authoritative.
   const canEdit =
     user?.role === "admin" ||
-    (user?.availableMemberships ?? []).some(
+    (user?.role === "vendor" && user.vendorId === vendorId && (user?.availableMemberships ?? []).some(
       (m) =>
         m.orgType === "vendor" && m.orgId === vendorId && m.role === "admin",
-    );
+    ));
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["vendor-services-pricing", vendorId],
+    queryKey: ["vendor-services-pricing", vendorId, user?.partnerId, user?.role],
     queryFn: async () => {
       const res = await fetch(`${base}/api/vendors/${vendorId}/work-types`, {
         credentials: "include",
@@ -1917,12 +1903,13 @@ function VendorServicesAndPricingCard({ vendorId }: { vendorId: number }) {
   const grouped = useMemo(() => {
     const map = new Map<string, ServicesItem[]>();
     for (const it of allSelected) {
-      const key = it.category?.trim() || "Uncategorized";
+      const category = it.category?.trim() || "Uncategorized";
+      const key = user?.role === "partner" ? category : `${it.partnerName} / ${category}`;
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(it);
     }
     return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
-  }, [allSelected]);
+  }, [allSelected, user?.role]);
 
   const selectedCount = grouped.reduce((acc, [, items]) => acc + items.length, 0);
   const missingPriceCount = grouped.reduce(
@@ -1973,7 +1960,7 @@ function VendorServicesAndPricingCard({ vendorId }: { vendorId: number }) {
             className="text-sm text-muted-foreground"
             data-testid="text-services-empty"
           >
-            This vendor has not configured any services yet.
+            No services have been selected for this partner.
           </p>
         ) : (
           <div className="space-y-4">
@@ -2037,7 +2024,6 @@ function VendorServicesAndPricingCard({ vendorId }: { vendorId: number }) {
         <ServicePriceEditModal
           vendorId={vendorId}
           item={editing}
-          allSelected={allSelected}
           open={!!editing}
           onOpenChange={(v) => !v && setEditing(null)}
         />

@@ -37,7 +37,8 @@ export function withGateLogNav(
     icon?: NavIcon;
   },
 ): NavItem[] {
-  if (!canViewGateLog(opts.user) || !opts.gatekeepingEnabled) return items;
+  if (!canViewGateLog(opts.user)) return items;
+  items = items.filter((item) => item.key !== "visitors" && item.key !== "gate-log");
   const item: NavItem = {
     href: "/gate-log",
     label: opts.label,

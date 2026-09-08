@@ -51,6 +51,7 @@ const PILL_IMAGE: Record<ImagePillColor, string> = {
 
 
 interface ImagePillProps {
+  activeSrc?: string;
 
   color?: ImagePillColor;
 
@@ -76,6 +77,7 @@ interface ImagePillProps {
 
 
 export default function ImagePill({
+  activeSrc,
 
   color = "grey",
 
@@ -126,7 +128,7 @@ export default function ImagePill({
 
     >
 
-      <PillColorLayer src={PILL_IMAGE[effectiveColor]} />
+      <PillColorLayer src={!rest && activeSrc ? activeSrc : PILL_IMAGE[effectiveColor]} />
 
       <span
 

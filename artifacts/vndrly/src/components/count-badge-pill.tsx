@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 /** Small numeric / icon+count chip (unread comments, vendor counts, etc.). */
 export default function CountBadgePill({
   children,
+  activeSrc,
   icon: Icon,
   color = "grey",
   rest = color === "grey",
@@ -15,6 +16,7 @@ export default function CountBadgePill({
   "data-recon-enabled": reconEnabled,
 }: {
   children: React.ReactNode;
+  activeSrc?: string;
   icon?: LucideIcon;
   color?: ImagePillColor;
   rest?: boolean;
@@ -27,6 +29,7 @@ export default function CountBadgePill({
   return (
     <span data-testid={testId} data-recon-enabled={reconEnabled}>
       <ImagePill
+        activeSrc={activeSrc}
         color={color}
         rest={rest}
         className={cn("whitespace-nowrap pointer-events-none", className)}

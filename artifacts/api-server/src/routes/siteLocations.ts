@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq, sql, and, isNull, inArray } from "drizzle-orm";
 import { db, siteLocationsTable, partnersTable, siteWorkAssignmentsTable, workTypesTable, vendorsTable, vendorWorkTypesTable, vendorPeopleTable, ticketsTable, ticketCrewTable, siteLocationAdminAuditLogTable } from "@workspace/db";
+import { approvedPartnersForVendor, vendorCanReadPartner, sitesAssignedToEmployee, employeeCanReadSite } from "../lib/approved-partner-sites";
 import { formatTicketTrackingNumber } from "@workspace/db/format";
 import { getSessionFromRequest, type SessionPayload } from "../lib/session";
 import { notifyUsers } from "./notifications";
@@ -77,21 +78,19 @@ function generateSiteCode(): string {
 }
 
 // Verifies the caller has read access to a specific site.
-// Admin sees any; partner sees their own sites; vendor and field_employee see
-// any site (matches the GET /site-locations list policy — vendors can pick up
-// new work, not just sites they're already pre-assigned to).
+// Admin sees any; partners see their own sites; vendor crews see approved partners.
 // Returns true to continue, false if a response was already sent.
 async function verifySiteReadAccess(
   session: SessionPayload,
   _req: any,
   res: any,
   sitePartnerId: number | null,
-  _siteId: number,
+  siteId: number,
 ): Promise<boolean> {
   if (session.role === "admin") return true;
 
   if (session.role === "partner") {
-    if (sitePartnerId !== (session.partnerId ?? null)) {
+    if (!session.partnerId || sitePartnerId !== session.partnerId) {
       sendApiError(res, 403, "auth.forbidden", "Access denied");
       return false;
     }
@@ -99,12 +98,12 @@ async function verifySiteReadAccess(
   }
 
   if (session.role === "vendor" && session.vendorId != null) {
-    return true;
+    if (await vendorCanReadPartner(session.vendorId, sitePartnerId)) return true;
   }
 
   if (session.role === "field_employee" && session.userId != null) {
     const [vp] = await db
-      .select({ vendorId: vendorPeopleTable.vendorId })
+      .select({ id: vendorPeopleTable.id, vendorId: vendorPeopleTable.vendorId })
       .from(vendorPeopleTable)
       .where(
         and(
@@ -117,7 +116,7 @@ async function verifySiteReadAccess(
       sendApiError(res, 403, "field.account_inactive", "Field account not active");
       return false;
     }
-    return true;
+    if (await employeeCanReadSite(vp.id, vp.vendorId, sitePartnerId, siteId)) return true;
   }
 
   sendApiError(res, 403, "auth.forbidden", "Access denied");
@@ -133,13 +132,14 @@ router.get("/site-locations", async (req, res): Promise<void> => {
 
   const query = ListSiteLocationsQueryParams.safeParse(req.query);
   let vendorId = session.role === "vendor" ? (session.vendorId ?? null) : null;
+  let employeeId: number | null = null;
   const sessionPartnerId = session.role === "partner" ? (session.partnerId ?? null) : null;
 
   // Field employees do not have vendorId stored in their session cookie.
-  // Look it up via vendor_people and scope the list to their vendor's assigned sites.
+  // Resolve their employee identity before applying ticket/crew site assignments.
   if (session.role === "field_employee" && session.userId != null) {
     const [vp] = await db
-      .select({ vendorId: vendorPeopleTable.vendorId })
+      .select({ id: vendorPeopleTable.id, vendorId: vendorPeopleTable.vendorId })
       .from(vendorPeopleTable)
       .where(
         and(
@@ -153,6 +153,7 @@ router.get("/site-locations", async (req, res): Promise<void> => {
       return;
     }
     vendorId = vp.vendorId;
+    employeeId = vp.id;
   }
 
   const siteSelect = siteLocationPublicSelect;
@@ -160,12 +161,7 @@ router.get("/site-locations", async (req, res): Promise<void> => {
   let results;
 
   const isAdmin = session?.role === "admin";
-  // Vendors (and field employees, whose vendorId is resolved above) see
-  // every visible site location, not just the ones their vendor already has
-  // an assignment on. Per-product decision: the site picker on "start a
-  // ticket" is supposed to surface the entire site catalog so a vendor can
-  // pick up new work, not be limited to the sites they're already
-  // pre-assigned to. Partners remain scoped to their own partner's sites.
+  // Public Hotlist discovery does not grant access to private site catalogs.
   const isVendorScoped = vendorId != null;
 
   if (isVendorScoped) {
@@ -173,7 +169,7 @@ router.get("/site-locations", async (req, res): Promise<void> => {
       .select(siteSelect)
       .from(siteLocationsTable)
       .leftJoin(partnersTable, eq(siteLocationsTable.partnerId, partnersTable.id))
-      .where(sql`${siteLocationsTable.hidden} = false`)
+      .where(and(eq(siteLocationsTable.hidden, false), inArray(siteLocationsTable.partnerId, approvedPartnersForVendor(vendorId!)), employeeId == null ? undefined : inArray(siteLocationsTable.id, sitesAssignedToEmployee(employeeId, vendorId!)), query.success && query.data.partnerId ? eq(siteLocationsTable.partnerId, query.data.partnerId) : undefined))
       .orderBy(siteLocationsTable.createdAt);
   } else if (sessionPartnerId) {
     results = await db
@@ -182,7 +178,7 @@ router.get("/site-locations", async (req, res): Promise<void> => {
       .leftJoin(partnersTable, eq(siteLocationsTable.partnerId, partnersTable.id))
       .where(sql`${siteLocationsTable.partnerId} = ${sessionPartnerId} AND ${siteLocationsTable.hidden} = false`)
       .orderBy(siteLocationsTable.createdAt);
-  } else if (query.success && query.data.partnerId) {
+  } else if (isAdmin && query.success && query.data.partnerId) {
     results = await db
       .select(siteSelect)
       .from(siteLocationsTable)

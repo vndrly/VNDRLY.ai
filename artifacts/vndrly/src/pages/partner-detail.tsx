@@ -1,5 +1,6 @@
 import { Fragment, useState, useRef, useMemo, useEffect } from "react";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
+import { TAX_REPORTING_ENABLED } from "@/lib/release-features";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 import { cn, formatPhone, handlePhoneInput, stripPhone } from "@/lib/utils";
@@ -117,6 +118,8 @@ type WorkTypeCatalogItem = {
   name: string;
   category: string | null;
   description: string;
+  estimatedDuration?: string | null;
+  estimatedPrice?: string | null;
   afe: string;
   // Number of vendors that currently offer this product/service via
   // vendor_work_types. Surfaced as a small TogglePill next to the
@@ -345,6 +348,7 @@ export function PartnerProductServiceCatalogCard({
    */
   canAddToCatalog: boolean;
 }) {
+  const catalogBrand = useBrand();
   const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -360,6 +364,7 @@ export function PartnerProductServiceCatalogCard({
   // self-service flow). Admin-only; gated on `canAddToCatalog`.
   // ---------------------------------------------------------------
   const [addOpen, setAddOpen] = useState(false);
+  const [editingWorkTypeId, setEditingWorkTypeId] = useState<number | null>(null);
   const [addForm, setAddForm] = useState({
     name: "",
     category: "",
@@ -367,7 +372,8 @@ export function PartnerProductServiceCatalogCard({
     estimatedDuration: "",
     estimatedPrice: "",
   });
-  const resetAddForm = () =>
+  const resetAddForm = () => {
+    setEditingWorkTypeId(null);
     setAddForm({
       name: "",
       category: "",
@@ -375,6 +381,7 @@ export function PartnerProductServiceCatalogCard({
       estimatedDuration: "",
       estimatedPrice: "",
     });
+  };
 
   const createWorkType = useMutation({
     mutationFn: async () => {
@@ -396,8 +403,8 @@ export function PartnerProductServiceCatalogCard({
         estimatedPrice = n.toFixed(2);
       }
 
-      const res = await fetch(`${API_BASE}/api/partners/${partnerId}/work-types`, {
-        method: "POST",
+      const res = await fetch(`${API_BASE}/api/partners/${partnerId}/work-types${editingWorkTypeId === null ? "" : `/${editingWorkTypeId}`}`, {
+        method: editingWorkTypeId === null ? "POST" : "PUT",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -549,7 +556,7 @@ export function PartnerProductServiceCatalogCard({
       <CardHeader className="flex flex-row items-center justify-between gap-3">
         <CardTitle className="flex items-center gap-2">
           <Receipt className="w-5 h-5" style={{ color: "var(--brand-primary)" }} />
-          {t("partners.productServiceCatalog.title")}
+          Services &amp; Pricing
         </CardTitle>
         <div className="flex items-center gap-3">
           <div className="text-xs text-muted-foreground">
@@ -653,6 +660,15 @@ export function PartnerProductServiceCatalogCard({
                           <div className="flex items-center justify-between gap-3 w-full">
                             <span className="min-w-0 pr-2 flex items-center gap-2 flex-wrap">
                               {it.name}
+                              {canAddToCatalog && <button type="button" title="Edit service" aria-label={`Edit ${it.name}`}
+                                className="inline-flex h-8 w-8 shrink-0 items-center justify-center"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  setEditingWorkTypeId(it.workTypeId);
+                                  setAddForm({ name: it.name, category: it.category ?? "", description: it.description,
+                                    estimatedDuration: it.estimatedDuration ?? "", estimatedPrice: it.estimatedPrice ?? "" });
+                                  setAddOpen(true);
+                                }}><Pencil className="h-4 w-4" /></button>}
                               {it.partnerScoped ? (
                                 <span className="text-[10px] uppercase tracking-wide font-semibold text-[var(--brand-primary)]">
                                   {t("partners.productServiceCatalog.partnerScopedBadge")}
@@ -661,6 +677,7 @@ export function PartnerProductServiceCatalogCard({
                             </span>
                             <CountBadgePill
                               color="blue"
+                              activeSrc={brandImagePillSrc(catalogBrand.primary, catalogBrand.name)}
                               rest={it.vendorCount === 0}
                               className="shrink-0"
                               data-testid={`badge-catalog-vendor-count-${it.workTypeId}`}
@@ -723,7 +740,7 @@ export function PartnerProductServiceCatalogCard({
         >
           <DialogHeader>
             <DialogTitle>
-              {t("partners.productServiceCatalog.addModalTitle")}
+              {editingWorkTypeId === null ? t("partners.productServiceCatalog.addModalTitle") : "Edit service"}
             </DialogTitle>
             <DialogDescription>
               {t("partners.productServiceCatalog.addModalDescription")}
@@ -851,7 +868,7 @@ export function PartnerProductServiceCatalogCard({
               >
                 {createWorkType.isPending
                   ? t("partners.productServiceCatalog.addCreating")
-                  : t("partners.productServiceCatalog.addCreate")}
+                  : editingWorkTypeId === null ? t("partners.productServiceCatalog.addCreate") : "Save"}
               </PngPillButton>
             </DialogFooter>
           </form>
@@ -2020,7 +2037,7 @@ export default function PartnerDetail({ id }: { id: number }) {
                     />
                   </div>
                 </div>
-                <div className="space-y-2 pt-2 border-t">
+                {TAX_REPORTING_ENABLED && <div className="space-y-2 pt-2 border-t">
                   <Label>{t("partners.email1099Template", { defaultValue: "1099 Email Template" })}</Label>
                   <p className="text-xs text-muted-foreground" data-testid="text-email-1099-template-help">
                     {t("partners.email1099TemplateHelp", { defaultValue: "Customize the subject and message for 1099 statement emails sent to vendors who consented to electronic delivery. Leave both blank to use the default English email." })}
@@ -2049,7 +2066,7 @@ export default function PartnerDetail({ id }: { id: number }) {
                       data-testid="input-email-1099-body"
                     />
                   </div>
-                </div>
+                </div>}
                 <PngPillButton
                   type="submit"
                   color="image"
@@ -2441,7 +2458,7 @@ export default function PartnerDetail({ id }: { id: number }) {
         }
       />
 
-      {(isAdmin || isOwnPartner) && (
+      {TAX_REPORTING_ENABLED && (isAdmin || isOwnPartner) && (
         <Partner1099TotalsCard partnerId={id} />
       )}
 

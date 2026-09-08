@@ -54,6 +54,35 @@ export function haversineMeters(
   return 2 * R * Math.asin(Math.sqrt(a));
 }
 
+export type DistancePing = {
+  ticketId: number;
+  latitude: number;
+  longitude: number;
+  recordedAt: string | Date;
+};
+
+/** Sampled distance, not odometer mileage. Never bridge missing or implausible segments. */
+export function summarizeGpsDistance(pings: DistancePing[]) {
+  const sorted = [...pings].sort((a, b) => new Date(a.recordedAt).getTime() - new Date(b.recordedAt).getTime());
+  let meters = 0;
+  let segments = 0;
+  let gaps = 0;
+  const valid = (p: DistancePing) => Number.isFinite(p.latitude) && Math.abs(p.latitude) <= 90 &&
+    Number.isFinite(p.longitude) && Math.abs(p.longitude) <= 180 && Number.isFinite(new Date(p.recordedAt).getTime());
+  for (let i = 1; i < sorted.length; i++) {
+    const a = sorted[i - 1];
+    const b = sorted[i];
+    const seconds = (new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime()) / 1000;
+    if (seconds === 0 && valid(a) && valid(b) && a.latitude === b.latitude && a.longitude === b.longitude) continue;
+    if (!valid(a) || !valid(b) || a.ticketId !== b.ticketId || seconds <= 0 || seconds > 900) { gaps++; continue; }
+    const distance = haversineMeters(a.latitude, a.longitude, b.latitude, b.longitude);
+    if (!Number.isFinite(distance) || distance / seconds > 65) { gaps++; continue; }
+    meters += distance;
+    segments++;
+  }
+  return { meters, segments, gaps, samples: sorted.length };
+}
+
 /** Resolve geofence radius: explicit site value, else fallback (150 m). */
 export function resolveGeofenceRadiusMeters(
   siteRadiusMeters: number | null | undefined,

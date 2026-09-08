@@ -239,6 +239,7 @@ export default function GatekeeperPage() {
     selectedState: PlateStateCode;
   } | null>(null);
   const [purpose, setPurpose] = useState("");
+  const [entryCategory, setEntryCategory] = useState<"" | "visitor" | "routine_vendor_work" | "partner_admin" | "vendor_admin">("");
   const [notes, setNotes] = useState("");
   const [checkOutNotes, setCheckOutNotes] = useState("");
   const [duration, setDuration] = useState("60");
@@ -701,6 +702,7 @@ export default function GatekeeperPage() {
     setCompany("");
     setVehiclePlate("");
     setPurpose("");
+    setEntryCategory("");
     setNotes("");
     setCheckOutNotes("");
     setDuration("60");
@@ -826,6 +828,7 @@ export default function GatekeeperPage() {
         vehiclePlate: vehiclePlate.trim() || undefined,
         plateState: plateState ?? undefined,
         purpose: purpose.trim() || undefined,
+        entryCategory: entryCategory || null,
         notes: notes.trim() || undefined,
         expectedDurationMinutes:
           Number.isFinite(minutes) && minutes > 0 ? minutes : undefined,
@@ -1436,6 +1439,12 @@ export default function GatekeeperPage() {
                   setPurpose(e.target.value);
                 }}
               />
+            </div>
+            <div>
+              <Label htmlFor="gate-entry-category">{t("gateReport.category")}</Label>
+              <select id="gate-entry-category" className="h-10 w-full rounded-md border bg-background px-2" value={entryCategory} onChange={e => setEntryCategory(e.target.value as typeof entryCategory)}>
+                {["", "visitor", "routine_vendor_work", "partner_admin", "vendor_admin"].map(value => <option key={value} value={value}>{t(`gateReport.${value || "unclassified"}`)}</option>)}
+              </select>
             </div>
             <div>
               <Label>{t("gatekeeper.notes")}</Label>

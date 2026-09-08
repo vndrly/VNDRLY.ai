@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { translateApiError } from "@/lib/api-error";
-import { PLATFORM_EULA_TEXT } from "@workspace/platform-eula";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   useGetVendorWorkTypeSiteAfes,
@@ -44,6 +43,8 @@ type Unit = (typeof UNIT_OPTIONS)[number];
 
 type WorkTypeRow = {
   id: number;
+  partnerId: number;
+  partnerName: string;
   name: string;
   category: string | null;
   selected: boolean;
@@ -373,7 +374,8 @@ export default function VendorCatalog() {
   const save = useMutation({
     mutationFn: () => {
       const items = Object.entries(drafts)
-        .filter(([, d]) => d.selected)
+        .filter(([id, d]) => d.selected && (partnerFilter === "__all__" ||
+          data?.items.find(row => row.id === Number(id))?.partnerId === Number(partnerFilter)))
         .map(([id, d]) => ({
           workTypeId: Number(id),
           unitPrice: d.unitPrice.trim() === "" ? null : d.unitPrice.trim(),
@@ -388,7 +390,7 @@ export default function VendorCatalog() {
         updated: number;
       }>(`/api/vendors/${vendorId}/work-types`, {
         method: "PUT",
-        body: JSON.stringify({ items }),
+        body: JSON.stringify({ items, ...(partnerFilter === "__all__" ? {} : { partnerId: Number(partnerFilter) }) }),
       });
     },
     onSuccess: () => {
@@ -651,13 +653,14 @@ export default function VendorCatalog() {
                               title={t("vendorCatalog.openAfeModal")}
                             >
                               <span className="inline-flex items-center gap-1">
-                                <span className="truncate">{wt.name}</span>
+                                <span className="break-words">{wt.name}</span>
                                 <Info
                                   className="w-3.5 h-3.5 text-muted-foreground shrink-0"
                                   aria-hidden="true"
                                 />
                               </span>
                             </button>
+                            {partnerFilter === "__all__" && <p className="text-xs text-muted-foreground">{wt.partnerName}</p>}
                             {isLoadingBulkAfes ? (
                               <Skeleton
                                 className="h-5 w-32"
@@ -870,195 +873,10 @@ export default function VendorCatalog() {
         }}
       />
 
-      <PublishCatalogPanel vendorId={vendorId} hasWorkTypes={selectedCount > 0} />
     </div>
   );
 }
 
-// Task #1156 — vendor-side panel for publishing a new catalog version.
-// Surfaces the impact-count up-front (so the vendor knows how many of
-// their approved partners will be flipped to "Re-approval pending")
-// and forces an authority attestation + EULA before the server will
-// accept the publish.
-function PublishCatalogPanel({
-  vendorId,
-  hasWorkTypes,
-}: {
-  vendorId: number;
-  hasWorkTypes: boolean;
-}) {
-  const { t } = useTranslation();
-  const { toast } = useToast();
-  const qc = useQueryClient();
-  const [eulaText, setEulaText] = useState(PLATFORM_EULA_TEXT);
-  const [changeSummary, setChangeSummary] = useState("");
-  const [attest, setAttest] = useState(false);
-
-  const impactKey = ["vendor-catalog-publish-impact", vendorId];
-  const { data: impact, isLoading: impactLoading } = useQuery({
-    queryKey: impactKey,
-    queryFn: () =>
-      jsonFetch<{
-        vendorId: number;
-        approvedCount: number;
-        pendingCount: number;
-        willAutoUnapprove: number;
-        willStayPending: number;
-        missingCompliance?: string[];
-      }>(`/api/vendors/${vendorId}/catalog/publish-impact`),
-    enabled: !!vendorId,
-  });
-  const missingCompliance = impact?.missingCompliance ?? [];
-  const hasMissingCompliance = missingCompliance.length > 0;
-
-  const publish = useMutation({
-    mutationFn: () =>
-      jsonFetch<{ versionId: number; version: number }>(
-        `/api/vendors/${vendorId}/catalog/publish`,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            eulaText: eulaText.trim(),
-            changeSummary: changeSummary.trim() || null,
-            attestAuthority: attest,
-          }),
-        },
-      ),
-    onSuccess: (r) => {
-      toast({
-        title: t("vendorCatalog.publish.publishedToast", {
-          version: r.version,
-        }),
-      });
-      setEulaText(PLATFORM_EULA_TEXT);
-      setChangeSummary("");
-      setAttest(false);
-      qc.invalidateQueries({ queryKey: impactKey });
-    },
-    onError: (e: Error) =>
-      toast({
-        title: translateApiError(
-          e,
-          t,
-          t("vendorCatalog.publish.publishFailedToast"),
-        ),
-        variant: "destructive",
-      }),
-  });
-
-  const canPublish =
-    hasWorkTypes &&
-    eulaText.trim().length > 0 &&
-    attest &&
-    !hasMissingCompliance &&
-    !publish.isPending;
-
-  return (
-    <Card data-testid="card-publish-catalog">
-      <CardHeader>
-        <CardTitle className="text-lg">
-          {t("vendorCatalog.publish.sectionTitle")}
-        </CardTitle>
-        <p className="text-xs text-muted-foreground">
-          {t("vendorCatalog.publish.sectionSubtitle")}
-        </p>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {hasMissingCompliance && (
-          <div
-            className="text-sm rounded border p-2 bg-red-50 border-red-200 text-red-900"
-            data-testid="banner-publish-compliance-missing"
-          >
-            <div className="font-medium">
-              <AlertCircle className="inline w-3.5 h-3.5 mr-1" />
-              {t("vendorCatalog.publish.complianceMissingTitle")}
-            </div>
-            <div className="text-xs mt-1">
-              {t("vendorCatalog.publish.complianceMissingHelp")}
-            </div>
-          </div>
-        )}
-        <div
-          className="text-sm rounded border p-2"
-          style={{
-            background:
-              "color-mix(in srgb, var(--brand-primary) 8%, white)",
-            borderColor:
-              "color-mix(in srgb, var(--brand-primary) 35%, white)",
-          }}
-          data-testid="text-publish-impact"
-        >
-          {impactLoading ? (
-            t("vendorCatalog.publish.impactLoading")
-          ) : impact && impact.willAutoUnapprove > 0 ? (
-            <span style={{ color: "var(--brand-primary)" }}>
-              <AlertCircle className="inline w-3.5 h-3.5 mr-1" />
-              {t("vendorCatalog.publish.impactWarning", {
-                count: impact.willAutoUnapprove,
-              })}
-            </span>
-          ) : (
-            <span className="text-muted-foreground">
-              {t("vendorCatalog.publish.impactNone")}
-            </span>
-          )}
-        </div>
-        <label className="block space-y-1">
-          <span className="text-xs text-muted-foreground">
-            {t("vendorCatalog.publish.changeSummaryLabel")}
-          </span>
-          <Input
-            value={changeSummary}
-            onChange={(e) => setChangeSummary(e.target.value)}
-            placeholder={t("vendorCatalog.publish.changeSummaryPlaceholder")}
-            data-testid="input-publish-change-summary"
-          />
-        </label>
-        <label className="block space-y-1">
-          <span className="text-xs text-muted-foreground">
-            {t("vendorCatalog.publish.eulaLabel")}
-          </span>
-          <textarea
-            value={eulaText}
-            onChange={(e) => setEulaText(e.target.value)}
-            placeholder={t("vendorCatalog.publish.eulaPlaceholder")}
-            rows={6}
-            className="w-full text-sm border rounded-md p-2 font-mono"
-            data-testid="textarea-publish-eula"
-          />
-        </label>
-        <label className="flex items-start gap-2 text-sm">
-          <Checkbox
-            checked={attest}
-            onCheckedChange={(v) => setAttest(!!v)}
-            className="border-[var(--brand-primary)] data-[state=checked]:bg-[var(--brand-primary)] data-[state=checked]:border-[var(--brand-primary)] data-[state=checked]:text-white"
-            data-testid="checkbox-publish-attest"
-          />
-          <span>{t("vendorCatalog.publish.attestLabel")}</span>
-        </label>
-        <div className="flex justify-end pt-2 border-t">
-          {canPublish ? (
-            <PngPillButton
-              color="blue"
-              onClick={() => publish.mutate()}
-              disabled={publish.isPending}
-              className="px-3"
-              data-testid="button-publish-catalog"
-            >
-              {publish.isPending
-                ? t("vendorCatalog.publish.publishing")
-                : t("vendorCatalog.publish.publishButton")}
-            </PngPillButton>
-          ) : (
-            <PngPillButton disabled data-testid="button-publish-catalog">
-              {t("vendorCatalog.publish.publishButton")}
-            </PngPillButton>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
 
 function VendorWorkTypeAfeModal({
   vendorId,

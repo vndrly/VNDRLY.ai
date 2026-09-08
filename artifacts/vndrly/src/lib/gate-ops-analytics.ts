@@ -30,8 +30,8 @@ export type GateOpsAnalytics = {
 };
 
 export function buildGateOpsAnalytics(visits: VisitorRow[], now: Date): GateOpsAnalytics {
-  const onSite = visits.filter((v) => !v.checkOutTime);
-  const completed = visits.filter((v) => v.checkOutTime);
+  const onSite = visits.filter((v) => !v.checkOutTime && v.admissionStatus !== "pending");
+  const completed = visits.filter((v) => v.checkOutTime && v.admissionStatus !== "pending");
   const overdueNow = onSite.filter((v) => {
     const expected = v.expectedDurationMinutes;
     if (!expected || expected <= 0) return false;
@@ -65,7 +65,7 @@ export function buildGateOpsAnalytics(visits: VisitorRow[], now: Date): GateOpsA
     const day = dayKey(visit.checkInTime);
     const dayRow = byDay.get(day) ?? { checkIns: 0, stillOnSite: 0 };
     dayRow.checkIns += 1;
-    if (!visit.checkOutTime) dayRow.stillOnSite += 1;
+    if (!visit.checkOutTime && visit.admissionStatus !== "pending") dayRow.stillOnSite += 1;
     byDay.set(day, dayRow);
     const hour = hourUtc(visit.checkInTime);
     byHour.set(hour, (byHour.get(hour) ?? 0) + 1);
@@ -195,7 +195,7 @@ export function buildGateStaffHours(input: {
       vendorName: person.vendorName,
       daysWorked: days.size,
       visitsProcessed: recorded.length,
-      hoursWorked: hoursClockedRounded > 0 ? hoursClockedRounded : hoursOnBoothRounded,
+      hoursWorked: hoursClockedRounded,
       hoursClocked: hoursClockedRounded,
       hoursOnBooth: hoursOnBoothRounded,
       lastSeenAt: lastSeenCandidates.at(-1) ?? null,

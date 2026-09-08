@@ -28,6 +28,7 @@ import { recomputeApproval } from "../lib/approval-derivation";
 import { sha256Hex } from "../lib/hash";
 import { resolveEulaDisplayText } from "@workspace/platform-eula";
 import { sendApiError } from "../lib/apiError";
+import { ensureVendorAgreement, getVendorApprovalMissingFields } from "../lib/vendor-agreement";
 
 const router: IRouter = Router();
 
@@ -62,6 +63,9 @@ async function requirePartnerAdmin(
   }
   if (session.role === "admin") {
     return { ok: true, session, isSystemAdmin: true };
+  }
+  if (session.role !== "partner" || session.partnerId !== partnerId) {
+    return { ok: false, status: 403, body: { error: "Active partner access required", code: "auth.forbidden" } };
   }
   const [active] = await db
     .select({ role: userOrgMembershipsTable.role })
@@ -231,7 +235,8 @@ router.get(
         partnerId: partnerVendorRelationshipsTable.partnerId,
         partnerName: partnersTable.name,
         status: partnerVendorRelationshipsTable.status,
-        notes: partnerVendorRelationshipsTable.notes,
+        // Relationship notes are authored by the partner, not the vendor.
+        notes: session.role === "admin" ? partnerVendorRelationshipsTable.notes : sql<string | null>`NULL`,
         ratedAt: partnerVendorRelationshipsTable.ratedAt,
         approvedAt: partnerVendorRelationshipsTable.approvedAt,
         approvedByUserId: partnerVendorRelationshipsTable.approvedByUserId,
@@ -382,6 +387,11 @@ router.put(
     }
 
     if (targetStatus === "approved") {
+      const missing = await getVendorApprovalMissingFields(vendorId);
+      if (missing.length) {
+        res.status(409).json({ error: "Vendor approval requires current compliance details", code: "approvals.compliance_incomplete", missing });
+        return;
+      }
       // EULA gate: the partner must have signed the EULA bound to the
       // vendor's *current* catalog version. We refuse to promote until
       // that's on file — the partner UI shows the gating modal first
@@ -396,8 +406,8 @@ router.put(
       if (!vendor?.currentCatalogVersionId) {
         res.status(409).json({
           error:
-            "Vendor has not published a catalog version yet — they must publish before partners can approve",
-          code: "approvals.vendor_no_catalog",
+            "Partner must accept the EULA before approving",
+          code: "approvals.eula_not_accepted",
         });
         return;
       }
@@ -536,11 +546,18 @@ router.post(
       .from(vendorsTable)
       .where(eq(vendorsTable.id, vendorId))
       .limit(1);
-    if (!vendor?.currentCatalogVersionId) {
-      res.status(409).json({
-        error: "Vendor has not published a catalog version yet",
-        code: "approvals.vendor_no_catalog",
-      });
+    if (!vendor) {
+      res.status(404).json({ error: "Vendor not found" });
+      return;
+    }
+    const missing = await getVendorApprovalMissingFields(vendorId);
+    if (missing.length) {
+      res.status(409).json({ error: "Vendor approval requires current compliance details", code: "approvals.compliance_incomplete", missing });
+      return;
+    }
+    const agreementVersionId = vendor.currentCatalogVersionId ?? await ensureVendorAgreement(vendorId);
+    if (vendor.currentCatalogVersionId && req.body?.catalogVersionId !== vendor.currentCatalogVersionId) {
+      res.status(409).json({ error: "Reload the agreement before accepting", code: "approvals.agreement_changed" });
       return;
     }
     const [version] = await db
@@ -550,7 +567,7 @@ router.post(
         eulaHash: vendorCatalogVersionsTable.eulaHash,
       })
       .from(vendorCatalogVersionsTable)
-      .where(eq(vendorCatalogVersionsTable.id, vendor.currentCatalogVersionId))
+      .where(eq(vendorCatalogVersionsTable.id, agreementVersionId))
       .limit(1);
     if (!version) {
       res.status(409).json({
@@ -638,6 +655,11 @@ router.post(
           .limit(1);
         if (!rel) {
           results.push({ vendorId, ok: false, reason: "no_relationship" });
+          continue;
+        }
+        const missing = await getVendorApprovalMissingFields(vendorId);
+        if (missing.length) {
+          results.push({ vendorId, ok: false, reason: "compliance_incomplete" });
           continue;
         }
         const [vendor] = await db

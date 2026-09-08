@@ -14,6 +14,7 @@ import {
   vendorWorkTypesTable,
   partnerVendorWorkTypeApprovalsTable,
   userOrgMembershipsTable,
+  partnerVendorRelationshipsTable,
 } from "@workspace/db";
 import { getSessionFromRequest } from "../lib/session";
 
@@ -110,7 +111,12 @@ router.get(
         vendorsTable,
         eq(vendorWorkTypesTable.vendorId, vendorsTable.id),
       )
-      .where(eq(vendorWorkTypesTable.workTypeId, workTypeId))
+      .innerJoin(workTypesTable, eq(workTypesTable.id, vendorWorkTypesTable.workTypeId))
+      .innerJoin(partnerVendorRelationshipsTable, and(
+        eq(partnerVendorRelationshipsTable.vendorId, vendorWorkTypesTable.vendorId),
+        eq(partnerVendorRelationshipsTable.partnerId, partnerId),
+        eq(partnerVendorRelationshipsTable.status, "approved")))
+      .where(and(eq(vendorWorkTypesTable.workTypeId, workTypeId), eq(workTypesTable.partnerId, partnerId)))
       .orderBy(asc(vendorsTable.name));
 
     const approvals = await db
@@ -191,6 +197,16 @@ router.post(
           ),
         );
       res.json({ partnerId, vendorId, workTypeId, approved: false });
+      return;
+    }
+
+    const [ownedWorkType] = await db.select({ id: workTypesTable.id }).from(workTypesTable)
+      .where(and(eq(workTypesTable.id, workTypeId), eq(workTypesTable.partnerId, partnerId))).limit(1);
+    const [relationship] = await db.select({ id: partnerVendorRelationshipsTable.id }).from(partnerVendorRelationshipsTable)
+      .where(and(eq(partnerVendorRelationshipsTable.partnerId, partnerId), eq(partnerVendorRelationshipsTable.vendorId, vendorId),
+        eq(partnerVendorRelationshipsTable.status, "approved"))).limit(1);
+    if (!ownedWorkType || !relationship) {
+      res.status(403).json({ error: "Approved partner catalog access required", code: "auth.forbidden" });
       return;
     }
 

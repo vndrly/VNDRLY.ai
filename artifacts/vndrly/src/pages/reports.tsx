@@ -8,6 +8,7 @@ import {
   type ReactElement,
 } from "react";
 import { useTranslation } from "react-i18next";
+import { ACCOUNTING_ENABLED, TAX_REPORTING_ENABLED, reportEnabled } from "@/lib/release-features";
 import { translateApiError } from "@/lib/api-error";
 import {
   BarChart,
@@ -452,7 +453,11 @@ interface ReportCardProps {
   deepLink?: ReportDeepLink | null;
 }
 
-function ReportCard(props: ReportCardProps): ReactElement {
+function ReportCard(props: ReportCardProps): ReactElement | null {
+  return reportEnabled(props.apiPath) ? <EnabledReportCard {...props} /> : null;
+}
+
+function EnabledReportCard(props: ReportCardProps): ReactElement {
   const { t } = useTranslation();
   // Apply a matching deep-link as the initial period so the very first
   // fetch already uses the requested range (no flicker between the
@@ -5120,9 +5125,9 @@ function VendorReports({
           );
         }}
       />
-      <EDeliveryConsentCard vendorId={vendorId} />
-      <VendorQbAccountMappingCard vendorId={vendorId} />
-      <QbExportCard vendorId={vendorId} />
+      {TAX_REPORTING_ENABLED && <EDeliveryConsentCard vendorId={vendorId} />}
+      {ACCOUNTING_ENABLED && <VendorQbAccountMappingCard vendorId={vendorId} />}
+      {ACCOUNTING_ENABLED && <QbExportCard vendorId={vendorId} />}
     </div>
   );
 }
@@ -5429,8 +5434,8 @@ function PartnerReports({
           );
         }}
       />
-      <Dashboard1099Card scope={`partner/${partnerId}`} />
-      <FireExportCard scope={`partner/${partnerId}`} />
+      {TAX_REPORTING_ENABLED && <Dashboard1099Card scope={`partner/${partnerId}`} />}
+      {TAX_REPORTING_ENABLED && <FireExportCard scope={`partner/${partnerId}`} />}
     </div>
   );
 }
@@ -5493,12 +5498,12 @@ function AdminReports({
           )
         }
       />
-      <QbAccountMappingCard />
-      <QbAccountMappingAuditCard />
-      <Dashboard1099Card scope="admin" />
-      <CategoryChangeLogCard />
-      <FireExportCard scope="admin" />
-      <AuditCard />
+      {ACCOUNTING_ENABLED && <QbAccountMappingCard />}
+      {ACCOUNTING_ENABLED && <QbAccountMappingAuditCard />}
+      {TAX_REPORTING_ENABLED && <Dashboard1099Card scope="admin" />}
+      {TAX_REPORTING_ENABLED && <CategoryChangeLogCard />}
+      {TAX_REPORTING_ENABLED && <FireExportCard scope="admin" />}
+      {ACCOUNTING_ENABLED && <AuditCard />}
     </div>
   );
 }
@@ -9878,6 +9883,9 @@ export default function ReportsPage(): ReactElement {
 
       {user?.role === "vendor" && user.vendorId && (
         <VendorReports vendorId={user.vendorId} deepLink={deepLink} />
+      )}
+      {(user?.role === "admin" || (user?.role === "vendor" && (user.vendorRole === "office" || user.vendorRole === "both" || user.availableMemberships.some((m) => m.id === user.activeMembershipId && m.role === "admin")))) && (
+        <Link href="/payroll" className="inline-block underline font-medium">{t("payrollDraft.reportsLink")}</Link>
       )}
       {user?.role === "partner" && user.partnerId && (
         <PartnerReports partnerId={user.partnerId} deepLink={deepLink} />

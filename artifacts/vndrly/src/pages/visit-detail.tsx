@@ -1,5 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
-import { lazy, Suspense } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { lazy, Suspense, useEffect, useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import { PngPillButton } from "@/components/png-pill-rollover";
+import { Save } from "lucide-react";
 import { Link } from "wouter";
 import { useTranslation } from "react-i18next";
 import { visitsApi } from "@/lib/visits-api";
@@ -43,6 +46,12 @@ function escapeHtml(value: unknown): string {
 
 export default function VisitDetailPage({ id }: { id: string }) {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [categoryDraft, setCategoryDraft] = useState<string | undefined>();
+  const [categoryError, setCategoryError] = useState("");
+  const [savingCategory, setSavingCategory] = useState(false);
+  useEffect(() => { setCategoryDraft(undefined); setCategoryError(""); }, [id]);
   const visitId = parseInt(id, 10);
   // Task #710 — visit detail is gated by `visits.rate_limited` on the
   // server. There's no poll to suspend, but we still want to (a) avoid
@@ -190,6 +199,19 @@ export default function VisitDetailPage({ id }: { id: string }) {
               }
             />
             <Row label={t("visitor.detail.purpose")} value={data.purpose ?? "—"} />
+            <Row label={t("gateReport.category")} value={t(`gateReport.${data.entryCategory || "unclassified"}`)} />
+            {user && ["admin", "partner", "vendor"].includes(user.role) && <div className="flex flex-wrap items-center gap-2">
+              <select aria-label={t("gateReport.category")} className="h-10 rounded-md border bg-background px-2" value={categoryDraft ?? data.entryCategory ?? ""} onChange={event => setCategoryDraft(event.target.value)}>
+                {["", "visitor", "routine_vendor_work", "partner_admin", "vendor_admin"].map(value => <option key={value} value={value}>{t(`gateReport.${value || "unclassified"}`)}</option>)}
+              </select>
+              <PngPillButton color="blue" disabled={savingCategory || categoryDraft === undefined} aria-label={t("gateReport.saveCategory")} title={t("gateReport.saveCategory")} onClick={async () => {
+                setSavingCategory(true); setCategoryError("");
+                try { await visitsApi.setEntryCategory(visitId, (categoryDraft || null) as NonNullable<typeof data>["entryCategory"]); setCategoryDraft(undefined); await queryClient.invalidateQueries({ queryKey: ["visit", visitId] }); await queryClient.invalidateQueries({ queryKey: ["visits-list"] }); }
+                catch (failure) { setCategoryError(failure instanceof Error ? failure.message : t("gateReport.error")); }
+                finally { setSavingCategory(false); }
+              }}><Save className="h-4 w-4" /></PngPillButton>
+              {categoryError && <p role="alert" className="text-destructive">{categoryError}</p>}
+            </div>}
             <Row label={t("visitor.detail.phone")} value={data.phone ?? "—"} />
             <Row label={t("visitor.detail.email")} value={data.email ?? "—"} />
             <Row

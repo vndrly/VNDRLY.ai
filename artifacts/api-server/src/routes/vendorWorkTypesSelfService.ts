@@ -23,6 +23,7 @@ import {
   type SessionPayload,
 } from "../lib/session";
 import { sendApiError } from "../lib/apiError";
+import { vendorCatalogPartnerIds, catalogSaveScope } from "../lib/partner-catalog-access";
 
 const router: IRouter = Router();
 
@@ -59,6 +60,9 @@ async function requireVendorAdmin(
   }
   if (session.role === "admin") {
     return { ok: true, session, isSystemAdmin: true };
+  }
+  if (session.role !== "vendor" || session.vendorId !== vendorId) {
+    return { ok: false, status: 403, body: { error: "Active vendor access required", code: "auth.forbidden" } };
   }
   const [active] = await db
     .select({ role: userOrgMembershipsTable.role })
@@ -105,14 +109,23 @@ router.get(
       sendApiError(res, 404, "vendor.not_found", "Vendor not found");
       return;
     }
-    const workTypes = await db
+    const partnerIds = await vendorCatalogPartnerIds(getSessionFromRequest(req)!, vendorId);
+    if (partnerIds === null) {
+      sendApiError(res, 403, "auth.forbidden", "Forbidden");
+      return;
+    }
+    const workTypes = partnerIds.length ? await db
       .select({
         id: workTypesTable.id,
         name: workTypesTable.name,
         category: workTypesTable.category,
+        partnerId: workTypesTable.partnerId,
+        partnerName: partnersTable.name,
       })
       .from(workTypesTable)
-      .orderBy(asc(workTypesTable.category), asc(workTypesTable.name));
+      .innerJoin(partnersTable, eq(partnersTable.id, workTypesTable.partnerId))
+      .where(inArray(workTypesTable.partnerId, partnerIds))
+      .orderBy(asc(workTypesTable.category), asc(workTypesTable.name)) : [];
     const selected = await db
       .select({
         workTypeId: vendorWorkTypesTable.workTypeId,
@@ -203,6 +216,7 @@ router.put(
       return;
     }
     const body = req.body as {
+      partnerId?: number;
       workTypeIds?: number[];
       items?: VendorWorkTypeWriteItem[];
     };
@@ -214,10 +228,21 @@ router.put(
     // Validate ids against the catalog so a typo'd id doesn't silently
     // create a row pointing at nothing once a future work type with
     // that id appears.
-    const allIds = await db
-      .select({ id: workTypesTable.id })
-      .from(workTypesTable);
-    const validIds = new Set(allIds.map((r) => r.id));
+    const partnerIds = await vendorCatalogPartnerIds(auth.session, vendorId);
+    if (!partnerIds || (body.partnerId !== undefined &&
+      (!Number.isInteger(body.partnerId) || !partnerIds.includes(body.partnerId)))) {
+      sendApiError(res, 403, "auth.forbidden", "Partner catalog access required");
+      return;
+    }
+    const allIds = partnerIds.length ? await db
+      .select({ id: workTypesTable.id, partnerId: workTypesTable.partnerId })
+      .from(workTypesTable).where(inArray(workTypesTable.partnerId, partnerIds)) : [];
+    const validIds = catalogSaveScope(allIds, body.partnerId);
+    const submittedIds = Array.isArray(body.items) ? body.items.map(row => row.workTypeId) : body.workTypeIds;
+    if (submittedIds?.some(id => !validIds.has(Number(id)))) {
+      sendApiError(res, 403, "auth.forbidden", "Work type is outside the authorized partner catalog");
+      return;
+    }
 
     // Build a normalized map of (workTypeId -> normalized payload).
     // The legacy shape (`workTypeIds: number[]`) maps each id to a
@@ -237,6 +262,11 @@ router.put(
     >();
     if (Array.isArray(body.items)) {
       for (const raw of body.items) {
+        if (raw.unitPrice !== undefined && raw.unitPrice !== null && raw.unitPrice !== "" &&
+          (!Number.isFinite(Number(raw.unitPrice)) || Number(raw.unitPrice) < 0 || Number(raw.unitPrice) > 9999999999.99)) {
+          sendApiError(res, 400, "validation.invalid_price", "Price must be a non-negative amount with at most ten whole digits");
+          return;
+        }
         const n = Number(raw?.workTypeId);
         if (!validIds.has(n)) continue;
         wanted.set(n, {
@@ -303,7 +333,7 @@ router.put(
         }
       }
       for (const id of existingById.keys()) {
-        if (!wanted.has(id)) toRemove.push(id);
+        if (validIds.has(id) && !wanted.has(id)) toRemove.push(id);
       }
 
       if (toAdd.length) {
@@ -398,6 +428,40 @@ router.put(
   },
 );
 
+// A one-price edit never resubmits cached selections or sibling prices.
+router.put("/vendors/:vendorId/work-types/:workTypeId/price", async (req, res): Promise<void> => {
+  const vendorId = Number(req.params.vendorId);
+  const workTypeId = Number(req.params.workTypeId);
+  const partnerId = Number(req.body?.partnerId);
+  if (![vendorId, workTypeId, partnerId].every(id => Number.isInteger(id) && id > 0)) {
+    sendApiError(res, 400, "validation.invalid_id", "Vendor, work type and partner IDs are required");
+    return;
+  }
+  const auth = await requireVendorAdmin(req, vendorId);
+  if (!auth.ok) { res.status(auth.status).json(auth.body); return; }
+  const partnerIds = await vendorCatalogPartnerIds(auth.session, vendorId);
+  if (!partnerIds?.includes(partnerId)) {
+    sendApiError(res, 403, "auth.forbidden", "Partner catalog access required"); return;
+  }
+  const [owned] = await db.select({ id: workTypesTable.id }).from(workTypesTable)
+    .where(and(eq(workTypesTable.id, workTypeId), eq(workTypesTable.partnerId, partnerId))).limit(1);
+  if (!owned) { sendApiError(res, 403, "auth.forbidden", "Work type is outside the partner catalog"); return; }
+  const body = req.body as VendorWorkTypeWriteItem;
+  if (body.unitPrice === undefined || body.unitPrice === "" || body.unitPrice === null ||
+    !Number.isFinite(Number(body.unitPrice)) || Number(body.unitPrice) < 0 || Number(body.unitPrice) > 9999999999.99) {
+    sendApiError(res, 400, "validation.invalid_price", "A non-negative price is required"); return;
+  }
+  const reason = normalizeNotes(body.priceChangeReason);
+  const [updated] = await db.update(vendorWorkTypesTable).set({
+    unitPrice: normalizeUnitPrice(body.unitPrice), unit: normalizeUnit(body.unit),
+    currency: normalizeCurrency(body.currency), notes: normalizeNotes(body.notes),
+    ...(reason ? { lastPriceChangeReason: reason } : {}),
+  }).where(and(eq(vendorWorkTypesTable.vendorId, vendorId), eq(vendorWorkTypesTable.workTypeId, workTypeId)))
+    .returning({ workTypeId: vendorWorkTypesTable.workTypeId });
+  if (!updated) { sendApiError(res, 404, "work_type.not_selected", "Service is not selected"); return; }
+  res.json({ vendorId, partnerId, workTypeId, updated: true });
+});
+
 // Add-only endpoint used by the partner/admin "catalog conflict"
 // recovery dialog in site-location-detail. Unlike the full PUT above,
 // this one is purely additive (no removes, no pricing edits) so it can
@@ -480,12 +544,18 @@ router.post(
       return;
     }
     const [wt] = await db
-      .select({ id: workTypesTable.id })
+      .select({ id: workTypesTable.id, partnerId: workTypesTable.partnerId })
       .from(workTypesTable)
       .where(eq(workTypesTable.id, workTypeId))
       .limit(1);
     if (!wt) {
       sendApiError(res, 404, "work_type.not_found", "Work type not found");
+      return;
+    }
+
+    const partnerIds = await vendorCatalogPartnerIds(session, vendorId);
+    if (wt.partnerId === null || !partnerIds?.includes(wt.partnerId)) {
+      sendApiError(res, 403, "auth.forbidden", "Work type is outside the authorized partner catalog");
       return;
     }
 
@@ -742,22 +812,19 @@ router.get(
       return;
     }
 
-    const rows = await db
+    const accessiblePartnerIds = await vendorCatalogPartnerIds(auth.session, vendorId) ?? [];
+    const rows = accessiblePartnerIds.length ? await db
       .select({
-        workTypeId: siteWorkAssignmentsTable.workTypeId,
+        workTypeId: workTypesTable.id,
         partnerId: partnersTable.id,
         partnerName: partnersTable.name,
       })
-      .from(siteWorkAssignmentsTable)
-      .innerJoin(
-        siteLocationsTable,
-        eq(siteWorkAssignmentsTable.siteLocationId, siteLocationsTable.id),
-      )
+      .from(workTypesTable)
       .innerJoin(
         partnersTable,
-        eq(siteLocationsTable.partnerId, partnersTable.id),
+        eq(workTypesTable.partnerId, partnersTable.id),
       )
-      .where(eq(siteWorkAssignmentsTable.vendorId, vendorId));
+      .where(inArray(workTypesTable.partnerId, accessiblePartnerIds)) : [];
 
     // De-dupe partners by id (a partner with N sites/work types appears
     // many times in the join) and the (workTypeId, partnerId) pairs
@@ -792,17 +859,7 @@ router.get(
     const partnerIds = Array.from(partnersById.keys());
     const partnerWorkTypes: { partnerId: number; workTypeId: number }[] = [];
     if (partnerIds.length > 0) {
-      const allRows = await db
-        .select({
-          partnerId: siteLocationsTable.partnerId,
-          workTypeId: siteWorkAssignmentsTable.workTypeId,
-        })
-        .from(siteWorkAssignmentsTable)
-        .innerJoin(
-          siteLocationsTable,
-          eq(siteWorkAssignmentsTable.siteLocationId, siteLocationsTable.id),
-        )
-        .where(inArray(siteLocationsTable.partnerId, partnerIds));
+      const allRows = rows;
       const allPairs = new Set<string>();
       for (const r of allRows) {
         if (r.partnerId === null) continue;

@@ -1,6 +1,7 @@
 // AskV read-only tools — safety, sites, ops, hotlist, catalog, notifications.
 
 import { and, asc, desc, eq, gte, ilike, inArray, isNull, sql } from "drizzle-orm";
+import { vendorCatalogPartnerIds } from "../lib/partner-catalog-access";
 import {
   db,
   safetyEventsTable,
@@ -39,7 +40,10 @@ import {
 } from "./data-tools-helpers";
 import { LIVE_TRACKED_LIFECYCLE_STATES } from "@workspace/ticket-status-meta";
 import { normalizePlateState } from "@workspace/plate-state";
+import { summarizeGpsDistance } from "@workspace/map-utils";
 import { estimateMapboxDrivingRoute } from "../lib/mapbox-routing";
+import { approvedPartnersForVendor, vendorCanReadPartner, employeeCanReadSite } from "../lib/approved-partner-sites";
+import { GateReportError, getGateReport } from "../lib/gate-report";
 
 import { OPS_DATA_TOOL_NAMES } from "./tool-names";
 export { OPS_DATA_TOOL_NAMES } from "./tool-names";
@@ -124,10 +128,22 @@ async function lookupSiteOperationalStatus(args: Record<string, unknown>, sessio
   if (!Number.isFinite(siteId)) return err("siteId is required.");
   const status = await loadSiteOperationalStatus(siteId);
   if (!status) return err(`Site ${siteId} not found.`);
-  if (session.role === "partner" && session.partnerId !== status.partnerId) {
+  if (!(await canReadSitePartner(session, status.partnerId, siteId))) {
     return err("Site not visible to your account.");
   }
   return JSON.stringify(status);
+}
+
+async function canReadSitePartner(session: SessionPayload, partnerId: number | null, siteId: number) {
+  if (session.role === "admin") return true;
+  if (session.role === "partner") return !!session.partnerId && session.partnerId === partnerId;
+  if (session.role === "vendor" && session.vendorId) return vendorCanReadPartner(session.vendorId, partnerId);
+  if (session.role === "field_employee" && session.userId) {
+    const [person] = await db.select({ id: vendorPeopleTable.id, vendorId: vendorPeopleTable.vendorId }).from(vendorPeopleTable)
+      .where(and(eq(vendorPeopleTable.userId, session.userId), eq(vendorPeopleTable.isActive, true), isNull(vendorPeopleTable.deletedAt))).limit(1);
+    return !!person && employeeCanReadSite(person.id, person.vendorId, partnerId, siteId);
+  }
+  return false;
 }
 
 async function querySiteLocations(args: Record<string, unknown>, session: SessionPayload) {
@@ -138,12 +154,9 @@ async function querySiteLocations(args: Record<string, unknown>, session: Sessio
   if (session.role === "partner" && session.partnerId) {
     filters.push(eq(siteLocationsTable.partnerId, session.partnerId));
   } else if (session.role === "vendor" && session.vendorId) {
-    filters.push(
-      sql`${siteLocationsTable.id} IN (
-        SELECT site_location_id FROM site_work_assignments
-        WHERE vendor_id = ${session.vendorId}
-      )`,
-    );
+    filters.push(inArray(siteLocationsTable.partnerId, approvedPartnersForVendor(session.vendorId)));
+  } else if (session.role !== "admin") {
+    return err("No org scope on this session.");
   }
   if (args.inactiveOnly === true) {
     filters.push(eq(siteLocationsTable.isActive, false));
@@ -179,7 +192,7 @@ async function lookupSiteDetail(args: Record<string, unknown>, session: SessionP
     .where(eq(siteLocationsTable.id, siteId))
     .limit(1);
   if (!site) return err(`Site ${siteId} not found.`);
-  if (session.role === "partner" && session.partnerId !== site.partnerId) {
+  if (!(await canReadSitePartner(session, site.partnerId, siteId))) {
     return err("Site not visible to your account.");
   }
   const assignments = await db
@@ -623,15 +636,16 @@ async function queryCrewEta(args: Record<string, unknown>, session: SessionPaylo
   if (!ticket) return err("No active ticket found for that crew member in your scope.");
   const lastGps = await loadLatestGps(ticket.ticketId);
   if (!lastGps) return err(`No GPS points found for ticket ${ticket.ticketId}.`);
-  const distanceToSiteMiles = milesBetween(lastGps, {
-    latitude: ticket.siteLatitude,
-    longitude: ticket.siteLongitude,
-  });
+  const gpsAgeMs = Date.now() - new Date(lastGps.recordedAt).getTime();
+  if (!Number.isFinite(gpsAgeMs) || gpsAgeMs < -60_000 || gpsAgeMs > 15 * 60_000) return err("GPS is stale; a current arrival estimate is unavailable.");
+  if (ticket.lifecycleState !== "en_route") return JSON.stringify({ ticketId: ticket.ticketId, lifecycleState: ticket.lifecycleState, etaMinutes: null, note: "Crew is not currently en route." });
+  const route = await estimateMapboxDrivingRoute({ origin: lastGps, destination: { latitude: ticket.siteLatitude, longitude: ticket.siteLongitude } });
+  if (!route.ok) return JSON.stringify({ error: route.message, etaMinutes: null });
+  const distanceToSiteMiles = route.distanceMiles;
   const speedMph = lastGps.speedMps && lastGps.speedMps > 0
     ? lastGps.speedMps * 2.2369362921
     : null;
-  const fallbackMph = 45;
-  const etaMinutes = Math.round((distanceToSiteMiles / (speedMph && speedMph >= 5 ? speedMph : fallbackMph)) * 60);
+  const etaMinutes = route.durationMinutes;
   const etaAt = new Date(Date.now() + etaMinutes * 60_000);
   return JSON.stringify({
     employee: {
@@ -645,7 +659,7 @@ async function queryCrewEta(args: Record<string, unknown>, session: SessionPaylo
     speedMph,
     etaMinutes,
     etaAt,
-    estimateBasis: speedMph && speedMph >= 5 ? "current_gps_speed" : "fallback_45_mph",
+    estimateBasis: "mapbox_road_route_estimate",
     locationSource: "ticket_gps_trail",
   });
 }
@@ -694,10 +708,7 @@ async function queryCrewRouteSummary(args: Record<string, unknown>, session: Ses
     .where(eq(gpsLogsTable.ticketId, Math.floor(ticketId)))
     .orderBy(asc(gpsLogsTable.recordedAt))
     .limit(500);
-  let miles = 0;
-  for (let i = 1; i < points.length; i += 1) {
-    miles += milesBetween(points[i - 1], points[i]);
-  }
+  const distance = summarizeGpsDistance(points.map((point) => ({ ...point, ticketId: Math.floor(ticketId) })));
   const first = points[0] ?? null;
   const last = points[points.length - 1] ?? null;
   const durationMinutes =
@@ -732,7 +743,10 @@ async function queryCrewRouteSummary(args: Record<string, unknown>, session: Ses
     points: points.length,
     first,
     last,
-    routeMilesApprox: Math.round(miles * 10) / 10,
+    routeMilesApprox: distance.segments ? Math.round(distance.meters / 1609.344 * 10) / 10 : null,
+    excludedGpsSegments: distance.gaps,
+    potentiallyTruncated: points.length === 500,
+    mileageBasis: "Sampled ticket GPS; not odometer mileage or a complete employee day total.",
     durationMinutes,
     activeCheckIn: activeCheckIn ?? null,
     locationSource: "ticket_gps_trail",
@@ -1182,19 +1196,22 @@ async function queryVendorCatalog(args: Record<string, unknown>, session: Sessio
   const vendorId =
     session.role === "vendor" ? session.vendorId : args.vendorId ? Number(args.vendorId) : null;
   if (!vendorId) return err("Vendor scope required.");
+  const partnerIds = await vendorCatalogPartnerIds(session, vendorId);
+  if (partnerIds === null) return err("Authorized vendor catalog access required.");
   const limit = Math.min(MAX_LIMIT, clampLimit(args.limit));
-  const rows = await db
+  const rows = partnerIds.length ? await db
     .select({
       id: vendorWorkTypesTable.id,
       workTypeId: vendorWorkTypesTable.workTypeId,
       workTypeName: workTypesTable.name,
+      partnerId: workTypesTable.partnerId,
       unitPrice: vendorWorkTypesTable.unitPrice,
       unit: vendorWorkTypesTable.unit,
     })
     .from(vendorWorkTypesTable)
     .innerJoin(workTypesTable, eq(vendorWorkTypesTable.workTypeId, workTypesTable.id))
-    .where(eq(vendorWorkTypesTable.vendorId, vendorId))
-    .limit(limit);
+    .where(and(eq(vendorWorkTypesTable.vendorId, vendorId), inArray(workTypesTable.partnerId, partnerIds)))
+    .limit(limit) : [];
   return JSON.stringify({ rows, limit, vendorId });
 }
 
@@ -1385,6 +1402,8 @@ async function queryActiveVisitors(args: Record<string, unknown>, session: Sessi
     filters.push(sql`${siteVisitsTable.siteLocationId} IN (SELECT id FROM site_locations WHERE partner_id = ${session.partnerId})`);
   } else if (session.role === "vendor" && session.vendorId) {
     filters.push(eq(siteVisitsTable.hostVendorId, session.vendorId));
+  } else if (session.role !== "admin") {
+    return err("No organization scope on this session.");
   }
   const rows = await db
     .select({
@@ -1418,6 +1437,9 @@ export async function runOpsDataTool(
   session: SessionPayload,
 ): Promise<string> {
   switch (name) {
+    case "query_gate_report":
+      try { return JSON.stringify(await getGateReport(session, { ...args, limit: 50 })); }
+      catch (error) { if (error instanceof GateReportError) return err(error.message); throw error; }
     case "query_safety_events":
       return querySafetyEvents(args, session);
     case "lookup_safety_metrics":

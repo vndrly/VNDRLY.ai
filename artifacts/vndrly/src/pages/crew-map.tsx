@@ -19,6 +19,7 @@ import {
 } from "@workspace/map-utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RecentTripsCard } from "@/components/map/recent-trips-card";
+import { CrewInspector } from "@/components/map/crew-inspector";
 import { MapComplianceIssuesCard } from "@/components/map/map-compliance-issues-card";
 import type { MapboxCircle, MapboxLine, MapboxPoint } from "@/components/mapbox-map";
 
@@ -324,6 +325,9 @@ export default function CrewMapPage({ portalMode = "default" }: CrewMapPageProps
     }
   });
   const [problemFilterOnly, setProblemFilterOnly] = useState(false);
+  const [employeeFilter, setEmployeeFilter] = useState("all");
+  const [activityFilter, setActivityFilter] = useState("all");
+  const [showVisitors, setShowVisitors] = useState(true);
   const [showGeofences, setShowGeofences] = useState(true);
   useEffect(() => {
     try {
@@ -334,7 +338,7 @@ export default function CrewMapPage({ portalMode = "default" }: CrewMapPageProps
   }, [siteFilter]);
   const siteParams = !isForemanPortal && user?.role === "partner" && user.partnerId ? { partnerId: user.partnerId } : undefined;
   const { data: vendorSites } = useListSiteLocations(siteParams, {
-    query: { enabled: !isForemanPortal && siteParams != null, queryKey: getListSiteLocationsQueryKey(siteParams) },
+    query: { enabled: !isForemanPortal && !!user, queryKey: getListSiteLocationsQueryKey(siteParams) },
   });
   const [fieldSites, setFieldSites] = useState<Array<{ id: number; name: string }>>([]);
   useEffect(() => {
@@ -382,9 +386,10 @@ export default function CrewMapPage({ portalMode = "default" }: CrewMapPageProps
   }, [sites]);
 
   const displayedLocations = useMemo(() => {
-    if (!problemFilterOnly) return locations;
     return locations.filter((loc) =>
-      isProblemCrewMember({
+      (employeeFilter === "all" || String(loc.employeeId) === employeeFilter) &&
+      (activityFilter === "all" || loc.lifecycleState === activityFilter) &&
+      (!problemFilterOnly || isProblemCrewMember({
         batteryLevel: loc.batteryLevel,
         recordedAt: loc.recordedAt,
         lifecycleState: loc.lifecycleState,
@@ -393,9 +398,9 @@ export default function CrewMapPage({ portalMode = "default" }: CrewMapPageProps
         latitude: loc.latitude,
         longitude: loc.longitude,
         speedMps: loc.speedMps,
-      }),
+      })),
     );
-  }, [locations, problemFilterOnly]);
+  }, [locations, problemFilterOnly, employeeFilter, activityFilter]);
 
   // Task #710 — per-resource gates. The fetchers below early-return
   // while parked, but we also stash the latest `rateLimited` flag in a
@@ -828,7 +833,7 @@ export default function CrewMapPage({ portalMode = "default" }: CrewMapPageProps
     });
     const sitePoints = Array.from(
       new Map(
-        locations
+        displayedLocations
           .filter((l) => l.siteLatitude != null && l.siteLongitude != null)
           .map((l) => [
             `${l.siteLatitude},${l.siteLongitude}`,
@@ -844,7 +849,7 @@ export default function CrewMapPage({ portalMode = "default" }: CrewMapPageProps
           ]),
       ).values(),
     );
-    const visitorPoints: MapboxPoint[] = isForemanPortal
+    const visitorPoints: MapboxPoint[] = isForemanPortal || !showVisitors
       ? []
       : visitors.map((v) => ({
           id: `visitor-${v.id}`,
@@ -861,11 +866,11 @@ export default function CrewMapPage({ portalMode = "default" }: CrewMapPageProps
             </div>`,
         }));
     return [...points, ...sitePoints, ...visitorPoints];
-  }, [displayedLocations, flashingEmployeeIds, isForemanPortal, locations, t, visitors]);
+  }, [displayedLocations, flashingEmployeeIds, isForemanPortal, showVisitors, t, visitors]);
 
   const mapLines = useMemo<MapboxLine[]>(
     () =>
-      locations
+      displayedLocations
         .filter((loc) => loc.lifecycleState === "en_route" && loc.siteLatitude != null && loc.siteLongitude != null)
         .map((loc) => ({
           id: `route-${loc.employeeId}`,
@@ -877,7 +882,7 @@ export default function CrewMapPage({ portalMode = "default" }: CrewMapPageProps
           width: 2,
           opacity: 0.75,
         })),
-    [locations],
+    [displayedLocations],
   );
 
   const mapCircles = useMemo<MapboxCircle[]>(
@@ -899,7 +904,7 @@ export default function CrewMapPage({ portalMode = "default" }: CrewMapPageProps
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <Link href={isForemanPortal ? "/foreman" : "/"} className="group inline-flex items-center" aria-label="Back" data-testid="button-back"><SphereBackButton size={40} /></Link>
           <div>
@@ -937,6 +942,32 @@ export default function CrewMapPage({ portalMode = "default" }: CrewMapPageProps
       </div>
 
       <div className="flex flex-wrap items-center gap-4 text-sm">
+        <Select value={employeeFilter} onValueChange={setEmployeeFilter}>
+          <SelectTrigger className="w-full sm:w-[220px]" aria-label={t("crewMap.employeeFilter")}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t("crewMap.allEmployees")}</SelectItem>
+            {Array.from(new Map(locations.map((loc) => [loc.employeeId, loc])).values()).map((loc) => (
+              <SelectItem key={loc.employeeId} value={String(loc.employeeId)}>{loc.employeeName}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={activityFilter} onValueChange={setActivityFilter}>
+          <SelectTrigger className="w-full sm:w-[180px]" aria-label={t("crewMap.activityFilter")}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t("crewMap.allActivities")}</SelectItem>
+            {["en_route", "on_location", "on_site"].map((state) => (
+              <SelectItem key={state} value={state}>{lifecycleLabel(state, t)}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {!isForemanPortal && <label className="inline-flex items-center gap-2 cursor-pointer">
+          <Checkbox checked={showVisitors} onCheckedChange={(value) => setShowVisitors(value === true)} />
+          {t("crewMap.showVisitors")}
+        </label>}
         <label className="inline-flex items-center gap-2 cursor-pointer">
           <Checkbox
             checked={problemFilterOnly}
@@ -954,6 +985,7 @@ export default function CrewMapPage({ portalMode = "default" }: CrewMapPageProps
           {t("crewMap.showGeofences", "Show site geofences")}
         </label>
       </div>
+
 
       <Card className="border-dashed">
         <CardContent className="py-3 text-xs text-muted-foreground flex items-start gap-2">
@@ -1077,6 +1109,7 @@ export default function CrewMapPage({ portalMode = "default" }: CrewMapPageProps
               </div>
             </CardContent>
           </Card>
+          {employeeFilter !== "all" && displayedLocations[0] && <CrewInspector point={displayedLocations[0]} scope={`${user?.userId}:${user?.role}:${user?.vendorId}:${user?.partnerId}`} />}
         </div>
 
         <div>

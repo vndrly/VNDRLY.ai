@@ -8,6 +8,9 @@ export const workTypesTable = pgTable(
   "work_types",
   {
     id: serial("id").primaryKey(),
+    // Explicit lineage for temporary partner copies; historical references
+    // continue to point at their original work type.
+    sourceWorkTypeId: integer("source_work_type_id"),
     // NULL = platform-wide (admin master catalog). Non-null = partner-
     // scoped product/service visible only on that partner's catalog.
     partnerId: integer("partner_id").references(() => partnersTable.id, {
@@ -38,6 +41,9 @@ export const workTypesTable = pgTable(
     taxTreatment: text("tax_treatment"),
   },
   (t) => ({
+    uniqPartnerSource: uniqueIndex("work_types_partner_source_unique")
+      .on(t.partnerId, t.sourceWorkTypeId)
+      .where(sql`${t.sourceWorkTypeId} IS NOT NULL`),
     // Case-insensitive uniqueness on the trimmed display name. Mirrors
     // partners_canonical_name_unique and vendors_canonical_name_unique —
     // same problem shape: a re-seed or hand-edit could otherwise
@@ -60,6 +66,6 @@ export const workTypesTable = pgTable(
   }),
 );
 
-export const insertWorkTypeSchema = createInsertSchema(workTypesTable).omit({ id: true });
+export const insertWorkTypeSchema = createInsertSchema(workTypesTable).omit({ id: true, sourceWorkTypeId: true });
 export type InsertWorkType = z.infer<typeof insertWorkTypeSchema>;
 export type WorkType = typeof workTypesTable.$inferSelect;

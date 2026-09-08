@@ -85,3 +85,13 @@ jobs:
           --id "$EAS_BUILD_ID"
           --non-interactive
           --wait
+
+      - name: Preserve EAS build evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eas-ios-production-build
+          path: |
+            ${{ runner.temp }}/eas-ios-build.json
+            ${{ runner.temp }}/eas-ios-build-verified.json
+          if-no-files-found: ignore

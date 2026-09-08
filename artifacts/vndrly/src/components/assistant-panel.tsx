@@ -1392,7 +1392,14 @@ export function AssistantLauncher({
 } = {}) {
   const [open, setOpen] = useState(false);
   const [hovered, setHovered] = useState(false);
-  const engaged = hovered && !open;
+  const [voiceState, setVoiceState] = useState("idle");
+  useEffect(() => {
+    const changed = (event: Event) => setVoiceState((event as CustomEvent<{ state: string }>).detail.state);
+    window.addEventListener("askv:voice-state", changed);
+    return () => window.removeEventListener("askv:voice-state", changed);
+  }, []);
+  const voiceActive = voiceState === "listening" || voiceState === "running";
+  const engaged = voiceActive || (hovered && !open);
   return (
     <>
       <button
@@ -1414,6 +1421,7 @@ export function AssistantLauncher({
       >
         <span className="sr-only">ask V</span>
         <AskVFloatingLauncherMark engaged={engaged} panelOpen={open} />
+        {!tokenMode && !signupMode && <span className={`absolute right-1 top-1 h-2.5 w-2.5 rounded-full ${voiceActive ? "bg-green-500" : voiceState === "connecting" ? "bg-amber-500 animate-pulse" : "bg-red-500"}`} aria-hidden="true" />}
       </button>
       <AssistantPanel
         open={open}

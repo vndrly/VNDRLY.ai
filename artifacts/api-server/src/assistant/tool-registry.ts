@@ -115,6 +115,7 @@ const TOOL_METADATA: Record<string, Partial<ToolMetadata>> = {
   lookup_ticket_payment_status: { roles: OFFICE_ROLES, auditTarget: "ticket" },
   lookup_accounting_connection: { roles: ["admin", "vendor"] },
   query_active_visitors: { roles: OFFICE_ROLES },
+  query_gate_report: { roles: OFFICE_ROLES },
   prepare_visitor_check_in: { roles: OFFICE_ROLES, pack: "screen", auditTarget: "site" },
   confirm_visitor_check_in: {
     roles: OFFICE_ROLES,

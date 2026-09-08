@@ -33,6 +33,7 @@ vi.mock("@/hooks/use-auth", () => ({
 }));
 
 vi.mock("@workspace/api-client-react", () => ({
+  getListFieldEmployeesQueryKey: (args: ListArgs) => ["/api/field-employees", args],
   useListFieldEmployees: (args: ListArgs) => {
     mockState.lastListArgs = args;
     mockState.listCallCount += 1;

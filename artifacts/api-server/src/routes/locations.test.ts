@@ -58,7 +58,7 @@ const tables = {
     "batteryLevel",
     "recordedAt",
   ]),
-  sites: tableTag("sites", ["id", "name", "siteCode"]),
+  sites: tableTag("sites", ["id", "name", "siteCode", "partnerId"]),
 };
 
 const fixtures: Record<string, Row[]> = {
@@ -1062,11 +1062,31 @@ describe("GET /api/field-employees/:id/day-track", () => {
     expect(res.body.pings).toBeUndefined();
   });
 
+  it("partners only receive their own site's pings after qualifying through one trip", async () => {
+    fixtures.employees = [emp()];
+    fixtures.gpsLogs = [ping({ id: 1, partnerId: 7 }), ping({ id: 2, partnerId: 8 })];
+    const res = await request(app)
+      .get("/api/field-employees/50/day-track?date=2026-04-20")
+      .set("Cookie", authCookie({ role: "partner", vendorId: null, partnerId: 7 }));
+    expectStatus(res, 200);
+    expect(res.body.pings.map((row: Row) => row.id)).toEqual([1]);
+  });
+
+  it("vendors cannot read an employee's prior-company ticket trail", async () => {
+    fixtures.employees = [emp({ vendorId: 1 })];
+    fixtures.gpsLogs = [ping({ id: 1, vendorId: 1 }), ping({ id: 2, vendorId: 2 })];
+    const res = await request(app)
+      .get("/api/field-employees/50/day-track?date=2026-04-20")
+      .set("Cookie", authCookie({ role: "vendor", vendorId: 1 }));
+    expectStatus(res, 200);
+    expect(res.body.pings.map((row: Row) => row.id)).toEqual([1]);
+  });
+
   it("vendors can view their own employee's timeline", async () => {
     fixtures.employees = [emp({ vendorId: 1 })];
     fixtures.gpsLogs = [
-      ping({ id: 1, recordedAt: new Date("2026-04-20T08:30:00.000Z") }),
-      ping({ id: 2, recordedAt: new Date("2026-04-20T16:45:00.000Z") }),
+      ping({ id: 1, vendorId: 1, recordedAt: new Date("2026-04-20T08:30:00.000Z") }),
+      ping({ id: 2, vendorId: 1, recordedAt: new Date("2026-04-20T16:45:00.000Z") }),
     ];
     const res = await request(app)
       .get("/api/field-employees/50/day-track?date=2026-04-20")

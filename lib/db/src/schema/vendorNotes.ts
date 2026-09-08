@@ -6,6 +6,9 @@ import { vendorsTable } from "./vendors";
 export const vendorNotesTable = pgTable("vendor_notes", {
   id: serial("id").primaryKey(),
   vendorId: integer("vendor_id").notNull().references(() => vendorsTable.id, { onDelete: "cascade" }),
+  // NULL ownership is legacy/ambiguous and is never exposed by company routes.
+  ownerOrgType: text("owner_org_type"),
+  ownerOrgId: integer("owner_org_id"),
   content: text("content").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

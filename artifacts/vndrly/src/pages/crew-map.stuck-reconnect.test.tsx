@@ -1,6 +1,10 @@
 import * as React from "react";
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 
+vi.mock("@/components/mapbox-map", () => ({
+  MapboxMap: () => React.createElement("div", { "data-testid": "stub-map" }),
+}));
+
 // Task #116 — pin down the "wedged channel" recovery path on the
 // crew-map page's live-locations EventSource. The browser auto-
 // reconnects on transient drops, but a proxy 502 or laptop sleep can

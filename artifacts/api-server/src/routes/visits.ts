@@ -21,6 +21,7 @@ import {
   siteWorkAssignmentsTable,
   vendorPeopleTable,
   ticketCheckInsTable,
+  ticketsTable,
 } from "@workspace/db";
 import {
   notifyUsers,
@@ -85,6 +86,7 @@ import {
   OFF_GEOFENCE,
 } from "@workspace/visit-error-codes";
 import { trimVisitNotes } from "@workspace/gate-booth";
+import { parseVisitEntryCategory } from "../lib/visit-entry-category";
 
 const COOKIE_NAME = "vndrly_session";
 const GUEST_COOKIE_NAME = "vndrly_guest";
@@ -511,7 +513,12 @@ function roundPublicCoordinate(value: number): number {
 }
 
 // ---------- GET /api/visits/public-sites (public; no auth required) ----------
-router.get("/visits/public-sites", async (_req, res): Promise<void> => {
+router.get("/visits/public-sites", async (req, res): Promise<void> => {
+  const siteCode = typeof req.query.siteCode === "string" ? req.query.siteCode.trim() : "";
+  if (!siteCode || siteCode.length > 64) {
+    res.json([]);
+    return;
+  }
   const rows = await db
     .select({
       id: siteLocationsTable.id,
@@ -526,10 +533,11 @@ router.get("/visits/public-sites", async (_req, res): Promise<void> => {
     .from(siteLocationsTable)
     .leftJoin(partnersTable, eq(siteLocationsTable.partnerId, partnersTable.id))
     .where(
-      sql`${siteLocationsTable.isActive} = true AND ${siteLocationsTable.hidden} = false`,
+      and(eq(siteLocationsTable.siteCode, siteCode),
+        sql`${siteLocationsTable.isActive} = true AND ${siteLocationsTable.hidden} = false`),
     )
     .orderBy(siteLocationsTable.name)
-    .limit(50);
+    .limit(1);
   res.json(
     rows.map((site) => ({
       ...site,
@@ -606,6 +614,7 @@ const visitListProjection = {
   platePhotoUrl: siteVisitsTable.platePhotoUrl,
   vehiclePhotoUrl: siteVisitsTable.vehiclePhotoUrl,
   purpose: siteVisitsTable.purpose,
+  entryCategory: siteVisitsTable.entryCategory,
   notes: siteVisitsTable.notes,
   checkOutNotes: siteVisitsTable.checkOutNotes,
   admissionStatus: siteVisitsTable.admissionStatus,
@@ -671,11 +680,14 @@ async function loadGateOpsBundle(session: Session) {
     .innerJoin(vendorsTable, eq(vendorsTable.id, vendorPeopleTable.vendorId))
     .where(and(...staffConds));
 
-  const visitConds = [sql`${siteVisitsTable.checkInTime} >= ${since}`];
+  const visitConds = [sql`(${siteVisitsTable.checkInTime} >= ${since} OR ${siteVisitsTable.checkOutTime} IS NULL)`];
+  if (session.role === "vendor" && session.vendorId) {
+    visitConds.push(eq(siteVisitsTable.hostVendorId, session.vendorId));
+  }
   if (siteIds) {
     if (siteIds.length === 0) {
       return {
-        enabled: session.role === "admin",
+        enabled: true,
         visits: [],
         staff: staffRows,
         recordedVisits: [],
@@ -710,20 +722,23 @@ async function loadGateOpsBundle(session: Session) {
           checkOutAt: ticketCheckInsTable.checkOutAt,
         })
         .from(ticketCheckInsTable)
+        .innerJoin(ticketsTable, eq(ticketsTable.id, ticketCheckInsTable.ticketId))
         .where(
           and(
             inArray(ticketCheckInsTable.employeeId, employeeIds),
             sql`${ticketCheckInsTable.checkInAt} >= ${since}`,
+            ...(siteIds ? [inArray(ticketsTable.siteLocationId, siteIds)] : []),
           ),
         )
     : [];
 
-  const enabled =
-    session.role === "admin" || staffRows.length > 0 || visits.length > 0;
+  const enabled = true;
   return {
     enabled,
     visits,
-    staff: staffRows,
+    staff: staffRows.filter((person) => session.role !== "partner" ||
+      checkIns.some((clock) => clock.employeeId === person.employeeId) ||
+      visits.some((visit) => visit.recordedByUserId != null && visit.recordedByUserId === person.userId)),
     recordedVisits: visits.map((visit) => ({
       recordedByUserId: visit.recordedByUserId ?? null,
       checkInTime: visit.checkInTime,
@@ -890,6 +905,7 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
     hostPartnerId?: number;
     hostVendorId?: number;
     purpose?: string;
+    entryCategory?: unknown;
     expectedDurationMinutes?: number;
     vehiclePlate?: string;
     plateState?: string;
@@ -899,6 +915,9 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
     latitude?: number;
     longitude?: number;
   };
+  let entryCategory;
+  try { entryCategory = parseVisitEntryCategory(b.entryCategory); }
+  catch { res.status(400).json({ message: "Invalid entry category", code: VISIT_INVALID_INPUT }); return; }
   const firstName = String(b.firstName ?? "").trim();
   const lastName = String(b.lastName ?? "").trim();
   if (!firstName || !lastName) {
@@ -1085,6 +1104,7 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
           : null,
       notes: trimVisitNotes(b.notes),
       admissionStatus: "admitted",
+      entryCategory,
       expectedDurationMinutes: expectedDuration,
       hostType: b.hostType,
       hostPartnerId: b.hostType === "partner" ? b.hostPartnerId! : null,
@@ -1280,6 +1300,10 @@ router.post("/visits/gate/:id/admit", async (req, res): Promise<void> => {
 
 // ---------- POST /api/visits/check-in (guest) ----------
 router.post("/visits/check-in", async (req, res): Promise<void> => {
+  if (req.body?.entryCategory != null) {
+    res.status(403).json({ message: "Entry categories can only be recorded by authorized staff", code: VISIT_NO_ACCESS });
+    return;
+  }
   const ctx = await requireGuest(req, res);
   if (!ctx) return;
   const b = (req.body ?? {}) as {
@@ -1729,6 +1753,7 @@ router.get("/visits/me/active", async (req, res): Promise<void> => {
       hostPartnerName: partnersTable.name,
       hostVendorName: vendorsTable.name,
       purpose: siteVisitsTable.purpose,
+      entryCategory: siteVisitsTable.entryCategory,
       vehiclePlate: siteVisitsTable.vehiclePlate,
       plateState: siteVisitsTable.plateState,
       platePhotoUrl: siteVisitsTable.platePhotoUrl,
@@ -1782,6 +1807,14 @@ router.get("/visits", async (req, res): Promise<void> => {
   const toParam =
     typeof req.query.to === "string" ? new Date(req.query.to) : null;
   const activeOnly = req.query.activeOnly === "true";
+  const overlap = req.query.overlap === "true";
+  if ((fromParam && Number.isNaN(fromParam.getTime())) ||
+      (toParam && Number.isNaN(toParam.getTime())) ||
+      (fromParam && toParam && fromParam >= toParam) ||
+      (req.query.siteLocationId && (!Number.isSafeInteger(siteParam) || Number(siteParam) <= 0))) {
+    res.status(400).json({ message: "Invalid report filters", code: VISIT_INVALID_INPUT });
+    return;
+  }
   const requestedLimit = Number(req.query.limit);
   const requestedOffset = Number(req.query.offset);
   const limit = Number.isSafeInteger(requestedLimit)
@@ -1796,10 +1829,14 @@ router.get("/visits", async (req, res): Promise<void> => {
     conds.push(eq(siteVisitsTable.siteLocationId, siteParam));
   }
   if (fromParam && !Number.isNaN(fromParam.getTime())) {
-    conds.push(sql`${siteVisitsTable.checkInTime} >= ${fromParam}`);
+    conds.push(overlap
+      ? sql`(${siteVisitsTable.checkOutTime} IS NULL OR ${siteVisitsTable.checkOutTime} > ${fromParam})`
+      : sql`${siteVisitsTable.checkInTime} >= ${fromParam}`);
   }
   if (toParam && !Number.isNaN(toParam.getTime())) {
-    conds.push(sql`${siteVisitsTable.checkInTime} <= ${toParam}`);
+    conds.push(overlap
+      ? sql`${siteVisitsTable.checkInTime} < ${toParam}`
+      : sql`${siteVisitsTable.checkInTime} <= ${toParam}`);
   }
   if (isGatekeeperSession(session)) {
     const assignments = await db
@@ -1837,6 +1874,8 @@ router.get("/visits", async (req, res): Promise<void> => {
       platePhotoUrl: siteVisitsTable.platePhotoUrl,
       vehiclePhotoUrl: siteVisitsTable.vehiclePhotoUrl,
       purpose: siteVisitsTable.purpose,
+      entryCategory: siteVisitsTable.entryCategory,
+      admissionStatus: siteVisitsTable.admissionStatus,
       expectedDurationMinutes: siteVisitsTable.expectedDurationMinutes,
       hostType: siteVisitsTable.hostType,
       hostPartnerId: siteVisitsTable.hostPartnerId,
@@ -1863,7 +1902,7 @@ router.get("/visits", async (req, res): Promise<void> => {
     )
     .leftJoin(vendorsTable, eq(vendorsTable.id, siteVisitsTable.hostVendorId))
     .where(conds.length ? and(...conds) : undefined)
-    .orderBy(desc(siteVisitsTable.checkInTime))
+    .orderBy(desc(siteVisitsTable.checkInTime), desc(siteVisitsTable.id))
     .limit(limit)
     .offset(offset);
   res.json(
@@ -2088,6 +2127,12 @@ router.get("/visits/:id", async (req, res): Promise<void> => {
     res.status(401).json({ message: "Login required", code: AUTH_REQUIRED });
     return;
   }
+  if (session.role !== "admin" &&
+      !(session.role === "partner" && session.partnerId) &&
+      !(session.role === "vendor" && session.vendorId)) {
+    res.status(403).json({ message: "Forbidden", code: VISIT_NO_ACCESS });
+    return;
+  }
   // Task #698: per-session, role-aware rate limit on the visit
   // detail endpoint. Shares the visits-resource budget with the
   // list/SSE so an attacker sweeping visit ids burns down the same
@@ -2111,6 +2156,7 @@ router.get("/visits/:id", async (req, res): Promise<void> => {
       platePhotoUrl: siteVisitsTable.platePhotoUrl,
       vehiclePhotoUrl: siteVisitsTable.vehiclePhotoUrl,
       purpose: siteVisitsTable.purpose,
+      entryCategory: siteVisitsTable.entryCategory,
       expectedDurationMinutes: siteVisitsTable.expectedDurationMinutes,
       hostType: siteVisitsTable.hostType,
       hostPartnerId: siteVisitsTable.hostPartnerId,

@@ -64,6 +64,25 @@ import { sendResponse, sendResponseStatus } from "../lib/typed-response";
 import { sendValidationFailed } from "../lib/validation-error";
 const router: IRouter = Router();
 
+function noteOwner(session: Session) {
+  if (session.role === "admin") return { ownerOrgType: "platform", ownerOrgId: 0 };
+  if (session.role === "vendor" && session.vendorId) return { ownerOrgType: "vendor", ownerOrgId: session.vendorId };
+  if (session.role === "partner" && session.partnerId) return { ownerOrgType: "partner", ownerOrgId: session.partnerId };
+  throw new Error("Vendor note owner requires an authorized organization session");
+}
+
+function noteOwnerFilter(session: Session) {
+  const owner = noteOwner(session);
+  return and(eq(vendorNotesTable.ownerOrgType, owner.ownerOrgType), eq(vendorNotesTable.ownerOrgId, owner.ownerOrgId));
+}
+
+async function canAccessVendorNotes(session: Session, vendorId: number): Promise<boolean> {
+  if (session.role === "admin") return true;
+  if (session.role === "vendor") return session.vendorId === vendorId;
+  if (session.role === "partner" && session.partnerId) return partnerHasVendorRelationship(session.partnerId, vendorId);
+  return false;
+}
+
 async function partnerHasVendorRelationship(partnerId: number, vendorId: number): Promise<boolean> {
   const [rel] = await db
     .select({ id: partnerVendorRelationshipsTable.id })
@@ -573,9 +592,14 @@ router.get("/vendor-contacts", async (req, res): Promise<void> => {
     res.status(401).json({ error: "Not authenticated", code: "auth.not_authenticated" });
     return;
   }
+  // This endpoint is the internal office employee directory. Designated
+  // business contacts remain available through /vendors/:vendorId/contacts.
+  if (session.role === "partner") {
+    res.status(403).json({ error: "Forbidden", code: "auth.forbidden" });
+    return;
+  }
   if (
     session.role !== "admin" &&
-    session.role !== "partner" &&
     session.role !== "vendor" &&
     !isForemanActor(session)
   ) {
@@ -589,19 +613,6 @@ router.get("/vendor-contacts", async (req, res): Promise<void> => {
       return;
     }
     vendorId = session.vendorId;
-  } else if (session.role === "partner") {
-    if (!session.partnerId) {
-      res.status(403).json({ error: "Forbidden", code: "auth.forbidden" });
-      return;
-    }
-    const vendorIdParam = req.query.vendorId;
-    vendorId = vendorIdParam ? Number(vendorIdParam) : null;
-    if (vendorId) {
-      if (!(await partnerHasVendorRelationship(session.partnerId, vendorId))) {
-        res.status(403).json({ error: "Forbidden", code: "auth.forbidden" });
-        return;
-      }
-    }
   } else {
     const vendorIdParam = req.query.vendorId;
     vendorId = vendorIdParam ? Number(vendorIdParam) : null;
@@ -663,25 +674,6 @@ router.get("/vendor-contacts", async (req, res): Promise<void> => {
   const conds = [notInArray(fieldEmployeesTable.vendorRole, ["field", "foreman"])];
   if (vendorId) conds.push(eq(fieldEmployeesTable.vendorId, vendorId));
   if (!includeDeleted) conds.push(isNull(fieldEmployeesTable.deletedAt));
-  if (session.role === "partner" && !vendorId) {
-    const partnerId = session.partnerId!;
-    const rows = await db
-      .select(baseSelect)
-      .from(fieldEmployeesTable)
-      .leftJoin(vendorsTable, eq(fieldEmployeesTable.vendorId, vendorsTable.id))
-      .leftJoin(usersTable, eq(fieldEmployeesTable.userId, usersTable.id))
-      .innerJoin(
-        partnerVendorRelationshipsTable,
-        and(
-          eq(partnerVendorRelationshipsTable.vendorId, fieldEmployeesTable.vendorId),
-          eq(partnerVendorRelationshipsTable.partnerId, partnerId),
-        ),
-      )
-      .where(and(...conds))
-      .orderBy(fieldEmployeesTable.createdAt);
-    res.json(rows.map(shape));
-    return;
-  }
   const rows = await db
     .select(baseSelect)
     .from(fieldEmployeesTable)
@@ -722,13 +714,40 @@ router.get("/vendors/:vendorId/contacts", async (req, res): Promise<void> => {
     eq(vendorContactsTable.vendorId, params.data.vendorId),
     notInArray(vendorContactsTable.vendorRole, ["field", "foreman"]),
   ];
+  let designatedEmail: string | null = null;
+  if (session.role === "partner") {
+    // The vendor profile's primary contact email is an explicit business
+    // designation. An office role alone must not publish an employee directory.
+    const [vendor] = await db.select({ contactEmail: vendorsTable.contactEmail }).from(vendorsTable)
+      .where(eq(vendorsTable.id, params.data.vendorId)).limit(1);
+    designatedEmail = vendor?.contactEmail?.trim().toLowerCase() || null;
+    if (!designatedEmail) {
+      sendResponse(res, ListVendorContactsResponse, []);
+      return;
+    }
+    conds.push(sql`lower(trim(${vendorContactsTable.email})) = ${designatedEmail}`, eq(vendorContactsTable.isActive, true));
+  }
   if (!includeDeleted) conds.push(isNull(vendorContactsTable.deletedAt));
   const contacts = await db
     .select()
     .from(vendorContactsTable)
     .where(and(...conds))
     .orderBy(vendorContactsTable.createdAt);
-  sendResponse(res, ListVendorContactsResponse, contacts);
+  const visibleContacts = session.role === "partner" ? contacts.filter(contact =>
+    contact.isActive && !contact.deletedAt && contact.email.trim().toLowerCase() === designatedEmail,
+  ).map(contact => ({
+    id: contact.id,
+    vendorId: contact.vendorId,
+    vendorRole: contact.vendorRole,
+    jobTitle: contact.jobTitle,
+    firstName: contact.firstName,
+    lastName: contact.lastName,
+    email: contact.email,
+    phone: contact.phone,
+    isActive: contact.isActive,
+    createdAt: contact.createdAt,
+  })) : contacts;
+  sendResponse(res, ListVendorContactsResponse, visibleContacts);
 });
 
 router.post("/vendors/:vendorId/contacts", async (req, res): Promise<void> => {
@@ -897,20 +916,14 @@ router.get("/vendors/:vendorId/notes", async (req, res): Promise<void> => {
     sendValidationFailed(res, params.error, { code: "validation.invalid_input" });
     return;
   }
-  if (session.role !== "admin" && session.role !== "partner") {
-    res.status(403).json({ error: "Admin or partner access required", code: "auth.admin_or_partner_required" });
+  if (!(await canAccessVendorNotes(session, params.data.vendorId))) {
+    res.status(403).json({ error: "Forbidden", code: "auth.forbidden" });
     return;
-  }
-  if (session.role === "partner") {
-    if (!session.partnerId || !(await partnerHasVendorRelationship(session.partnerId, params.data.vendorId))) {
-      res.status(403).json({ error: "Forbidden", code: "auth.forbidden" });
-      return;
-    }
   }
   const notes = await db
     .select()
     .from(vendorNotesTable)
-    .where(eq(vendorNotesTable.vendorId, params.data.vendorId))
+    .where(and(eq(vendorNotesTable.vendorId, params.data.vendorId), noteOwnerFilter(session)))
     .orderBy(vendorNotesTable.createdAt);
   sendResponse(res, ListVendorNotesResponse, notes);
 });
@@ -926,15 +939,9 @@ router.post("/vendors/:vendorId/notes", async (req, res): Promise<void> => {
     sendValidationFailed(res, params.error, { code: "validation.invalid_input" });
     return;
   }
-  if (session.role !== "admin" && session.role !== "partner") {
-    res.status(403).json({ error: "Admin or partner access required", code: "auth.admin_or_partner_required" });
+  if (!(await canAccessVendorNotes(session, params.data.vendorId))) {
+    res.status(403).json({ error: "Forbidden", code: "auth.forbidden" });
     return;
-  }
-  if (session.role === "partner") {
-    if (!session.partnerId || !(await partnerHasVendorRelationship(session.partnerId, params.data.vendorId))) {
-      res.status(403).json({ error: "Forbidden", code: "auth.forbidden" });
-      return;
-    }
   }
   const parsed = CreateVendorNoteBody.safeParse(req.body);
   if (!parsed.success) {
@@ -943,7 +950,7 @@ router.post("/vendors/:vendorId/notes", async (req, res): Promise<void> => {
   }
   const [note] = await db
     .insert(vendorNotesTable)
-    .values({ ...parsed.data, vendorId: params.data.vendorId })
+    .values({ ...parsed.data, vendorId: params.data.vendorId, ...noteOwner(session) })
     .returning();
   res.status(201).json(note);
 });
@@ -959,21 +966,16 @@ router.delete("/vendors/:vendorId/notes/:noteId", async (req, res): Promise<void
     sendValidationFailed(res, params.error, { code: "validation.invalid_input" });
     return;
   }
-  if (session.role !== "admin" && session.role !== "partner") {
-    res.status(403).json({ error: "Admin or partner access required", code: "auth.admin_or_partner_required" });
+  if (!(await canAccessVendorNotes(session, params.data.vendorId))) {
+    res.status(403).json({ error: "Forbidden", code: "auth.forbidden" });
     return;
-  }
-  if (session.role === "partner") {
-    if (!session.partnerId || !(await partnerHasVendorRelationship(session.partnerId, params.data.vendorId))) {
-      res.status(403).json({ error: "Forbidden", code: "auth.forbidden" });
-      return;
-    }
   }
   const [deleted] = await db
     .delete(vendorNotesTable)
     .where(and(
       eq(vendorNotesTable.id, params.data.noteId),
       eq(vendorNotesTable.vendorId, params.data.vendorId),
+      noteOwnerFilter(session),
     ))
     .returning();
   if (!deleted) {

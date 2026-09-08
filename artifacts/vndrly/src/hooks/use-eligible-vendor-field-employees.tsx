@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import {
   useListFieldEmployees,
+  getListFieldEmployeesQueryKey,
   type FieldEmployee,
 } from "@workspace/api-client-react";
 import { useAuth } from "@/hooks/use-auth";
@@ -57,6 +58,7 @@ export function useEligibleVendorFieldEmployees(): {
 // rows so a deactivation that landed mid-dialog can't slip through.
 export function useEligibleVendorFieldEmployeesByVendorId(
   vendorId: number | null | undefined,
+  enabled = true,
 ): {
   eligibleForemen: FieldEmployee[];
   fieldEmployees: FieldEmployee[] | undefined;
@@ -64,6 +66,7 @@ export function useEligibleVendorFieldEmployeesByVendorId(
   const normalizedId = vendorId ?? null;
   const { data: fieldEmployees } = useListFieldEmployees(
     normalizedId != null ? { vendorId: normalizedId } : undefined,
+    { query: { enabled, queryKey: getListFieldEmployeesQueryKey(normalizedId != null ? { vendorId: normalizedId } : undefined) } },
   );
   const eligibleForemen = useMemo(
     () => filterEligible(fieldEmployees, normalizedId),

@@ -80,7 +80,7 @@ export async function estimateMapboxDrivingRoute(
   args: EstimateArgs,
   options: EstimateOptions = {},
 ): Promise<RouteEstimateResult> {
-  const accessToken = options.accessToken ?? process.env.MAPBOX_ACCESS_TOKEN ?? process.env.MAPBOX_API_KEY ?? "";
+  const accessToken = options.accessToken ?? process.env.MAPBOX_ACCESS_TOKEN ?? process.env.MAPBOX_API_KEY ?? process.env.VITE_MAPBOX_ACCESS_TOKEN ?? "";
   if (!accessToken.trim()) {
     return {
       ok: false,
@@ -135,7 +135,7 @@ async function requestMapboxDrivingRoute(
   const fetchImpl = options.fetchImpl ?? fetch;
   let response: Response;
   try {
-    response = await fetchImpl(url.toString());
+    response = await fetchImpl(url.toString(), { signal: AbortSignal.timeout(15_000) });
   } catch {
     return {
       ok: false,

@@ -25,10 +25,17 @@ test("API deploy is a separate main workflow with guarded VPS access", () => {
 
 test("API deploy builds, migrates, restarts, and health-checks without touching web or nginx", () => {
   assert.match(workflow, /git fetch origin main/);
-  assert.match(workflow, /git reset --hard ["']?\$EXPECTED_SHA["']?/);
+  assert.match(workflow, /git diff --exit-code --quiet/);
+  assert.match(workflow, /git diff --cached --exit-code --quiet/);
+  assert.match(workflow, /git switch --detach ["']?\$EXPECTED_SHA["']?/);
+  assert.doesNotMatch(workflow, /git reset --hard/);
   assert.match(workflow, /pnpm --filter @workspace\/api-server run build/);
   assert.match(workflow, /migrate:plate-state/);
   assert.match(workflow, /migrate:notes-admission/);
+  for (const migration of ["vendor-note-ownership", "visit-entry-category", "partner-owned-catalogs"]) {
+    assert.ok(workflow.indexOf(`migrate:${migration}`) > 0);
+    assert.ok(workflow.indexOf(`migrate:${migration}`) < workflow.indexOf("systemctl restart vndrly-api"));
+  }
   assert.ok(workflow.indexOf('migrate:askv-greeting') > 0);
   assert.ok(workflow.indexOf('migrate:askv-greeting') < workflow.indexOf('systemctl restart vndrly-api'));
   assert.match(workflow, /systemctl restart vndrly-api/);

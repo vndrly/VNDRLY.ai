@@ -7,10 +7,10 @@ import {
   type NavItem,
 } from "./gate-ops-nav";
 
-const crew: NavItem<LucideIcon> = { href: "/crew-map", label: "Crew Map", key: "crew-map", icon: Map };
-const site: NavItem<LucideIcon> = { href: "/site-map", label: "Site Map", key: "site-map", icon: Map };
-const visitors: NavItem<LucideIcon> = { href: "/visitors", label: "Visitors", key: "visitors", icon: UserPlus };
-const tracking: NavItem<LucideIcon> = { href: "/tickets", label: "Tracking", key: "tracking", icon: Ticket };
+const crew: NavItem = { href: "/crew-map", label: "Crew Map", key: "crew-map", icon: Map };
+const site: NavItem = { href: "/site-map", label: "Site Map", key: "site-map", icon: Map };
+const visitors: NavItem = { href: "/visitors", label: "Visitors", key: "visitors", icon: UserPlus };
+const tracking: NavItem = { href: "/tickets", label: "Tracking", key: "tracking", icon: Ticket };
 
 describe("canViewGateLog", () => {
   it("is for admin and partner office viewers, not field or booth operators", () => {
@@ -35,8 +35,8 @@ describe("withGateLogNav", () => {
       label: "Gate Log",
       icon: ClipboardList,
     });
-    const insertedIcon: LucideIcon = items[2].icon;
-    expect(items.map((i) => i.key)).toEqual(["tracking", "crew-map", "gate-log", "visitors"]);
+    const insertedIcon = items[2].icon;
+    expect(items.map((i) => i.key)).toEqual(["tracking", "crew-map", "gate-log"]);
     expect(insertedIcon).toBe(ClipboardList);
   });
 
@@ -48,16 +48,16 @@ describe("withGateLogNav", () => {
       label: "Gate Log",
       icon: ClipboardList,
     });
-    expect(items.map((i) => i.key)).toEqual(["tracking", "site-map", "gate-log", "visitors"]);
+    expect(items.map((i) => i.key)).toEqual(["tracking", "site-map", "gate-log"]);
   });
 
-  it("hides the item when the company does not staff a gate", () => {
+  it("keeps the consolidated log available before a company staffs a gate", () => {
     const items = withGateLogNav([tracking, crew, visitors], {
       user: { role: "admin" },
       gatekeepingEnabled: false,
       label: "Gate Log",
       icon: ClipboardList,
     });
-    expect(items.map((i) => i.key)).toEqual(["tracking", "crew-map", "visitors"]);
+    expect(items.map((i) => i.key)).toEqual(["tracking", "crew-map", "gate-log"]);
   });
 });
