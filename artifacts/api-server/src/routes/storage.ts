@@ -16,6 +16,7 @@ import { absoluteUploadUrl } from "../lib/uploadUrl";
 import { db, siteLocationsTable, siteVisitsTable, siteWorkAssignmentsTable, ticketNoteLogsTable } from "@workspace/db";
 import { and, eq, or } from "drizzle-orm";
 import { canReadTicketAttachment, ticketAttachmentReference } from "../lib/ticket-attachment-access";
+import { canReadWorkHubFile } from "../work-hub/file-access";
 
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
@@ -279,7 +280,8 @@ router.get("/storage/objects/*path", async (req: Request, res: Response) => {
       requestedPermission: ObjectPermission.READ,
     });
     const canAccess = aclAccess || await canReadVisitEvidence(session, objectPath) ||
-      await canReadTicketAttachment(session, objectPath, obj.acl?.owner);
+      await canReadTicketAttachment(session, objectPath, obj.acl?.owner) ||
+      await canReadWorkHubFile(session, objectPath);
     if (!canAccess) {
       res.status(403).json({ error: "Forbidden" });
       return;

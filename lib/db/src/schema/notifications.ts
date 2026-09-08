@@ -106,6 +106,13 @@ export const notificationPreferencesTable = pgTable("notification_preferences", 
   commentReplyEmailEnabled: boolean("comment_reply_email_enabled")
     .notNull()
     .default(true),
+  workHubMessagesEnabled: boolean("work_hub_messages_enabled").notNull().default(true),
+  workHubTasksEnabled: boolean("work_hub_tasks_enabled").notNull().default(true),
+  workHubAnnouncementsEnabled: boolean("work_hub_announcements_enabled").notNull().default(true),
+  workHubScheduleEnabled: boolean("work_hub_schedule_enabled").notNull().default(true),
+  workHubMeetingsEnabled: boolean("work_hub_meetings_enabled").notNull().default(true),
+  workHubDigestEnabled: boolean("work_hub_digest_enabled").notNull().default(true),
+  workHubUrgentBypassDndEnabled: boolean("work_hub_urgent_bypass_dnd_enabled").notNull().default(false),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
 

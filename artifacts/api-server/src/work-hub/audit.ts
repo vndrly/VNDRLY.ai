@@ -20,7 +20,9 @@ export function redactWorkHubAuditMetadata(metadata: Record<string, unknown> = {
   return Object.fromEntries(Object.entries(metadata).map(([key, value]) => [key, SECRET_KEYS.test(key) ? "[redacted]" : value]));
 }
 
-export async function appendWorkHubAudit(input: WorkHubAuditInput, executor = db): Promise<void> {
+type WorkHubAuditExecutor = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+export async function appendWorkHubAudit(input: WorkHubAuditInput, executor: WorkHubAuditExecutor = db): Promise<void> {
   await executor.insert(workHubAuditLogTable).values({
     actorUserId: input.actorUserId,
     ownerOrgType: input.owner.type,

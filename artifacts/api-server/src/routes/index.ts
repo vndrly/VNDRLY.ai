@@ -53,6 +53,7 @@ import safetyRouter from "./safety";
 import majikRouter from "./majik";
 import workHubChannelsRouter from "./workHubChannels";
 import workHubEventsRouter from "./workHubEvents";
+import workHubOperationsRouter from "./workHubOperations";
 
 const router: IRouter = Router();
 
@@ -124,5 +125,6 @@ router.use(safetyRouter);
 router.use(majikRouter);
 router.use(workHubChannelsRouter);
 router.use(workHubEventsRouter);
+router.use(workHubOperationsRouter);
 
 export default router;

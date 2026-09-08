@@ -97,3 +97,7 @@ export * from "./workHubFiles";
 export * from "./workHubNotes";
 export * from "./workHubOperations";
 export * from "./workHubGovernance";
+export * from "./workHubWork";
+export * from "./workHubSchedule";
+export * from "./workHubMeetings";
+export * from "./workHubConnectors";

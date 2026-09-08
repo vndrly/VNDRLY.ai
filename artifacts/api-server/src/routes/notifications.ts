@@ -62,7 +62,12 @@ export type NotificationCategory =
   | "system"
   | "visitor"
   | "comments"
-  | "safety";
+  | "safety"
+  | "work_hub_messages"
+  | "work_hub_tasks"
+  | "work_hub_announcements"
+  | "work_hub_schedule"
+  | "work_hub_meetings";
 
 const TYPE_TO_CATEGORY: Record<string, NotificationCategory> = {
   ticket_assigned: "tickets",
@@ -132,6 +137,16 @@ const TYPE_TO_CATEGORY: Record<string, NotificationCategory> = {
   comment_mention: "comments",
   comment_added: "comments",
   hotlist_comment_added: "comments",
+  work_hub_message: "work_hub_messages",
+  work_hub_mention: "work_hub_messages",
+  work_hub_task_assigned: "work_hub_tasks",
+  work_hub_task_updated: "work_hub_tasks",
+  work_hub_announcement: "work_hub_announcements",
+  work_hub_announcement_urgent: "work_hub_announcements",
+  work_hub_shift_assigned: "work_hub_schedule",
+  work_hub_shift_changed: "work_hub_schedule",
+  work_hub_meeting_invite: "work_hub_meetings",
+  work_hub_meeting_changed: "work_hub_meetings",
 };
 
 // Task #50 — these are the comment-thread reply types. They are gated
@@ -190,6 +205,13 @@ const DEFAULT_PREFS = {
   commentsEnabled: true,
   commentMentionEmailEnabled: true,
   commentReplyEmailEnabled: true,
+  workHubMessagesEnabled: true,
+  workHubTasksEnabled: true,
+  workHubAnnouncementsEnabled: true,
+  workHubScheduleEnabled: true,
+  workHubMeetingsEnabled: true,
+  workHubDigestEnabled: true,
+  workHubUrgentBypassDndEnabled: false,
 };
 
 async function getPrefsForUsers(userIds: number[]): Promise<Map<number, typeof DEFAULT_PREFS>> {
@@ -224,6 +246,13 @@ async function getPrefsForUsers(userIds: number[]): Promise<Map<number, typeof D
       commentsEnabled: r.commentsEnabled,
       commentMentionEmailEnabled: r.commentMentionEmailEnabled,
       commentReplyEmailEnabled: r.commentReplyEmailEnabled,
+      workHubMessagesEnabled: r.workHubMessagesEnabled,
+      workHubTasksEnabled: r.workHubTasksEnabled,
+      workHubAnnouncementsEnabled: r.workHubAnnouncementsEnabled,
+      workHubScheduleEnabled: r.workHubScheduleEnabled,
+      workHubMeetingsEnabled: r.workHubMeetingsEnabled,
+      workHubDigestEnabled: r.workHubDigestEnabled,
+      workHubUrgentBypassDndEnabled: r.workHubUrgentBypassDndEnabled,
     });
   }
   return map;
@@ -239,6 +268,11 @@ function categoryEnabled(prefs: typeof DEFAULT_PREFS, cat: NotificationCategory)
     case "visitor": return prefs.visitorEnabled;
     case "comments": return prefs.commentsEnabled;
   case "safety": return prefs.complianceEnabled;
+    case "work_hub_messages": return prefs.workHubMessagesEnabled;
+    case "work_hub_tasks": return prefs.workHubTasksEnabled;
+    case "work_hub_announcements": return prefs.workHubAnnouncementsEnabled;
+    case "work_hub_schedule": return prefs.workHubScheduleEnabled;
+    case "work_hub_meetings": return prefs.workHubMeetingsEnabled;
   }
 }
 
@@ -266,6 +300,11 @@ function categoryEmailEnabled(
       // to map (e.g. a future "comment_reaction").
       return prefs.commentMentionEmailEnabled || prefs.commentReplyEmailEnabled;
     case "safety": return prefs.complianceEmailEnabled;
+    case "work_hub_messages":
+    case "work_hub_tasks":
+    case "work_hub_announcements":
+    case "work_hub_schedule":
+    case "work_hub_meetings": return prefs.systemEmailEnabled;
   }
 }
 
@@ -301,6 +340,11 @@ export const HIGH_PRIORITY_NOTIFICATION_TYPES: ReadonlySet<string> = new Set([
   "safety_event_submitted",
   "safety_stop_work",
   "safety_event_hipo",
+  "work_hub_mention",
+  "work_hub_task_assigned",
+  "work_hub_announcement_urgent",
+  "work_hub_shift_changed",
+  "work_hub_meeting_changed",
 ]);
 
 export function isHighPriorityNotificationType(type: string): boolean {
@@ -1067,6 +1111,13 @@ router.patch("/notifications/preferences", async (req, res) => {
     "commentsEnabled",
     "commentMentionEmailEnabled",
     "commentReplyEmailEnabled",
+    "workHubMessagesEnabled",
+    "workHubTasksEnabled",
+    "workHubAnnouncementsEnabled",
+    "workHubScheduleEnabled",
+    "workHubMeetingsEnabled",
+    "workHubDigestEnabled",
+    "workHubUrgentBypassDndEnabled",
   ] as const) {
     if (typeof b[k] === "boolean") patch[k] = b[k];
   }
