@@ -68,6 +68,12 @@ jobs:
           pnpm run typecheck
           pnpm lint:i18n
 
+      - name: Independent database-backed API gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm run test:api 2>&1 | tee "$RUNNER_TEMP/vndrly-api-tests.log"
+
       - name: Full required test chain
         shell: bash
         run: |
@@ -81,6 +87,7 @@ jobs:
           name: release-verification-${{ github.sha }}
           path: |
             ${{ runner.temp }}/vndrly-tests.log
+            ${{ runner.temp }}/vndrly-api-tests.log
             ${{ runner.temp }}/vndrly-postgres.log
             lib/e2e/test-results
           if-no-files-found: warn

@@ -62,15 +62,6 @@
     "saturday": "Saturday",
     "reportsLink": "Payroll: gross-pay review and CSV"
   },
-  "askvVoice": {
-    "handsFree": "AskV hands-free",
-    "idle": "Voice off",
-    "connecting": "Connecting voice",
-    "listening": "Listening",
-    "running": "Processing request",
-    "error": "Voice unavailable; switch off and on to retry",
-    "paused": "Voice paused while this tab is hidden"
-  },
   "askvMicrophone": {
     "label": "Microphone",
     "systemDefault": "System default",

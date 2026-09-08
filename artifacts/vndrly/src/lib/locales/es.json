@@ -62,15 +62,6 @@
     "saturday": "Sábado",
     "reportsLink": "Nómina: revisión del pago bruto y CSV"
   },
-  "askvVoice": {
-    "handsFree": "AskV manos libres",
-    "idle": "Voz desactivada",
-    "connecting": "Conectando voz",
-    "listening": "Escuchando",
-    "running": "Procesando solicitud",
-    "error": "Voz no disponible; desactive y active para reintentar",
-    "paused": "Voz en pausa mientras esta pestaña está oculta"
-  },
   "askvMicrophone": {
     "label": "Micrófono",
     "systemDefault": "Predeterminado del sistema",

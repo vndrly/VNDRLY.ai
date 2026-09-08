@@ -125,7 +125,13 @@ vi.mock("@/components/map/map-compliance-issues-card", () => ({
 }));
 
 import { render, act, screen, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import CrewMapPage from "./crew-map";
+
+function renderCrewMap() {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(<QueryClientProvider client={client}><CrewMapPage /></QueryClientProvider>);
+}
 
 const LOCATIONS_FALLBACK_POLL_MS = 5 * 60_000;
 const VISITORS_FALLBACK_POLL_MS = 60_000;
@@ -194,7 +200,7 @@ describe("crew map — rate-limit gate (Task #710)", () => {
       return new Response(JSON.stringify({ locations: [] }), { status: 200 });
     });
 
-    render(<CrewMapPage />);
+    renderCrewMap();
 
     // Wait until the first /api/live-locations call has resolved and
     // the gate has tripped (banner is the user-visible proof).
@@ -243,7 +249,7 @@ describe("crew map — rate-limit gate (Task #710)", () => {
     );
     visitsListMock.mockResolvedValue([]);
 
-    render(<CrewMapPage />);
+    renderCrewMap();
 
     await waitFor(() => {
       expect(screen.queryByTestId("crew-map-slow-down")).not.toBeNull();
@@ -267,11 +273,12 @@ describe("crew map — rate-limit gate (Task #710)", () => {
 
   it("does NOT park on a 429 with the wrong code (cross-resource isolation)", async () => {
     // A `dashboard.rate_limited` 429 should never park crew-map polls.
-    fetchMock.mockImplementationOnce(async () =>
-      rateLimitResponse("dashboard.rate_limited", 600),
-    );
+    fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
+      if (String(input).includes("/api/live-locations")) return rateLimitResponse("dashboard.rate_limited", 600);
+      return new Response(JSON.stringify({ locations: [], trips: [] }), { status: 200 });
+    });
 
-    render(<CrewMapPage />);
+    renderCrewMap();
 
     // Let the page settle through the first fetch + microtasks.
     await act(async () => {
