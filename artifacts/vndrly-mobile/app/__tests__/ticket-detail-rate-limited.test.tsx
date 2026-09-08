@@ -212,6 +212,7 @@ function makeRateLimitError(retryAfterSeconds = 12) {
 afterEach(() => {
   cleanup();
   __resetTicketsRateLimitForTests();
+  vi.useRealTimers();
 });
 
 beforeEach(() => {
@@ -225,9 +226,9 @@ describe("TicketDetailScreen — Task #686 rate-limit gate", () => {
   it("surfaces the reconnecting affordance when mounted while a cooldown is already active, then auto-recovers when the window expires", async () => {
     // The background reporter just tripped a 429 before the user
     // navigated to this screen. Pre-arm the shared cooldown to
-    // simulate that state. Use a short window so the test recovers
-    // quickly without fake-timer plumbing (the hook + module both
-    // honor the deadline rather than any setTimeout count).
+    // simulate that state. Control both Date.now and timers so CI
+    // scheduling cannot consume the cooldown before mount settles.
+    vi.useFakeTimers();
     noteTicketsRateLimit(makeRateLimitError(1));
 
     // apiFetch should NOT be called while parked. We swap to the
@@ -236,16 +237,17 @@ describe("TicketDetailScreen — Task #686 rate-limit gate", () => {
       throw new Error(`apiFetch should not run during cooldown: ${url}`);
     });
 
-    render(<TicketDetailScreen />);
+    await act(async () => { render(<TicketDetailScreen />); });
 
     // The reconnecting toast must appear instead of a silent spinner.
-    await waitFor(() => {
-      expect(screen.queryAllByTestId("toast-ticket-rate-limited").length).toBeGreaterThan(0);
-    });
+    expect(screen.queryAllByTestId("toast-ticket-rate-limited").length).toBeGreaterThan(0);
     // Sanity: the early-exit guard inside `load()` must short-circuit
     // before any apiFetch call — otherwise we'd immediately re-trip
     // the limiter on every mount.
     expect(apiFetchMock).not.toHaveBeenCalled();
+    await act(async () => { await vi.advanceTimersByTimeAsync(999); });
+    expect(apiFetchMock).not.toHaveBeenCalled();
+    expect(screen.queryAllByTestId("toast-ticket-rate-limited").length).toBeGreaterThan(0);
 
     // Now arm the happy-path API so when the cooldown expires the
     // recovery effect's load() actually populates the screen.
@@ -274,25 +276,19 @@ describe("TicketDetailScreen — Task #686 rate-limit gate", () => {
       return Promise.resolve(null);
     });
 
-    // Wait for the cooldown to expire and the recovery effect to fire.
+    // Cross the actual deadline and let the recovery effect fire.
     // This is the regression guard: without the recovery effect the
     // screen would stay on the spinner forever after expiry.
-    await waitFor(
-      () => {
-        expect(
-          apiFetchMock.mock.calls.some(([u]) => u === `/api/tickets/${TICKET_ID}`),
-        ).toBe(true);
-      },
-      { timeout: 3000 },
-    );
+    await act(async () => { await vi.advanceTimersByTimeAsync(1); });
+    expect(
+      apiFetchMock.mock.calls.some(([u]) => u === `/api/tickets/${TICKET_ID}`),
+    ).toBe(true);
 
     // And the screen actually renders the ticket — the refresh button
     // (only mounted in the loaded branch) is in the DOM and enabled.
-    await waitFor(() => {
-      const btn = screen.queryByTestId("button-refresh-ticket-detail");
-      expect(btn).toBeTruthy();
-      expect(isElementDisabled(btn)).toBe(false);
-    });
+    const btn = screen.queryByTestId("button-refresh-ticket-detail");
+    expect(btn).toBeTruthy();
+    expect(isElementDisabled(btn)).toBe(false);
   });
 
   it("shows the reconnecting toast and disables the header refresh button when apiFetch rejects with a 429 during a manual refresh", async () => {

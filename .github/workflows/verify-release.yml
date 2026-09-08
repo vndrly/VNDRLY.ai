@@ -75,10 +75,18 @@ jobs:
           pnpm run test:api 2>&1 | tee "$RUNNER_TEMP/vndrly-api-tests.log"
 
       - name: Full required test chain
+        id: full-chain
         shell: bash
         run: |
           set -euo pipefail
           pnpm test 2>&1 | tee "$RUNNER_TEMP/vndrly-tests.log"
+
+      - name: Diagnose browser gate after an earlier chain failure
+        if: failure() && steps.full-chain.outcome == 'failure'
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm run test:e2e 2>&1 | tee "$RUNNER_TEMP/vndrly-browser-tests.log"
 
       - name: Retain verification evidence
         if: always()
@@ -88,6 +96,7 @@ jobs:
           path: |
             ${{ runner.temp }}/vndrly-tests.log
             ${{ runner.temp }}/vndrly-api-tests.log
+            ${{ runner.temp }}/vndrly-browser-tests.log
             ${{ runner.temp }}/vndrly-postgres.log
             lib/e2e/test-results
           if-no-files-found: warn
