@@ -1,0 +1,3 @@
+import { describe, expect, it } from "vitest";
+import { sessionCanSeeOwner } from "./owner-boundary";
+describe("Work Hub owner boundary", () => { it("hides unrelated tenants and permits the active owner or system admin", () => { expect(sessionCanSeeOwner({ role: "vendor", vendorId: 1, partnerId: null }, "vendor", 1)).toBe(true); expect(sessionCanSeeOwner({ role: "vendor", vendorId: 1, partnerId: null }, "vendor", 2)).toBe(false); expect(sessionCanSeeOwner({ role: "partner", vendorId: null, partnerId: 8 }, "vendor", 1)).toBe(false); expect(sessionCanSeeOwner({ role: "admin", vendorId: null, partnerId: null }, "partner", 99)).toBe(true); }); });

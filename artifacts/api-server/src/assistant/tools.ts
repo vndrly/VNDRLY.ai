@@ -53,9 +53,26 @@ export const DEEP_LINK_SCREENS = [
   "safety-event-detail",
   "askv-audit",
   "communications-health",
+  "work-hub",
+  "work-hub-channels",
+  "work-hub-calendar",
+  "work-hub-files",
+  "work-hub-tasks",
+  "work-hub-meetings",
+  "work-hub-search",
 ] as const;
 
 export const TOOLS: Anthropic.Tool[] = [
+  {
+    name: "query_work_hub",
+    description: "Read permission-scoped Work Hub information. Results are restricted by the caller's current organization and role on the server.",
+    input_schema: { type: "object", properties: { domain: { type: "string", enum: ["home", "calendar", "tasks", "channels", "messages", "meetings", "transcripts", "files", "notes", "people", "announcements", "shifts", "forms", "search", "summaries", "action_suggestions"] }, id: { type: "string" }, query: { type: "string" }, start: { type: "string" }, end: { type: "string" } }, required: ["domain"], additionalProperties: false },
+  },
+  {
+    name: "propose_work_hub_action",
+    description: "Propose a consequential Work Hub write. Every call requires explicit user confirmation before execution, an idempotency operation id, expected version where applicable, and server-side authorization/audit.",
+    input_schema: { type: "object", properties: { action: { type: "string", enum: ["create_task", "update_task", "post_message", "create_shift", "claim_shift", "create_meeting", "publish_announcement", "acknowledge_announcement"] }, operationId: { type: "string", format: "uuid" }, owner: { type: "object", properties: { type: { type: "string", enum: ["vendor", "partner"] }, id: { type: "number" } }, required: ["type", "id"], additionalProperties: false }, context: { type: "object", properties: { kind: { type: "string", enum: ["organization", "ticket", "site", "crew", "gate"] }, id: { anyOf: [{ type: "number" }, { type: "string" }] } }, required: ["kind", "id"], additionalProperties: false }, expectedVersion: { anyOf: [{ type: "number" }, { type: "null" }] }, targetId: { type: "string" }, payload: { type: "object" } }, required: ["action", "operationId", "owner", "context", "payload"], additionalProperties: false },
+  },
   {
     name: "lookup_user_progress",
     description:

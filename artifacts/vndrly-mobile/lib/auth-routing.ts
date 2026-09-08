@@ -1,0 +1,1 @@
+export function resolveMobileLaunchRoute(input: { authenticated: boolean; tokenExpired: boolean; requestedPath: string | null }) { if (!input.authenticated || input.tokenExpired) return "/login"; if (input.requestedPath?.startsWith("/work-hub/") || input.requestedPath === "/work-hub") return input.requestedPath; return "/(tabs)"; }

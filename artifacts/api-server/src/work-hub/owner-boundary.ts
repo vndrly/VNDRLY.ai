@@ -1,0 +1,1 @@
+export function sessionCanSeeOwner(session: { role?: string; vendorId?: number | null; partnerId?: number | null }, ownerType: string, ownerId: number) { return session.role === "admin" || (ownerType === "vendor" ? session.vendorId === ownerId : ownerType === "partner" ? session.partnerId === ownerId : false); }

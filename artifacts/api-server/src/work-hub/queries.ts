@@ -39,10 +39,12 @@ export async function resolveChannelAccess(
 }
 
 export async function listOwnedWorkHubChannels(session: SessionPayload & { userId: number }, before?: Date, limit = 50) {
-  const ownership = session.role === "admin" ? undefined : or(
-    session.vendorId ? and(eq(workHubChannelsTable.ownerOrgType, "vendor"), eq(workHubChannelsTable.ownerOrgId, session.vendorId)) : undefined,
-    session.partnerId ? and(eq(workHubChannelsTable.ownerOrgType, "partner"), eq(workHubChannelsTable.ownerOrgId, session.partnerId)) : undefined,
-  );
-  return db.select().from(workHubChannelsTable).where(and(ownership, before ? lt(workHubChannelsTable.updatedAt, before) : undefined))
-    .orderBy(desc(workHubChannelsTable.updatedAt), desc(workHubChannelsTable.id)).limit(Math.min(100, Math.max(1, limit)));
+  const requested = Math.min(100, Math.max(1, limit));
+  const candidates = await db.select().from(workHubChannelsTable)
+    .where(before ? lt(workHubChannelsTable.updatedAt, before) : undefined)
+    .orderBy(desc(workHubChannelsTable.updatedAt), desc(workHubChannelsTable.id))
+    .limit(session.role === "admin" ? requested : Math.max(requested * 4, 200));
+  if (session.role === "admin") return candidates;
+  const accessible = await Promise.all(candidates.map(async (channel) => ({ channel, allowed: await isWorkHubParticipant(session, channel) })));
+  return accessible.filter((entry) => entry.allowed).slice(0, requested).map((entry) => entry.channel);
 }

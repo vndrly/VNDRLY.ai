@@ -3811,6 +3811,10 @@
     "mismatch": "Las contraseñas no coinciden."
   },
   "errors": {
+    "public_askv": {
+      "rate_limited": "AskV está recibiendo demasiadas solicitudes. Inténtalo de nuevo en breve.",
+      "invalid_input": "Escribe una pregunta más corta sobre VNDRLY."
+    },
     "unknownError": "Algo salió mal. Inténtalo de nuevo.",
     "badRequest": "No se pudo procesar la solicitud. Revisa los datos e inténtalo de nuevo.",
     "unauthorized": "Tu sesión ha caducado. Inicia sesión de nuevo.",

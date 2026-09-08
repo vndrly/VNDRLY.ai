@@ -36,6 +36,7 @@ export const ROLE_ALLOWED_SCREENS: Record<AssistantRole, Set<string> | null> = {
     "notifications-inbox",
     "safety-inbox",
     "safety-event-detail",
+    "work-hub", "work-hub-channels", "work-hub-calendar", "work-hub-files", "work-hub-tasks", "work-hub-meetings", "work-hub-search",
   ]),
   vendor: new Set([
     "dashboard",
@@ -63,6 +64,7 @@ export const ROLE_ALLOWED_SCREENS: Record<AssistantRole, Set<string> | null> = {
     "notifications-inbox",
     "safety-inbox",
     "safety-event-detail",
+    "work-hub", "work-hub-channels", "work-hub-calendar", "work-hub-files", "work-hub-tasks", "work-hub-meetings", "work-hub-search",
   ]),
   field_employee: new Set([
     "onboarding-field",
@@ -70,6 +72,7 @@ export const ROLE_ALLOWED_SCREENS: Record<AssistantRole, Set<string> | null> = {
     "ticket-detail",
     "safety-inbox",
     "safety-event-detail",
+    "work-hub", "work-hub-channels", "work-hub-calendar", "work-hub-files", "work-hub-tasks", "work-hub-meetings", "work-hub-search",
   ]),
   any: null,
 };

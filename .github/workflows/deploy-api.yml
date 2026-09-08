@@ -11,6 +11,7 @@ on:
       - "scripts/notes-admission-migration.mjs"
       - "scripts/askv-greeting-migration.mjs"
       - "scripts/assistant-action-audit-migration.mjs"
+      - "scripts/work-hub-*-migration.mjs"
       - ".github/workflows/deploy-api.yml"
   workflow_dispatch:
 
@@ -103,6 +104,10 @@ jobs:
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" APPLY_PARTNER_OWNED_CATALOGS=1 pnpm --filter @workspace/api-server run migrate:partner-owned-catalogs
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:assistant-action-audit
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:askv-greeting
+          sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:work-hub-flags
+          sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:work-hub-core
+          sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:work-hub-domains
+          sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:work-hub-notifications
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" APPLY_PUBLIC_DATA_API_HARDENING=1 pnpm --filter @workspace/api-server run migrate:public-data-api-hardening
           unset database_url openai_key
           sudo systemctl daemon-reload

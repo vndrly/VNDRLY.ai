@@ -1,0 +1,3 @@
+import { describe, expect, it } from "vitest";
+import { ASK_V_TOOL_REGISTRY } from "./tool-registry";
+describe("Work Hub AskV web/iOS parity", () => { it("uses one server toolbox for both clients and confirms every write", () => { const read = ASK_V_TOOL_REGISTRY.find((tool) => tool.name === "query_work_hub"); const write = ASK_V_TOOL_REGISTRY.find((tool) => tool.name === "propose_work_hub_action"); expect(read?.roles).toEqual(expect.arrayContaining(["admin", "partner", "vendor", "field_employee"])); expect(write).toMatchObject({ mutating: true, confirmation: "required", auditTarget: "work_hub" }); expect(write?.inputSchema).toMatchObject({ properties: { operationId: { format: "uuid" } } }); }); });

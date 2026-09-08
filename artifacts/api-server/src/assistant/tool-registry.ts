@@ -15,7 +15,8 @@ export type AskVAuditTarget =
   | "crew"
   | "safety"
   | "hotlist"
-  | "invoice";
+  | "invoice"
+  | "work_hub";
 
 export interface AskVToolDefinition {
   name: string;
@@ -62,6 +63,8 @@ const DEFAULT_METADATA: ToolMetadata = {
 };
 
 const TOOL_METADATA: Record<string, Partial<ToolMetadata>> = {
+  query_work_hub: { auditTarget: "work_hub" },
+  propose_work_hub_action: { mutating: true, confirmation: "required", risk: "high", auditTarget: "work_hub" },
   lookup_user_progress: { auditTarget: "onboarding" },
   start_onboarding: { roles: ONBOARDING_ROLES, mutating: true, pack: "screen", auditTarget: "onboarding" },
   set_onboarding_field: { roles: ONBOARDING_ROLES, mutating: true, confirmation: "required", pack: "screen", auditTarget: "onboarding" },

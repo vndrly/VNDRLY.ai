@@ -74,6 +74,11 @@ describe("buildAppNavigation", () => {
     }
   });
 
+  it("enters the focused Work Hub shell outside the main tabs", () => {
+    const entry = buildAppNavigation({ user: user("vendor"), labels, badges }).find((item) => item.key === "work-hub");
+    expect(entry?.href).toBe("/work-hub");
+  });
+
   it("keeps home, schedule, flagged, scan, and profile access for field users", () => {
     const items = buildAppNavigation({
       user: user("field_employee", "field"),

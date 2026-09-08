@@ -754,13 +754,13 @@ describe("deep_link_to role gate", () => {
     expect(gateDeepLinkScreen("vendor", "crew-map").ok).toBe(true);
   });
 
-  it("field employees can only reach the field portal trio", () => {
-    // Field employee allow list is intentionally tiny.
+  it("field employees can reach field operations and permission-scoped Work Hub", () => {
     const allowed = ROLE_ALLOWED_SCREENS.field_employee!;
-    expect(allowed.size).toBeLessThanOrEqual(5); // tight cap
     expect(allowed.has("field-home")).toBe(true);
     expect(allowed.has("onboarding-field")).toBe(true);
     expect(allowed.has("ticket-detail")).toBe(true);
+    expect(allowed.has("work-hub")).toBe(true);
+    expect(allowed.has("work-hub-tasks")).toBe(true);
 
     // High-blast-radius admin/back-office screens must be denied.
     const denied = [

@@ -787,6 +787,45 @@ export async function runTool(
       error: `Tool '${name}' is not available in field-employee invite mode.`,
     });
   }
+  if (name === "query_work_hub") {
+    const args = (input ?? {}) as Record<string, unknown>;
+    const domain = String(args.domain ?? "home");
+    const id = typeof args.id === "string" ? encodeURIComponent(args.id) : "";
+    const paths: Record<string, string | null> = {
+      home: "/work-hub/home",
+      calendar: `/work-hub/calendar?start=${encodeURIComponent(String(args.start ?? new Date().toISOString()))}&end=${encodeURIComponent(String(args.end ?? new Date(Date.now() + 30 * 86_400_000).toISOString()))}`,
+      tasks: "/work-hub/tasks", channels: "/work-hub/channels",
+      messages: id ? `/work-hub/channels/${id}/messages` : null,
+      notes: id ? `/work-hub/channels/${id}/notes` : null,
+      meetings: id ? `/work-hub/meetings/${id}/catch-up` : "/work-hub/home",
+      transcripts: id ? `/work-hub/meetings/${id}/catch-up` : null,
+      search: `/work-hub/search?q=${encodeURIComponent(String(args.query ?? ""))}`,
+      shifts: "/work-hub/home", announcements: "/work-hub/home", files: "/work-hub/home",
+      people: null, forms: null, summaries: "/work-hub/home", action_suggestions: "/work-hub/home",
+    };
+    const path = paths[domain];
+    if (!path) return JSON.stringify({ ok: false, error: "That Work Hub query needs a specific authorized context or is not available yet." });
+    return JSON.stringify(await callNaturalVoiceDomainApi(path, "GET", {}, session));
+  }
+  if (name === "propose_work_hub_action") {
+    const args = (input ?? {}) as Record<string, unknown>;
+    const action = String(args.action ?? "");
+    const targetId = typeof args.targetId === "string" ? encodeURIComponent(args.targetId) : "";
+    const paths: Record<string, string | null> = {
+      create_task: "/work-hub/tasks",
+      post_message: targetId ? `/work-hub/channels/${targetId}/messages` : null,
+      create_shift: "/work-hub/shifts",
+      claim_shift: targetId ? `/work-hub/shifts/${targetId}/claim` : null,
+      create_meeting: "/work-hub/meetings",
+      publish_announcement: "/work-hub/announcements",
+      acknowledge_announcement: targetId ? `/work-hub/announcements/${targetId}/acknowledge` : null,
+      update_task: null,
+    };
+    const path = paths[action];
+    if (!path) return JSON.stringify({ ok: false, error: "That Work Hub action needs a target or is not available yet." });
+    const envelope = action === "claim_shift" || action === "acknowledge_announcement" ? {} : { operationId: args.operationId, owner: args.owner, context: args.context, expectedVersion: args.expectedVersion ?? null, payloadVersion: 1, payload: args.payload ?? {} };
+    return JSON.stringify(await callNaturalVoiceDomainApi(path, "POST", envelope, session));
+  }
   if (isWriteTool(name)) {
     return runWriteTool(name, input, session);
   }

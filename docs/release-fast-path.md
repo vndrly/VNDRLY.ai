@@ -4,6 +4,15 @@ This is the canonical agent workflow after implementation is complete and the
 exact release tree has passed its required validation. Development, debugging,
 and TestFlight build time are measured separately from commit/push/web deploy.
 
+## Work Hub release checks
+
+- Confirm the public root renders the commercial homepage while login, signup, legal, portal, and deep links remain direct.
+- Confirm authenticated `/work-hub` uses focused navigation and “Back to VNDRLY” restores the prior route.
+- Run `migrate:work-hub-flags`, `migrate:work-hub-core`, `migrate:work-hub-domains`, and `migrate:work-hub-notifications` in order.
+- Verify `/api/healthz`, flag-off opaque responses, and the public AskV privacy/rate-limit boundary.
+- Confirm iOS signed-out launch routes to sign in, Work Hub deep links resolve, and exit returns to the main tabs.
+- Treat audio and Microsoft 365 as unavailable unless their provider readiness checks pass.
+
 ## Service target
 
 | Checkpoint | Target from release start |

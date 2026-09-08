@@ -3811,6 +3811,10 @@
     "mismatch": "Passwords do not match."
   },
   "errors": {
+    "public_askv": {
+      "rate_limited": "AskV is receiving too many requests. Please try again shortly.",
+      "invalid_input": "Enter a shorter question about VNDRLY."
+    },
     "unknownError": "Something went wrong. Please try again.",
     "badRequest": "The request couldn't be processed. Please check your input and try again.",
     "unauthorized": "Your session has expired. Please sign in again.",
