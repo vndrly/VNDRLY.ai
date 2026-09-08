@@ -2162,7 +2162,7 @@ export default function Tickets() {
                   </div>
                   <PngPillButton
                     type="submit"
-                    color="blue"
+                    color="brand"
                     disabled={
                       creatingPhoneIntake ||
                       !phoneForm.callerName.trim() ||
@@ -2315,7 +2315,7 @@ export default function Tickets() {
             </PngPillButton>
           )}
           <PngPillButton
-            color="blue"
+            color="brand"
             data-testid="toggle-group-by-visit"
             className="px-2"
             onClick={() => setGroupByVisit((v) => !v)}
@@ -2591,7 +2591,7 @@ export default function Tickets() {
                   )}
                   <PngPillButton
                     type="submit"
-                    color="blue"
+                    color="brand"
                     disabled={
                       creatingBatch
                       || !form.siteLocationId

@@ -38,6 +38,8 @@ const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 // pill doctrine label depth on text).
 
 const COMPANY_ROLES = [
+  "Field Worker",
+  "Driver",
   "Operations Manager",
   "Drilling / Completions Engineer",
   "Procurement / Supply Chain",
@@ -547,7 +549,7 @@ export default function FieldEmployees() {
           <Dialog open={addOpen} onOpenChange={setAddOpen}>
             <DialogTrigger asChild>
               <PngPillButton
-                color="blue"
+                color="brand"
                 data-testid="button-add-employee"
                 onClick={() => setForm((f) => ({ ...f, vendorRole: "field" }))}
                 className="px-2"
@@ -624,7 +626,7 @@ export default function FieldEmployees() {
             </CardTitle>
             <Dialog open={addPartnerContactOpen} onOpenChange={(open) => { setAddPartnerContactOpen(open); if (!open) setAddPartnerContactForm(emptyPartnerContactForm); }}>
               <DialogTrigger asChild>
-                <PngPillButton color="blue" data-testid="button-add-partner-employee"><Plus className="w-4 h-4" />{t("fieldEmployees.addEmployee")}</PngPillButton>
+                <PngPillButton color="brand" data-testid="button-add-partner-employee"><Plus className="w-4 h-4" />{t("fieldEmployees.addEmployee")}</PngPillButton>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader><DialogTitle>{t("fieldEmployees.addEmployee")}</DialogTitle></DialogHeader>
@@ -654,7 +656,7 @@ export default function FieldEmployees() {
                     <p className="text-xs text-muted-foreground mb-2">{t("fieldEmployees.partnerRolesHelp")}</p>
                     <RoleMultiSelect value={addPartnerContactForm.roles} onChange={(roles) => setAddPartnerContactForm({ ...addPartnerContactForm, roles })} testIdPrefix="add-partner-role" />
                   </div>
-                  <PngPillButton color="blue" type="submit" disabled={createPartnerContact.isPending} className="w-full" data-testid="button-submit-add-partner-contact">
+                  <PngPillButton color="brand" type="submit" disabled={createPartnerContact.isPending} className="w-full" data-testid="button-submit-add-partner-contact">
                     {createPartnerContact.isPending ? t("fieldEmployees.adding") : t("fieldEmployees.addEmployee")}
                   </PngPillButton>
                 </form>
@@ -841,7 +843,7 @@ export default function FieldEmployees() {
                 <p className="text-xs text-muted-foreground mb-2">{t("fieldEmployees.partnerRolesHelp")}</p>
                 <RoleMultiSelect value={editPartnerContactForm.roles} onChange={(roles) => setEditPartnerContactForm({ ...editPartnerContactForm, roles })} testIdPrefix="edit-partner-role" />
               </div>
-              <PngPillButton color="blue" type="submit" disabled={updatePartnerContact.isPending} className="w-full" data-testid="button-submit-edit-partner-contact">
+              <PngPillButton color="brand" type="submit" disabled={updatePartnerContact.isPending} className="w-full" data-testid="button-submit-edit-partner-contact">
                 {updatePartnerContact.isPending ? t("fieldEmployees.saving") : t("fieldEmployees.saveChanges")}
               </PngPillButton>
             </form>
@@ -945,7 +947,7 @@ export default function FieldEmployees() {
                 />
               );
             })()}
-            <PngPillButton color="blue" type="submit" disabled={updateVendorContact.isPending} attention={editOfficeDirty} className="w-full" data-testid="button-submit-edit-office">
+            <PngPillButton color="brand" type="submit" disabled={updateVendorContact.isPending} attention={editOfficeDirty} className="w-full" data-testid="button-submit-edit-office">
               {updateVendorContact.isPending ? t("fieldEmployees.saving") : t("fieldEmployees.saveChanges")}
             </PngPillButton>
           </form>

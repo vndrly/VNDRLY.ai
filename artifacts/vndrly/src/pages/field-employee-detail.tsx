@@ -437,9 +437,13 @@ export default function FieldEmployeeDetail({ id }: { id: number }) {
               <Label>{t("fieldEmployeeDetail.pecCertification")}</Label>
               <PecStatusBadge expirationDate={form.pecExpirationDate || null} />
             </div>
-            <div className="flex items-center gap-2">
-              <Checkbox id="visit-notif-employee-detail" checked={form.roles.includes("Visitor Notifications")} onCheckedChange={(v) => setForm({ ...form, roles: v ? Array.from(new Set([...form.roles, "Visitor Notifications"])) : form.roles.filter((r) => r !== "Visitor Notifications") })} data-testid="checkbox-employee-visit-notifications" />
-              <Label htmlFor="visit-notif-employee-detail" className="cursor-pointer">Receive site visitor check-in notifications</Label>
+            <div className="flex flex-wrap gap-4">
+              {["Field Worker", "Driver", "Visitor Notifications"].map((role) => (
+                <div className="flex items-center gap-2" key={role}>
+                  <Checkbox id={`employee-role-${role}`} checked={form.roles.includes(role)} onCheckedChange={(checked) => setForm({ ...form, roles: checked ? Array.from(new Set([...form.roles, role])) : form.roles.filter((item) => item !== role) })} />
+                  <Label htmlFor={`employee-role-${role}`} className="cursor-pointer">{role}</Label>
+                </div>
+              ))}
             </div>
             <div>
               <Label>{t("fieldEmployeeDetail.expirationDate")}</Label>
@@ -488,7 +492,7 @@ export default function FieldEmployeeDetail({ id }: { id: number }) {
                       (primary action), h=24, matching the rest of
                       the pill family. The conditional label flips
                       to "Uploading…" while the request is in flight. */}
-                  <PngPillButton type="button" color="blue" onClick={() => fileInputRef.current?.click()} disabled={uploading} data-testid="button-add-photo">
+                  <PngPillButton type="button" color="brand" onClick={() => fileInputRef.current?.click()} disabled={uploading} data-testid="button-add-photo">
                     <Camera className="w-4 h-4" />{uploading ? t("fieldEmployeeDetail.uploading") : t("fieldEmployeeDetail.addPhoto")}
                   </PngPillButton>
                   {/* Remove Photo → PngPillButton red (destructive),
@@ -549,7 +553,7 @@ export default function FieldEmployeeDetail({ id }: { id: number }) {
                   edits. AlertDialog gating on Delete is unchanged
                   — PngPillButton renders an underlying <button>
                   so AlertDialogTrigger asChild still binds. */}
-              <PngPillButton type="submit" color="blue" disabled={updateEmployee.isPending} attention={isDirty} className="w-[140px] justify-center" data-testid="button-save">
+              <PngPillButton type="submit" color="brand" disabled={updateEmployee.isPending} attention={isDirty} className="w-[140px] justify-center" data-testid="button-save">
                 {updateEmployee.isPending ? t("fieldEmployeeDetail.saving") : t("fieldEmployeeDetail.saveChanges")}
               </PngPillButton>
               <AlertDialog
@@ -731,7 +735,7 @@ export default function FieldEmployeeDetail({ id }: { id: number }) {
                 action), h=24. The label is conditional — "Update
                 Password" when a login exists, "Create Login" when
                 first-time provisioning, "Saving…" while in flight. */}
-            <PngPillButton type="button" color="blue" onClick={saveCredentials} disabled={credBusy} data-testid="button-save-credentials">
+            <PngPillButton type="button" color="brand" onClick={saveCredentials} disabled={credBusy} data-testid="button-save-credentials">
               {credBusy ? t("fieldEmployeeDetail.saving") : loginInfo?.hasLogin ? t("fieldEmployeeDetail.updatePassword") : t("fieldEmployeeDetail.createLogin")}
             </PngPillButton>
             {!loginInfo?.hasLogin && (
@@ -778,7 +782,7 @@ export default function FieldEmployeeDetail({ id }: { id: number }) {
         </CardContent>
       </Card>
 
-      <CertificationsSection employeeId={id} />
+      <CertificationsSection employeeId={id} roles={form.roles} />
 
       <Card data-testid="compliance-card-preview-section">
         <CardHeader><CardTitle>{t("fieldEmployeeDetail.compliancePreview")}</CardTitle></CardHeader>
@@ -813,7 +817,7 @@ export default function FieldEmployeeDetail({ id }: { id: number }) {
               renders an underlying <button>. */}
           <Dialog open={noteOpen} onOpenChange={setNoteOpen}>
             <DialogTrigger asChild>
-              <PngPillButton color="blue" data-testid="button-add-note"><Plus className="w-4 h-4" />{t("fieldEmployeeDetail.addNote")}</PngPillButton>
+              <PngPillButton color="brand" data-testid="button-add-note"><Plus className="w-4 h-4" />{t("fieldEmployeeDetail.addNote")}</PngPillButton>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader><DialogTitle>{t("fieldEmployeeDetail.addNote")}</DialogTitle></DialogHeader>
@@ -826,7 +830,7 @@ export default function FieldEmployeeDetail({ id }: { id: number }) {
                   data-testid="input-note-content"
                   required
                 />
-                <PngPillButton color="blue" type="submit" disabled={createNote.isPending} className="w-full" data-testid="button-submit-note">
+                <PngPillButton color="brand" type="submit" disabled={createNote.isPending} className="w-full" data-testid="button-submit-note">
                   {createNote.isPending ? t("fieldEmployeeDetail.adding") : t("fieldEmployeeDetail.addNote")}
                 </PngPillButton>
               </form>

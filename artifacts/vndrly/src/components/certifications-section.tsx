@@ -23,6 +23,7 @@ import { ShieldCheck, Pencil, Trash2 } from "lucide-react";
 import ImagePill from "@/components/image-pill";
 import { PngPillButton } from "@/components/png-pill-rollover";
 import { translateApiError } from "@/lib/api-error";
+import { requiredCredentialsForRoles } from "@/lib/role-compliance";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -43,7 +44,7 @@ function statusBadge(expirationDate: string | null) {
       </ImagePill>
     );
   }
-  if (days <= 60) {
+  if (days <= 90) {
     return <ImagePill color="amber">Expires in {Math.ceil(days)}d</ImagePill>;
   }
   return <ImagePill color="green">Valid</ImagePill>;
@@ -71,12 +72,15 @@ export default function CertificationsSection({
   variant = "card",
   testIdPrefix = "employee-certifications",
   showVendorVerify = false,
+  roles = [],
 }: {
   employeeId: number;
   variant?: "card" | "inline";
   testIdPrefix?: string;
   /** Vendor office/admin can check off employee-submitted certifications. */
   showVendorVerify?: boolean;
+  /** Selected workforce roles determine which credentials are required. */
+  roles?: string[];
 }) {
   const { t } = useTranslation();
   const qc = useQueryClient();
@@ -102,6 +106,13 @@ export default function CertificationsSection({
     () => (catalogNames ?? []).filter((n) => !existingNames.has(n)),
     [catalogNames, existingNames],
   );
+  const requiredCredentials = useMemo(() => requiredCredentialsForRoles(roles), [roles]);
+  const requirementSummary = requiredCredentials.length > 0 ? (
+    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground" data-testid={`${testIdPrefix}-role-requirements`}>
+      <span>Required for selected roles:</span>
+      {requiredCredentials.map((credential) => <ImagePill key={credential} color={existingNames.has(credential) ? "green" : "red"}>{credential}</ImagePill>)}
+    </div>
+  ) : null;
 
   const startEdit = (c: EmployeeCertification) => {
     setEditing(c);
@@ -468,6 +479,7 @@ export default function CertificationsSection({
           </p>
         </div>
         {addCertPicker}
+        {requirementSummary}
         {inlineCertRows}
       </div>
     );
@@ -483,6 +495,7 @@ export default function CertificationsSection({
       </CardHeader>
       <CardContent className="space-y-3">
         {addCertPicker}
+        {requirementSummary}
         {cardCertRows}
         {editDialog}
       </CardContent>

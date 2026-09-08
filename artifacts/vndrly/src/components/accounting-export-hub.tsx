@@ -35,6 +35,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { useBrand } from "@/hooks/use-brand";
+import { pillBlue } from "@/lib/pill-palette-assets";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -333,7 +334,7 @@ export function AccountingExportHub({
 
         <div className="flex flex-wrap gap-2">
           <PngPillButton
-            color="blue"
+            color="green"
             disabled={!canDownload}
             onClick={() => download(`${base}/line-detail-export?format=csv`)}
             data-testid="button-download-line-detail"
@@ -382,7 +383,8 @@ export function AccountingExportHub({
 
           {role === "partner" && (
             <PngPillButton
-              color="green"
+              color="blue"
+              activeSrc={pillBlue}
               disabled={!canDownload}
               onClick={() => download(`${base}/accounting-bundle`)}
               data-testid="button-download-accounting-bundle"
