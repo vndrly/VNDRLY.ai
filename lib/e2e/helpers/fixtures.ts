@@ -67,6 +67,7 @@ export async function createVendor(
 export interface CreateWorkTypeInput {
   name: string;
   category: string;
+  partnerId?: number;
 }
 
 /**
@@ -79,8 +80,8 @@ export async function createWorkType(
   input: CreateWorkTypeInput,
 ): Promise<{ id: number }> {
   const { rows } = await pool.query<{ id: number }>(
-    `INSERT INTO work_types (name, category) VALUES ($1, $2) RETURNING id`,
-    [input.name, input.category],
+    `INSERT INTO work_types (name, category, partner_id) VALUES ($1, $2, $3) RETURNING id`,
+    [input.name, input.category, input.partnerId ?? null],
   );
   return rows[0];
 }

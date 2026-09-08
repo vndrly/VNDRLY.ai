@@ -82,7 +82,17 @@ async function seedFixture(): Promise<Seed> {
   const workType = await createWorkType(pool, {
     name: `E522 Work Type ${stamp}`,
     category: "general",
+    partnerId: partner.id,
   });
+  // Site access and service selection require an approved partner relationship.
+  await pool.query(
+    `INSERT INTO partner_vendor_relationships (partner_id, vendor_id, status) VALUES ($1, $2, 'approved')`,
+    [partner.id, vendor.id],
+  );
+  await pool.query(
+    `INSERT INTO vendor_work_types (vendor_id, work_type_id) VALUES ($1, $2)`,
+    [vendor.id, workType.id],
+  );
   const site = await createSiteLocation(pool, {
     partnerId: partner.id,
     name: `E522 Site ${stamp}`,
@@ -203,6 +213,7 @@ async function cleanup(s: Seed): Promise<void> {
     s.vendorUserId,
     s.feUserId,
   ]);
+  await pool.query(`DELETE FROM vendor_work_types WHERE vendor_id = $1 AND work_type_id = $2`, [s.vendorId, s.workTypeId]);
   await pool.query(`DELETE FROM work_types WHERE id = $1`, [s.workTypeId]);
   await pool.query(`DELETE FROM vendors WHERE id = $1`, [s.vendorId]);
   await pool.query(`DELETE FROM partners WHERE id = $1`, [s.partnerId]);

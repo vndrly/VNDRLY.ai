@@ -101,6 +101,10 @@ export default defineConfig({
         PORT: "23539",
         BASE_PATH: "/",
         VITE_API_PROXY_TARGET: "http://localhost:18080",
+        // Exercise retained accounting workflows in this isolated test server.
+        // Production defaults stay disabled and are covered by release-features tests.
+        VITE_ENABLE_TAX_REPORTING: "true",
+        VITE_ENABLE_ACCOUNTING: "true",
       },
       stdout: "ignore",
       stderr: "pipe",
