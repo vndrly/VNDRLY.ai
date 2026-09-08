@@ -94,6 +94,7 @@ jobs:
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" APPLY_PARTNER_OWNED_CATALOGS=1 pnpm --filter @workspace/api-server run migrate:partner-owned-catalogs
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:assistant-action-audit
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:askv-greeting
+          sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" APPLY_PUBLIC_DATA_API_HARDENING=1 pnpm --filter @workspace/api-server run migrate:public-data-api-hardening
           unset database_url
           sudo systemctl daemon-reload
           sudo systemctl enable vndrly-api 2>/dev/null || true

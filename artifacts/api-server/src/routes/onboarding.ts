@@ -854,10 +854,6 @@ router.post("/onboarding/:orgType/:orgId/complete", async (req: Request, res: Re
     vendorId: orgType === "vendor" ? orgId : null,
     defaultStep: "done",
   });
-  if (existing.completedAt) {
-    res.json(serializeProgress(existing));
-    return;
-  }
   const payload = (existing.payload ?? {}) as Record<string, unknown>;
 
   if (orgType === "partner") {

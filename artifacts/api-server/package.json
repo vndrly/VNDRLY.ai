@@ -16,6 +16,7 @@
     "migrate:vendor-note-ownership": "node scripts/apply-vendor-note-ownership-migration.mjs",
     "migrate:visit-entry-category": "node scripts/apply-visit-entry-category-migration.mjs",
     "migrate:partner-owned-catalogs": "tsx scripts/migrate-partner-owned-catalogs.ts",
+    "migrate:public-data-api-hardening": "tsx scripts/harden-public-data-api.ts",
     "migrate:askv-greeting": "node scripts/apply-askv-greeting-migration.mjs",
     "migrate:assistant-action-audit": "node scripts/apply-assistant-action-audit-migration.mjs",
     "eval": "vitest run --config vitest.eval.config.ts",
