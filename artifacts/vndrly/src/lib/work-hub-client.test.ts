@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  canManageWorkHubChannels,
   commandEnvelope,
   ownerForUser,
   workHubModulePath,
@@ -7,6 +8,12 @@ import {
 } from "./work-hub-client";
 
 describe("Work Hub client boundary", () => {
+  it("only lets platform or organization administrators manage channels", () => {
+    expect(canManageWorkHubChannels({ role: "admin", vendorId: null, partnerId: null, membershipRole: null })).toBe(true);
+    expect(canManageWorkHubChannels({ role: "vendor", vendorId: 22, partnerId: null, membershipRole: "admin" })).toBe(true);
+    expect(canManageWorkHubChannels({ role: "vendor", vendorId: 22, partnerId: null, membershipRole: "member" })).toBe(false);
+  });
+
   it("uses the active tenant as the only command owner", () => {
     expect(
       ownerForUser({

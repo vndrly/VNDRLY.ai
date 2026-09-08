@@ -10,13 +10,16 @@ import {
   Video,
 } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
-import { Button } from "@/components/ui/button";
+import BrandPillButton from "@/components/brand-pill-button";
+import MeetingAudioRoom from "@/components/meeting-audio-room";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/use-auth";
 import {
+  canManageWorkHubChannels,
   commandEnvelope,
+  isWorkHubAdmin,
   ownerForUser,
   workHubModulePath,
   workHubRequest,
@@ -148,12 +151,17 @@ function useCommand(path: string, key: unknown[]) {
 }
 
 function Channels() {
-  const owner = useOwner();
+  const { user } = useAuth();
+  const owner = ownerForUser(user);
+  const canManageChannels = canManageWorkHubChannels(user);
   const qc = useQueryClient();
   const [selected, setSelected] = useState<string>();
   const [name, setName] = useState("");
+  const [visibility, setVisibility] = useState<"organization" | "private" | "group">("organization");
   const [body, setBody] = useState("");
   const [note, setNote] = useState({ title: "", body: "" });
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [guidance, setGuidance] = useState<string>();
   const channels = useQuery<Row[]>({
     queryKey: ["work-hub", "channels"],
     queryFn: () => workHubRequest("/channels"),
@@ -169,15 +177,33 @@ function Channels() {
     queryFn: () => workHubRequest(`/channels/${active}/notes`),
     enabled: !!active,
   });
+  const members = useQuery<Row[]>({
+    queryKey: ["work-hub", "channel-members", active],
+    queryFn: () => workHubRequest(`/channels/${active}/members`),
+    enabled: !!active,
+  });
   const create = useMutation({
     mutationFn: () =>
       workHubRequest("/channels", {
         method: "POST",
-        body: JSON.stringify(commandEnvelope(owner!, { name })),
+        body: JSON.stringify(commandEnvelope(owner!, { name, visibility })),
       }),
-    onSuccess: () => {
+    onSuccess: (result: Row) => {
       setName("");
+      setGuidance(undefined);
+      if (result?.resource?.id) setSelected(result.resource.id);
       qc.invalidateQueries({ queryKey: ["work-hub", "channels"] });
+    },
+  });
+  const invite = useMutation({
+    mutationFn: () => workHubRequest(`/channels/${active}/members`, {
+      method: "POST",
+      body: JSON.stringify({ email: inviteEmail }),
+    }),
+    onSuccess: () => {
+      setInviteEmail("");
+      setGuidance("Participant added. The channel will appear in their Work Hub.");
+      qc.invalidateQueries({ queryKey: ["work-hub", "channel-members", active] });
     },
   });
   const send = useMutation({
@@ -206,43 +232,79 @@ function Channels() {
   });
   return (
     <Shell module="channels">
-      <div className="grid gap-4 lg:grid-cols-[260px_1fr_320px]">
+      <div className="grid gap-4">
         <Card>
           <CardHeader>
             <CardTitle>Channels</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-2">
             <form
-              className="flex gap-2"
+              className="grid gap-2"
               onSubmit={(e) => {
                 e.preventDefault();
+                if (!canManageChannels) {
+                  setGuidance("Only an organization administrator can create a channel.");
+                  return;
+                }
+                if (!owner) {
+                  setGuidance("Choose an organization before creating a channel.");
+                  return;
+                }
+                if (!name.trim()) {
+                  setGuidance("Enter a channel name first.");
+                  return;
+                }
                 create.mutate();
               }}
             >
-              <Input
-                aria-label="Channel name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="New channel"
-              />
-              <Button size="sm" disabled={!owner || !name}>
-                Add
-              </Button>
+              <div className="flex gap-2">
+                <Input
+                  aria-label="Channel name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="New channel"
+                />
+                <BrandPillButton type="submit" tone="brand" disabled={create.isPending} className="min-w-20">Add</BrandPillButton>
+              </div>
+              <select aria-label="Channel access" className="h-9 rounded-md border bg-background px-3 text-sm" value={visibility} onChange={(e) => setVisibility(e.target.value as typeof visibility)}>
+                <option value="organization">Everyone in this organization</option>
+                <option value="private">Private channel</option>
+                <option value="group">Invited group</option>
+              </select>
             </form>
+            {guidance && (
+              <p role="status" className="text-xs text-muted-foreground">
+                {guidance}
+              </p>
+            )}
             {channels.data?.map((c) => (
-              <Button
+              <BrandPillButton
                 key={c.id}
-                variant={c.id === active ? "default" : "ghost"}
-                className="justify-start"
+                tone="brand"
+                className="w-full justify-start"
                 onClick={() => setSelected(c.id)}
               >
                 # {c.name}
-              </Button>
+              </BrandPillButton>
             ))}
             {!channels.data?.length && <Empty>No channels yet.</Empty>}
+            {active && canManageChannels && (
+              <form className="mt-3 grid gap-2 border-t pt-3" onSubmit={(e) => {
+                e.preventDefault();
+                if (!inviteEmail.trim()) { setGuidance("Enter the participant's VNDRLY email first."); return; }
+                invite.mutate();
+              }}>
+                <p className="text-xs font-semibold">Invite participants</p>
+                <Input type="email" aria-label="Participant email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder="name@company.com" />
+                <BrandPillButton type="submit" tone="brand" disabled={invite.isPending}>Invite</BrandPillButton>
+                <Notice error={invite.error} />
+                {members.data?.map((member) => <p key={member.id} className="truncate text-xs text-muted-foreground">{member.displayName} · {member.email ?? "VNDRLY user"}</p>)}
+              </form>
+            )}
           </CardContent>
         </Card>
-        <Card>
+        {!active && <Card><CardContent className="pt-6"><Empty>Create or select a channel to open its conversation.</Empty></CardContent></Card>}
+        {active && <Card>
           <CardHeader>
             <CardTitle>Conversation</CardTitle>
           </CardHeader>
@@ -263,6 +325,14 @@ function Channels() {
               className="grid gap-2"
               onSubmit={(e) => {
                 e.preventDefault();
+                if (!active) {
+                  setGuidance("Create or select a channel before sending a message.");
+                  return;
+                }
+                if (!body.trim()) {
+                  setGuidance("Write a message first.");
+                  return;
+                }
                 send.mutate();
               }}
             >
@@ -272,11 +342,11 @@ function Channels() {
                 onChange={(e) => setBody(e.target.value)}
                 placeholder="Write a message…"
               />
-              <Button disabled={!active || !body}>Send message</Button>
+              <BrandPillButton type="submit" tone="brand" disabled={send.isPending}>Send message</BrandPillButton>
             </form>
           </CardContent>
-        </Card>
-        <Card>
+        </Card>}
+        {active && <Card>
           <CardHeader>
             <CardTitle>Channel notes</CardTitle>
           </CardHeader>
@@ -291,6 +361,14 @@ function Channels() {
               className="grid gap-2"
               onSubmit={(e) => {
                 e.preventDefault();
+                if (!active) {
+                  setGuidance("Create or select a channel before saving a note.");
+                  return;
+                }
+                if (!note.title.trim() || !note.body.trim()) {
+                  setGuidance("Add both a note title and note text first.");
+                  return;
+                }
                 saveNote.mutate();
               }}
             >
@@ -306,30 +384,34 @@ function Channels() {
                 onChange={(e) => setNote({ ...note, body: e.target.value })}
                 placeholder="Durable context"
               />
-              <Button
-                variant="outline"
-                disabled={!active || !note.title || !note.body}
-              >
+              <BrandPillButton type="submit" tone="brand" disabled={saveNote.isPending}>
                 Save note
-              </Button>
+              </BrandPillButton>
             </form>
           </CardContent>
-        </Card>
+        </Card>}
       </div>
     </Shell>
   );
 }
 
 function CalendarModule() {
-  const now = new Date();
-  const end = new Date(now);
-  end.setMonth(end.getMonth() + 2);
+  const { user } = useAuth();
+  const canManage = isWorkHubAdmin(user);
+  const [month, setMonth] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+  const [selectedDay, setSelectedDay] = useState(() => new Date().toISOString().slice(0, 10));
+  const start = new Date(month.getFullYear(), month.getMonth(), 1);
+  const end = new Date(month.getFullYear(), month.getMonth() + 1, 1);
   const calendar = useQuery<Row>({
-    queryKey: ["work-hub", "calendar"],
+    queryKey: ["work-hub", "calendar", start.toISOString(), end.toISOString()],
     queryFn: () =>
       workHubRequest(
-        `/calendar?start=${now.toISOString()}&end=${end.toISOString()}`,
+        `/calendar?start=${start.toISOString()}&end=${end.toISOString()}`,
       ),
+  });
+  const channelSummary = useQuery<Row[]>({
+    queryKey: ["work-hub", "channels"],
+    queryFn: () => workHubRequest("/channels"),
   });
   const { owner, command } = useCommand("/shifts", ["work-hub", "calendar"]);
   const [form, setForm] = useState({
@@ -337,6 +419,11 @@ function CalendarModule() {
     startsAt: "",
     endsAt: "",
     assignees: "",
+    calendarType: "company",
+    projectName: "",
+    milestoneStatus: "upcoming",
+    percentComplete: "0",
+    sharedWith: "",
   });
   const items = useMemo(
     () =>
@@ -358,15 +445,52 @@ function CalendarModule() {
       ].sort((a, b) => String(a.startsAt).localeCompare(String(b.startsAt))),
     [calendar.data],
   );
+  const firstWeekday = start.getDay();
+  const daysInMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+  const calendarDays = Array.from({ length: firstWeekday + daysInMonth }, (_, index) => index < firstWeekday ? null : index - firstWeekday + 1);
+  const dateKey = (value: unknown) => value ? new Date(String(value)).toLocaleDateString("en-CA") : "";
+  const selectedItems = items.filter((item) => dateKey(item.startsAt) === selectedDay);
+  const nextOfKind = (kind: string) => items.find((item) => item.kind === kind && new Date(item.startsAt).getTime() >= Date.now());
+  const nextShift = nextOfKind("Shift");
+  const nextMeeting = nextOfKind("Meeting");
+  const nextTask = nextOfKind("Task");
+  const unreadMessages = (channelSummary.data ?? []).reduce((total, channel) => total + Number(channel.unreadCount ?? 0), 0);
   return (
     <Shell module="calendar">
-      <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
+      <div className="grid gap-4">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {[
+            ["My next shift", nextShift?.title ?? "Nothing scheduled", nextShift?.startsAt ? displayDate(nextShift.startsAt) : ""],
+            ["Next meeting", nextMeeting?.title ?? "Nothing scheduled", nextMeeting?.startsAt ? displayDate(nextMeeting.startsAt) : ""],
+            ["Tasks due soon", nextTask?.title ?? "No task due", nextTask?.startsAt ? displayDate(nextTask.startsAt) : ""],
+          ].map(([title, value, detail]) => <Card key={title}><CardContent className="pt-5"><p className="text-xs font-semibold uppercase text-muted-foreground">{title}</p><p className="mt-1 font-semibold">{value}</p>{detail && <p className="text-xs text-muted-foreground">{detail}</p>}</CardContent></Card>)}
+          <Card><CardContent className="pt-5"><p className="text-xs font-semibold uppercase text-muted-foreground">Unread channel messages</p><p className="mt-1 text-2xl font-bold">{unreadMessages}</p><a href="/work-hub/channels" className="text-xs font-semibold text-[var(--brand-primary)] underline">Open channels</a></CardContent></Card>
+        </div>
         <Card>
           <CardHeader>
-            <CardTitle>Upcoming work</CardTitle>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <CardTitle>{month.toLocaleDateString(undefined, { month: "long", year: "numeric" })}</CardTitle>
+              <div className="flex gap-2">
+                <BrandPillButton tone="brand" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}>Previous</BrandPillButton>
+                <BrandPillButton tone="brand" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}>Next</BrandPillButton>
+              </div>
+            </div>
           </CardHeader>
           <CardContent className="grid gap-2">
-            {items.map((i) => (
+            <div className="grid grid-cols-7 gap-1 text-center text-xs font-semibold text-muted-foreground">
+              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => <div key={day} className="py-2">{day}</div>)}
+              {calendarDays.map((day, index) => {
+                if (!day) return <div key={`blank-${index}`} />;
+                const key = new Date(month.getFullYear(), month.getMonth(), day).toLocaleDateString("en-CA");
+                const count = items.filter((item) => dateKey(item.startsAt) === key).length;
+                return <button key={key} type="button" onClick={() => setSelectedDay(key)} className={`min-h-20 rounded-lg border p-2 text-left transition-colors hover:border-[var(--brand-primary)] ${selectedDay === key ? "border-[var(--brand-primary)] bg-[color-mix(in_srgb,var(--brand-primary)_12%,transparent)]" : "bg-card"}`}>
+                  <span className="font-semibold">{day}</span>
+                  {count > 0 && <span className="mt-2 block text-xs text-[var(--brand-primary)]">{count} {count === 1 ? "event" : "events"}</span>}
+                </button>;
+              })}
+            </div>
+            <h2 className="mt-4 font-semibold">{new Date(`${selectedDay}T12:00:00`).toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}</h2>
+            {selectedItems.map((i) => (
               <article
                 key={`${i.kind}-${i.id}`}
                 className="flex justify-between rounded-lg border p-4"
@@ -380,10 +504,10 @@ function CalendarModule() {
                 <time className="text-sm">{displayDate(i.startsAt)}</time>
               </article>
             ))}
-            {!items.length && <Empty>No scheduled work in this range.</Empty>}
+            {!selectedItems.length && <Empty>No scheduled work for this day.</Empty>}
           </CardContent>
         </Card>
-        <Card>
+        {canManage && <Card>
           <CardHeader>
             <CardTitle>Create shift</CardTitle>
           </CardHeader>
@@ -401,6 +525,11 @@ function CalendarModule() {
                     open: false,
                     assigneeUserIds: parseIds(form.assignees),
                     qualificationCodes: [],
+                    calendarType: form.calendarType,
+                    projectName: form.projectName || null,
+                    milestoneStatus: form.milestoneStatus,
+                    percentComplete: Number(form.percentComplete) || 0,
+                    sharedWithUserIds: parseIds(form.sharedWith),
                   },
                 });
               }}
@@ -439,9 +568,23 @@ function CalendarModule() {
                   placeholder="12,18"
                 />
               </Field>
+              <Field label="Calendar"><select className="h-10 rounded-md border bg-background px-3" value={form.calendarType} onChange={(e) => setForm({ ...form, calendarType: e.target.value })}><option value="company">Internal company</option><option value="project">Shared project</option></select></Field>
+              {form.calendarType === "project" && <>
+                <Field label="Project name"><Input value={form.projectName} onChange={(e) => setForm({ ...form, projectName: e.target.value })} required /></Field>
+                <Field label="Milestone status"><select className="h-10 rounded-md border bg-background px-3" value={form.milestoneStatus} onChange={(e) => setForm({ ...form, milestoneStatus: e.target.value })}><option value="upcoming">Upcoming</option><option value="in_progress">In progress</option><option value="completed">Completed</option><option value="blocked">Blocked</option><option value="overdue">Overdue</option></select></Field>
+                <Field label="Percent complete"><Input type="number" min="0" max="100" value={form.percentComplete} onChange={(e) => setForm({ ...form, percentComplete: e.target.value })} /></Field>
+                <Field label="Share with user IDs"><Input value={form.sharedWith} onChange={(e) => setForm({ ...form, sharedWith: e.target.value })} placeholder="Invited partner or vendor users" /></Field>
+              </>}
               <Notice error={command.error} />
-              <Button disabled={!owner}>Publish shift</Button>
+              <BrandPillButton type="submit" tone="brand" disabled={!owner || command.isPending}>Publish shift</BrandPillButton>
             </form>
+          </CardContent>
+        </Card>}
+        <Card>
+          <CardHeader><CardTitle>Project timeline</CardTitle></CardHeader>
+          <CardContent className="grid gap-3">
+            {items.filter((item) => item.calendarType === "project").map((item) => <article key={`timeline-${item.id}`} className="rounded-lg border p-4"><div className="flex justify-between gap-3"><div><span className="text-xs uppercase text-muted-foreground">{item.projectName} · {String(item.milestoneStatus).replace("_", " ")}</span><h3 className="font-semibold">{item.title}</h3><p className="text-xs">{displayDate(item.startsAt)} – {displayDate(item.endsAt)}</p></div><strong>{item.percentComplete ?? 0}%</strong></div><div className="mt-3 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full bg-[var(--brand-primary)]" style={{ width: `${item.percentComplete ?? 0}%` }} /></div></article>)}
+            {!items.some((item) => item.calendarType === "project") && <Empty>No shared project milestones in this month.</Empty>}
           </CardContent>
         </Card>
       </div>
@@ -570,7 +713,7 @@ function Governance({
               />
               Require acknowledgement
             </label>
-            <Button disabled={!owner}>Publish and assign</Button>
+            <BrandPillButton type="submit" tone="brand" disabled={!owner}>Publish and assign</BrandPillButton>
           </form>
           <Notice error={publish.error ?? acknowledge.error} />
           {data?.announcements?.map((row: Row) => (
@@ -578,14 +721,13 @@ function Governance({
               <strong>{row.title}</strong>
               <p className="text-sm text-muted-foreground">{row.body}</p>
               {row.acknowledgementRequired && (
-                <Button
+                <BrandPillButton
                   className="mt-2"
-                  size="sm"
-                  variant="outline"
+                  tone="brand"
                   onClick={() => acknowledge.mutate(row.id)}
                 >
                   Acknowledge
-                </Button>
+                </BrandPillButton>
               )}
             </article>
           ))}
@@ -629,7 +771,7 @@ function Governance({
               placeholder="Approver user IDs: 12,18"
               required
             />
-            <Button disabled={!owner}>Request ordered approval</Button>
+            <BrandPillButton type="submit" tone="brand" disabled={!owner}>Request ordered approval</BrandPillButton>
           </form>
           <Notice error={request.error ?? decide.error} />
           {data?.approvals?.map((row: Row) => (
@@ -642,23 +784,22 @@ function Governance({
               </strong>
               {row.status === "pending" && (
                 <div className="mt-2 flex gap-2">
-                  <Button
-                    size="sm"
+                  <BrandPillButton
+                    tone="green"
                     onClick={() =>
                       decide.mutate({ id: row.id, decision: "approved" })
                     }
                   >
                     Approve
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="destructive"
+                  </BrandPillButton>
+                  <BrandPillButton
+                    tone="red"
                     onClick={() =>
                       decide.mutate({ id: row.id, decision: "rejected" })
                     }
                   >
                     Reject
-                  </Button>
+                  </BrandPillButton>
                 </div>
               )}
             </article>
@@ -670,6 +811,8 @@ function Governance({
 }
 
 function TasksModule() {
+  const { user } = useAuth();
+  const canManage = isWorkHubAdmin(user);
   const owner = useOwner();
   const qc = useQueryClient();
   const tasks = useQuery<Row[]>({
@@ -808,25 +951,24 @@ function TasksModule() {
                   </div>
                   <div className="flex gap-2">
                     {row.status === "open" && (
-                      <Button
-                        size="sm"
-                        variant="outline"
+                      <BrandPillButton
+                        tone="brand"
                         onClick={() =>
                           update.mutate({ row, status: "in_progress" })
                         }
                       >
                         Start
-                      </Button>
+                      </BrandPillButton>
                     )}
                     {row.status !== "completed" && (
-                      <Button
-                        size="sm"
+                      <BrandPillButton
+                        tone="green"
                         onClick={() =>
                           update.mutate({ row, status: "completed" })
                         }
                       >
                         Complete
-                      </Button>
+                      </BrandPillButton>
                     )}
                   </div>
                 </div>
@@ -835,7 +977,7 @@ function TasksModule() {
             {!tasks.data?.length && <Empty>No tasks yet.</Empty>}
           </CardContent>
         </Card>
-        <Card>
+        {canManage && <Card>
           <CardHeader>
             <CardTitle>Assign task</CardTitle>
           </CardHeader>
@@ -878,10 +1020,10 @@ function TasksModule() {
                 />
               </Field>
               <Notice error={create.error} />
-              <Button disabled={!owner}>Assign</Button>
+              <BrandPillButton type="submit" tone="brand" disabled={!owner}>Assign</BrandPillButton>
             </form>
           </CardContent>
-        </Card>
+        </Card>}
       </div>
       <Card className="mt-4">
         <CardHeader>
@@ -899,9 +1041,9 @@ function TasksModule() {
                 {displayDate(instance.dueAt)}
               </p>
               {instance.status !== "completed" && (
-                <Button
+                <BrandPillButton
                   className="mt-3"
-                  size="sm"
+                  tone="green"
                   onClick={() =>
                     respond.mutate({
                       kind: "checklist",
@@ -916,7 +1058,7 @@ function TasksModule() {
                   }
                 >
                   Complete checklist
-                </Button>
+                </BrandPillButton>
               )}
             </article>
           ))}
@@ -945,9 +1087,9 @@ function TasksModule() {
                   </Field>
                 ))}
               </div>
-              <Button
+              <BrandPillButton
                 className="mt-3"
-                size="sm"
+                tone="brand"
                 onClick={() =>
                   respond.mutate({
                     kind: "form",
@@ -957,7 +1099,7 @@ function TasksModule() {
                 }
               >
                 Submit form
-              </Button>
+              </BrandPillButton>
             </article>
           ))}
           {required.data?.approvals?.map(({ request: row, step }: Row) => (
@@ -970,8 +1112,8 @@ function TasksModule() {
               </h3>
               {!step.decision && (
                 <div className="mt-3 flex gap-2">
-                  <Button
-                    size="sm"
+                  <BrandPillButton
+                    tone="green"
                     onClick={() =>
                       respond.mutate({
                         kind: "approval",
@@ -981,10 +1123,9 @@ function TasksModule() {
                     }
                   >
                     Approve
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="destructive"
+                  </BrandPillButton>
+                  <BrandPillButton
+                    tone="red"
                     onClick={() =>
                       respond.mutate({
                         kind: "approval",
@@ -994,7 +1135,7 @@ function TasksModule() {
                     }
                   >
                     Reject
-                  </Button>
+                  </BrandPillButton>
                 </div>
               )}
             </article>
@@ -1006,7 +1147,7 @@ function TasksModule() {
             )}
         </CardContent>
       </Card>
-      <Card className="mt-4">
+      {canManage && <Card className="mt-4">
         <CardHeader>
           <CardTitle>Reusable checklists and forms</CardTitle>
         </CardHeader>
@@ -1050,7 +1191,7 @@ function TasksModule() {
             </Field>
             <Notice error={publish.error} />
             <Notice error={assignTemplate.error} />
-            <Button disabled={!owner}>Publish template</Button>
+            <BrandPillButton type="submit" tone="brand" disabled={!owner}>Publish template</BrandPillButton>
           </form>
           <div className="grid gap-3 sm:grid-cols-2">
             {[
@@ -1071,26 +1212,27 @@ function TasksModule() {
                 <p className="text-xs text-muted-foreground">
                   {row.definition?.length ?? 0} fields · published snapshot
                 </p>
-                <Button
+                <BrandPillButton
                   className="mt-3"
-                  size="sm"
-                  variant="outline"
+                  tone="brand"
                   disabled={!owner || !Number(task.assignee)}
                   onClick={() => assignTemplate.mutate(row)}
                 >
                   Assign to user {task.assignee || "…"}
-                </Button>
+                </BrandPillButton>
               </article>
             ))}
           </div>
         </CardContent>
-      </Card>
-      <Governance owner={owner} data={admin.data} />
+      </Card>}
+      {canManage && <Governance owner={owner} data={admin.data} />}
     </Shell>
   );
 }
 
 function MeetingsModule() {
+  const { user } = useAuth();
+  const canManage = isWorkHubAdmin(user);
   const owner = useOwner();
   const qc = useQueryClient();
   const now = new Date();
@@ -1109,6 +1251,13 @@ function MeetingsModule() {
     startsAt: "",
     endsAt: "",
     participants: "",
+  });
+  const [selected, setSelected] = useState<string>();
+  const catchUp = useQuery<Row>({
+    queryKey: ["work-hub", "meeting-catch-up", selected],
+    queryFn: () => workHubRequest(`/meetings/${selected}/catch-up`),
+    enabled: !!selected,
+    refetchInterval: selected ? 5_000 : false,
   });
   const create = useMutation({
     mutationFn: () =>
@@ -1129,8 +1278,23 @@ function MeetingsModule() {
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: ["work-hub", "meetings"] }),
   });
+  const startNow = useMutation({
+    mutationFn: () => {
+      const startsAt = new Date();
+      const endsAt = new Date(startsAt.getTime() + 60 * 60 * 1000);
+      return workHubRequest("/meetings", { method: "POST", body: JSON.stringify(commandEnvelope(owner!, {
+        title: form.title || "Audio meeting", agenda: form.agenda, startsAt: startsAt.toISOString(), endsAt: endsAt.toISOString(),
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, recordingAllowed: false, participantUserIds: parseIds(form.participants),
+      })) });
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["work-hub", "meetings"] }),
+  });
   return (
     <Shell module="meetings">
+      {canManage && <div className="mb-4 flex flex-wrap gap-2">
+        <BrandPillButton tone="brand" onClick={() => document.getElementById("schedule-meeting")?.scrollIntoView({ behavior: "smooth" })}>Schedule meeting</BrandPillButton>
+        <BrandPillButton tone="green" disabled={!owner || startNow.isPending} onClick={() => startNow.mutate()}>Start meeting now</BrandPillButton>
+      </div>}
       <div className="grid gap-4 lg:grid-cols-[1fr_380px]">
         <Card>
           <CardHeader>
@@ -1147,6 +1311,10 @@ function MeetingsModule() {
                   {displayDate(occurrence.startsAt)} · Recording{" "}
                   {meeting.recordingAllowed ? "requires consent" : "disabled"}
                 </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <BrandPillButton tone="green" onClick={() => setSelected(occurrence.id)}>Open meeting</BrandPillButton>
+                  <BrandPillButton tone="brand" onClick={() => setSelected(occurrence.id)}>View notes</BrandPillButton>
+                </div>
               </article>
             ))}
             {!calendar.data?.meetings?.length && (
@@ -1154,7 +1322,7 @@ function MeetingsModule() {
             )}
           </CardContent>
         </Card>
-        <Card>
+        {canManage ? <Card id="schedule-meeting">
           <CardHeader>
             <CardTitle>Schedule meeting</CardTitle>
           </CardHeader>
@@ -1205,28 +1373,61 @@ function MeetingsModule() {
                 />
               </Field>
               <Notice error={create.error} />
-              <Button disabled={!owner}>Schedule and invite</Button>
+              <BrandPillButton type="submit" tone="brand" disabled={!owner}>Schedule and invite</BrandPillButton>
             </form>
           </CardContent>
-        </Card>
+        </Card> : <Card><CardHeader><CardTitle>Participant access</CardTitle></CardHeader><CardContent><p className="text-sm text-muted-foreground">Administrators schedule and start meetings. Your invited meetings appear here with a Join action when available.</p></CardContent></Card>}
       </div>
+      {selected && <Card className="mt-4">
+        <CardHeader><CardTitle>Meeting workspace</CardTitle></CardHeader>
+        <CardContent className="grid gap-4">
+          <MeetingAudioRoom occurrenceId={selected} />
+          <section><h3 className="font-semibold">Transcript and catch-up notes</h3>
+            {(catchUp.data?.transcript ?? []).map((line: Row) => <p key={line.id} className="mt-2 rounded-lg border p-3 text-sm">{line.text}</p>)}
+            {!catchUp.data?.transcript?.length && <Empty>Transcript, decisions, and action items will appear here for invited participants.</Empty>}
+          </section>
+        </CardContent>
+      </Card>}
     </Shell>
   );
 }
 function FilesModule() {
+  const owner = useOwner();
+  const qc = useQueryClient();
   const files = useQuery<Row[]>({
     queryKey: ["work-hub", "files"],
     queryFn: () => workHubRequest("/files"),
   });
+  const channels = useQuery<Row[]>({ queryKey: ["work-hub", "channels"], queryFn: () => workHubRequest("/channels") });
+  const [category, setCategory] = useState("All");
+  const [channelId, setChannelId] = useState("");
+  const [accessLevel, setAccessLevel] = useState("internal");
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const upload = useMutation({ mutationFn: async () => {
+    if (!owner || !uploadFile || !channelId) throw new Error("Choose a channel and file first.");
+    const checksum = [...new Uint8Array(await crypto.subtle.digest("SHA-256", await uploadFile.arrayBuffer()))].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+    const reserved = await workHubRequest<Row>("/files/reserve", { method: "POST", body: JSON.stringify(commandEnvelope(owner, { channelId, fileName: uploadFile.name, contentType: uploadFile.type || "application/octet-stream", byteSize: uploadFile.size, checksumSha256: checksum, category, accessLevel, tags: [] })) });
+    const descriptor = reserved.resource ?? reserved;
+    const response = await fetch(descriptor.uploadURL, { method: "PUT", body: uploadFile, headers: { "Content-Type": uploadFile.type || "application/octet-stream" } });
+    if (!response.ok) throw new Error("The file upload did not complete.");
+    return workHubRequest(`/files/${descriptor.file.id}/finalize`, { method: "POST", body: JSON.stringify({ objectURL: descriptor.uploadURL }) });
+  }, onSuccess: () => { setUploadFile(null); void qc.invalidateQueries({ queryKey: ["work-hub", "files"] }); } });
+  const categories = ["Meeting Notes", "Safety & Compliance", "Site & Project Documents", "Procedures & Checklists", "Photos & Field Reports", "Contracts & Approvals", "Training Materials", "General Notes"];
+  const visibleFiles = (files.data ?? []).filter((file) => category === "All" || file.mediaMetadata?.category === category);
   return (
     <Shell module="files">
+      <Card className="mb-4"><CardHeader><CardTitle>Add an authorized file</CardTitle></CardHeader><CardContent><form className="grid gap-3 md:grid-cols-4" onSubmit={(event) => { event.preventDefault(); upload.mutate(); }}>
+        <select aria-label="File channel" className="h-10 rounded-md border bg-background px-3" value={channelId} onChange={(e) => setChannelId(e.target.value)}><option value="">Choose channel</option>{channels.data?.map((channel) => <option key={channel.id} value={channel.id}>{channel.name}</option>)}</select>
+        <select aria-label="File category" className="h-10 rounded-md border bg-background px-3" value={category === "All" ? "General Notes" : category} onChange={(e) => setCategory(e.target.value)}>{categories.map((value) => <option key={value}>{value}</option>)}</select>
+        <select aria-label="File access" className="h-10 rounded-md border bg-background px-3" value={accessLevel} onChange={(e) => setAccessLevel(e.target.value)}><option value="internal">Internal</option><option value="shared">Shared with channel</option></select>
+        <Input aria-label="Choose file" type="file" onChange={(e) => setUploadFile(e.target.files?.[0] ?? null)} />
+        <Notice error={upload.error} /><BrandPillButton type="submit" tone="brand" disabled={!channelId || !uploadFile || upload.isPending}>Upload file</BrandPillButton>
+      </form></CardContent></Card>
       <Card>
-        <CardHeader>
-          <CardTitle>Finalized files</CardTitle>
-        </CardHeader>
+        <CardHeader><div className="flex flex-wrap items-center justify-between gap-3"><CardTitle>Files and notes library</CardTitle><select aria-label="Filter file category" className="h-10 rounded-md border bg-background px-3" value={category} onChange={(e) => setCategory(e.target.value)}><option>All</option>{categories.map((value) => <option key={value}>{value}</option>)}</select></div></CardHeader>
         <CardContent className="grid gap-2">
           <Notice error={files.error} />
-          {files.data?.map((f) => (
+          {visibleFiles.map((f) => (
             <article
               key={f.id}
               className="flex justify-between rounded-lg border p-4"
@@ -1237,11 +1438,12 @@ function FilesModule() {
                   {f.contentType} · {Math.ceil(f.byteSize / 1024)} KB ·{" "}
                   {displayDate(f.finalizedAt)}
                 </p>
+                <p className="text-xs">{f.mediaMetadata?.category ?? "General Notes"} · {f.mediaMetadata?.accessLevel ?? "internal"}</p>
               </div>
               <span className="text-xs uppercase">{f.state}</span>
             </article>
           ))}
-          {!files.data?.length && (
+          {!visibleFiles.length && (
             <Empty>
               No finalized files. Upload files from an authorized channel so
               access follows channel membership.
@@ -1255,9 +1457,18 @@ function FilesModule() {
 function SearchModule() {
   const [q, setQ] = useState("");
   const [term, setTerm] = useState("");
+  const [start, setStart] = useState("");
+  const [end, setEnd] = useState("");
+  const [type, setType] = useState("");
   const results = useQuery<Row[]>({
-    queryKey: ["work-hub", "search", term],
-    queryFn: () => workHubRequest(`/search?q=${encodeURIComponent(term)}`),
+    queryKey: ["work-hub", "search", term, start, end, type],
+    queryFn: () => {
+      const params = new URLSearchParams({ q: term });
+      if (start) params.set("start", new Date(`${start}T00:00:00`).toISOString());
+      if (end) params.set("end", new Date(`${end}T23:59:59.999`).toISOString());
+      if (type) params.set("type", type);
+      return workHubRequest(`/search?${params.toString()}`);
+    },
     enabled: term.length >= 2,
   });
   return (
@@ -1268,7 +1479,7 @@ function SearchModule() {
         </CardHeader>
         <CardContent className="grid gap-3">
           <form
-            className="flex gap-2"
+            className="grid gap-3 md:grid-cols-[2fr_1fr_1fr_1fr_auto]"
             onSubmit={(e) => {
               e.preventDefault();
               setTerm(q.trim());
@@ -1280,7 +1491,13 @@ function SearchModule() {
               onChange={(e) => setQ(e.target.value)}
               placeholder="Messages, files, tasks, forms, meetings"
             />
-            <Button>Search</Button>
+            <Input aria-label="Search start date" type="date" value={start} onChange={(e) => setStart(e.target.value)} />
+            <Input aria-label="Search end date" type="date" value={end} onChange={(e) => setEnd(e.target.value)} />
+            <select aria-label="Search record type" className="h-10 rounded-md border bg-background px-3" value={type} onChange={(e) => setType(e.target.value)}>
+              <option value="">All records</option>
+              <option value="message">Messages</option><option value="file">Files</option><option value="task">Tasks</option><option value="form">Forms</option><option value="meeting">Meetings</option><option value="announcement">Announcements</option>
+            </select>
+            <BrandPillButton type="submit" tone="brand">Search</BrandPillButton>
           </form>
           {results.data?.map((r) => (
             <a
@@ -1335,7 +1552,7 @@ function SettingsModule() {
             edits, acknowledgements, approvals, assignments, or new records back
             to Microsoft.
           </p>
-          <Button disabled>Connect Microsoft 365</Button>
+          <BrandPillButton tone="brand" disabled title="Available when Microsoft 365 credentials are configured">Connect Microsoft 365</BrandPillButton>
         </CardContent>
       </Card>
     </Shell>

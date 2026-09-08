@@ -1,13 +1,21 @@
-import { and, desc, eq, lt, or } from "drizzle-orm";
-import { db, siteLocationsTable, ticketsTable, workHubChannelsTable } from "@workspace/db";
+import { and, desc, eq, lt } from "drizzle-orm";
+import { db, siteLocationsTable, ticketsTable, workHubChannelMembersTable, workHubChannelsTable } from "@workspace/db";
 import type { SessionPayload } from "../lib/session";
 import { createWorkHubAccess, requireWorkHubCapability, type WorkHubAccess } from "./context-access";
 import type { WorkHubCapability } from "@workspace/api-zod";
 
 export async function isWorkHubParticipant(session: SessionPayload & { userId: number }, channel: typeof workHubChannelsTable.$inferSelect): Promise<boolean> {
   if (session.role === "admin") return true;
-  if (channel.ownerOrgType === "vendor" && session.vendorId === channel.ownerOrgId) return true;
-  if (channel.ownerOrgType === "partner" && session.partnerId === channel.ownerOrgId) return true;
+  const ownerMatch = channel.ownerOrgType === "vendor"
+    ? session.vendorId === channel.ownerOrgId
+    : session.partnerId === channel.ownerOrgId;
+  if (ownerMatch && session.membershipRole === "admin") return true;
+  const [membership] = await db.select({ id: workHubChannelMembersTable.id })
+    .from(workHubChannelMembersTable)
+    .where(and(eq(workHubChannelMembersTable.channelId, channel.id), eq(workHubChannelMembersTable.userId, session.userId)))
+    .limit(1);
+  if (membership) return true;
+  if (channel.visibility === "organization" && ownerMatch) return true;
   if (channel.contextKind === "ticket") {
     const ticketId = Number(channel.contextId);
     if (!Number.isInteger(ticketId)) return false;

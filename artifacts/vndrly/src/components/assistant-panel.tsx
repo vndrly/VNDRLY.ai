@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
-import { Sparkles, MessageCircle, Trash2, Loader2, Download, CheckCircle2, Circle, Plus, X, ThumbsUp, ThumbsDown, Send, Mail, Mic, Volume2, VolumeX } from "lucide-react";
+import { Sparkles, MessageCircle, Trash2, Loader2, Download, CheckCircle2, Circle, Plus, X, ThumbsUp, ThumbsDown, Send, Mail, Mic, Volume2, VolumeX, Copy, Minus, Maximize2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AskVFloatingLauncherMark, AskVLogo, ASKV_LAUNCHER_HEIGHT, ASKV_LAUNCHER_WIDTH } from "@/components/askv-logo";
@@ -262,6 +262,7 @@ function pickAskVRecordingMimeType(): string | undefined {
 }
 
 export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: AssistantPanelProps) {
+  const [minimized, setMinimized] = useState(false);
   const { t } = useTranslation();
   const { user } = useAuth();
   const voiceSession = useAskVVoiceSession();
@@ -822,6 +823,10 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
       ...resolveAssistantShareParts(messageIndex, message),
       typeLabel: t("notifications.sendToAskVPreviewLabel"),
     });
+  const copyMessage = (message: AssistantMessage) => {
+    if (!message.content.trim()) return;
+    void navigator.clipboard.writeText(message.content);
+  };
 
   const showMessageFeedback = !tokenMode && !signupMode;
   const showVoiceInput = !tokenMode && !signupMode && !voiceSession.muted && (sharedAssistant ? voiceSession.state === "error" : !textOnly);
@@ -847,7 +852,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         bare
-        className="sm:max-w-[38.59rem] h-[min(80vh,640px)] bg-[#3a3d42] text-gray-100"
+        className={cn("bg-[#3a3d42] text-gray-100 sm:left-auto sm:right-6 sm:top-6 sm:max-w-[38.59rem] sm:translate-x-0 sm:translate-y-0 sm:resize sm:overflow-hidden", minimized ? "h-16" : "h-[min(80vh,640px)]")}
         data-testid="assistant-panel"
         hideClose
       >
@@ -957,6 +962,13 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
               </>
             )}
             <HeaderIconButton
+              onClick={() => setMinimized((value) => !value)}
+              testId="assistant-minimize"
+              title={minimized ? "Restore AskV" : "Minimize AskV"}
+            >
+              {minimized ? <Maximize2 className="w-4 h-4" /> : <Minus className="w-4 h-4" />}
+            </HeaderIconButton>
+            <HeaderIconButton
               onClick={handleClose}
               testId="assistant-close"
               title="Close"
@@ -966,16 +978,16 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
           </div>
         </DialogHeader>
 
-        {open && !tokenMode && !signupMode && askVUserId != null && <AskVMicrophoneSettings />}
+        {!minimized && open && !tokenMode && !signupMode && askVUserId != null && <AskVMicrophoneSettings />}
 
-        {progress && (
+        {!minimized && progress && (
           <OnboardingMiniStepper progress={progress} />
         )}
-        {!tokenMode && !signupMode && voiceSession.error && (
+        {!minimized && !tokenMode && !signupMode && voiceSession.error && (
           <p role="status" className="px-4 py-2 text-sm text-destructive">{voiceSession.error}</p>
         )}
 
-        {pendingSignup && (
+        {!minimized && pendingSignup && (
           <PendingSignupChatOffer
             chat={pendingSignup}
             adopting={adopting}
@@ -984,7 +996,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
           />
         )}
 
-        <div ref={scrollRef} className="relative z-10 min-h-0 flex-1 overflow-y-auto px-4 py-4 siace-y-4">
+        <div ref={scrollRef} className={cn("relative z-10 min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4", minimized && "hidden")}>
           {messages.length === 0 && (
             <div className="siace-y-3">
               <div className="relative px-4 py-2 text-sm text-gray-300">
@@ -1066,6 +1078,13 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
                               <ThumbsDown className="w-4 h-4" />
                             </HeaderIconButton>
                             <HeaderIconButton
+                              onClick={() => copyMessage(m)}
+                              testId={`assistant-copy-${m.serverId}`}
+                              title="Copy result"
+                            >
+                              <Copy className="w-4 h-4" />
+                            </HeaderIconButton>
+                            <HeaderIconButton
                               onClick={() => openSendToForMessage(messageIndex, m)}
                               testId={`assistant-send-to-${m.serverId}`}
                               title="Send to"
@@ -1109,7 +1128,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
         </div>
 
         <form
-          className="relative z-10 shrink-0 border-t border-white/20 bg-transparent px-3 py-3"
+          className={cn("relative z-10 shrink-0 border-t border-white/20 bg-transparent px-3 py-3", minimized && "hidden")}
           onSubmit={(e) => {
             e.preventDefault();
             handleSend();
@@ -1393,10 +1412,20 @@ export function AssistantLauncher({
   const [open, setOpen] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [voiceState, setVoiceState] = useState("idle");
+  const [resultsReady, setResultsReady] = useState(false);
   useEffect(() => {
     const changed = (event: Event) => setVoiceState((event as CustomEvent<{ state: string }>).detail.state);
     window.addEventListener("askv:voice-state", changed);
     return () => window.removeEventListener("askv:voice-state", changed);
+  }, []);
+  useEffect(() => {
+    const showResults = () => {
+      setResultsReady(true);
+      setOpen(true);
+      window.setTimeout(() => setResultsReady(false), 1200);
+    };
+    window.addEventListener("askv:show-results", showResults);
+    return () => window.removeEventListener("askv:show-results", showResults);
   }, []);
   const voiceActive = voiceState === "listening" || voiceState === "running";
   const engaged = voiceActive || (hovered && !open);
@@ -1411,6 +1440,7 @@ export function AssistantLauncher({
         onBlur={() => setHovered(false)}
         className={cn(
           "inline-flex items-center justify-center overflow-visible transition-transform",
+          resultsReady && "animate-pulse",
           placement === "floating"
             ? "fixed bottom-5 left-5 z-[1100] hover:scale-[1.03]"
             : "relative z-[1100]",

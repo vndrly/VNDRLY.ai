@@ -23,6 +23,7 @@ import pillOrange from "@assets/pills/pill_orange.png";
 import pillDarkOrange from "@assets/pills/pill_dark_orange.png";
 import pillTan from "@assets/pills/pill_tan.png";
 import pillGreen from "@assets/pills/pill_green.png";
+import pillGreenApproval1 from "@assets/pills/pill_green_approval1.png";
 import pillDarkGreen from "@assets/pills/pill_dark_green.png";
 import pillLime from "@assets/pills/pill_lime.png";
 import pillTeal from "@assets/pills/pill_teal.png";
@@ -66,6 +67,7 @@ export {
   pillDarkOrange,
   pillTan,
   pillGreen,
+  pillGreenApproval1,
   pillDarkGreen,
   pillLime,
   pillTeal,

@@ -42,7 +42,7 @@ function missingCheckInFields(args: Record<string, unknown>): string[] {
 /** Reuse the real API boundary: assignment, role, geofence, audit, GPS and events. */
 export async function callNaturalVoiceDomainApi(
   path: string,
-  method: "GET" | "POST",
+  method: "GET" | "POST" | "PATCH",
   input: Record<string, unknown>,
   session: SessionPayload,
 ): Promise<Record<string, unknown> | unknown[]> {
@@ -73,7 +73,7 @@ export async function callNaturalVoiceDomainApi(
       "Content-Type": "application/json",
       cookie: `vndrly_session=${payload}.${signature}`,
     },
-    ...(method === "POST" ? { body: JSON.stringify(body) } : {}),
+    ...(method !== "GET" ? { body: JSON.stringify(body) } : {}),
     signal: AbortSignal.timeout(30_000),
     redirect: "error",
   });

@@ -799,9 +799,9 @@ export async function runTool(
       notes: id ? `/work-hub/channels/${id}/notes` : null,
       meetings: id ? `/work-hub/meetings/${id}/catch-up` : "/work-hub/home",
       transcripts: id ? `/work-hub/meetings/${id}/catch-up` : null,
-      search: `/work-hub/search?q=${encodeURIComponent(String(args.query ?? ""))}`,
-      shifts: "/work-hub/home", announcements: "/work-hub/home", files: "/work-hub/home",
-      people: null, forms: null, summaries: "/work-hub/home", action_suggestions: "/work-hub/home",
+      search: `/work-hub/search?q=${encodeURIComponent(String(args.query ?? "all"))}${args.start ? `&start=${encodeURIComponent(String(args.start))}` : ""}${args.end ? `&end=${encodeURIComponent(String(args.end))}` : ""}`,
+      shifts: "/work-hub/home", announcements: "/work-hub/home", files: "/work-hub/files",
+      people: "/work-hub/home", forms: "/work-hub/required-actions", summaries: "/work-hub/home", action_suggestions: "/work-hub/home",
     };
     const path = paths[domain];
     if (!path) return JSON.stringify({ ok: false, error: "That Work Hub query needs a specific authorized context or is not available yet." });
@@ -812,19 +812,32 @@ export async function runTool(
     const action = String(args.action ?? "");
     const targetId = typeof args.targetId === "string" ? encodeURIComponent(args.targetId) : "";
     const paths: Record<string, string | null> = {
+      create_channel: "/work-hub/channels",
+      invite_channel_member: targetId ? `/work-hub/channels/${targetId}/members` : null,
       create_task: "/work-hub/tasks",
       post_message: targetId ? `/work-hub/channels/${targetId}/messages` : null,
+      create_note: targetId ? `/work-hub/channels/${targetId}/notes` : null,
       create_shift: "/work-hub/shifts",
       claim_shift: targetId ? `/work-hub/shifts/${targetId}/claim` : null,
       create_meeting: "/work-hub/meetings",
       publish_announcement: "/work-hub/announcements",
       acknowledge_announcement: targetId ? `/work-hub/announcements/${targetId}/acknowledge` : null,
-      update_task: null,
+      update_task: targetId ? `/work-hub/tasks/${targetId}` : null,
+      publish_form_template: "/work-hub/admin/forms",
+      publish_checklist_template: "/work-hub/admin/checklists",
+      assign_form: targetId ? `/work-hub/admin/forms/${targetId}/assign` : null,
+      assign_checklist: targetId ? `/work-hub/admin/checklists/${targetId}/assign` : null,
+      submit_form: targetId ? `/work-hub/forms/${targetId}/submit` : null,
+      respond_checklist: targetId ? `/work-hub/checklists/${targetId}/respond` : null,
+      request_approval: "/work-hub/admin/approvals",
+      decide_approval: targetId ? `/work-hub/admin/approvals/${targetId}/decide` : null,
     };
     const path = paths[action];
     if (!path) return JSON.stringify({ ok: false, error: "That Work Hub action needs a target or is not available yet." });
-    const envelope = action === "claim_shift" || action === "acknowledge_announcement" ? {} : { operationId: args.operationId, owner: args.owner, context: args.context, expectedVersion: args.expectedVersion ?? null, payloadVersion: 1, payload: args.payload ?? {} };
-    return JSON.stringify(await callNaturalVoiceDomainApi(path, "POST", envelope, session));
+    const envelope = action === "claim_shift" || action === "acknowledge_announcement" ? {}
+      : action === "invite_channel_member" ? (args.payload ?? {})
+      : { operationId: args.operationId, owner: args.owner, context: args.context, expectedVersion: args.expectedVersion ?? null, payloadVersion: 1, payload: args.payload ?? {} };
+    return JSON.stringify(await callNaturalVoiceDomainApi(path, action === "update_task" ? "PATCH" : "POST", envelope as Record<string, unknown>, session));
   }
   if (isWriteTool(name)) {
     return runWriteTool(name, input, session);

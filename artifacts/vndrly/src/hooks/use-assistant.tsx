@@ -650,6 +650,9 @@ async function consumeSse(
       else if (eventName === "tool") onEvent({ type: "tool", ...(parsed as { name: string; status: "start" | "end" }) });
       else if (eventName === "done") {
         const payload = parsed as { content: string; assistantMessageId?: number };
+        if (payload.content.length >= 240 || /\|.+\||```|\b(total|quarter|report|results?|meetings?|messages?|files?|tasks?|forms?)\b/i.test(payload.content)) {
+          window.dispatchEvent(new CustomEvent("askv:show-results", { detail: { content: payload.content } }));
+        }
         onEvent({
           type: "done",
           content: payload.content,

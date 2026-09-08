@@ -3,7 +3,18 @@ export type WorkHubUser = {
   role: string;
   vendorId: number | null;
   partnerId: number | null;
+  membershipRole?: string | null;
 };
+
+export function canManageWorkHubChannels(
+  user: WorkHubUser | null | undefined,
+): boolean {
+  return Boolean(
+    user && (user.role === "admin" || user.membershipRole === "admin"),
+  );
+}
+
+export const isWorkHubAdmin = canManageWorkHubChannels;
 
 export function ownerForUser(
   user: WorkHubUser | null | undefined,

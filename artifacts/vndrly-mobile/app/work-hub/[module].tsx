@@ -46,6 +46,10 @@ export default function WorkHubModuleScreen() {
   const module = String(raw ?? "channels");
   const title = titles[module] ?? "Work Hub";
   const owner = mobileOwner(user);
+  const activeMembership = user?.availableMemberships?.find(
+    (membership) => membership.id === user.activeMembershipId,
+  );
+  const canManage = user?.role === "admin" || activeMembership?.role === "admin";
   const [data, setData] = useState<any>();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -87,6 +91,7 @@ export default function WorkHubModuleScreen() {
         agenda: x.meeting.agenda,
         kind: "Meeting",
       }));
+    if (module === "search") return data?.results ?? [];
     return [];
   }, [data, module]);
   const complete = async (row: Row) => {
@@ -206,7 +211,7 @@ export default function WorkHubModuleScreen() {
             </Pressable>
           </View>
         )}
-        {owner &&
+        {owner && canManage &&
           ["channels", "calendar", "tasks-forms", "meetings"].includes(
             module,
           ) && (
@@ -356,14 +361,15 @@ export default function WorkHubModuleScreen() {
             No authorized records yet.
           </Text>
         )}
-        {owner &&
+        {owner && canManage &&
           ["channels", "calendar", "tasks-forms", "meetings"].includes(
             module,
           ) && (
             <Text style={{ color: colors.mutedForeground, fontSize: 12 }}>
-              iOS supports quick creation and participant outcomes. Advanced
-              template builders, bulk assignments, announcement delivery, and
-              approval monitoring are available in the web administration view.
+              Administrative creation is limited to assigned administrators.
+              Invited participants can view and complete the work shared with
+              them here; full template design and bulk administration remain in
+              the web workspace.
             </Text>
           )}
       </ScrollView>

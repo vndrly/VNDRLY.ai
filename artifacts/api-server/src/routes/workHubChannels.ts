@@ -1,8 +1,8 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { and, asc, desc, eq, lt } from "drizzle-orm";
+import { and, desc, eq, gt, lt, ne, sql } from "drizzle-orm";
 import { z } from "zod/v4";
 import {
-  db, workHubChannelsTable, workHubMessagesTable, workHubMessageVersionsTable,
+  db, usersTable, workHubChannelMembersTable, workHubChannelsTable, workHubMessagesTable, workHubMessageVersionsTable,
   workHubMentionsTable, workHubReactionsTable, workHubReadCursorsTable,
   workHubNotesTable, workHubNoteVersionsTable,
 } from "@workspace/db";
@@ -18,7 +18,7 @@ import { isWorkHubEnabled } from "../work-hub/feature-access";
 
 const router: IRouter = Router();
 const uuid = z.string().uuid();
-const createChannelPayload = z.object({ name: z.string().trim().min(1).max(120) });
+const createChannelPayload = z.object({ name: z.string().trim().min(1).max(120), visibility: z.enum(["organization", "private", "group"]).default("organization") });
 const createMessagePayload = z.object({ body: z.string().trim().min(1).max(20_000), kind: z.enum(["text", "voice_note", "system"]).default("text"), rootMessageId: uuid.nullable().optional(), parentMessageId: uuid.nullable().optional(), mentionUserIds: z.array(z.number().int().positive()).max(100).default([]) });
 const updateMessagePayload = z.object({ body: z.string().trim().min(1).max(20_000) });
 
@@ -42,7 +42,15 @@ router.use("/work-hub", async (_req, res, next) => {
 router.get("/work-hub/channels", async (req, res) => {
   const actor = session(req); if (!actor) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
   const before = typeof req.query.before === "string" ? new Date(req.query.before) : undefined;
-  return res.json(await listOwnedWorkHubChannels(actor, before && !Number.isNaN(before.getTime()) ? before : undefined, Number(req.query.limit) || 50));
+  const channels = await listOwnedWorkHubChannels(actor, before && !Number.isNaN(before.getTime()) ? before : undefined, Number(req.query.limit) || 50);
+  const enriched = await Promise.all(channels.map(async (channel) => {
+    const [cursor] = await db.select({ seenAt: workHubReadCursorsTable.seenAt }).from(workHubReadCursorsTable)
+      .where(and(eq(workHubReadCursorsTable.channelId, channel.id), eq(workHubReadCursorsTable.userId, actor.userId))).limit(1);
+    const [row] = await db.select({ unreadCount: sql<number>`count(*)::int` }).from(workHubMessagesTable)
+      .where(and(eq(workHubMessagesTable.channelId, channel.id), ne(workHubMessagesTable.authorUserId, actor.userId), cursor?.seenAt ? gt(workHubMessagesTable.createdAt, cursor.seenAt) : undefined));
+    return { ...channel, unreadCount: row?.unreadCount ?? 0 };
+  }));
+  return res.json(enriched);
 });
 
 router.post("/work-hub/channels", async (req, res) => {
@@ -53,11 +61,41 @@ router.post("/work-hub/channels", async (req, res) => {
     const access = createWorkHubAccess({ session: actor, owner: envelope.owner, context: envelope.context, participant: true });
     requireWorkHubCapability(access, "channel.manage");
     const result = await executeWorkHubCommand({ userId: actor.userId, source: source(req) }, "channel.create", envelope, async (tx) => {
-      const [channel] = await tx.insert(workHubChannelsTable).values({ ownerOrgType: envelope.owner.type, ownerOrgId: envelope.owner.id, contextKind: envelope.context.kind, contextId: String(envelope.context.id), name: payload.name, createdById: actor.userId }).returning();
+      const contextId = envelope.context.kind === "organization"
+        ? `${envelope.owner.id}:${envelope.operationId}`
+        : String(envelope.context.id);
+      const [channel] = await tx.insert(workHubChannelsTable).values({ ownerOrgType: envelope.owner.type, ownerOrgId: envelope.owner.id, contextKind: envelope.context.kind, contextId, name: payload.name, visibility: payload.visibility, createdById: actor.userId }).returning();
+      await tx.insert(workHubChannelMembersTable).values({ channelId: channel.id, userId: actor.userId, mode: "owner" }).onConflictDoNothing();
       await appendWorkHubAudit({ actorUserId: actor.userId, owner: envelope.owner, action: "channel.created", subjectType: "channel", subjectId: channel.id, newVersion: 1, source: source(req), operationId: envelope.operationId }, tx);
       return channel;
     });
     return res.status(result.replayed ? 200 : 201).json(result);
+  } catch (error) { return fail(res, error); }
+});
+
+router.get("/work-hub/channels/:channelId/members", async (req, res) => {
+  const actor = session(req); if (!actor) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
+  try {
+    await resolveChannelAccess(actor, req.params.channelId, "channel.read");
+    const rows = await db.select({ id: workHubChannelMembersTable.id, userId: usersTable.id, displayName: usersTable.displayName, email: usersTable.email, mode: workHubChannelMembersTable.mode })
+      .from(workHubChannelMembersTable).innerJoin(usersTable, eq(usersTable.id, workHubChannelMembersTable.userId))
+      .where(eq(workHubChannelMembersTable.channelId, req.params.channelId));
+    return res.json(rows);
+  } catch (error) { return fail(res, error); }
+});
+
+router.post("/work-hub/channels/:channelId/members", async (req, res) => {
+  const actor = session(req); if (!actor) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
+  try {
+    const { channel } = await resolveChannelAccess(actor, req.params.channelId, "channel.manage");
+    const email = z.string().trim().email().parse(req.body?.email).toLowerCase();
+    const [invitee] = await db.select({ id: usersTable.id }).from(usersTable)
+      .where(sql`lower(coalesce(${usersTable.email}, ${usersTable.username})) = ${email}`).limit(1);
+    if (!invitee) return sendApiError(res, 404, "work_hub.invitee_not_found", "No VNDRLY user was found for that email");
+    const [member] = await db.insert(workHubChannelMembersTable).values({ channelId: channel.id, userId: invitee.id, mode: "member" })
+      .onConflictDoUpdate({ target: [workHubChannelMembersTable.channelId, workHubChannelMembersTable.userId], set: { mode: "member" } }).returning();
+    await appendWorkHubAudit({ actorUserId: actor.userId, owner: { type: channel.ownerOrgType as "vendor" | "partner", id: channel.ownerOrgId }, action: "channel.member_added", subjectType: "channel", subjectId: channel.id, source: source(req), metadata: { invitedUserId: invitee.id } });
+    return res.status(201).json(member);
   } catch (error) { return fail(res, error); }
 });
 

@@ -8,6 +8,7 @@ export const workHubChannelsTable = pgTable("work_hub_channels", {
   contextKind: text("context_kind").notNull(),
   contextId: text("context_id").notNull(),
   name: text("name").notNull(),
+  visibility: text("visibility").notNull().default("organization"),
   status: text("status").notNull().default("active"),
   createdById: integer("created_by_id").notNull().references(() => usersTable.id),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

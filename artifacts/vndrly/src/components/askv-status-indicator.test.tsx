@@ -23,7 +23,8 @@ describe("AskVStatusIndicator", () => {
 
   it("turns natural voice on directly from the Muted control", () => {
     render(<AskVStatusIndicator />);
-    fireEvent.click(screen.getByRole("button", { name: "Turn AskV Live" }));
+    fireEvent.click(screen.getByRole("button", { name: "Unmute AskV" }));
+    expect(screen.getByTestId("askv-status-indicator").textContent).toContain("Unmute");
     expect(setMuted).toHaveBeenCalledWith(false);
   });
 
@@ -31,6 +32,7 @@ describe("AskVStatusIndicator", () => {
     voice.muted = false;
     voice.state = "listening";
     render(<AskVStatusIndicator />);
+    expect(screen.getByTestId("askv-status-indicator").textContent).toContain("Mute");
     fireEvent.click(screen.getByRole("button", { name: "Mute AskV" }));
     expect(setMuted).toHaveBeenCalledWith(true);
     voice.muted = true;
