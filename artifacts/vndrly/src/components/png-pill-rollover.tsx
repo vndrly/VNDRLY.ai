@@ -9,6 +9,7 @@ import {
   pillAmber,
   pillBlue,
   pillGreen,
+  pillPurple,
   pillRed,
 } from "@/lib/pill-palette-assets";
 import {
@@ -31,6 +32,7 @@ const HUE_PILL_PALETTE: HueEntry[] = [
   { hex: "#F39C1A", src: pillAmber },
   { hex: "#149F3D", src: pillGreen },
   { hex: "#1E5BD0", src: pillBlue },
+  { hex: "#7C3AED", src: pillPurple },
 ];
 
 function hexToRgb(hex: string): [number, number, number] | null {
@@ -132,6 +134,7 @@ export type PngPillColor = keyof typeof PNG_PILL_COLORS;
 function hoverSrcForColor(
   color: PngPillColor | "image",
   activeSrc: string | undefined,
+  brandColor: string | null | undefined,
   brandName: string | null | undefined,
 ): string {
   if (activeSrc) return activeSrc;
@@ -139,13 +142,7 @@ function hoverSrcForColor(
   if (color === "green") return PILL_ACTION.green;
   if (color === "amber") return PILL_ACTION.amber;
   if (color === "blue") return PILL_ACTION.blue;
-  const name = brandName?.toLowerCase() ?? "";
-  if (name.includes("baker")) return PILL_BRAND.baker;
-  if (name.includes("winchester")) return PILL_BRAND.winchester;
-  if (name.includes("flywheel")) return PILL_BRAND.flywheel;
-  if (name.includes("midcon")) return PILL_BRAND.midcon;
-  if (name.includes("vndrly")) return PILL_BRAND.vndrly;
-  return PILL_ACTION.blue;
+  return brandImagePillSrc(brandColor, brandName);
 }
 
 function coloredSrcForChip(color: PngPillColor): string {
@@ -251,7 +248,7 @@ export function PngPillButton({
   ...props
 }: PngPillButtonProps) {
   const brand = useBrand();
-  const hoverSrc = hoverSrcForColor(color, activeSrc, brand.name);
+  const hoverSrc = hoverSrcForColor(color, activeSrc, brand.primary, brand.name);
   const restSrc = idleSrc ?? PILL_IDLE;
 
   const [pulseOn, setPulseOn] = useState(false);

@@ -1421,7 +1421,6 @@ export function AssistantLauncher({
       >
         <span className="sr-only">ask V</span>
         <AskVFloatingLauncherMark engaged={engaged} panelOpen={open} />
-        {!tokenMode && !signupMode && <span className={`absolute right-1 top-1 h-2.5 w-2.5 rounded-full ${voiceActive ? "bg-green-500" : voiceState === "connecting" ? "bg-amber-500 animate-pulse" : "bg-red-500"}`} aria-hidden="true" />}
       </button>
       <AssistantPanel
         open={open}

@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import SphereBackButton from "@/components/sphere-back-button";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
+import { useBrand } from "@/hooks/use-brand";
 import {
   Card,
   CardContent,
@@ -29,6 +30,7 @@ import {
 } from "@workspace/api-client-react";
 import { visitsApi, type VisitorRow } from "@/lib/visits-api";
 import type { MapboxCircle, MapboxPoint } from "@/components/mapbox-map";
+import SiteMapToolbox from "@/components/map/site-map-toolbox";
 
 const LazyMapboxMap = lazy(() =>
   import("@/components/mapbox-map").then((mod) => ({ default: mod.MapboxMap })),
@@ -150,6 +152,12 @@ function employeeColor(emp: NearbyEmployee): string {
   );
 }
 
+function formatEta(distanceMeters: number, speedMps: number | null): string | null {
+  if (speedMps == null || speedMps < SPEED_MIN_MOVING_MPS) return null;
+  const minutes = Math.max(1, Math.round(distanceMeters / speedMps / 60));
+  return minutes < 60 ? `${minutes} min` : `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
+}
+
 function escapeHtml(value: unknown): string {
   return String(value ?? "")
     .replace(/&/g, "&amp;")
@@ -162,6 +170,7 @@ function escapeHtml(value: unknown): string {
 export default function SiteMapPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const brand = useBrand();
   // Site Map is only meaningful for partners (their own sites) and admins
   // (any site). Vendor / field-employee users would only ever see 403s from
   // the API, so block at the page level for a cleaner UX.
@@ -403,6 +412,7 @@ export default function SiteMapPage() {
         longitude: mapCenter[1],
         color: "#2563eb",
         label: "S",
+        imageUrl: brand.logoSquareUrl ?? brand.logoUrl,
         title: data?.site.name ?? selectedSite?.name ?? t("siteMap.siteLabel", "Site location"),
         popupHtml: `
           <div class="text-sm space-y-1 min-w-[180px]">
@@ -411,6 +421,21 @@ export default function SiteMapPage() {
             <div class="text-xs text-muted-foreground">${escapeHtml(t("siteMap.radius", "Radius"))}: ${radiusMiles.toFixed(2)} mi</div>
           </div>`,
       });
+    }
+
+    if (viewMode === "all") {
+      for (const site of geofenceSites) {
+        points.push({
+          id: `site-${site.id}`,
+          latitude: site.latitude,
+          longitude: site.longitude,
+          color: "var(--brand-primary)",
+          imageUrl: brand.logoSquareUrl ?? brand.logoUrl,
+          label: "S",
+          title: site.name,
+          popupHtml: `<div class="text-sm min-w-[180px]"><div class="font-semibold">${escapeHtml(site.name)}</div></div>`,
+        });
+      }
     }
 
     for (const v of activeVisitors) {
@@ -437,6 +462,7 @@ export default function SiteMapPage() {
 
     for (const emp of employees) {
       const lowBattery = emp.batteryLevel != null && emp.batteryLevel <= LOW_BATTERY_THRESHOLD;
+      const eta = formatEta(emp.distanceMeters, emp.speedMps);
       points.push({
         id: `employee-${emp.employeeId}`,
         latitude: emp.latitude,
@@ -449,8 +475,10 @@ export default function SiteMapPage() {
             <div class="font-semibold">${escapeHtml(emp.employeeName)}</div>
             ${emp.activeTicket ? `<div class="text-xs"><a href="/tickets/${emp.activeTicket.ticketId}" class="underline">${escapeHtml(t("crewMap.ticketLabel", { id: emp.activeTicket.ticketId }))}</a> - ${escapeHtml(lifecycleLabel(emp.activeTicket.lifecycleState, t))}</div>` : `<div class="text-xs italic text-muted-foreground">${escapeHtml(t("siteMap.noActiveTicket", "Not signed in to a ticket"))}</div>`}
             ${emp.activeTicket?.siteName ? `<div class="text-xs">${escapeHtml(emp.activeTicket.siteName)}</div>` : ""}
+            ${emp.activeTicket?.siteName ? `<div class="text-xs text-muted-foreground">${escapeHtml(t("siteMap.destination", "Destination"))}: ${escapeHtml(emp.activeTicket.siteName)}</div>` : ""}
             <div class="text-xs font-medium">${escapeHtml(formatDistance(emp.distanceMeters))} ${escapeHtml(t("siteMap.fromSite", "from site"))}</div>
             <div class="text-xs">${escapeHtml(formatSpeed(emp.speedMps))}</div>
+            ${eta ? `<div class="text-xs font-medium">${escapeHtml(t("siteMap.eta", "ETA"))}: ${escapeHtml(eta)}</div>` : ""}
             <div class="text-xs text-muted-foreground">${escapeHtml(t("siteMap.lastSeen", "Last seen"))}: ${escapeHtml(timeAgo(emp.recordedAt))}</div>
             ${emp.batteryLevel != null ? `<div class="text-xs ${lowBattery ? "text-red-600 font-medium" : "text-muted-foreground"}">${Math.round(emp.batteryLevel * 100)}%</div>` : ""}
           </div>`,
@@ -458,7 +486,7 @@ export default function SiteMapPage() {
     }
 
     return points;
-  }, [activeVisitors, data, employees, mapCenter, radiusMiles, selectedSite, t, viewMode]);
+  }, [activeVisitors, brand.logoSquareUrl, brand.logoUrl, data, employees, geofenceSites, mapCenter, radiusMiles, selectedSite, t, viewMode]);
 
   const mapCircles = useMemo<MapboxCircle[]>(
     () =>
@@ -738,6 +766,7 @@ export default function SiteMapPage() {
           />
         </div>
       </div>
+      <SiteMapToolbox siteName={viewMode === "single" ? selectedSite?.name : "all authorized sites"} />
       {/* user is referenced solely so unused-imports stays quiet; the page
           relies on session cookies, not user object directly. */}
       <span className="hidden" aria-hidden>{user?.role ?? ""}</span>

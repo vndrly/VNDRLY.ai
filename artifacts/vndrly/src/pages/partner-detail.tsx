@@ -567,7 +567,7 @@ export function PartnerProductServiceCatalogCard({
           </div>
           {canAddToCatalog && (
             <PngPillButton
-              color="blue"
+              color="brand"
               onClick={() => setAddOpen(true)}
               className="px-2"
               data-testid="button-open-add-to-catalog"
@@ -860,7 +860,7 @@ export function PartnerProductServiceCatalogCard({
                 {t("partners.productServiceCatalog.addCancel")}
               </PngPillButton>
               <PngPillButton
-                color="blue"
+                color="brand"
                 type="submit"
                 disabled={createWorkType.isPending}
                 className="px-4"
@@ -1756,7 +1756,7 @@ export default function PartnerDetail({ id }: { id: number }) {
           {canEditPartner && (
           <Dialog open={editOpen} onOpenChange={tryCloseEdit}>
             <DialogTrigger asChild>
-              <BrandPillButton tone="blue" onClick={openEditDialog} data-testid="button-edit-partner"><Pencil className="w-4 h-4" />{t("common.edit")}</BrandPillButton>
+              <BrandPillButton tone="brand" onClick={openEditDialog} data-testid="button-edit-partner"><Pencil className="w-4 h-4" />{t("common.edit")}</BrandPillButton>
             </DialogTrigger>
             <DialogContent className="max-h-[90vh] overflow-y-auto">
               <DialogHeader><DialogTitle>{t("partners.editPartner")}</DialogTitle></DialogHeader>
@@ -1866,7 +1866,7 @@ export default function PartnerDetail({ id }: { id: number }) {
                         <p className="text-xs text-muted-foreground mb-2">{t("partners.companyLogoHelp", { defaultValue: "PNG, JPG, SVG, or animated GIF. Used on tickets, posters, and inside dialogs. Wordmarks (wide logos) work great here." })}</p>
                         <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} data-testid="input-logo-file" />
                         <div className="flex gap-2 flex-wrap">
-                          <PngPillButton color="blue" type="button" onClick={() => logoInputRef.current?.click()} disabled={uploadingLogo} data-testid="button-upload-logo">
+                          <PngPillButton color="brand" type="button" onClick={() => logoInputRef.current?.click()} disabled={uploadingLogo} data-testid="button-upload-logo">
                             <Upload className="w-4 h-4" />{uploadingLogo ? t("partners.uploadingLogo", { defaultValue: "Uploading..." }) : partner.logoUrl ? t("partners.replaceLogo", { defaultValue: "Replace Logo" }) : t("partners.uploadLogo", { defaultValue: "Upload Logo" })}
                           </PngPillButton>
                           {partner.logoUrl && (
@@ -1905,7 +1905,7 @@ export default function PartnerDetail({ id }: { id: number }) {
                         />
                         <div className="flex gap-2 flex-wrap">
                           <PngPillButton
-                            color="blue"
+                            color="brand"
                             type="button"
                             onClick={() => squareLogoInputRef.current?.click()}
                             disabled={uploadingSquareLogo}
@@ -2124,7 +2124,7 @@ export default function PartnerDetail({ id }: { id: number }) {
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2"><MapPin className="w-5 h-5" style={{ color: "var(--brand-primary)" }} />{t("partners.siteLocationsCount", { count: sites?.length ?? 0 })}</CardTitle>
           {!isVendorUser && selectedSiteIds.size > 0 && (
-            <PngPillButton color="blue" type="button" onClick={handlePrintSelectedQrs} data-testid="button-print-selected-qrs">
+            <PngPillButton color="brand" type="button" onClick={handlePrintSelectedQrs} data-testid="button-print-selected-qrs">
               <Printer className="w-4 h-4" />
               {t("siteLocations.printSelectedQrs", { count: selectedSiteIds.size })}
             </PngPillButton>
@@ -2251,7 +2251,7 @@ export default function PartnerDetail({ id }: { id: number }) {
             )}
           {canEditPartner && (
             <PngPillButton
-              color="blue"
+              color="brand"
               onClick={() => setContactOpen(true)}
               className="px-2"
               data-testid="button-add-contact"
@@ -2287,7 +2287,7 @@ export default function PartnerDetail({ id }: { id: number }) {
                   <p className="text-xs text-muted-foreground mb-2">{t("partners.rolesHelp")}</p>
                   <RoleMultiSelect value={contactForm.roles} onChange={(roles) => setContactForm({ ...contactForm, roles })} testIdPrefix="add-role" />
                 </div>
-                <PngPillButton color="blue" type="submit" disabled={createContact.isPending} className="w-full" data-testid="button-submit-contact">
+                <PngPillButton color="brand" type="submit" disabled={createContact.isPending} className="w-full" data-testid="button-submit-contact">
                   {createContact.isPending ? t("partners.adding") : t("partners.addCompanyContact")}
                 </PngPillButton>
               </form>
@@ -2467,7 +2467,7 @@ export default function PartnerDetail({ id }: { id: number }) {
           <CardTitle className="flex items-center gap-2"><FileText className="w-5 h-5" style={{ color: "var(--brand-primary)" }} />{t("partners.notesCount", { count: notes?.length ?? 0 })}</CardTitle>
           <Dialog open={noteOpen} onOpenChange={setNoteOpen}>
             <DialogTrigger asChild>
-              <PngPillButton color="blue" className="px-2" data-testid="button-add-note"><Plus className="w-4 h-4" />{t("partners.addNote")}</PngPillButton>
+              <PngPillButton color="brand" className="px-2" data-testid="button-add-note"><Plus className="w-4 h-4" />{t("partners.addNote")}</PngPillButton>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader><DialogTitle>{t("partners.addNote")}</DialogTitle></DialogHeader>
@@ -2476,7 +2476,7 @@ export default function PartnerDetail({ id }: { id: number }) {
                   <Label>{t("partners.noteLabel")}</Label>
                   <Textarea value={noteContent} onChange={(e) => setNoteContent(e.target.value)} placeholder={t("partners.enterNotePlaceholder")} rows={4} data-testid="input-note-content" />
                 </div>
-                <PngPillButton color="blue" type="submit" disabled={createNote.isPending} className="w-full" data-testid="button-submit-note">
+                <PngPillButton color="brand" type="submit" disabled={createNote.isPending} className="w-full" data-testid="button-submit-note">
                   {createNote.isPending ? t("partners.adding") : t("partners.addNote")}
                 </PngPillButton>
               </form>
@@ -2539,7 +2539,7 @@ export default function PartnerDetail({ id }: { id: number }) {
               <p className="text-xs text-muted-foreground mb-2">{t("partners.rolesHelp")}</p>
               <RoleMultiSelect value={editContactForm.roles} onChange={(roles) => setEditContactForm({ ...editContactForm, roles })} testIdPrefix="edit-role" />
             </div>
-            <PngPillButton color="blue" type="submit" disabled={updateContact.isPending} attention={editContactDirty} className="w-full" data-testid="button-submit-edit-contact">
+            <PngPillButton color="brand" type="submit" disabled={updateContact.isPending} attention={editContactDirty} className="w-full" data-testid="button-submit-edit-contact">
               {updateContact.isPending ? t("common.saving") : t("common.saveChanges")}
             </PngPillButton>
           </form>

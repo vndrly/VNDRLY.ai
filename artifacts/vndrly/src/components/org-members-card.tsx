@@ -297,7 +297,7 @@ export default function OrgMembersCard({
           Administrative Team Members ({members.length})
         </CardTitle>
         <PngPillButton
-          color="blue"
+          color="brand"
 
           onClick={() => setAddOpen(true)}
           className="px-2"
@@ -458,7 +458,7 @@ export default function OrgMembersCard({
                 </PngPillButton>
                 <PngPillButton
                   type="submit"
-                  color="blue"
+                  color="brand"
 
                   disabled={addMutation.isPending}
                   data-testid={`button-submit-${orgType}-member`}
@@ -869,7 +869,7 @@ export default function OrgMembersCard({
                     {resetPasswordError}
                   </p>
                 ) : null}
-                <PngPillButton color="blue"
+                <PngPillButton color="brand"
                   type="button"
                   disabled={
                     resetPending || editTempPassword.trim().length < 8

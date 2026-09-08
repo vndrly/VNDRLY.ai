@@ -12,6 +12,7 @@ export type MapboxPoint = {
   longitude: number;
   color?: string;
   label?: string;
+  imageUrl?: string | null;
   title?: string;
   popupHtml?: string;
   onClick?: () => void;
@@ -84,6 +85,13 @@ function escapeHtml(value: string): string {
         return "&#39;";
     }
   });
+}
+
+export function mapboxMarkerContent(point: Pick<MapboxPoint, "label" | "imageUrl" | "title">): string {
+  if (point.imageUrl) {
+    return `<img class="vndrly-mapbox-marker-logo" src="${escapeHtml(point.imageUrl)}" alt="" />`;
+  }
+  return `<span>${escapeHtml(point.label ?? "")}</span>`;
 }
 
 function circlePolygon(latitude: number, longitude: number, radiusMeters: number): Position[] {
@@ -279,7 +287,7 @@ export function MapboxMap({
       el.style.setProperty("--pin-color", point.color ?? "#2563eb");
       el.classList.toggle("is-selected", point.id === selectedPointId);
       el.dataset.flashing = point.flashing ? "1" : "0";
-      el.innerHTML = `<span>${escapeHtml(point.label ?? "")}</span>`;
+      el.innerHTML = mapboxMarkerContent(point);
       if (point.flashing) {
         const ring = document.createElement("span");
         ring.className = "vndrly-mapbox-marker-flash";

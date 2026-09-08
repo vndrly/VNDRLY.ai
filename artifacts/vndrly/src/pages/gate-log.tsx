@@ -74,6 +74,9 @@ function GateOperations() {
   const brand = useBrand();
   const iconStyle = { color: brand.isOrgBranded ? brand.primary : "#f59e0b" };
   const [query, setQuery] = useState("");
+  const [siteFilter, setSiteFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [dateFilter, setDateFilter] = useState("");
   const displayPlate = (state: string | null | undefined, plate: string | null | undefined) =>
     formatPlateForDisplay(state, plate, t("gatekeeper.plateStateUnconfirmed"));
 
@@ -110,9 +113,20 @@ function GateOperations() {
     [now, ops.data],
   );
 
-  const onSite = visits.filter((visit) => !visit.checkOutTime && visit.admissionStatus !== "pending");
-  const history = useMemo(() => filterGateHistory(visits, query), [query, visits]);
-  const liveFiltered = useMemo(() => filterGateHistory(onSite, query), [onSite, query]);
+  const fullView = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("view") === "full";
+  const recentEvents = useMemo(
+    () => [...visits].sort((a, b) => new Date(b.checkOutTime ?? b.checkInTime).getTime() - new Date(a.checkOutTime ?? a.checkInTime).getTime()).slice(0, 10),
+    [visits],
+  );
+  const siteOptions = useMemo(() => Array.from(new Set(visits.map((visit) => visit.siteName).filter((name): name is string => Boolean(name)))).sort(), [visits]);
+  const history = useMemo(() => filterGateHistory(visits, query).filter((visit) => {
+    if (siteFilter !== "all" && visit.siteName !== siteFilter) return false;
+    if (statusFilter === "on-site" && visit.checkOutTime) return false;
+    if (statusFilter === "checked-out" && !visit.checkOutTime) return false;
+    if (dateFilter && visit.checkInTime.slice(0, 10) !== dateFilter) return false;
+    return true;
+  }), [dateFilter, query, siteFilter, statusFilter, visits]);
+  const liveFiltered = recentEvents;
 
   const hourChart = analytics.visitsByHour.map((row) => ({
     ...row,
@@ -219,11 +233,12 @@ function GateOperations() {
       </div>
 
       <Card data-testid="gate-log-on-site">
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between gap-3">
           <CardTitle className="text-lg flex items-center gap-2">
             <Shield className={CARD_ICON_CLASS} style={iconStyle} />
             {t("gateLog.liveTitle")}
           </CardTitle>
+          <Link href="/gate-log?view=full" className="text-sm font-medium underline hover:text-[var(--brand-primary)]">View Full Log</Link>
         </CardHeader>
         <CardContent className="space-y-3">
           {liveFiltered.length === 0 ? (
@@ -244,9 +259,7 @@ function GateOperations() {
                     <p className="truncate text-xs text-muted-foreground">
                       {[visit.company, displayPlate(visit.plateState, visit.vehiclePlate), visit.siteName].filter(Boolean).join(" · ")}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      {t("gateLog.dwellSoFar", { minutes: dwellMinutes(visit, now) })}
-                    </p>
+                    <p className="text-xs text-muted-foreground">{visit.checkOutTime ? `${fmt(visit.checkInTime)} → ${fmt(visit.checkOutTime)}` : t("gateLog.dwellSoFar", { minutes: dwellMinutes(visit, now) })}</p>
                   </div>
                   <span className="shrink-0 text-xs font-semibold text-muted-foreground">
                     {fmt(visit.checkInTime)}
@@ -258,7 +271,8 @@ function GateOperations() {
         </CardContent>
       </Card>
 
-      <div className="relative max-w-xl">
+      {fullView && <><div className="flex flex-wrap gap-3">
+       <div className="relative min-w-[240px] flex-1">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={query}
@@ -268,6 +282,15 @@ function GateOperations() {
           className="pl-9"
           data-testid="gate-log-search"
         />
+       </div>
+       <select className="h-10 rounded-md border bg-background px-3 text-sm" value={siteFilter} onChange={(event) => setSiteFilter(event.target.value)} aria-label="Filter by site">
+         <option value="all">All sites</option>
+         {siteOptions.map((site) => <option key={site} value={site}>{site}</option>)}
+       </select>
+       <select className="h-10 rounded-md border bg-background px-3 text-sm" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} aria-label="Filter by status">
+         <option value="all">All statuses</option><option value="on-site">On site</option><option value="checked-out">Checked out</option>
+       </select>
+       <Input type="date" className="w-auto" value={dateFilter} onChange={(event) => setDateFilter(event.target.value)} aria-label="Filter by date" />
       </div>
 
       <Card data-testid="gate-log-history">
@@ -313,7 +336,7 @@ function GateOperations() {
             ))
           )}
         </CardContent>
-      </Card>
+      </Card></>}
 
       <Card data-testid="gate-log-staff">
         <CardHeader>

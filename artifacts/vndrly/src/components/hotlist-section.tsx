@@ -477,14 +477,14 @@ function PartnerHotlist({ focusedJobId }: { focusedJobId: number | null }) {
               rel="noopener noreferrer"
               className="inline-flex items-center"
             >
-              <PngPillButton color="blue" data-testid="button-print-hotlist">
+              <PngPillButton color="brand" data-testid="button-print-hotlist">
                 <Printer className="w-4 h-4" />
                 Print
               </PngPillButton>
             </a>
           <Dialog open={postOpen} onOpenChange={setPostOpen}>
             <DialogTrigger asChild>
-              <PngPillButton color="blue" data-testid="button-post-hotlist">
+              <PngPillButton color="brand" data-testid="button-post-hotlist">
                 <Plus className="w-4 h-4" />Post Job
               </PngPillButton>
             </DialogTrigger>
@@ -526,7 +526,7 @@ function PartnerHotlist({ focusedJobId }: { focusedJobId: number | null }) {
                   <div><Label>Deadline</Label><Input type="date" value={form.deadline} onChange={(e) => setForm({ ...form, deadline: e.target.value })} data-testid="input-hotlist-deadline" /></div>
                   <div><Label>Est. Duration (days)</Label><Input type="number" min="1" value={form.estimatedDurationDays} onChange={(e) => setForm({ ...form, estimatedDurationDays: e.target.value })} data-testid="input-hotlist-duration" /></div>
                 </div>
-                <PngPillButton type="submit" color="blue" disabled={createJob.isPending} className="w-full" data-testid="button-submit-hotlist">{createJob.isPending ? "Posting..." : "Post Job"}</PngPillButton>
+                <PngPillButton type="submit" color="brand" disabled={createJob.isPending} className="w-full" data-testid="button-submit-hotlist">{createJob.isPending ? "Posting..." : "Post Job"}</PngPillButton>
               </form>
             </DialogContent>
           </Dialog>
@@ -1083,7 +1083,7 @@ function DirectAwardButton({ job }: { job: HotlistJobRow }) {
             <Input type="number" min="0" value={duration} onChange={(e) => setDuration(e.target.value)} data-testid="input-direct-award-duration" />
           </div>
           <div className="flex gap-2">
-            <PngPillButton type="submit" color="blue" disabled={!canSubmit} className="flex-1" data-testid="button-submit-direct-award">{submit.isPending ? "Awarding..." : "Direct Award"}</PngPillButton>
+            <PngPillButton type="submit" color="brand" disabled={!canSubmit} className="flex-1" data-testid="button-submit-direct-award">{submit.isPending ? "Awarding..." : "Direct Award"}</PngPillButton>
             <PngPillButton type="button" color="red" onClick={() => setOpen(false)}>Cancel</PngPillButton>
           </div>
         </form>
@@ -1191,7 +1191,7 @@ function ConvertToTicketButton({ job, bid }: { job: HotlistJobRow; bid: HotlistB
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <PngPillButton color="blue" data-testid={`button-convert-ticket-${job.id}`}>
+        <PngPillButton color="brand" data-testid={`button-convert-ticket-${job.id}`}>
           <FileText className="w-3 h-3" />Create Ticket
         </PngPillButton>
       </DialogTrigger>
@@ -1273,7 +1273,7 @@ function ConvertToTicketButton({ job, bid }: { job: HotlistJobRow; bid: HotlistB
           <div className="flex gap-2">
             <PngPillButton
               type="submit"
-              color="blue"
+              color="brand"
               disabled={!canSubmit}
               className="flex-1"
               data-testid="button-submit-convert-ticket"
@@ -1370,7 +1370,7 @@ function VendorHotlist({ focusedJobId }: { focusedJobId: number | null }) {
           <div className="text-center py-6 space-y-2">
             <p className="text-sm">Set your operating area to see Hotlist jobs.</p>
             <Link href={`/vendors/${user?.vendorId}`}>
-              <PngPillButton color="blue" data-testid="link-set-operating-area">Set Operating Area</PngPillButton>
+              <PngPillButton color="brand" data-testid="link-set-operating-area">Set Operating Area</PngPillButton>
             </Link>
           </div>
         </CardContent>
@@ -1643,7 +1643,7 @@ function VendorJobCard({
       ) : (
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <PngPillButton color="blue" className="mr-2" data-testid={`button-bid-${job.id}`}>{job.myBid ? "Update Bid" : "Bid"}</PngPillButton>
+          <PngPillButton color="brand" className="mr-2" data-testid={`button-bid-${job.id}`}>{job.myBid ? "Update Bid" : "Bid"}</PngPillButton>
         </DialogTrigger>
         <DialogContent>
           <DialogHeader><DialogTitle>{job.myBid ? "Update Bid" : "Place Bid"} — {job.title}</DialogTitle></DialogHeader>
@@ -1652,7 +1652,7 @@ function VendorJobCard({
             <div><Label>ETA (days)</Label><Input type="number" min="0" value={form.etaDays} onChange={(e) => setForm({ ...form, etaDays: e.target.value })} data-testid="input-bid-eta" /></div>
             <div><Label>Notes</Label><Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Crew size, scope clarifications, etc." data-testid="input-bid-notes" /></div>
             <div className="flex gap-2">
-              <PngPillButton type="submit" color="blue" disabled={bid.isPending} className="flex-1" data-testid="button-submit-bid">{bid.isPending ? "Saving..." : job.myBid ? "Update Bid" : "Submit Bid"}</PngPillButton>
+              <PngPillButton type="submit" color="brand" disabled={bid.isPending} className="flex-1" data-testid="button-submit-bid">{bid.isPending ? "Saving..." : job.myBid ? "Update Bid" : "Submit Bid"}</PngPillButton>
               <PngPillButton type="button" color="red" onClick={() => setOpen(false)}>Cancel</PngPillButton>
             </div>
           </form>
@@ -1797,14 +1797,14 @@ function AdminHotlist() {
               rel="noopener noreferrer"
               className="inline-flex items-center"
             >
-              <PngPillButton color="blue" data-testid="button-print-hotlist-admin">
+              <PngPillButton color="brand" data-testid="button-print-hotlist-admin">
                 <Printer className="w-4 h-4" />
                 Print
               </PngPillButton>
             </a>
             <Dialog open={postOpen} onOpenChange={setPostOpen}>
               <DialogTrigger asChild>
-                <PngPillButton color="blue" data-testid="button-post-hotlist-admin">
+                <PngPillButton color="brand" data-testid="button-post-hotlist-admin">
                   <Plus className="w-4 h-4" />Post Job
                 </PngPillButton>
               </DialogTrigger>
@@ -1836,7 +1836,7 @@ function AdminHotlist() {
                     <div><Label>Deadline</Label><Input type="date" value={form.deadline} onChange={(e) => setForm({ ...form, deadline: e.target.value })} data-testid="input-hotlist-admin-deadline" /></div>
                     <div><Label>Est. Duration (days)</Label><Input type="number" min="1" value={form.estimatedDurationDays} onChange={(e) => setForm({ ...form, estimatedDurationDays: e.target.value })} data-testid="input-hotlist-admin-duration" /></div>
                   </div>
-                  <PngPillButton type="submit" color="blue" disabled={createJob.isPending || !form.partnerId} className="w-full" data-testid="button-submit-hotlist-admin">{createJob.isPending ? "Posting..." : "Post Job"}</PngPillButton>
+                  <PngPillButton type="submit" color="brand" disabled={createJob.isPending || !form.partnerId} className="w-full" data-testid="button-submit-hotlist-admin">{createJob.isPending ? "Posting..." : "Post Job"}</PngPillButton>
                 </form>
               </DialogContent>
             </Dialog>
@@ -1913,7 +1913,7 @@ function AdminHotlist() {
                     <HotlistStatusPill status={j.status} />
                     {isRemoved ? (
                       <PngPillButton
-                        color="blue"
+                        color="brand"
                         onClick={() => restoreJob.mutate(j.id)}
                         disabled={restoreJob.isPending}
                         data-testid={`button-restore-job-${j.id}`}

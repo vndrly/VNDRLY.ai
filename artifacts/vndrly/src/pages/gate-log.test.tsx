@@ -1,6 +1,6 @@
 import * as React from "react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 if (typeof globalThis.ResizeObserver === "undefined") {
@@ -148,22 +148,18 @@ describe("Gate Log page", () => {
     });
   });
 
-  it("shows live visitors, staff hours, search, charts, and recommendations", async () => {
+  it("shows the newest gate events in one live card with a full-log link", async () => {
     renderPage();
     await waitFor(() => expect(screen.getByTestId("gate-log-on-site")).toBeTruthy());
     expect(screen.getByTestId("gate-log-on-site").textContent).toContain("Sam Visitor");
+    expect(screen.getByTestId("gate-log-on-site").textContent).toContain("Pat Visitor");
+    expect(screen.getByRole("link", { name: "View Full Log" }).getAttribute("href")).toBe("/gate-log?view=full");
     expect(screen.getByTestId("gate-log-staff").textContent).toContain("Riley Gate");
     expect(screen.getByTestId("gate-log-staff").textContent).toContain("Winchester");
     expect(screen.getByTestId("gate-log-recommendations").textContent).toContain("Awaiting admission: 0");
     expect(screen.getByTestId("gate-log-recommendations").textContent).toContain("Overdue: 1");
     expect(screen.getByTestId("gate-log-visits-by-day")).toBeTruthy();
     expect(screen.getByTestId("gate-log-top-companies").textContent).toContain("Acme Pump");
-    expect(screen.getByTestId("gate-log-history").textContent).toContain("OK • OK-GATE1");
-    expect(screen.getByTestId("gate-log-history").textContent).toContain("Unconfirmed state");
-
-    fireEvent.change(screen.getByTestId("gate-log-search"), { target: { value: "solo" } });
-    expect(screen.getAllByTestId("gate-log-history-row")).toHaveLength(1);
-    expect(screen.getByTestId("gate-log-history").textContent).toContain("Sam Visitor");
-    expect(screen.getByTestId("gate-log-history").textContent).not.toContain("Pat Visitor");
+    expect(screen.queryByTestId("gate-log-history")).toBeNull();
   });
 });

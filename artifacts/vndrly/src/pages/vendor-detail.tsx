@@ -72,7 +72,19 @@ import { hotlistApi } from "@/lib/hotlist-api";
 import { useTranslation } from "react-i18next";
 import { translateApiError } from "@/lib/api-error";
 import { PlatformEulaModal } from "@/components/platform-eula-modal";
+import { canViewVendorOfficeEmployees } from "@/lib/vendor-detail-visibility";
 
+const WORKFORCE_ROLES = ["Field Worker", "Driver", "Visitor Notifications"] as const;
+
+function WorkforceRoleChecks({ roles, onChange, prefix }: { roles: string[]; onChange: (roles: string[]) => void; prefix: string }) {
+  const { t } = useTranslation();
+  return <div className="flex flex-wrap gap-4">
+    {WORKFORCE_ROLES.map((role) => <div key={role} className="flex items-center gap-2">
+      <Checkbox id={`${prefix}-${role}`} checked={roles.includes(role)} onCheckedChange={(checked) => onChange(checked ? Array.from(new Set([...roles, role])) : roles.filter((item) => item !== role))} />
+      <Label htmlFor={`${prefix}-${role}`} className="cursor-pointer">{role === "Visitor Notifications" ? t("vendors.visitorNotifications") : role}</Label>
+    </div>)}
+  </div>;
+}
 
 export default function VendorDetail({ id }: { id: number }) {
   const brand = useBrand();
@@ -80,6 +92,7 @@ export default function VendorDetail({ id }: { id: number }) {
   const { user: authUser } = useAuth();
   const isOwnVendor = authUser?.role === "vendor" && authUser.vendorId === id;
   const canEditVendor = authUser?.role === "admin" || isOwnVendor;
+  const canViewOfficeEmployees = canViewVendorOfficeEmployees(authUser?.role, isOwnVendor);
   const { data: vendor, isLoading } = useGetVendor(id, { query: { enabled: !!id, queryKey: getGetVendorQueryKey(id) } });
   // Task #523: source the field-employee list through the shared hook so
   // every vendor-facing surface that lists vendor_people goes through the
@@ -91,7 +104,7 @@ export default function VendorDetail({ id }: { id: number }) {
   // getListFieldEmployeesQueryKey({ vendorId: id }) invalidations below.
   const { eligibleForemen: employees } =
     useEligibleVendorFieldEmployeesByVendorId(id, canEditVendor);
-  const { data: contacts } = useListVendorContacts(id, undefined, { query: { enabled: !!id, queryKey: getListVendorContactsQueryKey(id) } });
+  const { data: contacts } = useListVendorContacts(id, undefined, { query: { enabled: !!id && canViewOfficeEmployees, queryKey: getListVendorContactsQueryKey(id) } });
   const { data: notes } = useListVendorNotes(id, { query: { enabled: !!id && (authUser?.role === "admin" || authUser?.role === "partner" || isOwnVendor), queryKey: [...getListVendorNotesQueryKey(id), authUser?.role, authUser?.partnerId, authUser?.vendorId] } });
   const updateVendor = useUpdateVendor();
   const removeVendor = useDeleteVendor();
@@ -670,6 +683,11 @@ export default function VendorDetail({ id }: { id: number }) {
         ) : (
           <button type="button" onClick={() => window.history.back()} className="group inline-flex items-center gap-2" aria-label="Back" data-testid="button-back"><SphereBackButton size={40} /></button>
         )}
+        {vendor.logoUrl && (
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-white p-1" data-testid="vendor-header-logo">
+            <img src={vendor.logoUrl} alt={`${vendor.name} logo`} className="h-full w-full object-contain" />
+          </div>
+        )}
         <div>
           <h1 className="text-2xl font-bold" data-testid="text-vendor-name">{vendor.name}</h1>
           <p className="text-muted-foreground text-sm">Vendor since {new Date(vendor.createdAt).toLocaleDateString()}</p>
@@ -678,7 +696,7 @@ export default function VendorDetail({ id }: { id: number }) {
           {canEditVendor && (
           <Dialog open={editOpen} onOpenChange={tryCloseEdit}>
             <DialogTrigger asChild>
-              <PngPillButton color="blue" onClick={openEditDialog} className="px-2" data-testid="button-edit-vendor"><Pencil className="w-4 h-4" />{t("common.edit")}</PngPillButton>
+              <PngPillButton color="brand" onClick={openEditDialog} className="px-2" data-testid="button-edit-vendor"><Pencil className="w-4 h-4" />{t("common.edit")}</PngPillButton>
             </DialogTrigger>
             <DialogContent className="max-h-[90vh] overflow-y-auto">
               <DialogLogoHeader
@@ -798,7 +816,7 @@ export default function VendorDetail({ id }: { id: number }) {
                               primary in dialog (Upload/Replace), red =
                               destructive (Remove). Pulses to colored state
                               on hover to match the rest of the pill chrome. */}
-                          <PngPillButton type="button" color="blue" onClick={() => logoInputRef.current?.click()} disabled={uploadingLogo} data-testid="button-upload-logo">
+                          <PngPillButton type="button" color="brand" onClick={() => logoInputRef.current?.click()} disabled={uploadingLogo} data-testid="button-upload-logo">
                             <Upload className="w-4 h-4" />{uploadingLogo ? "Uploading..." : vendor.logoUrl ? "Replace Logo" : "Upload Logo"}
                           </PngPillButton>
                           {vendor.logoUrl && (
@@ -838,7 +856,7 @@ export default function VendorDetail({ id }: { id: number }) {
                         <div className="flex gap-2 flex-wrap">
                           <PngPillButton
                             type="button"
-                            color="blue"
+                            color="brand"
                             onClick={() => squareLogoInputRef.current?.click()}
                             disabled={uploadingSquareLogo}
                             data-testid="button-upload-square-logo"
@@ -959,13 +977,13 @@ export default function VendorDetail({ id }: { id: number }) {
 
       <VendorRatingsCard vendorId={id} />
 
-      <Card>
+      {canViewOfficeEmployees && <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2"><UserCheck className="w-5 h-5" style={{ color: "var(--brand-primary)" }} />Office Employees ({contacts?.length ?? 0})</CardTitle>
           <Dialog open={contactOpen} onOpenChange={setContactOpen}>
             {canEditVendor && (
             <DialogTrigger asChild>
-              <PngPillButton color="blue" data-testid="button-add-contact" className="px-2" onClick={() => setContactForm((f) => ({ ...f, vendorRole: "office" }))}><Plus className="w-4 h-4" />{t("vendors.addEmployee")}</PngPillButton>
+              <PngPillButton color="brand" data-testid="button-add-contact" className="px-2" onClick={() => setContactForm((f) => ({ ...f, vendorRole: "office" }))}><Plus className="w-4 h-4" />{t("vendors.addEmployee")}</PngPillButton>
             </DialogTrigger>
             )}
             <DialogContent>
@@ -1012,15 +1030,12 @@ export default function VendorDetail({ id }: { id: number }) {
                   <Checkbox id="pec-cert-contact-add" checked={contactForm.pecCertification} onCheckedChange={(v) => setContactForm({ ...contactForm, pecCertification: !!v })} data-testid="checkbox-contact-pec-cert" />
                   <Label htmlFor="pec-cert-contact-add" className="cursor-pointer">{t("vendors.pecCertified")}</Label>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Checkbox id="visit-notif-contact-add" checked={contactForm.roles.includes("Visitor Notifications")} onCheckedChange={(v) => setContactForm({ ...contactForm, roles: v ? Array.from(new Set([...contactForm.roles, "Visitor Notifications"])) : contactForm.roles.filter((r) => r !== "Visitor Notifications") })} data-testid="checkbox-contact-visit-notifications" />
-                  <Label htmlFor="visit-notif-contact-add" className="cursor-pointer">{t("vendors.visitorNotifications")}</Label>
-                </div>
+                <WorkforceRoleChecks roles={contactForm.roles} onChange={(roles) => setContactForm({ ...contactForm, roles })} prefix="contact-add-role" />
                 <div>
                   <Label>{t("vendors.pecExpiration")}</Label>
                   <Input type="date" value={contactForm.pecExpirationDate} onChange={(e) => setContactForm({ ...contactForm, pecExpirationDate: e.target.value })} data-testid="input-contact-pec-expiration" />
                 </div>
-                <PngPillButton color="blue" type="submit" disabled={createContact.isPending} className="w-full" data-testid="button-submit-contact">
+                <PngPillButton color="brand" type="submit" disabled={createContact.isPending} className="w-full" data-testid="button-submit-contact">
                   {createContact.isPending ? t("vendors.addingEmployee") : t("vendors.addEmployee")}
                 </PngPillButton>
               </form>
@@ -1082,13 +1097,13 @@ export default function VendorDetail({ id }: { id: number }) {
             <div className="p-6 text-center text-muted-foreground text-sm">No contacts added yet</div>
           )}
         </CardContent>
-      </Card>
+      </Card>}
 
       {canEditVendor && <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2"><UserCheck className="w-5 h-5" style={{ color: "var(--brand-primary)" }} />Field Employees ({employees?.length ?? 0})</CardTitle>
           {canEditVendor && (
-            <PngPillButton color="blue" data-testid="button-add-employee" className="px-2" onClick={() => { setContactForm({ jobTitle: "", firstName: "", lastName: "", email: "", phone: "", vendorRole: "field", pecCertification: false, pecExpirationDate: "", roles: [] }); setContactOpen(true); }}><Plus className="w-4 h-4" />{t("vendors.addEmployee")}</PngPillButton>
+            <PngPillButton color="brand" data-testid="button-add-employee" className="px-2" onClick={() => { setContactForm({ jobTitle: "", firstName: "", lastName: "", email: "", phone: "", vendorRole: "field", pecCertification: false, pecExpirationDate: "", roles: [] }); setContactOpen(true); }}><Plus className="w-4 h-4" />{t("vendors.addEmployee")}</PngPillButton>
           )}
         </CardHeader>
         <CardContent className="p-0">
@@ -1176,7 +1191,7 @@ export default function VendorDetail({ id }: { id: number }) {
           <CardTitle className="flex items-center gap-2"><FileText className="w-5 h-5" style={{ color: "var(--brand-primary)" }} />Notes ({notes?.length ?? 0})</CardTitle>
           <Dialog open={noteOpen} onOpenChange={setNoteOpen}>
             <DialogTrigger asChild>
-              <PngPillButton color="blue" className="px-2" data-testid="button-add-note"><Plus className="w-4 h-4" />Add Note</PngPillButton>
+              <PngPillButton color="brand" className="px-2" data-testid="button-add-note"><Plus className="w-4 h-4" />Add Note</PngPillButton>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader><DialogTitle>Add Note</DialogTitle></DialogHeader>
@@ -1185,7 +1200,7 @@ export default function VendorDetail({ id }: { id: number }) {
                   <Label>Note</Label>
                   <Textarea value={noteContent} onChange={(e) => setNoteContent(e.target.value)} placeholder="Enter note..." rows={4} data-testid="input-note-content" />
                 </div>
-                <PngPillButton color="blue" type="submit" disabled={createNote.isPending} className="w-full" data-testid="button-submit-note">
+                <PngPillButton color="brand" type="submit" disabled={createNote.isPending} className="w-full" data-testid="button-submit-note">
                   {createNote.isPending ? "Adding..." : "Add Note"}
                 </PngPillButton>
               </form>
@@ -1272,10 +1287,7 @@ export default function VendorDetail({ id }: { id: number }) {
               <Checkbox id="pec-cert-contact-edit" checked={editContactForm.pecCertification} onCheckedChange={(v) => setEditContactForm({ ...editContactForm, pecCertification: !!v })} data-testid="checkbox-edit-contact-pec-cert" />
               <Label htmlFor="pec-cert-contact-edit" className="cursor-pointer">{t("vendors.pecCertified")}</Label>
             </div>
-            <div className="flex items-center gap-2">
-              <Checkbox id="visit-notif-contact-edit" checked={editContactForm.roles.includes("Visitor Notifications")} onCheckedChange={(v) => setEditContactForm({ ...editContactForm, roles: v ? Array.from(new Set([...editContactForm.roles, "Visitor Notifications"])) : editContactForm.roles.filter((r) => r !== "Visitor Notifications") })} data-testid="checkbox-edit-contact-visit-notifications" />
-              <Label htmlFor="visit-notif-contact-edit" className="cursor-pointer">{t("vendors.visitorNotifications")}</Label>
-            </div>
+              <WorkforceRoleChecks roles={editContactForm.roles} onChange={(roles) => setEditContactForm({ ...editContactForm, roles })} prefix="contact-edit-role" />
             <div>
               <Label>{t("vendors.pecExpiration")}</Label>
               <Input type="date" value={editContactForm.pecExpirationDate} onChange={(e) => setEditContactForm({ ...editContactForm, pecExpirationDate: e.target.value })} data-testid="input-edit-contact-pec-expiration" />
@@ -1292,7 +1304,7 @@ export default function VendorDetail({ id }: { id: number }) {
                 }}
               />
             ) : null}
-            <PngPillButton color="blue" type="submit" disabled={updateContact.isPending} attention={editContactDirty} className="w-full" data-testid="button-submit-edit-contact">
+            <PngPillButton color="brand" type="submit" disabled={updateContact.isPending} attention={editContactDirty} className="w-full" data-testid="button-submit-edit-contact">
               {updateContact.isPending ? t("common.saving") : t("common.saveChanges")}
             </PngPillButton>
           </form>
@@ -1356,10 +1368,7 @@ export default function VendorDetail({ id }: { id: number }) {
               <Label>{t("vendors.expirationDate")}</Label>
               <Input type="date" value={editEmployeeForm.pecExpirationDate} onChange={(e) => setEditEmployeeForm({ ...editEmployeeForm, pecExpirationDate: e.target.value })} data-testid="input-edit-pec-expiration" />
             </div>
-            <div className="flex items-center gap-2">
-              <Checkbox id="visit-notif-employee-edit" checked={editEmployeeForm.roles.includes("Visitor Notifications")} onCheckedChange={(v) => setEditEmployeeForm({ ...editEmployeeForm, roles: v ? Array.from(new Set([...editEmployeeForm.roles, "Visitor Notifications"])) : editEmployeeForm.roles.filter((r) => r !== "Visitor Notifications") })} data-testid="checkbox-edit-employee-visit-notifications" />
-              <Label htmlFor="visit-notif-employee-edit" className="cursor-pointer">{t("vendors.visitorNotifications")}</Label>
-            </div>
+              <WorkforceRoleChecks roles={editEmployeeForm.roles} onChange={(roles) => setEditEmployeeForm({ ...editEmployeeForm, roles })} prefix="employee-edit-role" />
             {editingEmployeeId ? (
               <EmployeePortalLoginFields
                 employeeId={editingEmployeeId}
@@ -1372,7 +1381,7 @@ export default function VendorDetail({ id }: { id: number }) {
                 }}
               />
             ) : null}
-            <PngPillButton type="submit" color="blue" className="w-full px-2" disabled={updateEmployee.isPending} attention={editEmployeeDirty} data-testid="button-submit-edit-employee">
+            <PngPillButton type="submit" color="brand" className="w-full px-2" disabled={updateEmployee.isPending} attention={editEmployeeDirty} data-testid="button-submit-edit-employee">
               {updateEmployee.isPending ? t("common.saving") : t("common.saveChanges")}
             </PngPillButton>
           </form>
@@ -1452,7 +1461,7 @@ function OperatingAreaEditor({ vendorId, canEdit }: { vendorId: number; canEdit:
           </div>
         </div>
         {canEdit && !editing && (
-          <PngPillButton color="blue" onClick={start} className="px-2" data-testid="button-edit-operating-area"><Pencil className="w-3 h-3" />Change Radius</PngPillButton>
+          <PngPillButton color="brand" onClick={start} className="px-2" data-testid="button-edit-operating-area"><Pencil className="w-3 h-3" />Change Radius</PngPillButton>
         )}
       </div>
       {editing && (
@@ -1474,7 +1483,7 @@ function OperatingAreaEditor({ vendorId, canEdit }: { vendorId: number; canEdit:
               Cancel is explicitly red per user request (overrides
               the usual grey-cancel convention for this surface). */}
           <div className="flex gap-2">
-            <PngPillButton color="blue" onClick={save} disabled={saving} data-testid="button-save-operating-area">
+            <PngPillButton color="brand" onClick={save} disabled={saving} data-testid="button-save-operating-area">
               <Check className="h-4 w-4" />
               {saving ? "Saving..." : "Save"}
             </PngPillButton>
@@ -1576,14 +1585,14 @@ function VendorRatingsCard({ vendorId }: { vendorId: number }) {
                     <StarRating value={myRating.rating} readOnly size={20} />
                     {myRating.review && <span className="text-sm text-muted-foreground line-clamp-1">"{myRating.review}"</span>}
                     <div className="ml-auto mr-2 flex items-center gap-4">
-                      <PngPillButton color="blue" onClick={startEdit} className="px-2" data-testid="button-edit-my-rating"><Pencil className="w-4 h-4" />Edit</PngPillButton>
+                      <PngPillButton color="brand" onClick={startEdit} className="px-2" data-testid="button-edit-my-rating"><Pencil className="w-4 h-4" />Edit</PngPillButton>
                       <BrandPillButton tone="red" onClick={removeMine} data-testid="button-remove-my-rating"><Trash2 className="w-4 h-4" />Remove</BrandPillButton>
                     </div>
                   </>
                 ) : (
                   <>
                     <span className="text-sm text-muted-foreground">You haven't rated this vendor.</span>
-                    <div className="ml-auto"><PngPillButton color="blue" className="px-2" onClick={startEdit} data-testid="button-add-my-rating"><Plus className="w-4 h-4" />Add Rating</PngPillButton></div>
+                    <div className="ml-auto"><PngPillButton color="brand" className="px-2" onClick={startEdit} data-testid="button-add-my-rating"><Plus className="w-4 h-4" />Add Rating</PngPillButton></div>
                   </>
                 )}
               </div>
@@ -1601,7 +1610,7 @@ function VendorRatingsCard({ vendorId }: { vendorId: number }) {
                   data-testid="input-rating-review"
                 />
                 <div className="flex gap-2">
-                  <PngPillButton color="blue" onClick={submit} disabled={upsert.isPending} data-testid="button-save-rating">
+                  <PngPillButton color="brand" onClick={submit} disabled={upsert.isPending} data-testid="button-save-rating">
                     <Check className="w-4 h-4" />
                     {upsert.isPending ? "Saving..." : "Save"}
                   </PngPillButton>
@@ -1854,7 +1863,7 @@ function ServicePriceEditModal({
               on hover. `flex-1` makes it span the remainder of the
               footer next to the Cancel button. */}
           <PngPillButton
-            color="blue"
+            color="brand"
             size="sm"
             className="flex-1"
             onClick={() => save.mutate()}

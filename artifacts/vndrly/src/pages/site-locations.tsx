@@ -414,7 +414,7 @@ export default function SiteLocations() {
         </div>
         <div className="flex items-center gap-2">
           {!isVendor && selectedIds.size > 0 && (
-            <PngPillButton color="blue"
+            <PngPillButton color="brand"
               type="button"
               onClick={handlePrintSelected}
               data-testid="button-print-selected-qrs"
@@ -425,7 +425,7 @@ export default function SiteLocations() {
           )}
         {!isVendor && <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <PngPillButton color="blue" className="px-2" data-testid="button-add-site"><Plus className="w-4 h-4" />{t("siteLocations.addSite")}</PngPillButton>
+            <PngPillButton color="brand" className="px-2" data-testid="button-add-site"><Plus className="w-4 h-4" />{t("siteLocations.addSite")}</PngPillButton>
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader><DialogTitle>{t("siteLocations.addSiteLocation")}</DialogTitle></DialogHeader>
@@ -587,7 +587,7 @@ export default function SiteLocations() {
               </div>
 
               <DialogFooter>
-                <PngPillButton color="blue" type="submit" disabled={createSite.isPending} data-testid="button-submit-site" className="w-full">
+                <PngPillButton color="brand" type="submit" disabled={createSite.isPending} data-testid="button-submit-site" className="w-full">
                   {createSite.isPending ? t("siteLocations.creating") : t("siteLocations.createSite")}
                 </PngPillButton>
               </DialogFooter>
@@ -739,7 +739,7 @@ export default function SiteLocations() {
                         {canEditRadius && (
                           <PngPillButton
                             type="button"
-                            color="blue"
+                            color="brand"
                             className="min-w-[120px]"
                             onClick={() => openRadiusDialog(s)}
                             data-testid={`button-edit-radius-${s.id}`}
@@ -823,7 +823,7 @@ export default function SiteLocations() {
               </PngPillButton>
               <PngPillButton
                 type="submit"
-                color="blue"
+                color="brand"
                 className="px-2"
                 disabled={updateSite.isPending}
                 data-testid="button-save-radius"

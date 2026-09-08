@@ -1,4 +1,6 @@
 import { cn } from "@/lib/utils";
+import { useBrand } from "@/hooks/use-brand";
+import { brandImagePillSrc } from "@/components/png-pill-rollover";
 
 import { PillColorLayer } from "@/components/png-pill-chrome";
 
@@ -122,6 +124,7 @@ export default function BrandPillButton({
   ...props
 
 }: BrandPillButtonProps) {
+  const brand = useBrand();
 
   const sharedClassName = cn(
 
@@ -138,7 +141,13 @@ export default function BrandPillButton({
   const sharedStyle: React.CSSProperties = { height };
 
   const toneHoverSrc =
-    tone === "blue" ? pillBlue : tone === "red" ? pillRed : undefined;
+    tone === "brand"
+      ? brandImagePillSrc(brand.primary, brand.name)
+      : tone === "blue" ? pillBlue
+      : tone === "red" ? pillRed
+      : tone === "green" ? pillGreen
+      : tone === "amber" ? pillAmber
+      : undefined;
   const hoverRevealSrc = hoverSrc ?? toneHoverSrc;
   const hoverReveal = !!hoverRevealSrc;
   const src = TONE_PILL[tone];

@@ -1042,7 +1042,7 @@ export default function SiteLocationDetail({ id }: { id: number }) {
                     </p>
                   </div>
                 </div>
-                <PngPillButton color="blue"
+                <PngPillButton color="brand"
                   className="w-full"
                   onClick={handleUnhide}
                   disabled={updateSite.isPending}
@@ -1162,7 +1162,7 @@ export default function SiteLocationDetail({ id }: { id: number }) {
           <div className="flex items-center gap-2">
             <Dialog open={expandOpen} onOpenChange={setExpandOpen}>
               <DialogTrigger asChild>
-                <BrandPillButton tone="blue" onClick={handleOpenExpand} data-testid="button-expand-catalog"><ListChecks className="w-4 h-4" />{t("siteLocations.addSiteAssignments")}</BrandPillButton>
+                <BrandPillButton tone="brand" onClick={handleOpenExpand} data-testid="button-expand-catalog"><ListChecks className="w-4 h-4" />{t("siteLocations.addSiteAssignments")}</BrandPillButton>
               </DialogTrigger>
               <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
                 <DialogHeader>
@@ -1261,7 +1261,7 @@ export default function SiteLocationDetail({ id }: { id: number }) {
                   {expandDirty ? (
                     <PngPillButton color="green" onClick={handleSaveExpand} disabled={expandSaving} data-testid="button-save-expand">{expandSaving ? t("siteLocations.saving") : t("siteLocations.save")}</PngPillButton>
                   ) : (
-                    <PngPillButton color="blue" onClick={handleSaveExpand} disabled={expandSaving} data-testid="button-save-expand">{expandSaving ? t("siteLocations.saving") : t("siteLocations.save")}</PngPillButton>
+                    <PngPillButton color="brand" onClick={handleSaveExpand} disabled={expandSaving} data-testid="button-save-expand">{expandSaving ? t("siteLocations.saving") : t("siteLocations.save")}</PngPillButton>
                   )}
                 </div>
               </DialogContent>
@@ -1269,7 +1269,7 @@ export default function SiteLocationDetail({ id }: { id: number }) {
             {canManageAssignments && (
               <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
-                <BrandPillButton tone="blue" data-testid="button-add-assignment"><Plus className="w-4 h-4" />{t("common.add", { defaultValue: "Add" })}</BrandPillButton>
+                <BrandPillButton tone="brand" data-testid="button-add-assignment"><Plus className="w-4 h-4" />{t("common.add", { defaultValue: "Add" })}</BrandPillButton>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader><DialogTitle>{t("siteLocations.addAssignmentTitle")}</DialogTitle></DialogHeader>
@@ -1292,7 +1292,7 @@ export default function SiteLocationDetail({ id }: { id: number }) {
                       </SelectContent>
                     </Select>
                   </div>
-                  <PngPillButton color="blue" type="submit" disabled={createAssignment.isPending} data-testid="button-submit-assignment" className="w-full">{createAssignment.isPending ? t("siteLocations.addingAssignment") : t("siteLocations.addAssignment")}</PngPillButton>
+                  <PngPillButton color="brand" type="submit" disabled={createAssignment.isPending} data-testid="button-submit-assignment" className="w-full">{createAssignment.isPending ? t("siteLocations.addingAssignment") : t("siteLocations.addAssignment")}</PngPillButton>
                 </form>
               </DialogContent>
             </Dialog>
@@ -1382,7 +1382,7 @@ export default function SiteLocationDetail({ id }: { id: number }) {
             {canManageAssignments && (
               <Dialog open={directOpen} onOpenChange={setDirectOpen}>
                 <DialogTrigger asChild>
-                  <PngPillButton color="blue" className="px-2" data-testid="button-add-direct-assignment">
+                  <PngPillButton color="brand" className="px-2" data-testid="button-add-direct-assignment">
                     <Plus className="w-4 h-4" />
                     {t("directAssignment.addButton")}
                   </PngPillButton>
@@ -1483,7 +1483,7 @@ export default function SiteLocationDetail({ id }: { id: number }) {
                       />
                     </div>
                     <PngPillButton
-                      color="blue"
+                      color="brand"
                       type="submit"
 
                       className="w-full px-2"
