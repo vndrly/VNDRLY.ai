@@ -1,4 +1,4 @@
-import { pgTable, text, integer, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, timestamp, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -33,6 +33,10 @@ export const platformSettingsTable = pgTable("platform_settings", {
   // through `getBulkActionRetentionDays()` so a UI change here picks up
   // automatically on the next sweep + the next page load.
   qbBulkActionRetentionDays: integer("qb_bulk_action_retention_days"),
+  workHubEnabled: boolean("work_hub_enabled").notNull().default(false),
+  workHubMeetingRecordingEnabled: boolean("work_hub_meeting_recording_enabled").notNull().default(false),
+  workHubMicrosoft365Enabled: boolean("work_hub_microsoft_365_enabled").notNull().default(false),
+  workHubExportsEnabled: boolean("work_hub_exports_enabled").notNull().default(false),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

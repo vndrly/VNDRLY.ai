@@ -19,6 +19,7 @@
     "migrate:public-data-api-hardening": "tsx scripts/harden-public-data-api.ts",
     "migrate:askv-greeting": "node scripts/apply-askv-greeting-migration.mjs",
     "migrate:assistant-action-audit": "node scripts/apply-assistant-action-audit-migration.mjs",
+    "migrate:work-hub-flags": "node scripts/apply-work-hub-flags-migration.mjs",
     "eval": "vitest run --config vitest.eval.config.ts",
     "eval:tool-use": "vitest run --config vitest.eval.config.ts src/assistant/__evals__/tool-use.eval.ts",
     "eval:tone": "vitest run --config vitest.eval.config.ts src/assistant/__evals__/tone.eval.ts",
