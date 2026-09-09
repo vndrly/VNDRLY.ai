@@ -135,6 +135,7 @@ describe("FieldOpsPortalShell", () => {
     renderShell();
 
     expect(screen.getByTestId("askv-pane")).toBeTruthy();
+    expect(screen.getByTestId("askv-status-toggle").parentElement).toBe(screen.getByTestId("askv-pane"));
     expect((await screen.findByTestId("assistant-launcher")).getAttribute("data-placement")).toBe(
       "askv-pane",
     );

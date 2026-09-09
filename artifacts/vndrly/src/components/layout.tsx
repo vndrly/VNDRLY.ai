@@ -65,6 +65,7 @@ import { withGateLogNav, canViewGateLog } from "@/lib/gate-ops-nav";
 import { visitsApi } from "@/lib/visits-api";
 import { ACCOUNTING_ENABLED, TAX_REPORTING_ENABLED } from "@/lib/release-features";
 import AskVStatusIndicator from "@/components/askv-status-indicator";
+import { orderPortalNavigation } from "@/lib/portal-nav-order";
 import { getWorkHubNavItems, getWorkHubReturnPath, isWorkHubPath } from "@/lib/work-hub-nav";
 
 const AssistantLauncher = React.lazy(() =>
@@ -193,7 +194,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const { t } = useTranslation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const standardNavItems = useNavItems(user);
+  const standardNavItems = orderPortalNavigation(useNavItems(user), user?.role);
   const inWorkHub = isWorkHubPath(location);
   const workHubIcons = { home: LayoutDashboard, channels: MessageSquareOff, calendar: CalendarDays, files: Files, tasks: CheckSquare2, meetings: Video, search: Search, settings: Settings };
   const navItems = inWorkHub ? getWorkHubNavItems(user?.role).map((item) => ({ ...item, icon: workHubIcons[item.key as keyof typeof workHubIcons] })) : standardNavItems;
@@ -418,8 +419,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           className="flex min-h-[48px] shrink-0 items-center justify-end gap-4 overflow-visible px-4 py-2"
           data-testid="askv-pane"
         >
-          <div className="flex items-center gap-3 overflow-visible">
-            <AskVStatusIndicator placement="top-strip" />
+          <AskVStatusIndicator placement="top-strip" />
+          <div className="ml-auto flex items-center gap-3 overflow-visible">
             <Suspense fallback={null}>
               <AssistantLauncher placement="askv-pane" />
             </Suspense>

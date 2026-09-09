@@ -26,6 +26,7 @@
     "migrate:work-hub-imports": "node scripts/apply-work-hub-imports-migration.mjs",
     "migrate:work-hub-channel-visibility": "node scripts/apply-work-hub-channel-visibility-migration.mjs",
     "migrate:work-hub-project-calendar": "node scripts/apply-work-hub-project-calendar-migration.mjs",
+    "migrate:work-hub-meeting-collaboration": "node scripts/apply-work-hub-meeting-collaboration-migration.mjs",
     "eval": "vitest run --config vitest.eval.config.ts",
     "eval:tool-use": "vitest run --config vitest.eval.config.ts src/assistant/__evals__/tool-use.eval.ts",
     "eval:tone": "vitest run --config vitest.eval.config.ts src/assistant/__evals__/tone.eval.ts",

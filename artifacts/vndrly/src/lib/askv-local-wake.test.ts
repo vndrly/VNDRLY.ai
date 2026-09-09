@@ -60,13 +60,13 @@ describe('local wake capture ownership', () => {
     await vi.waitFor(() => expect(grant).toBeDefined()); controller.abort(); grant({ getTracks: () => [track] }); await rejected;
     expect(track.stop).toHaveBeenCalledOnce(); expect(askVMicrophone.owner).toBeNull();
   });
-  it('transfers bounded pre-roll and continuing speech exactly once without reopening capture', async () => {
+  it.each(['V', 'ASKV'])('transfers bounded pre-roll once for %s without reopening capture', async (keyword) => {
     const wake = vi.fn((value: WakeAudioSource) => { source = value; });
     listener = await startLocalWake({ signal: controller.signal, onWake: wake, onError: vi.fn() });
     WorkletFake.last.emit(0.25); WorkerFake.last.emit({ type: 'consumed' });
     expect(getAskVMicrophoneState().level).toBeGreaterThan(0);
-    WorkerFake.last.emit({ type: 'wake', keyword: 'V' }); expect(wake).not.toHaveBeenCalled();
-    WorkerFake.last.emit({ type: 'wake', keyword: 'ASKV' }); WorkerFake.last.emit({ type: 'wake', keyword: 'ASKV' });
+    WorkerFake.last.emit({ type: 'wake', keyword: 'Vendor' }); expect(wake).not.toHaveBeenCalled();
+    WorkerFake.last.emit({ type: 'wake', keyword }); WorkerFake.last.emit({ type: 'wake', keyword });
     expect(wake).toHaveBeenCalledOnce(); expect(listener.transferred).toBe(true);
     controller.abort(); expect(track.stop).not.toHaveBeenCalled();
     WorkletFake.last.emit(0.5);

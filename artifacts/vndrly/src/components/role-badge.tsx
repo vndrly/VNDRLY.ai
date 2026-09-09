@@ -1,5 +1,8 @@
 import { useTranslation } from "react-i18next";
 import ImagePill, { type ImagePillColor } from "@/components/image-pill";
+import { brandImagePillSrc } from "@/components/png-pill-rollover";
+import { useBrand } from "@/hooks/use-brand";
+import { PILL_IDLE } from "@/lib/pill-palette-assets";
 import { PILL_HEIGHT_PX } from "@/lib/pill-doctrine";
 
 const roleConfig: Record<
@@ -33,12 +36,17 @@ interface RoleBadgeProps {
  */
 export default function RoleBadge({ role, className, height = PILL_HEIGHT_PX, "data-testid": dataTestId }: RoleBadgeProps) {
   const { t } = useTranslation();
+  const brand = useBrand();
   const cfg = roleConfig[role || "field"] || roleConfig.field;
+  // Admin remains an amber authority marker. All other roles follow the
+  // active company, including the field/office wrappers and team menus.
+  const isAdmin = role === "admin";
+  const brandSrc = brandImagePillSrc(brand.primary, brand.name);
   const label = t(cfg.labelKey, { defaultValue: cfg.fallback });
   return (
     <ImagePill
-      color={cfg.color}
-      rest={cfg.isRest}
+      color={isAdmin ? cfg.color : brandSrc === PILL_IDLE ? "grey" : "blue"}
+      activeSrc={isAdmin ? undefined : brandSrc}
       height={height}
       className={className}
       data-testid={dataTestId ?? `employee-role-pill-${(cfg.fallback || "").toLowerCase()}`}

@@ -24,13 +24,13 @@ describe("native wake audio bridge", () => {
     native.available = false;
     expect(createLocalAskVWakeDetector({ onWake: () => {}, onError: () => {} })).toBeNull();
   });
-  it("hands pre-roll and subsequent audio to one source and never wakes on V", async () => {
+  it.each(["V", "AskV"])("hands pre-roll and subsequent audio to one source for %s", async (keyword) => {
     const onWake = vi.fn();
     const detector = createLocalAskVWakeDetector({ onWake, onError: () => {} })!;
     await detector.start();
-    native.listeners.get("onWake")!({ keyword: "V", samples: [0.1], sampleRate: 16000 });
+    native.listeners.get("onWake")!({ keyword: "Vendor", samples: [0.1], sampleRate: 16000 });
     expect(onWake).not.toHaveBeenCalled();
-    native.listeners.get("onWake")!({ keyword: "AskV", samples: [0.25, 0.5], sampleRate: 16000 });
+    native.listeners.get("onWake")!({ keyword, samples: [0.25, 0.5], sampleRate: 16000 });
     native.listeners.get("onAudio")!({ samples: [0.75], sampleRate: 16000 });
     const received: number[] = [];
     detector.audioSource.subscribe(frame => received.push(...frame));

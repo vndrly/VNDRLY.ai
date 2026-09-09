@@ -304,8 +304,8 @@ export function FieldOpsPortalShell({
           className="flex min-h-[48px] shrink-0 items-center justify-end gap-4 overflow-visible px-4 py-2"
           data-testid="askv-pane"
         >
-          <div className="flex items-center gap-3 overflow-visible">
-            <AskVStatusIndicator placement="top-strip" />
+          <AskVStatusIndicator placement="top-strip" />
+          <div className="ml-auto flex items-center gap-3 overflow-visible">
             <Suspense fallback={null}>
               <AssistantLauncher placement="askv-pane" />
             </Suspense>

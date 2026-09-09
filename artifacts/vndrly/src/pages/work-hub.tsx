@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import BrandPillButton from "@/components/brand-pill-button";
-import MeetingAudioRoom from "@/components/meeting-audio-room";
+import MeetingWorkspace from "@/components/meeting-workspace";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -1830,30 +1830,7 @@ function MeetingsModule() {
           </Card>
         )}
       </div>
-      {selected && (
-        <Card className="mt-4">
-          <CardHeader>
-            <CardTitle>Meeting workspace</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-4">
-            <MeetingAudioRoom occurrenceId={selected} />
-            <section>
-              <h3 className="font-semibold">Transcript and catch-up notes</h3>
-              {(catchUp.data?.transcript ?? []).map((line: Row) => (
-                <p key={line.id} className="mt-2 rounded-lg border p-3 text-sm">
-                  {line.text}
-                </p>
-              ))}
-              {!catchUp.data?.transcript?.length && (
-                <Empty>
-                  Transcript, decisions, and action items will appear here for
-                  invited participants.
-                </Empty>
-              )}
-            </section>
-          </CardContent>
-        </Card>
-      )}
+      {selected && <div className="mt-4"><MeetingWorkspace key={selected} occurrenceId={selected} /></div>}
     </Shell>
   );
 }

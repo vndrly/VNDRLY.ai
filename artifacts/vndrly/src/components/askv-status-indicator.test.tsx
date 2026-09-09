@@ -17,9 +17,10 @@ vi.mock("@/hooks/use-askv-voice-session", () => ({
 }));
 
 import AskVStatusIndicator from "./askv-status-indicator";
+import LiveConnectionPill from "./live-connection-pill";
 
 describe("AskVStatusIndicator", () => {
-  beforeEach(() => setMuted.mockClear());
+  beforeEach(() => { setMuted.mockClear(); voice.muted = true; voice.state = "idle"; voice.wakeReady = false; voice.availabilityStatus = "available"; });
 
   it("turns natural voice on directly from the Muted control", () => {
     render(<AskVStatusIndicator />);
@@ -57,15 +58,34 @@ describe("AskVStatusIndicator", () => {
     expect(toggle.className).toContain("focus-visible:outline-none");
   });
 
-  it("uses the narrower vertically-centered treatment only in the top strip", () => {
+  it("uses a gray restart pill in the top strip without changing the approved modal control", () => {
     const { rerender } = render(<AskVStatusIndicator placement="top-strip" />);
-    const topStripButton = screen.getByRole("button", { name: "Go Live with AskV" });
-    expect(topStripButton.className).toContain("min-w-[62px]");
-    expect(topStripButton.className).toContain("translate-y-0");
+    const topStripButton = screen.getByRole("button", { name: "Click to restart V" });
+    expect(topStripButton.getAttribute("data-color")).toBe("grey");
+    expect(topStripButton.getAttribute("aria-pressed")).toBe("false");
+    fireEvent.click(topStripButton);
+    expect(setMuted).toHaveBeenCalledWith(false);
 
     rerender(<AskVStatusIndicator />);
     const modalButton = screen.getByRole("button", { name: "Go Live with AskV" });
     expect(modalButton.className).toContain("min-w-[74px]");
     expect(modalButton.className).toContain("-translate-y-1");
+  });
+  it("matches the Hotlist Live pill artwork and height when V is listening", () => {
+    voice.muted = false; voice.state = "listening";
+    render(<><AskVStatusIndicator placement="top-strip" /><LiveConnectionPill status="live" /></>);
+    const button = screen.getByRole("button", { name: "V is listening" });
+    const hotlist = screen.getByTestId("live-connection-pill");
+    expect(button.querySelector("img")!.getAttribute("src")).toBe(hotlist.querySelector("img")!.getAttribute("src"));
+    expect(button.style.height).toBe(hotlist.style.height);
+    expect(button.getAttribute("data-color")).toBe("green");
+    fireEvent.click(button);
+    expect(setMuted).toHaveBeenCalledWith(true);
+  });
+  it("offers restart instead of claiming listening when unmuted but disconnected", () => {
+    voice.muted = false; voice.state = "stopped";
+    render(<AskVStatusIndicator placement="top-strip" />);
+    fireEvent.click(screen.getByRole("button", { name: "Click to restart V" }));
+    expect(setMuted).toHaveBeenCalledWith(false);
   });
 });

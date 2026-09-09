@@ -51,3 +51,13 @@ test("API deploy builds, migrates, restarts, and health-checks without touching 
   assert.doesNotMatch(workflow, /\b(?:DROP|TRUNCATE)\b/i);
   assert.doesNotMatch(workflow, /tee \.env\.production/);
 });
+
+test("API deploy configures the VNDRLY-owned TURN relay before restarting meetings", () => {
+  assert.match(workflow, /coturn/);
+  assert.match(workflow, /VNDRLY_STUN_URL/);
+  assert.match(workflow, /VNDRLY_TURN_URL/);
+  assert.match(workflow, /VNDRLY_TURN_USERNAME/);
+  assert.match(workflow, /VNDRLY_TURN_CREDENTIAL/);
+  assert.match(workflow, /systemctl restart coturn/);
+  assert.ok(workflow.indexOf("systemctl restart coturn") < workflow.indexOf("systemctl restart vndrly-api"));
+});
