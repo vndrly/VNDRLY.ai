@@ -1,6 +1,6 @@
 /** Platform-neutral primitives; microphone audio must never be persisted here. */
 export function isWakeKeyword(value: string): boolean {
-  return /^ask\s?v$/i.test(value.trim());
+  return /^(?:ask\s?v|v)$/i.test(value.trim());
 }
 
 export class PcmRingBuffer {

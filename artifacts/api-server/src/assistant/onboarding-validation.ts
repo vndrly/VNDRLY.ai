@@ -57,8 +57,6 @@ export const STEP_REQUIRED_FIELDS: Record<Persona, Record<string, readonly strin
       "taxIds.billingAddress",
     ],
     "work-types": ["serviceArea.operatingRadiusMiles", "workTypeIds"],
-    "compliance": [],
-    "rates": [],
     "first-employee": ["firstEmployee.firstName", "firstEmployee.lastName", "firstEmployee.email"],
     "company-basics": [],
   },
@@ -91,10 +89,6 @@ export const PAYLOAD_TOP_KEYS: Record<Persona, readonly string[]> = {
     "taxIds",
     "serviceArea",
     "workTypeIds",
-    "compliance",
-    "rates",
-    "overtimeMultiplier",
-    "eDeliveryConsent",
     "branding",
     "firstEmployee",
   ],
@@ -119,7 +113,7 @@ export function isPayloadFieldFilled(value: unknown): boolean {
   if (value === null || value === undefined) return false;
   if (typeof value === "string") return value.trim().length > 0;
   if (typeof value === "number") return Number.isFinite(value);
-  if (typeof value === "boolean") return true; // explicit false is "filled" (e.g. eDeliveryConsent)
+  if (typeof value === "boolean") return true; // explicit false is still a filled field
   if (Array.isArray(value)) return value.length > 0;
   if (typeof value === "object") return Object.keys(value as Record<string, unknown>).length > 0;
   return false;

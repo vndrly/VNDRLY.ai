@@ -11,6 +11,10 @@ let activeAudio: HTMLAudioElement | null = null;
 let activeObjectUrl: string | null = null;
 let openAiSpeechPending = false;
 
+export function speechPronunciationText(text: string): string {
+  return text.replace(/\bVNDRLY\b/gi, "Vinderly");
+}
+
 export function markdownToSpeechText(text: string): string {
   return text
     .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
@@ -77,7 +81,7 @@ export function isAskVSpeaking(): boolean {
 }
 
 export function speakAskV(text: string, language = "en-US"): void {
-  const plain = markdownToSpeechText(text);
+  const plain = speechPronunciationText(markdownToSpeechText(text));
   if (!plain) return;
 
   const runId = speechRunId + 1;

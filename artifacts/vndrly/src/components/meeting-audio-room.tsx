@@ -3,7 +3,7 @@ import BrandPillButton from "@/components/brand-pill-button";
 import { workHubRequest } from "@/lib/work-hub-client";
 import { transcribeAskVRecording } from "@/lib/askv-transcribe";
 
-type JoinResult = { roomId: string; userId: number; participants: Array<{ userId: number; role: string }> };
+type JoinResult = { roomId: string; userId: number; participants: Array<{ userId: number; role: string }>; iceServers: RTCIceServer[] };
 type Signal = { id: string; fromUserId: number; kind: "offer" | "answer" | "ice"; payload: any; createdAt: number };
 
 export default function MeetingAudioRoom({ occurrenceId }: { occurrenceId: string }) {
@@ -17,10 +17,11 @@ export default function MeetingAudioRoom({ occurrenceId }: { occurrenceId: strin
   const cursor = useRef(0);
   const recorder = useRef<MediaRecorder | null>(null);
   const joinedAt = useRef(0);
+  const iceServers = useRef<RTCIceServer[]>([]);
   const sendSignal = (toUserId: number, kind: Signal["kind"], payload: unknown) => workHubRequest(`/meetings/${occurrenceId}/signal`, { method: "POST", body: JSON.stringify({ toUserId, kind, payload }) });
   const peerFor = (userId: number) => {
     const existing = peers.current.get(userId); if (existing) return existing;
-    const peer = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
+    const peer = new RTCPeerConnection({ iceServers: iceServers.current });
     local.current?.getTracks().forEach((track) => peer.addTrack(track, local.current!));
     peer.onicecandidate = (event) => { if (event.candidate) void sendSignal(userId, "ice", event.candidate.toJSON()); };
     peer.ontrack = (event) => { remote.current.set(userId, event.streams[0]); const audio = document.getElementById(`meeting-audio-${userId}`) as HTMLAudioElement | null; if (audio) audio.srcObject = event.streams[0]; };
@@ -30,7 +31,7 @@ export default function MeetingAudioRoom({ occurrenceId }: { occurrenceId: strin
     try {
       local.current = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: false });
       local.current.getAudioTracks().forEach((track) => { track.enabled = false; });
-      const result = await workHubRequest<JoinResult>(`/meetings/${occurrenceId}/join`, { method: "POST", body: "{}" }); setJoined(result);
+      const result = await workHubRequest<JoinResult>(`/meetings/${occurrenceId}/join`, { method: "POST", body: "{}" }); iceServers.current = result.iceServers; setJoined(result);
       joinedAt.current = Date.now();
       if (typeof MediaRecorder !== "undefined") {
         const mediaRecorder = new MediaRecorder(local.current);

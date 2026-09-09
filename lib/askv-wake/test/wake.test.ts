@@ -2,10 +2,11 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { PcmRingBuffer, PcmResampler, MicrophoneCoordinator, isWakeKeyword, encodePcm16Base64 } from '../src/index.ts';
 
-test('only the complete Ask V phrase activates', () => {
+test('Ask V and standalone V activate', () => {
   assert.equal(isWakeKeyword('ASK V'), true);
   assert.equal(isWakeKeyword('AskV'), true);
-  for (const text of ['V', 'ask me', 'ask Steve', 'please ask V later', '']) assert.equal(isWakeKeyword(text), false);
+  assert.equal(isWakeKeyword('V'), true);
+  for (const text of ['ask me', 'ask Steve', 'please ask V later', 'vendor', '']) assert.equal(isWakeKeyword(text), false);
 });
 
 test('ring keeps newest samples in order and clears private audio', () => {

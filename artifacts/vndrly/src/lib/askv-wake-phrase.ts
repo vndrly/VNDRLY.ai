@@ -5,5 +5,6 @@ export function isAskVWakePhrase(text: string, confidence = 1): boolean {
     .replace(/[^\w\s]/g, "")
     .replace(/\s+/g, " ");
   if (normalized === "askv" || normalized === "ask v") return confidence >= 0.65;
+  if (normalized === "v") return confidence >= 0.9;
   return false;
 }

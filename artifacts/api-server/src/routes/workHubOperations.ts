@@ -76,6 +76,7 @@ import { notifyUsers } from "./notifications";
 import { sessionCanSeeOwner } from "../work-hub/owner-boundary";
 import { appendWorkHubAudit } from "../work-hub/audit";
 import { microsoftImportStatus } from "../work-hub/microsoft-import";
+import { resolveVndrlyIceServers } from "../work-hub/audio-provider";
 import {
   assertOwnerMatchesChannel,
   assertOwnerUsers,
@@ -1860,6 +1861,7 @@ router.post("/work-hub/meetings/:occurrenceId/join", async (req, res) => {
       handRaisedAt,
     })),
     transcription: true,
+    iceServers: resolveVndrlyIceServers(),
   });
 });
 

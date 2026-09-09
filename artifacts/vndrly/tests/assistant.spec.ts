@@ -577,7 +577,7 @@ describe("onboarding flows", () => {
         expectedCode: "required_step_skipped",
       },
       {
-        label: "complete rates with no hourly rate",
+        label: "attempt removed rates step",
         run: () =>
           validateStepCompletion({
             persona: "vendor",
@@ -586,7 +586,7 @@ describe("onboarding flows", () => {
             skipped: false,
             existing: { currentStep: "rates", payload: { rates: {} } },
           }),
-        expectedCode: "missing_required_fields",
+        expectedCode: "invalid_step_name",
       },
       {
         label: "set vendor field at unknown top-level key",
@@ -599,7 +599,7 @@ describe("onboarding flows", () => {
           validateStepCompletion({
             persona: "vendor",
             step: "tax-ids",
-            nextStep: "rates",
+            nextStep: "first-employee",
             skipped: false,
             existing: { currentStep: "tax-ids", payload: buildHappyPayload("vendor", "tax-ids") },
           }),

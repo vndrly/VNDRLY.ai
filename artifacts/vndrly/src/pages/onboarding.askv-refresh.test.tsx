@@ -63,9 +63,9 @@ describe("AskV onboarding refresh on the active wizard", () => {
   });
 
   it("propagates a committed voice step through the provider to both the wizard and progress widget", async () => {
-    mocks.getMine.mockResolvedValue(saved(row("vendor", "rates", { rates: { hourlyRate: "40" } })));
+    mocks.getMine.mockResolvedValue(saved(row("vendor", "work-types", { serviceArea: { operatingRadiusMiles: 40 }, workTypeIds: [] })));
     renderPage(OnboardingVendor, true);
-    await screen.findByTestId("step-rates-body");
+    await screen.findByTestId("step-work-types-body");
     mocks.getMine.mockResolvedValue(saved(row("vendor", "first-employee", { firstEmployee: { firstName: "Morgan", lastName: "Saved", email: "morgan@example.invalid" } })));
     act(() => mocks.realtimeOptions?.onMutation?.({ name: "complete_onboarding_step", refresh: ["onboarding"] }));
     await screen.findByTestId("step-first-employee-body");
@@ -74,13 +74,13 @@ describe("AskV onboarding refresh on the active wizard", () => {
   });
 
   it.each([
-    { Page: OnboardingVendor, orgType: "vendor" as const, step: "rates", field: "input-hourly-rate", payload: { rates: { hourlyRate: "40" } }, updated: { rates: { hourlyRate: "55" } }, value: "55" },
+    { Page: OnboardingVendor, orgType: "vendor" as const, step: "work-types", field: "input-service-radius", payload: { serviceArea: { operatingRadiusMiles: 40 }, workTypeIds: [] }, updated: { serviceArea: { operatingRadiusMiles: 55 }, workTypeIds: [] }, value: "55" },
     { Page: OnboardingPartner, orgType: "partner" as const, step: "first-site", field: "input-site-name", payload: { firstSite: { name: "Saved site" } }, updated: { firstSite: { name: "Voice site" } }, value: "Voice site" },
   ])("preserves $orgType drafts for unrelated events and refreshes saved onboarding fields", async ({ Page, orgType, step, field, payload, updated, value }) => {
     mocks.getMine.mockResolvedValue(saved(row(orgType, step, payload)));
     renderPage(Page);
     const input = await screen.findByTestId(field);
-    fireEvent.change(input, { target: { value: field === "input-hourly-rate" ? "125" : "Unsaved site" } });
+    fireEvent.change(input, { target: { value: field === "input-service-radius" ? "125" : "Unsaved site" } });
     const draft = (input as HTMLInputElement).value;
     mocks.getMine.mockResolvedValue(saved(row(orgType, step, updated)));
     const requestsBefore = mocks.getMine.mock.calls.length;
