@@ -47,11 +47,13 @@ import {
   workHubFormSubmissionsTable,
   workHubTranscriptSegmentsTable,
   workHubAuditLogTable,
+  siteWorkAssignmentsTable,
   usersTable,
 } from "@workspace/db";
 import {
   workHubCommandEnvelopeSchema,
   type WorkHubOwner,
+  type WorkHubContextRef,
 } from "@workspace/api-zod";
 import { getSessionFromRequest, type SessionPayload } from "../lib/session";
 import { sendApiError } from "../lib/apiError";
@@ -74,12 +76,30 @@ import { notifyUsers } from "./notifications";
 import { sessionCanSeeOwner } from "../work-hub/owner-boundary";
 import { appendWorkHubAudit } from "../work-hub/audit";
 import { microsoftImportStatus } from "../work-hub/microsoft-import";
+import {
+  assertOwnerMatchesChannel,
+  assertOwnerUsers,
+} from "../work-hub/owner-users";
 
 const router: IRouter = Router();
 const storage = new ObjectStorageService();
-type MeetingSignal = { id: string; occurrenceId: string; fromUserId: number; toUserId: number | null; kind: "offer" | "answer" | "ice"; payload: unknown; createdAt: number };
+type MeetingSignal = {
+  id: string;
+  occurrenceId: string;
+  fromUserId: number;
+  toUserId: number | null;
+  kind: "offer" | "answer" | "ice";
+  payload: unknown;
+  createdAt: number;
+};
 const meetingSignals = new Map<string, MeetingSignal[]>();
-function pruneMeetingSignals(now = Date.now()) { for (const [key, values] of meetingSignals) { const fresh = values.filter((value) => now - value.createdAt < 5 * 60_000); if (fresh.length) meetingSignals.set(key, fresh); else meetingSignals.delete(key); } }
+function pruneMeetingSignals(now = Date.now()) {
+  for (const [key, values] of meetingSignals) {
+    const fresh = values.filter((value) => now - value.createdAt < 5 * 60_000);
+    if (fresh.length) meetingSignals.set(key, fresh);
+    else meetingSignals.delete(key);
+  }
+}
 type Actor = SessionPayload & { userId: number };
 function actor(req: Request): Actor | null {
   const value = getSessionFromRequest(req);
@@ -88,15 +108,40 @@ function actor(req: Request): Actor | null {
 function clientSource(req: Request): "web" | "ios" {
   return req.header("x-vndrly-client") === "ios" ? "ios" : "web";
 }
-function ownAccess(
+async function ownAccess(
   session: Actor,
   owner: WorkHubOwner,
   capability: Parameters<typeof requireWorkHubCapability>[1],
+  context: WorkHubContextRef = { kind: "organization", id: owner.id },
 ) {
+  if (
+    session.vendorRole === "gate_supervisor" &&
+    (capability === "task.assign" || capability === "shift.manage")
+  ) {
+    if (
+      owner.type !== "vendor" ||
+      (context.kind !== "gate" && context.kind !== "site")
+    )
+      throw new WorkHubAccessError("forbidden");
+    const siteId = Number(context.id);
+    if (!Number.isInteger(siteId) || siteId <= 0)
+      throw new WorkHubAccessError("not_found");
+    const [assignment] = await db
+      .select({ id: siteWorkAssignmentsTable.id })
+      .from(siteWorkAssignmentsTable)
+      .where(
+        and(
+          eq(siteWorkAssignmentsTable.vendorId, owner.id),
+          eq(siteWorkAssignmentsTable.siteLocationId, siteId),
+        ),
+      )
+      .limit(1);
+    if (!assignment) throw new WorkHubAccessError("not_found");
+  }
   const access = createWorkHubAccess({
     session,
     owner,
-    context: { kind: "organization", id: owner.id },
+    context,
     participant: true,
   });
   requireWorkHubCapability(access, capability);
@@ -126,6 +171,40 @@ function failure(res: Response, error: unknown): void {
     return;
   }
   throw error;
+}
+
+async function claimOpenShift(shiftId: string, userId: number) {
+  return db.transaction(async (tx) => {
+    const [claimedShift] = await tx
+      .update(workHubShiftsTable)
+      .set({ open: false, updatedAt: new Date() })
+      .where(
+        and(
+          eq(workHubShiftsTable.id, shiftId),
+          eq(workHubShiftsTable.open, true),
+        ),
+      )
+      .returning({ id: workHubShiftsTable.id });
+    if (!claimedShift) return null;
+    const [assignment] = await tx
+      .insert(workHubShiftAssignmentsTable)
+      .values({
+        shiftId,
+        userId,
+        status: "claimed",
+        assignedById: userId,
+      })
+      .returning();
+    await tx.insert(workHubShiftRequestsTable).values({
+      shiftId,
+      requestType: "claim",
+      requestedById: userId,
+      status: "approved",
+      decidedById: userId,
+      decidedAt: new Date(),
+    });
+    return assignment;
+  });
 }
 function ownerFilter(session: Actor) {
   return session.role === "admin"
@@ -177,7 +256,13 @@ router.use("/work-hub", async (_req, res, next) => {
 
 router.get("/work-hub/audit", async (req, res) => {
   const session = actor(req);
-  if (!session) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
+  if (!session)
+    return sendApiError(
+      res,
+      401,
+      "auth.unauthenticated",
+      "Authentication required",
+    );
   const owner = session.vendorId
     ? { type: "vendor" as const, id: session.vendorId }
     : session.partnerId
@@ -185,24 +270,36 @@ router.get("/work-hub/audit", async (req, res) => {
       : null;
   if (!owner) return sendApiError(res, 404, "work_hub.not_found", "Not found");
   try {
-    ownAccess(session, owner, "policy.manage");
-    const rows = await db.select({
-      id: workHubAuditLogTable.id,
-      action: workHubAuditLogTable.action,
-      subjectType: workHubAuditLogTable.subjectType,
-      subjectId: workHubAuditLogTable.subjectId,
-      source: workHubAuditLogTable.source,
-      metadata: workHubAuditLogTable.metadata,
-      createdAt: workHubAuditLogTable.createdAt,
-      actorUserId: workHubAuditLogTable.actorUserId,
-      actorName: usersTable.displayName,
-    }).from(workHubAuditLogTable)
+    await ownAccess(session, owner, "policy.manage");
+    const rows = await db
+      .select({
+        id: workHubAuditLogTable.id,
+        action: workHubAuditLogTable.action,
+        subjectType: workHubAuditLogTable.subjectType,
+        subjectId: workHubAuditLogTable.subjectId,
+        source: workHubAuditLogTable.source,
+        metadata: workHubAuditLogTable.metadata,
+        createdAt: workHubAuditLogTable.createdAt,
+        actorUserId: workHubAuditLogTable.actorUserId,
+        actorName: usersTable.displayName,
+      })
+      .from(workHubAuditLogTable)
       .leftJoin(usersTable, eq(usersTable.id, workHubAuditLogTable.actorUserId))
-      .where(and(eq(workHubAuditLogTable.ownerOrgType, owner.type), eq(workHubAuditLogTable.ownerOrgId, owner.id)))
-      .orderBy(desc(workHubAuditLogTable.createdAt), desc(workHubAuditLogTable.id))
+      .where(
+        and(
+          eq(workHubAuditLogTable.ownerOrgType, owner.type),
+          eq(workHubAuditLogTable.ownerOrgId, owner.id),
+        ),
+      )
+      .orderBy(
+        desc(workHubAuditLogTable.createdAt),
+        desc(workHubAuditLogTable.id),
+      )
       .limit(Math.min(200, Math.max(1, Number(req.query.limit) || 100)));
     return res.json(rows);
-  } catch (error) { return failure(res, error); }
+  } catch (error) {
+    return failure(res, error);
+  }
 });
 
 router.get("/work-hub/home", async (req, res) => {
@@ -343,14 +440,30 @@ router.get("/work-hub/files", async (req, res) => {
       "auth.unauthenticated",
       "Authentication required",
     );
-  const candidates = await db.select().from(workHubFilesTable)
+  const candidates = await db
+    .select()
+    .from(workHubFilesTable)
     .where(eq(workHubFilesTable.state, "finalized"))
-    .orderBy(desc(workHubFilesTable.finalizedAt)).limit(500);
-  const visible = (await Promise.all(candidates.map(async (file) => {
-    if (!file.channelId) return sessionCanSeeOwner(session, file.ownerOrgType, file.ownerOrgId) ? file : null;
-    try { await resolveChannelAccess(session, file.channelId, "channel.read"); return file; }
-    catch { return null; }
-  }))).filter(Boolean).slice(0, 100);
+    .orderBy(desc(workHubFilesTable.finalizedAt))
+    .limit(500);
+  const visible = (
+    await Promise.all(
+      candidates.map(async (file) => {
+        if (!file.channelId)
+          return sessionCanSeeOwner(session, file.ownerOrgType, file.ownerOrgId)
+            ? file
+            : null;
+        try {
+          await resolveChannelAccess(session, file.channelId, "channel.read");
+          return file;
+        } catch {
+          return null;
+        }
+      }),
+    )
+  )
+    .filter(Boolean)
+    .slice(0, 100);
   return res.json(visible);
 });
 
@@ -535,7 +648,7 @@ async function createTemplate(
     );
   try {
     const envelope = workHubCommandEnvelopeSchema.parse(req.body);
-    ownAccess(session, envelope.owner, "task.assign");
+    await ownAccess(session, envelope.owner, "task.assign", envelope.context);
     const payload = templatePayload.parse(envelope.payload);
     const result = await executeWorkHubCommand(
       { userId: session.userId, source: clientSource(req) },
@@ -608,7 +721,7 @@ async function assignTemplate(
     );
   try {
     const envelope = workHubCommandEnvelopeSchema.parse(req.body);
-    ownAccess(session, envelope.owner, "task.assign");
+    await ownAccess(session, envelope.owner, "task.assign", envelope.context);
     const templateId = String(req.params.id);
     const payload = z
       .object({
@@ -617,6 +730,7 @@ async function assignTemplate(
         dueAt: z.iso.datetime().nullable().optional(),
       })
       .parse(envelope.payload);
+    await assertOwnerUsers(envelope.owner, [payload.assigneeUserId]);
     const template =
       kind === "checklist"
         ? (
@@ -888,7 +1002,7 @@ router.post("/work-hub/admin/approvals", async (req, res) => {
     );
   try {
     const envelope = workHubCommandEnvelopeSchema.parse(req.body);
-    ownAccess(session, envelope.owner, "task.assign");
+    await ownAccess(session, envelope.owner, "task.assign", envelope.context);
     const payload = z
       .object({
         subjectType: z.string().min(1).max(80),
@@ -899,6 +1013,7 @@ router.post("/work-hub/admin/approvals", async (req, res) => {
       })
       .parse(envelope.payload);
     const approvers = [...new Set(payload.approverUserIds)];
+    await assertOwnerUsers(envelope.owner, approvers);
     const result = await executeWorkHubCommand(
       { userId: session.userId, source: clientSource(req) },
       "approval.create",
@@ -1064,7 +1179,7 @@ router.post("/work-hub/tasks", async (req, res) => {
     );
   try {
     const envelope = workHubCommandEnvelopeSchema.parse(req.body);
-    ownAccess(session, envelope.owner, "task.assign");
+    await ownAccess(session, envelope.owner, "task.assign", envelope.context);
     const payload = z
       .object({
         title: z.string().trim().min(1).max(200),
@@ -1076,6 +1191,10 @@ router.post("/work-hub/tasks", async (req, res) => {
         recurrence: z.unknown().nullable().optional(),
       })
       .parse(envelope.payload);
+    await assertOwnerUsers(
+      envelope.owner,
+      payload.assigneeUserId ? [payload.assigneeUserId] : [],
+    );
     if (payload.channelId)
       await resolveChannelAccess(session, payload.channelId, "task.assign");
     const recurrence = payload.recurrence
@@ -1199,7 +1318,12 @@ router.post("/work-hub/announcements", async (req, res) => {
     );
   try {
     const envelope = workHubCommandEnvelopeSchema.parse(req.body);
-    ownAccess(session, envelope.owner, "announcement.publish");
+    await ownAccess(
+      session,
+      envelope.owner,
+      "announcement.publish",
+      envelope.context,
+    );
     const payload = z
       .object({
         title: z.string().trim().min(1).max(200),
@@ -1211,6 +1335,7 @@ router.post("/work-hub/announcements", async (req, res) => {
       })
       .parse(envelope.payload);
     const recipients = [...new Set(payload.recipientUserIds)];
+    await assertOwnerUsers(envelope.owner, recipients);
     const result = await executeWorkHubCommand(
       { userId: session.userId, source: clientSource(req) },
       "announcement.publish",
@@ -1423,7 +1548,7 @@ router.post("/work-hub/shifts", async (req, res) => {
     );
   try {
     const envelope = workHubCommandEnvelopeSchema.parse(req.body);
-    ownAccess(session, envelope.owner, "shift.manage");
+    await ownAccess(session, envelope.owner, "shift.manage", envelope.context);
     const payload = z
       .object({
         title: z.string().trim().min(1).max(200),
@@ -1439,11 +1564,20 @@ router.post("/work-hub/shifts", async (req, res) => {
         recurrence: z.unknown().nullable().optional(),
         calendarType: z.enum(["company", "project"]).default("company"),
         projectName: z.string().trim().max(200).nullable().optional(),
-        milestoneStatus: z.enum(["completed", "in_progress", "upcoming", "blocked", "overdue"]).default("upcoming"),
+        milestoneStatus: z
+          .enum(["completed", "in_progress", "upcoming", "blocked", "overdue"])
+          .default("upcoming"),
         percentComplete: z.number().int().min(0).max(100).default(0),
-        sharedWithUserIds: z.array(z.number().int().positive()).max(500).default([]),
+        sharedWithUserIds: z
+          .array(z.number().int().positive())
+          .max(500)
+          .default([]),
       })
       .parse(envelope.payload);
+    await assertOwnerUsers(envelope.owner, [
+      ...payload.assigneeUserIds,
+      ...payload.sharedWithUserIds,
+    ]);
     if (new Date(payload.startsAt) >= new Date(payload.endsAt))
       throw new z.ZodError([]);
     const recurrence = payload.recurrence
@@ -1525,31 +1659,14 @@ router.post("/work-hub/shifts/:id/claim", async (req, res) => {
       "work_hub.invalid_operation",
       "Shift is not open",
     );
-  const [assignment] = await db
-    .insert(workHubShiftAssignmentsTable)
-    .values({
-      shiftId: shift.id,
-      userId: session.userId,
-      status: "claimed",
-      assignedById: session.userId,
-    })
-    .onConflictDoNothing()
-    .returning();
+  const assignment = await claimOpenShift(shift.id, session.userId);
   if (!assignment)
     return sendApiError(
       res,
       409,
       "work_hub.invalid_operation",
-      "Shift was already claimed by this user",
+      "Shift was already claimed",
     );
-  await db.insert(workHubShiftRequestsTable).values({
-    shiftId: shift.id,
-    requestType: "claim",
-    requestedById: session.userId,
-    status: "approved",
-    decidedById: session.userId,
-    decidedAt: new Date(),
-  });
   return res.status(201).json(assignment);
 });
 
@@ -1564,7 +1681,7 @@ router.post("/work-hub/meetings", async (req, res) => {
     );
   try {
     const envelope = workHubCommandEnvelopeSchema.parse(req.body);
-    ownAccess(session, envelope.owner, "meeting.host");
+    await ownAccess(session, envelope.owner, "meeting.host", envelope.context);
     const payload = z
       .object({
         title: z.string().trim().min(1).max(200),
@@ -1586,6 +1703,7 @@ router.post("/work-hub/meetings", async (req, res) => {
     const participants = [
       ...new Set([session.userId, ...payload.participantUserIds]),
     ];
+    await assertOwnerUsers(envelope.owner, payload.participantUserIds);
     const result = await executeWorkHubCommand(
       { userId: session.userId, source: clientSource(req) },
       "meeting.create",
@@ -1709,49 +1827,217 @@ router.post("/work-hub/meetings/:occurrenceId/join", async (req, res) => {
     );
   if (!participant)
     return sendApiError(res, 404, "work_hub.not_found", "Not found");
-  const [occurrence] = await db.select().from(workHubMeetingOccurrencesTable).where(eq(workHubMeetingOccurrencesTable.id, req.params.occurrenceId));
-  if (!occurrence) return sendApiError(res, 404, "work_hub.not_found", "Not found");
+  const [occurrence] = await db
+    .select()
+    .from(workHubMeetingOccurrencesTable)
+    .where(eq(workHubMeetingOccurrencesTable.id, req.params.occurrenceId));
+  if (!occurrence)
+    return sendApiError(res, 404, "work_hub.not_found", "Not found");
   const roomId = occurrence.providerRoomId ?? `vndrly-${randomUUID()}`;
-  if (!occurrence.providerRoomId) await db.update(workHubMeetingOccurrencesTable).set({ providerRoomId: roomId, status: "live", transcriptState: "active" }).where(eq(workHubMeetingOccurrencesTable.id, occurrence.id));
-  await db.insert(workHubMeetingAttendanceTable).values({ occurrenceId: occurrence.id, userId: session.userId });
-  const participants = await db.select().from(workHubMeetingParticipantsTable).where(eq(workHubMeetingParticipantsTable.occurrenceId, occurrence.id));
-  return res.json({ roomId, userId: session.userId, participants: participants.map(({ userId, role, muted, handRaisedAt }) => ({ userId, role, muted, handRaisedAt })), transcription: true });
+  if (!occurrence.providerRoomId)
+    await db
+      .update(workHubMeetingOccurrencesTable)
+      .set({
+        providerRoomId: roomId,
+        status: "live",
+        transcriptState: "active",
+      })
+      .where(eq(workHubMeetingOccurrencesTable.id, occurrence.id));
+  await db
+    .insert(workHubMeetingAttendanceTable)
+    .values({ occurrenceId: occurrence.id, userId: session.userId });
+  const participants = await db
+    .select()
+    .from(workHubMeetingParticipantsTable)
+    .where(eq(workHubMeetingParticipantsTable.occurrenceId, occurrence.id));
+  return res.json({
+    roomId,
+    userId: session.userId,
+    participants: participants.map(({ userId, role, muted, handRaisedAt }) => ({
+      userId,
+      role,
+      muted,
+      handRaisedAt,
+    })),
+    transcription: true,
+  });
 });
 
 router.post("/work-hub/meetings/:occurrenceId/signal", async (req, res) => {
-  const session = actor(req); if (!session) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
-  const [participant] = await db.select().from(workHubMeetingParticipantsTable).where(and(eq(workHubMeetingParticipantsTable.occurrenceId, req.params.occurrenceId), eq(workHubMeetingParticipantsTable.userId, session.userId)));
-  if (!participant) return sendApiError(res, 404, "work_hub.not_found", "Not found");
-  const payload = z.object({ toUserId: z.number().int().positive().nullable().default(null), kind: z.enum(["offer", "answer", "ice"]), payload: z.unknown() }).parse(req.body);
-  pruneMeetingSignals(); const signal: MeetingSignal = { id: randomUUID(), occurrenceId: req.params.occurrenceId, fromUserId: session.userId, ...payload, createdAt: Date.now() };
-  meetingSignals.set(req.params.occurrenceId, [...(meetingSignals.get(req.params.occurrenceId) ?? []), signal]);
+  const session = actor(req);
+  if (!session)
+    return sendApiError(
+      res,
+      401,
+      "auth.unauthenticated",
+      "Authentication required",
+    );
+  const [participant] = await db
+    .select()
+    .from(workHubMeetingParticipantsTable)
+    .where(
+      and(
+        eq(
+          workHubMeetingParticipantsTable.occurrenceId,
+          req.params.occurrenceId,
+        ),
+        eq(workHubMeetingParticipantsTable.userId, session.userId),
+      ),
+    );
+  if (!participant)
+    return sendApiError(res, 404, "work_hub.not_found", "Not found");
+  const payload = z
+    .object({
+      toUserId: z.number().int().positive().nullable().default(null),
+      kind: z.enum(["offer", "answer", "ice"]),
+      payload: z.unknown(),
+    })
+    .parse(req.body);
+  pruneMeetingSignals();
+  const signal: MeetingSignal = {
+    id: randomUUID(),
+    occurrenceId: req.params.occurrenceId,
+    fromUserId: session.userId,
+    ...payload,
+    createdAt: Date.now(),
+  };
+  meetingSignals.set(req.params.occurrenceId, [
+    ...(meetingSignals.get(req.params.occurrenceId) ?? []),
+    signal,
+  ]);
   return res.status(201).json({ id: signal.id });
 });
 
 router.get("/work-hub/meetings/:occurrenceId/signals", async (req, res) => {
-  const session = actor(req); if (!session) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
-  const [participant] = await db.select().from(workHubMeetingParticipantsTable).where(and(eq(workHubMeetingParticipantsTable.occurrenceId, req.params.occurrenceId), eq(workHubMeetingParticipantsTable.userId, session.userId)));
-  if (!participant) return sendApiError(res, 404, "work_hub.not_found", "Not found");
-  const since = Number(req.query.since ?? 0); pruneMeetingSignals();
-  return res.json((meetingSignals.get(req.params.occurrenceId) ?? []).filter((signal) => signal.createdAt > since && signal.fromUserId !== session.userId && (signal.toUserId == null || signal.toUserId === session.userId)));
+  const session = actor(req);
+  if (!session)
+    return sendApiError(
+      res,
+      401,
+      "auth.unauthenticated",
+      "Authentication required",
+    );
+  const [participant] = await db
+    .select()
+    .from(workHubMeetingParticipantsTable)
+    .where(
+      and(
+        eq(
+          workHubMeetingParticipantsTable.occurrenceId,
+          req.params.occurrenceId,
+        ),
+        eq(workHubMeetingParticipantsTable.userId, session.userId),
+      ),
+    );
+  if (!participant)
+    return sendApiError(res, 404, "work_hub.not_found", "Not found");
+  const since = Number(req.query.since ?? 0);
+  pruneMeetingSignals();
+  return res.json(
+    (meetingSignals.get(req.params.occurrenceId) ?? []).filter(
+      (signal) =>
+        signal.createdAt > since &&
+        signal.fromUserId !== session.userId &&
+        (signal.toUserId == null || signal.toUserId === session.userId),
+    ),
+  );
 });
 
 router.post("/work-hub/meetings/:occurrenceId/presence", async (req, res) => {
-  const session = actor(req); if (!session) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
-  const payload = z.object({ muted: z.boolean().optional(), handRaised: z.boolean().optional() }).parse(req.body);
-  const [updated] = await db.update(workHubMeetingParticipantsTable).set({ ...(payload.muted === undefined ? {} : { muted: payload.muted }), ...(payload.handRaised === undefined ? {} : { handRaisedAt: payload.handRaised ? new Date() : null }) }).where(and(eq(workHubMeetingParticipantsTable.occurrenceId, req.params.occurrenceId), eq(workHubMeetingParticipantsTable.userId, session.userId))).returning();
-  if (!updated) return sendApiError(res, 404, "work_hub.not_found", "Not found");
+  const session = actor(req);
+  if (!session)
+    return sendApiError(
+      res,
+      401,
+      "auth.unauthenticated",
+      "Authentication required",
+    );
+  const payload = z
+    .object({
+      muted: z.boolean().optional(),
+      handRaised: z.boolean().optional(),
+    })
+    .parse(req.body);
+  const [updated] = await db
+    .update(workHubMeetingParticipantsTable)
+    .set({
+      ...(payload.muted === undefined ? {} : { muted: payload.muted }),
+      ...(payload.handRaised === undefined
+        ? {}
+        : { handRaisedAt: payload.handRaised ? new Date() : null }),
+    })
+    .where(
+      and(
+        eq(
+          workHubMeetingParticipantsTable.occurrenceId,
+          req.params.occurrenceId,
+        ),
+        eq(workHubMeetingParticipantsTable.userId, session.userId),
+      ),
+    )
+    .returning();
+  if (!updated)
+    return sendApiError(res, 404, "work_hub.not_found", "Not found");
   return res.json(updated);
 });
 
 router.post("/work-hub/meetings/:occurrenceId/transcript", async (req, res) => {
-  const session = actor(req); if (!session) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
-  const [participant] = await db.select().from(workHubMeetingParticipantsTable).where(and(eq(workHubMeetingParticipantsTable.occurrenceId, req.params.occurrenceId), eq(workHubMeetingParticipantsTable.userId, session.userId)));
-  if (!participant) return sendApiError(res, 404, "work_hub.not_found", "Not found");
-  const payload = z.object({ text: z.string().trim().min(1).max(20_000), startsAtMs: z.number().int().min(0), endsAtMs: z.number().int().min(0) }).parse(req.body);
-  let [artifact] = await db.select().from(workHubMeetingArtifactsTable).where(and(eq(workHubMeetingArtifactsTable.occurrenceId, req.params.occurrenceId), eq(workHubMeetingArtifactsTable.artifactType, "transcript")));
-  if (!artifact) [artifact] = await db.insert(workHubMeetingArtifactsTable).values({ occurrenceId: req.params.occurrenceId, artifactType: "transcript", state: "active", metadata: { consentNotice: true } }).returning();
-  const [segment] = await db.insert(workHubTranscriptSegmentsTable).values({ artifactId: artifact.id, speakerUserId: session.userId, ...payload }).returning();
+  const session = actor(req);
+  if (!session)
+    return sendApiError(
+      res,
+      401,
+      "auth.unauthenticated",
+      "Authentication required",
+    );
+  const [participant] = await db
+    .select()
+    .from(workHubMeetingParticipantsTable)
+    .where(
+      and(
+        eq(
+          workHubMeetingParticipantsTable.occurrenceId,
+          req.params.occurrenceId,
+        ),
+        eq(workHubMeetingParticipantsTable.userId, session.userId),
+      ),
+    );
+  if (!participant)
+    return sendApiError(res, 404, "work_hub.not_found", "Not found");
+  const payload = z
+    .object({
+      text: z.string().trim().min(1).max(20_000),
+      startsAtMs: z.number().int().min(0),
+      endsAtMs: z.number().int().min(0),
+    })
+    .parse(req.body);
+  let [artifact] = await db
+    .select()
+    .from(workHubMeetingArtifactsTable)
+    .where(
+      and(
+        eq(workHubMeetingArtifactsTable.occurrenceId, req.params.occurrenceId),
+        eq(workHubMeetingArtifactsTable.artifactType, "transcript"),
+      ),
+    );
+  if (!artifact)
+    [artifact] = await db
+      .insert(workHubMeetingArtifactsTable)
+      .values({
+        occurrenceId: req.params.occurrenceId,
+        artifactType: "transcript",
+        state: "active",
+        metadata: { consentNotice: true },
+      })
+      .returning();
+  const [segment] = await db
+    .insert(workHubTranscriptSegmentsTable)
+    .values({
+      artifactId: artifact.id,
+      speakerUserId: session.userId,
+      ...payload,
+    })
+    .returning();
   return res.status(201).json(segment);
 });
 router.post("/work-hub/meetings/:occurrenceId/chat", async (req, res) => {
@@ -1890,11 +2176,21 @@ router.post("/work-hub/files/reserve", async (req, res) => {
         tags: z.array(z.string().trim().max(50)).max(30).default([]),
       })
       .parse(envelope.payload);
-    await resolveChannelAccess(session, payload.channelId, "channel.write");
+    const { channel } = await resolveChannelAccess(
+      session,
+      payload.channelId,
+      "channel.write",
+    );
+    assertOwnerMatchesChannel(envelope.owner, channel);
     const voiceMetadata = payload.voiceMetadata
       ? validateVoiceNoteMetadata(payload.voiceMetadata)
       : null;
-    const mediaMetadata = { ...(voiceMetadata ?? {}), category: payload.category, accessLevel: payload.accessLevel, tags: payload.tags };
+    const mediaMetadata = {
+      ...(voiceMetadata ?? {}),
+      category: payload.category,
+      accessLevel: payload.accessLevel,
+      tags: payload.tags,
+    };
     const descriptor = storage.getUploadDescriptor();
     const result = await executeWorkHubCommand(
       { userId: session.userId, source: clientSource(req) },
@@ -1982,42 +2278,295 @@ router.get("/work-hub/search", async (req, res) => {
   const q = z.string().trim().min(2).max(200).parse(req.query.q);
   const start = req.query.start ? new Date(String(req.query.start)) : null;
   const end = req.query.end ? new Date(String(req.query.end)) : null;
-  const subjectType = req.query.type ? z.string().trim().max(80).parse(req.query.type) : null;
-  if ((start && Number.isNaN(start.getTime())) || (end && Number.isNaN(end.getTime())) || (start && end && start > end))
-    return sendApiError(res, 400, "work_hub.invalid_operation", "Invalid search date range");
-  const inRange = (value: Date | string | null | undefined) => { const time = value ? new Date(value).getTime() : 0; return (!start || time >= start.getTime()) && (!end || time <= end.getTime()); };
-  const matches = (...values: unknown[]) => q.toLowerCase() === "all" || values.some((value) => String(value ?? "").toLowerCase().includes(q.toLowerCase()));
+  const subjectType = req.query.type
+    ? z.string().trim().max(80).parse(req.query.type)
+    : null;
+  if (
+    (start && Number.isNaN(start.getTime())) ||
+    (end && Number.isNaN(end.getTime())) ||
+    (start && end && start > end)
+  )
+    return sendApiError(
+      res,
+      400,
+      "work_hub.invalid_operation",
+      "Invalid search date range",
+    );
+  const inRange = (value: Date | string | null | undefined) => {
+    const time = value ? new Date(value).getTime() : 0;
+    return (
+      (!start || time >= start.getTime()) && (!end || time <= end.getTime())
+    );
+  };
+  const matches = (...values: unknown[]) =>
+    q.toLowerCase() === "all" ||
+    values.some((value) =>
+      String(value ?? "")
+        .toLowerCase()
+        .includes(q.toLowerCase()),
+    );
   const wants = (type: string) => !subjectType || subjectType === type;
   const [tasks, meetings, files, announcements, channels] = await Promise.all([
-    db.select().from(workHubTasksTable).where(ownerFilter(session)).orderBy(desc(workHubTasksTable.updatedAt)).limit(200),
-    db.select({ occurrence: workHubMeetingOccurrencesTable, meeting: workHubMeetingsTable }).from(workHubMeetingOccurrencesTable).innerJoin(workHubMeetingsTable, eq(workHubMeetingsTable.id, workHubMeetingOccurrencesTable.meetingId)).orderBy(desc(workHubMeetingOccurrencesTable.startsAt)).limit(200),
-    db.select().from(workHubFilesTable).where(eq(workHubFilesTable.state, "finalized")).orderBy(desc(workHubFilesTable.finalizedAt)).limit(200),
-    db.select().from(workHubAnnouncementsTable).where(ownerFilterFor(session, workHubAnnouncementsTable)).orderBy(desc(workHubAnnouncementsTable.publishedAt)).limit(200),
+    db
+      .select()
+      .from(workHubTasksTable)
+      .where(ownerFilter(session))
+      .orderBy(desc(workHubTasksTable.updatedAt))
+      .limit(200),
+    db
+      .select({
+        occurrence: workHubMeetingOccurrencesTable,
+        meeting: workHubMeetingsTable,
+      })
+      .from(workHubMeetingOccurrencesTable)
+      .innerJoin(
+        workHubMeetingsTable,
+        eq(workHubMeetingsTable.id, workHubMeetingOccurrencesTable.meetingId),
+      )
+      .orderBy(desc(workHubMeetingOccurrencesTable.startsAt))
+      .limit(200),
+    db
+      .select()
+      .from(workHubFilesTable)
+      .where(eq(workHubFilesTable.state, "finalized"))
+      .orderBy(desc(workHubFilesTable.finalizedAt))
+      .limit(200),
+    db
+      .select()
+      .from(workHubAnnouncementsTable)
+      .where(ownerFilterFor(session, workHubAnnouncementsTable))
+      .orderBy(desc(workHubAnnouncementsTable.publishedAt))
+      .limit(200),
     db.select().from(workHubChannelsTable).limit(500),
   ]);
   const visibleChannels = new Set<string>();
-  await Promise.all(channels.map(async (channel) => { try { await resolveChannelAccess(session, channel.id, "channel.read"); visibleChannels.add(channel.id); } catch { /* hidden */ } }));
+  await Promise.all(
+    channels.map(async (channel) => {
+      try {
+        await resolveChannelAccess(session, channel.id, "channel.read");
+        visibleChannels.add(channel.id);
+      } catch {
+        /* hidden */
+      }
+    }),
+  );
   const [messages, notes] = await Promise.all([
-    visibleChannels.size ? db.select().from(workHubMessagesTable).where(inArray(workHubMessagesTable.channelId, [...visibleChannels])).orderBy(desc(workHubMessagesTable.createdAt)).limit(300) : Promise.resolve([]),
-    visibleChannels.size ? db.select().from(workHubNotesTable).where(inArray(workHubNotesTable.channelId, [...visibleChannels])).orderBy(desc(workHubNotesTable.updatedAt)).limit(200) : Promise.resolve([]),
+    visibleChannels.size
+      ? db
+          .select()
+          .from(workHubMessagesTable)
+          .where(inArray(workHubMessagesTable.channelId, [...visibleChannels]))
+          .orderBy(desc(workHubMessagesTable.createdAt))
+          .limit(300)
+      : Promise.resolve([]),
+    visibleChannels.size
+      ? db
+          .select()
+          .from(workHubNotesTable)
+          .where(inArray(workHubNotesTable.channelId, [...visibleChannels]))
+          .orderBy(desc(workHubNotesTable.updatedAt))
+          .limit(200)
+      : Promise.resolve([]),
   ]);
-  const visibleMessages = messages as Array<typeof workHubMessagesTable.$inferSelect>;
+  const visibleMessages = messages as Array<
+    typeof workHubMessagesTable.$inferSelect
+  >;
   const visibleNotes = notes as Array<typeof workHubNotesTable.$inferSelect>;
-  const meetingParticipantIds = new Set((await db.select({ occurrenceId: workHubMeetingParticipantsTable.occurrenceId }).from(workHubMeetingParticipantsTable).where(eq(workHubMeetingParticipantsTable.userId, session.userId))).map((row) => row.occurrenceId));
+  const meetingParticipantIds = new Set(
+    (
+      await db
+        .select({ occurrenceId: workHubMeetingParticipantsTable.occurrenceId })
+        .from(workHubMeetingParticipantsTable)
+        .where(eq(workHubMeetingParticipantsTable.userId, session.userId))
+    ).map((row) => row.occurrenceId),
+  );
   const [forms, transcripts] = await Promise.all([
-    db.select({ instance: workHubFormInstancesTable, template: workHubFormTemplatesTable }).from(workHubFormInstancesTable).innerJoin(workHubFormTemplatesTable, eq(workHubFormTemplatesTable.id, workHubFormInstancesTable.templateId)).where(session.role === "admin" ? undefined : eq(workHubFormInstancesTable.assigneeUserId, session.userId)).limit(200),
-    db.select({ segment: workHubTranscriptSegmentsTable, occurrenceId: workHubMeetingArtifactsTable.occurrenceId, startsAt: workHubMeetingOccurrencesTable.startsAt }).from(workHubTranscriptSegmentsTable).innerJoin(workHubMeetingArtifactsTable, eq(workHubMeetingArtifactsTable.id, workHubTranscriptSegmentsTable.artifactId)).innerJoin(workHubMeetingOccurrencesTable, eq(workHubMeetingOccurrencesTable.id, workHubMeetingArtifactsTable.occurrenceId)).limit(500),
+    db
+      .select({
+        instance: workHubFormInstancesTable,
+        template: workHubFormTemplatesTable,
+      })
+      .from(workHubFormInstancesTable)
+      .innerJoin(
+        workHubFormTemplatesTable,
+        eq(workHubFormTemplatesTable.id, workHubFormInstancesTable.templateId),
+      )
+      .where(
+        session.role === "admin"
+          ? undefined
+          : eq(workHubFormInstancesTable.assigneeUserId, session.userId),
+      )
+      .limit(200),
+    db
+      .select({
+        segment: workHubTranscriptSegmentsTable,
+        occurrenceId: workHubMeetingArtifactsTable.occurrenceId,
+        startsAt: workHubMeetingOccurrencesTable.startsAt,
+      })
+      .from(workHubTranscriptSegmentsTable)
+      .innerJoin(
+        workHubMeetingArtifactsTable,
+        eq(
+          workHubMeetingArtifactsTable.id,
+          workHubTranscriptSegmentsTable.artifactId,
+        ),
+      )
+      .innerJoin(
+        workHubMeetingOccurrencesTable,
+        eq(
+          workHubMeetingOccurrencesTable.id,
+          workHubMeetingArtifactsTable.occurrenceId,
+        ),
+      )
+      .limit(500),
   ]);
   const results = [
-    ...tasks.filter((row) => wants("task") && inRange(row.updatedAt) && matches(row.title, row.description)).map((row) => ({ id: `task:${row.id}`, subjectType: "task", subjectId: row.id, title: row.title, contextKind: "organization", contextId: `${row.ownerOrgType}:${row.ownerOrgId}`, updatedAt: row.updatedAt })),
-    ...meetings.filter(({ occurrence, meeting }) => wants("meeting") && (session.role === "admin" || meetingParticipantIds.has(occurrence.id)) && inRange(occurrence.startsAt) && matches(meeting.title, meeting.agenda)).map(({ occurrence, meeting }) => ({ id: `meeting:${occurrence.id}`, subjectType: "meeting", subjectId: occurrence.id, title: meeting.title, contextKind: "meeting", contextId: occurrence.id, updatedAt: occurrence.startsAt })),
-    ...files.filter((row) => wants("file") && row.channelId && visibleChannels.has(row.channelId) && inRange(row.finalizedAt) && matches(row.fileName, row.mediaMetadata?.category)).map((row) => ({ id: `file:${row.id}`, subjectType: "file", subjectId: row.id, title: row.fileName, contextKind: "channel", contextId: row.channelId!, updatedAt: row.finalizedAt })),
-    ...announcements.filter((row) => wants("announcement") && inRange(row.publishedAt) && matches(row.title, row.body)).map((row) => ({ id: `announcement:${row.id}`, subjectType: "announcement", subjectId: row.id, title: row.title, contextKind: "organization", contextId: `${row.ownerOrgType}:${row.ownerOrgId}`, updatedAt: row.publishedAt })),
-    ...visibleMessages.filter((row) => wants("message") && inRange(row.createdAt) && matches(row.body)).map((row) => ({ id: `message:${row.id}`, subjectType: "message", subjectId: row.id, title: row.body.slice(0, 120), contextKind: "channel", contextId: row.channelId, updatedAt: row.createdAt })),
-    ...visibleNotes.filter((row) => wants("note") && inRange(row.updatedAt) && matches(row.title, row.body)).map((row) => ({ id: `note:${row.id}`, subjectType: "note", subjectId: row.id, title: row.title, contextKind: "channel", contextId: row.channelId, updatedAt: row.updatedAt })),
-    ...forms.filter(({ instance, template }) => wants("form") && sessionCanSeeOwner(session, template.ownerOrgType, template.ownerOrgId) && inRange(instance.createdAt) && matches(template.name, instance.definitionSnapshot)).map(({ instance, template }) => ({ id: `form:${instance.id}`, subjectType: "form", subjectId: instance.id, title: template.name, contextKind: "organization", contextId: `${template.ownerOrgType}:${template.ownerOrgId}`, updatedAt: instance.createdAt })),
-    ...transcripts.filter(({ occurrenceId, segment, startsAt }) => (!subjectType || subjectType === "transcript" || subjectType === "meeting") && (session.role === "admin" || meetingParticipantIds.has(occurrenceId)) && inRange(startsAt) && matches(segment.text)).map(({ occurrenceId, segment, startsAt }) => ({ id: `transcript:${segment.id}`, subjectType: "meeting", subjectId: occurrenceId, title: segment.text.slice(0, 120), contextKind: "meeting", contextId: occurrenceId, updatedAt: startsAt })),
-  ].sort((a, b) => new Date(b.updatedAt ?? 0).getTime() - new Date(a.updatedAt ?? 0).getTime()).slice(0, 100);
+    ...tasks
+      .filter(
+        (row) =>
+          wants("task") &&
+          inRange(row.updatedAt) &&
+          matches(row.title, row.description),
+      )
+      .map((row) => ({
+        id: `task:${row.id}`,
+        subjectType: "task",
+        subjectId: row.id,
+        title: row.title,
+        contextKind: "organization",
+        contextId: `${row.ownerOrgType}:${row.ownerOrgId}`,
+        updatedAt: row.updatedAt,
+      })),
+    ...meetings
+      .filter(
+        ({ occurrence, meeting }) =>
+          wants("meeting") &&
+          (session.role === "admin" ||
+            meetingParticipantIds.has(occurrence.id)) &&
+          inRange(occurrence.startsAt) &&
+          matches(meeting.title, meeting.agenda),
+      )
+      .map(({ occurrence, meeting }) => ({
+        id: `meeting:${occurrence.id}`,
+        subjectType: "meeting",
+        subjectId: occurrence.id,
+        title: meeting.title,
+        contextKind: "meeting",
+        contextId: occurrence.id,
+        updatedAt: occurrence.startsAt,
+      })),
+    ...files
+      .filter(
+        (row) =>
+          wants("file") &&
+          row.channelId &&
+          visibleChannels.has(row.channelId) &&
+          inRange(row.finalizedAt) &&
+          matches(row.fileName, row.mediaMetadata?.category),
+      )
+      .map((row) => ({
+        id: `file:${row.id}`,
+        subjectType: "file",
+        subjectId: row.id,
+        title: row.fileName,
+        contextKind: "channel",
+        contextId: row.channelId!,
+        updatedAt: row.finalizedAt,
+      })),
+    ...announcements
+      .filter(
+        (row) =>
+          wants("announcement") &&
+          inRange(row.publishedAt) &&
+          matches(row.title, row.body),
+      )
+      .map((row) => ({
+        id: `announcement:${row.id}`,
+        subjectType: "announcement",
+        subjectId: row.id,
+        title: row.title,
+        contextKind: "organization",
+        contextId: `${row.ownerOrgType}:${row.ownerOrgId}`,
+        updatedAt: row.publishedAt,
+      })),
+    ...visibleMessages
+      .filter(
+        (row) =>
+          wants("message") && inRange(row.createdAt) && matches(row.body),
+      )
+      .map((row) => ({
+        id: `message:${row.id}`,
+        subjectType: "message",
+        subjectId: row.id,
+        title: row.body.slice(0, 120),
+        contextKind: "channel",
+        contextId: row.channelId,
+        updatedAt: row.createdAt,
+      })),
+    ...visibleNotes
+      .filter(
+        (row) =>
+          wants("note") &&
+          inRange(row.updatedAt) &&
+          matches(row.title, row.body),
+      )
+      .map((row) => ({
+        id: `note:${row.id}`,
+        subjectType: "note",
+        subjectId: row.id,
+        title: row.title,
+        contextKind: "channel",
+        contextId: row.channelId,
+        updatedAt: row.updatedAt,
+      })),
+    ...forms
+      .filter(
+        ({ instance, template }) =>
+          wants("form") &&
+          sessionCanSeeOwner(
+            session,
+            template.ownerOrgType,
+            template.ownerOrgId,
+          ) &&
+          inRange(instance.createdAt) &&
+          matches(template.name, instance.definitionSnapshot),
+      )
+      .map(({ instance, template }) => ({
+        id: `form:${instance.id}`,
+        subjectType: "form",
+        subjectId: instance.id,
+        title: template.name,
+        contextKind: "organization",
+        contextId: `${template.ownerOrgType}:${template.ownerOrgId}`,
+        updatedAt: instance.createdAt,
+      })),
+    ...transcripts
+      .filter(
+        ({ occurrenceId, segment, startsAt }) =>
+          (!subjectType ||
+            subjectType === "transcript" ||
+            subjectType === "meeting") &&
+          (session.role === "admin" ||
+            meetingParticipantIds.has(occurrenceId)) &&
+          inRange(startsAt) &&
+          matches(segment.text),
+      )
+      .map(({ occurrenceId, segment, startsAt }) => ({
+        id: `transcript:${segment.id}`,
+        subjectType: "meeting",
+        subjectId: occurrenceId,
+        title: segment.text.slice(0, 120),
+        contextKind: "meeting",
+        contextId: occurrenceId,
+        updatedAt: startsAt,
+      })),
+  ]
+    .sort(
+      (a, b) =>
+        new Date(b.updatedAt ?? 0).getTime() -
+        new Date(a.updatedAt ?? 0).getTime(),
+    )
+    .slice(0, 100);
   return res.json(results);
 });
 router.get("/work-hub/connectors/microsoft-365", async (req, res) => {
@@ -2079,7 +2628,7 @@ router.post("/work-hub/connectors/microsoft-365/connect", async (req, res) => {
       id: z.number().int().positive(),
     })
     .parse(req.body?.owner);
-  ownAccess(session, owner, "connector.manage");
+  await ownAccess(session, owner, "connector.manage");
   return sendApiError(
     res,
     503,

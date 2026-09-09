@@ -9,7 +9,9 @@ describe("Work Hub channel error feedback", () => {
       "utf8",
     );
 
-    expect(source).toContain("<Notice error={channels.error ?? create.error} />");
+    expect(source).toContain(
+      "<Notice error={channels.error ?? create.error} />",
+    );
   });
 
   it("keeps the empty channel state in one card and requires confirmation before deleting", () => {
@@ -18,10 +20,13 @@ describe("Work Hub channel error feedback", () => {
       "utf8",
     );
 
-    expect(source).not.toContain("Create or select a channel to open its conversation.");
+    expect(source).not.toContain(
+      "Create or select a channel to open its conversation.",
+    );
     expect(source).toContain('aria-label="Delete channel"');
     expect(source).toContain("Delete this channel?");
-    expect(source).toContain('workHubRequest(`/channels/${active}`');
+    expect(source).toContain("workHubRequest(`/channels/${active}`");
+    expect(source).toContain("const active = selected;");
   });
 
   it("uses the approved calendar split and compact branded file chooser", () => {

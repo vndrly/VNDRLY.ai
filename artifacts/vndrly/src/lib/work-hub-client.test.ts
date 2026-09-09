@@ -12,23 +12,51 @@ import {
 
 describe("Work Hub client boundary", () => {
   it("only lets platform or organization administrators manage channels", () => {
-    expect(canManageWorkHubChannels({ role: "admin", vendorId: null, partnerId: null, membershipRole: null })).toBe(true);
-    expect(canManageWorkHubChannels({ role: "vendor", vendorId: 22, partnerId: null, membershipRole: "admin" })).toBe(true);
-    expect(canManageWorkHubChannels({ role: "vendor", vendorId: 22, partnerId: null, membershipRole: "member" })).toBe(false);
-    expect(canManageWorkHubChannels({
-      role: "vendor",
-      vendorId: 22,
-      partnerId: null,
-      activeMembershipId: 91,
-      availableMemberships: [
-        { id: 90, role: "member" },
-        { id: 91, role: "admin" },
-      ],
-    })).toBe(true);
+    expect(
+      canManageWorkHubChannels({
+        role: "admin",
+        vendorId: null,
+        partnerId: null,
+        membershipRole: null,
+      }),
+    ).toBe(true);
+    expect(
+      canManageWorkHubChannels({
+        role: "vendor",
+        vendorId: 22,
+        partnerId: null,
+        membershipRole: "admin",
+      }),
+    ).toBe(true);
+    expect(
+      canManageWorkHubChannels({
+        role: "vendor",
+        vendorId: 22,
+        partnerId: null,
+        membershipRole: "member",
+      }),
+    ).toBe(false);
+    expect(
+      canManageWorkHubChannels({
+        role: "vendor",
+        vendorId: 22,
+        partnerId: null,
+        activeMembershipId: 91,
+        availableMemberships: [
+          { id: 90, role: "member" },
+          { id: 91, role: "admin" },
+        ],
+      }),
+    ).toBe(true);
   });
 
   it("lets gate supervisors schedule without granting channel administration", () => {
-    const supervisor = { role: "field_employee", vendorId: 22, partnerId: null, vendorRole: "gate_supervisor" };
+    const supervisor = {
+      role: "field_employee",
+      vendorId: 22,
+      partnerId: null,
+      vendorRole: "gate_supervisor",
+    };
     expect(isWorkHubScheduler(supervisor)).toBe(true);
     expect(canManageWorkHubChannels(supervisor)).toBe(false);
   });
@@ -80,6 +108,18 @@ describe("Work Hub client boundary", () => {
         commandEnvelope({ type: "vendor", id: 22 }, { name: "Admin" }),
       ).success,
     ).toBe(true);
+  });
+
+  it("preserves an explicit gate context for scoped supervisor commands", () => {
+    expect(
+      commandEnvelope(
+        { type: "vendor", id: 22 },
+        { title: "Gate shift" },
+        "operation-2",
+        undefined,
+        { kind: "gate", id: 90 },
+      ).context,
+    ).toEqual({ kind: "gate", id: 90 });
   });
 
   it("creates a valid operation id when randomUUID is unavailable", () => {

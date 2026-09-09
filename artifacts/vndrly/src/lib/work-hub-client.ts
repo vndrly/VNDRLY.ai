@@ -42,15 +42,17 @@ export function canManageWorkHubChannels(
   )?.role;
   return Boolean(
     user &&
-      (user.role === "admin" ||
-        user.membershipRole === "admin" ||
-        activeMembershipRole === "admin"),
+    (user.role === "admin" ||
+      user.membershipRole === "admin" ||
+      activeMembershipRole === "admin"),
   );
 }
 
 export const isWorkHubAdmin = canManageWorkHubChannels;
 
-export function isWorkHubScheduler(user: WorkHubUser | null | undefined): boolean {
+export function isWorkHubScheduler(
+  user: WorkHubUser | null | undefined,
+): boolean {
   return isWorkHubAdmin(user) || user?.vendorRole === "gate_supervisor";
 }
 
@@ -68,11 +70,26 @@ export function commandEnvelope<T>(
   payload: T,
   operationId = createWorkHubOperationId(),
   expectedVersion?: number,
+  context: {
+    kind:
+      | "organization"
+      | "ticket"
+      | "site"
+      | "crew"
+      | "gate"
+      | "project"
+      | "channel"
+      | "meeting";
+    id: number | string;
+  } = {
+    kind: "organization",
+    id: owner.id,
+  },
 ) {
   return {
     operationId,
     owner,
-    context: { kind: "organization" as const, id: owner.id },
+    context,
     expectedVersion: expectedVersion ?? null,
     payloadVersion: 1 as const,
     payload,
