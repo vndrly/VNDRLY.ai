@@ -87,10 +87,10 @@ export function OnboardingBrandHeader({
             )}
             data-testid="onboarding-brand-title"
           >
-            {hasOrgBrand && preview?.name?.trim() ? preview.name.trim() : title}
+            {title}
           </h1>
           <p className="text-sm text-gray-500">
-            {hasOrgBrand ? "Your brand is coming to life." : subtitle}
+            {subtitle}
           </p>
         </div>
       </div>

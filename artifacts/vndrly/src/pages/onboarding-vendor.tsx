@@ -39,8 +39,6 @@ const STEPS: (StepperStep & { key: StepKey })[] = [
   { key: "branding", label: "Branding" },
   { key: "tax-ids", label: "Tax IDs" },
   { key: "work-types", label: "Service Area & Work Types" },
-  { key: "compliance", label: "Compliance" },
-  { key: "rates", label: "Rates" },
   { key: "first-employee", label: "First Employee" },
 ];
 
@@ -705,7 +703,7 @@ export default function OnboardingVendor() {
   const brandPreview = useMemo((): OnboardingBrandPreview | null => {
     const primary = vendorBranding.brandPrimaryColor.trim() || payload.branding?.brandPrimaryColor?.trim() || "";
     const logo = vendorBranding.logoUrl.trim() || payload.branding?.logoUrl?.trim() || "";
-    if (!primary && !logo) return null;
+    if (!primary && !logo && !basics.name.trim()) return null;
     return {
       name: basics.name.trim() || null,
       logoUrl: logo || null,
@@ -725,10 +723,31 @@ export default function OnboardingVendor() {
     };
   }, [brandPreview]);
 
+  const goToStep = async (targetIndex: number) => {
+    if (targetIndex === stepIndex || !orgId) return;
+    setLoading(true);
+    try {
+      await persist({
+        currentStep: STEPS[targetIndex].key,
+        payloadPatch: buildPayloadPatch(),
+      });
+      setStepIndex(targetIndex);
+    } catch (e) {
+      toast({ title: (e as Error).message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <OnboardingPageShell brand={pageBrand}>
       <div className="rounded-2xl border border-white/25 bg-white/95 p-5 shadow-2xl backdrop-blur-xl mb-4">
-        <OnboardingBrandHeader title="Vendor Onboarding" subtitle="A short setup flow so you can start taking work." preview={brandPreview} onBack={() => (stepIndex === 0 ? navigate("/signup") : prevStep())} />
+        <OnboardingBrandHeader
+          title="VNDRLY Onboarding"
+          subtitle={basics.name.trim() ? `Welcome, ${basics.name.trim()}` : "A short setup flow so you can start taking work."}
+          preview={brandPreview}
+          onBack={() => (stepIndex === 0 ? navigate("/signup") : prevStep())}
+        />
 
         {/* Email-verification banner — appears once an account
               exists. Hidden on the anonymous step-1 visit so it doesn't
@@ -738,7 +757,15 @@ export default function OnboardingVendor() {
 
       <Card className="border-2 border-[color:var(--brand-primary)]/70 bg-white/95 shadow-2xl backdrop-blur-xl">
         <CardContent className="p-6 pt-6">
-          <OnboardingStepper steps={STEPS} currentIndex={stepIndex} completedKeys={completed} skippedKeys={skipped} className="mb-8" />
+          <OnboardingStepper
+            steps={STEPS}
+            currentIndex={stepIndex}
+            completedKeys={completed}
+            skippedKeys={skipped}
+            onStepClick={(index) => void goToStep(index)}
+            disabled={loading || !orgId}
+            className="mb-8"
+          />
 
           {currentStep.key === "company-basics" && (
             <div className="space-y-4" data-testid="step-company-basics-body">

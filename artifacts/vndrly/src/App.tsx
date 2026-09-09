@@ -400,7 +400,7 @@ function GlobalAssistantLauncher({ authenticated }: { authenticated: boolean }) 
   }
   return (
     <Suspense fallback={null}>
-      <AssistantLauncher />
+      <AssistantLauncher placement={location.startsWith("/onboarding/vendor") ? "onboarding" : "floating"} />
     </Suspense>
   );
 }

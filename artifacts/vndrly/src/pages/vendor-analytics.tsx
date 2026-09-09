@@ -26,6 +26,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useBrand } from "@/hooks/use-brand";
 import { VerticalPillBarShape } from "@/components/vertical-pill-bar-shape";
 import { formatStatusLabel } from "@/lib/format-status";
+import { TAX_REPORTING_ENABLED } from "@/lib/release-features";
 import {
   ANALYTICS_BAR_SIZE,
   ANALYTICS_VERTICAL_CHART_HEIGHT,
@@ -306,7 +307,7 @@ export default function VendorAnalytics({ vendorId }: { vendorId: number }) {
           iconStyle={iconStyle}
           testId="card-vendor-invoice-aging"
         />
-        <AnalyticsNec1099Card
+        {TAX_REPORTING_ENABLED && <AnalyticsNec1099Card
           title={t("vendorAnalytics.nec1099Title", {
             defaultValue: "1099-NEC income ({{year}})",
             year: analytics.nec1099Exposure.year,
@@ -336,7 +337,7 @@ export default function VendorAnalytics({ vendorId }: { vendorId: number }) {
           entityHref={(id) => `/partners/${id}`}
           iconStyle={iconStyle}
           testId="card-vendor-nec1099-exposure"
-        />
+        />}
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">

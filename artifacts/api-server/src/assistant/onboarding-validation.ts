@@ -18,7 +18,7 @@ export type Persona = "partner" | "vendor" | "field_employee";
 
 export const REQUIRED_STEPS: Record<Persona, readonly string[]> = {
   partner: ["company-basics", "platform-eula", "legal-consent", "first-site", "tax-billing"],
-  vendor: ["company-basics", "platform-eula", "legal-consent", "tax-ids", "work-types", "rates", "first-employee"],
+  vendor: ["company-basics", "platform-eula", "legal-consent", "tax-ids", "work-types", "first-employee"],
   field_employee: ["personal-info", "photo-certs", "set-password"],
 };
 
@@ -26,7 +26,7 @@ export const REQUIRED_STEPS: Record<Persona, readonly string[]> = {
 // the route. "done" is always the terminal pseudo-step.
 export const STEP_KEYS: Record<Persona, readonly string[]> = {
   partner: ["company-basics", "platform-eula", "legal-consent", "branding", "first-site", "tax-billing", "preferences", "invite-team", "done"],
-  vendor: ["company-basics", "platform-eula", "legal-consent", "branding", "tax-ids", "work-types", "compliance", "rates", "first-employee", "done"],
+  vendor: ["company-basics", "platform-eula", "legal-consent", "branding", "tax-ids", "work-types", "first-employee", "done"],
   field_employee: ["personal-info", "photo-certs", "set-password", "done"],
 };
 
@@ -58,12 +58,7 @@ export const STEP_REQUIRED_FIELDS: Record<Persona, Record<string, readonly strin
     ],
     "work-types": ["serviceArea.operatingRadiusMiles", "workTypeIds"],
     "compliance": [],
-    "rates": [
-      "rates.hourlyRate",
-      "rates.dailyOtHours",
-      "rates.weeklyOtHours",
-      "rates.overtimeMultiplier",
-    ],
+    "rates": [],
     "first-employee": ["firstEmployee.firstName", "firstEmployee.lastName", "firstEmployee.email"],
     "company-basics": [],
   },

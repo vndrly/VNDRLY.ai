@@ -14,6 +14,9 @@ interface OnboardingStepperProps {
   completedKeys?: string[];
   /** Step keys the user has chosen to "Skip for now". */
   skippedKeys?: string[];
+  /** Navigate to a visible step without changing its completion state. */
+  onStepClick?: (index: number, step: StepperStep) => void;
+  disabled?: boolean;
   className?: string;
 }
 
@@ -29,6 +32,8 @@ export default function OnboardingStepper({
   currentIndex,
   completedKeys = [],
   skippedKeys = [],
+  onStepClick,
+  disabled = false,
   className,
 }: OnboardingStepperProps) {
   const completedSet = new Set(completedKeys);
@@ -92,9 +97,15 @@ export default function OnboardingStepper({
                   style={rightLineActive ? brandLineStyle : undefined}
                 />
               )}
-              <div
+              <button
+                type="button"
+                onClick={() => onStepClick?.(i, step)}
+                disabled={disabled || !onStepClick}
+                aria-current={isCurrent ? "step" : undefined}
+                aria-label={`Go to ${step.label}`}
                 className={cn(
-                  "relative z-10 w-6 h-6 rounded-full border-2 shadow-sm flex items-center justify-center transition-colors",
+                  "relative z-10 w-6 h-6 rounded-full border-2 shadow-sm flex items-center justify-center transition-all",
+                  onStepClick && !disabled && "cursor-pointer hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[color:var(--brand-primary)]",
                   dotBg,
                 )}
                 style={isBrandActive && !isSkipped ? brandGlossStyle : undefined}
@@ -107,13 +118,16 @@ export default function OnboardingStepper({
                 ) : isSkipped ? (
                   <span className="text-[10px] font-bold leading-none">!</span>
                 ) : null}
-              </div>
-              <span
-                className={cn("mt-1.5 text-[11px] text-center leading-tight px-1", labelClass)}
+              </button>
+              <button
+                type="button"
+                onClick={() => onStepClick?.(i, step)}
+                disabled={disabled || !onStepClick}
+                className={cn("mt-1.5 text-[11px] text-center leading-tight px-1", labelClass, onStepClick && !disabled && "cursor-pointer hover:underline")}
                 style={isCurrent ? brandTextStyle : undefined}
               >
                 {step.label}
-              </span>
+              </button>
             </div>
           );
         })}

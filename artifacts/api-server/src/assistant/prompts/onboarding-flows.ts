@@ -189,7 +189,7 @@ const vendorFlow: StepSpec[] = [
     step: "tax-ids",
     title: "Tax IDs and addresses",
     required: true,
-    purpose: "Capture vendor tax IDs and billing addresses needed for 1099s.",
+    purpose: "Capture vendor tax IDs and billing addresses needed for account setup.",
     fields: [
       { path: "taxIds.federalTaxId", label: "Federal tax ID (EIN)", required: true },
       { path: "taxIds.stateTaxId", label: "State tax ID", required: true },
@@ -209,35 +209,6 @@ const vendorFlow: StepSpec[] = [
     ],
     guidance:
       "Operating radius must be a positive number. At least one work type ID is required — if the user is unsure which categories apply, list a few common ones for their region (frac, drilling, completions, etc.).",
-  },
-  {
-    step: "compliance",
-    title: "Insurance and compliance",
-    required: true,
-    purpose: "Capture insurance policy details and upload the certificate.",
-    fields: [
-      { path: "compliance.carrier", label: "Insurance carrier name", required: true },
-      { path: "compliance.policyNumber", label: "Policy number", required: true },
-      { path: "compliance.expirationDate", label: "Policy expiration date", hint: "ISO date YYYY-MM-DD", required: true },
-      { path: "compliance.documentUrl", label: "Insurance certificate (uploaded URL)", required: true },
-    ],
-    guidance:
-      "The document URL must come from the wizard's upload flow — guide the user to drag-and-drop the COI PDF into the compliance step. If they paste a non-uploaded URL it'll fail.",
-  },
-  {
-    step: "rates",
-    title: "Rates and OT thresholds",
-    required: true,
-    purpose: "Set hourly billing rate, overtime thresholds, and 1099 e-delivery consent.",
-    fields: [
-      { path: "rates.hourlyRate", label: "Hourly rate (USD)", required: true },
-      { path: "rates.dailyOtHours", label: "Daily OT threshold (hours)", hint: "Common: 8", required: true },
-      { path: "rates.weeklyOtHours", label: "Weekly OT threshold (hours)", hint: "Common: 40", required: true },
-      { path: "rates.overtimeMultiplier", label: "OT multiplier", hint: "Common: 1.50", required: true },
-      { path: "eDeliveryConsent", label: "1099 e-delivery consent", hint: "Explicit true/false answer required", required: true },
-    ],
-    guidance:
-      "eDeliveryConsent must be an explicit boolean — don't infer 'yes' from silence. Ask plainly: 'Do you consent to receive 1099s electronically instead of paper?'",
   },
   {
     step: "first-employee",

@@ -68,7 +68,7 @@ const QUICK_ACTIONS: Record<string, QuickAction[]> = {
   admin: [
     { label: "Onboard a new partner", prompt: "Walk me through inviting and onboarding a new partner." },
     { label: "Unlock a closed ticket", prompt: "How do I unlock a closed ticket so I can edit it?" },
-    { label: "1099 e-delivery report", prompt: "Where do I run the 1099 e-delivery report?" },
+    { label: "Communications health", prompt: "Where can I review communications provider readiness?" },
   ],
 };
 
@@ -92,7 +92,7 @@ const STEP_LABELS: Record<string, string> = {
 
 const STEPS_BY_ORG: Record<"partner" | "vendor" | "field_employee", string[]> = {
   partner: ["company-basics", "platform-eula", "branding", "first-site", "tax-billing", "preferences", "invite-team"],
-  vendor: ["company-basics", "platform-eula", "branding", "tax-ids", "work-types", "compliance", "rates", "first-employee"],
+  vendor: ["company-basics", "platform-eula", "branding", "tax-ids", "work-types", "first-employee"],
   field_employee: ["personal-info", "photo-certs", "set-password"],
 };
 
@@ -104,7 +104,7 @@ const STEPS_BY_ORG: Record<"partner" | "vendor" | "field_employee", string[]> = 
 // required so the user is never offered an action the server refuses.
 const REQUIRED_STEPS: Record<"partner" | "vendor" | "field_employee", Set<string>> = {
   partner: new Set(["company-basics", "platform-eula", "first-site", "tax-billing"]),
-  vendor: new Set(["company-basics", "platform-eula", "tax-ids", "work-types", "compliance", "rates", "first-employee"]),
+  vendor: new Set(["company-basics", "platform-eula", "tax-ids", "work-types", "first-employee"]),
   field_employee: new Set(["personal-info", "photo-certs", "set-password"]),
 };
 
@@ -155,7 +155,7 @@ const SIGNUP_QUICK_ACTIONS: Record<
     vendor: [
       { label: "What is VNDRLY?", prompt: "What is VNDRLY and what does it do for vendors?" },
       { label: "What happens after signup?", prompt: "After I finish this signup form, what does vendor onboarding look like?" },
-      { label: "What info will I need?", prompt: "What information should I have ready to complete vendor onboarding (insurance, tax, etc.)?" },
+      { label: "What info will I need?", prompt: "What information should I have ready to complete vendor onboarding?" },
     ],
   },
   es: {
@@ -167,7 +167,7 @@ const SIGNUP_QUICK_ACTIONS: Record<
     vendor: [
       { label: "¿Qué es VNDRLY?", prompt: "¿Qué es VNDRLY y qué hace para los proveedores?" },
       { label: "¿Y después del registro?", prompt: "Cuando termine este formulario de registro, ¿cómo es el proceso de incorporación para proveedores?" },
-      { label: "¿Qué información necesito?", prompt: "¿Qué información debo tener lista para completar la incorporación como proveedor (seguros, impuestos, etc.)?" },
+      { label: "¿Qué información necesito?", prompt: "¿Qué información debo tener lista para completar la incorporación como proveedor?" },
     ],
   },
 };
@@ -261,7 +261,7 @@ function pickAskVRecordingMimeType(): string | undefined {
   return preferred.find((type) => MediaRecorder.isTypeSupported(type));
 }
 
-export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: AssistantPanelProps) {
+export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, placement = "default" }: AssistantPanelProps & { placement?: "default" | "onboarding" }) {
   const [minimized, setMinimized] = useState(false);
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -849,10 +849,20 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode }: As
 
   return (
     <>
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
       <DialogContent
         bare
-        className={cn("bg-[#3a3d42] text-gray-100 sm:left-auto sm:right-6 sm:top-6 sm:max-w-[38.59rem] sm:translate-x-0 sm:translate-y-0 sm:resize sm:overflow-hidden", minimized ? "h-16" : "h-[min(80vh,640px)]")}
+        hideOverlay
+        onPointerDownOutside={(event) => event.preventDefault()}
+        onInteractOutside={(event) => event.preventDefault()}
+        onEscapeKeyDown={(event) => event.preventDefault()}
+        className={cn(
+          "border-2 border-[color:var(--brand-primary)] bg-[#3a3d42] text-gray-100 sm:translate-x-0 sm:translate-y-0 sm:resize sm:overflow-hidden",
+          placement === "onboarding"
+            ? "sm:left-6 sm:right-auto sm:top-auto sm:bottom-24 sm:max-w-[min(24rem,calc(100vw-3rem))]"
+            : "sm:left-auto sm:right-6 sm:top-6 sm:max-w-[38.59rem]",
+          minimized ? "h-16" : "h-[min(72vh,640px)]",
+        )}
         data-testid="assistant-panel"
         hideClose
       >
@@ -1407,12 +1417,18 @@ export function AssistantLauncher({
   tokenMode?: { token: string };
   signupMode?: { persona: "partner" | "vendor" };
   /** `floating` = bottom-left FAB; `askv-pane` = main layout AskV pane. */
-  placement?: "floating" | "askv-pane";
+  placement?: "floating" | "askv-pane" | "onboarding";
 } = {}) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.sessionStorage.getItem("vndrly.askv.panelOpen") === "true";
+  });
   const [hovered, setHovered] = useState(false);
   const [voiceState, setVoiceState] = useState("idle");
   const [resultsReady, setResultsReady] = useState(false);
+  useEffect(() => {
+    window.sessionStorage.setItem("vndrly.askv.panelOpen", String(open));
+  }, [open]);
   useEffect(() => {
     const changed = (event: Event) => setVoiceState((event as CustomEvent<{ state: string }>).detail.state);
     window.addEventListener("askv:voice-state", changed);
@@ -1431,9 +1447,10 @@ export function AssistantLauncher({
   const engaged = voiceActive || (hovered && !open);
   return (
     <>
+      <div className={cn(placement === "onboarding" ? "fixed bottom-5 left-5 z-[1100] flex items-center gap-2" : "contents")}>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={() => setOpen((value) => !value)}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         onFocus={() => setHovered(true)}
@@ -1447,16 +1464,20 @@ export function AssistantLauncher({
         )}
         style={{ width: ASKV_LAUNCHER_WIDTH, height: ASKV_LAUNCHER_HEIGHT }}
         data-testid="assistant-launcher"
-        aria-label="ask V"
+        aria-label={open ? "Close Ask V" : "Open Ask V"}
+        aria-expanded={open}
       >
         <span className="sr-only">ask V</span>
         <AskVFloatingLauncherMark engaged={engaged} panelOpen={open} />
       </button>
+      {placement === "onboarding" && <AskVStatusIndicator />}
+      </div>
       <AssistantPanel
         open={open}
         onOpenChange={setOpen}
         tokenMode={tokenMode}
         signupMode={signupMode}
+        placement={placement === "onboarding" ? "onboarding" : "default"}
       />
     </>
   );

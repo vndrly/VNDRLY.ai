@@ -3,10 +3,11 @@ import { describe, expect, it } from "vitest";
 import { REQUIRED_STEPS, STEP_REQUIRED_FIELDS } from "../assistant/onboarding-validation";
 
 describe("temporary vendor onboarding gates", () => {
-  it("does not require insurance or 1099 consent to complete onboarding", () => {
+  it("does not require insurance, rates, or 1099 consent to complete onboarding", () => {
     expect(REQUIRED_STEPS.vendor).not.toContain("compliance");
+    expect(REQUIRED_STEPS.vendor).not.toContain("rates");
     expect(STEP_REQUIRED_FIELDS.vendor.compliance).toEqual([]);
-    expect(STEP_REQUIRED_FIELDS.vendor.rates).not.toContain("eDeliveryConsent");
+    expect(STEP_REQUIRED_FIELDS.vendor.rates).toEqual([]);
 
     const route = readFileSync(new URL("./onboarding.ts", import.meta.url), "utf8");
     const validator = route.slice(
@@ -14,6 +15,7 @@ describe("temporary vendor onboarding gates", () => {
       route.indexOf('router.post("/onboarding/:orgType/:orgId/complete"'),
     );
     expect(validator).not.toContain('missing.push("compliance.');
+    expect(validator).not.toContain('missing.push("rates.');
     expect(validator).not.toContain('missing.push("eDeliveryConsent")');
   });
 

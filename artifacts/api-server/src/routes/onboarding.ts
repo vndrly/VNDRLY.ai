@@ -84,15 +84,17 @@ function buildSessionCookie(args: {
 }
 
 function serializeProgress(row: typeof onboardingProgressTable.$inferSelect) {
+  const retiredVendorSteps = new Set(["compliance", "rates"]);
+  const isVendor = row.orgType === "vendor";
   return {
     id: row.id,
     orgType: row.orgType,
     partnerId: row.partnerId ?? null,
     vendorId: row.vendorId ?? null,
     vendorPeopleId: row.vendorPeopleId ?? null,
-    currentStep: row.currentStep,
-    completedSteps: row.completedSteps,
-    skippedSteps: row.skippedSteps,
+    currentStep: isVendor && retiredVendorSteps.has(row.currentStep) ? "first-employee" : row.currentStep,
+    completedSteps: isVendor ? row.completedSteps.filter((step) => !retiredVendorSteps.has(step)) : row.completedSteps,
+    skippedSteps: isVendor ? row.skippedSteps.filter((step) => !retiredVendorSteps.has(step)) : row.skippedSteps,
     payload: (row.payload ?? {}) as Record<string, unknown>,
     startedAt: row.startedAt.toISOString(),
     completedAt: row.completedAt ? row.completedAt.toISOString() : null,
@@ -809,15 +811,6 @@ function validateVendorPayload(p: Record<string, unknown>): string[] {
     ),
   );
   if (validIds.length === 0) missing.push("workTypeIds");
-  const rates = (p.rates ?? {}) as Record<string, unknown>;
-  if (rates.hourlyRate === undefined || rates.hourlyRate === null || rates.hourlyRate === "") missing.push("rates.hourlyRate");
-  if (rates.dailyOtHours === undefined || rates.dailyOtHours === null || rates.dailyOtHours === "") missing.push("rates.dailyOtHours");
-  if (rates.weeklyOtHours === undefined || rates.weeklyOtHours === null || rates.weeklyOtHours === "") missing.push("rates.weeklyOtHours");
-  // Overtime multiplier required (per spec) — defaults to 1.50 in the
-  // wizard, but persist whatever the user confirms.
-  if (rates.overtimeMultiplier === undefined || rates.overtimeMultiplier === null || rates.overtimeMultiplier === "") {
-    missing.push("rates.overtimeMultiplier");
-  }
   const emp = (p.firstEmployee ?? {}) as Record<string, unknown>;
   if (!trim(emp.firstName)) missing.push("firstEmployee.firstName");
   if (!trim(emp.lastName)) missing.push("firstEmployee.lastName");
@@ -934,7 +927,7 @@ router.post("/onboarding/:orgType/:orgId/complete", async (req: Request, res: Re
       return;
     }
     const tax = payload.taxIds as Record<string, string>;
-    const rates = payload.rates as Record<string, string | number>;
+    const rates = (payload.rates ?? {}) as Record<string, string | number>;
     const emp = payload.firstEmployee as Record<string, string>;
     const compliance = (payload.compliance ?? {}) as Record<string, string>;
     const serviceArea = (payload.serviceArea ?? {}) as Record<string, unknown>;
@@ -993,9 +986,9 @@ router.post("/onboarding/:orgType/:orgId/complete", async (req: Request, res: Re
             // matching for nearby partners. Lat/lng come from a
             // background geocoder once the address is set.
             operatingRadiusMiles: Math.max(1, Math.round(Number(serviceArea.operatingRadiusMiles) || 0)),
-            dailyOtHours: String(rates.dailyOtHours),
-            weeklyOtHours: String(rates.weeklyOtHours),
-            overtimeMultiplier: String(rates.overtimeMultiplier),
+            ...(rates.dailyOtHours != null ? { dailyOtHours: String(rates.dailyOtHours) } : {}),
+            ...(rates.weeklyOtHours != null ? { weeklyOtHours: String(rates.weeklyOtHours) } : {}),
+            ...(rates.overtimeMultiplier != null ? { overtimeMultiplier: String(rates.overtimeMultiplier) } : {}),
             // Optional compliance and legacy consent values only update
             // canonical records when supplied, preserving existing data.
             ...compliancePatch,
@@ -1032,7 +1025,7 @@ router.post("/onboarding/:orgType/:orgId/complete", async (req: Request, res: Re
               lastName: trim(emp.lastName),
               email: cleanEmp,
               phone: trim(emp.phone) || null,
-              hourlyRate: String(rates.hourlyRate),
+              ...(rates.hourlyRate != null ? { hourlyRate: String(rates.hourlyRate) } : {}),
             })
             .returning({ id: vendorPeopleTable.id });
           firstEmployeeId = created.id;

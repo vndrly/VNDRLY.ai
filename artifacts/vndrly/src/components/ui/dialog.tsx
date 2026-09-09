@@ -118,12 +118,14 @@ type DialogContentProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.
    * action row) so the two don't visually compete.
    */
   hideClose?: boolean
+  /** Omit the page-blocking backdrop for persistent utility panels. */
+  hideOverlay?: boolean
 }
 
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   DialogContentProps
->(({ className, children, bare = false, hideClose = false, ...props }, ref) => {
+>(({ className, children, bare = false, hideClose = false, hideOverlay = false, ...props }, ref) => {
   const [customLogo, setCustomLogo] = React.useState<DialogLogoSpec | null>(null)
   const ctxValue = React.useMemo<DialogLogoContextValue>(() => ({ setCustomLogo }), [])
   const { resolved } = useTheme()
@@ -131,7 +133,7 @@ const DialogContent = React.forwardRef<
 
   return (
     <DialogPortal>
-      <DialogOverlay />
+      {!hideOverlay && <DialogOverlay />}
       <ModalThemeContext.Provider value={modalTheme}>
         <DialogPrimitive.Content
           ref={ref}

@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { getWorkHubNavItems, getWorkHubReturnPath, isWorkHubPath } from "./work-hub-nav";
 
@@ -13,6 +15,15 @@ describe("Work Hub navigation", () => {
         "home", "channels", "calendar", "files", "tasks", "meetings", "search", "settings",
       ]);
     }
+  });
+
+  it("keeps the Work Hub entry in the shared navigation for every portal role", () => {
+    const layout = readFileSync(resolve(__dirname, "../components/layout.tsx"), "utf8");
+    expect(layout).toContain('{ href: "/work-hub", label: "Work Hub"');
+    expect(layout).toContain('testId={`nav-${item.key}`}');
+    expect(layout).toContain('if (user.role === "vendor" && user.vendorId)');
+    expect(layout).toContain('if (user.role === "partner" && user.partnerId)');
+    expect(layout).toContain('if (user.role === "admin")');
   });
 
   it("restores a safe prior app location", () => {
