@@ -65,21 +65,34 @@ jobs:
           build_ref="$(node scripts/eas-production-runtime-commit.mjs "$builds_file")"
           echo "base_ref=$build_ref" >>"$GITHUB_OUTPUT"
 
-      - name: Refuse native-impact changes
+      - name: Classify native-impact changes
+        id: release-impact
         run: >-
           node scripts/mobile-release-impact.mjs
           --base-ref "${{ steps.production-build.outputs.base_ref }}"
+          --github-output
+
+      - name: Record TestFlight-required release
+        if: steps.release-impact.outputs.requires_native_build == 'true'
+        shell: bash
+        run: |
+          echo "### OTA intentionally skipped" >>"$GITHUB_STEP_SUMMARY"
+          echo "TestFlight-required release detected; the OTA safety guard did not publish an incompatible update." >>"$GITHUB_STEP_SUMMARY"
 
       - name: Build shared TypeScript declarations
+        if: steps.release-impact.outputs.requires_native_build == 'false'
         run: pnpm run typecheck:libs
 
       - name: Typecheck mobile app
+        if: steps.release-impact.outputs.requires_native_build == 'false'
         run: pnpm --filter @workspace/vndrly-mobile run typecheck
 
       - name: Test mobile app
+        if: steps.release-impact.outputs.requires_native_build == 'false'
         run: pnpm --filter @workspace/vndrly-mobile exec vitest run --maxWorkers=2 --retry=1
 
       - name: Publish production iOS OTA update
+        if: steps.release-impact.outputs.requires_native_build == 'false'
         working-directory: artifacts/vndrly-mobile
         env:
           EAS_UPDATE_MESSAGE: ${{ inputs.message }}

@@ -46,6 +46,20 @@ test("mobile OTA cannot bypass validation or mutate production data", () => {
   assert.doesNotMatch(workflow, /eas (?:build(?!:)|submit)\b/);
 });
 
+test("native-impact releases finish as an intentional OTA skip", () => {
+  assert.match(workflow, /id:\s*release-impact/);
+  assert.match(workflow, /--github-output/);
+  assert.match(
+    workflow,
+    /if:\s*steps\.release-impact\.outputs\.requires_native_build == 'false'/,
+  );
+  assert.match(
+    workflow,
+    /if:\s*steps\.release-impact\.outputs\.requires_native_build == 'true'/,
+  );
+  assert.match(workflow, /TestFlight-required release detected/);
+});
+
 test("EAS publishes iOS OTA only when the installed native fingerprint matches", () => {
   assert.match(easWorkflow, /^\s*push:\s*$/m);
   assert.match(easWorkflow, /^\s*- main\s*$/m);

@@ -181,6 +181,7 @@ function isNativeImpact(file, baseRef = null) {
 
 const baseRef = readArg("--base-ref");
 if (baseRef) git(["rev-parse", "--verify", `${baseRef}^{commit}`]);
+const githubOutputMode = process.argv.includes("--github-output");
 
 const files = collectDiffFiles(baseRef);
 const mobileFiles = files.filter(
@@ -220,6 +221,18 @@ if (process.argv.includes("--json")) {
     console.log("Native/TestFlight-required changes:");
     for (const file of nativeImpactFiles) console.log(`  - ${file}`);
   }
+}
+
+if (githubOutputMode) {
+  const outputPath = process.env.GITHUB_OUTPUT;
+  if (!outputPath) {
+    throw new Error("GITHUB_OUTPUT is required with --github-output.");
+  }
+  fs.appendFileSync(
+    outputPath,
+    `requires_native_build=${nativeImpactFiles.length > 0}\n`,
+  );
+  process.exit(0);
 }
 
 process.exit(nativeImpactFiles.length > 0 ? 2 : 0);

@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
-import { copyFile, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import {
+  copyFile,
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -42,6 +49,23 @@ function inspect(root, baseRef) {
     process.execPath,
     ["scripts/mobile-release-impact.mjs", "--base-ref", baseRef, "--json"],
     { cwd: root, encoding: "utf8" },
+  );
+}
+
+function inspectForWorkflow(root, baseRef, githubOutput) {
+  return spawnSync(
+    process.execPath,
+    [
+      "scripts/mobile-release-impact.mjs",
+      "--base-ref",
+      baseRef,
+      "--github-output",
+    ],
+    {
+      cwd: root,
+      encoding: "utf8",
+      env: { ...process.env, GITHUB_OUTPUT: githubOutput },
+    },
   );
 }
 
@@ -106,6 +130,30 @@ test("base-ref rejects committed native dependency changes", async () => {
       "artifacts/vndrly-mobile/package.json",
     ]);
     assert.equal(report.requiresNativeBuild, true);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("workflow mode safely skips OTA without failing when TestFlight is required", async () => {
+  const root = await createRepo();
+  try {
+    await writeFile(
+      path.join(root, "artifacts/vndrly-mobile/app.json"),
+      '{"expo":{"version":"1.0.1"}}\n',
+    );
+    git(root, "add", ".");
+    git(root, "commit", "--quiet", "-m", "native config change");
+    const githubOutput = path.join(root, "github-output.txt");
+
+    const result = inspectForWorkflow(root, "HEAD^", githubOutput);
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /Native\/TestFlight-required changes/);
+    assert.equal(
+      await readFile(githubOutput, "utf8"),
+      "requires_native_build=true\n",
+    );
   } finally {
     await rm(root, { recursive: true, force: true });
   }
