@@ -1,60 +1,68 @@
-# Work Hub progress and safe resume
+# Live release checkpoint — September 9, 2026, 14:32 UTC
 
-Updated: 2026-09-09 07:48 CDT (America/Chicago). Progress supplied by the active implementation task and checked against the saved workspace; historical tests are identified below.
+Application source is now published on main at **76db4fc009fdf77416f77c1285a6c22021f1f905**. Deployment-only recovery **0ae510e0443703a22513c0e1432b424ee7fdf6e1** preserves identical application source. Fetch main to obtain implementation; this handoff branch remains documentation-only.
+
+- Web Publish [34363501708](https://github.com/vndrly/VNDRLY.ai/actions/runs/34363501708) succeeded; public root and gate return HTTP 200.
+- OTA [34363524030](https://github.com/vndrly/VNDRLY.ai/actions/runs/34363524030) succeeded. Production iOS update group **65d5efbe-59bc-4f06-b6e8-55f07b2bafc8**, runtime 1.0.2, exact application commit 76db4fc0.
+- Native TestFlight [34363527714](https://github.com/vndrly/VNDRLY.ai/actions/runs/34363527714) is building; submission is not yet complete.
+- API deployment remains incomplete. Initial relay startup readiness race was fixed. Recovery identified missing imports in two migration entrypoints; those are being corrected and replay-tested on an isolated database. Do not claim the expanded API is live until restart/migrations succeed.
+- VNDRLY-hosted relay is active and externally verified: forced relay UDP and TCP each passed 5 sent / 5 received / 5 echoed packets with connected relay candidate pairs. Permanent credentials were neither printed nor rotated.
+
+Full ship is still in progress. The historical source-verification checkpoint below records completed implementation tests; its pre-publication remaining steps are superseded by this live status.
+
+---
+
+# Work Hub implementation and release checkpoint
+
+Updated September 9, 2026 (America/Chicago).
 
 ## Release state
-- GitHub repository: vndrly/VNDRLY.ai.
-- Local implementation branch: codex/work-hub-expansion, baseline 931b7e5f127feaac3b31ccf6128f868813e25133.
-- This checkpoint publishes documentation only on codex/work-hub-handoff-20260909. It does not publish application source, advance main, or deploy.
-- The expanded Work Hub has NOT been fully implemented, verified, or shipped. Source changes described below are local, uncommitted, and not available by cloning this documentation branch.
 
-## Approved scope
-See [design](superpowers/specs/2026-09-09-work-hub-expansion.md) and [implementation plan](superpowers/plans/2026-09-09-work-hub-expansion.md). The user authorized unattended implementation and full ship. Latest audio instruction: extend the already developed internal WebRTC solution, not an external calling API. Payment/payroll external execution must remain truthful and unavailable until configured; it must never simulate successful transactions.
+The expansion is implemented locally on `codex/work-hub-expansion`, with implementation and required verification complete. Original baseline: `931b7e5f127feaac3b31ccf6128f868813e25133`. The non-overlapping release guard fix through `d6f854b1ceed67827e7cc5f5b088b36e5cb4dbba` was fast-forwarded without replacing local work. Publication and live verification remain pending. Passing source tests are not a production release.
 
-## Actual progress
-| Area | Status | Evidence / remaining work |
-|---|---|---|
-| Interview and scope | Written | Approved decisions saved in design and plan; no screenshot business data copied |
-| Crews, chats, invitations, preferences | Partial local implementation | Dedicated schema/routes/access helpers exist; completing permission review, migration, registration and tests |
-| Workspace navigation | Partial local implementation | Rail/navigation files changed; expanded page integration and tests in progress |
-| Billing/payroll | Partial local implementation | Dedicated schema, policy helpers and tests; API/UI integration and verification in progress |
-| Internal audio | Partial local implementation | Host-controlled consent/capture, private recording chunks, signal ordering and optional self-hosted relay credentials implemented; full multi-participant browser/native verification outstanding |
-| Mobile | Partial local implementation | Scope helper/test and entry screen recovered; participant flows and checks outstanding |
-| Migrations | In progress | Additive collaboration/finance scripts require review and deploy registration; not applied to production |
-| Full ship | Not started | No release commit/push/main update, deployment, OTA or TestFlight submission for this expansion |
+The separate `codex/work-hub-handoff-20260909` documentation branch carries cross-machine progress; it does not contain application source. Later release evidence must identify the exact main commit, workflow runs, Expo update and TestFlight build/submission.
 
-## Test evidence
-- Before restart: internal-audio policy tests passed (3 tests); baseline shared declaration build and then-existing web typecheck passed. These are historical, limited results, not proof for the current tree.
-- Mobile device-scope test was first run red as intended before implementation; final passing rerun pending.
-- After restart: refreshed origin; HEAD and origin/main still matched baseline. Dedicated test PostgreSQL restart performed. All complete release gates must be rerun against final integrated files.
+## Implemented scope
 
-## Blockers and limitations
-- Machine restart interrupted work. No prior process is assumed alive.
-- Windows sandbox helper intermittently failed to start; scoped elevated command execution has been used when required.
-- Payment processor, direct deposit and payroll tax/filing integrations are not yet configured. No real money movement or filing is claimed.
-- Internal audio does not require a paid calling provider; restrictive networks may require VNDRLY-hosted TURN relay configuration and verification.
-- Native device behavior and live browser end-to-end proof remain outstanding.
+See the [approved design](superpowers/specs/2026-09-09-work-hub-expansion.md) and [implementation plan](superpowers/plans/2026-09-09-work-hub-expansion.md).
 
-## Next steps
-1. Finish collaboration and finance contracts, mount routers/schema exports and guarded migrations.
-2. Finish workspace screens, native participant flows, recording/voicemail and private-file access.
-3. Review tenant/role boundaries, idempotency, fee/refund math, monetary precision and public-link scope.
-4. Run root typecheck, locale parity, libraries, web, mobile, isolated API and E2E tests; inspect real UI with fictional test data.
-5. Commit scoped changes; publish non-force; verify web, API/Supabase migrations, production OTA and exact TestFlight build/submission.
-6. Update this checkpoint with new evidence and actual release URLs.
+- Persistent Crews, Channels, invitations, chats, activity, preferences, conversation actions, notes and existing task/form workflows in a branded workspace.
+- Calendar and authenticated Meetings scheduling with personal/shared meeting types, availability and conflict protection.
+- Internal WebRTC Calls and meetings, acceptance boundaries, private voicemail, and host-controlled meeting recording with participant consent. VNDRLY-hosted TURN provisioning is included; no external calling provider is introduced.
+- Personal/shared files, versions, integrity verification, favorites, recycle/restore and expiring revocable public links; authorized existing uploads remain available.
+- Invoice drafts, issue/email/print/export, outside payments, guarded refunds and platform fee policy. Payroll preparation/approval requires explicit payroll grants; administration alone never grants payroll data access.
+- CSV preview/mapping/confirmation/import history and authorized exports, plus existing accounting connection entry points. Microsoft remains import-only and unavailable without configuration.
+- Phone/tablet daily collaboration and native audio using existing dependencies. Full financial execution, refund and bulk import controls remain web-only.
 
-## Resume safely from either machine
-Read this document and both linked documents first. Fetch the repository and inspect branch, remote, status and local changes. The documentation branch does not contain unfinished source; recover source from the originating checkout or a later verified implementation commit before continuing. Never reset or overwrite local work to match this checkpoint.
+Screenshot business data and source screenshots are excluded from application code, fixtures and documents.
 
-Preserve the pre-existing deleted button shortcut and untracked artifacts/list-one-verification directory. Do not stage them. Never wipe/reset a database, rotate demo credentials or force push. For API/E2E use fresh-local mode with a new loopback test database; do not use the legacy schema-reset test mode. Do not print secrets. Keep screenshot contents out of code/docs/fixtures.
+## Verification before publication
 
-A full ship is complete only with commit/main proof, verified web and API, additive database/storage cutover where needed, Expo OTA group and exact native TestFlight submission evidence. Source compilation alone is not a release.
+- Full workspace typecheck and English/Spanish locale parity passed.
+- Shared library tests: 57 passed.
+- Web: 956 passed and 3 skipped in the broad run; affected Work Hub and three worker-startup failures were covered by focused retries. Final recording-flush regression passed after correcting its test timer selection.
+- Mobile: all 104 files / 681 tests covered by passing runs and unchanged retries for Windows startup/import timeouts.
+- API: broad fresh-local run passed 2,359 tests; focused retries covered every affected file, including storage ownership, capture consent and the isolated database-role fixture. No production database was used.
+- All 36 browser workflows passed across the broad run and focused retries, including the persisted Work Hub flow and real audio.
+- Real two-browser internal audio passed: acceptance, both actual audio-room interfaces, bidirectional RTP packets and recording denied for Calls. Only microphone hardware was synthetic; signaling and media were real.
+- Production web/API bundles built. Newly fetched mobile release guard checks passed 15/15. Relay/workflow checks passed; actual relay allocation awaits deployment.
 
+Logs and synthetic browser artifacts remain local in `artifacts/work-hub-verification/`, excluded from release. Final scope corrections also passed: announcement authorization 3 tests, command consumers 16 tests, finance API 6 tests, mobile document checks 6 tests, focused web 11 tests, and API/web/mobile typechecks. Announcements now reach authorized recipients with acknowledgement and urgent priority; personal issued payroll documents are recipient-only; gross payroll drafts export to CSV.
 
-## Cross-machine continuation prompt
+## Explicit live limitations
 
-> Read docs/work-hub-progress.md on branch codex/work-hub-handoff-20260909 in vndrly/VNDRLY.ai, then its linked scope and plan. Check for a newer progress update and a published implementation checkpoint before changing anything. Preserve this machine's local changes. Confirm which source changes are actually available remotely. Resume the unfinished Work Hub expansion under the recorded scope, using internal audio, then verify and full ship. Coordinate with the home task before parallel edits; never assume this documentation checkpoint contains the unfinished source.
+Card/ACH collections, payroll direct deposit, taxes/filings and secure provider-managed bank/tax onboarding require provider configuration. Unavailable execution never simulates a payment, deposit, filing or net-pay calculation. Microsoft connection/import requires credentials. Transcription depends on the existing configured transcription service; live audio itself does not.
 
-## Progress maintenance
+The relay must be verified from outside the VPS after deployment; a listener check alone is insufficient. Physical iOS microphone/headset behavior remains a device acceptance check. Automated native tests and TestFlight submission do not prove physical hardware behavior.
 
-The active implementation task has been instructed to update this file at meaningful milestones with timestamps, checkpoint commits, test results, blockers, and release evidence. This is a saved checkpoint, not a live feed. If work moves to a different branch, update this document with the exact branch and commit so this bookmarked page remains the entry point.
+## Remaining release work
+
+1. Freeze the verified source and preserve its exact tree identity.
+2. Recheck remote main and publish scoped source non-force, preserving unrelated work.
+3. Verify web Publish, API Deploy/additive migrations, authenticated Work Hub and external TURN allocation.
+4. Dispatch/verify production OTA eligibility/update and exact native TestFlight build/submission. Never bypass an incompatible-runtime OTA guard.
+5. Record concrete evidence on the handoff branch. Full ship remains incomplete until required tracks have terminal proof.
+
+## Safe resume
+
+Inspect branch, remotes, status and latest checkpoint. Preserve pre-existing deleted button shortcut and untracked `artifacts/list-one-verification/`. Exclude verification helpers/logs. Never force-push, rotate credentials, wipe/reset data or run destructive schema push. API/E2E use new loopback databases in `fresh-local` mode. Never reset source work to match a documentation-only branch.
