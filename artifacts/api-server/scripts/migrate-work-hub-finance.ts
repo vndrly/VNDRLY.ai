@@ -1,4 +1,3 @@
-import "../src/lib/loadEnv";
 import { db } from "@workspace/db";
 import { sql } from "drizzle-orm";
 
