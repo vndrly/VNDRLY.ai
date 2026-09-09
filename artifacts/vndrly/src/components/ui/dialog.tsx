@@ -120,12 +120,14 @@ type DialogContentProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.
   hideClose?: boolean
   /** Omit the page-blocking backdrop for persistent utility panels. */
   hideOverlay?: boolean
+  /** Optional per-dialog sizing/position override for the decorative header image. */
+  accentHeaderStyle?: React.CSSProperties
 }
 
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   DialogContentProps
->(({ className, children, bare = false, hideClose = false, hideOverlay = false, ...props }, ref) => {
+>(({ className, children, bare = false, hideClose = false, hideOverlay = false, accentHeaderStyle, ...props }, ref) => {
   const [customLogo, setCustomLogo] = React.useState<DialogLogoSpec | null>(null)
   const ctxValue = React.useMemo<DialogLogoContextValue>(() => ({ setCustomLogo }), [])
   const { resolved } = useTheme()
@@ -148,7 +150,7 @@ const DialogContent = React.forwardRef<
           <div
             aria-hidden
             className={modalTheme.accentHeaderClassName}
-            style={modalTheme.accentHeaderStyle}
+            style={{ ...modalTheme.accentHeaderStyle, ...accentHeaderStyle }}
             data-testid="modal-accent-header"
           />
           {bare ? (

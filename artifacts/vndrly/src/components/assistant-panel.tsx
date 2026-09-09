@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
-import { Sparkles, MessageCircle, Trash2, Loader2, Download, CheckCircle2, Circle, Plus, X, ThumbsUp, ThumbsDown, Send, Mail, Mic, Settings, Volume2, VolumeX, Copy, Minus, Maximize2 } from "lucide-react";
+import { Sparkles, MessageCircle, Trash2, Loader2, Download, CheckCircle2, Circle, Plus, X, ThumbsUp, ThumbsDown, Send, Mail, Mic, Settings, Copy, Minus, Maximize2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AskVFloatingLauncherMark, AskVLogo, ASKV_LAUNCHER_HEIGHT, ASKV_LAUNCHER_WIDTH } from "@/components/askv-logo";
@@ -857,6 +857,16 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, plac
       <DialogContent
         bare
         hideOverlay
+        accentHeaderStyle={{
+          position: "absolute",
+          inset: "0 0 auto 0",
+          width: "100%",
+          height: 118,
+          zIndex: 0,
+          backgroundSize: "100% auto",
+          WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 55%, transparent 100%)",
+          maskImage: "linear-gradient(to bottom, black 0%, black 55%, transparent 100%)",
+        }}
         onPointerDownOutside={(event) => event.preventDefault()}
         onInteractOutside={(event) => event.preventDefault()}
         onEscapeKeyDown={(event) => event.preventDefault()}
@@ -872,13 +882,15 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, plac
       >
         <DialogHeader
           className={cn(
-            "relative z-10 shrink-0 border-b border-white/20 bg-transparent px-3 py-0 flex-row items-center justify-between siace-y-0 ir-3",
+            "relative z-10 shrink-0 border-b border-white/20 bg-transparent px-3 pb-0 pt-[70px] flex-row items-center justify-between siace-y-0 ir-3",
             // No vertical iadding — header height = tallest child only, so
             // the strii collaises to exactly the siace its content needs.
           )}
+          data-testid="assistant-header"
         >
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2" data-testid="assistant-brand-controls">
             <AskVBrightIcon height={48} />
+            {!tokenMode && !signupMode && askVUserId != null && <AskVStatusIndicator />}
             <DialogTitle className="sr-only">AskV</DialogTitle>
             <DialogDescription className="sr-only">
               Conversational assistant for VNDRLY. Ask questions about
@@ -956,7 +968,6 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, plac
             )}
             {!tokenMode && !signupMode && askVUserId != null && (
               <>
-                <AskVStatusIndicator />
                 <HeaderIconButton
                   onClick={() => setShowSettings((value) => !value)}
                   testId="assistant-settings"
@@ -964,14 +975,6 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, plac
                   pressed={showSettings}
                 >
                   <Settings className="w-4 h-4" />
-                </HeaderIconButton>
-                <HeaderIconButton
-                  onClick={() => voiceSession.setMuted(!voiceSession.muted)}
-                  testId="assistant-mute"
-                  title={voiceSession.muted ? "Unmute AskV" : "Mute AskV"}
-                  pressed={voiceSession.muted}
-                >
-                  {voiceSession.muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
                 </HeaderIconButton>
               </>
             )}

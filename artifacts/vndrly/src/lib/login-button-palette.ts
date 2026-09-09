@@ -23,6 +23,8 @@ import midconBlueSquare from "@assets/button-palette/900x229_midcon_blue_square-
 
 /** Universal light-grey idle square — every brand at rest. */
 export const LOGIN_IDLE_SQUARE_SRC = idleSquare;
+export const LOGIN_RED_SQUARE_SRC = redSquare;
+export const LOGIN_GREEN_SQUARE_SRC = greenSquare;
 
 /** Natural width:height of the 900×229 square PNGs. */
 export const LOGIN_BUTTON_IMAGE_ASPECT = 900 / 229;

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 
@@ -59,6 +59,12 @@ it('extends the full AskV panel downward without changing its top-right anchor',
   expect(panel.className).toContain('sm:right-6');
   expect(panel.className).toContain('sm:top-6');
   expect(panel.className).toContain('h-[min(86vh,768px)]');
+  const accent = screen.getByTestId('modal-accent-header');
+  expect(accent.style.backgroundSize).toBe('100%');
+  expect(accent.style.position).toBe('absolute');
+  expect(accent.style.height).toBe('118px');
+  expect(accent.style.maskImage).toContain('transparent 100%');
+  expect(screen.getByTestId('assistant-header').className).toContain('pt-[70px]');
 });
 
 it('hides the AskV onboarding stepper after every current vendor step is complete', () => {
@@ -82,4 +88,6 @@ it('groups microphone and across-VNDRLY controls under one recognizable settings
   fireEvent.click(screen.getByRole('button', { name: 'Ask V settings' }));
   expect(screen.getByTestId('askv-microphone-settings')).not.toBeNull();
   expect(screen.getByRole('button', { name: /Enable AskV across VNDRLY/ })).not.toBeNull();
+  expect(screen.getAllByRole('button', { name: 'Mute AskV' })).toHaveLength(1);
+  expect(within(screen.getByTestId('assistant-brand-controls')).getByRole('button', { name: 'Mute AskV' })).not.toBeNull();
 });
