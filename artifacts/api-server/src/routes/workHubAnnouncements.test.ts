@@ -1,0 +1,65 @@
+import { randomUUID } from "node:crypto";
+import express from "express";
+import cookieParser from "cookie-parser";
+import request from "supertest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
+import { and, eq } from "drizzle-orm";
+import { db, usersTable, vendorsTable, userOrgMembershipsTable, workHubAnnouncementsTable, workHubAnnouncementRecipientsTable } from "@workspace/db";
+import operations from "./workHubOperations";
+import { buildTestCookie } from "../test-utils/session";
+vi.mock("../work-hub/feature-access", () => ({ isWorkHubEnabled: async () => true }));
+vi.mock("./notifications", () => ({ notifyUsers: vi.fn() }));
+const app = express().use(express.json()).use(cookieParser()).use(operations);
+describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")("announcement current company authorization", () => {
+  let ownerId: number, otherId: number, adminId: number, memberId: number, externalId: number;
+  let admin: string, member: string;
+  const envelope = (recipientUserIds: number[]) => ({ operationId: randomUUID(), owner: { type: "vendor", id: ownerId }, context: { kind: "organization", id: ownerId }, expectedVersion: null, payloadVersion: 1, payload: { title: `Announcement ${randomUUID()}`, body: "Example company handover", recipientUserIds, acknowledgementRequired: true } });
+  beforeAll(async () => {
+    const suffix = randomUUID();
+    const companies = await db.insert(vendorsTable).values(["A", "B"].map(name => ({ name: `Announcement ${name} ${suffix}`, contactName: "Example", contactEmail: `${name}.${suffix}@example.invalid` }))).returning();
+    [ownerId, otherId] = companies.map(row => row.id);
+    const people = await db.insert(usersTable).values(["Admin", "Member", "External"].map(name => ({ username: `${name}.${suffix}@example.invalid`, displayName: name, passwordHash: "unused-fixture", role: "vendor" }))).returning();
+    [adminId, memberId, externalId] = people.map(row => row.id);
+    await db.insert(userOrgMembershipsTable).values([{ userId: adminId, orgType: "vendor", vendorId: ownerId, role: "admin" }, { userId: memberId, orgType: "vendor", vendorId: ownerId, role: "member" }, { userId: externalId, orgType: "vendor", vendorId: otherId, role: "member" }]);
+    admin = buildTestCookie({ userId: adminId, role: "vendor", vendorId: ownerId, membershipRole: "admin" });
+    member = buildTestCookie({ userId: memberId, role: "vendor", vendorId: ownerId, membershipRole: "admin" });
+  });
+  it("rejects any foreign recipient and stale admin claim without inserting an announcement", async () => {
+    const foreign = envelope([memberId, externalId]);
+    expect((await request(app).post("/work-hub/announcements").set("Cookie", admin).send(foreign)).status).toBe(403);
+    expect(await db.select().from(workHubAnnouncementsTable).where(eq(workHubAnnouncementsTable.title, foreign.payload.title))).toHaveLength(0);
+    expect((await request(app).post("/work-hub/announcements").set("Cookie", member).send(envelope([memberId]))).status).toBe(403);
+  });
+  it("publishes to current members, acknowledges idempotently, and denies replay after admin demotion", async () => {
+    const body = envelope([memberId]);
+    const published = await request(app).post("/work-hub/announcements").set("Cookie", admin).send(body);
+    expect(published.status).toBe(201);
+    const id = published.body.resource.id;
+    expect((await request(app).post("/work-hub/announcements").set("Cookie", admin).send(body)).status).toBe(200);
+    const home = await request(app).get("/work-hub/home").set("Cookie", member);
+    expect(home.body.announcements.some((row: any) => row.announcement.id === id)).toBe(true);
+    const ack = await request(app).post(`/work-hub/announcements/${id}/acknowledge`).set("Cookie", member).send({});
+    expect(ack.status).toBe(200);
+    const replay = await request(app).post(`/work-hub/announcements/${id}/acknowledge`).set("Cookie", member).send({});
+    expect(replay.body.acknowledgedAt).toBe(ack.body.acknowledgedAt);
+    await db.update(userOrgMembershipsTable).set({ role: "member" }).where(eq(userOrgMembershipsTable.userId, adminId));
+    expect((await request(app).post("/work-hub/announcements").set("Cookie", admin).send(body)).status).toBe(403);
+    const management = await request(app).get("/work-hub/admin").set("Cookie", admin);
+    expect(management.body.announcements).toEqual([]);
+    await db.update(userOrgMembershipsTable).set({ role: "admin" }).where(eq(userOrgMembershipsTable.userId, adminId));
+  });
+  it("removes stale recipients from home/search and denies acknowledgement and command replay", async () => {
+    const body = envelope([memberId]);
+    const published = await request(app).post("/work-hub/announcements").set("Cookie", admin).send(body);
+    expect(published.status).toBe(201);
+    const id = published.body.resource.id;
+    await db.update(userOrgMembershipsTable).set({ vendorId: otherId }).where(eq(userOrgMembershipsTable.userId, memberId));
+    expect((await request(app).get("/work-hub/home").set("Cookie", member)).body.announcements).toEqual([]);
+    const search = await request(app).get("/work-hub/search").query({ q: body.payload.title }).set("Cookie", member);
+    expect(JSON.stringify(search.body)).not.toContain(id);
+    expect((await request(app).post(`/work-hub/announcements/${id}/acknowledge`).set("Cookie", member).send({})).status).toBe(404);
+    expect((await request(app).post("/work-hub/announcements").set("Cookie", admin).send(body)).status).toBe(403);
+    const [recipient] = await db.select().from(workHubAnnouncementRecipientsTable).where(and(eq(workHubAnnouncementRecipientsTable.announcementId, id), eq(workHubAnnouncementRecipientsTable.userId, memberId)));
+    expect(recipient.acknowledgedAt).toBeNull();
+  });
+});

@@ -1,3 +1,11 @@
+import { ImportExportTools } from "@/components/work-hub/import-export";
+import { FilesAndNotes } from "@/components/work-hub/files-and-notes";
+import { WorkHubCalls } from "@/components/work-hub/calls";
+import { MeetingScheduling } from "@/components/work-hub/meeting-scheduling";
+import { ActivityWorkspace, CollaborationWorkspace } from "@/components/work-hub/collaboration";
+import { CalendarTimeGrid, localDateKey } from "@/components/work-hub/calendar-views";
+import { WorkHubFinance, WorkHubAdministration } from "@/components/work-hub/finance";
+import { AssistantPanel } from "@/components/assistant-panel";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import {
@@ -7,7 +15,7 @@ import {
   Link2,
   MessageSquare,
   Search,
-  Video,
+  Headphones,
 } from "lucide-react";
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import BrandPillButton from "@/components/brand-pill-button";
@@ -61,11 +69,11 @@ const MODULES = {
   meetings: [
     "Meetings",
     "Scheduling, attendance, consent, chat, and catch-up records.",
-    Video,
+    Headphones,
   ],
   search: ["Search", "Permission-filtered discovery across Work Hub.", Search],
   settings: [
-    "Settings & Connections",
+    "Import & Export",
     "Optional, one-way Microsoft 365 migration controls.",
     Link2,
   ],
@@ -448,9 +456,9 @@ function CalendarModule() {
   const { user } = useAuth();
   const canManage = isWorkHubScheduler(user);
   const [month, setMonth] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
-  const [selectedDay, setSelectedDay] = useState(() => new Date().toISOString().slice(0, 10));
-  const start = new Date(month.getFullYear(), month.getMonth(), 1);
-  const end = new Date(month.getFullYear(), month.getMonth() + 1, 1);
+  const [selectedDay, setSelectedDay] = useState(() => localDateKey(new Date()));
+  const start = new Date(month.getFullYear(), month.getMonth(), -6);
+  const end = new Date(month.getFullYear(), month.getMonth() + 1, 8);
   const calendar = useQuery<Row>({
     queryKey: ["work-hub", "calendar", start.toISOString(), end.toISOString()],
     queryFn: () =>
@@ -494,10 +502,10 @@ function CalendarModule() {
       ].sort((a, b) => String(a.startsAt).localeCompare(String(b.startsAt))),
     [calendar.data],
   );
-  const firstWeekday = start.getDay();
+  const firstWeekday = new Date(month.getFullYear(), month.getMonth(), 1).getDay();
   const daysInMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
   const calendarDays = Array.from({ length: firstWeekday + daysInMonth }, (_, index) => index < firstWeekday ? null : index - firstWeekday + 1);
-  const dateKey = (value: unknown) => value ? new Date(String(value)).toLocaleDateString("en-CA") : "";
+  const dateKey = (value: unknown) => value ? localDateKey(new Date(String(value))) : "";
   const selectedItems = items.filter((item) => dateKey(item.startsAt) === selectedDay);
   const nextOfKind = (kind: string) => items.find((item) => item.kind === kind && new Date(item.startsAt).getTime() >= Date.now());
   const nextShift = nextOfKind("Shift");
@@ -505,7 +513,7 @@ function CalendarModule() {
   const nextTask = nextOfKind("Task");
   const unreadMessages = (channelSummary.data ?? []).reduce((total, channel) => total + Number(channel.unreadCount ?? 0), 0);
   return (
-    <Shell module="calendar">
+    <Shell module="calendar"><CalendarTimeGrid selectedDay={selectedDay} items={items} onSelectDay={day => { setSelectedDay(day); const date = new Date(`${day}T12:00:00`); setMonth(new Date(date.getFullYear(), date.getMonth(), 1)); }}/>
       <div className="grid gap-4">
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {[
@@ -659,6 +667,7 @@ function Governance({
     body: "",
     recipients: "",
     acknowledgementRequired: true,
+    urgency: "normal",
   });
   const [approval, setApproval] = useState({
     subjectType: "task",
@@ -674,7 +683,7 @@ function Governance({
             title: announcement.title,
             body: announcement.body,
             recipientUserIds: parseIds(announcement.recipients),
-            urgency: "normal",
+            urgency: announcement.urgency,
             acknowledgementRequired: announcement.acknowledgementRequired,
           }),
         ),
@@ -754,6 +763,9 @@ function Governance({
               placeholder="Recipient user IDs: 12,18"
               required
             />
+            <label className="grid gap-1 text-sm">Announcement priority
+              <select aria-label="Announcement priority" className="h-10 rounded border bg-background px-3" value={announcement.urgency} onChange={(e) => setAnnouncement({ ...announcement, urgency: e.target.value })}><option value="normal">Normal</option><option value="urgent">Urgent — notify recipients</option></select>
+            </label>
             <label className="flex gap-2 text-sm">
               <input
                 type="checkbox"
@@ -1306,7 +1318,7 @@ function MeetingsModule() {
     endsAt: "",
     participants: "",
   });
-  const [selected, setSelected] = useState<string>();
+  const [selected, setSelected] = useState<string | undefined>(() => new URLSearchParams(window.location.search).get("meeting") ?? undefined);
   const catchUp = useQuery<Row>({
     queryKey: ["work-hub", "meeting-catch-up", selected],
     queryFn: () => workHubRequest(`/meetings/${selected}/catch-up`),
@@ -1344,7 +1356,7 @@ function MeetingsModule() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["work-hub", "meetings"] }),
   });
   return (
-    <Shell module="meetings">
+    <Shell module="meetings"><MeetingScheduling />
       {canManage && <div className="mb-4 flex flex-wrap gap-2">
         <BrandPillButton tone="brand" onClick={() => document.getElementById("schedule-meeting")?.scrollIntoView({ behavior: "smooth" })}>Schedule meeting</BrandPillButton>
         <BrandPillButton tone="green" disabled={!owner || startNow.isPending} onClick={() => startNow.mutate()}>Start meeting now</BrandPillButton>
@@ -1455,7 +1467,7 @@ function FilesModule() {
   });
   const channels = useQuery<Row[]>({ queryKey: ["work-hub", "channels"], queryFn: () => workHubRequest("/channels") });
   const [category, setCategory] = useState("All");
-  const [channelId, setChannelId] = useState("");
+  const [channelId, setChannelId] = useState(() => new URLSearchParams(window.location.search).get("channel") ?? "");
   const [accessLevel, setAccessLevel] = useState("internal");
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const upload = useMutation({ mutationFn: async () => {
@@ -1601,7 +1613,7 @@ function SettingsModule() {
     enabled: canManage,
   });
   return (
-    <Shell module="settings">
+    <Shell module="settings"><ImportExportTools />
       <Card>
         <CardHeader>
           <CardTitle>Microsoft 365 import</CardTitle>
@@ -1699,18 +1711,32 @@ function Home() {
     </section>
   );
 }
-export default function WorkHubPage() {
+function AskVWorkspace() {
+  const [open, setOpen] = useState(true);
+  return <section className="p-6"><h1 className="text-2xl font-semibold">AskV</h1><p className="my-4 text-muted-foreground">Ask about your work by text or voice. AskV uses your current company permissions.</p><BrandPillButton tone="brand" onClick={() => setOpen(true)}>Open AskV</BrandPillButton><AssistantPanel open={open} onOpenChange={setOpen}/></section>;
+}
+function WorkHubContent() {
   const [location] = useLocation();
   const module = location.split("/")[2] as ModuleKey | undefined;
-  if (!module) return <Home />;
+  if (!module) return <ActivityWorkspace />;
+  if (module === ("chat" as ModuleKey)) return <CollaborationWorkspace chat />;
+  if (module === ("calls" as ModuleKey)) return <WorkHubCalls />;
+  if (module === ("finance" as ModuleKey)) return <WorkHubFinance />;
+  if (module === ("administration" as ModuleKey)) return <WorkHubAdministration />;
+  if (module === ("askv" as ModuleKey)) return <AskVWorkspace />;
   const pages: Record<ModuleKey, ReactNode> = {
-    channels: <Channels />,
+    channels: <CollaborationWorkspace />,
     calendar: <CalendarModule />,
-    files: <FilesModule />,
+    files: <FilesAndNotes />,
     tasks: <TasksModule />,
     meetings: <MeetingsModule />,
     search: <SearchModule />,
     settings: <SettingsModule />,
   };
   return pages[module] ?? <Home />;
+}
+
+export default function WorkHubPage() {
+  const { user } = useAuth();
+  return <WorkHubContent key={`${user?.userId}:${user?.activeMembershipId}:${user?.vendorId}:${user?.partnerId}`} />;
 }

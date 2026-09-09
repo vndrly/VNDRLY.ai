@@ -1,7 +1,7 @@
 import { z } from "zod/v4";
 
 export const WORK_HUB_OWNER_TYPES = ["vendor", "partner"] as const;
-export const WORK_HUB_CONTEXT_KINDS = ["organization", "ticket", "site", "crew", "gate"] as const;
+export const WORK_HUB_CONTEXT_KINDS = ["organization", "ticket", "site", "crew", "gate", "chat"] as const;
 export const WORK_HUB_CAPABILITIES = [
   "channel.read",
   "channel.write",
@@ -46,3 +46,4 @@ export const WORK_HUB_ERROR_CODES = [
 ] as const;
 
 export type WorkHubErrorCode = (typeof WORK_HUB_ERROR_CODES)[number];
+

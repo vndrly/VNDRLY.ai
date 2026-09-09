@@ -41,6 +41,7 @@ vi.mock("@workspace/db", () => {
     "tickets",
     "people",
     "crew",
+    "workHubFiles",
   ];
   const tables = Object.fromEntries(
     names.map((name) => [
@@ -98,6 +99,7 @@ vi.mock("@workspace/db", () => {
     ticketsTable: tables.tickets,
     vendorPeopleTable: tables.people,
     ticketCrewTable: tables.crew,
+    workHubFilesTable: tables.workHubFiles,
   };
 });
 const objectPath = "/objects/uploads/00000000-0000-4000-8000-000000000001";
@@ -124,6 +126,7 @@ beforeEach(() => {
     tickets: [],
     people: [],
     crew: [],
+    workHubFiles: [],
   };
   state.rows.notes.push({
     id: 1,
@@ -244,3 +247,4 @@ describe("private ticket photo authorization", () => {
     expect(state.deleteObject).toHaveBeenCalledWith(objectPath);
   });
 });
+

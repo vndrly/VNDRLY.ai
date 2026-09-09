@@ -14,6 +14,15 @@ describe.skipIf(!enabled)("public Data API hardening in a fresh isolated Postgre
     try {
       await client.connect();
       await client.query("BEGIN");
+      // Reproduce the reviewed production identity only in this rollback-only
+      // local fixture; the SQL intentionally rejects other backend identities.
+      await client.query(`DO $$ BEGIN
+        IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname='postgres') THEN
+          CREATE ROLE postgres NOLOGIN SUPERUSER BYPASSRLS;
+        END IF;
+      END $$; SET LOCAL ROLE postgres`);
+      const owner = (await client.query<{ owner: string }>("SELECT current_user AS owner")).rows[0].owner;
+      const ownerRole = `"${owner.replace(/"/g, '""')}"`;
       // These roles and fixtures exist only inside this rolled-back transaction,
       // and role creation is gated above by the fresh-local cluster marker.
       await client.query(`DO $$ BEGIN
@@ -30,8 +39,8 @@ describe.skipIf(!enabled)("public Data API hardening in a fresh isolated Postgre
       GRANT SELECT(secret) ON public.hardening_test_company TO anon;
       GRANT ALL ON SEQUENCE public.hardening_test_company_id_seq TO PUBLIC, anon, authenticated, service_role;
       GRANT EXECUTE ON FUNCTION public.hardening_test_rpc() TO PUBLIC, anon, authenticated;
-      ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON TABLES TO anon, authenticated;
-      ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO anon, authenticated;`);
+      ALTER DEFAULT PRIVILEGES FOR ROLE ${ownerRole} IN SCHEMA public GRANT ALL ON TABLES TO anon, authenticated;
+      ALTER DEFAULT PRIVILEGES FOR ROLE ${ownerRole} IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO anon, authenticated;`);
       expect((await client.query("SELECT has_table_privilege('anon','public.hardening_test_company','SELECT') AS allowed")).rows[0].allowed).toBe(true);
       await client.query(migration);
       await client.query(migration);
@@ -51,7 +60,7 @@ describe.skipIf(!enabled)("public Data API hardening in a fresh isolated Postgre
       expect((await client.query("SELECT secret FROM public.hardening_test_company")).rows).toEqual([{ secret: "preserved" }]);
       await client.query("SET LOCAL ROLE service_role");
       expect((await client.query("SELECT public.hardening_test_rpc() AS secret")).rows[0].secret).toBe("preserved");
-      await client.query("RESET ROLE");
+      await client.query("SET LOCAL ROLE postgres");
       const rls = await client.query("SELECT relrowsecurity, relforcerowsecurity FROM pg_class WHERE oid='public.hardening_test_company'::regclass");
       expect(rls.rows[0]).toEqual({ relrowsecurity: true, relforcerowsecurity: false });
       await client.query("CREATE TABLE public.hardening_test_future(id integer); CREATE FUNCTION public.hardening_test_future_rpc() RETURNS integer LANGUAGE sql AS 'SELECT 1'");

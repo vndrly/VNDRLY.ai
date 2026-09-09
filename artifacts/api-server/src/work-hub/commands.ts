@@ -10,8 +10,10 @@ export async function executeWorkHubCommand<T>(
   kind: string,
   envelope: WorkHubCommandEnvelope<unknown>,
   apply: (tx: Parameters<Parameters<typeof db.transaction>[0]>[0]) => Promise<T>,
+  authorize?: (tx: Parameters<Parameters<typeof db.transaction>[0]>[0]) => Promise<void>,
 ): Promise<WorkHubCommandResult<T>> {
   return db.transaction(async (tx) => {
+    await authorize?.(tx);
     const [claimed] = await tx.insert(workHubClientOperationsTable).values({
       userId: actor.userId, commandKind: kind, operationId: envelope.operationId,
       ownerOrgType: envelope.owner.type, ownerOrgId: envelope.owner.id,

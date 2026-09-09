@@ -53,6 +53,7 @@ export async function apiFetch<T = unknown>(
     headers.set("content-type", "application/json");
   }
   headers.set("accept", "application/json");
+  headers.set("x-vndrly-client", "ios");
   if (token) headers.set("authorization", `Bearer ${token}`);
 
   let res: Response;
@@ -293,3 +294,4 @@ export async function logout() {
   await setToken(null);
   await setUser(null);
 }
+

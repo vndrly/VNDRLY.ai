@@ -20,6 +20,11 @@
     "migrate:askv-greeting": "node scripts/apply-askv-greeting-migration.mjs",
     "migrate:assistant-action-audit": "node scripts/apply-assistant-action-audit-migration.mjs",
     "migrate:work-hub-flags": "node scripts/apply-work-hub-flags-migration.mjs",
+    "migrate:work-hub-calls": "node scripts/apply-work-hub-calls-migration.mjs",
+    "migrate:work-hub-scheduling": "node scripts/apply-work-hub-scheduling-migration.mjs",
+    "migrate:work-hub-file-library": "tsx scripts/migrate-work-hub-file-library.ts",
+    "migrate:work-hub-finance": "tsx scripts/migrate-work-hub-finance.ts",
+    "migrate:work-hub-collaboration": "node scripts/apply-work-hub-collaboration-migration.mjs",
     "migrate:work-hub-core": "node scripts/apply-work-hub-core-migration.mjs",
     "migrate:work-hub-domains": "node scripts/apply-work-hub-domains-migration.mjs",
     "migrate:work-hub-notifications": "node scripts/apply-work-hub-notifications-migration.mjs",
@@ -110,3 +115,4 @@
     "vitest": "^4.1.4"
   }
 }
+

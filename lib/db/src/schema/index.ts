@@ -102,3 +102,8 @@ export * from "./workHubSchedule";
 export * from "./workHubMeetings";
 export * from "./workHubConnectors";
 export * from "./workHubImports";
+export * from "./workHubCollaboration";
+export * from "./workHubFinance";
+export * from "./workHubScheduling";
+export * from "./workHubCalls";
+export * from "./workHubFileLibrary";

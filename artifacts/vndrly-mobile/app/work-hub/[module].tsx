@@ -9,6 +9,9 @@ import {
   TextInput,
   View,
 } from "react-native";
+import WorkHubCalls from "@/components/WorkHubCalls";
+import WorkHubAudioRoom from "@/components/WorkHubAudioRoom";
+import WorkHubConversation from "@/components/WorkHubConversation";
 import ScreenSafeArea from "@/components/ScreenSafeArea";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/hooks/use-auth";
@@ -17,11 +20,12 @@ import { mobileOwner, moduleEndpoint } from "@/lib/work-hub-mobile";
 
 type Row = Record<string, any>;
 const titles: Record<string, string> = {
-  channels: "Channels",
+  channels: "Crews & Channels",
+  activity: "Activity", chat: "Chat", crews: "Crews",
   calendar: "Calendar",
   "files-notes": "Files & Notes",
   "tasks-forms": "Tasks & Forms",
-  meetings: "Meetings",
+  meetings: "Meetings", calls: "Calls",
   search: "Search",
   "settings-connections": "Settings & Connections",
 };
@@ -50,6 +54,7 @@ export default function WorkHubModuleScreen() {
     (membership) => membership.id === user.activeMembershipId,
   );
   const canManage = user?.role === "admin" || activeMembership?.role === "admin";
+  const [selectedChannel, setSelectedChannel] = useState<Row | null>(null);
   const [data, setData] = useState<any>();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -70,7 +75,7 @@ export default function WorkHubModuleScreen() {
     [module, query],
   );
   useEffect(() => {
-    void load("");
+    if (module !== "calls") void load("");
   }, [module]);
   const rows = useMemo<Row[]>(() => {
     if (Array.isArray(data)) return data;
@@ -79,16 +84,16 @@ export default function WorkHubModuleScreen() {
         ...(data?.shifts ?? []).map((x: Row) => ({ ...x.item, kind: "Shift" })),
         ...(data?.tasks ?? []).map((x: Row) => ({ ...x.item, kind: "Task" })),
         ...(data?.meetings ?? []).map((x: Row) => ({
-          ...x.occurrence,
-          title: x.meeting.title,
+          ...(x.occurrence ?? x.item?.occurrence),
+          title: (x.meeting ?? x.item?.meeting)?.title,
           kind: "Meeting",
         })),
       ];
     if (module === "meetings")
       return (data?.meetings ?? []).map((x: Row) => ({
-        ...x.occurrence,
-        title: x.meeting.title,
-        agenda: x.meeting.agenda,
+        ...(x.occurrence ?? x.item?.occurrence),
+        title: (x.meeting ?? x.item?.meeting)?.title,
+        agenda: (x.meeting ?? x.item?.meeting)?.agenda,
         kind: "Meeting",
       }));
     if (module === "search") return data?.results ?? [];
@@ -161,6 +166,7 @@ export default function WorkHubModuleScreen() {
       );
     }
   };
+  if (module === "calls") return <ScreenSafeArea style={{ backgroundColor: colors.background }}><Stack.Screen options={{ title: "Calls" }} /><ScrollView contentContainerStyle={{ padding: 20, gap: 14 }}><Text accessibilityRole="header" style={{ color: colors.text, fontSize: 28, fontWeight: "700" }}>Calls</Text><WorkHubCalls /></ScrollView></ScreenSafeArea>;
   return (
     <ScreenSafeArea style={{ backgroundColor: colors.background }}>
       <Stack.Screen options={{ title }} />
@@ -288,7 +294,8 @@ export default function WorkHubModuleScreen() {
             {error}
           </Text>
         )}
-        {rows.map((row) => (
+        {selectedChannel && <WorkHubConversation channel={selectedChannel} onClose={() => setSelectedChannel(null)} />}
+        {!selectedChannel && rows.map((row) => (
           <View
             key={row.id}
             style={{
@@ -327,6 +334,8 @@ export default function WorkHubModuleScreen() {
                   ).toLocaleString()
                 : ""}
             </Text>
+            {module === "meetings" && <WorkHubAudioRoom occurrenceId={row.id} />}
+            {["channels", "chat"].includes(module) && <Pressable accessibilityRole="button" onPress={() => setSelectedChannel(row)}><Text style={{ color: colors.primary, padding: 10 }}>Open conversation</Text></Pressable>}
             {module === "tasks-forms" && row.status !== "completed" && (
               <Pressable
                 accessibilityRole="button"
@@ -376,3 +385,4 @@ export default function WorkHubModuleScreen() {
     </ScreenSafeArea>
   );
 }
+

@@ -12,6 +12,7 @@ on:
       - "scripts/askv-greeting-migration.mjs"
       - "scripts/assistant-action-audit-migration.mjs"
       - "scripts/work-hub-*-migration.mjs"
+      - "scripts/provision-work-hub-audio.sh"
       - ".github/workflows/deploy-api.yml"
   workflow_dispatch:
 
@@ -45,6 +46,11 @@ jobs:
               exit 1
             fi
           done
+          if [[ ! "$VPS_HOST" =~ ^[a-zA-Z0-9]([a-zA-Z0-9.-]*[a-zA-Z0-9])?$ || "$VPS_HOST" == *..* ]]; then
+            echo "::error::VPS_HOST must be a plain hostname or IPv4 address"
+            exit 1
+          fi
+          [[ "$EXPECTED_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::Invalid release commit"; exit 1; }
 
       - name: Install SSH deployment tools
         run: |
@@ -66,7 +72,7 @@ jobs:
             -o PubkeyAuthentication=no \
             -o StrictHostKeyChecking=accept-new \
             "$VPS_USER@$VPS_HOST" \
-            "EXPECTED_SHA=$(printf '%s' "$EXPECTED_SHA") bash -s" <<'REMOTE'
+            "EXPECTED_SHA=$EXPECTED_SHA RELAY_HOST=$VPS_HOST bash -s" <<'REMOTE'
           set -euo pipefail
           APP_DIR=/var/www/vndrly
           cd "$APP_DIR"
@@ -83,6 +89,7 @@ jobs:
           export CI=true
           sudo -u vndrly env HOME=/home/vndrly pnpm install --frozen-lockfile
           sudo -u vndrly env HOME=/home/vndrly pnpm --filter @workspace/api-server run build
+          sudo bash scripts/provision-work-hub-audio.sh "$RELAY_HOST"
           database_url="$(sudo sed -n 's/^DATABASE_URL=//p' .env.production | head -n 1)"
           if [ -z "$database_url" ]; then
             echo "DATABASE_URL missing from .env.production; refusing API restart" >&2
@@ -111,7 +118,17 @@ jobs:
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:work-hub-imports
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:work-hub-channel-visibility
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:work-hub-project-calendar
+          sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:work-hub-collaboration
+          sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:work-hub-finance
+          sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:work-hub-calls
+          sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:work-hub-scheduling
+          sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:work-hub-file-library
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" APPLY_PUBLIC_DATA_API_HARDENING=1 pnpm --filter @workspace/api-server run migrate:public-data-api-hardening
+          # The additive schema defaults Work Hub off. This authorized launch opts in
+          # only when the VPS has no explicit environment rollout setting.
+          if ! sudo grep -q '^WORK_HUB_ENABLED=' .env.production; then
+            sudo sed -i '$aWORK_HUB_ENABLED=1' .env.production
+          fi
           unset database_url openai_key
           sudo systemctl daemon-reload
           sudo systemctl enable vndrly-api 2>/dev/null || true

@@ -44,6 +44,8 @@ const DEV_UNAUTHENTICATED_ALLOWLIST: ApiAllowRule[] =
     : [];
 
 export const PUBLIC_UNAUTHENTICATED_ALLOWLIST: ApiAllowRule[] = [
+  { method: "GET", pattern: /^\/api\/work-hub\/file-library\/public\/[a-f0-9]{64}$/ },
+  { method: "GET", pattern: /^\/api\/work-hub\/finance\/public\/[a-f0-9]{64}$/ },
   ...GUEST_ALLOWLIST,
   ...DEV_UNAUTHENTICATED_ALLOWLIST,
   { method: "GET", pattern: /^\/api\/healthz\/?$/ },

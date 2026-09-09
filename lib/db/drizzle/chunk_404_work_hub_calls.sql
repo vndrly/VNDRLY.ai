@@ -1,0 +1,5 @@
+BEGIN;
+CREATE TABLE IF NOT EXISTS work_hub_calls (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), caller_user_id integer NOT NULL REFERENCES users(id), recipient_user_id integer NOT NULL REFERENCES users(id), occurrence_id uuid NOT NULL REFERENCES work_hub_meeting_occurrences(id), status text NOT NULL DEFAULT 'ringing', created_at timestamptz NOT NULL DEFAULT now(), answered_at timestamptz, ended_at timestamptz);
+CREATE TABLE IF NOT EXISTS work_hub_voicemail (id uuid PRIMARY KEY, call_id uuid NOT NULL REFERENCES work_hub_calls(id), recipient_user_id integer NOT NULL REFERENCES users(id), sender_user_id integer NOT NULL REFERENCES users(id), storage_key text NOT NULL, content_type text NOT NULL, duration_ms integer NOT NULL, transcript text, created_at timestamptz NOT NULL DEFAULT now(), read_at timestamptz, deleted_at timestamptz);
+CREATE TABLE IF NOT EXISTS work_hub_call_settings (user_id integer PRIMARY KEY REFERENCES users(id), available boolean NOT NULL DEFAULT true, speed_dial jsonb NOT NULL DEFAULT '[]');
+COMMIT;
