@@ -4,13 +4,21 @@ export type WorkHubUser = {
   vendorId: number | null;
   partnerId: number | null;
   membershipRole?: string | null;
+  activeMembershipId?: number | null;
+  availableMemberships?: Array<{ id: number; role: string }>;
 };
 
 export function canManageWorkHubChannels(
   user: WorkHubUser | null | undefined,
 ): boolean {
+  const activeMembershipRole = user?.availableMemberships?.find(
+    (membership) => membership.id === user.activeMembershipId,
+  )?.role;
   return Boolean(
-    user && (user.role === "admin" || user.membershipRole === "admin"),
+    user &&
+      (user.role === "admin" ||
+        user.membershipRole === "admin" ||
+        activeMembershipRole === "admin"),
   );
 }
 

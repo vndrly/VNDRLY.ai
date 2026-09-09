@@ -12,6 +12,16 @@ describe("Work Hub client boundary", () => {
     expect(canManageWorkHubChannels({ role: "admin", vendorId: null, partnerId: null, membershipRole: null })).toBe(true);
     expect(canManageWorkHubChannels({ role: "vendor", vendorId: 22, partnerId: null, membershipRole: "admin" })).toBe(true);
     expect(canManageWorkHubChannels({ role: "vendor", vendorId: 22, partnerId: null, membershipRole: "member" })).toBe(false);
+    expect(canManageWorkHubChannels({
+      role: "vendor",
+      vendorId: 22,
+      partnerId: null,
+      activeMembershipId: 91,
+      availableMemberships: [
+        { id: 90, role: "member" },
+        { id: 91, role: "admin" },
+      ],
+    })).toBe(true);
   });
 
   it("uses the active tenant as the only command owner", () => {
