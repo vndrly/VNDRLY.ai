@@ -46,6 +46,8 @@ import {
   workHubFormInstancesTable,
   workHubFormSubmissionsTable,
   workHubTranscriptSegmentsTable,
+  workHubAuditLogTable,
+  usersTable,
 } from "@workspace/db";
 import {
   workHubCommandEnvelopeSchema,
@@ -171,6 +173,36 @@ router.use("/work-hub", async (_req, res, next) => {
     return;
   }
   next();
+});
+
+router.get("/work-hub/audit", async (req, res) => {
+  const session = actor(req);
+  if (!session) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
+  const owner = session.vendorId
+    ? { type: "vendor" as const, id: session.vendorId }
+    : session.partnerId
+      ? { type: "partner" as const, id: session.partnerId }
+      : null;
+  if (!owner) return sendApiError(res, 404, "work_hub.not_found", "Not found");
+  try {
+    ownAccess(session, owner, "policy.manage");
+    const rows = await db.select({
+      id: workHubAuditLogTable.id,
+      action: workHubAuditLogTable.action,
+      subjectType: workHubAuditLogTable.subjectType,
+      subjectId: workHubAuditLogTable.subjectId,
+      source: workHubAuditLogTable.source,
+      metadata: workHubAuditLogTable.metadata,
+      createdAt: workHubAuditLogTable.createdAt,
+      actorUserId: workHubAuditLogTable.actorUserId,
+      actorName: usersTable.displayName,
+    }).from(workHubAuditLogTable)
+      .leftJoin(usersTable, eq(usersTable.id, workHubAuditLogTable.actorUserId))
+      .where(and(eq(workHubAuditLogTable.ownerOrgType, owner.type), eq(workHubAuditLogTable.ownerOrgId, owner.id)))
+      .orderBy(desc(workHubAuditLogTable.createdAt), desc(workHubAuditLogTable.id))
+      .limit(Math.min(200, Math.max(1, Number(req.query.limit) || 100)));
+    return res.json(rows);
+  } catch (error) { return failure(res, error); }
 });
 
 router.get("/work-hub/home", async (req, res) => {

@@ -809,11 +809,6 @@ function validateVendorPayload(p: Record<string, unknown>): string[] {
     ),
   );
   if (validIds.length === 0) missing.push("workTypeIds");
-  const ins = (p.compliance ?? {}) as Record<string, unknown>;
-  if (!trim(ins.carrier)) missing.push("compliance.carrier");
-  if (!trim(ins.policyNumber)) missing.push("compliance.policyNumber");
-  if (!trim(ins.expirationDate)) missing.push("compliance.expirationDate");
-  if (!trim(ins.documentUrl)) missing.push("compliance.documentUrl");
   const rates = (p.rates ?? {}) as Record<string, unknown>;
   if (rates.hourlyRate === undefined || rates.hourlyRate === null || rates.hourlyRate === "") missing.push("rates.hourlyRate");
   if (rates.dailyOtHours === undefined || rates.dailyOtHours === null || rates.dailyOtHours === "") missing.push("rates.dailyOtHours");
@@ -823,10 +818,6 @@ function validateVendorPayload(p: Record<string, unknown>): string[] {
   if (rates.overtimeMultiplier === undefined || rates.overtimeMultiplier === null || rates.overtimeMultiplier === "") {
     missing.push("rates.overtimeMultiplier");
   }
-  // 1099 e-delivery consent: must be an explicit boolean (true OR
-  // false). The wizard captures the user's choice; an absent value
-  // means the question wasn't asked, which we don't allow.
-  if (typeof p.eDeliveryConsent !== "boolean") missing.push("eDeliveryConsent");
   const emp = (p.firstEmployee ?? {}) as Record<string, unknown>;
   if (!trim(emp.firstName)) missing.push("firstEmployee.firstName");
   if (!trim(emp.lastName)) missing.push("firstEmployee.lastName");
@@ -947,7 +938,16 @@ router.post("/onboarding/:orgType/:orgId/complete", async (req: Request, res: Re
     const emp = payload.firstEmployee as Record<string, string>;
     const compliance = (payload.compliance ?? {}) as Record<string, string>;
     const serviceArea = (payload.serviceArea ?? {}) as Record<string, unknown>;
-    const eDeliveryConsent = payload.eDeliveryConsent === true;
+    const compliancePatch: Partial<typeof vendorsTable.$inferInsert> = {};
+    if (trim(compliance.carrier)) compliancePatch.insuranceCarrier = trim(compliance.carrier);
+    if (trim(compliance.policyNumber)) compliancePatch.insurancePolicyNumber = trim(compliance.policyNumber);
+    if (trim(compliance.expirationDate)) compliancePatch.insuranceExpirationDate = trim(compliance.expirationDate);
+    if (trim(compliance.documentUrl)) compliancePatch.coiDocumentUrl = trim(compliance.documentUrl);
+    const consentPatch: Partial<typeof vendorsTable.$inferInsert> = {};
+    if (typeof payload.eDeliveryConsent === "boolean") {
+      consentPatch.eDeliveryConsent = payload.eDeliveryConsent;
+      consentPatch.eDeliveryConsentAt = payload.eDeliveryConsent ? new Date() : null;
+    }
     // Vendor branding is a should-have step. Persist whatever the user
     // entered (or leave existing values intact if they skipped). Empty
     // strings are coerced to undefined so we don't blow away a logo
@@ -996,17 +996,10 @@ router.post("/onboarding/:orgType/:orgId/complete", async (req: Request, res: Re
             dailyOtHours: String(rates.dailyOtHours),
             weeklyOtHours: String(rates.weeklyOtHours),
             overtimeMultiplier: String(rates.overtimeMultiplier),
-            // 1099 e-delivery consent. When true, also stamp the
-            // consent timestamp for IRS audit trail (Pub 1179 §31.6051-1(j)).
-            eDeliveryConsent,
-            eDeliveryConsentAt: eDeliveryConsent ? new Date() : null,
-            // Persist Compliance step canonically so partner-facing COI
-            // expiration reports + admin audits can read it without
-            // dipping into onboarding_progress.payload.
-            insuranceCarrier: trim(compliance.carrier),
-            insurancePolicyNumber: trim(compliance.policyNumber),
-            insuranceExpirationDate: trim(compliance.expirationDate),
-            coiDocumentUrl: trim(compliance.documentUrl),
+            // Optional compliance and legacy consent values only update
+            // canonical records when supplied, preserving existing data.
+            ...compliancePatch,
+            ...consentPatch,
             // Spread in optional vendor branding only if the user
             // actually filled it. Skipping the step leaves existing
             // values untouched.

@@ -120,16 +120,16 @@ export default function AccountActions({ userId, hasLogin, suspendedAt, testIdPr
   };
 
   return (
-    <div className="flex flex-wrap gap-2">
-      <PngPillButton color="blue" type="button" onClick={() => setResetOpen(true)} data-testid={`${testIdPrefix}-reset-password`}>
+    <div className="grid grid-cols-2 gap-2 sm:flex">
+      <PngPillButton color="blue" type="button" className="min-w-0 flex-1" onClick={() => setResetOpen(true)} data-testid={`${testIdPrefix}-reset-password`}>
         {t("accountActions.resetPassword")}
       </PngPillButton>
       {isSuspended ? (
-        <GreenButton type="button" onClick={() => setReactivateOpen(true)} data-testid={`${testIdPrefix}-reactivate`}>
+        <GreenButton type="button" className="min-w-0 flex-1" onClick={() => setReactivateOpen(true)} data-testid={`${testIdPrefix}-reactivate`}>
           {t("accountActions.reactivate")}
         </GreenButton>
       ) : (
-        <PngPillButton color="red" type="button" onClick={() => setSuspendOpen(true)} data-testid={`${testIdPrefix}-suspend`}>
+        <PngPillButton color="red" type="button" className="min-w-0 flex-1" onClick={() => setSuspendOpen(true)} data-testid={`${testIdPrefix}-suspend`}>
           {t("accountActions.suspend")}
         </PngPillButton>
       )}
@@ -170,10 +170,10 @@ export default function AccountActions({ userId, hasLogin, suspendedAt, testIdPr
             <AlertDialogDescription>{t("accountActions.suspendConfirmDescription")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel data-testid={`${testIdPrefix}-suspend-cancel`}>{t("accountActions.cancel")}</AlertDialogCancel>
-            <AlertDialogAction onClick={submitSuspend} disabled={busy} data-testid={`${testIdPrefix}-suspend-confirm`}>
+            <AlertDialogCancel asChild><PngPillButton color="image" type="button" data-testid={`${testIdPrefix}-suspend-cancel`}>{t("accountActions.cancel")}</PngPillButton></AlertDialogCancel>
+            <AlertDialogAction asChild><PngPillButton color="red" type="button" onClick={submitSuspend} disabled={busy} data-testid={`${testIdPrefix}-suspend-confirm`}>
               {busy ? t("accountActions.sending") : t("accountActions.suspend")}
-            </AlertDialogAction>
+            </PngPillButton></AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -186,10 +186,10 @@ export default function AccountActions({ userId, hasLogin, suspendedAt, testIdPr
             <AlertDialogDescription>{t("accountActions.reactivateConfirmDescription")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel data-testid={`${testIdPrefix}-reactivate-cancel`}>{t("accountActions.cancel")}</AlertDialogCancel>
-            <AlertDialogAction onClick={submitReactivate} disabled={busy} data-testid={`${testIdPrefix}-reactivate-confirm`}>
+            <AlertDialogCancel asChild><PngPillButton color="image" type="button" data-testid={`${testIdPrefix}-reactivate-cancel`}>{t("accountActions.cancel")}</PngPillButton></AlertDialogCancel>
+            <AlertDialogAction asChild><PngPillButton color="green" type="button" onClick={submitReactivate} disabled={busy} data-testid={`${testIdPrefix}-reactivate-confirm`}>
               {busy ? t("accountActions.sending") : t("accountActions.reactivate")}
-            </AlertDialogAction>
+            </PngPillButton></AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

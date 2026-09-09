@@ -73,6 +73,25 @@ router.post("/work-hub/channels", async (req, res) => {
   } catch (error) { return fail(res, error); }
 });
 
+router.delete("/work-hub/channels/:channelId", async (req, res) => {
+  const actor = session(req); if (!actor) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
+  try {
+    const { channel } = await resolveChannelAccess(actor, req.params.channelId, "channel.manage");
+    const envelope = workHubCommandEnvelopeSchema.parse(req.body);
+    if (envelope.owner.type !== channel.ownerOrgType || envelope.owner.id !== channel.ownerOrgId) throw new WorkHubAccessError("forbidden");
+    const result = await executeWorkHubCommand({ userId: actor.userId, source: source(req) }, "channel.delete", envelope, async (tx) => {
+      const [deleted] = await tx.update(workHubChannelsTable)
+        .set({ status: "deleted", updatedAt: new Date() })
+        .where(and(eq(workHubChannelsTable.id, channel.id), eq(workHubChannelsTable.status, "active")))
+        .returning();
+      if (!deleted) throw new WorkHubAccessError("not_found");
+      await appendWorkHubAudit({ actorUserId: actor.userId, owner: envelope.owner, action: "channel.deleted", subjectType: "channel", subjectId: channel.id, source: source(req), operationId: envelope.operationId }, tx);
+      return { id: channel.id, deleted: true };
+    });
+    return res.json(result);
+  } catch (error) { return fail(res, error); }
+});
+
 router.get("/work-hub/channels/:channelId/members", async (req, res) => {
   const actor = session(req); if (!actor) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
   try {

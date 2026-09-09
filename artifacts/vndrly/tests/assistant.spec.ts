@@ -565,14 +565,14 @@ describe("onboarding flows", () => {
     ],
     vendor: [
       {
-        label: "skip a required step (compliance)",
+        label: "skip a required step (tax IDs)",
         run: () =>
           validateStepCompletion({
             persona: "vendor",
-            step: "compliance",
-            nextStep: "rates",
+            step: "tax-ids",
+            nextStep: "work-types",
             skipped: true,
-            existing: { currentStep: "compliance", payload: {} },
+            existing: { currentStep: "tax-ids", payload: {} },
           }),
         expectedCode: "required_step_skipped",
       },

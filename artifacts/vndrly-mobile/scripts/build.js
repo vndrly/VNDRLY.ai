@@ -1,10 +1,12 @@
 const fs = require("fs");
 const path = require("path");
 const { spawn } = require("child_process");
+const net = require("net");
 const { Readable } = require("stream");
 const { pipeline } = require("stream/promises");
 
 let metroProcess = null;
+let metroPort = null;
 
 const projectRoot = path.resolve(__dirname, "..");
 
@@ -100,7 +102,7 @@ function clearMetroCache() {
 
 async function checkMetroHealth() {
   try {
-    const response = await fetch("http://localhost:8081/status", {
+    const response = await fetch(`http://localhost:${metroPort}/status`, {
       signal: AbortSignal.timeout(5000),
     });
     return response.ok;
@@ -109,13 +111,20 @@ async function checkMetroHealth() {
   }
 }
 
-async function startMetro(expoPublicDomain) {
-  const isRunning = await checkMetroHealth();
-  if (isRunning) {
-    console.log("Metro already running");
-    return;
-  }
+async function reserveMetroPort() {
+  return new Promise((resolve, reject) => {
+    const server = net.createServer();
+    server.unref();
+    server.on("error", reject);
+    server.listen(0, "127.0.0.1", () => {
+      const address = server.address();
+      const port = typeof address === "object" && address ? address.port : null;
+      server.close((error) => (error ? reject(error) : resolve(port)));
+    });
+  });
+}
 
+async function startMetro(expoPublicDomain) {
   console.log("Starting Metro...");
   console.log(`Setting EXPO_PUBLIC_DOMAIN=${expoPublicDomain}`);
   const env = {
@@ -132,6 +141,8 @@ async function startMetro(expoPublicDomain) {
       "--no-dev",
       "--minify",
       "--localhost",
+      "--port",
+      String(metroPort),
     ],
     {
       stdio: ["ignore", "pipe", "pipe"],
@@ -210,9 +221,11 @@ async function downloadFile(url, outputPath) {
 }
 
 async function downloadBundle(platform, timestamp) {
-  const entryPath = path.resolve(projectRoot, "node_modules", "expo-router", "entry");
-  const bundlePath = path.relative(workspaceRoot, entryPath);
-  const url = new URL(`http://localhost:8081/${bundlePath}.bundle`);
+  // Expo Router 6 exposes the resolved app entry through Metro's virtual
+  // entry module. Direct node_modules entry URLs return 404 on Expo 54.
+  const url = new URL(
+    `http://localhost:${metroPort}/.expo/.virtual-metro-entry.bundle`,
+  );
   url.searchParams.set("platform", platform);
   url.searchParams.set("dev", "false");
   url.searchParams.set("hot", "false");
@@ -240,7 +253,7 @@ async function downloadManifest(platform) {
 
   try {
     console.log(`Fetching ${platform} manifest...`);
-    const response = await fetch("http://localhost:8081/manifest", {
+    const response = await fetch(`http://localhost:${metroPort}/manifest`, {
       headers: { "expo-platform": platform },
       signal: controller.signal,
     });
@@ -308,7 +321,7 @@ function extractAssets(timestamp) {
       const originalPath = match[1];
       const filename = match[3] + "." + match[4];
 
-      const tempUrl = new URL(`http://localhost:8081${originalPath}`);
+      const tempUrl = new URL(`http://localhost:${metroPort}${originalPath}`);
       const unstablePath = tempUrl.searchParams.get("unstable_path");
 
       if (!unstablePath) {
@@ -350,7 +363,7 @@ async function downloadAssets(assets, timestamp) {
   const failures = [];
 
   const downloadPromises = assets.map(async (asset) => {
-    const tempUrl = new URL(`http://localhost:8081${asset.originalPath}`);
+    const tempUrl = new URL(`http://localhost:${metroPort}${asset.originalPath}`);
     const unstablePath = tempUrl.searchParams.get("unstable_path");
 
     if (!unstablePath) {
@@ -423,7 +436,7 @@ function updateBundleUrls(timestamp, baseUrl) {
     bundle = bundle.replace(
       /httpServerLocation:"(\/[^"]+)"/g,
       (_match, capturedPath) => {
-        const tempUrl = new URL(`http://localhost:8081${capturedPath}`);
+        const tempUrl = new URL(`http://localhost:${metroPort}${capturedPath}`);
         const unstablePath = tempUrl.searchParams.get("unstable_path");
 
         if (!unstablePath) {
@@ -498,6 +511,8 @@ async function main() {
 
   prepareDirectories(timestamp);
   clearMetroCache();
+
+  metroPort = await reserveMetroPort();
 
   await startMetro(domain);
 

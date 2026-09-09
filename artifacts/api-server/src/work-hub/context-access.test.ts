@@ -39,6 +39,18 @@ describe("deriveWorkHubCapabilities", () => {
     expect(capabilities).not.toContain("channel.manage");
   });
 
+  it("lets a gate supervisor schedule gate work without organization admin authority", () => {
+    const capabilities = deriveWorkHubCapabilities({
+      session: { userId: 11, role: "field_employee", vendorId: 12, membershipRole: "field_employee", vendorRole: "gate_supervisor" },
+      owner: vendorOwner,
+      context: { kind: "organization", id: "12" },
+      participant: true,
+    });
+    expect(capabilities).toEqual(expect.arrayContaining(["task.assign", "shift.manage"]));
+    expect(capabilities).not.toContain("channel.manage");
+    expect(capabilities).not.toContain("policy.manage");
+  });
+
   it("hides cross-tenant contexts", () => {
     expect(() => deriveWorkHubCapabilities({
       session: { userId: 10, role: "vendor", vendorId: 99, membershipRole: "admin" },

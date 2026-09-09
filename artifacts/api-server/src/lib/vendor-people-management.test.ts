@@ -18,6 +18,8 @@ describe("vendor-people-management", () => {
     expect(usesFieldEmployeeLogin("field")).toBe(true);
     expect(sessionUserRoleForVendorPerson("field")).toBe("field_employee");
     expect(membershipRoleForVendorPerson("field")).toBe("field_employee");
+    expect(usesFieldEmployeeLogin("gate_supervisor")).toBe(true);
+    expect(sessionUserRoleForVendorPerson("gate_supervisor")).toBe("field_employee");
   });
 
   it("maps office/admin roles to vendor portal login", () => {

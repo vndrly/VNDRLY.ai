@@ -6,6 +6,7 @@ export type WorkHubUser = {
   membershipRole?: string | null;
   activeMembershipId?: number | null;
   availableMemberships?: Array<{ id: number; role: string }>;
+  vendorRole?: string | null;
 };
 
 type WorkHubCrypto = {
@@ -48,6 +49,10 @@ export function canManageWorkHubChannels(
 }
 
 export const isWorkHubAdmin = canManageWorkHubChannels;
+
+export function isWorkHubScheduler(user: WorkHubUser | null | undefined): boolean {
+  return isWorkHubAdmin(user) || user?.vendorRole === "gate_supervisor";
+}
 
 export function ownerForUser(
   user: WorkHubUser | null | undefined,

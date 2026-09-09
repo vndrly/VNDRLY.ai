@@ -40,7 +40,7 @@ const STEPS: (StepperStep & { key: StepKey })[] = [
   { key: "tax-ids", label: "Tax IDs" },
   { key: "work-types", label: "Service Area & Work Types" },
   { key: "compliance", label: "Compliance" },
-  { key: "rates", label: "Rates & 1099" },
+  { key: "rates", label: "Rates" },
   { key: "first-employee", label: "First Employee" },
 ];
 
@@ -76,7 +76,6 @@ interface VendorPayload {
     weeklyOtHours?: string;
     overtimeMultiplier?: string;
   };
-  eDeliveryConsent?: boolean;
   branding?: { brandPrimaryColor?: string; logoUrl?: string };
   platformEula?: { accepted?: boolean; version?: string };
   legalConsent?: { accepted?: boolean; smsOptIn?: boolean; version?: string };
@@ -152,10 +151,6 @@ export default function OnboardingVendor() {
     weeklyOtHours: "40",
     overtimeMultiplier: "1.5",
   });
-  // 1099 e-delivery consent is a tri-state in our payload (undefined =
-  // not asked). The form forces a yes/no choice via radios so we save
-  // an explicit boolean, never undefined.
-  const [eDeliveryConsent, setEDeliveryConsent] = useState<boolean | undefined>(undefined);
   // Vendor branding (should-have): drives the in-app vendor portal
   // colour and the vendor logo on invoices. Both fields are optional;
   // skipping this step adds it to the dashboard's Finish-setup widget.
@@ -232,7 +227,6 @@ export default function OnboardingVendor() {
         if (p.serviceArea?.operatingRadiusMiles != null) {
           setServiceRadius(String(p.serviceArea.operatingRadiusMiles));
         }
-        if (typeof p.eDeliveryConsent === "boolean") setEDeliveryConsent(p.eDeliveryConsent);
         if (p.compliance) {
           setCompliance({
             carrier: p.compliance.carrier ?? "",
@@ -524,16 +518,12 @@ export default function OnboardingVendor() {
         return null;
       }
       case "compliance":
-        if (!compliance.carrier.trim() || !compliance.policyNumber.trim()) return "Carrier and policy number are required.";
-        if (!compliance.expirationDate.trim()) return "Expiration date is required.";
-        if (!compliance.documentUrl.trim()) return "Upload a copy of your COI to continue.";
         return null;
       case "rates":
         if (!rates.hourlyRate.trim() || isNaN(Number(rates.hourlyRate))) return "Enter a baseline hourly rate.";
         if (!rates.dailyOtHours.trim() || isNaN(Number(rates.dailyOtHours))) return "Enter a daily OT threshold.";
         if (!rates.weeklyOtHours.trim() || isNaN(Number(rates.weeklyOtHours))) return "Enter a weekly OT threshold.";
         if (!rates.overtimeMultiplier.trim() || isNaN(Number(rates.overtimeMultiplier))) return "Enter an overtime multiplier.";
-        if (eDeliveryConsent === undefined) return "Choose how you'd like to receive your 1099.";
         return null;
       case "first-employee":
         if (!firstEmp.firstName.trim() || !firstEmp.lastName.trim()) return "First and last name are required.";
@@ -669,13 +659,7 @@ export default function OnboardingVendor() {
         case "compliance":
           return { compliance };
         case "rates":
-          // Persist eDeliveryConsent as the literal user choice, not a
-          // coercion. Coercing undefined → false would let an unset
-          // value silently pass the server's `typeof boolean` check
-          // and complete onboarding without explicit IRS consent.
-          // The client-side step validation already blocks `undefined`,
-          // so by the time we get here it should be a real boolean.
-          return typeof eDeliveryConsent === "boolean" ? { rates, eDeliveryConsent } : { rates };
+          return { rates };
         case "branding":
           return {
             branding: {
@@ -704,7 +688,7 @@ export default function OnboardingVendor() {
           return {};
       }
     };
-  }, [currentStep.key, taxIds, selectedWtIds, serviceRadius, compliance, rates, eDeliveryConsent, vendorBranding, platformEula, legalConsent, firstEmp]);
+  }, [currentStep.key, taxIds, selectedWtIds, serviceRadius, compliance, rates, vendorBranding, platformEula, legalConsent, firstEmp]);
 
   // Group work-types by category so the picker is scannable instead of
   // a 60-item flat list.
@@ -831,7 +815,7 @@ export default function OnboardingVendor() {
           {currentStep.key === "tax-ids" && (
             <div className="space-y-4" data-testid="step-tax-ids-body">
               <h2 className="text-lg font-semibold text-gray-900">Tax IDs &amp; addresses</h2>
-              <p className="text-sm text-gray-500">Required so partners can issue 1099s and route invoices correctly.</p>
+              <p className="text-sm text-gray-500">Required so partners can route invoices correctly.</p>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label>Federal Tax ID (EIN) *</Label>
@@ -896,14 +880,14 @@ export default function OnboardingVendor() {
           {currentStep.key === "compliance" && (
             <div className="space-y-4" data-testid="step-compliance-body">
               <h2 className="text-lg font-semibold text-gray-900">Insurance &amp; compliance</h2>
-              <p className="text-sm text-gray-500">Upload a current Certificate of Insurance — partners require it before assigning work.</p>
+              <p className="text-sm text-gray-500">Optional for now. Add a current Certificate of Insurance when available; partners may require verified coverage before assigning work.</p>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label>Carrier *</Label>
+                  <Label>Carrier</Label>
                   <Input value={compliance.carrier} onChange={(e) => setCompliance({ ...compliance, carrier: e.target.value })} placeholder="e.g. The Hartford" data-testid="input-insurance-carrier" />
                 </div>
                 <div>
-                  <Label>Policy number *</Label>
+                  <Label>Policy number</Label>
                   <Input
                     value={compliance.policyNumber}
                     onChange={(e) =>
@@ -917,7 +901,7 @@ export default function OnboardingVendor() {
                 </div>
               </div>
               <div>
-                <Label>Expiration date *</Label>
+                <Label>Expiration date</Label>
                 <Input
                   type="date"
                   value={compliance.expirationDate}
@@ -931,7 +915,7 @@ export default function OnboardingVendor() {
                 />
               </div>
               <div>
-                <Label>COI document *</Label>
+                <Label>COI document</Label>
                 <div className="flex items-center gap-3">
                   <input type="file" accept="application/pdf,image/*" onChange={(e) => e.target.files?.[0] && uploadDoc(e.target.files[0])} data-testid="input-coi-file" className="text-sm" />
                   {compliance.documentUrl && (
@@ -960,7 +944,7 @@ export default function OnboardingVendor() {
 
           {currentStep.key === "rates" && (
             <div className="space-y-4" data-testid="step-rates-body">
-              <h2 className="text-lg font-semibold text-gray-900">Rates, overtime &amp; 1099 delivery</h2>
+              <h2 className="text-lg font-semibold text-gray-900">Rates and overtime</h2>
               <p className="text-sm text-gray-500">Set your baseline hourly rate and overtime rules. You can override these per-employee later.</p>
               <div>
                 <Label>Baseline hourly rate (USD) *</Label>
@@ -979,24 +963,6 @@ export default function OnboardingVendor() {
                   <Label>OT multiplier *</Label>
                   <Input type="number" step="0.05" min="1" value={rates.overtimeMultiplier} onChange={(e) => setRates({ ...rates, overtimeMultiplier: e.target.value })} data-testid="input-ot-multiplier" />
                   <p className="text-xs text-gray-500 mt-1">Federal default is 1.5×.</p>
-                </div>
-              </div>
-              <div className="border-t pt-4">
-                <Label>1099-NEC delivery preference *</Label>
-                <p className="text-xs text-gray-500 mb-2">IRS rules require explicit consent before we can deliver year-end tax forms electronically. You can change this later.</p>
-                <div className="flex flex-col gap-2">
-                  <label className="flex items-start gap-2 cursor-pointer" data-testid="radio-edelivery-yes">
-                    <input type="radio" className="mt-1" name="edelivery" checked={eDeliveryConsent === true} onChange={() => setEDeliveryConsent(true)} />
-                    <span className="text-sm">
-                      <strong>Send my 1099 electronically</strong> — I consent to receive the form as a downloadable PDF instead of by mail.
-                    </span>
-                  </label>
-                  <label className="flex items-start gap-2 cursor-pointer" data-testid="radio-edelivery-no">
-                    <input type="radio" className="mt-1" name="edelivery" checked={eDeliveryConsent === false} onChange={() => setEDeliveryConsent(false)} />
-                    <span className="text-sm">
-                      <strong>Mail me a paper 1099</strong> — send the form to my physical address each January.
-                    </span>
-                  </label>
                 </div>
               </div>
             </div>

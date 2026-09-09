@@ -18,7 +18,7 @@ export type Persona = "partner" | "vendor" | "field_employee";
 
 export const REQUIRED_STEPS: Record<Persona, readonly string[]> = {
   partner: ["company-basics", "platform-eula", "legal-consent", "first-site", "tax-billing"],
-  vendor: ["company-basics", "platform-eula", "legal-consent", "tax-ids", "work-types", "compliance", "rates", "first-employee"],
+  vendor: ["company-basics", "platform-eula", "legal-consent", "tax-ids", "work-types", "rates", "first-employee"],
   field_employee: ["personal-info", "photo-certs", "set-password"],
 };
 
@@ -57,18 +57,12 @@ export const STEP_REQUIRED_FIELDS: Record<Persona, Record<string, readonly strin
       "taxIds.billingAddress",
     ],
     "work-types": ["serviceArea.operatingRadiusMiles", "workTypeIds"],
-    "compliance": [
-      "compliance.carrier",
-      "compliance.policyNumber",
-      "compliance.expirationDate",
-      "compliance.documentUrl",
-    ],
+    "compliance": [],
     "rates": [
       "rates.hourlyRate",
       "rates.dailyOtHours",
       "rates.weeklyOtHours",
       "rates.overtimeMultiplier",
-      "eDeliveryConsent",
     ],
     "first-employee": ["firstEmployee.firstName", "firstEmployee.lastName", "firstEmployee.email"],
     "company-basics": [],

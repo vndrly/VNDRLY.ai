@@ -9,18 +9,29 @@ import {
   Search,
   Video,
 } from "lucide-react";
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import BrandPillButton from "@/components/brand-pill-button";
 import MeetingAudioRoom from "@/components/meeting-audio-room";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useAuth } from "@/hooks/use-auth";
 import {
   canManageWorkHubChannels,
   commandEnvelope,
   createWorkHubOperationId,
   isWorkHubAdmin,
+  isWorkHubScheduler,
   ownerForUser,
   workHubModulePath,
   workHubRequest,
@@ -163,6 +174,7 @@ function Channels() {
   const [note, setNote] = useState({ title: "", body: "" });
   const [inviteEmail, setInviteEmail] = useState("");
   const [guidance, setGuidance] = useState<string>();
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const channels = useQuery<Row[]>({
     queryKey: ["work-hub", "channels"],
     queryFn: () => workHubRequest("/channels"),
@@ -229,6 +241,19 @@ function Channels() {
     onSuccess: () => {
       setNote({ title: "", body: "" });
       qc.invalidateQueries({ queryKey: ["work-hub", "notes", active] });
+    },
+  });
+  const remove = useMutation({
+    mutationFn: () =>
+      workHubRequest(`/channels/${active}`, {
+        method: "DELETE",
+        body: JSON.stringify(commandEnvelope(owner!, {})),
+      }),
+    onSuccess: () => {
+      setDeleteOpen(false);
+      setSelected(undefined);
+      setGuidance("Channel deleted.");
+      qc.invalidateQueries({ queryKey: ["work-hub", "channels"] });
     },
   });
   return (
@@ -305,10 +330,16 @@ function Channels() {
             )}
           </CardContent>
         </Card>
-        {!active && <Card><CardContent className="pt-6"><Empty>Create or select a channel to open its conversation.</Empty></CardContent></Card>}
         {active && <Card>
           <CardHeader>
-            <CardTitle>Conversation</CardTitle>
+            <div className="flex items-center justify-between gap-3">
+              <CardTitle>Conversation</CardTitle>
+              {canManageChannels && (
+                <BrandPillButton tone="red" aria-label="Delete channel" onClick={() => setDeleteOpen(true)}>
+                  Delete channel
+                </BrandPillButton>
+              )}
+            </div>
           </CardHeader>
           <CardContent className="grid gap-3">
             <Notice error={messages.error ?? send.error} />
@@ -392,6 +423,22 @@ function Channels() {
             </form>
           </CardContent>
         </Card>}
+        <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete this channel?</AlertDialogTitle>
+              <AlertDialogDescription>
+                The channel will be removed from participant views. Its audit history is retained.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel asChild><BrandPillButton tone="image">Cancel</BrandPillButton></AlertDialogCancel>
+              <AlertDialogAction asChild><BrandPillButton tone="red" onClick={() => remove.mutate()} disabled={remove.isPending}>
+                {remove.isPending ? "Deleting…" : "Delete channel"}
+              </BrandPillButton></AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </Shell>
   );
@@ -399,7 +446,7 @@ function Channels() {
 
 function CalendarModule() {
   const { user } = useAuth();
-  const canManage = isWorkHubAdmin(user);
+  const canManage = isWorkHubScheduler(user);
   const [month, setMonth] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
   const [selectedDay, setSelectedDay] = useState(() => new Date().toISOString().slice(0, 10));
   const start = new Date(month.getFullYear(), month.getMonth(), 1);
@@ -468,6 +515,10 @@ function CalendarModule() {
           ].map(([title, value, detail]) => <Card key={title}><CardContent className="pt-5"><p className="text-xs font-semibold uppercase text-muted-foreground">{title}</p><p className="mt-1 font-semibold">{value}</p>{detail && <p className="text-xs text-muted-foreground">{detail}</p>}</CardContent></Card>)}
           <Card><CardContent className="pt-5"><p className="text-xs font-semibold uppercase text-muted-foreground">Unread channel messages</p><p className="mt-1 text-2xl font-bold">{unreadMessages}</p><a href="/work-hub/channels" className="text-xs font-semibold text-[var(--brand-primary)] underline">Open channels</a></CardContent></Card>
         </div>
+        <div
+          className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)] lg:items-start"
+          data-testid="work-hub-calendar-layout"
+        >
         <Card>
           <CardHeader>
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -582,6 +633,7 @@ function CalendarModule() {
             </form>
           </CardContent>
         </Card>}
+        </div>
         <Card>
           <CardHeader><CardTitle>Project timeline</CardTitle></CardHeader>
           <CardContent className="grid gap-3">
@@ -814,7 +866,7 @@ function Governance({
 
 function TasksModule() {
   const { user } = useAuth();
-  const canManage = isWorkHubAdmin(user);
+  const canManage = isWorkHubScheduler(user);
   const owner = useOwner();
   const qc = useQueryClient();
   const tasks = useQuery<Row[]>({
@@ -1396,6 +1448,7 @@ function MeetingsModule() {
 function FilesModule() {
   const owner = useOwner();
   const qc = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const files = useQuery<Row[]>({
     queryKey: ["work-hub", "files"],
     queryFn: () => workHubRequest("/files"),
@@ -1422,7 +1475,20 @@ function FilesModule() {
         <select aria-label="File channel" className="h-10 rounded-md border bg-background px-3" value={channelId} onChange={(e) => setChannelId(e.target.value)}><option value="">Choose channel</option>{channels.data?.map((channel) => <option key={channel.id} value={channel.id}>{channel.name}</option>)}</select>
         <select aria-label="File category" className="h-10 rounded-md border bg-background px-3" value={category === "All" ? "General Notes" : category} onChange={(e) => setCategory(e.target.value)}>{categories.map((value) => <option key={value}>{value}</option>)}</select>
         <select aria-label="File access" className="h-10 rounded-md border bg-background px-3" value={accessLevel} onChange={(e) => setAccessLevel(e.target.value)}><option value="internal">Internal</option><option value="shared">Shared with channel</option></select>
-        <Input aria-label="Choose file" type="file" onChange={(e) => setUploadFile(e.target.files?.[0] ?? null)} />
+        <div className="flex min-w-0 items-center gap-2">
+          <input
+            ref={fileInputRef}
+            data-testid="work-hub-file-input"
+            aria-label="Choose file"
+            className="sr-only"
+            type="file"
+            onChange={(e) => setUploadFile(e.target.files?.[0] ?? null)}
+          />
+          <BrandPillButton type="button" tone="brand" onClick={() => fileInputRef.current?.click()}>
+            Choose file
+          </BrandPillButton>
+          {uploadFile && <span className="truncate text-xs text-muted-foreground">{uploadFile.name}</span>}
+        </div>
         <Notice error={upload.error} /><BrandPillButton type="submit" tone="brand" disabled={!channelId || !uploadFile || upload.isPending}>Upload file</BrandPillButton>
       </form></CardContent></Card>
       <Card>
@@ -1523,9 +1589,16 @@ function SearchModule() {
   );
 }
 function SettingsModule() {
+  const { user } = useAuth();
+  const canManage = isWorkHubAdmin(user);
   const connector = useQuery<Row>({
     queryKey: ["work-hub", "microsoft"],
     queryFn: () => workHubRequest("/connectors/microsoft-365"),
+  });
+  const audit = useQuery<Row[]>({
+    queryKey: ["work-hub", "audit"],
+    queryFn: () => workHubRequest("/audit"),
+    enabled: canManage,
   });
   return (
     <Shell module="settings">
@@ -1557,6 +1630,17 @@ function SettingsModule() {
           <BrandPillButton tone="brand" disabled title="Available when Microsoft 365 credentials are configured">Connect Microsoft 365</BrandPillButton>
         </CardContent>
       </Card>
+      {canManage && <Card className="mt-4">
+        <CardHeader><CardTitle>Audit history</CardTitle></CardHeader>
+        <CardContent className="grid gap-2">
+          <Notice error={audit.error} />
+          {audit.data?.map((entry) => <article key={entry.id} className="rounded-lg border p-3">
+            <p className="font-semibold">{String(entry.action).replaceAll(".", " ")}</p>
+            <p className="text-xs text-muted-foreground">{entry.actorName ?? `User ${entry.actorUserId}`} · {entry.subjectType} · {displayDate(entry.createdAt)}</p>
+          </article>)}
+          {!audit.data?.length && <Empty>No Work Hub administrative activity yet.</Empty>}
+        </CardContent>
+      </Card>}
     </Shell>
   );
 }

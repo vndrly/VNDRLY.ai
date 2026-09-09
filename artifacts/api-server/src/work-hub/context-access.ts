@@ -36,6 +36,11 @@ const OWNER_ADMIN_CAPABILITIES: WorkHubCapability[] = [
   "channel.manage", "task.assign", "announcement.publish", "shift.manage",
   "meeting.host", "meeting.record", "meeting.artifact.download", "policy.manage", "connector.manage",
 ];
+const GATE_SUPERVISOR_CAPABILITIES: WorkHubCapability[] = [
+  ...PARTICIPANT_CAPABILITIES,
+  "task.assign",
+  "shift.manage",
+];
 
 function ownsContext(session: SessionPayload, owner: WorkHubOwner): boolean {
   return owner.type === "vendor"
@@ -52,6 +57,7 @@ export function deriveWorkHubCapabilities(input: WorkHubAccessInput): WorkHubCap
     throw new WorkHubAccessError("not_found");
   }
   if (ownerMatch && session.membershipRole === "admin") return [...OWNER_ADMIN_CAPABILITIES];
+  if (ownerMatch && session.vendorRole === "gate_supervisor") return [...GATE_SUPERVISOR_CAPABILITIES];
   if (participant || ownerMatch) return [...PARTICIPANT_CAPABILITIES];
   throw new WorkHubAccessError("not_found");
 }

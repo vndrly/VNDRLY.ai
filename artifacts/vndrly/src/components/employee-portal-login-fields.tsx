@@ -87,6 +87,8 @@ export default function EmployeePortalLoginFields({
   const portalPath =
     vendorRole === "gatekeeper"
       ? "/gate"
+      : vendorRole === "gate_supervisor"
+        ? "/work-hub/calendar"
       : vendorRole === "admin" || vendorRole === "office"
       ? "/"
       : vendorRole === "foreman" || vendorRole === "both"
@@ -275,12 +277,13 @@ export default function EmployeePortalLoginFields({
         </>
       ) : null}
 
-      <div className="flex flex-wrap gap-2">
+      <div className="grid grid-cols-2 gap-2 sm:flex">
         <PngPillButton
           type="button"
           color="blue"
           onClick={saveCredentials}
           disabled={credBusy}
+          className="min-w-0 flex-1"
           data-testid={`${testIdPrefix}-save`}
         >
           {credBusy
@@ -296,6 +299,7 @@ export default function EmployeePortalLoginFields({
             type="button"
             color="image"
             disabled={credBusy}
+            className="min-w-0 flex-1"
             onClick={async () => {
               try {
                 const data = await onboardingInviteMutation.mutateAsync({ id: employeeId });
@@ -323,6 +327,7 @@ export default function EmployeePortalLoginFields({
             color="red"
             onClick={disableCredentials}
             disabled={credBusy}
+            className="min-w-0 flex-1"
             data-testid={`${testIdPrefix}-disable`}
           >
             {t("fieldEmployeeDetail.disableLogin")}

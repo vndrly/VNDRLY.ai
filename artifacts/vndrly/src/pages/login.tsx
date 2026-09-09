@@ -55,7 +55,14 @@ export default function Login() {
 
   useEffect(() => {
     if (user && (location === "/login" || location === "/login/" || location === "/gate")) {
-      navigate(user.vendorRole === "gatekeeper" ? "/gate" : "/", { replace: true });
+      navigate(
+        user.vendorRole === "gatekeeper"
+          ? "/gate"
+          : user.vendorRole === "gate_supervisor"
+            ? "/work-hub/calendar"
+            : "/",
+        { replace: true },
+      );
     }
   }, [user, location, navigate]);
 

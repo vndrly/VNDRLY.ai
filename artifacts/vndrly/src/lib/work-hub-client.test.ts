@@ -4,6 +4,7 @@ import {
   canManageWorkHubChannels,
   commandEnvelope,
   createWorkHubOperationId,
+  isWorkHubScheduler,
   ownerForUser,
   workHubModulePath,
   type WorkHubUser,
@@ -24,6 +25,12 @@ describe("Work Hub client boundary", () => {
         { id: 91, role: "admin" },
       ],
     })).toBe(true);
+  });
+
+  it("lets gate supervisors schedule without granting channel administration", () => {
+    const supervisor = { role: "field_employee", vendorId: 22, partnerId: null, vendorRole: "gate_supervisor" };
+    expect(isWorkHubScheduler(supervisor)).toBe(true);
+    expect(canManageWorkHubChannels(supervisor)).toBe(false);
   });
 
   it("uses the active tenant as the only command owner", () => {

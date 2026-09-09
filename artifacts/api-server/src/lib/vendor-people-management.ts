@@ -114,7 +114,7 @@ export async function validateVendorRoleAssignment(
 }
 
 export function usesFieldEmployeeLogin(vendorRole: string | null | undefined): boolean {
-  return vendorRole === "field" || vendorRole === "foreman" || vendorRole === "both";
+  return vendorRole === "field" || vendorRole === "foreman" || vendorRole === "both" || vendorRole === "gate_supervisor";
 }
 
 export function membershipRoleForVendorPerson(vendorRole: string | null | undefined): "admin" | "member" | "field_employee" {

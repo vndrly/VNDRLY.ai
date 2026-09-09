@@ -36,7 +36,7 @@ export async function resolveChannelAccess(
   session: SessionPayload & { userId: number }, channelId: string, capability: WorkHubCapability,
 ): Promise<{ channel: typeof workHubChannelsTable.$inferSelect; access: WorkHubAccess }> {
   const [channel] = await db.select().from(workHubChannelsTable).where(eq(workHubChannelsTable.id, channelId)).limit(1);
-  if (!channel) throw new (await import("./context-access")).WorkHubAccessError("not_found");
+  if (!channel || channel.status !== "active") throw new (await import("./context-access")).WorkHubAccessError("not_found");
   const access = createWorkHubAccess({
     session, owner: { type: channel.ownerOrgType as "vendor" | "partner", id: channel.ownerOrgId },
     context: { kind: channel.contextKind as "organization" | "ticket" | "site" | "crew" | "gate", id: channel.contextId },
@@ -49,7 +49,7 @@ export async function resolveChannelAccess(
 export async function listOwnedWorkHubChannels(session: SessionPayload & { userId: number }, before?: Date, limit = 50) {
   const requested = Math.min(100, Math.max(1, limit));
   const candidates = await db.select().from(workHubChannelsTable)
-    .where(before ? lt(workHubChannelsTable.updatedAt, before) : undefined)
+    .where(and(eq(workHubChannelsTable.status, "active"), before ? lt(workHubChannelsTable.updatedAt, before) : undefined))
     .orderBy(desc(workHubChannelsTable.updatedAt), desc(workHubChannelsTable.id))
     .limit(session.role === "admin" ? requested : Math.max(requested * 4, 200));
   if (session.role === "admin") return candidates;

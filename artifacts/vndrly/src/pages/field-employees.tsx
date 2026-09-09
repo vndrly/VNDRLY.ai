@@ -226,8 +226,6 @@ export default function FieldEmployees() {
   const [editingOfficeContactId, setEditingOfficeContactId] = useState<number | null>(null);
   const [editingFromFieldTable, setEditingFromFieldTable] = useState(false);
   const [editingOfficeVendorId, setEditingOfficeVendorId] = useState<number | null>(null);
-  const [editingOfficeVendorLogoUrl, setEditingOfficeVendorLogoUrl] = useState<string | null>(null);
-  const [editingOfficeVendorName, setEditingOfficeVendorName] = useState<string | null>(null);
   const [editOfficeForm, setEditOfficeForm] = useState<EditOfficeForm>({ jobTitle: "", firstName: "", lastName: "", email: "", phone: "", vendorRole: "office", pecCertification: false, pecExpirationDate: "", photoUrl: null, roles: [] });
   const initialEditOfficeFormRef = useRef<EditOfficeForm | null>(null);
   const editOfficeDirty = useMemo(() => !!initialEditOfficeFormRef.current && JSON.stringify(editOfficeForm) !== JSON.stringify(initialEditOfficeFormRef.current), [editOfficeForm]);
@@ -239,8 +237,6 @@ export default function FieldEmployees() {
       setEditingOfficeContactId(null);
       setEditingFromFieldTable(false);
       setEditingOfficeVendorId(null);
-      setEditingOfficeVendorLogoUrl(null);
-      setEditingOfficeVendorName(null);
     }
     setEditOfficeOpen(open);
   };
@@ -249,8 +245,6 @@ export default function FieldEmployees() {
     setEditingOfficeContactId(p.id);
     setEditingFromFieldTable(fromFieldTable);
     setEditingOfficeVendorId(p.vendorId);
-    setEditingOfficeVendorLogoUrl(p.vendorLogoUrl ?? null);
-    setEditingOfficeVendorName(p.vendorName ?? null);
     const hydrated: EditOfficeForm = {
       jobTitle: p.jobTitle ?? "",
       firstName: p.firstName,
@@ -576,6 +570,7 @@ export default function FieldEmployees() {
                       <SelectItem value="both" className="focus:bg-transparent data-[highlighted]:bg-transparent"><EmployeeRolePill role="both" /></SelectItem>
                       <SelectItem value="foreman" className="focus:bg-transparent data-[highlighted]:bg-transparent"><EmployeeRolePill role="foreman" /></SelectItem>
                       <SelectItem value="gatekeeper" className="focus:bg-transparent data-[highlighted]:bg-transparent"><EmployeeRolePill role="gatekeeper" /></SelectItem>
+                      <SelectItem value="gate_supervisor" className="focus:bg-transparent data-[highlighted]:bg-transparent"><EmployeeRolePill role="gate_supervisor" /></SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground mt-1">{t("fieldEmployees.roleHelp")}</p>
@@ -853,11 +848,6 @@ export default function FieldEmployees() {
 
       <Dialog open={editOfficeOpen} onOpenChange={tryCloseEditOffice}>
         <DialogContent className="max-h-[90vh] overflow-y-auto">
-          {editingOfficeVendorLogoUrl && (
-            <div className="absolute inset-x-0 top-0 z-30 h-[calc(1.5in+1rem)] flex items-center justify-center pointer-events-none">
-              <img src={editingOfficeVendorLogoUrl} alt={editingOfficeVendorName ? `${editingOfficeVendorName} logo` : "Company logo"} className="max-h-24 max-w-[70%] object-contain" data-testid="img-edit-office-vendor-logo" />
-            </div>
-          )}
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               {t("fieldEmployees.editEmployee")}
@@ -889,6 +879,7 @@ export default function FieldEmployees() {
                   <SelectItem value="both" className="focus:bg-transparent data-[highlighted]:bg-transparent"><EmployeeRolePill role="both" /></SelectItem>
                   <SelectItem value="foreman" className="focus:bg-transparent data-[highlighted]:bg-transparent"><EmployeeRolePill role="foreman" /></SelectItem>
                   <SelectItem value="gatekeeper" className="focus:bg-transparent data-[highlighted]:bg-transparent"><EmployeeRolePill role="gatekeeper" /></SelectItem>
+                  <SelectItem value="gate_supervisor" className="focus:bg-transparent data-[highlighted]:bg-transparent"><EmployeeRolePill role="gate_supervisor" /></SelectItem>
                 </SelectContent>
               </Select>
             </div>

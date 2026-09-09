@@ -7,7 +7,7 @@ import dialogAccentDark from "@assets/VNDRLY_Header_Blur_Dark_1778850026167.png"
 export const APP_MODAL_HEADER_HEIGHT_PX = 70;
 
 const ACCENT_MASK =
-  "linear-gradient(to bottom, black 0%, transparent 100%)" as const;
+  "linear-gradient(to bottom, black 0%, black 66%, transparent 100%)" as const;
 
 export type AppModalTheme = {
   shellChromeClassName: string;
@@ -32,6 +32,7 @@ export const APP_MODAL_LIGHT: AppModalTheme = {
   accentHeaderStyle: {
     height: APP_MODAL_HEADER_HEIGHT_PX,
     backgroundImage: `url(${dialogAccent})`,
+    backgroundSize: "auto 100%",
     WebkitMaskImage: ACCENT_MASK,
     maskImage: ACCENT_MASK,
   },
@@ -55,6 +56,7 @@ export const APP_MODAL_DARK: AppModalTheme = {
   accentHeaderStyle: {
     height: APP_MODAL_HEADER_HEIGHT_PX,
     backgroundImage: `url(${dialogAccentDark})`,
+    backgroundSize: "auto 100%",
     WebkitMaskImage: ACCENT_MASK,
     maskImage: ACCENT_MASK,
   },

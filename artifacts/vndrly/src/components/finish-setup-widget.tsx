@@ -30,7 +30,7 @@ const VENDOR_STEPS: Record<string, { label: string; href: string }> = {
   "tax-ids": { label: "Add tax IDs and billing address", href: "/onboarding/vendor?step=tax-ids" },
   "work-types": { label: "Set service area and work types", href: "/onboarding/vendor?step=work-types" },
   compliance: { label: "Upload your insurance certificate", href: "/onboarding/vendor?step=compliance" },
-  rates: { label: "Set your rates and 1099 delivery", href: "/onboarding/vendor?step=rates" },
+  rates: { label: "Set your rates", href: "/onboarding/vendor?step=rates" },
   "first-employee": { label: "Add your first field employee", href: "/onboarding/vendor?step=first-employee" },
 };
 
@@ -55,7 +55,7 @@ const STEPS_BY_ORG: Record<"partner" | "vendor", { key: string; label: string }[
     { key: "tax-ids", label: "Tax IDs" },
     { key: "work-types", label: "Service & Work Types" },
     { key: "compliance", label: "Compliance" },
-    { key: "rates", label: "Rates & 1099" },
+    { key: "rates", label: "Rates" },
     { key: "first-employee", label: "First Employee" },
   ],
 };

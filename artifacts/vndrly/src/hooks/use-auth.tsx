@@ -49,7 +49,7 @@ interface AuthUser {
   // For vendor sessions: vendor_people.vendor_role of the active membership
   // ('field' | 'foreman' | 'office' | 'both' | 'gatekeeper' | null). Used by the UI to
   // decide whether to surface office-only affordances like phone intake.
-  vendorRole: "field" | "foreman" | "office" | "both" | "gatekeeper" | null;
+  vendorRole: "field" | "foreman" | "office" | "both" | "gatekeeper" | "gate_supervisor" | null;
   preferredLanguage: "en" | "es" | null;
   activeMembershipId: number | null;
   availableMemberships: MembershipSummary[];
@@ -143,7 +143,8 @@ function fromResponse(input: unknown): AuthUser {
     data.vendorRole === "foreman" ||
     data.vendorRole === "office" ||
     data.vendorRole === "both" ||
-    data.vendorRole === "gatekeeper"
+    data.vendorRole === "gatekeeper" ||
+    data.vendorRole === "gate_supervisor"
       ? data.vendorRole
       : null;
   return {
@@ -252,7 +253,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // serving stale authenticated data after the cookie is gone. The org id
     // in the query string tells the login page which Supabase-backed brand
     // to load — no extra cookies or localStorage.
-    window.location.replace(`${BASE}/${qs}`);
+    window.location.replace(`${BASE}/login${qs}`);
   }, []);
 
   const setPreferredLanguage = useCallback((lng: "en" | "es") => {
@@ -310,7 +311,7 @@ const FALLBACK_AUTH: AuthContextType = {
   },
   logout: async () => {
     // HMR can detach AuthProvider briefly; still force a hard reset to login.
-    window.location.replace(`${import.meta.env.BASE_URL.replace(/\/$/, "")}/`);
+    window.location.replace(`${import.meta.env.BASE_URL.replace(/\/$/, "")}/login`);
   },
   setPreferredLanguage: () => {},
   switchContext: async () => {
