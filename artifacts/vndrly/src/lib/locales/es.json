@@ -63,6 +63,7 @@
     "reportsLink": "Nómina: revisión del pago bruto y CSV"
   },
   "askvMicrophone": {
+    "complete": "Completar",
     "label": "Micrófono",
     "systemDefault": "Predeterminado del sistema",
     "savedNotListed": "Micrófono guardado (no aparece en la lista)",

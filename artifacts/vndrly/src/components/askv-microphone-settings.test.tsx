@@ -5,6 +5,7 @@ import { captureAskVMicrophone, meterAskVMicrophone, selectAskVMicrophone } from
 
 let meter: ReturnType<typeof meterAskVMicrophone> | undefined;
 beforeEach(() => {
+  localStorage.removeItem('askv:microphone-setup-complete');
   selectAskVMicrophone('');
   const mediaDevices = new EventTarget();
   Object.assign(mediaDevices, {
@@ -15,6 +16,20 @@ beforeEach(() => {
     getUserMedia: vi.fn(async () => ({ getTracks: () => [{ label: 'PC microphone' }] })),
   });
   Object.defineProperty(navigator, 'mediaDevices', { configurable: true, value: mediaDevices });
+});
+
+it('enables Complete only after live microphone input is detected', async () => {
+  const capture = await captureAskVMicrophone(new AbortController().signal);
+  meter = meterAskVMicrophone(capture);
+  const onComplete = vi.fn();
+  render(<AskVMicrophoneSettings onComplete={onComplete} />);
+  const complete = screen.getByRole('button', { name: 'Complete' });
+  expect(complete.hasAttribute('disabled')).toBe(true);
+  act(() => meter!.push(new Float32Array([0.1, -0.1])));
+  expect(complete.hasAttribute('disabled')).toBe(false);
+  fireEvent.click(complete);
+  expect(localStorage.getItem('askv:microphone-setup-complete')).toBe('true');
+  expect(onComplete).toHaveBeenCalledOnce();
 });
 afterEach(() => { meter?.stop(); meter = undefined; vi.restoreAllMocks(); });
 

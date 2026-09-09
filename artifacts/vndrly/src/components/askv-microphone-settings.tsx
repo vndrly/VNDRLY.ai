@@ -1,12 +1,18 @@
-import { useEffect, useId, useSyncExternalStore } from 'react';
+import { useEffect, useId, useState, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getAskVMicrophoneState, observeAskVMicrophones, selectAskVMicrophone, subscribeAskVMicrophone } from '@/lib/askv-microphone';
 
-export function AskVMicrophoneSettings() {
+export const ASKV_MICROPHONE_SETUP_KEY = 'askv:microphone-setup-complete';
+
+export function AskVMicrophoneSettings({ onComplete }: { onComplete?: () => void }) {
   const { t } = useTranslation();
   const id = useId();
   const microphone = useSyncExternalStore(subscribeAskVMicrophone, getAskVMicrophoneState);
+  const [verified, setVerified] = useState(false);
   useEffect(observeAskVMicrophones, []);
+  useEffect(() => {
+    if (microphone.active && microphone.level !== null && microphone.level > 0) setVerified(true);
+  }, [microphone.active, microphone.level]);
   const savedNotListed = microphone.selectedDeviceId && !microphone.devices.some(device => device.deviceId === microphone.selectedDeviceId);
   const activeLabel = microphone.activeLabel || t('askvMicrophone.systemDefault');
   return <div className="shrink-0 border-b border-white/20 px-4 py-2 space-y-1.5 text-xs" data-testid="askv-microphone-settings">
@@ -33,5 +39,19 @@ export function AskVMicrophoneSettings() {
         : t('askvMicrophone.inactive')}</span>
     </div>
     {!microphone.devices.some(device => device.label) && <p className="text-white/70">{t('askvMicrophone.labelsAfterPermission')}</p>}
+    <div className="flex justify-end">
+      <button
+        type="button"
+        disabled={!verified}
+        onClick={() => {
+          window.localStorage.setItem(ASKV_MICROPHONE_SETUP_KEY, 'true');
+          onComplete?.();
+        }}
+        className="rounded-full border border-[color:var(--brand-primary)] px-3 py-1 font-medium text-white disabled:cursor-not-allowed disabled:opacity-40"
+        data-testid="askv-microphone-complete"
+      >
+        {t('askvMicrophone.complete')}
+      </button>
+    </div>
   </div>;
 }

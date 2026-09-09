@@ -63,6 +63,7 @@
     "reportsLink": "Payroll: gross-pay review and CSV"
   },
   "askvMicrophone": {
+    "complete": "Complete",
     "label": "Microphone",
     "systemDefault": "System default",
     "savedNotListed": "Saved microphone (not listed)",

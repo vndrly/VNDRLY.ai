@@ -14,7 +14,7 @@ import lightGreySquareSrc from "@assets/900x229_Light-grey_v2r_square_1778256462
 import AskVStatusIndicator from "@/components/askv-status-indicator";
 import { askVMicrophone } from '@workspace/askv-wake';
 import { useAskVVoiceSession } from "@/hooks/use-askv-voice-session";
-import { AskVMicrophoneSettings } from "@/components/askv-microphone-settings";
+import { AskVMicrophoneSettings, ASKV_MICROPHONE_SETUP_KEY } from "@/components/askv-microphone-settings";
 import { captureAskVMicrophone, meterAskVMicrophone } from "@/lib/askv-microphone";
 import { writeAskVAcrossVndrly } from "@/lib/askv-voice-preferences";
 import { useAuth } from "@/hooks/use-auth";
@@ -263,6 +263,10 @@ function pickAskVRecordingMimeType(): string | undefined {
 
 export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, placement = "default" }: AssistantPanelProps & { placement?: "default" | "onboarding" }) {
   const [minimized, setMinimized] = useState(false);
+  const [showMicrophoneSetup, setShowMicrophoneSetup] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return window.localStorage.getItem(ASKV_MICROPHONE_SETUP_KEY) !== "true";
+  });
   const { t } = useTranslation();
   const { user } = useAuth();
   const voiceSession = useAskVVoiceSession();
@@ -953,6 +957,15 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, plac
             {!tokenMode && !signupMode && askVUserId != null && (
               <>
                 <AskVStatusIndicator />
+                {!showMicrophoneSetup && (
+                  <HeaderIconButton
+                    onClick={() => setShowMicrophoneSetup(true)}
+                    testId="assistant-microphone-settings"
+                    title="Microphone setup"
+                  >
+                    <Mic className="w-4 h-4" />
+                  </HeaderIconButton>
+                )}
                 <HeaderIconButton
                   onClick={() => voiceSession.setMuted(!voiceSession.muted)}
                   testId="assistant-mute"
@@ -988,7 +1001,9 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, plac
           </div>
         </DialogHeader>
 
-        {!minimized && open && !tokenMode && !signupMode && askVUserId != null && <AskVMicrophoneSettings />}
+        {!minimized && open && !tokenMode && !signupMode && askVUserId != null && showMicrophoneSetup && (
+          <AskVMicrophoneSettings onComplete={() => setShowMicrophoneSetup(false)} />
+        )}
 
         {!minimized && progress && (
           <OnboardingMiniStepper progress={progress} />
