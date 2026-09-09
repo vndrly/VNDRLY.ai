@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
-import { Sparkles, MessageCircle, Trash2, Loader2, Download, CheckCircle2, Circle, Plus, X, ThumbsUp, ThumbsDown, Send, Mail, Mic, Volume2, VolumeX, Copy, Minus, Maximize2 } from "lucide-react";
+import { Sparkles, MessageCircle, Trash2, Loader2, Download, CheckCircle2, Circle, Plus, X, ThumbsUp, ThumbsDown, Send, Mail, Mic, Settings, Volume2, VolumeX, Copy, Minus, Maximize2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AskVFloatingLauncherMark, AskVLogo, ASKV_LAUNCHER_HEIGHT, ASKV_LAUNCHER_WIDTH } from "@/components/askv-logo";
@@ -263,7 +263,7 @@ function pickAskVRecordingMimeType(): string | undefined {
 
 export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, placement = "default" }: AssistantPanelProps & { placement?: "default" | "onboarding" }) {
   const [minimized, setMinimized] = useState(false);
-  const [showMicrophoneSetup, setShowMicrophoneSetup] = useState(() => {
+  const [showSettings, setShowSettings] = useState(() => {
     if (typeof window === "undefined") return true;
     return window.localStorage.getItem(ASKV_MICROPHONE_SETUP_KEY) !== "true";
   });
@@ -865,7 +865,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, plac
           placement === "onboarding"
             ? "sm:left-6 sm:right-auto sm:top-auto sm:bottom-24 sm:max-w-[min(24rem,calc(100vw-3rem))]"
             : "sm:left-auto sm:right-6 sm:top-6 sm:max-w-[38.59rem]",
-          minimized ? "h-16" : "h-[min(72vh,640px)]",
+          minimized ? "h-16" : "h-[min(86vh,768px)]",
         )}
         data-testid="assistant-panel"
         hideClose
@@ -957,15 +957,14 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, plac
             {!tokenMode && !signupMode && askVUserId != null && (
               <>
                 <AskVStatusIndicator />
-                {!showMicrophoneSetup && (
-                  <HeaderIconButton
-                    onClick={() => setShowMicrophoneSetup(true)}
-                    testId="assistant-microphone-settings"
-                    title="Microphone setup"
-                  >
-                    <Mic className="w-4 h-4" />
-                  </HeaderIconButton>
-                )}
+                <HeaderIconButton
+                  onClick={() => setShowSettings((value) => !value)}
+                  testId="assistant-settings"
+                  title="Ask V settings"
+                  pressed={showSettings}
+                >
+                  <Settings className="w-4 h-4" />
+                </HeaderIconButton>
                 <HeaderIconButton
                   onClick={() => voiceSession.setMuted(!voiceSession.muted)}
                   testId="assistant-mute"
@@ -973,14 +972,6 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, plac
                   pressed={voiceSession.muted}
                 >
                   {voiceSession.muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                </HeaderIconButton>
-                <HeaderIconButton
-                  onClick={() => writeAskVAcrossVndrly(askVUserId, !voiceSession.acrossVndrly)}
-                  testId="assistant-across-vndrly"
-                  title={voiceSession.acrossVndrly ? "Across VNDRLY is on: listen locally for AskV while the app is open" : "Enable AskV across VNDRLY: listen locally for AskV while the app is open"}
-                  pressed={voiceSession.acrossVndrly}
-                >
-                  <Sparkles className="w-4 h-4" />
                 </HeaderIconButton>
               </>
             )}
@@ -1001,8 +992,23 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, plac
           </div>
         </DialogHeader>
 
-        {!minimized && open && !tokenMode && !signupMode && askVUserId != null && showMicrophoneSetup && (
-          <AskVMicrophoneSettings onComplete={() => setShowMicrophoneSetup(false)} />
+        {!minimized && open && !tokenMode && !signupMode && askVUserId != null && showSettings && (
+          <div className="shrink-0 border-b border-white/20" data-testid="assistant-settings-panel">
+            <div className="flex items-center justify-between px-4 py-2 text-sm font-medium">
+              <span>Ask V settings</span>
+              <button
+                type="button"
+                onClick={() => writeAskVAcrossVndrly(askVUserId, !voiceSession.acrossVndrly)}
+                aria-label={voiceSession.acrossVndrly ? "Across VNDRLY is on: listen locally for AskV while the app is open" : "Enable AskV across VNDRLY: listen locally for AskV while the app is open"}
+                className="inline-flex items-center gap-2 rounded-full border border-white/25 px-3 py-1 text-xs text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+                data-testid="assistant-across-vndrly"
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                Across VNDRLY: {voiceSession.acrossVndrly ? "On" : "Off"}
+              </button>
+            </div>
+            <AskVMicrophoneSettings onComplete={() => setShowSettings(false)} />
+          </div>
         )}
 
         {!minimized && progress && (
@@ -1318,12 +1324,13 @@ function PendingSignupChatOffer({
 // Comiact horizontal stepper shown above the message list when an
 // onboarding flow is in progress. Mirrors the dot/check iattern from
 // the wizard pages so users get a consistent sense of "where am I".
-function OnboardingMiniStepper({ progress }: { progress: OnboardingProgress }) {
+export function OnboardingMiniStepper({ progress }: { progress: OnboardingProgress }) {
   const steps = STEPS_BY_ORG[progress.orgType];
   const currentIdx = steps.indexOf(progress.currentStep);
   const completed = new Set(progress.completedSteps);
   const skipped = new Set(progress.skippedSteps);
   const totalDone = steps.filter((step) => completed.has(step) || skipped.has(step)).length;
+  if (totalDone === steps.length) return null;
   return (
     <div
       className="border-b bg-muted/20 px-4 py-2 siace-y-1.5"

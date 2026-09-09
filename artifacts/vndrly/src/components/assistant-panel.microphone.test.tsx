@@ -15,7 +15,7 @@ vi.mock('@/hooks/use-askv-voice-session', () => ({ useAskVVoiceSession: () => ({
   muted: state.muted, state: 'error', error: null, acrossVndrly: false, wakeReady: false,
   startConversation: state.startConversation, closePanel: state.closePanel, stop: vi.fn(), setMuted: vi.fn(),
 }) }));
-import { AssistantPanel } from './assistant-panel';
+import { AssistantPanel, OnboardingMiniStepper } from './assistant-panel';
 import { getAskVMicrophoneState, selectAskVMicrophone } from '@/lib/askv-microphone';
 
 class Recorder {
@@ -49,4 +49,37 @@ it('uses the selected input for fallback recording and releases it when AskV is 
   await waitFor(() => expect(getAskVMicrophoneState().active).toBe(false));
   expect(track.stop).toHaveBeenCalled();
   expect(screen.queryByTestId('assistant-voice')).toBeNull();
+});
+
+it('extends the full AskV panel downward without changing its top-right anchor', () => {
+  const queryClient = new QueryClient();
+  render(<QueryClientProvider client={queryClient}><AssistantPanel open onOpenChange={() => {}} /></QueryClientProvider>);
+
+  const panel = screen.getByTestId('assistant-panel');
+  expect(panel.className).toContain('sm:right-6');
+  expect(panel.className).toContain('sm:top-6');
+  expect(panel.className).toContain('h-[min(86vh,768px)]');
+});
+
+it('hides the AskV onboarding stepper after every current vendor step is complete', () => {
+  render(<OnboardingMiniStepper progress={{
+    orgType: 'vendor',
+    currentStep: 'first-employee',
+    completedSteps: ['company-basics', 'platform-eula', 'branding', 'tax-ids', 'work-types', 'first-employee'],
+    skippedSteps: [],
+  }} />);
+
+  expect(screen.queryByTestId('assistant-mini-stepper')).toBeNull();
+});
+
+it('groups microphone and across-VNDRLY controls under one recognizable settings button', () => {
+  localStorage.setItem('askv:microphone-setup-complete', 'true');
+  const queryClient = new QueryClient();
+  render(<QueryClientProvider client={queryClient}><AssistantPanel open onOpenChange={() => {}} /></QueryClientProvider>);
+
+  expect(screen.queryByRole('button', { name: 'Microphone setup' })).toBeNull();
+  expect(screen.queryByRole('button', { name: /Enable AskV across VNDRLY/ })).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Ask V settings' }));
+  expect(screen.getByTestId('askv-microphone-settings')).not.toBeNull();
+  expect(screen.getByRole('button', { name: /Enable AskV across VNDRLY/ })).not.toBeNull();
 });

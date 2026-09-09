@@ -117,11 +117,21 @@ export default function FinishSetupWidget({
   }, [progress]);
 
   const incomplete = isOnboardingIncomplete(progress);
+  const canonicalStepsComplete = useMemo(() => {
+    if (!progress || (progress.orgType !== "partner" && progress.orgType !== "vendor")) {
+      return false;
+    }
+    const accountedFor = new Set([
+      ...(progress.completedSteps ?? []),
+      ...(progress.skippedSteps ?? []),
+    ]);
+    return STEPS_BY_ORG[progress.orgType].every((step) => accountedFor.has(step.key));
+  }, [progress]);
   const resumeHref =
-    progress && incomplete ? onboardingResumeHref(progress) : null;
+    progress && incomplete && !canonicalStepsComplete ? onboardingResumeHref(progress) : null;
 
   const stepper = useMemo(() => {
-    if (!progress || !incomplete) return null;
+    if (!progress || !incomplete || canonicalStepsComplete) return null;
     if (progress.orgType !== "partner" && progress.orgType !== "vendor") {
       return null;
     }
@@ -137,9 +147,10 @@ export default function FinishSetupWidget({
         ? steps[currentIdx].label
         : (steps.find((s) => !done.has(s.key))?.label ?? null);
     return { steps, done, currentIdx, doneCount, currentLabel };
-  }, [progress, incomplete]);
+  }, [progress, incomplete, canonicalStepsComplete]);
 
   if (hidden || !progress) return null;
+  if (canonicalStepsComplete) return null;
   if (!incomplete && items.length === 0) return null;
 
   const goToStep = (stepKey: string) => {

@@ -13,7 +13,7 @@ export default function AskVStatusIndicator() {
       onClick={() => setMuted(!muted)}
       aria-label={muted ? "Unmute AskV" : "Mute AskV"}
       title={muted ? "Unmute AskV" : "Mute AskV"}
-      className="rounded-full border-0 bg-transparent p-0 transition-transform active:scale-[0.98]"
+      className="appearance-none rounded-full border-0 bg-transparent p-0 shadow-none outline-none transition-transform active:scale-[0.98] focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
       data-testid="askv-status-toggle"
     >
       <ImagePill

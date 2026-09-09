@@ -38,4 +38,13 @@ describe("AskVStatusIndicator", () => {
     voice.muted = true;
     voice.state = "idle";
   });
+
+  it("does not draw a focus halo around the mute control", () => {
+    render(<AskVStatusIndicator />);
+    const toggle = screen.getByRole("button", { name: "Unmute AskV" });
+
+    expect(toggle.className).toContain("focus-visible:ring-0");
+    expect(toggle.className).toContain("focus-visible:ring-offset-0");
+    expect(toggle.className).toContain("focus-visible:outline-none");
+  });
 });
