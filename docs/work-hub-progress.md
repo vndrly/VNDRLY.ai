@@ -1,68 +1,44 @@
-# Live release checkpoint — September 9, 2026, 14:32 UTC
+# Work Hub release complete
 
-Application source is now published on main at **76db4fc009fdf77416f77c1285a6c22021f1f905**. Deployment-only recovery **0ae510e0443703a22513c0e1432b424ee7fdf6e1** preserves identical application source. Fetch main to obtain implementation; this handoff branch remains documentation-only.
+Verified September 9, 2026, 14:44 UTC. The approved Work Hub expansion is deployed, and iOS 1.0.2 build 166 is available for internal TestFlight testing.
 
-- Web Publish [34363501708](https://github.com/vndrly/VNDRLY.ai/actions/runs/34363501708) succeeded; public root and gate return HTTP 200.
-- OTA [34363524030](https://github.com/vndrly/VNDRLY.ai/actions/runs/34363524030) succeeded. Production iOS update group **65d5efbe-59bc-4f06-b6e8-55f07b2bafc8**, runtime 1.0.2, exact application commit 76db4fc0.
-- Native TestFlight [34363527714](https://github.com/vndrly/VNDRLY.ai/actions/runs/34363527714) is building; submission is not yet complete.
-- API deployment remains incomplete. Initial relay startup readiness race was fixed. Recovery identified missing imports in two migration entrypoints; those are being corrected and replay-tested on an isolated database. Do not claim the expanded API is live until restart/migrations succeed.
-- VNDRLY-hosted relay is active and externally verified: forced relay UDP and TCP each passed 5 sent / 5 received / 5 echoed packets with connected relay candidate pairs. Permanent credentials were neither printed nor rotated.
+## Source and deployment identity
 
-Full ship is still in progress. The historical source-verification checkpoint below records completed implementation tests; its pre-publication remaining steps are superseded by this live status.
+- Current main and local implementation branch: **abb82e811b43e93036c4e46dc6c33c52b4a3b757**.
+- Application release: **76db4fc009fdf77416f77c1285a6c22021f1f905**. Native build and OTA use this exact commit.
+- Later commits **0ae510e0** and **abb82e81** change only the VPS relay startup script and two migration entrypoint imports. Git diff confirms web, mobile, API runtime code, dependencies and schemas are identical to application release 76db4fc0.
+- Source is available on main and codex/work-hub-expansion. This codex/work-hub-handoff-20260909 branch remains a documentation checkpoint, not the application checkout.
 
----
+## Terminal release evidence
 
-# Work Hub implementation and release checkpoint
+| Track | Verified result |
+|---|---|
+| Commit / push / main | Non-force publication; local branch fast-forwarded to abb82e81; unrelated local work preserved |
+| Web | [Publish 34364345130](https://github.com/vndrly/VNDRLY.ai/actions/runs/34364345130) succeeded; public root and gate HTTP 200; signed-in Work Hub rendered with zero browser errors |
+| API | [Deploy API 34364345208](https://github.com/vndrly/VNDRLY.ai/actions/runs/34364345208) succeeded; VPS exact SHA abb82e81; health HTTP 200 with status ok |
+| Database / storage access | All additive migrations completed, including collaboration, finance, calls, scheduling and file library; access hardening verified two restricted roles and 161 RLS tables; existing storage retained |
+| Internal audio relay | Existing VPS hosts relay; real off-server forced-relay UDP and TCP each sent/received/echoed all 5 messages; connected relay pairs verified |
+| iOS OTA | [34363524030](https://github.com/vndrly/VNDRLY.ai/actions/runs/34363524030) succeeded; production runtime 1.0.2; [update group 65d5efbe-59bc-4f06-b6e8-55f07b2bafc8](https://expo.dev/accounts/vndrlyadmin/projects/vndrly-mobile/updates/65d5efbe-59bc-4f06-b6e8-55f07b2bafc8); iOS update 01a08692-170f-7171-a2be-d78fffbfa06d |
+| Native build | [ad3b1962-ce9a-4677-b3d1-7c569568b9f6](https://expo.dev/accounts/vndrlyadmin/projects/vndrly-mobile/builds/ad3b1962-ce9a-4677-b3d1-7c569568b9f6), FINISHED, iOS 1.0.2 (166), production, exact commit 76db4fc0; verified artifact 10109428598 |
+| TestFlight submission | [34363527714](https://github.com/vndrly/VNDRLY.ai/actions/runs/34363527714) succeeded using exact build ID and --wait; [submission 7b90a236-640f-4a4c-8e7d-9d26a0755919](https://expo.dev/accounts/vndrlyadmin/projects/vndrly-mobile/submissions/7b90a236-640f-4a4c-8e7d-9d26a0755919) uploaded successfully at 14:38:44 UTC |
+| Apple processing | Direct App Store Connect verification at 14:44:24 UTC: build d44dab0e-40a9-4bd0-977e-6c0f8a981b74, version 166, processingState VALID, internalBuildState IN_BETA_TESTING, expired false. External beta state READY_FOR_BETA_SUBMISSION; no external review or App Store sale action performed |
 
-Updated September 9, 2026 (America/Chicago).
+Verified final web/API deployment completed about 9 minutes 14 seconds after release publication began. Internal TestFlight readiness was confirmed about 19 minutes 22 seconds after that start. Two deployment failures were diagnosed and repaired: first-start relay listener readiness, then redundant nonexistent migration imports. No credentials were rotated and no database reset was performed.
 
-## Release state
+## Verification
 
-The expansion is implemented locally on `codex/work-hub-expansion`, with implementation and required verification complete. Original baseline: `931b7e5f127feaac3b31ccf6128f868813e25133`. The non-overlapping release guard fix through `d6f854b1ceed67827e7cc5f5b088b36e5cb4dbba` was fast-forwarded without replacing local work. Publication and live verification remain pending. Passing source tests are not a production release.
+[Complete application CI 34363491692](https://github.com/vndrly/VNDRLY.ai/actions/runs/34363491692) passed in one run: full workspace typecheck and locale parity, shared libraries, web 155 files / 981 tests (3 skipped), mobile 105 files / 684 tests, API 299 files / 2382 tests (53 skipped), and all 36 browser workflows. API also passed independently of the root test chain. Local verification covered final permission, replay, privacy, invoice/refund and recording regressions.
 
-The separate `codex/work-hub-handoff-20260909` documentation branch carries cross-machine progress; it does not contain application source. Later release evidence must identify the exact main commit, workflow runs, Expo update and TestFlight build/submission.
+Two real browser clients accepted an internal call, joined and unmuted through the actual interface, and exchanged 49/50 inbound/outbound audio packets with connected peers. Calls recording remained disabled. Synthetic microphone hardware was used; signaling and media were real. Production relay tests separately forced actual relay connections over both transports. Final migration entrypoints executed twice each on an isolated local database (10/10). Deployment-script syntax, readiness failure/success cases and workflow contracts passed.
 
-## Implemented scope
+A redundant final-commit CI run may still be completing; application evidence above applies because subsequent changes contain only the separately verified deployment/migration fixes. Local logs and synthetic artifacts are retained in artifacts/work-hub-verification and excluded from source control.
 
-See the [approved design](superpowers/specs/2026-09-09-work-hub-expansion.md) and [implementation plan](superpowers/plans/2026-09-09-work-hub-expansion.md).
+## Delivered scope and configuration boundaries
 
-- Persistent Crews, Channels, invitations, chats, activity, preferences, conversation actions, notes and existing task/form workflows in a branded workspace.
-- Calendar and authenticated Meetings scheduling with personal/shared meeting types, availability and conflict protection.
-- Internal WebRTC Calls and meetings, acceptance boundaries, private voicemail, and host-controlled meeting recording with participant consent. VNDRLY-hosted TURN provisioning is included; no external calling provider is introduced.
-- Personal/shared files, versions, integrity verification, favorites, recycle/restore and expiring revocable public links; authorized existing uploads remain available.
-- Invoice drafts, issue/email/print/export, outside payments, guarded refunds and platform fee policy. Payroll preparation/approval requires explicit payroll grants; administration alone never grants payroll data access.
-- CSV preview/mapping/confirmation/import history and authorized exports, plus existing accounting connection entry points. Microsoft remains import-only and unavailable without configuration.
-- Phone/tablet daily collaboration and native audio using existing dependencies. Full financial execution, refund and bulk import controls remain web-only.
+See the [approved design](superpowers/specs/2026-09-09-work-hub-expansion.md) and [implementation plan](superpowers/plans/2026-09-09-work-hub-expansion.md). The release includes Crews/Channels, invited chat and internal calls, voicemail, consented meeting recording, activity/announcements, files/versions/sharing, notes/tasks/forms, calendar/Meetings scheduling, invoice and payroll preparation, explicit delegated permissions, imports/exports and appropriate mobile participation. Employee payroll documents are recipient-only and require actual issued provider documents; none were fabricated.
 
-Screenshot business data and source screenshots are excluded from application code, fixtures and documents.
+Card/ACH collection, payroll direct deposit, tax calculation/filing, secure bank/tax onboarding and Microsoft connection require their external configuration. These actions remain explicitly unavailable until configured and do not simulate successful money movement or filing. Voice transcription uses the existing configured transcription service; internal live audio requires no external calling provider. Physical microphone/headset acceptance remains a device test, distinct from automated native tests and TestFlight readiness.
 
-## Verification before publication
+## Safe cross-machine continuation
 
-- Full workspace typecheck and English/Spanish locale parity passed.
-- Shared library tests: 57 passed.
-- Web: 956 passed and 3 skipped in the broad run; affected Work Hub and three worker-startup failures were covered by focused retries. Final recording-flush regression passed after correcting its test timer selection.
-- Mobile: all 104 files / 681 tests covered by passing runs and unchanged retries for Windows startup/import timeouts.
-- API: broad fresh-local run passed 2,359 tests; focused retries covered every affected file, including storage ownership, capture consent and the isolated database-role fixture. No production database was used.
-- All 36 browser workflows passed across the broad run and focused retries, including the persisted Work Hub flow and real audio.
-- Real two-browser internal audio passed: acceptance, both actual audio-room interfaces, bidirectional RTP packets and recording denied for Calls. Only microphone hardware was synthetic; signaling and media were real.
-- Production web/API bundles built. Newly fetched mobile release guard checks passed 15/15. Relay/workflow checks passed; actual relay allocation awaits deployment.
-
-Logs and synthetic browser artifacts remain local in `artifacts/work-hub-verification/`, excluded from release. Final scope corrections also passed: announcement authorization 3 tests, command consumers 16 tests, finance API 6 tests, mobile document checks 6 tests, focused web 11 tests, and API/web/mobile typechecks. Announcements now reach authorized recipients with acknowledgement and urgent priority; personal issued payroll documents are recipient-only; gross payroll drafts export to CSV.
-
-## Explicit live limitations
-
-Card/ACH collections, payroll direct deposit, taxes/filings and secure provider-managed bank/tax onboarding require provider configuration. Unavailable execution never simulates a payment, deposit, filing or net-pay calculation. Microsoft connection/import requires credentials. Transcription depends on the existing configured transcription service; live audio itself does not.
-
-The relay must be verified from outside the VPS after deployment; a listener check alone is insufficient. Physical iOS microphone/headset behavior remains a device acceptance check. Automated native tests and TestFlight submission do not prove physical hardware behavior.
-
-## Remaining release work
-
-1. Freeze the verified source and preserve its exact tree identity.
-2. Recheck remote main and publish scoped source non-force, preserving unrelated work.
-3. Verify web Publish, API Deploy/additive migrations, authenticated Work Hub and external TURN allocation.
-4. Dispatch/verify production OTA eligibility/update and exact native TestFlight build/submission. Never bypass an incompatible-runtime OTA guard.
-5. Record concrete evidence on the handoff branch. Full ship remains incomplete until required tracks have terminal proof.
-
-## Safe resume
-
-Inspect branch, remotes, status and latest checkpoint. Preserve pre-existing deleted button shortcut and untracked `artifacts/list-one-verification/`. Exclude verification helpers/logs. Never force-push, rotate credentials, wipe/reset data or run destructive schema push. API/E2E use new loopback databases in `fresh-local` mode. Never reset source work to match a documentation-only branch.
+Fetch main and inspect local status before continuing. Preserve each machine's local work. The home checkout retains the pre-existing deleted button shortcut and artifacts/list-one-verification; neither was included in this release. Do not reset a checkout to this documentation-only branch. Never wipe/reset production or development data, rotate canonical credentials, or force-push. Screenshots and their business contents were not copied into repository fixtures or documents.
