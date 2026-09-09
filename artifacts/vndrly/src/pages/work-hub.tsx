@@ -19,6 +19,7 @@ import { useAuth } from "@/hooks/use-auth";
 import {
   canManageWorkHubChannels,
   commandEnvelope,
+  createWorkHubOperationId,
   isWorkHubAdmin,
   ownerForUser,
   workHubModulePath,
@@ -140,7 +141,7 @@ function useCommand(path: string, key: unknown[]) {
             commandEnvelope(
               owner!,
               payload,
-              crypto.randomUUID(),
+              createWorkHubOperationId(),
               expectedVersion,
             ),
           ),
@@ -272,6 +273,7 @@ function Channels() {
                 <option value="group">Invited group</option>
               </select>
             </form>
+            <Notice error={channels.error ?? create.error} />
             {guidance && (
               <p role="status" className="text-xs text-muted-foreground">
                 {guidance}

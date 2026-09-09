@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   canManageWorkHubChannels,
   commandEnvelope,
+  createWorkHubOperationId,
   ownerForUser,
   workHubModulePath,
   type WorkHubUser,
@@ -62,6 +63,19 @@ describe("Work Hub client boundary", () => {
       expectedVersion: 4,
       payload: { title: "Inspect pump" },
     });
+  });
+
+  it("creates a valid operation id when randomUUID is unavailable", () => {
+    const operationId = createWorkHubOperationId({
+      getRandomValues: (bytes: Uint8Array) => {
+        bytes.set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
+        return bytes;
+      },
+    });
+
+    expect(operationId).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+    );
   });
 
   it("maps searchable subjects back to usable module destinations", () => {
