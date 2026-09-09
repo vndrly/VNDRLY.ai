@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { workHubCommandEnvelopeSchema } from "@workspace/api-zod";
 import {
   canManageWorkHubChannels,
   commandEnvelope,
@@ -61,8 +62,17 @@ describe("Work Hub client boundary", () => {
       owner: { type: "vendor", id: 22 },
       context: { kind: "organization", id: 22 },
       expectedVersion: 4,
+      payloadVersion: 1,
       payload: { title: "Inspect pump" },
     });
+  });
+
+  it("creates an envelope accepted by the shared API schema", () => {
+    expect(
+      workHubCommandEnvelopeSchema.safeParse(
+        commandEnvelope({ type: "vendor", id: 22 }, { name: "Admin" }),
+      ).success,
+    ).toBe(true);
   });
 
   it("creates a valid operation id when randomUUID is unavailable", () => {

@@ -68,7 +68,8 @@ export function commandEnvelope<T>(
     operationId,
     owner,
     context: { kind: "organization" as const, id: owner.id },
-    ...(expectedVersion === undefined ? {} : { expectedVersion }),
+    expectedVersion: expectedVersion ?? null,
+    payloadVersion: 1 as const,
     payload,
   };
 }
