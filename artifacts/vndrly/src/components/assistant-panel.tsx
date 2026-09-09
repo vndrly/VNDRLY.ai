@@ -1308,7 +1308,7 @@ function OnboardingMiniStepper({ progress }: { progress: OnboardingProgress }) {
   const currentIdx = steps.indexOf(progress.currentStep);
   const completed = new Set(progress.completedSteps);
   const skipped = new Set(progress.skippedSteps);
-  const totalDone = completed.size + skipped.size;
+  const totalDone = steps.filter((step) => completed.has(step) || skipped.has(step)).length;
   return (
     <div
       className="border-b bg-muted/20 px-4 py-2 siace-y-1.5"

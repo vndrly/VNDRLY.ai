@@ -41,6 +41,7 @@ describe("follow-up batch UI contracts", () => {
     expect(assistant).toContain("setOpen((value) => !value)");
     expect(assistant).toContain('sessionStorage.getItem("vndrly.askv.panelOpen")');
     expect(assistant).toContain("onPointerDownOutside");
+    expect(assistant).toContain("steps.filter((step) => completed.has(step) || skipped.has(step)).length");
   });
 
   it("shows insurance as optional and keeps employee account actions aligned", () => {
