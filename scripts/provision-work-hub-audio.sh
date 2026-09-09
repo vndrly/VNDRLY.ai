@@ -207,9 +207,19 @@ if command -v ufw >/dev/null && ufw status | grep -q '^Status: active'; then
 fi
 systemctl daemon-reload
 systemctl enable --now vndrly-audio-relay
-systemctl is-active --quiet vndrly-audio-relay
-ss -H -ltn 'sport = :3478' | grep -q .
-ss -H -lun 'sport = :3478' | grep -q .
+# Type=simple becomes active before coturn finishes opening both listeners.
+# Wait for readiness before publishing URLs or allowing the API deploy onward.
+relay_ready=false
+for attempt in {1..30}; do
+  if systemctl is-active --quiet vndrly-audio-relay &&
+    [[ -n $(ss -H -ltn 'sport = :3478') ]] &&
+    [[ -n $(ss -H -lun 'sport = :3478') ]]; then
+    relay_ready=true
+    break
+  fi
+  sleep 1
+done
+[[ "$relay_ready" == true ]] || { echo 'Relay did not open TCP and UDP listeners within 30 seconds' >&2; exit 1; }
 write_setting WORK_HUB_TURN_URLS "turn:$relay_host:3478?transport=udp,turn:$relay_host:3478?transport=tcp"
 unset secret configured_secret
 echo 'Self-hosted relay is listening; verify external allocation and provider firewall before claiming NAT connectivity'
