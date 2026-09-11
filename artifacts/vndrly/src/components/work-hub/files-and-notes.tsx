@@ -4,6 +4,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { WorkHubFiles } from "./files";
 import { HubError } from "./collaboration";
 import BrandPillButton from "@/components/brand-pill-button";
+import {
+  PngPillButton,
+  brandImagePillSrc,
+} from "@/components/png-pill-rollover";
+import { useBrand } from "@/hooks/use-brand";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { commandEnvelope, workHubRequest } from "@/lib/work-hub-client";
@@ -227,16 +232,20 @@ function ExistingUploads() {
 }
 export function FilesAndNotes() {
   const [tab, setTab] = useState("files");
+  const brand = useBrand();
+  const brandPillSrc = brandImagePillSrc(brand.primary, brand.name);
   return (
-    <section className="mx-auto max-w-7xl p-4 md:p-6">
+    <section className="mx-auto max-w-7xl rounded-xl border bg-card p-4 shadow-sm md:p-6">
       <h1 className="text-2xl font-semibold">Files & Notes</h1>
-      <div className="my-5 flex gap-6 border-b" role="tablist">
+      <div className="my-5 flex flex-wrap gap-2" role="tablist">
         {["files", "notes", "existing"].map((key) => (
-          <button
+          <PngPillButton
             key={key}
             role="tab"
             aria-selected={tab === key}
-            className={`pb-3 text-sm font-semibold ${tab === key ? "border-b-2 border-[var(--brand-primary)]" : "text-muted-foreground"}`}
+            aria-pressed={tab === key}
+            activeSrc={brandPillSrc}
+            idleSrc={tab === key ? brandPillSrc : undefined}
             onClick={() => setTab(key)}
           >
             {key === "files"
@@ -244,7 +253,7 @@ export function FilesAndNotes() {
               : key === "notes"
                 ? "Native notes"
                 : "Existing uploads"}
-          </button>
+          </PngPillButton>
         ))}
       </div>
       {tab === "files" ? (

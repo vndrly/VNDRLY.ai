@@ -6,8 +6,14 @@ import {
   PhoneOutgoing,
   Voicemail,
   Star,
+  X,
 } from "lucide-react";
 import BrandPillButton from "@/components/brand-pill-button";
+import {
+  PngPillButton,
+  brandImagePillSrc,
+} from "@/components/png-pill-rollover";
+import { useBrand } from "@/hooks/use-brand";
 import MeetingAudioRoom from "@/components/meeting-audio-room";
 import {
   createWorkHubOperationId,
@@ -170,6 +176,7 @@ function VoicemailRecorder({
   );
 }
 export function WorkHubCalls() {
+  const brand = useBrand();
   const queryClient = useQueryClient();
   const pendingDial = useRef<{
     recipientUserId: number;
@@ -256,6 +263,22 @@ export function WorkHubCalls() {
           c.incoming &&
           ["missed", "declined", "busy", "unavailable"].includes(c.status)),
     ) ?? [];
+  const orderedSpeedDial = [...(settings.data?.speedDial ?? [])].sort(
+    (left, right) => {
+      const latest = (contactId: number) =>
+        Math.max(
+          0,
+          ...(calls.data ?? [])
+            .filter((call) =>
+              call.incoming
+                ? call.callerUserId === contactId
+                : call.recipientUserId === contactId,
+            )
+            .map((call) => new Date(call.createdAt).getTime()),
+        );
+      return latest(right) - latest(left);
+    },
+  );
   const respond = (id: string, action: string) => {
     setSelected(id);
     change.mutate({ path: `/calls/${id}/respond`, body: { action } });
@@ -273,27 +296,14 @@ export function WorkHubCalls() {
       },
     });
   };
+  const brandPillSrc = brandImagePillSrc(brand.primary, brand.name);
+  const available = settings.data?.available ?? true;
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <h2 className="flex items-center gap-2 text-xl font-semibold">
           <Phone className="h-5 w-5" /> Calls
         </h2>
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={settings.data?.available ?? true}
-            disabled={!settings.data || change.isPending}
-            onChange={(e) =>
-              change.mutate({
-                path: "/calls/settings",
-                method: "PUT",
-                body: { ...settings.data, available: e.target.checked },
-              })
-            }
-          />
-          Available for internal calls
-        </label>
       </div>
       <HubError
         error={
@@ -330,10 +340,31 @@ export function WorkHubCalls() {
           </div>
         </div>
       ))}
-      <div className="grid gap-5 lg:grid-cols-[minmax(240px,1fr)_2fr]">
-        <aside className="space-y-4 rounded-xl border p-4">
+      <div className="grid items-start gap-5 lg:grid-cols-[minmax(220px,320px)_minmax(0,1fr)]">
+        <aside
+          aria-label="Start an internal call"
+          className="w-full max-w-xs space-y-4 rounded-xl border bg-card p-4 shadow-sm"
+        >
           <h3 className="font-semibold">Start an internal call</h3>
-          <PeoplePicker value={person} onChange={setPerson} />
+          <PngPillButton
+            activeSrc={brandPillSrc}
+            idleSrc={available ? brandPillSrc : undefined}
+            disabled={!settings.data || change.isPending}
+            aria-pressed={available}
+            aria-label="Show me as available for calls"
+            onClick={() =>
+              change.mutate({
+                path: "/calls/settings",
+                method: "PUT",
+                body: { ...settings.data, available: !available },
+              })
+            }
+          >
+            Show me as available for calls
+          </PngPillButton>
+          <div className="max-w-xs">
+            <PeoplePicker value={person} onChange={setPerson} />
+          </div>
           <div className="flex flex-wrap gap-2">
             <BrandPillButton
               disabled={!person || dial.isPending}
@@ -349,19 +380,30 @@ export function WorkHubCalls() {
             </BrandPillButton>
           </div>
           <h3 className="pt-3 font-semibold">Speed dial</h3>
-          {settings.data?.speedDial.map((id) => (
+          {orderedSpeedDial.map((id) => (
             <div className="flex items-center justify-between gap-2" key={id}>
               <span>
                 <Star className="mr-2 inline h-4 w-4" />
                 {people.data?.find((p) => p.id === id)?.displayName ??
                   "Saved contact"}
               </span>
-              <BrandPillButton
-                disabled={dial.isPending}
-                onClick={() => dial.mutate(id)}
-              >
-                Call
-              </BrandPillButton>
+              <div className="flex items-center gap-1">
+                <BrandPillButton
+                  disabled={dial.isPending}
+                  onClick={() => dial.mutate(id)}
+                >
+                  Call
+                </BrandPillButton>
+                <button
+                  type="button"
+                  className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+                  aria-label={`Remove ${people.data?.find((p) => p.id === id)?.displayName ?? "contact"} from speed dial`}
+                  disabled={change.isPending}
+                  onClick={() => toggleSpeed(id)}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
             </div>
           ))}
           {!settings.data?.speedDial.length && (
@@ -370,7 +412,10 @@ export function WorkHubCalls() {
             </p>
           )}
         </aside>
-        <section className="space-y-4">
+        <section
+          aria-label="Call history"
+          className="w-full min-w-0 space-y-4 rounded-xl border bg-card p-4 shadow-sm"
+        >
           {active && (
             <div className="space-y-3 rounded-xl border p-4">
               <p className="font-medium">
@@ -415,15 +460,16 @@ export function WorkHubCalls() {
           >
             {["all", "incoming", "outgoing", "missed", "voicemail"].map(
               (value) => (
-                <button
-                  type="button"
+                <PngPillButton
                   key={value}
                   aria-pressed={filter === value}
                   onClick={() => setFilter(value)}
-                  className={`rounded-md border px-3 py-2 text-sm capitalize ${filter === value ? "bg-primary text-primary-foreground" : "bg-background"}`}
+                  activeSrc={brandPillSrc}
+                  idleSrc={filter === value ? brandPillSrc : undefined}
+                  className="capitalize"
                 >
                   {value}
-                </button>
+                </PngPillButton>
               ),
             )}
           </nav>

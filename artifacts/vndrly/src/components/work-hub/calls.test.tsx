@@ -18,6 +18,15 @@ vi.mock("@/components/brand-pill-button", () => ({
     <button {...props}>{children}</button>
   ),
 }));
+vi.mock("@/components/png-pill-rollover", () => ({
+  brandImagePillSrc: () => "brand-pill.png",
+  PngPillButton: ({ children, activeSrc: _activeSrc, idleSrc: _idleSrc, ...props }: any) => (
+    <button {...props}>{children}</button>
+  ),
+}));
+vi.mock("@/hooks/use-brand", () => ({
+  useBrand: () => ({ primary: "#0f766e", name: "MidCon Solutions" }),
+}));
 vi.mock("@/components/meeting-audio-room", () => ({
   default: ({ occurrenceId }: any) => <div>Audio room {occurrenceId}</div>,
 }));
@@ -69,6 +78,16 @@ describe("internal Calls workspace", () => {
         : defaults(path),
     );
     mount();
+    const startCard = screen.getByRole("complementary", {
+      name: "Start an internal call",
+    });
+    const historyCard = screen.getByRole("region", { name: "Call history" });
+    expect(startCard.className).toContain("max-w-xs");
+    expect(startCard.className).toContain("rounded-xl");
+    expect(historyCard.className).toContain("rounded-xl");
+    expect(startCard.parentElement?.className).toContain(
+      "lg:grid-cols-[minmax(220px,320px)_minmax(0,1fr)]",
+    );
     expect(await screen.findByText("Jordan is calling")).toBeTruthy();
     expect(screen.queryByText("Audio room room1")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Accept" }));
@@ -124,5 +143,66 @@ describe("internal Calls workspace", () => {
       "Contact invitation must be accepted",
     );
     expect(screen.queryByText(/Audio room/)).toBeNull();
+  });
+  it("uses branded pressed controls for presence and call history filters", async () => {
+    api.request.mockImplementation(async (path: string, options?: any) => {
+      if (path === "/calls/settings" && options?.method === "PUT") return options;
+      return defaults(path);
+    });
+    mount();
+    const presence = await screen.findByRole("button", {
+      name: "Show me as available for calls",
+    });
+    await waitFor(() =>
+      expect((presence as HTMLButtonElement).disabled).toBe(false),
+    );
+    expect(presence.getAttribute("aria-pressed")).toBe("true");
+    fireEvent.click(presence);
+    await waitFor(() =>
+      expect(api.request).toHaveBeenCalledWith(
+        "/calls/settings",
+        expect.objectContaining({
+          method: "PUT",
+          body: JSON.stringify({ available: false, speedDial: [] }),
+        }),
+      ),
+    );
+    expect(screen.getByRole("button", { name: "all" }).getAttribute("aria-pressed")).toBe("true");
+    fireEvent.click(screen.getByRole("button", { name: "incoming" }));
+    expect(screen.getByRole("button", { name: "incoming" }).getAttribute("aria-pressed")).toBe("true");
+  });
+  it("orders speed dial by latest call and removes one shortcut without deleting history", async () => {
+    api.request.mockImplementation(async (path: string, options?: any) => {
+      if (path === "/calls/settings" && options?.method === "PUT") return options;
+      if (path === "/calls/settings") return { available: true, speedDial: [5, 6] };
+      if (path === "/people") return [{ id: 5, displayName: "Jordan" }, { id: 6, displayName: "Casey" }];
+      if (path === "/calls") return [
+        { id: "older", incoming: false, recipientUserId: 5, callerUserId: 7, createdAt: "2026-09-09T10:00:00Z", status: "ended" },
+        { id: "newer", incoming: true, recipientUserId: 7, callerUserId: 6, createdAt: "2026-09-10T10:00:00Z", status: "ended" },
+      ];
+      return [];
+    });
+    mount();
+    await waitFor(() => {
+      const removeButtons = screen.getAllByRole("button", {
+        name: /Remove .* from speed dial/,
+      });
+      expect(removeButtons[0].getAttribute("aria-label")).toBe(
+        "Remove Casey from speed dial",
+      );
+      expect(removeButtons[1].getAttribute("aria-label")).toBe(
+        "Remove Jordan from speed dial",
+      );
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Remove Casey from speed dial" }));
+    await waitFor(() =>
+      expect(api.request).toHaveBeenCalledWith(
+        "/calls/settings",
+        expect.objectContaining({
+          method: "PUT",
+          body: JSON.stringify({ available: true, speedDial: [5] }),
+        }),
+      ),
+    );
   });
 });

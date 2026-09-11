@@ -7,6 +7,11 @@ const mocks = vi.hoisted(() => ({ request: vi.fn() }));
 vi.mock("./files", () => ({ WorkHubFiles: () => <div>Working file library</div> }));
 vi.mock("./collaboration", () => ({ HubError: ({ error }: any) => error ? <p role="alert">{error.message}</p> : null }));
 vi.mock("@/components/brand-pill-button", () => ({ default: ({ children, tone: _tone, ...props }: any) => <button {...props}>{children}</button> }));
+vi.mock("@/components/png-pill-rollover", () => ({
+  brandImagePillSrc: () => "brand-pill.png",
+  PngPillButton: ({ children, activeSrc: _activeSrc, idleSrc: _idleSrc, ...props }: any) => <button {...props}>{children}</button>,
+}));
+vi.mock("@/hooks/use-brand", () => ({ useBrand: () => ({ primary: "#0f766e", name: "MidCon Solutions" }) }));
 vi.mock("@/lib/work-hub-client", async importOriginal => ({ ...await importOriginal<any>(), workHubRequest: mocks.request }));
 describe("Files and native notes", () => {
   beforeEach(() => {
@@ -19,8 +24,11 @@ describe("Files and native notes", () => {
   });
   it("keeps native notes accessible alongside the new file library and uses their owner's versioned contract", async () => {
     render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><FilesAndNotes/></QueryClientProvider>);
+    expect(screen.getByRole("heading", { name: "Files & Notes" }).parentElement?.className).toContain("rounded-xl");
+    expect(screen.getByRole("tab", { name: "File library" }).getAttribute("aria-pressed")).toBe("true");
     expect(screen.getByText("Working file library")).toBeTruthy();
     fireEvent.click(screen.getByRole("tab", { name: "Native notes" }));
+    expect(screen.getByRole("tab", { name: "Native notes" }).getAttribute("aria-pressed")).toBe("true");
     fireEvent.click(await screen.findByRole("button", { name: "Edit note" }));
     fireEvent.change(screen.getByLabelText("Note text"), { target: { value: "Updated briefing" } });
     fireEvent.click(screen.getByRole("button", { name: "Save note" }));

@@ -224,6 +224,10 @@ interface PngPillButtonProps {
   attention?: boolean;
   className?: string;
   title?: string;
+  role?: React.AriaRole;
+  "aria-label"?: string;
+  "aria-pressed"?: boolean;
+  "aria-selected"?: boolean;
   "data-testid"?: string;
 }
 
@@ -281,6 +285,10 @@ export function PngPillButton({
       )}
       style={{ height }}
       data-testid={props["data-testid"]}
+      role={props.role}
+      aria-label={props["aria-label"]}
+      aria-pressed={props["aria-pressed"]}
+      aria-selected={props["aria-selected"]}
     >
       <PillColorLayer
         src={restSrc}
