@@ -45,9 +45,17 @@ public final class WorkHubMeetingModule: Module, WorkHubMeetingSessionDelegate {
       if self.generation == options.generation { self.session?.applySignal(forPeerUserId: options.peerUserId, kind: options.kind, payload: options.payload) }
     }
     AsyncFunction("removePeer") { (options: WorkHubPeerOptions) in if self.generation == options.generation { self.session?.removePeerUserId(options.peerUserId) } }
-    Function("invalidateSession") { (options: WorkHubGenerationOptions) in if self.generation == options.generation { self.invalidate() } }.runOnQueue(.main)
+    Function("invalidateSession") { (options: WorkHubGenerationOptions) in
+      self.onMain {
+        if self.generation == options.generation { self.invalidate() }
+      }
+    }
     OnDestroy { self.teardown() }
     OnAppContextDestroys { self.teardown() }
+  }
+
+  private func onMain(_ body: () -> Void) {
+    if Thread.isMainThread { body() } else { DispatchQueue.main.sync(execute: body) }
   }
 
   private func observeLifecycle() {

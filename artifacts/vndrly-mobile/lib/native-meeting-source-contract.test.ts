@@ -9,6 +9,7 @@ const session = ios("WorkHubMeetingSession.mm");
 const conversationAudio = ios("AskVConversationAudio.mm");
 const xctest = ios("tests/WorkHubPCMEncoderTests.mm");
 const meetingModule = ios("WorkHubMeetingModule.swift");
+const meetingSessionHeader = ios("WorkHubMeetingSession.h");
 
 function balancedBraces(source: string) {
   let depth = 0;
@@ -77,6 +78,13 @@ describe("native meeting source safety contracts", () => {
   it("ignores a stale native failure after a newer generation replaces it", () => {
     expect(meetingModule).toMatch(/meetingSessionDidFail[\s\S]*?guard self\.generation == generation else \{ return \}/);
     expect(meetingModule).toMatch(/guard self\.generation == generation else \{ return \}[\s\S]*?invalidate\(expectedGeneration: generation/);
+  });
+
+  it("uses Expo-compatible Swift module and synchronous function declarations", () => {
+    expect(meetingSessionHeader).toContain("@protocol WorkHubMeetingSessionDelegate");
+    expect(meetingSessionHeader).not.toContain("@protocol WorkHubMeetingSessionDelegate <NSObject>");
+    expect(meetingModule).toMatch(/Function\("invalidateSession"\)[\s\S]*?self\.onMain/);
+    expect(meetingModule).not.toMatch(/Function\("invalidateSession"\)[^\n]*runOnQueue/);
   });
 
   it("bounds queued audio to at most half a second at the actual input rate", () => {
