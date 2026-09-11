@@ -40,7 +40,7 @@ import {
 
 
 
-interface BrandPillButtonProps {
+interface BrandPillButtonProps extends React.AriaAttributes {
 
   children: React.ReactNode;
 
@@ -197,6 +197,8 @@ export default function BrandPillButton({
 
       <a
 
+        {...props}
+
         href={href}
 
         target={target}
@@ -210,8 +212,6 @@ export default function BrandPillButton({
         style={sharedStyle}
 
         aria-disabled={disabled || undefined}
-
-        data-testid={props["data-testid"]}
 
       >
 
@@ -229,6 +229,8 @@ export default function BrandPillButton({
 
     <button
 
+      {...props}
+
       type={type}
 
       onClick={onClick}
@@ -240,8 +242,6 @@ export default function BrandPillButton({
       className={sharedClassName}
 
       style={sharedStyle}
-
-      data-testid={props["data-testid"]}
 
     >
 

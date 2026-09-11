@@ -4,8 +4,12 @@ import * as Localization from "expo-localization";
 import {
   getToken,
   getUser,
+  captureAuthScope,
+  clearAuthIfCurrent,
+  isAuthScopeCurrent,
   setToken,
   setUser,
+  type AuthScope,
   type MembershipSummary,
   type StoredUser,
 } from "./auth";
@@ -43,30 +47,116 @@ export function initApi() {
   setAuthTokenGetter(() => getToken());
 }
 
-export async function apiFetch<T = unknown>(
+type ApiRequestError = Error & {
+  status?: number;
+  data?: unknown;
+  code?: string;
+  retryAfterMs?: number;
+};
+
+export type ScopedRawResponse = {
+  readonly ok: boolean;
+  readonly status: number;
+  readonly statusText: string;
+  readonly headers: Headers;
+  readonly url: string;
+  arrayBuffer(): Promise<ArrayBuffer>;
+  blob(): Promise<Blob>;
+  json(): Promise<any>;
+  text(): Promise<string>;
+};
+
+function parseRetryAfter(
+  value: string | null,
+  now = Date.now(),
+): number | undefined {
+  if (!value) return undefined;
+  if (/^\d+$/.test(value)) {
+    const delay = Number(value) * 1_000;
+    return Number.isFinite(delay) ? delay : undefined;
+  }
+  if (
+    !/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), \d{2} (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{4} \d{2}:\d{2}:\d{2} GMT$/.test(
+      value,
+    )
+  )
+    return undefined;
+  const at = Date.parse(value);
+  return Number.isFinite(at) && new Date(at).toUTCString() === value
+    ? Math.max(0, at - now)
+    : undefined;
+}
+
+async function scopedRequest(
   path: string,
-  init: RequestInit = {},
-): Promise<T> {
+  init: RequestInit,
+  authScope: AuthScope | undefined,
+  acceptJson: boolean,
+) {
+  const requestAuthScope = authScope ?? captureAuthScope();
+  const abortError = () =>
+    Object.assign(new Error("Request authorization changed"), {
+      name: "AbortError",
+    });
+  const assertNotAborted = () => {
+    if (init.signal?.aborted) throw abortError();
+  };
+  const assertCurrent = () => {
+    assertNotAborted();
+    if (!isAuthScopeCurrent(requestAuthScope)) throw abortError();
+  };
+  assertCurrent();
   const token = await getToken();
+  assertCurrent();
   const headers = new Headers(init.headers as HeadersInit | undefined);
-  if (!headers.has("content-type") && init.body && typeof init.body === "string") {
+  if (
+    !headers.has("content-type") &&
+    init.body &&
+    typeof init.body === "string"
+  ) {
     headers.set("content-type", "application/json");
   }
-  headers.set("accept", "application/json");
+  if (acceptJson) headers.set("accept", "application/json");
+  headers.set("x-vndrly-client", "ios");
   if (token) headers.set("authorization", `Bearer ${token}`);
 
   let res: Response;
   try {
+    assertCurrent();
     res = await fetch(`${getApiBase()}${path}`, { ...init, headers });
   } catch (e) {
+    if (e instanceof Error && e.name === "AbortError") throw e;
+    assertCurrent();
     // fetch() throws on network failure (offline, DNS, TLS, etc.).
     // Tag with a stable code so translateApiError() can localize it.
     const err = new Error(
       e instanceof Error ? e.message : "Network request failed",
-    ) as Error & { status?: number; data?: unknown; code?: string };
+    ) as ApiRequestError;
     err.code = "network.unreachable";
     throw err;
   }
+  assertCurrent();
+  return {
+    res,
+    token,
+    requestAuthScope,
+    abortError,
+    assertCurrent,
+    assertNotAborted,
+  };
+}
+
+async function assertSuccessfulResponse(
+  request: Awaited<ReturnType<typeof scopedRequest>>,
+) {
+  const {
+    res,
+    token,
+    requestAuthScope,
+    abortError,
+    assertCurrent,
+    assertNotAborted,
+  } = request;
   if (!res.ok) {
     let message = `HTTP ${res.status}`;
     let data: { code?: string; message?: string; error?: string } | null = null;
@@ -77,6 +167,7 @@ export async function apiFetch<T = unknown>(
     } catch {
       // ignore
     }
+    assertCurrent();
     // If the server explicitly tells us the session is dead (expired token,
     // signature mismatch, or invalidated by users.session_version bump),
     // wipe local auth so the AuthGate subscriber re-routes the user to
@@ -96,21 +187,30 @@ export async function apiFetch<T = unknown>(
       "auth.session_expired",
       "auth.token_invalid",
     ]);
-    if (res.status === 401 && token && data?.code && sessionDeadCodes.has(data.code)) {
-      try {
-        await setToken(null);
-        await setUser(null);
-      } catch {
-        // best effort — never let cleanup mask the original error
-      }
+    if (
+      res.status === 401 &&
+      token &&
+      data?.code &&
+      sessionDeadCodes.has(data.code)
+    ) {
+      assertCurrent();
+      // clearAuthIfCurrent performs its authoritative in-memory mutation
+      // synchronously before its persistence promise yields. Capture that
+      // expected new generation so it does not cancel the genuine 401.
+      const cleanup = clearAuthIfCurrent(requestAuthScope);
+      const cleanupScope = captureAuthScope();
+      const cleared = await cleanup;
+      assertNotAborted();
+      // A login that wins during deferred persistence makes this completion stale.
+      if (!cleared || !isAuthScopeCurrent(cleanupScope)) throw abortError();
     }
-    const err = new Error(message) as Error & {
-      status?: number;
-      data?: unknown;
-      code?: string;
-    };
+    const err = new Error(message) as ApiRequestError;
     err.status = res.status;
     err.data = data;
+    const retryAfter = parseRetryAfter(
+      res.headers?.get?.("retry-after") ?? null,
+    );
+    if (retryAfter !== undefined) err.retryAfterMs = retryAfter;
     // Task #527: ticket-mutation routes (accept/deny/reinvite/PATCH/schedule
     // /unlock/reactivate/disperse-funds) return structured codes via the
     // `error` field — NOT `code`. Fall back to `data.error` so those codes
@@ -120,16 +220,62 @@ export async function apiFetch<T = unknown>(
     else if (data?.error) err.code = data.error;
     throw err;
   }
-  if (res.status === 204) return null as T;
+}
+
+export async function apiFetchRaw(
+  path: string,
+  init: RequestInit = {},
+  authScope?: AuthScope,
+): Promise<ScopedRawResponse> {
+  const request = await scopedRequest(path, init, authScope, false);
+  await assertSuccessfulResponse(request);
+  const { res, assertCurrent } = request;
+  const consume =
+    <T>(reader: () => Promise<T>) =>
+    async () => {
+      assertCurrent();
+      const value = await reader();
+      assertCurrent();
+      return value;
+    };
+  return {
+    ok: res.ok,
+    status: res.status,
+    statusText: res.statusText,
+    headers: res.headers,
+    url: res.url,
+    arrayBuffer: consume(() => res.arrayBuffer()),
+    blob: consume(() => res.blob()),
+    json: consume(() => res.json()),
+    text: consume(() => res.text()),
+  };
+}
+
+export async function apiFetch<T = unknown>(
+  path: string,
+  init: RequestInit = {},
+  authScope?: AuthScope,
+): Promise<T> {
+  const request = await scopedRequest(path, init, authScope, true);
+  await assertSuccessfulResponse(request);
+  const { res, assertCurrent } = request;
+  if (res.status === 204) {
+    assertCurrent();
+    return null as T;
+  }
   const text = await res.text();
+  assertCurrent();
   if (!text) return null as T;
+  let parsed: T;
   try {
-    return JSON.parse(text) as T;
+    parsed = JSON.parse(text) as T;
   } catch {
     const err = new Error("Invalid JSON response") as Error & { code?: string };
     err.code = "network.parse_error";
     throw err;
   }
+  assertCurrent();
+  return parsed;
 }
 
 type RawMembership = {
@@ -176,8 +322,7 @@ function buildStoredUser(
   },
 ): { user: StoredUser; preferredLanguage: "en" | "es" | null } {
   const raw = (data as { preferredLanguage?: string | null }).preferredLanguage;
-  const preferredLanguage =
-    raw === "en" || raw === "es" ? raw : null;
+  const preferredLanguage = raw === "en" || raw === "es" ? raw : null;
   const user: StoredUser = {
     id: data.id,
     username: data.username,
@@ -189,7 +334,9 @@ function buildStoredUser(
     vendorPeopleId: data.vendorPeopleId ?? null,
     preferredLanguage,
     activeMembershipId:
-      typeof data.activeMembershipId === "number" ? data.activeMembershipId : null,
+      typeof data.activeMembershipId === "number"
+        ? data.activeMembershipId
+        : null,
     availableMemberships: normalizeMemberships(data.availableMemberships),
     requiresContextChoice: Boolean(
       (data as { requiresContextChoice?: boolean }).requiresContextChoice,
@@ -198,7 +345,10 @@ function buildStoredUser(
   return { user, preferredLanguage };
 }
 
-export async function login(username: string, password: string): Promise<StoredUser> {
+export async function login(
+  username: string,
+  password: string,
+): Promise<StoredUser> {
   const data = await apiFetch<
     StoredUser & {
       token: string;
@@ -271,7 +421,9 @@ export async function refreshAuthMe(): Promise<StoredUser | null> {
   }
 }
 
-export async function updatePreferredLanguage(language: "en" | "es" | "pt"): Promise<void> {
+export async function updatePreferredLanguage(
+  language: "en" | "es" | "pt",
+): Promise<void> {
   await apiFetch("/api/auth/me/language", {
     method: "PATCH",
     body: JSON.stringify({ language }),

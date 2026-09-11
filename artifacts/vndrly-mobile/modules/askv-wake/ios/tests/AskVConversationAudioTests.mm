@@ -8,6 +8,7 @@
 @property(nonatomic, strong) AskVConversationAudio *audio;
 @property(nonatomic, strong) RTCAudioSessionConfiguration *originalPolicy;
 @property(nonatomic, strong) RTCAudioSessionConfiguration *originalSession;
+@property(nonatomic, assign) BOOL originalSessionActive;
 @end
 
 @implementation AskVConversationAudioTests
@@ -15,6 +16,7 @@
   [super setUp];
   self.originalPolicy = [RTCAudioSessionConfiguration webRTCConfiguration];
   self.originalSession = [RTCAudioSessionConfiguration currentConfiguration];
+  self.originalSessionActive = [RTCAudioSession sharedInstance].isActive;
   self.audio = [[AskVConversationAudio alloc] init];
 }
 
@@ -24,6 +26,7 @@
   RTCAudioSession *session = [RTCAudioSession sharedInstance];
   [session lockForConfiguration];
   [session setConfiguration:self.originalSession error:nil];
+  [session setActive:self.originalSessionActive error:nil];
   [session unlockForConfiguration];
   [super tearDown];
 }
@@ -72,5 +75,62 @@
   [RTCAudioSessionConfiguration setWebRTCConfiguration:newOwner];
   [self.audio releaseConfiguration];
   XCTAssertEqual([RTCAudioSessionConfiguration webRTCConfiguration], newOwner);
+}
+
+- (void)testReleaseRestoresThePriorDirectSessionConfigurationAndActiveState {
+  RTCAudioSession *session = [RTCAudioSession sharedInstance];
+  [session lockForConfiguration];
+  XCTAssertTrue([session setActive:NO withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error:nil]);
+  [session unlockForConfiguration];
+  XCTAssertFalse(session.isActive);
+  BOOL priorActive = NO;
+  RTCAudioSessionConfiguration *prior = [RTCAudioSessionConfiguration currentConfiguration];
+  NSError *error = nil;
+  XCTAssertTrue([self.audio configure:&error]);
+  [session lockForConfiguration];
+  XCTAssertTrue([session setActive:YES error:&error]);
+  [session unlockForConfiguration];
+  [self.audio releaseConfiguration];
+  RTCAudioSessionConfiguration *restored = [RTCAudioSessionConfiguration currentConfiguration];
+  XCTAssertEqualObjects(restored.category, prior.category);
+  XCTAssertEqualObjects(restored.mode, prior.mode);
+  XCTAssertEqual(restored.categoryOptions, prior.categoryOptions);
+  XCTAssertEqual(session.isActive, priorActive);
+}
+
+- (void)testEffectiveHardwareNormalizationDoesNotLookLikeOwnershipTakeover {
+  RTCAudioSession *session = [RTCAudioSession sharedInstance];
+  NSError *error = nil;
+  XCTAssertTrue([self.audio configure:&error]);
+  RTCAudioSessionConfiguration *effective = [RTCAudioSessionConfiguration currentConfiguration];
+  effective.sampleRate = effective.sampleRate == 48000 ? 44100 : 48000;
+  effective.ioBufferDuration = effective.ioBufferDuration + 0.001;
+  effective.inputNumberOfChannels = MAX(1, effective.inputNumberOfChannels);
+  effective.outputNumberOfChannels = MAX(1, effective.outputNumberOfChannels);
+  [session lockForConfiguration];
+  XCTAssertTrue([session setConfiguration:effective error:&error]);
+  [session unlockForConfiguration];
+  XCTAssertTrue([self.audio ownsCurrentConfiguration]);
+  [self.audio releaseConfiguration];
+  XCTAssertEqual([RTCAudioSessionConfiguration webRTCConfiguration], self.originalPolicy);
+}
+
+- (void)testReleaseDoesNotRestoreDirectConfigurationOrActiveStateAfterOwnershipTakeover {
+  RTCAudioSession *session = [RTCAudioSession sharedInstance];
+  NSError *error = nil;
+  XCTAssertTrue([self.audio configure:&error]);
+  RTCAudioSessionConfiguration *takeover = [[RTCAudioSessionConfiguration alloc] init];
+  takeover.category = AVAudioSessionCategoryPlayback;
+  takeover.mode = AVAudioSessionModeDefault;
+  [session lockForConfiguration];
+  XCTAssertTrue([session setConfiguration:takeover error:&error]);
+  XCTAssertTrue([session setActive:YES error:&error]);
+  [session unlockForConfiguration];
+  [RTCAudioSessionConfiguration setWebRTCConfiguration:takeover];
+  XCTAssertFalse([self.audio ownsCurrentConfiguration]);
+  [self.audio releaseConfiguration];
+  RTCAudioSessionConfiguration *current = [RTCAudioSessionConfiguration currentConfiguration];
+  XCTAssertEqualObjects(current.category, AVAudioSessionCategoryPlayback);
+  XCTAssertTrue(session.isActive);
 }
 @end

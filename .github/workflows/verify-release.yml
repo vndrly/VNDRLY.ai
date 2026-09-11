@@ -32,9 +32,12 @@ jobs:
         with:
           node-version: 24
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - id: dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Install the pinned test browser
+        id: browser
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -44,6 +47,8 @@ jobs:
           printf 'PLAYWRIGHT_CHROMIUM=%s\n' "$browser_path" >> "$GITHUB_ENV"
 
       - name: Start a new runner-local PostgreSQL cluster
+        id: postgres
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -60,15 +65,30 @@ jobs:
           "$pg_bin/pg_ctl" --pgdata="$pg_data" --log="$RUNNER_TEMP/vndrly-postgres.log" --options="-h 127.0.0.1 -p 55439 -k '$RUNNER_TEMP'" --wait start
           printf 'VNDRLY_CI_PG_BIN=%s\nVNDRLY_CI_PG_DATA=%s\n' "$pg_bin" "$pg_data" >> "$GITHUB_ENV"
 
-      - name: Typecheck and locale parity
+      - name: Verify fresh test database safety invariants
+        id: db-safety
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
         shell: bash
         run: |
           set -euo pipefail
-          node --test scripts/tests/fresh-test-database.test.mjs
+          node --test scripts/tests/fresh-test-database.test.mjs scripts/tests/verify-release-workflow.test.mjs
+
+      - name: Typecheck and locale parity
+        id: static
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
+        shell: bash
+        run: |
+          set -euo pipefail
           pnpm run typecheck
           pnpm lint:i18n
 
       - name: Independent database-backed API gate
+        id: api
+        if: >-
+          ${{ !cancelled() &&
+              steps.dependencies.outcome == 'success' &&
+              steps.postgres.outcome == 'success' &&
+              steps.db-safety.outcome == 'success' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -76,13 +96,19 @@ jobs:
 
       - name: Full required test chain
         id: full-chain
+        if: >-
+          ${{ !cancelled() &&
+              steps.dependencies.outcome == 'success' &&
+              steps.browser.outcome == 'success' &&
+              steps.postgres.outcome == 'success' &&
+              steps.db-safety.outcome == 'success' }}
         shell: bash
         run: |
           set -euo pipefail
           pnpm test 2>&1 | tee "$RUNNER_TEMP/vndrly-tests.log"
 
       - name: Diagnose browser gate after an earlier chain failure
-        if: failure() && steps.full-chain.outcome == 'failure'
+        if: ${{ !cancelled() && steps.full-chain.outcome == 'failure' }}
         shell: bash
         run: |
           set -euo pipefail

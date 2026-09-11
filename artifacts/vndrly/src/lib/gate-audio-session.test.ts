@@ -89,6 +89,55 @@ describe("createGateAudioSession", () => {
     expect(stopTrack).toHaveBeenCalledTimes(1);
     expect(session.isListening()).toBe(false);
   });
+
+  it("restarts cleanly after stop without duplicate microphone sessions", async () => {
+    const stopTracks = [vi.fn(), vi.fn()];
+    const recorders = [new FakeRecorder(), new FakeRecorder()];
+    let streamIndex = 0;
+    let recorderIndex = 0;
+    const getStream = vi.fn(async () => ({
+      getTracks: () => [{ stop: stopTracks[streamIndex++] }],
+    }));
+    const session = createGateAudioSession({
+      getStream,
+      createRecorder: () => recorders[recorderIndex++],
+      onAudio: vi.fn(),
+      onListeningChange: vi.fn(),
+      onError: vi.fn(),
+    });
+
+    await session.toggle();
+    await session.toggle();
+    await session.toggle();
+
+    expect(getStream).toHaveBeenCalledTimes(2);
+    expect(recorders[0].start).toHaveBeenCalledTimes(1);
+    expect(recorders[1].start).toHaveBeenCalledTimes(1);
+    await session.dispose();
+    expect(stopTracks[0]).toHaveBeenCalledTimes(1);
+    expect(stopTracks[1]).toHaveBeenCalledTimes(1);
+    expect(session.isListening()).toBe(false);
+  });
+
+  it("releases capture without returning audio when the page disposes", async () => {
+    const stopTrack = vi.fn();
+    const recorder = new FakeRecorder();
+    const onAudio = vi.fn();
+    const session = createGateAudioSession({
+      getStream: async () => ({ getTracks: () => [{ stop: stopTrack }] }),
+      createRecorder: () => recorder,
+      onAudio,
+      onListeningChange: vi.fn(),
+      onError: vi.fn(),
+    });
+
+    await session.toggle();
+    await session.dispose();
+
+    expect(recorder.stop).toHaveBeenCalledTimes(1);
+    expect(stopTrack).toHaveBeenCalledTimes(1);
+    expect(onAudio).not.toHaveBeenCalled();
+  });
 });
 
 describe("Gate audio microphone contention", () => {

@@ -12,6 +12,7 @@ on:
       - "scripts/askv-greeting-migration.mjs"
       - "scripts/assistant-action-audit-migration.mjs"
       - "scripts/work-hub-*-migration.mjs"
+      - "scripts/provision-work-hub-audio.sh"
       - ".github/workflows/deploy-api.yml"
   workflow_dispatch:
 
@@ -33,18 +34,24 @@ jobs:
       VPS_USER: ${{ secrets.VPS_USER }}
       VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
       VPS_PORT: ${{ secrets.VPS_PORT }}
+      ASSEMBLYAI_API_KEY: ${{ secrets.ASSEMBLYAI_API_KEY }}
       EXPECTED_SHA: ${{ github.sha }}
     steps:
       - name: Verify deployment configuration
         shell: bash
         run: |
           set -euo pipefail
-          for name in VPS_HOST VPS_USER VPS_PASSWORD VPS_PORT; do
+          for name in VPS_HOST VPS_USER VPS_PASSWORD VPS_PORT ASSEMBLYAI_API_KEY; do
             if [ -z "${!name:-}" ]; then
               echo "::error title=Missing deployment secret::$name is not configured"
               exit 1
             fi
           done
+          if [[ ! "$VPS_HOST" =~ ^[a-zA-Z0-9]([a-zA-Z0-9.-]*[a-zA-Z0-9])?$ || "$VPS_HOST" == *..* ]]; then
+            echo "::error::VPS_HOST must be a plain hostname or IPv4 address"
+            exit 1
+          fi
+          [[ "$EXPECTED_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::Invalid release commit"; exit 1; }
 
       - name: Install SSH deployment tools
         run: |
@@ -57,9 +64,16 @@ jobs:
           SSHPASS: ${{ secrets.VPS_PASSWORD }}
         run: |
           set -euo pipefail
-          turn_host_b64="$(printf '%s' "$VPS_HOST" | base64 -w0)"
           mkdir -p "$HOME/.ssh"
           chmod 700 "$HOME/.ssh"
+          printf '%s' "$ASSEMBLYAI_API_KEY" | sshpass -e ssh \
+            -p "$VPS_PORT" \
+            -o ConnectTimeout=20 \
+            -o PreferredAuthentications=password \
+            -o PubkeyAuthentication=no \
+            -o StrictHostKeyChecking=accept-new \
+            "$VPS_USER@$VPS_HOST" \
+            'umask 077; cat > /tmp/vndrly-assemblyai-key'
           sshpass -e ssh \
             -p "$VPS_PORT" \
             -o ConnectTimeout=20 \
@@ -67,8 +81,9 @@ jobs:
             -o PubkeyAuthentication=no \
             -o StrictHostKeyChecking=accept-new \
             "$VPS_USER@$VPS_HOST" \
-            "EXPECTED_SHA=$(printf '%s' "$EXPECTED_SHA") VNDRLY_TURN_HOST_B64=$turn_host_b64 bash -s" <<'REMOTE'
+            "EXPECTED_SHA=$EXPECTED_SHA RELAY_HOST=$VPS_HOST bash -s" <<'REMOTE'
           set -euo pipefail
+          trap 'sudo rm -f /tmp/vndrly-assemblyai-key' EXIT
           APP_DIR=/var/www/vndrly
           cd "$APP_DIR"
           sudo -u vndrly git remote set-url origin https://github.com/vndrly/VNDRLY.ai.git
@@ -84,6 +99,7 @@ jobs:
           export CI=true
           sudo -u vndrly env HOME=/home/vndrly pnpm install --frozen-lockfile
           sudo -u vndrly env HOME=/home/vndrly pnpm --filter @workspace/api-server run build
+          sudo bash scripts/provision-work-hub-audio.sh "$RELAY_HOST"
           database_url="$(sudo sed -n 's/^DATABASE_URL=//p' .env.production | head -n 1)"
           if [ -z "$database_url" ]; then
             echo "DATABASE_URL missing from .env.production; refusing API restart" >&2
@@ -94,6 +110,14 @@ jobs:
             echo "OPENAI_API_KEY missing from .env.production; refusing to enable natural voice" >&2
             exit 1
           fi
+          assemblyai_key="$(sudo cat /tmp/vndrly-assemblyai-key)"
+          if [ "${#assemblyai_key}" -lt 16 ]; then
+            echo "Meeting transcription key is invalid; refusing API restart" >&2
+            exit 1
+          fi
+          sudo sed -i '/^ASSEMBLYAI_API_KEY=/d; /^ASSEMBLYAI_MODEL_TRAINING_ALLOWED=/d; /^ASSEMBLYAI_MAX_CONCURRENT_STREAMS=/d; /^VNDRLY_MEETING_STT_PROVIDER=/d' .env.production
+          printf 'ASSEMBLYAI_API_KEY=%s\n' "$assemblyai_key" | sudo tee -a .env.production >/dev/null
+          printf '%s\n' 'ASSEMBLYAI_MODEL_TRAINING_ALLOWED=1' 'ASSEMBLYAI_MAX_CONCURRENT_STREAMS=5' 'VNDRLY_MEETING_STT_PROVIDER=assemblyai' | sudo tee -a .env.production >/dev/null
           sudo sed -i '/^ASKV_NATURAL_VOICE_USER_IDS=/d' .env.production
           if ! sudo grep -q '^ASKV_NATURAL_VOICE_ENABLED=' .env.production; then
             sudo sed -i '$aASKV_NATURAL_VOICE_ENABLED=1' .env.production
@@ -112,44 +136,21 @@ jobs:
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:work-hub-imports
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:work-hub-channel-visibility
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:work-hub-project-calendar
+          sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:work-hub-collaboration
+          sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:work-hub-finance
+          sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:work-hub-calls
+          sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:work-hub-scheduling
+          sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:work-hub-file-library
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:work-hub-meeting-collaboration
+          sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:work-hub-governance-export
+          sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:work-hub-meeting-replay
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" APPLY_PUBLIC_DATA_API_HARDENING=1 pnpm --filter @workspace/api-server run migrate:public-data-api-hardening
-          turn_host="$(printf '%s' "$VNDRLY_TURN_HOST_B64" | base64 -d)"
-          if ! printf '%s' "$turn_host" | grep -Eq '^[A-Za-z0-9.-]+$'; then
-            echo "Invalid TURN host; refusing relay configuration" >&2
-            exit 1
+          # The additive schema defaults Work Hub off. This authorized launch opts in
+          # only when the VPS has no explicit environment rollout setting.
+          if ! sudo grep -q '^WORK_HUB_ENABLED=' .env.production; then
+            sudo sed -i '$aWORK_HUB_ENABLED=1' .env.production
           fi
-          if ! command -v turnserver >/dev/null 2>&1; then
-            sudo apt-get update
-            sudo DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends coturn openssl
-          fi
-          turn_secret_file=/etc/vndrly-turn-secret
-          if [ ! -s "$turn_secret_file" ]; then
-            openssl rand -hex 24 | sudo tee "$turn_secret_file" >/dev/null
-            sudo chmod 600 "$turn_secret_file"
-          fi
-          turn_secret="$(sudo cat "$turn_secret_file")"
-          sudo cp "$APP_DIR/scripts/server/turnserver.conf" /etc/turnserver.conf
-          sudo sed -i "s|__VNDRLY_TURN_SECRET__|$turn_secret|g" /etc/turnserver.conf
-          if [ -f /etc/default/coturn ]; then
-            sudo sed -i 's/^#\?TURNSERVER_ENABLED=.*/TURNSERVER_ENABLED=1/' /etc/default/coturn
-          fi
-          sudo ufw allow 3478/tcp
-          sudo ufw allow 3478/udp
-          sudo ufw allow 49160:49200/udp
-          for key in VNDRLY_STUN_URL VNDRLY_TURN_URL VNDRLY_TURN_USERNAME VNDRLY_TURN_CREDENTIAL; do
-            sudo sed -i "/^${key}=/d" .env.production
-          done
-          printf '%s\n' \
-            "VNDRLY_STUN_URL=stun:${turn_host}:3478" \
-            "VNDRLY_TURN_URL=turn:${turn_host}:3478?transport=udp" \
-            "VNDRLY_TURN_USERNAME=vndrly" \
-            "VNDRLY_TURN_CREDENTIAL=${turn_secret}" \
-            | sudo tee -a .env.production >/dev/null
-          sudo systemctl enable coturn
-          sudo systemctl restart coturn
-          sudo systemctl is-active --quiet coturn
-          unset database_url openai_key
+          unset database_url openai_key assemblyai_key
           sudo systemctl daemon-reload
           sudo systemctl enable vndrly-api 2>/dev/null || true
           sudo systemctl restart vndrly-api

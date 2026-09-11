@@ -59,6 +59,10 @@ export const STEP_REQUIRED_FIELDS: Record<Persona, Record<string, readonly strin
     "work-types": ["serviceArea.operatingRadiusMiles", "workTypeIds"],
     "first-employee": ["firstEmployee.firstName", "firstEmployee.lastName", "firstEmployee.email"],
     "company-basics": [],
+    // These compliance records remain available after onboarding, but they
+    // are deliberately not completion gates during the temporary rollout.
+    compliance: [],
+    rates: [],
   },
   field_employee: {
     "personal-info": [],

@@ -19,6 +19,7 @@ import {
 } from "@workspace/plate-state";
 
 import AmberButton from "@/components/amber-button";
+import BrandPillButton from "@/components/brand-pill-button";
 import BlueButton from "@/components/blue-button";
 import GreenButton from "@/components/green-button";
 import { LiveConnectionPill } from "@/components/live-connection-pill";
@@ -45,6 +46,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/use-auth";
 import { useBrand } from "@/hooks/use-brand";
 import { useGateLiveMonitor } from "@/hooks/use-gate-live-monitor";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { FIELD_OPS_PAGE_CLASS } from "@/lib/field-ops-content-pane";
 import {
   latestVisitForPlate,
@@ -76,6 +78,11 @@ import {
   matchGateCheckoutVisits,
   parseGateVoiceCommand,
 } from "@/lib/gate-voice-entry";
+import {
+  applyGateAskVTurn,
+  evaluateGateAskVTurn,
+  type GateAskVDraftContext,
+} from "@/lib/gate-askv-context";
 import {
   createGateSpeechSession,
   type GateSpeechRecognition,
@@ -219,6 +226,10 @@ export default function GatekeeperPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const brand = useBrand();
+  const isMobile = useIsMobile();
+  const [isShortViewport, setIsShortViewport] = useState(
+    () => typeof window !== "undefined" && window.innerHeight < 700,
+  );
   const iconStyle = { color: brand.isOrgBranded ? brand.primary : "#f59e0b" };
   const queryClient = useQueryClient();
   const plateInput = useRef<HTMLInputElement>(null);
@@ -252,6 +263,10 @@ export default function GatekeeperPage() {
   const [voiceTranscribing, setVoiceTranscribing] = useState(false);
   const [voiceCheckInPending, setVoiceCheckInPending] = useState(false);
   const [voiceCheckoutMatches, setVoiceCheckoutMatches] = useState<VisitorRow[]>([]);
+  const [voiceResponse, setVoiceResponse] = useState<{
+    messageKey: string;
+    params?: Record<string, string>;
+  } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [activeMemoryField, setActiveMemoryField] =
     useState<GateMemoryField | null>(null);
@@ -265,6 +280,12 @@ export default function GatekeeperPage() {
     plate: string | null | undefined,
   ) =>
     formatPlateForDisplay(state, plate, t("gatekeeper.plateStateUnconfirmed"));
+
+  useEffect(() => {
+    const update = () => setIsShortViewport(window.innerHeight < 700);
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
 
   const visits = useQuery({
     queryKey: ["gatekeeper-visits"],
@@ -395,10 +416,72 @@ export default function GatekeeperPage() {
   };
   const applyEntryDraftRef = useRef(applyEntryDraft);
   applyEntryDraftRef.current = applyEntryDraft;
-  const processVoiceTranscriptRef = useRef<(transcript: string) => void>(
+  const gateAskVContextRef = useRef<GateAskVDraftContext>({
+    selectedSite: null,
+    draft: {
+      firstName: "",
+      lastName: "",
+      company: "",
+      vehiclePlate: "",
+      plateState: null,
+      purpose: "",
+      notes: "",
+      expectedDurationMinutes: null,
+    },
+    selectedHost: null,
+    authorizedHosts: [],
+  });
+  const gateAskVContextEpochRef = useRef(0);
+  const gateAskVCaptureContextEpochRef = useRef(0);
+  const gateVoiceCaptureIdRef = useRef(0);
+  const gateHostOptionsRef = useRef<
+    Array<{ key: string; label: string; type: "partner" | "vendor" }>
+  >([]);
+  const lastVoiceTurnRef = useRef("");
+  const processVoiceTranscriptRef = useRef<
+    (transcript: string, contextEpoch?: number, deliveryId?: string) => void
+  >(
     () => undefined,
   );
-  processVoiceTranscriptRef.current = (transcript) => {
+  processVoiceTranscriptRef.current = (
+    transcript,
+    contextEpoch = gateAskVContextEpochRef.current,
+    deliveryId = `capture:${gateVoiceCaptureIdRef.current}`,
+  ) => {
+    const turnKey = `${deliveryId}:\0${transcript.trim().toLocaleLowerCase()}`;
+    if (lastVoiceTurnRef.current === turnKey) return;
+    lastVoiceTurnRef.current = turnKey;
+    const localTurn = applyGateAskVTurn(
+      evaluateGateAskVTurn(transcript, gateAskVContextRef.current, contextEpoch),
+      gateAskVContextEpochRef.current,
+    );
+    if (localTurn.kind === "stale") {
+      setVoiceResponse({ messageKey: "gatekeeper.askvContextChanged" });
+      return;
+    }
+    if (localTurn.kind !== "unhandled") {
+      if (localTurn.kind === "host-selection") {
+        const matchingHost = gateHostOptionsRef.current.filter(
+          (host) =>
+            host.label === localTurn.host.label &&
+            host.type === localTurn.host.type,
+        );
+        if (matchingHost.length !== 1) {
+          setVoiceResponse({ messageKey: "gatekeeper.askvContextChanged" });
+          return;
+        }
+        setHostKey(matchingHost[0].key);
+      }
+      setVoiceResponse({
+        messageKey: localTurn.messageKey,
+        params: localTurn.params,
+      });
+      setVoiceCheckInPending(false);
+      setVoiceCheckoutMatches([]);
+      setError(null);
+      return;
+    }
+    setVoiceResponse(null);
     const command = parseGateVoiceCommand(transcript);
     const fill = command.fill;
     if (Object.keys(fill).length === 0) {
@@ -457,6 +540,7 @@ export default function GatekeeperPage() {
     plateAutoFillRef.current = null;
     setMemoryDeleting(false);
     applyEntryDraft(applyGateMemorySuggestion(entryDraft, suggestion, activeMemoryField));
+    if (suggestion.mode === "company") setActiveMemoryField("firstName");
   };
 
   useEffect(() => {
@@ -485,6 +569,7 @@ export default function GatekeeperPage() {
     const supportsRecording = Boolean(navigator.mediaDevices?.getUserMedia) && typeof MediaRecorder !== "undefined";
     const session: {
       dispose: () => void | Promise<void>;
+      isListening: () => boolean;
       toggle: () => void | Promise<void>;
     } = supportsRecording
       ? createGateAudioSession({
@@ -504,7 +589,11 @@ export default function GatekeeperPage() {
                 setError(translateRef.current("gatekeeper.voiceNotUnderstood"));
                 return;
               }
-              processVoiceTranscriptRef.current(transcript);
+              processVoiceTranscriptRef.current(
+                transcript,
+                gateAskVCaptureContextEpochRef.current,
+                `capture:${gateVoiceCaptureIdRef.current}`,
+              );
             } catch (reason) {
               if (disposed) return;
               const code = reason instanceof Error ? reason.message : "";
@@ -526,13 +615,22 @@ export default function GatekeeperPage() {
             const Recognition = win.SpeechRecognition ?? win.webkitSpeechRecognition;
             return Recognition ? new Recognition() : null;
           },
-          onTranscript: (transcript) => processVoiceTranscriptRef.current(transcript),
+          onTranscript: (transcript, deliveryId) =>
+            processVoiceTranscriptRef.current(
+              transcript,
+              gateAskVContextEpochRef.current,
+              `recognition:${deliveryId}`,
+            ),
           onListeningChange: publishListening,
           onError: reportVoiceError,
         });
     const launch = () => {
       if (processing) return;
       setError(null);
+      if (!session.isListening()) {
+        gateAskVCaptureContextEpochRef.current = gateAskVContextEpochRef.current;
+        gateVoiceCaptureIdRef.current += 1;
+      }
       void session.toggle();
     };
     const unsubscribe = subscribeGateVoiceEntry(launch);
@@ -568,6 +666,42 @@ export default function GatekeeperPage() {
       })),
     ];
   }, [site.data]);
+  const selectedHost = hosts.find((host) => host.key === hostKey) ?? null;
+  gateHostOptionsRef.current = hosts;
+  gateAskVContextRef.current = {
+    selectedSite: site.data
+      ? { name: siteDisplayName(site.data.site), address: site.data.site.address }
+      : null,
+    draft: {
+      firstName,
+      lastName,
+      company,
+      vehiclePlate,
+      plateState,
+      purpose,
+      notes,
+      expectedDurationMinutes: /^\d+$/.test(duration) ? Number(duration) : null,
+    },
+    selectedHost: selectedHost
+      ? { label: selectedHost.label, type: selectedHost.type }
+      : null,
+    authorizedHosts: hosts.map((host) => ({
+      label: host.label,
+      type: host.type,
+    })),
+  };
+  useEffect(() => {
+    gateAskVContextEpochRef.current += 1;
+    lastVoiceTurnRef.current = "";
+    setVoiceResponse(null);
+  }, [
+    confirmedCode,
+    site.data?.site.name,
+    user?.partnerId,
+    user?.role,
+    user?.userId,
+    user?.vendorId,
+  ]);
   const assignedSites = assigned.data?.sites ?? [];
   const assignedPartners = useMemo(() => groupAssignedGateSitesByPartner(assignedSites), [assignedSites]);
   const nearestSite = useMemo(() => pickNearestAssignedGateSite(assignedSites, origin), [assignedSites, origin]);
@@ -761,12 +895,21 @@ export default function GatekeeperPage() {
       setPlatePhotoUrl(objectPath);
       if (candidate?.plate) {
         setMemoryDeleting(false);
-        setActiveMemoryField("vehiclePlate");
+        const confidentPlate =
+          candidate.plateConfidence != null &&
+          candidate.plateConfidence >= PLATE_OCR_STATE_CONFIDENCE_THRESHOLD;
         const confidentState =
           candidate.stateConfidence != null &&
           candidate.stateConfidence >= PLATE_OCR_STATE_CONFIDENCE_THRESHOLD
             ? normalizePlateState(candidate.state)
             : null;
+        // History identity autofill from OCR requires the same confident
+        // plate+state pair used by the established state-correction flow.
+        // A plate alone remains visible for manual confirmation without
+        // guessing who is driving it.
+        setActiveMemoryField(
+          confidentPlate && confidentState ? "vehiclePlate" : null,
+        );
         const automatedPlate = reconcileAutomatedPlateUpdate({
           currentPlate: vehiclePlate,
           currentState: plateState,
@@ -913,13 +1056,22 @@ export default function GatekeeperPage() {
             {t("gatekeeper.handsFreeHint")}
           </p>
           {voiceListening && (
-            <p className="mt-1 text-sm font-medium text-[color:var(--brand-primary)]">
+            <p role="status" aria-live="polite" className="mt-1 text-sm font-medium text-[color:var(--brand-primary)]">
               {t("gatekeeper.voiceListening")}
             </p>
           )}
           {voiceTranscribing && (
-            <p className="mt-1 text-sm font-medium text-[color:var(--brand-primary)]">
+            <p role="status" aria-live="polite" className="mt-1 text-sm font-medium text-[color:var(--brand-primary)]">
               {t("gatekeeper.voiceTranscribing")}
+            </p>
+          )}
+          {voiceResponse && (
+            <p
+              className="mt-1 text-sm font-medium text-[color:var(--brand-primary)]"
+              data-testid="gate-askv-response"
+              role="status"
+            >
+              {t(voiceResponse.messageKey, voiceResponse.params)}
             </p>
           )}
         </div>
@@ -977,7 +1129,16 @@ export default function GatekeeperPage() {
       )}
 
       <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-        <Card>
+        <Card
+          className="flex min-h-[360px] flex-col !border-[color:var(--brand-primary)] lg:min-h-[420px]"
+          data-testid="gate-on-site-card"
+          data-brand-outline="true"
+          style={{
+            borderColor: brand.primary,
+            height: isMobile || isShortViewport ? "68vh" : "560px",
+            maxHeight: "560px",
+          }}
+        >
           <CardHeader className="flex-row items-center justify-between space-y-0">
             <CardTitle className="flex items-center gap-2">
               <Shield className={CARD_TITLE_ICON_CLASS} style={iconStyle} />
@@ -991,16 +1152,25 @@ export default function GatekeeperPage() {
                   onRefresh={() => void visits.refetch()}
                 />
               )}
-              <BlueButton
+              <BrandPillButton
+                tone="brand"
                 onClick={() => void visits.refetch()}
                 disabled={visits.isFetching}
                 data-testid="button-gate-refresh"
+                title={t("common.refresh")}
               >
-                <RefreshCw className="h-4 w-4" />
-              </BlueButton>
+                <RefreshCw className="h-4 w-4" aria-hidden="true" />
+                <span className="sr-only">{t("common.refresh")}</span>
+              </BrandPillButton>
             </div>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="flex min-h-0 flex-1 flex-col gap-3">
+            <div
+              className="min-h-0 basis-3/4 space-y-3 overflow-y-auto pr-1"
+              data-testid="gate-on-site-entries"
+              role="region"
+              aria-label={t("gatekeeper.onSiteNow")}
+            >
             {pendingVisits.length > 0 && (
               <div className="space-y-2" data-testid="gate-pending-visitors">
                 <p className="text-sm font-semibold text-foreground">
@@ -1114,19 +1284,41 @@ export default function GatekeeperPage() {
                 </BlueButton>
               </div>
             )}
-            <div>
-              <Label>{t("gatekeeper.checkOutNotes")}</Label>
+            </div>
+            <div
+              className="min-h-0 basis-1/4 overflow-y-auto pr-1"
+              data-testid="gate-checkout-notes-region"
+              role="region"
+              aria-label={t("gatekeeper.checkOutNotes")}
+            >
+              <Label htmlFor="gate-checkout-notes">{t("gatekeeper.checkOutNotes")}</Label>
               <Textarea
+                id="gate-checkout-notes"
                 value={checkOutNotes}
                 onChange={(e) => setCheckOutNotes(e.target.value)}
                 placeholder={t("gatekeeper.notesPlaceholder")}
                 data-testid="input-gate-checkout-notes"
               />
             </div>
+            {site.data ? <div className="flex shrink-0 justify-end pt-1">
+              <BrandPillButton
+                tone="brand"
+                href={`/gate/history?siteLocationId=${site.data.site.id}`}
+                data-testid="button-gate-full-history"
+              >
+                <History className="h-4 w-4" aria-hidden="true" />
+                {t("gatekeeper.fullGateHistory")}
+              </BrandPillButton>
+            </div> : null}
           </CardContent>
         </Card>
 
-        <Card>
+        <Card
+          className="!border-[color:var(--brand-primary)]"
+          data-testid="gate-new-entry-card"
+          data-brand-outline="true"
+          style={{ borderColor: brand.primary }}
+        >
           <CardHeader>
             <CardTitle>{t("gatekeeper.newEntry")}</CardTitle>
             <p className="text-sm text-muted-foreground">
@@ -1168,31 +1360,41 @@ export default function GatekeeperPage() {
               </div>
             )}
             <div className="space-y-2">
-              <Label className="text-base font-bold">{t("gatekeeper.vehiclePlate")} *</Label>
+              <Label htmlFor="gate-vehicle-plate" className="text-base font-bold">{t("gatekeeper.vehiclePlate")} *</Label>
               <div className="grid grid-cols-2 gap-3">
-                <BlueButton
-                  className="h-14 text-base"
+                <BrandPillButton
+                  tone="brand"
+                  className="w-full text-base"
+                  height={56}
                   onClick={() => plateInput.current?.click()}
                   disabled={busy}
                   data-testid="button-gate-read-plate"
+                  aria-pressed={Boolean(platePhotoUrl)}
                 >
-                  <Camera className="mr-2 h-5 w-5" />
+                  <Camera className="mr-2 h-5 w-5" aria-hidden="true" />
                   {platePhotoUrl
                     ? t("gatekeeper.plateAttached")
                     : t("gatekeeper.capturePlate")}
-                </BlueButton>
-                <BlueButton
-                  className="h-14 text-base"
+                </BrandPillButton>
+                <BrandPillButton
+                  tone="brand"
+                  className="w-full text-base"
+                  height={56}
                   onClick={() => vehicleInput.current?.click()}
                   disabled={busy}
+                  data-testid="button-gate-vehicle-photo"
+                  aria-pressed={Boolean(vehiclePhotoUrl)}
                 >
-                  <Camera className="mr-2 h-5 w-5" />
+                  <Camera className="mr-2 h-5 w-5" aria-hidden="true" />
                   {vehiclePhotoUrl
                     ? t("gatekeeper.vehicleAttached")
                     : t("gatekeeper.vehiclePhoto")}
-                </BlueButton>
+                </BrandPillButton>
               </div>
               <GateMemoryInput
+                id="gate-vehicle-plate"
+                required
+                aria-required="true"
                 value={vehiclePlate}
                 suggestions={
                   activeMemoryField === "vehiclePlate"
@@ -1226,8 +1428,11 @@ export default function GatekeeperPage() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>{t("gatekeeper.firstName")} * </Label>
+                <Label htmlFor="gate-first-name">{t("gatekeeper.firstName")} * </Label>
                 <GateMemoryInput
+                  id="gate-first-name"
+                  required
+                  aria-required="true"
                   value={firstName}
                   suggestions={
                     activeMemoryField === "firstName"
@@ -1244,8 +1449,11 @@ export default function GatekeeperPage() {
                 />
               </div>
               <div>
-                <Label>{t("gatekeeper.lastName")} *</Label>
+                <Label htmlFor="gate-last-name">{t("gatekeeper.lastName")} *</Label>
                 <GateMemoryInput
+                  id="gate-last-name"
+                  required
+                  aria-required="true"
                   value={lastName}
                   suggestions={
                     activeMemoryField === "lastName"
@@ -1263,8 +1471,9 @@ export default function GatekeeperPage() {
               </div>
             </div>
             <div>
-              <Label>{t("gatekeeper.company")}</Label>
+              <Label htmlFor="gate-company">{t("gatekeeper.company")}</Label>
               <GateMemoryInput
+                id="gate-company"
                 value={company}
                 suggestions={
                   activeMemoryField === "company"
@@ -1334,14 +1543,19 @@ export default function GatekeeperPage() {
                 )}
               </p>
             ) : null}
-            <div className={`${CARD_INNER_TILE_CLASS} space-y-3`} data-testid="gate-selected-location">
+            <div
+              className={`${CARD_INNER_TILE_CLASS} space-y-3 !border-[color:var(--brand-primary)]`}
+              data-testid="gate-selected-location"
+              data-brand-outline="true"
+              style={{ borderColor: brand.primary }}
+            >
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 {t("gatekeeper.selectedLocation")}
               </p>
               {assignedSites.length > 0 ? (
                 <div className="grid gap-3 sm:grid-cols-2">
                 <Select value={selectedPartnerId} onValueChange={(value) => { setSelectedPartnerId(value); setHostKey(""); }}>
-                  <SelectTrigger data-testid="select-gate-partner" className="h-14 text-lg font-bold"><SelectValue placeholder="Select company" /></SelectTrigger>
+                  <SelectTrigger aria-label={t("gatekeeper.selectCompany")} data-testid="select-gate-partner" className="h-14 text-lg font-bold"><SelectValue placeholder={t("gatekeeper.selectCompany")} /></SelectTrigger>
                   <SelectContent>{assignedPartners.map((group) => <SelectItem key={group.partnerId} value={String(group.partnerId)}>{group.partnerName}</SelectItem>)}</SelectContent>
                 </Select>
                 <Select
@@ -1356,7 +1570,7 @@ export default function GatekeeperPage() {
                     setHostKey("");
                   }}
                 >
-                  <SelectTrigger data-testid="select-gate-current-location" className="h-14 text-lg font-bold">
+                  <SelectTrigger aria-label={t("gatekeeper.selectSite")} data-testid="select-gate-current-location" className="h-14 text-lg font-bold">
                     <SelectValue placeholder={t("gatekeeper.selectSite")} />
                   </SelectTrigger>
                   <SelectContent>
@@ -1370,9 +1584,14 @@ export default function GatekeeperPage() {
                 </div>
               ) : null}
               {site.data && (
-                <p className="text-2xl font-black leading-tight text-foreground">
-                  {siteDisplayName(site.data.site)}
-                </p>
+                <div className="space-y-1">
+                  <p className="text-base font-bold leading-tight text-foreground">
+                    {siteDisplayName(site.data.site)}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {site.data.site.address}
+                  </p>
+                </div>
               )}
               <p
                 className="text-sm font-semibold"
@@ -1404,18 +1623,10 @@ export default function GatekeeperPage() {
               </p>
             )}
             {site.data && (
-              <>
-                <p className={`${CARD_INNER_TILE_CLASS} text-sm`}>
-                  <strong>{site.data.site.name}</strong>
-                  <br />
-                  <span className="text-muted-foreground">
-                    {site.data.site.address}
-                  </span>
-                </p>
                 <div>
-                  <Label>{t("gatekeeper.host")} *</Label>
+                  <Label htmlFor="gate-host">{t("gatekeeper.host")} *</Label>
                   <Select value={hostKey} onValueChange={setHostKey}>
-                    <SelectTrigger>
+                    <SelectTrigger id="gate-host" aria-required="true">
                       <SelectValue placeholder={t("gatekeeper.selectHost")} />
                     </SelectTrigger>
                     <SelectContent>
@@ -1427,11 +1638,11 @@ export default function GatekeeperPage() {
                     </SelectContent>
                   </Select>
                 </div>
-              </>
             )}
             <div>
-              <Label>{t("gatekeeper.purpose")}</Label>
+              <Label htmlFor="gate-purpose">{t("gatekeeper.purpose")}</Label>
               <Textarea
+                id="gate-purpose"
                 data-testid="input-gate-purpose"
                 value={purpose}
                 onChange={(e) => {
@@ -1447,8 +1658,9 @@ export default function GatekeeperPage() {
               </select>
             </div>
             <div>
-              <Label>{t("gatekeeper.notes")}</Label>
+              <Label htmlFor="gate-notes">{t("gatekeeper.notes")}</Label>
               <Textarea
+                id="gate-notes"
                 data-testid="input-gate-notes"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
@@ -1456,25 +1668,30 @@ export default function GatekeeperPage() {
               />
             </div>
             <div>
-              <Label>{t("gatekeeper.expectedMinutes")}</Label>
+              <Label htmlFor="gate-expected-duration">{t("gatekeeper.expectedMinutes")}</Label>
               <div className="mb-2 grid grid-cols-4 gap-2">
                 {GATE_DURATION_CHIPS.map((chip) => (
-                  <BlueButton
+                  <BrandPillButton
+                    tone="brand"
                     key={chip.id}
-                    className="h-10 text-xs"
+                    className="w-full text-xs"
+                    height={40}
                     data-testid={`button-gate-duration-${chip.id}`}
+                    aria-pressed={duration === String(minutesForDurationChip(chip.id))}
                     onClick={() => {
                       forgetPlateAutoFill("expectedDuration");
                       setDuration(String(minutesForDurationChip(chip.id)));
                     }}
                   >
                     {t(`gatekeeper.duration${chip.id === "30m" ? "30m" : chip.id === "2h" ? "2h" : chip.id === "allDay" ? "AllDay" : "Overnight"}`)}
-                  </BlueButton>
+                  </BrandPillButton>
                 ))}
               </div>
               <Input
+                id="gate-expected-duration"
                 inputMode="numeric"
                 value={duration}
+                data-testid="input-gate-duration"
                 onChange={(e) => {
                   forgetPlateAutoFill("expectedDuration");
                   setDuration(e.target.value);

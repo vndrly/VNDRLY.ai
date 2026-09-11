@@ -18,9 +18,19 @@ test("API deploy is a separate main workflow with guarded VPS access", () => {
   assert.match(workflow, /"scripts\/askv-greeting-migration\.mjs"/);
   assert.match(workflow, /"scripts\/assistant-action-audit-migration\.mjs"/);
 
-  for (const secret of ["VPS_HOST", "VPS_USER", "VPS_PASSWORD", "VPS_PORT"]) {
+  for (const secret of ["VPS_HOST", "VPS_USER", "VPS_PASSWORD", "VPS_PORT", "ASSEMBLYAI_API_KEY"]) {
     assert.match(workflow, new RegExp(`secrets\\.${secret}`));
   }
+});
+
+test("API deploy transfers the meeting transcription key without logging it and activates the bounded provider", () => {
+  assert.match(workflow, /printf '%s' "\$ASSEMBLYAI_API_KEY" \| sshpass -e ssh/);
+  assert.match(workflow, /cat > \/tmp\/vndrly-assemblyai-key/);
+  assert.match(workflow, /trap '[^']*vndrly-assemblyai-key[^']*' EXIT/);
+  assert.match(workflow, /VNDRLY_MEETING_STT_PROVIDER=assemblyai/);
+  assert.match(workflow, /ASSEMBLYAI_MODEL_TRAINING_ALLOWED=1/);
+  assert.match(workflow, /ASSEMBLYAI_MAX_CONCURRENT_STREAMS=5/);
+  assert.doesNotMatch(workflow, /echo[^\n]*ASSEMBLYAI_API_KEY/);
 });
 
 test("API deploy builds, migrates, restarts, and health-checks without touching web or nginx", () => {
@@ -53,11 +63,12 @@ test("API deploy builds, migrates, restarts, and health-checks without touching 
 });
 
 test("API deploy configures the VNDRLY-owned TURN relay before restarting meetings", () => {
-  assert.match(workflow, /coturn/);
-  assert.match(workflow, /VNDRLY_STUN_URL/);
-  assert.match(workflow, /VNDRLY_TURN_URL/);
-  assert.match(workflow, /VNDRLY_TURN_USERNAME/);
-  assert.match(workflow, /VNDRLY_TURN_CREDENTIAL/);
-  assert.match(workflow, /systemctl restart coturn/);
-  assert.ok(workflow.indexOf("systemctl restart coturn") < workflow.indexOf("systemctl restart vndrly-api"));
+  const provision = 'sudo bash scripts/provision-work-hub-audio.sh "$RELAY_HOST"';
+  assert.ok(workflow.includes(provision));
+  assert.ok(workflow.indexOf(provision) < workflow.indexOf("systemctl restart vndrly-api"));
+  assert.doesNotMatch(workflow, /VNDRLY_TURN_CREDENTIAL|\/etc\/turnserver\.conf/);
+  for (const migration of ["work-hub-collaboration", "work-hub-calls", "work-hub-scheduling", "work-hub-finance", "work-hub-file-library", "work-hub-meeting-collaboration"]) {
+    assert.ok(workflow.includes(`migrate:${migration}`));
+    assert.ok(workflow.indexOf(`migrate:${migration}`) < workflow.indexOf("systemctl restart vndrly-api"));
+  }
 });

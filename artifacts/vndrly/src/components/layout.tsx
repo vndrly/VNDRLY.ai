@@ -66,7 +66,9 @@ import { visitsApi } from "@/lib/visits-api";
 import { ACCOUNTING_ENABLED, TAX_REPORTING_ENABLED } from "@/lib/release-features";
 import AskVStatusIndicator from "@/components/askv-status-indicator";
 import { orderPortalNavigation } from "@/lib/portal-nav-order";
-import { getWorkHubNavItems, getWorkHubReturnPath, isWorkHubPath } from "@/lib/work-hub-nav";
+import { workHubIcons, getWorkHubNavItems, getWorkHubReturnPath, isWorkHubPath } from "@/lib/work-hub-nav";
+
+import { WorkHubNavigation } from "@/components/work-hub/navigation";
 
 const AssistantLauncher = React.lazy(() =>
   import("@/components/assistant-panel").then((mod) => ({
@@ -196,7 +198,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const standardNavItems = orderPortalNavigation(useNavItems(user), user?.role);
   const inWorkHub = isWorkHubPath(location);
-  const workHubIcons = { home: LayoutDashboard, channels: MessageSquareOff, calendar: CalendarDays, files: Files, tasks: CheckSquare2, meetings: Video, search: Search, settings: Settings };
+
   const navItems = inWorkHub ? getWorkHubNavItems(user?.role).map((item) => ({ ...item, icon: workHubIcons[item.key as keyof typeof workHubIcons] })) : standardNavItems;
   const { data: vendor } = useGetVendor(user?.vendorId ?? 0, { query: { enabled: user?.role === "vendor" && !!user.vendorId, queryKey: getGetVendorQueryKey(user?.vendorId ?? 0) } });
   const { data: partner } = useGetPartner(user?.partnerId ?? 0, { query: { enabled: user?.role === "partner" && !!user.partnerId, queryKey: getGetPartnerQueryKey(user?.partnerId ?? 0) } });
@@ -348,7 +350,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           )}
         >
           {inWorkHub && <Link href={getWorkHubReturnPath(sessionStorage.getItem("vndrly.workHub.returnPath"))} onClick={() => setSidebarOpen(false)}><SidebarButton isActive={false} activeOnHover testId="nav-back-to-vndrly" branded={branded} brandPrimary={brand.primary} brandAccent={brand.accent}><ArrowLeft className="h-4 w-4"/>Back to VNDRLY</SidebarButton></Link>}
-          {navItems.map((item) => {
+          {inWorkHub ? <WorkHubNavigation onNavigate={() => setSidebarOpen(false)} /> : navItems.map((item) => {
             const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
             const Icon = item.icon;
             return (

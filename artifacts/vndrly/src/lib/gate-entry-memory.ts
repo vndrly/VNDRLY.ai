@@ -381,7 +381,13 @@ export function evaluateGateMemory(input: {
   } = input;
   const query = activeField ? draft[activeField] : "";
   const length = activeField ? queryLength(activeField, query) : 0;
-  if (!activeField || length < minSuggestionLength) {
+  const browsingExactCompanyDrivers = Boolean(
+    (activeField === "firstName" || activeField === "lastName")
+    && !query.trim()
+    && draft.company.trim()
+    && visits.some((visit) => norm(visit.company) === norm(draft.company)),
+  );
+  if (!activeField || (!browsingExactCompanyDrivers && length < minSuggestionLength)) {
     return { suggestions: [], fill: null };
   }
   const matches = rankedMatches(
@@ -394,7 +400,7 @@ export function evaluateGateMemory(input: {
     : matches;
   const suggestions = visitorSuggestions(suggestionSource, draft, activeField);
 
-  if (isDeleting || length < minAutoFillLength) {
+  if (browsingExactCompanyDrivers || isDeleting || length < minAutoFillLength) {
     return { suggestions, fill: null };
   }
 

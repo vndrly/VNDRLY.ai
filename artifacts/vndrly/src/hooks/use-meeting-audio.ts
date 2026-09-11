@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { workHubRequest } from "@/lib/work-hub-client";
 import type { MeetingSnapshot } from "@/lib/meeting-types";
+import { useMeetingTranscription } from "./use-meeting-transcription";
 
 type Join = { userId: number; startedAt: string; iceServers: RTCIceServer[] };
 type Signal = { sequence: number; fromUserId: number; kind: "offer" | "answer" | "ice"; payload: RTCSessionDescriptionInit & RTCIceCandidateInit };
@@ -13,6 +14,8 @@ export function useMeetingAudio(occurrenceId: string, snapshot: MeetingSnapshot 
   const [needsPlayback, setNeedsPlayback] = useState(false);
   const peers = useRef(new Map<number, Peer>());
   const stream = useRef<MediaStream | null>(null);
+  const transcription = useMeetingTranscription(occurrenceId, snapshot, joined, muted, stream);
+  const { stopTranscription } = transcription;
   const analyser = useRef<{ context: AudioContext; node: AnalyserNode } | null>(null);
   const lease = useRef<Join | null>(null);
   const state = useRef(snapshot); state.current = snapshot;
@@ -25,12 +28,13 @@ export function useMeetingAudio(occurrenceId: string, snapshot: MeetingSnapshot 
     peer.connection.close(); peer.audio.pause(); peer.audio.srcObject = null; peers.current.delete(id);
   };
   const cleanup = useCallback(() => {
+    stopTranscription();
     lease.current = null;
     peers.current.forEach((_, id) => closePeer(id));
     stream.current?.getTracks().forEach((track) => track.stop()); stream.current = null;
     void analyser.current?.context.close(); analyser.current = null;
     mutedRef.current = true;
-  }, []);
+  }, [stopTranscription]);
   const leave = useCallback(async () => {
     cleanup(); setJoined(false); setMuted(true);
     try { await workHubRequest(`/meetings/${occurrenceId}/leave`, { method: "POST", body: "{}", keepalive: true }); }
@@ -140,6 +144,7 @@ export function useMeetingAudio(occurrenceId: string, snapshot: MeetingSnapshot 
 
   const toggleMute = async () => {
     const next = !mutedRef.current; mutedRef.current = next; setMuted(next);
+    if (next) stopTranscription();
     stream.current?.getAudioTracks().forEach((track) => { track.enabled = !next; });
     if (!next) await analyser.current?.context.resume();
     try { await workHubRequest(`/meetings/${occurrenceId}/presence`, { method: "POST", body: JSON.stringify({ muted: next }) }); }
@@ -149,5 +154,5 @@ export function useMeetingAudio(occurrenceId: string, snapshot: MeetingSnapshot 
     const results = await Promise.allSettled([...peers.current.values()].map((p) => p.audio.play()));
     setNeedsPlayback(results.some((r) => r.status === "rejected"));
   };
-  return { joined, muted, join, leave, toggleMute, error, needsPlayback, enablePlayback, stream };
+  return { joined, muted, join, leave, toggleMute, error, needsPlayback, enablePlayback, stream, ...transcription };
 }

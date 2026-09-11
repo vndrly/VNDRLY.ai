@@ -6,6 +6,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// Configuring the session neither activates it nor opens a microphone.
 @interface AskVConversationAudio : NSObject
 - (BOOL)configure:(NSError **)error;
+- (BOOL)ownsCurrentConfiguration;
 - (void)releaseConfiguration;
 @end
 

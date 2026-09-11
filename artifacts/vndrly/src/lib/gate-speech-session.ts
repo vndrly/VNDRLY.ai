@@ -31,7 +31,7 @@ type RestartHandle = ReturnType<typeof setTimeout>;
 
 type GateSpeechSessionOptions = {
   createRecognition: () => GateSpeechRecognition | null;
-  onTranscript: (transcript: string) => void;
+  onTranscript: (transcript: string, deliveryId: string) => void;
   onListeningChange: (listening: boolean) => void;
   onError: (code: string) => void;
   scheduleRestart?: (callback: () => void) => RestartHandle;
@@ -73,6 +73,7 @@ export function createGateSpeechSession(
   let starting: Promise<void> | null = null;
   let restartHandle: RestartHandle | null = null;
   let releaseLease: (() => Promise<void>) | null = null;
+  let recognitionId = 0;
 
   const publishListening = (next: boolean) => {
     if (listening === next) return;
@@ -137,6 +138,7 @@ export function createGateSpeechSession(
         return;
       }
       let resolveEnd!: () => void;
+      const currentRecognitionId = ++recognitionId;
       const current: Active = {
         recognition,
         ended: new Promise<void>((resolve) => {
@@ -179,7 +181,13 @@ export function createGateSpeechSession(
           if (result.isFinal !== false && result[0]?.transcript?.trim())
             parts.push(result[0].transcript.trim());
         }
-        if (parts.length) options.onTranscript(parts.join(" "));
+        if (parts.length) {
+          const firstResult = Math.max(0, event.resultIndex ?? 0);
+          options.onTranscript(
+            parts.join(" "),
+            `${currentRecognitionId}:${firstResult}:${event.results.length}`,
+          );
+        }
       };
       recognition.onerror = (event) => {
         const code = event.error ?? "recognition-failed";

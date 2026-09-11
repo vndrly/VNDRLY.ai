@@ -7,6 +7,7 @@ import {
   View,
   type GestureResponderEvent,
   type ImageSourcePropType,
+  type AccessibilityState,
   type StyleProp,
   type TextStyle,
   type ViewStyle,
@@ -36,6 +37,8 @@ export interface TogglePillButtonProps {
   height?: number;
   color?: TogglePillColor;
   inactive?: boolean;
+  accessibilityLabel?: string;
+  accessibilityState?: AccessibilityState;
   /** Colored at rest (primary CTAs). Default false = grey rest, colored on press. */
   solid?: boolean;
 }
@@ -58,28 +61,41 @@ export default function TogglePillButton({
   style,
   textStyle,
   testID,
-  height: _heightProp,
+  height: heightProp,
   color = "brand",
   inactive,
+  accessibilityLabel,
+  accessibilityState,
   solid,
 }: TogglePillButtonProps) {
   const brand = useBrand();
   const isDisabled = disabled || loading;
+  const resolvedAccessibilityLabel = accessibilityLabel ?? (typeof children === "string" ? children : undefined);
   const lockToRest = !!inactive || !!loading;
   const lockToColored = !!solid && !lockToRest;
-  const height = PILL_HEIGHT_PX;
-  const radius = height / 2;
+  const visualMinHeight = Math.max(PILL_HEIGHT_PX, heightProp ?? PILL_HEIGHT_PX);
+  const targetMinHeight = Math.max(44, visualMinHeight);
   const activeSrc = coloredSrc(color, brand.primary ?? "#1f9a3d", brand.name ?? "");
   const restSrc = TOGGLE_IDLE_PILL_SRC;
 
   return (
     <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={resolvedAccessibilityLabel}
+      accessibilityState={{
+        ...accessibilityState,
+        disabled: Boolean(isDisabled),
+        busy: Boolean(loading || accessibilityState?.busy),
+      }}
+      aria-selected={accessibilityState?.selected}
+      aria-busy={Boolean(loading || accessibilityState?.busy)}
+      aria-disabled={Boolean(isDisabled)}
       onPress={onPress}
       disabled={isDisabled}
       testID={testID}
       style={({ pressed }) => [
         styles.container,
-        { height, alignSelf: "stretch" },
+        { minHeight: targetMinHeight, alignSelf: "stretch" },
         isDisabled && !inactive ? styles.dimmed : null,
         style,
       ]}
@@ -91,8 +107,8 @@ export default function TogglePillButton({
         const isGreyedOut = isDisabled && !inactive;
         const isGreyPill = !showColored && !isGreyedOut;
         return (
-          <View style={[styles.inner, { height }, isGreyPill ? styles.greyPill : null]}>
-            <Pill9Slice source={src} height={height} borderRadius={radius} />
+          <View style={[styles.inner, { minHeight: visualMinHeight }, isGreyPill ? styles.greyPill : null]}>
+            <Pill9Slice source={src} borderRadius={999} />
             <View style={styles.contentRow}>
               {loading ? (
                 <ActivityIndicator color={labelColor} size="small" />
@@ -104,7 +120,6 @@ export default function TogglePillButton({
                     showColored ? styles.labelColoredShadow : null,
                     textStyle,
                   ]}
-                  numberOfLines={1}
                 >
                   {children}
                 </Text>
@@ -128,6 +143,7 @@ const styles = StyleSheet.create({
   inner: {
     position: "relative",
     paddingHorizontal: 16,
+    paddingVertical: 8,
     justifyContent: "center",
     alignItems: "center",
     overflow: "hidden",
@@ -146,11 +162,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
     zIndex: 1,
+    flexShrink: 1,
   },
   label: {
     fontSize: 14,
     fontWeight: "600",
     textAlign: "center",
+    flexShrink: 1,
   },
   labelColoredShadow: TEXT_SHADOW.onColor,
 });

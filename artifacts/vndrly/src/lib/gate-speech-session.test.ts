@@ -87,7 +87,10 @@ describe("createGateSpeechSession", () => {
       },
     });
 
-    expect(onTranscript).toHaveBeenCalledWith("Bob Villa checking out");
+    expect(onTranscript).toHaveBeenCalledWith(
+      "Bob Villa checking out",
+      "1:1:2",
+    );
   });
 
   it("ignores no-speech errors but stops cleanly on microphone permission errors", async () => {

@@ -1,5 +1,5 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { randomUUID } from "node:crypto";
+import { randomUUID, createHash } from "node:crypto";
 import {
   and,
   asc,
@@ -49,6 +49,7 @@ import {
   workHubAuditLogTable,
   siteWorkAssignmentsTable,
   usersTable,
+  userOrgMembershipsTable,
 } from "@workspace/db";
 import {
   workHubCommandEnvelopeSchema,
@@ -76,31 +77,30 @@ import { notifyUsers } from "./notifications";
 import { sessionCanSeeOwner } from "../work-hub/owner-boundary";
 import { appendWorkHubAudit } from "../work-hub/audit";
 import { microsoftImportStatus } from "../work-hub/microsoft-import";
-import { resolveVndrlyIceServers } from "../work-hub/audio-provider";
-import workHubMeetingsRouter from "./workHubMeetings";
 import {
-  assertOwnerMatchesChannel,
-  assertOwnerUsers,
-} from "../work-hub/owner-users";
+  audioIceServers,
+  captureAllowed,
+  SignalMailbox,
+} from "../work-hub/internal-audio";
+import { getObjectStore } from "../lib/objectStore";
+import workHubMeetingsRouter from "./workHubMeetings";
+import workHubMeetingReplayRouter from "./workHubMeetingReplay";
+import { assertOwnerMatchesChannel, assertOwnerUsers } from "../work-hub/owner-users";
 
 const router: IRouter = Router();
 const storage = new ObjectStorageService();
-type MeetingSignal = {
-  id: string;
-  occurrenceId: string;
-  fromUserId: number;
-  toUserId: number | null;
-  kind: "offer" | "answer" | "ice";
-  payload: unknown;
-  createdAt: number;
-};
-const meetingSignals = new Map<string, MeetingSignal[]>();
-function pruneMeetingSignals(now = Date.now()) {
-  for (const [key, values] of meetingSignals) {
-    const fresh = values.filter((value) => now - value.createdAt < 5 * 60_000);
-    if (fresh.length) meetingSignals.set(key, fresh);
-    else meetingSignals.delete(key);
-  }
+const meetingSignals = new SignalMailbox();
+function announcementMembership(userId: number, adminOnly = false) {
+  return sql`exists (select 1 from ${userOrgMembershipsTable} membership
+    where membership.user_id = ${userId}
+    and membership.org_type = ${workHubAnnouncementsTable.ownerOrgType}
+    and case when membership.org_type = 'vendor' then membership.vendor_id else membership.partner_id end = ${workHubAnnouncementsTable.ownerOrgId}
+    ${adminOnly ? sql`and membership.role = 'admin'` : sql``})`;
+}
+function announcementReadable(userId: number) {
+  return and(announcementMembership(userId), isNull(workHubAnnouncementsTable.withdrawnAt),
+    or(announcementMembership(userId, true), sql`exists (select 1 from ${workHubAnnouncementRecipientsTable} recipient
+      where recipient.announcement_id = ${workHubAnnouncementsTable.id} and recipient.user_id = ${userId})`));
 }
 type Actor = SessionPayload & { userId: number };
 function actor(req: Request): Actor | null {
@@ -256,6 +256,7 @@ router.use("/work-hub", async (_req, res, next) => {
   next();
 });
 
+router.use("/work-hub/meetings", workHubMeetingReplayRouter);
 router.use("/work-hub/meetings", workHubMeetingsRouter);
 
 router.get("/work-hub/audit", async (req, res) => {
@@ -347,6 +348,7 @@ router.get("/work-hub/home", async (req, res) => {
       .where(
         and(
           eq(workHubAnnouncementRecipientsTable.userId, session.userId),
+          announcementMembership(session.userId),
           isNull(workHubAnnouncementsTable.withdrawnAt),
         ),
       )
@@ -509,7 +511,7 @@ router.get("/work-hub/admin", async (req, res) => {
     db
       .select()
       .from(workHubAnnouncementsTable)
-      .where(ownerFilterFor(session, workHubAnnouncementsTable))
+      .where(and(ownerFilterFor(session, workHubAnnouncementsTable), announcementMembership(session.userId, true)))
       .orderBy(desc(workHubAnnouncementsTable.publishedAt))
       .limit(100),
   ]);
@@ -1366,6 +1368,15 @@ router.post("/work-hub/announcements", async (req, res) => {
         );
         return announcement;
       },
+      async (tx) => {
+        const members = await tx.select().from(userOrgMembershipsTable).where(and(
+          eq(userOrgMembershipsTable.orgType, envelope.owner.type),
+          envelope.owner.type === "vendor" ? eq(userOrgMembershipsTable.vendorId, envelope.owner.id) : eq(userOrgMembershipsTable.partnerId, envelope.owner.id),
+          inArray(userOrgMembershipsTable.userId, [...new Set([session.userId, ...recipients])]),
+        )).for("share");
+        if (!members.some(member => member.userId === session.userId && member.role === "admin") ||
+          recipients.some(userId => !members.some(member => member.userId === userId))) throw new WorkHubAccessError("forbidden");
+      },
     );
     if (!result.replayed)
       await notifyUsers(recipients, {
@@ -1376,7 +1387,7 @@ router.post("/work-hub/announcements", async (req, res) => {
         category: "system",
         title: payload.title,
         body: payload.body.slice(0, 180),
-        link: `/work-hub/announcements/${result.resource.id}`,
+        link: `/work-hub?announcement=${result.resource.id}`,
         dedupeKey: `work-hub-announcement:${result.resource.id}`,
       });
     return res.status(result.replayed ? 200 : 201).json(result);
@@ -1393,34 +1404,34 @@ router.post("/work-hub/announcements/:id/acknowledge", async (req, res) => {
       "auth.unauthenticated",
       "Authentication required",
     );
-  const [recipient] = await db
-    .update(workHubAnnouncementRecipientsTable)
-    .set({ acknowledgedAt: new Date(), viewedAt: new Date() })
-    .where(
-      and(
-        eq(workHubAnnouncementRecipientsTable.announcementId, req.params.id),
-        eq(workHubAnnouncementRecipientsTable.userId, session.userId),
-      ),
-    )
-    .returning();
-  if (!recipient)
-    return sendApiError(res, 404, "work_hub.not_found", "Not found");
-  const [announcement] = await db
-    .select()
-    .from(workHubAnnouncementsTable)
-    .where(eq(workHubAnnouncementsTable.id, req.params.id));
-  await db
-    .insert(workHubAcknowledgementsTable)
-    .values({
-      ownerOrgType: announcement.ownerOrgType,
-      ownerOrgId: announcement.ownerOrgId,
-      subjectType: "announcement",
-      subjectId: announcement.id,
-      subjectVersion: announcement.version,
-      userId: session.userId,
-    })
-    .onConflictDoNothing();
-  return res.json(recipient);
+  try {
+    const recipient = await db.transaction(async (tx) => {
+      const [announcement] = await tx.select().from(workHubAnnouncementsTable).where(and(
+        eq(workHubAnnouncementsTable.id, req.params.id), announcementReadable(session.userId),
+      )).limit(1);
+      if (!announcement) throw new WorkHubAccessError("not_found");
+      const [membership] = await tx.select().from(userOrgMembershipsTable).where(and(
+        eq(userOrgMembershipsTable.userId, session.userId),
+        eq(userOrgMembershipsTable.orgType, announcement.ownerOrgType),
+        announcement.ownerOrgType === "vendor" ? eq(userOrgMembershipsTable.vendorId, announcement.ownerOrgId) : eq(userOrgMembershipsTable.partnerId, announcement.ownerOrgId),
+      )).for("share");
+      if (!membership) throw new WorkHubAccessError("not_found");
+      const [row] = await tx.update(workHubAnnouncementRecipientsTable).set({
+        acknowledgedAt: sql`coalesce(${workHubAnnouncementRecipientsTable.acknowledgedAt}, now())`,
+        viewedAt: sql`coalesce(${workHubAnnouncementRecipientsTable.viewedAt}, now())`,
+      }).where(and(eq(workHubAnnouncementRecipientsTable.announcementId, announcement.id),
+        eq(workHubAnnouncementRecipientsTable.userId, session.userId))).returning();
+      if (!row) throw new WorkHubAccessError("not_found");
+      await tx.insert(workHubAcknowledgementsTable).values({
+        ownerOrgType: announcement.ownerOrgType, ownerOrgId: announcement.ownerOrgId,
+        subjectType: "announcement", subjectId: announcement.id, subjectVersion: announcement.version, userId: session.userId,
+      }).onConflictDoNothing();
+      return row;
+    });
+    return res.json(recipient);
+  } catch (error) {
+    return failure(res, error);
+  }
 });
 
 router.get("/work-hub/calendar", async (req, res) => {
@@ -1514,6 +1525,7 @@ router.get("/work-hub/calendar", async (req, res) => {
       .where(
         and(
           meetingOwner,
+          sql`exists (select 1 from ${workHubMeetingParticipantsTable} mp where mp.occurrence_id = ${workHubMeetingOccurrencesTable.id} and mp.user_id = ${session.userId})`,
           lte(workHubMeetingOccurrencesTable.startsAt, end),
           or(
             isNull(workHubMeetingOccurrencesTable.endsAt),
@@ -1713,6 +1725,9 @@ router.post("/work-hub/meetings", async (req, res) => {
       "meeting.create",
       envelope,
       async (tx) => {
+        for (const userId of [...participants].sort((a, b) => a - b)) {
+          await tx.execute(sql`select pg_advisory_xact_lock(73009, ${userId})`);
+        }
         const [meeting] = await tx
           .insert(workHubMeetingsTable)
           .values({
@@ -1760,6 +1775,778 @@ router.post("/work-hub/meetings", async (req, res) => {
   } catch (error) {
     return failure(res, error);
   }
+});
+type MeetingTx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+class MeetingMutationError extends Error {
+  constructor(
+    readonly status: number,
+    message: string,
+  ) {
+    super(message);
+  }
+}
+async function meetingMutation(
+  req: Request,
+  res: Response,
+  apply: (tx: MeetingTx, session: Actor, id: string) => Promise<unknown>,
+) {
+  const session = actor(req);
+  if (!session)
+    return res.status(401).json({ message: "Authentication required" });
+  try {
+    const id = z.string().uuid().parse(req.params.occurrenceId);
+    const result = await db.transaction(async (tx) => {
+      await tx.execute(
+        sql`select pg_advisory_xact_lock(hashtext(${"meeting-capture:" + id}))`,
+      );
+      // The new meeting router uses this same row lock for consent and presence.
+      // Keep legacy capture uploads/start serialized with withdrawal and leave.
+      await tx.execute(sql`select ${workHubMeetingOccurrencesTable.id} from ${workHubMeetingOccurrencesTable} where ${workHubMeetingOccurrencesTable.id} = ${id} for update`);
+      return apply(tx, session, id);
+    });
+    return res.json(result);
+  } catch (error) {
+    return res
+      .status(error instanceof MeetingMutationError ? error.status : 400)
+      .json({
+        message:
+          error instanceof Error ? error.message : "Meeting operation failed",
+      });
+  }
+}
+async function requireMeetingMember(
+  tx: MeetingTx,
+  id: string,
+  userId: number,
+  hostOnly = false,
+) {
+  const [member] = await tx
+    .select()
+    .from(workHubMeetingParticipantsTable)
+    .where(
+      and(
+        eq(workHubMeetingParticipantsTable.occurrenceId, id),
+        eq(workHubMeetingParticipantsTable.userId, userId),
+      ),
+    )
+    .limit(1);
+  if (!member || member.removedAt) throw new MeetingMutationError(404, "Meeting not found");
+  if (hostOnly && member.role !== "host")
+    throw new MeetingMutationError(
+      403,
+      "Only the meeting host can record or transcribe",
+    );
+  return member;
+}
+async function meetingEntry(tx: MeetingTx, id: string) {
+  const [entry] = await tx
+    .select({
+      occurrence: workHubMeetingOccurrencesTable,
+      meeting: workHubMeetingsTable,
+    })
+    .from(workHubMeetingOccurrencesTable)
+    .innerJoin(
+      workHubMeetingsTable,
+      eq(workHubMeetingsTable.id, workHubMeetingOccurrencesTable.meetingId),
+    )
+    .where(eq(workHubMeetingOccurrencesTable.id, id));
+  if (!entry) throw new MeetingMutationError(404, "Meeting not found");
+  return entry;
+}
+async function requireCaptureConsent(
+  tx: MeetingTx,
+  id: string,
+  userId: number,
+) {
+  const member = await requireMeetingMember(tx, id, userId, true);
+  const entry = await meetingEntry(tx, id);
+  if (["ended", "cancelled"].includes(entry.occurrence.status))
+    throw new MeetingMutationError(409, "Meeting has ended");
+  const present = await tx
+    .select()
+    .from(workHubMeetingAttendanceTable)
+    .where(
+      and(
+        eq(workHubMeetingAttendanceTable.occurrenceId, id),
+        isNull(workHubMeetingAttendanceTable.leftAt),
+      ),
+    );
+  const consents = await tx
+    .select()
+    .from(workHubMeetingConsentsTable)
+    .where(eq(workHubMeetingConsentsTable.occurrenceId, id));
+  if (
+    !present.some((p) => p.userId === userId) ||
+    !captureAllowed({
+      role: member.role,
+      recordingAllowed: entry.meeting.recordingAllowed,
+      policyVersion: entry.meeting.policyVersion,
+      consents,
+      present: present.map((p) => p.userId),
+    })
+  )
+    throw new MeetingMutationError(
+      409,
+      "Every present participant must consent before capture",
+    );
+  return entry;
+}
+router.post("/work-hub/meetings/:occurrenceId/consent", (req, res) =>
+  meetingMutation(req, res, async (tx, session, id) => {
+    await requireMeetingMember(tx, id, session.userId);
+    const entry = await meetingEntry(tx, id);
+    const p = z
+      .object({
+        policyVersion: z.number().int().positive(),
+        response: z.enum(["accepted", "declined"]),
+      })
+      .parse(req.body);
+    if (p.policyVersion !== entry.meeting.policyVersion)
+      throw new MeetingMutationError(
+        409,
+        "Consent policy changed; refresh the meeting",
+      );
+    const [consent] = await tx
+      .insert(workHubMeetingConsentsTable)
+      .values({ occurrenceId: id, userId: session.userId, ...p })
+      .onConflictDoUpdate({
+        target: [
+          workHubMeetingConsentsTable.occurrenceId,
+          workHubMeetingConsentsTable.userId,
+          workHubMeetingConsentsTable.policyVersion,
+        ],
+        set: { response: p.response, respondedAt: new Date() },
+      })
+      .returning();
+    if (p.response === "declined")
+      await tx
+        .update(workHubMeetingOccurrencesTable)
+        .set({ recordingState: "off", transcriptState: "off" })
+        .where(eq(workHubMeetingOccurrencesTable.id, id));
+    return consent;
+  }),
+);
+
+router.post("/work-hub/meetings/:occurrenceId/join", (req, res) =>
+  meetingMutation(req, res, async (tx, session, id) => {
+    await requireMeetingMember(tx, id, session.userId);
+    const { occurrence, meeting } = await meetingEntry(tx, id);
+    if (["ended", "cancelled"].includes(occurrence.status))
+      throw new MeetingMutationError(409, "Meeting has ended");
+    const roomId = occurrence.providerRoomId ?? "vndrly-" + randomUUID();
+    const [attending] = await tx
+      .select()
+      .from(workHubMeetingAttendanceTable)
+      .where(
+        and(
+          eq(workHubMeetingAttendanceTable.occurrenceId, id),
+          eq(workHubMeetingAttendanceTable.userId, session.userId),
+          isNull(workHubMeetingAttendanceTable.leftAt),
+        ),
+      );
+    if (!attending) {
+      await tx
+        .update(workHubMeetingOccurrencesTable)
+        .set({
+          providerRoomId: roomId,
+          status: "live",
+          recordingState: "off",
+          transcriptState: "off",
+        })
+        .where(eq(workHubMeetingOccurrencesTable.id, id));
+      await tx
+        .insert(workHubMeetingAttendanceTable)
+        .values({ occurrenceId: id, userId: session.userId });
+      await tx
+        .insert(workHubMeetingConsentsTable)
+        .values({
+          occurrenceId: id,
+          userId: session.userId,
+          policyVersion: meeting.policyVersion,
+          response: "declined",
+        })
+        .onConflictDoUpdate({
+          target: [
+            workHubMeetingConsentsTable.occurrenceId,
+            workHubMeetingConsentsTable.userId,
+            workHubMeetingConsentsTable.policyVersion,
+          ],
+          set: { response: "declined", respondedAt: new Date() },
+        });
+    }
+    const [currentConsent] = await tx
+      .select()
+      .from(workHubMeetingConsentsTable)
+      .where(
+        and(
+          eq(workHubMeetingConsentsTable.occurrenceId, id),
+          eq(workHubMeetingConsentsTable.userId, session.userId),
+          eq(workHubMeetingConsentsTable.policyVersion, meeting.policyVersion),
+        ),
+      )
+      .limit(1);
+    const participants = await tx
+      .select()
+      .from(workHubMeetingParticipantsTable)
+      .where(eq(workHubMeetingParticipantsTable.occurrenceId, id));
+    return {
+      roomId,
+      consentAccepted: currentConsent?.response === "accepted",
+      userId: session.userId,
+      participants: participants.map(
+        ({ userId, role, muted, handRaisedAt }) => ({
+          userId,
+          role,
+          muted,
+          handRaisedAt,
+        }),
+      ),
+      transcription: false,
+      recordingAllowed: meeting.recordingAllowed,
+      policyVersion: meeting.policyVersion,
+      iceServers: audioIceServers(process.env, session.userId),
+    };
+  }),
+);
+
+router.post("/work-hub/meetings/:occurrenceId/signal", async (req, res) => {
+  const session = actor(req);
+  if (!session)
+    return sendApiError(
+      res,
+      401,
+      "auth.unauthenticated",
+      "Authentication required",
+    );
+  const [participant] = await db
+    .select()
+    .from(workHubMeetingParticipantsTable)
+    .where(
+      and(
+        eq(
+          workHubMeetingParticipantsTable.occurrenceId,
+          req.params.occurrenceId,
+        ),
+        eq(workHubMeetingParticipantsTable.userId, session.userId),
+      ),
+    );
+  if (!participant)
+    return sendApiError(res, 404, "work_hub.not_found", "Not found");
+  const payload = z
+    .object({
+      toUserId: z.number().int().positive(),
+      kind: z.enum(["offer", "answer", "ice"]),
+      payload: z.unknown(),
+    })
+    .parse(req.body);
+  if ((JSON.stringify(payload.payload) ?? "").length > 65536)
+    return sendApiError(
+      res,
+      413,
+      "work_hub.signal_too_large",
+      "Audio signal too large",
+    );
+  const [target] = await db
+    .select()
+    .from(workHubMeetingParticipantsTable)
+    .where(
+      and(
+        eq(
+          workHubMeetingParticipantsTable.occurrenceId,
+          req.params.occurrenceId,
+        ),
+        eq(workHubMeetingParticipantsTable.userId, payload.toUserId),
+      ),
+    );
+  if (!target)
+    return sendApiError(
+      res,
+      404,
+      "work_hub.not_found",
+      "Participant not found",
+    );
+  const signal = meetingSignals.append(
+    req.params.occurrenceId,
+    session.userId,
+    payload.toUserId,
+    payload.kind,
+    payload.payload,
+  );
+  return res.status(201).json({ id: signal.id });
+});
+
+router.get("/work-hub/meetings/:occurrenceId/signals", async (req, res) => {
+  const session = actor(req);
+  if (!session)
+    return sendApiError(
+      res,
+      401,
+      "auth.unauthenticated",
+      "Authentication required",
+    );
+  const [participant] = await db
+    .select()
+    .from(workHubMeetingParticipantsTable)
+    .where(
+      and(
+        eq(
+          workHubMeetingParticipantsTable.occurrenceId,
+          req.params.occurrenceId,
+        ),
+        eq(workHubMeetingParticipantsTable.userId, session.userId),
+      ),
+    );
+  if (!participant)
+    return sendApiError(res, 404, "work_hub.not_found", "Not found");
+  const since = Number(req.query.since ?? 0);
+  if (!Number.isFinite(since) || since < 0)
+    return sendApiError(
+      res,
+      400,
+      "work_hub.invalid_cursor",
+      "Invalid audio cursor",
+    );
+  return res.json(
+    meetingSignals.read(req.params.occurrenceId, session.userId, since),
+  );
+});
+
+router.get("/work-hub/meetings/:occurrenceId/audio-state", async (req, res) => {
+  const session = actor(req);
+  if (!session)
+    return sendApiError(
+      res,
+      401,
+      "auth.unauthenticated",
+      "Authentication required",
+    );
+  const [member] = await db
+    .select()
+    .from(workHubMeetingParticipantsTable)
+    .where(
+      and(
+        eq(
+          workHubMeetingParticipantsTable.occurrenceId,
+          req.params.occurrenceId,
+        ),
+        eq(workHubMeetingParticipantsTable.userId, session.userId),
+      ),
+    );
+  if (!member) return sendApiError(res, 404, "work_hub.not_found", "Not found");
+  const [occurrence] = await db
+    .select()
+    .from(workHubMeetingOccurrencesTable)
+    .where(eq(workHubMeetingOccurrencesTable.id, req.params.occurrenceId));
+  const present = await db
+    .select({ userId: workHubMeetingAttendanceTable.userId })
+    .from(workHubMeetingAttendanceTable)
+    .where(
+      and(
+        eq(workHubMeetingAttendanceTable.occurrenceId, req.params.occurrenceId),
+        isNull(workHubMeetingAttendanceTable.leftAt),
+      ),
+    );
+  return res.json({
+    recordingState: occurrence?.recordingState ?? "off",
+    presentUserIds: [...new Set(present.map((x) => x.userId))],
+  });
+});
+
+router.post("/work-hub/meetings/:occurrenceId/leave", (req, res) =>
+  meetingMutation(req, res, async (tx, session, id) => {
+    await requireMeetingMember(tx, id, session.userId);
+    await tx
+      .update(workHubMeetingAttendanceTable)
+      .set({ leftAt: new Date() })
+      .where(
+        and(
+          eq(workHubMeetingAttendanceTable.occurrenceId, id),
+          eq(workHubMeetingAttendanceTable.userId, session.userId),
+          isNull(workHubMeetingAttendanceTable.leftAt),
+        ),
+      );
+    await tx
+      .update(workHubMeetingOccurrencesTable)
+      .set({ recordingState: "off", transcriptState: "off" })
+      .where(eq(workHubMeetingOccurrencesTable.id, id));
+    return { left: true };
+  }),
+);
+
+router.post("/work-hub/meetings/:occurrenceId/recording", (req, res) =>
+  meetingMutation(req, res, async (tx, session, id) => {
+    await requireMeetingMember(tx, id, session.userId, true);
+    const { enabled } = z.object({ enabled: z.boolean() }).parse(req.body);
+    const entry = enabled
+      ? await requireCaptureConsent(tx, id, session.userId)
+      : await meetingEntry(tx, id);
+    await tx
+      .update(workHubMeetingOccurrencesTable)
+      .set({
+        recordingState: enabled ? "active" : "off",
+        transcriptState: enabled ? "active" : "off",
+      })
+      .where(eq(workHubMeetingOccurrencesTable.id, id));
+    await appendWorkHubAudit(
+      {
+        actorUserId: session.userId,
+        owner: {
+          type: entry.meeting.ownerOrgType as "vendor" | "partner",
+          id: entry.meeting.ownerOrgId,
+        },
+        action: enabled
+          ? "meeting.recording_started"
+          : "meeting.recording_stopped",
+        subjectType: "meeting_occurrence",
+        subjectId: id,
+        source: clientSource(req),
+      },
+      tx,
+    );
+    return { recordingState: enabled ? "active" : "off" };
+  }),
+);
+
+router.post("/work-hub/meetings/:occurrenceId/audio-chunks", (req, res) =>
+  meetingMutation(req, res, async (tx, session, id) => {
+    await requireMeetingMember(tx, id, session.userId, true);
+    const p = z
+      .object({
+        id: z.uuid(),
+        audioBase64: z
+          .string()
+          .min(1)
+          .max(2_000_000)
+          .regex(/^[A-Za-z0-9+/]*={0,2}$/),
+        contentType: z.enum([
+          "audio/webm",
+          "audio/webm;codecs=opus",
+          "audio/ogg",
+          "audio/ogg;codecs=opus",
+          "audio/mp4",
+        ]),
+        startsAtMs: z.number().int().min(0).max(2147483647),
+        endsAtMs: z.number().int().min(0).max(2147483647),
+      })
+      .refine(
+        (x) =>
+          x.endsAtMs >= x.startsAtMs && x.endsAtMs - x.startsAtMs <= 120000,
+      )
+      .parse(req.body);
+    const storageKey =
+      "/objects/work-hub-recordings/" + id + "/" + session.userId + "/" + p.id;
+    const bytes = Buffer.from(p.audioBase64, "base64");
+    const checksum = createHash("sha256").update(bytes).digest("hex");
+    const [prior] = await tx
+      .select()
+      .from(workHubMeetingArtifactsTable)
+      .where(eq(workHubMeetingArtifactsTable.id, p.id));
+    if (prior) {
+      if (
+        prior.storageKey !== storageKey ||
+        prior.metadata?.checksum !== checksum ||
+        prior.metadata?.startsAtMs !== p.startsAtMs ||
+        prior.metadata?.endsAtMs !== p.endsAtMs
+      )
+        throw new MeetingMutationError(
+          409,
+          "Recording identifier already used for different audio",
+        );
+      return { id: prior.id, replayed: true };
+    }
+    const entry = await requireCaptureConsent(tx, id, session.userId);
+    if (entry.occurrence.recordingState !== "active")
+      throw new MeetingMutationError(409, "Capture is inactive");
+    await getObjectStore().putObject(storageKey, p.contentType, bytes, {
+      owner: "workhub-recording:" + id,
+      visibility: "private",
+    });
+    await tx.insert(workHubMeetingArtifactsTable).values({
+      id: p.id,
+      occurrenceId: id,
+      artifactType: "audio",
+      storageKey,
+      state: "ready",
+      metadata: {
+        uploadedBy: session.userId,
+        mixedAudio: true,
+        checksum,
+        startsAtMs: p.startsAtMs,
+        endsAtMs: p.endsAtMs,
+      },
+    });
+    return { id: p.id };
+  }),
+);
+
+router.get(
+  "/work-hub/meetings/:occurrenceId/audio-chunks/:artifactId",
+  async (req, res) => {
+    const session = actor(req);
+    if (!session)
+      return sendApiError(
+        res,
+        401,
+        "auth.unauthenticated",
+        "Authentication required",
+      );
+    const [member] = await db
+      .select()
+      .from(workHubMeetingParticipantsTable)
+      .where(
+        and(
+          eq(
+            workHubMeetingParticipantsTable.occurrenceId,
+            req.params.occurrenceId,
+          ),
+          eq(workHubMeetingParticipantsTable.userId, session.userId),
+        ),
+      );
+    if (!member || member.removedAt)
+      return sendApiError(res, 404, "work_hub.not_found", "Not found");
+    const [artifact] = await db
+      .select()
+      .from(workHubMeetingArtifactsTable)
+      .where(
+        and(
+          eq(
+            workHubMeetingArtifactsTable.occurrenceId,
+            req.params.occurrenceId,
+          ),
+          eq(workHubMeetingArtifactsTable.id, req.params.artifactId),
+          eq(workHubMeetingArtifactsTable.artifactType, "audio"),
+        ),
+      );
+    if (!artifact?.storageKey)
+      return sendApiError(res, 404, "work_hub.not_found", "Not found");
+    const object = await storage.getStoredObject(artifact.storageKey);
+    res.setHeader("Cache-Control", "private, no-store");
+    return res.type(object.contentType).send(object.body);
+  },
+);
+
+router.post("/work-hub/meetings/:occurrenceId/presence", async (req, res) => {
+  const session = actor(req);
+  if (!session)
+    return sendApiError(
+      res,
+      401,
+      "auth.unauthenticated",
+      "Authentication required",
+    );
+  const payload = z
+    .object({
+      muted: z.boolean().optional(),
+      handRaised: z.boolean().optional(),
+    })
+    .parse(req.body);
+  const [updated] = await db
+    .update(workHubMeetingParticipantsTable)
+    .set({
+      ...(payload.muted === undefined ? {} : { muted: payload.muted }),
+      ...(payload.handRaised === undefined
+        ? {}
+        : { handRaisedAt: payload.handRaised ? new Date() : null }),
+    })
+    .where(
+      and(
+        eq(
+          workHubMeetingParticipantsTable.occurrenceId,
+          req.params.occurrenceId,
+        ),
+        eq(workHubMeetingParticipantsTable.userId, session.userId),
+      ),
+    )
+    .returning();
+  if (!updated)
+    return sendApiError(res, 404, "work_hub.not_found", "Not found");
+  return res.json(updated);
+});
+
+router.post("/work-hub/meetings/:occurrenceId/transcript", (req, res) =>
+  meetingMutation(req, res, async (tx, session, id) => {
+    await requireMeetingMember(tx, id, session.userId, true);
+    const p = z
+      .object({
+        id: z.string().uuid(),
+        text: z.string().trim().min(1).max(20000),
+        startsAtMs: z.number().int().min(0).max(2147483647),
+        endsAtMs: z.number().int().min(0).max(2147483647),
+      })
+      .refine((x) => x.endsAtMs >= x.startsAtMs)
+      .parse(req.body);
+    const [audio] = await tx
+      .select()
+      .from(workHubMeetingArtifactsTable)
+      .where(
+        and(
+          eq(workHubMeetingArtifactsTable.id, p.id),
+          eq(workHubMeetingArtifactsTable.occurrenceId, id),
+          eq(workHubMeetingArtifactsTable.artifactType, "audio"),
+          eq(workHubMeetingArtifactsTable.state, "ready"),
+        ),
+      );
+    if (
+      !audio ||
+      audio.metadata?.startsAtMs !== p.startsAtMs ||
+      audio.metadata?.endsAtMs !== p.endsAtMs
+    )
+      throw new MeetingMutationError(
+        409,
+        "Transcript requires its previously authorized audio chunk",
+      );
+    const [prior] = await tx
+      .select()
+      .from(workHubTranscriptSegmentsTable)
+      .where(eq(workHubTranscriptSegmentsTable.id, p.id));
+    if (prior) {
+      if (prior.text !== p.text)
+        throw new MeetingMutationError(
+          409,
+          "Transcript identifier already used",
+        );
+      return prior;
+    }
+    let [artifact] = await tx
+      .select()
+      .from(workHubMeetingArtifactsTable)
+      .where(
+        and(
+          eq(workHubMeetingArtifactsTable.occurrenceId, id),
+          eq(workHubMeetingArtifactsTable.artifactType, "transcript"),
+        ),
+      );
+    if (!artifact)
+      [artifact] = await tx
+        .insert(workHubMeetingArtifactsTable)
+        .values({
+          occurrenceId: id,
+          artifactType: "transcript",
+          state: "active",
+          metadata: { consentNotice: true, mixedAudio: true },
+        })
+        .returning();
+    const [segment] = await tx
+      .insert(workHubTranscriptSegmentsTable)
+      .values({
+        id: p.id,
+        artifactId: artifact.id,
+        speakerUserId: null,
+        text: p.text,
+        startsAtMs: p.startsAtMs,
+        endsAtMs: p.endsAtMs,
+      })
+      .returning();
+    return segment;
+  }),
+);
+
+router.post("/work-hub/meetings/:occurrenceId/chat", async (req, res) => {
+  const session = actor(req);
+  if (!session)
+    return sendApiError(
+      res,
+      401,
+      "auth.unauthenticated",
+      "Authentication required",
+    );
+  const body = z.string().trim().min(1).max(10_000).parse(req.body?.body);
+  const [participant] = await db
+    .select()
+    .from(workHubMeetingParticipantsTable)
+    .where(
+      and(
+        eq(
+          workHubMeetingParticipantsTable.occurrenceId,
+          req.params.occurrenceId,
+        ),
+        eq(workHubMeetingParticipantsTable.userId, session.userId),
+      ),
+    );
+  if (!participant)
+    return sendApiError(res, 404, "work_hub.not_found", "Not found");
+  const [message] = await db
+    .insert(workHubMeetingChatTable)
+    .values({
+      occurrenceId: req.params.occurrenceId,
+      userId: session.userId,
+      body,
+    })
+    .returning();
+  return res.status(201).json(message);
+});
+router.get("/work-hub/meetings/:occurrenceId/catch-up", async (req, res) => {
+  const session = actor(req);
+  if (!session)
+    return sendApiError(
+      res,
+      401,
+      "auth.unauthenticated",
+      "Authentication required",
+    );
+  const [participant] = await db
+    .select()
+    .from(workHubMeetingParticipantsTable)
+    .where(
+      and(
+        eq(
+          workHubMeetingParticipantsTable.occurrenceId,
+          req.params.occurrenceId,
+        ),
+        eq(workHubMeetingParticipantsTable.userId, session.userId),
+      ),
+    );
+  if (!participant)
+    return sendApiError(res, 404, "work_hub.not_found", "Not found");
+  const [occurrence] = await db
+    .select({
+      occurrence: workHubMeetingOccurrencesTable,
+      meeting: workHubMeetingsTable,
+    })
+    .from(workHubMeetingOccurrencesTable)
+    .innerJoin(
+      workHubMeetingsTable,
+      eq(workHubMeetingsTable.id, workHubMeetingOccurrencesTable.meetingId),
+    )
+    .where(eq(workHubMeetingOccurrencesTable.id, req.params.occurrenceId));
+  const artifacts = await db
+    .select()
+    .from(workHubMeetingArtifactsTable)
+    .where(
+      eq(workHubMeetingArtifactsTable.occurrenceId, req.params.occurrenceId),
+    );
+  const artifactIds = artifacts.map((item) => item.id);
+  const [attendance, chat, transcript] = await Promise.all([
+    db
+      .select()
+      .from(workHubMeetingAttendanceTable)
+      .where(
+        eq(workHubMeetingAttendanceTable.occurrenceId, req.params.occurrenceId),
+      ),
+    db
+      .select()
+      .from(workHubMeetingChatTable)
+      .where(eq(workHubMeetingChatTable.occurrenceId, req.params.occurrenceId))
+      .orderBy(asc(workHubMeetingChatTable.createdAt)),
+    artifactIds.length
+      ? db
+          .select()
+          .from(workHubTranscriptSegmentsTable)
+          .where(
+            inArray(workHubTranscriptSegmentsTable.artifactId, artifactIds),
+          )
+          .orderBy(asc(workHubTranscriptSegmentsTable.startsAtMs))
+      : Promise.resolve([]),
+  ]);
+  return res.json({
+    ...occurrence,
+    attendance,
+    chat,
+    artifacts,
+    transcript,
+    recap: null,
+    suggestedTasks: [],
+  });
 });
 
 router.post("/work-hub/files/reserve", async (req, res) => {
@@ -1948,7 +2735,7 @@ router.get("/work-hub/search", async (req, res) => {
     db
       .select()
       .from(workHubAnnouncementsTable)
-      .where(ownerFilterFor(session, workHubAnnouncementsTable))
+      .where(and(ownerFilterFor(session, workHubAnnouncementsTable), announcementReadable(session.userId)))
       .orderBy(desc(workHubAnnouncementsTable.publishedAt))
       .limit(200),
     db.select().from(workHubChannelsTable).limit(500),
@@ -2055,8 +2842,7 @@ router.get("/work-hub/search", async (req, res) => {
       .filter(
         ({ occurrence, meeting }) =>
           wants("meeting") &&
-          (session.role === "admin" ||
-            meetingParticipantIds.has(occurrence.id)) &&
+          meetingParticipantIds.has(occurrence.id) &&
           inRange(occurrence.startsAt) &&
           matches(meeting.title, meeting.agenda),
       )
@@ -2160,8 +2946,7 @@ router.get("/work-hub/search", async (req, res) => {
           (!subjectType ||
             subjectType === "transcript" ||
             subjectType === "meeting") &&
-          (session.role === "admin" ||
-            meetingParticipantIds.has(occurrenceId)) &&
+          meetingParticipantIds.has(occurrenceId) &&
           inRange(startsAt) &&
           matches(segment.text),
       )

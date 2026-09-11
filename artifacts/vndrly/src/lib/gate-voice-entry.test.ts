@@ -140,6 +140,40 @@ describe("parseGateVoiceCommand", () => {
       },
     });
   });
+
+  it("fills a natural check-in including state, purpose, and a spoken hour duration", () => {
+    expect(parseGateVoiceCommand(
+      "check in Bob Villa from Peak Energy state Oklahoma plate ABC 123 here for delivery for two hours",
+    )).toEqual({
+      intent: "check-in",
+      fill: {
+        firstName: "Bob",
+        lastName: "Villa",
+        company: "Peak Energy",
+        vehiclePlate: "ABC123",
+        plateState: "OK",
+        purpose: "delivery",
+        expectedDuration: "120",
+      },
+    });
+  });
+
+  it("stops an implicit driver name at the spoken state boundary", () => {
+    expect(
+      parseGateVoiceCommand(
+        "check in Bob Villa state Oklahoma plate ABC123 for two hours",
+      ),
+    ).toEqual({
+      intent: "check-in",
+      fill: {
+        firstName: "Bob",
+        lastName: "Villa",
+        plateState: "OK",
+        vehiclePlate: "ABC123",
+        expectedDuration: "120",
+      },
+    });
+  });
 });
 
 describe("matchGateCheckoutVisits", () => {

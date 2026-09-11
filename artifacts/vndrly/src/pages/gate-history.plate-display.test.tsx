@@ -1,7 +1,7 @@
 import * as React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 const listAllVisits = vi.hoisted(() => vi.fn());
 
@@ -15,8 +15,13 @@ vi.mock("@/lib/visits-api", () => ({ listAllVisits }));
 
 import GateHistoryPage from "./gate-history";
 
+afterEach(() => {
+  window.history.replaceState({}, "", "/");
+});
+
 describe("GateHistoryPage plate display", () => {
   it("renders the state-qualified plate in the history row", async () => {
+    window.history.replaceState({}, "", "/gate/history?siteLocationId=42");
     listAllVisits.mockResolvedValue([{
       id: 88,
       firstName: "Taylor",
@@ -54,5 +59,9 @@ describe("GateHistoryPage plate display", () => {
     );
 
     expect((await screen.findByTestId("gate-history-row")).textContent).toContain("TX • ABC123");
+    expect(listAllVisits).toHaveBeenCalledWith({
+      from: expect.any(String),
+      siteLocationId: 42,
+    });
   });
 });

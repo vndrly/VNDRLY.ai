@@ -79,6 +79,9 @@ app.use(corsMiddleware);
 app.options(/^\/api\//, corsMiddleware);
 app.use(helmet());
 app.use(cookieParser());
+// Four MiB of native meeting audio expands to roughly 5.34 MiB in base64.
+// Keep the larger JSON allowance confined to this authenticated capture route.
+app.post(/^\/api\/work-hub\/meetings\/[^/]+\/transcribe-audio\/?$/, express.json({ limit: "6mb" }));
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 

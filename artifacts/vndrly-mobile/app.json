@@ -107,6 +107,12 @@
       ],
       "expo-secure-store",
       [
+        "expo-sqlite",
+        {
+          "useSQLCipher": true
+        }
+      ],
+      [
         "expo-local-authentication",
         {
           "faceIDPermission": "VNDRLY uses Face ID to sign you in quickly and securely."

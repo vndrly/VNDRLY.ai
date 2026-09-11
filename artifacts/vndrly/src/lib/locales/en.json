@@ -1,4 +1,14 @@
 {
+  "workHubExports": {
+    "title": "Export your authorized records",
+    "description": "Create a complete private export from your current company context. Choose when access to the finished download expires.",
+    "dataset": "Export dataset", "format": "Export format", "expiry": "Export expiry",
+    "tasks": "Tasks", "calendar": "Calendar", "channels": "Channel directory",
+    "create": "Create export", "download": "Download export", "accessChanged": "Your access changed. Create a new export after access is restored.",
+    "failedHelp": "The export could not be completed. Create a new export or narrow its scope.",
+    "expiredHelp": "This export is no longer available. Create a new export if you still need it.",
+    "status": { "pending": "Queued", "running": "Preparing", "completed": "Ready", "failed": "Failed", "expired": "Expired" }
+  },
   "gateReport": {
     "title": "Gate Log Report",
     "from": "From", "to": "Through", "partner": "Partner", "site": "Site", "company": "Company", "purpose": "Purpose", "category": "Activity category",
@@ -4859,9 +4869,139 @@
     "preferred": "Preferred states",
     "all": "All states"
   },
+  "meetingWorkspace": {
+    "workspaceLabel": "Meeting workspace",
+    "opening": "Opening meeting…",
+    "meetingEnded": "Meeting ended",
+    "restartV": "Click to restart V",
+    "transcriptionUnavailable": "Transcription unavailable",
+    "waitingConsent": "Waiting for consent",
+    "joinAudioTranscribe": "Join audio to transcribe",
+    "micMuted": "Your mic is muted",
+    "vListening": "V is listening",
+    "transcriptionPausedHere": "Transcription paused here",
+    "pauseRestartV": "Pause or restart V",
+    "hostControlsV": "The host controls V",
+    "joinAudio": "Join audio",
+    "unmuteMic": "Unmute mic",
+    "muteMic": "Mute mic",
+    "leave": "Leave",
+    "privateMessageCount": "Private Message, {{count}} attendees",
+    "attendees": "Attendees",
+    "closeAttendees": "Close attendees",
+    "speaking": "{{name}} speaking",
+    "noOneSpeaking": "No one speaking",
+    "duration": "Meeting duration",
+    "transcriptLabel": "Meeting transcript",
+    "privateMessagesLabel": "Private meeting messages",
+    "activity": "Meeting activity",
+    "addFile": "Add File",
+    "takePhoto": "Take photo",
+    "send": "Send",
+    "meetingTools": "Meeting Tools"
+    ,"presentCount": "{{count}} present"
+    ,"live": "Live"
+    ,"transcribingMic": "Transcribing your microphone"
+    ,"transcriptionPaused": "Transcription paused"
+    ,"host": "Host"
+    ,"privateMessage": "Private Message"
+    ,"elapsed": "Elapsed"
+    ,"target": "Target"
+    ,"overtime": "Overtime"
+    ,"choosePrivate": "Choose someone to message privately"
+    ,"close": "Close"
+    ,"speakingState": "Speaking"
+    ,"present": "Present"
+    ,"notConnected": "Not connected"
+    ,"latestAnswer": "V's latest answer"
+    ,"privateWith": "Private with {{name}}"
+    ,"savedTranscript": "Saved in the transcript"
+    ,"attendee": "attendee"
+    ,"liveTranscript": "Live transcript"
+    ,"scrollFullMeeting": "Scroll for full meeting"
+    ,"jumpLatest": "Jump to latest"
+    ,"noMatches": "No matching entries."
+    ,"emptyPrivate": "Your private conversation starts here."
+    ,"emptyTimeline": "Spoken words, typed messages, and shared files appear here."
+    ,"sendHint": "Enter to send · Shift+Enter for a new line"
+    ,"tryAgain": "Please try again."
+    ,"sendFailed": "Message was not sent. Your draft is still here."
+    ,"fileAddFailed": "File could not be added. Please try again."
+    ,"fileAddUnable": "Unable to add file."
+    ,"fileRemoved": "File removed by host"
+    ,"consentNotice": "With everyone's consent, V can transcribe your unmuted microphone. The shared transcript is saved for authorized attendees. Private messages stay between their two participants."
+    ,"acceptTranscription": "Accept transcription"
+    ,"decline": "Decline"
+    ,"withdrawConsent": "Withdraw transcription consent"
+    ,"captureUnavailable": "Transcription is unavailable. Your microphone is not being transcribed."
+    ,"retryTranscription": "Retry transcription"
+    ,"playAudio": "Play meeting audio"
+    ,"privateLabel": "Private · {{name}}"
+    ,"typed": "Typed"
+    ,"privatePrefix": "Private · "
+    ,"anAttendee": "An attendee"
+    ,"typing": "is typing a message…"
+    ,"addingFile": "is adding a file…"
+    ,"privateTo": "Private message to {{name}}"
+    ,"backMeeting": "Back to meeting"
+    ,"messageMeeting": "Message the meeting"
+    ,"privatePlaceholder": "Private message to {{name}}…"
+    ,"messagePlaceholder": "Message the meeting…"
+    ,"summaryEmpty": "The saved meeting summary will appear here when available."
+    ,"agendaEmpty": "No agenda was added."
+    ,"itemsEmpty": "No items have been published yet."
+    ,"searchMeeting": "Search meeting"
+    ,"searchPlaceholder": "Search text, names, or filenames"
+    ,"filterSpeaker": "Filter by speaker"
+    ,"everyone": "Everyone"
+    ,"clearSearch": "Clear search"
+    ,"searchPrivacy": "Results appear in the timeline. Private results are visible only to their two participants."
+    ,"removedByHost": "Removed by host"
+    ,"left": "Left"
+    ,"neverJoined": "Never joined"
+    ,"connected": "Connected"
+    ,"removeConfirm": "Remove {{name}} from this meeting? Their contributions remain in the record."
+    ,"removeMeeting": "Remove from meeting"
+    ,"endConfirm": "End this meeting for everyone? Saved transcript entries will remain available."
+    ,"endEveryone": "End meeting for everyone"
+    ,"tools": {"summary":"Summary"}
+    ,"webAudio": {"region":"Meeting audio controls","description":"VNDRLY internal audio · invited participants only","active":"Recording and transcription are active.","off":"Recording and transcription are off.","joining":"Joining…","join":"Join audio","unmute":"Unmute","mute":"Mute","lowerHand":"Lower hand","raiseHand":"Raise hand","resume":"Resume audio","withdraw":"Withdraw recording consent","consent":"Consent to recording","stop":"Stop recording","start":"Start recording","leave":"Leave","operationFailed":"Audio operation failed. Please retry.","playbackBlocked":"Audio playback was blocked. Use Resume audio.","connectionFailed":"Audio connection failed. Rejoin the call; restrictive networks require the VNDRLY relay.","browserRequired":"Use a current browser over HTTPS for internal audio."}
+  },
+  "meetingReplay": {
+    "unavailable": "Meeting replay is unavailable.",
+    "loading": "Loading timed replay…",
+    "label": "Timed meeting replay",
+    "title": "Watch meeting replay",
+    "completeRecording": "Complete recording",
+    "hasGaps": "Replay includes clearly marked gaps",
+    "required": "Required",
+    "optional": "Optional",
+    "completed": "Completed",
+    "pause": "Pause",
+    "play": "Play",
+    "timeline": "Replay timeline",
+    "events": "Meeting replay events",
+    "attendee": "Attendee",
+    "openFile": "Open shared file",
+    "gap": "This portion of the meeting has no recorded audio.",
+    "assignCatchUp": "Assign catch-up",
+    "assignee": "Attendee",
+    "chooseAttendee": "Choose attendee",
+    "requirement": "Requirement",
+    "dueDate": "Due date",
+    "assign": "Assign",
+    "assignFailed": "Catch-up could not be assigned."
+  },
   "gatekeeper": {
     "voiceListening": "Listening — say the plate, driver name, company, purpose, and duration, then press the microphone again.",
     "voiceTranscribing": "Processing voice entry…",
+    "askvDurationCaptured": "Yes. The expected on-site time is {{duration}}.",
+    "askvDurationMissing": "The expected on-site time has not been entered yet.",
+    "askvSelectSite": "Select an authorized site before asking V about this gate entry.",
+    "askvHostSelected": "{{host}} is selected as the host.",
+    "askvHostAmbiguous": "I found more than one authorized match: {{options}}. Which host do you mean?",
+    "askvHostMissing": "I could not match that host to an authorized option for this site.",
+    "askvContextChanged": "The selected site or your access changed, so I did not apply that voice turn. Please try again.",
     "voicePermissionDenied": "Microphone access was denied. Allow it in your browser settings and try again.",
     "voiceUnavailable": "Voice entry is not available right now.",
     "voiceNotUnderstood": "I couldn't understand that. Try: Bob Villa checking out, or plate ABC123 checking out.",
@@ -4878,6 +5018,7 @@
     "noActive": "No active gate entries.",
     "newEntry": "New gate entry",
     "selectSite": "Select assigned site",
+    "selectCompany": "Select company",
     "siteNotFound": "Site not found or unavailable.",
     "host": "Host",
     "selectHost": "Select partner or vendor",
@@ -4918,6 +5059,7 @@
     "liveCheckedIn": "{{name}} just checked in",
     "liveCheckedOut": "{{name}} just checked out",
     "history": "History",
+    "fullGateHistory": "Full Gate History",
     "historyTitle": "Gate history",
     "historySubtitle": "Check-ins and check-outs from the last 30 days, newest first.",
     "historySearch": "Search by name, plate, company, or site",

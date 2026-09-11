@@ -13,10 +13,10 @@ Pod::Spec.new do |s|
   s.dependency 'ExpoModulesCore'
   # The app already installs this exact SDK through react-native-webrtc.
   s.dependency 'JitsiWebRTC', '~> 124.0.0'
-  s.frameworks = 'AVFoundation', 'Accelerate', 'CoreML'
+  s.frameworks = 'AVFoundation', 'AudioToolbox', 'Accelerate', 'CoreML'
   s.libraries = 'c++'
   s.source_files = '*.{h,mm,swift}'
-  s.public_header_files = 'AskVKeywordEngine.h', 'AskVConversationAudio.h'
+  s.public_header_files = 'AskVKeywordEngine.h', 'AskVConversationAudio.h', 'WorkHubPCMEncoder.h', 'WorkHubMeetingSession.h'
   s.vendored_frameworks = 'vendor/sherpa-onnx.xcframework', 'vendor/onnxruntime.xcframework'
   s.resource_bundles = {
     'AskVWakeModels' => ['../../../assets/askv-wake/*.{onnx,txt,json,md}', '../THIRD_PARTY_NOTICES.md']

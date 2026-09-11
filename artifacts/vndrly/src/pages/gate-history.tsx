@@ -24,9 +24,19 @@ export default function GateHistoryPage() {
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const from = useMemo(() => gateHistoryFromIso(), []);
+  const selectedSiteLocationId = useMemo(() => {
+    if (typeof window === "undefined") return null;
+    const raw = new URLSearchParams(window.location.search).get("siteLocationId");
+    if (!raw || !/^\d+$/.test(raw)) return null;
+    const parsed = Number(raw);
+    return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
+  }, []);
   const visits = useQuery({
-    queryKey: ["gate-history", from],
-    queryFn: () => listAllVisits({ from }),
+    queryKey: ["gate-history", selectedSiteLocationId, from],
+    queryFn: () => listAllVisits({
+      from,
+      ...(selectedSiteLocationId ? { siteLocationId: selectedSiteLocationId } : {}),
+    }),
     retry: false,
   });
   const rows = useMemo(
@@ -41,7 +51,9 @@ export default function GateHistoryPage() {
   const exportCompleteLog = async (format: "pdf" | "excel" | "word") => {
     setExporting(true);
     try {
-      const all = toGateLogRows(await listAllVisits());
+      const all = toGateLogRows(await listAllVisits(
+        selectedSiteLocationId ? { siteLocationId: selectedSiteLocationId } : undefined,
+      ));
       if (format === "pdf") await exportPdf(all);
       else if (format === "excel") exportExcel(all);
       else exportWord(all);

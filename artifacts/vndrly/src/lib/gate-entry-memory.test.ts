@@ -92,6 +92,40 @@ describe("evaluateGateMemory", () => {
     expect(result.suggestions.map((row) => row.label)).toEqual(["Peak Energy"]);
   });
 
+  it("shows distinct prior drivers for an exact known company before a name prefix", () => {
+    const result = evaluateGateMemory({
+      visits: [peakJordan, peakRiley, summitMaya],
+      draft: draft({ company: "Peak Energy" }),
+      activeField: "firstName",
+    });
+    expect(result.fill).toBeNull();
+    expect(result.suggestions.map((row) => row.label)).toEqual([
+      "Riley Cho",
+      "Jordan Hale",
+    ]);
+  });
+
+  it("uses a newly saved visit as the latest unambiguous plate suggestion", () => {
+    const newlySaved = visit({
+      id: 99,
+      firstName: "Alex",
+      lastName: "Nguyen",
+      vehiclePlate: "OK-4412",
+      purpose: "Updated delivery",
+      checkInTime: "2026-08-25T10:00:00Z",
+    });
+    const result = evaluateGateMemory({
+      visits: [peakJordan, newlySaved],
+      draft: draft({ vehiclePlate: "OK4412", plateState: "OK" }),
+      activeField: "vehiclePlate",
+    });
+    expect(result.fill).toMatchObject({
+      firstName: "Alex",
+      lastName: "Nguyen",
+      purpose: "Updated delivery",
+    });
+  });
+
   it("fills the most recent driver for a tag even when a different person used that plate earlier", () => {
     const older = visit({
       id: 12,

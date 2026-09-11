@@ -26,14 +26,24 @@ declare module "expo-av" {
     }
     class Sound {
       static createAsync(
-        source: number | { uri: string },
+        source: number | { uri: string; headers?: Record<string, string> },
+        initialStatus?: { shouldPlay?: boolean },
+        onPlaybackStatusUpdate?: (status: {
+          isLoaded: boolean;
+          positionMillis?: number;
+          didJustFinish?: boolean;
+          error?: string;
+        }) => void,
       ): Promise<{ sound: Sound }>;
       stopAsync(): Promise<void>;
       playAsync(): Promise<void>;
+      pauseAsync(): Promise<void>;
+      setPositionAsync(positionMillis: number): Promise<void>;
       unloadAsync(): Promise<void>;
       setOnPlaybackStatusUpdate(
         callback: (status: {
           isLoaded: boolean;
+          positionMillis?: number;
           didJustFinish?: boolean;
           error?: string;
         }) => void,

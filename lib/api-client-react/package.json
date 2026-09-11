@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./meeting-streaming": "./src/meeting-streaming.ts",
+    "./meeting-workspace": "./src/meeting-workspace.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "catalog:"

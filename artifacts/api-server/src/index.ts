@@ -76,6 +76,10 @@ import {
 import { startCommentReplyDigest } from "./lib/comment-reply-digest";
 import { markStuckDeliveryJobsAsFailed } from "./routes/reports";
 import { startGateEvidenceCleanupWorker, stopGateEvidenceCleanupWorker } from "./lib/gate-evidence-cleanup";
+import { closeAllAssemblyAIStreams } from "./work-hub/assemblyai-streaming";
+import { completeServerShutdown } from "./lib/graceful-shutdown";
+import { recoverAndStartWorkHubExportWorker, stopWorkHubExportWorker } from "./work-hub/governance-export-runtime";
+import { recoverAndStartWorkHubRetentionPlannerWorker, stopWorkHubRetentionPlannerWorker } from "./work-hub/governance-retention-planner-runtime";
 
 const rawPort = process.env["PORT"];
 
@@ -177,6 +181,12 @@ function onListening(): void {
   void markStuckDeliveryJobsAsFailed(bootTimestamp).catch((err) => {
     logger.warn({ err }, "Failed to recover stuck 1099 delivery jobs");
   });
+  void recoverAndStartWorkHubExportWorker().catch((err) => {
+    logger.warn({ err }, "Failed to start Work Hub export worker");
+  });
+  void recoverAndStartWorkHubRetentionPlannerWorker().catch((err) => {
+    logger.warn({ err }, "Failed to start Work Hub retention planner worker");
+  });
 }
 
 function onError(err: NodeJS.ErrnoException): void {
@@ -198,7 +208,7 @@ function onError(err: NodeJS.ErrnoException): void {
   process.exit(1);
 }
 
-function shutdown(signal: NodeJS.Signals): void {
+async function shutdown(signal: NodeJS.Signals): Promise<void> {
   logger.info({ signal }, "Shutting down server");
   stopStaleVisitSweeper();
   stopGateEvidenceCleanupWorker();
@@ -213,6 +223,8 @@ function shutdown(signal: NodeJS.Signals): void {
   stopSignupAssistantDigest();
   stopCertificationReminderWorker();
   stopOaConnectionReminderWorker();
+  stopWorkHubExportWorker();
+  const retentionPlannerStop = stopWorkHubRetentionPlannerWorker();
   stopApprovalRecomputeWorker();
   void stopVisitEventBus();
   void stopLocationEventBus();
@@ -220,12 +232,12 @@ function shutdown(signal: NodeJS.Signals): void {
   void stopHotlistCommentEventBus();
   void stopNotificationEventBus();
   void stopMajikEventBus();
-  server.close((err) => {
-    if (err) {
-      logger.error({ err }, "Error during server shutdown");
-      process.exit(1);
-    }
-    process.exit(0);
+  await retentionPlannerStop;
+  void completeServerShutdown({
+    closeServer: (done) => server.close(done),
+    closeStreams: closeAllAssemblyAIStreams,
+    exit: (code) => process.exit(code),
+    onError: (err) => logger.error({ err }, "Error during server shutdown"),
   });
 }
 

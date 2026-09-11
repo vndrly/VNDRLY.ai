@@ -1,4 +1,14 @@
 {
+  "workHubExports": {
+    "title": "Exportar sus registros autorizados",
+    "description": "Cree una exportación privada completa del contexto actual de su empresa. Elija cuándo vence el acceso a la descarga terminada.",
+    "dataset": "Conjunto de datos de exportación", "format": "Formato de exportación", "expiry": "Vencimiento de la exportación",
+    "tasks": "Tareas", "calendar": "Calendario", "channels": "Directorio de canales",
+    "create": "Crear exportación", "download": "Descargar exportación", "accessChanged": "Su acceso cambió. Cree una nueva exportación después de que se restablezca el acceso.",
+    "failedHelp": "No se pudo completar la exportación. Cree una nueva exportación o reduzca su alcance.",
+    "expiredHelp": "Esta exportación ya no está disponible. Cree una nueva exportación si aún la necesita.",
+    "status": { "pending": "En cola", "running": "Preparando", "completed": "Lista", "failed": "Falló", "expired": "Vencida" }
+  },
   "gateReport": {
     "title": "Informe del registro de acceso",
     "from": "Desde", "to": "Hasta", "partner": "Socio", "site": "Sitio", "company": "Empresa", "purpose": "Motivo", "category": "Tipo de actividad",
@@ -4859,9 +4869,139 @@
     "preferred": "Estados preferidos",
     "all": "Todos los estados"
   },
+  "meetingWorkspace": {
+    "workspaceLabel": "Espacio de reunión",
+    "opening": "Abriendo la reunión…",
+    "meetingEnded": "La reunión terminó",
+    "restartV": "Haz clic para reiniciar V",
+    "transcriptionUnavailable": "Transcripción no disponible",
+    "waitingConsent": "Esperando consentimiento",
+    "joinAudioTranscribe": "Únete al audio para transcribir",
+    "micMuted": "Tu micrófono está silenciado",
+    "vListening": "V está escuchando",
+    "transcriptionPausedHere": "La transcripción está pausada aquí",
+    "pauseRestartV": "Pausar o reiniciar V",
+    "hostControlsV": "El anfitrión controla V",
+    "joinAudio": "Unirse al audio",
+    "unmuteMic": "Activar micrófono",
+    "muteMic": "Silenciar micrófono",
+    "leave": "Salir",
+    "privateMessageCount": "Mensaje privado, {{count}} asistentes",
+    "attendees": "Asistentes",
+    "closeAttendees": "Cerrar asistentes",
+    "speaking": "{{name}} está hablando",
+    "noOneSpeaking": "Nadie está hablando",
+    "duration": "Duración de la reunión",
+    "transcriptLabel": "Transcripción de la reunión",
+    "privateMessagesLabel": "Mensajes privados de la reunión",
+    "activity": "Actividad de la reunión",
+    "addFile": "Agregar archivo",
+    "takePhoto": "Tomar foto",
+    "send": "Enviar",
+    "meetingTools": "Herramientas de reunión"
+    ,"presentCount": "{{count}} presentes"
+    ,"live": "En vivo"
+    ,"transcribingMic": "Transcribiendo tu micrófono"
+    ,"transcriptionPaused": "Transcripción pausada"
+    ,"host": "Anfitrión"
+    ,"privateMessage": "Mensaje privado"
+    ,"elapsed": "Transcurrido"
+    ,"target": "Objetivo"
+    ,"overtime": "Tiempo extra"
+    ,"choosePrivate": "Elija a alguien para enviarle un mensaje privado"
+    ,"close": "Cerrar"
+    ,"speakingState": "Hablando"
+    ,"present": "Presente"
+    ,"notConnected": "Sin conexión"
+    ,"latestAnswer": "Última respuesta de V"
+    ,"privateWith": "Privado con {{name}}"
+    ,"savedTranscript": "Guardado en la transcripción"
+    ,"attendee": "asistente"
+    ,"liveTranscript": "Transcripción en vivo"
+    ,"scrollFullMeeting": "Desplácese para ver toda la reunión"
+    ,"jumpLatest": "Ir a lo más reciente"
+    ,"noMatches": "No hay resultados."
+    ,"emptyPrivate": "Su conversación privada comienza aquí."
+    ,"emptyTimeline": "Las palabras habladas, los mensajes escritos y los archivos compartidos aparecerán aquí."
+    ,"sendHint": "Intro para enviar · Mayús+Intro para una línea nueva"
+    ,"tryAgain": "Inténtelo de nuevo."
+    ,"sendFailed": "No se envió el mensaje. Su borrador sigue aquí."
+    ,"fileAddFailed": "No se pudo agregar el archivo. Inténtelo de nuevo."
+    ,"fileAddUnable": "No se puede agregar el archivo."
+    ,"fileRemoved": "Archivo eliminado por el anfitrión"
+    ,"consentNotice": "Con el consentimiento de todos, V puede transcribir su micrófono sin silenciar. La transcripción compartida se guarda para los asistentes autorizados. Los mensajes privados permanecen entre sus dos participantes."
+    ,"acceptTranscription": "Aceptar transcripción"
+    ,"decline": "Rechazar"
+    ,"withdrawConsent": "Retirar consentimiento de transcripción"
+    ,"captureUnavailable": "La transcripción no está disponible. Su micrófono no se está transcribiendo."
+    ,"retryTranscription": "Reintentar transcripción"
+    ,"playAudio": "Reproducir audio de la reunión"
+    ,"privateLabel": "Privado · {{name}}"
+    ,"typed": "Escrito"
+    ,"privatePrefix": "Privado · "
+    ,"anAttendee": "Un asistente"
+    ,"typing": "está escribiendo un mensaje…"
+    ,"addingFile": "está agregando un archivo…"
+    ,"privateTo": "Mensaje privado para {{name}}"
+    ,"backMeeting": "Volver a la reunión"
+    ,"messageMeeting": "Mensaje para la reunión"
+    ,"privatePlaceholder": "Mensaje privado para {{name}}…"
+    ,"messagePlaceholder": "Mensaje para la reunión…"
+    ,"summaryEmpty": "El resumen guardado aparecerá aquí cuando esté disponible."
+    ,"agendaEmpty": "No se agregó una agenda."
+    ,"itemsEmpty": "Aún no se han publicado elementos."
+    ,"searchMeeting": "Buscar en la reunión"
+    ,"searchPlaceholder": "Buscar texto, nombres o archivos"
+    ,"filterSpeaker": "Filtrar por participante"
+    ,"everyone": "Todos"
+    ,"clearSearch": "Borrar búsqueda"
+    ,"searchPrivacy": "Los resultados aparecen en la cronología. Los resultados privados solo son visibles para sus dos participantes."
+    ,"removedByHost": "Eliminado por el anfitrión"
+    ,"left": "Salió"
+    ,"neverJoined": "Nunca se unió"
+    ,"connected": "Conectado"
+    ,"removeConfirm": "¿Eliminar a {{name}} de esta reunión? Sus contribuciones permanecerán en el registro."
+    ,"removeMeeting": "Eliminar de la reunión"
+    ,"endConfirm": "¿Finalizar esta reunión para todos? Las entradas guardadas permanecerán disponibles."
+    ,"endEveryone": "Finalizar la reunión para todos"
+    ,"tools": {"summary":"Resumen"}
+    ,"webAudio": {"region":"Controles de audio de la reunión","description":"Audio interno de VNDRLY · solo participantes invitados","active":"La grabación y la transcripción están activas.","off":"La grabación y la transcripción están desactivadas.","joining":"Conectando…","join":"Unirse al audio","unmute":"Activar micrófono","mute":"Silenciar","lowerHand":"Bajar la mano","raiseHand":"Levantar la mano","resume":"Reanudar audio","withdraw":"Retirar consentimiento de grabación","consent":"Consentir la grabación","stop":"Detener grabación","start":"Iniciar grabación","leave":"Salir","operationFailed":"Falló la operación de audio. Inténtelo de nuevo.","playbackBlocked":"La reproducción de audio fue bloqueada. Use Reanudar audio.","connectionFailed":"Falló la conexión de audio. Vuelva a unirse; las redes restrictivas requieren el relé de VNDRLY.","browserRequired":"Use un navegador actual mediante HTTPS para el audio interno."}
+  },
+  "meetingReplay": {
+    "unavailable": "La repetición de la reunión no está disponible.",
+    "loading": "Cargando repetición cronometrada…",
+    "label": "Repetición cronometrada de la reunión",
+    "title": "Ver repetición de la reunión",
+    "completeRecording": "Grabación completa",
+    "hasGaps": "La repetición incluye interrupciones claramente marcadas",
+    "required": "Obligatorio",
+    "optional": "Opcional",
+    "completed": "Completado",
+    "pause": "Pausar",
+    "play": "Reproducir",
+    "timeline": "Cronología de la repetición",
+    "events": "Eventos de la repetición de la reunión",
+    "attendee": "Asistente",
+    "openFile": "Abrir archivo compartido",
+    "gap": "Esta parte de la reunión no tiene audio grabado.",
+    "assignCatchUp": "Asignar puesta al día",
+    "assignee": "Asistente",
+    "chooseAttendee": "Elegir asistente",
+    "requirement": "Requisito",
+    "dueDate": "Fecha límite",
+    "assign": "Asignar",
+    "assignFailed": "No se pudo asignar la puesta al día."
+  },
   "gatekeeper": {
     "voiceListening": "Escuchando: diga la matrícula, el nombre del conductor, la empresa, el propósito y la duración; después, vuelva a pulsar el micrófono.",
     "voiceTranscribing": "Procesando la entrada de voz…",
+    "askvDurationCaptured": "Sí. El tiempo previsto en el sitio es {{duration}}.",
+    "askvDurationMissing": "Aún no se ha indicado el tiempo previsto en el sitio.",
+    "askvSelectSite": "Seleccione un sitio autorizado antes de preguntarle a V sobre esta entrada.",
+    "askvHostSelected": "{{host}} está seleccionado como anfitrión.",
+    "askvHostAmbiguous": "Encontré más de una coincidencia autorizada: {{options}}. ¿A qué anfitrión se refiere?",
+    "askvHostMissing": "No pude relacionar ese anfitrión con una opción autorizada para este sitio.",
+    "askvContextChanged": "El sitio seleccionado o su acceso cambió, por lo que no apliqué esa instrucción de voz. Inténtelo de nuevo.",
     "voicePermissionDenied": "Se denegó el acceso al micrófono. Permítalo en la configuración del navegador e inténtelo de nuevo.",
     "voiceUnavailable": "La entrada por voz no está disponible en este momento.",
     "voiceNotUnderstood": "No pude entender. Inténtelo con: Bob Villa saliendo, o matrícula ABC123 saliendo.",
@@ -4878,6 +5018,7 @@
     "noActive": "No hay entradas activas.",
     "newEntry": "Nueva entrada",
     "selectSite": "Seleccione el sitio asignado",
+    "selectCompany": "Seleccionar empresa",
     "siteNotFound": "Sitio no encontrado o no disponible.",
     "host": "Anfitrión",
     "selectHost": "Seleccione socio o proveedor",
@@ -4918,6 +5059,7 @@
     "liveCheckedIn": "{{name}} acaba de entrar",
     "liveCheckedOut": "{{name}} acaba de salir",
     "history": "Historial",
+    "fullGateHistory": "Historial completo de la portería",
     "historyTitle": "Historial de portería",
     "historySubtitle": "Entradas y salidas de los últimos 30 días, las más recientes primero.",
     "historySearch": "Buscar por nombre, placa, empresa o sitio",

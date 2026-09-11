@@ -81,3 +81,12 @@ The page intentionally separates configured credentials from production readines
 - SendGrid is not fully ready until sandbox mode is off and `SENDGRID_DOMAIN_AUTHENTICATED=true`.
 - Twilio is not fully ready until credentials and sender are present and `TWILIO_SENDER_REGISTRATION_STATUS=approved`.
 - Expo push is reported as endpoint-ready; true delivery still depends on valid stored device push tokens.
+
+## Work Hub representative release load
+
+Measured locally against the exact release source on September 11, 2026:
+
+- Recipient-isolated event delivery completed 5,000 notifications across 500 subscribed recipients with exact sequence and no cross-recipient delivery.
+- The export builder produced a deterministic, checksummed 10,000-row CSV artifact within the five-second release budget.
+- The AssemblyAI trial key completed five concurrent public-sample streams with exact expected words. A sixth concurrent stream is now rejected locally with a retryable busy response instead of consuming an upstream attempt. `ASSEMBLYAI_MAX_CONCURRENT_STREAMS` may be raised deliberately, up to the server safety ceiling, after a permanent provider account is benchmarked.
+- Focused representative-load and provider-admission verification passed 2 files / 18 tests. These checks establish bounded local service behavior; they do not replace production monitoring or physical-device acceptance.

@@ -35,6 +35,19 @@ export type StoredUser = {
 };
 
 const userListeners = new Set<(user: StoredUser | null) => void>();
+let authGeneration = 0;
+let cachedUser: StoredUser | null = null;
+let cachedUserLoaded = false;
+
+export type AuthScope = Readonly<{ generation: number }>;
+
+export function captureAuthScope(): AuthScope {
+  return Object.freeze({ generation: authGeneration });
+}
+
+export function isAuthScopeCurrent(scope: AuthScope): boolean {
+  return scope.generation === authGeneration;
+}
 
 export function subscribeUser(listener: (user: StoredUser | null) => void): () => void {
   userListeners.add(listener);
@@ -44,6 +57,10 @@ export function subscribeUser(listener: (user: StoredUser | null) => void): () =
 }
 
 function notifyUser(user: StoredUser | null) {
+  cachedUser = user;
+  cachedUserLoaded = true;
+  cachedRole = user?.role ?? null;
+  authGeneration += 1;
   userListeners.forEach((l) => l(user));
 }
 
@@ -52,6 +69,8 @@ const memoryStore: Record<string, string> = {};
 let cachedToken: string | null = null;
 let cachedTokenLoaded = false;
 let cachedRole: string | null = null;
+let tokenStorageQueue = Promise.resolve();
+let userStorageQueue = Promise.resolve();
 const tokenListeners = new Set<(token: string | null) => void>();
 
 export function getCachedRole(): string | null {
@@ -73,10 +92,23 @@ export function subscribeToken(listener: (token: string | null) => void): () => 
   };
 }
 
-function notifyToken(token: string | null) {
+function notifyToken(token: string | null, invalidateScopes = true) {
   cachedToken = token;
   cachedTokenLoaded = true;
+  if (invalidateScopes) authGeneration += 1;
   tokenListeners.forEach((l) => l(token));
+}
+
+function queueTokenStorage(work: () => Promise<void>): Promise<void> {
+  const pending = tokenStorageQueue.then(work);
+  tokenStorageQueue = pending.catch(() => undefined);
+  return pending;
+}
+
+function queueUserStorage(work: () => Promise<void>): Promise<void> {
+  const pending = userStorageQueue.then(work);
+  userStorageQueue = pending.catch(() => undefined);
+  return pending;
 }
 
 function webStorage(): Storage | null {
@@ -118,34 +150,60 @@ async function removeItem(key: string): Promise<void> {
 
 export async function getToken(): Promise<string | null> {
   if (cachedTokenLoaded) return cachedToken;
+  const generation = authGeneration;
   const t = await getItem(TOKEN_KEY);
-  notifyToken(t);
+  if (generation !== authGeneration) return cachedToken;
+  // Hydration supplies the credential to the request already waiting for it;
+  // it is not an auth mutation and must not obsolete that request's scope.
+  notifyToken(t, false);
   return t;
 }
 
-export async function setToken(token: string | null) {
-  if (token) await setItem(TOKEN_KEY, token);
-  else await removeItem(TOKEN_KEY);
+export function setToken(token: string | null): Promise<void> {
   notifyToken(token);
+  return queueTokenStorage(() => token
+    ? setItem(TOKEN_KEY, token)
+    : removeItem(TOKEN_KEY));
 }
 
 export async function getUser(): Promise<StoredUser | null> {
+  if (cachedUserLoaded) return cachedUser;
+  const generation = authGeneration;
   const raw = await getItem(USER_KEY);
-  if (!raw) return null;
+  if (generation !== authGeneration) return cachedUser;
+  cachedUserLoaded = true;
+  if (!raw) {
+    cachedUser = null;
+    cachedRole = null;
+    return null;
+  }
   try {
     const u = JSON.parse(raw) as StoredUser;
+    cachedUser = u;
     cachedRole = u?.role ?? null;
     return u;
   } catch {
+    cachedUser = null;
+    cachedRole = null;
     return null;
   }
 }
 
-export async function setUser(user: StoredUser | null) {
-  if (user) await setItem(USER_KEY, JSON.stringify(user));
-  else await removeItem(USER_KEY);
-  cachedRole = user?.role ?? null;
+export function setUser(user: StoredUser | null): Promise<void> {
   notifyUser(user);
+  return queueUserStorage(() => user
+    ? setItem(USER_KEY, JSON.stringify(user))
+    : removeItem(USER_KEY));
+}
+
+export async function clearAuthIfCurrent(scope: AuthScope): Promise<boolean> {
+  if (!isAuthScopeCurrent(scope)) return false;
+  const tokenWrite = setToken(null);
+  const userWrite = setUser(null);
+  // The in-memory clear is authoritative and synchronous. Persistence remains
+  // best effort so a storage fault cannot replace the server's original 401.
+  await Promise.allSettled([tokenWrite, userWrite]);
+  return true;
 }
 
 export async function clearAuth() {

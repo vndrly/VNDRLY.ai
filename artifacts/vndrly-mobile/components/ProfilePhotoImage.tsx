@@ -10,6 +10,8 @@ type Props = {
   photoUrl?: string | null;
   style?: StyleProp<ImageStyle>;
   accessibilityLabel?: string;
+  testID?: string;
+  onError?: () => void;
 };
 
 /**
@@ -21,33 +23,44 @@ export default function ProfilePhotoImage({
   photoUrl,
   style,
   accessibilityLabel,
+  testID,
+  onError,
 }: Props) {
   const uri = resolveProfilePhotoUrl(profilePhotoPath, photoUrl);
-  const [headers, setHeaders] = useState<Record<string, string> | undefined>();
+  const protectedPhoto = Boolean(uri && isVndrlyStoragePhotoUrl(uri));
+  const [authorization, setAuthorization] = useState<{
+    uri: string;
+    headers: Record<string, string> | undefined;
+  } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    if (!uri || !isVndrlyStoragePhotoUrl(uri)) {
-      setHeaders(undefined);
-      return;
-    }
+    if (!uri || !protectedPhoto) return;
     void getToken().then((token) => {
-      if (cancelled) return;
-      setHeaders(token ? { Authorization: `Bearer ${token}` } : undefined);
-    });
+      const bearer = token?.trim();
+      if (cancelled || !bearer) return;
+      setAuthorization({
+        uri,
+        headers: { Authorization: `Bearer ${bearer}` },
+      });
+    }).catch(() => undefined);
     return () => {
       cancelled = true;
     };
-  }, [uri]);
+  }, [protectedPhoto, uri]);
 
   if (!uri) return null;
+  if (protectedPhoto && (authorization?.uri !== uri || !authorization.headers?.Authorization)) return null;
+  const headers = protectedPhoto ? authorization?.headers : undefined;
 
   return (
     <Image
       key={uri}
-      source={{ uri, headers }}
+      source={{ uri, ...(headers ? { headers } : {}) }}
       style={style}
       accessibilityLabel={accessibilityLabel}
+      testID={testID}
+      onError={onError}
       cachePolicy="none"
     />
   );

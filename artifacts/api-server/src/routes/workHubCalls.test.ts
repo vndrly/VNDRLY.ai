@@ -1,0 +1,64 @@
+import { randomUUID } from "node:crypto";
+import express from "express";
+import cookieParser from "cookie-parser";
+import request from "supertest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
+import { and, eq } from "drizzle-orm";
+import { db, usersTable, vendorsTable, userOrgMembershipsTable, workHubMeetingParticipantsTable, workHubMeetingOccurrencesTable, workHubCallsTable } from "@workspace/db";
+import calls from "./workHubCalls";
+import { buildTestCookie } from "../test-utils/session";
+vi.mock("../work-hub/feature-access", () => ({ isWorkHubEnabled: async () => true }));
+vi.mock("./notifications", () => ({ notifyUsers: vi.fn(async () => undefined) }));
+const objects = vi.hoisted(() => new Map<string, { body: Buffer; contentType: string }>());
+vi.mock("../lib/objectStore", () => ({ getObjectStore: () => ({ putObject: async (key: string, contentType: string, body: Buffer) => { objects.set(key, { contentType, body }); }, getObject: async (key: string) => objects.get(key) ?? null }) }));
+const app = express().use(express.json()).use(cookieParser()).use(calls);
+describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")("internal calls privacy and durable retries", () => {
+  let callerId: number, recipientId: number, foreignId: number, callerCookie: string, recipientCookie: string, foreignCookie: string;
+  beforeAll(async () => {
+    const suffix = randomUUID();
+    const companies = await db.insert(vendorsTable).values(["A", "B"].map(n => ({ name: `Calls ${n} ${suffix}`, contactName: "Test", contactEmail: `${n}.${suffix}@example.invalid` }))).returning();
+    const people = await db.insert(usersTable).values(["Caller", "Recipient", "Foreign"].map(n => ({ username: `${n}.${suffix}@example.invalid`, displayName: n, passwordHash: "unused-test-hash", role: "vendor" }))).returning();
+    [callerId, recipientId, foreignId] = people.map(p => p.id) as [number, number, number];
+    await db.insert(userOrgMembershipsTable).values([{ userId: callerId, orgType: "vendor", vendorId: companies[0]!.id, role: "member" }, { userId: recipientId, orgType: "vendor", vendorId: companies[0]!.id, role: "member" }, { userId: foreignId, orgType: "vendor", vendorId: companies[1]!.id, role: "admin" }]);
+    callerCookie = buildTestCookie({ userId: callerId, role: "vendor", vendorId: companies[0]!.id });
+    recipientCookie = buildTestCookie({ userId: recipientId, role: "vendor", vendorId: companies[0]!.id });
+    foreignCookie = buildTestCookie({ userId: foreignId, role: "admin", vendorId: companies[1]!.id });
+  });
+  it("rejects cross-company calls without accepted direct-chat invitation", async () => {
+    expect((await request(app).post("/work-hub/calls").set("Cookie", callerCookie).send({ recipientUserId: foreignId, operationId: randomUUID() })).status).toBe(403);
+  });
+  it("creates one occurrence on retry and grants audio participants only after recipient acceptance", async () => {
+    const body = { recipientUserId: recipientId, operationId: randomUUID() };
+    const first = await request(app).post("/work-hub/calls").set("Cookie", callerCookie).send(body);
+    expect(first.status).toBe(201);
+    const retry = await request(app).post("/work-hub/calls").set("Cookie", callerCookie).send(body);
+    expect(retry.body.id).toBe(first.body.id); expect(retry.status).toBe(200);
+    const participantsBefore = await db.select().from(workHubMeetingParticipantsTable).where(eq(workHubMeetingParticipantsTable.occurrenceId, first.body.occurrenceId));
+    expect(participantsBefore).toHaveLength(0);
+    expect((await request(app).post(`/work-hub/calls/${first.body.id}/respond`).set("Cookie", callerCookie).send({ action: "accept" })).status).toBe(403);
+    expect((await request(app).post(`/work-hub/calls/${first.body.id}/respond`).set("Cookie", foreignCookie).send({ action: "accept" })).status).toBe(404);
+    expect((await request(app).post(`/work-hub/calls/${first.body.id}/respond`).set("Cookie", recipientCookie).send({ action: "accept" })).status).toBe(200);
+    const participants = await db.select().from(workHubMeetingParticipantsTable).where(eq(workHubMeetingParticipantsTable.occurrenceId, first.body.occurrenceId));
+    expect(participants.map(p => p.userId).sort()).toEqual([callerId, recipientId].sort());
+    expect((await request(app).post(`/work-hub/calls/${first.body.id}/respond`).set("Cookie", callerCookie).send({ action: "end" })).status).toBe(200);
+    const [occurrence] = await db.select().from(workHubMeetingOccurrencesTable).where(eq(workHubMeetingOccurrencesTable.id, first.body.occurrenceId));
+    expect(occurrence!.status).toBe("ended");
+  });
+  it("stores voicemail once and denies caller and administrator playback/deletion", async () => {
+    await request(app).put("/work-hub/calls/settings").set("Cookie", recipientCookie).send({ available: false, speedDial: [] });
+    const call = await request(app).post("/work-hub/calls").set("Cookie", callerCookie).send({ recipientUserId: recipientId, operationId: randomUUID() });
+    expect(call.body.status).toBe("unavailable");
+    const bytes = Buffer.alloc(128); Buffer.from([0x1a, 0x45, 0xdf, 0xa3]).copy(bytes); const operation = randomUUID();
+    const upload = () => request(app).post(`/work-hub/calls/${call.body.id}/voicemail`).set("Cookie", callerCookie).set("Content-Type", "audio/webm").set("x-operation-id", operation).set("x-duration-ms", "3000").send(bytes);
+    expect((await upload()).status).toBe(201); expect((await upload()).status).toBe(200);
+    expect((await request(app).get(`/work-hub/voicemail/${operation}/audio`).set("Cookie", callerCookie)).status).toBe(404);
+    expect((await request(app).get(`/work-hub/voicemail/${operation}/audio`).set("Cookie", foreignCookie)).status).toBe(404);
+    expect((await request(app).delete(`/work-hub/voicemail/${operation}`).set("Cookie", foreignCookie)).status).toBe(404);
+    expect((await request(app).get(`/work-hub/voicemail/${operation}/audio`).set("Cookie", recipientCookie)).status).toBe(200);
+    expect((await request(app).get("/work-hub/voicemail").set("Cookie", recipientCookie)).body[0].readAt).toBeTruthy();
+    expect((await request(app).delete(`/work-hub/voicemail/${operation}`).set("Cookie", recipientCookie)).status).toBe(200);
+    expect((await request(app).get(`/work-hub/voicemail/${operation}/audio`).set("Cookie", recipientCookie)).status).toBe(404);
+    const [persisted] = await db.select().from(workHubCallsTable).where(and(eq(workHubCallsTable.id, call.body.id), eq(workHubCallsTable.callerUserId, callerId)));
+    expect(persisted!.status).toBe("unavailable");
+  });
+});

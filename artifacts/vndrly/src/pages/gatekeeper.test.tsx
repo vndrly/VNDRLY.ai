@@ -19,6 +19,7 @@ const api = vi.hoisted(() => ({
 const liveMonitor = vi.hoisted(() => ({
   flash: null as Record<string, unknown> | null,
 }));
+const locale = vi.hoisted(() => ({ spanish: false }));
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -34,6 +35,8 @@ vi.mock("react-i18next", () => ({
         "plateStatePicker.all": "All states",
         "gatekeeper.plateStateSuggested": "Suggested state: {{state}}",
         "gatekeeper.plateStateCorrected": "State corrected: {{state}}",
+        "gatekeeper.selectCompany": locale.spanish ? "Seleccionar empresa" : "Select company",
+        "gatekeeper.selectSite": locale.spanish ? "Seleccione el sitio asignado" : "Select assigned site",
       };
       const template = strings[key] ?? key;
       return template.replace(/\{\{(\w+)\}\}/g, (_, name) =>
@@ -91,6 +94,16 @@ vi.stubGlobal(
     disconnect() {}
   },
 );
+vi.stubGlobal("matchMedia", (query: string) => ({
+  matches: query.includes("max-width") && window.innerWidth < 768,
+  media: query,
+  onchange: null,
+  addEventListener: vi.fn(),
+  removeEventListener: vi.fn(),
+  addListener: vi.fn(),
+  removeListener: vi.fn(),
+  dispatchEvent: vi.fn(() => true),
+}));
 
 import GatekeeperPage from "./gatekeeper";
 
@@ -174,6 +187,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   window.localStorage.setItem(ASKV_NATURAL_VOICE_FLAG, "0");
   liveMonitor.flash = null;
+  locale.spanish = false;
   api.list.mockResolvedValue([]);
   api.listAllVisits.mockResolvedValue([]);
   api.listAssignedGateSites.mockResolvedValue({
@@ -218,6 +232,23 @@ beforeEach(() => {
 });
 
 describe("GatekeeperPage plate state", () => {
+  it("gives company and current-location selectors localized Spanish names", async () => {
+    locale.spanish = true;
+    renderPage();
+    expect(await screen.findByRole("combobox", { name: "Seleccionar empresa" })).toBeTruthy();
+    expect(screen.getByRole("combobox", { name: "Seleccione el sitio asignado" })).toBeTruthy();
+  });
+  it("associates Gate entry labels and required state with every field", async () => {
+    renderPage();
+    const plate = await screen.findByRole("combobox", { name: /gatekeeper\.vehiclePlate/ });
+    expect(plate.getAttribute("aria-required")).toBe("true");
+    expect(screen.getByRole("combobox", { name: /gatekeeper\.firstName/ }).getAttribute("aria-required")).toBe("true");
+    expect(screen.getByRole("combobox", { name: /gatekeeper\.lastName/ }).getAttribute("aria-required")).toBe("true");
+    expect(screen.getByRole("combobox", { name: "gatekeeper.company" })).toBeTruthy();
+    expect((await screen.findByRole("combobox", { name: /gatekeeper\.host/ })).getAttribute("aria-required")).toBe("true");
+    expect(screen.getByRole("textbox", { name: "gatekeeper.purpose" })).toBeTruthy();
+    expect(screen.getByRole("textbox", { name: "gatekeeper.notes" })).toBeTruthy();
+  });
   it("renders state-qualified plates from both the live event and active gate rows", async () => {
     api.list.mockResolvedValue([
       recentVisit({
@@ -661,5 +692,233 @@ describe("GatekeeperPage plate state", () => {
       ).toBe("Driver");
       expect(screen.getByTestId("gate-last-driver-hint")).toBeTruthy();
     });
+  });
+});
+
+describe("GatekeeperPage compact branded workspace", () => {
+  it("keeps the selected site details in one compact branded location card", async () => {
+    renderPage();
+
+    const location = await screen.findByTestId("gate-selected-location");
+    expect(location.getAttribute("data-brand-outline")).toBe("true");
+    expect(await within(location).findByText("123 Main St")).toBeTruthy();
+    expect(screen.getAllByText("123 Main St")).toHaveLength(1);
+    expect(screen.queryByTestId("gate-selected-location-duplicate")).toBeNull();
+  });
+
+  it("uses successful plate and state OCR to fill the newest exact authorized history match", async () => {
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url.includes("request-url")) return {
+        ok: true,
+        json: async () => ({ uploadURL: "/upload", objectPath: "/objects/plate.jpg" }),
+      };
+      if (url.includes("finalize") || init?.method === "PUT") return { ok: true };
+      return { ok: true };
+    }));
+    api.listAllVisits.mockResolvedValue([
+      recentVisit({ checkInTime: "2026-08-20T10:00:00Z" }),
+      recentVisit({
+        id: 2,
+        firstName: "Latest",
+        lastName: "Driver",
+        company: "Current Hauling",
+        purpose: "Fresh delivery",
+        expectedDurationMinutes: 120,
+        checkInTime: "2026-08-25T10:00:00Z",
+      }),
+    ]);
+    api.readPlate.mockResolvedValue({
+      plate: "44-12",
+      state: "OK",
+      plateConfidence: 0.98,
+      stateConfidence: 0.95,
+    });
+    const { container } = renderPage();
+    await screen.findByTestId("input-gate-plate");
+    const plateInput = container.querySelector<HTMLInputElement>('input[type="file"][capture="environment"]')!;
+    fireEvent.change(plateInput, {
+      target: { files: [new File(["plate"], "plate.jpg", { type: "image/jpeg" })] },
+    });
+
+    await waitFor(() => {
+      expect((screen.getByTestId("input-gate-first-name") as HTMLInputElement).value).toBe("Latest");
+      expect((screen.getByTestId("input-gate-last-name") as HTMLInputElement).value).toBe("Driver");
+      expect((screen.getByTestId("input-gate-company") as HTMLInputElement).value).toBe("Current Hauling");
+      expect((screen.getByTestId("input-gate-purpose") as HTMLTextAreaElement).value).toBe("Fresh delivery");
+      expect((screen.getByTestId("input-gate-duration") as HTMLInputElement).value).toBe("120");
+    });
+
+    fireEvent.change(screen.getByTestId("input-gate-company"), { target: { value: "Manual Company" } });
+    await waitFor(() => expect((screen.getByTestId("input-gate-company") as HTMLInputElement).value).toBe("Manual Company"));
+    expect(api.listAllVisits).toHaveBeenCalledWith();
+  });
+
+  it("does not guess identity from low-confidence or state-free OCR", async () => {
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url.includes("request-url")) return {
+        ok: true,
+        json: async () => ({ uploadURL: "/upload", objectPath: "/objects/plate.jpg" }),
+      };
+      if (url.includes("finalize") || init?.method === "PUT") return { ok: true };
+      return { ok: true };
+    }));
+    api.listAllVisits.mockResolvedValue([recentVisit()]);
+    api.readPlate.mockResolvedValue({
+      plate: "4412",
+      state: "OK",
+      plateConfidence: 0.98,
+      stateConfidence: 0.79,
+    });
+    const { container } = renderPage();
+    await screen.findByTestId("input-gate-plate");
+    const plateInput = container.querySelector<HTMLInputElement>('input[type="file"][capture="environment"]')!;
+    fireEvent.change(plateInput, {
+      target: { files: [new File(["plate"], "plate.jpg", { type: "image/jpeg" })] },
+    });
+
+    await waitFor(() => expect((screen.getByTestId("input-gate-plate") as HTMLInputElement).value).toBe("4412"));
+    expect((screen.getByTestId("input-gate-first-name") as HTMLInputElement).value).toBe("");
+    expect((screen.getByTestId("input-gate-company") as HTMLInputElement).value).toBe("");
+    expect(screen.getByRole("button", { name: "Select plate state" })).toBeTruthy();
+  });
+
+  it("does not restore identity when plate confidence is low even if state confidence is high", async () => {
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url.includes("request-url")) return {
+        ok: true,
+        json: async () => ({ uploadURL: "/upload", objectPath: "/objects/plate.jpg" }),
+      };
+      if (url.includes("finalize") || init?.method === "PUT") return { ok: true };
+      return { ok: true };
+    }));
+    api.listAllVisits.mockResolvedValue([recentVisit()]);
+    api.readPlate.mockResolvedValue({
+      plate: "4412",
+      state: "OK",
+      plateConfidence: 0.79,
+      stateConfidence: 0.95,
+    });
+    const { container } = renderPage();
+    await screen.findByTestId("input-gate-plate");
+    const plateInput = container.querySelector<HTMLInputElement>('input[type="file"][capture="environment"]')!;
+    fireEvent.change(plateInput, {
+      target: { files: [new File(["plate"], "plate.jpg", { type: "image/jpeg" })] },
+    });
+
+    await waitFor(() => expect((screen.getByTestId("input-gate-plate") as HTMLInputElement).value).toBe("4412"));
+    expect((screen.getByTestId("input-gate-first-name") as HTMLInputElement).value).toBe("");
+    expect((screen.getByTestId("input-gate-company") as HTMLInputElement).value).toBe("");
+  });
+
+  it("constrains on-site activity to independently scrollable entry and note regions", async () => {
+    renderPage();
+
+    const card = await screen.findByTestId("gate-on-site-card");
+    expect(card.getAttribute("data-brand-outline")).toBe("true");
+    expect(card.style.height).toBe("560px");
+
+    const entries = within(card).getByTestId("gate-on-site-entries");
+    const notes = within(card).getByTestId("gate-checkout-notes-region");
+    expect(entries.className).toContain("basis-3/4");
+    expect(entries.className).toContain("overflow-y-auto");
+    expect(notes.className).toContain("basis-1/4");
+    expect(notes.className).toContain("overflow-y-auto");
+  });
+
+  it("uses brand-aware pills for Gate actions and keeps history anchored in the on-site card", async () => {
+    renderPage();
+    const card = await screen.findByTestId("gate-on-site-card");
+
+    const history = await within(card).findByTestId("button-gate-full-history");
+    expect(history.getAttribute("href")).toBe("/gate/history?siteLocationId=42");
+    expect(history.querySelector("img")).toBeTruthy();
+
+    const actionIds = [
+      "button-gate-refresh",
+      "button-gate-read-plate",
+      "button-gate-vehicle-photo",
+      "button-gate-duration-30m",
+      "button-gate-duration-2h",
+      "button-gate-duration-allDay",
+      "button-gate-duration-overnight",
+    ];
+    for (const id of actionIds) {
+      expect(screen.getByTestId(id).querySelector("img")).toBeTruthy();
+    }
+    expect(screen.getByTestId("gate-new-entry-card").getAttribute("data-brand-outline")).toBe("true");
+  });
+
+  it("does not offer selected-gate history until the selected site context resolves", async () => {
+    let resolveSite!: (site: typeof SITE_CONTEXT) => void;
+    api.getSiteContext.mockReturnValue(new Promise((resolve) => {
+      resolveSite = resolve;
+    }));
+
+    renderPage();
+    const card = await screen.findByTestId("gate-on-site-card");
+    expect(within(card).queryByTestId("button-gate-full-history")).toBeNull();
+
+    resolveSite(SITE_CONTEXT);
+    expect(
+      (await within(card).findByTestId("button-gate-full-history")).getAttribute("href"),
+    ).toBe("/gate/history?siteLocationId=42");
+  });
+
+  it("uses a compact viewport-relative on-site height on narrow screens", async () => {
+    const originalWidth = window.innerWidth;
+    Object.defineProperty(window, "innerWidth", {
+      configurable: true,
+      value: 390,
+    });
+
+    const view = renderPage();
+    const card = await screen.findByTestId("gate-on-site-card");
+    await waitFor(() => expect(card.style.height).toBe("68vh"));
+    expect(card.style.maxHeight).toBe("560px");
+
+    view.unmount();
+    Object.defineProperty(window, "innerWidth", {
+      configurable: true,
+      value: originalWidth,
+    });
+  });
+
+  it("uses a viewport-relative on-site height on a short wide landscape viewport", async () => {
+    const originalWidth = window.innerWidth;
+    const originalHeight = window.innerHeight;
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: 1024 });
+    Object.defineProperty(window, "innerHeight", { configurable: true, value: 520 });
+
+    const view = renderPage();
+    const card = await screen.findByTestId("gate-on-site-card");
+    await waitFor(() => expect(card.style.height).toBe("68vh"));
+    expect(card.style.maxHeight).toBe("560px");
+
+    view.unmount();
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: originalWidth });
+    Object.defineProperty(window, "innerHeight", { configurable: true, value: originalHeight });
+  });
+
+  it("names the independently scrollable Gate regions and associates their form labels", async () => {
+    renderPage();
+    const card = await screen.findByTestId("gate-on-site-card");
+    expect(within(card).getByRole("region", { name: "gatekeeper.onSiteNow" })).toBeTruthy();
+    expect(within(card).getByRole("region", { name: "gatekeeper.checkOutNotes" })).toBeTruthy();
+    expect(screen.getByRole("textbox", { name: "gatekeeper.checkOutNotes" })).toBe(screen.getByTestId("input-gate-checkout-notes"));
+    expect(screen.getByRole("textbox", { name: "gatekeeper.expectedMinutes" })).toBe(screen.getByTestId("input-gate-duration"));
+  });
+
+  it("exposes selected duration and captured-photo states on the branded Gate controls", async () => {
+    renderPage();
+    await screen.findByTestId("button-gate-duration-30m");
+    expect(screen.getByTestId("button-gate-duration-2h").getAttribute("aria-pressed")).toBe("false");
+    fireEvent.click(screen.getByTestId("button-gate-duration-2h"));
+    expect(screen.getByTestId("button-gate-duration-2h").getAttribute("aria-pressed")).toBe("true");
+    expect(screen.getByTestId("button-gate-duration-30m").getAttribute("aria-pressed")).toBe("false");
+    expect(screen.getByTestId("button-gate-read-plate").getAttribute("aria-pressed")).toBe("false");
+    expect(screen.getByTestId("button-gate-vehicle-photo").getAttribute("aria-pressed")).toBe("false");
   });
 });
