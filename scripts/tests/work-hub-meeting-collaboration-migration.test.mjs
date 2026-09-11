@@ -3,6 +3,15 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 const migration = await readFile(new URL("../../lib/db/drizzle/chunk_402_work_hub_meeting_collaboration.sql", import.meta.url), "utf8");
+const runner = await readFile(new URL("../../artifacts/api-server/scripts/apply-work-hub-meeting-collaboration-migration.mjs", import.meta.url), "utf8");
+
+test("meeting collaboration runner resolves the migration inside the repository", () => {
+  assert.match(
+    runner,
+    /new URL\("\.\.\/\.\.\/\.\.\/lib\/db\/drizzle\/chunk_402_work_hub_meeting_collaboration\.sql"/,
+  );
+  assert.doesNotMatch(runner, /\.\.\/\.\.\/\.\.\/\.\.\/lib\/db\/drizzle/);
+});
 
 test("meeting collaboration migration is additive and guarded", () => {
   const statements = migration.split(";").map((value) => value.trim()).filter(Boolean);
