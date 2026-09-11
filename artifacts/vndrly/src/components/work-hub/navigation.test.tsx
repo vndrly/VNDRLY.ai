@@ -36,7 +36,10 @@ describe("Work Hub navigation", () => {
     expect(icon?.getAttribute("class")).toContain("h-4");
     expect(icon?.getAttribute("class")).toContain("w-4");
 
-    screen.getByRole("button", { name: "Customize navigation" }).click();
+    const more = screen.getByRole("button", { name: "More" });
+    expect(more.getAttribute("aria-expanded")).toBe("false");
+    more.click();
+    expect(await screen.findByRole("button", { name: "Done" })).toBeTruthy();
     const controls = await screen.findAllByRole("button", { name: /^(Pin|Unpin|Move)/ });
     await waitFor(() => expect(controls.length).toBeGreaterThan(2));
     for (const control of controls) {

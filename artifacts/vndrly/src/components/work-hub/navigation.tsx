@@ -10,7 +10,6 @@ import {
   orderWorkHubItems,
   workHubIcons,
 } from "@/lib/work-hub-nav";
-import BrandPillButton from "@/components/brand-pill-button";
 import SidebarButton from "@/components/sidebar-button";
 export type HubPreferences = {
   pinned: string[];
@@ -129,32 +128,17 @@ export function WorkHubNavigation({ onNavigate }: { onNavigate?: () => void }) {
         ? items
         : items.filter((item) => preferences.pinned.includes(item.key))
       ).map(render)}
-      {!customize && (
-        <details
-          open={
-            items.some(
-              (item) =>
-                !preferences.pinned.includes(item.key) &&
-                location === item.href,
-            ) || undefined
-          }
-        >
-          <summary className="cursor-pointer list-none">
-            <SidebarButton isActive={false}>
-              <MoreHorizontal className="h-4 w-4" />
-              More
-            </SidebarButton>
-          </summary>
-          <div className="space-y-0">
-            {items
-              .filter((item) => !preferences.pinned.includes(item.key))
-              .map(render)}
-          </div>
-        </details>
-      )}
-      <BrandPillButton tone="blue" onClick={() => setCustomize(!customize)}>
-        {customize ? "Done" : "Customize navigation"}
-      </BrandPillButton>
+      <button
+        type="button"
+        className="block w-full text-left"
+        onClick={() => setCustomize(!customize)}
+        aria-expanded={customize}
+      >
+        <SidebarButton isActive={false}>
+          <MoreHorizontal className="h-4 w-4" />
+          {customize ? "Done" : "More"}
+        </SidebarButton>
+      </button>
       {save.error && (
         <p role="alert" className="text-xs text-red-500">
           Navigation could not be saved. Try again.
