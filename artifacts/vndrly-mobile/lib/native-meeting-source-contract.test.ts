@@ -75,6 +75,13 @@ describe("native meeting source safety contracts", () => {
     expect(encoder).not.toContain("chunk.count / 16");
   });
 
+  it("converts Core Audio host ticks with the iOS mach timebase API", () => {
+    expect(session).toContain("#import <mach/mach_time.h>");
+    expect(session).toContain("mach_timebase_info");
+    expect(session).toContain("HostTimeToNanos(timestamp->mHostTime)");
+    expect(session).not.toContain("AudioConvertHostTimeToNanos");
+  });
+
   it("ignores a stale native failure after a newer generation replaces it", () => {
     expect(meetingModule).toMatch(/meetingSessionDidFail[\s\S]*?guard self\.generation == generation else \{ return \}/);
     expect(meetingModule).toMatch(/guard self\.generation == generation else \{ return \}[\s\S]*?invalidate\(expectedGeneration: generation/);

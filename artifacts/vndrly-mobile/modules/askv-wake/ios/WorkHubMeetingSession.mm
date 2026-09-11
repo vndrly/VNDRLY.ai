@@ -4,6 +4,7 @@
 
 #import <AudioToolbox/AudioToolbox.h>
 #import <WebRTC/WebRTC.h>
+#import <mach/mach_time.h>
 #include <array>
 #include <atomic>
 #include <cstring>
@@ -13,6 +14,19 @@ constexpr AudioUnitElement kInputBus = 1;
 constexpr AudioUnitElement kOutputBus = 0;
 constexpr UInt32 kMaxFrames = 4096;
 char kMeetingQueueKey;
+
+const mach_timebase_info_data_t kHostTimebase = [] {
+  mach_timebase_info_data_t value{};
+  mach_timebase_info(&value);
+  return value;
+}();
+
+uint64_t HostTimeToNanos(uint64_t hostTime) {
+  if (kHostTimebase.denom == 0) return 0;
+  const uint64_t whole = hostTime / kHostTimebase.denom;
+  const uint64_t remainder = hostTime % kHostTimebase.denom;
+  return whole * kHostTimebase.numer + remainder * kHostTimebase.numer / kHostTimebase.denom;
+}
 
 AudioStreamBasicDescription PCM16Mono(double rate) {
   AudioStreamBasicDescription format{};
@@ -113,7 +127,7 @@ static OSStatus Capture(void *context, AudioUnitRenderActionFlags *flags, const 
     if (status != noErr) { [device report:@"MIC_CAPTURE_FAILED"]; return status; }
     const int64_t sampleTime = (timestamp->mFlags & kAudioTimeStampSampleTimeValid) ? (int64_t)timestamp->mSampleTime : -1;
     const uint64_t hostTimeNanos = (timestamp->mFlags & kAudioTimeStampHostTimeValid)
-      ? AudioConvertHostTimeToNanos(timestamp->mHostTime) : 0;
+      ? HostTimeToNanos(timestamp->mHostTime) : 0;
     if (![device->_encoder enqueuePCM16:device->_captureSamples.data() frameCount:frames
           sampleRate:device->_sampleRate.load(std::memory_order_acquire) sampleTime:sampleTime hostTimeNanos:hostTimeNanos]) return kAudio_ParamError;
   }
