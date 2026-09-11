@@ -10,7 +10,8 @@ import { buildTestCookie } from "../test-utils/session";
 vi.mock("../work-hub/feature-access", () => ({ isWorkHubEnabled: async () => true }));
 vi.mock("./notifications", () => ({ notifyUsers: vi.fn() }));
 const app = express().use(express.json()).use(cookieParser()).use(operations);
-describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")("announcement current company authorization", () => {
+const usesIsolatedDatabase = process.env.VNDRLY_TEST_DB_MODE === "fresh-local" || process.env.VNDRLY_ISOLATED_TEST_DB === "1";
+describe.skipIf(!usesIsolatedDatabase)("announcement current company authorization", () => {
   let ownerId: number, otherId: number, adminId: number, memberId: number, externalId: number;
   let admin: string, member: string;
   const envelope = (recipientUserIds: number[]) => ({ operationId: randomUUID(), owner: { type: "vendor", id: ownerId }, context: { kind: "organization", id: ownerId }, expectedVersion: null, payloadVersion: 1, payload: { title: `Announcement ${randomUUID()}`, body: "Example company handover", recipientUserIds, acknowledgementRequired: true } });
@@ -24,9 +25,9 @@ describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")("announcement
     admin = buildTestCookie({ userId: adminId, role: "vendor", vendorId: ownerId, membershipRole: "admin" });
     member = buildTestCookie({ userId: memberId, role: "vendor", vendorId: ownerId, membershipRole: "admin" });
   });
-  it("rejects any foreign recipient and stale admin claim without inserting an announcement", async () => {
+  it("hides any foreign recipient and rejects a stale admin claim without inserting an announcement", async () => {
     const foreign = envelope([memberId, externalId]);
-    expect((await request(app).post("/work-hub/announcements").set("Cookie", admin).send(foreign)).status).toBe(403);
+    expect((await request(app).post("/work-hub/announcements").set("Cookie", admin).send(foreign)).status).toBe(404);
     expect(await db.select().from(workHubAnnouncementsTable).where(eq(workHubAnnouncementsTable.title, foreign.payload.title))).toHaveLength(0);
     expect((await request(app).post("/work-hub/announcements").set("Cookie", member).send(envelope([memberId]))).status).toBe(403);
   });
@@ -58,7 +59,7 @@ describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")("announcement
     const search = await request(app).get("/work-hub/search").query({ q: body.payload.title }).set("Cookie", member);
     expect(JSON.stringify(search.body)).not.toContain(id);
     expect((await request(app).post(`/work-hub/announcements/${id}/acknowledge`).set("Cookie", member).send({})).status).toBe(404);
-    expect((await request(app).post("/work-hub/announcements").set("Cookie", admin).send(body)).status).toBe(403);
+    expect((await request(app).post("/work-hub/announcements").set("Cookie", admin).send(body)).status).toBe(404);
     const [recipient] = await db.select().from(workHubAnnouncementRecipientsTable).where(and(eq(workHubAnnouncementRecipientsTable.announcementId, id), eq(workHubAnnouncementRecipientsTable.userId, memberId)));
     expect(recipient.acknowledgedAt).toBeNull();
   });
