@@ -58,7 +58,7 @@ export function PeoplePicker({
       />
       <select
         aria-label="Person"
-        className="h-10 rounded border bg-background px-2"
+        className="h-10 rounded border bg-background px-2 text-sm"
         value={value}
         onChange={(e) => onChange(e.target.value)}
       >
@@ -83,7 +83,10 @@ export function ActivityWorkspace() {
   const people = useRows("/people");
   const [search, setSearch] = useState("");
   return (
-    <section className="mx-auto max-w-6xl p-6">
+    <section
+      aria-label="Activity workspace"
+      className="mx-auto max-w-6xl rounded-xl border bg-card p-6 shadow-sm"
+    >
       <h1 className="text-2xl font-semibold">Activity</h1>
       <HubError error={home.error ?? acknowledge.error} />
       {home.data?.announcements?.length > 0 && <section aria-label="Your announcements" className="my-5 grid gap-3">
@@ -97,13 +100,18 @@ export function ActivityWorkspace() {
       <p className="mt-1 text-sm text-muted-foreground">
         Recent conversations across your company and shared Crews.
       </p>
-      <Input
-        className="my-5"
-        aria-label="Filter activity"
-        placeholder="Search activity"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
+      <div
+        role="search"
+        aria-label="Search activity"
+        className="my-5 rounded-xl border bg-background p-4 shadow-sm"
+      >
+        <Input
+          aria-label="Filter activity"
+          placeholder="Search activity"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
       <HubError error={activity.error} />
       {activity.isLoading && <p role="status">Loading activity…</p>}
       <div className="divide-y rounded-xl border bg-card">
@@ -187,6 +195,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
     members.data?.some(
       (member) => member.userId === user?.userId && member.mode === "owner",
     );
+  const canAdministerChannels = isWorkHubAdmin(user);
   const retryOperations = useRef(new Map<string, string>());
   const mutation = useMutation({
     mutationFn: async ({
@@ -274,10 +283,13 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
     );
   return (
     <section
-      className="grid min-h-[calc(100vh-9rem)] bg-background lg:grid-cols-[300px_minmax(0,1fr)]"
+      className="grid min-h-[calc(100vh-9rem)] gap-4 bg-background p-4 lg:grid-cols-[300px_minmax(0,1fr)]"
       data-testid={chat ? "work-hub-chat" : "work-hub-channels"}
     >
-      <aside className="space-y-4 border-r bg-card p-4">
+      <aside
+        aria-label="Conversations panel"
+        className="space-y-4 rounded-xl border bg-card p-4 shadow-sm"
+      >
         <h1 className="flex items-center gap-2 text-xl font-semibold">
           {chat ? <MessageSquare /> : <Users />}
           {chat ? "Chat" : "Crews & Channels"}
@@ -378,6 +390,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
               <>
                 <PeoplePicker value={person} onChange={setPerson} />
                 <BrandPillButton
+                  className="w-fit max-w-full justify-self-start"
                   tone="blue"
                   disabled={!person || mutation.isPending}
                   onClick={() =>
@@ -466,7 +479,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                     Create company channel
                   </BrandPillButton>
                 )}
-                {crew && canManageCrew && (
+                {crew && canAdministerChannels && (
                   <>
                     <select
                       aria-label="Channel visibility"
@@ -493,6 +506,10 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                     >
                       Add channel
                     </BrandPillButton>
+                  </>
+                )}
+                {crew && canManageCrew && (
+                  <>
                     <PeoplePicker value={person} onChange={setPerson} />
                     {["member", "owner"].map((mode) => (
                       <BrandPillButton
@@ -522,14 +539,20 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
         </details>
         <HubError error={mutation.error ?? save.error} />
       </aside>
-      <main className="min-w-0">
+      <main
+        aria-label="Selected conversation workspace"
+        className="grid min-w-0 content-start gap-4"
+      >
         {active ? (
           <>
-            <header className="border-b bg-card px-6 py-4">
+            <section
+              aria-label="Selected channel"
+              className="w-full rounded-xl border bg-card px-6 py-4 shadow-sm"
+            >
               <h2 className="text-xl font-semibold">
                 {channel?.name ?? "Conversation"}
               </h2>
-              {!chat && canManageChannel && (
+              {!chat && canAdministerChannels && (
                 <div className="mt-2">
                   <BrandPillButton
                     tone="red"
@@ -554,24 +577,30 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                   </BrandPillButton>
                 </div>
               )}
-              <div className="mt-3 flex gap-6" role="tablist">
+              <div className="mt-3 flex flex-wrap gap-2" role="tablist">
                 {["conversation", "notes", "shared", "people"].map((x) => (
-                  <button
+                  <BrandPillButton
                     key={x}
+                    type="button"
+                    tone="brand"
                     role="tab"
                     aria-selected={tab === x}
-                    className={`pb-2 text-sm capitalize ${tab === x ? "border-b-2 border-[var(--brand-primary)] font-semibold" : "text-muted-foreground"}`}
+                    className="w-fit capitalize"
                     onClick={() => setTab(x)}
                   >
                     {x}
-                  </button>
+                  </BrandPillButton>
                 ))}
               </div>
-            </header>
-            <div className="p-4 md:p-6">
+            </section>
+            <div className="contents">
               <HubError error={messages.error ?? notes.error} />
               {tab === "conversation" && (
                 <>
+                  <section
+                    aria-label="Channel content"
+                    className="w-full min-h-[18rem] rounded-xl border bg-card p-4 shadow-sm md:p-6"
+                  >
                   {thread && (
                     <div className="mb-4 flex items-center justify-between border-b pb-3">
                       <strong>Thread</strong>
@@ -667,8 +696,10 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                       </article>
                     ))}
                   </div>
+                  </section>
                   <form
-                    className="sticky bottom-0 mt-6 grid gap-3 rounded-xl border bg-card p-4"
+                    aria-label="Message composer"
+                    className="sticky bottom-4 grid w-full gap-3 rounded-xl border bg-card p-4 shadow-sm"
                     onSubmit={(e) => {
                       e.preventDefault();
                       void send().catch(() => undefined);
@@ -739,7 +770,11 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                 </>
               )}
               {tab === "notes" && (
-                <div className="grid gap-4">
+                <div
+                  role="region"
+                  aria-label="Channel content"
+                  className="grid w-full min-h-[18rem] gap-4 rounded-xl border bg-card p-4 shadow-sm md:p-6"
+                >
                   {notes.data?.map((n) => (
                     <article key={n.id} className="rounded border p-4">
                       <h3 className="font-semibold">{n.title}</h3>
@@ -805,7 +840,11 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                 </div>
               )}
               {tab === "shared" && (
-                <div className="space-y-4">
+                <div
+                  role="region"
+                  aria-label="Channel content"
+                  className="w-full min-h-[18rem] space-y-4 rounded-xl border bg-card p-4 shadow-sm md:p-6"
+                >
                   <h3 className="font-semibold">Shared content</h3>
                   <a
                     href={`/work-hub/files?channel=${active}`}
@@ -826,7 +865,11 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                 </div>
               )}
               {tab === "people" && (
-                <div className="divide-y">
+                <div
+                  role="region"
+                  aria-label="Channel content"
+                  className="w-full min-h-[18rem] divide-y rounded-xl border bg-card p-4 shadow-sm md:p-6"
+                >
                   {members.data?.map((m) => (
                     <div key={m.userId ?? m.id} className="py-3">
                       <strong>{m.displayName}</strong>
@@ -893,13 +936,16 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
             </div>
           </>
         ) : (
-          <div className="flex min-h-96 flex-col items-center justify-center gap-3 text-muted-foreground">
+          <section
+            aria-label="Channel content"
+            className="flex min-h-96 w-full flex-col items-center justify-center gap-3 rounded-xl border bg-card text-muted-foreground shadow-sm"
+          >
             <MessageSquare className="h-10 w-10" />
             <h2 className="text-lg font-semibold">Choose a conversation</h2>
             <p className="text-sm">
               Your company conversations and shared work live here.
             </p>
-          </div>
+          </section>
         )}
       </main>
     </section>

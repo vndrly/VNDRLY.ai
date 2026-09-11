@@ -11,6 +11,7 @@ import {
   workHubIcons,
 } from "@/lib/work-hub-nav";
 import BrandPillButton from "@/components/brand-pill-button";
+import SidebarButton from "@/components/sidebar-button";
 export type HubPreferences = {
   pinned: string[];
   order: string[];
@@ -66,20 +67,25 @@ export function WorkHubNavigation({ onNavigate }: { onNavigate?: () => void }) {
       location === item.href ||
       (item.href !== "/work-hub" && location.startsWith(item.href));
     return (
-      <div key={item.key} className="flex items-center gap-1">
+      <div key={item.key} className="relative">
         <Link
           href={item.href}
           onClick={onNavigate}
           aria-current={selected ? "page" : undefined}
           data-testid={`nav-${item.key}`}
-          className={`flex min-h-10 flex-1 items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${selected ? "bg-[var(--brand-primary)] text-white" : "text-sidebar-foreground hover:bg-sidebar-accent"}`}
         >
-          <Icon className="h-5 w-5 shrink-0" strokeWidth={1.6} />
-          <span>{item.label}</span>
+          <SidebarButton
+            isActive={selected}
+            className={customize ? "pr-16" : undefined}
+          >
+            <Icon className="h-4 w-4 shrink-0" strokeWidth={1.6} />
+            <span className="min-w-0 flex-1 truncate">{item.label}</span>
+          </SidebarButton>
         </Link>
         {customize && (
-          <div className="flex gap-1">
+          <div className="absolute inset-y-0 right-2 z-20 flex items-center gap-0.5">
             <button
+              className="grid h-5 w-5 place-items-center text-white disabled:text-white/35"
               aria-label={`${preferences.pinned.includes(item.key) ? "Unpin" : "Pin"} ${item.label}`}
               title="Pin to navigation"
               disabled={save.isPending}
@@ -92,22 +98,24 @@ export function WorkHubNavigation({ onNavigate }: { onNavigate?: () => void }) {
               }
             >
               <Pin
-                className={`h-4 w-4 ${preferences.pinned.includes(item.key) ? "fill-current" : ""}`}
+                className={`h-3 w-3 ${preferences.pinned.includes(item.key) ? "fill-current" : ""}`}
               />
             </button>
             <button
+              className="grid h-5 w-5 place-items-center text-white disabled:text-white/35"
               aria-label={`Move ${item.label} up`}
               disabled={save.isPending || items[0].key === item.key}
               onClick={() => move(item.key, -1)}
             >
-              <ArrowUp className="h-4 w-4" />
+              <ArrowUp className="h-3 w-3" />
             </button>
             <button
+              className="grid h-5 w-5 place-items-center text-white disabled:text-white/35"
               aria-label={`Move ${item.label} down`}
               disabled={save.isPending || items.at(-1)?.key === item.key}
               onClick={() => move(item.key, 1)}
             >
-              <ArrowDown className="h-4 w-4" />
+              <ArrowDown className="h-3 w-3" />
             </button>
           </div>
         )}
@@ -130,9 +138,11 @@ export function WorkHubNavigation({ onNavigate }: { onNavigate?: () => void }) {
             ) || undefined
           }
         >
-          <summary className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm text-sidebar-foreground">
-            <MoreHorizontal className="h-5 w-5" />
-            More
+          <summary className="cursor-pointer list-none">
+            <SidebarButton isActive={false}>
+              <MoreHorizontal className="h-4 w-4" />
+              More
+            </SidebarButton>
           </summary>
           <div className="space-y-1">
             {items

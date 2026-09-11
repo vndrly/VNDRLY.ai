@@ -44,6 +44,16 @@ describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")("collaboratio
     const wide = await request(app).post(`/work-hub/crews/${crewId}/channels`).set("Cookie", adminCookie).send({ name: "Everyone", visibility: "crew" });
     expect((await request(app).get(`/work-hub/channels/${wide.body.id}/messages`).set("Cookie", memberCookie)).status).toBe(200);
   });
+  it("reserves channel creation and deletion for organization admins", async () => {
+    expect((await request(app).post(`/work-hub/crews/${crewId}/members`).set("Cookie", adminCookie).send({ userId: memberId, mode: "owner" })).status).toBe(200);
+    expect((await request(app).post(`/work-hub/crews/${crewId}/channels`).set("Cookie", memberCookie).send({ name: "Owner side channel", visibility: "crew" })).status).toBe(403);
+
+    const channel = await request(app).post(`/work-hub/crews/${crewId}/channels`).set("Cookie", adminCookie).send({ name: "Admin managed", visibility: "crew" });
+    expect(channel.status).toBe(201);
+    const envelope = { operationId: randomUUID(), owner: { type: "vendor", id: ownerId }, context: { kind: "organization", id: String(ownerId) }, expectedVersion: null, payloadVersion: 1, payload: {} };
+    expect((await request(app).delete(`/work-hub/channels/${channel.body.id}`).set("Cookie", memberCookie).send(envelope)).status).toBe(403);
+    expect((await request(app).delete(`/work-hub/channels/${channel.body.id}`).set("Cookie", adminCookie).send({ ...envelope, operationId: randomUUID() })).status).toBe(200);
+  });
   it("does not expose cross-company chats until the recipient accepts", async () => {
     const [relationship] = await db.insert(workHubChannelsTable).values({ ownerOrgType: "vendor", ownerOrgId: ownerId, contextKind: "organization", contextId: randomUUID(), name: "Authorized relationship", visibility: "private", createdById: adminId }).returning();
     await db.insert(workHubChannelMembersTable).values([{ channelId: relationship!.id, userId: adminId, mode: "owner" }, { channelId: relationship!.id, userId: externalId, mode: "member" }]);

@@ -4,6 +4,7 @@ import { and, desc, eq, gt, lt, ne, sql, inArray } from "drizzle-orm";
 import { z } from "zod/v4";
 import {
   db,
+  userOrgMembershipsTable,
   usersTable,
   workHubChannelMembersTable,
   workHubChannelsTable,
@@ -57,6 +58,27 @@ function session(req: Request): (SessionPayload & { userId: number }) | null {
 }
 function source(req: Request): "web" | "ios" {
   return req.header("x-vndrly-client") === "ios" ? "ios" : "web";
+}
+async function requireOrganizationAdmin(
+  actor: SessionPayload & { userId: number },
+  owner: { type: "vendor" | "partner"; id: number },
+) {
+  if (actor.role === "admin") return;
+  const [membership] = await db
+    .select({ id: userOrgMembershipsTable.id })
+    .from(userOrgMembershipsTable)
+    .where(
+      and(
+        eq(userOrgMembershipsTable.userId, actor.userId),
+        eq(userOrgMembershipsTable.orgType, owner.type),
+        eq(userOrgMembershipsTable.role, "admin"),
+        owner.type === "vendor"
+          ? eq(userOrgMembershipsTable.vendorId, owner.id)
+          : eq(userOrgMembershipsTable.partnerId, owner.id),
+      ),
+    )
+    .limit(1);
+  if (!membership) throw new WorkHubAccessError("forbidden");
 }
 function fail(res: Response, error: unknown): void {
   if (error instanceof WorkHubAccessError) {
@@ -153,6 +175,7 @@ router.post("/work-hub/channels", async (req, res) => {
   try {
     const envelope = workHubCommandEnvelopeSchema.parse(req.body);
     const payload = createChannelPayload.parse(envelope.payload);
+    await requireOrganizationAdmin(actor, envelope.owner);
     const access = createWorkHubAccess({
       session: actor,
       owner: envelope.owner,
@@ -237,6 +260,10 @@ router.delete("/work-hub/channels/:channelId", async (req, res) => {
           envelope.owner.id !== channel.ownerOrgId
         )
           throw new WorkHubAccessError("forbidden");
+        await requireOrganizationAdmin(actor, {
+          type: channel.ownerOrgType as "vendor" | "partner",
+          id: channel.ownerOrgId,
+        });
         const [deleted] = await tx
           .update(workHubChannelsTable)
           .set({ status: "deleted", updatedAt: new Date() })

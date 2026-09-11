@@ -46,7 +46,7 @@ function owns(a: Actor, type: string, id: number) {
   return type === "vendor" ? a.vendorId === id : a.partnerId === id;
 }
 function admin(a: Actor, type: string, id: number) {
-  return owns(a, type, id) && a.membershipRole === "admin";
+  return a.role === "admin" || (owns(a, type, id) && a.membershipRole === "admin");
 }
 function activeOwner(a: Actor) {
   if (a.vendorId) return { type: "vendor" as const, id: a.vendorId };
@@ -301,7 +301,9 @@ router.post("/work-hub/crews/:id/members", async (req, res) => {
 });
 router.post("/work-hub/crews/:id/channels", async (req, res) => {
   const a = res.locals.collaborationActor as Actor;
-  const { crew } = await crewAccess(a, req.params.id, true);
+  const { crew } = await crewAccess(a, req.params.id);
+  if (!admin(a, crew.ownerOrgType, crew.ownerOrgId))
+    throw new WorkHubAccessError("forbidden");
   const p = z
     .object({
       name,

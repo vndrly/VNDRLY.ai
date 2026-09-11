@@ -2,8 +2,12 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ActivityWorkspace, CollaborationWorkspace, displayMentionText } from "./collaboration";
-const mocks = vi.hoisted(() => ({ request: vi.fn(), save: vi.fn() }));
-vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: { userId: 7, role: "vendor", vendorId: 1, partnerId: null, membershipRole: "admin" } }) }));
+const mocks = vi.hoisted(() => ({
+  request: vi.fn(),
+  save: vi.fn(),
+  user: { userId: 7, role: "vendor", vendorId: 1, partnerId: null, membershipRole: "admin" } as Record<string, any>,
+}));
+vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: mocks.user }) }));
 vi.mock("@/components/brand-pill-button", () => ({ default: ({ children, tone: _tone, ...props }: any) => <button {...props}>{children}</button> }));
 vi.mock("./navigation", () => ({ useHubPreferences: () => ({ preferences: { favorites: [], drafts: { c1: "Saved draft" } }, save: { mutate: mocks.save } }) }));
 vi.mock("@/lib/work-hub-client", async importOriginal => ({ ...await importOriginal<any>(), workHubRequest: mocks.request }));
@@ -11,6 +15,7 @@ function mount(chat = true) { return render(<QueryClientProvider client={new Que
 describe("Work Hub conversations", () => {
   beforeEach(() => {
     mocks.request.mockReset(); mocks.save.mockReset();
+    mocks.user = { userId: 7, role: "vendor", vendorId: 1, partnerId: null, membershipRole: "admin" };
     mocks.request.mockImplementation(async (path: string, init?: RequestInit) => {
       if (init) return { resource: {} };
       if (path === "/chats") return [{ id: "c1", name: "Operations", ownerOrgType: "vendor", ownerOrgId: 1, unreadCount: 2 }, { id: "c2", name: "Dispatch", ownerOrgType: "vendor", ownerOrgId: 1, unreadCount: 0 }];
@@ -21,6 +26,8 @@ describe("Work Hub conversations", () => {
   it("loads saved drafts and sends a reply with its thread root", async () => {
     mount();
     expect(await screen.findByDisplayValue("Saved draft")).toBeTruthy();
+    expect(screen.getByLabelText("Person").className).toContain("text-sm");
+    expect(screen.getByRole("button", { name: "Start chat / send invitation" }).className).toContain("w-fit");
     fireEvent.click(await screen.findByText("Reply in thread"));
     fireEvent.change(screen.getByLabelText("Message"), { target: { value: "Reply content" } });
     fireEvent.click(screen.getByText("Send message"));
@@ -35,6 +42,21 @@ describe("Work Hub conversations", () => {
     expect(screen.queryByText("Dispatch")).toBeNull();
     fireEvent.click(screen.getByLabelText("Favorite Operations"));
     expect(mocks.save).toHaveBeenCalledWith({ favorites: ["c1"] });
+  });
+  it("separates the channel list, header, content, and composer into aligned cards", async () => {
+    mount();
+    await screen.findByText("Original message");
+
+    const workspace = screen.getByRole("main", { name: "Selected conversation workspace" });
+    const header = screen.getByRole("region", { name: "Selected channel" });
+    const content = screen.getByRole("region", { name: "Channel content" });
+    const composer = screen.getByRole("form", { name: "Message composer" });
+
+    expect(screen.getByRole("complementary", { name: "Conversations panel" })).toBeTruthy();
+    expect(workspace.contains(header)).toBe(true);
+    expect(workspace.contains(content)).toBe(true);
+    expect(workspace.contains(composer)).toBe(true);
+    expect([header, content, composer].every((card) => card.className.includes("w-full"))).toBe(true);
   });
   it("retries an interrupted send with the original operation ID", async () => {
     const original = mocks.request.getMockImplementation()!;
@@ -101,6 +123,25 @@ describe("Work Hub conversations", () => {
     );
     releaseChannelsRefresh?.();
   });
+
+  it("does not offer channel creation or deletion to a crew owner who is not an organization admin", async () => {
+    mocks.user = { userId: 7, role: "vendor", vendorId: 1, partnerId: null, membershipRole: "member" };
+    mocks.request.mockImplementation(async (path: string) => {
+      if (path === "/channels") return [{ id: "c1", name: "Operations", ownerOrgType: "vendor", ownerOrgId: 1, createdById: 7 }];
+      if (path === "/crews") return [{ id: "crew-1", name: "Gate Crew", role: "owner" }];
+      if (path === "/crews/crew-1/channels") return [];
+      return [];
+    });
+
+    mount(false);
+    await screen.findByRole("heading", { name: "Operations" });
+    expect(screen.queryByRole("button", { name: "Delete channel" })).toBeNull();
+
+    fireEvent.change(screen.getByLabelText("Crew", { exact: true }), {
+      target: { value: "crew-1" },
+    });
+    expect(screen.queryByRole("button", { name: "Add channel" })).toBeNull();
+  });
 });
 
 describe("Work Hub recipient announcements", () => {
@@ -113,6 +154,11 @@ describe("Work Hub recipient announcements", () => {
       return [];
     });
     render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><ActivityWorkspace /></QueryClientProvider>);
+    const activityCard = screen.getByRole("region", { name: "Activity workspace" });
+    const searchCard = screen.getByRole("search", { name: "Search activity" });
+    expect(activityCard.contains(searchCard)).toBe(true);
+    expect(activityCard.className).toContain("rounded-xl");
+    expect(searchCard.className).toContain("rounded-xl");
     expect(await screen.findByText("Safety briefing")).toBeTruthy();
     expect(screen.getByText("Urgent")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Acknowledge" }));

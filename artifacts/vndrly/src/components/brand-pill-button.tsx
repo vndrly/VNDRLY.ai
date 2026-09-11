@@ -69,6 +69,8 @@ interface BrandPillButtonProps extends React.AriaAttributes {
 
   title?: string;
 
+  role?: React.AriaRole;
+
   "data-testid"?: string;
 
 }
