@@ -80,7 +80,7 @@
 - (void)testReleaseRestoresThePriorDirectSessionConfigurationAndActiveState {
   RTCAudioSession *session = [RTCAudioSession sharedInstance];
   [session lockForConfiguration];
-  XCTAssertTrue([session setActive:NO withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error:nil]);
+  XCTAssertTrue([session setActive:NO error:nil]);
   [session unlockForConfiguration];
   XCTAssertFalse(session.isActive);
   BOOL priorActive = NO;

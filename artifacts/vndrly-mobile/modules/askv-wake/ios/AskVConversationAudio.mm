@@ -64,7 +64,9 @@ static BOOL SameStableDirectConfiguration(RTCAudioSessionConfiguration *left, RT
     [session lockForConfiguration];
     [session setConfiguration:_previousSessionConfiguration error:nil];
     if (!_previousSessionActive && session.isActive) {
-      [session setActive:NO withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error:nil];
+      // RTCAudioSession's supported deactivation API supplies
+      // AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation internally.
+      [session setActive:NO error:nil];
     }
     [session unlockForConfiguration];
     [RTCAudioSessionConfiguration setWebRTCConfiguration:_previousConfiguration];

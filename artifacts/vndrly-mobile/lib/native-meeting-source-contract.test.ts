@@ -114,7 +114,8 @@ describe("native meeting source safety contracts", () => {
     expect(ownershipHelper).toContain("left.mode");
     expect(ownershipHelper).toContain("left.categoryOptions");
     expect(ownershipHelper).not.toMatch(/sampleRate|ioBufferDuration|NumberOfChannels/);
-    expect(conversationAudio).toContain("AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation");
+    expect(conversationAudio).toContain("[session setActive:NO error:nil]");
+    expect(conversationAudio).not.toContain("setActive:NO withOptions:");
     expect(conversationAudio).toMatch(/setConfiguration:_previousSessionConfiguration[\s\S]*?_previousSessionActive/);
     expect(conversationAudio).toMatch(/if \(_previousConfiguration && stillOwns\)/);
   });
