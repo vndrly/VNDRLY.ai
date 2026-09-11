@@ -124,7 +124,7 @@ export function WorkHubNavigation({ onNavigate }: { onNavigate?: () => void }) {
     );
   };
   return (
-    <div className="space-y-[5px]" aria-label="Work Hub navigation">
+    <div className="space-y-0" aria-label="Work Hub navigation">
       {(customize
         ? items
         : items.filter((item) => preferences.pinned.includes(item.key))
@@ -145,7 +145,7 @@ export function WorkHubNavigation({ onNavigate }: { onNavigate?: () => void }) {
               More
             </SidebarButton>
           </summary>
-          <div className="space-y-[5px] pt-[5px]">
+          <div className="space-y-0">
             {items
               .filter((item) => !preferences.pinned.includes(item.key))
               .map(render)}

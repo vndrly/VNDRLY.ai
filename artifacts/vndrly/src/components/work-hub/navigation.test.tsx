@@ -29,7 +29,7 @@ describe("Work Hub navigation", () => {
   it("uses canonical sidebar sizing and keeps compact white edit controls inside each row", async () => {
     mount();
     const navigation = screen.getByLabelText("Work Hub navigation");
-    expect(navigation.className).toContain("space-y-[5px]");
+    expect(navigation.className).toContain("space-y-0");
     const chat = await screen.findByTestId("nav-chat");
     expect(chat.className).toContain("block");
     const icon = chat.querySelector("svg");
