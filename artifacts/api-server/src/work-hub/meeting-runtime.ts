@@ -9,6 +9,17 @@ export type MeetingRuntime = {
   signals?: MeetingSignal[];
 };
 
+const MAX_MEETING_SIGNAL_COUNT = 2_000;
+const MAX_MEETING_SIGNAL_BYTES = 2 * 1024 * 1024;
+
+export class MeetingSignalCapacityError extends Error {
+  constructor() { super("meeting.signalling_busy"); }
+}
+
+function meetingSignalBytes(signal: Omit<MeetingSignal, "sequence" | "createdAt"> | MeetingSignal) {
+  return Buffer.byteLength(JSON.stringify(signal), "utf8");
+}
+
 export function visibleMeetingActivities(runtime: MeetingRuntime, viewerUserId: number, activeIds: number[], now = Date.now()) {
   return Object.entries(runtime.activity ?? {})
     .filter(([userId, value]) => Number(userId) !== viewerUserId && activeIds.includes(Number(userId)) && value.expiresAt > now && (value.recipientUserId === null || value.recipientUserId === viewerUserId))
@@ -25,8 +36,10 @@ export function presentUserIds(runtime: MeetingRuntime, now = Date.now()) {
 export function appendMeetingSignal(runtime: MeetingRuntime, signal: Omit<MeetingSignal, "sequence" | "createdAt">, now = Date.now()): MeetingRuntime {
   const sequence = (runtime.sequence ?? 0) + 1;
   const recent = (runtime.signals ?? []).filter((item) => now - item.createdAt < 120_000);
-  if (recent.length >= 2_000) throw new Error("meeting.signalling_busy");
-  return { ...runtime, sequence, signals: [...recent, { ...signal, sequence, createdAt: now }] };
+  const next = { ...signal, sequence, createdAt: now };
+  const aggregateBytes = recent.reduce((total, item) => total + meetingSignalBytes(item), meetingSignalBytes(next));
+  if (recent.length >= MAX_MEETING_SIGNAL_COUNT || aggregateBytes > MAX_MEETING_SIGNAL_BYTES) throw new MeetingSignalCapacityError();
+  return { ...runtime, sequence, signals: [...recent, next] };
 }
 
 export function signalsForParticipant(runtime: MeetingRuntime, userId: number, after: number) {

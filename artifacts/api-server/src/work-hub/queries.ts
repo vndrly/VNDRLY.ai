@@ -1,4 +1,4 @@
-import { and, desc, eq, lt, or } from "drizzle-orm";
+import { and, desc, eq, lt, or, sql, type SQL } from "drizzle-orm";
 import { db, siteLocationsTable, ticketsTable, workHubChannelMembersTable, workHubChannelsTable } from "@workspace/db";
 import type { SessionPayload } from "../lib/session";
 import { createWorkHubAccess, requireWorkHubCapability, type WorkHubAccess } from "./context-access";
@@ -52,22 +52,65 @@ export async function resolveChannelAccess(
   return { channel, access: resolved };
 }
 
+function listedChannelAccess(session: SessionPayload & { userId: number }): SQL | undefined {
+  const ownerMatch = session.vendorId
+    ? sql`(${workHubChannelsTable.ownerOrgType} = 'vendor' AND ${workHubChannelsTable.ownerOrgId} = ${session.vendorId})`
+    : session.partnerId
+      ? sql`(${workHubChannelsTable.ownerOrgType} = 'partner' AND ${workHubChannelsTable.ownerOrgId} = ${session.partnerId})`
+      : sql`false`;
+  const legacyAccess = sql`(
+    NOT EXISTS (SELECT 1 FROM work_hub_collaboration_channels collaboration WHERE collaboration.channel_id = ${workHubChannelsTable.id})
+    AND (
+      ${session.role === "admin"}
+      OR EXISTS (SELECT 1 FROM work_hub_channel_members member WHERE member.channel_id = ${workHubChannelsTable.id} AND member.user_id = ${session.userId})
+      OR (${ownerMatch} AND (${session.membershipRole === "admin"} OR ${workHubChannelsTable.visibility} = 'organization'))
+      OR (${workHubChannelsTable.contextKind} = 'ticket' AND EXISTS (
+        SELECT 1 FROM tickets ticket
+        JOIN site_locations site ON site.id = ticket.site_location_id
+        WHERE ticket.id::text = ${workHubChannelsTable.contextId}
+          AND (ticket.vendor_id = ${session.vendorId ?? -1} OR site.partner_id = ${session.partnerId ?? -1})
+      ))
+      OR (${workHubChannelsTable.contextKind} = 'site' AND EXISTS (
+        SELECT 1 FROM site_locations site
+        WHERE site.id::text = ${workHubChannelsTable.contextId} AND site.partner_id = ${session.partnerId ?? -1}
+      ))
+    )
+  )`;
+  const collaborationAccess = sql`EXISTS (
+    SELECT 1 FROM work_hub_collaboration_channels collaboration
+    WHERE collaboration.channel_id = ${workHubChannelsTable.id}
+      AND (
+        collaboration.crew_id IS NULL
+        OR collaboration.kind = 'shared'
+        OR EXISTS (
+          SELECT 1 FROM work_hub_crews crew
+          JOIN user_org_memberships membership
+            ON membership.user_id = ${session.userId}
+           AND membership.org_type = crew.owner_org_type
+           AND ((crew.owner_org_type = 'vendor' AND membership.vendor_id = crew.owner_org_id)
+             OR (crew.owner_org_type = 'partner' AND membership.partner_id = crew.owner_org_id))
+          WHERE crew.id = collaboration.crew_id
+        )
+      )
+      AND (
+        EXISTS (SELECT 1 FROM work_hub_channel_members member WHERE member.channel_id = ${workHubChannelsTable.id} AND member.user_id = ${session.userId})
+        OR (collaboration.kind = 'crew' AND EXISTS (
+          SELECT 1 FROM work_hub_crew_members crew_member
+          WHERE crew_member.crew_id = collaboration.crew_id AND crew_member.user_id = ${session.userId}
+        ))
+      )
+  )`;
+  return sql`(${legacyAccess} OR ${collaborationAccess})`;
+}
+
 export async function listOwnedWorkHubChannels(session: SessionPayload & { userId: number }, before?: Date, limit = 50) {
   const requested = Math.min(100, Math.max(1, limit));
-  const visible: (typeof workHubChannelsTable.$inferSelect)[] = [];
-  let cursor: { updatedAt: Date; id: string } | undefined;
-  // Keep scanning until the authorized page is full. A tenant with older channels
-  // must not disappear behind another company's newer channels.
-  while (visible.length < requested) {
-    const candidates = await db.select().from(workHubChannelsTable)
-      .where(and(eq(workHubChannelsTable.status, "active"), before ? lt(workHubChannelsTable.updatedAt, before) : undefined,
-        cursor ? or(lt(workHubChannelsTable.updatedAt, cursor.updatedAt), and(eq(workHubChannelsTable.updatedAt, cursor.updatedAt), lt(workHubChannelsTable.id, cursor.id))) : undefined))
-      .orderBy(desc(workHubChannelsTable.updatedAt), desc(workHubChannelsTable.id)).limit(200);
-    const accessible = await Promise.all(candidates.map(async channel => ({ channel, allowed: await isWorkHubParticipant(session, channel) })));
-    visible.push(...accessible.filter(entry => entry.allowed).map(entry => entry.channel));
-    if (candidates.length < 200) break;
-    const last = candidates[candidates.length - 1]!;
-    cursor = { updatedAt: last.updatedAt, id: last.id };
-  }
-  return visible.slice(0, requested);
+  return db.select().from(workHubChannelsTable)
+    .where(and(
+      eq(workHubChannelsTable.status, "active"),
+      before ? lt(workHubChannelsTable.updatedAt, before) : undefined,
+      listedChannelAccess(session),
+    ))
+    .orderBy(desc(workHubChannelsTable.updatedAt), desc(workHubChannelsTable.id))
+    .limit(requested);
 }

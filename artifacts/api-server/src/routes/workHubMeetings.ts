@@ -23,7 +23,7 @@ import {
   closeAssemblyAIStream, openAssemblyAIStream, sendAssemblyAIFrame,
 } from "../work-hub/assemblyai-streaming";
 import { canReadMeetingMessage, canRemoveMeetingParticipant } from "../work-hub/meeting-collaboration";
-import { appendMeetingSignal, captureAllowed, presentUserIds, signalsForParticipant, visibleMeetingActivities, type MeetingRuntime } from "../work-hub/meeting-runtime";
+import { appendMeetingSignal, captureAllowed, MeetingSignalCapacityError, presentUserIds, signalsForParticipant, visibleMeetingActivities, type MeetingRuntime } from "../work-hub/meeting-runtime";
 import { answerMeetingQuestion } from "../work-hub/meeting-answer";
 import {
   buildMeetingAnswerInput,
@@ -198,7 +198,13 @@ router.post("/:occurrenceId/signal", route(async (req, _res, tx, ctx) => {
   const present = presentUserIds(ctx.runtime);
   if (!present.includes(ctx.session.userId) || !present.includes(payload.toUserId) || !ctx.all.some((p) => p.userId === payload.toUserId && !p.removedAt)) throw new MeetingError(409, "Participant is no longer connected");
   if (JSON.stringify(payload.payload ?? null).length > 64_000) throw new MeetingError(413, "Audio signal too large");
-  const runtime = appendMeetingSignal(ctx.runtime, { ...payload, fromUserId: ctx.session.userId });
+  let runtime: MeetingRuntime;
+  try {
+    runtime = appendMeetingSignal(ctx.runtime, { ...payload, fromUserId: ctx.session.userId });
+  } catch (error) {
+    if (error instanceof MeetingSignalCapacityError) throw new MeetingError(429, "Audio signaling is busy");
+    throw error;
+  }
   await saveRuntime(tx, ctx, runtime);
   return { sequence: runtime.sequence };
 }));

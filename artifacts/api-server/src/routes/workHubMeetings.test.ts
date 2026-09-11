@@ -335,6 +335,15 @@ describe("shipped audio compatibility", () => {
     expect(response.status).toBe(200);
     expect(response.body).toEqual(cursor === "since" ? [signal] : { sequence: 5, signals: [signal] });
   });
+  it("returns a stable busy response when persisted signaling reaches its byte budget", async () => {
+    const now = Date.now();
+    const candidate = "\u00e9".repeat(30_000);
+    const signals = Array.from({ length: 35 }, (_, index) => ({ sequence: index + 1, fromUserId: 1, toUserId: 2, kind: "ice", payload: { candidate }, createdAt: now }));
+    seed({ runtime: { sequence: signals.length, signals, presence: { 1: { seenAt: now, joinedAt: now, speaking: false }, 2: { seenAt: now, joinedAt: now, speaking: false } } } });
+    const response = await request(app()).post(`/meetings/${meetingId}/signal`).send({ toUserId: 2, kind: "ice", payload: { candidate: "next" } });
+    expect(response.status).toBe(429);
+    expect(response.body).toMatchObject({ code: "work_hub.meeting", message: "Audio signaling is busy" });
+  });
   it("refreshes a polling native participant without reviving another expired attendee", async () => {
     const joinedAt = Date.now() - 60_000;
     seed({ runtime: { presence: { 1: { seenAt: joinedAt, joinedAt, speaking: false }, 2: { seenAt: joinedAt, joinedAt, speaking: false } } } });
