@@ -118,6 +118,8 @@ interface OnboardingProgress {
 export interface AssistantPanelProps {
   open: boolean;
   onOpenChange: (v: boolean) => void;
+  /** Keep the complete Ask V experience inside its owning page card. */
+  embedded?: boolean;
   /**
    * When set, the panel runs in unauthenticated field-employee invite
    * mode. It calls the token-scoped chat endpoint, fetches progress
@@ -261,7 +263,7 @@ function pickAskVRecordingMimeType(): string | undefined {
   return preferred.find((type) => MediaRecorder.isTypeSupported(type));
 }
 
-export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, placement = "default" }: AssistantPanelProps & { placement?: "default" | "onboarding" }) {
+export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embedded = false, placement = "default" }: AssistantPanelProps & { placement?: "default" | "onboarding" }) {
   const [minimized, setMinimized] = useState(false);
   const [showSettings, setShowSettings] = useState(() => {
     if (typeof window === "undefined") return true;
@@ -857,6 +859,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, plac
       <DialogContent
         bare
         hideOverlay
+        inline={embedded}
         accentHeaderStyle={{
           position: "absolute",
           inset: "0 0 auto 0",
@@ -872,10 +875,12 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, plac
         onEscapeKeyDown={(event) => event.preventDefault()}
         className={cn(
           "border-2 border-[color:var(--brand-primary)] bg-[#3a3d42] text-gray-100 sm:translate-x-0 sm:translate-y-0 sm:resize sm:overflow-hidden",
-          placement === "onboarding"
-            ? "sm:left-6 sm:right-auto sm:top-auto sm:bottom-24 sm:max-w-[min(24rem,calc(100vw-3rem))]"
-            : "sm:left-auto sm:right-6 sm:top-6 sm:max-w-[38.59rem]",
-          minimized ? "h-16" : "h-[min(86vh,768px)]",
+          embedded
+            ? "h-[min(72vh,760px)] w-full max-w-none rounded-xl sm:resize-none"
+            : placement === "onboarding"
+              ? "sm:left-6 sm:right-auto sm:top-auto sm:bottom-24 sm:max-w-[min(24rem,calc(100vw-3rem))]"
+              : "sm:left-auto sm:right-6 sm:top-6 sm:max-w-[38.59rem]",
+          !embedded && (minimized ? "h-16" : "h-[min(86vh,768px)]"),
         )}
         data-testid="assistant-panel"
         hideClose
@@ -978,20 +983,24 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, plac
                 </HeaderIconButton>
               </>
             )}
-            <HeaderIconButton
-              onClick={() => setMinimized((value) => !value)}
-              testId="assistant-minimize"
-              title={minimized ? "Restore AskV" : "Minimize AskV"}
-            >
-              {minimized ? <Maximize2 className="w-4 h-4" /> : <Minus className="w-4 h-4" />}
-            </HeaderIconButton>
-            <HeaderIconButton
-              onClick={handleClose}
-              testId="assistant-close"
-              title="Close"
-            >
-              <X className="w-4 h-4" />
-            </HeaderIconButton>
+            {!embedded && (
+              <>
+                <HeaderIconButton
+                  onClick={() => setMinimized((value) => !value)}
+                  testId="assistant-minimize"
+                  title={minimized ? "Restore AskV" : "Minimize AskV"}
+                >
+                  {minimized ? <Maximize2 className="w-4 h-4" /> : <Minus className="w-4 h-4" />}
+                </HeaderIconButton>
+                <HeaderIconButton
+                  onClick={handleClose}
+                  testId="assistant-close"
+                  title="Close"
+                >
+                  <X className="w-4 h-4" />
+                </HeaderIconButton>
+              </>
+            )}
           </div>
         </DialogHeader>
 

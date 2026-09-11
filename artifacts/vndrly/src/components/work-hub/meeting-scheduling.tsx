@@ -10,6 +10,7 @@ import {
   workHubRequest,
 } from "@/lib/work-hub-client";
 import { HubError } from "./collaboration";
+import { WorkHubCardTitle } from "./chrome";
 type MeetingType = {
   id: string;
   title: string;
@@ -95,12 +96,13 @@ export function MeetingScheduling() {
   const windows = draftWindows ?? availability.data?.windows ?? [];
   return (
     <section
-      className="mb-6 overflow-hidden rounded-xl border bg-card"
+      data-work-hub-card
+      className="mb-6 overflow-hidden rounded-xl border-2 border-[color:var(--brand-primary)] bg-card"
       aria-label="Meeting scheduling pages"
     >
       <header className="flex flex-wrap items-center justify-between gap-4 border-b p-5">
         <div>
-          <h2 className="text-xl font-semibold">Meeting scheduling</h2>
+          <h2><WorkHubCardTitle icon={CalendarDays} className="text-xl">Meeting scheduling</WorkHubCardTitle></h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Set your availability and let signed-in teammates reserve a time.
           </p>
@@ -466,8 +468,8 @@ export function MeetingScheduling() {
               </section>
             </>
           ) : (
-            <div className="flex min-h-64 flex-col items-center justify-center gap-3 text-muted-foreground">
-              <Users className="h-10 w-10" />
+            <div className="flex min-h-64 flex-col items-center justify-center gap-3 text-center text-muted-foreground">
+              <Users className="h-10 w-10 text-[var(--brand-primary)] card-icon-drop-shadow" />
               <p>Select a meeting type or create your scheduling page.</p>
             </div>
           )}

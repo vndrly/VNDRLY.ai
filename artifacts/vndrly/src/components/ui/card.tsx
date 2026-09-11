@@ -63,6 +63,7 @@ const Card = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
+    data-slot="card"
     className={cn(CARD_SURFACE_CLASS, className)}
     {...props}
   />

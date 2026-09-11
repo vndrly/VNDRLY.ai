@@ -11,6 +11,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { downloadCsv } from "./csv";
+import { FilePenLine, Receipt, ShieldCheck } from "lucide-react";
+import BrandPillButton from "@/components/brand-pill-button";
+import { WorkHubCardTitle, WorkHubPageHeading } from "./chrome";
 type Row = { id: string; data: Record<string, any> };
 type Finance = {
   permissions: Record<string, boolean>;
@@ -167,6 +170,7 @@ export function WorkHubFinance() {
   if (!data) return null;
   return (
     <div className="space-y-6">
+      <WorkHubPageHeading module="finance" title="Billing & Payroll" />
       <p className="rounded-lg border p-3">
         {data.providers.message} Evaluation platform fee:{" "}
         {data.fee.basisPoints / 100}%
@@ -180,7 +184,7 @@ export function WorkHubFinance() {
         <>
           <Card>
             <CardHeader>
-              <CardTitle>Ticket billing</CardTitle>
+              <CardTitle><WorkHubCardTitle icon={Receipt}>Ticket billing</WorkHubCardTitle></CardTitle>
             </CardHeader>
             <CardContent>
               <a className="underline" href="/invoices">
@@ -198,7 +202,7 @@ export function WorkHubFinance() {
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle>Manual customer invoice</CardTitle>
+              <CardTitle><WorkHubCardTitle icon={FilePenLine}>Manual customer invoice</WorkHubCardTitle></CardTitle>
             </CardHeader>
             <CardContent>
               <form
@@ -250,9 +254,9 @@ export function WorkHubFinance() {
                     required
                   />
                 </label>
-                <Button disabled={mutation.isPending}>
+                <BrandPillButton type="submit" tone="brand" className="w-fit justify-self-start" disabled={mutation.isPending}>
                   Save invoice draft
-                </Button>
+                </BrandPillButton>
                 {editingId && (
                   <Button
                     type="button"
@@ -313,9 +317,9 @@ export function WorkHubFinance() {
           {data.invoices.map((row) => (
             <Card key={row.id}>
               <CardHeader>
-                <CardTitle>
+                <CardTitle><WorkHubCardTitle icon={Receipt}>
                   {row.data.customer} · {money(row.data.amountCents)}
-                </CardTitle>
+                </WorkHubCardTitle></CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <p>{row.data.description}</p>
@@ -437,7 +441,7 @@ export function WorkHubFinance() {
       )}
       <Card>
         <CardHeader>
-          <CardTitle>US W-2 employer payroll</CardTitle>
+          <CardTitle><WorkHubCardTitle icon={FilePenLine}>US W-2 employer payroll</WorkHubCardTitle></CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {!data.permissions.payrollView ? (
@@ -548,9 +552,11 @@ export function WorkHubAdministration() {
   if (!query.data.permissions.administer)
     return <p>Only company administrators can assign finance roles.</p>;
   return (
+    <div className="space-y-5">
+    <WorkHubPageHeading module="administration" title="Administration" />
     <Card>
       <CardHeader>
-        <CardTitle>Finance role assignments</CardTitle>
+        <CardTitle><WorkHubCardTitle icon={ShieldCheck}>Finance role assignments</WorkHubCardTitle></CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         <p>
@@ -616,5 +622,6 @@ export function WorkHubAdministration() {
         {mutation.isSuccess && <p role="status">Finance assignments saved.</p>}
       </CardContent>
     </Card>
+    </div>
   );
 }

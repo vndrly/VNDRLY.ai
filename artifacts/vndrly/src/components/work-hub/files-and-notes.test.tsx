@@ -24,7 +24,7 @@ describe("Files and native notes", () => {
   });
   it("keeps native notes accessible alongside the new file library and uses their owner's versioned contract", async () => {
     render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><FilesAndNotes/></QueryClientProvider>);
-    expect(screen.getByRole("heading", { name: "Files & Notes" }).parentElement?.className).toContain("rounded-xl");
+    expect(screen.getByRole("heading", { name: "Files & Notes" }).closest("section")?.className).toContain("rounded-xl");
     expect(screen.getByRole("tab", { name: "File library" }).getAttribute("aria-pressed")).toBe("true");
     expect(screen.getByText("Working file library")).toBeTruthy();
     fireEvent.click(screen.getByRole("tab", { name: "Native notes" }));

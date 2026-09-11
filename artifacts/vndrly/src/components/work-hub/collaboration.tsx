@@ -13,6 +13,12 @@ import BrandPillButton from "@/components/brand-pill-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useHubPreferences } from "./navigation";
+import {
+  BrandedSelect,
+  WorkHubPageHeading,
+  WORK_HUB_CARD_CLASS,
+  WORK_HUB_SUBCARD_CLASS,
+} from "./chrome";
 
 type Row = Record<string, any>;
 export function displayMentionText(body: string, people: Row[]) {
@@ -56,9 +62,8 @@ export function PeoplePicker({
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
-      <select
+      <BrandedSelect
         aria-label="Person"
-        className="h-10 rounded border bg-background px-2 text-sm"
         value={value}
         onChange={(e) => onChange(e.target.value)}
       >
@@ -68,7 +73,7 @@ export function PeoplePicker({
             {p.displayName} {p.email ? `(${p.email})` : ""}
           </option>
         ))}
-      </select>
+      </BrandedSelect>
       <HubError error={people.error} />
     </div>
   );
@@ -85,13 +90,14 @@ export function ActivityWorkspace() {
   return (
     <section
       aria-label="Activity workspace"
-      className="mx-auto max-w-6xl rounded-xl border bg-card p-6 shadow-sm"
+      data-work-hub-card
+      className={`mx-auto max-w-6xl p-6 ${WORK_HUB_CARD_CLASS}`}
     >
-      <h1 className="text-2xl font-semibold">Activity</h1>
+      <WorkHubPageHeading module="activity" title="Activity" />
       <HubError error={home.error ?? acknowledge.error} />
       {home.data?.announcements?.length > 0 && <section aria-label="Your announcements" className="my-5 grid gap-3">
         <h2 className="text-lg font-semibold">Announcements</h2>
-        {home.data?.announcements.map(({ announcement, recipient }: Row) => <article key={announcement.id} className="rounded-lg border bg-card p-4">
+        {home.data?.announcements.map(({ announcement, recipient }: Row) => <article key={announcement.id} data-work-hub-card className={`${WORK_HUB_SUBCARD_CLASS} p-4`}>
           {announcement.urgency === "urgent" && <p className="font-semibold text-red-600">Urgent</p>}
           <h3 className="font-semibold">{announcement.title}</h3><p className="whitespace-pre-wrap text-sm">{announcement.body}</p>
           {announcement.acknowledgementRequired && (recipient.acknowledgedAt ? <p className="mt-2 text-sm">Acknowledged</p> : <BrandPillButton className="mt-2" tone="brand" disabled={acknowledge.isPending} onClick={() => acknowledge.mutate(announcement.id)}>Acknowledge</BrandPillButton>)}
@@ -103,7 +109,8 @@ export function ActivityWorkspace() {
       <div
         role="search"
         aria-label="Search activity"
-        className="my-5 rounded-xl border bg-background p-4 shadow-sm"
+        data-work-hub-card
+        className={`my-5 p-4 shadow-sm ${WORK_HUB_SUBCARD_CLASS}`}
       >
         <Input
           aria-label="Filter activity"
@@ -114,7 +121,7 @@ export function ActivityWorkspace() {
       </div>
       <HubError error={activity.error} />
       {activity.isLoading && <p role="status">Loading activity…</p>}
-      <div className="divide-y rounded-xl border bg-card">
+      <div data-work-hub-card className={`divide-y ${WORK_HUB_SUBCARD_CLASS}`}>
         {activity.data
           ?.filter((x) =>
             `${displayMentionText(x.body, people.data ?? [])} ${x.channelName}`
@@ -283,17 +290,19 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
     );
   return (
     <section
-      className="grid min-h-[calc(100vh-9rem)] gap-4 bg-background p-4 lg:grid-cols-[300px_minmax(0,1fr)]"
+      className="grid min-h-[calc(100vh-9rem)] gap-4 bg-background p-4 lg:grid-cols-[minmax(340px,380px)_minmax(0,1fr)]"
       data-testid={chat ? "work-hub-chat" : "work-hub-channels"}
     >
       <aside
         aria-label="Conversations panel"
-        className="space-y-4 rounded-xl border bg-card p-4 shadow-sm"
+        data-work-hub-card
+        className={`min-w-0 space-y-4 p-4 ${WORK_HUB_CARD_CLASS}`}
       >
-        <h1 className="flex items-center gap-2 text-xl font-semibold">
-          {chat ? <MessageSquare /> : <Users />}
-          {chat ? "Chat" : "Crews & Channels"}
-        </h1>
+        <WorkHubPageHeading
+          module={chat ? "chat" : "channels"}
+          title={chat ? "Chat" : "Crews & Channels"}
+          compact
+        />
         <div className="relative">
           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
           <Input
@@ -304,9 +313,8 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <select
+        <BrandedSelect
           aria-label="Conversation filter"
-          className="h-9 w-full rounded border bg-background px-2"
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
         >
@@ -315,11 +323,10 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
               {x[0].toUpperCase() + x.slice(1)}
             </option>
           ))}
-        </select>
+        </BrandedSelect>
         {!chat && (
-          <select
+          <BrandedSelect
             aria-label="Crew"
-            className="h-10 w-full rounded border bg-background px-2"
             value={crew}
             onChange={(e) => {
               setCrew(e.target.value);
@@ -332,7 +339,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                 {c.name}
               </option>
             ))}
-          </select>
+          </BrandedSelect>
         )}
         <HubError error={channels.error ?? crews.error} />
         {channels.isLoading && <p role="status">Loading conversations…</p>}
@@ -481,16 +488,15 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                 )}
                 {crew && canAdministerChannels && (
                   <>
-                    <select
+                    <BrandedSelect
                       aria-label="Channel visibility"
-                      className="h-10 rounded border bg-background"
                       value={visibility}
                       onChange={(e) => setVisibility(e.target.value)}
                     >
                       <option value="crew">Entire Crew</option>
                       <option value="private">Private</option>
                       <option value="shared">Shared</option>
-                    </select>
+                    </BrandedSelect>
                     <BrandPillButton
                       tone="blue"
                       disabled={!name.trim() || mutation.isPending}
@@ -547,7 +553,8 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
           <>
             <section
               aria-label="Selected channel"
-              className="w-full rounded-xl border bg-card px-6 py-4 shadow-sm"
+              data-work-hub-card
+              className={`w-full px-6 py-4 ${WORK_HUB_CARD_CLASS}`}
             >
               <h2 className="text-xl font-semibold">
                 {channel?.name ?? "Conversation"}
@@ -599,7 +606,8 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                 <>
                   <section
                     aria-label="Channel content"
-                    className="w-full min-h-[18rem] rounded-xl border bg-card p-4 shadow-sm md:p-6"
+                    data-work-hub-card
+                    className={`w-full min-h-[18rem] p-4 md:p-6 ${WORK_HUB_CARD_CLASS}`}
                   >
                   {thread && (
                     <div className="mb-4 flex items-center justify-between border-b pb-3">
@@ -699,7 +707,8 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                   </section>
                   <form
                     aria-label="Message composer"
-                    className="sticky bottom-4 grid w-full gap-3 rounded-xl border bg-card p-4 shadow-sm"
+                    data-work-hub-card
+                    className={`sticky bottom-4 grid w-full gap-3 p-4 ${WORK_HUB_CARD_CLASS}`}
                     onSubmit={(e) => {
                       e.preventDefault();
                       void send().catch(() => undefined);
@@ -739,7 +748,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <select
                         aria-label="Mention teammate"
-                        className="max-w-48 rounded border bg-background p-2 text-sm"
+                        className="max-w-48 rounded-lg border-2 border-[color:var(--brand-primary)] bg-background p-2 text-sm"
                         value=""
                         onChange={(e) =>
                           setDrafts((d) => ({
@@ -773,7 +782,8 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                 <div
                   role="region"
                   aria-label="Channel content"
-                  className="grid w-full min-h-[18rem] gap-4 rounded-xl border bg-card p-4 shadow-sm md:p-6"
+                  data-work-hub-card
+                  className={`grid w-full min-h-[18rem] gap-4 p-4 md:p-6 ${WORK_HUB_CARD_CLASS}`}
                 >
                   {notes.data?.map((n) => (
                     <article key={n.id} className="rounded border p-4">
@@ -843,7 +853,8 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                 <div
                   role="region"
                   aria-label="Channel content"
-                  className="w-full min-h-[18rem] space-y-4 rounded-xl border bg-card p-4 shadow-sm md:p-6"
+                  data-work-hub-card
+                  className={`w-full min-h-[18rem] space-y-4 p-4 md:p-6 ${WORK_HUB_CARD_CLASS}`}
                 >
                   <h3 className="font-semibold">Shared content</h3>
                   <a
@@ -868,7 +879,8 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                 <div
                   role="region"
                   aria-label="Channel content"
-                  className="w-full min-h-[18rem] divide-y rounded-xl border bg-card p-4 shadow-sm md:p-6"
+                  data-work-hub-card
+                  className={`w-full min-h-[18rem] divide-y p-4 md:p-6 ${WORK_HUB_CARD_CLASS}`}
                 >
                   {members.data?.map((m) => (
                     <div key={m.userId ?? m.id} className="py-3">
@@ -938,10 +950,11 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
         ) : (
           <section
             aria-label="Channel content"
-            className="flex min-h-96 w-full flex-col items-center justify-center gap-3 rounded-xl border bg-card text-muted-foreground shadow-sm"
+            data-work-hub-card
+            className={`flex min-h-96 w-full flex-col items-center justify-center gap-3 text-center text-muted-foreground ${WORK_HUB_CARD_CLASS}`}
           >
-            <MessageSquare className="h-10 w-10" />
-            <h2 className="text-lg font-semibold">Choose a conversation</h2>
+            <MessageSquare className="h-10 w-10 text-[var(--brand-primary)]" />
+            <h2 className="text-lg font-bold text-[var(--brand-primary)]">Choose a conversation</h2>
             <p className="text-sm">
               Your company conversations and shared work live here.
             </p>

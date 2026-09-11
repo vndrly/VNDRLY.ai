@@ -5,8 +5,10 @@ import {
   ownerForUser,
   workHubRequest,
   commandEnvelope,
+  createWorkHubOperationId,
 } from "@/lib/work-hub-client";
 import { Button } from "@/components/ui/button";
+import BrandPillButton from "@/components/brand-pill-button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
@@ -17,7 +19,9 @@ import {
   Trash2,
   RotateCcw,
   Share2,
+  Upload,
 } from "lucide-react";
+import { WorkHubCardTitle } from "./chrome";
 type Document = {
   id: string;
   createdBy: number;
@@ -36,6 +40,12 @@ type Document = {
   favorite: boolean;
   canManage: boolean;
 };
+type UploadReservation = {
+  file: File;
+  uploadOwner: { type: "vendor" | "partner"; id: number };
+  finalizeOperationId: string;
+  resource: { documentId: string; fileId: string; uploadURL: string };
+};
 export function WorkHubFiles() {
   const { user } = useAuth();
   const owner = ownerForUser(user);
@@ -46,12 +56,25 @@ export function WorkHubFiles() {
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [replace, setReplace] = useState<Document | null>(null);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [pendingOperationId, setPendingOperationId] = useState<string | null>(null);
+  const [reservationStarted, setReservationStarted] = useState(false);
+  const [reservedUpload, setReservedUpload] = useState<UploadReservation | null>(null);
   const [versions, setVersions] = useState<string | null>(null);
   const [share, setShare] = useState<{
     token: string;
     expiresAt: string;
   } | null>(null);
-  useEffect(() => { setShare(null); setReplace(null); setVersions(null); }, [user?.userId, user?.activeMembershipId, owner?.type, owner?.id]);
+  useEffect(() => {
+    setShare(null);
+    setReplace(null);
+    setPendingFile(null);
+    setPendingOperationId(null);
+    setReservationStarted(false);
+    setReservedUpload(null);
+    setVersions(null);
+    if (input.current) input.current.value = "";
+  }, [user?.userId, user?.activeMembershipId, owner?.type, owner?.id]);
   const queryKey = ["work-hub-file-library", user?.userId, user?.activeMembershipId, owner?.type, owner?.id];
   const query = useQuery({
     queryKey,
@@ -106,6 +129,7 @@ export function WorkHubFiles() {
       const checksumSha256 = [...new Uint8Array(digest)]
         .map((n) => n.toString(16).padStart(2, "0"))
         .join("");
+      setReservationStarted(true);
       const channel = channels.data?.find((c) => c.id === channelId);
       const uploadOwner = replace
         ? { type: replace.orgType, id: replace.orgId }
@@ -115,25 +139,37 @@ export function WorkHubFiles() {
               id: channel.ownerOrgId,
             }
           : owner!;
-      const reserved = await workHubRequest<{
-        resource: { documentId: string; fileId: string; uploadURL: string };
-      }>("/file-library/reserve", {
-        method: "POST",
-        body: JSON.stringify(
-          commandEnvelope(uploadOwner, {
-            ...(replace ? { documentId: replace.id } : {}),
-            scope: replace?.data.scope ?? scope,
-            ...((replace?.data.channelId ?? channelId)
-              ? { channelId: replace?.data.channelId ?? channelId }
-              : {}),
-            fileName: file.name,
-            byteSize: file.size,
-            contentType: file.type || "application/octet-stream",
-            checksumSha256,
-          }),
-        ),
-      });
-      const response = await fetch(reserved.resource.uploadURL, {
+      let reservation = reservedUpload?.file === file ? reservedUpload : null;
+      if (!reservation) {
+        const operationId = pendingOperationId ?? createWorkHubOperationId();
+        if (!pendingOperationId) setPendingOperationId(operationId);
+        const reserved = await workHubRequest<{
+          resource: { documentId: string; fileId: string; uploadURL: string };
+        }>("/file-library/reserve", {
+          method: "POST",
+          body: JSON.stringify(
+            commandEnvelope(uploadOwner, {
+              ...(replace ? { documentId: replace.id } : {}),
+              scope: replace?.data.scope ?? scope,
+              ...((replace?.data.channelId ?? channelId)
+                ? { channelId: replace?.data.channelId ?? channelId }
+                : {}),
+              fileName: file.name,
+              byteSize: file.size,
+              contentType: file.type || "application/octet-stream",
+              checksumSha256,
+            }, operationId),
+          ),
+        });
+        reservation = {
+          file,
+          uploadOwner,
+          finalizeOperationId: createWorkHubOperationId(),
+          resource: reserved.resource,
+        };
+        setReservedUpload(reservation);
+      }
+      const response = await fetch(reservation.resource.uploadURL, {
         method: "PUT",
         headers: { "Content-Type": file.type || "application/octet-stream" },
         body: file,
@@ -145,19 +181,25 @@ export function WorkHubFiles() {
       await workHubRequest("/file-library/finalize", {
         method: "POST",
         body: JSON.stringify(
-          commandEnvelope(uploadOwner, {
-            id: reserved.resource.documentId,
-            fileId: reserved.resource.fileId,
-          }),
+          commandEnvelope(
+            reservation.uploadOwner,
+            {
+              id: reservation.resource.documentId,
+              fileId: reservation.resource.fileId,
+            },
+            reservation.finalizeOperationId,
+          ),
         ),
       });
     },
     onSuccess: () => {
       setReplace(null);
-      cache.invalidateQueries({ queryKey });
-    },
-    onSettled: () => {
+      setPendingFile(null);
+      setPendingOperationId(null);
+      setReservationStarted(false);
+      setReservedUpload(null);
       if (input.current) input.current.value = "";
+      cache.invalidateQueries({ queryKey });
     },
   });
   if (!owner) return <p>Select a company to open your files.</p>;
@@ -198,7 +240,7 @@ export function WorkHubFiles() {
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>Upload a file</CardTitle>
+          <CardTitle><WorkHubCardTitle icon={Upload}>Upload a file</WorkHubCardTitle></CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <p>
@@ -212,6 +254,7 @@ export function WorkHubFiles() {
               aria-label="File audience"
               className="bg-background border rounded p-2"
               value={scope}
+              disabled={upload.isPending || reservationStarted}
               onChange={(e) => setScope(e.target.value)}
             >
               <option value="personal">Only me</option>
@@ -226,6 +269,7 @@ export function WorkHubFiles() {
                 aria-label="File channel"
                 className="bg-background border rounded p-2"
                 value={channelId}
+                disabled={upload.isPending || reservationStarted}
                 onChange={(e) => setChannelId(e.target.value)}
               >
                 <option value="">Choose channel</option>
@@ -242,17 +286,33 @@ export function WorkHubFiles() {
             type="file"
             aria-label="Choose file to upload"
             disabled={
+              upload.isPending || reservationStarted
+            }
+            onChange={(e) => {
+              const file = e.target.files?.[0] ?? null;
+              setPendingFile(file);
+              setPendingOperationId(file ? createWorkHubOperationId() : null);
+              setReservationStarted(false);
+              setReservedUpload(null);
+            }}
+          />
+          <BrandPillButton
+            type="button"
+            tone="brand"
+            className="w-fit"
+            disabled={
+              !pendingFile ||
               upload.isPending ||
               (!replace && scope === "channel" && !channelId)
             }
-            onChange={(e) => {
-              if (e.target.files?.[0]) upload.mutate(e.target.files[0]);
-            }}
-          />
+            onClick={() => pendingFile && upload.mutate(pendingFile)}
+          >
+            Upload File
+          </BrandPillButton>
           {replace && (
             <p>
               Replacing {replace.data.name}.{" "}
-              <Button variant="outline" onClick={() => setReplace(null)}>
+              <Button variant="outline" disabled={upload.isPending || reservationStarted} onClick={() => { setReplace(null); setPendingFile(null); setPendingOperationId(null); setReservedUpload(null); if (input.current) input.current.value = ""; }}>
                 Cancel replacement
               </Button>
             </p>
@@ -350,8 +410,14 @@ export function WorkHubFiles() {
                       <>
                         <Button
                           variant="outline"
+                          disabled={upload.isPending || reservationStarted}
                           onClick={() => {
                             setReplace(doc);
+                            setPendingFile(null);
+                            setPendingOperationId(null);
+                            setReservationStarted(false);
+                            setReservedUpload(null);
+                            if (input.current) input.current.value = "";
                             input.current?.click();
                           }}
                         >

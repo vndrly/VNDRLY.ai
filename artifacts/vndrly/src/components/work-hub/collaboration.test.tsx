@@ -58,6 +58,15 @@ describe("Work Hub conversations", () => {
     expect(workspace.contains(composer)).toBe(true);
     expect([header, content, composer].every((card) => card.className.includes("w-full"))).toBe(true);
   });
+  it("uses branded conversation headings, contained selectors, and the wider chat setup card", async () => {
+    mount();
+    await screen.findByText("Original message");
+    const panel = screen.getByRole("complementary", { name: "Conversations panel" });
+    expect(panel.parentElement?.className).toContain("minmax(340px,380px)");
+    expect(screen.getByRole("heading", { name: "Chat" }).className).toContain("text-[var(--brand-primary)]");
+    expect(screen.getByLabelText("Conversation filter").className).toContain("text-sm");
+    expect(screen.getByLabelText("Conversation filter").parentElement?.className).toContain("relative");
+  });
   it("retries an interrupted send with the original operation ID", async () => {
     const original = mocks.request.getMockImplementation()!;
     const sent: any[] = [];
@@ -141,6 +150,23 @@ describe("Work Hub conversations", () => {
       target: { value: "crew-1" },
     });
     expect(screen.queryByRole("button", { name: "Add channel" })).toBeNull();
+  });
+});
+
+describe("Work Hub activity chrome", () => {
+  it("uses the navigation bell and a rounded branded search sub-card", async () => {
+    mocks.request.mockImplementation(async () => []);
+    render(
+      <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+        <ActivityWorkspace />
+      </QueryClientProvider>,
+    );
+    const heading = screen.getByRole("heading", { name: "Activity" });
+    expect(heading.closest("header")?.querySelector('[data-work-hub-heading-icon="activity"]')).toBeTruthy();
+    expect(heading.className).toContain("text-[var(--brand-primary)]");
+    const search = screen.getByRole("search", { name: "Search activity" });
+    expect(search.className).toContain("rounded-xl");
+    expect(search.className).toContain("border-[color:var(--brand-primary)]");
   });
 });
 

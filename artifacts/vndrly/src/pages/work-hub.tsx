@@ -16,6 +16,12 @@ import {
   MessageSquare,
   Search,
   Headphones,
+  ClipboardList,
+  UserPlus,
+  ListChecks,
+  Library,
+  CalendarClock,
+  UserRoundCheck,
 } from "lucide-react";
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import BrandPillButton from "@/components/brand-pill-button";
@@ -44,6 +50,12 @@ import {
   workHubModulePath,
   workHubRequest,
 } from "@/lib/work-hub-client";
+import {
+  WorkHubCardTitle,
+  WorkHubPageHeading,
+  WorkHubSurface,
+  WORK_HUB_CARD_CLASS,
+} from "@/components/work-hub/chrome";
 
 const MODULES = {
   channels: [
@@ -120,25 +132,18 @@ function Shell({
   module: ModuleKey;
   children: ReactNode;
 }) {
-  const [title, description, Icon] = MODULES[module];
+  const [title, description] = MODULES[module];
   return (
     <section
       className="mx-auto max-w-7xl p-4 md:p-8"
       data-testid={`work-hub-${module}`}
     >
-      <div className="mb-6 flex items-center gap-3">
-        <Icon className="h-7 w-7 text-[var(--brand-primary)]" />
-        <div>
-          <a
-            href="/work-hub"
-            className="text-xs font-semibold uppercase tracking-[.2em] text-muted-foreground"
-          >
-            Work Hub
-          </a>
-          <h1 className="text-3xl font-bold">{title}</h1>
-          <p className="text-sm text-muted-foreground">{description}</p>
-        </div>
-      </div>
+      <WorkHubPageHeading
+        module={module}
+        title={title}
+        description={description}
+        className="mb-6"
+      />
       {children}
     </section>
   );
@@ -282,7 +287,7 @@ function Channels() {
       <div className="grid gap-4">
         <Card>
           <CardHeader>
-            <CardTitle>Channels</CardTitle>
+            <CardTitle><WorkHubCardTitle icon={MessageSquare}>Channels</WorkHubCardTitle></CardTitle>
           </CardHeader>
           <CardContent className="grid gap-2">
             <form
@@ -400,7 +405,7 @@ function Channels() {
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between gap-3">
-                <CardTitle>Conversation</CardTitle>
+                <CardTitle><WorkHubCardTitle icon={MessageSquare}>Conversation</WorkHubCardTitle></CardTitle>
                 {canManageChannels && (
                   <BrandPillButton
                     tone="red"
@@ -462,7 +467,7 @@ function Channels() {
         {active && (
           <Card>
             <CardHeader>
-              <CardTitle>Channel notes</CardTitle>
+              <CardTitle><WorkHubCardTitle icon={FileText}>Channel notes</WorkHubCardTitle></CardTitle>
             </CardHeader>
             <CardContent className="grid gap-3">
               {notes.data?.map((n) => (
@@ -660,12 +665,12 @@ function CalendarModule() {
           <Card>
             <CardHeader>
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <CardTitle>
+                <CardTitle><WorkHubCardTitle icon={CalendarDays}>
                   {month.toLocaleDateString(undefined, {
                     month: "long",
                     year: "numeric",
                   })}
-                </CardTitle>
+                </WorkHubCardTitle></CardTitle>
                 <div className="flex gap-2">
                   <BrandPillButton
                     tone="brand"
@@ -754,7 +759,7 @@ function CalendarModule() {
           {canManage && (
             <Card>
               <CardHeader>
-                <CardTitle>Create shift</CardTitle>
+                <CardTitle><WorkHubCardTitle icon={CalendarDays}>Create shift</WorkHubCardTitle></CardTitle>
               </CardHeader>
               <CardContent>
                 <form
@@ -916,7 +921,7 @@ function CalendarModule() {
         </div>
         <Card>
           <CardHeader>
-            <CardTitle>Project timeline</CardTitle>
+            <CardTitle><WorkHubCardTitle icon={CheckSquare2}>Project timeline</WorkHubCardTitle></CardTitle>
           </CardHeader>
           <CardContent className="grid gap-3">
             {items
@@ -1030,7 +1035,7 @@ function Governance({
     <div className="mt-4 grid gap-4 lg:grid-cols-2">
       <Card>
         <CardHeader>
-          <CardTitle>Announcements and acknowledgements</CardTitle>
+          <CardTitle><WorkHubCardTitle icon={MessageSquare}>Announcements and acknowledgements</WorkHubCardTitle></CardTitle>
         </CardHeader>
         <CardContent className="grid gap-3">
           <form
@@ -1107,7 +1112,7 @@ function Governance({
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>Approval requests</CardTitle>
+          <CardTitle><WorkHubCardTitle icon={CheckSquare2}>Approval requests</WorkHubCardTitle></CardTitle>
         </CardHeader>
         <CardContent className="grid gap-3">
           <form
@@ -1304,7 +1309,7 @@ function TasksModule() {
       <div className="grid gap-4 lg:grid-cols-[1fr_380px]">
         <Card>
           <CardHeader>
-            <CardTitle>Assignments and review</CardTitle>
+            <CardTitle><WorkHubCardTitle icon={ClipboardList}>Assignments and review</WorkHubCardTitle></CardTitle>
           </CardHeader>
           <CardContent className="grid gap-2">
             {tasks.data?.map((row) => (
@@ -1354,7 +1359,7 @@ function TasksModule() {
         {canManage && (
           <Card>
             <CardHeader>
-              <CardTitle>Assign task</CardTitle>
+              <CardTitle><WorkHubCardTitle icon={UserPlus}>Assign task</WorkHubCardTitle></CardTitle>
             </CardHeader>
             <CardContent>
               <form
@@ -1409,7 +1414,7 @@ function TasksModule() {
       </div>
       <Card className="mt-4">
         <CardHeader>
-          <CardTitle>My checklists, forms, and approvals</CardTitle>
+          <CardTitle><WorkHubCardTitle icon={ListChecks}>My checklists, forms, and approvals</WorkHubCardTitle></CardTitle>
         </CardHeader>
         <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {required.data?.checklists?.map(({ instance, template }: Row) => (
@@ -1532,7 +1537,7 @@ function TasksModule() {
       {canManage && (
         <Card className="mt-4">
           <CardHeader>
-            <CardTitle>Reusable checklists and forms</CardTitle>
+            <CardTitle><WorkHubCardTitle icon={Library}>Reusable checklists and forms</WorkHubCardTitle></CardTitle>
           </CardHeader>
           <CardContent className="grid gap-5 lg:grid-cols-[360px_1fr]">
             <form
@@ -1695,7 +1700,7 @@ function MeetingsModule() {
       <div className="grid gap-4 lg:grid-cols-[1fr_380px]">
         <Card>
           <CardHeader>
-            <CardTitle>Scheduled meetings</CardTitle>
+            <CardTitle><WorkHubCardTitle icon={CalendarClock}>Scheduled meetings</WorkHubCardTitle></CardTitle>
           </CardHeader>
           <CardContent className="grid gap-2">
             {calendar.data?.meetings?.map(({ meeting, occurrence }: Row) => (
@@ -1732,7 +1737,7 @@ function MeetingsModule() {
         {canManage ? (
           <Card id="schedule-meeting">
             <CardHeader>
-              <CardTitle>Schedule meeting</CardTitle>
+              <CardTitle><WorkHubCardTitle icon={CalendarDays}>Schedule meeting</WorkHubCardTitle></CardTitle>
             </CardHeader>
             <CardContent>
               <form
@@ -1796,7 +1801,7 @@ function MeetingsModule() {
         ) : (
           <Card>
             <CardHeader>
-              <CardTitle>Participant access</CardTitle>
+              <CardTitle><WorkHubCardTitle icon={UserRoundCheck}>Participant access</WorkHubCardTitle></CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
@@ -1889,7 +1894,7 @@ function FilesModule() {
     <Shell module="files">
       <Card className="mb-4">
         <CardHeader>
-          <CardTitle>Add an authorized file</CardTitle>
+          <CardTitle><WorkHubCardTitle icon={FileText}>Add an authorized file</WorkHubCardTitle></CardTitle>
         </CardHeader>
         <CardContent>
           <form
@@ -1967,7 +1972,7 @@ function FilesModule() {
       <Card>
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <CardTitle>Files and notes library</CardTitle>
+            <CardTitle><WorkHubCardTitle icon={Library}>Files and notes library</WorkHubCardTitle></CardTitle>
             <select
               aria-label="Filter file category"
               className="h-10 rounded-md border bg-background px-3"
@@ -2035,7 +2040,7 @@ function SearchModule() {
     <Shell module="search">
       <Card>
         <CardHeader>
-          <CardTitle>Search authorized records</CardTitle>
+          <CardTitle><WorkHubCardTitle icon={Search}>Search authorized records</WorkHubCardTitle></CardTitle>
         </CardHeader>
         <CardContent className="grid gap-3">
           <form
@@ -2118,7 +2123,7 @@ function SettingsModule() {
     <Shell module="settings"><ImportExportTools />
       <Card>
         <CardHeader>
-          <CardTitle>Microsoft 365 import</CardTitle>
+          <CardTitle><WorkHubCardTitle icon={Link2}>Microsoft 365 import</WorkHubCardTitle></CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4">
           <p className="rounded-lg border border-amber-400/40 bg-amber-50 p-4 text-sm text-amber-950">
@@ -2153,7 +2158,7 @@ function SettingsModule() {
       {canManage && (
         <Card className="mt-4">
           <CardHeader>
-            <CardTitle>Audit history</CardTitle>
+            <CardTitle><WorkHubCardTitle icon={Search}>Audit history</WorkHubCardTitle></CardTitle>
           </CardHeader>
           <CardContent className="grid gap-2">
             <Notice error={audit.error} />
@@ -2232,9 +2237,19 @@ function Home() {
     </section>
   );
 }
-function AskVWorkspace() {
-  const [open, setOpen] = useState(true);
-  return <section className="p-6"><h1 className="text-2xl font-semibold">AskV</h1><p className="my-4 text-muted-foreground">Ask about your work by text or voice. AskV uses your current company permissions.</p><BrandPillButton tone="brand" onClick={() => setOpen(true)}>Open AskV</BrandPillButton><AssistantPanel open={open} onOpenChange={setOpen}/></section>;
+export function AskVWorkspace() {
+  return (
+    <section className="mx-auto max-w-7xl space-y-5 p-4 md:p-8">
+      <WorkHubPageHeading
+        module="askv"
+        title="AskV"
+        description="Ask about your work by text or voice. AskV uses your current company permissions."
+      />
+      <div data-work-hub-card className={`overflow-hidden ${WORK_HUB_CARD_CLASS}`}>
+        <AssistantPanel open onOpenChange={() => undefined} embedded />
+      </div>
+    </section>
+  );
 }
 function WorkHubContent() {
   const [location] = useLocation();
@@ -2259,5 +2274,9 @@ function WorkHubContent() {
 
 export default function WorkHubPage() {
   const { user } = useAuth();
-  return <WorkHubContent key={`${user?.userId}:${user?.activeMembershipId}:${user?.vendorId}:${user?.partnerId}`} />;
+  return (
+    <WorkHubSurface>
+      <WorkHubContent key={`${user?.userId}:${user?.activeMembershipId}:${user?.vendorId}:${user?.partnerId}`} />
+    </WorkHubSurface>
+  );
 }

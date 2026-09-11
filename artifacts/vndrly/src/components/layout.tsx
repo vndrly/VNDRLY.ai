@@ -233,7 +233,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   // AskV pane: horizontal chrome above the content area for every
   // authenticated admin / partner / vendor viewer. Uses the same
   // nav-pane background as the left sidebar; hosts Ask V + powered-by.
-  const showAskVPane = !!user;
+  // The dedicated Work Hub AskV route embeds the complete assistant. Hiding
+  // the global launcher there prevents two simultaneous assistant sessions.
+  const showAskVPane = !!user && location !== "/work-hub/askv";
   const navPaneStyle = { backgroundColor: NAV_PANE_DARK_BG } as const;
 
   return (

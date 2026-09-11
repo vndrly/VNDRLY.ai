@@ -12,6 +12,7 @@ import { useBrand } from "@/hooks/use-brand";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { commandEnvelope, workHubRequest } from "@/lib/work-hub-client";
+import { WorkHubPageHeading, WORK_HUB_CARD_CLASS } from "./chrome";
 type Channel = {
   id: string;
   name: string;
@@ -235,8 +236,8 @@ export function FilesAndNotes() {
   const brand = useBrand();
   const brandPillSrc = brandImagePillSrc(brand.primary, brand.name);
   return (
-    <section className="mx-auto max-w-7xl rounded-xl border bg-card p-4 shadow-sm md:p-6">
-      <h1 className="text-2xl font-semibold">Files & Notes</h1>
+    <section data-work-hub-card className={`mx-auto max-w-7xl p-4 md:p-6 ${WORK_HUB_CARD_CLASS}`}>
+      <WorkHubPageHeading module="files" title="Files & Notes" />
       <div className="my-5 flex flex-wrap gap-2" role="tablist">
         {["files", "notes", "existing"].map((key) => (
           <PngPillButton

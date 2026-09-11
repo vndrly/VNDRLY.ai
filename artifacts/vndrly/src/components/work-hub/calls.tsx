@@ -20,6 +20,12 @@ import {
   workHubRequest,
 } from "@/lib/work-hub-client";
 import { HubError, PeoplePicker } from "./collaboration";
+import {
+  WorkHubCardTitle,
+  WorkHubPageHeading,
+  WORK_HUB_CARD_CLASS,
+  WORK_HUB_SUBCARD_CLASS,
+} from "./chrome";
 type Call = {
   id: string;
   occurrenceId: string;
@@ -298,13 +304,33 @@ export function WorkHubCalls() {
   };
   const brandPillSrc = brandImagePillSrc(brand.primary, brand.name);
   const available = settings.data?.available ?? true;
+  const presenceLabel = available
+    ? "Show me as away for calls"
+    : "Show me as available for calls";
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center gap-3">
-        <h2 className="flex items-center gap-2 text-xl font-semibold">
-          <Phone className="h-5 w-5" /> Calls
-        </h2>
-      </div>
+      <WorkHubPageHeading
+        module="calls"
+        title="Calls"
+        actions={
+          <PngPillButton
+            activeSrc={brandPillSrc}
+            idleSrc={available ? brandPillSrc : undefined}
+            disabled={!settings.data || change.isPending}
+            aria-pressed={available}
+            aria-label="Available for calls"
+            onClick={() =>
+              change.mutate({
+                path: "/calls/settings",
+                method: "PUT",
+                body: { ...settings.data, available: !available },
+              })
+            }
+          >
+            {presenceLabel}
+          </PngPillButton>
+        }
+      />
       <HubError
         error={
           calls.error ??
@@ -340,46 +366,38 @@ export function WorkHubCalls() {
           </div>
         </div>
       ))}
+      <section
+        aria-label="Calls workspace"
+        data-work-hub-card
+        className={`p-4 md:p-5 ${WORK_HUB_CARD_CLASS}`}
+      >
       <div className="grid items-start gap-5 lg:grid-cols-[minmax(220px,320px)_minmax(0,1fr)]">
         <aside
           aria-label="Start an internal call"
-          className="w-full max-w-xs space-y-4 rounded-xl border bg-card p-4 shadow-sm"
+          data-work-hub-card
+          className={`w-full max-w-xs space-y-4 p-4 ${WORK_HUB_SUBCARD_CLASS}`}
         >
-          <h3 className="font-semibold">Start an internal call</h3>
-          <PngPillButton
-            activeSrc={brandPillSrc}
-            idleSrc={available ? brandPillSrc : undefined}
-            disabled={!settings.data || change.isPending}
-            aria-pressed={available}
-            aria-label="Show me as available for calls"
-            onClick={() =>
-              change.mutate({
-                path: "/calls/settings",
-                method: "PUT",
-                body: { ...settings.data, available: !available },
-              })
-            }
-          >
-            Show me as available for calls
-          </PngPillButton>
+          <h3><WorkHubCardTitle icon={Phone}>Start an internal call</WorkHubCardTitle></h3>
           <div className="max-w-xs">
             <PeoplePicker value={person} onChange={setPerson} />
           </div>
           <div className="flex flex-wrap gap-2">
             <BrandPillButton
+              tone="brand"
               disabled={!person || dial.isPending}
               onClick={() => dial.mutate(Number(person))}
             >
               Call
             </BrandPillButton>
             <BrandPillButton
+              tone="brand"
               disabled={!person || change.isPending}
               onClick={() => toggleSpeed(Number(person))}
             >
               Toggle speed dial
             </BrandPillButton>
           </div>
-          <h3 className="pt-3 font-semibold">Speed dial</h3>
+          <h3 className="pt-3"><WorkHubCardTitle icon={Star}>Speed dial</WorkHubCardTitle></h3>
           {orderedSpeedDial.map((id) => (
             <div className="flex items-center justify-between gap-2" key={id}>
               <span>
@@ -414,7 +432,8 @@ export function WorkHubCalls() {
         </aside>
         <section
           aria-label="Call history"
-          className="w-full min-w-0 space-y-4 rounded-xl border bg-card p-4 shadow-sm"
+          data-work-hub-card
+          className={`w-full min-w-0 space-y-4 p-4 ${WORK_HUB_SUBCARD_CLASS}`}
         >
           {active && (
             <div className="space-y-3 rounded-xl border p-4">
@@ -570,6 +589,7 @@ export function WorkHubCalls() {
           )}
         </section>
       </div>
+      </section>
     </div>
   );
 }

@@ -91,4 +91,17 @@ describe("meeting scheduling page", () => {
     ).toBe("/work-hub/meetings?meeting=booked-occurrence");
     expect(screen.queryByText("Manage availability")).toBeNull();
   });
+  it("centers and brands the empty scheduling state", async () => {
+    mocks.request.mockImplementation(async (path: string) =>
+      path === "/scheduling/types" ? [] : { windows: [], slots: [], version: 1 },
+    );
+    render(
+      <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+        <MeetingScheduling />
+      </QueryClientProvider>,
+    );
+    const message = await screen.findByText("Select a meeting type or create your scheduling page.");
+    expect(message.parentElement?.className).toContain("text-center");
+    expect(message.parentElement?.querySelector("svg")?.getAttribute("class")).toContain("text-[var(--brand-primary)]");
+  });
 });

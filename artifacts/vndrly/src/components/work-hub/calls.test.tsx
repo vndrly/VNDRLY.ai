@@ -151,12 +151,13 @@ describe("internal Calls workspace", () => {
     });
     mount();
     const presence = await screen.findByRole("button", {
-      name: "Show me as available for calls",
+      name: "Available for calls",
     });
     await waitFor(() =>
       expect((presence as HTMLButtonElement).disabled).toBe(false),
     );
     expect(presence.getAttribute("aria-pressed")).toBe("true");
+    expect(presence.textContent).toContain("Show me as away for calls");
     fireEvent.click(presence);
     await waitFor(() =>
       expect(api.request).toHaveBeenCalledWith(
@@ -170,6 +171,17 @@ describe("internal Calls workspace", () => {
     expect(screen.getByRole("button", { name: "all" }).getAttribute("aria-pressed")).toBe("true");
     fireEvent.click(screen.getByRole("button", { name: "incoming" }));
     expect(screen.getByRole("button", { name: "incoming" }).getAttribute("aria-pressed")).toBe("true");
+  });
+  it("keeps the presence control in the branded heading and both call areas inside one master card", async () => {
+    api.request.mockImplementation(async (path: string) => defaults(path));
+    mount();
+    const master = await screen.findByRole("region", { name: "Calls workspace" });
+    const heading = screen.getByRole("heading", { name: "Calls" });
+    const presence = screen.getByRole("button", { name: "Available for calls" });
+    expect(heading.closest("header")?.contains(presence)).toBe(true);
+    expect(master.contains(screen.getByRole("complementary", { name: "Start an internal call" }))).toBe(true);
+    expect(master.contains(screen.getByRole("region", { name: "Call history" }))).toBe(true);
+    expect(master.className).toContain("border-[color:var(--brand-primary)]");
   });
   it("orders speed dial by latest call and removes one shortcut without deleting history", async () => {
     api.request.mockImplementation(async (path: string, options?: any) => {

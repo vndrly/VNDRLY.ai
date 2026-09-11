@@ -101,6 +101,8 @@ const DialogOverlay = React.forwardRef<
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
 
 type DialogContentProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
+  /** Render the dialog frame in normal document flow instead of a portal. */
+  inline?: boolean
   /**
    * When true, renders children directly inside the Dialog frame without
    * the standard DialogLogoArea (which always reserves ~1.5in of header
@@ -127,15 +129,52 @@ type DialogContentProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   DialogContentProps
->(({ className, children, bare = false, hideClose = false, hideOverlay = false, accentHeaderStyle, ...props }, ref) => {
+>(({ className, children, bare = false, hideClose = false, hideOverlay = false, inline = false, accentHeaderStyle, style, onPointerDownOutside, onInteractOutside, onEscapeKeyDown, ...props }, ref) => {
   const [customLogo, setCustomLogo] = React.useState<DialogLogoSpec | null>(null)
   const ctxValue = React.useMemo<DialogLogoContextValue>(() => ({ setCustomLogo }), [])
   const { resolved } = useTheme()
   const modalTheme = appModalTheme(resolved)
 
-  return (
-    <DialogPortal>
-      {!hideOverlay && <DialogOverlay />}
+  if (inline) {
+    return (
+      <ModalThemeContext.Provider value={modalTheme}>
+        <div
+          ref={ref}
+          className={cn(
+            "relative z-0 flex max-h-none w-full max-w-none flex-col overflow-hidden rounded-xl border-2 shadow-lg",
+            modalTheme.shellChromeClassName,
+            className,
+          )}
+          {...props}
+          style={{ ...modalTheme.shellStyle, ...style }}
+        >
+          <div
+            aria-hidden
+            className={modalTheme.accentHeaderClassName}
+            style={{ ...modalTheme.accentHeaderStyle, ...accentHeaderStyle }}
+            data-testid="modal-accent-header"
+          />
+          {bare ? (
+            children
+          ) : (
+            <DialogLogoContext.Provider value={ctxValue}>
+              <DialogLogoArea customLogo={customLogo} />
+              <div
+                className={cn(
+                  "relative z-10 grid min-h-0 flex-1 gap-4 overflow-y-auto p-6 pt-0",
+                  modalTheme.bodyWrapperClassName,
+                )}
+              >
+                {children}
+              </div>
+            </DialogLogoContext.Provider>
+          )}
+        </div>
+      </ModalThemeContext.Provider>
+    )
+  }
+
+  const content = (
       <ModalThemeContext.Provider value={modalTheme}>
         <DialogPrimitive.Content
           ref={ref}
@@ -145,7 +184,10 @@ const DialogContent = React.forwardRef<
             className
           )}
           {...props}
-          style={{ ...modalTheme.shellStyle, ...props.style }}
+          style={{ ...modalTheme.shellStyle, ...style }}
+          onPointerDownOutside={onPointerDownOutside}
+          onInteractOutside={onInteractOutside}
+          onEscapeKeyDown={onEscapeKeyDown}
         >
           <div
             aria-hidden
@@ -176,6 +218,11 @@ const DialogContent = React.forwardRef<
           )}
         </DialogPrimitive.Content>
       </ModalThemeContext.Provider>
+  )
+  return (
+    <DialogPortal>
+      {!hideOverlay && <DialogOverlay />}
+      {content}
     </DialogPortal>
   )
 })
