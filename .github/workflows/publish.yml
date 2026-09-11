@@ -36,6 +36,7 @@ jobs:
         with:
           name: vndrly-web-${{ github.sha }}
           path: artifacts/vndrly/dist/public
+          include-hidden-files: true
           if-no-files-found: error
           retention-days: 1
 

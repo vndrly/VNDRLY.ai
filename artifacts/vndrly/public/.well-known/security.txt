@@ -1,3 +1,4 @@
 Contact: mailto:security@vndrly.ai
+Expires: 2027-09-01T00:00:00Z
 Preferred-Languages: en
 Canonical: https://vndrly.ai/.well-known/security.txt
