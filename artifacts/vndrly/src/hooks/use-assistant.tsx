@@ -4,10 +4,24 @@ import {
   type AskVLocationContext,
   readAskVCurrentLocationForMessage,
 } from "@/lib/assistant-location-context";
+import { createWorkHubOperationId } from "@/lib/work-hub-client";
 
 export type SignupAssistantLang = "en" | "es";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+const WORK_HUB_DEVICE_KEY = "vndrly.workHubDeviceId";
+
+function browserWorkHubDeviceId(): string {
+  try {
+    const existing = window.localStorage.getItem(WORK_HUB_DEVICE_KEY);
+    if (existing) return existing;
+    const created = createWorkHubOperationId();
+    window.localStorage.setItem(WORK_HUB_DEVICE_KEY, created);
+    return created;
+  } catch {
+    return createWorkHubOperationId();
+  }
+}
 
 export type AssistantFeedbackRating = "helpful" | "unhelpful";
 
@@ -368,6 +382,7 @@ export function useAssistant(opts: AssistantOptions = {}) {
             ? { message: trimmed, history: priorHistory }
             : {
                 message: trimmed,
+                deviceContext: { sourceDeviceId: browserWorkHubDeviceId() },
                 ...(pageContext || currentLocation
                   ? {
                       pageContext: {
@@ -460,6 +475,53 @@ export function useAssistant(opts: AssistantOptions = {}) {
 
   // Stop in-flight streaming if the panel unmounts.
   useEffect(() => () => abortRef.current?.abort(), []);
+
+  // Other devices publish content-free invalidations. Refetch the canonical
+  // conversation instead of copying message text through the event stream,
+  // and never replace a local in-flight turn.
+  useEffect(() => {
+    if (stateless || streaming || typeof EventSource === "undefined") return;
+    const source = new EventSource(`${BASE}/api/work-hub/events`, { withCredentials: true });
+    let closed = false;
+    const refresh = async (event: Event) => {
+      let remoteConversationId: number | null = null;
+      try {
+        const data = JSON.parse((event as MessageEvent<string>).data) as { conversationId?: unknown; payload?: { conversationId?: unknown } };
+        const value = data.conversationId ?? data.payload?.conversationId;
+        remoteConversationId = Number.isSafeInteger(Number(value)) && Number(value) > 0 ? Number(value) : null;
+      } catch { return; }
+      if (!remoteConversationId || (conversationId !== null && conversationId !== remoteConversationId)) return;
+      const myVersion = ++restoreVersionRef.current;
+      try {
+        const response = await fetch(`${BASE}/api/assistant/conversations/${remoteConversationId}`, { credentials: "include" });
+        if (!response.ok || closed || myVersion !== restoreVersionRef.current) return;
+        const detail = await response.json() as { id: number; messages: Array<{ id: number; role: "user" | "assistant"; content: string; feedbackRating?: AssistantFeedbackRating | null }> };
+        if (closed || myVersion !== restoreVersionRef.current) return;
+        setConversationId(detail.id);
+        setMessages(detail.messages.filter(message => message.role === "user" || message.content.trim()).map(message => ({
+          id: `db-${message.id}`,
+          serverId: message.id,
+          role: message.role,
+          content: message.content,
+          feedbackRating: message.feedbackRating ?? null,
+        })));
+        window.dispatchEvent(new CustomEvent("askv:cross-device-state", { detail: { conversationId: detail.id } }));
+      } catch {
+        // The existing conversation remains usable if another device drops.
+      }
+    };
+    const eventNames = [
+      "work_hub.askv.conversation_changed",
+      "work_hub.askv.confirmation_changed",
+      "work_hub.askv.action_changed",
+    ];
+    for (const eventName of eventNames) source.addEventListener(eventName, refresh);
+    return () => {
+      closed = true;
+      for (const eventName of eventNames) source.removeEventListener(eventName, refresh);
+      source.close();
+    };
+  }, [conversationId, stateless, streaming]);
 
   // ── Pre-auth → post-auth hand-off ────────────────────────────
   // Whenever the panel runs in signupMode, mirror the visible chat

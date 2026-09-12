@@ -11,6 +11,7 @@ import * as Location from "expo-location";
 import {
   readAskVCurrentLocationForMessage,
 } from "@/lib/assistant-location-context";
+import { getDeviceId } from "@/lib/deviceId";
 
 export type AssistantFeedbackRating = "helpful" | "unhelpful";
 
@@ -211,21 +212,23 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
             trimmed,
             Location,
             Location.Accuracy.Balanced,
-          ).then((currentLocation) =>
-            assistantFetch("/api/assistant/chat", {
+          ).then(async (currentLocation) => {
+            const sourceDeviceId = await getDeviceId();
+            return assistantFetch("/api/assistant/chat", {
               method: "POST",
               headers: { accept: "text/event-stream" },
               body: JSON.stringify({
                 message: trimmed,
                 ...(convId !== null ? { conversationId: convId } : {}),
+                deviceContext: { sourceDeviceId },
                 pageContext: {
                   path: "/mobile/askv",
                   ...(currentLocation ? { currentLocation } : {}),
                 },
               }),
               signal: ac.signal,
-            }),
-          );
+            });
+          });
 
         let res = await postChat(conversationIdRef.current);
         if (ac.signal.aborted || sendVersion !== restoreVersionRef.current) return;
@@ -349,6 +352,39 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
   );
 
   useEffect(() => () => abortRef.current?.abort(), []);
+
+  // React Native does not provide the browser EventSource API consistently.
+  // While Ask V is mounted, poll only the active canonical conversation and
+  // never overwrite an in-flight local turn. The composer draft lives outside
+  // this hook, so refreshing messages cannot erase unsent text.
+  useEffect(() => {
+    if (conversationId === null) return;
+    let stopped = false;
+    const refresh = async () => {
+      if (streamingRef.current) return;
+      const activeId = conversationIdRef.current;
+      if (activeId === null) return;
+      const myVersion = restoreVersionRef.current;
+      try {
+        const response = await assistantFetch(`/api/assistant/conversations/${activeId}`);
+        if (!response.ok || stopped || streamingRef.current || myVersion !== restoreVersionRef.current) return;
+        const detail = await response.json() as { id: number; messages: Array<{ id: number; role: "user" | "assistant"; content: string; feedbackRating?: AssistantFeedbackRating | null }> };
+        if (stopped || streamingRef.current || myVersion !== restoreVersionRef.current || detail.id !== conversationIdRef.current) return;
+        setMessages(detail.messages.filter(message => message.role === "user" || message.content.trim()).map(message => ({
+          id: `db-${message.id}`,
+          serverId: message.id,
+          role: message.role,
+          content: message.content,
+          feedbackRating: message.feedbackRating ?? null,
+        })));
+      } catch {
+        // Keep the local conversation intact while the other device is offline.
+      }
+    };
+    const timer = setInterval(() => { void refresh(); }, 2500);
+    void refresh();
+    return () => { stopped = true; clearInterval(timer); };
+  }, [conversationId]);
 
   const submitFeedback = useCallback(
     async (messageId: number, rating: AssistantFeedbackRating): Promise<boolean> => {

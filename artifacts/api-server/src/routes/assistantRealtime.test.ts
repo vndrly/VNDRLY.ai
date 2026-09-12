@@ -234,6 +234,29 @@ describe("AskV Realtime routes", () => {
     });
   });
 
+  it("allows role-gated Work Hub meeting actions through voice but still requires confirmation", async () => {
+    const res = await request(app())
+      .post("/assistant/realtime/tool-call")
+      .send({
+        sessionId: testSessionId,
+        callId: "meeting-mute-1",
+        name: "moderate_work_hub_meeting",
+        path: "/work-hub/meetings/meeting-1",
+        arguments: {
+          action: "host_mute",
+          occurrenceId: "meeting-1",
+          targetUserId: 42,
+          operationId: "10000000-0000-4000-8000-000000000001",
+          owner: { type: "vendor", id: 22 },
+          context: { kind: "meeting", id: "meeting-1" },
+        },
+        clientSurface: "ios",
+      })
+      .expect(200);
+    expect(res.body).toMatchObject({ ok: false, requiresConfirmation: true });
+    expect(mocks.runTool).not.toHaveBeenCalled();
+  });
+
   it("requires confirmation before realtime voice write tools execute", async () => {
     const res = await request(app())
       .post("/assistant/realtime/tool-call")

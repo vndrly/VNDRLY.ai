@@ -175,6 +175,18 @@ describe("resolveWorkHubToolRequest", () => {
     });
   });
 
+  it("routes meeting-owner moderation through the canonical protected endpoints", () => {
+    expect(resolveWorkHubToolRequest("moderate_work_hub_meeting", {
+      action: "host_mute", occurrenceId: "meeting-1", targetUserId: 42,
+    })).toMatchObject({ method: "POST", path: "/work-hub/meetings/meeting-1/participants/42/host-mute" });
+    expect(resolveWorkHubToolRequest("moderate_work_hub_meeting", {
+      action: "release_host_mute", occurrenceId: "meeting-1", targetUserId: 42,
+    })).toMatchObject({ method: "DELETE", path: "/work-hub/meetings/meeting-1/participants/42/host-mute" });
+    expect(resolveWorkHubToolRequest("moderate_work_hub_meeting", {
+      action: "request_to_speak", occurrenceId: "meeting-1",
+    })).toMatchObject({ method: "POST", path: "/work-hub/meetings/meeting-1/request-to-speak" });
+  });
+
   it("reserves a new file version without adding fields rejected by the strict schema", () => {
     expect(resolveWorkHubToolRequest("manage_work_hub_file", {
       ...command,

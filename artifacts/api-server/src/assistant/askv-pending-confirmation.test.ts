@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { AskVPendingConfirmationStore } from "./askv-pending-confirmation";
+import { AskVPendingConfirmationStore, askVConfirmationScopeId } from "./askv-pending-confirmation";
 const pending = {
   userId: 10,
   organizationKey: "vendor:22",
@@ -10,6 +10,11 @@ const pending = {
   idempotencyKey: "call-a",
 };
 describe("AskV pending confirmation binding", () => {
+  it("shares a conversation confirmation scope across phone and desktop voice sessions", () => {
+    expect(askVConfirmationScopeId(19, "phone-session")).toBe("conversation:19");
+    expect(askVConfirmationScopeId(19, "desktop-session")).toBe("conversation:19");
+    expect(askVConfirmationScopeId(null, "phone-session")).toBe("phone-session");
+  });
   it.each(["I confirm", "Yes, confirm.", "Yes, continue"])("binds natural approval %s to the exact action once", phrase => {
     const store = new AskVPendingConfirmationStore();
     expect(store.consume(phrase, pending)).toBeNull();

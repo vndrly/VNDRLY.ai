@@ -42,6 +42,11 @@ import {
 import { buildDeepLink } from "../assistant/deep-links";
 import { ensureDeepLinksInAssistantReply } from "../assistant/deep-link-markdown";
 import { parsePageContext } from "../assistant/page-context";
+import {
+  deviceActorFromSession,
+  publishAskVDeviceEvent,
+  resolveAuthorizedDeviceContext,
+} from "../assistant/device-context";
 import { classifyRefusal } from "../assistant/refusal";
 import { TOOLS } from "../assistant/tools";
 import { toolsForRealtime } from "../assistant/tool-packs";
@@ -1274,6 +1279,7 @@ async function handleConversationMessage(
     .insert(assistantMessagesTable)
     .values({ conversationId: conv.id, role: "user", content: userMessage })
     .returning();
+  void publishAskVDeviceEvent(session, "work_hub.askv.conversation_changed", conv.id, { phase: "user_message", messageId: savedUserMsg.id }).catch(() => undefined);
 
   // Auto-title on the first turn so the conversation list is useful.
   if (conv.title === "New conversation") {
@@ -1317,7 +1323,46 @@ async function handleConversationMessage(
   const onboardingActive = !!(onboardingProgressRow && !onboardingProgressRow.completedAt);
 
   const preferredLanguage = (user?.preferredLanguage as "en" | "es" | null) ?? null;
-  const pageContext = parsePageContext(req.body?.pageContext);
+  let pageContext = parsePageContext(req.body?.pageContext);
+  const rawDeviceContext = req.body?.deviceContext;
+  if (rawDeviceContext && typeof rawDeviceContext === "object") {
+    const actor = deviceActorFromSession(session);
+    if (actor) {
+      const sourceDeviceId = typeof rawDeviceContext.sourceDeviceId === "string"
+        ? rawDeviceContext.sourceDeviceId.slice(0, 128)
+        : null;
+      const targetDeviceId = typeof rawDeviceContext.targetDeviceId === "string"
+        ? rawDeviceContext.targetDeviceId.slice(0, 128)
+        : null;
+      const shouldResolve = Boolean(targetDeviceId) ||
+        /\b(this|that|current|open)\s+(ticket|job|meeting|call|invoice|bill|site|location|well|visitor|gate|check[- ]?in)\b/i.test(userMessage);
+      if (shouldResolve) {
+        const resolved = await resolveAuthorizedDeviceContext(actor, conv.id, {
+          sourceDeviceId,
+          targetDeviceId,
+          reference: userMessage,
+        });
+        if (resolved.status === "resolved") {
+          const numericEntityId = resolved.entityId != null && /^\d+$/.test(resolved.entityId)
+            ? Number(resolved.entityId)
+            : undefined;
+          pageContext = parsePageContext({
+            path: resolved.path,
+            ...(numericEntityId != null ? { entityId: numericEntityId } : {}),
+            ...(pageContext?.currentLocation ? { currentLocation: pageContext.currentLocation } : {}),
+          });
+        } else if (resolved.status === "ambiguous") {
+          docs.push({
+            id: "askv-cross-device-ambiguity",
+            title: "Several active screens match",
+            roles: ["any"],
+            body: `Do not guess or use a mutating tool. Ask which screen the user means. The authorized choices are:\n${resolved.choices.map((choice, index) => `${index + 1}. ${choice.deviceName}: ${choice.path}`).join("\n")}`,
+          });
+          pageContext = undefined;
+        }
+      }
+    }
+  }
   const assistantTools = pageContext?.path.startsWith("/work-hub")
     ? toolsForRealtime({
         role: session.role,
@@ -1518,6 +1563,7 @@ async function handleConversationMessage(
         refusal: classifyRefusal(finalText),
       })
       .returning({ id: assistantMessagesTable.id });
+    void publishAskVDeviceEvent(session, "work_hub.askv.conversation_changed", conv.id, { phase: "assistant_message", messageId: savedAssistantMsg.id }).catch(() => undefined);
     // Bump conversation updatedAt for sidebar ordering.
     await db
       .update(assistantConversationsTable)

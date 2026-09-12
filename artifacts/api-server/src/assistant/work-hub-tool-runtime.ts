@@ -342,6 +342,21 @@ export function resolveWorkHubToolRequest(
       if (["join", "leave", "end"].includes(String(input.action)))
         return request("POST", `/work-hub/meetings/${target}/${input.action}`, payload);
       return unsupported("meeting");
+    case "moderate_work_hub_meeting": {
+      target = required(input.occurrenceId, "meeting occurrence id");
+      if (typeof target !== "string") return target;
+      if (input.action === "request_to_speak")
+        return request("POST", `/work-hub/meetings/${target}/request-to-speak`);
+      const userId = required(input.targetUserId, "target user id");
+      if (typeof userId !== "string") return userId;
+      if (input.action === "host_mute")
+        return request("POST", `/work-hub/meetings/${target}/participants/${userId}/host-mute`);
+      if (input.action === "release_host_mute")
+        return request("DELETE", `/work-hub/meetings/${target}/participants/${userId}/host-mute`);
+      if (input.action === "remove")
+        return request("POST", `/work-hub/meetings/${target}/participants/${userId}/remove`);
+      return unsupported("meeting moderation");
+    }
     case "get_work_hub_meeting_catchup":
       target = required(input.occurrenceId, "meeting occurrence id");
       return typeof target === "string"

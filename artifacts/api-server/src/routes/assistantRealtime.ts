@@ -70,9 +70,11 @@ import {
   stableArguments,
 } from "../assistant/askv-idempotency";
 import {
+  askVConfirmationScopeId,
   askvPendingConfirmations,
   organizationKeyFromSession,
 } from "../assistant/askv-pending-confirmation";
+import { publishAskVDeviceEvent } from "../assistant/device-context";
 
 const router: IRouter = Router();
 const parseRealtimeSdp = text({
@@ -790,6 +792,7 @@ router.post(
     // Existing onboarding joins the core field/Gate writes; office writes remain deferred.
     if (
       tool.mutating &&
+      !isTypedWorkHubTool(name) &&
       ![
         "confirm_visitor_check_in",
         "confirm_visitor_check_out",
@@ -832,6 +835,7 @@ router.post(
       });
       return;
     }
+    const confirmationScopeId = askVConfirmationScopeId(context.conversationId, sessionId);
     const rawInput = req.body?.arguments ?? req.body?.input ?? {};
     if (typeof rawInput === "string") {
       try {
@@ -881,7 +885,7 @@ router.post(
       pendingCreatedAt: askvPendingConfirmations.createdAt(
         session.userId!,
         orgKey,
-        sessionId,
+        confirmationScopeId,
       ),
     });
     const decision = confirmationPhrase
@@ -898,7 +902,7 @@ router.post(
     const pending = {
       userId: session.userId!,
       organizationKey: orgKey,
-      sessionId,
+      sessionId: confirmationScopeId,
       contextKey: context.key,
       toolName: name,
       arguments: input,
@@ -907,7 +911,7 @@ router.post(
     const scope = {
       userId: session.userId!,
       organizationKey: orgKey,
-      sessionId,
+      sessionId: confirmationScopeId,
       key: key ?? "read",
       fingerprint: mutationIdempotencyKey(session.userId!, name, input),
     };
@@ -945,8 +949,13 @@ router.post(
       });
     };
     if (decision === "cancel") {
-      askvPendingConfirmations.clear(session.userId!, orgKey, sessionId);
+      askvPendingConfirmations.clear(session.userId!, orgKey, confirmationScopeId);
       if (tool.mutating) await audit("cancelled");
+      void publishAskVDeviceEvent(session, "work_hub.askv.confirmation_changed", context.conversationId ?? 0, {
+        state: "cancelled",
+        toolName: name,
+        actionFingerprint: scope.fingerprint,
+      }).catch(() => undefined);
       res.json({ ok: false, cancelled: true, output: "Cancelled." });
       return;
     }
@@ -965,6 +974,11 @@ router.post(
     if (requiresVoiceConfirmation(name) && !confirmed) {
       askvPendingConfirmations.set(pending);
       if (tool.mutating) await audit("requires_confirmation");
+      void publishAskVDeviceEvent(session, "work_hub.askv.confirmation_changed", context.conversationId ?? 0, {
+        state: "pending",
+        toolName: name,
+        actionFingerprint: scope.fingerprint,
+      }).catch(() => undefined);
       res.json({
         ok: false,
         requiresConfirmation: true,
@@ -1010,6 +1024,13 @@ router.post(
         : { hit: false, value: await execute() };
       const status = classifyToolResult(result.value, tool.mutating);
       if (tool.mutating) await audit(status, result.value);
+      if (tool.mutating)
+        void publishAskVDeviceEvent(session, "work_hub.askv.action_changed", context.conversationId ?? 0, {
+          state: status,
+          toolName: name,
+          actionFingerprint: scope.fingerprint,
+          duplicate: result.hit,
+        }).catch(() => undefined);
       if (!tool.mutating || result.hit)
         recordVoiceToolOutcome({
           session,
@@ -1231,12 +1252,19 @@ router.post("/assistant/voice/transcript", async (req, res): Promise<void> => {
       .where(eq(assistantConversationsTable.id, conversationId));
     return message!.id;
   });
+  void publishAskVDeviceEvent(session, "work_hub.askv.conversation_changed", conversationId, {
+    phase: role === "user" ? "user_message" : "assistant_message",
+    messageId,
+  }).catch(() => undefined);
   if (role === "user" && classifyConfirmation(content) === "cancel") {
     askvPendingConfirmations.clear(
       session.userId!,
       organizationKeyFromSession(session),
-      sessionId,
+      askVConfirmationScopeId(conversationId, sessionId),
     );
+    void publishAskVDeviceEvent(session, "work_hub.askv.confirmation_changed", conversationId, {
+      state: "cancelled",
+    }).catch(() => undefined);
   }
   res.json({ ok: true, messageId });
 });

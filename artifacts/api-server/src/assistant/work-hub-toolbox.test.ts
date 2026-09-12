@@ -32,6 +32,12 @@ describe("Work Hub AskV web/iOS parity", () => {
       "end",
     ]);
     expect(actions("manage_work_hub_meeting_file")).toEqual(["delete"]);
+    expect(actions("moderate_work_hub_meeting")).toEqual([
+      "host_mute",
+      "release_host_mute",
+      "remove",
+      "request_to_speak",
+    ]);
     expect(actions("manage_work_hub_task")).toEqual([
       "create",
       "update",
@@ -81,6 +87,7 @@ describe("Work Hub AskV web/iOS parity", () => {
     ]));
     expect(namesFor("/work-hub/meetings")).toEqual(expect.arrayContaining([
       "manage_work_hub_meeting", "get_work_hub_meeting_catchup", "ask_work_hub_meeting",
+      "moderate_work_hub_meeting",
     ]));
   });
 

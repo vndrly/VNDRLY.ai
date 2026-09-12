@@ -1,5 +1,6 @@
 import { classifyConfirmation } from "./action-classifier";
 import type { SessionPayload } from "../lib/session";
+import { publishAskVDeviceEvent } from "./device-context";
 import { findAskVTool } from "./tool-registry";
 import {
   stableArguments,
@@ -14,6 +15,11 @@ export interface AskVPendingConfirmation {
   toolName: string;
   arguments: unknown;
   idempotencyKey: string;
+}
+export function askVConfirmationScopeId(conversationId: number | null | undefined, fallbackSessionId: string): string {
+  return Number.isSafeInteger(conversationId) && Number(conversationId) > 0
+    ? `conversation:${conversationId}`
+    : fallbackSessionId;
 }
 export function organizationKeyFromSession(session: {
   role?: string;
@@ -121,7 +127,7 @@ export function synchronizeTypedAskVContext(
   phrase: string,
 ): void {
   const organizationKey = organizationKeyFromSession(session);
-  const sessionId = `typed:${conversationId}`;
+  const sessionId = askVConfirmationScopeId(conversationId, `typed:${conversationId}`);
   const ownerKey = `${session.userId}:${conversationId}`;
   const previousOrganization = typedOrganizations.get(ownerKey);
   if (previousOrganization && previousOrganization !== organizationKey)
@@ -169,7 +175,7 @@ export async function runBoundTypedAskVTool(args: {
     : {};
   const userId = args.session.userId;
   const organizationKey = organizationKeyFromSession(args.session);
-  const sessionId = `typed:${args.conversationId}`;
+  const sessionId = askVConfirmationScopeId(args.conversationId, `typed:${args.conversationId}`);
   const fingerprint = mutationIdempotencyKey(userId, args.name, input);
   const turnKey = stableArguments([
     userId,
@@ -187,7 +193,10 @@ export async function runBoundTypedAskVTool(args: {
     args.phrase,
   );
   if (classifyConfirmation(args.phrase) === "cancel")
-    return JSON.stringify({ ok: false, cancelled: true });
+    {
+      void publishAskVDeviceEvent(args.session, "work_hub.askv.confirmation_changed", args.conversationId, { state: "cancelled" }).catch(() => undefined);
+      return JSON.stringify({ ok: false, cancelled: true });
+    }
   const pending = askvPendingConfirmations.peek(
     userId,
     organizationKey,
@@ -224,6 +233,7 @@ export async function runBoundTypedAskVTool(args: {
         arguments: input,
         idempotencyKey: key,
       });
+      void publishAskVDeviceEvent(args.session, "work_hub.askv.confirmation_changed", args.conversationId, { state: "pending", toolName: args.name, actionFingerprint: fingerprint }).catch(() => undefined);
       return JSON.stringify({
         ok: false,
         requiresConfirmation: true,
@@ -244,5 +254,6 @@ export async function runBoundTypedAskVTool(args: {
         ...(confirmed ? { confirmed: true } : {}),
       }),
   );
+  void publishAskVDeviceEvent(args.session, "work_hub.askv.action_changed", args.conversationId, { state: "completed", toolName: args.name, actionFingerprint: fingerprint }).catch(() => undefined);
   return result.value;
 }
