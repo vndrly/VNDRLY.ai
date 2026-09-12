@@ -44,6 +44,7 @@ import { ensureDeepLinksInAssistantReply } from "../assistant/deep-link-markdown
 import { parsePageContext } from "../assistant/page-context";
 import { classifyRefusal } from "../assistant/refusal";
 import { TOOLS } from "../assistant/tools";
+import { toolsForRealtime } from "../assistant/tool-packs";
 import { writeAskVActionAudit, type AskVClientSurface, type AskVInputMode } from "../assistant/action-audit";
 import {
   clampActionAuditLimit,
@@ -56,6 +57,11 @@ import { findAskVTool } from "../assistant/tool-registry";
 import { isDataTool, runDataTool } from "../assistant/data-tools";
 import { isWriteTool, runWriteTool } from "../assistant/write-tools";
 import { callNaturalVoiceDomainApi } from "../assistant/natural-voice-write-tools";
+import {
+  bindWorkHubToolScope,
+  isTypedWorkHubTool,
+  resolveExecutableWorkHubToolRequest,
+} from "../assistant/work-hub-tool-runtime";
 import { isClientTool, runClientTool } from "../assistant/client-tools";
 import {
   consumeDailyBudget,
@@ -776,6 +782,7 @@ export async function runTool(
   session: SessionPayload,
   cookieHeader: string,
   isTokenMode: boolean = false,
+  workHubMutationAuthorizedByServer: boolean = false,
 ): Promise<string> {
   if (isTokenMode && !FIELD_TOKEN_ALLOWED_TOOLS.has(name)) {
     return JSON.stringify({
@@ -786,6 +793,30 @@ export async function runTool(
     return JSON.stringify({
       error: `Tool '${name}' is not available in field-employee invite mode.`,
     });
+  }
+  const workHubRequest = resolveExecutableWorkHubToolRequest(
+    name,
+    bindWorkHubToolScope(input, session),
+    workHubMutationAuthorizedByServer,
+  );
+  if (workHubRequest) {
+    if ("error" in workHubRequest)
+      return JSON.stringify({
+        ok: false,
+        error: workHubRequest.error,
+        ...(workHubRequest.requiresConfirmation
+          ? { requiresConfirmation: true }
+          : {}),
+      });
+    return JSON.stringify(
+      await callNaturalVoiceDomainApi(
+        workHubRequest.path,
+        workHubRequest.method,
+        workHubRequest.body,
+        session,
+        workHubRequest.headers,
+      ),
+    );
   }
   if (name === "query_work_hub") {
     const args = (input ?? {}) as Record<string, unknown>;
@@ -1287,6 +1318,18 @@ async function handleConversationMessage(
 
   const preferredLanguage = (user?.preferredLanguage as "en" | "es" | null) ?? null;
   const pageContext = parsePageContext(req.body?.pageContext);
+  const assistantTools = pageContext?.path.startsWith("/work-hub")
+    ? toolsForRealtime({
+        role: session.role,
+        membershipRole: session.membershipRole,
+        path: pageContext.path,
+        entityId: pageContext.entityId,
+      }).map((tool) => ({
+        name: tool.name,
+        description: tool.description,
+        input_schema: tool.inputSchema,
+      }))
+    : TOOLS;
   const typedConfirmationContext = JSON.stringify(pageContext ?? {});
   synchronizeTypedAskVContext(session, conv.id, typedConfirmationContext, userMessage);
   const systemPrompt = buildSystemPrompt({
@@ -1366,7 +1409,7 @@ async function handleConversationMessage(
         model: MODEL,
         max_tokens: MAX_TOKENS,
         system: systemPrompt,
-        tools: TOOLS,
+        tools: assistantTools,
         messages,
       });
 
@@ -1416,7 +1459,17 @@ async function handleConversationMessage(
         const out = await runBoundTypedAskVTool({
           name: tu.name, input: tu.input, session, conversationId: conv.id, turnId: savedUserMsg.id,
           contextKey: typedConfirmationContext, phrase: userMessage,
-          execute: (input) => runTool(tu.name, input, session, req.headers.cookie ?? ""),
+          execute: (input) =>
+            isTypedWorkHubTool(tu.name)
+              ? runTool(
+                  tu.name,
+                  input,
+                  session,
+                  req.headers.cookie ?? "",
+                  false,
+                  true,
+                )
+              : runTool(tu.name, input, session, req.headers.cookie ?? ""),
         });
         const mutation = voiceMutationHint(tu.name, (tu.input ?? {}) as Record<string, unknown>, out,
           classifyToolResult(out, findAskVTool(tu.name)?.mutating === true) === "success", false);

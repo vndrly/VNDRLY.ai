@@ -10,6 +10,45 @@ const namesFor = (
   toolsForRealtime({ role, membershipRole, path }).map((tool) => tool.name);
 
 describe("Work Hub AskV web/iOS parity", () => {
+  it("does not advertise operations that lack a safe executable Work Hub route", () => {
+    const actions = (name: string) => {
+      const tool = ASK_V_TOOL_REGISTRY.find((entry) => entry.name === name);
+      const properties = tool?.inputSchema.properties as
+        | Record<string, { enum?: string[] }>
+        | undefined;
+      return properties?.action?.enum;
+    };
+    expect(actions("manage_work_hub_channel")).toEqual(["create", "delete"]);
+    expect(actions("manage_work_hub_channel_member")).toEqual(["add", "invite"]);
+    expect(actions("manage_work_hub_shift")).toEqual(["create", "claim"]);
+    expect(actions("manage_work_hub_scheduling")).toEqual([
+      "set_availability",
+      "book",
+    ]);
+    expect(actions("manage_work_hub_meeting")).toEqual([
+      "create",
+      "join",
+      "leave",
+      "end",
+    ]);
+    expect(actions("manage_work_hub_meeting_file")).toEqual(["delete"]);
+    expect(actions("manage_work_hub_task")).toEqual([
+      "create",
+      "update",
+      "complete",
+      "cancel",
+    ]);
+    expect(actions("manage_work_hub_form_template")).toEqual([
+      "create",
+      "assign",
+    ]);
+    expect(actions("manage_work_hub_approval")).toEqual([
+      "request",
+      "approve",
+      "reject",
+    ]);
+  });
+
   it("keeps the legacy server toolbox available while typed tools replace it in page packs", () => {
     const read = ASK_V_TOOL_REGISTRY.find((tool) => tool.name === "query_work_hub");
     const write = ASK_V_TOOL_REGISTRY.find((tool) => tool.name === "propose_work_hub_action");
@@ -57,6 +96,31 @@ describe("Work Hub AskV web/iOS parity", () => {
     expect(member).not.toContain("manage_work_hub_export");
     expect(member).not.toContain("manage_work_hub_retention");
     expect(member).not.toContain("manage_work_hub_legal_hold");
+    expect(namesFor("/work-hub/channels", "vendor", "member"))
+      .not.toContain("manage_work_hub_channel");
+    expect(namesFor("/work-hub/channels", "vendor", "admin"))
+      .toContain("manage_work_hub_channel");
+    expect(namesFor("/work-hub/administration", "admin", null)).not.toContain(
+      "manage_work_hub_legal_hold",
+    );
+  });
+
+  it("loads the complete role-safe toolbox on the dedicated Ask V page", () => {
+    const companyAdmin = namesFor("/work-hub/askv", "vendor", "admin");
+    expect(companyAdmin).toEqual(expect.arrayContaining([
+      "send_work_hub_message",
+      "manage_work_hub_task",
+      "manage_work_hub_scheduling",
+      "start_work_hub_call",
+      "ask_work_hub_meeting",
+      "prepare_work_hub_file_upload",
+      "manage_work_hub_finance",
+      "manage_work_hub_export",
+      "manage_work_hub_legal_hold",
+    ]));
+    const member = namesFor("/work-hub/askv", "vendor", "member");
+    expect(member).toContain("send_work_hub_message");
+    expect(member).not.toContain("manage_work_hub_export");
   });
 
   it("marks every typed Work Hub mutation for confirmation and auditing", () => {

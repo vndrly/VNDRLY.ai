@@ -5,6 +5,7 @@ import {
   type AskVToolDefinition,
 } from "./tool-registry";
 import {
+  WORK_HUB_TOOL_FAMILIES,
   WORK_HUB_TOOL_NAMES_BY_FAMILY,
   type WorkHubToolFamily,
 } from "./work-hub-tools";
@@ -203,15 +204,21 @@ export function toolsForRealtime(args: {
   if (inWorkHub) {
     allowed.delete("query_work_hub");
     allowed.delete("propose_work_hub_action");
-    for (const name of WORK_HUB_TOOL_NAMES_BY_FAMILY[workHubToolFamilyForPath(path)]) {
-      allowed.add(name);
+    const families =
+      workHubToolFamilyForPath(path) === "command" &&
+      /\/work-hub\/askv(?:\/|$)/i.test(path)
+        ? WORK_HUB_TOOL_FAMILIES
+        : [workHubToolFamilyForPath(path)];
+    for (const family of families) {
+      for (const name of WORK_HUB_TOOL_NAMES_BY_FAMILY[family]) {
+        allowed.add(name);
+      }
     }
   }
   return ASK_V_TOOL_REGISTRY.filter((tool) => {
     if (!allowed.has(tool.name)) return false;
     if (
       tool.companyAdminOnly &&
-      role !== "admin" &&
       args.membershipRole !== "admin"
     ) return false;
     return tool.roles.includes(role) || tool.roles.includes("any");

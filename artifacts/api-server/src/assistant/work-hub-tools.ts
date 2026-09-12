@@ -131,17 +131,17 @@ const entries: Entry[] = [
     payload: { type: "object" },
   }, ["action", "crewId", "userId"])),
   read("list_work_hub_channels", "collaboration", "List channels visible to the caller.", schema({ crewId: identifier() })),
-  write("manage_work_hub_channel", "collaboration", "Create, update, archive, or delete a channel after confirmation.", writeSchema({
-    action: { type: "string", enum: ["create", "update", "archive", "delete"] },
+  write("manage_work_hub_channel", "collaboration", "Create or delete a channel after confirmation.", writeSchema({
+    action: { type: "string", enum: ["create", "delete"] },
     channelId: identifier(),
     payload: { type: "object" },
-  }, ["action", "payload"])),
-  write("manage_work_hub_channel_member", "collaboration", "Add, invite, or remove a channel member after confirmation.", writeSchema({
-    action: { type: "string", enum: ["add", "invite", "remove"] },
+  }, ["action", "payload"]), true),
+  write("manage_work_hub_channel_member", "collaboration", "Add or invite a channel member after confirmation.", writeSchema({
+    action: { type: "string", enum: ["add", "invite"] },
     channelId: identifier(),
+    email: text("Existing VNDRLY user's email when adding a company member."),
     userId: { type: "number" },
-    payload: { type: "object" },
-  }, ["action", "channelId", "payload"])),
+  }, ["action", "channelId"])),
   read("list_work_hub_messages", "collaboration", "Read authorized messages in a channel.", schema({
     channelId: identifier(),
     before: text(),
@@ -174,8 +174,9 @@ const entries: Entry[] = [
     payload: { type: "object" },
   }, ["action", "channelId", "payload"])),
   write("manage_work_hub_chat", "collaboration", "Create a private chat with selected authorized participants after confirmation.", writeSchema({
-    participantUserIds: { type: "array", items: { type: "number" }, minItems: 1, maxItems: 50 },
-  }, ["participantUserIds"])),
+    recipientUserId: { type: "number" },
+    name: text(),
+  }, ["recipientUserId"])),
   write("respond_work_hub_invitation", "collaboration", "Accept or decline a Work Hub invitation.", writeSchema({
     invitationId: identifier(),
     response: { type: "string", enum: ["accept", "decline"] },
@@ -185,18 +186,18 @@ const entries: Entry[] = [
   }, ["payload"])),
 
   read("list_work_hub_tasks", "tasks", "List permission-scoped Work Hub tasks.", schema({ status: text(), assigneeUserId: { type: "number" } })),
-  write("manage_work_hub_task", "tasks", "Create, update, assign, complete, or cancel a Work Hub task after confirmation.", writeSchema({
-    action: { type: "string", enum: ["create", "update", "assign", "complete", "cancel"] },
+  write("manage_work_hub_task", "tasks", "Create or change the status of a Work Hub task after confirmation.", writeSchema({
+    action: { type: "string", enum: ["create", "update", "complete", "cancel"] },
     taskId: identifier(),
     payload: { type: "object" },
   }, ["action", "payload"])),
-  write("manage_work_hub_form_template", "tasks", "Create, publish, update, or assign a form template after confirmation.", writeSchema({
-    action: { type: "string", enum: ["create", "publish", "update", "assign"] },
+  write("manage_work_hub_form_template", "tasks", "Create or assign a form template after confirmation.", writeSchema({
+    action: { type: "string", enum: ["create", "assign"] },
     templateId: identifier(),
     payload: { type: "object" },
   }, ["action", "payload"])),
-  write("manage_work_hub_checklist_template", "tasks", "Create, publish, update, or assign a checklist template after confirmation.", writeSchema({
-    action: { type: "string", enum: ["create", "publish", "update", "assign"] },
+  write("manage_work_hub_checklist_template", "tasks", "Create or assign a checklist template after confirmation.", writeSchema({
+    action: { type: "string", enum: ["create", "assign"] },
     templateId: identifier(),
     payload: { type: "object" },
   }, ["action", "payload"])),
@@ -208,8 +209,8 @@ const entries: Entry[] = [
     checklistId: identifier(),
     payload: { type: "object" },
   }, ["checklistId", "payload"])),
-  write("manage_work_hub_approval", "tasks", "Request, approve, reject, or return a Work Hub approval after confirmation.", writeSchema({
-    action: { type: "string", enum: ["request", "approve", "reject", "return"] },
+  write("manage_work_hub_approval", "tasks", "Request, approve, or reject a Work Hub approval after confirmation.", writeSchema({
+    action: { type: "string", enum: ["request", "approve", "reject"] },
     approvalId: identifier(),
     payload: { type: "object" },
   }, ["action", "payload"])),
@@ -218,8 +219,8 @@ const entries: Entry[] = [
     announcementId: identifier(),
     payload: { type: "object" },
   }, ["action", "payload"])),
-  write("manage_work_hub_shift", "tasks", "Create, update, cancel, or claim an authorized shift after confirmation.", writeSchema({
-    action: { type: "string", enum: ["create", "update", "cancel", "claim"] },
+  write("manage_work_hub_shift", "tasks", "Create or claim an authorized shift after confirmation.", writeSchema({
+    action: { type: "string", enum: ["create", "claim"] },
     shiftId: identifier(),
     payload: { type: "object" },
   }, ["action", "payload"])),
@@ -234,8 +235,8 @@ const entries: Entry[] = [
     meetingTypeId: identifier(),
     payload: { type: "object" },
   }, ["action", "payload"])),
-  write("manage_work_hub_scheduling", "scheduling", "Update availability or book, reschedule, or cancel a scheduled meeting after confirmation.", writeSchema({
-    action: { type: "string", enum: ["set_availability", "book", "reschedule", "cancel"] },
+  write("manage_work_hub_scheduling", "scheduling", "Update availability or book a scheduled meeting after confirmation.", writeSchema({
+    action: { type: "string", enum: ["set_availability", "book"] },
     meetingTypeId: identifier(),
     bookingId: identifier(),
     payload: { type: "object" },
@@ -259,16 +260,17 @@ const entries: Entry[] = [
     payload: { type: "object" },
   }, ["action", "voicemailId"])),
 
-  write("manage_work_hub_meeting", "meetings", "Create, join, leave, end, or update audio state for an authorized meeting.", writeSchema({
-    action: { type: "string", enum: ["create", "join", "leave", "end", "set_audio_state"] },
+  write("manage_work_hub_meeting", "meetings", "Create, join, leave, or end an authorized meeting.", writeSchema({
+    action: { type: "string", enum: ["create", "join", "leave", "end"] },
     occurrenceId: identifier(),
     payload: { type: "object" },
   }, ["action", "payload"])),
   read("get_work_hub_meeting_catchup", "meetings", "Get the authorized meeting catch-up, transcript projection, decisions, and action items.", schema({ occurrenceId: identifier() }, ["occurrenceId"])),
-  write("ask_work_hub_meeting", "meetings", "Ask a question grounded only in authorized saved meeting content.", writeSchema({
+  write("ask_work_hub_meeting", "meetings", "Answer an Ask V question from the caller's authorized saved meeting message or transcript segment.", writeSchema({
     occurrenceId: identifier(),
-    question: text(),
-  }, ["occurrenceId", "question"])),
+    sourceId: identifier("Saved chat-message or transcript-segment id."),
+    sourceType: { type: "string", enum: ["chat", "transcript"] },
+  }, ["occurrenceId", "sourceId", "sourceType"])),
   read("search_work_hub_meeting", "meetings", "Search an authorized meeting transcript or replay for an exact topic or moment.", schema({
     occurrenceId: identifier(),
     query: text(),
@@ -276,14 +278,15 @@ const entries: Entry[] = [
   write("manage_work_hub_replay", "meetings", "Start a replay watch session or save authorized replay progress.", writeSchema({
     action: { type: "string", enum: ["start_watch", "save_progress"] },
     occurrenceId: identifier(),
+    viewerSessionId: text("Server-issued watch session returned by start_watch."),
     payload: { type: "object" },
   }, ["action", "occurrenceId", "payload"])),
-  write("manage_work_hub_meeting_file", "meetings", "Upload or delete an authorized meeting file after confirmation.", writeSchema({
-    action: { type: "string", enum: ["reserve_upload", "delete"] },
+  write("manage_work_hub_meeting_file", "meetings", "Delete an authorized meeting file after confirmation.", writeSchema({
+    action: { type: "string", enum: ["delete"] },
     occurrenceId: identifier(),
     fileId: identifier(),
     payload: { type: "object" },
-  }, ["action", "occurrenceId", "payload"])),
+  }, ["action", "occurrenceId", "fileId"])),
   write("manage_work_hub_replay_assignment", "meetings", "Assign or update replay review work after confirmation.", writeSchema({
     occurrenceId: identifier(),
     payload: { type: "object" },
@@ -306,15 +309,15 @@ const entries: Entry[] = [
   }, ["action", "fileId", "payload"])),
 
   read("get_work_hub_finance", "finance", "Read permission-scoped Work Hub billing, payroll, invoice, and approval information.", schema({ query: text(), status: text() })),
-  write("manage_work_hub_finance", "finance", "Create or update a draft, prepare or send an invoice email, or decide a financial approval after confirmation.", writeSchema({
-    action: { type: "string", enum: ["create_draft", "update_draft", "prepare_email", "send_email", "request_approval", "approve", "reject"] },
+  write("manage_work_hub_finance", "finance", "Create or update an invoice draft, or send an invoice email after confirmation.", writeSchema({
+    action: { type: "string", enum: ["create_draft", "update_draft", "send_email"] },
     recordId: identifier(),
     payload: { type: "object" },
   }, ["action", "payload"])),
 
   read("get_work_hub_audit", "administration", "Read the active company''s authorized Work Hub audit history.", schema({ query: text(), start: text(), end: text() })),
-  write("manage_work_hub_export", "administration", "Create or retrieve a company-scoped Work Hub export after confirming dataset and scope.", writeSchema({
-    action: { type: "string", enum: ["create", "download"] },
+  write("manage_work_hub_export", "administration", "Create a company-scoped Work Hub export after confirming dataset and scope.", writeSchema({
+    action: { type: "string", enum: ["create"] },
     exportId: identifier(),
     payload: { type: "object" },
   }, ["action", "payload"]), true),
@@ -324,13 +327,13 @@ const entries: Entry[] = [
     payload: { type: "object" },
   }, ["action", "payload"]), true),
   read("get_work_hub_metrics", "administration", "Read aggregate operational metrics for the active company.", schema({ start: text(), end: text() })),
-  write("manage_work_hub_retention", "administration", "Create or update company retention policy or generate a non-destructive retention plan.", writeSchema({
-    action: { type: "string", enum: ["create_policy", "update_policy", "create_plan"] },
+  write("manage_work_hub_retention", "administration", "Create a new versioned company retention policy or generate a non-destructive retention plan.", writeSchema({
+    action: { type: "string", enum: ["create_policy", "create_plan"] },
     policyId: identifier(),
     payload: { type: "object" },
   }, ["action", "payload"]), true),
-  write("manage_work_hub_legal_hold", "administration", "Create, update, or release a company legal hold after strong confirmation.", writeSchema({
-    action: { type: "string", enum: ["create", "update", "release"] },
+  write("manage_work_hub_legal_hold", "administration", "Create or release a company legal hold after strong confirmation.", writeSchema({
+    action: { type: "string", enum: ["create", "release"] },
     holdId: identifier(),
     payload: { type: "object" },
   }, ["action", "payload"]), true),

@@ -44,6 +44,26 @@ describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")("internal cal
     const [occurrence] = await db.select().from(workHubMeetingOccurrencesTable).where(eq(workHubMeetingOccurrencesTable.id, first.body.occurrenceId));
     expect(occurrence!.status).toBe("ended");
   });
+  it("changes voice availability without clearing the saved speed dial", async () => {
+    await request(app)
+      .put("/work-hub/calls/settings")
+      .set("Cookie", callerCookie)
+      .send({ available: true, speedDial: [recipientId] })
+      .expect(200);
+    await request(app)
+      .put("/work-hub/calls/settings")
+      .set("Cookie", callerCookie)
+      .send({ available: false })
+      .expect(200);
+    const settings = await request(app)
+      .get("/work-hub/calls/settings")
+      .set("Cookie", callerCookie)
+      .expect(200);
+    expect(settings.body).toMatchObject({
+      available: false,
+      speedDial: [recipientId],
+    });
+  });
   it("stores voicemail once and denies caller and administrator playback/deletion", async () => {
     await request(app).put("/work-hub/calls/settings").set("Cookie", recipientCookie).send({ available: false, speedDial: [] });
     const call = await request(app).post("/work-hub/calls").set("Cookie", callerCookie).send({ recipientUserId: recipientId, operationId: randomUUID() });

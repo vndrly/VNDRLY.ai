@@ -34,6 +34,7 @@ import {
   VOICE_WORKFLOWS,
   type VoiceWorkflow,
 } from "../assistant/tool-packs";
+import { isTypedWorkHubTool } from "../assistant/work-hub-tool-runtime";
 import {
   allowVoiceMetric,
   parseVoiceMetric,
@@ -395,6 +396,7 @@ function realtimeToolsForRequest(
         : null;
   return toolsForRealtime({
     role: session.role,
+    membershipRole: session.membershipRole,
     path,
     entityId: Number.isFinite(entityId) ? entityId : null,
   });
@@ -721,7 +723,11 @@ router.post("/assistant/realtime/context", async (req, res): Promise<void> => {
     res.status(409).json({ error: "This voice session has ended." });
     return;
   }
-  const selected = toolsForRealtime({ role: session.role, ...context });
+  const selected = toolsForRealtime({
+    role: session.role,
+    membershipRole: session.membershipRole,
+    ...context,
+  });
   res.json({
     tools: toRealtimeTools(selected),
     toolMetadata: toRealtimeToolMetadata(selected),
@@ -846,6 +852,7 @@ router.post(
       });
       const selected = toolsForRealtime({
         role: session.role,
+        membershipRole: session.membershipRole,
         ...selectedContext,
       });
       res.json({
@@ -988,7 +995,16 @@ router.post(
         ...(confirmed ? { confirmed: true } : {}),
       };
       const execute = () =>
-        runTool(name, executableInput, session, req.headers.cookie ?? "");
+        isTypedWorkHubTool(name)
+          ? runTool(
+              name,
+              executableInput,
+              session,
+              req.headers.cookie ?? "",
+              false,
+              confirmed,
+            )
+          : runTool(name, executableInput, session, req.headers.cookie ?? "");
       const result = tool.mutating
         ? await runPersistentAskVMutation(scope, execute)
         : { hit: false, value: await execute() };

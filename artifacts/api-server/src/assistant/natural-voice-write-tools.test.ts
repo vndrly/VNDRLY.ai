@@ -8,6 +8,7 @@ import {
   prepareVisitorCheckOut,
   setTicketLifecycle,
   closeTicketForReview,
+  callNaturalVoiceDomainApi,
 } from "./natural-voice-write-tools";
 const fetchMock = vi.fn();
 const gate = {
@@ -32,6 +33,48 @@ beforeEach(() => {
   vi.stubGlobal("fetch", fetchMock);
 });
 describe("AskV canonical Gate and field operations", () => {
+  it("supports the full internal Work Hub method set and marks requests as Ask V", async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({ ok: true }),
+    });
+    await callNaturalVoiceDomainApi(
+      "/work-hub/calls/settings",
+      "PUT",
+      { available: true },
+      gate,
+    );
+    await callNaturalVoiceDomainApi(
+      "/work-hub/channels/abc",
+      "DELETE",
+      { operationId: "op" },
+      gate,
+    );
+    expect(fetchMock.mock.calls.map(([, init]) => init.method)).toEqual([
+      "PUT",
+      "DELETE",
+    ]);
+    expect(fetchMock.mock.calls[0][1].headers).toMatchObject({
+      "X-VNDRLY-Source": "askv",
+      "X-VNDRLY-Client": "assistant",
+    });
+  });
+  it("forwards only explicitly supplied internal request headers", async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({ ok: true }),
+    });
+    await callNaturalVoiceDomainApi(
+      "/work-hub/meetings/occurrence/replay/watch/progress",
+      "POST",
+      { playheadMs: 1200 },
+      gate,
+      { "x-replay-view-session": "server-issued-token" },
+    );
+    expect(fetchMock.mock.calls[0][1].headers).toMatchObject({
+      "x-replay-view-session": "server-issued-token",
+    });
+  });
   it("collects exact host and location instead of silently choosing them", async () => {
     const incomplete = JSON.parse(
       await prepareVisitorCheckIn({

@@ -30,6 +30,7 @@ const mocks = vi.hoisted(() => ({
     partnerId: number | null;
     vendorPeopleId: number | null;
     displayName: string;
+    membershipRole?: string | null;
   },
 }));
 vi.mock("../assistant/askv-voice-confirmation", () => ({
@@ -529,6 +530,38 @@ describe("AskV Realtime safety regressions", () => {
     } finally {
       vi.unstubAllEnvs();
     }
+  });
+
+  it("loads company-admin Work Hub tools into voice only for the active organization admin", async () => {
+    vi.stubEnv("OPENAI_API_KEY", "sk-test");
+    mocks.session = { ...mocks.session, membershipRole: "admin" };
+    const admin = await request(app())
+      .post("/assistant/realtime/client-secret")
+      .send({ path: "/work-hub/administration" })
+      .expect(200);
+    expect(admin.body.toolNames).toContain("manage_work_hub_legal_hold");
+    expect(admin.body.toolNames).toContain("manage_work_hub_export");
+
+    mocks.session = { ...mocks.session, membershipRole: "member" };
+    const member = await request(app())
+      .post("/assistant/realtime/client-secret")
+      .send({ path: "/work-hub/administration" })
+      .expect(200);
+    expect(member.body.toolNames).not.toContain("manage_work_hub_legal_hold");
+    expect(member.body.toolNames).not.toContain("manage_work_hub_export");
+  });
+
+  it("preserves company-admin tools when refreshing realtime context", async () => {
+    mocks.session = { ...mocks.session, membershipRole: "admin" };
+    const context = await request(app())
+      .post("/assistant/realtime/context")
+      .send({
+        sessionId: "work-hub-admin-context",
+        path: "/work-hub/administration",
+      })
+      .expect(200);
+    expect(context.body.tools.map((tool: { name: string }) => tool.name))
+      .toContain("manage_work_hub_legal_hold");
   });
   it("explains account rollout denial separately from missing provider configuration", async () => {
     vi.stubEnv("ASKV_NATURAL_VOICE_ENABLED", "1");

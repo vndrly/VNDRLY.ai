@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 const source = readFileSync(
   new URL("./governance-retention-runtime.ts", import.meta.url),
   "utf8",
-);
+).replace(/\r\n/g, "\n");
 
 describe("governance retention runtime safety boundary", () => {
   it("contains no governed-content deletion or object deletion path", () => {

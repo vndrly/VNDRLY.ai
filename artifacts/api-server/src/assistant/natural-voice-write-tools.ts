@@ -42,9 +42,10 @@ function missingCheckInFields(args: Record<string, unknown>): string[] {
 /** Reuse the real API boundary: assignment, role, geofence, audit, GPS and events. */
 export async function callNaturalVoiceDomainApi(
   path: string,
-  method: "GET" | "POST" | "PATCH",
+  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
   input: Record<string, unknown>,
   session: SessionPayload,
+  extraHeaders: Record<string, string> = {},
 ): Promise<Record<string, unknown> | unknown[]> {
   if (!session.userId) return { ok: false, error: "You must be signed in." };
   const now = Math.floor(Date.now() / 1000);
@@ -70,7 +71,10 @@ export async function callNaturalVoiceDomainApi(
   const response = await fetch(`http://127.0.0.1:${port}/api${path}`, {
     method,
     headers: {
+      ...extraHeaders,
       "Content-Type": "application/json",
+      "X-VNDRLY-Source": "askv",
+      "X-VNDRLY-Client": "assistant",
       cookie: `vndrly_session=${payload}.${signature}`,
     },
     ...(method !== "GET" ? { body: JSON.stringify(body) } : {}),

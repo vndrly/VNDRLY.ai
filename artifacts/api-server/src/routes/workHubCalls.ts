@@ -162,15 +162,25 @@ router.put("/work-hub/calls/settings", async (req, res) => {
   const a = res.locals.callActor as Actor;
   const p = z
     .object({
-      available: z.boolean(),
-      speedDial: z.array(z.number().int().positive()).max(30),
+      available: z.boolean().optional(),
+      speedDial: z.array(z.number().int().positive()).max(30).optional(),
     })
+    .refine((value) => value.available !== undefined || value.speedDial !== undefined)
     .parse(req.body);
-  for (const id of p.speedDial) await authorizedContact(a, id);
+  const [current] = await db
+    .select()
+    .from(workHubCallSettingsTable)
+    .where(eq(workHubCallSettingsTable.userId, a.userId))
+    .limit(1);
+  const next = {
+    available: p.available ?? current?.available ?? true,
+    speedDial: p.speedDial ?? current?.speedDial ?? [],
+  };
+  for (const id of next.speedDial) await authorizedContact(a, id);
   const [settings] = await db
     .insert(workHubCallSettingsTable)
-    .values({ userId: a.userId, ...p })
-    .onConflictDoUpdate({ target: workHubCallSettingsTable.userId, set: p })
+    .values({ userId: a.userId, ...next })
+    .onConflictDoUpdate({ target: workHubCallSettingsTable.userId, set: next })
     .returning();
   return res.json(settings);
 });
