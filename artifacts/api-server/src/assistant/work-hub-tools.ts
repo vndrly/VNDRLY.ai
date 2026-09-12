@@ -265,10 +265,10 @@ const entries: Entry[] = [
     occurrenceId: identifier(),
     payload: { type: "object" },
   }, ["action", "payload"])),
-  write("moderate_work_hub_meeting", "meetings", "Host or co-host meeting moderation, including muting or removing an attendee. A host mute never remotely unmutes the attendee; releasing it only restores their own unmute control. Attendees may request to speak.", writeSchema({
-    action: { type: "string", enum: ["host_mute", "release_host_mute", "remove", "request_to_speak"] },
+  write("moderate_work_hub_meeting", "meetings", "Host or co-host meeting moderation, including muting, removing, or checking in an invited attendee on a shared terminal. A shared-terminal email or name match confirms the invitation, not identity. A host mute never remotely unmutes the attendee; releasing it only restores their own unmute control. Attendees may request to speak.", writeSchema({
+    action: { type: "string", enum: ["host_mute", "release_host_mute", "remove", "request_to_speak", "check_in", "check_out"] },
     occurrenceId: identifier(),
-    targetUserId: { type: "number", description: "Required for host_mute, release_host_mute, and remove." },
+    targetUserId: { type: "number", description: "Required for host_mute, release_host_mute, remove, check_in, and check_out." },
   }, ["action", "occurrenceId"])),
   read("get_work_hub_meeting_catchup", "meetings", "Get the authorized meeting catch-up, transcript projection, decisions, and action items.", schema({ occurrenceId: identifier() }, ["occurrenceId"])),
   write("ask_work_hub_meeting", "meetings", "Answer an Ask V question from the caller's authorized saved meeting message or transcript segment.", writeSchema({

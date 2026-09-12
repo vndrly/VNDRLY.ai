@@ -185,6 +185,12 @@ describe("resolveWorkHubToolRequest", () => {
     expect(resolveWorkHubToolRequest("moderate_work_hub_meeting", {
       action: "request_to_speak", occurrenceId: "meeting-1",
     })).toMatchObject({ method: "POST", path: "/work-hub/meetings/meeting-1/request-to-speak" });
+    expect(resolveWorkHubToolRequest("moderate_work_hub_meeting", {
+      action: "check_in", occurrenceId: "meeting-1", targetUserId: 42,
+    })).toMatchObject({ method: "POST", path: "/work-hub/meetings/meeting-1/participants/42/check-in" });
+    expect(resolveWorkHubToolRequest("moderate_work_hub_meeting", {
+      action: "check_out", occurrenceId: "meeting-1", targetUserId: 42,
+    })).toMatchObject({ method: "DELETE", path: "/work-hub/meetings/meeting-1/participants/42/check-in" });
   });
 
   it("reserves a new file version without adding fields rejected by the strict schema", () => {

@@ -8,7 +8,7 @@ import {
   useFonts,
 } from "@expo-google-fonts/inter";
 import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Slot, router, useSegments } from "expo-router";
+import { Slot, router, usePathname, useSegments } from "expo-router";
 import * as Notifications from "expo-notifications";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useState } from "react";
@@ -27,10 +27,12 @@ import AskVVoiceIndicator from "@/components/AskVVoiceIndicator";
 import { subscribeAskVDataChanged } from "@/lib/askv-client-tools";
 import { initApi } from "@/lib/api";
 import VndrlyPageBackground from "@/components/VndrlyPageBackground";
+import { MeetingCompanionProvider } from "@/components/MeetingCompanionProvider";
 import { getCachedToken, getCachedRole, getToken, isTokenCacheReady, subscribeToken, getUser } from "@/lib/auth";
 import { isGatekeeperTabKey, isGatekeeperUser } from "@/lib/mobile-viewer";
 import { hasActiveConsentForThisDevice, isConsentDeclined } from "@/lib/locationConsent";
 import { startLiveLocationReporter, stopLiveLocationReporter } from "@/lib/liveLocationReporter";
+import { useWorkHubDevicePresence } from "@/hooks/use-work-hub-device-presence";
 import { ensureNotificationSoundLifecycle } from "@/lib/notificationSounds";
 import { syncAppIconBadge } from "@/lib/notificationBadge";
 import {
@@ -69,10 +71,12 @@ const queryClient = new QueryClient({
 function AuthGate() {
   useEffect(() => subscribeAskVDataChanged(() => { void queryClient.invalidateQueries(); }), []);
   const segments = useSegments();
+  const pathname = usePathname();
   const [checked, setChecked] = useState(isTokenCacheReady());
   const [hasAuth, setHasAuth] = useState(!!getCachedToken());
   const [role, setRole] = useState<string | null>(getCachedRole());
   const [minSplashElapsed, setMinSplashElapsed] = useState(false);
+  useWorkHubDevicePresence(pathname, checked && hasAuth && role !== "guest");
 
   useEffect(() => {
     const timer = setTimeout(() => setMinSplashElapsed(true), SPLASH_MIN_DURATION_MS);
@@ -263,9 +267,11 @@ function RootLayout() {
               <GestureHandlerRootView style={{ flex: 1 }}>
                 <SafeKeyboardProvider>
                   <VndrlyPageBackground>
-                    <AuthGate />
-                    <ContextPickerModal />
-                    <AskVVoiceIndicator />
+                    <MeetingCompanionProvider>
+                      <AuthGate />
+                      <ContextPickerModal />
+                      <AskVVoiceIndicator />
+                    </MeetingCompanionProvider>
                   </VndrlyPageBackground>
                 </SafeKeyboardProvider>
               </GestureHandlerRootView>

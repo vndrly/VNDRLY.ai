@@ -23,6 +23,7 @@ import TogglePillButton from "@/components/TogglePillButton";
 import { useBrand } from "@/hooks/use-brand";
 import { useColors } from "@/hooks/useColors";
 import { useMeetingWorkspace } from "@/lib/use-meeting-workspace";
+import { useMeetingCompanion } from "@/components/MeetingCompanionProvider";
 
 const SURFACE = "#3a3d42";
 const PANEL = "#50545a";
@@ -93,6 +94,7 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
   const brand = useBrand();
   const { width } = useWindowDimensions();
   const workspace = useMeetingWorkspace(occurrenceId);
+  const companion = useMeetingCompanion();
   const [rosterOpen, setRosterOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
   const [manageOpen, setManageOpen] = useState(false);
@@ -149,6 +151,10 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
   const toolNames = ["summary", "actionItems", "decisions", "search", "agenda",
     ...(snapshot.canViewAttendance ? ["attendance"] : [])];
   const wide = width >= 720;
+  useEffect(() => {
+    if (!snapshot || !["scheduled", "live"].includes(snapshot.occurrence.status) || workspace.meetingEndedAcknowledged) { if (companion?.active?.occurrenceId === occurrenceId) companion.clear(); return; }
+    companion?.activate({ occurrenceId, title: snapshot.meeting.title, hostMuted: Boolean(selfParticipant?.hostMutedAt), hostMuteGeneration: selfParticipant?.hostMuteGeneration ?? 0 });
+  }, [companion?.active?.occurrenceId, companion?.activate, companion?.clear, occurrenceId, selfParticipant?.hostMuteGeneration, selfParticipant?.hostMutedAt, snapshot?.meeting.title, snapshot?.occurrence.status, workspace.meetingEndedAcknowledged]);
 
   return <KeyboardAvoidingView behavior={process.env.EXPO_OS === "ios" ? "padding" : undefined} style={{ flex: 1, backgroundColor: SURFACE }}>
     <ScrollView
@@ -164,7 +170,7 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
           <Text selectable style={{ color: "#e1e3e6" }}>
             {t("meetingWorkspace.presentCount", { defaultValue: "{{count}} present", count: present.length })}
           </Text>
-          {["scheduled", "live"].includes(snapshot.occurrence.status) && !workspace.meetingEndedAcknowledged && <WorkHubAudioRoom occurrenceId={occurrenceId} hostMuted={Boolean(selfParticipant?.hostMutedAt)} hostMuteGeneration={selfParticipant?.hostMuteGeneration ?? 0} />}
+          {["scheduled", "live"].includes(snapshot.occurrence.status) && !workspace.meetingEndedAcknowledged && !companion && <WorkHubAudioRoom occurrenceId={occurrenceId} hostMuted={Boolean(selfParticipant?.hostMutedAt)} hostMuteGeneration={selfParticipant?.hostMuteGeneration ?? 0} />}
           {selfParticipant?.hostMutedAt && <TogglePillButton color="brand" disabled={workspace.managementPending || Boolean(snapshot.mySpeakRequest)} accessibilityLabel={snapshot.mySpeakRequest ? t("meetingWorkspace.speakRequested", { defaultValue: "Request sent" }) : t("meetingWorkspace.requestToSpeak", { defaultValue: "Request to speak" })} onPress={() => void workspace.requestToSpeak()}>{snapshot.mySpeakRequest ? t("meetingWorkspace.speakRequested", { defaultValue: "Request sent" }) : t("meetingWorkspace.requestToSpeak", { defaultValue: "Request to speak" })}</TogglePillButton>}
           <Text selectable style={{ color: "#ffffff", fontWeight: "700" }}>
             {t("meetingWorkspace.transcriptionUnavailable", { defaultValue: "Transcription unavailable on this device." })}

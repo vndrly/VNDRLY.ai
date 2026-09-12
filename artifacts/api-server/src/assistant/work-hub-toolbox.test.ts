@@ -37,6 +37,8 @@ describe("Work Hub AskV web/iOS parity", () => {
       "release_host_mute",
       "remove",
       "request_to_speak",
+      "check_in",
+      "check_out",
     ]);
     expect(actions("manage_work_hub_task")).toEqual([
       "create",

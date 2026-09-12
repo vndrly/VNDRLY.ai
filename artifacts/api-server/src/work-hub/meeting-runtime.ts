@@ -9,7 +9,14 @@ export type MeetingRuntime = {
   presence?: Record<string, MeetingPresence>;
   connections?: Record<string, MeetingDevicePresence>;
   signals?: MeetingSignal[];
+  /** People explicitly admitted by a host on a shared terminal. This is
+   * attendance presence only; it must never be treated as an audio device. */
+  admittedUserIds?: number[];
 };
+
+export function meetingAdmittedUserIds(runtime: MeetingRuntime) {
+  return [...new Set((runtime.admittedUserIds ?? []).filter((value) => Number.isSafeInteger(value) && value > 0))];
+}
 
 const MAX_MEETING_SIGNAL_COUNT = 2_000;
 const MAX_MEETING_SIGNAL_BYTES = 2 * 1024 * 1024;

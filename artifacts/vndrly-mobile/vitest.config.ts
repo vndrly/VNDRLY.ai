@@ -22,6 +22,7 @@ export default defineConfig({
     setupFiles: ["./vitest.setup.ts"],
     include: [
       "lib/**/*.test.ts",
+      "hooks/**/*.test.tsx",
       "components/**/*.test.tsx",
       "app/**/*.test.tsx",
     ],

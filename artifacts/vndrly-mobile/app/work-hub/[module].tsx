@@ -12,15 +12,20 @@ import {
 } from "react-native";
 import WorkHubCalls from "@/components/WorkHubCalls";
 import WorkHubConversation from "@/components/WorkHubConversation";
+import { useMeetingCompanion } from "@/components/MeetingCompanionProvider";
+import TogglePillButton from "@/components/TogglePillButton";
 import ScreenSafeArea from "@/components/ScreenSafeArea";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/hooks/use-auth";
 import { apiFetch } from "@/lib/api";
+import { captureAuthScope } from "@/lib/auth";
+import { pickMeetingFile, persistMeetingFileForOffline, uploadMeetingFile, type MeetingFileSource } from "@/lib/meeting-files";
 import { mobileOwner, moduleEndpoint } from "@/lib/work-hub-mobile";
 import {
   flushNativeWorkHubQueue,
   isOfflineWorkHubFailure,
   queueNativeWorkHubRequest,
+  queueNativeWorkHubUpload,
 } from "@/lib/work-hub-queue-runtime";
 
 type Row = Record<string, any>;
@@ -55,6 +60,7 @@ export default function WorkHubModuleScreen() {
   const { t } = useTranslation();
   const colors = useColors();
   const { user } = useAuth();
+  const meetingCompanion = useMeetingCompanion();
   const { module: raw } = useLocalSearchParams<{ module: string }>();
   const module = String(raw ?? "channels");
   const title = titles[module] ?? "Work Hub";
@@ -70,6 +76,9 @@ export default function WorkHubModuleScreen() {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [draft, setDraft] = useState("");
+  const [meetingFileBusy, setMeetingFileBusy] = useState(false);
+  const [meetingFileNotice, setMeetingFileNotice] = useState("");
+  const [meetingFileError, setMeetingFileError] = useState("");
   const load = useCallback(
     async (search = query) => {
       setLoading(true);
@@ -191,6 +200,32 @@ export default function WorkHubModuleScreen() {
       }
     }
   };
+  const uploadToActiveMeeting = async (source: MeetingFileSource) => {
+    const active = meetingCompanion?.active;
+    if (!active || meetingFileBusy) return;
+    setMeetingFileBusy(true);
+    setMeetingFileNotice("");
+    setMeetingFileError("");
+    try {
+      const file = await pickMeetingFile(source);
+      if (!file) return;
+      const authScope = captureAuthScope();
+      try {
+        await uploadMeetingFile(active.occurrenceId, file, null, authScope);
+        setMeetingFileNotice(`File added to ${active.title}.`);
+      } catch (cause) {
+        if (!user || !isOfflineWorkHubFailure(cause)) throw cause;
+        const path = `/api/work-hub/meetings/${encodeURIComponent(active.occurrenceId)}/files/${encodeURIComponent(file.id)}`;
+        const uri = persistMeetingFileForOffline(file);
+        await queueNativeWorkHubUpload(user, path, uri, file.type, [], { "x-file-name": encodeURIComponent(file.name) }, true, file.id);
+        setMeetingFileNotice(`File saved securely and will be added to ${active.title} when you reconnect.`);
+      }
+    } catch (cause) {
+      setMeetingFileError(cause instanceof Error ? cause.message : "The file could not be added.");
+    } finally {
+      setMeetingFileBusy(false);
+    }
+  };
   if (module === "calls")
     return (
       <ScreenSafeArea style={{ backgroundColor: colors.background }}>
@@ -254,6 +289,20 @@ export default function WorkHubModuleScreen() {
                 Search
               </Text>
             </Pressable>
+          </View>
+        )}
+        {module === "files-notes" && meetingCompanion?.active && (
+          <View accessibilityLabel="Active meeting upload" style={{ borderWidth: 1, borderColor: colors.primary, borderRadius: 12, padding: 16, gap: 10, backgroundColor: colors.card }}>
+            <Text style={{ color: colors.text, fontWeight: "700", fontSize: 17 }}>Sharing to: {meetingCompanion.active.title}</Text>
+            <Text style={{ color: colors.mutedForeground }}>The active meeting is selected. Return to the meeting to choose a private recipient.</Text>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+              <TogglePillButton color="brand" disabled={meetingFileBusy} loading={meetingFileBusy} accessibilityLabel="Take a photo for the active meeting" onPress={() => void uploadToActiveMeeting("camera")}>Camera</TogglePillButton>
+              <TogglePillButton color="brand" disabled={meetingFileBusy} loading={meetingFileBusy} accessibilityLabel="Choose a photo for the active meeting" onPress={() => void uploadToActiveMeeting("photos")}>Photos</TogglePillButton>
+              <TogglePillButton color="brand" disabled={meetingFileBusy} loading={meetingFileBusy} accessibilityLabel="Choose a file for the active meeting" onPress={() => void uploadToActiveMeeting("files")}>Files</TogglePillButton>
+              <TogglePillButton color="brand" accessibilityLabel="Return to active meeting" onPress={() => router.push(`/work-hub/meeting/${meetingCompanion.active!.occurrenceId}` as never)}>Change destination</TogglePillButton>
+            </View>
+            {!!meetingFileNotice && <Text accessibilityLiveRegion="polite" style={{ color: colors.text, fontWeight: "700" }}>{meetingFileNotice}</Text>}
+            {!!meetingFileError && <Text accessibilityRole="alert" style={{ color: colors.destructive, fontWeight: "700" }}>{meetingFileError}</Text>}
           </View>
         )}
         {owner &&

@@ -41,6 +41,8 @@ import { useAuth } from "@/hooks/use-auth";
 import LanguageToggle from "@/components/language-toggle";
 import DarkLightToggle from "@/components/dark-light-toggle";
 import { useTheme } from "@/hooks/use-theme";
+import { useWorkHubDevicePresence } from "@/hooks/use-work-hub-device-presence";
+import { MeetingSessionProvider } from "@/components/meeting-session-provider";
 import { useGetVendor, useGetPartner, useGetVendorRatings, getGetVendorRatingsQueryKey, getGetVendorQueryKey, getGetPartnerQueryKey } from "@workspace/api-client-react";
 import StarRating from "@/components/star-rating";
 import SidebarButton from "@/components/sidebar-button";
@@ -198,6 +200,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const standardNavItems = orderPortalNavigation(useNavItems(user), user?.role);
   const inWorkHub = isWorkHubPath(location);
+  useWorkHubDevicePresence(location, Boolean(user?.vendorId || user?.partnerId));
 
   const navItems = inWorkHub ? getWorkHubNavItems(user?.role).map((item) => ({ ...item, icon: workHubIcons[item.key as keyof typeof workHubIcons] })) : standardNavItems;
   const { data: vendor } = useGetVendor(user?.vendorId ?? 0, { query: { enabled: user?.role === "vendor" && !!user.vendorId, queryKey: getGetVendorQueryKey(user?.vendorId ?? 0) } });
@@ -240,6 +243,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <>
+    <MeetingSessionProvider>
     <div
       className={cn("flex", FIXED_APP_CHROME ? "h-screen overflow-hidden" : "min-h-screen")}
       style={brandStyleVars(brand)}
@@ -459,6 +463,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </main>
       </div>
     </div>
+    </MeetingSessionProvider>
     </>
   );
 }

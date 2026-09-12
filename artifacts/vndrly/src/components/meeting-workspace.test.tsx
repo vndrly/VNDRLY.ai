@@ -51,6 +51,15 @@ beforeEach(() => {
   };
 });
 describe("approved Work Hub meeting workspace", () => {
+  it("lets a host check an invited attendee in from the shared terminal", async () => {
+    mocks.snapshot.participants[1] = { ...mocks.snapshot.participants[1], present: false };
+    render(<MeetingWorkspace occurrenceId="meeting" />);
+    fireEvent.click(screen.getByText("Meeting Tools"));
+    fireEvent.click(screen.getByRole("button", { name: "Manage Attendees" }));
+    fireEvent.change(screen.getByRole("combobox", { name: "Add participant" }), { target: { value: "2" } });
+    fireEvent.click(screen.getByRole("button", { name: "Check in participant" }));
+    await waitFor(() => expect(mocks.request).toHaveBeenCalledWith("/meetings/meeting/participants/2/check-in", expect.objectContaining({ method: "POST" })));
+  });
   it("keeps the existing consent controls without an in-house claim when streaming capture is selected", () => {
     mocks.snapshot.myConsent = "pending"; mocks.snapshot.nativeCaptureAvailable = false; mocks.snapshot.streamingCaptureAvailable = true;
     render(<MeetingWorkspace occurrenceId="meeting" />);

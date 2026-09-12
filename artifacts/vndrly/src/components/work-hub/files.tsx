@@ -22,6 +22,7 @@ import {
   Upload,
 } from "lucide-react";
 import { WorkHubCardTitle } from "./chrome";
+import { useMeetingSession } from "@/components/meeting-session-provider";
 type Document = {
   id: string;
   createdBy: number;
@@ -50,8 +51,9 @@ export function WorkHubFiles() {
   const { user } = useAuth();
   const owner = ownerForUser(user);
   const cache = useQueryClient();
+  const meetingSession = useMeetingSession();
   const input = useRef<HTMLInputElement>(null);
-  const [scope, setScope] = useState(() => new URLSearchParams(window.location.search).get("channel") ? "channel" : "personal");
+  const [scope, setScope] = useState(() => new URLSearchParams(window.location.search).get("channel") ? "channel" : meetingSession?.occurrenceId ? "meeting" : "personal");
   const [channelId, setChannelId] = useState(() => new URLSearchParams(window.location.search).get("channel") ?? "");
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
@@ -75,6 +77,7 @@ export function WorkHubFiles() {
     setVersions(null);
     if (input.current) input.current.value = "";
   }, [user?.userId, user?.activeMembershipId, owner?.type, owner?.id]);
+  useEffect(() => { if (meetingSession?.occurrenceId && !pendingFile && !replace) setScope("meeting"); }, [meetingSession?.occurrenceId, pendingFile, replace]);
   const queryKey = ["work-hub-file-library", user?.userId, user?.activeMembershipId, owner?.type, owner?.id];
   const query = useQuery({
     queryKey,
@@ -122,6 +125,12 @@ export function WorkHubFiles() {
     mutationFn: async (file: File) => {
       if (file.size <= 0 || file.size > 25 * 1024 * 1024)
         throw new Error("Choose a non-empty file no larger than 25 MB.");
+      if (scope === "meeting" && meetingSession?.occurrenceId && !replace) {
+        const operationId = pendingOperationId ?? createWorkHubOperationId();
+        if (!pendingOperationId) setPendingOperationId(operationId);
+        setReservationStarted(true);
+        return workHubRequest(`/meetings/${meetingSession.occurrenceId}/files/${operationId}`, { method: "PUT", headers: { "Content-Type": file.type || "application/octet-stream", "x-file-name": encodeURIComponent(file.name) }, body: file });
+      }
       const digest = await crypto.subtle.digest(
         "SHA-256",
         await file.arrayBuffer(),
@@ -200,6 +209,7 @@ export function WorkHubFiles() {
       setReservedUpload(null);
       if (input.current) input.current.value = "";
       cache.invalidateQueries({ queryKey });
+      if (meetingSession?.occurrenceId) cache.invalidateQueries({ queryKey: ["work-hub", "meeting-workspace", meetingSession.occurrenceId] });
     },
   });
   if (!owner) return <p>Select a company to open your files.</p>;
@@ -260,8 +270,10 @@ export function WorkHubFiles() {
               <option value="personal">Only me</option>
               <option value="company">Company members</option>
               <option value="channel">Channel members</option>
+              {meetingSession?.occurrenceId && <option value="meeting">Active meeting</option>}
             </select>
           </label>
+          {scope === "meeting" && meetingSession?.occurrenceId && <p role="status"><strong>Sharing to: {meetingSession.snapshot?.meeting.title ?? "active meeting"}</strong> · Change the audience above to choose somewhere else.</p>}
           {scope === "channel" && (
             <label className="block">
               Channel{" "}

@@ -355,6 +355,10 @@ export function resolveWorkHubToolRequest(
         return request("DELETE", `/work-hub/meetings/${target}/participants/${userId}/host-mute`);
       if (input.action === "remove")
         return request("POST", `/work-hub/meetings/${target}/participants/${userId}/remove`);
+      if (input.action === "check_in")
+        return request("POST", `/work-hub/meetings/${target}/participants/${userId}/check-in`);
+      if (input.action === "check_out")
+        return request("DELETE", `/work-hub/meetings/${target}/participants/${userId}/check-in`);
       return unsupported("meeting moderation");
     }
     case "get_work_hub_meeting_catchup":

@@ -12,6 +12,7 @@ export type MeetingAttendee = {
   joinedAt?: number;
   removedAt: string | null;
   handRaisedAt?: string | null;
+  presenceKind?: "authenticated_device" | "host_confirmed_invitation" | null;
 };
 
 export type MeetingAnswerProvenance = {

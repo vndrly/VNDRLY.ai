@@ -314,6 +314,34 @@ describe("native meeting transcription", () => {
 });
 
 describe("cross-device meeting moderation routes", () => {
+  it("lets a host check an invited attendee in on a shared terminal without fabricating an audio device", async () => {
+    seed();
+    mocks.results.push([]);
+    const response = await request(app()).post(`/meetings/${meetingId}/participants/2/check-in`).send({});
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({ userId: 2, present: true, verification: "host_confirmed_invitation" });
+    expect(mocks.mutations.some((value) => value.type === "insert" && (value.value as any)?.userId === 2)).toBe(true);
+    const runtime = (mocks.mutations.find(value => value.type === "update" && (value.value as any)?.runtime)?.value as any).runtime;
+    expect(runtime.admittedUserIds).toEqual([2]);
+    expect(runtime.connections).toBeUndefined();
+  });
+
+  it("does not let a regular attendee check another invited attendee in", async () => {
+    seed({ actorRole: "participant" });
+    const response = await request(app()).post(`/meetings/${meetingId}/participants/2/check-in`).send({});
+    expect(response.status).toBe(403);
+    expect(mocks.mutations).toEqual([]);
+  });
+
+  it("lets a host check out a shared-terminal attendee and closes the active attendance record", async () => {
+    seed({ runtime: { admittedUserIds: [2] } });
+    const response = await request(app()).delete(`/meetings/${meetingId}/participants/2/check-in`);
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({ userId: 2, present: false });
+    const runtime = (mocks.mutations.find(value => value.type === "update" && (value.value as any)?.runtime)?.value as any).runtime;
+    expect(runtime.admittedUserIds).toEqual([]);
+  });
+
   it("host-mutes an attendee and stops speaking on every connection", async () => {
     seed({ runtime: { connections: {
       phone: { userId: 2, deviceId: "phone", connectionId: "phone", joinedAt: 1, seenAt: Date.now(), speaking: true },
@@ -389,6 +417,8 @@ describe("shipped audio compatibility", () => {
       presentUserIds: [1],
       peerConnections: [{ userId: 2, deviceId: "legacy:2", connectionId: "legacy:2" }],
       recordingState: "active",
+      audioOwnership: null,
+      automaticBackupDeviceId: null,
     });
     const runtime = (mocks.mutations[0].value as any).runtime;
     expect(runtime.presence[1].seenAt).toBeGreaterThan(joinedAt);

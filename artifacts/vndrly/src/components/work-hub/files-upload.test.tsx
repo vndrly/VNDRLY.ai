@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WorkHubFiles } from "./files";
 
-const mocks = vi.hoisted(() => ({ request: vi.fn() }));
+const mocks = vi.hoisted(() => ({ request: vi.fn(), meeting: null as null | { occurrenceId: string; snapshot?: { meeting: { title: string } } } }));
 vi.mock("@/hooks/use-auth", () => ({
   useAuth: () => ({ user: { userId: 7, vendorId: 1, activeMembershipId: 1 } }),
 }));
@@ -16,15 +16,29 @@ vi.mock("@/lib/work-hub-client", () => ({
 vi.mock("@/components/brand-pill-button", () => ({
   default: ({ children, tone: _tone, ...props }: any) => <button {...props}>{children}</button>,
 }));
+vi.mock("@/components/meeting-session-provider", () => ({ useMeetingSession: () => mocks.meeting }));
 
 describe("Work Hub explicit file upload", () => {
   beforeEach(() => {
+    mocks.meeting = null;
     mocks.request.mockReset();
     mocks.request.mockImplementation(async (path: string) => {
       if (path === "/file-library?orgType=vendor&orgId=1") return [];
       if (path === "/channels") return [];
       return {};
     });
+  });
+
+  it("defaults a new upload to the active meeting while keeping the destination changeable", async () => {
+    mocks.meeting = { occurrenceId: "meeting-one", snapshot: { meeting: { title: "Morning Operations" } } };
+    render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><WorkHubFiles /></QueryClientProvider>);
+    expect(screen.getByText("Sharing to: Morning Operations")).toBeTruthy();
+    const file = new File(["receipt"], "receipt.pdf", { type: "application/pdf" });
+    fireEvent.change(screen.getByLabelText("Choose file to upload"), { target: { files: [file] } });
+    fireEvent.click(screen.getByRole("button", { name: "Upload File" }));
+    await waitFor(() => expect(mocks.request).toHaveBeenCalledWith("/meetings/meeting-one/files/operation-1", expect.objectContaining({ method: "PUT", body: file })));
+    fireEvent.change(screen.getByLabelText("File audience"), { target: { value: "personal" } });
+    expect(screen.queryByText("Sharing to: Morning Operations")).toBeNull();
   });
 
   afterEach(() => vi.unstubAllGlobals());
