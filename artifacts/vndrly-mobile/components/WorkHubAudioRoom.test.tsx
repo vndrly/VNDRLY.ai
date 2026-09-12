@@ -108,6 +108,9 @@ describe("native meeting microphone lifecycle", () => {
     const native = { start: vi.fn(async () => undefined), setMuted: vi.fn(async () => undefined), setTranscription: vi.fn(async () => undefined), createOffer: vi.fn(async () => undefined), applySignal: vi.fn(async () => undefined), removePeer: vi.fn(async () => undefined), stop: vi.fn(async () => undefined) };
     env.nativeFactory.mockReturnValue(native);
     render(<WorkHubAudioRoom occurrenceId="room-a" />); await join();
+    // Secure per-install device identity schedules one immediate storage task;
+    // flush it without advancing the 1.2 second meeting poll.
+    await act(async () => { await vi.advanceTimersByTimeAsync(0); });
     expect(env.capture).not.toHaveBeenCalled();
     expect(native.start).toHaveBeenCalledWith({ sourceId: expect.stringContaining("meeting-1-"), iceServers: [] });
     expect(screen.getByRole("button", { name: "Unmute" })).toBeTruthy();
@@ -161,7 +164,12 @@ describe("native meeting microphone lifecycle", () => {
     render(<WorkHubAudioRoom occurrenceId="room-a" />); await join(); await tick();
     expect(native.createOffer).toHaveBeenCalledWith(2);
     onSignal?.({ generation: 1, toUserId: 2, kind: "offer", payload: { type: "offer", sdp: "native" } }); await settle();
-    expect(JSON.parse(writes("signal").at(-1)?.[1]?.body)).toEqual({ toUserId: 2, kind: "offer", payload: { type: "offer", sdp: "native" } });
+    expect(JSON.parse(writes("signal").at(-1)?.[1]?.body)).toMatchObject({
+      deviceId: expect.stringMatching(/^[0-9a-f-]{36}$/),
+      connectionId: expect.stringMatching(/^[0-9a-f-]{36}$/),
+      toUserId: 2, toDeviceId: "legacy:2", kind: "offer",
+      payload: { type: "offer", sdp: "native" },
+    });
   });
   it("hands off the real coordinator before native capture", async () => {
     const previous = nativeStream(); await askVMicrophone.acquire("askv", async () => { previous.track.stop(); });

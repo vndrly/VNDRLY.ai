@@ -24,7 +24,7 @@ export class WorkHubDeviceError extends Error {
   constructor(readonly code: "work_hub.not_found" | "work_hub.invalid_payload", message: string) { super(message); this.name = "WorkHubDeviceError"; }
 }
 
-type CreateDeviceInput = Omit<DeviceRecord, "id" | "revokedAt" | "createdAt" | "updatedAt"> & { now: Date };
+type CreateDeviceInput = Omit<DeviceRecord, "id" | "revokedAt" | "createdAt" | "updatedAt"> & { id?: string; now: Date };
 type UpdateDeviceInput = Partial<Pick<DeviceRecord, "owner" | "friendlyName" | "deviceClass" | "capabilities" | "revokedAt">> & { updatedAt: Date };
 type UpsertConnectionInput = Omit<DeviceConnectionRecord, "connectedAt" | "seenAt"> & { now: Date };
 type AppendEventInput = Omit<DurableUserEvent, "id" | "sequence" | "createdAt"> & { now: Date };
@@ -54,7 +54,7 @@ function mapEvent(row: typeof workHubUserEventsTable.$inferSelect): DurableUserE
 
 export const databaseDeviceCoordinatorStore: DeviceCoordinatorStore = {
   async findDevice(id) { const [row] = await db.select().from(workHubDevicesTable).where(eq(workHubDevicesTable.id, id)).limit(1); return row ? mapDevice(row) : null; },
-  async createDevice(input) { const [row] = await db.insert(workHubDevicesTable).values({ userId: input.userId, ownerOrgType: input.owner.type, ownerOrgId: input.owner.id, friendlyName: input.friendlyName, deviceClass: input.deviceClass, capabilities: input.capabilities, createdAt: input.now, updatedAt: input.now }).returning(); return mapDevice(row!); },
+  async createDevice(input) { const [row] = await db.insert(workHubDevicesTable).values({ ...(input.id ? { id: input.id } : {}), userId: input.userId, ownerOrgType: input.owner.type, ownerOrgId: input.owner.id, friendlyName: input.friendlyName, deviceClass: input.deviceClass, capabilities: input.capabilities, createdAt: input.now, updatedAt: input.now }).returning(); return mapDevice(row!); },
   async updateDevice(id, patch) {
     const set: Partial<typeof workHubDevicesTable.$inferInsert> = { updatedAt: patch.updatedAt };
     if (patch.owner) { set.ownerOrgType = patch.owner.type; set.ownerOrgId = patch.owner.id; }
@@ -96,7 +96,8 @@ export function createDeviceCoordinator(store: DeviceCoordinatorStore, options: 
       const now = clock(); const friendlyName = normalizeName(input.friendlyName); const deviceClass = normalizeClass(input.deviceClass);
       if (!input.deviceId) return store.createDevice({ userId: actor.userId, owner: actor.owner, friendlyName, deviceClass, capabilities: input.capabilities, now });
       const existing = await store.findDevice(input.deviceId);
-      if (!existing || existing.userId !== actor.userId || existing.revokedAt) throw new WorkHubDeviceError("work_hub.not_found", "Device not found");
+      if (!existing) return store.createDevice({ id: input.deviceId, userId: actor.userId, owner: actor.owner, friendlyName, deviceClass, capabilities: input.capabilities, now });
+      if (existing.userId !== actor.userId || existing.revokedAt) throw new WorkHubDeviceError("work_hub.not_found", "Device not found");
       if (existing.owner.type !== actor.owner.type || existing.owner.id !== actor.owner.id) await store.clearConnections(existing.id);
       const updated = await store.updateDevice(existing.id, { owner: actor.owner, friendlyName, deviceClass, capabilities: input.capabilities, updatedAt: now });
       if (!updated) throw new WorkHubDeviceError("work_hub.not_found", "Device not found");
@@ -105,6 +106,12 @@ export function createDeviceCoordinator(store: DeviceCoordinatorStore, options: 
     async heartbeatDevice(actor: DeviceActor, deviceId: string, input: { connectionId: string; foreground: boolean; microphonePermission: DeviceConnectionRecord["microphonePermission"]; surface?: DeviceSurface | null }) {
       const device = await requireOwnedDevice(actor, deviceId); const now = clock(); const surface = compactSurface(input.surface);
       return store.upsertConnection({ deviceId: device.id, connectionId: input.connectionId, foreground: input.foreground, microphonePermission: input.microphonePermission, surface, now });
+    },
+    async requireDeviceConnection(actor: DeviceActor, deviceId: string, connectionId: string) {
+      const device = await requireOwnedDevice(actor, deviceId);
+      const connection = (await store.listConnections([device.id])).find(value => value.connectionId === connectionId && value.seenAt.getTime() >= clock().getTime() - SURFACE_TTL_MS);
+      if (!connection) throw new WorkHubDeviceError("work_hub.not_found", "Device connection not found");
+      return { device, connection };
     },
     async revokeDevice(actor: DeviceActor, deviceId: string) { const device = await requireOwnedDevice(actor, deviceId); const now = clock(); await store.clearConnections(device.id); const updated = await store.updateDevice(device.id, { revokedAt: now, updatedAt: now }); if (!updated) throw new WorkHubDeviceError("work_hub.not_found", "Device not found"); return updated; },
     async listDevices(actor: DeviceActor) { return store.listDevices(actor); },

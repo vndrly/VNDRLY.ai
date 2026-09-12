@@ -8,6 +8,7 @@ import { getCachedToken, getToken, subscribeToken, subscribeUser } from "@/lib/a
 import { isAskVAppActive, requestAskVMicrophonePermission, subscribeAskVAppState } from "@/lib/askv-audio-session";
 import { useColors } from "@/hooks/useColors";
 import { createNativeMeetingAudioSession, type NativeMeetingAudioSession } from "@/lib/native-meeting-audio";
+import { getDeviceId } from "@/lib/deviceId";
 
 type Session = {
   valid: boolean;
@@ -16,14 +17,22 @@ type Session = {
   toggle: () => void;
   consent: () => void;
 };
-type JoinInfo = { userId: number; iceServers: any[]; recordingAllowed: boolean; policyVersion: number; consentAccepted?: boolean };
-type Signal = { sequence: number; fromUserId: number; kind: string; payload: any };
+type MeetingPeer = { userId: number; deviceId: string; connectionId: string };
+type MeetingIdentity = { deviceId: string; connectionId: string };
+type JoinInfo = MeetingIdentity & { userId: number; iceServers: any[]; recordingAllowed: boolean; policyVersion: number; consentAccepted?: boolean; peerConnections?: MeetingPeer[] };
+type Signal = { sequence: number; fromUserId: number; fromDeviceId?: string; kind: string; payload: any };
 // The installed package's EventTarget declaration omits these inherited APIs.
 type NativeEvents = {
   addEventListener: (name: string, listener: (event: any) => void) => void;
   removeEventListener: (name: string, listener: (event: any) => void) => void;
 };
 const cancelled = () => Object.assign(new Error("Audio session stopped"), { name: "AbortError" });
+function newConnectionId() {
+  const bytes = Array.from({ length: 16 }, () => Math.floor(Math.random() * 256));
+  bytes[6] = (bytes[6] & 0x0f) | 0x40; bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = bytes.map(value => value.toString(16).padStart(2, "0"));
+  return `${hex.slice(0, 4).join("")}-${hex.slice(4, 6).join("")}-${hex.slice(6, 8).join("")}-${hex.slice(8, 10).join("")}-${hex.slice(10).join("")}`;
+}
 
 /** Audio stays on the existing VNDRLY signaling service and native WebRTC. */
 export default function WorkHubAudioRoom({ occurrenceId }: { occurrenceId: string }) {
@@ -40,6 +49,7 @@ export default function WorkHubAudioRoom({ occurrenceId }: { occurrenceId: strin
   const generation = useRef(0);
   const mounted = useRef(false);
   const leaving = useRef<AbortController | null>(null);
+  const pollingTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     mounted.current = true;
@@ -58,6 +68,8 @@ export default function WorkHubAudioRoom({ occurrenceId }: { occurrenceId: strin
     const appState = subscribeAskVAppState(() => {}, () => current.current?.stop(t("meetingWorkspace.audio.appInactive")));
     return () => {
       current.current?.stop(undefined, true);
+      if (pollingTimer.current !== null) clearInterval(pollingTimer.current);
+      pollingTimer.current = null;
       generation.current++;
       mounted.current = false;
       unsubscribeToken(); unsubscribeUser(); appState.remove();
@@ -83,6 +95,8 @@ export default function WorkHubAudioRoom({ occurrenceId }: { occurrenceId: strin
     let interval: ReturnType<typeof setInterval> | null = null;
     let joinedServer = false, localMuted = true, presencePending = false, consentPending = false;
     let accepted = false, recordingPolicy: number | null = null, recordingActive = false;
+    let identity: MeetingIdentity | null = null, lastDeviceHeartbeat = 0;
+    const peerConnectionByUser = new Map<number, MeetingPeer>();
     let nativeTranscribing = false, nativeTranscriptionPending = false;
     const trackListeners: Array<() => void> = [];
     const session: Session = { valid: true, token: getCachedToken() ?? undefined, stop: () => {}, toggle: () => {}, consent: () => {} };
@@ -112,6 +126,7 @@ export default function WorkHubAudioRoom({ occurrenceId }: { occurrenceId: strin
       local?.getTracks().forEach(track => { try { track.enabled = false; } catch (cause) { failures.push(cause); } });
       controller.abort();
       if (interval !== null) clearInterval(interval);
+      if (pollingTimer.current === interval) pollingTimer.current = null;
       interval = null;
       if (current.current === session) {
         current.current = null;
@@ -145,7 +160,7 @@ export default function WorkHubAudioRoom({ occurrenceId }: { occurrenceId: strin
       });
       if (shouldLeave) {
         const leaveController = new AbortController(); leaving.current = leaveController;
-        void apiFetch(`/api/work-hub/meetings/${occurrenceId}/leave`, { method: "POST", body: "{}", signal: leaveController.signal }).catch(() => undefined);
+        void apiFetch(`/api/work-hub/meetings/${occurrenceId}/leave`, { method: "POST", body: JSON.stringify(identity ?? {}), signal: leaveController.signal }).catch(() => undefined);
       }
     };
     const failure = (cause: any) => {
@@ -158,14 +173,20 @@ export default function WorkHubAudioRoom({ occurrenceId }: { occurrenceId: strin
     };
     const request = async <T,>(path: string, payload?: unknown): Promise<T> => {
       check();
+      const body = payload === undefined ? undefined : identity ? { ...(payload as Record<string, unknown>), ...identity } : payload;
       const result = await apiFetch<T>(`/api/work-hub/meetings/${occurrenceId}/${path}`, {
         signal: controller.signal,
-        ...(payload === undefined ? {} : { method: "POST", body: JSON.stringify(payload) }),
+        ...(identity ? { headers: { "x-vndrly-device-id": identity.deviceId, "x-vndrly-connection-id": identity.connectionId } } : {}),
+        ...(body === undefined ? {} : { method: "POST", body: JSON.stringify(body) }),
       });
       check();
       return result;
     };
-    const signal = (id: number, kind: string, payload: any) => request("signal", { toUserId: id, kind, payload });
+    const signal = (id: number, kind: string, payload: any) => {
+      const target = peerConnectionByUser.get(id);
+      if (!target) return Promise.reject(new Error("Participant device is no longer connected"));
+      return request("signal", { toUserId: id, toDeviceId: target.connectionId, kind, payload });
+    };
     const reconcileNativeTranscription = () => {
       if (!native || recordingPolicy === null || nativeTranscriptionPending || !live()) return;
       const shouldTranscribe = !localMuted && accepted && recordingActive;
@@ -233,7 +254,12 @@ export default function WorkHubAudioRoom({ occurrenceId }: { occurrenceId: strin
       }, cause => { captureError = cause; });
       await capturePending; check();
       if (captureError) throw captureError;
+      identity = { deviceId: await getDeviceId(), connectionId: newConnectionId() }; check();
+      await apiFetch("/api/work-hub/devices/register", { method: "POST", body: JSON.stringify({ deviceId: identity.deviceId, friendlyName: "iPhone or iPad", deviceClass: "phone", capabilities: { microphone: true, speaker: true, fileSelection: true, pushNotifications: true } }), signal: controller.signal }); check();
+      await apiFetch(`/api/work-hub/devices/${identity.deviceId}/heartbeat`, { method: "POST", body: JSON.stringify({ connectionId: identity.connectionId, foreground: true, microphonePermission: "granted", surface: { path: `/work-hub/meetings/${occurrenceId}`, entityType: "meeting", entityId: occurrenceId, updatedAt: Date.now() } }), signal: controller.signal }); check();
+      lastDeviceHeartbeat = Date.now();
       const info = await request<JoinInfo>("join", {}); check(); joinedServer = true;
+      for (const peer of info.peerConnections ?? []) if (!peerConnectionByUser.has(peer.userId)) peerConnectionByUser.set(peer.userId, peer);
       if (native) await native.start({ sourceId: `meeting-${info.userId}-${version}`, iceServers: info.iceServers ?? [] });
       recordingPolicy = info.recordingAllowed ? info.policyVersion : null; accepted = info.consentAccepted ?? false;
       setPolicy(recordingPolicy); setConsented(accepted); setJoined(true); setBusy(false);
@@ -257,7 +283,14 @@ export default function WorkHubAudioRoom({ occurrenceId }: { occurrenceId: strin
         if (polling || !live()) return;
         polling = true;
         try {
-          const state = await request<{ presentUserIds: number[]; recordingState: string }>("audio-state"); check();
+          if (identity && Date.now() - lastDeviceHeartbeat > 15_000) {
+            await apiFetch(`/api/work-hub/devices/${identity.deviceId}/heartbeat`, { method: "POST", body: JSON.stringify({ connectionId: identity.connectionId, foreground: true, microphonePermission: "granted", surface: { path: `/work-hub/meetings/${occurrenceId}`, entityType: "meeting", entityId: occurrenceId, updatedAt: Date.now() } }), signal: controller.signal }); check();
+            lastDeviceHeartbeat = Date.now();
+          }
+          const state = await request<{ presentUserIds: number[]; peerConnections?: MeetingPeer[]; recordingState: string }>("audio-state"); check();
+          peerConnectionByUser.clear();
+          const discoveredPeers = state.peerConnections ?? info.peerConnections ?? state.presentUserIds.filter(userId => userId !== info.userId).map(userId => ({ userId, deviceId: `legacy:${userId}`, connectionId: `legacy:${userId}` }));
+          for (const peer of discoveredPeers) if (!peerConnectionByUser.has(peer.userId)) peerConnectionByUser.set(peer.userId, peer);
           if (!state.presentUserIds.includes(info.userId)) {
             session.stop(t("meetingWorkspace.audio.sessionEnded"));
             return;
@@ -266,7 +299,7 @@ export default function WorkHubAudioRoom({ occurrenceId }: { occurrenceId: strin
           setRecording(recordingActive); setError(""); reconcileNativeTranscription();
           if (native) {
             for (const id of nativePeers) if (!state.presentUserIds.includes(id)) { nativePeers.delete(id); await native.removePeer(id); check(); }
-            for (const id of state.presentUserIds) {
+            for (const id of peerConnectionByUser.keys()) {
               check(); if (id <= info.userId || nativePeers.has(id)) continue;
               nativePeers.add(id); await native.createOffer(id); check();
             }
@@ -274,7 +307,7 @@ export default function WorkHubAudioRoom({ occurrenceId }: { occurrenceId: strin
           for (const [id, peer] of peers) if (!state.presentUserIds.includes(id)) {
             peers.delete(id); pendingIce.delete(id); peer.close();
           }
-          for (const id of state.presentUserIds) {
+          for (const id of peerConnectionByUser.keys()) {
             check(); if (id <= info.userId || peers.has(id)) continue;
             const peer = peerFor(id);
             const offer = await peer.createOffer(); check();
@@ -313,6 +346,7 @@ export default function WorkHubAudioRoom({ occurrenceId }: { occurrenceId: strin
         } catch (cause) { failure(cause); }
         finally { polling = false; }
       }, 1200);
+      pollingTimer.current = interval;
     } catch (cause: any) {
       if (live()) {
         const message = cause?.message === "askv.microphoneDenied"

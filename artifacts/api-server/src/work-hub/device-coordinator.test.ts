@@ -22,7 +22,7 @@ function memoryStore(): DeviceCoordinatorStore {
     async findDevice(id) { return devices.get(id) ?? null; },
     async createDevice(input) {
       const now = input.now;
-      const row: DeviceRecord = { ...input, id: `00000000-0000-4000-8000-${String(nextDevice++).padStart(12, "0")}`, revokedAt: null, createdAt: now, updatedAt: now };
+      const row: DeviceRecord = { ...input, id: input.id ?? `00000000-0000-4000-8000-${String(nextDevice++).padStart(12, "0")}`, revokedAt: null, createdAt: now, updatedAt: now };
       devices.set(row.id, row); return row;
     },
     async updateDevice(id, patch) {
@@ -85,12 +85,25 @@ describe("Work Hub device coordinator", () => {
     expect(await coordinator.eligibleAudioDevices(otherOrgActor)).toEqual([]);
   });
 
+  it("accepts a stable client-generated device identifier on first registration", async () => {
+    const id = "20000000-0000-4000-8000-000000000002";
+    const device = await coordinator.registerDevice(vendorActor, { deviceId: id, friendlyName: "Browser", deviceClass: "desktop", capabilities: {} });
+    expect(device.id).toBe(id);
+  });
+
   it("returns only live, permitted microphone devices", async () => {
     const device = await coordinator.registerDevice(vendorActor, { friendlyName: "Phone", deviceClass: "phone", capabilities: { microphone: true } });
     await coordinator.heartbeatDevice(vendorActor, device.id, { connectionId: "10000000-0000-4000-8000-000000000001", foreground: true, microphonePermission: "granted", surface: null });
     expect(await coordinator.eligibleAudioDevices(vendorActor)).toHaveLength(1);
     now = new Date(now.getTime() + SURFACE_TTL_MS + 1);
     expect(await coordinator.eligibleAudioDevices(vendorActor)).toEqual([]);
+  });
+
+  it("requires a live connection owned by the same user and organization", async () => {
+    const device = await coordinator.registerDevice(vendorActor, { friendlyName: "Phone", deviceClass: "phone", capabilities: { microphone: true } });
+    await coordinator.heartbeatDevice(vendorActor, device.id, { connectionId: "10000000-0000-4000-8000-000000000001", foreground: true, microphonePermission: "granted", surface: null });
+    await expect(coordinator.requireDeviceConnection(vendorActor, device.id, "10000000-0000-4000-8000-000000000001")).resolves.toMatchObject({ device: { id: device.id } });
+    await expect(coordinator.requireDeviceConnection(otherOrgActor, device.id, "10000000-0000-4000-8000-000000000001")).rejects.toMatchObject({ code: "work_hub.not_found" });
   });
 
   it("persists bounded organization-scoped events and reports cursor gaps", async () => {

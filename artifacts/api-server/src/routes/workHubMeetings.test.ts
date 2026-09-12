@@ -349,7 +349,11 @@ describe("shipped audio compatibility", () => {
     seed({ runtime: { presence: { 1: { seenAt: joinedAt, joinedAt, speaking: false }, 2: { seenAt: joinedAt, joinedAt, speaking: false } } } });
     const response = await request(app()).get(`/meetings/${meetingId}/audio-state`);
     expect(response.status).toBe(200);
-    expect(response.body).toEqual({ presentUserIds: [1], recordingState: "active" });
+    expect(response.body).toEqual({
+      presentUserIds: [1],
+      peerConnections: [{ userId: 2, deviceId: "legacy:2", connectionId: "legacy:2" }],
+      recordingState: "active",
+    });
     const runtime = (mocks.mutations[0].value as any).runtime;
     expect(runtime.presence[1].seenAt).toBeGreaterThan(joinedAt);
     expect(runtime.presence[1].joinedAt).toBe(joinedAt);

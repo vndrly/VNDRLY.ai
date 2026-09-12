@@ -1,7 +1,29 @@
 import { describe, expect, it } from "vitest";
-import { appendMeetingSignal, captureAllowed, presentUserIds, signalsForParticipant, visibleMeetingActivities, type MeetingRuntime } from "./meeting-runtime";
+import { appendMeetingSignal, captureAllowed, presentUserIds, removeDevicePresence, signalsForConnection, signalsForParticipant, upsertDevicePresence, visibleMeetingActivities, type MeetingRuntime } from "./meeting-runtime";
 
 describe("persisted meeting runtime", () => {
+  it("keeps a user present when one of two devices leaves", () => {
+    let runtime: MeetingRuntime = {};
+    runtime = upsertDevicePresence(runtime, { userId: 7, deviceId: "phone", connectionId: "phone-connection", joinedAt: 10, seenAt: 100, speaking: true });
+    runtime = upsertDevicePresence(runtime, { userId: 7, deviceId: "desktop", connectionId: "desktop-connection", joinedAt: 20, seenAt: 100, speaking: false });
+    const next = removeDevicePresence(runtime, "phone-connection");
+    expect(presentUserIds(next, 100)).toEqual([7]);
+    expect(next.connections).toHaveProperty("desktop-connection");
+    expect(next.connections).not.toHaveProperty("phone-connection");
+  });
+
+  it("delivers an offer only to the addressed device", () => {
+    let runtime: MeetingRuntime = {};
+    runtime = appendMeetingSignal(runtime, { fromUserId: 1, fromDeviceId: "phone", toUserId: 2, toDeviceId: "desktop", kind: "offer", payload: { sdp: "offer" } }, 100);
+    expect(signalsForConnection(runtime, "desktop", 0)).toHaveLength(1);
+    expect(signalsForConnection(runtime, "tablet", 0)).toEqual([]);
+  });
+
+  it("reads legacy presence as synthetic connections", () => {
+    const runtime: MeetingRuntime = { presence: { 7: { joinedAt: 10, seenAt: 100, speaking: false } } };
+    expect(presentUserIds(runtime, 100)).toEqual([7]);
+    expect(removeDevicePresence(runtime, "legacy:7").connections).toEqual({});
+  });
   it("exposes private activity only to its recipient with its scope and expiry intact", () => {
     const runtime: MeetingRuntime = { activity: {
       2: { kind: "typing", recipientUserId: 1, expiresAt: 9000 },

@@ -23,7 +23,8 @@ import {
   closeAssemblyAIStream, openAssemblyAIStream, sendAssemblyAIFrame,
 } from "../work-hub/assemblyai-streaming";
 import { canReadMeetingMessage, canRemoveMeetingParticipant } from "../work-hub/meeting-collaboration";
-import { appendMeetingSignal, captureAllowed, MeetingSignalCapacityError, presentUserIds, signalsForParticipant, visibleMeetingActivities, type MeetingRuntime } from "../work-hub/meeting-runtime";
+import { aggregateUserPresence, appendMeetingSignal, captureAllowed, devicePresenceForUser, meetingDeviceConnections, MeetingSignalCapacityError, presentUserIds, removeDevicePresence, removeUserPresence, signalsForConnection, signalsForParticipant, upsertDevicePresence, visibleMeetingActivities, type MeetingRuntime } from "../work-hub/meeting-runtime";
+import { deviceCoordinator, WorkHubDeviceError } from "../work-hub/device-coordinator";
 import { answerMeetingQuestion } from "../work-hub/meeting-answer";
 import {
   buildMeetingAnswerInput,
@@ -100,6 +101,24 @@ function active(ctx: Context) {
 function host(ctx: Context) {
   if (ctx.participant.role !== "host") throw new MeetingError(403, "Only the meeting host can do this");
 }
+const meetingConnectionFields = z.object({ deviceId: z.string().uuid().optional(), connectionId: z.string().uuid().optional() }).superRefine((value, issue) => {
+  if (Boolean(value.deviceId) !== Boolean(value.connectionId)) issue.addIssue({ code: "custom", message: "Device and connection identity must be sent together" });
+});
+async function meetingConnection(req: Request, ctx: Context, source: "body" | "query" = "body") {
+  const raw = source === "body" ? req.body ?? {} : req.query;
+  const identity = meetingConnectionFields.parse({ deviceId: raw.deviceId ?? req.header("x-vndrly-device-id"), connectionId: raw.connectionId ?? req.header("x-vndrly-connection-id") });
+  if (!identity.deviceId || !identity.connectionId) {
+    const legacyId = `legacy:${ctx.session.userId}`;
+    return { deviceId: legacyId, connectionId: legacyId, legacy: true };
+  }
+  try {
+    await deviceCoordinator.requireDeviceConnection({ userId: ctx.session.userId, owner: { type: ctx.meeting.ownerOrgType as "vendor" | "partner", id: ctx.meeting.ownerOrgId } }, identity.deviceId, identity.connectionId);
+  } catch (error) {
+    if (error instanceof WorkHubDeviceError) throw new MeetingError(404, "Meeting device connection not found");
+    throw error;
+  }
+  return { ...identity, deviceId: identity.deviceId, connectionId: identity.connectionId, legacy: false };
+}
 async function audit(tx: Tx, ctx: Context, action: string, metadata: Record<string, unknown> = {}) {
   await appendWorkHubAudit({ actorUserId: ctx.session.userId, owner: { type: ctx.meeting.ownerOrgType as "vendor" | "partner", id: ctx.meeting.ownerOrgId }, action, subjectType: "meeting_occurrence", subjectId: ctx.id, source: ctx.source, metadata }, tx);
 }
@@ -155,10 +174,12 @@ router.post("/:occurrenceId/consent", route(async (req, _res, tx, ctx) => {
 
 router.post("/:occurrenceId/join", route(async (req, _res, tx, ctx) => {
   active(ctx);
+  const connection = await meetingConnection(req, ctx);
   const now = Date.now();
   const [attending] = await tx.select().from(attendance).where(and(eq(attendance.occurrenceId, ctx.id), eq(attendance.userId, ctx.session.userId), isNull(attendance.leftAt))).limit(1);
-  const joinedAt = attending ? ctx.runtime.presence?.[ctx.session.userId]?.joinedAt ?? attending.joinedAt.getTime() : now;
-  const runtime = { ...ctx.runtime, startedAt: ctx.runtime.startedAt ?? new Date(now).toISOString(), signals: attending ? ctx.runtime.signals : (ctx.runtime.signals ?? []).filter((s) => s.fromUserId !== ctx.session.userId && s.toUserId !== ctx.session.userId), presence: { ...ctx.runtime.presence, [ctx.session.userId]: { seenAt: now, joinedAt, speaking: false } } };
+  const joinedAt = attending ? aggregateUserPresence(ctx.runtime, ctx.session.userId, now)?.joinedAt ?? attending.joinedAt.getTime() : now;
+  const cleanRuntime = attending ? ctx.runtime : { ...ctx.runtime, signals: (ctx.runtime.signals ?? []).filter((s) => s.fromUserId !== ctx.session.userId && s.toUserId !== ctx.session.userId) };
+  const runtime = upsertDevicePresence({ ...cleanRuntime, startedAt: ctx.runtime.startedAt ?? new Date(now).toISOString() }, { userId: ctx.session.userId, deviceId: connection.deviceId, connectionId: connection.connectionId, seenAt: now, joinedAt, speaking: false });
   if (!attending) {
     await tx.insert(attendance).values({ occurrenceId: ctx.id, userId: ctx.session.userId });
     await tx.insert(consents).values({ occurrenceId: ctx.id, userId: ctx.session.userId, policyVersion: ctx.meeting.policyVersion, response: "declined" }).onConflictDoUpdate({ target: [consents.occurrenceId, consents.userId, consents.policyVersion], set: { response: "declined", respondedAt: new Date(now) } });
@@ -168,25 +189,31 @@ router.post("/:occurrenceId/join", route(async (req, _res, tx, ctx) => {
   const [consent] = await tx.select().from(consents).where(and(eq(consents.occurrenceId, ctx.id), eq(consents.userId, ctx.session.userId), eq(consents.policyVersion, ctx.meeting.policyVersion)));
   afterCommit(req, () => closeAllAssemblyAIStreams(ctx.id));
   const legacyIceServers = audioIceServers(process.env, ctx.session.userId);
-  return { roomId, userId: ctx.session.userId, startedAt: runtime.startedAt, participants: ctx.all.filter((p) => !p.removedAt && (p.userId === ctx.session.userId || presentUserIds(runtime).includes(p.userId))), recordingAllowed: ctx.meeting.recordingAllowed, policyVersion: ctx.meeting.policyVersion, consentAccepted: consent?.response === "accepted", transcription: await captureState(tx, ctx, runtime), iceServers: legacyIceServers.length ? legacyIceServers : resolveVndrlyIceServers() };
+  return { roomId, userId: ctx.session.userId, deviceId: connection.deviceId, connectionId: connection.connectionId, startedAt: runtime.startedAt, participants: ctx.all.filter((p) => !p.removedAt && (p.userId === ctx.session.userId || presentUserIds(runtime).includes(p.userId))), peerConnections: Object.values(meetingDeviceConnections(runtime)).filter(value => value.connectionId !== connection.connectionId && value.userId !== ctx.session.userId).map(value => ({ userId: value.userId, deviceId: value.deviceId, connectionId: value.connectionId })), recordingAllowed: ctx.meeting.recordingAllowed, policyVersion: ctx.meeting.policyVersion, consentAccepted: consent?.response === "accepted", transcription: await captureState(tx, ctx, runtime), iceServers: legacyIceServers.length ? legacyIceServers : resolveVndrlyIceServers() };
 }));
 
 router.post("/:occurrenceId/leave", route(async (req, _res, tx, ctx) => {
-  const presence = { ...ctx.runtime.presence }; delete presence[ctx.session.userId];
-  await saveRuntime(tx, ctx, { ...ctx.runtime, presence }, { recordingState: "off", transcriptState: "off" });
-  await tx.update(attendance).set({ leftAt: new Date() }).where(and(eq(attendance.occurrenceId, ctx.id), eq(attendance.userId, ctx.session.userId), isNull(attendance.leftAt)));
-  await tx.update(participants).set({ muted: true, handRaisedAt: null }).where(eq(participants.id, ctx.participant.id));
-  afterCommit(req, () => closeAllAssemblyAIStreams(ctx.id));
-  return { left: true };
+  const connection = await meetingConnection(req, ctx);
+  const runtime = removeDevicePresence(ctx.runtime, connection.connectionId);
+  const userStillPresent = presentUserIds(runtime).includes(ctx.session.userId);
+  await saveRuntime(tx, ctx, runtime, userStillPresent ? {} : { recordingState: "off", transcriptState: "off" });
+  if (!userStillPresent) {
+    await tx.update(attendance).set({ leftAt: new Date() }).where(and(eq(attendance.occurrenceId, ctx.id), eq(attendance.userId, ctx.session.userId), isNull(attendance.leftAt)));
+    await tx.update(participants).set({ muted: true, handRaisedAt: null }).where(eq(participants.id, ctx.participant.id));
+    afterCommit(req, () => closeAllAssemblyAIStreams(ctx.id));
+  }
+  return { left: true, userStillPresent };
 }));
 
 router.post("/:occurrenceId/presence", route(async (req, _res, tx, ctx) => {
   active(ctx);
-  if (!ctx.runtime.presence?.[ctx.session.userId]) throw new MeetingError(409, "Join the meeting first");
-  const payload = z.object({ muted: z.boolean().optional(), handRaised: z.boolean().optional(), speaking: z.boolean().default(false) }).parse(req.body);
+  const connection = await meetingConnection(req, ctx);
+  const current = meetingDeviceConnections(ctx.runtime)[connection.connectionId];
+  if (!current || current.userId !== ctx.session.userId) throw new MeetingError(409, "Join the meeting first");
+  const payload = z.object({ muted: z.boolean().optional(), handRaised: z.boolean().optional(), speaking: z.boolean().default(false), deviceId: z.string().optional(), connectionId: z.string().optional() }).parse(req.body);
   const muted = payload.muted ?? ctx.participant.muted;
   await tx.update(participants).set({ muted, ...(payload.handRaised === undefined ? {} : { handRaisedAt: payload.handRaised ? new Date() : null }) }).where(eq(participants.id, ctx.participant.id));
-  const runtime = { ...ctx.runtime, presence: { ...ctx.runtime.presence, [ctx.session.userId]: { ...ctx.runtime.presence[ctx.session.userId], seenAt: Date.now(), speaking: !muted && payload.speaking } } };
+  const runtime = upsertDevicePresence(ctx.runtime, { ...current, seenAt: Date.now(), speaking: !muted && payload.speaking });
   await saveRuntime(tx, ctx, runtime);
   if (payload.muted !== undefined && payload.muted !== ctx.participant.muted) afterCommit(req, () => closeAllAssemblyAIStreams(ctx.id));
   return { transcription: await captureState(tx, ctx, runtime) };
@@ -194,13 +221,19 @@ router.post("/:occurrenceId/presence", route(async (req, _res, tx, ctx) => {
 
 router.post("/:occurrenceId/signal", route(async (req, _res, tx, ctx) => {
   active(ctx);
-  const payload = z.object({ toUserId: z.number().int().positive(), kind: z.enum(["offer", "answer", "ice"]), payload: z.unknown() }).parse(req.body);
+  const connection = await meetingConnection(req, ctx);
+  const payload = z.object({ toUserId: z.number().int().positive(), toDeviceId: z.string().max(64).optional(), kind: z.enum(["offer", "answer", "ice"]), payload: z.unknown(), deviceId: z.string().optional(), connectionId: z.string().optional() }).parse(req.body);
   const present = presentUserIds(ctx.runtime);
   if (!present.includes(ctx.session.userId) || !present.includes(payload.toUserId) || !ctx.all.some((p) => p.userId === payload.toUserId && !p.removedAt)) throw new MeetingError(409, "Participant is no longer connected");
+  if (!connection.legacy && !payload.toDeviceId) throw new MeetingError(400, "A destination device is required");
+  if (payload.toDeviceId) {
+    const target = meetingDeviceConnections(ctx.runtime)[payload.toDeviceId];
+    if (!target || target.userId !== payload.toUserId) throw new MeetingError(409, "Participant device is no longer connected");
+  }
   if (JSON.stringify(payload.payload ?? null).length > 64_000) throw new MeetingError(413, "Audio signal too large");
   let runtime: MeetingRuntime;
   try {
-    runtime = appendMeetingSignal(ctx.runtime, { ...payload, fromUserId: ctx.session.userId });
+    runtime = appendMeetingSignal(ctx.runtime, { toUserId: payload.toUserId, toDeviceId: payload.toDeviceId, kind: payload.kind, payload: payload.payload, fromUserId: ctx.session.userId, fromDeviceId: connection.legacy ? undefined : connection.connectionId });
   } catch (error) {
     if (error instanceof MeetingSignalCapacityError) throw new MeetingError(429, "Audio signaling is busy");
     throw error;
@@ -213,16 +246,18 @@ router.get("/:occurrenceId/audio-state", route(async (_req, _res, tx, ctx) => {
   if (["ended", "cancelled"].includes(ctx.occurrence.status)) return { presentUserIds: [], recordingState: "off" };
   // Shipped clients use this poll as their heartbeat and send presence only
   // when toggling controls. A late poll must not undo an explicit leave.
-  const presence = ctx.runtime.presence?.[ctx.session.userId];
-  const runtime = presence ? { ...ctx.runtime, presence: { ...ctx.runtime.presence, [ctx.session.userId]: { ...presence, seenAt: Date.now() } } } : ctx.runtime;
+  const connection = await meetingConnection(_req, ctx, "query");
+  const presence = meetingDeviceConnections(ctx.runtime)[connection.connectionId];
+  const runtime = presence ? upsertDevicePresence(ctx.runtime, { ...presence, seenAt: Date.now() }) : ctx.runtime;
   if (presence) await saveRuntime(tx, ctx, runtime);
-  return { presentUserIds: presentUserIds(runtime).filter((id) => ctx.all.some((p) => p.userId === id && !p.removedAt)), recordingState: ctx.occurrence.recordingState ?? "off" };
+  return { presentUserIds: presentUserIds(runtime).filter((id) => ctx.all.some((p) => p.userId === id && !p.removedAt)), peerConnections: Object.values(meetingDeviceConnections(runtime)).filter(value => value.connectionId !== connection.connectionId && value.userId !== ctx.session.userId).map(value => ({ userId: value.userId, deviceId: value.deviceId, connectionId: value.connectionId })), recordingState: ctx.occurrence.recordingState ?? "off" };
 }));
 
 router.get("/:occurrenceId/signals", route(async (req, _res, _tx, ctx) => {
   active(ctx);
+  const connection = await meetingConnection(req, ctx, "query");
   const after = z.coerce.number().int().nonnegative().parse(req.query.after ?? req.query.since ?? 0);
-  const signals = signalsForParticipant(ctx.runtime, ctx.session.userId, after);
+  const signals = connection.legacy ? signalsForParticipant(ctx.runtime, ctx.session.userId, after) : signalsForConnection(ctx.runtime, connection.connectionId, after, ctx.session.userId);
   return req.query.after === undefined && req.query.since !== undefined ? signals : { sequence: ctx.runtime.sequence ?? 0, signals };
 }));
 
@@ -704,8 +739,7 @@ router.post("/:occurrenceId/participants/:userId/remove", route(async (req, _res
   const removedAt = new Date();
   await tx.update(participants).set({ removedAt, removedById: ctx.session.userId, muted: true }).where(eq(participants.id, target.id));
   await tx.update(attendance).set({ leftAt: removedAt }).where(and(eq(attendance.occurrenceId, ctx.id), eq(attendance.userId, userId), isNull(attendance.leftAt)));
-  const presence = { ...ctx.runtime.presence }; delete presence[userId];
-  await saveRuntime(tx, ctx, { ...ctx.runtime, presence, signals: (ctx.runtime.signals ?? []).filter((s) => s.fromUserId !== userId && s.toUserId !== userId) });
+  await saveRuntime(tx, ctx, { ...removeUserPresence(ctx.runtime, userId), signals: (ctx.runtime.signals ?? []).filter((s) => s.fromUserId !== userId && s.toUserId !== userId) });
   const [user] = await tx.select({ name: usersTable.displayName }).from(usersTable).where(eq(usersTable.id, userId));
   await tx.insert(chat).values({ occurrenceId: ctx.id, userId: ctx.session.userId, messageType: "system", body: `${user?.name ?? "An attendee"} was removed by the host.` });
   await audit(tx, ctx, "meeting.participant_removed", { removedUserId: userId });
@@ -775,7 +809,7 @@ router.get("/:occurrenceId/catch-up", route(async (_req, _res, tx, ctx) => {
     transcription, nativeCaptureAvailable: provider === "native" && nativeTranscriptionAvailable(),
     streamingCaptureAvailable: provider === "assemblyai" && assemblyAIStreamingAvailable() && streamingTrialAudienceAllows(ctx.all.filter((participant) => !participant.removedAt).map((participant) => participant.userId)),
     myConsent: consent[0]?.response ?? "pending",
-    participants: ctx.all.map((p) => ({ userId: p.userId, displayName: names.get(p.userId) ?? "Attendee", photoUrl: participantPhotos.get(p.userId) ?? null, role: p.role, joinedAt: ctx.runtime.presence?.[p.userId]?.joinedAt, muted: p.muted, handRaisedAt: p.handRaisedAt, removedAt: p.removedAt, present: !p.removedAt && present.includes(p.userId), speaking: !p.removedAt && present.includes(p.userId) && !p.muted && Boolean(ctx.runtime.presence?.[p.userId]?.speaking) })),
+    participants: ctx.all.map((p) => { const presence = aggregateUserPresence(ctx.runtime, p.userId); return { userId: p.userId, displayName: names.get(p.userId) ?? "Attendee", photoUrl: participantPhotos.get(p.userId) ?? null, role: p.role, joinedAt: presence?.joinedAt, muted: p.muted, handRaisedAt: p.handRaisedAt, removedAt: p.removedAt, present: !p.removedAt && present.includes(p.userId), speaking: !p.removedAt && present.includes(p.userId) && !p.muted && Boolean(presence?.speaking) }; }),
     activity: visibleMeetingActivities(ctx.runtime, ctx.session.userId, ctx.all.filter((p) => !p.removedAt).map((p) => p.userId)),
     attendance: records, chat: messages.map((m) => {
       const safe = safeMeetingMessage(m);
@@ -790,7 +824,7 @@ router.post("/:occurrenceId/end", route(async (req, _res, tx, ctx) => {
   host(ctx);
   if (ctx.occurrence.status === "ended") return { ended: true };
   const endedAt = new Date();
-  await saveRuntime(tx, ctx, { ...ctx.runtime, endedAt: endedAt.toISOString(), presence: {}, signals: [], activity: {} }, { status: "ended", transcriptState: "complete", recordingState: "off" });
+  await saveRuntime(tx, ctx, { ...ctx.runtime, endedAt: endedAt.toISOString(), presence: {}, connections: {}, signals: [], activity: {} }, { status: "ended", transcriptState: "complete", recordingState: "off" });
   await tx.update(attendance).set({ leftAt: endedAt }).where(and(eq(attendance.occurrenceId, ctx.id), isNull(attendance.leftAt)));
   await tx.update(artifacts).set({ state: "complete" }).where(and(eq(artifacts.occurrenceId, ctx.id), eq(artifacts.artifactType, "transcript")));
   await tx.insert(chat).values({ occurrenceId: ctx.id, userId: ctx.session.userId, messageType: "system", body: "The host ended the meeting. The shared transcript is saved." });

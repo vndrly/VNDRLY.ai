@@ -1,18 +1,27 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { workHubRequest } from "@/lib/work-hub-client";
+import { createWorkHubOperationId, workHubRequest } from "@/lib/work-hub-client";
 import type { MeetingSnapshot } from "@/lib/meeting-types";
 import { useMeetingTranscription } from "./use-meeting-transcription";
 
-type Join = { userId: number; startedAt: string; iceServers: RTCIceServer[] };
-type Signal = { sequence: number; fromUserId: number; kind: "offer" | "answer" | "ice"; payload: RTCSessionDescriptionInit & RTCIceCandidateInit };
-type Peer = { connection: RTCPeerConnection; audio: HTMLAudioElement; pendingIce: RTCIceCandidateInit[]; generation?: number };
+type MeetingPeer = { userId: number; deviceId: string; connectionId: string };
+type MeetingIdentity = { deviceId: string; connectionId: string };
+type Join = MeetingIdentity & { userId: number; startedAt: string; iceServers: RTCIceServer[]; peerConnections: MeetingPeer[] };
+type Signal = { sequence: number; fromUserId: number; fromDeviceId?: string; kind: "offer" | "answer" | "ice"; payload: RTCSessionDescriptionInit & RTCIceCandidateInit };
+type Peer = { userId: number; connection: RTCPeerConnection; audio: HTMLAudioElement; pendingIce: RTCIceCandidateInit[] };
+
+const DEVICE_STORAGE_KEY = "vndrly.workHubDeviceId";
+function browserDeviceId() {
+  const existing = window.localStorage.getItem(DEVICE_STORAGE_KEY);
+  if (existing) return existing;
+  const created = createWorkHubOperationId(); window.localStorage.setItem(DEVICE_STORAGE_KEY, created); return created;
+}
 
 export function useMeetingAudio(occurrenceId: string, snapshot: MeetingSnapshot | undefined) {
   const [joined, setJoined] = useState(false);
   const [muted, setMuted] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [needsPlayback, setNeedsPlayback] = useState(false);
-  const peers = useRef(new Map<number, Peer>());
+  const peers = useRef(new Map<string, Peer>());
   const stream = useRef<MediaStream | null>(null);
   const transcription = useMeetingTranscription(occurrenceId, snapshot, joined, muted, stream);
   const { stopTranscription } = transcription;
@@ -23,7 +32,9 @@ export function useMeetingAudio(occurrenceId: string, snapshot: MeetingSnapshot 
   const cursor = useRef(0);
   const alive = useRef(true);
   const joining = useRef(false);
-  const closePeer = (id: number) => {
+  const identity = useRef<MeetingIdentity>({ deviceId: browserDeviceId(), connectionId: createWorkHubOperationId() });
+  const lastDeviceHeartbeat = useRef(0);
+  const closePeer = (id: string) => {
     const peer = peers.current.get(id); if (!peer) return;
     peer.connection.close(); peer.audio.pause(); peer.audio.srcObject = null; peers.current.delete(id);
   };
@@ -37,7 +48,7 @@ export function useMeetingAudio(occurrenceId: string, snapshot: MeetingSnapshot 
   }, [stopTranscription]);
   const leave = useCallback(async () => {
     cleanup(); setJoined(false); setMuted(true);
-    try { await workHubRequest(`/meetings/${occurrenceId}/leave`, { method: "POST", body: "{}", keepalive: true }); }
+    try { await workHubRequest(`/meetings/${occurrenceId}/leave`, { method: "POST", body: JSON.stringify(identity.current), keepalive: true }); }
     catch (cause) { if (alive.current) setError(cause instanceof Error ? cause.message : "The connection closed."); }
   }, [cleanup, occurrenceId]);
 
@@ -46,7 +57,7 @@ export function useMeetingAudio(occurrenceId: string, snapshot: MeetingSnapshot 
     return () => {
       alive.current = false;
       const wasJoined = Boolean(lease.current); cleanup();
-      if (wasJoined) void workHubRequest(`/meetings/${occurrenceId}/leave`, { method: "POST", body: "{}", keepalive: true }).catch(() => undefined);
+      if (wasJoined) void workHubRequest(`/meetings/${occurrenceId}/leave`, { method: "POST", body: JSON.stringify(identity.current), keepalive: true }).catch(() => undefined);
     };
   }, [cleanup, occurrenceId]);
 
@@ -58,8 +69,11 @@ export function useMeetingAudio(occurrenceId: string, snapshot: MeetingSnapshot 
       const input = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: false });
       if (!alive.current) { input.getTracks().forEach((track) => track.stop()); return; }
       stream.current = input; input.getAudioTracks().forEach((track) => { track.enabled = false; });
-      const result = await workHubRequest<Join>(`/meetings/${occurrenceId}/join`, { method: "POST", body: "{}" });
-      if (!alive.current) { cleanup(); await workHubRequest(`/meetings/${occurrenceId}/leave`, { method: "POST", body: "{}", keepalive: true }); return; }
+      await workHubRequest("/devices/register", { method: "POST", body: JSON.stringify({ deviceId: identity.current.deviceId, friendlyName: navigator.platform || "Web browser", deviceClass: /Mobi|Android/i.test(navigator.userAgent) ? "phone" : "desktop", capabilities: { microphone: true, speaker: true, fileSelection: true } }) });
+      await workHubRequest(`/devices/${identity.current.deviceId}/heartbeat`, { method: "POST", body: JSON.stringify({ connectionId: identity.current.connectionId, foreground: document.visibilityState === "visible", microphonePermission: "granted", surface: { path: window.location.pathname, entityType: "meeting", entityId: occurrenceId, updatedAt: Date.now() } }) });
+      lastDeviceHeartbeat.current = Date.now();
+      const result = await workHubRequest<Join>(`/meetings/${occurrenceId}/join`, { method: "POST", body: JSON.stringify(identity.current) });
+      if (!alive.current) { cleanup(); await workHubRequest(`/meetings/${occurrenceId}/leave`, { method: "POST", body: JSON.stringify(identity.current), keepalive: true }); return; }
       const context = new AudioContext(); const node = context.createAnalyser(); node.fftSize = 256;
       context.createMediaStreamSource(input).connect(node); analyser.current = { context, node };
       lease.current = result; cursor.current = 0; setMuted(true); mutedRef.current = true; setJoined(true);
@@ -71,15 +85,15 @@ export function useMeetingAudio(occurrenceId: string, snapshot: MeetingSnapshot 
     if (!joined) return;
     let stopped = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
-    const sendSignal = (id: number, kind: Signal["kind"], payload: unknown) => workHubRequest(`/meetings/${occurrenceId}/signal`, { method: "POST", body: JSON.stringify({ toUserId: id, kind, payload }) });
-    function peerFor(id: number) {
-      const existing = peers.current.get(id); if (existing) return existing;
+    const sendSignal = (peer: MeetingPeer, kind: Signal["kind"], payload: unknown) => workHubRequest(`/meetings/${occurrenceId}/signal`, { method: "POST", body: JSON.stringify({ ...identity.current, toUserId: peer.userId, toDeviceId: peer.connectionId, kind, payload }) });
+    function peerFor(target: MeetingPeer) {
+      const existing = peers.current.get(target.connectionId); if (existing) return existing;
       const connection = new RTCPeerConnection({ iceServers: lease.current?.iceServers ?? [] });
       const audio = new Audio(); audio.autoplay = true;
-      const peer: Peer = { connection, audio, pendingIce: [], generation: state.current?.participants.find((p) => p.userId === id)?.joinedAt };
-      peers.current.set(id, peer);
+      const peer: Peer = { userId: target.userId, connection, audio, pendingIce: [] };
+      peers.current.set(target.connectionId, peer);
       stream.current?.getTracks().forEach((track) => connection.addTrack(track, stream.current!));
-      connection.onicecandidate = (event) => { if (event.candidate && !stopped) void sendSignal(id, "ice", event.candidate.toJSON()).catch(() => undefined); };
+      connection.onicecandidate = (event) => { if (event.candidate && !stopped) void sendSignal(target, "ice", event.candidate.toJSON()).catch(() => undefined); };
       connection.ontrack = (event) => {
         audio.srcObject = event.streams[0] ?? new MediaStream([event.track]);
         void audio.play().catch(() => { if (!stopped) setNeedsPlayback(true); });
@@ -95,26 +109,29 @@ export function useMeetingAudio(occurrenceId: string, snapshot: MeetingSnapshot 
         }
         const samples = new Uint8Array(128); analyser.current?.node.getByteTimeDomainData(samples);
         const speaking = Boolean(analyser.current && !mutedRef.current && samples.some((value) => Math.abs(value - 128) > 8));
-        await workHubRequest(`/meetings/${occurrenceId}/presence`, { method: "POST", body: JSON.stringify({ muted: mutedRef.current, speaking }) });
-        if (stopped) return;
-        const others = data?.participants.filter((p) => p.present && !p.removedAt && p.userId !== lease.current?.userId) ?? [];
-        for (const [id, peer] of peers.current) {
-          const person = others.find((p) => p.userId === id);
-          if (!person || person.joinedAt !== peer.generation) closePeer(id);
+        if (Date.now() - lastDeviceHeartbeat.current > 15_000) {
+          await workHubRequest(`/devices/${identity.current.deviceId}/heartbeat`, { method: "POST", body: JSON.stringify({ connectionId: identity.current.connectionId, foreground: document.visibilityState === "visible", microphonePermission: "granted", surface: { path: window.location.pathname, entityType: "meeting", entityId: occurrenceId, updatedAt: Date.now() } }) });
+          lastDeviceHeartbeat.current = Date.now();
         }
+        await workHubRequest(`/meetings/${occurrenceId}/presence`, { method: "POST", body: JSON.stringify({ ...identity.current, muted: mutedRef.current, speaking }) });
+        if (stopped) return;
+        const audioState = await workHubRequest<{ presentUserIds: number[]; peerConnections: MeetingPeer[]; recordingState: string }>(`/meetings/${occurrenceId}/audio-state?deviceId=${identity.current.deviceId}&connectionId=${identity.current.connectionId}`);
+        const others = audioState.peerConnections ?? lease.current.peerConnections ?? [];
+        for (const id of peers.current.keys()) if (!others.some(person => person.connectionId === id)) closePeer(id);
         for (const person of others) {
-          if (!peers.current.has(person.userId) && lease.current!.userId < person.userId) {
-            const { connection } = peerFor(person.userId);
+          if (!peers.current.has(person.connectionId) && identity.current.connectionId < person.connectionId) {
+            const { connection } = peerFor(person);
             const offer = await connection.createOffer(); await connection.setLocalDescription(offer);
-            await sendSignal(person.userId, "offer", offer);
+            await sendSignal(person, "offer", offer);
           }
         }
-        const result = await workHubRequest<{ sequence: number; signals: Signal[] }>(`/meetings/${occurrenceId}/signals?after=${cursor.current}`);
+        const result = await workHubRequest<{ sequence: number; signals: Signal[] }>(`/meetings/${occurrenceId}/signals?after=${cursor.current}&deviceId=${identity.current.deviceId}&connectionId=${identity.current.connectionId}`);
         if (stopped) return;
         let deferred = false;
         for (const signal of result.signals) {
-          if (!others.some((p) => p.userId === signal.fromUserId)) { deferred = true; break; }
-          const peer = peerFor(signal.fromUserId);
+          const source = others.find((p) => p.connectionId === signal.fromDeviceId) ?? others.find((p) => p.userId === signal.fromUserId);
+          if (!source) { deferred = true; break; }
+          const peer = peerFor(source);
           if (signal.kind === "ice") {
             if (peer.connection.remoteDescription) await peer.connection.addIceCandidate(signal.payload);
             else peer.pendingIce.push(signal.payload);
@@ -123,7 +140,7 @@ export function useMeetingAudio(occurrenceId: string, snapshot: MeetingSnapshot 
             for (const candidate of peer.pendingIce.splice(0)) await peer.connection.addIceCandidate(candidate);
             if (signal.kind === "offer") {
               const answer = await peer.connection.createAnswer(); await peer.connection.setLocalDescription(answer);
-              await sendSignal(signal.fromUserId, "answer", answer);
+              await sendSignal(source, "answer", answer);
             }
           }
           cursor.current = signal.sequence;
@@ -147,7 +164,7 @@ export function useMeetingAudio(occurrenceId: string, snapshot: MeetingSnapshot 
     if (next) stopTranscription();
     stream.current?.getAudioTracks().forEach((track) => { track.enabled = !next; });
     if (!next) await analyser.current?.context.resume();
-    try { await workHubRequest(`/meetings/${occurrenceId}/presence`, { method: "POST", body: JSON.stringify({ muted: next }) }); }
+    try { await workHubRequest(`/meetings/${occurrenceId}/presence`, { method: "POST", body: JSON.stringify({ ...identity.current, muted: next }) }); }
     catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to update microphone."); }
   };
   const enablePlayback = async () => {
