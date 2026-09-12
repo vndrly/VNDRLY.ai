@@ -4,6 +4,9 @@ export type MeetingAttendee = {
   photoUrl?: string | null;
   role: string;
   muted: boolean;
+  hostMutedAt?: string | null;
+  hostMutedById?: number | null;
+  hostMuteGeneration?: number;
   present: boolean;
   speaking: boolean;
   joinedAt?: number;
@@ -53,9 +56,11 @@ export type MeetingSnapshot = {
   streamingCaptureAvailable?: boolean;
   userId: number;
   canManage: boolean;
+  canModerate?: boolean;
   canViewAttendance: boolean;
   transcription: boolean;
   myConsent: string;
+  mySpeakRequest?: { id: string; status: string; requestedAt: string } | null;
   meeting: { title: string; agenda: string | null; policyVersion: number };
   occurrence: {
     id: string;

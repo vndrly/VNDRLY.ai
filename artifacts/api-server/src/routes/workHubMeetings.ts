@@ -7,8 +7,10 @@ import {
   workHubMeetingParticipantsTable as participants, workHubMeetingAttendanceTable as attendance,
   workHubMeetingConsentsTable as consents, workHubMeetingChatTable as chat,
   workHubMeetingArtifactsTable as artifacts, workHubTranscriptSegmentsTable as segments,
+  workHubMeetingSpeakRequestsTable as speakRequests,
   workHubCallsTable as calls,
   vendorPeopleTable, partnerContactsTable,
+  userOrgMembershipsTable,
 } from "@workspace/db";
 import { getSessionFromRequest } from "../lib/session";
 import { sendApiError } from "../lib/apiError";
@@ -25,6 +27,7 @@ import {
 import { canReadMeetingMessage, canRemoveMeetingParticipant } from "../work-hub/meeting-collaboration";
 import { aggregateUserPresence, appendMeetingSignal, captureAllowed, devicePresenceForUser, meetingDeviceConnections, MeetingSignalCapacityError, presentUserIds, removeDevicePresence, removeUserPresence, signalsForConnection, signalsForParticipant, upsertDevicePresence, visibleMeetingActivities, type MeetingRuntime } from "../work-hub/meeting-runtime";
 import { deviceCoordinator, WorkHubDeviceError } from "../work-hub/device-coordinator";
+import { imposeHostMute, releaseHostMute, routeSpeakRequest, MeetingModerationError } from "../work-hub/meeting-moderation";
 import { answerMeetingQuestion } from "../work-hub/meeting-answer";
 import {
   buildMeetingAnswerInput,
@@ -211,12 +214,13 @@ router.post("/:occurrenceId/presence", route(async (req, _res, tx, ctx) => {
   const current = meetingDeviceConnections(ctx.runtime)[connection.connectionId];
   if (!current || current.userId !== ctx.session.userId) throw new MeetingError(409, "Join the meeting first");
   const payload = z.object({ muted: z.boolean().optional(), handRaised: z.boolean().optional(), speaking: z.boolean().default(false), deviceId: z.string().optional(), connectionId: z.string().optional() }).parse(req.body);
-  const muted = payload.muted ?? ctx.participant.muted;
+  if (ctx.participant.hostMutedAt && payload.muted === false) throw new MeetingError(409, "Muted by the meeting host. Request to speak instead.");
+  const muted = ctx.participant.hostMutedAt ? true : payload.muted ?? ctx.participant.muted;
   await tx.update(participants).set({ muted, ...(payload.handRaised === undefined ? {} : { handRaisedAt: payload.handRaised ? new Date() : null }) }).where(eq(participants.id, ctx.participant.id));
   const runtime = upsertDevicePresence(ctx.runtime, { ...current, seenAt: Date.now(), speaking: !muted && payload.speaking });
   await saveRuntime(tx, ctx, runtime);
   if (payload.muted !== undefined && payload.muted !== ctx.participant.muted) afterCommit(req, () => closeAllAssemblyAIStreams(ctx.id));
-  return { transcription: await captureState(tx, ctx, runtime) };
+  return { transcription: await captureState(tx, ctx, runtime), hostMutedAt: ctx.participant.hostMutedAt, hostMuteGeneration: ctx.participant.hostMuteGeneration };
 }));
 
 router.post("/:occurrenceId/signal", route(async (req, _res, tx, ctx) => {
@@ -747,6 +751,70 @@ router.post("/:occurrenceId/participants/:userId/remove", route(async (req, _res
   return { userId, removedAt };
 }));
 
+function moderationParticipant(row: typeof participants.$inferSelect, present: number[], adminUserIds: Set<number>) {
+  return {
+    userId: row.userId, role: row.role, present: present.includes(row.userId), removedAt: row.removedAt,
+    organizationAdmin: adminUserIds.has(row.userId), hostMutedAt: row.hostMutedAt,
+    hostMutedById: row.hostMutedById, hostMuteGeneration: row.hostMuteGeneration,
+  };
+}
+
+router.post("/:occurrenceId/participants/:userId/host-mute", route(async (req, _res, tx, ctx) => {
+  active(ctx);
+  const userId = z.coerce.number().int().positive().parse(req.params.userId);
+  const target = ctx.all.find(value => value.userId === userId);
+  if (!target) throw new MeetingError(404, "Attendee not found");
+  let patch;
+  try { patch = imposeHostMute(moderationParticipant(ctx.participant, presentUserIds(ctx.runtime), new Set()), moderationParticipant(target, presentUserIds(ctx.runtime), new Set())); }
+  catch (error) { if (error instanceof MeetingModerationError) throw new MeetingError(403, error.message); throw error; }
+  await tx.update(participants).set(patch).where(eq(participants.id, target.id));
+  const current = devicePresenceForUser(ctx.runtime, userId);
+  let runtime = ctx.runtime;
+  for (const connection of current) runtime = upsertDevicePresence(runtime, { ...connection, speaking: false });
+  await saveRuntime(tx, ctx, runtime);
+  await tx.insert(chat).values({ occurrenceId: ctx.id, userId: ctx.session.userId, messageType: "system", body: "An attendee was muted by the meeting host." });
+  await audit(tx, ctx, "meeting.participant_host_muted", { mutedUserId: userId, generation: patch.hostMuteGeneration });
+  afterCommit(req, () => deviceCoordinator.publishUserEvent({ userId, owner: { type: ctx.meeting.ownerOrgType as "vendor" | "partner", id: ctx.meeting.ownerOrgId } }, { eventType: "work_hub.meeting.host_muted", payload: { context: { kind: "meeting", id: ctx.id }, subject: { type: "meeting_participant", id: userId }, occurrenceId: ctx.id, generation: patch.hostMuteGeneration } }));
+  afterCommit(req, () => closeAllAssemblyAIStreams(ctx.id));
+  return { userId, ...patch };
+}));
+
+router.delete("/:occurrenceId/participants/:userId/host-mute", route(async (req, _res, tx, ctx) => {
+  active(ctx);
+  const userId = z.coerce.number().int().positive().parse(req.params.userId);
+  const target = ctx.all.find(value => value.userId === userId);
+  if (!target) throw new MeetingError(404, "Attendee not found");
+  let patch;
+  try { patch = releaseHostMute(moderationParticipant(ctx.participant, presentUserIds(ctx.runtime), new Set()), moderationParticipant(target, presentUserIds(ctx.runtime), new Set())); }
+  catch (error) { if (error instanceof MeetingModerationError) throw new MeetingError(error.code === "not_host_muted" ? 409 : 403, error.message); throw error; }
+  await tx.update(participants).set(patch).where(eq(participants.id, target.id));
+  await tx.update(speakRequests).set({ status: "resolved", resolvedAt: new Date(), resolvedById: ctx.session.userId }).where(and(eq(speakRequests.occurrenceId, ctx.id), eq(speakRequests.userId, userId), eq(speakRequests.status, "pending")));
+  await audit(tx, ctx, "meeting.participant_host_mute_released", { mutedUserId: userId, generation: patch.hostMuteGeneration });
+  afterCommit(req, () => deviceCoordinator.publishUserEvent({ userId, owner: { type: ctx.meeting.ownerOrgType as "vendor" | "partner", id: ctx.meeting.ownerOrgId } }, { eventType: "work_hub.meeting.host_mute_released", payload: { context: { kind: "meeting", id: ctx.id }, subject: { type: "meeting_participant", id: userId }, occurrenceId: ctx.id, generation: patch.hostMuteGeneration } }));
+  return { userId, ...patch };
+}));
+
+router.post("/:occurrenceId/request-to-speak", route(async (req, _res, tx, ctx) => {
+  active(ctx);
+  const present = presentUserIds(ctx.runtime);
+  const ownerColumn = ctx.meeting.ownerOrgType === "vendor" ? userOrgMembershipsTable.vendorId : userOrgMembershipsTable.partnerId;
+  const adminMemberships = await tx.select({ userId: userOrgMembershipsTable.userId }).from(userOrgMembershipsTable).where(and(
+    inArray(userOrgMembershipsTable.userId, ctx.all.map(value => value.userId)),
+    eq(userOrgMembershipsTable.orgType, ctx.meeting.ownerOrgType),
+    eq(ownerColumn, ctx.meeting.ownerOrgId),
+    eq(userOrgMembershipsTable.role, "admin"),
+  ));
+  const adminUserIds = new Set(adminMemberships.map(value => value.userId));
+  let routing;
+  try { routing = routeSpeakRequest(ctx.all.map(value => moderationParticipant(value, present, adminUserIds)), ctx.session.userId); }
+  catch (error) { if (error instanceof MeetingModerationError) throw new MeetingError(error.code === "not_found" ? 404 : 409, error.message); throw error; }
+  const [request] = await tx.insert(speakRequests).values({ occurrenceId: ctx.id, userId: ctx.session.userId, status: "pending", requestedAt: new Date(), resolvedAt: null, resolvedById: null }).onConflictDoUpdate({ target: [speakRequests.occurrenceId, speakRequests.userId, speakRequests.status], set: { requestedAt: new Date(), resolvedAt: null, resolvedById: null } }).returning();
+  const recipients = [...new Set([...routing.authorityUserIds, ...routing.fallbackAdminUserIds])];
+  for (const recipientUserId of recipients) afterCommit(req, () => deviceCoordinator.publishUserEvent({ userId: recipientUserId, owner: { type: ctx.meeting.ownerOrgType as "vendor" | "partner", id: ctx.meeting.ownerOrgId } }, { eventType: "work_hub.meeting.speak_requested", payload: { context: { kind: "meeting", id: ctx.id }, subject: { type: "meeting_speak_request", id: request!.id }, occurrenceId: ctx.id, requesterUserId: ctx.session.userId, canRelease: routing.authorityUserIds.includes(recipientUserId) } }));
+  await audit(tx, ctx, "meeting.speak_requested", { authorityUserIds: routing.authorityUserIds, fallbackAdminUserIds: routing.fallbackAdminUserIds });
+  return { request, ...routing };
+}));
+
 router.get("/:occurrenceId/catch-up", route(async (_req, _res, tx, ctx) => {
   const rows = await tx.select({ id: usersTable.id, displayName: usersTable.displayName }).from(usersTable).where(inArray(usersTable.id, ctx.all.map((p) => p.userId)));
   const names = new Map(rows.map((u) => [u.id, u.displayName]));
@@ -755,6 +823,7 @@ router.get("/:occurrenceId/catch-up", route(async (_req, _res, tx, ctx) => {
   const messages = await tx.select().from(chat).where(and(eq(chat.occurrenceId, ctx.id), or(isNull(chat.recipientUserId), eq(chat.userId, ctx.session.userId), eq(chat.recipientUserId, ctx.session.userId)))).orderBy(asc(chat.createdAt));
   const transcript = artifactIds.length ? await tx.select().from(segments).where(inArray(segments.artifactId, artifactIds)).orderBy(asc(segments.startsAtMs)) : [];
   const consent = await tx.select().from(consents).where(and(eq(consents.occurrenceId, ctx.id), eq(consents.policyVersion, ctx.meeting.policyVersion), eq(consents.userId, ctx.session.userId)));
+  const [mySpeakRequest] = await tx.select().from(speakRequests).where(and(eq(speakRequests.occurrenceId, ctx.id), eq(speakRequests.userId, ctx.session.userId), eq(speakRequests.status, "pending"))).limit(1);
   const present = presentUserIds(ctx.runtime);
   const privileged = ["host", "co_host"].includes(ctx.participant.role) || ctx.session.role === "admin";
   const records = privileged ? await tx.select().from(attendance).where(eq(attendance.occurrenceId, ctx.id)).orderBy(asc(attendance.joinedAt)) : [];
@@ -805,11 +874,11 @@ router.get("/:occurrenceId/catch-up", route(async (_req, _res, tx, ctx) => {
   const provider = transcriptionProvider();
   return {
     occurrence: { ...occurrence, startedAt: ctx.runtime.startedAt ?? null, endedAt: ctx.runtime.endedAt ?? null },
-    meeting: ctx.meeting, userId: ctx.session.userId, canManage: ctx.participant.role === "host", canViewAttendance: privileged,
+    meeting: ctx.meeting, userId: ctx.session.userId, canManage: ctx.participant.role === "host", canModerate: ["host", "co_host"].includes(ctx.participant.role), canViewAttendance: privileged,
     transcription, nativeCaptureAvailable: provider === "native" && nativeTranscriptionAvailable(),
     streamingCaptureAvailable: provider === "assemblyai" && assemblyAIStreamingAvailable() && streamingTrialAudienceAllows(ctx.all.filter((participant) => !participant.removedAt).map((participant) => participant.userId)),
-    myConsent: consent[0]?.response ?? "pending",
-    participants: ctx.all.map((p) => { const presence = aggregateUserPresence(ctx.runtime, p.userId); return { userId: p.userId, displayName: names.get(p.userId) ?? "Attendee", photoUrl: participantPhotos.get(p.userId) ?? null, role: p.role, joinedAt: presence?.joinedAt, muted: p.muted, handRaisedAt: p.handRaisedAt, removedAt: p.removedAt, present: !p.removedAt && present.includes(p.userId), speaking: !p.removedAt && present.includes(p.userId) && !p.muted && Boolean(presence?.speaking) }; }),
+    myConsent: consent[0]?.response ?? "pending", mySpeakRequest: mySpeakRequest ?? null,
+    participants: ctx.all.map((p) => { const presence = aggregateUserPresence(ctx.runtime, p.userId); return { userId: p.userId, displayName: names.get(p.userId) ?? "Attendee", photoUrl: participantPhotos.get(p.userId) ?? null, role: p.role, joinedAt: presence?.joinedAt, muted: p.muted, hostMutedAt: p.hostMutedAt, hostMutedById: p.hostMutedById, hostMuteGeneration: p.hostMuteGeneration, handRaisedAt: p.handRaisedAt, removedAt: p.removedAt, present: !p.removedAt && present.includes(p.userId), speaking: !p.removedAt && present.includes(p.userId) && !p.muted && !p.hostMutedAt && Boolean(presence?.speaking) }; }),
     activity: visibleMeetingActivities(ctx.runtime, ctx.session.userId, ctx.all.filter((p) => !p.removedAt).map((p) => p.userId)),
     attendance: records, chat: messages.map((m) => {
       const safe = safeMeetingMessage(m);

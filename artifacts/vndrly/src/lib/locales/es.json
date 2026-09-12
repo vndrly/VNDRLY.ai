@@ -4962,6 +4962,11 @@
     ,"connected": "Conectado"
     ,"removeConfirm": "¿Eliminar a {{name}} de esta reunión? Sus contribuciones permanecerán en el registro."
     ,"removeMeeting": "Eliminar de la reunión"
+    ,"mutedByHost": "Silenciado por el anfitrión"
+    ,"hostMute": "Silenciar asistente"
+    ,"releaseHostMute": "Permitir hablar"
+    ,"requestToSpeak": "Solicitar hablar"
+    ,"speakRequested": "Solicitud enviada"
     ,"endConfirm": "¿Finalizar esta reunión para todos? Las entradas guardadas permanecerán disponibles."
     ,"endEveryone": "Finalizar la reunión para todos"
     ,"tools": {"summary":"Resumen"}

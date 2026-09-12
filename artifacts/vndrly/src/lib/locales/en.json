@@ -4962,6 +4962,11 @@
     ,"connected": "Connected"
     ,"removeConfirm": "Remove {{name}} from this meeting? Their contributions remain in the record."
     ,"removeMeeting": "Remove from meeting"
+    ,"mutedByHost": "Muted by host"
+    ,"hostMute": "Mute attendee"
+    ,"releaseHostMute": "Allow to speak"
+    ,"requestToSpeak": "Request to speak"
+    ,"speakRequested": "Request sent"
     ,"endConfirm": "End this meeting for everyone? Saved transcript entries will remain available."
     ,"endEveryone": "End meeting for everyone"
     ,"tools": {"summary":"Summary"}

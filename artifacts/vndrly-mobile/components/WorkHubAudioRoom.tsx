@@ -15,6 +15,7 @@ type Session = {
   token: string | null | undefined;
   stop: (message?: string, notifyLeave?: boolean) => void;
   toggle: () => void;
+  forceMute: () => void;
   consent: () => void;
 };
 type MeetingPeer = { userId: number; deviceId: string; connectionId: string };
@@ -35,7 +36,7 @@ function newConnectionId() {
 }
 
 /** Audio stays on the existing VNDRLY signaling service and native WebRTC. */
-export default function WorkHubAudioRoom({ occurrenceId }: { occurrenceId: string }) {
+export default function WorkHubAudioRoom({ occurrenceId, hostMuted = false, hostMuteGeneration = 0 }: { occurrenceId: string; hostMuted?: boolean; hostMuteGeneration?: number }) {
   const { t } = useTranslation();
   const colors = useColors();
   const [joined, setJoined] = useState(false);
@@ -99,7 +100,7 @@ export default function WorkHubAudioRoom({ occurrenceId }: { occurrenceId: strin
     const peerConnectionByUser = new Map<number, MeetingPeer>();
     let nativeTranscribing = false, nativeTranscriptionPending = false;
     const trackListeners: Array<() => void> = [];
-    const session: Session = { valid: true, token: getCachedToken() ?? undefined, stop: () => {}, toggle: () => {}, consent: () => {} };
+    const session: Session = { valid: true, token: getCachedToken() ?? undefined, stop: () => {}, toggle: () => {}, forceMute: () => {}, consent: () => {} };
     current.current = session;
     const live = () => session.valid && current.current === session && mounted.current;
     const check = () => { if (!live()) throw cancelled(); };
@@ -216,6 +217,19 @@ export default function WorkHubAudioRoom({ occurrenceId }: { occurrenceId: strin
         setMuted(next);
         reconcileNativeTranscription();
       }).catch(failure).finally(() => { presencePending = false; });
+    };
+    session.forceMute = () => {
+      if (!live()) return;
+      local?.getAudioTracks().forEach(track => { track.enabled = false; });
+      if (native) {
+        if (nativeTranscribing && recordingPolicy !== null) void native.setTranscription(false, recordingPolicy).catch(failure);
+        void native.setMuted(true).catch(failure); nativeTranscribing = false;
+      }
+      localMuted = true; setMuted(true);
+      if (!presencePending) {
+        presencePending = true;
+        void request("presence", { muted: true }).catch(failure).finally(() => { presencePending = false; });
+      }
     };
     session.consent = () => {
       if (!live() || recordingPolicy === null || consentPending) return;
@@ -360,9 +374,13 @@ export default function WorkHubAudioRoom({ occurrenceId }: { occurrenceId: strin
     }
   };
 
+  useEffect(() => {
+    if (hostMuted) current.current?.forceMute();
+  }, [hostMuteGeneration, hostMuted]);
+
   const consentLabel = consented ? t("meetingWorkspace.audio.withdrawConsent") : t("meetingWorkspace.audio.giveConsent");
   const primaryLabel = busy ? t("meetingWorkspace.audio.joining")
-    : joined ? muted ? t("meetingWorkspace.audio.unmute") : t("meetingWorkspace.audio.mute")
+    : joined ? hostMuted ? t("meetingWorkspace.mutedByHost", { defaultValue: "Muted by host" }) : muted ? t("meetingWorkspace.audio.unmute") : t("meetingWorkspace.audio.mute")
     : t("meetingWorkspace.audio.join");
   const consentControl = joined && policy !== null ? (
     <Pressable accessibilityRole="button" accessibilityLabel={consentLabel}
@@ -380,7 +398,7 @@ export default function WorkHubAudioRoom({ occurrenceId }: { occurrenceId: strin
     <View style={{ flexDirection: "row", gap: 20 }}>
       <Pressable accessibilityRole="button" accessibilityLabel={primaryLabel}
         accessibilityHint={t(joined ? "meetingWorkspace.audio.toggleHint" : "meetingWorkspace.audio.joinHint")}
-        style={{ minHeight: 44, justifyContent: "center" }} disabled={busy}
+        style={{ minHeight: 44, justifyContent: "center" }} disabled={busy || (joined && hostMuted)}
         onPress={joined ? () => current.current?.toggle() : join}>
         <Text style={{ color: colors.primary, padding: 10 }}>{primaryLabel}</Text>
       </Pressable>

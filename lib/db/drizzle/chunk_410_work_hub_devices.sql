@@ -14,3 +14,6 @@ CREATE UNIQUE INDEX IF NOT EXISTS "work_hub_user_events_sequence_unique" ON "wor
 CREATE INDEX IF NOT EXISTS "work_hub_user_events_user_org_sequence_idx" ON "work_hub_user_events" ("user_id", "owner_org_type", "owner_org_id", "sequence");
 CREATE TABLE IF NOT EXISTS "work_hub_meeting_speak_requests" ("id" uuid PRIMARY KEY DEFAULT gen_random_uuid(), "occurrence_id" uuid NOT NULL REFERENCES "work_hub_meeting_occurrences"("id") ON DELETE CASCADE, "user_id" integer NOT NULL REFERENCES "users"("id") ON DELETE CASCADE, "status" text NOT NULL DEFAULT 'pending', "requested_at" timestamptz NOT NULL DEFAULT now(), "resolved_at" timestamptz, "resolved_by_id" integer REFERENCES "users"("id"));
 CREATE UNIQUE INDEX IF NOT EXISTS "work_hub_meeting_speak_requests_pending_unique" ON "work_hub_meeting_speak_requests" ("occurrence_id", "user_id", "status");
+ALTER TABLE "work_hub_meeting_participants" ADD COLUMN IF NOT EXISTS "host_muted_at" timestamptz;
+ALTER TABLE "work_hub_meeting_participants" ADD COLUMN IF NOT EXISTS "host_muted_by_id" integer REFERENCES "users"("id");
+ALTER TABLE "work_hub_meeting_participants" ADD COLUMN IF NOT EXISTS "host_mute_generation" integer NOT NULL DEFAULT 0;

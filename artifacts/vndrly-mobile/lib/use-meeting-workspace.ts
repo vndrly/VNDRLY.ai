@@ -88,6 +88,8 @@ export type MeetingWorkspaceState = {
   requestEndConfirmation: () => void;
   cancelManagement: () => void;
   confirmManagement: () => Promise<void>;
+  moderateParticipant: (userId: number, release: boolean) => Promise<void>;
+  requestToSpeak: () => Promise<void>;
   chooseFile: (source: MeetingFileSource) => Promise<void>;
   retryFile: () => Promise<void>;
   openFile: (file: { id: string; recipientUserId: number | null; fileName: string; contentType: string; byteSize: number }) => Promise<void>;
@@ -618,6 +620,56 @@ export function useMeetingWorkspace(occurrenceId: string): MeetingWorkspaceState
     }
   }, [abortRequests, request, revoke, t, userId]);
 
+  const moderateParticipant = useCallback(async (targetUserId: number, release: boolean) => {
+    const current = snapshotRef.current;
+    const actor = current?.participants.find(person => person.userId === current.userId);
+    const target = current?.participants.find(person => person.userId === targetUserId);
+    const allowed = Boolean(current?.canModerate && actor && target && target.userId !== current.userId && target.role !== "host" && !target.removedAt && (actor.role === "host" || target.role === "participant"));
+    if (!allowed || managementOwnerRef.current) return;
+    const owner = Symbol("meeting-moderation");
+    const requestScope = scopeRef.current;
+    const generation = lifecycleRef.current;
+    managementOwnerRef.current = owner;
+    setManagementPending(true);
+    setManagementNotice("");
+    try {
+      await request(requestScope, generation, `/api/work-hub/meetings/${encodeURIComponent(occurrenceRef.current)}/participants/${encodeURIComponent(String(targetUserId))}/host-mute`, { method: release ? "DELETE" : "POST", body: "{}" });
+      if (managementOwnerRef.current !== owner || scopeRef.current !== requestScope || lifecycleRef.current !== generation) return;
+      setManagementNotice(release
+        ? t("meetingWorkspace.hostMuteReleased", { defaultValue: "The attendee may choose to unmute." })
+        : t("meetingWorkspace.hostMuteApplied", { defaultValue: "The attendee is muted on every device." }));
+      await refreshRef.current();
+    } catch (cause) {
+      if (isTerminal(cause)) { revoke(requestScope); return; }
+      if (!isAbort(cause) && managementOwnerRef.current === owner) setManagementNotice(t("meetingWorkspace.errors.moderation", { defaultValue: "The attendee mute could not be changed. Try again." }));
+    } finally {
+      if (managementOwnerRef.current === owner) { managementOwnerRef.current = null; if (mountedRef.current) setManagementPending(false); }
+    }
+  }, [request, revoke, t]);
+
+  const requestToSpeak = useCallback(async () => {
+    const current = snapshotRef.current;
+    const self = current?.participants.find(person => person.userId === current.userId);
+    if (!self?.hostMutedAt || current?.mySpeakRequest || managementOwnerRef.current) return;
+    const owner = Symbol("meeting-speak-request");
+    const requestScope = scopeRef.current;
+    const generation = lifecycleRef.current;
+    managementOwnerRef.current = owner;
+    setManagementPending(true);
+    setManagementNotice("");
+    try {
+      await request(requestScope, generation, `/api/work-hub/meetings/${encodeURIComponent(occurrenceRef.current)}/request-to-speak`, { method: "POST", body: "{}" });
+      if (managementOwnerRef.current !== owner || scopeRef.current !== requestScope || lifecycleRef.current !== generation) return;
+      setManagementNotice(t("meetingWorkspace.speakRequested", { defaultValue: "Request sent" }));
+      await refreshRef.current();
+    } catch (cause) {
+      if (isTerminal(cause)) { revoke(requestScope); return; }
+      if (!isAbort(cause) && managementOwnerRef.current === owner) setManagementNotice(t("meetingWorkspace.errors.speakRequest", { defaultValue: "The request could not be sent. Try again." }));
+    } finally {
+      if (managementOwnerRef.current === owner) { managementOwnerRef.current = null; if (mountedRef.current) setManagementPending(false); }
+    }
+  }, [request, revoke, t]);
+
   const uploadPendingFile = useCallback(async (operation: PendingFile, inherited?: FileUploadOwnership) => {
     if ((!inherited && fileOwnerRef.current) || !snapshotRef.current || !activeRef.current ||
       operation.scope !== scopeRef.current || operation.generation !== lifecycleRef.current ||
@@ -816,11 +868,13 @@ export function useMeetingWorkspace(occurrenceId: string): MeetingWorkspaceState
     requestEndConfirmation,
     cancelManagement,
     confirmManagement,
+    moderateParticipant,
+    requestToSpeak,
     chooseFile,
     retryFile,
     openFile,
   }), [accessLost, cancelManagement, confirmManagement, draft, endedAcknowledgedScope, error, loadingScope,
     fileBusy, fileError, fileNotice, fileRefreshFailed, managementConfirmation, managementNotice, managementPending,
-    managementRefreshFailed, now, openFile, recipientUserId, refresh, requestEndConfirmation, requestRemoveConfirmation,
+    managementRefreshFailed, moderateParticipant, now, openFile, recipientUserId, refresh, requestEndConfirmation, requestRemoveConfirmation, requestToSpeak,
     retryFile, scope, selectRecipient, send, sending, snapshot, updateDraft, chooseFile]);
 }

@@ -51,13 +51,13 @@ import operations from "./workHubOperations";
 
 const meetingId = "17795fa1-bb5f-4abc-a5f8-7e9b33a0ea01";
 const messageId = "17795fa1-bb5f-4abc-a5f8-7e9b33a0ea02";
-const host = { id: "host", userId: 1, role: "host", removedAt: null, muted: true };
-const guest = { id: "guest", userId: 2, role: "participant", removedAt: null, muted: true };
-function seed(options: { removed?: boolean; guestRemoved?: boolean; ended?: boolean; invited?: boolean; muted?: boolean; runtime?: Record<string, unknown> } = {}) {
+const host = { id: "host", userId: 1, role: "host", removedAt: null, muted: true, hostMutedAt: null, hostMutedById: null, hostMuteGeneration: 0 };
+const guest = { id: "guest", userId: 2, role: "participant", removedAt: null, muted: true, hostMutedAt: null, hostMutedById: null, hostMuteGeneration: 0 };
+function seed(options: { removed?: boolean; guestRemoved?: boolean; ended?: boolean; invited?: boolean; muted?: boolean; runtime?: Record<string, unknown>; actorRole?: string; guestHostMuted?: boolean } = {}) {
   mocks.results.push(
     [{ id: meetingId, meetingId, status: options.ended ? "ended" : "live", recordingState: "active", askvInvitedAt: options.invited ? new Date() : null, runtime: options.runtime ?? { presence: { 1: { seenAt: Date.now(), joinedAt: Date.now(), speaking: false } } } }],
     [{ id: meetingId, ownerOrgType: "vendor", ownerOrgId: 22, policyVersion: 1, recordingAllowed: true }],
-    [{ ...host, muted: options.muted ?? true, removedAt: options.removed ? new Date() : null }, { ...guest, removedAt: options.guestRemoved ? new Date() : null }],
+    [{ ...host, role: options.actorRole ?? "host", muted: options.muted ?? true, removedAt: options.removed ? new Date() : null }, { ...guest, hostMutedAt: options.guestHostMuted ? new Date("2026-09-12T12:00:00Z") : null, hostMutedById: options.guestHostMuted ? 1 : null, hostMuteGeneration: options.guestHostMuted ? 1 : 0, removedAt: options.guestRemoved ? new Date() : null }],
   );
 }
 function app(legacy = false) {
@@ -310,6 +310,42 @@ describe("native meeting transcription", () => {
   it.each([false, true])("advertises actual native availability as %s", async (available) => {
     seed(); mocks.nativeAvailable.mockReturnValue(available); mocks.results.push([{ id: 1, displayName: "Host" }], [], [], [], [], []);
     const result = await request(app()).get(`/meetings/${meetingId}/catch-up`); expect(result.status).toBe(200); expect(result.body.nativeCaptureAvailable).toBe(available);
+  });
+});
+
+describe("cross-device meeting moderation routes", () => {
+  it("host-mutes an attendee and stops speaking on every connection", async () => {
+    seed({ runtime: { connections: {
+      phone: { userId: 2, deviceId: "phone", connectionId: "phone", joinedAt: 1, seenAt: Date.now(), speaking: true },
+      tablet: { userId: 2, deviceId: "tablet", connectionId: "tablet", joinedAt: 1, seenAt: Date.now(), speaking: true },
+    } } });
+    const response = await request(app()).post(`/meetings/${meetingId}/participants/2/host-mute`).send({});
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({ userId: 2, hostMutedById: 1, hostMuteGeneration: 1, muted: true });
+    const runtime = (mocks.mutations.find(value => value.type === "update" && (value.value as any)?.runtime)?.value as any).runtime;
+    expect(Object.values(runtime.connections).every((value: any) => value.speaking === false)).toBe(true);
+  });
+
+  it("does not let an unassigned organization admin release a host mute", async () => {
+    mocks.session = { userId: 1, vendorId: 22, partnerId: null, role: "admin" };
+    seed({ actorRole: "participant", guestHostMuted: true });
+    const response = await request(app()).delete(`/meetings/${meetingId}/participants/2/host-mute`);
+    expect(response.status).toBe(403);
+  });
+
+  it("routes a muted attendee request to the present host and co-host", async () => {
+    mocks.session = { userId: 2, vendorId: 22, partnerId: null, role: "vendor" };
+    const now = Date.now();
+    mocks.results.push(
+      [{ id: meetingId, meetingId, status: "live", recordingState: "active", askvInvitedAt: null, runtime: { presence: { 1: { seenAt: now, joinedAt: now, speaking: false }, 2: { seenAt: now, joinedAt: now, speaking: false }, 3: { seenAt: now, joinedAt: now, speaking: false } } } }],
+      [{ id: meetingId, ownerOrgType: "vendor", ownerOrgId: 22, policyVersion: 1, recordingAllowed: true }],
+      [{ ...host }, { ...guest, hostMutedAt: new Date(), hostMutedById: 1, hostMuteGeneration: 1 }, { ...guest, id: "cohost", userId: 3, role: "co_host" }],
+      [],
+    );
+    mocks.returnInserted = true;
+    const response = await request(app()).post(`/meetings/${meetingId}/request-to-speak`).send({});
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({ authorityUserIds: [1, 3], fallbackAdminUserIds: [] });
   });
 });
 

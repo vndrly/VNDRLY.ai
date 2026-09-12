@@ -121,11 +121,13 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
 
   const ended = ["ended", "cancelled"].includes(snapshot.occurrence.status);
   const host = snapshot.participants.find((person) => person.role === "host");
+  const selfParticipant = snapshot.participants.find((person) => person.userId === snapshot.userId);
   const speaker = ended ? undefined : currentSpeaker(snapshot);
   const present = snapshot.participants.filter((person) => person.present && !person.removedAt);
   const presentAttendeeCount = present.filter((person) => person.role !== "host").length;
   const removableParticipants = snapshot.participants.filter((person) =>
     person.userId !== snapshot.userId && person.role !== "host" && !person.removedAt);
+  const moderatableParticipants = removableParticipants.filter(person => selfParticipant?.role === "host" || person.role === "participant");
   const selectedPerson = snapshot.participants.find((person) => person.userId === workspace.recipientUserId);
   const timerNow = snapshot.occurrence.endedAt ? Date.parse(snapshot.occurrence.endedAt) : workspace.now;
   const timing = meetingTimer(
@@ -162,7 +164,8 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
           <Text selectable style={{ color: "#e1e3e6" }}>
             {t("meetingWorkspace.presentCount", { defaultValue: "{{count}} present", count: present.length })}
           </Text>
-          {["scheduled", "live"].includes(snapshot.occurrence.status) && !workspace.meetingEndedAcknowledged && <WorkHubAudioRoom occurrenceId={occurrenceId} />}
+          {["scheduled", "live"].includes(snapshot.occurrence.status) && !workspace.meetingEndedAcknowledged && <WorkHubAudioRoom occurrenceId={occurrenceId} hostMuted={Boolean(selfParticipant?.hostMutedAt)} hostMuteGeneration={selfParticipant?.hostMuteGeneration ?? 0} />}
+          {selfParticipant?.hostMutedAt && <TogglePillButton color="brand" disabled={workspace.managementPending || Boolean(snapshot.mySpeakRequest)} accessibilityLabel={snapshot.mySpeakRequest ? t("meetingWorkspace.speakRequested", { defaultValue: "Request sent" }) : t("meetingWorkspace.requestToSpeak", { defaultValue: "Request to speak" })} onPress={() => void workspace.requestToSpeak()}>{snapshot.mySpeakRequest ? t("meetingWorkspace.speakRequested", { defaultValue: "Request sent" }) : t("meetingWorkspace.requestToSpeak", { defaultValue: "Request to speak" })}</TogglePillButton>}
           <Text selectable style={{ color: "#ffffff", fontWeight: "700" }}>
             {t("meetingWorkspace.transcriptionUnavailable", { defaultValue: "Transcription unavailable on this device." })}
           </Text>
@@ -373,7 +376,7 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
             >
               {t(`meetingWorkspace.tools.${name}`, { defaultValue: name })}
             </TogglePillButton>)}
-            {snapshot.canManage && !ended && <TogglePillButton
+            {(snapshot.canManage || snapshot.canModerate) && !ended && <TogglePillButton
               color="brand"
               solid={manageOpen}
               accessibilityLabel={t("meetingWorkspace.manageAttendees", { defaultValue: "Manage Attendees" })}
@@ -386,21 +389,12 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
               {t("meetingWorkspace.endMeeting", { defaultValue: "End meeting" })}
             </TogglePillButton>}
           </ScrollView>
-          {snapshot.canManage && manageOpen && <View style={{ gap: 8 }}>
-            <Text selectable style={{ color: "#ffffff" }}>{t("meetingWorkspace.manageAttendeesHelp", { defaultValue: "Choose an attendee to remove from the live meeting." })}</Text>
-            {removableParticipants.map((person) => <Pressable
-              key={person.userId}
-              accessibilityRole="button"
-              accessibilityLabel={`${person.displayName} · ${person.present
-                ? t("meetingWorkspace.present", { defaultValue: "Present" })
-                : t("meetingWorkspace.notConnected", { defaultValue: "Not connected" })}`}
-              onPress={() => workspace.requestRemoveConfirmation(person.userId)}
-              style={{ minHeight: 44, justifyContent: "center" }}
-            >
-              <Text style={{ color: brand.primary, fontWeight: "700" }}>{person.displayName} · {person.present
-                ? t("meetingWorkspace.present", { defaultValue: "Present" })
-                : t("meetingWorkspace.notConnected", { defaultValue: "Not connected" })}</Text>
-            </Pressable>)}
+          {(snapshot.canManage || snapshot.canModerate) && manageOpen && <View style={{ gap: 8 }}>
+            <Text selectable style={{ color: "#ffffff" }}>{t("meetingWorkspace.manageAttendeesHelp", { defaultValue: "Mute an attendee, or remove them if you are the host." })}</Text>
+            {moderatableParticipants.map((person) => <View key={person.userId} style={{ gap: 6 }}>
+              {snapshot.canManage ? <Pressable accessibilityRole="button" accessibilityLabel={`${person.displayName} · ${person.present ? t("meetingWorkspace.present", { defaultValue: "Present" }) : t("meetingWorkspace.notConnected", { defaultValue: "Not connected" })}`} onPress={() => workspace.requestRemoveConfirmation(person.userId)} style={{ minHeight: 44, justifyContent: "center" }}><Text style={{ color: brand.primary, fontWeight: "700" }}>{person.displayName} · {person.present ? t("meetingWorkspace.present", { defaultValue: "Present" }) : t("meetingWorkspace.notConnected", { defaultValue: "Not connected" })}{person.hostMutedAt ? ` · ${t("meetingWorkspace.mutedByHost", { defaultValue: "Muted by host" })}` : ""}</Text></Pressable> : <Text selectable style={{ color: brand.primary, fontWeight: "700" }}>{person.displayName} · {person.present ? t("meetingWorkspace.present", { defaultValue: "Present" }) : t("meetingWorkspace.notConnected", { defaultValue: "Not connected" })}{person.hostMutedAt ? ` · ${t("meetingWorkspace.mutedByHost", { defaultValue: "Muted by host" })}` : ""}</Text>}
+              <TogglePillButton color="brand" disabled={workspace.managementPending} accessibilityLabel={person.hostMutedAt ? t("meetingWorkspace.releaseHostMute", { defaultValue: "Allow to speak" }) : t("meetingWorkspace.hostMute", { defaultValue: "Mute attendee" })} onPress={() => void workspace.moderateParticipant(person.userId, Boolean(person.hostMutedAt))}>{person.hostMutedAt ? t("meetingWorkspace.releaseHostMute", { defaultValue: "Allow to speak" }) : t("meetingWorkspace.hostMute", { defaultValue: "Mute attendee" })}</TogglePillButton>
+            </View>)}
           </View>}
           {tool === "summary" && <Text selectable style={{ color: "#ffffff" }}>{typeof snapshot.recap?.summary === "string" ? snapshot.recap.summary : t("meetingWorkspace.emptySummary", { defaultValue: "The saved meeting summary will appear here when available." })}</Text>}
           {tool === "actionItems" && <Text selectable style={{ color: "#ffffff" }}>{recapList(snapshot.recap?.actionItems) ?? t("meetingWorkspace.emptyActionItems", { defaultValue: "No action items have been published yet." })}</Text>}
