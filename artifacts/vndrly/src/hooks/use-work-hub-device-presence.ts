@@ -30,14 +30,20 @@ function storedId(storage: Storage, key: string) {
   return value;
 }
 
+export function workHubDeviceIdentity() {
+  if (typeof window === "undefined") return null;
+  return { deviceId: storedId(localStorage, DEVICE_KEY), connectionId: storedId(sessionStorage, CONNECTION_KEY) };
+}
+
 export function useWorkHubDevicePresence(path: string, enabled: boolean) {
   const registered = useRef(false);
   useEffect(() => {
     if (!enabled || typeof window === "undefined") return;
     let stopped = false;
     let timer: ReturnType<typeof setInterval> | undefined;
-    const deviceId = storedId(localStorage, DEVICE_KEY);
-    const connectionId = storedId(sessionStorage, CONNECTION_KEY);
+    const identity = workHubDeviceIdentity();
+    if (!identity) return;
+    const { deviceId, connectionId } = identity;
     const heartbeat = async () => {
       if (stopped) return;
       if (!registered.current) {

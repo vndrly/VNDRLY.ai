@@ -19,6 +19,8 @@ import {
   createWorkHubOperationId,
   workHubRequest,
 } from "@/lib/work-hub-client";
+import { workHubDeviceIdentity } from "@/hooks/use-work-hub-device-presence";
+import WorkHubDeviceSettings from "./device-settings";
 import { HubError, PeoplePicker } from "./collaboration";
 import {
   WorkHubCardTitle,
@@ -287,8 +289,61 @@ export function WorkHubCalls() {
   );
   const respond = (id: string, action: string) => {
     setSelected(id);
-    change.mutate({ path: `/calls/${id}/respond`, body: { action } });
+    const identity = action === "accept" ? workHubDeviceIdentity() : null;
+    change.mutate({ path: `/calls/${id}/respond`, body: { action, ...(identity ?? {}) } });
   };
+  useEffect(() => {
+    if (typeof EventSource === "undefined") return;
+    const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+    const source = new EventSource(`${base}/api/work-hub/events`, {
+      withCredentials: true,
+    });
+    const refreshCalls = (event: Event) => {
+      try {
+        const envelope = JSON.parse((event as MessageEvent<string>).data) as {
+          subject?: { type?: unknown; id?: unknown };
+        };
+        if (envelope.subject?.type === "work_hub_voicemail") {
+          void queryClient.invalidateQueries({ queryKey: ["work-hub", "voicemail"] });
+          return;
+        }
+        if (envelope.subject?.type !== "work_hub_call" || typeof envelope.subject.id !== "string")
+          return;
+        const callId = envelope.subject.id;
+        const type = event.type;
+        const status =
+          type === "work_hub.call.answered"
+            ? "active"
+            : type === "work_hub.call.declined"
+              ? "declined"
+              : type === "work_hub.call.missed"
+                ? "missed"
+                : "ended";
+        queryClient.setQueryData<Call[]>(["work-hub", "calls"], (rows) =>
+          rows?.map((call) =>
+            call.id === callId ? { ...call, status } : call,
+          ),
+        );
+        refresh();
+      } catch {
+        // Polling remains the fallback for malformed or interrupted events.
+      }
+    };
+    const names = [
+      "work_hub.call.answered",
+      "work_hub.call.declined",
+      "work_hub.call.ended",
+      "work_hub.call.missed",
+      "work_hub.voicemail.created",
+      "work_hub.voicemail.read",
+      "work_hub.voicemail.deleted",
+    ];
+    for (const name of names) source.addEventListener(name, refreshCalls);
+    return () => {
+      for (const name of names) source.removeEventListener(name, refreshCalls);
+      source.close();
+    };
+  }, [queryClient]);
   const toggleSpeed = (id: number) => {
     const current = settings.data ?? { available: true, speedDial: [] };
     change.mutate({
@@ -590,6 +645,7 @@ export function WorkHubCalls() {
         </section>
       </div>
       </section>
+      <WorkHubDeviceSettings />
     </div>
   );
 }

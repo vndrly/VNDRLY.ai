@@ -19,6 +19,7 @@ import {
 import {
   getCurrentNotificationEventSeq,
   publishNotificationCreated,
+  publishNotificationStateChanged,
   subscribeNotificationEvents,
 } from "../lib/notification-events";
 
@@ -947,10 +948,12 @@ router.post("/notifications/:id/read", async (req, res) => {
   if (!session) return sendApiError(res, 401, "auth.not_authenticated", "Unauthorized");
   const id = parseInt(req.params.id);
   if (isNaN(id)) return sendApiError(res, 400, "validation.invalid_id", "Invalid id");
-  await db
+  const changed = await db
     .update(notificationsTable)
     .set({ isRead: true })
-    .where(and(eq(notificationsTable.id, id), eq(notificationsTable.userId, session.userId)));
+    .where(and(eq(notificationsTable.id, id), eq(notificationsTable.userId, session.userId), eq(notificationsTable.isRead, false)))
+    .returning({ id: notificationsTable.id });
+  if (changed[0]) publishNotificationStateChanged({ userId: session.userId, notificationId: id, state: "read" });
   return res.status(204).send();
 });
 
@@ -959,10 +962,12 @@ router.post("/notifications/:id/unread", async (req, res) => {
   if (!session) return sendApiError(res, 401, "auth.not_authenticated", "Unauthorized");
   const id = parseInt(req.params.id);
   if (isNaN(id)) return sendApiError(res, 400, "validation.invalid_id", "Invalid id");
-  await db
+  const changed = await db
     .update(notificationsTable)
     .set({ isRead: false })
-    .where(and(eq(notificationsTable.id, id), eq(notificationsTable.userId, session.userId)));
+    .where(and(eq(notificationsTable.id, id), eq(notificationsTable.userId, session.userId), eq(notificationsTable.isRead, true)))
+    .returning({ id: notificationsTable.id });
+  if (changed[0]) publishNotificationStateChanged({ userId: session.userId, notificationId: id, state: "unread" });
   return res.status(204).send();
 });
 
@@ -971,19 +976,23 @@ router.delete("/notifications/:id", async (req, res) => {
   if (!session) return sendApiError(res, 401, "auth.not_authenticated", "Unauthorized");
   const id = parseInt(req.params.id);
   if (isNaN(id)) return sendApiError(res, 400, "validation.invalid_id", "Invalid id");
-  await db
+  const changed = await db
     .delete(notificationsTable)
-    .where(and(eq(notificationsTable.id, id), eq(notificationsTable.userId, session.userId)));
+    .where(and(eq(notificationsTable.id, id), eq(notificationsTable.userId, session.userId)))
+    .returning({ id: notificationsTable.id });
+  if (changed[0]) publishNotificationStateChanged({ userId: session.userId, notificationId: id, state: "deleted" });
   return res.status(204).send();
 });
 
 router.post("/notifications/read-all", async (req, res) => {
   const session = getSession(req);
   if (!session) return sendApiError(res, 401, "auth.not_authenticated", "Unauthorized");
-  await db
+  const changed = await db
     .update(notificationsTable)
     .set({ isRead: true })
-    .where(and(eq(notificationsTable.userId, session.userId), eq(notificationsTable.isRead, false)));
+    .where(and(eq(notificationsTable.userId, session.userId), eq(notificationsTable.isRead, false)))
+    .returning({ id: notificationsTable.id });
+  if (changed.length > 0) publishNotificationStateChanged({ userId: session.userId, notificationId: null, state: "all_read" });
   return res.status(204).send();
 });
 
@@ -1005,6 +1014,15 @@ router.get("/notifications/events", (req, res): void => {
   const session = getSession(req);
   if (!session) {
     sendApiError(res, 401, "auth.not_authenticated", "Unauthorized");
+    return;
+  }
+
+  if (req.query.transport === "poll") {
+    const afterRaw = Number(req.query.after);
+    const after = Number.isSafeInteger(afterRaw) && afterRaw >= 0 ? afterRaw : 0;
+    void getCurrentNotificationEventSeq()
+      .then((currentSeq) => res.json({ currentSeq, changed: currentSeq > after }))
+      .catch(() => sendApiError(res, 503, "notifications.events_unavailable", "Notification updates are temporarily unavailable"));
     return;
   }
 

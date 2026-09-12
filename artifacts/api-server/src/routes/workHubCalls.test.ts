@@ -4,7 +4,7 @@ import cookieParser from "cookie-parser";
 import request from "supertest";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { and, eq } from "drizzle-orm";
-import { db, usersTable, vendorsTable, userOrgMembershipsTable, workHubMeetingParticipantsTable, workHubMeetingOccurrencesTable, workHubCallsTable } from "@workspace/db";
+import { db, usersTable, vendorsTable, userOrgMembershipsTable, workHubMeetingParticipantsTable, workHubMeetingOccurrencesTable, workHubCallsTable, workHubDevicesTable, workHubDeviceConnectionsTable } from "@workspace/db";
 import calls from "./workHubCalls";
 import { buildTestCookie } from "../test-utils/session";
 vi.mock("../work-hub/feature-access", () => ({ isWorkHubEnabled: async () => true }));
@@ -13,10 +13,11 @@ const objects = vi.hoisted(() => new Map<string, { body: Buffer; contentType: st
 vi.mock("../lib/objectStore", () => ({ getObjectStore: () => ({ putObject: async (key: string, contentType: string, body: Buffer) => { objects.set(key, { contentType, body }); }, getObject: async (key: string) => objects.get(key) ?? null }) }));
 const app = express().use(express.json()).use(cookieParser()).use(calls);
 describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")("internal calls privacy and durable retries", () => {
-  let callerId: number, recipientId: number, foreignId: number, callerCookie: string, recipientCookie: string, foreignCookie: string;
+  let companyId: number, callerId: number, recipientId: number, foreignId: number, callerCookie: string, recipientCookie: string, foreignCookie: string;
   beforeAll(async () => {
     const suffix = randomUUID();
     const companies = await db.insert(vendorsTable).values(["A", "B"].map(n => ({ name: `Calls ${n} ${suffix}`, contactName: "Test", contactEmail: `${n}.${suffix}@example.invalid` }))).returning();
+    companyId = companies[0]!.id;
     const people = await db.insert(usersTable).values(["Caller", "Recipient", "Foreign"].map(n => ({ username: `${n}.${suffix}@example.invalid`, displayName: n, passwordHash: "unused-test-hash", role: "vendor" }))).returning();
     [callerId, recipientId, foreignId] = people.map(p => p.id) as [number, number, number];
     await db.insert(userOrgMembershipsTable).values([{ userId: callerId, orgType: "vendor", vendorId: companies[0]!.id, role: "member" }, { userId: recipientId, orgType: "vendor", vendorId: companies[0]!.id, role: "member" }, { userId: foreignId, orgType: "vendor", vendorId: companies[1]!.id, role: "admin" }]);
@@ -43,6 +44,25 @@ describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")("internal cal
     expect((await request(app).post(`/work-hub/calls/${first.body.id}/respond`).set("Cookie", callerCookie).send({ action: "end" })).status).toBe(200);
     const [occurrence] = await db.select().from(workHubMeetingOccurrencesTable).where(eq(workHubMeetingOccurrencesTable.id, first.body.occurrenceId));
     expect(occurrence!.status).toBe("ended");
+  });
+  it("selects exactly one audio owner when two recipient devices answer together", async () => {
+    await request(app).put("/work-hub/calls/settings").set("Cookie", recipientCookie).send({ available: true, speedDial: [] }).expect(200);
+    const call = await request(app).post("/work-hub/calls").set("Cookie", callerCookie).send({ recipientUserId: recipientId, operationId: randomUUID() }).expect(201);
+    const [phone, desktop] = await db.insert(workHubDevicesTable).values([
+      { userId: recipientId, ownerOrgType: "vendor", ownerOrgId: companyId, friendlyName: "Phone", deviceClass: "phone", capabilities: { microphone: true } },
+      { userId: recipientId, ownerOrgType: "vendor", ownerOrgId: companyId, friendlyName: "Desktop", deviceClass: "desktop", capabilities: { microphone: true } },
+    ]).returning();
+    const phoneConnection = randomUUID(), desktopConnection = randomUUID();
+    await db.insert(workHubDeviceConnectionsTable).values([
+      { deviceId: phone!.id, connectionId: phoneConnection, foreground: true, microphonePermission: "granted" },
+      { deviceId: desktop!.id, connectionId: desktopConnection, foreground: true, microphonePermission: "granted" },
+    ]);
+    const answer = (deviceId: string, connectionId: string) => request(app).post(`/work-hub/calls/${call.body.id}/respond`).set("Cookie", recipientCookie).send({ action: "accept", deviceId, connectionId });
+    const [phoneAnswer, desktopAnswer] = await Promise.all([answer(phone!.id, phoneConnection), answer(desktop!.id, desktopConnection)]);
+    expect(phoneAnswer.status).toBe(200);
+    expect(desktopAnswer.status).toBe(200);
+    expect([phoneAnswer.body, desktopAnswer.body].filter(body => body.selectedAudioOwner)).toHaveLength(1);
+    expect(new Set([phoneAnswer.body.answeringDeviceId, desktopAnswer.body.answeringDeviceId])).toEqual(new Set([phoneAnswer.body.answeringDeviceId]));
   });
   it("changes voice availability without clearing the saved speed dial", async () => {
     await request(app)

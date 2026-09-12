@@ -1,9 +1,11 @@
 import { boolean, integer, jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { usersTable } from "./users";
 import { workHubMeetingOccurrencesTable } from "./workHubMeetings";
+import { workHubDevicesTable } from "./workHubDevices";
 export const workHubCallsTable = pgTable("work_hub_calls", {
   id: uuid("id").primaryKey().defaultRandom(), callerUserId: integer("caller_user_id").notNull().references(() => usersTable.id), recipientUserId: integer("recipient_user_id").notNull().references(() => usersTable.id),
   occurrenceId: uuid("occurrence_id").notNull().references(() => workHubMeetingOccurrencesTable.id), status: text("status").notNull().default("ringing"),
+  answeredDeviceId: uuid("answered_device_id").references(() => workHubDevicesTable.id), answeredConnectionId: uuid("answered_connection_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(), answeredAt: timestamp("answered_at", { withTimezone: true }), endedAt: timestamp("ended_at", { withTimezone: true }),
 });
 export const workHubVoicemailTable = pgTable("work_hub_voicemail", {

@@ -1,4 +1,19 @@
 {
+  "workHubDevices": {
+    "title": "Dispositivos y respaldo de audio",
+    "descriptionMobile": "Elija cuáles de sus dispositivos pueden tomar el audio automáticamente después de una desconexión y establezca su orden preferido.",
+    "failed": "No se pudo guardar la configuración de dispositivos.",
+    "thisDevice": "Este dispositivo",
+    "audioOwner": "El audio está aquí",
+    "nameLabel": "Nombre del dispositivo",
+    "moveUp": "Subir",
+    "moveDown": "Bajar",
+    "backupEnabled": "Respaldo automático permitido",
+    "allowBackup": "Permitir respaldo automático",
+    "forget": "Olvidar dispositivo",
+    "none": "No hay dispositivos activos registrados.",
+    "clearLearning": "Borrar el orden aprendido de dispositivos"
+  },
   "common": {
     "cancel": "Cancelar",
     "delete": "Eliminar",

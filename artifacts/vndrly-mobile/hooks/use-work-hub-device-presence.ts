@@ -13,6 +13,10 @@ function newConnectionId() {
   });
 }
 
+export async function nativeWorkHubDeviceIdentity() {
+  return { deviceId: await getDeviceId(), connectionId: connectionId ?? (connectionId = newConnectionId()) };
+}
+
 export type NativeWorkHubSurface = {
   path: string;
   entityType: string | null;
@@ -50,6 +54,7 @@ export function useWorkHubDevicePresence(path: string, enabled: boolean) {
       if (!registered) {
         await apiFetch("/api/work-hub/devices/register", {
           method: "POST",
+          headers: { "x-work-hub-source": "ios" },
           body: JSON.stringify({
             deviceId,
             friendlyName: Platform.OS === "ios" ? "iPhone or iPad" : "Mobile device",
@@ -61,6 +66,7 @@ export function useWorkHubDevicePresence(path: string, enabled: boolean) {
       }
       await apiFetch(`/api/work-hub/devices/${deviceId}/heartbeat`, {
         method: "POST",
+        headers: { "x-work-hub-source": "ios" },
         body: JSON.stringify({
           connectionId: currentConnectionId,
           foreground: AppState.currentState === "active",

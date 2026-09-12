@@ -32,6 +32,9 @@ function memoryStore(): DeviceCoordinatorStore {
     async listDevices(actor) {
       return [...devices.values()].filter(d => d.userId === actor.userId && d.owner.type === actor.owner.type && d.owner.id === actor.owner.id);
     },
+    async listOrganizationDevices(owner) {
+      return [...devices.values()].filter(d => d.owner.type === owner.type && d.owner.id === owner.id);
+    },
     async clearConnections(deviceId) { for (const [key, row] of connections) if (row.deviceId === deviceId) connections.delete(key); },
     async upsertConnection(input) {
       const key = `${input.deviceId}:${input.connectionId}`;
@@ -67,6 +70,16 @@ describe("Work Hub device coordinator", () => {
   it("cannot use another user's device", async () => {
     const device = await coordinator.registerDevice(vendorActor, { friendlyName: "Desktop", deviceClass: "desktop", capabilities: {} });
     await expect(coordinator.revokeDevice(otherUserActor, device.id)).rejects.toBeInstanceOf(WorkHubDeviceError);
+  });
+
+  it("lets an organization administrator boundary revoke only devices in that organization", async () => {
+    const own = await coordinator.registerDevice(vendorActor, { friendlyName: "Desktop", deviceClass: "desktop", capabilities: {} });
+    const colleague = await coordinator.registerDevice(otherUserActor, { friendlyName: "Phone", deviceClass: "phone", capabilities: {} });
+    const foreign = await coordinator.registerDevice(otherOrgActor, { friendlyName: "Other", deviceClass: "desktop", capabilities: {} });
+    expect(await coordinator.listOrganizationDevices(vendorActor)).toHaveLength(2);
+    await expect(coordinator.revokeOrganizationDevice(vendorActor, colleague.id)).resolves.toMatchObject({ revokedAt: expect.any(Date) });
+    await expect(coordinator.revokeOrganizationDevice(vendorActor, foreign.id)).rejects.toMatchObject({ code: "work_hub.not_found" });
+    expect((await coordinator.listDevices(vendorActor)).find(device => device.id === own.id)?.revokedAt).toBeNull();
   });
 
   it("expires stale surface context without revoking the device", async () => {

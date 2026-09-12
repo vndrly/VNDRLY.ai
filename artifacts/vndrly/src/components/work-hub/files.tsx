@@ -129,7 +129,8 @@ export function WorkHubFiles() {
         const operationId = pendingOperationId ?? createWorkHubOperationId();
         if (!pendingOperationId) setPendingOperationId(operationId);
         setReservationStarted(true);
-        return workHubRequest(`/meetings/${meetingSession.occurrenceId}/files/${operationId}`, { method: "PUT", headers: { "Content-Type": file.type || "application/octet-stream", "x-file-name": encodeURIComponent(file.name) }, body: file });
+        await workHubRequest(`/meetings/${meetingSession.occurrenceId}/files/${operationId}`, { method: "PUT", headers: { "Content-Type": file.type || "application/octet-stream", "x-file-name": encodeURIComponent(file.name) }, body: file });
+        return;
       }
       const digest = await crypto.subtle.digest(
         "SHA-256",

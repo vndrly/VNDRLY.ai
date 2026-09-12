@@ -13,6 +13,7 @@ import * as FileSystem from "expo-file-system/legacy";
 import { apiFetch, getApiBase } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 import { useColors } from "@/hooks/useColors";
+import { nativeWorkHubDeviceIdentity } from "@/hooks/use-work-hub-device-presence";
 import WorkHubAudioRoom from "@/components/WorkHubAudioRoom";
 type Call = {
   id: string;
@@ -66,6 +67,8 @@ export default function WorkHubCalls() {
     recordingTimer = useRef<ReturnType<typeof setTimeout> | null>(null),
     mounted = useRef(true),
     polling = useRef(false),
+    eventPolling = useRef(false),
+    eventCursor = useRef(0),
     clipUri = useRef<string | null>(null);
   const recordingCall = useRef("");
   const startedAt = useRef(0),
@@ -100,6 +103,69 @@ export default function WorkHubCalls() {
           : "Call operation failed. Please retry.",
       );
   };
+  const pollCallEvents = useCallback(async () => {
+    if (eventPolling.current) return;
+    eventPolling.current = true;
+    try {
+      const page = await apiFetch<{
+        gap: boolean;
+        latestSequence: number | null;
+        events: Array<{
+          sequence: number;
+          type: string;
+          payload: {
+            subject?: { type?: unknown; id?: unknown };
+          };
+        }>;
+      }>(
+        `/api/work-hub/events?transport=poll&after=${eventCursor.current}`,
+      );
+      if (typeof page.latestSequence === "number")
+        eventCursor.current = Math.max(
+          eventCursor.current,
+          page.latestSequence,
+        );
+      const transitions = new Map<string, string>();
+      let voicemailChanged = false;
+      for (const event of page.events) {
+        eventCursor.current = Math.max(eventCursor.current, event.sequence);
+        const subject = event.payload.subject;
+        if (subject?.type === "work_hub_voicemail") {
+          voicemailChanged = true;
+          continue;
+        }
+        if (
+          subject?.type !== "work_hub_call" ||
+          typeof subject.id !== "string"
+        )
+          continue;
+        const status =
+          event.type === "work_hub.call.answered"
+            ? "active"
+            : event.type === "work_hub.call.declined"
+              ? "declined"
+              : event.type === "work_hub.call.missed"
+                ? "missed"
+                : event.type === "work_hub.call.ended"
+                  ? "ended"
+                  : null;
+        if (status) transitions.set(subject.id, status);
+      }
+      if (page.gap || voicemailChanged || transitions.size > 0) {
+        if (transitions.size > 0 && mounted.current)
+          setCalls((rows) =>
+            rows.map((call) =>
+              transitions.has(call.id)
+                ? { ...call, status: transitions.get(call.id)! }
+                : call,
+            ),
+          );
+        await load();
+      }
+    } finally {
+      eventPolling.current = false;
+    }
+  }, [load]);
   const stopRecording = async () => {
     if (recordingTimer.current) clearTimeout(recordingTimer.current);
     recordingTimer.current = null;
@@ -133,10 +199,14 @@ export default function WorkHubCalls() {
   };
   useEffect(() => {
     mounted.current = true;
-    void load().catch(report);
+    void load().then(pollCallEvents).catch(report);
     const interval = setInterval(() => {
       if (AppState.currentState === "active") void load().catch(report);
     }, 4000);
+    const eventInterval = setInterval(() => {
+      if (AppState.currentState === "active")
+        void pollCallEvents().catch(report);
+    }, 1000);
     const subscription = AppState.addEventListener("change", (next) => {
       if (next !== "active") void stopRecording();
       else void load().catch(report);
@@ -144,6 +214,7 @@ export default function WorkHubCalls() {
     return () => {
       mounted.current = false;
       clearInterval(interval);
+      clearInterval(eventInterval);
       subscription.remove();
       if (recordingTimer.current) clearTimeout(recordingTimer.current);
       void microphone.current?.stopAndUnloadAsync().catch(() => undefined);
@@ -158,7 +229,7 @@ export default function WorkHubCalls() {
           idempotent: true,
         }).catch(() => undefined);
     };
-  }, [load]);
+  }, [load, pollCallEvents]);
   useEffect(() => {
     let current = true;
     const timer = setTimeout(() => {
@@ -216,10 +287,11 @@ export default function WorkHubCalls() {
       setBusy(false);
     }
   };
-  const respond = (call: Call, response: string) => {
+  const respond = async (call: Call, response: string) => {
     setSelected(call.id);
     setVoicemailCall(null);
-    void action(`/api/work-hub/calls/${call.id}/respond`, { action: response });
+    const identity = response === "accept" ? await nativeWorkHubDeviceIdentity() : null;
+    void action(`/api/work-hub/calls/${call.id}/respond`, { action: response, ...(identity ?? {}) });
   };
   const saveSettings = (next: Settings) =>
     action("/api/work-hub/calls/settings", next, "PUT");

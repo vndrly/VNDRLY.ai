@@ -1,4 +1,5 @@
 import { Router, raw, type IRouter } from "express";
+import { createHash, randomBytes } from "node:crypto";
 import { and, desc, eq, gt, inArray, isNull, lt, or, sql } from "drizzle-orm";
 import { z } from "zod/v4";
 import {
@@ -13,6 +14,7 @@ import {
   workHubMeetingsTable,
   workHubMeetingOccurrencesTable,
   workHubMeetingParticipantsTable,
+  workHubAudioLeasesTable,
 } from "@workspace/db";
 import { getSessionFromRequest, type SessionPayload } from "../lib/session";
 import { sendApiError } from "../lib/apiError";
@@ -26,9 +28,16 @@ import {
   callCanTransition,
   validVoicemailAudio,
 } from "../work-hub/calls-policy";
+import { deviceCoordinator, WorkHubDeviceError, type DeviceActor } from "../work-hub/device-coordinator";
 const router: IRouter = Router();
 type Actor = SessionPayload & { userId: number };
 const uuid = z.string().uuid();
+function ownerForActor(a: Actor) {
+  const id = a.vendorId ?? a.partnerId;
+  return id
+    ? { type: (a.vendorId ? "vendor" : "partner") as "vendor" | "partner", id }
+    : null;
+}
 async function authorizedContact(a: Actor, recipientUserId: number) {
   if (a.userId === recipientUserId) throw new WorkHubAccessError("forbidden");
   const orgType = a.vendorId ? "vendor" : "partner",
@@ -108,8 +117,8 @@ async function ownedCall(a: Actor, id: string) {
   if (!call) throw new WorkHubAccessError("not_found");
   return call;
 }
-async function expireCalls(userId: number) {
-  await db.transaction(async (tx) => {
+async function expireCalls(userId: number, owner: ReturnType<typeof ownerForActor>) {
+  const expired = await db.transaction(async (tx) => {
     const expired = await tx
       .update(workHubCallsTable)
       .set({ status: "missed", endedAt: new Date() })
@@ -134,7 +143,27 @@ async function expireCalls(userId: number) {
             expired.map((c) => c.occurrenceId),
           ),
         );
+    return expired;
   });
+  if (owner && expired.length > 0) {
+    await Promise.allSettled(expired.flatMap((call) =>
+      [call.callerUserId, call.recipientUserId].map((recipientUserId) =>
+        deviceCoordinator.publishUserEvent(
+          { userId: recipientUserId, owner },
+          {
+            eventType: "work_hub.call.missed",
+            payload: {
+              context: { kind: "meeting", id: call.occurrenceId },
+              subject: { type: "work_hub_call", id: call.id },
+              callId: call.id,
+              occurrenceId: call.occurrenceId,
+              status: "missed",
+            },
+          },
+        ),
+      ),
+    ));
+  }
 }
 router.use("/work-hub", async (req, res, next) => {
   if (!(await isWorkHubEnabled()))
@@ -186,7 +215,7 @@ router.put("/work-hub/calls/settings", async (req, res) => {
 });
 router.get("/work-hub/calls", async (req, res) => {
   const a = res.locals.callActor as Actor;
-  await expireCalls(a.userId);
+  await expireCalls(a.userId, ownerForActor(a));
   const filter = z
     .enum(["all", "incoming", "outgoing", "missed"])
     .parse(req.query.filter ?? "all");
@@ -241,8 +270,8 @@ router.post("/work-hub/calls", async (req, res) => {
     .object({ recipientUserId: z.number().int().positive(), operationId: uuid })
     .parse(req.body);
   const { owner, recipient } = await authorizedContact(a, p.recipientUserId);
-  await expireCalls(a.userId);
-  await expireCalls(p.recipientUserId);
+  await expireCalls(a.userId, owner);
+  await expireCalls(p.recipientUserId, owner);
   const result = await executeWorkHubCommand(
     { userId: a.userId, source: "web" },
     "call.create",
@@ -338,10 +367,17 @@ router.post("/work-hub/calls", async (req, res) => {
 });
 router.post("/work-hub/calls/:id/respond", async (req, res) => {
   const a = res.locals.callActor as Actor;
-  const { action } = z
-    .object({ action: z.enum(["accept", "decline", "end"]) })
+  const { action, deviceId, connectionId } = z
+    .object({ action: z.enum(["accept", "decline", "end"]), deviceId: uuid.optional(), connectionId: uuid.optional() })
+    .refine(value => (value.deviceId === undefined) === (value.connectionId === undefined), "Device and connection must be provided together")
     .parse(req.body);
-  await expireCalls(a.userId);
+  const owner = ownerForActor(a);
+  const deviceActor: DeviceActor | null = owner ? { userId: a.userId, owner } : null;
+  if (action === "accept" && deviceId && connectionId) {
+    if (!deviceActor) throw new WorkHubAccessError("forbidden");
+    await deviceCoordinator.requireDeviceConnection(deviceActor, deviceId, connectionId);
+  }
+  await expireCalls(a.userId, owner);
   await ownedCall(a, req.params.id);
   const result = await db.transaction(async (tx) => {
     const [call] = await tx
@@ -355,19 +391,20 @@ router.post("/work-hub/calls/:id/respond", async (req, res) => {
       call.status === "active" &&
       call.recipientUserId === a.userId
     )
-      return call;
-    if (action === "end" && call.endedAt) return call;
+      return { call, selectedAudioOwner: Boolean(deviceId && call.answeredDeviceId === deviceId && call.answeredConnectionId === connectionId), transitioned: false };
+    if (action === "end" && call.endedAt) return { call, selectedAudioOwner: false, transitioned: false };
     if (
       action === "decline" &&
       call.status === "declined" &&
       call.recipientUserId === a.userId
     )
-      return call;
+      return { call, selectedAudioOwner: false, transitioned: false };
     if (
       !callCanTransition(call.status, action, call.recipientUserId === a.userId)
     )
       throw new WorkHubAccessError("forbidden");
-    if (action === "accept")
+    let audioLease: { token: string; generation: number; expiresAt: Date } | undefined;
+    if (action === "accept") {
       await tx
         .insert(workHubMeetingParticipantsTable)
         .values([
@@ -385,7 +422,26 @@ router.post("/work-hub/calls/:id/respond", async (req, res) => {
           },
         ])
         .onConflictDoNothing();
-    else
+      if (deviceId) {
+        const token = randomBytes(32).toString("base64url");
+        const expiresAt = new Date(Date.now() + 20_000);
+        const [lease] = await tx.insert(workHubAudioLeasesTable).values({
+          occurrenceId: call.occurrenceId,
+          userId: a.userId,
+          deviceId,
+          generation: 1,
+          tokenHash: createHash("sha256").update(token).digest("hex"),
+          state: "active",
+          expiresAt,
+          pendingDeviceId: null,
+          offerTokenHash: null,
+          offerExpiresAt: null,
+          updatedAt: new Date(),
+        }).onConflictDoNothing().returning();
+        if (!lease) throw new WorkHubAccessError("forbidden");
+        audioLease = { token, generation: lease.generation, expiresAt: lease.expiresAt };
+      }
+    } else
       await tx
         .update(workHubMeetingOccurrencesTable)
         .set({
@@ -399,7 +455,7 @@ router.post("/work-hub/calls/:id/respond", async (req, res) => {
       .update(workHubCallsTable)
       .set(
         action === "accept"
-          ? { status: "active", answeredAt: new Date() }
+          ? { status: "active", answeredAt: new Date(), answeredDeviceId: deviceId ?? null, answeredConnectionId: connectionId ?? null }
           : {
               status:
                 action === "decline"
@@ -412,9 +468,27 @@ router.post("/work-hub/calls/:id/respond", async (req, res) => {
       )
       .where(eq(workHubCallsTable.id, call.id))
       .returning();
-    return updated;
+    return { call: updated, selectedAudioOwner: Boolean(deviceId), transitioned: true, ...(audioLease ? { audioLease } : {}) };
   });
-  return res.json(result);
+  if (result.transitioned && owner) {
+    const eventType = `work_hub.call.${action === "accept" ? "answered" : action === "decline" ? "declined" : "ended"}`;
+    const payload = {
+      context: { kind: "meeting", id: result.call.occurrenceId },
+      subject: { type: "work_hub_call", id: result.call.id },
+      callId: result.call.id,
+      occurrenceId: result.call.occurrenceId,
+      status: result.call.status,
+      answeringDeviceId: result.call.answeredDeviceId ?? null,
+    };
+    await Promise.allSettled([result.call.callerUserId, result.call.recipientUserId].map(userId => deviceCoordinator.publishUserEvent({ userId, owner }, { eventType, payload })));
+  }
+  return res.json({
+    ...result.call,
+    selectedAudioOwner: result.selectedAudioOwner,
+    answeringDeviceId: result.call.answeredDeviceId ?? null,
+    answeringConnectionId: result.call.answeredConnectionId ?? null,
+    ...(result.audioLease ? { audioLease: result.audioLease } : {}),
+  });
 });
 router.get("/work-hub/voicemail", async (_req, res) => {
   const rows = await db
@@ -502,7 +576,7 @@ router.post(
         });
       return { id, replayed: false };
     });
-    if (!result.replayed)
+    if (!result.replayed) {
       await notifyUsers([call.recipientUserId], {
         type: "work_hub_voicemail",
         category: "system",
@@ -511,6 +585,20 @@ router.post(
         link: "/work-hub/calls",
         dedupeKey: `voicemail:${id}`,
       });
+      const owner = ownerForActor(a);
+      if (owner)
+        await deviceCoordinator.publishUserEvent(
+          { userId: call.recipientUserId, owner },
+          {
+            eventType: "work_hub.voicemail.created",
+            payload: {
+              context: { kind: "meeting", id: call.occurrenceId },
+              subject: { type: "work_hub_voicemail", id },
+              callId: call.id,
+            },
+          },
+        );
+    }
     return res.status(result.replayed ? 200 : 201).json(result);
   },
 );
@@ -530,8 +618,9 @@ async function privateVoicemail(userId: number, id: string) {
   return row;
 }
 router.get("/work-hub/voicemail/:id/audio", async (req, res) => {
+  const a = res.locals.callActor as Actor;
   const row = await privateVoicemail(
-    res.locals.callActor.userId,
+    a.userId,
     req.params.id,
   );
   const object = await getObjectStore().getObject(row.storageKey);
@@ -542,22 +631,36 @@ router.get("/work-hub/voicemail/:id/audio", async (req, res) => {
       "work_hub.audio_missing",
       "Audio is unavailable",
     );
-  await db
+  const changed = await db
     .update(workHubVoicemailTable)
     .set({ readAt: new Date() })
-    .where(eq(workHubVoicemailTable.id, row.id));
+    .where(and(eq(workHubVoicemailTable.id, row.id), isNull(workHubVoicemailTable.readAt)))
+    .returning({ id: workHubVoicemailTable.id });
+  const owner = ownerForActor(a);
+  if (owner && changed[0])
+    await deviceCoordinator.publishUserEvent(
+      { userId: a.userId, owner },
+      {
+        eventType: "work_hub.voicemail.read",
+        payload: {
+          context: { kind: "meeting", id: row.callId },
+          subject: { type: "work_hub_voicemail", id: row.id },
+        },
+      },
+    );
   res.setHeader("Cache-Control", "private, no-store");
   res.setHeader("X-Content-Type-Options", "nosniff");
   return res.type(row.contentType).send(object.body);
 });
 router.delete("/work-hub/voicemail/:id", async (req, res) => {
+  const a = res.locals.callActor as Actor;
   const [row] = await db
     .select()
     .from(workHubVoicemailTable)
     .where(
       and(
         eq(workHubVoicemailTable.id, uuid.parse(req.params.id)),
-        eq(workHubVoicemailTable.recipientUserId, res.locals.callActor.userId),
+        eq(workHubVoicemailTable.recipientUserId, a.userId),
       ),
     )
     .limit(1);
@@ -567,6 +670,18 @@ router.delete("/work-hub/voicemail/:id", async (req, res) => {
     .update(workHubVoicemailTable)
     .set({ deletedAt: new Date() })
     .where(eq(workHubVoicemailTable.id, row.id));
+  const owner = ownerForActor(a);
+  if (owner)
+    await deviceCoordinator.publishUserEvent(
+      { userId: a.userId, owner },
+      {
+        eventType: "work_hub.voicemail.deleted",
+        payload: {
+          context: { kind: "meeting", id: row.callId },
+          subject: { type: "work_hub_voicemail", id: row.id },
+        },
+      },
+    );
   return res.json({ deleted: true });
 });
 router.post("/work-hub/voicemail/:id/transcribe", async (req, res) => {
@@ -609,6 +724,8 @@ router.use(
   ) => {
     if (error instanceof WorkHubAccessError)
       return sendApiError(res, error.status, error.code, error.message);
+    if (error instanceof WorkHubDeviceError)
+      return sendApiError(res, error.code === "work_hub.not_found" ? 404 : 400, error.code, error.message);
     if (error instanceof z.ZodError)
       return sendApiError(
         res,

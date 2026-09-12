@@ -1,4 +1,21 @@
 {
+  "workHubDevices": {
+    "title": "Devices and audio backup",
+    "description": "Name your devices, choose the preferred backup order, and decide which microphones may take over after a disconnect. Company administrators can revoke devices only inside this company.",
+    "failed": "Device settings could not be saved.",
+    "thisDevice": "This device",
+    "audioCapable": "Microphone available",
+    "audioOwner": "Audio is here",
+    "nameLabel": "Device name",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "backupEnabled": "Automatic backup allowed",
+    "allowBackup": "Allow automatic backup",
+    "forget": "Forget device",
+    "revoke": "Revoke company device",
+    "none": "No active devices are registered.",
+    "clearLearning": "Clear learned device order"
+  },
   "workHubExports": {
     "title": "Export your authorized records",
     "description": "Create a complete private export from your current company context. Choose when access to the finished download expires.",

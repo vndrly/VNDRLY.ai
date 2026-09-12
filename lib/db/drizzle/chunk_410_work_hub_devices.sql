@@ -20,3 +20,5 @@ ALTER TABLE "work_hub_meeting_participants" ADD COLUMN IF NOT EXISTS "host_mute_
 ALTER TABLE "work_hub_audio_leases" ADD COLUMN IF NOT EXISTS "pending_device_id" uuid REFERENCES "work_hub_devices"("id");
 ALTER TABLE "work_hub_audio_leases" ADD COLUMN IF NOT EXISTS "offer_token_hash" text;
 ALTER TABLE "work_hub_audio_leases" ADD COLUMN IF NOT EXISTS "offer_expires_at" timestamptz;
+ALTER TABLE "work_hub_calls" ADD COLUMN IF NOT EXISTS "answered_device_id" uuid REFERENCES "work_hub_devices"("id");
+ALTER TABLE "work_hub_calls" ADD COLUMN IF NOT EXISTS "answered_connection_id" uuid;

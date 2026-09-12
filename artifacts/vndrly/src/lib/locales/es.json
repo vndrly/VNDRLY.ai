@@ -1,4 +1,21 @@
 {
+  "workHubDevices": {
+    "title": "Dispositivos y respaldo de audio",
+    "description": "Asigne nombres a sus dispositivos, elija el orden de respaldo y decida qué micrófonos pueden tomar el control después de una desconexión. Los administradores de la empresa solo pueden revocar dispositivos dentro de esta empresa.",
+    "failed": "No se pudo guardar la configuración de dispositivos.",
+    "thisDevice": "Este dispositivo",
+    "audioCapable": "Micrófono disponible",
+    "audioOwner": "El audio está aquí",
+    "nameLabel": "Nombre del dispositivo",
+    "moveUp": "Subir",
+    "moveDown": "Bajar",
+    "backupEnabled": "Respaldo automático permitido",
+    "allowBackup": "Permitir respaldo automático",
+    "forget": "Olvidar dispositivo",
+    "revoke": "Revocar dispositivo de la empresa",
+    "none": "No hay dispositivos activos registrados.",
+    "clearLearning": "Borrar el orden aprendido de dispositivos"
+  },
   "workHubExports": {
     "title": "Exportar sus registros autorizados",
     "description": "Cree una exportación privada completa del contexto actual de su empresa. Elija cuándo vence el acceso a la descarga terminada.",

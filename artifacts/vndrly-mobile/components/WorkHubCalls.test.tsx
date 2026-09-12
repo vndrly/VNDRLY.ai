@@ -82,12 +82,65 @@ describe("mobile internal Calls", () => {
     expect(await screen.findByText("Jordan is calling")).toBeTruthy();
     expect(screen.queryByText("Audio room room1")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Accept" }));
-    await waitFor(() =>
-      expect(mocks.api).toHaveBeenCalledWith(
-        "/api/work-hub/calls/call1/respond",
-        expect.objectContaining({ body: JSON.stringify({ action: "accept" }) }),
-      ),
-    );
+    await waitFor(() => {
+      const request = mocks.api.mock.calls.find(
+        ([path]) => path === "/api/work-hub/calls/call1/respond",
+      );
+      expect(request?.[1]).toMatchObject({ method: "POST" });
+      expect(JSON.parse(String(request?.[1]?.body))).toEqual({
+        action: "accept",
+        deviceId: expect.stringMatching(/^[0-9a-f-]{36}$/),
+        connectionId: expect.stringMatching(/^[0-9a-f-]{36}$/),
+      });
+    });
+  });
+  it("stops a local ring when another device answers through the durable event cursor", async () => {
+    let callReads = 0;
+    let eventReads = 0;
+    mocks.api.mockImplementation(async (path: string) => {
+      if (path === "/api/work-hub/calls") {
+        callReads += 1;
+        return [
+          {
+            id: "call1",
+            occurrenceId: "room1",
+            incoming: true,
+            callerName: "Jordan",
+            status: callReads === 1 ? "ringing" : "active",
+            createdAt: new Date().toISOString(),
+          },
+        ];
+      }
+      if (path.startsWith("/api/work-hub/events?transport=poll")) {
+        eventReads += 1;
+        return {
+          gap: false,
+          latestSequence: 42,
+          events:
+            eventReads === 1
+              ? [
+                  {
+                    sequence: 42,
+                    type: "work_hub.call.answered",
+                    payload: {
+                      subject: { type: "work_hub_call", id: "call1" },
+                    },
+                    occurredAt: "2026-09-12T12:00:00.000Z",
+                  },
+                ]
+              : [],
+        };
+      }
+      return defaults(path);
+    });
+
+    render(<WorkHubCalls />);
+    await waitFor(() => {
+      expect(eventReads).toBeGreaterThan(0);
+      expect(callReads).toBeGreaterThan(1);
+      expect(screen.queryByText("Jordan is calling")).toBeNull();
+      expect(screen.getByText("Jordan · active")).toBeTruthy();
+    });
   });
   it("keeps playback credentials in headers, never the audio URL", async () => {
     mocks.api.mockImplementation(async (path: string) =>

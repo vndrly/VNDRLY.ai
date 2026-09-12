@@ -11,6 +11,25 @@ router.get("/work-hub/events", async (req, res): Promise<void> => {
   if (!session?.userId) { sendApiError(res, 401, "auth.unauthenticated", "Authentication required"); return; }
   const actor = await resolveActiveDeviceActor(req);
   if (!actor) { sendApiError(res, 404, "work_hub.not_found", "Not found"); return; }
+  if (req.query.transport === "poll") {
+    const after = Number(req.query.after ?? 0);
+    if (!Number.isSafeInteger(after) || after < 0) {
+      sendApiError(res, 400, "work_hub.invalid_cursor", "Invalid event cursor");
+      return;
+    }
+    const page = await eventsAfter(actor, after);
+    res.json({
+      gap: page.gap,
+      latestSequence: page.latestSequence,
+      events: page.events.map((event) => ({
+        sequence: event.sequence,
+        type: event.eventType,
+        payload: event.payload,
+        occurredAt: event.createdAt.toISOString(),
+      })),
+    });
+    return;
+  }
   res.setHeader("Content-Type", "text/event-stream"); res.setHeader("Cache-Control", "no-cache, no-transform"); res.setHeader("X-Accel-Buffering", "no");
   const lastEventHeader = req.header("Last-Event-ID"); const hasCursor = lastEventHeader !== undefined;
   const parsedLastSeen = Number(lastEventHeader); const lastSeen = Number.isSafeInteger(parsedLastSeen) && parsedLastSeen >= 0 ? parsedLastSeen : 0;

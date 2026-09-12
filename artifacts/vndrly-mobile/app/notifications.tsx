@@ -45,6 +45,7 @@ export default function NotificationsScreen() {
   const [selected, setSelected] = useState<NotificationRow | null>(null);
   const [sendToItem, setSendToItem] = useState<NotificationRow | null>(null);
   const [loadError, setLoadError] = useState<unknown>(null);
+  const notificationEventCursor = React.useRef(0);
   const { rateLimited, retryAfterSeconds } = useRateLimitGate(
     loadError,
     "notifications.rate_limited",
@@ -84,6 +85,29 @@ export default function NotificationsScreen() {
   useEffect(() => {
     if (rateLimited) return;
     load();
+  }, [load, rateLimited]);
+
+  useEffect(() => {
+    if (rateLimited) return;
+    let stopped = false;
+    const poll = async () => {
+      try {
+        const result = await apiFetch<{ currentSeq: number; changed: boolean }>(
+          `/api/notifications/events?transport=poll&after=${notificationEventCursor.current}`,
+        );
+        if (stopped) return;
+        notificationEventCursor.current = result.currentSeq;
+        if (result.changed) await load();
+      } catch {
+        // The normal focus refresh remains the fallback when live sync is unavailable.
+      }
+    };
+    void poll();
+    const timer = setInterval(() => void poll(), 5000);
+    return () => {
+      stopped = true;
+      clearInterval(timer);
+    };
   }, [load, rateLimited]);
 
   useFocusEffect(

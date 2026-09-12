@@ -114,6 +114,7 @@ export default function NotificationsBell() {
         }
       };
       es.addEventListener("notification.created", onCreated as EventListener);
+      es.addEventListener("notification.state_changed", refreshBell as EventListener);
       es.addEventListener("notification.hello", onHello as EventListener);
     } catch {
       es = null;

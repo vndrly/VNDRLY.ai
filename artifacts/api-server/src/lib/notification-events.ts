@@ -34,7 +34,17 @@ export type NotificationCreatedEvent = {
   createdAt: string;
 };
 
-export type NotificationEvent = NotificationCreatedEvent;
+export type NotificationStateChangedEvent = {
+  type: "notification.state_changed";
+  userId: number;
+  notificationId: number | null;
+  state: "read" | "unread" | "deleted" | "all_read";
+  changedAt: string;
+};
+
+export type NotificationEvent =
+  | NotificationCreatedEvent
+  | NotificationStateChangedEvent;
 
 // Subscribers receive events with a monotonically increasing `seq` attached
 // by the publisher (sourced from a Postgres sequence so it's globally
@@ -234,6 +244,25 @@ export function publishNotificationCreated(input: {
     link: input.link,
     createdAt: input.createdAt,
   };
+  publishNotificationEvent(ev);
+}
+
+export function publishNotificationStateChanged(input: {
+  userId: number;
+  notificationId: number | null;
+  state: NotificationStateChangedEvent["state"];
+  changedAt?: string;
+}): void {
+  publishNotificationEvent({
+    type: "notification.state_changed",
+    userId: input.userId,
+    notificationId: input.notificationId,
+    state: input.state,
+    changedAt: input.changedAt ?? new Date().toISOString(),
+  });
+}
+
+function publishNotificationEvent(ev: NotificationEvent): void {
   void publishViaPool(ev).catch((err) => {
     if (!(err instanceof PoolUnavailableError)) {
       logger.error(

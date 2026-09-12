@@ -1,4 +1,19 @@
 {
+  "workHubDevices": {
+    "title": "Devices and audio backup",
+    "descriptionMobile": "Choose which of your devices may automatically take audio after a disconnect and set their preferred order.",
+    "failed": "Device settings could not be saved.",
+    "thisDevice": "This device",
+    "audioOwner": "Audio is here",
+    "nameLabel": "Device name",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "backupEnabled": "Automatic backup allowed",
+    "allowBackup": "Allow automatic backup",
+    "forget": "Forget device",
+    "none": "No active devices are registered.",
+    "clearLearning": "Clear learned device order"
+  },
   "common": {
     "cancel": "Cancel",
     "delete": "Delete",
