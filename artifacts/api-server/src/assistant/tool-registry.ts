@@ -1,5 +1,9 @@
 import type { Anthropic } from "@workspace/integrations-anthropic-ai/sdk";
 import { DEEP_LINK_SCREENS, TOOLS } from "./tools";
+import {
+  WORK_HUB_TOOL_METADATA,
+  type WorkHubToolFamily,
+} from "./work-hub-tools";
 
 export type AskVRole = "admin" | "partner" | "vendor" | "field_employee" | "any";
 export type AskVConfirmationMode = "none" | "required";
@@ -29,6 +33,8 @@ export interface AskVToolDefinition {
   execution?: AskVExecution;
   pack?: AskVToolPack;
   auditTarget?: AskVAuditTarget;
+  workHubFamily?: WorkHubToolFamily;
+  companyAdminOnly?: boolean;
 }
 
 export interface OpenAIRealtimeTool {
@@ -63,6 +69,20 @@ const DEFAULT_METADATA: ToolMetadata = {
 };
 
 const TOOL_METADATA: Record<string, Partial<ToolMetadata>> = {
+  ...Object.fromEntries(
+    Object.entries(WORK_HUB_TOOL_METADATA).map(([name, metadata]) => [
+      name,
+      {
+        mutating: metadata.mutating,
+        confirmation: metadata.mutating ? "required" : "none",
+        risk: metadata.mutating ? "high" : "read",
+        pack: "screen",
+        auditTarget: "work_hub",
+        workHubFamily: metadata.family,
+        companyAdminOnly: metadata.companyAdminOnly,
+      },
+    ]),
+  ),
   query_work_hub: { auditTarget: "work_hub" },
   propose_work_hub_action: { mutating: true, confirmation: "required", risk: "high", auditTarget: "work_hub" },
   lookup_user_progress: { auditTarget: "onboarding" },
@@ -177,6 +197,8 @@ export const ASK_V_TOOL_REGISTRY: AskVToolDefinition[] = TOOLS.map((tool) => {
     execution: metadata.execution,
     pack: metadata.pack,
     auditTarget: metadata.auditTarget,
+    workHubFamily: metadata.workHubFamily,
+    companyAdminOnly: metadata.companyAdminOnly,
   };
 });
 

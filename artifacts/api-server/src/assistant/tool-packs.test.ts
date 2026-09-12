@@ -105,4 +105,26 @@ describe("AskV realtime tool packs", () => {
     }).map((tool) => tool.name);
     expect(names).not.toContain("query_invoices");
   });
+
+  it("keeps each page-aware Work Hub voice pack bounded", () => {
+    for (const path of [
+      "/work-hub/activity",
+      "/work-hub/chat",
+      "/work-hub/calendar",
+      "/work-hub/calls",
+      "/work-hub/files",
+      "/work-hub/tasks",
+      "/work-hub/meetings",
+      "/work-hub/billing",
+      "/work-hub/administration",
+    ]) {
+      const tools = toolsForRealtime({
+        role: "vendor",
+        membershipRole: "admin",
+        path,
+      });
+      expect(tools.length, path).toBeLessThanOrEqual(35);
+      expect(tools.map((tool) => tool.name), path).toContain("select_tool_pack");
+    }
+  });
 });

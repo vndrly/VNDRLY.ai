@@ -10,6 +10,7 @@
 // this module is schema-only.
 
 import type { Anthropic } from "@workspace/integrations-anthropic-ai/sdk";
+import { WORK_HUB_TOOLS } from "./work-hub-tools";
 
 // Screens the model is allowed to deep-link to. Mirrored in the
 // route's `buildDeepLink` switch and in the per-role allow lists in
@@ -73,6 +74,7 @@ export const TOOLS: Anthropic.Tool[] = [
     description: "Propose a consequential Work Hub write. Every call requires explicit user confirmation before execution, an idempotency operation id, expected version where applicable, and server-side authorization/audit.",
     input_schema: { type: "object", properties: { action: { type: "string", enum: ["create_channel", "invite_channel_member", "post_message", "create_note", "create_task", "update_task", "create_shift", "claim_shift", "create_meeting", "publish_announcement", "acknowledge_announcement", "publish_form_template", "publish_checklist_template", "assign_form", "assign_checklist", "submit_form", "respond_checklist", "request_approval", "decide_approval"] }, operationId: { type: "string", format: "uuid" }, owner: { type: "object", properties: { type: { type: "string", enum: ["vendor", "partner"] }, id: { type: "number" } }, required: ["type", "id"], additionalProperties: false }, context: { type: "object", properties: { kind: { type: "string", enum: ["organization", "ticket", "site", "crew", "gate", "project", "channel", "meeting"] }, id: { anyOf: [{ type: "number" }, { type: "string" }] } }, required: ["kind", "id"], additionalProperties: false }, expectedVersion: { anyOf: [{ type: "number" }, { type: "null" }] }, targetId: { type: "string" }, payload: { type: "object" } }, required: ["action", "operationId", "owner", "context", "payload"], additionalProperties: false },
   },
+  ...WORK_HUB_TOOLS,
   {
     name: "lookup_user_progress",
     description:

@@ -4,6 +4,10 @@ import {
   type AskVRole,
   type AskVToolDefinition,
 } from "./tool-registry";
+import {
+  WORK_HUB_TOOL_NAMES_BY_FAMILY,
+  type WorkHubToolFamily,
+} from "./work-hub-tools";
 
 const CORE_TOOLS = new Set([
   "select_tool_pack",
@@ -165,8 +169,22 @@ export function voiceWorkflowForPath(path: string): VoiceWorkflow {
   return "auto";
 }
 
+export function workHubToolFamilyForPath(path: string): WorkHubToolFamily {
+  const module = path.toLowerCase().match(/\/work-hub\/([^/?#]+)/)?.[1] ?? "activity";
+  if (["chat", "channels", "crews"].includes(module)) return "collaboration";
+  if (["calendar"].includes(module)) return "scheduling";
+  if (["calls", "voicemail"].includes(module)) return "calls";
+  if (["files", "notes"].includes(module)) return "files";
+  if (["tasks", "forms"].includes(module)) return "tasks";
+  if (["meetings"].includes(module)) return "meetings";
+  if (["billing", "payroll", "finance"].includes(module)) return "finance";
+  if (["administration", "admin", "import-export"].includes(module)) return "administration";
+  return "command";
+}
+
 export function toolsForRealtime(args: {
   role: AskVRole | string | null | undefined;
+  membershipRole?: string | null;
   path?: string | null;
   entityId?: number | null;
   workflow?: VoiceWorkflow;
@@ -181,8 +199,21 @@ export function toolsForRealtime(args: {
       : voiceWorkflowForPath(path);
   if (workflow !== "auto")
     for (const name of WORKFLOW_TOOLS[workflow]) allowed.add(name);
+  const inWorkHub = /\/work-hub(?:\/|$)/i.test(path);
+  if (inWorkHub) {
+    allowed.delete("query_work_hub");
+    allowed.delete("propose_work_hub_action");
+    for (const name of WORK_HUB_TOOL_NAMES_BY_FAMILY[workHubToolFamilyForPath(path)]) {
+      allowed.add(name);
+    }
+  }
   return ASK_V_TOOL_REGISTRY.filter((tool) => {
     if (!allowed.has(tool.name)) return false;
+    if (
+      tool.companyAdminOnly &&
+      role !== "admin" &&
+      args.membershipRole !== "admin"
+    ) return false;
     return tool.roles.includes(role) || tool.roles.includes("any");
   });
 }
