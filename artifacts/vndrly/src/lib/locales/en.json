@@ -7,6 +7,7 @@
     "audioCapable": "Microphone available",
     "audioOwner": "Audio is here",
     "nameLabel": "Device name",
+    "save": "Save",
     "moveUp": "Move up",
     "moveDown": "Move down",
     "backupEnabled": "Automatic backup allowed",

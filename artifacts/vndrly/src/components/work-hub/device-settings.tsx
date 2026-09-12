@@ -90,7 +90,7 @@ export default function WorkHubDeviceSettings() {
               </div>
               {selfOwned && <div className="mt-3 flex flex-wrap items-center gap-2">
                 <Input className="h-9 min-w-44 flex-1" aria-label={t("workHubDevices.nameLabel")} value={names[device.id] ?? device.friendlyName} onChange={(event) => setNames((current) => ({ ...current, [device.id]: event.target.value }))} />
-                <BrandPillButton disabled={change.isPending} onClick={() => change.mutate({ path: `/devices/${device.id}`, method: "PATCH", body: { friendlyName: names[device.id] ?? device.friendlyName } })}>{t("common.save")}</BrandPillButton>
+                <BrandPillButton disabled={change.isPending} onClick={() => change.mutate({ path: `/devices/${device.id}`, method: "PATCH", body: { friendlyName: names[device.id] ?? device.friendlyName } })}>{t("workHubDevices.save")}</BrandPillButton>
                 <BrandPillButton disabled={change.isPending} onClick={() => move(device.id, -1)}>{t("workHubDevices.moveUp")}</BrandPillButton>
                 <BrandPillButton disabled={change.isPending} onClick={() => move(device.id, 1)}>{t("workHubDevices.moveDown")}</BrandPillButton>
                 <BrandPillButton tone={automatic ? "brand" : "image"} disabled={change.isPending || !device.capabilities.microphone} aria-pressed={automatic} onClick={() => toggleBackup(device.id)}>{automatic ? t("workHubDevices.backupEnabled") : t("workHubDevices.allowBackup")}</BrandPillButton>

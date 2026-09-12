@@ -7,6 +7,7 @@
     "audioCapable": "Micrófono disponible",
     "audioOwner": "El audio está aquí",
     "nameLabel": "Nombre del dispositivo",
+    "save": "Guardar",
     "moveUp": "Subir",
     "moveDown": "Bajar",
     "backupEnabled": "Respaldo automático permitido",

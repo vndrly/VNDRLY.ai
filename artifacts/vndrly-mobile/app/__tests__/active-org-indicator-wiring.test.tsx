@@ -130,6 +130,19 @@ vi.mock("expo-splash-screen", () => ({
   hideAsync: vi.fn(() => Promise.resolve()),
 }));
 
+vi.mock("expo-av", () => ({
+  Audio: {},
+  Video: () => null,
+  ResizeMode: {},
+}));
+
+vi.mock("expo", () => ({
+  registerRootComponent: () => undefined,
+  disableErrorHandling: () => undefined,
+  requireOptionalNativeModule: () => null,
+  requireNativeModule: () => ({}),
+}));
+
 vi.mock("@expo-google-fonts/inter", () => ({
   useFonts: () => [true, null],
   Inter_400Regular: "Inter_400Regular",
