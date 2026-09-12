@@ -22,6 +22,7 @@ export type ClientOptions = {
   fetcher?: typeof fetch;
   transport?: MeetingStreamingTransport;
   retryDelay?: (signal: AbortSignal) => Promise<void>;
+  authorization?: () => Record<string, unknown> | null;
 };
 
 const CLOSE_TIMEOUT_MS = 1_000;
@@ -86,6 +87,7 @@ export class MeetingStreamingClient {
   private readonly fetcher?: typeof fetch;
   private readonly transport?: MeetingStreamingTransport;
   private readonly retryDelay: (signal: AbortSignal) => Promise<void>;
+  private readonly authorization?: () => Record<string, unknown> | null;
   private handle?: StreamHandle;
   private acknowledged = -1;
   private readonly persisted = new Set<number>();
@@ -100,6 +102,7 @@ export class MeetingStreamingClient {
     this.fetcher = options.transport ? undefined : (options.fetcher ?? fetch);
     this.transport = options.transport;
     this.retryDelay = options.retryDelay ?? defaultRetryDelay;
+    this.authorization = options.authorization;
   }
 
   private path(suffix = "") {
@@ -107,12 +110,15 @@ export class MeetingStreamingClient {
   }
 
   private async send<T>(path: string, body: string, signal: AbortSignal): Promise<T> {
-    if (this.transport) return this.transport<T>(path, body, signal);
+    const authorization = this.authorization?.();
+    if (this.authorization && !authorization) throw new Error("Current meeting audio ownership is required.");
+    const authorizedBody = authorization ? JSON.stringify({ ...JSON.parse(body), ...authorization }) : body;
+    if (this.transport) return this.transport<T>(path, authorizedBody, signal);
     const response = await this.fetcher!(path, {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body,
+      body: authorizedBody,
       signal,
     });
     if (!response.ok) {

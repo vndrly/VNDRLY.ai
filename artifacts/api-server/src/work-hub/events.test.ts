@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { createWorkHubEventBus } from "./events";
+import { createWorkHubEventBus, fanOutPersistedWorkHubEvent } from "./events";
 
 describe("Work Hub event bus", () => {
   it("delivers events only to their named recipient and advances sequence", () => {
     const bus = createWorkHubEventBus();
     const user45: number[] = [];
     const user46: number[] = [];
-    bus.subscribe(45, (event) => user45.push(event.sequence));
-    bus.subscribe(46, (event) => user46.push(event.sequence));
+    bus.subscribe({ userId: 45, owner: { type: "vendor", id: 12 } }, (event) => user45.push(event.sequence));
+    bus.subscribe({ userId: 46, owner: { type: "vendor", id: 12 } }, (event) => user46.push(event.sequence));
     const event = bus.publish({
       type: "work_hub.message.created",
       owner: { type: "vendor", id: 12 },
@@ -21,10 +21,23 @@ describe("Work Hub event bus", () => {
     expect(bus.currentSequence()).toBe(1);
   });
 
+  it("does not deliver another company's event to the same user", () => {
+    const bus = createWorkHubEventBus();
+    const received: number[] = [];
+    bus.subscribe({ userId: 45, owner: { type: "vendor", id: 12 } }, event => received.push(event.sequence));
+    bus.publish({ type: "work_hub.task.updated", owner: { type: "vendor", id: 13 }, context: { kind: "organization", id: 13 }, subject: { type: "task", id: 9 }, recipientUserId: 45 });
+    expect(received).toEqual([]);
+  });
+
+  it("preserves content-free Ask V invalidation payloads", () => {
+    const event = fanOutPersistedWorkHubEvent({ sequence: 8, userId: 45, owner: { type: "vendor", id: 12 }, eventType: "work_hub.askv.conversation_changed", payload: { conversationId: 91, context: { kind: "organization", id: 12 }, subject: { type: "assistant_conversation", id: 91 } }, createdAt: new Date("2026-09-12T12:00:00.000Z") });
+    expect(event.payload).toEqual(expect.objectContaining({ conversationId: 91 }));
+  });
+
   it("unsubscribes without affecting another recipient", () => {
     const bus = createWorkHubEventBus();
     let deliveries = 0;
-    const unsubscribe = bus.subscribe(45, () => deliveries++);
+    const unsubscribe = bus.subscribe({ userId: 45, owner: { type: "vendor", id: 12 } }, () => deliveries++);
     unsubscribe();
     bus.publish({
       type: "work_hub.task.updated", owner: { type: "vendor", id: 12 },

@@ -13,6 +13,7 @@ export const workHubEventEnvelopeSchema = z.object({
   }),
   recipientUserId: z.number().int().positive(),
   occurredAt: z.iso.datetime(),
+  payload: z.record(z.string(), z.unknown()).optional(),
 });
 
 export type WorkHubEventEnvelope = z.infer<typeof workHubEventEnvelopeSchema>;

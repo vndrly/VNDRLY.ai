@@ -17,7 +17,7 @@ NS_ASSUME_NONNULL_BEGIN
                            iceServers:(NSArray<NSDictionary *> *)iceServers
                              delegate:(id<WorkHubMeetingSessionDelegate>)delegate NS_DESIGNATED_INITIALIZER;
 - (instancetype)init NS_UNAVAILABLE;
-- (void)setMuted:(BOOL)muted;
+- (void)setMuted:(BOOL)muted leaseGeneration:(uint64_t)leaseGeneration leaseExpiresAtMs:(double)leaseExpiresAtMs;
 - (void)setTranscriptionEnabled:(BOOL)enabled policyRevision:(uint64_t)policyRevision;
 - (void)acknowledgeSequence:(uint64_t)sequence;
 - (void)createOfferForPeerUserId:(NSInteger)peerUserId;

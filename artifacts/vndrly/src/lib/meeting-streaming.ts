@@ -16,6 +16,7 @@ type StreamingCaptureOptions = {
   startedAtMs: number;
   signal: AbortSignal;
   onError?: (error: unknown) => void;
+  authorization: () => Record<string, unknown> | null;
   createAudioContext?: () => AudioContext;
   createWorkletNode?: (context: AudioContext) => AudioWorkletNode;
 };
@@ -23,7 +24,7 @@ type StreamingCaptureOptions = {
 /** Processes the already-open call microphone; it never acquires or stops call tracks. */
 export async function startMeetingStreamingCapture(options: StreamingCaptureOptions) {
   options.signal.throwIfAborted();
-  const client = new MeetingStreamingClient(options.occurrenceId);
+  const client = new MeetingStreamingClient(options.occurrenceId, { authorization: options.authorization });
   const controller = new AbortController();
   let context: AudioContext | undefined;
   let source: MediaStreamAudioSourceNode | undefined;

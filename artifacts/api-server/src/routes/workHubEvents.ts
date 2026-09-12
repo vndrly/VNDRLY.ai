@@ -36,7 +36,7 @@ router.get("/work-hub/events", async (req, res): Promise<void> => {
   const queued: Parameters<Parameters<typeof workHubEventBus.subscribe>[1]>[0][] = [];
   let catchingUp = true;
   const writeEvent = (event: Parameters<Parameters<typeof workHubEventBus.subscribe>[1]>[0]) => res.write(`${isPersistedWorkHubEvent(event) ? `id: ${event.sequence}\n` : ""}event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`);
-  const unsubscribe = workHubEventBus.subscribe(session.userId, (event) => { if (catchingUp) queued.push(event); else writeEvent(event); });
+  const unsubscribe = workHubEventBus.subscribe(actor, (event) => { if (catchingUp) queued.push(event); else writeEvent(event); });
   const catchUp = await eventsAfter(actor, hasCursor ? lastSeen : Number.MAX_SAFE_INTEGER);
   res.write(`event: work_hub.hello\ndata: ${JSON.stringify({ currentSequence: catchUp.latestSequence ?? workHubEventBus.currentSequence(), lastSeenSequence: lastSeen || null, gap: catchUp.gap })}\n\n`);
   if (!catchUp.gap) for (const event of catchUp.events) res.write(`id: ${event.sequence}\nevent: ${event.eventType}\ndata: ${JSON.stringify(event)}\n\n`);

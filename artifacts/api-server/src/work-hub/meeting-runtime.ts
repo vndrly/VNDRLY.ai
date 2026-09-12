@@ -49,6 +49,20 @@ export function meetingDeviceConnections(runtime: MeetingRuntime): Record<string
   }));
 }
 
+/** Selects exactly one live audio endpoint per remote person. The active
+ * microphone owner wins; otherwise the freshest companion is deterministic. */
+export function meetingAudioPeerConnections(runtime: MeetingRuntime, selfConnectionId: string, activeAudioDeviceByUser: Map<number, string>, now = Date.now()) {
+  const grouped = new Map<number, MeetingDevicePresence[]>();
+  for (const value of Object.values(meetingDeviceConnections(runtime))) {
+    if (value.connectionId === selfConnectionId || now - value.seenAt >= 30_000) continue;
+    const entries = grouped.get(value.userId) ?? []; entries.push(value); grouped.set(value.userId, entries);
+  }
+  return [...grouped.values()].map(entries => {
+    const audioDeviceId = activeAudioDeviceByUser.get(entries[0]!.userId);
+    return entries.find(value => value.deviceId === audioDeviceId) ?? entries.sort((left, right) => right.seenAt - left.seenAt || left.connectionId.localeCompare(right.connectionId))[0]!;
+  });
+}
+
 function legacyPresenceProjection(connections: Record<string, MeetingDevicePresence>): Record<string, MeetingPresence> {
   const projected: Record<string, MeetingPresence> = {};
   for (const value of Object.values(connections)) {

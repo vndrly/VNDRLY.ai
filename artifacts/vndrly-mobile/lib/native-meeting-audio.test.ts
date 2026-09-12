@@ -91,6 +91,16 @@ describe("native meeting audio adapter", () => {
     expect(stream.open).not.toHaveBeenCalled();
   });
 
+  it("never enables the native RTP track without a server lease generation", async () => {
+    const stream = streamingClient();
+    const session = createNativeMeetingAudioSession({ occurrenceId: "room", generation: 8, streamingClient: stream as any })!;
+    await session.start({ sourceId: "track-8", iceServers: [] });
+    await expect(session.setMuted(false)).rejects.toThrow(/ownership/i);
+    expect(env.native.setMuted).not.toHaveBeenCalled();
+    await session.setMuted(false, 12, "2026-09-09T14:06:00.000Z");
+    expect(env.native.setMuted).toHaveBeenCalledWith({ generation: 8, muted: false, leaseGeneration: 12, leaseExpiresAtMs: Date.parse("2026-09-09T14:06:00.000Z") });
+  });
+
   it("opens the authenticated stream before allowing native PCM and persists each frame before returning its credit", async () => {
     const stream = streamingClient();
     const session = createNativeMeetingAudioSession({ occurrenceId: "room", generation: 3, streamingClient: stream as any })!;

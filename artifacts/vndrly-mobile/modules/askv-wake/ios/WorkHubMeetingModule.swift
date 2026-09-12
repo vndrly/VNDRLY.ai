@@ -9,7 +9,7 @@ private struct WorkHubCreateOptions: Record {
   @Field var iceServers: [[String: Any]] = []
 }
 private struct WorkHubGenerationOptions: Record { @Field var generation: UInt64 = 0 }
-private struct WorkHubMuteOptions: Record { @Field var generation: UInt64 = 0; @Field var muted: Bool = true }
+private struct WorkHubMuteOptions: Record { @Field var generation: UInt64 = 0; @Field var muted: Bool = true; @Field var leaseGeneration: UInt64 = 0; @Field var leaseExpiresAtMs: Double = 0 }
 private struct WorkHubTranscriptionOptions: Record {
   @Field var generation: UInt64 = 0; @Field var enabled: Bool = false; @Field var policyRevision: UInt64 = 0
 }
@@ -35,7 +35,9 @@ public final class WorkHubMeetingModule: Module, WorkHubMeetingSessionDelegate {
       self.session = WorkHubMeetingSession(occurrenceId: options.occurrenceId, generation: options.generation,
         sourceId: options.sourceId, iceServers: options.iceServers, delegate: self)
     }.runOnQueue(.main)
-    AsyncFunction("setMuted") { (options: WorkHubMuteOptions) in if self.generation == options.generation { self.session?.setMuted(options.muted) } }.runOnQueue(.main)
+    AsyncFunction("setMuted") { (options: WorkHubMuteOptions) in
+      if self.generation == options.generation { self.session?.setMuted(options.muted, leaseGeneration: options.leaseGeneration, leaseExpiresAtMs: options.leaseExpiresAtMs) }
+    }.runOnQueue(.main)
     AsyncFunction("setTranscription") { (options: WorkHubTranscriptionOptions) in
       if self.generation == options.generation { self.session?.setTranscriptionEnabled(options.enabled, policyRevision: options.policyRevision) }
     }.runOnQueue(.main)

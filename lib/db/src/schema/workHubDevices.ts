@@ -78,7 +78,7 @@ export const workHubUserEventsTable = pgTable("work_hub_user_events", {
   eventType: text("event_type").notNull(),
   payload: jsonb("payload").$type<Record<string, unknown>>().notNull().default({}),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-}, t => ({ sequenceUnique: uniqueIndex("work_hub_user_events_sequence_unique").on(t.sequence), userOrgSequenceIdx: index("work_hub_user_events_user_org_sequence_idx").on(t.userId, t.ownerOrgType, t.ownerOrgId, t.sequence) }));
+}, t => ({ sequenceUnique: uniqueIndex("work_hub_user_events_sequence_unique").on(t.sequence), userOrgSequenceIdx: index("work_hub_user_events_user_org_sequence_idx").on(t.userId, t.ownerOrgType, t.ownerOrgId, t.sequence), createdAtIdx: index("work_hub_user_events_created_at_idx").on(t.createdAt) }));
 
 export const workHubMeetingSpeakRequestsTable = pgTable("work_hub_meeting_speak_requests", {
   id: uuid("id").primaryKey().defaultRandom(),

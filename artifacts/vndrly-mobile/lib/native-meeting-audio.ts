@@ -24,7 +24,7 @@ export type NativeMeetingSignal = {
 
 type NativeMeetingModule = {
   createSession(options: { occurrenceId: string; generation: number; sourceId: string; iceServers: unknown[] }): Promise<void>;
-  setMuted(options: { generation: number; muted: boolean }): Promise<void>;
+  setMuted(options: { generation: number; muted: boolean; leaseGeneration: number; leaseExpiresAtMs: number }): Promise<void>;
   setTranscription(options: { generation: number; enabled: boolean; policyRevision: number }): Promise<void>;
   acknowledgeFrame(options: { generation: number; sequence: number }): Promise<void>;
   createOffer(options: { generation: number; peerUserId: number }): Promise<void>;
@@ -38,7 +38,7 @@ type StreamingClient = ReturnType<typeof createMobileMeetingStreamingClient>;
 
 export type NativeMeetingAudioSession = {
   start(options: { sourceId: string; iceServers: unknown[] }): Promise<void>;
-  setMuted(muted: boolean): Promise<void>;
+  setMuted(muted: boolean, leaseGeneration?: number, leaseExpiresAt?: string): Promise<void>;
   setTranscription(enabled: boolean, policyRevision: number): Promise<void>;
   createOffer(peerUserId: number): Promise<void>;
   applySignal(peerUserId: number, kind: string, payload: unknown): Promise<void>;
@@ -49,6 +49,7 @@ export type NativeMeetingAudioSession = {
 export function createNativeMeetingAudioSession(options: {
   occurrenceId: string;
   generation: number;
+  audioAuthorization?: () => Record<string, unknown> | null;
   streamingClient?: StreamingClient;
   onSignal?: (signal: NativeMeetingSignal) => void;
   onError?: (code: string) => void;
@@ -64,7 +65,7 @@ export function createNativeMeetingAudioSession(options: {
     );
   }
 
-  const stream = options.streamingClient ?? createMobileMeetingStreamingClient(options.occurrenceId);
+  const stream = options.streamingClient ?? createMobileMeetingStreamingClient(options.occurrenceId, options.audioAuthorization ?? (() => null));
   const sessionController = new AbortController();
   let streamController: AbortController | null = null;
   const subscriptions: Array<{ remove(): void }> = [];
@@ -161,10 +162,13 @@ export function createNativeMeetingAudioSession(options: {
       if (!alive) throw Object.assign(new Error("Meeting audio stopped"), { name: "AbortError" });
       started = true;
     },
-    async setMuted(muted) {
+    async setMuted(muted, leaseGeneration = 0, leaseExpiresAt) {
       if (!alive || !started) return;
       if (muted && (transcription || streamController)) await this.setTranscription(false, 0);
-      await native!.setMuted({ generation: options.generation, muted });
+      if (!muted && (!Number.isSafeInteger(leaseGeneration) || leaseGeneration <= 0)) throw new Error("Current meeting audio ownership is required.");
+      const leaseExpiresAtMs = muted ? 0 : Date.parse(leaseExpiresAt ?? "");
+      if (!muted && !Number.isFinite(leaseExpiresAtMs)) throw new Error("Current meeting audio lease expiry is required.");
+      await native!.setMuted({ generation: options.generation, muted, leaseGeneration: muted ? 0 : leaseGeneration, leaseExpiresAtMs });
     },
     async setTranscription(enabled, policyRevision) {
       if (!alive || !started) return;

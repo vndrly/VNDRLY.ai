@@ -57,6 +57,46 @@ async function connect(result: { current: ReturnType<typeof useMeetingAudio> }) 
 }
 
 describe("consented meeting microphone transcription", () => {
+  it("fails closed immediately when renewal says audio ownership expired", async () => {
+    window.localStorage.setItem("vndrly.workHubDeviceId", "10000000-0000-4000-8000-000000000001");
+    boundary.request.mockImplementation(async (path: string, options?: RequestInit) => {
+      if (path.endsWith("/join")) return { userId: 4, startedAt: "2026-09-09T14:05:00Z", iceServers: [] };
+      if (path.endsWith("/audio-lease") && options?.method === "POST") return { token: "a".repeat(32), generation: 1, expiresAt: "2026-09-09T14:05:10Z" };
+      if (path.endsWith("/audio-lease") && options?.method === "PUT") throw new Error("Audio ownership expired or moved to another device");
+      if (path.includes("/audio-state")) return { presentUserIds: [4], peerConnections: [], recordingState: "off", audioOwnership: { deviceId: "10000000-0000-4000-8000-000000000001", generation: 1, active: true, expiresAt: "2026-09-09T14:05:10Z", pendingDeviceId: null }, automaticBackupDeviceId: null };
+      if (path.includes("/signals?")) return { sequence: 0, signals: [] };
+      return {};
+    });
+    const { result } = renderHook(() => useMeetingAudio("meeting", snapshot()));
+    await connect(result);
+    expect(track.enabled).toBe(true);
+    await act(async () => { await vi.advanceTimersByTimeAsync(9_600); });
+    expect(track.enabled).toBe(false);
+    expect(result.current.muted).toBe(true);
+  });
+
+  it("ignores signaling from a previous endpoint for the same participant", async () => {
+    const remote = vi.fn(async () => undefined);
+    vi.stubGlobal("RTCPeerConnection", class {
+      remoteDescription = null;
+      onicecandidate: unknown; ontrack: unknown; onconnectionstatechange: unknown;
+      connectionState = "new";
+      addTrack() {} close() {} async createOffer() { return { type: "offer", sdp: "offer" }; }
+      async createAnswer() { return { type: "answer", sdp: "answer" }; }
+      async setLocalDescription() {} async setRemoteDescription(value: unknown) { await remote(value); }
+      async addIceCandidate() {}
+    });
+    boundary.request.mockImplementation(async (path: string) => {
+      if (path.endsWith("/join")) return { userId: 4, startedAt: "2026-09-09T14:05:00Z", iceServers: [], peerConnections: [] };
+      if (path.includes("/audio-state")) return { presentUserIds: [4, 7], peerConnections: [{ userId: 7, deviceId: "new-device", connectionId: "new-connection" }], recordingState: "off", audioOwnership: null, automaticBackupDeviceId: null };
+      if (path.includes("/signals?")) return { sequence: 1, signals: [{ sequence: 1, fromUserId: 7, fromDeviceId: "old-connection", kind: "answer", payload: { type: "answer", sdp: "stale" } }] };
+      return {};
+    });
+    const { result } = renderHook(() => useMeetingAudio("meeting", snapshot()));
+    await act(async () => { await result.current.join(); await vi.advanceTimersByTimeAsync(1_200); });
+    expect(remote).not.toHaveBeenCalled();
+  });
+
   it("acquires the single-device audio lease before unmuting and releases it on mute", async () => {
     const { result } = renderHook(() => useMeetingAudio("meeting", snapshot()));
     await act(async () => { await result.current.join(); });
@@ -82,6 +122,29 @@ describe("consented meeting microphone transcription", () => {
     expect(result.current.muted).toBe(true);
     expect(track.enabled).toBe(false);
     expect(result.current.error).toMatch(/another device/i);
+  });
+  it("keeps the microphone off and releases a lease if Cancel races failover activation", async () => {
+    window.localStorage.setItem("vndrly.workHubDeviceId", "10000000-0000-4000-8000-000000000001");
+    let finishActivation!: (lease: { token: string; generation: number; expiresAt: string }) => void;
+    const activation = new Promise<{ token: string; generation: number; expiresAt: string }>(resolve => { finishActivation = resolve; });
+    boundary.request.mockImplementation(async (path: string, options?: RequestInit) => {
+      if (path.endsWith("/join")) return { userId: 4, startedAt: "2026-09-09T14:05:00Z", iceServers: [], peerConnections: [] };
+      if (path.includes("/audio-state")) return { presentUserIds: [4], peerConnections: [], recordingState: "off", audioOwnership: { deviceId: "20000000-0000-4000-8000-000000000001", generation: 5, active: false, expiresAt: "2026-09-09T14:05:00Z", pendingDeviceId: null }, automaticBackupDeviceId: "10000000-0000-4000-8000-000000000001" };
+      if (path.endsWith("/audio-failover/prepare")) return { expectedGeneration: 5, readyAt: new Date().toISOString() };
+      if (path.endsWith("/audio-failover/activate")) return activation;
+      if (path.includes("/signals?")) return { sequence: 0, signals: [] };
+      return {};
+    });
+    const { result } = renderHook(() => useMeetingAudio("meeting", snapshot()));
+    await act(async () => { await result.current.join(); });
+    act(() => { vi.advanceTimersByTime(1200); });
+    await act(async () => { for (let i = 0; i < 10; i++) await Promise.resolve(); });
+    expect(boundary.request.mock.calls.some(([path]) => path.endsWith("/audio-failover/activate"))).toBe(true);
+    act(() => { result.current.cancelFailover(); });
+    await act(async () => { finishActivation({ token: "b".repeat(32), generation: 6, expiresAt: "2026-09-09T14:06:00Z" }); for (let i = 0; i < 10; i++) await Promise.resolve(); });
+    expect(track.enabled).toBe(false);
+    expect(result.current.muted).toBe(true);
+    expect(boundary.request.mock.calls.some(([path, options]) => path.endsWith("/audio-lease") && options?.method === "DELETE" && String(options.body).includes('"generation":6'))).toBe(true);
   });
   it("selects authenticated streaming capture on the same microphone without opening native recording", async () => {
     const data = snapshot(); data.streamingCaptureAvailable = true;
@@ -144,7 +207,7 @@ describe("consented meeting microphone transcription", () => {
     const { result } = renderHook(() => useMeetingAudio("meeting", snapshot()));
     await connect(result);
     await act(async () => { await vi.advanceTimersByTimeAsync(15_000); });
-    expect(boundary.transcribe).toHaveBeenCalledWith("meeting", expect.any(Blob), expect.any(AbortSignal));
+    expect(boundary.transcribe).toHaveBeenCalledWith("meeting", expect.any(Blob), expect.any(AbortSignal), expect.objectContaining({ token: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", generation: 1 }));
     expect(boundary.request).toHaveBeenCalledWith("/meetings/meeting/transcript", expect.objectContaining({ method: "POST", body: JSON.stringify({ id: "97dc3845-2360-48f7-b8ea-8a5c6611ab92", text: "Check the north gate.", startsAtMs: 300_000, endsAtMs: 315_000 }) }));
     expect(boundary.request.mock.calls.some(([path]) => path.endsWith("/audio-chunks"))).toBe(false);
   });

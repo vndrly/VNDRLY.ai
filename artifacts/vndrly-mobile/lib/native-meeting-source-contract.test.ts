@@ -94,6 +94,14 @@ describe("native meeting source safety contracts", () => {
     expect(meetingModule).not.toMatch(/Function\("invalidateSession"\)[^\n]*runOnQueue/);
   });
 
+  it("expires native RTP on the native queue using the exact server lease generation", () => {
+    expect(meetingModule).toContain("leaseExpiresAtMs");
+    expect(session).toContain("leaseExpiresAtMs");
+    expect(session).toContain("dispatch_after");
+    expect(session).toContain("_audioLeaseExpiryEpoch");
+    expect(session).toMatch(/expiryEpoch == self->_audioLeaseExpiryEpoch[\s\S]*?_audioLeaseGeneration == leaseGeneration[\s\S]*?_track\.isEnabled = NO/);
+  });
+
   it("bounds queued audio to at most half a second at the actual input rate", () => {
     expect(encoder).toContain("(double)frameCount * 1000000000.0 / sampleRate");
     expect(encoder).toContain("kMaxQueuedNanos = 500000000");

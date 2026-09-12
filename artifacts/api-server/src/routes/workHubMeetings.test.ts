@@ -14,6 +14,8 @@ const mocks = vi.hoisted(() => ({
   getObject: vi.fn(),
   nativeAvailable: vi.fn(),
   nativeTranscribe: vi.fn(),
+  validateLease: vi.fn(),
+  audioState: vi.fn(),
   answerQuestion: vi.fn(),
   returnInserted: false,
   transactionDepth: 0,
@@ -26,6 +28,7 @@ vi.mock("../lib/objectStorage", () => ({ ObjectStorageService: class { getStored
 vi.mock("../work-hub/feature-access", () => ({ isWorkHubEnabled: async () => true }));
 vi.mock("./notifications", () => ({ notifyUsers: vi.fn() }));
 vi.mock("../work-hub/native-transcription", () => ({ nativeTranscriptionAvailable: mocks.nativeAvailable, transcribeNativeAudio: mocks.nativeTranscribe }));
+vi.mock("../work-hub/audio-lease-database", () => ({ audioLeaseService: { validate: mocks.validateLease, state: mocks.audioState } }));
 vi.mock("../work-hub/meeting-answer", () => ({ answerMeetingQuestion: mocks.answerQuestion }));
 vi.mock("@workspace/db", async () => {
   const schema = await vi.importActual("@workspace/db/schema");
@@ -51,6 +54,7 @@ import operations from "./workHubOperations";
 
 const meetingId = "17795fa1-bb5f-4abc-a5f8-7e9b33a0ea01";
 const messageId = "17795fa1-bb5f-4abc-a5f8-7e9b33a0ea02";
+const captureAuthorization = { token: "a".repeat(32), generation: 1 };
 const host = { id: "host", userId: 1, role: "host", removedAt: null, muted: true, hostMutedAt: null, hostMutedById: null, hostMuteGeneration: 0 };
 const guest = { id: "guest", userId: 2, role: "participant", removedAt: null, muted: true, hostMutedAt: null, hostMutedById: null, hostMuteGeneration: 0 };
 function seed(options: { removed?: boolean; guestRemoved?: boolean; ended?: boolean; invited?: boolean; muted?: boolean; runtime?: Record<string, unknown>; actorRole?: string; guestHostMuted?: boolean } = {}) {
@@ -70,6 +74,8 @@ beforeEach(() => {
   mocks.results = []; mocks.predicates = []; mocks.executed = []; mocks.mutations = []; mocks.failCommit = false;
   mocks.audit.mockReset(); mocks.getObject.mockReset();
   mocks.nativeAvailable.mockReset().mockReturnValue(false); mocks.nativeTranscribe.mockReset(); mocks.transactionDepth = 0;
+  mocks.validateLease.mockReset().mockResolvedValue(true);
+  mocks.audioState.mockReset().mockResolvedValue(null);
   mocks.answerQuestion.mockReset(); mocks.returnInserted = false;
   vi.unstubAllEnvs();
 });
@@ -233,14 +239,19 @@ describe("source-bound meeting Ask V answers", () => {
 });
 
 describe("native meeting transcription", () => {
-  const audio = { audioBase64: Buffer.from("local audio").toString("base64"), mimeType: "audio/webm" };
+  const audio = { audioBase64: Buffer.from("local audio").toString("base64"), mimeType: "audio/webm", ...captureAuthorization };
   let now = Date.now();
   const ready = (accepted = true) => { seed({ invited: true, muted: false }); mocks.results.push(accepted ? [{ userId: 1 }] : []); };
-  const post = (body: unknown = audio) => request(app()).post(`/meetings/${meetingId}/transcribe-audio`).send(body as any);
+  const post = (body: Record<string, unknown> = audio) => request(app()).post(`/meetings/${meetingId}/transcribe-audio`).send({ ...captureAuthorization, ...body });
   beforeEach(() => { now += 60_001; vi.useFakeTimers({ toFake: ["Date"] }); vi.setSystemTime(now); mocks.nativeAvailable.mockReturnValue(true); });
   afterEach(() => vi.useRealTimers());
   it("rejects unauthenticated capture without invoking the engine", async () => {
     mocks.session = null; expect((await post()).status).toBe(401); expect(mocks.nativeTranscribe).not.toHaveBeenCalled();
+  });
+  it("rejects native audio from a superseded device generation", async () => {
+    ready(); mocks.validateLease.mockResolvedValue(false);
+    expect((await post()).status).toBe(409);
+    expect(mocks.nativeTranscribe).not.toHaveBeenCalled();
   });
   it.each(["muted", "absent", "not-invited", "declined", "removed"])("rejects %s capture without invoking the engine", async (reason) => {
     seed({ invited: reason !== "not-invited", muted: reason === "muted", removed: reason === "removed", ...(reason === "absent" ? { runtime: {} } : {}) });
@@ -415,7 +426,7 @@ describe("shipped audio compatibility", () => {
     expect(response.status).toBe(200);
     expect(response.body).toEqual({
       presentUserIds: [1],
-      peerConnections: [{ userId: 2, deviceId: "legacy:2", connectionId: "legacy:2" }],
+      peerConnections: [],
       recordingState: "active",
       audioOwnership: null,
       automaticBackupDeviceId: null,

@@ -22,7 +22,7 @@ test("multi-device migration creates every coordination boundary", async () => {
   for (const table of ["work_hub_devices", "work_hub_device_connections", "work_hub_workspace_sessions", "work_hub_audio_leases", "work_hub_device_preferences", "work_hub_user_events", "work_hub_meeting_speak_requests"]) {
     assert.match(sql, new RegExp(`CREATE TABLE IF NOT EXISTS "${table}"`));
   }
-  for (const index of ["work_hub_devices_user_org_idx", "work_hub_device_connections_device_unique", "work_hub_workspace_sessions_user_org_unique", "work_hub_audio_leases_occurrence_user_unique", "work_hub_device_preferences_user_org_unique", "work_hub_user_events_user_org_sequence_idx", "work_hub_meeting_speak_requests_pending_unique"]) assert.match(sql, new RegExp(index));
+  for (const index of ["work_hub_devices_user_org_idx", "work_hub_device_connections_device_unique", "work_hub_workspace_sessions_user_org_unique", "work_hub_audio_leases_occurrence_user_unique", "work_hub_device_preferences_user_org_unique", "work_hub_user_events_user_org_sequence_idx", "work_hub_user_events_created_at_idx", "work_hub_meeting_speak_requests_pending_unique"]) assert.match(sql, new RegExp(index));
   assert.match(sql, /ALTER TABLE "work_hub_calls" ADD COLUMN IF NOT EXISTS "answered_device_id"/);
   assert.match(sql, /ALTER TABLE "work_hub_calls" ADD COLUMN IF NOT EXISTS "answered_connection_id"/);
 });

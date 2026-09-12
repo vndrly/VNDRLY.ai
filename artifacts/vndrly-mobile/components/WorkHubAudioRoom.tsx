@@ -93,7 +93,7 @@ export default function WorkHubAudioRoom({ occurrenceId, hostMuted = false, host
     setBusy(true); setError(""); setMuted(true); setConsented(false); setPolicy(null);
     const controller = new AbortController();
     const peers = new Map<number, RTCPeerConnection>();
-    const nativePeers = new Set<number>();
+    const nativePeers = new Map<number, string>();
     const pendingIce = new Map<number, any[]>();
     let local: MediaStream | null = null;
     let native: NativeMeetingAudioSession | null = null;
@@ -108,6 +108,7 @@ export default function WorkHubAudioRoom({ occurrenceId, hostMuted = false, host
     let failoverDeadline: { generation: number; at: number } | null = null;
     let cancelledFailoverGeneration: number | null = null;
     let failoverStarting = false;
+    let failoverAttempt = 0;
     const peerConnectionByUser = new Map<number, MeetingPeer>();
     let nativeTranscribing = false, nativeTranscriptionPending = false;
     const trackListeners: Array<() => void> = [];
@@ -232,11 +233,12 @@ export default function WorkHubAudioRoom({ occurrenceId, hostMuted = false, host
           serverAudioLease = await request<ServerAudioLease>("audio-lease", {});
           lastAudioLeaseRenewal = Date.now();
         }
+        if (next && native) await native.setMuted(true);
         await request("presence", { muted: next });
         if (next) await releaseServerAudio();
         check(); localMuted = next;
         local?.getAudioTracks().forEach(track => { check(); track.enabled = !next; });
-        if (native) await native.setMuted(next);
+        if (native) await native.setMuted(next, next ? 0 : serverAudioLease?.generation, next ? undefined : serverAudioLease?.expiresAt);
         setMuted(next);
         reconcileNativeTranscription();
       })().catch(async cause => { await releaseServerAudio(); failure(cause); }).finally(() => { presencePending = false; });
@@ -249,11 +251,14 @@ export default function WorkHubAudioRoom({ occurrenceId, hostMuted = false, host
         void native.setMuted(true).catch(failure); nativeTranscribing = false;
       }
       localMuted = true; setMuted(true);
-      void releaseServerAudio();
-      if (!presencePending) {
-        presencePending = true;
-        void request("presence", { muted: true }).catch(failure).finally(() => { presencePending = false; });
-      }
+      void (async () => {
+        if (native) await native.setMuted(true);
+        await releaseServerAudio();
+        if (!presencePending) {
+          presencePending = true;
+          await request("presence", { muted: true }).catch(failure).finally(() => { presencePending = false; });
+        }
+      })().catch(failure);
     };
     session.consent = () => {
       if (!live() || recordingPolicy === null || consentPending) return;
@@ -268,14 +273,17 @@ export default function WorkHubAudioRoom({ occurrenceId, hostMuted = false, host
       void request("audio-handoff/request", {}).then(() => request<ServerAudioLease>("audio-handoff/accept", {})).then(async acquired => {
         check(); serverAudioLease = acquired; lastAudioLeaseRenewal = Date.now(); localMuted = false; setMuted(false); setAudioOnAnotherDevice(false);
         local?.getAudioTracks().forEach(track => { check(); track.enabled = true; });
-        if (native) await native.setMuted(false);
+        if (native) await native.setMuted(false, acquired.generation, acquired.expiresAt);
         await request("presence", { muted: false });
         reconcileNativeTranscription();
       }).catch(failure).finally(() => { if (live()) setHandoffBusy(false); });
     };
     session.cancelFailover = () => {
-      cancelledFailoverGeneration = failoverDeadline?.generation ?? cancelledFailoverGeneration;
+      const generation = failoverDeadline?.generation;
+      failoverAttempt++;
+      cancelledFailoverGeneration = generation ?? cancelledFailoverGeneration;
       failoverDeadline = null; setFailoverCountdown(null);
+      if (generation) void request("audio-failover/cancel", { expectedGeneration: generation }).catch(() => undefined);
     };
 
     try {
@@ -287,6 +295,7 @@ export default function WorkHubAudioRoom({ occurrenceId, hostMuted = false, host
       await requestAskVMicrophonePermission(check); check();
       native = createNativeMeetingAudioSession({
         occurrenceId, generation: version,
+        audioAuthorization: () => serverAudioLease && identity ? { ...identity, token: serverAudioLease.token, generation: serverAudioLease.generation } : null,
         onSignal: event => { if (live()) void signal(event.toUserId, event.kind, event.payload).catch(failure); },
         onError: code => { if (live()) session.stop(t("meetingWorkspace.audio.nativeStopped", { code })); },
       });
@@ -342,7 +351,10 @@ export default function WorkHubAudioRoom({ occurrenceId, hostMuted = false, host
           }
           if (!localMuted && serverAudioLease && Date.now() - lastAudioLeaseRenewal > 8_000) {
             const owned = serverAudioLease;
-            serverAudioLease = await apiFetch<ServerAudioLease>(`/api/work-hub/meetings/${occurrenceId}/audio-lease`, { method: "PUT", body: JSON.stringify({ ...identity, token: owned.token, generation: owned.generation }), signal: controller.signal }); check();
+            try {
+              serverAudioLease = await apiFetch<ServerAudioLease>(`/api/work-hub/meetings/${occurrenceId}/audio-lease`, { method: "PUT", body: JSON.stringify({ ...identity, token: owned.token, generation: owned.generation }), signal: controller.signal }); check();
+              if (native) await native.setMuted(false, serverAudioLease.generation, serverAudioLease.expiresAt);
+            } catch (cause) { session.forceMute(); throw cause; }
             lastAudioLeaseRenewal = Date.now();
           }
           const state = await request<{ presentUserIds: number[]; peerConnections?: MeetingPeer[]; recordingState: string; audioOwnership?: ServerAudioState | null; automaticBackupDeviceId?: string | null }>("audio-state"); check();
@@ -353,22 +365,43 @@ export default function WorkHubAudioRoom({ occurrenceId, hostMuted = false, host
             if (native) await native.setMuted(true);
           }
           if (identity && state.audioOwnership && !state.audioOwnership.active && state.automaticBackupDeviceId === identity.deviceId && cancelledFailoverGeneration !== state.audioOwnership.generation) {
-            if (!failoverDeadline || failoverDeadline.generation !== state.audioOwnership.generation) failoverDeadline = { generation: state.audioOwnership.generation, at: Date.now() + 3_000 };
-            const remaining = Math.max(0, Math.ceil((failoverDeadline.at - Date.now()) / 1_000)); setFailoverCountdown(remaining);
-            if (remaining === 0 && !failoverStarting) {
+            if ((!failoverDeadline || failoverDeadline.generation !== state.audioOwnership.generation) && !failoverStarting) {
               failoverStarting = true;
               try {
-                const acquired = await request<ServerAudioLease>("audio-failover/activate", { expectedGeneration: failoverDeadline.generation });
+                const prepared = await request<{ expectedGeneration: number; readyAt: string }>("audio-failover/prepare", { expectedGeneration: state.audioOwnership.generation });
+                failoverDeadline = { generation: prepared.expectedGeneration, at: new Date(prepared.readyAt).getTime() };
+              } finally { failoverStarting = false; }
+            }
+            const deadline = failoverDeadline;
+            if (!deadline) return;
+            const remaining = Math.max(0, Math.ceil((deadline.at - Date.now()) / 1_000)); setFailoverCountdown(remaining);
+            if (remaining === 0 && !failoverStarting) {
+              failoverStarting = true;
+              const attempt = ++failoverAttempt;
+              try {
+                const acquired = await request<ServerAudioLease>("audio-failover/activate", { expectedGeneration: deadline.generation });
+                if (attempt !== failoverAttempt || cancelledFailoverGeneration === deadline.generation) {
+                  serverAudioLease = acquired;
+                  await releaseServerAudio();
+                  return;
+                }
                 serverAudioLease = acquired; lastAudioLeaseRenewal = Date.now(); localMuted = false; setMuted(false); setAudioOnAnotherDevice(false);
                 local?.getAudioTracks().forEach(track => { track.enabled = true; });
-                if (native) await native.setMuted(false);
+                if (native) await native.setMuted(false, acquired.generation, acquired.expiresAt);
                 await request("presence", { muted: false });
               } finally { failoverDeadline = null; failoverStarting = false; setFailoverCountdown(null); }
             }
           } else if (!state.audioOwnership || state.audioOwnership.active || state.automaticBackupDeviceId !== identity?.deviceId) { failoverDeadline = null; setFailoverCountdown(null); }
+          const priorPeerConnections = new Map(peerConnectionByUser);
           peerConnectionByUser.clear();
           const discoveredPeers = state.peerConnections ?? info.peerConnections ?? state.presentUserIds.filter(userId => userId !== info.userId).map(userId => ({ userId, deviceId: `legacy:${userId}`, connectionId: `legacy:${userId}` }));
           for (const peer of discoveredPeers) if (!peerConnectionByUser.has(peer.userId)) peerConnectionByUser.set(peer.userId, peer);
+          for (const [id, prior] of priorPeerConnections) {
+            const next = peerConnectionByUser.get(id);
+            if (next && next.connectionId === prior.connectionId) continue;
+            if (nativePeers.has(id)) { nativePeers.delete(id); if (native) { await native.removePeer(id); check(); } }
+            const peer = peers.get(id); if (peer) { peers.delete(id); pendingIce.delete(id); peer.close(); }
+          }
           if (!state.presentUserIds.includes(info.userId)) {
             session.stop(t("meetingWorkspace.audio.sessionEnded"));
             return;
@@ -376,10 +409,10 @@ export default function WorkHubAudioRoom({ occurrenceId, hostMuted = false, host
           recordingActive = state.recordingState === "active";
           setRecording(recordingActive); setError(""); reconcileNativeTranscription();
           if (native) {
-            for (const id of nativePeers) if (!state.presentUserIds.includes(id)) { nativePeers.delete(id); await native.removePeer(id); check(); }
-            for (const id of peerConnectionByUser.keys()) {
-              check(); if (id <= info.userId || nativePeers.has(id)) continue;
-              nativePeers.add(id); await native.createOffer(id); check();
+            for (const [id] of nativePeers) if (!state.presentUserIds.includes(id)) { nativePeers.delete(id); await native.removePeer(id); check(); }
+            for (const [id, target] of peerConnectionByUser) {
+              check(); if (id <= info.userId || nativePeers.get(id) === target.connectionId) continue;
+              nativePeers.set(id, target.connectionId); await native.createOffer(id); check();
             }
           }
           for (const [id, peer] of peers) if (!state.presentUserIds.includes(id)) {
@@ -396,8 +429,10 @@ export default function WorkHubAudioRoom({ occurrenceId, hostMuted = false, host
           for (const item of signals) {
             check();
             if (!state.presentUserIds.includes(item.fromUserId)) { cursor = Math.max(cursor, item.sequence); continue; }
+            const source = peerConnectionByUser.get(item.fromUserId);
+            if (item.fromDeviceId && source?.connectionId !== item.fromDeviceId) { cursor = Math.max(cursor, item.sequence); continue; }
             if (native) {
-              nativePeers.add(item.fromUserId);
+              if (source) nativePeers.set(item.fromUserId, source.connectionId);
               await native.applySignal(item.fromUserId, item.kind, item.payload); check();
               cursor = Math.max(cursor, item.sequence); continue;
             }

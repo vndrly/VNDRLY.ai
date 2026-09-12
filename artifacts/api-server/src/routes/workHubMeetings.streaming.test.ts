@@ -7,6 +7,8 @@ const mocks = vi.hoisted(() => ({
   results: [] as unknown[][],
   open: vi.fn(), send: vi.fn(), close: vi.fn(), closeAll: vi.fn(),
   nativeAvailable: vi.fn(), nativeTranscribe: vi.fn(),
+  validateLease: vi.fn(),
+  leaseState: vi.fn(),
   mutations: [] as Array<{ type: string; value?: any }>,
   transactionDepth: 0,
   transactionCalls: 0,
@@ -17,6 +19,7 @@ vi.mock("../lib/session", () => ({ getSessionFromRequest: () => mocks.session })
 vi.mock("../work-hub/audit", () => ({ appendWorkHubAudit: vi.fn() }));
 vi.mock("../lib/objectStore", () => ({ getObjectStore: vi.fn() }));
 vi.mock("../work-hub/native-transcription", () => ({ nativeTranscriptionAvailable: mocks.nativeAvailable, transcribeNativeAudio: mocks.nativeTranscribe }));
+vi.mock("../work-hub/audio-lease-database", () => ({ audioLeaseService: { validate: mocks.validateLease, state: mocks.leaseState } }));
 vi.mock("../work-hub/assemblyai-streaming", async (load) => ({
   ...(await load<any>()),
   openAssemblyAIStream: mocks.open,
@@ -41,6 +44,7 @@ import router from "./workHubMeetings";
 
 const occurrenceId = "17795fa1-bb5f-4abc-a5f8-7e9b33a0ea01";
 const sessionId = "17795fa1-bb5f-4abc-a5f8-7e9b33a0ea02";
+const authorization = { token: "a".repeat(32), generation: 1 };
 const present = { seenAt: Date.now(), joinedAt: Date.now(), speaking: false };
 function seed(options: { muted?: boolean; removed?: boolean; ended?: boolean; consent?: number[]; attendees?: number[] } = {}) {
   const attendeeIds = options.attendees ?? [1, 2];
@@ -63,16 +67,34 @@ beforeEach(() => {
   mocks.open.mockReset().mockResolvedValue({ sessionId, sampleRate: 16000, frameDurationMs: 500 });
   mocks.send.mockReset().mockResolvedValue({ turns: [] }); mocks.close.mockReset().mockResolvedValue({ closed: true }); mocks.closeAll.mockReset().mockResolvedValue(undefined);
   mocks.nativeAvailable.mockReset().mockReturnValue(true); mocks.nativeTranscribe.mockReset();
+  mocks.validateLease.mockReset().mockResolvedValue(true);
+  mocks.leaseState.mockReset().mockResolvedValue(null);
   vi.unstubAllEnvs();
   vi.stubEnv("VNDRLY_MEETING_STT_PROVIDER", "assemblyai"); vi.stubEnv("ASSEMBLYAI_API_KEY", "fake-route-key"); vi.stubEnv("ASSEMBLYAI_MODEL_TRAINING_ALLOWED", "1"); vi.stubEnv("VNDRLY_MEETING_STT_TRIAL_USER_IDS", "1,2");
 });
 
 describe("authenticated meeting streaming routes", () => {
-  const start = () => request(app()).post(`/meetings/${occurrenceId}/transcription-stream`).send({});
-  const frame = (extra: Record<string, unknown> = {}) => request(app()).post(`/meetings/${occurrenceId}/transcription-stream/${sessionId}/frame`).send({ sequence: 0, pcmBase64: Buffer.alloc(16_000).toString("base64"), ...extra });
+  const start = () => request(app()).post(`/meetings/${occurrenceId}/transcription-stream`).send(authorization);
+  const frame = (extra: Record<string, unknown> = {}) => request(app()).post(`/meetings/${occurrenceId}/transcription-stream/${sessionId}/frame`).send({ sequence: 0, pcmBase64: Buffer.alloc(16_000).toString("base64"), ...authorization, ...extra });
 
   it("rejects an unauthenticated start and never opens a provider connection", async () => {
     mocks.session = null; expect((await start()).status).toBe(401); expect(mocks.open).not.toHaveBeenCalled();
+  });
+  it("rejects a superseded device generation before opening a provider connection", async () => {
+    seed(); mocks.validateLease.mockResolvedValue(false);
+    expect((await start()).status).toBe(409);
+    expect(mocks.open).not.toHaveBeenCalled();
+  });
+  it("keeps an installed legacy client working only while no modern audio lease exists", async () => {
+    seed(); seed();
+    const compatible = await request(app()).post(`/meetings/${occurrenceId}/transcription-stream`).send({});
+    expect(compatible.status).toBe(200);
+    expect(mocks.validateLease).not.toHaveBeenCalled();
+
+    mocks.results = []; seed();
+    mocks.leaseState.mockResolvedValue({ deviceId: "phone", generation: 2, active: true, expiresAt: new Date(), pendingDeviceId: null });
+    const fenced = await request(app()).post(`/meetings/${occurrenceId}/transcription-stream`).send({});
+    expect(fenced.status).toBe(409);
   });
   it("opens outside the row-lock transaction only for an unmuted, present, fully consenting trial audience", async () => {
     seed(); seed();
@@ -125,7 +147,7 @@ describe("authenticated meeting streaming routes", () => {
   });
   it("enforces owner identity on close and preserves the existing consent policy version", async () => {
     seed(); mocks.session.userId = 2;
-    const response = await request(app()).post(`/meetings/${occurrenceId}/transcription-stream/${sessionId}/close`).send({});
+    const response = await request(app()).post(`/meetings/${occurrenceId}/transcription-stream/${sessionId}/close`).send(authorization);
     expect(response.status).toBe(200); expect(mocks.close).toHaveBeenCalledWith({ sessionId, occurrenceId, userId: 2 });
     mocks.results = []; mocks.session.userId = 1;
     seed(); mocks.results.push([{ response: "accepted" }]);

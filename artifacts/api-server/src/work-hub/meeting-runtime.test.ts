@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { appendMeetingSignal, captureAllowed, presentUserIds, removeDevicePresence, signalsForConnection, signalsForParticipant, upsertDevicePresence, visibleMeetingActivities, type MeetingRuntime } from "./meeting-runtime";
+import { appendMeetingSignal, captureAllowed, meetingAudioPeerConnections, presentUserIds, removeDevicePresence, signalsForConnection, signalsForParticipant, upsertDevicePresence, visibleMeetingActivities, type MeetingRuntime } from "./meeting-runtime";
 
 describe("persisted meeting runtime", () => {
   it("keeps a user present when one of two devices leaves", () => {
@@ -10,6 +10,15 @@ describe("persisted meeting runtime", () => {
     expect(presentUserIds(next, 100)).toEqual([7]);
     expect(next.connections).toHaveProperty("desktop-connection");
     expect(next.connections).not.toHaveProperty("phone-connection");
+  });
+
+  it("selects the active audio owner when one person has multiple connected devices", () => {
+    let runtime: MeetingRuntime = {};
+    runtime = upsertDevicePresence(runtime, { userId: 7, deviceId: "phone", connectionId: "phone-connection", joinedAt: 10, seenAt: 100, speaking: true });
+    runtime = upsertDevicePresence(runtime, { userId: 7, deviceId: "desktop", connectionId: "desktop-connection", joinedAt: 20, seenAt: 200, speaking: false });
+    runtime = upsertDevicePresence(runtime, { userId: 8, deviceId: "tablet", connectionId: "tablet-connection", joinedAt: 20, seenAt: 200, speaking: false });
+    const selected = meetingAudioPeerConnections(runtime, "self", new Map([[7, "phone"]]), 200);
+    expect(selected.map(value => value.connectionId)).toEqual(["phone-connection", "tablet-connection"]);
   });
 
   it("delivers an offer only to the addressed device", () => {

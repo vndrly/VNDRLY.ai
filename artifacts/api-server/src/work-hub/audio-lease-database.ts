@@ -34,3 +34,12 @@ export const databaseAudioLeaseStore: AudioLeaseStore = {
 };
 
 export const audioLeaseService = createAudioLeaseService(databaseAudioLeaseStore);
+
+export async function fenceAudioLeasesForDevice(deviceId: string) {
+  const clock = new Date();
+  return db.update(workHubAudioLeasesTable).set({
+    generation: sql`${workHubAudioLeasesTable.generation} + 1`,
+    state: "source_lost", expiresAt: clock, updatedAt: clock,
+    pendingDeviceId: null, offerTokenHash: null, offerExpiresAt: null,
+  }).where(and(eq(workHubAudioLeasesTable.deviceId, deviceId), eq(workHubAudioLeasesTable.state, "active")));
+}

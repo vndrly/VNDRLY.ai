@@ -38,6 +38,16 @@ beforeEach(() => {
 });
 
 describe("mobile meeting streaming transport", () => {
+  it("attaches the current server audio lease to every streaming request", async () => {
+    env.apiFetch.mockImplementation(async (path: string) => path.endsWith("/frame") ? { turns: [] } : HANDLE);
+    const authorization = { deviceId: "phone", connectionId: "connection", token: "a".repeat(32), generation: 7 };
+    const client = createMobileMeetingStreamingClient("meeting", () => authorization);
+    const signal = new AbortController().signal;
+    await client.open(signal);
+    await client.sendAndPersist(0, new Uint8Array([1]), async () => undefined, signal);
+    for (const [, options] of env.apiFetch.mock.calls) expect(JSON.parse(String(options.body))).toEqual(expect.objectContaining(authorization));
+  });
+
   it("is inert until open and sends the start request only through apiFetch", async () => {
     const rawFetch = vi.fn(() => { throw new Error("raw fetch must not be used"); });
     vi.stubGlobal("fetch", rawFetch);

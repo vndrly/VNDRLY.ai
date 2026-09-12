@@ -1,4 +1,4 @@
-import { and, asc, eq, gt, inArray, sql } from "drizzle-orm";
+import { and, asc, eq, gt, inArray, lt, sql } from "drizzle-orm";
 import {
   db,
   workHubDeviceConnectionsTable,
@@ -11,6 +11,7 @@ import { fanOutPersistedWorkHubEvent } from "./events";
 export const SURFACE_TTL_MS = 45_000;
 export const MAX_EVENT_BYTES = 4_096;
 export const MAX_EVENT_PAGE = 250;
+export const EVENT_RETENTION_MS = 30 * 24 * 60 * 60 * 1_000;
 
 export type WorkHubOwner = { type: "vendor" | "partner"; id: number };
 export type DeviceActor = { userId: number; owner: WorkHubOwner };
@@ -39,6 +40,8 @@ export interface DeviceCoordinatorStore {
   upsertConnection(input: UpsertConnectionInput): Promise<DeviceConnectionRecord>;
   listConnections(deviceIds: string[]): Promise<DeviceConnectionRecord[]>;
   appendEvent(input: AppendEventInput): Promise<DurableUserEvent>;
+  listExpiredEventActors(before: Date, limit: number): Promise<DeviceActor[]>;
+  pruneEvents(actor: DeviceActor, before: Date, limit: number): Promise<void>;
   listEventsAfter(actor: DeviceActor, cursor: number, limit: number): Promise<DurableUserEvent[]>;
   eventBounds(actor: DeviceActor): Promise<{ earliest: number | null; latest: number | null }>;
 }
@@ -73,6 +76,14 @@ export const databaseDeviceCoordinatorStore: DeviceCoordinatorStore = {
   },
   async listConnections(deviceIds) { if (!deviceIds.length) return []; return (await db.select().from(workHubDeviceConnectionsTable).where(inArray(workHubDeviceConnectionsTable.deviceId, deviceIds))).map(mapConnection); },
   async appendEvent(input) { const [row] = await db.insert(workHubUserEventsTable).values({ userId: input.userId, ownerOrgType: input.owner.type, ownerOrgId: input.owner.id, eventType: input.eventType, payload: input.payload, createdAt: input.now }).returning(); return mapEvent(row!); },
+  async listExpiredEventActors(before, limit) {
+    const rows = await db.select({ userId: workHubUserEventsTable.userId, ownerOrgType: workHubUserEventsTable.ownerOrgType, ownerOrgId: workHubUserEventsTable.ownerOrgId }).from(workHubUserEventsTable).where(lt(workHubUserEventsTable.createdAt, before)).orderBy(asc(workHubUserEventsTable.createdAt)).limit(limit);
+    return rows.map(row => ({ userId: row.userId, owner: { type: row.ownerOrgType as WorkHubOwner["type"], id: row.ownerOrgId } }));
+  },
+  async pruneEvents(actor, before, limit) {
+    const expired = db.select({ id: workHubUserEventsTable.id }).from(workHubUserEventsTable).where(and(eq(workHubUserEventsTable.userId, actor.userId), eq(workHubUserEventsTable.ownerOrgType, actor.owner.type), eq(workHubUserEventsTable.ownerOrgId, actor.owner.id), lt(workHubUserEventsTable.createdAt, before))).orderBy(asc(workHubUserEventsTable.createdAt)).limit(limit);
+    await db.delete(workHubUserEventsTable).where(inArray(workHubUserEventsTable.id, expired));
+  },
   async listEventsAfter(actor, cursor, limit) { return (await db.select().from(workHubUserEventsTable).where(and(eq(workHubUserEventsTable.userId, actor.userId), eq(workHubUserEventsTable.ownerOrgType, actor.owner.type), eq(workHubUserEventsTable.ownerOrgId, actor.owner.id), gt(workHubUserEventsTable.sequence, cursor))).orderBy(asc(workHubUserEventsTable.sequence)).limit(limit)).map(mapEvent); },
   async eventBounds(actor) {
     const [row] = await db.select({ earliest: sql<number | null>`min(${workHubUserEventsTable.sequence})`, latest: sql<number | null>`max(${workHubUserEventsTable.sequence})` }).from(workHubUserEventsTable).where(and(eq(workHubUserEventsTable.userId, actor.userId), eq(workHubUserEventsTable.ownerOrgType, actor.owner.type), eq(workHubUserEventsTable.ownerOrgId, actor.owner.id)));
@@ -92,6 +103,10 @@ function compactSurface(surface: DeviceSurface | null | undefined): DeviceSurfac
 
 export function createDeviceCoordinator(store: DeviceCoordinatorStore, options: { now?: () => Date; fanOut?: (event: DurableUserEvent) => void } = {}) {
   const clock = options.now ?? (() => new Date());
+  async function pruneExpiredEvents(now: Date) {
+    const before = new Date(now.getTime() - EVENT_RETENTION_MS);
+    for (const actor of (await store.listExpiredEventActors(before, 1)).slice(0, 1)) await store.pruneEvents(actor, before, 100);
+  }
   async function requireOwnedDevice(actor: DeviceActor, id: string) { const device = await store.findDevice(id); if (!device || !sameActor(actor, device) || device.revokedAt) throw new WorkHubDeviceError("work_hub.not_found", "Device not found"); return device; }
   return {
     async registerDevice(actor: DeviceActor, input: { deviceId?: string; friendlyName: string; deviceClass: string; capabilities: DeviceCapabilities }) {
@@ -123,8 +138,8 @@ export function createDeviceCoordinator(store: DeviceCoordinatorStore, options: 
     async listDeviceConnections(actor: DeviceActor, organization = false) { const devices = organization ? await store.listOrganizationDevices(actor.owner) : await store.listDevices(actor); return store.listConnections(devices.filter(device => !device.revokedAt).map(device => device.id)); },
     async activeSurface(actor: DeviceActor, deviceId: string) { const device = await requireOwnedDevice(actor, deviceId); const connections = await store.listConnections([device.id]); const threshold = clock().getTime() - SURFACE_TTL_MS; return connections.filter(c => c.seenAt.getTime() >= threshold && c.surface && c.surface.updatedAt >= threshold).sort((a, b) => b.seenAt.getTime() - a.seenAt.getTime())[0]?.surface ?? null; },
     async eligibleAudioDevices(actor: DeviceActor) { const devices = (await store.listDevices(actor)).filter(d => !d.revokedAt && d.capabilities.microphone); const threshold = clock().getTime() - SURFACE_TTL_MS; const connections = await store.listConnections(devices.map(d => d.id)); return devices.flatMap(device => connections.filter(c => c.deviceId === device.id && c.seenAt.getTime() >= threshold && c.microphonePermission === "granted").map(connection => ({ device, connection }))); },
-    async publishUserEvent(actor: DeviceActor, input: { eventType: string; payload: Record<string, unknown> }) { const eventType = input.eventType.trim(); const bytes = Buffer.byteLength(JSON.stringify(input.payload), "utf8"); if (!/^work_hub\.[a-z0-9_.]+$/.test(eventType) || eventType.length > 100 || bytes > MAX_EVENT_BYTES) throw new WorkHubDeviceError("work_hub.invalid_payload", "Invalid event payload"); const event = await store.appendEvent({ userId: actor.userId, owner: actor.owner, eventType, payload: input.payload, now: clock() }); options.fanOut?.(event); return event; },
-    async eventsAfter(actor: DeviceActor, cursor: number, limit = MAX_EVENT_PAGE) { const safeCursor = Number.isSafeInteger(cursor) ? cursor : 0; const safeLimit = Math.max(1, Math.min(limit, MAX_EVENT_PAGE)); const bounds = await store.eventBounds(actor); const gap = bounds.earliest !== null && safeCursor < bounds.earliest - 1; return { events: gap ? [] : await store.listEventsAfter(actor, safeCursor, safeLimit), gap, earliestSequence: bounds.earliest, latestSequence: bounds.latest }; },
+    async publishUserEvent(actor: DeviceActor, input: { eventType: string; payload: Record<string, unknown> }) { const eventType = input.eventType.trim(); const bytes = Buffer.byteLength(JSON.stringify(input.payload), "utf8"); if (!/^work_hub\.[a-z0-9_.]+$/.test(eventType) || eventType.length > 100 || bytes > MAX_EVENT_BYTES) throw new WorkHubDeviceError("work_hub.invalid_payload", "Invalid event payload"); const now = clock(); const event = await store.appendEvent({ userId: actor.userId, owner: actor.owner, eventType, payload: input.payload, now }); await pruneExpiredEvents(now); options.fanOut?.(event); return event; },
+    async eventsAfter(actor: DeviceActor, cursor: number, limit = MAX_EVENT_PAGE) { const safeCursor = Number.isSafeInteger(cursor) ? cursor : 0; const safeLimit = Math.max(1, Math.min(limit, MAX_EVENT_PAGE)); await pruneExpiredEvents(clock()); const bounds = await store.eventBounds(actor); const gap = bounds.earliest !== null && safeCursor < bounds.earliest - 1; return { events: gap ? [] : await store.listEventsAfter(actor, safeCursor, safeLimit), gap, earliestSequence: bounds.earliest, latestSequence: bounds.latest }; },
   };
 }
 

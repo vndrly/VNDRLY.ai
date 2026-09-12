@@ -39,10 +39,14 @@ describe("cross-device audio lease", () => {
     expect(selectFailoverCandidate(devices, { rankedDeviceIds: [desktopId, "denied", "stale"], automaticBackupDeviceIds: [desktopId] }, now)?.deviceId).toBe(desktopId);
   });
 
-  it("releases ownership and lets an authorized backup fence the old generation", async () => {
-    const service = createAudioLeaseService(new InMemoryAudioLeaseStore(), { token: (() => { let i = 0; return () => `token-${++i}`; })() });
+  it("releases ownership and lets an authorized backup fence the old generation after the warning", async () => {
+    let clock = new Date("2026-09-12T12:00:00.000Z");
+    const service = createAudioLeaseService(new InMemoryAudioLeaseStore(), { now: () => clock, token: (() => { let i = 0; return () => `token-${++i}`; })() });
     const phone = await service.acquire(actor);
     await service.release(actor, phone.token, phone.generation);
+    await service.prepareFailover({ ...actor, deviceId: desktopId }, phone.generation);
+    await expect(service.activateFailover({ ...actor, deviceId: desktopId }, phone.generation)).rejects.toMatchObject({ code: "audio.failover_warning" });
+    clock = new Date(clock.getTime() + 3_000);
     const desktop = await service.activateFailover({ ...actor, deviceId: desktopId }, phone.generation);
     expect(desktop.generation).toBe(phone.generation + 1);
     await expect(service.renew(actor, phone.token, phone.generation)).rejects.toMatchObject({ code: "audio.invalid_lease" });
@@ -52,6 +56,21 @@ describe("cross-device audio lease", () => {
     const service = createAudioLeaseService(new InMemoryAudioLeaseStore());
     const phone = await service.acquire(actor);
     await expect(service.activateFailover({ ...actor, deviceId: desktopId }, phone.generation)).rejects.toMatchObject({ code: "audio.in_use" });
+  });
+
+  it("rejects direct failover activation without a server-issued warning", async () => {
+    const service = createAudioLeaseService(new InMemoryAudioLeaseStore());
+    const phone = await service.acquire(actor);
+    await service.release(actor, phone.token, phone.generation);
+    await expect(service.activateFailover({ ...actor, deviceId: desktopId }, phone.generation)).rejects.toMatchObject({ code: "audio.invalid_offer" });
+  });
+
+  it("fences an active microphone lease immediately for moderation or device revocation", async () => {
+    const service = createAudioLeaseService(new InMemoryAudioLeaseStore());
+    const phone = await service.acquire(actor);
+    const fenced = await service.fence(occurrenceId, actor.userId);
+    expect(fenced.generation).toBe(phone.generation + 1);
+    await expect(service.renew(actor, phone.token, phone.generation)).rejects.toMatchObject({ code: "audio.invalid_lease" });
   });
 
   it("lets only the offered destination decline a pending handoff", async () => {

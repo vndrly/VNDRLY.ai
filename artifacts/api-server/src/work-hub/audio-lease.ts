@@ -2,6 +2,7 @@ import { createHash, randomBytes } from "node:crypto";
 
 const LEASE_TTL_MS = 20_000;
 const OFFER_TTL_MS = 30_000;
+const FAILOVER_WARNING_MS = 3_000;
 const CONNECTION_TTL_MS = 45_000;
 
 export type AudioLeaseActor = { occurrenceId: string; userId: number; deviceId: string; hostMuted?: boolean };
@@ -16,7 +17,7 @@ export type AudioLeaseStore = {
 };
 
 export class AudioLeaseError extends Error {
-  constructor(readonly code: "meeting.host_muted" | "audio.in_use" | "audio.invalid_lease" | "audio.invalid_offer", message: string) { super(message); this.name = "AudioLeaseError"; }
+  constructor(readonly code: "meeting.host_muted" | "audio.in_use" | "audio.invalid_lease" | "audio.invalid_offer" | "audio.failover_warning", message: string) { super(message); this.name = "AudioLeaseError"; }
 }
 
 const digest = (token: string) => createHash("sha256").update(token).digest("hex");
@@ -93,11 +94,39 @@ export function createAudioLeaseService(store: AudioLeaseStore, options: { now?:
         return { record, value: { released: true, generation: record.generation } };
       });
     },
+    async fence(occurrenceId: string, userId: number) {
+      return store.transact(occurrenceId, userId, current => {
+        if (!current) throw new AudioLeaseError("audio.invalid_lease", "No audio ownership exists");
+        const clock = now();
+        const record: AudioLeaseRecord = { ...current, generation: current.generation + 1, state: "source_lost", expiresAt: clock, updatedAt: clock, pendingDeviceId: null, offerTokenHash: null, offerExpiresAt: null };
+        return { record, value: { fenced: true, generation: record.generation } };
+      });
+    },
+    async prepareFailover(actor: AudioLeaseActor, expectedGeneration: number) {
+      if (actor.hostMuted) throw new AudioLeaseError("meeting.host_muted", "Muted by the meeting host");
+      return store.transact(actor.occurrenceId, actor.userId, current => {
+        const clock = now();
+        if (!current || current.generation !== expectedGeneration || (current.state === "active" && current.expiresAt > clock)) throw new AudioLeaseError("audio.in_use", "Audio is still active on another device");
+        const readyAt = new Date(clock.getTime() + FAILOVER_WARNING_MS);
+        const record: AudioLeaseRecord = { ...current, state: "source_lost", expiresAt: clock, pendingDeviceId: actor.deviceId, offerTokenHash: null, offerExpiresAt: readyAt, updatedAt: clock };
+        return { record, value: { expectedGeneration, readyAt } };
+      });
+    },
+    async cancelFailover(actor: AudioLeaseActor, expectedGeneration: number) {
+      return store.transact(actor.occurrenceId, actor.userId, current => {
+        const clock = now();
+        if (!current || current.generation !== expectedGeneration || current.pendingDeviceId !== actor.deviceId || current.state !== "source_lost") throw new AudioLeaseError("audio.invalid_offer", "No failover warning is active on this device");
+        const record = { ...current, pendingDeviceId: null, offerTokenHash: null, offerExpiresAt: null, updatedAt: clock };
+        return { record, value: { cancelled: true } };
+      });
+    },
     async activateFailover(actor: AudioLeaseActor, expectedGeneration: number) {
       if (actor.hostMuted) throw new AudioLeaseError("meeting.host_muted", "Muted by the meeting host");
       return store.transact(actor.occurrenceId, actor.userId, current => {
         const clock = now();
         if (!current || current.generation !== expectedGeneration || (current.state === "active" && current.expiresAt > clock)) throw new AudioLeaseError("audio.in_use", "Audio is still active on another device");
+        if (current.pendingDeviceId !== actor.deviceId || !current.offerExpiresAt) throw new AudioLeaseError("audio.invalid_offer", "Start the failover warning before activating audio");
+        if (current.offerExpiresAt > clock) throw new AudioLeaseError("audio.failover_warning", "The failover warning is still active");
         const rawToken = token();
         const record: AudioLeaseRecord = { ...current, deviceId: actor.deviceId, generation: current.generation + 1, tokenHash: digest(rawToken), state: "active", expiresAt: new Date(clock.getTime() + LEASE_TTL_MS), updatedAt: clock, pendingDeviceId: null, offerTokenHash: null, offerExpiresAt: null };
         return { record, value: { token: rawToken, generation: record.generation, expiresAt: record.expiresAt } };

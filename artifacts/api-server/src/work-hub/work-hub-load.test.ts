@@ -10,7 +10,7 @@ describe("Work Hub representative load boundaries", () => {
   it("fans out ten rounds to 500 recipients without cross-recipient delivery", () => {
     const bus = createWorkHubEventBus();
     const deliveries = Array.from({ length: 500 }, () => 0);
-    deliveries.forEach((_count, index) => bus.subscribe(index + 1, (event) => {
+    deliveries.forEach((_count, index) => bus.subscribe({ userId: index + 1, owner }, (event) => {
       expect(event.recipientUserId).toBe(index + 1);
       deliveries[index] += 1;
     }));

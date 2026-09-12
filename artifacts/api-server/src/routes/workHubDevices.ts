@@ -12,6 +12,7 @@ import {
 } from "../work-hub/device-coordinator";
 import { getDevicePreferences, saveDevicePreferences } from "../work-hub/device-preferences";
 import { appendWorkHubAudit } from "../work-hub/audit";
+import { fenceAudioLeasesForDevice } from "../work-hub/audio-lease-database";
 
 const router: IRouter = Router();
 const uuid = z.string().uuid();
@@ -144,6 +145,7 @@ router.delete("/work-hub/devices/:deviceId", async (req, res) => {
     const organizationScope = req.query.scope === "organization";
     if (organizationScope && !res.locals.deviceAdmin) return sendApiError(res, 404, "work_hub.not_found", "Not found");
     await (organizationScope ? deviceCoordinator.revokeOrganizationDevice(res.locals.deviceActor, deviceId) : deviceCoordinator.revokeDevice(res.locals.deviceActor, deviceId));
+    await fenceAudioLeasesForDevice(deviceId);
     await appendWorkHubAudit({ actorUserId: res.locals.deviceActor.userId, owner: res.locals.deviceActor.owner, action: "device.revoked", subjectType: "work_hub_device", subjectId: deviceId, source: deviceAuditSource(req), metadata: { organizationScope } });
     return res.status(204).end();
   }

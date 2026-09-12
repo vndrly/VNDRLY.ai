@@ -11,6 +11,7 @@ export function useMeetingTranscription(
   joined: boolean,
   muted: boolean,
   stream: RefObject<MediaStream | null>,
+  getAudioAuthorization: () => Record<string, unknown> | null,
 ) {
   const [transcriptionActive, setActive] = useState(false);
   const [transcriptionError, setError] = useState<string | null>(null);
@@ -25,6 +26,7 @@ export function useMeetingTranscription(
   const nativeAllowed = baseAllowed && !streamingAllowed && snapshot?.nativeCaptureAvailable === true;
   const allowed = streamingAllowed || nativeAllowed;
   const latestAllowed = useRef(allowed); latestAllowed.current = allowed;
+  const authorization = useRef(getAudioAuthorization); authorization.current = getAudioAuthorization;
   const stopTranscription = useCallback(() => stop.current(), []);
   const retryTranscription = useCallback(() => setAttempt((value) => value + 1), []);
 
@@ -71,7 +73,9 @@ export function useMeetingTranscription(
           uploads += 1;
           void (async () => {
             try {
-              const text = await transcribeMeetingRecording(occurrenceId, event.data, controller.signal);
+              const currentAuthorization = authorization.current();
+              if (!currentAuthorization) throw new Error("Current meeting audio ownership is required.");
+              const text = await transcribeMeetingRecording(occurrenceId, event.data, controller.signal, currentAuthorization);
               if (!current() || !text) return;
               await workHubRequest(`/meetings/${occurrenceId}/transcript`, {
                 method: "POST", signal: controller.signal,
@@ -98,7 +102,7 @@ export function useMeetingTranscription(
     setError(null);
     if (streamingAllowed) {
       void startMeetingStreamingCapture({
-        occurrenceId, input, startedAtMs: Math.max(0, Date.now() - startedAt), signal: controller.signal, onError: fail,
+        occurrenceId, input, startedAtMs: Math.max(0, Date.now() - startedAt), signal: controller.signal, onError: fail, authorization: () => authorization.current(),
       }).then((capture) => {
         if (!current()) { void capture.stop(); return; }
         streaming = capture; setActive(true);

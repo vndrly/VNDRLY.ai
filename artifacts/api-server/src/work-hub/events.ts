@@ -6,29 +6,31 @@ const persistedEvents = new WeakSet<WorkHubEventEnvelope>();
 
 export function createWorkHubEventBus() {
   let sequence = 0;
-  const subscribers = new Map<number, Set<Subscriber>>();
+  const subscribers = new Map<string, Set<Subscriber>>();
+  const key = (userId: number, owner: WorkHubOwner) => `${userId}:${owner.type}:${owner.id}`;
   return {
     currentSequence: () => sequence,
-    subscribe(userId: number, subscriber: Subscriber) {
-      const set = subscribers.get(userId) ?? new Set<Subscriber>();
+    subscribe(actor: { userId: number; owner: WorkHubOwner }, subscriber: Subscriber) {
+      const subscriptionKey = key(actor.userId, actor.owner);
+      const set = subscribers.get(subscriptionKey) ?? new Set<Subscriber>();
       set.add(subscriber);
-      subscribers.set(userId, set);
+      subscribers.set(subscriptionKey, set);
       return () => {
         set.delete(subscriber);
-        if (set.size === 0) subscribers.delete(userId);
+        if (set.size === 0) subscribers.delete(subscriptionKey);
       };
     },
     publish(input: PendingEvent): WorkHubEventEnvelope {
       const event: WorkHubEventEnvelope = {
         ...input, version: 1, sequence: ++sequence, occurredAt: new Date().toISOString(),
       };
-      for (const subscriber of subscribers.get(input.recipientUserId) ?? []) subscriber(event);
+      for (const subscriber of subscribers.get(key(input.recipientUserId, input.owner)) ?? []) subscriber(event);
       return event;
     },
     publishPersisted(event: WorkHubEventEnvelope): WorkHubEventEnvelope {
       persistedEvents.add(event);
       sequence = Math.max(sequence, event.sequence);
-      for (const subscriber of subscribers.get(event.recipientUserId) ?? []) subscriber(event);
+      for (const subscriber of subscribers.get(key(event.recipientUserId, event.owner)) ?? []) subscriber(event);
       return event;
     },
   };
@@ -49,7 +51,7 @@ export function fanOutPersistedWorkHubEvent(input: {
   return workHubEventBus.publishPersisted({
     version: 1, sequence: input.sequence, type: input.eventType,
     owner: input.owner, context, subject,
-    recipientUserId: input.userId, occurredAt: input.createdAt.toISOString(),
+    recipientUserId: input.userId, occurredAt: input.createdAt.toISOString(), payload: input.payload,
   });
 }
 

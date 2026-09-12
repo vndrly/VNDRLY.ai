@@ -246,6 +246,8 @@ static OSStatus Capture(void *context, AudioUnitRenderActionFlags *flags, const 
 @implementation WorkHubMeetingSession {
   NSString *_occurrenceId, *_sourceId;
   uint64_t _generation;
+  uint64_t _audioLeaseGeneration;
+  uint64_t _audioLeaseExpiryEpoch;
   __weak id<WorkHubMeetingSessionDelegate> _delegate;
   dispatch_queue_t _queue;
   std::atomic<bool> _valid;
@@ -262,7 +264,7 @@ static OSStatus Capture(void *context, AudioUnitRenderActionFlags *flags, const 
 - (instancetype)initWithOccurrenceId:(NSString *)occurrenceId generation:(uint64_t)generation sourceId:(NSString *)sourceId
                            iceServers:(NSArray<NSDictionary *> *)iceServers delegate:(id<WorkHubMeetingSessionDelegate>)delegate {
   if ((self = [super init])) {
-    _occurrenceId = [occurrenceId copy]; _generation = generation; _sourceId = [sourceId copy]; _delegate = delegate;
+    _occurrenceId = [occurrenceId copy]; _generation = generation; _audioLeaseGeneration = 0; _audioLeaseExpiryEpoch = 0; _sourceId = [sourceId copy]; _delegate = delegate;
     _valid.store(true); _queue = dispatch_queue_create("ai.vndrly.workhub.meeting", DISPATCH_QUEUE_SERIAL);
     dispatch_queue_set_specific(_queue, &kMeetingQueueKey, &kMeetingQueueKey, nullptr);
     _peers = [NSMutableDictionary dictionary]; _peerIds = [NSMapTable weakToStrongObjectsMapTable]; _pendingIce = [NSMutableDictionary dictionary];
@@ -306,7 +308,19 @@ static OSStatus Capture(void *context, AudioUnitRenderActionFlags *flags, const 
   if (!_valid.load()) return;
   [_delegate meetingSessionDidEmitSignal:@{ @"generation": @(_generation), @"toUserId": @(peerUserId), @"kind": kind, @"payload": payload }];
 }
-- (void)setMuted:(BOOL)muted { if (_valid.load()) { _track.isEnabled = !muted; [_audioDevice setCaptureAuthorized:!muted]; } }
+- (void)setMuted:(BOOL)muted leaseGeneration:(uint64_t)leaseGeneration leaseExpiresAtMs:(double)leaseExpiresAtMs {
+  if (!_valid.load()) return;
+  const uint64_t expiryEpoch = ++_audioLeaseExpiryEpoch;
+  if (muted) { _audioLeaseGeneration = 0; _track.isEnabled = NO; [_audioDevice setCaptureAuthorized:NO]; return; }
+  if (!leaseGeneration || leaseExpiresAtMs <= 0) { _track.isEnabled = NO; [_audioDevice setCaptureAuthorized:NO]; return; }
+  _audioLeaseGeneration = leaseGeneration; _track.isEnabled = YES; [_audioDevice setCaptureAuthorized:YES];
+  NSTimeInterval delay = MAX(0, (leaseExpiresAtMs / 1000.0) - [NSDate date].timeIntervalSince1970);
+  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+    if (self->_valid.load() && expiryEpoch == self->_audioLeaseExpiryEpoch && self->_audioLeaseGeneration == leaseGeneration) {
+      self->_audioLeaseGeneration = 0; self->_track.isEnabled = NO; [self->_audioDevice setCaptureAuthorized:NO];
+    }
+  });
+}
 - (void)setTranscriptionEnabled:(BOOL)enabled policyRevision:(uint64_t)policyRevision { if (_valid.load()) [_audioDevice setTranscriptionEnabled:enabled policyRevision:policyRevision]; }
 - (void)acknowledgeSequence:(uint64_t)sequence { if (_valid.load()) [_audioDevice acknowledgeSequence:sequence]; }
 - (void)createOfferForPeerUserId:(NSInteger)peerUserId {

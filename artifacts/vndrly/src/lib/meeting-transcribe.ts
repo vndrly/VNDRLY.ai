@@ -1,7 +1,7 @@
 import { workHubRequest } from "./work-hub-client";
 
 /** Meeting speech uses only VNDRLY's native service, never the assistant's external provider. */
-export async function transcribeMeetingRecording(occurrenceId: string, audio: Blob, signal: AbortSignal): Promise<string> {
+export async function transcribeMeetingRecording(occurrenceId: string, audio: Blob, signal: AbortSignal, authorization: Record<string, unknown>): Promise<string> {
   signal.throwIfAborted();
   const audioBase64 = await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
@@ -18,7 +18,7 @@ export async function transcribeMeetingRecording(occurrenceId: string, audio: Bl
     method: "POST", signal,
     // Browser codec parameters describe the same container; the server validates
     // the base type and the local decoder inspects the actual encoded bytes.
-    body: JSON.stringify({ audioBase64, mimeType: audio.type.split(";")[0].trim().toLowerCase() || "audio/webm" }),
+    body: JSON.stringify({ audioBase64, mimeType: audio.type.split(";")[0].trim().toLowerCase() || "audio/webm", ...authorization }),
   });
   signal.throwIfAborted();
   return result.text.trim();

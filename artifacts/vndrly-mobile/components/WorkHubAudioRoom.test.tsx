@@ -126,7 +126,7 @@ describe("native meeting microphone lifecycle", () => {
     render(<WorkHubAudioRoom occurrenceId="room-a" />); await join();
     await tick(); expect(native.setTranscription).not.toHaveBeenCalledWith(true, 2);
     fireEvent.click(screen.getByRole("button", { name: "Unmute" })); await settle(); await tick();
-    expect(native.setMuted).toHaveBeenCalledWith(false);
+    expect(native.setMuted).toHaveBeenCalledWith(false, 1, "2026-09-09T14:06:00Z");
     expect(native.setTranscription).toHaveBeenCalledWith(true, 2);
     fireEvent.click(screen.getByRole("button", { name: "Mute" }));
     expect(native.setMuted).toHaveBeenCalledWith(true);
@@ -316,6 +316,31 @@ describe("native meeting microphone lifecycle", () => {
     expect(local.track.stop).not.toHaveBeenCalled();
     expect(askVMicrophone.owner).toBe("work-hub-audio");
     expect(screen.getByRole("button", { name: "Unmute" })).toBeTruthy();
+  });
+  it("ignores queued WebRTC signals from a superseded participant endpoint", async () => {
+    const local = nativeStream(); env.capture.mockResolvedValue(local);
+    env.api.mockImplementation(async path => path.endsWith("/join") ? { ...info, peerConnections: [{ userId: 2, deviceId: "new-device", connectionId: "new-connection" }] }
+      : path.endsWith("/audio-state") ? { presentUserIds: [1, 2], peerConnections: [{ userId: 2, deviceId: "new-device", connectionId: "new-connection" }], recordingState: "off" }
+      : path.includes("/signals?") ? [{ sequence: 1, fromUserId: 2, fromDeviceId: "old-connection", kind: "answer", payload: { type: "answer", sdp: "stale" } }]
+      : response(path));
+    render(<WorkHubAudioRoom occurrenceId="room-a" />); await join(); await tick();
+    expect(env.peers[0].setRemoteDescription).not.toHaveBeenCalled();
+  });
+
+  it("rebuilds the remote peer when that user's selected audio endpoint changes", async () => {
+    const local = nativeStream(); env.capture.mockResolvedValue(local);
+    let connectionId = "20000000-0000-4000-8000-000000000001";
+    env.api.mockImplementation(async path => path.endsWith("/audio-state")
+      ? { presentUserIds: [1, 2], peerConnections: [{ userId: 2, deviceId: "30000000-0000-4000-8000-000000000001", connectionId }], recordingState: "off" }
+      : response(path));
+    render(<WorkHubAudioRoom occurrenceId="room-a" />); await join(); await tick();
+    expect(env.peers).toHaveLength(1);
+    connectionId = "20000000-0000-4000-8000-000000000002";
+    await tick(); await settle();
+    expect(env.peers[0].close).toHaveBeenCalledOnce();
+    expect(env.peers).toHaveLength(2);
+    const latestSignal = JSON.parse(writes("signal").at(-1)![1].body);
+    expect(latestSignal.toDeviceId).toBe(connectionId);
   });
   it("releases every late capture resource after cancellation even when disabling a track throws", async () => {
     const coordinator = new MicrophoneCoordinator();
