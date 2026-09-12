@@ -27,12 +27,12 @@ describe("Work Hub offline queue", () => {
       path: "/api/work-hub/tasks",
       method: "POST",
       payload: { title: "Inspect" },
-    });
+    }, { now: () => new Date("2026-09-11T11:59:59Z") });
     await enqueueWorkHubCommand(store, bob, {
       path: "/api/work-hub/tasks",
       method: "POST",
       payload: { title: "Other user" },
-    });
+    }, { now: () => new Date("2026-09-11T11:59:59Z") });
 
     const sent: string[] = [];
     await flushWorkHubCommands(store, susie, async (item) => {
@@ -67,7 +67,12 @@ describe("Work Hub offline queue", () => {
 
   it("honors Retry-After, preserves conflicts for resolution, and stops revoked scopes", async () => {
     const store = memoryStore();
-    await enqueueWorkHubCommand(store, susie, { path: "/api/work-hub/tasks", method: "POST", payload: { title: "Rate limited" } });
+    await enqueueWorkHubCommand(
+      store,
+      susie,
+      { path: "/api/work-hub/tasks", method: "POST", payload: { title: "Rate limited" } },
+      { now: () => new Date("2026-09-11T11:59:59Z") },
+    );
     await flushWorkHubCommands(store, susie, async () => {
       throw Object.assign(new Error("slow down"), { status: 429, retryAfterMs: 30_000 });
     }, { now: () => new Date("2026-09-11T12:00:00Z") });
