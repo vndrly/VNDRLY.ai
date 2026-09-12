@@ -54,6 +54,9 @@ export const workHubAudioLeasesTable = pgTable("work_hub_audio_leases", {
   tokenHash: text("token_hash").notNull(),
   state: text("state").notNull().default("active"),
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  pendingDeviceId: uuid("pending_device_id").references(() => workHubDevicesTable.id),
+  offerTokenHash: text("offer_token_hash"),
+  offerExpiresAt: timestamp("offer_expires_at", { withTimezone: true }),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 }, t => ({ occurrenceUserUnique: uniqueIndex("work_hub_audio_leases_occurrence_user_unique").on(t.occurrenceId, t.userId) }));
 

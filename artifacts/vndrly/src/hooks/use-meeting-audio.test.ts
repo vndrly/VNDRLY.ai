@@ -46,7 +46,7 @@ beforeEach(() => {
     async close() {} async resume() {}
   });
   Object.defineProperty(navigator, "mediaDevices", { configurable: true, value: { getUserMedia: async () => input } });
-  boundary.request.mockReset().mockImplementation(async (path: string) => path.endsWith("/join") ? { userId: 4, startedAt: "2026-09-09T14:05:00Z", iceServers: [] } : path.includes("/signals?") ? { sequence: 0, signals: [] } : {});
+  boundary.request.mockReset().mockImplementation(async (path: string) => path.endsWith("/join") ? { userId: 4, startedAt: "2026-09-09T14:05:00Z", iceServers: [] } : path.endsWith("/audio-lease") ? { token: "a".repeat(32), generation: 1, expiresAt: "2026-09-09T14:06:00Z" } : path.includes("/signals?") ? { sequence: 0, signals: [] } : {});
   boundary.transcribe.mockReset().mockResolvedValue("Check the north gate.");
   boundary.startStreaming.mockReset().mockResolvedValue({ stop: vi.fn() });
 });
@@ -57,6 +57,32 @@ async function connect(result: { current: ReturnType<typeof useMeetingAudio> }) 
 }
 
 describe("consented meeting microphone transcription", () => {
+  it("acquires the single-device audio lease before unmuting and releases it on mute", async () => {
+    const { result } = renderHook(() => useMeetingAudio("meeting", snapshot()));
+    await act(async () => { await result.current.join(); });
+    await act(async () => { await result.current.toggleMute(); });
+    const acquire = boundary.request.mock.calls.find(([path, options]) => path.endsWith("/audio-lease") && options?.method === "POST");
+    expect(acquire).toBeTruthy();
+    expect(track.enabled).toBe(true);
+    await act(async () => { await result.current.toggleMute(); });
+    expect(boundary.request.mock.calls.some(([path, options]) => path.endsWith("/audio-lease") && options?.method === "DELETE")).toBe(true);
+    expect(track.enabled).toBe(false);
+  });
+
+  it("stays muted when another device owns audio", async () => {
+    boundary.request.mockImplementation(async (path: string) => {
+      if (path.endsWith("/join")) return { userId: 4, startedAt: "2026-09-09T14:05:00Z", iceServers: [] };
+      if (path.endsWith("/audio-lease")) throw new Error("Audio is active on another device");
+      if (path.includes("/signals?")) return { sequence: 0, signals: [] };
+      return {};
+    });
+    const { result } = renderHook(() => useMeetingAudio("meeting", snapshot()));
+    await act(async () => { await result.current.join(); });
+    await act(async () => { await result.current.toggleMute(); });
+    expect(result.current.muted).toBe(true);
+    expect(track.enabled).toBe(false);
+    expect(result.current.error).toMatch(/another device/i);
+  });
   it("selects authenticated streaming capture on the same microphone without opening native recording", async () => {
     const data = snapshot(); data.streamingCaptureAvailable = true;
     const { result } = renderHook(() => useMeetingAudio("meeting", data));

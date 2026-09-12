@@ -57,6 +57,7 @@ function nativeStream() {
 const info = { userId: 1, iceServers: [], recordingAllowed: true, policyVersion: 2, consentAccepted: false };
 function response(path: string) {
   if (path.endsWith("/join")) return info;
+  if (path.endsWith("/audio-lease")) return { token: "a".repeat(32), generation: 1, expiresAt: "2026-09-09T14:06:00Z" };
   if (path.endsWith("/audio-state")) return { presentUserIds: [1, 2], recordingState: "off" };
   if (path.includes("/signals?")) return [];
   return {};

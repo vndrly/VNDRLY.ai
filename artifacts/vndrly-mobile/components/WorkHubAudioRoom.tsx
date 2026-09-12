@@ -17,11 +17,15 @@ type Session = {
   toggle: () => void;
   forceMute: () => void;
   consent: () => void;
+  moveAudio: () => void;
+  cancelFailover: () => void;
 };
 type MeetingPeer = { userId: number; deviceId: string; connectionId: string };
 type MeetingIdentity = { deviceId: string; connectionId: string };
 type JoinInfo = MeetingIdentity & { userId: number; iceServers: any[]; recordingAllowed: boolean; policyVersion: number; consentAccepted?: boolean; peerConnections?: MeetingPeer[] };
 type Signal = { sequence: number; fromUserId: number; fromDeviceId?: string; kind: string; payload: any };
+type ServerAudioLease = { token: string; generation: number; expiresAt: string };
+type ServerAudioState = { deviceId: string; generation: number; active: boolean; expiresAt: string; pendingDeviceId: string | null };
 // The installed package's EventTarget declaration omits these inherited APIs.
 type NativeEvents = {
   addEventListener: (name: string, listener: (event: any) => void) => void;
@@ -46,6 +50,9 @@ export default function WorkHubAudioRoom({ occurrenceId, hostMuted = false, host
   const [consented, setConsented] = useState(false);
   const [policy, setPolicy] = useState<number | null>(null);
   const [error, setError] = useState("");
+  const [audioOnAnotherDevice, setAudioOnAnotherDevice] = useState(false);
+  const [handoffBusy, setHandoffBusy] = useState(false);
+  const [failoverCountdown, setFailoverCountdown] = useState<number | null>(null);
   const current = useRef<Session | null>(null);
   const generation = useRef(0);
   const mounted = useRef(false);
@@ -96,11 +103,15 @@ export default function WorkHubAudioRoom({ occurrenceId, hostMuted = false, host
     let interval: ReturnType<typeof setInterval> | null = null;
     let joinedServer = false, localMuted = true, presencePending = false, consentPending = false;
     let accepted = false, recordingPolicy: number | null = null, recordingActive = false;
-    let identity: MeetingIdentity | null = null, lastDeviceHeartbeat = 0;
+    let identity: MeetingIdentity | null = null, lastDeviceHeartbeat = 0, lastAudioLeaseRenewal = 0;
+    let serverAudioLease: ServerAudioLease | null = null;
+    let failoverDeadline: { generation: number; at: number } | null = null;
+    let cancelledFailoverGeneration: number | null = null;
+    let failoverStarting = false;
     const peerConnectionByUser = new Map<number, MeetingPeer>();
     let nativeTranscribing = false, nativeTranscriptionPending = false;
     const trackListeners: Array<() => void> = [];
-    const session: Session = { valid: true, token: getCachedToken() ?? undefined, stop: () => {}, toggle: () => {}, forceMute: () => {}, consent: () => {} };
+    const session: Session = { valid: true, token: getCachedToken() ?? undefined, stop: () => {}, toggle: () => {}, forceMute: () => {}, consent: () => {}, moveAudio: () => {}, cancelFailover: () => {} };
     current.current = session;
     const live = () => session.valid && current.current === session && mounted.current;
     const check = () => { if (!live()) throw cancelled(); };
@@ -117,6 +128,11 @@ export default function WorkHubAudioRoom({ occurrenceId, hostMuted = false, host
       }
       if (failures.length) throw failures[0];
     };
+    async function releaseServerAudio() {
+      const owned = serverAudioLease; serverAudioLease = null;
+      if (!owned || !identity || session.token !== getCachedToken()) return;
+      await apiFetch(`/api/work-hub/meetings/${occurrenceId}/audio-lease`, { method: "DELETE", body: JSON.stringify({ ...identity, token: owned.token, generation: owned.generation }) }).catch(() => undefined);
+    }
     // Called INSIDE the coordinator's serialized handoff. Never wait for the
     // lease release (or all of join, which may itself be waiting for a lease).
     // Only actual native acquisition can still produce a microphone to clean up.
@@ -125,6 +141,7 @@ export default function WorkHubAudioRoom({ occurrenceId, hostMuted = false, host
       session.valid = false;
       const failures: unknown[] = [];
       local?.getTracks().forEach(track => { try { track.enabled = false; } catch (cause) { failures.push(cause); } });
+      void releaseServerAudio();
       controller.abort();
       if (interval !== null) clearInterval(interval);
       if (pollingTimer.current === interval) pollingTimer.current = null;
@@ -132,7 +149,7 @@ export default function WorkHubAudioRoom({ occurrenceId, hostMuted = false, host
       if (current.current === session) {
         current.current = null;
         if (mounted.current) {
-          setJoined(false); setBusy(false); setMuted(true); setRecording(false); setConsented(false); setPolicy(null);
+          setJoined(false); setBusy(false); setMuted(true); setRecording(false); setConsented(false); setPolicy(null); setAudioOnAnotherDevice(false); setHandoffBusy(false); setFailoverCountdown(null);
           if (message) setError(message);
         }
       }
@@ -210,13 +227,19 @@ export default function WorkHubAudioRoom({ occurrenceId, hostMuted = false, host
         void native.setMuted(true).catch(failure); nativeTranscribing = false;
       }
       localMuted = true; setMuted(true); presencePending = true;
-      void request("presence", { muted: next }).then(async () => {
+      void (async () => {
+        if (!next) {
+          serverAudioLease = await request<ServerAudioLease>("audio-lease", {});
+          lastAudioLeaseRenewal = Date.now();
+        }
+        await request("presence", { muted: next });
+        if (next) await releaseServerAudio();
         check(); localMuted = next;
         local?.getAudioTracks().forEach(track => { check(); track.enabled = !next; });
         if (native) await native.setMuted(next);
         setMuted(next);
         reconcileNativeTranscription();
-      }).catch(failure).finally(() => { presencePending = false; });
+      })().catch(async cause => { await releaseServerAudio(); failure(cause); }).finally(() => { presencePending = false; });
     };
     session.forceMute = () => {
       if (!live()) return;
@@ -226,6 +249,7 @@ export default function WorkHubAudioRoom({ occurrenceId, hostMuted = false, host
         void native.setMuted(true).catch(failure); nativeTranscribing = false;
       }
       localMuted = true; setMuted(true);
+      void releaseServerAudio();
       if (!presencePending) {
         presencePending = true;
         void request("presence", { muted: true }).catch(failure).finally(() => { presencePending = false; });
@@ -237,6 +261,21 @@ export default function WorkHubAudioRoom({ occurrenceId, hostMuted = false, host
       void request("consent", { policyVersion: recordingPolicy, response: next ? "accepted" : "declined" }).then(() => {
         check(); accepted = next; setConsented(next); reconcileNativeTranscription();
       }).catch(failure).finally(() => { consentPending = false; });
+    };
+    session.moveAudio = () => {
+      if (!live() || !identity) return;
+      setHandoffBusy(true); setError("");
+      void request("audio-handoff/request", {}).then(() => request<ServerAudioLease>("audio-handoff/accept", {})).then(async acquired => {
+        check(); serverAudioLease = acquired; lastAudioLeaseRenewal = Date.now(); localMuted = false; setMuted(false); setAudioOnAnotherDevice(false);
+        local?.getAudioTracks().forEach(track => { check(); track.enabled = true; });
+        if (native) await native.setMuted(false);
+        await request("presence", { muted: false });
+        reconcileNativeTranscription();
+      }).catch(failure).finally(() => { if (live()) setHandoffBusy(false); });
+    };
+    session.cancelFailover = () => {
+      cancelledFailoverGeneration = failoverDeadline?.generation ?? cancelledFailoverGeneration;
+      failoverDeadline = null; setFailoverCountdown(null);
     };
 
     try {
@@ -301,7 +340,32 @@ export default function WorkHubAudioRoom({ occurrenceId, hostMuted = false, host
             await apiFetch(`/api/work-hub/devices/${identity.deviceId}/heartbeat`, { method: "POST", body: JSON.stringify({ connectionId: identity.connectionId, foreground: true, microphonePermission: "granted", surface: { path: `/work-hub/meetings/${occurrenceId}`, entityType: "meeting", entityId: occurrenceId, updatedAt: Date.now() } }), signal: controller.signal }); check();
             lastDeviceHeartbeat = Date.now();
           }
-          const state = await request<{ presentUserIds: number[]; peerConnections?: MeetingPeer[]; recordingState: string }>("audio-state"); check();
+          if (!localMuted && serverAudioLease && Date.now() - lastAudioLeaseRenewal > 8_000) {
+            const owned = serverAudioLease;
+            serverAudioLease = await apiFetch<ServerAudioLease>(`/api/work-hub/meetings/${occurrenceId}/audio-lease`, { method: "PUT", body: JSON.stringify({ ...identity, token: owned.token, generation: owned.generation }), signal: controller.signal }); check();
+            lastAudioLeaseRenewal = Date.now();
+          }
+          const state = await request<{ presentUserIds: number[]; peerConnections?: MeetingPeer[]; recordingState: string; audioOwnership?: ServerAudioState | null; automaticBackupDeviceId?: string | null }>("audio-state"); check();
+          setAudioOnAnotherDevice(Boolean(state.audioOwnership?.active && state.audioOwnership.deviceId !== identity?.deviceId));
+          if (serverAudioLease && state.audioOwnership && (state.audioOwnership.deviceId !== identity?.deviceId || state.audioOwnership.generation !== serverAudioLease.generation)) {
+            serverAudioLease = null; localMuted = true; setMuted(true);
+            local?.getAudioTracks().forEach(track => { track.enabled = false; });
+            if (native) await native.setMuted(true);
+          }
+          if (identity && state.audioOwnership && !state.audioOwnership.active && state.automaticBackupDeviceId === identity.deviceId && cancelledFailoverGeneration !== state.audioOwnership.generation) {
+            if (!failoverDeadline || failoverDeadline.generation !== state.audioOwnership.generation) failoverDeadline = { generation: state.audioOwnership.generation, at: Date.now() + 3_000 };
+            const remaining = Math.max(0, Math.ceil((failoverDeadline.at - Date.now()) / 1_000)); setFailoverCountdown(remaining);
+            if (remaining === 0 && !failoverStarting) {
+              failoverStarting = true;
+              try {
+                const acquired = await request<ServerAudioLease>("audio-failover/activate", { expectedGeneration: failoverDeadline.generation });
+                serverAudioLease = acquired; lastAudioLeaseRenewal = Date.now(); localMuted = false; setMuted(false); setAudioOnAnotherDevice(false);
+                local?.getAudioTracks().forEach(track => { track.enabled = true; });
+                if (native) await native.setMuted(false);
+                await request("presence", { muted: false });
+              } finally { failoverDeadline = null; failoverStarting = false; setFailoverCountdown(null); }
+            }
+          } else if (!state.audioOwnership || state.audioOwnership.active || state.automaticBackupDeviceId !== identity?.deviceId) { failoverDeadline = null; setFailoverCountdown(null); }
           peerConnectionByUser.clear();
           const discoveredPeers = state.peerConnections ?? info.peerConnections ?? state.presentUserIds.filter(userId => userId !== info.userId).map(userId => ({ userId, deviceId: `legacy:${userId}`, connectionId: `legacy:${userId}` }));
           for (const peer of discoveredPeers) if (!peerConnectionByUser.has(peer.userId)) peerConnectionByUser.set(peer.userId, peer);
@@ -394,6 +458,7 @@ export default function WorkHubAudioRoom({ occurrenceId, hostMuted = false, host
       state: recording ? t("meetingWorkspace.audio.recordingActive") : t("meetingWorkspace.audio.recordingOff"),
     })}</Text>
     {!!error && <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{error}</Text>}
+    {failoverCountdown !== null && <View accessibilityRole="alert"><Text style={{ color: colors.text }}>{t("meetingWorkspace.audio.failoverCountdown", { count: failoverCountdown, defaultValue: "Audio device disconnected. This microphone will turn on in {{count}} seconds." })}</Text><Pressable accessibilityRole="button" onPress={() => current.current?.cancelFailover()}><Text style={{ color: colors.destructive, padding: 10 }}>{t("meetingWorkspace.audio.cancelFailover", { defaultValue: "Keep microphone off" })}</Text></Pressable></View>}
     {consentControl}
     <View style={{ flexDirection: "row", gap: 20 }}>
       <Pressable accessibilityRole="button" accessibilityLabel={primaryLabel}
@@ -407,6 +472,7 @@ export default function WorkHubAudioRoom({ occurrenceId, hostMuted = false, host
         onPress={() => current.current?.stop(undefined, true)}>
         <Text style={{ color: colors.destructive, padding: 10 }}>{t("meetingWorkspace.audio.leave")}</Text>
       </Pressable>}
+      {joined && audioOnAnotherDevice && <Pressable accessibilityRole="button" disabled={handoffBusy || hostMuted} accessibilityLabel={t("meetingWorkspace.audio.moveHere", { defaultValue: "Move audio here" })} onPress={() => current.current?.moveAudio()}><Text style={{ color: colors.primary, padding: 10 }}>{handoffBusy ? t("meetingWorkspace.audio.moving", { defaultValue: "Moving audio…" }) : t("meetingWorkspace.audio.moveHere", { defaultValue: "Move audio here" })}</Text></Pressable>}
     </View>
   </View>;
 }

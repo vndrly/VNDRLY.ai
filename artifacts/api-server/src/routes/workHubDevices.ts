@@ -10,6 +10,7 @@ import {
   WorkHubDeviceError,
   type DeviceActor,
 } from "../work-hub/device-coordinator";
+import { getDevicePreferences, saveDevicePreferences } from "../work-hub/device-preferences";
 
 const router: IRouter = Router();
 const uuid = z.string().uuid();
@@ -29,6 +30,9 @@ const heartbeatSchema = z.object({
   connectionId: uuid, foreground: z.boolean(),
   microphonePermission: z.enum(["unknown", "granted", "denied"]),
   surface: surfaceSchema.nullable().optional(),
+}).strict();
+const preferencesSchema = z.object({
+  rankedDeviceIds: z.array(uuid).max(20), automaticBackupDeviceIds: z.array(uuid).max(20),
 }).strict();
 
 export function activeOwnerFromSession(session: SessionPayload & { userId: number }): DeviceActor | null {
@@ -73,6 +77,19 @@ router.post("/work-hub/devices/:deviceId/heartbeat", async (req, res) => {
   catch (error) { return handleError(res, error); }
 });
 router.get("/work-hub/devices", async (_req, res) => res.json(await deviceCoordinator.listDevices(res.locals.deviceActor)));
+router.get("/work-hub/devices/preferences", async (_req, res) => res.json(await getDevicePreferences(res.locals.deviceActor)));
+router.put("/work-hub/devices/preferences", async (req, res) => {
+  try {
+    const input = preferencesSchema.parse(req.body);
+    const devices = await deviceCoordinator.listDevices(res.locals.deviceActor);
+    const owned = new Set(devices.filter(device => !device.revokedAt).map(device => device.id));
+    const rankedDeviceIds = [...new Set(input.rankedDeviceIds)];
+    const automaticBackupDeviceIds = [...new Set(input.automaticBackupDeviceIds)];
+    if (![...rankedDeviceIds, ...automaticBackupDeviceIds].every(id => owned.has(id))) return sendApiError(res, 404, "work_hub.not_found", "Device not found");
+    const current = await getDevicePreferences(res.locals.deviceActor);
+    return res.json(await saveDevicePreferences(res.locals.deviceActor, { rankedDeviceIds, automaticBackupDeviceIds, learning: current.learning }));
+  } catch (error) { return handleError(res, error); }
+});
 router.delete("/work-hub/devices/:deviceId", async (req, res) => {
   try { await deviceCoordinator.revokeDevice(res.locals.deviceActor, uuid.parse(req.params.deviceId)); return res.status(204).end(); }
   catch (error) { return handleError(res, error); }

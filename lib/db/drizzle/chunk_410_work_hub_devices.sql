@@ -17,3 +17,6 @@ CREATE UNIQUE INDEX IF NOT EXISTS "work_hub_meeting_speak_requests_pending_uniqu
 ALTER TABLE "work_hub_meeting_participants" ADD COLUMN IF NOT EXISTS "host_muted_at" timestamptz;
 ALTER TABLE "work_hub_meeting_participants" ADD COLUMN IF NOT EXISTS "host_muted_by_id" integer REFERENCES "users"("id");
 ALTER TABLE "work_hub_meeting_participants" ADD COLUMN IF NOT EXISTS "host_mute_generation" integer NOT NULL DEFAULT 0;
+ALTER TABLE "work_hub_audio_leases" ADD COLUMN IF NOT EXISTS "pending_device_id" uuid REFERENCES "work_hub_devices"("id");
+ALTER TABLE "work_hub_audio_leases" ADD COLUMN IF NOT EXISTS "offer_token_hash" text;
+ALTER TABLE "work_hub_audio_leases" ADD COLUMN IF NOT EXISTS "offer_expires_at" timestamptz;

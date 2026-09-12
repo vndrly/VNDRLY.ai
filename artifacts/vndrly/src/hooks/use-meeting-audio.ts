@@ -8,6 +8,8 @@ type MeetingIdentity = { deviceId: string; connectionId: string };
 type Join = MeetingIdentity & { userId: number; startedAt: string; iceServers: RTCIceServer[]; peerConnections: MeetingPeer[] };
 type Signal = { sequence: number; fromUserId: number; fromDeviceId?: string; kind: "offer" | "answer" | "ice"; payload: RTCSessionDescriptionInit & RTCIceCandidateInit };
 type Peer = { userId: number; connection: RTCPeerConnection; audio: HTMLAudioElement; pendingIce: RTCIceCandidateInit[] };
+type OwnershipLease = { token: string; generation: number; expiresAt: string };
+type OwnershipState = { deviceId: string; generation: number; active: boolean; expiresAt: string; pendingDeviceId: string | null };
 
 const DEVICE_STORAGE_KEY = "vndrly.workHubDeviceId";
 function browserDeviceId() {
@@ -21,6 +23,9 @@ export function useMeetingAudio(occurrenceId: string, snapshot: MeetingSnapshot 
   const [muted, setMuted] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [needsPlayback, setNeedsPlayback] = useState(false);
+  const [audioOwnerDeviceId, setAudioOwnerDeviceId] = useState<string | null>(null);
+  const [failoverCountdown, setFailoverCountdown] = useState<number | null>(null);
+  const [handoffBusy, setHandoffBusy] = useState(false);
   const peers = useRef(new Map<string, Peer>());
   const stream = useRef<MediaStream | null>(null);
   const transcription = useMeetingTranscription(occurrenceId, snapshot, joined, muted, stream);
@@ -34,18 +39,30 @@ export function useMeetingAudio(occurrenceId: string, snapshot: MeetingSnapshot 
   const joining = useRef(false);
   const identity = useRef<MeetingIdentity>({ deviceId: browserDeviceId(), connectionId: createWorkHubOperationId() });
   const lastDeviceHeartbeat = useRef(0);
+  const ownership = useRef<OwnershipLease | null>(null);
+  const lastLeaseRenewal = useRef(0);
+  const failoverDeadline = useRef<{ generation: number; at: number } | null>(null);
+  const failoverStarting = useRef(false);
+  const cancelledFailoverGeneration = useRef<number | null>(null);
+  const releaseOwnership = useCallback(async (keepalive = false) => {
+    const current = ownership.current; ownership.current = null;
+    if (!current) return;
+    await workHubRequest(`/meetings/${occurrenceId}/audio-lease`, { method: "DELETE", body: JSON.stringify({ ...identity.current, token: current.token, generation: current.generation }), keepalive }).catch(() => undefined);
+  }, [occurrenceId]);
   const closePeer = (id: string) => {
     const peer = peers.current.get(id); if (!peer) return;
     peer.connection.close(); peer.audio.pause(); peer.audio.srcObject = null; peers.current.delete(id);
   };
   const cleanup = useCallback(() => {
+    void releaseOwnership(true);
     stopTranscription();
     lease.current = null;
     peers.current.forEach((_, id) => closePeer(id));
     stream.current?.getTracks().forEach((track) => track.stop()); stream.current = null;
     void analyser.current?.context.close(); analyser.current = null;
     mutedRef.current = true;
-  }, [stopTranscription]);
+    failoverDeadline.current = null; failoverStarting.current = false; cancelledFailoverGeneration.current = null; setFailoverCountdown(null); setAudioOwnerDeviceId(null);
+  }, [releaseOwnership, stopTranscription]);
   const leave = useCallback(async () => {
     cleanup(); setJoined(false); setMuted(true);
     try { await workHubRequest(`/meetings/${occurrenceId}/leave`, { method: "POST", body: JSON.stringify(identity.current), keepalive: true }); }
@@ -114,8 +131,32 @@ export function useMeetingAudio(occurrenceId: string, snapshot: MeetingSnapshot 
           lastDeviceHeartbeat.current = Date.now();
         }
         await workHubRequest(`/meetings/${occurrenceId}/presence`, { method: "POST", body: JSON.stringify({ ...identity.current, muted: mutedRef.current, speaking }) });
+        if (ownership.current && !mutedRef.current && Date.now() - lastLeaseRenewal.current > 8_000) {
+          const current = ownership.current;
+          const renewed = await workHubRequest<{ generation: number; expiresAt: string }>(`/meetings/${occurrenceId}/audio-lease`, { method: "PUT", body: JSON.stringify({ ...identity.current, token: current.token, generation: current.generation }) });
+          if (ownership.current === current) ownership.current = { ...current, ...renewed };
+          lastLeaseRenewal.current = Date.now();
+        }
         if (stopped) return;
-        const audioState = await workHubRequest<{ presentUserIds: number[]; peerConnections: MeetingPeer[]; recordingState: string }>(`/meetings/${occurrenceId}/audio-state?deviceId=${identity.current.deviceId}&connectionId=${identity.current.connectionId}`);
+        const audioState = await workHubRequest<{ presentUserIds: number[]; peerConnections: MeetingPeer[]; recordingState: string; audioOwnership: OwnershipState | null; automaticBackupDeviceId: string | null }>(`/meetings/${occurrenceId}/audio-state?deviceId=${identity.current.deviceId}&connectionId=${identity.current.connectionId}`);
+        setAudioOwnerDeviceId(audioState.audioOwnership?.active ? audioState.audioOwnership.deviceId : null);
+        if (ownership.current && audioState.audioOwnership && (audioState.audioOwnership.deviceId !== identity.current.deviceId || audioState.audioOwnership.generation !== ownership.current.generation)) {
+          ownership.current = null; mutedRef.current = true; setMuted(true); stopTranscription();
+          stream.current?.getAudioTracks().forEach(track => { track.enabled = false; });
+        }
+        if (audioState.audioOwnership && !audioState.audioOwnership.active && audioState.automaticBackupDeviceId === identity.current.deviceId && cancelledFailoverGeneration.current !== audioState.audioOwnership.generation) {
+          if (!failoverDeadline.current || failoverDeadline.current.generation !== audioState.audioOwnership.generation) failoverDeadline.current = { generation: audioState.audioOwnership.generation, at: Date.now() + 3_000 };
+          const remaining = Math.max(0, Math.ceil((failoverDeadline.current.at - Date.now()) / 1_000)); setFailoverCountdown(remaining);
+          if (remaining === 0 && !failoverStarting.current) {
+            failoverStarting.current = true;
+            try {
+              const acquired = await workHubRequest<OwnershipLease>(`/meetings/${occurrenceId}/audio-failover/activate`, { method: "POST", body: JSON.stringify({ ...identity.current, expectedGeneration: failoverDeadline.current.generation }) });
+              ownership.current = acquired; lastLeaseRenewal.current = Date.now(); mutedRef.current = false; setMuted(false); setAudioOwnerDeviceId(identity.current.deviceId);
+              stream.current?.getAudioTracks().forEach(track => { track.enabled = true; });
+              await workHubRequest(`/meetings/${occurrenceId}/presence`, { method: "POST", body: JSON.stringify({ ...identity.current, muted: false }) });
+            } finally { failoverDeadline.current = null; failoverStarting.current = false; setFailoverCountdown(null); }
+          }
+        } else { failoverDeadline.current = null; setFailoverCountdown(null); }
         const others = audioState.peerConnections ?? lease.current.peerConnections ?? [];
         for (const id of peers.current.keys()) if (!others.some(person => person.connectionId === id)) closePeer(id);
         for (const person of others) {
@@ -160,16 +201,46 @@ export function useMeetingAudio(occurrenceId: string, snapshot: MeetingSnapshot 
   }, [joined, occurrenceId, cleanup, leave]);
 
   const toggleMute = async () => {
-    const next = !mutedRef.current; mutedRef.current = next; setMuted(next);
-    if (next) stopTranscription();
-    stream.current?.getAudioTracks().forEach((track) => { track.enabled = !next; });
-    if (!next) await analyser.current?.context.resume();
-    try { await workHubRequest(`/meetings/${occurrenceId}/presence`, { method: "POST", body: JSON.stringify({ ...identity.current, muted: next }) }); }
-    catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to update microphone."); }
+    const next = !mutedRef.current;
+    if (next) {
+      mutedRef.current = true; setMuted(true); stopTranscription();
+      stream.current?.getAudioTracks().forEach((track) => { track.enabled = false; });
+      await releaseOwnership();
+      try { await workHubRequest(`/meetings/${occurrenceId}/presence`, { method: "POST", body: JSON.stringify({ ...identity.current, muted: true }) }); }
+      catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to update microphone."); }
+      return;
+    }
+    try {
+      const acquired = await workHubRequest<OwnershipLease>(`/meetings/${occurrenceId}/audio-lease`, { method: "POST", body: JSON.stringify(identity.current) });
+      ownership.current = acquired; lastLeaseRenewal.current = Date.now();
+      await workHubRequest(`/meetings/${occurrenceId}/presence`, { method: "POST", body: JSON.stringify({ ...identity.current, muted: false }) });
+      mutedRef.current = false; setMuted(false); setError(null);
+      stream.current?.getAudioTracks().forEach((track) => { track.enabled = true; });
+      await analyser.current?.context.resume();
+    } catch (cause) {
+      await releaseOwnership();
+      mutedRef.current = true; setMuted(true);
+      stream.current?.getAudioTracks().forEach((track) => { track.enabled = false; });
+      setError(cause instanceof Error ? cause.message : "Unable to move audio to this device.");
+    }
   };
   const enablePlayback = async () => {
     const results = await Promise.allSettled([...peers.current.values()].map((p) => p.audio.play()));
     setNeedsPlayback(results.some((r) => r.status === "rejected"));
   };
-  return { joined, muted, join, leave, toggleMute, error, needsPlayback, enablePlayback, stream, ...transcription };
+  const moveAudioHere = async () => {
+    if (!joined || handoffBusy || audioOwnerDeviceId === identity.current.deviceId) return;
+    setHandoffBusy(true); setError(null);
+    try {
+      await workHubRequest(`/meetings/${occurrenceId}/audio-handoff/request`, { method: "POST", body: JSON.stringify(identity.current) });
+      const acquired = await workHubRequest<OwnershipLease>(`/meetings/${occurrenceId}/audio-handoff/accept`, { method: "POST", body: JSON.stringify(identity.current) });
+      ownership.current = acquired; lastLeaseRenewal.current = Date.now(); mutedRef.current = false; setMuted(false); setAudioOwnerDeviceId(identity.current.deviceId);
+      stream.current?.getAudioTracks().forEach(track => { track.enabled = true; });
+      await workHubRequest(`/meetings/${occurrenceId}/presence`, { method: "POST", body: JSON.stringify({ ...identity.current, muted: false }) });
+      await analyser.current?.context.resume();
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to move audio to this device."); }
+    finally { setHandoffBusy(false); }
+  };
+  const cancelFailover = () => { cancelledFailoverGeneration.current = failoverDeadline.current?.generation ?? null; failoverDeadline.current = null; setFailoverCountdown(null); };
+  return { joined, muted, join, leave, toggleMute, error, needsPlayback, enablePlayback, stream, audioOwnerDeviceId, audioOnAnotherDevice: Boolean(audioOwnerDeviceId && audioOwnerDeviceId !== identity.current.deviceId), moveAudioHere, handoffBusy, failoverCountdown, cancelFailover, ...transcription };
 }
