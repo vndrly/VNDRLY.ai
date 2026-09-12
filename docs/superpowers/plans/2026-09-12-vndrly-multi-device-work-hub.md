@@ -33,6 +33,7 @@
 - Create: `lib/db/src/schema/workHubDevices.ts`
 - Modify: `lib/db/src/schema/index.ts`
 - Create: `lib/db/drizzle/chunk_410_work_hub_devices.sql`
+- Create: `scripts/work-hub-devices-migration.mjs`
 - Create: `artifacts/api-server/scripts/apply-work-hub-devices-migration.mjs`
 - Modify: `artifacts/api-server/package.json`
 - Create: `scripts/tests/work-hub-devices-migration.test.mjs`

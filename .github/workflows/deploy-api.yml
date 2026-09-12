@@ -144,6 +144,7 @@ jobs:
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:work-hub-meeting-collaboration
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:work-hub-governance-export
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:work-hub-meeting-replay
+          sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:work-hub-devices
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" APPLY_PUBLIC_DATA_API_HARDENING=1 pnpm --filter @workspace/api-server run migrate:public-data-api-hardening
           # The additive schema defaults Work Hub off. This authorized launch opts in
           # only when the VPS has no explicit environment rollout setting.

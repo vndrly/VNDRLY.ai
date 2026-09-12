@@ -109,3 +109,4 @@ export * from "./workHubFinance";
 export * from "./workHubScheduling";
 export * from "./workHubCalls";
 export * from "./workHubFileLibrary";
+export * from "./workHubDevices";

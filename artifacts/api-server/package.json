@@ -34,6 +34,7 @@
     "migrate:work-hub-meeting-collaboration": "node scripts/apply-work-hub-meeting-collaboration-migration.mjs",
     "migrate:work-hub-governance-export": "node scripts/apply-work-hub-governance-export-migration.mjs",
     "migrate:work-hub-meeting-replay": "node scripts/apply-work-hub-meeting-replay-migration.mjs",
+    "migrate:work-hub-devices": "node scripts/apply-work-hub-devices-migration.mjs",
     "eval": "vitest run --config vitest.eval.config.ts",
     "eval:tool-use": "vitest run --config vitest.eval.config.ts src/assistant/__evals__/tool-use.eval.ts",
     "eval:tone": "vitest run --config vitest.eval.config.ts src/assistant/__evals__/tone.eval.ts",
