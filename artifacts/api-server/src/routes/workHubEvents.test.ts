@@ -5,6 +5,8 @@ describe("Work Hub durable event cursor recovery", () => {
   it("returns ordered events after the cursor and signals an expired cursor", async () => {
     const events: DurableUserEvent[] = [5, 6].map(sequence => ({ id: `event-${sequence}`, sequence, userId: 7, owner: { type: "vendor", id: 12 }, eventType: "work_hub.workspace.updated", payload: {}, createdAt: new Date() }));
     const store = {
+      listExpiredEventActors: async () => [],
+      pruneEvents: async () => 0,
       eventBounds: async () => ({ earliest: 5, latest: 6 }),
       listEventsAfter: async (_actor: unknown, cursor: number) => events.filter(event => event.sequence > cursor),
     } as unknown as DeviceCoordinatorStore;
