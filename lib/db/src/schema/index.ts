@@ -102,6 +102,7 @@ export * from "./workHubWork";
 export * from "./workHubSchedule";
 export * from "./workHubMeetings";
 export * from "./workHubMeetingReplay";
+export * from "./workHubMeetingParticipation";
 export * from "./workHubConnectors";
 export * from "./workHubImports";
 export * from "./workHubCollaboration";

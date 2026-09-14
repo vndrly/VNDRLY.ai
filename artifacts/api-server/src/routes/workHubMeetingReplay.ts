@@ -11,6 +11,7 @@ import {
   workHubMeetingReplayEventsTable as replayEvents,
   workHubMeetingReplayAssignmentsTable as replayAssignments,
 } from "@workspace/db";
+import { workHubMeetingRecordingRetentionTable as recordingRetention, workHubMeetingRecordingHoldsTable as recordingHolds } from "@workspace/db/schema";
 import { getSessionFromRequest } from "../lib/session";
 import { sendApiError } from "../lib/apiError";
 import { getObjectStore } from "../lib/objectStore";
@@ -21,6 +22,7 @@ import {
   MeetingReplayError, buildReplayManifest, serializeReplayEvent, validateReplayChunk, type ReplayEventType, type ReplayGap,
 } from "../work-hub/meeting-replay";
 import { advanceReplayProgress, normalizeWatchedIntervals, type WatchedInterval } from "../work-hub/meeting-replay-progress";
+import { applyRecordingRetention, placeRecordingHold } from "../services/meeting-participation";
 
 const router = Router();
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -336,8 +338,45 @@ router.post("/:occurrenceId/replay/finalize", express.json({ limit: "128kb" }), 
       const events = await tx.select().from(replayEvents).where(eq(replayEvents.manifestId, manifest.id)).orderBy(asc(replayEvents.offsetMs));
       buildReplayManifest({ occurrenceId: ctx.occurrenceId, meetingStartedAt: manifest.meetingStartedAt, meetingStatus: ctx.occurrence.status, manifestStatus: "finalized", rendererVersion: manifest.rendererVersion, schemaVersion: manifest.schemaVersion, durationMs, chunks: chunks as any, events: events as any, explicitGaps: finalGaps });
       await tx.update(replayManifests).set({ status: "finalized", meetingEndedAt: endedAt, durationMs, gapMarkers: finalGaps, updatedAt: new Date() }).where(eq(replayManifests.id, manifest.id));
+      const retentionDecision = applyRecordingRetention({ endedAt, now: new Date(), activeHolds: [] });
+      await tx.insert(recordingRetention).values({ manifestId: manifest.id, occurrenceId: ctx.occurrenceId, retentionDays: 30, rawMediaExpiresAt: retentionDecision.rawMediaExpiresAt }).onConflictDoUpdate({ target: recordingRetention.manifestId, set: { rawMediaExpiresAt: retentionDecision.rawMediaExpiresAt, updatedAt: new Date() } });
       await audit(tx, ctx, "meeting.replay_finalized", { durationMs, gapCount: finalGaps.length, chunkCount: chunks.length });
-      return { finalized: true, replayed: false };
+      return { finalized: true, replayed: false, rawMediaExpiresAt: retentionDecision.rawMediaExpiresAt, transcriptRetained: true, summaryRetained: true };
+    });
+    return res.json(result);
+  } catch (error) { return handle(error, res, next); }
+});
+
+router.post("/:occurrenceId/replay/holds", express.json({ limit: "4kb" }), async (req, res, next): Promise<Response | void> => {
+  try {
+    const payload = z.object({ kind: z.enum(["legal", "incident", "evidence"]), reason: z.string().trim().min(1).max(1_000) }).strict().parse(req.body);
+    const result = await db.transaction(async (tx) => {
+      const ctx = await context(req, tx, { allowAdminOutsideRoster: true }); requireReplayable(ctx); requireAssignmentManager(ctx);
+      const [retention] = await tx.select().from(recordingRetention).where(eq(recordingRetention.occurrenceId, ctx.occurrenceId)).for("update");
+      if (!retention) throw new ReplayRouteError(409, "The recording retention clock is not available");
+      const hold = placeRecordingHold({ ...payload, placedByUserId: ctx.session.userId });
+      const [saved] = await tx.insert(recordingHolds).values({ retentionId: retention.id, kind: hold.kind, reason: hold.reason, placedByUserId: hold.placedByUserId, placedAt: hold.placedAt }).returning();
+      await audit(tx, ctx, "meeting.recording_hold_placed", { holdId: saved.id, kind: saved.kind });
+      return saved;
+    });
+    return res.status(201).json(result);
+  } catch (error) { return handle(error, res, next); }
+});
+
+router.delete("/:occurrenceId/replay/holds/:holdId", async (req, res, next): Promise<Response | void> => {
+  try {
+    const holdId = z.string().uuid().parse(req.params.holdId);
+    const result = await db.transaction(async (tx) => {
+      const ctx = await context(req, tx, { allowAdminOutsideRoster: true }); requireReplayable(ctx); requireAssignmentManager(ctx);
+      const [retention] = await tx.select().from(recordingRetention).where(eq(recordingRetention.occurrenceId, ctx.occurrenceId));
+      if (!retention) throw new ReplayRouteError(404, "Recording retention not found");
+      const [hold] = await tx.select().from(recordingHolds).where(and(eq(recordingHolds.id, holdId), eq(recordingHolds.retentionId, retention.id))).for("update");
+      if (!hold) throw new ReplayRouteError(404, "Recording hold not found");
+      if (hold.releasedAt) return { released: true, replayed: true };
+      const releasedAt = new Date();
+      await tx.update(recordingHolds).set({ releasedAt, releasedByUserId: ctx.session.userId }).where(eq(recordingHolds.id, hold.id));
+      await audit(tx, ctx, "meeting.recording_hold_released", { holdId: hold.id, kind: hold.kind });
+      return { released: true, replayed: false, releasedAt };
     });
     return res.json(result);
   } catch (error) { return handle(error, res, next); }

@@ -90,6 +90,7 @@ export type MeetingWorkspaceState = {
   confirmManagement: () => Promise<void>;
   moderateParticipant: (userId: number, release: boolean) => Promise<void>;
   requestToSpeak: () => Promise<void>;
+  acceptParticipationAuthorization: () => Promise<void>;
   chooseFile: (source: MeetingFileSource) => Promise<void>;
   retryFile: () => Promise<void>;
   openFile: (file: { id: string; recipientUserId: number | null; fileName: string; contentType: string; byteSize: number }) => Promise<void>;
@@ -841,6 +842,19 @@ export function useMeetingWorkspace(occurrenceId: string): MeetingWorkspaceState
     }
   }, [revoke, t]);
 
+  const acceptParticipationAuthorization = useCallback(async () => {
+    const current = snapshotRef.current;
+    const requestScope = scopeRef.current;
+    const generation = lifecycleRef.current;
+    if (!current || !activeRef.current || scopeRef.current !== requestScope) return;
+    await request(requestScope, generation, `/api/work-hub/meetings/${occurrenceRef.current}/consent`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ policyVersion: current.meeting.policyVersion, response: "accepted" }),
+    });
+    await refresh();
+  }, [refresh, request]);
+
   return useMemo(() => ({
     snapshot,
     loading: loadingScope === scope,
@@ -870,11 +884,12 @@ export function useMeetingWorkspace(occurrenceId: string): MeetingWorkspaceState
     confirmManagement,
     moderateParticipant,
     requestToSpeak,
+    acceptParticipationAuthorization,
     chooseFile,
     retryFile,
     openFile,
   }), [accessLost, cancelManagement, confirmManagement, draft, endedAcknowledgedScope, error, loadingScope,
     fileBusy, fileError, fileNotice, fileRefreshFailed, managementConfirmation, managementNotice, managementPending,
-    managementRefreshFailed, moderateParticipant, now, openFile, recipientUserId, refresh, requestEndConfirmation, requestRemoveConfirmation, requestToSpeak,
+    managementRefreshFailed, moderateParticipant, now, openFile, recipientUserId, refresh, requestEndConfirmation, requestRemoveConfirmation, requestToSpeak, acceptParticipationAuthorization,
     retryFile, scope, selectRecipient, send, sending, snapshot, updateDraft, chooseFile]);
 }

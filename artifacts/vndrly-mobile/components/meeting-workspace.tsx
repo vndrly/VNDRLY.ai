@@ -122,6 +122,7 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
   }
 
   const ended = ["ended", "cancelled"].includes(snapshot.occurrence.status);
+  const viewOnly = snapshot.participationMode === "view_only" || snapshot.myConsent !== "accepted";
   const host = snapshot.participants.find((person) => person.role === "host");
   const selfParticipant = snapshot.participants.find((person) => person.userId === snapshot.userId);
   const speaker = ended ? undefined : currentSpeaker(snapshot);
@@ -167,10 +168,11 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
           <Text selectable accessibilityRole="header" style={{ color: "#ffffff", fontSize: 24, fontWeight: "800" }}>
             {snapshot.meeting.title}
           </Text>
+          {snapshot.transcriptionIndicator === "persistent" && <Text selectable accessibilityRole="text" style={{ color: WARNING, fontWeight: "800" }}>● {t("meetingWorkspace.transcriptionActiveIndicator", { defaultValue: "Transcription active" })}</Text>}
           <Text selectable style={{ color: "#e1e3e6" }}>
             {t("meetingWorkspace.presentCount", { defaultValue: "{{count}} present", count: present.length })}
           </Text>
-          {["scheduled", "live"].includes(snapshot.occurrence.status) && !workspace.meetingEndedAcknowledged && !companion && <WorkHubAudioRoom occurrenceId={occurrenceId} hostMuted={Boolean(selfParticipant?.hostMutedAt)} hostMuteGeneration={selfParticipant?.hostMuteGeneration ?? 0} />}
+          {["scheduled", "live"].includes(snapshot.occurrence.status) && !workspace.meetingEndedAcknowledged && !companion && !viewOnly && <WorkHubAudioRoom occurrenceId={occurrenceId} hostMuted={Boolean(selfParticipant?.hostMutedAt)} hostMuteGeneration={selfParticipant?.hostMuteGeneration ?? 0} />}
           {selfParticipant?.hostMutedAt && <TogglePillButton color="brand" disabled={workspace.managementPending || Boolean(snapshot.mySpeakRequest)} accessibilityLabel={snapshot.mySpeakRequest ? t("meetingWorkspace.speakRequested", { defaultValue: "Request sent" }) : t("meetingWorkspace.requestToSpeak", { defaultValue: "Request to speak" })} onPress={() => void workspace.requestToSpeak()}>{snapshot.mySpeakRequest ? t("meetingWorkspace.speakRequested", { defaultValue: "Request sent" }) : t("meetingWorkspace.requestToSpeak", { defaultValue: "Request to speak" })}</TogglePillButton>}
           <Text selectable style={{ color: "#ffffff", fontWeight: "700" }}>
             {t("meetingWorkspace.transcriptionUnavailable", { defaultValue: "Transcription unavailable on this device." })}
@@ -180,6 +182,7 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
           <Text selectable style={{ color: "#ffffff", fontWeight: "700" }}>
             {host?.displayName ?? t("meetingWorkspace.host", { defaultValue: "Host" })} · {t("meetingWorkspace.host", { defaultValue: "Host" })}
           </Text>
+          {snapshot.assistantParticipant?.visible && <Text selectable style={{ color: brand.primary, fontWeight: "800" }}>{snapshot.assistantParticipant.label} · {snapshot.assistantParticipant.state === "paused" ? t("meetingWorkspace.paused", { defaultValue: "Paused" }) : t("meetingWorkspace.silentAssistant", { defaultValue: "Silent unless addressed" })}</Text>}
           <Pressable
             ref={rosterTriggerRef}
             testID="meeting-roster-trigger"
@@ -206,6 +209,10 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
         </View>
       </View>
 
+      {viewOnly && !ended && <View accessibilityLiveRegion="polite" style={{ backgroundColor: PANEL, borderRadius: 14, borderCurve: "continuous", padding: 14, gap: 10 }}>
+        <Text selectable style={{ color: "#ffffff" }}>{t("meetingWorkspace.participationAuthorization", { defaultValue: "You are viewing this meeting. Accept the work participation authorization to speak, post, and share files. Transcription begins automatically under your company policy." })}</Text>
+        <TogglePillButton color="brand" disabled={workspace.managementPending} onPress={() => void workspace.acceptParticipationAuthorization()}>{t("meetingWorkspace.acceptAndParticipate", { defaultValue: "Accept and participate" })}</TogglePillButton>
+      </View>}
       {rosterOpen && <View accessibilityLabel={t("meetingWorkspace.attendees", { defaultValue: "Attendees" })} style={{ backgroundColor: PANEL, borderRadius: 14, borderCurve: "continuous", padding: 12, gap: 8 }}>
         <Text selectable style={{ color: "#ffffff", fontWeight: "800" }}>
           {t("meetingWorkspace.choosePrivate", { defaultValue: "Choose someone to message privately" })}
@@ -297,9 +304,9 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={t("meetingWorkspace.addFile", { defaultValue: "Add File" })}
-            accessibilityState={{ expanded: fileMenuOpen, busy: workspace.fileBusy, disabled: workspace.fileBusy }}
+            accessibilityState={{ expanded: fileMenuOpen, busy: workspace.fileBusy, disabled: workspace.fileBusy || viewOnly }}
             aria-busy={workspace.fileBusy}
-            disabled={workspace.fileBusy}
+            disabled={workspace.fileBusy || viewOnly}
             onPress={() => setFileMenuOpen((open) => !open)}
             style={{ minHeight: 44, justifyContent: "center", paddingHorizontal: 8 }}
           >
@@ -342,6 +349,7 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
           testID="meeting-composer-input"
           accessibilityLabel={workspace.recipientUserId === null ? t("meetingWorkspace.messageMeeting", { defaultValue: "Message the meeting" }) : t("meetingWorkspace.privateTo", { defaultValue: "Private message to {{name}}", name: selectedPerson?.displayName ?? t("meetingWorkspace.attendee", { defaultValue: "An attendee" }) })}
           value={workspace.draft}
+          editable={!viewOnly}
           onChangeText={workspace.updateDraft}
           multiline
           scrollEnabled
@@ -353,7 +361,7 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
           solid
           color="brand"
           accessibilityLabel={t("meetingWorkspace.send", { defaultValue: "Send" })}
-          disabled={!workspace.draft.trim() || workspace.sending}
+          disabled={viewOnly || !workspace.draft.trim() || workspace.sending}
           loading={workspace.sending}
           onPress={() => void workspace.send()}
           style={{ alignSelf: "stretch" }}

@@ -19,7 +19,7 @@ vi.mock("@workspace/db", async () => {
     const mutation = type === "select" ? undefined : { type, value: undefined as unknown };
     if (mutation) mocks.mutations.push(mutation);
     const query: Record<string, any> = {};
-    for (const method of ["from", "where", "for", "set", "values", "returning", "onConflictDoNothing", "orderBy", "limit", "innerJoin"]) {
+    for (const method of ["from", "where", "for", "set", "values", "returning", "onConflictDoNothing", "onConflictDoUpdate", "orderBy", "limit", "innerJoin"]) {
       query[method] = (value: unknown) => { if (mutation && ["set", "values"].includes(method)) mutation.value = value; return query; };
     }
     query.then = (resolve: (value: unknown) => unknown) => Promise.resolve(mocks.results.shift() ?? []).then(resolve);
@@ -277,7 +277,7 @@ describe("meeting replay recording routes", () => {
     seedContext({ status: "ended", recordingState: "off", durationMs: 6_000 });
     mocks.results.push([manifest], [chunk], [], []);
     const response = await request(app()).post(`/meetings/${occurrenceId}/replay/finalize`).set("x-replay-schema-version", "2").set("x-replay-renderer-version", "1").set("x-replay-session-id", leaseToken).send({ gaps: [{ startsAtMs: 5_000, endsAtMs: 6_000, reason: "recorder_interruption" }] });
-    expect(response.status).toBe(200); expect(response.body).toEqual({ finalized: true, replayed: false });
+    expect(response.status).toBe(200); expect(response.body).toMatchObject({ finalized: true, replayed: false, rawMediaExpiresAt: "2026-10-09T12:00:06.000Z", transcriptRetained: true, summaryRetained: true });
     expect(mocks.audit).toHaveBeenCalledWith(expect.objectContaining({ action: "meeting.replay_finalized", metadata: { durationMs: 6_000, gapCount: 1, chunkCount: 1 } }), expect.anything());
   });
 

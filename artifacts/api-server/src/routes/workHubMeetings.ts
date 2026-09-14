@@ -13,6 +13,7 @@ import {
   vendorPeopleTable, partnerContactsTable,
   userOrgMembershipsTable,
 } from "@workspace/db";
+import { workHubMeetingParticipationAuthorizationsTable as participationAuthorizations } from "@workspace/db/schema";
 import { getSessionFromRequest } from "../lib/session";
 import { sendApiError } from "../lib/apiError";
 import { getObjectStore } from "../lib/objectStore";
@@ -43,6 +44,7 @@ import { meetingParticipantPhotoUrls } from "../work-hub/meeting-participant-pho
 import { audioLeaseService } from "../work-hub/audio-lease-database";
 import { AudioLeaseError, selectFailoverCandidate } from "../work-hub/audio-lease";
 import { getDevicePreferences, recordSuccessfulHandoff } from "../work-hub/device-preferences";
+import { acceptParticipationAuthorization, askVParticipantState, participationState } from "../services/meeting-participation";
 
 const router = Router();
 type TranscriptionProvider = "native" | "assemblyai";
@@ -69,7 +71,7 @@ function afterRollback(req: Request, task: () => Promise<unknown>) {
 }
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 class MeetingError extends Error {
-  constructor(readonly status: number, message: string) { super(message); }
+  constructor(readonly status: number, message: string, readonly code = "work_hub.meeting") { super(message); }
 }
 function clientSource(req: Request): "web" | "ios" {
   return req.header("x-vndrly-client") === "ios" ? "ios" : "web";
@@ -134,6 +136,19 @@ async function captureState(tx: Tx, ctx: Context, runtime = ctx.runtime) {
   const accepted = await tx.select().from(consents).where(and(eq(consents.occurrenceId, ctx.id), eq(consents.policyVersion, policyVersion), eq(consents.response, "accepted")));
   return !["ended", "cancelled"].includes(ctx.occurrence.status) && captureAllowed(Boolean(ctx.occurrence.askvInvitedAt), runtime, ctx.all.filter((p) => !p.removedAt).map((p) => p.userId), accepted.map((p) => p.userId));
 }
+async function participationAccepted(tx: Tx, ctx: Context) {
+  const [authorization] = await tx.select().from(participationAuthorizations).where(and(eq(participationAuthorizations.userId, ctx.session.userId), eq(participationAuthorizations.policyVersion, ctx.meeting.policyVersion), isNull(participationAuthorizations.revokedAt))).limit(1);
+  if (authorization) return authorization.acceptedAt;
+  // Keep already-authorized active meetings compatible while onboarding authorization rolls out.
+  const [meetingConsent] = await tx.select().from(consents).where(and(eq(consents.occurrenceId, ctx.id), eq(consents.userId, ctx.session.userId), eq(consents.policyVersion, ctx.meeting.policyVersion), eq(consents.response, "accepted"))).limit(1);
+  return meetingConsent?.respondedAt ?? null;
+}
+async function requireParticipation(tx: Tx, ctx: Context) {
+  const acceptedAt = await participationAccepted(tx, ctx);
+  if (!acceptedAt) throw new MeetingError(403, "Accept the work participation authorization to speak or post in this meeting.", "meeting.authorization_required");
+  return acceptedAt;
+}
+
 async function saveRuntime(tx: Tx, ctx: Context, runtime: MeetingRuntime, extra: Partial<typeof occurrences.$inferInsert> = {}) {
   await tx.update(occurrences).set({ runtime: runtime as Record<string, unknown>, ...extra }).where(eq(occurrences.id, ctx.id));
 }
@@ -161,7 +176,7 @@ function route(handler: Handler) {
         if (result.status === "rejected") req.log?.error?.({ err: result.reason }, "Meeting rollback cleanup failed");
       }
       if (error instanceof z.ZodError) return sendApiError(res, 400, "work_hub.invalid_operation", "Invalid meeting request");
-      if (error instanceof MeetingError) return sendApiError(res, error.status, "work_hub.meeting", error.message);
+      if (error instanceof MeetingError) return sendApiError(res, error.status, error.code, error.message);
       if (error instanceof AudioLeaseError) return sendApiError(res, error.code === "meeting.host_muted" || error.code === "audio.in_use" || error.code === "audio.failover_warning" ? 409 : 404, error.code, error.message);
       return next(error);
     }
@@ -174,23 +189,32 @@ router.post("/:occurrenceId/consent", route(async (req, _res, tx, ctx) => {
   const policyVersion = effectiveMeetingTranscriptionPolicyVersion(ctx.meeting.policyVersion, transcriptionProvider());
   if (payload.policyVersion !== policyVersion) throw new MeetingError(409, "Please review the latest transcription notice");
   const [consent] = await tx.insert(consents).values({ occurrenceId: ctx.id, userId: ctx.session.userId, ...payload }).onConflictDoUpdate({ target: [consents.occurrenceId, consents.userId, consents.policyVersion], set: { response: payload.response, respondedAt: new Date() } }).returning();
+  if (payload.response === "accepted") {
+    const authorization = acceptParticipationAuthorization({ userId: ctx.session.userId, policyVersion, source: "in_meeting" });
+    await tx.insert(participationAuthorizations).values({ userId: authorization.userId, policyVersion: authorization.policyVersion, source: authorization.source, acceptedAt: authorization.acceptedAt, revokedAt: null }).onConflictDoUpdate({ target: [participationAuthorizations.userId, participationAuthorizations.policyVersion], set: { source: authorization.source, acceptedAt: authorization.acceptedAt, revokedAt: null } });
+  }
   if (payload.response === "declined") await tx.update(occurrences).set({ recordingState: "off", transcriptState: "off" }).where(eq(occurrences.id, ctx.id));
   if (payload.response === "declined") afterCommit(req, () => closeAllAssemblyAIStreams(ctx.id));
   await audit(tx, ctx, "meeting.consent", { response: payload.response, policyVersion: payload.policyVersion });
-  return consent;
+  return { ...consent, ...participationState({ authorizationAcceptedAt: payload.response === "accepted" ? consent.respondedAt : null }), rejoinRequired: false };
 }));
 
 router.post("/:occurrenceId/join", route(async (req, _res, tx, ctx) => {
   active(ctx);
   const connection = await meetingConnection(req, ctx);
   const now = Date.now();
+  const authorizationAcceptedAt = await participationAccepted(tx, ctx);
+  if (!authorizationAcceptedAt) {
+    const participation = participationState({ authorizationAcceptedAt: null });
+    return { roomId: null, userId: ctx.session.userId, deviceId: connection.deviceId, connectionId: connection.connectionId, startedAt: ctx.runtime.startedAt ?? null, participants: [ctx.participant], peerConnections: [], recordingAllowed: false, policyVersion: ctx.meeting.policyVersion, consentAccepted: false, participationMode: participation.mode, authorizationRequired: true, transcription: false, iceServers: [] };
+  }
   const [attending] = await tx.select().from(attendance).where(and(eq(attendance.occurrenceId, ctx.id), eq(attendance.userId, ctx.session.userId), isNull(attendance.leftAt))).limit(1);
   const joinedAt = attending ? aggregateUserPresence(ctx.runtime, ctx.session.userId, now)?.joinedAt ?? attending.joinedAt.getTime() : now;
   const cleanRuntime = { ...(attending ? ctx.runtime : { ...ctx.runtime, signals: (ctx.runtime.signals ?? []).filter((s) => s.fromUserId !== ctx.session.userId && s.toUserId !== ctx.session.userId) }), admittedUserIds: meetingAdmittedUserIds(ctx.runtime).filter((userId) => userId !== ctx.session.userId) };
   const runtime = upsertDevicePresence({ ...cleanRuntime, startedAt: ctx.runtime.startedAt ?? new Date(now).toISOString() }, { userId: ctx.session.userId, deviceId: connection.deviceId, connectionId: connection.connectionId, seenAt: now, joinedAt, speaking: false });
   if (!attending) {
     await tx.insert(attendance).values({ occurrenceId: ctx.id, userId: ctx.session.userId });
-    await tx.insert(consents).values({ occurrenceId: ctx.id, userId: ctx.session.userId, policyVersion: ctx.meeting.policyVersion, response: "declined" }).onConflictDoUpdate({ target: [consents.occurrenceId, consents.userId, consents.policyVersion], set: { response: "declined", respondedAt: new Date(now) } });
+    await tx.insert(consents).values({ occurrenceId: ctx.id, userId: ctx.session.userId, policyVersion: ctx.meeting.policyVersion, response: authorizationAcceptedAt ? "accepted" : "declined" }).onConflictDoUpdate({ target: [consents.occurrenceId, consents.userId, consents.policyVersion], set: authorizationAcceptedAt ? { response: "accepted", respondedAt: new Date(now) } : { respondedAt: new Date(now) } });
   }
   const roomId = ctx.occurrence.providerRoomId ?? `vndrly-${ctx.id}`;
   await saveRuntime(tx, ctx, runtime, { providerRoomId: roomId, status: "live", ...(!attending ? { recordingState: "off", transcriptState: "off" } : {}) });
@@ -202,7 +226,8 @@ router.post("/:occurrenceId/join", route(async (req, _res, tx, ctx) => {
     ? await tx.select({ userId: audioLeases.userId, deviceId: audioLeases.deviceId }).from(audioLeases).where(and(eq(audioLeases.occurrenceId, ctx.id), eq(audioLeases.state, "active"), gt(audioLeases.expiresAt, new Date())))
     : [];
   const peerConnections = meetingAudioPeerConnections(runtime, connection.connectionId, new Map(activeAudioRows.map(value => [value.userId, value.deviceId]))).filter(value => value.userId !== ctx.session.userId).map(value => ({ userId: value.userId, deviceId: value.deviceId, connectionId: value.connectionId }));
-  return { roomId, userId: ctx.session.userId, deviceId: connection.deviceId, connectionId: connection.connectionId, startedAt: runtime.startedAt, participants: ctx.all.filter((p) => !p.removedAt && (p.userId === ctx.session.userId || presentUserIds(runtime).includes(p.userId))), peerConnections, recordingAllowed: ctx.meeting.recordingAllowed, policyVersion: ctx.meeting.policyVersion, consentAccepted: consent?.response === "accepted", transcription: await captureState(tx, ctx, runtime), iceServers: legacyIceServers.length ? legacyIceServers : resolveVndrlyIceServers() };
+  const participation = participationState({ authorizationAcceptedAt: consent?.response === "accepted" ? consent.respondedAt : null });
+  return { roomId, userId: ctx.session.userId, deviceId: connection.deviceId, connectionId: connection.connectionId, startedAt: runtime.startedAt, participants: ctx.all.filter((p) => !p.removedAt && (p.userId === ctx.session.userId || presentUserIds(runtime).includes(p.userId))), peerConnections: participation.audioAllowed ? peerConnections : [], recordingAllowed: ctx.meeting.recordingAllowed, policyVersion: ctx.meeting.policyVersion, consentAccepted: consent?.response === "accepted", participationMode: participation.mode, authorizationRequired: participation.mode === "view_only", transcription: await captureState(tx, ctx, runtime), iceServers: legacyIceServers.length ? legacyIceServers : resolveVndrlyIceServers() };
 }));
 
 router.post("/:occurrenceId/leave", route(async (req, _res, tx, ctx) => {
@@ -224,6 +249,7 @@ router.post("/:occurrenceId/presence", route(async (req, _res, tx, ctx) => {
   const current = meetingDeviceConnections(ctx.runtime)[connection.connectionId];
   if (!current || current.userId !== ctx.session.userId) throw new MeetingError(409, "Join the meeting first");
   const payload = z.object({ muted: z.boolean().optional(), handRaised: z.boolean().optional(), speaking: z.boolean().default(false), deviceId: z.string().optional(), connectionId: z.string().optional() }).parse(req.body);
+  if (payload.muted === false || payload.speaking) await requireParticipation(tx, ctx);
   if (ctx.participant.hostMutedAt && payload.muted === false) throw new MeetingError(409, "Muted by the meeting host. Request to speak instead.");
   const muted = ctx.participant.hostMutedAt ? true : payload.muted ?? ctx.participant.muted;
   await tx.update(participants).set({ muted, ...(payload.handRaised === undefined ? {} : { handRaisedAt: payload.handRaised ? new Date() : null }) }).where(eq(participants.id, ctx.participant.id));
@@ -235,6 +261,7 @@ router.post("/:occurrenceId/presence", route(async (req, _res, tx, ctx) => {
 
 router.post("/:occurrenceId/signal", route(async (req, _res, tx, ctx) => {
   active(ctx);
+  await requireParticipation(tx, ctx);
   const connection = await meetingConnection(req, ctx);
   const payload = z.object({ toUserId: z.number().int().positive(), toDeviceId: z.string().max(64).optional(), kind: z.enum(["offer", "answer", "ice"]), payload: z.unknown(), deviceId: z.string().optional(), connectionId: z.string().optional() }).parse(req.body);
   const present = presentUserIds(ctx.runtime);
@@ -287,6 +314,7 @@ function leaseActor(ctx: Context, deviceId: string) {
 
 router.post("/:occurrenceId/audio-lease", route(async (req, _res, _tx, ctx) => {
   active(ctx);
+  await requireParticipation(_tx, ctx);
   const connection = await meetingConnection(req, ctx);
   const lease = await audioLeaseService.acquire(leaseActor(ctx, connection.deviceId));
   afterCommit(req, () => deviceCoordinator.publishUserEvent({ userId: ctx.session.userId, owner: { type: ctx.meeting.ownerOrgType as "vendor" | "partner", id: ctx.meeting.ownerOrgId } }, { eventType: "work_hub.meeting.audio_owner_changed", payload: { context: { kind: "meeting", id: ctx.id }, occurrenceId: ctx.id, deviceId: connection.deviceId, generation: lease.generation } }));
@@ -295,6 +323,7 @@ router.post("/:occurrenceId/audio-lease", route(async (req, _res, _tx, ctx) => {
 
 router.put("/:occurrenceId/audio-lease", route(async (req, _res, _tx, ctx) => {
   active(ctx);
+  await requireParticipation(_tx, ctx);
   const connection = requireModernAudioConnection(await meetingConnection(req, ctx));
   const payload = z.object({ token: z.string().min(32).max(256), generation: z.number().int().positive(), deviceId: z.string().optional(), connectionId: z.string().optional() }).parse(req.body);
   return audioLeaseService.renew(leaseActor(ctx, connection.deviceId), payload.token, payload.generation);
@@ -331,6 +360,7 @@ router.post("/:occurrenceId/audio-handoff/request", route(async (req, _res, _tx,
 
 router.post("/:occurrenceId/audio-handoff/accept", route(async (req, _res, _tx, ctx) => {
   active(ctx);
+  await requireParticipation(_tx, ctx);
   const connection = requireModernAudioConnection(await meetingConnection(req, ctx));
   const payload = z.object({ offerToken: z.string().min(32).max(256).optional(), deviceId: z.string().optional(), connectionId: z.string().optional() }).parse(req.body);
   const lease = await audioLeaseService.acceptHandoff(leaseActor(ctx, connection.deviceId), payload.offerToken);
@@ -455,7 +485,7 @@ function streamStatus(error: AssemblyAIStreamError) {
 
 function streamRouteError(res: Response, next: NextFunction, error: unknown) {
   if (error instanceof z.ZodError) return sendApiError(res, 400, "work_hub.invalid_audio", "Invalid meeting audio request");
-  if (error instanceof MeetingError) return sendApiError(res, error.status, "work_hub.meeting", error.message);
+  if (error instanceof MeetingError) return sendApiError(res, error.status, error.code, error.message);
   if (error instanceof AssemblyAIStreamError) return sendApiError(res, streamStatus(error), "work_hub.streaming_transcription", error.message);
   return next(error);
 }
@@ -568,6 +598,7 @@ router.post("/:occurrenceId/transcribe-audio", async (req, res, next): Promise<R
 });
 
 router.post("/:occurrenceId/transcript", route(async (req, _res, tx, ctx) => {
+  await requireParticipation(tx, ctx);
   const payload = z.object({ id: z.string().uuid().optional(), text: z.string().trim().min(1).max(20_000), startsAtMs: z.number().int().min(0).max(2147483647), endsAtMs: z.number().int().min(0).max(2147483647) }).refine((p) => p.endsAtMs >= p.startsAtMs).parse(req.body);
   const [audio] = payload.id ? await tx.select().from(artifacts).where(and(eq(artifacts.id, payload.id), eq(artifacts.occurrenceId, ctx.id), eq(artifacts.artifactType, "audio"), eq(artifacts.state, "ready"))) : [];
   if (audio) {
@@ -596,6 +627,7 @@ router.post("/:occurrenceId/transcript", route(async (req, _res, tx, ctx) => {
 
 router.post("/:occurrenceId/chat", route(async (req, _res, tx, ctx) => {
   active(ctx);
+  await requireParticipation(tx, ctx);
   const payload = z.object({ id: z.string().uuid().optional(), body: z.string().trim().min(1).max(1_000_000), recipientUserId: z.number().int().positive().nullable().default(null) }).parse(req.body);
   if (payload.recipientUserId !== null && !ctx.all.some((p) => p.userId === payload.recipientUserId && !p.removedAt)) throw new MeetingError(404, "Recipient not found");
   const [message] = await tx.insert(chat).values({ ...payload, occurrenceId: ctx.id, userId: ctx.session.userId, messageType: "typed" }).onConflictDoNothing().returning();
@@ -850,7 +882,7 @@ router.post("/:occurrenceId/askv/question", async (req, res, next): Promise<Resp
   } catch (error) {
     if (controller.signal.aborted || res.destroyed) return;
     if (error instanceof z.ZodError) return sendApiError(res, 400, "work_hub.invalid_operation", "Invalid meeting question request");
-    if (error instanceof MeetingError) return sendApiError(res, error.status, "work_hub.meeting", error.message);
+    if (error instanceof MeetingError) return sendApiError(res, error.status, error.code, error.message);
     return next(error);
   } finally {
     req.off("aborted", abort);
@@ -1040,12 +1072,14 @@ router.get("/:occurrenceId/catch-up", route(async (_req, _res, tx, ctx) => {
   // Runtime includes SDP/ICE for other participants and must never be serialized.
   const { runtime: _runtime, providerRoomId: _room, ...occurrence } = ctx.occurrence;
   const provider = transcriptionProvider();
+  const myParticipation = participationState({ authorizationAcceptedAt: consent[0]?.response === "accepted" ? consent[0].respondedAt : null });
+  const assistantParticipant = askVParticipantState({ invited: Boolean(ctx.occurrence.askvInvitedAt), paused: Boolean(ctx.occurrence.askvInvitedAt) && !transcription });
   return {
     occurrence: { ...occurrence, startedAt: ctx.runtime.startedAt ?? null, endedAt: ctx.runtime.endedAt ?? null },
     meeting: ctx.meeting, userId: ctx.session.userId, canManage: ctx.participant.role === "host", canModerate: ["host", "co_host"].includes(ctx.participant.role), canViewAttendance: privileged,
     transcription, nativeCaptureAvailable: provider === "native" && nativeTranscriptionAvailable(),
     streamingCaptureAvailable: provider === "assemblyai" && assemblyAIStreamingAvailable() && streamingTrialAudienceAllows(ctx.all.filter((participant) => !participant.removedAt).map((participant) => participant.userId)),
-    myConsent: consent[0]?.response ?? "pending", mySpeakRequest: mySpeakRequest ?? null,
+    myConsent: consent[0]?.response ?? "pending", participationMode: myParticipation.mode, authorizationRequired: myParticipation.mode === "view_only", transcriptionIndicator: ctx.occurrence.askvInvitedAt ? "persistent" : "off", assistantParticipant, mySpeakRequest: mySpeakRequest ?? null,
     participants: ctx.all.map((p) => { const presence = aggregateUserPresence(ctx.runtime, p.userId); return { userId: p.userId, displayName: names.get(p.userId) ?? "Attendee", photoUrl: participantPhotos.get(p.userId) ?? null, role: p.role, joinedAt: presence?.joinedAt, muted: p.muted, hostMutedAt: p.hostMutedAt, hostMutedById: p.hostMutedById, hostMuteGeneration: p.hostMuteGeneration, handRaisedAt: p.handRaisedAt, removedAt: p.removedAt, present: !p.removedAt && present.includes(p.userId), presenceKind: admitted.includes(p.userId) && !connected.includes(p.userId) ? "host_confirmed_invitation" : connected.includes(p.userId) ? "authenticated_device" : null, speaking: !p.removedAt && connected.includes(p.userId) && !p.muted && !p.hostMutedAt && Boolean(presence?.speaking) }; }),
     activity: visibleMeetingActivities(ctx.runtime, ctx.session.userId, ctx.all.filter((p) => !p.removedAt).map((p) => p.userId)),
     attendance: records, chat: messages.map((m) => {
@@ -1177,7 +1211,7 @@ router.get("/:occurrenceId/files/:fileId", async (req, res, next): Promise<Respo
     res.setHeader("Content-Disposition", `${file.contentType.startsWith("image/") || file.contentType === "application/pdf" ? "inline" : "attachment"}; filename*=UTF-8''${encodeURIComponent(file.fileName)}`);
     return res.type(file.contentType).send(object.body);
   } catch (error) {
-    if (error instanceof MeetingError) return sendApiError(res, error.status, "work_hub.meeting", error.message);
+    if (error instanceof MeetingError) return sendApiError(res, error.status, error.code, error.message);
     if (error instanceof z.ZodError) return sendApiError(res, 400, "work_hub.invalid_operation", "Invalid file request");
     return next(error);
   }

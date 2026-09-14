@@ -372,6 +372,7 @@ function hookState(data = snapshot()) {
     updateDraft: vi.fn(),
     send: vi.fn(),
     refresh: vi.fn(),
+    acceptParticipationAuthorization: vi.fn(),
     managementConfirmation: null,
     managementPending: false,
     managementNotice: "",
@@ -410,6 +411,15 @@ afterEach(() => {
 });
 
 describe("native meeting workspace", () => {
+  it("keeps an unfinished attendee view-only and authorizes them in place", () => {
+    env.state = hookState(snapshot({ myConsent: "pending", participationMode: "view_only", authorizationRequired: true }));
+    render(<MeetingWorkspace occurrenceId="meeting-a" />);
+    expect(screen.queryByTestId("audio-meeting-a")).toBeNull();
+    const accept = screen.getByRole("button", { name: "Accept and participate" });
+    expect(screen.getByRole("button", { name: "Send" }).hasAttribute("disabled")).toBe(true);
+    fireEvent.click(accept);
+    expect(env.state.acceptParticipationAuthorization).toHaveBeenCalledOnce();
+  });
   it("renders actual Spanish meeting controls and status text", () => {
     env.spanish = true;
     render(<MeetingWorkspace occurrenceId="meeting-a" />);

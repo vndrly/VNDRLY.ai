@@ -61,6 +61,17 @@ export type MeetingSnapshot = {
   canViewAttendance: boolean;
   transcription: boolean;
   myConsent: string;
+  participationMode?: "view_only" | "active";
+  authorizationRequired?: boolean;
+  transcriptionIndicator?: "off" | "persistent";
+  assistantParticipant?: {
+    visible: boolean;
+    label: "VNDRLY Assistant";
+    silentUnlessAddressed: true;
+    countsTowardAttendance: false;
+    countsTowardQuorum: false;
+    state: "available" | "paused" | "removed";
+  };
   mySpeakRequest?: { id: string; status: string; requestedAt: string } | null;
   meeting: { title: string; agenda: string | null; policyVersion: number };
   occurrence: {

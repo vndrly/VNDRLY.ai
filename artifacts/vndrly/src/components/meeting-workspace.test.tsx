@@ -60,13 +60,14 @@ describe("approved Work Hub meeting workspace", () => {
     fireEvent.click(screen.getByRole("button", { name: "Check in participant" }));
     await waitFor(() => expect(mocks.request).toHaveBeenCalledWith("/meetings/meeting/participants/2/check-in", expect.objectContaining({ method: "POST" })));
   });
-  it("keeps the existing consent controls without an in-house claim when streaming capture is selected", () => {
-    mocks.snapshot.myConsent = "pending"; mocks.snapshot.nativeCaptureAvailable = false; mocks.snapshot.streamingCaptureAvailable = true;
+  it("keeps an unfinished attendee view-only and authorizes them in place", async () => {
+    mocks.snapshot.myConsent = "pending"; mocks.snapshot.participationMode = "view_only"; mocks.snapshot.nativeCaptureAvailable = false; mocks.snapshot.streamingCaptureAvailable = true;
     render(<MeetingWorkspace occurrenceId="meeting" />);
-    expect(screen.getByRole("button", { name: "Accept transcription" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Decline" })).toBeTruthy();
-    expect(document.body.textContent).not.toMatch(/in-house|provider|training/i);
-    expect(screen.queryByText(/microphone is not being transcribed/i)).toBeNull();
+    expect(screen.getByRole("button", { name: "Accept and participate" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Decline" })).toBeNull();
+    expect(screen.getByRole("textbox", { name: "Message the meeting" }).hasAttribute("disabled")).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "Accept and participate" }));
+    await waitFor(() => expect(mocks.request).toHaveBeenCalledWith("/meetings/meeting/consent", expect.objectContaining({ body: '{"policyVersion":1,"response":"accepted"}' })));
   });
   it("shows a fresh V answer for ten seconds and retains its exact text in the transcript", () => {
     vi.useFakeTimers();
@@ -244,13 +245,12 @@ describe("approved Work Hub meeting workspace", () => {
     expect(screen.queryByRole("button", { name: "V is listening" })).toBeNull();
     expect(screen.getByRole("button", { name: "Your mic is muted" })).toBeTruthy();
   });
-  it("lets an attendee withdraw consent and stops local capture before the request resolves", () => {
+  it("does not offer a per-meeting withdrawal after onboarding authorization", () => {
     mocks.audio.muted = false; mocks.audio.transcriptionActive = true;
-    mocks.request.mockImplementation(() => new Promise(() => undefined));
+    mocks.snapshot.transcriptionIndicator = "persistent";
     render(<MeetingWorkspace occurrenceId="meeting" />);
-    fireEvent.click(screen.getByRole("button", { name: "Withdraw transcription consent" }));
-    expect(mocks.audio.stopTranscription).toHaveBeenCalledOnce();
-    expect(mocks.request).toHaveBeenCalledWith("/meetings/meeting/consent", expect.objectContaining({ body: '{"policyVersion":1,"response":"declined"}' }));
+    expect(screen.queryByRole("button", { name: "Withdraw transcription consent" })).toBeNull();
+    expect(screen.getByText(/Transcription active/)).toBeTruthy();
   });
   it("shows transcription errors independently of working meeting audio and supports retry", () => {
     mocks.audio.muted = false; mocks.audio.transcriptionError = "Meeting transcription is unavailable.";

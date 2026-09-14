@@ -20,6 +20,7 @@ const mocks = vi.hoisted(() => ({
   returnInserted: false,
   transactionDepth: 0,
   failCommit: false,
+  authorizationAccepted: true,
 }));
 vi.mock("../lib/session", () => ({ getSessionFromRequest: () => mocks.session }));
 vi.mock("../work-hub/audit", () => ({ appendWorkHubAudit: mocks.audit }));
@@ -36,14 +37,21 @@ vi.mock("@workspace/db", async () => {
     const mutation = type === "select" ? undefined : { type, value: undefined as unknown };
     if (mutation) mocks.mutations.push(mutation);
     const query: Record<string, unknown> = {};
+    let source: unknown;
     for (const method of ["from", "where", "for", "set", "values", "returning", "onConflictDoNothing", "onConflictDoUpdate", "orderBy", "limit"]) {
       query[method] = (value: unknown) => {
+        if (method === "from") source = value;
         if (method === "where") mocks.predicates.push(value as SQL);
         if (mutation && ["set", "values"].includes(method)) mutation.value = value;
         return query;
       };
     }
-    query.then = (resolve: (value: unknown) => unknown) => Promise.resolve(type === "insert" && mocks.returnInserted ? [mutation!.value] : mocks.results.shift() ?? []).then(resolve);
+    query.then = (resolve: (value: unknown) => unknown) => {
+      const value = type === "select" && source === schema.workHubMeetingParticipationAuthorizationsTable
+        ? (mocks.authorizationAccepted ? [{ acceptedAt: new Date() }] : [])
+        : type === "insert" && mocks.returnInserted ? [mutation!.value] : mocks.results.shift() ?? [];
+      return Promise.resolve(value).then(resolve);
+    };
     return query;
   }
   const tx = { select: () => chain("select"), insert: () => chain("insert"), update: () => chain("update"), execute: async (value: SQL) => { mocks.executed.push(value); return []; } };
@@ -71,7 +79,7 @@ function app(legacy = false) {
 }
 beforeEach(() => {
   mocks.session = { userId: 1, vendorId: 22, partnerId: null, role: "vendor" };
-  mocks.results = []; mocks.predicates = []; mocks.executed = []; mocks.mutations = []; mocks.failCommit = false;
+  mocks.results = []; mocks.predicates = []; mocks.executed = []; mocks.mutations = []; mocks.failCommit = false; mocks.authorizationAccepted = true;
   mocks.audit.mockReset(); mocks.getObject.mockReset();
   mocks.nativeAvailable.mockReset().mockReturnValue(false); mocks.nativeTranscribe.mockReset(); mocks.transactionDepth = 0;
   mocks.validateLease.mockReset().mockResolvedValue(true);
@@ -451,12 +459,11 @@ describe("shipped audio compatibility", () => {
     expect(mocks.mutations).toHaveLength(1);
     expect(mocks.mutations[0].value).not.toHaveProperty("recordingState");
   });
-  it("stops capture and requires fresh consent on new attendance", async () => {
-    seed({ runtime: {} }); mocks.results.push([], [], [], [], [{ response: "declined" }], []);
+  it("keeps an unauthorized new attendee outside attendance and audio", async () => {
+    seed({ runtime: {} }); mocks.authorizationAccepted = false; mocks.results.push([], [], [], [], [{ response: "declined" }], []);
     const response = await request(app()).post(`/meetings/${meetingId}/join`).send({});
-    expect(response.status).toBe(200); expect(response.body.consentAccepted).toBe(false);
-    expect(mocks.mutations.some((m) => (m.value as any)?.response === "declined")).toBe(true);
-    expect(mocks.mutations.some((m) => (m.value as any)?.recordingState === "off")).toBe(true);
+    expect(response.status).toBe(200); expect(response.body).toMatchObject({ consentAccepted: false, participationMode: "view_only", authorizationRequired: true, roomId: null, iceServers: [] });
+    expect(mocks.mutations).toEqual([]);
   });
   it.each(["consent", "leave"])("stops legacy host capture on %s", async (path) => {
     seed(); mocks.results.push([{ response: "declined" }]);
