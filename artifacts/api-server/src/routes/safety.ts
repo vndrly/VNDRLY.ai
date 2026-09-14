@@ -4,6 +4,7 @@ import { and, desc, eq, gte, inArray, isNull, sql } from "drizzle-orm";
 import {
   db,
   safetyEventsTable,
+  safetyIncidentResponsesTable,
   safetyEventAttachmentsTable,
   safetyEventHistoryTable,
   safetyResolutionNotesTable,
@@ -432,6 +433,15 @@ router.post("/safety/events", requireSession, enforceSafetyRateLimit, async (req
     actorRole: session.role ?? null,
   });
 
+  await db.insert(safetyIncidentResponsesTable).values({
+    eventId: created.id,
+    source: "manual",
+    severity: Boolean(isHighPotential) || stopWork ? "high" : "medium",
+    responseStatus: "open",
+    originalReport: description ? String(description).slice(0, 8000) : String(title).slice(0, 8000),
+    safetyChainSnapshot: [],
+    degradedCapabilities: [],
+  });
   if (Array.isArray(attachmentPaths)) {
     for (const path of attachmentPaths.slice(0, 5)) {
       if (typeof path === "string" && path.trim()) {

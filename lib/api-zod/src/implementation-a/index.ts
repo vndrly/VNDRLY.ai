@@ -6,3 +6,5 @@ export * from "./authority";
 export * from "./workforce";
 export * from "./assets";
 export * from "./trips";
+
+export * from "./safety";

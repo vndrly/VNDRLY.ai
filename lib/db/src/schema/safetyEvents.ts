@@ -23,6 +23,8 @@ export const SAFETY_EVENT_TYPES = [
   "unsafe_act",
   "injury",
   "property_damage",
+  "vehicle_incident",
+  "possible_crash",
   "observation",
 ] as const;
 
