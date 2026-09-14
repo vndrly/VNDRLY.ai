@@ -2215,5 +2215,27 @@
     "exempt_labor": "Mano de obra de campo exenta",
     "taxable_repair_service": "Reparación / mantenimiento (gravar mano de obra)",
     "taxable_all": "Todo gravable (IGB / servicio amplio)"
+  },
+  "implementationAOperations": {
+    "title": "Estado de operaciones",
+    "description": "Estado de entrega, sincronización, retención y flujos de seguridad.",
+    "adminOnly": "El estado de operaciones está limitado a administradores de la empresa.",
+    "healthy": "Saludable",
+    "attention": "Requiere atención",
+    "checking": "Comprobando",
+    "signalList": "Señales del estado de operaciones",
+    "offlineBacklog": "Cambios sin conexión pendientes: {{count}}",
+    "terminalConflicts": "Conflictos terminales: {{count}}",
+    "permissionDenials": "Denegaciones recientes de permiso: {{count}}",
+    "staleLocations": "Ubicaciones en vivo desactualizadas: {{count}}",
+    "failedAlerts": "Alertas fallidas: {{count}}",
+    "unhealthyDisplays": "Pantallas que requieren atención: {{count}}",
+    "transcription": "Transcripción de reuniones: {{state}}",
+    "safetyChain": "Cadena de escalamiento de seguridad: {{state}}",
+    "available": "Disponible",
+    "unavailableState": "No disponible",
+    "configured": "Configurada",
+    "missing": "Faltante",
+    "textFallback": "Usar texto en lugar de voz"
   }
 }

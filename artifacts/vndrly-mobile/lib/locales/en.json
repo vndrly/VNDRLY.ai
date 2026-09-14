@@ -2215,5 +2215,27 @@
     "exempt_labor": "Field labor exempt",
     "taxable_repair_service": "Repair / maintenance (tax labor)",
     "taxable_all": "All taxable (GRT / broad service)"
+  },
+  "implementationAOperations": {
+    "title": "Operations Health",
+    "description": "Delivery, synchronization, retention, and safety workflow status.",
+    "adminOnly": "Operations health is limited to company administrators.",
+    "healthy": "Healthy",
+    "attention": "Attention required",
+    "checking": "Checking",
+    "signalList": "Operations health signals",
+    "offlineBacklog": "Offline changes waiting: {{count}}",
+    "terminalConflicts": "Terminal conflicts: {{count}}",
+    "permissionDenials": "Recent permission denials: {{count}}",
+    "staleLocations": "Stale live locations: {{count}}",
+    "failedAlerts": "Failed alerts: {{count}}",
+    "unhealthyDisplays": "Displays needing attention: {{count}}",
+    "transcription": "Meeting transcription: {{state}}",
+    "safetyChain": "Safety escalation chain: {{state}}",
+    "available": "Available",
+    "unavailableState": "Unavailable",
+    "configured": "Configured",
+    "missing": "Missing",
+    "textFallback": "Use text instead of voice"
   }
 }

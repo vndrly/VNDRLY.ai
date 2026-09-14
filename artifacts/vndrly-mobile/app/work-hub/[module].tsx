@@ -17,6 +17,7 @@ import { Assets } from "@/components/implementation-a/Assets";
 import { SitePresence } from "@/components/implementation-a/SitePresence";
 import { SafetyResponse } from "@/components/implementation-a/SafetyResponse";
 import { ImplementationAExports } from "@/components/implementation-a/Exports";
+import { OperationsHealth } from "@/components/implementation-a/OperationsHealth";
 import WorkHubConversation from "@/components/WorkHubConversation";
 import { useMeetingCompanion } from "@/components/MeetingCompanionProvider";
 import TogglePillButton from "@/components/TogglePillButton";
@@ -44,6 +45,7 @@ const titles: Record<string, string> = {
   "site-presence": "Site Presence",
   "safety-response": "Safety Response",
   "implementation-exports": "Exports",
+  "operations-health": "Operations Health",
   chat: "Chat",
   crews: "Crews",
   calendar: "Calendar",
@@ -238,7 +240,7 @@ export default function WorkHubModuleScreen() {
       setMeetingFileBusy(false);
     }
   };
-  if (["managed-crews", "workforce-coverage", "inventory", "site-presence", "safety-response", "implementation-exports"].includes(module))
+  if (["managed-crews", "workforce-coverage", "inventory", "site-presence", "safety-response", "implementation-exports", "operations-health"].includes(module))
     return (
       <ScreenSafeArea style={{ backgroundColor: colors.background }}>
         <Stack.Screen options={{ title }} />
@@ -252,6 +254,7 @@ export default function WorkHubModuleScreen() {
           {module === "site-presence" && <SitePresence people={data?.people ?? data?.workers ?? []} canSeeExactLocation={canManage} />}
           {module === "safety-response" && <SafetyResponse />}
           {module === "implementation-exports" && owner && <ImplementationAExports owner={owner} />}
+          {module === "operations-health" && <OperationsHealth health={data} admin={canManage} />}
         </ScrollView>
       </ScreenSafeArea>
     );
@@ -299,6 +302,7 @@ export default function WorkHubModuleScreen() {
                 borderWidth: 1,
                 borderColor: colors.border,
                 borderRadius: 10,
+                minHeight: 44,
                 padding: 12,
               }}
             />
@@ -308,6 +312,7 @@ export default function WorkHubModuleScreen() {
               style={{
                 backgroundColor: colors.primary,
                 borderRadius: 10,
+                minHeight: 44,
                 padding: 12,
                 justifyContent: "center",
               }}
@@ -352,6 +357,7 @@ export default function WorkHubModuleScreen() {
                   borderWidth: 1,
                   borderColor: colors.border,
                   borderRadius: 10,
+                minHeight: 44,
                   padding: 12,
                 }}
               />
@@ -361,6 +367,7 @@ export default function WorkHubModuleScreen() {
                 style={{
                   backgroundColor: colors.primary,
                   borderRadius: 10,
+                minHeight: 44,
                   padding: 12,
                   justifyContent: "center",
                 }}
@@ -482,7 +489,7 @@ export default function WorkHubModuleScreen() {
                   accessibilityRole="button"
                   onPress={() => setSelectedChannel(row)}
                 >
-                  <Text style={{ color: colors.primary, padding: 10 }}>
+                  <Text style={{ color: colors.primary, padding: 10, minHeight: 44, textAlignVertical: "center" }}>
                     Open conversation
                   </Text>
                 </Pressable>
@@ -499,6 +506,8 @@ export default function WorkHubModuleScreen() {
                     borderRadius: 8,
                     paddingHorizontal: 14,
                     paddingVertical: 9,
+                    minHeight: 44,
+                    justifyContent: "center",
                   }}
                 >
                   <Text

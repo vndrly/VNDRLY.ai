@@ -121,6 +121,10 @@ vi.mock("./services/notification-delivery", () => ({
   startReliableNotificationWorker: vi.fn(),
   stopReliableNotificationWorker: vi.fn(),
 }));
+vi.mock("./services/operations-health", () => ({
+  startImplementationARetentionWorker: vi.fn(),
+  stopImplementationARetentionWorker: vi.fn(),
+}));
 vi.mock("./lib/invoice-generator", () => ({
   startInvoicePeriodWorker: vi.fn(),
   stopInvoicePeriodWorker: vi.fn(),

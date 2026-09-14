@@ -392,9 +392,10 @@ router.get("/:occurrenceId/replay", async (req, res, next): Promise<Response | v
       requireStoredVersions(saved);
       const chunks = await tx.select().from(replayChunks).where(and(eq(replayChunks.manifestId, saved.id), eq(replayChunks.state, "ready"))).orderBy(asc(replayChunks.sequence));
       const events = await tx.select().from(replayEvents).where(eq(replayEvents.manifestId, saved.id)).orderBy(asc(replayEvents.offsetMs));
+      const [retention] = await tx.select().from(recordingRetention).where(eq(recordingRetention.manifestId, saved.id));
       const value = buildReplayManifest({ occurrenceId: ctx.occurrenceId, meetingStartedAt: saved.meetingStartedAt, meetingStatus: ctx.occurrence.status, manifestStatus: saved.status, rendererVersion: saved.rendererVersion, schemaVersion: saved.schemaVersion, durationMs: saved.durationMs, chunks: chunks as any, events: events as any, explicitGaps: saved.gapMarkers as ReplayGap[] });
       await audit(tx, ctx, "meeting.replay_viewed", { complete: value.complete, eventCount: value.events.length });
-      return value;
+      return { ...value, rawMediaAvailable: !retention?.rawMediaDeletedAt, rawMediaDeletedAt: retention?.rawMediaDeletedAt?.toISOString() ?? null };
     });
     res.setHeader("Cache-Control", "private, no-store"); return res.json(manifest);
   } catch (error) { return handle(error, res, next); }
@@ -509,6 +510,8 @@ router.get("/:occurrenceId/replay/audio/:chunkId", async (req, res, next): Promi
       const [manifest] = await tx.select().from(replayManifests).where(eq(replayManifests.occurrenceId, ctx.occurrenceId));
       if (!manifest || manifest.status !== "finalized") throw new ReplayRouteError(404, "Replay audio not found");
       requireStoredVersions(manifest);
+      const [retention] = await tx.select().from(recordingRetention).where(eq(recordingRetention.manifestId, manifest.id));
+      if (retention?.rawMediaDeletedAt) throw new ReplayRouteError(410, "Replay audio expired; the transcript and summary remain available");
       const id = z.string().uuid().parse(req.params.chunkId);
       const [chunk] = await tx.select().from(replayChunks).where(and(eq(replayChunks.id, id), eq(replayChunks.manifestId, manifest.id), eq(replayChunks.occurrenceId, ctx.occurrenceId), eq(replayChunks.state, "ready")));
       if (!chunk) throw new ReplayRouteError(404, "Replay audio not found");

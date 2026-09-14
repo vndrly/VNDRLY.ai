@@ -17,5 +17,6 @@ describe("mobile Work Hub boundary", () => {
     expect(moduleEndpoint("channels")).toBe("/api/work-hub/channels");
     expect(moduleEndpoint("files-notes")).toBe("/api/work-hub/files");
     expect(moduleEndpoint("tasks-forms")).toBe("/api/work-hub/tasks");
+    expect(moduleEndpoint("operations-health")).toBe("/api/implementation-a/operations-health");
   });
 });

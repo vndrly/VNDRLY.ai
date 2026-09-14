@@ -15,6 +15,7 @@ export function moduleEndpoint(module: string, query = "") {
   if (module === "managed-crews") return "/api/implementation-a/sponsorships";
   if (module === "inventory") return "/api/implementation-a/assets";
   if (module === "site-presence") return "/api/site-map/overview";
+  if (module === "operations-health") return "/api/implementation-a/operations-health";
   if (module === "chat") return "/api/work-hub/chats";
   if (module === "crews") return "/api/work-hub/crews";
   if (module === "files-notes") return "/api/work-hub/files";
@@ -57,6 +58,7 @@ export function mobileWorkHubModules(isTablet: boolean, companyAdmin: boolean) {
     { key: "askv", label: "AskV", icon: "mic" },
     { key: "search", label: "Search", icon: "search" },
   ];
+  if (companyAdmin) items.push({ key: "operations-health", label: "Operations Health", icon: "activity" });
   if (isTablet && companyAdmin)
     items.push({ key: "crews", label: "Manage Crews", icon: "users" });
   return items;

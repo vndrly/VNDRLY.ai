@@ -81,6 +81,7 @@ import { completeServerShutdown } from "./lib/graceful-shutdown";
 import { recoverAndStartWorkHubExportWorker, stopWorkHubExportWorker } from "./work-hub/governance-export-runtime";
 import { recoverAndStartWorkHubRetentionPlannerWorker, stopWorkHubRetentionPlannerWorker } from "./work-hub/governance-retention-planner-runtime";
 import { startReliableNotificationWorker, stopReliableNotificationWorker } from "./services/notification-delivery";
+import { startImplementationARetentionWorker, stopImplementationARetentionWorker } from "./services/operations-health";
 
 const rawPort = process.env["PORT"];
 
@@ -147,6 +148,7 @@ function onListening(): void {
   startMajikEventBus();
   startScheduledNotificationWorker();
   startReliableNotificationWorker();
+  startImplementationARetentionWorker();
   startInvoicePeriodWorker();
   startInvoiceAgingWorker();
   startApPaymentDigestWorker();
@@ -216,6 +218,7 @@ async function shutdown(signal: NodeJS.Signals): Promise<void> {
   stopGateEvidenceCleanupWorker();
   stopScheduledNotificationWorker();
   stopReliableNotificationWorker();
+  stopImplementationARetentionWorker();
   stopInvoicePeriodWorker();
   stopInvoiceAgingWorker();
   stopApPaymentDigestWorker();

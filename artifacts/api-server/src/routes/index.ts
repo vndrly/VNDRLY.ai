@@ -72,6 +72,7 @@ import implementationATripsRouter from "./implementationATrips";
 import implementationASafetyRouter from "./implementationASafety";
 import implementationASubscriptionsRouter from "./implementationASubscriptions";
 import implementationADisplaysRouter from "./implementationADisplays";
+import implementationAHealthRouter from "./implementationAHealth";
 
 const router: IRouter = Router();
 
@@ -162,5 +163,6 @@ router.use(implementationATripsRouter);
 router.use(implementationASafetyRouter);
 router.use(implementationASubscriptionsRouter);
 router.use(implementationADisplaysRouter);
+router.use(implementationAHealthRouter);
 
 export default router;
