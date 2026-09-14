@@ -1,3 +1,9 @@
+import { INVITATION_CAPABILITY_TOOLS } from "./capabilities/invitations";
+import { WORKFORCE_CAPABILITY_TOOLS } from "./capabilities/workforce";
+import { ASSET_CAPABILITY_TOOLS } from "./capabilities/assets";
+import { TRIP_CAPABILITY_TOOLS } from "./capabilities/trips";
+import { SAFETY_CAPABILITY_TOOLS } from "./capabilities/safety";
+import { ACCOUNT_CAPABILITY_TOOLS } from "./capabilities/accounts";
 import {
   ASK_V_TOOL_REGISTRY,
   normalizeAskVRole,
@@ -9,6 +15,11 @@ import {
   WORK_HUB_TOOL_NAMES_BY_FAMILY,
   type WorkHubToolFamily,
 } from "./work-hub-tools";
+
+const IMPLEMENTATION_A_TOOL_NAMES = [
+  ...INVITATION_CAPABILITY_TOOLS, ...WORKFORCE_CAPABILITY_TOOLS, ...ASSET_CAPABILITY_TOOLS,
+  ...TRIP_CAPABILITY_TOOLS, ...SAFETY_CAPABILITY_TOOLS, ...ACCOUNT_CAPABILITY_TOOLS,
+].map((tool) => tool.name);
 
 const CORE_TOOLS = new Set([
   "select_tool_pack",
@@ -209,6 +220,8 @@ export function toolsForRealtime(args: {
       /\/work-hub\/askv(?:\/|$)/i.test(path)
         ? WORK_HUB_TOOL_FAMILIES
         : [workHubToolFamilyForPath(path)];
+    if (/\/work-hub\/askv(?:\/|$)/i.test(path))
+      for (const name of IMPLEMENTATION_A_TOOL_NAMES) allowed.add(name);
     for (const family of families) {
       for (const name of WORK_HUB_TOOL_NAMES_BY_FAMILY[family]) {
         allowed.add(name);

@@ -1,6 +1,12 @@
 import type { Anthropic } from "@workspace/integrations-anthropic-ai/sdk";
 import type { AuthorityCapability } from "../../../../lib/api-zod/src/implementation-a/authority";
 import { DEEP_LINK_SCREENS, TOOLS } from "./tools";
+import { INVITATION_CAPABILITY_TOOLS } from "./capabilities/invitations";
+import { WORKFORCE_CAPABILITY_TOOLS } from "./capabilities/workforce";
+import { ASSET_CAPABILITY_TOOLS } from "./capabilities/assets";
+import { TRIP_CAPABILITY_TOOLS } from "./capabilities/trips";
+import { SAFETY_CAPABILITY_TOOLS } from "./capabilities/safety";
+import { ACCOUNT_CAPABILITY_TOOLS } from "./capabilities/accounts";
 import {
   WORK_HUB_TOOL_METADATA,
   type WorkHubToolFamily,
@@ -200,25 +206,48 @@ const TOOL_METADATA: Record<string, Partial<ToolMetadata>> = {
 
 export { DEEP_LINK_SCREENS };
 
-export const ASK_V_TOOL_REGISTRY: AskVToolDefinition[] = TOOLS.map((tool) => {
-  const metadata = { ...DEFAULT_METADATA, ...(TOOL_METADATA[tool.name] ?? {}) };
-  return {
-    name: tool.name,
-    description: tool.description ?? "",
-    inputSchema: tool.input_schema,
-    roles: metadata.roles,
-    mutating: metadata.mutating,
-    confirmation: metadata.confirmation,
-    risk: metadata.mutating ? (metadata.confirmation === "required" ? "high" : "low") : "read",
-    execution: metadata.execution,
-    pack: metadata.pack,
-    auditTarget: metadata.auditTarget,
-    workHubFamily: metadata.workHubFamily,
-    companyAdminOnly: metadata.companyAdminOnly,
-    authorityCapability: metadata.authorityCapability,
-  };
-});
+export const IMPLEMENTATION_A_CAPABILITY_TOOLS = [
+  ...INVITATION_CAPABILITY_TOOLS,
+  ...WORKFORCE_CAPABILITY_TOOLS,
+  ...ASSET_CAPABILITY_TOOLS,
+  ...TRIP_CAPABILITY_TOOLS,
+  ...SAFETY_CAPABILITY_TOOLS,
+  ...ACCOUNT_CAPABILITY_TOOLS,
+];
 
+export const ASK_V_TOOL_REGISTRY: AskVToolDefinition[] = [
+  ...TOOLS.map((tool) => {
+    const metadata = { ...DEFAULT_METADATA, ...(TOOL_METADATA[tool.name] ?? {}) };
+    return {
+      name: tool.name,
+      description: tool.description ?? "",
+      inputSchema: tool.input_schema,
+      roles: metadata.roles,
+      mutating: metadata.mutating,
+      confirmation: metadata.confirmation,
+      risk: metadata.mutating ? (metadata.confirmation === "required" ? "high" : "low") : "read",
+      execution: metadata.execution,
+      pack: metadata.pack,
+      auditTarget: metadata.auditTarget,
+      workHubFamily: metadata.workHubFamily,
+      companyAdminOnly: metadata.companyAdminOnly,
+      authorityCapability: metadata.authorityCapability,
+    } satisfies AskVToolDefinition;
+  }),
+  ...IMPLEMENTATION_A_CAPABILITY_TOOLS.map((tool) => ({
+    name: tool.name,
+    description: tool.description,
+    inputSchema: tool.input_schema,
+    roles: ALL_SIGNED_IN_ROLES,
+    mutating: tool.mutating,
+    confirmation: tool.confirmation,
+    risk: tool.mutating ? ("high" as const) : ("read" as const),
+    execution: "server" as const,
+    pack: "role" as const,
+    auditTarget: tool.name.includes("incident") ? ("safety" as const) : ("work_hub" as const),
+    authorityCapability: tool.authorityCapability,
+  })),
+];
 export function toAnthropicTools(tools: AskVToolDefinition[]): Anthropic.Tool[] {
   return tools.map((tool) => ({
     name: tool.name,

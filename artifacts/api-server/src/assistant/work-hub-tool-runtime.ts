@@ -61,6 +61,58 @@ const direct = (input: Input, extra: Input = {}): Input => ({
   ...extra,
 });
 
+function resolveImplementationACapabilityRequest(name: string, input: Input): WorkHubToolRequest | null {
+  const action = typeof input.action === "string" ? input.action : "";
+  const payload = record(input.payload);
+  const resourceId = encoded(input.resourceId ?? input.id ?? input.assetId ?? input.tripId ?? input.eventId ?? input.invitationId);
+  const readPaths: Record<string, string> = {
+    query_account_invitations: "/implementation-a/account-invitations",
+    query_workforce_coverage: "/implementation-a/workforce/coverage",
+    query_asset_custody: "/implementation-a/assets",
+    query_field_trips: resourceId ? `/implementation-a/trips/${resourceId}` : "/implementation-a/trips",
+    query_incident_response: resourceId ? `/implementation-a/safety/incidents/${resourceId}` : "/implementation-a/safety/incidents",
+    query_worker_subscriptions: "/implementation-a/subscriptions",
+    query_operations_displays: "/implementation-a/displays",
+  };
+  if (readPaths[name]) return request("GET", readPaths[name]);
+  if (name.startsWith("prepare_") && name.endsWith("_action")) {
+    const queryName = name.replace(/^prepare_/, "query_").replace(/_action$/, "");
+    const path = readPaths[queryName];
+    return path
+      ? request("GET", queryPath(path, { prepareAction: action, resourceId }))
+      : unsupported("prepared capability");
+  }
+  if (!name.startsWith("confirm_") || !name.endsWith("_action")) return null;
+  if (name === "confirm_account_invitations_action") {
+    if (action === "create") return request("POST", "/implementation-a/account-invitations", payload);
+    if (!resourceId) return { error: "A valid invitation id is required." };
+    if (action === "resend") return request("POST", `/implementation-a/account-invitations/${resourceId}/resend`, payload);
+    if (action === "revoke") return request("DELETE", `/implementation-a/account-invitations/${resourceId}`, payload);
+  }
+  if (name === "confirm_workforce_coverage_action") {
+    if (action === "assign") return request("POST", "/implementation-a/workforce/assignments", payload);
+    if (!resourceId) return { error: "A valid assignment or coverage id is required." };
+    if (action === "acknowledge") return request("PATCH", `/implementation-a/workforce/assignments/${resourceId}/acknowledge`, payload);
+    if (["evaluate", "escalate"].includes(action)) return request("POST", `/implementation-a/workforce/coverage/${resourceId}/${action}`, payload);
+  }
+  if (name === "confirm_asset_custody_action") {
+    if (!resourceId) return { error: "A valid asset id is required." };
+    if (["checkout", "return", "transfer", "condition", "hold", "merge"].includes(action)) return request("POST", `/implementation-a/assets/${resourceId}/${action}`, payload);
+  }
+  if (name === "confirm_field_trips_action") {
+    if (action === "start") return request("POST", "/implementation-a/trips", payload);
+    if (!resourceId) return { error: "A valid trip id is required." };
+    if (["location", "pause"].includes(action)) return request("POST", `/implementation-a/trips/${resourceId}/${action}`, payload);
+  }
+  if (name === "confirm_incident_response_action") {
+    if (action === "create") return request("POST", "/implementation-a/safety/incidents", payload);
+    if (!resourceId) return { error: "A valid safety event id is required." };
+    if (["escalate", "acknowledge", "evidence", "hold", "close"].includes(action)) return request("POST", `/implementation-a/safety/incidents/${resourceId}/${action}`, payload);
+  }
+  if (name === "confirm_worker_subscriptions_action") return request("POST", resourceId ? `/implementation-a/subscriptions/${resourceId}/${action}` : "/implementation-a/subscriptions", payload);
+  if (name === "confirm_operations_displays_action") return request("POST", resourceId ? `/implementation-a/displays/${resourceId}/${action}` : "/implementation-a/displays", payload);
+  return unsupported("capability");
+}
 export function resolveWorkHubToolRequest(
   name: string,
   rawInput: unknown,
@@ -539,9 +591,10 @@ export function resolveExecutableWorkHubToolRequest(
   return resolveWorkHubToolRequest(name, input);
 }
 import { WORK_HUB_TOOL_METADATA } from "./work-hub-tools";
+import { IMPLEMENTATION_A_CAPABILITY_TOOLS } from "./tool-registry";
 
 export const isTypedWorkHubTool = (name: string): boolean =>
-  Boolean(WORK_HUB_TOOL_METADATA[name]);
+  Boolean(WORK_HUB_TOOL_METADATA[name] || IMPLEMENTATION_A_CAPABILITY_TOOLS.some((tool) => tool.name === name));
 
 export function bindWorkHubToolScope(
   rawInput: unknown,
