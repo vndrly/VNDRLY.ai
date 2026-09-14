@@ -29,6 +29,11 @@ vi.mock("@workspace/db", () => ({
     mustChangePassword: "users.must_change_password",
     sessionVersion: "users.session_version",
   },
+  workerSubscriptionsTable: {
+    workerUserId: "worker_subscriptions.worker_user_id",
+    state: "worker_subscriptions.state",
+    renewalAt: "worker_subscriptions.renewal_at",
+  },
   userOrgMembershipsTable: {
     id: "memberships.id",
     userId: "memberships.user_id",
@@ -106,5 +111,26 @@ describe("POST /users/:id/admin-reset-password", () => {
         locale: "en",
       }),
     );
+  });
+});
+
+describe("worker subscription account lifecycle", () => {
+  beforeEach(() => {
+    selectRows.queue = [[{ displayName: "System Admin" }], [{ id: 42, suspendedAt: null }]];
+    updateSetMock.mockReset().mockReturnValue({ where: vi.fn(async () => undefined) });
+    getSessionFromRequestMock.mockReset().mockReturnValue({ userId: 1, role: "admin" });
+  });
+
+  it("pauses the sponsored seat when an account is suspended", async () => {
+    const res = await request(app()).post("/users/42/suspend").send({});
+    expectStatus(res, 200);
+    expect(updateSetMock).toHaveBeenCalledWith(expect.objectContaining({ state: "paused", renews: false, accessEndsAt: expect.any(Date), auditActorUserId: 1 }));
+  });
+
+  it("reactivates the same sponsored seat with the account", async () => {
+    selectRows.queue = [[{ displayName: "System Admin" }], [{ id: 42 }]];
+    const res = await request(app()).post("/users/42/reactivate").send({});
+    expectStatus(res, 200);
+    expect(updateSetMock).toHaveBeenCalledWith(expect.objectContaining({ state: "active", renews: true, accessEndsAt: null, archivedAt: null, auditActorUserId: 1 }));
   });
 });

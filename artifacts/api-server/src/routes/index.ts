@@ -70,6 +70,7 @@ import implementationAWorkforceRouter from "./implementationAWorkforce";
 import implementationAAssetsRouter from "./implementationAAssets";
 import implementationATripsRouter from "./implementationATrips";
 import implementationASafetyRouter from "./implementationASafety";
+import implementationASubscriptionsRouter from "./implementationASubscriptions";
 
 const router: IRouter = Router();
 
@@ -158,5 +159,6 @@ router.use(implementationAWorkforceRouter);
 router.use(implementationAAssetsRouter);
 router.use(implementationATripsRouter);
 router.use(implementationASafetyRouter);
+router.use(implementationASubscriptionsRouter);
 
 export default router;

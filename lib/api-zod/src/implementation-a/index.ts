@@ -8,3 +8,4 @@ export * from "./assets";
 export * from "./trips";
 
 export * from "./safety";
+export * from "./subscriptions";

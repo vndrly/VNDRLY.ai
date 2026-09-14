@@ -20,6 +20,7 @@ import {
   db,
   usersTable,
   userOrgMembershipsTable,
+  workerSubscriptionsTable,
 } from "@workspace/db";
 import { getSessionFromRequest } from "../lib/session";
 import { sendAdminResetPasswordEmail } from "../lib/sendgrid";
@@ -288,16 +289,25 @@ router.post("/users/:id/suspend", async (req, res) => {
     return;
   }
 
+  const suspendedAt = new Date();
   await db
     .update(usersTable)
     .set({
-      suspendedAt: new Date(),
+      suspendedAt,
       suspendedBy: auth.ctx.adminUserId,
       sessionVersion: sql`${usersTable.sessionVersion} + 1`,
     })
     .where(eq(usersTable.id, targetUserId));
+  await db.update(workerSubscriptionsTable).set({
+    state: "paused",
+    renews: false,
+    accessEndsAt: suspendedAt,
+    billingEndsAt: sql`${workerSubscriptionsTable.renewalAt}`,
+    auditActorUserId: auth.ctx.adminUserId,
+    updatedAt: suspendedAt,
+  }).where(and(eq(workerSubscriptionsTable.workerUserId, targetUserId), eq(workerSubscriptionsTable.state, "active")));
 
-  res.json({ ok: true, suspendedAt: new Date().toISOString() });
+  res.json({ ok: true, suspendedAt: suspendedAt.toISOString() });
 });
 
 // ─── Reactivate ─────────────────────────────────────────────────
@@ -323,6 +333,7 @@ router.post("/users/:id/reactivate", async (req, res) => {
     return;
   }
 
+  const reactivatedAt = new Date();
   await db
     .update(usersTable)
     .set({
@@ -333,6 +344,15 @@ router.post("/users/:id/reactivate", async (req, res) => {
       sessionVersion: sql`${usersTable.sessionVersion} + 1`,
     })
     .where(eq(usersTable.id, targetUserId));
+  await db.update(workerSubscriptionsTable).set({
+    state: "active",
+    renews: true,
+    accessEndsAt: null,
+    billingEndsAt: null,
+    archivedAt: null,
+    auditActorUserId: auth.ctx.adminUserId,
+    updatedAt: reactivatedAt,
+  }).where(and(eq(workerSubscriptionsTable.workerUserId, targetUserId), eq(workerSubscriptionsTable.state, "paused")));
 
   res.json({ ok: true });
 });
