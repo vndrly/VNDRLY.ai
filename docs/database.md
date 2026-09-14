@@ -2,11 +2,11 @@
 
 VNDRLY uses **one** Postgres database, hosted on **Supabase**.
 
-| Environment | Where the connection lives | Same database? |
-|---|---|---|
-| **Your Desktop** (Cursor edits) | Repo root `.env.local` → `DATABASE_URL` | Yes — Supabase |
+| Environment                               | Where the connection lives                                                  | Same database?          |
+| ----------------------------------------- | --------------------------------------------------------------------------- | ----------------------- |
+| **Your Desktop** (Cursor edits)           | Repo root `.env.local` → `DATABASE_URL`                                     | Yes — Supabase          |
 | **Production** (vndrly.ai on GoDaddy VPS) | `/var/www/vndrly/.env.production` (written by `scripts/godaddy-deploy.mjs`) | Yes — same Supabase URL |
-| **Schema / SQL from Cursor** | Supabase MCP plugin, project `bihjmgbdzbhcnsuhzzwo` | Yes — Supabase |
+| **Schema / SQL from Cursor**              | Supabase MCP plugin, project `bihjmgbdzbhcnsuhzzwo`                         | Yes — Supabase          |
 
 Production `.env.production` is assembled on deploy from repo `.env.local` plus Supabase credentials. Outbound email is not enabled yet; password-reset and notification email require a future paid-tier provider.
 
@@ -31,10 +31,10 @@ postgresql://postgres.bihjmgbdzbhcnsuhzzwo:[PASSWORD]@aws-1-us-west-2.pooler.sup
 
 ## Web app vs iOS app
 
-| App | How it reaches data |
-|---|---|
-| **Web** (`artifacts/vndrly`) | Browser → Vite dev server → **api-server** → Supabase via `DATABASE_URL` |
-| **API** (`artifacts/api-server`) | Express → `@workspace/db` → Supabase via `DATABASE_URL` |
+| App                                 | How it reaches data                                                                       |
+| ----------------------------------- | ----------------------------------------------------------------------------------------- |
+| **Web** (`artifacts/vndrly`)        | Browser → Vite dev server → **api-server** → Supabase via `DATABASE_URL`                  |
+| **API** (`artifacts/api-server`)    | Express → `@workspace/db` → Supabase via `DATABASE_URL`                                   |
 | **iOS** (`artifacts/vndrly-mobile`) | Expo app → **`EXPO_PUBLIC_DOMAIN`** (default `https://vndrly.ai`) → api-server → Supabase |
 
 The mobile app never connects to Supabase Postgres directly. Production iOS builds use `EXPO_PUBLIC_DOMAIN=https://vndrly.ai` (see `artifacts/vndrly-mobile/eas.json`).
@@ -91,3 +91,15 @@ Neon → Supabase migration is **done** (May 2026). For reference, the export sc
 ## Tests
 
 `pnpm --filter @workspace/api-server test` uses an isolated `*_test` database derived from `DATABASE_URL`. It does not touch production Supabase data during normal test runs.
+
+## Implementation A guarded migration
+
+`lib/db/drizzle/chunk_411_implementation_a.sql` is the production migration for managed subcontractors, account activation, workforce coverage, reliable acknowledgements, inventory custody, field trips and automatic presence, safety response, meeting participation retention, company-sponsored seats, and operations displays.
+
+The API deployment runs it with:
+
+```bash
+pnpm --filter @workspace/db run migrate:implementation-a
+```
+
+The runner rejects destructive statements before connecting, then executes the additive, idempotent SQL in one transaction under an advisory lock. The migration creates tables and indexes with `IF NOT EXISTS` and adds columns with `ADD COLUMN IF NOT EXISTS`; it does not rotate credentials or rewrite existing operational rows.

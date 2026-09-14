@@ -15,7 +15,8 @@
     "push": "drizzle-kit push --config ./drizzle.config.ts",
     "push-force": "drizzle-kit push --force --config ./drizzle.config.ts",
     "check-schema": "tsx src/scripts/check-schema-drift.ts",
-    "backfill:status-history": "tsx src/scripts/backfill-ticket-status-history.ts"
+    "backfill:status-history": "tsx src/scripts/backfill-ticket-status-history.ts",
+    "migrate:implementation-a": "tsx src/scripts/apply-implementation-a.ts"
   },
   "dependencies": {
     "drizzle-orm": "catalog:",
