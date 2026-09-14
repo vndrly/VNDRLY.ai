@@ -114,3 +114,4 @@ export * from "./capabilityFlags";
 export * from "./managedSubcontractors";
 export * from "./accountInvitations";
 export * from "./workParticipationAuthorizations";
+export * from "./workforceCoverage";
