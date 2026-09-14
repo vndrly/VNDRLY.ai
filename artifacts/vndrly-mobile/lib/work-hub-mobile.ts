@@ -12,6 +12,9 @@ export function moduleEndpoint(module: string, query = "") {
     return "/api/work-hub/finance/personal-documents";
   if (module === "calls") return "/api/work-hub/calls";
   if (module === "activity") return "/api/work-hub/activity";
+  if (module === "managed-crews") return "/api/implementation-a/sponsorships";
+  if (module === "inventory") return "/api/implementation-a/assets";
+  if (module === "site-presence") return "/api/site-map/overview";
   if (module === "chat") return "/api/work-hub/chats";
   if (module === "crews") return "/api/work-hub/crews";
   if (module === "files-notes") return "/api/work-hub/files";
@@ -20,7 +23,7 @@ export function moduleEndpoint(module: string, query = "") {
     return "/api/work-hub/connectors/microsoft-365";
   if (module === "search")
     return `/api/work-hub/search?q=${encodeURIComponent(query)}`;
-  if (module === "calendar" || module === "meetings") {
+  if (module === "calendar" || module === "meetings" || module === "workforce-coverage") {
     const start = new Date();
     const end = new Date(start);
     end.setMonth(end.getMonth() + 3);
@@ -41,6 +44,11 @@ export function mobileWorkHubModules(isTablet: boolean, companyAdmin: boolean) {
     { key: "chat", label: "Chat", icon: "message-circle" },
     { key: "channels", label: "Crews & Channels", icon: "users" },
     { key: "calendar", label: "Calendar", icon: "calendar" },
+    { key: "managed-crews", label: "Managed Crews", icon: "users" },
+    { key: "workforce-coverage", label: "Workforce Coverage", icon: "clock" },
+    { key: "inventory", label: "Inventory", icon: "package" },
+    { key: "site-presence", label: "Site Presence", icon: "map-pin" },
+    { key: "safety-response", label: "Safety Response", icon: "shield" },
     { key: "files-notes", label: "Files & Notes", icon: "folder" },
     { key: "tasks-forms", label: "Tasks & Forms", icon: "check-square" },
     { key: "calls", label: "Calls", icon: "phone" },

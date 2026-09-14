@@ -1,6 +1,8 @@
 import * as FileSystem from "expo-file-system/legacy";
 import { getToken, type StoredUser } from "./auth";
 import { apiFetch, getApiBase } from "./api";
+import { getDeviceId } from "./deviceId";
+import { createImplementationAQueue, type ImplementationADomain, type ImplementationAScope } from "./implementation-a-queue";
 import {
   enqueueWorkHubCommand,
   enqueueWorkHubUpload,
@@ -56,6 +58,38 @@ export async function queueNativeWorkHubUpload(
   return enqueueWorkHubUpload(await nativeStore(), scope, { path, fileUri, contentType, dependsOn, headers, removeAfterSend, operationId });
 }
 
+
+async function implementationAScope(user: StoredUser): Promise<ImplementationAScope> {
+  const scope = workHubQueueScope(user);
+  if (!scope) throw new Error("An active Work Hub organization is required");
+  return { ...scope, deviceId: await getDeviceId() };
+}
+
+export async function queueNativeImplementationARequest(
+  user: StoredUser,
+  input: {
+    domain: ImplementationADomain;
+    domainVersion: number;
+    operationId: string;
+    originalEventAt: string;
+    path: string;
+    method: "POST" | "PUT" | "PATCH" | "DELETE";
+    payload: unknown;
+  },
+) {
+  return createImplementationAQueue(await nativeStore()).enqueue(await implementationAScope(user), input);
+}
+
+async function flushNativeImplementationAQueue(user: StoredUser) {
+  const queue = createImplementationAQueue(await nativeStore());
+  return queue.flush(await implementationAScope(user), async (item) => {
+    await apiFetch(item.path, {
+      method: item.method,
+      body: JSON.stringify(item.payload),
+      headers: { "x-operation-id": item.operationId, "x-domain-version": String(item.domainVersion), "x-original-event-at": item.originalEventAt },
+    });
+  });
+}
 async function replay(item: QueuedWorkHubItem) {
   if (item.kind === "command") {
     await apiFetch(item.path, {
@@ -85,5 +119,7 @@ async function replay(item: QueuedWorkHubItem) {
 export async function flushNativeWorkHubQueue(user: StoredUser) {
   const scope = workHubQueueScope(user);
   if (!scope) return { sent: 0, remaining: 0, revoked: false };
-  return flushWorkHubCommands(await nativeStore(), scope, replay);
+  const workHub = await flushWorkHubCommands(await nativeStore(), scope, replay);
+  const implementationA = await flushNativeImplementationAQueue(user);
+  return { ...workHub, implementationARemaining: implementationA.items.length };
 }

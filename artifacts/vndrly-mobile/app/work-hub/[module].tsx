@@ -11,6 +11,11 @@ import {
   View,
 } from "react-native";
 import WorkHubCalls from "@/components/WorkHubCalls";
+import { ManagedCrews } from "@/components/implementation-a/ManagedCrews";
+import { WorkforceCoverage } from "@/components/implementation-a/WorkforceCoverage";
+import { Assets } from "@/components/implementation-a/Assets";
+import { SitePresence } from "@/components/implementation-a/SitePresence";
+import { SafetyResponse } from "@/components/implementation-a/SafetyResponse";
 import WorkHubConversation from "@/components/WorkHubConversation";
 import { useMeetingCompanion } from "@/components/MeetingCompanionProvider";
 import TogglePillButton from "@/components/TogglePillButton";
@@ -32,6 +37,11 @@ type Row = Record<string, any>;
 const titles: Record<string, string> = {
   channels: "Crews & Channels",
   activity: "Activity",
+  "managed-crews": "Managed Crews",
+  "workforce-coverage": "Workforce Coverage",
+  inventory: "Inventory",
+  "site-presence": "Site Presence",
+  "safety-response": "Safety Response",
   chat: "Chat",
   crews: "Crews",
   calendar: "Calendar",
@@ -95,7 +105,7 @@ export default function WorkHubModuleScreen() {
     [module, query, user],
   );
   useEffect(() => {
-    if (module !== "calls") void load("");
+    if (module !== "calls" && module !== "safety-response") void load("");
   }, [module]);
   const rows = useMemo<Row[]>(() => {
     if (Array.isArray(data)) return data;
@@ -226,6 +236,22 @@ export default function WorkHubModuleScreen() {
       setMeetingFileBusy(false);
     }
   };
+  if (["managed-crews", "workforce-coverage", "inventory", "site-presence", "safety-response"].includes(module))
+    return (
+      <ScreenSafeArea style={{ backgroundColor: colors.background }}>
+        <Stack.Screen options={{ title }} />
+        <ScrollView refreshControl={module === "safety-response" ? undefined : <RefreshControl refreshing={loading} onRefresh={() => load()} />} contentContainerStyle={{ padding: 20, gap: 14 }}>
+          <Text accessibilityRole="header" style={{ color: colors.text, fontSize: 28, fontWeight: "700" }}>{title}</Text>
+          {loading && !data && module !== "safety-response" ? <ActivityIndicator color={colors.primary} /> : null}
+          {!!error && <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{error}</Text>}
+          {module === "managed-crews" && <ManagedCrews sponsorships={data?.sponsorships ?? []} />}
+          {module === "workforce-coverage" && <WorkforceCoverage gaps={data?.gaps ?? []} />}
+          {module === "inventory" && <Assets assets={data?.assets ?? []} />}
+          {module === "site-presence" && <SitePresence people={data?.people ?? data?.workers ?? []} canSeeExactLocation={canManage} />}
+          {module === "safety-response" && <SafetyResponse />}
+        </ScrollView>
+      </ScreenSafeArea>
+    );
   if (module === "calls")
     return (
       <ScreenSafeArea style={{ backgroundColor: colors.background }}>
