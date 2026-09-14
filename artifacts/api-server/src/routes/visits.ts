@@ -11,6 +11,7 @@ import {
   inArray,
 } from "drizzle-orm";
 import crypto from "crypto";
+import { z } from "zod/v4";
 import {
   db,
   siteVisitsTable,
@@ -87,6 +88,9 @@ import {
 } from "@workspace/visit-error-codes";
 import { trimVisitNotes } from "@workspace/gate-booth";
 import { parseVisitEntryCategory } from "../lib/visit-entry-category";
+import { databaseAssetRepository } from "../services/asset-database-repository";
+import { createAssetService } from "../services/assets";
+import { completeRetrospectiveVisit, observeGateCrossing } from "../services/gate-reconciliation";
 
 const COOKIE_NAME = "vndrly_session";
 const GUEST_COOKIE_NAME = "vndrly_guest";
@@ -315,6 +319,24 @@ async function requireGatekeeperSession(
   return session;
 }
 
+async function requireGateReconciliationSession(req: any, res: any): Promise<Session | null> {
+  const session = getStaffSession(req);
+  if (!session) {
+    res.status(401).json({ message: "Login required", code: AUTH_REQUIRED });
+    return null;
+  }
+  if (
+    session.role !== "vendor" ||
+    !session.vendorId ||
+    !["gatekeeper", "gate_supervisor"].includes(session.vendorRole ?? "")
+  ) {
+    res.status(403).json({ message: "Gate staff access required", code: VISIT_NO_ACCESS });
+    return null;
+  }
+  return session;
+}
+
+const gateAssetService = createAssetService(databaseAssetRepository);
 const router: IRouter = Router();
 
 // ---------- POST /api/auth/guest — create a guest session ----------
@@ -633,6 +655,13 @@ const visitListProjection = {
   checkInLatitude: siteVisitsTable.checkInLatitude,
   checkInLongitude: siteVisitsTable.checkInLongitude,
   recordedByUserId: siteVisitsTable.recordedByUserId,
+  observedArrivalAt: siteVisitsTable.observedArrivalAt,
+  observedDepartureAt: siteVisitsTable.observedDepartureAt,
+  observationSource: siteVisitsTable.observationSource,
+  reconciliationState: siteVisitsTable.reconciliationState,
+  reconciliationFacts: siteVisitsTable.reconciliationFacts,
+  conflictReason: siteVisitsTable.conflictReason,
+  reconciledAt: siteVisitsTable.reconciledAt,
 };
 
 async function loadGateOpsBundle(session: Session) {
@@ -890,6 +919,188 @@ router.post("/visits/gate/read-plate", async (req, res): Promise<void> => {
   }
 });
 
+// ---------- Gate observations and retrospective reconciliation ----------
+router.post("/visits/gate/observations", async (req, res): Promise<void> => {
+  const session = await requireGateReconciliationSession(req, res);
+  if (!session) return;
+  try {
+    const input = z.object({
+      siteLocationId: z.number().int().positive(),
+      direction: z.enum(["entry", "exit"]),
+      source: z.enum(["camera", "gatekeeper", "geofence", "driver"]),
+      observedAt: z.iso.datetime(),
+      plate: z.string().trim().min(1).max(32).optional(),
+      plateState: z.string().trim().min(2).max(8).optional(),
+    }).parse(req.body);
+    const [site] = await db.select().from(siteLocationsTable).where(eq(siteLocationsTable.id, input.siteLocationId)).limit(1);
+    if (!site) {
+      res.status(404).json({ message: "Site not found", code: SITE_NOT_FOUND });
+      return;
+    }
+    const [assignment] = await db.select({ id: siteWorkAssignmentsTable.id })
+      .from(siteWorkAssignmentsTable)
+      .where(and(
+        eq(siteWorkAssignmentsTable.siteLocationId, site.id),
+        eq(siteWorkAssignmentsTable.vendorId, session.vendorId!),
+      ))
+      .limit(1);
+    if (!assignment) {
+      res.status(403).json({ message: "Gate staff is not assigned to this site", code: VISIT_NO_ACCESS });
+      return;
+    }
+
+    const observation = observeGateCrossing({
+      direction: input.direction,
+      source: input.source,
+      at: new Date(input.observedAt),
+      plate: input.plate,
+      plateState: input.plateState,
+    });
+    const vehicle = input.plate && input.plateState
+      ? await gateAssetService.findOrCreateProvisional({
+          identifier: { kind: "plate", value: input.plate, jurisdiction: input.plateState },
+          responsibleOwner: { type: "vendor", id: session.vendorId! },
+        })
+      : null;
+
+    let visit;
+    if (input.direction === "exit" && input.plate) {
+      const normalized = input.plate.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+      const candidates = await db.select().from(siteVisitsTable).where(and(
+        eq(siteVisitsTable.siteLocationId, site.id),
+        isNull(siteVisitsTable.checkOutTime),
+      )).orderBy(desc(siteVisitsTable.checkInTime)).limit(100);
+      visit = candidates.find((candidate) =>
+        (candidate.vehiclePlate ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "") === normalized &&
+        (!input.plateState || !candidate.plateState || normalizePlateState(candidate.plateState) === normalizePlateState(input.plateState))
+      );
+    }
+    if (visit) {
+      const [updated] = await db.update(siteVisitsTable).set({
+        observedDepartureAt: observation.observedDepartureAt,
+        observedDirection: input.direction,
+        observationSource: input.source,
+        provisionalVehicleAssetId: vehicle?.id ?? visit.provisionalVehicleAssetId,
+        reconciliationState: visit.reconciliationState === "not_required" ? "observed" : visit.reconciliationState,
+        reconciliationFacts: { ...(visit.reconciliationFacts ?? {}), ...observation.facts },
+        checkOutTime: observation.observedDepartureAt,
+        autoCheckedOut: input.source === "geofence",
+      }).where(eq(siteVisitsTable.id, visit.id)).returning();
+      res.status(201).json(updated);
+      return;
+    }
+
+    const [created] = await db.insert(siteVisitsTable).values({
+      siteLocationId: site.id,
+      firstName: "Unknown",
+      lastName: "Visitor",
+      company: null,
+      vehiclePlate: input.plate ?? null,
+      plateState: normalizePlateState(input.plateState) ?? null,
+      hostType: "partner",
+      hostPartnerId: site.partnerId,
+      hostVendorId: null,
+      checkInTime: observation.observedArrivalAt ?? observation.observedAt,
+      checkOutTime: observation.observedDepartureAt,
+      observedArrivalAt: observation.observedArrivalAt,
+      observedDepartureAt: observation.observedDepartureAt,
+      observedDirection: input.direction,
+      observationSource: input.source,
+      provisionalVehicleAssetId: vehicle?.id ?? null,
+      reconciliationState: "observed",
+      reconciliationFacts: observation.facts,
+      admissionStatus: "pending",
+      recordedByUserId: session.userId,
+    }).returning();
+    res.status(201).json(created);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ message: "Invalid gate observation", code: VISIT_INVALID_INPUT, details: error.issues });
+      return;
+    }
+    console.error("Gate observation failed", error);
+    res.status(500).json({ message: "Gate observation failed", code: VISIT_INVALID_INPUT });
+  }
+});
+
+router.post("/visits/gate/:id/reconcile", async (req, res): Promise<void> => {
+  const session = await requireGateReconciliationSession(req, res);
+  if (!session) return;
+  try {
+    const visitId = z.coerce.number().int().positive().parse(req.params.id);
+    const input = z.object({
+      firstName: z.string().trim().min(1).max(120),
+      lastName: z.string().trim().min(1).max(120),
+      company: z.string().trim().min(1).max(200),
+      plate: z.string().trim().min(1).max(32).optional(),
+      plateState: z.string().trim().min(2).max(8).optional(),
+      completedAt: z.iso.datetime().optional(),
+      overrideReason: z.string().trim().min(1).max(2_000).optional(),
+    }).parse(req.body);
+    const [visit] = await db.select().from(siteVisitsTable).where(eq(siteVisitsTable.id, visitId)).limit(1);
+    if (!visit) {
+      res.status(404).json({ message: "Visit not found", code: VISIT_NOT_FOUND });
+      return;
+    }
+    const [assignment] = await db.select({ id: siteWorkAssignmentsTable.id })
+      .from(siteWorkAssignmentsTable)
+      .where(and(
+        eq(siteWorkAssignmentsTable.siteLocationId, visit.siteLocationId),
+        eq(siteWorkAssignmentsTable.vendorId, session.vendorId!),
+      ))
+      .limit(1);
+    if (!assignment) {
+      res.status(404).json({ message: "Visit not found", code: VISIT_NOT_FOUND });
+      return;
+    }
+
+    const observation = observeGateCrossing({
+      direction: (visit.observedDirection === "exit" ? "exit" : "entry"),
+      source: (visit.observationSource as "camera" | "gatekeeper" | "geofence" | "driver") ?? "gatekeeper",
+      at: visit.observedArrivalAt ?? visit.observedDepartureAt ?? visit.checkInTime,
+      plate: visit.vehiclePlate ?? undefined,
+      plateState: visit.plateState ?? undefined,
+    });
+    observation.observedArrivalAt = visit.observedArrivalAt;
+    observation.observedDepartureAt = visit.observedDepartureAt;
+    observation.facts = visit.reconciliationFacts ?? observation.facts;
+    const reconciled = completeRetrospectiveVisit(observation, {
+      plate: input.plate,
+      plateState: input.plateState,
+      driverName: input.firstName + " " + input.lastName,
+      company: input.company,
+    }, {
+      at: input.completedAt ? new Date(input.completedAt) : new Date(),
+      gatekeeperUserId: session.userId,
+    });
+    const supervisorOverride = session.vendorRole === "gate_supervisor" && Boolean(input.overrideReason);
+    const state = reconciled.state === "reconciled" || supervisorOverride ? "reconciled" : "needs_supervisor_review";
+    const [updated] = await db.update(siteVisitsTable).set({
+      firstName: input.firstName,
+      lastName: input.lastName,
+      company: input.company,
+      vehiclePlate: input.plate ?? visit.vehiclePlate,
+      plateState: normalizePlateState(input.plateState) ?? normalizePlateState(visit.plateState),
+      reconciliationState: state,
+      reconciliationFacts: reconciled.facts,
+      conflictReason: state === "reconciled" ? null : reconciled.conflictReason ?? "gate.unresolved_identity",
+      reconciledByUserId: state === "reconciled" ? session.userId : null,
+      reconciledAt: state === "reconciled" ? (reconciled.completedAt ?? new Date()) : null,
+      admissionStatus: state === "reconciled" ? "admitted" : visit.admissionStatus,
+      notes: supervisorOverride
+        ? trimVisitNotes([visit.notes, "Supervisor reconciliation: " + input.overrideReason].filter(Boolean).join("\n"))
+        : visit.notes,
+    }).where(eq(siteVisitsTable.id, visit.id)).returning();
+    res.status(state === "reconciled" ? 200 : 409).json(updated);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ message: "Invalid reconciliation", code: VISIT_INVALID_INPUT, details: error.issues });
+      return;
+    }
+    console.error("Gate reconciliation failed", error);
+    res.status(500).json({ message: "Gate reconciliation failed", code: VISIT_INVALID_INPUT });
+  }
+});
 // ---------- POST /api/visits/gate/check-in (authenticated gatekeeper) ----------
 router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
   const session = await requireGatekeeperSession(req, res);
@@ -2172,6 +2383,13 @@ router.get("/visits/:id", async (req, res): Promise<void> => {
       checkInLatitude: siteVisitsTable.checkInLatitude,
       checkInLongitude: siteVisitsTable.checkInLongitude,
       checkOutLatitude: siteVisitsTable.checkOutLatitude,
+      observedArrivalAt: siteVisitsTable.observedArrivalAt,
+      observedDepartureAt: siteVisitsTable.observedDepartureAt,
+      observationSource: siteVisitsTable.observationSource,
+      reconciliationState: siteVisitsTable.reconciliationState,
+      reconciliationFacts: siteVisitsTable.reconciliationFacts,
+      conflictReason: siteVisitsTable.conflictReason,
+      reconciledAt: siteVisitsTable.reconciledAt,
       checkOutLongitude: siteVisitsTable.checkOutLongitude,
     })
     .from(siteVisitsTable)

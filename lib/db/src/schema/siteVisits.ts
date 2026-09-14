@@ -1,7 +1,9 @@
-import { pgTable, text, serial, timestamp, integer, doublePrecision, boolean, index } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, doublePrecision, boolean, index, jsonb, uuid } from "drizzle-orm/pg-core";
 import { siteLocationsTable } from "./siteLocations";
 import { partnersTable } from "./partners";
 import { vendorsTable } from "./vendors";
+import { usersTable } from "./users";
+import { assetsTable } from "./assets";
 
 export const guestSessionsTable = pgTable(
   "guest_sessions",
@@ -63,6 +65,17 @@ export const siteVisitsTable = pgTable(
     checkOutLongitude: doublePrecision("check_out_longitude"),
     autoCheckedOut: boolean("auto_checked_out").notNull().default(false),
     recordedByUserId: integer("recorded_by_user_id"),
+
+    observedArrivalAt: timestamp("observed_arrival_at", { withTimezone: true }),
+    observedDepartureAt: timestamp("observed_departure_at", { withTimezone: true }),
+    observedDirection: text("observed_direction"),
+    observationSource: text("observation_source"),
+    provisionalVehicleAssetId: uuid("provisional_vehicle_asset_id").references(() => assetsTable.id),
+    reconciliationState: text("reconciliation_state").notNull().default("not_required"),
+    reconciliationFacts: jsonb("reconciliation_facts").$type<Record<string, { value: string; source: "observed" | "supplied_later" }>>().notNull().default({}),
+    conflictReason: text("conflict_reason"),
+    reconciledByUserId: integer("reconciled_by_user_id").references(() => usersTable.id),
+    reconciledAt: timestamp("reconciled_at", { withTimezone: true }),
 
     safetyAcknowledgedAt: timestamp("safety_acknowledged_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

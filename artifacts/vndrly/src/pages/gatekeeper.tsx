@@ -1184,6 +1184,19 @@ export default function GatekeeperPage() {
                     <div className="min-w-0">
                       <p className="font-semibold text-foreground">
                         {visit.firstName} {visit.lastName}
+                      {visit.reconciliationState === "observed" ||
+                      visit.reconciliationState === "needs_supervisor_review" ? (
+                        <span
+                          className="ml-2 text-xs font-medium text-amber-700 dark:text-amber-300"
+                          data-testid={"gate-reconciliation-status-" + visit.id}
+                        >
+                          {t(
+                            visit.reconciliationState === "needs_supervisor_review"
+                              ? "gatekeeper.reconciliationReview"
+                              : "gatekeeper.reconciliationObserved",
+                          )}
+                        </span>
+                      ) : null}
                       </p>
                       <p className="truncate text-xs text-muted-foreground">
                         {[
@@ -1226,6 +1239,19 @@ export default function GatekeeperPage() {
                   <div className="min-w-0">
                     <p className="font-semibold text-foreground">
                       {visit.firstName} {visit.lastName}
+                      {visit.reconciliationState === "observed" ||
+                      visit.reconciliationState === "needs_supervisor_review" ? (
+                        <span
+                          className="ml-2 text-xs font-medium text-amber-700 dark:text-amber-300"
+                          data-testid={"gate-reconciliation-status-" + visit.id}
+                        >
+                          {t(
+                            visit.reconciliationState === "needs_supervisor_review"
+                              ? "gatekeeper.reconciliationReview"
+                              : "gatekeeper.reconciliationObserved",
+                          )}
+                        </span>
+                      ) : null}
                     </p>
                     <p className="truncate text-xs text-muted-foreground">
                       {[

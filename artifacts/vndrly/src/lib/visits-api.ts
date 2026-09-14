@@ -30,6 +30,12 @@ export type VisitorRow = {
   checkInTime: string;
   checkOutTime: string | null;
   autoCheckedOut: boolean;
+  observedArrivalAt?: string | null;
+  observedDepartureAt?: string | null;
+  observationSource?: "camera" | "gatekeeper" | "geofence" | "driver" | null;
+  reconciliationState?: "not_required" | "observed" | "reconciled" | "needs_supervisor_review";
+  conflictReason?: string | null;
+  reconciledAt?: string | null;
   checkInLatitude: number | null;
   checkInLongitude: number | null;
 };
@@ -237,7 +243,30 @@ export const visitsApi = {
       method: "POST",
       body: JSON.stringify({ latitude, longitude, notes }),
     }),
-  gateCheckIn: (input: {
+  observeGateCrossing: (input: {
+    siteLocationId: number;
+    direction: "entry" | "exit";
+    source: "camera" | "gatekeeper" | "geofence" | "driver";
+    observedAt: string;
+    plate?: string;
+    plateState?: string;
+  }) =>
+    jf<VisitorRow>("/api/visits/gate/observations", {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
+  reconcileGateVisit: (id: number, input: {
+    firstName: string;
+    lastName: string;
+    company: string;
+    plate?: string;
+    plateState?: string;
+    overrideReason?: string;
+  }) =>
+    jf<VisitorRow>("/api/visits/gate/" + id + "/reconcile", {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),  gateCheckIn: (input: {
     firstName: string;
     lastName: string;
     company?: string;

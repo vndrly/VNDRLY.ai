@@ -802,6 +802,15 @@ export default function GatekeeperScreen() {
                           style={[styles.visitName, { color: colors.foreground }]}
                         >
                           {visit.firstName} {visit.lastName}
+                          {visit.reconciliationState === "observed" ||
+                          visit.reconciliationState === "needs_supervisor_review"
+                            ? " · " +
+                              t(
+                                visit.reconciliationState === "needs_supervisor_review"
+                                  ? "gatekeeper.reconciliationReview"
+                                  : "gatekeeper.reconciliationObserved",
+                              )
+                            : ""}
                         </Text>
                         <Text
                           style={[styles.muted, { color: colors.mutedForeground }]}

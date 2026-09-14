@@ -173,3 +173,34 @@ export async function submitGatekeeperVisit(
   });
   return { ok: true, visitId: res.id };
 }
+
+export async function observeGateCrossing(input: {
+  siteLocationId: number;
+  direction: "entry" | "exit";
+  source: "camera" | "gatekeeper" | "geofence" | "driver";
+  observedAt: string;
+  plate?: string;
+  plateState?: string;
+}): Promise<ActiveVisit> {
+  return apiFetch("/api/visits/gate/observations", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function reconcileGateVisit(
+  visitId: number,
+  input: {
+    firstName: string;
+    lastName: string;
+    company: string;
+    plate?: string;
+    plateState?: string;
+    overrideReason?: string;
+  },
+): Promise<ActiveVisit> {
+  return apiFetch("/api/visits/gate/" + visitId + "/reconcile", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}

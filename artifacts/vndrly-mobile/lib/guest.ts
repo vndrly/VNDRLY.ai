@@ -128,6 +128,12 @@ export type ActiveVisit = {
   expectedDurationMinutes: number | null;
   checkInTime: string;
   checkOutTime?: string | null;
+  observedArrivalAt?: string | null;
+  observedDepartureAt?: string | null;
+  observationSource?: "camera" | "gatekeeper" | "geofence" | "driver" | null;
+  reconciliationState?: "not_required" | "observed" | "reconciled" | "needs_supervisor_review";
+  conflictReason?: string | null;
+  reconciledAt?: string | null;
   expiresAt: string | null;
 };
 

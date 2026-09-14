@@ -145,6 +145,8 @@
     "minutesOnSite": "{{minutes}} min on site",
     "overdue": "Overdue {{minutes}} min",
     "pendingAdmit": "Waiting to enter",
+    "reconciliationObserved": "Observed entry - details needed",
+    "reconciliationReview": "Gate Supervisor review needed",
     "admit": "Admit"
   },
   "login": {

@@ -5113,6 +5113,8 @@
     "minutesOnSite": "{{minutes}} min en el sitio",
     "overdue": "Atrasado {{minutes}} min",
     "pendingAdmit": "Esperando entrar",
+    "reconciliationObserved": "Entrada observada; faltan detalles",
+    "reconciliationReview": "Se necesita revision del supervisor de puerta",
     "admit": "Admitir"
   },
   "ticketVoiceEntry": {
