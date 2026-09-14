@@ -1,3 +1,10 @@
+import { ManagedCrews } from "@/components/implementation-a/managed-crews";
+import { WorkforceCoverage } from "@/components/implementation-a/workforce-coverage";
+import { Assets } from "@/components/implementation-a/assets";
+import { SitePresence } from "@/components/implementation-a/site-presence";
+import { SafetyResponse } from "@/components/implementation-a/safety-response";
+import { Subscriptions } from "@/components/implementation-a/subscriptions";
+import { OperationsHealth } from "@/components/implementation-a/operations-health";
 import { ImportExportTools } from "@/components/work-hub/import-export";
 import { FilesAndNotes } from "@/components/work-hub/files-and-notes";
 import { WorkHubCalls } from "@/components/work-hub/calls";
@@ -2252,9 +2259,18 @@ export function AskVWorkspace() {
   );
 }
 function WorkHubContent() {
+  const { user } = useAuth();
   const [location] = useLocation();
-  const module = location.split("/")[2] as ModuleKey | undefined;
+  const moduleName = location.split("/")[2];
+  const module = moduleName as ModuleKey | undefined;
   if (!module) return <ActivityWorkspace />;
+  if (moduleName === "managed-crews") return <ManagedCrews />;
+  if (moduleName === "coverage") return <WorkforceCoverage />;
+  if (moduleName === "assets") return <Assets />;
+  if (moduleName === "site-presence") return <SitePresence />;
+  if (moduleName === "safety-response") return <SafetyResponse />;
+  if (moduleName === "subscriptions") return <Subscriptions admin={isWorkHubAdmin(user)} />;
+  if (moduleName === "operations-health") return <OperationsHealth admin={isWorkHubAdmin(user)} />;
   if (module === ("chat" as ModuleKey)) return <CollaborationWorkspace chat />;
   if (module === ("calls" as ModuleKey)) return <WorkHubCalls />;
   if (module === ("finance" as ModuleKey)) return <WorkHubFinance />;

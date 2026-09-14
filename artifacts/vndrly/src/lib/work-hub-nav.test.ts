@@ -12,7 +12,7 @@ describe("Work Hub navigation", () => {
   it("provides the focused modules to every authenticated role", () => {
     for (const role of ["admin", "partner", "vendor", "field_employee"]) {
       expect(getWorkHubNavItems(role).map((item) => item.key)).toEqual([
-        "activity", "chat", "channels", "calendar", "calls", "files", "tasks", "meetings", "finance", "askv", "settings", "administration", "search",
+        "activity", "chat", "channels", "managedCrews", "coverage", "assets", "sitePresence", "safetyResponse", "subscriptions", "operationsHealth", "calendar", "calls", "files", "tasks", "meetings", "finance", "askv", "settings", "administration", "search",
       ]);
     }
   });

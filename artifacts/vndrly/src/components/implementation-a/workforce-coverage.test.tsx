@@ -1,0 +1,2 @@
+import { render, screen } from "@testing-library/react"; import { it, expect } from "vitest"; import { WorkforceCoverage } from "./workforce-coverage";
+it("renders uncovered shift state", () => { render(<WorkforceCoverage gaps={[{ id: "g1", label: "Wednesday gate shift", startsAt: "2026-09-16T12:00:00Z", status: "supervisor notified" }]} />); expect(screen.getByText("Wednesday gate shift")).toBeTruthy(); });

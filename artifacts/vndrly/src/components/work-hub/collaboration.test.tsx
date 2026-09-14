@@ -63,7 +63,13 @@ describe("Work Hub conversations", () => {
     await screen.findByText("Original message");
     const panel = screen.getByRole("complementary", { name: "Conversations panel" });
     expect(panel.parentElement?.className).toContain("minmax(340px,380px)");
-    expect(screen.getByRole("heading", { name: "Chat" }).className).toContain("text-[var(--brand-primary)]");
+    const chatHeading = screen.getByRole("heading", { name: "Chat" });
+    expect(chatHeading.className).toContain("text-[var(--brand-primary)]");
+    expect(panel.contains(chatHeading)).toBe(false);
+    expect(chatHeading.closest("header")?.querySelector("svg")?.getAttribute("class")).not.toContain("shadow");
+    expect(screen.getByLabelText("Find conversations").className).toContain("border-[color:var(--brand-primary)]");
+    expect(screen.getByLabelText("Find conversations").className).toContain("bg-white");
+    expect(screen.getByLabelText("Conversation filter").className).toContain("bg-white");
     expect(screen.getByLabelText("Conversation filter").className).toContain("text-sm");
     expect(screen.getByLabelText("Conversation filter").parentElement?.className).toContain("relative");
   });
@@ -154,22 +160,73 @@ describe("Work Hub conversations", () => {
 });
 
 describe("Work Hub activity chrome", () => {
-  it("uses the navigation bell and a rounded branded search sub-card", async () => {
-    mocks.request.mockImplementation(async () => []);
+  it("places the shadow-free heading above a full-width card with one branded white search field", async () => {
+    mocks.request.mockImplementation(async (path: string) => path === "/home" ? { announcements: [], tasks: [], shifts: [], meetings: [] } : []);
     render(
       <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
         <ActivityWorkspace />
       </QueryClientProvider>,
     );
+    const workspace = screen.getByTestId("work-hub-activity");
     const heading = screen.getByRole("heading", { name: "Activity" });
-    expect(heading.closest("header")?.querySelector('[data-work-hub-heading-icon="activity"]')).toBeTruthy();
-    expect(heading.className).toContain("text-[var(--brand-primary)]");
-    const search = screen.getByRole("search", { name: "Search activity" });
-    expect(search.className).toContain("rounded-xl");
+    const card = screen.getByTestId("activity-primary-card");
+    const icon = heading.closest("header")?.querySelector('[data-work-hub-heading-icon="activity"]');
+    expect(icon).toBeTruthy();
+    expect(icon?.getAttribute("class")).not.toContain("shadow");
+    expect(card.contains(heading)).toBe(false);
+    expect(workspace.className).not.toContain("max-w-6xl");
+    const search = screen.getByLabelText("Filter activity");
+    expect(search.className).toContain("rounded-lg");
     expect(search.className).toContain("border-[color:var(--brand-primary)]");
+    expect(search.className).toContain("bg-white");
+    expect(screen.getByRole("search", { name: "Search activity" }).hasAttribute("data-work-hub-card")).toBe(false);
   });
 });
 
+describe("Work Hub activity attention surface", () => {
+  it("ranks attention groups, limits the calendar to five, and shows review documents", async () => {
+    mocks.request.mockImplementation(async (path: string) => {
+      if (path === "/home") return {
+        announcements: [
+          { announcement: { id: "urgent", title: "Late shift", body: "Ten minutes overdue", urgency: "urgent", acknowledgementRequired: true }, recipient: { acknowledgedAt: null } },
+          { announcement: { id: "important", title: "Assignment issued", body: "Please review", urgency: "normal", acknowledgementRequired: true }, recipient: { acknowledgedAt: null } },
+        ],
+        tasks: [
+          { id: "old", title: "Old receipt review", status: "open", updatedAt: "2026-01-01T00:00:00Z" },
+          ...Array.from({ length: 7 }, (_, index) => ({ id: `task-${index}`, title: `Upcoming ${index}`, status: "open", dueAt: `2099-01-0${index + 1}T12:00:00Z` })),
+        ],
+        shifts: [], meetings: [], reviewItems: [{ id: "document", title: "Uploaded receipt", deepLink: "/work-hub/files?review=document" }],
+      };
+      return [];
+    });
+    render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><ActivityWorkspace /></QueryClientProvider>);
+    const urgent = await screen.findByText("Late shift");
+    const important = screen.getByText("Assignment issued");
+    const stale = screen.getByText("Old receipt review");
+    expect(urgent.compareDocumentPosition(important) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(important.compareDocumentPosition(stale) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getByRole("region", { name: "Upcoming calendar" }).querySelectorAll("li")).toHaveLength(5);
+    expect(screen.getByRole("link", { name: "Uploaded receipt" }).getAttribute("href")).toContain("review=document");
+  });
+
+  it("refreshes attention data when the Work Hub event stream changes", async () => {
+    class FakeEventSource {
+      static current: FakeEventSource | null = null;
+      onmessage: ((event: MessageEvent) => void) | null = null;
+      constructor() { FakeEventSource.current = this; }
+      close() {}
+    }
+    vi.stubGlobal("EventSource", FakeEventSource);
+    let homeReads = 0;
+    mocks.request.mockImplementation(async (path: string) => { if (path === "/home") { homeReads += 1; return { announcements: [], tasks: [], shifts: [], meetings: [] }; } return []; });
+    const view = render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><ActivityWorkspace /></QueryClientProvider>);
+    await waitFor(() => expect(homeReads).toBe(1));
+    FakeEventSource.current?.onmessage?.(new MessageEvent("message"));
+    await waitFor(() => expect(homeReads).toBeGreaterThan(1));
+    view.unmount();
+    vi.unstubAllGlobals();
+  });
+});
 describe("Work Hub recipient announcements", () => {
   it("lets a recipient acknowledge an urgent announcement and refreshes its state", async () => {
     let acknowledged = false;
@@ -181,10 +238,11 @@ describe("Work Hub recipient announcements", () => {
     });
     render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><ActivityWorkspace /></QueryClientProvider>);
     const activityCard = screen.getByRole("region", { name: "Activity workspace" });
-    const searchCard = screen.getByRole("search", { name: "Search activity" });
-    expect(activityCard.contains(searchCard)).toBe(true);
-    expect(activityCard.className).toContain("rounded-xl");
-    expect(searchCard.className).toContain("rounded-xl");
+    const searchRegion = screen.getByRole("search", { name: "Search activity" });
+    const primaryCard = screen.getByTestId("activity-primary-card");
+    expect(activityCard.contains(searchRegion)).toBe(true);
+    expect(primaryCard.className).toContain("rounded-xl");
+    expect(searchRegion.hasAttribute("data-work-hub-card")).toBe(false);
     expect(await screen.findByText("Safety briefing")).toBeTruthy();
     expect(screen.getByText("Urgent")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Acknowledge" }));

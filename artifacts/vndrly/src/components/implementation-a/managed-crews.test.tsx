@@ -1,0 +1,3 @@
+import { render, screen } from "@testing-library/react"; import { QueryClient, QueryClientProvider } from "@tanstack/react-query"; import { describe, expect, it, vi } from "vitest"; import { ManagedCrews } from "./managed-crews";
+vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ sponsorships: [{ id: "s1", workerDisplayName: "NewTek worker", managedOrganizationName: "NewTek" }] }), { status: 200 })));
+it("shows only sponsorships returned for the caller's server-enforced scope", async () => { render(<QueryClientProvider client={new QueryClient()}><ManagedCrews scope="managed-company" /></QueryClientProvider>); expect(await screen.findByText("NewTek worker")).toBeTruthy(); });

@@ -14,7 +14,7 @@ export const WORK_HUB_SUBCARD_CLASS =
 
 export function WorkHubSurface({ children }: { children: ReactNode }) {
   return (
-    <div className="work-hub-surface [&_[data-slot=card]]:!border-[color:var(--brand-primary)] [&_[data-work-hub-card]]:!border-[color:var(--brand-primary)] [&_[data-slot=card-title]]:font-bold [&_[data-slot=card-title]]:text-black [&_[data-slot=card-title]_svg]:text-[var(--brand-primary)]">
+    <div className="work-hub-surface [&_svg]:!filter-none [&_[data-slot=card]]:!border-[color:var(--brand-primary)] [&_[data-work-hub-card]]:!border-[color:var(--brand-primary)] [&_[data-slot=card-title]]:font-bold [&_[data-slot=card-title]]:text-black [&_[data-slot=card-title]_svg]:text-[var(--brand-primary)]">
       {children}
     </div>
   );
@@ -43,7 +43,7 @@ export function WorkHubPageHeading({
           aria-hidden="true"
           data-work-hub-heading-icon={module}
           className={cn(
-            "shrink-0 text-[var(--brand-primary)] card-icon-drop-shadow",
+            "shrink-0 text-[var(--brand-primary)]",
             compact ? "h-5 w-5" : "h-6 w-6",
           )}
         />
@@ -77,7 +77,7 @@ export function WorkHubCardTitle({
 }) {
   return (
     <span className={cn("flex items-start gap-2 text-base font-bold text-black", className)}>
-      <Icon aria-hidden="true" className={cn(CARD_TITLE_ICON_CLASS, "text-[var(--brand-primary)]")} />
+      <Icon aria-hidden="true" className="h-5 w-5 shrink-0 self-start text-[var(--brand-primary)]" />
       <span>{children}</span>
     </span>
   );
@@ -88,7 +88,7 @@ export function BrandedSelect({ className, children, ...props }: SelectHTMLAttri
     <span className="relative block min-w-0">
       <select
         className={cn(
-          "h-9 w-full appearance-none rounded-lg border-2 border-[color:var(--brand-primary)] bg-background px-3 pr-8 text-sm text-foreground outline-none focus:ring-2 focus:ring-[color:var(--brand-primary)]/25",
+          "h-9 w-full appearance-none rounded-lg border-2 border-[color:var(--brand-primary)] bg-white px-3 pr-8 text-sm text-foreground outline-none focus:ring-2 focus:ring-[color:var(--brand-primary)]/25",
           className,
         )}
         {...props}

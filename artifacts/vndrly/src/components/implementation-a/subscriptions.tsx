@@ -1,0 +1,5 @@
+import { useQuery } from "@tanstack/react-query";
+import { implementationARequest } from "./client";
+import { EmptyState, ImplementationSurface } from "./surface";
+type Seat = { id: string; workerUserId: number; plan: string; state: string; monthlyPriceCents: number };
+export function Subscriptions({ admin = false }: { admin?: boolean }) { const query = useQuery<{ subscriptions: Seat[] }>({ queryKey: ["implementation-a", "subscriptions"], queryFn: () => implementationARequest("/subscriptions"), enabled: admin }); return <ImplementationSurface module="subscriptions" title="Worker Subscriptions" description="Company-sponsored per-worker plans and lifecycle controls." preview={!admin}>{!admin ? <p className="text-sm text-muted-foreground">Billing details are available to company administrators.</p> : query.data?.subscriptions?.length ? <ul>{query.data.subscriptions.map(seat => <li key={seat.id} className="border-b py-3">Worker {seat.workerUserId} · {seat.plan} · {seat.state} · ${(seat.monthlyPriceCents / 100).toFixed(2)}</li>)}</ul> : <EmptyState>No worker subscriptions yet.</EmptyState>}</ImplementationSurface>; }
