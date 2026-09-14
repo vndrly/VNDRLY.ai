@@ -52,4 +52,11 @@ describe("Work Hub export HTTP boundary", () => {
     expect(response.status).toBe(400);
     expect(h.lifecycle.status).not.toHaveBeenCalled();
   });
-});
+
+  it("previews scoped Implementation A columns without exporting data", async () => {
+    const h = appWith();
+    expect((await request(h.app).post("/work-hub/exports/implementation-a/preview").send({ dataset: "assets", scope: { ownerOrgId: 41 } })).status).toBe(401);
+    const response = await request(h.app).post("/work-hub/exports/implementation-a/preview").set("Cookie", cookie).send({ dataset: "assets", scope: { ownerOrgId: 41 } });
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({ dataset: "assets", headers: ["assetId", "name", "category", "status", "holder", "condition"], excludedSensitiveFields: ["incidentDetail"] });
+  });});

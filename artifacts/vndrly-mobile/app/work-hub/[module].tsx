@@ -16,6 +16,7 @@ import { WorkforceCoverage } from "@/components/implementation-a/WorkforceCovera
 import { Assets } from "@/components/implementation-a/Assets";
 import { SitePresence } from "@/components/implementation-a/SitePresence";
 import { SafetyResponse } from "@/components/implementation-a/SafetyResponse";
+import { ImplementationAExports } from "@/components/implementation-a/Exports";
 import WorkHubConversation from "@/components/WorkHubConversation";
 import { useMeetingCompanion } from "@/components/MeetingCompanionProvider";
 import TogglePillButton from "@/components/TogglePillButton";
@@ -42,6 +43,7 @@ const titles: Record<string, string> = {
   inventory: "Inventory",
   "site-presence": "Site Presence",
   "safety-response": "Safety Response",
+  "implementation-exports": "Exports",
   chat: "Chat",
   crews: "Crews",
   calendar: "Calendar",
@@ -105,7 +107,7 @@ export default function WorkHubModuleScreen() {
     [module, query, user],
   );
   useEffect(() => {
-    if (module !== "calls" && module !== "safety-response") void load("");
+    if (module !== "calls" && module !== "safety-response" && module !== "implementation-exports") void load("");
   }, [module]);
   const rows = useMemo<Row[]>(() => {
     if (Array.isArray(data)) return data;
@@ -236,19 +238,20 @@ export default function WorkHubModuleScreen() {
       setMeetingFileBusy(false);
     }
   };
-  if (["managed-crews", "workforce-coverage", "inventory", "site-presence", "safety-response"].includes(module))
+  if (["managed-crews", "workforce-coverage", "inventory", "site-presence", "safety-response", "implementation-exports"].includes(module))
     return (
       <ScreenSafeArea style={{ backgroundColor: colors.background }}>
         <Stack.Screen options={{ title }} />
-        <ScrollView refreshControl={module === "safety-response" ? undefined : <RefreshControl refreshing={loading} onRefresh={() => load()} />} contentContainerStyle={{ padding: 20, gap: 14 }}>
+        <ScrollView refreshControl={["safety-response", "implementation-exports"].includes(module) ? undefined : <RefreshControl refreshing={loading} onRefresh={() => load()} />} contentContainerStyle={{ padding: 20, gap: 14 }}>
           <Text accessibilityRole="header" style={{ color: colors.text, fontSize: 28, fontWeight: "700" }}>{title}</Text>
-          {loading && !data && module !== "safety-response" ? <ActivityIndicator color={colors.primary} /> : null}
+          {loading && !data && !["safety-response", "implementation-exports"].includes(module) ? <ActivityIndicator color={colors.primary} /> : null}
           {!!error && <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{error}</Text>}
           {module === "managed-crews" && <ManagedCrews sponsorships={data?.sponsorships ?? []} />}
           {module === "workforce-coverage" && <WorkforceCoverage gaps={data?.gaps ?? []} />}
           {module === "inventory" && <Assets assets={data?.assets ?? []} />}
           {module === "site-presence" && <SitePresence people={data?.people ?? data?.workers ?? []} canSeeExactLocation={canManage} />}
           {module === "safety-response" && <SafetyResponse />}
+          {module === "implementation-exports" && owner && <ImplementationAExports owner={owner} />}
         </ScrollView>
       </ScreenSafeArea>
     );

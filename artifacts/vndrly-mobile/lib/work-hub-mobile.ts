@@ -49,6 +49,7 @@ export function mobileWorkHubModules(isTablet: boolean, companyAdmin: boolean) {
     { key: "inventory", label: "Inventory", icon: "package" },
     { key: "site-presence", label: "Site Presence", icon: "map-pin" },
     { key: "safety-response", label: "Safety Response", icon: "shield" },
+    { key: "implementation-exports", label: "Exports", icon: "download" },
     { key: "files-notes", label: "Files & Notes", icon: "folder" },
     { key: "tasks-forms", label: "Tasks & Forms", icon: "check-square" },
     { key: "calls", label: "Calls", icon: "phone" },
