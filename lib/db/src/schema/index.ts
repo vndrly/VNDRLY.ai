@@ -110,3 +110,4 @@ export * from "./workHubScheduling";
 export * from "./workHubCalls";
 export * from "./workHubFileLibrary";
 export * from "./workHubDevices";
+export * from "./capabilityFlags";
