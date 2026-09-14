@@ -11,6 +11,7 @@ export interface CreateAskVRealtimeClientSecretArgs {
   instructions: string;
   tools: OpenAIRealtimeTool[];
   language?: "en" | "es";
+  workContextSummary?: string;
   fetchImpl?: typeof fetch;
 }
 
@@ -31,7 +32,7 @@ function buildRealtimeSessionConfig(args: CreateAskVRealtimeClientSecretArgs) {
   return {
     type: "realtime",
     model: args.model,
-    instructions: args.instructions,
+    instructions: args.workContextSummary ? `${args.instructions}\n\nCURRENT AUTHORIZED WORK CONTEXT\n${args.workContextSummary}` : args.instructions,
     audio: {
       input: {
         format: { type: "audio/pcm", rate: 24000 },

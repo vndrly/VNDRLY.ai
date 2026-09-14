@@ -11,6 +11,8 @@ declare class AskVWakeModule extends NativeModule<AskVWakeEvents> {
   stop(): Promise<void>;
   /** false hands the same microphone's PCM to the active voice session. */
   setDetectionEnabled(enabled: boolean): Promise<void>;
+  /** Keeps the local wake boundary active across an authorized work session. */
+  setContinuousWorkSessionEnabled(enabled: boolean): Promise<void>;
 }
 
 // Expo Go, Android and older installed builds have no native detector.

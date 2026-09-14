@@ -111,6 +111,7 @@ public final class AskVWakeModule: Module {
   private var audioEngine: AVAudioEngine?
   private var hasTap = false
   private var ownsAudioSession = false
+  private var continuousWorkSessionEnabled = false
   private var token: UInt64?
   private var pendingStart: Promise?
   private var observers: [NSObjectProtocol] = []
@@ -144,6 +145,10 @@ public final class AskVWakeModule: Module {
       self.stopCapture()
     }.runOnQueue(.main)
 
+    AsyncFunction("setContinuousWorkSessionEnabled") { (enabled: Bool) in
+      self.continuousWorkSessionEnabled = enabled
+      if !enabled { self.stopCapture() }
+    }.runOnQueue(.main)
     AsyncFunction("setDetectionEnabled") { (enabled: Bool, promise: Promise) in
       guard let current = self.token, self.gate.isCurrent(current) else {
         promise.reject("NOT_RUNNING", "The local microphone is stopped.")
