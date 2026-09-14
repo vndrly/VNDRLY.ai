@@ -67,6 +67,7 @@ import publicAskVRouter from "./publicAskV";
 import implementationASponsorshipsRouter from "./implementationASponsorships";
 import implementationAInvitationsRouter from "./implementationAInvitations";
 import implementationAWorkforceRouter from "./implementationAWorkforce";
+import implementationAAssetsRouter from "./implementationAAssets";
 
 const router: IRouter = Router();
 
@@ -152,5 +153,6 @@ router.use(publicAskVRouter);
 router.use(implementationASponsorshipsRouter);
 router.use(implementationAInvitationsRouter);
 router.use(implementationAWorkforceRouter);
+router.use(implementationAAssetsRouter);
 
 export default router;

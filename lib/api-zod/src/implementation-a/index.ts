@@ -4,3 +4,4 @@ export * from "./sponsorships";
 export * from "./invitations";
 export * from "./authority";
 export * from "./workforce";
+export * from "./assets";
