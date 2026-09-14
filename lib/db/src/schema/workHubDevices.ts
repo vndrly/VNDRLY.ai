@@ -4,7 +4,7 @@ import { workHubMeetingOccurrencesTable } from "./workHubMeetings";
 
 export type WorkHubDeviceCapabilities = {
   microphone?: boolean; speaker?: boolean; camera?: boolean;
-  fileSelection?: boolean; pushNotifications?: boolean;
+  fileSelection?: boolean; pushNotifications?: boolean; operationsDisplayControl?: boolean;
 };
 
 const organization = {

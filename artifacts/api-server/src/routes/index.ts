@@ -71,6 +71,7 @@ import implementationAAssetsRouter from "./implementationAAssets";
 import implementationATripsRouter from "./implementationATrips";
 import implementationASafetyRouter from "./implementationASafety";
 import implementationASubscriptionsRouter from "./implementationASubscriptions";
+import implementationADisplaysRouter from "./implementationADisplays";
 
 const router: IRouter = Router();
 
@@ -160,5 +161,6 @@ router.use(implementationAAssetsRouter);
 router.use(implementationATripsRouter);
 router.use(implementationASafetyRouter);
 router.use(implementationASubscriptionsRouter);
+router.use(implementationADisplaysRouter);
 
 export default router;

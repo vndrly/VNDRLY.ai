@@ -18,7 +18,7 @@ const router: IRouter = Router();
 const uuid = z.string().uuid();
 const capabilitiesSchema = z.object({
   microphone: z.boolean().optional(), speaker: z.boolean().optional(), camera: z.boolean().optional(),
-  fileSelection: z.boolean().optional(), pushNotifications: z.boolean().optional(),
+  fileSelection: z.boolean().optional(), pushNotifications: z.boolean().optional(), operationsDisplayControl: z.boolean().optional(),
 }).strict();
 const surfaceSchema = z.object({
   path: z.string().trim().min(1).max(512), entityType: z.string().trim().max(80).nullable(),
