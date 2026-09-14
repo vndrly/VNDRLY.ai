@@ -4,6 +4,7 @@ import {
   parseSafetyEventIdFromHref,
   parseSiteLocationFromHref,
   parseTicketIdFromNotificationLink,
+  parseWorkHubNotificationLink,
 } from "../notification-link";
 
 describe("notification-link", () => {
@@ -20,5 +21,9 @@ describe("notification-link", () => {
 
   it("parses safety event id from notification links", () => {
     expect(parseSafetyEventIdFromHref("/safety/42?siteLocationId=7")).toBe(42);
+  });
+  it("preserves stable internal Work Hub deep links and rejects external links", () => {
+    expect(parseWorkHubNotificationLink("/work-hub/activity?notice=7")).toBe("/work-hub/activity?notice=7");
+    expect(parseWorkHubNotificationLink("https://attacker.example/work-hub/activity")).toBeNull();
   });
 });

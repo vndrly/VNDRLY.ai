@@ -47,3 +47,14 @@ export function parseSiteLocationFromHref(href: string): { id: number; name: str
     return null;
   }
 }
+export function parseWorkHubNotificationLink(href: string): string | null {
+  const trimmed = href.trim();
+  if (!trimmed) return null;
+  try {
+    const url = trimmed.startsWith("http") ? new URL(trimmed) : new URL(trimmed, "https://vndrly.ai");
+    if (url.origin !== "https://vndrly.ai" || !url.pathname.startsWith("/work-hub")) return null;
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return null;
+  }
+}

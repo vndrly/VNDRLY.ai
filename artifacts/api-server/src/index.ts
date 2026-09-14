@@ -80,6 +80,7 @@ import { closeAllAssemblyAIStreams } from "./work-hub/assemblyai-streaming";
 import { completeServerShutdown } from "./lib/graceful-shutdown";
 import { recoverAndStartWorkHubExportWorker, stopWorkHubExportWorker } from "./work-hub/governance-export-runtime";
 import { recoverAndStartWorkHubRetentionPlannerWorker, stopWorkHubRetentionPlannerWorker } from "./work-hub/governance-retention-planner-runtime";
+import { startReliableNotificationWorker, stopReliableNotificationWorker } from "./services/notification-delivery";
 
 const rawPort = process.env["PORT"];
 
@@ -145,6 +146,7 @@ function onListening(): void {
   startNotificationEventBus();
   startMajikEventBus();
   startScheduledNotificationWorker();
+  startReliableNotificationWorker();
   startInvoicePeriodWorker();
   startInvoiceAgingWorker();
   startApPaymentDigestWorker();
@@ -213,6 +215,7 @@ async function shutdown(signal: NodeJS.Signals): Promise<void> {
   stopStaleVisitSweeper();
   stopGateEvidenceCleanupWorker();
   stopScheduledNotificationWorker();
+  stopReliableNotificationWorker();
   stopInvoicePeriodWorker();
   stopInvoiceAgingWorker();
   stopApPaymentDigestWorker();

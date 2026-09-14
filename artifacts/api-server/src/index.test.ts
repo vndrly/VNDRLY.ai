@@ -117,6 +117,10 @@ vi.mock("./routes/ticketSchedule", () => ({
   startScheduledNotificationWorker: vi.fn(),
   stopScheduledNotificationWorker: vi.fn(),
 }));
+vi.mock("./services/notification-delivery", () => ({
+  startReliableNotificationWorker: vi.fn(),
+  stopReliableNotificationWorker: vi.fn(),
+}));
 vi.mock("./lib/invoice-generator", () => ({
   startInvoicePeriodWorker: vi.fn(),
   stopInvoicePeriodWorker: vi.fn(),

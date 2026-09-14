@@ -25,6 +25,7 @@ import {
 
 import { SESSION_SECRET } from "../lib/session";
 import { sendApiError } from "../lib/apiError";
+import { acknowledgeNotification, databaseNotificationDeliveryRepository } from "../services/notification-delivery";
 
 const COOKIE_NAME = "vndrly_session";
 
@@ -941,6 +942,21 @@ router.get("/notifications/unread-count", async (req, res) => {
     .from(notificationsTable)
     .where(and(...conds));
   return res.json({ count: row?.n ?? 0 });
+});
+
+
+router.post("/notifications/:id/acknowledge", async (req, res) => {
+  const session = getSession(req);
+  if (!session) return sendApiError(res, 401, "auth.not_authenticated", "Unauthorized");
+  const notificationId = Number(req.params.id);
+  if (!Number.isSafeInteger(notificationId) || notificationId <= 0) return sendApiError(res, 400, "validation.invalid_id", "Invalid id");
+  const result = await acknowledgeNotification(
+    { notificationId, userId: session.userId },
+    { repository: databaseNotificationDeliveryRepository, sender: async () => ({ delivered: false }), now: () => new Date() },
+  );
+  if (!result.acknowledged) return sendApiError(res, 404, "notification.not_found", "Notification not found");
+  publishNotificationStateChanged({ userId: session.userId, notificationId, state: "read" });
+  return res.status(204).send();
 });
 
 router.post("/notifications/:id/read", async (req, res) => {

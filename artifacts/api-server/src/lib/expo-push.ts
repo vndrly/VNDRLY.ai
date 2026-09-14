@@ -49,7 +49,7 @@ function resolveInterruptionLevel(msg: ExpoPushMessage): ExpoPushMessage["interr
 }
 
 async function sendExpoPushBatch(tokens: string[], msg: ExpoPushMessage) {
-  if (tokens.length === 0) return;
+  if (tokens.length === 0) return false;
   const interruptionLevel = resolveInterruptionLevel(msg);
   const type = resolvePushType(msg);
   const messages = tokens.map((to) => ({
@@ -79,9 +79,13 @@ async function sendExpoPushBatch(tokens: string[], msg: ExpoPushMessage) {
         { status: res.status, body: await res.text().catch(() => "") },
         "Expo push send failed",
       );
+      return false;
     }
+    const payload = await res.json().catch(() => null) as { data?: Array<{ status?: string }> } | null;
+    return Array.isArray(payload?.data) && payload.data.length === messages.length && payload.data.every((ticket) => ticket.status === "ok");
   } catch (err) {
     logger.warn({ err }, "Expo push send threw");
+    return false;
   }
 }
 
@@ -90,7 +94,8 @@ export async function sendPushToUser(userId: number, msg: ExpoPushMessage) {
     .select({ token: fieldPushTokensTable.expoToken })
     .from(fieldPushTokensTable)
     .where(eq(fieldPushTokensTable.userId, userId));
-  await sendExpoPushBatch(rows.map((r) => r.token), msg);
+  const delivered = await sendExpoPushBatch(rows.map((r) => r.token), msg);
+  return { delivered, recipientCount: rows.length };
 }
 
 /**

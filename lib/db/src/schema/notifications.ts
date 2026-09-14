@@ -14,6 +14,19 @@ export const notificationsTable = pgTable(
     body: text("body"),
     link: text("link"),
     isRead: boolean("is_read").notNull().default(false),
+    deliveryStatus: text("delivery_status").notNull().default("pending"),
+    deliveryAttempts: integer("delivery_attempts").notNull().default(0),
+    nextDeliveryAttemptAt: timestamp("next_delivery_attempt_at", { withTimezone: true }),
+    deliveredAt: timestamp("delivered_at", { withTimezone: true }),
+    acknowledgementRequired: boolean("acknowledgement_required").notNull().default(false),
+    acknowledgementDueAt: timestamp("acknowledgement_due_at", { withTimezone: true }),
+    acknowledgedAt: timestamp("acknowledged_at", { withTimezone: true }),
+    acknowledgedByUserId: integer("acknowledged_by_user_id").references(() => usersTable.id, { onDelete: "set null" }),
+    escalationPolicy: text("escalation_policy"),
+    escalationId: text("escalation_id"),
+    escalatedAt: timestamp("escalated_at", { withTimezone: true }),
+    finalDeliveryFailureAt: timestamp("final_delivery_failure_at", { withTimezone: true }),
+    finalDeliveryFailureReason: text("final_delivery_failure_reason"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     // Task #47 — when the user has email delivery enabled for this
     // notification's category, the notify pipeline either sends a single
@@ -26,6 +39,8 @@ export const notificationsTable = pgTable(
   },
   (t) => ({
     userIdx: index("notifications_user_idx").on(t.userId),
+    deliveryRetryIdx: index("notifications_delivery_retry_idx").on(t.deliveryStatus, t.nextDeliveryAttemptAt),
+    acknowledgementDueIdx: index("notifications_acknowledgement_due_idx").on(t.acknowledgementRequired, t.acknowledgementDueAt),
     dedupeUnique: uniqueIndex("notifications_user_dedupe_unique").on(t.userId, t.dedupeKey),
     // Daily-digest worker scans for unemailed rows per user, ordered by
     // creation. A partial index keeps the lookup tight — the vast
