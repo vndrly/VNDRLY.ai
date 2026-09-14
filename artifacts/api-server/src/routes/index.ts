@@ -65,6 +65,7 @@ import workHubExportsRouter from "./workHubExports";
 import workHubGovernanceRouter from "./workHubGovernance";
 import publicAskVRouter from "./publicAskV";
 import implementationASponsorshipsRouter from "./implementationASponsorships";
+import implementationAInvitationsRouter from "./implementationAInvitations";
 
 const router: IRouter = Router();
 
@@ -148,5 +149,6 @@ router.use(workHubGovernanceRouter);
 router.use(workHubOperationsRouter);
 router.use(publicAskVRouter);
 router.use(implementationASponsorshipsRouter);
+router.use(implementationAInvitationsRouter);
 
 export default router;

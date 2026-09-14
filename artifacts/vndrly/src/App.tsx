@@ -74,6 +74,7 @@ const LegalTermsPage = lazy(() => import("@/pages/legal-terms"));
 const LegalMessagingConsentPage = lazy(() => import("@/pages/legal-messaging-consent"));
 const PlatformEulaPage = lazy(() => import("@/pages/platform-eula"));
 const ResetPassword = lazy(() => import("@/pages/reset-password"));
+const ActivateAccount = lazy(() => import("@/pages/activate-account"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 const AdminVndrly = lazy(() => import("@/pages/admin-vndrly"));
 const AdminRateLimits = lazy(() => import("@/pages/admin-rate-limits"));
@@ -222,6 +223,7 @@ function AuthenticatedRouter() {
         <Route path="/print-hotlist" component={PrintHotlistPage} />
         <Route path="/forgot-password" component={ForgotPassword} />
         <Route path="/reset-password" component={ResetPassword} />
+        <Route path="/activate-account" component={ActivateAccount} />
         <Route path="/legal/privacy" component={LegalPrivacyPage} />
         <Route path="/legal/terms" component={LegalTermsPage} />
         <Route path="/legal/messaging" component={LegalMessagingConsentPage} />

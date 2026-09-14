@@ -1449,3 +1449,26 @@ export async function sendCommentReplyDigestEmail(
   logger.debug({ fn: "sendCommentReplyDigestEmail" }, SKIP);
   return { messageId: undefined };
 }
+
+export async function sendAccountInvitationEmail(input: {
+  to: string;
+  username: string;
+  sponsorName: string;
+  expiresAt: Date;
+  activationUrl: string;
+}): Promise<{ messageId: string | undefined }> {
+  const safeSponsor = escapeHtml(input.sponsorName);
+  const safeUsername = escapeHtml(input.username);
+  const safeUrl = escapeHtml(input.activationUrl);
+  const expiration = input.expiresAt.toLocaleString("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+  return sendSendGridMail({
+    to: input.to,
+    subject: `${input.sponsorName} invited you to VNDRLY`,
+    categories: ["account-invitation"],
+    html: `<p>${safeSponsor} created your VNDRLY account.</p><p>Your username is <strong>${safeUsername}</strong>.</p><p><a href="${safeUrl}">Set your password and finish onboarding</a></p><p>This single-use link expires ${escapeHtml(expiration)}. No temporary password was created or sent.</p>`,
+    text: `${input.sponsorName} created your VNDRLY account.\nUsername: ${input.username}\nSet your password and finish onboarding: ${input.activationUrl}\nThis single-use link expires ${expiration}. No temporary password was created or sent.`,
+  });
+}

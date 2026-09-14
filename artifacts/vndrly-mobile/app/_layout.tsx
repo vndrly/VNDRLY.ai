@@ -141,9 +141,10 @@ function AuthGate() {
     const seg0 = segments[0] as string | undefined;
     const inLogin = seg0 === "login";
     const inGuestLogin = seg0 === "guest-login";
+    const inActivation = seg0 === "activate-account";
     const inGuestStack = seg0 === "visitor-checkin";
     if (!hasAuth) {
-      if (!inLogin && !inGuestLogin) router.replace("/login");
+      if (!inLogin && !inGuestLogin && !inActivation) router.replace("/login");
       return;
     }
     (async () => {
