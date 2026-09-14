@@ -1,4 +1,5 @@
 import type { Anthropic } from "@workspace/integrations-anthropic-ai/sdk";
+import type { AuthorityCapability } from "../../../../lib/api-zod/src/implementation-a/authority";
 import { DEEP_LINK_SCREENS, TOOLS } from "./tools";
 import {
   WORK_HUB_TOOL_METADATA,
@@ -35,6 +36,7 @@ export interface AskVToolDefinition {
   auditTarget?: AskVAuditTarget;
   workHubFamily?: WorkHubToolFamily;
   companyAdminOnly?: boolean;
+  authorityCapability?: AuthorityCapability;
 }
 
 export interface OpenAIRealtimeTool {
@@ -59,6 +61,19 @@ const OFFICE_ROLES: AskVRole[] = ["admin", "partner", "vendor"];
 const VENDOR_FIELD_ROLES: AskVRole[] = ["admin", "vendor", "field_employee"];
 const ONBOARDING_ROLES: AskVRole[] = ["partner", "vendor", "field_employee"];
 
+export function authorityCapabilityForWorkHubTool(metadata: {
+  family: WorkHubToolFamily;
+  mutating: boolean;
+  companyAdminOnly?: boolean;
+  authorityCapability?: AuthorityCapability;
+}): AuthorityCapability {
+  if (metadata.family === "scheduling" && metadata.mutating) return "schedule.manage";
+  if (["collaboration", "calls", "meetings"].includes(metadata.family)) return "meeting.join";
+  if (metadata.family === "administration") return "directory.read";
+  if (metadata.family === "finance") return metadata.companyAdminOnly ? "pay_rates.read" : "export.read";
+  return "events.subscribe";
+}
+
 const DEFAULT_METADATA: ToolMetadata = {
   roles: ALL_SIGNED_IN_ROLES,
   mutating: false,
@@ -80,6 +95,7 @@ const TOOL_METADATA: Record<string, Partial<ToolMetadata>> = {
         auditTarget: "work_hub",
         workHubFamily: metadata.family,
         companyAdminOnly: metadata.companyAdminOnly,
+        authorityCapability: authorityCapabilityForWorkHubTool(metadata),
       },
     ]),
   ),
@@ -199,6 +215,7 @@ export const ASK_V_TOOL_REGISTRY: AskVToolDefinition[] = TOOLS.map((tool) => {
     auditTarget: metadata.auditTarget,
     workHubFamily: metadata.workHubFamily,
     companyAdminOnly: metadata.companyAdminOnly,
+    authorityCapability: metadata.authorityCapability,
   };
 });
 

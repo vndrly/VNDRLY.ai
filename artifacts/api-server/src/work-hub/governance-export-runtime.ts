@@ -10,6 +10,7 @@ import {
 import { WORK_HUB_EXPORT_AUDIT_ACTIONS, type WorkHubExportCreate } from "@workspace/api-zod";
 import { getObjectStore } from "../lib/objectStore";
 import { logger } from "../lib/logger";
+import { authorizeCapability } from "../lib/authority-matrix";
 import { appendWorkHubAudit, redactWorkHubAuditMetadata } from "./audit";
 import { createWorkHubAccess, requireWorkHubCapability } from "./context-access";
 import { buildWorkHubExportArtifact, readCompleteWorkHubExport } from "./governance-export-reader";
@@ -56,7 +57,20 @@ async function currentAccess(job: ExportJobRecord) {
   }
   const access = createWorkHubAccess({ session: { userId: user.id, role: user.role === "admin" ? "admin" : job.ownerOrgType, membershipRole, vendorId: job.ownerOrgType === "vendor" ? job.ownerOrgId : null, partnerId: job.ownerOrgType === "partner" ? job.ownerOrgId : null }, owner: { type: job.ownerOrgType, id: job.ownerOrgId }, context: { kind: "organization", id: job.ownerOrgId }, participant: true });
   requireWorkHubCapability(access, "policy.manage");
-  return access;
+  const authority = await authorizeCapability({
+    actor: {
+      userId: user.id,
+      kind: user.role === "admin" || membershipRole === "admin" ? "organization_admin" : "employee",
+      activeOwner: { type: job.ownerOrgType, id: job.ownerOrgId },
+      roles: membershipRole === "admin" ? ["admin"] : ["member"],
+      siteIds: [],
+      crewIds: [],
+      explicitInvitations: [],
+    },
+    resource: { type: job.dataset, id: job.id, owner: { type: job.ownerOrgType, id: job.ownerOrgId } },
+  }, "export.read");
+  if (!authority.allowed) throw new ExportLifecycleError("access_changed", 403, "Export access changed");
+  return Object.assign(access, { authorityVisibleFields: authority.visibleFields });
 }
 
 const repository = {

@@ -4,6 +4,7 @@ import { sendApiError } from "../lib/apiError";
 import { isPersistedWorkHubEvent, workHubEventBus } from "../work-hub/events";
 import { eventsAfter } from "../work-hub/device-coordinator";
 import { resolveActiveDeviceActor } from "./workHubDevices";
+import { authorizeCapability, type AuthorityContext } from "../lib/authority-matrix";
 
 const router: IRouter = Router();
 router.get("/work-hub/events", async (req, res): Promise<void> => {
@@ -11,6 +12,21 @@ router.get("/work-hub/events", async (req, res): Promise<void> => {
   if (!session?.userId) { sendApiError(res, 401, "auth.unauthenticated", "Authentication required"); return; }
   const actor = await resolveActiveDeviceActor(req);
   if (!actor) { sendApiError(res, 404, "work_hub.not_found", "Not found"); return; }
+  const membershipRole = (session as typeof session & { membershipRole?: string | null }).membershipRole;
+  const authorityContext: AuthorityContext = {
+    actor: {
+      userId: actor.userId,
+      kind: session.role === "admin" || membershipRole === "admin" ? "organization_admin" : "employee",
+      activeOwner: actor.owner,
+      roles: membershipRole === "admin" ? ["admin"] : ["member"],
+      siteIds: [],
+      crewIds: [],
+      explicitInvitations: [],
+    },
+    resource: { type: "work_hub_events", id: String(actor.userId), owner: actor.owner },
+  };
+  const authority = await authorizeCapability(authorityContext, "events.subscribe");
+  if (!authority.allowed) { sendApiError(res, 404, "work_hub.not_found", "Not found"); return; }
   if (req.query.transport === "poll") {
     const after = Number(req.query.after ?? 0);
     if (!Number.isSafeInteger(after) || after < 0) {

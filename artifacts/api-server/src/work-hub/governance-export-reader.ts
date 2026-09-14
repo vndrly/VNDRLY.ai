@@ -11,6 +11,7 @@ import {
   type WorkHubExportManifest,
 } from "@workspace/api-zod";
 import { requireWorkHubCapability, WorkHubAccessError, type WorkHubAccess } from "./context-access";
+import { filterAuthorityFields } from "../lib/authority-matrix";
 
 export type WorkHubExportOwner = { type: "vendor" | "partner"; id: number };
 export type WorkHubExportField = string | number | boolean | null | Date | WorkHubExportField[] | { [key: string]: WorkHubExportField };
@@ -208,7 +209,7 @@ export async function readCompleteWorkHubExport(input: {
   execute: (query: SQL, request: { after: Cursor | null; limit: number }) => Promise<unknown[]>;
   request: ExportRequest;
   owner: WorkHubExportOwner;
-  access: WorkHubAccess;
+  access: WorkHubAccess & { authorityVisibleFields?: string[] };
   snapshotAt: Date;
   pageSize?: number;
   maximumRows?: number;
@@ -225,7 +226,10 @@ export async function readCompleteWorkHubExport(input: {
   while (true) {
     const limit = Math.min(pageSize, maximumRows - rows.length + 1);
     const rawPage: unknown[] = await input.execute(buildWorkHubExportPageQuery({ request, owner: input.owner, snapshotAt: input.snapshotAt, after, limit }), { after, limit });
-    const page: WorkHubExportRow[] = rawPage.map(parseRow);
+    const page: WorkHubExportRow[] = rawPage.map(parseRow).map((row) => ({
+      ...row,
+      fields: filterAuthorityFields(row.fields, input.access.authorityVisibleFields ?? ["*"]) as Record<string, WorkHubExportField>,
+    }));
     if (page.length === 0) return rows;
     for (const item of page) {
       if (after && (item.cursorAt < after.at || (item.cursorAt === after.at && item.cursorId <= after.id))) throw new Error("Export reader returned an unstable keyset page");
