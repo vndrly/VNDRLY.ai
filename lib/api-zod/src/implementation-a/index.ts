@@ -5,3 +5,4 @@ export * from "./invitations";
 export * from "./authority";
 export * from "./workforce";
 export * from "./assets";
+export * from "./trips";

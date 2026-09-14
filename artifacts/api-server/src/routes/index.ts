@@ -68,6 +68,7 @@ import implementationASponsorshipsRouter from "./implementationASponsorships";
 import implementationAInvitationsRouter from "./implementationAInvitations";
 import implementationAWorkforceRouter from "./implementationAWorkforce";
 import implementationAAssetsRouter from "./implementationAAssets";
+import implementationATripsRouter from "./implementationATrips";
 
 const router: IRouter = Router();
 
@@ -154,5 +155,6 @@ router.use(implementationASponsorshipsRouter);
 router.use(implementationAInvitationsRouter);
 router.use(implementationAWorkforceRouter);
 router.use(implementationAAssetsRouter);
+router.use(implementationATripsRouter);
 
 export default router;

@@ -219,6 +219,10 @@ vi.mock("@workspace/db", () => {
   };
 });
 
+vi.mock("../services/field-trip-database-repository", () => ({
+  databaseFieldTripRepository: {},
+  findActiveTripForDriver: vi.fn(async () => null),
+}));
 vi.mock("drizzle-orm", () => {
   const passthrough = (..._args: any[]) => ({ kind: "true" });
   // `sql` is used as a tagged template literal in the route. Capture the

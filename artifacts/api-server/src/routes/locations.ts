@@ -21,6 +21,8 @@ import { notifyUsers, findVendorUserIds } from "./notifications";
 import { logger } from "../lib/logger";
 
 import { SESSION_SECRET, getSessionFromRequest } from "../lib/session";
+import { createFieldTripService } from "../services/field-trips";
+import { databaseFieldTripRepository, findActiveTripForDriver } from "../services/field-trip-database-repository";
 import { enforceLiveLocationsRateLimit } from "../lib/live-locations-rate-limit";
 import { resolveLiveLocationsScope } from "../lib/live-locations-scope";
 import { resolveRecentTripsScope } from "../lib/recent-trips-scope";
@@ -146,6 +148,8 @@ function getSession(req: Request): Session | null {
     return null;
   }
 }
+
+const fieldTripService = createFieldTripService(databaseFieldTripRepository);
 
 const router: IRouter = Router();
 
@@ -299,6 +303,24 @@ router.post("/location-pings", async (req: Request, res: Response) => {
     })
     .returning();
 
+  // Mirror the existing field ping into an active Implementation A trip.
+  // This is best-effort so trip state can never make the established GPS log fail.
+  try {
+    const activeTrip = await findActiveTripForDriver(session.userId);
+    if (activeTrip) {
+      await fieldTripService.updateTripLocation({
+        tripId: activeTrip.id,
+        expectedVersion: activeTrip.version,
+        latitude: Number(created.latitude),
+        longitude: Number(created.longitude),
+        accuracyMeters: Number(req.body?.accuracyMeters ?? 50),
+        speedMps: created.speedMps == null ? null : Number(created.speedMps),
+        recordedAt: created.recordedAt ?? new Date(),
+      });
+    }
+  } catch (err) {
+    logger.warn({ err, ticketId, employeeId }, "active trip location mirror failed");
+  }
   const headingForEvent =
     deviceHeading != null
       ? deviceHeading
