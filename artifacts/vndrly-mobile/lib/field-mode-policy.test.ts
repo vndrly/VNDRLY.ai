@@ -36,7 +36,7 @@ describe("field mode policy", () => {
     expect(prompted.effects).toEqual([{ type: "prompt_end_work" }]);
     const timedOut = evaluateFieldMode(prompted.snapshot, { id: "tick-timeout", type: "clock_tick", atMs: 910_000 });
     expect(timedOut.snapshot.mode).toBe("ended");
-    expect(timedOut.effects).toEqual([{ type: "stop_tracking" }, { type: "supervisor_exception", reason: "end_work_unanswered" }]);
+    expect(timedOut.effects).toEqual([{ type: "stop_tracking", reason: "unattended_timeout", needsSupervisorConfirmation: true }, { type: "supervisor_exception", reason: "end_work_unanswered" }]);
   });
 
   it("prompts on an unassigned departure and ends immediately when confirmed", () => {
@@ -44,8 +44,15 @@ describe("field mode policy", () => {
     const prompted = evaluateFieldMode(active, { id: "exit-final", type: "geofence_exit", atMs: 5_000 });
     expect(prompted.effects).toEqual([{ type: "record_departure" }, { type: "prompt_end_work" }]);
     const ended = evaluateFieldMode(prompted.snapshot, { id: "confirm-end", type: "end_work_confirmed", atMs: 6_000 });
-    expect(ended.effects).toEqual([{ type: "stop_tracking" }]);
+    expect(ended.effects).toEqual([{ type: "stop_tracking", reason: "end_of_work", needsSupervisorConfirmation: false }]);
     expect(ended.snapshot.mode).toBe("ended");
+  });
+
+  it("allows the worker to end active work manually at any time", () => {
+    const active = { ...base, mode: "active" as const };
+    const ended = evaluateFieldMode(active, { id: "manual-end", type: "end_work_confirmed", atMs: 6_000 });
+    expect(ended.snapshot.mode).toBe("ended");
+    expect(ended.effects).toEqual([{ type: "stop_tracking", reason: "end_of_work", needsSupervisorConfirmation: false }]);
   });
 
   it("nudges after a forty-five minute offsite stop and escalates unanswered without checking out", () => {

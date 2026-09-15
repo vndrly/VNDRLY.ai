@@ -16,7 +16,7 @@ import {
 import { getSessionFromRequest } from "../lib/session";
 import { createFieldTripService, FieldTripError, type FieldTripRecord, type TripOwner } from "../services/field-trips";
 import { assertFieldTripAccess, authorizeFieldTripCompletion } from "../services/field-trip-access";
-import { databaseFieldTripRepository } from "../services/field-trip-database-repository";
+import { databaseFieldTripRepository, findActiveTripForDriver } from "../services/field-trip-database-repository";
 import { crossingDeduplicationKey, evaluateDirectionalCrossing } from "../services/geofence-crossings";
 
 const router = Router();
@@ -112,6 +112,16 @@ router.post("/implementation-a/trips", async (req, res) => {
     const [consent] = await db.select({ id: locationConsentsTable.id }).from(locationConsentsTable).where(and(eq(locationConsentsTable.userId, input.driverUserId), isNull(locationConsentsTable.revokedAt))).limit(1);
     if (!consent) throw new FieldTripError("trip.location_consent_required", 403);
     return res.status(201).json(await service.startTrip(input));
+  } catch (error) { return sendError(res, error); }
+});
+
+router.get("/implementation-a/trips/active", async (req, res) => {
+  try {
+    const context = actor(req);
+    const trip = await findActiveTripForDriver(context.session.userId!);
+    if (!trip) return res.json(null);
+    assertTripAccess(trip, context);
+    return res.json(trip);
   } catch (error) { return sendError(res, error); }
 });
 

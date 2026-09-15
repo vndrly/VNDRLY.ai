@@ -26,7 +26,7 @@ export type FieldModeEffect =
   | { type: "record_departure" }
   | { type: "prompt_end_work" }
   | { type: "prompt_extended_stop" }
-  | { type: "stop_tracking" }
+  | { type: "stop_tracking"; reason: "end_of_work" | "unattended_timeout"; needsSupervisorConfirmation: boolean }
   | { type: "supervisor_exception"; reason: "end_work_unanswered" | "extended_stop_unanswered" };
 
 const END_RESPONSE_TIMEOUT_MS = 15 * 60 * 1_000;
@@ -64,10 +64,10 @@ export function evaluateFieldMode(snapshot: FieldModeSnapshot, event: FieldModeE
     return { snapshot: next, effects };
   }
 
-  if (event.type === "end_work_confirmed" && next.mode === "awaiting_end") {
+  if (event.type === "end_work_confirmed" && (next.mode === "active" || next.mode === "awaiting_end" || next.mode === "awaiting_stop")) {
     next.mode = "ended";
     next.promptStartedAtMs = null;
-    effects.push({ type: "stop_tracking" });
+    effects.push({ type: "stop_tracking", reason: "end_of_work", needsSupervisorConfirmation: false });
     return { snapshot: next, effects };
   }
 
@@ -90,7 +90,7 @@ export function evaluateFieldMode(snapshot: FieldModeSnapshot, event: FieldModeE
   if (next.mode === "awaiting_end" && next.promptStartedAtMs != null && event.atMs - next.promptStartedAtMs >= END_RESPONSE_TIMEOUT_MS) {
     next.mode = "ended";
     next.promptStartedAtMs = null;
-    effects.push({ type: "stop_tracking" }, { type: "supervisor_exception", reason: "end_work_unanswered" });
+    effects.push({ type: "stop_tracking", reason: "unattended_timeout", needsSupervisorConfirmation: true }, { type: "supervisor_exception", reason: "end_work_unanswered" });
     return { snapshot: next, effects };
   }
 

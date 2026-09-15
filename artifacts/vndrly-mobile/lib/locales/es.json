@@ -2256,6 +2256,12 @@
     "taxable_repair_service": "Reparación / mantenimiento (gravar mano de obra)",
     "taxable_all": "Todo gravable (IGB / servicio amplio)"
   },
+  "fieldMode": {
+    "active": "V está lista · Ubicación de trabajo activa",
+    "endWork": "Terminar trabajo",
+    "endPrompt": "¿Terminaste por hoy?",
+    "extendedStopPrompt": "¿Estás almorzando, tienes una demora o necesitas ayuda?"
+  },
   "implementationAOperations": {
     "title": "Estado de operaciones",
     "description": "Estado de entrega, sincronización, retención y flujos de seguridad.",

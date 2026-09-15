@@ -2256,6 +2256,12 @@
     "taxable_repair_service": "Repair / maintenance (tax labor)",
     "taxable_all": "All taxable (GRT / broad service)"
   },
+  "fieldMode": {
+    "active": "V is ready · Work location on",
+    "endWork": "End work",
+    "endPrompt": "Are you done for the day?",
+    "extendedStopPrompt": "Are you on lunch, delayed, or do you need help?"
+  },
   "implementationAOperations": {
     "title": "Operations Health",
     "description": "Delivery, synchronization, retention, and safety workflow status.",

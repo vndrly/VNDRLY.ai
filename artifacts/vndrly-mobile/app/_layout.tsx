@@ -24,6 +24,7 @@ import { AskVVoiceProvider } from "@/hooks/use-askv-voice-session";
 import { BrandProvider } from "@/hooks/use-brand";
 import ContextPickerModal from "@/components/ContextPickerModal";
 import AskVVoiceIndicator from "@/components/AskVVoiceIndicator";
+import FieldModeCoordinator from "@/components/FieldModeCoordinator";
 import { subscribeAskVDataChanged } from "@/lib/askv-client-tools";
 import { initApi } from "@/lib/api";
 import VndrlyPageBackground from "@/components/VndrlyPageBackground";
@@ -241,7 +242,12 @@ function AuthGate() {
     return <SplashLogo />;
   }
 
-  return <Slot />;
+  return (
+    <>
+      <Slot />
+      <FieldModeCoordinator enabled={hasAuth && role === "field_employee"} />
+    </>
+  );
 }
 
 function RootLayout() {
