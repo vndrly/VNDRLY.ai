@@ -2282,6 +2282,7 @@
     "staleLocations": "Stale live locations: {{count}}",
     "failedAlerts": "Failed alerts: {{count}}",
     "unhealthyDisplays": "Displays needing attention: {{count}}",
+    "supervisorExceptions": "Supervisor exceptions in the last 24 hours: {{count}}",
     "transcription": "Meeting transcription: {{state}}",
     "safetyChain": "Safety escalation chain: {{state}}",
     "available": "Available",

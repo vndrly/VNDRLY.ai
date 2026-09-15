@@ -25,6 +25,7 @@ export type OperationsHealthCounts = {
   staleLocations: number;
   failedAlerts: number;
   unhealthyDisplays: number;
+  supervisorExceptions: number;
   missingSafetyChain: boolean;
   transcriptionAvailable: boolean;
 };
@@ -45,6 +46,7 @@ export function buildOperationsHealth(counts: OperationsHealthCounts, now = new 
     counts.failedAlerts > 0 && "failed_alerts",
     !counts.transcriptionAvailable && "transcription_unavailable",
     counts.unhealthyDisplays > 0 && "unhealthy_displays",
+    counts.supervisorExceptions > 0 && "supervisor_exceptions",
     counts.missingSafetyChain && "missing_safety_chain",
   ].filter((value): value is string => Boolean(value));
   return { status: attention.length ? "attention_required" : "healthy", checkedAt: now.toISOString(), signals: counts, attention };
@@ -60,7 +62,7 @@ export async function getOperationsHealth(owner: OperationsOwner, now = new Date
   const membershipScope = owner.type === "vendor"
     ? eq(userOrgMembershipsTable.vendorId, owner.id)
     : eq(userOrgMembershipsTable.partnerId, owner.id);
-  const [offlineBacklog, terminalConflicts, permissionDenials, staleLocations, failedAlerts, unhealthyDisplays, safetyChains] = await Promise.all([
+  const [offlineBacklog, terminalConflicts, permissionDenials, staleLocations, failedAlerts, unhealthyDisplays, supervisorExceptions, safetyChains] = await Promise.all([
     countRows(db.select({ count: sql<number>`count(*)::int` }).from(workHubClientOperationsTable).where(and(
       eq(workHubClientOperationsTable.ownerOrgType, owner.type), eq(workHubClientOperationsTable.ownerOrgId, owner.id), isNull(workHubClientOperationsTable.appliedAt),
     ))),
@@ -83,12 +85,16 @@ export async function getOperationsHealth(owner: OperationsOwner, now = new Date
     countRows(db.select({ count: sql<number>`count(*)::int` }).from(operationsDisplaysTable).where(and(
       eq(operationsDisplaysTable.ownerOrgType, owner.type), eq(operationsDisplaysTable.ownerOrgId, owner.id), isNull(operationsDisplaysTable.revokedAt), lte(operationsDisplaysTable.tokenExpiresAt, now),
     ))),
+    countRows(db.select({ count: sql<number>`count(*)::int` }).from(workHubAuditLogTable).where(and(
+      eq(workHubAuditLogTable.ownerOrgType, owner.type), eq(workHubAuditLogTable.ownerOrgId, owner.id), gte(workHubAuditLogTable.createdAt, recent),
+      eq(workHubAuditLogTable.action, "supervisor.exception"),
+    ))),
     countRows(db.select({ count: sql<number>`count(*)::int` }).from(safetyEscalationChainsTable).where(and(
       eq(safetyEscalationChainsTable.ownerType, owner.type), eq(safetyEscalationChainsTable.ownerId, owner.id), eq(safetyEscalationChainsTable.isActive, true),
     ))),
   ]);
   return buildOperationsHealth({
-    offlineBacklog, terminalConflicts, permissionDenials, staleLocations, failedAlerts, unhealthyDisplays,
+    offlineBacklog, terminalConflicts, permissionDenials, staleLocations, failedAlerts, unhealthyDisplays, supervisorExceptions,
     missingSafetyChain: safetyChains === 0,
     transcriptionAvailable: assemblyAIStreamingAvailable(process.env),
   }, now);

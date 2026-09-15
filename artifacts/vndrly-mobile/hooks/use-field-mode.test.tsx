@@ -55,6 +55,10 @@ describe("useFieldMode", () => {
     await run.emit({ id: "exit-1", type: "geofence_exit", atMs: 2_000 });
     await run.emit({ id: "timeout-1", type: "clock_tick", atMs: 902_000 });
     expect(run.order.slice(-2)).toEqual(["stop", "exception"]);
+    expect(run.actions.createSupervisorException).toHaveBeenCalledWith(
+      "end_work_unanswered",
+      "timeout-1",
+    );
   });
 
   it("unsubscribes on unmount so foreground callbacks cannot restart work", () => {

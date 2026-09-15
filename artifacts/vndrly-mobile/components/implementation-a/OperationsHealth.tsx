@@ -13,6 +13,7 @@ export type MobileOperationsHealth = {
     staleLocations: number;
     failedAlerts: number;
     unhealthyDisplays: number;
+    supervisorExceptions: number;
     missingSafetyChain: boolean;
     transcriptionAvailable: boolean;
   };
@@ -31,6 +32,7 @@ export function OperationsHealth({ health, admin }: { health?: MobileOperationsH
     [t("implementationAOperations.staleLocations", { count: health.signals.staleLocations }), health.signals.staleLocations > 0],
     [t("implementationAOperations.failedAlerts", { count: health.signals.failedAlerts }), health.signals.failedAlerts > 0],
     [t("implementationAOperations.unhealthyDisplays", { count: health.signals.unhealthyDisplays }), health.signals.unhealthyDisplays > 0],
+    [t("implementationAOperations.supervisorExceptions", { count: health.signals.supervisorExceptions }), health.signals.supervisorExceptions > 0],
     [t("implementationAOperations.transcription", { state: health.signals.transcriptionAvailable ? t("implementationAOperations.available") : t("implementationAOperations.unavailableState") }), !health.signals.transcriptionAvailable],
     [t("implementationAOperations.safetyChain", { state: health.signals.missingSafetyChain ? t("implementationAOperations.missing") : t("implementationAOperations.configured") }), health.signals.missingSafetyChain],
   ] as const : [];

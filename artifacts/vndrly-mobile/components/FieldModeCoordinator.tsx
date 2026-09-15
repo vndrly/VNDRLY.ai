@@ -41,8 +41,8 @@ function ActiveFieldModeCoordinator() {
     recordDeparture: async () => undefined,
     promptEndWork: async () => { if (!voice.muted) speakAskV(t("fieldMode.endPrompt"), i18n.language.startsWith("es") ? "es-US" : "en-US"); },
     promptExtendedStop: async () => { if (!voice.muted) speakAskV(t("fieldMode.extendedStopPrompt"), i18n.language.startsWith("es") ? "es-US" : "en-US"); },
-    createSupervisorException: async (reason) => {
-      await apiFetch("/api/implementation-a/operations-health/events", { method: "POST", body: JSON.stringify({ operationId: crypto.randomUUID(), kind: "field_mode_exception", reason }) });
+    createSupervisorException: async (reason, eventId) => {
+      await apiFetch("/api/implementation-a/operations-health/events", { method: "POST", body: JSON.stringify({ operationId: crypto.randomUUID(), eventId, kind: "field_mode_exception", reason }) });
     },
   }), [i18n.language, t, voice.muted]);
   const { snapshot, dispatch } = useFieldMode({ initialSnapshot, source, actions });

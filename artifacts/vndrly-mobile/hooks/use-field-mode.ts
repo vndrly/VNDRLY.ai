@@ -9,14 +9,21 @@ export type FieldModeActions = {
   recordDeparture: () => Promise<void>;
   promptEndWork: () => Promise<void>;
   promptExtendedStop: () => Promise<void>;
-  createSupervisorException: (reason: "end_work_unanswered" | "extended_stop_unanswered") => Promise<void>;
+  createSupervisorException: (
+    reason: "end_work_unanswered" | "extended_stop_unanswered",
+    eventId: string,
+  ) => Promise<void>;
 };
 
 export type FieldModeEventSource = {
   subscribe: (listener: (event: FieldModeEvent) => void) => () => void;
 };
 
-async function executeEffect(effect: FieldModeEffect, actions: FieldModeActions) {
+async function executeEffect(
+  effect: FieldModeEffect,
+  actions: FieldModeActions,
+  eventId: string,
+) {
   switch (effect.type) {
     case "start_tracking": return actions.startTracking();
     case "stop_tracking": return actions.stopTracking({ reason: effect.reason, needsSupervisorConfirmation: effect.needsSupervisorConfirmation });
@@ -25,7 +32,7 @@ async function executeEffect(effect: FieldModeEffect, actions: FieldModeActions)
     case "record_departure": return actions.recordDeparture();
     case "prompt_end_work": return actions.promptEndWork();
     case "prompt_extended_stop": return actions.promptExtendedStop();
-    case "supervisor_exception": return actions.createSupervisorException(effect.reason);
+    case "supervisor_exception": return actions.createSupervisorException(effect.reason, eventId);
   }
 }
 
@@ -40,7 +47,8 @@ export function useFieldMode(input: { initialSnapshot: FieldModeSnapshot; source
       const result = evaluateFieldMode(current, event);
       if (result.effects.length > 0) {
         queueRef.current = queueRef.current.then(async () => {
-          for (const effect of result.effects) await executeEffect(effect, actionsRef.current);
+          for (const effect of result.effects)
+            await executeEffect(effect, actionsRef.current, event.id);
         });
       }
       return result.snapshot;

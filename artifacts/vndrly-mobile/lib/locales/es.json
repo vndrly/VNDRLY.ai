@@ -2282,6 +2282,7 @@
     "staleLocations": "Ubicaciones en vivo desactualizadas: {{count}}",
     "failedAlerts": "Alertas fallidas: {{count}}",
     "unhealthyDisplays": "Pantallas que requieren atención: {{count}}",
+    "supervisorExceptions": "Excepciones del supervisor en las últimas 24 horas: {{count}}",
     "transcription": "Transcripción de reuniones: {{state}}",
     "safetyChain": "Cadena de escalamiento de seguridad: {{state}}",
     "available": "Disponible",

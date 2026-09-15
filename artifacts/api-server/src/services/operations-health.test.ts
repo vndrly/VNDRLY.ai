@@ -13,6 +13,7 @@ const healthyCounts: OperationsHealthCounts = {
   staleLocations: 0,
   failedAlerts: 0,
   unhealthyDisplays: 0,
+  supervisorExceptions: 0,
   missingSafetyChain: false,
   transcriptionAvailable: true,
 };
@@ -33,6 +34,7 @@ describe("operations health", () => {
       offlineBacklog: 3,
       terminalConflicts: 1,
       staleLocations: 2,
+      supervisorExceptions: 2,
       missingSafetyChain: true,
       transcriptionAvailable: false,
     }, new Date("2026-09-14T12:00:00Z"));
@@ -42,6 +44,7 @@ describe("operations health", () => {
       "terminal_conflicts",
       "stale_locations",
       "transcription_unavailable",
+      "supervisor_exceptions",
       "missing_safety_chain",
     ]);
   });
