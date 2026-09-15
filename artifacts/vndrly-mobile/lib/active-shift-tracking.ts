@@ -4,6 +4,7 @@ export type ShiftTrackingSnapshot = {
   indicator: string | null;
   battery: "normal" | "low";
   location: "current" | "stale";
+  activeShiftId: string | null;
 };
 
 export function createActiveShiftTracking(options: { consentVersion: number; requiredConsentVersion: number }) {
@@ -11,6 +12,7 @@ export function createActiveShiftTracking(options: { consentVersion: number; req
   let battery: ShiftTrackingSnapshot["battery"] = "normal";
   let location: ShiftTrackingSnapshot["location"] = "current";
   let approvedShift = false;
+  let activeShiftId: string | null = null;
 
   const snapshot = (): ShiftTrackingSnapshot => ({
     state,
@@ -18,17 +20,19 @@ export function createActiveShiftTracking(options: { consentVersion: number; req
     indicator: state === "tracking" ? "Work location sharing on" : null,
     battery,
     location,
+    activeShiftId,
   });
 
   return {
     openApp(_input?: { onDuty?: boolean }) { return snapshot(); },
     shiftStarted(input: { shiftId: string; approved: boolean }) {
       approvedShift = input.approved;
+      activeShiftId = input.approved ? input.shiftId : null;
       if (options.consentVersion !== options.requiredConsentVersion) state = "consent_required";
       else state = input.approved ? "tracking" : "off_duty";
       return snapshot();
     },
-    shiftEnded() { approvedShift = false; state = "off_duty"; return snapshot(); },
+    shiftEnded() { approvedShift = false; activeShiftId = null; state = "off_duty"; return snapshot(); },
     pause() { if (state === "tracking") state = "paused"; return snapshot(); },
     resume() { if (state === "paused" && approvedShift) state = "tracking"; return snapshot(); },
     health(input: { batteryPercent: number; locationAgeMs: number }) {

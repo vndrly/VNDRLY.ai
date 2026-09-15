@@ -5,8 +5,8 @@ describe("active shift tracking", () => {
   it("starts automatically only during an eligible shift after versioned consent", () => {
     const tracking = createActiveShiftTracking({ consentVersion: 2, requiredConsentVersion: 2 });
     expect(tracking.openApp({ onDuty: false })).toMatchObject({ state: "off_duty", sharing: false });
-    expect(tracking.shiftStarted({ shiftId: "shift-1", approved: true })).toMatchObject({ state: "tracking", sharing: true, indicator: "Work location sharing on" });
-    expect(tracking.shiftEnded()).toMatchObject({ state: "off_duty", sharing: false });
+    expect(tracking.shiftStarted({ shiftId: "shift-1", approved: true })).toMatchObject({ state: "tracking", sharing: true, indicator: "Work location sharing on", activeShiftId: "shift-1" });
+    expect(tracking.shiftEnded()).toMatchObject({ state: "off_duty", sharing: false, activeShiftId: null });
   });
 
   it("surfaces paused, stale, battery, and location health", () => {
