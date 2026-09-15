@@ -14,6 +14,9 @@ test("a vendor creates a paid managed worker while sponsorships stay private and
   const stamp = makeStamp();
   const sponsor = await createVendorActor(pool, "MidCon Sponsor");
   const claimant = await createVendorActor(pool, "NewTek Claimant");
+  await pool.query("UPDATE users SET email_verified_at=NOW() WHERE id=$1", [
+    claimant.userId,
+  ]);
   const claimantContext = await browser.newContext();
   try {
     await loginAsVendor(page, sponsor);

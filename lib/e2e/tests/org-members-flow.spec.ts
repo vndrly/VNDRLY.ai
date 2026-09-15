@@ -204,6 +204,16 @@ test.afterAll(async () => {
   // createdMemberUserIds), the field-employee user, and the self-row
   // partner-admin user — none of them belong to any other org so it's
   // safe to remove the user rows themselves.
+  const fixtureUserIds = [
+    seed.adminUserId,
+    seed.fieldUserId,
+    seed.selfUserId,
+    ...seed.createdMemberUserIds,
+  ];
+  await pool.query(
+    `DELETE FROM work_hub_audit_log WHERE actor_user_id = ANY($1::int[])`,
+    [fixtureUserIds],
+  );
   await pool.query(`DELETE FROM partners WHERE id = $1`, [seed.partnerId]);
   await pool.query(`DELETE FROM vendors WHERE id = $1`, [seed.vendorId]);
   await pool.query(`DELETE FROM users WHERE id = ANY($1::int[])`, [

@@ -149,7 +149,7 @@ vi.mock("@/components/CrewTimeSection", async () => {
           if (refreshHandleRef) refreshHandleRef.current = null;
         };
       }, [refreshHandleRef]);
-      return ReactLib.createElement("div");
+      return ReactLib.createElement("div", { "data-testid": "crew-time-section" });
     },
   };
 });
@@ -372,6 +372,7 @@ describe("TicketDetailScreen — Task #877 manual crew refresh", () => {
   it("invokes the CrewTimeSection refresh handle when the header refresh button is tapped", async () => {
     render(<TicketDetailScreen />);
     const button = await screen.findByTestId("button-refresh-ticket-detail");
+    await screen.findByTestId("crew-time-section");
 
     // The mock registers `refreshAll` on the supplied ref during its
     // mount-time effect, so by the time the header button is on screen

@@ -2,7 +2,11 @@ import { Router, type Request, type Response } from "express";
 import { and, eq, ne } from "drizzle-orm";
 import { z } from "zod/v4";
 import { ActivateWorkerSubscriptionSchema, PreviewWorkerSubscriptionSchema, ReactivateWorkerSubscriptionSchema } from "@workspace/api-zod";
-import { db, workerSubscriptionsTable } from "@workspace/db";
+import {
+  db,
+  managedSubcontractorWorkerSponsorshipsTable,
+  workerSubscriptionsTable,
+} from "@workspace/db";
 import { getSessionFromRequest } from "../lib/session";
 import { issueAccountInvitation } from "../services/account-invitations";
 import {
@@ -52,9 +56,26 @@ const repository: WorkerSubscriptionRepository = {
   },
   async get(id) { const [row] = await db.select().from(workerSubscriptionsTable).where(eq(workerSubscriptionsTable.id, id)).limit(1); return row ? fromRow(row) : null; },
   async save(seat) {
-    const [saved] = await db.update(workerSubscriptionsTable).set({ state: seat.state, renews: seat.renews, renewalAt: seat.renewalAt, accessEndsAt: seat.accessEndsAt, billingEndsAt: seat.billingEndsAt, archivedAt: seat.archivedAt, auditActorUserId: seat.auditActorUserId, updatedAt: seat.updatedAt }).where(eq(workerSubscriptionsTable.id, seat.id)).returning();
-    if (!saved) throw new WorkerSubscriptionError("worker_subscription.not_found", 404);
-    return fromRow(saved);
+    return db.transaction(async (tx) => {
+      const [saved] = await tx.update(workerSubscriptionsTable).set({ state: seat.state, renews: seat.renews, renewalAt: seat.renewalAt, accessEndsAt: seat.accessEndsAt, billingEndsAt: seat.billingEndsAt, archivedAt: seat.archivedAt, auditActorUserId: seat.auditActorUserId, updatedAt: seat.updatedAt }).where(eq(workerSubscriptionsTable.id, seat.id)).returning();
+      if (!saved) throw new WorkerSubscriptionError("worker_subscription.not_found", 404);
+      if (seat.payor.type === "vendor") {
+        await tx
+          .update(managedSubcontractorWorkerSponsorshipsTable)
+          .set({
+            status: seat.state,
+            updatedAt: seat.updatedAt,
+            endedAt: seat.state === "terminated" ? seat.updatedAt : null,
+          })
+          .where(
+            and(
+              eq(managedSubcontractorWorkerSponsorshipsTable.workerUserId, seat.workerUserId),
+              eq(managedSubcontractorWorkerSponsorshipsTable.sponsorVendorId, seat.payor.id),
+            ),
+          );
+      }
+      return fromRow(saved);
+    });
   },
   async listForPayor(payor) {
     const rows = await db.select().from(workerSubscriptionsTable).where(and(

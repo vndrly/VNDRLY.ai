@@ -3926,7 +3926,15 @@
       "already_member": "Ese usuario ya está en el equipo Majik."
     },
     "safety": {
-      "site_inactive": "Este sitio está inactivo por una orden de alto al trabajo de seguridad."
+      "site_inactive": "Este sitio está inactivo por una orden de alto al trabajo de seguridad.",
+      "unauthenticated": "Inicia sesión para usar la respuesta de seguridad.",
+      "invalid_request": "La solicitud de seguridad no es válida.",
+      "response_not_found": "No se encontró la respuesta de seguridad.",
+      "owner_required": "Se requiere una empresa activa para la respuesta de seguridad.",
+      "out_of_scope": "Este incidente de seguridad está fuera de tu empresa activa.",
+      "not_found": "No se encontró el incidente de seguridad.",
+      "response_window_active": "La ventana de respuesta sigue activa.",
+      "close_forbidden": "No tienes permiso para cerrar este incidente de seguridad."
     },
     "work_type": {
       "duplicate_name": "Ya existe un tipo de trabajo llamado «{{name}}».",
@@ -4564,6 +4572,39 @@
       "compliance_incomplete": "La información de cumplimiento está incompleta. Termine los campos requeridos.",
       "empty_catalog": "Agregue al menos un tipo de trabajo antes de publicar su catálogo.",
       "publish_failed": "No pudimos publicar su catálogo. Inténtelo de nuevo."
+    },
+    "asset": {
+      "invalid_request": "La solicitud del activo no es válida.",
+      "internal_error": "No se pudo completar la solicitud del activo."
+    },
+    "operations_display": {
+      "invalid_request": "La solicitud de la pantalla de operaciones no es válida.",
+      "trusted_companion_required": "Se requiere un dispositivo complementario de confianza."
+    },
+    "operations_health": {
+      "unauthenticated": "Inicia sesión para ver el estado de las operaciones.",
+      "admin_required": "Se requiere acceso de administrador de la empresa.",
+      "owner_required": "Se requiere una empresa activa."
+    },
+    "account_invitation": {
+      "invalid_request": "La solicitud de invitación de cuenta no es válida.",
+      "internal_error": "No se pudo completar la solicitud de invitación de cuenta."
+    },
+    "managed_subcontractor": {
+      "invalid_request": "La solicitud del subcontratista administrado no es válida.",
+      "internal_error": "No se pudo completar la solicitud del subcontratista administrado."
+    },
+    "worker_subscription": {
+      "invalid_request": "La solicitud de suscripción del trabajador no es válida.",
+      "internal_error": "No se pudo completar la solicitud de suscripción del trabajador."
+    },
+    "trip": {
+      "invalid_request": "La solicitud del viaje no es válida.",
+      "internal_error": "No se pudo completar la solicitud del viaje."
+    },
+    "workforce": {
+      "invalid_request": "La solicitud de personal no es válida.",
+      "internal_error": "No se pudo completar la solicitud de personal."
     }
   },
   "fieldNav": {

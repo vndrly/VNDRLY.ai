@@ -5,7 +5,11 @@ import { Bell } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
-import { notificationsApi } from "@/lib/notifications-api";
+import {
+  NOTIFICATION_CREATED_BROWSER_EVENT,
+  notificationsApi,
+  type NotificationCreatedBrowserDetail,
+} from "@/lib/notifications-api";
 import { useRateLimitGate } from "@/hooks/use-rate-limit-gate";
 import { useBrowserNotifications } from "@/hooks/use-browser-notifications";
 import { useNotificationsModal } from "@/components/notifications-modal-context";
@@ -68,14 +72,15 @@ export default function NotificationsBell() {
       };
       const onCreated = (msg: MessageEvent) => {
         try {
-          const parsed = JSON.parse(msg.data) as {
-            type?: string;
-            notificationId?: number;
-            title?: string;
-            body?: string | null;
-            link?: string | null;
-          };
+          const parsed = JSON.parse(
+            msg.data,
+          ) as NotificationCreatedBrowserDetail;
           if (parsed.type !== "notification.created") return;
+          window.dispatchEvent(
+            new CustomEvent(NOTIFICATION_CREATED_BROWSER_EVENT, {
+              detail: parsed,
+            }),
+          );
           refreshBell();
           if (parsed.title) {
             const link = parsed.link ?? null;

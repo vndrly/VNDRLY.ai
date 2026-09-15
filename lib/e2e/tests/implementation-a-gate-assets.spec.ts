@@ -85,8 +85,11 @@ test("a spoken Texas plate resolves one vehicle, transfers custody, and auto-adm
     );
     expect(checkout.status()).toBe(200);
     expect(await checkout.json()).toMatchObject({
-      status: "checked_out",
-      holderUserId: driver.userId,
+      status: "applied",
+      asset: {
+        status: "checked_out",
+        holderUserId: driver.userId,
+      },
     });
 
     const started = await driverPage.request.post(

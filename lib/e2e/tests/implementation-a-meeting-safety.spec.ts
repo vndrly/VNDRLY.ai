@@ -151,7 +151,7 @@ test("a view-only call participant accepts once in place and immediately becomes
     );
     expect(authorization.status()).toBe(200);
     expect(await authorization.json()).toMatchObject({
-      participationMode: "active",
+      mode: "active",
       rejoinRequired: false,
     });
     const activeResponse = await participantPage.request.post(

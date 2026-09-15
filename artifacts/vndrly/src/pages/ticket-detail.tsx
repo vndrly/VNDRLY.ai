@@ -1,4 +1,4 @@
-﻿import { PngPillButton } from "@/components/png-pill-rollover";
+import { PngPillButton } from "@/components/png-pill-rollover";
 import { TicketVoiceEntry } from "@/components/ticket-voice-entry";
 import type { TicketTransition } from "@workspace/api-client-react";
 import {
@@ -1186,7 +1186,11 @@ export default function TicketDetail({ id }: { id: number }) {
   };
   const handleAccept = () => {
     acceptTicket.mutate({ id }, {
-      onSuccess: () => { invalidate(); toast({ title: t("ticketDetail.toastInviteAccepted") }); },
+      onSuccess: (acceptedTicket) => {
+        queryClient.setQueryData(getGetTicketQueryKey(id), acceptedTicket);
+        queryClient.invalidateQueries({ queryKey: getGetTicketTransitionsQueryKey(id) });
+        toast({ title: t("ticketDetail.toastInviteAccepted") });
+      },
       onError,
     });
   };

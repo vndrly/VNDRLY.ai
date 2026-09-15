@@ -1,5 +1,17 @@
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
+export const NOTIFICATION_CREATED_BROWSER_EVENT =
+  "vndrly:notification-created";
+
+export type NotificationCreatedBrowserDetail = {
+  type?: string;
+  notifType?: string;
+  notificationId?: number;
+  title?: string;
+  body?: string | null;
+  link?: string | null;
+};
+
 export type NotificationRow = {
   id: number;
   userId: number;

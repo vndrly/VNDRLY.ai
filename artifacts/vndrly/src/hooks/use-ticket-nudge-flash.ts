@@ -5,9 +5,11 @@ import {
   ticketIdFromNotificationLink,
   unreadNudgedTicketIds,
 } from "@workspace/ticket-nudge-ui";
-import { notificationsApi } from "@/lib/notifications-api";
-
-const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+import {
+  NOTIFICATION_CREATED_BROWSER_EVENT,
+  notificationsApi,
+  type NotificationCreatedBrowserDetail,
+} from "@/lib/notifications-api";
 
 type Options = {
   enabled?: boolean;
@@ -77,37 +79,27 @@ export function useTicketNudgeFlash(options: Options = {}) {
 
   useEffect(() => {
     if (!enabled) return;
-    if (typeof window === "undefined" || typeof EventSource === "undefined") {
-      return;
-    }
+    if (typeof window === "undefined") return;
 
-    let es: EventSource | null = null;
-    try {
-      es = new EventSource(`${API_BASE}/api/notifications/events`, {
-        withCredentials: true,
-      });
-      const onCreated = (msg: MessageEvent) => {
-        try {
-          const parsed = JSON.parse(msg.data) as {
-            type?: string;
-            notifType?: string;
-            link?: string | null;
-          };
-          if (parsed.type !== "notification.created") return;
-          if (parsed.notifType !== WORKFLOW_NUDGE_TYPE) return;
-          const id = ticketIdFromNotificationLink(parsed.link);
-          if (id) flashNudgeTicket(id);
-        } catch {
-          /* malformed */
-        }
-      };
-      es.addEventListener("notification.created", onCreated as EventListener);
-    } catch {
-      es = null;
-    }
+    const onCreated = (event: Event) => {
+      const parsed = (
+        event as CustomEvent<NotificationCreatedBrowserDetail>
+      ).detail;
+      if (parsed?.type !== "notification.created") return;
+      if (parsed.notifType !== WORKFLOW_NUDGE_TYPE) return;
+      const id = ticketIdFromNotificationLink(parsed.link);
+      if (id) flashNudgeTicket(id);
+    };
+    window.addEventListener(
+      NOTIFICATION_CREATED_BROWSER_EVENT,
+      onCreated,
+    );
 
     return () => {
-      es?.close();
+      window.removeEventListener(
+        NOTIFICATION_CREATED_BROWSER_EVENT,
+        onCreated,
+      );
     };
   }, [enabled, flashNudgeTicket]);
 

@@ -11,6 +11,9 @@ test("company-sponsored worker seats pause without losing identity or history", 
 }) => {
   const pool = createPool();
   const stamp = makeStamp();
+  const originalWorkHubSetting = await pool.query(
+    "SELECT work_hub_enabled FROM platform_settings WHERE id=1",
+  );
   const sponsor = await createVendorActor(pool, "Seat Sponsor");
   try {
     await loginAsVendor(page, sponsor);
@@ -49,8 +52,8 @@ test("company-sponsored worker seats pause without losing identity or history", 
     );
     expect(paused.status()).toBe(200);
     expect(await paused.json()).toMatchObject({
-      status: "applied",
-      seat: { state: "paused", renews: false },
+      state: "paused",
+      renews: false,
     });
     const retained = await pool.query(
       `SELECT u.id, ws.state, m.status
@@ -75,10 +78,16 @@ test("company-sponsored worker seats pause without losing identity or history", 
     );
     expect(reactivated.status()).toBe(200);
     expect(await reactivated.json()).toMatchObject({
-      status: "applied",
-      seat: { state: "active", workerUserId },
+      state: "active",
+      workerUserId,
     });
   } finally {
+    const originalWorkHubEnabled =
+      originalWorkHubSetting.rows[0]?.work_hub_enabled ?? false;
+    await pool.query(
+      "INSERT INTO platform_settings (id, work_hub_enabled) VALUES (1, $1) ON CONFLICT (id) DO UPDATE SET work_hub_enabled=EXCLUDED.work_hub_enabled",
+      [originalWorkHubEnabled],
+    );
     await pool.end();
   }
 });

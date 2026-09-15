@@ -400,6 +400,10 @@ test.describe.serial("Task #499 — vendor accept/deny round-trip", () => {
         seed.vendor1FieldEmployeeId,
         seed.vendor2FieldEmployeeId,
       ]);
+      await pool.query(
+        `DELETE FROM work_hub_audit_log WHERE actor_user_id IN ($1, $2, $3)`,
+        [seed.partnerUserId, seed.vendor1UserId, seed.vendor2UserId],
+      );
       await pool.query(`DELETE FROM users WHERE id IN ($1, $2, $3)`, [
         seed.partnerUserId,
         seed.vendor1UserId,
@@ -455,7 +459,18 @@ test.describe.serial("Task #499 — vendor accept/deny round-trip", () => {
 
     // Click Accept; the banner should disappear once the mutation
     // resolves (the ticket is no longer awaiting_acceptance).
+    const acceptResponsePromise = page.waitForResponse(
+      (response) =>
+        response.url().endsWith(`/api/tickets/${ticketId}/accept`)
+        && response.request().method() === "POST",
+      { timeout: 15_000 },
+    );
     await banner.locator('[data-testid="button-accept-invite"]').click();
+    const acceptResponse = await acceptResponsePromise;
+    expect(
+      acceptResponse.ok(),
+      `accept failed: ${acceptResponse.status()} ${await acceptResponse.text().catch(() => "")}`,
+    ).toBeTruthy();
     await expect(banner).toHaveCount(0, { timeout: 15_000 });
 
     // Server side: the ticket transitioned to `initiated`.

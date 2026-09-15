@@ -3926,7 +3926,15 @@
       "already_member": "That user is already on the Majik team."
     },
     "safety": {
-      "site_inactive": "This site is inactive due to a safety stop-work event."
+      "site_inactive": "This site is inactive due to a safety stop-work event.",
+      "unauthenticated": "Sign in to use safety response.",
+      "invalid_request": "The safety request is invalid.",
+      "response_not_found": "The safety response was not found.",
+      "owner_required": "An active company is required for safety response.",
+      "out_of_scope": "This safety incident is outside your active company.",
+      "not_found": "The safety incident was not found.",
+      "response_window_active": "The response window is still active.",
+      "close_forbidden": "You are not allowed to close this safety incident."
     },
     "work_type": {
       "duplicate_name": "A work type named \"{{name}}\" already exists.",
@@ -4564,6 +4572,39 @@
       "compliance_incomplete": "Compliance information is incomplete. Finish the required fields.",
       "empty_catalog": "Add at least one work type before publishing your catalog.",
       "publish_failed": "We couldn't publish your catalog. Please try again."
+    },
+    "asset": {
+      "invalid_request": "The asset request is invalid.",
+      "internal_error": "The asset request could not be completed."
+    },
+    "operations_display": {
+      "invalid_request": "The operations display request is invalid.",
+      "trusted_companion_required": "A trusted companion device is required."
+    },
+    "operations_health": {
+      "unauthenticated": "Sign in to view operations health.",
+      "admin_required": "Company administrator access is required.",
+      "owner_required": "An active company is required."
+    },
+    "account_invitation": {
+      "invalid_request": "The account invitation request is invalid.",
+      "internal_error": "The account invitation request could not be completed."
+    },
+    "managed_subcontractor": {
+      "invalid_request": "The managed subcontractor request is invalid.",
+      "internal_error": "The managed subcontractor request could not be completed."
+    },
+    "worker_subscription": {
+      "invalid_request": "The worker subscription request is invalid.",
+      "internal_error": "The worker subscription request could not be completed."
+    },
+    "trip": {
+      "invalid_request": "The trip request is invalid.",
+      "internal_error": "The trip request could not be completed."
+    },
+    "workforce": {
+      "invalid_request": "The workforce request is invalid.",
+      "internal_error": "The workforce request could not be completed."
     }
   },
   "fieldNav": {

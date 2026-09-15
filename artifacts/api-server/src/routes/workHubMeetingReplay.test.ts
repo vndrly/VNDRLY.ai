@@ -341,7 +341,7 @@ describe("meeting replay retrieval", () => {
   });
 
   it("reauthorizes and integrity-checks every audio download", async () => {
-    seedContext({ role: "participant", status: "ended", recordingState: "off" }); mocks.results.push([{ ...manifest, status: "finalized", durationMs: 5_000 }], [chunk]);
+    seedContext({ role: "participant", status: "ended", recordingState: "off" }); mocks.results.push([{ ...manifest, status: "finalized", durationMs: 5_000 }], [], [chunk]);
     mocks.getObject.mockResolvedValue({ contentType: chunk.contentType, body });
     const response = await request(app()).get(`/meetings/${occurrenceId}/replay/audio/${chunkId}`).set("x-replay-schema-version", "2").set("x-replay-renderer-version", "1");
     expect(response.status).toBe(200); expect(response.body).toEqual(body); expect(response.headers["cache-control"]).toBe("private, no-store");

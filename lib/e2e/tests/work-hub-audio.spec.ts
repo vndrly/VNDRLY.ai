@@ -41,6 +41,10 @@ test("two invited users exchange real internal audio while recording stays off",
       await setActiveMembership(pool, { userId: user.id, membershipId: membership.id });
       users.push({ ...user, username, label });
     }
+    await Promise.all(users.map(user => pool.query(
+      "INSERT INTO work_hub_meeting_participation_authorizations(user_id, policy_version, source) VALUES($1, 1, 'test_fixture') ON CONFLICT(user_id, policy_version) DO UPDATE SET revoked_at = NULL",
+      [user.id],
+    )));
     await pool.query("INSERT INTO platform_settings(id,work_hub_enabled) VALUES(1,true) ON CONFLICT(id) DO UPDATE SET work_hub_enabled=true");
     const contexts = await Promise.all(users.map(() => browser.newContext({ baseURL, permissions: ["microphone"] })));
     for (const context of contexts) await context.addInitScript(() => {
@@ -72,10 +76,12 @@ test("two invited users exchange real internal audio while recording stays off",
       await page.getByRole("button", { name: "Join audio", exact: true }).click();
       await page.getByRole("button", { name: "Unmute", exact: true }).click();
     }
-    for (const page of pages) await expect.poll(async () => {
-      const stats = await packets(page);
-      return stats.connected > 0 && stats.inbound > 10 && stats.outbound > 10;
-    }, { timeout: 35_000, message: "Both real peers must receive and send RTP audio" }).toBe(true);
+    for (const page of pages) {
+      await expect.poll(async () => {
+        const stats = await packets(page);
+        return stats.connected > 0 && stats.inbound > 10 && stats.outbound > 10;
+      }, { timeout: 35_000, message: "Both real peers must receive and send RTP audio" }).toBe(true);
+    }
     const stats = await Promise.all(pages.map(packets));
     writeFileSync(testInfo.outputPath("real-audio-packets.json"), JSON.stringify(stats, null, 2));
     for (const [index, page] of pages.entries()) {
