@@ -1672,7 +1672,6 @@
     "mute": "Silenciar",
     "unmute": "Activar voz",
     "acrossOn": "AskV en todo VNDRLY: Activado",
-    "acrossOff": "AskV en todo VNDRLY: Desactivado",
     "wakeUnavailable": "La activación por voz no está disponible aquí. Abre AskV para hablar.",
     "voiceFailed": "La voz no está disponible. Puedes seguir escribiendo o usar la grabación alternativa.",
     "naturalVoiceUnavailable": "Las conversaciones de voz no están disponibles para esta cuenta. Puedes escribir o mantener presionado el micrófono para grabar.",

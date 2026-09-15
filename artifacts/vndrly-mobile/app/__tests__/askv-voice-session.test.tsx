@@ -135,6 +135,46 @@ describe("mobile AskV session ownership", () => {
     expect(env.clients[0].connect).toHaveBeenCalledOnce();
   });
 
+  it("starts AskV across the app on Gate even when the old preference was off", async () => {
+    env.path = "/gate";
+    env.across = false;
+    const { result } = renderHook(useAskVVoiceSession, { wrapper });
+    await flush();
+    expect(result.current.acrossVndrly).toBe(true);
+    expect(env.across).toBe(true);
+    expect(env.clients).toHaveLength(1);
+    expect(env.clients[0].connect).toHaveBeenCalledOnce();
+  });
+
+  it("resumes the same app-wide assistant when unmuted from Gate", async () => {
+    env.path = "/gate";
+    env.muted = true;
+    env.across = true;
+    const { result } = renderHook(useAskVVoiceSession, { wrapper });
+    await flush();
+    expect(result.current.state).toBe("muted");
+    act(() => result.current.setMuted(false));
+    await flush();
+    expect(env.clients).toHaveLength(1);
+    expect(env.clients[0].connect).toHaveBeenCalledOnce();
+  });
+
+  it("resumes app-wide listening after returning to the foreground", async () => {
+    env.path = "/gate";
+    env.across = true;
+    const { result } = renderHook(useAskVVoiceSession, { wrapper });
+    await flush();
+    expect(env.clients).toHaveLength(1);
+    act(() => env.background());
+    await flush();
+    expect(env.clients[0].close).toHaveBeenCalledOnce();
+    act(() => env.active());
+    await flush();
+    expect(env.clients).toHaveLength(2);
+    expect(env.clients[1].connect).toHaveBeenCalledOnce();
+    expect(result.current.state).not.toBe("interrupted");
+  });
+
   it("coalesces simultaneous opens into one microphone and connection", async () => {
     const { result } = renderHook(useAskVVoiceSession, { wrapper });
     await flush();

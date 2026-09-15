@@ -35,6 +35,15 @@ const AskVVoiceSessionContext = createContext<AskVVoiceSessionValue | null>(null
 function scopeOf(user: StoredUser | null): string {
   return user ? [user.id, user.activeMembershipId, user.role, user.partnerId, user.vendorId].join(":") : "";
 }
+function isGlobalAskVSurface(path: string): boolean {
+  return !path.endsWith("/askv") && ![
+    "/login",
+    "/guest-login",
+    "/activate-account",
+    "/visitor-checkin",
+    "/location-consent",
+  ].some(publicPath => path.endsWith(publicPath));
+}
 function abortError() { return Object.assign(new Error("AskV voice stopped"), { name: "AbortError" }); }
 async function post(token: string, path: string, body: unknown, signal?: AbortSignal) {
   const response = await fetch(getApiBase() + "/api/assistant/" + path, {
@@ -508,7 +517,9 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
     if (next) { clientRef.current?.setMicEnabled(false); void disposeRef.current("muted"); }
     else {
       writeState("stopped");
-      if (pathRef.current.endsWith("/askv")) void startRef.current("unmute", pathRef.current);
+      if (acrossRef.current || pathRef.current.endsWith("/askv")) {
+        void startRef.current("unmute", pathRef.current);
+      }
     }
   }, [writeState]);
   const setAcrossVndrly = useCallback((enabled: boolean) => {
@@ -539,6 +550,15 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
     if (user?.id) void ensurePreferences(user.id);
     else { prefsRef.current = null; setPreferencesReady(false); }
   }, [user?.id, ensurePreferences]);
+  useEffect(() => {
+    if (!preferencesReady || !user?.id || !isGlobalAskVSurface(pathname)) return;
+    if (!acrossRef.current) {
+      acrossRef.current = true;
+      setAcross(true);
+      void writeAskVAcrossVndrly(user.id, true).catch(() => setError("askv.voicePreferencesFailed"));
+    }
+    if (!mutedRef.current) void startRef.current(undefined, pathname);
+  }, [pathname, preferencesReady, user?.id]);
   const priorScope = useRef(scope);
   useEffect(() => {
     if (priorScope.current === scope) return;
@@ -558,7 +578,12 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
       }
     });
     const subscription = subscribeAskVAppState(
-      () => { foregroundRef.current = true; },
+      () => {
+        foregroundRef.current = true;
+        if (userRef.current && acrossRef.current && !mutedRef.current) {
+          void startRef.current(undefined, pathRef.current);
+        }
+      },
       () => { foregroundRef.current = false; void disposeRef.current("interrupted"); },
     );
     return () => {

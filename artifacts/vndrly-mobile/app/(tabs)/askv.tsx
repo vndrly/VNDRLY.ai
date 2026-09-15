@@ -89,15 +89,18 @@ export default function AskVScreen() {
   const cancelRecordingRef = useRef(() => {});
   sessionRef.current = voiceSession;
   useFocusEffect(useCallback(() => {
-    if (voiceSession.preferencesReady && !sessionRef.current.muted) {
-      void voiceSession.startConversation("open AskV", "/askv");
+    if (voiceSession.preferencesReady) {
+      if (!sessionRef.current.acrossVndrly) voiceSession.setAcrossVndrly(true);
+      if (!sessionRef.current.muted) {
+        void voiceSession.startConversation("open AskV", "/askv");
+      }
     }
     return () => {
       stopAskVSpeech();
       cancelRecordingRef.current();
       if (!sessionRef.current.acrossVndrly) void sessionRef.current.stop();
     };
-  }, [voiceSession.preferencesReady, voiceSession.startConversation]));
+  }, [voiceSession.preferencesReady, voiceSession.setAcrossVndrly, voiceSession.startConversation]));
   const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollView>(null);
   const params = useLocalSearchParams<{ prompt?: string | string[] }>();
@@ -412,16 +415,9 @@ export default function AskVScreen() {
             {voiceStatusLabel}
           </Text>
         ) : null}
-        <Pressable
-          accessibilityRole="switch"
-          accessibilityState={{ checked: voiceSession.acrossVndrly }}
-          onPress={() => voiceSession.setAcrossVndrly(!voiceSession.acrossVndrly)}
-          testID="askv-across-vndrly"
-        >
-          <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
-            {t(voiceSession.acrossVndrly ? "askv.acrossOn" : "askv.acrossOff")}
-          </Text>
-        </Pressable>
+        <Text testID="askv-across-vndrly" style={[styles.subtitle, { color: colors.mutedForeground }]}>
+          {t("askv.acrossOn")}
+        </Text>
         {voiceSession.acrossVndrly && !voiceSession.wakeSupported ? (
           <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>{t("askv.wakeUnavailable")}</Text>
         ) : null}

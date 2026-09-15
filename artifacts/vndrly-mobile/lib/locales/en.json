@@ -1672,7 +1672,6 @@
     "mute": "Mute",
     "unmute": "Unmute",
     "acrossOn": "AskV across VNDRLY: On",
-    "acrossOff": "AskV across VNDRLY: Off",
     "wakeUnavailable": "Wake listening is unavailable here. Open AskV manually to talk.",
     "voiceFailed": "Voice is unavailable. You can keep typing or use the recording fallback.",
     "naturalVoiceUnavailable": "Voice conversations are unavailable for this account. You can still type or hold the microphone to record.",
