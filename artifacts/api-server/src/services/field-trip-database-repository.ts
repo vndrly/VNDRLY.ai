@@ -25,6 +25,10 @@ function mapTrip(row: typeof fieldTripsTable.$inferSelect): FieldTripRecord {
     startedAt: row.startedAt,
     pausedAt: row.pausedAt,
     completedAt: row.completedAt,
+    completionOperationId: row.completionOperationId,
+    completionReason: row.completionReason as FieldTripRecord["completionReason"],
+    completedByUserId: row.completedByUserId,
+    needsSupervisorConfirmation: row.needsSupervisorConfirmation,
     version: row.version,
   };
 }
@@ -77,6 +81,10 @@ export const databaseFieldTripRepository: FieldTripRepository = {
         finalVisitId: trip.finalVisitId,
         pausedAt: trip.pausedAt,
         completedAt: trip.completedAt,
+        completionOperationId: trip.completionOperationId,
+        completionReason: trip.completionReason,
+        completedByUserId: trip.completedByUserId,
+        needsSupervisorConfirmation: trip.needsSupervisorConfirmation,
         version: expectedVersion + 1,
         updatedAt: new Date(),
       }).where(and(eq(fieldTripsTable.id, trip.id), eq(fieldTripsTable.version, expectedVersion))).returning();

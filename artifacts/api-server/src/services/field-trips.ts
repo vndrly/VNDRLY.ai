@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { estimateMapboxDrivingRoute, type RouteEstimateResult } from "../lib/mapbox-routing";
 
 export type TripOwner = { type: "vendor" | "partner"; id: number };
+export type TripCompletionReason = "end_of_work" | "unattended_timeout" | "supervisor_confirmed";
 export type TripPoint = {
   latitude: number;
   longitude: number;
@@ -26,6 +27,10 @@ export type FieldTripRecord = {
   startedAt: Date;
   pausedAt: Date | null;
   completedAt: Date | null;
+  completionOperationId: string | null;
+  completionReason: TripCompletionReason | null;
+  completedByUserId: number | null;
+  needsSupervisorConfirmation: boolean;
   version: number;
 };
 
@@ -34,7 +39,7 @@ export class FieldTripError extends Error {
 }
 
 export interface FieldTripRepository {
-  create(input: Omit<FieldTripRecord, "id" | "version" | "startedAt" | "pausedAt" | "completedAt" | "lastReliablePoint" | "trackingState" | "presenceState" | "finalVisitId">): Promise<FieldTripRecord>;
+  create(input: Omit<FieldTripRecord, "id" | "version" | "startedAt" | "pausedAt" | "completedAt" | "completionOperationId" | "completionReason" | "completedByUserId" | "needsSupervisorConfirmation" | "lastReliablePoint" | "trackingState" | "presenceState" | "finalVisitId">): Promise<FieldTripRecord>;
   findByOperation(operationId: string): Promise<FieldTripRecord | null>;
   get(id: string): Promise<FieldTripRecord | null>;
   save(trip: FieldTripRecord, expectedVersion: number): Promise<FieldTripRecord | null>;
@@ -44,7 +49,7 @@ export function createMemoryFieldTripRepository(): FieldTripRepository {
   const trips = new Map<string, FieldTripRecord>();
   return {
     async create(input) {
-      const row: FieldTripRecord = { ...input, id: randomUUID(), version: 1, startedAt: new Date(), pausedAt: null, completedAt: null, lastReliablePoint: null, trackingState: "active", presenceState: "en_route", finalVisitId: null };
+      const row: FieldTripRecord = { ...input, id: randomUUID(), version: 1, startedAt: new Date(), pausedAt: null, completedAt: null, completionOperationId: null, completionReason: null, completedByUserId: null, needsSupervisorConfirmation: false, lastReliablePoint: null, trackingState: "active", presenceState: "en_route", finalVisitId: null };
       trips.set(row.id, row);
       return structuredClone(row);
     },
@@ -69,7 +74,7 @@ export function createFieldTripService(repository: FieldTripRepository, routeEst
     return trip;
   }
   return {
-    async startTrip(input: Omit<FieldTripRecord, "id" | "version" | "startedAt" | "pausedAt" | "completedAt" | "lastReliablePoint" | "trackingState" | "presenceState" | "finalVisitId">) {
+    async startTrip(input: Omit<FieldTripRecord, "id" | "version" | "startedAt" | "pausedAt" | "completedAt" | "completionOperationId" | "completionReason" | "completedByUserId" | "needsSupervisorConfirmation" | "lastReliablePoint" | "trackingState" | "presenceState" | "finalVisitId">) {
       const replay = await repository.findByOperation(input.operationId);
       return replay ?? repository.create(input);
     },
@@ -95,7 +100,23 @@ export function createFieldTripService(repository: FieldTripRepository, routeEst
       if (trip.version !== input.expectedVersion) throw new FieldTripError("trip.version_conflict");
       trip.presenceState = input.direction === "entry" ? "on_site" : "off_site";
       trip.finalVisitId = input.visitId;
-      if (input.direction === "exit") { trip.trackingState = "completed"; trip.completedAt = input.crossedAt; }
+      const saved = await repository.save(trip, input.expectedVersion);
+      if (!saved) throw new FieldTripError("trip.version_conflict");
+      return saved;
+    },
+    async completeTrip(input: { tripId: string; expectedVersion: number; operationId: string; actorUserId: number; actorMayComplete: boolean; reason: TripCompletionReason; needsSupervisorConfirmation: boolean; completedAt: Date }) {
+      const trip = await current(input.tripId);
+      if (trip.completionOperationId === input.operationId) return trip;
+      if (trip.version !== input.expectedVersion) throw new FieldTripError("trip.version_conflict");
+      if (trip.driverUserId !== input.actorUserId && !input.actorMayComplete) throw new FieldTripError("trip.completion_forbidden", 403);
+      if (trip.trackingState === "completed") throw new FieldTripError("trip.already_completed");
+      trip.trackingState = "completed";
+      trip.presenceState = "off_site";
+      trip.completedAt = input.completedAt;
+      trip.completionOperationId = input.operationId;
+      trip.completionReason = input.reason;
+      trip.completedByUserId = input.actorUserId;
+      trip.needsSupervisorConfirmation = input.needsSupervisorConfirmation;
       const saved = await repository.save(trip, input.expectedVersion);
       if (!saved) throw new FieldTripError("trip.version_conflict");
       return saved;

@@ -27,3 +27,11 @@ export const FinalizeAutomaticPresenceSchema = z.object({
   visitId: z.number().int().positive(),
   crossedAt: z.iso.datetime(),
 });
+
+export const CompleteFieldTripSchema = z.object({
+  operationId: z.string().uuid(),
+  expectedVersion: z.number().int().positive(),
+  reason: z.enum(["end_of_work", "unattended_timeout", "supervisor_confirmed"]),
+  needsSupervisorConfirmation: z.boolean().default(false),
+  completedAt: z.iso.datetime(),
+});

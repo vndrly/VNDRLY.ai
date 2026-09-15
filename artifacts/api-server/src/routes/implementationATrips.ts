@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from "express";
 import { and, desc, eq, isNull } from "drizzle-orm";
 import { z } from "zod/v4";
-import { StartFieldTripSchema, UpdateFieldTripLocationSchema } from "@workspace/api-zod";
+import { CompleteFieldTripSchema, StartFieldTripSchema, UpdateFieldTripLocationSchema } from "@workspace/api-zod";
 import {
   db,
   fieldTripCrossingsTable,
@@ -15,6 +15,7 @@ import {
 } from "@workspace/db";
 import { getSessionFromRequest } from "../lib/session";
 import { createFieldTripService, FieldTripError, type FieldTripRecord, type TripOwner } from "../services/field-trips";
+import { assertFieldTripAccess, authorizeFieldTripCompletion } from "../services/field-trip-access";
 import { databaseFieldTripRepository } from "../services/field-trip-database-repository";
 import { crossingDeduplicationKey, evaluateDirectionalCrossing } from "../services/geofence-crossings";
 
@@ -35,8 +36,12 @@ function actor(req: Request) {
 }
 
 function assertTripAccess(trip: FieldTripRecord, context: ReturnType<typeof actor>) {
-  if (context.session.role === "admin") return;
-  if (!context.owner || trip.owner.type !== context.owner.type || trip.owner.id !== context.owner.id) throw new FieldTripError("trip.not_found", 404);
+  assertFieldTripAccess(trip, {
+    userId: context.session.userId!,
+    owner: context.owner,
+    isAdmin: context.isAdmin,
+    vendorRole: context.session.vendorRole ?? null,
+  });
 }
 
 function sendError(res: Response, error: unknown) {
@@ -154,6 +159,29 @@ router.post("/implementation-a/trips/:tripId/pause", async (req, res) => {
     const tripId = IdSchema.parse(req.params.tripId);
     const input = z.object({ expectedVersion: z.number().int().positive() }).parse(req.body);
     return res.json(await service.pauseWorkTracking({ tripId, expectedVersion: input.expectedVersion, actorUserId: context.session.userId! }));
+  } catch (error) { return sendError(res, error); }
+});
+
+router.post("/implementation-a/trips/:tripId/complete", async (req, res) => {
+  try {
+    const context = actor(req);
+    const tripId = IdSchema.parse(req.params.tripId);
+    const trip = await databaseFieldTripRepository.get(tripId);
+    if (!trip) throw new FieldTripError("trip.not_found", 404);
+    const input = CompleteFieldTripSchema.parse(req.body);
+    const { actorMayComplete } = authorizeFieldTripCompletion(trip, {
+      userId: context.session.userId!,
+      owner: context.owner,
+      isAdmin: context.isAdmin,
+      vendorRole: context.session.vendorRole ?? null,
+    });
+    return res.json(await service.completeTrip({
+      tripId,
+      ...input,
+      completedAt: new Date(input.completedAt),
+      actorUserId: context.session.userId!,
+      actorMayComplete,
+    }));
   } catch (error) { return sendError(res, error); }
 });
 

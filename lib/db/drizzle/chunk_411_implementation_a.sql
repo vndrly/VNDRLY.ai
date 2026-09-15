@@ -545,3 +545,8 @@ CREATE TABLE IF NOT EXISTS "operations_display_outputs" (
   "updated_at" timestamptz NOT NULL DEFAULT now()
 );
 CREATE UNIQUE INDEX IF NOT EXISTS "operations_display_outputs_display_name_unique" ON "operations_display_outputs" ("display_id", "name");
+
+ALTER TABLE "field_trips" ADD COLUMN IF NOT EXISTS "completion_operation_id" uuid;
+ALTER TABLE "field_trips" ADD COLUMN IF NOT EXISTS "completion_reason" text;
+ALTER TABLE "field_trips" ADD COLUMN IF NOT EXISTS "completed_by_user_id" integer REFERENCES "users"("id");
+ALTER TABLE "field_trips" ADD COLUMN IF NOT EXISTS "needs_supervisor_confirmation" boolean NOT NULL DEFAULT false;
