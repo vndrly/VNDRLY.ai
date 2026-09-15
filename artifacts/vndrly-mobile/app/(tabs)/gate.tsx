@@ -50,6 +50,7 @@ import {
 } from "@/lib/gatekeeper";
 import { captureAndUploadImage } from "@/lib/photos";
 import { formatPlateForDisplay } from "@/lib/plate-display";
+import { createGateEventPoller } from "@/lib/gate-events";
 import {
   matchGateCheckoutVisits,
   parseGateVoiceCommand,
@@ -127,6 +128,7 @@ export default function GatekeeperScreen() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const qc = useQueryClient();
+  const gateEventPoller = useMemo(() => createGateEventPoller(), []);
   const appliedDefault = useRef(false);
   const voiceRecorderRef = useRef<PttRecorder | null>(null);
   const plateAutoFillRef = useRef<PlateAutoFillSnapshot | null>(null);
@@ -206,6 +208,16 @@ export default function GatekeeperScreen() {
     enabled: !!confirmedCode,
     retry: false,
   });
+  const selectedSiteId = ctxQuery.data?.site.id ?? null;
+  useEffect(() => {
+    if (!selectedSiteId) return;
+    return gateEventPoller.start(selectedSiteId, () => {
+      void Promise.all([
+        qc.invalidateQueries({ queryKey: ["gatekeeper-visits"] }),
+        qc.invalidateQueries({ queryKey: ["gatekeeper-recent-visits"] }),
+      ]);
+    });
+  }, [gateEventPoller, qc, selectedSiteId]);
   const preferredPlateStates = useQuery({
     queryKey: ["preferred-plate-states", ctxQuery.data?.site.id, confirmedCode],
     queryFn: () =>
@@ -311,7 +323,13 @@ export default function GatekeeperScreen() {
       plateAutoFillRef.current = null;
       setActiveNameField(null);
       if (command.intent === "check-out") {
-        const matches = matchGateCheckoutVisits(activeVisits.data ?? [], fill);
+        const matches = matchGateCheckoutVisits(
+          (activeVisits.data ?? []).filter(
+            (visit) =>
+              selectedSiteId == null || visit.siteLocationId === selectedSiteId,
+          ),
+          fill,
+        );
         setVoiceCheckInPending(false);
         setVoiceCheckoutMatches(matches);
         if (matches.length === 0 && voiceMountedRef.current) Alert.alert(t("visitor.error"), t("gatekeeper.voiceNoCheckoutMatch"));
@@ -459,10 +477,13 @@ export default function GatekeeperScreen() {
       : null,
   });
   const fenceCopy = formatFenceMilesSentence(fence);
-  const pendingVisits = (activeVisits.data ?? []).filter(
+  const selectedActiveVisits = (activeVisits.data ?? []).filter(
+    (visit) => selectedSiteId == null || visit.siteLocationId === selectedSiteId,
+  );
+  const pendingVisits = selectedActiveVisits.filter(
     (visit) => visit.admissionStatus === "pending",
   );
-  const onSiteVisits = (activeVisits.data ?? []).filter(
+  const onSiteVisits = selectedActiveVisits.filter(
     (visit) => visit.admissionStatus !== "pending",
   );
 
@@ -563,6 +584,10 @@ export default function GatekeeperScreen() {
     if (normalized.length < 3 || !plateState) return;
     const exactKey = plateMatchKey(plateState, vehiclePlate);
     const prior = [...(recentVisits.data ?? [])]
+      .filter(
+        (visit) =>
+          selectedSiteId == null || visit.siteLocationId === selectedSiteId,
+      )
       .filter((visit) => {
         if (
           (visit.vehiclePlate ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "") !==

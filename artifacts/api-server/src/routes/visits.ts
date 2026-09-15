@@ -37,7 +37,11 @@ import {
   subscribeVisitEvents,
   type PublishedVisitEvent,
 } from "../lib/visit-events";
-import { visitEventVisibleToSession } from "../lib/visit-event-visibility";
+import {
+  visitEventSiteId,
+  visitEventVisibleToSession,
+} from "../lib/visit-event-visibility";
+import { createScopedEventBuffer } from "../lib/scoped-event-buffer";
 import {
   assembleAssignedGateSites,
   pickDefaultAssignedSite,
@@ -338,6 +342,8 @@ async function requireGateReconciliationSession(req: any, res: any): Promise<Ses
 
 const gateAssetService = createAssetService(databaseAssetRepository);
 const router: IRouter = Router();
+const visitPollBuffer = createScopedEventBuffer<PublishedVisitEvent>(500);
+subscribeVisitEvents((event) => visitPollBuffer.push(event));
 
 // ---------- POST /api/auth/guest — create a guest session ----------
 router.post("/auth/guest", async (req, res): Promise<void> => {
@@ -1860,21 +1866,48 @@ router.get("/visits/events", async (req, res): Promise<void> => {
   // fallback does.
   if (!(await enforceVisitsRateLimit(req, res, session))) return;
 
-  let assignedSiteIds: Set<number> | null = null;
-  const refreshAssignedSites = async (): Promise<void> => {
-    if (!isGatekeeperSession(session) || !session.vendorId) return;
+  const loadAssignedSites = async (): Promise<Set<number> | null> => {
+    if (!isGatekeeperSession(session) || !session.vendorId) return null;
     const assignments = await db
       .select({ siteLocationId: siteWorkAssignmentsTable.siteLocationId })
       .from(siteWorkAssignmentsTable)
       .where(eq(siteWorkAssignmentsTable.vendorId, session.vendorId));
-    assignedSiteIds = new Set(assignments.map((row) => row.siteLocationId));
+    return new Set(assignments.map((row) => row.siteLocationId));
   };
-  if (isGatekeeperSession(session) && session.vendorId) {
-    await refreshAssignedSites();
-  }
+  let assignedSiteIds = await loadAssignedSites();
+  const refreshAssignedSites = async (): Promise<void> => {
+    assignedSiteIds = await loadAssignedSites();
+  };
 
   const visible = (ev: PublishedVisitEvent): boolean =>
     visitEventVisibleToSession(session, ev, assignedSiteIds);
+
+  if (req.query.transport === "poll") {
+    const afterRaw = Number(req.query.after ?? 0);
+    const after = Number.isFinite(afterRaw) && afterRaw >= 0 ? afterRaw : 0;
+    const requestedSiteRaw = req.query.siteLocationId == null ? null : Number(req.query.siteLocationId);
+    const requestedSiteId = requestedSiteRaw != null && Number.isInteger(requestedSiteRaw) && requestedSiteRaw > 0 ? requestedSiteRaw : null;
+    if (req.query.siteLocationId != null && requestedSiteId == null) {
+      res.status(400).json({ code: VISIT_INVALID_INPUT, message: "Invalid site location" });
+      return;
+    }
+    if (requestedSiteId != null && assignedSiteIds && !assignedSiteIds.has(requestedSiteId)) {
+      res.status(404).json({ code: SITE_NOT_FOUND, message: "Site not found" });
+      return;
+    }
+    const currentSeq = await getCurrentVisitEventSeq();
+    res.json(
+      visitPollBuffer.poll(
+        after,
+        currentSeq,
+        (event) =>
+          visible(event) &&
+          (requestedSiteId == null ||
+            visitEventSiteId(event) === requestedSiteId),
+      ),
+    );
+    return;
+  }
 
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache, no-transform");

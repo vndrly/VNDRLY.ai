@@ -574,6 +574,7 @@ describe("GatekeeperScreen", () => {
       },
       {
         id: 1,
+        siteLocationId: 42,
         firstName: "Exact",
         lastName: "Texas",
         company: "Peak Energy",
@@ -607,6 +608,7 @@ describe("GatekeeperScreen", () => {
     fetchGatekeeperRecentVisitsMock.mockResolvedValue([
       {
         id: 1,
+        siteLocationId: 42,
         firstName: "Oklahoma",
         lastName: "Visitor",
         company: "Sooner Services",
@@ -618,6 +620,7 @@ describe("GatekeeperScreen", () => {
       },
       {
         id: 2,
+        siteLocationId: 42,
         firstName: "Texas",
         lastName: "Driver",
         company: "Lone Star Services",
@@ -669,6 +672,7 @@ describe("GatekeeperScreen", () => {
     fetchGatekeeperRecentVisitsMock.mockResolvedValue([
       {
         id: 1,
+        siteLocationId: 42,
         firstName: "Oklahoma",
         lastName: "Visitor",
         company: "Sooner Services",
