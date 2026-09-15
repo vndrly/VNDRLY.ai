@@ -52,10 +52,13 @@ vi.mock("expo-av", () => ({
     Sound: { createAsync: mocks.createSound },
   },
 }));
-const defaults = (path: string) =>
-  path === "/api/work-hub/calls/settings"
-    ? { available: true, speedDial: [] }
-    : [];
+const defaults = (path: string) => {
+  if (path === "/api/work-hub/calls/settings")
+    return { available: true, speedDial: [] };
+  if (path.startsWith("/api/work-hub/events?transport=poll"))
+    return { gap: false, latestSequence: null, events: [] };
+  return [];
+};
 describe("mobile internal Calls", () => {
   afterEach(cleanup);
   beforeEach(() => {
