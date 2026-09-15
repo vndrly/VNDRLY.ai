@@ -4584,7 +4584,8 @@
     "operations_health": {
       "unauthenticated": "Sign in to view operations health.",
       "admin_required": "Company administrator access is required.",
-      "owner_required": "An active company is required."
+      "owner_required": "An active company is required.",
+      "invalid_event": "The operations event is invalid."
     },
     "account_invitation": {
       "invalid_request": "The account invitation request is invalid.",

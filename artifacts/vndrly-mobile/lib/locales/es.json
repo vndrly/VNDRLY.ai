@@ -1331,7 +1331,8 @@
     "operations_health": {
       "unauthenticated": "Inicia sesión para ver el estado de las operaciones.",
       "admin_required": "Se requiere acceso de administrador de la empresa.",
-      "owner_required": "Se requiere una empresa activa."
+      "owner_required": "Se requiere una empresa activa.",
+      "invalid_event": "El evento de operaciones no es válido."
     },
     "account_invitation": {
       "invalid_request": "La solicitud de invitación de cuenta no es válida.",
