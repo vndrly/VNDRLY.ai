@@ -93,6 +93,12 @@
     "errorHint": "Error: {{error}}"
   },
   "gatekeeper": {
+    "voiceNeedsDetail": "Un dato más",
+    "voiceRecovery": {
+      "name": "¿Cuál es el nombre completo del conductor?",
+      "plate": "No obtuve una placa completa. Dígala de nuevo, elija una placa reciente o use la cámara de placas.",
+      "plateState": "¿De qué estado es la placa? También puede usar la cámara de placas."
+    },
     "voiceEntry": "Voz",
     "voiceListening": "Escuchando los datos de entrada; vuelva a tocar el micrófono cuando termine.",
     "voiceTranscribing": "Procesando la entrada de voz…",

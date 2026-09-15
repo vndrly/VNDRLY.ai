@@ -1,8 +1,9 @@
 import React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+const voiceFeature = vi.hoisted(() => ({ enabled: false }));
 vi.mock("@/lib/askv-natural-voice", () => ({
-  isAskVNaturalVoiceEnabled: () => false,
+  isAskVNaturalVoiceEnabled: () => voiceFeature.enabled,
 }));
 
 vi.mock("@/hooks/useColors", () => ({
@@ -241,6 +242,7 @@ const FLYWHEEL_SITE = {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  voiceFeature.enabled = false;
   captureAndUploadImageMock.mockReset();
   readGatePlateMock.mockReset();
   fetchGatekeeperVisitsMock.mockResolvedValue([]);
@@ -255,7 +257,7 @@ beforeEach(() => {
     dispose: recorderDisposeMock,
   });
   transcribeAskVRecordingMock.mockResolvedValue(
-    "check in Bob Villa from NewCo plate ABC123 for equipment delivery",
+    "check in Bob Villa from NewCo state TX plate ABC123 for equipment delivery",
   );
   fetchAssignedGateSitesMock.mockResolvedValue({
     sites: [FLYWHEEL_SITE],
@@ -946,5 +948,18 @@ describe("GatekeeperScreen", () => {
     expect(payload.platePhotoUrl).toBe("/uploads/tag.jpg");
     expect(payload.vehiclePhotoUrl).toBe("/uploads/truck.jpg");
     expect(payload.firstName).toBe("Jordan");
+  });
+
+  it("leaves Gate push-to-talk disabled when the global Ask V voice owner is enabled", async () => {
+    voiceFeature.enabled = true;
+    fetchSiteContextMock.mockResolvedValue(SITE_CTX);
+    renderScreen();
+    await findFirstByTestId("gate-first-name");
+
+    requestGateVoiceEntry();
+    await Promise.resolve();
+
+    expect(createPttRecorderMock).not.toHaveBeenCalled();
+    expect(recorderStartMock).not.toHaveBeenCalled();
   });
 });

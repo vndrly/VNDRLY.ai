@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { matchGateCheckoutVisits, parseGateVoiceCommand, parseGateVoiceEntry } from "./gate-voice-entry";
+import {
+  matchGateCheckoutVisits,
+  parseGateVoiceCommand,
+  parseGateVoiceEntry,
+  recoverGateVoiceCommand,
+} from "./gate-voice-entry";
 
 describe("parseGateVoiceEntry", () => {
   it("extracts plate and driver from the minimum spoken command", () => {
@@ -133,5 +138,63 @@ describe("matchGateCheckoutVisits", () => {
   it("finds an active visit by full name or normalized plate", () => {
     expect(matchGateCheckoutVisits(visits, { firstName: "Bob", lastName: "Villa" }).map((visit) => visit.id)).toEqual([1]);
     expect(matchGateCheckoutVisits(visits, { vehiclePlate: "51d4a1" }).map((visit) => visit.id)).toEqual([1]);
+  });
+});
+
+describe("recoverGateVoiceCommand", () => {
+  const history = [
+    {
+      id: 9,
+      firstName: "Bob",
+      lastName: "Villa",
+      company: "Grady Farms",
+      vehiclePlate: "8TRK22",
+      plateState: "TX",
+      checkInTime: "2026-09-14T12:00:00Z",
+    },
+  ];
+
+  it("asks only for a missing full name", () => {
+    expect(
+      recoverGateVoiceCommand(
+        parseGateVoiceCommand("check in Texas, plate 8TRK22"),
+        history,
+      ),
+    ).toMatchObject({ ready: false, missing: ["name"], offerCamera: false });
+  });
+
+  it("offers the camera when a spoken plate is too short", () => {
+    expect(
+      recoverGateVoiceCommand(
+        parseGateVoiceCommand("check in Bob Villa plate 12 state Texas"),
+        history,
+      ),
+    ).toMatchObject({ ready: false, missing: ["plate"], offerCamera: true });
+  });
+
+  it("asks for jurisdiction when the plate has no state", () => {
+    expect(
+      recoverGateVoiceCommand(
+        parseGateVoiceCommand("check in Bob Villa plate 8TRK22"),
+        history,
+      ),
+    ).toMatchObject({
+      ready: false,
+      missing: ["plateState"],
+      offerCamera: true,
+    });
+  });
+
+  it("uses matching history to offer recent fleet plates without binding a driver to one truck", () => {
+    expect(
+      recoverGateVoiceCommand(
+        parseGateVoiceCommand("check in Bob Villa from Grady Farms"),
+        history,
+      ),
+    ).toMatchObject({
+      ready: false,
+      missing: ["plate"],
+      suggestedPlates: [{ vehiclePlate: "8TRK22", plateState: "TX" }],
+    });
   });
 });

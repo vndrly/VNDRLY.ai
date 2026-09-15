@@ -93,6 +93,12 @@
     "errorHint": "Error: {{error}}"
   },
   "gatekeeper": {
+    "voiceNeedsDetail": "One more detail",
+    "voiceRecovery": {
+      "name": "What is the driver's full name?",
+      "plate": "I did not get a complete plate. Say it again, choose a recent plate, or use the plate camera.",
+      "plateState": "What state is that plate from? You can also use the plate camera."
+    },
     "voiceEntry": "Voice",
     "voiceListening": "Listening for gate entry details — tap the microphone again when finished.",
     "voiceTranscribing": "Processing voice entry…",

@@ -54,6 +54,7 @@ import { createGateEventPoller } from "@/lib/gate-events";
 import {
   matchGateCheckoutVisits,
   parseGateVoiceCommand,
+  recoverGateVoiceCommand,
 } from "@/lib/gate-voice-entry";
 import {
   setGateVoiceListening,
@@ -335,6 +336,23 @@ export default function GatekeeperScreen() {
         if (matches.length === 0 && voiceMountedRef.current) Alert.alert(t("visitor.error"), t("gatekeeper.voiceNoCheckoutMatch"));
       } else {
         setVoiceCheckoutMatches([]);
+        const recovery = recoverGateVoiceCommand(
+          command,
+          (recentVisits.data ?? []).filter(
+            (visit) =>
+              selectedSiteId == null || visit.siteLocationId === selectedSiteId,
+          ),
+        );
+        if (!recovery.ready) {
+          setVoiceCheckInPending(false);
+          if (voiceMountedRef.current && recovery.prompt) {
+            Alert.alert(
+              t("gatekeeper.voiceNeedsDetail"),
+              t(`gatekeeper.voiceRecovery.${recovery.prompt}`),
+            );
+          }
+          return;
+        }
         setVoiceCheckInPending(true);
       }
     } catch (error) {

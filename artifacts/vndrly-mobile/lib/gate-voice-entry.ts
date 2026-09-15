@@ -27,9 +27,20 @@ export type GateCheckoutVisit = {
   checkInTime: string;
 };
 
+export type GateVoiceRecovery = {
+  ready: boolean;
+  missing: Array<"name" | "plate" | "plateState">;
+  prompt: "name" | "plate" | "plateState" | null;
+  offerCamera: boolean;
+  suggestedPlates: Array<{
+    vehiclePlate: string;
+    plateState: PlateStateCode | null;
+  }>;
+};
+
 const CHECK_OUT = /\b(?:check\s*out|checking\s*out)\b/i;
 const CHECK_IN = /\b(?:check\s*in|checking\s*in)\b/i;
-const FIELD_LABELS = "license plate|plate|tag|driver name|driver|name|company|from|with|truck|vehicle|purpose|reason|here for|for|here to|notes|note|remark|comment|duration|time|checking in|check in|checking out|check out";
+const FIELD_LABELS = "license plate|plate|tag|state|driver name|driver|name|company|from|with|truck|vehicle|purpose|reason|here for|for|here to|notes|note|remark|comment|duration|time|checking in|check in|checking out|check out";
 
 function valueAfter(text: string, labels: string[]): string | undefined {
   const label = labels.join("|");
@@ -90,6 +101,48 @@ export function parseGateVoiceCommand(transcript: string): GateVoiceCommand {
   const fill = parseGateVoiceEntry(transcript);
   if (!fill.firstName && !fill.lastName) applyName(fill, implicitDriver(transcript));
   return { intent, fill };
+}
+
+export function recoverGateVoiceCommand<T extends GateCheckoutVisit>(
+  command: GateVoiceCommand,
+  recentVisits: T[],
+): GateVoiceRecovery {
+  const { fill } = command;
+  const normalizedPlate = normalizePlate(fill.vehiclePlate);
+  const missing: GateVoiceRecovery["missing"] = [];
+  if (!fill.firstName?.trim() || !fill.lastName?.trim()) missing.push("name");
+  if (!normalizedPlate || normalizedPlate.length < 4) missing.push("plate");
+  else if (!normalizePlateState(fill.plateState)) missing.push("plateState");
+
+  const firstName = normalize(fill.firstName);
+  const lastName = normalize(fill.lastName);
+  const company = normalize(fill.company);
+  const seen = new Set<string>();
+  const suggestedPlates = [...recentVisits]
+    .filter(
+      (visit) =>
+        (!firstName || normalize(visit.firstName) === firstName) &&
+        (!lastName || normalize(visit.lastName) === lastName) &&
+        (!company || normalize(visit.company) === company),
+    )
+    .sort((a, b) => Date.parse(b.checkInTime) - Date.parse(a.checkInTime))
+    .flatMap((visit) => {
+      const vehiclePlate = normalizePlate(visit.vehiclePlate);
+      const plateState = normalizePlateState(visit.plateState);
+      const key = `${plateState ?? ""}:${vehiclePlate}`;
+      if (!vehiclePlate || seen.has(key)) return [];
+      seen.add(key);
+      return [{ vehiclePlate, plateState }];
+    })
+    .slice(0, 5);
+
+  return {
+    ready: missing.length === 0,
+    missing,
+    prompt: missing[0] ?? null,
+    offerCamera: missing.includes("plate") || missing.includes("plateState"),
+    suggestedPlates,
+  };
 }
 
 function normalize(value: string | null | undefined): string {

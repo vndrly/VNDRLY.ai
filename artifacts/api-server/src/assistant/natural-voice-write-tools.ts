@@ -25,6 +25,16 @@ function missingCheckInFields(args: Record<string, unknown>): string[] {
     missing.push("hostPartnerId");
   if (args.hostType === "vendor" && !positiveId(args.hostVendorId))
     missing.push("hostVendorId");
+  const vehiclePlate =
+    typeof args.vehiclePlate === "string"
+      ? args.vehiclePlate.toUpperCase().replace(/[^A-Z0-9]/g, "")
+      : "";
+  if (vehiclePlate.length < 4) missing.push("vehiclePlate");
+  else if (
+    typeof args.plateState !== "string" ||
+    !/^[A-Z]{2}$/.test(args.plateState.trim().toUpperCase())
+  )
+    missing.push("plateState");
   if (
     typeof args.latitude !== "number" ||
     !Number.isFinite(args.latitude) ||
@@ -123,11 +133,24 @@ function writeGuard(
 export async function prepareVisitorCheckIn(input: unknown): Promise<string> {
   const args = argsOf(input);
   const missing = missingCheckInFields(args);
+  const promptField = missing[0] ?? null;
   return JSON.stringify({
     ok: missing.length === 0,
     action: "prepare_visitor_check_in",
     missing,
     draft: args,
+    ...(promptField
+      ? {
+          recovery: {
+            kind: "input",
+            promptField,
+            offerCamera:
+              missing.includes("vehiclePlate") ||
+              missing.includes("plateState"),
+            reportSystemFailure: false,
+          },
+        }
+      : {}),
   });
 }
 export async function confirmVisitorCheckIn(

@@ -23,6 +23,8 @@ const fields = {
   siteLocationId: 9,
   hostType: "vendor",
   hostVendorId: 22,
+  vehiclePlate: "8TRK22",
+  plateState: "TX",
   latitude: 30,
   longitude: -100,
   confirmed: true,
@@ -86,10 +88,39 @@ describe("AskV canonical Gate and field operations", () => {
     );
     expect(incomplete.missing).toEqual([
       "hostVendorId",
+      "vehiclePlate",
       "latitude",
       "longitude",
     ]);
     expect(JSON.parse(await prepareVisitorCheckIn(fields)).ok).toBe(true);
+  });
+  it("recovers incomplete plate input without treating it as a system failure", async () => {
+    expect(
+      JSON.parse(
+        await prepareVisitorCheckIn({
+          ...fields,
+          vehiclePlate: "12",
+          plateState: undefined,
+        }),
+      ),
+    ).toMatchObject({
+      ok: false,
+      missing: ["vehiclePlate"],
+      recovery: {
+        kind: "input",
+        promptField: "vehiclePlate",
+        offerCamera: true,
+        reportSystemFailure: false,
+      },
+    });
+    expect(
+      JSON.parse(
+        await prepareVisitorCheckIn({ ...fields, plateState: undefined }),
+      ),
+    ).toMatchObject({
+      missing: ["plateState"],
+      recovery: { promptField: "plateState", offerCamera: true },
+    });
   });
   it("denies non-gatekeepers before any visitor write", async () => {
     expect(
