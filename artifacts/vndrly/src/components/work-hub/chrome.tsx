@@ -3,6 +3,7 @@ import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { workHubIcons } from "@/lib/work-hub-nav";
 import { CARD_TITLE_ICON_CLASS } from "@/components/ui/card";
+import PageBackButton from "@/components/page-back-button";
 
 export type WorkHubModuleKey = keyof typeof workHubIcons;
 type HubIcon = ComponentType<SVGProps<SVGSVGElement>>;
@@ -10,7 +11,7 @@ type HubIcon = ComponentType<SVGProps<SVGSVGElement>>;
 export const WORK_HUB_CARD_CLASS =
   "rounded-xl border-2 border-[color:var(--brand-primary)] bg-card shadow-sm";
 export const WORK_HUB_SUBCARD_CLASS =
-  "rounded-xl border-2 border-[color:var(--brand-primary)] bg-background";
+  "rounded-xl border-2 border-[color:var(--brand-primary)] bg-card";
 
 export function WorkHubSurface({ children }: { children: ReactNode }) {
   return (
@@ -27,6 +28,7 @@ export function WorkHubPageHeading({
   actions,
   compact = false,
   className,
+  backFallbackHref = "/work-hub",
 }: {
   module: WorkHubModuleKey;
   title: string;
@@ -34,11 +36,13 @@ export function WorkHubPageHeading({
   actions?: ReactNode;
   compact?: boolean;
   className?: string;
+  backFallbackHref?: string;
 }) {
   const Icon = workHubIcons[module];
   return (
     <header className={cn("flex flex-wrap items-center justify-between gap-3", className)}>
-      <div className="flex min-w-0 items-start gap-2">
+      <div className="flex min-w-0 items-center gap-2">
+        <PageBackButton fallbackHref={backFallbackHref} />
         <Icon
           aria-hidden="true"
           data-work-hub-heading-icon={module}
@@ -50,7 +54,7 @@ export function WorkHubPageHeading({
         <div className="min-w-0">
           <h1
             className={cn(
-              "font-bold leading-none text-[var(--brand-primary)]",
+              "font-bold leading-none text-black",
               compact ? "text-xl" : "text-2xl",
             )}
           >

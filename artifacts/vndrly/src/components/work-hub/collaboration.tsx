@@ -19,6 +19,7 @@ import {
   WORK_HUB_CARD_CLASS,
   WORK_HUB_SUBCARD_CLASS,
 } from "./chrome";
+import { ActivityDashboard } from "./activity-dashboard";
 
 type Row = Record<string, any>;
 export function displayMentionText(body: string, people: Row[]) {
@@ -93,6 +94,7 @@ export function ActivityWorkspace() {
   });
   const activity = useRows("/activity");
   const people = useRows("/people");
+  const channels = useRows("/channels");
   const [search, setSearch] = useState("");
   useEffect(() => {
     if (typeof EventSource === "undefined") return;
@@ -131,11 +133,10 @@ export function ActivityWorkspace() {
 
   return (
     <section aria-label="Activity workspace" data-testid="work-hub-activity" className="w-full space-y-5 bg-background p-4 md:p-6">
-      <WorkHubPageHeading module="activity" title="Activity" description="Recent conversations across your company and shared Crews." />
+      <WorkHubPageHeading module="activity" title="Activity" description="Recent conversations across your company and shared Crews." backFallbackHref="/" />
       <div data-testid="activity-primary-card" data-work-hub-card className={`w-full p-5 md:p-6 ${WORK_HUB_CARD_CLASS}`}>
         <HubError error={home.error ?? acknowledge.error} />
-        {!!timeSensitive.length && <section aria-label="Time-sensitive activity" className="mb-5 grid gap-3"><h2 className="text-lg font-semibold">Needs attention now</h2>{timeSensitive.map(announcementCard)}</section>}
-        {!!important.length && <section aria-label="Important activity" className="mb-5 grid gap-3"><h2 className="text-lg font-semibold">Important</h2>{important.map(announcementCard)}</section>}
+        <ActivityDashboard home={home.data} channels={channels.data} onAcknowledge={(id) => acknowledge.mutate(id)} acknowledging={acknowledge.isPending} />
         {!!stale.length && <section aria-label="Activity inactive for thirty days" className="mb-5 grid gap-3"><h2 className="text-lg font-semibold">No action for 30 days</h2>{stale.map((task: Row) => <a key={task.id} href={`/work-hub/tasks?task=${task.id}`} className={`${WORK_HUB_SUBCARD_CLASS} p-4 text-sm`}>{task.title}</a>)}</section>}
         <div className="mb-5 grid gap-5 lg:grid-cols-2">
           <section aria-label="Upcoming calendar" className={`${WORK_HUB_SUBCARD_CLASS} p-4`}><h2 className="font-semibold">Next on your calendar</h2>{calendar.length ? <ol className="mt-3 grid gap-2">{calendar.map((entry) => <li key={entry.id}><a href={entry.href} className="text-sm underline">{entry.title} · {new Date(entry.at).toLocaleString()}</a></li>)}</ol> : <p className="mt-2 text-sm text-muted-foreground">No upcoming items.</p>}</section>
@@ -146,7 +147,7 @@ export function ActivityWorkspace() {
         </div>
         <HubError error={activity.error} />
         {activity.isLoading && <p role="status">Loading activity…</p>}
-        <div data-work-hub-card className={`divide-y ${WORK_HUB_SUBCARD_CLASS}`}>
+        <div data-testid="activity-feed" className="divide-y rounded-xl border-2 border-border bg-card">
           {activity.data?.filter((x) => `${displayMentionText(x.body, people.data ?? [])} ${x.channelName}`.toLowerCase().includes(search.toLowerCase())).map((x) => (
             <a key={x.id} href={`/work-hub/channels?channel=${x.channelId}`} className="flex gap-4 p-5 hover:bg-muted">
               <MessageSquare className="mt-1 h-5 w-5 text-[var(--brand-primary)]" />
@@ -296,7 +297,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
     );
   return (
     <section className="w-full space-y-4 bg-background p-4" data-testid={chat ? "work-hub-chat" : "work-hub-channels"}>
-      <WorkHubPageHeading module={chat ? "chat" : "channels"} title={chat ? "Chat" : "Crews & Channels"} compact />
+      <WorkHubPageHeading module={chat ? "chat" : "channels"} title={chat ? "Direct Chat" : "Crews & Channels"} compact />
       <div className="grid min-h-[calc(100vh-12rem)] gap-4 lg:grid-cols-[minmax(340px,380px)_minmax(0,1fr)]">
       <aside
         aria-label="Conversations panel"
@@ -954,7 +955,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
             className={`flex min-h-96 w-full flex-col items-center justify-center gap-3 text-center text-muted-foreground ${WORK_HUB_CARD_CLASS}`}
           >
             <MessageSquare className="h-10 w-10 text-[var(--brand-primary)]" />
-            <h2 className="text-lg font-bold text-[var(--brand-primary)]">Choose a conversation</h2>
+            <h2 className="text-lg font-bold text-black">Choose a conversation</h2>
             <p className="text-sm">
               Your company conversations and shared work live here.
             </p>

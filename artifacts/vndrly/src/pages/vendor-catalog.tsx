@@ -451,7 +451,7 @@ export default function VendorCatalog() {
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t("vendorCatalog.searchPlaceholder")}
               aria-label={t("vendorCatalog.searchPlaceholder")}
-              className="sm:flex-1"
+              className="rounded-full border-2 border-[color:var(--brand-primary)] bg-white sm:flex-1 focus-visible:ring-[color:var(--brand-primary)]"
               data-testid="input-search-work-types"
             />
             <Select
@@ -460,7 +460,7 @@ export default function VendorCatalog() {
               disabled={(partnersData?.partners.length ?? 0) === 0}
             >
               <SelectTrigger
-                className="sm:w-[220px]"
+                className="rounded-full border-2 border-[color:var(--brand-primary)] bg-white sm:w-[220px] focus:ring-[color:var(--brand-primary)]"
                 aria-label={t("vendorCatalog.partnerFilterLabel")}
                 data-testid="select-partner-filter"
               >

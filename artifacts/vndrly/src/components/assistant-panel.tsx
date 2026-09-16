@@ -329,6 +329,14 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
   } = sharedAssistant ?? legacyAssistant;
   const send = sharedAssistant ? voiceSession.sendText : legacySend;
   const [input, setInput] = useState("");
+  useEffect(() => {
+    if (!open || tokenMode || signupMode) return;
+    const prefill = window.sessionStorage.getItem("vndrly.askv.prefill");
+    if (!prefill) return;
+    window.sessionStorage.removeItem("vndrly.askv.prefill");
+    setInput(prefill);
+  }, [open, tokenMode, signupMode]);
+
   const [feedbackPendingId, setFeedbackPendingId] = useState<number | null>(null);
   const [assistantShare, setAssistantShare] = useState<AssistantShareContext | null>(null);
   const [progress, setProgress] = useState<OnboardingProgress | null>(null);
@@ -901,6 +909,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
             </DialogDescription>
           </div>
           <div className="flex items-center gap-1">
+            {embedded && !tokenMode && !signupMode && askVUserId != null && <AskVStatusIndicator />}
             {/* Pre-auth EN/ES toggle, only visible on the public
                 signup pages. Visitors have no saved language
                 ireference yet, so we let them flii explicitly when

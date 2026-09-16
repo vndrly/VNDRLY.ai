@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CARD_INNER_TILE_HOVER_CLASS, 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AlertTriangle, BatteryLow, Clock, Gauge, MapPin, Navigation, RefreshCw, Shield, UserCheck } from "lucide-react";
+import { AlertTriangle, BatteryLow, Clock, Gauge, MapPin, Navigation, RefreshCw, Shield, Sparkles, UserCheck } from "lucide-react";
 import { visitsApi, type VisitorRow } from "@/lib/visits-api";
 import { useListSiteLocations, getListSiteLocationsQueryKey } from "@workspace/api-client-react";
 import LiveConnectionPill, { type LiveConnectionStatus } from "@/components/live-connection-pill";
@@ -916,19 +916,6 @@ export default function CrewMapPage({ portalMode = "default" }: CrewMapPageProps
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Select value={siteFilter} onValueChange={setSiteFilter}>
-            <SelectTrigger className="w-[200px]" data-testid="select-site-filter">
-              <SelectValue placeholder={t("crewMap.allSites")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all" data-testid="option-site-all">{t("crewMap.allSites")}</SelectItem>
-              {(sites ?? []).map((s) => (
-                <SelectItem key={s.id} value={String(s.id)} data-testid={`option-site-${s.id}`}>
-                  {s.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
           <PngPillButton
             color="blue"
             onClick={fetchLocations}
@@ -943,7 +930,7 @@ export default function CrewMapPage({ portalMode = "default" }: CrewMapPageProps
 
       <div className="flex flex-wrap items-center gap-4 text-sm">
         <Select value={employeeFilter} onValueChange={setEmployeeFilter}>
-          <SelectTrigger className="w-full sm:w-[220px]" aria-label={t("crewMap.employeeFilter")}>
+          <SelectTrigger className="w-full rounded-full border-2 bg-white shadow-sm focus:ring-[var(--brand-primary)] sm:w-[220px]" style={{ borderColor: "var(--brand-primary)" }} aria-label={t("crewMap.employeeFilter")}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -954,7 +941,7 @@ export default function CrewMapPage({ portalMode = "default" }: CrewMapPageProps
           </SelectContent>
         </Select>
         <Select value={activityFilter} onValueChange={setActivityFilter}>
-          <SelectTrigger className="w-full sm:w-[180px]" aria-label={t("crewMap.activityFilter")}>
+          <SelectTrigger className="w-full rounded-full border-2 bg-white shadow-sm focus:ring-[var(--brand-primary)] sm:w-[180px]" style={{ borderColor: "var(--brand-primary)" }} aria-label={t("crewMap.activityFilter")}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -965,13 +952,25 @@ export default function CrewMapPage({ portalMode = "default" }: CrewMapPageProps
           </SelectContent>
         </Select>
         {!isForemanPortal && <label className="inline-flex items-center gap-2 cursor-pointer">
-          <Checkbox checked={showVisitors} onCheckedChange={(value) => setShowVisitors(value === true)} />
+        <Select value={siteFilter} onValueChange={setSiteFilter}>
+          <SelectTrigger className="w-full rounded-full border-2 bg-white shadow-sm focus:ring-[var(--brand-primary)] sm:w-[200px]" style={{ borderColor: "var(--brand-primary)" }} data-testid="select-site-filter">
+            <SelectValue placeholder={t("crewMap.allSites")} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all" data-testid="option-site-all">{t("crewMap.allSites")}</SelectItem>
+            {(sites ?? []).map((s) => (
+              <SelectItem key={s.id} value={String(s.id)} data-testid={`option-site-${s.id}`}>{s.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+          <Checkbox className="border-[var(--brand-primary)] data-[state=checked]:bg-[var(--brand-primary)] data-[state=checked]:text-white" checked={showVisitors} onCheckedChange={(value) => setShowVisitors(value === true)} />
           {t("crewMap.showVisitors")}
         </label>}
         <label className="inline-flex items-center gap-2 cursor-pointer">
           <Checkbox
             checked={problemFilterOnly}
             onCheckedChange={(v) => setProblemFilterOnly(v === true)}
+            className="border-[var(--brand-primary)] data-[state=checked]:bg-[var(--brand-primary)] data-[state=checked]:text-white"
             data-testid="checkbox-problem-filter"
           />
           {t("crewMap.problemFilter", "Needs attention only")}
@@ -980,6 +979,7 @@ export default function CrewMapPage({ portalMode = "default" }: CrewMapPageProps
           <Checkbox
             checked={showGeofences}
             onCheckedChange={(v) => setShowGeofences(v === true)}
+            className="border-[var(--brand-primary)] data-[state=checked]:bg-[var(--brand-primary)] data-[state=checked]:text-white"
             data-testid="checkbox-show-geofences"
           />
           {t("crewMap.showGeofences", "Show site geofences")}
@@ -1112,6 +1112,29 @@ export default function CrewMapPage({ portalMode = "default" }: CrewMapPageProps
           {employeeFilter !== "all" && displayedLocations[0] && <CrewInspector point={displayedLocations[0]} scope={`${user?.userId}:${user?.role}:${user?.vendorId}:${user?.partnerId}`} />}
         </div>
 
+          {!isForemanPortal && (
+            <Card className="mt-4 border-2 bg-white" style={{ borderColor: "var(--brand-primary)" }} data-testid="crew-map-askv-guidance">
+              <CardContent className="p-4">
+                <div className="mb-3 flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-[var(--brand-primary)]" />
+                  <div>
+                    <p className="font-semibold text-foreground">Ask V about this map</p>
+                    <p className="text-xs text-muted-foreground">Try a question with your current crew, site, and activity filters.</p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {["Who needs attention right now?", "Where are today’s coverage gaps?", "Which crews are late to a site?", "Summarize activity on this map."].map((prompt) => (
+                    <Link key={prompt} href="/work-hub/askv"
+                      className="rounded-full border-2 bg-white px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted"
+                      style={{ borderColor: "var(--brand-primary)" }}
+                      onClick={() => window.sessionStorage.setItem("vndrly.askv.prefill", `${prompt} Use the Crew Map context and my current permissions.`)}>
+                      {prompt}
+                    </Link>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         <div>
           <Card>
             <CardHeader className="pb-2">

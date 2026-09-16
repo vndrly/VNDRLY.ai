@@ -63,8 +63,8 @@ describe("Work Hub conversations", () => {
     await screen.findByText("Original message");
     const panel = screen.getByRole("complementary", { name: "Conversations panel" });
     expect(panel.parentElement?.className).toContain("minmax(340px,380px)");
-    const chatHeading = screen.getByRole("heading", { name: "Chat" });
-    expect(chatHeading.className).toContain("text-[var(--brand-primary)]");
+    const chatHeading = screen.getByRole("heading", { name: "Direct Chat" });
+    expect(chatHeading.className).toContain("text-black");
     expect(panel.contains(chatHeading)).toBe(false);
     expect(chatHeading.closest("header")?.querySelector("svg")?.getAttribute("class")).not.toContain("shadow");
     expect(screen.getByLabelText("Find conversations").className).toContain("border-[color:var(--brand-primary)]");
@@ -72,6 +72,23 @@ describe("Work Hub conversations", () => {
     expect(screen.getByLabelText("Conversation filter").className).toContain("bg-white");
     expect(screen.getByLabelText("Conversation filter").className).toContain("text-sm");
     expect(screen.getByLabelText("Conversation filter").parentElement?.className).toContain("relative");
+  });
+  it.each([
+    ["Direct Chat", true, "/chats"],
+    ["Crews & Channels", false, "/channels"],
+  ])("keeps the %s empty-state icon branded and its heading black", async (_label, chat, emptyPath) => {
+    mocks.request.mockImplementation(async (path: string) => {
+      if (path === emptyPath || path === "/crews") return [];
+      return [];
+    });
+
+    mount(chat);
+
+    const heading = await screen.findByRole("heading", { name: "Choose a conversation" });
+    const emptyState = heading.closest("section");
+    expect(heading.className).toContain("text-black");
+    expect(heading.className).not.toContain("text-[var(--brand-primary)]");
+    expect(emptyState?.querySelector("svg")?.getAttribute("class")).toContain("text-[var(--brand-primary)]");
   });
   it("retries an interrupted send with the original operation ID", async () => {
     const original = mocks.request.getMockImplementation()!;
@@ -180,6 +197,18 @@ describe("Work Hub activity chrome", () => {
     expect(search.className).toContain("border-[color:var(--brand-primary)]");
     expect(search.className).toContain("bg-white");
     expect(screen.getByRole("search", { name: "Search activity" }).hasAttribute("data-work-hub-card")).toBe(false);
+
+    const calendar = screen.getByRole("region", { name: "Upcoming calendar" });
+    const review = screen.getByRole("region", { name: "Documents needing review" });
+    expect(calendar.className).toContain("bg-card");
+    expect(calendar.className).not.toContain("bg-background");
+    expect(review.className).toContain("bg-card");
+    expect(review.className).not.toContain("bg-background");
+
+    const feed = screen.getByTestId("activity-feed");
+    expect(feed.className).toContain("border-2");
+    expect(feed.className).toContain("border-border");
+    expect(feed.hasAttribute("data-work-hub-card")).toBe(false);
   });
 });
 

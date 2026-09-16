@@ -12,8 +12,8 @@ function dayKey(iso: string): string {
   return iso.slice(0, 10);
 }
 
-function hourUtc(iso: string): number {
-  return new Date(iso).getUTCHours();
+function hourLocal(iso: string): number {
+  return new Date(iso).getHours();
 }
 
 export type GateOpsAnalytics = {
@@ -67,7 +67,7 @@ export function buildGateOpsAnalytics(visits: VisitorRow[], now: Date): GateOpsA
     dayRow.checkIns += 1;
     if (!visit.checkOutTime && visit.admissionStatus !== "pending") dayRow.stillOnSite += 1;
     byDay.set(day, dayRow);
-    const hour = hourUtc(visit.checkInTime);
+    const hour = hourLocal(visit.checkInTime);
     byHour.set(hour, (byHour.get(hour) ?? 0) + 1);
     const siteName = visit.siteName || "Unknown site";
     const siteRow = bySite.get(siteName) ?? { count: 0, dwell: 0 };

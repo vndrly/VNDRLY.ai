@@ -22,6 +22,14 @@ export function contrastRatio(a: { r: number; g: number; b: number }, b: { r: nu
   return (hi + 0.05) / (lo + 0.05);
 }
 
+export function brandTextColor(color: string): "#000000" | "#ffffff" {
+  const rgb = hexToRgb(color);
+  if (!rgb) return "#000000";
+  const black = contrastRatio(rgb, { r: 0, g: 0, b: 0 });
+  const white = contrastRatio(rgb, { r: 255, g: 255, b: 255 });
+  return black >= white ? "#000000" : "#ffffff";
+}
+
 export function getContrastWarning(color: string): string | null {
   const rgb = hexToRgb(color);
   if (!rgb) return null;

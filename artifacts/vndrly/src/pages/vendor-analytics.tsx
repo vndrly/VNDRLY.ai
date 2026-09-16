@@ -21,7 +21,7 @@ import type { VendorAnalytics } from "@workspace/api-client-react";
 import { DollarSign, FileText, CheckCircle2, AlertTriangle, Shield, TrendingUp, Users, MapPin, BarChart3 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Link, useLocation } from "wouter";
-import SphereBackButton from "@/components/sphere-back-button";
+import PageBackButton from "@/components/page-back-button";
 import { useAuth } from "@/hooks/use-auth";
 import { useBrand } from "@/hooks/use-brand";
 import { VerticalPillBarShape } from "@/components/vertical-pill-bar-shape";
@@ -169,7 +169,7 @@ export default function VendorAnalytics({ vendorId }: { vendorId: number }) {
   return (
     <div className="space-y-6" data-testid="vendor-analytics-page">
       <div className="flex items-center gap-4">
-        {!isOwnVendor && <Link href={`/vendors/${vendorId}`} className="group inline-flex items-center" aria-label="Back"><SphereBackButton size={40} /></Link>}
+        <PageBackButton fallbackHref={isOwnVendor ? "/" : `/vendors/${vendorId}`} />
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t("vendorAnalytics.titleFor", { name: vendor?.name || t("vendorAnalytics.vendorFallback") })}</h1>
           <p className="text-muted-foreground text-sm mt-1">{t("vendorAnalytics.subtitle")}</p>

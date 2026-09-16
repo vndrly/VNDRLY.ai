@@ -607,12 +607,13 @@ export default function SiteLocations() {
               placeholder={t("siteLocations.searchPlaceholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 w-[260px]"
+              className="w-[260px] rounded-full border-2 bg-white pl-9 shadow-sm focus-visible:ring-[var(--brand-primary)]"
+              style={{ borderColor: "var(--brand-primary)" }}
             />
           </div>
           {!isPartner && availablePartners.length > 1 && (
             <Select value={partnerFilter} onValueChange={setPartnerFilter}>
-              <SelectTrigger className="w-[200px]" data-testid="select-filter-partner">
+              <SelectTrigger className="w-[200px] rounded-full border-2 bg-white shadow-sm focus:ring-[var(--brand-primary)]" style={{ borderColor: "var(--brand-primary)" }} data-testid="select-filter-partner">
                 <SelectValue placeholder={t("siteLocations.filterPartnerPlaceholder")} />
               </SelectTrigger>
               <SelectContent>
@@ -624,7 +625,7 @@ export default function SiteLocations() {
             </Select>
           )}
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[180px]" data-testid="select-filter-status">
+            <SelectTrigger className="w-[180px] rounded-full border-2 bg-white shadow-sm focus:ring-[var(--brand-primary)]" style={{ borderColor: "var(--brand-primary)" }} data-testid="select-filter-status">
               <SelectValue placeholder={t("siteLocations.filterStatusPlaceholder")} />
             </SelectTrigger>
             <SelectContent>

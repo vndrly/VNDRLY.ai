@@ -234,6 +234,8 @@ router.get(
       .select({
         partnerId: partnerVendorRelationshipsTable.partnerId,
         partnerName: partnersTable.name,
+        partnerLogoUrl: partnersTable.logoUrl,
+        partnerLogoSquareUrl: partnersTable.logoSquareUrl,
         status: partnerVendorRelationshipsTable.status,
         // Relationship notes are authored by the partner, not the vendor.
         notes: session.role === "admin" ? partnerVendorRelationshipsTable.notes : sql<string | null>`NULL`,

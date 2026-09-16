@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { PngPillButton } from "@/components/png-pill-rollover";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -246,7 +247,7 @@ export function AccountingExportHub({
             }
           >
             <SelectTrigger
-              className="w-44"
+              className="w-44 rounded-full border-2 bg-white"
               data-testid="select-accounting-export-period"
             >
               <SelectValue />
@@ -267,7 +268,7 @@ export function AccountingExportHub({
                 onChange={(e) =>
                   setPeriod({ ...period, customStart: e.target.value })
                 }
-                className="w-40"
+                className="w-40 rounded-full border-2 bg-white"
                 data-testid="input-accounting-export-start"
                 aria-label={t("reports.preset.from")}
               />
@@ -278,7 +279,7 @@ export function AccountingExportHub({
                 onChange={(e) =>
                   setPeriod({ ...period, customEnd: e.target.value })
                 }
-                className="w-40"
+                className="w-40 rounded-full border-2 bg-white"
                 data-testid="input-accounting-export-end"
                 aria-label={t("reports.preset.to")}
               />
@@ -295,40 +296,13 @@ export function AccountingExportHub({
           </p>
         )}
         {summary && !summaryLoading && (
-          <div
-            className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm"
-            data-testid="accounting-export-summary-chips"
-          >
-            <SummaryChip
-              icon={Receipt}
-              label={t("reports.accountingExport.chip.invoices")}
-              value={String(summary.invoiceCount)}
-              iconStyle={iconStyle}
-            />
-            <SummaryChip
-              icon={Clock}
-              label={t("reports.accountingExport.chip.hours")}
-              value={formatHours(summary.laborHours)}
-              iconStyle={iconStyle}
-            />
-            <SummaryChip
-              icon={Wrench}
-              label={t("reports.accountingExport.chip.parts")}
-              value={formatMoney(summary.partsAmount)}
-              iconStyle={iconStyle}
-            />
-            <SummaryChip
-              icon={FileSpreadsheet}
-              label={t("reports.accountingExport.chip.tax")}
-              value={formatMoney(summary.taxTotal)}
-              iconStyle={iconStyle}
-            />
-            <SummaryChip
-              icon={Receipt}
-              label={t("reports.accountingExport.chip.total")}
-              value={formatMoney(summary.totalAmount)}
-              iconStyle={iconStyle}
-            />
+          <div className="grid grid-cols-2 gap-3 text-sm md:grid-cols-3 xl:grid-cols-6" data-testid="accounting-export-summary-chips">
+            <SummaryChip icon={Receipt} label={t("reports.accountingExport.chip.invoices")} value={String(summary.invoiceCount)} detail={`${summary.lineCount} line items in the selected period.`} iconStyle={iconStyle} />
+            <SummaryChip icon={Wrench} label="Labor" value={formatMoney(summary.laborAmount)} detail={`${formatHours(summary.laborHours)} approved labor hours.`} iconStyle={iconStyle} />
+            <SummaryChip icon={Clock} label={t("reports.accountingExport.chip.hours")} value={formatHours(summary.laborHours)} detail={`${formatMoney(summary.laborAmount)} labor value in the selected period.`} iconStyle={iconStyle} />
+            <SummaryChip icon={Package} label={t("reports.accountingExport.chip.parts")} value={formatMoney(summary.partsAmount)} detail="Parts and equipment charges in the selected period." iconStyle={iconStyle} />
+            <SummaryChip icon={FileSpreadsheet} label={t("reports.accountingExport.chip.tax")} value={formatMoney(summary.taxTotal)} detail="Tax across the selected invoice records." iconStyle={iconStyle} />
+            <SummaryChip icon={Receipt} label={t("reports.accountingExport.chip.total")} value={formatMoney(summary.totalAmount)} detail={`${summary.invoiceCount} invoices included.`} iconStyle={iconStyle} />
           </div>
         )}
 
@@ -403,16 +377,30 @@ function SummaryChip(props: {
   icon: typeof Receipt;
   label: string;
   value: string;
+  detail: string;
   iconStyle: { color: string };
 }): ReactElement {
   const Icon = props.icon;
   return (
-    <div className="rounded-md border px-3 py-2">
-      <div className="flex items-center gap-1.5 text-muted-foreground">
-        <Icon className={CARD_ICON_CLASS} style={props.iconStyle} />
-        <span>{props.label}</span>
-      </div>
-      <div className="font-semibold tabular-nums mt-0.5">{props.value}</div>
-    </div>
+    <Dialog>
+      <DialogTrigger asChild>
+        <button type="button" className="rounded-xl border-2 bg-white px-3 py-2 text-left transition-shadow hover:shadow-md" style={{ borderColor: "var(--brand-primary)" }}>
+          <div className="flex items-center gap-1.5 text-muted-foreground">
+            <Icon className={CARD_ICON_CLASS} style={props.iconStyle} />
+            <span>{props.label}</span>
+          </div>
+          <div className="mt-0.5 font-semibold tabular-nums text-foreground">{props.value}</div>
+        </button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{props.label}</DialogTitle>
+          <DialogDescription>{props.detail}</DialogDescription>
+        </DialogHeader>
+        <div className="rounded-xl border-2 bg-white p-4 text-2xl font-bold tabular-nums" style={{ borderColor: "var(--brand-primary)" }}>
+          {props.value}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -31,6 +31,7 @@ import BulkLoginUploadDialog from "@/components/bulk-login-upload-dialog";
 import EmployeePortalLoginFields from "@/components/employee-portal-login-fields";
 import CertificationsSection from "@/components/certifications-section";
 import ContentPaneBackLink from "@/components/content-pane-back-link";
+import ManagedSubcontractorEmployeesCard from "@/components/managed-subcontractor-employees-card";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -737,22 +738,23 @@ export default function FieldEmployees() {
             </CardContent>
           </Card>
 
-          <Card data-testid="gate-employees-section">
-            <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2">
-              <CardTitle className="flex items-center gap-2"><UserCheck className="w-5 h-5" style={iconStyle} />{t("fieldEmployees.gateEmployees")} ({sortedGate.length})</CardTitle>
-              {isVendor && <PngPillButton color="image" activeSrc={brandImagePillSrc(brand.primary, brand.name)} onClick={() => { setForm((value) => ({ ...value, vendorRole: "gatekeeper" })); setAddOpen(true); }} aria-label={t("fieldEmployees.addGateEmployee")}>
-                <Plus className="h-4 w-4" />{t("fieldEmployees.addGateEmployee")}
-              </PngPillButton>}
-            </CardHeader>
-            <CardContent className="p-0">
-              {isLoadingOffice || isLoadingField ? <div className="p-6"><Skeleton className="h-10 w-full" /></div> : sortedGate.length ? (
-                <Table>
-                  {renderHeader(officeCols, gateSort, setGateSort)}
-                  <TableBody>{sortedGate.map((person) => renderRow(person, "gate"))}</TableBody>
-                </Table>
-              ) : <div className="p-6 text-center text-muted-foreground text-sm">{t("fieldEmployees.noGateEmployees")}</div>}
-            </CardContent>
-          </Card>
+          {isVendorAdmin && vendorId ? (
+            <ManagedSubcontractorEmployeesCard vendorId={vendorId} />
+          ) : (
+            <Card data-testid="gate-employees-section">
+              <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2">
+                <CardTitle className="flex items-center gap-2"><UserCheck className="w-5 h-5" style={iconStyle} />{t("fieldEmployees.gateEmployees")} ({sortedGate.length})</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                {isLoadingOffice || isLoadingField ? <div className="p-6"><Skeleton className="h-10 w-full" /></div> : sortedGate.length ? (
+                  <Table>
+                    {renderHeader(officeCols, gateSort, setGateSort)}
+                    <TableBody>{sortedGate.map((person) => renderRow(person, "gate"))}</TableBody>
+                  </Table>
+                ) : <div className="p-6 text-center text-muted-foreground text-sm">{t("fieldEmployees.noGateEmployees")}</div>}
+              </CardContent>
+            </Card>
+          )}
 
           {isAdmin && (
             <Card data-testid="removed-employees-section">

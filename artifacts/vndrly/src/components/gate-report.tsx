@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { PngPillButton as TogglePillButton } from "@/components/png-pill-rollover";
 import { loadGateReport, type GateReportResult } from "@/lib/gate-report-api";
 import { printGateReport } from "@/lib/gate-report-print";
+import GateBillingInvoiceCard from "@/components/gate-billing-invoice-card";
 
 function localDate(offset: number) {
   const date = new Date(); date.setDate(date.getDate() + offset);
@@ -53,18 +54,22 @@ function ScopedGateReport() {
       if (!request.signal.aborted) setError(failure instanceof Error ? failure.message : label("error"));
     } finally { if (!request.signal.aborted) setBusy(false); }
   }
+  const controlClass = "h-10 w-full rounded-full border-2 border-[color:var(--brand-primary)] bg-white px-3 focus-visible:ring-[color:var(--brand-primary)]";
   return <section className="space-y-4" data-testid="gate-report">
+    <div data-testid="gate-report-controls" className="rounded-xl border-2 border-[color:var(--brand-primary)] bg-card p-4 shadow-sm">
     <form onSubmit={run} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 print:hidden">
-      <div><Label htmlFor="gate-report-from">{label("from")}</Label><Input id="gate-report-from" type="date" required value={from} onChange={e => setFrom(e.target.value)} /></div>
-      <div><Label htmlFor="gate-report-to">{label("to")}</Label><Input id="gate-report-to" type="date" required value={to} onChange={e => setTo(e.target.value)} /></div>
-      <div><Label htmlFor="gate-report-partner">{label("partner")}</Label><select id="gate-report-partner" className="h-10 w-full rounded-md border bg-background px-2" value={partner} onChange={e => { setPartner(e.target.value); setSite("all"); }}><option value="all">{label("allAccessiblePartners")}</option>{partners.map(row => <option value={row.id} key={row.id}>{row.name}</option>)}</select></div>
-      <div><Label htmlFor="gate-report-site">{label("site")}</Label><select id="gate-report-site" className="h-10 w-full rounded-md border bg-background px-2" value={site} onChange={e => setSite(e.target.value)}><option value="all">{label("allSites")}</option>{sites.filter(row => partner === "all" || String(row.partnerId) === partner).map(row => <option value={row.id} key={row.id}>{row.name}</option>)}</select></div>
-      <div><Label htmlFor="gate-report-company">{label("company")}</Label><Input id="gate-report-company" value={company} onChange={e => setCompany(e.target.value)} /></div>
-      <div><Label htmlFor="gate-report-source">{label("record")}</Label><select id="gate-report-source" className="h-10 w-full rounded-md border bg-background px-2" value={recordKind} onChange={e => setRecordKind(e.target.value)}>{["all", "visitor", "employee_checkin"].map(value => <option key={value} value={value}>{label(value)}</option>)}</select></div>
-      <div><Label htmlFor="gate-report-purpose">{label("purpose")}</Label><Input id="gate-report-purpose" value={purpose} onChange={e => setPurpose(e.target.value)} /></div>
-      <div><Label htmlFor="gate-report-category">{label("category")}</Label><select id="gate-report-category" className="h-10 w-full rounded-md border bg-background px-2" value={category} onChange={e => setCategory(e.target.value)}>{["all", "routine_vendor_work", "visitor", "unclassified", "partner_admin", "vendor_admin"].map(value => <option key={value} value={value}>{label(value)}</option>)}</select></div>
+      <div><Label htmlFor="gate-report-from">{label("from")}</Label><Input id="gate-report-from" className={controlClass} type="date" required value={from} onChange={e => setFrom(e.target.value)} /></div>
+      <div><Label htmlFor="gate-report-to">{label("to")}</Label><Input id="gate-report-to" className={controlClass} type="date" required value={to} onChange={e => setTo(e.target.value)} /></div>
+      <div><Label htmlFor="gate-report-partner">{label("partner")}</Label><select id="gate-report-partner" className={controlClass} value={partner} onChange={e => { setPartner(e.target.value); setSite("all"); }}><option value="all">{label("allAccessiblePartners")}</option>{partners.map(row => <option value={row.id} key={row.id}>{row.name}</option>)}</select></div>
+      <div><Label htmlFor="gate-report-site">{label("site")}</Label><select id="gate-report-site" className={controlClass} value={site} onChange={e => setSite(e.target.value)}><option value="all">{label("allSites")}</option>{sites.filter(row => partner === "all" || String(row.partnerId) === partner).map(row => <option value={row.id} key={row.id}>{row.name}</option>)}</select></div>
+      <div><Label htmlFor="gate-report-company">{label("company")}</Label><Input id="gate-report-company" className={controlClass} value={company} onChange={e => setCompany(e.target.value)} /></div>
+      <div><Label htmlFor="gate-report-source">{label("record")}</Label><select id="gate-report-source" className={controlClass} value={recordKind} onChange={e => setRecordKind(e.target.value)}>{["all", "visitor", "employee_checkin"].map(value => <option key={value} value={value}>{label(value)}</option>)}</select></div>
+      <div><Label htmlFor="gate-report-purpose">{label("purpose")}</Label><Input id="gate-report-purpose" className={controlClass} value={purpose} onChange={e => setPurpose(e.target.value)} /></div>
+      <div><Label htmlFor="gate-report-category">{label("category")}</Label><select id="gate-report-category" className={controlClass} value={category} onChange={e => setCategory(e.target.value)}>{["all", "routine_vendor_work", "visitor", "unclassified", "partner_admin", "vendor_admin"].map(value => <option key={value} value={value}>{label(value)}</option>)}</select></div>
       <div className="flex items-end gap-2"><TogglePillButton color="blue" type="submit" disabled={busy}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}{label("run")}</TogglePillButton><TogglePillButton color="blue" type="button" disabled={!report || busy} title={label("print")} aria-label={label("print")} onClick={() => { const element = document.getElementById("gate-report-print"); if (element) printGateReport(element, label("title")); }}><Printer className="h-4 w-4" /></TogglePillButton></div>
     </form>
+    </div>
+    <GateBillingInvoiceCard role={user?.role} partners={partners.map((row) => ({ id: Number(row.id), name: row.name }))} />
     {error && <p role="alert" className="text-destructive">{error}</p>}
     {busy && <p role="status">{label("loading")}</p>}
     {report && <div id="gate-report-print" className="space-y-4">

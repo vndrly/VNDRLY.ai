@@ -1,5 +1,8 @@
 import { useState } from "react";
 import BrandPillButton from "@/components/brand-pill-button";
+import { useBrand } from "@/hooks/use-brand";
+import { brandTextColor } from "@/lib/brand-color";
+import { BrandedSelect } from "./chrome";
 export function localDateKey(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
@@ -23,6 +26,7 @@ export function CalendarTimeGrid({
 }) {
   const [view, setView] = useState<"day" | "week">("week");
   const [kind, setKind] = useState("All");
+  const brand = useBrand();
   const days = calendarViewDays(selectedDay, view);
   return (
     <div className="mb-4 overflow-hidden rounded-xl border bg-card">
@@ -30,7 +34,7 @@ export function CalendarTimeGrid({
         <h2 className="font-semibold">Schedule</h2>
         <div className="flex flex-wrap gap-2">
           <BrandPillButton
-            tone="blue"
+            tone="brand"
             onClick={() => {
               const next = new Date(`${selectedDay}T12:00:00`);
               next.setDate(next.getDate() - (view === "week" ? 7 : 1));
@@ -40,13 +44,13 @@ export function CalendarTimeGrid({
             Previous {view}
           </BrandPillButton>
           <BrandPillButton
-            tone="blue"
+            tone="brand"
             onClick={() => onSelectDay(localDateKey(new Date()))}
           >
             Today
           </BrandPillButton>
           <BrandPillButton
-            tone="blue"
+            tone="brand"
             onClick={() => {
               const next = new Date(`${selectedDay}T12:00:00`);
               next.setDate(next.getDate() + (view === "week" ? 7 : 1));
@@ -55,25 +59,25 @@ export function CalendarTimeGrid({
           >
             Next {view}
           </BrandPillButton>
-          <select
+          <BrandedSelect
             aria-label="Calendar view"
-            className="rounded border bg-background px-2"
+            className="min-w-24"
             value={view}
             onChange={(e) => setView(e.target.value as typeof view)}
           >
             <option value="day">Day</option>
             <option value="week">Week</option>
-          </select>
-          <select
+          </BrandedSelect>
+          <BrandedSelect
             aria-label="Event type"
-            className="rounded border bg-background px-2"
+            className="min-w-28"
             value={kind}
             onChange={(e) => setKind(e.target.value)}
           >
             {["All", "Shift", "Task", "Meeting"].map((k) => (
               <option key={k}>{k}</option>
             ))}
-          </select>
+          </BrandedSelect>
         </div>
       </div>
       <div className="overflow-x-auto">
@@ -86,7 +90,11 @@ export function CalendarTimeGrid({
               className="min-h-56 border-r last:border-r-0"
             >
               <button
-                className="w-full border-b bg-muted/40 p-3 text-sm font-semibold"
+                className="m-1 w-[calc(100%_-_0.5rem)] rounded-lg p-3 text-sm font-bold"
+                style={{
+                  backgroundColor: "var(--brand-primary)",
+                  color: brandTextColor(brand.primary),
+                }}
                 onClick={() => onSelectDay(localDateKey(day))}
               >
                 {day.toLocaleDateString(undefined, {

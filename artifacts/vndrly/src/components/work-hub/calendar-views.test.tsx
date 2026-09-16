@@ -1,5 +1,8 @@
+import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
-import { calendarViewDays, localDateKey } from "./calendar-views";
+import { DEFAULT_BRAND } from "@/hooks/use-brand";
+import { brandImagePillSrc } from "@/components/png-pill-rollover";
+import { CalendarTimeGrid, calendarViewDays, localDateKey } from "./calendar-views";
 describe("Work Hub calendar ranges", () => {
   it("keeps day view on the chosen local day", () => {
     expect(calendarViewDays("2026-09-09", "day").map(localDateKey)).toEqual(["2026-09-09"]);
@@ -10,5 +13,26 @@ describe("Work Hub calendar ranges", () => {
   it("does not truncate a week at the year boundary", () => {
     const days = calendarViewDays("2027-01-01", "week").map(localDateKey);
     expect(days[0]).toBe("2026-12-27"); expect(days[6]).toBe("2027-01-02");
+  });
+  it("renders branded navigation, white selectors, and readable branded weekday tiles", () => {
+    render(<CalendarTimeGrid selectedDay="2026-09-16" items={[]} onSelectDay={() => undefined} />);
+
+    const brandPill = brandImagePillSrc(DEFAULT_BRAND.primary, DEFAULT_BRAND.name);
+    for (const name of ["Previous week", "Today", "Next week"]) {
+      const button = screen.getByRole("button", { name });
+      expect([...button.querySelectorAll("img")].some((image) => image.getAttribute("src") === brandPill)).toBe(true);
+    }
+
+    for (const name of ["Calendar view", "Event type"]) {
+      const select = screen.getByLabelText(name);
+      expect(select.className).toContain("bg-white");
+      expect(select.className).toContain("rounded-lg");
+      expect(select.className).toContain("border-[color:var(--brand-primary)]");
+    }
+
+    const sunday = screen.getByRole("button", { name: /Sun, Sep 13/ });
+    expect(sunday.className).toContain("rounded-lg");
+    expect(sunday.style.backgroundColor).toBe("var(--brand-primary)");
+    expect(sunday.style.color).toBe("rgb(0, 0, 0)");
   });
 });

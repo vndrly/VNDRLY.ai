@@ -12,6 +12,8 @@ import { MeetingScheduling } from "@/components/work-hub/meeting-scheduling";
 import { ActivityWorkspace, CollaborationWorkspace } from "@/components/work-hub/collaboration";
 import { CalendarTimeGrid, localDateKey } from "@/components/work-hub/calendar-views";
 import ManagedSubcontractorHoursPanel from "@/components/managed-subcontractor-hours-panel";
+import CalendarSummaryCards from "@/components/work-hub/calendar-summary-cards";
+import ProjectTimeline from "@/components/work-hub/project-timeline";
 import { WorkHubFinance, WorkHubAdministration } from "@/components/work-hub/finance";
 import { AssistantPanel } from "@/components/assistant-panel";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -594,6 +596,12 @@ function CalendarModule() {
     sharedWith: "",
     siteId: "",
   });
+  const [calendarFilters, setCalendarFilters] = useState({
+    search: "",
+    site: "all",
+    kind: "all",
+    status: "all",
+  });
   const items = useMemo(
     () =>
       [
@@ -614,68 +622,56 @@ function CalendarModule() {
       ].sort((a, b) => String(a.startsAt).localeCompare(String(b.startsAt))),
     [calendar.data],
   );
+  const filteredItems = useMemo(() => {
+    const needle = calendarFilters.search.trim().toLowerCase();
+    return items.filter((item) => {
+      const site = String(item.siteName ?? item.locationName ?? "");
+      const status = String(item.milestoneStatus ?? item.status ?? "");
+      const searchable = [
+        item.title,
+        item.projectName,
+        item.employeeName,
+        item.crewName,
+        item.subcontractorName,
+        site,
+      ].filter(Boolean).join(" ").toLowerCase();
+      return (!needle || searchable.includes(needle))
+        && (calendarFilters.site === "all" || site === calendarFilters.site)
+        && (calendarFilters.kind === "all" || item.kind === calendarFilters.kind)
+        && (calendarFilters.status === "all" || status === calendarFilters.status);
+    });
+  }, [calendarFilters, items]);
+  const calendarSites = Array.from(new Set(items.map((item) => String(item.siteName ?? item.locationName ?? "")).filter(Boolean))).sort();
+  const calendarStatuses = Array.from(new Set(items.map((item) => String(item.milestoneStatus ?? item.status ?? "")).filter(Boolean))).sort();
   const firstWeekday = new Date(month.getFullYear(), month.getMonth(), 1).getDay();
   const daysInMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
   const calendarDays = Array.from({ length: firstWeekday + daysInMonth }, (_, index) => index < firstWeekday ? null : index - firstWeekday + 1);
   const dateKey = (value: unknown) => value ? localDateKey(new Date(String(value))) : "";
-  const selectedItems = items.filter((item) => dateKey(item.startsAt) === selectedDay);
-  const nextOfKind = (kind: string) => items.find((item) => item.kind === kind && new Date(item.startsAt).getTime() >= Date.now());
-  const nextShift = nextOfKind("Shift");
-  const nextMeeting = nextOfKind("Meeting");
-  const nextTask = nextOfKind("Task");
-  const unreadMessages = (channelSummary.data ?? []).reduce(
-    (total, channel) => total + Number(channel.unreadCount ?? 0),
-    0,
-  );
+  const selectedItems = filteredItems.filter((item) => dateKey(item.startsAt) === selectedDay);
   return (
-    <Shell module="calendar"><CalendarTimeGrid selectedDay={selectedDay} items={items} onSelectDay={day => { setSelectedDay(day); const date = new Date(`${day}T12:00:00`); setMonth(new Date(date.getFullYear(), date.getMonth(), 1)); }}/>
+    <Shell module="calendar"><CalendarTimeGrid selectedDay={selectedDay} items={filteredItems} onSelectDay={day => { setSelectedDay(day); const date = new Date(`${day}T12:00:00`); setMonth(new Date(date.getFullYear(), date.getMonth(), 1)); }}/>
       {user?.vendorId && Boolean(hoursCompanies.data?.items.length) && <div className="mb-4"><ManagedSubcontractorHoursPanel vendorId={user.vendorId} companies={hoursCompanies.data!.items} start={new Date(`${selectedDay}T00:00:00`).toISOString()} end={new Date(new Date(`${selectedDay}T00:00:00`).getTime() + 86_400_000).toISOString()} /></div>}
+      <Card className="mb-4 border-2 bg-white" style={{ borderColor: "var(--brand-primary)" }} data-testid="calendar-operational-filters">
+        <CardContent className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-4 [&_input]:rounded-full [&_input]:border-2 [&_input]:border-[color:var(--brand-primary)] [&_input]:bg-white [&_select]:h-10 [&_select]:rounded-full [&_select]:border-2 [&_select]:border-[color:var(--brand-primary)] [&_select]:bg-white [&_select]:px-3">
+          <Input aria-label="Filter employees, crews, or subcontractors" placeholder="Employee, crew, or subcontractor" value={calendarFilters.search} onChange={(event) => setCalendarFilters({ ...calendarFilters, search: event.target.value })} />
+          <select aria-label="Filter by site" value={calendarFilters.site} onChange={(event) => setCalendarFilters({ ...calendarFilters, site: event.target.value })}>
+            <option value="all">All sites</option>
+            {calendarSites.map((site) => <option key={site} value={site}>{site}</option>)}
+          </select>
+          <select aria-label="Filter by calendar item type" value={calendarFilters.kind} onChange={(event) => setCalendarFilters({ ...calendarFilters, kind: event.target.value })}>
+            <option value="all">All work</option>
+            <option value="Shift">Shifts</option>
+            <option value="Meeting">Meetings</option>
+            <option value="Task">Tasks</option>
+          </select>
+          <select aria-label="Filter by status" value={calendarFilters.status} onChange={(event) => setCalendarFilters({ ...calendarFilters, status: event.target.value })}>
+            <option value="all">All statuses</option>
+            {calendarStatuses.map((status) => <option key={status} value={status}>{status.replaceAll("_", " ")}</option>)}
+          </select>
+        </CardContent>
+      </Card>
       <div className="grid gap-4">
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {[
-            [
-              "My next shift",
-              nextShift?.title ?? "Nothing scheduled",
-              nextShift?.startsAt ? displayDate(nextShift.startsAt) : "",
-            ],
-            [
-              "Next meeting",
-              nextMeeting?.title ?? "Nothing scheduled",
-              nextMeeting?.startsAt ? displayDate(nextMeeting.startsAt) : "",
-            ],
-            [
-              "Tasks due soon",
-              nextTask?.title ?? "No task due",
-              nextTask?.startsAt ? displayDate(nextTask.startsAt) : "",
-            ],
-          ].map(([title, value, detail]) => (
-            <Card key={title}>
-              <CardContent className="pt-5">
-                <p className="text-xs font-semibold uppercase text-muted-foreground">
-                  {title}
-                </p>
-                <p className="mt-1 font-semibold">{value}</p>
-                {detail && (
-                  <p className="text-xs text-muted-foreground">{detail}</p>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-          <Card>
-            <CardContent className="pt-5">
-              <p className="text-xs font-semibold uppercase text-muted-foreground">
-                Unread channel messages
-              </p>
-              <p className="mt-1 text-2xl font-bold">{unreadMessages}</p>
-              <a
-                href="/work-hub/channels"
-                className="text-xs font-semibold text-[var(--brand-primary)] underline"
-              >
-                Open channels
-              </a>
-            </CardContent>
-          </Card>
-        </div>
+        <CalendarSummaryCards shifts={filteredItems.filter((item) => item.kind === "Shift")} meetings={filteredItems.filter((item) => item.kind === "Meeting")} tasks={filteredItems.filter((item) => item.kind === "Task")} channels={channelSummary.data ?? []} />
         <div
           className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)] lg:items-start"
           data-testid="work-hub-calendar-layout"
@@ -729,7 +725,7 @@ function CalendarModule() {
                     month.getMonth(),
                     day,
                   ).toLocaleDateString("en-CA");
-                  const count = items.filter(
+                  const count = filteredItems.filter(
                     (item) => dateKey(item.startsAt) === key,
                   ).length;
                   return (
@@ -775,13 +771,13 @@ function CalendarModule() {
             </CardContent>
           </Card>
           {canManage && (
-            <Card>
+            <Card id="create-shift-card" className="border-2 border-[color:var(--brand-primary)] bg-white">
               <CardHeader>
                 <CardTitle><WorkHubCardTitle icon={CalendarDays}>Create shift</WorkHubCardTitle></CardTitle>
               </CardHeader>
               <CardContent>
                 <form
-                  className="grid gap-3"
+                  className="grid gap-3 [&_input]:rounded-full [&_input]:border-2 [&_input]:border-[color:var(--brand-primary)] [&_input]:bg-white [&_select]:rounded-full [&_select]:border-2 [&_select]:border-[color:var(--brand-primary)] [&_select]:bg-white"
                   onSubmit={(e) => {
                     e.preventDefault();
                     command.mutate({
@@ -937,45 +933,7 @@ function CalendarModule() {
             </Card>
           )}
         </div>
-        <Card>
-          <CardHeader>
-            <CardTitle><WorkHubCardTitle icon={CheckSquare2}>Project timeline</WorkHubCardTitle></CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-3">
-            {items
-              .filter((item) => item.calendarType === "project")
-              .map((item) => (
-                <article
-                  key={`timeline-${item.id}`}
-                  className="rounded-lg border p-4"
-                >
-                  <div className="flex justify-between gap-3">
-                    <div>
-                      <span className="text-xs uppercase text-muted-foreground">
-                        {item.projectName} ·{" "}
-                        {String(item.milestoneStatus).replace("_", " ")}
-                      </span>
-                      <h3 className="font-semibold">{item.title}</h3>
-                      <p className="text-xs">
-                        {displayDate(item.startsAt)} –{" "}
-                        {displayDate(item.endsAt)}
-                      </p>
-                    </div>
-                    <strong>{item.percentComplete ?? 0}%</strong>
-                  </div>
-                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
-                    <div
-                      className="h-full bg-[var(--brand-primary)]"
-                      style={{ width: `${item.percentComplete ?? 0}%` }}
-                    />
-                  </div>
-                </article>
-              ))}
-            {!items.some((item) => item.calendarType === "project") && (
-              <Empty>No shared project milestones in this month.</Empty>
-            )}
-          </CardContent>
-        </Card>
+        <ProjectTimeline items={filteredItems} canManage={canManage} onCreate={() => { setForm((current) => ({ ...current, calendarType: "project" })); requestAnimationFrame(() => document.getElementById("create-shift-card")?.scrollIntoView({ behavior: "smooth", block: "start" })); }} />
       </div>
     </Shell>
   );

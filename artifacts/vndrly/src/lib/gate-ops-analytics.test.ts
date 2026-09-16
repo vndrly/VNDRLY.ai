@@ -97,7 +97,8 @@ describe("buildGateOpsAnalytics", () => {
     expect(stats.uniquePlates).toBe(2);
     expect(stats.topCompanies[0]).toEqual({ name: "Acme Pump", count: 2 });
     expect(stats.visitsByDay.find((d) => d.day === "2026-08-25")?.checkIns).toBe(2);
-    expect(stats.visitsByHour.find((h) => h.hour === 14)?.count).toBe(2);
+    const localPeakHour = new Date("2026-08-25T14:00:00.000Z").getHours();
+    expect(stats.visitsByHour.find((h) => h.hour === localPeakHour)?.count).toBe(2);
     expect(stats.avgDwellMinutes).toBe(60);
   });
 

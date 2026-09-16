@@ -15,10 +15,13 @@ import {
 } from "lucide-react";
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-import SphereBackButton from "@/components/sphere-back-button";
+import PageBackButton from "@/components/page-back-button";
+import SplitToggleHalf from "@/components/split-toggle-half";
+import { pickTogglePillSrc, splitToggleDividerClass, TOGGLE_IDLE_PILL_SRC } from "@/lib/pick-toggle-pill";
+import { cn } from "@/lib/utils";
 import { LiveConnectionPill } from "@/components/live-connection-pill";
 import { VerticalPillBarShape } from "@/components/vertical-pill-bar-shape";
-import { Card, CardContent, CardHeader, CardTitle, CARD_ICON_CLASS, CARD_ICON_ROW_CLASS, CARD_INNER_TILE_CLASS, CARD_MINI_CONTENT_CLASS } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CARD_ICON_CLASS, CARD_INNER_TILE_CLASS } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -34,7 +37,7 @@ import { formatPlateForDisplay } from "@/lib/plate-display";
 import { buildGateOpsAnalytics, buildGateStaffHours, dwellMinutes } from "@/lib/gate-ops-analytics";
 import { visitsApi } from "@/lib/visits-api";
 import GateReport from "@/components/gate-report";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import GateLogStatCard from "@/components/gate-log-stat-card";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 const OPS_KEY = ["gate-ops"] as const;
@@ -54,17 +57,27 @@ function hourLabel(hour: number): string {
 
 export default function GateLogPage() {
   const { t } = useTranslation();
+  const [view, setView] = useState<"operations" | "reports">("operations");
+  const brand = useBrand();
+  const activePillSrc = pickTogglePillSrc(brand.primary, brand.name);
+  const dividerClass = splitToggleDividerClass("light");
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <h1 className="text-2xl font-semibold mb-4">{t("gateLog.title")}</h1>
-      <Tabs defaultValue="operations">
-        <TabsList className="print:hidden">
-          <TabsTrigger value="operations">{t("gateLog.operationsTab", { defaultValue: "Operations" })}</TabsTrigger>
-          <TabsTrigger value="reports">{t("nav.reports")}</TabsTrigger>
-        </TabsList>
-        <TabsContent value="operations"><GateOperations /></TabsContent>
-        <TabsContent value="reports"><GateReport /></TabsContent>
-      </Tabs>
+    <div className="mx-auto max-w-6xl space-y-5 p-6">
+      <header className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <PageBackButton fallbackHref="/" />
+          <div>
+            <h1 className="text-2xl font-semibold text-black">{t("gateLog.title")}</h1>
+            <p className="mt-1 text-sm text-muted-foreground">{t("gateLog.subtitle")}</p>
+          </div>
+        </div>
+        <div className="inline-flex items-stretch overflow-hidden rounded-full print:hidden" data-testid="gate-log-view-toggle">
+          <SplitToggleHalf side="left" active={view === "operations"} pillSrc={view === "operations" ? activePillSrc : TOGGLE_IDLE_PILL_SRC} onClick={() => setView("operations")} aria-pressed={view === "operations"}>{t("gateLog.operationsTab", { defaultValue: "Operations" })}</SplitToggleHalf>
+          <span aria-hidden className={cn("w-px shrink-0 self-stretch", dividerClass)} />
+          <SplitToggleHalf side="right" active={view === "reports"} pillSrc={view === "reports" ? activePillSrc : TOGGLE_IDLE_PILL_SRC} onClick={() => setView("reports")} aria-pressed={view === "reports"}>{t("nav.reports")}</SplitToggleHalf>
+        </div>
+      </header>
+      {view === "operations" ? <GateOperations /> : <GateReport />}
     </div>
   );
 }
@@ -160,37 +173,27 @@ function GateOperations() {
     );
   }
 
+  const visitDetail = (visit: (typeof visits)[number]) => ({ id: visit.id, title: `${visit.firstName} ${visit.lastName}`.trim(), subtitle: [visit.company, visit.siteName, fmt(visit.checkInTime)].filter(Boolean).join(" · ") });
+  const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  const onSiteRows = visits.filter((visit) => !visit.checkOutTime && visit.admissionStatus !== "pending");
+  const overdueRows = onSiteRows.filter((visit) => Boolean(visit.expectedDurationMinutes && dwellMinutes(visit, now) > visit.expectedDurationMinutes));
+  const completedRows = visits.filter((visit) => Boolean(visit.checkOutTime) && visit.admissionStatus !== "pending");
+  const activeEmployeeIds = new Set((ops.data?.checkIns ?? []).filter((row) => !row.checkOutAt).map((row) => row.employeeId));
+  const activeStaffRows = staffRows.filter((row) => activeEmployeeIds.has(row.employeeId));
+  const todayRows = visits.filter((visit) => new Date(visit.checkInTime).toLocaleDateString("en-CA") === todayKey);
+  const needsAttentionRows = [...new Map([...overdueRows, ...visits.filter((visit) => visit.admissionStatus === "pending")].map((visit) => [visit.id, visit])).values()];
   const statCards = [
-    { key: "on-site", label: t("gateLog.onSiteNow"), value: analytics.onSiteNow, icon: Shield },
-    { key: "overdue", label: t("gateLog.overdueNow"), value: analytics.overdueNow, icon: AlertTriangle },
-    { key: "dwell", label: t("gateLog.avgDwell"), value: `${analytics.avgDwellMinutes}m`, icon: Clock },
-    { key: "plates", label: t("gateLog.uniquePlates"), value: analytics.uniquePlates, icon: ClipboardList },
-    { key: "auto", label: t("gateLog.autoCheckedOut"), value: analytics.autoCheckedOut, icon: Users },
-    { key: "visitors", label: t("gateLog.uniqueVisitors"), value: analytics.uniqueVisitors, icon: BarChart3 },
+    { key: "on-site", label: "On Site Now", value: analytics.onSiteNow, icon: Shield, definition: "People admitted and not yet checked out.", timeWindow: `As of ${now.toLocaleTimeString()}`, details: onSiteRows.map(visitDetail) },
+    { key: "overdue", label: "Overdue Visits", value: analytics.overdueNow, icon: AlertTriangle, definition: "On-site visits beyond their expected duration.", timeWindow: `As of ${now.toLocaleTimeString()}`, details: overdueRows.map(visitDetail) },
+    { key: "dwell", label: "Average Dwell", value: `${analytics.avgDwellMinutes}m`, icon: Clock, definition: "Average completed visit duration in the returned history window.", timeWindow: "Current Gate Log history window", details: completedRows.slice(0, 25).map(visitDetail) },
+    { key: "today", label: "Today’s Entries", value: todayRows.length, icon: ClipboardList, definition: "Gate entries recorded today in local time.", timeWindow: now.toLocaleDateString(), details: todayRows.map(visitDetail) },
+    { key: "coverage", label: "Gate Coverage", value: activeStaffRows.length, icon: Users, definition: "Gate staff currently clocked in.", timeWindow: `As of ${now.toLocaleTimeString()}`, details: activeStaffRows.map((row) => ({ id: row.employeeId, title: row.name, subtitle: [row.vendorName, `${row.hoursClocked} hours clocked`].filter(Boolean).join(" · ") })) },
+    { key: "attention", label: "Needs Attention", value: needsAttentionRows.length, icon: AlertTriangle, definition: "Pending admissions and overdue on-site visits requiring review.", timeWindow: `As of ${now.toLocaleTimeString()}`, details: needsAttentionRows.map(visitDetail) },
   ];
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-6" data-testid="gate-log-page">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => {
-              if (typeof window !== "undefined" && window.history.length > 1) {
-                window.history.back();
-              }
-            }}
-            className="group inline-flex items-center"
-            aria-label={t("common.back")}
-            data-testid="button-back"
-          >
-            <SphereBackButton size={40} />
-          </button>
-          <div>
-            <h1 className="text-2xl font-semibold">{t("gateLog.title")}</h1>
-            <p className="mt-1 text-sm text-muted-foreground">{t("gateLog.subtitle")}</p>
-          </div>
-        </div>
+    <div className="space-y-6" data-testid="gate-log-page">
+      <div className="flex justify-end">
         <LiveConnectionPill status={live.liveStatus} compact onRefresh={() => void ops.refetch()} />
       </div>
 
@@ -219,17 +222,7 @@ function GateOperations() {
       )}
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        {statCards.map((stat) => (
-          <Card key={stat.key} data-testid={`gate-log-stat-${stat.key}`}>
-            <CardContent className={CARD_MINI_CONTENT_CLASS}>
-              <div className={CARD_ICON_ROW_CLASS}>
-                <stat.icon className={CARD_ICON_CLASS} style={iconStyle} />
-                <span className="text-xs text-gray-700 font-medium">{stat.label}</span>
-              </div>
-              <p className="text-lg font-bold mt-auto text-center">{stat.value}</p>
-            </CardContent>
-          </Card>
-        ))}
+        {statCards.map(({ key, ...stat }) => <GateLogStatCard key={key} {...stat} iconColor={String(iconStyle.color)} testId={`gate-log-stat-${key}`} />)}
       </div>
 
       <Card data-testid="gate-log-on-site">

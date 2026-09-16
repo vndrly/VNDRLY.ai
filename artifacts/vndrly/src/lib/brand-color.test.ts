@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  brandTextColor,
   SIDEBAR_BG_RGB,
   contrastRatio,
   getContrastWarningKind,
@@ -42,5 +43,14 @@ describe("getSidebarContrastWarningKind", () => {
     expect(SIDEBAR_BG_RGB).toEqual({ r: 57, g: 62, b: 70 });
     const ratio = contrastRatio(hexToRgb("#ffffff")!, SIDEBAR_BG_RGB);
     expect(ratio).toBeGreaterThan(8);
+  });
+});
+
+describe("brandTextColor", () => {
+  it("selects black for light brand fills and white for dark brand fills", () => {
+    expect(brandTextColor("#f1f1f1")).toBe("#000000");
+    expect(brandTextColor("#e6ac00")).toBe("#000000");
+    expect(brandTextColor("#005577")).toBe("#ffffff");
+    expect(brandTextColor("not-a-color")).toBe("#000000");
   });
 });

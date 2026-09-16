@@ -23,8 +23,9 @@ import {
 export type WorkHubNavItem = { key: string; label: string; href: string };
 const ITEMS: WorkHubNavItem[] = [
   { key: "activity", label: "Activity", href: "/work-hub" },
-  { key: "chat", label: "Chat", href: "/work-hub/chat" },
+  { key: "calendar", label: "Calendar", href: "/work-hub/calendar" },
   { key: "channels", label: "Crews & Channels", href: "/work-hub/channels" },
+  { key: "chat", label: "Direct Chat", href: "/work-hub/chat" },
   { key: "managedCrews", label: "Managed Crews", href: "/work-hub/managed-crews" },
   { key: "coverage", label: "Coverage", href: "/work-hub/coverage" },
   { key: "assets", label: "Inventory", href: "/work-hub/assets" },
@@ -32,7 +33,6 @@ const ITEMS: WorkHubNavItem[] = [
   { key: "safetyResponse", label: "Safety Response", href: "/work-hub/safety-response" },
   { key: "subscriptions", label: "Worker Subscriptions", href: "/work-hub/subscriptions" },
   { key: "operationsHealth", label: "Operations Health", href: "/work-hub/operations-health" },
-  { key: "calendar", label: "Calendar", href: "/work-hub/calendar" },
   { key: "calls", label: "Calls", href: "/work-hub/calls" },
   { key: "files", label: "Files & Notes", href: "/work-hub/files" },
   { key: "tasks", label: "Tasks & Forms", href: "/work-hub/tasks" },
@@ -71,9 +71,9 @@ export const workHubIcons = {
 };
 export const DEFAULT_WORK_HUB_PINS = [
   "activity",
-  "chat",
-  "channels",
   "calendar",
+  "channels",
+  "chat",
   "calls",
   "files",
   "askv",

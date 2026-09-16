@@ -10,7 +10,7 @@ import { formatPhone, handlePhoneInput, stripPhone } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import SphereBackButton from "@/components/sphere-back-button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CARD_TITLE_ICON_CLASS } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -45,13 +45,13 @@ function PartnerRowLogo({
   const [errored, setErrored] = useState(false);
   const trimmed = typeof logoUrl === "string" ? logoUrl.trim() : "";
   if (!trimmed || errored) {
-    return <Handshake className="w-4 h-4 shrink-0" style={{ color: fallbackColor }} data-testid={`icon-partner-row-fallback-${partnerId}`} />;
+    return <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-gray-200 bg-white"><Handshake className="h-6 w-6" style={{ color: fallbackColor }} data-testid={`icon-partner-row-fallback-${partnerId}`} /></span>;
   }
   return (
     <img
       src={trimmed}
       alt={altText || `${name} logo`}
-      className="w-6 h-6 rounded-sm object-contain bg-white border border-gray-200 shrink-0"
+      className="h-12 w-12 shrink-0 rounded-lg border border-gray-200 bg-white object-contain"
       data-testid={`img-partner-row-logo-${partnerId}`}
       onError={() => setErrored(true)}
     />
@@ -304,7 +304,7 @@ export default function Partners() {
       {/* Plain white pill search input — canonical pill-family chrome
           mirrored from the Tracking page so the partners listing reads
           as part of the same toolbar system. */}
-      <div className="relative inline-flex items-center h-[23px] w-[180px] rounded-full bg-white border border-black/10">
+      <div className="relative inline-flex h-9 w-[240px] items-center rounded-full border-2 border-[var(--brand-primary)] bg-white shadow-sm">
         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500 pointer-events-none" />
         <input
           type="text"
@@ -317,6 +317,12 @@ export default function Partners() {
       </div>
 
       <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2">
+            <Handshake className={CARD_TITLE_ICON_CLASS} style={{ color: "var(--brand-primary)" }} />
+            {t("nav.partners")}
+          </CardTitle>
+        </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (
             <div className="p-6 space-y-3">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-12 w-full" />)}</div>
@@ -355,7 +361,7 @@ export default function Partners() {
                       <Link href={`/partners/${p.id}`} className="font-medium text-gray-700 hover:text-[var(--row-brand-primary,var(--brand-primary))] transition-colors" data-testid={`link-partner-${p.id}`}>
                         <div className="flex items-center gap-2">
                           <PartnerRowLogo
-                            logoUrl={p.logoUrl}
+                            logoUrl={p.logoSquareUrl || p.logoUrl}
                             name={p.name}
                             partnerId={p.id}
                             altText={t("partners.logoAlt", { defaultValue: "{{name}} logo", name: p.name })}

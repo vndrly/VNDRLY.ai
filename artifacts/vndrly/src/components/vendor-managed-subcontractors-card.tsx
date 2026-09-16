@@ -147,7 +147,7 @@ export default function VendorManagedSubcontractorsCard({
     <Card data-testid="vendor-managed-subcontractors-card">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Users className={CARD_TITLE_ICON_CLASS} />
+          <Users className={`${CARD_TITLE_ICON_CLASS} text-[var(--brand-primary)]`} />
           {key("title")}
         </CardTitle>
       </CardHeader>
@@ -206,6 +206,8 @@ export default function VendorManagedSubcontractorsCard({
               maxLength={200}
               value={companyName}
               onChange={(event) => setCompanyName(event.target.value)}
+              className="rounded-full border-2 bg-white"
+              style={{ borderColor: "var(--brand-primary)" }}
             />
           </div>
           <BrandPillButton

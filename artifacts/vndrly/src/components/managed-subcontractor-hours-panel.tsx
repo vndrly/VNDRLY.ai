@@ -56,7 +56,7 @@ export default function ManagedSubcontractorHoursPanel({ vendorId, companies, in
       <div className="flex flex-wrap gap-2">
         <TogglePillButton color="green" disabled={command.isPending || report.data.approved || report.data.lines.some((line) => line.exceptions.length)} onClick={() => command.mutate({ suffix: "/approve" })}><CheckCircle2 className="h-4 w-4" />Approve hours</TogglePillButton>
         <TogglePillButton color="blue" disabled={command.isPending} onClick={() => command.mutate({ suffix: "/email" })}><Mail className="h-4 w-4" />Email Hours Report</TogglePillButton>
-        <TogglePillButton color="blue" type="button" onClick={() => { window.location.href = `${BASE}${path}/pdf?${range}`; }}><Download className="h-4 w-4" />Download PDF</TogglePillButton>
+        <TogglePillButton color="red" type="button" onClick={() => { window.location.href = `${BASE}${path}/pdf?${range}`; }}><Download className="h-4 w-4" />Download PDF</TogglePillButton>
       </div>
       {showSettings && <div className="grid gap-3 rounded-lg border p-3 md:grid-cols-[12rem_1fr_auto]">
         <label className="text-sm">Approval rule<select className="mt-1 w-full rounded border bg-background p-2" value={policy} onChange={(event) => setPolicy(event.target.value as typeof policy)}><option value="contractor">Contractor</option><option value="subcontractor">Subcontractor</option><option value="either">Either supervisor</option><option value="dual">Both supervisors</option></select></label>

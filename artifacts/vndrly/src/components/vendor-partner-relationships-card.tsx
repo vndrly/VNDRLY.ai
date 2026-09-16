@@ -14,12 +14,15 @@ import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import ImagePill, { type ImagePillColor } from "@/components/image-pill";
 import { cn } from "@/lib/utils";
+import PartnerApprovalLogo from "@/components/partner-approval-logo";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 type PartnerRelationshipRow = {
   partnerId: number;
   partnerName: string;
+  partnerLogoUrl: string | null;
+  partnerLogoSquareUrl: string | null;
   status: string;
   notes: string | null;
   ratedAt: string | null;
@@ -121,18 +124,13 @@ export default function VendorPartnerRelationshipsCard({
                 key={r.partnerId}
                 className={cn(
                   CARD_INNER_TILE_HOVER_CLASS,
-                  "group flex items-center gap-3",
+                  "group flex min-h-14 items-center gap-3",
                 )}
                 data-testid={`row-partner-relationship-${r.partnerId}`}
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <Handshake
-                      className="w-4 h-4 shrink-0 card-icon-drop-shadow"
-                      style={{ color: "var(--brand-primary)" }}
-                      aria-hidden
-                      data-testid={`icon-partner-row-${r.partnerId}`}
-                    />
+                <PartnerApprovalLogo partnerId={r.partnerId} partnerName={r.partnerName} logoUrl={r.partnerLogoUrl} squareLogoUrl={r.partnerLogoSquareUrl} />
                     <Link
                       href={`/partners/${r.partnerId}`}
                       className="hotlist-job-title font-semibold text-gray-700 truncate text-left transition-[color,text-shadow] hover:text-[var(--brand-primary)]"
