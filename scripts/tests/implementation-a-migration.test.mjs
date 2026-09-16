@@ -9,4 +9,6 @@ test("managed subcontractor hours settings are additive and constrained", () => 
   assert.match(migration, /ADD COLUMN IF NOT EXISTS "hours_recipient_emails" text\[\] NOT NULL DEFAULT '\{\}'/i);
   assert.match(migration, /hours_approval_policy[^;]+IN \('contractor', 'subcontractor', 'either', 'dual'\)/is);
   assert.doesNotMatch(migration, /\b(?:DROP|TRUNCATE|DELETE\s+FROM)\b/i);
+  assert.doesNotMatch(migration, /DO \$\s*(?:BEGIN|DECLARE)/i, "PL/pgSQL blocks must use a complete dollar quote");
+  assert.match(migration, /DO \$\$\s*(?:BEGIN|DECLARE)[\s\S]*END \$\$;/i);
 });

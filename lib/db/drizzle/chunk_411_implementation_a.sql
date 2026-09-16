@@ -47,12 +47,12 @@ ALTER TABLE "managed_subcontractor_sponsors"
   ADD COLUMN IF NOT EXISTS "hours_approval_policy" text NOT NULL DEFAULT 'either';
 ALTER TABLE "managed_subcontractor_sponsors"
   ADD COLUMN IF NOT EXISTS "hours_recipient_emails" text[] NOT NULL DEFAULT '{}';
-DO $
+DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'managed_subcontractor_hours_approval_policy_check') THEN
     ALTER TABLE "managed_subcontractor_sponsors" ADD CONSTRAINT "managed_subcontractor_hours_approval_policy_check" CHECK ("hours_approval_policy" IN ('contractor', 'subcontractor', 'either', 'dual'));
   END IF;
-END $;
+END $$;
 CREATE UNIQUE INDEX IF NOT EXISTS "managed_subcontractor_active_sponsor_unique" ON "managed_subcontractor_sponsors" ("managed_organization_id", "sponsor_vendor_id") WHERE "status" = 'active';
 CREATE INDEX IF NOT EXISTS "managed_subcontractor_sponsor_vendor_idx" ON "managed_subcontractor_sponsors" ("sponsor_vendor_id", "status");
 
