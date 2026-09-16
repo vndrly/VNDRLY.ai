@@ -33,6 +33,8 @@ function verifyPayload(signed: string): string | null {
 }
 
 export interface SessionPayload {
+  /** Signed operational grants; never an employee payroll relationship. */
+  managedSubcontractor?: { siteGrants: { siteId: number; role: "gatekeeper" | "gate_supervisor" }[] };
   userId?: number;
   role?: string;
   /**

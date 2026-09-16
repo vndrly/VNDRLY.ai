@@ -1511,6 +1511,50 @@ router.post("/field-employees/:id/login", async (req, res): Promise<void> => {
         await tx.update(vendorPeopleTable).set({ email }).where(eq(vendorPeopleTable.id, employeeId));
         return { userId: employee.userId, status: "updated" as const };
       }
+      const duplicateLinks = await tx
+        .select()
+        .from(vendorPeopleTable)
+        .where(and(
+          eq(vendorPeopleTable.vendorId, employee.vendorId),
+          eq(vendorPeopleTable.email, email),
+          isNotNull(vendorPeopleTable.userId),
+        ));
+      const dormantLinks = duplicateLinks.filter((person) =>
+        person.id !== employeeId && (!person.isActive || person.deletedAt != null),
+      );
+      if (dormantLinks.length > 1) {
+        throw Object.assign(new Error("Multiple inactive employee records own this login; contact support to reconcile them."), { http: 409 });
+      }
+      const dormant = dormantLinks[0];
+      if (dormant?.userId) {
+        const [existing] = await tx.select().from(usersTable).where(eq(usersTable.id, dormant.userId));
+        if (!existing) throw Object.assign(new Error("The inactive employee login could not be found."), { http: 409 });
+        if (existing.role !== expectedUserRole) {
+          throw Object.assign(new Error("Linked login role does not match employee role"), { http: 409 });
+        }
+        const [conflict] = await tx.select({ id: usersTable.id }).from(usersTable)
+          .where(and(eq(usersTable.username, email), ne(usersTable.id, dormant.userId)));
+        if (conflict) throw Object.assign(new Error("That email is already in use by another login"), { http: 409 });
+        const updateValues: Record<string, unknown> = {
+          username: email,
+          email,
+          displayName: finalDisplayName,
+          role: expectedUserRole,
+          passwordHash: bcrypt.hashSync(password, 10),
+          mustChangePassword,
+          sessionVersion: sql`${usersTable.sessionVersion} + 1`,
+        };
+        if (langProvided) updateValues.preferredLanguage = langForInsert;
+        await tx.update(usersTable).set(updateValues).where(eq(usersTable.id, dormant.userId));
+        await tx.update(vendorPeopleTable).set({ userId: null }).where(eq(vendorPeopleTable.id, dormant.id));
+        await tx.update(vendorPeopleTable).set({ userId: dormant.userId, email }).where(eq(vendorPeopleTable.id, employeeId));
+        if (usesFieldEmployeeLogin(employee.vendorRole)) {
+          await ensureFieldEmployeeMembershipTx(tx, dormant.userId, employee.vendorId, employeeId);
+        } else {
+          await ensureVendorPortalMembershipTx(tx, dormant.userId, employee.vendorId, employeeId, employee.vendorRole);
+        }
+        return { userId: dormant.userId, status: "relinked" as const };
+      }
       const [conflict] = await tx.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.username, email));
       if (conflict) throw Object.assign(new Error("That email is already in use by another login"), { http: 409 });
       const [newUser] = await tx

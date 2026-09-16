@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray, isNull, ne, sql } from "drizzle-orm";
 import {
   db,
   managedSubcontractorClaimsTable,
@@ -8,11 +8,20 @@ import {
   managedSubcontractorWorkerSponsorshipsTable,
   userOrgMembershipsTable,
   usersTable,
+  accountInvitationsTable,
+  siteLocationsTable,
+  siteWorkAssignmentsTable,
+  workHubCrewsTable,
 } from "@workspace/db";
 import type {
   GrantSponsoredRoleInput,
   ManagedSubcontractorRole,
 } from "@workspace/api-zod";
+import {
+  issueAccountInvitation,
+  resendAccountInvitation,
+} from "./account-invitations";
+import { getAppOrigin } from "../lib/appOrigin";
 
 export class ManagedSubcontractorError extends Error {
   constructor(
@@ -33,7 +42,9 @@ function canonicalizeName(name: string): string {
   return name.trim().replace(/\s+/g, " ").toLocaleLowerCase("en-US");
 }
 
-async function assertVendorAdmin(actor: ManagedSubcontractorActor): Promise<void> {
+async function assertVendorAdmin(
+  actor: ManagedSubcontractorActor,
+): Promise<void> {
   const [membership] = await db
     .select({ id: userOrgMembershipsTable.id })
     .from(userOrgMembershipsTable)
@@ -65,7 +76,10 @@ async function assertActiveSponsor(
     .from(managedSubcontractorSponsorsTable)
     .where(
       and(
-        eq(managedSubcontractorSponsorsTable.managedOrganizationId, managedOrganizationId),
+        eq(
+          managedSubcontractorSponsorsTable.managedOrganizationId,
+          managedOrganizationId,
+        ),
         eq(managedSubcontractorSponsorsTable.sponsorVendorId, actor.vendorId),
         eq(managedSubcontractorSponsorsTable.status, "active"),
       ),
@@ -95,7 +109,8 @@ export async function createManagedOrganization(
         createdByUserId: actor.userId,
       })
       .returning();
-    if (!organization) throw new Error("Managed organization insert returned no row");
+    if (!organization)
+      throw new Error("Managed organization insert returned no row");
     await tx.insert(managedSubcontractorSponsorsTable).values({
       managedOrganizationId: organization.id,
       sponsorVendorId: actor.vendorId,
@@ -128,8 +143,14 @@ export async function inviteManagedWorker(
     .from(managedSubcontractorWorkerSponsorshipsTable)
     .where(
       and(
-        eq(managedSubcontractorWorkerSponsorshipsTable.workerUserId, workerUserId),
-        eq(managedSubcontractorWorkerSponsorshipsTable.sponsorVendorId, actor.vendorId),
+        eq(
+          managedSubcontractorWorkerSponsorshipsTable.workerUserId,
+          workerUserId,
+        ),
+        eq(
+          managedSubcontractorWorkerSponsorshipsTable.sponsorVendorId,
+          actor.vendorId,
+        ),
         eq(
           managedSubcontractorWorkerSponsorshipsTable.managedOrganizationId,
           managedOrganizationId,
@@ -164,7 +185,10 @@ export async function grantSponsoredRole(
     .where(
       and(
         eq(managedSubcontractorWorkerSponsorshipsTable.id, sponsorshipId),
-        eq(managedSubcontractorWorkerSponsorshipsTable.sponsorVendorId, actor.vendorId),
+        eq(
+          managedSubcontractorWorkerSponsorshipsTable.sponsorVendorId,
+          actor.vendorId,
+        ),
         eq(managedSubcontractorWorkerSponsorshipsTable.status, "active"),
       ),
     )
@@ -175,6 +199,28 @@ export async function grantSponsoredRole(
       404,
       "managed_subcontractor.sponsorship_not_found",
     );
+  }
+  await assertActiveSponsor(actor, sponsorship.managedOrganizationId);
+  if (input.siteId != null)
+    await assertManagedWorkerSites(actor.vendorId, [input.siteId]);
+  if (input.crewId != null) {
+    const [crew] = await db
+      .select({ id: workHubCrewsTable.id })
+      .from(workHubCrewsTable)
+      .where(
+        and(
+          eq(workHubCrewsTable.id, input.crewId),
+          eq(workHubCrewsTable.ownerOrgType, "vendor"),
+          eq(workHubCrewsTable.ownerOrgId, actor.vendorId),
+        ),
+      )
+      .limit(1);
+    if (!crew)
+      throw new ManagedSubcontractorError(
+        "Crew not found",
+        404,
+        "managed_subcontractor.crew_not_found",
+      );
   }
   const [grant] = await db
     .insert(managedSubcontractorRoleGrantsTable)
@@ -196,10 +242,18 @@ export async function listVisibleSponsorships(
 ) {
   await assertVendorAdmin(actor);
   const conditions = [
-    eq(managedSubcontractorWorkerSponsorshipsTable.sponsorVendorId, actor.vendorId),
+    eq(
+      managedSubcontractorWorkerSponsorshipsTable.sponsorVendorId,
+      actor.vendorId,
+    ),
   ];
   if (workerUserId !== undefined) {
-    conditions.push(eq(managedSubcontractorWorkerSponsorshipsTable.workerUserId, workerUserId));
+    conditions.push(
+      eq(
+        managedSubcontractorWorkerSponsorshipsTable.workerUserId,
+        workerUserId,
+      ),
+    );
   }
   return db
     .select()
@@ -237,7 +291,9 @@ export async function claimManagedOrganization(
     const [organization] = await tx
       .select()
       .from(managedSubcontractorOrganizationsTable)
-      .where(eq(managedSubcontractorOrganizationsTable.id, managedOrganizationId))
+      .where(
+        eq(managedSubcontractorOrganizationsTable.id, managedOrganizationId),
+      )
       .limit(1);
     if (!organization) {
       throw new ManagedSubcontractorError(
@@ -246,7 +302,10 @@ export async function claimManagedOrganization(
         "managed_subcontractor.not_found",
       );
     }
-    if (organization.claimedVendorId !== null && organization.claimedVendorId !== actor.vendorId) {
+    if (
+      organization.claimedVendorId !== null &&
+      organization.claimedVendorId !== actor.vendorId
+    ) {
       throw new ManagedSubcontractorError(
         "Managed organization has already been claimed",
         409,
@@ -254,7 +313,9 @@ export async function claimManagedOrganization(
       );
     }
     const workers = await tx
-      .select({ workerUserId: managedSubcontractorWorkerSponsorshipsTable.workerUserId })
+      .select({
+        workerUserId: managedSubcontractorWorkerSponsorshipsTable.workerUserId,
+      })
       .from(managedSubcontractorWorkerSponsorshipsTable)
       .where(
         eq(
@@ -270,7 +331,9 @@ export async function claimManagedOrganization(
         claimedAt: new Date(),
         updatedAt: new Date(),
       })
-      .where(eq(managedSubcontractorOrganizationsTable.id, managedOrganizationId))
+      .where(
+        eq(managedSubcontractorOrganizationsTable.id, managedOrganizationId),
+      )
       .returning();
     await tx
       .insert(managedSubcontractorClaimsTable)
@@ -279,10 +342,335 @@ export async function claimManagedOrganization(
         claimedVendorId: actor.vendorId,
         representativeUserId,
         claimedByUserId: actor.userId,
-        workerIdentitySnapshot: [...new Set(workers.map((row) => row.workerUserId))],
+        workerIdentitySnapshot: [
+          ...new Set(workers.map((row) => row.workerUserId)),
+        ],
       })
-      .onConflictDoNothing({ target: managedSubcontractorClaimsTable.managedOrganizationId });
+      .onConflictDoNothing({
+        target: managedSubcontractorClaimsTable.managedOrganizationId,
+      });
     if (!updated) throw new Error("Managed organization claim returned no row");
     return updated;
   });
+}
+
+/** Eligible sites come from the sponsor's own active site assignments. */
+export async function listManagedWorkerSites(vendorId: number) {
+  return db
+    .selectDistinct({
+      id: siteLocationsTable.id,
+      name: siteLocationsTable.name,
+    })
+    .from(siteLocationsTable)
+    .innerJoin(
+      siteWorkAssignmentsTable,
+      eq(siteWorkAssignmentsTable.siteLocationId, siteLocationsTable.id),
+    )
+    .where(
+      and(
+        eq(siteWorkAssignmentsTable.vendorId, vendorId),
+        eq(siteLocationsTable.isActive, true),
+        eq(siteLocationsTable.hidden, false),
+      ),
+    )
+    .orderBy(siteLocationsTable.name);
+}
+
+async function assertManagedWorkerSites(vendorId: number, siteIds: number[]) {
+  const allowed = new Set(
+    (await listManagedWorkerSites(vendorId)).map((site) => site.id),
+  );
+  if (!siteIds.length || siteIds.some((id) => !allowed.has(id))) {
+    throw new ManagedSubcontractorError(
+      "Select sites assigned to your company",
+      403,
+      "managed_subcontractor.site_not_permitted",
+    );
+  }
+}
+
+export async function listManagedOrganizations(
+  actor: ManagedSubcontractorActor,
+) {
+  await assertVendorAdmin(actor);
+  const organizations = await db
+    .select({
+      id: managedSubcontractorOrganizationsTable.id,
+      name: managedSubcontractorOrganizationsTable.name,
+      status: managedSubcontractorOrganizationsTable.status,
+    })
+    .from(managedSubcontractorOrganizationsTable)
+    .innerJoin(
+      managedSubcontractorSponsorsTable,
+      eq(
+        managedSubcontractorSponsorsTable.managedOrganizationId,
+        managedSubcontractorOrganizationsTable.id,
+      ),
+    )
+    .where(
+      and(
+        eq(managedSubcontractorSponsorsTable.sponsorVendorId, actor.vendorId),
+        eq(managedSubcontractorSponsorsTable.status, "active"),
+      ),
+    );
+  const workers = await db
+    .select({
+      id: managedSubcontractorWorkerSponsorshipsTable.id,
+      organizationId:
+        managedSubcontractorWorkerSponsorshipsTable.managedOrganizationId,
+      userId: usersTable.id,
+      name: usersTable.displayName,
+      email: usersTable.email,
+      status: managedSubcontractorWorkerSponsorshipsTable.status,
+    })
+    .from(managedSubcontractorWorkerSponsorshipsTable)
+    .innerJoin(
+      usersTable,
+      eq(
+        usersTable.id,
+        managedSubcontractorWorkerSponsorshipsTable.workerUserId,
+      ),
+    )
+    .where(
+      eq(
+        managedSubcontractorWorkerSponsorshipsTable.sponsorVendorId,
+        actor.vendorId,
+      ),
+    );
+  const grants = workers.length
+    ? await db
+        .select()
+        .from(managedSubcontractorRoleGrantsTable)
+        .where(
+          and(
+            inArray(
+              managedSubcontractorRoleGrantsTable.sponsorshipId,
+              workers.map((w) => w.id),
+            ),
+            eq(managedSubcontractorRoleGrantsTable.status, "active"),
+          ),
+        )
+    : [];
+  const invitations = await db
+    .select({
+      id: accountInvitationsTable.id,
+      userId: accountInvitationsTable.userId,
+      state: accountInvitationsTable.state,
+      expiresAt: accountInvitationsTable.expiresAt,
+    })
+    .from(accountInvitationsTable)
+    .where(eq(accountInvitationsTable.sponsorVendorId, actor.vendorId));
+  return {
+    items: organizations.map((org) => ({
+      ...org,
+      workers: workers
+        .filter((worker) => worker.organizationId === org.id)
+        .map((worker) => {
+          const roles = grants.filter(
+            (grant) => grant.sponsorshipId === worker.id,
+          );
+          const invitation = invitations.find(
+            (row) => row.userId === worker.userId,
+          );
+          return {
+            ...worker,
+            role:
+              roles.find((grant) => grant.role === "gate_supervisor")?.role ??
+              roles[0]?.role ??
+              null,
+            siteIds: [
+              ...new Set(
+                roles.flatMap((grant) =>
+                  grant.siteId === null ? [] : [grant.siteId],
+                ),
+              ),
+            ],
+            invitationId: invitation?.id ?? null,
+            invitationState:
+              invitation &&
+              !["claimed", "revoked"].includes(invitation.state) &&
+              invitation.expiresAt < new Date()
+                ? "expired"
+                : (invitation?.state ?? null),
+          };
+        }),
+    })),
+    sites: await listManagedWorkerSites(actor.vendorId),
+  };
+}
+
+export async function createManagedWorker(
+  actor: ManagedSubcontractorActor,
+  organizationId: string,
+  input: {
+    name: string;
+    email: string;
+    role: "gatekeeper" | "gate_supervisor";
+    siteIds: number[];
+  },
+) {
+  await assertActiveSponsor(actor, organizationId);
+  await assertManagedWorkerSites(actor.vendorId, input.siteIds);
+  const issued = await issueAccountInvitation(
+    actor,
+    {
+      email: input.email,
+      displayName: input.name,
+      managedOrganizationId: organizationId,
+      authorizationVersion: "work-participation-2026-09",
+    },
+    { role: input.role, siteIds: [...new Set(input.siteIds)] },
+  );
+  const result = await listManagedOrganizations(actor);
+  const worker = result.items
+    .find((org) => org.id === organizationId)
+    ?.workers.find((row) => row.userId === issued.userId);
+  return {
+    ...worker,
+    invitation: { id: issued.invitationId, state: worker?.invitationState },
+    activationUrl: `${getAppOrigin()}/activate-account?token=${encodeURIComponent(issued.rawToken)}`,
+  };
+}
+
+export async function updateManagedWorker(
+  actor: ManagedSubcontractorActor,
+  organizationId: string,
+  sponsorshipId: string,
+  input:
+    | { status: "terminated" }
+    | { role: "gatekeeper" | "gate_supervisor"; siteIds: number[] },
+) {
+  await assertActiveSponsor(actor, organizationId);
+  if ("siteIds" in input)
+    await assertManagedWorkerSites(actor.vendorId, input.siteIds);
+  await db.transaction(async (tx) => {
+    const [sponsorship] = await tx
+      .select()
+      .from(managedSubcontractorWorkerSponsorshipsTable)
+      .where(
+        and(
+          eq(managedSubcontractorWorkerSponsorshipsTable.id, sponsorshipId),
+          eq(
+            managedSubcontractorWorkerSponsorshipsTable.managedOrganizationId,
+            organizationId,
+          ),
+          eq(
+            managedSubcontractorWorkerSponsorshipsTable.sponsorVendorId,
+            actor.vendorId,
+          ),
+        ),
+      )
+      .limit(1)
+      .for("update");
+    if (!sponsorship || sponsorship.status !== "active")
+      throw new ManagedSubcontractorError(
+        "Active sponsorship not found",
+        404,
+        "managed_subcontractor.sponsorship_not_found",
+      );
+    const now = new Date();
+    await tx
+      .update(managedSubcontractorRoleGrantsTable)
+      .set({ status: "inactive", endedAt: now })
+      .where(
+        and(
+          eq(managedSubcontractorRoleGrantsTable.sponsorshipId, sponsorshipId),
+          eq(managedSubcontractorRoleGrantsTable.status, "active"),
+        ),
+      );
+    if ("role" in input) {
+      await tx.insert(managedSubcontractorRoleGrantsTable).values(
+        [...new Set(input.siteIds)].map((siteId) => ({
+          sponsorshipId,
+          role: input.role,
+          siteId,
+          grantedByUserId: actor.userId,
+        })),
+      );
+    } else {
+      await tx
+        .update(managedSubcontractorWorkerSponsorshipsTable)
+        .set({ status: "terminated", endedAt: now, updatedAt: now })
+        .where(
+          eq(managedSubcontractorWorkerSponsorshipsTable.id, sponsorshipId),
+        );
+      await tx
+        .update(accountInvitationsTable)
+        .set({ state: "revoked", revokedAt: now, updatedAt: now })
+        .where(
+          and(
+            eq(accountInvitationsTable.userId, sponsorship.workerUserId),
+            eq(accountInvitationsTable.sponsorVendorId, actor.vendorId),
+            eq(accountInvitationsTable.managedOrganizationId, organizationId),
+            ne(accountInvitationsTable.state, "claimed"),
+          ),
+        );
+      const remaining = await tx
+        .select({ id: managedSubcontractorWorkerSponsorshipsTable.id })
+        .from(managedSubcontractorWorkerSponsorshipsTable)
+        .where(
+          and(
+            eq(
+              managedSubcontractorWorkerSponsorshipsTable.workerUserId,
+              sponsorship.workerUserId,
+            ),
+            eq(
+              managedSubcontractorWorkerSponsorshipsTable.sponsorVendorId,
+              actor.vendorId,
+            ),
+            eq(managedSubcontractorWorkerSponsorshipsTable.status, "active"),
+          ),
+        )
+        .limit(1);
+      if (!remaining.length) {
+        await tx
+          .delete(userOrgMembershipsTable)
+          .where(
+            and(
+              eq(userOrgMembershipsTable.userId, sponsorship.workerUserId),
+              eq(userOrgMembershipsTable.vendorId, actor.vendorId),
+              eq(userOrgMembershipsTable.role, "field_employee"),
+              isNull(userOrgMembershipsTable.vendorPeopleId),
+            ),
+          );
+      }
+    }
+    await tx
+      .update(usersTable)
+      .set({ sessionVersion: sql`${usersTable.sessionVersion} + 1` })
+      .where(eq(usersTable.id, sponsorship.workerUserId));
+  });
+  const list = await listManagedOrganizations(actor);
+  return list.items
+    .find((org) => org.id === organizationId)
+    ?.workers.find((worker) => worker.id === sponsorshipId);
+}
+
+export async function resendManagedWorkerInvitation(
+  actor: ManagedSubcontractorActor,
+  organizationId: string,
+  sponsorshipId: string,
+) {
+  await assertActiveSponsor(actor, organizationId);
+  const list = await listManagedOrganizations(actor);
+  const worker = list.items
+    .find((org) => org.id === organizationId)
+    ?.workers.find(
+      (row) => row.id === sponsorshipId && row.status === "active",
+    );
+  if (!worker?.invitationId)
+    throw new ManagedSubcontractorError(
+      "Invitation not found",
+      404,
+      "managed_subcontractor.invitation_not_found",
+    );
+  const issued = await resendAccountInvitation(actor, worker.invitationId);
+  const [invitation] = await db
+    .select({ state: accountInvitationsTable.state })
+    .from(accountInvitationsTable)
+    .where(eq(accountInvitationsTable.id, issued.invitationId));
+  return {
+    invitation: { id: issued.invitationId, state: invitation!.state },
+    activationUrl: `${getAppOrigin()}/activate-account?token=${encodeURIComponent(issued.rawToken)}`,
+  };
 }

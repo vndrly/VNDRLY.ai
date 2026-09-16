@@ -416,6 +416,38 @@ export default function GatekeeperPage() {
   };
   const applyEntryDraftRef = useRef(applyEntryDraft);
   applyEntryDraftRef.current = applyEntryDraft;
+  useEffect(() => {
+    const listener = (event: Event) => {
+      const detail = (event as CustomEvent<{ mode?: string; values?: Record<string, unknown>; matches?: Array<{ id?: unknown }>; missing?: unknown[] }>).detail;
+      if (!detail) return;
+      const values = detail.values ?? {};
+      const current = entryDraftRef.current;
+      const next: GateEntryDraft = {
+        ...current,
+        ...(typeof values.firstName === "string" ? { firstName: values.firstName } : {}),
+        ...(typeof values.lastName === "string" ? { lastName: values.lastName } : {}),
+        ...(typeof values.company === "string" ? { company: values.company } : {}),
+        ...(typeof values.vehiclePlate === "string" ? { vehiclePlate: values.vehiclePlate.toUpperCase() } : {}),
+        ...(typeof values.plateState === "string" ? { plateState: normalizePlateState(values.plateState) } : {}),
+        ...(typeof values.purpose === "string" ? { purpose: values.purpose } : {}),
+        ...(typeof values.notes === "string" ? { notes: values.notes } : {}),
+        ...(values.expectedDurationMinutes != null ? { duration: String(values.expectedDurationMinutes) } : {}),
+      };
+      entryDraftRef.current = next;
+      applyEntryDraftRef.current(next);
+      if (detail.mode === "check-out") {
+        const ids = new Set((detail.matches ?? []).map((match) => Number(match.id)).filter(Number.isSafeInteger));
+        setVoiceCheckInPending(false);
+        setVoiceCheckoutMatches(activeVisitsRef.current.filter((visit) => ids.has(visit.id)));
+      } else {
+        setVoiceCheckoutMatches([]);
+        setVoiceCheckInPending((detail.missing ?? []).length === 0);
+      }
+      setError(null);
+    };
+    window.addEventListener("askv:gate-prefill", listener);
+    return () => window.removeEventListener("askv:gate-prefill", listener);
+  }, []);
   const gateAskVContextRef = useRef<GateAskVDraftContext>({
     selectedSite: null,
     draft: {

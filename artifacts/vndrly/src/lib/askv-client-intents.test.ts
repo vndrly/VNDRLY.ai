@@ -20,4 +20,13 @@ describe("AskV client intents", () => {
     expect(push).toHaveBeenCalledWith({}, "", "/gatekeeper");
     push.mockRestore();
   });
+
+  it("dispatches Gate prefill facts to the visible Gate form", () => {
+    const listener = vi.fn();
+    window.addEventListener("askv:gate-prefill", listener);
+    const result = applyAskVClientIntent({ name: "prefill_gate_visit", arguments: { mode: "check-in", values: { firstName: "Bob", vehiclePlate: "8TRK22" }, missing: ["plateState"] } });
+    expect(result).toMatchObject({ ok: true });
+    expect(listener).toHaveBeenCalledOnce();
+    window.removeEventListener("askv:gate-prefill", listener);
+  });
 });

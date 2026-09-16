@@ -1,8 +1,15 @@
 import { type ReactNode } from "react";
-import { History, Mic, Shield } from "lucide-react";
+import { BriefcaseBusiness, History, Mic, Shield } from "lucide-react";
 import { FieldOpsPortalShell, type FieldOpsTabDef } from "@/components/field-ops-portal-shell";
 
 const TABS: FieldOpsTabDef[] = [
+  {
+    href: "/work-hub",
+    icon: BriefcaseBusiness,
+    labelKey: "managedSubcontractors.workHub",
+    testId: "tab-gate-work-hub",
+    match: (p) => p.startsWith("/work-hub"),
+  },
   {
     href: "/gate",
     icon: Mic,

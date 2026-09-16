@@ -30,7 +30,10 @@ vi.mock("../lib/sendgrid", () => ({
   sendAccountInvitationEmail: sendAccountInvitationEmailMock,
 }));
 
-const app = express().use(express.json()).use(cookieParser()).use(invitationsRouter);
+const app = express()
+  .use(express.json())
+  .use(cookieParser())
+  .use(invitationsRouter);
 
 const usesIsolatedDatabase =
   process.env.VNDRLY_TEST_DB_MODE === "fresh-local" ||
@@ -44,7 +47,9 @@ describe.skipIf(!usesIsolatedDatabase)("secure account invitations", () => {
   const actor = () => ({ userId: adminId, vendorId });
 
   beforeAll(async () => {
-    sendAccountInvitationEmailMock.mockResolvedValue({ messageId: "test-message" });
+    sendAccountInvitationEmailMock.mockResolvedValue({
+      messageId: "test-message",
+    });
     const suffix = randomUUID();
     const [vendor] = await db
       .insert(vendorsTable)
@@ -67,7 +72,12 @@ describe.skipIf(!usesIsolatedDatabase)("secure account invitations", () => {
       })
       .returning();
     adminId = admin!.id;
-    adminCookie = buildTestCookie({ userId: adminId, role: "vendor", vendorId, membershipRole: "admin" });
+    adminCookie = buildTestCookie({
+      userId: adminId,
+      role: "vendor",
+      vendorId,
+      membershipRole: "admin",
+    });
     await db.insert(userOrgMembershipsTable).values({
       userId: adminId,
       orgType: "vendor",
@@ -101,6 +111,22 @@ describe.skipIf(!usesIsolatedDatabase)("secure account invitations", () => {
     };
   }
 
+  it("does not resurrect an invitation revoked while email delivery is in flight", async () => {
+    const input = invitationInput();
+    sendAccountInvitationEmailMock.mockImplementationOnce(async () => {
+      const [invitation] = await db
+        .select()
+        .from(accountInvitationsTable)
+        .where(eq(accountInvitationsTable.email, input.email));
+      await revokeAccountInvitation(actor(), invitation.id);
+      return { messageId: "late-delivery" };
+    });
+    const issued = await issueAccountInvitation(actor(), input);
+    expect(await getInvitationStatus(issued.rawToken)).toEqual({
+      state: "revoked",
+    });
+  });
+
   it("stores only the activation token hash and never creates a temporary password", async () => {
     const issued = await issueAccountInvitation(actor(), invitationInput());
     const [row] = await db
@@ -115,7 +141,9 @@ describe.skipIf(!usesIsolatedDatabase)("secure account invitations", () => {
     expect(row!.tokenHash).toMatch(/^[a-f0-9]{64}$/);
     expect(JSON.stringify(row)).not.toContain(issued.rawToken);
     expect(user!.mustChangePassword).toBe(false);
-    expect(await bcrypt.compare("shared temporary password", user!.passwordHash)).toBe(false);
+    expect(
+      await bcrypt.compare("shared temporary password", user!.passwordHash),
+    ).toBe(false);
     expect(sendAccountInvitationEmailMock).toHaveBeenCalledWith(
       expect.objectContaining({
         to: user!.email,
@@ -148,7 +176,9 @@ describe.skipIf(!usesIsolatedDatabase)("secure account invitations", () => {
       .select()
       .from(usersTable)
       .where(eq(usersTable.id, issued.userId));
-    expect(await bcrypt.compare("Unique first password 42!", user!.passwordHash)).toBe(true);
+    expect(
+      await bcrypt.compare("Unique first password 42!", user!.passwordHash),
+    ).toBe(true);
     expect(user!.emailVerifiedAt).toBeInstanceOf(Date);
     const authorization = await db
       .select()
@@ -168,23 +198,31 @@ describe.skipIf(!usesIsolatedDatabase)("secure account invitations", () => {
   it("supports revoked, expired, and delivery-failed states without exposing usernames", async () => {
     const revoked = await issueAccountInvitation(actor(), invitationInput());
     await revokeAccountInvitation(actor(), revoked.invitationId);
-    expect(await getInvitationStatus(revoked.rawToken)).toEqual({ state: "revoked" });
+    expect(await getInvitationStatus(revoked.rawToken)).toEqual({
+      state: "revoked",
+    });
 
     const expired = await issueAccountInvitation(actor(), invitationInput());
     await db
       .update(accountInvitationsTable)
       .set({ expiresAt: new Date(Date.now() - 1_000), state: "expired" })
       .where(eq(accountInvitationsTable.id, expired.invitationId));
-    expect(await getInvitationStatus(expired.rawToken)).toEqual({ state: "expired" });
+    expect(await getInvitationStatus(expired.rawToken)).toEqual({
+      state: "expired",
+    });
 
-    sendAccountInvitationEmailMock.mockRejectedValueOnce(new Error("synthetic delivery failure"));
+    sendAccountInvitationEmailMock.mockRejectedValueOnce(
+      new Error("synthetic delivery failure"),
+    );
     const failed = await issueAccountInvitation(actor(), invitationInput());
     const [failedRow] = await db
       .select()
       .from(accountInvitationsTable)
       .where(eq(accountInvitationsTable.id, failed.invitationId));
     expect(failedRow!.state).toBe("delivery_failed");
-    expect(JSON.stringify(await getInvitationStatus("f".repeat(64)))).not.toContain("worker");
+    expect(
+      JSON.stringify(await getInvitationStatus("f".repeat(64))),
+    ).not.toContain("worker");
     expect(JSON.stringify(failedRow)).not.toContain(failed.rawToken);
   });
   it("never exposes the raw token or a password through the HTTP API", async () => {

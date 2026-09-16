@@ -2,6 +2,10 @@ import { Router } from "express";
 import { db } from "@workspace/db";
 import {
   usersTable,
+  managedSubcontractorWorkerSponsorshipsTable,
+  accountInvitationsTable,
+  managedSubcontractorRoleGrantsTable,
+  siteWorkAssignmentsTable,
   vendorPeopleTable,
   userOrgMembershipsTable,
   partnersTable,
@@ -144,6 +148,7 @@ interface ResolvedContext {
   vendorId: number | null;
   vendorRole: string | null;
   vendorPeopleId: number | null;
+  managedSubcontractor?: import("../lib/session").SessionPayload["managedSubcontractor"];
   availableMemberships: MembershipSummary[];
 }
 
@@ -242,7 +247,15 @@ async function resolveContext(
         resolvedVendorId = vp.vendorId;
       }
     }
+    // Retain the restricted identity after sponsorship termination. A fresh
+    // login must not fall back into legacy unscoped employee route behavior.
+    const [managedHistory] = user.role === "field_employee" && !vendorPeopleId
+      ? await db.select({ id: managedSubcontractorWorkerSponsorshipsTable.id })
+        .from(managedSubcontractorWorkerSponsorshipsTable)
+        .where(eq(managedSubcontractorWorkerSponsorshipsTable.workerUserId, user.id)).limit(1)
+      : [];
     return {
+      managedSubcontractor: managedHistory ? { siteGrants: [] } : undefined,
       activeMembershipId: null,
       role: user.role,
       membershipRole: null,
@@ -296,7 +309,26 @@ async function resolveContext(
     }
   }
 
+  let managedSubcontractor: ResolvedContext["managedSubcontractor"];
+  if (preferred.orgType === "vendor" && preferred.role === "field_employee" && !resolvedVendorPeopleId) {
+    const [activation] = await db.select({ id: accountInvitationsTable.id }).from(accountInvitationsTable).where(and(
+      eq(accountInvitationsTable.userId, user.id), eq(accountInvitationsTable.sponsorVendorId, preferred.orgId), eq(accountInvitationsTable.state, "claimed"),
+    )).limit(1);
+    if (!activation) return {
+      activeMembershipId: null, role: "field_employee", membershipRole: null, partnerId: null, vendorId: null,
+      vendorRole: null, vendorPeopleId: null, availableMemberships: memberships.filter((membership) => membership.id !== preferred.id),
+      managedSubcontractor: { siteGrants: [] },
+    };
+    const grants = await db.select({ siteId: managedSubcontractorRoleGrantsTable.siteId, role: managedSubcontractorRoleGrantsTable.role })
+      .from(managedSubcontractorWorkerSponsorshipsTable)
+      .innerJoin(managedSubcontractorRoleGrantsTable, eq(managedSubcontractorRoleGrantsTable.sponsorshipId, managedSubcontractorWorkerSponsorshipsTable.id))
+      .innerJoin(siteWorkAssignmentsTable, and(eq(siteWorkAssignmentsTable.siteLocationId, managedSubcontractorRoleGrantsTable.siteId), eq(siteWorkAssignmentsTable.vendorId, managedSubcontractorWorkerSponsorshipsTable.sponsorVendorId)))
+      .where(and(eq(managedSubcontractorWorkerSponsorshipsTable.workerUserId, user.id), eq(managedSubcontractorWorkerSponsorshipsTable.sponsorVendorId, preferred.orgId), eq(managedSubcontractorWorkerSponsorshipsTable.status, "active"), eq(managedSubcontractorRoleGrantsTable.status, "active")));
+    managedSubcontractor = { siteGrants: grants.flatMap((grant) => grant.siteId && (grant.role === "gatekeeper" || grant.role === "gate_supervisor") ? [{ siteId: grant.siteId, role: grant.role as "gatekeeper" | "gate_supervisor" }] : []) };
+    vendorRole = managedSubcontractor.siteGrants.some((grant) => grant.role === "gate_supervisor") ? "gate_supervisor" : managedSubcontractor.siteGrants.length ? "gatekeeper" : null;
+  }
   return {
+    managedSubcontractor,
     activeMembershipId: preferred.id,
     role: deriveSessionRole(preferred.orgType, preferred.role),
     membershipRole: preferred.role,
@@ -322,6 +354,7 @@ function buildSessionCookie(
       partnerId: ctx.partnerId,
       vendorId: ctx.vendorId,
       vendorRole: ctx.vendorRole,
+      managedSubcontractor: ctx.managedSubcontractor,
       vendorPeopleId: ctx.vendorPeopleId,
       activeMembershipId: ctx.activeMembershipId,
       iat: nowSecs,
@@ -435,6 +468,7 @@ router.post("/auth/login", async (req, res) => {
       partnerId: ctx.partnerId,
       vendorId: ctx.vendorId,
       vendorRole: ctx.vendorRole,
+      managedSubcontractor: ctx.managedSubcontractor,
       vendorPeopleId: ctx.vendorPeopleId,
       activeMembershipId: ctx.activeMembershipId,
       availableMemberships: ctx.availableMemberships,
@@ -606,6 +640,7 @@ router.get("/auth/me", async (req, res) => {
       partnerId: ctx.partnerId,
       vendorId: ctx.vendorId,
       vendorRole: ctx.vendorRole,
+      managedSubcontractor: ctx.managedSubcontractor,
       vendorPeopleId: ctx.vendorPeopleId,
       activeMembershipId: ctx.activeMembershipId,
       availableMemberships: ctx.availableMemberships,
@@ -723,6 +758,7 @@ router.post("/auth/switch-context", async (req, res) => {
       partnerId: ctx.partnerId,
       vendorId: ctx.vendorId,
       vendorRole: ctx.vendorRole,
+      managedSubcontractor: ctx.managedSubcontractor,
       vendorPeopleId: ctx.vendorPeopleId,
       activeMembershipId: ctx.activeMembershipId,
       availableMemberships: ctx.availableMemberships,

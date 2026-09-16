@@ -94,7 +94,7 @@ describe("deriveWorkHubCapabilities", () => {
       participant: true,
     });
     expect(capabilities).toEqual(
-      expect.arrayContaining(["task.assign", "shift.manage"]),
+      expect.arrayContaining(["task.assign", "shift.manage", "meeting.host"]),
     );
     expect(capabilities).not.toContain("channel.manage");
     expect(capabilities).not.toContain("policy.manage");
@@ -124,5 +124,25 @@ describe("deriveWorkHubCapabilities", () => {
       participant: true,
     });
     expect(capabilities).toContain("policy.manage");
+  });
+});
+
+describe("managed subcontractor context boundaries", () => {
+  const session = { userId: 91, role: "field_employee", membershipRole: "field_employee", vendorId: 12, vendorRole: "gate_supervisor", managedSubcontractor: { siteGrants: [{ siteId: 3, role: "gate_supervisor" as const }, { siteId: 4, role: "gatekeeper" as const }] } };
+  it("grants supervision only at the supervisor site", () => {
+    expect(deriveWorkHubCapabilities({ session, owner: vendorOwner, context: { kind: "gate", id: 3 }, participant: true })).toContain("shift.manage");
+    expect(deriveWorkHubCapabilities({ session, owner: vendorOwner, context: { kind: "gate", id: 4 }, participant: true })).not.toContain("shift.manage");
+  });
+  it("rejects another site, another company and private nonparticipant contexts", () => {
+    for (const input of [
+      { owner: vendorOwner, context: { kind: "site" as const, id: 5 }, participant: true },
+      { owner: { type: "vendor" as const, id: 13 }, context: { kind: "gate" as const, id: 3 }, participant: true },
+      { owner: vendorOwner, context: { kind: "chat" as const, id: "private" }, participant: false },
+    ]) expect(() => deriveWorkHubCapabilities({ session, ...input })).toThrow(WorkHubAccessError);
+  });
+  it("does not turn explicit organizational participation into office authority", () => {
+    const capabilities = deriveWorkHubCapabilities({ session, owner: vendorOwner, context: { kind: "organization", id: 12 }, participant: true });
+    expect(capabilities).not.toContain("policy.manage");
+    expect(capabilities).not.toContain("shift.manage");
   });
 });

@@ -64,6 +64,7 @@ type JsonSchema = Record<string, unknown>;
 
 const ALL_SIGNED_IN_ROLES: AskVRole[] = ["admin", "partner", "vendor", "field_employee"];
 const OFFICE_ROLES: AskVRole[] = ["admin", "partner", "vendor"];
+const GATE_ROLES: AskVRole[] = ["admin", "partner", "vendor", "field_employee"];
 const VENDOR_FIELD_ROLES: AskVRole[] = ["admin", "vendor", "field_employee"];
 const ONBOARDING_ROLES: AskVRole[] = ["partner", "vendor", "field_employee"];
 
@@ -161,19 +162,19 @@ const TOOL_METADATA: Record<string, Partial<ToolMetadata>> = {
   lookup_accounting_connection: { roles: ["admin", "vendor"] },
   query_active_visitors: { roles: OFFICE_ROLES },
   query_gate_report: { roles: OFFICE_ROLES },
-  prepare_visitor_check_in: { roles: OFFICE_ROLES, pack: "screen", auditTarget: "site" },
+  prepare_visitor_check_in: { roles: GATE_ROLES, pack: "screen", auditTarget: "site" },
   confirm_visitor_check_in: {
-    roles: OFFICE_ROLES,
+    roles: GATE_ROLES,
     mutating: true,
     confirmation: "required",
     risk: "high",
     pack: "screen",
     auditTarget: "site",
   },
-  find_active_visitors: { roles: OFFICE_ROLES, pack: "screen", auditTarget: "site" },
-  prepare_visitor_check_out: { roles: OFFICE_ROLES, pack: "screen", auditTarget: "site" },
+  find_active_visitors: { roles: GATE_ROLES, pack: "screen", auditTarget: "site" },
+  prepare_visitor_check_out: { roles: GATE_ROLES, pack: "screen", auditTarget: "site" },
   confirm_visitor_check_out: {
-    roles: OFFICE_ROLES,
+    roles: GATE_ROLES,
     mutating: true,
     confirmation: "required",
     risk: "high",

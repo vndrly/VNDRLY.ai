@@ -57,6 +57,14 @@ export const managedSubcontractorSponsorsTable = pgTable(
       .notNull()
       .references(() => vendorsTable.id),
     status: text("status").notNull().default("active"),
+    hoursApprovalPolicy: text("hours_approval_policy")
+      .$type<"contractor" | "subcontractor" | "either" | "dual">()
+      .notNull()
+      .default("either"),
+    hoursRecipientEmails: text("hours_recipient_emails")
+      .array()
+      .notNull()
+      .default([]),
     createdByUserId: integer("created_by_user_id")
       .notNull()
       .references(() => usersTable.id),
@@ -74,6 +82,10 @@ export const managedSubcontractorSponsorsTable = pgTable(
     statusCheck: check(
       "managed_subcontractor_sponsor_status_check",
       sql`${table.status} in ('active', 'inactive')`,
+    ),
+    hoursApprovalPolicyCheck: check(
+      "managed_subcontractor_hours_approval_policy_check",
+      sql`${table.hoursApprovalPolicy} in ('contractor', 'subcontractor', 'either', 'dual')`,
     ),
   }),
 );

@@ -61,6 +61,7 @@ import {
   subscribeGateVoiceEntry,
 } from "@/lib/gate-voice-launch";
 import { isAskVNaturalVoiceEnabled } from "@/lib/askv-natural-voice";
+import { subscribeAskVGatePrefill } from "@/lib/askv-client-tools";
 import { transcribeAskVRecording } from "@/lib/askv-transcribe";
 import {
   createPttRecorder,
@@ -177,6 +178,28 @@ export default function GatekeeperScreen() {
     refetchInterval: 30000,
     retry: false,
   });
+  useEffect(() => subscribeAskVGatePrefill((prefill) => {
+    const values = prefill.values;
+    if (typeof values.firstName === "string") setFirstName(values.firstName);
+    if (typeof values.lastName === "string") setLastName(values.lastName);
+    if (typeof values.company === "string") setCompany(values.company);
+    if (typeof values.vehiclePlate === "string") setVehiclePlate(values.vehiclePlate.toUpperCase());
+    if (typeof values.plateState === "string") setPlateState(normalizePlateState(values.plateState));
+    if (typeof values.purpose === "string") setPurpose(values.purpose);
+    if (typeof values.notes === "string") setNotes(values.notes);
+    if (values.expectedDurationMinutes != null) setDuration(String(values.expectedDurationMinutes));
+    setPlateStateError(null);
+    setOcrStateNotice(null);
+    setActiveNameField(null);
+    if (prefill.mode === "check-out") {
+      const ids = new Set(prefill.matches.map((match) => match.id));
+      setVoiceCheckInPending(false);
+      setVoiceCheckoutMatches((activeVisits.data ?? []).filter((visit) => ids.has(visit.id)));
+    } else {
+      setVoiceCheckoutMatches([]);
+      setVoiceCheckInPending(prefill.missing.length === 0);
+    }
+  }), [activeVisits.data]);
   const recentVisits = useQuery({
     queryKey: ["gatekeeper-recent-visits"],
     queryFn: fetchGatekeeperRecentVisits,

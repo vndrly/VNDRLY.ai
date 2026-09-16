@@ -182,10 +182,18 @@ describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")(
         403,
       );
       await post("consent", host, { policyVersion: 1, response: "accepted" });
+      // Authorization unlocks audio participation; the earlier view-only join
+      // did not create attendance, so explicitly join after acceptance.
+      expect((await post("join", host, {})).body.consentAccepted).toBe(true);
+      // Keep the guest present while withdrawing meeting capture consent.
+      await post("consent", guest, { policyVersion: 1, response: "accepted" });
+      expect((await post("join", guest, {})).body.consentAccepted).toBe(true);
+      await post("consent", guest, { policyVersion: 1, response: "declined" });
       expect((await post("recording", host, { enabled: true })).status).toBe(
         409,
       );
       await post("consent", guest, { policyVersion: 1, response: "accepted" });
+      expect((await post("join", guest, {})).body.consentAccepted).toBe(true);
       await Promise.all([
         post("recording", host, { enabled: true }),
         post("consent", guest, { policyVersion: 1, response: "declined" }),
@@ -215,6 +223,7 @@ describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")(
       expect((await post("audio-chunks", guest, chunk)).status).toBe(403);
       expect((await post("audio-chunks", host, chunk)).status).toBe(409);
       await post("consent", guest, { policyVersion: 1, response: "accepted" });
+      expect((await post("join", guest, {})).body.consentAccepted).toBe(true);
       expect((await post("recording", host, { enabled: true })).status).toBe(
         200,
       );
@@ -255,7 +264,7 @@ describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")(
           .status,
       ).toBe(409);
     });
-    it("duplicate joins preserve consent while new attendance requires fresh consent", async () => {
+    it("duplicate joins preserve capture while authorized rejoining starts with capture off", async () => {
       expect((await post("recording", host, { enabled: true })).status).toBe(
         200,
       );
@@ -270,11 +279,15 @@ describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")(
       ).toBe("active");
       await post("leave", guest, {});
       const rejoined = await post("join", guest, {});
-      expect(rejoined.body.consentAccepted).toBe(false);
+      // Accepted work-participation authorization persists across rejoining.
+      // New attendance still pauses capture; restarting requires a present host.
+      expect(rejoined.body.consentAccepted).toBe(true);
+      expect((await request(app).get(`/work-hub/meetings/${occurrenceId}/audio-state`).set("Cookie", host)).body.recordingState).toBe("off");
       expect((await post("recording", host, { enabled: true })).status).toBe(
-        409,
+        200,
       );
       await post("consent", guest, { policyVersion: 1, response: "accepted" });
+      expect((await post("join", guest, {})).body.consentAccepted).toBe(true);
       expect((await post("recording", host, { enabled: true })).status).toBe(
         200,
       );

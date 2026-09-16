@@ -6,6 +6,10 @@ vi.mock("@/lib/askv-natural-voice", () => ({
   isAskVNaturalVoiceEnabled: () => voiceFeature.enabled,
 }));
 
+vi.mock("@/lib/askv-client-tools", () => ({
+  subscribeAskVGatePrefill: () => () => undefined,
+}));
+
 vi.mock("@/hooks/useColors", () => ({
   useColors: () => ({
     background: "#fff",

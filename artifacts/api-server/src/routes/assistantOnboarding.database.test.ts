@@ -98,11 +98,12 @@ describe.runIf(process.env.VNDRLY_TEST_DB_MODE === "fresh-local")("AskV onboardi
       expect((await progress()).updatedAt).toEqual(first.updatedAt);
 
       // Discard the process-local reservation cache and prove the SQL result survives.
-      const { organizationKeyFromSession } = await import("../assistant/askv-pending-confirmation");
+      const { organizationKeyFromSession, askVConfirmationScopeId } = await import("../assistant/askv-pending-confirmation");
       const { mutationIdempotencyKey } = await import("../assistant/askv-idempotency");
+      // Persisted operations use the stable conversation scope across voice sessions.
       vi.resetModules();
       const durable = await import("../assistant/askv-idempotency");
-      const replayAfterRestart = await durable.runPersistentAskVMutation({ userId: session.userId!, organizationKey: organizationKeyFromSession(session), sessionId, key: "complete-step", fingerprint: mutationIdempotencyKey(session.userId!, action.name, action.arguments) }, async () => { throw new Error("Duplicate domain execution"); });
+      const replayAfterRestart = await durable.runPersistentAskVMutation({ userId: session.userId!, organizationKey: organizationKeyFromSession(session), sessionId: askVConfirmationScopeId(conversationId, sessionId), key: "complete-step", fingerprint: mutationIdempotencyKey(session.userId!, action.name, action.arguments) }, async () => { throw new Error("Duplicate domain execution"); });
       expect(replayAfterRestart).toMatchObject({ hit: true });
       expect(JSON.parse(replayAfterRestart.value)).toMatchObject({ ok: true, currentStep: "done" });
     } finally {
@@ -216,6 +217,11 @@ describe.runIf(process.env.VNDRLY_TEST_DB_MODE === "fresh-local")("AskV onboardi
     let now = Date.now();
     const clock = vi.spyOn(Date, "now").mockImplementation(() => now);
     try {
+      // The context endpoint updates page metadata only. A persisted user
+      // utterance binds the voice session to its conversation before proposal,
+      // just as the real voice flow does; the later reply confirms that action.
+      await post("/assistant/voice/transcript", { conversationId, sessionId, eventId: "request-revisited-wizard", role: "user", content: "Save the new branding and finish onboarding." }).expect(200);
+      now++;
       const action = { sessionId, callId: "finish-revisited-wizard", name: "finalize_onboarding", arguments: {} };
       const pending = await post("/assistant/realtime/tool-call", action).expect(200);
       expect(pending.body.requiresConfirmation).toBe(true);

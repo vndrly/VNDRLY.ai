@@ -1,4 +1,5 @@
 import type { SessionPayload } from "../lib/session";
+import { managedWorkerSiteRole } from "../lib/managed-worker-access";
 import type {
   WorkHubCapability,
   WorkHubContextRef,
@@ -58,6 +59,7 @@ const GATE_SUPERVISOR_CAPABILITIES: WorkHubCapability[] = [
   ...PARTICIPANT_CAPABILITIES,
   "task.assign",
   "shift.manage",
+  "meeting.host",
 ];
 
 function ownsContext(session: SessionPayload, owner: WorkHubOwner): boolean {
@@ -70,6 +72,15 @@ export function deriveWorkHubCapabilities(
   input: WorkHubAccessInput,
 ): WorkHubCapability[] {
   const { session, owner, participant } = input;
+  if (session.managedSubcontractor) {
+    if (owner.type !== "vendor" || owner.id !== session.vendorId || !participant) throw new WorkHubAccessError("not_found");
+    if (input.context.kind === "site" || input.context.kind === "gate") {
+      const role = managedWorkerSiteRole(session, Number(input.context.id));
+      if (!role) throw new WorkHubAccessError("not_found");
+      return role === "gate_supervisor" ? [...GATE_SUPERVISOR_CAPABILITIES] : [...PARTICIPANT_CAPABILITIES];
+    }
+    return [...PARTICIPANT_CAPABILITIES];
+  }
   if (session.role === "admin") return [...OWNER_ADMIN_CAPABILITIES];
   const ownerMatch = ownsContext(session, owner);
   if (!ownerMatch && !participant) throw new WorkHubAccessError("not_found");

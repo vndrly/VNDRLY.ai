@@ -6,6 +6,23 @@ export interface AskVClientIntent { name: string; arguments: Record<string, unkn
 export interface AskVClientResult { ok: boolean; message: string; opened?: boolean; saved?: boolean }
 const controls = new Map<string, () => boolean>();
 const dataChanged = new Set<() => void>();
+export type AskVGatePrefill = { mode: "check-in" | "check-out"; values: Record<string, unknown>; matches: Array<{ id: number }>; missing: string[] };
+const gatePrefillListeners = new Set<(prefill: AskVGatePrefill) => void>();
+export function subscribeAskVGatePrefill(listener: (prefill: AskVGatePrefill) => void): () => void {
+  gatePrefillListeners.add(listener); return () => { gatePrefillListeners.delete(listener); };
+}
+function readGatePrefill(args: Record<string, unknown>): AskVGatePrefill {
+  const mode = args.mode === "check-out" ? "check-out" : "check-in";
+  const raw = args.values && typeof args.values === "object" && !Array.isArray(args.values) ? args.values as Record<string, unknown> : {};
+  const allowed = new Set(["firstName", "lastName", "company", "vehiclePlate", "plateState", "purpose", "notes", "expectedDurationMinutes"]);
+  const values = Object.fromEntries(Object.entries(raw).filter(([key, value]) => allowed.has(key) && (typeof value === "string" || typeof value === "number")));
+  const matches = Array.isArray(args.matches) ? args.matches.flatMap((match) => {
+    const id = Number((match as { id?: unknown })?.id);
+    return Number.isSafeInteger(id) && id > 0 ? [{ id }] : [];
+  }) : [];
+  const missing = Array.isArray(args.missing) ? args.missing.filter((value): value is string => typeof value === "string") : [];
+  return { mode, values, matches, missing };
+}
 export function emitAskVDataChanged(): void { dataChanged.forEach(listener => listener()); }
 export function subscribeAskVDataChanged(listener: () => void): () => void {
   dataChanged.add(listener); return () => { dataChanged.delete(listener); };
@@ -52,6 +69,11 @@ const opened = (message: string): AskVClientResult => ({ ok: true, opened: true,
 export async function executeAskVClientIntent(intent: AskVClientIntent, path: string): Promise<AskVClientResult> {
   const args = intent.arguments;
   try {
+    if (intent.name === "prefill_gate_visit") {
+      const prefill = readGatePrefill(args);
+      gatePrefillListeners.forEach((listener) => listener(prefill));
+      return opened(prefill.missing.length ? `Gate form filled. Still needed: ${prefill.missing.join(", ")}.` : "Gate form filled and ready for review.");
+    }
     if (intent.name === "focus_control") {
       const focus = controls.get(path + ":" + String(args.controlId));
       return focus?.() ? opened("Focused the requested control.") : fail("That control is not available on the current screen.");

@@ -28,6 +28,15 @@ export function applyAskVClientIntent(intent: AskVClientIntent): { ok: boolean; 
     window.dispatchEvent(new CustomEvent('askv:client-intent', { detail: intent }));
     return true;
   };
+  if (intent.name === 'prefill_gate_visit') {
+    const mode = args.mode === 'check-out' ? 'check-out' : 'check-in';
+    const raw = args.values && typeof args.values === 'object' && !Array.isArray(args.values) ? args.values as Record<string, unknown> : {};
+    const allowed = new Set(['firstName', 'lastName', 'company', 'vehiclePlate', 'plateState', 'purpose', 'notes', 'expectedDurationMinutes']);
+    const values = Object.fromEntries(Object.entries(raw).filter(([key, value]) => allowed.has(key) && (typeof value === 'string' || typeof value === 'number')));
+    const detail = { mode, values, matches: Array.isArray(args.matches) ? args.matches : [], missing: Array.isArray(args.missing) ? args.missing : [] };
+    window.dispatchEvent(new CustomEvent('askv:gate-prefill', { detail }));
+    return { ok: true, message: detail.missing.length ? `Gate form filled. Still needed: ${detail.missing.join(', ')}.` : 'Gate form filled and ready for review.' };
+  }
   if (intent.name === 'prefill_draft' && args.form === 'safety-report') {
     let values: Record<string, unknown>;
     try { values = typeof args.values === 'string' ? JSON.parse(args.values) : args.values as Record<string, unknown>; }

@@ -55,6 +55,9 @@ export function buildAppNavigation({
       item("gate", "/(tabs)/gate", labels.gate, "truck"),
       item("askv", "/(tabs)/askv", labels.askv, "zap", "askv"),
       item("gate-history", "/(tabs)/gate-history", labels.history, "clock"),
+      ...(user?.managedSubcontractor
+        ? [item("work-hub", "/work-hub", labels.workHub, "briefcase")]
+        : []),
       item("profile", "/(tabs)/profile", labels.profile, "user"),
     ];
   }

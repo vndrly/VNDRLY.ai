@@ -5,10 +5,11 @@ export type VisitEventSession = {
   vendorId: number | null;
   partnerId: number | null;
   vendorRole?: string | null;
+  managedSubcontractor?: import("./session").SessionPayload["managedSubcontractor"];
 };
 
 export function isGatekeeperVisitSession(session: VisitEventSession): boolean {
-  return session.role === "vendor" && !!session.vendorId && session.vendorRole === "gatekeeper";
+  return !!session.vendorId && ((session.role === "vendor" && session.vendorRole === "gatekeeper") || (session.role === "field_employee" && !!session.managedSubcontractor && ["gatekeeper", "gate_supervisor"].includes(session.vendorRole ?? "")));
 }
 
 export function visitEventSiteId(ev: VisitEvent): number {

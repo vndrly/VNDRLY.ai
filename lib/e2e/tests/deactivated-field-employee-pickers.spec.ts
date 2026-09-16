@@ -48,6 +48,7 @@ type Seed = {
   siteCode: string;
   activeFeId: number;
   deactivatedFeId: number;
+  officeAdminId: number;
   ticketId: number;
   vendorUserId: number;
   vendorUsername: string;
@@ -134,6 +135,20 @@ async function seedFixture(): Promise<Seed> {
     membershipId: vendorMembership.id,
   });
 
+  // The startup approval scan requires a nondeleted field/admin person.
+  // Foremen alone do not qualify, and this suite intentionally deactivates
+  // every field employee. Keep a separate office admin so that scan cannot
+  // revoke the relationship and remove the site while testing empty pickers.
+  // Admin personnel are excluded from the field-worker picker endpoints.
+  const officeAdmin = await createVendorPerson(pool, {
+    vendorId: vendor.id,
+    vendorRole: "admin",
+    firstName: "E522OfficeAdmin",
+    lastName: stamp,
+    email: `e522-office-admin-${stamp}@example.com`,
+    isActive: true,
+  });
+
   // Active foreman with a linked user — needed so the schedule dialog's
   // foreman picker (which only lists crew members whose vendor_people
   // row has a userId) can include them.
@@ -185,6 +200,7 @@ async function seedFixture(): Promise<Seed> {
     siteCode,
     activeFeId: activeFe.id,
     deactivatedFeId: deactivatedFe.id,
+    officeAdminId: officeAdmin.id,
     ticketId: ticket.id,
     vendorUserId: vendorUser.id,
     vendorUsername,
@@ -205,9 +221,10 @@ async function cleanup(s: Seed): Promise<void> {
     [s.siteId],
   );
   await pool.query(`DELETE FROM site_locations WHERE id = $1`, [s.siteId]);
-  await pool.query(`DELETE FROM vendor_people WHERE id IN ($1, $2)`, [
+  await pool.query(`DELETE FROM vendor_people WHERE id IN ($1, $2, $3)`, [
     s.activeFeId,
     s.deactivatedFeId,
+    s.officeAdminId,
   ]);
   await pool.query(`DELETE FROM users WHERE id IN ($1, $2)`, [
     s.vendorUserId,

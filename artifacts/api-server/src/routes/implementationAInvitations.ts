@@ -71,59 +71,80 @@ router.post("/implementation-a/account-invitations", async (req, res) => {
   }
 });
 
-router.post("/implementation-a/account-invitations/:invitationId/resend", async (req, res) => {
-  try {
-    const result = await resendAccountInvitation(
-      actorFrom(req),
-      InvitationIdSchema.parse(req.params.invitationId),
-    );
-    res.json({
-      invitationId: result.invitationId,
-      userId: result.userId,
-      expiresAt: result.expiresAt.toISOString(),
-    });
-  } catch (error) {
-    sendError(res, error);
-  }
-});
-
-router.delete("/implementation-a/account-invitations/:invitationId", async (req, res) => {
-  try {
-    await revokeAccountInvitation(
-      actorFrom(req),
-      InvitationIdSchema.parse(req.params.invitationId),
-    );
-    res.status(204).end();
-  } catch (error) {
-    sendError(res, error);
-  }
-});
-
-router.get("/implementation-a/account-invitations/activate/:token", async (req, res) => {
-  try {
-    const token = RawTokenSchema.safeParse(req.params.token);
-    res.json(token.success ? await getInvitationStatus(token.data) : { state: "invalid" });
-  } catch (error) {
-    sendError(res, error);
-  }
-});
-
-router.post("/implementation-a/account-invitations/activate/:token", async (req, res) => {
-  try {
-    const token = RawTokenSchema.safeParse(req.params.token);
-    if (!token.success) {
-      throw new AccountInvitationError(
-        "Invitation is invalid or unavailable",
-        410,
-        "account_invitation.invalid",
+router.post(
+  "/implementation-a/account-invitations/:invitationId/resend",
+  async (req, res) => {
+    try {
+      const result = await resendAccountInvitation(
+        actorFrom(req),
+        InvitationIdSchema.parse(req.params.invitationId),
       );
+      res.json({
+        invitationId: result.invitationId,
+        userId: result.userId,
+        expiresAt: result.expiresAt.toISOString(),
+      });
+    } catch (error) {
+      sendError(res, error);
     }
-    res.json(
-      await claimAccountInvitation(token.data, ClaimAccountInvitationSchema.parse(req.body)),
-    );
-  } catch (error) {
-    sendError(res, error);
-  }
-});
+  },
+);
+
+router.delete(
+  "/implementation-a/account-invitations/:invitationId",
+  async (req, res) => {
+    try {
+      await revokeAccountInvitation(
+        actorFrom(req),
+        InvitationIdSchema.parse(req.params.invitationId),
+      );
+      res.status(204).end();
+    } catch (error) {
+      sendError(res, error);
+    }
+  },
+);
+
+router.get(
+  "/implementation-a/account-invitations/activate/:token",
+  async (req, res) => {
+    res.setHeader("Cache-Control", "no-store");
+    try {
+      const token = RawTokenSchema.safeParse(req.params.token);
+      res.json(
+        token.success
+          ? await getInvitationStatus(token.data)
+          : { state: "invalid" },
+      );
+    } catch (error) {
+      sendError(res, error);
+    }
+  },
+);
+
+router.post(
+  "/implementation-a/account-invitations/activate/:token",
+  async (req, res) => {
+    res.setHeader("Cache-Control", "no-store");
+    try {
+      const token = RawTokenSchema.safeParse(req.params.token);
+      if (!token.success) {
+        throw new AccountInvitationError(
+          "Invitation is invalid or unavailable",
+          410,
+          "account_invitation.invalid",
+        );
+      }
+      res.json(
+        await claimAccountInvitation(
+          token.data,
+          ClaimAccountInvitationSchema.parse(req.body),
+        ),
+      );
+    } catch (error) {
+      sendError(res, error);
+    }
+  },
+);
 
 export default router;

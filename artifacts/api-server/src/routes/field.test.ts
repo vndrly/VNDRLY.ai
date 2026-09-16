@@ -53,6 +53,7 @@ const tables = {
   users: tableTag("users", [
     "id",
     "username",
+    "email",
     "passwordHash",
     "role",
     "displayName",
@@ -617,6 +618,41 @@ function seedFieldEmployeeWithLogin(opts: {
   user.activeMembershipId = membership.id;
   return { user, employee, membership };
 }
+
+describe("POST /api/field-employees/:id/login", () => {
+  it("relinks a dormant duplicate login to the active vendor person", async () => {
+    const vendor = seedVendor(802, "Midcon Solutions");
+    const admin: Row = {
+      id: nextId("users"), username: "admin@midconsolutions.com", email: "admin@midconsolutions.com",
+      passwordHash: "hashed:admin-password", role: "vendor", displayName: "Midcon Admin",
+      activeMembershipId: null, preferredLanguage: null, sessionVersion: 1, createdAt: new Date(),
+    };
+    fixtures.users.push(admin);
+    const dormant = seedFieldEmployeeWithLogin({ vendorId: vendor.id, email: "chad@midconsolutions.com", firstName: "Chad", lastName: "Elerick" });
+    dormant.user.username = "chad@midconsolutions";
+    dormant.user.email = "chad@midconsolutions";
+    dormant.user.role = "vendor";
+    dormant.employee.vendorRole = "admin";
+    dormant.employee.isActive = false;
+    dormant.employee.deletedAt = new Date();
+    dormant.membership.role = "admin";
+    const active: Row = {
+      id: nextId("vendorPeople"), vendorId: vendor.id, userId: null,
+      firstName: "Chad", lastName: "Elerick", email: "chad@midconsolutions.com",
+      isActive: true, deletedAt: null, vendorRole: "admin",
+    };
+    fixtures.vendorPeople.push(active);
+    const response = await request(app).post(`/api/field-employees/${active.id}/login`)
+      .set("Cookie", vendorCookie(admin.id, vendor.id))
+      .send({ portalLoginEnabled: true, email: "chad@midconsolutions.com", password: "new-password", displayName: "Chad Elerick" });
+    expectStatus(response, 200);
+    expect(response.body).toMatchObject({ employeeId: active.id, userId: dormant.user.id, status: "relinked" });
+    expect(active.userId).toBe(dormant.user.id);
+    expect(dormant.employee.userId).toBeNull();
+    expect(dormant.user).toMatchObject({ username: "chad@midconsolutions.com", email: "chad@midconsolutions.com", passwordHash: "hashed:new-password", role: "vendor", displayName: "Chad Elerick" });
+    expect(fixtures.userOrgMemberships.find((membership) => membership.userId === dormant.user.id && membership.vendorPeopleId === active.id)).toMatchObject({ userId: dormant.user.id, vendorId: vendor.id, vendorPeopleId: active.id, role: "admin" });
+  });
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DELETE /api/field-employees/:id/login — the field-employee unassign

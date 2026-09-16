@@ -28,6 +28,26 @@ const user = (role: string, vendorRole?: string): StoredUser => ({
 });
 
 describe("buildAppNavigation", () => {
+  it("gives sponsored gate workers Gate and Work Hub without office or payroll navigation", () => {
+    for (const role of ["gatekeeper", "gate_supervisor"]) {
+      const worker = {
+        ...user("field_employee", role),
+        managedSubcontractor: { siteGrants: [{ siteId: 7, role }] },
+      };
+      const keys = buildAppNavigation({
+        user: worker as StoredUser,
+        labels,
+        badges,
+      }).map((item) => item.key);
+      expect(keys).toEqual([
+        "gate",
+        "askv",
+        "gate-history",
+        "work-hub",
+        "profile",
+      ]);
+    }
+  });
   it("uses four Gate actions with AskV as the voice entry", () => {
     const items = buildAppNavigation({
       user: user("vendor", "gatekeeper"),
@@ -75,7 +95,11 @@ describe("buildAppNavigation", () => {
   });
 
   it("enters the focused Work Hub shell outside the main tabs", () => {
-    const entry = buildAppNavigation({ user: user("vendor"), labels, badges }).find((item) => item.key === "work-hub");
+    const entry = buildAppNavigation({
+      user: user("vendor"),
+      labels,
+      badges,
+    }).find((item) => item.key === "work-hub");
     expect(entry?.href).toBe("/work-hub");
   });
 

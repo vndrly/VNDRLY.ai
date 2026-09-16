@@ -67,12 +67,13 @@ import EmployeePortalLoginFields from "@/components/employee-portal-login-fields
 import { useAuth } from "@/hooks/use-auth";
 import OrgMembersCard from "@/components/org-members-card";
 import VendorPartnerRelationshipsCard from "@/components/vendor-partner-relationships-card";
+import VendorManagedSubcontractorsCard from "@/components/vendor-managed-subcontractors-card";
 import { useQuery } from "@tanstack/react-query";
 import { hotlistApi } from "@/lib/hotlist-api";
 import { useTranslation } from "react-i18next";
 import { translateApiError } from "@/lib/api-error";
 import { PlatformEulaModal } from "@/components/platform-eula-modal";
-import { canViewVendorOfficeEmployees } from "@/lib/vendor-detail-visibility";
+import { canManageVendorSubcontractors, canViewVendorOfficeEmployees } from "@/lib/vendor-detail-visibility";
 
 const WORKFORCE_ROLES = ["Field Worker", "Driver", "Visitor Notifications"] as const;
 
@@ -1183,6 +1184,7 @@ export default function VendorDetail({ id }: { id: number }) {
       />}
 
       {canEditVendor && <VendorPartnerRelationshipsCard vendorId={id} />}
+      {canManageVendorSubcontractors(authUser, id) && <VendorManagedSubcontractorsCard vendorId={id} vendorName={vendor.name} />}
 
       <VendorServicesAndPricingCard vendorId={id} />
 

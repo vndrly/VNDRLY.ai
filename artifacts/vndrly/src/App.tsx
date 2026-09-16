@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
+import { isManagedSubcontractor } from "@/lib/managed-subcontractor-access";
 import { AskVVoiceBoundary } from "@/hooks/use-askv-voice-session";
 import { BrandProvider } from "@/hooks/use-brand";
 import { ThemeProvider } from "@/hooks/use-theme";
@@ -242,7 +243,7 @@ function AuthenticatedRouter() {
             <Route path="/login" component={Login} />
             <Route path="/*splat" component={Login} />
           </>
-        ) : user.role === "vendor" && user.vendorRole === "gatekeeper" ? (
+        ) : (user.role === "vendor" && user.vendorRole === "gatekeeper") || isManagedSubcontractor(user) ? (
           <GatePortalLayout>
             <Switch>
               <Route path="/gate/history" component={GateHistoryPage} />
