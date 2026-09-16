@@ -25,6 +25,9 @@ export type StoredUser = {
   // (foreman | field | both) so foreman-only UI can gate correctly.
   vendorRole?: string | null;
   vendorPeopleId?: number | null;
+  managedSubcontractor?: {
+    siteGrants: { siteId: number; role: "gatekeeper" | "gate_supervisor" }[];
+  } | null;
   preferredLanguage?: "en" | "es" | "pt" | null;
   // Mirrors of the web app's auth state so the mobile header can show
   // the active org name + Partner/Vendor pill, and dual-membership users
@@ -49,7 +52,9 @@ export function isAuthScopeCurrent(scope: AuthScope): boolean {
   return scope.generation === authGeneration;
 }
 
-export function subscribeUser(listener: (user: StoredUser | null) => void): () => void {
+export function subscribeUser(
+  listener: (user: StoredUser | null) => void,
+): () => void {
   userListeners.add(listener);
   return () => {
     userListeners.delete(listener);
@@ -85,7 +90,9 @@ export function isTokenCacheReady(): boolean {
   return cachedTokenLoaded;
 }
 
-export function subscribeToken(listener: (token: string | null) => void): () => void {
+export function subscribeToken(
+  listener: (token: string | null) => void,
+): () => void {
   tokenListeners.add(listener);
   return () => {
     tokenListeners.delete(listener);
@@ -161,9 +168,9 @@ export async function getToken(): Promise<string | null> {
 
 export function setToken(token: string | null): Promise<void> {
   notifyToken(token);
-  return queueTokenStorage(() => token
-    ? setItem(TOKEN_KEY, token)
-    : removeItem(TOKEN_KEY));
+  return queueTokenStorage(() =>
+    token ? setItem(TOKEN_KEY, token) : removeItem(TOKEN_KEY),
+  );
 }
 
 export async function getUser(): Promise<StoredUser | null> {
@@ -191,9 +198,9 @@ export async function getUser(): Promise<StoredUser | null> {
 
 export function setUser(user: StoredUser | null): Promise<void> {
   notifyUser(user);
-  return queueUserStorage(() => user
-    ? setItem(USER_KEY, JSON.stringify(user))
-    : removeItem(USER_KEY));
+  return queueUserStorage(() =>
+    user ? setItem(USER_KEY, JSON.stringify(user)) : removeItem(USER_KEY),
+  );
 }
 
 export async function clearAuthIfCurrent(scope: AuthScope): Promise<boolean> {

@@ -14,6 +14,7 @@ import { logger } from "./lib/logger";
 import {
   GUEST_ALLOWLIST,
   PUBLIC_UNAUTHENTICATED_ALLOWLIST,
+  ACCOUNT_ACTIVATION_ALLOWLIST,
 } from "./lib/publicApiAllowlist";
 import {
   decodeRole,
@@ -41,6 +42,7 @@ app.set("trust proxy", "loopback");
 // also prevents stolen tokens from being used to repeatedly increment
 // sessionVersion (DoS via forced global logout).
 const SESSION_VERSION_SKIP: { method: string; pattern: RegExp }[] = [
+  ...ACCOUNT_ACTIVATION_ALLOWLIST,
   { method: "POST", pattern: /^\/api\/auth\/login\/?$/ },
   { method: "GET", pattern: /^\/api\/health\/?$/ },
   { method: "GET", pattern: /^\/api\/healthz\/?$/ },
@@ -54,7 +56,7 @@ app.use(
         return {
           id: req.id,
           method: req.method,
-          url: req.url?.split("?")[0],
+          url: req.url?.split("?")[0]?.replace(/(\/account-invitations\/activate\/)[^/]+/i, "$1[redacted]"),
         };
       },
       res(res) {
@@ -211,13 +213,12 @@ app.use(async (req: Request, res: Response, next: NextFunction) => {
   } catch (err) {
     // On a transient DB error let the request through; route-level
     // auth still validates the token signature and expiry.
+    if (session.managedSubcontractor) return res.status(503).json({ message: "Unable to verify access", code: "auth.access_unavailable" });
     logger.warn({ err }, "Session version check failed — allowing request");
   }
 
   next();
 });
-
-const { enforceTenant } = require("./lib/tenantGuard");
 
 // Per-route handlers enforce auth; this layer only applies tenant response
 // filtering when a session is present.

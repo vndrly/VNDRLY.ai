@@ -1,3 +1,5 @@
+import { managedWorkerSessionIsCurrent } from "../lib/managed-worker-session";
+import { managedWorkerSiteIds, managedWorkerSiteRole } from "../lib/managed-worker-access";
 import { Router, type IRouter } from "express";
 import {
   eq,
@@ -283,7 +285,10 @@ type Session = {
   role: string;
   vendorId: number | null;
   partnerId: number | null;
+  sv?: number;
+  exp?: number;
   vendorRole?: string | null;
+  managedSubcontractor?: import("../lib/session").SessionPayload["managedSubcontractor"];
 };
 function getStaffSession(req: any): Session | null {
   const cookie = req.cookies?.[COOKIE_NAME];
@@ -301,8 +306,8 @@ function getStaffSession(req: any): Session | null {
 }
 
 function isGatekeeperSession(session: Session | null): boolean {
-  if (!session || session.role !== "vendor" || !session.vendorId) return false;
-  return session.vendorRole === "gatekeeper";
+  if (!session || (session.role !== "vendor" && !(session.role === "field_employee" && session.managedSubcontractor)) || !session.vendorId) return false;
+  return session.vendorRole === "gatekeeper" || (Boolean(session.managedSubcontractor) && session.vendorRole === "gate_supervisor");
 }
 
 async function requireGatekeeperSession(
@@ -330,7 +335,7 @@ async function requireGateReconciliationSession(req: any, res: any): Promise<Ses
     return null;
   }
   if (
-    session.role !== "vendor" ||
+    (session.role !== "vendor" && !(session.role === "field_employee" && session.managedSubcontractor)) ||
     !session.vendorId ||
     !["gatekeeper", "gate_supervisor"].includes(session.vendorRole ?? "")
   ) {
@@ -847,7 +852,7 @@ router.get("/visits/gate/assigned-sites", async (req, res): Promise<void> => {
       siteLocationId: siteWorkAssignmentsTable.siteLocationId,
     })
     .from(siteWorkAssignmentsTable)
-    .where(eq(siteWorkAssignmentsTable.vendorId, session.vendorId!));
+    .where(and(eq(siteWorkAssignmentsTable.vendorId, session.vendorId!), session.managedSubcontractor ? inArray(siteWorkAssignmentsTable.siteLocationId, managedWorkerSiteIds(session)) : undefined));
   const siteIds = [...new Set(assignments.map((row) => row.siteLocationId))];
   if (siteIds.length === 0) {
     res.json({ sites: [], defaultSite: null });
@@ -947,7 +952,7 @@ router.post("/visits/gate/observations", async (req, res): Promise<void> => {
       .from(siteWorkAssignmentsTable)
       .where(and(
         eq(siteWorkAssignmentsTable.siteLocationId, site.id),
-        eq(siteWorkAssignmentsTable.vendorId, session.vendorId!),
+        and(eq(siteWorkAssignmentsTable.vendorId, session.vendorId!), session.managedSubcontractor ? inArray(siteWorkAssignmentsTable.siteLocationId, managedWorkerSiteIds(session)) : undefined),
       ))
       .limit(1);
     if (!assignment) {
@@ -1052,7 +1057,7 @@ router.post("/visits/gate/:id/reconcile", async (req, res): Promise<void> => {
       .from(siteWorkAssignmentsTable)
       .where(and(
         eq(siteWorkAssignmentsTable.siteLocationId, visit.siteLocationId),
-        eq(siteWorkAssignmentsTable.vendorId, session.vendorId!),
+        and(eq(siteWorkAssignmentsTable.vendorId, session.vendorId!), session.managedSubcontractor ? inArray(siteWorkAssignmentsTable.siteLocationId, managedWorkerSiteIds(session)) : undefined),
       ))
       .limit(1);
     if (!assignment) {
@@ -1079,7 +1084,7 @@ router.post("/visits/gate/:id/reconcile", async (req, res): Promise<void> => {
       at: input.completedAt ? new Date(input.completedAt) : new Date(),
       gatekeeperUserId: session.userId,
     });
-    const supervisorOverride = session.vendorRole === "gate_supervisor" && Boolean(input.overrideReason);
+    const supervisorOverride = (session.managedSubcontractor ? managedWorkerSiteRole(session, visit.siteLocationId) === "gate_supervisor" : session.vendorRole === "gate_supervisor") && Boolean(input.overrideReason);
     const state = reconciled.state === "reconciled" || supervisorOverride ? "reconciled" : "needs_supervisor_review";
     const [updated] = await db.update(siteVisitsTable).set({
       firstName: input.firstName,
@@ -1178,7 +1183,7 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
     .where(
       and(
         eq(siteWorkAssignmentsTable.siteLocationId, site.id),
-        eq(siteWorkAssignmentsTable.vendorId, session.vendorId!),
+        and(eq(siteWorkAssignmentsTable.vendorId, session.vendorId!), session.managedSubcontractor ? inArray(siteWorkAssignmentsTable.siteLocationId, managedWorkerSiteIds(session)) : undefined),
       ),
     )
     .limit(1);
@@ -1410,7 +1415,7 @@ router.post("/visits/gate/:id/check-out", async (req, res): Promise<void> => {
     .where(
       and(
         eq(siteWorkAssignmentsTable.siteLocationId, visit.siteLocationId),
-        eq(siteWorkAssignmentsTable.vendorId, session.vendorId!),
+        and(eq(siteWorkAssignmentsTable.vendorId, session.vendorId!), session.managedSubcontractor ? inArray(siteWorkAssignmentsTable.siteLocationId, managedWorkerSiteIds(session)) : undefined),
       ),
     )
     .limit(1);
@@ -1487,7 +1492,7 @@ router.post("/visits/gate/:id/admit", async (req, res): Promise<void> => {
     .where(
       and(
         eq(siteWorkAssignmentsTable.siteLocationId, visit.siteLocationId),
-        eq(siteWorkAssignmentsTable.vendorId, session.vendorId!),
+        and(eq(siteWorkAssignmentsTable.vendorId, session.vendorId!), session.managedSubcontractor ? inArray(siteWorkAssignmentsTable.siteLocationId, managedWorkerSiteIds(session)) : undefined),
       ),
     )
     .limit(1);
@@ -1871,7 +1876,7 @@ router.get("/visits/events", async (req, res): Promise<void> => {
     const assignments = await db
       .select({ siteLocationId: siteWorkAssignmentsTable.siteLocationId })
       .from(siteWorkAssignmentsTable)
-      .where(eq(siteWorkAssignmentsTable.vendorId, session.vendorId));
+      .where(and(eq(siteWorkAssignmentsTable.vendorId, session.vendorId), session.managedSubcontractor ? inArray(siteWorkAssignmentsTable.siteLocationId, managedWorkerSiteIds(session)) : undefined));
     return new Set(assignments.map((row) => row.siteLocationId));
   };
   let assignedSiteIds = await loadAssignedSites();
@@ -1954,7 +1959,11 @@ router.get("/visits/events", async (req, res): Promise<void> => {
     }
   }, 25000);
 
-  const unsubscribe = subscribeVisitEvents((ev) => {
+  const unsubscribe = subscribeVisitEvents(async (ev) => {
+    if (session.managedSubcontractor) {
+      if (!(await managedWorkerSessionIsCurrent(session))) { res.end(); return; }
+      try { await refreshAssignedSites(); } catch { res.end(); return; }
+    }
     if (!visible(ev)) return;
     try {
       // Always advance Last-Event-ID for visible events so reconnect-time
@@ -2086,7 +2095,7 @@ router.get("/visits", async (req, res): Promise<void> => {
     const assignments = await db
       .select({ siteLocationId: siteWorkAssignmentsTable.siteLocationId })
       .from(siteWorkAssignmentsTable)
-      .where(eq(siteWorkAssignmentsTable.vendorId, session.vendorId!));
+      .where(and(eq(siteWorkAssignmentsTable.vendorId, session.vendorId!), session.managedSubcontractor ? inArray(siteWorkAssignmentsTable.siteLocationId, managedWorkerSiteIds(session)) : undefined));
     const assignedSiteIds = [
       ...new Set(assignments.map((row) => row.siteLocationId)),
     ];
@@ -2297,7 +2306,7 @@ router.get(
         .from(siteWorkAssignmentsTable)
         .where(
           and(
-            eq(siteWorkAssignmentsTable.vendorId, session.vendorId),
+            and(eq(siteWorkAssignmentsTable.vendorId, session.vendorId), session.managedSubcontractor ? inArray(siteWorkAssignmentsTable.siteLocationId, managedWorkerSiteIds(session)) : undefined),
             eq(siteWorkAssignmentsTable.siteLocationId, siteId),
           ),
         )
@@ -2373,7 +2382,7 @@ router.get("/visits/:id", async (req, res): Promise<void> => {
   }
   if (session.role !== "admin" &&
       !(session.role === "partner" && session.partnerId) &&
-      !(session.role === "vendor" && session.vendorId)) {
+      !(session.role === "vendor" && session.vendorId) && !isGatekeeperSession(session)) {
     res.status(403).json({ message: "Forbidden", code: VISIT_NO_ACCESS });
     return;
   }
@@ -2446,7 +2455,7 @@ router.get("/visits/:id", async (req, res): Promise<void> => {
       .from(siteWorkAssignmentsTable)
       .where(
         and(
-          eq(siteWorkAssignmentsTable.vendorId, session.vendorId!),
+          and(eq(siteWorkAssignmentsTable.vendorId, session.vendorId!), session.managedSubcontractor ? inArray(siteWorkAssignmentsTable.siteLocationId, managedWorkerSiteIds(session)) : undefined),
           eq(siteWorkAssignmentsTable.siteLocationId, v.siteLocationId),
         ),
       )

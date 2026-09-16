@@ -1,3 +1,4 @@
+import { managedWorkerSiteRole } from "../lib/managed-worker-access";
 import { Router, type IRouter, type Request, type Response } from "express";
 import express from "express";
 import {
@@ -88,8 +89,9 @@ async function canReadVisitEvidence(
   if (session.role === "admin") return true;
   if (session.role === "partner")
     return session.partnerId === visit.sitePartnerId;
-  if (session.role !== "vendor" || !session.vendorId) return false;
-  if (session.vendorRole !== "gatekeeper")
+  if (session.managedSubcontractor && !managedWorkerSiteRole(session, visit.siteLocationId)) return false;
+  if ((session.role !== "vendor" && !(session.role === "field_employee" && session.managedSubcontractor)) || !session.vendorId) return false;
+  if (session.vendorRole !== "gatekeeper" && !session.managedSubcontractor)
     return session.vendorId === visit.hostVendorId;
   const [assignment] = await db
     .select({ id: siteWorkAssignmentsTable.id })

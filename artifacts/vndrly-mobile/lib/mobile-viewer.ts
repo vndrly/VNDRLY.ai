@@ -1,10 +1,17 @@
 import type { StoredUser } from "@/lib/auth";
 
 type GatekeeperUserShape = Pick<StoredUser, "role"> &
-  Partial<Pick<StoredUser, "vendorRole" | "username" | "displayName">>;
+  Partial<
+    Pick<
+      StoredUser,
+      "vendorRole" | "username" | "displayName" | "managedSubcontractor"
+    >
+  >;
 
 /** Top-level session role is field employee (crew / foreman mobile workflows). */
-export function isFieldEmployeeUser(user: Pick<StoredUser, "role"> | null | undefined): boolean {
+export function isFieldEmployeeUser(
+  user: Pick<StoredUser, "role"> | null | undefined,
+): boolean {
   return user?.role === "field_employee";
 }
 
@@ -21,25 +28,44 @@ export function isForemanEmployeeUser(
 export function isGatekeeperUser(
   user: GatekeeperUserShape | null | undefined,
 ): boolean {
-  return user?.role === "vendor" && user.vendorRole === "gatekeeper";
+  return (
+    (user?.role === "vendor" && user.vendorRole === "gatekeeper") ||
+    (user?.role === "field_employee" &&
+      !!user.managedSubcontractor &&
+      (user.vendorRole === "gatekeeper" ||
+        user.vendorRole === "gate_supervisor"))
+  );
 }
 
 /** Tab route segments a gatekeeper may stay on without being bounced to Gate. */
-export const GATEKEEPER_TAB_KEYS = ["askv", "gate", "gate-history", "profile"] as const;
+export const GATEKEEPER_TAB_KEYS = [
+  "askv",
+  "gate",
+  "gate-history",
+  "profile",
+] as const;
 
 export function isGatekeeperTabKey(segment: string | undefined): boolean {
-  return !!segment && (GATEKEEPER_TAB_KEYS as readonly string[]).includes(segment);
+  return (
+    !!segment && (GATEKEEPER_TAB_KEYS as readonly string[]).includes(segment)
+  );
 }
 
-export function isVendorOfficeUser(user: Pick<StoredUser, "role"> | null | undefined): boolean {
+export function isVendorOfficeUser(
+  user: Pick<StoredUser, "role"> | null | undefined,
+): boolean {
   return user?.role === "vendor";
 }
 
-export function isPartnerOfficeUser(user: Pick<StoredUser, "role"> | null | undefined): boolean {
+export function isPartnerOfficeUser(
+  user: Pick<StoredUser, "role"> | null | undefined,
+): boolean {
   return user?.role === "partner";
 }
 
-export function isAdminOfficeUser(user: Pick<StoredUser, "role"> | null | undefined): boolean {
+export function isAdminOfficeUser(
+  user: Pick<StoredUser, "role"> | null | undefined,
+): boolean {
   return user?.role === "admin";
 }
 

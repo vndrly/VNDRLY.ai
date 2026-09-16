@@ -14,9 +14,14 @@ import {
   grantSponsoredRole,
   inviteManagedWorker,
   listVisibleSponsorships,
+  listManagedOrganizations,
+  createManagedWorker,
+  updateManagedWorker,
+  resendManagedWorkerInvitation,
   ManagedSubcontractorError,
   type ManagedSubcontractorActor,
 } from "../services/managed-subcontractors";
+import { AccountInvitationError } from "../services/account-invitations";
 
 const router = Router();
 const IdSchema = z.string().uuid();
@@ -39,7 +44,10 @@ function actorFrom(req: Request): ManagedSubcontractorActor {
 }
 
 function sendError(res: Response, error: unknown): void {
-  if (error instanceof ManagedSubcontractorError) {
+  if (
+    error instanceof ManagedSubcontractorError ||
+    error instanceof AccountInvitationError
+  ) {
     res.status(error.status).json({ error: error.message, code: error.code });
     return;
   }
@@ -74,7 +82,9 @@ router.post(
   async (req, res) => {
     try {
       const actor = actorFrom(req);
-      const managedOrganizationId = IdSchema.parse(req.params.managedOrganizationId);
+      const managedOrganizationId = IdSchema.parse(
+        req.params.managedOrganizationId,
+      );
       const input = InviteManagedWorkerSchema.parse(req.body);
       const created = await inviteManagedWorker(
         actor,
@@ -88,17 +98,20 @@ router.post(
   },
 );
 
-router.post("/implementation-a/sponsorships/:sponsorshipId/roles", async (req, res) => {
-  try {
-    const actor = actorFrom(req);
-    const sponsorshipId = IdSchema.parse(req.params.sponsorshipId);
-    const input = GrantSponsoredRoleSchema.parse(req.body);
-    const created = await grantSponsoredRole(actor, sponsorshipId, input);
-    res.status(201).json(created);
-  } catch (error) {
-    sendError(res, error);
-  }
-});
+router.post(
+  "/implementation-a/sponsorships/:sponsorshipId/roles",
+  async (req, res) => {
+    try {
+      const actor = actorFrom(req);
+      const sponsorshipId = IdSchema.parse(req.params.sponsorshipId);
+      const input = GrantSponsoredRoleSchema.parse(req.body);
+      const created = await grantSponsoredRole(actor, sponsorshipId, input);
+      res.status(201).json(created);
+    } catch (error) {
+      sendError(res, error);
+    }
+  },
+);
 
 router.get("/implementation-a/sponsorships", async (req, res) => {
   try {
@@ -115,7 +128,9 @@ router.post(
   async (req, res) => {
     try {
       const actor = actorFrom(req);
-      const managedOrganizationId = IdSchema.parse(req.params.managedOrganizationId);
+      const managedOrganizationId = IdSchema.parse(
+        req.params.managedOrganizationId,
+      );
       const input = ClaimManagedOrganizationSchema.parse(req.body);
       res.json(
         await claimManagedOrganization(
@@ -123,6 +138,105 @@ router.post(
           managedOrganizationId,
           input.representativeUserId,
         ),
+      );
+    } catch (error) {
+      sendError(res, error);
+    }
+  },
+);
+
+function vendorActorFrom(req: Request) {
+  const actor = actorFrom(req);
+  if (
+    z.coerce.number().int().positive().parse(req.params.vendorId) !==
+    actor.vendorId
+  ) {
+    throw new ManagedSubcontractorError(
+      "Vendor administrator access required",
+      403,
+      "managed_subcontractor.vendor_admin_required",
+    );
+  }
+  return actor;
+}
+
+const RoleSitesSchema = z
+  .object({
+    role: z.enum(["gatekeeper", "gate_supervisor"]),
+    siteIds: z.array(z.number().int().positive()).min(1).max(200),
+  })
+  .strict();
+const WorkerSchema = RoleSitesSchema.extend({
+  name: z.string().trim().min(1).max(160),
+  email: z.email().max(320),
+});
+const base = "/vendors/:vendorId/managed-subcontractors";
+router.get(base, async (req, res) => {
+  try {
+    res.json(await listManagedOrganizations(vendorActorFrom(req)));
+  } catch (error) {
+    sendError(res, error);
+  }
+});
+router.post(base, async (req, res) => {
+  try {
+    const actor = vendorActorFrom(req);
+    const created = await createManagedOrganization(
+      actor,
+      CreateManagedOrganizationSchema.parse(req.body),
+    );
+    res
+      .status(201)
+      .json({
+        id: created.id,
+        name: created.name,
+        status: created.status,
+        workers: [],
+      });
+  } catch (error) {
+    sendError(res, error);
+  }
+});
+router.post(`${base}/:organizationId/workers`, async (req, res) => {
+  try {
+    const actor = vendorActorFrom(req);
+    const orgId = IdSchema.parse(req.params.organizationId);
+    const input = WorkerSchema.parse(req.body);
+    res.setHeader("Cache-Control", "no-store");
+    res.status(201).json(await createManagedWorker(actor, orgId, input));
+  } catch (error) {
+    sendError(res, error);
+  }
+});
+router.patch(
+  `${base}/:organizationId/workers/:sponsorshipId`,
+  async (req, res) => {
+    try {
+      const actor = vendorActorFrom(req);
+      const orgId = IdSchema.parse(req.params.organizationId);
+      const sponsorshipId = IdSchema.parse(req.params.sponsorshipId);
+      const input = z
+        .union([
+          RoleSitesSchema,
+          z.object({ status: z.literal("terminated") }).strict(),
+        ])
+        .parse(req.body);
+      res.json(await updateManagedWorker(actor, orgId, sponsorshipId, input));
+    } catch (error) {
+      sendError(res, error);
+    }
+  },
+);
+router.post(
+  `${base}/:organizationId/workers/:sponsorshipId/resend-invitation`,
+  async (req, res) => {
+    try {
+      const actor = vendorActorFrom(req);
+      const orgId = IdSchema.parse(req.params.organizationId);
+      const sponsorshipId = IdSchema.parse(req.params.sponsorshipId);
+      res.setHeader("Cache-Control", "no-store");
+      res.json(
+        await resendManagedWorkerInvitation(actor, orgId, sponsorshipId),
       );
     } catch (error) {
       sendError(res, error);

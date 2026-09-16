@@ -1,11 +1,27 @@
 import { and, desc, eq, lt, or, sql, type SQL } from "drizzle-orm";
-import { db, siteLocationsTable, ticketsTable, workHubChannelMembersTable, workHubChannelsTable } from "@workspace/db";
+import { db, siteWorkAssignmentsTable, siteLocationsTable, ticketsTable, workHubChannelMembersTable, workHubChannelsTable } from "@workspace/db";
 import type { SessionPayload } from "../lib/session";
+import { managedWorkerSiteRole } from "../lib/managed-worker-access";
 import { createWorkHubAccess, requireWorkHubCapability, type WorkHubAccess } from "./context-access";
 import type { WorkHubCapability } from "@workspace/api-zod";
 import { collaborationChannelAccess, collaborationChannelScope } from "./collaboration-access";
 
 export async function isWorkHubParticipant(session: SessionPayload & { userId: number }, channel: typeof workHubChannelsTable.$inferSelect): Promise<boolean> {
+  if (session.managedSubcontractor) {
+    if (channel.ownerOrgType !== "vendor" || channel.ownerOrgId !== session.vendorId) return false;
+    if (channel.contextKind === "site" || channel.contextKind === "gate") {
+      if (!managedWorkerSiteRole(session, Number(channel.contextId))) return false;
+      const [assignment] = await db.select({ id: siteWorkAssignmentsTable.id }).from(siteWorkAssignmentsTable)
+        .where(and(eq(siteWorkAssignmentsTable.vendorId, channel.ownerOrgId), eq(siteWorkAssignmentsTable.siteLocationId, Number(channel.contextId)))).limit(1);
+      if (!assignment) return false;
+    }
+    const collaboration = await collaborationChannelAccess(session.userId, channel.id);
+    if (collaboration !== null) return collaboration;
+    const [member] = await db.select({ id: workHubChannelMembersTable.id }).from(workHubChannelMembersTable)
+      .where(and(eq(workHubChannelMembersTable.channelId, channel.id), eq(workHubChannelMembersTable.userId, session.userId))).limit(1);
+    if (member) return true;
+    return channel.visibility === "organization" && (channel.contextKind === "organization" || channel.contextKind === "site" || channel.contextKind === "gate");
+  }
   const collaborationAccess = await collaborationChannelAccess(session.userId, channel.id);
   if (collaborationAccess !== null) return collaborationAccess;
   if (session.role === "admin") return true;
@@ -47,7 +63,7 @@ export async function resolveChannelAccess(
     participant: await isWorkHubParticipant(session, channel), visibilityRevision: `${session.userId}:${channel.updatedAt.toISOString()}`,
   });
   const scope = await collaborationChannelScope(session.userId, channel.id);
-  const resolved = scope ? { ...access, capabilities: new Set<WorkHubCapability>(scope.manager ? ["channel.read", "channel.write", "file.download", "channel.manage", "task.assign", "announcement.publish", "meeting.host"] : ["channel.read", "channel.write", "file.download"]) } : access;
+  const resolved = scope && !session.managedSubcontractor ? { ...access, capabilities: new Set<WorkHubCapability>(scope.manager ? ["channel.read", "channel.write", "file.download", "channel.manage", "task.assign", "announcement.publish", "meeting.host"] : ["channel.read", "channel.write", "file.download"]) } : access;
   requireWorkHubCapability(resolved, capability);
   return { channel, access: resolved };
 }
@@ -105,7 +121,7 @@ function listedChannelAccess(session: SessionPayload & { userId: number }): SQL 
 
 export async function listOwnedWorkHubChannels(session: SessionPayload & { userId: number }, before?: Date, limit = 50) {
   const requested = Math.min(100, Math.max(1, limit));
-  return db.select().from(workHubChannelsTable)
+  const rows = await db.select().from(workHubChannelsTable)
     .where(and(
       eq(workHubChannelsTable.status, "active"),
       before ? lt(workHubChannelsTable.updatedAt, before) : undefined,
@@ -113,4 +129,7 @@ export async function listOwnedWorkHubChannels(session: SessionPayload & { userI
     ))
     .orderBy(desc(workHubChannelsTable.updatedAt), desc(workHubChannelsTable.id))
     .limit(requested);
+  if (!session.managedSubcontractor) return rows;
+  const allowed = await Promise.all(rows.map((channel) => isWorkHubParticipant(session, channel)));
+  return rows.filter((_, index) => allowed[index]);
 }

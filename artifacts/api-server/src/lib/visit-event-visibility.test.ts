@@ -70,3 +70,10 @@ describe("visitEventVisibleToSession", () => {
     expect(visitEventVisibleToSession(vendor, checkedInAtSite(309, null))).toBe(false);
   });
 });
+
+it("managed gate workers see only granted assigned sites", () => {
+  const session = { ...gatekeeper, role: "field_employee", vendorRole: "gate_supervisor", managedSubcontractor: { siteGrants: [{ siteId: 309, role: "gate_supervisor" as const }] } };
+  expect(visitEventVisibleToSession(session, checkedInAtSite(309, null), new Set([309]))).toBe(true);
+  expect(visitEventVisibleToSession(session, checkedInAtSite(999, 1054), new Set([309]))).toBe(false);
+  expect(visitEventVisibleToSession(session, checkedInAtSite(309, null), null)).toBe(false);
+});

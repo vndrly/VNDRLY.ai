@@ -1,3 +1,4 @@
+import { managedWorkerSiteRole } from "../lib/managed-worker-access";
 import { Router, type IRouter, type Request, type Response } from "express";
 import { randomUUID, createHash } from "node:crypto";
 import {
@@ -105,6 +106,7 @@ function announcementReadable(userId: number) {
 type Actor = SessionPayload & { userId: number };
 function actor(req: Request): Actor | null {
   const value = getSessionFromRequest(req);
+  if (value?.managedSubcontractor && !value.vendorId) return null;
   return value?.userId ? (value as Actor) : null;
 }
 function clientSource(req: Request): "web" | "ios" {
@@ -126,6 +128,7 @@ async function ownAccess(
     )
       throw new WorkHubAccessError("forbidden");
     const siteId = Number(context.id);
+    if (session.managedSubcontractor && (owner.id !== session.vendorId || managedWorkerSiteRole(session, siteId) !== "gate_supervisor")) throw new WorkHubAccessError("forbidden");
     if (!Number.isInteger(siteId) || siteId <= 0)
       throw new WorkHubAccessError("not_found");
     const [assignment] = await db
@@ -209,6 +212,11 @@ async function claimOpenShift(shiftId: string, userId: number) {
   });
 }
 function ownerFilter(session: Actor) {
+  if (session.role !== "admin" && !session.vendorId && !session.partnerId) return sql`false`;
+  if (session.managedSubcontractor) return and(
+    eq(workHubTasksTable.ownerOrgType, "vendor"), eq(workHubTasksTable.ownerOrgId, session.vendorId ?? -1),
+    or(eq(workHubTasksTable.assigneeUserId, session.userId), eq(workHubTasksTable.createdById, session.userId)),
+  );
   return session.role === "admin"
     ? undefined
     : or(
@@ -230,6 +238,7 @@ function ownerFilterFor(
   session: Actor,
   table: { ownerOrgType: AnyPgColumn; ownerOrgId: AnyPgColumn },
 ) {
+  if (session.role !== "admin" && !session.vendorId && !session.partnerId) return sql`false`;
   return session.role === "admin"
     ? undefined
     : or(
@@ -455,6 +464,7 @@ router.get("/work-hub/files", async (req, res) => {
   const visible = (
     await Promise.all(
       candidates.map(async (file) => {
+        if (session.managedSubcontractor && !file.channelId) return null;
         if (!file.channelId)
           return sessionCanSeeOwner(session, file.ownerOrgType, file.ownerOrgId)
             ? file
@@ -1498,6 +1508,7 @@ router.get("/work-hub/calendar", async (req, res) => {
       .where(
         and(
           shiftOwner,
+          session.managedSubcontractor ? sql`(${workHubShiftsTable.createdById} = ${session.userId} or exists (select 1 from ${workHubShiftAssignmentsTable} assignment where assignment.shift_id = ${workHubShiftsTable.id} and assignment.user_id = ${session.userId}) or ${workHubShiftsTable.sharedWithUserIds} @> ${JSON.stringify([session.userId])}::jsonb)` : undefined,
           lte(workHubShiftsTable.startsAt, end),
           gte(workHubShiftsTable.endsAt, start),
         ),
@@ -1535,7 +1546,11 @@ router.get("/work-hub/calendar", async (req, res) => {
       ),
   ]);
   return res.json({
-    shifts: shifts.map((item) => ({
+    shifts: (await Promise.all(shifts.map(async (item) => {
+      if (!session.managedSubcontractor || item.createdById !== session.userId) return item;
+      if (!item.channelId) return null;
+      try { await resolveChannelAccess(session, item.channelId, "shift.manage"); return item; } catch { return null; }
+    }))).filter((item): item is typeof shifts[number] => item !== null).map((item) => ({
       source: "vndrly",
       authority: "work_hub_shift",
       item,
@@ -1599,6 +1614,25 @@ router.post("/work-hub/shifts", async (req, res) => {
     const recurrence = payload.recurrence
       ? normalizeRecurrenceRule(payload.recurrence as never)
       : null;
+    let managedShiftChannelId: string | undefined;
+    if (session.managedSubcontractor) {
+      // ownAccess already verified the site-specific supervisor grant and
+      // live sponsor assignment. Provision a scoped channel idempotently.
+      await db.insert(workHubChannelsTable).values({
+        ownerOrgType: envelope.owner.type, ownerOrgId: envelope.owner.id,
+        contextKind: envelope.context.kind, contextId: String(envelope.context.id),
+        name: `${envelope.context.kind === "gate" ? "Gate" : "Site"} ${envelope.context.id}`,
+        visibility: "organization", createdById: session.userId,
+      }).onConflictDoNothing();
+      const [channel] = await db.select({ id: workHubChannelsTable.id }).from(workHubChannelsTable).where(and(
+        eq(workHubChannelsTable.ownerOrgType, envelope.owner.type), eq(workHubChannelsTable.ownerOrgId, envelope.owner.id),
+        eq(workHubChannelsTable.contextKind, envelope.context.kind), eq(workHubChannelsTable.contextId, String(envelope.context.id)),
+        eq(workHubChannelsTable.status, "active"),
+      )).limit(1);
+      if (!channel) throw new WorkHubAccessError("not_found");
+      await resolveChannelAccess(session, channel.id, "shift.manage");
+      managedShiftChannelId = channel.id;
+    }
     const result = await executeWorkHubCommand(
       { userId: session.userId, source: clientSource(req) },
       "shift.create",
@@ -1609,6 +1643,7 @@ router.post("/work-hub/shifts", async (req, res) => {
           .values({
             ownerOrgType: envelope.owner.type,
             ownerOrgId: envelope.owner.id,
+            channelId: managedShiftChannelId,
             title: payload.title,
             startsAt: new Date(payload.startsAt),
             endsAt: new Date(payload.endsAt),
@@ -1667,6 +1702,8 @@ router.post("/work-hub/shifts/:id/claim", async (req, res) => {
     .where(eq(workHubShiftsTable.id, req.params.id));
   if (!shift) return sendApiError(res, 404, "work_hub.not_found", "Not found");
   if (!sessionCanSeeOwner(session, shift.ownerOrgType, shift.ownerOrgId))
+    return sendApiError(res, 404, "work_hub.not_found", "Not found");
+  if (session.managedSubcontractor && !(shift.sharedWithUserIds ?? []).includes(session.userId))
     return sendApiError(res, 404, "work_hub.not_found", "Not found");
   if (!shift.open)
     return sendApiError(

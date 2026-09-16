@@ -1,11 +1,13 @@
+import { managedWorkerSiteIds } from "../lib/managed-worker-access";
 import { Router } from "express";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, sql, inArray } from "drizzle-orm";
 import { db, siteVisitsTable } from "@workspace/db";
 import { getSessionFromRequest, type SessionPayload } from "../lib/session";
 import { parseVisitEntryCategory } from "../lib/visit-entry-category";
 
 export function visitEntryCategoryScope(session: SessionPayload) {
   if (!session.userId) return null;
+  if (session.managedSubcontractor) return and(inArray(siteVisitsTable.siteLocationId, managedWorkerSiteIds(session)), sql`EXISTS (SELECT 1 FROM site_work_assignments a WHERE a.site_location_id = ${siteVisitsTable.siteLocationId} AND a.vendor_id = ${session.vendorId})`);
   if (session.role === "admin") return sql`true`;
   if (session.role === "partner" && session.partnerId) return sql`EXISTS (
     SELECT 1 FROM site_locations s WHERE s.id = ${siteVisitsTable.siteLocationId} AND s.partner_id = ${session.partnerId}

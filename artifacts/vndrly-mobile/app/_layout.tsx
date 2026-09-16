@@ -7,7 +7,12 @@ import {
   Inter_700Bold,
   useFonts,
 } from "@expo-google-fonts/inter";
-import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {
+  MutationCache,
+  QueryCache,
+  QueryClient,
+  QueryClientProvider,
+} from "@tanstack/react-query";
 import { Slot, router, usePathname, useSegments } from "expo-router";
 import * as Notifications from "expo-notifications";
 import * as SplashScreen from "expo-splash-screen";
@@ -29,10 +34,23 @@ import { subscribeAskVDataChanged } from "@/lib/askv-client-tools";
 import { initApi } from "@/lib/api";
 import VndrlyPageBackground from "@/components/VndrlyPageBackground";
 import { MeetingCompanionProvider } from "@/components/MeetingCompanionProvider";
-import { getCachedToken, getCachedRole, getToken, isTokenCacheReady, subscribeToken, getUser } from "@/lib/auth";
+import {
+  getCachedToken,
+  getCachedRole,
+  getToken,
+  isTokenCacheReady,
+  subscribeToken,
+  getUser,
+} from "@/lib/auth";
 import { isGatekeeperTabKey, isGatekeeperUser } from "@/lib/mobile-viewer";
-import { hasActiveConsentForThisDevice, isConsentDeclined } from "@/lib/locationConsent";
-import { startLiveLocationReporter, stopLiveLocationReporter } from "@/lib/liveLocationReporter";
+import {
+  hasActiveConsentForThisDevice,
+  isConsentDeclined,
+} from "@/lib/locationConsent";
+import {
+  startLiveLocationReporter,
+  stopLiveLocationReporter,
+} from "@/lib/liveLocationReporter";
 import { useWorkHubDevicePresence } from "@/hooks/use-work-hub-device-presence";
 import { ensureNotificationSoundLifecycle } from "@/lib/notificationSounds";
 import { syncAppIconBadge } from "@/lib/notificationBadge";
@@ -59,18 +77,26 @@ const queryClient = new QueryClient({
   },
   queryCache: new QueryCache({
     onError: (err) => {
-      if (__DEV__) console.warn("[query]", err instanceof Error ? err.message : err);
+      if (__DEV__)
+        console.warn("[query]", err instanceof Error ? err.message : err);
     },
   }),
   mutationCache: new MutationCache({
     onError: (err) => {
-      if (__DEV__) console.warn("[mutation]", err instanceof Error ? err.message : err);
+      if (__DEV__)
+        console.warn("[mutation]", err instanceof Error ? err.message : err);
     },
   }),
 });
 
 function AuthGate() {
-  useEffect(() => subscribeAskVDataChanged(() => { void queryClient.invalidateQueries(); }), []);
+  useEffect(
+    () =>
+      subscribeAskVDataChanged(() => {
+        void queryClient.invalidateQueries();
+      }),
+    [],
+  );
   const segments = useSegments();
   const pathname = usePathname();
   const [checked, setChecked] = useState(isTokenCacheReady());
@@ -80,7 +106,10 @@ function AuthGate() {
   useWorkHubDevicePresence(pathname, checked && hasAuth && role !== "guest");
 
   useEffect(() => {
-    const timer = setTimeout(() => setMinSplashElapsed(true), SPLASH_MIN_DURATION_MS);
+    const timer = setTimeout(
+      () => setMinSplashElapsed(true),
+      SPLASH_MIN_DURATION_MS,
+    );
     return () => clearTimeout(timer);
   }, []);
 
@@ -100,7 +129,11 @@ function AuthGate() {
     const tagUser = (u: Awaited<ReturnType<typeof getUser>>) =>
       setSentryUser(
         u
-          ? { id: u.id, username: u.username ?? null, email: u.username ?? null }
+          ? {
+              id: u.id,
+              username: u.username ?? null,
+              email: u.username ?? null,
+            }
           : null,
       );
     if (!isTokenCacheReady()) {
@@ -153,7 +186,9 @@ function AuthGate() {
       if (cancelled) return;
       const isGatekeeper = isGatekeeperUser(routeUser);
       const routeSegments = segments as readonly string[];
-      const inGatekeeperStack = seg0 === "(tabs)" && isGatekeeperTabKey(routeSegments[1]);
+      const inGatekeeperStack =
+        (seg0 === "(tabs)" && isGatekeeperTabKey(routeSegments[1])) ||
+        (!!routeUser?.managedSubcontractor && seg0 === "work-hub");
       if (role === "guest") {
         if (!inGuestStack) router.replace("/visitor-checkin");
       } else if (isGatekeeper) {
@@ -192,7 +227,9 @@ function AuthGate() {
         router.replace("/location-consent");
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [checked, hasAuth, role, segments]);
 
   // Deep-link from push notifications: route by payload.type / link.
@@ -205,7 +242,9 @@ function AuthGate() {
       if (notifId != null) {
         try {
           const { apiFetch } = await import("@/lib/api");
-          await apiFetch(`/api/notifications/${notifId}/read`, { method: "POST" });
+          await apiFetch(`/api/notifications/${notifId}/read`, {
+            method: "POST",
+          });
         } catch {
           // ignore
         }
@@ -217,9 +256,11 @@ function AuthGate() {
       void syncAppIconBadge();
     }
 
-    const sub = Notifications.addNotificationResponseReceivedListener((resp) => {
-      void handlePushOpen(resp.notification.request.content.data);
-    });
+    const sub = Notifications.addNotificationResponseReceivedListener(
+      (resp) => {
+        void handlePushOpen(resp.notification.request.content.data);
+      },
+    );
     void Notifications.getLastNotificationResponseAsync().then((resp) => {
       if (!resp) return;
       void handlePushOpen(resp.notification.request.content.data);
@@ -271,17 +312,17 @@ function RootLayout() {
           <AuthProvider>
             <AskVVoiceProvider>
               <BrandProvider>
-              <GestureHandlerRootView style={{ flex: 1 }}>
-                <SafeKeyboardProvider>
-                  <VndrlyPageBackground>
-                    <MeetingCompanionProvider>
-                      <AuthGate />
-                      <ContextPickerModal />
-                      <AskVVoiceIndicator />
-                    </MeetingCompanionProvider>
-                  </VndrlyPageBackground>
-                </SafeKeyboardProvider>
-              </GestureHandlerRootView>
+                <GestureHandlerRootView style={{ flex: 1 }}>
+                  <SafeKeyboardProvider>
+                    <VndrlyPageBackground>
+                      <MeetingCompanionProvider>
+                        <AuthGate />
+                        <ContextPickerModal />
+                        <AskVVoiceIndicator />
+                      </MeetingCompanionProvider>
+                    </VndrlyPageBackground>
+                  </SafeKeyboardProvider>
+                </GestureHandlerRootView>
               </BrandProvider>
             </AskVVoiceProvider>
           </AuthProvider>

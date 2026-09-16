@@ -4,7 +4,23 @@
 
 export type ApiAllowRule = { method: string; pattern: RegExp };
 
+// The random, single-use token authenticates activation itself. Administrative
+// issue/resend/revoke endpoints remain behind the normal staff session gate.
+export const ACCOUNT_ACTIVATION_ALLOWLIST: ApiAllowRule[] = [
+  {
+    method: "GET",
+    pattern:
+      /^\/api\/implementation-a\/account-invitations\/activate\/[a-f0-9]{64}\/?$/i,
+  },
+  {
+    method: "POST",
+    pattern:
+      /^\/api\/implementation-a\/account-invitations\/activate\/[a-f0-9]{64}\/?$/i,
+  },
+];
+
 export const GUEST_ALLOWLIST: ApiAllowRule[] = [
+  ...ACCOUNT_ACTIVATION_ALLOWLIST,
   { method: "POST", pattern: /^\/api\/auth\/guest\/?$/ },
   { method: "GET", pattern: /^\/api\/auth\/guest\/me\/?$/ },
   { method: "POST", pattern: /^\/api\/auth\/guest\/logout\/?$/ },
@@ -44,8 +60,14 @@ const DEV_UNAUTHENTICATED_ALLOWLIST: ApiAllowRule[] =
     : [];
 
 export const PUBLIC_UNAUTHENTICATED_ALLOWLIST: ApiAllowRule[] = [
-  { method: "GET", pattern: /^\/api\/work-hub\/file-library\/public\/[a-f0-9]{64}$/ },
-  { method: "GET", pattern: /^\/api\/work-hub\/finance\/public\/[a-f0-9]{64}$/ },
+  {
+    method: "GET",
+    pattern: /^\/api\/work-hub\/file-library\/public\/[a-f0-9]{64}$/,
+  },
+  {
+    method: "GET",
+    pattern: /^\/api\/work-hub\/finance\/public\/[a-f0-9]{64}$/,
+  },
   ...GUEST_ALLOWLIST,
   ...DEV_UNAUTHENTICATED_ALLOWLIST,
   { method: "GET", pattern: /^\/api\/healthz\/?$/ },

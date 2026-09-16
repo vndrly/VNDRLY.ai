@@ -332,6 +332,7 @@ function buildStoredUser(
     vendorId: data.vendorId,
     vendorRole: data.vendorRole ?? null,
     vendorPeopleId: data.vendorPeopleId ?? null,
+    managedSubcontractor: data.managedSubcontractor ?? null,
     preferredLanguage,
     activeMembershipId:
       typeof data.activeMembershipId === "number"

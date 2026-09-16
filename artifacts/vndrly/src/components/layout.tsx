@@ -1,7 +1,9 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
+import { isManagedSubcontractor, type ManagedSubcontractor } from "@/lib/managed-subcontractor-access";
 import {
   LayoutDashboard,
+  History,
   Building2,
   Handshake,
   Users,
@@ -83,6 +85,7 @@ function useNavItems(user: {
   vendorId: number | null;
   partnerId: number | null;
   vendorRole?: string | null;
+  managedSubcontractor?: ManagedSubcontractor;
 } | null) {
   const { t } = useTranslation();
   const gateEnabled = useQuery({
@@ -121,6 +124,13 @@ function useNavItems(user: {
       icon: ClipboardList,
     });
   if (!user) return [...baseNavItems, crewMapItem];
+  if (isManagedSubcontractor(user)) {
+    return [
+      { href: "/gate", label: t("gateNav.gate"), icon: ClipboardList, key: "gate" },
+      { href: "/gate/history", label: t("gateNav.history"), icon: History, key: "gate-history" },
+      { href: "/work-hub", label: "Work Hub", icon: BriefcaseBusiness, key: "work-hub" },
+    ];
+  }
   if (user.role === "vendor" && user.vendorId) {
     return wrap([
       ...baseNavItems.map((item) =>

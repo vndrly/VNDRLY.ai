@@ -66,3 +66,13 @@ describe("explicit staff visit categories", () => {
     expect(response.status).toBe(403);
   });
 });
+
+it("restricts managed workers to both their site grants and sponsor assignments", () => {
+  const scope = visitEntryCategoryScope({ userId: 90, role: "field_employee", vendorId: 7, managedSubcontractor: { siteGrants: [{ siteId: 22, role: "gatekeeper" }] } });
+  const filter = new PgDialect().sqlToQuery(scope!);
+  expect(filter.sql).toContain('"site_visits"."site_location_id" in');
+  expect(filter.sql).toContain("a.vendor_id =");
+  expect(filter.params).toEqual([22, 7]);
+  const empty = new PgDialect().sqlToQuery(visitEntryCategoryScope({ userId: 90, vendorId: 7, managedSubcontractor: { siteGrants: [] } })!);
+  expect(empty.sql).toContain("false");
+});

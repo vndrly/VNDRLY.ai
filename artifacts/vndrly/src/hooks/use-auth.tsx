@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from "react";
 import i18n from "@/lib/i18n";
+import { normalizeManagedSubcontractor } from "@/lib/managed-subcontractor-access";
 
 type AuthErrorBody = { error?: string; code?: string; message?: string };
 
@@ -39,6 +40,7 @@ export interface MembershipSummary {
 }
 
 interface AuthUser {
+  managedSubcontractor?: import("@/lib/managed-subcontractor-access").ManagedSubcontractor;
   userId: number;
   role: "admin" | "vendor" | "partner" | "field_employee";
   displayName: string;
@@ -90,6 +92,7 @@ type RawMembership = {
 };
 
 type RawAuthResponse = {
+  managedSubcontractor?: unknown;
   userId?: unknown;
   id?: unknown;
   role?: unknown;
@@ -156,6 +159,7 @@ function fromResponse(input: unknown): AuthUser {
     vendorPeopleId:
       typeof data.vendorPeopleId === "number" ? data.vendorPeopleId : null,
     vendorRole,
+    managedSubcontractor: normalizeManagedSubcontractor(data.managedSubcontractor),
     preferredLanguage:
       data.preferredLanguage === "en" || data.preferredLanguage === "es"
         ? data.preferredLanguage
