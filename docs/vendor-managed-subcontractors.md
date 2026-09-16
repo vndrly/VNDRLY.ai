@@ -23,4 +23,4 @@ Vendor administrators manage external staffing companies from the vendor detail 
 
 ## Development status
 
-Implemented and published on `codex/vendor-managed-subcontractors`. The user has authorized a full production release; web, API, iOS OTA and TestFlight are being verified separately. Validation results and resume instructions are recorded in `docs/superpowers/plans/2026-09-16-managed-subcontractors.md`. Use the exact commit's GitHub Actions results to confirm deployment status.
+Live on web/API and the production iOS update, with TestFlight 1.0.2 build 177 available for internal testing. Application release source: `9fe07a3960d0c67c5872ecd2c3da9f2e136cd3ab`. Exact workflow, update, native build, Apple processing and validation evidence are in `docs/releases/2026-09-16-managed-subcontractors.md`. Implementation and resume notes are in `docs/superpowers/plans/2026-09-16-managed-subcontractors.md`.

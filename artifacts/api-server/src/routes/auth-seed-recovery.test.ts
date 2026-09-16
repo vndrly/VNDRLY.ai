@@ -8,7 +8,9 @@ import {
 } from "../test-utils/route-app";
 import pg from "pg";
 import bcrypt from "bcryptjs";
-import { sql } from "drizzle-orm";
+import { inArray, or, sql } from "drizzle-orm";
+import { DEMO_USERS } from "../lib/demo-users";
+import { DEMO_SEED_ORGANIZATIONS, demoIdentityAliases } from "../lib/demo-user-seed";
 import { assertIsolatedTestDatabaseEnvironment } from "../../../../scripts/e2e-isolation.mjs";
 
 // ---------------------------------------------------------------------------
@@ -143,37 +145,35 @@ describe.runIf(haveRealDb)("POST /api/auth/seed demo password recovery", () => {
   });
 
   it("is idempotent and does not duplicate users, memberships, or organizations", async () => {
-    const before = {
-      users: (await db.select({ id: usersTable.id }).from(usersTable)).length,
-      memberships: (
-        await db
-          .select({ id: userOrgMembershipsTable.id })
-          .from(userOrgMembershipsTable)
-      ).length,
-      partners: (await db.select({ id: partnersTable.id }).from(partnersTable))
-        .length,
-      vendors: (await db.select({ id: vendorsTable.id }).from(vendorsTable))
-        .length,
+    // Suites share an isolated database: unrelated fixture cleanup can change
+    // global counts during this request. Compare the seed-owned identities and
+    // row IDs instead, retaining duplicate and replacement detection.
+    const snapshot = async () => {
+      const users = await db.select({ id: usersTable.id, username: usersTable.username, email: usersTable.email })
+        .from(usersTable).where(inArray(sql`lower(coalesce(${usersTable.email}, ${usersTable.username}))`, DEMO_USERS.flatMap(demoIdentityAliases)))
+        .orderBy(usersTable.id);
+      const memberships = await db.select({ id: userOrgMembershipsTable.id, userId: userOrgMembershipsTable.userId, partnerId: userOrgMembershipsTable.partnerId, vendorId: userOrgMembershipsTable.vendorId, role: userOrgMembershipsTable.role })
+        .from(userOrgMembershipsTable).where(inArray(userOrgMembershipsTable.userId, users.map((user) => user.id))).orderBy(userOrgMembershipsTable.id);
+      const organizationScope = (type: "partner" | "vendor", table: typeof partnersTable | typeof vendorsTable) => {
+        const specs = DEMO_SEED_ORGANIZATIONS.filter((org) => org.orgType === type);
+        const normalize = (value: string) => value.trim().toLowerCase();
+        return or(
+          inArray(sql`lower(btrim(${table.name}))`, specs.flatMap((org) => [org.name, ...org.nameAliases]).map(normalize)),
+          inArray(sql`lower(btrim(${table.contactEmail}))`, specs.flatMap((org) => [org.contactEmail, ...org.contactEmailAliases]).map(normalize)),
+        );
+      };
+      const partners = await db.select({ id: partnersTable.id, name: partnersTable.name }).from(partnersTable).where(organizationScope("partner", partnersTable)).orderBy(partnersTable.id);
+      const vendors = await db.select({ id: vendorsTable.id, name: vendorsTable.name }).from(vendorsTable).where(organizationScope("vendor", vendorsTable)).orderBy(vendorsTable.id);
+      return { users, memberships, partners, vendors };
     };
-
+    const before = await snapshot();
+    expect(before.users).toHaveLength(DEMO_USERS.length);
+    expect(before.partners).toHaveLength(DEMO_SEED_ORGANIZATIONS.filter((org) => org.orgType === "partner").length);
+    expect(before.vendors).toHaveLength(DEMO_SEED_ORGANIZATIONS.filter((org) => org.orgType === "vendor").length);
     const rerun = await request(app).post("/api/auth/seed");
     expectStatus(rerun, 200);
     expect(rerun.body.added).toEqual([]);
-
-    const after = {
-      users: (await db.select({ id: usersTable.id }).from(usersTable)).length,
-      memberships: (
-        await db
-          .select({ id: userOrgMembershipsTable.id })
-          .from(userOrgMembershipsTable)
-      ).length,
-      partners: (await db.select({ id: partnersTable.id }).from(partnersTable))
-        .length,
-      vendors: (await db.select({ id: vendorsTable.id }).from(vendorsTable))
-        .length,
-    };
-    expect(after).toEqual(before);
-
+    expect(await snapshot()).toEqual(before);
     const bakerRows = await db
       .select({ name: vendorsTable.name })
       .from(vendorsTable)

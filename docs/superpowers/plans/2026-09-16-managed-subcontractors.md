@@ -15,7 +15,7 @@
 Backend implementer owns API/schema changes and access integration; frontend implementer owns web components and locales. Coordinator owns verification setup, cross-component review, documentation and final evidence. No production data or credentials are changed during development.
 
 ## Checkpoint
-Implementation started from a clean main checkout. The user explicitly authorized the full production release on September 16, 2026, including source publication, web/API/database deployment, iOS OTA and TestFlight. Release verification is in progress.
+Implementation started from a clean main checkout. The user explicitly authorized the full production release on September 16, 2026. Web, API and guarded database migrations, production iOS OTA, and TestFlight build 177 all completed successfully. Apple reports the build VALID and IN_BETA_TESTING. See `docs/releases/2026-09-16-managed-subcontractors.md` for exact evidence and the post-release test-isolation follow-up.
 
 ## Implementation details
 
@@ -39,6 +39,8 @@ Implementation started from a clean main checkout. The user explicitly authorize
 ## Resume from another machine
 
 Read this file plus `docs/vendor-managed-subcontractors.md` on branch `codex/vendor-managed-subcontractors`. Full implementation commit `62b412a0` is now published. The prior inline upload-size blocker was resolved with a normal non-force Git push after explicit user authorization. Release fixes and this updated checkpoint will advance main together; inspect GitHub Actions for the exact release commit and individual web, API, OTA and TestFlight results. Preserve this feature work when synchronizing; it is current work, not stale pre-sync leftovers.
+
+Production application source is `9fe07a3960d0c67c5872ecd2c3da9f2e136cd3ab`; local and remote main include it. The full CI test chain passed 2,981 API, 1,189 web, 994 mobile and 42 browser tests on that source. A test/documentation-only follow-up removes a flaky global-count assertion in demo-seed recovery; it does not change application code. Check the release evidence document before starting any duplicate deployment.
 
 ## Resolved verification blocker
 
