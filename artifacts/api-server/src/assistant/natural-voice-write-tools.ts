@@ -111,10 +111,14 @@ export async function callNaturalVoiceDomainApi(
 function gatekeeper(session: SessionPayload): boolean {
   return Boolean(
     session.userId &&
-    session.role === "vendor" &&
+    (session.role === "vendor" || (session.role === "field_employee" && session.managedSubcontractor)) &&
     session.vendorId &&
-    session.vendorRole === "gatekeeper",
+    (session.vendorRole === "gatekeeper" || session.vendorRole === "gate_supervisor"),
   );
+}
+const GATE_FORM_FIELDS = ["firstName", "lastName", "company", "vehiclePlate", "plateState", "purpose", "notes", "expectedDurationMinutes"] as const;
+function gateFormValues(args: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(GATE_FORM_FIELDS.filter((key) => args[key] != null).map((key) => [key, args[key]]));
 }
 function writeGuard(
   args: Record<string, unknown>,
@@ -139,6 +143,8 @@ export async function prepareVisitorCheckIn(input: unknown): Promise<string> {
     action: "prepare_visitor_check_in",
     missing,
     draft: args,
+    execution: "client",
+    intent: { name: "prefill_gate_visit", arguments: { mode: "check-in", values: gateFormValues(args), missing } },
     ...(promptField
       ? {
           recovery: {
@@ -182,7 +188,7 @@ export async function findActiveVisitors(
 ): Promise<string> {
   if (
     !session?.userId ||
-    !["admin", "partner", "vendor"].includes(session.role ?? "")
+    (!["admin", "partner", "vendor"].includes(session.role ?? "") && !gatekeeper(session))
   )
     return err("You cannot view visitor records.");
   const args = argsOf(input);
@@ -252,6 +258,8 @@ export async function prepareVisitorCheckOut(
     matches: found.matches,
     needsChoice: found.needsChoice,
     missing: found.matches.length ? [] : ["visit"],
+    execution: "client",
+    intent: { name: "prefill_gate_visit", arguments: { mode: "check-out", matches: found.matches, missing: found.matches.length ? [] : ["visit"] } },
   });
 }
 export async function confirmVisitorCheckOut(
