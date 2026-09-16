@@ -59,6 +59,7 @@ const GATE_SUPERVISOR_CAPABILITIES: WorkHubCapability[] = [
   ...PARTICIPANT_CAPABILITIES,
   "task.assign",
   "shift.manage",
+  "meeting.host",
 ];
 
 function ownsContext(session: SessionPayload, owner: WorkHubOwner): boolean {

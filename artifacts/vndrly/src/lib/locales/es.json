@@ -4646,6 +4646,10 @@
       "sponsorship_not_found": "Esta relación con el trabajador ya no está disponible.",
       "invitation_not_found": "No hay invitación disponible para este trabajador.",
       "invalid_request": "La solicitud del subcontratista administrado no es válida.",
+      "invalid_hours_request": "La solicitud del informe de horas no es válida. Revise las fechas y la información e inténtelo de nuevo.",
+      "hours_access_required": "Se requiere acceso de supervisor para este informe de horas.",
+      "hours_recipient_required": "Agregue al menos un destinatario del informe de horas.",
+      "hours_internal_error": "No se pudo completar el informe de horas.",
       "internal_error": "No se pudo completar la solicitud del subcontratista administrado."
     },
     "worker_subscription": {

@@ -11,6 +11,7 @@ import { WorkHubCalls } from "@/components/work-hub/calls";
 import { MeetingScheduling } from "@/components/work-hub/meeting-scheduling";
 import { ActivityWorkspace, CollaborationWorkspace } from "@/components/work-hub/collaboration";
 import { CalendarTimeGrid, localDateKey } from "@/components/work-hub/calendar-views";
+import ManagedSubcontractorHoursPanel from "@/components/managed-subcontractor-hours-panel";
 import { WorkHubFinance, WorkHubAdministration } from "@/components/work-hub/finance";
 import { AssistantPanel } from "@/components/assistant-panel";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -556,6 +557,15 @@ function Channels() {
 function CalendarModule() {
   const { user } = useAuth();
   const canManage = isWorkHubScheduler(user);
+  const hoursCompanies = useQuery<{ items: { id: string; name: string }[] }>({
+    queryKey: ["managed-subcontractor-hours-access", user?.vendorId],
+    enabled: Boolean(user?.vendorId),
+    queryFn: async () => {
+      const response = await fetch(`/api/vendors/${user!.vendorId}/managed-subcontractors/hours-access`, { credentials: "include" });
+      if (!response.ok) return { items: [] };
+      return response.json();
+    },
+  });
   const [month, setMonth] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
   const [selectedDay, setSelectedDay] = useState(() => localDateKey(new Date()));
   const start = new Date(month.getFullYear(), month.getMonth(), -6);
@@ -619,6 +629,7 @@ function CalendarModule() {
   );
   return (
     <Shell module="calendar"><CalendarTimeGrid selectedDay={selectedDay} items={items} onSelectDay={day => { setSelectedDay(day); const date = new Date(`${day}T12:00:00`); setMonth(new Date(date.getFullYear(), date.getMonth(), 1)); }}/>
+      {user?.vendorId && Boolean(hoursCompanies.data?.items.length) && <div className="mb-4"><ManagedSubcontractorHoursPanel vendorId={user.vendorId} companies={hoursCompanies.data!.items} start={new Date(`${selectedDay}T00:00:00`).toISOString()} end={new Date(new Date(`${selectedDay}T00:00:00`).getTime() + 86_400_000).toISOString()} /></div>}
       <div className="grid gap-4">
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {[

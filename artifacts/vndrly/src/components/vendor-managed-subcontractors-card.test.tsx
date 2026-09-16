@@ -99,7 +99,7 @@ it("requires confirmation before revoking access and preserves the worker record
   const fetchMock = setup();
   await screen.findByText("Alex");
   fireEvent.click(screen.getByText("managedSubcontractors.revokeAccess"));
-  expect(fetchMock).toHaveBeenCalledTimes(1);
+  expect(fetchMock.mock.calls.some(([, init]) => init?.method === "PATCH")).toBe(false);
   fireEvent.click(screen.getByText("managedSubcontractors.confirmRevoke"));
   await waitFor(() =>
     expect(fetchMock).toHaveBeenCalledWith(

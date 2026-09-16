@@ -4646,6 +4646,10 @@
       "sponsorship_not_found": "This worker relationship is no longer available.",
       "invitation_not_found": "No invitation is available for this worker.",
       "invalid_request": "The managed subcontractor request is invalid.",
+      "invalid_hours_request": "The hours report request is invalid. Review the dates and information and try again.",
+      "hours_access_required": "Supervisor access is required for this hours report.",
+      "hours_recipient_required": "Add at least one hours report recipient.",
+      "hours_internal_error": "The hours report could not be completed.",
       "internal_error": "The managed subcontractor request could not be completed."
     },
     "worker_subscription": {

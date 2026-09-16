@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import BrandPillButton from "@/components/brand-pill-button";
 import { translateApiError } from "@/lib/api-error";
+import ManagedSubcontractorHoursPanel from "@/components/managed-subcontractor-hours-panel";
 
 type Worker = {
   id: string | number;
@@ -124,6 +125,11 @@ export default function VendorManagedSubcontractorsCard({
     setActivationUrl(null);
   };
   const key = (value: string) => t(`managedSubcontractors.${value}`);
+  const hoursStart = new Date();
+  hoursStart.setDate(hoursStart.getDate() - hoursStart.getDay());
+  hoursStart.setHours(0, 0, 0, 0);
+  const hoursEnd = new Date(hoursStart);
+  hoursEnd.setDate(hoursEnd.getDate() + 7);
   const invitationLabel = (state: string) =>
     key(
       [
@@ -245,6 +251,7 @@ export default function VendorManagedSubcontractorsCard({
                 vendor: vendorName,
               })}
             </p>
+            <ManagedSubcontractorHoursPanel vendorId={vendorId} companies={[{ id: String(company.id), name: company.name }]} initialCompanyId={String(company.id)} start={hoursStart.toISOString()} end={hoursEnd.toISOString()} showSettings />
             {company.workers.length === 0 && (
               <p className="text-sm">{key("noWorkers")}</p>
             )}

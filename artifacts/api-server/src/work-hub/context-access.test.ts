@@ -94,7 +94,7 @@ describe("deriveWorkHubCapabilities", () => {
       participant: true,
     });
     expect(capabilities).toEqual(
-      expect.arrayContaining(["task.assign", "shift.manage"]),
+      expect.arrayContaining(["task.assign", "shift.manage", "meeting.host"]),
     );
     expect(capabilities).not.toContain("channel.manage");
     expect(capabilities).not.toContain("policy.manage");
