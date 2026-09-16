@@ -683,9 +683,9 @@ export default function VendorDetail({ id }: { id: number }) {
         ) : (
           <button type="button" onClick={() => window.history.back()} className="group inline-flex items-center gap-2" aria-label="Back" data-testid="button-back"><SphereBackButton size={40} /></button>
         )}
-        {vendor.logoUrl && (
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-white p-1" data-testid="vendor-header-logo">
-            <img src={vendor.logoUrl} alt={`${vendor.name} logo`} className="h-full w-full object-contain" />
+        {(vendor.logoUrl || vendor.logoSquareUrl) && (
+          <div className="flex h-14 max-w-44 shrink-0 items-center justify-start" data-testid="vendor-header-logo">
+            <img src={vendor.logoUrl || vendor.logoSquareUrl || ""} alt={`${vendor.name} logo`} className="h-full w-auto max-w-44 object-contain object-left" />
           </div>
         )}
         <div>

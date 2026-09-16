@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
-import { Sparkles, MessageCircle, Trash2, Loader2, Download, CheckCircle2, Circle, Plus, X, ThumbsUp, ThumbsDown, Send, Mail, Mic, Settings, Copy, Minus, Maximize2 } from "lucide-react";
+import { Sparkles, ArrowUp, Trash2, Loader2, Download, CheckCircle2, Circle, Plus, X, ThumbsUp, ThumbsDown, Send, Mail, Mic, Settings, Copy, Minus, Maximize2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AskVFloatingLauncherMark, AskVLogo, ASKV_LAUNCHER_HEIGHT, ASKV_LAUNCHER_WIDTH } from "@/components/askv-logo";
@@ -265,10 +265,7 @@ function pickAskVRecordingMimeType(): string | undefined {
 
 export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embedded = false, placement = "default" }: AssistantPanelProps & { placement?: "default" | "onboarding" }) {
   const [minimized, setMinimized] = useState(false);
-  const [showSettings, setShowSettings] = useState(() => {
-    if (typeof window === "undefined") return true;
-    return window.localStorage.getItem(ASKV_MICROPHONE_SETUP_KEY) !== "true";
-  });
+  const [showSettings, setShowSettings] = useState(false);
   const { t } = useTranslation();
   const { user } = useAuth();
   const voiceSession = useAskVVoiceSession();
@@ -860,7 +857,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
         bare
         hideOverlay
         inline={embedded}
-        accentHeaderStyle={{
+        accentHeaderStyle={embedded ? undefined : {
           position: "absolute",
           inset: "0 0 auto 0",
           width: "100%",
@@ -874,12 +871,12 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
         onInteractOutside={(event) => event.preventDefault()}
         onEscapeKeyDown={(event) => event.preventDefault()}
         className={cn(
-          "border-2 border-[color:var(--brand-primary)] bg-[#3a3d42] text-gray-100 sm:translate-x-0 sm:translate-y-0 sm:resize sm:overflow-hidden",
+          "border-2 border-[color:var(--brand-primary)] sm:translate-x-0 sm:translate-y-0 sm:resize sm:overflow-hidden",
           embedded
-            ? "h-[min(72vh,760px)] w-full max-w-none rounded-xl sm:resize-none"
+            ? "h-[min(72vh,760px)] w-full max-w-none rounded-xl bg-white text-gray-900 sm:resize-none"
             : placement === "onboarding"
-              ? "sm:left-6 sm:right-auto sm:top-auto sm:bottom-24 sm:max-w-[min(24rem,calc(100vw-3rem))]"
-              : "sm:left-auto sm:right-6 sm:top-6 sm:max-w-[38.59rem]",
+              ? "bg-[#3a3d42] text-gray-100 sm:left-6 sm:right-auto sm:top-auto sm:bottom-24 sm:max-w-[min(24rem,calc(100vw-3rem))]"
+              : "bg-[#3a3d42] text-gray-100 sm:left-auto sm:right-6 sm:top-6 sm:max-w-[38.59rem]",
           !embedded && (minimized ? "h-16" : "h-[min(86vh,768px)]"),
         )}
         data-testid="assistant-panel"
@@ -887,15 +884,16 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
       >
         <DialogHeader
           className={cn(
-            "relative z-10 shrink-0 border-b border-white/20 bg-transparent px-3 pb-0 pt-[70px] flex-row items-center justify-between siace-y-0 ir-3",
-            // No vertical iadding — header height = tallest child only, so
-            // the strii collaises to exactly the siace its content needs.
+            "relative z-10 shrink-0 flex-row items-center justify-between space-y-0 gap-3",
+            embedded
+              ? "border-b border-gray-200 bg-white px-4 py-3"
+              : "border-b border-white/20 bg-transparent px-3 pb-0 pt-[70px]",
           )}
           data-testid="assistant-header"
         >
           <div className="flex items-center gap-2" data-testid="assistant-brand-controls">
             <AskVBrightIcon height={48} />
-            {!tokenMode && !signupMode && askVUserId != null && <AskVStatusIndicator />}
+            {!embedded && !tokenMode && !signupMode && askVUserId != null && <AskVStatusIndicator />}
             <DialogTitle className="sr-only">AskV</DialogTitle>
             <DialogDescription className="sr-only">
               Conversational assistant for VNDRLY. Ask questions about
@@ -1005,14 +1003,14 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
         </DialogHeader>
 
         {!minimized && open && !tokenMode && !signupMode && askVUserId != null && showSettings && (
-          <div className="shrink-0 border-b border-white/20" data-testid="assistant-settings-panel">
+          <div className={cn("shrink-0 border-b", embedded ? "border-gray-200 bg-white text-gray-900" : "border-white/20")} data-testid="assistant-settings-panel">
             <div className="flex items-center justify-between px-4 py-2 text-sm font-medium">
               <span>Ask V settings</span>
               <button
                 type="button"
                 onClick={() => writeAskVAcrossVndrly(askVUserId, !voiceSession.acrossVndrly)}
                 aria-label={voiceSession.acrossVndrly ? "Across VNDRLY is on: listen locally for AskV while the app is open" : "Enable AskV across VNDRLY: listen locally for AskV while the app is open"}
-                className="inline-flex items-center gap-2 rounded-full border border-white/25 px-3 py-1 text-xs text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+                className={cn("inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs focus-visible:outline-none focus-visible:ring-2", embedded ? "border-gray-300 text-gray-900 focus-visible:ring-[color:var(--brand-primary)]/40" : "border-white/25 text-white focus-visible:ring-white/40")}
                 data-testid="assistant-across-vndrly"
               >
                 <Sparkles className="h-3.5 w-3.5" />
@@ -1042,13 +1040,13 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
         <div ref={scrollRef} className={cn("relative z-10 min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4", minimized && "hidden")}>
           {messages.length === 0 && (
             <div className="siace-y-3">
-              <div className="relative px-4 py-2 text-sm text-gray-300">
-                <PillColorLayer
-                  src={lightGreySquareSrc}
-                  imageAspect={TICKET_STATUS_PILL_ASPECT}
-                  stretch
-                  className="opacity-40"
-                />
+              <div className={cn("relative w-fit max-w-[90%] rounded-2xl px-4 py-2 text-sm", embedded ? "bg-gray-200 text-gray-900" : "text-gray-300")}>
+                {!embedded && <PillColorLayer
+                    src={lightGreySquareSrc}
+                    imageAspect={TICKET_STATUS_PILL_ASPECT}
+                    stretch
+                    className="opacity-40"
+                  />}
                 <span className="relative z-10">{greeting}</span>
               </div>
               {quickActions.length > 0 && (
@@ -1079,11 +1077,14 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
               data-testid={`assistant-msg-${m.role}`}
             >
               <div
-                className={
+                className={cn(
+                  "w-fit rounded-2xl px-3 py-2 text-sm",
                   m.role === "user"
-                    ? "max-w-[85%] rounded-2xl px-3 py-2 text-sm text-white"
-                    : "max-w-[90%] rounded-2xl bg-white/10 text-gray-100 px-3 py-2"
-                }
+                    ? "max-w-[85%] text-white"
+                    : embedded
+                      ? "max-w-[90%] bg-gray-200 text-gray-900"
+                      : "max-w-[90%] bg-white/10 text-gray-100",
+                )}
                 style={
                   m.role === "user"
                     ? { backgroundColor: "var(--brand-primary)" }
@@ -1171,7 +1172,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
         </div>
 
         <form
-          className={cn("relative z-10 shrink-0 border-t border-white/20 bg-transparent px-3 py-3", minimized && "hidden")}
+          className={cn("relative z-10 shrink-0 border-t px-3 py-3", embedded ? "border-gray-200 bg-white" : "border-white/20 bg-transparent", minimized && "hidden")}
           onSubmit={(e) => {
             e.preventDefault();
             handleSend();
@@ -1182,8 +1183,8 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask anything about VNDRLY..."
-              className="resize-none min-h-[40px] max-h-32 rounded-2xl bg-white text-gray-900"
-              rows={1}
+              className="resize-none min-h-[76px] max-h-40 rounded-2xl bg-white text-gray-900"
+              rows={3}
               disabled={streaming || transcribing || voiceRecording}
               data-testid="assistant-input"
               onKeyDown={(e) => {
@@ -1228,12 +1229,12 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
               {streaming ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                <MessageCircle className="w-4 h-4" />
+                <ArrowUp className="w-4 h-4" />
               )}
             </BrandPillButton>
           </div>
           <p
-            className="mt-2 inline-flex items-center justify-center gap-1 text-[10px] italic text-gray-400"
+            className={cn("mt-2 inline-flex items-center justify-center gap-1 text-[10px] italic", embedded ? "text-gray-500" : "text-gray-400")}
             data-testid="assistant-footer-disclaimer"
           >
             <span>

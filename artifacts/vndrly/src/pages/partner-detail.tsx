@@ -1748,6 +1748,11 @@ export default function PartnerDetail({ id }: { id: number }) {
       />
       <div className="flex items-center gap-4">
         <Link href="/partners" className="group inline-flex items-center gap-2" aria-label="Back" data-testid="button-back"><SphereBackButton size={40} /></Link>
+        {(partner.logoUrl || partner.logoSquareUrl) && (
+          <div className="flex h-14 max-w-44 shrink-0 items-center justify-start" data-testid="partner-header-logo">
+            <img src={partner.logoUrl || partner.logoSquareUrl || ""} alt={t("partners.logoAlt", { name: partner.name })} className="h-full w-auto max-w-44 object-contain object-left" />
+          </div>
+        )}
         <div>
           <h1 className="text-2xl font-bold" data-testid="text-partner-name">{partner.name}</h1>
           <p className="text-muted-foreground text-sm">{t("partners.partnerSince", { date: new Date(partner.createdAt).toLocaleDateString() })}</p>
