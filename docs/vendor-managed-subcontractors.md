@@ -23,4 +23,4 @@ Vendor administrators manage external staffing companies from the vendor detail 
 
 ## Development status
 
-Implemented locally on `codex/vendor-managed-subcontractors`. The online branch contains the progress documents; full code publication is blocked by the automatic review payload limit. This document describes the feature, not a production deployment claim. Validation results and the remaining unrelated API test failure are recorded in `docs/superpowers/plans/2026-09-16-managed-subcontractors.md`.
+Implemented and published on `codex/vendor-managed-subcontractors`. The user has authorized a full production release; web, API, iOS OTA and TestFlight are being verified separately. Validation results and resume instructions are recorded in `docs/superpowers/plans/2026-09-16-managed-subcontractors.md`. Use the exact commit's GitHub Actions results to confirm deployment status.

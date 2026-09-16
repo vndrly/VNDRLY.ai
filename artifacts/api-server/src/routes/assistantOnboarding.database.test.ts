@@ -217,6 +217,11 @@ describe.runIf(process.env.VNDRLY_TEST_DB_MODE === "fresh-local")("AskV onboardi
     let now = Date.now();
     const clock = vi.spyOn(Date, "now").mockImplementation(() => now);
     try {
+      // The context endpoint updates page metadata only. A persisted user
+      // utterance binds the voice session to its conversation before proposal,
+      // just as the real voice flow does; the later reply confirms that action.
+      await post("/assistant/voice/transcript", { conversationId, sessionId, eventId: "request-revisited-wizard", role: "user", content: "Save the new branding and finish onboarding." }).expect(200);
+      now++;
       const action = { sessionId, callId: "finish-revisited-wizard", name: "finalize_onboarding", arguments: {} };
       const pending = await post("/assistant/realtime/tool-call", action).expect(200);
       expect(pending.body.requiresConfirmation).toBe(true);
