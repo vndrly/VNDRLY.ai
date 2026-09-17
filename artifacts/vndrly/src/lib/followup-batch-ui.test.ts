@@ -51,7 +51,7 @@ describe("follow-up batch UI contracts", () => {
 
     expect(onboarding).toContain("Optional for now");
     expect(onboarding).not.toContain("Carrier and policy number are required.");
-    expect(loginActions).toContain('className="grid grid-cols-2 gap-2 sm:flex"');
-    expect(accountActions).toContain('className="grid grid-cols-2 gap-2 sm:flex"');
+    expect(loginActions).toContain('EMPLOYEE_ACCOUNT_ACTIONS_CLASS_NAME = "grid grid-cols-5 gap-1"');
+    expect(accountActions).toContain('inline ? "contents"');
   });
 });

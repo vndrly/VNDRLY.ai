@@ -139,14 +139,11 @@ describe("Work Hub conversations", () => {
     });
 
     mount(false);
-    const name = await screen.findByLabelText("Crew or channel name");
+    const name = await screen.findByLabelText("New crew name");
     fireEvent.change(name, { target: { value: "Review Crew" } });
     fireEvent.click(screen.getByRole("button", { name: "Create Crew" }));
-    await screen.findByRole("option", { name: "Review Crew" });
-    fireEvent.change(screen.getByLabelText("Crew", { exact: true }), {
-      target: { value: "crew-1" },
-    });
-    fireEvent.change(name, { target: { value: "Handover" } });
+    fireEvent.click(await screen.findByRole("button", { name: "Edit Review Crew" }));
+    fireEvent.change(screen.getByLabelText("New channel name"), { target: { value: "Handover" } });
 
     await waitFor(() =>
       expect(
@@ -174,7 +171,32 @@ describe("Work Hub conversations", () => {
     });
     expect(screen.queryByRole("button", { name: "Add channel" })).toBeNull();
   });
-});
+
+  it("opens a branded crew manager with role, archive, and delete controls", async () => {
+    mocks.request.mockImplementation(async (path: string, init?: RequestInit) => {
+      if (init) return { resource: {} };
+      if (path === "/channels") return [];
+      if (path === "/crews") return [{ id: "crew-1", name: "Gate Crew", role: "admin", status: "active" }];
+      if (path === "/crews/crew-1/channels") return [];
+      if (path === "/crews/crew-1/members") return [{ userId: 8, displayName: "Bill Crew", mode: "owner" }];
+      return [];
+    });
+
+    mount(false);
+
+    const manager = await screen.findByRole("region", { name: "Manage crews and channels" });
+    expect(manager.className).toContain("rounded-xl");
+    expect(manager.className).toContain("border-2");
+    await screen.findAllByRole("option", { name: "Gate Crew" });
+    fireEvent.change(screen.getByLabelText("Crew", { exact: true }), { target: { value: "crew-1" } });
+
+    expect(await screen.findByRole("heading", { name: "Edit Gate Crew" })).toBeTruthy();
+    expect(screen.getByLabelText("Crew name").className).toContain("h-9");
+    expect((await screen.findByLabelText("Role for Bill Crew")).className).toContain("h-9");
+    expect(screen.getByRole("button", { name: "Remove Bill Crew" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Archive crew" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Delete crew" })).toBeTruthy();
+  });});
 
 describe("Work Hub activity chrome", () => {
   it("places the shadow-free heading above a full-width card with one branded white search field", async () => {

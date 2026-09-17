@@ -57,28 +57,25 @@ test.describe("Work Hub workspace persisted flow", () => {
     await loginAsVendor(page, { username, password });
     await page.goto("/work-hub/channels");
     await expect(page.getByTestId("nav-calendar")).toBeVisible();
-    await page.getByText("Manage Crews & channels", { exact: true }).click();
-    await page.getByLabel("Crew or channel name").fill(`Review Crew ${stamp}`);
+    await page.getByLabel("New crew name").fill(`Review Crew ${stamp}`);
     await page
       .getByRole("button", { name: "Create Crew", exact: true })
       .click();
     await expect(
       page
-        .getByLabel("Crew")
+        .getByLabel("Crew", { exact: true })
         .locator("option", { hasText: `Review Crew ${stamp}` }),
     ).toHaveCount(1);
     await page
       .getByLabel("Crew", { exact: true })
       .selectOption({ label: `Review Crew ${stamp}` });
-    await page.getByLabel("Crew or channel name").fill(`Handover ${stamp}`);
+    await page.getByLabel("New channel name").fill(`Handover ${stamp}`);
     await page
       .getByRole("button", { name: "Add channel", exact: true })
       .click();
     await page
-      .getByRole("navigation", { name: "Conversations" })
-      .getByRole("button")
-      .filter({ hasText: `Handover ${stamp}` })
-      .first()
+      .getByRole("dialog")
+      .getByRole("button", { name: `Handover ${stamp}`, exact: true })
       .click();
     const message = `Synthetic handover message ${stamp}`;
     await page.getByLabel("Message", { exact: true }).fill(message);

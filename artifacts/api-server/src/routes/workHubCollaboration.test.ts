@@ -9,8 +9,8 @@ import channels from "./workHubChannels";
 import { buildTestCookie } from "../test-utils/session";
 vi.mock("../work-hub/feature-access", () => ({ isWorkHubEnabled: async () => true }));
 const app = express().use(express.json()).use(cookieParser()).use(collaboration).use(channels);
-// These integration fixtures may only be inserted by the fresh-local wrapper.
-describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")("collaboration durable authorization", () => {
+// These integration fixtures may only be inserted by an isolated-database wrapper.
+describe.skipIf(process.env.VNDRLY_ISOLATED_TEST_DB !== "1")("collaboration durable authorization", () => {
   let ownerId: number, otherOrg: number, adminId: number, memberId: number, externalId: number;
   let adminCookie: string, memberCookie: string, externalCookie: string, crewId: string;
   beforeAll(async () => {
@@ -53,6 +53,26 @@ describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")("collaboratio
     const envelope = { operationId: randomUUID(), owner: { type: "vendor", id: ownerId }, context: { kind: "organization", id: String(ownerId) }, expectedVersion: null, payloadVersion: 1, payload: {} };
     expect((await request(app).delete(`/work-hub/channels/${channel.body.id}`).set("Cookie", memberCookie).send(envelope)).status).toBe(403);
     expect((await request(app).delete(`/work-hub/channels/${channel.body.id}`).set("Cookie", adminCookie).send({ ...envelope, operationId: randomUUID() })).status).toBe(200);
+  });
+  it("allows an owner handoff but never removes the final Crew owner", async () => {
+    expect((await request(app).delete(`/work-hub/crews/${crewId}/members/${adminId}`).set("Cookie", adminCookie)).status).toBe(200);
+    const finalOwnerDemotion = await request(app).post(`/work-hub/crews/${crewId}/members`).set("Cookie", adminCookie).send({ userId: memberId, mode: "member" });
+    expect(finalOwnerDemotion.status).toBe(409);
+    expect(finalOwnerDemotion.body.code).toBe("crew.last_owner");
+    const finalOwner = await request(app).delete(`/work-hub/crews/${crewId}/members/${memberId}`).set("Cookie", adminCookie);
+    expect(finalOwner.status).toBe(409);
+    expect(finalOwner.body.code).toBe("crew.last_owner");
+  });
+  it("lets organization admins archive or delete an empty Crew without erasing linked history", async () => {
+    const archived = await request(app).post("/work-hub/crews").set("Cookie", adminCookie).send({ owner: { type: "vendor", id: ownerId }, name: "Archive me" });
+    expect(archived.status).toBe(201);
+    expect((await request(app).post(`/work-hub/crews/${archived.body.id}/archive`).set("Cookie", adminCookie)).status).toBe(200);
+    expect((await request(app).get("/work-hub/crews").set("Cookie", adminCookie)).body.some((crew: { id: string }) => crew.id === archived.body.id)).toBe(false);
+
+    const duplicate = await request(app).post("/work-hub/crews").set("Cookie", adminCookie).send({ owner: { type: "vendor", id: ownerId }, name: "Duplicate crew" });
+    expect(duplicate.status).toBe(201);
+    expect((await request(app).delete(`/work-hub/crews/${duplicate.body.id}`).set("Cookie", adminCookie)).status).toBe(200);
+    expect((await request(app).get("/work-hub/crews").set("Cookie", adminCookie)).body.some((crew: { id: string }) => crew.id === duplicate.body.id)).toBe(false);
   });
   it("does not expose cross-company chats until the recipient accepts", async () => {
     const [relationship] = await db.insert(workHubChannelsTable).values({ ownerOrgType: "vendor", ownerOrgId: ownerId, contextKind: "organization", contextId: randomUUID(), name: "Authorized relationship", visibility: "private", createdById: adminId }).returning();

@@ -75,7 +75,7 @@ async function crewAccess(a: Actor, id: string, manage = false) {
     .from(workHubCrewsTable)
     .where(eq(workHubCrewsTable.id, z.string().uuid().parse(id)))
     .limit(1);
-  if (!crew) throw new WorkHubAccessError("not_found");
+  if (!crew || crew.status === "deleted") throw new WorkHubAccessError("not_found");
   const [membership] = await db
     .select()
     .from(workHubCrewMembersTable)
@@ -168,7 +168,12 @@ router.get("/work-hub/crews", async (_req, res) => {
   const crews = await db
     .select()
     .from(workHubCrewsTable)
-    .where(or(ids.length ? inArray(workHubCrewsTable.id, ids) : undefined, own))
+    .where(
+      and(
+        or(ids.length ? inArray(workHubCrewsTable.id, ids) : undefined, own),
+        eq(workHubCrewsTable.status, "active"),
+      ),
+    )
     .orderBy(desc(workHubCrewsTable.createdAt));
   const eligible = await Promise.all(
     crews.map(async (c) =>
@@ -251,6 +256,45 @@ router.patch("/work-hub/crews/:id", async (req, res) => {
     .returning();
   return res.json(updated);
 });
+router.post("/work-hub/crews/:id/archive", async (req, res) => {
+  const a = res.locals.collaborationActor as Actor;
+  const { crew } = await crewAccess(a, req.params.id, true);
+  if (!admin(a, crew.ownerOrgType, crew.ownerOrgId))
+    throw new WorkHubAccessError("forbidden");
+  const [updated] = await db
+    .update(workHubCrewsTable)
+    .set({ status: "archived", archivedAt: new Date() })
+    .where(eq(workHubCrewsTable.id, crew.id))
+    .returning();
+  await appendWorkHubAudit({
+    actorUserId: a.userId,
+    owner: { type: crew.ownerOrgType as "vendor" | "partner", id: crew.ownerOrgId },
+    action: "crew.archived",
+    subjectType: "crew",
+    subjectId: crew.id,
+    source: "web",
+  });
+  return res.json(updated);
+});
+router.delete("/work-hub/crews/:id", async (req, res) => {
+  const a = res.locals.collaborationActor as Actor;
+  const { crew } = await crewAccess(a, req.params.id, true);
+  if (!admin(a, crew.ownerOrgType, crew.ownerOrgId))
+    throw new WorkHubAccessError("forbidden");
+  await db
+    .update(workHubCrewsTable)
+    .set({ status: "deleted", archivedAt: new Date() })
+    .where(eq(workHubCrewsTable.id, crew.id));
+  await appendWorkHubAudit({
+    actorUserId: a.userId,
+    owner: { type: crew.ownerOrgType as "vendor" | "partner", id: crew.ownerOrgId },
+    action: "crew.deleted",
+    subjectType: "crew",
+    subjectId: crew.id,
+    source: "web",
+  });
+  return res.json({ deleted: true });
+});
 router.get("/work-hub/crews/:id/members", async (req, res) => {
   await crewAccess(res.locals.collaborationActor, req.params.id);
   return res.json(
@@ -277,14 +321,51 @@ router.post("/work-hub/crews/:id/members", async (req, res) => {
     .parse(req.body);
   if (!(await memberOf(p.userId, crew.ownerOrgType, crew.ownerOrgId)))
     throw new WorkHubAccessError("forbidden");
-  const [member] = await db
-    .insert(workHubCrewMembersTable)
-    .values({ crewId: crew.id, ...p })
-    .onConflictDoUpdate({
-      target: [workHubCrewMembersTable.crewId, workHubCrewMembersTable.userId],
-      set: { mode: p.mode },
-    })
-    .returning();
+  const mutation = await db.transaction(async (tx) => {
+    await tx
+      .select({ id: workHubCrewsTable.id })
+      .from(workHubCrewsTable)
+      .where(eq(workHubCrewsTable.id, crew.id))
+      .for("update");
+    const [existing] = await tx
+      .select()
+      .from(workHubCrewMembersTable)
+      .where(
+        and(
+          eq(workHubCrewMembersTable.crewId, crew.id),
+          eq(workHubCrewMembersTable.userId, p.userId),
+        ),
+      )
+      .limit(1);
+    if (existing?.mode === "owner" && p.mode === "member") {
+      const [{ ownerCount }] = await tx
+        .select({ ownerCount: sql<number>`count(*)::int` })
+        .from(workHubCrewMembersTable)
+        .where(
+          and(
+            eq(workHubCrewMembersTable.crewId, crew.id),
+            eq(workHubCrewMembersTable.mode, "owner"),
+          ),
+        );
+      if (ownerCount <= 1) return { blocked: true as const };
+    }
+    const [member] = await tx
+      .insert(workHubCrewMembersTable)
+      .values({ crewId: crew.id, ...p })
+      .onConflictDoUpdate({
+        target: [workHubCrewMembersTable.crewId, workHubCrewMembersTable.userId],
+        set: { mode: p.mode },
+      })
+      .returning();
+    return { blocked: false as const, member };
+  });
+  if (mutation.blocked)
+    return sendApiError(
+      res,
+      409,
+      "crew.last_owner",
+      "A crew must always have at least one owner",
+    );
   await appendWorkHubAudit({
     actorUserId: a.userId,
     owner: {
@@ -297,7 +378,7 @@ router.post("/work-hub/crews/:id/members", async (req, res) => {
     source: "web",
     metadata: p,
   });
-  return res.json(member);
+  return res.json(mutation.member);
 });
 router.post("/work-hub/crews/:id/channels", async (req, res) => {
   const a = res.locals.collaborationActor as Actor;
@@ -449,8 +530,35 @@ router.delete("/work-hub/crews/:id/members/:userId", async (req, res) => {
   const a = res.locals.collaborationActor as Actor;
   const { crew } = await crewAccess(a, req.params.id, true);
   const userId = z.coerce.number().int().positive().parse(req.params.userId);
-  if (userId === a.userId) throw new WorkHubAccessError("forbidden");
-  await db.transaction(async (tx) => {
+  const mutation = await db.transaction(async (tx) => {
+    await tx
+      .select({ id: workHubCrewsTable.id })
+      .from(workHubCrewsTable)
+      .where(eq(workHubCrewsTable.id, crew.id))
+      .for("update");
+    const [target] = await tx
+      .select()
+      .from(workHubCrewMembersTable)
+      .where(
+        and(
+          eq(workHubCrewMembersTable.crewId, crew.id),
+          eq(workHubCrewMembersTable.userId, userId),
+        ),
+      )
+      .limit(1);
+    if (!target) return { blocked: false as const };
+    if (target.mode === "owner") {
+      const [{ ownerCount }] = await tx
+        .select({ ownerCount: sql<number>`count(*)::int` })
+        .from(workHubCrewMembersTable)
+        .where(
+          and(
+            eq(workHubCrewMembersTable.crewId, crew.id),
+            eq(workHubCrewMembersTable.mode, "owner"),
+          ),
+        );
+      if (ownerCount <= 1) return { blocked: true as const };
+    }
     await tx
       .delete(workHubCrewMembersTable)
       .where(
@@ -473,7 +581,15 @@ router.delete("/work-hub/crews/:id/members/:userId", async (req, res) => {
           eq(workHubChannelMembersTable.userId, userId),
         ),
       );
+    return { blocked: false as const };
   });
+  if (mutation.blocked)
+    return sendApiError(
+      res,
+      409,
+      "crew.last_owner",
+      "A crew must always have at least one owner",
+    );
   return res.json({ removed: true });
 });
 router.post("/work-hub/channels/:channelId/invitations", async (req, res) => {

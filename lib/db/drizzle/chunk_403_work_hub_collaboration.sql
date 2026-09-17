@@ -1,5 +1,7 @@
 BEGIN;
 CREATE TABLE IF NOT EXISTS work_hub_crews (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), name text NOT NULL, owner_org_type text NOT NULL, owner_org_id integer NOT NULL, created_by_id integer NOT NULL REFERENCES users(id), created_at timestamptz NOT NULL DEFAULT now());
+ALTER TABLE work_hub_crews ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'active';
+ALTER TABLE work_hub_crews ADD COLUMN IF NOT EXISTS archived_at timestamptz;
 CREATE TABLE IF NOT EXISTS work_hub_crew_members (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), crew_id uuid NOT NULL REFERENCES work_hub_crews(id), user_id integer NOT NULL REFERENCES users(id), mode text NOT NULL DEFAULT 'member');
 CREATE UNIQUE INDEX IF NOT EXISTS work_hub_crew_members_unique ON work_hub_crew_members (crew_id, user_id);
 CREATE TABLE IF NOT EXISTS work_hub_collaboration_channels (channel_id uuid PRIMARY KEY REFERENCES work_hub_channels(id), crew_id uuid REFERENCES work_hub_crews(id), kind text NOT NULL);
