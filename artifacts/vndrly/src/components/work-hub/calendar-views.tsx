@@ -29,7 +29,7 @@ export function CalendarTimeGrid({
   const brand = useBrand();
   const days = calendarViewDays(selectedDay, view);
   return (
-    <div className="mb-4 overflow-hidden rounded-xl border bg-card">
+    <div className="mb-4 overflow-hidden rounded-xl border-2 border-[color:var(--brand-primary)] bg-white text-black">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b p-4">
         <h2 className="font-semibold">Schedule</h2>
         <div className="flex flex-wrap gap-2">

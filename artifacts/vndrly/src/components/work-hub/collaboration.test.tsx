@@ -200,9 +200,9 @@ describe("Work Hub activity chrome", () => {
 
     const calendar = screen.getByRole("region", { name: "Upcoming calendar" });
     const review = screen.getByRole("region", { name: "Documents needing review" });
-    expect(calendar.className).toContain("bg-card");
+    expect(calendar.className).toContain("bg-white");
     expect(calendar.className).not.toContain("bg-background");
-    expect(review.className).toContain("bg-card");
+    expect(review.className).toContain("bg-white");
     expect(review.className).not.toContain("bg-background");
 
     const feed = screen.getByTestId("activity-feed");

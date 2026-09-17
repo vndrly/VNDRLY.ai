@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Flame, Plus, MapPin, Calendar, Clock, Trash2, Award, FileText, Copy, ExternalLink, Printer, Undo2, ListChecks, MessageCircle } from "lucide-react";
+import { Flame, Plus, MapPin, Calendar, Clock, Trash2, Award, FileText, Copy, ExternalLink, Printer, Undo2, MessageCircle } from "lucide-react";
 import ImagePill, { type ImagePillColor } from "@/components/image-pill";
 import RemovePill from "@/components/remove-pill";
 import CommentsPanel from "@/components/comments-panel";
@@ -33,6 +33,7 @@ import { useTranslation } from "react-i18next";
 import { translateApiError } from "@/lib/api-error";
 import { cn } from "@/lib/utils";
 import { hotlistApi, isVendorListResponse, type HotlistJobRow, type HotlistBidRow } from "@/lib/hotlist-api";
+import HotlistCatalogFilterBar from "@/components/hotlist-catalog-filter-bar";
 import { useOnboardingProgress } from "@/hooks/use-onboarding-progress";
 import {
   vendorFeatureUnlockMessage,
@@ -1394,59 +1395,12 @@ function VendorHotlist({ focusedJobId }: { focusedJobId: number | null }) {
       />
       <CardContent>
         {catalogActive ? (
-          <div
-            className="mb-3 flex flex-wrap items-center gap-2 text-xs"
-            data-testid="hotlist-catalog-filter-bar"
-          >
-            {includeAll ? (
-              <>
-                <span
-                  className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-muted text-muted-foreground"
-                  data-testid="pill-catalog-all"
-                >
-                  <ListChecks className="w-3 h-3" />
-                  Showing all jobs
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setIncludeAll(false)}
-                  className="font-medium hover:opacity-80"
-                  style={{ color: "var(--brand-primary)" }}
-                  data-testid="button-filter-by-catalog"
-                >
-                  Filter to my services
-                </button>
-              </>
-            ) : (
-              <>
-                <span
-                  className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-amber-100 text-amber-800 border border-amber-300"
-                  data-testid="pill-catalog-filtered"
-                  title="Only jobs that match your work-type catalog are shown."
-                >
-                  <ListChecks className="w-3 h-3" />
-                  Filtered by your services
-                </span>
-                {filteredCount > 0 ? (
-                  <span
-                    className="text-muted-foreground"
-                    data-testid="text-catalog-filtered-count"
-                  >
-                    {filteredCount} hidden
-                  </span>
-                ) : null}
-                <button
-                  type="button"
-                  onClick={() => setIncludeAll(true)}
-                  className="font-medium ml-auto hover:opacity-80"
-                  style={{ color: "var(--brand-primary)" }}
-                  data-testid="button-show-all-jobs"
-                >
-                  Show all
-                </button>
-              </>
-            )}
-          </div>
+          <HotlistCatalogFilterBar
+            includeAll={includeAll}
+            filteredCount={filteredCount}
+            onShowAll={() => setIncludeAll(true)}
+            onFilter={() => setIncludeAll(false)}
+          />
         ) : null}
         {inRadius.length === 0 && outOfRadius.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-6">No open jobs right now.</p>

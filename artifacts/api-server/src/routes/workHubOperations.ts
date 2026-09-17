@@ -1501,6 +1501,16 @@ router.get("/work-hub/calendar", async (req, res) => {
               )
             : undefined,
         );
+  const projectVisibility =
+    session.role === "admin" || session.membershipRole === "admin"
+      ? undefined
+      : or(
+          eq(workHubShiftsTable.calendarType, "company"),
+          eq(workHubShiftsTable.createdById, session.userId),
+          eq(workHubShiftsTable.ownerUserId, session.userId),
+          sql`exists (select 1 from ${workHubShiftAssignmentsTable} assignment where assignment.shift_id = ${workHubShiftsTable.id} and assignment.user_id = ${session.userId})`,
+          sql`${workHubShiftsTable.sharedWithUserIds} @> ${JSON.stringify([session.userId])}::jsonb`,
+        );
   const [shifts, tasks, meetings] = await Promise.all([
     db
       .select()
@@ -1508,6 +1518,7 @@ router.get("/work-hub/calendar", async (req, res) => {
       .where(
         and(
           shiftOwner,
+          projectVisibility,
           session.managedSubcontractor ? sql`(${workHubShiftsTable.createdById} = ${session.userId} or exists (select 1 from ${workHubShiftAssignmentsTable} assignment where assignment.shift_id = ${workHubShiftsTable.id} and assignment.user_id = ${session.userId}) or ${workHubShiftsTable.sharedWithUserIds} @> ${JSON.stringify([session.userId])}::jsonb)` : undefined,
           lte(workHubShiftsTable.startsAt, end),
           gte(workHubShiftsTable.endsAt, start),
@@ -1545,6 +1556,15 @@ router.get("/work-hub/calendar", async (req, res) => {
         ),
       ),
   ]);
+  const canViewProjectFinancials = session.role === "admin" || session.membershipRole === "admin";
+  const ownerUserIds = [...new Set(shifts.map((item) => item.ownerUserId).filter((id): id is number => id != null))];
+  const ownerUsers = ownerUserIds.length
+    ? await db
+        .select({ id: usersTable.id, displayName: usersTable.displayName })
+        .from(usersTable)
+        .where(inArray(usersTable.id, ownerUserIds))
+    : [];
+  const ownerDisplayNames = new Map(ownerUsers.map((user) => [user.id, user.displayName]));
   return res.json({
     shifts: (await Promise.all(shifts.map(async (item) => {
       if (!session.managedSubcontractor || item.createdById !== session.userId) return item;
@@ -1553,7 +1573,18 @@ router.get("/work-hub/calendar", async (req, res) => {
     }))).filter((item): item is typeof shifts[number] => item !== null).map((item) => ({
       source: "vndrly",
       authority: "work_hub_shift",
-      item,
+      item: canViewProjectFinancials ? {
+        ...item,
+        ownerDisplayName: item.ownerUserId ? ownerDisplayNames.get(item.ownerUserId) ?? null : null,
+      } : {
+        ...item,
+        ownerDisplayName: item.ownerUserId ? ownerDisplayNames.get(item.ownerUserId) ?? null : null,
+        budgetAmount: null,
+        budgetUsedAmount: null,
+        invoicedAmount: null,
+        invoiceReference: null,
+        afeCode: null,
+      },
     })),
     tasks: tasks.map((item) => ({
       source: "vndrly",
@@ -1599,6 +1630,16 @@ router.post("/work-hub/shifts", async (req, res) => {
           .enum(["completed", "in_progress", "upcoming", "blocked", "overdue"])
           .default("upcoming"),
         percentComplete: z.number().int().min(0).max(100).default(0),
+        instructions: z.string().trim().max(4000).nullable().optional(),
+        dependencyTitle: z.string().trim().max(300).nullable().optional(),
+        blockers: z.string().trim().max(2000).nullable().optional(),
+        ownerUserId: z.number().int().positive().nullable().optional(),
+        afeCode: z.string().trim().max(100).nullable().optional(),
+        ticketNumber: z.string().trim().max(100).nullable().optional(),
+        budgetAmount: z.number().nonnegative().nullable().optional(),
+        budgetUsedAmount: z.number().nonnegative().nullable().optional(),
+        invoicedAmount: z.number().nonnegative().nullable().optional(),
+        invoiceReference: z.string().trim().max(100).nullable().optional(),
         sharedWithUserIds: z
           .array(z.number().int().positive())
           .max(500)
@@ -1608,6 +1649,7 @@ router.post("/work-hub/shifts", async (req, res) => {
     await assertOwnerUsers(envelope.owner, [
       ...payload.assigneeUserIds,
       ...payload.sharedWithUserIds,
+      ...(payload.ownerUserId ? [payload.ownerUserId] : []),
     ]);
     if (new Date(payload.startsAt) >= new Date(payload.endsAt))
       throw new z.ZodError([]);
@@ -1655,6 +1697,16 @@ router.post("/work-hub/shifts", async (req, res) => {
             projectName: payload.projectName ?? null,
             milestoneStatus: payload.milestoneStatus,
             percentComplete: payload.percentComplete,
+            instructions: payload.instructions ?? null,
+            dependencyTitle: payload.dependencyTitle ?? null,
+            blockers: payload.blockers ?? null,
+            ownerUserId: payload.ownerUserId ?? null,
+            afeCode: payload.afeCode ?? null,
+            ticketNumber: payload.ticketNumber ?? null,
+            budgetAmount: payload.budgetAmount == null ? null : String(payload.budgetAmount),
+            budgetUsedAmount: payload.budgetUsedAmount == null ? null : String(payload.budgetUsedAmount),
+            invoicedAmount: payload.invoicedAmount == null ? null : String(payload.invoicedAmount),
+            invoiceReference: payload.invoiceReference ?? null,
             sharedWithUserIds: [...new Set(payload.sharedWithUserIds)],
             createdById: session.userId,
           })

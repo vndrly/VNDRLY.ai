@@ -894,7 +894,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
           className={cn(
             "relative z-10 shrink-0 flex-row items-center justify-between space-y-0 gap-3",
             embedded
-              ? "border-b border-gray-200 bg-white px-4 py-3"
+              ? "border-b border-white/20 bg-[#3a3d42] px-4 py-3 text-white"
               : "border-b border-white/20 bg-transparent px-3 pb-0 pt-[70px]",
           )}
           data-testid="assistant-header"

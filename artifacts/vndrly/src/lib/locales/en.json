@@ -413,6 +413,15 @@
       "daysWaiting_one": "{{count}} day",
       "daysWaiting_other": "{{count}} days"
     },
+    "siteSnapshot": {
+      "title": "Site Workload Overview",
+      "empty": "No site workload yet",
+      "active": "Active",
+      "review": "Review",
+      "ap": "AP",
+      "vendors": "Vendors",
+      "totalTracking": "{{count}} total tracking"
+    },
     "trackingStatus": "Tracking Status Breakdown",
     "noTrackingData": "No tracking data yet",
     "recentActivity": "Recent Activity",

@@ -34,11 +34,19 @@ describe("ManagedSubcontractorHoursPanel", () => {
           companies={[{ id: "sub-1", name: "NewTech" }]}
           start="2026-09-01T00:00:00.000Z"
           end="2026-10-01T00:00:00.000Z"
+          showSettings
         />
       </QueryClientProvider>,
     );
 
     const download = await screen.findByRole("button", { name: "Download PDF" });
+    expect(screen.getByTestId("managed-subcontractor-hours-panel").className).toContain(
+      "border-[color:var(--brand-primary)]",
+    );
+    expect(screen.getByTestId("select-subcontractor-approval-rule").className).toContain("rounded-full");
+    expect(screen.getByTestId("select-subcontractor-approval-rule").className).toContain("border-[color:var(--brand-primary)]");
+    expect(screen.getByTestId("input-subcontractor-email-recipients").className).toContain("bg-white");
+    expect(screen.getByTestId("input-subcontractor-email-recipients").className).toContain("rounded-full");
     expect(
       [...download.querySelectorAll("img")].some(
         (image) => image.getAttribute("src") === PILL_ACTION.red,

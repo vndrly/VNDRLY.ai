@@ -32,6 +32,32 @@ describe("Work Hub mutation guardrails", () => {
     expect(operations).toContain("siteWorkAssignmentsTable.siteLocationId");
   });
 
+  it("limits project milestones to participants and hides financials from regular users", () => {
+    expect(operations).toContain("projectVisibility");
+    expect(operations).toContain("workHubShiftsTable.ownerUserId");
+    expect(operations).toContain("workHubShiftsTable.sharedWithUserIds");
+    expect(operations).toContain("canViewProjectFinancials");
+    expect(operations).toContain("budgetAmount: null");
+    expect(operations).toContain("invoicedAmount: null");
+  });
+
+  it("accepts the approved project planning and finance fields", () => {
+    for (const field of [
+      "instructions",
+      "dependencyTitle",
+      "blockers",
+      "ownerUserId",
+      "afeCode",
+      "ticketNumber",
+      "budgetAmount",
+      "budgetUsedAmount",
+      "invoicedAmount",
+      "invoiceReference",
+    ]) {
+      expect(operations).toContain(`${field}: payload.${field}`);
+    }
+  });
+
   it("enters the idempotency ledger before resolving a deletable channel", () => {
     const deleteRoute = channels.slice(
       channels.indexOf('router.delete("/work-hub/channels/:channelId"'),

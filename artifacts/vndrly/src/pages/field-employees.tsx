@@ -528,7 +528,7 @@ export default function FieldEmployees() {
             <div className="flex items-center gap-2">
               <Label htmlFor="status-filter" className="text-sm text-muted-foreground whitespace-nowrap">{t("fieldEmployees.statusFilterLabel")}</Label>
               <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as "all" | "active" | "inactive")}>
-                <SelectTrigger id="status-filter" className="w-[160px]" data-testid="select-status-filter">
+                <SelectTrigger id="status-filter" className="w-[160px] rounded-full border-2 border-[color:var(--brand-primary)] bg-white" data-testid="select-status-filter">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

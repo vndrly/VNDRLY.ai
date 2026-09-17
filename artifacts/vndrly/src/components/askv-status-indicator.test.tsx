@@ -24,13 +24,12 @@ describe("AskVStatusIndicator", () => {
 
   it("turns natural voice on directly from the Muted control", () => {
     render(<AskVStatusIndicator />);
-    const button = screen.getByRole("button", { name: "Go Live with AskV" });
-    expect(button.textContent).toContain("Go Live");
+    const button = screen.getByRole("button", { name: "Click to start V" });
+    expect(button.textContent).toContain("Click to start V");
     expect(button.getAttribute("data-color")).toBe("green");
     expect(button.className).toContain("h-[34px]");
-    expect(button.className).toContain("min-w-[74px]");
+    expect(button.className).toContain("min-w-[112px]");
     expect(button.className).toContain("self-center");
-    expect(button.className).toContain("-translate-y-1");
     fireEvent.click(button);
     expect(setMuted).toHaveBeenCalledWith(false);
   });
@@ -39,8 +38,8 @@ describe("AskVStatusIndicator", () => {
     voice.muted = false;
     voice.state = "listening";
     render(<AskVStatusIndicator />);
-    const button = screen.getByRole("button", { name: "Mute AskV" });
-    expect(button.textContent).toContain("Mute");
+    const button = screen.getByRole("button", { name: "Pause V" });
+    expect(button.textContent).toContain("Pause V");
     expect(button.getAttribute("data-color")).toBe("red");
     expect(button.className).toContain("h-[34px]");
     fireEvent.click(button);
@@ -51,7 +50,7 @@ describe("AskVStatusIndicator", () => {
 
   it("does not draw a focus halo around the mute control", () => {
     render(<AskVStatusIndicator />);
-    const toggle = screen.getByRole("button", { name: "Go Live with AskV" });
+    const toggle = screen.getByRole("button", { name: "Click to start V" });
 
     expect(toggle.className).toContain("focus-visible:ring-0");
     expect(toggle.className).toContain("focus-visible:ring-offset-0");
@@ -67,9 +66,8 @@ describe("AskVStatusIndicator", () => {
     expect(setMuted).toHaveBeenCalledWith(false);
 
     rerender(<AskVStatusIndicator />);
-    const modalButton = screen.getByRole("button", { name: "Go Live with AskV" });
-    expect(modalButton.className).toContain("min-w-[74px]");
-    expect(modalButton.className).toContain("-translate-y-1");
+    const modalButton = screen.getByRole("button", { name: "Click to start V" });
+    expect(modalButton.className).toContain("min-w-[112px]");
   });
   it("matches the Hotlist Live pill artwork and height when V is listening", () => {
     voice.muted = false; voice.state = "listening";

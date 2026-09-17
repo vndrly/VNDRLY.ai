@@ -3,6 +3,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { siteLocationsTable } from "./siteLocations";
 import { vendorsTable } from "./vendors";
+import { partnersTable } from "./partners";
 import { fieldEmployeesTable } from "./vendorPeople";
 import { workTypesTable } from "./workTypes";
 
@@ -98,6 +99,23 @@ export const ticketsTable = pgTable("tickets", {
   paymentReceiptUrl: text("payment_receipt_url"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
+});
+
+// Holds production tracking numbers that have been deliberately assigned
+// before a site or service date is known. Reservations stay outside `tickets`
+// so incomplete work never appears in live operational metrics.
+export const ticketNumberReservationsTable = pgTable("ticket_number_reservations", {
+  ticketNumber: integer("ticket_number").primaryKey(),
+  vendorId: integer("vendor_id").notNull().references(() => vendorsTable.id),
+  partnerId: integer("partner_id").notNull().references(() => partnersTable.id),
+  workTypeId: integer("work_type_id").notNull().references(() => workTypesTable.id),
+  billingUnit: text("billing_unit").notNull().default("day"),
+  provisionalUnitRate: numeric("provisional_unit_rate", { precision: 14, scale: 2 }),
+  siteLocationId: integer("site_location_id").references(() => siteLocationsTable.id),
+  serviceStartAt: timestamp("service_start_at", { withTimezone: true }),
+  afeCode: text("afe_code"),
+  status: text("status").notNull().default("reserved"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 export const insertTicketSchema = createInsertSchema(ticketsTable).omit({ id: true, status: true, createdAt: true, updatedAt: true });

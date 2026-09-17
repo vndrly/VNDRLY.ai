@@ -190,6 +190,7 @@ export default function VendorAnalytics({ vendorId }: { vendorId: number }) {
         ))}
       </div>
 
+      <div className="grid lg:grid-cols-3 gap-6" data-testid="analytics-primary-finance-row">
       {auditAggregate && (
         <Card data-testid="card-vendor-audit-trail">
           <CardHeader>
@@ -240,8 +241,6 @@ export default function VendorAnalytics({ vendorId }: { vendorId: number }) {
           </CardContent>
         </Card>
       )}
-
-      <div className="grid md:grid-cols-2 gap-6">
         <AnalyticsPipelineCard
           title={t("vendorAnalytics.revenuePipelineTitle", { defaultValue: "Revenue pipeline" })}
           segments={pipelineSegments}
@@ -251,35 +250,6 @@ export default function VendorAnalytics({ vendorId }: { vendorId: number }) {
           }
           iconStyle={iconStyle}
           testId="card-vendor-revenue-pipeline"
-        />
-        <AnalyticsKickbackTrendCard
-          title={t("vendorAnalytics.kickbackTrendTitle", { defaultValue: "Kickback trend" })}
-          rows={analytics.kickbackTrendByMonth}
-          emptyMessage={t("vendorAnalytics.noKickbackTrend", { defaultValue: "No kickbacks recorded yet" })}
-          caption={t("vendorAnalytics.kickbackTrendCaption", {
-            defaultValue: "Kickbacks recorded each month vs tickets created that month.",
-          })}
-          kickedBackLabel={t("vendorAnalytics.kickedBack")}
-          kickbackRateLabel={t("vendorAnalytics.kickbackRate")}
-          totalTicketsLabel={t("vendorAnalytics.totalTickets")}
-          iconStyle={iconStyle}
-          testId="card-vendor-kickback-trend"
-        />
-      </div>
-
-      <div className="grid lg:grid-cols-3 gap-6">
-        <AnalyticsSpendByAfeCard
-          title={t("vendorAnalytics.revenueByAfeTitle", { defaultValue: "Revenue by AFE" })}
-          caption={t("vendorAnalytics.spendByAfeCaption", {
-            defaultValue: "Ticket revenue grouped by AFE code (assignment override, then site default).",
-          })}
-          emptyMessage={t("vendorAnalytics.noAfeData", { defaultValue: "No AFE-tagged revenue yet" })}
-          valueLabel={t("vendorAnalytics.revenue", { defaultValue: "Revenue" })}
-          rows={analytics.spendByAfe}
-          formatCurrency={formatCurrency}
-          formatFullCurrency={formatFullCurrency}
-          iconStyle={iconStyle}
-          testId="card-vendor-spend-by-afe"
         />
         <AnalyticsInvoiceAgingCard
           title={t("vendorAnalytics.invoiceAgingTitle", { defaultValue: "Open invoices aging" })}
@@ -306,6 +276,35 @@ export default function VendorAnalytics({ vendorId }: { vendorId: number }) {
           formatFullCurrency={formatFullCurrency}
           iconStyle={iconStyle}
           testId="card-vendor-invoice-aging"
+        />
+      </div>
+
+      <div className="grid lg:grid-cols-3 gap-6">
+        <AnalyticsKickbackTrendCard
+          title={t("vendorAnalytics.kickbackTrendTitle", { defaultValue: "Kickback trend" })}
+          rows={analytics.kickbackTrendByMonth}
+          emptyMessage={t("vendorAnalytics.noKickbackTrend", { defaultValue: "No kickbacks recorded yet" })}
+          caption={t("vendorAnalytics.kickbackTrendCaption", {
+            defaultValue: "Kickbacks recorded each month vs tickets created that month.",
+          })}
+          kickedBackLabel={t("vendorAnalytics.kickedBack")}
+          kickbackRateLabel={t("vendorAnalytics.kickbackRate")}
+          totalTicketsLabel={t("vendorAnalytics.totalTickets")}
+          iconStyle={iconStyle}
+          testId="card-vendor-kickback-trend"
+        />
+        <AnalyticsSpendByAfeCard
+          title={t("vendorAnalytics.revenueByAfeTitle", { defaultValue: "Revenue by AFE" })}
+          caption={t("vendorAnalytics.spendByAfeCaption", {
+            defaultValue: "Ticket revenue grouped by AFE code (assignment override, then site default).",
+          })}
+          emptyMessage={t("vendorAnalytics.noAfeData", { defaultValue: "No AFE-tagged revenue yet" })}
+          valueLabel={t("vendorAnalytics.revenue", { defaultValue: "Revenue" })}
+          rows={analytics.spendByAfe}
+          formatCurrency={formatCurrency}
+          formatFullCurrency={formatFullCurrency}
+          iconStyle={iconStyle}
+          testId="card-vendor-spend-by-afe"
         />
         {TAX_REPORTING_ENABLED && <AnalyticsNec1099Card
           title={t("vendorAnalytics.nec1099Title", {

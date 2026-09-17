@@ -71,7 +71,7 @@ export default function GateBillingInvoiceCard({
         {loading ? <p className="text-sm text-muted-foreground">Loading invoice records…</p> : loadError ? <p className="text-sm text-destructive">Invoice records are unavailable.</p> : rows.length ? (
           <div className="space-y-2">
             {rows.map((invoice) => (
-              <Link key={invoice.id} href={`/invoices/${invoice.id}`} className="flex items-center justify-between gap-3 rounded-lg border bg-white p-3 hover:border-[var(--brand-primary)]">
+              <Link key={invoice.id} href={`/invoices/${invoice.id}`} className="flex items-center justify-between gap-3 rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-3">
                 <div><p className="font-medium">{invoice.invoiceNumber}</p><p className="text-xs text-muted-foreground">{invoice.periodStart} – {invoice.periodEnd} · {invoice.status}</p></div>
                 <span className="font-semibold tabular-nums">{new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(Number(invoice.total))}</span>
               </Link>

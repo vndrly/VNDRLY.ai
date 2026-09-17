@@ -272,18 +272,18 @@ function GateOperations() {
           onChange={(event) => setQuery(event.target.value)}
           placeholder={t("gateLog.searchPlaceholder")}
           aria-label={t("gateLog.searchPlaceholder")}
-          className="pl-9"
+          className="rounded-full border-2 border-[color:var(--brand-primary)] bg-white pl-9"
           data-testid="gate-log-search"
         />
        </div>
-       <select className="h-10 rounded-md border bg-background px-3 text-sm" value={siteFilter} onChange={(event) => setSiteFilter(event.target.value)} aria-label="Filter by site">
+       <select className="h-10 rounded-full border-2 border-[color:var(--brand-primary)] bg-white px-3 text-sm" value={siteFilter} onChange={(event) => setSiteFilter(event.target.value)} aria-label="Filter by site">
          <option value="all">All sites</option>
          {siteOptions.map((site) => <option key={site} value={site}>{site}</option>)}
        </select>
-       <select className="h-10 rounded-md border bg-background px-3 text-sm" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} aria-label="Filter by status">
+       <select className="h-10 rounded-full border-2 border-[color:var(--brand-primary)] bg-white px-3 text-sm" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} aria-label="Filter by status">
          <option value="all">All statuses</option><option value="on-site">On site</option><option value="checked-out">Checked out</option>
        </select>
-       <Input type="date" className="w-auto" value={dateFilter} onChange={(event) => setDateFilter(event.target.value)} aria-label="Filter by date" />
+       <Input type="date" className="w-auto rounded-full border-2 border-[color:var(--brand-primary)] bg-white" value={dateFilter} onChange={(event) => setDateFilter(event.target.value)} aria-label="Filter by date" />
       </div>
 
       <Card data-testid="gate-log-history">

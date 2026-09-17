@@ -2,7 +2,7 @@ import { useState, useRef, useMemo, useEffect } from "react";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
-import { formatPhone, handlePhoneInput, stripPhone } from "@/lib/utils";
+import { cn, formatPhone, handlePhoneInput, stripPhone } from "@/lib/utils";
 import {
   compressMainLogo,
   fitImageIntoSquare,
@@ -37,7 +37,7 @@ import type { MatchVendorResponseItem } from "@workspace/api-client-react";
 import { useEligibleVendorFieldEmployeesByVendorId } from "@/hooks/use-eligible-vendor-field-employees";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CARD_INNER_TILE_CLASS } from "@/components/ui/card";
 import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import RemovePill from "@/components/remove-pill";
 import { Input } from "@/components/ui/input";
@@ -1213,7 +1213,7 @@ export default function VendorDetail({ id }: { id: number }) {
           {notes && notes.length > 0 ? (
             <div className="space-y-3">
               {notes.map((note) => (
-                <div key={note.id} className="flex items-start gap-3 p-3 border rounded-lg" data-testid={`note-${note.id}`}>
+                <div key={note.id} className={cn(CARD_INNER_TILE_CLASS, "flex items-start gap-3")} data-testid={`note-${note.id}`}>
                   <div className="flex-1">
                     <p className="text-sm whitespace-pre-wrap">{note.content}</p>
                     <p className="text-xs text-muted-foreground mt-1">{new Date(note.createdAt).toLocaleString()}</p>
@@ -1578,7 +1578,7 @@ function VendorRatingsCard({ vendorId }: { vendorId: number }) {
         </div>
 
         {isPartnerUser && (
-          <div className="rounded-md border p-3 space-y-3">
+          <div className={cn(CARD_INNER_TILE_CLASS, "space-y-3")}>
             <div className="text-sm font-medium">Your rating</div>
             {!editing ? (
               <div className="flex items-center gap-3">
@@ -1980,7 +1980,7 @@ function VendorServicesAndPricingCard({ vendorId }: { vendorId: number }) {
                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                   {category}
                 </h3>
-                <div className="rounded border divide-y">
+                <div className="rounded-xl border-2 border-[color:var(--brand-primary)] bg-white divide-y">
                   {items.map((it) => (
                     <div
                       key={it.id}

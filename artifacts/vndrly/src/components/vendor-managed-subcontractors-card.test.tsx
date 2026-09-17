@@ -58,6 +58,12 @@ function setup() {
 }
 afterEach(() => vi.unstubAllGlobals());
 
+it("uses the primary brand outline for subcontractor company subcards", async () => {
+  setup();
+  const company = await screen.findByTestId("managed-subcontractor-7");
+  expect(company.className).toContain("border-[color:var(--brand-primary)]");
+});
+
 it("creates a subcontractor under the current vendor", async () => {
   const fetchMock = setup();
   await screen.findByText("NewTech");

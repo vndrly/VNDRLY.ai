@@ -595,6 +595,16 @@ function CalendarModule() {
     percentComplete: "0",
     sharedWith: "",
     siteId: "",
+    instructions: "",
+    dependencyTitle: "",
+    blockers: "",
+    ownerUserId: "",
+    afeCode: "",
+    ticketNumber: "",
+    budgetAmount: "",
+    budgetUsedAmount: "",
+    invoicedAmount: "",
+    invoiceReference: "",
   });
   const [calendarFilters, setCalendarFilters] = useState({
     search: "",
@@ -733,7 +743,7 @@ function CalendarModule() {
                       key={key}
                       type="button"
                       onClick={() => setSelectedDay(key)}
-                      className={`min-h-20 rounded-lg border p-2 text-left transition-colors hover:border-[var(--brand-primary)] ${selectedDay === key ? "border-[var(--brand-primary)] bg-[color-mix(in_srgb,var(--brand-primary)_12%,transparent)]" : "bg-card"}`}
+                      className={`min-h-20 rounded-lg border-2 border-[color:var(--brand-primary)] p-2 text-left transition-colors ${selectedDay === key ? "bg-[color-mix(in_srgb,var(--brand-primary)_12%,transparent)]" : "bg-white"}`}
                     >
                       <span className="font-semibold">{day}</span>
                       {count > 0 && (
@@ -754,7 +764,7 @@ function CalendarModule() {
               {selectedItems.map((i) => (
                 <article
                   key={`${i.kind}-${i.id}`}
-                  className="flex justify-between rounded-lg border p-4"
+                  className="flex justify-between rounded-lg border-2 border-[color:var(--brand-primary)] bg-white p-4"
                 >
                   <div>
                     <span className="text-xs uppercase text-muted-foreground">
@@ -799,6 +809,16 @@ function CalendarModule() {
                         milestoneStatus: form.milestoneStatus,
                         percentComplete: Number(form.percentComplete) || 0,
                         sharedWithUserIds: parseIds(form.sharedWith),
+                        instructions: form.instructions || null,
+                        dependencyTitle: form.dependencyTitle || null,
+                        blockers: form.blockers || null,
+                        ownerUserId: form.ownerUserId ? Number(form.ownerUserId) : null,
+                        afeCode: form.afeCode || null,
+                        ticketNumber: form.ticketNumber || null,
+                        budgetAmount: form.budgetAmount ? Number(form.budgetAmount) : null,
+                        budgetUsedAmount: form.budgetUsedAmount ? Number(form.budgetUsedAmount) : null,
+                        invoicedAmount: form.invoicedAmount ? Number(form.invoicedAmount) : null,
+                        invoiceReference: form.invoiceReference || null,
                       },
                     });
                   }}
@@ -856,7 +876,7 @@ function CalendarModule() {
                   )}
                   <Field label="Calendar">
                     <select
-                      className="h-10 rounded-md border bg-background px-3"
+                      className="h-10 rounded-full border-2 border-[color:var(--brand-primary)] bg-white px-3"
                       value={form.calendarType}
                       onChange={(e) =>
                         setForm({ ...form, calendarType: e.target.value })
@@ -879,7 +899,7 @@ function CalendarModule() {
                       </Field>
                       <Field label="Milestone status">
                         <select
-                          className="h-10 rounded-md border bg-background px-3"
+                          className="h-10 rounded-full border-2 border-[color:var(--brand-primary)] bg-white px-3"
                           value={form.milestoneStatus}
                           onChange={(e) =>
                             setForm({
@@ -918,6 +938,36 @@ function CalendarModule() {
                           placeholder="Invited partner or vendor users"
                         />
                       </Field>
+                      <Field label="Milestone owner user ID">
+                        <Input type="number" min="1" value={form.ownerUserId} onChange={(e) => setForm({ ...form, ownerUserId: e.target.value })} placeholder="Person responsible" />
+                      </Field>
+                      <Field label="Instructions">
+                        <Input value={form.instructions} onChange={(e) => setForm({ ...form, instructions: e.target.value })} placeholder="What must be completed" />
+                      </Field>
+                      <Field label="Immediate dependency or handoff">
+                        <Input value={form.dependencyTitle} onChange={(e) => setForm({ ...form, dependencyTitle: e.target.value })} placeholder="What comes before or after" />
+                      </Field>
+                      <Field label="Blockers">
+                        <Input value={form.blockers} onChange={(e) => setForm({ ...form, blockers: e.target.value })} placeholder="Known blockers" />
+                      </Field>
+                      <Field label="Linked ticket number">
+                        <Input value={form.ticketNumber} onChange={(e) => setForm({ ...form, ticketNumber: e.target.value })} />
+                      </Field>
+                      <Field label="AFE code">
+                        <Input value={form.afeCode} onChange={(e) => setForm({ ...form, afeCode: e.target.value })} />
+                      </Field>
+                      <Field label="Project budget">
+                        <Input type="number" min="0" step="0.01" value={form.budgetAmount} onChange={(e) => setForm({ ...form, budgetAmount: e.target.value })} />
+                      </Field>
+                      <Field label="Budget used">
+                        <Input type="number" min="0" step="0.01" value={form.budgetUsedAmount} onChange={(e) => setForm({ ...form, budgetUsedAmount: e.target.value })} />
+                      </Field>
+                      <Field label="Invoiced amount">
+                        <Input type="number" min="0" step="0.01" value={form.invoicedAmount} onChange={(e) => setForm({ ...form, invoicedAmount: e.target.value })} />
+                      </Field>
+                      <Field label="Invoice reference">
+                        <Input value={form.invoiceReference} onChange={(e) => setForm({ ...form, invoiceReference: e.target.value })} />
+                      </Field>
                     </>
                   )}
                   <Notice error={command.error} />
@@ -926,7 +976,7 @@ function CalendarModule() {
                     tone="brand"
                     disabled={!owner || command.isPending}
                   >
-                    Publish shift
+                    {form.calendarType === "project" ? "Create project milestone" : "Publish shift"}
                   </BrandPillButton>
                 </form>
               </CardContent>

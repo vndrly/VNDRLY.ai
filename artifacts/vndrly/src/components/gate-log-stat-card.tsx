@@ -51,7 +51,7 @@ export default function GateLogStatCard({
         <p className="text-xs font-medium text-muted-foreground">{timeWindow}</p>
         <div className="space-y-2">
           {details.length ? details.map((detail) => (
-            <div key={detail.id} className="rounded-lg border bg-white p-3">
+            <div key={detail.id} className="rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-3">
               <p className="font-medium text-foreground">{detail.title}</p>
               {detail.subtitle ? <p className="text-xs text-muted-foreground">{detail.subtitle}</p> : null}
             </div>

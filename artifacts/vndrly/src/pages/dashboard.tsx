@@ -52,6 +52,7 @@ import { useBrand } from "@/hooks/use-brand";
 import { useToast } from "@/hooks/use-toast";
 import { brandImagePillSrc } from "@/components/png-pill-rollover";
 import ContentPaneBackLink from "@/components/content-pane-back-link";
+import DashboardStatCard from "@/components/dashboard-stat-card";
 
 // Maps a raw ticket status key to the same i18n label that the
 // tracking-page "All Status" jump list (`pages/tickets.tsx` →
@@ -611,10 +612,10 @@ export default function Dashboard() {
   //              so it isn't shown twice
   //   - other (admin) → cross-tenant partners count
   const firstStatCard = isPartner
-    ? { key: "hotlist-bids", label: t("dashboard.stats.hotlistBids"), value: summary?.hotlistBids ?? 0, icon: Flame }
+    ? { key: "hotlist-bids", label: t("dashboard.stats.hotlistBids"), value: summary?.hotlistBids ?? 0, icon: Flame, definition: "Hotlist bids received by your company.", destination: "/dashboard#hotlist" }
     : isVendor
-    ? { key: "site-locations", label: t("dashboard.stats.siteLocations"), value: summary?.totalSiteLocations ?? 0, icon: MapPin }
-    : { key: "partners", label: t("dashboard.stats.partners"), value: summary?.totalPartners ?? 0, icon: Handshake };
+    ? { key: "site-locations", label: t("dashboard.stats.siteLocations"), value: summary?.totalSiteLocations ?? 0, icon: MapPin, definition: "Sites connected to your company's tickets.", destination: "/site-locations" }
+    : { key: "partners", label: t("dashboard.stats.partners"), value: summary?.totalPartners ?? 0, icon: Handshake, definition: "Partner companies in VNDRLY.", destination: "/partners" };
 
   const statCards = [
     firstStatCard,
@@ -625,17 +626,20 @@ export default function Dashboard() {
     ...(isVendor
       ? []
       : [
-          { key: "vendors", label: t("dashboard.stats.vendors"), value: summary?.totalVendors ?? 0, icon: Users },
-          { key: "site-locations", label: t("dashboard.stats.siteLocations"), value: summary?.totalSiteLocations ?? 0, icon: MapPin },
+          { key: "vendors", label: t("dashboard.stats.vendors"), value: summary?.totalVendors ?? 0, icon: Users, definition: "Vendor companies visible in your current context.", destination: "/vendors" },
+          { key: "site-locations", label: t("dashboard.stats.siteLocations"), value: summary?.totalSiteLocations ?? 0, icon: MapPin, definition: "Site locations visible to your company.", destination: "/site-locations" },
         ]),
-    { key: "total-tracking", label: t("dashboard.stats.totalTracking"), value: summary?.totalTickets ?? 0, icon: FileText },
-    { key: "active", label: t("dashboard.stats.active"), value: summary?.activeTickets ?? 0, icon: Clock },
-    { key: "pending-approval", label: t("dashboard.stats.pendingApproval"), value: summary?.pendingApproval ?? 0, icon: AlertTriangle },
-    { key: "approved-month", label: t("dashboard.stats.approvedThisMonth"), value: summary?.approvedThisMonth ?? 0, icon: CheckCircle2 },
+    { key: "total-tracking", label: t("dashboard.stats.totalTracking"), value: summary?.totalTickets ?? 0, icon: FileText, definition: "All tickets visible to your company.", destination: "/tickets" },
+    { key: "active", label: t("dashboard.stats.active"), value: summary?.activeTickets ?? 0, icon: Clock, definition: "Tickets currently initiated, drafted, in progress, or pending review.", destination: "/tickets" },
+    { key: "pending-approval", label: t("dashboard.stats.pendingApproval"), value: summary?.pendingApproval ?? 0, icon: AlertTriangle, definition: "Submitted tickets waiting for approval.", destination: "/tickets?status=submitted" },
+    { key: "approved-month", label: t("dashboard.stats.approvedThisMonth"), value: summary?.approvedThisMonth ?? 0, icon: CheckCircle2, definition: "Tickets approved during the current month.", destination: "/tickets?status=approved" },
   ];
 
   return (
-    <div className="space-y-6" data-testid="dashboard-page">
+    <div
+      className="space-y-6 [&_[data-slot=card]]:!border-[color:var(--brand-primary)]"
+      data-testid="dashboard-page"
+    >
       <div className="flex items-center gap-3">
         <ContentPaneBackLink href="/" />
         <div>
@@ -809,31 +813,26 @@ export default function Dashboard() {
       {isAdmin && <AssistantMetricsCard />}
 
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-        {statCards.map((stat) => (
-          <Card key={stat.key} data-testid={`card-stat-${stat.key}`}>
-            <CardContent className={CARD_MINI_CONTENT_CLASS}>
-              {summaryLoading ? (
-                <Skeleton className="h-10 w-full" />
-              ) : (
-                <>
-                  <div className={CARD_ICON_ROW_CLASS}>
-                    <stat.icon className={CARD_ICON_CLASS} style={iconStyle} />
-                    <span className="text-xs text-gray-700 font-medium">{stat.label}</span>
-                  </div>
-                  <p
-                    className="text-lg font-bold mt-auto text-center"
-                    data-testid={`text-stat-${stat.key}`}
-                  >
-                    {stat.value}
-                  </p>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        ))}
+        {summaryLoading
+          ? statCards.map((stat) => <Skeleton key={stat.key} className="h-[82px] w-full" />)
+          : statCards.map((stat) => (
+              <DashboardStatCard
+                key={stat.key}
+                icon={stat.icon}
+                label={stat.label}
+                value={stat.value}
+                definition={stat.definition}
+                destination={stat.destination}
+                iconColor={accentColor}
+                testId={`card-stat-${stat.key}`}
+                valueTestId={`text-stat-${stat.key}`}
+              />
+            ))}
       </div>
 
-      <HotlistSection />
+      <div id="hotlist">
+        <HotlistSection />
+      </div>
 
       <SafetyTrainingBanner />
 
@@ -1086,7 +1085,7 @@ function SiteLocationSnapshotCard({
       <CardHeader>
         <CardTitle className="text-lg flex items-center gap-2">
           <MapPin className={CARD_TITLE_ICON_CLASS} style={{ color: accentColor }} />
-          {t("dashboard.siteSnapshot.title", { defaultValue: "Site Location Snapshot" })}
+          {t("dashboard.siteSnapshot.title", { defaultValue: "Site Workload Overview" })}
         </CardTitle>
       </CardHeader>
       <CardContent>

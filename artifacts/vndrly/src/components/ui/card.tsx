@@ -7,11 +7,11 @@ export const CARD_CORNER_CLASS = "rounded-xl"
 
 /** Outer card shell — canonical dashboard/content-pane card. */
 export const CARD_SURFACE_CLASS =
-  `${CARD_CORNER_CLASS} border-2 border-gray-300 bg-white text-gray-900 shadow-[var(--card-shadow)] transition-shadow duration-200 hover:shadow-[var(--card-shadow-hover)] dark:border-gray-400 dark:bg-white dark:text-gray-900`
+  `${CARD_CORNER_CLASS} border-2 border-[color:var(--brand-primary)] bg-white text-gray-900 shadow-[var(--card-shadow)] transition-shadow duration-200 hover:shadow-[var(--card-shadow-hover)] dark:border-[color:var(--brand-primary)] dark:bg-white dark:text-gray-900`
 
 /** Read-only inner tile (stat box, subsection) — grey outline matches outer card. */
 export const CARD_INNER_TILE_CLASS =
-  `${CARD_CORNER_CLASS} border-2 border-gray-300 bg-white p-3 dark:border-gray-400 dark:bg-white`
+  `${CARD_CORNER_CLASS} border-2 border-[color:var(--brand-primary)] bg-white p-3 dark:border-[color:var(--brand-primary)] dark:bg-white`
 
 /** Shared hover lift for inner tiles — shadow only; clickable tiles add brand border below. */
 const CARD_INNER_TILE_HOVER_SHADOW_CLASS =

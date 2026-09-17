@@ -136,6 +136,7 @@ jobs:
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:work-hub-imports
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:work-hub-channel-visibility
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:work-hub-project-calendar
+          sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:real-ticket-boundary
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:work-hub-collaboration
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:work-hub-finance
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:work-hub-calls

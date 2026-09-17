@@ -45,13 +45,13 @@ function PartnerRowLogo({
   const [errored, setErrored] = useState(false);
   const trimmed = typeof logoUrl === "string" ? logoUrl.trim() : "";
   if (!trimmed || errored) {
-    return <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-gray-200 bg-white"><Handshake className="h-6 w-6" style={{ color: fallbackColor }} data-testid={`icon-partner-row-fallback-${partnerId}`} /></span>;
+    return <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border-2 border-[color:var(--brand-primary)] bg-white"><Handshake className="h-6 w-6" style={{ color: fallbackColor }} data-testid={`icon-partner-row-fallback-${partnerId}`} /></span>;
   }
   return (
     <img
       src={trimmed}
       alt={altText || `${name} logo`}
-      className="h-12 w-12 shrink-0 rounded-lg border border-gray-200 bg-white object-contain"
+      className="h-12 w-12 shrink-0 rounded-lg border-2 border-[color:var(--brand-primary)] bg-white object-contain"
       data-testid={`img-partner-row-logo-${partnerId}`}
       onError={() => setErrored(true)}
     />

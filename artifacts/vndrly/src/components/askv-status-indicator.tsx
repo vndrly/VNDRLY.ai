@@ -18,8 +18,8 @@ export default function AskVStatusIndicator({ placement = "default" }: AskVStatu
     const active = !muted && voice.availabilityStatus === "available" && ((voice.acrossVndrly && voice.wakeReady) || ["listening", "thinking", "speaking"].includes(voice.state));
     return <AskVListeningPill active={active} onClick={() => setMuted(active)} data-testid="askv-status-toggle" title={active ? "Pause V" : "Restart V"} />;
   }
-  const label = muted ? "Go Live" : "Mute";
-  const ariaLabel = muted ? "Go Live with AskV" : "Mute AskV";
+  const label = muted ? "Click to start V" : "Pause V";
+  const ariaLabel = muted ? "Click to start V" : "Pause V";
   const color = muted ? "green" : "red";
   return (
     <button
@@ -28,7 +28,7 @@ export default function AskVStatusIndicator({ placement = "default" }: AskVStatu
       aria-label={ariaLabel}
       title={ariaLabel}
       className={`group relative h-[34px] shrink-0 self-center appearance-none border-0 bg-transparent p-0 shadow-none outline-none transition-transform active:scale-[0.98] focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
-        "min-w-[74px] -translate-y-1"
+        "min-w-[112px]"
       }`}
       data-testid="askv-status-toggle"
       data-color={color}

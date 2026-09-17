@@ -247,7 +247,7 @@ export function AccountingExportHub({
             }
           >
             <SelectTrigger
-              className="w-44 rounded-full border-2 bg-white"
+              className="w-44 rounded-full border-2 border-[color:var(--brand-primary)] bg-white"
               data-testid="select-accounting-export-period"
             >
               <SelectValue />
@@ -268,7 +268,7 @@ export function AccountingExportHub({
                 onChange={(e) =>
                   setPeriod({ ...period, customStart: e.target.value })
                 }
-                className="w-40 rounded-full border-2 bg-white"
+                className="w-40 rounded-full border-2 border-[color:var(--brand-primary)] bg-white"
                 data-testid="input-accounting-export-start"
                 aria-label={t("reports.preset.from")}
               />
@@ -279,7 +279,7 @@ export function AccountingExportHub({
                 onChange={(e) =>
                   setPeriod({ ...period, customEnd: e.target.value })
                 }
-                className="w-40 rounded-full border-2 bg-white"
+                className="w-40 rounded-full border-2 border-[color:var(--brand-primary)] bg-white"
                 data-testid="input-accounting-export-end"
                 aria-label={t("reports.preset.to")}
               />

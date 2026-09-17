@@ -7,6 +7,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  CARD_INNER_TILE_CLASS,
   CARD_TITLE_ICON_CLASS,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import BrandPillButton from "@/components/brand-pill-button";
 import { translateApiError } from "@/lib/api-error";
 import ManagedSubcontractorHoursPanel from "@/components/managed-subcontractor-hours-panel";
+import { cn } from "@/lib/utils";
 
 type Worker = {
   id: string | number;
@@ -169,7 +171,7 @@ export default function VendorManagedSubcontractorsCard({
         )}
         {notice && <p role="status">{notice}</p>}
         {activationUrl && (
-          <div className="space-y-2 rounded-md border p-3">
+          <div className={cn(CARD_INNER_TILE_CLASS, "space-y-2")}>
             <Label htmlFor={`activation-link-${vendorId}`}>
               {key("activationLink")}
             </Label>
@@ -225,7 +227,7 @@ export default function VendorManagedSubcontractorsCard({
           <section
             key={company.id}
             data-testid={`managed-subcontractor-${company.id}`}
-            className="rounded-lg border p-4 space-y-3"
+            className={cn(CARD_INNER_TILE_CLASS, "space-y-3")}
           >
             <div className="flex flex-wrap justify-between items-center gap-3">
               <h3 className="font-semibold">{company.name}</h3>
@@ -468,7 +470,7 @@ export default function VendorManagedSubcontractorsCard({
               <div
                 role="alertdialog"
                 aria-label={key("revokeAccess")}
-                className="border rounded-md p-3 space-y-3"
+                className={cn(CARD_INNER_TILE_CLASS, "space-y-3")}
               >
                 <p>
                   {t("managedSubcontractors.revokeWarning", {

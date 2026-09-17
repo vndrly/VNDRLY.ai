@@ -46,7 +46,7 @@ export default function CalendarSummaryCards({ shifts = [], meetings = [], tasks
     <Dialog open={Boolean(open)} onOpenChange={(isOpen) => { if (!isOpen) setOpen(null); }}>
       <DialogContent>
         <DialogHeader><DialogTitle>{open?.title}</DialogTitle><DialogDescription>Live records from your Work Hub access.</DialogDescription></DialogHeader>
-        {open?.items.length ? <ul className="max-h-[50vh] space-y-2 overflow-y-auto">{open.items.map((item) => <li key={item.id}><a href={item.href} className="block rounded-lg border border-border bg-white p-3 hover:border-[var(--brand-primary)]"><span className="block font-semibold text-black">{item.title}</span><span className="text-sm text-muted-foreground">{item.detail}</span></a></li>)}</ul> : <p className="text-sm text-muted-foreground">No matching records right now.</p>}
+        {open?.items.length ? <ul className="max-h-[50vh] space-y-2 overflow-y-auto">{open.items.map((item) => <li key={item.id}><a href={item.href} className="block rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-3"><span className="block font-semibold text-black">{item.title}</span><span className="text-sm text-muted-foreground">{item.detail}</span></a></li>)}</ul> : <p className="text-sm text-muted-foreground">No matching records right now.</p>}
         {open && <a href={open.href} className="text-sm font-semibold text-[var(--brand-primary)] underline">View all</a>}
       </DialogContent>
     </Dialog>

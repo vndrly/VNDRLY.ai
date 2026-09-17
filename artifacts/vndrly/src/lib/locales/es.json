@@ -413,6 +413,15 @@
       "daysWaiting_one": "{{count}} día",
       "daysWaiting_other": "{{count}} días"
     },
+    "siteSnapshot": {
+      "title": "Resumen de carga de trabajo por sitio",
+      "empty": "Aún no hay carga de trabajo por sitio",
+      "active": "Activos",
+      "review": "Revisión",
+      "ap": "Cuentas por pagar",
+      "vendors": "Proveedores",
+      "totalTracking": "{{count}} seguimientos totales"
+    },
     "trackingStatus": "Desglose de Estado de Seguimiento",
     "noTrackingData": "Aún no hay datos de seguimiento",
     "recentActivity": "Actividad Reciente",

@@ -9,9 +9,9 @@ export type WorkHubModuleKey = keyof typeof workHubIcons;
 type HubIcon = ComponentType<SVGProps<SVGSVGElement>>;
 
 export const WORK_HUB_CARD_CLASS =
-  "rounded-xl border-2 border-[color:var(--brand-primary)] bg-card shadow-sm";
+  "rounded-xl border-2 border-[color:var(--brand-primary)] bg-white text-black shadow-sm";
 export const WORK_HUB_SUBCARD_CLASS =
-  "rounded-xl border-2 border-[color:var(--brand-primary)] bg-card";
+  "rounded-xl border-2 border-[color:var(--brand-primary)] bg-white text-black";
 
 export function WorkHubSurface({ children }: { children: ReactNode }) {
   return (

@@ -162,6 +162,7 @@ interface PngPillProps {
   /** Allow nested controls (e.g. crew-chip remove button). */
   interactive?: boolean;
   "data-testid"?: string;
+  "data-color"?: PngPillColor;
   "aria-label"?: string;
 }
 
@@ -176,7 +177,12 @@ export default function PngPill({
   interactive = false,
   ...props
 }: PngPillProps) {
-  const src = rest ? PILL_IDLE : coloredSrcForChip(color);
+  const brand = useBrand();
+  const src = rest
+    ? PILL_IDLE
+    : color === "brand"
+      ? brandImagePillSrc(brand.primary, brand.name)
+      : coloredSrcForChip(color);
   const wrapperClass = interactive ? PILL_WRAPPER_CLASS : PILL_READONLY_WRAPPER_CLASS;
 
   return (
@@ -189,6 +195,7 @@ export default function PngPill({
       )}
       style={{ height }}
       data-testid={props["data-testid"]}
+      data-color={props["data-color"] ?? color}
       aria-label={props["aria-label"]}
     >
       <PillColorLayer src={src} />
