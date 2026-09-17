@@ -29,14 +29,21 @@ describe("Work Hub channel error feedback", () => {
     expect(source).toContain("const active = selected;");
   });
 
-  it("uses the approved calendar split and compact branded file chooser", () => {
+  it("uses the approved full-width calendar, equal creation cards, and compact branded file chooser", () => {
     const source = readFileSync(
       resolve(__dirname, "../pages/work-hub.tsx"),
       "utf8",
     );
 
+    const createCardsSource = readFileSync(
+      resolve(__dirname, "../components/work-hub/calendar-create-cards.tsx"),
+      "utf8",
+    );
+
     expect(source).toContain('data-testid="work-hub-calendar-layout"');
-    expect(source).toContain("lg:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)]");
+    expect(source).not.toContain("lg:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)]");
+    expect(source).toContain("<CalendarCreateCards owner={owner} />");
+    expect(createCardsSource).toContain("lg:grid-cols-2");
     expect(source).toContain('data-testid="work-hub-file-input"');
     expect(source).toContain("Choose file");
   });
