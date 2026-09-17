@@ -25,6 +25,9 @@ describe("DashboardStatCard", () => {
     await userEvent.click(screen.getByRole("button", { name: "View Total Tracking details" }));
 
     expect(screen.getByRole("dialog")).toBeTruthy();
+    expect(screen.getByTestId("mini-card-dialog-header")).toBeTruthy();
+    expect(screen.getByTestId("mini-card-dialog-logo")).toBeTruthy();
+    expect(screen.getByTestId("modal-accent-header").getAttribute("style")).toContain("height: 118px");
     expect(screen.getByText("Tickets visible to your company.")).toBeTruthy();
     expect(screen.getByRole("link", { name: "View all" }).getAttribute("href")).toBe("/tickets");
   });

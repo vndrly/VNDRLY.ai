@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { sql, eq, desc, and, gte } from "drizzle-orm";
+import { sql, eq, desc, and } from "drizzle-orm";
 import crypto from "crypto";
 import {
   db,
@@ -70,8 +70,6 @@ router.get("/dashboard/summary", requireSession, async (req, res): Promise<void>
   const partnerId = isPartner ? session!.partnerId! : null;
   const isVendor = session?.role === "vendor" && !!session.vendorId;
   const vendorId = isVendor ? session!.vendorId! : null;
-  const productionTicketCondition = gte(ticketsTable.id, 100001);
-
   const [partnerCount] = await db.select({ count: sql<number>`count(*)::int` }).from(partnersTable);
   const [vendorCount] = await db.select({ count: sql<number>`count(*)::int` }).from(vendorsTable);
   // Site locations card scoping:
@@ -90,7 +88,7 @@ router.get("/dashboard/summary", requireSession, async (req, res): Promise<void>
     ? await db
         .select({ count: sql<number>`count(distinct ${ticketsTable.siteLocationId})::int` })
         .from(ticketsTable)
-        .where(and(eq(ticketsTable.vendorId, vendorId!), productionTicketCondition))
+        .where(eq(ticketsTable.vendorId, vendorId!))
     : await db.select({ count: sql<number>`count(*)::int` }).from(siteLocationsTable);
 
   const ticketBase = isPartner
@@ -107,22 +105,19 @@ router.get("/dashboard/summary", requireSession, async (req, res): Promise<void>
         .select({ count: sql<number>`count(*)::int` })
         .from(ticketsTable)
         .leftJoin(siteLocationsTable, eq(ticketsTable.siteLocationId, siteLocationsTable.id))
-        .where(and(partnerCond, productionTicketCondition))
+        .where(partnerCond)
     : isVendor
     ? db
         .select({ count: sql<number>`count(*)::int` })
         .from(ticketsTable)
-        .where(and(eq(ticketsTable.vendorId, vendorId!), productionTicketCondition))
+        .where(eq(ticketsTable.vendorId, vendorId!))
     : db.select({ count: sql<number>`count(*)::int` }).from(ticketsTable));
   const [activeCount] = await (isPartner
     ? db
         .select({ count: sql<number>`count(*)::int` })
         .from(ticketsTable)
         .leftJoin(siteLocationsTable, eq(ticketsTable.siteLocationId, siteLocationsTable.id))
-        .where(and(
-          sql`${ticketsTable.status} IN ('initiated', 'draft', 'in_progress', 'pending_review') AND ${partnerCond}`,
-          productionTicketCondition,
-        ))
+        .where(sql`${ticketsTable.status} IN ('initiated', 'draft', 'in_progress', 'pending_review') AND ${partnerCond}`)
     : isVendor
     ? db
         .select({ count: sql<number>`count(*)::int` })
@@ -130,7 +125,6 @@ router.get("/dashboard/summary", requireSession, async (req, res): Promise<void>
         .where(and(
           sql`${ticketsTable.status} IN ('initiated', 'draft', 'in_progress', 'pending_review')`,
           eq(ticketsTable.vendorId, vendorId!),
-          productionTicketCondition,
         ))
     : db
         .select({ count: sql<number>`count(*)::int` })
@@ -141,12 +135,12 @@ router.get("/dashboard/summary", requireSession, async (req, res): Promise<void>
         .select({ count: sql<number>`count(*)::int` })
         .from(ticketsTable)
         .leftJoin(siteLocationsTable, eq(ticketsTable.siteLocationId, siteLocationsTable.id))
-        .where(and(sql`${ticketsTable.status} = 'submitted' AND ${partnerCond}`, productionTicketCondition))
+        .where(sql`${ticketsTable.status} = 'submitted' AND ${partnerCond}`)
     : isVendor
     ? db
         .select({ count: sql<number>`count(*)::int` })
         .from(ticketsTable)
-        .where(and(eq(ticketsTable.status, "submitted"), eq(ticketsTable.vendorId, vendorId!), productionTicketCondition))
+        .where(and(eq(ticketsTable.status, "submitted"), eq(ticketsTable.vendorId, vendorId!)))
     : db
         .select({ count: sql<number>`count(*)::int` })
         .from(ticketsTable)
@@ -156,10 +150,7 @@ router.get("/dashboard/summary", requireSession, async (req, res): Promise<void>
         .select({ count: sql<number>`count(*)::int` })
         .from(ticketsTable)
         .leftJoin(siteLocationsTable, eq(ticketsTable.siteLocationId, siteLocationsTable.id))
-        .where(and(
-          sql`${ticketsTable.status} = 'approved' AND ${ticketsTable.updatedAt} >= date_trunc('month', CURRENT_DATE) AND ${partnerCond}`,
-          productionTicketCondition,
-        ))
+        .where(sql`${ticketsTable.status} = 'approved' AND ${ticketsTable.updatedAt} >= date_trunc('month', CURRENT_DATE) AND ${partnerCond}`)
     : isVendor
     ? db
         .select({ count: sql<number>`count(*)::int` })
@@ -168,7 +159,6 @@ router.get("/dashboard/summary", requireSession, async (req, res): Promise<void>
           eq(ticketsTable.status, "approved"),
           sql`${ticketsTable.updatedAt} >= date_trunc('month', CURRENT_DATE)`,
           eq(ticketsTable.vendorId, vendorId!),
-          productionTicketCondition,
         ))
     : db
         .select({ count: sql<number>`count(*)::int` })

@@ -10,13 +10,10 @@ import {
 } from "@/components/ui/card";
 import {
   Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import PngPill from "@/components/png-pill-rollover";
+import MiniCardDialogContent from "@/components/mini-card-dialog-content";
 
 export default function DashboardStatCard({
   icon: Icon,
@@ -56,14 +53,13 @@ export default function DashboardStatCard({
           </Card>
         </button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Icon className="h-5 w-5" style={{ color: iconColor }} />
-            {label}
-          </DialogTitle>
-          <DialogDescription>{definition}</DialogDescription>
-        </DialogHeader>
+      <MiniCardDialogContent
+        icon={Icon}
+        label={label}
+        definition={definition}
+        iconColor={iconColor}
+        className="sm:max-w-md"
+      >
         <div className="rounded-xl border bg-white p-4 text-center">
           <p className="text-3xl font-bold">{value}</p>
           <p className="mt-1 text-xs text-muted-foreground">Matching records in your current company</p>
@@ -71,7 +67,7 @@ export default function DashboardStatCard({
         <Link href={destination} className="mx-auto inline-flex">
           <PngPill color="brand" interactive>View all</PngPill>
         </Link>
-      </DialogContent>
+      </MiniCardDialogContent>
     </Dialog>
   );
 }

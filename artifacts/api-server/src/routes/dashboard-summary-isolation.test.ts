@@ -59,7 +59,7 @@ beforeEach(() => {
 });
 
 describe("GET /dashboard/summary tenant isolation", () => {
-  it("scopes every vendor ticket aggregate to the active vendor", async () => {
+  it("scopes every vendor ticket aggregate without excluding legacy ticket IDs", async () => {
     const response = await request(app)
       .get("/api/dashboard/summary")
       .set("Cookie", vendorCookie(607));
@@ -72,9 +72,9 @@ describe("GET /dashboard/summary tenant isolation", () => {
     expect(ticketFilters).toHaveLength(5);
     for (const filter of ticketFilters) {
       expect(filter.sql).toContain('"tickets"."vendor_id" =');
-      expect(filter.sql).toContain('"tickets"."id" >=');
       expect(filter.params).toContain(607);
-      expect(filter.params).toContain(100001);
+      expect(filter.sql).not.toContain('"tickets"."id" >=');
+      expect(filter.params).not.toContain(100001);
     }
   });
 });

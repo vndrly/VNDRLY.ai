@@ -1,7 +1,8 @@
 import type { LucideIcon } from "lucide-react";
 
 import { Card, CardContent, CARD_ICON_CLASS, CARD_ICON_ROW_CLASS, CARD_MINI_CONTENT_CLASS } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import MiniCardDialogContent from "@/components/mini-card-dialog-content";
 
 export type GateLogStatDetail = {
   id: string | number;
@@ -43,11 +44,13 @@ export default function GateLogStatCard({
           </Card>
         </button>
       </DialogTrigger>
-      <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{label}</DialogTitle>
-          <DialogDescription>{definition}</DialogDescription>
-        </DialogHeader>
+      <MiniCardDialogContent
+        icon={Icon}
+        label={label}
+        definition={definition}
+        iconColor={iconColor}
+        className="max-h-[80vh] sm:max-w-lg"
+      >
         <p className="text-xs font-medium text-muted-foreground">{timeWindow}</p>
         <div className="space-y-2">
           {details.length ? details.map((detail) => (
@@ -57,7 +60,7 @@ export default function GateLogStatCard({
             </div>
           )) : <p className="text-sm text-muted-foreground">No matching records.</p>}
         </div>
-      </DialogContent>
+      </MiniCardDialogContent>
     </Dialog>
   );
 }
