@@ -215,8 +215,8 @@ export default function CalendarCreateCards({ owner }: { owner: Owner | null }) 
             <Field label="Ends"><Input type="datetime-local" value={form.endsAt} onChange={(event) => setForm({ ...form, endsAt: event.target.value })} required /></Field>
             <Picker people={people.data ?? []} crews={crews.data ?? []} userIds={form.userIds} crewIds={form.crewIds} onUsers={(userIds) => setForm({ ...form, userIds })} onCrews={(crewIds) => setForm({ ...form, crewIds })} />
             <Field label="Calendar"><select value="company" disabled><option value="company">Internal company</option></select></Field>
-            <Field label="Notes"><Textarea value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} /></Field>
-            <label className="flex items-center gap-2 text-sm font-semibold"><input type="checkbox" checked={form.mandatory} onChange={(event) => setForm({ ...form, mandatory: event.target.checked })} />Mandatory</label>
+            <Field label="Notes"><Textarea className="rounded-xl border-2 border-[color:var(--brand-primary)] bg-white" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} /></Field>
+            <label className="flex items-center gap-2 text-sm font-semibold"><input className="h-4 w-4 rounded border-2 border-[color:var(--brand-primary)] accent-[var(--brand-primary)]" type="checkbox" checked={form.mandatory} onChange={(event) => setForm({ ...form, mandatory: event.target.checked })} />Mandatory</label>
             {createItem.error && <p role="alert" className="text-sm text-red-700">{createItem.error instanceof Error ? createItem.error.message : "Unable to create Calendar work."}</p>}
             <BrandPillButton type="submit" tone="brand" disabled={!owner || createItem.isPending}>{createItem.isPending ? "Creating…" : "Create Shift/Event"}</BrandPillButton>
           </form>
@@ -227,7 +227,7 @@ export default function CalendarCreateCards({ owner }: { owner: Owner | null }) 
         <CardContent>
           <form className={commonClass} onSubmit={(event) => { event.preventDefault(); createTask.mutate(); }}>
             <Field label="Title"><Input value={task.title} onChange={(event) => setTask({ ...task, title: event.target.value })} required /></Field>
-            <Field label="Description"><Textarea value={task.description} onChange={(event) => setTask({ ...task, description: event.target.value })} /></Field>
+            <Field label="Description"><Textarea className="rounded-xl border-2 border-[color:var(--brand-primary)] bg-white" value={task.description} onChange={(event) => setTask({ ...task, description: event.target.value })} /></Field>
             <Field label="Due"><Input type="datetime-local" value={task.dueAt} onChange={(event) => setTask({ ...task, dueAt: event.target.value })} /></Field>
             <Field label="Priority"><select value={task.priority} onChange={(event) => setTask({ ...task, priority: event.target.value })}><option value="low">Low</option><option value="normal">Normal</option><option value="high">High</option><option value="urgent">Urgent</option></select></Field>
             <Picker people={people.data ?? []} crews={crews.data ?? []} userIds={task.userIds} crewIds={task.crewIds} onUsers={(userIds) => setTask({ ...task, userIds })} onCrews={(crewIds) => setTask({ ...task, crewIds })} />

@@ -17,17 +17,20 @@ vi.mock("@/hooks/use-askv-voice-session", () => ({
 }));
 
 import AskVStatusIndicator from "./askv-status-indicator";
+import { pillGreenApproval1 } from "@/lib/pill-palette-assets";
 
 describe("AskVStatusIndicator", () => {
   beforeEach(() => { setMuted.mockClear(); voice.muted = true; voice.state = "idle"; voice.wakeReady = false; voice.availabilityStatus = "available"; });
 
   it("turns natural voice on directly from the Muted control", () => {
-    render(<AskVStatusIndicator />);
+    const { container } = render(<AskVStatusIndicator />);
     const button = screen.getByRole("button", { name: "Click to Start V" });
     expect(button.textContent).toContain("Click to Start V");
     expect(button.getAttribute("data-color")).toBe("green");
     expect(button.className).toContain("h-[23px]");
     expect(button.className).toContain("self-center");
+    expect([...container.querySelectorAll("img")]).toHaveLength(3);
+    expect([...container.querySelectorAll("img")].every((image) => image.getAttribute("src") === pillGreenApproval1)).toBe(true);
     fireEvent.click(button);
     expect(setMuted).toHaveBeenCalledWith(false);
   });
@@ -46,11 +49,12 @@ describe("AskVStatusIndicator", () => {
     voice.state = "idle";
   });
 
-  it("does not draw a focus halo around the mute control", () => {
+  it("does not underline or draw a focus halo around the shared control", () => {
     render(<AskVStatusIndicator />);
     const toggle = screen.getByRole("button", { name: "Click to Start V" });
 
-    expect(toggle.className).toContain("focus-visible:underline");
+    expect(toggle.className).not.toContain("underline");
+    expect(toggle.className).toContain("focus-visible:outline-none");
   });
 
   it("uses the same green Start and red Mute labels in the top strip and modal", () => {

@@ -40,5 +40,14 @@ describe("CalendarCreateCards", () => {
     expect(individuals.getAttribute("aria-pressed")).toBe("true");
     await waitFor(() => expect(screen.getByText("Alex Field")).toBeTruthy());
     expect(screen.getAllByText("Gatekeepers")).toHaveLength(1);
+    const notes = screen.getByLabelText("Notes");
+    const description = screen.getByLabelText("Description");
+    const mandatory = screen.getByRole("checkbox", { name: "Mandatory" });
+    for (const field of [notes, description]) {
+      expect(field.className).toContain("rounded-xl");
+      expect(field.className).toContain("border-[color:var(--brand-primary)]");
+      expect(field.className).toContain("bg-white");
+    }
+    expect(mandatory.className).toContain("accent-[var(--brand-primary)]");
   });
 });
