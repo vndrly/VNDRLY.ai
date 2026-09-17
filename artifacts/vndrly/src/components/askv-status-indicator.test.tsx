@@ -17,7 +17,6 @@ vi.mock("@/hooks/use-askv-voice-session", () => ({
 }));
 
 import AskVStatusIndicator from "./askv-status-indicator";
-import LiveConnectionPill from "./live-connection-pill";
 
 describe("AskVStatusIndicator", () => {
   beforeEach(() => { setMuted.mockClear(); voice.muted = true; voice.state = "idle"; voice.wakeReady = false; voice.availabilityStatus = "available"; });
@@ -27,21 +26,20 @@ describe("AskVStatusIndicator", () => {
     const button = screen.getByRole("button", { name: "Click to Start V" });
     expect(button.textContent).toContain("Click to Start V");
     expect(button.getAttribute("data-color")).toBe("green");
-    expect(button.className).toContain("h-[34px]");
-    expect(button.className).toContain("min-w-[112px]");
+    expect(button.className).toContain("h-[23px]");
     expect(button.className).toContain("self-center");
     fireEvent.click(button);
     expect(setMuted).toHaveBeenCalledWith(false);
   });
 
-  it("mutes natural voice directly from the Live control", () => {
+  it("mutes natural voice directly from the active control", () => {
     voice.muted = false;
     voice.state = "listening";
     render(<AskVStatusIndicator />);
-    const button = screen.getByRole("button", { name: "Click to Stop V" });
-    expect(button.textContent).toContain("Click to Stop V");
+    const button = screen.getByRole("button", { name: "Click to Mute V" });
+    expect(button.textContent).toContain("Click to Mute V");
     expect(button.getAttribute("data-color")).toBe("red");
-    expect(button.className).toContain("h-[34px]");
+    expect(button.className).toContain("h-[23px]");
     fireEvent.click(button);
     expect(setMuted).toHaveBeenCalledWith(true);
     voice.muted = true;
@@ -52,38 +50,33 @@ describe("AskVStatusIndicator", () => {
     render(<AskVStatusIndicator />);
     const toggle = screen.getByRole("button", { name: "Click to Start V" });
 
-    expect(toggle.className).toContain("focus-visible:ring-0");
-    expect(toggle.className).toContain("focus-visible:ring-offset-0");
-    expect(toggle.className).toContain("focus-visible:outline-none");
+    expect(toggle.className).toContain("focus-visible:underline");
   });
 
-  it("uses a gray restart pill in the top strip without changing the approved modal control", () => {
+  it("uses the same green Start and red Mute labels in the top strip and modal", () => {
     const { rerender } = render(<AskVStatusIndicator placement="top-strip" />);
-    const topStripButton = screen.getByRole("button", { name: "Click to restart V" });
-    expect(topStripButton.getAttribute("data-color")).toBe("grey");
+    const topStripButton = screen.getByRole("button", { name: "Click to Start V" });
+    expect(topStripButton.getAttribute("data-color")).toBe("green");
     expect(topStripButton.getAttribute("aria-pressed")).toBe("false");
     fireEvent.click(topStripButton);
     expect(setMuted).toHaveBeenCalledWith(false);
 
     rerender(<AskVStatusIndicator />);
     const modalButton = screen.getByRole("button", { name: "Click to Start V" });
-    expect(modalButton.className).toContain("min-w-[112px]");
+    expect(modalButton.className).toBe(topStripButton.className);
   });
-  it("matches the Hotlist Live pill artwork and height when V is listening", () => {
+  it("uses the red Mute pill when V is listening", () => {
     voice.muted = false; voice.state = "listening";
-    render(<><AskVStatusIndicator placement="top-strip" /><LiveConnectionPill status="live" /></>);
-    const button = screen.getByRole("button", { name: "V is listening" });
-    const hotlist = screen.getByTestId("live-connection-pill");
-    expect(button.querySelector("img")!.getAttribute("src")).toBe(hotlist.querySelector("img")!.getAttribute("src"));
-    expect(button.style.height).toBe(hotlist.style.height);
-    expect(button.getAttribute("data-color")).toBe("green");
+    render(<AskVStatusIndicator placement="top-strip" />);
+    const button = screen.getByRole("button", { name: "Click to Mute V" });
+    expect(button.getAttribute("data-color")).toBe("red");
     fireEvent.click(button);
     expect(setMuted).toHaveBeenCalledWith(true);
   });
-  it("offers restart instead of claiming listening when unmuted but disconnected", () => {
+  it("keeps the shared toggle on Mute while voice is unmuted but disconnected", () => {
     voice.muted = false; voice.state = "stopped";
     render(<AskVStatusIndicator placement="top-strip" />);
-    fireEvent.click(screen.getByRole("button", { name: "Click to restart V" }));
-    expect(setMuted).toHaveBeenCalledWith(false);
+    fireEvent.click(screen.getByRole("button", { name: "Click to Mute V" }));
+    expect(setMuted).toHaveBeenCalledWith(true);
   });
 });

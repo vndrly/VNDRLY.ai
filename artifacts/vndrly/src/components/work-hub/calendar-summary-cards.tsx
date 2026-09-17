@@ -2,7 +2,8 @@ import { CalendarClock, CheckSquare2, MessageSquare, Users } from "lucide-react"
 import { useState } from "react";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog } from "@/components/ui/dialog";
+import MiniCardDialogContent from "@/components/mini-card-dialog-content";
 
 type Row = Record<string, any>;
 
@@ -44,11 +45,16 @@ export default function CalendarSummaryCards({ shifts = [], meetings = [], tasks
       </Card>)}
     </div>
     <Dialog open={Boolean(open)} onOpenChange={(isOpen) => { if (!isOpen) setOpen(null); }}>
-      <DialogContent>
-        <DialogHeader><DialogTitle>{open?.title}</DialogTitle><DialogDescription>Live records from your Work Hub access.</DialogDescription></DialogHeader>
+      <MiniCardDialogContent
+        icon={open?.icon ?? Users}
+        label={open?.title ?? "Calendar details"}
+        definition="Live records from your Work Hub access."
+        iconColor="var(--brand-primary)"
+        className="max-h-[80vh] sm:max-w-lg"
+      >
         {open?.items.length ? <ul className="max-h-[50vh] space-y-2 overflow-y-auto">{open.items.map((item) => <li key={item.id}><a href={item.href} className="block rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-3"><span className="block font-semibold text-black">{item.title}</span><span className="text-sm text-muted-foreground">{item.detail}</span></a></li>)}</ul> : <p className="text-sm text-muted-foreground">No matching records right now.</p>}
         {open && <a href={open.href} className="text-sm font-semibold text-[var(--brand-primary)] underline">View all</a>}
-      </DialogContent>
+      </MiniCardDialogContent>
     </Dialog>
   </>;
 }

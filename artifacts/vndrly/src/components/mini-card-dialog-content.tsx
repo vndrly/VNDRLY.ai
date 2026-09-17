@@ -36,7 +36,7 @@ export default function MiniCardDialogContent({
   className?: string;
 }) {
   const brand = useBrand();
-  const logoUrl = brand.logoUrl ?? brand.logoSquareUrl;
+  const logoUrl = brand.logoSquareUrl ?? brand.logoUrl;
 
   return (
     <DialogContent
@@ -49,14 +49,14 @@ export default function MiniCardDialogContent({
         data-testid="mini-card-dialog-header"
       >
         <div
-          className="flex h-12 min-w-12 shrink-0 items-center justify-center"
+          className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-md"
           data-testid="mini-card-dialog-logo"
         >
           {logoUrl ? (
             <img
               src={logoUrl}
               alt={brand.name ? `${brand.name} logo` : "Company logo"}
-              className="max-h-12 max-w-28 object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.35)]"
+              className="h-12 w-12 object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.35)]"
             />
           ) : (
             <span className="text-sm font-bold text-white drop-shadow-sm">
