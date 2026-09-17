@@ -88,6 +88,6 @@ it('groups microphone and across-VNDRLY controls under one recognizable settings
   fireEvent.click(screen.getByRole('button', { name: 'Ask V settings' }));
   expect(screen.getByTestId('askv-microphone-settings')).not.toBeNull();
   expect(screen.getByRole('button', { name: /Enable AskV across VNDRLY/ })).not.toBeNull();
-  expect(screen.getAllByRole('button', { name: 'Pause V' })).toHaveLength(1);
-  expect(within(screen.getByTestId('assistant-brand-controls')).getByRole('button', { name: 'Pause V' })).not.toBeNull();
+  expect(screen.getAllByRole('button', { name: 'Click to Stop V' })).toHaveLength(1);
+  expect(within(screen.getByTestId('assistant-brand-controls')).getByRole('button', { name: 'Click to Stop V' })).not.toBeNull();
 });

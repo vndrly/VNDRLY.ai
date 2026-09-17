@@ -1,7 +1,6 @@
 import { useState } from "react";
 import BrandPillButton from "@/components/brand-pill-button";
-import { useBrand } from "@/hooks/use-brand";
-import { brandTextColor } from "@/lib/brand-color";
+import SidebarButton from "@/components/sidebar-button";
 import { BrandedSelect } from "./chrome";
 export function localDateKey(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -26,7 +25,6 @@ export function CalendarTimeGrid({
 }) {
   const [view, setView] = useState<"day" | "week">("week");
   const [kind, setKind] = useState("All");
-  const brand = useBrand();
   const days = calendarViewDays(selectedDay, view);
   return (
     <div className="mb-4 overflow-hidden rounded-xl border-2 border-[color:var(--brand-primary)] bg-white text-black">
@@ -90,18 +88,22 @@ export function CalendarTimeGrid({
               className="min-h-56 border-r last:border-r-0"
             >
               <button
-                className="m-1 w-[calc(100%_-_0.5rem)] rounded-lg p-3 text-sm font-bold"
-                style={{
-                  backgroundColor: "var(--brand-primary)",
-                  color: brandTextColor(brand.primary),
-                }}
+                className="m-1 block w-[calc(100%_-_0.5rem)] overflow-hidden rounded-lg bg-transparent text-sm"
                 onClick={() => onSelectDay(localDateKey(day))}
               >
-                {day.toLocaleDateString(undefined, {
-                  weekday: "short",
-                  month: "short",
-                  day: "numeric",
-                })}
+                <SidebarButton
+                  isActive
+                  theme="light"
+                  className="w-full"
+                >
+                  <span className="flex w-full items-center justify-center font-bold">
+                    {day.toLocaleDateString(undefined, {
+                      weekday: "short",
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </span>
+                </SidebarButton>
               </button>
               <div className="space-y-2 p-2">
                 {items

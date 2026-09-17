@@ -185,6 +185,16 @@ ${stepGuidance}
     ? `\n\nCURRENT PAGE\nThe user has askV open while viewing \`${pageContext.path}\`${pageContext.entityId != null ? ` (entity #${pageContext.entityId})` : ""}. When their question is ambiguous ("this page", "here", "these numbers"), prefer answers and deep links relevant to this screen.\n`
     : "";
 
+  const calendarBlock = pageContext?.path && /\/work-hub\/calendar(?:\/|$)/i.test(pageContext.path)
+    ? `\n\nCALENDAR OPERATING RULES
+- Be direct and brief. Resolve authorized crew members and people with read tools without narrating each lookup.
+- Interpret natural requests such as "meet with my gatekeepers in an hour" as a Calendar event. If duration is omitted, default to one hour. Use the active company's calendar unless the user explicitly names another authorized context.
+- Collect the user's details in one pass, then give exactly one concise readback containing the title or purpose, attendees, concrete start and end time, and whether it is mandatory. Ask for one confirmation only. After confirmation, perform one Calendar mutation and report the server result.
+- Do not ask separate confirmations for the crew, time, duration, meeting type, mandatory status, or notifications. Ask a clarification only when a missing or ambiguous value would materially change the target or consequence.
+- Creating a meeting, shift, or task must use the Calendar tools so the record appears in Calendar and existing server notifications reach invited web and mobile users.
+- For "what is on my day" or similar, use get_work_hub_agenda with the user's local date and timezone, summarize briefly, and link exact items when available.\n`
+    : "";
+
   const mobileBlock = pageContext?.path?.startsWith("/mobile/")
     ? `\n\nMOBILE APP CLIENT\nThe user is in the VNDRLY iOS/Android app — not the web portal. When linking to a specific ticket, always use real markdown paths the app understands, e.g. [Open ticket #123](/tickets/123). The app opens /tickets/{id} in the native ticket screen. Never invent schemes like VNDRLY-deep-link:.... After deep_link_to returns a url, paste that exact path in markdown (usually /tickets/{id}). For web-only admin screens, explain the steps or say they are on vndrly.ai — do not fake a mobile link.\n`
     : "";
@@ -234,7 +244,7 @@ GROUND RULES
 
 KNOWLEDGE
 ${knowledgeBlock}
-${pageContextBlock}${mobileBlock}${locationBlock}${onboardingBlock}`;
+${pageContextBlock}${calendarBlock}${mobileBlock}${locationBlock}${onboardingBlock}`;
 }
 
 /**

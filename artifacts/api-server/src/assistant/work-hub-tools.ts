@@ -119,6 +119,7 @@ const entries: Entry[] = [
 
   read("find_work_hub_people", "collaboration", "Find people available to the active company by name or email.", schema({ query: text() })),
   read("list_work_hub_crews", "collaboration", "List crews visible to the caller."),
+  read("get_work_hub_crew_members", "collaboration", "List the authorized members of one visible crew.", schema({ crewId: identifier() }, ["crewId"])),
   write("manage_work_hub_crew", "collaboration", "Create or update a crew after confirmation.", writeSchema({
     action: { type: "string", enum: ["create", "update"] },
     crewId: identifier(),
@@ -219,8 +220,8 @@ const entries: Entry[] = [
     announcementId: identifier(),
     payload: { type: "object" },
   }, ["action", "payload"])),
-  write("manage_work_hub_shift", "tasks", "Create or claim an authorized shift after confirmation.", writeSchema({
-    action: { type: "string", enum: ["create", "claim"] },
+  write("manage_work_hub_shift", "tasks", "Create, claim, update, reschedule, or cancel an authorized shift after confirmation.", writeSchema({
+    action: { type: "string", enum: ["create", "claim", "update", "reschedule", "cancel"] },
     shiftId: identifier(),
     payload: { type: "object" },
   }, ["action", "payload"])),
@@ -229,6 +230,32 @@ const entries: Entry[] = [
     start: text("ISO start time."),
     end: text("ISO end time."),
   }, ["start", "end"])),
+  read("get_work_hub_agenda", "scheduling", "Read every authorized Calendar item for one local day.", schema({
+    date: text("Local date in YYYY-MM-DD format."),
+    timezone: text("IANA timezone."),
+  }, ["date"])),
+  read("get_work_hub_calendar_item", "scheduling", "Read one authorized shift, meeting, event, or task in full.", schema({
+    kind: { type: "string", enum: ["shift", "event", "meeting", "task"] },
+    itemId: identifier(),
+  }, ["kind", "itemId"])),
+  write("manage_work_hub_calendar_item", "scheduling", "Create, update, reschedule, or cancel one authorized Calendar shift, event, meeting, or task with one confirmation.", writeSchema({
+    action: { type: "string", enum: ["create", "update", "reschedule", "cancel"] },
+    kind: { type: "string", enum: ["shift", "event", "meeting", "task"] },
+    itemId: identifier(),
+    payload: { type: "object" },
+  }, ["action", "kind", "payload"])),
+  read("get_work_hub_subcontractor_hours", "scheduling", "Read permission-scoped subcontractor hours for a Calendar period.", schema({
+    start: text("ISO start time."),
+    end: text("ISO end time."),
+    companyId: identifier(),
+  }, ["start", "end"])),
+  write("manage_work_hub_subcontractor_hours", "scheduling", "Approve, email, or prepare the PDF for authorized subcontractor hours after confirmation.", writeSchema({
+    action: { type: "string", enum: ["approve", "email", "prepare_pdf"] },
+    companyId: identifier(),
+    start: text("ISO start time."),
+    end: text("ISO end time."),
+    payload: { type: "object" },
+  }, ["action", "companyId", "start", "end"])),
   read("list_work_hub_meeting_types", "scheduling", "List meeting types and scheduling pages visible to the caller."),
   write("manage_work_hub_meeting_type", "scheduling", "Create or update a meeting type after confirmation.", writeSchema({
     action: { type: "string", enum: ["create", "update"] },
@@ -260,8 +287,8 @@ const entries: Entry[] = [
     payload: { type: "object" },
   }, ["action", "voicemailId"])),
 
-  write("manage_work_hub_meeting", "meetings", "Create, join, leave, or end an authorized meeting.", writeSchema({
-    action: { type: "string", enum: ["create", "join", "leave", "end"] },
+  write("manage_work_hub_meeting", "meetings", "Create, join, leave, end, update, reschedule, or cancel an authorized meeting.", writeSchema({
+    action: { type: "string", enum: ["create", "join", "leave", "end", "update", "reschedule", "cancel"] },
     occurrenceId: identifier(),
     payload: { type: "object" },
   }, ["action", "payload"])),

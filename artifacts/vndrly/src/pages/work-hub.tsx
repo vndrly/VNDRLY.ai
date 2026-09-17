@@ -14,6 +14,8 @@ import { CalendarTimeGrid, localDateKey } from "@/components/work-hub/calendar-v
 import ManagedSubcontractorHoursPanel from "@/components/managed-subcontractor-hours-panel";
 import CalendarSummaryCards from "@/components/work-hub/calendar-summary-cards";
 import ProjectTimeline from "@/components/work-hub/project-timeline";
+import CalendarCreateCards from "@/components/work-hub/calendar-create-cards";
+import DayAgendaDialog from "@/components/work-hub/day-agenda-dialog";
 import { WorkHubFinance, WorkHubAdministration } from "@/components/work-hub/finance";
 import { AssistantPanel } from "@/components/assistant-panel";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -570,6 +572,7 @@ function CalendarModule() {
   });
   const [month, setMonth] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
   const [selectedDay, setSelectedDay] = useState(() => localDateKey(new Date()));
+  const [agendaOpen, setAgendaOpen] = useState(false);
   const start = new Date(month.getFullYear(), month.getMonth(), -6);
   const end = new Date(month.getFullYear(), month.getMonth() + 1, 8);
   const calendar = useQuery<Row>({
@@ -659,7 +662,11 @@ function CalendarModule() {
   const dateKey = (value: unknown) => value ? localDateKey(new Date(String(value))) : "";
   const selectedItems = filteredItems.filter((item) => dateKey(item.startsAt) === selectedDay);
   return (
-    <Shell module="calendar"><CalendarTimeGrid selectedDay={selectedDay} items={filteredItems} onSelectDay={day => { setSelectedDay(day); const date = new Date(`${day}T12:00:00`); setMonth(new Date(date.getFullYear(), date.getMonth(), 1)); }}/>
+    <Shell module="calendar">
+      <div className="mb-4">
+        <CalendarSummaryCards shifts={filteredItems.filter((item) => item.kind === "Shift")} meetings={filteredItems.filter((item) => item.kind === "Meeting")} tasks={filteredItems.filter((item) => item.kind === "Task")} channels={channelSummary.data ?? []} />
+      </div>
+      <CalendarTimeGrid selectedDay={selectedDay} items={filteredItems} onSelectDay={day => { setSelectedDay(day); const date = new Date(`${day}T12:00:00`); setMonth(new Date(date.getFullYear(), date.getMonth(), 1)); }}/>
       {user?.vendorId && Boolean(hoursCompanies.data?.items.length) && <div className="mb-4"><ManagedSubcontractorHoursPanel vendorId={user.vendorId} companies={hoursCompanies.data!.items} start={new Date(`${selectedDay}T00:00:00`).toISOString()} end={new Date(new Date(`${selectedDay}T00:00:00`).getTime() + 86_400_000).toISOString()} /></div>}
       <Card className="mb-4 border-2 bg-white" style={{ borderColor: "var(--brand-primary)" }} data-testid="calendar-operational-filters">
         <CardContent className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-4 [&_input]:rounded-full [&_input]:border-2 [&_input]:border-[color:var(--brand-primary)] [&_input]:bg-white [&_select]:h-10 [&_select]:rounded-full [&_select]:border-2 [&_select]:border-[color:var(--brand-primary)] [&_select]:bg-white [&_select]:px-3">
@@ -681,7 +688,6 @@ function CalendarModule() {
         </CardContent>
       </Card>
       <div className="grid gap-4">
-        <CalendarSummaryCards shifts={filteredItems.filter((item) => item.kind === "Shift")} meetings={filteredItems.filter((item) => item.kind === "Meeting")} tasks={filteredItems.filter((item) => item.kind === "Task")} channels={channelSummary.data ?? []} />
         <div
           className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)] lg:items-start"
           data-testid="work-hub-calendar-layout"
@@ -742,8 +748,8 @@ function CalendarModule() {
                     <button
                       key={key}
                       type="button"
-                      onClick={() => setSelectedDay(key)}
-                      className={`min-h-20 rounded-lg border-2 border-[color:var(--brand-primary)] p-2 text-left transition-colors ${selectedDay === key ? "bg-[color-mix(in_srgb,var(--brand-primary)_12%,transparent)]" : "bg-white"}`}
+                      onClick={() => { setSelectedDay(key); setAgendaOpen(true); }}
+                      className={`min-h-20 rounded-lg border-2 p-2 text-left transition-colors ${count > 0 ? "border-[color:var(--brand-primary)]" : "border-gray-300"} ${selectedDay === key ? "bg-[color-mix(in_srgb,var(--brand-primary)_12%,transparent)]" : "bg-white"}`}
                     >
                       <span className="font-semibold">{day}</span>
                       {count > 0 && (
@@ -780,7 +786,7 @@ function CalendarModule() {
               )}
             </CardContent>
           </Card>
-          {canManage && (
+          {false && canManage && (
             <Card id="create-shift-card" className="border-2 border-[color:var(--brand-primary)] bg-white">
               <CardHeader>
                 <CardTitle><WorkHubCardTitle icon={CalendarDays}>Create shift</WorkHubCardTitle></CardTitle>
@@ -982,7 +988,9 @@ function CalendarModule() {
               </CardContent>
             </Card>
           )}
+          {canManage && <CalendarCreateCards owner={owner} />}
         </div>
+        <DayAgendaDialog open={agendaOpen} onOpenChange={setAgendaOpen} day={selectedDay} items={selectedItems} />
         <ProjectTimeline items={filteredItems} canManage={canManage} onCreate={() => { setForm((current) => ({ ...current, calendarType: "project" })); requestAnimationFrame(() => document.getElementById("create-shift-card")?.scrollIntoView({ behavior: "smooth", block: "start" })); }} />
       </div>
     </Shell>

@@ -227,6 +227,15 @@ export function toolsForRealtime(args: {
         allowed.add(name);
       }
     }
+    if (/\/work-hub\/calendar(?:\/|$)/i.test(path)) {
+      for (const name of [
+        "find_work_hub_people",
+        "list_work_hub_crews",
+        "get_work_hub_crew_members",
+        "list_work_hub_tasks",
+        "manage_work_hub_task",
+      ]) allowed.add(name);
+    }
   }
   return ASK_V_TOOL_REGISTRY.filter((tool) => {
     if (!allowed.has(tool.name)) return false;

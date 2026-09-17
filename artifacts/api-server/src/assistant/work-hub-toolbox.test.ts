@@ -20,7 +20,13 @@ describe("Work Hub AskV web/iOS parity", () => {
     };
     expect(actions("manage_work_hub_channel")).toEqual(["create", "delete"]);
     expect(actions("manage_work_hub_channel_member")).toEqual(["add", "invite"]);
-    expect(actions("manage_work_hub_shift")).toEqual(["create", "claim"]);
+    expect(actions("manage_work_hub_shift")).toEqual([
+      "create",
+      "claim",
+      "update",
+      "reschedule",
+      "cancel",
+    ]);
     expect(actions("manage_work_hub_scheduling")).toEqual([
       "set_availability",
       "book",
@@ -30,6 +36,9 @@ describe("Work Hub AskV web/iOS parity", () => {
       "join",
       "leave",
       "end",
+      "update",
+      "reschedule",
+      "cancel",
     ]);
     expect(actions("manage_work_hub_meeting_file")).toEqual(["delete"]);
     expect(actions("moderate_work_hub_meeting")).toEqual([
@@ -90,6 +99,21 @@ describe("Work Hub AskV web/iOS parity", () => {
     expect(namesFor("/work-hub/meetings")).toEqual(expect.arrayContaining([
       "manage_work_hub_meeting", "get_work_hub_meeting_catchup", "ask_work_hub_meeting",
       "moderate_work_hub_meeting",
+    ]));
+  });
+
+  it("gives the Calendar page its complete, focused operational tool pack", () => {
+    const names = namesFor("/work-hub/calendar");
+    expect(names).toEqual(expect.arrayContaining([
+      "get_work_hub_calendar",
+      "get_work_hub_agenda",
+      "get_work_hub_calendar_item",
+      "find_work_hub_people",
+      "list_work_hub_crews",
+      "get_work_hub_crew_members",
+      "manage_work_hub_calendar_item",
+      "get_work_hub_subcontractor_hours",
+      "manage_work_hub_subcontractor_hours",
     ]));
   });
 

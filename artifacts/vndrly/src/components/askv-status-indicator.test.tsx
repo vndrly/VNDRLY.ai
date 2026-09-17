@@ -24,8 +24,8 @@ describe("AskVStatusIndicator", () => {
 
   it("turns natural voice on directly from the Muted control", () => {
     render(<AskVStatusIndicator />);
-    const button = screen.getByRole("button", { name: "Click to start V" });
-    expect(button.textContent).toContain("Click to start V");
+    const button = screen.getByRole("button", { name: "Click to Start V" });
+    expect(button.textContent).toContain("Click to Start V");
     expect(button.getAttribute("data-color")).toBe("green");
     expect(button.className).toContain("h-[34px]");
     expect(button.className).toContain("min-w-[112px]");
@@ -38,8 +38,8 @@ describe("AskVStatusIndicator", () => {
     voice.muted = false;
     voice.state = "listening";
     render(<AskVStatusIndicator />);
-    const button = screen.getByRole("button", { name: "Pause V" });
-    expect(button.textContent).toContain("Pause V");
+    const button = screen.getByRole("button", { name: "Click to Stop V" });
+    expect(button.textContent).toContain("Click to Stop V");
     expect(button.getAttribute("data-color")).toBe("red");
     expect(button.className).toContain("h-[34px]");
     fireEvent.click(button);
@@ -50,7 +50,7 @@ describe("AskVStatusIndicator", () => {
 
   it("does not draw a focus halo around the mute control", () => {
     render(<AskVStatusIndicator />);
-    const toggle = screen.getByRole("button", { name: "Click to start V" });
+    const toggle = screen.getByRole("button", { name: "Click to Start V" });
 
     expect(toggle.className).toContain("focus-visible:ring-0");
     expect(toggle.className).toContain("focus-visible:ring-offset-0");
@@ -66,7 +66,7 @@ describe("AskVStatusIndicator", () => {
     expect(setMuted).toHaveBeenCalledWith(false);
 
     rerender(<AskVStatusIndicator />);
-    const modalButton = screen.getByRole("button", { name: "Click to start V" });
+    const modalButton = screen.getByRole("button", { name: "Click to Start V" });
     expect(modalButton.className).toContain("min-w-[112px]");
   });
   it("matches the Hotlist Live pill artwork and height when V is listening", () => {

@@ -1271,7 +1271,13 @@ router.patch("/work-hub/tasks/:id", async (req, res) => {
     const envelope = workHubCommandEnvelopeSchema.parse(req.body);
     const payload = z
       .object({
-        status: z.enum(["open", "in_progress", "completed", "cancelled"]),
+        action: z.enum(["update", "reschedule", "cancel"]).optional(),
+        title: z.string().trim().min(1).max(200).optional(),
+        description: z.string().max(20_000).nullable().optional(),
+        assigneeUserId: z.number().int().positive().nullable().optional(),
+        dueAt: z.iso.datetime().nullable().optional(),
+        priority: z.enum(["low", "normal", "high", "urgent"]).optional(),
+        status: z.enum(["open", "in_progress", "completed", "cancelled"]).optional(),
       })
       .parse(envelope.payload);
     const result = await executeWorkHubCommand(
@@ -1300,10 +1306,18 @@ router.patch("/work-hub/tasks/:id", async (req, res) => {
           throw new WorkHubAccessError("forbidden");
         if (current.version !== envelope.expectedVersion)
           throw new Error("work_hub.version_conflict");
+        if (payload.assigneeUserId !== undefined)
+          await assertOwnerUsers(envelope.owner, payload.assigneeUserId ? [payload.assigneeUserId] : []);
+        const status = payload.action === "cancel" ? "cancelled" : payload.status;
         const [updated] = await tx
           .update(workHubTasksTable)
           .set({
-            status: payload.status,
+            ...(payload.title !== undefined ? { title: payload.title } : {}),
+            ...(payload.description !== undefined ? { description: payload.description } : {}),
+            ...(payload.assigneeUserId !== undefined ? { assigneeUserId: payload.assigneeUserId } : {}),
+            ...(payload.dueAt !== undefined ? { dueAt: payload.dueAt ? new Date(payload.dueAt) : null } : {}),
+            ...(payload.priority !== undefined ? { priority: payload.priority } : {}),
+            ...(status !== undefined ? { status } : {}),
             version: current.version + 1,
             updatedAt: new Date(),
           })
@@ -1312,7 +1326,7 @@ router.patch("/work-hub/tasks/:id", async (req, res) => {
         await tx.insert(workHubTaskEventsTable).values({
           taskId: current.id,
           actorUserId: session.userId,
-          eventType: `status.${payload.status}`,
+          eventType: status ? `status.${status}` : "updated",
         });
         return updated;
       },
@@ -1599,6 +1613,36 @@ router.get("/work-hub/calendar", async (req, res) => {
     external: [],
   });
 });
+router.get("/work-hub/calendar/items/:kind/:id", async (req, res) => {
+  const session = actor(req);
+  if (!session) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
+  try {
+    const kind = z.enum(["shift", "event", "meeting", "task"]).parse(req.params.kind);
+    const itemId = z.string().uuid().parse(req.params.id);
+    if (kind === "shift") {
+      const [item] = await db.select().from(workHubShiftsTable).where(eq(workHubShiftsTable.id, itemId)).limit(1);
+      if (!item || !sessionCanSeeOwner(session, item.ownerOrgType, item.ownerOrgId)) throw new WorkHubAccessError("not_found");
+      const assigned = await db.select({ id: workHubShiftAssignmentsTable.id }).from(workHubShiftAssignmentsTable).where(and(eq(workHubShiftAssignmentsTable.shiftId, item.id), eq(workHubShiftAssignmentsTable.userId, session.userId))).limit(1);
+      if (session.managedSubcontractor && item.createdById !== session.userId && !assigned.length && !(item.sharedWithUserIds ?? []).includes(session.userId)) throw new WorkHubAccessError("not_found");
+      return res.json({ source: "vndrly", authority: "work_hub_shift", item });
+    }
+    if (kind === "task") {
+      const [item] = await db.select().from(workHubTasksTable).where(eq(workHubTasksTable.id, itemId)).limit(1);
+      if (!item || !sessionCanSeeOwner(session, item.ownerOrgType, item.ownerOrgId)) throw new WorkHubAccessError("not_found");
+      if (session.managedSubcontractor && item.assigneeUserId !== session.userId && item.createdById !== session.userId) throw new WorkHubAccessError("not_found");
+      return res.json({ source: "vndrly", authority: "work_hub_task", item });
+    }
+    const [item] = await db.select({ occurrence: workHubMeetingOccurrencesTable, meeting: workHubMeetingsTable })
+      .from(workHubMeetingOccurrencesTable)
+      .innerJoin(workHubMeetingsTable, eq(workHubMeetingsTable.id, workHubMeetingOccurrencesTable.meetingId))
+      .where(eq(workHubMeetingOccurrencesTable.id, itemId)).limit(1);
+    if (!item || !sessionCanSeeOwner(session, item.meeting.ownerOrgType, item.meeting.ownerOrgId)) throw new WorkHubAccessError("not_found");
+    const [participant] = await db.select({ id: workHubMeetingParticipantsTable.id }).from(workHubMeetingParticipantsTable)
+      .where(and(eq(workHubMeetingParticipantsTable.occurrenceId, itemId), eq(workHubMeetingParticipantsTable.userId, session.userId))).limit(1);
+    if (!participant && session.role !== "admin" && session.membershipRole !== "admin") throw new WorkHubAccessError("not_found");
+    return res.json({ source: "vndrly", authority: "work_hub_meeting", item });
+  } catch (error) { return failure(res, error); }
+});
 router.post("/work-hub/shifts", async (req, res) => {
   const session = actor(req);
   if (!session)
@@ -1739,6 +1783,47 @@ router.post("/work-hub/shifts", async (req, res) => {
     return failure(res, error);
   }
 });
+router.patch("/work-hub/shifts/:id", async (req, res) => {
+  const session = actor(req);
+  if (!session) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
+  try {
+    const envelope = workHubCommandEnvelopeSchema.parse(req.body);
+    await ownAccess(session, envelope.owner, "shift.manage", envelope.context);
+    const payload = z.object({
+      action: z.enum(["update", "reschedule", "cancel"]).optional(),
+      title: z.string().trim().min(1).max(200).optional(),
+      startsAt: z.iso.datetime().optional(),
+      endsAt: z.iso.datetime().optional(),
+      timezone: z.string().min(3).max(80).optional(),
+      instructions: z.string().trim().max(4000).nullable().optional(),
+      assigneeUserIds: z.array(z.number().int().positive()).max(500).optional(),
+      mandatory: z.boolean().optional(),
+    }).parse(envelope.payload);
+    if (payload.startsAt && payload.endsAt && new Date(payload.startsAt) >= new Date(payload.endsAt)) throw new z.ZodError([]);
+    if (payload.assigneeUserIds) await assertOwnerUsers(envelope.owner, payload.assigneeUserIds);
+    const result = await executeWorkHubCommand({ userId: session.userId, source: clientSource(req) }, "shift.update", envelope, async (tx) => {
+      const [current] = await tx.select().from(workHubShiftsTable).where(eq(workHubShiftsTable.id, req.params.id)).limit(1);
+      if (!current || current.ownerOrgType !== envelope.owner.type || current.ownerOrgId !== envelope.owner.id || !sessionCanSeeOwner(session, current.ownerOrgType, current.ownerOrgId)) throw new WorkHubAccessError("not_found");
+      if (current.version !== envelope.expectedVersion) throw new Error("work_hub.version_conflict");
+      const instructions = payload.mandatory === undefined ? payload.instructions : `${payload.instructions ?? current.instructions ?? ""}${payload.instructions || current.instructions ? "\n" : ""}Mandatory: ${payload.mandatory ? "Yes" : "No"}`;
+      const [updated] = await tx.update(workHubShiftsTable).set({
+        ...(payload.title !== undefined ? { title: payload.title } : {}),
+        ...(payload.startsAt !== undefined ? { startsAt: new Date(payload.startsAt) } : {}),
+        ...(payload.endsAt !== undefined ? { endsAt: new Date(payload.endsAt) } : {}),
+        ...(payload.timezone !== undefined ? { timezone: payload.timezone } : {}),
+        ...(instructions !== undefined ? { instructions } : {}),
+        ...(payload.action === "cancel" ? { milestoneStatus: "cancelled", open: false } : {}),
+        version: current.version + 1, updatedAt: new Date(),
+      }).where(eq(workHubShiftsTable.id, current.id)).returning();
+      if (payload.assigneeUserIds) {
+        await tx.delete(workHubShiftAssignmentsTable).where(eq(workHubShiftAssignmentsTable.shiftId, current.id));
+        if (payload.assigneeUserIds.length) await tx.insert(workHubShiftAssignmentsTable).values([...new Set(payload.assigneeUserIds)].map((userId) => ({ shiftId: current.id, userId, assignedById: session.userId })));
+      }
+      return updated;
+    });
+    return res.json(result);
+  } catch (error) { return failure(res, error); }
+});
 router.post("/work-hub/shifts/:id/claim", async (req, res) => {
   const session = actor(req);
   if (!session)
@@ -1864,6 +1949,41 @@ router.post("/work-hub/meetings", async (req, res) => {
   } catch (error) {
     return failure(res, error);
   }
+});
+router.patch("/work-hub/meetings/:occurrenceId", async (req, res) => {
+  const session = actor(req);
+  if (!session) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
+  try {
+    const envelope = workHubCommandEnvelopeSchema.parse(req.body);
+    await ownAccess(session, envelope.owner, "meeting.host", envelope.context);
+    const payload = z.object({
+      action: z.enum(["update", "reschedule", "cancel"]).optional(),
+      title: z.string().trim().min(1).max(200).optional(),
+      agenda: z.string().max(50_000).nullable().optional(),
+      startsAt: z.iso.datetime().optional(),
+      endsAt: z.iso.datetime().nullable().optional(),
+      timezone: z.string().min(3).max(80).optional(),
+    }).parse(envelope.payload);
+    const result = await executeWorkHubCommand({ userId: session.userId, source: clientSource(req) }, "meeting.update", envelope, async (tx) => {
+      const [current] = await tx.select({ occurrence: workHubMeetingOccurrencesTable, meeting: workHubMeetingsTable })
+        .from(workHubMeetingOccurrencesTable).innerJoin(workHubMeetingsTable, eq(workHubMeetingsTable.id, workHubMeetingOccurrencesTable.meetingId))
+        .where(eq(workHubMeetingOccurrencesTable.id, req.params.occurrenceId)).limit(1);
+      if (!current || current.meeting.ownerOrgType !== envelope.owner.type || current.meeting.ownerOrgId !== envelope.owner.id || !sessionCanSeeOwner(session, current.meeting.ownerOrgType, current.meeting.ownerOrgId)) throw new WorkHubAccessError("not_found");
+      if (current.meeting.createdById !== session.userId && session.role !== "admin" && session.membershipRole !== "admin") throw new WorkHubAccessError("forbidden");
+      if (payload.title !== undefined || payload.agenda !== undefined || payload.timezone !== undefined) await tx.update(workHubMeetingsTable).set({
+        ...(payload.title !== undefined ? { title: payload.title } : {}),
+        ...(payload.agenda !== undefined ? { agenda: payload.agenda } : {}),
+        ...(payload.timezone !== undefined ? { timezone: payload.timezone } : {}),
+      }).where(eq(workHubMeetingsTable.id, current.meeting.id));
+      const [occurrence] = await tx.update(workHubMeetingOccurrencesTable).set({
+        ...(payload.startsAt !== undefined ? { startsAt: new Date(payload.startsAt) } : {}),
+        ...(payload.endsAt !== undefined ? { endsAt: payload.endsAt ? new Date(payload.endsAt) : null } : {}),
+        ...(payload.action === "cancel" ? { status: "cancelled" } : {}),
+      }).where(eq(workHubMeetingOccurrencesTable.id, current.occurrence.id)).returning();
+      return { meeting: { ...current.meeting, ...payload }, occurrence };
+    });
+    return res.json(result);
+  } catch (error) { return failure(res, error); }
 });
 type MeetingTx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 class MeetingMutationError extends Error {

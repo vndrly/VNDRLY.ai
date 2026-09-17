@@ -47,6 +47,28 @@ const queryPath = (
   const query = params.toString();
   return query ? `${path}?${query}` : path;
 };
+const zonedDayBoundary = (date: unknown, timezone: unknown, dayOffset: number): string | null => {
+  if (typeof date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
+  const [year, month, day] = date.split("-").map(Number);
+  const desired = Date.UTC(year, month - 1, day + dayOffset);
+  const zone = typeof timezone === "string" && timezone.trim() ? timezone.trim() : "UTC";
+  try {
+    const formatter = new Intl.DateTimeFormat("en-CA", {
+      timeZone: zone,
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23",
+    });
+    let guess = desired;
+    for (let pass = 0; pass < 2; pass += 1) {
+      const values = Object.fromEntries(formatter.formatToParts(new Date(guess)).map((part) => [part.type, part.value]));
+      const represented = Date.UTC(Number(values.year), Number(values.month) - 1, Number(values.day), Number(values.hour), Number(values.minute), Number(values.second));
+      guess += desired - represented;
+    }
+    return new Date(guess).toISOString();
+  } catch {
+    return null;
+  }
+};
 const envelope = (input: Input, payload = record(input.payload)): Input => ({
   operationId: input.operationId,
   owner: input.owner,
@@ -136,6 +158,11 @@ export function resolveWorkHubToolRequest(
       return request("GET", queryPath("/work-hub/people", { q: input.query }));
     case "list_work_hub_crews":
       return request("GET", "/work-hub/crews");
+    case "get_work_hub_crew_members":
+      target = required(input.crewId, "crew id");
+      return typeof target === "string"
+        ? request("GET", `/work-hub/crews/${target}/members`)
+        : target;
     case "manage_work_hub_crew":
       if (input.action === "create")
         return request("POST", "/work-hub/crews", direct(input, { owner: input.owner }));
@@ -332,12 +359,71 @@ export function resolveWorkHubToolRequest(
       if (input.action === "create")
         return request("POST", "/work-hub/shifts", envelope(input));
       target = required(input.shiftId, "shift id");
-      return typeof target === "string" && input.action === "claim"
-        ? request("POST", `/work-hub/shifts/${target}/claim`)
-        : typeof target === "string" ? unsupported("shift") : target;
+      if (typeof target !== "string") return target;
+      if (input.action === "claim")
+        return request("POST", `/work-hub/shifts/${target}/claim`);
+      if (["update", "reschedule", "cancel"].includes(String(input.action)))
+        return request("PATCH", `/work-hub/shifts/${target}`, envelope(input, {
+          ...payload,
+          ...(input.action === "cancel" ? { status: "cancelled" } : {}),
+        }));
+      return unsupported("shift");
 
     case "get_work_hub_calendar":
       return request("GET", queryPath("/work-hub/calendar", { start: input.start, end: input.end }));
+    case "get_work_hub_agenda":
+      {
+        const start = zonedDayBoundary(input.date, input.timezone, 0);
+        const end = zonedDayBoundary(input.date, input.timezone, 1);
+        return start && end
+          ? request("GET", queryPath("/work-hub/calendar", { start, end }))
+          : { error: "A valid local date and timezone are required." };
+      }
+    case "get_work_hub_calendar_item":
+      target = required(input.itemId, "calendar item id");
+      return typeof target === "string"
+        ? request("GET", `/work-hub/calendar/items/${encodeURIComponent(String(input.kind))}/${target}`)
+        : target;
+    case "manage_work_hub_calendar_item":
+      {
+        const kind = typeof input.kind === "string" ? input.kind : "";
+        const action = typeof input.action === "string" ? input.action : "";
+        if (action === "create") {
+          if (kind === "shift") return request("POST", "/work-hub/shifts", envelope(input));
+          if (kind === "event" || kind === "meeting") return request("POST", "/work-hub/meetings", envelope(input));
+          if (kind === "task") return request("POST", "/work-hub/tasks", envelope(input));
+        }
+        target = required(input.itemId, "calendar item id");
+        if (typeof target !== "string") return target;
+        if (kind === "shift") return request("PATCH", `/work-hub/shifts/${target}`, envelope(input, { action, ...payload }));
+        if (kind === "event" || kind === "meeting") return request("PATCH", `/work-hub/meetings/${target}`, envelope(input, { action, ...payload }));
+        if (kind === "task") return request("PATCH", `/work-hub/tasks/${target}`, envelope(input, { action, ...payload }));
+        return unsupported("calendar item");
+      }
+    case "get_work_hub_subcontractor_hours":
+      {
+        const owner = record(input.owner);
+        const vendorId = encoded(owner.id);
+        const companyId = encoded(input.companyId);
+        return vendorId && companyId ? request("GET", queryPath(`/vendors/${vendorId}/managed-subcontractors/${companyId}/hours`, {
+        start: input.start,
+        end: input.end,
+        })) : { error: "A vendor owner and subcontractor company are required." };
+      }
+    case "manage_work_hub_subcontractor_hours":
+      {
+        const owner = record(input.owner);
+        const vendorId = encoded(owner.id);
+        const companyId = encoded(input.companyId);
+        if (!vendorId || !companyId) return { error: "A vendor owner and subcontractor company are required." };
+        const base = `/vendors/${vendorId}/managed-subcontractors/${companyId}/hours`;
+        const path = input.action === "approve" ? `${base}/approve` : input.action === "email" ? `${base}/email` : input.action === "prepare_pdf" ? `${base}/pdf` : null;
+        if (!path) return unsupported("subcontractor hours");
+        return request(input.action === "prepare_pdf" ? "GET" : "POST", queryPath(path, {
+        start: input.start,
+        end: input.end,
+        }), payload);
+      }
     case "list_work_hub_meeting_types":
       return request("GET", "/work-hub/scheduling/types");
     case "manage_work_hub_meeting_type":
@@ -393,6 +479,11 @@ export function resolveWorkHubToolRequest(
       if (typeof target !== "string") return target;
       if (["join", "leave", "end"].includes(String(input.action)))
         return request("POST", `/work-hub/meetings/${target}/${input.action}`, payload);
+      if (["update", "reschedule", "cancel"].includes(String(input.action)))
+        return request("PATCH", `/work-hub/meetings/${target}`, envelope(input, {
+          ...payload,
+          ...(input.action === "cancel" ? { status: "cancelled" } : {}),
+        }));
       return unsupported("meeting");
     case "moderate_work_hub_meeting": {
       target = required(input.occurrenceId, "meeting occurrence id");

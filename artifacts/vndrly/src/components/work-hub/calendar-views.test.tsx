@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import { DEFAULT_BRAND } from "@/hooks/use-brand";
 import { brandImagePillSrc } from "@/components/png-pill-rollover";
+import { pickLoginSquareActive } from "@/lib/login-button-palette";
 import { CalendarTimeGrid, calendarViewDays, localDateKey } from "./calendar-views";
 describe("Work Hub calendar ranges", () => {
   it("keeps day view on the chosen local day", () => {
@@ -32,7 +33,7 @@ describe("Work Hub calendar ranges", () => {
 
     const sunday = screen.getByRole("button", { name: /Sun, Sep 13/ });
     expect(sunday.className).toContain("rounded-lg");
-    expect(sunday.style.backgroundColor).toBe("var(--brand-primary)");
-    expect(sunday.style.color).toBe("rgb(0, 0, 0)");
+    expect(sunday.querySelector(`img[src="${pickLoginSquareActive(DEFAULT_BRAND.primary, DEFAULT_BRAND.name)}"]`)).not.toBeNull();
+    expect(sunday.textContent).toContain("Sun, Sep 13");
   });
 });

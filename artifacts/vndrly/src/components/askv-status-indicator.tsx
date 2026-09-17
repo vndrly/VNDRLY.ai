@@ -16,10 +16,10 @@ export default function AskVStatusIndicator({ placement = "default" }: AskVStatu
   const { muted, setMuted } = voice;
   if (placement === "top-strip") {
     const active = !muted && voice.availabilityStatus === "available" && ((voice.acrossVndrly && voice.wakeReady) || ["listening", "thinking", "speaking"].includes(voice.state));
-    return <AskVListeningPill active={active} onClick={() => setMuted(active)} data-testid="askv-status-toggle" title={active ? "Pause V" : "Restart V"} />;
+    return <AskVListeningPill active={active} onClick={() => setMuted(active)} data-testid="askv-status-toggle" title={active ? "Click to Stop V" : "Click to Start V"} />;
   }
-  const label = muted ? "Click to start V" : "Pause V";
-  const ariaLabel = muted ? "Click to start V" : "Pause V";
+  const label = muted ? "Click to Start V" : "Click to Stop V";
+  const ariaLabel = label;
   const color = muted ? "green" : "red";
   return (
     <button
