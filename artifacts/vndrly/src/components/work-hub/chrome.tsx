@@ -87,14 +87,15 @@ export function WorkHubCardTitle({
   );
 }
 
-export function BrandedSelect({ className, children, ...props }: SelectHTMLAttributes<HTMLSelectElement>) {
+export function BrandedSelect({ className, children, style, ...props }: SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <span className="relative block min-w-0">
       <select
         className={cn(
-          "h-9 w-full appearance-none rounded-lg border-2 border-[color:var(--brand-primary)] bg-white px-3 pr-8 text-sm text-foreground outline-none focus:ring-2 focus:ring-[color:var(--brand-primary)]/25",
+          "h-10 w-full appearance-none rounded-full border-2 border-[color:var(--brand-primary)] bg-white px-3 pr-8 text-sm text-gray-700 outline-none focus:ring-2 focus:ring-[color:var(--brand-primary)]/25 [&>option]:bg-white [&>option]:text-gray-700 [&>option:hover]:bg-[var(--brand-primary)] [&>option:hover]:text-white [&>option:checked]:bg-[var(--brand-primary)] [&>option:checked]:text-white",
           className,
         )}
+        style={{ colorScheme: "light", ...style }}
         {...props}
       >
         {children}

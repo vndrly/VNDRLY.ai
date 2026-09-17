@@ -181,7 +181,7 @@ export function ImportExportTools() {
           </select>
           <label className="grid gap-1 text-sm">{t("workHubExports.expiry")}<input aria-label={t("workHubExports.expiry")} type="datetime-local" className="rounded border bg-background px-3" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} /></label>
           <BrandPillButton
-            tone="blue"
+            tone={format === "csv" ? "green" : format === "pdf" ? "red" : "blue"}
             disabled={exportData.isPending || !expiresAt}
             onClick={() => exportData.mutate()}
           >
@@ -215,7 +215,7 @@ export function ImportExportTools() {
           <p><strong>Included:</strong> {implementationExportDescriptions[implementationDataset].includes}</p>
           <p><strong>Excluded:</strong> {implementationExportDescriptions[implementationDataset].excludes}</p>
         </div>
-        <BrandPillButton tone="blue" disabled={implementationExport.isPending} onClick={() => implementationExport.mutate()}>Create audited CSV</BrandPillButton>
+        <BrandPillButton tone="green" disabled={implementationExport.isPending} onClick={() => implementationExport.mutate()}>Create audited CSV</BrandPillButton>
         <HubError error={implementationExport.error} />
       </section>}      {admin && <CsvImport />}
       {admin && (

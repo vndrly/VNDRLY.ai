@@ -7,6 +7,7 @@ import {
   getGetPartnerQueryKey,
 } from "@workspace/api-client-react";
 import { getBrandColors, hexToRgb } from "@/lib/brand-colors";
+import { PngPillButton } from "@/components/png-pill-rollover";
 
 type LoadedLogo = {
   dataUrl: string;
@@ -271,14 +272,14 @@ export default function PrintVisitorQrPage({ id }: { id: number }) {
         >
           Print
         </button>
-        <button
+        <PngPillButton
+          color="red"
           onClick={handleDownloadPdf}
           disabled={downloading}
-          className="px-4 py-2 rounded bg-black text-white font-semibold hover:bg-gray-800 disabled:opacity-60 disabled:cursor-not-allowed"
           data-testid="button-download-pdf"
         >
           {downloading ? "Preparing..." : "Download PDF"}
-        </button>
+        </PngPillButton>
         <button
           onClick={() => window.close()}
           className="px-4 py-2 rounded border border-gray-300 hover:bg-gray-100"

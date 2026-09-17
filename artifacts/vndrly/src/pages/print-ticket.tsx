@@ -13,6 +13,7 @@ import {
 } from "@workspace/api-client-react";
 import { getBrandColors, hexToRgb } from "@/lib/brand-colors";
 import { buildTicketProofPacket } from "@/lib/proof-packet";
+import { PngPillButton } from "@/components/png-pill-rollover";
 
 function formatDateTime(s: string | null | undefined): string {
   if (!s) return "-";
@@ -375,9 +376,9 @@ export default function PrintTicketPage({ id }: { id: number }) {
 
       <div className="no-print w-full max-w-2xl flex justify-end mb-4 gap-2">
         <button onClick={() => window.print()} className="px-4 py-2 rounded bg-amber-500 text-white font-semibold hover:bg-amber-600" data-testid="button-trigger-print">Print</button>
-        <button onClick={handleDownloadPdf} disabled={downloading} className="px-4 py-2 rounded bg-black text-white font-semibold hover:bg-gray-800 disabled:opacity-60 disabled:cursor-not-allowed" data-testid="button-download-pdf">
+        <PngPillButton color="red" onClick={handleDownloadPdf} disabled={downloading} data-testid="button-download-pdf">
           {downloading ? "Preparing..." : "Download PDF"}
-        </button>
+        </PngPillButton>
         <button onClick={() => window.close()} className="px-4 py-2 rounded border border-gray-300 hover:bg-gray-100" data-testid="button-close">Close</button>
       </div>
 

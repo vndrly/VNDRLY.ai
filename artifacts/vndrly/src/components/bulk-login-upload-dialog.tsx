@@ -276,7 +276,7 @@ export default function BulkLoginUploadDialog({ visible }: Props) {
           <div className="flex flex-wrap items-center gap-3">
             <PillButton
               type="button"
-              color="image"
+              color="green"
               onClick={handleDownloadTemplate}
               data-testid="button-download-bulk-login-template"
             >

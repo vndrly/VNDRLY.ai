@@ -49,5 +49,12 @@ describe("CalendarCreateCards", () => {
       expect(field.className).toContain("bg-white");
     }
     expect(mandatory.className).toContain("accent-[var(--brand-primary)]");
+    for (const name of ["Work type", "Calendar", "Priority"]) {
+      const select = screen.getByRole("combobox", { name });
+      expect(select.className).toContain("rounded-full");
+      expect(select.className).toContain("bg-white");
+      expect(select.className).toContain("[&>option:hover]:bg-[var(--brand-primary)]");
+      expect(select.style.colorScheme).toBe("light");
+    }
   });
 });

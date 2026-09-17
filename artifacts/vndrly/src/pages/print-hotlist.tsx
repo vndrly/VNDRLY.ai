@@ -7,6 +7,7 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { hotlistApi, isVendorListResponse, type HotlistJobRow } from "@/lib/hotlist-api";
 import { getBrandColors, hexToRgb } from "@/lib/brand-colors";
+import { PngPillButton } from "@/components/png-pill-rollover";
 
 const STATUS_LABELS: Record<string, string> = {
   open: "Open",
@@ -336,9 +337,9 @@ export default function PrintHotlistPage() {
 
         <div className="flex justify-end gap-2">
           <button onClick={() => window.print()} className="px-4 py-2 rounded bg-amber-500 text-white font-semibold hover:bg-amber-600" data-testid="button-trigger-print">Print</button>
-          <button onClick={handleDownloadPdf} disabled={downloading} className="px-4 py-2 rounded bg-black text-white font-semibold hover:bg-gray-800 disabled:opacity-60 disabled:cursor-not-allowed" data-testid="button-download-pdf">
+          <PngPillButton color="red" onClick={handleDownloadPdf} disabled={downloading} data-testid="button-download-pdf">
             {downloading ? "Preparing..." : "Download PDF"}
-          </button>
+          </PngPillButton>
           <button onClick={() => window.close()} className="px-4 py-2 rounded border border-gray-300 hover:bg-gray-100" data-testid="button-close">Close</button>
         </div>
       </div>

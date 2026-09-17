@@ -79,66 +79,72 @@ export function CalendarTimeGrid({
         </div>
       </div>
       <div className="overflow-x-auto">
-        <div
-          className={`grid ${view === "week" ? "min-w-[720px] grid-cols-7" : "grid-cols-1"}`}
-        >
-          {days.map((day) => (
-            <div
-              key={localDateKey(day)}
-              className="min-h-56 border-r last:border-r-0"
-            >
-              <button
-                className="m-1 block w-[calc(100%_-_0.5rem)] overflow-hidden rounded-lg bg-transparent text-sm"
-                onClick={() => onSelectDay(localDateKey(day))}
-              >
-                <SidebarButton
-                  isActive
-                  theme="light"
-                  className="w-full"
+        <div className={view === "week" ? "min-w-[720px]" : undefined}>
+          <div
+            data-testid="calendar-weekday-rail"
+            className="border-y-2 border-[color:var(--brand-primary)] bg-gray-200 px-1 py-2"
+          >
+            <div className={`grid ${view === "week" ? "grid-cols-7" : "grid-cols-1"}`}>
+              {days.map((day) => (
+                <button
+                  key={localDateKey(day)}
+                  className="mx-1 block overflow-hidden rounded-lg bg-transparent text-sm"
+                  onClick={() => onSelectDay(localDateKey(day))}
                 >
-                  <span className="flex w-full items-center justify-center font-bold">
-                    {day.toLocaleDateString(undefined, {
-                      weekday: "short",
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </span>
-                </SidebarButton>
-              </button>
-              <div className="space-y-2 p-2">
-                {items
-                  .filter(
-                    (item) =>
-                      item.startsAt &&
-                      localDateKey(new Date(item.startsAt)) ===
-                        localDateKey(day) &&
-                      (kind === "All" || item.kind === kind),
-                  )
-                  .map((item) => (
-                    <a
-                      key={`${item.kind}-${item.id}`}
-                      href={
-                        item.kind === "Meeting"
-                          ? `/work-hub/meetings?meeting=${item.id}`
-                          : item.kind === "Task"
-                            ? `/work-hub/tasks?task=${item.id}`
-                            : "#shift-schedule"
-                      }
-                      className="block rounded border-l-4 border-[var(--brand-primary)] bg-[color-mix(in_srgb,var(--brand-primary)_10%,transparent)] p-2 text-xs"
-                    >
-                      <time>
-                        {new Date(item.startsAt).toLocaleTimeString([], {
-                          hour: "numeric",
-                          minute: "2-digit",
-                        })}
-                      </time>
-                      <strong className="mt-1 block">{item.title}</strong>
-                      <span>{item.kind}</span>
-                    </a>
-                  ))}
-              </div>
+                  <SidebarButton isActive theme="light" className="w-full">
+                    <span className="flex w-full items-center justify-center font-bold">
+                      {day.toLocaleDateString(undefined, {
+                        weekday: "short",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </span>
+                  </SidebarButton>
+                </button>
+              ))}
             </div>
-          ))}
+          </div>
+          <div className={`grid ${view === "week" ? "grid-cols-7" : "grid-cols-1"}`}>
+            {days.map((day) => (
+              <div
+                key={localDateKey(day)}
+                className="min-h-56 border-r last:border-r-0"
+              >
+                <div className="space-y-2 p-2">
+                  {items
+                    .filter(
+                      (item) =>
+                        item.startsAt &&
+                        localDateKey(new Date(item.startsAt)) ===
+                          localDateKey(day) &&
+                        (kind === "All" || item.kind === kind),
+                    )
+                    .map((item) => (
+                      <a
+                        key={`${item.kind}-${item.id}`}
+                        href={
+                          item.kind === "Meeting"
+                            ? `/work-hub/meetings?meeting=${item.id}`
+                            : item.kind === "Task"
+                              ? `/work-hub/tasks?task=${item.id}`
+                              : "#shift-schedule"
+                        }
+                        className="block rounded border-l-4 border-[var(--brand-primary)] bg-[color-mix(in_srgb,var(--brand-primary)_10%,transparent)] p-2 text-xs"
+                      >
+                        <time>
+                          {new Date(item.startsAt).toLocaleTimeString([], {
+                            hour: "numeric",
+                            minute: "2-digit",
+                          })}
+                        </time>
+                        <strong className="mt-1 block">{item.title}</strong>
+                        <span>{item.kind}</span>
+                      </a>
+                    ))}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

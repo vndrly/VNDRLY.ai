@@ -5,7 +5,7 @@ import BrandPillButton from "@/components/brand-pill-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { WorkHubCardTitle } from "@/components/work-hub/chrome";
+import { BrandedSelect, WorkHubCardTitle } from "@/components/work-hub/chrome";
 import SplitToggleHalf from "@/components/split-toggle-half";
 import { useBrand } from "@/hooks/use-brand";
 import { pickTogglePillSrc, splitToggleDividerClass, TOGGLE_IDLE_PILL_SRC } from "@/lib/pick-toggle-pill";
@@ -201,10 +201,10 @@ export default function CalendarCreateCards({ owner }: { owner: Owner | null }) 
         <CardContent>
           <form className={commonClass} onSubmit={(event) => { event.preventDefault(); createItem.mutate(); }}>
             <Field label="Work type">
-              <select value={form.kind} onChange={(event) => setForm({ ...form, kind: event.target.value })}>
+              <BrandedSelect aria-label="Work type" value={form.kind} onChange={(event) => setForm({ ...form, kind: event.target.value })}>
                 <option value="shift">Shift</option>
                 <option value="event">Event or meeting</option>
-              </select>
+              </BrandedSelect>
             </Field>
             <Field label="Meeting Type">
               <Input list="calendar-meeting-types" value={form.meetingType} onChange={(event) => setForm({ ...form, meetingType: event.target.value })} placeholder="Type or create a meeting type" />
@@ -214,7 +214,7 @@ export default function CalendarCreateCards({ owner }: { owner: Owner | null }) 
             <Field label="Starts"><Input type="datetime-local" value={form.startsAt} onChange={(event) => setForm({ ...form, startsAt: event.target.value })} required /></Field>
             <Field label="Ends"><Input type="datetime-local" value={form.endsAt} onChange={(event) => setForm({ ...form, endsAt: event.target.value })} required /></Field>
             <Picker people={people.data ?? []} crews={crews.data ?? []} userIds={form.userIds} crewIds={form.crewIds} onUsers={(userIds) => setForm({ ...form, userIds })} onCrews={(crewIds) => setForm({ ...form, crewIds })} />
-            <Field label="Calendar"><select value="company" disabled><option value="company">Internal company</option></select></Field>
+            <Field label="Calendar"><BrandedSelect aria-label="Calendar" value="company" disabled><option value="company">Internal company</option></BrandedSelect></Field>
             <Field label="Notes"><Textarea className="rounded-xl border-2 border-[color:var(--brand-primary)] bg-white" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} /></Field>
             <label className="flex items-center gap-2 text-sm font-semibold"><input className="h-4 w-4 rounded border-2 border-[color:var(--brand-primary)] accent-[var(--brand-primary)]" type="checkbox" checked={form.mandatory} onChange={(event) => setForm({ ...form, mandatory: event.target.checked })} />Mandatory</label>
             {createItem.error && <p role="alert" className="text-sm text-red-700">{createItem.error instanceof Error ? createItem.error.message : "Unable to create Calendar work."}</p>}
@@ -229,7 +229,7 @@ export default function CalendarCreateCards({ owner }: { owner: Owner | null }) 
             <Field label="Title"><Input value={task.title} onChange={(event) => setTask({ ...task, title: event.target.value })} required /></Field>
             <Field label="Description"><Textarea className="rounded-xl border-2 border-[color:var(--brand-primary)] bg-white" value={task.description} onChange={(event) => setTask({ ...task, description: event.target.value })} /></Field>
             <Field label="Due"><Input type="datetime-local" value={task.dueAt} onChange={(event) => setTask({ ...task, dueAt: event.target.value })} /></Field>
-            <Field label="Priority"><select value={task.priority} onChange={(event) => setTask({ ...task, priority: event.target.value })}><option value="low">Low</option><option value="normal">Normal</option><option value="high">High</option><option value="urgent">Urgent</option></select></Field>
+            <Field label="Priority"><BrandedSelect aria-label="Priority" value={task.priority} onChange={(event) => setTask({ ...task, priority: event.target.value })}><option value="low">Low</option><option value="normal">Normal</option><option value="high">High</option><option value="urgent">Urgent</option></BrandedSelect></Field>
             <Picker people={people.data ?? []} crews={crews.data ?? []} userIds={task.userIds} crewIds={task.crewIds} onUsers={(userIds) => setTask({ ...task, userIds })} onCrews={(crewIds) => setTask({ ...task, crewIds })} />
             {createTask.error && <p role="alert" className="text-sm text-red-700">{createTask.error instanceof Error ? createTask.error.message : "Unable to create task."}</p>}
             <BrandPillButton type="submit" tone="brand" disabled={!owner || createTask.isPending}>{createTask.isPending ? "Creating…" : "Create Task"}</BrandPillButton>

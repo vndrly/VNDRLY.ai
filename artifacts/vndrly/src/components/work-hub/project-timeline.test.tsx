@@ -34,6 +34,11 @@ describe("ProjectTimeline", () => {
       />,
     </QueryClientProvider>);
 
+    const range = screen.getByRole("combobox", { name: "Project timeline range" });
+    expect(range.className).toContain("rounded-full");
+    expect(range.className).toContain("bg-white");
+    expect(range.className).toContain("[&>option:hover]:bg-[var(--brand-primary)]");
+    expect(range.style.colorScheme).toBe("light");
     expect(screen.getByText("Jordan Lee")).toBeTruthy();
     await userEvent.click(screen.getByRole("button", { name: "Preview Commission west gate" }));
     expect(screen.getByRole("dialog")).toBeTruthy();

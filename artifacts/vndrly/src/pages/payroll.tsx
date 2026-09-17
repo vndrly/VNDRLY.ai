@@ -6,6 +6,7 @@ import { Link } from "wouter";
 import { Download, Calculator } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Input } from "@/components/ui/input";
+import { PngPillButton } from "@/components/png-pill-rollover";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 type Employee = { id: number; firstName: string; lastName: string };
@@ -82,7 +83,7 @@ export default function PayrollPage() {
       {draft.issues.length > 0 && <ul className="list-disc pl-5 text-red-700">{draft.issues.map((issue) => <li key={issue}>{issue}</li>)}</ul>}
       <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr>{[t("payrollDraft.employee"), t("payrollDraft.session"), t("payrollDraft.start"), t("payrollDraft.end"), t("payrollDraft.regular"), t("payrollDraft.ot"), t("payrollDraft.wage"), t("payrollDraft.grossUsd")].map((h) => <th className="text-left p-2 whitespace-nowrap" key={h}>{h}</th>)}</tr></thead><tbody>{draft.rows.map((row) => <tr className="border-t" key={`${row.sessionId}:${row.start}`}><td className="p-2">{row.employeeName}</td><td>#{row.sessionId}</td><td className="p-2 whitespace-nowrap">{row.start}</td><td className="p-2 whitespace-nowrap">{row.end}</td><td>{row.regularHours}</td><td>{row.overtimeHours}</td><td>{row.hourlyWage}</td><td>{row.grossPay}</td></tr>)}</tbody></table></div>
       <label className="flex items-start gap-2"><input type="checkbox" checked={reviewed && !stale} disabled={stale || !draft.exportable} onChange={(e) => setReviewed(e.target.checked)} />{t("payrollDraft.review")}</label>
-      <button title={t("payrollDraft.download")} className="inline-flex items-center gap-2 border rounded px-3 py-2 disabled:opacity-50" onClick={exportCsv} disabled={busy || stale || !draft.exportable || !reviewed}><Download size={18} />{t("payrollDraft.csv")}</button>
+      <PngPillButton color="green" title={t("payrollDraft.download")} onClick={exportCsv} disabled={busy || stale || !draft.exportable || !reviewed}><Download size={18} />{t("payrollDraft.csv")}</PngPillButton>
     </section>}
     <section className="border-t pt-4 text-sm space-y-2"><h2 className="font-semibold">{t("payrollDraft.connections")}</h2><p>{t("payrollDraft.qbo")}</p><p>{t("payrollDraft.oa")}</p><p>{t("payrollDraft.transient")}</p></section>
   </main>;

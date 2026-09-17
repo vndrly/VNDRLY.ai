@@ -8,6 +8,15 @@ vi.mock("@/hooks/use-brand", () => ({
 }));
 
 describe("DayAgendaDialog", () => {
+  it("renders the agenda body as a white rounded brand-bordered card", () => {
+    render(<DayAgendaDialog open onOpenChange={vi.fn()} day="2099-09-09" items={[]} />);
+
+    const body = screen.getByTestId("day-agenda-content");
+    expect(body.className).toContain("bg-white");
+    expect(body.className).toContain("rounded-xl");
+    expect(body.className).toContain("border-[color:var(--brand-primary)]");
+    expect(body.textContent).toContain("Nothing is scheduled for this day.");
+  });
   it("uses flyout-only type settings and keeps controls in the shared header", () => {
     render(<DayAgendaDialog open onOpenChange={vi.fn()} day="2099-09-09" items={[
       { id: "m1", kind: "Meeting", title: "Admin meeting", startsAt: "2099-09-09T15:00:00.000Z" },

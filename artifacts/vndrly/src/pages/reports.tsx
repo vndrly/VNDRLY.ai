@@ -2331,7 +2331,7 @@ export function AuditCard(): ReactElement {
           </div>
           <PillButton
             type="button"
-            color="image"
+            color="green"
             onClick={downloadCsv}
             disabled={downloadingCsv}
             title={t("reports.audit.csv.help")}
@@ -6554,7 +6554,7 @@ export function QbAccountMappingCard(): ReactElement {
               {t("reports.qbMapping.retention.button")}
             </PillButton>
             <PillButton
-              color="image"
+              color="green"
               onClick={handleExportCsv}
               data-testid="button-export-csv"
             >
@@ -6562,7 +6562,7 @@ export function QbAccountMappingCard(): ReactElement {
               {t("reports.qbMapping.exportCsv")}
             </PillButton>
             <PillButton
-              color="image"
+              color="green"
               onClick={() => fileInputRef.current?.click()}
               disabled={importing || previewLoading}
               data-testid="button-import-csv"
@@ -8102,7 +8102,7 @@ function Dashboard1099Card({ scope }: DashboardScopeProps): ReactElement {
                 </span>
               )}
               <PngPillButton
-                color="blue"
+                color="green"
 
                 className="ml-auto"
                 onClick={() => {
@@ -8121,7 +8121,7 @@ function Dashboard1099Card({ scope }: DashboardScopeProps): ReactElement {
                 {t("reports.dashboard1099.k.downloadCsv")}
               </PngPillButton>
               <PngPillButton
-                color="blue"
+                color="red"
 
                 onClick={() => {
                   // Same scope/year as the CSV button; the server

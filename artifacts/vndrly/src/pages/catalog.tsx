@@ -1019,10 +1019,10 @@ export default function Catalog() {
               <Activity className="w-4 h-4" />{t("catalog.healthLink")}
             </PngPillButton>
           </Link>
-          <PngPillButton color="blue" className="px-3" onClick={handleExport} data-testid="button-export-csv">
+          <PngPillButton color="green" className="px-3" onClick={handleExport} data-testid="button-export-csv">
             <Download className="w-4 h-4" />{t("catalog.exportCsv")}
           </PngPillButton>
-          <PngPillButton color="blue" className="px-3" onClick={openImportDialog} data-testid="button-import-csv">
+          <PngPillButton color="green" className="px-3" onClick={openImportDialog} data-testid="button-import-csv">
             <Upload className="w-4 h-4" />{t("catalog.importCsv")}
           </PngPillButton>
         <Dialog open={addOpen} onOpenChange={(o) => { setAddOpen(o); if (o) resetForm(); }}>
@@ -1067,10 +1067,10 @@ export default function Catalog() {
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">{t("catalog.importDescription")}</p>
             <div className="flex items-center gap-2 flex-wrap">
-              <PngPillButton color="blue" className="px-3" onClick={() => fileInputRef.current?.click()} data-testid="button-pick-import-file">
+              <PngPillButton color="green" className="px-3" onClick={() => fileInputRef.current?.click()} data-testid="button-pick-import-file">
                 <Upload className="w-4 h-4" />{t("catalog.importChooseFile")}
               </PngPillButton>
-              <PngPillButton color="blue" className="px-3" onClick={handleDownloadTemplate} data-testid="button-download-template">
+              <PngPillButton color="green" className="px-3" onClick={handleDownloadTemplate} data-testid="button-download-template">
                 <Download className="w-4 h-4" />{t("catalog.importDownloadTemplate")}
               </PngPillButton>
               {importFileName && (

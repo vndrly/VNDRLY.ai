@@ -370,12 +370,12 @@ export function WorkHubFinance() {
                       Issue invoice
                     </Button>
                   )}
-                  <Button variant="outline" onClick={() => printInvoice(row)}>
+                  <BrandPillButton tone="red" onClick={() => printInvoice(row)}>
                     Print / Save PDF
-                  </Button>
-                  <Button variant="outline" onClick={() => exportInvoice(row)}>
+                  </BrandPillButton>
+                  <BrandPillButton tone="green" onClick={() => exportInvoice(row)}>
                     Export CSV
-                  </Button>
+                  </BrandPillButton>
                   {row.data.status !== "draft" && (
                     <>
                       <Button
@@ -456,7 +456,7 @@ export function WorkHubFinance() {
                 Gross-pay drafts only. Taxes and net pay remain uncalculated;
                 approval does not submit payroll or transfer money.
               </p>
-              <Button variant="outline" disabled={!data.payroll.length} onClick={() => downloadCsv("payroll-gross-drafts.csv", ["Payroll ID", "Period end", "Status", "Employee ID", "Employee", "Gross USD", "Report basis"], data.payroll.flatMap(row => row.data.employees.map((employee: { userId: number; grossCents: number }) => [row.id, row.data.periodEnd, row.data.status, employee.userId, data.members.find(member => member.userId === employee.userId)?.displayName ?? "", (employee.grossCents / 100).toFixed(2), "Gross-pay draft only; no taxes, net pay or funds transfer"])))}>Export gross-pay report CSV</Button>
+              <BrandPillButton tone="green" disabled={!data.payroll.length} onClick={() => downloadCsv("payroll-gross-drafts.csv", ["Payroll ID", "Period end", "Status", "Employee ID", "Employee", "Gross USD", "Report basis"], data.payroll.flatMap(row => row.data.employees.map((employee: { userId: number; grossCents: number }) => [row.id, row.data.periodEnd, row.data.status, employee.userId, data.members.find(member => member.userId === employee.userId)?.displayName ?? "", (employee.grossCents / 100).toFixed(2), "Gross-pay draft only; no taxes, net pay or funds transfer"])))}>Export gross-pay report CSV</BrandPillButton>
               {data.permissions.payrollPrepare && (
                 <form
                   className="grid gap-3"

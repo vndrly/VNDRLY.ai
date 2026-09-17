@@ -27,11 +27,19 @@ describe("Work Hub calendar ranges", () => {
     for (const name of ["Calendar view", "Event type"]) {
       const select = screen.getByLabelText(name);
       expect(select.className).toContain("bg-white");
-      expect(select.className).toContain("rounded-lg");
+      expect(select.className).toContain("rounded-full");
+      expect(select.className).toContain("[&>option]:bg-white");
+      expect(select.className).toContain("[&>option:hover]:bg-[var(--brand-primary)]");
+      expect(select.style.colorScheme).toBe("light");
       expect(select.className).toContain("border-[color:var(--brand-primary)]");
     }
 
     const sunday = screen.getByRole("button", { name: /Sun, Sep 13/ });
+    const weekdayRail = screen.getByTestId("calendar-weekday-rail");
+    expect(weekdayRail.className).toContain("bg-gray-200");
+    expect(weekdayRail.className).toContain("py-2");
+    expect(weekdayRail.className).toContain("border-y-2");
+    expect(weekdayRail.className).toContain("border-[color:var(--brand-primary)]");
     expect(sunday.className).toContain("rounded-lg");
     expect(sunday.querySelector(`img[src="${pickLoginSquareActive(DEFAULT_BRAND.primary, DEFAULT_BRAND.name)}"]`)).not.toBeNull();
     expect(sunday.textContent).toContain("Sun, Sep 13");

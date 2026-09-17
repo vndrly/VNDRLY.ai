@@ -4,7 +4,10 @@ import { ArrowDown, ArrowUp, Plus, UserCheck } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import BrandPillButton from "@/components/brand-pill-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog } from "@/components/ui/dialog";
+import EmployeeDialogContent from "@/components/employee-dialog-content";
+import { BrandedCheckbox } from "@/components/branded-checkbox";
+import { BrandedSelect } from "@/components/work-hub/chrome";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -89,7 +92,7 @@ export default function ManagedSubcontractorEmployeesCard({ vendorId }: { vendor
           <UserCheck className="h-5 w-5" style={{ color: "var(--brand-primary)" }} />
           {t("managedSubcontractors.title")} ({rows.length})
         </CardTitle>
-        <BrandPillButton tone="blue" disabled={!query.data?.items.some((item) => item.status === "managed")} onClick={openNew}>
+        <BrandPillButton tone="brand" disabled={!query.data?.items.some((item) => item.status === "managed")} onClick={openNew}>
           <Plus className="h-4 w-4" />{t("managedSubcontractors.addSubcontractedEmployee")}
         </BrandPillButton>
       </CardHeader>
@@ -118,37 +121,40 @@ export default function ManagedSubcontractorEmployeesCard({ vendorId }: { vendor
               <TableCell>{t(`managedSubcontractors.${row.role ?? "noRole"}`)}</TableCell>
               <TableCell>{siteNames(row) || "—"}</TableCell>
               <TableCell>{t(`managedSubcontractors.${row.status === "active" ? "active" : row.status === "paused" ? "paused" : "terminated"}`)}</TableCell>
-              <TableCell><BrandPillButton tone="blue" onClick={() => setEditor({ companyId: row.companyId, workerId: row.id, name: row.name, email: row.email, role: row.role ?? "gatekeeper", siteIds: [...row.siteIds] })}>{t("managedSubcontractors.editAccess")}</BrandPillButton></TableCell>
+              <TableCell><BrandPillButton tone="brand" onClick={() => setEditor({ companyId: row.companyId, workerId: row.id, name: row.name, email: row.email, role: row.role ?? "gatekeeper", siteIds: [...row.siteIds] })}>{t("managedSubcontractors.editAccess")}</BrandPillButton></TableCell>
             </TableRow>)}</TableBody>
           </Table>
         ) : <div className="p-6 text-center text-sm text-muted-foreground">{t("managedSubcontractors.noWorkers")}</div>}
       </CardContent>
       <Dialog open={!!editor} onOpenChange={(open) => { if (!open) setEditor(null); }}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>{t(editor?.workerId ? "managedSubcontractors.editAccess" : "managedSubcontractors.addSubcontractedEmployee")}</DialogTitle></DialogHeader>
+        <EmployeeDialogContent
+          title={t(editor?.workerId ? "managedSubcontractors.editAccess" : "managedSubcontractors.addSubcontractedEmployee")}
+          className="max-w-lg"
+          testId="managed-subcontractor-employee-dialog"
+        >
           {editor && <form className="space-y-4" onSubmit={(event) => { event.preventDefault(); mutation.mutate(editor); }}>
             {!editor.workerId && <>
               <Label htmlFor="managed-company">{t("managedSubcontractors.subcontractor")}</Label>
-              <select id="managed-company" className="w-full rounded-md border bg-background p-2" value={editor.companyId} onChange={(event) => setEditor({ ...editor, companyId: event.target.value })}>
+              <BrandedSelect id="managed-company" aria-label={t("managedSubcontractors.subcontractor")} value={editor.companyId} onChange={(event) => setEditor({ ...editor, companyId: event.target.value })}>
                 {query.data?.items.filter((item) => item.status === "managed").map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-              </select>
+              </BrandedSelect>
               <Label htmlFor="managed-worker-name">{t("managedSubcontractors.workerName")}</Label>
-              <Input id="managed-worker-name" required value={editor.name} onChange={(event) => setEditor({ ...editor, name: event.target.value })} />
+              <Input id="managed-worker-name" required className="rounded-xl border-2 border-[color:var(--brand-primary)] bg-white text-gray-700" value={editor.name} onChange={(event) => setEditor({ ...editor, name: event.target.value })} />
               <Label htmlFor="managed-worker-email">{t("managedSubcontractors.email")}</Label>
-              <Input id="managed-worker-email" type="email" required value={editor.email} onChange={(event) => setEditor({ ...editor, email: event.target.value })} />
+              <Input id="managed-worker-email" type="email" required className="rounded-xl border-2 border-[color:var(--brand-primary)] bg-white text-gray-700" value={editor.email} onChange={(event) => setEditor({ ...editor, email: event.target.value })} />
             </>}
             <Label htmlFor="managed-worker-role">{t("managedSubcontractors.role")}</Label>
-            <select id="managed-worker-role" className="w-full rounded-md border bg-background p-2" value={editor.role} onChange={(event) => setEditor({ ...editor, role: event.target.value as Role })}>
+            <BrandedSelect id="managed-worker-role" aria-label={t("managedSubcontractors.role")} value={editor.role} onChange={(event) => setEditor({ ...editor, role: event.target.value as Role })}>
               <option value="gatekeeper">{t("managedSubcontractors.gatekeeper")}</option>
               <option value="gate_supervisor">{t("managedSubcontractors.gate_supervisor")}</option>
-            </select>
+            </BrandedSelect>
             <fieldset className="space-y-2"><legend className="text-sm font-medium">{t("managedSubcontractors.sites")}</legend>
-              {query.data?.sites.map((site) => <label key={site.id} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={editor.siteIds.includes(site.id)} onChange={(event) => setEditor({ ...editor, siteIds: event.target.checked ? [...editor.siteIds, site.id] : editor.siteIds.filter((id) => id !== site.id) })} />{site.name}</label>)}
+              {query.data?.sites.map((site) => <label key={site.id} className="flex items-center gap-2 text-sm"><BrandedCheckbox checked={editor.siteIds.includes(site.id)} onCheckedChange={(checked) => setEditor({ ...editor, siteIds: checked ? [...editor.siteIds, site.id] : editor.siteIds.filter((id) => id !== site.id) })} />{site.name}</label>)}
             </fieldset>
             {mutation.isError && <p className="text-sm text-destructive">{mutation.error.message}</p>}
-            <div className="flex gap-2"><BrandPillButton type="submit" tone="blue" disabled={mutation.isPending || !editor.siteIds.length}>{t("managedSubcontractors.saveWorker")}</BrandPillButton><BrandPillButton onClick={() => setEditor(null)}>{t("managedSubcontractors.cancel")}</BrandPillButton></div>
+            <div className="flex gap-2"><BrandPillButton type="submit" tone="brand" disabled={mutation.isPending || !editor.siteIds.length}>{t("managedSubcontractors.saveWorker")}</BrandPillButton><BrandPillButton onClick={() => setEditor(null)}>{t("managedSubcontractors.cancel")}</BrandPillButton></div>
           </form>}
-        </DialogContent>
+        </EmployeeDialogContent>
       </Dialog>
     </Card>
   );

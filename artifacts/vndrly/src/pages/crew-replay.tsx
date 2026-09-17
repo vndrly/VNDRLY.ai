@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
+import { PngPillButton } from "@/components/png-pill-rollover";
 import SphereBackButton from "@/components/sphere-back-button";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -117,9 +118,9 @@ export default function CrewReplayPage({ employeeId }: { employeeId: number }) {
           <h1 className="text-2xl font-bold">{t("crewReplay.dayReplayTitle", { name: data?.employee.name ?? t("crewReplay.employeeFallback") })}</h1>
           <p className="text-sm text-muted-foreground">{t("crewReplay.subtitle")}</p>
         </div>
-        <Button type="button" variant="outline" size="sm" onClick={exportCsv} disabled={!points.length} data-testid="button-export-replay">
+        <PngPillButton type="button" color="green" onClick={exportCsv} disabled={!points.length} data-testid="button-export-replay">
           {t("crewReplay.exportCsv", "Export CSV")}
-        </Button>
+        </PngPillButton>
       </div>
       <Card>
         <CardHeader className="pb-2">

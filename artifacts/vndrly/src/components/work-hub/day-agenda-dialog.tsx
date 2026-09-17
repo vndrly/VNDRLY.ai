@@ -67,13 +67,15 @@ export default function DayAgendaDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <MiniCardDialogContent icon={CalendarDays} label="Day Agenda" definition={label} iconColor="var(--brand-primary)" settings={settings} className="max-h-[86vh] sm:max-w-2xl">
         <div className="grid gap-3">
+          <div data-testid="day-agenda-content" className="grid gap-3 rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-3 text-black">
           {visibleItems.slice(0, 10).map((item) => (
             <a key={`${item.kind}-${item.id}`} href={calendarItemHref(item)} className="rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-4 text-black" data-testid="day-agenda-item">
               <span className="text-xs font-semibold uppercase text-muted-foreground">{item.kind}</span>
               <div className="flex items-start justify-between gap-3"><strong>{item.title}</strong><time className="text-sm">{new Date(item.startsAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</time></div>
             </a>
           ))}
-          {!visibleItems.length && <p className="rounded-xl border border-border p-6 text-center text-muted-foreground">Nothing is scheduled for this day.</p>}
+          {!visibleItems.length && <p className="rounded-xl p-6 text-center text-muted-foreground">Nothing is scheduled for this day.</p>}
+          </div>
           <BrandPillButton tone="brand" onClick={() => onOpenChange(false)}>Close</BrandPillButton>
         </div>
       </MiniCardDialogContent>

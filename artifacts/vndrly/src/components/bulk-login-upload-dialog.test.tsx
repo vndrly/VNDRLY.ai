@@ -1,5 +1,26 @@
-import { describe, expect, it } from "vitest";
-import { parseBulkLoginCsv } from "./bulk-login-upload-dialog";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import BulkLoginUploadDialog, { parseBulkLoginCsv } from "./bulk-login-upload-dialog";
+
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({ t: (key: string, values?: { defaultValue?: string }) => values?.defaultValue ?? key }),
+}));
+
+vi.mock("@/hooks/use-toast", () => ({
+  useToast: () => ({ toast: vi.fn() }),
+}));
+
+vi.mock("@/hooks/use-brand", () => ({
+  useBrand: () => ({
+    primary: "#00a9c8",
+    accent: "#00a9c8",
+    logoUrl: null,
+    logoSquareUrl: null,
+    name: "MidCon Solutions",
+    isOrgBranded: true,
+  }),
+}));
 
 // Lock in the contract between the CSV the admin uploads and the rows
 // we send to POST /api/field-employees/bulk-login. Drift here corrupts
@@ -83,4 +104,16 @@ describe("parseBulkLoginCsv", () => {
     const { rows } = parseBulkLoginCsv(csv);
     expect(rows).toHaveLength(1);
   });
+});
+it("uses the green rollover pill for the CSV template download", async () => {
+  render(
+    <QueryClientProvider client={new QueryClient()}>
+      <BulkLoginUploadDialog visible />
+    </QueryClientProvider>,
+  );
+
+  fireEvent.click(screen.getByTestId("button-open-bulk-login-upload"));
+  const download = await screen.findByTestId("button-download-bulk-login-template");
+  const sources = Array.from(download.querySelectorAll("img"), (image) => image.getAttribute("src") ?? "");
+  expect(sources.some((source) => source.includes("pill_green"))).toBe(true);
 });

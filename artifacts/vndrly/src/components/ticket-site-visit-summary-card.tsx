@@ -208,7 +208,7 @@ export function TicketSiteVisitSummaryCard({ ticketId }: { ticketId: number }) {
           {t("ticketDetail.siteVisitSummary.title")}
           <PillButton
             type="button"
-            color="image"
+            color="green"
             className="ml-auto h-7 px-2 text-xs"
             onClick={handleGpsExport}
             disabled={!data?.route.length}
