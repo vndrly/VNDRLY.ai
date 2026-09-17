@@ -62,6 +62,56 @@ describe("resolveWorkHubToolRequest", () => {
     });
   });
 
+  it("defaults optional meeting details without turning scheduling into a questionnaire", () => {
+    expect(resolveWorkHubToolRequest("manage_work_hub_calendar_item", {
+      ...command,
+      action: "create",
+      kind: "meeting",
+      payload: {
+        startsAt: "2026-09-18T14:00:00.000Z",
+        timezone: "America/Chicago",
+        participantUserIds: [11, 12],
+      },
+    })).toMatchObject({
+      method: "POST",
+      path: "/work-hub/meetings",
+      body: {
+        payload: {
+          title: "Meeting",
+          startsAt: "2026-09-18T14:00:00.000Z",
+          endsAt: "2026-09-18T14:30:00.000Z",
+          timezone: "America/Chicago",
+          participantUserIds: [11, 12],
+        },
+      },
+    });
+  });
+  it("uses the privacy-safe scheduling availability endpoint", () => {
+    expect(
+      resolveWorkHubToolRequest("find_work_hub_meeting_times", {
+        participantUserIds: [11, 12],
+        requestedStart: "2026-09-18T14:00:00.000Z",
+        searchStart: "2026-09-18T14:00:00.000Z",
+        searchEnd: "2026-09-18T22:00:00.000Z",
+        durationMinutes: 30,
+        timezone: "America/Chicago",
+        limit: 3,
+      }),
+    ).toEqual({
+      method: "POST",
+      path: "/work-hub/scheduling/availability-check",
+      body: {
+        participantUserIds: [11, 12],
+        requestedStart: "2026-09-18T14:00:00.000Z",
+        searchStart: "2026-09-18T14:00:00.000Z",
+        searchEnd: "2026-09-18T22:00:00.000Z",
+        durationMinutes: 30,
+        timezone: "America/Chicago",
+        limit: 3,
+      },
+    });
+  });
+
   it("builds the canonical command envelope for channel creation", () => {
     expect(
       resolveWorkHubToolRequest("manage_work_hub_channel", {

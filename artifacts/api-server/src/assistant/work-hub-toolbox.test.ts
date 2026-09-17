@@ -108,6 +108,7 @@ describe("Work Hub AskV web/iOS parity", () => {
       "get_work_hub_calendar",
       "get_work_hub_agenda",
       "get_work_hub_calendar_item",
+      "find_work_hub_meeting_times",
       "find_work_hub_people",
       "list_work_hub_crews",
       "get_work_hub_crew_members",

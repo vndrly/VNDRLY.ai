@@ -237,7 +237,15 @@ const entries: Entry[] = [
   read("get_work_hub_calendar_item", "scheduling", "Read one authorized shift, meeting, event, or task in full.", schema({
     kind: { type: "string", enum: ["shift", "event", "meeting", "task"] },
     itemId: identifier(),
-  }, ["kind", "itemId"])),
+  }, ["kind", "itemId"])),  read("find_work_hub_meeting_times", "scheduling", "Check the authorized participants' real meetings and assigned shifts, then return privacy-safe conflicts and the earliest common openings. Use the creator's device timezone without asking unless they explicitly override it.", schema({
+    participantUserIds: { type: "array", items: { type: "number" }, minItems: 1, maxItems: 100 },
+    requestedStart: text("Optional requested ISO start time."),
+    searchStart: text("ISO start of the search window."),
+    searchEnd: text("ISO end of the search window."),
+    durationMinutes: { type: "number", minimum: 5, maximum: 480, default: 30 },
+    timezone: text("Creator's IANA timezone."),
+    limit: { type: "number", minimum: 1, maximum: 10, default: 3 },
+  }, ["participantUserIds", "searchStart", "searchEnd", "timezone"])),
   write("manage_work_hub_calendar_item", "scheduling", "Create, update, reschedule, or cancel one authorized Calendar shift, event, meeting, or task with one confirmation.", writeSchema({
     action: { type: "string", enum: ["create", "update", "reschedule", "cancel"] },
     kind: { type: "string", enum: ["shift", "event", "meeting", "task"] },

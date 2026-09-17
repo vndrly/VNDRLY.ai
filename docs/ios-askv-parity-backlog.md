@@ -15,7 +15,10 @@ Before the next iOS or TestFlight update, explicitly confirm with the user that 
 - Support mandatory events and the Internal Company default.
 - Read and act on authorized subcontractor-hours reports: approve, email, and prepare PDF.
 - Preserve the one-pass scheduling flow: silent read lookups, one concise readback, one confirmation, then one mutation.
-- Default an omitted meeting duration to one hour.
+- Default an omitted meeting duration to thirty minutes and derive a short title rather than asking for optional details.
+- Use the shared `find_work_hub_meeting_times` server tool to check participant meetings and assigned shifts, keep tasks non-blocking, protect private schedule titles, and suggest the earliest common openings.
+- Recheck availability during the confirmed create transaction so a newly introduced conflict returns fresh alternatives instead of double-booking.
+- Use the creator device timezone for creation and render the same absolute meeting time in each attendee's local timezone.
 - Deliver and display the existing in-app and push notifications for invitees and assignees.
 
 ## Native Ask V experience

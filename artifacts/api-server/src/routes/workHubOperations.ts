@@ -77,6 +77,7 @@ import { validateVoiceNoteMetadata } from "../work-hub/file-policy";
 import { notifyUsers } from "./notifications";
 import { sessionCanSeeOwner } from "../work-hub/owner-boundary";
 import { appendWorkHubAudit } from "../work-hub/audit";
+import { findAvailableMeetingTimes, getParticipantBusyIntervals, requestedMeetingAvailability } from "../work-hub/meeting-availability";
 import { microsoftImportStatus } from "../work-hub/microsoft-import";
 import {
   audioIceServers,
@@ -151,7 +152,18 @@ async function ownAccess(
   });
   requireWorkHubCapability(access, capability);
 }
+class MeetingAvailabilityConflictError extends Error {
+  readonly status = 409;
+  readonly code = "work_hub.scheduling_conflict";
+  constructor(readonly details: Record<string, unknown>) {
+    super("That time conflicts with an attendee's schedule. Choose one of the next available times.");
+  }
+}
 function failure(res: Response, error: unknown): void {
+  if (error instanceof MeetingAvailabilityConflictError) {
+    sendApiError(res, error.status, error.code, error.message, error.details);
+    return;
+  }
   if (error instanceof WorkHubAccessError) {
     sendApiError(res, error.status, error.code, error.message);
     return;
@@ -1902,6 +1914,31 @@ router.post("/work-hub/meetings", async (req, res) => {
         for (const userId of [...participants].sort((a, b) => a - b)) {
           await tx.execute(sql`select pg_advisory_xact_lock(73009, ${userId})`);
         }
+        const startsAt = new Date(payload.startsAt);
+        const endsAt = payload.endsAt
+          ? new Date(payload.endsAt)
+          : new Date(startsAt.getTime() + 30 * 60_000);
+        const searchEnd = new Date(endsAt.getTime() + 8 * 60 * 60_000);
+        const busy = await getParticipantBusyIntervals(
+          tx,
+          envelope.owner,
+          participants,
+          startsAt,
+          searchEnd,
+        );
+        const availability = requestedMeetingAvailability(startsAt, endsAt, busy);
+        if (!availability.available) {
+          throw new MeetingAvailabilityConflictError({
+            conflicts: availability.conflicts,
+            suggestions: findAvailableMeetingTimes({
+              searchStart: startsAt,
+              searchEnd,
+              durationMinutes: Math.max(5, Math.round((endsAt.getTime() - startsAt.getTime()) / 60_000)),
+              busy,
+              limit: 3,
+            }),
+          });
+        }
         const [meeting] = await tx
           .insert(workHubMeetingsTable)
           .values({
@@ -1919,8 +1956,8 @@ router.post("/work-hub/meetings", async (req, res) => {
           .insert(workHubMeetingOccurrencesTable)
           .values({
             meetingId: meeting.id,
-            startsAt: new Date(payload.startsAt),
-            endsAt: payload.endsAt ? new Date(payload.endsAt) : null,
+            startsAt,
+            endsAt,
           })
           .returning();
         await tx.insert(workHubMeetingParticipantsTable).values(

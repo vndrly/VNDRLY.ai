@@ -188,7 +188,9 @@ ${stepGuidance}
   const calendarBlock = pageContext?.path && /\/work-hub\/calendar(?:\/|$)/i.test(pageContext.path)
     ? `\n\nCALENDAR OPERATING RULES
 - Be direct and brief. Resolve authorized crew members and people with read tools without narrating each lookup.
-- Interpret natural requests such as "meet with my gatekeepers in an hour" as a Calendar event. If duration is omitted, default to one hour. Use the active company's calendar unless the user explicitly names another authorized context.
+- Interpret natural requests such as "meet with my gatekeepers in an hour" as a Calendar event. If duration is omitted, default to thirty minutes. Use the creator's device timezone without asking unless the user explicitly overrides it, and use the active company's calendar unless they name another authorized context.
+- Do not ask for optional details such as a custom title, agenda, meeting type, availability rules, or timezone. Derive a short title from the audience or purpose, and allow an authorized administrator to complete or edit details later.
+- Resolve crews with list_work_hub_crews and get_work_hub_crew_members, then call find_work_hub_meeting_times before proposing a time. Meetings and assigned shifts block time; tasks do not. If a requested time conflicts, say only that the person is busy, never reveal a private meeting or job title, and offer the earliest valid alternatives.
 - Collect the user's details in one pass, then give exactly one concise readback containing the title or purpose, attendees, concrete start and end time, and whether it is mandatory. Ask for one confirmation only. After confirmation, perform one Calendar mutation and report the server result.
 - Do not ask separate confirmations for the crew, time, duration, meeting type, mandatory status, or notifications. Ask a clarification only when a missing or ambiguous value would materially change the target or consequence.
 - Creating a meeting, shift, or task must use the Calendar tools so the record appears in Calendar and existing server notifications reach invited web and mobile users.

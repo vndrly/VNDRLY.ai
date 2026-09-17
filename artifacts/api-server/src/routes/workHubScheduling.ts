@@ -22,6 +22,11 @@ import {
   overlaps,
   schedulingSlots,
 } from "../work-hub/scheduling-policy";
+import {
+  findAvailableMeetingTimes,
+  getParticipantBusyIntervals,
+  requestedMeetingAvailability,
+} from "../work-hub/meeting-availability";
 
 const router: IRouter = Router();
 type Actor = {
@@ -142,6 +147,72 @@ function normalizedBusy(rows: { startsAt: Date; endsAt: Date | null }[]) {
   }));
 }
 
+router.post("/work-hub/scheduling/availability-check", async (req, res) => {
+  const a = await actor(req);
+  const p = z
+    .object({
+      participantUserIds: z.array(z.number().int().positive()).min(1).max(100),
+      requestedStart: z.string().datetime().optional(),
+      searchStart: z.string().datetime(),
+      searchEnd: z.string().datetime(),
+      durationMinutes: z.number().int().min(5).max(480).default(30),
+      timezone,
+      limit: z.number().int().min(1).max(10).default(3),
+    })
+    .refine(
+      (value) =>
+        new Date(value.searchEnd) > new Date(value.searchStart) &&
+        new Date(value.searchEnd).getTime() - new Date(value.searchStart).getTime() <=
+          31 * 86400000,
+      "Search must end after it starts within thirty-one days",
+    )
+    .parse(req.body);
+  const participantUserIds = [...new Set(p.participantUserIds)];
+  const memberships = await db
+    .select({ userId: userOrgMembershipsTable.userId })
+    .from(userOrgMembershipsTable)
+    .where(
+      and(
+        inArray(userOrgMembershipsTable.userId, participantUserIds),
+        eq(userOrgMembershipsTable.orgType, a.owner.type),
+        a.owner.type === "vendor"
+          ? eq(userOrgMembershipsTable.vendorId, a.owner.id)
+          : eq(userOrgMembershipsTable.partnerId, a.owner.id),
+      ),
+    );
+  if (new Set(memberships.map((row) => row.userId)).size !== participantUserIds.length)
+    throw new WorkHubAccessError("not_found");
+
+  const searchStart = new Date(p.searchStart);
+  const searchEnd = new Date(p.searchEnd);
+  const busy = await getParticipantBusyIntervals(
+    db,
+    a.owner,
+    participantUserIds,
+    searchStart,
+    searchEnd,
+  );
+  const requested = p.requestedStart
+    ? requestedMeetingAvailability(
+        new Date(p.requestedStart),
+        new Date(new Date(p.requestedStart).getTime() + p.durationMinutes * 60000),
+        busy,
+      )
+    : null;
+  const suggestions = findAvailableMeetingTimes({
+    searchStart,
+    searchEnd,
+    durationMinutes: p.durationMinutes,
+    busy,
+    limit: p.limit,
+  });
+  return res.json({
+    requested,
+    suggestions,
+    durationMinutes: p.durationMinutes,
+    timezone: p.timezone,
+  });
+});
 router.get("/work-hub/scheduling/types", async (req, res) => {
   const a = await actor(req);
   const rows = await db

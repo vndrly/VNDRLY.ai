@@ -77,6 +77,23 @@ const envelope = (input: Input, payload = record(input.payload)): Input => ({
   payloadVersion: 1,
   payload,
 });
+const normalizedMeetingCreatePayload = (input: Input): Input => {
+  const payload = record(input.payload);
+  const startsAt = typeof payload.startsAt === "string" ? new Date(payload.startsAt) : null;
+  const validStart = startsAt && Number.isFinite(startsAt.getTime()) ? startsAt : null;
+  const title = typeof payload.title === "string" && payload.title.trim()
+    ? payload.title.trim()
+    : typeof payload.meetingType === "string" && payload.meetingType.trim()
+      ? payload.meetingType.trim()
+      : "Meeting";
+  return {
+    ...payload,
+    title,
+    ...(payload.endsAt || !validStart
+      ? {}
+      : { endsAt: new Date(validStart.getTime() + 30 * 60_000).toISOString() }),
+  };
+};
 const direct = (input: Input, extra: Input = {}): Input => ({
   operationId: input.operationId,
   ...record(input.payload),
@@ -384,13 +401,23 @@ export function resolveWorkHubToolRequest(
       return typeof target === "string"
         ? request("GET", `/work-hub/calendar/items/${encodeURIComponent(String(input.kind))}/${target}`)
         : target;
+    case "find_work_hub_meeting_times":
+      return request("POST", "/work-hub/scheduling/availability-check", {
+        participantUserIds: input.participantUserIds,
+        requestedStart: input.requestedStart,
+        searchStart: input.searchStart,
+        searchEnd: input.searchEnd,
+        durationMinutes: input.durationMinutes ?? 30,
+        timezone: input.timezone,
+        limit: input.limit ?? 3,
+      });
     case "manage_work_hub_calendar_item":
       {
         const kind = typeof input.kind === "string" ? input.kind : "";
         const action = typeof input.action === "string" ? input.action : "";
         if (action === "create") {
           if (kind === "shift") return request("POST", "/work-hub/shifts", envelope(input));
-          if (kind === "event" || kind === "meeting") return request("POST", "/work-hub/meetings", envelope(input));
+          if (kind === "event" || kind === "meeting") return request("POST", "/work-hub/meetings", envelope(input, normalizedMeetingCreatePayload(input)));
           if (kind === "task") return request("POST", "/work-hub/tasks", envelope(input));
         }
         target = required(input.itemId, "calendar item id");
@@ -474,7 +501,7 @@ export function resolveWorkHubToolRequest(
 
     case "manage_work_hub_meeting":
       if (input.action === "create")
-        return request("POST", "/work-hub/meetings", envelope(input));
+        return request("POST", "/work-hub/meetings", envelope(input, normalizedMeetingCreatePayload(input)));
       target = required(input.occurrenceId, "meeting occurrence id");
       if (typeof target !== "string") return target;
       if (["join", "leave", "end"].includes(String(input.action)))

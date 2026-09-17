@@ -8,6 +8,8 @@ import {
   usersTable,
   vendorsTable,
   userOrgMembershipsTable,
+  workHubShiftsTable,
+  workHubShiftAssignmentsTable,
 } from "@workspace/db";
 import scheduling from "./workHubScheduling";
 import { buildTestCookie } from "../test-utils/session";
@@ -15,13 +17,12 @@ vi.mock("../work-hub/feature-access", () => ({
   isWorkHubEnabled: async () => true,
 }));
 const app = express().use(express.json()).use(cookieParser()).use(scheduling);
-describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")(
-  "authenticated scheduling reservations",
-  () => {
+describe("authenticated scheduling reservations", () => {
     let hostCookie: string,
       memberCookie: string,
       otherCookie: string,
       typeId: string;
+    let hostUserId: number, memberUserId: number, foreignUserId: number, vendorId: number;
     const start = new Date(Date.now() + 86400000 * 30),
       end = new Date(start.getTime() + 3600000);
     beforeAll(async () => {
@@ -66,6 +67,62 @@ describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")(
           membershipRole: "admin",
         }),
       ) as [string, string, string];
+      [hostUserId, memberUserId, foreignUserId] = people.map((person) => person.id) as [number, number, number];
+      vendorId = companies[0]!.id;
+    });
+    it("checks assigned shifts and returns privacy-safe earliest openings", async () => {
+      const shiftStart = new Date(Date.now() + 86400000 * 50);
+      shiftStart.setUTCMinutes(0, 0, 0);
+      const shiftEnd = new Date(shiftStart.getTime() + 60 * 60_000);
+      const [shift] = await db.insert(workHubShiftsTable).values({
+        ownerOrgType: "vendor",
+        ownerOrgId: vendorId,
+        title: "Private customer job",
+        startsAt: shiftStart,
+        endsAt: shiftEnd,
+        timezone: "America/Chicago",
+        createdById: hostUserId,
+      }).returning();
+      await db.insert(workHubShiftAssignmentsTable).values({
+        shiftId: shift!.id,
+        userId: memberUserId,
+        assignedById: hostUserId,
+      });
+
+      const response = await request(app)
+        .post("/work-hub/scheduling/availability-check")
+        .set("Cookie", hostCookie)
+        .send({
+          participantUserIds: [hostUserId, memberUserId],
+          requestedStart: new Date(shiftStart.getTime() + 15 * 60_000).toISOString(),
+          searchStart: shiftStart.toISOString(),
+          searchEnd: new Date(shiftStart.getTime() + 3 * 60 * 60_000).toISOString(),
+          durationMinutes: 30,
+          timezone: "America/Chicago",
+          limit: 2,
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.requested).toMatchObject({ available: false });
+      expect(response.body.requested.conflicts).toEqual([
+        expect.objectContaining({ userId: memberUserId, kind: "shift" }),
+      ]);
+      expect(JSON.stringify(response.body)).not.toContain("Private customer job");
+      expect(response.body.suggestions[0]).toEqual({
+        startsAt: shiftEnd.toISOString(),
+        endsAt: new Date(shiftEnd.getTime() + 30 * 60_000).toISOString(),
+      });
+
+      const foreign = await request(app)
+        .post("/work-hub/scheduling/availability-check")
+        .set("Cookie", hostCookie)
+        .send({
+          participantUserIds: [foreignUserId],
+          searchStart: shiftStart.toISOString(),
+          searchEnd: shiftEnd.toISOString(),
+          timezone: "America/Chicago",
+        });
+      expect(foreign.status).toBe(404);
     });
     it("requires sign-in and persists idempotent shared types", async () => {
       expect(
@@ -163,5 +220,4 @@ describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")(
       expect(slots.body.slots).not.toContain(start.toISOString());
       expect(slots.body.windows).toEqual([]);
     });
-  },
-);
+});
