@@ -6,6 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { WorkHubCardTitle } from "@/components/work-hub/chrome";
+import SplitToggleHalf from "@/components/split-toggle-half";
+import { useBrand } from "@/hooks/use-brand";
+import { pickTogglePillSrc, splitToggleDividerClass, TOGGLE_IDLE_PILL_SRC } from "@/lib/pick-toggle-pill";
 import {
   commandEnvelope,
   createWorkHubOperationId,
@@ -34,26 +37,36 @@ function Picker({
   onUsers: (ids: number[]) => void;
   onCrews: (ids: string[]) => void;
 }) {
+  const [mode, setMode] = useState<"crews" | "individuals">("crews");
+  const brand = useBrand();
+  const activePillSrc = pickTogglePillSrc(brand.primary, brand.name);
   const toggle = <T,>(values: T[], value: T) =>
     values.includes(value) ? values.filter((item) => item !== value) : [...values, value];
   return (
     <div className="grid gap-2 rounded-2xl border-2 border-[color:var(--brand-primary)] bg-white p-3">
-      <p className="text-sm font-semibold">Crews or individuals</p>
-      <div className="grid max-h-40 gap-2 overflow-auto sm:grid-cols-2">
-        {crews.map((crew) => (
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm font-semibold">Assign attendees</p>
+        <div className="inline-flex items-stretch overflow-hidden rounded-full" data-testid="calendar-assignee-toggle">
+          <SplitToggleHalf side="left" active={mode === "crews"} pillSrc={mode === "crews" ? activePillSrc : TOGGLE_IDLE_PILL_SRC} onClick={() => setMode("crews")} aria-pressed={mode === "crews"}>Crews</SplitToggleHalf>
+          <span aria-hidden className={`w-px shrink-0 self-stretch ${splitToggleDividerClass("light")}`} />
+          <SplitToggleHalf side="right" active={mode === "individuals"} pillSrc={mode === "individuals" ? activePillSrc : TOGGLE_IDLE_PILL_SRC} onClick={() => setMode("individuals")} aria-pressed={mode === "individuals"}>Individuals</SplitToggleHalf>
+        </div>
+      </div>
+      <div className="grid h-36 content-start gap-2 overflow-y-auto pr-1">
+        {mode === "crews" ? crews.map((crew) => (
           <label key={crew.id} className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={crewIds.includes(crew.id)} onChange={() => onCrews(toggle(crewIds, crew.id))} />
-            Crew: {crew.name}
+            {crew.name}
           </label>
-        ))}
-        {people.map((person) => (
+        )) : people.map((person) => (
           <label key={person.id} className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={userIds.includes(person.id)} onChange={() => onUsers(toggle(userIds, person.id))} />
             {person.displayName || person.email}
           </label>
         ))}
+        {mode === "crews" && !crews.length && <p className="text-xs text-muted-foreground">No eligible crews found.</p>}
+        {mode === "individuals" && !people.length && <p className="text-xs text-muted-foreground">No eligible employees found.</p>}
       </div>
-      {!crews.length && !people.length && <p className="text-xs text-muted-foreground">No eligible crews or employees found.</p>}
     </div>
   );
 }
@@ -182,7 +195,7 @@ export default function CalendarCreateCards({ owner }: { owner: Owner | null }) 
   });
   const commonClass = "grid gap-3 [&_input:not([type=checkbox])]:rounded-full [&_input:not([type=checkbox])]:border-2 [&_input:not([type=checkbox])]:border-[color:var(--brand-primary)] [&_input:not([type=checkbox])]:bg-white [&_select]:h-10 [&_select]:rounded-full [&_select]:border-2 [&_select]:border-[color:var(--brand-primary)] [&_select]:bg-white [&_select]:px-3";
   return (
-    <div className="grid gap-4">
+    <div className="grid gap-4 lg:grid-cols-2 lg:items-start" data-testid="calendar-create-card-row">
       <Card id="create-shift-card" className="border-2 border-[color:var(--brand-primary)] bg-white">
         <CardHeader><CardTitle><WorkHubCardTitle icon={CalendarDays}>Create Shift/Event</WorkHubCardTitle></CardTitle></CardHeader>
         <CardContent>

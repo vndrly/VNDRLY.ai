@@ -689,7 +689,7 @@ function CalendarModule() {
       </Card>
       <div className="grid gap-4">
         <div
-          className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)] lg:items-start"
+          className="grid gap-4"
           data-testid="work-hub-calendar-layout"
         >
           <Card>
