@@ -99,7 +99,16 @@ export default function EmployeeDialogContent({
           </DialogClose>
         </div>
       </DialogHeader>
-      <div className="relative z-10 grid min-h-0 flex-1 gap-4 overflow-y-auto bg-background p-6">
+      <div
+        className={cn(
+          "relative z-10 grid min-h-0 flex-1 gap-4 overflow-y-auto bg-background p-6",
+          "[&_input]:!rounded-xl [&_input]:!border-2 [&_input]:!border-[color:var(--brand-primary)] [&_input]:!bg-white [&_input]:!text-gray-700 [&_input::placeholder]:!text-gray-500",
+          "[&_textarea]:!rounded-xl [&_textarea]:!border-2 [&_textarea]:!border-[color:var(--brand-primary)] [&_textarea]:!bg-white [&_textarea]:!text-gray-700 [&_textarea::placeholder]:!text-gray-500",
+          "[&_select]:!rounded-xl [&_select]:!border-2 [&_select]:!border-[color:var(--brand-primary)] [&_select]:!bg-white [&_select]:!text-gray-700",
+          "[&_[role=combobox]]:!rounded-xl [&_[role=combobox]]:!border-2 [&_[role=combobox]]:!border-[color:var(--brand-primary)] [&_[role=combobox]]:!bg-white [&_[role=combobox]]:!text-gray-700",
+        )}
+        data-testid="employee-dialog-body"
+      >
         {children}
       </div>
     </DialogContent>

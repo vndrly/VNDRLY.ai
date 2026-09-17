@@ -923,23 +923,24 @@ export default function FieldEmployees() {
                   queryClient.invalidateQueries({ queryKey: officeQueryKey });
                   queryClient.invalidateQueries({ queryKey: getListFieldEmployeesQueryKey(fieldQueryParams) });
                 }}
+                accountActions={(() => {
+                  const editing =
+                    (officeEmployees ?? []).find((e) => e.id === editingOfficeContactId) ??
+                    (fieldEmployees ?? []).find((e) => e.id === editingOfficeContactId);
+                  if (!editing?.hasLogin || !editing.userId) return null;
+                  return (
+                    <AccountActions
+                      inline
+                      userId={editing.userId}
+                      hasLogin={editing.hasLogin}
+                      suspendedAt={editing.suspendedAt ?? null}
+                      testIdPrefix="edit-office-account"
+                      onChanged={() => queryClient.invalidateQueries({ queryKey: officeQueryKey })}
+                    />
+                  );
+                })()}
               />
             ) : null}
-            {(() => {
-              const editing =
-                (officeEmployees ?? []).find((e) => e.id === editingOfficeContactId) ??
-                (fieldEmployees ?? []).find((e) => e.id === editingOfficeContactId);
-              if (!editing?.hasLogin || !editing.userId) return null;
-              return (
-                <AccountActions
-                  userId={editing.userId}
-                  hasLogin={editing.hasLogin}
-                  suspendedAt={editing.suspendedAt ?? null}
-                  testIdPrefix="edit-office-account"
-                  onChanged={() => queryClient.invalidateQueries({ queryKey: officeQueryKey })}
-                />
-              );
-            })()}
             <PngPillButton color="brand" type="submit" disabled={updateVendorContact.isPending} attention={editOfficeDirty} className="w-full" data-testid="button-submit-edit-office">
               {updateVendorContact.isPending ? t("fieldEmployees.saving") : t("fieldEmployees.saveChanges")}
             </PngPillButton>

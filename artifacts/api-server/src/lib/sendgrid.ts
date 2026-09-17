@@ -16,7 +16,7 @@ function sendGridSandboxEnabled(): boolean {
 function sendGridConfig() {
   const apiKey = process.env.SENDGRID_API_KEY?.trim() ?? "";
   const fromEmail = process.env.SENDGRID_FROM_EMAIL?.trim() ?? "";
-  const fromName = process.env.SENDGRID_FROM_NAME?.trim() || "VNDRLY";
+  const fromName = "VNDRLY.ai";
   const replyTo = process.env.SENDGRID_REPLY_TO?.trim() ?? "";
   return { apiKey, fromEmail, fromName, replyTo };
 }
@@ -28,6 +28,7 @@ async function sendSendGridMail(input: {
   text: string;
   categories?: string[];
   customArgs?: Record<string, string>;
+  fromName?: string;
 }): Promise<{ messageId: string | undefined }> {
   const cfg = sendGridConfig();
   if (!cfg.apiKey || !cfg.fromEmail) {
@@ -41,7 +42,7 @@ async function sendSendGridMail(input: {
         ...(input.customArgs ? { custom_args: input.customArgs } : {}),
       },
     ],
-    from: { email: cfg.fromEmail, name: cfg.fromName },
+    from: { email: cfg.fromEmail, name: input.fromName?.trim() || cfg.fromName },
     subject: input.subject,
     content: [
       { type: "text/plain", value: input.text },
@@ -691,6 +692,71 @@ export async function sendEmailVerificationEmail(
   });
 }
 
+export interface SendFieldEmployeeOnboardingInviteEmailInput {
+  to: string;
+  displayName: string;
+  vendorName: string;
+  inviteUrl: string;
+  existingLogin: boolean;
+  platformLogoUrl?: string | null;
+  vendorLogoUrl?: string | null;
+  brandColor?: string | null;
+}
+
+function safeEmailBrandColor(value?: string | null): string {
+  return value && /^#[0-9a-f]{6}$/i.test(value) ? value : "#d1b45c";
+}
+
+export async function sendFieldEmployeeOnboardingInviteEmail(
+  input: SendFieldEmployeeOnboardingInviteEmailInput,
+): Promise<{ messageId: string | undefined }> {
+  const safeName = escapeHtml(input.displayName || "there");
+  const safeVendor = escapeHtml(input.vendorName || "Your company");
+  const safeUrl = escapeHtml(input.inviteUrl);
+  const platformLogo = input.platformLogoUrl ? escapeHtml(input.platformLogoUrl) : null;
+  const vendorLogo = input.vendorLogoUrl ? escapeHtml(input.vendorLogoUrl) : null;
+  const brandColor = safeEmailBrandColor(input.brandColor);
+  const actionLabel = input.existingLogin ? "Sign in to VNDRLY" : "Finish onboarding";
+  const intro = input.existingLogin
+    ? `${safeVendor} has prepared your VNDRLY access. Sign in to finish setup; if required, VNDRLY will prompt you to choose a new password.`
+    : `${safeVendor} invited you to VNDRLY. Finish onboarding to complete your profile and create your password.`;
+  const textIntro = input.existingLogin
+    ? `${input.vendorName} has prepared your VNDRLY access. Sign in to finish setup; if required, VNDRLY will prompt you to choose a new password.`
+    : `${input.vendorName} invited you to VNDRLY. Finish onboarding to complete your profile and create your password.`;
+  const logoCell = (url: string | null, fallback: string, align: "left" | "right") =>
+    url
+      ? `<td align="${align}" style="width:72px;"><img src="${url}" alt="${escapeHtml(fallback)}" width="54" height="54" style="display:block;width:54px;height:54px;object-fit:contain;border-radius:10px;background:#ffffff;border:1px solid rgba(255,255,255,.35);padding:4px;" /></td>`
+      : `<td align="${align}" style="width:72px;"><div style="display:inline-block;width:54px;height:54px;line-height:54px;text-align:center;border-radius:10px;background:#ffffff;color:#34373c;font-size:11px;font-weight:800;">${escapeHtml(fallback.slice(0, 8))}</div></td>`;
+
+  return sendSendGridMail({
+    to: input.to,
+    subject: `${input.vendorName} invited you to VNDRLY`,
+    categories: ["field-employee-onboarding"],
+    fromName: "VNDRLY.ai",
+    html: `
+      <div style="margin:0;padding:28px 12px;background:#eef0f3;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#34373c;">
+        <div style="max-width:600px;margin:0 auto;border-radius:16px;overflow:hidden;border:2px solid ${brandColor};box-shadow:0 10px 30px rgba(17,24,39,.16);background:#ffffff;">
+          <div style="padding:18px 22px;background-color:#3a3d42;background-image:radial-gradient(circle at 2px 2px,rgba(255,255,255,.16) 1.1px,transparent 1.2px),linear-gradient(180deg,rgba(58,61,66,.15),rgba(58,61,66,.92));background-size:12px 12px,100% 100%;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+              ${logoCell(platformLogo, "VNDRLY", "left")}
+              <td align="center" style="color:#ffffff;font-weight:800;font-size:18px;letter-spacing:.02em;">VNDRLY Invitation</td>
+              ${logoCell(vendorLogo, input.vendorName, "right")}
+            </tr></table>
+          </div>
+          <div style="padding:24px;background:#f5f6f8;">
+            <div style="background:#ffffff;border:2px solid ${brandColor};border-radius:14px;padding:24px;box-shadow:0 4px 14px rgba(17,24,39,.08);">
+              <p style="margin:0 0 14px;font-size:16px;font-weight:700;">Hi ${safeName},</p>
+              <p style="margin:0 0 20px;line-height:1.55;color:#4b5563;">${intro}</p>
+              <p style="margin:22px 0;text-align:center;"><a href="${safeUrl}" style="display:inline-block;padding:12px 20px;border-radius:999px;background:${brandColor};color:#111827;text-decoration:none;font-weight:800;">${actionLabel}</a></p>
+              <p style="margin:20px 0 6px;font-size:12px;color:#6b7280;">If the button does not open, copy this link:</p>
+              <p style="margin:0;word-break:break-all;font-size:12px;color:#4b5563;">${safeUrl}</p>
+            </div>
+          </div>
+        </div>
+      </div>`,
+    text: `Hi ${input.displayName || "there"},\n\n${textIntro}\n\n${actionLabel}: ${input.inviteUrl}\n\nVNDRLY`,
+  });
+}
 // ─── Admin-issued temporary password ─────────────────────────────
 //
 // Sent when an org admin (system / partner / vendor) resets a user's

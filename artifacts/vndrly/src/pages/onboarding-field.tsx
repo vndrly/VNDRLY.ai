@@ -1,5 +1,5 @@
 import { PngPillButton } from "@/components/png-pill-rollover";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useLocation, useRoute } from "wouter";
 import { useTranslation } from "react-i18next";
 import { VNDRLY_LOGO_SQUARE as vndrlyLogo } from "@/lib/vndrly-brand-assets";
@@ -44,6 +44,8 @@ export default function OnboardingField() {
   const [completed, setCompleted] = useState<string[]>([]);
   const [skipped, setSkipped] = useState<string[]>([]);
   const [vendorName, setVendorName] = useState<string | null>(null);
+  const [vendorLogoUrl, setVendorLogoUrl] = useState<string | null>(null);
+  const [vendorPrimaryColor, setVendorPrimaryColor] = useState<string | null>(null);
   const [tokenValid, setTokenValid] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -67,6 +69,8 @@ export default function OnboardingField() {
         if (cancelled) return;
         setTokenValid(true);
         setVendorName(resp.vendorName);
+        setVendorLogoUrl(resp.vendorLogoUrl ?? null);
+        setVendorPrimaryColor(resp.vendorPrimaryColor ?? null);
         // Mirror the language saved on `vendor_people` so a Spanish
         // invitee who picks Español, then refreshes, still sees the
         // toggle in Spanish (and the assistant still primes in
@@ -319,20 +323,65 @@ export default function OnboardingField() {
   // vendor when the token is valid; until then we render a localised
   // placeholder so a Spanish invitee never briefly sees "your employer".
   const headlineVendor = vendorName ?? t("fieldOnboarding.defaultVendorName");
+  const brandColor = vendorPrimaryColor && /^#[0-9a-f]{6}$/i.test(vendorPrimaryColor)
+    ? vendorPrimaryColor
+    : "#d1b45c";
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-8">
+    <div
+      className="min-h-screen bg-gray-100 px-4 py-8"
+      style={{ "--brand-primary": brandColor } as CSSProperties}
+    >
       <div className="max-w-xl mx-auto">
-        <div className="flex items-center gap-3 mb-6">
-          <img src={vndrlyLogo} alt="VNDRLY" className="w-12 h-12 rounded-lg" />
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">{t("fieldOnboarding.welcomeTitle", { vendorName: headlineVendor })}</h1>
-            <p className="text-sm text-gray-500">{t("fieldOnboarding.welcomeSubtitle")}</p>
+        <div
+          className="mb-6 overflow-hidden rounded-2xl border-2 shadow-lg"
+          style={{ borderColor: brandColor }}
+          data-testid="invite-brand-header"
+        >
+          <div
+            className="grid grid-cols-[64px_1fr_64px] items-center gap-3 px-5 py-4 text-white"
+            style={{
+              backgroundColor: "#3a3d42",
+              backgroundImage:
+                "radial-gradient(circle at 2px 2px, rgba(255,255,255,.16) 1.1px, transparent 1.2px), linear-gradient(to bottom, rgba(58,61,66,.2), rgba(58,61,66,.94))",
+              backgroundSize: "12px 12px, 100% 100%",
+            }}
+          >
+            <img
+              src={vndrlyLogo}
+              alt="VNDRLY"
+              className="h-12 w-12 rounded-xl border border-white/30 bg-white object-contain p-1"
+              data-testid="invite-vndrly-logo"
+            />
+            <div className="min-w-0 text-center">
+              <h1 className="truncate text-xl font-bold">{t("fieldOnboarding.welcomeTitle", { vendorName: headlineVendor })}</h1>
+              <p className="mt-1 text-xs text-gray-200">{t("fieldOnboarding.welcomeSubtitle")}</p>
+            </div>
+            {vendorLogoUrl ? (
+              <img
+                src={vendorLogoUrl}
+                alt={`${headlineVendor} logo`}
+                className="ml-auto h-12 w-12 rounded-xl border border-white/30 bg-white object-contain p-1"
+                data-testid="invite-vendor-logo"
+              />
+            ) : (
+              <div
+                className="ml-auto flex h-12 w-12 items-center justify-center rounded-xl border border-white/30 bg-white text-xs font-bold text-gray-700"
+                data-testid="invite-vendor-logo-fallback"
+              >
+                {headlineVendor.slice(0, 2).toUpperCase()}
+              </div>
+            )}
           </div>
         </div>
 
-        <Card><CardContent className="p-6 pt-6">
-          <OnboardingStepper steps={STEPS} currentIndex={stepIndex} completedKeys={completed} skippedKeys={skipped} className="mb-8" />
+        <Card
+          className="rounded-2xl border-2 bg-white"
+          style={{ borderColor: brandColor }}
+          data-testid="field-onboarding-card"
+        >
+          <CardContent className="p-6 pt-6">
+            <OnboardingStepper steps={STEPS} currentIndex={stepIndex} completedKeys={completed} skippedKeys={skipped} className="mb-8" />
 
           {currentStep.key === "personal-info" && (
             <div className="space-y-4" data-testid="step-personal-info-body">
@@ -340,16 +389,16 @@ export default function OnboardingField() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label>{t("fieldOnboarding.personal.firstName")}</Label>
-                  <Input value={info.firstName} onChange={(e) => setInfo({ ...info, firstName: e.target.value })} data-testid="input-first-name" />
+                  <Input className="rounded-xl border-2 bg-white text-gray-700 placeholder:text-gray-500" style={{ borderColor: brandColor }} value={info.firstName} onChange={(e) => setInfo({ ...info, firstName: e.target.value })} data-testid="input-first-name" />
                 </div>
                 <div>
                   <Label>{t("fieldOnboarding.personal.lastName")}</Label>
-                  <Input value={info.lastName} onChange={(e) => setInfo({ ...info, lastName: e.target.value })} data-testid="input-last-name" />
+                  <Input className="rounded-xl border-2 bg-white text-gray-700 placeholder:text-gray-500" style={{ borderColor: brandColor }} value={info.lastName} onChange={(e) => setInfo({ ...info, lastName: e.target.value })} data-testid="input-last-name" />
                 </div>
               </div>
               <div>
                 <Label>{t("fieldOnboarding.personal.phone")}</Label>
-                <Input value={info.phone} onChange={(e) => setInfo({ ...info, phone: handlePhoneInput(e.target.value) })} placeholder="(555) 123-4567" data-testid="input-phone" />
+                <Input className="rounded-xl border-2 bg-white text-gray-700 placeholder:text-gray-500" style={{ borderColor: brandColor }} value={info.phone} onChange={(e) => setInfo({ ...info, phone: handlePhoneInput(e.target.value) })} placeholder="(555) 123-4567" data-testid="input-phone" />
               </div>
               <div>
                 <Label>{t("fieldOnboarding.personal.preferredLanguage")}</Label>
@@ -393,13 +442,13 @@ export default function OnboardingField() {
                 </div>
               </div>
               <label className="flex items-center gap-2 mt-4">
-                <Checkbox checked={pec.certified} onCheckedChange={(v) => setPec({ ...pec, certified: v === true })} data-testid="check-pec" />
+                <Checkbox className="rounded-md border-2 bg-white" style={{ borderColor: brandColor }} checked={pec.certified} onCheckedChange={(v) => setPec({ ...pec, certified: v === true })} data-testid="check-pec" />
                 <span className="text-sm">{t("fieldOnboarding.photo.pecCheckbox")}</span>
               </label>
               {pec.certified && (
                 <div>
                   <Label>{t("fieldOnboarding.photo.pecExpiration")}</Label>
-                  <Input type="date" value={pec.expirationDate} onChange={(e) => setPec({ ...pec, expirationDate: e.target.value })} data-testid="input-pec-expiration" />
+                  <Input className="rounded-xl border-2 bg-white text-gray-700 placeholder:text-gray-500" style={{ borderColor: brandColor }} type="date" value={pec.expirationDate} onChange={(e) => setPec({ ...pec, expirationDate: e.target.value })} data-testid="input-pec-expiration" />
                 </div>
               )}
             </div>
@@ -411,11 +460,11 @@ export default function OnboardingField() {
               <p className="text-sm text-gray-500">{t("fieldOnboarding.password.subtitle")}</p>
               <div>
                 <Label>{t("fieldOnboarding.password.password")}</Label>
-                <Input type="password" value={creds.password} onChange={(e) => setCreds({ ...creds, password: e.target.value })} data-testid="input-password" />
+                <Input className="rounded-xl border-2 bg-white text-gray-700 placeholder:text-gray-500" style={{ borderColor: brandColor }} type="password" value={creds.password} onChange={(e) => setCreds({ ...creds, password: e.target.value })} data-testid="input-password" />
               </div>
               <div>
                 <Label>{t("fieldOnboarding.password.confirm")}</Label>
-                <Input type="password" value={creds.confirm} onChange={(e) => setCreds({ ...creds, confirm: e.target.value })} data-testid="input-password-confirm" />
+                <Input className="rounded-xl border-2 bg-white text-gray-700 placeholder:text-gray-500" style={{ borderColor: brandColor }} type="password" value={creds.confirm} onChange={(e) => setCreds({ ...creds, confirm: e.target.value })} data-testid="input-password-confirm" />
               </div>
               <p className="text-xs text-gray-500">{t("fieldOnboarding.password.hint")}</p>
             </div>

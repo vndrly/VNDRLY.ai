@@ -22,6 +22,7 @@ export type AccountActionsProps = {
   suspendedAt: string | null;
   testIdPrefix: string;
   onChanged?: () => void;
+  inline?: boolean;
 };
 
 /**
@@ -31,7 +32,7 @@ export type AccountActionsProps = {
  * server-side; we additionally hide the controls for non-admin
  * sessions to avoid showing dead UI.
  */
-export default function AccountActions({ userId, hasLogin, suspendedAt, testIdPrefix, onChanged }: AccountActionsProps) {
+export default function AccountActions({ userId, hasLogin, suspendedAt, testIdPrefix, onChanged, inline = false }: AccountActionsProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -121,16 +122,16 @@ export default function AccountActions({ userId, hasLogin, suspendedAt, testIdPr
   };
 
   return (
-    <div className="grid grid-cols-2 gap-2 sm:flex">
-      <PngPillButton color="brand" type="button" className="min-w-0 flex-1" onClick={() => setResetOpen(true)} data-testid={`${testIdPrefix}-reset-password`}>
+    <div className={inline ? "contents" : "grid grid-cols-2 gap-2 sm:flex"}>
+      <PngPillButton color="brand" type="button" className={inline ? "min-w-0 px-1 text-[11px]" : "min-w-0 flex-1"} onClick={() => setResetOpen(true)} data-testid={`${testIdPrefix}-reset-password`}>
         {t("accountActions.resetPassword")}
       </PngPillButton>
       {isSuspended ? (
-        <GreenButton type="button" className="min-w-0 flex-1" onClick={() => setReactivateOpen(true)} data-testid={`${testIdPrefix}-reactivate`}>
+        <GreenButton type="button" className={inline ? "min-w-0 px-1 text-[11px]" : "min-w-0 flex-1"} onClick={() => setReactivateOpen(true)} data-testid={`${testIdPrefix}-reactivate`}>
           {t("accountActions.reactivate")}
         </GreenButton>
       ) : (
-        <PngPillButton color="red" type="button" className="min-w-0 flex-1" onClick={() => setSuspendOpen(true)} data-testid={`${testIdPrefix}-suspend`}>
+        <PngPillButton color="red" type="button" className={inline ? "min-w-0 px-1 text-[11px]" : "min-w-0 flex-1"} onClick={() => setSuspendOpen(true)} data-testid={`${testIdPrefix}-suspend`}>
           {t("accountActions.suspend")}
         </PngPillButton>
       )}

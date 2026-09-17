@@ -82,6 +82,8 @@ export const onboardingApi = {
       vendorPeopleId: number;
       vendorId: number;
       vendorName: string;
+      vendorLogoUrl: string | null;
+      vendorPrimaryColor: string | null;
       firstName: string;
       lastName: string;
       email: string;

@@ -12,6 +12,7 @@ import {
   onboardingProgressTable,
   siteLocationsTable,
   partnerContactsTable,
+  platformSettingsTable,
 } from "@workspace/db";
 import {
   CreatePartnerOnboardingBody,
@@ -33,7 +34,10 @@ import { getAppOrigin } from "../lib/appOrigin";
 import { ObjectStorageService } from "../lib/objectStorage";
 import { absoluteUploadUrl } from "../lib/uploadUrl";
 import { normalizeVendorName } from "../lib/vendor-match";
-import { sendEmailVerificationEmail } from "../lib/sendgrid";
+import {
+  sendEmailVerificationEmail,
+  sendFieldEmployeeOnboardingInviteEmail,
+} from "../lib/sendgrid";
 
 import { sendValidationFailed } from "../lib/validation-error";
 const onboardingObjectStorageService = new ObjectStorageService();
@@ -734,6 +738,13 @@ function trim(v: unknown): string {
 // (best-effort) email it. Used by the dedicated invite endpoint and
 // also fired automatically when a vendor finishes onboarding so the
 // first-employee step doubles as an invite.
+function publicEmailAssetUrl(value: string | null | undefined, baseUrl: string): string | null {
+  const trimmed = value?.trim();
+  if (!trimmed) return null;
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return `${baseUrl}/${trimmed.replace(/^\/+/, "")}`;
+}
+
 async function issueAndEmailFieldInvite(employeeId: number): Promise<{ token: string; url: string; emailSent: boolean }> {
   const token = crypto.randomBytes(24).toString("hex");
   await db
@@ -747,22 +758,69 @@ async function issueAndEmailFieldInvite(employeeId: number): Promise<{ token: st
   });
 
   const baseUrl = getAppOrigin();
-  const url = `${baseUrl}/onboarding/field/${token}`;
+  const onboardingUrl = `${baseUrl}/onboarding/field/${token}`;
 
   const [employee] = await db
-    .select({ email: vendorPeopleTable.email, firstName: vendorPeopleTable.firstName })
+    .select({
+      email: vendorPeopleTable.email,
+      firstName: vendorPeopleTable.firstName,
+      lastName: vendorPeopleTable.lastName,
+      userId: vendorPeopleTable.userId,
+      vendorId: vendorPeopleTable.vendorId,
+    })
     .from(vendorPeopleTable)
     .where(eq(vendorPeopleTable.id, employeeId))
     .limit(1);
 
-  let emailSent = false;
-  if (employee?.email) {
-    logger.debug({ employeeId, email: employee.email }, "field onboarding invite email disabled");
+  if (!employee?.email) return { token, url: onboardingUrl, emailSent: false };
+
+  const [[vendor], [platform]] = await Promise.all([
+    db
+      .select({
+        name: vendorsTable.name,
+        logoUrl: vendorsTable.logoUrl,
+        logoSquareUrl: vendorsTable.logoSquareUrl,
+        brandPrimaryColor: vendorsTable.brandPrimaryColor,
+      })
+      .from(vendorsTable)
+      .where(eq(vendorsTable.id, employee.vendorId))
+      .limit(1),
+    db
+      .select({
+        logoUrl: platformSettingsTable.logoUrl,
+        logoSquareUrl: platformSettingsTable.logoSquareUrl,
+      })
+      .from(platformSettingsTable)
+      .where(eq(platformSettingsTable.id, 1))
+      .limit(1),
+  ]);
+
+  const existingLogin = employee.userId != null;
+  const url = existingLogin ? `${baseUrl}/login` : onboardingUrl;
+  try {
+    const { messageId } = await sendFieldEmployeeOnboardingInviteEmail({
+      to: employee.email,
+      displayName: `${employee.firstName ?? ""} ${employee.lastName ?? ""}`.trim(),
+      vendorName: vendor?.name ?? "Your company",
+      inviteUrl: url,
+      existingLogin,
+      platformLogoUrl: publicEmailAssetUrl(platform?.logoSquareUrl ?? platform?.logoUrl, baseUrl),
+      vendorLogoUrl: publicEmailAssetUrl(vendor?.logoSquareUrl ?? vendor?.logoUrl, baseUrl),
+      brandColor: vendor?.brandPrimaryColor,
+    });
+    logger.info(
+      { employeeId, vendorId: employee.vendorId, recipient: employee.email, messageId },
+      "field onboarding invite accepted by SendGrid",
+    );
+    return { token, url, emailSent: true };
+  } catch (err) {
+    logger.warn(
+      { err, employeeId, vendorId: employee.vendorId, recipient: employee.email },
+      "field onboarding invite send failed",
+    );
+    return { token, url, emailSent: false };
   }
-
-  return { token, url, emailSent };
 }
-
 function validatePartnerPayload(p: Record<string, unknown>): string[] {
   const missing: string[] = [];
   if (!isPlatformEulaPayloadAccepted(p)) missing.push("platformEula");
@@ -1304,7 +1362,12 @@ router.get("/onboarding/field/by-token/:token", async (req: Request, res: Respon
     return;
   }
   const [vendor] = await db
-    .select({ name: vendorsTable.name })
+    .select({
+      name: vendorsTable.name,
+      logoUrl: vendorsTable.logoUrl,
+      logoSquareUrl: vendorsTable.logoSquareUrl,
+      brandPrimaryColor: vendorsTable.brandPrimaryColor,
+    })
     .from(vendorsTable)
     .where(eq(vendorsTable.id, employee.vendorId))
     .limit(1);
@@ -1317,6 +1380,8 @@ router.get("/onboarding/field/by-token/:token", async (req: Request, res: Respon
     vendorPeopleId: employee.id,
     vendorId: employee.vendorId,
     vendorName: vendor?.name ?? "your employer",
+    vendorLogoUrl: vendor?.logoSquareUrl ?? vendor?.logoUrl ?? null,
+    vendorPrimaryColor: vendor?.brandPrimaryColor ?? null,
     firstName: employee.firstName,
     lastName: employee.lastName,
     email: employee.email,

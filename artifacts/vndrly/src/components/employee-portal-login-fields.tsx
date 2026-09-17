@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import { KeyRound, Smartphone } from "lucide-react";
@@ -20,6 +20,16 @@ import { translateApiError } from "@/lib/api-error";
 
 const BASE_PATH = import.meta.env.BASE_URL.replace(/\/$/, "");
 
+export const ONBOARDING_INVITE_LABEL = "Send Invite";
+export const EMPLOYEE_ACCOUNT_ACTIONS_CLASS_NAME = "grid grid-cols-5 gap-1";
+export function shouldShowOnboardingInvite(
+  showOnboardingInvite: boolean,
+  portalLoginEnabled: boolean,
+  _hasLogin: boolean,
+): boolean {
+  return showOnboardingInvite && portalLoginEnabled;
+}
+
 export type EmployeePortalLoginFieldsProps = {
   employeeId: number;
   /** Profile email used when no login exists yet. */
@@ -31,6 +41,7 @@ export type EmployeePortalLoginFieldsProps = {
   showDisableLogin?: boolean;
   testIdPrefix?: string;
   onSaved?: () => void;
+  accountActions?: ReactNode;
 };
 
 export default function EmployeePortalLoginFields({
@@ -42,6 +53,7 @@ export default function EmployeePortalLoginFields({
   showDisableLogin = false,
   testIdPrefix = "employee-login",
   onSaved,
+  accountActions,
 }: EmployeePortalLoginFieldsProps) {
   const { t } = useTranslation();
   const { toast } = useToast();
@@ -277,13 +289,13 @@ export default function EmployeePortalLoginFields({
         </>
       ) : null}
 
-      <div className="grid grid-cols-2 gap-2 sm:flex">
+      <div className={EMPLOYEE_ACCOUNT_ACTIONS_CLASS_NAME}>
         <PngPillButton
           type="button"
           color="brand"
           onClick={saveCredentials}
           disabled={credBusy}
-          className="min-w-0 flex-1"
+          className="min-w-0 px-1 text-[11px]"
           data-testid={`${testIdPrefix}-save`}
         >
           {credBusy
@@ -294,12 +306,12 @@ export default function EmployeePortalLoginFields({
                 : t("fieldEmployeeDetail.createLogin")
               : t("fieldEmployeeDetail.saveLoginSettings")}
         </PngPillButton>
-        {showOnboardingInvite && portalLoginEnabled && !loginInfo?.hasLogin && (
+        {shouldShowOnboardingInvite(showOnboardingInvite, portalLoginEnabled, !!loginInfo?.hasLogin) && (
           <PillButton
             type="button"
             color="image"
             disabled={credBusy}
-            className="min-w-0 flex-1"
+            className="min-w-0 px-1 text-[11px]"
             onClick={async () => {
               try {
                 const data = await onboardingInviteMutation.mutateAsync({ id: employeeId });
@@ -318,7 +330,7 @@ export default function EmployeePortalLoginFields({
             }}
             data-testid={`${testIdPrefix}-onboarding-invite`}
           >
-            Send onboarding invite
+            {ONBOARDING_INVITE_LABEL}
           </PillButton>
         )}
         {showDisableLogin && loginInfo?.hasLogin && (
@@ -327,12 +339,13 @@ export default function EmployeePortalLoginFields({
             color="red"
             onClick={disableCredentials}
             disabled={credBusy}
-            className="min-w-0 flex-1"
+            className="min-w-0 px-1 text-[11px]"
             data-testid={`${testIdPrefix}-disable`}
           >
             {t("fieldEmployeeDetail.disableLogin")}
           </PngPillButton>
         )}
+        {accountActions}
       </div>
     </div>
   );

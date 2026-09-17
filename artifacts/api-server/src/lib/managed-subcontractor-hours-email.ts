@@ -10,7 +10,7 @@ export async function sendManagedSubcontractorHoursEmail(input: { recipients: st
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       personalizations: [{ to: input.recipients.map((email) => ({ email })) }],
-      from: { email: fromEmail, name: process.env.SENDGRID_FROM_NAME?.trim() || "VNDRLY" },
+      from: { email: fromEmail, name: "VNDRLY.ai" },
       subject,
       content: [
         { type: "text/plain", value: `${subject} from ${input.contractorName} for ${input.start} through ${input.end} is attached.` },

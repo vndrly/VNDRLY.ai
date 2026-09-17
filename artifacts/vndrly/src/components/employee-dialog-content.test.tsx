@@ -39,4 +39,24 @@ describe("EmployeeDialogContent", () => {
     expect(screen.getByTestId("employee-dialog-close")).not.toBeNull();
     expect(screen.getByText("Employee form")).not.toBeNull();
   });
+
+  it("gives every form control a readable branded light surface in dark mode", () => {
+    render(
+      <Dialog open>
+        <EmployeeDialogContent title="Edit Employee">
+          <div>Employee form</div>
+        </EmployeeDialogContent>
+      </Dialog>,
+    );
+
+    const body = screen.getByTestId("employee-dialog-body");
+    expect(body.className).toContain("[&_input]:!bg-white");
+    expect(body.className).toContain("[&_input]:!text-gray-700");
+    expect(body.className).toContain("[&_textarea]:!bg-white");
+    expect(body.className).toContain("[&_textarea]:!text-gray-700");
+    expect(body.className).toContain("[&_[role=combobox]]:!bg-white");
+    expect(body.className).toContain("[&_[role=combobox]]:!text-gray-700");
+    expect(body.className).toContain("[&_input]:!border-[color:var(--brand-primary)]");
+    expect(body.className).toContain("[&_[role=combobox]]:!rounded-xl");
+  });
 });

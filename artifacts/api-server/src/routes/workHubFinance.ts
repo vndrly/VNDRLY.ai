@@ -302,7 +302,7 @@ router.post("/work-hub/finance/email", async (req, res) => {
         personalizations: [{ to: [{ email: p.to }] }],
         from: {
           email: process.env.SENDGRID_FROM_EMAIL,
-          name: process.env.SENDGRID_FROM_NAME || "VNDRLY",
+          name: "VNDRLY.ai",
         },
         subject: `Invoice ${invoice.id}`,
         content: [

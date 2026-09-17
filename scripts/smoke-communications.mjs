@@ -64,7 +64,7 @@ async function maybeSendTwilioSmokeSms() {
 async function checkSendGrid() {
   const apiKey = required("SENDGRID_API_KEY");
   const fromEmail = required("SENDGRID_FROM_EMAIL");
-  const fromName = process.env.SENDGRID_FROM_NAME?.trim() || "VNDRLY";
+  const fromName = "VNDRLY.ai";
   const scopes = await fetch("https://api.sendgrid.com/v3/scopes", {
     headers: { Authorization: `Bearer ${apiKey}` },
   });

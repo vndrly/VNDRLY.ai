@@ -71,6 +71,8 @@ function makeFieldInviteResponse(preferredLanguage: "en" | "es" | null = "es") {
     vendorPeopleId: 1,
     vendorId: 11,
     vendorName: "Acme Vendor",
+    vendorLogoUrl: "https://cdn.example.com/acme-square.png",
+    vendorPrimaryColor: "#1266aa",
     firstName: "",
     lastName: "",
     email: "crew@example.com",
@@ -109,6 +111,14 @@ describe("OnboardingField Spanish wizard (Task #485)", () => {
       screen.getByText("Vamos a preparar tu cuenta en 3 pasos rápidos."),
     ).toBeTruthy();
     expect(screen.getByText("Confirma tus datos personales")).toBeTruthy();
+    expect(screen.getByTestId("invite-vndrly-logo")).toBeTruthy();
+    expect((screen.getByTestId("invite-vendor-logo") as HTMLImageElement).src).toBe(
+      "https://cdn.example.com/acme-square.png",
+    );
+    expect(screen.getByTestId("field-onboarding-card").getAttribute("style")).toContain(
+      "border-color: rgb(18, 102, 170)",
+    );
+    expect(screen.getByTestId("input-first-name").className).toContain("rounded-xl");
 
     // Field labels — render in Spanish, including the asterisk on
     // required ones (matches the rest of the wizard's "Field *" pattern).
@@ -163,6 +173,14 @@ describe("OnboardingField Spanish wizard (Task #485)", () => {
 
     // Sanity: we're starting in Spanish.
     expect(screen.getByText("Confirma tus datos personales")).toBeTruthy();
+    expect(screen.getByTestId("invite-vndrly-logo")).toBeTruthy();
+    expect((screen.getByTestId("invite-vendor-logo") as HTMLImageElement).src).toBe(
+      "https://cdn.example.com/acme-square.png",
+    );
+    expect(screen.getByTestId("field-onboarding-card").getAttribute("style")).toContain(
+      "border-color: rgb(18, 102, 170)",
+    );
+    expect(screen.getByTestId("input-first-name").className).toContain("rounded-xl");
 
     const user = userEvent.setup();
     await act(async () => {

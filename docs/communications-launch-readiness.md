@@ -14,7 +14,7 @@ Required before production email:
 
 - `SENDGRID_API_KEY` is a restricted SendGrid API key with Mail Send permission.
 - `SENDGRID_FROM_EMAIL` uses a verified sender or authenticated VNDRLY domain.
-- `SENDGRID_FROM_NAME` is set to `VNDRLY`.
+- `SENDGRID_FROM_NAME` is set to `VNDRLY.ai`.
 - `SENDGRID_REPLY_TO` is set to a monitored support address.
 - `SENDGRID_SANDBOX_MODE` is unset or `false`.
 - SendGrid domain authentication is verified with the required DKIM/SPF CNAME records.
