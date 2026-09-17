@@ -36,7 +36,7 @@ describe("Work Hub calendar ranges", () => {
 
     const sunday = screen.getByRole("button", { name: /Sun, Sep 13/ });
     const weekdayRail = screen.getByTestId("calendar-weekday-rail");
-    expect(weekdayRail.className).toContain("bg-gray-200");
+    expect(weekdayRail.className).toContain("bg-gray-400");
     expect(weekdayRail.className).toContain("py-2");
     expect(weekdayRail.className).toContain("border-y-2");
     expect(weekdayRail.className).toContain("border-[color:var(--brand-primary)]");

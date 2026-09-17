@@ -1,9 +1,20 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { Card } from "@/components/ui/card";
-import { WorkHubPageHeading, WorkHubSurface } from "./chrome";
+import { BrandedInput, BrandedSelect, WorkHubPageHeading, WorkHubSurface } from "./chrome";
 
 describe("Work Hub surface branding", () => {
+  it("uses one compact branded geometry for text inputs and dropdowns", () => {
+    render(<><BrandedInput aria-label="Standard input" /><BrandedSelect aria-label="Standard select"><option>All</option></BrandedSelect></>);
+
+    for (const control of [screen.getByLabelText("Standard input"), screen.getByLabelText("Standard select")]) {
+      expect(control.className).toContain("h-9");
+      expect(control.className).toContain("rounded-full");
+      expect(control.className).toContain("border-2");
+      expect(control.className).toContain("border-[color:var(--brand-primary)]");
+      expect(control.className).toContain("bg-white");
+    }
+  });
   it("brands declared cards without overriding semantic notice borders", () => {
     render(
       <WorkHubSurface>

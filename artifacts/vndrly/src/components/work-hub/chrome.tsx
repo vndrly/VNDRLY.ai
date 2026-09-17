@@ -1,4 +1,4 @@
-import type { ComponentType, ReactNode, SelectHTMLAttributes, SVGProps } from "react";
+import type { ComponentType, InputHTMLAttributes, ReactNode, SelectHTMLAttributes, SVGProps } from "react";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { workHubIcons } from "@/lib/work-hub-nav";
@@ -87,12 +87,20 @@ export function WorkHubCardTitle({
   );
 }
 
+export const WORK_HUB_BRANDED_FIELD_CLASS =
+  "h-9 w-full rounded-full border-2 border-[color:var(--brand-primary)] bg-white px-3 text-sm text-gray-700 outline-none focus:ring-2 focus:ring-[color:var(--brand-primary)]/25";
+
+export function BrandedInput({ className, ...props }: InputHTMLAttributes<HTMLInputElement>) {
+  return <input className={cn(WORK_HUB_BRANDED_FIELD_CLASS, className)} {...props} />;
+}
+
 export function BrandedSelect({ className, children, style, ...props }: SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <span className="relative block min-w-0">
       <select
         className={cn(
-          "h-10 w-full appearance-none rounded-full border-2 border-[color:var(--brand-primary)] bg-white px-3 pr-8 text-sm text-gray-700 outline-none focus:ring-2 focus:ring-[color:var(--brand-primary)]/25 [&>option]:bg-white [&>option]:text-gray-700 [&>option:hover]:bg-[var(--brand-primary)] [&>option:hover]:text-white [&>option:checked]:bg-[var(--brand-primary)] [&>option:checked]:text-white",
+          WORK_HUB_BRANDED_FIELD_CLASS,
+          "appearance-none pr-8 [&>option]:bg-white [&>option]:text-gray-700 [&>option:hover]:bg-[var(--brand-primary)] [&>option:hover]:text-white [&>option:checked]:bg-[var(--brand-primary)] [&>option:checked]:text-white",
           className,
         )}
         style={{ colorScheme: "light", ...style }}

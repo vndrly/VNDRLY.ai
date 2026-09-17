@@ -63,6 +63,8 @@ import {
   workHubRequest,
 } from "@/lib/work-hub-client";
 import {
+  BrandedInput,
+  BrandedSelect,
   WorkHubCardTitle,
   WorkHubPageHeading,
   WorkHubSurface,
@@ -669,22 +671,22 @@ function CalendarModule() {
       <CalendarTimeGrid selectedDay={selectedDay} items={filteredItems} onSelectDay={day => { setSelectedDay(day); const date = new Date(`${day}T12:00:00`); setMonth(new Date(date.getFullYear(), date.getMonth(), 1)); }}/>
       {user?.vendorId && Boolean(hoursCompanies.data?.items.length) && <div className="mb-4"><ManagedSubcontractorHoursPanel vendorId={user.vendorId} companies={hoursCompanies.data!.items} start={new Date(`${selectedDay}T00:00:00`).toISOString()} end={new Date(new Date(`${selectedDay}T00:00:00`).getTime() + 86_400_000).toISOString()} /></div>}
       <Card className="mb-4 border-2 bg-white" style={{ borderColor: "var(--brand-primary)" }} data-testid="calendar-operational-filters">
-        <CardContent className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-4 [&_input]:rounded-full [&_input]:border-2 [&_input]:border-[color:var(--brand-primary)] [&_input]:bg-white [&_select]:h-10 [&_select]:rounded-full [&_select]:border-2 [&_select]:border-[color:var(--brand-primary)] [&_select]:bg-white [&_select]:px-3">
-          <Input aria-label="Filter employees, crews, or subcontractors" placeholder="Employee, crew, or subcontractor" value={calendarFilters.search} onChange={(event) => setCalendarFilters({ ...calendarFilters, search: event.target.value })} />
-          <select aria-label="Filter by site" value={calendarFilters.site} onChange={(event) => setCalendarFilters({ ...calendarFilters, site: event.target.value })}>
+        <CardContent className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-4">
+          <BrandedInput aria-label="Filter employees, crews, or subcontractors" placeholder="Employee, crew, or subcontractor" value={calendarFilters.search} onChange={(event) => setCalendarFilters({ ...calendarFilters, search: event.target.value })} />
+          <BrandedSelect aria-label="Filter by site" value={calendarFilters.site} onChange={(event) => setCalendarFilters({ ...calendarFilters, site: event.target.value })}>
             <option value="all">All sites</option>
             {calendarSites.map((site) => <option key={site} value={site}>{site}</option>)}
-          </select>
-          <select aria-label="Filter by calendar item type" value={calendarFilters.kind} onChange={(event) => setCalendarFilters({ ...calendarFilters, kind: event.target.value })}>
+          </BrandedSelect>
+          <BrandedSelect aria-label="Filter by calendar item type" value={calendarFilters.kind} onChange={(event) => setCalendarFilters({ ...calendarFilters, kind: event.target.value })}>
             <option value="all">All work</option>
             <option value="Shift">Shifts</option>
             <option value="Meeting">Meetings</option>
             <option value="Task">Tasks</option>
-          </select>
-          <select aria-label="Filter by status" value={calendarFilters.status} onChange={(event) => setCalendarFilters({ ...calendarFilters, status: event.target.value })}>
+          </BrandedSelect>
+          <BrandedSelect aria-label="Filter by status" value={calendarFilters.status} onChange={(event) => setCalendarFilters({ ...calendarFilters, status: event.target.value })}>
             <option value="all">All statuses</option>
             {calendarStatuses.map((status) => <option key={status} value={status}>{status.replaceAll("_", " ")}</option>)}
-          </select>
+          </BrandedSelect>
         </CardContent>
       </Card>
       <div className="grid gap-4">

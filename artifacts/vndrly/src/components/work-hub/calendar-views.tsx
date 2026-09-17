@@ -82,7 +82,7 @@ export function CalendarTimeGrid({
         <div className={view === "week" ? "min-w-[720px]" : undefined}>
           <div
             data-testid="calendar-weekday-rail"
-            className="border-y-2 border-[color:var(--brand-primary)] bg-gray-200 px-1 py-2"
+            className="border-y-2 border-[color:var(--brand-primary)] bg-gray-400 px-1 py-2"
           >
             <div className={`grid ${view === "week" ? "grid-cols-7" : "grid-cols-1"}`}>
               {days.map((day) => (
