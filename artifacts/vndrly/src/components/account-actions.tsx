@@ -2,7 +2,8 @@ import ImagePill from "@/components/image-pill";
 import { PngPillButton } from "@/components/png-pill-rollover";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog } from "@/components/ui/dialog";
+import EmployeeDialogContent from "@/components/employee-dialog-content";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -121,7 +122,7 @@ export default function AccountActions({ userId, hasLogin, suspendedAt, testIdPr
 
   return (
     <div className="grid grid-cols-2 gap-2 sm:flex">
-      <PngPillButton color="blue" type="button" className="min-w-0 flex-1" onClick={() => setResetOpen(true)} data-testid={`${testIdPrefix}-reset-password`}>
+      <PngPillButton color="brand" type="button" className="min-w-0 flex-1" onClick={() => setResetOpen(true)} data-testid={`${testIdPrefix}-reset-password`}>
         {t("accountActions.resetPassword")}
       </PngPillButton>
       {isSuspended ? (
@@ -136,11 +137,11 @@ export default function AccountActions({ userId, hasLogin, suspendedAt, testIdPr
 
       {/* Reset password sub-modal */}
       <Dialog open={resetOpen} onOpenChange={(o) => { if (!busy) { setResetOpen(o); if (!o) setPwd(""); } }}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>{t("accountActions.resetPassword")}</DialogTitle>
-            <DialogDescription>{t("accountActions.resetDescription")}</DialogDescription>
-          </DialogHeader>
+        <EmployeeDialogContent
+          className="max-w-sm"
+          title={t("accountActions.resetPassword")}
+          description={t("accountActions.resetDescription")}
+        >
           <form onSubmit={submitReset} className="space-y-3">
             <div>
               <Label htmlFor={`${testIdPrefix}-new-password`}>{t("accountActions.newPassword")}</Label>
@@ -155,11 +156,11 @@ export default function AccountActions({ userId, hasLogin, suspendedAt, testIdPr
                 data-testid={`${testIdPrefix}-new-password-input`}
               />
             </div>
-            <PngPillButton color="blue" type="submit" disabled={busy} className="w-full" data-testid={`${testIdPrefix}-reset-submit`}>
+            <PngPillButton color="brand" type="submit" disabled={busy} className="w-full" data-testid={`${testIdPrefix}-reset-submit`}>
               {busy ? t("accountActions.sending") : t("accountActions.changePasswordAndEmail")}
             </PngPillButton>
           </form>
-        </DialogContent>
+        </EmployeeDialogContent>
       </Dialog>
 
       {/* Suspend confirmation */}

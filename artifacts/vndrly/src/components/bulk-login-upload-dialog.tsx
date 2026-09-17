@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import EmployeeDialogContent from "@/components/employee-dialog-content";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
@@ -253,17 +254,16 @@ export default function BulkLoginUploadDialog({ visible }: Props) {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <PngPillButton color="blue" data-testid="button-open-bulk-login-upload">
+        <PngPillButton color="brand" data-testid="button-open-bulk-login-upload">
           <Upload className="w-4 h-4" />
           {t("bulkLoginUpload.openButton", { defaultValue: "Bulk Upload Logins" })}
         </PngPillButton>
       </DialogTrigger>
-      <DialogContent className="w-[760px] max-w-[calc(100vw-2rem)]" data-testid="dialog-bulk-login-upload">
-        <DialogHeader>
-          <DialogTitle>
-            {t("bulkLoginUpload.title", { defaultValue: "Bulk Upload Field Employee Logins" })}
-          </DialogTitle>
-        </DialogHeader>
+      <EmployeeDialogContent
+        className="w-[760px] max-w-[calc(100vw-2rem)]"
+        testId="dialog-bulk-login-upload"
+        title={t("bulkLoginUpload.title", { defaultValue: "Bulk Upload Field Employee Logins" })}
+      >
 
         <div className="space-y-5">
           <p className="text-sm text-muted-foreground">
@@ -330,7 +330,7 @@ export default function BulkLoginUploadDialog({ visible }: Props) {
                   })}
                 </p>
                 <PngPillButton
-                  color="blue"
+                  color="brand"
                   type="button"
                   onClick={handleSubmit}
                   disabled={uploading || validRows.length === 0}
@@ -505,7 +505,7 @@ export default function BulkLoginUploadDialog({ visible }: Props) {
             </div>
           )}
         </div>
-      </DialogContent>
+      </EmployeeDialogContent>
     </Dialog>
   );
 }

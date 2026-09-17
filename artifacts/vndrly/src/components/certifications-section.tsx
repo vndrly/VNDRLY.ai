@@ -15,9 +15,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
+import { BrandedCheckbox } from "@/components/branded-checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import EmployeeDialogContent from "@/components/employee-dialog-content";
 import { useToast } from "@/hooks/use-toast";
 import { ShieldCheck, Pencil, Trash2 } from "lucide-react";
 import ImagePill from "@/components/image-pill";
@@ -312,7 +313,7 @@ export default function CertificationsSection({
             />
           </div>
           <div className="flex gap-2 pb-0.5">
-            <PngPillButton color="blue" onClick={() => void submitAddInline()} disabled={create.isPending} data-testid={`${testIdPrefix}-add-save`}>
+            <PngPillButton color="brand" onClick={() => void submitAddInline()} disabled={create.isPending} data-testid={`${testIdPrefix}-add-save`}>
               Add
             </PngPillButton>
             <PngPillButton color="red" onClick={resetAddInline}>Cancel</PngPillButton>
@@ -333,7 +334,7 @@ export default function CertificationsSection({
           {certs.map((c) => (
             <li key={c.id} className="flex flex-wrap items-center gap-x-3 gap-y-2" data-testid={`${testIdPrefix}-row-${c.id}`}>
               <div className="flex items-center gap-2">
-                <Checkbox
+                <BrandedCheckbox
                   id={`${testIdPrefix}-enabled-${c.id}`}
                   checked
                   onCheckedChange={(v) => {
@@ -371,7 +372,7 @@ export default function CertificationsSection({
               />
               {showVendorVerify ? (
                 <div className="flex items-center gap-2">
-                  <Checkbox
+                  <BrandedCheckbox
                     id={`${testIdPrefix}-verified-${c.id}`}
                     checked={!!c.vendorVerifiedAt}
                     onCheckedChange={(v) => void patchCert(c, { vendorVerified: !!v })}
@@ -432,8 +433,7 @@ export default function CertificationsSection({
   const editDialog = (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild><span /></DialogTrigger>
-      <DialogContent>
-        <DialogHeader><DialogTitle>{editing ? "Edit certification" : "Add certification"}</DialogTitle></DialogHeader>
+      <EmployeeDialogContent title={editing ? "Edit certification" : "Add certification"}>
         <div className="space-y-3">
           <div>
             <Label>Name *</Label>
@@ -462,10 +462,10 @@ export default function CertificationsSection({
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <PillButton color="red" onClick={() => setOpen(false)}>Cancel</PillButton>
-            <PillButton color="blue" onClick={submitDialog} disabled={create.isPending || update.isPending}>{editing ? "Save" : "Add"}</PillButton>
+            <PillButton color="brand" onClick={submitDialog} disabled={create.isPending || update.isPending}>{editing ? "Save" : "Add"}</PillButton>
           </div>
         </div>
-      </DialogContent>
+      </EmployeeDialogContent>
     </Dialog>
   );
 

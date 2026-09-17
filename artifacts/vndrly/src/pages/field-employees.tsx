@@ -9,8 +9,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import { BrandedCheckbox } from "@/components/branded-checkbox";
+import EmployeeDialogContent from "@/components/employee-dialog-content";
 import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import { UserCheck, ArrowUp, ArrowDown, Plus, RotateCcw } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -553,8 +554,7 @@ export default function FieldEmployees() {
                 {t("fieldEmployees.addEmployee")}
               </PngPillButton>
             </DialogTrigger>
-            <DialogContent>
-              <DialogHeader><DialogTitle>{t("fieldEmployees.addEmployee")}</DialogTitle></DialogHeader>
+            <EmployeeDialogContent title={t("fieldEmployees.addEmployee")}>
               <form onSubmit={(e) => handleAdd(e, "field")} className="space-y-4">
                 <div>
                   <Label>{t("fieldEmployees.jobTitle")}</Label>
@@ -583,7 +583,7 @@ export default function FieldEmployees() {
                 <div><Label>{t("fieldEmployees.email")}</Label><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required data-testid="input-email" /></div>
                 <div><Label>{t("fieldEmployees.phone")}</Label><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: handlePhoneInput(e.target.value) })} data-testid="input-phone" /></div>
                 <div className="flex items-center gap-2">
-                  <Checkbox id="pec-cert-page" checked={form.pecCertification} onCheckedChange={(v) => setForm({ ...form, pecCertification: !!v })} data-testid="checkbox-pec-certification" />
+                  <BrandedCheckbox id="pec-cert-page" checked={form.pecCertification} onCheckedChange={(v) => setForm({ ...form, pecCertification: !!v })} data-testid="checkbox-pec-certification" />
                   <Label htmlFor="pec-cert-page" className="cursor-pointer">{t("fieldEmployees.pecCertified")}</Label>
                 </div>
                 <div><Label>{t("fieldEmployees.pecExpiration")}</Label><Input type="date" value={form.pecExpirationDate} onChange={(e) => setForm({ ...form, pecExpirationDate: e.target.value })} data-testid="input-pec-expiration" /></div>
@@ -607,7 +607,7 @@ export default function FieldEmployees() {
                   {createContact.isPending ? t("fieldEmployees.adding") : t("fieldEmployees.addEmployee")}
                 </PngPillButton>
               </form>
-            </DialogContent>
+            </EmployeeDialogContent>
           </Dialog>
         )}
         </div>
@@ -624,8 +624,7 @@ export default function FieldEmployees() {
               <DialogTrigger asChild>
                 <PngPillButton color="brand" data-testid="button-add-partner-employee"><Plus className="w-4 h-4" />{t("fieldEmployees.addEmployee")}</PngPillButton>
               </DialogTrigger>
-              <DialogContent>
-                <DialogHeader><DialogTitle>{t("fieldEmployees.addEmployee")}</DialogTitle></DialogHeader>
+              <EmployeeDialogContent title={t("fieldEmployees.addEmployee")}>
                 <form onSubmit={handleAddPartnerContact} className="space-y-4">
                   <div>
                     <Label>{t("fieldEmployees.photo", { defaultValue: "Photo" })}</Label>
@@ -656,7 +655,7 @@ export default function FieldEmployees() {
                     {createPartnerContact.isPending ? t("fieldEmployees.adding") : t("fieldEmployees.addEmployee")}
                   </PngPillButton>
                 </form>
-              </DialogContent>
+              </EmployeeDialogContent>
             </Dialog>
           </CardHeader>
           <CardContent className="p-0">
@@ -812,8 +811,7 @@ export default function FieldEmployees() {
 
       {isPartner && (
         <Dialog open={editPartnerContactOpen} onOpenChange={setEditPartnerContactOpen}>
-          <DialogContent>
-            <DialogHeader><DialogTitle>{t("fieldEmployees.editEmployee")}</DialogTitle></DialogHeader>
+          <EmployeeDialogContent title={t("fieldEmployees.editEmployee")}>
             <form onSubmit={handleEditPartnerContact} className="space-y-4">
               <div>
                 <Label>{t("fieldEmployees.employeePhoto")}</Label>
@@ -844,21 +842,23 @@ export default function FieldEmployees() {
                 {updatePartnerContact.isPending ? t("fieldEmployees.saving") : t("fieldEmployees.saveChanges")}
               </PngPillButton>
             </form>
-          </DialogContent>
+          </EmployeeDialogContent>
         </Dialog>
       )}
 
       <Dialog open={editOfficeOpen} onOpenChange={tryCloseEditOffice}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+        <EmployeeDialogContent
+          className="max-h-[90vh]"
+          title={(
+            <span className="flex items-center gap-2">
               {t("fieldEmployees.editEmployee")}
               {(() => {
                 const editing = (officeEmployees ?? []).find((e) => e.id === editingOfficeContactId);
                 return editing?.suspendedAt ? <SuspendedPill /> : null;
               })()}
-            </DialogTitle>
-          </DialogHeader>
+            </span>
+          )}
+        >
           <form onSubmit={handleEditOffice} className="space-y-4">
             <div>
               <Label>{t("fieldEmployees.employeePhoto")}</Label>
@@ -892,12 +892,12 @@ export default function FieldEmployees() {
             <div><Label>{t("fieldEmployees.email")}</Label><Input type="email" value={editOfficeForm.email} onChange={(e) => setEditOfficeForm({ ...editOfficeForm, email: e.target.value })} data-testid="input-edit-office-email" /></div>
             <div><Label>{t("fieldEmployees.phone")}</Label><Input value={editOfficeForm.phone} onChange={(e) => setEditOfficeForm({ ...editOfficeForm, phone: handlePhoneInput(e.target.value) })} data-testid="input-edit-office-phone" /></div>
             <div className="flex items-center gap-2">
-              <Checkbox id="visit-notif-office-edit" checked={editOfficeForm.roles.includes("Visitor Notifications")} onCheckedChange={(v) => setEditOfficeForm({ ...editOfficeForm, roles: v ? Array.from(new Set([...editOfficeForm.roles, "Visitor Notifications"])) : editOfficeForm.roles.filter((r) => r !== "Visitor Notifications") })} data-testid="checkbox-edit-office-visit-notifications" />
+              <BrandedCheckbox id="visit-notif-office-edit" checked={editOfficeForm.roles.includes("Visitor Notifications")} onCheckedChange={(v) => setEditOfficeForm({ ...editOfficeForm, roles: v ? Array.from(new Set([...editOfficeForm.roles, "Visitor Notifications"])) : editOfficeForm.roles.filter((r) => r !== "Visitor Notifications") })} data-testid="checkbox-edit-office-visit-notifications" />
               <Label htmlFor="visit-notif-office-edit" className="cursor-pointer">Receive site visitor check-in notifications</Label>
             </div>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-3">
               <div className="flex items-center gap-2">
-                <Checkbox id="pec-cert-office-edit" checked={editOfficeForm.pecCertification} onCheckedChange={(v) => setEditOfficeForm({ ...editOfficeForm, pecCertification: !!v })} data-testid="checkbox-edit-office-pec-cert" />
+                <BrandedCheckbox id="pec-cert-office-edit" checked={editOfficeForm.pecCertification} onCheckedChange={(v) => setEditOfficeForm({ ...editOfficeForm, pecCertification: !!v })} data-testid="checkbox-edit-office-pec-cert" />
                 <Label htmlFor="pec-cert-office-edit" className="cursor-pointer whitespace-nowrap">{t("fieldEmployees.pecCertified")}</Label>
               </div>
               <Input type="date" value={editOfficeForm.pecExpirationDate} onChange={(e) => setEditOfficeForm({ ...editOfficeForm, pecExpirationDate: e.target.value })} className="w-auto max-w-[11rem]" data-testid="input-edit-office-pec-expiration" aria-label={t("fieldEmployees.pecExpiration")} />
@@ -944,7 +944,7 @@ export default function FieldEmployees() {
               {updateVendorContact.isPending ? t("fieldEmployees.saving") : t("fieldEmployees.saveChanges")}
             </PngPillButton>
           </form>
-        </DialogContent>
+        </EmployeeDialogContent>
       </Dialog>
     </div>
   );

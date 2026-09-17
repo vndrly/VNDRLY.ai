@@ -12,7 +12,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
+import { BrandedCheckbox } from "@/components/branded-checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PngPillButton as PillButton, PngPillButton } from "@/components/png-pill-rollover";
 import { useToast } from "@/hooks/use-toast";
@@ -197,7 +197,7 @@ export default function EmployeePortalLoginFields({
       ) : null}
 
       <div className="flex items-start gap-2">
-        <Checkbox
+        <BrandedCheckbox
           id={`${testIdPrefix}-portal-enabled`}
           checked={portalLoginEnabled}
           onCheckedChange={(v) => setPortalLoginEnabled(!!v)}
@@ -247,7 +247,7 @@ export default function EmployeePortalLoginFields({
             </div>
           </div>
           <div className="flex items-start gap-2">
-            <Checkbox
+            <BrandedCheckbox
               id={`${testIdPrefix}-must-change-password`}
               checked={mustChangePassword}
               onCheckedChange={(v) => setMustChangePassword(!!v)}
@@ -280,7 +280,7 @@ export default function EmployeePortalLoginFields({
       <div className="grid grid-cols-2 gap-2 sm:flex">
         <PngPillButton
           type="button"
-          color="blue"
+          color="brand"
           onClick={saveCredentials}
           disabled={credBusy}
           className="min-w-0 flex-1"
