@@ -137,7 +137,7 @@ describe("Work Hub client boundary", () => {
 
   it("maps searchable subjects back to usable module destinations", () => {
     expect(workHubModulePath("message", "m1")).toBe(
-      "/work-hub/channels?message=m1",
+      "/work-hub/chat?message=m1",
     );
     expect(workHubModulePath("meeting", "m2")).toBe(
       "/work-hub/meetings?meeting=m2",

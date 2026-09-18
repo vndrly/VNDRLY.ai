@@ -35,7 +35,7 @@ import {
   CalendarClock,
   UserRoundCheck,
 } from "lucide-react";
-import { useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import BrandPillButton from "@/components/brand-pill-button";
 import MeetingWorkspace from "@/components/meeting-workspace";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -2289,9 +2289,14 @@ export function AskVWorkspace() {
 }
 function WorkHubContent() {
   const { user } = useAuth();
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   const moduleName = location.split("/")[2];
   const module = moduleName as ModuleKey | undefined;
+  useEffect(() => {
+    if (moduleName !== "channels") return;
+    const channel = new URLSearchParams(window.location.search).get("channel");
+    if (channel) navigate(`/work-hub/chat?channel=${encodeURIComponent(channel)}`, { replace: true });
+  }, [moduleName, navigate]);
   if (!module) return <ActivityWorkspace />;
   if (moduleName === "managed-crews") return <ManagedCrews />;
   if (moduleName === "coverage") return <WorkforceCoverage />;

@@ -24,8 +24,8 @@ export type WorkHubNavItem = { key: string; label: string; href: string };
 const ITEMS: WorkHubNavItem[] = [
   { key: "activity", label: "Activity", href: "/work-hub" },
   { key: "calendar", label: "Calendar", href: "/work-hub/calendar" },
-  { key: "channels", label: "Crews & Channels", href: "/work-hub/channels" },
-  { key: "chat", label: "Direct Chat", href: "/work-hub/chat" },
+  { key: "channels", label: "Groups", href: "/work-hub/channels" },
+  { key: "chat", label: "Company Chat", href: "/work-hub/chat" },
   { key: "managedCrews", label: "Managed Crews", href: "/work-hub/managed-crews" },
   { key: "coverage", label: "Coverage", href: "/work-hub/coverage" },
   { key: "assets", label: "Inventory", href: "/work-hub/assets" },
@@ -87,8 +87,14 @@ export function orderWorkHubItems(items: WorkHubNavItem[], order: string[]) {
 export function isWorkHubPath(path: string) {
   return path === "/work-hub" || path.startsWith("/work-hub/");
 }
-export function getWorkHubNavItems(_role?: string | null) {
-  return ITEMS;
+export function getWorkHubNavItems(
+  _role?: string | null,
+  companyName?: string | null,
+) {
+  const chatLabel = `${companyName?.trim() || "Company"} Chat`;
+  return ITEMS.map((item) =>
+    item.key === "chat" ? { ...item, label: chatLabel } : { ...item },
+  );
 }
 export function getWorkHubReturnPath(candidate?: string | null) {
   return candidate &&

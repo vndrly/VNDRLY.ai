@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { Router, type IRouter } from "express";
-import { and, desc, eq, inArray, or, sql, ilike } from "drizzle-orm";
+import { and, desc, eq, inArray, or, sql } from "drizzle-orm";
 import { z } from "zod/v4";
 import {
   db,
@@ -24,6 +24,10 @@ import { executeWorkHubCommand } from "../work-hub/commands";
 import { resolveChannelAccess } from "../work-hub/queries";
 import { canManageCrew } from "../work-hub/collaboration-policy";
 import { appendWorkHubAudit } from "../work-hub/audit";
+import {
+  listEligibleWorkHubPeople,
+  resolveWorkHubInviteEligibility,
+} from "../work-hub/people-directory";
 
 const router: IRouter = Router();
 type Actor = SessionPayload & { userId: number };
@@ -467,64 +471,12 @@ router.get("/work-hub/crews/:id/channels", async (req, res) => {
 });
 router.get("/work-hub/people", async (req, res) => {
   const a = res.locals.collaborationActor as Actor;
-  const owner = activeOwner(a);
   const search = z
     .string()
     .trim()
     .max(100)
     .parse(req.query.search ?? "");
-  const channels = await listOwnedWorkHubChannels(a, undefined, 100);
-  const peers = channels.length
-    ? await db
-        .select({ userId: workHubChannelMembersTable.userId })
-        .from(workHubChannelMembersTable)
-        .where(
-          inArray(
-            workHubChannelMembersTable.channelId,
-            channels.map((c) => c.id),
-          ),
-        )
-    : [];
-  const company = await db
-    .select({ userId: userOrgMembershipsTable.userId })
-    .from(userOrgMembershipsTable)
-    .where(
-      and(
-        eq(userOrgMembershipsTable.orgType, owner.type),
-        owner.type === "vendor"
-          ? eq(userOrgMembershipsTable.vendorId, owner.id)
-          : eq(userOrgMembershipsTable.partnerId, owner.id),
-      ),
-    );
-  const ids = [...new Set([...company, ...peers].map((x) => x.userId))].filter(
-    (id) => id !== a.userId,
-  );
-  if (!ids.length) return res.json([]);
-  const rows = await db
-    .select({
-      id: usersTable.id,
-      displayName: usersTable.displayName,
-      email: usersTable.email,
-    })
-    .from(usersTable)
-    .where(
-      and(
-        inArray(usersTable.id, ids),
-        search
-          ? or(
-              ilike(usersTable.displayName, `%${search}%`),
-              ilike(usersTable.email, `%${search}%`),
-            )
-          : undefined,
-      ),
-    )
-    .limit(50);
-  return res.json(
-    rows.map((r) => ({
-      ...r,
-      sameCompany: company.some((c) => c.userId === r.id),
-    })),
-  );
+  return res.json(await listEligibleWorkHubPeople(a, search));
 });
 router.delete("/work-hub/crews/:id/members/:userId", async (req, res) => {
   const a = res.locals.collaborationActor as Actor;
@@ -608,28 +560,7 @@ router.post("/work-hub/channels/:channelId/invitations", async (req, res) => {
   const { recipientUserId } = z
     .object({ recipientUserId: z.number().int().positive() })
     .parse(req.body);
-  if (recipientUserId === a.userId) throw new WorkHubAccessError("forbidden");
-  const owner = { type: channel.ownerOrgType, id: channel.ownerOrgId };
-  const sameOrg = await memberOf(recipientUserId, owner.type, owner.id);
-  if (!sameOrg) {
-    const existingChannels = await listOwnedWorkHubChannels(a, undefined, 100);
-    const peers = existingChannels.length
-      ? await db
-          .select()
-          .from(workHubChannelMembersTable)
-          .where(
-            and(
-              inArray(
-                workHubChannelMembersTable.channelId,
-                existingChannels.map((c) => c.id),
-              ),
-              eq(workHubChannelMembersTable.userId, recipientUserId),
-            ),
-          )
-          .limit(1)
-      : [];
-    if (!peers.length) throw new WorkHubAccessError("forbidden");
-  }
+  await resolveWorkHubInviteEligibility(a, recipientUserId);
   const result = await db.transaction(async (tx) => {
     const [created] = await tx
       .insert(workHubChatInvitationsTable)
@@ -701,6 +632,84 @@ router.get("/work-hub/chats", async (_req, res) =>
     ).filter((c) => c.contextKind === "chat"),
   ),
 );
+router.post("/work-hub/chats/groups", async (req, res) => {
+  const a = res.locals.collaborationActor as Actor;
+  const { crewId, operationId } = z
+    .object({
+      crewId: z.string().uuid(),
+      operationId: z.string().uuid(),
+    })
+    .parse(req.body);
+  const { crew } = await crewAccess(a, crewId);
+  if (crew.status !== "active") throw new WorkHubAccessError("not_found");
+  const currentMembers = await db
+    .select({ userId: workHubCrewMembersTable.userId })
+    .from(workHubCrewMembersTable)
+    .where(eq(workHubCrewMembersTable.crewId, crew.id));
+  if (!currentMembers.length) throw new WorkHubAccessError("not_found");
+  const owner = {
+    type: crew.ownerOrgType as "vendor" | "partner",
+    id: crew.ownerOrgId,
+  };
+  const contextId = `group:${crew.id}`;
+  const result = await db.transaction(async (tx) => {
+    await tx.execute(
+      sql`select pg_advisory_xact_lock(hashtext(${`${owner.type}:${owner.id}:${contextId}`}))`,
+    );
+    const [existing] = await tx
+      .select()
+      .from(workHubChannelsTable)
+      .where(
+        and(
+          eq(workHubChannelsTable.ownerOrgType, owner.type),
+          eq(workHubChannelsTable.ownerOrgId, owner.id),
+          eq(workHubChannelsTable.contextKind, "chat"),
+          eq(workHubChannelsTable.contextId, contextId),
+          eq(workHubChannelsTable.status, "active"),
+        ),
+      )
+      .limit(1);
+    if (existing) return { channel: existing, reopened: true };
+    const [channel] = await tx
+      .insert(workHubChannelsTable)
+      .values({
+        ownerOrgType: owner.type,
+        ownerOrgId: owner.id,
+        contextKind: "chat",
+        contextId,
+        name: `${crew.name} Chat`,
+        visibility: "private",
+        createdById: a.userId,
+      })
+      .returning();
+    await tx
+      .insert(workHubCollaborationChannelsTable)
+      .values({ channelId: channel.id, crewId: crew.id, kind: "chat" });
+    const memberIds = [...new Set([...currentMembers.map((member) => member.userId), a.userId])];
+    await tx.insert(workHubChannelMembersTable).values(
+      memberIds.map((userId) => ({
+        channelId: channel.id,
+        userId,
+        mode: userId === a.userId ? "owner" : "member",
+      })),
+    );
+    await appendWorkHubAudit(
+      {
+        actorUserId: a.userId,
+        owner,
+        action: "chat.group_started",
+        subjectType: "channel",
+        subjectId: channel.id,
+        source: "web",
+        operationId,
+        metadata: { crewId: crew.id },
+      },
+      tx,
+    );
+    return { channel, reopened: false };
+  });
+  return res.status(result.reopened ? 200 : 201).json(result);
+});
 router.get("/work-hub/invitations", async (_req, res) => {
   const id = res.locals.collaborationActor.userId;
   return res.json(
@@ -726,28 +735,10 @@ router.post("/work-hub/chats", async (req, res) => {
     })
     .parse(req.body);
   const owner = activeOwner(a);
-  if (p.recipientUserId === a.userId) throw new WorkHubAccessError("forbidden");
-  const sameOrg = await memberOf(p.recipientUserId, owner.type, owner.id);
-  if (!sameOrg) {
-    // Existing shared channel membership establishes permission to request contact, never permission to bypass consent.
-    const myChannels = await listOwnedWorkHubChannels(a, undefined, 100);
-    const common = myChannels.length
-      ? await db
-          .select()
-          .from(workHubChannelMembersTable)
-          .where(
-            and(
-              inArray(
-                workHubChannelMembersTable.channelId,
-                myChannels.map((c) => c.id),
-              ),
-              eq(workHubChannelMembersTable.userId, p.recipientUserId),
-            ),
-          )
-          .limit(1)
-      : [];
-    if (!common.length) throw new WorkHubAccessError("forbidden");
-  }
+  const { sameCompany: sameOrg } = await resolveWorkHubInviteEligibility(
+    a,
+    p.recipientUserId,
+  );
   const pair = [a.userId, p.recipientUserId].sort((x, y) => x - y).join(":");
   const result = await db.transaction(async (tx) => {
     await tx.execute(

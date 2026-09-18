@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { MessageSquare, Hash, Star, Search, Users } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useBrand } from "@/hooks/use-brand";
 import {
   commandEnvelope,
   createWorkHubOperationId,
@@ -74,7 +75,9 @@ export function PeoplePicker({
         <option value="">Select a person</option>
         {people.data?.map((p) => (
           <option key={p.id} value={p.id}>
-            {p.displayName} {p.email ? `(${p.email})` : ""}
+            {p.displayName}
+            {p.organizationName ? ` · ${p.organizationName}` : ""}
+            {p.role ? ` · ${p.role}` : ""}
           </option>
         ))}
       </BrandedSelect>
@@ -152,7 +155,7 @@ export function ActivityWorkspace() {
         {activity.isLoading && <p role="status">Loading activity…</p>}
         <div data-testid="activity-feed" className="divide-y rounded-xl border-2 border-border bg-card">
           {activity.data?.filter((x) => `${displayMentionText(x.body, people.data ?? [])} ${x.channelName}`.toLowerCase().includes(search.toLowerCase())).map((x) => (
-            <a key={x.id} href={`/work-hub/channels?channel=${x.channelId}`} className="flex gap-4 p-5 hover:bg-muted">
+            <a key={x.id} href={`/work-hub/chat?channel=${x.channelId}`} className="flex gap-4 p-5 hover:bg-muted">
               <MessageSquare className="mt-1 h-5 w-5 text-[var(--brand-primary)]" />
               <div><h2 className="font-semibold">{x.channelName}</h2><p className="line-clamp-2 text-sm">{displayMentionText(x.body, people.data ?? [])}</p><time className="text-xs text-muted-foreground">{new Date(x.createdAt).toLocaleString()}</time></div>
             </a>
@@ -166,11 +169,12 @@ export function ActivityWorkspace() {
 
 export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
   const { user } = useAuth();
+  const brand = useBrand();
   const owner = ownerForUser(user);
   const qc = useQueryClient();
   const { preferences, save } = useHubPreferences();
-  const channels = useRows(chat ? "/chats" : "/channels");
-  const crews = useRows("/crews", !chat);
+  const channels = useRows(chat ? "/chats" : "/channels", chat);
+  const crews = useRows("/crews");
   const invitations = useRows("/invitations", chat);
   const [selected, setSelected] = useState(
     () => new URLSearchParams(window.location.search).get("channel") ?? "",
@@ -180,7 +184,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
   const [crewName, setCrewName] = useState("");
   const [channelName, setChannelName] = useState("");
   const [memberRole, setMemberRole] = useState("member");
-  const crewChannels = useRows(`/crews/${crew}/channels`, !!crew);
+  const crewChannels = useRows(`/crews/${crew}/channels`, false);
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [name, setName] = useState("");
@@ -204,7 +208,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
   const messages = useRows(`/channels/${active}/messages`, !!active);
   const notes = useRows(`/channels/${active}/notes`, !!active);
   const members = useRows(`/channels/${active}/members`, !!active);
-  const crewMembers = useRows(`/crews/${crew}/members`, !!crew);
+  const crewMembers = useRows(`/crews/${crew}/members`, !chat && !!crew);
   const body = drafts[active] ?? preferences.drafts[active] ?? "";
   const canManageCrew = ["admin", "owner"].includes(
     crews.data?.find((c) => c.id === crew)?.role,
@@ -302,9 +306,199 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
     .filter((m) =>
       thread ? m.id === thread || m.rootMessageId === thread : !m.rootMessageId,
     );
+  if (!chat) {
+    return (
+      <section className="w-full space-y-4 bg-background p-4" data-testid="work-hub-channels">
+        <WorkHubPageHeading
+          module="channels"
+          title="Groups"
+          description="Create groups, assign members and owners, and manage each group lifecycle."
+          compact
+        />
+        <section
+          role="region"
+          aria-label="Manage groups"
+          data-work-hub-card
+          className={`grid w-full gap-4 p-4 md:p-6 ${WORK_HUB_CARD_CLASS}`}
+        >
+          <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto]">
+            <BrandedInput
+              aria-label="New group name"
+              placeholder="New group name"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+            />
+            {isWorkHubAdmin(user) && (
+              <BrandPillButton
+                tone="brand"
+                disabled={!name.trim() || !owner || mutation.isPending}
+                onClick={() =>
+                  mutation
+                    .mutateAsync({ path: "/crews", data: { owner, name } })
+                    .then(() => setName(""))
+                    .catch(() => undefined)
+                }
+              >
+                Create Group
+              </BrandPillButton>
+            )}
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {crews.data?.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                aria-label={`Edit ${item.name}`}
+                className="rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-4 text-left text-sm font-semibold hover:bg-[color-mix(in_srgb,var(--brand-primary)_10%,white)]"
+                onClick={() => {
+                  setCrew(item.id);
+                  setCrewEditor(item);
+                  setCrewName(item.name);
+                }}
+              >
+                {item.name}
+              </button>
+            ))}
+            {!crews.isLoading && !crews.data?.length && (
+              <p className="text-sm text-muted-foreground">No groups have been created yet.</p>
+            )}
+          </div>
+          <HubError error={crews.error ?? mutation.error} />
+        </section>
+        <Dialog
+          open={Boolean(crewEditor)}
+          onOpenChange={(open) => {
+            if (!open) setCrewEditor(null);
+          }}
+        >
+          {crewEditor && (
+            <MiniCardDialogContent
+              icon={Users}
+              label={`Edit ${crewEditor.name}`}
+              definition="Rename this group, manage member roles, archive it, or delete it."
+              iconColor="var(--brand-primary)"
+              className="max-h-[86vh] sm:max-w-2xl"
+            >
+              <section className="grid gap-3 rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-4">
+                <label className="text-sm font-semibold" htmlFor="group-name">Group name</label>
+                <BrandedInput
+                  id="group-name"
+                  aria-label="Group name"
+                  value={crewName}
+                  onChange={(event) => setCrewName(event.target.value)}
+                />
+                <BrandPillButton
+                  tone="brand"
+                  disabled={!crewName.trim() || mutation.isPending}
+                  onClick={() =>
+                    mutation
+                      .mutateAsync({
+                        path: `/crews/${crewEditor.id}`,
+                        method: "PATCH",
+                        data: { name: crewName },
+                      })
+                      .then(() => setCrewEditor({ ...crewEditor, name: crewName }))
+                      .catch(() => undefined)
+                  }
+                >
+                  Save group name
+                </BrandPillButton>
+              </section>
+              <section className="grid gap-3 rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-4">
+                <h3 className="font-semibold">Members and owners</h3>
+                {crewMembers.data?.map((member) => (
+                  <div key={member.userId} className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_150px_150px] sm:items-center">
+                    <span className="text-sm">{member.displayName}</span>
+                    <BrandedSelect
+                      aria-label={`Role for ${member.displayName}`}
+                      value={member.mode}
+                      onChange={(event) =>
+                        mutation.mutate({
+                          path: `/crews/${crewEditor.id}/members`,
+                          data: { userId: Number(member.userId), mode: event.target.value },
+                        })
+                      }
+                    >
+                      <option value="member">Member</option>
+                      <option value="owner">Owner</option>
+                    </BrandedSelect>
+                    <BrandPillButton
+                      tone="red"
+                      aria-label={`Remove ${member.displayName}`}
+                      disabled={mutation.isPending}
+                      onClick={() =>
+                        mutation.mutate({
+                          path: `/crews/${crewEditor.id}/members/${member.userId}`,
+                          method: "DELETE",
+                          data: {},
+                        })
+                      }
+                    >
+                      Remove member
+                    </BrandPillButton>
+                  </div>
+                ))}
+                <PeoplePicker value={person} onChange={setPerson} />
+                <BrandedSelect
+                  aria-label="New member role"
+                  value={memberRole}
+                  onChange={(event) => setMemberRole(event.target.value)}
+                >
+                  <option value="member">Member</option>
+                  <option value="owner">Owner</option>
+                </BrandedSelect>
+                <BrandPillButton
+                  tone="brand"
+                  disabled={!person || mutation.isPending}
+                  onClick={() =>
+                    mutation.mutate({
+                      path: `/crews/${crewEditor.id}/members`,
+                      data: { userId: Number(person), mode: memberRole },
+                    })
+                  }
+                >
+                  Add or update member
+                </BrandPillButton>
+              </section>
+              {isWorkHubAdmin(user) && (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <BrandPillButton
+                    tone="brand"
+                    disabled={mutation.isPending}
+                    onClick={() =>
+                      mutation
+                        .mutateAsync({ path: `/crews/${crewEditor.id}/archive`, data: {} })
+                        .then(() => { setCrewEditor(null); setCrew(""); })
+                        .catch(() => undefined)
+                    }
+                  >
+                    Archive group
+                  </BrandPillButton>
+                  <BrandPillButton
+                    tone="red"
+                    disabled={mutation.isPending}
+                    onClick={() => {
+                      if (window.confirm("Delete this group? It will be removed from active group lists. Its audit history will be retained."))
+                        mutation
+                          .mutateAsync({ path: `/crews/${crewEditor.id}`, method: "DELETE", data: {} })
+                          .then(() => { setCrewEditor(null); setCrew(""); })
+                          .catch(() => undefined);
+                    }}
+                  >
+                    Delete group
+                  </BrandPillButton>
+                </div>
+              )}
+              <HubError error={mutation.error} />
+            </MiniCardDialogContent>
+          )}
+        </Dialog>
+      </section>
+    );
+  }
   return (
     <section className="w-full space-y-4 bg-background p-4" data-testid={chat ? "work-hub-chat" : "work-hub-channels"}>
-      <WorkHubPageHeading module={chat ? "chat" : "channels"} title={chat ? "Direct Chat" : "Crews & Channels"} compact />
+      <WorkHubPageHeading module="chat" title={`${brand.name || "Company"} Chat`} compact />
       <div className="grid min-h-[calc(100vh-12rem)] gap-4 lg:grid-cols-[minmax(340px,380px)_minmax(0,1fr)]">
       <aside
         aria-label="Conversations panel"
@@ -546,162 +740,78 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
             </Dialog>
           </>
         )}
-        {chat && (        <details className="border-t pt-4">
-          <summary className="cursor-pointer text-sm font-semibold">
-            {chat ? "New chat" : "Manage Crews & channels"}
-          </summary>
+        <details className="border-t pt-4">
+          <summary className="cursor-pointer text-sm font-semibold">New Chat</summary>
           <div className="mt-3 grid gap-3">
-            {chat ? (
-              <>
-                <PeoplePicker value={person} onChange={setPerson} />
-                <BrandPillButton
-                  className="w-fit max-w-full justify-self-start"
-                  tone="blue"
-                  disabled={!person || mutation.isPending}
-                  onClick={() =>
-                    mutation
-                      .mutateAsync({
-                        path: "/chats",
-                        data: { recipientUserId: Number(person) },
-                      })
-                      .then((r) => {
-                        if (r.channel) setSelected(r.channel.id);
-                        setPerson("");
-                      })
-                      .catch(() => undefined)
-                  }
-                >
-                  Start chat / send invitation
-                </BrandPillButton>
-                {invitations.data
-                  ?.filter(
-                    (i) =>
-                      i.status === "pending" &&
-                      i.recipientUserId === user?.userId,
-                  )
-                  .map((i) => (
-                    <div key={i.id} className="rounded border p-2 text-sm">
-                      Chat invitation from{" "}
-                      {i.senderName ?? `user ${i.senderUserId}`}
-                      <div className="mt-2 flex gap-2">
-                        {[true, false].map((accept) => (
-                          <BrandPillButton
-                            key={String(accept)}
-                            tone={accept ? "green" : "red"}
-                            onClick={() =>
-                              mutation.mutate({
-                                path: `/invitations/${i.id}/respond`,
-                                data: { accept },
-                              })
-                            }
-                          >
-                            {accept ? "Accept" : "Decline"}
-                          </BrandPillButton>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-              </>
-            ) : (
-              <>
-                <Input
-                  aria-label="Crew or channel name"
-                  placeholder="Crew or channel name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
-                {isWorkHubAdmin(user) && (
-                  <BrandPillButton
-                    tone="blue"
-                    disabled={!name.trim() || !owner || mutation.isPending}
-                    onClick={() =>
-                      mutation
-                        .mutateAsync({ path: "/crews", data: { owner, name } })
-                        .then(() => setName(""))
-                        .catch(() => undefined)
-                    }
-                  >
-                    Create Crew
-                  </BrandPillButton>
-                )}
-                {!crew && isWorkHubAdmin(user) && (
-                  <BrandPillButton
-                    tone="blue"
-                    disabled={!owner || !name.trim() || mutation.isPending}
-                    onClick={() =>
-                      mutation
-                        .mutateAsync({
-                          path: "/channels",
-                          data: commandEnvelope(owner!, {
-                            name,
-                            visibility: "organization",
-                          }),
-                        })
-                        .then(() => setName(""))
-                        .catch(() => undefined)
-                    }
-                  >
-                    Create company channel
-                  </BrandPillButton>
-                )}
-                {crew && canAdministerChannels && (
-                  <>
-                    <BrandedSelect
-                      aria-label="Channel visibility"
-                      value={visibility}
-                      onChange={(e) => setVisibility(e.target.value)}
-                    >
-                      <option value="crew">Entire Crew</option>
-                      <option value="private">Private</option>
-                      <option value="shared">Shared</option>
-                    </BrandedSelect>
-                    <BrandPillButton
-                      tone="blue"
-                      disabled={!name.trim() || mutation.isPending}
-                      onClick={() =>
-                        mutation
-                          .mutateAsync({
-                            path: `/crews/${crew}/channels`,
-                            data: { name, visibility },
-                          })
-                          .then(() => setName(""))
-                          .catch(() => undefined)
-                      }
-                    >
-                      Add channel
-                    </BrandPillButton>
-                  </>
-                )}
-                {crew && canManageCrew && (
-                  <>
-                    <PeoplePicker value={person} onChange={setPerson} />
-                    {["member", "owner"].map((mode) => (
+            <BrandedSelect
+              aria-label="Select Group"
+              value={crew}
+              onChange={(event) => {
+                setCrew(event.target.value);
+                if (event.target.value) setPerson("");
+              }}
+            >
+              <option value="">Select a group</option>
+              {crews.data?.map((item) => (
+                <option key={item.id} value={item.id}>{item.name}</option>
+              ))}
+            </BrandedSelect>
+            <PeoplePicker
+              value={person}
+              onChange={(value) => {
+                setPerson(value);
+                if (value) setCrew("");
+              }}
+            />
+            <BrandPillButton
+              className="w-fit max-w-full justify-self-start"
+              tone="brand"
+              disabled={(!crew && !person) || mutation.isPending}
+              onClick={() => {
+                const request = crew
+                  ? { path: "/chats/groups", data: { crewId: crew } }
+                  : { path: "/chats", data: { recipientUserId: Number(person) } };
+                mutation
+                  .mutateAsync(request)
+                  .then((result) => {
+                    if (result.channel) setSelected(result.channel.id);
+                    setCrew("");
+                    setPerson("");
+                  })
+                  .catch(() => undefined);
+              }}
+            >
+              {crew ? "Start Chat" : "Send Invite"}
+            </BrandPillButton>
+            {invitations.data
+              ?.filter(
+                (invitation) =>
+                  invitation.status === "pending" &&
+                  invitation.recipientUserId === user?.userId,
+              )
+              .map((invitation) => (
+                <div key={invitation.id} className="rounded border p-2 text-sm">
+                  Chat invitation from {invitation.senderName ?? `user ${invitation.senderUserId}`}
+                  <div className="mt-2 flex gap-2">
+                    {[true, false].map((accept) => (
                       <BrandPillButton
-                        key={mode}
-                        tone="blue"
-                        disabled={!person || mutation.isPending}
+                        key={String(accept)}
+                        tone={accept ? "green" : "red"}
                         onClick={() =>
                           mutation.mutate({
-                            path: `/crews/${crew}/members`,
-                            data: { userId: Number(person), mode },
+                            path: `/invitations/${invitation.id}/respond`,
+                            data: { accept },
                           })
                         }
                       >
-                        Add Crew {mode}
+                        {accept ? "Accept" : "Decline"}
                       </BrandPillButton>
                     ))}
-                    {crewMembers.data?.map((m) => (
-                      <p key={m.userId} className="text-xs">
-                        {m.displayName} · {m.mode}
-                      </p>
-                    ))}
-                  </>
-                )}
-              </>
-            )}
+                  </div>
+                </div>
+              ))}
           </div>
         </details>
-        )}
         <HubError error={mutation.error ?? save.error} />
       </aside>
       <main

@@ -30,11 +30,16 @@ export function moduleEndpoint(module: string, query = "") {
     end.setMonth(end.getMonth() + 3);
     return `/api/work-hub/calendar?start=${start.toISOString()}&end=${end.toISOString()}`;
   }
+  if (module === "channels") return "/api/work-hub/crews";
   return "/api/work-hub/channels";
 }
 
 /** Mobile intentionally omits payroll processing, refunds and bulk migration. */
-export function mobileWorkHubModules(isTablet: boolean, companyAdmin: boolean) {
+export function mobileWorkHubModules(
+  isTablet: boolean,
+  companyAdmin: boolean,
+  companyName?: string | null,
+) {
   const items = [
     {
       key: "payroll-documents",
@@ -42,8 +47,8 @@ export function mobileWorkHubModules(isTablet: boolean, companyAdmin: boolean) {
       icon: "file-text",
     },
     { key: "activity", label: "Activity", icon: "bell" },
-    { key: "chat", label: "Chat", icon: "message-circle" },
-    { key: "channels", label: "Crews & Channels", icon: "users" },
+    { key: "chat", label: `${companyName?.trim() || "Company"} Chat`, icon: "message-circle" },
+    { key: "channels", label: "Groups", icon: "users" },
     { key: "calendar", label: "Calendar", icon: "calendar" },
     { key: "managed-crews", label: "Managed Crews", icon: "users" },
     { key: "workforce-coverage", label: "Workforce Coverage", icon: "clock" },

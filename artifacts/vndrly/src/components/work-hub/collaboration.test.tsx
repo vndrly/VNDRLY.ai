@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   user: { userId: 7, role: "vendor", vendorId: 1, partnerId: null, membershipRole: "admin" } as Record<string, any>,
 }));
 vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: mocks.user }) }));
+vi.mock("@/hooks/use-brand", () => ({ useBrand: () => ({ name: "MidCon Solutions", primary: "#00a6b2", accent: "#f2b134" }) }));
 vi.mock("@/components/brand-pill-button", () => ({ default: ({ children, tone: _tone, ...props }: any) => <button {...props}>{children}</button> }));
 vi.mock("./navigation", () => ({ useHubPreferences: () => ({ preferences: { favorites: [], drafts: { c1: "Saved draft" } }, save: { mutate: mocks.save } }) }));
 vi.mock("@/lib/work-hub-client", async importOriginal => ({ ...await importOriginal<any>(), workHubRequest: mocks.request }));
@@ -27,7 +28,7 @@ describe("Work Hub conversations", () => {
     mount();
     expect(await screen.findByDisplayValue("Saved draft")).toBeTruthy();
     expect(screen.getByLabelText("Person").className).toContain("text-sm");
-    expect(screen.getByRole("button", { name: "Start chat / send invitation" }).className).toContain("w-fit");
+    expect(screen.getByRole("button", { name: "Send Invite" }).className).toContain("w-fit");
     fireEvent.click(await screen.findByText("Reply in thread"));
     fireEvent.change(screen.getByLabelText("Message"), { target: { value: "Reply content" } });
     fireEvent.click(screen.getByText("Send message"));
@@ -63,7 +64,7 @@ describe("Work Hub conversations", () => {
     await screen.findByText("Original message");
     const panel = screen.getByRole("complementary", { name: "Conversations panel" });
     expect(panel.parentElement?.className).toContain("minmax(340px,380px)");
-    const chatHeading = screen.getByRole("heading", { name: "Direct Chat" });
+    const chatHeading = screen.getByRole("heading", { name: "MidCon Solutions Chat" });
     expect(chatHeading.className).toContain("text-black");
     expect(panel.contains(chatHeading)).toBe(false);
     expect(chatHeading.closest("header")?.querySelector("svg")?.getAttribute("class")).not.toContain("shadow");
@@ -73,22 +74,42 @@ describe("Work Hub conversations", () => {
     expect(screen.getByLabelText("Conversation filter").className).toContain("text-sm");
     expect(screen.getByLabelText("Conversation filter").parentElement?.className).toContain("relative");
   });
-  it.each([
-    ["Direct Chat", true, "/chats"],
-    ["Crews & Channels", false, "/channels"],
-  ])("keeps the %s empty-state icon branded and its heading black", async (_label, chat, emptyPath) => {
+  it("keeps the Company Chat empty-state icon branded and its heading black", async () => {
     mocks.request.mockImplementation(async (path: string) => {
-      if (path === emptyPath || path === "/crews") return [];
+      if (path === "/chats" || path === "/crews") return [];
       return [];
     });
 
-    mount(chat);
+    mount(true);
 
     const heading = await screen.findByRole("heading", { name: "Choose a conversation" });
     const emptyState = heading.closest("section");
     expect(heading.className).toContain("text-black");
     expect(heading.className).not.toContain("text-[var(--brand-primary)]");
     expect(emptyState?.querySelector("svg")?.getAttribute("class")).toContain("text-[var(--brand-primary)]");
+  });
+  it("waits for the explicit action and keeps Group and Person selection mutually exclusive", async () => {
+    mocks.request.mockImplementation(async (path: string, init?: RequestInit) => {
+      if (init) return { channel: { id: "group-chat" } };
+      if (path === "/chats") return [];
+      if (path === "/crews") return [{ id: "group-1", name: "Gate Group" }];
+      if (path.startsWith("/people")) return [{ id: 42, displayName: "Taylor", organizationName: "Flywheel", role: "Operator" }];
+      return [];
+    });
+    mount(true);
+    const group = await screen.findByLabelText("Select Group");
+    const person = screen.getByLabelText("Person");
+    await screen.findByRole("option", { name: "Gate Group" });
+    fireEvent.change(group, { target: { value: "group-1" } });
+    expect((person as HTMLSelectElement).value).toBe("");
+    expect(mocks.request.mock.calls.some(([, init]) => init?.method === "POST")).toBe(false);
+    fireEvent.click(screen.getByRole("button", { name: "Start Chat" }));
+    await waitFor(() => expect(mocks.request).toHaveBeenCalledWith("/chats/groups", expect.objectContaining({ method: "POST" })));
+
+    fireEvent.change(person, { target: { value: "42" } });
+    expect((group as HTMLSelectElement).value).toBe("");
+    expect(screen.getByRole("button", { name: "Send Invite" })).toBeTruthy();
+    expect(screen.getByRole("option", { name: "Taylor · Flywheel · Operator" })).toBeTruthy();
   });
   it("retries an interrupted send with the original operation ID", async () => {
     const original = mocks.request.getMockImplementation()!;
@@ -112,64 +133,41 @@ describe("Work Hub conversations", () => {
     expect(displayMentionText("Review @[7] and @[99]", [{ userId: 7, displayName: "Casey Example" }])).toBe("Review @Casey Example and @teammate");
   });
 
-  it("unlocks crew actions without waiting for unrelated Work Hub refreshes", async () => {
-    let crewCreated = false;
-    let releaseChannelsRefresh: (() => void) | undefined;
-    const channelsRefresh = new Promise<void>((resolve) => {
-      releaseChannelsRefresh = resolve;
-    });
-    let channelReads = 0;
+  it("creates and opens a Group without a conversation surface", async () => {
+    let groupCreated = false;
     mocks.request.mockImplementation(async (path: string, init?: RequestInit) => {
       if (path === "/crews" && init?.method === "POST") {
-        crewCreated = true;
+        groupCreated = true;
         return { id: "crew-1" };
       }
       if (path === "/crews") {
-        return crewCreated
-          ? [{ id: "crew-1", name: "Review Crew", role: "admin" }]
+        return groupCreated
+          ? [{ id: "crew-1", name: "Review Group", role: "admin" }]
           : [];
       }
-      if (path === "/channels") {
-        channelReads += 1;
-        if (channelReads > 1) await channelsRefresh;
-        return [];
-      }
-      if (path === "/crews/crew-1/channels") return [];
       return [];
     });
 
     mount(false);
-    const name = await screen.findByLabelText("New crew name");
-    fireEvent.change(name, { target: { value: "Review Crew" } });
-    fireEvent.click(screen.getByRole("button", { name: "Create Crew" }));
-    fireEvent.click(await screen.findByRole("button", { name: "Edit Review Crew" }));
-    fireEvent.change(screen.getByLabelText("New channel name"), { target: { value: "Handover" } });
-
-    await waitFor(() =>
-      expect(
-        screen.getByRole("button", { name: "Add channel" }).hasAttribute("disabled"),
-      ).toBe(false),
-    );
-    releaseChannelsRefresh?.();
+    const name = await screen.findByLabelText("New group name");
+    fireEvent.change(name, { target: { value: "Review Group" } });
+    fireEvent.click(screen.getByRole("button", { name: "Create Group" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Edit Review Group" }));
+    expect(screen.getByLabelText("Group name")).toBeTruthy();
+    expect(screen.queryByLabelText("Conversations")).toBeNull();
+    expect(screen.queryByRole("main", { name: "Selected conversation workspace" })).toBeNull();
   });
 
-  it("does not offer channel creation or deletion to a crew owner who is not an organization admin", async () => {
+  it("does not offer Group creation or lifecycle actions to a non-admin member", async () => {
     mocks.user = { userId: 7, role: "vendor", vendorId: 1, partnerId: null, membershipRole: "member" };
     mocks.request.mockImplementation(async (path: string) => {
-      if (path === "/channels") return [{ id: "c1", name: "Operations", ownerOrgType: "vendor", ownerOrgId: 1, createdById: 7 }];
       if (path === "/crews") return [{ id: "crew-1", name: "Gate Crew", role: "owner" }];
-      if (path === "/crews/crew-1/channels") return [];
       return [];
     });
 
     mount(false);
-    await screen.findByRole("heading", { name: "Operations" });
-    expect(screen.queryByRole("button", { name: "Delete channel" })).toBeNull();
-
-    fireEvent.change(screen.getByLabelText("Crew", { exact: true }), {
-      target: { value: "crew-1" },
-    });
-    expect(screen.queryByRole("button", { name: "Add channel" })).toBeNull();
+    await screen.findByRole("button", { name: "Edit Gate Crew" });
+    expect(screen.queryByRole("button", { name: "Create Group" })).toBeNull();
   });
 
   it("opens a branded crew manager with role, archive, and delete controls", async () => {
@@ -184,18 +182,17 @@ describe("Work Hub conversations", () => {
 
     mount(false);
 
-    const manager = await screen.findByRole("region", { name: "Manage crews and channels" });
+    const manager = await screen.findByRole("region", { name: "Manage groups" });
     expect(manager.className).toContain("rounded-xl");
     expect(manager.className).toContain("border-2");
-    await screen.findAllByRole("option", { name: "Gate Crew" });
-    fireEvent.change(screen.getByLabelText("Crew", { exact: true }), { target: { value: "crew-1" } });
+    fireEvent.click(await screen.findByRole("button", { name: "Edit Gate Crew" }));
 
     expect(await screen.findByRole("heading", { name: "Edit Gate Crew" })).toBeTruthy();
-    expect(screen.getByLabelText("Crew name").className).toContain("h-9");
+    expect(screen.getByLabelText("Group name").className).toContain("h-9");
     expect((await screen.findByLabelText("Role for Bill Crew")).className).toContain("h-9");
     expect(screen.getByRole("button", { name: "Remove Bill Crew" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Archive crew" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Delete crew" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Archive group" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Delete group" })).toBeTruthy();
   });});
 
 describe("Work Hub activity chrome", () => {

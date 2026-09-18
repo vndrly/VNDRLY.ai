@@ -37,7 +37,7 @@ import {
 
 type Row = Record<string, any>;
 const titles: Record<string, string> = {
-  channels: "Crews & Channels",
+  channels: "Groups",
   activity: "Activity",
   "managed-crews": "Managed Crews",
   "workforce-coverage": "Workforce Coverage",
@@ -46,7 +46,7 @@ const titles: Record<string, string> = {
   "safety-response": "Safety Response",
   "implementation-exports": "Exports",
   "operations-health": "Operations Health",
-  chat: "Chat",
+  chat: "Company Chat",
   crews: "Crews",
   calendar: "Calendar",
   "files-notes": "Files & Notes",
@@ -77,11 +77,13 @@ export default function WorkHubModuleScreen() {
   const meetingCompanion = useMeetingCompanion();
   const { module: raw } = useLocalSearchParams<{ module: string }>();
   const module = String(raw ?? "channels");
-  const title = titles[module] ?? "Work Hub";
   const owner = mobileOwner(user);
   const activeMembership = user?.availableMemberships?.find(
     (membership) => membership.id === user.activeMembershipId,
   );
+  const title = module === "chat"
+    ? `${activeMembership?.orgName?.trim() || "Company"} Chat`
+    : (titles[module] ?? "Work Hub");
   const canManage =
     user?.role === "admin" || activeMembership?.role === "admin";
   const [selectedChannel, setSelectedChannel] = useState<Row | null>(null);
@@ -93,6 +95,12 @@ export default function WorkHubModuleScreen() {
   const [meetingFileBusy, setMeetingFileBusy] = useState(false);
   const [meetingFileNotice, setMeetingFileNotice] = useState("");
   const [meetingFileError, setMeetingFileError] = useState("");
+  const [chatGroups, setChatGroups] = useState<Row[]>([]);
+  const [chatPeople, setChatPeople] = useState<Row[]>([]);
+  const [selectedGroupId, setSelectedGroupId] = useState("");
+  const [selectedPersonId, setSelectedPersonId] = useState("");
+  const [chatActionBusy, setChatActionBusy] = useState(false);
+  const [chatActionNotice, setChatActionNotice] = useState("");
   const load = useCallback(
     async (search = query) => {
       setLoading(true);
@@ -110,6 +118,23 @@ export default function WorkHubModuleScreen() {
   );
   useEffect(() => {
     if (module !== "calls" && module !== "safety-response" && module !== "implementation-exports") void load("");
+  }, [module]);
+  useEffect(() => {
+    if (module !== "chat") return;
+    let active = true;
+    Promise.all([
+      apiFetch<Row[]>("/api/work-hub/crews"),
+      apiFetch<Row[]>("/api/work-hub/people"),
+    ])
+      .then(([groups, people]) => {
+        if (!active) return;
+        setChatGroups(groups);
+        setChatPeople(people);
+      })
+      .catch((cause) => {
+        if (active) setError(cause instanceof Error ? cause.message : "Could not load chat targets");
+      });
+    return () => { active = false; };
   }, [module]);
   const rows = useMemo<Row[]>(() => {
     if (Array.isArray(data)) return data;
@@ -157,7 +182,7 @@ export default function WorkHubModuleScreen() {
     const startsAt = new Date(Date.now() + 60 * 60_000);
     const endsAt = new Date(startsAt.getTime() + 60 * 60_000);
     const targets: Record<string, { path: string; payload: Row }> = {
-      channels: { path: "/api/work-hub/channels", payload: { name: draft } },
+      channels: { path: "/api/work-hub/crews", payload: { name: draft } },
       "tasks-forms": {
         path: "/api/work-hub/tasks",
         payload: {
@@ -192,7 +217,9 @@ export default function WorkHubModuleScreen() {
     };
     const target = targets[module];
     if (!target) return;
-    const body = envelope(owner, target.payload);
+    const body = module === "channels"
+      ? { operationId: crypto.randomUUID(), owner, name: draft.trim() }
+      : envelope(owner, target.payload);
     try {
       await apiFetch(target.path, {
         method: "POST",
@@ -212,6 +239,34 @@ export default function WorkHubModuleScreen() {
           e instanceof Error ? e.message : "Could not create Work Hub record",
         );
       }
+    }
+  };
+  const startChat = async () => {
+    if (!selectedGroupId && !selectedPersonId) return;
+    setChatActionBusy(true);
+    setChatActionNotice("");
+    try {
+      const response = selectedGroupId
+        ? await apiFetch<Row>("/api/work-hub/chats/groups", {
+            method: "POST",
+            body: JSON.stringify({
+              crewId: selectedGroupId,
+              operationId: crypto.randomUUID(),
+            }),
+          })
+        : await apiFetch<Row>("/api/work-hub/chats", {
+            method: "POST",
+            body: JSON.stringify({ recipientUserId: Number(selectedPersonId) }),
+          });
+      if (response.channel) setSelectedChannel(response.channel);
+      else setChatActionNotice("Invitation sent");
+      setSelectedGroupId("");
+      setSelectedPersonId("");
+      await load();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Could not start chat");
+    } finally {
+      setChatActionBusy(false);
     }
   };
   const uploadToActiveMeeting = async (source: MeetingFileSource) => {
@@ -337,6 +392,65 @@ export default function WorkHubModuleScreen() {
             </View>
             {!!meetingFileNotice && <Text accessibilityLiveRegion="polite" style={{ color: colors.text, fontWeight: "700" }}>{meetingFileNotice}</Text>}
             {!!meetingFileError && <Text accessibilityRole="alert" style={{ color: colors.destructive, fontWeight: "700" }}>{meetingFileError}</Text>}
+          </View>
+        )}
+        {module === "chat" && !selectedChannel && (
+          <View accessibilityLabel="New Chat" style={{ borderWidth: 1, borderColor: colors.primary, borderRadius: 12, padding: 16, gap: 12, backgroundColor: colors.card }}>
+            <Text style={{ color: colors.text, fontSize: 18, fontWeight: "700" }}>New Chat</Text>
+            <Text style={{ color: colors.text, fontWeight: "700" }}>Select Group</Text>
+            <View style={{ gap: 8 }}>
+              {chatGroups.map((group) => {
+                const selected = selectedGroupId === group.id;
+                return (
+                  <Pressable
+                    key={group.id}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                    accessibilityLabel={`Select group ${group.name}`}
+                    onPress={() => {
+                      setSelectedGroupId(group.id);
+                      setSelectedPersonId("");
+                    }}
+                    style={{ borderWidth: 1, borderColor: colors.primary, borderRadius: 10, minHeight: 44, padding: 12, justifyContent: "center", backgroundColor: selected ? colors.primary : colors.background }}
+                  >
+                    <Text style={{ color: selected ? colors.primaryForeground : colors.text, fontWeight: "600" }}>{group.name}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            <Text style={{ color: colors.text, fontWeight: "700" }}>Select Person</Text>
+            <View style={{ gap: 8 }}>
+              {chatPeople.map((person) => {
+                const selected = selectedPersonId === String(person.id);
+                const detail = [person.organizationName, person.role].filter(Boolean).join(" · ");
+                return (
+                  <Pressable
+                    key={person.id}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                    accessibilityLabel={`Select person ${person.displayName}`}
+                    onPress={() => {
+                      setSelectedPersonId(String(person.id));
+                      setSelectedGroupId("");
+                    }}
+                    style={{ borderWidth: 1, borderColor: colors.primary, borderRadius: 10, minHeight: 44, padding: 12, justifyContent: "center", backgroundColor: selected ? colors.primary : colors.background }}
+                  >
+                    <Text style={{ color: selected ? colors.primaryForeground : colors.text, fontWeight: "600" }}>{person.displayName}</Text>
+                    {!!detail && <Text style={{ color: selected ? colors.primaryForeground : colors.mutedForeground, fontSize: 12 }}>{detail}</Text>}
+                  </Pressable>
+                );
+              })}
+            </View>
+            <TogglePillButton
+              color="brand"
+              disabled={(!selectedGroupId && !selectedPersonId) || chatActionBusy}
+              loading={chatActionBusy}
+              accessibilityLabel={selectedGroupId ? "Start Chat" : "Send Invite"}
+              onPress={() => void startChat()}
+            >
+              {selectedGroupId ? "Start Chat" : "Send Invite"}
+            </TogglePillButton>
+            {!!chatActionNotice && <Text accessibilityLiveRegion="polite" style={{ color: colors.text, fontWeight: "700" }}>{chatActionNotice}</Text>}
           </View>
         )}
         {owner &&
@@ -484,7 +598,7 @@ export default function WorkHubModuleScreen() {
                   </Text>
                 </Pressable>
               )}
-              {["channels", "chat"].includes(module) && (
+              {module === "chat" && (
                 <Pressable
                   accessibilityRole="button"
                   onPress={() => setSelectedChannel(row)}

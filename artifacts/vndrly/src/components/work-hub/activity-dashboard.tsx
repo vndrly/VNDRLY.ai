@@ -28,7 +28,7 @@ export function ActivityDashboard({ home, channels = [], onAcknowledge, acknowle
     { label: "On shift now", value: String(onShiftNow), detail: "Current assigned shifts", href: "/work-hub/calendar", icon: Users },
     { label: "Coverage gaps", value: "—", detail: "Opens schedule coverage", href: "/work-hub/calendar", icon: AlertTriangle },
     { label: "Tasks due", value: String(dueSoonTasks.length + overdueTasks.length), detail: `${overdueTasks.length} overdue`, href: "/work-hub/tasks", icon: CheckSquare2 },
-    { label: "Unread messages", value: String(unreadMessages), detail: "Channels and crews", href: "/work-hub/channels", icon: MessageSquare },
+    { label: "Unread messages", value: String(unreadMessages), detail: "Company and group chats", href: "/work-hub/chat", icon: MessageSquare },
     { label: "Meetings today", value: String(meetingsToday), detail: "Your schedule", href: "/work-hub/meetings", icon: CalendarDays },
     { label: "Reviews waiting", value: String(reviewItems.length), detail: "Documents requiring review", href: "/work-hub/files", icon: Clock3 },
   ];

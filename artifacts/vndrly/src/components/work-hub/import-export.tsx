@@ -65,7 +65,7 @@ function SavedImport({
                   className="text-xs underline"
                   href={
                     row.activatedSubjectType === "channel"
-                      ? `/work-hub/channels?channel=${row.activatedSubjectId}`
+                      ? `/work-hub/chat?channel=${row.activatedSubjectId}`
                       : row.activatedSubjectType === "task"
                         ? `/work-hub/tasks?task=${row.activatedSubjectId}`
                         : "/work-hub/files"

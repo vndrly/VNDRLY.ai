@@ -14,7 +14,11 @@ export default function WorkHubScreen() {
   const { user } = useAuth();
   const { width } = useWindowDimensions();
   const membership = user?.availableMemberships?.find(x => x.id === user.activeMembershipId);
-  const modules = mobileWorkHubModules(width >= 768, user?.role === "admin" || membership?.role === "admin");
+  const modules = mobileWorkHubModules(
+    width >= 768,
+    user?.role === "admin" || membership?.role === "admin",
+    membership?.orgName,
+  );
   const [status, setStatus] = useState("Loading your workspace…");
   useEffect(() => {
     let active = true;

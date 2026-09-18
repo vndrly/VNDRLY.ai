@@ -118,7 +118,7 @@ export async function workHubRequest<T>(
 
 export function workHubModulePath(subjectType: string, subjectId: string) {
   if (["message", "channel", "note", "file"].includes(subjectType))
-    return `/work-hub/channels?${subjectType}=${encodeURIComponent(subjectId)}`;
+    return `/work-hub/chat?${subjectType}=${encodeURIComponent(subjectId)}`;
   if (["meeting", "meeting_occurrence"].includes(subjectType))
     return `/work-hub/meetings?meeting=${encodeURIComponent(subjectId)}`;
   if (

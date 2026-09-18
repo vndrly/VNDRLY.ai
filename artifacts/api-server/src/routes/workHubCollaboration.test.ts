@@ -3,7 +3,17 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import request from "supertest";
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { db, usersTable, vendorsTable, userOrgMembershipsTable, workHubChannelsTable, workHubChannelMembersTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
+import {
+  db,
+  partnersTable,
+  partnerVendorRelationshipsTable,
+  usersTable,
+  vendorsTable,
+  userOrgMembershipsTable,
+  workHubChannelsTable,
+  workHubChannelMembersTable,
+} from "@workspace/db";
 import collaboration from "./workHubCollaboration";
 import channels from "./workHubChannels";
 import { buildTestCookie } from "../test-utils/session";
@@ -12,6 +22,7 @@ const app = express().use(express.json()).use(cookieParser()).use(collaboration)
 // These integration fixtures may only be inserted by an isolated-database wrapper.
 describe.skipIf(process.env.VNDRLY_ISOLATED_TEST_DB !== "1")("collaboration durable authorization", () => {
   let ownerId: number, otherOrg: number, adminId: number, memberId: number, externalId: number;
+  let relatedPartnerUserId: number;
   let adminCookie: string, memberCookie: string, externalCookie: string, crewId: string;
   beforeAll(async () => {
     const suffix = randomUUID();
@@ -24,6 +35,53 @@ describe.skipIf(process.env.VNDRLY_ISOLATED_TEST_DB !== "1")("collaboration dura
     // Deliberately stale elevation claim must be ignored in favor of DB membership.
     memberCookie = buildTestCookie({ userId: memberId, role: "vendor", vendorId: ownerId, membershipRole: "admin" });
     externalCookie = buildTestCookie({ userId: externalId, role: "vendor", vendorId: otherOrg, membershipRole: "admin" });
+
+    const [relatedPartner] = await db
+      .insert(partnersTable)
+      .values({
+        name: `Related Partner ${suffix}`,
+        contactName: "Related Contact",
+        contactEmail: `related.${suffix}@example.invalid`,
+      })
+      .returning();
+    const [relatedPartnerUser] = await db
+      .insert(usersTable)
+      .values({
+        username: `related.person.${suffix}@example.invalid`,
+        email: `related.person.${suffix}@example.invalid`,
+        displayName: "Related Partner Person",
+        passwordHash: "unused-test-hash",
+        role: "partner",
+      })
+      .returning();
+    relatedPartnerUserId = relatedPartnerUser!.id;
+    await db.insert(userOrgMembershipsTable).values({
+      userId: relatedPartnerUserId,
+      orgType: "partner",
+      partnerId: relatedPartner!.id,
+      role: "member",
+    });
+    await db.insert(partnerVendorRelationshipsTable).values({
+      vendorId: ownerId,
+      partnerId: relatedPartner!.id,
+      status: "approved",
+    });
+  });
+
+  it("lists approved relationship contacts without exposing their email", async () => {
+    const response = await request(app)
+      .get("/work-hub/people?search=related.person")
+      .set("Cookie", adminCookie);
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual([
+      expect.objectContaining({
+        id: relatedPartnerUserId,
+        displayName: "Related Partner Person",
+        organizationType: "partner",
+        sameCompany: false,
+      }),
+    ]);
+    expect(response.body[0]).not.toHaveProperty("email");
   });
   it("rejects stale admin claims and foreign owner spoofing; retries create only one Crew", async () => {
     const body = { owner: { type: "vendor", id: ownerId }, name: "Durable crew", operationId: randomUUID() };
@@ -43,6 +101,49 @@ describe.skipIf(process.env.VNDRLY_ISOLATED_TEST_DB !== "1")("collaboration dura
     expect((await request(app).get(`/work-hub/channels/${privateChannel.body.id}/messages`).set("Cookie", memberCookie)).status).toBe(404);
     const wide = await request(app).post(`/work-hub/crews/${crewId}/channels`).set("Cookie", adminCookie).send({ name: "Everyone", visibility: "crew" });
     expect((await request(app).get(`/work-hub/channels/${wide.body.id}/messages`).set("Cookie", memberCookie)).status).toBe(200);
+  });
+  it("creates one group chat only after Start Chat and snapshots current members", async () => {
+    const createdGroup = await request(app)
+      .post("/work-hub/crews")
+      .set("Cookie", adminCookie)
+      .send({
+        owner: { type: "vendor", id: ownerId },
+        name: "Group chat source",
+        operationId: randomUUID(),
+      });
+    expect(createdGroup.status).toBe(201);
+    expect(
+      (
+        await request(app)
+          .post(`/work-hub/crews/${createdGroup.body.id}/members`)
+          .set("Cookie", adminCookie)
+          .send({ userId: memberId, mode: "member" })
+      ).status,
+    ).toBe(200);
+
+    const first = await request(app)
+      .post("/work-hub/chats/groups")
+      .set("Cookie", adminCookie)
+      .send({ crewId: createdGroup.body.id, operationId: randomUUID() });
+    expect(first.status).toBe(201);
+    expect(first.body.reopened).toBe(false);
+    const firstMembers = await db
+      .select({ userId: workHubChannelMembersTable.userId })
+      .from(workHubChannelMembersTable)
+      .where(eq(workHubChannelMembersTable.channelId, first.body.channel.id));
+    expect(firstMembers.map((row) => row.userId)).toEqual(
+      expect.arrayContaining([adminId, memberId]),
+    );
+
+    const replay = await request(app)
+      .post("/work-hub/chats/groups")
+      .set("Cookie", adminCookie)
+      .send({ crewId: createdGroup.body.id, operationId: randomUUID() });
+    expect(replay.status).toBe(200);
+    expect(replay.body).toMatchObject({
+      reopened: true,
+      channel: { id: first.body.channel.id },
+    });
   });
   it("reserves channel creation and deletion for organization admins", async () => {
     expect((await request(app).post(`/work-hub/crews/${crewId}/members`).set("Cookie", adminCookie).send({ userId: memberId, mode: "owner" })).status).toBe(200);

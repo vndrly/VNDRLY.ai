@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { useState } from "react";
 import { Pin, ArrowUp, ArrowDown, MoreHorizontal } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useBrand } from "@/hooks/use-brand";
 import { workHubRequest } from "@/lib/work-hub-client";
 import {
   DEFAULT_WORK_HUB_PINS,
@@ -49,9 +50,13 @@ export function useHubPreferences(enabled = true) {
 }
 export function WorkHubNavigation({ onNavigate }: { onNavigate?: () => void }) {
   const [location] = useLocation();
+  const brand = useBrand();
   const [customize, setCustomize] = useState(false);
   const { preferences, save } = useHubPreferences();
-  const items = orderWorkHubItems(getWorkHubNavItems(), preferences.order);
+  const items = orderWorkHubItems(
+    getWorkHubNavItems(undefined, brand.name),
+    preferences.order,
+  );
   function move(key: string, delta: number) {
     const order = items.map((item) => item.key);
     const index = order.indexOf(key),
