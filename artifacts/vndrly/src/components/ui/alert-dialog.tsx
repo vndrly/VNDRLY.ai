@@ -2,8 +2,7 @@ import * as React from "react"
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
 
 import { cn } from "@/lib/utils"
-import { appModalTheme } from "@/components/app-modal-tokens"
-import { useTheme } from "@/hooks/use-theme"
+import { APP_MODAL_ALWAYS_DARK } from "@/components/app-modal-tokens"
 import { buttonVariants } from "@/components/ui/button"
 
 const AlertDialog = AlertDialogPrimitive.Root
@@ -31,8 +30,7 @@ const AlertDialogContent = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Content>
 >(({ className, children, ...props }, ref) => {
-  const { resolved } = useTheme()
-  const modalTheme = appModalTheme(resolved)
+  const modalTheme = APP_MODAL_ALWAYS_DARK
 
   return (
     <AlertDialogPortal>
@@ -53,7 +51,11 @@ const AlertDialogContent = React.forwardRef<
           style={modalTheme.accentHeaderStyle}
           data-testid="modal-accent-header"
         />
-        <div className={cn("grid gap-4 p-6 pt-0", modalTheme.bodyWrapperClassName)}>
+        <div
+          className={cn("grid gap-4 p-6 pt-0", modalTheme.bodyWrapperClassName)}
+          data-testid="modal-body"
+          style={{ colorScheme: "light" }}
+        >
           {children}
         </div>
       </AlertDialogPrimitive.Content>
@@ -94,8 +96,7 @@ const AlertDialogTitle = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Title>,
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Title>
 >(({ className, ...props }, ref) => {
-  const { resolved } = useTheme()
-  const modalTheme = appModalTheme(resolved)
+  const modalTheme = APP_MODAL_ALWAYS_DARK
   return (
     <AlertDialogPrimitive.Title
       ref={ref}
@@ -110,8 +111,7 @@ const AlertDialogDescription = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Description>,
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Description>
 >(({ className, ...props }, ref) => {
-  const { resolved } = useTheme()
-  const modalTheme = appModalTheme(resolved)
+  const modalTheme = APP_MODAL_ALWAYS_DARK
   return (
     <AlertDialogPrimitive.Description
       ref={ref}

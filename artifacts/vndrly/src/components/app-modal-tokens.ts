@@ -71,7 +71,12 @@ export const APP_MODAL_DARK: AppModalTheme = {
     "h-8 w-8 shrink-0 rounded-lg object-contain drop-shadow-[0_1px_3px_rgba(0,0,0,0.2)] sm:h-9 sm:w-9",
 };
 
-export function appModalTheme(resolved: "light" | "dark"): AppModalTheme {
-  if (resolved === "dark") return APP_MODAL_DARK;
-  return APP_MODAL_LIGHT;
+/**
+ * Modal chrome is intentionally independent from the surrounding page theme.
+ * Keep the compatibility function while returning the single approved contract.
+ */
+export const APP_MODAL_ALWAYS_DARK: AppModalTheme = APP_MODAL_DARK;
+
+export function appModalTheme(_resolved?: "light" | "dark"): AppModalTheme {
+  return APP_MODAL_ALWAYS_DARK;
 }

@@ -3,8 +3,7 @@ import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { appModalTheme, type AppModalTheme } from "@/components/app-modal-tokens"
-import { useTheme } from "@/hooks/use-theme"
+import { APP_MODAL_ALWAYS_DARK, type AppModalTheme } from "@/components/app-modal-tokens"
 import { useAuth } from "@/hooks/use-auth"
 import { useGetPartner, useGetVendor, getGetPartnerQueryKey, getGetVendorQueryKey } from "@workspace/api-client-react"
 
@@ -25,7 +24,7 @@ const ModalThemeContext = React.createContext<AppModalTheme | null>(null)
 
 export function useModalTheme(): AppModalTheme {
   const ctx = React.useContext(ModalThemeContext)
-  return ctx ?? appModalTheme("light")
+  return ctx ?? APP_MODAL_ALWAYS_DARK
 }
 
 function useAutoEntityLogo(): DialogLogoSpec | null {
@@ -132,8 +131,7 @@ const DialogContent = React.forwardRef<
 >(({ className, children, bare = false, hideClose = false, hideOverlay = false, inline = false, accentHeaderStyle, style, onPointerDownOutside, onInteractOutside, onEscapeKeyDown, ...props }, ref) => {
   const [customLogo, setCustomLogo] = React.useState<DialogLogoSpec | null>(null)
   const ctxValue = React.useMemo<DialogLogoContextValue>(() => ({ setCustomLogo }), [])
-  const { resolved } = useTheme()
-  const modalTheme = appModalTheme(resolved)
+  const modalTheme = APP_MODAL_ALWAYS_DARK
 
   if (inline) {
     return (
@@ -160,10 +158,12 @@ const DialogContent = React.forwardRef<
             <DialogLogoContext.Provider value={ctxValue}>
               <DialogLogoArea customLogo={customLogo} />
               <div
+                data-testid="modal-body"
                 className={cn(
                   "relative z-10 grid min-h-0 flex-1 gap-4 overflow-y-auto p-6 pt-0",
                   modalTheme.bodyWrapperClassName,
                 )}
+                style={{ colorScheme: "light" }}
               >
                 {children}
               </div>
@@ -201,10 +201,12 @@ const DialogContent = React.forwardRef<
             <DialogLogoContext.Provider value={ctxValue}>
               <DialogLogoArea customLogo={customLogo} />
               <div
+                data-testid="modal-body"
                 className={cn(
                   "relative z-10 grid min-h-0 flex-1 gap-4 overflow-y-auto p-6 pt-0",
                   modalTheme.bodyWrapperClassName,
                 )}
+                style={{ colorScheme: "light" }}
               >
                 {children}
               </div>
