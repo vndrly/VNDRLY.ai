@@ -1,10 +1,28 @@
-import { render, screen } from "@testing-library/react";
+import { useState } from "react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import { DEFAULT_BRAND } from "@/hooks/use-brand";
 import { brandImagePillSrc } from "@/components/png-pill-rollover";
 import { pickLoginSquareActive } from "@/lib/login-button-palette";
 import { CalendarTimeGrid, calendarViewDays, localDateKey } from "./calendar-views";
 describe("Work Hub calendar ranges", () => {
+  it("drills from a week into a clicked day and toggles that day back to its week", () => {
+    function CalendarHarness() {
+      const [selectedDay, setSelectedDay] = useState("2026-09-16");
+      return <CalendarTimeGrid selectedDay={selectedDay} items={[]} onSelectDay={setSelectedDay} />;
+    }
+
+    render(<CalendarHarness />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Thu, Sep 17/ }));
+    expect((screen.getByLabelText("Calendar view") as HTMLSelectElement).value).toBe("day");
+    expect(screen.queryByRole("button", { name: /Wed, Sep 16/ })).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: /Thu, Sep 17/ }));
+    expect((screen.getByLabelText("Calendar view") as HTMLSelectElement).value).toBe("week");
+    expect(screen.queryByRole("button", { name: /Wed, Sep 16/ })).not.toBeNull();
+  });
+
   it("keeps day view on the chosen local day", () => {
     expect(calendarViewDays("2026-09-09", "day").map(localDateKey)).toEqual(["2026-09-09"]);
   });
@@ -37,7 +55,7 @@ describe("Work Hub calendar ranges", () => {
     const sunday = screen.getByRole("button", { name: /Sun, Sep 13/ });
     const weekdayRail = screen.getByTestId("calendar-weekday-rail");
     expect(weekdayRail.className).toContain("bg-gray-400");
-    expect(weekdayRail.className).toContain("py-2");
+    expect(weekdayRail.className).toContain("py-1");
     expect(weekdayRail.className).toContain("border-y-2");
     expect(weekdayRail.className).toContain("border-[color:var(--brand-primary)]");
     expect(sunday.className).toContain("rounded-lg");

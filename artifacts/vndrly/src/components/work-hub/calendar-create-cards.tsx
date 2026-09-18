@@ -52,15 +52,19 @@ function Picker({
           <SplitToggleHalf side="right" active={mode === "individuals"} pillSrc={mode === "individuals" ? activePillSrc : TOGGLE_IDLE_PILL_SRC} onClick={() => setMode("individuals")} aria-pressed={mode === "individuals"}>Individuals</SplitToggleHalf>
         </div>
       </div>
-      <div className="grid h-36 content-start gap-2 overflow-y-auto pr-1">
+      <div
+        className="grid h-36 content-start gap-2 overflow-y-auto pr-1"
+        data-testid="calendar-assignee-list"
+        style={{ colorScheme: "light" }}
+      >
         {mode === "crews" ? crews.map((crew) => (
           <label key={crew.id} className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={crewIds.includes(crew.id)} onChange={() => onCrews(toggle(crewIds, crew.id))} />
+            <input className="h-4 w-4 rounded border-2 border-[color:var(--brand-primary)] bg-white accent-[var(--brand-primary)]" style={{ colorScheme: "light", accentColor: "var(--brand-primary)" }} type="checkbox" checked={crewIds.includes(crew.id)} onChange={() => onCrews(toggle(crewIds, crew.id))} />
             {crew.name}
           </label>
         )) : people.map((person) => (
           <label key={person.id} className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={userIds.includes(person.id)} onChange={() => onUsers(toggle(userIds, person.id))} />
+            <input className="h-4 w-4 rounded border-2 border-[color:var(--brand-primary)] bg-white accent-[var(--brand-primary)]" style={{ colorScheme: "light", accentColor: "var(--brand-primary)" }} type="checkbox" checked={userIds.includes(person.id)} onChange={() => onUsers(toggle(userIds, person.id))} />
             {person.displayName || person.email}
           </label>
         ))}
@@ -216,7 +220,7 @@ export default function CalendarCreateCards({ owner }: { owner: Owner | null }) 
             <Picker people={people.data ?? []} crews={crews.data ?? []} userIds={form.userIds} crewIds={form.crewIds} onUsers={(userIds) => setForm({ ...form, userIds })} onCrews={(crewIds) => setForm({ ...form, crewIds })} />
             <Field label="Calendar"><BrandedSelect aria-label="Calendar" value="company" disabled><option value="company">Internal company</option></BrandedSelect></Field>
             <Field label="Notes"><Textarea className="rounded-xl border-2 border-[color:var(--brand-primary)] bg-white" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} /></Field>
-            <label className="flex items-center gap-2 text-sm font-semibold"><input className="h-4 w-4 rounded border-2 border-[color:var(--brand-primary)] accent-[var(--brand-primary)]" type="checkbox" checked={form.mandatory} onChange={(event) => setForm({ ...form, mandatory: event.target.checked })} />Mandatory</label>
+            <label className="flex items-center gap-2 text-sm font-semibold"><input className="h-4 w-4 rounded border-2 border-[color:var(--brand-primary)] bg-white accent-[var(--brand-primary)]" style={{ colorScheme: "light", accentColor: "var(--brand-primary)" }} type="checkbox" checked={form.mandatory} onChange={(event) => setForm({ ...form, mandatory: event.target.checked })} />Mandatory</label>
             {createItem.error && <p role="alert" className="text-sm text-red-700">{createItem.error instanceof Error ? createItem.error.message : "Unable to create Calendar work."}</p>}
             <BrandPillButton type="submit" tone="brand" disabled={!owner || createItem.isPending}>{createItem.isPending ? "Creating…" : "Create Shift/Event"}</BrandPillButton>
           </form>

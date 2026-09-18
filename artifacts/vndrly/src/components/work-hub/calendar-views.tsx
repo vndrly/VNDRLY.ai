@@ -26,6 +26,10 @@ export function CalendarTimeGrid({
   const [view, setView] = useState<"day" | "week">("week");
   const [kind, setKind] = useState("All");
   const days = calendarViewDays(selectedDay, view);
+  const toggleDay = (day: Date) => {
+    onSelectDay(localDateKey(day));
+    setView((current) => current === "week" ? "day" : "week");
+  };
   return (
     <div className="mb-4 overflow-hidden rounded-xl border-2 border-[color:var(--brand-primary)] bg-white text-black">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b p-4">
@@ -82,14 +86,14 @@ export function CalendarTimeGrid({
         <div className={view === "week" ? "min-w-[720px]" : undefined}>
           <div
             data-testid="calendar-weekday-rail"
-            className="border-y-2 border-[color:var(--brand-primary)] bg-gray-400 px-1 py-2"
+            className="border-y-2 border-[color:var(--brand-primary)] bg-gray-400 px-1 py-1"
           >
             <div className={`grid ${view === "week" ? "grid-cols-7" : "grid-cols-1"}`}>
               {days.map((day) => (
                 <button
                   key={localDateKey(day)}
                   className="mx-1 block overflow-hidden rounded-lg bg-transparent text-sm"
-                  onClick={() => onSelectDay(localDateKey(day))}
+                  onClick={() => toggleDay(day)}
                 >
                   <SidebarButton isActive theme="light" className="w-full">
                     <span className="flex w-full items-center justify-center font-bold">

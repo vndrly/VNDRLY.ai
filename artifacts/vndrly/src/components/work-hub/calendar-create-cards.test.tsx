@@ -49,6 +49,15 @@ describe("CalendarCreateCards", () => {
       expect(field.className).toContain("bg-white");
     }
     expect(mandatory.className).toContain("accent-[var(--brand-primary)]");
+    expect(mandatory.className).toContain("bg-white");
+    for (const list of screen.getAllByTestId("calendar-assignee-list")) {
+      expect(list.style.colorScheme).toBe("light");
+    }
+    for (const checkbox of screen.getAllByRole("checkbox")) {
+      expect(checkbox.style.colorScheme).toBe("light");
+      expect(checkbox.style.accentColor).toBe("var(--brand-primary)");
+      expect(checkbox.className).toContain("bg-white");
+    }
     for (const name of ["Work type", "Calendar", "Priority"]) {
       const select = screen.getByRole("combobox", { name });
       expect(select.className).toContain("rounded-full");
