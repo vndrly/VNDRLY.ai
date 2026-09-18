@@ -242,6 +242,254 @@ export async function findActiveVisitors(
     });
   return JSON.stringify({ ok: true, matches, needsChoice: matches.length > 1 });
 }
+
+function normalizedGatePlate(value: unknown): string {
+  return typeof value === "string"
+    ? value.toUpperCase().replace(/[^A-Z0-9]/g, "")
+    : "";
+}
+
+function normalizedGateText(value: unknown): string {
+  return typeof value === "string" ? value.trim().toLowerCase() : "";
+}
+
+function gateHistoryPublicRow(row: Record<string, unknown>) {
+  return {
+    id: row.id,
+    firstName: row.firstName,
+    lastName: row.lastName,
+    company: row.company,
+    vehiclePlate: normalizedGatePlate(row.vehiclePlate),
+    plateState:
+      typeof row.plateState === "string"
+        ? row.plateState.trim().toUpperCase()
+        : null,
+    purpose: row.purpose,
+    notes: row.notes,
+    expectedDurationMinutes: row.expectedDurationMinutes,
+    siteLocationId: row.siteLocationId,
+    siteName: row.siteName,
+    hostType: row.hostType,
+    hostPartnerId: row.hostPartnerId,
+    hostVendorId: row.hostVendorId,
+    checkInTime: row.checkInTime,
+    checkOutTime: row.checkOutTime,
+    recordedByUserId: row.recordedByUserId,
+    recordedByName: row.recordedByName,
+  };
+}
+
+export async function searchGateHistory(
+  input: unknown,
+  session: SessionPayload,
+): Promise<string> {
+  if (!gatekeeper(session))
+    return err("Gate history requires your assigned Gatekeeper account.");
+  const args = argsOf(input);
+  const query = new URLSearchParams({ limit: "1000" });
+  if (positiveId(args.siteLocationId))
+    query.set("siteLocationId", String(args.siteLocationId));
+  if (typeof args.from === "string" && args.from.trim())
+    query.set("from", args.from.trim());
+  if (typeof args.to === "string" && args.to.trim())
+    query.set("to", args.to.trim());
+  if (args.activeOnly === true) query.set("activeOnly", "true");
+
+  const result = await callNaturalVoiceDomainApi(
+    `/visits?${query}`,
+    "GET",
+    {},
+    session,
+  );
+  if (!Array.isArray(result)) return JSON.stringify(result);
+
+  const plate = normalizedGatePlate(args.vehiclePlate);
+  const state =
+    typeof args.plateState === "string"
+      ? args.plateState.trim().toUpperCase()
+      : "";
+  const firstName = normalizedGateText(args.firstName);
+  const lastName = normalizedGateText(args.lastName);
+  const company = normalizedGateText(args.company);
+  const freeQuery = normalizedGateText(args.query);
+
+  const matches = result
+    .map((row) => argsOf(row))
+    .filter((row) => {
+      if (plate && normalizedGatePlate(row.vehiclePlate) !== plate) return false;
+      if (
+        state &&
+        String(row.plateState ?? "").trim().toUpperCase() !== state
+      )
+        return false;
+      if (firstName && normalizedGateText(row.firstName) !== firstName)
+        return false;
+      if (lastName && normalizedGateText(row.lastName) !== lastName)
+        return false;
+      if (company && normalizedGateText(row.company) !== company) return false;
+      if (
+        freeQuery &&
+        ![
+          row.firstName,
+          row.lastName,
+          `${row.firstName ?? ""} ${row.lastName ?? ""}`,
+          row.company,
+          row.vehiclePlate,
+          row.siteName,
+        ].some((value) => normalizedGateText(value).includes(freeQuery))
+      )
+        return false;
+      return true;
+    })
+    .sort((a, b) => {
+      const right = Date.parse(String(b.checkInTime ?? "")) || 0;
+      const left = Date.parse(String(a.checkInTime ?? "")) || 0;
+      return right - left;
+    })
+    .slice(0, 25)
+    .map(gateHistoryPublicRow);
+
+  return JSON.stringify({ ok: true, matches, count: matches.length });
+}
+
+export async function resolveGateCheckInCandidate(
+  input: unknown,
+  session: SessionPayload,
+): Promise<string> {
+  if (!gatekeeper(session))
+    return err("Gate candidate resolution requires your assigned Gatekeeper account.");
+  const args = argsOf(input);
+  const vehiclePlate = normalizedGatePlate(args.vehiclePlate);
+  const historyInput = vehiclePlate
+    ? {
+        vehiclePlate,
+        plateState: args.plateState,
+        siteLocationId: args.siteLocationId,
+      }
+    : {
+        firstName: args.firstName,
+        lastName: args.lastName,
+        company: args.company,
+        siteLocationId: args.siteLocationId,
+      };
+  const searched = JSON.parse(
+    await searchGateHistory(historyInput, session),
+  ) as { error?: string; matches?: Array<Record<string, unknown>> };
+  if (searched.error || !searched.matches) return JSON.stringify(searched);
+
+  const states = [
+    ...new Set(
+      searched.matches
+        .map((row) =>
+          typeof row.plateState === "string"
+            ? row.plateState.trim().toUpperCase()
+            : "",
+        )
+        .filter(Boolean),
+    ),
+  ];
+  if (vehiclePlate && !args.plateState && states.length > 1) {
+    return JSON.stringify({
+      ok: false,
+      confidence: "ambiguous",
+      candidates: searched.matches.slice(0, 8),
+      clarification: {
+        field: "plateState",
+        prompt: "Which plate state should I use?",
+        options: states,
+      },
+    });
+  }
+
+  const candidate = searched.matches[0] ?? null;
+  const draft: Record<string, unknown> = {};
+  const provenance: Record<string, string> = {};
+  const explicitFields = [
+    "firstName",
+    "lastName",
+    "company",
+    "vehiclePlate",
+    "plateState",
+    "purpose",
+    "notes",
+    "expectedDurationMinutes",
+    "siteLocationId",
+    "hostType",
+    "hostPartnerId",
+    "hostVendorId",
+    "latitude",
+    "longitude",
+  ] as const;
+  for (const field of explicitFields) {
+    if (args[field] == null || args[field] === "") continue;
+    draft[field] =
+      field === "vehiclePlate" ? normalizedGatePlate(args[field]) : args[field];
+    provenance[field] = "explicit";
+  }
+
+  if (candidate) {
+    const historicalFields = [
+      "firstName",
+      "lastName",
+      "company",
+      "purpose",
+      "expectedDurationMinutes",
+      "siteLocationId",
+      "hostType",
+      "hostPartnerId",
+      "hostVendorId",
+    ] as const;
+    for (const field of historicalFields) {
+      if (draft[field] != null || candidate[field] == null) continue;
+      draft[field] = candidate[field];
+      provenance[field] = "most_recent_authorized_visit";
+    }
+    if (!draft.vehiclePlate && candidate.vehiclePlate) {
+      draft.vehiclePlate = normalizedGatePlate(candidate.vehiclePlate);
+      provenance.vehiclePlate = "most_recent_authorized_visit";
+    }
+    if (!draft.plateState && states.length === 1) {
+      draft.plateState = states[0];
+      provenance.plateState = vehiclePlate
+        ? "unique_authorized_plate_history"
+        : "most_recent_authorized_visit";
+    }
+  }
+
+  const missing = missingCheckInFields(draft);
+  const clarification = missing[0]
+    ? {
+        field: missing[0],
+        prompt: `Please provide ${missing[0]}.`,
+      }
+    : null;
+  const confidence = candidate
+    ? vehiclePlate || (args.firstName && args.lastName && args.company)
+      ? "high"
+      : "medium"
+    : "none";
+
+  return JSON.stringify({
+    ok: Boolean(candidate),
+    confidence,
+    candidates: candidate ? [candidate] : [],
+    draft,
+    provenance,
+    missing,
+    clarification,
+    execution: "client",
+    intent: {
+      name: "prefill_gate_visit",
+      arguments: {
+        mode: "check-in",
+        values: gateFormValues(draft),
+        provenance,
+        missing,
+      },
+    },
+  });
+}
+
 export async function prepareVisitorCheckOut(
   input: unknown,
   session?: SessionPayload,

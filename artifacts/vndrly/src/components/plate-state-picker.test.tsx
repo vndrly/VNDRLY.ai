@@ -93,12 +93,22 @@ describe("PlateStatePicker", () => {
     await user.click(screen.getByRole("button", { name: "Select plate state" }));
 
     expect(screen.getByRole("dialog", { name: "Plate state" })).toBeTruthy();
+    const trigger = screen.getByTestId("plate-state-picker-trigger");
+    expect(trigger.className).toContain("h-9");
+    expect(trigger.className).toContain("rounded-full");
+    expect(trigger.className).toContain("border-2");
+    expect(trigger.className).toContain("border-[color:var(--brand-primary)]");
+    const dialog = screen.getByRole("dialog", { name: "Plate state" });
+    expect(dialog.className).toContain("bg-white");
+    expect(dialog.className).toContain("border-[color:var(--brand-primary)]");
     const search = screen.getByRole("combobox", { name: "Search states" });
     expect(search.className).toContain("text-popover-foreground");
     expect(search.className).toContain("placeholder:text-popover-foreground/60");
 
     for (const option of screen.getAllByRole("option")) {
       expect(option.className).toContain("text-popover-foreground");
+      expect(option.className).toContain("aria-selected:bg-[var(--brand-primary)]");
+      expect(option.className).toContain("data-[selected=true]:bg-[var(--brand-primary)]");
     }
   });
 

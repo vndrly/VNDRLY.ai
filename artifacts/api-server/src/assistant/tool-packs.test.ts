@@ -78,6 +78,8 @@ describe("AskV realtime tool packs", () => {
     const names = gate.map((tool) => tool.name);
     expect(names).toContain("query_attention_briefing");
     expect(names).toContain("prepare_visitor_check_in");
+    expect(names).toContain("search_gate_history");
+    expect(names).toContain("resolve_gate_check_in");
     expect(names).toContain("confirm_visitor_check_in");
     expect(names).toContain("open_screen");
     expect(names).not.toContain("query_1099_k_summary");

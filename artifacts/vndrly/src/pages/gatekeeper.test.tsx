@@ -851,6 +851,48 @@ describe("GatekeeperPage compact branded workspace", () => {
     expect(screen.getByTestId("gate-new-entry-card").getAttribute("data-brand-outline")).toBe("true");
   });
 
+  it("uses the compact branded form-control standard for a new gate entry", async () => {
+    renderPage();
+
+    for (const id of [
+      "input-gate-plate",
+      "input-gate-first-name",
+      "input-gate-last-name",
+      "input-gate-company",
+      "input-gate-duration",
+    ]) {
+      const control = await screen.findByTestId(id);
+      expect(control.className).toContain("h-9");
+      expect(control.className).toContain("rounded-full");
+      expect(control.className).toContain("border-2");
+      expect(control.className).toContain("border-[color:var(--brand-primary)]");
+      expect(control.className).toContain("bg-white");
+    }
+
+    for (const id of ["select-gate-partner", "select-gate-current-location"]) {
+      const control = await screen.findByTestId(id);
+      expect(control.className).toContain("h-9");
+      expect(control.className).toContain("rounded-full");
+      expect(control.className).toContain("border-2");
+      expect(control.className).toContain("text-sm");
+      expect(control.className).not.toContain("h-14");
+      expect(control.className).not.toContain("text-lg");
+    }
+
+    for (const id of ["input-gate-purpose", "input-gate-notes"]) {
+      const control = await screen.findByTestId(id);
+      expect(control.className).toContain("rounded-xl");
+      expect(control.className).toContain("border-2");
+      expect(control.className).toContain("border-[color:var(--brand-primary)]");
+      expect(control.className).toContain("bg-white");
+      expect(control.className).not.toContain("rounded-full");
+    }
+
+    expect(screen.getByTestId("button-gate-read-plate").style.height).toBe("36px");
+    expect(screen.getByTestId("button-gate-vehicle-photo").style.height).toBe("36px");
+    expect(screen.getByTestId("button-gate-duration-30m").style.height).toBe("36px");
+  });
+
   it("does not offer selected-gate history until the selected site context resolves", async () => {
     let resolveSite!: (site: typeof SITE_CONTEXT) => void;
     api.getSiteContext.mockReturnValue(new Promise((resolve) => {

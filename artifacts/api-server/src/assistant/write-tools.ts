@@ -23,6 +23,8 @@ import {
   findActiveVisitors,
   prepareVisitorCheckIn,
   prepareVisitorCheckOut,
+  resolveGateCheckInCandidate,
+  searchGateHistory,
   setTicketLifecycle,
 } from "./natural-voice-write-tools";
 
@@ -464,6 +466,10 @@ export async function runWriteTool(
       return confirmVisitorCheckIn(args, session);
     case "find_active_visitors":
       return findActiveVisitors(args, session);
+    case "search_gate_history":
+      return searchGateHistory(args, session);
+    case "resolve_gate_check_in":
+      return resolveGateCheckInCandidate(args, session);
     case "prepare_visitor_check_out":
       return prepareVisitorCheckOut(args, session);
     case "confirm_visitor_check_out":

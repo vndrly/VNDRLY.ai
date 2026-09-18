@@ -545,11 +545,11 @@ export default function VisitorCheckInScreen() {
                 placeholder={t("visitor.notesPlaceholder")}
                 placeholderTextColor={colors.mutedForeground}
                 style={[
-                  styles.input,
+                  styles.tallInput,
                   {
-                    borderColor: colors.border,
-                    color: colors.foreground,
-                    backgroundColor: colors.card,
+                    borderColor: colors.primary,
+                    color: "#374151",
+                    backgroundColor: "#ffffff",
                   },
                 ]}
               />
@@ -782,9 +782,9 @@ export default function VisitorCheckInScreen() {
                       style={[
                         styles.input,
                         {
-                          borderColor: colors.border,
-                          color: colors.foreground,
-                          backgroundColor: colors.card,
+                          borderColor: colors.primary,
+                          color: "#374151",
+                          backgroundColor: "#ffffff",
                         },
                       ]}
                     />
@@ -855,12 +855,23 @@ const styles = StyleSheet.create({
   label: { fontFamily: "Inter_500Medium", fontSize: 13, marginBottom: 6 },
   row: { flexDirection: "row", gap: 8, alignItems: "center" },
   input: {
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    borderWidth: 2,
+    borderRadius: 999,
+    height: 36,
+    paddingHorizontal: 12,
+    paddingVertical: 0,
     fontFamily: "Inter_400Regular",
-    fontSize: 16,
+    fontSize: 14,
+  },
+  tallInput: {
+    borderWidth: 2,
+    borderRadius: 12,
+    minHeight: 72,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontFamily: "Inter_400Regular",
+    fontSize: 14,
+    textAlignVertical: "top",
   },
   lookupBtn: {
     borderWidth: 1.5,

@@ -66,6 +66,8 @@ export const WRITE_TOOL_NAMES = [
   "schedule_ticket_crew",
   "set_ticket_flag",
   "post_ticket_comment",
+  "search_gate_history",
+  "resolve_gate_check_in",
   "prepare_visitor_check_in",
   "confirm_visitor_check_in",
   "find_active_visitors",

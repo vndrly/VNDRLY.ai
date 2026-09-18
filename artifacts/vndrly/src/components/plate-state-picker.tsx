@@ -23,6 +23,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { WORK_HUB_BRANDED_FIELD_CLASS } from "@/components/work-hub/chrome";
 
 export interface PlateStatePickerProps {
   value: PlateStateCode | null;
@@ -100,7 +101,7 @@ export function PlateStatePicker({
             aria-label={triggerLabel}
             aria-invalid={error ? true : undefined}
             className={cn(
-              "w-full justify-between font-normal",
+              WORK_HUB_BRANDED_FIELD_CLASS, "justify-between font-normal",
               error && "border-destructive",
             )}
             data-testid="plate-state-picker-trigger"
@@ -114,7 +115,7 @@ export function PlateStatePicker({
         </PopoverTrigger>
         <PopoverContent
           aria-label={t("plateStatePicker.label")}
-          className="w-[var(--radix-popover-trigger-width)] p-2"
+          className="w-[var(--radix-popover-trigger-width)] border-2 border-[color:var(--brand-primary)] bg-white p-2 text-gray-700"
           role="dialog"
         >
           <Command label={t("plateStatePicker.search")} loop shouldFilter={false}>
@@ -134,7 +135,7 @@ export function PlateStatePicker({
                     return (
                       <CommandItem
                         aria-selected={isSelected}
-                        className="text-popover-foreground"
+                        className="text-popover-foreground aria-selected:bg-[var(--brand-primary)] aria-selected:text-white data-[selected=true]:bg-[var(--brand-primary)] data-[selected=true]:text-white"
                         key={state.code}
                         onSelect={() => selectState(state.code)}
                         role="option"
@@ -157,7 +158,7 @@ export function PlateStatePicker({
                     return (
                       <CommandItem
                         aria-selected={isSelected}
-                        className="text-popover-foreground"
+                        className="text-popover-foreground aria-selected:bg-[var(--brand-primary)] aria-selected:text-white data-[selected=true]:bg-[var(--brand-primary)] data-[selected=true]:text-white"
                         key={state.code}
                         onSelect={() => selectState(state.code)}
                         role="option"

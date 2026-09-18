@@ -875,6 +875,52 @@ export const TOOLS: Anthropic.Tool[] = [
     },
   },
   {
+    name: "search_gate_history",
+    description:
+      "Search authorized Gate history by any combination of visitor name, company, normalized plate, plate state, site, date range, or active status. Returns only visits visible to the signed-in Gatekeeper account, including the recorded attendant when available.",
+    input_schema: {
+      type: "object",
+      properties: {
+        query: { type: "string" },
+        firstName: { type: "string" },
+        lastName: { type: "string" },
+        company: { type: "string" },
+        vehiclePlate: { type: "string" },
+        plateState: { type: "string" },
+        siteLocationId: { type: "number" },
+        from: { type: "string", description: "ISO date or timestamp lower bound." },
+        to: { type: "string", description: "ISO date or timestamp upper bound." },
+        activeOnly: { type: "boolean" },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "resolve_gate_check_in",
+    description:
+      "Resolve an authorized Gate check-in candidate from partial name, company, plate, state, or current-site clues. Returns a client-side draft with field provenance and at most one clarification. Never submits a visit.",
+    input_schema: {
+      type: "object",
+      properties: {
+        firstName: { type: "string" },
+        lastName: { type: "string" },
+        company: { type: "string" },
+        vehiclePlate: { type: "string" },
+        plateState: { type: "string" },
+        purpose: { type: "string" },
+        notes: { type: "string" },
+        expectedDurationMinutes: { type: "number" },
+        siteLocationId: { type: "number" },
+        hostType: { type: "string", enum: ["partner", "vendor"] },
+        hostPartnerId: { type: "number" },
+        hostVendorId: { type: "number" },
+        latitude: { type: "number" },
+        longitude: { type: "number" },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
     name: "prepare_visitor_check_in",
     description:
       "Collect visitor check-in fields and report what is still missing. Does not commit the visit. Use for gate check-in. Ask for missing first name, last name, company, plate, state, purpose, notes, duration, or site.",

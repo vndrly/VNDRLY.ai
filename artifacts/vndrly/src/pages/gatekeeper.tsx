@@ -26,6 +26,10 @@ import { LiveConnectionPill } from "@/components/live-connection-pill";
 import { GateMemoryInput } from "@/components/gate-memory-input";
 import { PlateStatePicker } from "@/components/plate-state-picker";
 import {
+  BrandedSelect,
+  WORK_HUB_BRANDED_FIELD_CLASS,
+} from "@/components/work-hub/chrome";
+import {
   Card,
   CardContent,
   CardHeader,
@@ -78,6 +82,10 @@ import {
   matchGateCheckoutVisits,
   parseGateVoiceCommand,
 } from "@/lib/gate-voice-entry";
+
+const GATE_SELECT_CONTENT_CLASS = "border-2 border-[color:var(--brand-primary)] bg-white text-gray-700";
+const GATE_SELECT_ITEM_CLASS = "focus:bg-[var(--brand-primary)] focus:text-white data-[highlighted]:bg-[var(--brand-primary)] data-[highlighted]:text-white data-[state=checked]:bg-[var(--brand-primary)] data-[state=checked]:text-white";
+const GATE_TALL_FIELD_CLASS = "min-h-20 w-full rounded-xl border-2 border-[color:var(--brand-primary)] bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:ring-2 focus:ring-[color:var(--brand-primary)]/25";
 import {
   applyGateAskVTurn,
   evaluateGateAskVTurn,
@@ -1422,28 +1430,28 @@ export default function GatekeeperPage() {
               <div className="grid grid-cols-2 gap-3">
                 <BrandPillButton
                   tone="brand"
-                  className="w-full text-base"
-                  height={56}
+                  className="w-full text-sm"
+                  height={36}
                   onClick={() => plateInput.current?.click()}
                   disabled={busy}
                   data-testid="button-gate-read-plate"
                   aria-pressed={Boolean(platePhotoUrl)}
                 >
-                  <Camera className="mr-2 h-5 w-5" aria-hidden="true" />
+                  <Camera className="mr-2 h-4 w-4" aria-hidden="true" />
                   {platePhotoUrl
                     ? t("gatekeeper.plateAttached")
                     : t("gatekeeper.capturePlate")}
                 </BrandPillButton>
                 <BrandPillButton
                   tone="brand"
-                  className="w-full text-base"
-                  height={56}
+                  className="w-full text-sm"
+                  height={36}
                   onClick={() => vehicleInput.current?.click()}
                   disabled={busy}
                   data-testid="button-gate-vehicle-photo"
                   aria-pressed={Boolean(vehiclePhotoUrl)}
                 >
-                  <Camera className="mr-2 h-5 w-5" aria-hidden="true" />
+                  <Camera className="mr-2 h-4 w-4" aria-hidden="true" />
                   {vehiclePhotoUrl
                     ? t("gatekeeper.vehicleAttached")
                     : t("gatekeeper.vehiclePhoto")}
@@ -1466,7 +1474,7 @@ export default function GatekeeperPage() {
                 }
                 onFocus={() => setActiveMemoryField("vehiclePlate")}
                 data-testid="input-gate-plate"
-                className="h-14 text-lg font-bold tracking-widest"
+                className={`${WORK_HUB_BRANDED_FIELD_CLASS} font-bold tracking-widest`}
               />
               <PlateStatePicker
                 value={plateState}
@@ -1504,6 +1512,7 @@ export default function GatekeeperPage() {
                   }
                   onFocus={() => setActiveMemoryField("firstName")}
                   data-testid="input-gate-first-name"
+                  className={WORK_HUB_BRANDED_FIELD_CLASS}
                 />
               </div>
               <div>
@@ -1525,6 +1534,7 @@ export default function GatekeeperPage() {
                   }
                   onFocus={() => setActiveMemoryField("lastName")}
                   data-testid="input-gate-last-name"
+                  className={WORK_HUB_BRANDED_FIELD_CLASS}
                 />
               </div>
             </div>
@@ -1545,6 +1555,7 @@ export default function GatekeeperPage() {
                 }
                 onFocus={() => setActiveMemoryField("company")}
                 data-testid="input-gate-company"
+                className={WORK_HUB_BRANDED_FIELD_CLASS}
               />
             </div>
             {showPreviousBanner && previousPlateVisit && (
@@ -1613,8 +1624,8 @@ export default function GatekeeperPage() {
               {assignedSites.length > 0 ? (
                 <div className="grid gap-3 sm:grid-cols-2">
                 <Select value={selectedPartnerId} onValueChange={(value) => { setSelectedPartnerId(value); setHostKey(""); }}>
-                  <SelectTrigger aria-label={t("gatekeeper.selectCompany")} data-testid="select-gate-partner" className="h-14 text-lg font-bold"><SelectValue placeholder={t("gatekeeper.selectCompany")} /></SelectTrigger>
-                  <SelectContent>{assignedPartners.map((group) => <SelectItem key={group.partnerId} value={String(group.partnerId)}>{group.partnerName}</SelectItem>)}</SelectContent>
+                  <SelectTrigger aria-label={t("gatekeeper.selectCompany")} data-testid="select-gate-partner" className={WORK_HUB_BRANDED_FIELD_CLASS}><SelectValue placeholder={t("gatekeeper.selectCompany")} /></SelectTrigger>
+                  <SelectContent className={GATE_SELECT_CONTENT_CLASS}>{assignedPartners.map((group) => <SelectItem className={GATE_SELECT_ITEM_CLASS} key={group.partnerId} value={String(group.partnerId)}>{group.partnerName}</SelectItem>)}</SelectContent>
                 </Select>
                 <Select
                   value={
@@ -1628,12 +1639,12 @@ export default function GatekeeperPage() {
                     setHostKey("");
                   }}
                 >
-                  <SelectTrigger aria-label={t("gatekeeper.selectSite")} data-testid="select-gate-current-location" className="h-14 text-lg font-bold">
+                  <SelectTrigger aria-label={t("gatekeeper.selectSite")} data-testid="select-gate-current-location" className={WORK_HUB_BRANDED_FIELD_CLASS}>
                     <SelectValue placeholder={t("gatekeeper.selectSite")} />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className={GATE_SELECT_CONTENT_CLASS}>
                     {(assignedPartners.find((group) => String(group.partnerId) === selectedPartnerId)?.sites ?? []).map((row) => (
-                      <SelectItem key={row.siteCode} value={row.siteCode}>
+                      <SelectItem className={GATE_SELECT_ITEM_CLASS} key={row.siteCode} value={row.siteCode}>
                         {siteDisplayName(row)}
                       </SelectItem>
                     ))}
@@ -1684,12 +1695,12 @@ export default function GatekeeperPage() {
                 <div>
                   <Label htmlFor="gate-host">{t("gatekeeper.host")} *</Label>
                   <Select value={hostKey} onValueChange={setHostKey}>
-                    <SelectTrigger id="gate-host" aria-required="true">
+                    <SelectTrigger id="gate-host" aria-required="true" className={WORK_HUB_BRANDED_FIELD_CLASS}>
                       <SelectValue placeholder={t("gatekeeper.selectHost")} />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className={GATE_SELECT_CONTENT_CLASS}>
                       {hosts.map((host) => (
-                        <SelectItem key={host.key} value={host.key}>
+                        <SelectItem className={GATE_SELECT_ITEM_CLASS} key={host.key} value={host.key}>
                           {host.label} ({host.type})
                         </SelectItem>
                       ))}
@@ -1702,6 +1713,7 @@ export default function GatekeeperPage() {
               <Textarea
                 id="gate-purpose"
                 data-testid="input-gate-purpose"
+                className={GATE_TALL_FIELD_CLASS}
                 value={purpose}
                 onChange={(e) => {
                   forgetPlateAutoFill("purpose");
@@ -1711,15 +1723,16 @@ export default function GatekeeperPage() {
             </div>
             <div>
               <Label htmlFor="gate-entry-category">{t("gateReport.category")}</Label>
-              <select id="gate-entry-category" className="h-10 w-full rounded-md border bg-background px-2" value={entryCategory} onChange={e => setEntryCategory(e.target.value as typeof entryCategory)}>
+              <BrandedSelect id="gate-entry-category" value={entryCategory} onChange={e => setEntryCategory(e.target.value as typeof entryCategory)}>
                 {["", "visitor", "routine_vendor_work", "partner_admin", "vendor_admin"].map(value => <option key={value} value={value}>{t(`gateReport.${value || "unclassified"}`)}</option>)}
-              </select>
+              </BrandedSelect>
             </div>
             <div>
               <Label htmlFor="gate-notes">{t("gatekeeper.notes")}</Label>
               <Textarea
                 id="gate-notes"
                 data-testid="input-gate-notes"
+                className={GATE_TALL_FIELD_CLASS}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder={t("gatekeeper.notesPlaceholder")}
@@ -1733,7 +1746,7 @@ export default function GatekeeperPage() {
                     tone="brand"
                     key={chip.id}
                     className="w-full text-xs"
-                    height={40}
+                    height={36}
                     data-testid={`button-gate-duration-${chip.id}`}
                     aria-pressed={duration === String(minutesForDurationChip(chip.id))}
                     onClick={() => {
@@ -1750,6 +1763,7 @@ export default function GatekeeperPage() {
                 inputMode="numeric"
                 value={duration}
                 data-testid="input-gate-duration"
+                className={WORK_HUB_BRANDED_FIELD_CLASS}
                 onChange={(e) => {
                   forgetPlateAutoFill("expectedDuration");
                   setDuration(e.target.value);

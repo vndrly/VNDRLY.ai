@@ -6,6 +6,8 @@ import {
   findActiveVisitors,
   prepareVisitorCheckIn,
   prepareVisitorCheckOut,
+  resolveGateCheckInCandidate,
+  searchGateHistory,
   setTicketLifecycle,
   closeTicketForReview,
   callNaturalVoiceDomainApi,
@@ -182,6 +184,79 @@ describe("AskV canonical Gate and field operations", () => {
       ).error,
     ).toBeTruthy();
   });
+  it("searches only the authenticated Gate history and normalizes plate clues", async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => [
+        { id: 61, firstName: "Jack", lastName: "Smith", company: "Grady Farms", vehiclePlate: "ABC-123", plateState: "TX", siteLocationId: 9, checkInTime: "2026-09-17T10:00:00.000Z" },
+        { id: 62, firstName: "Unrelated", lastName: "Driver", company: "Other", vehiclePlate: "ZZZ999", plateState: "OK", siteLocationId: 9, checkInTime: "2026-09-17T11:00:00.000Z" },
+      ],
+    });
+    const result = JSON.parse(await searchGateHistory({ vehiclePlate: "abc 123", siteLocationId: 9 }, gate));
+    expect(result).toMatchObject({
+      ok: true,
+      matches: [{ id: 61, firstName: "Jack", lastName: "Smith", plateState: "TX" }],
+    });
+    expect(fetchMock.mock.calls[0][0]).toMatch(/\/api\/visits\?/);
+  });
+
+  it("resolves a unique historical plate while preserving an explicitly named driver", async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => [
+        { id: 61, firstName: "Old", lastName: "Driver", company: "Grady Farms", vehiclePlate: "ABC-123", plateState: "TX", purpose: "Delivery", siteLocationId: 9, hostType: "vendor", hostVendorId: 22, checkInTime: "2026-09-17T10:00:00.000Z" },
+      ],
+    });
+    const result = JSON.parse(await resolveGateCheckInCandidate({
+      firstName: "Jack",
+      lastName: "Smith",
+      vehiclePlate: "abc 123",
+      siteLocationId: 9,
+    }, gate));
+    expect(result).toMatchObject({
+      ok: true,
+      confidence: "high",
+      draft: {
+        firstName: "Jack",
+        lastName: "Smith",
+        company: "Grady Farms",
+        vehiclePlate: "ABC123",
+        plateState: "TX",
+      },
+      provenance: {
+        firstName: "explicit",
+        lastName: "explicit",
+        company: "most_recent_authorized_visit",
+        plateState: "unique_authorized_plate_history",
+      },
+      execution: "client",
+      intent: { name: "prefill_gate_visit", arguments: { mode: "check-in" } },
+    });
+  });
+
+  it("asks once for plate state when the same normalized plate occurs in multiple states", async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => [
+        { id: 61, firstName: "Jack", lastName: "Smith", vehiclePlate: "ABC123", plateState: "TX", siteLocationId: 9 },
+        { id: 62, firstName: "Jack", lastName: "Smith", vehiclePlate: "ABC123", plateState: "OK", siteLocationId: 9 },
+      ],
+    });
+    const result = JSON.parse(await resolveGateCheckInCandidate({ vehiclePlate: "ABC123", siteLocationId: 9 }, gate));
+    expect(result).toMatchObject({
+      ok: false,
+      confidence: "ambiguous",
+      clarification: { field: "plateState" },
+    });
+  });
+
+  it("denies Gate history and resolution to an unassigned non-gate account", async () => {
+    const session = { userId: 11, role: "field_employee" } as never;
+    expect(JSON.parse(await searchGateHistory({}, session)).error).toMatch(/Gatekeeper/i);
+    expect(JSON.parse(await resolveGateCheckInCandidate({}, session)).error).toMatch(/Gatekeeper/i);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("delegates ticket transitions and close to existing lifecycle endpoints", async () => {
     fetchMock.mockResolvedValue({ ok: true, json: async () => ({ id: 42 }) });
     await setTicketLifecycle(

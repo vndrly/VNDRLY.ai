@@ -79,7 +79,7 @@ afterEach(() => {
   cleanup();
 });
 
-import VisitorHostPicker from "./VisitorHostPicker";
+import VisitorHostPicker, { GATE_MOBILE_CONTROL_METRICS } from "./VisitorHostPicker";
 import type { SiteContext } from "../lib/guest";
 
 const labels = {
@@ -230,6 +230,15 @@ describe("VisitorHostPicker", () => {
     renderHostPicker({ onChangeSite });
     tap(firstByTestId("change-site-btn"));
     expect(onChangeSite).toHaveBeenCalledTimes(1);
+  });
+
+  it("uses compact branded Gate controls with tall rounded text areas", () => {
+    expect(GATE_MOBILE_CONTROL_METRICS).toEqual({
+      compactHeight: 36,
+      pillRadius: 999,
+      tallMinHeight: 72,
+      tallRadius: 12,
+    });
   });
 
   it("highlights the selected host inside the picker card", () => {

@@ -27,7 +27,7 @@ vi.mock("@/hooks/useColors", () => ({
   }),
 }));
 
-import PlateStatePicker from "./PlateStatePicker";
+import PlateStatePicker, { PLATE_STATE_PICKER_VISUALS } from "./PlateStatePicker";
 
 let testI18n: I18nInstance;
 
@@ -124,6 +124,18 @@ describe("PlateStatePicker", () => {
     tap(trigger);
     expect(screen.queryByRole("dialog", { name: "Plate state" })).toBeNull();
     expect(props.onChange).not.toHaveBeenCalled();
+  });
+
+  it("uses the compact branded trigger and light branded menu", () => {
+    expect(PLATE_STATE_PICKER_VISUALS).toEqual({
+      compactHeight: 36,
+      pillRadius: 999,
+      borderWidth: 2,
+      lightSurface: "#ffffff",
+    });
+    renderPicker();
+    tap(screen.getByRole("button", { name: "Select plate state" }));
+    expect(screen.getByRole("dialog", { name: "Plate state" })).toBeTruthy();
   });
 
   it("gives the open picker an accessible dialog and search control", () => {

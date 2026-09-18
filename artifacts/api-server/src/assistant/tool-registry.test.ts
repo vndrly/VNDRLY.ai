@@ -101,6 +101,10 @@ describe("AskV tool registry", () => {
     expect(markRead?.mutating).toBe(true);
     expect(markRead?.confirmation).toBe("required");
     const checkIn = ASK_V_TOOL_REGISTRY.find((tool) => tool.name === "confirm_visitor_check_in");
+    const history = ASK_V_TOOL_REGISTRY.find((tool) => tool.name === "search_gate_history");
+    const resolver = ASK_V_TOOL_REGISTRY.find((tool) => tool.name === "resolve_gate_check_in");
+    expect(history).toMatchObject({ mutating: false, confirmation: "none", risk: "read", pack: "screen" });
+    expect(resolver).toMatchObject({ mutating: false, confirmation: "none", risk: "read", pack: "screen" });
     const openScreen = ASK_V_TOOL_REGISTRY.find((tool) => tool.name === "open_screen");
     expect(checkIn).toMatchObject({
       mutating: true,

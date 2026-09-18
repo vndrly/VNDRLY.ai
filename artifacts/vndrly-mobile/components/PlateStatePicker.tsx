@@ -19,6 +19,8 @@ import { useTranslation } from "react-i18next";
 
 import { useColors } from "@/hooks/useColors";
 
+export const PLATE_STATE_PICKER_VISUALS = { compactHeight: 36, pillRadius: 999, borderWidth: 2, lightSurface: "#ffffff" } as const;
+
 export interface PlateStatePickerProps {
   value: PlateStateCode | null;
   onChange: (state: PlateStateCode) => void;
@@ -100,13 +102,13 @@ export function PlateStatePicker({
         style={[
           styles.trigger,
           {
-            backgroundColor: colors.card,
-            borderColor: error ? colors.destructive : colors.border,
+            backgroundColor: PLATE_STATE_PICKER_VISUALS.lightSurface,
+            borderColor: error ? colors.destructive : colors.primary,
             opacity: disabled ? 0.55 : 1,
           },
         ]}
       >
-        <Text style={[styles.triggerText, { color: selectedState ? colors.foreground : colors.mutedForeground }]}>
+        <Text style={[styles.triggerText, { color: selectedState ? "#374151" : "#6b7280" }]}>
           {selectedState
             ? `${selectedState.name} (${selectedState.code})`
             : selectLabel}
@@ -132,7 +134,7 @@ export function PlateStatePicker({
               role="dialog"
               aria-label={t("plateStatePicker.label")}
               accessibilityViewIsModal
-              style={[styles.dialog, { backgroundColor: colors.card, borderColor: colors.border }]}
+              style={[styles.dialog, { backgroundColor: "#ffffff", borderColor: colors.primary }]}
             >
               <View style={styles.dialogHeader}>
                 <Text style={[styles.title, { color: colors.foreground }]}>
@@ -159,7 +161,7 @@ export function PlateStatePicker({
                 placeholderTextColor={colors.mutedForeground}
                 style={[
                   styles.search,
-                  { borderColor: colors.border, color: colors.foreground },
+                  { borderColor: colors.primary, color: "#374151", backgroundColor: "#ffffff" },
                 ]}
                 value={query}
               />
@@ -193,12 +195,12 @@ export function PlateStatePicker({
                           style={[
                             styles.option,
                             {
-                              backgroundColor: isSelected ? colors.background : "transparent",
-                              borderColor: colors.border,
+                              backgroundColor: isSelected ? colors.primary : "#ffffff",
+                              borderColor: colors.primary,
                             },
                           ]}
                         >
-                          <Text style={[styles.optionText, { color: colors.foreground }]}>
+                          <Text style={[styles.optionText, { color: isSelected ? "#ffffff" : "#374151" }]}>
                             {state.name} ({state.code})
                           </Text>
                         </Pressable>
@@ -226,12 +228,12 @@ export function PlateStatePicker({
                           style={[
                             styles.option,
                             {
-                              backgroundColor: isSelected ? colors.background : "transparent",
-                              borderColor: colors.border,
+                              backgroundColor: isSelected ? colors.primary : "#ffffff",
+                              borderColor: colors.primary,
                             },
                           ]}
                         >
-                          <Text style={[styles.optionText, { color: colors.foreground }]}>
+                          <Text style={[styles.optionText, { color: isSelected ? "#ffffff" : "#374151" }]}>
                             {state.name} ({state.code})
                           </Text>
                         </Pressable>
@@ -254,11 +256,11 @@ const styles = StyleSheet.create({
   container: { gap: 6 },
   trigger: {
     alignItems: "center",
-    borderRadius: 10,
-    borderWidth: 1,
+    borderRadius: PLATE_STATE_PICKER_VISUALS.pillRadius,
+    borderWidth: PLATE_STATE_PICKER_VISUALS.borderWidth,
     flexDirection: "row",
     justifyContent: "space-between",
-    minHeight: 48,
+    minHeight: PLATE_STATE_PICKER_VISUALS.compactHeight,
     paddingHorizontal: 14,
   },
   triggerText: { flex: 1, fontFamily: "Inter_400Regular", fontSize: 16 },
@@ -288,8 +290,8 @@ const styles = StyleSheet.create({
   emptyText: { fontFamily: "Inter_400Regular", fontSize: 15, paddingVertical: 18, textAlign: "center" },
   groupLabel: { fontFamily: "Inter_600SemiBold", fontSize: 13, paddingHorizontal: 12, paddingVertical: 8 },
   search: {
-    borderRadius: 10,
-    borderWidth: 1,
+    borderRadius: 999,
+    borderWidth: 2,
     fontFamily: "Inter_400Regular",
     fontSize: 16,
     minHeight: 46,
@@ -298,7 +300,7 @@ const styles = StyleSheet.create({
   options: { marginTop: 12 },
   option: {
     borderBottomWidth: 1,
-    minHeight: 48,
+    minHeight: 36,
     justifyContent: "center",
     paddingHorizontal: 12,
   },

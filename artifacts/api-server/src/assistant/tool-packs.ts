@@ -38,6 +38,8 @@ const CORE_TOOLS = new Set([
 
 const GATE_SCREEN_TOOLS = new Set([
   "query_gate_report",
+  "search_gate_history",
+  "resolve_gate_check_in",
   "prepare_visitor_check_in",
   "confirm_visitor_check_in",
   "find_active_visitors",

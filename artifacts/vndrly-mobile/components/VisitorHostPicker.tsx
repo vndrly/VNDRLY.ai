@@ -7,6 +7,8 @@ import { useColors } from "@/hooks/useColors";
 import type { SiteContext } from "@/lib/guest";
 import { buildHostOptions, canSubmitCheckIn } from "@/lib/visitorCheckin";
 
+export const GATE_MOBILE_CONTROL_METRICS = { compactHeight: 36, pillRadius: 999, tallMinHeight: 72, tallRadius: 12 } as const;
+
 export interface VisitorHostPickerProps {
   ctx: SiteContext;
   hostKey: string | null;
@@ -118,9 +120,10 @@ export default function VisitorHostPicker({
         testID="purpose-input"
         value={purpose}
         onChangeText={onPurposeChange}
-        style={[styles.input, { borderColor: colors.border, color: colors.foreground, backgroundColor: colors.background }]}
-        placeholderTextColor={colors.mutedForeground}
+        style={[styles.tallInput, { borderColor: colors.primary, color: "#374151", backgroundColor: "#ffffff" }]}
+        placeholderTextColor="#6b7280"
         placeholder={labels.purposePlaceholder}
+        multiline
       />
 
       {onNotesChange ? (
@@ -132,8 +135,8 @@ export default function VisitorHostPicker({
             testID="notes-input"
             value={notes ?? ""}
             onChangeText={onNotesChange}
-            style={[styles.input, { borderColor: colors.border, color: colors.foreground, backgroundColor: colors.background }]}
-            placeholderTextColor={colors.mutedForeground}
+            style={[styles.tallInput, { borderColor: colors.primary, color: "#374151", backgroundColor: "#ffffff" }]}
+            placeholderTextColor="#6b7280"
             placeholder={labels.notesPlaceholder}
             multiline
           />
@@ -166,7 +169,7 @@ export default function VisitorHostPicker({
         value={duration}
         onChangeText={onDurationChange}
         keyboardType="number-pad"
-        style={[styles.input, { borderColor: colors.border, color: colors.foreground, backgroundColor: colors.background }]}
+        style={[styles.compactInput, { borderColor: colors.primary, color: "#374151", backgroundColor: "#ffffff" }]}
       />
 
       {(onCapturePlatePhoto || onCaptureVehiclePhoto) && (
@@ -238,13 +241,14 @@ const styles = StyleSheet.create({
   label: { fontFamily: "Inter_500Medium", fontSize: 13, marginBottom: 6 },
   hostOption: { flexDirection: "row", alignItems: "center", gap: 10, borderWidth: 1, borderRadius: 10, padding: 12, marginTop: 8 },
   hostLabel: { fontFamily: "Inter_500Medium", fontSize: 14 },
-  input: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, fontFamily: "Inter_400Regular", fontSize: 16 },
+  compactInput: { borderWidth: 2, borderRadius: GATE_MOBILE_CONTROL_METRICS.pillRadius, height: GATE_MOBILE_CONTROL_METRICS.compactHeight, paddingHorizontal: 12, paddingVertical: 0, fontFamily: "Inter_400Regular", fontSize: 14 },
+  tallInput: { borderWidth: 2, borderRadius: GATE_MOBILE_CONTROL_METRICS.tallRadius, minHeight: GATE_MOBILE_CONTROL_METRICS.tallMinHeight, paddingHorizontal: 12, paddingVertical: 8, fontFamily: "Inter_400Regular", fontSize: 14, textAlignVertical: "top" },
   chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 8 },
-  chip: { borderWidth: 1, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 8 },
+  chip: { borderWidth: 2, borderRadius: GATE_MOBILE_CONTROL_METRICS.pillRadius, height: GATE_MOBILE_CONTROL_METRICS.compactHeight, paddingHorizontal: 10, paddingVertical: 4, justifyContent: "center" },
   chipLabel: { fontFamily: "Inter_600SemiBold", fontSize: 12 },
   evidenceSection: { marginTop: 14 },
   evidenceRow: { flexDirection: "row", gap: 8 },
-  evidenceButton: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, borderWidth: 1, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 12 },
+  evidenceButton: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, borderWidth: 2, borderRadius: GATE_MOBILE_CONTROL_METRICS.pillRadius, height: GATE_MOBILE_CONTROL_METRICS.compactHeight, paddingHorizontal: 10, paddingVertical: 4 },
   evidenceLabel: { fontFamily: "Inter_600SemiBold", fontSize: 12, textAlign: "center" },
   linkText: { fontFamily: "Inter_600SemiBold", fontSize: 14 },
   note: { fontFamily: "Inter_400Regular", fontSize: 12, marginTop: 10, textAlign: "center" },
