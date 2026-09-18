@@ -3,8 +3,12 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
   AlertDialogTitle,
 } from "./alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "./dialog";
@@ -55,8 +59,14 @@ describe("always-dark modal theme contract", () => {
       render(
         <AlertDialog open>
           <AlertDialogContent>
-            <AlertDialogTitle>Confirmation modal</AlertDialogTitle>
-            <AlertDialogDescription>Confirmation description</AlertDialogDescription>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmation modal</AlertDialogTitle>
+              <AlertDialogDescription>Confirmation description</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction>Confirm</AlertDialogAction>
+            </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>,
       );
@@ -68,6 +78,11 @@ describe("always-dark modal theme contract", () => {
       expect(screen.getByTestId("modal-accent-header").style.backgroundImage).toContain(
         "VNDRLY_Header_Blur_Dark",
       );
+      const header = screen.getByTestId("app-modal-header");
+      expect(header.contains(screen.getByText("Confirmation modal"))).toBe(true);
+      expect(header.contains(screen.getByText("Confirmation description"))).toBe(true);
+      expect(body.contains(screen.getByRole("button", { name: "Confirm" }))).toBe(true);
+      expect(body.contains(screen.getByRole("button", { name: "Cancel" }))).toBe(true);
     });
   }
 });

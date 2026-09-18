@@ -1,9 +1,12 @@
 import * as React from "react"
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
+import { createPortal } from "react-dom"
 
+import { AppModalHeader } from "@/components/app-modal-header"
 import { cn } from "@/lib/utils"
 import { APP_MODAL_ALWAYS_DARK } from "@/components/app-modal-tokens"
 import { buttonVariants } from "@/components/ui/button"
+import { ModalHeaderHostContext } from "@/components/ui/dialog"
 
 const AlertDialog = AlertDialogPrimitive.Root
 
@@ -31,6 +34,7 @@ const AlertDialogContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Content>
 >(({ className, children, ...props }, ref) => {
   const modalTheme = APP_MODAL_ALWAYS_DARK
+  const [headerHost, setHeaderHost] = React.useState<HTMLDivElement | null>(null)
 
   return (
     <AlertDialogPortal>
@@ -45,19 +49,18 @@ const AlertDialogContent = React.forwardRef<
         {...props}
         style={{ ...modalTheme.shellStyle, ...props.style }}
       >
-        <div
-          aria-hidden
-          className={modalTheme.accentHeaderClassName}
-          style={modalTheme.accentHeaderStyle}
-          data-testid="modal-accent-header"
-        />
-        <div
-          className={cn("grid gap-4 p-6 pt-0", modalTheme.bodyWrapperClassName)}
-          data-testid="modal-body"
-          style={{ colorScheme: "light" }}
-        >
-          {children}
-        </div>
+        <ModalHeaderHostContext.Provider value={headerHost}>
+          <AppModalHeader>
+            <div ref={setHeaderHost} />
+          </AppModalHeader>
+          <div
+            className={cn("grid gap-4 p-6", modalTheme.bodyWrapperClassName)}
+            data-testid="modal-body"
+            style={{ colorScheme: "light" }}
+          >
+            {children}
+          </div>
+        </ModalHeaderHostContext.Provider>
       </AlertDialogPrimitive.Content>
     </AlertDialogPortal>
   )
@@ -67,15 +70,19 @@ AlertDialogContent.displayName = AlertDialogPrimitive.Content.displayName
 const AlertDialogHeader = ({
   className,
   ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
-  <div
-    className={cn(
-      "flex flex-col space-y-2 text-center sm:text-left",
-      className
-    )}
-    {...props}
-  />
-)
+}: React.HTMLAttributes<HTMLDivElement>) => {
+  const headerHost = React.useContext(ModalHeaderHostContext)
+  const header = (
+    <div
+      className={cn(
+        "flex flex-col space-y-2 text-left [&_[data-slot=alert-dialog-description]]:!text-white/80 [&_[data-slot=alert-dialog-title]]:!text-white",
+        className
+      )}
+      {...props}
+    />
+  )
+  return headerHost ? createPortal(header, headerHost) : header
+}
 AlertDialogHeader.displayName = "AlertDialogHeader"
 
 const AlertDialogFooter = ({
@@ -99,6 +106,7 @@ const AlertDialogTitle = React.forwardRef<
   const modalTheme = APP_MODAL_ALWAYS_DARK
   return (
     <AlertDialogPrimitive.Title
+      data-slot="alert-dialog-title"
       ref={ref}
       className={cn("text-lg font-semibold", modalTheme.titleClassName, className)}
       {...props}
@@ -114,6 +122,7 @@ const AlertDialogDescription = React.forwardRef<
   const modalTheme = APP_MODAL_ALWAYS_DARK
   return (
     <AlertDialogPrimitive.Description
+      data-slot="alert-dialog-description"
       ref={ref}
       className={cn("text-sm text-muted-foreground", modalTheme.descriptionClassName, className)}
       {...props}
