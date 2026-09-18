@@ -59,7 +59,7 @@ export function AppModalHeader({
     <div
       className={cn(
         "relative z-10 shrink-0 overflow-hidden border-b border-white/20",
-        "[&_[data-slot=dialog-description]]:!text-white/80 [&_[data-slot=dialog-title]]:!text-white",
+        "[&_[data-slot=dialog-description]]:!text-white/80 [&_[data-slot=dialog-title]]:!text-white [&_[data-slot=sheet-description]]:!text-white/80 [&_[data-slot=sheet-title]]:!text-white",
         compact ? "h-16 min-h-16" : "min-h-[118px]",
         className,
       )}

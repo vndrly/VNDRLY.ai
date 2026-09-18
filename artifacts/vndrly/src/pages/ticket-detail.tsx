@@ -3391,7 +3391,7 @@ function FindAnotherVendorSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-xl overflow-y-auto" data-testid="sheet-find-vendor">
+      <SheetContent side="right" modalChrome className="w-full sm:max-w-xl" data-testid="sheet-find-vendor">
         <SheetHeader>
           <SheetTitle>{t("ticketDetail.findAnotherVendor")}</SheetTitle>
           <SheetDescription>{t("ticketDetail.findAnotherVendorDescription")}</SheetDescription>
