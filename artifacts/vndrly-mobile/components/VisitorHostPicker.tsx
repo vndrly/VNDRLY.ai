@@ -25,6 +25,8 @@ export interface VisitorHostPickerProps {
   onSubmit: () => void;
   onChangeSite: () => void;
   extraSubmitDisabled?: boolean;
+  hideHost?: boolean;
+  lockSite?: boolean;
   notes?: string;
   onNotesChange?: (v: string) => void;
   durationChips?: Array<{ id: string; minutes: number; label: string }>;
@@ -62,6 +64,8 @@ export default function VisitorHostPicker({
   onSubmit,
   onChangeSite,
   extraSubmitDisabled = false,
+  hideHost = false,
+  lockSite = false,
   notes,
   onNotesChange,
   durationChips,
@@ -70,7 +74,7 @@ export default function VisitorHostPicker({
   const colors = useColors();
   const hostOptions = buildHostOptions(ctx);
   const submitDisabled =
-    !canSubmitCheckIn(hostKey, ctx, busy) || extraSubmitDisabled;
+    (hideHost ? busy : !canSubmitCheckIn(hostKey, ctx, busy)) || extraSubmitDisabled;
 
   return (
     <View
@@ -79,13 +83,15 @@ export default function VisitorHostPicker({
     >
       <View style={styles.cardHeader}>
         <Text style={[styles.cardTitle, { color: colors.foreground }]}>{ctx.site.name}</Text>
-        <TouchableOpacity onPress={onChangeSite} testID="change-site-btn">
-          <Text style={[styles.linkText, { color: colors.primary }]}>{labels.changeSite}</Text>
-        </TouchableOpacity>
+        {!lockSite ? (
+          <TouchableOpacity onPress={onChangeSite} testID="change-site-btn">
+            <Text style={[styles.linkText, { color: colors.primary }]}>{labels.changeSite}</Text>
+          </TouchableOpacity>
+        ) : null}
       </View>
       <Text style={[styles.muted, { color: colors.mutedForeground }]}>{ctx.site.address}</Text>
 
-      <Text style={[styles.label, { color: colors.foreground, marginTop: 14 }]}>{labels.whoVisiting}</Text>
+      {!hideHost ? <><Text style={[styles.label, { color: colors.foreground, marginTop: 14 }]}>{labels.whoVisiting}</Text>
       {hostOptions.length === 0 ? (
         <Text testID="no-hosts" style={[styles.muted, { color: colors.mutedForeground }]}>{labels.noHosts}</Text>
       ) : (
@@ -113,7 +119,7 @@ export default function VisitorHostPicker({
             </TouchableOpacity>
           );
         })
-      )}
+      )}</> : null}
 
       <Text style={[styles.label, { color: colors.foreground, marginTop: 14 }]}>{labels.purpose}</Text>
       <TextInput

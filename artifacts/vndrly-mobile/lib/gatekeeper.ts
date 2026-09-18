@@ -4,11 +4,12 @@ import { apiFetch } from "./api";
 import type { AssignedGateSitesResponse } from "./gate-default-site";
 import type { ActiveVisit, SiteContext } from "./guest";
 import type { PlateStateCode } from "@workspace/plate-state";
-import { buildHostOptions, parseDurationMinutes } from "./visitorCheckin";
+import { parseDurationMinutes } from "./visitorCheckin";
 
 export type GatekeeperVisitInput = {
   ctx: SiteContext;
-  hostKey: string;
+  /** Legacy caller compatibility; Gate host is derived from the selected site's partner. */
+  hostKey?: string;
   firstName: string;
   lastName: string;
   company: string;
@@ -28,7 +29,6 @@ export type GatekeeperSubmitResult =
       reason:
         | "missing-name"
         | "missing-plate"
-        | "no-host"
         | "location-denied";
     };
 
@@ -138,9 +138,6 @@ export async function submitGatekeeperVisit(
     return { ok: false, reason: "missing-name" };
   }
   if (!input.vehiclePlate.trim()) return { ok: false, reason: "missing-plate" };
-  const host = buildHostOptions(input.ctx).find((o) => o.key === input.hostKey);
-  if (!host) return { ok: false, reason: "no-host" };
-
   const perm = await Location.requestForegroundPermissionsAsync();
   if (perm.status !== "granted")
     return { ok: false, reason: "location-denied" };
@@ -155,9 +152,6 @@ export async function submitGatekeeperVisit(
       lastName: input.lastName.trim(),
       company: input.company.trim() || undefined,
       siteLocationId: input.ctx.site.id,
-      hostType: host.type,
-      hostPartnerId: host.type === "partner" ? host.id : undefined,
-      hostVendorId: host.type === "vendor" ? host.id : undefined,
       vehiclePlate: input.vehiclePlate.trim() || undefined,
       plateState: input.plateState ?? undefined,
       purpose: input.purpose.trim() || undefined,

@@ -2133,8 +2133,6 @@ describe("gatekeeper visit workflow", () => {
         firstName: "Pat",
         lastName: "Guarded",
         siteLocationId: site.id,
-        hostType: "partner",
-        hostPartnerId: site.partnerId,
         vehiclePlate: " GATE-1 ",
         plateState: "tx",
         latitude: site.latitude,
@@ -2149,6 +2147,9 @@ describe("gatekeeper visit workflow", () => {
     expect(fixtures.siteVisits[0]).toMatchObject({
       vehiclePlate: "GATE-1",
       plateState: "TX",
+      hostType: "partner",
+      hostPartnerId: site.partnerId,
+      hostVendorId: null,
     });
     expect(publishVisitEventMock).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -2248,7 +2249,11 @@ describe("gatekeeper visit workflow", () => {
         longitude: site.longitude,
       });
     expectStatus(response, 201);
-    expect(response.body.hostVendorId).toBe(otherVendor.id);
+    expect(response.body).toMatchObject({
+      hostType: "partner",
+      hostPartnerId: site.partnerId,
+      hostVendorId: null,
+    });
   });
 
   it("cannot operate a gate at a site where its vendor is unassigned", async () => {

@@ -27,6 +27,7 @@ import { translateApiError } from "@/lib/apiErrors";
 import {
   pickDefaultGateHostKey,
   groupAssignedGateSitesByPartner,
+  pickLocalAssignedGateSites,
   pickNearestAssignedGateSite,
   pickPreferredGateDefaultSite,
   resolveAssignedGateSites,
@@ -139,6 +140,7 @@ export default function GatekeeperScreen() {
   const voiceToggleRef = useRef<() => Promise<void>>(async () => undefined);
   const [siteCode, setSiteCode] = useState("");
   const [confirmedCode, setConfirmedCode] = useState<string | null>(null);
+  const [resolvedPrefillSiteId, setResolvedPrefillSiteId] = useState<number | null>(null);
   const [hostKey, setHostKey] = useState<string | null>(null);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -180,6 +182,9 @@ export default function GatekeeperScreen() {
   });
   useEffect(() => subscribeAskVGatePrefill((prefill) => {
     const values = prefill.values;
+    if (typeof values.siteLocationId === "number" && Number.isSafeInteger(values.siteLocationId)) {
+      setResolvedPrefillSiteId(values.siteLocationId);
+    }
     if (typeof values.firstName === "string") setFirstName(values.firstName);
     if (typeof values.lastName === "string") setLastName(values.lastName);
     if (typeof values.company === "string") setCompany(values.company);
@@ -218,6 +223,17 @@ export default function GatekeeperScreen() {
   const assignedSites = assigned.data?.sites ?? [];
   const assignedPartners = useMemo(() => groupAssignedGateSitesByPartner(assignedSites), [assignedSites]);
   const nearestSite = useMemo(() => pickNearestAssignedGateSite(assignedSites, origin), [assignedSites, origin]);
+  const localAssignedSites = useMemo(() => pickLocalAssignedGateSites(assignedSites, origin), [assignedSites, origin]);
+  useEffect(() => {
+    if (resolvedPrefillSiteId == null || assignedSites.length === 0) return;
+    const resolvedSite = localAssignedSites.find((site) => site.id === resolvedPrefillSiteId);
+    if (resolvedSite) {
+      appliedDefault.current = true;
+      setSiteCode(resolvedSite.siteCode);
+      setConfirmedCode(resolvedSite.siteCode);
+    }
+    setResolvedPrefillSiteId(null);
+  }, [assignedSites.length, localAssignedSites, resolvedPrefillSiteId]);
   const locationResolved = origin !== null || gps === "denied" || gps === "unavailable";
   const preferredSite = nearestSite ?? pickPreferredGateDefaultSite(assignedSites, assigned.data?.defaultSite ?? null);
   const defaultSiteCode = locationResolved ? preferredSite?.siteCode : undefined;
@@ -703,7 +719,6 @@ export default function GatekeeperScreen() {
     try {
       const result = await submitGatekeeperVisit({
         ctx,
-        hostKey: hostKey ?? "",
         firstName,
         lastName,
         company,
@@ -721,9 +736,7 @@ export default function GatekeeperScreen() {
             ? t("gatekeeper.nameRequired")
             : result.reason === "missing-plate"
               ? t("gatekeeper.plateRequired")
-              : result.reason === "no-host"
-                ? t("visitor.pickHost")
-                : t("visitor.locationDenied");
+            : t("visitor.locationDenied");
         Alert.alert(t("visitor.error"), message);
         return;
       }
@@ -1194,20 +1207,15 @@ export default function GatekeeperScreen() {
             >
               {fenceSentence}
             </Text>
-            <TouchableOpacity testID="gate-partner-selector" onPress={() => setPartnerMenuOpen((open) => !open)} style={[styles.siteOption, { borderColor: colors.border, backgroundColor: colors.card }]}>
-              <Text style={[styles.siteOptionName, { color: colors.foreground }]}>{assignedPartners.find((group) => group.partnerId === selectedPartnerId)?.partnerName ?? "Select company"}</Text>
-            </TouchableOpacity>
-            {partnerMenuOpen && assignedPartners.map((group) => (
-              <TouchableOpacity key={group.partnerId} onPress={() => { setSelectedPartnerId(group.partnerId); setPartnerMenuOpen(false); setSiteMenuOpen(true); }} style={[styles.siteOption, { borderColor: colors.border, backgroundColor: colors.card }]}>
-                <Text style={[styles.siteOptionName, { color: colors.foreground }]}>{group.partnerName}</Text>
-              </TouchableOpacity>
-            ))}
+            <View testID="gate-locked-partner" style={[styles.siteOption, { borderColor: colors.border, backgroundColor: colors.card }]}>
+              <Text style={[styles.siteOptionName, { color: colors.foreground }]}>{nearestSite?.partnerName ?? selectedAssignedSite?.partnerName ?? "Current lease"}</Text>
+            </View>
             <View testID={selectedAssignedSite ? `gate-site-option-${selectedAssignedSite.siteCode}` : undefined}>
               <TouchableOpacity testID="gate-site-selector" onPress={() => setSiteMenuOpen((open) => !open)} style={[styles.siteOption, { borderColor: colors.border, backgroundColor: colors.card }]}>
                 <Text style={[styles.siteOptionName, { color: colors.foreground }]}>{selectedAssignedSite?.name ?? "Select site"}</Text>
               </TouchableOpacity>
             </View>
-            {siteMenuOpen && (assignedPartners.find((group) => group.partnerId === selectedPartnerId)?.sites ?? []).map((site) => {
+            {siteMenuOpen && localAssignedSites.map((site) => {
               const selected = confirmedCode === site.siteCode;
               return (
                 <TouchableOpacity
@@ -1252,6 +1260,8 @@ export default function GatekeeperScreen() {
                 ctx={ctxQuery.data}
                 hostKey={hostKey}
                 onSelectHost={setHostKey}
+                hideHost
+                lockSite
                 purpose={purpose}
                 onPurposeChange={(value) => {
                   forgetPlateAutoFill("purpose");

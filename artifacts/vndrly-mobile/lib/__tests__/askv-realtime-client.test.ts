@@ -100,6 +100,33 @@ describe("mobile Realtime transport", () => {
     client.close();
   });
 
+  it("does not request speech after a successful silent Gate prefill", async () => {
+    const onDone = vi.fn();
+    const client = await createAskVRealtimeClient({
+      ...options(),
+      onDone,
+      onToolCall: async () => JSON.stringify({ ok: true, responseMode: "silent" }),
+    });
+    await client.connect();
+    const before = rtc.channels[0].sent.filter((event: any) => event.type === "response.create").length;
+    await emit({ type: "response.function_call_arguments.done", call_id: "gate-1", name: "resolve_gate_check_in", arguments: "{}" });
+    expect(rtc.channels[0].sent.filter((event: any) => event.type === "response.create")).toHaveLength(before);
+    expect(onDone).toHaveBeenCalledOnce();
+    client.close();
+  });
+
+  it("requests one response when the Gate tool needs clarification", async () => {
+    const client = await createAskVRealtimeClient({
+      ...options(),
+      onToolCall: async () => JSON.stringify({ ok: false, message: "Which driver?" }),
+    });
+    await client.connect();
+    const before = rtc.channels[0].sent.filter((event: any) => event.type === "response.create").length;
+    await emit({ type: "response.function_call_arguments.done", call_id: "gate-2", name: "resolve_gate_check_in", arguments: "{}" });
+    expect(rtc.channels[0].sent.filter((event: any) => event.type === "response.create")).toHaveLength(before + 1);
+    client.close();
+  });
+
   it("uses the existing native PCM source without acquiring a second microphone", async () => {
     const listeners = new Set<(samples: Float32Array) => void>();
     const audioSource = { subscribe: (fn: (samples: Float32Array) => void) => { listeners.add(fn); return () => listeners.delete(fn); }, stop: vi.fn() };

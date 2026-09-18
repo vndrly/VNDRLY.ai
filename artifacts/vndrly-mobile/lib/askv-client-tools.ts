@@ -3,10 +3,10 @@ import { Linking } from "react-native";
 import { getApiBase } from "@/lib/api";
 
 export interface AskVClientIntent { name: string; arguments: Record<string, unknown> }
-export interface AskVClientResult { ok: boolean; message: string; opened?: boolean; saved?: boolean }
+export interface AskVClientResult { ok: boolean; message: string; opened?: boolean; saved?: boolean; responseMode?: "silent" }
 const controls = new Map<string, () => boolean>();
 const dataChanged = new Set<() => void>();
-export type AskVGatePrefill = { mode: "check-in" | "check-out"; values: Record<string, unknown>; matches: Array<{ id: number }>; missing: string[] };
+export type AskVGatePrefill = { mode: "check-in" | "check-out"; values: Record<string, unknown>; provenance: Record<string, unknown>; matches: Array<{ id: number }>; missing: string[] };
 const gatePrefillListeners = new Set<(prefill: AskVGatePrefill) => void>();
 export function subscribeAskVGatePrefill(listener: (prefill: AskVGatePrefill) => void): () => void {
   gatePrefillListeners.add(listener); return () => { gatePrefillListeners.delete(listener); };
@@ -14,14 +14,15 @@ export function subscribeAskVGatePrefill(listener: (prefill: AskVGatePrefill) =>
 function readGatePrefill(args: Record<string, unknown>): AskVGatePrefill {
   const mode = args.mode === "check-out" ? "check-out" : "check-in";
   const raw = args.values && typeof args.values === "object" && !Array.isArray(args.values) ? args.values as Record<string, unknown> : {};
-  const allowed = new Set(["firstName", "lastName", "company", "vehiclePlate", "plateState", "purpose", "notes", "expectedDurationMinutes"]);
+  const allowed = new Set(["firstName", "lastName", "company", "vehiclePlate", "plateState", "purpose", "notes", "expectedDurationMinutes", "siteLocationId"]);
   const values = Object.fromEntries(Object.entries(raw).filter(([key, value]) => allowed.has(key) && (typeof value === "string" || typeof value === "number")));
   const matches = Array.isArray(args.matches) ? args.matches.flatMap((match) => {
     const id = Number((match as { id?: unknown })?.id);
     return Number.isSafeInteger(id) && id > 0 ? [{ id }] : [];
   }) : [];
   const missing = Array.isArray(args.missing) ? args.missing.filter((value): value is string => typeof value === "string") : [];
-  return { mode, values, matches, missing };
+  const provenance = args.provenance && typeof args.provenance === "object" && !Array.isArray(args.provenance) ? args.provenance as Record<string, unknown> : {};
+  return { mode, values, provenance, matches, missing };
 }
 export function emitAskVDataChanged(): void { dataChanged.forEach(listener => listener()); }
 export function subscribeAskVDataChanged(listener: () => void): () => void {
@@ -72,7 +73,8 @@ export async function executeAskVClientIntent(intent: AskVClientIntent, path: st
     if (intent.name === "prefill_gate_visit") {
       const prefill = readGatePrefill(args);
       gatePrefillListeners.forEach((listener) => listener(prefill));
-      return opened(prefill.missing.length ? `Gate form filled. Still needed: ${prefill.missing.join(", ")}.` : "Gate form filled and ready for review.");
+      const result = opened(prefill.missing.length ? `Gate form filled. Still needed: ${prefill.missing.join(", ")}.` : "Gate form filled and ready for review.");
+      return prefill.missing.length ? result : { ...result, responseMode: "silent" };
     }
     if (intent.name === "focus_control") {
       const focus = controls.get(path + ":" + String(args.controlId));

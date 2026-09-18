@@ -41,10 +41,8 @@ const GATE_SCREEN_TOOLS = new Set([
   "search_gate_history",
   "resolve_gate_check_in",
   "prepare_visitor_check_in",
-  "confirm_visitor_check_in",
   "find_active_visitors",
   "prepare_visitor_check_out",
-  "confirm_visitor_check_out",
   "query_active_visitors",
   "query_visits",
 ]);

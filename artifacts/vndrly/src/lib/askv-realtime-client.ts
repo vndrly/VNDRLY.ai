@@ -22,6 +22,15 @@ export interface RealtimeClientOptions {
   onResponse?: (response: Record<string, any>) => void;
 }
 
+function isSilentToolOutput(output: string): boolean {
+  try {
+    const value = JSON.parse(output) as { ok?: unknown; responseMode?: unknown };
+    return value.ok === true && value.responseMode === 'silent';
+  } catch {
+    return false;
+  }
+}
+
 /** Uses the existing OpenAI Realtime broker specified in the approved natural-voice scope.
  * Idle detection never invokes this client. PCM upload starts only after activation. */
 export async function createAskVRealtimeClient(args: RealtimeClientOptions): Promise<AskVRealtimeClient> {
@@ -114,7 +123,11 @@ export async function createAskVRealtimeClient(args: RealtimeClientOptions): Pro
       let parsed: unknown; try { parsed = typeof item.arguments === 'string' ? JSON.parse(item.arguments) : item.arguments ?? {}; } catch { parsed = null; }
       const output = parsed === null ? 'Invalid tool arguments. Ask for clarification.' : await args.onToolCall({ name: item.name, arguments: parsed, callId: item.call_id });
       if (closed) return;
-      send({ type: 'conversation.item.create', item: { type: 'function_call_output', call_id: item.call_id, output } }); send({ type: 'response.create' });
+      send({ type: 'conversation.item.create', item: { type: 'function_call_output', call_id: item.call_id, output } });
+      if (isSilentToolOutput(output)) {
+        args.onDone?.();
+        args.onPlaybackStopped?.();
+      } else send({ type: 'response.create' });
     })().catch(error => fail(error instanceof Error ? error.message : 'AskV tool failed.'));
   };
   return {

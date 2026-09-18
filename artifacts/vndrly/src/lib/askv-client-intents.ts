@@ -31,9 +31,9 @@ export function applyAskVClientIntent(intent: AskVClientIntent): { ok: boolean; 
   if (intent.name === 'prefill_gate_visit') {
     const mode = args.mode === 'check-out' ? 'check-out' : 'check-in';
     const raw = args.values && typeof args.values === 'object' && !Array.isArray(args.values) ? args.values as Record<string, unknown> : {};
-    const allowed = new Set(['firstName', 'lastName', 'company', 'vehiclePlate', 'plateState', 'purpose', 'notes', 'expectedDurationMinutes']);
+    const allowed = new Set(['firstName', 'lastName', 'company', 'vehiclePlate', 'plateState', 'purpose', 'notes', 'expectedDurationMinutes', 'siteLocationId']);
     const values = Object.fromEntries(Object.entries(raw).filter(([key, value]) => allowed.has(key) && (typeof value === 'string' || typeof value === 'number')));
-    const detail = { mode, values, matches: Array.isArray(args.matches) ? args.matches : [], missing: Array.isArray(args.missing) ? args.missing : [] };
+    const detail = { mode, values, provenance: args.provenance ?? {}, matches: Array.isArray(args.matches) ? args.matches : [], missing: Array.isArray(args.missing) ? args.missing : [] };
     window.dispatchEvent(new CustomEvent('askv:gate-prefill', { detail }));
     return { ok: true, message: detail.missing.length ? `Gate form filled. Still needed: ${detail.missing.join(', ')}.` : 'Gate form filled and ready for review.' };
   }

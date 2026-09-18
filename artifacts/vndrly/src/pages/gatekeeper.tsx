@@ -59,6 +59,7 @@ import {
 import {
   pickDefaultGateHostKey,
   groupAssignedGateSitesByPartner,
+  pickLocalAssignedGateSites,
   pickNearestAssignedGateSite,
   resolveAssignedGateSites,
   shouldApplyDefaultGateSite,
@@ -246,6 +247,7 @@ export default function GatekeeperPage() {
   const plateAutoFillRef = useRef<PlateAutoFillSnapshot | null>(null);
   const [siteCode, setSiteCode] = useState("");
   const [confirmedCode, setConfirmedCode] = useState<string | null>(null);
+  const [resolvedPrefillSiteId, setResolvedPrefillSiteId] = useState<number | null>(null);
   const [hostKey, setHostKey] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -429,6 +431,9 @@ export default function GatekeeperPage() {
       const detail = (event as CustomEvent<{ mode?: string; values?: Record<string, unknown>; matches?: Array<{ id?: unknown }>; missing?: unknown[] }>).detail;
       if (!detail) return;
       const values = detail.values ?? {};
+      if (typeof values.siteLocationId === "number" && Number.isSafeInteger(values.siteLocationId)) {
+        setResolvedPrefillSiteId(values.siteLocationId);
+      }
       const current = entryDraftRef.current;
       const next: GateEntryDraft = {
         ...current,
@@ -745,6 +750,17 @@ export default function GatekeeperPage() {
   const assignedSites = assigned.data?.sites ?? [];
   const assignedPartners = useMemo(() => groupAssignedGateSitesByPartner(assignedSites), [assignedSites]);
   const nearestSite = useMemo(() => pickNearestAssignedGateSite(assignedSites, origin), [assignedSites, origin]);
+  const localAssignedSites = useMemo(() => pickLocalAssignedGateSites(assignedSites, origin), [assignedSites, origin]);
+  useEffect(() => {
+    if (resolvedPrefillSiteId == null || assignedSites.length === 0) return;
+    const resolvedSite = localAssignedSites.find((row) => row.id === resolvedPrefillSiteId);
+    if (resolvedSite) {
+      appliedDefault.current = true;
+      setSiteCode(resolvedSite.siteCode);
+      setConfirmedCode(resolvedSite.siteCode);
+    }
+    setResolvedPrefillSiteId(null);
+  }, [assignedSites.length, localAssignedSites, resolvedPrefillSiteId]);
   const locationResolved = origin !== null || gps === "denied" || gps === "unavailable";
   const defaultSiteCode = locationResolved ? (nearestSite ?? assigned.data?.defaultSite)?.siteCode : undefined;
   const selectedAssignedSite = assignedSites.find((row) => row.siteCode === confirmedCode) ?? nearestSite ?? assigned.data?.defaultSite ?? null;
@@ -984,10 +1000,8 @@ export default function GatekeeperPage() {
 
   const checkIn = async () => {
     const context = site.data;
-    const host = hosts.find((candidate) => candidate.key === hostKey);
     if (
       !context ||
-      !host ||
       !firstName.trim() ||
       !lastName.trim() ||
       !vehiclePlate.trim()
@@ -1016,9 +1030,6 @@ export default function GatekeeperPage() {
         expectedDurationMinutes:
           Number.isFinite(minutes) && minutes > 0 ? minutes : undefined,
         siteLocationId: context.site.id,
-        hostType: host.type,
-        hostPartnerId: host.type === "partner" ? host.id : undefined,
-        hostVendorId: host.type === "vendor" ? host.id : undefined,
         platePhotoUrl: platePhotoUrl ?? undefined,
         vehiclePhotoUrl: vehiclePhotoUrl ?? undefined,
         latitude: origin.latitude,
@@ -1623,10 +1634,9 @@ export default function GatekeeperPage() {
               </p>
               {assignedSites.length > 0 ? (
                 <div className="grid gap-3 sm:grid-cols-2">
-                <Select value={selectedPartnerId} onValueChange={(value) => { setSelectedPartnerId(value); setHostKey(""); }}>
-                  <SelectTrigger aria-label={t("gatekeeper.selectCompany")} data-testid="select-gate-partner" className={WORK_HUB_BRANDED_FIELD_CLASS}><SelectValue placeholder={t("gatekeeper.selectCompany")} /></SelectTrigger>
-                  <SelectContent className={GATE_SELECT_CONTENT_CLASS}>{assignedPartners.map((group) => <SelectItem className={GATE_SELECT_ITEM_CLASS} key={group.partnerId} value={String(group.partnerId)}>{group.partnerName}</SelectItem>)}</SelectContent>
-                </Select>
+                <div className={WORK_HUB_BRANDED_FIELD_CLASS} data-testid="gate-locked-partner" aria-readonly="true">
+                  {nearestSite?.partnerName ?? selectedAssignedSite?.partnerName ?? t("gatekeeper.selectCompany")}
+                </div>
                 <Select
                   value={
                     assignedSites.some((row) => row.siteCode === confirmedCode)
@@ -1643,7 +1653,7 @@ export default function GatekeeperPage() {
                     <SelectValue placeholder={t("gatekeeper.selectSite")} />
                   </SelectTrigger>
                   <SelectContent className={GATE_SELECT_CONTENT_CLASS}>
-                    {(assignedPartners.find((group) => String(group.partnerId) === selectedPartnerId)?.sites ?? []).map((row) => (
+                    {localAssignedSites.map((row) => (
                       <SelectItem className={GATE_SELECT_ITEM_CLASS} key={row.siteCode} value={row.siteCode}>
                         {siteDisplayName(row)}
                       </SelectItem>
@@ -1690,23 +1700,6 @@ export default function GatekeeperPage() {
               <p className="text-sm text-destructive">
                 {t("gatekeeper.siteNotFound")}
               </p>
-            )}
-            {site.data && (
-                <div>
-                  <Label htmlFor="gate-host">{t("gatekeeper.host")} *</Label>
-                  <Select value={hostKey} onValueChange={setHostKey}>
-                    <SelectTrigger id="gate-host" aria-required="true" className={WORK_HUB_BRANDED_FIELD_CLASS}>
-                      <SelectValue placeholder={t("gatekeeper.selectHost")} />
-                    </SelectTrigger>
-                    <SelectContent className={GATE_SELECT_CONTENT_CLASS}>
-                      {hosts.map((host) => (
-                        <SelectItem className={GATE_SELECT_ITEM_CLASS} key={host.key} value={host.key}>
-                          {host.label} ({host.type})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
             )}
             <div>
               <Label htmlFor="gate-purpose">{t("gatekeeper.purpose")}</Label>

@@ -290,6 +290,7 @@ function contextFor(
 async function buildRealtimeSetup(
   session: SessionPayload,
   seedMessage: string,
+  path = "",
 ): Promise<{ instructions: string; language: "en" | "es" }> {
   const [user] = await db
     .select()
@@ -356,6 +357,7 @@ async function buildRealtimeSetup(
     },
     docs,
     onboarding,
+    pageContext: path ? { path } : undefined,
   })}
 
 VOICE MODE
@@ -591,7 +593,15 @@ router.post(
           process.env.ASKV_REALTIME_MODEL?.trim() ||
           DEFAULT_ASKV_REALTIME_MODEL,
         voice: process.env.ASKV_REALTIME_VOICE?.trim() || "marin",
-        ...(await buildRealtimeSetup(session, seedMessage)),
+        ...(await buildRealtimeSetup(
+          session,
+          seedMessage,
+          typeof req.body?.path === "string"
+            ? req.body.path
+            : typeof req.body?.pageContext?.path === "string"
+              ? req.body.pageContext.path
+              : "",
+        )),
         tools: toRealtimeTools(roleTools),
       });
 
@@ -695,7 +705,11 @@ router.post(
           process.env.ASKV_REALTIME_MODEL?.trim() ||
           DEFAULT_ASKV_REALTIME_MODEL,
         voice: process.env.ASKV_REALTIME_VOICE?.trim() || "marin",
-        ...(await buildRealtimeSetup(session, seedMessage)),
+        ...(await buildRealtimeSetup(
+          session,
+          seedMessage,
+          typeof req.query?.path === "string" ? req.query.path : "",
+        )),
         tools: toRealtimeTools(roleTools),
         sdp,
       });

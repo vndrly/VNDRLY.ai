@@ -745,8 +745,7 @@ describe("GatekeeperScreen", () => {
     fireEvent.change(firstByTestId("gate-vehicle-plate"), {
       target: { value: "4412" },
     });
-    tap(await findFirstByTestId("host-option-partner:7"));
-    tap(firstByTestId("check-in-btn"));
+    tap(await findFirstByTestId("check-in-btn"));
 
     await waitFor(() =>
       expect(submitGatekeeperVisitMock).toHaveBeenCalledTimes(1),
@@ -817,7 +816,6 @@ describe("GatekeeperScreen", () => {
     fireEvent.change(firstByTestId("gate-last-name"), {
       target: { value: "Hale" },
     });
-    tap(await findFirstByTestId("host-option-partner:7"));
     tap(firstByTestId("check-in-btn"));
 
     await waitFor(() =>
@@ -937,7 +935,6 @@ describe("GatekeeperScreen", () => {
       expect(isDisabled(firstByTestId("gate-capture-tag-photo"))).toBe(false);
     });
 
-    tap(await findFirstByTestId("host-option-partner:7"));
     tap(firstByTestId("check-in-btn"));
 
     await waitFor(() => {

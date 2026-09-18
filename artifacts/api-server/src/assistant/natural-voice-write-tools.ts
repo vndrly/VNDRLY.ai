@@ -19,8 +19,6 @@ function missingCheckInFields(args: Record<string, unknown>): string[] {
   if (typeof args.lastName !== "string" || !args.lastName.trim())
     missing.push("lastName");
   if (!positiveId(args.siteLocationId)) missing.push("siteLocationId");
-  if (args.hostType !== "partner" && args.hostType !== "vendor")
-    missing.push("hostType");
   if (args.hostType === "partner" && !positiveId(args.hostPartnerId))
     missing.push("hostPartnerId");
   if (args.hostType === "vendor" && !positiveId(args.hostVendorId))
@@ -116,7 +114,7 @@ function gatekeeper(session: SessionPayload): boolean {
     (session.vendorRole === "gatekeeper" || session.vendorRole === "gate_supervisor"),
   );
 }
-const GATE_FORM_FIELDS = ["firstName", "lastName", "company", "vehiclePlate", "plateState", "purpose", "notes", "expectedDurationMinutes"] as const;
+const GATE_FORM_FIELDS = ["firstName", "lastName", "company", "vehiclePlate", "plateState", "purpose", "notes", "expectedDurationMinutes", "siteLocationId", "latitude", "longitude"] as const;
 function gateFormValues(args: Record<string, unknown>): Record<string, unknown> {
   return Object.fromEntries(GATE_FORM_FIELDS.filter((key) => args[key] != null).map((key) => [key, args[key]]));
 }
@@ -286,13 +284,17 @@ export async function searchGateHistory(
   if (!gatekeeper(session))
     return err("Gate history requires your assigned Gatekeeper account.");
   const args = argsOf(input);
-  const query = new URLSearchParams({ limit: "1000" });
+  const query = new URLSearchParams({ limit: "25" });
   if (positiveId(args.siteLocationId))
     query.set("siteLocationId", String(args.siteLocationId));
   if (typeof args.from === "string" && args.from.trim())
     query.set("from", args.from.trim());
   if (typeof args.to === "string" && args.to.trim())
     query.set("to", args.to.trim());
+  if (typeof args.vehiclePlate === "string" && normalizedGatePlate(args.vehiclePlate))
+    query.set("vehiclePlate", normalizedGatePlate(args.vehiclePlate));
+  if (typeof args.plateState === "string" && args.plateState.trim())
+    query.set("plateState", args.plateState.trim().toUpperCase());
   if (args.activeOnly === true) query.set("activeOnly", "true");
 
   const result = await callNaturalVoiceDomainApi(
@@ -364,7 +366,6 @@ export async function resolveGateCheckInCandidate(
     ? {
         vehiclePlate,
         plateState: args.plateState,
-        siteLocationId: args.siteLocationId,
       }
     : {
         firstName: args.firstName,
@@ -414,9 +415,6 @@ export async function resolveGateCheckInCandidate(
     "notes",
     "expectedDurationMinutes",
     "siteLocationId",
-    "hostType",
-    "hostPartnerId",
-    "hostVendorId",
     "latitude",
     "longitude",
   ] as const;
@@ -435,9 +433,6 @@ export async function resolveGateCheckInCandidate(
       "purpose",
       "expectedDurationMinutes",
       "siteLocationId",
-      "hostType",
-      "hostPartnerId",
-      "hostVendorId",
     ] as const;
     for (const field of historicalFields) {
       if (draft[field] != null || candidate[field] == null) continue;
@@ -470,7 +465,7 @@ export async function resolveGateCheckInCandidate(
     : "none";
 
   return JSON.stringify({
-    ok: Boolean(candidate),
+    ok: true,
     confidence,
     candidates: candidate ? [candidate] : [],
     draft,

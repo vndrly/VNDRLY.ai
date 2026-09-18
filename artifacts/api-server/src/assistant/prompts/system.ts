@@ -197,6 +197,16 @@ ${stepGuidance}
 - For "what is on my day" or similar, use get_work_hub_agenda with the user's local date and timezone, summarize briefly, and link exact items when available.\n`
     : "";
 
+  const gateBlock = pageContext?.path && /\/(?:gate|gatekeeper|visitor)(?:\/|$)/i.test(pageContext.path)
+    ? `\n\nGATE FAST-LANE RULES
+- Gate check-in and check-out are speed-critical. When the gatekeeper gives a person, company, plate, or state, call the Gate resolver immediately. Do not explain what you can do, restate the request, or give instructions first.
+- Use current GPS and authorized history to resolve the locked lease location, local rig, exact state-plus-plate history, latest submitted driver, and company. Historical driver and rig values are editable suggestions, not verified facts.
+- Never ask for Host. Gate derives the lease-holding energy partner from the GPS-resolved site.
+- Ask one short clarification only when the resolver reports genuine ambiguity or a required value cannot be determined.
+- Do not speak after a successful prefill. The client silently updates the form and returns to listening.
+- Never submit or confirm a Gate check-in or check-out. The gatekeeper always performs the final submit after reviewing the draft.\n`
+    : "";
+
   const mobileBlock = pageContext?.path?.startsWith("/mobile/")
     ? `\n\nMOBILE APP CLIENT\nThe user is in the VNDRLY iOS/Android app — not the web portal. When linking to a specific ticket, always use real markdown paths the app understands, e.g. [Open ticket #123](/tickets/123). The app opens /tickets/{id} in the native ticket screen. Never invent schemes like VNDRLY-deep-link:.... After deep_link_to returns a url, paste that exact path in markdown (usually /tickets/{id}). For web-only admin screens, explain the steps or say they are on vndrly.ai — do not fake a mobile link.\n`
     : "";
@@ -246,7 +256,7 @@ GROUND RULES
 
 KNOWLEDGE
 ${knowledgeBlock}
-${pageContextBlock}${calendarBlock}${mobileBlock}${locationBlock}${onboardingBlock}`;
+${pageContextBlock}${calendarBlock}${gateBlock}${mobileBlock}${locationBlock}${onboardingBlock}`;
 }
 
 /**

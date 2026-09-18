@@ -21,6 +21,16 @@ describe("assigned gate site selection", () => {
   it("groups assigned sites by partner for the two-stage selector", () => {
     expect(gateSites.groupAssignedGateSitesByPartner(assignedSites).map((group) => group.partnerName)).toEqual(["Flywheel", "Warwick"]);
   });
+
+  it("offers only GPS-local rigs for the locked lease partner", () => {
+    const sites = [
+      { ...assignedSites[0], id: 3, siteCode: "LOCAL-A", name: "Local A", latitude: 35, longitude: -97, siteRadiusMeters: 805 },
+      { ...assignedSites[0], id: 4, siteCode: "LOCAL-B", name: "Local B", latitude: 35.001, longitude: -97.001, siteRadiusMeters: 805 },
+      { ...assignedSites[0], id: 5, siteCode: "FAR", name: "Far", latitude: 36, longitude: -98, siteRadiusMeters: 805 },
+      { ...assignedSites[1], id: 6, siteCode: "OTHER", name: "Other lease", latitude: 35, longitude: -97, siteRadiusMeters: 805 },
+    ];
+    expect(gateSites.pickLocalAssignedGateSites(sites, { latitude: 35, longitude: -97 }).map((site) => site.siteCode)).toEqual(["LOCAL-A", "LOCAL-B"]);
+  });
 });
 
 describe("shouldApplyDefaultGateSite", () => {

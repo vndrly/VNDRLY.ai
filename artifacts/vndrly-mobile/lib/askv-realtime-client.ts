@@ -73,6 +73,15 @@ export interface AskVRealtimeOptions {
   onUsage?: (usage: unknown) => void;
   onError?: (message: string) => void;
 }
+
+function isSilentToolOutput(output: string): boolean {
+  try {
+    const value = JSON.parse(output) as { ok?: unknown; responseMode?: unknown };
+    return value.ok === true && value.responseMode === "silent";
+  } catch {
+    return false;
+  }
+}
 function abortError() { return Object.assign(new Error("AskV voice stopped"), { name: "AbortError" }); }
 
 /** Construction never acquires a mic. close() can cancel pending permission/SDP. */
@@ -181,7 +190,8 @@ export async function createAskVRealtimeClient(args: AskVRealtimeOptions): Promi
           const output = await args.onToolCall({ name: String(payload.name ?? ""), arguments: payload.arguments, callId });
           if (!live()) break;
           send({ type: "conversation.item.create", item: { type: "function_call_output", call_id: callId, output } });
-          send({ type: "response.create" });
+          if (isSilentToolOutput(output)) args.onDone?.();
+          else send({ type: "response.create" });
           break;
         }
         case "error":

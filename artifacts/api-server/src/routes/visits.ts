@@ -866,6 +866,7 @@ router.get("/visits/gate/assigned-sites", async (req, res): Promise<void> => {
       siteCode: siteLocationsTable.siteCode,
       latitude: siteLocationsTable.latitude,
       longitude: siteLocationsTable.longitude,
+      siteRadiusMeters: siteLocationsTable.siteRadiusMeters,
       partnerId: siteLocationsTable.partnerId,
       partnerName: partnersTable.name,
       hidden: siteLocationsTable.hidden,
@@ -1151,15 +1152,11 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
       });
     return;
   }
-  if (
-    !b.siteLocationId ||
-    !b.hostType ||
-    !["partner", "vendor"].includes(b.hostType)
-  ) {
+  if (!b.siteLocationId) {
     res
       .status(400)
       .json({
-        message: "siteLocationId and hostType are required",
+        message: "siteLocationId is required",
         code: VISIT_INVALID_INPUT,
       });
     return;
@@ -1197,57 +1194,11 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
     return;
   }
 
-  let hostName = "";
-  if (b.hostType === "partner") {
-    if (!b.hostPartnerId || b.hostPartnerId !== site.partnerId) {
-      res
-        .status(400)
-        .json({
-          message: "Partner host does not match this site",
-          code: VISIT_PARTNER_HOST_MISMATCH,
-        });
-      return;
-    }
-    const [p] = await db
-      .select({ name: partnersTable.name })
-      .from(partnersTable)
-      .where(eq(partnersTable.id, b.hostPartnerId));
-    hostName = p?.name || "the partner";
-  } else {
-    if (!b.hostVendorId) {
-      res
-        .status(400)
-        .json({
-          message: "hostVendorId is required",
-          code: VISIT_HOST_VENDOR_REQUIRED,
-        });
-      return;
-    }
-    const [assign] = await db
-      .select({ id: siteWorkAssignmentsTable.id })
-      .from(siteWorkAssignmentsTable)
-      .where(
-        and(
-          eq(siteWorkAssignmentsTable.siteLocationId, site.id),
-          eq(siteWorkAssignmentsTable.vendorId, b.hostVendorId),
-        ),
-      )
-      .limit(1);
-    if (!assign) {
-      res
-        .status(400)
-        .json({
-          message: "Vendor is not assigned to this site",
-          code: VISIT_VENDOR_NOT_ASSIGNED,
-        });
-      return;
-    }
-    const [v] = await db
-      .select({ name: vendorsTable.name })
-      .from(vendorsTable)
-      .where(eq(vendorsTable.id, b.hostVendorId));
-    hostName = v?.name || "the vendor";
-  }
+  const [leasePartner] = await db
+    .select({ name: partnersTable.name })
+    .from(partnersTable)
+    .where(eq(partnersTable.id, site.partnerId));
+  const hostName = leasePartner?.name || "the partner";
 
   const radius = site.siteRadiusMeters ?? 805;
   if (typeof b.latitude !== "number" || typeof b.longitude !== "number") {
@@ -1328,9 +1279,9 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
       admissionStatus: "admitted",
       entryCategory,
       expectedDurationMinutes: expectedDuration,
-      hostType: b.hostType,
-      hostPartnerId: b.hostType === "partner" ? b.hostPartnerId! : null,
-      hostVendorId: b.hostType === "vendor" ? b.hostVendorId! : null,
+      hostType: "partner",
+      hostPartnerId: site.partnerId,
+      hostVendorId: null,
       checkInLatitude: b.latitude,
       checkInLongitude: b.longitude,
       safetyAcknowledgedAt: new Date(),
@@ -1339,10 +1290,7 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
     })
     .returning();
 
-  const recipients =
-    b.hostType === "partner"
-      ? await findPartnerVisitNotifierUserIds(b.hostPartnerId!)
-      : await findVendorVisitNotifierUserIds(b.hostVendorId!);
+  const recipients = await findPartnerVisitNotifierUserIds(site.partnerId);
   const visitorName = `${visit.firstName} ${visit.lastName}`.trim();
   const companyPart = visit.company ? ` from ${visit.company}` : "";
   const purposePart = visit.purpose ? ` for ${visit.purpose}` : "";
@@ -1370,8 +1318,8 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
       hostType: visit.hostType as "partner" | "vendor",
       hostPartnerId: visit.hostPartnerId,
       hostVendorId: visit.hostVendorId,
-      hostPartnerName: b.hostType === "partner" ? hostName : null,
-      hostVendorName: b.hostType === "vendor" ? hostName : null,
+      hostPartnerName: hostName,
+      hostVendorName: null,
       siteLocationId: site.id,
       sitePartnerId: site.partnerId,
       siteName: site.name,
@@ -2061,6 +2009,14 @@ router.get("/visits", async (req, res): Promise<void> => {
     typeof req.query.to === "string" ? new Date(req.query.to) : null;
   const activeOnly = req.query.activeOnly === "true";
   const overlap = req.query.overlap === "true";
+  const vehiclePlateParam =
+    typeof req.query.vehiclePlate === "string"
+      ? req.query.vehiclePlate.toUpperCase().replace(/[^A-Z0-9]/g, "")
+      : "";
+  const plateStateParam =
+    typeof req.query.plateState === "string"
+      ? normalizePlateState(req.query.plateState)
+      : null;
   if ((fromParam && Number.isNaN(fromParam.getTime())) ||
       (toParam && Number.isNaN(toParam.getTime())) ||
       (fromParam && toParam && fromParam >= toParam) ||
@@ -2078,6 +2034,10 @@ router.get("/visits", async (req, res): Promise<void> => {
     : 0;
   const conds: any[] = [];
   if (activeOnly) conds.push(isNull(siteVisitsTable.checkOutTime));
+  if (vehiclePlateParam) {
+    conds.push(sql`regexp_replace(upper(coalesce(${siteVisitsTable.vehiclePlate}, '')), '[^A-Z0-9]', '', 'g') = ${vehiclePlateParam}`);
+  }
+  if (plateStateParam) conds.push(eq(siteVisitsTable.plateState, plateStateParam));
   if (siteParam && Number.isFinite(siteParam)) {
     conds.push(eq(siteVisitsTable.siteLocationId, siteParam));
   }

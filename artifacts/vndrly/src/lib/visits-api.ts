@@ -273,7 +273,7 @@ export const visitsApi = {
     phone?: string;
     email?: string;
     siteLocationId: number;
-    hostType: "partner" | "vendor";
+    hostType?: "partner" | "vendor";
     hostPartnerId?: number;
     hostVendorId?: number;
     purpose?: string;

@@ -15,7 +15,7 @@ describe("AskV Gate client bridge", () => {
     }, "/gate");
     expect(result).toMatchObject({ ok: true, saved: false });
     expect(listener).toHaveBeenCalledWith({
-      mode: "check-in", values: { firstName: "Bob", vehiclePlate: "8TRK22" }, matches: [], missing: ["plateState"],
+      mode: "check-in", values: { firstName: "Bob", vehiclePlate: "8TRK22" }, matches: [], missing: ["plateState"], provenance: {},
     });
     unsubscribe();
   });

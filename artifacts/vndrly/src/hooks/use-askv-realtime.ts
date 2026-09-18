@@ -112,7 +112,16 @@ export function useAskVRealtime(args?: {
           else if (result.ok) pendingConfirmations.delete(call.name);
           if (!valid()) throw new Error('Voice session ended.');
           const intent = parseAskVClientIntent(output);
-          if (intent) return JSON.stringify({ ...body, clientResult: applyAskVClientIntent(intent) });
+          if (intent) {
+            const clientResult = applyAskVClientIntent(intent);
+            return JSON.stringify({
+              ...body,
+              clientResult,
+              ...(intent.name === 'prefill_gate_visit' && clientResult.ok && (!Array.isArray(parsed?.missing) || parsed.missing.length === 0)
+                ? { ok: true, responseMode: 'silent' }
+                : {}),
+            });
+          }
           return typeof output === 'string' ? output : JSON.stringify(output);
         },
         onSpeechStarted: () => { if (valid()) { userSpeaking.current = true; clearIdle(); if (current.current === 'speaking') { metrics.current?.event('interruption'); client.current?.interrupt(); } transition('listening'); } },

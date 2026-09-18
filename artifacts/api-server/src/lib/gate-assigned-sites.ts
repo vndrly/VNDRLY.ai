@@ -5,6 +5,7 @@ export type AssignedGateSiteInput = {
   siteCode: string;
   latitude: number;
   longitude: number;
+  siteRadiusMeters?: number | null;
   partnerId: number;
   partnerName: string;
   hidden?: boolean | null;
@@ -18,6 +19,7 @@ export type AssignedGateSite = {
   siteCode: string;
   latitude: number;
   longitude: number;
+  siteRadiusMeters: number;
   assignmentId: number;
   partnerId: number;
   partnerName: string;
@@ -46,6 +48,7 @@ export function assembleAssignedGateSites(
       siteCode: site.siteCode,
       latitude: site.latitude,
       longitude: site.longitude,
+      siteRadiusMeters: site.siteRadiusMeters ?? 805,
       assignmentId: latestAssignment.get(site.id)!,
       partnerId: site.partnerId,
       partnerName: site.partnerName,

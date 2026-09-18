@@ -138,6 +138,18 @@ describe("location-aware gate site selection", () => {
       },
     ]);
   });
+
+  it("offers only GPS-local rigs for the locked lease partner", () => {
+    const localSites = [
+      { ...sites[1], id: 4, siteCode: "LOCAL-A", name: "Local A", latitude: 29, longitude: -98, siteRadiusMeters: 805 },
+      { ...sites[1], id: 5, siteCode: "LOCAL-B", name: "Local B", latitude: 29.001, longitude: -98.001, siteRadiusMeters: 805 },
+      { ...sites[1], id: 6, siteCode: "FAR", name: "Far", latitude: 30, longitude: -99, siteRadiusMeters: 805 },
+      { ...sites[2], id: 7, siteCode: "OTHER", name: "Other lease", latitude: 29, longitude: -98, siteRadiusMeters: 805 },
+    ];
+    const pickLocal = (gateDefaultSite as Record<string, unknown>)
+      .pickLocalAssignedGateSites as undefined | ((sites: AssignedGateSite[], origin: { latitude: number; longitude: number }) => AssignedGateSite[]);
+    expect(pickLocal?.(localSites, { latitude: 29, longitude: -98 }).map((site) => site.siteCode)).toEqual(["LOCAL-A", "LOCAL-B"]);
+  });
 });
 
 describe("pickDefaultGateHostKey", () => {

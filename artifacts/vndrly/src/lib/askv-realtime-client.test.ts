@@ -117,6 +117,29 @@ describe('realtime transport lifecycle', () => {
     expect(onToolCall).toHaveBeenCalledOnce(); finish('done'); await Promise.resolve();
     expect(peer.channel.sent.filter(event => event.item?.type === 'function_call_output')).toHaveLength(1);
   });
+  it('silently returns to listening after a successful Gate prefill', async () => {
+    const onDone = vi.fn(), onPlaybackStopped = vi.fn();
+    client = await createAskVRealtimeClient({
+      onToolCall: async () => JSON.stringify({ ok: true, responseMode: 'silent' }),
+      onDone,
+      onPlaybackStopped,
+    });
+    await client.connect();
+    const before = peer.channel.sent.filter(event => event.type === 'response.create').length;
+    peer.channel.emit({ type: 'response.function_call_arguments.done', name: 'resolve_gate_check_in', call_id: 'gate-1', arguments: '{}' });
+    await vi.waitFor(() => expect(peer.channel.sent.filter(event => event.item?.type === 'function_call_output')).toHaveLength(1));
+    expect(peer.channel.sent.filter(event => event.type === 'response.create')).toHaveLength(before);
+    expect(onDone).toHaveBeenCalledOnce();
+    expect(onPlaybackStopped).toHaveBeenCalledOnce();
+  });
+  it('still requests a response when a Gate tool needs clarification', async () => {
+    client = await createAskVRealtimeClient({ onToolCall: async () => JSON.stringify({ ok: false, message: 'Which driver?' }) });
+    await client.connect();
+    const before = peer.channel.sent.filter(event => event.type === 'response.create').length;
+    peer.channel.emit({ type: 'response.function_call_arguments.done', name: 'resolve_gate_check_in', call_id: 'gate-2', arguments: '{}' });
+    await vi.waitFor(() => expect(peer.channel.sent.filter(event => event.item?.type === 'function_call_output')).toHaveLength(1));
+    expect(peer.channel.sent.filter(event => event.type === 'response.create')).toHaveLength(before + 1);
+  });
   it('continues wake PCM with no second microphone and clears the source on close', async () => {
     const stop = vi.fn(), subscribe = vi.fn(callback => { callback(new Float32Array(1600).fill(0.1)); return vi.fn(); });
     client = await createAskVRealtimeClient({ onToolCall: async () => '', audioSource: { stop, subscribe } });

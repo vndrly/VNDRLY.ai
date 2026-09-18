@@ -250,6 +250,30 @@ describe("AskV canonical Gate and field operations", () => {
     });
   });
 
+  it("prepares a new-visitor draft without requiring a spoken Host", async () => {
+    fetchMock.mockResolvedValue({ ok: true, json: async () => [] });
+    const result = JSON.parse(await resolveGateCheckInCandidate({
+      firstName: "Jack",
+      lastName: "Smith",
+      vehiclePlate: "ABC123",
+      plateState: "OK",
+      siteLocationId: 9,
+      latitude: 35,
+      longitude: -97,
+    }, gate));
+    expect(result).toMatchObject({
+      ok: true,
+      draft: { firstName: "Jack", lastName: "Smith", siteLocationId: 9 },
+      intent: {
+        name: "prefill_gate_visit",
+        arguments: {
+          values: { firstName: "Jack", lastName: "Smith", siteLocationId: 9 },
+        },
+      },
+    });
+    expect(result.missing).not.toContain("hostType");
+  });
+
   it("denies Gate history and resolution to an unassigned non-gate account", async () => {
     const session = { userId: 11, role: "field_employee" } as never;
     expect(JSON.parse(await searchGateHistory({}, session)).error).toMatch(/Gatekeeper/i);
