@@ -78,7 +78,7 @@ it("uses the Ask V header shell and branded fields inside the subcontractor empl
   await waitFor(() => expect((addAction as HTMLButtonElement).disabled).toBe(false));
   fireEvent.click(addAction);
 
-  expect(screen.getByTestId("employee-dialog-header").className).toContain("pt-[70px]");
+  expect(screen.getByTestId("employee-dialog-header").className).toContain("min-h-[118px]");
   expect(screen.getByTestId("employee-dialog-logo")).toBeTruthy();
   expect(screen.getByTestId("employee-dialog-close")).toBeTruthy();
 
