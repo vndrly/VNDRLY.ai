@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { KeyRound } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { AppModalHeader } from "@/components/app-modal-header";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PngPillButton } from "@/components/png-pill-rollover";
@@ -9,7 +10,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { useBrand } from "@/hooks/use-brand";
 import { useToast } from "@/hooks/use-toast";
 import { translateApiError } from "@/lib/api-error";
-import { EMPLOYEE_DIALOG_HEADER_STYLE } from "@/components/employee-dialog-content";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -18,7 +18,6 @@ export default function ChangePasswordModal() {
   const { user, clearMustChangePassword } = useAuth();
   const { toast } = useToast();
   const brand = useBrand();
-  const logoUrl = brand.logoSquareUrl ?? brand.logoUrl;
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
@@ -60,22 +59,16 @@ export default function ChangePasswordModal() {
 
   return (
     <Dialog open onOpenChange={() => { /* blocking — cannot dismiss */ }}>
-      <DialogContent bare hideClose accentHeaderStyle={EMPLOYEE_DIALOG_HEADER_STYLE} className="max-w-sm" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
-        <DialogHeader className="relative z-10 shrink-0 flex-row items-center gap-3 space-y-0 border-b border-white/20 bg-transparent px-3 pb-0 pt-[70px]" data-testid="change-password-header">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-md" data-testid="change-password-logo">
-            {logoUrl ? (
-              <img src={logoUrl} alt={brand.name ? `${brand.name} logo` : "Company logo"} className="h-12 w-12 object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.35)]" />
-            ) : (
-              <span className="text-sm font-bold text-white drop-shadow-sm">{brand.name ?? "VNDRLY"}</span>
-            )}
-          </div>
-          <KeyRound className="h-6 w-6 shrink-0" style={{ color: brand.primary }} aria-hidden />
-          <div className="min-w-0 text-left">
-            <DialogTitle className="text-white drop-shadow-sm">{t("changePassword.title")}</DialogTitle>
-            <DialogDescription className="mt-1 text-xs text-white/80">{t("changePassword.description")}</DialogDescription>
-          </div>
-        </DialogHeader>
-        <form onSubmit={submit} className="relative z-10 space-y-3 bg-background p-6" data-testid="change-password-body">
+      <DialogContent bare hideClose accentHeaderStyle={{ display: "none" }} className="max-w-sm" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+        <AppModalHeader
+          description={<DialogDescription>{t("changePassword.description")}</DialogDescription>}
+          icon={KeyRound}
+          iconColor={brand.primary}
+          logo={{ testId: "change-password-logo" }}
+          testId="change-password-header"
+          title={<DialogTitle>{t("changePassword.title")}</DialogTitle>}
+        />
+        <form onSubmit={submit} className="relative z-10 space-y-3 bg-[#d1d5db] p-6 text-gray-900" style={{ colorScheme: "light" }} data-testid="change-password-body">
           <div>
             <Label htmlFor="cp-new">{t("changePassword.newPassword")}</Label>
             <Input id="cp-new" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoFocus required minLength={8} className="rounded-xl border-2 bg-white text-gray-700 placeholder:text-gray-500" style={{ borderColor: brand.primary }} data-testid="input-change-password-new" />

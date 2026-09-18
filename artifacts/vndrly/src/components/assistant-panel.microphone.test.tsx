@@ -64,7 +64,7 @@ it('extends the full AskV panel downward without changing its top-right anchor',
   expect(accent.style.position).toBe('absolute');
   expect(accent.style.height).toBe('118px');
   expect(accent.style.maskImage).toContain('transparent 100%');
-  expect(screen.getByTestId('assistant-header').className).toContain('pt-[70px]');
+  expect(screen.getByTestId('assistant-header').className).toContain('min-h-[118px]');
 });
 
 it('hides the AskV onboarding stepper after every current vendor step is complete', () => {

@@ -4,6 +4,7 @@ import { MapPin } from "lucide-react";
 import {
   Dialog,
   DialogContent,
+  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { PngPillButton } from "@/components/png-pill-rollover";
@@ -68,12 +69,12 @@ export default function ForemanSchedulePickDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent bare className="max-w-lg flex max-h-[min(85vh,calc(100vh-2rem))] flex-col overflow-hidden p-0">
-          <div className="shrink-0 border-b border-border/60 px-6 py-4 pr-12">
+        <DialogContent className="max-w-lg flex max-h-[min(85vh,calc(100vh-2rem))] flex-col overflow-hidden p-0">
+          <DialogHeader>
             <DialogTitle className="break-words">{t("foremanSchedule.pickTicketTitle")}</DialogTitle>
-          </div>
+          </DialogHeader>
 
-          <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden pl-6 pr-2 pb-6 pt-4">
+          <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden pb-6 pl-0 pr-0 pt-0">
             {loading ? (
               <div className="flex justify-center py-10">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[color:var(--brand-primary)]" />

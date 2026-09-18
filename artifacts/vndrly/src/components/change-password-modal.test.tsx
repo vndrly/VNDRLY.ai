@@ -27,7 +27,7 @@ describe("ChangePasswordModal", () => {
   it("uses the approved branded header, rounded fields, and brand action pill", () => {
     render(<ChangePasswordModal />);
 
-    expect(screen.getByTestId("change-password-header").className).toContain("pt-[70px]");
+    expect(screen.getByTestId("change-password-header").className).toContain("min-h-[118px]");
     expect(screen.getByTestId("change-password-logo").querySelector("img")?.getAttribute("src")).toBe("/midcon-square.png");
 
     for (const testId of ["input-change-password-new", "input-change-password-confirm"]) {

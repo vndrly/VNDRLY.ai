@@ -33,12 +33,14 @@ import {
   LogOut,
   Plug,
   ShieldAlert,
+  X,
   type LucideIcon,
 } from "lucide-react";
+import { AppModalHeader, APP_MODAL_HEADER_ICON_CLASSNAME } from "@/components/app-modal-header";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
-  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -53,8 +55,7 @@ import { PILL_HEIGHT_CLASS, PILL_MIN_HEIGHT_CLASS } from "@/lib/pill-doctrine";
 import { useBrand } from "@/hooks/use-brand";
 import { portalDisplayLogo } from "@/lib/portal-branding";
 import { VNDRLY_LOGO_SQUARE } from "@/lib/vndrly-brand-assets";
-import { notificationsModalTheme, type NotificationsModalTheme } from "@/components/notifications-modal-tokens";
-import { useTheme } from "@/hooks/use-theme";
+import { NOTIFICATIONS_MODAL_DARK, type NotificationsModalTheme } from "@/components/notifications-modal-tokens";
 
 const CATEGORY_IDS = ["all", "tickets", "hotlist", "compliance", "crew", "comments", "visitor", "system", "safety"] as const;
 
@@ -230,8 +231,7 @@ export default function NotificationsModal({ open, onOpenChange, initialTab = "a
   const { user } = useAuth();
   const brand = useBrand();
   const displayLogo = portalDisplayLogo(brand, VNDRLY_LOGO_SQUARE);
-  const { resolved: themeResolved } = useTheme();
-  const modalTheme = notificationsModalTheme(themeResolved);
+  const modalTheme = NOTIFICATIONS_MODAL_DARK;
   const [, navigate] = useLocation();
   const qc = useQueryClient();
   const [activeTab, setActiveTab] = useState<string>("all");
@@ -335,22 +335,26 @@ export default function NotificationsModal({ open, onOpenChange, initialTab = "a
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         bare
+        hideClose
+        accentHeaderStyle={{ display: "none" }}
         className={modalTheme.shellClassName}
         data-testid="modal-notifications"
       >
         <div className="relative z-10 flex min-h-0 flex-1 flex-col">
-          <DialogHeader className={modalTheme.toolbarClassName}>
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex min-w-0 items-center gap-2 sm:gap-2.5">
-                <img
-                  src={displayLogo}
-                  alt={brand.name ? `${brand.name} logo` : "VNDRLY logo"}
-                  className={modalTheme.logoClassName}
-                  draggable={false}
-                  data-testid="modal-notifications-logo"
-                />
-                <DialogTitle className={modalTheme.titleClassName}>{t("notifications.heading")}</DialogTitle>
-              </div>
+          <AppModalHeader
+            closeControl={
+              <DialogClose asChild>
+                <button type="button" className={APP_MODAL_HEADER_ICON_CLASSNAME} aria-label="Close notifications">
+                  <X className="h-4 w-4" />
+                </button>
+              </DialogClose>
+            }
+            logo={{
+              src: displayLogo,
+              alt: brand.name ? `${brand.name} logo` : "VNDRLY logo",
+              testId: "modal-notifications-logo",
+            }}
+            settings={
               <div className="flex shrink-0 flex-wrap items-center gap-1.5">
                 <FlatBubbleButton
                   theme={modalTheme}
@@ -374,8 +378,9 @@ export default function NotificationsModal({ open, onOpenChange, initialTab = "a
                   </FlatBubbleButton>
                 )}
               </div>
-            </div>
-          </DialogHeader>
+            }
+            title={<DialogTitle className={modalTheme.titleClassName}>{t("notifications.heading")}</DialogTitle>}
+          />
 
           {rateLimited && (
             <div

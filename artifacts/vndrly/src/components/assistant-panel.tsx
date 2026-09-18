@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { Sparkles, ArrowUp, Trash2, Loader2, Download, CheckCircle2, Circle, Plus, X, ThumbsUp, ThumbsDown, Send, Mail, Mic, Settings, Copy, Minus, Maximize2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { AppModalHeader } from "@/components/app-modal-header";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AskVFloatingLauncherMark, AskVLogo, ASKV_LAUNCHER_HEIGHT, ASKV_LAUNCHER_WIDTH } from "@/components/askv-logo";
 import { PngPillButton as PillButton, brandImagePillSrc } from "@/components/png-pill-rollover";
 import BrandPillButton from "@/components/brand-pill-button";
@@ -865,16 +866,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
         bare
         hideOverlay
         inline={embedded}
-        accentHeaderStyle={embedded ? undefined : {
-          position: "absolute",
-          inset: "0 0 auto 0",
-          width: "100%",
-          height: 118,
-          zIndex: 0,
-          backgroundSize: "100% auto",
-          WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 55%, transparent 100%)",
-          maskImage: "linear-gradient(to bottom, black 0%, black 55%, transparent 100%)",
-        }}
+        accentHeaderStyle={{ display: "none" }}
         onPointerDownOutside={(event) => event.preventDefault()}
         onInteractOutside={(event) => event.preventDefault()}
         onEscapeKeyDown={(event) => event.preventDefault()}
@@ -890,25 +882,23 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
         data-testid="assistant-panel"
         hideClose
       >
-        <DialogHeader
-          className={cn(
-            "relative z-10 shrink-0 flex-row items-center justify-between space-y-0 gap-3",
-            embedded
-              ? "border-b border-white/20 bg-[#3a3d42] px-4 py-3 text-white"
-              : "border-b border-white/20 bg-transparent px-3 pb-0 pt-[70px]",
-          )}
-          data-testid="assistant-header"
-        >
-          <div className="flex items-center gap-2" data-testid="assistant-brand-controls">
-            <AskVBrightIcon height={48} />
-            {!embedded && !tokenMode && !signupMode && askVUserId != null && <AskVStatusIndicator />}
-            <DialogTitle className="sr-only">AskV</DialogTitle>
-            <DialogDescription className="sr-only">
-              Conversational assistant for VNDRLY. Ask questions about
-              your account, tickets, sites, and onboarding.
-            </DialogDescription>
-          </div>
-          <div className="flex items-center gap-1">
+        <AppModalHeader
+          compact={minimized}
+          testId="assistant-header"
+          logo={{ testId: "assistant-header-logo" }}
+          title={
+            <div className="flex items-center gap-2" data-testid="assistant-brand-controls">
+              <AskVBrightIcon height={minimized ? 40 : 48} />
+              {!embedded && !tokenMode && !signupMode && askVUserId != null && <AskVStatusIndicator />}
+              <DialogTitle className="sr-only">AskV</DialogTitle>
+              <DialogDescription className="sr-only">
+                Conversational assistant for VNDRLY. Ask questions about
+                your account, tickets, sites, and onboarding.
+              </DialogDescription>
+            </div>
+          }
+          settings={
+            <div className="flex items-center gap-1">
             {embedded && !tokenMode && !signupMode && askVUserId != null && <AskVStatusIndicator />}
             {/* Pre-auth EN/ES toggle, only visible on the public
                 signup pages. Visitors have no saved language
@@ -1008,8 +998,9 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
                 </HeaderIconButton>
               </>
             )}
-          </div>
-        </DialogHeader>
+            </div>
+          }
+        />
 
         {!minimized && open && !tokenMode && !signupMode && askVUserId != null && showSettings && (
           <div className={cn("shrink-0 border-b", embedded ? "border-gray-200 bg-white text-gray-900" : "border-white/20")} data-testid="assistant-settings-panel">

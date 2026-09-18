@@ -35,7 +35,7 @@ describe("EmployeeDialogContent", () => {
     expect(screen.getByTestId("employee-dialog-logo").querySelector("img")?.getAttribute("src")).toBe(
       "/midcon-square.png",
     );
-    expect(screen.getByTestId("employee-dialog-header").className).toContain("pt-[70px]");
+    expect(screen.getByTestId("employee-dialog-header").className).toContain("min-h-[118px]");
     expect(screen.getByTestId("employee-dialog-close")).not.toBeNull();
     expect(screen.getByText("Employee form")).not.toBeNull();
   });

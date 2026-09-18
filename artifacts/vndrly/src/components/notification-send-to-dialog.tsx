@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState, type ButtonHTMLAttributes } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+import { Loader2, X } from "lucide-react";
+import { AppModalHeader, APP_MODAL_HEADER_ICON_CLASSNAME } from "@/components/app-modal-header";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
-  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -14,11 +15,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useBrand } from "@/hooks/use-brand";
-import { useTheme } from "@/hooks/use-theme";
 import { portalDisplayLogo } from "@/lib/portal-branding";
 import { VNDRLY_LOGO_SQUARE } from "@/lib/vndrly-brand-assets";
 import {
-  notificationsModalTheme,
+  NOTIFICATIONS_MODAL_DARK,
   type NotificationsModalTheme,
 } from "@/components/notifications-modal-tokens";
 import {
@@ -115,8 +115,7 @@ export default function NotificationSendToDialog({
   const { t } = useTranslation();
   const { toast } = useToast();
   const brand = useBrand();
-  const { resolved: themeResolved } = useTheme();
-  const modalTheme = notificationsModalTheme(themeResolved);
+  const modalTheme = NOTIFICATIONS_MODAL_DARK;
   const displayLogo = portalDisplayLogo(brand, VNDRLY_LOGO_SQUARE);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [message, setMessage] = useState("");
@@ -227,22 +226,23 @@ export default function NotificationSendToDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent bare className={modalTheme.shellClassName} data-testid="dialog-send-to">
+      <DialogContent bare hideClose accentHeaderStyle={{ display: "none" }} className={modalTheme.shellClassName} data-testid="dialog-send-to">
         <div className="relative z-10 flex min-h-0 flex-1 flex-col">
-          <DialogHeader className={modalTheme.toolbarClassName}>
-            <div className="flex min-w-0 items-center gap-2 sm:gap-2.5">
-              <img
-                src={displayLogo}
-                alt={brand.name ? `${brand.name} logo` : "VNDRLY logo"}
-                className={modalTheme.logoClassName}
-                draggable={false}
-                data-testid="dialog-send-to-logo"
-              />
-              <DialogTitle className={modalTheme.titleClassName}>
-                {t("notifications.sendToTitle")}
-              </DialogTitle>
-            </div>
-          </DialogHeader>
+          <AppModalHeader
+            closeControl={
+              <DialogClose asChild>
+                <button type="button" className={APP_MODAL_HEADER_ICON_CLASSNAME} aria-label="Close send dialog">
+                  <X className="h-4 w-4" />
+                </button>
+              </DialogClose>
+            }
+            logo={{
+              src: displayLogo,
+              alt: brand.name ? `${brand.name} logo` : "VNDRLY logo",
+              testId: "dialog-send-to-logo",
+            }}
+            title={<DialogTitle className={modalTheme.titleClassName}>{t("notifications.sendToTitle")}</DialogTitle>}
+          />
 
           <div className={cn("min-h-0 flex-1 overflow-y-auto", modalTheme.bodySurfaceClassName)}>
             {!hasSendContext ? (

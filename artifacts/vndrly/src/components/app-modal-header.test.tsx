@@ -39,7 +39,7 @@ describe("AppModalHeader", () => {
       />,
     );
 
-    expect(screen.getByTestId("app-modal-header-logo").getAttribute("src")).toBe(
+    expect(screen.getByTestId("app-modal-header-logo").querySelector("img")?.getAttribute("src")).toBe(
       "/midcon-square.png",
     );
     expect(screen.getByTestId("app-modal-header-controls").className).toContain("right-4");
@@ -63,7 +63,7 @@ describe("AppModalHeader", () => {
     const header = screen.getByTestId("app-modal-header");
     expect(header.contains(screen.getByText("Example modal"))).toBe(true);
     expect(header.contains(screen.getByText("Example definition"))).toBe(true);
-    expect(screen.getByTestId("app-modal-header-logo").getAttribute("src")).toBe(
+    expect(screen.getByTestId("app-modal-header-logo").querySelector("img")?.getAttribute("src")).toBe(
       "/midcon-square.png",
     );
     expect(screen.getByTestId("app-modal-header-controls").className).toContain("right-4");

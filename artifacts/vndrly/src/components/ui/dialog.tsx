@@ -149,7 +149,7 @@ const DialogContent = React.forwardRef<
             aria-hidden
             className={bare ? modalTheme.accentHeaderClassName : "hidden"}
             style={bare ? { ...modalTheme.accentHeaderStyle, ...accentHeaderStyle } : undefined}
-            data-testid={bare ? "modal-accent-header" : undefined}
+            data-testid={bare && accentHeaderStyle?.display !== "none" ? "modal-accent-header" : undefined}
           />
           {bare ? (
             children
@@ -200,7 +200,7 @@ const DialogContent = React.forwardRef<
             aria-hidden
             className={bare ? modalTheme.accentHeaderClassName : "hidden"}
             style={bare ? { ...modalTheme.accentHeaderStyle, ...accentHeaderStyle } : undefined}
-            data-testid={bare ? "modal-accent-header" : undefined}
+            data-testid={bare && accentHeaderStyle?.display !== "none" ? "modal-accent-header" : undefined}
           />
           {bare ? (
             children
