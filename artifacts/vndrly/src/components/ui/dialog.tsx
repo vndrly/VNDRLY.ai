@@ -1,18 +1,15 @@
 import * as React from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X } from "lucide-react"
+import { createPortal } from "react-dom"
 
+import { AppModalHeader, type AppModalLogoSpec } from "@/components/app-modal-header"
 import { cn } from "@/lib/utils"
 import { APP_MODAL_ALWAYS_DARK, type AppModalTheme } from "@/components/app-modal-tokens"
 import { useAuth } from "@/hooks/use-auth"
 import { useGetPartner, useGetVendor, getGetPartnerQueryKey, getGetVendorQueryKey } from "@workspace/api-client-react"
 
-type DialogLogoSpec = {
-  src?: string | null
-  alt?: string
-  fallbackName?: string | null
-  testId?: string
-}
+type DialogLogoSpec = AppModalLogoSpec
 
 type DialogLogoContextValue = {
   setCustomLogo: (logo: DialogLogoSpec | null) => void
@@ -21,6 +18,7 @@ type DialogLogoContextValue = {
 const DialogLogoContext = React.createContext<DialogLogoContextValue | null>(null)
 
 const ModalThemeContext = React.createContext<AppModalTheme | null>(null)
+export const ModalHeaderHostContext = React.createContext<HTMLElement | null>(null)
 
 export function useModalTheme(): AppModalTheme {
   const ctx = React.useContext(ModalThemeContext)
@@ -130,6 +128,7 @@ const DialogContent = React.forwardRef<
   DialogContentProps
 >(({ className, children, bare = false, hideClose = false, hideOverlay = false, inline = false, accentHeaderStyle, style, onPointerDownOutside, onInteractOutside, onEscapeKeyDown, ...props }, ref) => {
   const [customLogo, setCustomLogo] = React.useState<DialogLogoSpec | null>(null)
+  const [headerHost, setHeaderHost] = React.useState<HTMLDivElement | null>(null)
   const ctxValue = React.useMemo<DialogLogoContextValue>(() => ({ setCustomLogo }), [])
   const modalTheme = APP_MODAL_ALWAYS_DARK
 
@@ -148,25 +147,33 @@ const DialogContent = React.forwardRef<
         >
           <div
             aria-hidden
-            className={modalTheme.accentHeaderClassName}
-            style={{ ...modalTheme.accentHeaderStyle, ...accentHeaderStyle }}
-            data-testid="modal-accent-header"
+            className={bare ? modalTheme.accentHeaderClassName : "hidden"}
+            style={bare ? { ...modalTheme.accentHeaderStyle, ...accentHeaderStyle } : undefined}
+            data-testid={bare ? "modal-accent-header" : undefined}
           />
           {bare ? (
             children
           ) : (
             <DialogLogoContext.Provider value={ctxValue}>
-              <DialogLogoArea customLogo={customLogo} />
-              <div
-                data-testid="modal-body"
-                className={cn(
-                  "relative z-10 grid min-h-0 flex-1 gap-4 overflow-y-auto p-6 pt-0",
-                  modalTheme.bodyWrapperClassName,
-                )}
-                style={{ colorScheme: "light" }}
-              >
-                {children}
-              </div>
+              <ModalHeaderHostContext.Provider value={headerHost}>
+                <AppModalHeader
+                  accentHeaderStyle={accentHeaderStyle}
+                  closeControl={hideClose ? null : <span />}
+                  logo={customLogo}
+                >
+                  <div ref={setHeaderHost} />
+                </AppModalHeader>
+                <div
+                  data-testid="modal-body"
+                  className={cn(
+                    "relative z-10 grid min-h-0 flex-1 gap-4 overflow-y-auto p-6",
+                    modalTheme.bodyWrapperClassName,
+                  )}
+                  style={{ colorScheme: "light" }}
+                >
+                  {children}
+                </div>
+              </ModalHeaderHostContext.Provider>
             </DialogLogoContext.Provider>
           )}
         </div>
@@ -191,28 +198,43 @@ const DialogContent = React.forwardRef<
         >
           <div
             aria-hidden
-            className={modalTheme.accentHeaderClassName}
-            style={{ ...modalTheme.accentHeaderStyle, ...accentHeaderStyle }}
-            data-testid="modal-accent-header"
+            className={bare ? modalTheme.accentHeaderClassName : "hidden"}
+            style={bare ? { ...modalTheme.accentHeaderStyle, ...accentHeaderStyle } : undefined}
+            data-testid={bare ? "modal-accent-header" : undefined}
           />
           {bare ? (
             children
           ) : (
             <DialogLogoContext.Provider value={ctxValue}>
-              <DialogLogoArea customLogo={customLogo} />
-              <div
-                data-testid="modal-body"
-                className={cn(
-                  "relative z-10 grid min-h-0 flex-1 gap-4 overflow-y-auto p-6 pt-0",
-                  modalTheme.bodyWrapperClassName,
-                )}
-                style={{ colorScheme: "light" }}
-              >
-                {children}
-              </div>
+              <ModalHeaderHostContext.Provider value={headerHost}>
+                <AppModalHeader
+                  accentHeaderStyle={accentHeaderStyle}
+                  closeControl={
+                    hideClose ? null : (
+                      <DialogPrimitive.Close className="rounded-sm text-white opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-white/40 disabled:pointer-events-none">
+                        <X className="h-4 w-4" />
+                        <span className="sr-only">Close</span>
+                      </DialogPrimitive.Close>
+                    )
+                  }
+                  logo={customLogo}
+                >
+                  <div ref={setHeaderHost} />
+                </AppModalHeader>
+                <div
+                  data-testid="modal-body"
+                  className={cn(
+                    "relative z-10 grid min-h-0 flex-1 gap-4 overflow-y-auto p-6",
+                    modalTheme.bodyWrapperClassName,
+                  )}
+                  style={{ colorScheme: "light" }}
+                >
+                  {children}
+                </div>
+              </ModalHeaderHostContext.Provider>
             </DialogLogoContext.Provider>
           )}
-          {!hideClose && (
+          {bare && !hideClose && (
             <DialogPrimitive.Close className="absolute right-4 top-4 z-30 rounded-sm text-white opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
               <X className="h-4 w-4" />
               <span className="sr-only">Close</span>
@@ -233,15 +255,19 @@ DialogContent.displayName = DialogPrimitive.Content.displayName
 const DialogHeader = ({
   className,
   ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
-  <div
-    className={cn(
-      "flex flex-col space-y-1.5 text-left",
-      className
-    )}
-    {...props}
-  />
-)
+}: React.HTMLAttributes<HTMLDivElement>) => {
+  const headerHost = React.useContext(ModalHeaderHostContext)
+  const header = (
+    <div
+      className={cn(
+        "flex flex-col space-y-1.5 text-left [&_[data-slot=dialog-description]]:!text-white/80 [&_[data-slot=dialog-title]]:!text-white",
+        className
+      )}
+      {...props}
+    />
+  )
+  return headerHost ? createPortal(header, headerHost) : header
+}
 DialogHeader.displayName = "DialogHeader"
 
 const DialogFooter = ({
@@ -265,6 +291,7 @@ const DialogTitle = React.forwardRef<
   const modalTheme = useModalTheme()
   return (
     <DialogPrimitive.Title
+      data-slot="dialog-title"
       ref={ref}
       className={cn(
         "text-lg font-semibold leading-none tracking-tight",
@@ -284,6 +311,7 @@ const DialogDescription = React.forwardRef<
   const modalTheme = useModalTheme()
   return (
     <DialogPrimitive.Description
+      data-slot="dialog-description"
       ref={ref}
       className={cn("text-sm text-muted-foreground", modalTheme.descriptionClassName, className)}
       {...props}
