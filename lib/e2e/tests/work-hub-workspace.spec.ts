@@ -48,7 +48,7 @@ test.describe("Work Hub workspace persisted flow", () => {
   test.afterAll(async () => {
     await pool?.end();
   });
-  test("creates a Crew conversation, scheduling page and confirmed CSV task, then opens files and notes", async ({
+  test("creates a Group conversation, scheduling page and confirmed CSV task, then opens files and notes", async ({
     page,
   }, testInfo) => {
     test.setTimeout(240000);
@@ -57,25 +57,22 @@ test.describe("Work Hub workspace persisted flow", () => {
     await loginAsVendor(page, { username, password });
     await page.goto("/work-hub/channels");
     await expect(page.getByTestId("nav-calendar")).toBeVisible();
-    await page.getByLabel("New crew name").fill(`Review Crew ${stamp}`);
+    await page.getByLabel("New group name").fill(`Review Group ${stamp}`);
     await page
-      .getByRole("button", { name: "Create Crew", exact: true })
+      .getByRole("button", { name: "Create Group", exact: true })
       .click();
     await expect(
       page
-        .getByLabel("Crew", { exact: true })
-        .locator("option", { hasText: `Review Crew ${stamp}` }),
-    ).toHaveCount(1);
+        .getByRole("button", { name: `Edit Review Group ${stamp}`, exact: true }),
+    ).toBeVisible();
+
+    await page.goto("/work-hub/chat");
+    await page.getByText("New Chat", { exact: true }).click();
     await page
-      .getByLabel("Crew", { exact: true })
-      .selectOption({ label: `Review Crew ${stamp}` });
-    await page.getByLabel("New channel name").fill(`Handover ${stamp}`);
+      .getByLabel("Select Group", { exact: true })
+      .selectOption({ label: `Review Group ${stamp}` });
     await page
-      .getByRole("button", { name: "Add channel", exact: true })
-      .click();
-    await page
-      .getByRole("dialog")
-      .getByRole("button", { name: `Handover ${stamp}`, exact: true })
+      .getByRole("button", { name: "Start Chat", exact: true })
       .click();
     const message = `Synthetic handover message ${stamp}`;
     await page.getByLabel("Message", { exact: true }).fill(message);
@@ -87,7 +84,7 @@ test.describe("Work Hub workspace persisted flow", () => {
     await page
       .getByRole("navigation", { name: "Conversations" })
       .getByRole("button")
-      .filter({ hasText: `Handover ${stamp}` })
+      .filter({ hasText: `Review Group ${stamp}` })
       .first()
       .click();
     await expect(page.getByRole("article").getByText(message, { exact: true })).toBeVisible();
