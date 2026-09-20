@@ -23,6 +23,39 @@ const base = {
   execute: mock.execute,
 };
 describe("AskV typed mutation confirmation", () => {
+  it("executes an exact Gate command in the same typed turn", async () => {
+    mock.execute.mockClear();
+    const completed = JSON.parse(
+      await runBoundTypedAskVTool({
+        ...base,
+        conversationId: 1100,
+        phrase: "check Bob Villa out",
+      }),
+    );
+    expect(completed).toMatchObject({
+      ok: true,
+      input: {
+        visitId: 44,
+        confirmed: true,
+        idempotencyKey: expect.any(String),
+      },
+    });
+    expect(mock.execute).toHaveBeenCalledOnce();
+  });
+
+  it("does not execute a same-turn Gate command from a first name alone", async () => {
+    mock.execute.mockClear();
+    const pending = JSON.parse(
+      await runBoundTypedAskVTool({
+        ...base,
+        conversationId: 1104,
+        phrase: "check Bob out",
+      }),
+    );
+    expect(pending.requiresConfirmation).toBe(true);
+    expect(mock.execute).not.toHaveBeenCalled();
+  });
+
   it("ignores model confirmed:true and binds the later user confirmation to exact arguments", async () => {
     mock.execute.mockClear();
     const first = { ...base, conversationId: 1101 };

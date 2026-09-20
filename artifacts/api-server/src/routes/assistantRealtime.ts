@@ -61,7 +61,14 @@ import {
 import { classifyToolResult } from "../assistant/tool-result";
 import { runTool } from "./assistant";
 import { buildAskVGreeting } from "../assistant/voice-greeting";
-import { readVoiceConfirmation } from "../assistant/askv-voice-confirmation";
+import {
+  readBoundVoiceUtterance,
+  readVoiceConfirmation,
+} from "../assistant/askv-voice-confirmation";
+import {
+  classifyGateIntent,
+  isGateMutationTool,
+} from "../assistant/gate-intent";
 import { voiceMutationHint } from "../assistant/voice-mutation";
 import {
   mutationIdempotencyKey,
@@ -892,7 +899,7 @@ router.post(
         ? req.body.transcriptText.slice(0, 8000)
         : null;
     const orgKey = organizationKeyFromSession(session);
-    const confirmationPhrase = await readVoiceConfirmation({
+    const laterConfirmationPhrase = await readVoiceConfirmation({
       conversationId: context.conversationId,
       sessionId,
       eventId: req.body?.confirmationEventId,
@@ -902,8 +909,21 @@ router.post(
         confirmationScopeId,
       ),
     });
-    const decision = confirmationPhrase
-      ? classifyConfirmation(confirmationPhrase)
+    const actionPhrase = isGateMutationTool(name)
+      ? await readBoundVoiceUtterance({
+          conversationId: context.conversationId,
+          sessionId,
+          eventId: req.body?.actionEventId,
+        })
+      : null;
+    const imperativeGateAuthorization = Boolean(
+      actionPhrase &&
+        classifyGateIntent({ utterance: actionPhrase, toolName: name })
+          .authorization === "submit",
+    );
+    const confirmationPhrase = actionPhrase ?? laterConfirmationPhrase;
+    const decision = laterConfirmationPhrase
+      ? classifyConfirmation(laterConfirmationPhrase)
       : "none";
     const key = req.body?.idempotencyKey ?? req.body?.callId;
     if (tool.mutating && !validSessionId(key)) {
@@ -980,6 +1000,7 @@ router.post(
       approved.contextKey === context.key &&
       approved.expiresAt > Date.now(),
     );
+    if (!confirmed && imperativeGateAuthorization) confirmed = true;
     if (!confirmed && requiresVoiceConfirmation(name) && confirmationPhrase) {
       confirmed = Boolean(
         askvPendingConfirmations.consume(confirmationPhrase, pending),

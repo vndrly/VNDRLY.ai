@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   runTool: vi.fn(async () => JSON.stringify({ ok: true })),
   writeAudit: vi.fn(async () => undefined),
   readConfirmation: vi.fn(async (): Promise<string | null> => null),
+  readBoundUtterance: vi.fn(async (): Promise<string | null> => null),
   runMutation: vi.fn(
     async (_scope: unknown, operation: () => Promise<string>) => ({
       hit: false,
@@ -35,10 +36,13 @@ const mocks = vi.hoisted(() => ({
 }));
 vi.mock("../assistant/askv-voice-confirmation", () => ({
   readVoiceConfirmation: mocks.readConfirmation,
+  readBoundVoiceUtterance: mocks.readBoundUtterance,
 }));
 beforeEach(() => {
   mocks.readConfirmation.mockReset();
   mocks.readConfirmation.mockResolvedValue(null);
+  mocks.readBoundUtterance.mockReset();
+  mocks.readBoundUtterance.mockResolvedValue(null);
 });
 
 vi.mock("../assistant/askv-idempotency", async () => ({
@@ -356,6 +360,66 @@ describe("AskV Realtime routes", () => {
       requiresConfirmation: true,
     });
     expect(mocks.runTool).not.toHaveBeenCalled();
+  });
+
+  it("executes an exact Gate mutation from a saved imperative user command", async () => {
+    mocks.readBoundUtterance.mockResolvedValue("check Bob Villa in");
+
+    const res = await request(app())
+      .post("/assistant/realtime/tool-call")
+      .send({
+        sessionId: testSessionId,
+        callId: "gate-command-1",
+        actionEventId: "saved-gate-command",
+        name: "confirm_visitor_check_in",
+        arguments: {
+          firstName: "Bob",
+          lastName: "Villa",
+          vehiclePlate: "ABC123",
+          siteLocationId: 9,
+        },
+        clientSurface: "ios",
+      })
+      .expect(200);
+
+    expect(res.body).toMatchObject({ ok: true });
+    expect(mocks.runTool).toHaveBeenCalledWith(
+      "confirm_visitor_check_in",
+      expect.objectContaining({
+        firstName: "Bob",
+        lastName: "Villa",
+        confirmed: true,
+        idempotencyKey: "gate-command-1",
+      }),
+      expect.objectContaining({ userId: 10, vendorId: 22 }),
+      "",
+    );
+    expect(mocks.writeAudit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        confirmationPhrase: "check Bob Villa in",
+        resultStatus: "success",
+      }),
+    );
+  });
+
+  it("does not execute Gate writes for a missing saved event or first name only", async () => {
+    for (const [index, utterance] of [null, "check Bob in"].entries()) {
+      mocks.runTool.mockClear();
+      mocks.readBoundUtterance.mockResolvedValue(utterance);
+      const res = await request(app())
+        .post("/assistant/realtime/tool-call")
+        .send({
+          sessionId: `${testSessionId}-insufficient-${index}`,
+          callId: `gate-insufficient-${index}`,
+          actionEventId: "untrusted-or-insufficient",
+          name: "confirm_visitor_check_in",
+          arguments: { firstName: "Bob", lastName: "Villa", siteLocationId: 9 },
+          clientSurface: "web",
+        })
+        .expect(200);
+      expect(res.body).toMatchObject({ requiresConfirmation: true });
+      expect(mocks.runTool).not.toHaveBeenCalled();
+    }
   });
 
   it("audits structured confirmation refusals from realtime tools", async () => {

@@ -1,16 +1,15 @@
 import { and, desc, eq, sql } from "drizzle-orm";
 import { db, assistantMessagesTable } from "@workspace/db";
 
-/** Approval comes from a saved user turn, never a model-supplied phrase. */
-export async function readVoiceConfirmation(input: {
+/** User evidence comes from a saved user turn, never a model-supplied phrase. */
+export async function readBoundVoiceUtterance(input: {
   conversationId: number | null;
   sessionId: string;
   eventId: unknown;
-  pendingCreatedAt: number | null;
+  acceptedAfter?: number | null;
 }): Promise<string | null> {
   if (
     !input.conversationId ||
-    input.pendingCreatedAt === null ||
     typeof input.eventId !== "string"
   )
     return null;
@@ -39,8 +38,24 @@ export async function readVoiceConfirmation(input: {
   if (
     metadata?.voiceEventId !== input.eventId ||
     typeof metadata.acceptedAt !== "number" ||
-    metadata.acceptedAt <= input.pendingCreatedAt
+    (input.acceptedAfter != null && metadata.acceptedAt <= input.acceptedAfter)
   )
     return null;
   return message.content?.slice(0, 300) ?? null;
+}
+
+/** Approval comes from a user turn saved after the pending action was created. */
+export async function readVoiceConfirmation(input: {
+  conversationId: number | null;
+  sessionId: string;
+  eventId: unknown;
+  pendingCreatedAt: number | null;
+}): Promise<string | null> {
+  if (input.pendingCreatedAt === null) return null;
+  return readBoundVoiceUtterance({
+    conversationId: input.conversationId,
+    sessionId: input.sessionId,
+    eventId: input.eventId,
+    acceptedAfter: input.pendingCreatedAt,
+  });
 }

@@ -1,4 +1,5 @@
 import { classifyConfirmation } from "./action-classifier";
+import { classifyGateIntent, isGateMutationTool } from "./gate-intent";
 import type { SessionPayload } from "../lib/session";
 import { publishAskVDeviceEvent } from "./device-context";
 import { findAskVTool } from "./tool-registry";
@@ -223,6 +224,14 @@ export async function runBoundTypedAskVTool(args: {
       })
     )
       confirmed = true;
+    if (
+      !confirmed &&
+      isGateMutationTool(args.name) &&
+      classifyGateIntent({ utterance: args.phrase, toolName: args.name })
+        .authorization === "submit"
+    ) {
+      confirmed = true;
+    }
     if (!confirmed) {
       askvPendingConfirmations.set({
         userId,
