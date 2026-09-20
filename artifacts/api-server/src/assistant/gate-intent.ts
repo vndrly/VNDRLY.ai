@@ -10,6 +10,7 @@ export interface GateIntentInput {
   utterance: string;
   toolName: string;
   pendingPrompt?: GatePromptKind;
+  toolArguments?: Record<string, unknown>;
 }
 
 export interface GateIntentDecision {
@@ -82,6 +83,13 @@ export function classifyGateIntent(
     return { action, authorization: "clarify", normalizedUtterance };
   }
   if (
+    action !== "other" &&
+    input.toolArguments &&
+    !resolvedTargetMatches(normalizedUtterance, input.toolArguments)
+  ) {
+    return { action, authorization: "clarify", normalizedUtterance };
+  }
+  if (
     SUBMIT.test(normalizedUtterance) ||
     CHECK_IN.test(normalizedUtterance) ||
     CHECK_OUT.test(normalizedUtterance)
@@ -92,16 +100,42 @@ export function classifyGateIntent(
 }
 const PLATE_TARGET = /\b(?=[a-z0-9-]{2,10}\b)(?=[a-z0-9-]*[a-z])(?=[a-z0-9-]*\d)[a-z0-9-]+\b/;
 
-function hasFullNameTarget(text: string): boolean {
+function fullNameTarget(text: string): [string, string] | null {
   const patterns = [
     /\bcheck\s+([a-z'-]+)\s+([a-z'-]+)\s+(?:in|out)\b/,
+    /\bcheck[ -]?(?:in|out)\s+([a-z'-]+)\s+([a-z'-]+)\b/,
     /\b([a-z'-]+)\s+([a-z'-]+)\s+(?:is\s+)?(?:coming in|arriving|leaving|departing)\b/,
     /\b(?:admit)\s+([a-z'-]+)\s+([a-z'-]+)\b/,
-    /\bcomplete\s+([a-z'-]+)\s+([a-z'-]+)'?s?\s+check[ -]?(?:in|out)\b/,
+    /\bcomplete\s+([a-z'-]+)\s+([a-z][a-z'-]*?)(?:'s)?\s+check[ -]?(?:in|out)\b/,
   ];
-  return patterns.some((pattern) => pattern.test(text));
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (match) return [match[1], match[2]];
+  }
+  return null;
 }
 
 function hasSufficientNewTarget(text: string): boolean {
-  return PLATE_TARGET.test(text) || hasFullNameTarget(text);
+  return PLATE_TARGET.test(text) || fullNameTarget(text) !== null;
+}
+
+function resolvedTargetMatches(
+  text: string,
+  args: Record<string, unknown>,
+): boolean {
+  const spokenName = fullNameTarget(text);
+  const spokenPlate = text.match(PLATE_TARGET)?.[0] ?? null;
+  if (spokenName) {
+    const firstName = normalize(String(args.firstName ?? ""));
+    const lastName = normalize(String(args.lastName ?? ""));
+    if (firstName !== spokenName[0] || lastName !== spokenName[1]) return false;
+  }
+  if (spokenPlate) {
+    const resolvedPlate = String(args.vehiclePlate ?? "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "");
+    const normalizedSpokenPlate = spokenPlate.replace(/[^a-z0-9]/g, "");
+    if (!resolvedPlate || resolvedPlate !== normalizedSpokenPlate) return false;
+  }
+  return Boolean(spokenName || spokenPlate);
 }

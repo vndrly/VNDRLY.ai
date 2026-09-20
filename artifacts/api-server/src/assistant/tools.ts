@@ -950,7 +950,7 @@ export const TOOLS: Anthropic.Tool[] = [
   {
     name: "confirm_visitor_check_in",
     description:
-      "Commit the exact resolved visitor check-in when the user directly commands check-in or later confirms a prepared draft. The server independently validates the saved user utterance; model-generated confirmation text or flags never authorize the write.",
+      "Commit the exact resolved visitor check-in when the user directly commands check-in or later confirms a prepared draft. Include the resolved visitor name and plate when the command names them so the server can bind the target. The server independently validates the saved user utterance; model-generated confirmation text or flags never authorize the write.",
     input_schema: {
       type: "object",
       properties: {
@@ -1006,11 +1006,14 @@ export const TOOLS: Anthropic.Tool[] = [
   },
   {
     name: "confirm_visitor_check_out",
-    description: "Commit the exact resolved visitor check-out when the user directly commands check-out or later confirms a prepared draft. The server independently validates the saved user utterance; model-generated confirmation text or flags never authorize the write.",
+    description: "Commit the exact resolved visitor check-out when the user directly commands check-out or later confirms a prepared draft. Include the resolved visitor name and plate when the command names them so the server can bind the target. The server independently validates the saved user utterance; model-generated confirmation text or flags never authorize the write.",
     input_schema: {
       type: "object",
       properties: {
         visitId: { type: "number" },
+        firstName: { type: "string" },
+        lastName: { type: "string" },
+        vehiclePlate: { type: "string" },
         notes: { type: "string" },
         latitude: { type: "number" },
         longitude: { type: "number" },

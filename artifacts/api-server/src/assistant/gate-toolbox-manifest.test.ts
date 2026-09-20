@@ -18,6 +18,7 @@ describe("Ask V Gate toolbox manifest", () => {
         (candidate) => candidate.name === row.tool,
       );
       expect(tool, `${row.action} -> ${row.tool}`).toBeTruthy();
+      expect(tool?.roles).toEqual(expect.arrayContaining([...row.roles]));
       if (row.mutating) {
         expect(tool).toMatchObject({
           mutating: true,

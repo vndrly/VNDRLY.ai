@@ -64,6 +64,6 @@ export const GATE_TOOLBOX_MANIFEST = [
   { action: "cancel_check_out", tool: "focus_control", ...client, auditTarget: "device" },
   { action: "submit_check_out", tool: "confirm_visitor_check_out", ...mutate },
   { action: "update_checkout_notes", tool: "prepare_visitor_check_out", ...prepare },
-  { action: "read_shift_context", tool: "query_gate_report", ...read },
+  { action: "read_shift_context", tool: "search_gate_history", ...read },
   { action: "focus_gate_surface", tool: "focus_control", ...client, auditTarget: "device" },
 ] as const satisfies readonly GateToolboxEntry[];

@@ -30,12 +30,15 @@ describe("AskV typed mutation confirmation", () => {
         ...base,
         conversationId: 1100,
         phrase: "check Bob Villa out",
+        input: { visitId: 44, firstName: "Bob", lastName: "Villa", confirmed: true },
       }),
     );
     expect(completed).toMatchObject({
       ok: true,
       input: {
         visitId: 44,
+        firstName: "Bob",
+        lastName: "Villa",
         confirmed: true,
         idempotencyKey: expect.any(String),
       },

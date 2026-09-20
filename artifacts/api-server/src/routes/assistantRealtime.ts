@@ -918,7 +918,11 @@ router.post(
       : null;
     const imperativeGateAuthorization = Boolean(
       actionPhrase &&
-        classifyGateIntent({ utterance: actionPhrase, toolName: name })
+        classifyGateIntent({
+          utterance: actionPhrase,
+          toolName: name,
+          toolArguments: input,
+        })
           .authorization === "submit",
     );
     const confirmationPhrase = actionPhrase ?? laterConfirmationPhrase;

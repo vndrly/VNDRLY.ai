@@ -84,6 +84,35 @@ describe("Ask V Gate intent", () => {
   );
 
   it.each([
+    {
+      utterance: "check Bob Villa in",
+      toolName: "confirm_visitor_check_in",
+      toolArguments: { firstName: "Eve", lastName: "Smith" },
+    },
+    {
+      utterance: "check out tag ABC123",
+      toolName: "confirm_visitor_check_out",
+      toolArguments: { vehiclePlate: "XYZ999", visitId: 77 },
+    },
+  ])("rejects a resolved target that differs from the spoken command: $utterance", (input) => {
+    expect(classifyGateIntent(input).authorization).toBe("clarify");
+  });
+
+  it.each([
+    "check in Bob Villa",
+    "check out Bob Villa",
+    "complete Bob Villa's check-out",
+  ])("accepts common verb-first phrasing when the resolved person matches: %s", (utterance) => {
+    expect(classifyGateIntent({
+      utterance,
+      toolName: utterance.includes("out")
+        ? "confirm_visitor_check_out"
+        : "confirm_visitor_check_in",
+      toolArguments: { firstName: "Bob", lastName: "Villa" },
+    }).authorization).toBe("submit");
+  });
+
+  it.each([
     "yes, but change the driver",
     "submit it but use David instead",
     "if I say submit will it go?",

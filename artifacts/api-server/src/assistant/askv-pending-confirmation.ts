@@ -227,7 +227,11 @@ export async function runBoundTypedAskVTool(args: {
     if (
       !confirmed &&
       isGateMutationTool(args.name) &&
-      classifyGateIntent({ utterance: args.phrase, toolName: args.name })
+      classifyGateIntent({
+        utterance: args.phrase,
+        toolName: args.name,
+        toolArguments: input,
+      })
         .authorization === "submit"
     ) {
       confirmed = true;

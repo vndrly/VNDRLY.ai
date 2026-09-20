@@ -402,6 +402,28 @@ describe("AskV Realtime routes", () => {
     );
   });
 
+  it("does not execute when resolved Gate arguments differ from the spoken target", async () => {
+    mocks.readBoundUtterance.mockResolvedValue("check Bob Villa in");
+    const res = await request(app())
+      .post("/assistant/realtime/tool-call")
+      .send({
+        sessionId: `${testSessionId}-target-mismatch`,
+        callId: "gate-target-mismatch",
+        actionEventId: "saved-gate-command",
+        name: "confirm_visitor_check_in",
+        arguments: {
+          firstName: "Eve",
+          lastName: "Smith",
+          vehiclePlate: "XYZ999",
+          siteLocationId: 9,
+        },
+        clientSurface: "ios",
+      })
+      .expect(200);
+    expect(res.body).toMatchObject({ requiresConfirmation: true });
+    expect(mocks.runTool).not.toHaveBeenCalled();
+  });
+
   it("does not execute Gate writes for a missing saved event or first name only", async () => {
     for (const [index, utterance] of [null, "check Bob in"].entries()) {
       mocks.runTool.mockClear();
