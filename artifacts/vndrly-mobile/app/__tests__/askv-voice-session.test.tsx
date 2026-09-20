@@ -470,6 +470,28 @@ function captureConfirmationRequests() {
 }
 
 describe("mobile AskV pending action retries", () => {
+  it("binds an explicit first-turn Gate command to its persisted user event", async () => {
+    env.locationPermission.mockResolvedValue({ status: "granted" });
+    env.locationPosition.mockResolvedValue({ coords: { latitude: 35, longitude: -97 } });
+    const requests: any[] = [];
+    const original = vi.mocked(fetch).getMockImplementation()!;
+    vi.mocked(fetch).mockImplementation(async (...args) => {
+      if (!String(args[0]).endsWith("/tool-call")) return original(...args);
+      const body = JSON.parse(String(args[1]?.body)); requests.push(body);
+      return new Response(JSON.stringify({ ok: true, output: { ok: true, visitId: 42 } }));
+    });
+    const { result } = renderHook(useAskVVoiceSession, { wrapper }); await flush();
+    await act(async () => { await result.current.startConversation(); });
+    act(() => env.options[0].onTranscript({ eventId: "gate:user", role: "user", content: "Check Bob Villa in." }));
+    await act(async () => { await env.options[0].onToolCall({
+      name: "confirm_visitor_check_in", callId: "gate-call", arguments: { firstName: "Bob", lastName: "Villa" },
+    }); });
+    expect(requests[0]).toMatchObject({
+      name: "confirm_visitor_check_in", callId: "gate-call", idempotencyKey: "gate-call", actionEventId: "gate:user",
+    });
+    expect(requests[0]).not.toHaveProperty("confirmationEventId");
+  });
+
   it("waits for and saves the user's reply before reusing the server key on a new provider call", async () => {
     vi.useFakeTimers();
     const requests = captureConfirmationRequests();

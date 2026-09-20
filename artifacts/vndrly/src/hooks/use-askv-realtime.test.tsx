@@ -30,7 +30,7 @@ describe("useAskVRealtime", () => {
     expect(onMutation).toHaveBeenCalledWith(mutation);
   });
 
-  afterEach(() => vi.useRealTimers());
+  afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); });
   beforeEach(() => {
     mocks.connect.mockClear();
     mocks.close.mockClear();
@@ -134,5 +134,32 @@ describe("useAskVRealtime", () => {
     expect(requests).toHaveLength(1); expect(flush).toHaveBeenCalledOnce();
     await act(async () => { finishSave(); await pending; });
     expect(requests[1]).toMatchObject({ idempotencyKey: 'original', confirmationEventId: 'user:approval' });
+  });
+
+  it('binds an explicit first-turn Gate command to its persisted user event', async () => {
+    vi.stubGlobal('navigator', { geolocation: { getCurrentPosition: (resolve: (value: unknown) => void) => resolve({ coords: { latitude: 35, longitude: -97 } }) } });
+    const requests: any[] = [];
+    vi.mocked(fetch).mockImplementation(async (url, init) => {
+      if (String(url).includes('/tool-call')) {
+        requests.push(JSON.parse(String(init?.body)));
+        return { ok: true, json: async () => ({ ok: true, output: '{"ok":true,"visitId":42}' }) } as Response;
+      }
+      return { ok: true, json: async () => String(url).includes('/conversation')
+        ? { conversationId: 8, messages: [] }
+        : { text: 'Hello' } } as Response;
+    });
+    const flush = vi.fn(async () => undefined);
+    const { result } = renderHook(() => useAskVRealtime({ flushTranscripts: flush }));
+    await act(async () => result.current.startConversation());
+    const callbacks = vi.mocked(createAskVRealtimeClient).mock.calls.at(-1)![0];
+    callbacks.onTranscript?.({ eventId: 'gate:user', role: 'user', content: 'Check Bob Villa in.' });
+    await act(async () => { await callbacks.onToolCall({
+      name: 'confirm_visitor_check_in', callId: 'gate-call', arguments: { firstName: 'Bob', lastName: 'Villa' },
+    }); });
+    expect(flush).toHaveBeenCalledOnce();
+    expect(requests[0]).toMatchObject({
+      name: 'confirm_visitor_check_in', callId: 'gate-call', idempotencyKey: 'gate-call', actionEventId: 'gate:user',
+    });
+    expect(requests[0]).not.toHaveProperty('confirmationEventId');
   });
 });

@@ -10,6 +10,8 @@ import { createLocalAskVWakeDetector, type LocalAskVWakeDetector } from "@/lib/a
 import { stopAskVSpeech } from "@/lib/askv-speech";
 import { emitAskVDataChanged, executeAskVClientIntent } from "@/lib/askv-client-tools";
 import { isAskVGpsWrite, withAskVToolLocation, type AskVCoordinates } from "@/lib/askv-tool-location";
+
+const GATE_SUBMISSION_TOOLS = new Set(["confirm_visitor_check_in", "confirm_visitor_check_out"]);
 import { recordAskVMetric } from "@/lib/askv-voice-metrics";
 import { getApiBase } from "@/lib/api";
 import { ASKV_IDLE_MS, type AskVVoiceState } from "@/lib/askv-voice-state";
@@ -107,6 +109,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
   const idleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const userSpeakingRef = useRef(false);
   const latestUserTranscript = useRef<{ sessionId: string; eventId: string } | null>(null);
+  const turnStartedAfterUserEventId = useRef<string | null>(null);
   // The server retains one exact pending action per user/organization/session.
   const pendingConfirmation = useRef<PendingConfirmation | null>(null);
   const prefsRef = useRef<{ userId: number; promise: Promise<void> } | null>(null);
@@ -348,7 +351,8 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
             check(); clearIdle(); writeState("thinking");
             const parsed = typeof call.arguments === "string" ? JSON.parse(call.arguments) : call.arguments;
             const { confirmed: _untrustedConfirmed, confirmationPhrase: _untrustedPhrase,
-              confirmationEventId: _untrustedEventId, idempotencyKey: _untrustedKey, callId: _untrustedCallId,
+              confirmationEventId: _untrustedEventId, actionEventId: _untrustedActionEventId,
+              idempotencyKey: _untrustedKey, callId: _untrustedCallId,
               ...rawArguments } = parsed ?? {};
             // GPS writes replace model coordinates with the captured device
             // location. Null schema fields and echoed GPS identify the same draft.
@@ -367,6 +371,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
             const contextChanged = () => JSON.stringify({ ok: false, requiresConfirmation: true,
               message: "The action or screen changed. Review the action again before confirming." });
             let confirmationEventId: string | undefined;
+            let actionEventId: string | undefined;
             if (pending) {
               const hasReply = () => latestUserTranscript.current?.sessionId === session.sessionId
                 && latestUserTranscript.current.eventId !== pending.afterEventId;
@@ -386,6 +391,21 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
               catch { return JSON.stringify({ ok: false, requiresConfirmation: true, message: "The confirmation could not be saved. Nothing was changed." }); }
               if (!sameContext()) return contextChanged();
               confirmationEventId = reply.eventId;
+            } else if (GATE_SUBMISSION_TOOLS.has(call.name)) {
+              const hasAction = () => latestUserTranscript.current?.sessionId === session.sessionId
+                && latestUserTranscript.current.eventId !== turnStartedAfterUserEventId.current;
+              const deadline = Date.now() + 4000;
+              while (sameContext() && !hasAction() && Date.now() < deadline) {
+                await new Promise(resolve => setTimeout(resolve, 50));
+              }
+              if (!sameContext()) return contextChanged();
+              const action = latestUserTranscript.current;
+              if (hasAction() && action) {
+                try { await flushTranscripts(); check(); }
+                catch { return JSON.stringify({ ok: false, message: "The Gate command could not be saved. Nothing was changed." }); }
+                if (!sameContext()) return contextChanged();
+                actionEventId = action.eventId;
+              }
             }
             let domainArguments: Record<string, unknown>;
             try {
@@ -399,6 +419,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
               sessionId: session.sessionId, conversationId: session.conversationId,
               callId: call.callId, idempotencyKey: stableKey,
               ...(confirmationEventId ? { confirmationEventId } : {}),
+              ...(actionEventId ? { actionEventId } : {}),
             }, ac.signal); }
             catch (reason) {
               check();
@@ -433,6 +454,8 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
           },
           onSpeechStarted: () => {
             if (!valid()) return;
+            turnStartedAfterUserEventId.current = latestUserTranscript.current?.sessionId === session.sessionId
+              ? latestUserTranscript.current.eventId : null;
             clearIdle();
             userSpeakingRef.current = true;
             if (stateRef.current === "speaking" || stateRef.current === "greeting") {

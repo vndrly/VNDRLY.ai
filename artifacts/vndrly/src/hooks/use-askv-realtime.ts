@@ -6,6 +6,7 @@ import { ASKV_IDLE_MS, type AskVVoiceState } from '@/lib/askv-voice-state';
 import { addAskVToolLocation } from '@/lib/askv-tool-location';
 import { createAskVVoiceMetrics } from '@/lib/askv-voice-metrics';
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
+const GATE_SUBMISSION_TOOLS = new Set(['confirm_visitor_check_in', 'confirm_visitor_check_out']);
 export type AskVRealtimeState = AskVVoiceState;
 type Conversation = { conversationId: number; messages: Array<{ role: 'user' | 'assistant'; content: string }> };
 export function useAskVRealtime(args?: {
@@ -68,6 +69,7 @@ export function useAskVRealtime(args?: {
       const data = await response.json() as { text?: string }; if (!valid()) return;
       const text = data.text ?? "I'm listening."; setGreeting(text);
       let lastUserTranscript: VoiceTranscript | undefined;
+      let turnStartedAfterEventId: string | undefined;
       const pendingConfirmations = new Map<string, { key: string; arguments: unknown; afterEventId?: string }>();
       const created = await createAskVRealtimeClient({ seedMessage, path, sessionId, conversationId: conversation.conversationId,
         signal: controller.signal, greeting: text, history: conversation.messages, audioSource,
@@ -82,6 +84,7 @@ export function useAskVRealtime(args?: {
           let domain = call.arguments && typeof call.arguments === 'object' ? call.arguments as Record<string, unknown> : {};
           const pending = pendingConfirmations.get(call.name);
           let confirmationEventId: string | undefined;
+          let actionEventId: string | undefined;
           if (pending) {
             // Tool generation can beat the user's transcription event. Never substitute the model's phrase.
             const until = Date.now() + 4000;
@@ -92,6 +95,15 @@ export function useAskVRealtime(args?: {
             if (!lastUserTranscript || lastUserTranscript.eventId === pending.afterEventId) return JSON.stringify({ ok: false, requiresConfirmation: true, message: 'The spoken confirmation has not arrived. Please confirm the pending action.' });
             await latest.current?.flushTranscripts?.();
             confirmationEventId = lastUserTranscript.eventId;
+          } else if (GATE_SUBMISSION_TOOLS.has(call.name)) {
+            const until = Date.now() + 4000;
+            while (valid() && (!lastUserTranscript || lastUserTranscript.eventId === turnStartedAfterEventId) && Date.now() < until) {
+              await new Promise(resolve => setTimeout(resolve, 50));
+            }
+            if (lastUserTranscript && lastUserTranscript.eventId !== turnStartedAfterEventId) {
+              await latest.current?.flushTranscripts?.();
+              actionEventId = lastUserTranscript.eventId;
+            }
           }
           try { domain = await addAskVToolLocation(call.name, domain, pending?.arguments); }
           catch { return JSON.stringify({ ok: false, message: 'Location permission is required for this action. You can continue in the existing form.' }); }
@@ -100,6 +112,7 @@ export function useAskVRealtime(args?: {
             headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: call.name, arguments: domain,
               sessionId, conversationId: conversation.conversationId, callId: call.callId,
               confirmationEventId,
+              actionEventId,
               idempotencyKey: pending ? pending.key : call.callId,
               clientSurface: 'web' }) });
           const body = await result.json();
@@ -124,7 +137,7 @@ export function useAskVRealtime(args?: {
           }
           return typeof output === 'string' ? output : JSON.stringify(output);
         },
-        onSpeechStarted: () => { if (valid()) { userSpeaking.current = true; clearIdle(); if (current.current === 'speaking') { metrics.current?.event('interruption'); client.current?.interrupt(); } transition('listening'); } },
+        onSpeechStarted: () => { if (valid()) { turnStartedAfterEventId = lastUserTranscript?.eventId; userSpeaking.current = true; clearIdle(); if (current.current === 'speaking') { metrics.current?.event('interruption'); client.current?.interrupt(); } transition('listening'); } },
         onSpeechStopped: () => { if (valid()) { metrics.current?.startTurn(); userSpeaking.current = false; clearIdle(); transition('thinking'); } },
         onAudio: () => { if (valid()) { metrics.current?.audio(); clearIdle(); transition('speaking'); } },
         onResponse: response => { if (valid()) metrics.current?.response(response); },

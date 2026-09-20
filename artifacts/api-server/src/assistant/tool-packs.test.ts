@@ -80,8 +80,8 @@ describe("AskV realtime tool packs", () => {
     expect(names).toContain("prepare_visitor_check_in");
     expect(names).toContain("search_gate_history");
     expect(names).toContain("resolve_gate_check_in");
-    expect(names).not.toContain("confirm_visitor_check_in");
-    expect(names).not.toContain("confirm_visitor_check_out");
+    expect(names).toContain("confirm_visitor_check_in");
+    expect(names).toContain("confirm_visitor_check_out");
     expect(names).toContain("open_screen");
     expect(names).not.toContain("query_1099_k_summary");
     expect(names).not.toContain("lookup_accounting_connection");

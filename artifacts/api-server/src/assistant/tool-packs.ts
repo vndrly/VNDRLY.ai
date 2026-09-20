@@ -43,6 +43,8 @@ const GATE_SCREEN_TOOLS = new Set([
   "prepare_visitor_check_in",
   "find_active_visitors",
   "prepare_visitor_check_out",
+  "confirm_visitor_check_in",
+  "confirm_visitor_check_out",
   "query_active_visitors",
   "query_visits",
 ]);
