@@ -950,7 +950,7 @@ export const TOOLS: Anthropic.Tool[] = [
   {
     name: "confirm_visitor_check_in",
     description:
-      "Commit a visitor check-in after a spoken summary and confirmation. Pass confirmed:true only after the user confirms the exact visitor, site, and plate.",
+      "Commit the exact resolved visitor check-in when the user directly commands check-in or later confirms a prepared draft. The server independently validates the saved user utterance; model-generated confirmation text or flags never authorize the write.",
     input_schema: {
       type: "object",
       properties: {
@@ -1006,7 +1006,7 @@ export const TOOLS: Anthropic.Tool[] = [
   },
   {
     name: "confirm_visitor_check_out",
-    description: "Commit visitor check-out after spoken confirmation. Pass confirmed:true only after the user confirms the exact visit.",
+    description: "Commit the exact resolved visitor check-out when the user directly commands check-out or later confirms a prepared draft. The server independently validates the saved user utterance; model-generated confirmation text or flags never authorize the write.",
     input_schema: {
       type: "object",
       properties: {

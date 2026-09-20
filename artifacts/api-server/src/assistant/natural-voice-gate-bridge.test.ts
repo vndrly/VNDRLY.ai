@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { confirmVisitorCheckIn, prepareVisitorCheckIn, prepareVisitorCheckOut } from "./natural-voice-write-tools";
+import { confirmVisitorCheckIn, confirmVisitorCheckOut, prepareVisitorCheckIn, prepareVisitorCheckOut } from "./natural-voice-write-tools";
 const fetchMock = vi.fn();
 beforeEach(() => { fetchMock.mockReset(); vi.stubGlobal("fetch", fetchMock); });
 const fields = {
@@ -22,6 +22,30 @@ describe("AskV Gate bridge", () => {
       userId: 20, role: "field_employee", vendorId: 22, vendorRole: "gate_supervisor",
       managedSubcontractor: { siteGrants: [{ siteId: 9, role: "gate_supervisor" }] },
     }));
-    expect(result).toMatchObject({ ok: true, visitId: 77 });
+    expect(result).toMatchObject({
+      ok: true,
+      action: "visitor_checked_in",
+      visitId: 77,
+      displayName: "Bob Villa",
+      message: "Bob Villa checked in.",
+      responseMode: "concise",
+      refresh: ["gate", "visits"],
+    });
+  });
+  it("returns a compact named check-out result", async () => {
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ id: 77, firstName: "Bob", lastName: "Villa" }) });
+    const result = JSON.parse(await confirmVisitorCheckOut(
+      { visitId: 77, confirmed: true, idempotencyKey: "call-b" },
+      { userId: 10, role: "vendor", vendorId: 22, vendorRole: "gatekeeper" },
+    ));
+    expect(result).toMatchObject({
+      ok: true,
+      action: "visitor_checked_out",
+      visitId: 77,
+      displayName: "Bob Villa",
+      message: "Bob Villa checked out.",
+      responseMode: "concise",
+      refresh: ["gate", "visits"],
+    });
   });
 });

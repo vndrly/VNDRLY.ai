@@ -174,10 +174,22 @@ export async function confirmVisitorCheckIn(
     args,
     session,
   )) as Record<string, unknown>;
+  const displayName = [args.firstName, args.lastName]
+    .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+    .map((value) => value.trim())
+    .join(" ");
   return JSON.stringify(
     result.error
       ? result
-      : { ok: true, visitId: result.id, refresh: ["gate", "visits"] },
+      : {
+          ok: true,
+          action: "visitor_checked_in",
+          visitId: result.id,
+          displayName,
+          message: `${displayName} checked in.`,
+          responseMode: "concise",
+          refresh: ["gate", "visits"],
+        },
   );
 }
 export async function findActiveVisitors(
@@ -521,10 +533,22 @@ export async function confirmVisitorCheckOut(
     args,
     session,
   )) as Record<string, unknown>;
+  const displayName = [result.firstName, result.lastName]
+    .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+    .map((value) => value.trim())
+    .join(" ") || "Visitor";
   return JSON.stringify(
     result.error
       ? result
-      : { ok: true, visitId: result.id, refresh: ["gate", "visits"] },
+      : {
+          ok: true,
+          action: "visitor_checked_out",
+          visitId: result.id,
+          displayName,
+          message: `${displayName} checked out.`,
+          responseMode: "concise",
+          refresh: ["gate", "visits"],
+        },
   );
 }
 export async function setTicketLifecycle(
