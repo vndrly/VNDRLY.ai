@@ -9,6 +9,8 @@ describe("Gate portal navigation", () => {
       "tab-gate-home",
       "tab-gate-history",
       "tab-gate-work-hub",
+      "tab-gate-change-over",
+      "tab-gate-shift-notes",
     ]);
   });
 });

@@ -161,7 +161,7 @@ interface ResolvedContext {
  * derivation from `users.role` + their vendor_people row so existing
  * behavior is preserved.
  */
-async function resolveContext(
+export async function resolveContext(
   user: typeof usersTable.$inferSelect,
 ): Promise<ResolvedContext> {
   const rows = await db
@@ -340,7 +340,7 @@ async function resolveContext(
   };
 }
 
-function buildSessionCookie(
+export function buildSessionCookie(
   user: typeof usersTable.$inferSelect,
   ctx: ResolvedContext,
 ): string {

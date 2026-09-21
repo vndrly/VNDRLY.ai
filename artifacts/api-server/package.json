@@ -60,7 +60,8 @@
     "set:majik-team-passwords": "tsx scripts/set-majik-team-passwords.ts",
     "ensure:majik-circle": "tsx scripts/ensure-majik-circle.ts",
     "ensure:majik-members": "tsx scripts/ensure-majik-members.ts",
-    "prune:majik-members": "tsx scripts/prune-majik-members.ts"
+    "prune:majik-members": "tsx scripts/prune-majik-members.ts",
+    "migrate:gate-change-over": "node scripts/apply-gate-change-over-migration.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",

@@ -29,7 +29,7 @@ export function isGatekeeperUser(
   user: GatekeeperUserShape | null | undefined,
 ): boolean {
   return (
-    (user?.role === "vendor" && user.vendorRole === "gatekeeper") ||
+    (user?.role === "vendor" && ["gatekeeper", "gate_supervisor"].includes(user.vendorRole ?? "")) ||
     (user?.role === "field_employee" &&
       !!user.managedSubcontractor &&
       (user.vendorRole === "gatekeeper" ||
@@ -42,6 +42,8 @@ export const GATEKEEPER_TAB_KEYS = [
   "askv",
   "gate",
   "gate-history",
+  "change-over",
+  "shift-notes",
   "profile",
 ] as const;
 

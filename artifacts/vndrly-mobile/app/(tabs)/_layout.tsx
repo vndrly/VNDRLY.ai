@@ -44,6 +44,8 @@ export default function TabLayout() {
       schedule: t("tabs.schedule"),
       voice: t("gatekeeper.voiceEntry"),
       workHub: "Work Hub",
+      changeOver: t("changeOver.title"),
+      shiftNotes: t("changeOver.shiftNotes"),
     }),
     [t, user],
   );

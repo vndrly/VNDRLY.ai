@@ -101,3 +101,18 @@ describe("native auth scopes", () => {
     await pendingRemoval;
   });
 });
+
+it("publishes a paired session and clears both identities when secure persistence fails", async () => {
+  const auth = await import("./auth");
+  await auth.setToken("old-token");
+  await auth.setUser({ id: 1, username: "old", displayName: "Old", role: "vendor" });
+  const observed: (string | null)[] = [];
+  auth.subscribeUser(() => observed.push(auth.getCachedToken()));
+  secure.set.mockRejectedValueOnce(new Error("Storage unavailable"));
+  await expect(auth.replaceSession("incoming-token", { id: 2, username: "incoming", displayName: "Incoming", role: "vendor" })).rejects.toThrow("Shift transferred");
+  expect(observed[0]).toBe("incoming-token");
+  expect(auth.getCachedToken()).toBeNull();
+  await expect(auth.getUser()).resolves.toBeNull();
+  expect(secure.remove).toHaveBeenCalledWith("vndrly.token");
+  expect(secure.remove).toHaveBeenCalledWith("vndrly.user");
+});

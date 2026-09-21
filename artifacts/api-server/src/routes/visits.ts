@@ -307,7 +307,7 @@ function getStaffSession(req: any): Session | null {
 
 function isGatekeeperSession(session: Session | null): boolean {
   if (!session || (session.role !== "vendor" && !(session.role === "field_employee" && session.managedSubcontractor)) || !session.vendorId) return false;
-  return session.vendorRole === "gatekeeper" || (Boolean(session.managedSubcontractor) && session.vendorRole === "gate_supervisor");
+  return session.vendorRole === "gatekeeper" || session.vendorRole === "gate_supervisor";
 }
 
 async function requireGatekeeperSession(

@@ -46,6 +46,11 @@ const gatekeeper = {
 };
 
 describe("visitEventVisibleToSession", () => {
+  it("scopes ordinary gate supervisors to all visits at assigned sites", () => {
+    const supervisor = { ...gatekeeper, vendorRole: "gate_supervisor" };
+    expect(visitEventVisibleToSession(supervisor, checkedInAtSite(309, null), new Set([309]))).toBe(true);
+    expect(visitEventVisibleToSession(supervisor, checkedOutAtSite(999, 1054), new Set([309]))).toBe(false);
+  });
   it("lets a gatekeeper see a partner-hosted check-in at an assigned site", () => {
     expect(
       visitEventVisibleToSession(gatekeeper, checkedInAtSite(309, null), new Set([309, 410])),

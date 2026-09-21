@@ -28,6 +28,8 @@ import {
   siteWorkAssignmentsTable,
 } from "@workspace/db";
 import type { SessionPayload } from "../lib/session";
+import { z } from "zod";
+import { ChangeOverError, getChangeOverState, getShiftNotes, listChangeOverSites, listChangeOverStations } from "../services/gate-change-over";
 import { computeSafetyMetrics, loadSiteOperationalStatus } from "../lib/safety-metrics";
 import {
   blockFieldEmployee,
@@ -1437,6 +1439,21 @@ export async function runOpsDataTool(
   session: SessionPayload,
 ): Promise<string> {
   switch (name) {
+    case "query_gate_stations":
+    case "query_gate_change_over":
+    case "query_shift_notes":
+      try {
+        if (name === "query_gate_stations") return JSON.stringify(args.siteId == null
+          ? { sites: await listChangeOverSites(session) }
+          : { stations: await listChangeOverStations(session, z.number().int().positive().parse(args.siteId)) });
+        const stationId = z.string().uuid().parse(args.stationId);
+        if (name === "query_gate_change_over") return JSON.stringify(await getChangeOverState(session, stationId));
+        const filters = z.object({ days: z.number().int().min(1).max(3650).optional(), search: z.string().max(200).optional(), before: z.string().datetime().optional() }).parse(args);
+        return JSON.stringify(await getShiftNotes(session, { ...filters, stationId }));
+      } catch (error) {
+        if (error instanceof ChangeOverError || error instanceof z.ZodError) return err(error instanceof ChangeOverError ? error.message : "Provide a valid gate and date range.");
+        throw error;
+      }
     case "query_gate_report":
       try { return JSON.stringify(await getGateReport(session, { ...args, limit: 50 })); }
       catch (error) { if (error instanceof GateReportError) return err(error.message); throw error; }

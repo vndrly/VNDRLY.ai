@@ -44,11 +44,13 @@ describe("buildAppNavigation", () => {
         "askv",
         "gate-history",
         "work-hub",
+        "change-over",
+        "shift-notes",
         "profile",
       ]);
     }
   });
-  it("uses four Gate actions with AskV as the voice entry", () => {
+  it("keeps Change Over and Shift Notes below Work Hub with AskV as the voice entry", () => {
     const items = buildAppNavigation({
       user: user("vendor", "gatekeeper"),
       labels,
@@ -58,6 +60,9 @@ describe("buildAppNavigation", () => {
       "gate",
       "askv",
       "gate-history",
+      "work-hub",
+      "change-over",
+      "shift-notes",
       "profile",
     ]);
     expect(items.some((entry) => entry.kind === "gate-voice")).toBe(false);

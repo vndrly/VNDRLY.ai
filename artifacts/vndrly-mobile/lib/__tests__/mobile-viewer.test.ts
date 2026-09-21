@@ -79,10 +79,13 @@ describe("mobile-viewer role helpers", () => {
       "askv",
       "gate",
       "gate-history",
+      "change-over",
+      "shift-notes",
       "profile",
     ]);
     expect(isGatekeeperTabKey("gate-history")).toBe(true);
     expect(isGatekeeperTabKey("index")).toBe(false);
+    expect(isGatekeeperUser({ role: "vendor", vendorRole: "gate_supervisor" })).toBe(true);
   });
 
   it("picks role-appropriate home tab titles", () => {

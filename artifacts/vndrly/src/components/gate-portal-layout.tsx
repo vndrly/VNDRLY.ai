@@ -32,6 +32,8 @@ export const GATE_PORTAL_TABS: FieldOpsTabDef[] = [
     testId: "tab-gate-work-hub",
     match: (p) => p.startsWith("/work-hub"),
   },
+  { href: "/gate/change-over", icon: Shield, labelKey: "changeOver.title", testId: "tab-gate-change-over", match: p => p === "/gate/change-over" },
+  { href: "/gate/shift-notes", icon: History, labelKey: "changeOver.shiftNotes", testId: "tab-gate-shift-notes", match: p => p === "/gate/shift-notes" },
 ];
 
 export function GatePortalLayout({ children }: { children: ReactNode }) {

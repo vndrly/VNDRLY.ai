@@ -91,7 +91,7 @@ async function canReadVisitEvidence(
     return session.partnerId === visit.sitePartnerId;
   if (session.managedSubcontractor && !managedWorkerSiteRole(session, visit.siteLocationId)) return false;
   if ((session.role !== "vendor" && !(session.role === "field_employee" && session.managedSubcontractor)) || !session.vendorId) return false;
-  if (session.vendorRole !== "gatekeeper" && !session.managedSubcontractor)
+  if (!["gatekeeper", "gate_supervisor"].includes(session.vendorRole ?? "") && !session.managedSubcontractor)
     return session.vendorId === visit.hostVendorId;
   const [assignment] = await db
     .select({ id: siteWorkAssignmentsTable.id })

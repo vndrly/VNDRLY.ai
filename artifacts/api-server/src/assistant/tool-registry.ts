@@ -91,6 +91,9 @@ const DEFAULT_METADATA: ToolMetadata = {
 };
 
 const TOOL_METADATA: Record<string, Partial<ToolMetadata>> = {
+  query_gate_stations: { roles: GATE_ROLES, pack: "screen", auditTarget: "site" },
+  query_gate_change_over: { roles: GATE_ROLES, pack: "screen", auditTarget: "site" },
+  query_shift_notes: { roles: GATE_ROLES, pack: "screen", auditTarget: "site" },
   ...Object.fromEntries(
     Object.entries(WORK_HUB_TOOL_METADATA).map(([name, metadata]) => [
       name,

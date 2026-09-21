@@ -58,6 +58,8 @@ const VerifyEmployeePage = lazy(() => import("@/pages/verify-employee"));
 const VisitorEntryPage = lazy(() => import("@/pages/visitor-entry"));
 const GatekeeperPage = lazy(() => import("@/pages/gatekeeper"));
 const GateHistoryPage = lazy(() => import("@/pages/gate-history"));
+const GateChangeOverPage = lazy(() => import("@/pages/gate-change-over"));
+const GateShiftNotesPage = lazy(() => import("@/pages/gate-change-over").then(m => ({ default: m.GateShiftNotesPage })));
 const VisitorsPage = lazy(() => import("@/pages/visitors"));
 const GateLogPage = lazy(() => import("@/pages/gate-log"));
 const FieldHome = lazy(() => import("@/pages/field-home"));
@@ -243,10 +245,12 @@ function AuthenticatedRouter() {
             <Route path="/login" component={Login} />
             <Route path="/*splat" component={Login} />
           </>
-        ) : (user.role === "vendor" && user.vendorRole === "gatekeeper") || isManagedSubcontractor(user) ? (
+        ) : (user.role === "vendor" && ["gatekeeper", "gate_supervisor"].includes(user.vendorRole ?? "")) || isManagedSubcontractor(user) ? (
           <GatePortalLayout>
             <Switch>
               <Route path="/gate/history" component={GateHistoryPage} />
+              <Route path="/gate/change-over"><GateChangeOverPage /></Route>
+              <Route path="/gate/shift-notes" component={GateShiftNotesPage} />
               <Route path="/gate" component={GatekeeperPage} />
               <Route path="/">
                 <GatekeeperRootRedirect />

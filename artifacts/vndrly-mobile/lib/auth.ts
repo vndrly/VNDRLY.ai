@@ -203,6 +203,27 @@ export function setUser(user: StoredUser | null): Promise<void> {
   );
 }
 
+/** Publish a complete identity before any listener or asynchronous storage work. */
+export async function replaceSession(token: string, user: StoredUser): Promise<void> {
+  cachedToken = token;
+  cachedTokenLoaded = true;
+  cachedUser = user;
+  cachedUserLoaded = true;
+  cachedRole = user.role;
+  authGeneration += 1;
+  const scope = captureAuthScope();
+  tokenListeners.forEach(listener => listener(token));
+  userListeners.forEach(listener => listener(user));
+  const writes = await Promise.allSettled([
+    queueTokenStorage(() => setItem(TOKEN_KEY, token)),
+    queueUserStorage(() => setItem(USER_KEY, JSON.stringify(user))),
+  ]);
+  if (writes.some(write => write.status === "rejected")) {
+    await clearAuthIfCurrent(scope);
+    throw new Error("Shift transferred, but this device could not save the new session. Sign in as the incoming gatekeeper.");
+  }
+}
+
 export async function clearAuthIfCurrent(scope: AuthScope): Promise<boolean> {
   if (!isAuthScopeCurrent(scope)) return false;
   const tokenWrite = setToken(null);

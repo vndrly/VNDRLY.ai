@@ -9,7 +9,7 @@ export type VisitEventSession = {
 };
 
 export function isGatekeeperVisitSession(session: VisitEventSession): boolean {
-  return !!session.vendorId && ((session.role === "vendor" && session.vendorRole === "gatekeeper") || (session.role === "field_employee" && !!session.managedSubcontractor && ["gatekeeper", "gate_supervisor"].includes(session.vendorRole ?? "")));
+  return !!session.vendorId && ((session.role === "vendor" && ["gatekeeper", "gate_supervisor"].includes(session.vendorRole ?? "")) || (session.role === "field_employee" && !!session.managedSubcontractor && ["gatekeeper", "gate_supervisor"].includes(session.vendorRole ?? "")));
 }
 
 export function visitEventSiteId(ev: VisitEvent): number {

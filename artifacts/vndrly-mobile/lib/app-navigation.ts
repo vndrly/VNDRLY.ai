@@ -30,6 +30,8 @@ export type AppNavigationLabels = {
   schedule: string;
   voice: string;
   workHub: string;
+  changeOver?: string;
+  shiftNotes?: string;
 };
 
 export type AppNavigationBadges = {
@@ -55,9 +57,9 @@ export function buildAppNavigation({
       item("gate", "/(tabs)/gate", labels.gate, "truck"),
       item("askv", "/(tabs)/askv", labels.askv, "zap", "askv"),
       item("gate-history", "/(tabs)/gate-history", labels.history, "clock"),
-      ...(user?.managedSubcontractor
-        ? [item("work-hub", "/work-hub", labels.workHub, "briefcase")]
-        : []),
+      item("work-hub", "/work-hub", labels.workHub, "briefcase"),
+      item("change-over", "/(tabs)/change-over", labels.changeOver ?? "Change Over", "repeat"),
+      item("shift-notes", "/(tabs)/shift-notes", labels.shiftNotes ?? "Shift Notes", "file-text"),
       item("profile", "/(tabs)/profile", labels.profile, "user"),
     ];
   }

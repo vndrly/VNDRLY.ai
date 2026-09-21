@@ -37,6 +37,9 @@ const CORE_TOOLS = new Set([
 ]);
 
 const GATE_SCREEN_TOOLS = new Set([
+  "query_gate_stations",
+  "query_gate_change_over",
+  "query_shift_notes",
   "query_gate_report",
   "search_gate_history",
   "resolve_gate_check_in",
@@ -173,7 +176,7 @@ const ROLE_READ_TOOLS: Record<AskVRole, Set<string>> = {
 
 export function voiceWorkflowForPath(path: string): VoiceWorkflow {
   if (/onboarding/i.test(path)) return "onboarding";
-  if (/gate|visitor/i.test(path)) return "gate";
+  if (/gate|visitor|change-over|shift-notes/i.test(path)) return "gate";
   if (/ticket/i.test(path)) return "tickets";
   if (/safety/i.test(path)) return "safety";
   if (/invoice|statement|bill|accounting/i.test(path)) return "finance";

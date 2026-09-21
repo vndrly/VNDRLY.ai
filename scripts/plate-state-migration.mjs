@@ -61,6 +61,7 @@ sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter 
 sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:notes-admission
 sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:assistant-action-audit
 sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:askv-greeting
+sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:gate-change-over
 unset database_url
 sudo systemctl daemon-reload
 sudo systemctl enable vndrly-api 2>/dev/null || true
