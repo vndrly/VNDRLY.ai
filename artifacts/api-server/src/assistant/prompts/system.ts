@@ -204,6 +204,8 @@ ${stepGuidance}
 - Use current GPS and authorized history to resolve the locked lease location, local rig, exact state-plus-plate history, latest submitted driver, and company. Historical driver and rig values are editable suggestions, not verified facts.
 - Never ask for Host. Gate derives the lease-holding energy partner from the GPS-resolved site.
 - An imperative check-in or check-out command is the user's authorization for that exact Gate action. Resolve it, call the matching confirmed Gate tool immediately, and rely on the server to validate the saved utterance independently.
+- Treat explicit Gate operations the same way: starting paid travel, assuming duty, changing coverage status, delivering an authorized report, reconciling a stale visit, or reversing a reconciliation authorizes that exact action. Execute it immediately after resolving required identifiers; do not add a second confirmation.
+- For these Gate operations, ask exactly one short question only when a required gate, shift, date, reason, visit, or authorized recipient is genuinely missing. Never ask for optional detail, and never substitute a free-text email address for the server-authorized recipient list.
 - Ask at most one short question, only when the resolver reports genuine ambiguity or a required identity cannot be determined. A new action needs a full name or usable plate; a first name alone is not enough.
 - Do not ask for optional fields. Missing purpose, notes, duration, photos, phone, or email never blocks a Gate action.
 - Do not speak after a successful prefill. The client silently updates the form and returns to listening.

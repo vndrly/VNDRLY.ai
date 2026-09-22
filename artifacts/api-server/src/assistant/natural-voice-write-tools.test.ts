@@ -11,6 +11,12 @@ import {
   setTicketLifecycle,
   closeTicketForReview,
   callNaturalVoiceDomainApi,
+  startPaidTravel,
+  assumeGateShift,
+  setGateCoverageStatus,
+  deliverGateReport,
+  reconcileStaleGateVisit,
+  reverseGateReconciliation,
 } from "./natural-voice-write-tools";
 const fetchMock = vi.fn();
 const gate = {
@@ -278,6 +284,52 @@ describe("AskV canonical Gate and field operations", () => {
     const session = { userId: 11, role: "field_employee" } as never;
     expect(JSON.parse(await searchGateHistory({}, session)).error).toMatch(/Gatekeeper/i);
     expect(JSON.parse(await resolveGateCheckInCandidate({}, session)).error).toMatch(/Gatekeeper/i);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("executes Gate operations through canonical endpoints with idempotency", async () => {
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ ok: true }) });
+    const confirmed = { confirmed: true, idempotencyKey: "gate-operation-1" };
+    await startPaidTravel({ ...confirmed, stationId: "station-1", workHubShiftId: "shift-1" }, gate);
+    await assumeGateShift({ ...confirmed, stationId: "station-1" }, gate);
+    await setGateCoverageStatus({ ...confirmed, stationId: "station-1", mode: "paused_until", pausedUntil: "2026-10-15", reason: "Drilling stopped" }, gate);
+    await reconcileStaleGateVisit({ ...confirmed, visitId: 77, reason: "Confirmed off site" }, gate);
+    await reverseGateReconciliation({ ...confirmed, visitId: 77, reconciliationId: "recon-1", reason: "Vehicle remains on site" }, gate);
+
+    expect(fetchMock.mock.calls.map(([url]) => url)).toEqual(expect.arrayContaining([
+      expect.stringMatching(/gate-change-over\/station-1\/work-sessions\/start$/),
+      expect.stringMatching(/gate-change-over\/station-1\/duty\/assume$/),
+      expect.stringMatching(/workforce\/gates\/station-1\/coverage-status$/),
+      expect.stringMatching(/visits\/gate\/77\/resolve-stale$/),
+      expect.stringMatching(/visits\/gate\/77\/reconciliations\/recon-1\/reverse$/),
+    ]));
+    for (const [, request] of fetchMock.mock.calls) {
+      expect(request.headers["Idempotency-Key"]).toBe("gate-operation-1");
+    }
+  });
+
+  it("delivers only to server-authorized report recipients without leaking guard fields", async () => {
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ delivered: 1 }) });
+    const result = JSON.parse(await deliverGateReport({
+      confirmed: true,
+      idempotencyKey: "report-1",
+      reportKind: "gate_history",
+      stationId: "station-1",
+      recipientUserIds: [10],
+      format: "pdf",
+      filters: { range: "previous_shift" },
+    }, gate));
+    expect(result).toMatchObject({ ok: true, action: "gate_report_sent", responseMode: "concise" });
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(body).toMatchObject({ recipientUserIds: [10], reportKind: "gate_history" });
+    expect(body.confirmed).toBeUndefined();
+    expect(body.idempotencyKey).toBeUndefined();
+    expect(fetchMock.mock.calls[0][1].headers["Idempotency-Key"]).toBe("report-1");
+  });
+
+  it("asks one short question when a required Gate operation detail is missing", async () => {
+    expect(JSON.parse(await startPaidTravel({ confirmed: true, idempotencyKey: "missing" }, gate)).error).toMatch(/which assigned gate shift/i);
+    expect(JSON.parse(await deliverGateReport({ confirmed: true, idempotencyKey: "missing" }, gate)).error).toMatch(/who should receive/i);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 

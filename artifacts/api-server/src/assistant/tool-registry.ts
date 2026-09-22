@@ -186,6 +186,12 @@ const TOOL_METADATA: Record<string, Partial<ToolMetadata>> = {
     pack: "screen",
     auditTarget: "site",
   },
+  start_paid_travel: { roles: GATE_ROLES, mutating: true, confirmation: "required", risk: "high", pack: "screen", auditTarget: "site" },
+  assume_gate_shift: { roles: GATE_ROLES, mutating: true, confirmation: "required", risk: "high", pack: "screen", auditTarget: "site" },
+  set_gate_coverage_status: { roles: OFFICE_ROLES, mutating: true, confirmation: "required", risk: "high", pack: "screen", auditTarget: "site" },
+  deliver_gate_report: { roles: GATE_ROLES, mutating: true, confirmation: "required", risk: "high", pack: "screen", auditTarget: "site" },
+  reconcile_stale_gate_visit: { roles: GATE_ROLES, mutating: true, confirmation: "required", risk: "high", pack: "screen", auditTarget: "site" },
+  reverse_gate_reconciliation: { roles: GATE_ROLES, mutating: true, confirmation: "required", risk: "high", pack: "screen", auditTarget: "site" },
   set_ticket_lifecycle: { roles: VENDOR_FIELD_ROLES, mutating: true, pack: "screen", auditTarget: "ticket" },
   close_ticket_for_review: {
     roles: VENDOR_FIELD_ROLES,

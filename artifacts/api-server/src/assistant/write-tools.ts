@@ -23,6 +23,12 @@ import {
   findActiveVisitors,
   prepareVisitorCheckIn,
   prepareVisitorCheckOut,
+  startPaidTravel,
+  assumeGateShift,
+  setGateCoverageStatus,
+  deliverGateReport,
+  reconcileStaleGateVisit,
+  reverseGateReconciliation,
   resolveGateCheckInCandidate,
   searchGateHistory,
   setTicketLifecycle,
@@ -474,6 +480,18 @@ export async function runWriteTool(
       return prepareVisitorCheckOut(args, session);
     case "confirm_visitor_check_out":
       return confirmVisitorCheckOut(args, session);
+    case "start_paid_travel":
+      return startPaidTravel(args, session);
+    case "assume_gate_shift":
+      return assumeGateShift(args, session);
+    case "set_gate_coverage_status":
+      return setGateCoverageStatus(args, session);
+    case "deliver_gate_report":
+      return deliverGateReport(args, session);
+    case "reconcile_stale_gate_visit":
+      return reconcileStaleGateVisit(args, session);
+    case "reverse_gate_reconciliation":
+      return reverseGateReconciliation(args, session);
     case "set_ticket_lifecycle":
       return setTicketLifecycle(args, session);
     case "close_ticket_for_review":

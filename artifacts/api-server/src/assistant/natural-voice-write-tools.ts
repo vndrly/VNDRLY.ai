@@ -72,7 +72,6 @@ export async function callNaturalVoiceDomainApi(
     : "8080";
   const {
     confirmed: _confirmed,
-    idempotencyKey: _key,
     voiceSessionId: _session,
     ...body
   } = input;
@@ -551,6 +550,70 @@ export async function confirmVisitorCheckOut(
         },
   );
 }
+
+function requiredText(args: Record<string, unknown>, key: string): string | null {
+  const value = typeof args[key] === "string" ? args[key].trim() : "";
+  return value || null;
+}
+
+async function gateOperation(
+  action: string,
+  path: string,
+  method: "POST" | "PATCH",
+  input: unknown,
+  session: SessionPayload,
+  message: string,
+  apiInput?: Record<string, unknown>,
+): Promise<string> {
+  const args = argsOf(input);
+  const guard = writeGuard(args, true);
+  if (guard) return guard;
+  const result = await callNaturalVoiceDomainApi(path, method, apiInput ?? args, session, { "Idempotency-Key": String(args.idempotencyKey ?? "") });
+  return JSON.stringify(Array.isArray(result) || (result as Record<string, unknown>).error ? result : {
+    ok: true, action, message, responseMode: "concise", refresh: ["gate", "work-hub", "notifications"], result,
+  });
+}
+
+export async function startPaidTravel(input: unknown, session: SessionPayload): Promise<string> {
+  const args = argsOf(input); const stationId = requiredText(args, "stationId");
+  if (!stationId || !requiredText(args, "workHubShiftId")) return err("Which assigned Gate shift should I start?");
+  return gateOperation("paid_travel_started", `/gate-change-over/${stationId}/work-sessions/start`, "POST", { ...args, source: "askv" }, session, "Paid travel started.");
+}
+
+export async function assumeGateShift(input: unknown, session: SessionPayload): Promise<string> {
+  const args = argsOf(input); const stationId = requiredText(args, "stationId");
+  if (!stationId) return err("Which Gate should I assume?");
+  return gateOperation("gate_shift_assumed", `/gate-change-over/${stationId}/duty/assume`, "POST", { ...args, source: "askv" }, session, "Gate shift assumed.");
+}
+
+export async function setGateCoverageStatus(input: unknown, session: SessionPayload): Promise<string> {
+  const args = argsOf(input); const stationId = requiredText(args, "stationId");
+  if (!stationId) return err("Which Gate should I update?");
+  if (!requiredText(args, "reason")) return err("What is the reason for changing Gate coverage?");
+  return gateOperation("gate_coverage_updated", `/implementation-a/workforce/gates/${stationId}/coverage-status`, "PATCH", args, session, "Gate coverage updated.");
+}
+
+export async function deliverGateReport(input: unknown, session: SessionPayload): Promise<string> {
+  const args = argsOf(input);
+  if (!Array.isArray(args.recipientUserIds) || !args.recipientUserIds.length) return err("Who should receive the report?");
+  const { confirmed: _confirmed, idempotencyKey: _idempotencyKey, ...reportRequest } = args;
+  return gateOperation("gate_report_sent", "/gate-report/deliver", "POST", args, session, "Secure report links sent.", reportRequest);
+}
+
+export async function reconcileStaleGateVisit(input: unknown, session: SessionPayload): Promise<string> {
+  const args = argsOf(input);
+  if (!positiveId(args.visitId)) return err("Which Gate visit should I reconcile?");
+  if (!requiredText(args, "reason")) return err("Why is this vehicle confirmed off site?");
+  return gateOperation("gate_visit_reconciled", `/visits/gate/${args.visitId}/resolve-stale`, "POST", args, session, "Gate visit reconciled.");
+}
+
+export async function reverseGateReconciliation(input: unknown, session: SessionPayload): Promise<string> {
+  const args = argsOf(input);
+  if (!positiveId(args.visitId) || !requiredText(args, "reconciliationId")) return err("Which reconciliation should I reverse?");
+  if (!requiredText(args, "reason")) return err("Why should this reconciliation be reversed?");
+  return gateOperation("gate_reconciliation_reversed", `/visits/gate/${args.visitId}/reconciliations/${args.reconciliationId}/reverse`, "POST", args, session, "Gate reconciliation reversed.");
+}
+
 export async function setTicketLifecycle(
   input: unknown,
   session: SessionPayload,

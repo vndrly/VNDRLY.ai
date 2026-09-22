@@ -48,6 +48,12 @@ const GATE_SCREEN_TOOLS = new Set([
   "prepare_visitor_check_out",
   "confirm_visitor_check_in",
   "confirm_visitor_check_out",
+  "start_paid_travel",
+  "assume_gate_shift",
+  "set_gate_coverage_status",
+  "deliver_gate_report",
+  "reconcile_stale_gate_visit",
+  "reverse_gate_reconciliation",
   "query_active_visitors",
   "query_visits",
 ]);

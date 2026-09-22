@@ -26,7 +26,13 @@ export class ContinuousWorkSession {
   interpret(phrase: string): { toolName: string; context: AskVCapabilityContext; clarification: string | null } {
     const text = phrase.toLowerCase();
     let toolName = "query_workforce_coverage";
-    if (/morning v/.test(text)) toolName = "query_workforce_coverage";
+    if (/start my day|start (?:my )?paid travel|morning v.{0,40}(?:start|on my way)/.test(text)) toolName = "start_paid_travel";
+    else if (/on site.{0,40}start.{0,30}shift|assume.{0,30}(?:shift|gate duty)|take.{0,30}(?:shift|gate duty)/.test(text)) toolName = "assume_gate_shift";
+    else if (/(?:pause|resume|activate|reopen|close).{0,50}gate/.test(text)) toolName = "set_gate_coverage_status";
+    else if (/(?:email|send).{0,100}(?:gate log|gate report|shift notes|report)/.test(text)) toolName = "deliver_gate_report";
+    else if (/(?:reconcile|confirm|mark).{0,100}(?:stale|off site|no longer on site)/.test(text)) toolName = "reconcile_stale_gate_visit";
+    else if (/(?:reverse|undo|reopen).{0,100}reconcil/.test(text)) toolName = "reverse_gate_reconciliation";
+    else if (/morning v/.test(text)) toolName = "query_workforce_coverage";
     else if (/accident|crash|t.?boned/.test(text)) toolName = "prepare_incident_response_action";
     else if (/invite|onboard/.test(text)) toolName = "prepare_account_invitations_action";
     else if (/check(?:ing)? out|return|walkie|asset|truck to me/.test(text)) toolName = "prepare_asset_custody_action";

@@ -1027,6 +1027,45 @@ export const TOOLS: Anthropic.Tool[] = [
     },
   },
   {
+    name: "start_paid_travel",
+    description: "Start the signed-in worker's paid-travel work session for an assigned Gate shift. An explicit command such as 'start my day' is confirmation. Ask only for a missing gate or shift.",
+    input_schema: { type: "object", properties: {
+      stationId: { type: "string" }, workHubShiftId: { type: "string" }, idempotencyKey: { type: "string" },
+      locationSharingActive: { type: "boolean" }, startLatitude: { type: "number" }, startLongitude: { type: "number" }, confirmed: { type: "boolean" },
+    }, required: ["stationId", "workHubShiftId", "idempotencyKey", "confirmed"], additionalProperties: false },
+  },
+  {
+    name: "assume_gate_shift",
+    description: "Assume duty at a Gate station without replacing other on-duty workers. Use an explicit 'assume shift' or on-site start command as confirmation.",
+    input_schema: { type: "object", properties: {
+      stationId: { type: "string" }, workHubShiftId: { type: "string" }, workSessionId: { type: "string" }, idempotencyKey: { type: "string" }, confirmed: { type: "boolean" },
+    }, required: ["stationId", "idempotencyKey", "confirmed"], additionalProperties: false },
+  },
+  {
+    name: "set_gate_coverage_status",
+    description: "For an authorized supervisor or admin, activate, pause until a date, pause indefinitely, or close a Gate staffing requirement. Requires the gate, mode, reason, and an explicit command.",
+    input_schema: { type: "object", properties: {
+      stationId: { type: "string" }, mode: { type: "string", enum: ["active", "paused_until", "paused_indefinitely", "closed"] }, pausedUntil: { type: "string" }, reason: { type: "string" }, idempotencyKey: { type: "string" }, confirmed: { type: "boolean" },
+    }, required: ["stationId", "mode", "reason", "idempotencyKey", "confirmed"], additionalProperties: false },
+  },
+  {
+    name: "deliver_gate_report",
+    description: "Email a secure Gate History or Shift Notes report link to selected eligible VNDRLY recipients. Uses the same filters and authorization as the page and never accepts free-text email addresses.",
+    input_schema: { type: "object", properties: {
+      recipientUserIds: { type: "array", items: { type: "number" } }, reportKind: { type: "string", enum: ["history", "shift_notes"] }, format: { type: "string", enum: ["pdf", "excel", "word"] }, filters: { type: "object" }, idempotencyKey: { type: "string" }, confirmed: { type: "boolean" },
+    }, required: ["recipientUserIds", "reportKind", "format", "filters", "idempotencyKey", "confirmed"], additionalProperties: false },
+  },
+  {
+    name: "reconcile_stale_gate_visit",
+    description: "Mark a reviewed stale Gate visit as confirmed no longer on site, with a required reason and audit trail.",
+    input_schema: { type: "object", properties: { visitId: { type: "number" }, reason: { type: "string" }, idempotencyKey: { type: "string" }, confirmed: { type: "boolean" } }, required: ["visitId", "reason", "idempotencyKey", "confirmed"], additionalProperties: false },
+  },
+  {
+    name: "reverse_gate_reconciliation",
+    description: "For a Gate supervisor or admin, reverse a specific stale-visit reconciliation with a required reason and audit trail.",
+    input_schema: { type: "object", properties: { visitId: { type: "number" }, reconciliationId: { type: "string" }, reason: { type: "string" }, idempotencyKey: { type: "string" }, confirmed: { type: "boolean" } }, required: ["visitId", "reconciliationId", "reason", "idempotencyKey", "confirmed"], additionalProperties: false },
+  },
+  {
     name: "set_ticket_lifecycle",
     description:
       "Mark a ticket en_route, on_location, on_site, work_complete, or off_site using existing ticket lifecycle rules. High-impact close-for-review is a different tool.",

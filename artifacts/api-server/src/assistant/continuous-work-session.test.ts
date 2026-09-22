@@ -4,6 +4,12 @@ import { ContinuousWorkSession } from "./continuous-work-session";
 describe("continuous Ask V work session", () => {
   it.each([
     ["Morning V", "query_workforce_coverage"],
+    ["Morning V, start my day", "start_paid_travel"],
+    ["I'm on site, start my Midcon shift", "assume_gate_shift"],
+    ["Pause Main Gate until October 15 because drilling stopped", "set_gate_coverage_status"],
+    ["Email last Thursday's gate log to my supervisor", "deliver_gate_report"],
+    ["Reconcile this stale truck because it is no longer on site", "reconcile_stale_gate_visit"],
+    ["Undo the gate reconciliation", "reverse_gate_reconciliation"],
     ["I'm in Texas plate ABC one two three", "prepare_field_trips_action"],
     ["I'm checking out these walkie-talkies", "prepare_asset_custody_action"],
     ["I acknowledge Friday's assignment", "prepare_workforce_coverage_action"],

@@ -139,10 +139,35 @@ describe("Ask V Gate intent", () => {
     },
   );
 
-  it("recognizes only the two confirmed Gate mutation tools", () => {
+  it("recognizes every confirmed Gate mutation tool", () => {
     expect(isGateMutationTool("confirm_visitor_check_in")).toBe(true);
     expect(isGateMutationTool("confirm_visitor_check_out")).toBe(true);
+    expect(isGateMutationTool("start_paid_travel")).toBe(true);
+    expect(isGateMutationTool("assume_gate_shift")).toBe(true);
+    expect(isGateMutationTool("set_gate_coverage_status")).toBe(true);
+    expect(isGateMutationTool("deliver_gate_report")).toBe(true);
+    expect(isGateMutationTool("reconcile_stale_gate_visit")).toBe(true);
+    expect(isGateMutationTool("reverse_gate_reconciliation")).toBe(true);
     expect(isGateMutationTool("prepare_visitor_check_in")).toBe(false);
     expect(isGateMutationTool("confirm_ticket_action")).toBe(false);
+  });
+
+  it.each([
+    ["Morning V, start my day", "start_paid_travel"],
+    ["I'm on site, start my Midcon shift", "assume_gate_shift"],
+    ["Pause Main Gate until October 15 because drilling stopped", "set_gate_coverage_status"],
+    ["Email last Thursday's gate log to my supervisor", "deliver_gate_report"],
+    ["Mark this stale truck no longer on site", "reconcile_stale_gate_visit"],
+    ["Undo that reconciliation", "reverse_gate_reconciliation"],
+  ])("treats an explicit Gate operation as authorization: %s", (utterance, toolName) => {
+    expect(classifyGateIntent({ utterance, toolName }).authorization).toBe("submit");
+  });
+
+  it.each([
+    ["Don't pause Main Gate", "set_gate_coverage_status"],
+    ["Can I email the gate report?", "deliver_gate_report"],
+    ["She said start my day", "start_paid_travel"],
+  ])("does not execute negated, questioned, or quoted Gate operations: %s", (utterance, toolName) => {
+    expect(classifyGateIntent({ utterance, toolName }).authorization).not.toBe("submit");
   });
 });

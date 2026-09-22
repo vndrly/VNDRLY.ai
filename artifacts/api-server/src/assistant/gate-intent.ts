@@ -24,7 +24,7 @@ const CHECK_IN = /\b(check[ -]?in|check\b.{1,80}\bin|checking in|coming in|arriv
 const CHECK_OUT = /\b(check[ -]?out|check\b.{1,80}\bout|checking out|leaving|departing)\b/;
 const SUBMIT = /\b(submit|complete|go ahead|do it|finish)\b/;
 const CANCEL = /\b(cancel|stop|never mind|nevermind|do not proceed|don't proceed)\b/;
-const NEGATED_ACTION = /\b(do not|don't|dont|not)\b.{0,24}\b(check|submit|complete|admit|proceed)\b/;
+const NEGATED_ACTION = /\b(do not|don't|dont|not)\b.{0,24}\b(check|submit|complete|admit|proceed|start|assume|take|pause|resume|activate|reopen|close|email|send|reconcile|reverse|undo|mark)\b/;
 const CORRECTION = /\b(but|change|instead|actually|correction|use .+ instead)\b/;
 const QUOTED = /\b(if i|she said|he said|they said|someone said)\b/;
 const DECLINES_DETAILS = /^(no|nothing else|no more details|that's all|thats all)$/;
@@ -42,14 +42,32 @@ function normalize(utterance: string): string {
 export function isGateMutationTool(name: string): boolean {
   return (
     name === "confirm_visitor_check_in" ||
-    name === "confirm_visitor_check_out"
+    name === "confirm_visitor_check_out" ||
+    ["start_paid_travel", "assume_gate_shift", "set_gate_coverage_status", "deliver_gate_report", "reconcile_stale_gate_visit", "reverse_gate_reconciliation"].includes(name)
   );
 }
+
+const OPERATION_COMMANDS: Record<string, RegExp> = {
+  start_paid_travel: /\b(start my day|start (?:my )?paid travel|i(?:'m| am) on my way)\b/,
+  assume_gate_shift: /\b(assume|take|start)\b.{0,36}\b(shift|gate duty)\b|\bon site\b.{0,30}\bstart\b/,
+  set_gate_coverage_status: /\b(pause|resume|activate|reopen|close)\b.{0,50}\bgate\b/,
+  deliver_gate_report: /\b(email|send)\b.{0,100}\b(gate log|gate report|shift notes|report)\b/,
+  reconcile_stale_gate_visit: /\b(reconcile|confirm|mark)\b.{0,100}\b(stale|off site|no longer on site)\b/,
+  reverse_gate_reconciliation: /\b(reverse|undo|reopen)\b.{0,100}\breconcil/,
+};
 
 export function classifyGateIntent(
   input: GateIntentInput,
 ): GateIntentDecision {
   const normalizedUtterance = normalize(input.utterance);
+  const operationCommand = OPERATION_COMMANDS[input.toolName];
+  if (operationCommand) {
+    if (CANCEL.test(normalizedUtterance) || NEGATED_ACTION.test(normalizedUtterance))
+      return { action: "other", authorization: "cancel", normalizedUtterance };
+    if (input.utterance.includes("?") || QUOTED.test(normalizedUtterance) || CORRECTION.test(normalizedUtterance))
+      return { action: "other", authorization: "clarify", normalizedUtterance };
+    return { action: "other", authorization: operationCommand.test(normalizedUtterance) ? "submit" : "clarify", normalizedUtterance };
+  }
   const action = input.toolName === "confirm_visitor_check_out" || CHECK_OUT.test(normalizedUtterance)
     ? "check_out"
     : input.toolName === "confirm_visitor_check_in" || CHECK_IN.test(normalizedUtterance)
