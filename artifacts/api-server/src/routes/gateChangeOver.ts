@@ -26,11 +26,20 @@ import {
   transferGateShift,
   getShiftNotes,
 } from "../services/gate-change-over";
+import {
+  assumeGateDuty,
+  endGateDuty,
+  endWorkSession,
+  getGateRoster,
+  startWorkSession,
+} from "../services/gate-duty";
 
 const router = Router();
 const uuid = z.string().uuid();
 const siteId = z.coerce.number().int().positive();
 const text = z.string().trim().min(1).max(2000);
+const gateSource = z.enum(["web", "ios", "askv"]);
+const operationKey = z.string().uuid();
 const reads = createRateLimiter({
   resourcePrefix: "CHANGE_OVER",
   errorCode: "change_over.rate_limited",
@@ -81,6 +90,84 @@ router.get("/gate-change-over/:stationId/state", async (req, res) => {
     await getChangeOverState(sessionFor(req), uuid.parse(req.params.stationId)),
   );
 });
+router.get("/gate-change-over/:stationId/roster", async (req, res) => {
+  res.json({
+    roster: await getGateRoster(
+      sessionFor(req),
+      uuid.parse(req.params.stationId),
+    ),
+  });
+});
+router.post(
+  "/gate-change-over/:stationId/work-sessions/start",
+  async (req, res) => {
+    const stationId = uuid.parse(req.params.stationId);
+    const body = z
+      .object({
+        workHubShiftId: uuid,
+        source: gateSource,
+        idempotencyKey: operationKey,
+        locationSharingActive: z.boolean().optional(),
+        startLatitude: z.number().min(-90).max(90).optional(),
+        startLongitude: z.number().min(-180).max(180).optional(),
+      })
+      .parse(req.body);
+    res.json(
+      await startWorkSession(sessionFor(req), {
+        ...body,
+        stationId,
+      }),
+    );
+  },
+);
+router.post("/gate-change-over/:stationId/duty/assume", async (req, res) => {
+  const stationId = uuid.parse(req.params.stationId);
+  const body = z
+    .object({
+      workHubShiftId: uuid.optional(),
+      workSessionId: uuid.optional(),
+      source: gateSource,
+      idempotencyKey: operationKey,
+    })
+    .parse(req.body);
+  res.json(
+    await assumeGateDuty(sessionFor(req), {
+      ...body,
+      stationId,
+    }),
+  );
+});
+router.post(
+  "/gate-change-over/:stationId/duty/:dutySessionId/end",
+  async (req, res) => {
+    uuid.parse(req.params.stationId);
+    const body = z
+      .object({
+        reason: text.max(500),
+        handoffCompleted: z.boolean(),
+      })
+      .parse(req.body);
+    res.json(
+      await endGateDuty(sessionFor(req), {
+        ...body,
+        dutySessionId: uuid.parse(req.params.dutySessionId),
+      }),
+    );
+  },
+);
+router.post(
+  "/gate-change-over/:stationId/work-sessions/:workSessionId/end",
+  async (req, res) => {
+    uuid.parse(req.params.stationId);
+    const body = z.object({ reason: text.max(500).optional() }).parse(req.body);
+    res.json(
+      await endWorkSession(sessionFor(req), {
+        ...body,
+        workSessionId: uuid.parse(req.params.workSessionId),
+      }),
+    );
+  },
+);
 router.get("/gate-change-over/:stationId/notes", async (req, res) => {
   const query = z
     .object({

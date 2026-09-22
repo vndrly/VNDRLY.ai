@@ -153,6 +153,34 @@ async function activeShift(client: Queryable, stationId: string) {
     ).rows[0] ?? null
   );
 }
+async function activeDutyMember(
+  client: Queryable,
+  stationId: string,
+  userId: number | undefined,
+) {
+  if (!userId) return false;
+  return Boolean(
+    (
+      await client.query(
+        "SELECT 1 FROM gate_duty_sessions WHERE station_id=$1 AND user_id=$2 AND ended_at IS NULL LIMIT 1",
+        [stationId, userId],
+      )
+    ).rowCount,
+  );
+}
+async function activeRoster(client: Queryable, stationId: string) {
+  return (
+    await client.query(
+      `SELECT d.id,d.station_id AS "stationId",d.user_id AS "userId",
+        d.work_hub_shift_id AS "workHubShiftId",d.work_session_id AS "workSessionId",
+        d.started_at AS "startedAt",coalesce(u.display_name,u.username) AS "userName"
+       FROM gate_duty_sessions d JOIN users u ON u.id=d.user_id
+       WHERE d.station_id=$1 AND d.ended_at IS NULL
+       ORDER BY d.started_at,d.id`,
+      [stationId],
+    )
+  ).rows;
+}
 async function currentItems(
   client: Queryable,
   stationId: string,
@@ -291,6 +319,7 @@ export async function getChangeOverState(
           Date.now() - new Date(preparation.created_at).getTime() > 5 * 60000),
       ),
       items: await currentItems(c, stationId),
+      roster: await activeRoster(c, stationId),
     };
   });
 }
@@ -327,7 +356,11 @@ export async function prepareGateHandoff(
   ) => Promise<{ source: string; facts: ShiftFact[] }>,
 ) {
   const state = await getChangeOverState(session, stationId);
-  if (!state.shift || state.shift.operator_id !== session.userId)
+  if (
+    !state.shift ||
+    (state.shift.operator_id !== session.userId &&
+      !(await activeDutyMember(pool, stationId, session.userId)))
+  )
     return fail(
       403,
       "owner_required",
@@ -342,7 +375,8 @@ export async function prepareGateHandoff(
     if (
       !shift ||
       shift.id !== state.shift.id ||
-      shift.operator_id !== session.userId
+      (shift.operator_id !== session.userId &&
+        !(await activeDutyMember(c, stationId, session.userId)))
     )
       return fail(409, "shift_changed", "Shift changed; refresh Change Over");
     const preparation = (
