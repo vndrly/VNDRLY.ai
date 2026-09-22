@@ -76,11 +76,20 @@ describe("AskVStatusIndicator", () => {
     expect(button.getAttribute("data-color")).toBe("red");
     fireEvent.click(button);
     expect(setMuted).toHaveBeenCalledWith(true);
+    expect(screen.getByTestId("askv-waveform").getAttribute("data-active")).toBe("true");
   });
   it("keeps the shared toggle on Mute while voice is unmuted but disconnected", () => {
     voice.muted = false; voice.state = "stopped";
     render(<AskVStatusIndicator placement="top-strip" />);
     fireEvent.click(screen.getByRole("button", { name: "Click to Mute V" }));
     expect(setMuted).toHaveBeenCalledWith(true);
+  });
+  it("opens the shared Ask V panel when either top control is used", () => {
+    const listener = vi.fn();
+    window.addEventListener("askv:open-panel", listener);
+    render(<AskVStatusIndicator placement="top-strip" />);
+    fireEvent.click(screen.getByRole("button", { name: "Click to Start V" }));
+    expect(listener).toHaveBeenCalledTimes(1);
+    window.removeEventListener("askv:open-panel", listener);
   });
 });

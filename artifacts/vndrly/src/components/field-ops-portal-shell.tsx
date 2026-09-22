@@ -40,6 +40,7 @@ const AssistantLauncher = lazy(() =>
   })),
 );
 import AskVStatusIndicator from "@/components/askv-status-indicator";
+import AskVWaveform from "@/components/askv-waveform";
 import { useAskVVoiceSession } from "@/hooks/use-askv-voice-session";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -385,13 +386,17 @@ function AskVMuteCircle({ testId }: { testId: string }) {
   const { muted, state, setMuted } = useAskVVoiceSession();
   const listening = !muted && (state === "listening" || state === "thinking" || state === "speaking");
   return (
-    <div className="flex justify-center py-3">
+    <div className="flex flex-col items-center justify-center gap-2 py-3">
       <GateVoiceCircleButton
         active={listening}
-        onClick={() => setMuted(!muted)}
+        onClick={() => {
+          window.dispatchEvent(new CustomEvent("askv:open-panel"));
+          setMuted(!muted);
+        }}
         testId={testId}
-        label={muted ? "Unmute AskV" : "Mute AskV"}
+        label={muted ? "Unmute Ask V" : "Mute Ask V"}
       />
+      <AskVWaveform active={!muted && (state === "listening" || state === "speaking")} />
     </div>
   );
 }

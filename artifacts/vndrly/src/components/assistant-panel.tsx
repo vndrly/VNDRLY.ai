@@ -1478,6 +1478,11 @@ export function AssistantLauncher({
     window.addEventListener("askv:show-results", showResults);
     return () => window.removeEventListener("askv:show-results", showResults);
   }, []);
+  useEffect(() => {
+    const openPanel = () => setOpen(true);
+    window.addEventListener("askv:open-panel", openPanel);
+    return () => window.removeEventListener("askv:open-panel", openPanel);
+  }, []);
   const voiceActive = voiceState === "listening" || voiceState === "running";
   const engaged = voiceActive || (hovered && !open);
   return (

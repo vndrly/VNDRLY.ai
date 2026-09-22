@@ -135,7 +135,7 @@ describe("FieldOpsPortalShell", () => {
     renderShell();
 
     expect(screen.getByTestId("askv-pane")).toBeTruthy();
-    expect(screen.getByTestId("askv-status-toggle").parentElement).toBe(screen.getByTestId("askv-pane"));
+    expect(screen.getByTestId("askv-status-toggle").closest('[data-testid="askv-pane"]')).toBe(screen.getByTestId("askv-pane"));
     expect((await screen.findByTestId("assistant-launcher")).getAttribute("data-placement")).toBe(
       "askv-pane",
     );
@@ -161,7 +161,8 @@ describe("FieldOpsPortalShell", () => {
 
     const button = screen.getByTestId("button-gate-voice");
     expect(button.tagName).toBe("BUTTON");
-    expect(button.getAttribute("aria-label")).toBe("Mute AskV");
+    expect(button.getAttribute("aria-label")).toBe("Mute Ask V");
+    expect(screen.getAllByTestId("askv-waveform").some((wave) => wave.getAttribute("data-active") === "false")).toBe(true);
     expect(button.getAttribute("aria-pressed")).toBe("false");
     expect(button.getAttribute("data-state")).toBe("idle");
     expect(screen.getByTestId("gate-voice-brand-layer").style.backgroundColor).toBe(
@@ -173,6 +174,6 @@ describe("FieldOpsPortalShell", () => {
     expect(screen.getByTestId("gate-voice-circle").className).toContain(
       "group-hover:scale-[1.04]",
     );
-    expect(button.textContent).toContain("Mute AskV");
+    expect(button.textContent).toContain("Mute Ask V");
   });
 });
