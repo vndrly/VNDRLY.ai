@@ -55,6 +55,17 @@ describe("Change Over factual snapshot", () => {
     });
     expect(s.coverage).toContain("site-wide");
   });
+  it("removes a confirmed off-site reconciliation from live occupancy without a checkout time", () => {
+    const s = assembleShiftSnapshot(
+      [visit(1, { reconciliation: "confirmed_off_site" })],
+      [],
+      start,
+      at,
+    );
+    expect(s.metrics.onSiteVisitorRecords).toBe(0);
+    expect(s.metrics.onSiteVehicles).toBe(0);
+    expect(s.outstanding).toEqual([]);
+  });
   it("detects missing identity, long visits and reconciliation exceptions", () => {
     const s = assembleShiftSnapshot(
       [visit(1, { name: "", reconciliation: "conflict" })],

@@ -96,7 +96,14 @@ import { trimVisitNotes } from "@workspace/gate-booth";
 import { parseVisitEntryCategory } from "../lib/visit-entry-category";
 import { databaseAssetRepository } from "../services/asset-database-repository";
 import { createAssetService } from "../services/assets";
-import { completeRetrospectiveVisit, observeGateCrossing } from "../services/gate-reconciliation";
+import {
+  completeRetrospectiveVisit,
+  GateVisitReconciliationError,
+  listVisitsNeedingReview,
+  observeGateCrossing,
+  reconcileStaleVisit,
+  reverseVisitReconciliation,
+} from "../services/gate-reconciliation";
 
 const COOKIE_NAME = "vndrly_session";
 const GUEST_COOKIE_NAME = "vndrly_guest";
@@ -288,6 +295,7 @@ type Session = {
   sv?: number;
   exp?: number;
   vendorRole?: string | null;
+  membershipRole?: string | null;
   managedSubcontractor?: import("../lib/session").SessionPayload["managedSubcontractor"];
 };
 function getStaffSession(req: any): Session | null {
@@ -340,6 +348,22 @@ async function requireGateReconciliationSession(req: any, res: any): Promise<Ses
     !["gatekeeper", "gate_supervisor"].includes(session.vendorRole ?? "")
   ) {
     res.status(403).json({ message: "Gate staff access required", code: VISIT_NO_ACCESS });
+    return null;
+  }
+  return session;
+}
+
+async function requireGateReviewSession(req: any, res: any): Promise<Session | null> {
+  const session = getStaffSession(req);
+  if (!session) {
+    res.status(401).json({ message: "Login required", code: AUTH_REQUIRED });
+    return null;
+  }
+  if (
+    !isGatekeeperSession(session) &&
+    (!officeMayAccessGateOps(session) || !sessionHasGateOpsScope(session))
+  ) {
+    res.status(403).json({ message: "Gate access required", code: VISIT_NO_ACCESS });
     return null;
   }
   return session;
@@ -633,6 +657,24 @@ async function loadPartnerSiteIds(partnerId: number): Promise<number[]> {
     .from(siteLocationsTable)
     .where(eq(siteLocationsTable.partnerId, partnerId));
   return sites.map((row) => row.id);
+}
+
+async function gateReviewSiteIds(session: Session): Promise<number[]> {
+  if (session.role === "admin") {
+    const sites = await db.select({ id: siteLocationsTable.id }).from(siteLocationsTable);
+    return sites.map((site) => site.id);
+  }
+  if (session.role === "partner" && session.partnerId)
+    return loadPartnerSiteIds(session.partnerId);
+  if (session.vendorId) {
+    const assigned = await loadAssignedSiteIds(session.vendorId);
+    if (session.managedSubcontractor) {
+      const allowed = new Set(managedWorkerSiteIds(session));
+      return assigned.filter((siteId) => allowed.has(siteId));
+    }
+    return assigned;
+  }
+  return [];
 }
 
 const visitListProjection = {
@@ -1032,6 +1074,93 @@ router.post("/visits/gate/observations", async (req, res): Promise<void> => {
     }
     console.error("Gate observation failed", error);
     res.status(500).json({ message: "Gate observation failed", code: VISIT_INVALID_INPUT });
+  }
+});
+
+router.get("/visits/gate/review", async (req, res): Promise<void> => {
+  const session = await requireGateReviewSession(req, res);
+  if (!session) return;
+  try {
+    const siteIds = await gateReviewSiteIds(session);
+    res.json(await listVisitsNeedingReview({ siteIds }));
+  } catch (error) {
+    console.error("Gate review list failed", error);
+    res.status(500).json({ message: "Gate review list failed", code: VISIT_INVALID_INPUT });
+  }
+});
+
+router.post("/visits/gate/:id/resolve-stale", async (req, res): Promise<void> => {
+  const session = await requireGateReviewSession(req, res);
+  if (!session) return;
+  try {
+    const visitId = z.coerce.number().int().positive().parse(req.params.id);
+    const input = z.object({
+      reason: z.string().max(2_000),
+      idempotencyKey: z.string().trim().min(1).max(200),
+    }).parse(req.body);
+    const result = await reconcileStaleVisit({
+      visitId,
+      actorUserId: session.userId,
+      allowedSiteIds: await gateReviewSiteIds(session),
+      ...input,
+    });
+    res.status(201).json(result);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ message: "Invalid reconciliation", code: VISIT_INVALID_INPUT, details: error.issues });
+      return;
+    }
+    if (error instanceof GateVisitReconciliationError) {
+      res.status(error.status).json({ message: error.message, code: error.code });
+      return;
+    }
+    console.error("Stale visit reconciliation failed", error);
+    res.status(500).json({ message: "Stale visit reconciliation failed", code: VISIT_INVALID_INPUT });
+  }
+});
+
+router.post("/visits/gate/:id/reconciliations/:reconciliationId/reverse", async (req, res): Promise<void> => {
+  const session = await requireGateReviewSession(req, res);
+  if (!session) return;
+  try {
+    const visitId = z.coerce.number().int().positive().parse(req.params.id);
+    const reconciliationId = z.string().uuid().parse(req.params.reconciliationId);
+    const input = z.object({
+      reason: z.string().max(2_000),
+      idempotencyKey: z.string().trim().min(1).max(200),
+    }).parse(req.body);
+    const allowedSiteIds = await gateReviewSiteIds(session);
+    const [visitScope] = await db
+      .select({ siteId: siteVisitsTable.siteLocationId })
+      .from(siteVisitsTable)
+      .where(eq(siteVisitsTable.id, visitId))
+      .limit(1);
+    const supervisor =
+      session.role === "admin" ||
+      session.role === "partner" ||
+      session.membershipRole === "admin" ||
+      session.vendorRole === "gate_supervisor" ||
+      Boolean(session.managedSubcontractor && visitScope && managedWorkerSiteRole(session, visitScope.siteId) === "gate_supervisor");
+    const result = await reverseVisitReconciliation({
+      visitId,
+      reconciliationId,
+      actorUserId: session.userId,
+      allowedSiteIds,
+      supervisor,
+      ...input,
+    });
+    res.status(201).json(result);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ message: "Invalid reversal", code: VISIT_INVALID_INPUT, details: error.issues });
+      return;
+    }
+    if (error instanceof GateVisitReconciliationError) {
+      res.status(error.status).json({ message: error.message, code: error.code });
+      return;
+    }
+    console.error("Stale visit reversal failed", error);
+    res.status(500).json({ message: "Stale visit reversal failed", code: VISIT_INVALID_INPUT });
   }
 });
 
@@ -2437,51 +2566,22 @@ router.get("/visits/:id", async (req, res): Promise<void> => {
 
 // ---------- Auto-checkout sweep (called by rules engine) ----------
 export async function sweepStaleVisits(): Promise<number> {
-  const now = new Date();
   // expires_at + 30min < now and still open.
   const cutoffSql = sql`${siteVisitsTable.expiresAt} + interval '30 minutes' < now()`;
   const result = await db
     .update(siteVisitsTable)
-    .set({ checkOutTime: now, autoCheckedOut: true })
+    .set({ reconciliationState: "needs_review" })
     .where(
       and(
         isNull(siteVisitsTable.checkOutTime),
         isNotNull(siteVisitsTable.expiresAt),
         cutoffSql,
+        sql`${siteVisitsTable.reconciliationState} NOT IN ('needs_review','confirmed_off_site')`,
       ),
     )
     .returning({
       id: siteVisitsTable.id,
-      siteLocationId: siteVisitsTable.siteLocationId,
-      hostVendorId: siteVisitsTable.hostVendorId,
     });
-
-  if (result.length > 0) {
-    const siteIds = Array.from(new Set(result.map((r) => r.siteLocationId)));
-    const sitePartnerRows = await db
-      .select({
-        id: siteLocationsTable.id,
-        partnerId: siteLocationsTable.partnerId,
-      })
-      .from(siteLocationsTable)
-      .where(sql`${siteLocationsTable.id} = ANY(${siteIds})`);
-    const partnerBySite = new Map(
-      sitePartnerRows.map((r) => [r.id, r.partnerId]),
-    );
-    const isoNow = now.toISOString();
-    for (const r of result) {
-      publishVisitEvent({
-        type: "visit.checked_out",
-        visitId: r.id,
-        siteLocationId: r.siteLocationId,
-        sitePartnerId: partnerBySite.get(r.siteLocationId) ?? null,
-        hostVendorId: r.hostVendorId,
-        checkOutTime: isoNow,
-        autoCheckedOut: true,
-      });
-    }
-  }
-
   return result.length;
 }
 

@@ -38,7 +38,9 @@ export function assembleShiftSnapshot(
       Date.parse(r.checkIn) <= end,
   );
   const outstanding = admitted.filter(
-    (r) => !r.checkOut || Date.parse(r.checkOut) > end,
+    (r) =>
+      r.reconciliation !== "confirmed_off_site" &&
+      (!r.checkOut || Date.parse(r.checkOut) > end),
   );
   const inWindow = (value: string | null) =>
     value != null && Date.parse(value) >= start && Date.parse(value) <= end;

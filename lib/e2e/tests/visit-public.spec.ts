@@ -244,17 +244,15 @@ test("happy path: guest signs in, checks in inside the geofence, then checks out
   await ctx.close();
 });
 
-test("stale-visit sweep auto-checks-out a forgotten visitor and the page returns to the sign-in step", async ({
+test("stale-visit sweep flags a forgotten visitor without inventing a checkout", async ({
   browser,
   baseURL,
 }) => {
   // Set up an open visit through the real UI flow so the guest session
   // cookie, the site_visits row, and the host association all match
   // production wiring. After we force the visit stale and run the sweep,
-  // a reload of /visit/:siteCode must show the sign-in form again — not
-  // a "stuck" active-visit card with a check-out button. See
-  // sweepStaleVisits in artifacts/api-server/src/routes/visits.ts and
-  // the myActive useEffect in artifacts/vndrly/src/pages/visit-public.tsx.
+  // the visit remains open while Gate staff review it; the system must not
+  // fabricate a departure timestamp.
   const ctx = await newGeoContext(browser, SITE_LAT, SITE_LNG, baseURL!);
   const page = await ctx.newPage();
   await page.goto(`/visit/${seed.siteCode}`);
@@ -286,41 +284,38 @@ test("stale-visit sweep auto-checks-out a forgotten visitor and the page returns
     [visitId],
   );
 
-  // Trigger the sweep. We replay the same UPDATE the production
-  // sweepStaleVisits() runs (see artifacts/api-server/src/routes/visits.ts)
-  // so the test exercises the exact predicate and side effects the
-  // background sweeper applies, without having to wait the 30s+5min
-  // initial-delay/interval cycle of the background job.
+  // Trigger the same state transition as the production sweep without
+  // waiting for the background worker interval.
   const sweepResult = await pool.query<{ id: number }>(
     `UPDATE site_visits
-        SET check_out_time = now(), auto_checked_out = true
+        SET reconciliation_state = 'needs_review'
       WHERE check_out_time IS NULL
         AND expires_at IS NOT NULL
         AND expires_at + interval '30 minutes' < now()
+        AND reconciliation_state NOT IN ('needs_review','confirmed_off_site')
       RETURNING id`,
   );
   // Our forgotten visit must be among the rows the sweep predicate matched.
   expect(sweepResult.rows.map((r) => r.id)).toContain(visitId);
 
-  // Reload the visitor page. The `myActive` useEffect should now return
-  // null (check_out_time is set) and the page should fall back to the
-  // sign-in step instead of re-rendering the active-visit card.
+  // Reloading still shows the active visit because no departure was recorded.
   await page.reload();
 
-  await expect(page.locator('[data-testid="input-first-name"]')).toBeVisible();
-  await expect(page.locator('[data-testid="button-check-out"]')).toHaveCount(0);
+  await expect(page.locator('[data-testid="button-check-out"]')).toBeVisible();
 
-  // Confirm the row reflects an auto-checkout, not a manual one.
+  // Confirm the review flag changed without changing occupancy history.
   const swept = await pool.query<{
     check_out_time: Date | null;
     auto_checked_out: boolean;
+    reconciliation_state: string;
   }>(
-    `SELECT check_out_time, auto_checked_out FROM site_visits WHERE id = $1`,
+    `SELECT check_out_time, auto_checked_out, reconciliation_state FROM site_visits WHERE id = $1`,
     [visitId],
   );
   expect(swept.rows).toHaveLength(1);
-  expect(swept.rows[0].check_out_time).not.toBeNull();
-  expect(swept.rows[0].auto_checked_out).toBe(true);
+  expect(swept.rows[0].check_out_time).toBeNull();
+  expect(swept.rows[0].auto_checked_out).toBe(false);
+  expect(swept.rows[0].reconciliation_state).toBe("needs_review");
 
   await ctx.close();
 });

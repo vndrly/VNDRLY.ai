@@ -2431,7 +2431,7 @@ describe("GET /api/visits/:id (staff detail)", () => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 describe("sweepStaleVisits()", () => {
-  it("auto-checks-out visits whose expiresAt + 30min has passed", async () => {
+  it("flags stale visits for review without inventing a checkout", async () => {
     seedScenario();
     const now = Date.now();
     // Open visit, expired 31 minutes ago → should be swept.
@@ -2498,8 +2498,9 @@ describe("sweepStaleVisits()", () => {
     const swept = await visitsModule.sweepStaleVisits();
     expect(swept).toBe(1);
     const stale = fixtures.siteVisits.find((v) => v.firstName === "Stale")!;
-    expect(stale.checkOutTime).toBeInstanceOf(Date);
-    expect(stale.autoCheckedOut).toBe(true);
+    expect(stale.checkOutTime).toBeNull();
+    expect(stale.autoCheckedOut).toBe(false);
+    expect(stale.reconciliationState).toBe("needs_review");
 
     const fresh = fixtures.siteVisits.find((v) => v.firstName === "Fresh")!;
     expect(fresh.checkOutTime).toBeNull();
