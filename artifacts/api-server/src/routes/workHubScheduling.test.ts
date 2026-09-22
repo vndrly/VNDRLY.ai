@@ -80,7 +80,7 @@ describe("authenticated scheduling reservations", () => {
       const [site] = await db.insert(siteLocationsTable).values({ partnerId: partner!.id, name: `Gate site ${suffix}`, address: "Fixture", latitude: 30, longitude: -100, siteCode: `GATE-${suffix}` }).returning();
       const [workType] = await db.insert(workTypesTable).values({ name: `Gate ${suffix}`, category: "gate" }).returning();
       await db.insert(siteWorkAssignmentsTable).values({ siteLocationId: site!.id, workTypeId: workType!.id, vendorId });
-      const [station] = await db.insert(gateStationsTable).values({ siteId: site!.id, name: "Main gate" }).returning();
+      const [station] = await db.insert(gateStationsTable).values({ siteId: site!.id, name: `Scheduling gate ${suffix}` }).returning();
       gateSiteId = site!.id;
       gateStationId = station!.id;
     });

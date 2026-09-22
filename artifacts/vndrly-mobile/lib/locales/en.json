@@ -125,13 +125,8 @@
     "tagPhoto": "Tag photo",
     "vehiclePhoto": "Vehicle photo",
     "historyTitle": "History",
-    "historySubtitle": "Check-ins and check-outs from the last 30 days.",
     "historySearch": "Search by name, plate, company, or site",
     "historyEmpty": "No visits in the last 30 days.",
-    "historyNoMatch": "No visits match that search.",
-    "historyLoadFailed": "Could not load history.",
-    "historyOnSite": "On site",
-    "historyCheckedOut": "Checked out",
     "currentLocation": "Current location",
     "handsFreeHint": "Tap the microphone to talk. Say the plate and name, then confirm. GPS must be locked inside the site fence to submit.",
     "notes": "Notes",
@@ -562,6 +557,10 @@
     "cameraUnavailablePickSite": "Camera is unavailable in this build. Choose a site by name instead."
   },
   "errors": {
+    "gate_report": {
+      "invalid_request": "Check the report filters and try again",
+      "invalid_token": "This secure report link is invalid or has expired"
+    },
     "change_over": {
       "forbidden": "Current gatekeeper or gate supervisor assignment required",
       "session_changed": "Sign in again to continue",

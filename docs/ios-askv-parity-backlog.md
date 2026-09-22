@@ -1,6 +1,6 @@
 # iOS Ask V parity backlog
 
-This is a release-blocking checklist for the next VNDRLY iOS update. The Calendar work is being published to web/API first; TestFlight is intentionally deferred until the next grouped mobile batch.
+This checklist is included in the September 22 Gate operations TestFlight release. Calendar and Gate Ask V parity now share server permissions, confirmation, audit, and idempotency boundaries; the remaining release gate is the exact-tree verification and successful TestFlight submission.
 
 Before the next iOS or TestFlight update, explicitly confirm with the user that this parity batch is included, then verify each item in the native app rather than assuming server availability proves the iOS experience.
 
@@ -35,3 +35,12 @@ Before the next iOS or TestFlight update, explicitly confirm with the user that 
 - Exercise the flows on an authenticated iOS build.
 - Verify push notifications on-device.
 - Complete OTA when sufficient and TestFlight when native code or bundled native behavior changes.
+
+## Gate Ask V and native parity included in this release
+
+- Common-language Gate commands cover check-in, check-out, paid-travel start, assume shift, Gate coverage status, secure report delivery, stale-visit reconciliation, and authorized reversal.
+- Explicit imperatives execute the exact requested Gate action without a redundant second confirmation; one short question is reserved for a genuinely missing required target, date, reason, or authorized recipient.
+- Native Dashboard, Work Hub, Gate, History, and Shift Notes use the same order and server-defined permissions as web.
+- Native History defaults to Current shift and supports Previous shift, 24 hours, 7, 14, 30, and 90 days, and one year, with record-type filters and matching PDF, Excel, Word, and secure-link delivery.
+- Native Gate duty supports concurrent workers, independent Assume Shift and sign-off, and paid-travel start when the Work Hub assignment permits it.
+- Native Needs Review supports audited stale-vehicle reconciliation; reversal remains supervisor/admin scoped on the server.

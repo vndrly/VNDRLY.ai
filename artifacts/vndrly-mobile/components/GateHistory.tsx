@@ -53,10 +53,10 @@ export default function GateHistory() {
   };
   const act = (work: () => Promise<void>) => void work().catch((cause) => setMessage(cause instanceof Error ? cause.message : t("gateHistory.failed")));
   const resolveReview = async (row: Row) => {
-    const id = String(row.id ?? ""); const reason = reviewReasons[id]?.trim();
-    if (!id || !reason) return;
+    const id = String(row.id ?? ""); const visitId = Number(row.visitId); const reason = reviewReasons[id]?.trim();
+    if (!id || !Number.isSafeInteger(visitId) || visitId <= 0 || !reason) return;
     const reconciliationId = typeof row.reconciliationId === "string" ? row.reconciliationId : null;
-    await apiFetch(reconciliationId ? `/api/visits/gate/${id}/reconciliations/${reconciliationId}/reverse` : `/api/visits/gate/${id}/resolve-stale`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ reason, idempotencyKey: Crypto.randomUUID() }) });
+    await apiFetch(reconciliationId ? `/api/visits/gate/${visitId}/reconciliations/${reconciliationId}/reverse` : `/api/visits/gate/${visitId}/resolve-stale`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ reason, idempotencyKey: Crypto.randomUUID() }) });
     setReviewReasons((current) => ({ ...current, [id]: "" })); await report.refetch();
   };
   const field = { backgroundColor: colors.background, borderColor: colors.border, borderRadius: 18, borderWidth: 1, color: colors.foreground, paddingHorizontal: 12, paddingVertical: 10 } as const;

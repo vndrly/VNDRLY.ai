@@ -266,7 +266,7 @@ async function resolveDatabaseAccess(userId: number, filters: GateReportFilters,
   const managed = (await pool.query(
     `SELECT o.name, bool_or(g.role='gate_supervisor' AND g.site_id=$2 AND g.status='active') AS site_wide
      FROM managed_subcontractor_worker_sponsorships w
-     JOIN managed_subcontractor_organizations o ON o.id=w.managed_org_id
+     JOIN managed_subcontractor_organizations o ON o.id=w.managed_organization_id
      LEFT JOIN managed_subcontractor_role_grants g ON g.sponsorship_id=w.id
      WHERE w.worker_user_id=$1 AND w.status='active' GROUP BY o.name LIMIT 1`,
     [userId, filters.siteId],
@@ -301,14 +301,14 @@ async function queryDatabaseRows(filters: GateReportFilters, scope: GateReportSc
     return result.rows as GateReportRow[];
   }
   const result = await pool.query(
-    `SELECT 'visit:'||v.id AS id,trim(v.first_name||' '||v.last_name) AS name,v.company,
+    `SELECT 'visit:'||v.id AS id,v.id AS "visitId",trim(v.first_name||' '||v.last_name) AS name,v.company,
       v.vehicle_plate AS "vehiclePlate",v.plate_state AS "plateState",v.check_in_time AS "checkInTime",
       v.check_out_time AS "checkOutTime",v.admission_status AS "admissionStatus",
       v.reconciliation_state AS "reconciliationState",'visitor' AS kind
      FROM site_visits v WHERE v.site_location_id=$1 AND v.check_in_time <= $3
        AND (v.check_out_time IS NULL OR v.check_out_time >= $2)
      UNION ALL
-     SELECT 'employee:'||c.id,trim(p.first_name||' '||p.last_name),ven.name,NULL,NULL,c.check_in_at,c.check_out_at,NULL,NULL,'employee'
+     SELECT 'employee:'||c.id,NULL,trim(p.first_name||' '||p.last_name),ven.name,NULL,NULL,c.check_in_at,c.check_out_at,NULL,NULL,'employee'
      FROM ticket_check_ins c JOIN tickets t ON t.id=c.ticket_id JOIN vendor_people p ON p.id=c.employee_id
        JOIN vendors ven ON ven.id=t.vendor_id WHERE t.site_location_id=$1 AND c.check_in_at <= $3
        AND (c.check_out_at IS NULL OR c.check_out_at >= $2)

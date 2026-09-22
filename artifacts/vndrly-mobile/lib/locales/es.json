@@ -125,13 +125,8 @@
     "tagPhoto": "Foto de placa",
     "vehiclePhoto": "Foto del vehículo",
     "historyTitle": "Historial",
-    "historySubtitle": "Entradas y salidas de los últimos 30 días.",
     "historySearch": "Buscar por nombre, placa, empresa o sitio",
     "historyEmpty": "No hay visitas en los últimos 30 días.",
-    "historyNoMatch": "Ninguna visita coincide con esa búsqueda.",
-    "historyLoadFailed": "No se pudo cargar el historial.",
-    "historyOnSite": "En el sitio",
-    "historyCheckedOut": "Salió",
     "currentLocation": "Ubicación actual",
     "handsFreeHint": "Toque el micrófono para hablar. Diga la placa y el nombre, luego confirme. El GPS debe estar fijo dentro de la cerca del sitio para enviar.",
     "notes": "Notas",
@@ -562,6 +557,10 @@
     "cameraUnavailablePickSite": "La cámara no está disponible en esta versión. Elija un sitio por nombre."
   },
   "errors": {
+    "gate_report": {
+      "invalid_request": "Revise los filtros del informe e inténtelo de nuevo",
+      "invalid_token": "Este enlace seguro del informe no es válido o ha vencido"
+    },
     "change_over": {
       "forbidden": "Se requiere acceso asignado a esta entrada.",
       "session_changed": "Inicie sesión de nuevo para continuar.",

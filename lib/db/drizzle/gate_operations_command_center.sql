@@ -116,6 +116,13 @@ INSERT INTO gate_duty_sessions(
 SELECT station_id, operator_id, id, started_at, 'legacy_backfill', 'legacy-shift:' || id::text
 FROM gate_shifts
 WHERE ended_at IS NULL
+  AND NOT EXISTS (
+    SELECT 1
+    FROM gate_duty_sessions existing
+    WHERE existing.station_id = gate_shifts.station_id
+      AND existing.user_id = gate_shifts.operator_id
+      AND existing.ended_at IS NULL
+  )
 ON CONFLICT (source_legacy_shift_id) DO NOTHING;
 
 ALTER TABLE gate_work_sessions ENABLE ROW LEVEL SECURITY;

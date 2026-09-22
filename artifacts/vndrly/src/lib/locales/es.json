@@ -3898,6 +3898,10 @@
     "mismatch": "Las contraseñas no coinciden."
   },
   "errors": {
+    "gate_report": {
+      "invalid_request": "Revise los filtros del informe e inténtelo de nuevo",
+      "invalid_token": "Este enlace seguro del informe no es válido o ha vencido"
+    },
     "change_over": {
       "forbidden": "Se requiere acceso asignado a esta entrada.",
       "session_changed": "Inicie sesión de nuevo para continuar.",
@@ -5216,10 +5220,8 @@
     "history": "Historial",
     "fullGateHistory": "Historial completo de la portería",
     "historyTitle": "Historial de portería",
-    "historySubtitle": "Entradas y salidas de los últimos 30 días, las más recientes primero.",
     "historySearch": "Buscar por nombre, placa, empresa o sitio",
     "historyEmpty": "No hay visitas en los últimos 30 días.",
-    "historyNoMatch": "Ninguna visita coincide con esa búsqueda.",
     "historyLoadFailed": "No se pudo cargar el historial.",
     "historyOnSite": "En el sitio",
     "historyCheckedOut": "Salió",
