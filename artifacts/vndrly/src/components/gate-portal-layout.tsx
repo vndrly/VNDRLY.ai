@@ -12,6 +12,20 @@ export const GATE_PORTAL_TABS: FieldOpsTabDef[] = [
     match: () => false,
   },
   {
+    href: "/gate/change-over",
+    icon: Shield,
+    labelKey: "changeOver.title",
+    testId: "tab-gate-change-over",
+    match: (p) => p === "/gate/change-over",
+  },
+  {
+    href: "/work-hub",
+    icon: BriefcaseBusiness,
+    labelKey: "managedSubcontractors.workHub",
+    testId: "tab-gate-work-hub",
+    match: (p) => p.startsWith("/work-hub"),
+  },
+  {
     href: "/gate",
     icon: Shield,
     labelKey: "gateNav.gate",
@@ -25,14 +39,6 @@ export const GATE_PORTAL_TABS: FieldOpsTabDef[] = [
     testId: "tab-gate-history",
     match: (p) => p === "/gate/history" || p.startsWith("/gate/history/"),
   },
-  {
-    href: "/work-hub",
-    icon: BriefcaseBusiness,
-    labelKey: "managedSubcontractors.workHub",
-    testId: "tab-gate-work-hub",
-    match: (p) => p.startsWith("/work-hub"),
-  },
-  { href: "/gate/change-over", icon: Shield, labelKey: "changeOver.title", testId: "tab-gate-change-over", match: p => p === "/gate/change-over" },
   { href: "/gate/shift-notes", icon: History, labelKey: "changeOver.shiftNotes", testId: "tab-gate-shift-notes", match: p => p === "/gate/shift-notes" },
 ];
 

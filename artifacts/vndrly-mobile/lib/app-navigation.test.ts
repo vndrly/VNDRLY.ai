@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { StoredUser } from "@/lib/auth";
-import { buildAppNavigation, type AppNavigationLabels } from "./app-navigation";
+import { buildAppNavigation, gateLandingRoute, type AppNavigationLabels } from "./app-navigation";
 
 const labels: AppNavigationLabels = {
   askv: "AskV",
@@ -28,6 +28,12 @@ const user = (role: string, vendorRole?: string): StoredUser => ({
 });
 
 describe("buildAppNavigation", () => {
+  it("opens Dashboard after sign-in for both gate roles only", () => {
+    for (const role of ["gatekeeper", "gate_supervisor"]) {
+      expect(gateLandingRoute(user("vendor", role))).toBe("/(tabs)/change-over");
+    }
+    expect(gateLandingRoute(user("vendor", "admin"))).toBe("/(tabs)");
+  });
   it("gives sponsored gate workers Gate and Work Hub without office or payroll navigation", () => {
     for (const role of ["gatekeeper", "gate_supervisor"]) {
       const worker = {
@@ -40,28 +46,28 @@ describe("buildAppNavigation", () => {
         badges,
       }).map((item) => item.key);
       expect(keys).toEqual([
+        "change-over",
+        "work-hub",
         "gate",
         "askv",
         "gate-history",
-        "work-hub",
-        "change-over",
         "shift-notes",
         "profile",
       ]);
     }
   });
-  it("keeps Change Over and Shift Notes below Work Hub with AskV as the voice entry", () => {
+  it("orders Dashboard, Work Hub, Gate, History, Shift Notes with AskV available", () => {
     const items = buildAppNavigation({
       user: user("vendor", "gatekeeper"),
       labels,
       badges,
     });
     expect(items.map((entry) => entry.key)).toEqual([
+      "change-over",
+      "work-hub",
       "gate",
       "askv",
       "gate-history",
-      "work-hub",
-      "change-over",
       "shift-notes",
       "profile",
     ]);

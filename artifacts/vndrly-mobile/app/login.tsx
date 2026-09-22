@@ -21,6 +21,7 @@ import LanguageToggle from "@/components/LanguageToggle";
 import { VNDRLY_LOGO_SQUARE } from "@/lib/vndrly-brand-assets";
 import { useColors } from "@/hooks/useColors";
 import { login } from "@/lib/api";
+import { gateLandingRoute } from "@/lib/app-navigation";
 import { translateApiError } from "@/lib/apiErrors";
 import {
   authenticateWithBiometrics,
@@ -51,23 +52,24 @@ export default function LoginScreen() {
     setBusy(true);
     try {
       const user = await login(emailVal.trim(), passwordVal);
+      const landingRoute = gateLandingRoute(user);
       if (options.offerEnable && capability?.available && capability.enrolled && !biometricEnabled) {
         Alert.alert(
           t("login.biometricEnableTitle", { label: capability.label }),
           t("login.biometricEnableBody", { label: capability.label }),
           [
-            { text: t("login.notNow"), style: "cancel", onPress: () => router.replace("/(tabs)") },
+            { text: t("login.notNow"), style: "cancel", onPress: () => router.replace(landingRoute as never) },
             {
               text: t("login.enable"),
               onPress: async () => {
                 await saveBiometricCredentials(emailVal.trim(), passwordVal);
-                router.replace("/(tabs)");
+                router.replace(landingRoute as never);
               },
             },
           ],
         );
       } else {
-        router.replace("/(tabs)");
+        router.replace(landingRoute as never);
       }
     } catch (e: unknown) {
       // If the saved biometric credentials no longer work (password

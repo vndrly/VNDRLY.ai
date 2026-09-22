@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { ClipboardList } from "lucide-react";
 import {
   mayTransferHandoff,
   type ChangeOverState,
@@ -10,9 +11,14 @@ import {
 } from "@workspace/gate-booth";
 import { useAuth } from "@/hooks/use-auth";
 import BrandPillButton from "@/components/brand-pill-button";
-import { Card, CardContent } from "@/components/ui/card";
+import ContentPaneBackLink from "@/components/content-pane-back-link";
+import { BrandedInput, BrandedSelect } from "@/components/work-hub/chrome";
+import { Card, CardContent, CARD_SURFACE_CLASS } from "@/components/ui/card";
 import { FIELD_OPS_PAGE_CLASS } from "@/lib/field-ops-content-pane";
 import { changeOverRequest as request } from "@/lib/change-over-api";
+
+const BRANDED_NOTES_CLASS =
+  "w-full rounded-lg border-2 border-[color:var(--brand-primary)] bg-white p-3 text-sm text-gray-700 outline-none focus:ring-2 focus:ring-[color:var(--brand-primary)]/25";
 
 export function ShiftSnapshotView({
   snapshot,
@@ -210,16 +216,28 @@ export default function GateChangeOverPage({
     sites.error || stations.error || (history ? log.error : state.error);
   return (
     <div className={`${FIELD_OPS_PAGE_CLASS} space-y-5`}>
-      <h1 className="text-2xl font-bold">
-        {t(history ? "changeOver.shiftNotes" : "changeOver.title")}
-      </h1>
-      <p>{t(history ? "changeOver.historyIntro" : "changeOver.intro")}</p>
+      <div className="flex items-center gap-3">
+        {history && <ContentPaneBackLink href="/gate/change-over" ariaLabel={t("changeOver.title")} testId="button-back" />}
+        {history && <ClipboardList aria-hidden="true" data-testid="shift-notes-header-icon" className="h-5 w-5 shrink-0 text-[var(--brand-primary)] card-icon-drop-shadow" />}
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            {t(history ? "changeOver.shiftNotes" : "changeOver.title")}
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t(history ? "changeOver.historyIntro" : "changeOver.intro")}</p>
+        </div>
+      </div>
+      <div
+        className={history
+          ? `min-h-[24rem] space-y-5 p-5 ${CARD_SURFACE_CLASS}`
+          : "space-y-5"}
+        data-testid={history ? "shift-notes-main-card" : undefined}
+      >
       <div className="flex flex-wrap gap-3">
-        <label>
+        <label className="min-w-36 space-y-1 text-sm font-medium">
           {t("changeOver.site")}
-          <select
+          <BrandedSelect
             aria-label={t("changeOver.site")}
-            className="ml-2 rounded border bg-background p-2"
+            className="min-w-36"
             value={siteId}
             onChange={(e) => {
               setSelectedSite(e.target.value);
@@ -232,13 +250,13 @@ export default function GateChangeOverPage({
                 {s.name}
               </option>
             ))}
-          </select>
+          </BrandedSelect>
         </label>
-        <label>
+        <label className="min-w-36 space-y-1 text-sm font-medium">
           {t("changeOver.gate")}
-          <select
+          <BrandedSelect
             aria-label={t("changeOver.gate")}
-            className="ml-2 rounded border bg-background p-2"
+            className="min-w-36"
             value={stationId}
             onChange={(e) => setSelectedStation(e.target.value)}
           >
@@ -248,7 +266,7 @@ export default function GateChangeOverPage({
                 {s.name}
               </option>
             ))}
-          </select>
+          </BrandedSelect>
         </label>
       </div>
       {!online && <p role="status">{t("changeOver.offline")}</p>}
@@ -263,36 +281,36 @@ export default function GateChangeOverPage({
       )}
       {history ? (
         <>
-          <div className="flex gap-3">
-            <input
+          <div className="flex flex-wrap gap-3">
+            <BrandedInput
               aria-label={t("changeOver.search")}
               placeholder={t("changeOver.search")}
-              className="rounded border bg-background p-2"
+              className="min-w-56"
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
                 setBefore("");
               }}
             />
-            <select
+            <BrandedSelect
               aria-label={t("changeOver.range")}
-              className="rounded border bg-background p-2"
+              className="min-w-36"
               value={days}
               onChange={(e) => {
                 setDays(Number(e.target.value));
                 setBefore("");
               }}
             >
-              {[7, 30, 90, 365, 3650].map((n) => (
+              {[7, 30, 90, 365].map((n) => (
                 <option key={n} value={n}>
                   {n} {t("changeOver.days")}
                 </option>
               ))}
-            </select>
+            </BrandedSelect>
           </div>
           {log.data?.rows.length === 0 && <p>{t("changeOver.noNotes")}</p>}
           {log.data?.rows.map((row) => (
-            <Card key={row.id}>
+            <Card key={row.id} className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-50">
               <CardContent className="space-y-4 p-5">
                 <h2 className="font-bold">
                   {new Date(row.acknowledged_at).toLocaleString()} ·{" "}
@@ -336,8 +354,9 @@ export default function GateChangeOverPage({
             </Card>
           )}
         </>
-      ) : (
-        current && (
+      ) : null}
+      </div>
+      {!history && current && (
           <>
             <Card>
               <CardContent className="space-y-4 p-5">
@@ -395,17 +414,16 @@ export default function GateChangeOverPage({
                 ))}
                 {(ownShift || current.supervisor) && (
                   <>
-                    <input
+                    <BrandedInput
                       aria-label={t("changeOver.reason")}
                       placeholder={t("changeOver.reason")}
-                      className="w-full rounded border bg-background p-2"
                       value={reason}
                       onChange={(e) => setReason(e.target.value)}
                     />
                     <textarea
                       aria-label={t("changeOver.newItem")}
                       placeholder={t("changeOver.newItem")}
-                      className="w-full rounded border bg-background p-2"
+                      className={BRANDED_NOTES_CLASS}
                       maxLength={2000}
                       value={itemText}
                       onChange={(e) => setItemText(e.target.value)}
@@ -435,7 +453,7 @@ export default function GateChangeOverPage({
                   <label className="block font-bold">
                     {t("changeOver.outgoingNotes")}
                     <textarea
-                      className="mt-2 min-h-28 w-full rounded border bg-background p-3 font-normal"
+                      className={`mt-2 min-h-28 font-normal ${BRANDED_NOTES_CLASS}`}
                       value={notes}
                       maxLength={8000}
                       onChange={(e) => {
@@ -504,19 +522,17 @@ export default function GateChangeOverPage({
                           <h3 className="font-bold">
                             {t("changeOver.incomingLogin")}
                           </h3>
-                          <input
+                          <BrandedInput
                             aria-label={t("changeOver.username")}
                             autoComplete="off"
-                            className="block w-full rounded border bg-background p-2"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
                             placeholder={t("changeOver.username")}
                           />
-                          <input
+                          <BrandedInput
                             aria-label={t("changeOver.password")}
                             autoComplete="new-password"
                             type="password"
-                            className="block w-full rounded border bg-background p-2"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             placeholder={t("changeOver.password")}
@@ -609,9 +625,8 @@ export default function GateChangeOverPage({
                       </BrandPillButton>
                     </>
                   )}
-                  <input
+                  <BrandedInput
                     aria-label={t("changeOver.newGate")}
-                    className="rounded border bg-background p-2"
                     placeholder={t("changeOver.newGate")}
                     value={stationName}
                     onChange={(e) => setStationName(e.target.value)}
@@ -635,7 +650,6 @@ export default function GateChangeOverPage({
               </Card>
             )}
           </>
-        )
       )}
     </div>
   );

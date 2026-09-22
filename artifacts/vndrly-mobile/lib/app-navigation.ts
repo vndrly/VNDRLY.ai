@@ -54,11 +54,11 @@ export function buildAppNavigation({
 }: Input): AppNavigationItem[] {
   if (isGatekeeperUser(user)) {
     return [
+      item("change-over", "/(tabs)/change-over", labels.changeOver ?? "Dashboard", "grid"),
+      item("work-hub", "/work-hub", labels.workHub, "briefcase"),
       item("gate", "/(tabs)/gate", labels.gate, "truck"),
       item("askv", "/(tabs)/askv", labels.askv, "zap", "askv"),
       item("gate-history", "/(tabs)/gate-history", labels.history, "clock"),
-      item("work-hub", "/work-hub", labels.workHub, "briefcase"),
-      item("change-over", "/(tabs)/change-over", labels.changeOver ?? "Change Over", "repeat"),
       item("shift-notes", "/(tabs)/shift-notes", labels.shiftNotes ?? "Shift Notes", "file-text"),
       item("profile", "/(tabs)/profile", labels.profile, "user"),
     ];
@@ -91,6 +91,10 @@ export function buildAppNavigation({
   result.push(item("scan", "/(tabs)/scan", labels.scan, "maximize"));
   result.push(item("profile", "/(tabs)/profile", labels.profile, "user"));
   return result;
+}
+
+export function gateLandingRoute(user: StoredUser | null | undefined): string {
+  return isGatekeeperUser(user) ? "/(tabs)/change-over" : "/(tabs)";
 }
 
 function item(

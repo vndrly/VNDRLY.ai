@@ -70,6 +70,8 @@ beforeEach(() => {
       ? { sites: [{ id: 1, name: "Site" }] }
       : path.startsWith("/stations")
         ? { stations: [{ id: "gate", name: "Main gate" }] }
+        : path.includes("/notes?")
+          ? { rows: [], actions: [] }
         : path.endsWith("/state")
           ? state()
           : path.endsWith("/authenticate")
@@ -78,17 +80,41 @@ beforeEach(() => {
   );
 });
 afterEach(cleanup);
-function mount() {
+function mount(history = false) {
   const cache = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
   });
   render(
     <QueryClientProvider client={cache}>
-      <GateChangeOverPage />
+      <GateChangeOverPage history={history} />
     </QueryClientProvider>,
   );
   return cache;
 }
+it("limits Shift Notes to one year and uses branded compact fields", async () => {
+  mount(true);
+  const card = screen.getByTestId("shift-notes-main-card");
+  expect(screen.getByTestId("button-back")).not.toBeNull();
+  expect(screen.getByTestId("shift-notes-header-icon")).not.toBeNull();
+  expect(card.className).toContain("bg-white");
+  expect(card.contains(screen.getByRole("combobox", { name: "changeOver.site" }))).toBe(true);
+  expect(card.contains(screen.getByRole("textbox", { name: "changeOver.search" }))).toBe(true);
+  expect(card.contains(await screen.findByText("changeOver.noNotes"))).toBe(true);
+  const range = screen.getByRole("combobox", { name: "changeOver.range" });
+  expect(Array.from(range.querySelectorAll("option"), (option) => option.value)).toEqual([
+    "7", "30", "90", "365",
+  ]);
+  for (const field of [
+    screen.getByRole("combobox", { name: "changeOver.site" }),
+    screen.getByRole("combobox", { name: "changeOver.gate" }),
+    range,
+    screen.getByRole("textbox", { name: "changeOver.search" }),
+  ]) {
+    expect(field.className).toContain("rounded-full");
+    expect(field.className).toContain("border-[color:var(--brand-primary)]");
+    expect(field.className).toContain("bg-white");
+  }
+});
 async function authenticate() {
   fireEvent.change(await screen.findByLabelText("changeOver.username"), {
     target: { value: "incoming" },

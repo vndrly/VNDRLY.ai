@@ -21,6 +21,7 @@ import logoUnderlay from "@assets/logo-underrlay_1778217900673.png";
 import logoOverlay from "@assets/logo-overlay_1778217860263.png";
 import { useBrand, brandStyleVars } from "@/hooks/use-brand";
 import { cn } from "@/lib/utils";
+import { gateDashboardRouteFor } from "@/lib/gate-dashboard-route";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -55,14 +56,7 @@ export default function Login() {
 
   useEffect(() => {
     if (user && (location === "/login" || location === "/login/" || location === "/gate")) {
-      navigate(
-        user.vendorRole === "gatekeeper"
-          ? "/gate"
-          : user.vendorRole === "gate_supervisor"
-            ? "/work-hub/calendar"
-            : "/",
-        { replace: true },
-      );
+      navigate(gateDashboardRouteFor(user), { replace: true });
     }
   }, [user, location, navigate]);
 
@@ -132,7 +126,7 @@ export default function Login() {
     setIsSubmitting(true);
     try {
       await login(account.username, account.password);
-      navigate(location.startsWith("/gate") ? "/gate" : "/", { replace: true });
+      navigate("/", { replace: true });
     } catch (err) {
       toast({
         title: translateApiError(err, t, t("login.loginFailed")),
@@ -203,7 +197,7 @@ export default function Login() {
     setIsSubmitting(true);
     try {
       await login(username, password);
-      navigate(location.startsWith("/gate") ? "/gate" : "/", { replace: true });
+      navigate("/", { replace: true });
     } catch (err) {
       toast({
         title: translateApiError(err, t, t("login.loginFailed")),

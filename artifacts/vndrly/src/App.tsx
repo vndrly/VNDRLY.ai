@@ -141,7 +141,7 @@ function LoginRedirect() {
 function GatekeeperRootRedirect() {
   const [, navigate] = useLocation();
   useEffect(() => {
-    navigate("/gate", { replace: true });
+    navigate("/gate/change-over", { replace: true });
   }, [navigate]);
   return null;
 }

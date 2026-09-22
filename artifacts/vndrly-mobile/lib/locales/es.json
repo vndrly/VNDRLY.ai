@@ -2323,7 +2323,7 @@
     "textFallback": "Usar texto en lugar de voz"
   },
   "changeOver": {
-    "title": "Cambio de turno",
+    "title": "Panel",
     "shiftNotes": "Notas de turno",
     "intro": "Prepare al siguiente portero con una entrega de turno basada en datos.",
     "historyIntro": "Entregas completadas en los últimos 7 días, más recientes primero. Consulte registros anteriores con el filtro de fechas.",

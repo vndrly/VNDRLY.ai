@@ -5306,7 +5306,7 @@
     "textFallback": "Use text instead of voice"
   },
   "changeOver": {
-    "title": "Change Over",
+    "title": "Dashboard",
     "shiftNotes": "Shift Notes",
     "intro": "Prepare the next gatekeeper with a factual shift handoff.",
     "historyIntro": "Completed handoffs from the last 7 days, newest first. Older records remain available through the date filter.",

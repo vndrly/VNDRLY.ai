@@ -43,6 +43,7 @@ import {
   getUser,
 } from "@/lib/auth";
 import { isGatekeeperTabKey, isGatekeeperUser } from "@/lib/mobile-viewer";
+import { gateLandingRoute } from "@/lib/app-navigation";
 import {
   hasActiveConsentForThisDevice,
   isConsentDeclined,
@@ -193,7 +194,7 @@ function AuthGate() {
         if (!inGuestStack) router.replace("/visitor-checkin");
       } else if (isGatekeeper) {
         if (inLogin || inGuestLogin || inGuestStack || !inGatekeeperStack) {
-          router.replace("/(tabs)/gate" as never);
+          router.replace(gateLandingRoute(routeUser) as never);
         }
       } else {
         if (inLogin || inGuestLogin || inGuestStack) router.replace("/(tabs)");
