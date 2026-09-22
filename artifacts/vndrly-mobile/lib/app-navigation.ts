@@ -22,6 +22,7 @@ export type AppNavigationLabels = {
   crews: string;
   flagged: string;
   gate: string;
+  gateMode?: string;
   history: string;
   home: string;
   map: string;
@@ -77,6 +78,13 @@ export function buildAppNavigation({
       badge: badges.flagged,
     },
   ];
+
+  if (
+    user?.role === "admin" ||
+    (user?.role === "vendor" && ["admin", "office"].includes(user.vendorRole ?? ""))
+  ) {
+    result.splice(2, 0, item("gate-mode", "/(tabs)/change-over?gateMode=1", labels.gateMode ?? "Gate Mode", "log-in"));
+  }
 
   if (crewMapTabVisible(user)) {
     result.push(item("crew-map", "/(tabs)/crew-map", labels.map, "map-pin"));

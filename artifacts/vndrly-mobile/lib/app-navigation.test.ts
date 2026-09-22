@@ -9,6 +9,7 @@ const labels: AppNavigationLabels = {
   crews: "Crews",
   flagged: "Flagged",
   gate: "Gate",
+  gateMode: "Gate Mode",
   history: "History",
   home: "Home",
   map: "Map",
@@ -93,6 +94,14 @@ describe("buildAppNavigation", () => {
       "profile",
     ]);
     expect(items.find((entry) => entry.key === "comms")?.badge).toBe(2);
+  });
+
+  it("gives authorized office admins an explicit Gate Mode entry", () => {
+    const items = buildAppNavigation({ user: user("vendor", "admin"), labels, badges });
+    expect(items.find((entry) => entry.key === "gate-mode")).toMatchObject({
+      href: "/(tabs)/change-over?gateMode=1",
+      label: "Gate Mode",
+    });
   });
 
   it("shows the shared map to partner and admin office viewers", () => {

@@ -9,6 +9,8 @@ import {
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import * as Crypto from "expo-crypto";
+import * as FileSystem from "expo-file-system/legacy";
+import * as Sharing from "expo-sharing";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
@@ -20,8 +22,10 @@ import {
 } from "@workspace/gate-booth";
 import ScreenSafeArea from "@/components/ScreenSafeArea";
 import TogglePillButton from "@/components/TogglePillButton";
+import GateDutyCard from "@/components/GateDutyCard";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/hooks/use-auth";
+import { apiFetch, apiFetchRaw } from "@/lib/api";
 import type { StoredUser } from "@/lib/auth";
 import {
   changeOverRequest as request,
@@ -97,6 +101,8 @@ export default function GateChangeOver({
   const params = useLocalSearchParams<{
     siteId?: string;
     stationId?: string;
+    workHubShiftId?: string;
+    gateMode?: string;
   }>();
   const [selectedSite, setSite] = useState<number | null>(
     params.siteId ? Number(params.siteId) : null,
@@ -124,6 +130,7 @@ export default function GateChangeOver({
   const [days, setDays] = useState(7);
   const [before, setBefore] = useState("");
   const [newGate, setNewGate] = useState("");
+  const [reportRecipientIds, setReportRecipientIds] = useState<number[]>([]);
   const sites = useQuery({
     queryKey: ["change-over-sites", user?.id],
     queryFn: () =>
@@ -145,6 +152,16 @@ export default function GateChangeOver({
     networkMode: "always",
   });
   const stationId = selectedGate || stations.data?.stations[0]?.id || "";
+  const reportRange = days === 7 ? "7d" : days === 30 ? "30d" : days === 90 ? "90d" : "1y";
+  const reportFilters = siteId ? { siteId, ...(stationId ? { stationId } : {}), range: reportRange, recordType: "all", ...(search.trim() ? { search: search.trim() } : {}) } : null;
+  const reportRecipients = useQuery({
+    queryKey: ["shift-notes-report-recipients", reportFilters],
+    queryFn: () => apiFetch<{ recipients: { userId: number; name: string }[] }>(`/api/gate-report/recipients?${new URLSearchParams({ reportKind: "shift_notes", siteId: String(siteId), stationId, range: reportRange, recordType: "all", search })}`),
+    enabled: history && Boolean(siteId), retry: false,
+  });
+  useEffect(() => {
+    if (user?.id && reportRecipients.data?.recipients.some((entry) => entry.userId === user.id)) setReportRecipientIds((current) => current.length ? current : [user.id]);
+  }, [reportRecipients.data, user?.id]);
   const state = useQuery({
     queryKey: ["change-over-state", user?.id, stationId],
     queryFn: () => request<ChangeOverState>(`/${stationId}/state`),
@@ -253,6 +270,21 @@ export default function GateChangeOver({
       {text}
     </TogglePillButton>
   );
+  const exportShiftNotes = async (format: "pdf" | "excel" | "word") => {
+    if (!reportFilters) return;
+    const response = await apiFetchRaw("/api/gate-report/export", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ reportKind: "shift_notes", format, filters: reportFilters }) });
+    if (!FileSystem.cacheDirectory || !(await Sharing.isAvailableAsync())) throw new Error(t("gateHistory.shareUnavailable"));
+    const uri = `${FileSystem.cacheDirectory}vndrly-shift-notes.${format === "excel" ? "xls" : format === "word" ? "doc" : "pdf"}`;
+    const bytes = new Uint8Array(await response.arrayBuffer()); let binary = "";
+    for (const byte of bytes) binary += String.fromCharCode(byte);
+    await FileSystem.writeAsStringAsync(uri, globalThis.btoa(binary), { encoding: FileSystem.EncodingType.Base64 });
+    await Sharing.shareAsync(uri, { dialogTitle: t("gateHistory.share") });
+  };
+  const emailShiftNotes = async () => {
+    if (!reportFilters || !reportRecipientIds.length) throw new Error(t("gateHistory.noRecipients"));
+    await apiFetch("/api/gate-report/deliver", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ reportKind: "shift_notes", format: "pdf", recipientUserIds: reportRecipientIds, filters: reportFilters }) });
+    setError(t("gateHistory.emailed"));
+  };
   const canTransfer = mayTransferHandoff({
     online,
     acknowledged,
@@ -273,6 +305,11 @@ export default function GateChangeOver({
           {t(history ? "changeOver.shiftNotes" : "changeOver.title")}
         </Text>
         {label(t(history ? "changeOver.historyIntro" : "changeOver.intro"))}
+        {params.gateMode === "1" && (
+          <TogglePillButton onPress={() => router.replace("/(tabs)" as never)}>
+            {t("gateDuty.returnToAdmin")}
+          </TogglePillButton>
+        )}
         <View style={cardStyle}>
           {label(t("changeOver.site"))}
           {sites.data?.sites.map((s) => (
@@ -319,8 +356,19 @@ export default function GateChangeOver({
             else await state.refetch();
           }
         })}
+        {!history && stationId ? (
+          <GateDutyCard stationId={stationId} workHubShiftId={params.workHubShiftId} />
+        ) : null}
         {history ? (
           <>
+            <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
+              {(["pdf", "excel", "word"] as const).map((format) => <TogglePillButton key={format} onPress={() => void act(() => exportShiftNotes(format))}>{format.toUpperCase()}</TogglePillButton>)}
+              <TogglePillButton onPress={() => void act(emailShiftNotes)}>{t("gateHistory.email")}</TogglePillButton>
+            </View>
+            {label(t("gateHistory.recipients"))}
+            <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
+              {reportRecipients.data?.recipients.map((recipient) => <TogglePillButton key={recipient.userId} solid={reportRecipientIds.includes(recipient.userId)} onPress={() => setReportRecipientIds((current) => current.includes(recipient.userId) ? current.filter((id) => id !== recipient.userId) : [...current, recipient.userId])}>{recipient.name}</TogglePillButton>)}
+            </View>
             <TextInput
               accessibilityLabel={t("changeOver.search")}
               placeholder={t("changeOver.search")}
@@ -409,9 +457,9 @@ export default function GateChangeOver({
                 )}
               </View>
               <View style={cardStyle}>
-                {label(t("changeOver.carryForward"))}
+                {label(t("changeOver.shiftFollowUps"))}
                 <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-                  <TogglePillButton solid={itemView === "open"} accessibilityState={{ selected: itemView === "open" }} onPress={() => setItemView("open")}>{t("changeOver.carryForward")}</TogglePillButton>
+                  <TogglePillButton solid={itemView === "open"} accessibilityState={{ selected: itemView === "open" }} onPress={() => setItemView("open")}>{t("changeOver.openItems")}</TogglePillButton>
                   <TogglePillButton solid={itemView === "resolved"} accessibilityState={{ selected: itemView === "resolved" }} onPress={() => setItemView("resolved")}>{t("changeOver.resolvedItems")}</TogglePillButton>
                 </View>
                 {current.items.filter((item) => item.status === itemView).length === 0 && label(t("changeOver.none"))}

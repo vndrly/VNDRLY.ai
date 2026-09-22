@@ -39,6 +39,8 @@ vi.mock("@/components/TogglePillButton", () => ({
     </button>
   ),
 }));
+vi.mock("@/components/GateDutyCard", () => ({ default: () => <div>gate-duty-card</div> }));
+vi.mock("@/lib/api", () => ({ apiFetch: vi.fn(), apiFetchRaw: vi.fn() }));
 vi.mock("expo-router", () => ({
   router: { replace: env.replace },
   useLocalSearchParams: () => env.params,
@@ -198,6 +200,8 @@ it("separates active carry-forward work from resolved history and can reopen an 
     return base(path, body);
   });
   mount();
+  expect(await screen.findByText("changeOver.shiftFollowUps")).not.toBeNull();
+  expect(screen.getByRole("button", { name: "changeOver.openItems" })).not.toBeNull();
   expect(await screen.findByText(/Identify driver for OK ABC123/)).not.toBeNull();
   expect(screen.getByText("changeOver.markResolved").closest("button")?.hasAttribute("disabled")).toBe(true);
   fireEvent.change(screen.getByLabelText("changeOver.resolutionNote"), {
@@ -212,6 +216,6 @@ it("separates active carry-forward work from resolved history and can reopen an 
   });
   fireEvent.click(screen.getByText("changeOver.reopen"));
   await waitFor(() => expect(screen.queryByText(/Driver is Jack Smith, Grady Farms/)).toBeNull());
-  fireEvent.click(screen.getByRole("button", { name: "changeOver.carryForward" }));
+  fireEvent.click(screen.getByRole("button", { name: "changeOver.openItems" }));
   expect(await screen.findByText(/Identify driver for OK ABC123/)).not.toBeNull();
 });
