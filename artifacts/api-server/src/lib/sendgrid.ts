@@ -1266,8 +1266,43 @@ export interface SendNotificationAlertEmailInput {
 export async function sendNotificationAlertEmail(
   input: SendNotificationAlertEmailInput,
 ): Promise<{ messageId: string | undefined }> {
-  logger.debug({ fn: "sendNotificationAlertEmail" }, SKIP);
-  return { messageId: undefined };
+  const name = input.recipientName?.trim() || "there";
+  const category = notificationCategoryLabel(input.category);
+  const deepLink = buildNotificationDeepLink(input.link);
+  const priority = input.highPriority ? "High priority" : "Notification";
+  const subject = `${input.highPriority ? "Action needed — " : ""}${input.title}`;
+  const text = [
+    `Hi ${name},`,
+    "",
+    `${priority} · ${category}`,
+    input.title,
+    input.body?.trim() || "",
+    deepLink ? `Open VNDRLY: ${deepLink}` : "Open VNDRLY to review this notification.",
+  ].filter((line, index, values) => line || values[index - 1] !== "").join("\n");
+  const linkHtml = deepLink
+    ? `<p style="margin-top:24px"><a href="${escapeHtml(deepLink)}" style="display:inline-block;border-radius:999px;background:#0f8f99;color:#fff;padding:11px 18px;text-decoration:none;font-weight:700">Open in VNDRLY</a></p>`
+    : `<p style="color:#6b7280">Open VNDRLY to review this notification.</p>`;
+  const html = `
+    <div style="font-family:Arial,sans-serif;max-width:640px;margin:0 auto;color:#1f2937">
+      <div style="border-radius:16px 16px 0 0;background:#26343d;color:#fff;padding:20px 24px">
+        <div style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#f5b942">${escapeHtml(priority)}</div>
+        <h1 style="font-size:22px;margin:6px 0 0">${escapeHtml(input.title)}</h1>
+      </div>
+      <div style="border:2px solid #0f8f99;border-top:0;border-radius:0 0 16px 16px;padding:24px;background:#fff">
+        <p>Hi ${escapeHtml(name)},</p>
+        <p style="font-weight:700">${escapeHtml(category)}</p>
+        ${input.body ? `<p>${escapeHtml(input.body)}</p>` : ""}
+        ${linkHtml}
+      </div>
+    </div>`;
+  return sendSendGridMail({
+    to: input.to,
+    subject,
+    text,
+    html,
+    categories: ["notification_alert", input.category].slice(0, 10),
+    customArgs: { notification_type: input.type },
+  });
 }
 
 export interface NotificationDigestItem {

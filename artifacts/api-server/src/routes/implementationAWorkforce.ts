@@ -27,6 +27,8 @@ import {
   evaluateCoverage,
   WorkforceCoverageError,
 } from "../services/workforce-coverage";
+import { ChangeOverError } from "../services/gate-change-over";
+import { setGateCoverageStatus } from "../services/gate-coverage-monitor";
 
 const router = Router();
 const id = z.string().uuid();
@@ -34,6 +36,7 @@ const id = z.string().uuid();
 function sendError(res: Response, error: unknown) {
   if (error instanceof z.ZodError) return res.status(400).json({ code: "workforce.invalid_request" });
   if (error instanceof WorkforceCoverageError) return res.status(error.status).json({ code: error.code });
+  if (error instanceof ChangeOverError) return res.status(error.status).json({ code: error.code });
   console.error("Workforce request failed", error);
   return res.status(500).json({ code: "workforce.internal_error" });
 }
@@ -109,6 +112,22 @@ router.post("/implementation-a/workforce/coverage/:coverageId/escalate", async (
     const input = z.object({ shiftId: z.string().uuid(), expectedVersion: z.number().int().nonnegative() }).parse(req.body);
     await schedulingAuthority(req, input.shiftId);
     return res.json(await escalateCoverage({ coverageId: id.parse(req.params.coverageId), expectedVersion: input.expectedVersion }, databaseWorkforceAssignmentRepository));
+  } catch (error) { return sendError(res, error); }
+});
+
+router.patch("/implementation-a/workforce/gates/:stationId/coverage-status", async (req, res) => {
+  try {
+    const session = getSessionFromRequest(req);
+    if (!session?.userId) throw new ChangeOverError(401, "change_over.sign_in_required", "Sign in required");
+    const input = z.object({
+      mode: z.enum(["active", "paused_until", "paused_indefinitely", "closed"]),
+      pausedUntil: z.coerce.date().nullable().optional(),
+      reason: z.string().trim().max(500).nullable().optional(),
+    }).parse(req.body);
+    return res.json(await setGateCoverageStatus(session, {
+      stationId: id.parse(req.params.stationId),
+      ...input,
+    }));
   } catch (error) { return sendError(res, error); }
 });
 

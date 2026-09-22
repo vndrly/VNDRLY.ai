@@ -41,13 +41,13 @@ describe("Implementation A workforce coverage rules", () => {
     });
   });
 
-  it("uses urgency-based coverage escalation and the fifteen-minute no-show rule", () => {
+  it("uses urgency-based coverage escalation and the ten-minute no-show rule", () => {
     const now = at("2026-09-13T12:00:00.000Z");
     expect(coverageEscalationDelayMs(now, at("2026-09-13T15:00:00.000Z"))).toBe(15 * 60_000);
     expect(coverageEscalationDelayMs(now, at("2026-09-14T08:00:00.000Z"))).toBe(60 * 60_000);
     expect(coverageEscalationDelayMs(now, at("2026-09-15T08:00:00.000Z"))).toBe(4 * 60 * 60_000);
-    expect(evaluateNoShow(at("2026-09-13T13:16:00.000Z"), at("2026-09-13T13:00:00.000Z"), null)).toBe(true);
-    expect(evaluateNoShow(at("2026-09-13T13:14:00.000Z"), at("2026-09-13T13:00:00.000Z"), null)).toBe(false);
+    expect(evaluateNoShow(at("2026-09-13T13:10:00.000Z"), at("2026-09-13T13:00:00.000Z"), null)).toBe(true);
+    expect(evaluateNoShow(at("2026-09-13T13:09:59.999Z"), at("2026-09-13T13:00:00.000Z"), null)).toBe(false);
   });
 
   it("schedules assignment, T-24h, T-1h, start, and no-show notices", () => {
@@ -56,7 +56,7 @@ describe("Implementation A workforce coverage rules", () => {
       { kind: "t24", at: at("2026-09-14T12:00:00.000Z") },
       { kind: "t1", at: at("2026-09-15T11:00:00.000Z") },
       { kind: "start", at: at("2026-09-15T12:00:00.000Z") },
-      { kind: "no_show", at: at("2026-09-15T12:15:00.000Z") },
+      { kind: "no_show", at: at("2026-09-15T12:10:00.000Z") },
     ]);
   });
 });

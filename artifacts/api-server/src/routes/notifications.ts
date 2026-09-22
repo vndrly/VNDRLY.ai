@@ -347,6 +347,9 @@ export const HIGH_PRIORITY_NOTIFICATION_TYPES: ReadonlySet<string> = new Set([
   "work_hub_announcement_urgent",
   "work_hub_shift_changed",
   "work_hub_meeting_changed",
+  "gate_coverage_uncovered",
+  "gate_coverage_understaffed",
+  "gate_coverage_restored",
 ]);
 
 export function isHighPriorityNotificationType(type: string): boolean {
@@ -371,6 +374,8 @@ export type NotifyInput = {
   link?: string | null;
   category?: NotificationCategory;
   dedupeKey?: string | null;
+  /** Operational alerts that must reach every authorized recipient on every configured channel. */
+  forceImmediateDelivery?: boolean;
   // Optional extra fields merged into the push payload's `data` object so
   // mobile deep-link routing can find e.g. `ticketId` (the mobile listener
   // routes by `data.ticketId`, not by `link`). See `vndrly-mobile/app/_layout.tsx`.
@@ -481,6 +486,7 @@ export async function notifyUsers(userIds: number[], notif: NotifyInput): Promis
   // category `*Enabled` flag gates everything, so a single false
   // skips the user entirely.
   const eligible = userIds.filter((uid) => {
+    if (notif.forceImmediateDelivery) return true;
     const p = prefs.get(uid)!;
     if (categoryEnabled(p, category)) return true;
     if (category === "comments") {
@@ -557,12 +563,12 @@ export async function notifyUsers(userIds: number[], notif: NotifyInput): Promis
   );
   for (const r of inserted) {
     const p = prefs.get(r.userId)!;
-    if (!p.pushEnabled || inDndWindow(p, now)) continue;
+    if (!notif.forceImmediateDelivery && (!p.pushEnabled || inDndWindow(p, now))) continue;
     // Task #50 — push lives on the same channel as the in-app
     // notification (commentsEnabled). When the row was inserted only
     // because the user wanted EMAIL but kept in-app/push off, we must
     // not fan out push or it would back-door the toggle they just set.
-    if (!categoryEnabled(p, category)) continue;
+    if (!notif.forceImmediateDelivery && !categoryEnabled(p, category)) continue;
     void sendPushToUser(r.userId, {
       title: notif.title,
       body: notif.body ?? "",
@@ -598,7 +604,7 @@ export async function notifyUsers(userIds: number[], notif: NotifyInput): Promis
   const emailEligibleIds = skipInstantEmail
     ? []
     : inserted
-        .filter((r) => categoryEmailEnabled(prefs.get(r.userId)!, category, notif.type))
+        .filter((r) => notif.forceImmediateDelivery || categoryEmailEnabled(prefs.get(r.userId)!, category, notif.type))
         .map((r) => r.userId);
   if (emailEligibleIds.length) {
     void dispatchNotificationEmails(inserted, prefs, category, notif).catch((err) =>
@@ -644,7 +650,7 @@ async function dispatchNotificationEmails(
   notif: NotifyInput,
 ): Promise<void> {
   const eligibleRows = inserted.filter((r) =>
-    categoryEmailEnabled(prefs.get(r.userId)!, category, notif.type),
+    notif.forceImmediateDelivery || categoryEmailEnabled(prefs.get(r.userId)!, category, notif.type),
   );
   if (!eligibleRows.length) return;
 
@@ -661,7 +667,7 @@ async function dispatchNotificationEmails(
     const contact = contacts.get(r.userId);
     if (!contact) continue;
     // Digest mode: only send instant emails for high-priority types.
-    if (p.emailDigestEnabled && !high) continue;
+    if (!notif.forceImmediateDelivery && p.emailDigestEnabled && !high) continue;
 
     try {
       await sendNotificationAlertEmail({

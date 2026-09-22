@@ -51,7 +51,7 @@ export function evaluateAssignmentEligibility(input: {
 }
 
 export function evaluateNoShow(now: Date, shiftStartsAt: Date, checkedInAt: Date | null): boolean {
-  return checkedInAt === null && now.getTime() >= shiftStartsAt.getTime() + 15 * MINUTE;
+  return checkedInAt === null && now.getTime() >= shiftStartsAt.getTime() + 10 * MINUTE;
 }
 
 export function workforceReminderSchedule(shiftStartsAt: Date, assignedAt: Date): Array<{ kind: ReminderKind; at: Date }> {
@@ -60,7 +60,7 @@ export function workforceReminderSchedule(shiftStartsAt: Date, assignedAt: Date)
     { kind: "t24", at: new Date(shiftStartsAt.getTime() - 24 * HOUR) },
     { kind: "t1", at: new Date(shiftStartsAt.getTime() - HOUR) },
     { kind: "start", at: shiftStartsAt },
-    { kind: "no_show", at: new Date(shiftStartsAt.getTime() + 15 * MINUTE) },
+    { kind: "no_show", at: new Date(shiftStartsAt.getTime() + 10 * MINUTE) },
   ];
   return candidates.filter((reminder) => reminder.kind === "assignment" || reminder.at >= assignedAt);
 }

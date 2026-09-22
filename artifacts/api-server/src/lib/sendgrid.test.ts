@@ -4,6 +4,7 @@ import {
   sendEmailVerificationEmail,
   sendFieldEmployeeOnboardingInviteEmail,
   sendPasswordResetEmail,
+  sendNotificationAlertEmail,
 } from "./sendgrid";
 
 const originalEnv = { ...process.env };
@@ -57,6 +58,28 @@ describe("sendPasswordResetEmail", () => {
       sendPasswordResetEmail("user@example.com", "https://vndrly.ai/reset-password?token=abc", "Jane User"),
     ).rejects.toThrow("SendGrid is not configured");
     expect(fetch).not.toHaveBeenCalled();
+  });
+});
+
+describe("sendNotificationAlertEmail", () => {
+  it("sends a real high-priority operational alert with its deep link", async () => {
+    process.env.APP_BASE_URL = "https://vndrly.ai";
+    const result = await sendNotificationAlertEmail({
+      to: "admin@midconsolutions.com",
+      recipientName: "Chad",
+      category: "crew",
+      type: "gate_coverage_uncovered",
+      title: "Main gate is uncovered",
+      body: "No gatekeeper assumed the 8:00 AM shift.",
+      link: "/work-hub/workforce-coverage",
+      highPriority: true,
+    });
+    expect(result).toEqual({ messageId: "msg-123" });
+    const payload = JSON.parse(String(vi.mocked(fetch).mock.calls[0]?.[1]?.body));
+    expect(payload.subject).toContain("Main gate is uncovered");
+    expect(payload.categories).toContain("notification_alert");
+    expect(payload.content[0].value).toContain("https://vndrly.ai/work-hub/workforce-coverage");
+    expect(payload.content[1].value).toContain("High priority");
   });
 });
 
