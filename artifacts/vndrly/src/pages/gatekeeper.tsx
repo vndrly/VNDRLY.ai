@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import {
   Camera,
+  ClipboardList,
   History,
   Loader2,
   RefreshCw,
@@ -20,6 +21,7 @@ import {
 
 import AmberButton from "@/components/amber-button";
 import BrandPillButton from "@/components/brand-pill-button";
+import ContentPaneBackLink from "@/components/content-pane-back-link";
 import BlueButton from "@/components/blue-button";
 import GreenButton from "@/components/green-button";
 import { LiveConnectionPill } from "@/components/live-connection-pill";
@@ -1096,7 +1098,10 @@ export default function GatekeeperPage() {
   return (
     <div className={FIELD_OPS_PAGE_CLASS} data-testid="gatekeeper-page">
       <div className="flex items-start justify-between gap-3">
-        <div>
+        <div className="flex items-start gap-3">
+          <ContentPaneBackLink href="/gate/change-over" ariaLabel={t("nav.dashboard")} testId="button-back" />
+          <ClipboardList aria-hidden="true" data-testid="gate-header-icon" className="mt-2 h-5 w-5 shrink-0 text-[var(--brand-primary)]" />
+          <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
             {t("gatekeeper.title")}
           </h1>
@@ -1125,6 +1130,7 @@ export default function GatekeeperPage() {
               {t(voiceResponse.messageKey, voiceResponse.params)}
             </p>
           )}
+          </div>
         </div>
         <Link
           href="/gate/history"

@@ -469,7 +469,7 @@ export function MeetingScheduling() {
             </>
           ) : (
             <div className="flex min-h-64 flex-col items-center justify-center gap-3 text-center text-muted-foreground">
-              <Users className="h-10 w-10 text-[var(--brand-primary)] card-icon-drop-shadow" />
+              <Users className="h-10 w-10 text-[var(--brand-primary)]" />
               <p>Select a meeting type or create your scheduling page.</p>
             </div>
           )}

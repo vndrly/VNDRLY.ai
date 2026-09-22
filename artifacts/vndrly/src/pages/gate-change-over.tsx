@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { ClipboardList } from "lucide-react";
+import { ClipboardList, LayoutDashboard } from "lucide-react";
 import {
   mayTransferHandoff,
   type ChangeOverState,
@@ -10,8 +10,10 @@ import {
   type ShiftNotesResponse,
 } from "@workspace/gate-booth";
 import { useAuth } from "@/hooks/use-auth";
+import { useBrand } from "@/hooks/use-brand";
 import BrandPillButton from "@/components/brand-pill-button";
 import ContentPaneBackLink from "@/components/content-pane-back-link";
+import { PngPillButton, brandImagePillSrc } from "@/components/png-pill-rollover";
 import { BrandedInput, BrandedSelect } from "@/components/work-hub/chrome";
 import { Card, CardContent, CARD_SURFACE_CLASS } from "@/components/ui/card";
 import { FIELD_OPS_PAGE_CLASS } from "@/lib/field-ops-content-pane";
@@ -81,6 +83,7 @@ export default function GateChangeOverPage({
 }) {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const brand = useBrand();
   const cache = useQueryClient();
   const [selectedSite, setSelectedSite] = useState(
     () => new URLSearchParams(window.location.search).get("siteId") ?? "",
@@ -91,6 +94,8 @@ export default function GateChangeOverPage({
   const [notes, setNotes] = useState("");
   const [itemText, setItemText] = useState("");
   const [reason, setReason] = useState("");
+  const [itemView, setItemView] = useState<"open" | "resolved">("open");
+  const [itemNotes, setItemNotes] = useState<Record<string, string>>({});
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [auth, setAuth] = useState<IncomingHandoffAuth | null>(null);
@@ -217,8 +222,9 @@ export default function GateChangeOverPage({
   return (
     <div className={`${FIELD_OPS_PAGE_CLASS} space-y-5`}>
       <div className="flex items-center gap-3">
-        {history && <ContentPaneBackLink href="/gate/change-over" ariaLabel={t("changeOver.title")} testId="button-back" />}
-        {history && <ClipboardList aria-hidden="true" data-testid="shift-notes-header-icon" className="h-5 w-5 shrink-0 text-[var(--brand-primary)] card-icon-drop-shadow" />}
+        <ContentPaneBackLink href={history ? "/gate/change-over" : "/gate"} ariaLabel={t("changeOver.title")} testId="button-back" />
+        {history && <ClipboardList aria-hidden="true" data-testid="shift-notes-header-icon" className="h-5 w-5 shrink-0 text-[var(--brand-primary)]" />}
+        {!history && <LayoutDashboard aria-hidden="true" data-testid="gate-dashboard-header-icon" className="h-5 w-5 shrink-0 text-[var(--brand-primary)]" />}
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
             {t(history ? "changeOver.shiftNotes" : "changeOver.title")}
@@ -386,40 +392,62 @@ export default function GateChangeOverPage({
             <Card>
               <CardContent className="space-y-3 p-5">
                 <h2 className="font-bold">{t("changeOver.carryForward")}</h2>
-                {current.items.map((i) => (
-                  <div key={i.id} className="space-y-2 rounded border p-3">
+                <div role="tablist" aria-label={t("changeOver.carryForward")} className="flex flex-wrap gap-2">
+                  <PngPillButton
+                    role="tab"
+                    aria-selected={itemView === "open"}
+                    color="brand"
+                    activeSrc={brandImagePillSrc(brand.primary, brand.name)}
+                    idleSrc={itemView === "open" ? brandImagePillSrc(brand.primary, brand.name) : undefined}
+                    onClick={() => setItemView("open")}
+                  >
+                    {t("changeOver.carryForward")}
+                  </PngPillButton>
+                  <PngPillButton
+                    role="tab"
+                    aria-selected={itemView === "resolved"}
+                    color="brand"
+                    activeSrc={brandImagePillSrc(brand.primary, brand.name)}
+                    idleSrc={itemView === "resolved" ? brandImagePillSrc(brand.primary, brand.name) : undefined}
+                    onClick={() => setItemView("resolved")}
+                  >
+                    {t("changeOver.resolvedItems")}
+                  </PngPillButton>
+                </div>
+                {current.items.filter((item) => item.status === itemView).length === 0 && (
+                  <p>{t("changeOver.none")}</p>
+                )}
+                {current.items.filter((item) => item.status === itemView).map((i) => (
+                  <div key={i.id} data-testid={`carry-forward-item-${i.id}`} className="space-y-2 rounded-lg border-2 border-[color:var(--brand-primary)] bg-white p-3 text-gray-800">
                     <p className="whitespace-pre-wrap">{i.text}</p>
-                    <p>{t(`changeOver.${i.status}`)}</p>
                     {(ownShift || current.supervisor) && (
-                      <BrandPillButton
-                        disabled={!online || busy || !reason.trim()}
-                        onClick={() =>
-                          void act(() =>
-                            mutate("items", {
+                      <>
+                        <BrandedInput
+                          aria-label={t(i.status === "open" ? "changeOver.resolutionNote" : "changeOver.reopenNote")}
+                          placeholder={t(i.status === "open" ? "changeOver.resolutionNote" : "changeOver.reopenNote")}
+                          value={itemNotes[i.id] ?? ""}
+                          onChange={(e) => setItemNotes((currentNotes) => ({ ...currentNotes, [i.id]: e.target.value }))}
+                        />
+                        <PngPillButton
+                          color="brand"
+                          disabled={!online || busy || !itemNotes[i.id]?.trim()}
+                          onClick={() => void act(async () => {
+                            await mutate("items", {
                               itemId: i.id,
                               kind: i.status === "open" ? "resolve" : "reopen",
-                              text: reason,
-                            }),
-                          )
-                        }
-                      >
-                        {t(
-                          i.status === "open"
-                            ? "changeOver.resolve"
-                            : "changeOver.reopen",
-                        )}
-                      </BrandPillButton>
+                              text: itemNotes[i.id].trim(),
+                            });
+                            setItemNotes((currentNotes) => ({ ...currentNotes, [i.id]: "" }));
+                          })}
+                        >
+                          {t(i.status === "open" ? "changeOver.markResolved" : "changeOver.reopen")}
+                        </PngPillButton>
+                      </>
                     )}
                   </div>
                 ))}
-                {(ownShift || current.supervisor) && (
+                {itemView === "open" && (ownShift || current.supervisor) && (
                   <>
-                    <BrandedInput
-                      aria-label={t("changeOver.reason")}
-                      placeholder={t("changeOver.reason")}
-                      value={reason}
-                      onChange={(e) => setReason(e.target.value)}
-                    />
                     <textarea
                       aria-label={t("changeOver.newItem")}
                       placeholder={t("changeOver.newItem")}
@@ -464,6 +492,7 @@ export default function GateChangeOverPage({
                   </label>
                   <BrandPillButton
                     disabled={busy || !online}
+                    hoverSrc={brandImagePillSrc(brand.primary, brand.name)}
                     onClick={() => void act(() => mutate("prepare", { notes }))}
                   >
                     {t(
@@ -590,14 +619,20 @@ export default function GateChangeOverPage({
                     </>
                   )}
                   {(ownShift || current.supervisor) && (
-                    <BrandPillButton
-                      disabled={busy || !online || !reason.trim()}
-                      onClick={() =>
-                        void act(() => mutate("cancel", { reason }))
-                      }
-                    >
-                      {t("changeOver.cancel")}
-                    </BrandPillButton>
+                    <>
+                      <BrandedInput
+                        aria-label={t("changeOver.reason")}
+                        placeholder={t("changeOver.reason")}
+                        value={reason}
+                        onChange={(e) => setReason(e.target.value)}
+                      />
+                      <BrandPillButton
+                        disabled={busy || !online || !reason.trim()}
+                        onClick={() => void act(() => mutate("cancel", { reason }))}
+                      >
+                        {t("changeOver.cancel")}
+                      </BrandPillButton>
+                    </>
                   )}
                 </CardContent>
               </Card>
@@ -609,6 +644,12 @@ export default function GateChangeOverPage({
                   {current.shift && !ownShift && (
                     <>
                       <p>{t("changeOver.recoverExplanation")}</p>
+                      <BrandedInput
+                        aria-label={t("changeOver.reason")}
+                        placeholder={t("changeOver.reason")}
+                        value={reason}
+                        onChange={(e) => setReason(e.target.value)}
+                      />
                       <BrandPillButton
                         disabled={busy || !online || !reason.trim()}
                         onClick={() =>

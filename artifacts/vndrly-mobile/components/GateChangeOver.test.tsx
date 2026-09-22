@@ -184,3 +184,34 @@ it("preserves cached shift facts on network failure but removes authentication a
   );
   expect(screen.queryByText("changeOver.switchUser")).toBeNull();
 });
+it("separates active carry-forward work from resolved history and can reopen an item", async () => {
+  const base = env.api.getMockImplementation()!;
+  let item = { id: "truck", text: "Identify driver for OK ABC123", status: "open" };
+  env.api.mockImplementation(async (path, body) => {
+    if (path.endsWith("/state")) return { ...state(), items: [item] };
+    if (path.endsWith("/items")) {
+      const action = body as { kind: string; text: string };
+      if (action.kind === "resolve") item = { ...item, text: `${item.text}\nResolution: ${action.text}`, status: "resolved" };
+      if (action.kind === "reopen") item = { ...item, text: `${item.text}\nReopened: ${action.text}`, status: "open" };
+      return {};
+    }
+    return base(path, body);
+  });
+  mount();
+  expect(await screen.findByText(/Identify driver for OK ABC123/)).not.toBeNull();
+  expect(screen.getByText("changeOver.markResolved").closest("button")?.hasAttribute("disabled")).toBe(true);
+  fireEvent.change(screen.getByLabelText("changeOver.resolutionNote"), {
+    target: { value: "Driver is Jack Smith, Grady Farms" },
+  });
+  fireEvent.click(screen.getByText("changeOver.markResolved"));
+  await waitFor(() => expect(screen.queryByText(/Identify driver for OK ABC123/)).toBeNull());
+  fireEvent.click(screen.getByText("changeOver.resolvedItems"));
+  expect(screen.getByText(/Driver is Jack Smith, Grady Farms/)).not.toBeNull();
+  fireEvent.change(screen.getByLabelText("changeOver.reopenNote"), {
+    target: { value: "Needs rechecking" },
+  });
+  fireEvent.click(screen.getByText("changeOver.reopen"));
+  await waitFor(() => expect(screen.queryByText(/Driver is Jack Smith, Grady Farms/)).toBeNull());
+  fireEvent.click(screen.getByRole("button", { name: "changeOver.carryForward" }));
+  expect(await screen.findByText(/Identify driver for OK ABC123/)).not.toBeNull();
+});

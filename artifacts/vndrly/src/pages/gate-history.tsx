@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { FileText, Loader2, Search, Sheet } from "lucide-react";
+import { FileText, History, Loader2, Search, Sheet } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import BlueButton from "@/components/blue-button";
@@ -72,6 +72,7 @@ export default function GateHistoryPage() {
           ariaLabel={t("gatekeeper.backToGate")}
           testId="button-back"
         />
+        <History aria-hidden="true" data-testid="gate-history-header-icon" className="h-5 w-5 shrink-0 text-[var(--brand-primary)]" />
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">{t("gatekeeper.historyTitle")}</h1>
           <p className="mt-1 text-sm text-muted-foreground">{t("gatekeeper.historySubtitle")}</p>

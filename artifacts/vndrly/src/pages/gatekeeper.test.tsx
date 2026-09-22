@@ -698,6 +698,13 @@ describe("GatekeeperPage plate state", () => {
 });
 
 describe("GatekeeperPage compact branded workspace", () => {
+  it("shows the standard back control and a shadow-free branded Gate icon", () => {
+    renderPage();
+    expect(screen.getByTestId("button-back").getAttribute("href")).toBe("/gate/change-over");
+    const icon = screen.getByTestId("gate-header-icon");
+    expect(icon.getAttribute("class")).toContain("text-[var(--brand-primary)]");
+    expect(icon.getAttribute("class")).not.toContain("card-icon-drop-shadow");
+  });
   it("keeps the selected site details in one compact branded location card", async () => {
     renderPage();
 

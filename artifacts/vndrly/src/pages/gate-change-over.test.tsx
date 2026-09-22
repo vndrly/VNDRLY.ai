@@ -6,6 +6,7 @@ import {
   fireEvent,
   waitFor,
   cleanup,
+  within,
 } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 const api = vi.hoisted(() => vi.fn());
@@ -16,13 +17,10 @@ vi.mock("@/hooks/use-auth", () => ({
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (k: string) => k }),
 }));
-vi.mock("@/components/brand-pill-button", () => ({
-  default: ({ children, onClick, disabled, type }: any) => (
-    <button type={type ?? "button"} onClick={onClick} disabled={disabled}>
-      {children}
-    </button>
-  ),
+vi.mock("@/hooks/use-brand", () => ({
+  useBrand: () => ({ primary: "#0095a8", name: "MidCon Solutions" }),
 }));
+import { PILL_BRAND, PILL_IDLE } from "@/lib/pill-palette-assets";
 import GateChangeOverPage from "./gate-change-over";
 const snapshot = {
   generatedAt: new Date().toISOString(),
@@ -91,11 +89,82 @@ function mount(history = false) {
   );
   return cache;
 }
+it("shows the standard back control and branded Dashboard icon", () => {
+  mount();
+  expect(screen.getByTestId("button-back")).not.toBeNull();
+  expect(screen.getByTestId("gate-dashboard-header-icon").getAttribute("class")).not.toContain("card-icon-drop-shadow");
+});
+it("keeps Prepare Handoff gray at rest and branded on hover without requiring notes", async () => {
+  const base = api.getMockImplementation()!;
+  api.mockImplementation((path, body) => path.endsWith("/state")
+    ? { ...state(), preparation: null }
+    : base(path, body));
+  mount();
+  const button = await screen.findByRole("button", { name: "changeOver.prepare" });
+  expect((button as HTMLButtonElement).disabled).toBe(false);
+  const sources = Array.from(button.querySelectorAll("img"), (image) => image.getAttribute("src"));
+  expect(sources).toContain(PILL_IDLE);
+  expect(sources).toContain(PILL_BRAND.midcon);
+});
+it("shows open carry-forward items separately from resolved history", async () => {
+  const base = api.getMockImplementation()!;
+  api.mockImplementation((path, body) => path.endsWith("/state")
+    ? {
+        ...state(),
+        items: [
+          { id: "open-item", text: "Identify driver for OK ABC123", status: "open" },
+          { id: "resolved-item", text: "North barrier inspected", status: "resolved" },
+        ],
+      }
+    : base(path, body));
+  mount();
+  expect(await screen.findByText("Identify driver for OK ABC123")).not.toBeNull();
+  expect(screen.queryByText("North barrier inspected")).toBeNull();
+  fireEvent.click(screen.getByRole("tab", { name: "changeOver.resolvedItems" }));
+  expect(screen.getByText("North barrier inspected")).not.toBeNull();
+  expect(screen.queryByText("Identify driver for OK ABC123")).toBeNull();
+});
+it("moves an item out of the open list only after a resolution note, and can reopen it", async () => {
+  const base = api.getMockImplementation()!;
+  let item = { id: "truck", text: "Identify driver for OK ABC123", status: "open" };
+  api.mockImplementation(async (path, body) => {
+    if (path.endsWith("/state")) return { ...state(), items: [item] };
+    if (path.endsWith("/items")) {
+      const action = body as { itemId: string; kind: string; text: string };
+      if (action.itemId === item.id && action.kind === "resolve") {
+        item = { ...item, text: `${item.text}\nResolution: ${action.text}`, status: "resolved" };
+      } else if (action.itemId === item.id && action.kind === "reopen") {
+        item = { ...item, text: `${item.text}\nReopened: ${action.text}`, status: "open" };
+      }
+      return {};
+    }
+    return base(path, body);
+  });
+  mount();
+  const openItem = await screen.findByTestId("carry-forward-item-truck");
+  const resolve = within(openItem).getByRole("button", { name: "changeOver.markResolved" });
+  expect((resolve as HTMLButtonElement).disabled).toBe(true);
+  fireEvent.change(within(openItem).getByRole("textbox", { name: "changeOver.resolutionNote" }), {
+    target: { value: "Driver is Jack Smith, Grady Farms" },
+  });
+  fireEvent.click(resolve);
+  await waitFor(() => expect(screen.queryByTestId("carry-forward-item-truck")).toBeNull());
+  fireEvent.click(screen.getByRole("tab", { name: "changeOver.resolvedItems" }));
+  const resolvedItem = screen.getByTestId("carry-forward-item-truck");
+  expect(resolvedItem.textContent).toContain("Driver is Jack Smith, Grady Farms");
+  fireEvent.change(within(resolvedItem).getByRole("textbox", { name: "changeOver.reopenNote" }), {
+    target: { value: "Driver details need rechecking" },
+  });
+  fireEvent.click(within(resolvedItem).getByRole("button", { name: "changeOver.reopen" }));
+  await waitFor(() => expect(screen.queryByTestId("carry-forward-item-truck")).toBeNull());
+  fireEvent.click(screen.getByRole("tab", { name: "changeOver.carryForward" }));
+  expect(await screen.findByTestId("carry-forward-item-truck")).not.toBeNull();
+});
 it("limits Shift Notes to one year and uses branded compact fields", async () => {
   mount(true);
   const card = screen.getByTestId("shift-notes-main-card");
   expect(screen.getByTestId("button-back")).not.toBeNull();
-  expect(screen.getByTestId("shift-notes-header-icon")).not.toBeNull();
+  expect(screen.getByTestId("shift-notes-header-icon").getAttribute("class")).not.toContain("card-icon-drop-shadow");
   expect(card.className).toContain("bg-white");
   expect(card.contains(screen.getByRole("combobox", { name: "changeOver.site" }))).toBe(true);
   expect(card.contains(screen.getByRole("textbox", { name: "changeOver.search" }))).toBe(true);
@@ -132,7 +201,7 @@ it("authenticates separately and only reveals Switch User after acknowledgment",
   expect(screen.queryByLabelText("changeOver.password")).toBeNull();
   fireEvent.click(screen.getByRole("checkbox"));
   expect(
-    (screen.getByText("changeOver.switchUser") as HTMLButtonElement).disabled,
+    (screen.getByRole("button", { name: "changeOver.switchUser" }) as HTMLButtonElement).disabled,
   ).toBe(false);
   expect(api.mock.calls.some(([path]) => path.endsWith("/transfer"))).toBe(
     false,

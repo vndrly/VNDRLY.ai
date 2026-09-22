@@ -20,6 +20,14 @@ afterEach(() => {
 });
 
 describe("GateHistoryPage plate display", () => {
+  it("shows a branded, shadow-free History icon beside the page heading", () => {
+    listAllVisits.mockResolvedValue([]);
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
+    render(<QueryClientProvider client={queryClient}><GateHistoryPage /></QueryClientProvider>);
+    const icon = screen.getByTestId("gate-history-header-icon");
+    expect(icon.getAttribute("class")).toContain("text-[var(--brand-primary)]");
+    expect(icon.getAttribute("class")).not.toContain("card-icon-drop-shadow");
+  });
   it("renders the state-qualified plate in the history row", async () => {
     window.history.replaceState({}, "", "/gate/history?siteLocationId=42");
     listAllVisits.mockResolvedValue([{

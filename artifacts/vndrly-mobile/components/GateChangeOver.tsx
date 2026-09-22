@@ -110,6 +110,8 @@ export default function GateChangeOver({
   }, [params.siteId, params.stationId]);
   const [notes, setNotes] = useState("");
   const [newItem, setNewItem] = useState("");
+  const [itemView, setItemView] = useState<"open" | "resolved">("open");
+  const [itemNotes, setItemNotes] = useState<Record<string, string>>({});
   const [reason, setReason] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -408,36 +410,42 @@ export default function GateChangeOver({
               </View>
               <View style={cardStyle}>
                 {label(t("changeOver.carryForward"))}
-                {current.items.map((i) => (
-                  <View key={i.id} style={{ gap: 8 }}>
-                    {label(`${i.text} · ${t(`changeOver.${i.status}`)}`)}
-                    {(ownShift || current.supervisor) &&
-                      button(
-                        t(
-                          i.status === "open"
-                            ? "changeOver.resolve"
-                            : "changeOver.reopen",
-                        ),
-                        () =>
-                          mutate("items", {
-                            itemId: i.id,
-                            kind: i.status === "open" ? "resolve" : "reopen",
-                            text: reason,
-                          }),
-                        !online || !reason.trim(),
-                      )}
+                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+                  <TogglePillButton solid={itemView === "open"} accessibilityState={{ selected: itemView === "open" }} onPress={() => setItemView("open")}>{t("changeOver.carryForward")}</TogglePillButton>
+                  <TogglePillButton solid={itemView === "resolved"} accessibilityState={{ selected: itemView === "resolved" }} onPress={() => setItemView("resolved")}>{t("changeOver.resolvedItems")}</TogglePillButton>
+                </View>
+                {current.items.filter((item) => item.status === itemView).length === 0 && label(t("changeOver.none"))}
+                {current.items.filter((item) => item.status === itemView).map((i) => (
+                  <View key={i.id} style={{ gap: 8, borderColor: colors.border, borderWidth: 1, borderRadius: 8, padding: 10 }}>
+                    {label(i.text)}
+                    {(ownShift || current.supervisor) && (
+                      <>
+                        <TextInput
+                          accessibilityLabel={t(i.status === "open" ? "changeOver.resolutionNote" : "changeOver.reopenNote")}
+                          placeholder={t(i.status === "open" ? "changeOver.resolutionNote" : "changeOver.reopenNote")}
+                          placeholderTextColor={colors.mutedForeground}
+                          style={fieldStyle}
+                          value={itemNotes[i.id] ?? ""}
+                          onChangeText={(value) => setItemNotes((notesByItem) => ({ ...notesByItem, [i.id]: value }))}
+                        />
+                        {button(
+                          t(i.status === "open" ? "changeOver.markResolved" : "changeOver.reopen"),
+                          async () => {
+                            await mutate("items", {
+                              itemId: i.id,
+                              kind: i.status === "open" ? "resolve" : "reopen",
+                              text: itemNotes[i.id].trim(),
+                            });
+                            setItemNotes((notesByItem) => ({ ...notesByItem, [i.id]: "" }));
+                          },
+                          !online || !itemNotes[i.id]?.trim(),
+                        )}
+                      </>
+                    )}
                   </View>
                 ))}
-                {(ownShift || current.supervisor) && (
+                {itemView === "open" && (ownShift || current.supervisor) && (
                   <>
-                    <TextInput
-                      accessibilityLabel={t("changeOver.reason")}
-                      placeholder={t("changeOver.reason")}
-                      placeholderTextColor={colors.mutedForeground}
-                      style={fieldStyle}
-                      value={reason}
-                      onChangeText={setReason}
-                    />
                     <TextInput
                       accessibilityLabel={t("changeOver.newItem")}
                       placeholder={t("changeOver.newItem")}
@@ -600,11 +608,21 @@ export default function GateChangeOver({
                     </>
                   )}
                   {(ownShift || current.supervisor) &&
-                    button(
-                      t("changeOver.cancel"),
-                      () => mutate("cancel", { reason }),
-                      !online || !reason.trim(),
-                    )}
+                    <>
+                      <TextInput
+                        accessibilityLabel={t("changeOver.reason")}
+                        placeholder={t("changeOver.reason")}
+                        placeholderTextColor={colors.mutedForeground}
+                        style={fieldStyle}
+                        value={reason}
+                        onChangeText={setReason}
+                      />
+                      {button(
+                        t("changeOver.cancel"),
+                        () => mutate("cancel", { reason }),
+                        !online || !reason.trim(),
+                      )}
+                    </>}
                 </View>
               )}
               {current.supervisor && (
@@ -613,6 +631,14 @@ export default function GateChangeOver({
                   {current.shift && !ownShift && (
                     <>
                       {label(t("changeOver.recoverExplanation"))}
+                      <TextInput
+                        accessibilityLabel={t("changeOver.reason")}
+                        placeholder={t("changeOver.reason")}
+                        placeholderTextColor={colors.mutedForeground}
+                        style={fieldStyle}
+                        value={reason}
+                        onChangeText={setReason}
+                      />
                       {button(
                         t("changeOver.recover"),
                         () =>
