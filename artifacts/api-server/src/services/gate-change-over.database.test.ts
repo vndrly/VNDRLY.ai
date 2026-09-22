@@ -133,9 +133,12 @@ async function fixture() {
 
 describe("Change Over database guarantees", () => {
   beforeAll(async () => {
-    if (process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")
+    if (
+      process.env.VNDRLY_TEST_DB_MODE !== "fresh-local" &&
+      process.env.VNDRLY_ISOLATED_TEST_DB !== "1"
+    )
       throw new Error(
-        "Run Change Over integration tests through fresh-local wrapper",
+        "Run Change Over integration tests through the isolated database wrapper",
       );
     const migration = await readFile(
       new URL(

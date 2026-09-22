@@ -124,3 +124,4 @@ export * from "./safetyResponse";
 export * from "./workerSubscriptions";
 export * from "./operationsDisplays";
 export * from "./gateChangeOver";
+export * from "./gateOperations";

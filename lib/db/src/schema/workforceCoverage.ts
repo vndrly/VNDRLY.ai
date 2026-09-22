@@ -1,6 +1,7 @@
 import { index, integer, jsonb, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { usersTable } from "./users";
 import { workHubShiftsTable } from "./workHubSchedule";
+import { gateStationsTable } from "./gateChangeOver";
 
 export const workforceStaffingRequirementsTable = pgTable("workforce_staffing_requirements", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -21,14 +22,18 @@ export const workforceCoverageRecordsTable = pgTable("workforce_coverage_records
   id: uuid("id").primaryKey().defaultRandom(),
   shiftId: uuid("shift_id").notNull().references(() => workHubShiftsTable.id, { onDelete: "cascade" }),
   requirementId: uuid("requirement_id").references(() => workforceStaffingRequirementsTable.id),
+  gateStationId: uuid("gate_station_id").references(() => gateStationsTable.id),
   vacancyOrigin: text("vacancy_origin").notNull(),
   requiredCount: integer("required_count").notNull().default(1),
   assignedCount: integer("assigned_count").notNull().default(0),
+  actualCount: integer("actual_count").notNull().default(0),
+  coverageKind: text("coverage_kind").notNull().default("general"),
   state: text("state").notNull().default("uncovered"),
   supervisorUserId: integer("supervisor_user_id").references(() => usersTable.id),
   escalationTargetUserId: integer("escalation_target_user_id").references(() => usersTable.id),
   escalationDueAt: timestamp("escalation_due_at", { withTimezone: true }),
   escalatedAt: timestamp("escalated_at", { withTimezone: true }),
+  lastReminderAt: timestamp("last_reminder_at", { withTimezone: true }),
   resolvedAt: timestamp("resolved_at", { withTimezone: true }),
   version: integer("version").notNull().default(1),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
