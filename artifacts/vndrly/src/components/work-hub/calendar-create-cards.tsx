@@ -18,6 +18,12 @@ import {
 type Row = Record<string, any>;
 type Owner = { type: "vendor" | "partner"; id: number };
 
+async function gateRequest<T>(path: string): Promise<T> {
+  const response = await fetch(`/api/gate-change-over${path}`, { credentials: "include" });
+  if (!response.ok) throw new Error("Could not load Gate scheduling options");
+  return response.json();
+}
+
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return <label className="grid gap-1 text-sm font-medium"><span>{label}</span>{children}</label>;
 }
@@ -97,6 +103,21 @@ export default function CalendarCreateCards({ owner }: { owner: Owner | null }) 
     crewIds: [] as string[],
     mandatory: false,
     notes: "",
+    shiftType: "standard",
+    siteLocationId: "",
+    gateStationId: "",
+    requiredStaffCount: "1",
+    workStartPolicy: "on_site",
+  });
+  const gateSites = useQuery<{ sites: Row[] }>({
+    queryKey: ["gate-change-over", "sites"],
+    queryFn: () => gateRequest("/sites"),
+    enabled: form.kind === "shift" && form.shiftType === "gate",
+  });
+  const gateStations = useQuery<{ stations: Row[] }>({
+    queryKey: ["gate-change-over", "stations", form.siteLocationId],
+    queryFn: () => gateRequest(`/stations?siteId=${form.siteLocationId}`),
+    enabled: form.kind === "shift" && form.shiftType === "gate" && Boolean(form.siteLocationId),
   });
   const [task, setTask] = useState({
     title: "",
@@ -164,11 +185,17 @@ export default function CalendarCreateCards({ owner }: { owner: Owner | null }) 
           qualificationCodes: [],
           calendarType: "company",
           instructions: [form.mandatory ? "Mandatory attendance." : "", form.notes].filter(Boolean).join("\n\n") || null,
+          ...(form.shiftType === "gate" ? {
+            siteLocationId: Number(form.siteLocationId),
+            gateStationId: form.gateStationId,
+            requiredStaffCount: Number(form.requiredStaffCount),
+            workStartPolicy: form.workStartPolicy,
+          } : {}),
         })),
       });
     },
     onSuccess: () => {
-      setForm((current) => ({ ...current, title: "", meetingType: "", startsAt: "", endsAt: "", userIds: [], crewIds: [], mandatory: false, notes: "" }));
+      setForm((current) => ({ ...current, title: "", meetingType: "", startsAt: "", endsAt: "", userIds: [], crewIds: [], mandatory: false, notes: "", gateStationId: "" }));
       qc.invalidateQueries({ queryKey: ["work-hub", "calendar"] });
       qc.invalidateQueries({ queryKey: ["work-hub", "meeting-types"] });
     },
@@ -210,6 +237,33 @@ export default function CalendarCreateCards({ owner }: { owner: Owner | null }) 
                 <option value="event">Event or meeting</option>
               </BrandedSelect>
             </Field>
+            {form.kind === "shift" && <Field label="Shift type">
+              <BrandedSelect aria-label="Shift type" value={form.shiftType} onChange={(event) => setForm({ ...form, shiftType: event.target.value })}>
+                <option value="standard">Standard shift</option>
+                <option value="gate">Gate shift</option>
+              </BrandedSelect>
+            </Field>}
+            {form.kind === "shift" && form.shiftType === "gate" && <>
+              <Field label="Gate site">
+                <BrandedSelect aria-label="Gate site" value={form.siteLocationId} onChange={(event) => setForm({ ...form, siteLocationId: event.target.value, gateStationId: "" })} required>
+                  <option value="">Choose site</option>
+                  {(gateSites.data?.sites ?? []).map((site) => <option key={site.id} value={site.id}>{site.name}</option>)}
+                </BrandedSelect>
+              </Field>
+              <Field label="Gate station">
+                <BrandedSelect aria-label="Gate station" value={form.gateStationId} onChange={(event) => setForm({ ...form, gateStationId: event.target.value })} required>
+                  <option value="">Choose gate</option>
+                  {(gateStations.data?.stations ?? []).map((station) => <option key={station.id} value={station.id}>{station.name}</option>)}
+                </BrandedSelect>
+              </Field>
+              <Field label="Required gatekeepers"><Input aria-label="Required gatekeepers" type="number" min="1" max="20" value={form.requiredStaffCount} onChange={(event) => setForm({ ...form, requiredStaffCount: event.target.value })} required /></Field>
+              <Field label="Work start policy">
+                <BrandedSelect aria-label="Work start policy" value={form.workStartPolicy} onChange={(event) => setForm({ ...form, workStartPolicy: event.target.value })}>
+                  <option value="on_site">Start work on site</option>
+                  <option value="paid_travel">Paid travel starts work</option>
+                </BrandedSelect>
+              </Field>
+            </>}
             <Field label="Meeting Type">
               <Input list="calendar-meeting-types" value={form.meetingType} onChange={(event) => setForm({ ...form, meetingType: event.target.value })} placeholder="Type or create a meeting type" />
               <datalist id="calendar-meeting-types">{meetingTypes.data?.map((type) => <option key={type.id} value={type.title} />)}</datalist>

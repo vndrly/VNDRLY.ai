@@ -10,19 +10,26 @@ import {
   userOrgMembershipsTable,
   workHubShiftsTable,
   workHubShiftAssignmentsTable,
+  partnersTable,
+  siteLocationsTable,
+  workTypesTable,
+  siteWorkAssignmentsTable,
+  gateStationsTable,
 } from "@workspace/db";
 import scheduling from "./workHubScheduling";
+import operations from "./workHubOperations";
 import { buildTestCookie } from "../test-utils/session";
 vi.mock("../work-hub/feature-access", () => ({
   isWorkHubEnabled: async () => true,
 }));
-const app = express().use(express.json()).use(cookieParser()).use(scheduling);
+vi.mock("./notifications", () => ({ notifyUsers: vi.fn() }));
+const app = express().use(express.json()).use(cookieParser()).use(scheduling).use(operations);
 describe("authenticated scheduling reservations", () => {
     let hostCookie: string,
       memberCookie: string,
       otherCookie: string,
       typeId: string;
-    let hostUserId: number, memberUserId: number, foreignUserId: number, vendorId: number;
+    let hostUserId: number, memberUserId: number, foreignUserId: number, vendorId: number, gateSiteId: number, gateStationId: string;
     const start = new Date(Date.now() + 86400000 * 30),
       end = new Date(start.getTime() + 3600000);
     beforeAll(async () => {
@@ -69,6 +76,13 @@ describe("authenticated scheduling reservations", () => {
       ) as [string, string, string];
       [hostUserId, memberUserId, foreignUserId] = people.map((person) => person.id) as [number, number, number];
       vendorId = companies[0]!.id;
+      const [partner] = await db.insert(partnersTable).values({ name: `Gate partner ${suffix}`, contactName: "Test", contactEmail: `gate.${suffix}@example.invalid` }).returning();
+      const [site] = await db.insert(siteLocationsTable).values({ partnerId: partner!.id, name: `Gate site ${suffix}`, address: "Fixture", latitude: 30, longitude: -100, siteCode: `GATE-${suffix}` }).returning();
+      const [workType] = await db.insert(workTypesTable).values({ name: `Gate ${suffix}`, category: "gate" }).returning();
+      await db.insert(siteWorkAssignmentsTable).values({ siteLocationId: site!.id, workTypeId: workType!.id, vendorId });
+      const [station] = await db.insert(gateStationsTable).values({ siteId: site!.id, name: "Main gate" }).returning();
+      gateSiteId = site!.id;
+      gateStationId = station!.id;
     });
     it("checks assigned shifts and returns privacy-safe earliest openings", async () => {
       const shiftStart = new Date(Date.now() + 86400000 * 50);
@@ -219,5 +233,35 @@ describe("authenticated scheduling reservations", () => {
         .set("Cookie", memberCookie);
       expect(slots.body.slots).not.toContain(start.toISOString());
       expect(slots.body.windows).toEqual([]);
+    });
+    it("persists Gate staffing and paid-travel policy on a Work Hub shift", async () => {
+      const body = {
+        operationId: randomUUID(),
+        owner: { type: "vendor", id: vendorId },
+        context: { kind: "gate", id: gateSiteId },
+        expectedVersion: null,
+        payloadVersion: 1,
+        payload: {
+          title: "Main Gate day shift",
+          startsAt: start.toISOString(),
+          endsAt: new Date(start.getTime() + 12 * 60 * 60_000).toISOString(),
+          timezone: "America/Chicago",
+          assigneeUserIds: [memberUserId],
+          qualificationCodes: [],
+          calendarType: "company",
+          siteLocationId: gateSiteId,
+          gateStationId,
+          requiredStaffCount: 2,
+          workStartPolicy: "paid_travel",
+        },
+      };
+      const created = await request(app).post("/work-hub/shifts").set("Cookie", hostCookie).send(body);
+      expect(created.status).toBe(201);
+      expect(created.body.resource).toMatchObject({
+        siteLocationId: gateSiteId,
+        gateStationId,
+        requiredStaffCount: 2,
+        workStartPolicy: "paid_travel",
+      });
     });
 });

@@ -66,4 +66,25 @@ describe("CalendarCreateCards", () => {
       expect(select.style.colorScheme).toBe("light");
     }
   });
+  it("shows branded Gate staffing and paid-travel selectors for Gate shifts", async () => {
+    vi.stubGlobal("fetch", vi.fn(async (url: string) => ({
+      ok: true,
+      json: async () => String(url).includes("stations")
+        ? { stations: [{ id: "11111111-1111-4111-8111-111111111111", name: "Main gate" }] }
+        : { sites: [{ id: 19, name: "Big Cs Deep" }] },
+    })));
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={client}>
+        <CalendarCreateCards owner={{ type: "vendor", id: 1 }} />
+      </QueryClientProvider>,
+    );
+    fireEvent.change(screen.getByRole("combobox", { name: "Shift type" }), { target: { value: "gate" } });
+    const site = await screen.findByRole("combobox", { name: "Gate site" });
+    await waitFor(() => expect(screen.getByRole("option", { name: "Big Cs Deep" })).toBeTruthy());
+    fireEvent.change(site, { target: { value: "19" } });
+    await waitFor(() => expect(screen.getByRole("option", { name: "Main gate" })).toBeTruthy());
+    expect(screen.getByRole("spinbutton", { name: "Required gatekeepers" }).getAttribute("value")).toBe("1");
+    expect(screen.getByRole("combobox", { name: "Work start policy" }).className).toContain("rounded-full");
+  });
 });

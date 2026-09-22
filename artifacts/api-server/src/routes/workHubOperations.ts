@@ -49,6 +49,7 @@ import {
   workHubTranscriptSegmentsTable,
   workHubAuditLogTable,
   siteWorkAssignmentsTable,
+  gateStationsTable,
   usersTable,
   userOrgMembershipsTable,
 } from "@workspace/db";
@@ -88,6 +89,13 @@ import { getObjectStore } from "../lib/objectStore";
 import workHubMeetingsRouter from "./workHubMeetings";
 import workHubMeetingReplayRouter from "./workHubMeetingReplay";
 import { assertOwnerMatchesChannel, assertOwnerUsers } from "../work-hub/owner-users";
+import {
+  recordTrackingException,
+  resolveAttendanceException,
+  setTravelEta,
+  startPaidTravel,
+} from "../services/gate-attendance";
+import { ChangeOverError } from "../services/gate-change-over";
 
 const router: IRouter = Router();
 const storage = new ObjectStorageService();
@@ -165,6 +173,10 @@ function failure(res: Response, error: unknown): void {
     return;
   }
   if (error instanceof WorkHubAccessError) {
+    sendApiError(res, error.status, error.code, error.message);
+    return;
+  }
+  if (error instanceof ChangeOverError) {
     sendApiError(res, error.status, error.code, error.message);
     return;
   }
@@ -1700,8 +1712,34 @@ router.post("/work-hub/shifts", async (req, res) => {
           .array(z.number().int().positive())
           .max(500)
           .default([]),
+        siteLocationId: z.number().int().positive().nullable().optional(),
+        gateStationId: z.string().uuid().nullable().optional(),
+        requiredStaffCount: z.number().int().min(1).max(20).nullable().optional(),
+        workStartPolicy: z.enum(["on_site", "paid_travel"]).nullable().optional(),
       })
       .parse(envelope.payload);
+    const gateValues = [
+      payload.siteLocationId,
+      payload.gateStationId,
+      payload.requiredStaffCount,
+      payload.workStartPolicy,
+    ];
+    const isGateShift = gateValues.some((value) => value != null);
+    if (isGateShift && gateValues.some((value) => value == null))
+      throw new z.ZodError([]);
+    if (isGateShift) {
+      await ownAccess(session, envelope.owner, "shift.manage", {
+        kind: "gate",
+        id: payload.siteLocationId!,
+      });
+      const [station] = await db
+        .select({ id: gateStationsTable.id, siteId: gateStationsTable.siteId })
+        .from(gateStationsTable)
+        .where(eq(gateStationsTable.id, payload.gateStationId!))
+        .limit(1);
+      if (!station || station.siteId !== payload.siteLocationId)
+        throw new z.ZodError([]);
+    }
     await assertOwnerUsers(envelope.owner, [
       ...payload.assigneeUserIds,
       ...payload.sharedWithUserIds,
@@ -1764,6 +1802,10 @@ router.post("/work-hub/shifts", async (req, res) => {
             invoicedAmount: payload.invoicedAmount == null ? null : String(payload.invoicedAmount),
             invoiceReference: payload.invoiceReference ?? null,
             sharedWithUserIds: [...new Set(payload.sharedWithUserIds)],
+            siteLocationId: payload.siteLocationId ?? null,
+            gateStationId: payload.gateStationId ?? null,
+            requiredStaffCount: payload.requiredStaffCount ?? null,
+            workStartPolicy: payload.workStartPolicy ?? null,
             createdById: session.userId,
           })
           .returning();
@@ -1795,6 +1837,45 @@ router.post("/work-hub/shifts", async (req, res) => {
     return failure(res, error);
   }
 });
+router.post("/work-hub/gate/travel/start", async (req, res) => {
+  const session = actor(req);
+  if (!session) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
+  try {
+    const payload = z.object({
+      workHubShiftId: z.string().uuid(),
+      stationId: z.string().uuid(),
+      idempotencyKey: z.string().uuid(),
+      locationSharingActive: z.boolean().default(false),
+      startLatitude: z.number().min(-90).max(90).optional(),
+      startLongitude: z.number().min(-180).max(180).optional(),
+    }).parse(req.body);
+    return res.json(await startPaidTravel(session, { ...payload, source: clientSource(req) }));
+  } catch (error) { return failure(res, error); }
+});
+router.patch("/work-hub/gate/work-sessions/:id/eta", async (req, res) => {
+  const session = actor(req);
+  if (!session) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
+  try {
+    const payload = z.object({ etaAt: z.iso.datetime(), source: z.enum(["gps", "manual"]) }).parse(req.body);
+    return res.json(await setTravelEta(session, z.string().uuid().parse(req.params.id), { etaAt: new Date(payload.etaAt), source: payload.source }));
+  } catch (error) { return failure(res, error); }
+});
+router.post("/work-hub/gate/work-sessions/:id/tracking-exception", async (req, res) => {
+  const session = actor(req);
+  if (!session) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
+  try {
+    const payload = z.object({ reason: z.string().trim().min(1).max(500) }).parse(req.body);
+    return res.json(await recordTrackingException(session, z.string().uuid().parse(req.params.id), payload.reason));
+  } catch (error) { return failure(res, error); }
+});
+router.post("/work-hub/gate/attendance/:id/resolve", async (req, res) => {
+  const session = actor(req);
+  if (!session) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
+  try {
+    const payload = z.object({ disposition: z.enum(["no_show", "excused", "reassigned"]), reason: z.string().trim().min(1).max(1000) }).parse(req.body);
+    return res.json(await resolveAttendanceException(session, z.string().uuid().parse(req.params.id), payload));
+  } catch (error) { return failure(res, error); }
+});
 router.patch("/work-hub/shifts/:id", async (req, res) => {
   const session = actor(req);
   if (!session) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
@@ -1810,6 +1891,10 @@ router.patch("/work-hub/shifts/:id", async (req, res) => {
       instructions: z.string().trim().max(4000).nullable().optional(),
       assigneeUserIds: z.array(z.number().int().positive()).max(500).optional(),
       mandatory: z.boolean().optional(),
+      siteLocationId: z.number().int().positive().nullable().optional(),
+      gateStationId: z.string().uuid().nullable().optional(),
+      requiredStaffCount: z.number().int().min(1).max(20).nullable().optional(),
+      workStartPolicy: z.enum(["on_site", "paid_travel"]).nullable().optional(),
     }).parse(envelope.payload);
     if (payload.startsAt && payload.endsAt && new Date(payload.startsAt) >= new Date(payload.endsAt)) throw new z.ZodError([]);
     if (payload.assigneeUserIds) await assertOwnerUsers(envelope.owner, payload.assigneeUserIds);
@@ -1817,6 +1902,18 @@ router.patch("/work-hub/shifts/:id", async (req, res) => {
       const [current] = await tx.select().from(workHubShiftsTable).where(eq(workHubShiftsTable.id, req.params.id)).limit(1);
       if (!current || current.ownerOrgType !== envelope.owner.type || current.ownerOrgId !== envelope.owner.id || !sessionCanSeeOwner(session, current.ownerOrgType, current.ownerOrgId)) throw new WorkHubAccessError("not_found");
       if (current.version !== envelope.expectedVersion) throw new Error("work_hub.version_conflict");
+      const nextGate = {
+        siteLocationId: payload.siteLocationId === undefined ? current.siteLocationId : payload.siteLocationId,
+        gateStationId: payload.gateStationId === undefined ? current.gateStationId : payload.gateStationId,
+        requiredStaffCount: payload.requiredStaffCount === undefined ? current.requiredStaffCount : payload.requiredStaffCount,
+        workStartPolicy: payload.workStartPolicy === undefined ? current.workStartPolicy : payload.workStartPolicy,
+      };
+      const nextGateValues = Object.values(nextGate);
+      if (nextGateValues.some((value) => value != null) && nextGateValues.some((value) => value == null)) throw new z.ZodError([]);
+      if (nextGate.gateStationId && nextGate.siteLocationId) {
+        const [station] = await tx.select({ siteId: gateStationsTable.siteId }).from(gateStationsTable).where(eq(gateStationsTable.id, nextGate.gateStationId)).limit(1);
+        if (!station || station.siteId !== nextGate.siteLocationId) throw new z.ZodError([]);
+      }
       const instructions = payload.mandatory === undefined ? payload.instructions : `${payload.instructions ?? current.instructions ?? ""}${payload.instructions || current.instructions ? "\n" : ""}Mandatory: ${payload.mandatory ? "Yes" : "No"}`;
       const [updated] = await tx.update(workHubShiftsTable).set({
         ...(payload.title !== undefined ? { title: payload.title } : {}),
@@ -1824,6 +1921,10 @@ router.patch("/work-hub/shifts/:id", async (req, res) => {
         ...(payload.endsAt !== undefined ? { endsAt: new Date(payload.endsAt) } : {}),
         ...(payload.timezone !== undefined ? { timezone: payload.timezone } : {}),
         ...(instructions !== undefined ? { instructions } : {}),
+        ...(payload.siteLocationId !== undefined ? { siteLocationId: payload.siteLocationId } : {}),
+        ...(payload.gateStationId !== undefined ? { gateStationId: payload.gateStationId } : {}),
+        ...(payload.requiredStaffCount !== undefined ? { requiredStaffCount: payload.requiredStaffCount } : {}),
+        ...(payload.workStartPolicy !== undefined ? { workStartPolicy: payload.workStartPolicy } : {}),
         ...(payload.action === "cancel" ? { milestoneStatus: "cancelled", open: false } : {}),
         version: current.version + 1, updatedAt: new Date(),
       }).where(eq(workHubShiftsTable.id, current.id)).returning();
