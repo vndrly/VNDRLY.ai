@@ -5012,6 +5012,8 @@
     "voice": "Entrada por voz",
     "gate": "Portería",
     "history": "Historial",
+    "gateMode": "Modo de portería",
+    "returnToAdmin": "Volver a administración",
     "aria": "Navegación del portal de portería"
   },
   "plateStatePicker": {
@@ -5308,7 +5310,7 @@
   "changeOver": {
     "title": "Panel",
     "shiftNotes": "Notas de turno",
-    "intro": "Prepare al siguiente portero con una entrega de turno basada en datos.",
+    "intro": "Vea quién está en el sitio, revise los asuntos pendientes y mantenga informado al siguiente turno.",
     "historyIntro": "Entregas completadas en los últimos 7 días, más recientes primero. Consulte registros anteriores con el filtro de fechas.",
     "site": "Sitio",
     "gate": "Entrada",
@@ -5334,6 +5336,8 @@
     "noNotes": "No hay entregas completadas en este período.",
     "acknowledged": "Reconocido por el portero entrante autenticado",
     "carryForward": "Acciones pendientes",
+    "shiftFollowUps": "Seguimiento del turno",
+    "openItems": "Asuntos pendientes",
     "resolvedItems": "Acciones resueltas",
     "resolutionNote": "Detalles de la resolución",
     "reopenNote": "Motivo para reabrir",

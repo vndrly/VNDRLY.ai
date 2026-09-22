@@ -112,8 +112,8 @@ function useNavItems(user: {
   const statementsItem = { href: "/statement", label: t("nav.statements"), icon: ScrollText, key: "statements" };
   const billsItem = { href: "/bills-to-pay", label: t("nav.billsToPay"), icon: Wallet, key: "bills-to-pay" };
   const reportsItem = { href: "/reports", label: t("nav.reports"), icon: BookOpen, key: "reports" };
-  const wrap = (items: Array<{ href: string; label: string; key: string; icon?: React.ComponentType<{ className?: string }> }>) =>
-    withGateLogNav(items.filter((item) => {
+  const wrap = (items: Array<{ href: string; label: string; key: string; icon?: React.ComponentType<{ className?: string }> }>) => {
+    const wrapped = withGateLogNav(items.filter((item) => {
       if (item.key === "admin-1099-transmitter") return TAX_REPORTING_ENABLED;
       if (["invoices", "statements", "bills-to-pay"].includes(item.key)) return ACCOUNTING_ENABLED;
       return true;
@@ -123,6 +123,11 @@ function useNavItems(user: {
       label: t("nav.gateLog"),
       icon: ClipboardList,
     });
+    if (gateEnabled.data?.enabled !== true || !canViewGateLog(user)) return wrapped;
+    const gateMode = { href: "/gate/change-over", label: t("gateNav.gateMode", { defaultValue: "Gate Mode" }), icon: ClipboardList, key: "gate-mode" };
+    const dashboardIndex = wrapped.findIndex((item) => item.key === "dashboard");
+    return dashboardIndex < 0 ? [gateMode, ...wrapped] : [...wrapped.slice(0, dashboardIndex + 1), gateMode, ...wrapped.slice(dashboardIndex + 1)];
+  };
   if (!user) return [...baseNavItems, crewMapItem];
   if (isManagedSubcontractor(user)) {
     return [

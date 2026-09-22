@@ -1787,6 +1787,8 @@ export default function GatekeeperPage() {
             />
             <AmberButton
               className="h-14 w-full text-lg"
+              hoverTextClass="group-hover:text-gray-800"
+              hoverTextShadowClass="group-hover:drop-shadow-none"
               onClick={() => void checkIn()}
               disabled={busy || !site.data || !fence.canSubmit}
               data-testid="button-gate-check-in"

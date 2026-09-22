@@ -223,6 +223,7 @@ interface PngPillButtonProps {
   fullWidth?: boolean;
   activeTextShadowClass?: string;
   hoverTextShadowClass?: string;
+  hoverTextClass?: string;
   onClick?: () => void;
   type?: "button" | "submit";
   disabled?: boolean;
@@ -248,6 +249,7 @@ export function PngPillButton({
   fullWidth = false,
   activeTextShadowClass = "drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]",
   hoverTextShadowClass = "group-hover:drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]",
+  hoverTextClass = "group-hover:text-white",
   onClick,
   type = "button",
   disabled,
@@ -326,8 +328,8 @@ export function PngPillButton({
           PILL_LABEL_CLASS,
           "h-full gap-1.5 transition-colors duration-200",
           alwaysColored || showHover
-            ? "text-white"
-            : "text-gray-700 group-hover:text-white group-hover:[text-shadow:0_2px_4px_rgba(0,0,0,0.9)]",
+            ? cn("text-white", activeTextShadowClass)
+            : cn("text-gray-700", hoverTextClass, hoverTextShadowClass),
         )}
         style={alwaysColored || showHover ? { textShadow: PILL_TEXT_SHADOW } : undefined}
       >

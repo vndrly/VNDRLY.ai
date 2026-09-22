@@ -5,10 +5,12 @@ import { enforceVisitsRateLimit } from "../lib/visits-rate-limit";
 import { z } from "zod/v4";
 import {
   deliverGateReports,
+  generateGateReport,
   GateReportsError,
   listGateReportRecipients,
   openGateReport,
   parseGateReportFilters,
+  queryGateReport,
 } from "../services/gate-reports";
 
 const router = Router();
@@ -49,6 +51,55 @@ router.post("/gate-report/deliver", async (req, res) => {
     res.status(201).json({ deliveries });
   } catch (error) {
     if (error instanceof z.ZodError) { res.status(400).json({ code: "gate_report.invalid_request", issues: error.issues }); return; }
+    if (error instanceof GateReportsError) { res.status(error.status).json({ code: error.code }); return; }
+    throw error;
+  }
+});
+
+router.post("/gate-report/export", async (req, res) => {
+  const session = getSessionFromRequest(req);
+  if (!session?.userId) { res.status(401).json({ code: "auth.required", message: "Login required" }); return; }
+  try {
+    const body = z.object({
+      reportKind: z.enum(["history", "shift_notes"]),
+      format: z.enum(["pdf", "excel", "word"]),
+      filters: z.object({
+        siteId: z.number().int().positive(), stationId: z.string().uuid().optional(),
+        range: z.enum(["current_shift", "previous_shift", "24h", "7d", "14d", "30d", "90d", "1y"]),
+        recordType: z.enum(["all", "check_ins", "check_outs", "visitors_on_site", "employees_on_site", "vehicles_on_site", "pending", "needs_review"]),
+        search: z.string().max(200).optional(),
+      }),
+    }).strict().parse(req.body);
+    const report = await generateGateReport({ userId: session.userId, ...body, filters: parseGateReportFilters(body.filters) });
+    res.setHeader("Cache-Control", "private, no-store");
+    res.setHeader("Content-Type", report.contentType);
+    res.setHeader("Content-Disposition", `attachment; filename="${report.filename}"`);
+    res.send(report.body);
+  } catch (error) {
+    if (error instanceof z.ZodError) { res.status(400).json({ code: "gate_report.invalid_request" }); return; }
+    if (error instanceof GateReportsError) { res.status(error.status).json({ code: error.code }); return; }
+    throw error;
+  }
+});
+
+router.post("/gate-report/query", async (req, res) => {
+  const session = getSessionFromRequest(req);
+  if (!session?.userId) { res.status(401).json({ code: "auth.required", message: "Login required" }); return; }
+  try {
+    const body = z.object({
+      reportKind: z.enum(["history", "shift_notes"]),
+      filters: z.object({
+        siteId: z.number().int().positive(), stationId: z.string().uuid().optional(),
+        range: z.enum(["current_shift", "previous_shift", "24h", "7d", "14d", "30d", "90d", "1y"]),
+        recordType: z.enum(["all", "check_ins", "check_outs", "visitors_on_site", "employees_on_site", "vehicles_on_site", "pending", "needs_review"]),
+        search: z.string().max(200).optional(),
+      }),
+    }).strict().parse(req.body);
+    const rows = await queryGateReport({ userId: session.userId, ...body, filters: parseGateReportFilters(body.filters) });
+    res.setHeader("Cache-Control", "private, no-store");
+    res.json({ rows });
+  } catch (error) {
+    if (error instanceof z.ZodError) { res.status(400).json({ code: "gate_report.invalid_request" }); return; }
     if (error instanceof GateReportsError) { res.status(error.status).json({ code: error.code }); return; }
     throw error;
   }

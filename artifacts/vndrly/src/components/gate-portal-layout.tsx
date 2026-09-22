@@ -1,5 +1,5 @@
 import { type ReactNode } from "react";
-import { BriefcaseBusiness, History, Mic, Shield } from "lucide-react";
+import { ArrowLeft, BriefcaseBusiness, History, Mic, Shield } from "lucide-react";
 import { FieldOpsPortalShell, type FieldOpsTabDef } from "@/components/field-ops-portal-shell";
 
 export const GATE_PORTAL_TABS: FieldOpsTabDef[] = [
@@ -42,10 +42,14 @@ export const GATE_PORTAL_TABS: FieldOpsTabDef[] = [
   { href: "/gate/shift-notes", icon: History, labelKey: "changeOver.shiftNotes", testId: "tab-gate-shift-notes", match: p => p === "/gate/shift-notes" },
 ];
 
-export function GatePortalLayout({ children }: { children: ReactNode }) {
+export function GatePortalLayout({ children, returnToAdmin = false }: { children: ReactNode; returnToAdmin?: boolean }) {
+  const tabs = returnToAdmin ? [
+    ...GATE_PORTAL_TABS,
+    { href: "/", icon: ArrowLeft, labelKey: "gateNav.returnToAdmin", testId: "tab-gate-return-admin", match: () => false },
+  ] : GATE_PORTAL_TABS;
   return (
     <FieldOpsPortalShell
-      tabs={GATE_PORTAL_TABS}
+      tabs={tabs}
       portalLabelKey="gatekeeper.portal"
       navAriaKey="gateNav.aria"
     >

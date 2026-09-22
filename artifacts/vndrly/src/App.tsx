@@ -203,6 +203,7 @@ function AdminRoutes() {
 
 function AuthenticatedRouter() {
   const { user, isLoading } = useAuth();
+  const gateWorker = Boolean(user && ((user.role === "vendor" && ["gatekeeper", "gate_supervisor"].includes(user.vendorRole ?? "")) || isManagedSubcontractor(user)));
 
   if (isLoading) {
     return (
@@ -237,6 +238,10 @@ function AuthenticatedRouter() {
         <Route path="/onboarding/partner" component={OnboardingPartner} />
         <Route path="/onboarding/vendor" component={OnboardingVendor} />
         <Route path="/onboarding/field/:token" component={OnboardingField} />
+        {user && <Route path="/gate/history"><GatePortalLayout returnToAdmin={!gateWorker}><GateHistoryPage /></GatePortalLayout></Route>}
+        {user && <Route path="/gate/change-over"><GatePortalLayout returnToAdmin={!gateWorker}><GateChangeOverPage /></GatePortalLayout></Route>}
+        {user && <Route path="/gate/shift-notes"><GatePortalLayout returnToAdmin={!gateWorker}><GateShiftNotesPage /></GatePortalLayout></Route>}
+        {user && <Route path="/gate"><GatePortalLayout returnToAdmin={!gateWorker}><GatekeeperPage /></GatePortalLayout></Route>}
         <Route path="/work-hub/:module"><Layout><WorkHubPage /></Layout></Route>
         <Route path="/work-hub"><Layout><WorkHubPage /></Layout></Route>
         {!user && <Route path="/" component={MarketingHome} />}

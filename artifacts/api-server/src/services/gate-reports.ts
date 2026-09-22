@@ -154,6 +154,33 @@ export async function openGateReport(
   return rendered;
 }
 
+export async function generateGateReport(input: {
+  userId: number;
+  reportKind: GateReportKind;
+  format: GateReportFormat;
+  filters: GateReportFilters;
+}, deps: GateReportDependencies = databaseGateReportDependencies) {
+  const filters = parseGateReportFilters(input.filters);
+  const scope = await deps.resolveAccess(input.userId, filters, input.reportKind);
+  if (!scope) throw new GateReportsError(403, "gate_report.forbidden");
+  if (input.reportKind === "shift_notes" && scope.kind !== "full_site")
+    fail(403, "gate_report.shift_notes_scope_required");
+  return renderGateReport(input.reportKind, input.format, await deps.queryRows(filters, scope, input.reportKind));
+}
+
+export async function queryGateReport(input: {
+  userId: number;
+  reportKind: GateReportKind;
+  filters: GateReportFilters;
+}, deps: GateReportDependencies = databaseGateReportDependencies) {
+  const filters = parseGateReportFilters(input.filters);
+  const scope = await deps.resolveAccess(input.userId, filters, input.reportKind);
+  if (!scope) throw new GateReportsError(403, "gate_report.forbidden");
+  if (input.reportKind === "shift_notes" && scope.kind !== "full_site")
+    fail(403, "gate_report.shift_notes_scope_required");
+  return deps.queryRows(filters, scope, input.reportKind);
+}
+
 export async function listGateReportRecipients(
   input: { senderUserId: number; reportKind: GateReportKind; filters: GateReportFilters },
   deps: GateReportDependencies = databaseGateReportDependencies,

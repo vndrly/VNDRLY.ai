@@ -5012,6 +5012,8 @@
     "voice": "Voice entry",
     "gate": "Gate",
     "history": "History",
+    "gateMode": "Gate Mode",
+    "returnToAdmin": "Return to Admin",
     "aria": "Gate portal navigation"
   },
   "plateStatePicker": {
@@ -5308,7 +5310,7 @@
   "changeOver": {
     "title": "Dashboard",
     "shiftNotes": "Shift Notes",
-    "intro": "Prepare the next gatekeeper with a factual shift handoff.",
+    "intro": "See who's on site, review open items, and keep the next shift informed.",
     "historyIntro": "Completed handoffs from the last 7 days, newest first. Older records remain available through the date filter.",
     "site": "Site",
     "gate": "Gate",
@@ -5334,6 +5336,8 @@
     "noNotes": "No completed handoffs in this range.",
     "acknowledged": "Acknowledged by the authenticated incoming gatekeeper",
     "carryForward": "Carry-forward items",
+    "shiftFollowUps": "Shift follow-ups",
+    "openItems": "Open items",
     "resolvedItems": "Resolved items",
     "resolutionNote": "Resolution details",
     "reopenNote": "Reason to reopen",

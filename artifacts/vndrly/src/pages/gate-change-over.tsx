@@ -15,6 +15,7 @@ import BrandPillButton from "@/components/brand-pill-button";
 import ContentPaneBackLink from "@/components/content-pane-back-link";
 import { PngPillButton, brandImagePillSrc } from "@/components/png-pill-rollover";
 import { BrandedInput, BrandedSelect } from "@/components/work-hub/chrome";
+import { GateReportToolbar, type GateReportRange } from "@/components/gate-report-toolbar";
 import { Card, CardContent, CARD_SURFACE_CLASS } from "@/components/ui/card";
 import { FIELD_OPS_PAGE_CLASS } from "@/lib/field-ops-content-pane";
 import { changeOverRequest as request } from "@/lib/change-over-api";
@@ -24,18 +25,38 @@ const BRANDED_NOTES_CLASS =
 
 export function ShiftSnapshotView({
   snapshot,
+  historyBaseHref,
 }: {
   snapshot: ChangeOverSnapshot;
+  historyBaseHref?: string;
 }) {
   const { t } = useTranslation();
+  const metricRecordType: Record<string, string> = {
+    checkIns: "check_ins",
+    checkOuts: "check_outs",
+    onSiteVisitorRecords: "visitors_on_site",
+    onSiteEmployeeRecords: "employees_on_site",
+    onSiteVehicles: "vehicles_on_site",
+    pendingAdmission: "pending",
+  };
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
         {t("changeOver.asOf")} {new Date(snapshot.generatedAt).toLocaleString()}
       </p>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-        {Object.entries(snapshot.metrics).map(([key, value]) => (
-          <div className="rounded-lg border p-3" key={key}>
+        {Object.entries(snapshot.metrics).map(([key, value]) => historyBaseHref ? (
+          <a
+            href={`${historyBaseHref}&recordType=${metricRecordType[key] ?? "all"}`}
+            className="rounded-lg border-2 border-gray-300 p-3 text-inherit transition-colors hover:border-[color:var(--brand-primary)] hover:bg-[color:var(--brand-primary)] hover:text-white"
+            key={key}
+            data-testid={`dashboard-metric-${key}`}
+          >
+            <div className="text-2xl font-bold">{value}</div>
+            <div className="text-sm">{t(`changeOver.${key}`)}</div>
+          </a>
+        ) : (
+          <div className="rounded-lg border-2 border-[color:var(--brand-primary)] p-3" key={key}>
             <div className="text-2xl font-bold">{value}</div>
             <div className="text-sm">{t(`changeOver.${key}`)}</div>
           </div>
@@ -287,6 +308,17 @@ export default function GateChangeOverPage({
       )}
       {history ? (
         <>
+          <GateReportToolbar
+            reportKind="shift_notes"
+            filters={siteId ? {
+              siteId: Number(siteId),
+              ...(stationId ? { stationId } : {}),
+              range: (days === 365 ? "1y" : `${days}d`) as GateReportRange,
+              recordType: "all",
+              ...(search.trim() ? { search: search.trim() } : {}),
+            } : null}
+            disabled={log.isLoading}
+          />
           <div className="flex flex-wrap gap-3">
             <BrandedInput
               aria-label={t("changeOver.search")}
@@ -373,7 +405,10 @@ export default function GateChangeOverPage({
                       {new Date(current.shift.started_at).toLocaleString()}
                     </h2>
                     {current.snapshot && (
-                      <ShiftSnapshotView snapshot={current.snapshot} />
+                      <ShiftSnapshotView
+                        snapshot={current.snapshot}
+                        historyBaseHref={`/gate/history?${new URLSearchParams({ siteId, stationId, range: "current_shift" })}`}
+                      />
                     )}
                   </>
                 ) : (
@@ -391,8 +426,8 @@ export default function GateChangeOverPage({
             </Card>
             <Card>
               <CardContent className="space-y-3 p-5">
-                <h2 className="font-bold">{t("changeOver.carryForward")}</h2>
-                <div role="tablist" aria-label={t("changeOver.carryForward")} className="flex flex-wrap gap-2">
+                <h2 className="font-bold">{t("changeOver.shiftFollowUps")}</h2>
+                <div role="tablist" aria-label={t("changeOver.shiftFollowUps")} className="flex flex-wrap gap-2">
                   <PngPillButton
                     role="tab"
                     aria-selected={itemView === "open"}
@@ -401,7 +436,7 @@ export default function GateChangeOverPage({
                     idleSrc={itemView === "open" ? brandImagePillSrc(brand.primary, brand.name) : undefined}
                     onClick={() => setItemView("open")}
                   >
-                    {t("changeOver.carryForward")}
+                    {t("changeOver.openItems")}
                   </PngPillButton>
                   <PngPillButton
                     role="tab"

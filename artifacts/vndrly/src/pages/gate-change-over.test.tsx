@@ -118,6 +118,8 @@ it("shows open carry-forward items separately from resolved history", async () =
       }
     : base(path, body));
   mount();
+  expect(await screen.findByText("changeOver.shiftFollowUps")).not.toBeNull();
+  expect(screen.getByRole("tab", { name: "changeOver.openItems" })).not.toBeNull();
   expect(await screen.findByText("Identify driver for OK ABC123")).not.toBeNull();
   expect(screen.queryByText("North barrier inspected")).toBeNull();
   fireEvent.click(screen.getByRole("tab", { name: "changeOver.resolvedItems" }));
@@ -157,8 +159,16 @@ it("moves an item out of the open list only after a resolution note, and can reo
   });
   fireEvent.click(within(resolvedItem).getByRole("button", { name: "changeOver.reopen" }));
   await waitFor(() => expect(screen.queryByTestId("carry-forward-item-truck")).toBeNull());
-  fireEvent.click(screen.getByRole("tab", { name: "changeOver.carryForward" }));
+  fireEvent.click(screen.getByRole("tab", { name: "changeOver.openItems" }));
   expect(await screen.findByTestId("carry-forward-item-truck")).not.toBeNull();
+});
+it("outlines each live snapshot counter in the organization brand", async () => {
+  mount();
+  await screen.findByText("changeOver.checkIns");
+  for (const metric of Object.keys(snapshot.metrics)) {
+    const label = screen.getByText(`changeOver.${metric}`);
+    expect(label.parentElement?.className).toContain("border-[color:var(--brand-primary)]");
+  }
 });
 it("limits Shift Notes to one year and uses branded compact fields", async () => {
   mount(true);
