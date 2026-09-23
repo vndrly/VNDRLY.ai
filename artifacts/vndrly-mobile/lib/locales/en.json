@@ -2,6 +2,12 @@
   "workHubDevices": {
     "title": "Audio and Backup Devices",
     "descriptionMobile": "Set one saved device as Primary, then arrange Secondary and later choices. You can change this same order from any signed-in device.",
+    "automaticDescription": "Voice automatically uses the device where you start or accept the call. Other signed-in devices stay ready for chat, files, and voice handoff.",
+    "voiceActiveOn": "Voice active on {{device}}",
+    "noActiveVoice": "No call or meeting is using voice right now",
+    "contentAvailable": "Every signed-in device can still send messages, photos, receipts, and files.",
+    "voiceActive": "Voice active",
+    "readyForHandoff": "Ready for automatic voice handoff",
     "failed": "Device settings could not be saved.",
     "thisDevice": "This device",
     "audioOwner": "Audio is here",

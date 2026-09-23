@@ -2,6 +2,12 @@
   "workHubDevices": {
     "title": "Audio y dispositivos de respaldo",
     "descriptionMobile": "Defina un dispositivo guardado como principal y luego ordene las opciones secundaria y posteriores. Puede cambiar este mismo orden desde cualquier dispositivo conectado.",
+    "automaticDescription": "La voz usa automáticamente el dispositivo donde inicia o acepta la llamada. Los demás dispositivos conectados quedan listos para chat, archivos y transferencia de voz.",
+    "voiceActiveOn": "Voz activa en {{device}}",
+    "noActiveVoice": "Ninguna llamada o reunión usa voz en este momento",
+    "contentAvailable": "Todos los dispositivos conectados pueden enviar mensajes, fotos, recibos y archivos.",
+    "voiceActive": "Voz activa",
+    "readyForHandoff": "Listo para transferencia automática de voz",
     "failed": "No se pudo guardar la configuración de dispositivos.",
     "thisDevice": "Este dispositivo",
     "audioOwner": "El audio está aquí",

@@ -1,5 +1,5 @@
 import React from "react";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({ api: vi.fn() }));
@@ -8,10 +8,11 @@ vi.mock("@/hooks/use-work-hub-device-presence", () => ({ nativeWorkHubDeviceIden
 vi.mock("@/hooks/useColors", () => ({ useColors: () => ({ primary: "blue", text: "black", mutedForeground: "gray", border: "gray", destructive: "red", card: "white" }) }));
 vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string) => ({
   "workHubDevices.title": "Audio and Backup Devices",
-  "workHubDevices.primary": "Primary audio device",
-  "workHubDevices.secondary": "Secondary audio device",
   "workHubDevices.thisDevice": "This device",
-  "workHubDevices.audioActive": "Currently carrying AskV audio",
+  "workHubDevices.voiceActive": "Voice active",
+  "workHubDevices.readyForHandoff": "Ready for automatic voice handoff",
+  "workHubDevices.noActiveVoice": "No call or meeting is using voice right now",
+  "workHubDevices.voiceActiveOn": "Voice active on John's iPhone",
 }[key] ?? key) }) }));
 vi.mock("@expo/vector-icons", () => ({ Feather: () => null }));
 vi.mock("@/components/TogglePillButton", () => ({ default: ({ children, onPress, ...props }: any) => <button onClick={onPress} {...props}>{children}</button> }));
@@ -36,11 +37,10 @@ describe("iPhone Work Hub device settings", () => {
     render(<WorkHubDeviceSettings />);
     expect(await screen.findByText("Audio and Backup Devices")).toBeTruthy();
     expect(await screen.findByText("John's iPhone · This device")).toBeTruthy();
-    expect(screen.getByText("Currently carrying AskV audio")).toBeTruthy();
+    expect(screen.getByText("Voice active on John's iPhone")).toBeTruthy();
+    expect(screen.getByText("Voice active")).toBeTruthy();
     expect(screen.getByText("Mobile device")).toBeTruthy();
-    expect(screen.getByText("Primary audio device")).toBeTruthy();
-    expect(screen.getByText("Secondary audio device")).toBeTruthy();
-    fireEvent.click(screen.getAllByRole("button", { name: "workHubDevices.allowHandoff" })[0]!);
+    expect(screen.getByText("Ready for automatic voice handoff")).toBeTruthy();
     await waitFor(() => expect(mocks.api).toHaveBeenCalledWith("/api/work-hub/devices/preferences", expect.objectContaining({ method: "PUT" })));
   });
 });
