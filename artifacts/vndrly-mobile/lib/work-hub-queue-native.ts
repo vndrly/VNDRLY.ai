@@ -1,11 +1,22 @@
 import * as Crypto from "expo-crypto";
 import * as SecureStore from "expo-secure-store";
 import { openDatabaseAsync, type SQLiteDatabase } from "expo-sqlite";
+import { Platform } from "react-native";
 import type { QueueStore } from "./work-hub-queue";
 
 const DATABASE_NAME = "vndrly-work-hub-queue.db";
 const DATABASE_KEY_NAME = "vndrly.workHub.queue.databaseKey.v1";
 let storePromise: Promise<QueueStore> | null = null;
+const webRows = new Map<string, string>();
+
+const webPreviewStore: QueueStore = {
+  async getItem(key) {
+    return webRows.get(key) ?? null;
+  },
+  async setItem(key, value) {
+    webRows.set(key, value);
+  },
+};
 
 function toHex(bytes: Uint8Array) {
   return Array.from(bytes, (value) => value.toString(16).padStart(2, "0")).join("");
@@ -38,6 +49,9 @@ async function initializeDatabase(): Promise<SQLiteDatabase> {
 }
 
 export function getNativeWorkHubQueueStore(): Promise<QueueStore> {
+  // Expo SecureStore and SQLCipher are native-only. The browser build is a
+  // local preview surface, so keep its queue session-scoped and in memory.
+  if (Platform.OS === "web") return Promise.resolve(webPreviewStore);
   if (!storePromise) {
     storePromise = initializeDatabase().then((database) => ({
       async getItem(key: string) {
@@ -63,4 +77,5 @@ export function getNativeWorkHubQueueStore(): Promise<QueueStore> {
 
 export function __resetNativeWorkHubQueueForTests() {
   storePromise = null;
+  webRows.clear();
 }

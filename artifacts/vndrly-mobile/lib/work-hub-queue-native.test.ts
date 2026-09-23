@@ -25,6 +25,7 @@ vi.mock("expo-secure-store", () => ({
   setItemAsync: mocks.secureSet,
 }));
 vi.mock("expo-crypto", () => ({ getRandomBytesAsync: mocks.random }));
+vi.mock("react-native", () => ({ Platform: { OS: "ios" } }));
 
 describe("native encrypted Work Hub queue store", () => {
   beforeEach(async () => {
