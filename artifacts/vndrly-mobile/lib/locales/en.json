@@ -8,6 +8,8 @@
     "contentAvailable": "Every signed-in device can still send messages, photos, receipts, and files.",
     "voiceActive": "Voice active",
     "readyForHandoff": "Ready for automatic voice handoff",
+    "allowMicrophone": "Allow AskV to use this device's microphone",
+    "microphoneDenied": "Microphone access was not allowed. Enable it in this device's settings to use AskV voice.",
     "failed": "Device settings could not be saved.",
     "thisDevice": "This device",
     "audioOwner": "Audio is here",

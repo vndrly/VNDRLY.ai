@@ -1,8 +1,8 @@
 import React from "react";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ api: vi.fn() }));
+const mocks = vi.hoisted(() => ({ api: vi.fn(), permission: vi.fn() }));
 vi.mock("@/lib/api", () => ({ apiFetch: mocks.api }));
 vi.mock("@/hooks/use-work-hub-device-presence", () => ({ nativeWorkHubDeviceIdentity: async () => ({ deviceId: "10000000-0000-4000-8000-000000000001" }) }));
 vi.mock("@/hooks/useColors", () => ({ useColors: () => ({ primary: "blue", text: "black", mutedForeground: "gray", border: "gray", destructive: "red", card: "white" }) }));
@@ -13,9 +13,12 @@ vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string) => (
   "workHubDevices.readyForHandoff": "Ready for automatic voice handoff",
   "workHubDevices.noActiveVoice": "No call or meeting is using voice right now",
   "workHubDevices.voiceActiveOn": "Voice active on John's iPhone",
+  "workHubDevices.allowMicrophone": "Allow AskV to use this device's microphone",
 }[key] ?? key) }) }));
 vi.mock("@expo/vector-icons", () => ({ Feather: () => null }));
 vi.mock("@/components/TogglePillButton", () => ({ default: ({ children, onPress, ...props }: any) => <button onClick={onPress} {...props}>{children}</button> }));
+vi.mock("expo-av", () => ({ Audio: { getPermissionsAsync: async () => ({ status: "undetermined" }) } }));
+vi.mock("@/lib/askv-audio-session", () => ({ requestAskVMicrophonePermission: mocks.permission }));
 
 import WorkHubDeviceSettings from "./WorkHubDeviceSettings";
 
@@ -41,6 +44,8 @@ describe("iPhone Work Hub device settings", () => {
     expect(screen.getByText("Voice active")).toBeTruthy();
     expect(screen.getByText("Mobile device")).toBeTruthy();
     expect(screen.getByText("Ready for automatic voice handoff")).toBeTruthy();
+    fireEvent.click(screen.getByRole("checkbox", { name: "Allow AskV to use this device's microphone" }));
+    await waitFor(() => expect(mocks.permission).toHaveBeenCalled());
     await waitFor(() => expect(mocks.api).toHaveBeenCalledWith("/api/work-hub/devices/preferences", expect.objectContaining({ method: "PUT" })));
   });
 });
