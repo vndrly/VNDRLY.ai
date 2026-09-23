@@ -26,6 +26,31 @@ function SummaryCard({ icon, title, value, detail, onPress, width }: CardProps) 
   </Pressable>;
 }
 
+type TodayItemProps = { icon: React.ComponentProps<typeof Feather>["name"]; label: string; value: string; onPress: () => void };
+function TodayItem({ icon, label, value, onPress }: TodayItemProps) {
+  const colors = useColors();
+  return <Pressable accessibilityRole="button" accessibilityLabel={`Open ${label}`} onPress={onPress} style={({ pressed }) => ({ alignItems: "center", borderTopColor: colors.border, borderTopWidth: 1, flexDirection: "row", gap: 11, opacity: pressed ? .7 : 1, paddingVertical: 13 })}>
+    <Feather name={icon} size={19} color={colors.primary} />
+    <Text style={{ color: colors.text, flex: 1, fontSize: 15, fontWeight: "600" }}>{label}</Text>
+    <Text style={{ color: colors.mutedForeground, fontSize: 13 }}>{value}</Text>
+    <Feather name="chevron-right" size={18} color={colors.mutedForeground} />
+  </Pressable>;
+}
+
+function TodayCard({ title, width, myWorkTitle, shifts, meetings, announcements, tasks }: { title: string; width: DimensionValue; myWorkTitle: string; shifts: number; meetings: number; announcements: number; tasks: number }) {
+  const colors = useColors();
+  return <View style={{ backgroundColor: colors.card, borderColor: colors.border, borderRadius: 16, borderWidth: 1, paddingHorizontal: 16, paddingTop: 16, width }}>
+    <View style={{ alignItems: "center", flexDirection: "row", gap: 10, paddingBottom: 14 }}>
+      <View style={{ alignItems: "center", backgroundColor: `${colors.primary}22`, borderRadius: 12, height: 40, justifyContent: "center", width: 40 }}><Feather name="sun" size={21} color={colors.primary} /></View>
+      <View><Text style={{ color: colors.text, fontSize: 19, fontWeight: "700" }}>{title}</Text><Text style={{ color: colors.mutedForeground, fontSize: 12 }}>Your schedule, work, and priorities</Text></View>
+    </View>
+    <TodayItem label="Calendar" icon="calendar" value={`${shifts + meetings} upcoming`} onPress={() => openModule("calendar")} />
+    <TodayItem label={myWorkTitle} icon="clock" value={`${shifts} shifts`} onPress={() => openModule("payroll-documents")} />
+    <TodayItem label="Activity" icon="bell" value={`${announcements} updates`} onPress={() => openModule("activity")} />
+    <TodayItem label="Tasks & Forms" icon="check-square" value={`${tasks} items`} onPress={() => openModule("tasks-forms")} />
+  </View>;
+}
+
 function openModule(key: string) { router.push({ pathname: "/work-hub/[module]", params: { module: key } } as never); }
 
 export default function WorkHubScreen() {
@@ -51,10 +76,7 @@ export default function WorkHubScreen() {
     {!home && !error ? <ActivityIndicator color={colors.primary} accessibilityLabel="Loading Work Hub summaries" /> : null}
     {error ? <Text accessibilityRole="alert" style={{ color: colors.mutedForeground }}>{error}</Text> : null}
     <View style={{ flexDirection: width >= 768 ? "row" : "column", flexWrap: "wrap", gap: 12 }}>
-      <SummaryCard title="Calendar" icon="calendar" value={`${shifts + meetings} upcoming`} detail={`${shifts} shifts and ${meetings} meetings currently on your schedule.`} onPress={() => openModule("calendar")} width={cardWidth} />
-      <SummaryCard icon="clock" title={myWorkTitle} value={`${shifts} upcoming ${shifts === 1 ? "shift" : "shifts"}`} detail={user?.managedSubcontractor ? "Review your recorded hours and work history." : "Review hours, work history, pay statements, and tax documents."} onPress={() => openModule("payroll-documents")} width={cardWidth} />
-      <SummaryCard title="Activity" icon="bell" value={`${announcements} new ${announcements === 1 ? "update" : "updates"}`} detail="Your newest authorized announcements and recent activity." onPress={() => openModule("activity")} width={cardWidth} />
-      <SummaryCard title="Tasks & Forms" icon="check-square" value={`${tasks} ${tasks === 1 ? "item" : "items"}`} detail="Assigned tasks, required forms, and work awaiting your action." onPress={() => openModule("tasks-forms")} width={cardWidth} />
+      <TodayCard title="Today" width={cardWidth} myWorkTitle={myWorkTitle} shifts={shifts} meetings={meetings} announcements={announcements} tasks={tasks} />
       <SummaryCard title="Communications" icon="message-circle" value={`${meetings} upcoming ${meetings === 1 ? "meeting" : "meetings"}`} detail={`Chats, calls, invitations, and recent ${membership?.orgName?.trim() || "company"} conversations.`} onPress={() => openModule("chat")} width={cardWidth} />
       <SummaryCard title="Site & Safety" icon="shield" value="Your assignments" detail="Authorized site presence, coverage, and open safety information." onPress={() => openModule("site-presence")} width={cardWidth} />
       <SummaryCard title="Files & Inventory" icon="folder" value="Recent records" detail="Your authorized files, notes, and assigned equipment." onPress={() => openModule("files-notes")} width={cardWidth} />
