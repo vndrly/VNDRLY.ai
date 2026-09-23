@@ -269,9 +269,11 @@ export default function GateChangeOver({
     text: string,
     action: () => Promise<void>,
     disabled = false,
+    inactive = false,
   ) => (
     <TogglePillButton
       disabled={busy || disabled}
+      inactive={inactive}
       onPress={() => void act(action)}
     >
       {text}
@@ -389,7 +391,7 @@ export default function GateChangeOver({
             if (history) await log.refetch();
             else await state.refetch();
           }
-        })}
+        }, false, true)}
         {!history && stationId ? (
           <GateDutyCard
             stationId={stationId}
@@ -486,7 +488,7 @@ export default function GateChangeOver({
                 {sectionHeading(t("changeOver.shiftFollowUps"))}
                 <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
                   <TogglePillButton solid={itemView === "open"} accessibilityState={{ selected: itemView === "open" }} onPress={() => setItemView("open")}>{t("changeOver.openItems")}</TogglePillButton>
-                  <TogglePillButton solid={itemView === "resolved"} accessibilityState={{ selected: itemView === "resolved" }} onPress={() => setItemView("resolved")}>{t("changeOver.resolvedItems")}</TogglePillButton>
+                  <TogglePillButton inactive accessibilityState={{ selected: itemView === "resolved" }} onPress={() => setItemView("resolved")}>{t("changeOver.resolvedItems")}</TogglePillButton>
                 </View>
                 {current.items.filter((item) => item.status === itemView).length === 0 && label(t("changeOver.none"))}
                 {current.items.filter((item) => item.status === itemView).map((i) => (
@@ -540,6 +542,7 @@ export default function GateChangeOver({
                         setNewItem("");
                       },
                       !online || !newItem.trim(),
+                      true,
                     )}
                   </>
                 )}
@@ -564,6 +567,7 @@ export default function GateChangeOver({
                     ),
                     () => mutate("prepare", { notes }),
                     !online,
+                    true,
                   )}
                 </View>
               )}

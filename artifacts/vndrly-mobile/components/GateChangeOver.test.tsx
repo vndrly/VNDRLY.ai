@@ -33,8 +33,8 @@ vi.mock("@/components/ScreenSafeArea", () => ({
   default: ({ children }: any) => <>{children}</>,
 }));
 vi.mock("@/components/TogglePillButton", () => ({
-  default: ({ children, disabled, onPress }: any) => (
-    <button disabled={disabled} onClick={onPress}>
+  default: ({ children, disabled, inactive, onPress }: any) => (
+    <button data-inactive={inactive ? "true" : "false"} disabled={disabled} onClick={onPress}>
       {children}
     </button>
   ),
@@ -174,6 +174,14 @@ it("keeps eligible sites compact until the operator opens the selector", async (
   expect(screen.queryByRole("button", { name: "Scheduled site" })).toBeNull();
   fireEvent.click(screen.getByRole("button", { name: "Current site" }));
   expect(screen.getByRole("button", { name: "Scheduled site" })).not.toBeNull();
+});
+it("uses the static gray pill for the requested dashboard actions", async () => {
+  mount();
+
+  for (const label of ["changeOver.refresh", "changeOver.resolvedItems", "changeOver.addItem", "changeOver.refreshHandoff"]) {
+    const action = await screen.findByRole("button", { name: label });
+    expect(action.getAttribute("data-inactive")).toBe("true");
+  }
 });
 it("preserves cached shift facts on network failure but removes authentication and requires refresh", async () => {
   const cache = mount();

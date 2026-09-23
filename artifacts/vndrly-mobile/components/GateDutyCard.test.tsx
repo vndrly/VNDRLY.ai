@@ -7,7 +7,7 @@ const env = vi.hoisted(() => ({ api: vi.fn(), user: { id: 1 } }));
 vi.mock("@/lib/api", () => ({ apiFetch: env.api }));
 vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: env.user }) }));
 vi.mock("@/hooks/useColors", () => ({ useColors: () => ({ foreground: "black", mutedForeground: "gray", background: "white", card: "white", border: "gray", destructive: "red" }) }));
-vi.mock("@/components/TogglePillButton", () => ({ default: ({ children, disabled, onPress }: any) => <button disabled={disabled} onClick={onPress}>{children}</button> }));
+vi.mock("@/components/TogglePillButton", () => ({ default: ({ children, disabled, inactive, onPress }: any) => <button data-inactive={inactive ? "true" : "false"} disabled={disabled} onClick={onPress}>{children}</button> }));
 vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
 vi.mock("expo-crypto", () => ({ randomUUID: () => "operation-1" }));
 import GateDutyCard from "./GateDutyCard";
@@ -42,6 +42,7 @@ it("shows the concurrent roster and signs off only the current worker", async ()
   mount();
   expect(await screen.findByText(/Chad/)).toBeTruthy(); expect(screen.getByText(/Bob/)).toBeTruthy();
   fireEvent.change(screen.getByLabelText("gateDuty.signOffReason"), { target: { value: "Appointment" } });
+  expect(screen.getByRole("button", { name: "gateDuty.signOff" }).getAttribute("data-inactive")).toBe("true");
   fireEvent.click(screen.getByRole("button", { name: "gateDuty.signOff" }));
   await waitFor(() => expect(env.api).toHaveBeenCalledWith(expect.stringMatching(/duty\/duty-1\/end$/), expect.objectContaining({ body: expect.stringContaining('"handoffCompleted":true') })));
 });
