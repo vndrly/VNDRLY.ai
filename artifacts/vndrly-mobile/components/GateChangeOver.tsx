@@ -309,16 +309,14 @@ export default function GateChangeOver({
         contentContainerStyle={{ padding: 16, gap: 16 }}
         keyboardShouldPersistTaps="handled"
       >
-        {!history ? (
-          <BrandTitleRow subtitle="iOS Portal" logoTestId="change-over-company-logo" platformLogoTestId="change-over-vndrly-logo" />
-        ) : null}
+        <BrandTitleRow subtitle="iOS Portal" logoTestId="change-over-company-logo" platformLogoTestId="change-over-vndrly-logo" />
         <View style={{ alignItems: "center", flexDirection: "row", gap: 12, justifyContent: "space-between" }}>
           <Text
             style={{ color: colors.foreground, flexShrink: 0, fontSize: 26, fontWeight: "700" }}
           >
             {t(history ? "changeOver.shiftNotes" : "changeOver.title")}
           </Text>
-          {!history ? <AskVVoiceIndicator inline /> : null}
+          <AskVVoiceIndicator inline />
         </View>
         {label(t(history ? "changeOver.historyIntro" : "changeOver.intro"))}
         {params.gateMode === "1" && (

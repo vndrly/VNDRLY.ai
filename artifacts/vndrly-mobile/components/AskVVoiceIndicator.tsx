@@ -20,7 +20,7 @@ export default function AskVVoiceIndicator({ inline = false }: { inline?: boolea
   if (
     !voice.preferencesReady ||
     pathname.endsWith("/askv") ||
-    (!inline && (pathname.endsWith("/change-over") || pathname === "/work-hub" || pathname.startsWith("/work-hub/")))
+    (!inline && (pathname.endsWith("/change-over") || pathname.endsWith("/shift-notes") || pathname === "/work-hub" || pathname.startsWith("/work-hub/")))
   ) return null;
   return (
     <View

@@ -48,7 +48,7 @@ export interface GateReportDependencies {
   markOpened(id: string, at: Date): Promise<void>;
   queryRows(filters: GateReportFilters, scope: GateReportScope, reportKind: GateReportKind): Promise<GateReportRow[]>;
   sendLink(input: { recipientUserId: number; url: string; token: string; reportKind: GateReportKind; format: GateReportFormat }): Promise<void>;
-  listRecipientCandidates(filters: GateReportFilters): Promise<Array<{ userId: number; name: string; role: string }>>;
+  listRecipientCandidates(filters: GateReportFilters, reportKind: GateReportKind): Promise<Array<{ userId: number; name: string; role: string }>>;
   now(): Date;
 }
 
@@ -89,6 +89,10 @@ export async function deliverGateReports(input: {
   if (!senderScope) throw new GateReportsError(403, "gate_report.forbidden");
   if (input.reportKind === "shift_notes" && senderScope.kind !== "full_site")
     fail(403, "gate_report.shift_notes_scope_required");
+  if (input.reportKind === "shift_notes") {
+    const allowed = new Set((await deps.listRecipientCandidates(filters, input.reportKind)).map(recipient => recipient.userId));
+    if (recipients.some(recipientUserId => !allowed.has(recipientUserId))) fail(403, "gate_report.recipient_forbidden");
+  }
   const resolvedRecipients = await Promise.all(recipients.map(async (recipientUserId) => ({
     recipientUserId,
     scope: await deps.resolveAccess(recipientUserId, filters, input.reportKind),
@@ -190,7 +194,7 @@ export async function listGateReportRecipients(
   if (!senderScope) throw new GateReportsError(403, "gate_report.forbidden");
   if (input.reportKind === "shift_notes" && senderScope.kind !== "full_site")
     fail(403, "gate_report.shift_notes_scope_required");
-  const candidates = await deps.listRecipientCandidates(filters);
+  const candidates = await deps.listRecipientCandidates(filters, input.reportKind);
   const recipients = [];
   for (const candidate of candidates) {
     const scope = await deps.resolveAccess(candidate.userId, filters, input.reportKind);
@@ -365,7 +369,22 @@ export const databaseGateReportDependencies: GateReportDependencies = {
       highPriority: false,
     });
   },
-  async listRecipientCandidates(filters) {
+  async listRecipientCandidates(filters, reportKind) {
+    if (reportKind === "shift_notes") {
+      const rows = (await pool.query(
+        `SELECT DISTINCT u.id AS user_id,coalesce(u.display_name,u.username) AS name,
+          coalesce(vp.vendor_role,m.role) AS role
+         FROM users u
+         JOIN user_org_memberships m ON m.user_id=u.id AND m.org_type='vendor'
+         LEFT JOIN vendor_people vp ON vp.user_id=u.id AND vp.vendor_id=m.vendor_id AND vp.deleted_at IS NULL AND vp.is_active=true
+         WHERE u.suspended_at IS NULL AND coalesce(u.email,u.username) LIKE '%@%'
+           AND EXISTS (SELECT 1 FROM site_work_assignments a WHERE a.vendor_id=m.vendor_id AND a.site_location_id=$1)
+           AND (m.role='admin' OR vp.vendor_role IN ('admin','office','both','gate_supervisor','gatekeeper'))
+         ORDER BY name LIMIT 5000`,
+        [filters.siteId],
+      )).rows;
+      return rows.map((row) => ({ userId: Number(row.user_id), name: String(row.name), role: String(row.role ?? "member") }));
+    }
     const rows = (await pool.query(
       `SELECT DISTINCT u.id AS user_id,coalesce(u.display_name,u.username) AS name,
         coalesce(vp.vendor_role,m.role,u.role) AS role
@@ -410,6 +429,7 @@ function deliveryRow(row: Record<string, unknown>): GateReportDelivery {
 export function createMemoryGateReportDependencies(input: {
   access: Map<number, GateReportScope | null>;
   rows?: GateReportRow[];
+  recipients?: Array<{ userId: number; name: string; role: string }>;
 }): GateReportDependencies & { sent(): Array<{ recipientUserId: number; url: string; token: string }> } {
   const deliveries = new Map<string, GateReportDelivery>();
   const sent: Array<{ recipientUserId: number; url: string; token: string }> = [];
@@ -426,7 +446,7 @@ export function createMemoryGateReportDependencies(input: {
     },
     async sendLink(message) { sent.push({ recipientUserId: message.recipientUserId, url: message.url, token: message.token }); },
     async listRecipientCandidates() {
-      return [...input.access.keys()].map((userId) => ({ userId, name: `User ${userId}`, role: "member" }));
+      return input.recipients ?? [...input.access.keys()].map((userId) => ({ userId, name: `User ${userId}`, role: "member" }));
     },
     now: () => new Date("2026-09-22T12:00:00.000Z"),
   };

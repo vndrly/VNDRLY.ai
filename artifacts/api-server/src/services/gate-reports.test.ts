@@ -88,6 +88,17 @@ describe("Gate reports", () => {
     }, deps)).rejects.toMatchObject({ status: 403 });
   });
 
+  it("rejects shift-note delivery to a full-site account outside the authorized gate recipient list", async () => {
+    const deps = createMemoryGateReportDependencies({
+      access: new Map([
+        [1, { kind: "full_site" }],
+        [2, { kind: "full_site" }],
+      ]),
+      recipients: [{ userId: 1, name: "Gate Supervisor", role: "gate_supervisor" }],
+    });
+    await expect(deliverGateReports({ senderUserId: 1, recipientUserIds: [2], reportKind: "shift_notes", format: "pdf", filters }, deps)).rejects.toMatchObject({ status: 403 });
+  });
+
   it("populates the selector from authorized user accounts", async () => {
     const deps = createMemoryGateReportDependencies({
       access: new Map([
