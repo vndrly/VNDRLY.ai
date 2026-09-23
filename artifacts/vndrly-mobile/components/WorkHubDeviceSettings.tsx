@@ -64,23 +64,17 @@ export default function WorkHubDeviceSettings() {
     {ordered.map((device, index) => {
       const automatic = preferences.automaticBackupDeviceIds.includes(device.id);
       const isCurrent = device.id === currentId;
-      const genericName = /^(mobile device|iphone or ipad)$/i.test(device.friendlyName.trim());
-      const displayName = isCurrent
-        ? t("workHubDevices.currentDeviceName")
-        : genericName
-          ? t("workHubDevices.otherMobileDevice")
-          : device.friendlyName;
+      const displayName = device.friendlyName;
       return <View key={device.id} accessibilityLabel={device.friendlyName} style={{ borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 12, gap: 8 }}>
-        <Text style={{ color: colors.primary, fontSize: 12, fontWeight: "700" }}>{index === 0 ? t("workHubDevices.firstChoice") : t("workHubDevices.backupChoice", { number: index + 1 })}</Text>
-        <Text style={{ color: colors.text, fontSize: 16, fontWeight: "700" }}>{displayName}</Text>
-        <Text style={{ color: colors.mutedForeground }}>{isCurrent ? t("workHubDevices.usingNow") : t("workHubDevices.registeredElsewhere")}</Text>
+        <Text style={{ color: colors.primary, fontSize: 12, fontWeight: "700" }}>{index === 0 ? t("workHubDevices.primary") : index === 1 ? t("workHubDevices.secondary") : t("workHubDevices.priority", { number: index + 1 })}</Text>
+        <Text style={{ color: colors.text, fontSize: 16, fontWeight: "700" }}>{displayName}{isCurrent ? ` · ${t("workHubDevices.thisDevice")}` : ""}</Text>
         {device.currentAudioOwner ? <Text style={{ color: colors.primary, fontWeight: "700" }}>{t("workHubDevices.audioActive")}</Text> : <Text style={{ color: colors.mutedForeground }}>{t("workHubDevices.audioInactive")}</Text>}
         <TextInput accessibilityLabel={t("workHubDevices.nameLabel")} value={names[device.id] ?? device.friendlyName} onChangeText={(value) => setNames((current) => ({ ...current, [device.id]: value }))} style={{ minHeight: 44, borderWidth: 1, borderColor: colors.primary, borderRadius: 10, paddingHorizontal: 12, color: colors.text }} />
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
           <TogglePillButton disabled={busy} style={{ flexGrow: 1 }} onPress={() => void request(`/api/work-hub/devices/${device.id}`, "PATCH", { friendlyName: names[device.id] ?? device.friendlyName })}>{t("common.save")}</TogglePillButton>
-          {index > 0 ? <TogglePillButton disabled={busy} style={{ flexGrow: 1 }} onPress={() => move(device.id, -1)}>{t("workHubDevices.makeFirst")}</TogglePillButton> : null}
+          {index > 0 ? <TogglePillButton disabled={busy} style={{ flexGrow: 1 }} onPress={() => move(device.id, -1)}>{index === 1 ? t("workHubDevices.makePrimary") : t("workHubDevices.moveUp")}</TogglePillButton> : null}
           {index < ordered.length - 1 ? <TogglePillButton disabled={busy} style={{ flexGrow: 1 }} onPress={() => move(device.id, 1)}>{t("workHubDevices.moveLater")}</TogglePillButton> : null}
-          <TogglePillButton disabled={busy || !device.capabilities.microphone} solid={automatic} accessibilityState={{ selected: automatic }} style={{ flexGrow: 1 }} onPress={() => void savePreferences({ automaticBackupDeviceIds: automatic ? preferences.automaticBackupDeviceIds.filter((id) => id !== device.id) : [...preferences.automaticBackupDeviceIds, device.id] })}>{automatic ? t("workHubDevices.backupEnabled") : t("workHubDevices.allowBackup")}</TogglePillButton>
+          <TogglePillButton disabled={busy || !device.capabilities.microphone} solid={automatic} accessibilityState={{ selected: automatic }} style={{ flexGrow: 1 }} onPress={() => void savePreferences({ automaticBackupDeviceIds: automatic ? preferences.automaticBackupDeviceIds.filter((id) => id !== device.id) : [...preferences.automaticBackupDeviceIds, device.id] })}>{automatic ? t("workHubDevices.handoffEnabled") : t("workHubDevices.allowHandoff")}</TogglePillButton>
           <TogglePillButton color="red" disabled={busy || isCurrent} style={{ flexGrow: 1 }} onPress={() => void request(`/api/work-hub/devices/${device.id}`, "DELETE")}>{t("workHubDevices.forget")}</TogglePillButton>
         </View>
       </View>;

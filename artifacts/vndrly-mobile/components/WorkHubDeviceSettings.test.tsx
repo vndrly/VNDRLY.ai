@@ -8,9 +8,9 @@ vi.mock("@/hooks/use-work-hub-device-presence", () => ({ nativeWorkHubDeviceIden
 vi.mock("@/hooks/useColors", () => ({ useColors: () => ({ primary: "blue", text: "black", mutedForeground: "gray", border: "gray", destructive: "red", card: "white" }) }));
 vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string) => ({
   "workHubDevices.title": "Audio and Backup Devices",
-  "workHubDevices.currentDeviceName": "This iPhone or iPad",
-  "workHubDevices.otherMobileDevice": "Other registered mobile device",
-  "workHubDevices.firstChoice": "First backup choice",
+  "workHubDevices.primary": "Primary audio device",
+  "workHubDevices.secondary": "Secondary audio device",
+  "workHubDevices.thisDevice": "This device",
   "workHubDevices.audioActive": "Currently carrying AskV audio",
 }[key] ?? key) }) }));
 vi.mock("@expo/vector-icons", () => ({ Feather: () => null }));
@@ -35,11 +35,12 @@ describe("iPhone Work Hub device settings", () => {
   it("identifies the current audio owner and enables automatic failover", async () => {
     render(<WorkHubDeviceSettings />);
     expect(await screen.findByText("Audio and Backup Devices")).toBeTruthy();
-    expect(await screen.findByText("This iPhone or iPad")).toBeTruthy();
+    expect(await screen.findByText("John's iPhone · This device")).toBeTruthy();
     expect(screen.getByText("Currently carrying AskV audio")).toBeTruthy();
-    expect(screen.getByText("Other registered mobile device")).toBeTruthy();
-    expect(screen.getByText("First backup choice")).toBeTruthy();
-    fireEvent.click(screen.getAllByRole("button", { name: "workHubDevices.allowBackup" })[0]!);
+    expect(screen.getByText("Mobile device")).toBeTruthy();
+    expect(screen.getByText("Primary audio device")).toBeTruthy();
+    expect(screen.getByText("Secondary audio device")).toBeTruthy();
+    fireEvent.click(screen.getAllByRole("button", { name: "workHubDevices.allowHandoff" })[0]!);
     await waitFor(() => expect(mocks.api).toHaveBeenCalledWith("/api/work-hub/devices/preferences", expect.objectContaining({ method: "PUT" })));
   });
 });

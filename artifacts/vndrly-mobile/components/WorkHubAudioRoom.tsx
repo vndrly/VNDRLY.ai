@@ -9,6 +9,7 @@ import { isAskVAppActive, requestAskVMicrophonePermission, subscribeAskVAppState
 import { useColors } from "@/hooks/useColors";
 import { createNativeMeetingAudioSession, type NativeMeetingAudioSession } from "@/lib/native-meeting-audio";
 import { getDeviceId } from "@/lib/deviceId";
+import { workHubDeviceClass, workHubDeviceLabel } from "@/lib/work-hub-device-label";
 
 type Session = {
   valid: boolean;
@@ -317,7 +318,7 @@ export default function WorkHubAudioRoom({ occurrenceId, hostMuted = false, host
       await capturePending; check();
       if (captureError) throw captureError;
       identity = { deviceId: await getDeviceId(), connectionId: newConnectionId() }; check();
-      await apiFetch("/api/work-hub/devices/register", { method: "POST", body: JSON.stringify({ deviceId: identity.deviceId, friendlyName: "iPhone or iPad", deviceClass: "phone", capabilities: { microphone: true, speaker: true, fileSelection: true, pushNotifications: true } }), signal: controller.signal }); check();
+      await apiFetch("/api/work-hub/devices/register", { method: "POST", body: JSON.stringify({ deviceId: identity.deviceId, friendlyName: workHubDeviceLabel(), deviceClass: workHubDeviceClass(), capabilities: { microphone: true, speaker: true, fileSelection: true, pushNotifications: true } }), signal: controller.signal }); check();
       await apiFetch(`/api/work-hub/devices/${identity.deviceId}/heartbeat`, { method: "POST", body: JSON.stringify({ connectionId: identity.connectionId, foreground: true, microphonePermission: "granted", surface: { path: `/work-hub/meetings/${occurrenceId}`, entityType: "meeting", entityId: occurrenceId, updatedAt: Date.now() } }), signal: controller.signal }); check();
       lastDeviceHeartbeat = Date.now();
       const info = await request<JoinInfo>("join", {}); check(); joinedServer = true;

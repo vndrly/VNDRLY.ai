@@ -1,7 +1,8 @@
 import { useEffect } from "react";
-import { AppState, Platform } from "react-native";
+import { AppState } from "react-native";
 import { apiFetch } from "@/lib/api";
 import { getDeviceId } from "@/lib/deviceId";
+import { workHubDeviceClass, workHubDeviceLabel } from "@/lib/work-hub-device-label";
 
 let connectionId: string | null = null;
 
@@ -57,8 +58,8 @@ export function useWorkHubDevicePresence(path: string, enabled: boolean) {
           headers: { "x-work-hub-source": "ios" },
           body: JSON.stringify({
             deviceId,
-            friendlyName: Platform.OS === "ios" ? "iPhone or iPad" : Platform.OS === "web" ? "Browser preview" : "Mobile device",
-            deviceClass: Platform.OS === "web" ? "desktop" : "phone",
+            friendlyName: workHubDeviceLabel(),
+            deviceClass: workHubDeviceClass(),
             capabilities: { microphone: true, speaker: true, camera: true, fileSelection: true, pushNotifications: true },
           }),
         });
