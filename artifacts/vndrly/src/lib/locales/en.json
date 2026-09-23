@@ -5378,5 +5378,18 @@
     "refresh": "Refresh connection and records",
     "recover": "Accept responsibility and recover shift",
     "recoverExplanation": "If the outgoing operator is unavailable, review the current facts and enter a reason above. This action records your acknowledgment, transfers responsibility to you, and signs out the previous operator."
+  },
+  "cameraCenter": {
+    "title": "Camera Center",
+    "subtitle": "Live, permission-controlled views from this site's camera gateways.",
+    "empty": "No camera gateway has been connected to this site yet.",
+    "loadError": "Camera hardware could not be loaded.",
+    "playbackError": "The live view could not be started. Check the gateway connection and try again.",
+    "viewLive": "View live",
+    "liveLabel": "{{name}} live video",
+    "status": {
+      "online": "Online",
+      "offline": "Offline"
+    }
   }
 }

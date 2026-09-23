@@ -5378,5 +5378,18 @@
     "refresh": "Actualizar conexión y registros",
     "recover": "Aceptar responsabilidad y recuperar turno",
     "recoverExplanation": "Si el operador saliente no está disponible, revise los datos actuales e ingrese un motivo arriba. Esta acción registra su reconocimiento, le transfiere la responsabilidad y cierra la sesión del operador anterior."
+  },
+  "cameraCenter": {
+    "title": "Centro de cámaras",
+    "subtitle": "Vistas en vivo con permisos desde las puertas de enlace de cámaras de este sitio.",
+    "empty": "Todavía no se ha conectado ninguna puerta de enlace de cámaras a este sitio.",
+    "loadError": "No se pudo cargar el equipo de cámaras.",
+    "playbackError": "No se pudo iniciar la vista en vivo. Revise la conexión de la puerta de enlace e inténtelo de nuevo.",
+    "viewLive": "Ver en vivo",
+    "liveLabel": "Video en vivo de {{name}}",
+    "status": {
+      "online": "En línea",
+      "offline": "Sin conexión"
+    }
   }
 }

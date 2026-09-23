@@ -33,7 +33,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2, QrCode, ChevronDown, ChevronUp, FileText, Clock, Info, Briefcase, Pencil, Save, X, ListChecks, Printer, MapPin, LocateFixed, Users, ArrowRight, Send, CalendarDays } from "lucide-react";
+import { Plus, Trash2, QrCode, ChevronDown, ChevronUp, FileText, Clock, Info, Briefcase, Pencil, Save, X, ListChecks, Printer, MapPin, LocateFixed, Users, ArrowRight, Send, CalendarDays, Camera } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -761,10 +761,20 @@ export default function SiteLocationDetail({ id }: { id: number }) {
     <div className="space-y-6" data-testid="site-location-detail-page">
       <div className="flex items-center gap-4">
         <Link href="/site-locations" className="group inline-flex items-center" aria-label="Back" data-testid="button-back"><SphereBackButton size={40} /></Link>
-        <div>
+        <div className="min-w-0 flex-1">
           <h1 className="text-2xl font-bold" data-testid="text-site-name">{site.name}</h1>
           <p className="text-muted-foreground text-sm">{site.address}</p>
         </div>
+        {(user?.role === "admin" || user?.role === "partner") && (
+          <Link
+            href={`/site-locations/${id}/cameras`}
+            className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium hover:bg-muted"
+            data-testid="link-camera-center"
+          >
+            <Camera className="h-4 w-4" />
+            {t("cameraCenter.title")}
+          </Link>
+        )}
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">

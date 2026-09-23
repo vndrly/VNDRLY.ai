@@ -29,6 +29,7 @@ const FieldEmployees = lazy(() => import("@/pages/field-employees"));
 const FieldEmployeeDetail = lazy(() => import("@/pages/field-employee-detail"));
 const SiteLocations = lazy(() => import("@/pages/site-locations"));
 const SiteLocationDetail = lazy(() => import("@/pages/site-location-detail"));
+const CameraCenterPage = lazy(() => import("@/pages/camera-center"));
 const Tickets = lazy(() => import("@/pages/tickets"));
 const TicketDetail = lazy(() => import("@/pages/ticket-detail"));
 const FieldSchedule = lazy(() => import("@/pages/field-schedule"));
@@ -159,6 +160,7 @@ function AdminRoutes() {
         <Route path="/field-employees" component={FieldEmployees} />
         <Route path="/field-employees/:id">{(params) => <FieldEmployeeDetail id={parseInt(params.id)} />}</Route>
         <Route path="/site-locations" component={SiteLocations} />
+        <Route path="/site-locations/:id/cameras">{(params) => <CameraCenterPage siteId={parseInt(params.id)} />}</Route>
         <Route path="/site-locations/:id">{(params) => <SiteLocationDetail id={parseInt(params.id)} />}</Route>
         <Route path="/tickets" component={Tickets} />
         <Route path="/flagged" component={FlaggedTicketsPage} />

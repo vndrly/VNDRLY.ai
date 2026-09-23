@@ -19,6 +19,7 @@ export * from "./partnerVendorWorkTypeApprovals";
 export * from "./partnerVendorRelationships";
 export * from "./vendorSiteLocationAfes";
 export * from "./siteLocations";
+export * from "./cameras";
 export * from "./siteWorkAssignments";
 export * from "./directAssignments";
 export * from "./fieldEmployeeNotes";

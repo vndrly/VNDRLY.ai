@@ -75,6 +75,7 @@ import implementationASafetyRouter from "./implementationASafety";
 import implementationASubscriptionsRouter from "./implementationASubscriptions";
 import implementationADisplaysRouter from "./implementationADisplays";
 import implementationAHealthRouter from "./implementationAHealth";
+import camerasRouter from "./cameras";
 
 const router: IRouter = Router();
 
@@ -168,5 +169,6 @@ router.use(implementationASafetyRouter);
 router.use(implementationASubscriptionsRouter);
 router.use(implementationADisplaysRouter);
 router.use(implementationAHealthRouter);
+router.use(camerasRouter);
 
 export default router;

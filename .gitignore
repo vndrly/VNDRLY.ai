@@ -61,6 +61,7 @@ Thumbs.db
 .env
 .env.local
 .env.*.local
+camera-gateway.json
 
 # Local scratch / automation output
 .cache/
