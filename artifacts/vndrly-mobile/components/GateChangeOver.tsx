@@ -307,7 +307,7 @@ export default function GateChangeOver({
         keyboardShouldPersistTaps="handled"
       >
         {!history ? (
-          <BrandTitleRow subtitle="iOS Portal" logoTestId="change-over-company-logo" />
+          <BrandTitleRow subtitle="iOS Portal" logoTestId="change-over-company-logo" platformLogoTestId="change-over-vndrly-logo" />
         ) : null}
         <View style={{ alignItems: "center", flexDirection: "row", gap: 12, justifyContent: "space-between" }}>
           <Text

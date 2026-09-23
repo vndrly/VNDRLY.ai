@@ -31,10 +31,11 @@ afterEach(cleanup);
 
 describe("BrandTitleRow", () => {
   it("uses the signed-in company name when a page title is not supplied", () => {
-    const screen = render(<BrandTitleRow subtitle="iOS Portal" logoTestId="company-logo" />);
+    const screen = render(<BrandTitleRow subtitle="iOS Portal" logoTestId="company-logo" platformLogoTestId="vndrly-logo" />);
 
     expect(screen.getByText("MidCon Solutions")).toBeTruthy();
     expect(screen.getByText("iOS Portal")).toBeTruthy();
     expect(screen.getByTestId("company-logo").getAttribute("aria-label")).toBe("MidCon Solutions");
+    expect(screen.getByTestId("vndrly-logo").getAttribute("aria-label")).toBe("VNDRLY");
   });
 });

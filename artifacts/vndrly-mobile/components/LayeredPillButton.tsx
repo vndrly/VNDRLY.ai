@@ -4,6 +4,7 @@ import {
   Pressable,
   StyleSheet,
   View,
+  type ImageSourcePropType,
   type GestureResponderEvent,
   type StyleProp,
   type ViewStyle,
@@ -91,6 +92,8 @@ export interface LayeredPillButtonProps {
   color?: string;
   /** Grey idle pill — no color overlay. */
   inactive?: boolean;
+  /** Exact pill artwork override for active state. */
+  source?: ImageSourcePropType;
 }
 
 /**
@@ -110,6 +113,7 @@ export default function LayeredPillButton({
   height: _heightProp,
   color,
   inactive,
+  source,
 }: LayeredPillButtonProps) {
   const brand = useBrand();
   const targetHex = color ?? brand.primary ?? "#1f9a3d";
@@ -119,7 +123,7 @@ export default function LayeredPillButton({
   const height = PILL_HEIGHT_PX;
   const radius = height / 2;
   const brandPillSrc = pickTogglePillSrc(targetHex, brand.name);
-  const activeSrc = color ? mid.src : brandPillSrc;
+  const activeSrc = source ?? (color ? mid.src : brandPillSrc);
   const src = useGreyAsset ? GREY_PILL : activeSrc;
 
   return (

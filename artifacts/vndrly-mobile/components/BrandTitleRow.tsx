@@ -12,9 +12,10 @@ type Props = {
   title?: string;
   subtitle?: string;
   logoTestId: string;
+  platformLogoTestId?: string;
 };
 
-export default function BrandTitleRow({ title, subtitle, logoTestId }: Props) {
+export default function BrandTitleRow({ title, subtitle, logoTestId, platformLogoTestId }: Props) {
   const brand = useBrand();
   const colors = useColors();
   const { t } = useTranslation();
@@ -54,6 +55,15 @@ export default function BrandTitleRow({ title, subtitle, logoTestId }: Props) {
           <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>{subtitle}</Text>
         ) : null}
       </View>
+      {platformLogoTestId ? (
+        <Image
+          accessibilityLabel="VNDRLY"
+          resizeMode="contain"
+          source={VNDRLY_LOGO_SQUARE}
+          style={styles.logo}
+          testID={platformLogoTestId}
+        />
+      ) : null}
     </View>
   );
 }
