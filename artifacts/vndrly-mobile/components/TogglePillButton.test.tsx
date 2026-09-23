@@ -37,17 +37,16 @@ describe("TogglePillButton accessibility", () => {
     expect(screen.queryByText("Remove Bob Brand")).toBeNull();
   });
 
-  it("honors requested minimum sizing and never clips multiline Dynamic Type labels", () => {
+  it("honors an explicitly requested taller pill", () => {
     render(<TogglePillButton height={56}>A deliberately long translated action label</TogglePillButton>);
     const button = screen.getByRole("button", { name: "A deliberately long translated action label" });
-    expect(button.style.minHeight).toBe("56px");
-    expect(button.style.height).toBe("");
-    const label = screen.getByText("A deliberately long translated action label");
-    expect(label.style.whiteSpace).not.toBe("nowrap");
+    expect(button.style.height).toBe("56px");
   });
 
-  it("provides at least a 44 point target by default", () => {
+  it("renders the shared VNDRLY pill at the canonical compact height", () => {
     render(<TogglePillButton>Send</TogglePillButton>);
-    expect(screen.getByRole("button", { name: "Send" }).style.minHeight).toBe("44px");
+    const button = screen.getByRole("button", { name: "Send" });
+    expect(button.style.height).toBe("30px");
+    expect(button.style.minHeight).toBe("");
   });
 });

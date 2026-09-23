@@ -73,8 +73,8 @@ export default function TogglePillButton({
   const resolvedAccessibilityLabel = accessibilityLabel ?? (typeof children === "string" ? children : undefined);
   const lockToRest = !!inactive || !!loading;
   const lockToColored = !!solid && !lockToRest;
-  const visualMinHeight = Math.max(PILL_HEIGHT_PX, heightProp ?? PILL_HEIGHT_PX);
-  const targetMinHeight = Math.max(44, visualMinHeight);
+  const visualHeight = Math.max(PILL_HEIGHT_PX, heightProp ?? PILL_HEIGHT_PX);
+  const verticalHitSlop = Math.max(0, (44 - visualHeight) / 2);
   const activeSrc = coloredSrc(color, brand.primary ?? "#1f9a3d", brand.name ?? "");
   const restSrc = TOGGLE_IDLE_PILL_SRC;
 
@@ -93,9 +93,10 @@ export default function TogglePillButton({
       onPress={onPress}
       disabled={isDisabled}
       testID={testID}
+      hitSlop={{ top: verticalHitSlop, bottom: verticalHitSlop }}
       style={({ pressed }) => [
         styles.container,
-        { minHeight: targetMinHeight, alignSelf: "stretch" },
+        { height: visualHeight, alignSelf: "stretch" },
         isDisabled && !inactive ? styles.dimmed : null,
         style,
       ]}
@@ -107,8 +108,8 @@ export default function TogglePillButton({
         const isGreyedOut = isDisabled && !inactive;
         const isGreyPill = !showColored && !isGreyedOut;
         return (
-          <View style={[styles.inner, { minHeight: visualMinHeight }, isGreyPill ? styles.greyPill : null]}>
-            <Pill9Slice source={src} borderRadius={999} />
+          <View style={[styles.inner, isGreyPill ? styles.greyPill : null]}>
+            <Pill9Slice source={src} height={visualHeight} borderRadius={999} />
             <View style={styles.contentRow}>
               {loading ? (
                 <ActivityIndicator color={labelColor} size="small" />
@@ -143,7 +144,6 @@ const styles = StyleSheet.create({
   inner: {
     position: "relative",
     paddingHorizontal: 16,
-    paddingVertical: 8,
     justifyContent: "center",
     alignItems: "center",
     overflow: "hidden",
