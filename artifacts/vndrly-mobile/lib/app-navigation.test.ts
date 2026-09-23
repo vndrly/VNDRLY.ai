@@ -114,13 +114,13 @@ describe("buildAppNavigation", () => {
     }
   });
 
-  it("keeps the Work Hub landing page inside the shared tab shell", () => {
+  it("opens the Work Hub stack, which supplies the shared navigation shell", () => {
     const entry = buildAppNavigation({
       user: user("vendor"),
       labels,
       badges,
     }).find((item) => item.key === "work-hub");
-    expect(entry?.href).toBe("/(tabs)/work-hub");
+    expect(entry?.href).toBe("/work-hub");
   });
 
   it("allows every gatekeeper account into the Work Hub route advertised by its navigation", () => {
