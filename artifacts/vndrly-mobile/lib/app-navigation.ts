@@ -57,7 +57,7 @@ export function buildAppNavigation({
   if (isGatekeeperUser(user)) {
     return [
       item("change-over", "/(tabs)/change-over", labels.changeOver ?? "Dashboard", "grid"),
-      item("work-hub", "/work-hub", labels.workHub, "briefcase"),
+      item("work-hub", "/(tabs)/work-hub", labels.workHub, "briefcase"),
       item("gate", "/(tabs)/gate", labels.gate, "truck"),
       item("askv", "/(tabs)/askv", labels.askv, "zap", "askv"),
       item("gate-history", "/(tabs)/gate-history", labels.history, "clock"),
@@ -69,7 +69,7 @@ export function buildAppNavigation({
   const result: AppNavigationItem[] = [
     item("askv", "/(tabs)/askv", labels.askv, "zap", "askv"),
     { ...item("index", "/(tabs)", labels.home, "home"), badge: badges.home },
-    item("work-hub", "/work-hub", labels.workHub, "briefcase"),
+    item("work-hub", "/(tabs)/work-hub", labels.workHub, "briefcase"),
     {
       ...item("schedule", "/(tabs)/schedule", labels.schedule, "calendar"),
       badge: badges.schedule,
