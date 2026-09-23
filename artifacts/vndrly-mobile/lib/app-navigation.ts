@@ -2,6 +2,7 @@ import type { StoredUser } from "@/lib/auth";
 import {
   crewMapTabVisible,
   isForemanEmployeeUser,
+  isGatekeeperTabKey,
   isGatekeeperUser,
 } from "@/lib/mobile-viewer";
 
@@ -103,6 +104,15 @@ export function buildAppNavigation({
 
 export function gateLandingRoute(user: StoredUser | null | undefined): string {
   return isGatekeeperUser(user) ? "/(tabs)/change-over" : "/(tabs)";
+}
+
+/** Routes exposed by the focused gatekeeper navigation. */
+export function isGatekeeperRouteAllowed(
+  user: StoredUser | null | undefined,
+  segments: readonly string[],
+): boolean {
+  const [root, child] = segments;
+  return (root === "(tabs)" && isGatekeeperTabKey(child)) || root === "work-hub";
 }
 
 function item(

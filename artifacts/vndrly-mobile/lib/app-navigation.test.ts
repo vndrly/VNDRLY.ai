@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { StoredUser } from "@/lib/auth";
-import { buildAppNavigation, gateLandingRoute, type AppNavigationLabels } from "./app-navigation";
+import { buildAppNavigation, gateLandingRoute, isGatekeeperRouteAllowed, type AppNavigationLabels } from "./app-navigation";
 
 const labels: AppNavigationLabels = {
   askv: "AskV",
@@ -121,6 +121,11 @@ describe("buildAppNavigation", () => {
       badges,
     }).find((item) => item.key === "work-hub");
     expect(entry?.href).toBe("/work-hub");
+  });
+
+  it("allows every gatekeeper account into the Work Hub route advertised by its navigation", () => {
+    expect(isGatekeeperRouteAllowed(user("vendor", "gatekeeper"), ["work-hub"])).toBe(true);
+    expect(isGatekeeperRouteAllowed(user("vendor", "gate_supervisor"), ["work-hub", "tasks-forms"])).toBe(true);
   });
 
   it("keeps home, schedule, flagged, scan, and profile access for field users", () => {

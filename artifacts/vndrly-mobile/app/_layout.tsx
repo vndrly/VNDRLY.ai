@@ -42,8 +42,8 @@ import {
   subscribeToken,
   getUser,
 } from "@/lib/auth";
-import { isGatekeeperTabKey, isGatekeeperUser } from "@/lib/mobile-viewer";
-import { gateLandingRoute } from "@/lib/app-navigation";
+import { isGatekeeperUser } from "@/lib/mobile-viewer";
+import { gateLandingRoute, isGatekeeperRouteAllowed } from "@/lib/app-navigation";
 import {
   hasActiveConsentForThisDevice,
   isConsentDeclined,
@@ -187,9 +187,7 @@ function AuthGate() {
       if (cancelled) return;
       const isGatekeeper = isGatekeeperUser(routeUser);
       const routeSegments = segments as readonly string[];
-      const inGatekeeperStack =
-        (seg0 === "(tabs)" && isGatekeeperTabKey(routeSegments[1])) ||
-        (!!routeUser?.managedSubcontractor && seg0 === "work-hub");
+      const inGatekeeperStack = isGatekeeperRouteAllowed(routeUser, routeSegments);
       if (role === "guest") {
         if (!inGuestStack) router.replace("/visitor-checkin");
       } else if (isGatekeeper) {
