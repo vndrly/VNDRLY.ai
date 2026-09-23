@@ -76,7 +76,9 @@ describe("AskVStatusIndicator", () => {
     expect(button.getAttribute("data-color")).toBe("red");
     fireEvent.click(button);
     expect(setMuted).toHaveBeenCalledWith(true);
-    expect(screen.getByTestId("askv-waveform").getAttribute("data-active")).toBe("true");
+    const waveform = screen.getByTestId("askv-waveform");
+    expect(waveform.getAttribute("data-active")).toBe("true");
+    expect(waveform.closest("button")).toBe(button);
   });
   it("keeps the shared toggle on Mute while voice is unmuted but disconnected", () => {
     voice.muted = false; voice.state = "stopped";

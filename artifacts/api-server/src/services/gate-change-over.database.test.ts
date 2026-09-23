@@ -17,6 +17,8 @@ import {
   cancelGateHandoff,
   recoverGateShift,
   requireChangeOverAccess,
+  listChangeOverSites,
+  listChangeOverStations,
 } from "./gate-change-over";
 import type { SessionPayload } from "../lib/session";
 import { buildTestCookie } from "../test-utils/session";
@@ -196,6 +198,65 @@ describe("Change Over database guarantees", () => {
     await expect(
       pool.query("DELETE FROM gate_stations WHERE id=$1", [f.station]),
     ).rejects.toThrow(/foreign key/);
+  });
+  it("lists only an operator's current site and sites with an active or future assigned shift", async () => {
+    const f = await fixture();
+    const scheduledSite = (
+      await pool.query(
+        "INSERT INTO site_locations(partner_id,name,address,latitude,longitude,site_code) SELECT partner_id,'Scheduled gate site','Fixture',30,-100,$2 FROM site_locations WHERE id=$1 RETURNING id",
+        [f.site, randomUUID()],
+      )
+    ).rows[0].id;
+    const unrelatedSite = (
+      await pool.query(
+        "INSERT INTO site_locations(partner_id,name,address,latitude,longitude,site_code) SELECT partner_id,'Unrelated gate site','Fixture',30,-100,$2 FROM site_locations WHERE id=$1 RETURNING id",
+        [f.site, randomUUID()],
+      )
+    ).rows[0].id;
+    const workTypeId = (
+      await pool.query(
+        "SELECT work_type_id FROM site_work_assignments WHERE site_location_id=$1 AND vendor_id=$2 LIMIT 1",
+        [f.site, f.vendor],
+      )
+    ).rows[0].work_type_id;
+    await pool.query(
+      "INSERT INTO site_work_assignments(site_location_id,work_type_id,vendor_id) VALUES($1,$3,$2),($4,$3,$2)",
+      [scheduledSite, f.vendor, workTypeId, unrelatedSite],
+    );
+    const shiftId = (
+      await pool.query(
+        `INSERT INTO work_hub_shifts(owner_org_type,owner_org_id,title,starts_at,ends_at,timezone,site_location_id,gate_station_id,created_by_id)
+         VALUES('vendor',$1,'Scheduled gate shift',now()+interval '1 hour',now()+interval '9 hours','America/Chicago',$2,$3,$4)
+         RETURNING id`,
+        [
+          f.vendor,
+          scheduledSite,
+          (
+            await pool.query(
+              "INSERT INTO gate_stations(site_id,name) VALUES($1,'Scheduled gate') RETURNING id",
+              [scheduledSite],
+            )
+          ).rows[0].id,
+          f.supervisor.userId,
+        ],
+      )
+    ).rows[0].id;
+    await pool.query(
+      "INSERT INTO work_hub_shift_assignments(shift_id,user_id,status,assigned_by_id) VALUES($1,$2,'assigned',$3)",
+      [shiftId, f.outgoing.userId, f.supervisor.userId],
+    );
+
+    const sites = await listChangeOverSites(f.outgoing);
+    expect(sites.map((site) => site.id).sort((a, b) => a - b)).toEqual(
+      [f.site, scheduledSite].sort((a, b) => a - b),
+    );
+    expect(sites.some((site) => site.id === unrelatedSite)).toBe(false);
+    await pool.query(
+      "INSERT INTO gate_stations(site_id,name) VALUES($1,'Unassigned gate')",
+      [scheduledSite],
+    );
+    const stations = await listChangeOverStations(f.outgoing, scheduledSite);
+    expect(stations.map((station) => station.name)).toEqual(["Scheduled gate"]);
   });
   it("grounds askV field answers in current state and refuses unrelated sites", async () => {
     const f = await fixture();

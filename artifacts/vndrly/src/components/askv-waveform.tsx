@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-export default function AskVWaveform({ active, className }: { active: boolean; className?: string }) {
+export default function AskVWaveform({ active, className, white = false }: { active: boolean; className?: string; white?: boolean }) {
   return (
     <div
       className={cn("flex h-5 items-center justify-center gap-0.5", className)}
@@ -14,7 +14,8 @@ export default function AskVWaveform({ active, className }: { active: boolean; c
           key={`${height}-${index}`}
           aria-hidden="true"
           className={cn(
-            "w-0.5 rounded-full bg-[color:var(--brand-primary)] transition-[height,opacity] motion-reduce:animate-none",
+            "w-0.5 rounded-full transition-[height,opacity] motion-reduce:animate-none",
+            white ? "bg-white" : "bg-[color:var(--brand-primary)]",
             active ? "animate-pulse opacity-100" : "opacity-40",
           )}
           style={{ height: active ? height : 4, animationDelay: `${index * 90}ms`, animationDuration: "650ms" }}

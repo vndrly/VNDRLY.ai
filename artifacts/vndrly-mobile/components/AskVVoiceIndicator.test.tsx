@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 const env = vi.hoisted(() => ({
   navigate: vi.fn(),
+  pathname: "/gate",
   setMuted: vi.fn(),
   voice: {
     preferencesReady: true,
@@ -15,7 +16,7 @@ const env = vi.hoisted(() => ({
 
 vi.mock("expo-router", () => ({
   router: { push: env.navigate },
-  usePathname: () => "/gate",
+  usePathname: () => env.pathname,
 }));
 vi.mock("react-native-safe-area-context", () => ({
   useSafeAreaInsets: () => ({ bottom: 0 }),
@@ -36,6 +37,7 @@ import AskVVoiceIndicator from "./AskVVoiceIndicator";
 
 afterEach(() => {
   cleanup();
+  env.pathname = "/gate";
   env.navigate.mockReset();
   env.setMuted.mockReset();
 });
@@ -46,5 +48,21 @@ describe("AskVVoiceIndicator", () => {
     fireEvent.click(screen.getByTestId("askv-global-mute"));
     expect(env.setMuted).toHaveBeenCalledWith(true);
     expect(env.navigate).not.toHaveBeenCalled();
+  });
+
+  it("moves the AskV voice control into the dashboard header without leaving a duplicate overlay", () => {
+    env.pathname = "/change-over";
+
+    const globalScreen = render(<AskVVoiceIndicator />);
+    expect(globalScreen.queryByTestId("askv-global-status")).toBeNull();
+    globalScreen.unmount();
+
+    const inlineScreen = render(<AskVVoiceIndicator inline />);
+    expect(inlineScreen.getByTestId("askv-inline-status")).toBeTruthy();
+    const waveform = inlineScreen.getByTestId("askv-waveform");
+    expect(waveform.getAttribute("aria-label")).toBe("Ask V voice idle");
+    expect(waveform.closest('[data-testid="askv-global-mute"]')).not.toBeNull();
+    fireEvent.click(inlineScreen.getByTestId("askv-global-mute"));
+    expect(env.setMuted).toHaveBeenCalledWith(true);
   });
 });

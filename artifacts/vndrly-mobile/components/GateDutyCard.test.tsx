@@ -25,6 +25,15 @@ it("supports assume shift and paid-travel start without replacing another worker
   await waitFor(() => expect(env.api).toHaveBeenCalledWith(expect.stringMatching(/work-sessions\/start$/), expect.anything()));
 });
 
+it("combines the uncovered warning with Start my shift and Assume shift actions", async () => {
+  const startShift = vi.fn();
+  render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><GateDutyCard stationId="station-1" onStartShift={startShift} /></QueryClientProvider>);
+  expect((await screen.findByRole("alert")).textContent).toContain("gateDuty.unstaffed");
+  fireEvent.click(screen.getByRole("button", { name: "changeOver.start" }));
+  expect(startShift).toHaveBeenCalledTimes(1);
+  expect(screen.getByRole("button", { name: "gateDuty.assume" })).toBeTruthy();
+});
+
 it("shows the concurrent roster and signs off only the current worker", async () => {
   env.api.mockImplementation(async (path: string) => path.endsWith("/roster") ? { roster: [
     { id: "duty-1", userId: 1, userName: "Chad", startedAt: "2026-09-22T12:00:00Z" },

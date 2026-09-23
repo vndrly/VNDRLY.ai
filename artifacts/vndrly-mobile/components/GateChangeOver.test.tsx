@@ -40,6 +40,8 @@ vi.mock("@/components/TogglePillButton", () => ({
   ),
 }));
 vi.mock("@/components/GateDutyCard", () => ({ default: () => <div>gate-duty-card</div> }));
+vi.mock("@/components/AskVVoiceIndicator", () => ({ default: () => <div>askv-voice-indicator</div> }));
+vi.mock("@/components/BrandTitleRow", () => ({ default: () => <div>company-portal-header</div> }));
 vi.mock("@/lib/api", () => ({ apiFetch: vi.fn(), apiFetchRaw: vi.fn() }));
 vi.mock("expo-router", () => ({
   router: { replace: env.replace },
@@ -159,6 +161,19 @@ it("does not replace the active native session during incoming authentication", 
   expect(env.replace).not.toHaveBeenCalled();
   expect(screen.queryByText("changeOver.switchUser")).toBeNull();
   expect(screen.queryByLabelText("changeOver.password")).toBeNull();
+});
+it("keeps eligible sites compact until the operator opens the selector", async () => {
+  const base = env.api.getMockImplementation()!;
+  env.api.mockImplementation((path, body) =>
+    path === "/sites"
+      ? Promise.resolve({ sites: [{ id: 1, name: "Current site" }, { id: 2, name: "Scheduled site" }] })
+      : base(path, body),
+  );
+  mount();
+  expect(await screen.findByRole("button", { name: "Current site" })).not.toBeNull();
+  expect(screen.queryByRole("button", { name: "Scheduled site" })).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Current site" }));
+  expect(screen.getByRole("button", { name: "Scheduled site" })).not.toBeNull();
 });
 it("preserves cached shift facts on network failure but removes authentication and requires refresh", async () => {
   const cache = mount();

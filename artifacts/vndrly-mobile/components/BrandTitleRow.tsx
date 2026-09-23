@@ -9,7 +9,7 @@ import { useColors } from "@/hooks/useColors";
 import { VNDRLY_LOGO_SQUARE } from "@/lib/vndrly-brand-assets";
 
 type Props = {
-  title: string;
+  title?: string;
   subtitle?: string;
   logoTestId: string;
 };
@@ -49,7 +49,7 @@ export default function BrandTitleRow({ title, subtitle, logoTestId }: Props) {
         fallbackLogo
       )}
       <View style={styles.textCol}>
-        <Text style={[styles.title, { color: colors.foreground }]}>{title}</Text>
+        <Text style={[styles.title, { color: colors.foreground }]}>{title ?? brandName}</Text>
         {subtitle ? (
           <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>{subtitle}</Text>
         ) : null}

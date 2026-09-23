@@ -23,6 +23,8 @@ import {
 import ScreenSafeArea from "@/components/ScreenSafeArea";
 import TogglePillButton from "@/components/TogglePillButton";
 import GateDutyCard from "@/components/GateDutyCard";
+import AskVVoiceIndicator from "@/components/AskVVoiceIndicator";
+import BrandTitleRow from "@/components/BrandTitleRow";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/hooks/use-auth";
 import { apiFetch, apiFetchRaw } from "@/lib/api";
@@ -108,6 +110,8 @@ export default function GateChangeOver({
     params.siteId ? Number(params.siteId) : null,
   );
   const [selectedGate, setGate] = useState(params.stationId ?? "");
+  const [siteMenuOpen, setSiteMenuOpen] = useState(false);
+  const [gateMenuOpen, setGateMenuOpen] = useState(false);
   useEffect(() => {
     if (params.siteId && params.stationId) {
       setSite(Number(params.siteId));
@@ -258,6 +262,9 @@ export default function GateChangeOver({
   const label = (text: string) => (
     <Text style={{ color: colors.foreground }}>{text}</Text>
   );
+  const sectionHeading = (text: string) => (
+    <Text style={{ color: colors.foreground, fontSize: 17, fontWeight: "700" }}>{text}</Text>
+  );
   const button = (
     text: string,
     action: () => Promise<void>,
@@ -299,11 +306,17 @@ export default function GateChangeOver({
         contentContainerStyle={{ padding: 16, gap: 16 }}
         keyboardShouldPersistTaps="handled"
       >
-        <Text
-          style={{ color: colors.foreground, fontSize: 26, fontWeight: "700" }}
-        >
-          {t(history ? "changeOver.shiftNotes" : "changeOver.title")}
-        </Text>
+        {!history ? (
+          <BrandTitleRow subtitle="iOS Portal" logoTestId="change-over-company-logo" />
+        ) : null}
+        <View style={{ alignItems: "center", flexDirection: "row", gap: 12, justifyContent: "space-between" }}>
+          <Text
+            style={{ color: colors.foreground, flexShrink: 0, fontSize: 26, fontWeight: "700" }}
+          >
+            {t(history ? "changeOver.shiftNotes" : "changeOver.title")}
+          </Text>
+          {!history ? <AskVVoiceIndicator inline /> : null}
+        </View>
         {label(t(history ? "changeOver.historyIntro" : "changeOver.intro"))}
         {params.gateMode === "1" && (
           <TogglePillButton onPress={() => router.replace("/(tabs)" as never)}>
@@ -311,26 +324,47 @@ export default function GateChangeOver({
           </TogglePillButton>
         )}
         <View style={cardStyle}>
-          {label(t("changeOver.site"))}
-          {sites.data?.sites.map((s) => (
+          {sectionHeading(t("changeOver.site"))}
+          {sites.data?.sites.filter((site) => site.id === siteId).map((s) => (
             <TogglePillButton
               key={s.id}
-              solid={siteId === s.id}
+              solid
+              accessibilityState={{ expanded: siteMenuOpen }}
               onPress={() => {
-                setSite(s.id);
-                setGate("");
+                if ((sites.data?.sites.length ?? 0) > 1) setSiteMenuOpen((open) => !open);
               }}
             >
               {s.name}
             </TogglePillButton>
           ))}
-          {label(t("changeOver.gate"))}
-          {stations.data?.stations.map((s) => (
+          {siteMenuOpen && sites.data?.sites.filter((site) => site.id !== siteId).map((s) => (
             <TogglePillButton
               key={s.id}
-              solid={stationId === s.id}
-              onPress={() => setGate(s.id)}
+              onPress={() => {
+                setSite(s.id);
+                setGate("");
+                setSiteMenuOpen(false);
+                setGateMenuOpen(false);
+              }}
             >
+              {s.name}
+            </TogglePillButton>
+          ))}
+          {sectionHeading(t("changeOver.gate"))}
+          {stations.data?.stations.filter((station) => station.id === stationId).map((s) => (
+            <TogglePillButton
+              key={s.id}
+              solid
+              accessibilityState={{ expanded: gateMenuOpen }}
+              onPress={() => {
+                if ((stations.data?.stations.length ?? 0) > 1) setGateMenuOpen((open) => !open);
+              }}
+            >
+              {s.name}
+            </TogglePillButton>
+          ))}
+          {gateMenuOpen && stations.data?.stations.filter((station) => station.id !== stationId).map((s) => (
+            <TogglePillButton key={s.id} onPress={() => { setGate(s.id); setGateMenuOpen(false); }}>
               {s.name}
             </TogglePillButton>
           ))}
@@ -357,7 +391,12 @@ export default function GateChangeOver({
           }
         })}
         {!history && stationId ? (
-          <GateDutyCard stationId={stationId} workHubShiftId={params.workHubShiftId} />
+          <GateDutyCard
+            stationId={stationId}
+            workHubShiftId={params.workHubShiftId}
+            onStartShift={current && !current.shift ? () => void mutate("start", {}) : undefined}
+            startShiftDisabled={!online}
+          />
         ) : null}
         {history ? (
           <>
@@ -435,29 +474,16 @@ export default function GateChangeOver({
         ) : (
           current && (
             <>
-              <View style={cardStyle}>
-                {current.shift ? (
-                  <>
-                    {label(
-                      `${current.shift.operator_name} · ${new Date(current.shift.started_at).toLocaleString()}`,
-                    )}
-                    {current.snapshot && (
-                      <Snapshot snapshot={current.snapshot} />
-                    )}
-                  </>
-                ) : (
-                  <>
-                    {label(t("changeOver.noShift"))}
-                    {button(
-                      t("changeOver.start"),
-                      () => mutate("start", {}),
-                      !online,
-                    )}
-                  </>
+              {current.shift ? <View style={cardStyle}>
+                {label(
+                  `${current.shift.operator_name} · ${new Date(current.shift.started_at).toLocaleString()}`,
                 )}
-              </View>
+                {current.snapshot && (
+                  <Snapshot snapshot={current.snapshot} />
+                )}
+              </View> : null}
               <View style={cardStyle}>
-                {label(t("changeOver.shiftFollowUps"))}
+                {sectionHeading(t("changeOver.shiftFollowUps"))}
                 <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
                   <TogglePillButton solid={itemView === "open"} accessibilityState={{ selected: itemView === "open" }} onPress={() => setItemView("open")}>{t("changeOver.openItems")}</TogglePillButton>
                   <TogglePillButton solid={itemView === "resolved"} accessibilityState={{ selected: itemView === "resolved" }} onPress={() => setItemView("resolved")}>{t("changeOver.resolvedItems")}</TogglePillButton>

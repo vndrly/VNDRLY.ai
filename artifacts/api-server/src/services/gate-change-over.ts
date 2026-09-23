@@ -242,8 +242,43 @@ export async function listChangeOverSites(session: SessionPayload) {
     await pool.query(
       `SELECT s.id, s.name FROM site_locations s WHERE s.is_active IS DISTINCT FROM false AND s.hidden IS DISTINCT FROM true
     AND ($1='admin' OR ($1='partner' AND s.partner_id=$2) OR EXISTS (SELECT 1 FROM site_work_assignments a WHERE a.site_location_id=s.id AND a.vendor_id=$3))
+    AND (
+      $1 IN ('admin','partner')
+      OR EXISTS (
+        SELECT 1 FROM gate_shifts active_shift
+        JOIN gate_stations active_station ON active_station.id=active_shift.station_id
+        WHERE active_shift.operator_id=$4 AND active_shift.ended_at IS NULL AND active_station.site_id=s.id
+      )
+      OR EXISTS (
+        SELECT 1 FROM gate_duty_sessions duty
+        JOIN gate_stations duty_station ON duty_station.id=duty.station_id
+        WHERE duty.user_id=$4 AND duty.ended_at IS NULL AND duty_station.site_id=s.id
+      )
+      OR EXISTS (
+        SELECT 1 FROM gate_work_sessions work_session
+        JOIN work_hub_shifts work_shift ON work_shift.id=work_session.work_hub_shift_id
+        LEFT JOIN gate_stations work_station ON work_station.id=work_shift.gate_station_id
+        WHERE work_session.user_id=$4 AND work_session.ended_at IS NULL
+          AND coalesce(work_shift.site_location_id,work_station.site_id)=s.id
+      )
+      OR EXISTS (
+        SELECT 1 FROM work_hub_shift_assignments assignment
+        JOIN work_hub_shifts scheduled_shift ON scheduled_shift.id=assignment.shift_id
+        LEFT JOIN gate_stations scheduled_station ON scheduled_station.id=scheduled_shift.gate_station_id
+        WHERE assignment.user_id=$4
+          AND assignment.status NOT IN ('cancelled','declined')
+          AND scheduled_shift.milestone_status <> 'cancelled'
+          AND scheduled_shift.ends_at >= now()
+          AND coalesce(scheduled_shift.site_location_id,scheduled_station.site_id)=s.id
+      )
+    )
     ORDER BY s.name LIMIT 2000`,
-      [session.role, session.partnerId ?? null, session.vendorId ?? null],
+      [
+        session.role,
+        session.partnerId ?? null,
+        session.vendorId ?? null,
+        session.userId ?? null,
+      ],
     )
   ).rows;
   const allowed: { id: number; name: string; supervisor: boolean }[] = [];
@@ -267,8 +302,36 @@ export async function listChangeOverStations(
   await requireChangeOverAccess(pool, session, siteId);
   return (
     await pool.query(
-      "SELECT id, name, site_id FROM gate_stations WHERE site_id=$1 ORDER BY created_at, id",
-      [siteId],
+      `SELECT station.id, station.name, station.site_id
+       FROM gate_stations station
+       WHERE station.site_id=$1
+         AND (
+           $2 IN ('admin','partner')
+           OR EXISTS (
+             SELECT 1 FROM gate_shifts active_shift
+             WHERE active_shift.station_id=station.id AND active_shift.operator_id=$3 AND active_shift.ended_at IS NULL
+           )
+           OR EXISTS (
+             SELECT 1 FROM gate_duty_sessions duty
+             WHERE duty.station_id=station.id AND duty.user_id=$3 AND duty.ended_at IS NULL
+           )
+           OR EXISTS (
+             SELECT 1 FROM gate_work_sessions work_session
+             JOIN work_hub_shifts work_shift ON work_shift.id=work_session.work_hub_shift_id
+             WHERE work_shift.gate_station_id=station.id AND work_session.user_id=$3 AND work_session.ended_at IS NULL
+           )
+           OR EXISTS (
+             SELECT 1 FROM work_hub_shift_assignments assignment
+             JOIN work_hub_shifts scheduled_shift ON scheduled_shift.id=assignment.shift_id
+             WHERE assignment.user_id=$3
+               AND assignment.status NOT IN ('cancelled','declined')
+               AND scheduled_shift.milestone_status <> 'cancelled'
+               AND scheduled_shift.ends_at >= now()
+               AND scheduled_shift.gate_station_id=station.id
+           )
+         )
+       ORDER BY station.created_at, station.id`,
+      [siteId, session.role, session.userId ?? null],
     )
   ).rows;
 }
