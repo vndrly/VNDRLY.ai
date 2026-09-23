@@ -14,6 +14,14 @@ describe("Work Hub home cards", () => {
     expect(source).toContain('title="Files & Inventory"');
   });
 
+  it("delineates the Communications card into its four destinations", () => {
+    expect(source).toContain("function CommunicationsCard");
+    expect(source).toContain('label="Chats"');
+    expect(source).toContain('label="Calls"');
+    expect(source).toContain('label="Invitations"');
+    expect(source).toContain('label={`${companyName} Conversations`}');
+  });
+
   it("groups the worker's schedule and action queue into one delineated Today card", () => {
     expect(source).toContain("function TodayCard");
     expect(source).toContain('label="Calendar"');

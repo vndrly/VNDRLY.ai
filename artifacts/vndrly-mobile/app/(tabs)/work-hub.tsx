@@ -51,6 +51,20 @@ function TodayCard({ title, width, myWorkTitle, shifts, meetings, announcements,
   </View>;
 }
 
+function CommunicationsCard({ title, width, companyName, meetings }: { title: string; width: DimensionValue; companyName: string; meetings: number }) {
+  const colors = useColors();
+  return <View style={{ backgroundColor: colors.card, borderColor: colors.border, borderRadius: 16, borderWidth: 1, paddingHorizontal: 16, paddingTop: 16, width }}>
+    <View style={{ alignItems: "center", flexDirection: "row", gap: 10, paddingBottom: 14 }}>
+      <View style={{ alignItems: "center", backgroundColor: `${colors.primary}22`, borderRadius: 12, height: 40, justifyContent: "center", width: 40 }}><Feather name="message-circle" size={21} color={colors.primary} /></View>
+      <View><Text style={{ color: colors.text, fontSize: 19, fontWeight: "700" }}>{title}</Text><Text style={{ color: colors.mutedForeground, fontSize: 12 }}>Messages, calls, and invitations</Text></View>
+    </View>
+    <TodayItem label="Chats" icon="message-square" value="Open" onPress={() => openModule("chat")} />
+    <TodayItem label="Calls" icon="phone" value="Recent" onPress={() => openModule("calls")} />
+    <TodayItem label="Invitations" icon="mail" value={`${meetings} upcoming`} onPress={() => openModule("meetings")} />
+    <TodayItem label={`${companyName} Conversations`} icon="users" value="Recent" onPress={() => openModule("chat")} />
+  </View>;
+}
+
 function openModule(key: string) { router.push({ pathname: "/work-hub/[module]", params: { module: key } } as never); }
 
 export default function WorkHubScreen() {
@@ -77,7 +91,7 @@ export default function WorkHubScreen() {
     {error ? <Text accessibilityRole="alert" style={{ color: colors.mutedForeground }}>{error}</Text> : null}
     <View style={{ flexDirection: width >= 768 ? "row" : "column", flexWrap: "wrap", gap: 12 }}>
       <TodayCard title="Today" width={cardWidth} myWorkTitle={myWorkTitle} shifts={shifts} meetings={meetings} announcements={announcements} tasks={tasks} />
-      <SummaryCard title="Communications" icon="message-circle" value={`${meetings} upcoming ${meetings === 1 ? "meeting" : "meetings"}`} detail={`Chats, calls, invitations, and recent ${membership?.orgName?.trim() || "company"} conversations.`} onPress={() => openModule("chat")} width={cardWidth} />
+      <CommunicationsCard title="Communications" width={cardWidth} companyName={membership?.orgName?.trim() || "Company"} meetings={meetings} />
       <SummaryCard title="Site & Safety" icon="shield" value="Your assignments" detail="Authorized site presence, coverage, and open safety information." onPress={() => openModule("site-presence")} width={cardWidth} />
       <SummaryCard title="Files & Inventory" icon="folder" value="Recent records" detail="Your authorized files, notes, and assigned equipment." onPress={() => openModule("files-notes")} width={cardWidth} />
     </View>
