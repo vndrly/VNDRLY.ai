@@ -6,7 +6,7 @@ import LayeredPillButton from "@/components/LayeredPillButton";
 import AskVWaveform from "@/components/AskVWaveform";
 import { useAskVVoiceSession } from "@/hooks/use-askv-voice-session";
 
-const GREEN_APPROVAL_PILL = require("../../../attached_assets/pills/pill_green_approval1.png");
+const GREEN_APPROVAL_PILL = require("@/assets/pills/pill_green_approval1.png");
 
 /** Root-mounted so microphone capture always has a visible state and stop control. */
 export default function AskVVoiceIndicator({ inline = false }: { inline?: boolean }) {
