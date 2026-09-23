@@ -34,7 +34,7 @@ export default function AskVVoiceIndicator({ inline = false }: { inline?: boolea
         voice.setMuted(voiceActive);
       }} inactive={voiceStatus === "unavailable"} testID="askv-global-mute">
         <View style={{ alignItems: "center", flexDirection: "row", gap: 8, justifyContent: "center" }}>
-          <Text accessibilityLiveRegion="polite" style={{ color: "#fff", fontSize: 12 }}>
+          <Text accessibilityLiveRegion="polite" style={{ color: voiceStatus === "active" ? "#fff" : "#1a1d23", fontSize: 12 }}>
             {voiceLabel}
           </Text>
           <AskVWaveform active={voiceActive} />

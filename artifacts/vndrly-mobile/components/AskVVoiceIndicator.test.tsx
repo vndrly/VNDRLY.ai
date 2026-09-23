@@ -50,6 +50,7 @@ describe("AskVVoiceIndicator", () => {
     expect(screen.getByTestId("askv-global-mute").getAttribute("data-color")).toBe("#b51a2a");
     expect(screen.getByTestId("askv-global-mute").getAttribute("data-inactive")).toBe("false");
     expect(screen.getByText("AskV is Muted")).toBeTruthy();
+    expect(screen.getByText("AskV is Muted").getAttribute("style")).toContain("color: rgb(26, 29, 35)");
     fireEvent.click(screen.getByTestId("askv-global-mute"));
     expect(env.setMuted).toHaveBeenCalledWith(false);
     expect(env.navigate).not.toHaveBeenCalled();
@@ -63,6 +64,7 @@ describe("AskVVoiceIndicator", () => {
     expect(screen.getByTestId("askv-global-mute").getAttribute("data-color")).toBe("#1f9a3d");
     expect(screen.getByTestId("askv-global-mute").getAttribute("data-source")).toContain("pill_green_approval1.png");
     expect(screen.getByText("AskV is Active")).toBeTruthy();
+    expect(screen.getByText("AskV is Active").getAttribute("style")).toContain("color: rgb(255, 255, 255)");
   });
 
   it("uses the gray pill when voice is unavailable", () => {
@@ -71,6 +73,7 @@ describe("AskVVoiceIndicator", () => {
 
     expect(screen.getByTestId("askv-global-mute").getAttribute("data-inactive")).toBe("true");
     expect(screen.getByText("AskV is Unavailable")).toBeTruthy();
+    expect(screen.getByText("AskV is Unavailable").getAttribute("style")).toContain("color: rgb(26, 29, 35)");
   });
 
   it("moves the AskV voice control into the dashboard header without leaving a duplicate overlay", () => {

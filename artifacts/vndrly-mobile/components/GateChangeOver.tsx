@@ -274,6 +274,7 @@ export default function GateChangeOver({
     <TogglePillButton
       disabled={busy || disabled}
       inactive={inactive}
+      askVInactiveStyle={inactive}
       onPress={() => void act(action)}
     >
       {text}
@@ -488,7 +489,7 @@ export default function GateChangeOver({
                 {sectionHeading(t("changeOver.shiftFollowUps"))}
                 <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
                   <TogglePillButton solid={itemView === "open"} accessibilityState={{ selected: itemView === "open" }} onPress={() => setItemView("open")}>{t("changeOver.openItems")}</TogglePillButton>
-                  <TogglePillButton inactive accessibilityState={{ selected: itemView === "resolved" }} onPress={() => setItemView("resolved")}>{t("changeOver.resolvedItems")}</TogglePillButton>
+                  <TogglePillButton inactive askVInactiveStyle accessibilityState={{ selected: itemView === "resolved" }} onPress={() => setItemView("resolved")}>{t("changeOver.resolvedItems")}</TogglePillButton>
                 </View>
                 {current.items.filter((item) => item.status === itemView).length === 0 && label(t("changeOver.none"))}
                 {current.items.filter((item) => item.status === itemView).map((i) => (

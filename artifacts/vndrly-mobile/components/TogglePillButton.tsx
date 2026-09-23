@@ -37,6 +37,8 @@ export interface TogglePillButtonProps {
   height?: number;
   color?: TogglePillColor;
   inactive?: boolean;
+  /** Match the gray AskV unavailable pill instead of the standard white toggle rest artwork. */
+  askVInactiveStyle?: boolean;
   accessibilityLabel?: string;
   accessibilityState?: AccessibilityState;
   /** Colored at rest (primary CTAs). Default false = grey rest, colored on press. */
@@ -64,6 +66,7 @@ export default function TogglePillButton({
   height: heightProp,
   color = "brand",
   inactive,
+  askVInactiveStyle,
   accessibilityLabel,
   accessibilityState,
   solid,
@@ -103,7 +106,7 @@ export default function TogglePillButton({
     >
       {({ pressed }) => {
         const showColored = !lockToRest && (lockToColored ? !pressed : pressed);
-        const src = showColored ? activeSrc : restSrc;
+        const src = showColored ? activeSrc : askVInactiveStyle ? GREY_PILL : restSrc;
         const labelColor = showColored ? "#ffffff" : "#1a1d23";
         const isGreyedOut = isDisabled && !inactive;
         const isGreyPill = !showColored && !isGreyedOut;

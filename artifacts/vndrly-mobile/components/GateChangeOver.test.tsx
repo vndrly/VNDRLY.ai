@@ -33,8 +33,8 @@ vi.mock("@/components/ScreenSafeArea", () => ({
   default: ({ children }: any) => <>{children}</>,
 }));
 vi.mock("@/components/TogglePillButton", () => ({
-  default: ({ children, disabled, inactive, onPress }: any) => (
-    <button data-inactive={inactive ? "true" : "false"} disabled={disabled} onClick={onPress}>
+  default: ({ askVInactiveStyle, children, disabled, inactive, onPress }: any) => (
+    <button data-askv-inactive-style={askVInactiveStyle ? "true" : "false"} data-inactive={inactive ? "true" : "false"} disabled={disabled} onClick={onPress}>
       {children}
     </button>
   ),
@@ -181,6 +181,7 @@ it("uses the static gray pill for the requested dashboard actions", async () => 
   for (const label of ["changeOver.refresh", "changeOver.resolvedItems", "changeOver.addItem", "changeOver.refreshHandoff"]) {
     const action = await screen.findByRole("button", { name: label });
     expect(action.getAttribute("data-inactive")).toBe("true");
+    expect(action.getAttribute("data-askv-inactive-style")).toBe("true");
   }
 });
 it("preserves cached shift facts on network failure but removes authentication and requires refresh", async () => {
