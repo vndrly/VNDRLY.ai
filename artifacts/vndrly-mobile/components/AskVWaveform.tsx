@@ -3,7 +3,7 @@ import { Animated, View } from "react-native";
 
 const BAR_HEIGHTS = [8, 14, 20, 14, 8];
 
-export default function AskVWaveform({ active }: { active: boolean }) {
+export default function AskVWaveform({ active, color = "#ffffff" }: { active: boolean; color?: string }) {
   const pulse = useMemo(() => new Animated.Value(0), []);
 
   useEffect(() => {
@@ -33,7 +33,7 @@ export default function AskVWaveform({ active }: { active: boolean }) {
         <Animated.View
           key={`${height}-${index}`}
           style={{
-            backgroundColor: "#ffffff",
+            backgroundColor: color,
             borderRadius: 2,
             height: active
               ? pulse.interpolate({

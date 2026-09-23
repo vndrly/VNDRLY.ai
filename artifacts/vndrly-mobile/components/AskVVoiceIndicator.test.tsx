@@ -51,6 +51,7 @@ describe("AskVVoiceIndicator", () => {
     expect(screen.getByTestId("askv-global-mute").getAttribute("data-inactive")).toBe("false");
     expect(screen.getByText("AskV is Muted")).toBeTruthy();
     expect(screen.getByText("AskV is Muted").getAttribute("style")).toContain("color: rgb(26, 29, 35)");
+    expect(screen.getByTestId("askv-waveform").firstElementChild?.getAttribute("style")).toContain("background-color: rgb(26, 29, 35)");
     fireEvent.click(screen.getByTestId("askv-global-mute"));
     expect(env.setMuted).toHaveBeenCalledWith(false);
     expect(env.navigate).not.toHaveBeenCalled();
@@ -65,6 +66,7 @@ describe("AskVVoiceIndicator", () => {
     expect(screen.getByTestId("askv-global-mute").getAttribute("data-source")).toContain("pill_green_approval1.png");
     expect(screen.getByText("AskV is Active")).toBeTruthy();
     expect(screen.getByText("AskV is Active").getAttribute("style")).toContain("color: rgb(255, 255, 255)");
+    expect(screen.getByTestId("askv-waveform").firstElementChild?.getAttribute("style")).toContain("background-color: rgb(255, 255, 255)");
   });
 
   it("uses the gray pill when voice is unavailable", () => {
@@ -74,6 +76,8 @@ describe("AskVVoiceIndicator", () => {
     expect(screen.getByTestId("askv-global-mute").getAttribute("data-inactive")).toBe("true");
     expect(screen.getByText("AskV is Unavailable")).toBeTruthy();
     expect(screen.getByText("AskV is Unavailable").getAttribute("style")).toContain("color: rgb(26, 29, 35)");
+    expect(screen.getByText("AskV is Unavailable").getAttribute("style")).toContain("font-size: 14px");
+    expect(screen.getByTestId("askv-waveform").firstElementChild?.getAttribute("style")).toContain("background-color: rgb(26, 29, 35)");
   });
 
   it("moves the AskV voice control into the dashboard header without leaving a duplicate overlay", () => {
@@ -85,6 +89,7 @@ describe("AskVVoiceIndicator", () => {
 
     const inlineScreen = render(<AskVVoiceIndicator inline />);
     expect(inlineScreen.getByTestId("askv-inline-status")).toBeTruthy();
+    expect(inlineScreen.getByTestId("askv-inline-status").getAttribute("style")).toContain("width: 50%");
     const waveform = inlineScreen.getByTestId("askv-waveform");
     expect(waveform.getAttribute("aria-label")).toBe("Ask V voice idle");
     expect(waveform.closest('[data-testid="askv-global-mute"]')).not.toBeNull();
