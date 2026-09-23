@@ -10,8 +10,18 @@ describe("Work Hub home cards", () => {
     expect(source).toContain('label={myWorkTitle}');
     expect(source).toContain('title="Today"');
     expect(source).toContain('title="Communications"');
-    expect(source).toContain('title="Site & Safety"');
-    expect(source).toContain('title="Files & Inventory"');
+    expect(source).toContain('{ key: "files-notes", label: "Files & Inventory"');
+    expect(source).toContain('{ key: "site-presence", label: "Site & Safety"');
+  });
+
+  it("orders compact tools as Search, Files and Inventory, Exports, then Site and Safety", () => {
+    const search = source.indexOf('{ key: "search"');
+    const files = source.indexOf('{ key: "files-notes"');
+    const exportsItem = source.indexOf('{ key: "implementation-exports"');
+    const safety = source.indexOf('{ key: "site-presence"');
+    expect(search).toBeLessThan(files);
+    expect(files).toBeLessThan(exportsItem);
+    expect(exportsItem).toBeLessThan(safety);
   });
 
   it("delineates the Communications card into its four destinations", () => {

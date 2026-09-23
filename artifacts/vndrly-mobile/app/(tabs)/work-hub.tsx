@@ -11,21 +11,6 @@ import { apiFetch } from "@/lib/api";
 import { mobileWorkHubModules } from "@/lib/work-hub-mobile";
 
 type HomeData = { tasks?: unknown[]; announcements?: unknown[]; shifts?: unknown[]; meetings?: unknown[] };
-type CardProps = { icon: React.ComponentProps<typeof Feather>["name"]; title: string; value: string; detail: string; onPress: () => void; width: DimensionValue };
-
-function SummaryCard({ icon, title, value, detail, onPress, width }: CardProps) {
-  const colors = useColors();
-  return <Pressable accessibilityRole="button" accessibilityLabel={`Open ${title}`} onPress={onPress} style={({ pressed }) => ({ width, minHeight: 132, borderWidth: 1, borderColor: colors.border, borderRadius: 16, padding: 16, gap: 10, opacity: pressed ? .72 : 1, backgroundColor: colors.card })}>
-    <View style={{ alignItems: "center", flexDirection: "row", gap: 10 }}>
-      <View style={{ alignItems: "center", backgroundColor: `${colors.primary}22`, borderRadius: 12, height: 40, justifyContent: "center", width: 40 }}><Feather name={icon} size={21} color={colors.primary} /></View>
-      <Text style={{ color: colors.text, flex: 1, fontSize: 17, fontWeight: "700" }}>{title}</Text>
-      <Feather name="chevron-right" size={20} color={colors.mutedForeground} />
-    </View>
-    <Text style={{ color: colors.text, fontSize: 24, fontWeight: "700" }}>{value}</Text>
-    <Text numberOfLines={2} style={{ color: colors.mutedForeground, fontSize: 13, lineHeight: 18 }}>{detail}</Text>
-  </Pressable>;
-}
-
 type TodayItemProps = { icon: React.ComponentProps<typeof Feather>["name"]; label: string; value: string; onPress: () => void };
 function TodayItem({ icon, label, value, onPress }: TodayItemProps) {
   const colors = useColors();
@@ -84,7 +69,13 @@ export default function WorkHubScreen() {
   const cardWidth = width >= 768 ? "48.5%" : "100%";
   const tasks = home?.tasks?.length ?? 0, announcements = home?.announcements?.length ?? 0, shifts = home?.shifts?.length ?? 0, meetings = home?.meetings?.length ?? 0;
   const myWorkTitle = user?.managedSubcontractor ? "My Hours" : "My Work";
-  const utilityModules = modules.filter(({ key }) => ["search", "implementation-exports", "operations-health"].includes(key));
+  const utilityModules = [
+    { key: "search", label: "Search", icon: "search" },
+    { key: "files-notes", label: "Files & Inventory", icon: "folder" },
+    { key: "implementation-exports", label: "Exports", icon: "download" },
+    { key: "site-presence", label: "Site & Safety", icon: "shield" },
+    ...modules.filter(({ key }) => key === "operations-health"),
+  ];
   return <ScreenSafeArea style={{ backgroundColor: colors.background }}><ScrollView contentContainerStyle={{ padding: 20, gap: 16 }}>
     <WorkHubPageTitle title="Work Hub" />
     {!home && !error ? <ActivityIndicator color={colors.primary} accessibilityLabel="Loading Work Hub summaries" /> : null}
@@ -92,8 +83,6 @@ export default function WorkHubScreen() {
     <View style={{ flexDirection: width >= 768 ? "row" : "column", flexWrap: "wrap", gap: 12 }}>
       <TodayCard title="Today" width={cardWidth} myWorkTitle={myWorkTitle} shifts={shifts} meetings={meetings} announcements={announcements} tasks={tasks} />
       <CommunicationsCard title="Communications" width={cardWidth} companyName={membership?.orgName?.trim() || "Company"} meetings={meetings} />
-      <SummaryCard title="Site & Safety" icon="shield" value="Your assignments" detail="Authorized site presence, coverage, and open safety information." onPress={() => openModule("site-presence")} width={cardWidth} />
-      <SummaryCard title="Files & Inventory" icon="folder" value="Recent records" detail="Your authorized files, notes, and assigned equipment." onPress={() => openModule("files-notes")} width={cardWidth} />
     </View>
     {utilityModules.length ? <View style={{ gap: 10 }}><Text style={{ color: colors.text, fontSize: 17, fontWeight: "700" }}>More tools</Text><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>{utilityModules.map(({ key, icon, label }) => <Pressable key={key} accessibilityRole="button" accessibilityLabel={`Open ${label}`} onPress={() => openModule(key)} style={({ pressed }) => ({ alignItems: "center", backgroundColor: colors.card, borderColor: colors.border, borderRadius: 14, borderWidth: 1, flexDirection: "row", gap: 8, opacity: pressed ? .72 : 1, paddingHorizontal: 14, paddingVertical: 11 })}><Feather name={icon as React.ComponentProps<typeof Feather>["name"]} size={18} color={colors.primary} /><Text style={{ color: colors.text, fontWeight: "600" }}>{label}</Text></Pressable>)}</View></View> : null}
     <WorkHubDeviceSettings />
