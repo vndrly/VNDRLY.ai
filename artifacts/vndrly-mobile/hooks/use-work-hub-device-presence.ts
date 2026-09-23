@@ -57,8 +57,8 @@ export function useWorkHubDevicePresence(path: string, enabled: boolean) {
           headers: { "x-work-hub-source": "ios" },
           body: JSON.stringify({
             deviceId,
-            friendlyName: Platform.OS === "ios" ? "iPhone or iPad" : "Mobile device",
-            deviceClass: "phone",
+            friendlyName: Platform.OS === "ios" ? "iPhone or iPad" : Platform.OS === "web" ? "Browser preview" : "Mobile device",
+            deviceClass: Platform.OS === "web" ? "desktop" : "phone",
             capabilities: { microphone: true, speaker: true, camera: true, fileSelection: true, pushNotifications: true },
           }),
         });
