@@ -22,6 +22,7 @@ import WorkHubConversation from "@/components/WorkHubConversation";
 import { useMeetingCompanion } from "@/components/MeetingCompanionProvider";
 import TogglePillButton from "@/components/TogglePillButton";
 import ScreenSafeArea from "@/components/ScreenSafeArea";
+import WorkHubPageTitle from "@/components/WorkHubPageTitle";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/hooks/use-auth";
 import { apiFetch } from "@/lib/api";
@@ -344,7 +345,7 @@ export default function WorkHubModuleScreen() {
       <ScreenSafeArea style={{ backgroundColor: colors.background }}>
         <Stack.Screen options={{ title }} />
         <ScrollView refreshControl={["safety-response", "implementation-exports"].includes(module) ? undefined : <RefreshControl refreshing={loading} onRefresh={() => load()} />} contentContainerStyle={{ padding: 20, gap: 14 }}>
-          <Text accessibilityRole="header" style={{ color: colors.text, fontSize: 28, fontWeight: "700" }}>{title}</Text>
+          <WorkHubPageTitle title={title} />
           {loading && !data && !["safety-response", "implementation-exports"].includes(module) ? <ActivityIndicator color={colors.primary} /> : null}
           {!!error && <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{error}</Text>}
           {module === "managed-crews" && <ManagedCrews sponsorships={data?.sponsorships ?? []} />}
@@ -362,12 +363,7 @@ export default function WorkHubModuleScreen() {
       <ScreenSafeArea style={{ backgroundColor: colors.background }}>
         <Stack.Screen options={{ title: "Calls" }} />
         <ScrollView contentContainerStyle={{ padding: 20, gap: 14 }}>
-          <Text
-            accessibilityRole="header"
-            style={{ color: colors.text, fontSize: 28, fontWeight: "700" }}
-          >
-            Calls
-          </Text>
+          <WorkHubPageTitle title="Calls" />
           <WorkHubCalls />
         </ScrollView>
       </ScreenSafeArea>
@@ -381,12 +377,7 @@ export default function WorkHubModuleScreen() {
         }
         contentContainerStyle={{ padding: 20, gap: 14 }}
       >
-        <Text
-          accessibilityRole="header"
-          style={{ color: colors.text, fontSize: 28, fontWeight: "700" }}
-        >
-          {title}
-        </Text>
+        <WorkHubPageTitle title={title} />
         {module === "search" && (
           <View style={{ flexDirection: "row", gap: 8 }}>
             <TextInput

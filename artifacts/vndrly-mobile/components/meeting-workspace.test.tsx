@@ -136,6 +136,7 @@ vi.mock("@/components/WorkHubAudioRoom", () => ({
 }));
 vi.mock("@/components/WorkHubCalls", () => ({ default: () => null }));
 vi.mock("@/components/WorkHubConversation", () => ({ default: () => null }));
+vi.mock("@/components/AskVVoiceIndicator", () => ({ default: () => null }));
 vi.mock("@/components/ScreenSafeArea", () => ({
   default: ({ children }: any) => <div>{children}</div>,
 }));

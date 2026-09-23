@@ -96,4 +96,13 @@ describe("AskVVoiceIndicator", () => {
     fireEvent.click(inlineScreen.getByTestId("askv-global-mute"));
     expect(env.setMuted).toHaveBeenCalledWith(false);
   });
+
+  it("moves the AskV voice control into Work Hub page headers without leaving a duplicate overlay", () => {
+    env.pathname = "/work-hub/activity";
+    const globalScreen = render(<AskVVoiceIndicator />);
+    expect(globalScreen.queryByTestId("askv-global-status")).toBeNull();
+    globalScreen.unmount();
+    const inlineScreen = render(<AskVVoiceIndicator inline />);
+    expect(inlineScreen.getByTestId("askv-inline-status")).toBeTruthy();
+  });
 });
