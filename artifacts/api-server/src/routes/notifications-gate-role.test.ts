@@ -15,10 +15,24 @@ const state = vi.hoisted(() => ({
   events: [] as unknown[],
   pageSizes: [] as number[],
 }));
+// PostgreSQL compares all six fractional digits even when the driver returns a Date.
+const timestampKey = vi.hoisted(() => (value: any): string => {
+  const text =
+    value instanceof Date ? value.toISOString() : (value.timestamp ?? value);
+  return text.replace(
+    /\.(\d{1,6})Z$/,
+    (_match: string, digits: string) => `.${digits.padEnd(6, "0")}Z`,
+  );
+});
 vi.mock("drizzle-orm", () => ({
   eq: (c: string, v: any) => (r: any) =>
-    (+new Date(r[c]) === +new Date(v) && v instanceof Date) || r[c] === v,
-  lt: (c: string, v: any) => (r: any) => r[c] < v,
+    c === "createdAt"
+      ? timestampKey(r.databaseCreatedAt ?? r[c]) === timestampKey(v)
+      : r[c] === v,
+  lt: (c: string, v: any) => (r: any) =>
+    c === "createdAt"
+      ? timestampKey(r.databaseCreatedAt ?? r[c]) < timestampKey(v)
+      : r[c] < v,
   and:
     (...p: any[]) =>
     (r: any) =>
@@ -30,10 +44,14 @@ vi.mock("drizzle-orm", () => ({
   inArray: (c: string, values: any[]) => (r: any) => values.includes(r[c]),
   desc: (c: string) => c,
   sql: Object.assign(
-    (parts: TemplateStringsArray) =>
-      parts.join("").includes("count(*)")
-        ? "count"
-        : (r: any) => r.category !== "comments",
+    (parts: TemplateStringsArray, ...values: any[]) =>
+      parts.join("").includes("::timestamptz")
+        ? { timestamp: values[0] }
+        : parts.join("").includes("to_char(")
+          ? "exactTimestamp"
+          : parts.join("").includes("count(*)")
+            ? "count"
+            : (r: any) => r.category !== "comments",
     { raw: () => "" },
   ),
 }));
@@ -82,8 +100,16 @@ vi.mock("@workspace/db", () => {
       rows = [...rows]
         .sort((a, b) => {
           for (const key of order) {
-            if (a[key] < b[key]) return 1;
-            if (a[key] > b[key]) return -1;
+            const av =
+              key === "createdAt"
+                ? timestampKey(a.databaseCreatedAt ?? a[key])
+                : a[key];
+            const bv =
+              key === "createdAt"
+                ? timestampKey(b.databaseCreatedAt ?? b[key])
+                : b[key];
+            if (av < bv) return 1;
+            if (av > bv) return -1;
           }
           return 0;
         })
@@ -92,7 +118,14 @@ vi.mock("@workspace/db", () => {
       return rows.map((r) =>
         select
           ? Object.fromEntries(
-              Object.entries(select).map(([k, v]) => [k, r[v as string]]),
+              Object.entries(select).map(([k, v]) => [
+                k,
+                v === "exactTimestamp"
+                  ? timestampKey(r.databaseCreatedAt ?? r.createdAt)
+                  : (v as any)?.name === table.name
+                    ? { ...r }
+                    : r[v as string],
+              ]),
             )
           : { ...r },
       );
@@ -232,8 +265,70 @@ const get = (path = "", cookie = gate) =>
   request(app).get(`/api/notifications${path}`).set("Cookie", cookie);
 
 describe("role-aware notification inbox", () => {
+  it("preserves microseconds across a 25-row page boundary", async () => {
+    state.tables.notifications = Array.from({ length: 30 }, (_, index) =>
+      notification(index + 1, "work_hub_message", {
+        // IDs deliberately run opposite to timestamp order.
+        databaseCreatedAt: `2026-09-24T12:00:00.000${String(999 - index).padStart(3, "0")}Z`,
+      }),
+    );
+    const first = await get();
+    expect(first.body.items.map((row: any) => row.id)).toEqual(
+      Array.from({ length: 25 }, (_, index) => index + 1),
+    );
+    expect(first.body.nextCursor).toEqual({
+      createdAt: "2026-09-24T12:00:00.000975Z",
+      id: 25,
+    });
+    const second = await get(
+      `?beforeCreatedAt=${first.body.nextCursor.createdAt}&beforeId=25`,
+    );
+    expect(second.body.items.map((row: any) => row.id)).toEqual([
+      26, 27, 28, 29, 30,
+    ]);
+    expect(second.body.nextCursor).toBeNull();
+    expect(first.body.items[0]).not.toHaveProperty("cursorCreatedAt");
+  });
+  it("preserves microseconds when list scanning crosses 100 hidden rows", async () => {
+    state.tables.notifications = Array.from({ length: 130 }, (_, index) =>
+      notification(
+        index + 1,
+        index < 105 ? "hotlist_match" : "work_hub_message",
+        {
+          databaseCreatedAt: `2026-09-24T12:00:00.000${String(999 - index).padStart(3, "0")}Z`,
+        },
+      ),
+    );
+    const response = await get();
+    expect(response.body.items.map((row: any) => row.id)).toEqual(
+      Array.from({ length: 25 }, (_, index) => index + 106),
+    );
+    expect(response.body.nextCursor).toBeNull();
+  });
+  it("counts all submillisecond rows across internal 100-row boundaries", async () => {
+    state.tables.notifications = Array.from({ length: 205 }, (_, index) =>
+      notification(index + 1, "work_hub_message", {
+        databaseCreatedAt: `2026-09-24T12:00:00.000${String(999 - index).padStart(3, "0")}Z`,
+      }),
+    );
+    expect((await get("/unread-count")).body.count).toBe(205);
+  });
+  it("marks all submillisecond rows read across internal 100-row boundaries", async () => {
+    state.tables.notifications = Array.from({ length: 205 }, (_, index) =>
+      notification(index + 1, "work_hub_message", {
+        databaseCreatedAt: `2026-09-24T12:00:00.000${String(999 - index).padStart(3, "0")}Z`,
+      }),
+    );
+    await request(app).post("/api/notifications/read-all").set("Cookie", gate);
+    expect(state.tables.notifications.filter((row) => row.isRead)).toHaveLength(
+      205,
+    );
+    expect(state.events).toHaveLength(1);
+  });
   it("preserves the raw array and 100-row default for the unfiltered office inbox", async () => {
-    state.tables.notifications = Array.from({ length: 40 }, (_, i) => notification(i + 1, "hotlist_match"));
+    state.tables.notifications = Array.from({ length: 40 }, (_, i) =>
+      notification(i + 1, "hotlist_match"),
+    );
     const response = await get("", office);
     expect(response.status).toBe(200);
     expect(Array.isArray(response.body)).toBe(true);
@@ -278,7 +373,10 @@ describe("role-aware notification inbox", () => {
     expect(first.body.items?.map((r: any) => r.id)).toEqual(
       Array.from({ length: 25 }, (_, i) => 60 - i),
     );
-    expect(first.body.nextCursor).toEqual({ createdAt: at, id: 36 });
+    expect(first.body.nextCursor).toEqual({
+      createdAt: "2026-09-24T12:00:00.000000Z",
+      id: 36,
+    });
     const second = await get(`?beforeCreatedAt=${at}&beforeId=36`);
     expect(second.body.items?.map((r: any) => r.id)).toEqual(
       Array.from({ length: 25 }, (_, i) => 35 - i),
@@ -404,9 +502,7 @@ describe("role-aware notification inbox", () => {
     state.tables.notificationPreferences = [
       { userId: 7, commentsEnabled: false, commentMentionEmailEnabled: true },
     ];
-    expect((await get("", office)).body.map((r: any) => r.id)).toEqual([
-      1,
-    ]);
+    expect((await get("", office)).body.map((r: any) => r.id)).toEqual([1]);
     expect((await get("/unread-count", office)).body.count).toBe(1);
   });
   it("returns gate switches and atomically maps combined preferences", async () => {

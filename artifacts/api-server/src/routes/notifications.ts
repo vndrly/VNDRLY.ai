@@ -855,6 +855,7 @@ export async function findVendorVisitNotifierUserIds(vendorId: number): Promise<
 }
 
 type NotificationRow = typeof notificationsTable.$inferSelect;
+type CursorNotificationRow = NotificationRow & { cursorCreatedAt: string };
 type NotificationCursor = { createdAt: string; id: number };
 type GatePrefs = Partial<typeof notificationPreferencesTable.$inferSelect>;
 const gateSwitches = {
@@ -877,12 +878,14 @@ function gatePreferences(prefs: GatePrefs) {
 }
 
 function cursorPredicate(cursor: NotificationCursor): SQL | undefined {
-  const at = new Date(cursor.createdAt);
+  // Bind the original ISO text: JS Date and the driver's timestamp encoder
+  // truncate PostgreSQL's microseconds, which would skip same-millisecond rows.
+  const at = sql`${cursor.createdAt}::timestamptz`;
   return or(lt(notificationsTable.createdAt, at), and(eq(notificationsTable.createdAt, at), lt(notificationsTable.id, cursor.id)));
 }
 
-function rowCursor(row: NotificationRow): NotificationCursor {
-  return { createdAt: row.createdAt.toISOString(), id: row.id };
+function rowCursor(row: CursorNotificationRow): NotificationCursor {
+  return { createdAt: row.cursorCreatedAt, id: row.id };
 }
 
 async function notificationVisibility(session: Session) {
@@ -912,10 +915,15 @@ async function* visibleNotificationBatches(
   let cursor = options.cursor;
   const batchSize = options.batchSize ?? 100;
   while (true) {
-    const rows = await db.select().from(notificationsTable)
+    const selected = await db.select({
+      notification: notificationsTable,
+      // Format in the database before its timestamptz reaches JS Date.
+      cursorCreatedAt: sql<string>`to_char(${notificationsTable.createdAt} AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')`,
+    }).from(notificationsTable)
       .where(and(eq(notificationsTable.userId, session.userId), ...(options.conditions ?? []), cursor ? cursorPredicate(cursor) : undefined))
       .orderBy(desc(notificationsTable.createdAt), desc(notificationsTable.id)).limit(batchSize);
-    const allowed: NotificationRow[] = [];
+    const rows = selected.map(({ notification, cursorCreatedAt }) => ({ ...notification, cursorCreatedAt }));
+    const allowed: CursorNotificationRow[] = [];
     for (const row of rows) if (await visible(row)) allowed.push(row);
     yield allowed;
     if (rows.length < batchSize) return;
@@ -969,14 +977,14 @@ router.get("/notifications", async (req, res) => {
     ? { createdAt: beforeCreatedAt, id: beforeId } : undefined;
   const category = typeof req.query.category === "string" ? req.query.category : "all";
   if (!gate && category !== "all") conditions.push(eq(notificationsTable.category, category));
-  const rows: NotificationRow[] = [];
+  const rows: CursorNotificationRow[] = [];
   for await (const batch of visibleNotificationBatches(session, { conditions, cursor, batchSize: gate ? 100 : legacy ? limit : limit + 1 })) {
     rows.push(...batch.filter(row => !gate || category === "all" || resolveGateNotificationCategory(row) === category));
     if (rows.length >= (legacy ? limit : limit + 1)) break;
   }
-  const items = rows.slice(0, limit).map(row => gate ? { ...row, displayCategory: resolveGateNotificationCategory(row) } : row);
+  const items = rows.slice(0, limit).map(({ cursorCreatedAt: _cursorCreatedAt, ...row }) => gate ? { ...row, displayCategory: resolveGateNotificationCategory(row) } : row);
   if (legacy) return res.json(items);
-  return res.json({ items, nextCursor: rows.length > limit && items.length ? rowCursor(items[items.length - 1]) : null,
+  return res.json({ items, nextCursor: rows.length > limit && items.length ? rowCursor(rows[items.length - 1]) : null,
     categories: gate ? GATE_NOTIFICATION_CATEGORIES : [...new Set(Object.values(TYPE_TO_CATEGORY))] });
 });
 
