@@ -205,12 +205,14 @@ vi.mock("@/components/AmberButton", async () => {
       onPress,
       disabled,
       loading,
+      height,
       testID,
     }: {
       children: React.ReactNode;
       onPress?: () => void;
       disabled?: boolean;
       loading?: boolean;
+      height?: number;
       testID?: string;
     }) => {
       const isDisabled = !!(disabled || loading);
@@ -218,6 +220,7 @@ vi.mock("@/components/AmberButton", async () => {
         "button",
         {
           "data-testid": testID,
+          "data-height": height,
           "aria-disabled": isDisabled || undefined,
           disabled: isDisabled,
           onClick: isDisabled ? undefined : onPress,
@@ -491,6 +494,7 @@ describe("GatekeeperScreen", () => {
     const row = firstByTestId("gate-submit-row");
     expect(row.contains(submitButtons[0])).toBe(true);
     expect(row.getAttribute("style")).toContain("align-items: flex-end");
+    expect(submitButtons[0].getAttribute("data-height")).toBe("30");
     expect(screen.getByText("gatekeeper.submitCheckIn")).toBeTruthy();
   });
 

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   AppState,
+  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -139,6 +140,8 @@ export default function GateChangeOver({
   const [search, setSearch] = useState("");
   const [recipientsOpen, setRecipientsOpen] = useState(false);
   const [days, setDays] = useState(7);
+  const [timeframeOpen, setTimeframeOpen] = useState(false);
+  const [reportFormat, setReportFormat] = useState<"pdf" | "excel" | "word" | null>(null);
   const [before, setBefore] = useState("");
   const [newGate, setNewGate] = useState("");
   const [reportRecipientIds, setReportRecipientIds] = useState<number[]>([]);
@@ -293,19 +296,34 @@ export default function GateChangeOver({
       {text}
     </TogglePillButton>
   );
-  const exportShiftNotes = async (format: "pdf" | "excel" | "word") => {
-    if (!reportFilters) return;
+  const exportShiftNotes = async () => {
+    if (!reportFilters || !reportFormat) throw new Error(t("gateHistory.noFormat"));
+    const format = reportFormat;
     const response = await apiFetchRaw("/api/gate-report/export", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ reportKind: "shift_notes", format, filters: reportFilters }) });
+    const extension = format === "excel" ? "csv" : format === "word" ? "doc" : "pdf";
+    const filename = `vndrly-shift-notes.${extension}`;
+    if (Platform.OS === "web") {
+      const url = URL.createObjectURL(await response.blob());
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = filename;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+      return;
+    }
     if (!FileSystem.cacheDirectory || !(await Sharing.isAvailableAsync())) throw new Error(t("gateHistory.shareUnavailable"));
-    const uri = `${FileSystem.cacheDirectory}vndrly-shift-notes.${format === "excel" ? "xls" : format === "word" ? "doc" : "pdf"}`;
+    const uri = `${FileSystem.cacheDirectory}${filename}`;
     const bytes = new Uint8Array(await response.arrayBuffer()); let binary = "";
     for (const byte of bytes) binary += String.fromCharCode(byte);
     await FileSystem.writeAsStringAsync(uri, globalThis.btoa(binary), { encoding: FileSystem.EncodingType.Base64 });
     await Sharing.shareAsync(uri, { dialogTitle: t("gateHistory.share") });
   };
   const emailShiftNotes = async () => {
-    if (!reportFilters || !reportRecipientIds.length) throw new Error(t("gateHistory.noRecipients"));
-    await apiFetch("/api/gate-report/deliver", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ reportKind: "shift_notes", format: "pdf", recipientUserIds: reportRecipientIds, filters: reportFilters }) });
+    if (!reportFilters || !reportFormat) throw new Error(t("gateHistory.noFormat"));
+    if (!reportRecipientIds.length) throw new Error(t("gateHistory.noRecipients"));
+    await apiFetch("/api/gate-report/email", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ reportKind: "shift_notes", format: reportFormat, recipientUserIds: reportRecipientIds, filters: reportFilters }) });
     setError(t("gateHistory.emailed"));
   };
   const canTransfer = mayTransferHandoff({
@@ -332,7 +350,7 @@ export default function GateChangeOver({
             />
             <Text
               accessibilityRole="header"
-              style={{ color: colors.foreground, flexShrink: 1, fontSize: 26, fontWeight: "700" }}
+              style={{ color: colors.foreground, flexShrink: 1, fontSize: 20, fontWeight: "700" }}
             >
               {t(history ? "changeOver.shiftNotes" : "changeOver.title")}
             </Text>
@@ -479,7 +497,10 @@ export default function GateChangeOver({
         ) : null}
         {history ? (
           <>
-            <View testID="shift-notes-recipients-card" style={[cardStyle, { backgroundColor: "#28282a" }]}>
+            <View testID="shift-notes-report-card" style={[cardStyle, { backgroundColor: "#28282a", gap: 14 }]}>
+            {sectionHeading(t("gateHistory.sendReports", { defaultValue: "Send Reports" }))}
+            <View style={{ backgroundColor: colors.border, height: 1 }} />
+            <View testID="shift-notes-recipients-card" style={{ gap: 12 }}>
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={t("gateHistory.toggleRecipients")}
@@ -502,7 +523,9 @@ export default function GateChangeOver({
                 </View>
               ) : null}
             </View>
-            <View testID="shift-notes-search-card" style={[cardStyle, { backgroundColor: "#28282a" }]}>
+            <View style={{ backgroundColor: colors.border, height: 1 }} />
+            <View testID="shift-notes-search-card" style={{ gap: 12 }}>
+              {sectionHeading(t("changeOver.search"))}
               <TextInput
                 accessibilityLabel={t("changeOver.search")}
                 placeholder={t("changeOver.search")}
@@ -514,7 +537,21 @@ export default function GateChangeOver({
                   setBefore("");
                 }}
               />
-              <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t("gateHistory.toggleTimePeriod")}
+                accessibilityState={{ expanded: timeframeOpen }}
+                onPress={() => setTimeframeOpen((open) => !open)}
+                style={{ alignItems: "center", flexDirection: "row", gap: 8, justifyContent: "space-between", minHeight: 30 }}
+                testID="shift-notes-timeframe-toggle"
+              >
+                <View style={{ flex: 1, gap: 2 }}>
+                  <Text style={{ color: colors.foreground, fontSize: 15, fontWeight: "700" }}>{t("gateHistory.chooseTimePeriod")}</Text>
+                  <Text style={{ color: colors.mutedForeground, fontSize: 13 }}>{`${days} ${t("changeOver.days")}`}</Text>
+                </View>
+                <Text aria-hidden style={{ color: colors.foreground, fontSize: 22, lineHeight: 22 }}>{timeframeOpen ? "⌃" : "⌄"}</Text>
+              </Pressable>
+              {timeframeOpen ? <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
                 {[7, 30, 90, 365].map((n) => (
                   <TogglePillButton
                     key={n}
@@ -527,7 +564,7 @@ export default function GateChangeOver({
                     {`${n} ${t("changeOver.days")}`}
                   </TogglePillButton>
                 ))}
-              </View>
+              </View> : null}
               {log.data?.rows.length === 0 && label(t("changeOver.noNotes"))}
               {log.data?.rows.map((row) => (
                 <View key={row.id} style={cardStyle}>
@@ -566,14 +603,17 @@ export default function GateChangeOver({
                 </View>
               )}
             </View>
+            <View style={{ backgroundColor: colors.border, height: 1 }} />
             <View testID="shift-notes-export-row" style={{ flexDirection: "row", gap: 8 }}>
               {(["pdf", "excel", "word"] as const).map((format) => (
-                <TogglePillButton key={format} color={format === "pdf" ? "red" : format === "excel" ? "green" : "blue"} solid style={{ flex: 1 }} onPress={() => void act(() => exportShiftNotes(format))}>
-                  {format === "excel" ? "CSV" : format.toUpperCase()}
+                <TogglePillButton key={format} color={format === "pdf" ? "red" : format === "excel" ? "green" : "blue"} solid={reportFormat === format} accessibilityState={{ selected: reportFormat === format }} style={{ flex: 1 }} onPress={() => setReportFormat(format)}>
+                  {format === "excel" ? "CSV" : format === "word" ? "DOC" : "PDF"}
                 </TogglePillButton>
               ))}
             </View>
-            <TogglePillButton testID="shift-notes-email" color="brand" solid onPress={() => void act(emailShiftNotes)}>{t("gateHistory.email")}</TogglePillButton>
+            <TogglePillButton testID="shift-notes-save" color="brand" solid disabled={!reportFormat} onPress={() => void act(exportShiftNotes)}>{t("gateHistory.saveCopy", { defaultValue: "Save a Copy" })}</TogglePillButton>
+            <TogglePillButton testID="shift-notes-email" color="brand" solid disabled={!reportFormat} onPress={() => void act(emailShiftNotes)}>{t("gateHistory.emailReport", { defaultValue: "Email Report" })}</TogglePillButton>
+            </View>
           </>
         ) : (
           current && (

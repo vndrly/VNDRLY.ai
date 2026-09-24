@@ -3,7 +3,7 @@ import * as Sharing from "expo-sharing";
 import * as Crypto from "expo-crypto";
 import { router } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
@@ -34,6 +34,7 @@ export default function GateHistory() {
   const [recipientsOpen, setRecipientsOpen] = useState(false);
   const [timePeriodOpen, setTimePeriodOpen] = useState(false); const [recordTypeOpen, setRecordTypeOpen] = useState(false);
   const [range, setRange] = useState<Range>("current_shift"); const [recordType, setRecordType] = useState<RecordType>("all");
+  const [emailFormat, setEmailFormat] = useState<Format | null>(null);
   const [search, setSearch] = useState(""); const [message, setMessage] = useState("");
   const [recipientIds, setRecipientIds] = useState<number[]>([]);
   const [reviewReasons, setReviewReasons] = useState<Record<string, string>>({});
@@ -53,18 +54,34 @@ export default function GateHistory() {
       return user?.id && visibleIds.has(user.id) ? [user.id] : [];
     });
   }, [recipients.data, user?.id]);
-  const exportReport = async (format: Format) => {
+  const exportReport = async () => {
+    if (!emailFormat) throw new Error(t("gateHistory.noFormat"));
+    const format = emailFormat;
     const response = await apiFetchRaw("/api/gate-report/export", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ reportKind: "history", format, filters }) });
+    const extension = format === "excel" ? "csv" : format === "word" ? "doc" : "pdf";
+    const filename = `vndrly-gate-history.${extension}`;
+    if (Platform.OS === "web") {
+      const url = URL.createObjectURL(await response.blob());
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = filename;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+      return;
+    }
     if (!FileSystem.cacheDirectory || !(await Sharing.isAvailableAsync())) throw new Error(t("gateHistory.shareUnavailable"));
-    const uri = `${FileSystem.cacheDirectory}vndrly-gate-history.${format === "excel" ? "xls" : format === "word" ? "doc" : "pdf"}`;
+    const uri = `${FileSystem.cacheDirectory}${filename}`;
     const bytes = new Uint8Array(await response.arrayBuffer());
     let binary = ""; for (const byte of bytes) binary += String.fromCharCode(byte);
     await FileSystem.writeAsStringAsync(uri, globalThis.btoa(binary), { encoding: FileSystem.EncodingType.Base64 });
     await Sharing.shareAsync(uri, { dialogTitle: t("gateHistory.share") });
   };
   const emailReport = async () => {
+    if (!emailFormat) throw new Error(t("gateHistory.noFormat"));
     if (!recipientIds.length) throw new Error(t("gateHistory.noRecipients"));
-    await apiFetch("/api/gate-report/deliver", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ reportKind: "history", format: "pdf", recipientUserIds: recipientIds, filters }) });
+    await apiFetch("/api/gate-report/email", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ reportKind: "history", format: emailFormat, recipientUserIds: recipientIds, filters }) });
     setMessage(t("gateHistory.emailed"));
   };
   const act = (work: () => Promise<void>) => void work().catch((cause) => setMessage(cause instanceof Error ? cause.message : t("gateHistory.failed")));
@@ -85,7 +102,7 @@ export default function GateHistory() {
           size={40}
           testID="history-page-back"
         />
-        <Text accessibilityRole="header" style={{ color: colors.foreground, flexShrink: 1, fontFamily: "Inter_700Bold", fontSize: 26 }}>
+        <Text accessibilityRole="header" style={{ color: colors.foreground, flexShrink: 1, fontFamily: "Inter_700Bold", fontSize: 20 }}>
           {t("gatekeeper.historyTitle")}
         </Text>
       </View>
@@ -102,7 +119,10 @@ export default function GateHistory() {
       {stations.data?.stations.filter((station) => station.id === selectedStationId).map((station) => <TogglePillButton key={station.id} solid accessibilityState={{ expanded: gateMenuOpen }} onPress={() => { if ((stations.data?.stations.length ?? 0) > 1) setGateMenuOpen((open) => !open); }}>{station.name}</TogglePillButton>)}
       {gateMenuOpen && stations.data?.stations.filter((station) => station.id !== selectedStationId).map((station) => <TogglePillButton key={station.id} onPress={() => { setStationId(station.id); setGateMenuOpen(false); }}>{station.name}</TogglePillButton>)}
     </View>
-    <View testID="gate-history-recipients-card" style={{ backgroundColor: "#28282a", borderColor: colors.border, borderRadius: 12, borderWidth: 1, gap: 12, padding: 16 }}>
+    <View testID="gate-history-report-card" style={{ backgroundColor: "#28282a", borderColor: colors.border, borderRadius: 12, borderWidth: 1, gap: 14, padding: 16 }}>
+    <Text style={{ color: colors.foreground, fontSize: 17, fontWeight: "700" }}>{t("gateHistory.sendReports", { defaultValue: "Send Reports" })}</Text>
+    <View style={{ backgroundColor: colors.border, height: 1 }} />
+    <View testID="gate-history-recipients-card" style={{ gap: 12 }}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={t("gateHistory.toggleRecipients")}
@@ -119,7 +139,8 @@ export default function GateHistory() {
       </Pressable>
       {recipientsOpen ? <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{recipients.data?.recipients.filter(isVisibleGateReportRecipient).map((recipient) => <TogglePillButton key={recipient.userId} solid={recipientIds.includes(recipient.userId)} onPress={() => setRecipientIds((current) => current.includes(recipient.userId) ? current.filter((id) => id !== recipient.userId) : [...current, recipient.userId])}>{recipient.name}</TogglePillButton>)}</View> : null}
     </View>
-    <View testID="gate-history-search-card" style={{ backgroundColor: "#28282a", borderColor: colors.border, borderRadius: 12, borderWidth: 1, gap: 12, padding: 16 }}>
+    <View style={{ backgroundColor: colors.border, height: 1 }} />
+    <View testID="gate-history-search-card" style={{ gap: 12 }}>
       <Text style={{ color: colors.foreground, fontSize: 17, fontWeight: "700" }}>{t("gateHistory.searchTitle")}</Text>
       <TextInput accessibilityLabel={t("gatekeeper.historySearch")} value={search} onChangeText={setSearch} placeholder={t("gatekeeper.historySearch")} placeholderTextColor={colors.mutedForeground} style={[field, { backgroundColor: colors.card }]} />
       <Pressable
@@ -155,7 +176,9 @@ export default function GateHistory() {
       {message ? <Text accessibilityRole="alert" style={{ color: colors.mutedForeground }}>{message}</Text> : null}
       {report.isLoading ? <ActivityIndicator color={colors.primary} /> : (report.data?.rows ?? []).length === 0 ? <Text style={{ color: colors.mutedForeground }}>{t("gatekeeper.historyEmpty")}</Text> : report.data?.rows.map((row, index) => { const id = String(row.id ?? index); return <View key={id} style={{ borderColor: colors.border, borderRadius: 10, borderWidth: 1, gap: 8, padding: 12 }}><Text style={{ color: colors.foreground }}>{String(row.name ?? row.driver ?? row.vehiclePlate ?? t("gateHistory.record"))}</Text><Text style={{ color: colors.mutedForeground }}>{Object.entries(row).filter(([key]) => key !== "id").slice(0, 5).map(([, value]) => String(value ?? "")).filter(Boolean).join(" · ")}</Text>{recordType === "needs_review" ? <><TextInput accessibilityLabel={`${t("gateHistory.reviewReason")} ${id}`} value={reviewReasons[id] ?? ""} onChangeText={(value) => setReviewReasons((current) => ({ ...current, [id]: value }))} placeholder={t("gateHistory.reviewReason")} placeholderTextColor={colors.mutedForeground} style={field} /><TogglePillButton disabled={!reviewReasons[id]?.trim()} onPress={() => act(() => resolveReview(row))}>{t(typeof row.reconciliationId === "string" ? "gateHistory.reverse" : "gateHistory.reconcile")}</TogglePillButton></> : null}</View>; })}
     </View>
-    <View testID="gate-history-export-row" style={{ flexDirection: "row", gap: 8 }}>{(["pdf", "excel", "word"] as Format[]).map((format) => <TogglePillButton key={format} color={format === "pdf" ? "red" : format === "excel" ? "green" : "blue"} solid style={{ flex: 1 }} onPress={() => act(() => exportReport(format))}>{format === "excel" ? "CSV" : format.toUpperCase()}</TogglePillButton>)}</View>
-    <TogglePillButton testID="gate-history-email" color="brand" solid onPress={() => act(emailReport)}>{t("gateHistory.email")}</TogglePillButton>
+    <View testID="gate-history-export-row" style={{ flexDirection: "row", gap: 8 }}>{(["pdf", "excel", "word"] as Format[]).map((format) => <TogglePillButton key={format} color={format === "pdf" ? "red" : format === "excel" ? "green" : "blue"} solid={emailFormat === format} accessibilityState={{ selected: emailFormat === format }} style={{ flex: 1 }} onPress={() => setEmailFormat(format)}>{format === "excel" ? "CSV" : format === "word" ? "DOC" : "PDF"}</TogglePillButton>)}</View>
+    <TogglePillButton testID="gate-history-save" color="brand" solid disabled={!emailFormat} onPress={() => act(exportReport)}>{t("gateHistory.saveCopy", { defaultValue: "Save a Copy" })}</TogglePillButton>
+    <TogglePillButton testID="gate-history-email" color="brand" solid disabled={!emailFormat} onPress={() => act(emailReport)}>{t("gateHistory.emailReport", { defaultValue: "Email Report" })}</TogglePillButton>
+    </View>
   </ScrollView></ScreenSafeArea>;
 }

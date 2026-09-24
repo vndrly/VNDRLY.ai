@@ -579,6 +579,15 @@ describe("CrewTimeSection — inline error wiring (Task #546)", () => {
     // Banner appears after the first (failing) tap.
     await screen.findByTestId("inline-error-foreman-membership");
 
+    // The banner can render before the failed request's `finally` block
+    // re-enables the row control. Wait for the real retry boundary so a
+    // loaded full suite cannot drop this second tap while the button is busy.
+    await waitFor(() => {
+      expect(
+        firstByTestId("button-crew-toggle-100").getAttribute("aria-disabled"),
+      ).not.toBe("true");
+    });
+
     // Second tap succeeds — banner must clear.
     tapInOutForCrewId(100);
 

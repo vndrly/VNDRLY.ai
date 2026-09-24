@@ -16,21 +16,29 @@ describe("Profile settings", () => {
     expect(source).toContain('styles.profileIconButton');
   });
 
-  it("keeps only language and location inside the settings panel", () => {
+  it("keeps language, location, and audio backup devices inside the settings panel", () => {
     expect(source).toContain('testID="profile-settings-panel"');
     expect(source).toContain('{settingsOpen ? (');
     expect(source).toContain('testID={`button-lang-${lng}`}');
     expect(source).toContain('testID="button-toggle-location-consent"');
+    expect(source).toContain('import WorkHubDeviceSettings from "@/components/WorkHubDeviceSettings"');
     const panelSource = source.slice(
       source.indexOf('testID="profile-settings-panel"'),
       source.indexOf('{canManageCompany ? ('),
     );
+    expect(panelSource).toContain("<WorkHubDeviceSettings />");
     expect(panelSource.indexOf('testID="button-edit-profile"')).toBeGreaterThan(
       panelSource.indexOf(') : null}'),
     );
     expect(panelSource.indexOf('testID="button-compliance-card"')).toBeGreaterThan(
       panelSource.indexOf(') : null}'),
     );
+  });
+
+  it("opens Settings when Work Hub links directly to audio settings", () => {
+    expect(source).toContain("useLocalSearchParams");
+    expect(source).toContain('openSettings === "audio"');
+    expect(source).toContain("setSettingsOpen(true)");
   });
 
   it("keeps Edit Profile and Compliance Card as regular Profile actions", () => {

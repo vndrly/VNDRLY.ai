@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   createMemoryGateReportDependencies,
   deliverGateReports,
+  emailGateReportAttachments,
   listGateReportRecipients,
   openGateReport,
   parseGateReportFilters,
@@ -86,6 +87,35 @@ describe("Gate reports", () => {
       format: "pdf",
       filters,
     }, deps)).rejects.toMatchObject({ status: 403 });
+  });
+
+  it("emails the selected report file with Search History and the time period in the subject", async () => {
+    const deps = createMemoryGateReportDependencies({
+      access: new Map([
+        [1, { kind: "full_site" }],
+        [2, { kind: "full_site" }],
+      ]),
+      rows: [{ id: "visit:1", name: "Alex", company: "MidCon" }],
+    });
+
+    await emailGateReportAttachments({
+      senderUserId: 1,
+      recipientUserIds: [2],
+      reportKind: "history",
+      format: "word",
+      filters: { ...filters, range: "30d" },
+    }, deps);
+
+    expect(deps.attachments()).toEqual([
+      expect.objectContaining({
+        recipientUserId: 2,
+        subject: "Search History — Last 30 Days",
+        filename: "vndrly-gate-report.doc",
+        contentType: "application/msword",
+      }),
+    ]);
+    expect(deps.attachments()[0]!.body.toString()).toContain("Site:</strong> Big Cs Deep");
+    expect(deps.attachments()[0]!.body.toString()).toContain("Gate:</strong> Main gate");
   });
 
   it("rejects shift-note delivery to a full-site account outside the authorized gate recipient list", async () => {

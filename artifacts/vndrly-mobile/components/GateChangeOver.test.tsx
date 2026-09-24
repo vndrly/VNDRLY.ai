@@ -157,11 +157,18 @@ it("collapses recipients and places exports after Shift Notes results", async ()
 
   const searchCard = screen.getByTestId("shift-notes-search-card");
   const exportRow = screen.getByTestId("shift-notes-export-row");
+  const reportCard = screen.getByTestId("shift-notes-report-card");
+  expect(reportCard.contains(screen.getByTestId("shift-notes-recipients-card"))).toBe(true);
+  expect(reportCard.contains(searchCard)).toBe(true);
+  expect(reportCard.contains(exportRow)).toBe(true);
+  expect(reportCard.contains(screen.getByTestId("shift-notes-save"))).toBe(true);
+  expect(reportCard.contains(screen.getByTestId("shift-notes-email"))).toBe(true);
   expect(searchCard.compareDocumentPosition(exportRow) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   expect(screen.getByTestId("shift-notes-email").compareDocumentPosition(exportRow) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy();
   expect(within(exportRow).getByRole("button", { name: "PDF" }).getAttribute("data-color")).toBe("red");
   expect(within(exportRow).getByRole("button", { name: "CSV" }).getAttribute("data-color")).toBe("green");
-  expect(within(exportRow).getByRole("button", { name: "WORD" }).getAttribute("data-color")).toBe("blue");
+  expect(within(exportRow).getByRole("button", { name: "DOC" }).getAttribute("data-color")).toBe("blue");
+  expect(within(exportRow).getAllByRole("button").every((button) => button.getAttribute("data-solid") === "false")).toBe(true);
   expect(screen.getByTestId("shift-notes-email").getAttribute("data-color")).toBe("brand");
   expect(screen.getByTestId("shift-notes-email").getAttribute("data-solid")).toBe("true");
 });

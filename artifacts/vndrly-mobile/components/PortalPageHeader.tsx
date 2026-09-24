@@ -79,6 +79,6 @@ const styles = StyleSheet.create({
   pageTitle: {
     flexShrink: 1,
     fontFamily: "Inter_700Bold",
-    fontSize: 26,
+    fontSize: 20,
   },
 });

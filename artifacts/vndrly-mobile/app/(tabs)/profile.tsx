@@ -1,5 +1,5 @@
 import { Feather } from "@expo/vector-icons";
-import { router, useFocusEffect } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import * as Location from "expo-location";
 import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -20,6 +20,7 @@ import SafetyTrainingBanner from "@/components/SafetyTrainingBanner";
 import ScreenSafeArea from "@/components/ScreenSafeArea";
 import SphereBackButton from "@/components/SphereBackButton";
 import ProfilePhotoImage from "@/components/ProfilePhotoImage";
+import WorkHubDeviceSettings from "@/components/WorkHubDeviceSettings";
 import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch, logout, updatePreferredLanguage } from "@/lib/api";
@@ -52,6 +53,7 @@ type FieldMe = {
 export default function ProfileScreen() {
   const colors = useColors();
   const { t, i18n } = useTranslation();
+  const { openSettings } = useLocalSearchParams<{ openSettings?: string }>();
   const {
     user,
     availableMemberships,
@@ -78,6 +80,10 @@ export default function ProfileScreen() {
   const [langToast, setLangToast] = useState<
     { kind: "saved"; languageName: string } | { kind: "error" } | null
   >(null);
+
+  useEffect(() => {
+    if (openSettings === "audio") setSettingsOpen(true);
+  }, [openSettings]);
 
   useEffect(() => {
     hasActiveConsentForThisDevice().then(setLocConsent).catch(() => setLocConsent(false));
@@ -450,6 +456,8 @@ export default function ProfileScreen() {
             </Text>
           </TouchableOpacity>
 
+          <View style={[styles.settingsDivider, { backgroundColor: colors.border }]} />
+          <WorkHubDeviceSettings />
         </View>
       ) : null}
 
@@ -555,7 +563,7 @@ const styles = StyleSheet.create({
   standardHeader: { gap: 14, marginBottom: 14, paddingHorizontal: 20, paddingTop: 20 },
   pageTitleRow: { alignItems: "center", flexDirection: "row", gap: 12, justifyContent: "space-between" },
   pageTitleStart: { alignItems: "center", flex: 1, flexDirection: "row", gap: 10, minWidth: 0 },
-  pageTitle: { flexShrink: 1, fontFamily: "Inter_700Bold", fontSize: 26 },
+  pageTitle: { flexShrink: 1, fontFamily: "Inter_700Bold", fontSize: 20 },
   locationBtn: { alignSelf: "stretch" },
   locationBtnText: { fontFamily: "Inter_600SemiBold", fontSize: 15 },
   locationDetailsLink: { marginTop: 10, alignSelf: "center", paddingVertical: 4 },

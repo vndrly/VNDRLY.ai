@@ -35,4 +35,10 @@ describe("Compliance Card identity guard", () => {
     expect(panelSource).toContain("form.expirationDate");
     expect(panelSource).toContain('testID="button-cert-photo"');
   });
+
+  it("left-aligns the company name with the employee name", () => {
+    expect(source).toMatch(
+      /\{me\.vendorName \? <Text[^>]*>\{me\.vendorName\}<\/Text> : null\}\s*\{me\.vendorLogoUrl \?/s,
+    );
+  });
 });

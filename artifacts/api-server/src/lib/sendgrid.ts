@@ -29,6 +29,7 @@ async function sendSendGridMail(input: {
   categories?: string[];
   customArgs?: Record<string, string>;
   fromName?: string;
+  attachments?: Array<{ content: string; type: string; filename: string; disposition: "attachment" }>;
 }): Promise<{ messageId: string | undefined }> {
   const cfg = sendGridConfig();
   if (!cfg.apiKey || !cfg.fromEmail) {
@@ -50,6 +51,7 @@ async function sendSendGridMail(input: {
     ],
     ...(cfg.replyTo ? { reply_to: { email: cfg.replyTo } } : {}),
     ...(input.categories?.length ? { categories: input.categories } : {}),
+    ...(input.attachments?.length ? { attachments: input.attachments } : {}),
     ...(sendGridSandboxEnabled()
       ? { mail_settings: { sandbox_mode: { enable: true } } }
       : {}),
@@ -71,6 +73,32 @@ async function sendSendGridMail(input: {
   }
 
   return { messageId: res.headers.get("x-message-id") ?? undefined };
+}
+
+export async function sendGateReportAttachmentEmail(input: {
+  to: string;
+  recipientName?: string | null;
+  subject: string;
+  filename: string;
+  contentType: string;
+  body: Buffer;
+}): Promise<{ messageId: string | undefined }> {
+  const name = input.recipientName?.trim() || "there";
+  const text = `Hi ${name},\n\nYour requested VNDRLY report is attached.`;
+  const html = `<p>Hi ${escapeHtml(name)},</p><p>Your requested VNDRLY report is attached.</p>`;
+  return sendSendGridMail({
+    to: input.to,
+    subject: input.subject,
+    text,
+    html,
+    categories: ["gate_report"],
+    attachments: [{
+      content: input.body.toString("base64"),
+      type: input.contentType,
+      filename: input.filename,
+      disposition: "attachment",
+    }],
+  });
 }
 
 const INVOICE_COPY = {

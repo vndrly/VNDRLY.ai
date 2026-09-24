@@ -15,7 +15,7 @@ afterEach(cleanup);
 describe("WorkHubPageTitle", () => {
   it("keeps AskV inline with a dashboard-sized page title", () => {
     render(<WorkHubPageTitle title="Activity" />);
-    expect(screen.getByRole("heading", { name: "Activity" }).getAttribute("style")).toContain("font-size: 26px");
+    expect(screen.getByRole("heading", { name: "Activity" }).getAttribute("style")).toContain("font-size: 20px");
     expect(screen.getByText("AskV").getAttribute("data-inline")).toBe("true");
     expect(screen.getByText("Company iOS Portal VNDRLY")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Back" })).toBeTruthy();

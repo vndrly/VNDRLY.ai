@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: "Inter_700Bold",
-    fontSize: 24,
+    fontSize: 20,
   },
   subtitle: {
     fontFamily: "Inter_400Regular",

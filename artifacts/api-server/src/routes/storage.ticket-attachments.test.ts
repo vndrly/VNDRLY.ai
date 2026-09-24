@@ -42,6 +42,8 @@ vi.mock("@workspace/db", () => {
     "people",
     "crew",
     "workHubFiles",
+    "certifications",
+    "fieldEmployees",
   ];
   const tables = Object.fromEntries(
     names.map((name) => [
@@ -100,6 +102,8 @@ vi.mock("@workspace/db", () => {
     vendorPeopleTable: tables.people,
     ticketCrewTable: tables.crew,
     workHubFilesTable: tables.workHubFiles,
+    employeeCertificationsTable: tables.certifications,
+    fieldEmployeesTable: tables.fieldEmployees,
   };
 });
 const objectPath = "/objects/uploads/00000000-0000-4000-8000-000000000001";
@@ -127,6 +131,8 @@ beforeEach(() => {
     people: [],
     crew: [],
     workHubFiles: [],
+    certifications: [],
+    fieldEmployees: [],
   };
   state.rows.notes.push({
     id: 1,
@@ -144,6 +150,64 @@ beforeEach(() => {
     actingForemanUserId: 12,
   });
   state.deleteObject.mockReset();
+});
+
+describe("private certification photo authorization", () => {
+  beforeEach(() => {
+    state.rows.notes = [];
+    state.object!.acl = { owner: "999", visibility: "private" };
+    state.rows.certifications.push({
+      id: 91,
+      employeeId: 7,
+      documentPath: objectPath,
+      documentUrl: `/api/storage${objectPath}`,
+      deletedAt: null,
+      vendorId: 22,
+      employeeUserId: 10,
+    });
+    state.rows.fieldEmployees.push({
+      id: 7,
+      userId: 10,
+      vendorId: 22,
+      deletedAt: null,
+    });
+  });
+
+  it("allows the employee, their vendor, same-vendor foremen, and admins", async () => {
+    for (const session of [
+      { userId: 10, role: "field_employee", vendorId: 22 },
+      { userId: 20, role: "vendor", vendorId: 22 },
+      { userId: 21, role: "field_employee", vendorId: 22, vendorRole: "foreman" },
+      { userId: 22, role: "admin" },
+    ]) {
+      state.session = session;
+      await request(app()).get(url).expect(200);
+    }
+  });
+
+  it("denies unrelated users and deleted certification references", async () => {
+    for (const session of [
+      { userId: 20, role: "vendor", vendorId: 44 },
+      { userId: 21, role: "field_employee", vendorId: 22, vendorRole: "gatekeeper" },
+      { userId: 21, role: "partner", partnerId: 33 },
+    ]) {
+      state.session = session;
+      await request(app()).get(url).expect(403);
+    }
+    state.session = { userId: 10, role: "field_employee", vendorId: 22 };
+    state.rows.certifications[0].deletedAt = new Date();
+    await request(app()).get(url).expect(403);
+  });
+
+  it("preserves a credential photo after it is attached to a certification", async () => {
+    state.session = { userId: 10, role: "field_employee", vendorId: 22 };
+    state.object!.acl = { owner: "10", visibility: "private" };
+    await request(app())
+      .delete("/storage/uploads")
+      .send({ objectPath })
+      .expect(409);
+    expect(state.deleteObject).not.toHaveBeenCalled();
+  });
 });
 describe("private ticket photo authorization", () => {
   it("keeps upload owners authorized before attachment and denies unrelated sessions", async () => {

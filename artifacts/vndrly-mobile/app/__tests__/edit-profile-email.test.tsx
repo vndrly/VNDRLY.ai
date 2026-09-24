@@ -21,8 +21,8 @@ describe("Edit Profile email", () => {
     expect(es.editProfile.email).toBe("Correo electrónico");
   });
 
-  it("keeps both form actions at the approved 40-pixel height", () => {
-    expect(source.match(/height=\{40\}/g)).toHaveLength(2);
+  it("keeps both form actions at the approved 30-pixel height", () => {
+    expect(source.match(/height=\{30\}/g)).toHaveLength(2);
     expect(source).not.toContain("height={44}");
   });
 

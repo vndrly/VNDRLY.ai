@@ -1,5 +1,6 @@
 import React from "react";
 import { cleanup, render } from "@testing-library/react";
+import { readFileSync } from "node:fs";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("react-i18next", () => ({
@@ -37,5 +38,11 @@ describe("BrandTitleRow", () => {
     expect(screen.getByText("iOS Portal")).toBeTruthy();
     expect(screen.getByTestId("company-logo").getAttribute("aria-label")).toBe("MidCon Solutions");
     expect(screen.getByTestId("vndrly-logo").getAttribute("aria-label")).toBe("VNDRLY");
+  });
+
+  it("uses the approved 20-point company name", () => {
+    const source = readFileSync(__filename.replace(/\.test\.tsx$/, ".tsx"), "utf8");
+
+    expect(source).toContain('title: {\n    fontFamily: "Inter_700Bold",\n    fontSize: 20,');
   });
 });

@@ -43,4 +43,11 @@ describe("Work Hub home cards", () => {
   it("labels sponsored workers as My Hours instead of exposing payroll documents", () => {
     expect(source).toContain('user?.managedSubcontractor ? "My Hours" : "My Work"');
   });
+
+  it("links to audio settings without embedding the device panel in Work Hub", () => {
+    expect(source).not.toContain("WorkHubDeviceSettings");
+    expect(source).toContain('accessibilityLabel="Open Audio settings"');
+    expect(source).toContain('pathname: "/profile"');
+    expect(source).toContain('params: { openSettings: "audio" }');
+  });
 });

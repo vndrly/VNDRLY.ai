@@ -26,13 +26,13 @@ export default function AskVVoiceIndicator({ inline = false }: { inline?: boolea
     <View
       pointerEvents="box-none"
       style={inline
-        ? { alignItems: "flex-end", maxWidth: 260, minWidth: 0, width: "50%" }
+        ? { alignItems: "flex-end", flexShrink: 1, maxWidth: 260, minWidth: 0 }
         : { position: "absolute", right: 12, bottom: Math.max(insets.bottom + 64, 80), width: 260, zIndex: 100 }}
       testID={inline ? "askv-inline-status" : "askv-global-status"}
     >
-      <LayeredPillButton color={voiceStatus === "active" ? "#1f9a3d" : voiceStatus === "muted" ? "#b51a2a" : undefined} source={voiceStatus === "active" ? GREEN_APPROVAL_PILL : undefined} height={40} style={{ alignSelf: "stretch" }} onPress={() => {
+      <LayeredPillButton color={voiceStatus === "active" ? "#1f9a3d" : undefined} source={voiceStatus === "active" ? GREEN_APPROVAL_PILL : undefined} height={40} style={{ alignSelf: inline ? "flex-end" : "stretch" }} onPress={() => {
         voice.setMuted(voiceActive);
-      }} inactive={voiceStatus === "unavailable"} testID="askv-global-mute">
+      }} inactive={voiceStatus !== "active"} testID="askv-global-mute">
         <View style={{ alignItems: "center", flexDirection: "row", gap: 8, justifyContent: "center" }}>
           <Text accessibilityLiveRegion="polite" style={{ color: voiceStatus === "active" ? "#fff" : "#1a1d23", fontSize: 14, fontWeight: "600" }}>
             {voiceLabel}

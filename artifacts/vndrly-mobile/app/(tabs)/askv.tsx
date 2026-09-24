@@ -581,7 +581,7 @@ const styles = StyleSheet.create({
   headerWrap: { gap: 12, paddingHorizontal: 20 },
   pageTitleRow: { alignItems: "center", flexDirection: "row", justifyContent: "space-between" },
   pageTitleStart: { alignItems: "center", flexDirection: "row", flexShrink: 1, gap: 8 },
-  pageTitle: { flexShrink: 1, fontFamily: "Inter_700Bold", fontSize: 26 },
+  pageTitle: { flexShrink: 1, fontFamily: "Inter_700Bold", fontSize: 20 },
   headerIcons: { flexDirection: "row", alignItems: "center", gap: 12 },
   subtitleControlsRow: { alignItems: "center", flexDirection: "row", gap: 12, marginTop: -6 },
   subtitleLineText: { flex: 1, marginBottom: 0, marginTop: 0 },

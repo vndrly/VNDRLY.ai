@@ -1331,7 +1331,7 @@ export default function GatekeeperScreen() {
                 onPress={onCheckIn}
                 loading={busy}
                 disabled={busy || !fence.canSubmit || !ctxQuery.data}
-                height={36}
+                height={30}
                 style={styles.submitButton}
               >
                 {t("gatekeeper.submitCheckIn")}
@@ -1349,7 +1349,7 @@ const styles = StyleSheet.create({
   container: { gap: 14, padding: 20, paddingBottom: 40 },
   pageTitleRow: { alignItems: "center", flexDirection: "row", gap: 12, justifyContent: "space-between" },
   pageTitleStart: { alignItems: "center", flex: 1, flexDirection: "row", gap: 10, minWidth: 0 },
-  pageTitle: { flexShrink: 1, fontFamily: "Inter_700Bold", fontSize: 26 },
+  pageTitle: { flexShrink: 1, fontFamily: "Inter_700Bold", fontSize: 20 },
   subtitle: { fontFamily: "Inter_400Regular", fontSize: 13, marginTop: -8 },
   submitButton: { width: "48%" },
   card: { borderWidth: 1, borderRadius: 12, gap: 10, padding: 14 },

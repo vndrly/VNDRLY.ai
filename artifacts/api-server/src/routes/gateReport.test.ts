@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   deliver: vi.fn(),
+  email: vi.fn(),
   open: vi.fn(),
 }));
 
@@ -15,7 +16,7 @@ vi.mock("../lib/visits-rate-limit", () => ({
 }));
 vi.mock("../services/gate-reports", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../services/gate-reports")>();
-  return { ...actual, deliverGateReports: mocks.deliver, openGateReport: mocks.open };
+  return { ...actual, deliverGateReports: mocks.deliver, emailGateReportAttachments: mocks.email, openGateReport: mocks.open };
 });
 
 import router from "./gateReport";
@@ -32,7 +33,19 @@ describe("Gate report delivery routes", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.deliver.mockResolvedValue([{ id: "delivery", recipientUserId: 2, expiresAt: new Date().toISOString() }]);
+    mocks.email.mockResolvedValue({ sent: 2 });
     mocks.open.mockResolvedValue({ body: Buffer.from("report"), contentType: "application/pdf", filename: "report.pdf" });
+  });
+
+  it("emails the selected report attachment format to the selected recipients", async () => {
+    const response = await request(app).post("/api/gate-report/email").send({ ...body, format: "word" });
+    expect(response.status).toBe(201);
+    expect(mocks.email).toHaveBeenCalledWith(expect.objectContaining({
+      senderUserId: 1,
+      recipientUserIds: [2, 3],
+      reportKind: "history",
+      format: "word",
+    }));
   });
 
   it("accepts only selected user ids and rejects a free-text recipient address", async () => {

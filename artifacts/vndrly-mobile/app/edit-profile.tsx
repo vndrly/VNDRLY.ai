@@ -256,7 +256,7 @@ export default function EditProfileScreen() {
               onPress={onSave}
               loading={saving}
               disabled={loading}
-              height={40}
+              height={30}
               style={{ alignSelf: "stretch", marginTop: 8 }}
               testID="button-save-profile"
             >
@@ -295,7 +295,7 @@ export default function EditProfileScreen() {
             <AmberButton
               onPress={onChangePassword}
               loading={pwSaving}
-              height={40}
+              height={30}
               style={{ alignSelf: "stretch", marginTop: 8 }}
               testID="button-change-password"
             >

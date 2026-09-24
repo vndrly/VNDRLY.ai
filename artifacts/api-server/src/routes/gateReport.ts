@@ -5,6 +5,7 @@ import { enforceVisitsRateLimit } from "../lib/visits-rate-limit";
 import { z } from "zod/v4";
 import {
   deliverGateReports,
+  emailGateReportAttachments,
   generateGateReport,
   GateReportsError,
   listGateReportRecipients,
@@ -49,6 +50,35 @@ router.post("/gate-report/deliver", async (req, res) => {
       filters: parseGateReportFilters(body.filters),
     });
     res.status(201).json({ deliveries });
+  } catch (error) {
+    if (error instanceof z.ZodError) { res.status(400).json({ code: "gate_report.invalid_request", issues: error.issues }); return; }
+    if (error instanceof GateReportsError) { res.status(error.status).json({ code: error.code }); return; }
+    throw error;
+  }
+});
+
+router.post("/gate-report/email", async (req, res) => {
+  const session = getSessionFromRequest(req);
+  if (!session?.userId) { res.status(401).json({ code: "auth.required", message: "Login required" }); return; }
+  try {
+    const body = z.object({
+      recipientUserIds: z.array(z.number().int().positive()).min(1).max(50),
+      reportKind: z.enum(["history", "shift_notes"]),
+      format: z.enum(["pdf", "excel", "word"]),
+      filters: z.object({
+        siteId: z.number().int().positive(),
+        stationId: z.string().uuid().optional(),
+        range: z.enum(["current_shift", "previous_shift", "24h", "7d", "14d", "30d", "90d", "1y"]),
+        recordType: z.enum(["all", "check_ins", "check_outs", "visitors_on_site", "employees_on_site", "vehicles_on_site", "pending", "needs_review"]),
+        search: z.string().max(200).optional(),
+      }),
+    }).strict().parse(req.body);
+    const result = await emailGateReportAttachments({
+      senderUserId: session.userId,
+      ...body,
+      filters: parseGateReportFilters(body.filters),
+    });
+    res.status(201).json(result);
   } catch (error) {
     if (error instanceof z.ZodError) { res.status(400).json({ code: "gate_report.invalid_request", issues: error.issues }); return; }
     if (error instanceof GateReportsError) { res.status(error.status).json({ code: error.code }); return; }

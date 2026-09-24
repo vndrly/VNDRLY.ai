@@ -94,6 +94,18 @@ describe("AskVVoiceIndicator", () => {
     expect(screen.getByTestId("askv-waveform").firstElementChild?.getAttribute("style")).toContain("background-color: rgb(26, 29, 35)");
   });
 
+  it("uses the gray pill and waveform when voice is muted", () => {
+    env.pathname = "/schedule";
+    env.voice.state = "stopped";
+    env.voice.muted = true;
+    const screen = render(<AskVVoiceIndicator />);
+
+    expect(screen.getByTestId("askv-global-mute").getAttribute("data-inactive")).toBe("true");
+    expect(screen.getByTestId("askv-global-mute").getAttribute("data-color")).toBe("brand");
+    expect(screen.getByText("AskV is Muted")).toBeTruthy();
+    expect(screen.getByTestId("askv-waveform")).toBeTruthy();
+  });
+
   it("moves the AskV voice control into the dashboard header without leaving a duplicate overlay", () => {
     env.pathname = "/change-over";
 
@@ -103,7 +115,8 @@ describe("AskVVoiceIndicator", () => {
 
     const inlineScreen = render(<AskVVoiceIndicator inline />);
     expect(inlineScreen.getByTestId("askv-inline-status")).toBeTruthy();
-    expect(inlineScreen.getByTestId("askv-inline-status").getAttribute("style")).toContain("width: 50%");
+    expect(inlineScreen.getByTestId("askv-inline-status").getAttribute("style")).toContain("align-items: flex-end");
+    expect(inlineScreen.getByTestId("askv-inline-status").getAttribute("style")).not.toContain("width: 50%");
     const waveform = inlineScreen.getByTestId("askv-waveform");
     expect(waveform.getAttribute("aria-label")).toBe("Ask V voice idle");
     expect(waveform.closest('[data-testid="askv-global-mute"]')).not.toBeNull();

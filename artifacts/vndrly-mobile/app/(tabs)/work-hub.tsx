@@ -3,7 +3,6 @@ import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, Text, View, useWindowDimensions, type DimensionValue } from "react-native";
 import ScreenSafeArea from "@/components/ScreenSafeArea";
-import WorkHubDeviceSettings from "@/components/WorkHubDeviceSettings";
 import WorkHubPageTitle from "@/components/WorkHubPageTitle";
 import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/useColors";
@@ -85,6 +84,15 @@ export default function WorkHubScreen() {
       <CommunicationsCard title="Communications" width={cardWidth} companyName={membership?.orgName?.trim() || "Company"} meetings={meetings} />
     </View>
     {utilityModules.length ? <View style={{ gap: 10 }}><Text style={{ color: colors.text, fontSize: 17, fontWeight: "700" }}>More tools</Text><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>{utilityModules.map(({ key, icon, label }) => <Pressable key={key} accessibilityRole="button" accessibilityLabel={`Open ${label}`} onPress={() => openModule(key)} style={({ pressed }) => ({ alignItems: "center", backgroundColor: colors.card, borderColor: colors.border, borderRadius: 14, borderWidth: 1, flexDirection: "row", gap: 8, opacity: pressed ? .72 : 1, paddingHorizontal: 14, paddingVertical: 11 })}><Feather name={icon as React.ComponentProps<typeof Feather>["name"]} size={18} color={colors.primary} /><Text style={{ color: colors.text, fontWeight: "600" }}>{label}</Text></Pressable>)}</View></View> : null}
-    <WorkHubDeviceSettings />
+    <Pressable
+      accessibilityRole="link"
+      accessibilityLabel="Open Audio settings"
+      onPress={() => router.push({ pathname: "/profile", params: { openSettings: "audio" } } as never)}
+      style={({ pressed }) => ({ alignItems: "center", alignSelf: "flex-start", flexDirection: "row", gap: 7, opacity: pressed ? .7 : 1, paddingVertical: 6 })}
+    >
+      <Feather name="headphones" size={17} color={colors.primary} />
+      <Text style={{ color: colors.primary, fontSize: 14, fontWeight: "600" }}>Audio settings</Text>
+      <Feather name="chevron-right" size={16} color={colors.primary} />
+    </Pressable>
   </ScrollView></ScreenSafeArea>;
 }

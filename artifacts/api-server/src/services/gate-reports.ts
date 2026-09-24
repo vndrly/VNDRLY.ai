@@ -1,7 +1,7 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import PDFDocument from "pdfkit";
 import { pool } from "@workspace/db";
-import { sendNotificationAlertEmail } from "../lib/sendgrid";
+import { sendGateReportAttachmentEmail, sendNotificationAlertEmail } from "../lib/sendgrid";
 
 export type GateReportRange = "current_shift" | "previous_shift" | "24h" | "7d" | "14d" | "30d" | "90d" | "1y";
 export type GateReportRecordType = "all" | "check_ins" | "check_outs" | "visitors_on_site" | "employees_on_site" | "vehicles_on_site" | "pending" | "needs_review";
@@ -47,7 +47,9 @@ export interface GateReportDependencies {
   markSent(id: string, at: Date): Promise<void>;
   markOpened(id: string, at: Date): Promise<void>;
   queryRows(filters: GateReportFilters, scope: GateReportScope, reportKind: GateReportKind): Promise<GateReportRow[]>;
+  resolveContext(filters: GateReportFilters): Promise<{ siteName: string; stationName: string }>;
   sendLink(input: { recipientUserId: number; url: string; token: string; reportKind: GateReportKind; format: GateReportFormat }): Promise<void>;
+  sendAttachment(input: { recipientUserId: number; subject: string; filename: string; contentType: string; body: Buffer }): Promise<void>;
   listRecipientCandidates(filters: GateReportFilters, reportKind: GateReportKind): Promise<Array<{ userId: number; name: string; role: string }>>;
   now(): Date;
 }
@@ -138,6 +140,53 @@ export async function deliverGateReports(input: {
   return results;
 }
 
+const rangeLabels: Record<GateReportRange, string> = {
+  current_shift: "Current Shift",
+  previous_shift: "Previous Shift",
+  "24h": "Last 24 Hours",
+  "7d": "Last 7 Days",
+  "14d": "Last 14 Days",
+  "30d": "Last 30 Days",
+  "90d": "Last 90 Days",
+  "1y": "Last 365 Days",
+};
+
+export async function emailGateReportAttachments(input: {
+  senderUserId: number;
+  recipientUserIds: number[];
+  reportKind: GateReportKind;
+  format: GateReportFormat;
+  filters: GateReportFilters;
+}, deps: GateReportDependencies = databaseGateReportDependencies) {
+  const filters = parseGateReportFilters(input.filters);
+  const recipients = [...new Set(input.recipientUserIds)];
+  if (!recipients.length || recipients.some((id) => !Number.isSafeInteger(id) || id <= 0))
+    fail(400, "gate_report.invalid_recipients");
+  const allowed = new Set((await listGateReportRecipients({
+    senderUserId: input.senderUserId,
+    reportKind: input.reportKind,
+    filters,
+  }, deps)).map((recipient) => recipient.userId));
+  if (recipients.some((id) => !allowed.has(id))) fail(403, "gate_report.recipient_forbidden");
+  const senderScope = await deps.resolveAccess(input.senderUserId, filters, input.reportKind);
+  if (!senderScope) throw new GateReportsError(403, "gate_report.forbidden");
+  const subjectPrefix = input.reportKind === "history" ? "Search History" : "Shift Notes";
+  const subject = `${subjectPrefix} — ${rangeLabels[filters.range]}`;
+  for (const recipientUserId of recipients) {
+    const recipientScope = await deps.resolveAccess(recipientUserId, filters, input.reportKind);
+    if (!recipientScope) throw new GateReportsError(403, "gate_report.recipient_forbidden");
+    const reportScope = senderScope.kind === "company" ? senderScope : recipientScope;
+    const rendered = await renderGateReport(
+      input.reportKind,
+      input.format,
+      await deps.queryRows(filters, reportScope, input.reportKind),
+      await deps.resolveContext(filters),
+    );
+    await deps.sendAttachment({ recipientUserId, subject, ...rendered });
+  }
+  return { sent: recipients.length };
+}
+
 export async function openGateReport(
   input: { token: string; userId: number },
   deps: GateReportDependencies = databaseGateReportDependencies,
@@ -153,7 +202,7 @@ export async function openGateReport(
     throw new GateReportsError(403, "gate_report.access_changed");
   if (delivery.reportKind === "shift_notes" && currentScope.kind !== "full_site") fail(403, "gate_report.access_changed");
   const rows = await deps.queryRows(delivery.filters, delivery.recipientScope, delivery.reportKind);
-  const rendered = await renderGateReport(delivery.reportKind, delivery.format, rows);
+  const rendered = await renderGateReport(delivery.reportKind, delivery.format, rows, await deps.resolveContext(delivery.filters));
   await deps.markOpened(delivery.id, now);
   return rendered;
 }
@@ -169,7 +218,7 @@ export async function generateGateReport(input: {
   if (!scope) throw new GateReportsError(403, "gate_report.forbidden");
   if (input.reportKind === "shift_notes" && scope.kind !== "full_site")
     fail(403, "gate_report.shift_notes_scope_required");
-  return renderGateReport(input.reportKind, input.format, await deps.queryRows(filters, scope, input.reportKind));
+  return renderGateReport(input.reportKind, input.format, await deps.queryRows(filters, scope, input.reportKind), await deps.resolveContext(filters));
 }
 
 export async function queryGateReport(input: {
@@ -210,16 +259,22 @@ function escapeXml(value: unknown) {
   return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
-async function renderGateReport(kind: GateReportKind, format: GateReportFormat, rows: GateReportRow[]) {
+async function renderGateReport(kind: GateReportKind, format: GateReportFormat, rows: GateReportRow[], context: { siteName: string; stationName: string }) {
   const columns = [...new Set(rows.flatMap((row) => Object.keys(row)))];
   const title = kind === "history" ? "VNDRLY Gate History" : "VNDRLY Shift Notes";
   if (format === "excel") {
-    const cells = (values: unknown[]) => values.map((value) => `<Cell><Data ss:Type="String">${escapeXml(value)}</Data></Cell>`).join("");
-    const body = `<?xml version="1.0"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="Report"><Table><Row>${cells(columns)}</Row>${rows.map((row) => `<Row>${cells(columns.map((key) => row[key]))}</Row>`).join("")}</Table></Worksheet></Workbook>`;
-    return { body: Buffer.from(body), contentType: "application/vnd.ms-excel", filename: "vndrly-gate-report.xls" };
+    const csvCell = (value: unknown) => `"${String(value ?? "").replace(/"/g, '""')}"`;
+    const body = [
+      ["Site", context.siteName],
+      ["Gate", context.stationName],
+      [],
+      columns,
+      ...rows.map((row) => columns.map((key) => row[key])),
+    ].map((values) => values.map(csvCell).join(",")).join("\r\n");
+    return { body: Buffer.from(`\uFEFF${body}`), contentType: "text/csv; charset=utf-8", filename: "vndrly-gate-report.csv" };
   }
   if (format === "word") {
-    const body = `<!doctype html><html><body><h1>${title}</h1><table><thead><tr>${columns.map((key) => `<th>${escapeXml(key)}</th>`).join("")}</tr></thead><tbody>${rows.map((row) => `<tr>${columns.map((key) => `<td>${escapeXml(row[key])}</td>`).join("")}</tr>`).join("")}</tbody></table></body></html>`;
+    const body = `<!doctype html><html><body><h1>${title}</h1><p><strong>Site:</strong> ${escapeXml(context.siteName)}</p><p><strong>Gate:</strong> ${escapeXml(context.stationName)}</p><table><thead><tr>${columns.map((key) => `<th>${escapeXml(key)}</th>`).join("")}</tr></thead><tbody>${rows.map((row) => `<tr>${columns.map((key) => `<td>${escapeXml(row[key])}</td>`).join("")}</tr>`).join("")}</tbody></table></body></html>`;
     return { body: Buffer.from(body), contentType: "application/msword", filename: "vndrly-gate-report.doc" };
   }
   const document = new PDFDocument({ margin: 36, size: "LETTER", layout: "landscape" });
@@ -230,6 +285,7 @@ async function renderGateReport(kind: GateReportKind, format: GateReportFormat, 
     document.on("error", reject);
   });
   document.fontSize(18).text(title).moveDown();
+  document.fontSize(11).text(`Site: ${context.siteName}`).text(`Gate: ${context.stationName}`).moveDown();
   document.fontSize(8);
   for (const row of rows) document.text(columns.map((key) => `${key}: ${String(row[key] ?? "")}`).join("  |  ")).moveDown(0.4);
   document.end();
@@ -355,6 +411,17 @@ export const databaseGateReportDependencies: GateReportDependencies = {
   async markSent(id, at) { await pool.query("UPDATE gate_report_deliveries SET sent_at=coalesce(sent_at,$2) WHERE id=$1", [id, at]); },
   async markOpened(id, at) { await pool.query("UPDATE gate_report_deliveries SET opened_at=coalesce(opened_at,$2) WHERE id=$1", [id, at]); },
   queryRows: queryDatabaseRows,
+  async resolveContext(filters) {
+    const row = (await pool.query(
+      `SELECT s.name AS site_name, coalesce(g.name,'All gates') AS station_name
+       FROM site_locations s
+       LEFT JOIN gate_stations g ON g.site_id=s.id AND g.id=$2
+       WHERE s.id=$1`,
+      [filters.siteId, filters.stationId ?? null],
+    )).rows[0];
+    if (!row) fail(404, "gate_report.site_not_found");
+    return { siteName: String(row.site_name), stationName: String(row.station_name) };
+  },
   async sendLink(input) {
     const contact = (await pool.query("SELECT coalesce(email,username) AS email,display_name FROM users WHERE id=$1", [input.recipientUserId])).rows[0];
     if (!contact?.email) fail(400, "gate_report.recipient_email_missing");
@@ -367,6 +434,18 @@ export const databaseGateReportDependencies: GateReportDependencies = {
       body: `Your ${input.format.toUpperCase()} report is ready. Sign in to VNDRLY to open it; access is checked again when you do.`,
       link: input.url,
       highPriority: false,
+    });
+  },
+  async sendAttachment(input) {
+    const contact = (await pool.query("SELECT coalesce(email,username) AS email,display_name FROM users WHERE id=$1", [input.recipientUserId])).rows[0];
+    if (!contact?.email) fail(400, "gate_report.recipient_email_missing");
+    await sendGateReportAttachmentEmail({
+      to: contact.email,
+      recipientName: contact.display_name,
+      subject: input.subject,
+      filename: input.filename,
+      contentType: input.contentType,
+      body: input.body,
     });
   },
   async listRecipientCandidates(filters, reportKind) {
@@ -432,11 +511,17 @@ export function createMemoryGateReportDependencies(input: {
   access: Map<number, GateReportScope | null>;
   rows?: GateReportRow[];
   recipients?: Array<{ userId: number; name: string; role: string }>;
-}): GateReportDependencies & { sent(): Array<{ recipientUserId: number; url: string; token: string }> } {
+  context?: { siteName: string; stationName: string };
+}): GateReportDependencies & {
+  sent(): Array<{ recipientUserId: number; url: string; token: string }>;
+  attachments(): Array<{ recipientUserId: number; subject: string; filename: string; contentType: string; body: Buffer }>;
+} {
   const deliveries = new Map<string, GateReportDelivery>();
   const sent: Array<{ recipientUserId: number; url: string; token: string }> = [];
+  const attachments: Array<{ recipientUserId: number; subject: string; filename: string; contentType: string; body: Buffer }> = [];
   return {
     sent: () => [...sent],
+    attachments: () => [...attachments],
     resolveAccess: async (userId) => input.access.get(userId) ?? null,
     async createDelivery(delivery) { deliveries.set(delivery.tokenHash, delivery); return delivery; },
     findDelivery: async (hash) => deliveries.get(hash) ?? null,
@@ -446,7 +531,9 @@ export function createMemoryGateReportDependencies(input: {
       const rows = input.rows ?? [];
       return scope.kind === "company" ? rows.filter((row) => String(row.company ?? "").toLowerCase() === scope.company.toLowerCase()) : rows;
     },
+    async resolveContext() { return input.context ?? { siteName: "Big Cs Deep", stationName: "Main gate" }; },
     async sendLink(message) { sent.push({ recipientUserId: message.recipientUserId, url: message.url, token: message.token }); },
+    async sendAttachment(message) { attachments.push(message); },
     async listRecipientCandidates() {
       return input.recipients ?? [...input.access.keys()].map((userId) => ({ userId, name: `User ${userId}`, role: "member" }));
     },

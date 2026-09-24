@@ -16,13 +16,15 @@ import { getObjectStore, UPLOAD_ROUTE } from "../lib/objectStore";
 import { absoluteUploadUrl } from "../lib/uploadUrl";
 import {
   db,
+  employeeCertificationsTable,
+  fieldEmployeesTable,
   siteLocationsTable,
   siteVisitsTable,
   siteWorkAssignmentsTable,
   ticketNoteLogsTable,
   workHubFilesTable,
 } from "@workspace/db";
-import { and, eq, or } from "drizzle-orm";
+import { and, eq, isNull, or } from "drizzle-orm";
 import {
   canReadTicketAttachment,
   ticketAttachmentReference,
@@ -104,6 +106,49 @@ async function canReadVisitEvidence(
     )
     .limit(1);
   return Boolean(assignment);
+}
+
+async function canReadCertificationPhoto(
+  session: ReturnType<typeof getSessionFromRequest>,
+  objectPath: string,
+): Promise<boolean> {
+  if (!session?.userId) return false;
+  const [certification] = await db
+    .select({
+      employeeId: employeeCertificationsTable.employeeId,
+      vendorId: fieldEmployeesTable.vendorId,
+      employeeUserId: fieldEmployeesTable.userId,
+    })
+    .from(employeeCertificationsTable)
+    .leftJoin(
+      fieldEmployeesTable,
+      eq(fieldEmployeesTable.id, employeeCertificationsTable.employeeId),
+    )
+    .where(
+      and(
+        or(
+          eq(employeeCertificationsTable.documentPath, objectPath),
+          eq(
+            employeeCertificationsTable.documentUrl,
+            `/api/storage${objectPath}`,
+          ),
+        ),
+        isNull(employeeCertificationsTable.deletedAt),
+        isNull(fieldEmployeesTable.deletedAt),
+      ),
+    )
+    .limit(1);
+  if (!certification?.vendorId) return false;
+  if (session.role === "admin") return true;
+  if (session.role === "vendor") {
+    return session.vendorId === certification.vendorId;
+  }
+  if (session.role !== "field_employee") return false;
+  if (session.userId === certification.employeeUserId) return true;
+  return (
+    session.vendorId === certification.vendorId &&
+    (session.vendorRole === "foreman" || session.vendorRole === "both")
+  );
 }
 
 function maxUploadBytes(): number {
@@ -325,6 +370,26 @@ router.delete("/storage/uploads", async (req: Request, res: Response) => {
       res.status(409).json({ error: "Object is attached to a ticket" });
       return;
     }
+    const [certificationReference] = await db
+      .select({ id: employeeCertificationsTable.id })
+      .from(employeeCertificationsTable)
+      .where(
+        and(
+          or(
+            eq(employeeCertificationsTable.documentPath, objectPath),
+            eq(
+              employeeCertificationsTable.documentUrl,
+              `/api/storage${objectPath}`,
+            ),
+          ),
+          isNull(employeeCertificationsTable.deletedAt),
+        ),
+      )
+      .limit(1);
+    if (certificationReference) {
+      res.status(409).json({ error: "Object is attached to a certification" });
+      return;
+    }
     await objectStorageService.deleteStoredObject(objectPath);
     res.status(204).end();
   } catch (error) {
@@ -391,6 +456,7 @@ router.get("/storage/objects/*path", async (req: Request, res: Response) => {
       aclAccess ||
       (await canReadVisitEvidence(session, objectPath)) ||
       (await canReadTicketAttachment(session, objectPath, obj.acl?.owner)) ||
+      (await canReadCertificationPhoto(session, objectPath)) ||
       (await canReadWorkHubFile(session, objectPath));
     if (!canAccess) {
       res.status(403).json({ error: "Forbidden" });

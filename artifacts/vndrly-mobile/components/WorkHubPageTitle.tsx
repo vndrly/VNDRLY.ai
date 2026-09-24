@@ -19,7 +19,7 @@ export default function WorkHubPageTitle({ title }: { title: string }) {
             size={40}
             testID="work-hub-page-back"
           />
-          <Text accessibilityRole="header" style={{ color: colors.text, flexShrink: 1, fontSize: 26, fontWeight: "700" }}>
+          <Text accessibilityRole="header" style={{ color: colors.text, flexShrink: 1, fontSize: 20, fontWeight: "700" }}>
             {title}
           </Text>
         </View>

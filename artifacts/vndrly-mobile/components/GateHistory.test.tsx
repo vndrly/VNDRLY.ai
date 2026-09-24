@@ -2,6 +2,7 @@ import React from "react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Platform } from "react-native";
 
 const env = vi.hoisted(() => ({ api: vi.fn(), raw: vi.fn(), changeOver: vi.fn(), share: vi.fn(), write: vi.fn() }));
 vi.mock("@/lib/api", () => ({ apiFetch: env.api, apiFetchRaw: env.raw }));
@@ -12,7 +13,7 @@ vi.mock("@/components/ScreenSafeArea", () => ({ default: ({ children }: any) => 
 vi.mock("@/components/BrandTitleRow", () => ({ default: ({ title, subtitle }: any) => <><h1>{title}</h1><p>{subtitle}</p></> }));
 vi.mock("@/components/AskVVoiceIndicator", () => ({ default: ({ inline }: any) => <div data-inline={String(Boolean(inline))}>AskV voice</div> }));
 vi.mock("@/components/SphereBackButton", () => ({ default: ({ onPress }: any) => <button onClick={onPress}>Back</button> }));
-vi.mock("@/components/TogglePillButton", () => ({ default: ({ children, color, onPress, solid, style, testID }: any) => <button data-testid={testID} data-color={color} data-solid={String(Boolean(solid))} onClick={onPress} style={style}>{children}</button> }));
+vi.mock("@/components/TogglePillButton", () => ({ default: ({ children, color, disabled, onPress, solid, style, testID }: any) => <button data-testid={testID} data-color={color} data-solid={String(Boolean(solid))} disabled={disabled} onClick={onPress} style={style}>{children}</button> }));
 vi.mock("expo-router", () => ({ router: { back: vi.fn(), canGoBack: () => true, replace: vi.fn() } }));
 vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
 vi.mock("expo-file-system/legacy", () => ({ cacheDirectory: "file:///cache/", EncodingType: { Base64: "base64" }, writeAsStringAsync: env.write }));
@@ -57,17 +58,40 @@ it("matches Shift Notes with selector and automatic-search result cards", async 
   expect(searchCard.compareDocumentPosition(exportRow) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   expect(within(exportRow).getByRole("button", { name: "PDF" }).getAttribute("data-color")).toBe("red");
   expect(within(exportRow).getByRole("button", { name: "CSV" }).getAttribute("data-color")).toBe("green");
-  expect(within(exportRow).getByRole("button", { name: "WORD" }).getAttribute("data-color")).toBe("blue");
+  expect(within(exportRow).getByRole("button", { name: "DOC" }).getAttribute("data-color")).toBe("blue");
+  expect(within(exportRow).getAllByRole("button").every((button) => button.getAttribute("data-solid") === "false")).toBe(true);
   expect(screen.getByTestId("gate-history-email").getAttribute("data-color")).toBe("brand");
   expect(screen.getByTestId("gate-history-email").getAttribute("data-solid")).toBe("true");
 });
 
 it("exports the selected view and emails only selected authorized recipients", async () => {
+  vi.spyOn(Platform, "OS", "get").mockReturnValue("ios");
   mount(); await screen.findByText("Bob Villa");
   fireEvent.click(screen.getByRole("button", { name: "PDF" }));
+  fireEvent.click(screen.getByTestId("gate-history-save"));
   await waitFor(() => expect(env.share).toHaveBeenCalled());
   fireEvent.click(screen.getByTestId("gate-history-recipients-toggle"));
   fireEvent.click(screen.getByRole("button", { name: "Supervisor" }));
-  fireEvent.click(screen.getByRole("button", { name: "gateHistory.email" }));
-  await waitFor(() => expect(env.api).toHaveBeenCalledWith("/api/gate-report/deliver", expect.objectContaining({ body: expect.stringContaining('"recipientUserIds":[1,2]') })));
+  fireEvent.click(screen.getByTestId("gate-history-email"));
+  await waitFor(() => expect(env.api).toHaveBeenCalledWith("/api/gate-report/email", expect.objectContaining({ body: expect.stringContaining('"recipientUserIds":[1,2]') })));
+});
+
+it("downloads each filtered export in the browser with the correct file type", async () => {
+  vi.spyOn(Platform, "OS", "get").mockReturnValue("web");
+  const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
+  const createObjectURL = vi.fn(() => "blob:gate-report");
+  const revokeObjectURL = vi.fn();
+  vi.stubGlobal("URL", { ...URL, createObjectURL, revokeObjectURL });
+  env.raw.mockResolvedValue({ blob: async () => new Blob(["report"]) });
+
+  mount();
+  await screen.findByText("Bob Villa");
+  for (const label of ["PDF", "CSV", "DOC"]) {
+    fireEvent.click(screen.getByRole("button", { name: label }));
+    fireEvent.click(screen.getByTestId("gate-history-save"));
+  }
+
+  await waitFor(() => expect(click).toHaveBeenCalledTimes(3));
+  expect(createObjectURL).toHaveBeenCalledTimes(3);
+  expect(revokeObjectURL).toHaveBeenCalledTimes(3);
 });

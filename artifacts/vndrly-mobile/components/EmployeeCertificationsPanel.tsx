@@ -4,6 +4,8 @@ import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
+  Modal,
+  Pressable,
   StyleSheet,
   Text,
   TextInput,
@@ -12,9 +14,11 @@ import {
 } from "react-native";
 
 import LayeredPillButton from "@/components/LayeredPillButton";
+import AuthedImage from "@/components/AuthedImage";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
 import { captureAndUploadImage } from "@/lib/photos";
+import { resolveStoragePath } from "@/lib/profile-photo";
 
 type Cert = {
   id: number;
@@ -61,6 +65,7 @@ export default function EmployeeCertificationsPanel({ employeeId, onChanged, def
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState<FormState>(blankForm);
   const [uploading, setUploading] = useState(false);
+  const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -211,6 +216,18 @@ export default function EmployeeCertificationsPanel({ employeeId, onChanged, def
                   .join(" · ")}
               </Text>
             </View>
+            {c.documentPath || c.documentUrl ? (
+              <TouchableOpacity
+                onPress={() =>
+                  setPreviewPhoto(resolveStoragePath(c.documentPath ?? c.documentUrl))
+                }
+                style={styles.iconBtn}
+                accessibilityLabel={t("employees.certifications.viewPhoto")}
+                testID={`button-view-cert-photo-${c.id}`}
+              >
+                <Feather name="image" size={16} color={colors.primary} />
+              </TouchableOpacity>
+            ) : null}
             <TouchableOpacity onPress={() => startEdit(c)} style={styles.iconBtn} accessibilityLabel={t("common.edit")}>
               <Feather name="edit-2" size={16} color={colors.mutedForeground} />
             </TouchableOpacity>
@@ -295,6 +312,36 @@ export default function EmployeeCertificationsPanel({ employeeId, onChanged, def
           </View>
         </View>
       ) : null}
+
+      <Modal
+        visible={!!previewPhoto}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setPreviewPhoto(null)}
+      >
+        <Pressable
+          style={styles.photoBackdrop}
+          onPress={() => setPreviewPhoto(null)}
+          testID="cert-photo-modal"
+        >
+          {previewPhoto ? (
+            <AuthedImage
+              uri={previewPhoto}
+              style={styles.photoPreview}
+              resizeMode="contain"
+              testID="cert-photo-image"
+            />
+          ) : null}
+          <TouchableOpacity
+            onPress={() => setPreviewPhoto(null)}
+            style={styles.photoClose}
+            accessibilityLabel={t("common.close")}
+            testID="button-close-cert-photo"
+          >
+            <Feather name="x" size={24} color="#ffffff" />
+          </TouchableOpacity>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -317,4 +364,7 @@ const styles = StyleSheet.create({
   saveText: { color: "#fff", fontFamily: "Inter_600SemiBold", fontSize: 14 },
   photoBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, marginTop: 6 },
   photoBtnText: { fontFamily: "Inter_600SemiBold", fontSize: 13 },
+  photoBackdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.92)", alignItems: "center", justifyContent: "center", padding: 20 },
+  photoPreview: { width: "100%", height: "78%" },
+  photoClose: { position: "absolute", top: 48, right: 20, width: 40, height: 40, alignItems: "center", justifyContent: "center" },
 });

@@ -111,10 +111,10 @@ export default function ComplianceScreen() {
                 <Text style={[styles.name, { color: c.foreground }]}>{me.firstName} {me.lastName}</Text>
                 {me.jobTitle ? <Text style={[styles.sub, { color: c.mutedForeground }]}>{me.jobTitle}</Text> : null}
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 2 }}>
+                  {me.vendorName ? <Text style={[styles.vendor, { color: c.foreground }]}>{me.vendorName}</Text> : null}
                   {me.vendorLogoUrl ? (
                     <Image source={{ uri: me.vendorLogoUrl }} style={{ width: 20, height: 20, borderRadius: 4 }} />
                   ) : null}
-                  {me.vendorName ? <Text style={[styles.vendor, { color: c.foreground }]}>{me.vendorName}</Text> : null}
                 </View>
               </View>
             </View>
