@@ -19,6 +19,15 @@ vi.mock("react-i18next", async (original) => ({ ...await original<typeof import(
 afterEach(() => { cleanup(); vi.clearAllMocks(); });
 
 describe("responsive notification placement", () => {
+  it("keeps one bell on a wide root page that has no sidebar", () => {
+    state.width = 1024;
+    const screen = render(<PortalPageHeader title="Edit profile" testIdPrefix="edit-profile" />);
+    const bells = screen.getAllByRole("button", { name: "nav.notifications" });
+    expect(bells).toHaveLength(1);
+    expect(bells[0].nextElementSibling).toBe(screen.getByTestId("edit-profile-vndrly-logo"));
+    fireEvent.click(bells[0]);
+    expect(state.push).toHaveBeenCalledExactlyOnceWith("/(tabs)/gate-notifications");
+  });
   it.each([390, 767, 768, 1024])("renders exactly one bell at %i points and opens the shared inbox once", (width) => {
     state.width = width;
     const screen = render(<AdaptiveNavigationShell activeKey="gate" bottomInset={0} gateVoiceActive={false} items={[]} notificationCount={7} onActivate={() => {}} onOpenNotifications={() => state.push("/(tabs)/gate-notifications")} {...{ onSignOut: () => {} }} width={width}>

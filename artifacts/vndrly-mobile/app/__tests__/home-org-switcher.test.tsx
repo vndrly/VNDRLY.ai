@@ -188,12 +188,23 @@ import {
 } from "@testing-library/react";
 
 import HomeScreen from "../(tabs)/index";
+import AdaptiveNavigationShell from "@/components/AdaptiveNavigationShell";
+import { syncAppIconBadge, useUnreadNotificationCount } from "@/lib/notificationBadge";
+import { setToken } from "@/lib/auth";
+vi.mock("@/components/SidebarHalftoneBackground", () => ({ default: () => null }));
+vi.mock("@/components/LanguageToggle", () => ({ default: () => null }));
+
+function HomeInShell() {
+  const count = useUnreadNotificationCount(true);
+  return <AdaptiveNavigationShell activeKey="index" bottomInset={0} gateVoiceActive={false} items={[]} notificationCount={count} onActivate={() => {}} onOpenNotifications={() => routerPushMock("/notifications")} {...{ onSignOut: () => {} }} width={1024}><HomeScreen /></AdaptiveNavigationShell>;
+}
 
 afterEach(() => {
   cleanup();
 });
 
-beforeEach(() => {
+beforeEach(async () => {
+  await setToken("home-test-account");
   apiFetchMock.mockReset();
   routerPushMock.mockReset();
   switchContextMock.mockReset();
@@ -229,6 +240,27 @@ beforeEach(() => {
 });
 
 describe("HomeScreen — Task #187 org-switcher pill", () => {
+  it("uses one shared unread request and only the sidebar bell on iPad", async () => {
+    authState.user = { id: 99, role: "vendor", displayName: "Vendor Tester" };
+    render(<HomeInShell />);
+    await act(async () => {});
+    expect(apiFetchMock.mock.calls.filter(([url]) => url === "/api/notifications/unread-count")).toHaveLength(1);
+    const bells = screen.getAllByRole("button", { name: "Notifications" });
+    expect(bells).toHaveLength(1);
+    expect(screen.getByTestId("adaptive-sidebar").contains(bells[0])).toBe(true);
+  });
+
+  it("uses shared count updates in the standalone Home bell and preserves its office destination", async () => {
+    authState.user = { id: 99, role: "vendor", displayName: "Vendor Tester" };
+    render(<HomeScreen />);
+    await act(async () => {});
+    apiFetchMock.mockResolvedValue({ count: 7 });
+    await act(async () => { await syncAppIconBadge(); });
+    const bell = screen.getByRole("button", { name: "Notifications" });
+    expect(bell.getAttribute("aria-valuetext")).toBe(tIdentity("home.unreadNotifications", { count: 7 }));
+    fireEvent.click(bell);
+    expect(routerPushMock).toHaveBeenCalledExactlyOnceWith("/notifications");
+  });
   it("makes the active-org pill tappable and opens the bottom sheet listing both memberships", async () => {
     render(<HomeScreen />);
 

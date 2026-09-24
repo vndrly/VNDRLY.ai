@@ -22,6 +22,8 @@ import { useScreenTopPadding } from "@/lib/screen-insets";
 import { formatTicketTrackingNumber } from "@workspace/db/format";
 
 import AuthedImage from "@/components/AuthedImage";
+import NotificationBell from "@/components/NotificationBell";
+import { useSidebarNotifications } from "@/components/SidebarNotificationsContext";
 import ForemanQuickActions from "@/components/ForemanQuickActions";
 import ForemanScheduleTicketsModal from "@/components/ForemanScheduleTicketsModal";
 import FreshnessPill from "@/components/FreshnessPill";
@@ -48,8 +50,7 @@ import {
 } from "@/lib/mobile-viewer";
 import { VNDRLY_LOGO_SQUARE } from "@/lib/vndrly-brand-assets";
 import { setHomeBadge } from "@/lib/tabBadges";
-import { syncAppIconBadge } from "@/lib/notificationBadge";
-import { isRateLimited, noteRateLimit } from "@/lib/rateLimitGate";
+import { useUnreadNotificationCount } from "@/lib/notificationBadge";
 import {
   isTicketsRateLimited,
   noteTicketsRateLimit,
@@ -82,7 +83,8 @@ export default function HomeScreen() {
   const [tickets, setTickets] = useState<OpenTicket[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const unreadCount = useUnreadNotificationCount(true);
+  const sidebarNotifications = useSidebarNotifications();
   const [pendingScheduleCount, setPendingScheduleCount] = useState(0);
   const [schedulePickerOpen, setSchedulePickerOpen] = useState(false);
   // Task #630: brief confirmation toast that appears when a foreground
@@ -294,25 +296,6 @@ export default function HomeScreen() {
     [t],
   );
 
-  const loadUnread = useCallback(async () => {
-    // Task #699 — skip the unread-count poll while the notifications
-    // resource is parked by a 429. Otherwise this 60s-on-focus poll
-    // (and the surgical post-push refreshes) would re-trip the limiter
-    // every time, leaving the user stuck in a slow-down loop.
-    if (isRateLimited("notifications.rate_limited")) return;
-    try {
-      const r = await apiFetch<{ count: number }>("/api/notifications/unread-count");
-      setUnreadCount(r?.count ?? 0);
-      void syncAppIconBadge();
-    } catch (e) {
-      // Park the badge poll if the limiter tripped. The notifications
-      // screen instance also subscribes to this same resource via the
-      // shared cooldown, so both sides park together.
-      noteRateLimit(e, "notifications.rate_limited");
-      // Silent otherwise — header badge just hides if unavailable.
-    }
-  }, []);
-
   const loadPendingSchedule = useCallback(async () => {
     if (!isForemanEmployee) return;
     try {
@@ -387,7 +370,6 @@ export default function HomeScreen() {
           setLoading(false);
           setRefreshing(false);
         }
-        void loadUnread();
         void loadPendingSchedule();
         void loadPendingDirect();
         return ok;
@@ -403,7 +385,6 @@ export default function HomeScreen() {
       }
     },
     [
-      loadUnread,
       loadPendingDirect,
       loadPendingSchedule,
       isFieldEmployee,
@@ -488,9 +469,8 @@ export default function HomeScreen() {
         // top of the assignment-restored confirmation toast.
         await load({ silent: true });
       }
-      void loadUnread();
     },
-    [load, loadUnread, isOfficeViewer],
+    [load, isOfficeViewer],
   );
 
   useFocusEffect(
@@ -557,8 +537,6 @@ export default function HomeScreen() {
       const data = n.request.content.data as Record<string, unknown> | null;
       if (!data || typeof data !== "object") return;
 
-      void syncAppIconBadge();
-
       if (data.type === "workflow_nudge") {
         handlePushData(data);
         return;
@@ -586,7 +564,6 @@ export default function HomeScreen() {
               : t("notifications.toast.trackingFallback"),
           }),
         );
-        void loadUnread();
         if (validTicketId) void refreshTicketRow(validTicketId);
         return;
       }
@@ -599,7 +576,6 @@ export default function HomeScreen() {
               : t("notifications.toast.trackingFallback"),
           }),
         );
-        void loadUnread();
         if (validTicketId) void refreshTicketRow(validTicketId);
         return;
       }
@@ -617,7 +593,7 @@ export default function HomeScreen() {
       return;
     }
     return () => sub?.remove();
-  }, [refreshTicketRow, t, handlePushData, loadUnread]);
+  }, [refreshTicketRow, t, handlePushData]);
 
   useEffect(() => {
     if (!crewToastMessage) return;
@@ -716,7 +692,6 @@ export default function HomeScreen() {
   // so we don't add a tap target that does nothing.
   const canSwitchOrg = availableMemberships.length >= 2;
 
-  const badgeText = unreadCount > 99 ? "99+" : String(unreadCount);
 
   return (
     <View style={styles.container}>
@@ -860,25 +835,8 @@ export default function HomeScreen() {
             </View>
           ) : null}
         </View>
-        {!isForemanEmployee ? (
-          <TouchableOpacity
-            onPress={() => router.push("/notifications")}
-            accessibilityLabel={t("nav.notifications")}
-            accessibilityHint={
-              unreadCount > 0 ? t("home.unreadNotifications", { count: unreadCount }) : t("home.noUnreadNotifications")
-            }
-            style={styles.bellBtn}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <Feather name="bell" size={28} color={colors.primary} />
-            {unreadCount > 0 ? (
-              <View style={[styles.badge, { backgroundColor: "#dc2626", borderColor: colors.background }]}>
-                <Text style={[styles.badgeText, { color: "#ffffff" }]} numberOfLines={1}>
-                  {badgeText}
-                </Text>
-              </View>
-            ) : null}
-          </TouchableOpacity>
+        {!isForemanEmployee && !sidebarNotifications ? (
+          <NotificationBell count={unreadCount} onPress={() => router.push("/notifications")} />
         ) : null}
       </View>
 
@@ -1676,40 +1634,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
     textTransform: "uppercase",
     color: "#ffffff",
-  },
-  bellBtn: {
-    padding: 6,
-    // Scoot the bell ~10px to the left of the right edge so the
-    // notification badge has breathing room and isn't crowded against
-    // the screen edge / parent padding.
-    marginRight: 10,
-    position: "relative",
-    overflow: "visible",
-  },
-  badge: {
-    position: "absolute",
-    top: -2,
-    right: -4,
-    // Pill that grows naturally with the digit count. minWidth keeps a
-    // perfect circle at "1" while paddingHorizontal lets "12" or "99+"
-    // stretch into a properly-proportioned rounded rectangle instead of
-    // clipping. Height stays fixed so the pill silhouette is consistent.
-    // paddingHorizontal bumped from 6 → 8 so two-digit counts ("12",
-    // "47", "99+") get enough horizontal room that the second digit
-    // isn't visually clipped by the rounded cap.
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
-    paddingHorizontal: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1.5,
-    overflow: "visible",
-  },
-  badgeText: {
-    fontFamily: "Inter_700Bold",
-    fontSize: 10,
-    lineHeight: 12,
   },
   // Heading row holds JUST the page title and the freshness ("Live")
   // pill, with the pill aligned right so the eye scans

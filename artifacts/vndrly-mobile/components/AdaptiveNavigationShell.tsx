@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import AskVNavLogo from "@/components/AskVNavLogo";
 import BrandTitleRow from "@/components/BrandTitleRow";
 import NotificationBell from "@/components/NotificationBell";
+import { SidebarNotificationsContext } from "@/components/SidebarNotificationsContext";
 import GateVoiceNavButton from "@/components/GateVoiceNavButton";
 import { useBrand } from "@/hooks/use-brand";
 import { useColors } from "@/hooks/useColors";
@@ -38,6 +39,7 @@ export default function AdaptiveNavigationShell({
 }: Props) {
   const regular = width >= REGULAR_NAVIGATION_BREAKPOINT;
   return (
+    <SidebarNotificationsContext.Provider value={regular}>
     <View
       style={[styles.root, regular && styles.regularRoot]}
       testID="adaptive-navigation-shell"
@@ -65,6 +67,7 @@ export default function AdaptiveNavigationShell({
         />
       ) : null}
     </View>
+    </SidebarNotificationsContext.Provider>
   );
 }
 
