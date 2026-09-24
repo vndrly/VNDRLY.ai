@@ -1,6 +1,9 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { router } from "expo-router";
+import NotificationBell from "@/components/NotificationBell";
+import { useUnreadNotificationCount } from "@/lib/notificationBadge";
 
 import AuthedImage from "@/components/AuthedImage";
 import { useAuth } from "@/hooks/use-auth";
@@ -17,6 +20,8 @@ type Props = {
 
 export default function BrandTitleRow({ title, subtitle, logoTestId, platformLogoTestId }: Props) {
   const brand = useBrand();
+  const { width } = useWindowDimensions();
+  const notificationCount = useUnreadNotificationCount(Boolean(platformLogoTestId));
   const colors = useColors();
   const { t } = useTranslation();
   const { activeMembership } = useAuth();
@@ -56,6 +61,8 @@ export default function BrandTitleRow({ title, subtitle, logoTestId, platformLog
         ) : null}
       </View>
       {platformLogoTestId ? (
+        <React.Fragment>
+        {width < 768 ? <NotificationBell count={notificationCount} onPress={() => router.push("/(tabs)/gate-notifications")} /> : null}
         <Image
           accessibilityLabel="VNDRLY"
           resizeMode="contain"
@@ -63,6 +70,7 @@ export default function BrandTitleRow({ title, subtitle, logoTestId, platformLog
           style={styles.logo}
           testID={platformLogoTestId}
         />
+        </React.Fragment>
       ) : null}
     </View>
   );

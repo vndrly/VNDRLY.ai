@@ -2,6 +2,9 @@ import React from "react";
 import { cleanup, render } from "@testing-library/react";
 import { readFileSync } from "node:fs";
 import { afterEach, describe, expect, it, vi } from "vitest";
+vi.mock("expo-router", () => ({ router: { push: vi.fn() } }));
+vi.mock("@expo/vector-icons", () => ({ Feather: () => null }));
+vi.mock("@/lib/notificationBadge", () => ({ useUnreadNotificationCount: () => 0 }));
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (key: string) => key }),

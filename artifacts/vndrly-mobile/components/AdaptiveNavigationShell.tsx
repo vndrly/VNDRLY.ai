@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import AskVNavLogo from "@/components/AskVNavLogo";
 import BrandTitleRow from "@/components/BrandTitleRow";
+import NotificationBell from "@/components/NotificationBell";
 import GateVoiceNavButton from "@/components/GateVoiceNavButton";
 import { useBrand } from "@/hooks/use-brand";
 import { useColors } from "@/hooks/useColors";
@@ -18,6 +19,8 @@ type Props = {
   children: React.ReactNode;
   gateVoiceActive: boolean;
   items: AppNavigationItem[];
+  notificationCount?: number;
+  onOpenNotifications?: () => void;
   onActivate: (item: AppNavigationItem) => void;
   width: number;
 };
@@ -28,6 +31,8 @@ export default function AdaptiveNavigationShell({
   children,
   gateVoiceActive,
   items,
+  notificationCount = 0,
+  onOpenNotifications,
   onActivate,
   width,
 }: Props) {
@@ -42,6 +47,8 @@ export default function AdaptiveNavigationShell({
           activeKey={activeKey}
           gateVoiceActive={gateVoiceActive}
           items={items}
+          notificationCount={notificationCount}
+          onOpenNotifications={onOpenNotifications}
           onActivate={onActivate}
         />
       ) : null}
@@ -70,17 +77,27 @@ function Sidebar({
   activeKey,
   gateVoiceActive,
   items,
+  notificationCount,
+  onOpenNotifications,
   onActivate,
-}: NavigationProps) {
+}: NavigationProps & Pick<Props, "notificationCount" | "onOpenNotifications">) {
   const brand = useBrand();
   const profile = items.find((item) => item.key === "profile");
   const primary = items.filter((item) => item.key !== "profile");
   return (
     <View style={styles.sidebar} testID="adaptive-sidebar">
-      <BrandTitleRow
-        logoTestId="adaptive-sidebar-brand-logo"
-        title={brand.name ?? "VNDRLY"}
-      />
+      <View style={{ alignItems: "flex-start", flexDirection: "row", justifyContent: "space-between" }}>
+        <BrandTitleRow
+          logoTestId="adaptive-sidebar-brand-logo"
+          title={brand.name ?? "VNDRLY"}
+        />
+        <NotificationBell
+          count={notificationCount ?? 0}
+          onPress={onOpenNotifications}
+          style={{ marginRight: 12 }}
+          testID="sidebar-notifications"
+        />
+      </View>
       <View style={styles.sidebarItems}>
         {primary.map((item) => (
           <NavigationItem

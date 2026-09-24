@@ -2,6 +2,7 @@ import path from "node:path";
 import Module from "node:module";
 import React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+vi.mock("@/lib/notificationBadge", () => ({ useUnreadNotificationCount: () => 0, syncAppIconBadge: vi.fn() }));
 
 // Task #186 originally proved ActiveOrgIndicator was wired into the
 // native Expo Router header. The mobile shell no longer uses a root

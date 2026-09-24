@@ -17,10 +17,12 @@ import {
 } from "@/lib/gate-voice-launch";
 import { homeTabTitleKey } from "@/lib/mobile-viewer";
 import { useTabBadges } from "@/lib/tabBadges";
+import { useUnreadNotificationCount } from "@/lib/notificationBadge";
 
 export default function TabLayout() {
   const { t } = useTranslation();
   const badges = useTabBadges();
+  const notificationCount = useUnreadNotificationCount(true);
   const { user } = useAuth();
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
@@ -70,6 +72,8 @@ export default function TabLayout() {
       bottomInset={insets.bottom}
       gateVoiceActive={gateVoiceListening}
       items={items}
+      notificationCount={notificationCount}
+      onOpenNotifications={() => router.push("/(tabs)/gate-notifications")}
       onActivate={activate}
       width={width}
     >

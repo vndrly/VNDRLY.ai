@@ -9,6 +9,8 @@ import {
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { MeetingSnapshot } from "@workspace/api-client-react/meeting-workspace";
+vi.mock("@expo/vector-icons", () => ({ Feather: () => null }));
+vi.mock("@/lib/notificationBadge", () => ({ useUnreadNotificationCount: () => 0 }));
 
 const env = vi.hoisted(() => ({
   state: {} as any,

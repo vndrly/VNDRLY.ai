@@ -1,5 +1,6 @@
 import React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+vi.mock("@/lib/notificationBadge", () => ({ useUnreadNotificationCount: () => 0 }));
 
 const voiceFeature = vi.hoisted(() => ({ enabled: false }));
 const routerState = vi.hoisted(() => ({
