@@ -62,6 +62,16 @@ test("API deploy builds, migrates, restarts, and health-checks without touching 
   assert.doesNotMatch(workflow, /tee \.env\.production/);
 });
 
+test("API deploy applies gate notification preferences before restarting the API", () => {
+  const migration = 'sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:gate-notification-preferences';
+  const migrationSection = workflow.slice(
+    workflow.indexOf('database_url="$(sudo sed'),
+    workflow.indexOf('unset database_url openai_key assemblyai_key'),
+  );
+  assert.ok(migrationSection.includes(migration));
+  assert.ok(workflow.indexOf(migration) < workflow.indexOf('systemctl restart vndrly-api'));
+});
+
 test("API deploy configures the VNDRLY-owned TURN relay before restarting meetings", () => {
   const provision = 'sudo bash scripts/provision-work-hub-audio.sh "$RELAY_HOST"';
   assert.ok(workflow.includes(provision));
