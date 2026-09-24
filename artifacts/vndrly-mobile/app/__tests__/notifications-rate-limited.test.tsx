@@ -27,6 +27,8 @@ vi.mock("@/hooks/useColors", () => ({
 }));
 
 vi.mock("@expo/vector-icons", () => ({ Feather: () => null }));
+vi.mock("@/components/AdaptiveNavigationShell", () => ({ REGULAR_NAVIGATION_BREAKPOINT: 768 }));
+vi.mock("react-native-svg", () => ({ default: () => null, Defs: () => null, LinearGradient: () => null, Rect: () => null, Stop: () => null }));
 
 vi.mock("expo-router", () => ({
   router: { push: vi.fn(), replace: vi.fn(), back: vi.fn() },
@@ -152,6 +154,10 @@ describe("NotificationsScreen — Task #699 rate-limit slow-down", () => {
       const banner = screen.getByTestId("notifications-slow-down-banner");
       expect(banner.textContent || "").toContain("Slowing down");
       expect(banner.textContent || "").toContain("15");
+      const filters = screen.getByTestId("notifications-category-row");
+      const divider = screen.getByTestId("notifications-category-divider");
+      expect(filters.compareDocumentPosition(divider) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(divider.compareDocumentPosition(banner) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     });
   });
 

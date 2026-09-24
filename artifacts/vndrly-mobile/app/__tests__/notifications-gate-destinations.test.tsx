@@ -19,6 +19,8 @@ vi.mock("@/lib/api", () => ({ apiFetch }));
 vi.mock("@/lib/notificationBadge", () => ({ syncAppIconBadge: syncBadge }));
 vi.mock("@/lib/notificationSounds", () => ({ stopBellTolling: vi.fn() }));
 vi.mock("@expo/vector-icons", () => ({ Feather: () => null }));
+vi.mock("@/components/AdaptiveNavigationShell", () => ({ REGULAR_NAVIGATION_BREAKPOINT: 768 }));
+vi.mock("react-native-svg", () => ({ default: () => null, Defs: () => null, LinearGradient: () => null, Rect: () => null, Stop: () => null }));
 vi.mock("@/hooks/useColors", () => ({
   useColors: () => ({ primary: "orange", card: "white" }),
 }));
@@ -121,9 +123,7 @@ it("consumes a gate envelope and opens its authorized exact item before marking 
   expect(push.mock.invocationCallOrder[0]).toBeLessThan(
     apiFetch.mock.invocationCallOrder[readIndex],
   );
-  expect(screen.getByTestId("notifications-tab-all").textContent).not.toContain(
-    "(1)",
-  );
+  await waitFor(() => expect(screen.getByTestId("notification-42").style.borderTopColor).not.toBe("rgb(255, 165, 0)"));
 });
 
 it.each(["reject", "external"])(
@@ -151,8 +151,6 @@ it.each(["reject", "external"])(
     expect(apiFetch.mock.calls.some(([path]) => path.endsWith("/read"))).toBe(
       false,
     );
-    expect(screen.getByTestId("notifications-tab-all").textContent).toContain(
-      "(1)",
-    );
+    expect(screen.getByTestId("notification-42").style.borderTopColor).toBe("rgb(255, 165, 0)");
   },
 );

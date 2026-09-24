@@ -7,17 +7,18 @@ import {
   Alert,
   FlatList,
   RefreshControl,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
+  useWindowDimensions,
 } from "react-native";
 
-import InPageHeader from "@/components/InPageHeader";
 import NotificationActionModal from "@/components/NotificationActionModal";
 import NotificationSendToModal from "@/components/NotificationSendToModal";
-import { useRateLimitGate } from "@/hooks/use-rate-limit-gate";
+import InPageHeader from "@/components/InPageHeader";
+import NotificationCategoryCarousel from "@/components/NotificationCategoryCarousel";
+import { useNotificationInbox } from "@/hooks/use-notification-inbox";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
 import { stopBellTolling } from "@/lib/notificationSounds";
@@ -25,33 +26,23 @@ import { syncAppIconBadge } from "@/lib/notificationBadge";
 import { openNotificationDestination } from "@/lib/notification-deep-links";
 import {
   effectiveNotificationCategory,
-  NOTIFICATION_CATEGORY_IDS,
   NOTIFICATION_TYPE_META,
   notificationTypeLabel,
   type NotificationRow,
-  type NotificationsListResponse,
 } from "@/lib/notifications-ui";
+
+// Task 7 supplies localized gate labels and empty copy; defaults keep the staged UI readable.
+const CATEGORY_LABELS: Record<string, string> = { all: "All", schedule: "Schedule", gate_crew: "Gate Crew", messages: "Messages", handoffs: "Handoffs", tasks: "Tasks", compliance: "Compliance", alerts: "Alerts" };
 
 export default function NotificationsScreen() {
   const colors = useColors();
   const { t } = useTranslation();
+  const { width } = useWindowDimensions();
   const { category: categoryParam } = useLocalSearchParams<{ category?: string }>();
-  const initialCategory =
-    categoryParam && NOTIFICATION_CATEGORY_IDS.includes(categoryParam as (typeof NOTIFICATION_CATEGORY_IDS)[number])
-      ? categoryParam
-      : "all";
-  const [activeCategory, setActiveCategory] = useState(initialCategory);
-  const [items, setItems] = useState<NotificationRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const { generation, activeCategory, selectCategory, categories, isGate, items, setItems, loading, refreshing, loadingMore, loadError, rateLimited, retryAfterSeconds, refresh, loadMore, retry } = useNotificationInbox(categoryParam ?? "all");
   const [selected, setSelected] = useState<NotificationRow | null>(null);
   const [sendToItem, setSendToItem] = useState<NotificationRow | null>(null);
-  const [loadError, setLoadError] = useState<unknown>(null);
-  const notificationEventCursor = React.useRef(0);
-  const { rateLimited, retryAfterSeconds } = useRateLimitGate(
-    loadError,
-    "notifications.rate_limited",
-  );
+  useEffect(() => { setSelected(null); setSendToItem(null); }, [generation]);
 
   function timeAgo(iso: string): string {
     const tt = new Date(iso).getTime();
@@ -65,78 +56,29 @@ export default function NotificationsScreen() {
     return t("notifications.ago.day", { n: d });
   }
 
-  const load = useCallback(async () => {
-    try {
-      const data = await apiFetch<NotificationsListResponse>("/api/notifications");
-      setItems(Array.isArray(data) ? data : data.items);
-      void syncAppIconBadge();
-      setLoadError(null);
-    } catch (e) {
-      const status = (e as { status?: unknown })?.status;
-      if (status === 429) {
-        setLoadError(e);
-      } else {
-        Alert.alert(t("common.error"), t("notifications.loadFailed"));
-      }
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [t]);
-
-  useEffect(() => {
-    if (rateLimited) return;
-    load();
-  }, [load, rateLimited]);
-
-  useEffect(() => {
-    if (rateLimited) return;
-    let stopped = false;
-    const poll = async () => {
-      try {
-        const result = await apiFetch<{ currentSeq: number; changed: boolean }>(
-          `/api/notifications/events?transport=poll&after=${notificationEventCursor.current}`,
-        );
-        if (stopped) return;
-        notificationEventCursor.current = result.currentSeq;
-        if (result.changed) await load();
-      } catch {
-        // The normal focus refresh remains the fallback when live sync is unavailable.
-      }
-    };
-    void poll();
-    const timer = setInterval(() => void poll(), 5000);
-    return () => {
-      stopped = true;
-      clearInterval(timer);
-    };
-  }, [load, rateLimited]);
-
   useFocusEffect(
     useCallback(() => {
       stopBellTolling();
     }, []),
   );
 
-  useEffect(() => {
-    setActiveCategory(initialCategory);
-  }, [initialCategory]);
-
   const filteredItems = useMemo(() => {
-    if (activeCategory === "all") return items;
+    if (isGate || activeCategory === "all") return items;
     return items.filter((item) => effectiveNotificationCategory(item) === activeCategory);
-  }, [activeCategory, items]);
+  }, [activeCategory, items, isGate]);
 
   const categoryUnread = useMemo(() => {
     const counts: Record<string, number> = {};
+    // Gate pages are partial; only the separately fetched bell has an authoritative total.
+    if (isGate) return counts;
     for (const item of items) {
       if (item.isRead) continue;
-      const cat = effectiveNotificationCategory(item);
+      const cat = item.displayCategory ?? effectiveNotificationCategory(item);
       counts[cat] = (counts[cat] ?? 0) + 1;
       counts.all = (counts.all ?? 0) + 1;
     }
     return counts;
-  }, [items]);
+  }, [items, isGate]);
 
   const updateItem = (id: number, patch: Partial<NotificationRow>) => {
     setItems((xs) => xs.map((x) => (x.id === id ? { ...x, ...patch } : x)));
@@ -229,6 +171,18 @@ export default function NotificationsScreen() {
         }
       />
 
+      <NotificationCategoryCarousel
+        categories={categories}
+        activeCategory={activeCategory}
+        unread={categoryUnread}
+        width={width}
+        onSelect={selectCategory}
+        label={(id) => t(`notifications.categories.${id}`, { defaultValue: CATEGORY_LABELS[id] ?? id })}
+      />
+      <View
+        style={[styles.categoryDivider, { backgroundColor: colors.border }]}
+        testID="notifications-category-divider"
+      />
       {rateLimited ? (
         <View
           style={[
@@ -251,64 +205,37 @@ export default function NotificationsScreen() {
         </View>
       ) : null}
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.categoryRow}
-        style={styles.categoryScroll}
-      >
-        {NOTIFICATION_CATEGORY_IDS.map((id) => {
-          const selected = activeCategory === id;
-          const unread = categoryUnread[id] ?? 0;
-          return (
-            <TouchableOpacity
-              key={id}
-              onPress={() => setActiveCategory(id)}
-              style={[
-                styles.categoryChip,
-                {
-                  backgroundColor: selected ? colors.primary : colors.muted,
-                  borderColor: selected ? colors.primary : colors.border,
-                },
-              ]}
-              testID={`notifications-tab-${id}`}
-            >
-              <Text
-                style={[
-                  styles.categoryChipText,
-                  { color: selected ? colors.primaryForeground : colors.foreground },
-                ]}
-              >
-                {t(`notifications.categories.${id}`)}
-                {unread > 0 ? ` (${unread})` : ""}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
-
       {loading ? (
         <ActivityIndicator style={{ marginTop: 40 }} color={colors.primary} />
       ) : (
         <FlatList
+          style={{ flex: 1 }}
           data={filteredItems}
           keyExtractor={(item) => String(item.id)}
           contentContainerStyle={{ padding: 16 }}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
-              onRefresh={() => {
-                if (rateLimited) return;
-                setRefreshing(true);
-                load();
-              }}
+              onRefresh={refresh}
             />
           }
           ListEmptyComponent={
             <Text style={[styles.empty, { color: colors.mutedForeground }]}>
-              {t("notifications.empty")}
+              {loadError ? t("notifications.loadFailed") : isGate && activeCategory !== "all"
+                ? t(`notifications.emptyCategories.${activeCategory}`, { defaultValue: `No ${(CATEGORY_LABELS[activeCategory] ?? activeCategory).toLowerCase()} notifications yet.` })
+                : t("notifications.empty")}
             </Text>
           }
+          onEndReached={() => { if (!loadError) void loadMore(); }}
+          onEndReachedThreshold={0.3}
+          ListFooterComponent={loadingMore ? <ActivityIndicator color={colors.primary} /> : loadError && !rateLimited ? (
+            <View testID="notifications-load-error" accessibilityRole="alert">
+              <Text style={{ color: colors.mutedForeground }}>{t("notifications.loadFailed")}</Text>
+              <TouchableOpacity onPress={retry} testID="notifications-retry" accessibilityRole="button">
+                <Text style={{ color: colors.primary }}>{t("common.retry", { defaultValue: "Retry" })}</Text>
+              </TouchableOpacity>
+            </View>
+          ) : null}
           renderItem={({ item }) => {
             const meta = NOTIFICATION_TYPE_META[item.type];
             const labelText = notificationTypeLabel(item, t);
@@ -368,7 +295,7 @@ export default function NotificationsScreen() {
                   {item.title}
                 </Text>
                 {item.body ? (
-                  <Text style={[styles.cardBody, { color: colors.foreground }]}>
+                  <Text numberOfLines={1} style={[styles.cardBody, { color: colors.foreground }]}>
                     {item.body}
                   </Text>
                 ) : null}
@@ -411,17 +338,9 @@ export default function NotificationsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   iconBtn: { padding: 8 },
-  categoryScroll: { flexGrow: 0, marginBottom: 4 },
-  categoryRow: { paddingHorizontal: 12, gap: 8, paddingBottom: 8 },
-  categoryChip: {
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  categoryChipText: {
-    fontFamily: "Inter_500Medium",
-    fontSize: 12,
+  categoryDivider: {
+    height: 1,
+    marginHorizontal: 12,
   },
   slowDownBanner: {
     flexDirection: "row",

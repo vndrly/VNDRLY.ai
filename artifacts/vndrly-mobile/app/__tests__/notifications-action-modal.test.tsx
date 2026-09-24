@@ -23,6 +23,8 @@ vi.mock("@/hooks/useColors", () => ({
 }));
 
 vi.mock("@expo/vector-icons", () => ({ Feather: () => null }));
+vi.mock("@/components/AdaptiveNavigationShell", () => ({ REGULAR_NAVIGATION_BREAKPOINT: 768 }));
+vi.mock("react-native-svg", () => ({ default: () => null, Defs: () => null, LinearGradient: () => null, Rect: () => null, Stop: () => null }));
 
 const routerPushMock = vi.fn();
 vi.mock("expo-router", () => ({
