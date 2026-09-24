@@ -1,5 +1,5 @@
 import { db, fieldPushTokensTable, vendorPeopleTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { logger } from "./logger";
 
 const EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
@@ -114,7 +114,7 @@ export async function sendPushToUser(userId: number, msg: ExpoPushMessage) {
   const rows = await db
     .select({ token: fieldPushTokensTable.expoToken })
     .from(fieldPushTokensTable)
-    .where(eq(fieldPushTokensTable.userId, userId));
+    .where(and(eq(fieldPushTokensTable.userId, userId), eq(fieldPushTokensTable.retirementPending, false)));
   const delivered = await sendExpoPushBatch(rows.map((r) => r.token), msg);
   return { delivered, recipientCount: rows.length };
 }

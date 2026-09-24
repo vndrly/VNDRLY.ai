@@ -1,9 +1,25 @@
 import { describe, expect, it } from "vitest";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import * as schema from "../../../../lib/db/src/schema/notifications";
+import { fieldPushTokensTable } from "../../../../lib/db/src/schema/fieldPushTokens";
 import { readFileSync } from "node:fs";
 
 describe("additive gate alert storage", () => {
+  it("owns durable retirement on the registration with guarded deployment and no inbox dependency", () => {
+    const table = getTableConfig(fieldPushTokensTable);
+    expect(table.columns.find(c => c.name === "retirement_pending")?.default).toBe(false);
+    expect(table.columns.find(c => c.name === "retirement_attempt_count")?.default).toBe(0);
+    expect(table.columns.map(c => c.name)).toEqual(expect.arrayContaining(["retirement_requested_at", "retirement_lease_token", "retirement_lease_until", "retirement_last_attempt_at"]));
+    expect(table.foreignKeys.map(f => f.reference().foreignTable)).not.toContain(schema.notificationsTable);
+    expect(table.indexes.map(i => i.config.name)).toContain("field_push_tokens_retirement_idx");
+    const source = readFileSync(new URL("../../scripts/migrate-push-token-retirement.ts", import.meta.url), "utf8");
+    expect(source.match(/ADD COLUMN IF NOT EXISTS/g)).toHaveLength(6);
+    expect(source).not.toMatch(/\b(DROP|TRUNCATE|DELETE FROM|UPDATE)\b/);
+    expect(source).toContain("CREATE INDEX IF NOT EXISTS field_push_tokens_retirement_idx");
+    const pkg = JSON.parse(readFileSync(new URL("../../package.json", import.meta.url), "utf8"));
+    expect(pkg.scripts["migrate:push-token-retirement"]).toBe("tsx scripts/migrate-push-token-retirement.ts");
+    expect(readFileSync(new URL("../../../../.github/workflows/deploy-api.yml", import.meta.url), "utf8")).toContain("run migrate:push-token-retirement");
+  });
   it("defaults SMS off with nullable consent and email on", () => {
     const columns = getTableConfig(schema.notificationPreferencesTable).columns;
     expect(columns.find(c => c.name === "alerts_sms_enabled")?.default).toBe(false);

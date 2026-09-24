@@ -37,7 +37,8 @@ beforeEach(() => {
       if (!state.available) return { rows: [] };
       return { rows: [{ userId: values[0], sessionVersion: 4, membershipId: state.membership ? 8 : null, vendorId: state.vendorId, vendorPeopleId: 9, vendorRole: state.office ? "office" : "gatekeeper", membershipRole: "field_employee", gateAlertsEnabled: true, pushEnabled: false, email: "test@example.invalid", alertsEmailEnabled: state.email, alertsSmsEnabled: false }] };
     }
-    if (sql.startsWith("SELECT expo_token")) return { rows: [{ token: `ExponentPushToken[user-${values[0]}]` }] };
+    if (sql.startsWith("SELECT id, expo_token")) return { rows: [{ id: values[0], token: `ExponentPushToken[user-${values[0]}]` }] };
+    if (sql.startsWith("SELECT id, user_id")) return { rows: [] };
     if (sql.startsWith("SELECT d.notification_id")) return { rows: [] };
     if (sql.startsWith("INSERT INTO notification_push_deliveries")) return { rows: [{ id: 1 }] };
     if (sql.startsWith("UPDATE notification_push_deliveries")) return { rows: [] };

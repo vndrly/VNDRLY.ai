@@ -7,7 +7,8 @@ const tokens = ["ExponentPushToken[accepted]", "ExponentPushToken[stale]", "Expo
 beforeEach(() => {
   records.clear();
   io.query.mockReset().mockImplementation(async (sql: string, values: any[]) => {
-    if (sql.startsWith("SELECT expo_token")) return { rows: tokens.map(token => ({ token })) };
+    if (sql.startsWith("SELECT id, expo_token")) return { rows: tokens.map((token, i) => ({ id: i + 1, token })) };
+    if (sql.startsWith("UPDATE field_push_tokens SET retirement_lease_token")) return { rows: [{ id: values[0] }] };
     if (sql.startsWith("INSERT INTO notification_push_deliveries")) {
       const previous = records.get(values[1]);
       if (previous && previous.status !== "retryable") return { rows: [] };
@@ -41,11 +42,11 @@ it("uses real Expo ticket parsing, retires stale destinations and retries only d
   const auditWrites = io.query.mock.calls.filter(([sql]) => /^(INSERT|UPDATE).*notification_push_deliveries/.test(sql));
   expect(JSON.stringify(auditWrites)).not.toContain("ExponentPushToken");
   expect(JSON.stringify(auditWrites)).not.toContain("private");
-  expect(io.query.mock.calls.find(([sql]) => sql.startsWith("DELETE FROM field_push_tokens"))?.[1]).toEqual([7, tokens[1]]);
+  expect(io.query.mock.calls.find(([sql]) => sql.startsWith("DELETE FROM field_push_tokens"))?.[1]).toEqual([2, 7, expect.any(String)]);
 });
 it("does not resend a device left sending by a crashed worker", async () => {
   vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ data: [{ status: "ok" }] }))));
-  io.query.mockImplementation(async (sql: string) => sql.startsWith("SELECT expo_token") ? { rows: [{ token: tokens[0] }] } : sql.startsWith("SELECT status") ? { rows: [{ status: "sending" }] } : { rows: [] });
+  io.query.mockImplementation(async (sql: string) => sql.startsWith("SELECT id, expo_token") ? { rows: [{ id: 1, token: tokens[0] }] } : sql.startsWith("SELECT status") ? { rows: [{ status: "sending" }] } : { rows: [] });
   await expect(sendGateAlertPush({ id: 1, userId: 7, title: "x", type: "gate_closed", link: "/gate" }, 0)).resolves.toMatchObject({ status: "unknown" });
   expect(fetch).not.toHaveBeenCalled();
 });
