@@ -206,13 +206,19 @@ async function ruleCertExpiring(cache: OrgUserCache): Promise<number> {
       const empName = [c.employeeFirstName, c.employeeLastName].filter(Boolean).join(" ").trim() || "An employee";
       const body = `${empName}'s ${c.name} ${days === 0 ? "expired today" : `expires on ${c.expirationDate}`}.`;
 
-      n += await notifyUsers([...recipients], {
+      const notice = {
         type,
         title,
         body,
-        link: `/field-employees/${c.employeeId}`,
         dedupeKey: `cert_expiring:${c.id}:${days}`,
-      });
+      };
+      // The employee opens their exact credential; office reviewers retain the
+      // existing employee-management destination. Never send both to one user.
+      if (c.userId) {
+        n += await notifyUsers([c.userId], { ...notice, link: `/profile?section=compliance&credentialId=${c.id}` });
+        recipients.delete(c.userId);
+      }
+      if (recipients.size) n += await notifyUsers([...recipients], { ...notice, link: `/field-employees/${c.employeeId}` });
     }
   }
   return n;

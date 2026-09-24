@@ -109,16 +109,11 @@ async function notifySafetyEvent(opts: {
   dedupeKey: string;
 }) {
   if (opts.userIds.length === 0) return;
-  const params = new URLSearchParams();
-  params.set("siteLocationId", String(opts.siteLocationId));
-  if (opts.siteName) params.set("siteName", opts.siteName);
-  if (opts.ticketId != null) params.set("ticketId", String(opts.ticketId));
-  const link = `${opts.linkUrl}?${params.toString()}`;
   await notifyUsers(opts.userIds, {
     type: opts.type,
     title: opts.title,
     body: opts.body,
-    link,
+    link: opts.linkUrl,
     dedupeKey: opts.dedupeKey,
     category: "safety",
   });
@@ -475,7 +470,7 @@ router.post("/safety/events", requireSession, enforceSafetyRateLimit, async (req
   const vendorHse = resolvedVendorId ? await findVendorHseUserIds(resolvedVendorId) : [];
   const notifyIds = [...new Set([...partnerHse, ...vendorHse])];
   await notifySafetyEvent({
-    type: stopWork ? "safety_stop_work" : "safety_event_submitted",
+    type: stopWork ? "safety_stop_work" : isHighPotential ? "safety_event_hipo" : "safety_event_submitted",
     title: stopWork ? `Stop-work at ${site.name}` : `Safety report: ${title}`,
     body: `${eventNumber} — ${String(eventType).replace(/_/g, " ")}`,
     linkUrl: `/safety/${created.id}`,

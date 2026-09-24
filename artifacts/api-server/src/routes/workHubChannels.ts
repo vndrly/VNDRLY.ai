@@ -32,6 +32,8 @@ import {
 } from "../work-hub/queries";
 import { publishWorkHubEvent } from "../work-hub/events";
 import { isWorkHubEnabled } from "../work-hub/feature-access";
+import { currentNotificationRecipients } from "../work-hub/notification-recipients";
+import { notifyUsers } from "./notifications";
 
 const router: IRouter = Router();
 const uuid = z.string().uuid();
@@ -394,6 +396,19 @@ router.post("/work-hub/channels/:channelId/messages", async (req, res) => {
       await appendWorkHubAudit({ actorUserId: actor.userId, owner: envelope.owner, action: "message.created", subjectType: "message", subjectId: message.id, newVersion: 1, source: source(req), operationId: envelope.operationId }, tx);
       return message;
     });
+    if (!result.replayed) {
+      const members = await db.select({ userId: workHubChannelMembersTable.userId }).from(workHubChannelMembersTable)
+        .where(eq(workHubChannelMembersTable.channelId, channel.id));
+      const link = `/work-hub/channels/${channel.id}?message=${result.resource.id}`;
+      const recipients = await currentNotificationRecipients(envelope.owner,
+        [...members.map(m => m.userId), ...payload.mentionUserIds].filter(id => id !== actor.userId), link);
+      const mentioned = new Set(payload.mentionUserIds);
+      for (const type of ["work_hub_message", "work_hub_mention"] as const) {
+        const ids = recipients.filter(id => mentioned.has(id) === (type === "work_hub_mention"));
+        if (ids.length) await notifyUsers(ids, { type, title: type === "work_hub_mention" ? "You were mentioned" : "New Work Hub message",
+          body: payload.body.slice(0, 180), link, dedupeKey: `work-hub-message:${result.resource.id}:1` });
+      }
+    }
     return res.status(result.replayed ? 200 : 201).json(result);
   } catch (error) {
     return fail(res, error);

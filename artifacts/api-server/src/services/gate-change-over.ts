@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
 import { pool } from "@workspace/db";
 import type { SessionPayload } from "../lib/session";
+import { notifyGateSiteEvent } from "./gate-notification-events";
 import {
   assembleShiftSnapshot,
   type ShiftRecord,
@@ -638,7 +639,8 @@ export async function transferGateShift(
       "acknowledgment_required",
       "A different incoming gatekeeper must acknowledge this handoff",
     );
-  return changeOverTransaction(async (c) => {
+  let notificationSiteId: number | undefined;
+  const result = await changeOverTransaction(async (c) => {
     // Brief SHARE locks cover every writer, including existing visit/checkout
     // paths. No network/provider work occurs inside this atomic boundary.
     await c.query(
@@ -729,8 +731,16 @@ export async function transferGateShift(
       "UPDATE users SET session_version=session_version+1 WHERE id=$1",
       [outgoing.userId],
     );
+    notificationSiteId = access.station.site_id;
     return handover;
   });
+  if (notificationSiteId !== undefined) await notifyGateSiteEvent(notificationSiteId, {
+    type: "gate_handoff_ready", title: "Gate handoff completed",
+    body: "The acknowledged shift handoff is ready to review.",
+    link: `/shift-notes?stationId=${input.stationId}&handoffId=${result.id}`,
+    dedupeKey: `gate-handoff:${result.id}:1`,
+  });
+  return result;
 }
 
 export async function getShiftNotes(

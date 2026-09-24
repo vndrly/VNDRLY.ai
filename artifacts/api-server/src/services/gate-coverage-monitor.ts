@@ -2,6 +2,7 @@ import { pool } from "@workspace/db";
 import { createAttendanceException } from "./gate-attendance";
 import type { SessionPayload } from "../lib/session";
 import { ChangeOverError, changeOverTransaction, requireChangeOverAccess } from "./gate-change-over";
+import { notifyGateSiteEvent } from "./gate-notification-events";
 
 export type GateCoverageMode =
   | "active"
@@ -72,13 +73,15 @@ export async function setGateCoverageStatus(
     (!input.pausedUntil || input.pausedUntil <= new Date())
   )
     fail(400, "pause_end_required", "Choose a future date to resume coverage");
-  return changeOverTransaction(async (client) => {
+  let closureSiteId: number | undefined;
+  const result = await changeOverTransaction(async (client) => {
     const station = (
       await client.query("SELECT site_id FROM gate_stations WHERE id=$1 FOR UPDATE", [
         input.stationId,
       ])
     ).rows[0];
     if (!station) fail(404, "not_found", "Gate not found");
+    const previous = (await client.query("SELECT mode FROM gate_coverage_status WHERE station_id=$1", [input.stationId])).rows[0];
     let supervisor = false;
     try {
       supervisor = (
@@ -114,6 +117,7 @@ export async function setGateCoverageStatus(
         ],
       )
     ).rows[0];
+    if (input.mode === "closed" && previous?.mode !== "closed") closureSiteId = Number(station.site_id);
     return {
       stationId: row.station_id,
       mode: row.mode as GateCoverageMode,
@@ -122,6 +126,12 @@ export async function setGateCoverageStatus(
       changedAt: row.changed_at as Date,
     };
   });
+  if (closureSiteId !== undefined) await notifyGateSiteEvent(closureSiteId, {
+    type: "gate_closed", title: "Gate closed", body: reason ?? undefined,
+    link: `/gate?stationId=${input.stationId}`,
+    dedupeKey: `gate-closed:${input.stationId}:${new Date(result.changedAt).toISOString()}`,
+  });
+  return result;
 }
 
 function paused(candidate: GateCoverageCandidate, at: Date) {

@@ -76,6 +76,7 @@ import {
 } from "../work-hub/domain-rules";
 import { validateVoiceNoteMetadata } from "../work-hub/file-policy";
 import { notifyUsers } from "./notifications";
+import { currentNotificationRecipients } from "../work-hub/notification-recipients";
 import { sessionCanSeeOwner } from "../work-hub/owner-boundary";
 import { appendWorkHubAudit } from "../work-hub/audit";
 import { findAvailableMeetingTimes, getParticipantBusyIntervals, requestedMeetingAvailability } from "../work-hub/meeting-availability";
@@ -1385,11 +1386,21 @@ router.post("/work-hub/announcements", async (req, res) => {
         recipientUserIds: z.array(z.number().int().positive()).min(1).max(5000),
         urgency: z.enum(["normal", "urgent"]).default("normal"),
         acknowledgementRequired: z.boolean().default(false),
+        channelId: z.string().uuid().optional(),
         expiresAt: z.iso.datetime().nullable().optional(),
       })
       .parse(envelope.payload);
-    const recipients = [...new Set(payload.recipientUserIds)];
+    let recipients = [...new Set(payload.recipientUserIds)];
     await assertOwnerUsers(envelope.owner, recipients);
+    let gateAnnouncement = false;
+    if (payload.channelId) {
+      const { channel } = await resolveChannelAccess(session, payload.channelId, "channel.write");
+      assertOwnerMatchesChannel(envelope.owner, channel);
+      gateAnnouncement = channel.contextKind === "gate";
+      recipients = await currentNotificationRecipients(envelope.owner, recipients,
+        `/work-hub/channels/${channel.id}`, channel.contextKind === "gate");
+      if (!recipients.length) throw new WorkHubAccessError("not_found");
+    }
     const result = await executeWorkHubCommand(
       { userId: session.userId, source: clientSource(req) },
       "announcement.publish",
@@ -1398,6 +1409,7 @@ router.post("/work-hub/announcements", async (req, res) => {
         const [announcement] = await tx
           .insert(workHubAnnouncementsTable)
           .values({
+            channelId: payload.channelId ?? null,
             ownerOrgType: envelope.owner.type,
             ownerOrgId: envelope.owner.id,
             title: payload.title,
@@ -1429,10 +1441,10 @@ router.post("/work-hub/announcements", async (req, res) => {
     if (!result.replayed)
       await notifyUsers(recipients, {
         type:
-          payload.urgency === "urgent"
+          payload.urgency === "urgent" && !gateAnnouncement
             ? "work_hub_announcement_urgent"
             : "work_hub_announcement",
-        category: "system",
+        category: "work_hub_announcements",
         title: payload.title,
         body: payload.body.slice(0, 180),
         link: `/work-hub?announcement=${result.resource.id}`,
@@ -1826,7 +1838,7 @@ router.post("/work-hub/shifts", async (req, res) => {
     if (!result.replayed)
       await notifyUsers(payload.assigneeUserIds, {
         type: "work_hub_shift_assigned",
-        category: "crew",
+        category: "work_hub_schedule",
         title: "Shift assigned",
         body: payload.title,
         link: `/work-hub/calendar?shift=${result.resource.id}`,

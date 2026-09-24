@@ -18,6 +18,7 @@ import {
   gateHandoversTable,
   gatePreparationsTable,
   gateShiftsTable,
+  safetyEventsTable,
   workHubFormInstancesTable,
   workHubFormTemplatesTable,
   workHubChecklistInstancesTable,
@@ -124,6 +125,20 @@ export async function resolveNotificationDestination(
     return true;
   };
   try {
+    const safetyId = path.match(/^\/safety\/([1-9]\d*)$/)?.[1];
+    if (safetyId) {
+      if (keys.length || !positiveId(safetyId)) return null;
+      const [event] = await db.select().from(safetyEventsTable)
+        .where(eq(safetyEventsTable.id, Number(safetyId))).limit(1);
+      if (!event) return null;
+      // Match GET /safety/events/:id exactly; stop-work events remain readable
+      // after the site becomes inactive, without granting access to other sites.
+      return session.role === "admin" ||
+        (session.role === "vendor" && event.vendorId === session.vendorId) ||
+        (session.role === "partner" && event.partnerId === session.partnerId) ||
+        (session.role === "field_employee" && event.reportedByUserId === session.userId)
+        ? link : null;
+    }
     if (path === "/profile") {
       if (keys.some((key) => !["section", "credentialId"].includes(key)))
         return null;

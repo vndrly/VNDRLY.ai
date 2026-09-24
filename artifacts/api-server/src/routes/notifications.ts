@@ -220,6 +220,7 @@ const DEFAULT_PREFS = {
   workHubMeetingsEnabled: true,
   workHubDigestEnabled: true,
   workHubUrgentBypassDndEnabled: false,
+  gateHandoffsEnabled: true,
 };
 
 async function getPrefsForUsers(userIds: number[]): Promise<Map<number, typeof DEFAULT_PREFS>> {
@@ -261,12 +262,14 @@ async function getPrefsForUsers(userIds: number[]): Promise<Map<number, typeof D
       workHubMeetingsEnabled: r.workHubMeetingsEnabled,
       workHubDigestEnabled: r.workHubDigestEnabled,
       workHubUrgentBypassDndEnabled: r.workHubUrgentBypassDndEnabled,
+      gateHandoffsEnabled: r.gateHandoffsEnabled ?? true,
     });
   }
   return map;
 }
 
-function categoryEnabled(prefs: typeof DEFAULT_PREFS, cat: NotificationCategory): boolean {
+function categoryEnabled(prefs: typeof DEFAULT_PREFS, cat: NotificationCategory, type?: string): boolean {
+  if (type && resolveGateNotificationCategory({ type }) === "handoffs") return prefs.gateHandoffsEnabled;
   switch (cat) {
     case "tickets": return prefs.ticketsEnabled;
     case "hotlist": return prefs.hotlistEnabled;
@@ -503,7 +506,7 @@ export async function notifyUsers(userIds: number[], notif: NotifyInput): Promis
     if (urgent) return true;
     if (notif.forceImmediateDelivery) return true;
     const p = prefs.get(uid)!;
-    if (categoryEnabled(p, category)) return true;
+    if (categoryEnabled(p, category, notif.type)) return true;
     if (category === "comments") {
       if (isCommentMentionNotificationType(notif.type) && p.commentMentionEmailEnabled) return true;
       if (isCommentReplyNotificationType(notif.type) && p.commentReplyEmailEnabled) return true;
@@ -591,7 +594,7 @@ export async function notifyUsers(userIds: number[], notif: NotifyInput): Promis
     // notification (commentsEnabled). When the row was inserted only
     // because the user wanted EMAIL but kept in-app/push off, we must
     // not fan out push or it would back-door the toggle they just set.
-    if (!notif.forceImmediateDelivery && !categoryEnabled(p, category)) continue;
+    if (!notif.forceImmediateDelivery && !categoryEnabled(p, category, notif.type)) continue;
     void sendPushToUser(r.userId, {
       title: notif.title,
       body: notif.body ?? "",
@@ -997,6 +1000,11 @@ async function notificationVisibility(session: Session) {
   }
   return async (row: NotificationRow) => {
     if (!gate) {
+      // Work Hub/Gate notices retain their legacy array shape, but a stored
+      // recipient id must never outlive current membership or subject access.
+      const protectedDestination = row.type.startsWith("work_hub_") || row.type.startsWith("gate_") ||
+        /^\/(?:\(tabs\)\/)?(?:work-hub|gate|gate-change-over|shift-notes|profile|safety)(?:[/?]|$)/.test(row.link ?? "");
+      if (protectedDestination && !await resolveNotificationDestination(session, row.link)) return false;
       if (resolveGateNotificationCategory(row) === "alerts")
         return categoryEnabled({ ...DEFAULT_PREFS, ...await preferences() }, categoryForType(row.type)) !== false;
       return row.category !== "comments" || (await preferences()).commentsEnabled !== false;
@@ -1103,18 +1111,7 @@ router.get("/notifications/unread-count", async (req, res) => {
   // one bucket per user so a misbehaving client can't dodge the cap
   // by alternating between the two routes.
   if (!await enforceNotificationsRateLimit(req, res, session)) return;
-  if (isGateNotificationSession(session)) {
-    return res.json({ count: await countGateUnreadNotifications(session) });
-  }
-  // Task #50 — match the visibility rule used by GET /notifications:
-  // when the caller has the comments in-app channel off, exclude any
-  // email-only rows from the unread count so the bell badge agrees
-  // with the bell list.
-  const [callerPrefs] = await db
-    .select()
-    .from(notificationPreferencesTable)
-    .where(eq(notificationPreferencesTable.userId, session.userId));
-  return res.json({ count: await countUnreadForUser(session.userId, callerPrefs?.commentsEnabled ?? true, callerPrefs) });
+  return res.json({ count: await countGateUnreadNotifications(session) });
 });
 
 
@@ -1280,20 +1277,31 @@ router.get("/notifications/events", (req, res): void => {
     }
   }, 25000);
 
+  let closed = false;
+  let delivery = Promise.resolve();
   const unsubscribe = subscribeNotificationEvents((ev) => {
     if (ev.userId !== session.userId) return;
-    try {
-      if (typeof ev.seq === "number") {
-        res.write(`id: ${ev.seq}\n`);
+    // Serialize authorization so sequence order is retained. Resolve from the
+    // stored row on every event, including streams opened before revocation.
+    delivery = delivery.then(async () => {
+      if (closed) return;
+      let authorizedEvent = ev;
+      if (ev.type === "notification.created") {
+        const [row] = await db.select().from(notificationsTable)
+          .where(and(eq(notificationsTable.id, ev.notificationId), eq(notificationsTable.userId, session.userId))).limit(1);
+        if (!row || !await (await notificationVisibility(session))(row)) return;
+        authorizedEvent = { ...ev, notifType: row.type, category: row.category,
+          title: row.title, body: row.body, link: row.link, createdAt: row.createdAt.toISOString() };
       }
-      res.write(`event: ${ev.type}\n`);
-      res.write(`data: ${JSON.stringify(ev)}\n\n`);
-    } catch {
-      /* client gone — cleanup happens on close */
-    }
+      if (closed) return;
+      if (typeof ev.seq === "number") res.write(`id: ${ev.seq}\n`);
+      res.write(`event: ${authorizedEvent.type}\n`);
+      res.write(`data: ${JSON.stringify(authorizedEvent)}\n\n`);
+    }).catch(err => { logger.warn({ err }, "Notification stream authorization failed"); });
   });
 
   req.on("close", () => {
+    closed = true;
     clearInterval(heartbeat);
     unsubscribe();
     try {

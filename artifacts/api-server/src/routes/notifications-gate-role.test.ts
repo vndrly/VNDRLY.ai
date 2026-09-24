@@ -15,6 +15,7 @@ const state = vi.hoisted(() => ({
   events: [] as unknown[],
   pageSizes: [] as number[],
   cursorTimestampBindings: [] as string[],
+  subscriber: undefined as undefined | ((event: any) => void),
 }));
 // PostgreSQL compares all six fractional digits even when the driver returns a Date.
 const timestampKey = vi.hoisted(() => (value: any): string => {
@@ -85,6 +86,7 @@ vi.mock("@workspace/db", () => {
     "workHubFormInstances",
     "workHubChecklistTemplates",
     "workHubFormTemplates",
+    "safetyEvents",
   ];
   const tables = Object.fromEntries(
     names.map((name) => [
@@ -209,6 +211,11 @@ vi.mock("../lib/notifications-rate-limit", () => ({
 }));
 vi.mock("../lib/notification-events", () => ({
   publishNotificationStateChanged: (event: unknown) => state.events.push(event),
+  getCurrentNotificationEventSeq: async () => 0,
+  subscribeNotificationEvents: (listener: (event: any) => void) => {
+    state.subscriber = listener;
+    return () => { state.subscriber = undefined; };
+  },
 }));
 vi.mock("../lib/sendgrid", () => ({
   sendNotificationAlertEmail: vi.fn(),
@@ -272,6 +279,61 @@ const get = (path = "", cookie = gate) =>
   request(app).get(`/api/notifications${path}`).set("Cookie", cookie);
 
 describe("role-aware notification inbox", () => {
+  it("resolves the exact authorized safety event, including an inactive stop-work site", async () => {
+    state.tables.safetyEvents = [{ id: 41, vendorId: 11, partnerId: 22, reportedByUserId: 7 }];
+    state.tables.notifications = [notification(1, "safety_stop_work", { link: "/safety/41" })];
+    expect((await request(app).post("/api/notifications/1/resolve").set("Cookie", gate)).body).toEqual({ href: "/safety/41" });
+    state.tables.safetyEvents[0].reportedByUserId = 8;
+    expect((await request(app).post("/api/notifications/1/resolve").set("Cookie", gate)).status).toBe(404);
+    expect((await request(app).post("/api/notifications/1/resolve").set("Cookie", office)).body).toEqual({ href: "/safety/41" });
+    state.tables.safetyEvents[0].vendorId = 99;
+    expect((await request(app).post("/api/notifications/1/resolve").set("Cookie", office)).status).toBe(404);
+    expect(state.tables.notifications[0].isRead).toBe(false);
+  });
+  it("keeps the office array contract while excluding revoked Work Hub content and unread totals", async () => {
+    state.tables.notifications = [notification(1), notification(2, "ticket_approved", { link: "/tickets/5" })];
+    state.revokedChannels.add(channel);
+    const response = await get("", office);
+    expect(response.status).toBe(200);
+    expect(response.body.map((row: any) => row.id)).toEqual([2]);
+    expect((await get("/unread-count", office)).body).toEqual({ count: 1 });
+    expect(state.tables.notifications[0].isRead).toBe(false);
+  });
+  it("hides a current destination from office users after organization membership is removed", async () => {
+    state.tables.notifications = [notification(1)];
+    state.tables.userOrgMemberships = [];
+    expect((await get("", office)).body).toEqual([]);
+    expect((await get("/unread-count", office)).body).toEqual({ count: 0 });
+  });
+  it.each([gate, office])("authorizes stored content before emitting a created SSE event", async (cookie) => {
+    state.tables.notifications = [notification(1)];
+    const server = app.listen(0);
+    const controller = new AbortController();
+    try {
+      const port = (server.address() as { port: number }).port;
+      const response = await fetch(`http://127.0.0.1:${port}/api/notifications/events`, { headers: { Cookie: cookie }, signal: controller.signal });
+      const reader = response.body!.getReader();
+      await reader.read();
+      const event = { type: "notification.created", userId: 7, notificationId: 1, notifType: "work_hub_message", category: "system", title: "FORGED CONTENT", body: "secret", link: `/work-hub/channels/${channel}`, createdAt: at, seq: 1 };
+      state.revokedChannels.add(channel);
+      state.subscriber!(event);
+      // A state event acts as a barrier after the asynchronous authorization.
+      state.subscriber!({ type: "notification.state_changed", userId: 7, notificationId: null, state: "all_read", changedAt: at, seq: 2 });
+      let received = "";
+      while (!received.includes('"seq":2')) received += new TextDecoder().decode((await reader.read()).value);
+      expect(received).not.toContain("secret");
+      expect(received).not.toContain("notification.created");
+      state.revokedChannels.clear();
+      state.subscriber!({ ...event, seq: 3 });
+      while (!received.includes('"seq":3')) received += new TextDecoder().decode((await reader.read()).value);
+      expect(received).toContain('"title":"Notice"');
+      expect(received).not.toContain("FORGED CONTENT");
+    } finally {
+      controller.abort();
+      server.closeAllConnections();
+      await new Promise<void>(resolve => server.close(() => resolve()));
+    }
+  });
   it.each([
     "2026-02-30T12:00:00.000975Z",
     "2026-02-29T12:00:00Z",

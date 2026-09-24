@@ -11,6 +11,7 @@ type WorkKind =
 export type NotificationTarget =
   | { kind: WorkKind; id: string; messageId?: string }
   | { kind: "credential"; id: string }
+  | { kind: "safety"; id: string }
   | { kind: "handoff"; id: string; stationId: string; siteId?: string }
   | { kind: "gate"; id: string; stationId?: string; siteId?: string };
 const uuid =
@@ -40,6 +41,8 @@ export function parseNotificationTarget(
     const params = url.searchParams;
     const keys = [...params.keys()];
     if (new Set(keys).size !== keys.length) return null;
+    const safetyId = path.match(/^\/safety\/([1-9]\d*)$/)?.[1];
+    if (safetyId) return !keys.length && positiveId(safetyId) ? { kind: "safety", id: safetyId } : null;
     if (path === "/profile") {
       const id = params.get("credentialId");
       if (
@@ -185,6 +188,10 @@ function content(
 export async function loadNotificationDestination(
   target: NotificationTarget,
 ): Promise<NotificationDestinationContent> {
+  if (target.kind === "safety") {
+    const data = await apiFetch<{ data: { event: RecordData } }>(`/api/safety/events/${target.id}`);
+    return content(target, data.data?.event);
+  }
   if (
     target.kind === "shift" ||
     target.kind === "task" ||
