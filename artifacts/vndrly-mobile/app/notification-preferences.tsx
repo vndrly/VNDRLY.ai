@@ -1,9 +1,8 @@
 import { Stack } from "expo-router";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
-  Alert,
   ScrollView,
   StyleSheet,
   Switch,
@@ -16,16 +15,30 @@ import AmberButton from "@/components/AmberButton";
 import InPageHeader from "@/components/InPageHeader";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
+import { captureAuthScope, isAuthScopeCurrent, subscribeToken, subscribeUser } from "@/lib/auth";
 
-type Prefs = {
+type SharedPrefs = {
+  pushEnabled: boolean;
+  dndStartHour: number | null;
+  dndEndHour: number | null;
+};
+type GatePrefs = SharedPrefs & {
+  mode: "gate";
+  scheduleEnabled: boolean;
+  gateCrewEnabled: boolean;
+  messagesEnabled: boolean;
+  handoffsEnabled: boolean;
+  tasksEnabled: boolean;
+  complianceEnabled: boolean;
+  alertsEnabled: boolean;
+};
+type OfficePrefs = SharedPrefs & {
+  mode?: "office";
   ticketsEnabled: boolean;
   hotlistEnabled: boolean;
   complianceEnabled: boolean;
   crewEnabled: boolean;
   systemEnabled: boolean;
-  pushEnabled: boolean;
-  dndStartHour: number | null;
-  dndEndHour: number | null;
   // Task #50 — comments thread fan-out. The mobile app shows a single
   // toggle per channel-group: `commentsEnabled` covers in-app + push for
   // both @mention and reply notifications, the mention-email and
@@ -34,12 +47,59 @@ type Prefs = {
   commentMentionEmailEnabled: boolean;
   commentReplyEmailEnabled: boolean;
 };
+type Prefs = GatePrefs | OfficePrefs;
+type SwitchKey = Exclude<keyof GatePrefs | keyof OfficePrefs, "mode" | "dndStartHour" | "dndEndHour">;
+const GATE_ROWS = [
+  ["scheduleEnabled", "schedule"], ["gateCrewEnabled", "gate_crew"],
+  ["messagesEnabled", "messages"], ["handoffsEnabled", "handoffs"],
+  ["tasksEnabled", "tasks"], ["complianceEnabled", "compliance"], ["alertsEnabled", "alerts"],
+] as const;
+const OFFICE_SWITCHES = [
+  "ticketsEnabled", "hotlistEnabled", "complianceEnabled", "crewEnabled", "systemEnabled",
+  "commentsEnabled", "commentMentionEmailEnabled", "commentReplyEmailEnabled",
+] as const;
+function parsePreferences(value: unknown): Prefs {
+  if (!value || typeof value !== "object") throw new Error("Invalid preferences response");
+  const row = value as Record<string, unknown>;
+  const keys = row.mode === "gate" ? GATE_ROWS.map(([key]) => key) : OFFICE_SWITCHES;
+  if ((row.mode != null && row.mode !== "gate" && row.mode !== "office") ||
+    [...keys, "pushEnabled"].some((key) => typeof row[key] !== "boolean") ||
+    [row.dndStartHour, row.dndEndHour].some((hour) => hour !== null &&
+      (typeof hour !== "number" || !Number.isInteger(hour) || hour < 0 || hour > 23))) {
+    throw new Error("Invalid preferences response");
+  }
+  return value as Prefs;
+}
+function subscribeAuth(listener: () => void) {
+  const user = subscribeUser(listener);
+  const token = subscribeToken(listener);
+  return () => { user(); token(); };
+}
+const authGeneration = () => captureAuthScope().generation;
 
 export default function NotificationPreferencesScreen() {
+  const generation = useSyncExternalStore(subscribeAuth, authGeneration);
+  // Remount on account/role changes so the old account's draft is never rendered.
+  return <NotificationPreferencesForm key={generation} />;
+}
+
+function NotificationPreferencesForm() {
+  const scope = useRef(captureAuthScope()).current;
   const colors = useColors();
   const { t } = useTranslation();
-  const ROWS = useMemo<{ key: keyof Prefs; label: string; desc: string }[]>(
+  const [prefs, setPrefs] = useState<Prefs | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const [saveError, setSaveError] = useState(false);
+  const [retry, setRetry] = useState(0);
+  const requestController = useRef<AbortController | null>(null);
+  const savingRef = useRef(false);
+  const gateMode = prefs?.mode === "gate";
+  const ROWS = useMemo<{ key: SwitchKey; label: string; desc: string }[]>(
     () => [
+      ...(gateMode ? GATE_ROWS.map(([key, category]) => ({
+        key, label: t(`notifications.categories.${category}`), desc: t(`notifications.gateDescriptions.${category}`),
+      })) : [
       { key: "ticketsEnabled", label: t("notifications.rows.tickets"), desc: t("notifications.rows.ticketsDesc") },
       { key: "hotlistEnabled", label: t("notifications.rows.hotlist"), desc: t("notifications.rows.hotlistDesc") },
       { key: "complianceEnabled", label: t("notifications.rows.compliance"), desc: t("notifications.rows.complianceDesc") },
@@ -52,42 +112,54 @@ export default function NotificationPreferencesScreen() {
       { key: "commentsEnabled", label: t("notifications.rows.comments"), desc: t("notifications.rows.commentsDesc") },
       { key: "commentMentionEmailEnabled", label: t("notifications.rows.commentMentionEmail"), desc: t("notifications.rows.commentMentionEmailDesc") },
       { key: "commentReplyEmailEnabled", label: t("notifications.rows.commentReplyEmail"), desc: t("notifications.rows.commentReplyEmailDesc") },
+      ] satisfies { key: SwitchKey; label: string; desc: string }[]),
       { key: "pushEnabled", label: t("notifications.rows.push"), desc: t("notifications.rows.pushDesc") },
     ],
-    [t],
+    [t, gateMode],
   );
-  const [prefs, setPrefs] = useState<Prefs | null>(null);
-  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    const controller = new AbortController();
+    requestController.current = controller;
+    setLoadError(false);
     (async () => {
       try {
-        const p = await apiFetch<Prefs>("/api/notifications/preferences");
-        setPrefs(p);
-      } catch (e) {
-        Alert.alert(t("common.error"), t("notifications.loadFailed"));
+        const p = parsePreferences(await apiFetch<unknown>("/api/notifications/preferences", { signal: controller.signal }, scope));
+        if (!controller.signal.aborted && isAuthScopeCurrent(scope)) setPrefs(p);
+      } catch {
+        if (!controller.signal.aborted && isAuthScopeCurrent(scope)) setLoadError(true);
       }
     })();
-  }, []);
+    return () => { controller.abort(); requestController.current?.abort(); };
+  }, [retry, scope]);
 
-  const update = (patch: Partial<Prefs>) => {
-    if (!prefs) return;
+  const update = (patch: Partial<SharedPrefs & Record<SwitchKey, boolean>>) => {
+    if (!prefs || savingRef.current || !isAuthScopeCurrent(scope)) return;
     setPrefs({ ...prefs, ...patch });
+    setSaveError(false);
   };
 
   const save = async () => {
-    if (!prefs) return;
+    if (!prefs || savingRef.current || !isAuthScopeCurrent(scope)) return;
+    const controller = new AbortController();
+    requestController.current = controller;
+    const valid = () => !controller.signal.aborted && isAuthScopeCurrent(scope);
+    savingRef.current = true;
     setSaving(true);
+    setSaveError(false);
+    // Only submit the fields shown in this mode; never round-trip hidden office settings.
+    const body = Object.fromEntries(ROWS.map(({ key }) => [key, (prefs as unknown as Record<SwitchKey, boolean>)[key]]));
     try {
-      const next = await apiFetch<Prefs>("/api/notifications/preferences", {
+      const next = parsePreferences(await apiFetch<unknown>("/api/notifications/preferences", {
         method: "PATCH",
-        body: JSON.stringify(prefs),
-      });
-      setPrefs(next);
-    } catch (e) {
-      Alert.alert(t("common.error"), t("notifications.saveFailed"));
+        body: JSON.stringify({ ...body, dndStartHour: prefs.dndStartHour, dndEndHour: prefs.dndEndHour }),
+        signal: controller.signal,
+      }, scope));
+      if (valid()) setPrefs(next);
+    } catch {
+      if (valid()) setSaveError(true);
     } finally {
-      setSaving(false);
+      if (valid()) { savingRef.current = false; setSaving(false); }
     }
   };
 
@@ -96,7 +168,10 @@ export default function NotificationPreferencesScreen() {
       <View style={[styles.container, { backgroundColor: colors.background, justifyContent: "center" }]}>
         <Stack.Screen options={{ headerShown: false }} />
         <InPageHeader title={t("notifications.preferencesTitle")} />
-        <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} />
+        {loadError ? <View style={{ padding: 16 }}>
+          <Text accessibilityRole="alert" style={{ color: colors.foreground }}>{t("notifications.preferencesLoadFailed")}</Text>
+          <AmberButton onPress={() => setRetry((value) => value + 1)}>{t("notifications.preferencesRetry")}</AmberButton>
+        </View> : <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} />}
       </View>
     );
   }
@@ -121,8 +196,11 @@ export default function NotificationPreferencesScreen() {
                 <Text style={[styles.rowDesc, { color: colors.mutedForeground }]}>{r.desc}</Text>
               </View>
               <Switch
-                value={prefs[r.key] as boolean}
-                onValueChange={(v) => update({ [r.key]: v } as Partial<Prefs>)}
+                accessibilityLabel={r.label}
+                accessibilityHint={r.desc}
+                disabled={saving}
+                value={(prefs as unknown as Record<SwitchKey, boolean>)[r.key]}
+                onValueChange={(v) => update({ [r.key]: v })}
               />
             </View>
           ))}
@@ -137,6 +215,8 @@ export default function NotificationPreferencesScreen() {
             <View style={{ flex: 1 }}>
               <Text style={[styles.rowDesc, { color: colors.mutedForeground }]}>{t("notifications.dndStart")}</Text>
               <TextInput
+                accessibilityLabel={t("notifications.dndStart")}
+                editable={!saving}
                 value={prefs.dndStartHour == null ? "" : String(prefs.dndStartHour)}
                 onChangeText={(v) =>
                   update({ dndStartHour: v === "" ? null : Math.max(0, Math.min(23, parseInt(v) || 0)) })
@@ -148,6 +228,8 @@ export default function NotificationPreferencesScreen() {
             <View style={{ flex: 1 }}>
               <Text style={[styles.rowDesc, { color: colors.mutedForeground }]}>{t("notifications.dndEnd")}</Text>
               <TextInput
+                accessibilityLabel={t("notifications.dndEnd")}
+                editable={!saving}
                 value={prefs.dndEndHour == null ? "" : String(prefs.dndEndHour)}
                 onChangeText={(v) =>
                   update({ dndEndHour: v === "" ? null : Math.max(0, Math.min(23, parseInt(v) || 0)) })
@@ -159,6 +241,7 @@ export default function NotificationPreferencesScreen() {
           </View>
         </View>
 
+        {saveError && <Text accessibilityRole="alert" style={{ color: colors.foreground }}>{t("notifications.saveFailed")}</Text>}
         <AmberButton
           onPress={save}
           disabled={saving}

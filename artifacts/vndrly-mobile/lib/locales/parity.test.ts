@@ -56,6 +56,24 @@ function collectLeaves(
 const enLeaves = collectLeaves(en as LocaleObject);
 const esLeaves = collectLeaves(es as LocaleObject);
 
+describe("gate notification copy", () => {
+  it.each(["schedule", "gate_crew", "messages", "handoffs", "tasks", "compliance", "alerts"])("provides translated settings and empty state for %s", (category) => {
+    for (const leaves of [enLeaves, esLeaves]) {
+      for (const key of [`notifications.categories.${category}`, `notifications.emptyCategories.${category}`, `notifications.gateDescriptions.${category}`]) {
+        expect(leaves.get(key), key).toBeTypeOf("string");
+        expect(leaves.get(key), key).not.toBe("");
+      }
+    }
+  });
+  it("provides a neutral unavailable destination and retryable settings errors in both languages", () => {
+    for (const leaves of [enLeaves, esLeaves]) {
+      for (const key of ["notifications.destinationUnavailable", "notifications.preferencesLoadFailed", "notifications.preferencesRetry"]) {
+        expect(leaves.get(key), key).toBeTypeOf("string");
+      }
+    }
+  });
+});
+
 describe("global locale parity (Task #611)", () => {
   it("en.json contains a non-trivial number of translation keys (sanity)", () => {
     // Guards against a refactor that accidentally empties the file and

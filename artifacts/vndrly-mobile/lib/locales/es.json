@@ -1442,6 +1442,27 @@
     "shareUnavailable": "No se pudo abrir la app de correo.",
     "actionFailed": "No se pudo actualizar esa notificación.",
     "preferencesTitle": "Ajustes de notificaciones",
+    "preferencesLoadFailed": "No se pudieron cargar los ajustes de notificaciones.",
+    "preferencesRetry": "Reintentar",
+    "destinationUnavailable": "El destino de esta notificación no está disponible.",
+    "emptyCategories": {
+      "schedule": "No hay notificaciones de horario.",
+      "gate_crew": "No hay notificaciones del equipo de puerta.",
+      "messages": "No hay notificaciones de mensajes.",
+      "handoffs": "No hay notificaciones de entregas de turno.",
+      "tasks": "No hay notificaciones de tareas.",
+      "compliance": "No hay notificaciones de cumplimiento.",
+      "alerts": "No hay alertas urgentes."
+    },
+    "gateDescriptions": {
+      "schedule": "Asignaciones y cambios de turno, coberturas, intercambios y reuniones.",
+      "gate_crew": "Anuncios del grupo de puerta, comunicados de supervisores y cambios de miembros.",
+      "messages": "Mensajes directos, menciones, respuestas y comentarios en los que participas.",
+      "handoffs": "Notas y revisiones de entregas de turno, seguimiento de supervisores y confirmaciones requeridas.",
+      "tasks": "Tareas, formularios, listas de verificación, confirmaciones y recordatorios de vencimiento.",
+      "compliance": "Tarjetas PEC, certificaciones, cualificaciones y recordatorios de vencimiento.",
+      "alerts": "Alertas urgentes de seguridad, cierres de puerta, cambios de acceso, paros de trabajo y del sitio."
+    },
     "loadFailed": "No se pudieron cargar las notificaciones.",
     "types": {
       "ticket_assigned": "Asignado a ti",
@@ -1468,6 +1489,12 @@
     },
     "categories": {
       "all": "Todas",
+      "schedule": "Horario",
+      "gate_crew": "Equipo de puerta",
+      "messages": "Mensajes",
+      "handoffs": "Entregas de turno",
+      "tasks": "Tareas",
+      "alerts": "Alertas",
       "tickets": "Tickets",
       "hotlist": "Hotlist",
       "compliance": "Cumplimiento",

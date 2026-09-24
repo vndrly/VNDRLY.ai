@@ -1442,6 +1442,27 @@
     "shareUnavailable": "Could not open the mail app.",
     "actionFailed": "Couldn't update that notification.",
     "preferencesTitle": "Notification settings",
+    "preferencesLoadFailed": "Couldn't load notification settings.",
+    "preferencesRetry": "Retry",
+    "destinationUnavailable": "This notification's destination is unavailable.",
+    "emptyCategories": {
+      "schedule": "No schedule notifications.",
+      "gate_crew": "No gate crew notifications.",
+      "messages": "No message notifications.",
+      "handoffs": "No handoff notifications.",
+      "tasks": "No task notifications.",
+      "compliance": "No compliance notifications.",
+      "alerts": "No urgent alerts."
+    },
+    "gateDescriptions": {
+      "schedule": "Shift assignments, schedule changes, coverage, swaps, and meetings.",
+      "gate_crew": "Gate group announcements, supervisor broadcasts, and membership updates.",
+      "messages": "Direct messages, mentions, replies, and comments involving you.",
+      "handoffs": "Shift notes, revised handoffs, supervisor follow-ups, and required acknowledgements.",
+      "tasks": "Assigned tasks, forms, checklists, acknowledgements, and due reminders.",
+      "compliance": "PEC cards, certifications, qualifications, and expiry reminders.",
+      "alerts": "Urgent safety, gate closures, access changes, stop-work, and site alerts."
+    },
     "loadFailed": "Couldn't load notifications.",
     "types": {
       "ticket_assigned": "Assigned to you",
@@ -1468,6 +1489,12 @@
     },
     "categories": {
       "all": "All",
+      "schedule": "Schedule",
+      "gate_crew": "Gate Crew",
+      "messages": "Messages",
+      "handoffs": "Handoffs",
+      "tasks": "Tasks",
+      "alerts": "Alerts",
       "tickets": "Tickets",
       "hotlist": "Hotlist",
       "compliance": "Compliance",
