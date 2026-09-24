@@ -232,6 +232,13 @@ const get = (path = "", cookie = gate) =>
   request(app).get(`/api/notifications${path}`).set("Cookie", cookie);
 
 describe("role-aware notification inbox", () => {
+  it("preserves the raw array and 100-row default for the unfiltered office inbox", async () => {
+    state.tables.notifications = Array.from({ length: 40 }, (_, i) => notification(i + 1, "hotlist_match"));
+    const response = await get("", office);
+    expect(response.status).toBe(200);
+    expect(Array.isArray(response.body)).toBe(true);
+    expect(response.body).toHaveLength(40);
+  });
   it("isolates gate categories, returns metadata, and preserves office rows", async () => {
     state.tables.notifications = [
       notification(3, "hotlist_match"),
@@ -253,7 +260,7 @@ describe("role-aware notification inbox", () => {
       "compliance",
       "alerts",
     ]);
-    expect((await get("", office)).body.items?.map((r: any) => r.id)).toEqual([
+    expect((await get("", office)).body.map((r: any) => r.id)).toEqual([
       3, 2, 1,
     ]);
   });
@@ -377,7 +384,7 @@ describe("role-aware notification inbox", () => {
     expect((await get("", managed)).body.items?.map((r: any) => r.id)).toEqual([
       1,
     ]);
-    expect((await get("", office)).body.items).toHaveLength(2);
+    expect((await get("", office)).body).toHaveLength(2);
   });
   it("keeps focused type queries as arrays without bypassing gate policy", async () => {
     state.tables.notifications = [
@@ -389,7 +396,7 @@ describe("role-aware notification inbox", () => {
     ).toEqual([2]);
     expect((await get("?type=hotlist_match")).body).toEqual([]);
   });
-  it("keeps office email-only comments out of the envelope and unread count", async () => {
+  it("keeps office email-only comments out of the array and unread count", async () => {
     state.tables.notifications = [
       notification(2, "comment_mention"),
       notification(1, "hotlist_match"),
@@ -397,7 +404,7 @@ describe("role-aware notification inbox", () => {
     state.tables.notificationPreferences = [
       { userId: 7, commentsEnabled: false, commentMentionEmailEnabled: true },
     ];
-    expect((await get("", office)).body.items?.map((r: any) => r.id)).toEqual([
+    expect((await get("", office)).body.map((r: any) => r.id)).toEqual([
       1,
     ]);
     expect((await get("/unread-count", office)).body.count).toBe(1);

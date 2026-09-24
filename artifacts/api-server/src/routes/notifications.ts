@@ -943,9 +943,9 @@ router.get("/notifications", async (req, res) => {
     .map((s) => s.trim())
     .filter((s) => s.length > 0);
 
-  // Focused legacy type consumers retain their raw-array shape and old cursor.
-  const legacy = typeof req.query.type === "string";
   const gate = isGateNotificationSession(session);
+  // All office callers and focused legacy type consumers retain raw arrays.
+  const legacy = !gate || typeof req.query.type === "string";
   const beforeParam = typeof req.query.before === "string" ? req.query.before : "";
   const beforeDate = beforeParam ? new Date(beforeParam) : null;
   const validBefore =

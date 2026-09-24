@@ -12,8 +12,8 @@ import { buildTestCookie } from "../test-utils/session";
 // without scanning the bell's full 100-row payload.
 //
 // What we assert:
-//   1. The general inbox returns a 25-row envelope with one lookahead;
-//      focused ?type= callers retain their existing raw-array contract.
+//   1. Office callers retain the original 100-row raw-array inbox;
+//      focused ?type= callers also retain their existing array contract.
 //   2. `?type=crew_added,crew_removed` builds an `inArray(type, [...])`
 //      condition with the parsed list. Bad/blank entries are dropped.
 //   3. `?limit=25` clamps to [1, 100] and is plumbed to drizzle's
@@ -152,7 +152,7 @@ function findCondition(op: string): ConditionCapture | undefined {
 }
 
 describe("GET /api/notifications — Task #639 filter + pagination", () => {
-  it("returns a user-scoped 25-item envelope with no query params", async () => {
+  it("returns the original user-scoped office array with no query params", async () => {
     returnRows = [];
     const r = await request(app).get("/api/notifications").set("Cookie", userCookie);
     expectStatus(r, 200);
@@ -162,8 +162,8 @@ describe("GET /api/notifications — Task #639 filter + pagination", () => {
     // No type or before filters at all.
     expect(findCondition("inArray")).toBeUndefined();
     expect(findCondition("lt")).toBeUndefined();
-    expect(lastWhereCall?.limit).toBe(26);
-    expect(r.body).toMatchObject({ items: [], nextCursor: null });
+    expect(lastWhereCall?.limit).toBe(100);
+    expect(r.body).toEqual([]);
   });
 
   it("filters by type when ?type=crew_added,crew_removed is supplied", async () => {
