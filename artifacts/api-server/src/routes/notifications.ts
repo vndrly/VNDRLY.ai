@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and, desc, sql, inArray, lt } from "drizzle-orm";
+import { eq, and, or, desc, sql, inArray, lt, type SQL } from "drizzle-orm";
 import {
   db,
   notificationsTable,
@@ -23,13 +23,18 @@ import {
   subscribeNotificationEvents,
 } from "../lib/notification-events";
 
-import { SESSION_SECRET } from "../lib/session";
+import { SESSION_SECRET, type SessionPayload } from "../lib/session";
+import { GATE_NOTIFICATION_CATEGORIES, gatePreferenceKeys, isGateNotificationSession, resolveGateNotificationCategory, type GateNotificationCategory } from "../lib/gate-notification-policy";
 import { sendApiError } from "../lib/apiError";
 import { acknowledgeNotification, databaseNotificationDeliveryRepository } from "../services/notification-delivery";
+// Lazy-loaded below so ordinary office polling does not initialize subject services.
+async function resolveNotificationDestination(session: Session, link: string | null, category?: GateNotificationCategory) {
+  return (await import("../lib/notification-destination")).resolveNotificationDestination(session, link, category);
+}
 
 const COOKIE_NAME = "vndrly_session";
 
-type Session = { userId: number; role: string; vendorId: number | null; partnerId: number | null; displayName?: string };
+type Session = SessionPayload & { userId: number; role: string; vendorId: number | null; partnerId: number | null };
 
 function getSession(req: any): Session | null {
   const cookie = req.cookies?.[COOKIE_NAME];
@@ -849,6 +854,75 @@ export async function findVendorVisitNotifierUserIds(vendorId: number): Promise<
   return findVendorUserIds(vendorId);
 }
 
+type NotificationRow = typeof notificationsTable.$inferSelect;
+type NotificationCursor = { createdAt: string; id: number };
+type GatePrefs = Partial<typeof notificationPreferencesTable.$inferSelect>;
+const gateSwitches = {
+  schedule: "scheduleEnabled", gate_crew: "gateCrewEnabled", messages: "messagesEnabled",
+  handoffs: "handoffsEnabled", tasks: "tasksEnabled", compliance: "complianceEnabled", alerts: "alertsEnabled",
+} as const;
+
+function gateCategoryEnabled(prefs: GatePrefs, category: GateNotificationCategory) {
+  return gatePreferenceKeys(category).every(key => prefs[key] !== false);
+}
+
+function gatePreferences(prefs: GatePrefs) {
+  return {
+    mode: "gate",
+    ...Object.fromEntries(GATE_NOTIFICATION_CATEGORIES.map(category => [gateSwitches[category], gateCategoryEnabled(prefs, category)])),
+    pushEnabled: prefs.pushEnabled ?? true,
+    dndStartHour: prefs.dndStartHour ?? null,
+    dndEndHour: prefs.dndEndHour ?? null,
+  };
+}
+
+function cursorPredicate(cursor: NotificationCursor): SQL | undefined {
+  const at = new Date(cursor.createdAt);
+  return or(lt(notificationsTable.createdAt, at), and(eq(notificationsTable.createdAt, at), lt(notificationsTable.id, cursor.id)));
+}
+
+function rowCursor(row: NotificationRow): NotificationCursor {
+  return { createdAt: row.createdAt.toISOString(), id: row.id };
+}
+
+async function notificationVisibility(session: Session) {
+  const gate = isGateNotificationSession(session);
+  let prefs: GatePrefs | undefined;
+  async function preferences() {
+    if (!prefs) {
+      const [row] = await db.select().from(notificationPreferencesTable).where(eq(notificationPreferencesTable.userId, session.userId));
+      prefs = row ?? {};
+    }
+    return prefs;
+  }
+  return async (row: NotificationRow) => {
+    if (!gate) return row.category !== "comments" || (await preferences()).commentsEnabled !== false;
+    const category = resolveGateNotificationCategory(row);
+    if (!category || !gateCategoryEnabled(await preferences(), category)) return false;
+    return (await resolveNotificationDestination(session, row.link, category)) !== null;
+  };
+}
+
+/** Bounded reads continue past excluded rows, using the last scanned two-part cursor. */
+async function* visibleNotificationBatches(
+  session: Session,
+  options: { conditions?: SQL[]; cursor?: NotificationCursor; batchSize?: number } = {},
+) {
+  const visible = await notificationVisibility(session);
+  let cursor = options.cursor;
+  const batchSize = options.batchSize ?? 100;
+  while (true) {
+    const rows = await db.select().from(notificationsTable)
+      .where(and(eq(notificationsTable.userId, session.userId), ...(options.conditions ?? []), cursor ? cursorPredicate(cursor) : undefined))
+      .orderBy(desc(notificationsTable.createdAt), desc(notificationsTable.id)).limit(batchSize);
+    const allowed: NotificationRow[] = [];
+    for (const row of rows) if (await visible(row)) allowed.push(row);
+    yield allowed;
+    if (rows.length < batchSize) return;
+    cursor = rowCursor(rows[rows.length - 1]);
+  }
+}
+
 router.get("/notifications", async (req, res) => {
   const session = getSession(req);
   if (!session) return sendApiError(res, 401, "auth.not_authenticated", "Unauthorized");
@@ -869,21 +943,19 @@ router.get("/notifications", async (req, res) => {
     .map((s) => s.trim())
     .filter((s) => s.length > 0);
 
-  // Cursor-based pagination using `createdAt`. `before` is an ISO
-  // timestamp; rows strictly older than it are returned. Combined with
-  // `desc(createdAt)` this gives stable infinite-scroll without an
-  // OFFSET that would skew when new rows arrive.
+  // Focused legacy type consumers retain their raw-array shape and old cursor.
+  const legacy = typeof req.query.type === "string";
+  const gate = isGateNotificationSession(session);
   const beforeParam = typeof req.query.before === "string" ? req.query.before : "";
   const beforeDate = beforeParam ? new Date(beforeParam) : null;
   const validBefore =
     beforeDate && !Number.isNaN(beforeDate.getTime()) ? beforeDate : null;
 
   const limitParam = Number(req.query.limit);
-  const limit = Number.isFinite(limitParam)
-    ? Math.max(1, Math.min(100, Math.floor(limitParam)))
-    : 100;
+  const maximum = legacy && !gate ? 100 : 25;
+  const limit = Number.isFinite(limitParam) ? Math.max(1, Math.min(maximum, Math.floor(limitParam))) : maximum;
 
-  const conditions = [eq(notificationsTable.userId, session.userId)];
+  const conditions: SQL[] = [];
   if (types.length > 0) {
     conditions.push(inArray(notificationsTable.type, types));
   }
@@ -891,33 +963,21 @@ router.get("/notifications", async (req, res) => {
     conditions.push(lt(notificationsTable.createdAt, validBefore));
   }
 
-  const rows = await db
-    .select()
-    .from(notificationsTable)
-    .where(and(...conditions))
-    .orderBy(desc(notificationsTable.createdAt))
-    .limit(limit);
-
-  // Task #50 — when a user has the "Comments & mentions" in-app
-  // category turned OFF but kept either email sub-channel ON, the row
-  // is still inserted so the email pipeline / reply-digest worker can
-  // see it. Hide those rows from the bell here so the user's in-app
-  // toggle remains a real toggle. Push fan-out is gated independently
-  // in `notifyUsers`. We only pay for the prefs lookup when the page
-  // actually contains a comments row — keeps the hot path unchanged
-  // and avoids touching list-filter test fixtures that don't return
-  // comments rows.
-  const hasCommentsRow = rows.some((r) => r.category === "comments");
-  if (!hasCommentsRow) return res.json(rows);
-  const [callerPrefs] = await db
-    .select({ commentsEnabled: notificationPreferencesTable.commentsEnabled })
-    .from(notificationPreferencesTable)
-    .where(eq(notificationPreferencesTable.userId, session.userId));
-  const callerCommentsEnabled = callerPrefs?.commentsEnabled ?? true;
-  const visible = callerCommentsEnabled
-    ? rows
-    : rows.filter((r) => r.category !== "comments");
-  return res.json(visible);
+  const beforeCreatedAt = typeof req.query.beforeCreatedAt === "string" ? req.query.beforeCreatedAt : "";
+  const beforeId = Number(req.query.beforeId);
+  const cursor = beforeCreatedAt && Number.isFinite(new Date(beforeCreatedAt).getTime()) && Number.isSafeInteger(beforeId) && beforeId > 0
+    ? { createdAt: beforeCreatedAt, id: beforeId } : undefined;
+  const category = typeof req.query.category === "string" ? req.query.category : "all";
+  if (!gate && category !== "all") conditions.push(eq(notificationsTable.category, category));
+  const rows: NotificationRow[] = [];
+  for await (const batch of visibleNotificationBatches(session, { conditions, cursor, batchSize: gate ? 100 : legacy ? limit : limit + 1 })) {
+    rows.push(...batch.filter(row => !gate || category === "all" || resolveGateNotificationCategory(row) === category));
+    if (rows.length >= (legacy ? limit : limit + 1)) break;
+  }
+  const items = rows.slice(0, limit).map(row => gate ? { ...row, displayCategory: resolveGateNotificationCategory(row) } : row);
+  if (legacy) return res.json(items);
+  return res.json({ items, nextCursor: rows.length > limit && items.length ? rowCursor(items[items.length - 1]) : null,
+    categories: gate ? GATE_NOTIFICATION_CATEGORIES : [...new Set(Object.values(TYPE_TO_CATEGORY))] });
 });
 
 router.get("/notifications/unread-count", async (req, res) => {
@@ -927,6 +987,11 @@ router.get("/notifications/unread-count", async (req, res) => {
   // one bucket per user so a misbehaving client can't dodge the cap
   // by alternating between the two routes.
   if (!await enforceNotificationsRateLimit(req, res, session)) return;
+  if (isGateNotificationSession(session)) {
+    let count = 0;
+    for await (const rows of visibleNotificationBatches(session, { conditions: [eq(notificationsTable.isRead, false)] })) count += rows.length;
+    return res.json({ count });
+  }
   // Task #50 — match the visibility rule used by GET /notifications:
   // when the caller has the comments in-app channel off, exclude any
   // email-only rows from the unread count so the bell badge agrees
@@ -950,6 +1015,20 @@ router.get("/notifications/unread-count", async (req, res) => {
   return res.json({ count: row?.n ?? 0 });
 });
 
+
+router.post("/notifications/:id/resolve", async (req, res) => {
+  const session = getSession(req);
+  if (!session) return sendApiError(res, 401, "auth.not_authenticated", "Unauthorized");
+  if (!await enforceNotificationsRateLimit(req, res, session)) return;
+  const id = Number(req.params.id);
+  const unavailable = () => sendApiError(res, 404, "notification.unavailable", "Notification unavailable");
+  if (!Number.isSafeInteger(id) || id <= 0) return unavailable();
+  const [row] = await db.select().from(notificationsTable)
+    .where(and(eq(notificationsTable.userId, session.userId), eq(notificationsTable.id, id))).limit(1);
+  if (!row || !await (await notificationVisibility(session))(row)) return unavailable();
+  const href = await resolveNotificationDestination(session, row.link, isGateNotificationSession(session) ? resolveGateNotificationCategory(row) ?? undefined : undefined);
+  return href ? res.json({ href }) : unavailable();
+});
 
 router.post("/notifications/:id/acknowledge", async (req, res) => {
   const session = getSession(req);
@@ -1009,6 +1088,18 @@ router.delete("/notifications/:id", async (req, res) => {
 router.post("/notifications/read-all", async (req, res) => {
   const session = getSession(req);
   if (!session) return sendApiError(res, 401, "auth.not_authenticated", "Unauthorized");
+  if (isGateNotificationSession(session)) {
+    let changed = false;
+    for await (const rows of visibleNotificationBatches(session, { conditions: [eq(notificationsTable.isRead, false)] })) {
+      if (!rows.length) continue;
+      const updated = await db.update(notificationsTable).set({ isRead: true })
+        .where(and(eq(notificationsTable.userId, session.userId), eq(notificationsTable.isRead, false), inArray(notificationsTable.id, rows.map(row => row.id))))
+        .returning({ id: notificationsTable.id });
+      changed ||= updated.length > 0;
+    }
+    if (changed) publishNotificationStateChanged({ userId: session.userId, notificationId: null, state: "all_read" });
+    return res.status(204).send();
+  }
   const changed = await db
     .update(notificationsTable)
     .set({ isRead: true })
@@ -1120,7 +1211,7 @@ router.get("/notifications/preferences", async (req, res) => {
     .select()
     .from(notificationPreferencesTable)
     .where(eq(notificationPreferencesTable.userId, session.userId));
-  return res.json(row ?? { userId: session.userId, ...DEFAULT_PREFS });
+  return res.json(isGateNotificationSession(session) ? gatePreferences(row ?? {}) : row ?? { userId: session.userId, ...DEFAULT_PREFS });
 });
 
 router.patch("/notifications/preferences", async (req, res) => {
@@ -1128,6 +1219,7 @@ router.patch("/notifications/preferences", async (req, res) => {
   if (!session) return sendApiError(res, 401, "auth.not_authenticated", "Unauthorized");
   const b = req.body ?? {};
   const patch: Record<string, unknown> = {};
+  const gate = isGateNotificationSession(session);
   for (const k of [
     "ticketsEnabled",
     "hotlistEnabled",
@@ -1159,7 +1251,11 @@ router.patch("/notifications/preferences", async (req, res) => {
     "workHubDigestEnabled",
     "workHubUrgentBypassDndEnabled",
   ] as const) {
-    if (typeof b[k] === "boolean") patch[k] = b[k];
+    if ((!gate || k === "pushEnabled") && typeof b[k] === "boolean") patch[k] = b[k];
+  }
+  if (gate) for (const category of GATE_NOTIFICATION_CATEGORIES) {
+    const value = b[gateSwitches[category]];
+    if (typeof value === "boolean") for (const key of gatePreferenceKeys(category)) patch[key] = value;
   }
   for (const k of ["dndStartHour", "dndEndHour"] as const) {
     if (b[k] === null) patch[k] = null;
@@ -1174,7 +1270,7 @@ router.patch("/notifications/preferences", async (req, res) => {
       set: patch,
     })
     .returning();
-  return res.json(row);
+  return res.json(gate ? gatePreferences(row ?? {}) : row);
 });
 
 // ---------- QB bulk-action expiry email preview (Task #963) ----------

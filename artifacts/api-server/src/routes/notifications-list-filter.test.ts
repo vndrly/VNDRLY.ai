@@ -12,9 +12,8 @@ import { buildTestCookie } from "../test-utils/session";
 // without scanning the bell's full 100-row payload.
 //
 // What we assert:
-//   1. With no query params, the handler still runs the original
-//      "all rows for me, desc(createdAt), limit 100" query — i.e.
-//      the bell + inbox are unaffected.
+//   1. The general inbox returns a 25-row envelope with one lookahead;
+//      focused ?type= callers retain their existing raw-array contract.
 //   2. `?type=crew_added,crew_removed` builds an `inArray(type, [...])`
 //      condition with the parsed list. Bad/blank entries are dropped.
 //   3. `?limit=25` clamps to [1, 100] and is plumbed to drizzle's
@@ -70,12 +69,14 @@ vi.mock("drizzle-orm", () => {
   const desc = (col: { __col?: string }) =>
     ({ op: "desc", col: col?.__col }) as ConditionCapture;
   const and = (...conds: ConditionCapture[]) =>
-    ({ op: "and", values: conds }) as ConditionCapture;
+    ({ op: "and", values: conds.filter(Boolean) }) as ConditionCapture;
+  const or = (...conds: ConditionCapture[]) =>
+    ({ op: "or", values: conds.filter(Boolean) }) as ConditionCapture;
   const sql = Object.assign(
     (..._parts: unknown[]) => ({ op: "sql" }) as ConditionCapture,
     { raw: (s: string) => ({ op: "rawSql", value: s }) },
   );
-  return { eq, lt, inArray, desc, and, sql };
+  return { eq, lt, inArray, desc, and, or, sql };
 });
 
 vi.mock("@workspace/db", () => {
@@ -151,7 +152,7 @@ function findCondition(op: string): ConditionCapture | undefined {
 }
 
 describe("GET /api/notifications — Task #639 filter + pagination", () => {
-  it("preserves the original behaviour with no query params (user-scoped, limit 100)", async () => {
+  it("returns a user-scoped 25-item envelope with no query params", async () => {
     returnRows = [];
     const r = await request(app).get("/api/notifications").set("Cookie", userCookie);
     expectStatus(r, 200);
@@ -161,8 +162,8 @@ describe("GET /api/notifications — Task #639 filter + pagination", () => {
     // No type or before filters at all.
     expect(findCondition("inArray")).toBeUndefined();
     expect(findCondition("lt")).toBeUndefined();
-    // Default limit is the legacy 100 the bell expects.
-    expect(lastWhereCall?.limit).toBe(100);
+    expect(lastWhereCall?.limit).toBe(26);
+    expect(r.body).toMatchObject({ items: [], nextCursor: null });
   });
 
   it("filters by type when ?type=crew_added,crew_removed is supplied", async () => {
@@ -173,6 +174,7 @@ describe("GET /api/notifications — Task #639 filter + pagination", () => {
     const inCond = findCondition("inArray");
     expect(inCond?.col).toBe("type");
     expect(inCond?.values).toEqual(["crew_added", "crew_removed"]);
+    expect(r.body).toEqual([]);
   });
 
   it("drops blank/whitespace-only entries from the type filter", async () => {
@@ -194,13 +196,13 @@ describe("GET /api/notifications — Task #639 filter + pagination", () => {
 
   it("clamps the limit to the [1, 100] range", async () => {
     await request(app)
-      .get("/api/notifications?limit=25")
+      .get("/api/notifications?type=crew_added&limit=25")
       .set("Cookie", userCookie);
     expect(lastWhereCall?.limit).toBe(25);
 
     resetWhereCall();
     await request(app)
-      .get("/api/notifications?limit=999")
+      .get("/api/notifications?type=crew_added&limit=999")
       .set("Cookie", userCookie);
     // Anything above 100 must clamp so a client can't ask the
     // database for an unbounded scan via the query string.
@@ -208,7 +210,7 @@ describe("GET /api/notifications — Task #639 filter + pagination", () => {
 
     resetWhereCall();
     await request(app)
-      .get("/api/notifications?limit=0")
+      .get("/api/notifications?type=crew_added&limit=0")
       .set("Cookie", userCookie);
     // 0 / negatives clamp to 1 so a typo never returns an empty
     // array that looks like "all caught up".
@@ -217,7 +219,7 @@ describe("GET /api/notifications — Task #639 filter + pagination", () => {
 
   it("falls back to the default limit when ?limit is non-numeric", async () => {
     await request(app)
-      .get("/api/notifications?limit=abc")
+      .get("/api/notifications?type=crew_added&limit=abc")
       .set("Cookie", userCookie);
     expect(lastWhereCall?.limit).toBe(100);
   });
