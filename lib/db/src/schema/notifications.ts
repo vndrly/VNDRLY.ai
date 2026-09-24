@@ -128,6 +128,8 @@ export const notificationPreferencesTable = pgTable("notification_preferences", 
   workHubMeetingsEnabled: boolean("work_hub_meetings_enabled").notNull().default(true),
   workHubDigestEnabled: boolean("work_hub_digest_enabled").notNull().default(true),
   workHubUrgentBypassDndEnabled: boolean("work_hub_urgent_bypass_dnd_enabled").notNull().default(false),
+  gateHandoffsEnabled: boolean("gate_handoffs_enabled").notNull().default(true),
+  gateAlertsEnabled: boolean("gate_alerts_enabled").notNull().default(true),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
 
