@@ -10,7 +10,19 @@ export type NotificationRow = {
   link: string | null;
   isRead: boolean;
   createdAt: string;
+  displayCategory?: GateNotificationCategory;
 };
+
+export type GateNotificationCategory = "schedule" | "gate_crew" | "messages" | "handoffs" | "tasks" | "compliance" | "alerts";
+export type GateNotificationRow = NotificationRow & { displayCategory: GateNotificationCategory };
+export type NotificationsResponse = {
+  items: GateNotificationRow[];
+  nextCursor: { createdAt: string; id: number } | null;
+  categories: readonly GateNotificationCategory[];
+};
+
+/** Office and focused legacy consumers still receive a raw array. */
+export type NotificationsListResponse = NotificationsResponse | NotificationRow[];
 
 type FeatherName = React.ComponentProps<typeof Feather>["name"];
 

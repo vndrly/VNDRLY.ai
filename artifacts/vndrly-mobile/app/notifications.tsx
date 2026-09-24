@@ -22,12 +22,14 @@ import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
 import { stopBellTolling } from "@/lib/notificationSounds";
 import { syncAppIconBadge } from "@/lib/notificationBadge";
+import { openNotificationDestination } from "@/lib/notification-deep-links";
 import {
   effectiveNotificationCategory,
   NOTIFICATION_CATEGORY_IDS,
   NOTIFICATION_TYPE_META,
   notificationTypeLabel,
   type NotificationRow,
+  type NotificationsListResponse,
 } from "@/lib/notifications-ui";
 
 export default function NotificationsScreen() {
@@ -65,8 +67,8 @@ export default function NotificationsScreen() {
 
   const load = useCallback(async () => {
     try {
-      const data = await apiFetch<NotificationRow[]>("/api/notifications");
-      setItems(data || []);
+      const data = await apiFetch<NotificationsListResponse>("/api/notifications");
+      setItems(Array.isArray(data) ? data : data.items);
       void syncAppIconBadge();
       setLoadError(null);
     } catch (e) {
@@ -172,8 +174,24 @@ export default function NotificationsScreen() {
     }
   };
 
-  const onCardPress = (item: NotificationRow) => {
-    setSelected(item);
+  const onCardPress = async (item: NotificationRow) => {
+    if (!item.displayCategory) {
+      setSelected(item);
+      return;
+    }
+    try {
+      const result = await openNotificationDestination(item, router);
+      if (result === "unavailable") {
+        Alert.alert(t("common.error"), t("notifications.destinationUnavailable", {
+          defaultValue: "This notification's destination is no longer available.",
+        }));
+        return;
+      }
+      updateItem(item.id, { isRead: true });
+      void syncAppIconBadge();
+    } catch {
+      Alert.alert(t("common.error"), t("notifications.actionFailed"));
+    }
   };
 
   const markAll = async () => {
