@@ -191,3 +191,16 @@ it("keeps iPad fixed without recentering or end spacers, enabling overflow only 
     Object.values(labels),
   );
 });
+
+it("gives each 30-point pill a centered 44-point parent so its accessible touch target is not clipped", () => {
+  render(<NotificationCategoryCarousel {...props} />);
+  for (const id of categories) {
+    const wrapper = screen.getByTestId(`notification-category-measure-${id}`);
+    const button = screen.getByTestId(`notifications-tab-${id}`);
+    const layout = getComputedStyle(wrapper);
+    expect(parseFloat(layout.minHeight)).toBeGreaterThanOrEqual(44);
+    expect(layout.justifyContent).toBe("center");
+    expect(getComputedStyle(button).height).toBe("30px");
+    expect(button.getAttribute("role")).toBe("button");
+  }
+});

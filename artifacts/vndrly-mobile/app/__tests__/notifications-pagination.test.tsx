@@ -41,7 +41,9 @@ vi.mock("react-native-svg", () => ({
   Stop: () => null,
 }));
 vi.mock("@/components/PortalPageHeader", () => ({ default: () => null }));
-vi.mock("@/components/InPageHeader", () => ({ default: ({ right }: any) => <div>{right}</div> }));
+vi.mock("@/components/InPageHeader", () => ({
+  default: ({ right }: any) => <div>{right}</div>,
+}));
 vi.mock("@/components/NotificationActionModal", () => ({
   default: () => null,
 }));
@@ -394,13 +396,112 @@ it("keeps a read-state change made while the next page is in flight", async () =
   apiFetch.mockImplementation(async (url: string) => {
     if (url.includes("/events")) return { currentSeq: 0, changed: false };
     if (url.endsWith("/read-all")) return { ok: true };
-    return url.includes("beforeId") ? page.promise : envelope([row(10)], { createdAt: timestamp, id: 10 });
+    return url.includes("beforeId")
+      ? page.promise
+      : envelope([row(10)], { createdAt: timestamp, id: 10 });
   });
   render(<NotificationsScreen />);
   await screen.findByTestId("notification-10");
   fireEvent.click(screen.getByTestId("load-more"));
-  await act(async () => fireEvent.click(screen.getByLabelText("notifications.markAll")));
-  expect(screen.getByTestId("notification-10").style.borderTopColor).toBe("rgb(128, 128, 128)");
+  await act(async () =>
+    fireEvent.click(screen.getByLabelText("notifications.markAll")),
+  );
+  expect(screen.getByTestId("notification-10").style.borderTopColor).toBe(
+    "rgb(128, 128, 128)",
+  );
   await act(async () => page.resolve(envelope([row(10), row(9)])));
-  expect(screen.getByTestId("notification-10").style.borderTopColor).toBe("rgb(128, 128, 128)");
+  expect(screen.getByTestId("notification-10").style.borderTopColor).toBe(
+    "rgb(128, 128, 128)",
+  );
+});
+
+it.each(["refresh", "retry"])(
+  "settles an office %s after changing its local category while the request is pending",
+  async (operation) => {
+    const pending = deferred();
+    const replacement = deferred();
+    let calls = 0;
+    const officeRow = (id: number) => ({
+      ...row(id),
+      displayCategory: undefined,
+      category: "tickets",
+    });
+    apiFetch.mockImplementation(async (url: string) => {
+      if (url.includes("/events")) return { currentSeq: 0, changed: false };
+      calls++;
+      if (calls === 1) return [officeRow(1)];
+      if (operation === "retry" && calls === 2) throw new Error("offline");
+      const pendingCall = operation === "refresh" ? 2 : 3;
+      return calls === pendingCall ? pending.promise : replacement.promise;
+    });
+    render(<NotificationsScreen />);
+    await screen.findByTestId("notification-1");
+    fireEvent.click(screen.getByTestId("refresh"));
+    if (operation === "retry") {
+      await screen.findByTestId("notifications-retry");
+      fireEvent.click(screen.getByTestId("notifications-retry"));
+    }
+    const requestCount = operation === "refresh" ? 2 : 3;
+    await waitFor(() => expect(listCalls()).toHaveLength(requestCount));
+    fireEvent.click(screen.getByTestId("notifications-tab-tickets"));
+    // Both preserving the original request and explicitly replacing it are valid;
+    // neither path may discard the result and leave the spinner stuck.
+    await act(async () => {
+      pending.resolve([officeRow(2)]);
+      replacement.resolve([officeRow(2)]);
+    });
+    await screen.findByTestId("notification-2");
+    expect(screen.queryByTestId("notification-1")).toBeNull();
+    expect(list.props.refreshControl.props.refreshing).toBe(false);
+    expect(
+      screen
+        .getByTestId("notifications-tab-tickets")
+        .getAttribute("aria-selected"),
+    ).toBe("true");
+    expect(listCalls().every((url) => url === "/api/notifications")).toBe(true);
+  },
+);
+
+it("retains live events during paging and coalesces them into one refresh after the page settles", async () => {
+  vi.useFakeTimers();
+  const page = deferred();
+  let currentSeq = 0;
+  let listRequests = 0;
+  apiFetch.mockImplementation(async (url: string) => {
+    if (url.includes("/events")) {
+      const after = Number(
+        new URL(url, "https://app.invalid").searchParams.get("after"),
+      );
+      return { currentSeq, changed: after < currentSeq };
+    }
+    listRequests++;
+    if (url.includes("beforeId")) return page.promise;
+    return currentSeq
+      ? envelope([row(99), row(10)])
+      : envelope([row(10)], { createdAt: timestamp, id: 10 });
+  });
+  await act(async () => {
+    render(<NotificationsScreen />);
+  });
+  fireEvent.click(screen.getByTestId("load-more"));
+  currentSeq = 7;
+  await act(async () => vi.advanceTimersByTimeAsync(5000));
+  currentSeq = 11;
+  await act(async () => vi.advanceTimersByTimeAsync(5000));
+  expect(listRequests).toBe(2);
+  await act(async () => page.resolve(envelope([row(9)])));
+  await act(async () => vi.advanceTimersByTimeAsync(5000));
+  expect(screen.getByTestId("notification-99")).toBeTruthy();
+  expect(listRequests).toBe(3);
+  await act(async () => vi.advanceTimersByTimeAsync(15000));
+  expect(listRequests).toBe(3);
+  const eventCalls = apiFetch.mock.calls
+    .map(([url]) => url)
+    .filter((url) => url.includes("/events"));
+  expect(eventCalls.slice(0, 4)).toEqual(
+    Array(4).fill("/api/notifications/events?transport=poll&after=0"),
+  );
+  expect(eventCalls.at(-1)).toBe(
+    "/api/notifications/events?transport=poll&after=11",
+  );
 });

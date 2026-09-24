@@ -81,6 +81,7 @@ export default function NotificationCategoryCarousel({
             <View
               key={id}
               testID={`notification-category-measure-${id}`}
+              style={styles.pillTarget}
               onLayout={({ nativeEvent: { layout } }) => {
                 setMeasurements((current) =>
                   current[id]?.x === layout.x &&
@@ -165,5 +166,6 @@ const styles = StyleSheet.create({
   viewport: { flexGrow: 0, flexShrink: 0 },
   content: { alignItems: "center", paddingVertical: 12 },
   row: { flexDirection: "row", alignItems: "center", gap: 8 },
+  pillTarget: { minHeight: 44, justifyContent: "center" },
   fade: { position: "absolute", top: 0, bottom: 0, width: 20 },
 });

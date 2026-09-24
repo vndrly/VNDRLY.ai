@@ -84,7 +84,7 @@ export function useNotificationInbox(initialCategory: string) {
 
   const request = useCallback(
     async (kind: "first" | "refresh" | "more" = "first") => {
-      if (rateLimited) return;
+      if (rateLimited) return false;
       const previous =
         stateRef.current.generation === generation
           ? stateRef.current
@@ -96,7 +96,7 @@ export function useNotificationInbox(initialCategory: string) {
           previous.category !== activeCategory ||
           !previous.nextCursor)
       )
-        return;
+        return false;
       inFlight.current?.abort();
       const controller = new AbortController();
       inFlight.current = controller;
@@ -133,7 +133,7 @@ export function useNotificationInbox(initialCategory: string) {
             : "/api/notifications",
           { signal: controller.signal },
         );
-        if (!valid()) return;
+        if (!valid()) return false;
         const office = Array.isArray(data);
         const categories: readonly string[] = office
           ? NOTIFICATION_CATEGORY_IDS
@@ -167,8 +167,10 @@ export function useNotificationInbox(initialCategory: string) {
             routeCategory: initialCategory,
           });
         void syncAppIconBadge();
+        return true;
       } catch (error) {
         if (valid()) setState((value) => ({ ...value, error, pending: null }));
+        return false;
       } finally {
         if (id === requestId.current) inFlight.current = null;
       }
@@ -181,9 +183,14 @@ export function useNotificationInbox(initialCategory: string) {
     if (
       value.generation !== generation ||
       value.mode !== "office" ||
-      value.error
+      value.error ||
+      value.pending
     )
-      void request();
+      // Category changes cancel the old request. Office filters still need a
+      // replacement unfiltered request whenever refresh/retry was in flight.
+      void request(
+        value.mode === "office" ? (value.pending ?? "first") : "first",
+      );
     return () => {
       ++requestId.current;
       inFlight.current?.abort();
@@ -215,8 +222,12 @@ export function useNotificationInbox(initialCategory: string) {
           `/api/notifications/events?transport=poll&after=${cursor}`,
         );
         if (stopped || !isAuthScopeCurrent(scope)) return;
+        if (result.changed) {
+          // Do not consume an event while a page is loading. Polling from the
+          // same cursor coalesces intervening events into one later refresh.
+          if (inFlight.current || !(await request("refresh"))) return;
+        }
         cursor = result.currentSeq;
-        if (result.changed && !inFlight.current) await request("refresh");
       } catch {
         /* Next poll / pull-to-refresh retries a transient live-sync failure. */
       } finally {
