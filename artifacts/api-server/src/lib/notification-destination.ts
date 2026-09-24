@@ -33,6 +33,7 @@ import type { SessionPayload } from "./session";
 import type { GateNotificationCategory } from "./gate-notification-policy";
 import { isGateNotificationSession } from "./gate-notification-policy";
 import { sessionCanSeeOwner } from "../work-hub/owner-boundary";
+import { sessionCanReadSafetyEvent } from "./safety-event-access";
 
 type Actor = SessionPayload & { userId: number };
 const uuid =
@@ -178,13 +179,7 @@ export async function resolveNotificationDestination(
       const [event] = await db.select().from(safetyEventsTable)
         .where(eq(safetyEventsTable.id, Number(safetyId))).limit(1);
       if (!event) return null;
-      // Match GET /safety/events/:id exactly; stop-work events remain readable
-      // after the site becomes inactive, without granting access to other sites.
-      return session.role === "admin" ||
-        (session.role === "vendor" && !!session.vendorId && !session.partnerId && event.vendorId === session.vendorId) ||
-        (session.role === "partner" && !!session.partnerId && !session.vendorId && event.partnerId === session.partnerId) ||
-        (session.role === "field_employee" && event.reportedByUserId === session.userId)
-        ? link : null;
+      return await sessionCanReadSafetyEvent(session, event) ? link : null;
     }
     if (path === "/profile") {
       if (keys.some((key) => !["section", "credentialId"].includes(key)))

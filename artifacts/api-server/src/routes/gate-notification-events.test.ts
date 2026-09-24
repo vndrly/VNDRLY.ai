@@ -73,7 +73,7 @@ vi.mock("./notifications", () => ({
 }));
 vi.mock("../work-hub/feature-access", () => ({ isWorkHubEnabled: async () => true }));
 vi.mock("../work-hub/audit", () => ({ appendWorkHubAudit: async () => {} }));
-vi.mock("../lib/safety-hse", () => ({ findPartnerHseUserIds: async () => [], findVendorHseUserIds: async () => [2] }));
+vi.mock("../lib/safety-hse", () => ({ findPartnerHseUserIds: async () => [], findVendorHseUserIds: async () => [1] }));
 vi.mock("../lib/safety-rate-limit", () => ({ enforceSafetyRateLimit: (_req: any, _res: any, next: any) => next() }));
 vi.mock("../work-hub/queries", () => ({
   resolveChannelAccess: async (actor: any, id: string) => {
@@ -106,6 +106,7 @@ beforeEach(async () => {
     vendor_people: [{ id: 22, userId: 2, vendorId: 11, vendorRole: "gatekeeper", isActive: true }],
     site_work_assignments: [{ id: 8, vendorId: 11, siteLocationId: 3 }],
     site_locations: [{ id: 3, partnerId: 22, name: "Gate site", isActive: true }],
+    partners: [{ id: 22, name: "Site owner" }],
   };
   state.notifications = []; state.sequence = 10; state.revoked.clear();
   state.transactionOpen = false; state.handovers = []; state.coverage = null;
@@ -119,7 +120,7 @@ beforeEach(async () => {
     else if (sql.startsWith("SELECT id, name, partner_id")) rows = [{ id: 3, name: "Site", partner_id: 22 }];
     else if (sql.includes("FROM gate_stations")) rows = [{ id: stationId, site_id: 3 }];
     else if (sql.includes("FROM site_work_assignments") || sql.includes("FROM user_org_memberships")) rows = [{ id: 1 }];
-    else if (sql.startsWith("SELECT vendor_role")) rows = [{ vendor_role: values[0] === 1 ? "gate_supervisor" : "gatekeeper" }];
+    else if (sql.startsWith("SELECT vendor_role")) rows = state.revoked.has(values[0]) ? [] : [{ vendor_role: values[0] === 1 ? "gate_supervisor" : "gatekeeper" }];
     else if (sql.startsWith("SELECT s.*, u.display_name")) rows = [{ id: shiftId, operator_id: 1, station_id: stationId, preparation_id: preparationId, started_at: "2026-09-24T08:00:00.000Z" }];
     else if (sql.startsWith("SELECT * FROM gate_handovers")) rows = state.handovers.filter(row => row.id === values[0]);
     else if (sql.startsWith("SELECT * FROM gate_preparations")) rows = [{ id: preparationId, shift_id: shiftId, snapshot, created_at: new Date() }];
@@ -214,7 +215,28 @@ describe("real Work Hub notification producers", () => {
   it.each([[true, false, "safety_stop_work"], [false, true, "safety_event_hipo"]])("emits an exact safety event with canonical urgency", async (isStopWork, isHighPotential, type) => {
     const created = await post("/safety/events", { eventType: "near_miss", title: "Gate hazard", siteLocationId: 3, isStopWork, isHighPotential });
     expect(created.status, JSON.stringify(created.body)).toBe(201);
-    expect(state.notifications).toEqual([expect.objectContaining({ type, userIds: [2], link: `/safety/${created.body.data.id}` })]);
+    expect(state.notifications).toEqual([expect.objectContaining({ type, userIds: [1, 2], link: `/safety/${created.body.data.id}` })]);
+  });
+  it("stops urgent safety fan-out when a managed gate grant is revoked", async () => {
+    state.tables.vendor_people = [];
+    state.tables.managed_subcontractor_worker_sponsorships = [{ id: "sponsor", workerUserId: 2, sponsorVendorId: 11, status: "active", endedAt: null }];
+    state.tables.managed_subcontractor_role_grants = [{ sponsorshipId: "sponsor", siteId: 3, role: "gate_supervisor", status: "active", endedAt: null }];
+    const first = await post("/safety/events", { eventType: "near_miss", title: "First hazard", siteLocationId: 3, isHighPotential: true });
+    expect(first.status, JSON.stringify(first.body)).toBe(201);
+    expect(state.notifications.at(-1)?.userIds).toEqual([1, 2]);
+    state.tables.managed_subcontractor_role_grants[0].endedAt = new Date();
+    const second = await post("/safety/events", { eventType: "near_miss", title: "Second hazard", siteLocationId: 3, isHighPotential: true });
+    expect(second.status, JSON.stringify(second.body)).toBe(201);
+    expect(state.notifications.at(-1)?.userIds).toEqual([1]);
+  });
+  it("revalidates the current site gate role before reading an urgent safety event", async () => {
+    const created = await post("/safety/events", { eventType: "near_miss", title: "Private hazard", siteLocationId: 3, isHighPotential: true });
+    expect(created.status, JSON.stringify(created.body)).toBe(201);
+    state.tables.safety_events[0].vendorId = 99;
+    const gateCookie = buildTestCookie({ userId: 2, role: "vendor", vendorId: 11, vendorRole: "gatekeeper", activeMembershipId: 2, sv: 1 });
+    expect((await request(app).get(`/safety/events/${created.body.data.id}`).set("Cookie", gateCookie)).status).toBe(200);
+    state.revoked.add(2);
+    expect((await request(app).get(`/safety/events/${created.body.data.id}`).set("Cookie", gateCookie)).status).toBe(404);
   });
   it("targets managed gate grants only while the sponsorship and grant remain current", async () => {
     state.tables.vendor_people = [];

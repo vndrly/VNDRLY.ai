@@ -30,6 +30,8 @@ import {
 import { computeSafetyMetrics, loadSiteOperationalStatus } from "../lib/safety-metrics";
 import { notifyUsers } from "./notifications";
 import { enforceSafetyRateLimit } from "../lib/safety-rate-limit";
+import { currentGateSiteRecipientIds } from "../services/gate-notification-events";
+import { sessionCanReadSafetyEvent } from "../lib/safety-event-access";
 
 const router: IRouter = Router();
 
@@ -268,8 +270,7 @@ router.get("/safety/events", requireSession, async (req, res): Promise<void> => 
 router.get("/safety/events/:id", requireSession, async (req, res): Promise<void> => {
   const session = readSession(req);
   const eventId = Number(req.params.id);
-  const scope = scopeFilters(session);
-  if (scope === null || !Number.isFinite(eventId)) {
+  if (!Number.isFinite(eventId)) {
     sendApiError(res, 403, "safety.forbidden", "Not allowed.");
     return;
   }
@@ -304,10 +305,10 @@ router.get("/safety/events/:id", requireSession, async (req, res): Promise<void>
     .innerJoin(siteLocationsTable, eq(safetyEventsTable.siteLocationId, siteLocationsTable.id))
     .innerJoin(partnersTable, eq(safetyEventsTable.partnerId, partnersTable.id))
     .leftJoin(vendorsTable, eq(safetyEventsTable.vendorId, vendorsTable.id))
-    .where(and(eq(safetyEventsTable.id, eventId), ...scope))
+    .where(eq(safetyEventsTable.id, eventId))
     .limit(1);
 
-  if (!event) {
+  if (!event || !(await sessionCanReadSafetyEvent(session, event))) {
     sendApiError(res, 404, "safety.not_found", "Safety event not found.");
     return;
   }
@@ -468,12 +469,16 @@ router.post("/safety/events", requireSession, enforceSafetyRateLimit, async (req
 
   const partnerHse = await findPartnerHseUserIds(site.partnerId);
   const vendorHse = resolvedVendorId ? await findVendorHseUserIds(resolvedVendorId) : [];
-  const notifyIds = [...new Set([...partnerHse, ...vendorHse])];
+  const linkUrl = `/safety/${created.id}`;
+  const gateRecipients = stopWork || Boolean(isHighPotential)
+    ? await currentGateSiteRecipientIds(siteId, linkUrl)
+    : new Set<number>();
+  const notifyIds = [...new Set([...partnerHse, ...vendorHse, ...gateRecipients])];
   await notifySafetyEvent({
     type: stopWork ? "safety_stop_work" : isHighPotential ? "safety_event_hipo" : "safety_event_submitted",
     title: stopWork ? `Stop-work at ${site.name}` : `Safety report: ${title}`,
     body: `${eventNumber} — ${String(eventType).replace(/_/g, " ")}`,
-    linkUrl: `/safety/${created.id}`,
+    linkUrl,
     siteLocationId: siteId,
     siteName: site.name,
     ticketId: ticketId ? Number(ticketId) : null,

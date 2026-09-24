@@ -465,15 +465,29 @@ describe("role-aware notification inbox", () => {
     state.tables.notifications = [notification(1, "safety_stop_work", { link: "/safety/41" })];
     expect((await get("", malformed)).body).toEqual([]);
   });
-  it("resolves the exact authorized safety event, including an inactive stop-work site", async () => {
-    state.tables.safetyEvents = [{ id: 41, vendorId: 11, partnerId: 22, reportedByUserId: 7 }];
+  it("resolves the exact authorized safety event for its reporter or a current site gatekeeper", async () => {
+    state.tables.safetyEvents = [{ id: 41, siteLocationId: 3, vendorId: 99, partnerId: 22, reportedByUserId: 7 }];
     state.tables.notifications = [notification(1, "safety_stop_work", { link: "/safety/41" })];
     expect((await request(app).post("/api/notifications/1/resolve").set("Cookie", gate)).body).toEqual({ href: "/safety/41" });
     state.tables.safetyEvents[0].reportedByUserId = 8;
+    expect((await request(app).post("/api/notifications/1/resolve").set("Cookie", gate)).body).toEqual({ href: "/safety/41" });
+    state.revokedSites.add(3);
     expect((await request(app).post("/api/notifications/1/resolve").set("Cookie", gate)).status).toBe(404);
+    state.revokedSites.clear();
+    state.tables.safetyEvents[0].vendorId = 11;
     expect((await request(app).post("/api/notifications/1/resolve").set("Cookie", office)).body).toEqual({ href: "/safety/41" });
     state.tables.safetyEvents[0].vendorId = 99;
     expect((await request(app).post("/api/notifications/1/resolve").set("Cookie", office)).status).toBe(404);
+    expect(state.tables.notifications[0].isRead).toBe(false);
+  });
+  it("resolves urgent safety destinations through the current site grant and fails closed after revocation", async () => {
+    state.currentSession = { ...state.currentSession, vendorRole: null, vendorPeopleId: null, managedSubcontractor: { siteGrants: [{ siteId: 3, role: "gate_supervisor" }] } };
+    const managedGate = buildTestCookie(state.currentSession);
+    state.tables.safetyEvents = [{ id: 41, siteLocationId: 3, vendorId: 99, partnerId: 22, reportedByUserId: 8, isHighPotential: true }];
+    state.tables.notifications = [notification(1, "safety_event_hipo", { link: "/safety/41" })];
+    expect((await request(app).post("/api/notifications/1/resolve").set("Cookie", managedGate)).body).toEqual({ href: "/safety/41" });
+    state.revokedSites.add(3);
+    expect((await request(app).post("/api/notifications/1/resolve").set("Cookie", managedGate)).status).toBe(404);
     expect(state.tables.notifications[0].isRead).toBe(false);
   });
   it("keeps the office array contract while excluding revoked Work Hub content and unread totals", async () => {

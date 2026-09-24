@@ -10,19 +10,25 @@ export async function notifyGateSiteEvent(siteId: number, notice: {
   title: string; body?: string; link: string; dedupeKey: string;
 }): Promise<void> {
   try {
-    const candidates = await db.select({ vendorId: userOrgMembershipsTable.vendorId, userId: userOrgMembershipsTable.userId })
-      .from(userOrgMembershipsTable)
-      .innerJoin(siteWorkAssignmentsTable, eq(siteWorkAssignmentsTable.vendorId, userOrgMembershipsTable.vendorId))
-      .where(and(eq(userOrgMembershipsTable.orgType, "vendor"), eq(siteWorkAssignmentsTable.siteLocationId, siteId)));
-    const recipients = new Set<number>();
-    for (const vendorId of new Set(candidates.map(row => row.vendorId).filter((id): id is number => id != null))) {
-      const ids = candidates.filter(row => row.vendorId === vendorId).map(row => row.userId);
-      for (const id of await currentNotificationRecipients({ type: "vendor", id: vendorId }, ids, notice.link, true)) recipients.add(id);
-    }
+    const recipients = await currentGateSiteRecipientIds(siteId, notice.link);
     if (recipients.size) await notifyUsers([...recipients], notice);
   } catch (err) {
     // A committed handoff/closure must never appear to have failed because its
     // best-effort notification failed. No provider work is held inside its locks.
     logger.warn({ err, type: notice.type, siteId }, "Gate event notification failed");
   }
+}
+
+/** Resolve current gate authority for every vendor assigned to this site. */
+export async function currentGateSiteRecipientIds(siteId: number, link: string): Promise<Set<number>> {
+  const candidates = await db.select({ vendorId: userOrgMembershipsTable.vendorId, userId: userOrgMembershipsTable.userId })
+    .from(userOrgMembershipsTable)
+    .innerJoin(siteWorkAssignmentsTable, eq(siteWorkAssignmentsTable.vendorId, userOrgMembershipsTable.vendorId))
+    .where(and(eq(userOrgMembershipsTable.orgType, "vendor"), eq(siteWorkAssignmentsTable.siteLocationId, siteId)));
+  const recipients = new Set<number>();
+  for (const vendorId of new Set(candidates.map(row => row.vendorId).filter((id): id is number => id != null))) {
+    const ids = candidates.filter(row => row.vendorId === vendorId).map(row => row.userId);
+    for (const id of await currentNotificationRecipients({ type: "vendor", id: vendorId }, ids, link, true)) recipients.add(id);
+  }
+  return recipients;
 }

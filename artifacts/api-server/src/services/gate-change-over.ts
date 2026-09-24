@@ -48,6 +48,7 @@ export async function requireChangeOverAccess(
   client: Queryable,
   session: SessionPayload,
   siteId: number,
+  options: { allowInactiveSite?: boolean } = {},
 ) {
   if (!session.userId || !Number.isSafeInteger(siteId) || siteId < 1)
     return fail(403, "forbidden", "Assigned gate access required");
@@ -61,8 +62,8 @@ export async function requireChangeOverAccess(
     return fail(401, "session_changed", "Sign in again to continue");
   const site = (
     await client.query(
-      "SELECT id, name, partner_id FROM site_locations WHERE id=$1 AND is_active IS DISTINCT FROM false AND hidden IS DISTINCT FROM true",
-      [siteId],
+      "SELECT id, name, partner_id FROM site_locations WHERE id=$1 AND ($2::boolean OR is_active IS DISTINCT FROM false) AND hidden IS DISTINCT FROM true",
+      [siteId, options.allowInactiveSite === true],
     )
   ).rows[0];
   if (!site) return fail(403, "forbidden", "Site unavailable");
