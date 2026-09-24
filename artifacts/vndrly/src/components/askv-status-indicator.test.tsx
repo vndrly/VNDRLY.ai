@@ -17,7 +17,7 @@ vi.mock("@/hooks/use-askv-voice-session", () => ({
 }));
 
 import AskVStatusIndicator from "./askv-status-indicator";
-import { pillRed, PILL_IDLE } from "@/lib/pill-palette-assets";
+import { pillGreenApproval1, PILL_IDLE } from "@/lib/pill-palette-assets";
 
 describe("AskVStatusIndicator", () => {
   beforeEach(() => { setMuted.mockClear(); voice.muted = true; voice.state = "idle"; voice.wakeReady = false; voice.availabilityStatus = "available"; });
@@ -26,11 +26,11 @@ describe("AskVStatusIndicator", () => {
     const { container } = render(<AskVStatusIndicator />);
     const button = screen.getByRole("button", { name: "AskV is Muted" });
     expect(button.textContent).toContain("AskV is Muted");
-    expect(button.getAttribute("data-color")).toBe("red");
+    expect(button.getAttribute("data-color")).toBe("grey");
     expect(button.className).toContain("h-[23px]");
     expect(button.className).toContain("self-center");
     expect([...container.querySelectorAll("img")]).toHaveLength(3);
-    expect([...container.querySelectorAll("img")].every((image) => image.getAttribute("src") === pillRed)).toBe(true);
+    expect([...container.querySelectorAll("img")].every((image) => image.getAttribute("src") === PILL_IDLE)).toBe(true);
     fireEvent.click(button);
     expect(setMuted).toHaveBeenCalledWith(false);
   });
@@ -60,7 +60,7 @@ describe("AskVStatusIndicator", () => {
   it("uses the same inactive and active voice colors in the top strip and modal", () => {
     const { rerender } = render(<AskVStatusIndicator placement="top-strip" />);
     const topStripButton = screen.getByRole("button", { name: "AskV is Muted" });
-    expect(topStripButton.getAttribute("data-color")).toBe("red");
+    expect(topStripButton.getAttribute("data-color")).toBe("grey");
     expect(topStripButton.getAttribute("aria-pressed")).toBe("false");
     fireEvent.click(topStripButton);
     expect(setMuted).toHaveBeenCalledWith(false);
@@ -84,7 +84,7 @@ describe("AskVStatusIndicator", () => {
     voice.muted = false; voice.state = "stopped";
     render(<AskVStatusIndicator placement="top-strip" />);
     const button = screen.getByRole("button", { name: "AskV is Muted" });
-    expect(button.getAttribute("data-color")).toBe("red");
+    expect(button.getAttribute("data-color")).toBe("grey");
     fireEvent.click(button);
     expect(setMuted).toHaveBeenCalledWith(false);
   });
@@ -102,5 +102,46 @@ describe("AskVStatusIndicator", () => {
     fireEvent.click(screen.getByRole("button", { name: "AskV is Muted" }));
     expect(listener).toHaveBeenCalledTimes(1);
     window.removeEventListener("askv:open-panel", listener);
+  });
+
+  describe.each([
+    ["VNDRLY light", "light", "#F59E0B"],
+    ["vendor dark", "dark", "#008578"],
+    ["partner light", "light", "#3260CD"],
+  ])("%s brand mode", (_name, mode, primary) => {
+    it.each([
+      ["idle", true, "available", "Muted", "grey", false, "Start"],
+      ["listening", true, "available", "Muted", "grey", false, "Start"],
+      ["idle", false, "available", "Muted", "grey", false, "Start"],
+      ["stopped", false, "available", "Muted", "grey", false, "Start"],
+      ["listening", false, "unavailable", "Unavailable", "grey", false, "Retry"],
+      ["error", false, "available", "Unavailable", "grey", false, "Retry"],
+      ["connecting", false, "available", "Active", "green", true, "Mute"],
+      ["greeting", false, "available", "Active", "green", true, "Mute"],
+      ["listening", false, "available", "Active", "green", true, "Mute"],
+      ["thinking", false, "available", "Active", "green", true, "Mute"],
+      ["speaking", false, "available", "Active", "green", true, "Mute"],
+      ["wake-idle", false, "available", "Active", "green", true, "Mute"],
+    ] as const)("renders %s (muted=%s, availability=%s) with its semantic status", (state, muted, availability, status, tone, active, action) => {
+      Object.assign(voice, { state, muted, availabilityStatus: availability });
+      const { container } = render(
+        <div className={mode} style={{ "--brand-primary": primary } as React.CSSProperties}>
+          <AskVStatusIndicator placement="top-strip" />
+        </div>,
+      );
+
+      const button = screen.getByRole("button", { name: `AskV is ${status}` });
+      expect(button.textContent).toContain(`AskV is ${status}`);
+      expect(button.getAttribute("data-color")).toBe(tone);
+      expect(button.getAttribute("aria-pressed")).toBe(String(active));
+      expect(button.title).toBe(`${action} AskV voice`);
+      const images = [...button.querySelectorAll("img")];
+      expect(images).toHaveLength(3);
+      expect(images.every((image) => image.getAttribute("src") === (active ? pillGreenApproval1 : PILL_IDLE))).toBe(true);
+      expect(screen.getByRole("img", { name: active ? "Ask V voice activity" : "Ask V voice idle" }).getAttribute("data-active")).toBe(String(active));
+      expect(container.querySelectorAll("button")).toHaveLength(1);
+      fireEvent.click(button);
+      expect(setMuted).toHaveBeenCalledWith(active);
+    });
   });
 });

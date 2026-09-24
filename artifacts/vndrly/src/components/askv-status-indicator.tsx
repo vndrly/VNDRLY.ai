@@ -19,7 +19,7 @@ export default function AskVStatusIndicator({ placement = "default" }: AskVStatu
     setMuted(active);
   };
   return <div className="flex items-center gap-2">
-    <AskVListeningPill active={active} tone={unavailable ? "grey" : active ? "green" : "red"} statusLabel={label} onClick={toggle} data-testid="askv-status-toggle" title={actionTitle}>
+    <AskVListeningPill active={active} tone={active ? "green" : "grey"} statusLabel={label} onClick={toggle} data-testid="askv-status-toggle" title={actionTitle}>
       {placement === "top-strip" && <AskVWaveform active={voiceActive} white className="h-4" />}
     </AskVListeningPill>
   </div>;
