@@ -135,7 +135,11 @@ export async function runReliableNotificationDelivery(): Promise<number> {
 
 export function startReliableNotificationWorker(intervalMs = 60_000): void {
   if (reliableNotificationHandle) return;
-  const run = () => { void runReliableNotificationDelivery().catch((error) => console.error("Reliable notification worker failed", error)); };
+  const run = () => {
+    void runReliableNotificationDelivery().catch((error) => console.error("Reliable notification worker failed", error));
+    void import("./gate-alert-repository").then(({ retryGateAlertChannels }) => retryGateAlertChannels())
+      .catch(() => console.error("Gate alert channel retry worker failed"));
+  };
   run();
   reliableNotificationHandle = setInterval(run, intervalMs);
   reliableNotificationHandle.unref?.();

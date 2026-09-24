@@ -478,6 +478,21 @@ export async function notifyUsers(userIds: number[], notif: NotifyInput): Promis
   if (!userIds.length) return 0;
   const category = notif.category ?? categoryForType(notif.type);
   const prefs = await getPrefsForUsers(userIds);
+  const urgentGateRecipients = new Map<number, boolean>();
+  let urgentLookupFailed = false;
+  if (resolveGateNotificationCategory(notif) === "alerts") {
+    try {
+      const { loadGateAlertRecipient } = await import("../services/gate-alert-repository");
+      for (const uid of userIds) {
+        const recipient = await loadGateAlertRecipient(uid);
+        if (recipient?.gate) urgentGateRecipients.set(uid, recipient.gateAlertsEnabled);
+      }
+    } catch {
+      // Preserve inbox creation on a contact lookup outage, but fail closed for outbound delivery.
+      urgentLookupFailed = true;
+      logger.warn("Gate alert recipient lookup unavailable");
+    }
+  }
   // Task #50 — for the comments category the email sub-channels
   // (mention email, reply digest email) are independently controllable
   // from the in-app/push category toggle. We must insert the row when
@@ -491,6 +506,8 @@ export async function notifyUsers(userIds: number[], notif: NotifyInput): Promis
   // category `*Enabled` flag gates everything, so a single false
   // skips the user entirely.
   const eligible = userIds.filter((uid) => {
+    if (urgentGateRecipients.has(uid)) return urgentGateRecipients.get(uid)!;
+    if (urgentLookupFailed) return true;
     if (notif.forceImmediateDelivery) return true;
     const p = prefs.get(uid)!;
     if (categoryEnabled(p, category)) return true;
@@ -563,11 +580,20 @@ export async function notifyUsers(userIds: number[], notif: NotifyInput): Promis
   // respecting per-user push + DND prefs.
   const now = new Date();
   const unreadByUser = await countUnreadForUsers(
-    inserted.map((r) => r.userId),
+    inserted.filter(r => !urgentGateRecipients.has(r.userId) && !urgentLookupFailed).map((r) => r.userId),
     prefs,
-  );
+  ).catch(() => new Map<number, number>());
   for (const r of inserted) {
     const p = prefs.get(r.userId)!;
+    if (urgentLookupFailed) continue;
+    if (urgentGateRecipients.has(r.userId)) {
+      try {
+        const { deliverGateAlert } = await import("../services/gate-alert-delivery");
+        await deliverGateAlert({ id: r.id, userId: r.userId, type: notif.type, title: notif.title,
+          body: notif.body, link: notif.link ?? null, badge: unreadByUser.get(r.userId) ?? 0 });
+      } catch { logger.warn({ notificationId: r.id }, "Gate alert channels unavailable; inbox preserved"); }
+      continue;
+    }
     if (!notif.forceImmediateDelivery && (!p.pushEnabled || inDndWindow(p, now))) continue;
     // Task #50 — push lives on the same channel as the in-app
     // notification (commentsEnabled). When the row was inserted only
@@ -606,13 +632,14 @@ export async function notifyUsers(userIds: number[], notif: NotifyInput): Promis
   // worker can pick it up; the daily digest worker leaves the comments
   // category alone.
   const skipInstantEmail = isCommentReplyNotificationType(notif.type);
+  const legacyInserted = urgentLookupFailed ? [] : inserted.filter(r => !urgentGateRecipients.has(r.userId));
   const emailEligibleIds = skipInstantEmail
     ? []
-    : inserted
+    : legacyInserted
         .filter((r) => notif.forceImmediateDelivery || categoryEmailEnabled(prefs.get(r.userId)!, category, notif.type))
         .map((r) => r.userId);
   if (emailEligibleIds.length) {
-    void dispatchNotificationEmails(inserted, prefs, category, notif).catch((err) =>
+    void dispatchNotificationEmails(legacyInserted, prefs, category, notif).catch((err) =>
       logger.warn({ err, type: notif.type }, "notifyUsers email dispatch failed"),
     );
   }
@@ -872,9 +899,22 @@ function gatePreferences(prefs: GatePrefs) {
     mode: "gate",
     ...Object.fromEntries(GATE_NOTIFICATION_CATEGORIES.map(category => [gateSwitches[category], gateCategoryEnabled(prefs, category)])),
     pushEnabled: prefs.pushEnabled ?? true,
+    alertsEmailEnabled: prefs.alertsEmailEnabled ?? true,
+    alertsSmsEnabled: prefs.alertsSmsEnabled ?? false,
+    alertsSmsOptedInAt: prefs.alertsSmsOptedInAt ?? null,
     dndStartHour: prefs.dndStartHour ?? null,
     dndEndHour: prefs.dndEndHour ?? null,
   };
+}
+
+async function gatePreferencesForSession(prefs: GatePrefs, session: Session) {
+  const { loadGateAlertRecipient } = await import("../services/gate-alert-repository");
+  const { currentSmsFingerprint } = await import("../services/gate-alert-delivery");
+  const recipient = await loadGateAlertRecipient(session.userId);
+  const fingerprint = recipient && recipient.membershipId === session.activeMembershipId ? currentSmsFingerprint(recipient) : null;
+  const consentCurrent = Boolean(fingerprint && prefs.alertsSmsEnabled && prefs.alertsSmsOptedInAt && prefs.alertsSmsConsentFingerprint === fingerprint);
+  return { ...gatePreferences(prefs), alertsSmsAvailable: Boolean(fingerprint), alertsSmsEnabled: consentCurrent,
+    alertsSmsOptedInAt: consentCurrent ? prefs.alertsSmsOptedInAt : null };
 }
 
 /** Supported RFC3339: AD years, microseconds, and offsets within +/-14:00.
@@ -948,6 +988,13 @@ async function* visibleNotificationBatches(
   }
 }
 
+/** Shared by the inbox badge endpoint and urgent push payloads. */
+export async function countGateUnreadNotifications(session: SessionPayload & { userId: number }): Promise<number> {
+  let count = 0;
+  for await (const rows of visibleNotificationBatches(session as Session, { conditions: [eq(notificationsTable.isRead, false)] })) count += rows.length;
+  return count;
+}
+
 router.get("/notifications", async (req, res) => {
   const session = getSession(req);
   if (!session) return sendApiError(res, 401, "auth.not_authenticated", "Unauthorized");
@@ -1013,9 +1060,7 @@ router.get("/notifications/unread-count", async (req, res) => {
   // by alternating between the two routes.
   if (!await enforceNotificationsRateLimit(req, res, session)) return;
   if (isGateNotificationSession(session)) {
-    let count = 0;
-    for await (const rows of visibleNotificationBatches(session, { conditions: [eq(notificationsTable.isRead, false)] })) count += rows.length;
-    return res.json({ count });
+    return res.json({ count: await countGateUnreadNotifications(session) });
   }
   // Task #50 — match the visibility rule used by GET /notifications:
   // when the caller has the comments in-app channel off, exclude any
@@ -1236,7 +1281,7 @@ router.get("/notifications/preferences", async (req, res) => {
     .select()
     .from(notificationPreferencesTable)
     .where(eq(notificationPreferencesTable.userId, session.userId));
-  return res.json(isGateNotificationSession(session) ? gatePreferences(row ?? {}) : row ?? { userId: session.userId, ...DEFAULT_PREFS });
+  return res.json(isGateNotificationSession(session) ? await gatePreferencesForSession(row ?? {}, session) : row ?? { userId: session.userId, ...DEFAULT_PREFS });
 });
 
 router.patch("/notifications/preferences", async (req, res) => {
@@ -1282,6 +1327,18 @@ router.patch("/notifications/preferences", async (req, res) => {
     const value = b[gateSwitches[category]];
     if (typeof value === "boolean") for (const key of gatePreferenceKeys(category)) patch[key] = value;
   }
+  if (gate && typeof b.alertsEmailEnabled === "boolean") patch.alertsEmailEnabled = b.alertsEmailEnabled;
+  if (gate && typeof b.alertsSmsEnabled === "boolean") {
+    const { loadGateAlertRecipient } = await import("../services/gate-alert-repository");
+    const { buildGateAlertConsentPatch } = await import("../services/gate-alert-delivery");
+    const recipient = b.alertsSmsEnabled ? await loadGateAlertRecipient(session.userId) : null;
+    try {
+      if (b.alertsSmsEnabled && recipient?.membershipId !== session.activeMembershipId) throw new Error("stale_membership");
+      Object.assign(patch, buildGateAlertConsentPatch(b.alertsSmsEnabled, recipient));
+    } catch {
+      return sendApiError(res, 400, "notifications.sms_phone_required", "A valid saved phone in your current gate membership is required");
+    }
+  }
   for (const k of ["dndStartHour", "dndEndHour"] as const) {
     if (b[k] === null) patch[k] = null;
     else if (typeof b[k] === "number" && b[k] >= 0 && b[k] <= 23) patch[k] = b[k];
@@ -1295,7 +1352,7 @@ router.patch("/notifications/preferences", async (req, res) => {
       set: patch,
     })
     .returning();
-  return res.json(gate ? gatePreferences(row ?? {}) : row);
+  return res.json(gate ? await gatePreferencesForSession(row ?? {}, session) : row);
 });
 
 // ---------- QB bulk-action expiry email preview (Task #963) ----------

@@ -69,4 +69,12 @@ describe("sendTransactionalSms", () => {
     ).rejects.toThrow("E.164");
     expect(fetch).not.toHaveBeenCalled();
   });
+
+  it("preserves a safe provider rejection code without copying its sensitive message", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(new Response(JSON.stringify({ code: 21610, message: "Private phone +14055554321 opted out" }), { status: 400 }));
+    const error = await sendTransactionalSms({ to: "+14055554321", body: "VNDRLY alert" }).catch(error => error);
+    expect(error.code).toBe("21610");
+    expect(error.message).not.toContain("14055554321");
+    expect(error.definitelyRejected).toBe(true);
+  });
 });

@@ -1454,6 +1454,13 @@
       "compliance": "No hay notificaciones de cumplimiento.",
       "alerts": "No hay alertas urgentes."
     },
+    "alertChannels": {
+      "email": "Alertas urgentes por correo",
+      "emailDesc": "Recibe alertas urgentes de puerta por correo cuando el envío esté disponible.",
+      "sms": "Alertas urgentes por SMS",
+      "smsDisclosure": "Opcional: recibe mensajes automáticos de alertas urgentes de VNDRLY en tu teléfono guardado. La frecuencia varía; pueden aplicarse tarifas de mensajes y datos. Responde STOP para cancelar o HELP para obtener ayuda. No se requiere consentimiento para usar VNDRLY.",
+      "phoneRequired": "Guarda un número de teléfono internacional válido en tu perfil de puerta actual para activar SMS."
+    },
     "gateDescriptions": {
       "schedule": "Asignaciones y cambios de turno, coberturas, intercambios y reuniones.",
       "gate_crew": "Anuncios del grupo de puerta, comunicados de supervisores y cambios de miembros.",

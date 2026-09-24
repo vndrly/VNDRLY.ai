@@ -202,6 +202,7 @@ vi.mock("../services/gate-change-over", () => ({
   },
 }));
 vi.mock("../lib/expo-push", () => ({ sendPushToUser: vi.fn() }));
+vi.mock("../services/gate-alert-repository", () => ({ loadGateAlertRecipient: async () => null }));
 vi.mock("../lib/notifications-rate-limit", () => ({
   enforceNotificationsRateLimit: async () => true,
 }));
@@ -560,6 +561,10 @@ describe("role-aware notification inbox", () => {
     const prefs = (await get("/preferences")).body;
     expect(prefs).toEqual({
       mode: "gate",
+      alertsEmailEnabled: true,
+      alertsSmsEnabled: false,
+      alertsSmsOptedInAt: null,
+      alertsSmsAvailable: false,
       scheduleEnabled: true,
       gateCrewEnabled: true,
       messagesEnabled: true,

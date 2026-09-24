@@ -202,6 +202,14 @@ afterEach(() => {
 });
 
 describe("runNotificationEmailDigest", () => {
+  it("never sends urgent gate events through legacy digest preferences", async () => {
+    candidateRows.push({ userId: 7 }); prefsRows.push(prefsRow({ userId: 7 }));
+    userRows.push({ id: 7, email: "gate@example.invalid" });
+    notificationRowsByUser.set(7, [{ id: 4, type: "gate_closed", category: "system", title: "Urgent", createdAt: new Date() }]);
+    const { runNotificationEmailDigest } = await import("./notification-email-digest");
+    await runNotificationEmailDigest();
+    expect(sendDigestMock).not.toHaveBeenCalled();
+  });
   it("returns an empty summary when no candidates are queued", async () => {
     const { runNotificationEmailDigest } = await import(
       "./notification-email-digest"

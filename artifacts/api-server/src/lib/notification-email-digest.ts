@@ -30,6 +30,7 @@ import {
   usersTable,
 } from "@workspace/db";
 import { logger } from "./logger";
+import { resolveGateNotificationCategory } from "./gate-notification-policy";
 import {
   sendNotificationDigestEmail,
   type NotificationDigestItem,
@@ -201,7 +202,8 @@ export async function runNotificationEmailDigest(
     const allRowIds: number[] = [];
     for (const r of rows) {
       allRowIds.push(r.id);
-      if (categoryEmailEnabledForRow(r.category, prefs)) {
+      // Urgent Alerts have immediate, independently consented delivery; a legacy digest must not bypass that gate.
+      if (resolveGateNotificationCategory(r) !== "alerts" && categoryEmailEnabledForRow(r.category, prefs)) {
         includedItems.push({
           category: r.category,
           title: r.title,

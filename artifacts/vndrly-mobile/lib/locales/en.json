@@ -1454,6 +1454,13 @@
       "compliance": "No compliance notifications.",
       "alerts": "No urgent alerts."
     },
+    "alertChannels": {
+      "email": "Email urgent alerts",
+      "emailDesc": "Receive urgent gate alerts by email when email delivery is available.",
+      "sms": "SMS urgent alerts",
+      "smsDisclosure": "Optional: receive automated VNDRLY urgent gate texts at your saved phone. Message frequency varies; message and data rates may apply. Reply STOP to opt out or HELP for help. Consent is not required to use VNDRLY.",
+      "phoneRequired": "Save a valid international phone number in your current gate profile to enable SMS."
+    },
     "gateDescriptions": {
       "schedule": "Shift assignments, schedule changes, coverage, swaps, and meetings.",
       "gate_crew": "Gate group announcements, supervisor broadcasts, and membership updates.",

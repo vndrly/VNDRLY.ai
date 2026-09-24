@@ -31,6 +31,9 @@ type GatePrefs = SharedPrefs & {
   tasksEnabled: boolean;
   complianceEnabled: boolean;
   alertsEnabled: boolean;
+  alertsEmailEnabled: boolean;
+  alertsSmsEnabled: boolean;
+  alertsSmsAvailable: boolean;
 };
 type OfficePrefs = SharedPrefs & {
   mode?: "office";
@@ -48,7 +51,7 @@ type OfficePrefs = SharedPrefs & {
   commentReplyEmailEnabled: boolean;
 };
 type Prefs = GatePrefs | OfficePrefs;
-type SwitchKey = Exclude<keyof GatePrefs | keyof OfficePrefs, "mode" | "dndStartHour" | "dndEndHour">;
+type SwitchKey = Exclude<keyof GatePrefs | keyof OfficePrefs, "mode" | "dndStartHour" | "dndEndHour" | "alertsSmsAvailable">;
 const GATE_ROWS = [
   ["scheduleEnabled", "schedule"], ["gateCrewEnabled", "gate_crew"],
   ["messagesEnabled", "messages"], ["handoffsEnabled", "handoffs"],
@@ -68,7 +71,8 @@ function parsePreferences(value: unknown): Prefs {
       (typeof hour !== "number" || !Number.isInteger(hour) || hour < 0 || hour > 23))) {
     throw new Error("Invalid preferences response");
   }
-  return value as Prefs;
+  return row.mode === "gate" ? { ...row, alertsEmailEnabled: row.alertsEmailEnabled !== false,
+    alertsSmsEnabled: row.alertsSmsEnabled === true, alertsSmsAvailable: row.alertsSmsAvailable === true } as GatePrefs : value as Prefs;
 }
 function subscribeAuth(listener: () => void) {
   const user = subscribeUser(listener);
@@ -94,6 +98,7 @@ function NotificationPreferencesForm() {
   const [retry, setRetry] = useState(0);
   const requestController = useRef<AbortController | null>(null);
   const savingRef = useRef(false);
+  const smsChanged = useRef(false);
   const gateMode = prefs?.mode === "gate";
   const ROWS = useMemo<{ key: SwitchKey; label: string; desc: string }[]>(
     () => [
@@ -113,6 +118,10 @@ function NotificationPreferencesForm() {
       { key: "commentMentionEmailEnabled", label: t("notifications.rows.commentMentionEmail"), desc: t("notifications.rows.commentMentionEmailDesc") },
       { key: "commentReplyEmailEnabled", label: t("notifications.rows.commentReplyEmail"), desc: t("notifications.rows.commentReplyEmailDesc") },
       ] satisfies { key: SwitchKey; label: string; desc: string }[]),
+      ...(gateMode ? [
+        { key: "alertsEmailEnabled" as const, label: t("notifications.alertChannels.email"), desc: t("notifications.alertChannels.emailDesc") },
+        { key: "alertsSmsEnabled" as const, label: t("notifications.alertChannels.sms"), desc: t("notifications.alertChannels.smsDisclosure") },
+      ] : []),
       { key: "pushEnabled", label: t("notifications.rows.push"), desc: t("notifications.rows.pushDesc") },
     ],
     [t, gateMode],
@@ -135,6 +144,7 @@ function NotificationPreferencesForm() {
 
   const update = (patch: Partial<SharedPrefs & Record<SwitchKey, boolean>>) => {
     if (!prefs || savingRef.current || !isAuthScopeCurrent(scope)) return;
+    if ("alertsSmsEnabled" in patch) smsChanged.current = true;
     setPrefs({ ...prefs, ...patch });
     setSaveError(false);
   };
@@ -148,14 +158,15 @@ function NotificationPreferencesForm() {
     setSaving(true);
     setSaveError(false);
     // Only submit the fields shown in this mode; never round-trip hidden office settings.
-    const body = Object.fromEntries(ROWS.map(({ key }) => [key, (prefs as unknown as Record<SwitchKey, boolean>)[key]]));
+    const body = Object.fromEntries(ROWS.filter(({ key }) => key !== "alertsSmsEnabled" || smsChanged.current)
+      .map(({ key }) => [key, (prefs as unknown as Record<SwitchKey, boolean>)[key]]));
     try {
       const next = parsePreferences(await apiFetch<unknown>("/api/notifications/preferences", {
         method: "PATCH",
         body: JSON.stringify({ ...body, dndStartHour: prefs.dndStartHour, dndEndHour: prefs.dndEndHour }),
         signal: controller.signal,
       }, scope));
-      if (valid()) setPrefs(next);
+      if (valid()) { setPrefs(next); smsChanged.current = false; }
     } catch {
       if (valid()) setSaveError(true);
     } finally {
@@ -194,11 +205,13 @@ function NotificationPreferencesForm() {
               <View style={{ flex: 1, paddingRight: 12 }}>
                 <Text style={[styles.rowLabel, { color: colors.foreground }]}>{r.label}</Text>
                 <Text style={[styles.rowDesc, { color: colors.mutedForeground }]}>{r.desc}</Text>
+                {r.key === "alertsSmsEnabled" && prefs.mode === "gate" && !prefs.alertsSmsAvailable &&
+                  <Text style={[styles.rowDesc, { color: colors.mutedForeground }]}>{t("notifications.alertChannels.phoneRequired")}</Text>}
               </View>
               <Switch
                 accessibilityLabel={r.label}
                 accessibilityHint={r.desc}
-                disabled={saving}
+                disabled={saving || (r.key === "alertsSmsEnabled" && prefs.mode === "gate" && !prefs.alertsSmsAvailable && !prefs.alertsSmsEnabled)}
                 value={(prefs as unknown as Record<SwitchKey, boolean>)[r.key]}
                 onValueChange={(v) => update({ [r.key]: v })}
               />

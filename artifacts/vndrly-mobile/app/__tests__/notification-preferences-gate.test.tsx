@@ -29,6 +29,7 @@ const gate = {
   mode: "gate", scheduleEnabled: true, gateCrewEnabled: true, messagesEnabled: true,
   handoffsEnabled: true, tasksEnabled: true, complianceEnabled: true, alertsEnabled: true,
   pushEnabled: true, dndStartHour: null, dndEndHour: null,
+  alertsEmailEnabled: true, alertsSmsEnabled: false, alertsSmsAvailable: true,
 };
 const office = {
   ticketsEnabled: true, hotlistEnabled: true, complianceEnabled: true, crewEnabled: true,
@@ -49,12 +50,29 @@ describe("role-specific notification preferences", () => {
       expect(screen.getByRole("switch", { name: label })).toBeTruthy();
     }
     for (const label of ["Tickets", "Hotlist", "Crew", "Comments & mentions", "System", "All"]) expect(screen.queryByText(label)).toBeNull();
-    expect(screen.getAllByRole("switch")).toHaveLength(8);
+    expect(screen.getAllByRole("switch")).toHaveLength(10);
     fireEvent.click(screen.getByRole("switch", { name: "Messages" }));
     fireEvent.click(screen.getByRole("button", { name: "Save preferences" }));
     await waitFor(() => expect(apiFetch).toHaveBeenCalledTimes(2));
-    const { mode: _mode, ...editable } = gate;
+    const { mode: _mode, alertsSmsEnabled: _sms, alertsSmsAvailable: _available, ...editable } = gate;
     expect(JSON.parse(apiFetch.mock.calls[1][1].body)).toEqual({ ...editable, messagesEnabled: false });
+  });
+
+  it("requires a saved phone and explicit SMS interaction before submitting consent", async () => {
+    apiFetch.mockResolvedValue({ ...gate, alertsSmsAvailable: false });
+    const view = render(<NotificationPreferencesScreen />);
+    const sms = await screen.findByRole("switch", { name: "SMS urgent alerts" });
+    expect((sms as HTMLInputElement).disabled).toBe(true);
+    expect(screen.getByText(/Reply STOP.*HELP/)).toBeTruthy();
+    view.unmount();
+    apiFetch.mockResolvedValue(gate);
+    render(<NotificationPreferencesScreen />);
+    fireEvent.click(await screen.findByRole("switch", { name: "SMS urgent alerts" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save preferences" }));
+    await waitFor(() => expect(apiFetch.mock.calls.some(c => c[1]?.method === "PATCH")).toBe(true));
+    const patch = apiFetch.mock.calls.find(c => c[1]?.method === "PATCH");
+    expect(JSON.parse(patch![1].body).alertsSmsEnabled).toBe(true);
+    expect(JSON.parse(patch![1].body)).not.toHaveProperty("alertsSmsOptedInAt");
   });
 
   it("keeps existing office controls and does not write unshown email preferences", async () => {

@@ -130,7 +130,33 @@ export const notificationPreferencesTable = pgTable("notification_preferences", 
   workHubUrgentBypassDndEnabled: boolean("work_hub_urgent_bypass_dnd_enabled").notNull().default(false),
   gateHandoffsEnabled: boolean("gate_handoffs_enabled").notNull().default(true),
   gateAlertsEnabled: boolean("gate_alerts_enabled").notNull().default(true),
+  alertsEmailEnabled: boolean("alerts_email_enabled").notNull().default(true),
+  alertsSmsEnabled: boolean("alerts_sms_enabled").notNull().default(false),
+  alertsSmsOptedInAt: timestamp("alerts_sms_opted_in_at", { withTimezone: true }),
+  alertsSmsConsentFingerprint: text("alerts_sms_consent_fingerprint"),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
 
 export type NotificationPreferences = typeof notificationPreferencesTable.$inferSelect;
+
+/** One claim per notification/channel; never persist addresses, bodies or provider error messages. */
+export const notificationChannelDeliveriesTable = pgTable("notification_channel_deliveries", {
+  id: serial("id").primaryKey(),
+  notificationId: integer("notification_id").notNull().references(() => notificationsTable.id, { onDelete: "cascade" }),
+  channel: text("channel").notNull(),
+  providerMessageId: text("provider_message_id"),
+  status: text("status").notNull().default("sending"),
+  attemptToken: text("attempt_token").notNull(),
+  attemptCount: integer("attempt_count").notNull().default(1),
+  consentFingerprint: text("consent_fingerprint"),
+  consentOptedInAt: timestamp("consent_opted_in_at", { withTimezone: true }),
+  lastErrorCode: text("last_error_code"),
+  nextAttemptAt: timestamp("next_attempt_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  deliveredAt: timestamp("delivered_at", { withTimezone: true }),
+}, t => ({
+  channelUnique: uniqueIndex("notification_channel_delivery_unique").on(t.notificationId, t.channel),
+  attemptUnique: uniqueIndex("notification_channel_attempt_unique").on(t.attemptToken),
+  retryIdx: index("notification_channel_retry_idx").on(t.status, t.nextAttemptAt),
+}));

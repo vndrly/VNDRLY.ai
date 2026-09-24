@@ -60,6 +60,8 @@ const DEV_UNAUTHENTICATED_ALLOWLIST: ApiAllowRule[] =
     : [];
 
 export const PUBLIC_UNAUTHENTICATED_ALLOWLIST: ApiAllowRule[] = [
+  // Authenticated by Twilio's request signature inside the handler.
+  { method: "POST", pattern: /^\/api\/twilio\/gate-alert-status$/ },
   {
     method: "GET",
     pattern: /^\/api\/work-hub\/file-library\/public\/[a-f0-9]{64}$/,

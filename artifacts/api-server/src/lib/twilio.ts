@@ -14,6 +14,12 @@ export interface SendTransactionalSmsResult {
   errorCode: string | number | undefined;
 }
 
+export class TwilioSmsError extends Error {
+  constructor(public readonly code: string | null, public readonly definitelyRejected: boolean, status: number) {
+    super(`Twilio SMS send failed with status ${status}`);
+  }
+}
+
 function requireEnv(name: string): string {
   const value = process.env[name]?.trim() ?? "";
   if (!value) throw new Error(`${name} is required`);
@@ -65,10 +71,10 @@ export async function sendTransactionalSms(
   const payload = (await res.json().catch(() => ({}))) as Record<string, unknown>;
   if (!res.ok) {
     logger.warn(
-      { status: res.status, code: payload.code, message: payload.message },
+      { status: res.status, code: /^\d{3,6}$/.test(String(payload.code)) ? String(payload.code) : null },
       "Twilio SMS send failed",
     );
-    throw new Error(`Twilio SMS send failed with status ${res.status}`);
+    throw new TwilioSmsError(/^\d{3,6}$/.test(String(payload.code)) ? String(payload.code) : null, res.status >= 400 && res.status < 500, res.status);
   }
 
   return {
