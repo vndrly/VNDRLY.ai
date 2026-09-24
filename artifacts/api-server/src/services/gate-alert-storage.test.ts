@@ -27,6 +27,9 @@ describe("additive gate alert storage", () => {
     expect(push.columns.map(c => c.name)).toContain("destination_hash");
     expect(push.columns.map(c => c.name)).not.toContain("token");
     expect(push.indexes[0].config.unique).toBe(true);
+    expect(push.indexes.map(index => index.config.name)).toEqual(expect.arrayContaining(["notification_push_stale_idx", "notification_push_cleanup_idx"]));
+    expect(source).toContain("CREATE INDEX IF NOT EXISTS notification_push_stale_idx");
+    expect(source).toContain("CREATE INDEX IF NOT EXISTS notification_push_cleanup_idx");
     expect(getTableConfig(schema.notificationsTable).columns.find(c => c.name === "urgent_delivery_pending")?.default).toBe(false);
     expect(source).toContain("CREATE TABLE IF NOT EXISTS notification_channel_deliveries");
     const pkg = JSON.parse(readFileSync(new URL("../../package.json", import.meta.url), "utf8"));

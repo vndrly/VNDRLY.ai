@@ -22,6 +22,7 @@ export interface GateAlertDependencies {
   loadRecipient(userId: number): Promise<GateAlertRecipient | null>;
   authorized(notice: GateAlert, recipient: GateAlertRecipient): Promise<boolean>;
   readiness(): { email: boolean; sms: boolean };
+  cancelRetryable(notice: GateAlert, channels: readonly GateAlertChannel[], reason: string): Promise<void>;
   claim(notice: GateAlert, channel: GateAlertChannel, consentFingerprint: string | null, consentOptedInAt?: Date | null): Promise<{ attemptToken: string; attemptCount: number } | null>;
   finish(outcome: GateAlertOutcome): Promise<void>;
   push(notice: GateAlert, recipient: GateAlertRecipient): Promise<SendResult>;
@@ -64,7 +65,10 @@ export async function deliverGateAlert(notice: GateAlert, dependencies?: GateAle
   if (resolveGateNotificationCategory(notice) !== "alerts") return true;
   const deps = dependencies ?? (await import("./gate-alert-repository")).gateAlertDependencies;
   const recipient = resolvedRecipient === undefined ? await deps.loadRecipient(notice.userId) : resolvedRecipient;
-  if (!recipient?.gate || !recipient.gateAlertsEnabled || !(await deps.authorized(notice, recipient))) return true;
+  if (!recipient?.gate || !recipient.gateAlertsEnabled || !(await deps.authorized(notice, recipient))) {
+    await deps.cancelRetryable(notice, ["push", "email", "sms"], "recipient_unavailable_or_disabled");
+    return true;
+  }
   const ready = deps.readiness();
   const fingerprint = currentSmsFingerprint(recipient);
   const smsConsent = recipient.alertsSmsEnabled && recipient.alertsSmsOptedInAt && fingerprint && fingerprint === recipient.alertsSmsConsentFingerprint;
@@ -75,6 +79,7 @@ export async function deliverGateAlert(notice: GateAlert, dependencies?: GateAle
   };
   const channels = ["push", "email", "sms"] as const;
   const results = await Promise.allSettled(channels.map(async channel => {
+    if (skip[channel]) await deps.cancelRetryable(notice, [channel], "channel_unavailable_or_disabled");
     const claim = await deps.claim(notice, channel, channel === "sms" ? fingerprint : null, channel === "sms" ? recipient.alertsSmsOptedInAt : null);
     if (!claim) return;
     const outcome: GateAlertOutcome = { notificationId: notice.id, channel, attemptToken: claim.attemptToken, status: "skipped", errorCode: skip[channel] };

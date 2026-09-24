@@ -4,6 +4,7 @@ import { sendTransactionalSms, TwilioSmsError } from "../lib/twilio";
 import { isPermanentSmsError, shouldApplyTwilioStatus, type TwilioStatusUpdate } from "../routes/twilioStatus";
 import { deliverGateAlert, gateAlertReadiness, type GateAlert, type GateAlertDependencies, type GateAlertRecipient } from "./gate-alert-delivery";
 import type { SessionPayload } from "../lib/session";
+import { logger } from "../lib/logger";
 
 type Recipient = GateAlertRecipient & { session: SessionPayload & { userId: number } };
 export async function loadGateAlertRecipient(userId: number): Promise<Recipient | null> {
@@ -54,6 +55,15 @@ export const gateAlertDependencies: GateAlertDependencies = {
     return Boolean(await resolveNotificationDestination(session, notice.link, "alerts"));
   },
   readiness: gateAlertReadiness,
+  async cancelRetryable(notice, channels, reason) {
+    if (!channels.length) return;
+    // One statement terminalizes every selected retry, including those not due yet.
+    // Never rewrite accepted/ambiguous/in-flight sends or invalidate their provider audit.
+    await pool.query(`UPDATE notification_channel_deliveries AS d SET status = 'cancelled',
+      last_error_code = $4, next_attempt_at = NULL, updated_at = now()
+      FROM notifications n WHERE d.notification_id = n.id AND n.id = $1 AND n.user_id = $2
+        AND d.channel = ANY($3::text[]) AND d.status = 'retryable'`, [notice.id, notice.userId, channels, reason]);
+  },
   async claim(notice, channel, consentFingerprint, consentOptedInAt) {
     const { rows } = await pool.query(`INSERT INTO notification_channel_deliveries
       (notification_id,channel,attempt_token,consent_fingerprint,consent_opted_in_at)
@@ -93,7 +103,7 @@ export const gateAlertDependencies: GateAlertDependencies = {
       return { accepted: true, providerMessageId: receipt.messageId };
     } catch (error) {
       if (!(error instanceof SendGridMailError) || !error.definitelyRejected) throw error;
-      return { accepted: false, errorCode: String(error.status), permanent: error.status !== 429 };
+      return { accepted: false, errorCode: String(error.status), permanent: ![429, 503].includes(error.status) };
     }
   },
   async sms(input) {
@@ -136,6 +146,8 @@ export async function applyTwilioStatus(update: TwilioStatusUpdate): Promise<voi
 
 /** Only definite failures marked retryable are replayed; a crashed/ambiguous send stays unknown/sending. */
 export async function retryGateAlertChannels(): Promise<number> {
+  try { await (await import("./gate-alert-push")).retryGateAlertPushCleanup(); }
+  catch { logger.warn("Gate push cleanup unavailable"); }
   const { rows } = await pool.query(`SELECT DISTINCT n.id, n.user_id AS "userId", n.type, n.title, n.body, n.link
     FROM notifications n LEFT JOIN notification_channel_deliveries d ON d.notification_id = n.id
     WHERE (n.urgent_delivery_leased_until IS NULL OR n.urgent_delivery_leased_until <= now())

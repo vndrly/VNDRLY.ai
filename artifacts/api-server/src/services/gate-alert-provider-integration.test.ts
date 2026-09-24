@@ -26,14 +26,14 @@ it("passes the real current-session guard and rejects a subsequently revoked ses
 it.each(["30003", "30005", "30006"])("does not revoke consent for non-opt-out delivery error %s", code => {
   expect(isPermanentSmsError(code)).toBe(false);
 });
-it("preserves real SendGrid 429 as a definite retryable rejection", async () => {
-  vi.stubGlobal("fetch", vi.fn(async () => new Response("private provider body", { status: 429 })));
-  await expect(gateAlertDependencies.email(notice, { email: "test@example.invalid" } as any)).resolves.toMatchObject({ accepted: false, errorCode: "429", permanent: false });
+it.each([429, 503])("preserves real SendGrid %s as a definite retryable rejection", async status => {
+  vi.stubGlobal("fetch", vi.fn(async () => new Response("private provider body", { status })));
+  await expect(gateAlertDependencies.email(notice, { email: "test@example.invalid" } as any)).resolves.toMatchObject({ accepted: false, errorCode: String(status), permanent: false });
 });
-it("does not classify a real sender timeout or server error as definite rejection", async () => {
+it("does not classify a real sender timeout or disconnect as definite rejection", async () => {
   vi.stubGlobal("fetch", vi.fn(async () => { throw new Error("timeout"); }));
   await expect(gateAlertDependencies.email(notice, { email: "test@example.invalid" } as any)).rejects.toThrow();
-  vi.stubGlobal("fetch", vi.fn(async () => new Response("private", { status: 503 })));
+  vi.stubGlobal("fetch", vi.fn(async () => { throw new TypeError("connection reset after write"); }));
   await expect(gateAlertDependencies.email(notice, { email: "test@example.invalid" } as any)).rejects.toThrow();
 });
 it.each(["30003", "21610"])("integrates signed callback %s with the real consent mutation and replay guard", async code => {

@@ -12,6 +12,8 @@ async function main() {
     created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now()
   )`);
   await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS notification_push_destination_unique ON notification_push_deliveries(notification_id,destination_hash)`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS notification_push_stale_idx ON notification_push_deliveries(destination_hash,last_error_code)`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS notification_push_cleanup_idx ON notification_push_deliveries(status,updated_at)`);
   await pool.query(`ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS alerts_email_enabled boolean NOT NULL DEFAULT true`);
   await pool.query(`ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS alerts_sms_enabled boolean NOT NULL DEFAULT false`);
   await pool.query(`ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS alerts_sms_opted_in_at timestamptz`);

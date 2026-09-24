@@ -25,7 +25,7 @@ export class SendGridMailError extends Error {
   readonly definitelyRejected: boolean;
   constructor(readonly status: number) {
     super(`SendGrid mail send failed with status ${status}`);
-    this.definitelyRejected = status >= 400 && status < 500 && status !== 408;
+    this.definitelyRejected = (status >= 400 && status < 500 && status !== 408) || status === 503;
   }
 }
 

@@ -14,6 +14,7 @@ beforeEach(() => {
       const row = { status: "sending", attempt: values[2] }; records.set(values[1], row);
       return { rows: [row] };
     }
+    if (sql.startsWith("UPDATE notification_push_deliveries SET status = 'failed'")) { records.get(values[1]).status = "failed"; return { rows: [] }; }
     if (sql.startsWith("UPDATE notification_push_deliveries")) { records.get(values[1]).status = values[3]; return { rows: [] }; }
     if (sql.startsWith("SELECT status")) return { rows: [...records.values()] };
     return { rows: [] };

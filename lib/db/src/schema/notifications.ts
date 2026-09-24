@@ -176,4 +176,8 @@ export const notificationPushDeliveriesTable = pgTable("notification_push_delive
   lastErrorCode: text("last_error_code"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-}, t => ({ destinationUnique: uniqueIndex("notification_push_destination_unique").on(t.notificationId, t.destinationHash) }));
+}, t => ({
+  destinationUnique: uniqueIndex("notification_push_destination_unique").on(t.notificationId, t.destinationHash),
+  staleIdx: index("notification_push_stale_idx").on(t.destinationHash, t.lastErrorCode),
+  cleanupIdx: index("notification_push_cleanup_idx").on(t.status, t.updatedAt),
+}));

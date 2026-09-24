@@ -11,6 +11,14 @@ import { loadGateAlertRecipient, gateAlertDependencies, applyTwilioStatus } from
 const notice = { id: 2, userId: 7, type: "safety_stop_work", title: "Private", link: "/work-hub" };
 beforeEach(() => { storage.query.mockReset(); storage.connect.mockResolvedValue(storage); storage.query.mockResolvedValue({ rows: [] }); });
 describe("gate channel persistence boundaries", () => {
+  it("atomically cancels owned retries without touching accepted or in-flight attempts", async () => {
+    await gateAlertDependencies.cancelRetryable(notice, ["push", "email", "sms"], "recipient_unavailable_or_disabled");
+    expect(storage.query).toHaveBeenCalledOnce();
+    const [sql, values] = storage.query.mock.calls[0];
+    expect(sql).toContain("n.user_id = $2"); expect(sql).toContain("d.status = 'retryable'");
+    expect(sql).toContain("next_attempt_at = NULL"); expect(sql).not.toContain("next_attempt_at <=");
+    expect(values).toEqual([2, 7, ["push", "email", "sms"], "recipient_unavailable_or_disabled"]);
+  });
   it("uses authorized gate unread totals instead of an office badge snapshot", async () => {
     await gateAlertDependencies.push({ ...notice, badge: 100 }, { session: { userId: 7 } } as any);
     expect(providers.push).toHaveBeenCalledWith(expect.objectContaining({ userId: 7 }), 7);

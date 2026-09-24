@@ -643,28 +643,44 @@ export async function notifyUsers(userIds: number[], notif: NotifyInput): Promis
 export async function deliverUrgentOfficeNotification(notice: import("../services/gate-alert-delivery").GateAlert): Promise<boolean> {
   const { gateAlertDependencies: deps, loadGateAlertRecipient } = await import("../services/gate-alert-repository");
   const recipient = await loadGateAlertRecipient(notice.userId);
-  if (!recipient || recipient.gate) return false;
+  if (!recipient || recipient.gate || !recipient.membershipId || !(await deps.authorized(notice, recipient))) {
+    await deps.cancelRetryable(notice, ["push", "email", "sms"], "recipient_unavailable_or_unauthorized");
+    return true;
+  }
   const prefs = await getPrefsForUsers([notice.userId]);
   const p = prefs.get(notice.userId)!;
   const category = categoryForType(notice.type);
-  const results = await Promise.allSettled((["push", "email"] as const).map(async channel => {
-    const claim = await deps.claim(notice, channel, null);
-    if (!claim) return;
+  if (!categoryEnabled(p, category)) {
+    await deps.cancelRetryable(notice, ["push", "email", "sms"], "category_disabled");
+    return true;
+  }
+  // Office roles never inherit a gate SMS retry, even when the same destination remains authorized.
+  const results = await Promise.allSettled((["push", "email", "sms"] as const).map(async channel => {
+    if (channel === "sms") return deps.cancelRetryable(notice, ["sms"], "role_changed");
     const enabled = categoryEnabled(p, category) && (channel === "push"
       ? p.pushEnabled // Canonical urgent types bypass quiet hours, including recovery after restart.
       : categoryEmailEnabled(p, category, notice.type) && Boolean(recipient.email) && deps.readiness().email);
+    if (!enabled) await deps.cancelRetryable(notice, [channel], "channel_unavailable_or_disabled");
+    const claim = await deps.claim(notice, channel, null);
+    if (!claim) return;
     let status: import("../services/gate-alert-delivery").GateAlertOutcome["status"] = "skipped";
     let providerMessageId: string | undefined;
     let errorCode: string | null = enabled ? null : "disabled_or_not_configured";
     if (enabled) {
+      let sendStarted = false;
       try {
+        const badge = channel === "push" ? (await countUnreadForUsers([notice.userId], prefs)).get(notice.userId) ?? 0 : 0;
+        sendStarted = true;
         const result = channel === "push"
-          ? await (await import("../services/gate-alert-push")).sendGateAlertPush(notice, (await countUnreadForUsers([notice.userId], prefs)).get(notice.userId) ?? 0)
+          ? await (await import("../services/gate-alert-push")).sendGateAlertPush(notice, badge)
           : await deps.email(notice, recipient);
         status = result.status ?? (result.accepted ? "accepted" : result.permanent ? "failed" : "retryable");
         providerMessageId = result.providerMessageId;
         errorCode = result.errorCode ?? null;
-      } catch { status = "unknown"; errorCode = "provider_exception"; }
+      } catch {
+        status = sendStarted ? "unknown" : "retryable";
+        errorCode = sendStarted ? "provider_exception" : "badge_unavailable";
+      }
     }
     await deps.finish({ notificationId: notice.id, channel, attemptToken: claim.attemptToken, status, errorCode, providerMessageId });
   }));

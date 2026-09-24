@@ -11,6 +11,7 @@ function fixture() {
     loadRecipient: async () => recipient,
     authorized: async () => true,
     readiness: () => ({ email: true, sms: true }),
+    cancelRetryable: vi.fn(async () => {}),
     claim: async (_notice, channel) => { const key = `${_notice.id}:${channel}`; if (claimed.has(key)) return null; claimed.add(key); return { attemptToken: channel, attemptCount: 1 }; },
     finish: async (result) => { outcomes.push(result); if (result.status === "retryable") claimed.delete(`${result.notificationId}:${result.channel}`); },
     push: vi.fn(async () => ({ accepted: true })),
@@ -21,6 +22,13 @@ function fixture() {
   return { recipient, dependencies, outcomes };
 }
 describe("urgent gate alert delivery", () => {
+  it("isolates a disabled channel cancellation failure from other eligible channels", async () => {
+    const f = fixture(); f.recipient.alertsSmsEnabled = false;
+    f.dependencies.cancelRetryable = async (_notice, channels) => { if (channels.includes("sms")) throw new Error("audit temporarily unavailable"); };
+    await expect(deliverGateAlert(notice, f.dependencies)).resolves.toBe(false);
+    expect(f.dependencies.push).toHaveBeenCalledOnce(); expect(f.dependencies.email).toHaveBeenCalledOnce();
+    expect(f.dependencies.sms).not.toHaveBeenCalled();
+  });
   it("logs a redacted audit-storage failure without rejecting or blocking other channels", async () => {
     const f = fixture(); const warning = vi.spyOn(logger, "warn").mockImplementation(() => {});
     const finish = f.dependencies.finish;
