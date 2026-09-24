@@ -16,6 +16,7 @@ const state = vi.hoisted(() => ({
   pageSizes: [] as number[],
   cursorTimestampBindings: [] as string[],
   subscriber: undefined as undefined | ((event: any) => void),
+  currentSession: null as any,
 }));
 // PostgreSQL compares all six fractional digits even when the driver returns a Date.
 const timestampKey = vi.hoisted(() => (value: any): string => {
@@ -87,6 +88,7 @@ vi.mock("@workspace/db", () => {
     "workHubChecklistTemplates",
     "workHubFormTemplates",
     "safetyEvents",
+    "workHubCalls", "workHubVoicemail", "workHubApprovalRequests", "workHubApprovalSteps", "workHubClientOperations",
   ];
   const tables = Object.fromEntries(
     names.map((name) => [
@@ -162,7 +164,16 @@ vi.mock("@workspace/db", () => {
   };
   return {
     ...tables,
-    pool: {},
+    pool: { query: async (sql: string, values: unknown[]) => {
+      expect(sql).toContain("u.suspended_at IS NULL");
+      expect(sql).toContain("m.id = u.active_membership_id");
+      expect(values).toEqual([7]);
+      const s = state.currentSession;
+      return { rows: s ? [{ userId: s.userId, userRole: s.role, sessionVersion: s.sv, membershipId: s.activeMembershipId,
+        orgType: s.partnerId ? "partner" : "vendor", vendorId: s.vendorId, partnerId: s.partnerId,
+        membershipRole: s.role === "field_employee" ? "field_employee" : "admin", vendorRole: s.vendorRole,
+        grants: s.managedSubcontractor?.siteGrants ?? [] }] : [] };
+    } },
     db: {
       select: (s: any) => ({ from: (t: any) => query(t, s) }),
       update: (t: any) => ({ set: (p: any) => query(t, undefined, p) }),
@@ -205,7 +216,6 @@ vi.mock("../services/gate-change-over", () => ({
   },
 }));
 vi.mock("../lib/expo-push", () => ({ sendPushToUser: vi.fn() }));
-vi.mock("../services/gate-alert-repository", () => ({ loadGateAlertRecipient: async () => null }));
 vi.mock("../lib/notifications-rate-limit", () => ({
   enforceNotificationsRateLimit: async () => true,
 }));
@@ -232,8 +242,9 @@ const gate = buildTestCookie({
   vendorId: 11,
   vendorRole: "gatekeeper",
   sv: 1,
+  activeMembershipId: 8,
 });
-const office = buildTestCookie({ userId: 7, role: "vendor", vendorId: 11 });
+const office = buildTestCookie({ userId: 7, role: "vendor", vendorId: 11, sv: 1, activeMembershipId: 8 });
 const channel = "10000000-0000-4000-8000-000000000001";
 const at = "2026-09-24T12:00:00.000Z";
 function notification(
@@ -269,6 +280,7 @@ beforeEach(async () => {
   state.pageSizes = [];
   state.cursorTimestampBindings = [];
   state.channelContexts = {};
+  state.currentSession = { userId: 7, role: "field_employee", vendorId: 11, sv: 1, activeMembershipId: 8, vendorRole: "gatekeeper" };
   app = express();
   app.use(express.json());
   app.use(cookieParser());
@@ -279,6 +291,111 @@ const get = (path = "", cookie = gate) =>
   request(app).get(`/api/notifications${path}`).set("Cookie", cookie);
 
 describe("role-aware notification inbox", () => {
+  it.each(["suspended", "version", "membership", "organization", "role"])("closes an existing SSE stream after current %s authority changes", async change => {
+    state.tables.notifications = [notification(1)];
+    const server = app.listen(0);
+    const controller = new AbortController();
+    try {
+      const port = (server.address() as { port: number }).port;
+      const response = await fetch(`http://127.0.0.1:${port}/api/notifications/events`, { headers: { Cookie: gate }, signal: controller.signal });
+      const reader = response.body!.getReader();
+      await reader.read();
+      if (change === "suspended") state.currentSession = null;
+      if (change === "version") state.currentSession.sv = 2;
+      if (change === "membership") state.currentSession.activeMembershipId = 9;
+      if (change === "organization") state.currentSession.vendorId = 99;
+      if (change === "role") state.currentSession.role = "vendor";
+      state.subscriber!({ type: "notification.created", userId: 7, notificationId: 1, seq: 1 });
+      const result = await reader.read();
+      expect(new TextDecoder().decode(result.value)).not.toContain("Notice");
+      expect(result.done).toBe(true);
+    } finally {
+      controller.abort(); server.closeAllConnections();
+      await new Promise<void>(resolve => server.close(() => resolve()));
+    }
+  });
+  it("office read-all marks only currently visible rows", async () => {
+    state.tables.notifications = [notification(1), notification(2, "ticket_approved", { link: "/tickets/5" })];
+    state.revokedChannels.add(channel);
+    expect((await request(app).post("/api/notifications/read-all").set("Cookie", office)).status).toBe(204);
+    expect(state.tables.notifications.map(row => row.isRead)).toEqual([false, true]);
+  });
+  it("office read-all leaves revoked membership and muted comment rows unread", async () => {
+    state.tables.notifications = [notification(1), notification(2, "comment_mention", { link: "/tickets/5" })];
+    state.tables.userOrgMemberships = [];
+    state.tables.notificationPreferences = [{ userId: 7, commentsEnabled: false }];
+    await request(app).post("/api/notifications/read-all").set("Cookie", office);
+    expect(state.tables.notifications.map(row => row.isRead)).toEqual([false, false]);
+    expect(state.events).toEqual([]);
+  });
+  it("uses a refreshed organization-admin role for legacy office SSE authorization", async () => {
+    state.currentSession = { ...state.currentSession, role: "vendor", vendorRole: "office" };
+    state.tables.userOrgMemberships[0].role = "admin";
+    state.tables.workHubClientOperations = [{ operationId: channel, commandKind: "supervisor_exception", ownerOrgType: "vendor", ownerOrgId: 11 }];
+    state.tables.notifications = [notification(1, "supervisor_exception", { link: "/work-hub/operations-health", dedupeKey: `supervisor:${channel}` })];
+    const server = app.listen(0);
+    const controller = new AbortController();
+    try {
+      const port = (server.address() as { port: number }).port;
+      const response = await fetch(`http://127.0.0.1:${port}/api/notifications/events`, { headers: { Cookie: office }, signal: controller.signal });
+      const reader = response.body!.getReader(); await reader.read();
+      state.subscriber!({ type: "notification.created", userId: 7, notificationId: 1, seq: 1 });
+      let received = "";
+      while (!received.includes('"seq":1')) received += new TextDecoder().decode((await reader.read()).value);
+      expect(received).toContain("operations-health");
+      state.tables.userOrgMemberships[0].role = "member";
+      state.subscriber!({ type: "notification.created", userId: 7, notificationId: 1, seq: 2 });
+      state.subscriber!({ type: "notification.state_changed", userId: 7, state: "all_read", seq: 3 });
+      received = "";
+      while (!received.includes('"seq":3')) received += new TextDecoder().decode((await reader.read()).value);
+      expect(received).not.toContain("Notice");
+      expect(received).not.toContain("operations-health");
+    } finally {
+      controller.abort(); server.closeAllConnections();
+      await new Promise<void>(resolve => server.close(() => resolve()));
+    }
+  });
+  it("preserves office site channel and shift access without a gatekeeper grant", async () => {
+    state.channelContexts[channel] = "site";
+    state.revokedSites.add(3);
+    state.tables.workHubShifts = [{ id: channel, ownerOrgType: "vendor", ownerOrgId: 11, siteLocationId: 3, channelId: channel }];
+    state.tables.notifications = [notification(1), notification(2, "work_hub_shift_assigned", { link: `/work-hub/calendar?shift=${channel}` })];
+    expect((await get("", office)).body.map((row: any) => row.id)).toEqual([2, 1]);
+    expect((await get()).body.items).toEqual([]);
+  });
+  it.each(["coverage", "call", "voicemail", "approval", "health"])("authorizes legacy office %s subject and rejects tenant revocation", async kind => {
+    state.tables.userOrgMemberships[0].role = "admin";
+    const owner = { ownerOrgType: "vendor", ownerOrgId: 11 };
+    state.tables.workHubShifts = [{ id: channel, ...owner }];
+    state.tables.workHubCalls = [{ id: channel, callerUserId: 8, recipientUserId: 7, occurrenceId: channel }];
+    state.tables.workHubVoicemail = [{ id: "20000000-0000-4000-8000-000000000001", callId: channel, recipientUserId: 7 }];
+    state.tables.workHubMeetingOccurrences = [{ id: channel, meetingId: channel }];
+    state.tables.workHubMeetings = [{ id: channel, ...owner }];
+    state.tables.workHubApprovalRequests = [{ id: channel, ...owner }];
+    state.tables.workHubApprovalSteps = [{ requestId: channel, approverUserId: 7 }];
+    state.tables.workHubClientOperations = [{ operationId: channel, commandKind: "supervisor_exception", ...owner }];
+    const cases: Record<string, any> = {
+      coverage: { link: "/work-hub/workforce-coverage", dedupeKey: `gate-coverage:${channel}:uncovered:1` },
+      call: { link: "/work-hub/calls", dedupeKey: `call:${channel}` },
+      voicemail: { link: "/work-hub/calls", dedupeKey: "voicemail:20000000-0000-4000-8000-000000000001" },
+      approval: { link: `/work-hub/tasks?approval=${channel}` },
+      health: { link: "/work-hub/operations-health", dedupeKey: `supervisor:${channel}` },
+    };
+    state.tables.notifications = [notification(1, "work_hub_legacy", cases[kind])];
+    expect((await get("", office)).body.map((row: any) => row.id)).toEqual([1]);
+    expect((await get("/unread-count", office)).body).toEqual({ count: 1 });
+    expect((await request(app).post("/api/notifications/1/resolve").set("Cookie", office)).body).toEqual({ href: cases[kind].link });
+    for (const table of ["workHubShifts", "workHubMeetings", "workHubApprovalRequests", "workHubClientOperations"]) state.tables[table][0].ownerOrgId = 99;
+    expect((await get("", office)).body).toEqual([]);
+    expect((await get("/unread-count", office)).body).toEqual({ count: 0 });
+  });
+  it("rejects safety null scope even with a membership in another organization", async () => {
+    const malformed = buildTestCookie({ userId: 7, role: "vendor", vendorId: null, partnerId: 22 });
+    state.tables.userOrgMemberships = [{ userId: 7, orgType: "partner", partnerId: 22 }];
+    state.tables.safetyEvents = [{ id: 41, vendorId: null, partnerId: 99, reportedByUserId: 8 }];
+    state.tables.notifications = [notification(1, "safety_stop_work", { link: "/safety/41" })];
+    expect((await get("", malformed)).body).toEqual([]);
+  });
   it("resolves the exact authorized safety event, including an inactive stop-work site", async () => {
     state.tables.safetyEvents = [{ id: 41, vendorId: 11, partnerId: 22, reportedByUserId: 7 }];
     state.tables.notifications = [notification(1, "safety_stop_work", { link: "/safety/41" })];
@@ -306,6 +423,7 @@ describe("role-aware notification inbox", () => {
     expect((await get("/unread-count", office)).body).toEqual({ count: 0 });
   });
   it.each([gate, office])("authorizes stored content before emitting a created SSE event", async (cookie) => {
+    if (cookie === office) state.currentSession = { ...state.currentSession, role: "vendor", vendorRole: "office" };
     state.tables.notifications = [notification(1)];
     const server = app.listen(0);
     const controller = new AbortController();

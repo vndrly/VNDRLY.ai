@@ -8,8 +8,8 @@ import { logger } from "../lib/logger";
 
 type Recipient = GateAlertRecipient & { session: SessionPayload & { userId: number } };
 export async function loadGateAlertRecipient(userId: number): Promise<Recipient | null> {
-  const { rows } = await pool.query(`SELECT u.id AS "userId", u.email, u.session_version AS "sessionVersion",
-    m.id AS "membershipId", m.vendor_id AS "vendorId", m.partner_id AS "partnerId", m.role AS "membershipRole",
+  const { rows } = await pool.query(`SELECT u.id AS "userId", u.role AS "userRole", u.email, u.session_version AS "sessionVersion",
+    m.id AS "membershipId", m.org_type AS "orgType", m.vendor_id AS "vendorId", m.partner_id AS "partnerId", m.role AS "membershipRole",
     vp.id AS "vendorPeopleId", vp.vendor_role AS "vendorRole", vp.phone,
     p.push_enabled AS "pushEnabled", p.gate_alerts_enabled AS "gateAlertsEnabled",
     p.alerts_email_enabled AS "alertsEmailEnabled", p.alerts_sms_enabled AS "alertsSmsEnabled",
@@ -28,15 +28,19 @@ export async function loadGateAlertRecipient(userId: number): Promise<Recipient 
     WHERE u.id = $1 AND u.suspended_at IS NULL`, [userId]);
   const row = rows[0];
   if (!row) return null;
+  const validVendor = row.orgType === "vendor" && Number.isSafeInteger(row.vendorId) && row.vendorId > 0 && row.partnerId == null;
+  const validPartner = row.orgType === "partner" && Number.isSafeInteger(row.partnerId) && row.partnerId > 0 && row.vendorId == null;
+  const systemAdmin = row.userRole === "admin" && row.membershipId == null;
+  if (!systemAdmin && (!row.membershipId || (!validVendor && !validPartner))) return null;
   const grants = row.grants ?? [];
-  const gate = ["gatekeeper", "gate_supervisor"].includes(row.vendorRole) || grants.length > 0;
+  const gate = validVendor && (["gatekeeper", "gate_supervisor"].includes(row.vendorRole) || grants.length > 0);
   return {
     userId, gate, membershipId: row.membershipId ?? null, vendorPeopleId: row.vendorPeopleId ?? null,
     phone: row.phone ?? null, email: typeof row.email === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.email) ? row.email : null,
     pushEnabled: row.pushEnabled ?? true, gateAlertsEnabled: row.gateAlertsEnabled ?? true,
     alertsEmailEnabled: row.alertsEmailEnabled ?? true, alertsSmsEnabled: row.alertsSmsEnabled ?? false,
     alertsSmsOptedInAt: row.alertsSmsOptedInAt ?? null, alertsSmsConsentFingerprint: row.alertsSmsConsentFingerprint ?? null,
-    session: { userId, sv: row.sessionVersion, role: row.membershipRole === "field_employee" ? "field_employee" : "vendor", vendorId: row.vendorId,
+    session: { userId, sv: row.sessionVersion, role: systemAdmin ? "admin" : row.membershipRole === "field_employee" ? "field_employee" : row.orgType, vendorId: row.vendorId,
       partnerId: row.partnerId, vendorPeopleId: row.vendorPeopleId, vendorRole: row.vendorRole,
       activeMembershipId: row.membershipId, membershipRole: row.membershipRole,
       ...(grants.length ? { managedSubcontractor: { siteGrants: grants } } : {}) },

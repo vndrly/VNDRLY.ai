@@ -11,6 +11,19 @@ import { loadGateAlertRecipient, gateAlertDependencies, applyTwilioStatus } from
 const notice = { id: 2, userId: 7, type: "safety_stop_work", title: "Private", link: "/work-hub" };
 beforeEach(() => { storage.query.mockReset(); storage.connect.mockResolvedValue(storage); storage.query.mockResolvedValue({ rows: [] }); });
 describe("gate channel persistence boundaries", () => {
+  it.each(["partner", "vendor"])("preserves the active %s organization authority", async orgType => {
+    storage.query.mockResolvedValueOnce({ rows: [{ userId: 7, userRole: "vendor", orgType, membershipId: 8, membershipRole: "admin", vendorId: orgType === "vendor" ? 3 : null, partnerId: orgType === "partner" ? 4 : null }] });
+    expect((await loadGateAlertRecipient(7))?.session.role).toBe(orgType);
+  });
+  it.each([
+    { orgType: "partner", vendorId: null, partnerId: null },
+    { orgType: "partner", vendorId: 3, partnerId: null },
+    { orgType: "vendor", vendorId: null, partnerId: 4 },
+    { orgType: "vendor", vendorId: 3, partnerId: 4 },
+  ])("rejects inconsistent active membership scope %j", async scope => {
+    storage.query.mockResolvedValueOnce({ rows: [{ userId: 7, membershipId: 8, membershipRole: "admin", ...scope }] });
+    expect(await loadGateAlertRecipient(7)).toBeNull();
+  });
   it("atomically cancels owned retries without touching accepted or in-flight attempts", async () => {
     await gateAlertDependencies.cancelRetryable(notice, ["push", "email", "sms"], "recipient_unavailable_or_disabled");
     expect(storage.query).toHaveBeenCalledOnce();
@@ -32,7 +45,7 @@ describe("gate channel persistence boundaries", () => {
     await expect(gateAlertDependencies.sms({ to: "+14055551212", body: "VNDRLY", attemptToken: "claim" })).rejects.toThrow();
   });
   it("resolves only the current user's active membership and uses the linked person's phone", async () => {
-    storage.query.mockResolvedValueOnce({ rows: [{ userId: 7, membershipId: 8, vendorPeopleId: 9, vendorId: 3, vendorRole: "gatekeeper", phone: "+14055551212", email: "x@example.invalid", membershipRole: "field_employee", grants: [] }] });
+    storage.query.mockResolvedValueOnce({ rows: [{ userId: 7, orgType: "vendor", membershipId: 8, vendorPeopleId: 9, vendorId: 3, vendorRole: "gatekeeper", phone: "+14055551212", email: "x@example.invalid", membershipRole: "field_employee", grants: [] }] });
     const recipient = await loadGateAlertRecipient(7);
     expect(recipient).toMatchObject({ userId: 7, membershipId: 8, phone: "+14055551212", gate: true, alertsSmsEnabled: false, alertsEmailEnabled: true });
     const [query, values] = storage.query.mock.calls[0];
@@ -44,7 +57,7 @@ describe("gate channel persistence boundaries", () => {
     expect(query).toContain("u.suspended_at IS NULL");
   });
   it("does not grant gate delivery when current membership is office", async () => {
-    storage.query.mockResolvedValueOnce({ rows: [{ userId: 7, vendorRole: "office", grants: [] }] });
+    storage.query.mockResolvedValueOnce({ rows: [{ userId: 7, orgType: "vendor", membershipId: 8, vendorId: 3, vendorRole: "office", grants: [] }] });
     expect((await loadGateAlertRecipient(7))?.gate).toBe(false);
   });
   it("claims atomically with notification ownership and bounded due retries", async () => {

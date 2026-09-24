@@ -23,9 +23,15 @@ import {
   workHubFormTemplatesTable,
   workHubChecklistInstancesTable,
   workHubChecklistTemplatesTable,
+  workHubCallsTable,
+  workHubVoicemailTable,
+  workHubApprovalRequestsTable,
+  workHubApprovalStepsTable,
+  workHubClientOperationsTable,
 } from "@workspace/db";
 import type { SessionPayload } from "./session";
 import type { GateNotificationCategory } from "./gate-notification-policy";
+import { isGateNotificationSession } from "./gate-notification-policy";
 import { sessionCanSeeOwner } from "../work-hub/owner-boundary";
 
 type Actor = SessionPayload & { userId: number };
@@ -43,6 +49,7 @@ export async function resolveNotificationDestination(
   session: Actor,
   link: string | null,
   category?: GateNotificationCategory,
+  source?: { dedupeKey?: string | null },
 ): Promise<string | null> {
   if (
     !link ||
@@ -84,6 +91,7 @@ export async function resolveNotificationDestination(
     "stationId",
     "handoffId",
     "credentialId",
+    "approval",
   ]);
   if (keys.some((key) => !permittedKeys.has(key))) return null;
   const ownerType = session.vendorId ? "vendor" : "partner";
@@ -117,7 +125,7 @@ export async function resolveNotificationDestination(
     if (!ownerAllowed(channel)) return false;
     if (category === "gate_crew" && channel.contextKind !== "gate")
       return false;
-    if (channel.contextKind === "gate" || channel.contextKind === "site") {
+    if (isGateNotificationSession(session) && (channel.contextKind === "gate" || channel.contextKind === "site")) {
       const { requireChangeOverAccess } =
         await import("../services/gate-change-over");
       await requireChangeOverAccess(pool, session, Number(channel.contextId));
@@ -125,6 +133,47 @@ export async function resolveNotificationDestination(
     return true;
   };
   try {
+    // Legacy office rows carry exact subjects in their durable dedupe key.
+    // Keep their original href/response shape; never authorize a whole page
+    // merely because the recipient once had a notification for it.
+    if (!isGateNotificationSession(session) && path === "/work-hub/workforce-coverage" && !keys.length) {
+      const shiftId = source?.dedupeKey?.match(/^gate-coverage:([^:]+):(?:uncovered|understaffed|restored):\d+$/)?.[1];
+      return shiftId && await resolveNotificationDestination(session, `/work-hub/calendar?shift=${shiftId}`) ? link : null;
+    }
+    if (!isGateNotificationSession(session) && path === "/work-hub/calls" && !keys.length) {
+      const subject = source?.dedupeKey?.match(/^(call|voicemail):([^:]+)$/);
+      if (!subject || !uuid.test(subject[2])) return null;
+      let callId = subject[2];
+      if (subject[1] === "voicemail") {
+        const [voicemail] = await db.select().from(workHubVoicemailTable).where(eq(workHubVoicemailTable.id, callId)).limit(1);
+        if (!voicemail || voicemail.deletedAt || voicemail.recipientUserId !== session.userId) return null;
+        callId = voicemail.callId;
+      }
+      const [call] = await db.select().from(workHubCallsTable).where(eq(workHubCallsTable.id, callId)).limit(1);
+      if (!call || ![call.callerUserId, call.recipientUserId].includes(session.userId)) return null;
+      const [occurrence] = await db.select().from(workHubMeetingOccurrencesTable).where(eq(workHubMeetingOccurrencesTable.id, call.occurrenceId)).limit(1);
+      if (!occurrence) return null;
+      const [meeting] = await db.select().from(workHubMeetingsTable).where(eq(workHubMeetingsTable.id, occurrence.meetingId)).limit(1);
+      if (!meeting || !ownerAllowed(meeting)) return null;
+      return !meeting.channelId || await authorizeChannel(meeting.channelId) ? link : null;
+    }
+    if (!isGateNotificationSession(session) && path === "/work-hub/operations-health" && !keys.length) {
+      const operationId = source?.dedupeKey?.match(/^supervisor:([0-9a-f-]{36})$/i)?.[1];
+      if (!operationId || (session.role !== "admin" && memberships[0]?.role !== "admin")) return null;
+      const [operation] = await db.select().from(workHubClientOperationsTable).where(and(
+        eq(workHubClientOperationsTable.operationId, operationId), eq(workHubClientOperationsTable.commandKind, "supervisor_exception"),
+      )).limit(1);
+      return operation && ownerAllowed(operation) ? link : null;
+    }
+    if (!isGateNotificationSession(session) && path === "/work-hub/tasks" && keys.length === 1 && params.has("approval")) {
+      const id = params.get("approval")!;
+      if (!uuid.test(id)) return null;
+      const [approval] = await db.select().from(workHubApprovalRequestsTable).where(eq(workHubApprovalRequestsTable.id, id)).limit(1);
+      if (!approval || !ownerAllowed(approval)) return null;
+      const [step] = await db.select().from(workHubApprovalStepsTable).where(and(eq(workHubApprovalStepsTable.requestId, id), eq(workHubApprovalStepsTable.approverUserId, session.userId))).limit(1);
+      if (!step || (approval.channelId && !await authorizeChannel(approval.channelId))) return null;
+      return link;
+    }
     const safetyId = path.match(/^\/safety\/([1-9]\d*)$/)?.[1];
     if (safetyId) {
       if (keys.length || !positiveId(safetyId)) return null;
@@ -134,8 +183,8 @@ export async function resolveNotificationDestination(
       // Match GET /safety/events/:id exactly; stop-work events remain readable
       // after the site becomes inactive, without granting access to other sites.
       return session.role === "admin" ||
-        (session.role === "vendor" && event.vendorId === session.vendorId) ||
-        (session.role === "partner" && event.partnerId === session.partnerId) ||
+        (session.role === "vendor" && !!session.vendorId && !session.partnerId && event.vendorId === session.vendorId) ||
+        (session.role === "partner" && !!session.partnerId && !session.vendorId && event.partnerId === session.partnerId) ||
         (session.role === "field_employee" && event.reportedByUserId === session.userId)
         ? link : null;
     }
@@ -224,7 +273,7 @@ export async function resolveNotificationDestination(
       return null;
     if (
       keys.some((key) =>
-        ["siteId", "stationId", "handoffId", "credentialId"].includes(key),
+        ["siteId", "stationId", "handoffId", "credentialId", "approval"].includes(key),
       )
     )
       return null;
@@ -339,7 +388,7 @@ export async function resolveNotificationDestination(
         return null;
       if (shift.channelId && !(await authorizeChannel(shift.channelId)))
         return null;
-      if (shift.siteLocationId) {
+      if (shift.siteLocationId && isGateNotificationSession(session)) {
         const { requireChangeOverAccess } =
           await import("../services/gate-change-over");
         await requireChangeOverAccess(pool, session, shift.siteLocationId);

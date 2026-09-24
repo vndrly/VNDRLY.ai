@@ -29,8 +29,8 @@ import { GATE_NOTIFICATION_CATEGORIES, gatePreferenceKeys, isGateNotificationSes
 import { sendApiError } from "../lib/apiError";
 import { acknowledgeNotification, databaseNotificationDeliveryRepository } from "../services/notification-delivery";
 // Lazy-loaded below so ordinary office polling does not initialize subject services.
-async function resolveNotificationDestination(session: Session, link: string | null, category?: GateNotificationCategory) {
-  return (await import("../lib/notification-destination")).resolveNotificationDestination(session, link, category);
+async function resolveNotificationDestination(session: Session, link: string | null, category?: GateNotificationCategory, source?: { dedupeKey?: string | null }) {
+  return (await import("../lib/notification-destination")).resolveNotificationDestination(session, link, category, source);
 }
 
 const COOKIE_NAME = "vndrly_session";
@@ -1004,7 +1004,7 @@ async function notificationVisibility(session: Session) {
       // recipient id must never outlive current membership or subject access.
       const protectedDestination = row.type.startsWith("work_hub_") || row.type.startsWith("gate_") ||
         /^\/(?:\(tabs\)\/)?(?:work-hub|gate|gate-change-over|shift-notes|profile|safety)(?:[/?]|$)/.test(row.link ?? "");
-      if (protectedDestination && !await resolveNotificationDestination(session, row.link)) return false;
+      if (protectedDestination && !await resolveNotificationDestination(session, row.link, undefined, row)) return false;
       if (resolveGateNotificationCategory(row) === "alerts")
         return categoryEnabled({ ...DEFAULT_PREFS, ...await preferences() }, categoryForType(row.type)) !== false;
       return row.category !== "comments" || (await preferences()).commentsEnabled !== false;
@@ -1125,7 +1125,7 @@ router.post("/notifications/:id/resolve", async (req, res) => {
   const [row] = await db.select().from(notificationsTable)
     .where(and(eq(notificationsTable.userId, session.userId), eq(notificationsTable.id, id))).limit(1);
   if (!row || !await (await notificationVisibility(session))(row)) return unavailable();
-  const href = await resolveNotificationDestination(session, row.link, isGateNotificationSession(session) ? resolveGateNotificationCategory(row) ?? undefined : undefined);
+  const href = await resolveNotificationDestination(session, row.link, isGateNotificationSession(session) ? resolveGateNotificationCategory(row) ?? undefined : undefined, row);
   return href ? res.json({ href }) : unavailable();
 });
 
@@ -1187,24 +1187,15 @@ router.delete("/notifications/:id", async (req, res) => {
 router.post("/notifications/read-all", async (req, res) => {
   const session = getSession(req);
   if (!session) return sendApiError(res, 401, "auth.not_authenticated", "Unauthorized");
-  if (isGateNotificationSession(session)) {
-    let changed = false;
-    for await (const rows of visibleNotificationBatches(session, { conditions: [eq(notificationsTable.isRead, false)] })) {
-      if (!rows.length) continue;
-      const updated = await db.update(notificationsTable).set({ isRead: true })
-        .where(and(eq(notificationsTable.userId, session.userId), eq(notificationsTable.isRead, false), inArray(notificationsTable.id, rows.map(row => row.id))))
-        .returning({ id: notificationsTable.id });
-      changed ||= updated.length > 0;
-    }
-    if (changed) publishNotificationStateChanged({ userId: session.userId, notificationId: null, state: "all_read" });
-    return res.status(204).send();
+  let changed = false;
+  for await (const rows of visibleNotificationBatches(session, { conditions: [eq(notificationsTable.isRead, false)] })) {
+    if (!rows.length) continue;
+    const updated = await db.update(notificationsTable).set({ isRead: true })
+      .where(and(eq(notificationsTable.userId, session.userId), eq(notificationsTable.isRead, false), inArray(notificationsTable.id, rows.map(row => row.id))))
+      .returning({ id: notificationsTable.id });
+    changed ||= updated.length > 0;
   }
-  const changed = await db
-    .update(notificationsTable)
-    .set({ isRead: true })
-    .where(and(eq(notificationsTable.userId, session.userId), eq(notificationsTable.isRead, false)))
-    .returning({ id: notificationsTable.id });
-  if (changed.length > 0) publishNotificationStateChanged({ userId: session.userId, notificationId: null, state: "all_read" });
+  if (changed) publishNotificationStateChanged({ userId: session.userId, notificationId: null, state: "all_read" });
   return res.status(204).send();
 });
 
@@ -1219,9 +1210,8 @@ router.post("/notifications/read-all", async (req, res) => {
 // so the client can detect dropped events on reconnect, and per-event
 // `id:` lines so EventSource auto-includes Last-Event-ID on reconnect.
 //
-// Scoping: every event carries a recipient `userId`; we only forward to
-// the connected session's user. No other roles need to see another
-// user's notifications, so this is the entire access check.
+// Revalidate the user, session version, active company and destination on
+// each delivery; a connection opened before revocation is not authority.
 router.get("/notifications/events", (req, res): void => {
   const session = getSession(req);
   if (!session) {
@@ -1285,11 +1275,25 @@ router.get("/notifications/events", (req, res): void => {
     // stored row on every event, including streams opened before revocation.
     delivery = delivery.then(async () => {
       if (closed) return;
+      const { loadGateAlertRecipient } = await import("../services/gate-alert-repository");
+      const current = (await loadGateAlertRecipient(session.userId))?.session;
+      if (!current || typeof session.sv !== "number" || current.sv !== session.sv ||
+        (current.activeMembershipId ?? null) !== (session.activeMembershipId ?? null) ||
+        (current.vendorId ?? null) !== (session.vendorId ?? null) ||
+        (current.partnerId ?? null) !== (session.partnerId ?? null) ||
+        current.role !== session.role || (session.exp != null && session.exp < Date.now() / 1000)) {
+        closed = true;
+        clearInterval(heartbeat);
+        unsubscribe();
+        res.end();
+        return;
+      }
       let authorizedEvent = ev;
       if (ev.type === "notification.created") {
         const [row] = await db.select().from(notificationsTable)
           .where(and(eq(notificationsTable.id, ev.notificationId), eq(notificationsTable.userId, session.userId))).limit(1);
-        if (!row || !await (await notificationVisibility(session))(row)) return;
+        const actor: Session = { ...current, role: current.role!, vendorId: current.vendorId ?? null, partnerId: current.partnerId ?? null };
+        if (!row || !await (await notificationVisibility(actor))(row)) return;
         authorizedEvent = { ...ev, notifType: row.type, category: row.category,
           title: row.title, body: row.body, link: row.link, createdAt: row.createdAt.toISOString() };
       }

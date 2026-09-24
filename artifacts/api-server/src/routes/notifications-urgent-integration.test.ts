@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-const state = vi.hoisted(() => ({ query: vi.fn(), notices: [] as any[], attempts: new Map<string, any>(), completed: [] as number[], fail: true, email: false, office: false, available: true, membership: true, vendorId: 3, failBadge: false, reads: [] as string[] }));
+const state = vi.hoisted(() => ({ query: vi.fn(), notices: [] as any[], attempts: new Map<string, any>(), completed: [] as number[], fail: true, email: false, office: false, available: true, membership: true, vendorId: 3, partnerId: null as number | null, failBadge: false, reads: [] as string[] }));
 vi.mock("@workspace/db", async () => {
   const schema = await import("../../../../lib/db/src/schema");
   return { ...schema, pool: { query: state.query }, db: {
@@ -7,8 +7,8 @@ vi.mock("@workspace/db", async () => {
       state.reads.push("select");
       if (projection?.n && state.failBadge) throw new Error("count unavailable");
       return { from: (table: any) => ({ where: () => ({
-        limit: async () => table === schema.workHubTasksTable ? [{ id: "11111111-1111-4111-8111-111111111111", ownerOrgType: "vendor", ownerOrgId: 3 }] : state.membership ? [{ id: 8 }] : [],
-        then: (resolve: any) => Promise.resolve([1, 2].map(userId => ({ userId, systemEnabled: true, pushEnabled: true, systemEmailEnabled: true, emailDigestEnabled: true, dndStartHour: 0, dndEndHour: 23 }))).then(resolve),
+        limit: async () => table === schema.workHubTasksTable ? [{ id: "11111111-1111-4111-8111-111111111111", ownerOrgType: "vendor", ownerOrgId: 3 }] : table === schema.safetyEventsTable ? [{ id: 41, vendorId: null, partnerId: 22, reportedByUserId: 99 }] : state.membership ? [{ id: 8 }] : [],
+        then: (resolve: any) => Promise.resolve([1, 2].map(userId => ({ userId, systemEnabled: true, complianceEnabled: true, complianceEmailEnabled: true, pushEnabled: true, systemEmailEnabled: true, emailDigestEnabled: true, dndStartHour: 0, dndEndHour: 23 }))).then(resolve),
       }) }) };
     },
     insert: () => ({ values: (rows: any[]) => ({ onConflictDoNothing: () => ({ returning: async () => {
@@ -23,7 +23,7 @@ vi.mock("../lib/notification-events", () => ({ publishNotificationCreated: vi.fn
 import { notifyUsers } from "./notifications";
 import { retryGateAlertChannels } from "../services/gate-alert-repository";
 beforeEach(() => {
-  state.notices = []; state.attempts.clear(); state.completed = []; state.fail = true; state.email = false; state.office = false; state.available = true; state.membership = true; state.vendorId = 3; state.failBadge = false; state.reads = [];
+  state.notices = []; state.attempts.clear(); state.completed = []; state.fail = true; state.email = false; state.office = false; state.available = true; state.membership = true; state.vendorId = 3; state.partnerId = null; state.failBadge = false; state.reads = [];
   vi.stubGlobal("fetch", vi.fn(async () => { throw new Error("Unexpected provider call"); }));
   state.query.mockReset().mockImplementation(async (sql: string, values: any[]) => {
     if (sql.startsWith("UPDATE notifications SET urgent_delivery_lease")) {
@@ -35,7 +35,7 @@ beforeEach(() => {
       expect(state.notices).toHaveLength(2);
       if (values[0] === 1 && state.fail) throw new Error("contact lookup unavailable");
       if (!state.available) return { rows: [] };
-      return { rows: [{ userId: values[0], sessionVersion: 4, membershipId: state.membership ? 8 : null, vendorId: state.vendorId, vendorPeopleId: 9, vendorRole: state.office ? "office" : "gatekeeper", membershipRole: "field_employee", gateAlertsEnabled: true, pushEnabled: false, email: "test@example.invalid", alertsEmailEnabled: state.email, alertsSmsEnabled: false }] };
+      return { rows: [{ userId: values[0], sessionVersion: 4, orgType: state.partnerId ? "partner" : "vendor", membershipId: state.membership ? 8 : null, vendorId: state.partnerId ? null : state.vendorId, partnerId: state.partnerId, vendorPeopleId: 9, vendorRole: state.office ? "office" : "gatekeeper", membershipRole: state.office ? "admin" : "field_employee", gateAlertsEnabled: true, pushEnabled: false, email: "test@example.invalid", alertsEmailEnabled: state.email, alertsSmsEnabled: false }] };
     }
     if (sql.startsWith("SELECT id, expo_token")) return { rows: [{ id: values[0], token: `ExponentPushToken[user-${values[0]}]` }] };
     if (sql.startsWith("SELECT id, user_id")) return { rows: [] };
@@ -66,6 +66,21 @@ beforeEach(() => {
   });
 });
 afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); vi.useRealTimers(); });
+it("cancels partner safety retries after an active partner change without leaking null-vendor content", async () => {
+  state.office = true; state.fail = false; state.partnerId = 22;
+  vi.stubEnv("GATE_ALERT_EMAIL_ENABLED", "true"); vi.stubEnv("SENDGRID_API_KEY", "test");
+  vi.stubEnv("SENDGRID_FROM_EMAIL", "test@example.invalid"); vi.stubEnv("SENDGRID_DOMAIN_AUTHENTICATED", "true"); vi.stubEnv("SENDGRID_SANDBOX_MODE", "false");
+  const send = vi.mocked(fetch).mockResolvedValue(new Response("temporary", { status: 503 }));
+  await notifyUsers([1, 2], { type: "safety_stop_work", title: "Partner 22 private safety event", link: "/safety/41" });
+  expect(state.attempts.get("1:email").status).toBe("retryable");
+  expect(send).toHaveBeenCalled();
+  const sends = send.mock.calls.length;
+  state.partnerId = 23;
+  await retryGateAlertChannels();
+  expect(send).toHaveBeenCalledTimes(sends);
+  expect(state.attempts.get("1:email").status).toBe("cancelled");
+  expect(state.notices).toHaveLength(2);
+});
 it("runs real notify → lease → recipient → destination → session guard → independent channel audits, then restarts failed lookup", async () => {
   expect(await notifyUsers([1, 2], { type: "gate_closed", title: "private", link: "/gate?siteId=3" })).toBe(2);
   expect(state.completed).toEqual([2]);
