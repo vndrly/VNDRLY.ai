@@ -1,6 +1,5 @@
 import { Feather } from "@expo/vector-icons";
 import { router, Stack } from "expo-router";
-import InPageHeader from "@/components/InPageHeader";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -18,6 +17,7 @@ import ScreenSafeArea from "@/components/ScreenSafeArea";
 
 import AmberButton from "@/components/AmberButton";
 import ProfilePhotoImage from "@/components/ProfilePhotoImage";
+import PortalPageHeader from "@/components/PortalPageHeader";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
 import { captureAndUploadImage, pickAndUploadImage } from "@/lib/photos";
@@ -36,10 +36,9 @@ type FieldMe = {
 type FieldMeFull = {
   firstName: string;
   lastName: string;
+  email: string;
   jobTitle: string | null;
   phone: string | null;
-  pecExpirationDate: string | null;
-  pecCertification: boolean;
   profilePhotoPath: string | null;
   photoUrl?: string | null;
 };
@@ -55,22 +54,22 @@ export default function EditProfileScreen() {
   const [directPhotoUrl, setDirectPhotoUrl] = useState<string | null>(null);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
   const [jobTitle, setJobTitle] = useState("");
   const [phone, setPhone] = useState("");
-  const [pecDate, setPecDate] = useState(""); // YYYY-MM-DD
 
   const [currentPw, setCurrentPw] = useState("");
   const [newPw, setNewPw] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
 
   useEffect(() => {
-    apiFetch<FieldMe & { phone?: string | null; pecExpirationDate?: string | null }>("/api/field/me")
+    apiFetch<FieldMe & { phone?: string | null }>("/api/field/me")
       .then((me) => {
         setFirstName(me.firstName ?? "");
         setLastName(me.lastName ?? "");
+        setEmail(me.email ?? "");
         setJobTitle(me.jobTitle ?? "");
         setPhone((me.phone as string | null) ?? "");
-        setPecDate((me.pecExpirationDate as string | null) ?? "");
         setPhotoPath(me.profilePhotoPath);
         setDirectPhotoUrl(me.photoUrl ?? null);
       })
@@ -112,8 +111,9 @@ export default function EditProfileScreen() {
       Alert.alert(t("common.required"), t("editProfile.requiredFirstName"));
       return;
     }
-    if (pecDate && !/^\d{4}-\d{2}-\d{2}$/.test(pecDate.trim())) {
-      Alert.alert(t("editProfile.invalidDateTitle"), t("editProfile.invalidDateBody"));
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      Alert.alert(t("editProfile.invalidEmailTitle"), t("editProfile.invalidEmailBody"));
       return;
     }
     setSaving(true);
@@ -123,13 +123,13 @@ export default function EditProfileScreen() {
         body: JSON.stringify({
           firstName: firstName.trim(),
           lastName: lastName.trim(),
+          email: email.trim().toLowerCase(),
           jobTitle: jobTitle.trim() || null,
           phone: phone.trim() || null,
-          pecExpirationDate: pecDate.trim() || null,
         }),
       });
       Alert.alert(t("editProfile.savedTitle"), t("editProfile.savedBody"));
-      router.back();
+      router.replace("/profile");
     } catch (e: unknown) {
       Alert.alert(t("common.error"), e instanceof Error ? e.message : t("editProfile.couldNotSave"));
     } finally {
@@ -170,18 +170,14 @@ export default function EditProfileScreen() {
   const hasPhoto = !!(photoPath || directPhotoUrl);
 
   return (
-    <ScreenSafeArea
-      style={styles.flex}
-      edges={["bottom"]}
-      includeTopGap={false}
-    >
+    <ScreenSafeArea style={styles.flex}>
       <Stack.Screen options={{ headerShown: false }} />
-      <InPageHeader title={t("stack.editProfile")} />
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+          <PortalPageHeader title={t("stack.editProfile")} testIdPrefix="edit-profile" />
           <View style={styles.header}>
             <TouchableOpacity onPress={onChangePhoto} style={styles.avatarWrap} disabled={loading}>
               {hasPhoto ? (
@@ -230,6 +226,15 @@ export default function EditProfileScreen() {
               testID="input-last-name"
             />
             <Field
+              label={t("editProfile.email")}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              colors={colors}
+              testID="input-email"
+            />
+            <Field
               label={t("editProfile.jobTitle")}
               value={jobTitle}
               onChangeText={setJobTitle}
@@ -247,21 +252,11 @@ export default function EditProfileScreen() {
               colors={colors}
               testID="input-phone"
             />
-            <Field
-              label={t("editProfile.pecLabel")}
-              value={pecDate}
-              onChangeText={setPecDate}
-              placeholder={t("editProfile.pecPlaceholder")}
-              autoCapitalize="none"
-              colors={colors}
-              testID="input-pec-date"
-            />
-
             <AmberButton
               onPress={onSave}
               loading={saving}
               disabled={loading}
-              height={44}
+              height={40}
               style={{ alignSelf: "stretch", marginTop: 8 }}
               testID="button-save-profile"
             >
@@ -300,7 +295,7 @@ export default function EditProfileScreen() {
             <AmberButton
               onPress={onChangePassword}
               loading={pwSaving}
-              height={44}
+              height={40}
               style={{ alignSelf: "stretch", marginTop: 8 }}
               testID="button-change-password"
             >

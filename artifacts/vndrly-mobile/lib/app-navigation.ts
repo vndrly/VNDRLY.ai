@@ -112,7 +112,16 @@ export function isGatekeeperRouteAllowed(
   segments: readonly string[],
 ): boolean {
   const [root, child] = segments;
-  return (root === "(tabs)" && isGatekeeperTabKey(child)) || root === "work-hub";
+  const profileActionRoutes = new Set([
+    "edit-profile",
+    "location-consent",
+    "compliance",
+  ]);
+  return (
+    (root === "(tabs)" && isGatekeeperTabKey(child)) ||
+    root === "work-hub" ||
+    profileActionRoutes.has(root)
+  );
 }
 
 function item(

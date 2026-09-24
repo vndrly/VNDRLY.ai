@@ -374,6 +374,8 @@ describe("GET /api/field/me — vendor admin mode", () => {
     selectQueue = [
       // requireFieldOrVendor: vendor lookup
       () => [vendorRow({ name: "Winchester" })],
+      // No employee-backed profile for this office-side vendor account.
+      () => [],
       // route SELECT: vendor logo lookup
       () => [{ logoUrl: "https://cdn.example/logo.png", name: "Winchester" }],
     ];
@@ -386,6 +388,30 @@ describe("GET /api/field/me — vendor admin mode", () => {
     expect(res.body.vendorName).toBe("Winchester");
     expect(res.body.employeeId).toBeNull();
     expect(res.body.vendorLogoUrl).toBe("https://cdn.example/logo.png");
+  });
+
+  it("returns a linked employee id for a vendor-role gate account", async () => {
+    selectQueue = [
+      () => [vendorRow({ name: "Winchester" })],
+      () => [{
+        ...fieldEmployeeRow(),
+        jobTitle: "Gatekeeper",
+        phone: null,
+        pecExpirationDate: null,
+        pecCertification: false,
+        profilePhotoPath: null,
+        photoUrl: null,
+        vendorLogoUrl: null,
+      }],
+    ];
+    const res = await request(app)
+      .get("/api/field/me")
+      .set("Cookie", vendorCookie);
+    expectStatus(res, 200);
+    expect(res.body.viewerRole).toBe("vendor");
+    expect(res.body.employeeId).toBe(50);
+    expect(res.body.firstName).toBe("Joe");
+    expect(res.body.jobTitle).toBe("Gatekeeper");
   });
 
   it("returns viewerRole=field_employee with full payload for a field session", async () => {

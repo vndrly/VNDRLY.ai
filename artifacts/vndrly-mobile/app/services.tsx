@@ -68,7 +68,7 @@ export default function ServicesScreen() {
   return (
     <View style={{ flex: 1 }}>
       <Stack.Screen options={{ headerShown: false }} />
-      <InPageHeader title={t("services.title")} onBack={() => router.back()} />
+      <InPageHeader title={t("services.title")} onBack={() => router.replace("/profile")} />
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={[styles.help, { color: colors.mutedForeground }]}>
           {t("services.readOnlyHelp")}

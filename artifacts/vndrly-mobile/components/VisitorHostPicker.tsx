@@ -25,6 +25,7 @@ export interface VisitorHostPickerProps {
   onSubmit: () => void;
   onChangeSite: () => void;
   extraSubmitDisabled?: boolean;
+  showSubmit?: boolean;
   hideHost?: boolean;
   lockSite?: boolean;
   notes?: string;
@@ -64,6 +65,7 @@ export default function VisitorHostPicker({
   onSubmit,
   onChangeSite,
   extraSubmitDisabled = false,
+  showSubmit = true,
   hideHost = false,
   lockSite = false,
   notes,
@@ -224,17 +226,21 @@ export default function VisitorHostPicker({
         </View>
       )}
 
-      <AmberButton
-        testID="check-in-btn"
-        onPress={onSubmit}
-        loading={busy}
-        disabled={submitDisabled}
-        height={48}
-        style={{ marginTop: 16 }}
-      >
-        {labels.checkIn}
-      </AmberButton>
-      <Text style={[styles.note, { color: colors.mutedForeground }]}>{labels.geofenceNote}</Text>
+      {showSubmit ? (
+        <>
+          <AmberButton
+            testID="check-in-btn"
+            onPress={onSubmit}
+            loading={busy}
+            disabled={submitDisabled}
+            height={48}
+            style={{ marginTop: 16 }}
+          >
+            {labels.checkIn}
+          </AmberButton>
+          <Text style={[styles.note, { color: colors.mutedForeground }]}>{labels.geofenceNote}</Text>
+        </>
+      ) : null}
     </View>
   );
 }

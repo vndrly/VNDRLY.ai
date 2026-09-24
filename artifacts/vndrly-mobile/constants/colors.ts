@@ -23,7 +23,7 @@ const colors = {
     background: "#3a3d42",
     pageBackground: "transparent",
     foreground: "#ffffff",
-    card: "#1c1c1e",
+    card: "#242426",
     cardForeground: "#ececec",
     primary: "#ececec",
     primaryForeground: "#1a1d23",

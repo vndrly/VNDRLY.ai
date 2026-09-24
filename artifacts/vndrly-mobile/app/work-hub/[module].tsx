@@ -23,6 +23,7 @@ import { useMeetingCompanion } from "@/components/MeetingCompanionProvider";
 import TogglePillButton from "@/components/TogglePillButton";
 import ScreenSafeArea from "@/components/ScreenSafeArea";
 import WorkHubPageTitle from "@/components/WorkHubPageTitle";
+import WorkHubShiftCalendar from "@/components/WorkHubShiftCalendar";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/hooks/use-auth";
 import { apiFetch } from "@/lib/api";
@@ -378,6 +379,7 @@ export default function WorkHubModuleScreen() {
         contentContainerStyle={{ padding: 20, gap: 14 }}
       >
         <WorkHubPageTitle title={title} />
+        {module === "calendar" ? <WorkHubShiftCalendar items={rows} /> : null}
         {module === "search" && (
           <View style={{ flexDirection: "row", gap: 8 }}>
             <TextInput
@@ -698,7 +700,7 @@ export default function WorkHubModuleScreen() {
               )}
             </View>
           ))}
-        {!loading && module !== "settings-connections" && !rows.length && (
+        {!loading && module !== "settings-connections" && module !== "calendar" && !rows.length && (
           <Text
             style={{
               color: colors.mutedForeground,

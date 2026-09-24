@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   AppState,
+  Pressable,
   ScrollView,
   Text,
   TextInput,
@@ -25,6 +26,7 @@ import TogglePillButton from "@/components/TogglePillButton";
 import GateDutyCard from "@/components/GateDutyCard";
 import AskVVoiceIndicator from "@/components/AskVVoiceIndicator";
 import BrandTitleRow from "@/components/BrandTitleRow";
+import SphereBackButton from "@/components/SphereBackButton";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/hooks/use-auth";
 import { apiFetch, apiFetchRaw } from "@/lib/api";
@@ -33,6 +35,10 @@ import {
   changeOverRequest as request,
   acceptChangeOverSession,
 } from "@/lib/change-over-api";
+import {
+  isVisibleGateReportRecipient,
+  type GateReportRecipient,
+} from "@/lib/gate-report-recipients";
 
 function Snapshot({ snapshot }: { snapshot: ChangeOverSnapshot }) {
   const colors = useColors();
@@ -131,6 +137,7 @@ export default function GateChangeOver({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+  const [recipientsOpen, setRecipientsOpen] = useState(false);
   const [days, setDays] = useState(7);
   const [before, setBefore] = useState("");
   const [newGate, setNewGate] = useState("");
@@ -160,11 +167,17 @@ export default function GateChangeOver({
   const reportFilters = siteId ? { siteId, ...(stationId ? { stationId } : {}), range: reportRange, recordType: "all", ...(search.trim() ? { search: search.trim() } : {}) } : null;
   const reportRecipients = useQuery({
     queryKey: ["shift-notes-report-recipients", reportFilters],
-    queryFn: () => apiFetch<{ recipients: { userId: number; name: string }[] }>(`/api/gate-report/recipients?${new URLSearchParams({ reportKind: "shift_notes", siteId: String(siteId), stationId, range: reportRange, recordType: "all", search })}`),
+    queryFn: () => apiFetch<{ recipients: GateReportRecipient[] }>(`/api/gate-report/recipients?${new URLSearchParams({ reportKind: "shift_notes", siteId: String(siteId), stationId, range: reportRange, recordType: "all", search })}`),
     enabled: history && Boolean(siteId), retry: false,
   });
   useEffect(() => {
-    if (user?.id && reportRecipients.data?.recipients.some((entry) => entry.userId === user.id)) setReportRecipientIds((current) => current.length ? current : [user.id]);
+    const visibleRecipients = reportRecipients.data?.recipients.filter(isVisibleGateReportRecipient) ?? [];
+    const visibleIds = new Set(visibleRecipients.map((entry) => entry.userId));
+    setReportRecipientIds((current) => {
+      const retained = current.filter((id) => visibleIds.has(id));
+      if (retained.length) return retained;
+      return user?.id && visibleIds.has(user.id) ? [user.id] : [];
+    });
   }, [reportRecipients.data, user?.id]);
   const state = useQuery({
     queryKey: ["change-over-state", user?.id, stationId],
@@ -306,16 +319,24 @@ export default function GateChangeOver({
   return (
     <ScreenSafeArea>
       <ScrollView
-        contentContainerStyle={{ padding: 16, gap: 16 }}
+        contentContainerStyle={{ padding: 20, gap: 16 }}
         keyboardShouldPersistTaps="handled"
       >
         <BrandTitleRow subtitle="iOS Portal" logoTestId="change-over-company-logo" platformLogoTestId="change-over-vndrly-logo" />
         <View style={{ alignItems: "center", flexDirection: "row", gap: 12, justifyContent: "space-between" }}>
-          <Text
-            style={{ color: colors.foreground, flexShrink: 0, fontSize: 26, fontWeight: "700" }}
-          >
-            {t(history ? "changeOver.shiftNotes" : "changeOver.title")}
-          </Text>
+          <View style={{ alignItems: "center", flex: 1, flexDirection: "row", gap: 10, minWidth: 0 }}>
+            <SphereBackButton
+              onPress={() => router.canGoBack() ? router.back() : router.replace("/(tabs)" as never)}
+              size={40}
+              testID={history ? "shift-notes-page-back" : "dashboard-page-back"}
+            />
+            <Text
+              accessibilityRole="header"
+              style={{ color: colors.foreground, flexShrink: 1, fontSize: 26, fontWeight: "700" }}
+            >
+              {t(history ? "changeOver.shiftNotes" : "changeOver.title")}
+            </Text>
+          </View>
           <AskVVoiceIndicator inline />
         </View>
         {label(t(history ? "changeOver.historyIntro" : "changeOver.intro"))}
@@ -324,7 +345,64 @@ export default function GateChangeOver({
             {t("gateDuty.returnToAdmin")}
           </TogglePillButton>
         )}
-        <View style={cardStyle}>
+        {!history ? (
+          <View
+            testID="dashboard-blank-card"
+            style={[cardStyle, { backgroundColor: "#28282a", minHeight: 120 }]}
+          >
+            {sectionHeading(t("changeOver.site"))}
+            {sites.data?.sites.filter((site) => site.id === siteId).map((s) => (
+              <TogglePillButton
+                key={`blank-site-${s.id}`}
+                solid
+                accessibilityState={{ expanded: siteMenuOpen }}
+                onPress={() => {
+                  if ((sites.data?.sites.length ?? 0) > 1) setSiteMenuOpen((open) => !open);
+                }}
+              >
+                {s.name}
+              </TogglePillButton>
+            ))}
+            {siteMenuOpen && sites.data?.sites.filter((site) => site.id !== siteId).map((s) => (
+              <TogglePillButton
+                key={`blank-site-option-${s.id}`}
+                onPress={() => {
+                  setSite(s.id);
+                  setGate("");
+                  setSiteMenuOpen(false);
+                  setGateMenuOpen(false);
+                }}
+              >
+                {s.name}
+              </TogglePillButton>
+            ))}
+            {sectionHeading(t("changeOver.gate"))}
+            {stations.data?.stations.filter((station) => station.id === stationId).map((s) => (
+              <TogglePillButton
+                key={`blank-gate-${s.id}`}
+                solid
+                accessibilityState={{ expanded: gateMenuOpen }}
+                onPress={() => {
+                  if ((stations.data?.stations.length ?? 0) > 1) setGateMenuOpen((open) => !open);
+                }}
+              >
+                {s.name}
+              </TogglePillButton>
+            ))}
+            {gateMenuOpen && stations.data?.stations.filter((station) => station.id !== stationId).map((s) => (
+              <TogglePillButton
+                key={`blank-gate-option-${s.id}`}
+                onPress={() => {
+                  setGate(s.id);
+                  setGateMenuOpen(false);
+                }}
+              >
+                {s.name}
+              </TogglePillButton>
+            ))}
+          </View>
+        ) : null}
+        {history ? <View testID="shift-notes-site-gate-card" style={[cardStyle, { backgroundColor: "#28282a" }]}>
           {sectionHeading(t("changeOver.site"))}
           {sites.data?.sites.filter((site) => site.id === siteId).map((s) => (
             <TogglePillButton
@@ -369,7 +447,7 @@ export default function GateChangeOver({
               {s.name}
             </TogglePillButton>
           ))}
-        </View>
+        </View> : null}
         {sites.isLoading && label(t("changeOver.loading"))}
         {sites.data?.sites.length === 0 && label(t("changeOver.noSites"))}
         {Boolean(loadError) && (
@@ -401,76 +479,101 @@ export default function GateChangeOver({
         ) : null}
         {history ? (
           <>
-            <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
-              {(["pdf", "excel", "word"] as const).map((format) => <TogglePillButton key={format} onPress={() => void act(() => exportShiftNotes(format))}>{format.toUpperCase()}</TogglePillButton>)}
-              <TogglePillButton onPress={() => void act(emailShiftNotes)}>{t("gateHistory.email")}</TogglePillButton>
+            <View testID="shift-notes-recipients-card" style={[cardStyle, { backgroundColor: "#28282a" }]}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t("gateHistory.toggleRecipients")}
+                accessibilityState={{ expanded: recipientsOpen }}
+                onPress={() => setRecipientsOpen((open) => !open)}
+                style={{ alignItems: "center", flexDirection: "row", gap: 8, justifyContent: "space-between" }}
+                testID="shift-notes-recipients-toggle"
+              >
+                <View style={{ flex: 1, gap: 2 }}>
+                  {sectionHeading(t("gateHistory.recipients"))}
+                  <Text style={{ color: colors.mutedForeground, fontSize: 13 }}>
+                    {t("gateHistory.selected", { count: reportRecipientIds.length })}
+                  </Text>
+                </View>
+                <Text aria-hidden style={{ color: colors.foreground, fontSize: 22, lineHeight: 22 }}>{recipientsOpen ? "⌃" : "⌄"}</Text>
+              </Pressable>
+              {recipientsOpen ? (
+                <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
+                  {reportRecipients.data?.recipients.filter(isVisibleGateReportRecipient).map((recipient) => <TogglePillButton key={recipient.userId} solid={reportRecipientIds.includes(recipient.userId)} onPress={() => setReportRecipientIds((current) => current.includes(recipient.userId) ? current.filter((id) => id !== recipient.userId) : [...current, recipient.userId])}>{recipient.name}</TogglePillButton>)}
+                </View>
+              ) : null}
             </View>
-            {label(t("gateHistory.recipients"))}
-            <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
-              {reportRecipients.data?.recipients.map((recipient) => <TogglePillButton key={recipient.userId} solid={reportRecipientIds.includes(recipient.userId)} onPress={() => setReportRecipientIds((current) => current.includes(recipient.userId) ? current.filter((id) => id !== recipient.userId) : [...current, recipient.userId])}>{recipient.name}</TogglePillButton>)}
+            <View testID="shift-notes-search-card" style={[cardStyle, { backgroundColor: "#28282a" }]}>
+              <TextInput
+                accessibilityLabel={t("changeOver.search")}
+                placeholder={t("changeOver.search")}
+                placeholderTextColor={colors.mutedForeground}
+                style={[fieldStyle, { backgroundColor: colors.card }]}
+                value={search}
+                onChangeText={(value) => {
+                  setSearch(value);
+                  setBefore("");
+                }}
+              />
+              <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
+                {[7, 30, 90, 365].map((n) => (
+                  <TogglePillButton
+                    key={n}
+                    solid={days === n}
+                    onPress={() => {
+                      setDays(n);
+                      setBefore("");
+                    }}
+                  >
+                    {`${n} ${t("changeOver.days")}`}
+                  </TogglePillButton>
+                ))}
+              </View>
+              {log.data?.rows.length === 0 && label(t("changeOver.noNotes"))}
+              {log.data?.rows.map((row) => (
+                <View key={row.id} style={cardStyle}>
+                  <Text style={{ color: colors.foreground, fontWeight: "700" }}>
+                    {new Date(row.acknowledged_at).toLocaleString()} ·{" "}
+                    {row.outgoing_name} → {row.incoming_name}
+                  </Text>
+                  {label(t("changeOver.acknowledged"))}
+                  {row.summary.facts.map((f) => (
+                    <Text key={f.id} style={{ color: colors.foreground }}>
+                      {f.text}
+                    </Text>
+                  ))}
+                  {label(row.notes)}
+                  {row.snapshot.openItems.map((i) => (
+                    <Text key={i.id} style={{ color: colors.foreground }}>
+                      {t("changeOver.carryForward")}: {i.text}
+                    </Text>
+                  ))}
+                  <Snapshot snapshot={row.snapshot} />
+                </View>
+              ))}
+              {log.data?.nextBefore &&
+                button(t("changeOver.older"), async () =>
+                  setBefore(log.data!.nextBefore!),
+                )}
+              {!!log.data?.actions.length && (
+                <View style={cardStyle}>
+                  {label(t("changeOver.audit"))}
+                  {log.data.actions.map((a) => (
+                    <Text key={a.id} style={{ color: colors.foreground }}>
+                      {new Date(a.created_at).toLocaleString()} · {a.actor_name} ·{" "}
+                      {a.kind}: {a.text}
+                    </Text>
+                  ))}
+                </View>
+              )}
             </View>
-            <TextInput
-              accessibilityLabel={t("changeOver.search")}
-              placeholder={t("changeOver.search")}
-              placeholderTextColor={colors.mutedForeground}
-              style={fieldStyle}
-              value={search}
-              onChangeText={(value) => {
-                setSearch(value);
-                setBefore("");
-              }}
-            />
-            <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
-              {[7, 30, 90, 365].map((n) => (
-                <TogglePillButton
-                  key={n}
-                  solid={days === n}
-                  onPress={() => {
-                    setDays(n);
-                    setBefore("");
-                  }}
-                >
-                  {n} {t("changeOver.days")}
+            <View testID="shift-notes-export-row" style={{ flexDirection: "row", gap: 8 }}>
+              {(["pdf", "excel", "word"] as const).map((format) => (
+                <TogglePillButton key={format} color={format === "pdf" ? "red" : format === "excel" ? "green" : "blue"} solid style={{ flex: 1 }} onPress={() => void act(() => exportShiftNotes(format))}>
+                  {format === "excel" ? "CSV" : format.toUpperCase()}
                 </TogglePillButton>
               ))}
             </View>
-            {log.data?.rows.length === 0 && label(t("changeOver.noNotes"))}
-            {log.data?.rows.map((row) => (
-              <View key={row.id} style={cardStyle}>
-                <Text style={{ color: colors.foreground, fontWeight: "700" }}>
-                  {new Date(row.acknowledged_at).toLocaleString()} ·{" "}
-                  {row.outgoing_name} → {row.incoming_name}
-                </Text>
-                {label(t("changeOver.acknowledged"))}
-                {row.summary.facts.map((f) => (
-                  <Text key={f.id} style={{ color: colors.foreground }}>
-                    {f.text}
-                  </Text>
-                ))}
-                {label(row.notes)}
-                {row.snapshot.openItems.map((i) => (
-                  <Text key={i.id} style={{ color: colors.foreground }}>
-                    {t("changeOver.carryForward")}: {i.text}
-                  </Text>
-                ))}
-                <Snapshot snapshot={row.snapshot} />
-              </View>
-            ))}
-            {log.data?.nextBefore &&
-              button(t("changeOver.older"), async () =>
-                setBefore(log.data!.nextBefore!),
-              )}
-            {!!log.data?.actions.length && (
-              <View style={cardStyle}>
-                {label(t("changeOver.audit"))}
-                {log.data.actions.map((a) => (
-                  <Text key={a.id} style={{ color: colors.foreground }}>
-                    {new Date(a.created_at).toLocaleString()} · {a.actor_name} ·{" "}
-                    {a.kind}: {a.text}
-                  </Text>
-                ))}
-              </View>
-            )}
+            <TogglePillButton testID="shift-notes-email" color="brand" solid onPress={() => void act(emailShiftNotes)}>{t("gateHistory.email")}</TogglePillButton>
           </>
         ) : (
           current && (

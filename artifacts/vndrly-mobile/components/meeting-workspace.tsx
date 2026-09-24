@@ -25,8 +25,6 @@ import { useColors } from "@/hooks/useColors";
 import { useMeetingWorkspace } from "@/lib/use-meeting-workspace";
 import { useMeetingCompanion } from "@/components/MeetingCompanionProvider";
 
-const SURFACE = "#3a3d42";
-const PANEL = "#50545a";
 const WARNING = "#f59e0b";
 
 function currentSpeaker(snapshot: NonNullable<ReturnType<typeof useMeetingWorkspace>["snapshot"]>) {
@@ -110,7 +108,7 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
   useEffect(() => { if (rosterOpen) focusForAccessibility(firstRosterPersonRef); }, [rosterOpen]);
 
   if (!snapshot) {
-    return <View accessibilityLabel={t("meetingWorkspace.workspaceLabel", { defaultValue: "Meeting workspace" })} style={{ flex: 1, backgroundColor: SURFACE, padding: 20 }}>
+    return <View accessibilityLabel={t("meetingWorkspace.workspaceLabel", { defaultValue: "Meeting workspace" })} style={{ flex: 1, backgroundColor: colors.background, padding: 20 }}>
       <Text
         selectable
         accessibilityRole={workspace.error ? "alert" : undefined}
@@ -157,7 +155,7 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
     companion?.activate({ occurrenceId, title: snapshot.meeting.title, hostMuted: Boolean(selfParticipant?.hostMutedAt), hostMuteGeneration: selfParticipant?.hostMuteGeneration ?? 0 });
   }, [companion?.active?.occurrenceId, companion?.activate, companion?.clear, occurrenceId, selfParticipant?.hostMuteGeneration, selfParticipant?.hostMutedAt, snapshot?.meeting.title, snapshot?.occurrence.status, workspace.meetingEndedAcknowledged]);
 
-  return <KeyboardAvoidingView behavior={process.env.EXPO_OS === "ios" ? "padding" : undefined} style={{ flex: 1, backgroundColor: SURFACE }}>
+  return <KeyboardAvoidingView behavior={process.env.EXPO_OS === "ios" ? "padding" : undefined} style={{ flex: 1, backgroundColor: colors.background }}>
     <ScrollView
       contentInsetAdjustmentBehavior="automatic"
       keyboardShouldPersistTaps="handled"
@@ -209,11 +207,11 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
         </View>
       </View>
 
-      {viewOnly && !ended && <View accessibilityLiveRegion="polite" style={{ backgroundColor: PANEL, borderRadius: 14, borderCurve: "continuous", padding: 14, gap: 10 }}>
+      {viewOnly && !ended && <View accessibilityLiveRegion="polite" style={{ backgroundColor: colors.card, borderRadius: 14, borderCurve: "continuous", padding: 14, gap: 10 }}>
         <Text selectable style={{ color: "#ffffff" }}>{t("meetingWorkspace.participationAuthorization", { defaultValue: "You are viewing this meeting. Accept the work participation authorization to speak, post, and share files. Transcription begins automatically under your company policy." })}</Text>
         <TogglePillButton color="brand" disabled={workspace.managementPending} onPress={() => void workspace.acceptParticipationAuthorization()}>{t("meetingWorkspace.acceptAndParticipate", { defaultValue: "Accept and participate" })}</TogglePillButton>
       </View>}
-      {rosterOpen && <View accessibilityLabel={t("meetingWorkspace.attendees", { defaultValue: "Attendees" })} style={{ backgroundColor: PANEL, borderRadius: 14, borderCurve: "continuous", padding: 12, gap: 8 }}>
+      {rosterOpen && <View accessibilityLabel={t("meetingWorkspace.attendees", { defaultValue: "Attendees" })} style={{ backgroundColor: colors.card, borderRadius: 14, borderCurve: "continuous", padding: 12, gap: 8 }}>
         <Text selectable style={{ color: "#ffffff", fontWeight: "800" }}>
           {t("meetingWorkspace.choosePrivate", { defaultValue: "Choose someone to message privately" })}
         </Text>
@@ -267,7 +265,7 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
           {t("meetingWorkspace.refresh", { defaultValue: "Refresh" })}
         </TogglePillButton>}
       </View>}
-      {latestAnswer && <View accessibilityLabel={t("meetingWorkspace.latestAnswer", { defaultValue: "V's latest answer" })} style={{ backgroundColor: PANEL, borderWidth: 2, borderColor: brand.primary, borderRadius: 14, borderCurve: "continuous", padding: 14, gap: 6 }}>
+      {latestAnswer && <View accessibilityLabel={t("meetingWorkspace.latestAnswer", { defaultValue: "V's latest answer" })} style={{ backgroundColor: colors.card, borderWidth: 2, borderColor: brand.primary, borderRadius: 14, borderCurve: "continuous", padding: 14, gap: 6 }}>
         <Text selectable style={{ color: "#ffffff", fontWeight: "800" }}>V</Text>
         <Text selectable style={{ color: "#ffffff" }}>{latestAnswer.text}</Text>
         <Text selectable style={{ color: "#d8dbe0", fontSize: 12 }}>{t("meetingWorkspace.savedTranscript", { defaultValue: "Saved in the transcript" })}</Text>
@@ -293,7 +291,7 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
         </Text>)}
       </View>
 
-      {!ended && <View style={{ backgroundColor: PANEL, borderRadius: 14, borderCurve: "continuous", padding: 12, gap: 10 }}>
+      {!ended && <View style={{ backgroundColor: colors.card, borderRadius: 14, borderCurve: "continuous", padding: 12, gap: 10 }}>
         <View testID="meeting-composer-actions" style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
           <Text selectable style={{ color: "#ffffff", fontWeight: "800" }}>
             {workspace.recipientUserId === null ? t("meetingWorkspace.messageMeeting", { defaultValue: "Message the meeting" }) : t("meetingWorkspace.privateTo", { defaultValue: "Private message to {{name}}", name: selectedPerson?.displayName ?? t("meetingWorkspace.attendee", { defaultValue: "An attendee" }) })}
@@ -355,7 +353,7 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
           scrollEnabled
           placeholder={workspace.recipientUserId === null ? t("meetingWorkspace.messagePlaceholder", { defaultValue: "Message the meeting…" }) : t("meetingWorkspace.privatePlaceholder", { defaultValue: "Private message to {{name}}…", name: selectedPerson?.displayName ?? t("meetingWorkspace.attendee", { defaultValue: "An attendee" }) })}
           placeholderTextColor="#c7cbd1"
-          style={{ minHeight: 88, maxHeight: 176, color: "#ffffff", backgroundColor: SURFACE, borderWidth: 1, borderColor: brand.primary, borderRadius: 12, padding: 12, textAlignVertical: "top" }}
+          style={{ minHeight: 88, maxHeight: 176, color: "#ffffff", backgroundColor: colors.background, borderWidth: 1, borderColor: brand.primary, borderRadius: 12, padding: 12, textAlignVertical: "top" }}
         />
         <TogglePillButton
           solid
@@ -378,7 +376,7 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
         >
           <Text style={{ color: "#ffffff", fontSize: 17, fontWeight: "800" }}>{t("meetingWorkspace.meetingTools", { defaultValue: "Meeting Tools" })}</Text>
         </Pressable>
-        {toolsOpen && <View style={{ backgroundColor: PANEL, borderRadius: 14, borderCurve: "continuous", padding: 12, gap: 12 }}>
+        {toolsOpen && <View style={{ backgroundColor: colors.card, borderRadius: 14, borderCurve: "continuous", padding: 12, gap: 12 }}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
             {toolNames.map((name) => <TogglePillButton
               key={name}
@@ -415,7 +413,7 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
           {tool === "decisions" && <Text selectable style={{ color: "#ffffff" }}>{recapList(snapshot.recap?.decisions) ?? t("meetingWorkspace.emptyDecisions", { defaultValue: "No decisions have been published yet." })}</Text>}
           {tool === "agenda" && <Text selectable style={{ color: "#ffffff" }}>{snapshot.meeting.agenda || t("meetingWorkspace.emptyAgenda", { defaultValue: "No agenda was added." })}</Text>}
           {tool === "search" && <View style={{ gap: 10 }}>
-            <TextInput accessibilityLabel={t("meetingWorkspace.search", { defaultValue: "Search meeting" })} value={search} onChangeText={setSearch} placeholder={t("meetingWorkspace.searchPlaceholder", { defaultValue: "Search text, names, or filenames" })} placeholderTextColor="#c7cbd1" style={{ color: "#ffffff", backgroundColor: SURFACE, borderRadius: 10, padding: 12 }} />
+            <TextInput accessibilityLabel={t("meetingWorkspace.search", { defaultValue: "Search meeting" })} value={search} onChangeText={setSearch} placeholder={t("meetingWorkspace.searchPlaceholder", { defaultValue: "Search text, names, or filenames" })} placeholderTextColor="#c7cbd1" style={{ color: "#ffffff", backgroundColor: colors.background, borderRadius: 10, padding: 12 }} />
             <Pressable accessibilityRole="button" accessibilityLabel={t("meetingWorkspace.everyone", { defaultValue: "Everyone" })} onPress={() => setSpeakerUserId(null)} style={{ minHeight: 44, justifyContent: "center" }}><Text style={{ color: speakerUserId === null ? brand.primary : "#ffffff" }}>{t("meetingWorkspace.everyone", { defaultValue: "Everyone" })}</Text></Pressable>
             {snapshot.participants.map((person) => <Pressable key={person.userId} accessibilityRole="button" accessibilityLabel={t("meetingWorkspace.filterPerson", { defaultValue: "Filter {{name}}", name: person.displayName })} onPress={() => setSpeakerUserId(person.userId)} style={{ minHeight: 44, justifyContent: "center" }}><Text style={{ color: speakerUserId === person.userId ? brand.primary : "#ffffff" }}>{person.displayName}</Text></Pressable>)}
           </View>}
@@ -433,7 +431,7 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
         </View>}
       </View>
 
-      {workspace.managementConfirmation && <View style={{ backgroundColor: PANEL, borderRadius: 14, borderCurve: "continuous", padding: 14, gap: 12 }}>
+      {workspace.managementConfirmation && <View style={{ backgroundColor: colors.card, borderRadius: 14, borderCurve: "continuous", padding: 14, gap: 12 }}>
         <Text selectable style={{ color: "#ffffff", fontWeight: "800" }}>
           {workspace.managementConfirmation.kind === "remove"
             ? t("meetingWorkspace.removeTitle", { defaultValue: "Remove {{name}}?", name: workspace.managementConfirmation.displayName })

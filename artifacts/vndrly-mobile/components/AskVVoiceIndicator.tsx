@@ -19,8 +19,8 @@ export default function AskVVoiceIndicator({ inline = false }: { inline?: boolea
   const voiceLabel = voiceStatus === "active" ? "AskV is Active" : voiceStatus === "muted" ? "AskV is Muted" : "AskV is Unavailable";
   if (
     !voice.preferencesReady ||
-    pathname.endsWith("/askv") ||
-    (!inline && (pathname.endsWith("/change-over") || pathname.endsWith("/shift-notes") || pathname === "/work-hub" || pathname.startsWith("/work-hub/")))
+    (!inline && pathname.endsWith("/askv")) ||
+    (!inline && (pathname.endsWith("/change-over") || pathname.endsWith("/shift-notes") || pathname.endsWith("/gate") || pathname.endsWith("/gate-history") || pathname.endsWith("/profile") || pathname.endsWith("/edit-profile") || pathname.endsWith("/compliance") || pathname === "/work-hub" || pathname.startsWith("/work-hub/")))
   ) return null;
   return (
     <View

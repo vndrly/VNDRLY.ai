@@ -12,15 +12,16 @@ import {
   View,
 } from "react-native";
 
-import ActiveOrgIndicator from "@/components/ActiveOrgIndicator";
 import AmberButton from "@/components/AmberButton";
-import InPageHeader from "@/components/InPageHeader";
+import AskVVoiceIndicator from "@/components/AskVVoiceIndicator";
+import BrandTitleRow from "@/components/BrandTitleRow";
 import LayeredPillButton from "@/components/LayeredPillButton";
 import SafetyTrainingBanner from "@/components/SafetyTrainingBanner";
+import ScreenSafeArea from "@/components/ScreenSafeArea";
+import SphereBackButton from "@/components/SphereBackButton";
 import ProfilePhotoImage from "@/components/ProfilePhotoImage";
 import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/useColors";
-import { isForemanEmployeeUser } from "@/lib/mobile-viewer";
 import { apiFetch, logout, updatePreferredLanguage } from "@/lib/api";
 import type { MembershipSummary } from "@/lib/auth";
 import { setLanguage, SUPPORTED_LANGUAGES, type SupportedLanguage } from "@/lib/i18n";
@@ -57,13 +58,16 @@ export default function ProfileScreen() {
     activeMembershipId,
     switchContext,
   } = useAuth();
-  const isForemanEmployee = isForemanEmployeeUser(user);
-  const canManageEmployees = user?.role === "vendor" || isForemanEmployee;
+  const canManageCompany =
+    user?.role === "admin" ||
+    (user?.role === "vendor" && ["admin", "office"].includes(user.vendorRole ?? ""));
   const [photoPath, setPhotoPath] = useState<string | null>(null);
   const [directPhotoUrl, setDirectPhotoUrl] = useState<string | null>(null);
   const [locConsent, setLocConsent] = useState<boolean | null>(null);
   const [locBusy, setLocBusy] = useState(false);
   const [switchingId, setSwitchingId] = useState<number | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [complianceEmployeeId, setComplianceEmployeeId] = useState<number | null>(null);
   // Task #838: brief confirmation toast after the user changes their
   // preferred language. `kind` distinguishes the green "Saved" state
   // from the red "Couldn't save" fallback so a network/server failure
@@ -91,8 +95,9 @@ export default function ProfileScreen() {
         .then((me) => {
           setPhotoPath(me.profilePhotoPath);
           setDirectPhotoUrl(me.photoUrl);
+          setComplianceEmployeeId(me.employeeId);
         })
-        .catch(() => undefined);
+        .catch(() => setComplianceEmployeeId(null));
     }, []),
   );
 
@@ -216,13 +221,28 @@ export default function ProfileScreen() {
   const hasPhoto = !!(photoPath || directPhotoUrl);
 
   return (
-    <View style={styles.flex}>
-      <InPageHeader
-        title={t("tabs.profile")}
-        onBack={() => router.push("/(tabs)" as never)}
-        right={<ActiveOrgIndicator />}
-      />
+    <ScreenSafeArea style={styles.flex}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
+      <View style={styles.standardHeader}>
+        <BrandTitleRow subtitle="iOS Portal" logoTestId="profile-company-logo" platformLogoTestId="profile-vndrly-logo" />
+        <View style={styles.pageTitleRow}>
+          <View style={styles.pageTitleStart}>
+            <SphereBackButton
+              onPress={() => {
+                if (router.canGoBack()) {
+                  router.back();
+                }
+              }}
+              size={40}
+              testID="profile-page-back"
+            />
+            <Text accessibilityRole="header" style={[styles.pageTitle, { color: colors.foreground }]}>
+              {t("tabs.profile")}
+            </Text>
+          </View>
+          <AskVVoiceIndicator inline />
+        </View>
+      </View>
       <SafetyTrainingBanner />
       <View style={styles.header}>
         <TouchableOpacity onPress={onChangePhoto} style={styles.avatarWrap}>
@@ -255,6 +275,30 @@ export default function ProfileScreen() {
         <Text style={[styles.role, { color: colors.mutedForeground }]}>
           {user?.username}
         </Text>
+        <View style={styles.profileIconActions}>
+          <TouchableOpacity
+            accessibilityLabel={t("profile.settings")}
+            accessibilityRole="button"
+            onPress={() => setSettingsOpen((open) => !open)}
+            style={styles.profileIconButton}
+            testID="button-profile-settings"
+          >
+            <Feather
+              name={settingsOpen ? "x" : "settings"}
+              size={20}
+              color="#ffffff"
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            accessibilityLabel={t("nav.signOut")}
+            accessibilityRole="button"
+            onPress={onLogout}
+            style={styles.profileIconButton}
+            testID="button-sign-out"
+          >
+            <Feather name="log-out" size={18} color="#ffffff" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {availableMemberships.length >= 2 ? (
@@ -326,89 +370,88 @@ export default function ProfileScreen() {
         </View>
       ) : null}
 
-      <View
-        style={[
-          styles.section,
-          { borderColor: colors.border, backgroundColor: colors.card },
-        ]}
-      >
-        <Text style={[styles.sectionTitle, { color: colors.mutedForeground }]}>
-          {t("profile.language")}
-        </Text>
-        <View style={styles.row}>
-          {SUPPORTED_LANGUAGES.map((lng) => {
-            const active = i18n.language === lng;
-            return (
-              <LayeredPillButton
-                key={lng}
-                onPress={() => switchLang(lng)}
-                height={40}
-                inactive={!active}
-                style={styles.langBtn}
-                testID={`button-lang-${lng}`}
-              >
-                <Text style={[styles.langBtnText, active ? styles.pillTextShadow : null]}>
-                  {t(LANGUAGE_NAME_KEYS[lng])}
-                </Text>
-              </LayeredPillButton>
-            );
-          })}
-        </View>
-      </View>
-
-      <View
-        style={[
-          styles.section,
-          { borderColor: colors.border, backgroundColor: colors.card },
-        ]}
-      >
-        <Text style={[styles.sectionTitle, { color: colors.mutedForeground }]}>
-          {t("profile.locationSharing")}
-        </Text>
-        <Text style={{ color: colors.foreground, fontSize: 13, marginBottom: 10, lineHeight: 18 }}>
-          {locConsent ? t("profile.locationOnDesc") : t("profile.locationOffDesc")}
-        </Text>
-        <Text style={{ color: colors.mutedForeground, fontSize: 11, marginBottom: 10, lineHeight: 16 }}>
-          {t("profile.locationFinePrint")}
-        </Text>
-        {locConsent ? (
-          <LayeredPillButton
-            onPress={onToggleLocation}
-            disabled={locBusy}
-            height={44}
-            color="#dc2626"
-            inactive
-            style={styles.locationBtn}
-            testID="button-toggle-location-consent"
-          >
-            <Feather name="map-pin" size={16} color="#ffffff" />
-            <Text style={styles.actionText}>
-              {locBusy ? "…" : t("profile.stopSharing")}
-            </Text>
-          </LayeredPillButton>
-        ) : (
-          <AmberButton
-            onPress={onToggleLocation}
-            disabled={locConsent === null || locBusy}
-            loading={locBusy}
-            height={48}
-            style={styles.locationBtn}
-            textStyle={styles.locationBtnText}
-            testID="button-toggle-location-consent"
-          >
-            {locConsent === null ? "…" : t("profile.turnOnSharing")}
-          </AmberButton>
-        )}
-        <TouchableOpacity
-          onPress={() => router.push("/location-consent")}
-          style={styles.locationDetailsLink}
-          testID="button-location-consent-details"
+      {settingsOpen ? (
+        <View
+          style={[
+            styles.section,
+            { borderColor: colors.border, backgroundColor: colors.card },
+          ]}
+          testID="profile-settings-panel"
         >
-          <Text style={{ color: colors.primary, fontFamily: "Inter_500Medium", fontSize: 13 }}>
-            {t("profile.reviewLocationDetails")}
+          <Text style={[styles.settingsTitle, { color: colors.foreground }]}>
+            {t("profile.settings")}
           </Text>
-        </TouchableOpacity>
-      </View>
+
+          <Text style={[styles.sectionTitle, { color: colors.mutedForeground }]}>
+            {t("profile.language")}
+          </Text>
+          <View style={styles.row}>
+            {SUPPORTED_LANGUAGES.map((lng) => {
+              const active = i18n.language === lng;
+              return (
+                <LayeredPillButton
+                  key={lng}
+                  onPress={() => switchLang(lng)}
+                  inactive={!active}
+                  style={styles.langBtn}
+                  testID={`button-lang-${lng}`}
+                >
+                  <Text style={[styles.langBtnText, active ? styles.pillTextShadow : null]}>
+                    {t(LANGUAGE_NAME_KEYS[lng])}
+                  </Text>
+                </LayeredPillButton>
+              );
+            })}
+          </View>
+
+          <View style={[styles.settingsDivider, { backgroundColor: colors.border }]} />
+          <Text style={[styles.sectionTitle, { color: colors.mutedForeground }]}>
+            {t("profile.locationSharing")}
+          </Text>
+          <Text style={{ color: colors.foreground, fontSize: 13, marginBottom: 10, lineHeight: 18 }}>
+            {locConsent ? t("profile.locationOnDesc") : t("profile.locationOffDesc")}
+          </Text>
+          <Text style={{ color: colors.mutedForeground, fontSize: 11, marginBottom: 10, lineHeight: 16 }}>
+            {t("profile.locationFinePrint")}
+          </Text>
+          {locConsent ? (
+            <LayeredPillButton
+              onPress={onToggleLocation}
+              disabled={locBusy}
+              color="#dc2626"
+              inactive
+              style={styles.locationBtn}
+              testID="button-toggle-location-consent"
+            >
+              <Feather name="map-pin" size={16} color="#ffffff" />
+              <Text style={styles.actionText}>
+                {locBusy ? "…" : t("profile.stopSharing")}
+              </Text>
+            </LayeredPillButton>
+          ) : (
+            <AmberButton
+              onPress={onToggleLocation}
+              disabled={locConsent === null || locBusy}
+              loading={locBusy}
+              style={styles.locationBtn}
+              textStyle={styles.locationBtnText}
+              testID="button-toggle-location-consent"
+            >
+              {locConsent === null ? "…" : t("profile.turnOnSharing")}
+            </AmberButton>
+          )}
+          <TouchableOpacity
+            onPress={() => router.push("/location-consent")}
+            style={styles.locationDetailsLink}
+            testID="button-location-consent-details"
+          >
+            <Text style={{ color: colors.primary, fontFamily: "Inter_500Medium", fontSize: 13 }}>
+              {t("profile.reviewLocationDetails")}
+            </Text>
+          </TouchableOpacity>
+
+        </View>
+      ) : null}
 
       <LayeredPillButton
         onPress={() => router.push("/edit-profile")}
@@ -420,34 +463,6 @@ export default function ProfileScreen() {
         <Text style={[styles.actionText, styles.pillTextShadow]}>{t("profile.editProfile")}</Text>
         <Feather name="chevron-right" size={18} color="#ffffff" style={[styles.actionChevron, styles.pillIconShadow]} />
       </LayeredPillButton>
-
-      {canManageEmployees ? (
-        <LayeredPillButton
-          onPress={() => router.push("/employees")}
-          height={40}
-          style={styles.actionBtn}
-          testID="button-manage-employees"
-        >
-          <Feather name="users" size={16} color="#ffffff" style={styles.pillIconShadow} />
-          <Text style={[styles.actionText, styles.pillTextShadow]}>{t("profile.manageEmployees")}</Text>
-          <Feather name="chevron-right" size={18} color="#ffffff" style={[styles.actionChevron, styles.pillIconShadow]} />
-        </LayeredPillButton>
-      ) : null}
-
-      {user?.vendorId ? (
-        <LayeredPillButton
-          onPress={() => router.push("/services")}
-          height={40}
-          style={styles.actionBtn}
-          testID="button-company-services"
-        >
-          <Feather name="briefcase" size={16} color="#ffffff" style={styles.pillIconShadow} />
-          <Text style={[styles.actionText, styles.pillTextShadow]}>
-            {t("profile.companyServices")}
-          </Text>
-          <Feather name="chevron-right" size={18} color="#ffffff" style={[styles.actionChevron, styles.pillIconShadow]} />
-        </LayeredPillButton>
-      ) : null}
 
       {user?.role !== "partner" ? (
         <LayeredPillButton
@@ -462,16 +477,33 @@ export default function ProfileScreen() {
         </LayeredPillButton>
       ) : null}
 
-      <LayeredPillButton
-        onPress={onLogout}
-        height={40}
-        inactive
-        style={styles.actionBtn}
-        testID="button-sign-out"
-      >
-        <Feather name="log-out" size={16} color="#ffffff" />
-        <Text style={styles.actionText}>{t("nav.signOut")}</Text>
-      </LayeredPillButton>
+      {canManageCompany ? (
+        <LayeredPillButton
+          onPress={() => router.push("/employees")}
+          height={40}
+          style={styles.actionBtn}
+          testID="button-manage-employees"
+        >
+          <Feather name="users" size={16} color="#ffffff" style={styles.pillIconShadow} />
+          <Text style={[styles.actionText, styles.pillTextShadow]}>{t("profile.manageEmployees")}</Text>
+          <Feather name="chevron-right" size={18} color="#ffffff" style={[styles.actionChevron, styles.pillIconShadow]} />
+        </LayeredPillButton>
+      ) : null}
+
+      {canManageCompany ? (
+        <LayeredPillButton
+          onPress={() => router.push("/services")}
+          height={40}
+          style={styles.actionBtn}
+          testID="button-company-services"
+        >
+          <Feather name="briefcase" size={16} color="#ffffff" style={styles.pillIconShadow} />
+          <Text style={[styles.actionText, styles.pillTextShadow]}>
+            {t("profile.companyServices")}
+          </Text>
+          <Feather name="chevron-right" size={18} color="#ffffff" style={[styles.actionChevron, styles.pillIconShadow]} />
+        </LayeredPillButton>
+      ) : null}
 
       {/* Task #838: brief language-change confirmation toast.
           Mirrors the manual-refresh toast styling used on the
@@ -513,13 +545,17 @@ export default function ProfileScreen() {
         </View>
       ) : null}
       </ScrollView>
-    </View>
+    </ScreenSafeArea>
   );
 }
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   scrollContent: { paddingBottom: 32 },
+  standardHeader: { gap: 14, marginBottom: 14, paddingHorizontal: 20, paddingTop: 20 },
+  pageTitleRow: { alignItems: "center", flexDirection: "row", gap: 12, justifyContent: "space-between" },
+  pageTitleStart: { alignItems: "center", flex: 1, flexDirection: "row", gap: 10, minWidth: 0 },
+  pageTitle: { flexShrink: 1, fontFamily: "Inter_700Bold", fontSize: 26 },
   locationBtn: { alignSelf: "stretch" },
   locationBtnText: { fontFamily: "Inter_600SemiBold", fontSize: 15 },
   locationDetailsLink: { marginTop: 10, alignSelf: "center", paddingVertical: 4 },
@@ -536,7 +572,22 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
   },
-  header: { alignItems: "center", paddingTop: 24, paddingBottom: 16 },
+  header: { alignItems: "center", paddingTop: 24, paddingBottom: 16, position: "relative" },
+  profileIconActions: {
+    alignItems: "center",
+    bottom: 26,
+    flexDirection: "row",
+    gap: 8,
+    position: "absolute",
+    right: 24,
+  },
+  profileIconButton: {
+    alignItems: "center",
+    borderRadius: 20,
+    height: 40,
+    justifyContent: "center",
+    width: 40,
+  },
   avatarWrap: { position: "relative" },
   avatar: { width: 96, height: 96, borderRadius: 48 },
   avatarPlaceholder: { alignItems: "center", justifyContent: "center" },
@@ -568,6 +619,13 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     marginBottom: 10,
   },
+  settingsTitle: {
+    fontFamily: "Inter_700Bold",
+    fontSize: 18,
+    marginBottom: 16,
+  },
+  settingsDivider: { height: 1, marginVertical: 16 },
+  settingsActionBtn: { alignSelf: "stretch", marginTop: 12 },
   row: { flexDirection: "row", gap: 8 },
   langBtn: {
     flex: 1,

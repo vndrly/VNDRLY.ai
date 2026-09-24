@@ -409,6 +409,58 @@ router.get("/field/me", async (req, res): Promise<void> => {
   if (!ctx) return;
 
   if (ctx.mode === "vendor") {
+    const [linkedPerson] = await db
+      .select({
+        id: vendorPeopleTable.id,
+        firstName: vendorPeopleTable.firstName,
+        lastName: vendorPeopleTable.lastName,
+        email: vendorPeopleTable.email,
+        jobTitle: vendorPeopleTable.jobTitle,
+        phone: vendorPeopleTable.phone,
+        pecExpirationDate: vendorPeopleTable.pecExpirationDate,
+        pecCertification: vendorPeopleTable.pecCertification,
+        profilePhotoPath: vendorPeopleTable.profilePhotoPath,
+        photoUrl: vendorPeopleTable.photoUrl,
+        vendorLogoUrl: vendorsTable.logoUrl,
+        vendorName: vendorsTable.name,
+      })
+      .from(vendorPeopleTable)
+      .leftJoin(vendorsTable, eq(vendorPeopleTable.vendorId, vendorsTable.id))
+      .where(
+        and(
+          eq(vendorPeopleTable.userId, ctx.session.userId),
+          eq(vendorPeopleTable.vendorId, ctx.vendorId),
+          eq(vendorPeopleTable.isActive, true),
+          isNull(vendorPeopleTable.deletedAt),
+        ),
+      );
+
+    if (linkedPerson) {
+      res.json({
+        viewerRole: "vendor",
+        employeeId: linkedPerson.id,
+        userId: ctx.session.userId,
+        firstName: linkedPerson.firstName,
+        lastName: linkedPerson.lastName,
+        email: linkedPerson.email,
+        vendorId: ctx.vendorId,
+        partnerId: null,
+        vendorName: linkedPerson.vendorName ?? ctx.vendorName,
+        partnerName: null,
+        jobTitle: linkedPerson.jobTitle ?? null,
+        phone: linkedPerson.phone ?? null,
+        pecExpirationDate: linkedPerson.pecExpirationDate ?? null,
+        pecCertification: linkedPerson.pecCertification ?? false,
+        vendorLogoUrl: linkedPerson.vendorLogoUrl ?? null,
+        profilePhotoPath: linkedPerson.profilePhotoPath ?? null,
+        photoUrl: resolveVendorPersonPhotoUrl(
+          linkedPerson.profilePhotoPath,
+          linkedPerson.photoUrl,
+        ),
+      });
+      return;
+    }
+
     const [vendor] = await db
       .select({ logoUrl: vendorsTable.logoUrl, name: vendorsTable.name })
       .from(vendorsTable)
@@ -527,6 +579,104 @@ router.get("/field/me", async (req, res): Promise<void> => {
   });
 });
 
+// Give an existing vendor login its own compliance identity when the account
+// predates vendor_people linkage (for example, a shared gate account). This
+// does not grant a new role or change the account's active membership.
+router.post("/field/me/compliance-profile", async (req, res): Promise<void> => {
+  const ctx = await requireFieldOrVendor(req, res);
+  if (!ctx) return;
+
+  if (ctx.mode === "field") {
+    res.status(200).json({ employeeId: ctx.employee.id });
+    return;
+  }
+  if (ctx.mode !== "vendor") {
+    res.status(403).json({
+      code: "compliance.vendor_account_required",
+      error: "compliance_vendor_account_required",
+      message: "A vendor account is required for a compliance card",
+    });
+    return;
+  }
+
+  const [alreadyLinked] = await db
+    .select({ id: vendorPeopleTable.id })
+    .from(vendorPeopleTable)
+    .where(and(
+      eq(vendorPeopleTable.userId, ctx.session.userId),
+      eq(vendorPeopleTable.vendorId, ctx.vendorId),
+      eq(vendorPeopleTable.isActive, true),
+      isNull(vendorPeopleTable.deletedAt),
+    ))
+    .limit(1);
+  if (alreadyLinked) {
+    res.status(200).json({ employeeId: alreadyLinked.id });
+    return;
+  }
+
+  const [account] = await db
+    .select({
+      username: usersTable.username,
+      email: usersTable.email,
+      displayName: usersTable.displayName,
+    })
+    .from(usersTable)
+    .where(eq(usersTable.id, ctx.session.userId))
+    .limit(1);
+  if (!account) {
+    res.status(404).json({
+      code: "compliance.account_not_found",
+      error: "compliance_account_not_found",
+      message: "Account not found",
+    });
+    return;
+  }
+
+  const email = (account.email ?? account.username).trim().toLowerCase();
+  const displayName = (account.displayName || ctx.session.displayName || email).trim();
+  const nameParts = displayName.split(/\s+/).filter(Boolean);
+  const firstName = nameParts.shift() || "Gate";
+  const lastName = nameParts.join(" ");
+
+  const employeeId = await db.transaction(async (tx) => {
+    const [unlinkedMatch] = await tx
+      .select({ id: vendorPeopleTable.id })
+      .from(vendorPeopleTable)
+      .where(and(
+        eq(vendorPeopleTable.vendorId, ctx.vendorId),
+        sql`lower(${vendorPeopleTable.email}) = ${email}`,
+        isNull(vendorPeopleTable.userId),
+        eq(vendorPeopleTable.isActive, true),
+        isNull(vendorPeopleTable.deletedAt),
+      ))
+      .limit(1);
+
+    if (unlinkedMatch) {
+      await tx
+        .update(vendorPeopleTable)
+        .set({ userId: ctx.session.userId })
+        .where(eq(vendorPeopleTable.id, unlinkedMatch.id));
+      return unlinkedMatch.id;
+    }
+
+    const [created] = await tx
+      .insert(vendorPeopleTable)
+      .values({
+        vendorId: ctx.vendorId,
+        vendorRole: ctx.session.vendorRole ?? "field",
+        roles: [],
+        firstName,
+        lastName,
+        email,
+        userId: ctx.session.userId,
+      })
+      .returning({ id: vendorPeopleTable.id });
+    return created.id;
+  });
+
+  res.status(201).json({ employeeId });
+});
+
 // ── PATCH /api/field/me — update current field employee profile ──
 router.patch("/field/me", async (req, res): Promise<void> => {
   const ctx = await requireFieldUser(req, res);
@@ -535,12 +685,14 @@ router.patch("/field/me", async (req, res): Promise<void> => {
     profilePhotoPath?: string | null;
     firstName?: string;
     lastName?: string;
+    email?: string;
     jobTitle?: string | null;
     phone?: string | null;
     pecExpirationDate?: string | null;
   };
 
   const updates: Record<string, unknown> = {};
+  let normalizedEmail: string | undefined;
   if ("profilePhotoPath" in body) {
     const path = body.profilePhotoPath ?? null;
     updates.profilePhotoPath = path;
@@ -561,6 +713,33 @@ router.patch("/field/me", async (req, res): Promise<void> => {
     updates.firstName = v;
   }
   if (typeof body.lastName === "string") updates.lastName = body.lastName.trim();
+  if (typeof body.email === "string") {
+    normalizedEmail = body.email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      res.status(400).json({
+        code: "field.invalid_email",
+        error: "field_invalid_email",
+        message: "Enter a valid email address",
+      });
+      return;
+    }
+    const [conflict] = await db
+      .select({ id: usersTable.id })
+      .from(usersTable)
+      .where(and(
+        eq(usersTable.username, normalizedEmail),
+        ne(usersTable.id, ctx.session.userId),
+      ));
+    if (conflict) {
+      res.status(409).json({
+        code: "field.email_in_use",
+        error: "field_email_in_use",
+        message: "That email is already in use",
+      });
+      return;
+    }
+    updates.email = normalizedEmail;
+  }
   if ("jobTitle" in body) {
     const v = body.jobTitle == null ? null : String(body.jobTitle).trim() || null;
     updates.jobTitle = v;
@@ -589,18 +768,31 @@ router.patch("/field/me", async (req, res): Promise<void> => {
   }
 
   if (Object.keys(updates).length > 0) {
-    await db.update(vendorPeopleTable).set(updates).where(eq(vendorPeopleTable.id, ctx.employee.id));
-    await markEmployeeProfilePendingReview(ctx.employee.id);
-  }
+    await db.transaction(async (tx) => {
+      await tx
+        .update(vendorPeopleTable)
+        .set(updates)
+        .where(eq(vendorPeopleTable.id, ctx.employee.id));
 
-  // Keep linked user displayName in sync with name changes.
-  if (("firstName" in updates || "lastName" in updates)) {
-    const newFirst = (updates.firstName as string) ?? ctx.employee.firstName;
-    const newLast = (updates.lastName as string) ?? ctx.employee.lastName;
-    const display = `${newFirst} ${newLast}`.trim();
-    if (display) {
-      await db.update(usersTable).set({ displayName: display }).where(eq(usersTable.id, ctx.session.userId));
-    }
+      const userUpdates: Record<string, unknown> = {};
+      if ("firstName" in updates || "lastName" in updates) {
+        const newFirst = (updates.firstName as string) ?? ctx.employee.firstName;
+        const newLast = (updates.lastName as string) ?? ctx.employee.lastName;
+        const display = `${newFirst} ${newLast}`.trim();
+        if (display) userUpdates.displayName = display;
+      }
+      if (normalizedEmail) {
+        userUpdates.username = normalizedEmail;
+        userUpdates.email = normalizedEmail;
+      }
+      if (Object.keys(userUpdates).length > 0) {
+        await tx
+          .update(usersTable)
+          .set(userUpdates)
+          .where(eq(usersTable.id, ctx.session.userId));
+      }
+    });
+    await markEmployeeProfilePendingReview(ctx.employee.id);
   }
 
   const [extra] = await db
@@ -609,6 +801,7 @@ router.patch("/field/me", async (req, res): Promise<void> => {
       photoUrl: vendorPeopleTable.photoUrl,
       jobTitle: vendorPeopleTable.jobTitle,
       phone: vendorPeopleTable.phone,
+      email: vendorPeopleTable.email,
       firstName: vendorPeopleTable.firstName,
       lastName: vendorPeopleTable.lastName,
       pecExpirationDate: vendorPeopleTable.pecExpirationDate,

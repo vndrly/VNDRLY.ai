@@ -126,6 +126,10 @@ flow is documented in one place.
 | Code | HTTP | Route(s) | EN message | ES message |
 | --- | --- | --- | --- | --- |
 | `field_email_required` | 400 | `POST /api/field-employees/:id/login` | Email is required. | El correo es obligatorio. |
+| `field_invalid_email` | 400 | `PATCH /api/field/me` | Enter a valid email address. | Ingresa una dirección de correo válida. |
+| `field_email_in_use` | 409 | `PATCH /api/field/me` | That email address is already in use. | Esa dirección de correo ya está en uso. |
+| `compliance_vendor_account_required` | 403 | `GET /api/field/me/compliance` | A vendor account is required to use the compliance card. | Se requiere una cuenta de proveedor para usar la tarjeta de cumplimiento. |
+| `compliance_account_not_found` | 404 | `GET /api/field/me/compliance` | We couldn't find the compliance account for this profile. | No encontramos la cuenta de cumplimiento para este perfil. |
 | `field_mobile_viewer_login_required` | 401 | `GET /api/field/open-tickets`, `GET /api/field/me` | Sign in with a mobile field account to continue. | Inicia sesión con una cuenta móvil de campo para continuar. |
 | `field_partner_not_found` | 403 | `GET /api/field/open-tickets`, `GET /api/field/me` | That partner wasn't found. | No se encontró ese socio. |
 | `foreman_required` | 403 | Foreman-only field endpoints | A foreman is required. | Se requiere un capataz. |

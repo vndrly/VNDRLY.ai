@@ -128,6 +128,17 @@ describe("buildAppNavigation", () => {
     expect(isGatekeeperRouteAllowed(user("vendor", "gate_supervisor"), ["work-hub", "tasks-forms"])).toBe(true);
   });
 
+  it("allows gatekeepers into the profile actions exposed by the Profile screen", () => {
+    for (const route of ["edit-profile", "location-consent", "compliance"]) {
+      expect(
+        isGatekeeperRouteAllowed(user("vendor", "gatekeeper"), [route]),
+        route,
+      ).toBe(true);
+    }
+    expect(isGatekeeperRouteAllowed(user("vendor", "gatekeeper"), ["employees"])).toBe(false);
+    expect(isGatekeeperRouteAllowed(user("vendor", "gatekeeper"), ["services"])).toBe(false);
+  });
+
   it("keeps home, schedule, flagged, scan, and profile access for field users", () => {
     const items = buildAppNavigation({
       user: user("field_employee", "field"),

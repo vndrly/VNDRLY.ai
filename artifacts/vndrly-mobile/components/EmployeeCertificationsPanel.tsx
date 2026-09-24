@@ -14,6 +14,7 @@ import {
 import LayeredPillButton from "@/components/LayeredPillButton";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
+import { captureAndUploadImage } from "@/lib/photos";
 
 type Cert = {
   id: number;
@@ -23,6 +24,7 @@ type Cert = {
   issuedDate: string | null;
   expirationDate: string | null;
   documentUrl: string | null;
+  documentPath?: string | null;
 };
 
 type FormState = {
@@ -31,6 +33,7 @@ type FormState = {
   certNumber: string;
   issuedDate: string;
   expirationDate: string;
+  documentPath: string;
 };
 
 const blankForm: FormState = {
@@ -39,14 +42,16 @@ const blankForm: FormState = {
   certNumber: "",
   issuedDate: "",
   expirationDate: "",
+  documentPath: "",
 };
 
 type Props = {
   employeeId: number;
   onChanged?: () => void;
+  defaultCertificationName?: string;
 };
 
-export default function EmployeeCertificationsPanel({ employeeId, onChanged }: Props) {
+export default function EmployeeCertificationsPanel({ employeeId, onChanged, defaultCertificationName }: Props) {
   const colors = useColors();
   const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
@@ -55,6 +60,7 @@ export default function EmployeeCertificationsPanel({ employeeId, onChanged }: P
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState<FormState>(blankForm);
+  const [uploading, setUploading] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -74,7 +80,7 @@ export default function EmployeeCertificationsPanel({ employeeId, onChanged }: P
 
   const startAdd = () => {
     setEditingId(null);
-    setForm(blankForm);
+    setForm({ ...blankForm, name: defaultCertificationName ?? "" });
     setFormOpen(true);
   };
 
@@ -86,6 +92,7 @@ export default function EmployeeCertificationsPanel({ employeeId, onChanged }: P
       certNumber: c.certNumber ?? "",
       issuedDate: c.issuedDate ?? "",
       expirationDate: c.expirationDate ?? "",
+      documentPath: c.documentPath ?? "",
     });
     setFormOpen(true);
   };
@@ -103,8 +110,8 @@ export default function EmployeeCertificationsPanel({ employeeId, onChanged }: P
         certNumber: form.certNumber.trim() || null,
         issuedDate: form.issuedDate.trim() || null,
         expirationDate: form.expirationDate.trim() || null,
-        documentUrl: null,
-        documentPath: null,
+        documentUrl: form.documentPath ? `/api/storage${form.documentPath}` : null,
+        documentPath: form.documentPath || null,
       };
       if (editingId) {
         await apiFetch(`/api/field-employees/${employeeId}/certifications/${editingId}`, {
@@ -126,6 +133,21 @@ export default function EmployeeCertificationsPanel({ employeeId, onChanged }: P
       Alert.alert(t("common.error"), e instanceof Error ? e.message : t("employees.certifications.saveFailed"));
     } finally {
       setSaving(false);
+    }
+  };
+
+  const takeCredentialPhoto = async () => {
+    setUploading(true);
+    try {
+      const uploaded = await captureAndUploadImage({ maxBytes: 10 * 1024 * 1024 });
+      if (uploaded) setForm((current) => ({ ...current, documentPath: uploaded.objectPath }));
+    } catch (e) {
+      Alert.alert(
+        t("common.error"),
+        e instanceof Error ? e.message : t("employees.certifications.photoFailed"),
+      );
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -241,6 +263,21 @@ export default function EmployeeCertificationsPanel({ employeeId, onChanged }: P
             placeholderTextColor={colors.mutedForeground}
             style={[styles.input, inputStyle]}
           />
+          <TouchableOpacity
+            onPress={() => void takeCredentialPhoto()}
+            disabled={uploading}
+            style={[styles.photoBtn, { borderColor: colors.primary }]}
+            testID="button-cert-photo"
+          >
+            <Feather name={form.documentPath ? "check-circle" : "camera"} size={17} color={colors.primary} />
+            <Text style={[styles.photoBtnText, { color: colors.primary }]}>
+              {uploading
+                ? t("employees.certifications.uploadingPhoto")
+                : form.documentPath
+                  ? t("employees.certifications.photoAttached")
+                  : t("employees.certifications.takePhoto")}
+            </Text>
+          </TouchableOpacity>
           <View style={styles.formActions}>
             <TouchableOpacity
               onPress={() => {
@@ -278,4 +315,6 @@ const styles = StyleSheet.create({
   formActions: { flexDirection: "row", gap: 8, marginTop: 8, alignItems: "center" },
   cancelBtn: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10 },
   saveText: { color: "#fff", fontFamily: "Inter_600SemiBold", fontSize: 14 },
+  photoBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, marginTop: 6 },
+  photoBtnText: { fontFamily: "Inter_600SemiBold", fontSize: 13 },
 });

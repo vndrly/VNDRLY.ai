@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import type { MeetingSnapshot } from "@workspace/api-client-react/meeting-workspace";
 import ProfilePhotoImage from "@/components/ProfilePhotoImage";
+import { useColors } from "@/hooks/useColors";
 
 export type MeetingTimelineEntry = {
   id: string;
@@ -123,6 +124,7 @@ export default function MeetingTimeline({
   onOpenFile,
 }: Props) {
   const { t } = useTranslation();
+  const colors = useColors();
   const scrollRef = useRef<ScrollView>(null);
   const [following, setFollowing] = useState(true);
   const [failedPhotos, setFailedPhotos] = useState<Set<string>>(() => new Set());
@@ -210,7 +212,7 @@ export default function MeetingTimeline({
             width: "88%",
             borderWidth: activeIds.has(entry.id) ? 2 : 1,
             borderColor: activeIds.has(entry.id) ? brandPrimary : "#686d75",
-            backgroundColor: "#50545a",
+            backgroundColor: colors.card,
             borderRadius: 14,
             borderCurve: "continuous",
             padding: 12,

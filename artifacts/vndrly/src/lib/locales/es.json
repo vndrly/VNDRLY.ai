@@ -4160,6 +4160,10 @@
     "field_partner_not_found": "No se encontró ese socio.",
     "field_mobile_viewer_login_required": "Inicia sesión con una cuenta móvil de campo para continuar.",
     "field_email_required": "El correo es obligatorio.",
+    "field_invalid_email": "Ingresa una dirección de correo válida.",
+    "field_email_in_use": "Esa dirección de correo ya está en uso.",
+    "compliance_vendor_account_required": "Se requiere una cuenta de proveedor para usar la tarjeta de cumplimiento.",
+    "compliance_account_not_found": "No encontramos la cuenta de cumplimiento para este perfil.",
     "internal_error": "Algo salió mal de nuestro lado. Inténtalo de nuevo.",
     "phone_intake_role_required": "La toma por teléfono requiere acceso de administrador u oficina del proveedor.",
     "foreman_vendor_mismatch": "Ese capataz no pertenece a este proveedor. Elige otro empleado de campo.",
@@ -4440,6 +4444,10 @@
       "invalid_id": "Ese ID de auditoría de fusión no es válido.",
       "not_found": "No se encontró esa entrada de auditoría de fusión."
     },
+    "compliance": {
+      "vendor_account_required": "Se requiere una cuenta de proveedor para usar la tarjeta de cumplimiento.",
+      "account_not_found": "No encontramos la cuenta de cumplimiento para este perfil."
+    },
     "field": {
       "account_inactive": "Tu cuenta de campo no está activa. Contacta a tu oficina.",
       "login_required": "Inicia sesión como empleado de campo para continuar.",
@@ -4450,6 +4458,8 @@
       "field_or_vendor_login_required": "Inicia sesión como empleado de campo o proveedor para continuar.",
       "first_name_required": "El nombre es obligatorio.",
       "email_required": "El correo es obligatorio.",
+      "invalid_email": "Ingresa una dirección de correo válida.",
+      "email_in_use": "Esa dirección de correo ya está en uso.",
       "invalid_pec_date": "La fecha de vencimiento PEC debe tener el formato AAAA-MM-DD.",
       "password_required": "La contraseña actual y la nueva son obligatorias.",
       "password_too_short": "La contraseña debe tener al menos 8 caracteres.",

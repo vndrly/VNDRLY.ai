@@ -45,19 +45,32 @@ afterEach(() => {
 });
 
 describe("AskVVoiceIndicator", () => {
-  it("keeps the app-wide mute control visible on Gate while AskV starts", () => {
-    const screen = render(<AskVVoiceIndicator />);
-    expect(screen.getByTestId("askv-global-mute").getAttribute("data-color")).toBe("#b51a2a");
-    expect(screen.getByTestId("askv-global-mute").getAttribute("data-inactive")).toBe("false");
-    expect(screen.getByText("AskV is Muted")).toBeTruthy();
-    expect(screen.getByText("AskV is Muted").getAttribute("style")).toContain("color: rgb(26, 29, 35)");
-    expect(screen.getByTestId("askv-waveform").firstElementChild?.getAttribute("style")).toContain("background-color: rgb(26, 29, 35)");
-    fireEvent.click(screen.getByTestId("askv-global-mute"));
+  it("moves the AskV voice control into the AskV title row without leaving a duplicate overlay", () => {
+    env.pathname = "/askv";
+
+    const globalScreen = render(<AskVVoiceIndicator />);
+    expect(globalScreen.queryByTestId("askv-global-status")).toBeNull();
+    globalScreen.unmount();
+
+    const inlineScreen = render(<AskVVoiceIndicator inline />);
+    expect(inlineScreen.getByTestId("askv-inline-status")).toBeTruthy();
+    expect(inlineScreen.getByText("AskV is Muted")).toBeTruthy();
+  });
+
+  it("moves the AskV voice control into the Gate header without leaving a duplicate overlay", () => {
+    const globalScreen = render(<AskVVoiceIndicator />);
+    expect(globalScreen.queryByTestId("askv-global-status")).toBeNull();
+    globalScreen.unmount();
+
+    const inlineScreen = render(<AskVVoiceIndicator inline />);
+    expect(inlineScreen.getByTestId("askv-inline-status")).toBeTruthy();
+    expect(inlineScreen.getByText("AskV is Muted")).toBeTruthy();
+    fireEvent.click(inlineScreen.getByTestId("askv-global-mute"));
     expect(env.setMuted).toHaveBeenCalledWith(false);
-    expect(env.navigate).not.toHaveBeenCalled();
   });
 
   it("uses the active pill only while the voice session is working", () => {
+    env.pathname = "/schedule";
     env.voice.state = "listening";
     const screen = render(<AskVVoiceIndicator />);
 
@@ -70,6 +83,7 @@ describe("AskVVoiceIndicator", () => {
   });
 
   it("uses the gray pill when voice is unavailable", () => {
+    env.pathname = "/schedule";
     env.voice.state = "error";
     const screen = render(<AskVVoiceIndicator />);
 
@@ -99,6 +113,15 @@ describe("AskVVoiceIndicator", () => {
 
   it("moves the AskV voice control into Work Hub page headers without leaving a duplicate overlay", () => {
     env.pathname = "/work-hub/activity";
+    const globalScreen = render(<AskVVoiceIndicator />);
+    expect(globalScreen.queryByTestId("askv-global-status")).toBeNull();
+    globalScreen.unmount();
+    const inlineScreen = render(<AskVVoiceIndicator inline />);
+    expect(inlineScreen.getByTestId("askv-inline-status")).toBeTruthy();
+  });
+
+  it.each(["/gate-history", "/profile", "/edit-profile", "/compliance"])("moves the AskV voice control into the %s header without leaving a duplicate overlay", (pathname) => {
+    env.pathname = pathname;
     const globalScreen = render(<AskVVoiceIndicator />);
     expect(globalScreen.queryByTestId("askv-global-status")).toBeNull();
     globalScreen.unmount();

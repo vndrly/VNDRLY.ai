@@ -2,6 +2,18 @@ import React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const voiceFeature = vi.hoisted(() => ({ enabled: false }));
+const routerState = vi.hoisted(() => ({
+  back: vi.fn(),
+  canGoBack: vi.fn(() => true),
+  replace: vi.fn(),
+}));
+vi.mock("expo-router", () => ({ router: routerState }));
+vi.mock("@/components/AskVVoiceIndicator", () => ({
+  default: () => <div>askv-voice-indicator</div>,
+}));
+vi.mock("@/components/SphereBackButton", () => ({
+  default: ({ onPress, testID }: any) => <button data-testid={testID} onClick={onPress}>Back</button>,
+}));
 vi.mock("@/lib/askv-natural-voice", () => ({
   isAskVNaturalVoiceEnabled: () => voiceFeature.enabled,
 }));
@@ -454,12 +466,32 @@ describe("GatekeeperScreen", () => {
     ).toBe("51D-4A1");
   });
 
-  it("shows the branded vendor logo in front of Gate Portal", async () => {
+  it("uses the standard company header and places Back immediately before Gate Portal", async () => {
     renderScreen();
     await findFirstByTestId("gate-first-name");
     const logo = firstByTestId("gate-brand-logo");
     expect(logo.getAttribute("src")).toBe("https://cdn.example.com/vendor.png");
-    expect(screen.getByText("gatekeeper.portal")).toBeTruthy();
+    expect(screen.getByText("iOS Portal")).toBeTruthy();
+    const back = firstByTestId("gate-page-back");
+    const title = screen.getByRole("heading", { name: "gatekeeper.portal" });
+    expect(back.parentElement).toBe(title.parentElement);
+    expect(Array.from(back.parentElement!.children).indexOf(back)).toBeLessThan(
+      Array.from(title.parentElement!.children).indexOf(title),
+    );
+    tap(back);
+    expect(routerState.back).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps one right-aligned Submit Check-In action at the bottom of the new entry card", async () => {
+    renderScreen();
+    await findFirstByTestId("gate-first-name");
+
+    const submitButtons = screen.getAllByTestId("check-in-btn");
+    expect(submitButtons).toHaveLength(1);
+    const row = firstByTestId("gate-submit-row");
+    expect(row.contains(submitButtons[0])).toBe(true);
+    expect(row.getAttribute("style")).toContain("align-items: flex-end");
+    expect(screen.getByText("gatekeeper.submitCheckIn")).toBeTruthy();
   });
 
   it("does not show phone or email fields", async () => {
@@ -745,7 +777,9 @@ describe("GatekeeperScreen", () => {
     fireEvent.change(firstByTestId("gate-vehicle-plate"), {
       target: { value: "4412" },
     });
-    tap(await findFirstByTestId("check-in-btn"));
+    const submit = await findFirstByTestId("check-in-btn");
+    await waitFor(() => expect(isDisabled(submit)).toBe(false));
+    tap(submit);
 
     await waitFor(() =>
       expect(submitGatekeeperVisitMock).toHaveBeenCalledTimes(1),
@@ -816,6 +850,7 @@ describe("GatekeeperScreen", () => {
     fireEvent.change(firstByTestId("gate-last-name"), {
       target: { value: "Hale" },
     });
+    await waitFor(() => expect(isDisabled(firstByTestId("check-in-btn"))).toBe(false));
     tap(firstByTestId("check-in-btn"));
 
     await waitFor(() =>
@@ -935,6 +970,7 @@ describe("GatekeeperScreen", () => {
       expect(isDisabled(firstByTestId("gate-capture-tag-photo"))).toBe(false);
     });
 
+    await waitFor(() => expect(isDisabled(firstByTestId("check-in-btn"))).toBe(false));
     tap(firstByTestId("check-in-btn"));
 
     await waitFor(() => {

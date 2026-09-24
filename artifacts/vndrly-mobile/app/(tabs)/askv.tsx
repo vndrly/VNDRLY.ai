@@ -18,30 +18,38 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import ActiveOrgIndicator from "@/components/ActiveOrgIndicator";
+import AskVNavLogo from "@/components/AskVNavLogo";
+import AskVVoiceIndicator from "@/components/AskVVoiceIndicator";
 import AssistantMarkdown from "@/components/AssistantMarkdown";
 import AssistantSendToModal, {
   type AssistantShareContext,
 } from "@/components/AssistantSendToModal";
-import InPageHeader from "@/components/InPageHeader";
 import LayeredPillButton from "@/components/LayeredPillButton";
+import BrandTitleRow from "@/components/BrandTitleRow";
+import SphereBackButton from "@/components/SphereBackButton";
 import { useAskVVoiceSession } from "@/hooks/use-askv-voice-session";
-import { useAskVRecording } from "@/hooks/use-askv-recording";
 import { useAuth } from "@/hooks/use-auth";
 import {
   type AssistantMessage,
 } from "@/hooks/use-assistant";
 import { useBrand } from "@/hooks/use-brand";
 import { useColors } from "@/hooks/useColors";
+import {
+  rankQuickActions,
+  readQuickActionUsage,
+  recordQuickActionUsage,
+  type QuickActionUsage,
+} from "@/lib/askv-quick-action-usage";
 import { quickActionsForUser } from "@/lib/assistant-quick-actions";
 import { isAskVSpeaking, speakAskV, stopAskVSpeech } from "@/lib/askv-speech";
-import { readAskVTextOnly, writeAskVTextOnly } from "@/lib/askvVoicePreferences";
+import { readAskVTextOnly } from "@/lib/askvVoicePreferences";
 import { shareAssistantTranscript } from "@/lib/assistant-transcript";
 import { readInitialAskVPromptParam } from "@/lib/assistant-ticket-actions";
-import { PttMicPermissionError } from "@/lib/ptt";
 import { isForemanEmployeeUser } from "@/lib/mobile-viewer";
 import { buildAssistantShareMailtoUrl } from "@/lib/notification-mailto";
-import { SCREEN_SUBTITLE_TEXT, SCREEN_TITLE_TEXT } from "@/lib/pill-doctrine";
+import { SCREEN_SUBTITLE_TEXT } from "@/lib/pill-doctrine";
 import { registerAskVControl } from "@/lib/askv-client-tools";
+import { screenTopPadding } from "@/lib/screen-insets";
 
 function truncateSharePreview(text: string, max: number) {
   const trimmed = text.trim();
@@ -86,7 +94,6 @@ export default function AskVScreen() {
   const { user } = useAuth();
   const voiceSession = useAskVVoiceSession();
   const sessionRef = useRef(voiceSession);
-  const cancelRecordingRef = useRef(() => {});
   sessionRef.current = voiceSession;
   useFocusEffect(useCallback(() => {
     if (voiceSession.preferencesReady) {
@@ -97,7 +104,6 @@ export default function AskVScreen() {
     }
     return () => {
       stopAskVSpeech();
-      cancelRecordingRef.current();
       if (!sessionRef.current.acrossVndrly) void sessionRef.current.stop();
     };
   }, [voiceSession.preferencesReady, voiceSession.setAcrossVndrly, voiceSession.startConversation]));
@@ -116,6 +122,7 @@ export default function AskVScreen() {
   const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
   const [feedbackPendingId, setFeedbackPendingId] = useState<number | null>(null);
   const [assistantShare, setAssistantShare] = useState<AssistantShareContext | null>(null);
+  const [quickActionUsage, setQuickActionUsage] = useState<QuickActionUsage>({});
   const askVUserId = typeof user?.id === "number" ? user.id : null;
 
   const {
@@ -139,7 +146,6 @@ export default function AskVScreen() {
   useEffect(() => {
     return () => {
       stopAskVSpeech();
-      cancelRecordingRef.current();
     };
   }, []);
 
@@ -180,7 +186,30 @@ export default function AskVScreen() {
     void send(initialPrompt);
   }, [params.prompt, send]);
 
-  const quickActions = useMemo(() => quickActionsForUser(user), [user]);
+  useEffect(() => {
+    let live = true;
+    if (askVUserId == null) {
+      setQuickActionUsage({});
+      return () => { live = false; };
+    }
+    void readQuickActionUsage(askVUserId, user?.activeMembershipId ?? null).then((usage) => {
+      if (live) setQuickActionUsage(usage);
+    });
+    return () => { live = false; };
+  }, [askVUserId, user?.activeMembershipId]);
+
+  const quickActions = useMemo(
+    () => rankQuickActions(quickActionsForUser(user), quickActionUsage).slice(0, 3),
+    [quickActionUsage, user],
+  );
+
+  const runQuickAction = (labelKey: string, prompt: string) => {
+    if (askVUserId != null) {
+      setQuickActionUsage((current) => ({ ...current, [labelKey]: (current[labelKey] ?? 0) + 1 }));
+      void recordQuickActionUsage(askVUserId, user?.activeMembershipId ?? null, labelKey);
+    }
+    void send(prompt);
+  };
 
   const greeting = useMemo(() => {
     const name = user?.displayName?.split(" ")[0] ?? t("askv.greetingFallback");
@@ -202,18 +231,6 @@ export default function AskVScreen() {
     void send(text);
   };
 
-  const toggleReadAloud = () => {
-    setReadAloud((prev) => {
-      const next = !prev;
-      if (!next) {
-        stopAskVSpeech();
-      }
-      if (askVUserId != null) void writeAskVTextOnly(askVUserId, !next);
-      return next;
-    });
-    setSpeakingMessageId(null);
-  };
-
   const onSpeakMessage = (message: AssistantMessage) => {
     if (!message.content.trim() || voiceSession.muted) return;
     if (speakingMessageId === message.id) {
@@ -227,28 +244,6 @@ export default function AskVScreen() {
       speakAskV(message.content);
     });
   };
-
-  const recordingFallback = useAskVRecording({
-    enabled: !voiceSession.muted && !streaming,
-    beforeStart: async () => {
-      await voiceSession.stop();
-      stopAskVSpeech();
-      setSpeakingMessageId(null);
-    },
-    onTranscript: send,
-    onError: err => {
-      if (err instanceof PttMicPermissionError) {
-        Alert.alert(
-          t("foremanHome.pttMicDeniedTitle"),
-          t("foremanHome.pttMicDeniedBody"),
-        );
-        return;
-      }
-      Alert.alert(t("common.error"), t("askv.transcribeFailed"));
-    },
-  });
-  cancelRecordingRef.current = recordingFallback.cancel;
-  const { recording: voiceRecording, transcribing, pressIn: onVoicePressIn, pressOut: onVoicePressOut } = recordingFallback;
 
   const onClear = () => {
     Alert.alert(t("askv.clearTitle"), t("askv.clearBody"), [
@@ -327,34 +322,8 @@ export default function AskVScreen() {
     }
   };
 
-  const fallbackAvailable = ["stopped", "error", "interrupted"].includes(voiceSession.state);
-  const voiceStatusLabel = t(`askv.voiceState.${voiceSession.muted ? "muted" : voiceSession.state}`);
-
   const headerIcons = (
     <View style={styles.headerIcons}>
-      <Pressable
-        onPress={() => { cancelRecordingRef.current(); voiceSession.setMuted(!voiceSession.muted); }}
-        accessibilityLabel={t(voiceSession.muted ? "askv.unmute" : "askv.mute")}
-        hitSlop={8}
-        testID="askv-mute"
-      >
-        <Feather
-          name={voiceSession.muted ? "mic-off" : "mic"}
-          size={18}
-          color={voiceSession.muted ? colors.mutedForeground : brand.primary}
-        />
-      </Pressable>
-      <Pressable
-        onPress={toggleReadAloud}
-        hitSlop={8}
-        testID="askv-read-aloud"
-      >
-        <Feather
-          name={readAloud ? "volume-2" : "volume-x"}
-          size={18}
-          color={readAloud ? brand.primary : colors.mutedForeground}
-        />
-      </Pressable>
       {messages.length > 0 ? (
         <>
           <Pressable
@@ -383,13 +352,6 @@ export default function AskVScreen() {
           </Pressable>
         </>
       ) : null}
-      <Pressable
-        onPress={() => router.push("/(tabs)" as never)}
-        hitSlop={8}
-        testID="askv-close"
-      >
-        <Feather name="x" size={18} color={colors.mutedForeground} />
-      </Pressable>
       <ActiveOrgIndicator />
     </View>
   );
@@ -400,27 +362,31 @@ export default function AskVScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={Platform.OS === "ios" ? 88 : 0}
     >
-      <View style={styles.headerWrap}>
-        <InPageHeader
-          title={t("askv.title")}
-          onBack={() => router.push("/(tabs)" as never)}
-          right={headerIcons}
-          testID="askv-header"
+      <View style={[styles.headerWrap, { paddingTop: screenTopPadding(insets.top) + 20 }]}>
+        <BrandTitleRow
+          subtitle="iOS Portal"
+          logoTestId="askv-company-logo"
+          platformLogoTestId="askv-vndrly-logo"
         />
-        <Text style={[styles.subtitle, { color: colors.mutedForeground }, SCREEN_SUBTITLE_TEXT]}>
-          {t("askv.subtitle")}
-        </Text>
-        {voiceStatusLabel ? (
-          <Text testID="askv-status-indicator" style={[styles.subtitle, { color: brand.primary }]}>
-            {voiceStatusLabel}
+        <View style={styles.pageTitleRow} testID="askv-header">
+          <View style={styles.pageTitleStart}>
+            <SphereBackButton
+              onPress={() => router.canGoBack() ? router.back() : router.replace("/(tabs)" as never)}
+              size={40}
+              testID="askv-page-back"
+            />
+            <Text accessibilityRole="header" style={[styles.pageTitle, { color: colors.foreground }]}>
+              {t("askv.title")}
+            </Text>
+          </View>
+          <AskVVoiceIndicator inline />
+        </View>
+        <View style={styles.subtitleControlsRow}>
+          <Text style={[styles.subtitle, styles.subtitleLineText, { color: colors.mutedForeground }, SCREEN_SUBTITLE_TEXT]}>
+            {t("askv.subtitle")}
           </Text>
-        ) : null}
-        <Text testID="askv-across-vndrly" style={[styles.subtitle, { color: colors.mutedForeground }]}>
-          {t("askv.acrossOn")}
-        </Text>
-        {voiceSession.acrossVndrly && !voiceSession.wakeSupported ? (
-          <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>{t("askv.wakeUnavailable")}</Text>
-        ) : null}
+          {headerIcons}
+        </View>
       </View>
 
       <ScrollView
@@ -436,40 +402,35 @@ export default function AskVScreen() {
             { backgroundColor: colors.card, borderColor: colors.border },
           ]}
         >
-          <View style={styles.greetingRow}>
-            <Feather name="zap" size={20} color={brand.primary} />
-            <Text style={[styles.greetingTitle, { color: colors.foreground }, SCREEN_TITLE_TEXT]}>
-              AskV
-            </Text>
-          </View>
-          <Text style={[styles.greetingBody, { color: colors.mutedForeground }]}>
-            {voiceSession.greeting ?? greeting}
-          </Text>
-        </View>
-
-        {messages.length === 0 && quickActions.length > 0 ? (
-          <View style={styles.chips}>
-            <Text style={[styles.chipsLabel, { color: colors.mutedForeground }]}>
-              {t("askv.quickActionsLabel")}
-            </Text>
-            {quickActions.map((chip) => (
-              <Pressable
-                key={chip.labelKey}
-                onPress={() => void send(chip.prompt)}
-                disabled={streaming}
-                style={[
-                  styles.chip,
-                  { borderColor: colors.border, backgroundColor: colors.card },
-                ]}
-                testID={`askv-chip-${chip.labelKey}`}
-              >
-                <Text style={[styles.chipText, { color: colors.foreground }]}>
-                  {t(chip.labelKey)}
+          <View style={styles.greetingContentRow}>
+            <View style={styles.greetingIdentity}>
+              <AskVNavLogo active size={63} testID="askv-greeting-logo" />
+              <Text style={[styles.greetingBody, { color: colors.mutedForeground }]}>
+                {voiceSession.greeting ?? greeting}
+              </Text>
+            </View>
+            {quickActions.length > 0 ? (
+              <View style={styles.quickActionsColumn}>
+                <Text style={[styles.quickActionsLabel, { color: colors.mutedForeground }]}>
+                  {t("askv.quickActionsLabel")}
                 </Text>
-              </Pressable>
-            ))}
+                {quickActions.map((chip) => (
+                  <Pressable
+                    key={chip.labelKey}
+                    onPress={() => runQuickAction(chip.labelKey, chip.prompt)}
+                    disabled={streaming}
+                    style={[styles.quickActionPill, { borderColor: colors.border, backgroundColor: colors.background }]}
+                    testID={`askv-quick-action-${chip.labelKey}`}
+                  >
+                    <Text style={[styles.quickActionText, { color: colors.foreground }]} numberOfLines={1}>
+                      {t(chip.labelKey)}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            ) : null}
           </View>
-        ) : null}
+        </View>
 
         {messages.map((m, messageIndex) => (
           <View
@@ -558,14 +519,6 @@ export default function AskVScreen() {
             {t(error ?? voiceSession.error ?? "askv.errorGeneric", { defaultValue: t("askv.voiceFailed") })}
           </Text>
         ) : null}
-        {fallbackAvailable ? (
-          <Text
-            style={[styles.handsFreeStatus, { color: colors.mutedForeground }]}
-            testID="askv-recording-fallback"
-          >
-            {t("askv.recordingFallback")}
-          </Text>
-        ) : null}
       </ScrollView>
 
       <View
@@ -579,30 +532,6 @@ export default function AskVScreen() {
         ]}
       >
         <View style={styles.composerRow}>
-          <Pressable
-            onPressIn={onVoicePressIn}
-            onPressOut={onVoicePressOut}
-            disabled={streaming || transcribing || voiceSession.muted || !fallbackAvailable}
-            accessibilityLabel={t("askv.recordingFallback")}
-            style={[
-              styles.micBtn,
-              {
-                borderColor: colors.border,
-                backgroundColor: voiceRecording ? brand.primary : colors.card,
-              },
-            ]}
-            testID="askv-voice"
-          >
-            {transcribing ? (
-              <ActivityIndicator size="small" color={brand.primary} />
-            ) : (
-              <Feather
-                name="mic"
-                size={18}
-                color={voiceRecording ? "#ffffff" : colors.foreground}
-              />
-            )}
-          </Pressable>
           <TextInput
             ref={inputRef}
             value={draft}
@@ -618,12 +547,13 @@ export default function AskVScreen() {
                 backgroundColor: colors.card,
               },
             ]}
-            editable={!streaming && !transcribing}
+            editable={!streaming}
             testID="askv-input"
           />
           <LayeredPillButton
+            color={brand.primary}
             onPress={onSend}
-            disabled={streaming || !draft.trim() || transcribing}
+            disabled={streaming || !draft.trim()}
             height={44}
             style={styles.sendBtn}
             testID="askv-send"
@@ -631,7 +561,7 @@ export default function AskVScreen() {
             {streaming ? (
               <ActivityIndicator size="small" color="#ffffff" />
             ) : (
-              <Feather name="message-circle" size={18} color="#ffffff" />
+              <Feather name="send" size={18} color="#ffffff" />
             )}
           </LayeredPillButton>
         </View>
@@ -648,28 +578,38 @@ export default function AskVScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  headerWrap: { paddingHorizontal: 16 },
+  headerWrap: { gap: 12, paddingHorizontal: 20 },
+  pageTitleRow: { alignItems: "center", flexDirection: "row", justifyContent: "space-between" },
+  pageTitleStart: { alignItems: "center", flexDirection: "row", flexShrink: 1, gap: 8 },
+  pageTitle: { flexShrink: 1, fontFamily: "Inter_700Bold", fontSize: 26 },
   headerIcons: { flexDirection: "row", alignItems: "center", gap: 12 },
+  subtitleControlsRow: { alignItems: "center", flexDirection: "row", gap: 12, marginTop: -6 },
+  subtitleLineText: { flex: 1, marginBottom: 0, marginTop: 0 },
   subtitle: { fontSize: 13, lineHeight: 18, marginTop: -4, marginBottom: 8 },
-  scrollContent: { paddingHorizontal: 16, paddingBottom: 16, gap: 12 },
+  scrollContent: { paddingHorizontal: 20, paddingTop: 14, paddingBottom: 16, gap: 12 },
   greetingCard: {
     borderWidth: 1,
     borderRadius: 12,
     padding: 14,
     gap: 8,
   },
-  greetingRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  greetingTitle: { fontSize: 18 },
+  greetingContentRow: { alignItems: "stretch", flexDirection: "row", gap: 12 },
+  greetingIdentity: { flex: 1, justifyContent: "center", minWidth: 0 },
   greetingBody: { fontSize: 14, lineHeight: 20 },
-  chips: { gap: 8 },
-  chipsLabel: { fontSize: 12, fontFamily: "Inter_500Medium", textTransform: "uppercase" },
-  chip: {
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+  quickActionsColumn: { flex: 1.45, gap: 6, minWidth: 0 },
+  quickActionsLabel: {
+    fontSize: 10,
+    fontFamily: "Inter_500Medium",
+    textAlign: "right",
+    textTransform: "uppercase",
   },
-  chipText: { fontSize: 14, lineHeight: 20 },
+  quickActionPill: {
+    borderWidth: 1,
+    borderRadius: 9,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+  },
+  quickActionText: { fontSize: 12, lineHeight: 16, textAlign: "center" },
   bubble: {
     borderRadius: 12,
     padding: 12,
@@ -698,12 +638,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   errorText: { fontSize: 13, lineHeight: 18 },
-  handsFreeStatus: {
-    fontSize: 12,
-    lineHeight: 18,
-    fontFamily: "Inter_500Medium",
-    textAlign: "center",
-  },
   composer: {
     borderTopWidth: 1,
     paddingHorizontal: 12,
@@ -716,22 +650,16 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    minHeight: 44,
+    minHeight: 64,
     maxHeight: 120,
     borderWidth: 1,
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 10,
     fontSize: 15,
+    lineHeight: 20,
     fontFamily: "Inter_400Regular",
+    textAlignVertical: "top",
   },
   sendBtn: { minWidth: 44, width: 44, paddingHorizontal: 0 },
-  micBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
 });

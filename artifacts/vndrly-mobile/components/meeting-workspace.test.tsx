@@ -13,7 +13,8 @@ import type { MeetingSnapshot } from "@workspace/api-client-react/meeting-worksp
 const env = vi.hoisted(() => ({
   state: {} as any,
   push: vi.fn(),
-  moduleData: { meetings: [] as any[] },
+  moduleData: { meetings: [] as any[] } as any,
+  moduleName: "meetings",
   scrollToEnd: vi.fn(),
   imageProps: [] as any[],
   getToken: vi.fn(),
@@ -144,7 +145,7 @@ vi.mock("expo-router", () => ({
   Stack: Object.assign(({ children }: any) => <>{children}</>, {
     Screen: () => null,
   }),
-  useLocalSearchParams: () => ({ module: "meetings" }),
+  useLocalSearchParams: () => ({ module: env.moduleName }),
   router: { push: env.push },
 }));
 vi.mock("react-i18next", () => ({
@@ -402,6 +403,7 @@ beforeEach(() => {
   env.getToken.mockReset();
   env.getToken.mockResolvedValue("private-photo-token");
   env.moduleData = { meetings: [] };
+  env.moduleName = "meetings";
   env.spanish = false;
   env.accessibilityFocus.mockReset();
   env.announce.mockReset();
@@ -1427,5 +1429,23 @@ describe("meeting list routing", () => {
       screen.getByRole("button", { name: "Abrir Daily operations" })
         .textContent,
     ).toContain("Abrir reunión");
+  });
+});
+
+describe("Work Hub calendar routing", () => {
+  it("keeps the weekly shift calendar visible above an empty authorized-record list", async () => {
+    env.moduleName = "calendar";
+    env.moduleData = { shifts: [], tasks: [], meetings: [] };
+
+    render(<WorkHubModuleScreen />);
+    await act(async () => {
+      for (let index = 0; index < 10; index += 1) await Promise.resolve();
+    });
+
+    expect(screen.getByLabelText("Shift calendar")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Week" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Month" })).toBeTruthy();
+    expect(screen.getByText("No shifts scheduled this week.")).toBeTruthy();
+    expect(screen.queryByText("No authorized records yet.")).toBeNull();
   });
 });

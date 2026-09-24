@@ -8,13 +8,14 @@ import {
   Text,
   View,
 } from "react-native";
-import { Stack } from "expo-router";
+import { router, Stack } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import QRCode from "react-native-qrcode-svg";
 
-import InPageHeader from "@/components/InPageHeader";
 import EmployeeCertificationsPanel from "@/components/EmployeeCertificationsPanel";
+import PortalPageHeader from "@/components/PortalPageHeader";
 import ProfilePhotoImage from "@/components/ProfilePhotoImage";
+import ScreenSafeArea from "@/components/ScreenSafeArea";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
 
@@ -28,6 +29,10 @@ type FieldMe = {
   vendorLogoUrl: string | null;
   profilePhotoPath: string | null;
   photoUrl?: string | null;
+};
+
+type FieldMeResponse = Omit<FieldMe, "employeeId"> & {
+  employeeId: number | null;
 };
 
 type ComplianceToken = {
@@ -48,9 +53,17 @@ export default function ComplianceScreen() {
     let cancelled = false;
     (async () => {
       try {
-        const meRes = await apiFetch<FieldMe>("/api/field/me");
+        let meRes = await apiFetch<FieldMeResponse>("/api/field/me");
         if (cancelled) return;
-        setMe(meRes);
+        if (meRes.employeeId == null) {
+          await apiFetch<{ employeeId: number }>("/api/field/me/compliance-profile", {
+            method: "POST",
+          });
+          meRes = await apiFetch<FieldMeResponse>("/api/field/me");
+          if (cancelled) return;
+          if (meRes.employeeId == null) throw new Error(t("compliance.unavailable"));
+        }
+        setMe({ ...meRes, employeeId: meRes.employeeId });
         const tokenRes = await apiFetch<ComplianceToken>(`/api/field-employees/${meRes.employeeId}/compliance-token`);
         if (cancelled) return;
         setToken(tokenRes);
@@ -59,16 +72,15 @@ export default function ComplianceScreen() {
       }
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [t]);
 
   const hasPhoto = !!(me?.profilePhotoPath || me?.photoUrl);
 
   return (
-    <View style={styles.container}>
+    <ScreenSafeArea style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
-      <InPageHeader title={t("compliance.title")} />
-
       <ScrollView contentContainerStyle={styles.content}>
+        <PortalPageHeader title={t("compliance.title")} testIdPrefix="compliance" />
         {error ? (
           <Text style={{ color: c.destructive, textAlign: "center", padding: 16 }}>{error}</Text>
         ) : !me ? (
@@ -107,7 +119,7 @@ export default function ComplianceScreen() {
               </View>
             </View>
 
-            <EmployeeCertificationsPanel employeeId={me.employeeId} />
+            <EmployeeCertificationsPanel employeeId={me.employeeId} defaultCertificationName="PEC" />
 
             <View style={[styles.qrWrap, { borderTopColor: c.border }]}>
               {token ? (
@@ -126,14 +138,14 @@ export default function ComplianceScreen() {
           </View>
         )}
       </ScrollView>
-    </View>
+    </ScreenSafeArea>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { padding: 16, paddingBottom: 48 },
-  card: { borderRadius: 16, borderWidth: 1, padding: 20, gap: 16 },
+  content: { paddingBottom: 48 },
+  card: { borderRadius: 16, borderWidth: 1, padding: 20, gap: 16, marginHorizontal: 16 },
   brandRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   brandLeft: { flexDirection: "row", alignItems: "center", gap: 6 },
   brandText: { fontSize: 11, fontWeight: "700", letterSpacing: 1 },

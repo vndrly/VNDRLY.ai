@@ -376,10 +376,12 @@ export const databaseGateReportDependencies: GateReportDependencies = {
           coalesce(vp.vendor_role,m.role) AS role
          FROM users u
          JOIN user_org_memberships m ON m.user_id=u.id AND m.org_type='vendor'
-         LEFT JOIN vendor_people vp ON vp.user_id=u.id AND vp.vendor_id=m.vendor_id AND vp.deleted_at IS NULL AND vp.is_active=true
+         JOIN vendor_people vp ON vp.user_id=u.id AND vp.vendor_id=m.vendor_id AND vp.deleted_at IS NULL AND vp.is_active=true
          WHERE u.suspended_at IS NULL AND coalesce(u.email,u.username) LIKE '%@%'
            AND EXISTS (SELECT 1 FROM site_work_assignments a WHERE a.vendor_id=m.vendor_id AND a.site_location_id=$1)
-           AND (m.role='admin' OR vp.vendor_role IN ('admin','office','both','gate_supervisor','gatekeeper'))
+           AND vp.vendor_role IN ('admin','office','both','gate_supervisor','gatekeeper')
+           AND lower(coalesce(u.email,u.username)) !~ '(^|[.@_-])(e2e|test)([.@_-]|$)'
+           AND lower(coalesce(u.display_name,'')) !~ '(^|[^a-z])(e2e|test)([^a-z]|$)'
          ORDER BY name LIMIT 5000`,
         [filters.siteId],
       )).rows;

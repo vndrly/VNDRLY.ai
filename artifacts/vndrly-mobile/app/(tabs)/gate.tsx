@@ -1,6 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Location from "expo-location";
+import { router } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -17,9 +18,11 @@ import {
 } from "react-native";
 
 import AmberButton from "@/components/AmberButton";
+import AskVVoiceIndicator from "@/components/AskVVoiceIndicator";
 import BrandTitleRow from "@/components/BrandTitleRow";
 import PlateStatePicker from "@/components/PlateStatePicker";
 import ScreenSafeArea from "@/components/ScreenSafeArea";
+import SphereBackButton from "@/components/SphereBackButton";
 import VisitorHostPicker from "@/components/VisitorHostPicker";
 import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/useColors";
@@ -800,10 +803,29 @@ export default function GatekeeperScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <BrandTitleRow
-            title={t("gatekeeper.portal")}
-            subtitle={t("gatekeeper.subtitle")}
+            subtitle="iOS Portal"
             logoTestId="gate-brand-logo"
+            platformLogoTestId="gate-vndrly-logo"
           />
+          <View style={styles.pageTitleRow}>
+            <View style={styles.pageTitleStart}>
+              <SphereBackButton
+                onPress={() => router.canGoBack() ? router.back() : router.replace("/(tabs)/change-over" as never)}
+                size={40}
+                testID="gate-page-back"
+              />
+              <Text
+                accessibilityRole="header"
+                style={[styles.pageTitle, { color: colors.foreground }]}
+              >
+                {t("gatekeeper.portal")}
+              </Text>
+            </View>
+            <AskVVoiceIndicator inline />
+          </View>
+          <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
+            {t("gatekeeper.subtitle")}
+          </Text>
 
           <View
             style={[
@@ -1282,6 +1304,7 @@ export default function GatekeeperScreen() {
                   ),
                 }))}
                 extraSubmitDisabled={!fence.canSubmit}
+                showSubmit={false}
                 busy={busy}
                 onSubmit={onCheckIn}
                 onChangeSite={() => {
@@ -1302,6 +1325,18 @@ export default function GatekeeperScreen() {
                 }}
               />
             ) : null}
+            <View testID="gate-submit-row" style={{ alignItems: "flex-end", marginTop: 4 }}>
+              <AmberButton
+                testID="check-in-btn"
+                onPress={onCheckIn}
+                loading={busy}
+                disabled={busy || !fence.canSubmit || !ctxQuery.data}
+                height={36}
+                style={styles.submitButton}
+              >
+                {t("gatekeeper.submitCheckIn")}
+              </AmberButton>
+            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -1312,8 +1347,11 @@ export default function GatekeeperScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   container: { gap: 14, padding: 20, paddingBottom: 40 },
-  title: { fontFamily: "Inter_700Bold", fontSize: 24 },
+  pageTitleRow: { alignItems: "center", flexDirection: "row", gap: 12, justifyContent: "space-between" },
+  pageTitleStart: { alignItems: "center", flex: 1, flexDirection: "row", gap: 10, minWidth: 0 },
+  pageTitle: { flexShrink: 1, fontFamily: "Inter_700Bold", fontSize: 26 },
   subtitle: { fontFamily: "Inter_400Regular", fontSize: 13, marginTop: -8 },
+  submitButton: { width: "48%" },
   card: { borderWidth: 1, borderRadius: 12, gap: 10, padding: 14 },
   cardTitle: { fontFamily: "Inter_600SemiBold", fontSize: 17 },
   plateInput: { fontFamily: "Inter_700Bold", fontSize: 22, minHeight: 56 },

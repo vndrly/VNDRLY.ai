@@ -4160,6 +4160,10 @@
     "field_partner_not_found": "That partner wasn't found.",
     "field_mobile_viewer_login_required": "Sign in with a mobile field account to continue.",
     "field_email_required": "Email is required.",
+    "field_invalid_email": "Enter a valid email address.",
+    "field_email_in_use": "That email address is already in use.",
+    "compliance_vendor_account_required": "A vendor account is required to use the compliance card.",
+    "compliance_account_not_found": "We couldn't find the compliance account for this profile.",
     "internal_error": "Something went wrong on our end. Please try again.",
     "phone_intake_role_required": "Phone intake requires admin or vendor office access.",
     "foreman_vendor_mismatch": "That foreman isn't on this vendor. Pick a different field employee.",
@@ -4440,6 +4444,10 @@
       "invalid_id": "That merge audit ID isn't valid.",
       "not_found": "That merge audit entry wasn't found."
     },
+    "compliance": {
+      "vendor_account_required": "A vendor account is required to use the compliance card.",
+      "account_not_found": "We couldn't find the compliance account for this profile."
+    },
     "field": {
       "account_inactive": "Your field account is not active. Contact your office staff.",
       "login_required": "Sign in as a field employee to continue.",
@@ -4450,6 +4458,8 @@
       "field_or_vendor_login_required": "Sign in as a field employee or vendor to continue.",
       "first_name_required": "First name is required.",
       "email_required": "Email is required.",
+      "invalid_email": "Enter a valid email address.",
+      "email_in_use": "That email address is already in use.",
       "invalid_pec_date": "PEC expiration date must be in YYYY-MM-DD format.",
       "password_required": "Current and new password are required.",
       "password_too_short": "Password must be at least 8 characters.",

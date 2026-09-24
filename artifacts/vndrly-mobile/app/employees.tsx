@@ -75,7 +75,11 @@ export default function EmployeesScreen() {
   return (
     <View style={styles.flex}>
       <Stack.Screen options={{ headerShown: false }} />
-      <InPageHeader title={t("employees.title")} right={<ActiveOrgIndicator />} />
+      <InPageHeader
+        title={t("employees.title")}
+        right={<ActiveOrgIndicator />}
+        onBack={() => router.replace("/profile")}
+      />
 
       {loading ? (
         <ActivityIndicator color={colors.primary} style={{ marginTop: 24 }} />

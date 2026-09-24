@@ -6,6 +6,7 @@ import type { MeetingSnapshot } from "@workspace/api-client-react/meeting-worksp
 
 import TogglePillButton from "@/components/TogglePillButton";
 import { useBrand } from "@/hooks/use-brand";
+import { useColors } from "@/hooks/useColors";
 import { apiFetch, getApiBase } from "@/lib/api";
 import { captureAuthScope, getToken, isAuthScopeCurrent } from "@/lib/auth";
 import { downloadAndShareMeetingReplayFile } from "@/lib/meeting-files";
@@ -40,8 +41,6 @@ type ReplayAssignment = {
   completedAt: string | null;
 };
 
-const PANEL = "#50545a";
-const SURFACE = "#3a3d42";
 const VERSION_HEADERS = {
   "x-replay-renderer-version": "1",
   "x-replay-schema-version": "2",
@@ -61,6 +60,7 @@ function absoluteUrl(path: string) {
 }
 
 export default function MeetingReplayWorkspace({ occurrenceId, meeting }: { occurrenceId: string; meeting: MeetingSnapshot }) {
+  const colors = useColors();
   const { t } = useTranslation();
   const brand = useBrand();
   const [manifest, setManifest] = useState<ReplayManifest | null>(null);
@@ -217,8 +217,8 @@ export default function MeetingReplayWorkspace({ occurrenceId, meeting }: { occu
   const progress = myAssignment ? Math.min(100, Math.round(myAssignment.watchedMs / manifest.occurrence.durationMs * 100)) : null;
   const inGap = manifest.gaps.some((gap) => playhead >= gap.startsAtMs && playhead < gap.endsAtMs);
 
-  return <View accessibilityLabel={t("meetingReplay.label", { defaultValue: "Timed meeting replay" })} style={{ gap: 12, backgroundColor: SURFACE }}>
-    <View style={{ backgroundColor: PANEL, borderColor: brand.primary, borderWidth: 1, borderRadius: 14, padding: 12, gap: 8 }}>
+  return <View accessibilityLabel={t("meetingReplay.label", { defaultValue: "Timed meeting replay" })} style={{ gap: 12, backgroundColor: colors.background }}>
+    <View style={{ backgroundColor: colors.card, borderColor: brand.primary, borderWidth: 1, borderRadius: 14, padding: 12, gap: 8 }}>
       <Text accessibilityRole="header" selectable style={{ color: "#ffffff", fontWeight: "800", fontSize: 18 }}>{t("meetingReplay.title", { defaultValue: "Watch meeting replay" })}</Text>
       <Text selectable style={{ color: "#ffffff" }}>{manifest.complete ? t("meetingReplay.completeRecording", { defaultValue: "Complete recording" }) : t("meetingReplay.hasGaps", { defaultValue: "Replay includes clearly marked gaps" })}</Text>
       {myAssignment && <Text selectable style={{ color: "#ffffff", fontWeight: "700" }}>{myAssignment.requirement === "required" ? t("meetingReplay.required", { defaultValue: "Required" }) : t("meetingReplay.optional", { defaultValue: "Optional" })} · {myAssignment.status === "completed" ? t("meetingReplay.completed", { defaultValue: "Completed" }) : `${progress}%`}</Text>}
@@ -239,7 +239,7 @@ export default function MeetingReplayWorkspace({ occurrenceId, meeting }: { occu
       {visibleEvents.map((event) => {
         const name = String(event.payload.displayName ?? (event.type === "askv_answer" ? "V" : t("meetingReplay.attendee", { defaultValue: "Attendee" })));
         const text = String(event.payload.text ?? event.payload.body ?? event.payload.fileName ?? event.payload.reason ?? "");
-        return <View key={event.key} style={{ backgroundColor: PANEL, borderRadius: 12, padding: 10, gap: 4 }}>
+        return <View key={event.key} style={{ backgroundColor: colors.card, borderRadius: 12, padding: 10, gap: 4 }}>
           <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 8 }}><Text selectable style={{ color: name === "V" ? "#ffffff" : brand.primary, fontWeight: "800" }}>{name}</Text><Text selectable style={{ color: "#ffffff" }}>{clock(event.offsetMs)}</Text></View>
           <Text selectable style={{ color: "#ffffff" }}>{text}</Text>
           {event.type === "file" && typeof event.payload.downloadPath === "string" && <TogglePillButton color="brand" accessibilityLabel={t("meetingReplay.openFile", { defaultValue: "Open shared file" })} onPress={() => void openReplayFile(event)}>{t("meetingReplay.openFile", { defaultValue: "Open shared file" })}</TogglePillButton>}
@@ -247,13 +247,13 @@ export default function MeetingReplayWorkspace({ occurrenceId, meeting }: { occu
       })}
     </ScrollView>
 
-    {meeting.canManage && <View style={{ backgroundColor: PANEL, borderRadius: 14, padding: 12, gap: 10 }}>
+    {meeting.canManage && <View style={{ backgroundColor: colors.card, borderRadius: 14, padding: 12, gap: 10 }}>
       <Text accessibilityRole="header" selectable style={{ color: "#ffffff", fontWeight: "800" }}>{t("meetingReplay.assignCatchUp", { defaultValue: "Assign catch-up" })}</Text>
       {meeting.participants.filter((person) => person.role !== "host" && !person.removedAt).map((person) => <Pressable key={person.userId} accessibilityRole="button" accessibilityLabel={t("meetingReplay.selectAttendee", { defaultValue: "Select {{name}}", name: person.displayName })} accessibilityState={{ selected: assignee === person.userId }} onPress={() => setAssignee(person.userId)} style={{ minHeight: 44, justifyContent: "center" }}><Text style={{ color: assignee === person.userId ? brand.primary : "#ffffff", fontWeight: "700" }}>{person.displayName}</Text></Pressable>)}
       <View style={{ flexDirection: "row", gap: 8 }}>
         {(["required", "optional"] as const).map((value) => <TogglePillButton key={value} color="brand" solid={requirement === value} accessibilityLabel={value === "required" ? t("meetingReplay.required", { defaultValue: "Required" }) : t("meetingReplay.optional", { defaultValue: "Optional" })} accessibilityState={{ selected: requirement === value }} onPress={() => setRequirement(value)} style={{ flex: 1 }}>{value === "required" ? t("meetingReplay.required", { defaultValue: "Required" }) : t("meetingReplay.optional", { defaultValue: "Optional" })}</TogglePillButton>)}
       </View>
-      <TextInput accessibilityLabel={t("meetingReplay.dueDate", { defaultValue: "Due date" })} value={dueAt} onChangeText={setDueAt} placeholder="YYYY-MM-DD HH:mm" placeholderTextColor="#c7cbd1" style={{ color: "#ffffff", backgroundColor: SURFACE, borderRadius: 10, padding: 12 }} />
+      <TextInput accessibilityLabel={t("meetingReplay.dueDate", { defaultValue: "Due date" })} value={dueAt} onChangeText={setDueAt} placeholder="YYYY-MM-DD HH:mm" placeholderTextColor="#c7cbd1" style={{ color: "#ffffff", backgroundColor: colors.background, borderRadius: 10, padding: 12 }} />
       <TogglePillButton color="brand" solid accessibilityLabel={t("meetingReplay.assign", { defaultValue: "Assign" })} disabled={assignee === null} onPress={() => void assign()}>{t("meetingReplay.assign", { defaultValue: "Assign" })}</TogglePillButton>
       {assignments.map((row) => <Text key={row.id} selectable style={{ color: "#ffffff" }}>{meeting.participants.find((person) => person.userId === row.assigneeUserId)?.displayName ?? t("meetingReplay.attendee", { defaultValue: "Attendee" })} · {row.requirement} · {row.status}</Text>)}
     </View>}

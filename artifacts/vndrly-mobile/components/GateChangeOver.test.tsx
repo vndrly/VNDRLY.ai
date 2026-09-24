@@ -6,11 +6,16 @@ import {
   fireEvent,
   waitFor,
   cleanup,
+  within,
 } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 const env = vi.hoisted(() => ({
   api: vi.fn(),
+  fetch: vi.fn(),
+  fetchRaw: vi.fn(),
   accept: vi.fn(),
+  back: vi.fn(),
+  canGoBack: vi.fn(() => true),
   replace: vi.fn(),
   params: {} as { siteId?: string; stationId?: string },
 }));
@@ -33,8 +38,8 @@ vi.mock("@/components/ScreenSafeArea", () => ({
   default: ({ children }: any) => <>{children}</>,
 }));
 vi.mock("@/components/TogglePillButton", () => ({
-  default: ({ askVInactiveStyle, children, disabled, inactive, onPress }: any) => (
-    <button data-askv-inactive-style={askVInactiveStyle ? "true" : "false"} data-inactive={inactive ? "true" : "false"} disabled={disabled} onClick={onPress}>
+  default: ({ askVInactiveStyle, children, color, disabled, inactive, onPress, solid, style, testID }: any) => (
+    <button data-testid={testID} data-askv-inactive-style={askVInactiveStyle ? "true" : "false"} data-color={color} data-inactive={inactive ? "true" : "false"} data-solid={String(Boolean(solid))} disabled={disabled} onClick={onPress} style={style}>
       {children}
     </button>
   ),
@@ -42,9 +47,12 @@ vi.mock("@/components/TogglePillButton", () => ({
 vi.mock("@/components/GateDutyCard", () => ({ default: () => <div>gate-duty-card</div> }));
 vi.mock("@/components/AskVVoiceIndicator", () => ({ default: () => <div>askv-voice-indicator</div> }));
 vi.mock("@/components/BrandTitleRow", () => ({ default: () => <div>company-portal-header</div> }));
-vi.mock("@/lib/api", () => ({ apiFetch: vi.fn(), apiFetchRaw: vi.fn() }));
+vi.mock("@/components/SphereBackButton", () => ({
+  default: ({ onPress, testID }: any) => <button data-testid={testID} onClick={onPress}>Back</button>,
+}));
+vi.mock("@/lib/api", () => ({ apiFetch: env.fetch, apiFetchRaw: env.fetchRaw }));
 vi.mock("expo-router", () => ({
-  router: { replace: env.replace },
+  router: { back: env.back, canGoBack: env.canGoBack, replace: env.replace },
   useLocalSearchParams: () => env.params,
 }));
 vi.mock("expo-crypto", () => ({ randomUUID: () => "operation-id" }));
@@ -89,6 +97,7 @@ const state = () => ({
 });
 beforeEach(() => {
   vi.clearAllMocks();
+  env.fetch.mockResolvedValue({ recipients: [] });
   env.api.mockImplementation(async (path: string) =>
     path === "/sites"
       ? { sites: [{ id: 1, name: "Site" }] }
@@ -102,6 +111,76 @@ beforeEach(() => {
   );
 });
 afterEach(cleanup);
+it("shows only active company employees in Shift Notes recipients", async () => {
+  const base = env.api.getMockImplementation()!;
+  env.api.mockImplementation((path, body) =>
+    path.includes("/notes?")
+      ? Promise.resolve({ rows: [], actions: [] })
+      : base(path, body),
+  );
+  env.fetch.mockResolvedValue({
+    recipients: [
+      { userId: 1063, name: "Brett Benta", role: "office" },
+      { userId: 1058, name: "Chad Elerick", role: "admin" },
+      { userId: 990, name: "MidCon Gate", role: "gatekeeper" },
+      { userId: 553, name: "E2E System Admin molpvn8d5mzv", role: "admin" },
+      { userId: 439, name: "E2E Test Admin", role: "admin" },
+      { userId: 34, name: "Test Admin", role: "admin" },
+      { userId: 6, name: "VNDRLY Admin", role: "admin" },
+      { userId: 1057, name: "Warwick Admin", role: "admin" },
+      { userId: 51, name: "Admin", role: "admin" },
+    ],
+  });
+  const cache = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(<QueryClientProvider client={cache}><GateChangeOver history /></QueryClientProvider>);
+
+  expect(screen.queryByRole("button", { name: "Brett Benta" })).toBeNull();
+  fireEvent.click(await screen.findByTestId("shift-notes-recipients-toggle"));
+  expect(await screen.findByRole("button", { name: "Brett Benta" })).not.toBeNull();
+  expect(screen.getByRole("button", { name: "Chad Elerick" })).not.toBeNull();
+  expect(screen.getByRole("button", { name: "MidCon Gate" })).not.toBeNull();
+  for (const hidden of ["E2E System Admin molpvn8d5mzv", "E2E Test Admin", "Test Admin", "VNDRLY Admin", "Warwick Admin", "Admin"]) {
+    expect(screen.queryByRole("button", { name: hidden })).toBeNull();
+  }
+});
+it("collapses recipients and places exports after Shift Notes results", async () => {
+  const base = env.api.getMockImplementation()!;
+  env.api.mockImplementation((path, body) => path.includes("/notes?") ? Promise.resolve({ rows: [], actions: [] }) : base(path, body));
+  env.fetch.mockResolvedValue({ recipients: [{ userId: 1, name: "Me" }, { userId: 2, name: "Supervisor" }] });
+  const cache = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(<QueryClientProvider client={cache}><GateChangeOver history /></QueryClientProvider>);
+
+  expect(await screen.findByText("gateHistory.selected")).not.toBeNull();
+  expect(screen.queryByRole("button", { name: "Supervisor" })).toBeNull();
+  fireEvent.click(screen.getByTestId("shift-notes-recipients-toggle"));
+  expect(await screen.findByRole("button", { name: "Supervisor" })).not.toBeNull();
+
+  const searchCard = screen.getByTestId("shift-notes-search-card");
+  const exportRow = screen.getByTestId("shift-notes-export-row");
+  expect(searchCard.compareDocumentPosition(exportRow) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(screen.getByTestId("shift-notes-email").compareDocumentPosition(exportRow) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy();
+  expect(within(exportRow).getByRole("button", { name: "PDF" }).getAttribute("data-color")).toBe("red");
+  expect(within(exportRow).getByRole("button", { name: "CSV" }).getAttribute("data-color")).toBe("green");
+  expect(within(exportRow).getByRole("button", { name: "WORD" }).getAttribute("data-color")).toBe("blue");
+  expect(screen.getByTestId("shift-notes-email").getAttribute("data-color")).toBe("brand");
+  expect(screen.getByTestId("shift-notes-email").getAttribute("data-solid")).toBe("true");
+});
+it("places the canonical back button immediately before the Shift Notes title", async () => {
+  const base = env.api.getMockImplementation()!;
+  env.api.mockImplementation((path, body) => path.includes("/notes?") ? Promise.resolve({ rows: [], actions: [] }) : base(path, body));
+  const cache = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(<QueryClientProvider client={cache}><GateChangeOver history /></QueryClientProvider>);
+
+  const back = await screen.findByTestId("shift-notes-page-back");
+  const title = screen.getByRole("heading", { name: "changeOver.shiftNotes" });
+  expect(back.parentElement).toBe(title.parentElement);
+  expect(Array.from(back.parentElement!.children).indexOf(back)).toBeLessThan(
+    Array.from(title.parentElement!.children).indexOf(title),
+  );
+
+  fireEvent.click(back);
+  expect(env.back).toHaveBeenCalledTimes(1);
+});
 it("updates a mounted notes tab to the gate selected by a new transfer", async () => {
   env.params = { siteId: "1", stationId: "old-gate" };
   const base = env.api.getMockImplementation()!;
@@ -144,6 +223,19 @@ function mount() {
   );
   return cache;
 }
+it("places the canonical back button immediately before the Dashboard title", async () => {
+  mount();
+
+  const back = await screen.findByTestId("dashboard-page-back");
+  const title = screen.getByRole("heading", { name: "changeOver.title" });
+  expect(back.parentElement).toBe(title.parentElement);
+  expect(Array.from(back.parentElement!.children).indexOf(back)).toBeLessThan(
+    Array.from(title.parentElement!.children).indexOf(title),
+  );
+
+  fireEvent.click(back);
+  expect(env.back).toHaveBeenCalledTimes(1);
+});
 async function authenticate() {
   fireEvent.change(await screen.findByLabelText("changeOver.username"), {
     target: { value: "incoming" },
@@ -170,10 +262,14 @@ it("keeps eligible sites compact until the operator opens the selector", async (
       : base(path, body),
   );
   mount();
-  expect(await screen.findByRole("button", { name: "Current site" })).not.toBeNull();
+  expect((await screen.findAllByRole("button", { name: "Current site" }))).toHaveLength(1);
+  expect(screen.getByTestId("dashboard-blank-card").getAttribute("style")).toContain("min-height: 120px");
+  expect(screen.getByTestId("dashboard-blank-card").getAttribute("style")).toContain("background-color: rgb(40, 40, 42)");
+  expect(screen.getByTestId("dashboard-blank-card").getAttribute("style")).not.toContain("opacity");
+  expect(screen.getByTestId("dashboard-blank-card").getAttribute("style")).not.toContain("filter");
   expect(screen.queryByRole("button", { name: "Scheduled site" })).toBeNull();
-  fireEvent.click(screen.getByRole("button", { name: "Current site" }));
-  expect(screen.getByRole("button", { name: "Scheduled site" })).not.toBeNull();
+  fireEvent.click(screen.getAllByRole("button", { name: "Current site" })[0]);
+  expect(screen.getAllByRole("button", { name: "Scheduled site" })).toHaveLength(1);
 });
 it("uses the static gray pill for the requested dashboard actions", async () => {
   mount();

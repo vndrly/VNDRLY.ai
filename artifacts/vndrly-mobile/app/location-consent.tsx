@@ -58,10 +58,7 @@ export default function LocationConsentScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <InPageHeader
         title={t("consent.title")}
-        onBack={() => {
-          if (router.canGoBack()) router.back();
-          else router.replace("/(tabs)/profile");
-        }}
+        onBack={() => router.replace("/profile")}
       />
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={[styles.iconWrap, { backgroundColor: colors.accent }]}>
