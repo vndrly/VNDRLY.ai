@@ -10,13 +10,14 @@ export default function AskVStatusIndicator({ placement = "default" }: AskVStatu
   const voice = useAskVVoiceSession();
   const { muted, setMuted } = voice;
   const unavailable = voice.availabilityStatus !== "available" || voice.state === "error";
-  const active = !unavailable && !muted && ["connecting", "greeting", "listening", "thinking", "speaking", "wake-idle"].includes(voice.state);
-  const label = unavailable ? "AskV is Unavailable" : active ? "AskV is Active" : "AskV is Muted";
-  const actionTitle = unavailable ? "Retry AskV voice" : active ? "Mute AskV voice" : "Start AskV voice";
+  const connecting = !unavailable && !muted && voice.state === "connecting";
+  const active = !unavailable && !muted && ["greeting", "listening", "thinking", "speaking", "wake-idle"].includes(voice.state);
+  const label = unavailable ? "AskV is Unavailable" : connecting ? "AskV is Connecting" : active ? "AskV is Active" : "AskV is Muted";
+  const actionTitle = unavailable ? "Retry AskV voice" : connecting ? "Stop AskV voice" : active ? "Mute AskV voice" : "Start AskV voice";
   const voiceActive = active;
   const toggle = () => {
     window.dispatchEvent(new CustomEvent("askv:open-panel"));
-    setMuted(active);
+    setMuted(active || connecting);
   };
   return <div className="flex items-center gap-2">
     <AskVListeningPill active={active} tone={active ? "green" : "grey"} statusLabel={label} onClick={toggle} data-testid="askv-status-toggle" title={actionTitle}>

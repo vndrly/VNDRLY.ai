@@ -104,25 +104,45 @@ describe("AskVStatusIndicator", () => {
     window.removeEventListener("askv:open-panel", listener);
   });
 
+  it("waits for an established session before showing active status", () => {
+    voice.muted = false;
+    voice.state = "connecting";
+    const { rerender } = render(<AskVStatusIndicator placement="top-strip" />);
+    const connecting = screen.getByRole("button", { name: "AskV is Connecting" });
+    expect(connecting.getAttribute("data-color")).toBe("grey");
+    expect(connecting.getAttribute("aria-pressed")).toBe("false");
+    expect(connecting.title).toBe("Stop AskV voice");
+    expect(screen.getByTestId("askv-waveform").getAttribute("data-active")).toBe("false");
+
+    voice.state = "listening";
+    rerender(<AskVStatusIndicator placement="top-strip" />);
+    const listening = screen.getByRole("button", { name: "AskV is Active" });
+    expect(listening.getAttribute("data-color")).toBe("green");
+    expect(listening.getAttribute("aria-pressed")).toBe("true");
+    expect(screen.getByTestId("askv-waveform").getAttribute("data-active")).toBe("true");
+  });
+
   describe.each([
     ["VNDRLY light", "light", "#F59E0B"],
     ["vendor dark", "dark", "#008578"],
     ["partner light", "light", "#3260CD"],
   ])("%s brand mode", (_name, mode, primary) => {
     it.each([
-      ["idle", true, "available", "Muted", "grey", false, "Start"],
-      ["listening", true, "available", "Muted", "grey", false, "Start"],
-      ["idle", false, "available", "Muted", "grey", false, "Start"],
-      ["stopped", false, "available", "Muted", "grey", false, "Start"],
-      ["listening", false, "unavailable", "Unavailable", "grey", false, "Retry"],
-      ["error", false, "available", "Unavailable", "grey", false, "Retry"],
-      ["connecting", false, "available", "Active", "green", true, "Mute"],
-      ["greeting", false, "available", "Active", "green", true, "Mute"],
-      ["listening", false, "available", "Active", "green", true, "Mute"],
-      ["thinking", false, "available", "Active", "green", true, "Mute"],
-      ["speaking", false, "available", "Active", "green", true, "Mute"],
-      ["wake-idle", false, "available", "Active", "green", true, "Mute"],
-    ] as const)("renders %s (muted=%s, availability=%s) with its semantic status", (state, muted, availability, status, tone, active, action) => {
+      ["idle", true, "available", "Muted", "grey", false, "Start", false],
+      ["listening", true, "available", "Muted", "grey", false, "Start", false],
+      ["idle", false, "available", "Muted", "grey", false, "Start", false],
+      ["stopped", false, "available", "Muted", "grey", false, "Start", false],
+      ["listening", false, "unavailable", "Unavailable", "grey", false, "Retry", false],
+      ["error", false, "available", "Unavailable", "grey", false, "Retry", false],
+      ["connecting", false, "available", "Connecting", "grey", false, "Stop", true],
+      ["connecting", true, "available", "Muted", "grey", false, "Start", false],
+      ["connecting", false, "unavailable", "Unavailable", "grey", false, "Retry", false],
+      ["greeting", false, "available", "Active", "green", true, "Mute", true],
+      ["listening", false, "available", "Active", "green", true, "Mute", true],
+      ["thinking", false, "available", "Active", "green", true, "Mute", true],
+      ["speaking", false, "available", "Active", "green", true, "Mute", true],
+      ["wake-idle", false, "available", "Active", "green", true, "Mute", true],
+    ] as const)("renders %s (muted=%s, availability=%s) with its semantic status", (state, muted, availability, status, tone, active, action, mutedAfterClick) => {
       Object.assign(voice, { state, muted, availabilityStatus: availability });
       const { container } = render(
         <div className={mode} style={{ "--brand-primary": primary } as React.CSSProperties}>
@@ -141,7 +161,7 @@ describe("AskVStatusIndicator", () => {
       expect(screen.getByRole("img", { name: active ? "Ask V voice activity" : "Ask V voice idle" }).getAttribute("data-active")).toBe(String(active));
       expect(container.querySelectorAll("button")).toHaveLength(1);
       fireEvent.click(button);
-      expect(setMuted).toHaveBeenCalledWith(active);
+      expect(setMuted).toHaveBeenCalledWith(mutedAfterClick);
     });
   });
 });
