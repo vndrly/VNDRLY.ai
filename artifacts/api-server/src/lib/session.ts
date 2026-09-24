@@ -32,9 +32,11 @@ function verifyPayload(signed: string): string | null {
   return payload;
 }
 
+export type GateRole = "gatekeeper" | "gate_supervisor";
+
 export interface SessionPayload {
   /** Signed operational grants; never an employee payroll relationship. */
-  managedSubcontractor?: { siteGrants: { siteId: number; role: "gatekeeper" | "gate_supervisor" }[] };
+  managedSubcontractor?: { siteGrants: { siteId: number; role: GateRole }[] };
   userId?: number;
   role?: string;
   /**
@@ -46,6 +48,7 @@ export interface SessionPayload {
   membershipRole?: string | null;
   partnerId?: number | null;
   vendorId?: number | null;
+  /** A direct gate role also qualifies this session for gate notifications. */
   vendorRole?: string | null;
   vendorPeopleId?: number | null;
   activeMembershipId?: number | null;
