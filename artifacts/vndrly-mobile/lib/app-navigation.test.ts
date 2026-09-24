@@ -128,8 +128,15 @@ describe("buildAppNavigation", () => {
     expect(isGatekeeperRouteAllowed(user("vendor", "gate_supervisor"), ["work-hub", "tasks-forms"])).toBe(true);
   });
 
+  it("allows gatekeepers and gate supervisors to open the notification inbox", () => {
+    expect(isGatekeeperRouteAllowed(user("vendor", "gatekeeper"), ["notifications"])).toBe(true);
+    expect(isGatekeeperRouteAllowed(user("vendor", "gate_supervisor"), ["notifications"])).toBe(true);
+    expect(isGatekeeperRouteAllowed(user("vendor", "gatekeeper"), ["(tabs)", "gate-notifications"])).toBe(true);
+    expect(isGatekeeperRouteAllowed(user("vendor", "gatekeeper"), ["(tabs)", "gate-notification-preferences"])).toBe(true);
+  });
+
   it("allows gatekeepers into the profile actions exposed by the Profile screen", () => {
-    for (const route of ["edit-profile", "location-consent", "compliance"]) {
+    for (const route of ["edit-profile", "location-consent", "compliance", "notification-preferences"]) {
       expect(
         isGatekeeperRouteAllowed(user("vendor", "gatekeeper"), [route]),
         route,

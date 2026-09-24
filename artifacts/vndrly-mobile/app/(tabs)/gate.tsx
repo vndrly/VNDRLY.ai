@@ -830,7 +830,7 @@ export default function GatekeeperScreen() {
           <View
             style={[
               styles.card,
-              { borderColor: colors.border, backgroundColor: colors.card },
+              { borderColor: colors.primary, backgroundColor: colors.card },
             ]}
           >
             <Text style={[styles.cardTitle, { color: colors.foreground }]}>
@@ -999,7 +999,7 @@ export default function GatekeeperScreen() {
           <View
             style={[
               styles.card,
-              { borderColor: colors.border, backgroundColor: colors.card },
+              { borderColor: colors.primary, backgroundColor: colors.card },
             ]}
           >
             <Text style={[styles.cardTitle, { color: colors.foreground }]}>
@@ -1352,7 +1352,7 @@ const styles = StyleSheet.create({
   pageTitle: { flexShrink: 1, fontFamily: "Inter_700Bold", fontSize: 20 },
   subtitle: { fontFamily: "Inter_400Regular", fontSize: 13, marginTop: -8 },
   submitButton: { width: "48%" },
-  card: { borderWidth: 1, borderRadius: 12, gap: 10, padding: 14 },
+  card: { borderWidth: 2, borderRadius: 12, gap: 10, padding: 14 },
   cardTitle: { fontFamily: "Inter_600SemiBold", fontSize: 17 },
   plateInput: { fontFamily: "Inter_700Bold", fontSize: 22, minHeight: 56 },
   admitLabel: { fontFamily: "Inter_700Bold", fontSize: 13 },

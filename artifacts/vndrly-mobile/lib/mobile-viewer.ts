@@ -44,6 +44,8 @@ export const GATEKEEPER_TAB_KEYS = [
   "gate-history",
   "change-over",
   "shift-notes",
+  "gate-notifications",
+  "gate-notification-preferences",
   "profile",
 ] as const;
 

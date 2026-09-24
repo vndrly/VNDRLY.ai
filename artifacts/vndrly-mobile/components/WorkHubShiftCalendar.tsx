@@ -89,7 +89,7 @@ export default function WorkHubShiftCalendar({
   return (
     <View
       accessibilityLabel="Shift calendar"
-      style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
+      style={[styles.card, { backgroundColor: colors.card, borderColor: colors.primary }]}
     >
       <View style={styles.headerRow}>
         <Text selectable style={[styles.title, { color: colors.text }]}>Shift calendar</Text>
@@ -228,7 +228,7 @@ export default function WorkHubShiftCalendar({
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: 16, borderWidth: 1, gap: 10, padding: 12 },
+  card: { borderRadius: 16, borderWidth: 2, gap: 10, padding: 12 },
   headerRow: { alignItems: "center", flexDirection: "row", gap: 10, justifyContent: "space-between" },
   title: { fontSize: 17, fontWeight: "800" },
   viewToggle: { flexDirection: "row", gap: 6 },

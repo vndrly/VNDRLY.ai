@@ -73,6 +73,18 @@ vi.mock("react-i18next", () => ({
 
 vi.mock("@expo/vector-icons", () => ({ Feather: () => null }));
 
+// The real shell and sidebar stay mounted below. Only the native SVG renderer
+// used by the sidebar artwork needs a jsdom boundary: its CommonJS entrypoint
+// loads React Native's Flow source outside Vite's react-native-web alias.
+vi.mock("react-native-svg", () => ({
+  Defs: ({ children }: { children?: React.ReactNode }) => children,
+  LinearGradient: ({ children }: { children?: React.ReactNode }) => children,
+  Rect: () => null,
+  Stop: () => null,
+  Svg: ({ children }: { children?: React.ReactNode }) => children,
+  SvgXml: () => null,
+}));
+
 vi.mock("@/hooks/useColors", () => ({
   useColors: () => ({
     background: "#fff",

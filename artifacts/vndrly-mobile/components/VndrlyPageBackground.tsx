@@ -1,5 +1,5 @@
 import React, { useEffect, type ReactNode } from "react";
-import { Image, Platform, StyleSheet, View } from "react-native";
+import { Image, Platform, StyleSheet, useWindowDimensions, View } from "react-native";
 
 const BACKGROUND = "#3a3d42";
 
@@ -8,6 +8,7 @@ type Props = {
 };
 
 export default function VndrlyPageBackground({ children }: Props) {
+  const { width } = useWindowDimensions();
   useEffect(() => {
     if (Platform.OS !== "web") return;
     const styleId = "vndrly-mobile-transparent-scenes";
@@ -24,11 +25,14 @@ export default function VndrlyPageBackground({ children }: Props) {
 
   return (
     <View style={styles.root}>
-      <Image
-        source={require("@/assets/images/vndrly-page-background.png")}
-        style={styles.backgroundImage}
-        resizeMode="cover"
-      />
+      {width < 768 ? (
+        <Image
+          resizeMode="cover"
+          source={require("@/assets/images/vndrly-page-background.png")}
+          style={styles.backgroundImage}
+          testID="vndrly-page-halftone"
+        />
+      ) : null}
       <View style={styles.content}>{children}</View>
     </View>
   );

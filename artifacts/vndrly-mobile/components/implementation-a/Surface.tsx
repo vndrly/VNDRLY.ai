@@ -4,7 +4,7 @@ import { useColors } from "@/hooks/useColors";
 
 export function ImplementationASurface({ description, children }: { description: string; children: React.ReactNode }) {
   const colors = useColors();
-  return <View style={{ borderWidth: 1, borderColor: colors.border, borderRadius: 14, padding: 16, gap: 12, backgroundColor: colors.card }}>
+  return <View style={{ borderWidth: 2, borderColor: colors.primary, borderRadius: 14, padding: 16, gap: 12, backgroundColor: colors.card }}>
     <Text style={{ color: colors.mutedForeground }}>{description}</Text>
     {children}
   </View>;

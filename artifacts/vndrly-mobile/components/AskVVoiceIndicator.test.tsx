@@ -133,7 +133,7 @@ describe("AskVVoiceIndicator", () => {
     expect(inlineScreen.getByTestId("askv-inline-status")).toBeTruthy();
   });
 
-  it.each(["/gate-history", "/profile", "/edit-profile", "/compliance"])("moves the AskV voice control into the %s header without leaving a duplicate overlay", (pathname) => {
+  it.each(["/gate-history", "/notifications", "/gate-notifications", "/notification-preferences", "/gate-notification-preferences", "/profile", "/edit-profile", "/compliance"])("moves the AskV voice control into the %s header without leaving a duplicate overlay", (pathname) => {
     env.pathname = pathname;
     const globalScreen = render(<AskVVoiceIndicator />);
     expect(globalScreen.queryByTestId("askv-global-status")).toBeNull();

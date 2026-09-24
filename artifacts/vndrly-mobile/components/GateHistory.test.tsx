@@ -30,7 +30,7 @@ beforeEach(() => {
 });
 
 it("defaults to Current Shift and drives the visible report with type and range filters", async () => {
-  mount(); expect(await screen.findByText("Bob Villa")).toBeTruthy();
+  mount(); expect((await screen.findAllByText("Bob Villa")).length).toBeGreaterThan(0);
   fireEvent.click(screen.getByTestId("gate-history-record-type-toggle"));
   fireEvent.click(screen.getByRole("button", { name: "gateHistory.type.check_ins" }));
   fireEvent.click(screen.getByTestId("gate-history-time-period-toggle"));
@@ -39,11 +39,15 @@ it("defaults to Current Shift and drives the visible report with type and range 
   expect(env.api).toHaveBeenCalledWith("/api/gate-report/query", expect.objectContaining({ body: expect.stringContaining('"recordType":"check_ins"') }));
 });
 
-it("matches Shift Notes with selector and automatic-search result cards", async () => {
+it("places the live history above Send Reports and moves Site and Gate into the report card", async () => {
   mount();
-  const selectorCard = await screen.findByTestId("gate-history-site-gate-card");
-  expect(await within(selectorCard).findByRole("button", { name: "Big Cs Deep" })).not.toBeNull();
-  expect(await within(selectorCard).findByRole("button", { name: "Main gate" })).not.toBeNull();
+  const historyCard = await screen.findByTestId("gate-history-live-card");
+  const reportCard = screen.getByTestId("gate-history-report-card");
+  expect(await within(historyCard).findByText("Bob Villa")).not.toBeNull();
+  expect(await within(reportCard).findByRole("button", { name: "Big Cs Deep" })).not.toBeNull();
+  expect(await within(reportCard).findByRole("button", { name: "Main gate" })).not.toBeNull();
+  expect(screen.queryByTestId("gate-history-site-gate-card")).toBeNull();
+  expect(historyCard.compareDocumentPosition(reportCard) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 
   const searchCard = screen.getByTestId("gate-history-search-card");
   expect(within(searchCard).getByLabelText("gatekeeper.historySearch")).not.toBeNull();
@@ -64,9 +68,19 @@ it("matches Shift Notes with selector and automatic-search result cards", async 
   expect(screen.getByTestId("gate-history-email").getAttribute("data-solid")).toBe("true");
 });
 
+it("uses two-pixel brand outlines for both History cards", async () => {
+  mount();
+  const historyCard = await screen.findByTestId("gate-history-live-card");
+  const reportCard = screen.getByTestId("gate-history-report-card");
+  expect(historyCard.style.borderTopColor).toBe("rgb(0, 0, 255)");
+  expect(historyCard.style.borderTopWidth).toBe("2px");
+  expect(reportCard.style.borderTopColor).toBe("rgb(0, 0, 255)");
+  expect(reportCard.style.borderTopWidth).toBe("2px");
+});
+
 it("exports the selected view and emails only selected authorized recipients", async () => {
   vi.spyOn(Platform, "OS", "get").mockReturnValue("ios");
-  mount(); await screen.findByText("Bob Villa");
+  mount(); await screen.findAllByText("Bob Villa");
   fireEvent.click(screen.getByRole("button", { name: "PDF" }));
   fireEvent.click(screen.getByTestId("gate-history-save"));
   await waitFor(() => expect(env.share).toHaveBeenCalled());
@@ -85,7 +99,7 @@ it("downloads each filtered export in the browser with the correct file type", a
   env.raw.mockResolvedValue({ blob: async () => new Blob(["report"]) });
 
   mount();
-  await screen.findByText("Bob Villa");
+  await screen.findAllByText("Bob Villa");
   for (const label of ["PDF", "CSV", "DOC"]) {
     fireEvent.click(screen.getByRole("button", { name: label }));
     fireEvent.click(screen.getByTestId("gate-history-save"));

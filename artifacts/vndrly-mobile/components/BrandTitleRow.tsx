@@ -17,9 +17,18 @@ type Props = {
   subtitle?: string;
   logoTestId: string;
   platformLogoTestId?: string;
+  compact?: boolean;
+  stacked?: boolean;
 };
 
-export default function BrandTitleRow({ title, subtitle, logoTestId, platformLogoTestId }: Props) {
+export default function BrandTitleRow({
+  title,
+  subtitle,
+  logoTestId,
+  platformLogoTestId,
+  compact = false,
+  stacked = false,
+}: Props) {
   const brand = useBrand();
   const sidebarNotifications = useSidebarNotifications();
   const notificationCount = useUnreadNotificationCount(Boolean(platformLogoTestId));
@@ -31,34 +40,46 @@ export default function BrandTitleRow({ title, subtitle, logoTestId, platformLog
     activeMembership?.orgLogoUrl ??
     null;
   const brandName = brand.name ?? activeMembership?.orgName ?? t("home.brandWordmark");
+  const logoStyle = stacked ? styles.stackedLogo : compact ? styles.compactLogo : styles.logo;
   const fallbackLogo = (
     <Image
-      source={VNDRLY_LOGO_SQUARE}
-      style={styles.logo}
-      resizeMode="contain"
-      testID={logoTestId}
       accessibilityLabel={brandName}
+      resizeMode="contain"
+      source={VNDRLY_LOGO_SQUARE}
+      style={logoStyle}
+      testID={logoTestId}
     />
   );
 
   return (
-    <View style={styles.row}>
+    <View
+      style={[styles.row, stacked && styles.stackedRow]}
+      testID={stacked ? "brand-title-stacked" : undefined}
+    >
       {logoUri ? (
         <AuthedImage
-          uri={logoUri}
-          fallback={fallbackLogo}
-          style={styles.logo}
-          resizeMode="contain"
-          testID={logoTestId}
           accessibilityLabel={brandName}
+          fallback={fallbackLogo}
+          resizeMode="contain"
+          style={logoStyle}
+          testID={logoTestId}
+          uri={logoUri}
         />
       ) : (
         fallbackLogo
       )}
       <View style={styles.textCol}>
-        <Text style={[styles.title, { color: colors.foreground }]}>{title ?? brandName}</Text>
+        <Text
+          style={[styles.title, (compact || stacked) && styles.compactTitle, { color: colors.foreground }]}
+        >
+          {title ?? brandName}
+        </Text>
         {subtitle ? (
-          <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>{subtitle}</Text>
+          <Text
+            style={[styles.subtitle, (compact || stacked) && styles.compactSubtitle, { color: colors.mutedForeground }]}
+          >
+            {subtitle}
+          </Text>
         ) : null}
       </View>
       {platformLogoTestId ? (
@@ -78,26 +99,17 @@ export default function BrandTitleRow({ title, subtitle, logoTestId, platformLog
 }
 
 const styles = StyleSheet.create({
-  row: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 10,
-  },
-  logo: {
-    height: 40,
-    width: 40,
-  },
-  textCol: {
-    flex: 1,
-    minWidth: 0,
-  },
+  row: { alignItems: "center", flexDirection: "row", gap: 10 },
+  logo: { height: 40, width: 40 },
+  compactLogo: { height: 32, width: 32 },
+  stackedLogo: { height: 44, width: 44 },
+  stackedRow: { alignItems: "flex-start", flexDirection: "column", gap: 6 },
+  textCol: { flex: 1, minWidth: 0 },
   title: {
     fontFamily: "Inter_700Bold",
     fontSize: 20,
   },
-  subtitle: {
-    fontFamily: "Inter_400Regular",
-    fontSize: 13,
-    marginTop: 2,
-  },
+  compactTitle: { fontSize: 16 },
+  subtitle: { fontFamily: "Inter_400Regular", fontSize: 13, marginTop: 2 },
+  compactSubtitle: { fontSize: 11 },
 });

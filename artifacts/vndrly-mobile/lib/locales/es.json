@@ -1399,6 +1399,7 @@
   },
   "notifications": {
     "title": "Notificaciones",
+    "description": "Revisa asignaciones, mensajes, relevos y alertas que requieren tu atención.",
     "empty": "Sin notificaciones.",
     "markAll": "Marcar todas como leídas",
     "markRead": "Marcar como leída",
@@ -1606,6 +1607,7 @@
     "noPrice": "Sin precio"
   },
   "profile": {
+    "navLabel": "Perfil & configuración",
     "settings": "Configuración",
     "language": "Idioma",
     "locationSharing": "Compartir ubicación",

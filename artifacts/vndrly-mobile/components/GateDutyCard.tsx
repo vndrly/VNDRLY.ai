@@ -47,7 +47,7 @@ export default function GateDutyCard({
     method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body),
   });
 
-  return <View style={{ backgroundColor: colors.card, borderColor: colors.border, borderRadius: 12, borderWidth: 1, gap: 10, padding: 16 }}>
+  return <View style={{ backgroundColor: colors.card, borderColor: colors.primary, borderRadius: 12, borderWidth: 2, gap: 10, padding: 16 }}>
     <Text style={{ color: colors.foreground, fontSize: 17, fontWeight: "700" }}>{t("gateDuty.title")}</Text>
     {(roster.data?.roster ?? []).length === 0
       ? <View accessibilityRole="alert" style={{ backgroundColor: `${colors.destructive}18`, borderColor: colors.destructive, borderRadius: 8, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 8 }}>

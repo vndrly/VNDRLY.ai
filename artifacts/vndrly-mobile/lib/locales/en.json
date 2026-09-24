@@ -1399,6 +1399,7 @@
   },
   "notifications": {
     "title": "Notifications",
+    "description": "Review assignments, messages, handoffs, and alerts that need your attention.",
     "empty": "No notifications.",
     "markAll": "Mark all as read",
     "markRead": "Mark read",
@@ -1606,6 +1607,7 @@
     "noPrice": "No price set"
   },
   "profile": {
+    "navLabel": "Profile & Settings",
     "settings": "Settings",
     "language": "Language",
     "locationSharing": "Location sharing",

@@ -399,7 +399,7 @@ export default function AskVScreen() {
         <View
           style={[
             styles.greetingCard,
-            { backgroundColor: colors.card, borderColor: colors.border },
+            { backgroundColor: colors.card, borderColor: brand.primary },
           ]}
         >
           <View style={styles.greetingContentRow}>
@@ -588,7 +588,7 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: 13, lineHeight: 18, marginTop: -4, marginBottom: 8 },
   scrollContent: { paddingHorizontal: 20, paddingTop: 14, paddingBottom: 16, gap: 12 },
   greetingCard: {
-    borderWidth: 1,
+    borderWidth: 2,
     borderRadius: 12,
     padding: 14,
     gap: 8,

@@ -27,6 +27,7 @@ export interface Pill9SliceProps {
   height?: number;
   borderRadius?: number;
   style?: StyleProp<ViewStyle>;
+  testID?: string;
 }
 
 function PillSliceLayers({
@@ -140,6 +141,7 @@ export default function Pill9Slice({
   height: heightProp,
   borderRadius,
   style,
+  testID,
 }: Pill9SliceProps) {
   const [w, setW] = useState(0);
   const [measuredH, setMeasuredH] = useState(0);
@@ -157,6 +159,7 @@ export default function Pill9Slice({
     <View
       onLayout={onLayout}
       pointerEvents="none"
+      testID={testID}
       style={[
         {
           position: "absolute",

@@ -32,6 +32,7 @@ vi.mock("@/hooks/useColors", () => ({
     border: "gray",
     mutedForeground: "gray",
     destructive: "red",
+    primary: "blue",
   }),
 }));
 vi.mock("@/components/ScreenSafeArea", () => ({
@@ -111,6 +112,59 @@ beforeEach(() => {
   );
 });
 afterEach(cleanup);
+it("reveals Shift Notes ten at a time across server pages without report filters changing the 60-day browser", async () => {
+  const base = env.api.getMockImplementation()!;
+  const notes = Array.from({ length: 60 }, (_, index) => ({
+    id: `note-${index}`,
+    acknowledged_at: new Date(Date.UTC(2026, 8, 24, 12, -index)).toISOString(),
+    outgoing_name: `Outgoing ${index}`,
+    incoming_name: `Incoming ${index}`,
+    notes: `Handoff detail ${index}`,
+    summary: { source: "structured_facts", facts: [] },
+    snapshot: { ...snapshot, openItems: [{ id: "carry-1", text: "Barrier requires follow-up" }] },
+  }));
+  const nextBefore = notes[49].acknowledged_at;
+  env.api.mockImplementation((path, body) => {
+    if (!path.includes("/notes?")) return base(path, body);
+    const params = new URLSearchParams(path.split("?")[1]);
+    return Promise.resolve(params.has("before")
+      ? { rows: notes.slice(50), nextBefore: null, actions: [] }
+      : { rows: notes.slice(0, 50), nextBefore, actions: [] });
+  });
+  const cache = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(<QueryClientProvider client={cache}><GateChangeOver history /></QueryClientProvider>);
+  const card = await screen.findByTestId("shift-notes-browser-card");
+  // Count rendered note rows without jsdom's expensive layout/visibility walk
+  // for every row on every polling tick. Accessibility names are checked below.
+  const noteButtons = () => card.querySelectorAll('[role="button"]');
+  await waitFor(() => expect(noteButtons()).toHaveLength(10));
+  const scroller = card.querySelector<HTMLElement>('[style*="max-height: 520px"]')!;
+  expect(scroller).not.toBeNull();
+  Object.defineProperties(scroller, {
+    scrollHeight: { configurable: true, writable: true, value: 1000 },
+    offsetHeight: { configurable: true, value: 500 },
+    scrollTop: { configurable: true, writable: true, value: 500 },
+  });
+  for (const visible of [20, 30, 40, 50, 60]) {
+    Object.defineProperty(scroller, "scrollHeight", { configurable: true, value: (visible - 10) * 100 });
+    scroller.scrollTop = (visible - 10) * 100 - 500;
+    fireEvent.scroll(scroller);
+    await waitFor(() => expect(noteButtons()).toHaveLength(visible));
+  }
+  const requests = env.api.mock.calls.filter(([path]) => path.includes("/notes?"));
+  expect(requests).toHaveLength(2);
+  expect(new URLSearchParams(requests[1][0].split("?")[1]).get("before")).toBe(nextBefore);
+  expect(requests.every(([path]) => new URLSearchParams(path.split("?")[1]).get("days") === "60")).toBe(true);
+  fireEvent.click(within(card).getByRole("button", { name: /Outgoing 59/ }));
+  expect(within(card).getByText("Handoff detail 59")).toBeTruthy();
+  expect(within(card).getByText(/Barrier requires follow-up/)).toBeTruthy();
+  expect(screen.getByText("30 changeOver.days")).toBeTruthy();
+  fireEvent.change(within(screen.getByTestId("shift-notes-search-card")).getByRole("textbox"), { target: { value: "report only" } });
+  await waitFor(() => expect(env.fetch.mock.calls.some(([path]) => path.includes("search=report+only"))).toBe(true));
+  expect(noteButtons()).toHaveLength(60);
+  expect(env.api.mock.calls.filter(([path]) => path.includes("/notes?"))).toHaveLength(2);
+});
+
 it("shows only active company employees in Shift Notes recipients", async () => {
   const base = env.api.getMockImplementation()!;
   env.api.mockImplementation((path, body) =>
@@ -158,6 +212,13 @@ it("collapses recipients and places exports after Shift Notes results", async ()
   const searchCard = screen.getByTestId("shift-notes-search-card");
   const exportRow = screen.getByTestId("shift-notes-export-row");
   const reportCard = screen.getByTestId("shift-notes-report-card");
+  const notesCard = screen.getByTestId("shift-notes-browser-card");
+  expect(within(reportCard).getByRole("button", { name: "Site" })).not.toBeNull();
+  expect(within(reportCard).getByRole("button", { name: "Main gate" })).not.toBeNull();
+  expect(screen.queryByTestId("shift-notes-site-gate-card")).toBeNull();
+  expect(notesCard.compareDocumentPosition(reportCard) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(reportCard.style.borderTopColor).toBe("rgb(0, 0, 255)");
+  expect(reportCard.style.borderTopWidth).toBe("2px");
   expect(reportCard.contains(screen.getByTestId("shift-notes-recipients-card"))).toBe(true);
   expect(reportCard.contains(searchCard)).toBe(true);
   expect(reportCard.contains(exportRow)).toBe(true);
@@ -171,6 +232,13 @@ it("collapses recipients and places exports after Shift Notes results", async ()
   expect(within(exportRow).getAllByRole("button").every((button) => button.getAttribute("data-solid") === "false")).toBe(true);
   expect(screen.getByTestId("shift-notes-email").getAttribute("data-color")).toBe("brand");
   expect(screen.getByTestId("shift-notes-email").getAttribute("data-solid")).toBe("true");
+});
+
+it("uses a two-pixel brand outline on the Dashboard selector card", async () => {
+  mount();
+  const card = await screen.findByTestId("dashboard-blank-card");
+  expect(card.style.borderTopColor).toBe("rgb(0, 0, 255)");
+  expect(card.style.borderTopWidth).toBe("2px");
 });
 it("places the canonical back button immediately before the Shift Notes title", async () => {
   const base = env.api.getMockImplementation()!;

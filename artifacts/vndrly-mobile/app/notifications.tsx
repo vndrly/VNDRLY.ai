@@ -1,5 +1,5 @@
 import { Feather } from "@expo/vector-icons";
-import { router, Stack, useFocusEffect, useLocalSearchParams } from "expo-router";
+import { router, Stack, useFocusEffect, useLocalSearchParams, usePathname } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -16,7 +16,7 @@ import {
 
 import NotificationActionModal from "@/components/NotificationActionModal";
 import NotificationSendToModal from "@/components/NotificationSendToModal";
-import InPageHeader from "@/components/InPageHeader";
+import PortalPageHeader from "@/components/PortalPageHeader";
 import NotificationCategoryCarousel from "@/components/NotificationCategoryCarousel";
 import { useNotificationInbox } from "@/hooks/use-notification-inbox";
 import { useColors } from "@/hooks/useColors";
@@ -37,6 +37,7 @@ const CATEGORY_LABELS: Record<string, string> = { all: "All", schedule: "Schedul
 export default function NotificationsScreen() {
   const colors = useColors();
   const { t } = useTranslation();
+  const pathname = usePathname();
   const { width } = useWindowDimensions();
   const { category: categoryParam } = useLocalSearchParams<{ category?: string }>();
   const { generation, activeCategory, selectCategory, categories, isGate, items, setItems, loading, refreshing, loadingMore, loadError, rateLimited, retryAfterSeconds, refresh, loadMore, retry } = useNotificationInbox(categoryParam ?? "all");
@@ -149,28 +150,44 @@ export default function NotificationsScreen() {
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
-      <InPageHeader
+      <PortalPageHeader
         title={t("notifications.title")}
-        right={
-          <View style={{ flexDirection: "row", gap: 4 }}>
-            <TouchableOpacity
-              onPress={() => router.push("/notification-preferences")}
-              style={styles.iconBtn}
-              accessibilityLabel={t("notifications.preferencesTitle")}
-            >
-              <Feather name="settings" size={18} color={colors.foreground} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={markAll}
-              style={styles.iconBtn}
-              accessibilityLabel={t("notifications.markAll")}
-            >
-              <Feather name="check-circle" size={18} color={colors.primary} />
-            </TouchableOpacity>
-          </View>
-        }
+        testIdPrefix="notifications"
+        fallbackHref="/(tabs)/change-over"
       />
+      <Text style={[styles.pageDescription, { color: colors.mutedForeground }]}>
+        {t("notifications.description")}
+      </Text>
 
+      <View
+        style={[
+          styles.inboxCard,
+          { backgroundColor: colors.card, borderColor: colors.primary },
+        ]}
+        testID="notifications-inbox-card"
+      >
+      <View style={styles.cardActions}>
+        <TouchableOpacity
+          onPress={() =>
+            router.push(
+              pathname.endsWith("/gate-notifications")
+                ? "/(tabs)/gate-notification-preferences"
+                : "/notification-preferences",
+            )
+          }
+          style={styles.iconBtn}
+          accessibilityLabel={t("notifications.preferencesTitle")}
+        >
+          <Feather name="settings" size={18} color={colors.foreground} />
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={markAll}
+          style={styles.iconBtn}
+          accessibilityLabel={t("notifications.markAll")}
+        >
+          <Feather name="check-circle" size={18} color={colors.primary} />
+        </TouchableOpacity>
+      </View>
       <NotificationCategoryCarousel
         categories={categories}
         activeCategory={activeCategory}
@@ -307,6 +324,7 @@ export default function NotificationsScreen() {
           }}
         />
       )}
+      </View>
 
       <NotificationActionModal
         visible={selected !== null}
@@ -337,6 +355,29 @@ export default function NotificationsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  pageDescription: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 13,
+    marginBottom: 12,
+    marginHorizontal: 20,
+    marginTop: -8,
+  },
+  inboxCard: {
+    borderRadius: 12,
+    borderWidth: 2,
+    flex: 1,
+    marginBottom: 12,
+    marginHorizontal: 12,
+    overflow: "hidden",
+  },
+  cardActions: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 4,
+    justifyContent: "flex-end",
+    paddingHorizontal: 8,
+    paddingTop: 6,
+  },
   iconBtn: { padding: 8 },
   categoryDivider: {
     height: 1,

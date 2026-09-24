@@ -29,11 +29,17 @@ vi.mock("@/hooks/useColors", () => ({
 vi.mock("@expo/vector-icons", () => ({ Feather: () => null }));
 vi.mock("@/components/AdaptiveNavigationShell", () => ({ REGULAR_NAVIGATION_BREAKPOINT: 768 }));
 vi.mock("react-native-svg", () => ({ default: () => null, Defs: () => null, LinearGradient: () => null, Rect: () => null, Stop: () => null }));
+vi.mock("@/components/PortalPageHeader", () => ({
+  default: ({ title, testIdPrefix }: { title: string; testIdPrefix: string }) => (
+    <div data-testid={`${testIdPrefix}-standard-header`}>{title}</div>
+  ),
+}));
 
 vi.mock("expo-router", () => ({
   router: { push: vi.fn(), replace: vi.fn(), back: vi.fn() },
   Stack: { Screen: () => null },
   useLocalSearchParams: () => ({}),
+  usePathname: () => "/(tabs)/gate-notifications",
   useFocusEffect: (cb: () => void | (() => void)) => {
     const ReactLib = require("react");
     ReactLib.useEffect(() => {

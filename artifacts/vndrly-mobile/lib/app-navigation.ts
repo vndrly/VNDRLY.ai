@@ -116,6 +116,8 @@ export function isGatekeeperRouteAllowed(
     "edit-profile",
     "location-consent",
     "compliance",
+    "notifications",
+    "notification-preferences",
   ]);
   return (
     (root === "(tabs)" && isGatekeeperTabKey(child)) ||

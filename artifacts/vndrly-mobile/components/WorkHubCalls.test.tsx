@@ -1,6 +1,7 @@
 import React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -12,6 +13,8 @@ const mocks = vi.hoisted(() => ({
   api: vi.fn(),
   createSound: vi.fn(),
   upload: vi.fn(),
+  recordStart: vi.fn(async () => undefined),
+  recordStop: vi.fn(async () => undefined),
 }));
 vi.mock("@/lib/api", () => ({
   apiFetch: mocks.api,
@@ -43,8 +46,8 @@ vi.mock("expo-av", () => ({
     RecordingOptionsPresets: { HIGH_QUALITY: {} },
     Recording: class {
       async prepareToRecordAsync() {}
-      async startAsync() {}
-      async stopAndUnloadAsync() {}
+      startAsync = mocks.recordStart;
+      stopAndUnloadAsync = mocks.recordStop;
       getURI() {
         return "file:///private/voicemail.m4a";
       }
@@ -65,6 +68,8 @@ describe("mobile internal Calls", () => {
     mocks.api.mockReset();
     mocks.upload.mockReset();
     mocks.createSound.mockReset();
+    mocks.recordStart.mockClear();
+    mocks.recordStop.mockClear();
   });
   it("does not expose the audio room before recipient acceptance", async () => {
     mocks.api.mockImplementation(async (path: string) =>
@@ -200,10 +205,18 @@ describe("mobile internal Calls", () => {
     render(<WorkHubCalls />);
     fireEvent.click(await screen.findByText("Jordan · unavailable"));
     fireEvent.click(screen.getByRole("button", { name: "Leave voicemail" }));
-    fireEvent.click(screen.getByRole("button", { name: "Record message" }));
-    fireEvent.click(
-      await screen.findByRole("button", { name: "Stop recording" }),
-    );
+    // Recording changes the same React Native Web Pressable from Start to
+    // Stop asynchronously. Its responder receives the new onPress in a passive
+    // effect; a DOM-label-only wait can click before that effect is flushed.
+    // Await each interaction's React work, then verify the native boundary too.
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Record message" }));
+    });
+    expect(mocks.recordStart).toHaveBeenCalledTimes(1);
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Stop recording" }));
+    });
+    expect(mocks.recordStop).toHaveBeenCalledTimes(1);
     fireEvent.click(
       await screen.findByRole("button", { name: "Send voicemail" }),
     );

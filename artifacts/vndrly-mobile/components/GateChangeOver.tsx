@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   AppState,
   Platform,
@@ -6,6 +6,7 @@ import {
   ScrollView,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
   Switch,
 } from "react-native";
@@ -13,7 +14,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import * as Crypto from "expo-crypto";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
   mayTransferHandoff,
@@ -105,6 +106,8 @@ export default function GateChangeOver({
 }) {
   const { t } = useTranslation();
   const colors = useColors();
+  const { width, height } = useWindowDimensions();
+  const wideLandscape = width >= 768 && width > height;
   const { user } = useAuth();
   const cache = useQueryClient();
   const params = useLocalSearchParams<{
@@ -139,10 +142,13 @@ export default function GateChangeOver({
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [recipientsOpen, setRecipientsOpen] = useState(false);
-  const [days, setDays] = useState(7);
+  const [days, setDays] = useState(30);
   const [timeframeOpen, setTimeframeOpen] = useState(false);
   const [reportFormat, setReportFormat] = useState<"pdf" | "excel" | "word" | null>(null);
-  const [before, setBefore] = useState("");
+  const [visibleNoteCount, setVisibleNoteCount] = useState(10);
+  const [expandedNoteId, setExpandedNoteId] = useState<string | null>(null);
+  const lastNotesEndHeight = useRef<number | null>(null);
+  const notesPageRequest = useRef<object | null>(null);
   const [newGate, setNewGate] = useState("");
   const [reportRecipientIds, setReportRecipientIds] = useState<number[]>([]);
   const sites = useQuery({
@@ -190,16 +196,37 @@ export default function GateChangeOver({
     networkMode: "always",
     refetchInterval: 15000,
   });
-  const log = useQuery({
-    queryKey: ["shift-notes", user?.id, stationId, days, before, search],
-    queryFn: () =>
+  const log = useInfiniteQuery({
+    queryKey: ["shift-notes", user?.id, stationId, 60],
+    initialPageParam: "",
+    queryFn: ({ pageParam }) =>
       request<ShiftNotesResponse>(
-        `/${stationId}/notes?${new URLSearchParams({ days: String(days), search, ...(before ? { before } : {}) })}`,
+        `/${stationId}/notes?${new URLSearchParams({ days: "60", ...(pageParam ? { before: pageParam } : {}) })}`,
       ),
+    getNextPageParam: (page) => page.nextBefore || undefined,
     enabled: Boolean(stationId) && history,
     retry: false,
     networkMode: "always",
   });
+  const noteRows = Array.from(new Map(
+    (log.data?.pages.flatMap((page) => page.rows) ?? []).map((row) => [row.id, row]),
+  ).values());
+  const revealOlderNotes = async (contentHeight: number) => {
+    // Native/web scroll-end callbacks can repeat for the same visible content.
+    if (lastNotesEndHeight.current === contentHeight || notesPageRequest.current) return;
+    lastNotesEndHeight.current = contentHeight;
+    if (visibleNoteCount < noteRows.length) {
+      setVisibleNoteCount((count) => Math.min(count + 10, noteRows.length));
+    } else if (log.hasNextPage) {
+      const requestId = {};
+      notesPageRequest.current = requestId;
+      const next = await log.fetchNextPage({ cancelRefetch: false });
+      if (notesPageRequest.current !== requestId) return;
+      notesPageRequest.current = null;
+      if (next.isError) lastNotesEndHeight.current = null;
+      else setVisibleNoteCount((count) => count + 10);
+    }
+  };
   const current = state.data;
   const prep = current?.preparation;
   const revision = current?.snapshot?.revision ?? "";
@@ -217,7 +244,10 @@ export default function GateChangeOver({
     resetReview();
     setNotes("");
     setError("");
-    setBefore("");
+    setVisibleNoteCount(10);
+    setExpandedNoteId(null);
+    lastNotesEndHeight.current = null;
+    notesPageRequest.current = null;
   }, [stationId, user?.id]);
   useEffect(() => {
     resetReview();
@@ -269,8 +299,8 @@ export default function GateChangeOver({
   };
   const cardStyle = {
     backgroundColor: colors.card,
-    borderColor: colors.border,
-    borderWidth: 1,
+    borderColor: colors.primary,
+    borderWidth: 2,
     borderRadius: 12,
     padding: 16,
     gap: 12,
@@ -368,6 +398,8 @@ export default function GateChangeOver({
             testID="dashboard-blank-card"
             style={[cardStyle, { backgroundColor: "#28282a", minHeight: 120 }]}
           >
+            <View testID="dashboard-site-gate-layout" style={{ flexDirection: wideLandscape ? "row" : "column", gap: 12 }}>
+            <View style={{ flex: 1, gap: 8 }}>
             {sectionHeading(t("changeOver.site"))}
             {sites.data?.sites.filter((site) => site.id === siteId).map((s) => (
               <TogglePillButton
@@ -394,6 +426,8 @@ export default function GateChangeOver({
                 {s.name}
               </TogglePillButton>
             ))}
+            </View>
+            <View style={{ flex: 1, gap: 8 }}>
             {sectionHeading(t("changeOver.gate"))}
             {stations.data?.stations.filter((station) => station.id === stationId).map((s) => (
               <TogglePillButton
@@ -418,53 +452,27 @@ export default function GateChangeOver({
                 {s.name}
               </TogglePillButton>
             ))}
+            </View>
+            </View>
           </View>
         ) : null}
-        {history ? <View testID="shift-notes-site-gate-card" style={[cardStyle, { backgroundColor: "#28282a" }]}>
-          {sectionHeading(t("changeOver.site"))}
-          {sites.data?.sites.filter((site) => site.id === siteId).map((s) => (
-            <TogglePillButton
-              key={s.id}
-              solid
-              accessibilityState={{ expanded: siteMenuOpen }}
-              onPress={() => {
-                if ((sites.data?.sites.length ?? 0) > 1) setSiteMenuOpen((open) => !open);
-              }}
-            >
-              {s.name}
-            </TogglePillButton>
-          ))}
-          {siteMenuOpen && sites.data?.sites.filter((site) => site.id !== siteId).map((s) => (
-            <TogglePillButton
-              key={s.id}
-              onPress={() => {
-                setSite(s.id);
-                setGate("");
-                setSiteMenuOpen(false);
-                setGateMenuOpen(false);
-              }}
-            >
-              {s.name}
-            </TogglePillButton>
-          ))}
-          {sectionHeading(t("changeOver.gate"))}
-          {stations.data?.stations.filter((station) => station.id === stationId).map((s) => (
-            <TogglePillButton
-              key={s.id}
-              solid
-              accessibilityState={{ expanded: gateMenuOpen }}
-              onPress={() => {
-                if ((stations.data?.stations.length ?? 0) > 1) setGateMenuOpen((open) => !open);
-              }}
-            >
-              {s.name}
-            </TogglePillButton>
-          ))}
-          {gateMenuOpen && stations.data?.stations.filter((station) => station.id !== stationId).map((s) => (
-            <TogglePillButton key={s.id} onPress={() => { setGate(s.id); setGateMenuOpen(false); }}>
-              {s.name}
-            </TogglePillButton>
-          ))}
+        {history ? <View testID="shift-notes-browser-card" style={[cardStyle, { backgroundColor: "#28282a" }]}>
+          {sectionHeading(t("changeOver.shiftNotes"))}
+          {!log.isLoading && noteRows.length === 0 && label(t("changeOver.noNotes"))}
+          <ScrollView nestedScrollEnabled style={{ maxHeight: 520 }} onScroll={({ nativeEvent }) => {
+            const nearBottom = nativeEvent.contentOffset.y + nativeEvent.layoutMeasurement.height >= nativeEvent.contentSize.height - 24;
+            if (nearBottom) void revealOlderNotes(nativeEvent.contentSize.height);
+          }} scrollEventThrottle={80}>
+            <View style={{ gap: 8 }}>
+              {noteRows.slice(0, visibleNoteCount).map((row) => {
+                const expanded = expandedNoteId === String(row.id);
+                return <Pressable key={row.id} accessibilityRole="button" accessibilityState={{ expanded }} onPress={() => setExpandedNoteId(expanded ? null : String(row.id))} style={{ borderColor: colors.primary, borderWidth: 2, borderRadius: 10, padding: 12, gap: 6 }}>
+                  <Text style={{ color: colors.foreground, fontWeight: "700" }}>{new Date(row.acknowledged_at).toLocaleString()} · {row.outgoing_name} → {row.incoming_name}</Text>
+                  {expanded ? <><Text style={{ color: colors.foreground }}>{row.notes}</Text>{row.summary.facts.map((fact) => <Text key={fact.id} style={{ color: colors.foreground }}>{fact.text}</Text>)}{row.snapshot.openItems.map((item) => <Text key={item.id} style={{ color: colors.foreground }}>{t("changeOver.carryForward")}: {item.text}</Text>)}<Snapshot snapshot={row.snapshot} /></> : null}
+                </Pressable>;
+              })}
+            </View>
+          </ScrollView>
         </View> : null}
         {sites.isLoading && label(t("changeOver.loading"))}
         {sites.data?.sites.length === 0 && label(t("changeOver.noSites"))}
@@ -500,6 +508,19 @@ export default function GateChangeOver({
             <View testID="shift-notes-report-card" style={[cardStyle, { backgroundColor: "#28282a", gap: 14 }]}>
             {sectionHeading(t("gateHistory.sendReports", { defaultValue: "Send Reports" }))}
             <View style={{ backgroundColor: colors.border, height: 1 }} />
+            <View testID="shift-notes-report-selectors" style={{ flexDirection: wideLandscape ? "row" : "column", gap: 12 }}>
+              <View style={{ flex: 1, gap: 8 }}>
+                {sectionHeading(t("changeOver.site"))}
+                {sites.data?.sites.filter((site) => site.id === siteId).map((site) => <TogglePillButton key={site.id} solid accessibilityState={{ expanded: siteMenuOpen }} onPress={() => { if ((sites.data?.sites.length ?? 0) > 1) setSiteMenuOpen((open) => !open); }}>{site.name}</TogglePillButton>)}
+                {siteMenuOpen && sites.data?.sites.filter((site) => site.id !== siteId).map((site) => <TogglePillButton key={site.id} onPress={() => { setSite(site.id); setGate(""); setSiteMenuOpen(false); setGateMenuOpen(false); }}>{site.name}</TogglePillButton>)}
+              </View>
+              <View style={{ flex: 1, gap: 8 }}>
+                {sectionHeading(t("changeOver.gate"))}
+                {stations.data?.stations.filter((station) => station.id === stationId).map((station) => <TogglePillButton key={station.id} solid accessibilityState={{ expanded: gateMenuOpen }} onPress={() => { if ((stations.data?.stations.length ?? 0) > 1) setGateMenuOpen((open) => !open); }}>{station.name}</TogglePillButton>)}
+                {gateMenuOpen && stations.data?.stations.filter((station) => station.id !== stationId).map((station) => <TogglePillButton key={station.id} onPress={() => { setGate(station.id); setGateMenuOpen(false); }}>{station.name}</TogglePillButton>)}
+              </View>
+            </View>
+            <View style={{ backgroundColor: colors.border, height: 1 }} />
             <View testID="shift-notes-recipients-card" style={{ gap: 12 }}>
               <Pressable
                 accessibilityRole="button"
@@ -534,7 +555,6 @@ export default function GateChangeOver({
                 value={search}
                 onChangeText={(value) => {
                   setSearch(value);
-                  setBefore("");
                 }}
               />
               <Pressable
@@ -558,50 +578,12 @@ export default function GateChangeOver({
                     solid={days === n}
                     onPress={() => {
                       setDays(n);
-                      setBefore("");
                     }}
                   >
                     {`${n} ${t("changeOver.days")}`}
                   </TogglePillButton>
                 ))}
               </View> : null}
-              {log.data?.rows.length === 0 && label(t("changeOver.noNotes"))}
-              {log.data?.rows.map((row) => (
-                <View key={row.id} style={cardStyle}>
-                  <Text style={{ color: colors.foreground, fontWeight: "700" }}>
-                    {new Date(row.acknowledged_at).toLocaleString()} ·{" "}
-                    {row.outgoing_name} → {row.incoming_name}
-                  </Text>
-                  {label(t("changeOver.acknowledged"))}
-                  {row.summary.facts.map((f) => (
-                    <Text key={f.id} style={{ color: colors.foreground }}>
-                      {f.text}
-                    </Text>
-                  ))}
-                  {label(row.notes)}
-                  {row.snapshot.openItems.map((i) => (
-                    <Text key={i.id} style={{ color: colors.foreground }}>
-                      {t("changeOver.carryForward")}: {i.text}
-                    </Text>
-                  ))}
-                  <Snapshot snapshot={row.snapshot} />
-                </View>
-              ))}
-              {log.data?.nextBefore &&
-                button(t("changeOver.older"), async () =>
-                  setBefore(log.data!.nextBefore!),
-                )}
-              {!!log.data?.actions.length && (
-                <View style={cardStyle}>
-                  {label(t("changeOver.audit"))}
-                  {log.data.actions.map((a) => (
-                    <Text key={a.id} style={{ color: colors.foreground }}>
-                      {new Date(a.created_at).toLocaleString()} · {a.actor_name} ·{" "}
-                      {a.kind}: {a.text}
-                    </Text>
-                  ))}
-                </View>
-              )}
             </View>
             <View style={{ backgroundColor: colors.border, height: 1 }} />
             <View testID="shift-notes-export-row" style={{ flexDirection: "row", gap: 8 }}>

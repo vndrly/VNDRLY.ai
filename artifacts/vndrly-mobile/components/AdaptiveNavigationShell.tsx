@@ -4,12 +4,20 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import AskVNavLogo from "@/components/AskVNavLogo";
 import BrandTitleRow from "@/components/BrandTitleRow";
+import GateVoiceNavButton from "@/components/GateVoiceNavButton";
+import LanguageToggle from "@/components/LanguageToggle";
 import NotificationBell from "@/components/NotificationBell";
 import { SidebarNotificationsContext } from "@/components/SidebarNotificationsContext";
-import GateVoiceNavButton from "@/components/GateVoiceNavButton";
+import Pill9Slice from "@/components/Pill9Slice";
+import SidebarHalftoneBackground from "@/components/SidebarHalftoneBackground";
 import { useBrand } from "@/hooks/use-brand";
 import { useColors } from "@/hooks/useColors";
 import type { AppNavigationItem } from "@/lib/app-navigation";
+import { TEXT_SHADOW } from "@/lib/pill-doctrine";
+import {
+  IDLE_SQUARE_NAV_SOURCE,
+  pickSquareNavSource,
+} from "@/lib/square-nav-palette";
 
 export const REGULAR_NAVIGATION_BREAKPOINT = 768;
 export const REGULAR_SIDEBAR_WIDTH = 228;
@@ -21,8 +29,12 @@ type Props = {
   gateVoiceActive: boolean;
   items: AppNavigationItem[];
   notificationCount?: number;
-  onOpenNotifications?: () => void;
   onActivate: (item: AppNavigationItem) => void;
+  onOpenNotifications?: () => void;
+  onSignOut: () => void;
+  profileSettingsLabel?: string;
+  signOutLabel?: string;
+  userName?: string;
   width: number;
 };
 
@@ -33,40 +45,48 @@ export default function AdaptiveNavigationShell({
   gateVoiceActive,
   items,
   notificationCount = 0,
-  onOpenNotifications,
   onActivate,
+  onOpenNotifications,
+  onSignOut,
+  profileSettingsLabel,
+  signOutLabel = "Sign Out",
+  userName,
   width,
 }: Props) {
   const regular = width >= REGULAR_NAVIGATION_BREAKPOINT;
   return (
     <SidebarNotificationsContext.Provider value={regular}>
-    <View
-      style={[styles.root, regular && styles.regularRoot]}
-      testID="adaptive-navigation-shell"
-    >
-      {regular ? (
-        <Sidebar
-          activeKey={activeKey}
-          gateVoiceActive={gateVoiceActive}
-          items={items}
-          notificationCount={notificationCount}
-          onOpenNotifications={onOpenNotifications}
-          onActivate={onActivate}
-        />
-      ) : null}
-      <View style={styles.page} testID="adaptive-navigation-content">
-        {children}
+      <View
+        style={[styles.root, regular && styles.regularRoot]}
+        testID="adaptive-navigation-shell"
+      >
+        {regular ? (
+          <Sidebar
+            activeKey={activeKey}
+            gateVoiceActive={gateVoiceActive}
+            items={items}
+            notificationCount={notificationCount}
+            onActivate={onActivate}
+            onOpenNotifications={onOpenNotifications}
+            onSignOut={onSignOut}
+            profileSettingsLabel={profileSettingsLabel}
+            signOutLabel={signOutLabel}
+            userName={userName}
+          />
+        ) : null}
+        <View style={styles.page} testID="adaptive-navigation-content">
+          {children}
+        </View>
+        {!regular ? (
+          <BottomTray
+            activeKey={activeKey}
+            bottomInset={bottomInset}
+            gateVoiceActive={gateVoiceActive}
+            items={items}
+            onActivate={onActivate}
+          />
+        ) : null}
       </View>
-      {!regular ? (
-        <BottomTray
-          activeKey={activeKey}
-          bottomInset={bottomInset}
-          gateVoiceActive={gateVoiceActive}
-          items={items}
-          onActivate={onActivate}
-        />
-      ) : null}
-    </View>
     </SidebarNotificationsContext.Provider>
   );
 }
@@ -81,17 +101,37 @@ function Sidebar({
   gateVoiceActive,
   items,
   notificationCount,
-  onOpenNotifications,
   onActivate,
-}: NavigationProps & Pick<Props, "notificationCount" | "onOpenNotifications">) {
+  onOpenNotifications,
+  onSignOut,
+  profileSettingsLabel,
+  signOutLabel,
+  userName,
+}: NavigationProps &
+  Pick<
+    Props,
+    | "notificationCount"
+    | "onOpenNotifications"
+    | "onSignOut"
+    | "profileSettingsLabel"
+    | "signOutLabel"
+    | "userName"
+  >) {
   const brand = useBrand();
   const profile = items.find((item) => item.key === "profile");
+  const sidebarProfile =
+    profile && profileSettingsLabel
+      ? { ...profile, label: profileSettingsLabel }
+      : profile;
   const primary = items.filter((item) => item.key !== "profile");
   return (
     <View style={styles.sidebar} testID="adaptive-sidebar">
-      <View style={{ alignItems: "flex-start", flexDirection: "row", justifyContent: "space-between" }}>
+      <SidebarHalftoneBackground />
+      <View style={styles.sidebarHeader}>
         <BrandTitleRow
           logoTestId="adaptive-sidebar-brand-logo"
+          stacked
+          subtitle={userName}
           title={brand.name ?? "VNDRLY"}
         />
         <NotificationBell
@@ -103,26 +143,38 @@ function Sidebar({
       </View>
       <View style={styles.sidebarItems}>
         {primary.map((item) => (
-          <NavigationItem
-            active={
-              item.key === activeKey ||
-              (item.kind === "gate-voice" && gateVoiceActive)
-            }
-            item={item}
-            key={item.key}
-            mode="sidebar"
-            onPress={() => onActivate(item)}
-          />
+          <React.Fragment key={item.key}>
+            <NavigationItem
+              active={
+                item.key === activeKey ||
+                (item.kind === "gate-voice" && gateVoiceActive)
+              }
+              item={item}
+              mode="sidebar"
+              onPress={() => onActivate(item)}
+            />
+            {item.key === "shift-notes" ? (
+              <View style={styles.sidebarToggles}>
+                <LanguageToggle />
+              </View>
+            ) : null}
+          </React.Fragment>
         ))}
       </View>
-      {profile ? (
-        <NavigationItem
-          active={profile.key === activeKey}
-          item={profile}
-          mode="sidebar"
-          onPress={() => onActivate(profile)}
+      <View style={styles.sidebarFooter} testID="sidebar-footer">
+        {sidebarProfile ? (
+          <NavigationItem
+            active={sidebarProfile.key === activeKey}
+            item={sidebarProfile}
+            mode="sidebar"
+            onPress={() => onActivate(sidebarProfile)}
+          />
+        ) : null}
+        <SidebarSignOut
+          label={signOutLabel ?? "Sign Out"}
+          onPress={onSignOut}
         />
-      ) : null}
+      </View>
     </View>
   );
 }
@@ -185,7 +237,15 @@ function NavigationItem({
   onPress: () => void;
 }) {
   const colors = useColors();
-  const color = active ? colors.primary : colors.mutedForeground;
+  const brand = useBrand();
+  const color =
+    mode === "sidebar"
+      ? active
+        ? "#ffffff"
+        : "rgba(255,255,255,0.66)"
+      : active
+        ? colors.primary
+        : colors.mutedForeground;
   const badge =
     item.badge && item.badge > 0
       ? item.badge > 99
@@ -196,7 +256,7 @@ function NavigationItem({
     item.kind === "askv" ? (
       <AskVNavLogo
         active={active}
-        size={mode === "sidebar" ? 42 : 36}
+        size={mode === "sidebar" ? 20 : 36}
         testID={`${item.key}-nav-logo`}
       />
     ) : item.kind === "gate-voice" ? (
@@ -209,8 +269,9 @@ function NavigationItem({
     ) : (
       <Feather
         name={item.icon as keyof typeof Feather.glyphMap}
-        size={26}
+        size={mode === "sidebar" ? 16 : 26}
         color={color}
+        style={mode === "sidebar" ? styles.sidebarIconShadow : undefined}
       />
     );
 
@@ -226,14 +287,35 @@ function NavigationItem({
       onPress={onPress}
       style={({ pressed }) => [
         mode === "compact" ? styles.compactItem : styles.sidebarItem,
-        mode === "sidebar" && active
-          ? { backgroundColor: `${colors.primary}22` }
-          : null,
         pressed && styles.pressed,
       ]}
       testID={`nav-${item.key}`}
     >
-      <View style={styles.iconWrap}>
+      {mode === "sidebar" ? (
+        <>
+          <View
+            pointerEvents="none"
+            testID={`sidebar-chrome-${item.key}`}
+            style={StyleSheet.absoluteFill}
+          >
+            <Pill9Slice
+              source={pickSquareNavSource(brand.primary, brand.name)}
+              height={32}
+              borderRadius={3}
+              style={{ opacity: active ? 1 : 0 }}
+              testID={`sidebar-active-chrome-${item.key}`}
+            />
+            <Pill9Slice
+              source={IDLE_SQUARE_NAV_SOURCE}
+              height={32}
+              borderRadius={3}
+              style={{ opacity: active ? 0 : 0.52 }}
+              testID={`sidebar-idle-chrome-${item.key}`}
+            />
+          </View>
+        </>
+      ) : null}
+      <View style={[styles.iconWrap, mode === "sidebar" && styles.sidebarIconWrap]}>
         {icon}
         {badge ? (
           <View style={[styles.badge, { backgroundColor: colors.primary }]}>
@@ -246,9 +328,55 @@ function NavigationItem({
         style={[
           mode === "compact" ? styles.compactLabel : styles.sidebarLabel,
           { color },
+          mode === "sidebar" ? styles.sidebarLabelShadow : null,
         ]}
       >
         {item.label}
+      </Text>
+    </Pressable>
+  );
+}
+
+function SidebarSignOut({
+  label,
+  onPress,
+}: {
+  label: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      accessibilityLabel={label}
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => [styles.sidebarItem, pressed && styles.pressed]}
+      testID="nav-sign-out"
+    >
+      <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+        <Pill9Slice
+          source={IDLE_SQUARE_NAV_SOURCE}
+          height={32}
+          borderRadius={3}
+          style={{ opacity: 0.52 }}
+        />
+      </View>
+      <View style={[styles.iconWrap, styles.sidebarIconWrap]}>
+        <Feather
+          color="#d1d5db"
+          name="log-out"
+          size={16}
+          style={styles.sidebarIconShadow}
+        />
+      </View>
+      <Text
+        numberOfLines={1}
+        style={[
+          styles.sidebarLabel,
+          styles.sidebarLabelShadow,
+          { color: "#d1d5db" },
+        ]}
+      >
+        {label}
       </Text>
     </Pressable>
   );
@@ -262,23 +390,43 @@ const styles = StyleSheet.create({
     backgroundColor: "#1c1c1e",
     borderRightColor: "#3a3a3a",
     borderRightWidth: StyleSheet.hairlineWidth,
-    gap: 16,
+    gap: 0,
     paddingBottom: 18,
     paddingHorizontal: 14,
     paddingTop: 20,
+    position: "relative",
     width: REGULAR_SIDEBAR_WIDTH,
   },
-  sidebarItems: { flex: 1, gap: 4, marginTop: 4 },
+  sidebarHeader: {
+    alignItems: "flex-start",
+    flexDirection: "row",
+    gap: 8,
+    justifyContent: "space-between",
+    marginBottom: 12,
+    position: "relative",
+    zIndex: 1,
+  },
+  sidebarItems: { flex: 1, gap: 3 },
+  sidebarFooter: { gap: 3 },
+  sidebarToggles: {
+    alignItems: "flex-start",
+    paddingHorizontal: 4,
+    paddingTop: 7,
+  },
   sidebarItem: {
     alignItems: "center",
-    borderRadius: 12,
+    borderRadius: 3,
     flexDirection: "row",
-    gap: 13,
-    minHeight: 50,
+    gap: 12,
+    minHeight: 32,
+    overflow: "hidden",
     paddingHorizontal: 12,
+    position: "relative",
   },
   sidebarVoice: { alignItems: "center", paddingVertical: 4 },
   sidebarLabel: { flex: 1, fontFamily: "Inter_600SemiBold", fontSize: 14 },
+  sidebarLabelShadow: TEXT_SHADOW.deep,
+  sidebarIconShadow: TEXT_SHADOW.deep,
   bottomTray: {
     alignItems: "center",
     borderTopColor: "#3a3a3a",
@@ -309,6 +457,7 @@ const styles = StyleSheet.create({
     minHeight: 30,
     minWidth: 34,
   },
+  sidebarIconWrap: { minHeight: 24, minWidth: 24 },
   badge: {
     alignItems: "center",
     borderRadius: 10,

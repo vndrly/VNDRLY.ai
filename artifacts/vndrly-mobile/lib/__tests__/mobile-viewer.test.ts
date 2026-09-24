@@ -81,9 +81,13 @@ describe("mobile-viewer role helpers", () => {
       "gate-history",
       "change-over",
       "shift-notes",
+      "gate-notifications",
+      "gate-notification-preferences",
       "profile",
     ]);
     expect(isGatekeeperTabKey("gate-history")).toBe(true);
+    expect(isGatekeeperTabKey("gate-notifications")).toBe(true);
+    expect(isGatekeeperTabKey("gate-notification-preferences")).toBe(true);
     expect(isGatekeeperTabKey("index")).toBe(false);
     expect(isGatekeeperUser({ role: "vendor", vendorRole: "gate_supervisor" })).toBe(true);
   });

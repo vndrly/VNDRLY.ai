@@ -1,4 +1,4 @@
-import { Stack } from "expo-router";
+import { Stack, usePathname } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -12,7 +12,7 @@ import {
 } from "react-native";
 
 import AmberButton from "@/components/AmberButton";
-import InPageHeader from "@/components/InPageHeader";
+import PortalPageHeader from "@/components/PortalPageHeader";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
 import { captureAuthScope, isAuthScopeCurrent, subscribeToken, subscribeUser } from "@/lib/auth";
@@ -91,6 +91,10 @@ function NotificationPreferencesForm() {
   const scope = useRef(captureAuthScope()).current;
   const colors = useColors();
   const { t } = useTranslation();
+  const pathname = usePathname();
+  const notificationsHref = pathname.endsWith("/gate-notification-preferences")
+    ? "/(tabs)/gate-notifications"
+    : "/notifications";
   const [prefs, setPrefs] = useState<Prefs | null>(null);
   const [saving, setSaving] = useState(false);
   const [loadError, setLoadError] = useState(false);
@@ -178,7 +182,11 @@ function NotificationPreferencesForm() {
     return (
       <View style={[styles.container, { backgroundColor: colors.background, justifyContent: "center" }]}>
         <Stack.Screen options={{ headerShown: false }} />
-        <InPageHeader title={t("notifications.preferencesTitle")} />
+        <PortalPageHeader
+          title={t("notifications.preferencesTitle")}
+          testIdPrefix="notification-preferences"
+          fallbackHref={notificationsHref}
+        />
         {loadError ? <View style={{ padding: 16 }}>
           <Text accessibilityRole="alert" style={{ color: colors.foreground }}>{t("notifications.preferencesLoadFailed")}</Text>
           <AmberButton onPress={() => setRetry((value) => value + 1)}>{t("notifications.preferencesRetry")}</AmberButton>
@@ -190,7 +198,11 @@ function NotificationPreferencesForm() {
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
-      <InPageHeader title={t("notifications.preferencesTitle")} />
+      <PortalPageHeader
+        title={t("notifications.preferencesTitle")}
+        testIdPrefix="notification-preferences"
+        fallbackHref={notificationsHref}
+      />
 
       <ScrollView contentContainerStyle={{ padding: 16 }}>
         <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -255,16 +267,17 @@ function NotificationPreferencesForm() {
         </View>
 
         {saveError && <Text accessibilityRole="alert" style={{ color: colors.foreground }}>{t("notifications.saveFailed")}</Text>}
-        <AmberButton
-          onPress={save}
-          disabled={saving}
-          loading={saving}
-          height={48}
-          style={styles.saveBtn}
-          textStyle={styles.saveText}
-        >
-          {t("notifications.save")}
-        </AmberButton>
+        <View style={styles.saveRow} testID="notification-preferences-save-row">
+          <AmberButton
+            onPress={save}
+            disabled={saving}
+            loading={saving}
+            style={styles.saveBtn}
+            textStyle={styles.saveText}
+          >
+            {t("notifications.save")}
+          </AmberButton>
+        </View>
       </ScrollView>
     </View>
   );
@@ -279,6 +292,7 @@ const styles = StyleSheet.create({
   sectionTitle: { fontFamily: "Inter_600SemiBold", fontSize: 14, marginBottom: 4, marginTop: 4 },
   sectionDesc: { fontFamily: "Inter_400Regular", fontSize: 12, marginBottom: 8 },
   input: { borderWidth: 1, borderRadius: 8, padding: 10, marginTop: 4, fontFamily: "Inter_400Regular" },
-  saveBtn: { padding: 14, borderRadius: 12, alignItems: "center", marginTop: 8 },
+  saveRow: { alignItems: "flex-end", marginTop: 8 },
+  saveBtn: { alignSelf: "flex-end", minWidth: 180 },
   saveText: { fontFamily: "Inter_600SemiBold", fontSize: 14 },
 });

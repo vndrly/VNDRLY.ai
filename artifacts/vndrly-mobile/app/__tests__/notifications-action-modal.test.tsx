@@ -25,12 +25,18 @@ vi.mock("@/hooks/useColors", () => ({
 vi.mock("@expo/vector-icons", () => ({ Feather: () => null }));
 vi.mock("@/components/AdaptiveNavigationShell", () => ({ REGULAR_NAVIGATION_BREAKPOINT: 768 }));
 vi.mock("react-native-svg", () => ({ default: () => null, Defs: () => null, LinearGradient: () => null, Rect: () => null, Stop: () => null }));
+vi.mock("@/components/PortalPageHeader", () => ({
+  default: ({ title, testIdPrefix }: { title: string; testIdPrefix: string }) => (
+    <div data-testid={`${testIdPrefix}-standard-header`}>{title}</div>
+  ),
+}));
 
 const routerPushMock = vi.fn();
 vi.mock("expo-router", () => ({
   router: { push: (...a: unknown[]) => routerPushMock(...a), back: vi.fn() },
   Stack: { Screen: () => null },
   useLocalSearchParams: () => ({}),
+  usePathname: () => "/(tabs)/gate-notifications",
   useFocusEffect: (cb: () => void | (() => void)) => {
     const ReactLib = require("react");
     ReactLib.useEffect(() => {
@@ -167,6 +173,10 @@ describe("NotificationsScreen action modal", () => {
 
   it("opens action modal instead of navigating directly on row tap", async () => {
     render(<NotificationsScreen />);
+    expect(screen.getByTestId("notifications-standard-header")).toBeTruthy();
+    expect(screen.getByTestId("notifications-inbox-card")).toBeTruthy();
+    expect(screen.getByTestId("notifications-category-divider")).toBeTruthy();
+    expect(screen.getByText("Review assignments, messages, handoffs, and alerts that need your attention.")).toBeTruthy();
     await waitFor(() => {
       expect(screen.getByTestId("notification-42")).toBeTruthy();
     });
@@ -178,5 +188,31 @@ describe("NotificationsScreen action modal", () => {
     expect(screen.getByTestId("notification-action-modal")).toBeTruthy();
     expect(screen.getByTestId("notification-action-selected-id").textContent).toBe("42");
     expect(routerPushMock).not.toHaveBeenCalled();
+  });
+
+  it("keeps exactly one notification category selected", async () => {
+    render(<NotificationsScreen />);
+
+    const allTab = screen.getByTestId("notifications-tab-all");
+    const ticketsTab = await screen.findByTestId("notifications-tab-tickets");
+    expect(allTab.getAttribute("aria-selected")).toBe("true");
+    expect(ticketsTab.getAttribute("aria-selected")).toBe("false");
+
+    await act(async () => {
+      fireEvent.click(ticketsTab);
+    });
+
+    expect(allTab.getAttribute("aria-selected")).toBe("false");
+    expect(ticketsTab.getAttribute("aria-selected")).toBe("true");
+  });
+
+  it("opens gate notification preferences inside the iPad shell", async () => {
+    render(<NotificationsScreen />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText("Notification settings"));
+    });
+
+    expect(routerPushMock).toHaveBeenCalledWith("/(tabs)/gate-notification-preferences");
   });
 });

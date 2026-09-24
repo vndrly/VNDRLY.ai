@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 
 import AdaptiveNavigationShell from "@/components/AdaptiveNavigationShell";
 import { useAuth } from "@/hooks/use-auth";
+import { logout } from "@/lib/api";
 import {
   buildAppNavigation,
   type AppNavigationItem,
@@ -66,6 +67,11 @@ export default function TabLayout() {
     router.push(item.href as never);
   };
 
+  const signOut = async () => {
+    await logout();
+    router.replace("/login");
+  };
+
   return (
     <AdaptiveNavigationShell
       activeKey={activeKey}
@@ -73,8 +79,12 @@ export default function TabLayout() {
       gateVoiceActive={gateVoiceListening}
       items={items}
       notificationCount={notificationCount}
-      onOpenNotifications={() => router.push("/(tabs)/gate-notifications")}
       onActivate={activate}
+      onOpenNotifications={() => router.push("/(tabs)/gate-notifications")}
+      onSignOut={signOut}
+      profileSettingsLabel={t("profile.navLabel")}
+      signOutLabel={t("nav.signOut")}
+      userName={user?.displayName ?? undefined}
       width={width}
     >
       <Slot />
