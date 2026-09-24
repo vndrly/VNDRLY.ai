@@ -91,6 +91,16 @@ All is not a preference. The existing Mobile Push and Do Not Disturb controls re
 
 Preference persistence remains server-authoritative. Existing Work Hub preference columns may be reused where their meaning is exact; gate-only handoff, compliance, and urgent-alert controls receive additive fields or a guarded versioned preference object. No destructive migration is permitted.
 
+## Urgent alert delivery channels
+
+Alerts remain visible in the in-app inbox and increment the shared bell. They also fan out immediately through every channel the user has explicitly enabled:
+
+- Mobile push uses the existing Expo push registration and badge count.
+- Email uses the existing immediate notification-alert email template when the user has a valid email address and alert email enabled.
+- SMS uses the existing Twilio transactional sender only after the user separately enables urgent-alert SMS and has a valid E.164 phone number. SMS consent is optional, auditable, and never inferred from accepting terms, providing a phone number, or enabling push/email.
+
+Push, email, and SMS are independent attempts. A missing provider configuration or one channel's failure does not suppress the other channels or remove the inbox item. SMS sends include a signed status-callback URL; queued, sent, delivered, undelivered, failed, and opt-out outcomes are recorded per notification and channel. Permanent opt-out or invalid-recipient responses disable further SMS attempts until the user explicitly opts in again with a valid number. Alerts remain urgent-only so routine notices do not create multi-channel noise.
+
 ## Error and empty states
 
 - Empty categories show a category-specific empty message.
@@ -108,4 +118,8 @@ Preference persistence remains server-authoritative. Existing Work Hub preferenc
 
 ## Release boundary
 
-The first implementation is local-only for visual and behavior review. No push, deployment, OTA update, or TestFlight submission occurs until separately requested.
+The approved release is a full ship: commit, push and advance `main`, publish web, deploy API with guarded Supabase migrations, publish iOS OTA, and build and submit TestFlight. App Store Ready for Sale is not included.
+
+## Companion web status correction
+
+The web portal's top Ask V status treatment uses neutral gray when Ask V is muted or unavailable. Green is reserved for the active/on state. Red is not used for muted or unavailable because those are non-error states.

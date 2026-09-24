@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Replace office-oriented notification categories for gatekeepers and gate supervisors with one authorized, Work Hub-backed gate inbox whose filters, preferences, deep links, pagination, and unread badge agree on every iPhone and iPad layout.
+**Goal:** Replace office-oriented notification categories for gatekeepers and gate supervisors with one authorized, Work Hub-backed gate inbox whose filters, preferences, deep links, pagination, unread badge, and urgent push/email/SMS delivery agree on every iPhone and iPad layout.
 
 **Architecture:** Keep `notifications` and `notification_preferences` as the authoritative stores. Add one server-side gate-role policy that maps existing event types to seven gate display categories and applies the same visibility rules to list, unread count, mark-all-read, and preferences; the mobile client renders the server result instead of inventing a second taxonomy. Reuse existing Work Hub links and add only the two preference fields whose meaning is not already represented: Handoffs and Alerts.
 
@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- The first implementation is local-only; do not push, deploy, publish an OTA update, or submit TestFlight.
+- This approved execution is a full ship: commit, non-force push and advance `main`, web publish, API deploy with guarded migrations, iOS OTA, and TestFlight build/submit. Do not request App Store Ready for Sale.
 - Gate roles are `gatekeeper` and `gate_supervisor`; all other roles keep their existing categories and preference behavior.
 - Gate categories are `schedule`, `gate_crew`, `messages`, `handoffs`, `tasks`, `compliance`, and `alerts`; `all` is a filter only.
 - The server is authoritative for category, visibility, unread totals, and preference gating.
@@ -21,6 +21,8 @@
 - Use existing `TogglePillButton` and brand assets: gray inactive, current brand active.
 - No destructive database operation. Any schema change is additive and guarded with `ADD COLUMN IF NOT EXISTS`.
 - Preserve existing rate limiting, SSE refresh, push badge synchronization, DND, and non-gate notification behavior.
+- Urgent Alerts fan out independently to in-app, enabled push, enabled email, and separately opted-in SMS; one channel failure never blocks the others.
+- SMS requires an explicit gate-alert preference, a valid E.164 gate-worker phone, signed delivery callbacks, and auditable status. It defaults off and is never inferred.
 
 ## Review Focus
 
@@ -38,6 +40,8 @@
 - `artifacts/api-server/src/lib/gate-notification-policy.test.ts` — pure policy contract tests.
 - `artifacts/api-server/src/routes/notifications.ts` — applies policy to list/count/read-all/preferences and returns role-aware response metadata.
 - `artifacts/api-server/src/routes/notifications-gate-role.test.ts` — API regression coverage for role isolation, pagination, counts, preferences, and revoked items.
+- `artifacts/api-server/src/services/gate-alert-delivery.ts` — independent push, email, and consent-gated SMS fan-out with per-channel outcomes.
+- `artifacts/api-server/src/routes/twilioStatus.ts` — signed Twilio delivery-status callback handling.
 - `lib/db/src/schema/notifications.ts` — two additive preference columns.
 - `artifacts/api-server/scripts/migrate-gate-notification-preferences.ts` and package script — guarded production migration.
 - `artifacts/vndrly-mobile/lib/notifications-ui.ts` — gate category types, labels, icons, and `NotificationsResponse`; no client-side remapping of server categories.
@@ -49,6 +53,7 @@
 - `artifacts/vndrly-mobile/components/AdaptiveNavigationShell.tsx` and `app/(tabs)/_layout.tsx` — iPad bell placement and shared count.
 - `artifacts/vndrly-mobile/components/PortalPageHeader.tsx` — iPhone bell slot immediately left of the VNDRLY icon.
 - `artifacts/vndrly-mobile/lib/locales/en.json` and `es.json` — category, description, empty-state, and unavailable copy.
+- Existing web Ask V status component and tests — gray muted/unavailable state and green active state.
 
 ### Task 1: Authoritative gate notification policy
 
@@ -534,7 +539,101 @@ git add -- artifacts/vndrly-mobile/app/notification-preferences.tsx artifacts/vn
 git commit -m "feat: tailor notification settings for gate roles"
 ```
 
-### Task 8: Wire representative Work Hub and gate events
+### Task 8: Deliver urgent Alerts through push, email, and opt-in SMS
+
+**Files:**
+- Modify: `lib/db/src/schema/notifications.ts`
+- Modify: `lib/db/src/schema/index.ts`
+- Create: `artifacts/api-server/scripts/migrate-gate-alert-channels.ts`
+- Modify: `artifacts/api-server/package.json`
+- Create: `artifacts/api-server/src/services/gate-alert-delivery.ts`
+- Create: `artifacts/api-server/src/services/gate-alert-delivery.test.ts`
+- Create: `artifacts/api-server/src/routes/twilioStatus.ts`
+- Create: `artifacts/api-server/src/routes/twilioStatus.test.ts`
+- Modify: `artifacts/api-server/src/routes/index.ts`
+- Modify: `artifacts/api-server/src/routes/notifications.ts`
+- Modify: `artifacts/vndrly-mobile/app/notification-preferences.tsx`
+- Modify: `artifacts/vndrly-mobile/app/__tests__/notification-preferences-shell.test.tsx`
+
+**Interfaces:**
+- Consumes: canonical `alerts` events, existing Expo push and SendGrid alert senders, `sendTransactionalSms`, the current user's email, and active vendor-person phone.
+- Produces: independent channel attempts, `notification_channel_deliveries` audit rows, signed Twilio callbacks, and `alertsEmailEnabled` / `alertsSmsEnabled` preferences with SMS opt-in timestamp.
+
+- [ ] **Step 1: Write failing delivery-policy tests**
+
+```ts
+it("fans urgent alerts to every enabled channel without coupling failures", async () => {
+  push.mockRejectedValueOnce(new Error("push unavailable"));
+  await deliverGateAlert(alert, recipient({ alertsEmailEnabled: true, alertsSmsEnabled: true }));
+  expect(email).toHaveBeenCalledTimes(1);
+  expect(sms).toHaveBeenCalledTimes(1);
+  expect(record).toHaveBeenCalledWith(expect.objectContaining({ channel: "push", status: "failed" }));
+});
+
+it("never sends SMS without explicit consent and a valid E.164 number", async () => {
+  await deliverGateAlert(alert, recipient({ alertsSmsEnabled: false, phone: "+14055551212" }));
+  await deliverGateAlert(alert, recipient({ alertsSmsEnabled: true, phone: "405-555-1212" }));
+  expect(sms).not.toHaveBeenCalled();
+});
+```
+
+Add tests for SMS provider unconfigured, email missing, DND not suppressing urgent Alerts, non-alert events never using this fan-out, and a Twilio opt-out callback disabling later SMS.
+
+- [ ] **Step 2: Run the delivery tests and verify the service is missing**
+
+Run: `pnpm --filter @workspace/api-server exec vitest run src/services/gate-alert-delivery.test.ts src/routes/twilioStatus.test.ts`
+
+Expected: FAIL on unresolved modules.
+
+- [ ] **Step 3: Add guarded consent and delivery-audit storage**
+
+Add `alerts_email_enabled boolean NOT NULL DEFAULT true`, `alerts_sms_enabled boolean NOT NULL DEFAULT false`, and nullable `alerts_sms_opted_in_at timestamptz` to `notification_preferences`. Add `notification_channel_deliveries` with notification id, channel, provider message id, status, attempt count, last error code, created/updated/delivered timestamps, plus a unique `(notification_id, channel)` key. The migration uses only `CREATE TABLE IF NOT EXISTS`, `ADD COLUMN IF NOT EXISTS`, and `CREATE INDEX IF NOT EXISTS`.
+
+- [ ] **Step 4: Implement independent channel fan-out**
+
+```ts
+const attempts = [
+  attempt("push", () => sendPush(alert, recipient)),
+  recipient.alertsEmailEnabled ? attempt("email", () => sendEmail(alert, recipient)) : null,
+  recipient.alertsSmsEnabled && recipient.smsOptedInAt && isE164Phone(recipient.phone ?? "")
+    ? attempt("sms", () => sendTransactionalSms({
+        to: recipient.phone!,
+        body: formatGateAlertSms(alert),
+        statusCallbackUrl: signedStatusCallbackUrl(alert.notificationId),
+      }))
+    : null,
+].filter(isPresent);
+await Promise.allSettled(attempts);
+```
+
+Each attempt upserts its own audit row. Do not throw the aggregate delivery call because a provider is missing or one channel fails; log and persist the channel outcome. Keep SMS concise, transactional, and free of sensitive detail; include the VNDRLY name and a short instruction to open the app.
+
+- [ ] **Step 5: Implement and authenticate Twilio status callbacks**
+
+Verify the Twilio request signature against the exact public callback URL before accepting the update. Map `queued`, `sent`, `delivered`, `undelivered`, and `failed` into the channel-delivery row. Treat Twilio opt-out and invalid-recipient codes as permanent: set `alertsSmsEnabled=false`, clear the opt-in timestamp, and do not retry automatically. Return `403` for an invalid signature and `204` for an accepted idempotent callback.
+
+- [ ] **Step 6: Extend gate preferences with explicit channel consent**
+
+Show `Email urgent alerts` defaulted on and `SMS urgent alerts` defaulted off for gate roles. Enabling SMS requires a valid saved phone and displays the existing transactional SMS disclosure; on save, stamp `alertsSmsOptedInAt` server-side. Disabling SMS clears the timestamp. Push remains controlled by Mobile Push and all three channel toggles stay independent.
+
+- [ ] **Step 7: Run communications and preference regressions**
+
+Run: `pnpm --filter @workspace/api-server exec vitest run src/services/gate-alert-delivery.test.ts src/routes/twilioStatus.test.ts src/lib/twilio.test.ts src/lib/sendgrid.test.ts src/lib/communications-health.test.ts`
+
+Run: `pnpm --filter @workspace/vndrly-mobile exec vitest run app/__tests__/notification-preferences-shell.test.tsx`
+
+Run: `pnpm run typecheck`
+
+Expected: PASS.
+
+- [ ] **Step 8: Commit alert channels**
+
+```powershell
+git add -- lib/db/src/schema/notifications.ts lib/db/src/schema/index.ts artifacts/api-server/scripts/migrate-gate-alert-channels.ts artifacts/api-server/package.json artifacts/api-server/src/services/gate-alert-delivery.ts artifacts/api-server/src/services/gate-alert-delivery.test.ts artifacts/api-server/src/routes/twilioStatus.ts artifacts/api-server/src/routes/twilioStatus.test.ts artifacts/api-server/src/routes/index.ts artifacts/api-server/src/routes/notifications.ts artifacts/vndrly-mobile/app/notification-preferences.tsx artifacts/vndrly-mobile/app/__tests__/notification-preferences-shell.test.tsx
+git commit -m "feat: deliver urgent gate alerts across channels"
+```
+
+### Task 9: Wire representative Work Hub and gate events
 
 **Files:**
 - Modify: existing Work Hub notification emitters under `artifacts/api-server/src/work-hub/`
@@ -573,18 +672,63 @@ git add -- artifacts/api-server/src/work-hub artifacts/api-server/src/services/g
 git commit -m "feat: notify gate teams from work hub events"
 ```
 
-### Task 9: Local integration verification and visual review
+### Task 10: Correct web Ask V status colors
+
+**Files:**
+- Modify: the existing web component that renders the top Ask V muted/unavailable/active pill, located by `rg -n "Ask V is Muted|Ask V is Unavailable|askV.*muted" artifacts/vndrly/src`.
+- Modify: that component's existing test, or create a colocated test when none exists.
+
+**Interfaces:**
+- Consumes: existing Ask V state (`active`, `muted`, or `unavailable`) and existing shared pill/status component.
+- Produces: gray treatment for muted/unavailable and green treatment only for active/on.
+
+- [ ] **Step 1: Write a failing three-state color test**
+
+Render each state and assert muted and unavailable select the gray semantic/pill source while active selects green. Assert none of the three paths hand-picks a PNG; the component must use the existing semantic pill/status API.
+
+- [ ] **Step 2: Run the focused web test and verify muted currently resolves to red**
+
+Run the exact Vitest file through `pnpm --filter @workspace/vndrly exec vitest run <test-file>`.
+
+Expected: FAIL for muted/unavailable color.
+
+- [ ] **Step 3: Change only the state-to-color mapping**
+
+```ts
+const askVStatusTone = active ? "green" : "gray";
+```
+
+Preserve copy, layout, waveform, and click behavior.
+
+- [ ] **Step 4: Run the focused web test and web typecheck**
+
+Run: `pnpm --filter @workspace/vndrly exec vitest run <test-file>`
+
+Run: `pnpm --filter @workspace/vndrly run typecheck`
+
+Expected: PASS.
+
+- [ ] **Step 5: Commit the web correction**
+
+```powershell
+git add -- <component-file> <test-file>
+git commit -m "fix: use neutral Ask V inactive status"
+```
+
+### Task 11: Integration verification, visual review, and full ship
 
 **Files:**
 - Modify only if a demonstrated regression requires a fix.
 
 **Interfaces:**
-- Consumes: Tasks 1-8.
-- Produces: verified local iPhone and iPad notification flows; no publication.
+- Consumes: Tasks 1-10.
+- Produces: verified iPhone, iPad, web, API, database, OTA, and TestFlight release evidence.
 
 - [ ] **Step 1: Run focused notification suites**
 
 Run: `pnpm --filter @workspace/api-server exec vitest run src/lib/gate-notification-policy.test.ts src/routes/notifications-gate-role.test.ts src/routes/gate-notification-events.test.ts`
+
+Run: `pnpm --filter @workspace/api-server exec vitest run src/services/gate-alert-delivery.test.ts src/routes/twilioStatus.test.ts`
 
 Run: `pnpm --filter @workspace/vndrly-mobile exec vitest run components/NotificationCategoryCarousel.test.tsx components/NotificationBell.test.tsx app/__tests__/notifications-action-modal.test.tsx app/__tests__/notifications-rate-limited.test.tsx app/__tests__/notification-preferences-shell.test.tsx lib/notification-deep-links.test.ts`
 
@@ -616,10 +760,30 @@ At a regular iPad width, verify the 27-point bell and total badge appear only in
 
 Open one item per category and confirm the exact Work Hub or Profile destination. Revoke one item's authorization and confirm it stays unread with the neutral unavailable message. Use Mark All Read and confirm both inbox and bell reach zero.
 
-- [ ] **Step 7: Record local review evidence without publishing**
+- [ ] **Step 7: Verify the Ask V web status states locally**
 
-Capture one iPhone and one iPad screenshot, record the passing commands, and report any known local-data limitations. Do not push, deploy, run OTA, or submit TestFlight.
+Capture muted/unavailable in gray and active in green. Confirm the header layout and behavior did not change.
 
-- [ ] **Step 8: Commit only demonstrated verification fixes**
+- [ ] **Step 8: Commit the exact verified release tree**
+
+Review `git status`, preserve unrelated user changes, and create the final implementation commit only if verification produced uncommitted fixes. Record the release commit SHA and start the commit-to-live clock.
+
+- [ ] **Step 9: Push and advance `main` non-force**
+
+Use the configured GitHub integration as the primary path. Confirm current remote `main` is an ancestor or resolve normally without rewriting history. Push the working branch and advance `main` in the same safe pass.
+
+- [ ] **Step 10: Monitor web, API, Supabase, OTA, and TestFlight concurrently**
+
+Verify `.github/workflows/publish.yml`, `.github/workflows/deploy-api.yml`, `.github/workflows/mobile-ota.yml`, and `.github/workflows/mobile-testflight.yml`. Dispatch the API workflow if path filtering does not start it. The API deploy runs the new guarded migrations; never use drizzle push against production.
+
+- [ ] **Step 11: Verify public results**
+
+Verify `https://vndrly.ai`, the public Gate route, `https://vndrly.ai/api/healthz`, the Expo update group, and the submitted TestFlight build. Retrieve exact failing logs, fix root causes, and retry under the standing full-ship authorization.
+
+- [ ] **Step 12: Report the complete release**
+
+Report the commit, workflow results, public web/API verification, guarded migration status, OTA update group, TestFlight submission/processing state, elapsed commit-to-live time, and any user action still required. Do not call the full ship complete before TestFlight submission succeeds.
+
+- [ ] **Step 13: Commit only demonstrated verification fixes**
 
 If verification required source changes, stage only those exact files and commit with a message describing the repaired behavior. If no files changed, do not create an empty commit.
