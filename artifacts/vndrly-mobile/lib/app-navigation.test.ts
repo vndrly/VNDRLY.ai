@@ -57,6 +57,26 @@ describe("buildAppNavigation", () => {
       ]);
     }
   });
+  it("lands direct field gate employees in the restricted gate experience", () => {
+    for (const role of ["gatekeeper", "gate_supervisor"]) {
+      const worker = user("field_employee", role);
+      expect(gateLandingRoute(worker)).toBe("/(tabs)/change-over");
+      expect(
+        buildAppNavigation({ user: worker, labels, badges }).map(
+          (item) => item.key,
+        ),
+      ).toEqual([
+        "change-over",
+        "work-hub",
+        "gate",
+        "askv",
+        "gate-history",
+        "shift-notes",
+        "profile",
+      ]);
+      expect(isGatekeeperRouteAllowed(worker, ["employees"])).toBe(false);
+    }
+  });
   it("orders Dashboard, Work Hub, Gate, History, Shift Notes with AskV available", () => {
     const items = buildAppNavigation({
       user: user("vendor", "gatekeeper"),

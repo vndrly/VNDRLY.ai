@@ -29,11 +29,8 @@ export function isGatekeeperUser(
   user: GatekeeperUserShape | null | undefined,
 ): boolean {
   return (
-    (user?.role === "vendor" && ["gatekeeper", "gate_supervisor"].includes(user.vendorRole ?? "")) ||
-    (user?.role === "field_employee" &&
-      !!user.managedSubcontractor &&
-      (user.vendorRole === "gatekeeper" ||
-        user.vendorRole === "gate_supervisor"))
+    (user?.role === "vendor" || user?.role === "field_employee") &&
+    (user.vendorRole === "gatekeeper" || user.vendorRole === "gate_supervisor")
   );
 }
 

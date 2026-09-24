@@ -13,18 +13,17 @@ import {
 } from "@/lib/mobile-viewer";
 
 describe("mobile-viewer role helpers", () => {
-  it("recognizes explicitly sponsored gate workers without granting office identity", () => {
+  it("recognizes direct and sponsored gate workers without granting office identity", () => {
     for (const vendorRole of ["gatekeeper", "gate_supervisor"] as const) {
+      const directWorker = { role: "field_employee", vendorRole };
       const worker = {
-        role: "field_employee",
-        vendorRole,
+        ...directWorker,
         managedSubcontractor: { siteGrants: [{ siteId: 7, role: vendorRole }] },
       };
+      expect(isGatekeeperUser(directWorker)).toBe(true);
+      expect(isOfficeMobileViewer(directWorker)).toBe(false);
       expect(isGatekeeperUser(worker)).toBe(true);
       expect(isOfficeMobileViewer(worker)).toBe(false);
-      expect(isGatekeeperUser({ role: "field_employee", vendorRole })).toBe(
-        false,
-      );
     }
   });
   it("detects field employee and foreman", () => {
