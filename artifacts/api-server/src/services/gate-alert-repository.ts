@@ -33,6 +33,9 @@ export async function loadGateAlertRecipient(userId: number): Promise<Recipient 
   const systemAdmin = row.userRole === "admin" && row.membershipId == null;
   if (!systemAdmin && (!row.membershipId || (!validVendor && !validPartner))) return null;
   const grants = row.grants ?? [];
+  // Match login context: a vendor field membership without a linked active
+  // employee is a restricted managed worker, even after all grants end.
+  const managed = validVendor && row.membershipRole === "field_employee" && !row.vendorPeopleId;
   const gate = validVendor && (["gatekeeper", "gate_supervisor"].includes(row.vendorRole) || grants.length > 0);
   return {
     userId, gate, membershipId: row.membershipId ?? null, vendorPeopleId: row.vendorPeopleId ?? null,
@@ -43,7 +46,7 @@ export async function loadGateAlertRecipient(userId: number): Promise<Recipient 
     session: { userId, sv: row.sessionVersion, role: systemAdmin ? "admin" : row.membershipRole === "field_employee" ? "field_employee" : row.orgType, vendorId: row.vendorId,
       partnerId: row.partnerId, vendorPeopleId: row.vendorPeopleId, vendorRole: row.vendorRole,
       activeMembershipId: row.membershipId, membershipRole: row.membershipRole,
-      ...(grants.length ? { managedSubcontractor: { siteGrants: grants } } : {}) },
+      ...(managed || grants.length ? { managedSubcontractor: { siteGrants: grants } } : {}) },
   };
 }
 

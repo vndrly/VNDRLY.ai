@@ -13,7 +13,7 @@ afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
 it("passes the real current-session guard and rejects a subsequently revoked session", async () => {
   let version = 4;
   storage.query.mockImplementation(async (sql: string) => {
-    if (sql.includes('u.id AS "userId"')) return { rows: [{ userId: 7, sessionVersion: 4, membershipId: 8, vendorId: 3, vendorPeopleId: 9, vendorRole: "gatekeeper", membershipRole: "field_employee" }] };
+    if (sql.includes('u.id AS "userId"')) return { rows: [{ userId: 7, sessionVersion: 4, orgType: "vendor", membershipId: 8, vendorId: 3, vendorPeopleId: 9, vendorRole: "gatekeeper", membershipRole: "field_employee" }] };
     if (sql.includes("session_version")) return { rows: [{ id: 7, session_version: version }] };
     return { rows: [{ id: 1, vendor_role: "gatekeeper" }], rowCount: 1 };
   });

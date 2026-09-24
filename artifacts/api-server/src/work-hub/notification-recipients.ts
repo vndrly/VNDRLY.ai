@@ -34,12 +34,14 @@ export async function currentNotificationRecipients(
         eq(managedSubcontractorRoleGrantsTable.status, "active"), isNull(managedSubcontractorRoleGrantsTable.endedAt))) : [];
     const siteGrants = grants.filter((g): g is { siteId: number; role: GateRole } =>
       g.siteId != null && (g.role === "gatekeeper" || g.role === "gate_supervisor"));
+    // Empty grants revoke capabilities, not the managed-worker restriction.
+    const managed = owner.type === "vendor" && m.role === "field_employee" && !person;
     const session: SessionPayload & { userId: number } = {
       userId: m.userId, role: m.role === "field_employee" ? "field_employee" : owner.type,
       vendorId: m.vendorId ?? undefined, partnerId: m.partnerId ?? undefined,
       activeMembershipId: m.id, membershipRole: m.role, sv: user.sessionVersion,
       vendorRole: person?.vendorRole ?? undefined,
-      ...(siteGrants.length ? { managedSubcontractor: { siteGrants } } : {}),
+      ...(managed || siteGrants.length ? { managedSubcontractor: { siteGrants } } : {}),
     };
     if (gateOnly && !isGateNotificationSession(session)) continue;
     if (await resolveNotificationDestination(session, link)) allowed.push(m.userId);

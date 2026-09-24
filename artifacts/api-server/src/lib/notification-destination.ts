@@ -151,11 +151,9 @@ export async function resolveNotificationDestination(
       }
       const [call] = await db.select().from(workHubCallsTable).where(eq(workHubCallsTable.id, callId)).limit(1);
       if (!call || ![call.callerUserId, call.recipientUserId].includes(session.userId)) return null;
-      const [occurrence] = await db.select().from(workHubMeetingOccurrencesTable).where(eq(workHubMeetingOccurrencesTable.id, call.occurrenceId)).limit(1);
-      if (!occurrence) return null;
-      const [meeting] = await db.select().from(workHubMeetingsTable).where(eq(workHubMeetingsTable.id, occurrence.meetingId)).limit(1);
-      if (!meeting || !ownerAllowed(meeting)) return null;
-      return !meeting.channelId || await authorizeChannel(meeting.channelId) ? link : null;
+      const { authorizeCallContact } = await import("../work-hub/call-access");
+      await authorizeCallContact(session, call.callerUserId === session.userId ? call.recipientUserId : call.callerUserId);
+      return link;
     }
     if (!isGateNotificationSession(session) && path === "/work-hub/operations-health" && !keys.length) {
       const operationId = source?.dedupeKey?.match(/^supervisor:([0-9a-f-]{36})$/i)?.[1];

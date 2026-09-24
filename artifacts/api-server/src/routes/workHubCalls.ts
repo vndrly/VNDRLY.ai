@@ -5,12 +5,9 @@ import { z } from "zod/v4";
 import {
   db,
   usersTable,
-  userOrgMembershipsTable,
   workHubCallsTable,
   workHubVoicemailTable,
   workHubCallSettingsTable,
-  workHubChatInvitationsTable,
-  workHubCollaborationChannelsTable,
   workHubMeetingsTable,
   workHubMeetingOccurrencesTable,
   workHubMeetingParticipantsTable,
@@ -19,6 +16,7 @@ import {
 import { getSessionFromRequest, type SessionPayload } from "../lib/session";
 import { sendApiError } from "../lib/apiError";
 import { WorkHubAccessError } from "../work-hub/context-access";
+import { authorizeCallContact as authorizedContact } from "../work-hub/call-access";
 import { executeWorkHubCommand } from "../work-hub/commands";
 import { isWorkHubEnabled } from "../work-hub/feature-access";
 import { getObjectStore } from "../lib/objectStore";
@@ -37,68 +35,6 @@ function ownerForActor(a: Actor) {
   return id
     ? { type: (a.vendorId ? "vendor" : "partner") as "vendor" | "partner", id }
     : null;
-}
-async function authorizedContact(a: Actor, recipientUserId: number) {
-  if (a.userId === recipientUserId) throw new WorkHubAccessError("forbidden");
-  const orgType = a.vendorId ? "vendor" : "partner",
-    orgId = a.vendorId ?? a.partnerId;
-  if (!orgId) throw new WorkHubAccessError("forbidden");
-  const memberships = await db
-    .select()
-    .from(userOrgMembershipsTable)
-    .where(
-      and(
-        inArray(userOrgMembershipsTable.userId, [a.userId, recipientUserId]),
-        eq(userOrgMembershipsTable.orgType, orgType),
-        orgType === "vendor"
-          ? eq(userOrgMembershipsTable.vendorId, orgId)
-          : eq(userOrgMembershipsTable.partnerId, orgId),
-      ),
-    );
-  if (!memberships.some((m) => m.userId === a.userId))
-    throw new WorkHubAccessError("forbidden");
-  if (!memberships.some((m) => m.userId === recipientUserId)) {
-    const [accepted] = await db
-      .select()
-      .from(workHubChatInvitationsTable)
-      .innerJoin(
-        workHubCollaborationChannelsTable,
-        eq(
-          workHubCollaborationChannelsTable.channelId,
-          workHubChatInvitationsTable.channelId,
-        ),
-      )
-      .where(
-        and(
-          eq(workHubChatInvitationsTable.status, "accepted"),
-          eq(workHubCollaborationChannelsTable.kind, "chat"),
-          or(
-            and(
-              eq(workHubChatInvitationsTable.senderUserId, a.userId),
-              eq(workHubChatInvitationsTable.recipientUserId, recipientUserId),
-            ),
-            and(
-              eq(workHubChatInvitationsTable.senderUserId, recipientUserId),
-              eq(workHubChatInvitationsTable.recipientUserId, a.userId),
-            ),
-          ),
-        ),
-      )
-      .limit(1);
-    if (!accepted) throw new WorkHubAccessError("forbidden");
-  }
-  const [recipient] = await db
-    .select()
-    .from(usersTable)
-    .where(
-      and(eq(usersTable.id, recipientUserId), isNull(usersTable.suspendedAt)),
-    )
-    .limit(1);
-  if (!recipient) throw new WorkHubAccessError("not_found");
-  return {
-    owner: { type: orgType as "vendor" | "partner", id: orgId },
-    recipient,
-  };
 }
 async function ownedCall(a: Actor, id: string) {
   const [call] = await db
