@@ -178,10 +178,10 @@ describe("real Work Hub notification producers", () => {
     expect(notices).toContainEqual(expect.objectContaining({ userIds: [1], link: "/field-employees/22" }));
     expect(notices.flatMap(row => row.userIds)).toEqual([2, 1]);
   });
-  it("keeps urgent Gate announcements in Gate Crew and rejects unrelated office recipients", async () => {
+  it("keeps urgent Gate announcements urgent while rejecting unrelated office recipients", async () => {
     const created = await post("/work-hub/announcements", envelope({ title: "Briefing", body: "Review instructions", channelId, recipientUserIds: [1, 2], urgency: "urgent" }, "gate"));
     expect(created.status, JSON.stringify(created.body)).toBe(201);
-    expect(state.notifications).toEqual([expect.objectContaining({ type: "work_hub_announcement", userIds: [2] })]);
+    expect(state.notifications).toEqual([expect.objectContaining({ type: "work_hub_announcement_urgent", userIds: [2] })]);
   });
   it("does not notify a removed channel member even when supplied as a mention", async () => {
     state.revoked.add(2);

@@ -114,6 +114,19 @@ function announcementReadable(userId: number) {
       where recipient.announcement_id = ${workHubAnnouncementsTable.id} and recipient.user_id = ${userId})`));
 }
 type Actor = SessionPayload & { userId: number };
+async function announcementChannelReadable(
+  session: Actor,
+  announcement: { channelId: string | null },
+): Promise<boolean> {
+  if (!announcement.channelId) return true;
+  try {
+    await resolveChannelAccess(session, announcement.channelId, "channel.read");
+    return true;
+  } catch (error) {
+    if (error instanceof WorkHubAccessError) return false;
+    throw error;
+  }
+}
 function actor(req: Request): Actor | null {
   const value = getSessionFromRequest(req);
   if (value?.managedSubcontractor && !value.vendorId) return null;
@@ -351,7 +364,7 @@ router.get("/work-hub/home", async (req, res) => {
       "Authentication required",
     );
   const now = new Date();
-  const [tasks, announcements, shifts, meetings] = await Promise.all([
+  const [tasks, storedAnnouncements, shifts, meetings] = await Promise.all([
     db
       .select()
       .from(workHubTasksTable)
@@ -436,6 +449,9 @@ router.get("/work-hub/home", async (req, res) => {
       .orderBy(asc(workHubMeetingOccurrencesTable.startsAt))
       .limit(50),
   ]);
+  const announcements = (await Promise.all(storedAnnouncements.map(async (row) =>
+    await announcementChannelReadable(session, row.announcement) ? row : null
+  ))).filter((row): row is NonNullable<typeof row> => row !== null);
   return res.json({
     generatedAt: now.toISOString(),
     tasks,
@@ -1392,11 +1408,9 @@ router.post("/work-hub/announcements", async (req, res) => {
       .parse(envelope.payload);
     let recipients = [...new Set(payload.recipientUserIds)];
     await assertOwnerUsers(envelope.owner, recipients);
-    let gateAnnouncement = false;
     if (payload.channelId) {
       const { channel } = await resolveChannelAccess(session, payload.channelId, "channel.write");
       assertOwnerMatchesChannel(envelope.owner, channel);
-      gateAnnouncement = channel.contextKind === "gate";
       recipients = await currentNotificationRecipients(envelope.owner, recipients,
         `/work-hub/channels/${channel.id}`, channel.contextKind === "gate");
       if (!recipients.length) throw new WorkHubAccessError("not_found");
@@ -1440,10 +1454,9 @@ router.post("/work-hub/announcements", async (req, res) => {
     );
     if (!result.replayed)
       await notifyUsers(recipients, {
-        type:
-          payload.urgency === "urgent" && !gateAnnouncement
-            ? "work_hub_announcement_urgent"
-            : "work_hub_announcement",
+        type: payload.urgency === "urgent"
+          ? "work_hub_announcement_urgent"
+          : "work_hub_announcement",
         category: "work_hub_announcements",
         title: payload.title,
         body: payload.body.slice(0, 180),
@@ -1470,6 +1483,7 @@ router.post("/work-hub/announcements/:id/acknowledge", async (req, res) => {
         eq(workHubAnnouncementsTable.id, req.params.id), announcementReadable(session.userId),
       )).limit(1);
       if (!announcement) throw new WorkHubAccessError("not_found");
+      if (!(await announcementChannelReadable(session, announcement))) throw new WorkHubAccessError("not_found");
       const [membership] = await tx.select().from(userOrgMembershipsTable).where(and(
         eq(userOrgMembershipsTable.userId, session.userId),
         eq(userOrgMembershipsTable.orgType, announcement.ownerOrgType),
@@ -3236,6 +3250,7 @@ router.get("/work-hub/search", async (req, res) => {
       .filter(
         (row) =>
           wants("announcement") &&
+          (!row.channelId || visibleChannels.has(row.channelId)) &&
           inRange(row.publishedAt) &&
           matches(row.title, row.body),
       )

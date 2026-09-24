@@ -64,6 +64,13 @@ describe("urgent gate alert delivery", () => {
   it.each(["work_hub_message", "unknown", "work_hub_announcement"])("never fans out routine %s", async (type) => {
     const f = fixture(); await deliverGateAlert({ ...notice, type }, f.dependencies); expect(f.outcomes).toEqual([]);
   });
+  it("fans out an urgent Work Hub announcement through push, email, and consented SMS", async () => {
+    const f = fixture();
+    await deliverGateAlert({ ...notice, type: "work_hub_announcement_urgent" }, f.dependencies);
+    expect(f.outcomes.map(row => [row.channel, row.status]).sort()).toEqual([
+      ["email", "accepted"], ["push", "accepted"], ["sms", "accepted"],
+    ]);
+  });
   it("rechecks authorization and active role before every delivery", async () => {
     const f = fixture(); f.dependencies.authorized = async () => false;
     await deliverGateAlert(notice, f.dependencies); expect(f.outcomes).toEqual([]);

@@ -4,7 +4,7 @@ import cookieParser from "cookie-parser";
 import request from "supertest";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { and, eq } from "drizzle-orm";
-import { db, usersTable, vendorsTable, userOrgMembershipsTable, workHubAnnouncementsTable, workHubAnnouncementRecipientsTable } from "@workspace/db";
+import { db, usersTable, vendorsTable, userOrgMembershipsTable, workHubAnnouncementsTable, workHubAnnouncementRecipientsTable, workHubChannelMembersTable, workHubChannelsTable } from "@workspace/db";
 import operations from "./workHubOperations";
 import { buildTestCookie } from "../test-utils/session";
 vi.mock("../work-hub/feature-access", () => ({ isWorkHubEnabled: async () => true }));
@@ -13,7 +13,7 @@ const app = express().use(express.json()).use(cookieParser()).use(operations);
 const usesIsolatedDatabase = process.env.VNDRLY_TEST_DB_MODE === "fresh-local" || process.env.VNDRLY_ISOLATED_TEST_DB === "1";
 describe.skipIf(!usesIsolatedDatabase)("announcement current company authorization", () => {
   let ownerId: number, otherId: number, adminId: number, memberId: number, externalId: number;
-  let admin: string, member: string;
+  let admin: string, member: string, channelMember: string;
   const envelope = (recipientUserIds: number[]) => ({ operationId: randomUUID(), owner: { type: "vendor", id: ownerId }, context: { kind: "organization", id: ownerId }, expectedVersion: null, payloadVersion: 1, payload: { title: `Announcement ${randomUUID()}`, body: "Example company handover", recipientUserIds, acknowledgementRequired: true } });
   beforeAll(async () => {
     const suffix = randomUUID();
@@ -24,6 +24,7 @@ describe.skipIf(!usesIsolatedDatabase)("announcement current company authorizati
     await db.insert(userOrgMembershipsTable).values([{ userId: adminId, orgType: "vendor", vendorId: ownerId, role: "admin" }, { userId: memberId, orgType: "vendor", vendorId: ownerId, role: "member" }, { userId: externalId, orgType: "vendor", vendorId: otherId, role: "member" }]);
     admin = buildTestCookie({ userId: adminId, role: "vendor", vendorId: ownerId, membershipRole: "admin" });
     member = buildTestCookie({ userId: memberId, role: "vendor", vendorId: ownerId, membershipRole: "admin" });
+    channelMember = buildTestCookie({ userId: memberId, role: "vendor", vendorId: ownerId, membershipRole: "member" });
   });
   it("hides any foreign recipient and rejects a stale admin claim without inserting an announcement", async () => {
     const foreign = envelope([memberId, externalId]);
@@ -60,6 +61,32 @@ describe.skipIf(!usesIsolatedDatabase)("announcement current company authorizati
     expect(JSON.stringify(search.body)).not.toContain(id);
     expect((await request(app).post(`/work-hub/announcements/${id}/acknowledge`).set("Cookie", member).send({})).status).toBe(404);
     expect((await request(app).post("/work-hub/announcements").set("Cookie", admin).send(body)).status).toBe(404);
+    const [recipient] = await db.select().from(workHubAnnouncementRecipientsTable).where(and(eq(workHubAnnouncementRecipientsTable.announcementId, id), eq(workHubAnnouncementRecipientsTable.userId, memberId)));
+    expect(recipient.acknowledgedAt).toBeNull();
+  });
+  it("rechecks private channel access before home, search, and acknowledgement", async () => {
+    await db.update(userOrgMembershipsTable).set({ vendorId: ownerId, role: "member" }).where(eq(userOrgMembershipsTable.userId, memberId));
+    const [channel] = await db.insert(workHubChannelsTable).values({
+      ownerOrgType: "vendor", ownerOrgId: ownerId, contextKind: "organization", contextId: String(ownerId),
+      name: `Private announcements ${randomUUID()}`, visibility: "private", createdById: adminId,
+    }).returning();
+    await db.insert(workHubChannelMembersTable).values([
+      { channelId: channel.id, userId: adminId, mode: "owner" },
+      { channelId: channel.id, userId: memberId, mode: "member" },
+    ]);
+    const body = envelope([memberId]);
+    const published = await request(app).post("/work-hub/announcements").set("Cookie", admin).send(body);
+    expect(published.status, JSON.stringify(published.body)).toBe(201);
+    const id = published.body.resource.id;
+    await db.update(workHubAnnouncementsTable).set({ channelId: channel.id }).where(eq(workHubAnnouncementsTable.id, id));
+    expect((await request(app).get("/work-hub/home").set("Cookie", channelMember)).body.announcements.some((row: any) => row.announcement.id === id)).toBe(true);
+
+    await db.delete(workHubChannelMembersTable).where(and(eq(workHubChannelMembersTable.channelId, channel.id), eq(workHubChannelMembersTable.userId, memberId)));
+
+    expect((await request(app).get("/work-hub/home").set("Cookie", channelMember)).body.announcements.some((row: any) => row.announcement.id === id)).toBe(false);
+    const search = await request(app).get("/work-hub/search").query({ q: body.payload.title }).set("Cookie", channelMember);
+    expect(JSON.stringify(search.body)).not.toContain(id);
+    expect((await request(app).post(`/work-hub/announcements/${id}/acknowledge`).set("Cookie", channelMember).send({})).status).toBe(404);
     const [recipient] = await db.select().from(workHubAnnouncementRecipientsTable).where(and(eq(workHubAnnouncementRecipientsTable.announcementId, id), eq(workHubAnnouncementRecipientsTable.userId, memberId)));
     expect(recipient.acknowledgedAt).toBeNull();
   });

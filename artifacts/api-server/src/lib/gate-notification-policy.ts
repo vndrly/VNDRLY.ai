@@ -20,6 +20,7 @@ const GATE_TYPE_CATEGORY: Readonly<Record<string, GateNotificationCategory>> = {
   work_hub_meeting_invite: "schedule",
   work_hub_meeting_changed: "schedule",
   work_hub_announcement: "gate_crew",
+  work_hub_announcement_urgent: "alerts",
   work_hub_message: "messages",
   work_hub_mention: "messages",
   comment_mention: "messages",

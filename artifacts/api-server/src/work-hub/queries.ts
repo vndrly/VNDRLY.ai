@@ -57,10 +57,12 @@ export async function resolveChannelAccess(
   const [channel] = await db.select().from(workHubChannelsTable).where(eq(workHubChannelsTable.id, channelId)).limit(1);
   if (!channel || channel.status !== "active") throw new (await import("./context-access")).WorkHubAccessError("not_found");
   if (await collaborationChannelAccess(session.userId, channel.id) === false) throw new (await import("./context-access")).WorkHubAccessError("not_found");
+  const participant = await isWorkHubParticipant(session, channel);
+  if (!participant) throw new (await import("./context-access")).WorkHubAccessError("not_found");
   const access = createWorkHubAccess({
     session, owner: { type: channel.ownerOrgType as "vendor" | "partner", id: channel.ownerOrgId },
     context: { kind: channel.contextKind as "organization" | "ticket" | "site" | "crew" | "gate" | "chat", id: channel.contextId },
-    participant: await isWorkHubParticipant(session, channel), visibilityRevision: `${session.userId}:${channel.updatedAt.toISOString()}`,
+    participant, visibilityRevision: `${session.userId}:${channel.updatedAt.toISOString()}`,
   });
   const scope = await collaborationChannelScope(session.userId, channel.id);
   const resolved = scope && !session.managedSubcontractor ? { ...access, capabilities: new Set<WorkHubCapability>(scope.manager ? ["channel.read", "channel.write", "file.download", "channel.manage", "task.assign", "announcement.publish", "meeting.host"] : ["channel.read", "channel.write", "file.download"]) } : access;
