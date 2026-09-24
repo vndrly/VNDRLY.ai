@@ -223,7 +223,8 @@ export async function loadNotificationDestination(
           match,
           target.messageId ? undefined : match.name,
         );
-      const cursor = rows.at(-1)?.createdAt;
+      const cursor =
+        rows.at(-1)?.[target.messageId ? "createdAt" : "updatedAt"];
       if (rows.length < 100 || typeof cursor !== "string" || seen.has(cursor))
         break;
       seen.add(cursor);
@@ -242,11 +243,8 @@ export async function loadNotificationDestination(
     );
   }
   if (target.kind === "form" || target.kind === "checklist") {
-    const data = await apiFetch<
-      Record<string, { instance: RecordData; template: RecordData }[]>
-    >("/api/work-hub/required-actions");
-    const row = data[target.kind === "form" ? "forms" : "checklists"]?.find(
-      (row) => row.instance.id === target.id,
+    const row = await apiFetch<{ instance: RecordData; template: RecordData }>(
+      `/api/work-hub/required-actions/${target.kind}/${target.id}`,
     );
     return content(
       target,

@@ -1,4 +1,9 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
@@ -15,16 +20,32 @@ import {
   type NotificationDestinationContent,
 } from "@/lib/notification-destination";
 import { syncAppIconBadge } from "@/lib/notificationBadge";
+import { captureAuthScope, subscribeToken, subscribeUser } from "@/lib/auth";
+
+function subscribeAuthScope(listener: () => void) {
+  const user = subscribeUser(listener);
+  const token = subscribeToken(listener);
+  return () => {
+    user();
+    token();
+  };
+}
+const authGeneration = () => captureAuthScope().generation;
 
 export default function NotificationDestinationScreen() {
   const { requestId } = useLocalSearchParams<{ requestId: string }>();
   const colors = useColors();
   const { t } = useTranslation();
+  const generation = useSyncExternalStore(subscribeAuthScope, authGeneration);
   const [loaded, setLoaded] = useState<{
     requestId: string;
+    generation: number;
     record: NotificationDestinationContent;
   } | null>(null);
-  const record = loaded?.requestId === requestId ? loaded.record : null;
+  const invalidated = loaded !== null && loaded.generation !== generation;
+  // Guard during render, even after acknowledgement removes the transient request.
+  const record =
+    loaded?.requestId === requestId && !invalidated ? loaded.record : null;
   const mountedRequest = useRef<{ requestId: string } | null>(null);
   const [unavailable, setUnavailable] = useState(false);
   useEffect(() => {
@@ -45,7 +66,11 @@ export default function NotificationDestinationScreen() {
       void loadNotificationDestination(request.target)
         .then((value) => {
           if (active && getNotificationOpenRequest(requestId) === request)
-            setLoaded({ requestId, record: value });
+            setLoaded({
+              requestId,
+              generation: request.scope.generation,
+              record: value,
+            });
           else if (active) setUnavailable(true);
         })
         .catch(() => {
@@ -68,6 +93,12 @@ export default function NotificationDestinationScreen() {
     };
   }, [requestId]);
   useEffect(() => {
+    if (!invalidated) return;
+    setLoaded(null);
+    setUnavailable(true);
+    cancelNotificationOpen(requestId);
+  }, [invalidated, requestId]);
+  useEffect(() => {
     if (!record) return;
     void confirmNotificationRendered(requestId).then((result) => {
       if (result === "opened") void syncAppIconBadge();
@@ -88,7 +119,7 @@ export default function NotificationDestinationScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <ScrollView contentContainerStyle={{ padding: 20, gap: 16 }}>
         <WorkHubPageTitle title={title} />
-        {unavailable ? (
+        {unavailable || invalidated ? (
           <Text
             accessibilityRole="alert"
             style={{ color: colors.mutedForeground }}

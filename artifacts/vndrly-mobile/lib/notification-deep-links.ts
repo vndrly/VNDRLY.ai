@@ -17,6 +17,7 @@ type OpenRequest = {
   scope: AuthScope;
   finish: (result: OpenResult) => void;
   timer: ReturnType<typeof setTimeout>;
+  controller: AbortController;
   completion: Promise<OpenResult>;
   confirmation?: Promise<OpenResult>;
 };
@@ -36,6 +37,7 @@ export function cancelNotificationOpen(requestId: string) {
   if (!request) return;
   clearTimeout(request.timer);
   requests.delete(requestId);
+  request.controller.abort();
   request.finish("unavailable");
 }
 
@@ -46,28 +48,32 @@ export function confirmNotificationRendered(
   const request = getNotificationOpenRequest(requestId);
   if (!request) return Promise.resolve("unavailable");
   if (request.confirmation) return request.confirmation;
-  request.confirmation = (async () => {
+  // Confirmation callers share the deadline-bound result, not the network promise.
+  request.confirmation = request.completion;
+  void (async () => {
     try {
       // Recheck after loading, before writing read state (membership may have changed).
       const resolved = await apiFetch<{ href: string }>(
         `/api/notifications/${request.notificationId}/resolve`,
-        { method: "POST" },
+        { method: "POST", signal: request.controller.signal },
       );
       if (
         getNotificationOpenRequest(requestId) !== request ||
         resolved.href !== request.href
       )
         throw new Error("notification.unavailable");
-      clearTimeout(request.timer);
       await apiFetch(`/api/notifications/${request.notificationId}/read`, {
         method: "POST",
+        signal: request.controller.signal,
       });
+      // A late response cannot resurrect an expired or context-invalid request.
+      // The server may already have applied the read; the next refresh reconciles it.
+      if (getNotificationOpenRequest(requestId) !== request) return;
+      clearTimeout(request.timer);
       requests.delete(requestId);
       request.finish("opened");
-      return "opened";
     } catch {
       cancelNotificationOpen(requestId);
-      return "unavailable";
     }
   })();
   return request.confirmation;
@@ -112,6 +118,7 @@ export async function openNotificationDestination(
     scope,
     finish,
     timer,
+    controller: new AbortController(),
     completion: result,
   });
   try {

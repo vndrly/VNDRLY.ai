@@ -31,9 +31,74 @@ function translate(key: string, options?: { defaultValue?: string }) {
 }
 import DestinationScreen from "../work-hub/notification";
 import { openNotificationDestination } from "../../lib/notification-deep-links";
-import { setUser } from "../../lib/auth";
+import { setUser, setToken } from "../../lib/auth";
 const id = "7b077b60-17aa-4e3b-9d23-f622311ff274";
 const other = "86ec8edf-d36f-4eca-9874-7fd6443a1070";
+it.each(["identity", "context", "token"])(
+  "clears acknowledged content immediately when %s changes",
+  async (change) => {
+    await setUser({
+      id: 9,
+      username: "worker",
+      displayName: "Worker",
+      role: "vendor",
+      vendorId: 3,
+      activeMembershipId: 1,
+    });
+    apiFetch.mockImplementation(async (path: string) =>
+      path.endsWith("/resolve")
+        ? { href: `/work-hub/tasks/${id}` }
+        : path.endsWith("/read")
+          ? { ok: true }
+          : { item: { id, title: "Private loaded task" } },
+    );
+    render(<Host />);
+    fireEvent.click(screen.getByText("Open"));
+    await waitFor(() => expect(screen.getByText("opened")).toBeTruthy());
+    expect(screen.getByText("Private loaded task")).toBeTruthy();
+    await act(async () => {
+      if (change === "token") await setToken("new-session-token");
+      else
+        await setUser({
+          id: change === "identity" ? 10 : 9,
+          username: "worker",
+          displayName: "Worker",
+          role: "vendor",
+          vendorId: 4,
+          activeMembershipId: 2,
+        });
+    });
+    expect(screen.queryByText("Private loaded task")).toBeNull();
+    expect(screen.getByRole("alert").textContent).toContain(
+      "no longer available",
+    );
+  },
+);
+
+it("finds an exact channel on page two using updatedAt rather than createdAt", async () => {
+  const updatedAt = "2026-09-22T12:00:00Z";
+  apiFetch.mockImplementation(async (path: string) => {
+    if (path.endsWith("/resolve")) return { href: `/work-hub/channels/${id}` };
+    if (path.endsWith("/read")) return { ok: true };
+    if (path === "/api/work-hub/channels?limit=100")
+      return Array.from({ length: 100 }, (_, n) => ({
+        id: `other-${n}`,
+        name: "Other channel",
+        createdAt: "2020-01-01T00:00:00Z",
+        updatedAt,
+      }));
+    if (
+      path ===
+      `/api/work-hub/channels?limit=100&before=${encodeURIComponent(updatedAt)}`
+    )
+      return [{ id, name: "Exact older channel" }];
+    throw new Error(`Wrong cursor ${path}`);
+  });
+  render(<Host />);
+  fireEvent.click(screen.getByText("Open"));
+  await waitFor(() => expect(screen.getByText("opened")).toBeTruthy());
+  expect(screen.getByText("Exact older channel")).toBeTruthy();
+});
 const row = {
   id: 42,
   type: "work_hub_task_assigned",
@@ -211,36 +276,26 @@ const cases = [
   {
     name: "form",
     href: `/work-hub?form=${id}`,
-    endpoint: "/api/work-hub/required-actions",
+    endpoint: `/api/work-hub/required-actions/form/${id}`,
     data: {
-      forms: [
-        {
-          instance: { id },
-          template: {
-            name: "Exact form",
-            definition: [{ label: "Gate check" }],
-          },
-        },
-      ],
-      checklists: [],
+      instance: { id },
+      template: {
+        name: "Exact form",
+        definition: [{ label: "Gate check" }],
+      },
     },
     text: "Exact form",
   },
   {
     name: "checklist",
     href: `/work-hub?checklist=${id}`,
-    endpoint: "/api/work-hub/required-actions",
+    endpoint: `/api/work-hub/required-actions/checklist/${id}`,
     data: {
-      checklists: [
-        {
-          instance: { id },
-          template: {
-            name: "Exact checklist",
-            definition: [{ label: "Inspect lock" }],
-          },
-        },
-      ],
-      forms: [],
+      instance: { id },
+      template: {
+        name: "Exact checklist",
+        definition: [{ label: "Inspect lock" }],
+      },
     },
     text: "Exact checklist",
   },
@@ -269,6 +324,7 @@ it.each(cases)(
     expect(apiFetch).toHaveBeenCalledWith(endpoint);
     expect(apiFetch).toHaveBeenCalledWith("/api/notifications/42/read", {
       method: "POST",
+      signal: expect.any(AbortSignal),
     });
   },
 );
@@ -314,6 +370,34 @@ it("does not mark read while the exact item is still loading or after leaving", 
     false,
   );
 });
+
+it.each([
+  ["form", "denied"],
+  ["form", "wrong-id"],
+  ["checklist", "denied"],
+  ["checklist", "wrong-id"],
+])(
+  "keeps an unavailable exact %s %s lookup unread without history fallback",
+  async (kind, failure) => {
+    apiFetch.mockImplementation(async (path: string) => {
+      if (path.endsWith("/resolve")) return { href: `/work-hub?${kind}=${id}` };
+      expect(path).toBe(`/api/work-hub/required-actions/${kind}/${id}`);
+      if (failure === "denied") throw new Error("404 not found");
+      return {
+        instance: { id: other },
+        template: { name: "Wrong assigned record" },
+      };
+    });
+    render(<Host />);
+    fireEvent.click(screen.getByText("Open"));
+    await waitFor(() => expect(screen.getByText("unavailable")).toBeTruthy());
+    expect(screen.queryByText("Wrong assigned record")).toBeNull();
+    expect(apiFetch.mock.calls.map(([path]) => path)).toEqual([
+      "/api/notifications/42/resolve",
+      `/api/work-hub/required-actions/${kind}/${id}`,
+    ]);
+  },
+);
 
 it("opens only once when React replays destination mount effects", async () => {
   apiFetch.mockImplementation(async (path: string) => {
@@ -365,21 +449,18 @@ it.each(["form", "checklist"])(
     apiFetch.mockImplementation(async (path: string) => {
       if (path.endsWith("/resolve")) return { href: `/work-hub?${kind}=${id}` };
       if (path.endsWith("/read")) return { ok: true };
+      expect(path).toBe(`/api/work-hub/required-actions/${kind}/${id}`);
       return {
-        [kind === "form" ? "forms" : "checklists"]: [
-          {
-            instance: {
-              id,
-              [kind === "form" ? "definitionSnapshot" : "snapshot"]: [
-                { id: "f1", label: "Original assigned field" },
-              ],
-            },
-            template: {
-              name: "Assigned record",
-              definition: [{ id: "f2", label: "Revised template field" }],
-            },
-          },
-        ],
+        instance: {
+          id,
+          [kind === "form" ? "definitionSnapshot" : "snapshot"]: [
+            { id: "f1", label: "Original assigned field" },
+          ],
+        },
+        template: {
+          name: "Assigned record",
+          definition: [{ id: "f2", label: "Revised template field" }],
+        },
       };
     });
     render(<Host />);

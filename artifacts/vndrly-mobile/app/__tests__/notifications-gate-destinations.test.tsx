@@ -111,6 +111,7 @@ it("consumes a gate envelope and opens its authorized exact item before marking 
   await waitFor(() =>
     expect(apiFetch).toHaveBeenCalledWith("/api/notifications/42/read", {
       method: "POST",
+      signal: expect.any(AbortSignal),
     }),
   );
   expect(screen.getByText("Exact gate task")).toBeTruthy();

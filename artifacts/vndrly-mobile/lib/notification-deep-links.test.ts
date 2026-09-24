@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   openNotificationDestination,
   resolveNotificationHref,
+  confirmNotificationRendered,
+  getNotificationOpenRequest,
 } from "./notification-deep-links";
 import type { GateNotificationRow } from "./notifications-ui";
 const { apiFetch } = vi.hoisted(() => ({ apiFetch: vi.fn() }));
@@ -25,6 +27,47 @@ afterEach(() => {
   vi.useRealTimers();
 });
 describe("notification destinations", () => {
+  it.each(["resolve", "reject"])(
+    "expires a hung read and ignores a late %s",
+    async (late) => {
+      vi.useFakeTimers();
+      let finish!: (value: unknown) => void;
+      let fail!: (reason: Error) => void;
+      let signal: AbortSignal | undefined;
+      apiFetch.mockImplementation(async (path: string, init?: RequestInit) =>
+        path.endsWith("/resolve")
+          ? { href: `/work-hub/tasks/${id}` }
+          : new Promise((resolve, reject) => {
+              signal = init?.signal ?? undefined;
+              finish = resolve;
+              fail = reject;
+            }),
+      );
+      const push = vi.fn();
+      const result = vi.fn();
+      const confirmation = vi.fn();
+      void openNotificationDestination(row, { push }).then(result);
+      await vi.advanceTimersByTimeAsync(1);
+      const requestId = new URL(
+        push.mock.calls[0][0],
+        "https://app.invalid",
+      ).searchParams.get("requestId")!;
+      void confirmNotificationRendered(requestId).then(confirmation);
+      await vi.advanceTimersByTimeAsync(1);
+      expect(finish).toBeTypeOf("function");
+      expect(signal?.aborted).toBe(false);
+      await vi.advanceTimersByTimeAsync(30_000);
+      expect(signal?.aborted).toBe(true);
+      expect(getNotificationOpenRequest(requestId)).toBeUndefined();
+      expect(result).toHaveBeenCalledExactlyOnceWith("unavailable");
+      expect(confirmation).toHaveBeenCalledExactlyOnceWith("unavailable");
+      if (late === "resolve") finish({ ok: true });
+      else fail(new Error("late failure"));
+      await vi.advanceTimersByTimeAsync(1);
+      expect(result).toHaveBeenCalledExactlyOnceWith("unavailable");
+      expect(confirmation).toHaveBeenCalledExactlyOnceWith("unavailable");
+    },
+  );
   it("preserves the authorized subject instead of trusting a saved link", async () => {
     const href = `/work-hub/tasks/${id}`;
     apiFetch.mockResolvedValueOnce({ href });
