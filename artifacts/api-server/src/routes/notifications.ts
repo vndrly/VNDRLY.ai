@@ -9,6 +9,7 @@ import {
   vendorPeopleTable,
 } from "@workspace/db";
 import crypto from "crypto";
+import { GATE_ALERT_TYPES } from "../lib/gate-notification-policy";
 import { sendPushToUser } from "../lib/expo-push";
 import { logger } from "../lib/logger";
 import { enforceNotificationsRateLimit } from "../lib/notifications-rate-limit";
@@ -391,6 +392,7 @@ export type NotifyInput = {
 export async function countUnreadForUser(
   userId: number,
   commentsEnabled = true,
+  preferences?: Partial<typeof DEFAULT_PREFS>,
 ): Promise<number> {
   const conds = [
     eq(notificationsTable.userId, userId),
@@ -398,6 +400,10 @@ export async function countUnreadForUser(
   ];
   if (!commentsEnabled) {
     conds.push(sql`${notificationsTable.category} <> 'comments'`);
+  }
+  for (const type of GATE_ALERT_TYPES) {
+    if (preferences && categoryEnabled({ ...DEFAULT_PREFS, ...preferences }, categoryForType(type)) === false)
+      conds.push(sql`${notificationsTable.type} <> ${type}`);
   }
   const [row] = await db
     .select({ n: sql<number>`count(*)::int` })
@@ -415,7 +421,7 @@ export async function countUnreadForUsers(
   await Promise.all(
     userIds.map(async (uid) => {
       const p = prefs.get(uid) ?? DEFAULT_PREFS;
-      map.set(uid, await countUnreadForUser(uid, p.commentsEnabled));
+      map.set(uid, await countUnreadForUser(uid, p.commentsEnabled, p));
     }),
   );
   return map;
@@ -456,7 +462,7 @@ export async function fanOutPushToUser(
   const now = new Date();
   if (!p.pushEnabled || inDndWindow(p, now) || !categoryEnabled(p, category)) return;
 
-  const badge = await countUnreadForUser(userId, p.commentsEnabled);
+  const badge = await countUnreadForUser(userId, p.commentsEnabled, p);
   const { sendPushToUser } = await import("../lib/expo-push");
   await sendPushToUser(userId, {
     title: notif.title,
@@ -477,22 +483,8 @@ export async function fanOutPushToUser(
 export async function notifyUsers(userIds: number[], notif: NotifyInput): Promise<number> {
   if (!userIds.length) return 0;
   const category = notif.category ?? categoryForType(notif.type);
-  const prefs = await getPrefsForUsers(userIds);
-  const urgentGateRecipients = new Map<number, boolean>();
-  let urgentLookupFailed = false;
-  if (resolveGateNotificationCategory(notif) === "alerts") {
-    try {
-      const { loadGateAlertRecipient } = await import("../services/gate-alert-repository");
-      for (const uid of userIds) {
-        const recipient = await loadGateAlertRecipient(uid);
-        if (recipient?.gate) urgentGateRecipients.set(uid, recipient.gateAlertsEnabled);
-      }
-    } catch {
-      // Preserve inbox creation on a contact lookup outage, but fail closed for outbound delivery.
-      urgentLookupFailed = true;
-      logger.warn("Gate alert recipient lookup unavailable");
-    }
-  }
+  const urgent = resolveGateNotificationCategory(notif) === "alerts";
+  const prefs = urgent ? new Map<number, typeof DEFAULT_PREFS>() : await getPrefsForUsers(userIds);
   // Task #50 — for the comments category the email sub-channels
   // (mention email, reply digest email) are independently controllable
   // from the in-app/push category toggle. We must insert the row when
@@ -506,8 +498,9 @@ export async function notifyUsers(userIds: number[], notif: NotifyInput): Promis
   // category `*Enabled` flag gates everything, so a single false
   // skips the user entirely.
   const eligible = userIds.filter((uid) => {
-    if (urgentGateRecipients.has(uid)) return urgentGateRecipients.get(uid)!;
-    if (urgentLookupFailed) return true;
+    // Canonical urgent records are durable even when recipient resolution is unavailable.
+    // Channel preferences and live membership are applied after this atomic insert.
+    if (urgent) return true;
     if (notif.forceImmediateDelivery) return true;
     const p = prefs.get(uid)!;
     if (categoryEnabled(p, category)) return true;
@@ -527,6 +520,7 @@ export async function notifyUsers(userIds: number[], notif: NotifyInput): Promis
     title: notif.title,
     body: notif.body ?? null,
     link: notif.link ?? null,
+    urgentDeliveryPending: urgent,
   }));
 
   let inserted: { id: number; userId: number; createdAt: Date }[] = [];
@@ -576,24 +570,22 @@ export async function notifyUsers(userIds: number[], notif: NotifyInput): Promis
     }
   }
 
+  if (urgent) {
+    const { processPendingGateAlert } = await import("../services/gate-alert-repository");
+    await Promise.allSettled(inserted.map(r => processPendingGateAlert({ id: r.id, userId: r.userId,
+      type: notif.type, title: notif.title, body: notif.body, link: notif.link ?? null })));
+    return inserted.length;
+  }
+
   // Fan out push notifications (best-effort) for newly inserted rows only,
   // respecting per-user push + DND prefs.
   const now = new Date();
   const unreadByUser = await countUnreadForUsers(
-    inserted.filter(r => !urgentGateRecipients.has(r.userId) && !urgentLookupFailed).map((r) => r.userId),
+    inserted.map((r) => r.userId),
     prefs,
   ).catch(() => new Map<number, number>());
   for (const r of inserted) {
     const p = prefs.get(r.userId)!;
-    if (urgentLookupFailed) continue;
-    if (urgentGateRecipients.has(r.userId)) {
-      try {
-        const { deliverGateAlert } = await import("../services/gate-alert-delivery");
-        await deliverGateAlert({ id: r.id, userId: r.userId, type: notif.type, title: notif.title,
-          body: notif.body, link: notif.link ?? null, badge: unreadByUser.get(r.userId) ?? 0 });
-      } catch { logger.warn({ notificationId: r.id }, "Gate alert channels unavailable; inbox preserved"); }
-      continue;
-    }
     if (!notif.forceImmediateDelivery && (!p.pushEnabled || inDndWindow(p, now))) continue;
     // Task #50 — push lives on the same channel as the in-app
     // notification (commentsEnabled). When the row was inserted only
@@ -632,7 +624,7 @@ export async function notifyUsers(userIds: number[], notif: NotifyInput): Promis
   // worker can pick it up; the daily digest worker leaves the comments
   // category alone.
   const skipInstantEmail = isCommentReplyNotificationType(notif.type);
-  const legacyInserted = urgentLookupFailed ? [] : inserted.filter(r => !urgentGateRecipients.has(r.userId));
+  const legacyInserted = inserted;
   const emailEligibleIds = skipInstantEmail
     ? []
     : legacyInserted
@@ -645,6 +637,38 @@ export async function notifyUsers(userIds: number[], notif: NotifyInput): Promis
   }
 
   return inserted.length;
+}
+
+/** Recovery path for canonical urgent records whose current membership is not a gate role. */
+export async function deliverUrgentOfficeNotification(notice: import("../services/gate-alert-delivery").GateAlert): Promise<boolean> {
+  const { gateAlertDependencies: deps, loadGateAlertRecipient } = await import("../services/gate-alert-repository");
+  const recipient = await loadGateAlertRecipient(notice.userId);
+  if (!recipient || recipient.gate) return false;
+  const prefs = await getPrefsForUsers([notice.userId]);
+  const p = prefs.get(notice.userId)!;
+  const category = categoryForType(notice.type);
+  const results = await Promise.allSettled((["push", "email"] as const).map(async channel => {
+    const claim = await deps.claim(notice, channel, null);
+    if (!claim) return;
+    const enabled = categoryEnabled(p, category) && (channel === "push"
+      ? p.pushEnabled // Canonical urgent types bypass quiet hours, including recovery after restart.
+      : categoryEmailEnabled(p, category, notice.type) && Boolean(recipient.email) && deps.readiness().email);
+    let status: import("../services/gate-alert-delivery").GateAlertOutcome["status"] = "skipped";
+    let providerMessageId: string | undefined;
+    let errorCode: string | null = enabled ? null : "disabled_or_not_configured";
+    if (enabled) {
+      try {
+        const result = channel === "push"
+          ? await (await import("../services/gate-alert-push")).sendGateAlertPush(notice, (await countUnreadForUsers([notice.userId], prefs)).get(notice.userId) ?? 0)
+          : await deps.email(notice, recipient);
+        status = result.status ?? (result.accepted ? "accepted" : result.permanent ? "failed" : "retryable");
+        providerMessageId = result.providerMessageId;
+        errorCode = result.errorCode ?? null;
+      } catch { status = "unknown"; errorCode = "provider_exception"; }
+    }
+    await deps.finish({ notificationId: notice.id, channel, attemptToken: claim.attemptToken, status, errorCode, providerMessageId });
+  }));
+  return results.every(result => result.status === "fulfilled");
 }
 
 // Look up email + display name for the given user ids in a single
@@ -956,7 +980,11 @@ async function notificationVisibility(session: Session) {
     return prefs;
   }
   return async (row: NotificationRow) => {
-    if (!gate) return row.category !== "comments" || (await preferences()).commentsEnabled !== false;
+    if (!gate) {
+      if (resolveGateNotificationCategory(row) === "alerts")
+        return categoryEnabled({ ...DEFAULT_PREFS, ...await preferences() }, categoryForType(row.type)) !== false;
+      return row.category !== "comments" || (await preferences()).commentsEnabled !== false;
+    }
     const category = resolveGateNotificationCategory(row);
     if (!category || !gateCategoryEnabled(await preferences(), category)) return false;
     return (await resolveNotificationDestination(session, row.link, category)) !== null;
@@ -1067,22 +1095,10 @@ router.get("/notifications/unread-count", async (req, res) => {
   // email-only rows from the unread count so the bell badge agrees
   // with the bell list.
   const [callerPrefs] = await db
-    .select({ commentsEnabled: notificationPreferencesTable.commentsEnabled })
+    .select()
     .from(notificationPreferencesTable)
     .where(eq(notificationPreferencesTable.userId, session.userId));
-  const callerCommentsEnabled = callerPrefs?.commentsEnabled ?? true;
-  const conds = [
-    eq(notificationsTable.userId, session.userId),
-    eq(notificationsTable.isRead, false),
-  ];
-  if (!callerCommentsEnabled) {
-    conds.push(sql`${notificationsTable.category} <> 'comments'`);
-  }
-  const [row] = await db
-    .select({ n: sql<number>`count(*)::int` })
-    .from(notificationsTable)
-    .where(and(...conds));
-  return res.json({ count: row?.n ?? 0 });
+  return res.json({ count: await countUnreadForUser(session.userId, callerPrefs?.commentsEnabled ?? true, callerPrefs) });
 });
 
 

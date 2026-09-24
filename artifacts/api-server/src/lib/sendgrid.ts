@@ -21,6 +21,14 @@ function sendGridConfig() {
   return { apiKey, fromEmail, fromName, replyTo };
 }
 
+export class SendGridMailError extends Error {
+  readonly definitelyRejected: boolean;
+  constructor(readonly status: number) {
+    super(`SendGrid mail send failed with status ${status}`);
+    this.definitelyRejected = status >= 400 && status < 500 && status !== 408;
+  }
+}
+
 async function sendSendGridMail(input: {
   to: string;
   subject: string;
@@ -67,9 +75,8 @@ async function sendSendGridMail(input: {
   });
 
   if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    logger.error({ status: res.status, body }, "SendGrid mail send failed");
-    throw new Error(`SendGrid mail send failed with status ${res.status}`);
+    logger.error({ status: res.status }, "SendGrid mail send failed");
+    throw new SendGridMailError(res.status);
   }
 
   return { messageId: res.headers.get("x-message-id") ?? undefined };

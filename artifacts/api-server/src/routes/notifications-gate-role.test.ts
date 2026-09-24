@@ -46,6 +46,7 @@ vi.mock("drizzle-orm", () => ({
   desc: (c: string) => c,
   sql: Object.assign(
     (parts: TemplateStringsArray, ...values: any[]) => {
+      if (parts.join("") === " <> " && values[0] === "type") return (r: any) => r.type !== values[1];
       if (parts.join("").includes("::timestamptz")) {
         state.cursorTimestampBindings.push(values[0]);
         return { timestamp: values[0] };
@@ -556,6 +557,13 @@ describe("role-aware notification inbox", () => {
     ];
     expect((await get("", office)).body.map((r: any) => r.id)).toEqual([1]);
     expect((await get("/unread-count", office)).body.count).toBe(1);
+  });
+  it("retains canonical urgent records but hides disabled office categories from list and badge", async () => {
+    state.tables.notifications = [notification(3, "gate_closed"), notification(2, "safety_stop_work", { category: "safety" }), notification(1, "hotlist_match")];
+    state.tables.notificationPreferences = [{ userId: 7, systemEnabled: false, complianceEnabled: false }];
+    expect((await get("", office)).body.map((r: any) => r.id)).toEqual([1]);
+    expect((await get("/unread-count", office)).body.count).toBe(1);
+    expect(state.tables.notifications).toHaveLength(3);
   });
   it("returns gate switches and atomically maps combined preferences", async () => {
     const prefs = (await get("/preferences")).body;

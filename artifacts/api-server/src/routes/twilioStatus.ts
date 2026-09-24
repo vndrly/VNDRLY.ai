@@ -8,7 +8,9 @@ export function shouldApplyTwilioStatus(current: string, incoming: string) {
   return !TERMINAL.has(current) && incoming in RANK && current in RANK && RANK[incoming] > RANK[current];
 }
 export function isPermanentSmsError(code: string | null | undefined) {
-  return ["21610", "21211", "21614", "30003", "30005", "30006"].includes(code ?? "");
+  // Only explicit opt-out or a rejected invalid/non-mobile destination invalidates consent.
+  // Carrier delivery failures (including unreachable 30003) are not evidence of withdrawn consent.
+  return ["21610", "21211", "21614"].includes(code ?? "");
 }
 export function createTwilioStatusRouter(dependencies: {
   config(): { url: string; authToken: string; accountSid: string };

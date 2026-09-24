@@ -25,7 +25,7 @@ describe("urgent gate alert delivery", () => {
     const f = fixture(); const warning = vi.spyOn(logger, "warn").mockImplementation(() => {});
     const finish = f.dependencies.finish;
     f.dependencies.finish = async result => { if (result.channel === "push") throw new Error("secret phone"); return finish(result); };
-    await expect(deliverGateAlert(notice, f.dependencies)).resolves.toBeUndefined();
+    await expect(deliverGateAlert(notice, f.dependencies)).resolves.toBe(false);
     expect(warning).toHaveBeenCalledWith({ notificationId: 10, channel: "push" }, "Gate alert channel audit unavailable");
     expect(f.outcomes).toHaveLength(2);
     warning.mockRestore();
@@ -34,7 +34,7 @@ describe("urgent gate alert delivery", () => {
     const f = fixture();
     vi.mocked(f.dependencies.push).mockRejectedValue(new Error("secret +14055551212"));
     await deliverGateAlert(notice, f.dependencies);
-    expect(f.outcomes.map(r => [r.channel, r.status]).sort()).toEqual([["email", "accepted"], ["push", "retryable"], ["sms", "accepted"]]);
+    expect(f.outcomes.map(r => [r.channel, r.status]).sort()).toEqual([["email", "accepted"], ["push", "unknown"], ["sms", "accepted"]]);
     expect(JSON.stringify(f.outcomes)).not.toMatch(/secret|14055551212|Private site|Sensitive incident|worker@example/);
   });
   it.each([
@@ -63,7 +63,7 @@ describe("urgent gate alert delivery", () => {
     await deliverGateAlert(notice, f.dependencies); expect(f.outcomes).toEqual([]);
   });
   it("deduplicates concurrent delivery and retries only the failed channel", async () => {
-    const f = fixture(); vi.mocked(f.dependencies.push).mockRejectedValueOnce(new Error("offline"));
+    const f = fixture(); vi.mocked(f.dependencies.push).mockResolvedValueOnce({ accepted: false, status: "retryable" });
     await Promise.all([deliverGateAlert(notice, f.dependencies), deliverGateAlert(notice, f.dependencies)]);
     await deliverGateAlert(notice, f.dependencies);
     expect(f.dependencies.email).toHaveBeenCalledOnce(); expect(f.dependencies.sms).toHaveBeenCalledOnce();

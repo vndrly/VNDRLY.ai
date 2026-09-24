@@ -14,6 +14,9 @@ export const notificationsTable = pgTable(
     body: text("body"),
     link: text("link"),
     isRead: boolean("is_read").notNull().default(false),
+    urgentDeliveryPending: boolean("urgent_delivery_pending").notNull().default(false),
+    urgentDeliveryLease: text("urgent_delivery_lease"),
+    urgentDeliveryLeasedUntil: timestamp("urgent_delivery_leased_until", { withTimezone: true }),
     deliveryStatus: text("delivery_status").notNull().default("pending"),
     deliveryAttempts: integer("delivery_attempts").notNull().default(0),
     nextDeliveryAttemptAt: timestamp("next_delivery_attempt_at", { withTimezone: true }),
@@ -39,6 +42,7 @@ export const notificationsTable = pgTable(
   },
   (t) => ({
     userIdx: index("notifications_user_idx").on(t.userId),
+    urgentDeliveryIdx: index("notifications_urgent_delivery_idx").on(t.urgentDeliveryPending, t.urgentDeliveryLeasedUntil),
     deliveryRetryIdx: index("notifications_delivery_retry_idx").on(t.deliveryStatus, t.nextDeliveryAttemptAt),
     acknowledgementDueIdx: index("notifications_acknowledgement_due_idx").on(t.acknowledgementRequired, t.acknowledgementDueAt),
     dedupeUnique: uniqueIndex("notifications_user_dedupe_unique").on(t.userId, t.dedupeKey),
@@ -160,3 +164,16 @@ export const notificationChannelDeliveriesTable = pgTable("notification_channel_
   attemptUnique: uniqueIndex("notification_channel_attempt_unique").on(t.attemptToken),
   retryIdx: index("notification_channel_retry_idx").on(t.status, t.nextAttemptAt),
 }));
+
+export const notificationPushDeliveriesTable = pgTable("notification_push_deliveries", {
+  id: serial("id").primaryKey(),
+  notificationId: integer("notification_id").notNull().references(() => notificationsTable.id, { onDelete: "cascade" }),
+  destinationHash: text("destination_hash").notNull(),
+  status: text("status").notNull().default("sending"),
+  attemptToken: text("attempt_token").notNull(),
+  attemptCount: integer("attempt_count").notNull().default(1),
+  providerMessageId: text("provider_message_id"),
+  lastErrorCode: text("last_error_code"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+}, t => ({ destinationUnique: uniqueIndex("notification_push_destination_unique").on(t.notificationId, t.destinationHash) }));

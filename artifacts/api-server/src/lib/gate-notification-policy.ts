@@ -42,6 +42,8 @@ export function resolveGateNotificationCategory(row: { type: string }): GateNoti
     : null;
 }
 
+export const GATE_ALERT_TYPES = Object.keys(GATE_TYPE_CATEGORY).filter(type => GATE_TYPE_CATEGORY[type] === "alerts");
+
 export function gateNotificationVisible(row: { type: string }): boolean {
   return resolveGateNotificationCategory(row) !== null;
 }

@@ -17,7 +17,7 @@ vi.mock("@workspace/db", async () => {
     }) }),
   } };
 });
-vi.mock("../services/gate-alert-repository", () => ({ loadGateAlertRecipient: async () => state.recipient }));
+vi.mock("../services/gate-alert-repository", () => ({ loadGateAlertRecipient: async () => state.recipient, processPendingGateAlert: state.fanout }));
 vi.mock("../services/gate-alert-delivery", async importOriginal => ({ ...await importOriginal<any>(), deliverGateAlert: state.fanout }));
 vi.mock("../lib/expo-push", () => ({ sendPushToUser: vi.fn(async () => ({ delivered: true })) }));
 vi.mock("../lib/notification-events", () => ({ publishNotificationCreated: vi.fn(), publishNotificationStateChanged: vi.fn(), subscribeNotificationEvents: vi.fn(), getCurrentNotificationEventSeq: vi.fn() }));
@@ -62,6 +62,7 @@ describe("gate alert preference authorization", () => {
     state.fanout.mockRejectedValueOnce(new Error("provider error"));
     await expect(notifyUsers([7], { type: "gate_closed", title: "Gate closed", link: "/gate?siteId=3" })).resolves.toBe(1);
     expect(state.notices).toHaveLength(1);
+    expect(state.notices[0].urgentDeliveryPending).toBe(true);
     expect(state.fanout).toHaveBeenCalledWith(expect.objectContaining({ id: 1, userId: 7, type: "gate_closed" }));
   });
   it("does not let the legacy badge query suppress urgent channel fanout", async () => {

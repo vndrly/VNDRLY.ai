@@ -2,12 +2,12 @@ import { randomUUID } from "node:crypto";
 import { pool } from "@workspace/db";
 import { sendTransactionalSms, TwilioSmsError } from "../lib/twilio";
 import { isPermanentSmsError, shouldApplyTwilioStatus, type TwilioStatusUpdate } from "../routes/twilioStatus";
-import { deliverGateAlert, gateAlertReadiness, type GateAlertDependencies, type GateAlertRecipient } from "./gate-alert-delivery";
+import { deliverGateAlert, gateAlertReadiness, type GateAlert, type GateAlertDependencies, type GateAlertRecipient } from "./gate-alert-delivery";
 import type { SessionPayload } from "../lib/session";
 
 type Recipient = GateAlertRecipient & { session: SessionPayload & { userId: number } };
 export async function loadGateAlertRecipient(userId: number): Promise<Recipient | null> {
-  const { rows } = await pool.query(`SELECT u.id AS "userId", u.email,
+  const { rows } = await pool.query(`SELECT u.id AS "userId", u.email, u.session_version AS "sessionVersion",
     m.id AS "membershipId", m.vendor_id AS "vendorId", m.partner_id AS "partnerId", m.role AS "membershipRole",
     vp.id AS "vendorPeopleId", vp.vendor_role AS "vendorRole", vp.phone,
     p.push_enabled AS "pushEnabled", p.gate_alerts_enabled AS "gateAlertsEnabled",
@@ -35,7 +35,7 @@ export async function loadGateAlertRecipient(userId: number): Promise<Recipient 
     pushEnabled: row.pushEnabled ?? true, gateAlertsEnabled: row.gateAlertsEnabled ?? true,
     alertsEmailEnabled: row.alertsEmailEnabled ?? true, alertsSmsEnabled: row.alertsSmsEnabled ?? false,
     alertsSmsOptedInAt: row.alertsSmsOptedInAt ?? null, alertsSmsConsentFingerprint: row.alertsSmsConsentFingerprint ?? null,
-    session: { userId, role: row.membershipRole === "field_employee" ? "field_employee" : "vendor", vendorId: row.vendorId,
+    session: { userId, sv: row.sessionVersion, role: row.membershipRole === "field_employee" ? "field_employee" : "vendor", vendorId: row.vendorId,
       partnerId: row.partnerId, vendorPeopleId: row.vendorPeopleId, vendorRole: row.vendorRole,
       activeMembershipId: row.membershipId, membershipRole: row.membershipRole,
       ...(grants.length ? { managedSubcontractor: { siteGrants: grants } } : {}) },
@@ -78,18 +78,23 @@ export const gateAlertDependencies: GateAlertDependencies = {
     [result.notificationId, result.channel, result.attemptToken, result.status, result.errorCode, result.providerMessageId ?? null]);
   },
   async push(notice, recipient) {
-    const { sendPushToUser } = await import("../lib/expo-push");
+    const { sendGateAlertPush } = await import("./gate-alert-push");
     const { countGateUnreadNotifications } = await import("../routes/notifications");
-    const badge = await countGateUnreadNotifications((recipient as Recipient).session);
-    const receipt = await sendPushToUser(notice.userId, { title: notice.title, body: notice.body ?? "", badge,
-      data: { type: notice.type, link: notice.link, notificationId: notice.id, category: "alerts" } });
-    return { accepted: receipt.delivered };
+    let badge: number;
+    try { badge = await countGateUnreadNotifications((recipient as Recipient).session); }
+    catch { return { accepted: false, status: "retryable", errorCode: "badge_unavailable" }; }
+    return sendGateAlertPush(notice, badge);
   },
   async email(notice, recipient) {
-    const { sendNotificationAlertEmail } = await import("../lib/sendgrid");
-    const receipt = await sendNotificationAlertEmail({ to: recipient.email!, title: notice.title, body: notice.body,
-      link: notice.link, category: "safety", type: notice.type, highPriority: true });
-    return { accepted: true, providerMessageId: receipt.messageId };
+    const { sendNotificationAlertEmail, SendGridMailError } = await import("../lib/sendgrid");
+    try {
+      const receipt = await sendNotificationAlertEmail({ to: recipient.email!, title: notice.title, body: notice.body,
+        link: notice.link, category: "safety", type: notice.type, highPriority: true });
+      return { accepted: true, providerMessageId: receipt.messageId };
+    } catch (error) {
+      if (!(error instanceof SendGridMailError) || !error.definitelyRejected) throw error;
+      return { accepted: false, errorCode: String(error.status), permanent: error.status !== 429 };
+    }
   },
   async sms(input) {
     try {
@@ -132,8 +137,29 @@ export async function applyTwilioStatus(update: TwilioStatusUpdate): Promise<voi
 /** Only definite failures marked retryable are replayed; a crashed/ambiguous send stays unknown/sending. */
 export async function retryGateAlertChannels(): Promise<number> {
   const { rows } = await pool.query(`SELECT DISTINCT n.id, n.user_id AS "userId", n.type, n.title, n.body, n.link
-    FROM notifications n JOIN notification_channel_deliveries d ON d.notification_id = n.id
-    WHERE d.status = 'retryable' AND d.attempt_count < 3 AND d.next_attempt_at <= now() LIMIT 100`);
-  await Promise.allSettled(rows.map(row => deliverGateAlert(row)));
+    FROM notifications n LEFT JOIN notification_channel_deliveries d ON d.notification_id = n.id
+    WHERE (n.urgent_delivery_leased_until IS NULL OR n.urgent_delivery_leased_until <= now())
+      AND (n.urgent_delivery_pending = true OR (d.status = 'retryable' AND d.attempt_count < 3 AND d.next_attempt_at <= now()))
+    ORDER BY n.id LIMIT 100`);
+  await Promise.allSettled(rows.map(row => processPendingGateAlert(row)));
   return rows.length;
+}
+
+/** Durable notification marker precedes recipient lookup; expiring CAS lease permits crash recovery. */
+export async function processPendingGateAlert(notice: GateAlert): Promise<void> {
+  const lease = randomUUID();
+  const claim = await pool.query(`UPDATE notifications SET urgent_delivery_lease = $3,
+    urgent_delivery_leased_until = now() + interval '5 minutes'
+    WHERE id = $1 AND user_id = $2 AND (urgent_delivery_leased_until IS NULL OR urgent_delivery_leased_until <= now())
+      AND (urgent_delivery_pending = true OR EXISTS (SELECT 1 FROM notification_channel_deliveries d
+        WHERE d.notification_id = notifications.id AND d.status = 'retryable' AND d.attempt_count < 3 AND d.next_attempt_at <= now()))
+    RETURNING id`, [notice.id, notice.userId, lease]);
+  if (!claim.rows.length) return;
+  const recipient = await loadGateAlertRecipient(notice.userId);
+  const scheduled = recipient && !recipient.gate
+    ? await (await import("../routes/notifications")).deliverUrgentOfficeNotification(notice)
+    : await deliverGateAlert(notice, gateAlertDependencies, recipient);
+  if (scheduled) await pool.query(`UPDATE notifications SET urgent_delivery_pending = false,
+    urgent_delivery_lease = NULL, urgent_delivery_leased_until = NULL
+    WHERE id = $1 AND urgent_delivery_lease = $2`, [notice.id, lease]);
 }

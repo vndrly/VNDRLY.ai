@@ -3,8 +3,8 @@ const storage = vi.hoisted(() => ({ query: vi.fn(), connect: vi.fn(), release: v
 const providers = vi.hoisted(() => ({ sms: vi.fn(), email: vi.fn(), push: vi.fn(async () => ({ delivered: true })), count: vi.fn(async () => 7) }));
 vi.mock("@workspace/db", () => ({ pool: storage }));
 vi.mock("../lib/twilio", async original => ({ ...await original<any>(), sendTransactionalSms: providers.sms }));
-vi.mock("../lib/sendgrid", () => ({ sendNotificationAlertEmail: providers.email }));
-vi.mock("../lib/expo-push", () => ({ sendPushToUser: providers.push }));
+vi.mock("../lib/sendgrid", async original => ({ ...await original<any>(), sendNotificationAlertEmail: providers.email }));
+vi.mock("./gate-alert-push", () => ({ sendGateAlertPush: providers.push }));
 vi.mock("../routes/notifications", () => ({ countGateUnreadNotifications: providers.count }));
 vi.mock("../lib/notification-destination", () => ({ resolveNotificationDestination: vi.fn(async () => "/work-hub") }));
 import { loadGateAlertRecipient, gateAlertDependencies, applyTwilioStatus } from "./gate-alert-repository";
@@ -13,7 +13,7 @@ beforeEach(() => { storage.query.mockReset(); storage.connect.mockResolvedValue(
 describe("gate channel persistence boundaries", () => {
   it("uses authorized gate unread totals instead of an office badge snapshot", async () => {
     await gateAlertDependencies.push({ ...notice, badge: 100 }, { session: { userId: 7 } } as any);
-    expect(providers.push).toHaveBeenCalledWith(7, expect.objectContaining({ badge: 7 }));
+    expect(providers.push).toHaveBeenCalledWith(expect.objectContaining({ userId: 7 }), 7);
   });
   it("does not retry a successful email just because SendGrid omitted its message id", async () => {
     providers.email.mockResolvedValueOnce({ messageId: undefined });

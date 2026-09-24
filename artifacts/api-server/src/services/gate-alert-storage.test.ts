@@ -21,7 +21,13 @@ describe("additive gate alert storage", () => {
   it("registers only guarded additive migration statements in deployment", () => {
     const source = readFileSync(new URL("../../scripts/migrate-gate-alert-channels.ts", import.meta.url), "utf8");
     expect(source).not.toMatch(/\b(DROP|TRUNCATE|DELETE FROM|UPDATE notification)\b/);
-    expect(source.match(/ADD COLUMN IF NOT EXISTS/g)).toHaveLength(4);
+    expect(source.match(/ADD COLUMN IF NOT EXISTS/g)).toHaveLength(7);
+    expect(source).toContain("CREATE TABLE IF NOT EXISTS notification_push_deliveries");
+    const push = getTableConfig(schema.notificationPushDeliveriesTable);
+    expect(push.columns.map(c => c.name)).toContain("destination_hash");
+    expect(push.columns.map(c => c.name)).not.toContain("token");
+    expect(push.indexes[0].config.unique).toBe(true);
+    expect(getTableConfig(schema.notificationsTable).columns.find(c => c.name === "urgent_delivery_pending")?.default).toBe(false);
     expect(source).toContain("CREATE TABLE IF NOT EXISTS notification_channel_deliveries");
     const pkg = JSON.parse(readFileSync(new URL("../../package.json", import.meta.url), "utf8"));
     expect(pkg.scripts["migrate:gate-alert-channels"]).toBe("tsx scripts/migrate-gate-alert-channels.ts");

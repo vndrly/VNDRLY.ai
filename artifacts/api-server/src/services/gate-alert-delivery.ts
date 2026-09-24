@@ -17,7 +17,7 @@ export type GateAlertOutcome = {
   status: "accepted" | "skipped" | "retryable" | "failed" | "unknown";
   errorCode: string | null; providerMessageId?: string;
 };
-type SendResult = { accepted: boolean; providerMessageId?: string; errorCode?: string; permanent?: boolean };
+export type SendResult = { accepted: boolean; status?: GateAlertOutcome["status"]; providerMessageId?: string; errorCode?: string; permanent?: boolean };
 export interface GateAlertDependencies {
   loadRecipient(userId: number): Promise<GateAlertRecipient | null>;
   authorized(notice: GateAlert, recipient: GateAlertRecipient): Promise<boolean>;
@@ -60,11 +60,11 @@ export function gateAlertReadiness(env: Record<string, string | undefined> = pro
 }
 
 /** A notification already exists before this runs. Each channel claims and persists independently. */
-export async function deliverGateAlert(notice: GateAlert, dependencies?: GateAlertDependencies): Promise<void> {
-  if (resolveGateNotificationCategory(notice) !== "alerts") return;
+export async function deliverGateAlert(notice: GateAlert, dependencies?: GateAlertDependencies, resolvedRecipient?: GateAlertRecipient | null): Promise<boolean> {
+  if (resolveGateNotificationCategory(notice) !== "alerts") return true;
   const deps = dependencies ?? (await import("./gate-alert-repository")).gateAlertDependencies;
-  const recipient = await deps.loadRecipient(notice.userId);
-  if (!recipient?.gate || !recipient.gateAlertsEnabled || !(await deps.authorized(notice, recipient))) return;
+  const recipient = resolvedRecipient === undefined ? await deps.loadRecipient(notice.userId) : resolvedRecipient;
+  if (!recipient?.gate || !recipient.gateAlertsEnabled || !(await deps.authorized(notice, recipient))) return true;
   const ready = deps.readiness();
   const fingerprint = currentSmsFingerprint(recipient);
   const smsConsent = recipient.alertsSmsEnabled && recipient.alertsSmsOptedInAt && fingerprint && fingerprint === recipient.alertsSmsConsentFingerprint;
@@ -84,13 +84,13 @@ export async function deliverGateAlert(notice: GateAlert, dependencies?: GateAle
           to: recipient.phone!, attemptToken: claim.attemptToken,
           body: "VNDRLY urgent alert. Open the app to review. Reply STOP to opt out or HELP for help.",
         });
-        outcome.status = result.accepted ? "accepted" : result.permanent ? "failed" : "retryable";
+        outcome.status = result.status ?? (result.accepted ? "accepted" : result.permanent ? "failed" : "retryable");
         outcome.providerMessageId = result.providerMessageId;
         outcome.errorCode = result.errorCode && /^\d{3,6}$/.test(result.errorCode) ? result.errorCode : result.accepted ? null : "not_accepted";
         if (channel === "sms" && result.permanent) await deps.revokeSms(recipient.userId, fingerprint, recipient.alertsSmsOptedInAt);
       } catch {
         // A timeout may happen after provider acceptance. SMS/email must not be blindly resent.
-        outcome.status = channel === "push" ? "retryable" : "unknown";
+        outcome.status = "unknown";
         outcome.errorCode = "provider_exception";
       }
     }
@@ -99,4 +99,5 @@ export async function deliverGateAlert(notice: GateAlert, dependencies?: GateAle
   results.forEach((result, index) => {
     if (result.status === "rejected") logger.warn({ notificationId: notice.id, channel: channels[index] }, "Gate alert channel audit unavailable");
   });
+  return results.every(result => result.status === "fulfilled");
 }
