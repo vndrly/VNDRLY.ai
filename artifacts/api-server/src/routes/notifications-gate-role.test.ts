@@ -14,6 +14,7 @@ const state = vi.hoisted(() => ({
   revokedSites: new Set<number>(),
   events: [] as unknown[],
   pageSizes: [] as number[],
+  cursorTimestampBindings: [] as string[],
 }));
 // PostgreSQL compares all six fractional digits even when the driver returns a Date.
 const timestampKey = vi.hoisted(() => (value: any): string => {
@@ -44,14 +45,17 @@ vi.mock("drizzle-orm", () => ({
   inArray: (c: string, values: any[]) => (r: any) => values.includes(r[c]),
   desc: (c: string) => c,
   sql: Object.assign(
-    (parts: TemplateStringsArray, ...values: any[]) =>
-      parts.join("").includes("::timestamptz")
-        ? { timestamp: values[0] }
-        : parts.join("").includes("to_char(")
-          ? "exactTimestamp"
-          : parts.join("").includes("count(*)")
-            ? "count"
-            : (r: any) => r.category !== "comments",
+    (parts: TemplateStringsArray, ...values: any[]) => {
+      if (parts.join("").includes("::timestamptz")) {
+        state.cursorTimestampBindings.push(values[0]);
+        return { timestamp: values[0] };
+      }
+      return parts.join("").includes("to_char(")
+        ? "exactTimestamp"
+        : parts.join("").includes("count(*)")
+          ? "count"
+          : (r: any) => r.category !== "comments";
+    },
     { raw: () => "" },
   ),
 }));
@@ -254,6 +258,7 @@ beforeEach(async () => {
   state.revokedSites.clear();
   state.events = [];
   state.pageSizes = [];
+  state.cursorTimestampBindings = [];
   state.channelContexts = {};
   app = express();
   app.use(express.json());
@@ -265,6 +270,52 @@ const get = (path = "", cookie = gate) =>
   request(app).get(`/api/notifications${path}`).set("Cookie", cookie);
 
 describe("role-aware notification inbox", () => {
+  it.each([
+    "2026-02-30T12:00:00.000975Z",
+    "2026-02-29T12:00:00Z",
+    "2100-02-29T12:00:00Z",
+    "2026-04-31T12:00:00Z",
+    "0000-01-01T00:00:00Z",
+    "2026-01-01T24:00:00Z",
+    "2026-01-01T12:60:00Z",
+    "2026-01-01T12:00:60Z",
+    "2026-01-01T12:00:00+14:01",
+    "2026-01-01T12:00:00+23:00",
+    "2026-01-01T12:00:00.1234567Z",
+    "0",
+    "September 24, 2026",
+    "2026/09/24",
+    "2026-09-24",
+    "2026-09-24 12:00:00Z",
+  ])(
+    "ignores invalid cursor timestamp %s before SQL binding",
+    async (createdAt) => {
+      state.tables.notifications = [notification(1)];
+      const response = await get(
+        `?beforeCreatedAt=${encodeURIComponent(createdAt)}&beforeId=25`,
+      );
+      expect(response.status).toBe(200);
+      expect(state.cursorTimestampBindings).toEqual([]);
+      expect(response.body.items.map((row: any) => row.id)).toEqual([1]);
+    },
+  );
+  it.each([
+    "2024-02-29T12:00:00.000975Z",
+    "2000-02-29T12:00:00Z",
+    "2026-09-24T12:00:00.1Z",
+    "2026-09-24T12:00:00.120034+05:30",
+    "2026-09-24T12:00:00.000001-06:00",
+    "2026-09-24T12:00:00+14:00",
+  ])(
+    "binds valid RFC3339 cursor %s without losing fractional digits",
+    async (createdAt) => {
+      const response = await get(
+        `?beforeCreatedAt=${encodeURIComponent(createdAt)}&beforeId=25`,
+      );
+      expect(response.status).toBe(200);
+      expect(state.cursorTimestampBindings).toEqual([createdAt]);
+    },
+  );
   it("preserves microseconds across a 25-row page boundary", async () => {
     state.tables.notifications = Array.from({ length: 30 }, (_, index) =>
       notification(index + 1, "work_hub_message", {

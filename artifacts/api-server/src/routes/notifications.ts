@@ -877,6 +877,23 @@ function gatePreferences(prefs: GatePrefs) {
   };
 }
 
+/** Supported RFC3339: AD years, microseconds, and offsets within +/-14:00.
+ * Validate numerically instead of letting Date normalize an impossible date.
+ * The original text is retained so fractional digits never pass through Date.
+ */
+function validCursorTimestamp(value: string): boolean {
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{1,6})?(?:Z|[+-](\d{2}):(\d{2}))$/.exec(value);
+  if (!match || match[0] !== value) return false;
+  const [, yearText, monthText, dayText, hourText, minuteText, secondText, offsetHourText, offsetMinuteText] = match;
+  const year = Number(yearText), month = Number(monthText), day = Number(dayText);
+  if (year < 1 || month < 1 || month > 12 || day < 1) return false;
+  const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const monthDays = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  if (day > monthDays[month - 1] || Number(hourText) > 23 || Number(minuteText) > 59 || Number(secondText) > 59) return false;
+  const offsetHour = Number(offsetHourText ?? 0), offsetMinute = Number(offsetMinuteText ?? 0);
+  return offsetMinute <= 59 && (offsetHour < 14 || (offsetHour === 14 && offsetMinute === 0));
+}
+
 function cursorPredicate(cursor: NotificationCursor): SQL | undefined {
   // Bind the original ISO text: JS Date and the driver's timestamp encoder
   // truncate PostgreSQL's microseconds, which would skip same-millisecond rows.
@@ -973,7 +990,7 @@ router.get("/notifications", async (req, res) => {
 
   const beforeCreatedAt = typeof req.query.beforeCreatedAt === "string" ? req.query.beforeCreatedAt : "";
   const beforeId = Number(req.query.beforeId);
-  const cursor = beforeCreatedAt && Number.isFinite(new Date(beforeCreatedAt).getTime()) && Number.isSafeInteger(beforeId) && beforeId > 0
+  const cursor = validCursorTimestamp(beforeCreatedAt) && Number.isSafeInteger(beforeId) && beforeId > 0
     ? { createdAt: beforeCreatedAt, id: beforeId } : undefined;
   const category = typeof req.query.category === "string" ? req.query.category : "all";
   if (!gate && category !== "all") conditions.push(eq(notificationsTable.category, category));
