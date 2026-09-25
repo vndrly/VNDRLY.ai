@@ -35,9 +35,9 @@ export default function GateHistoryPage() {
   const [range, setRange] = useState<GateReportRange>((initial.get("range") as GateReportRange) || "current_shift");
   const [recordType, setRecordType] = useState<GateReportRecordType>((initial.get("recordType") as GateReportRecordType) || "all");
   const [search, setSearch] = useState(initial.get("search") ?? "");
-  const sites = useQuery({ queryKey: ["change-over-sites"], queryFn: () => changeOverRequest<{ sites: { id: number; name: string }[] }>("/sites"), retry: false });
+  const sites = useQuery({ queryKey: ["change-over-history-sites"], queryFn: () => changeOverRequest<{ sites: { id: number; name: string }[] }>("/sites?mode=history"), retry: false });
   const resolvedSiteId = siteId || String(sites.data?.sites[0]?.id ?? "");
-  const stations = useQuery({ queryKey: ["change-over-stations", resolvedSiteId], queryFn: () => changeOverRequest<{ stations: { id: string; name: string }[] }>(`/stations?siteId=${resolvedSiteId}`), enabled: Boolean(resolvedSiteId), retry: false });
+  const stations = useQuery({ queryKey: ["change-over-history-stations", resolvedSiteId], queryFn: () => changeOverRequest<{ stations: { id: string; name: string }[] }>(`/stations?siteId=${resolvedSiteId}&mode=history`), enabled: Boolean(resolvedSiteId), retry: false });
   const resolvedStationId = stationId || stations.data?.stations[0]?.id || "";
   const filters = resolvedSiteId ? {
     siteId: Number(resolvedSiteId), ...(resolvedStationId ? { stationId: resolvedStationId } : {}), range, recordType,

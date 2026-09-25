@@ -13,6 +13,12 @@ const duty = vi.hoisted(() => ({
 }));
 
 vi.mock("../services/gate-duty", () => duty);
+const discovery = vi.hoisted(() => ({ sites: vi.fn(), stations: vi.fn() }));
+vi.mock("../services/gate-change-over", async importOriginal => ({
+  ...(await importOriginal<typeof import("../services/gate-change-over")>()),
+  listChangeOverSites: discovery.sites,
+  listChangeOverStations: discovery.stations,
+}));
 
 import gateChangeOverRouter from "./gateChangeOver";
 
@@ -38,6 +44,17 @@ const session = buildTestCookie({
 
 describe("Gate duty routes", () => {
   beforeEach(() => vi.clearAllMocks());
+  it("validates explicit history discovery while defaulting operational requests safely", async () => {
+    discovery.sites.mockResolvedValue([{ id: 22, name: "Former gate site" }]);
+    discovery.stations.mockResolvedValue([{ id: stationId, name: "Closed gate" }]);
+    expect((await request(app).get("/gate-change-over/sites?mode=history").set("Cookie", session)).body.sites).toHaveLength(1);
+    expect(discovery.sites).toHaveBeenCalledWith(expect.objectContaining({ userId: 41 }), "history");
+    expect((await request(app).get("/gate-change-over/stations?siteId=22&mode=history").set("Cookie", session)).body.stations).toHaveLength(1);
+    expect(discovery.stations).toHaveBeenCalledWith(expect.objectContaining({ userId: 41 }), 22, "history");
+    await request(app).get("/gate-change-over/stations?siteId=22").set("Cookie", session);
+    expect(discovery.stations).toHaveBeenLastCalledWith(expect.objectContaining({ userId: 41 }), 22, "operational");
+    expect((await request(app).get("/gate-change-over/stations?siteId=22&mode=all").set("Cookie", session)).status).toBe(400);
+  });
 
   it("starts work using the signed-in actor and validated Gate fields", async () => {
     duty.startWorkSession.mockResolvedValue({ workSession: { id: "work" } });

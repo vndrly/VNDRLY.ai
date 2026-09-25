@@ -60,7 +60,6 @@ const OWNER_ADMIN_CAPABILITIES: WorkHubCapability[] = [
   "export.inventory-custody",
   "export.staffing",
   "export.safety-response",
-  "gate.location.manage",
   "channel.manage",
   "task.assign",
   "announcement.publish",
@@ -89,6 +88,13 @@ function ownsContext(session: SessionPayload, owner: WorkHubOwner): boolean {
     : session.partnerId === owner.id;
 }
 
+function ownerAdminCapabilities(session: SessionPayload, owner: WorkHubOwner): WorkHubCapability[] {
+  const eligibleGateAdmin = owner.type === "vendor" && session.role === "vendor" &&
+    session.vendorId === owner.id && session.membershipRole === "admin" && !session.managedSubcontractor &&
+    !["gatekeeper", "gate_supervisor"].includes(session.vendorRole ?? "");
+  return [...OWNER_ADMIN_CAPABILITIES, ...(eligibleGateAdmin ? ["gate.location.manage" as const] : [])];
+}
+
 export function deriveWorkHubCapabilities(
   input: WorkHubAccessInput,
 ): WorkHubCapability[] {
@@ -106,14 +112,14 @@ export function deriveWorkHubCapabilities(
         : [...GATEKEEPER_CAPABILITIES];
     return [...PARTICIPANT_CAPABILITIES];
   }
-  if (session.role === "admin") return [...OWNER_ADMIN_CAPABILITIES];
+  if (session.role === "admin") return ownerAdminCapabilities(session, owner);
   const ownerMatch = ownsContext(session, owner);
   if (!ownerMatch && !participant) throw new WorkHubAccessError("not_found");
   if (!participant && ownerMatch && input.context.kind !== "organization") {
     throw new WorkHubAccessError("not_found");
   }
   if (ownerMatch && session.membershipRole === "admin")
-    return [...OWNER_ADMIN_CAPABILITIES];
+    return ownerAdminCapabilities(session, owner);
   if (ownerMatch && input.context.kind === "organization") {
     if (session.vendorRole === "gate_supervisor")
       return [...GATE_SUPERVISOR_ORGANIZATION_CAPABILITIES];

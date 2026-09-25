@@ -24,13 +24,15 @@ const mount = () => render(<QueryClientProvider client={new QueryClient({ defaul
 afterEach(cleanup);
 beforeEach(() => {
   vi.clearAllMocks();
-  env.changeOver.mockImplementation(async (path: string) => path === "/sites" ? { sites: [{ id: 7, name: "Big Cs Deep" }] } : { stations: [{ id: "station-1", name: "Main gate" }] });
+  env.changeOver.mockImplementation(async (path: string) => path.startsWith("/sites") ? { sites: [{ id: 7, name: "Big Cs Deep" }] } : { stations: [{ id: "station-1", name: "Main gate" }] });
   env.api.mockImplementation(async (path: string) => path.includes("/recipients") ? { recipients: [{ userId: 1, name: "Me" }, { userId: 2, name: "Supervisor" }] } : path.includes("/query") ? { rows: [{ id: 9, name: "Bob Villa", vehiclePlate: "ABC123" }] } : { deliveries: [] });
   env.raw.mockResolvedValue({ arrayBuffer: async () => new ArrayBuffer(2) });
 });
 
 it("defaults to Current Shift and drives the visible report with type and range filters", async () => {
   mount(); expect((await screen.findAllByText("Bob Villa")).length).toBeGreaterThan(0);
+  expect(env.changeOver).toHaveBeenCalledWith("/sites?mode=history");
+  expect(env.changeOver).toHaveBeenCalledWith("/stations?siteId=7&mode=history");
   fireEvent.click(screen.getByTestId("gate-history-record-type-toggle"));
   fireEvent.click(screen.getByRole("button", { name: "gateHistory.type.check_ins" }));
   fireEvent.click(screen.getByTestId("gate-history-time-period-toggle"));

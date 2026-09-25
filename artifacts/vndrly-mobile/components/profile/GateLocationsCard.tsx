@@ -6,6 +6,7 @@ import { randomUUID } from "expo-crypto";
 import TogglePillButton from "@/components/TogglePillButton";
 import MapboxNativeMap from "@/components/MapboxNativeMap";
 import { useColors } from "@/hooks/useColors";
+import { useAuth } from "@/hooks/use-auth";
 import { apiFetch } from "@/lib/api";
 
 type Gate = {
@@ -35,6 +36,12 @@ type Draft = {
 };
 type Review = { values: Values; confirmation: string; idempotencyKey: string };
 export default function GateLocationsCard() {
+  const { user, activeMembershipId } = useAuth();
+  if (user?.role !== "vendor" || !user.vendorId || user.managedSubcontractor || ["gatekeeper", "gate_supervisor"].includes(user.vendorRole ?? "")) return null;
+  // A membership change unmounts all draft/review/request state immediately.
+  return <GateLocationsPanel key={`${user.id}:${activeMembershipId}:${user.vendorId}`} />;
+}
+function GateLocationsPanel() {
   const { t } = useTranslation(),
     colors = useColors();
   const [allowed, setAllowed] = useState(false),

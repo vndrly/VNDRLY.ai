@@ -152,20 +152,20 @@ export default function GateChangeOver({
   const [newGate, setNewGate] = useState("");
   const [reportRecipientIds, setReportRecipientIds] = useState<number[]>([]);
   const sites = useQuery({
-    queryKey: ["change-over-sites", user?.id],
+    queryKey: ["change-over-sites", user?.id, history],
     queryFn: () =>
       request<{ sites: { id: number; name: string; supervisor: boolean }[] }>(
-        "/sites",
+        history ? "/sites?mode=history" : "/sites",
       ),
     retry: false,
     networkMode: "always",
   });
   const siteId = selectedSite ?? sites.data?.sites[0]?.id;
   const stations = useQuery({
-    queryKey: ["change-over-stations", user?.id, siteId],
+    queryKey: ["change-over-stations", user?.id, siteId, history],
     queryFn: () =>
       request<{ stations: { id: string; name: string }[] }>(
-        `/stations?siteId=${siteId}`,
+        `/stations?siteId=${siteId}${history ? "&mode=history" : ""}`,
       ),
     enabled: Boolean(siteId),
     retry: false,

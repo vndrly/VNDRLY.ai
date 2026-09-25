@@ -41,9 +41,9 @@ export default function GateHistory() {
   const [recipientIds, setRecipientIds] = useState<number[]>([]);
   const [historyPage, setHistoryPage] = useState(0);
   const [reviewReasons, setReviewReasons] = useState<Record<string, string>>({});
-  const sites = useQuery({ queryKey: ["gate-history-sites"], queryFn: () => changeOverRequest<{ sites: { id: number; name: string }[] }>("/sites"), retry: false });
+  const sites = useQuery({ queryKey: ["gate-history-sites"], queryFn: () => changeOverRequest<{ sites: { id: number; name: string }[] }>("/sites?mode=history"), retry: false });
   const selectedSiteId = siteId ?? sites.data?.sites[0]?.id ?? null;
-  const stations = useQuery({ queryKey: ["gate-history-stations", selectedSiteId], queryFn: () => changeOverRequest<{ stations: { id: string; name: string }[] }>(`/stations?siteId=${selectedSiteId}`), enabled: Boolean(selectedSiteId), retry: false });
+  const stations = useQuery({ queryKey: ["gate-history-stations", selectedSiteId], queryFn: () => changeOverRequest<{ stations: { id: string; name: string }[] }>(`/stations?siteId=${selectedSiteId}&mode=history`), enabled: Boolean(selectedSiteId), retry: false });
   const selectedStationId = stationId || stations.data?.stations[0]?.id || "";
   const filters = useMemo(() => ({ siteId: selectedSiteId!, ...(selectedStationId ? { stationId: selectedStationId } : {}), range, recordType, ...(search.trim() ? { search: search.trim() } : {}) }), [range, recordType, search, selectedSiteId, selectedStationId]);
   const report = useQuery({ queryKey: ["gate-history-report", filters], queryFn: () => apiFetch<{ rows: Row[] }>("/api/gate-report/query", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ reportKind: "history", filters }) }), enabled: Boolean(selectedSiteId), retry: false });

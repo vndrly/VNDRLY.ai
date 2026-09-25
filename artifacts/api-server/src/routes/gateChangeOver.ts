@@ -40,6 +40,7 @@ const siteId = z.coerce.number().int().positive();
 const text = z.string().trim().min(1).max(2000);
 const gateSource = z.enum(["web", "ios", "askv"]);
 const operationKey = z.string().uuid();
+const discoveryMode = z.enum(["operational", "history"]).default("operational");
 const reads = createRateLimiter({
   resourcePrefix: "CHANGE_OVER",
   errorCode: "change_over.rate_limited",
@@ -71,13 +72,14 @@ router.use("/gate-change-over", async (req, res, next) => {
 const sessionFor = (req: Parameters<typeof getSessionFromRequest>[0]) =>
   getSessionFromRequest(req)!;
 router.get("/gate-change-over/sites", async (req, res) => {
-  res.json({ sites: await listChangeOverSites(sessionFor(req)) });
+  res.json({ sites: await listChangeOverSites(sessionFor(req), discoveryMode.parse(req.query.mode)) });
 });
 router.get("/gate-change-over/stations", async (req, res) => {
   res.json({
     stations: await listChangeOverStations(
       sessionFor(req),
       siteId.parse(req.query.siteId),
+      discoveryMode.parse(req.query.mode),
     ),
   });
 });

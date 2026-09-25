@@ -12,7 +12,9 @@ const mocks = vi.hoisted(() => ({
   api: vi.fn(),
   permission: vi.fn(),
   location: vi.fn(),
+  auth: { user: { id: 33, role: "vendor", vendorId: 41, partnerId: null as number | null }, activeMembershipId: 1 },
 }));
+vi.mock("@/hooks/use-auth", () => ({ useAuth: () => mocks.auth }));
 vi.mock("@/lib/api", () => ({ apiFetch: mocks.api }));
 vi.mock("@/hooks/useColors", () => ({
   useColors: () => ({
@@ -45,6 +47,8 @@ vi.mock("@/components/TogglePillButton", () => ({
 import GateLocationsCard from "./GateLocationsCard";
 describe("Gate Locations profile card", () => {
   beforeEach(() => {
+    mocks.auth.user = { id: 33, role: "vendor", vendorId: 41, partnerId: null };
+    mocks.auth.activeMembershipId = 1;
     mocks.api.mockReset();
     mocks.permission.mockResolvedValue({ status: "granted" });
     mocks.location.mockResolvedValue({
@@ -62,6 +66,24 @@ describe("Gate Locations profile card", () => {
     });
   });
   afterEach(cleanup);
+  it("immediately hides and clears a vendor draft when switching to a partner admin and back", async () => {
+    const view = render(<GateLocationsCard />);
+    fireEvent.click(await screen.findByText("Gate Locations"));
+    fireEvent.click(await screen.findByText("Partner wellhead"));
+    fireEvent.click(await screen.findByText("Add gate"));
+    fireEvent.change(screen.getByLabelText("Gate name"), { target: { value: "Unsaved private gate" } });
+    mocks.auth.user = { id: 33, role: "partner", vendorId: 0, partnerId: 41 };
+    mocks.auth.activeMembershipId = 2;
+    view.rerender(<GateLocationsCard />);
+    expect(screen.queryByText("Gate Locations")).toBeNull();
+    expect(screen.queryByDisplayValue("Unsaved private gate")).toBeNull();
+    mocks.auth.user = { id: 33, role: "vendor", vendorId: 41, partnerId: null };
+    mocks.auth.activeMembershipId = 1;
+    view.rerender(<GateLocationsCard />);
+    await screen.findByText("Gate Locations");
+    expect(screen.queryByDisplayValue("Unsaved private gate")).toBeNull();
+    expect(screen.queryByText("Partner wellhead")).toBeNull();
+  });
   it("hides management without the server capability", async () => {
     mocks.api.mockResolvedValue({
       capabilities: { canManageGateLocations: false },

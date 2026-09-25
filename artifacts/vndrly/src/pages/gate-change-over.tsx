@@ -130,19 +130,19 @@ export default function GateChangeOverPage({
   const [before, setBefore] = useState("");
   const [stationName, setStationName] = useState("");
   const sites = useQuery({
-    queryKey: ["change-over-sites", user?.userId],
+    queryKey: ["change-over-sites", user?.userId, history],
     queryFn: () =>
       request<{ sites: { id: number; name: string; supervisor: boolean }[] }>(
-        "/sites",
+        history ? "/sites?mode=history" : "/sites",
       ),
     retry: false,
   });
   const siteId = selectedSite || String(sites.data?.sites[0]?.id ?? "");
   const stations = useQuery({
-    queryKey: ["change-over-stations", user?.userId, siteId],
+    queryKey: ["change-over-stations", user?.userId, siteId, history],
     queryFn: () =>
       request<{ stations: { id: string; name: string }[] }>(
-        `/stations?siteId=${siteId}`,
+        `/stations?siteId=${siteId}${history ? "&mode=history" : ""}`,
       ),
     enabled: Boolean(siteId),
     retry: false,

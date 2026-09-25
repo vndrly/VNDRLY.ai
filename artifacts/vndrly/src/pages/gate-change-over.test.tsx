@@ -64,7 +64,7 @@ beforeEach(() => {
     configurable: true,
   });
   api.mockImplementation(async (path: string) =>
-    path === "/sites"
+    path.startsWith("/sites")
       ? { sites: [{ id: 1, name: "Site" }] }
       : path.startsWith("/stations")
         ? { stations: [{ id: "gate", name: "Main gate" }] }
@@ -78,6 +78,11 @@ beforeEach(() => {
   );
 });
 afterEach(cleanup);
+it("requests separate history discovery for inactive gates without reusing operational selectors", async () => {
+  mount(true);
+  await waitFor(() => expect(api).toHaveBeenCalledWith("/sites?mode=history"));
+  await waitFor(() => expect(api).toHaveBeenCalledWith("/stations?siteId=1&mode=history"));
+});
 function mount(history = false) {
   const cache = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },

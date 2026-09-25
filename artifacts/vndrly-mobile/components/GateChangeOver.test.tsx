@@ -100,7 +100,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   env.fetch.mockResolvedValue({ recipients: [] });
   env.api.mockImplementation(async (path: string) =>
-    path === "/sites"
+    path.startsWith("/sites")
       ? { sites: [{ id: 1, name: "Site" }] }
       : path.startsWith("/stations")
         ? { stations: [{ id: "gate", name: "Main gate" }] }
@@ -112,6 +112,14 @@ beforeEach(() => {
   );
 });
 afterEach(cleanup);
+it("uses history discovery for inactive station notes", async () => {
+  const base = env.api.getMockImplementation()!;
+  env.api.mockImplementation((path, body) => path.includes("/notes?") ? { rows: [], actions: [], nextBefore: null } : base(path, body));
+  const cache = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(<QueryClientProvider client={cache}><GateChangeOver history /></QueryClientProvider>);
+  await waitFor(() => expect(env.api).toHaveBeenCalledWith("/sites?mode=history"));
+  await waitFor(() => expect(env.api).toHaveBeenCalledWith(expect.stringMatching(/^\/stations\?siteId=.+&mode=history$/)));
+});
 it("reveals Shift Notes ten at a time across server pages without report filters changing the 60-day browser", async () => {
   const base = env.api.getMockImplementation()!;
   const notes = Array.from({ length: 60 }, (_, index) => ({

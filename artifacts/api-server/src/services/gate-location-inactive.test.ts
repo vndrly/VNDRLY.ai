@@ -16,7 +16,7 @@ vi.mock("@workspace/db", () => ({
 vi.mock("./gate-notification-events", () => ({
   notifyGateSiteEvent: async () => {},
 }));
-import { startGateShift } from "./gate-change-over";
+import { listChangeOverStations, listChangeOverSites, startGateShift } from "./gate-change-over";
 import { assumeGateDuty, endGateDuty, startWorkSession } from "./gate-duty";
 const session = { userId: 7, role: "admin", sv: 1 };
 beforeEach(() => {
@@ -56,10 +56,35 @@ beforeEach(() => {
     return { rows, rowCount: rows.length };
   });
 });
+it("discovers inactive gates for authorized history reads without adding them to new-use discovery", async () => {
+  const base = state.query.getMockImplementation()!;
+  state.query.mockImplementation(async (sql: string, p: any[] = []) => {
+    if (sql.includes("FROM gate_stations") && !sql.includes("WHERE id=$1")) {
+      return { rows: sql.includes("station.active=true") ? [] : [{ id: "gate", name: "Closed gate", site_id: 22 }], rowCount: 1 };
+    }
+    return base(sql, p);
+  });
+  expect(await listChangeOverStations(session, 22)).toEqual([]);
+  expect(await listChangeOverStations(session, 22, "history")).toMatchObject([{ id: "gate" }]);
+});
+it("lets history find an authorized site with no current scheduled or active shift", async () => {
+  const base = state.query.getMockImplementation()!;
+  state.query.mockImplementation(async (sql: string, p: any[] = []) => {
+    if (sql.startsWith("SELECT s.id, s.name")) return { rows: p[4] === true ? [{ id: 22, name: "Former gate site" }] : [], rowCount: p[4] ? 1 : 0 };
+    return base(sql, p);
+  });
+  expect(await listChangeOverSites(session)).toEqual([]);
+  expect(await listChangeOverSites(session, "history")).toMatchObject([{ id: 22 }]);
+});
 it("rejects a new legacy shift at an inactive gate", async () => {
   await expect(startGateShift(session, "gate")).rejects.toMatchObject({
     code: "change_over.station_inactive",
   });
+});
+it("still requires current site authorization for historical gate discovery", async () => {
+  const base = state.query.getMockImplementation()!;
+  state.query.mockImplementation(async (sql: string, p: any[] = []) => sql.includes("FROM site_locations") ? { rows: [], rowCount: 0 } : base(sql, p));
+  await expect(listChangeOverStations(session, 22, "history")).rejects.toMatchObject({ code: "change_over.forbidden" });
 });
 it("rejects new duty and paid travel at an inactive gate", async () => {
   await expect(

@@ -27,12 +27,19 @@ afterEach(() => {
 });
 
 beforeEach(() => {
-  changeOverRequest.mockImplementation((path: string) => path === "/sites"
+  changeOverRequest.mockImplementation((path: string) => path.startsWith("/sites")
     ? Promise.resolve({ sites: [{ id: 42, name: "Acme HQ" }] })
     : Promise.resolve({ stations: [{ id: "00000000-0000-4000-8000-000000000042", name: "Main gate" }] }));
 });
 
 describe("GateHistoryPage plate display", () => {
+  it("requests historical site and station discovery for past gate reports", async () => {
+    queryGateReportRows.mockResolvedValue([]);
+    const cache = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
+    render(<QueryClientProvider client={cache}><GateHistoryPage /></QueryClientProvider>);
+    await waitFor(() => expect(changeOverRequest).toHaveBeenCalledWith("/sites?mode=history"));
+    await waitFor(() => expect(changeOverRequest).toHaveBeenCalledWith("/stations?siteId=42&mode=history"));
+  });
   it("shows a branded, shadow-free History icon beside the page heading", () => {
     queryGateReportRows.mockResolvedValue([]);
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });

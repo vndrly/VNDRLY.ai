@@ -5,6 +5,14 @@ import { resolveWorkHubCapabilities } from "./capabilities";
 const owner = { type: "vendor", id: 12 } as const;
 
 describe("Work Hub role capability matrix", () => {
+  it("withdraws gate location management when a vendor admin switches to a partner admin membership", () => {
+    expect(resolveWorkHubCapabilities({ userId: 33, role: "vendor", vendorId: 12, membershipRole: "admin" }, 12).canManageGateLocations).toBe(true);
+    expect(resolveWorkHubCapabilities({ userId: 33, role: "partner", partnerId: 12, membershipRole: "admin" }, 12).canManageGateLocations).toBe(false);
+    expect(deriveWorkHubCapabilities({ session: { userId: 33, role: "partner", partnerId: 12, membershipRole: "admin" }, owner: { type: "partner", id: 12 }, context: { kind: "organization", id: 12 }, participant: true })).not.toContain("gate.location.manage");
+  });
+  it.each(["gatekeeper", "gate_supervisor"])("does not promote an operational %s role to physical gate admin", vendorRole => {
+    expect(resolveWorkHubCapabilities({ userId: 33, role: "vendor", vendorId: 12, membershipRole: "admin", vendorRole }, 12).canManageGateLocations).toBe(false);
+  });
   it("projects the gatekeeper, supervisor, and administrator grants for the home response", () => {
     const gatekeeper = resolveWorkHubCapabilities({ userId: 31, role: "field_employee", vendorId: 12, vendorRole: "gatekeeper" }, 12);
     expect(gatekeeper).toMatchObject({
