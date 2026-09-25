@@ -36,7 +36,7 @@ describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")("channel note
     const fixture = Array.from({ length: 210 }, (_, index) => ({
       id: `${prefix}-0000-4000-8000-${String(index).padStart(12, "0")}`,
       ownerOrgType: "vendor", ownerOrgId: index % 2 === 0 ? ownerId : ownerId + 100000,
-      contextKind: "organization", contextId: String(ownerId), name: `Precision ${index}`,
+      contextKind: "organization", contextId: `${ownerId}:${prefix}:${index}`, name: `Precision ${index}`,
       visibility: "organization", createdById: authorId,
       updatedAt: sql`'2026-09-24T12:00:00.123456Z'::timestamptz`,
     }));
@@ -80,7 +80,7 @@ describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")("channel note
   });
 
   it("lets collaboration members create and edit their own notes but not another member's", async () => {
-    const [shared] = await db.insert(workHubChannelsTable).values({ ownerOrgType: "vendor", ownerOrgId: ownerId, contextKind: "organization", contextId: String(ownerId), name: "Shared notes", visibility: "private", createdById: adminId }).returning();
+    const [shared] = await db.insert(workHubChannelsTable).values({ ownerOrgType: "vendor", ownerOrgId: ownerId, contextKind: "organization", contextId: `${ownerId}:shared:${randomUUID()}`, name: "Shared notes", visibility: "private", createdById: adminId }).returning();
     await db.insert(workHubCollaborationChannelsTable).values({ channelId: shared!.id, kind: "shared" });
     await db.insert(workHubChannelMembersTable).values([
       { channelId: shared!.id, userId: authorId, mode: "member" },

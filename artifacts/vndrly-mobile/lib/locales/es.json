@@ -717,6 +717,7 @@
       "export_forbidden": "La exportación del registro de auditoría está restringida a roles de administrador, socio o proveedor."
     },
     "validation": {
+      "invalid_request": "La solicitud no es válida. Revísela e inténtelo de nuevo.",
       "invalid_id": "La solicitud tenía un ID no válido. Actualiza e inténtalo de nuevo.",
       "invalid_employee_id": "Ese ID de empleado no es válido.",
       "invalid_at": "Esa fecha y hora no son válidas.",
@@ -1454,6 +1455,9 @@
     },
     "approval": {
       "no_offer": "No se encontró una oferta coincidente para aprobar."
+    },
+    "gate_locations": {
+      "name_conflict": "Ya existe una puerta con ese nombre en este sitio."
     },
     "vendor_catalog": {
       "partner_owned": "Los catálogos pertenecen a los socios. Seleccione sus servicios y tarifas del catálogo de un socio autorizado.",

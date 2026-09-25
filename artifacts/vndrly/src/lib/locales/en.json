@@ -3949,6 +3949,7 @@
       "export_forbidden": "Audit-trail export is restricted to admin, partner, or vendor roles."
     },
     "validation": {
+      "invalid_request": "The request is invalid. Please review it and try again.",
       "invalid_id": "That request had an invalid ID. Please refresh and try again.",
       "invalid_employee_id": "That employee ID isn't valid.",
       "invalid_at": "That timestamp isn't valid.",
@@ -4663,6 +4664,9 @@
     },
     "approval": {
       "no_offer": "No matching offer was found to approve."
+    },
+    "gate_locations": {
+      "name_conflict": "A gate with that name already exists at this site."
     },
     "vendor_catalog": {
       "partner_owned": "Catalogs belong to partners. Select your services and rates from an authorized partner's catalog.",
