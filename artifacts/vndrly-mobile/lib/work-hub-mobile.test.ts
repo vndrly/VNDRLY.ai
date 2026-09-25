@@ -25,4 +25,18 @@ describe("mobile Work Hub boundary", () => {
     expect(items.find((item) => item.key === "channels")?.label).toBe("Groups");
     expect(items.find((item) => item.key === "chat")?.label).toBe("MidCon Solutions Chat");
   });
+
+  it("shows Exports only for a role with an allowed dataset", () => {
+    const gatekeeper = mobileWorkHubModules(false, false, "MidCon", {
+      canViewExports: false,
+      allowedExportDatasets: [],
+    });
+    const supervisor = mobileWorkHubModules(false, false, "MidCon", {
+      canViewExports: true,
+      allowedExportDatasets: ["staffing"],
+    });
+    expect(gatekeeper.some((item) => item.key === "implementation-exports")).toBe(false);
+    expect(supervisor.some((item) => item.key === "implementation-exports")).toBe(true);
+    expect(gatekeeper.some((item) => item.key === "files-notes")).toBe(true);
+  });
 });

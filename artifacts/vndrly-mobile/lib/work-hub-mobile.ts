@@ -2,6 +2,10 @@ export type MobileTenant = {
   vendorId?: number | null;
   partnerId?: number | null;
 };
+export type MobileWorkHubCapabilities = {
+  canViewExports: boolean;
+  allowedExportDatasets: readonly string[];
+};
 export function mobileOwner(user: MobileTenant | null | undefined) {
   if (user?.partnerId) return { type: "partner" as const, id: user.partnerId };
   if (user?.vendorId) return { type: "vendor" as const, id: user.vendorId };
@@ -39,6 +43,7 @@ export function mobileWorkHubModules(
   isTablet: boolean,
   companyAdmin: boolean,
   companyName?: string | null,
+  capabilities?: MobileWorkHubCapabilities | null,
 ) {
   const items = [
     {
@@ -55,7 +60,6 @@ export function mobileWorkHubModules(
     { key: "inventory", label: "Inventory", icon: "package" },
     { key: "site-presence", label: "Site Presence", icon: "map-pin" },
     { key: "safety-response", label: "Safety Response", icon: "shield" },
-    { key: "implementation-exports", label: "Exports", icon: "download" },
     { key: "files-notes", label: "Files & Notes", icon: "folder" },
     { key: "tasks-forms", label: "Tasks & Forms", icon: "check-square" },
     { key: "calls", label: "Calls", icon: "phone" },
@@ -63,6 +67,8 @@ export function mobileWorkHubModules(
     { key: "askv", label: "AskV", icon: "mic" },
     { key: "search", label: "Search", icon: "search" },
   ];
+  if (capabilities?.canViewExports && capabilities.allowedExportDatasets.length > 0)
+    items.push({ key: "implementation-exports", label: "Exports", icon: "download" });
   if (companyAdmin) items.push({ key: "operations-health", label: "Operations Health", icon: "activity" });
   if (isTablet && companyAdmin)
     items.push({ key: "crews", label: "Manage Crews", icon: "users" });

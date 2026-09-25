@@ -63,6 +63,7 @@ import { sendApiError } from "../lib/apiError";
 import { ObjectStorageService } from "../lib/objectStorage";
 import { absoluteUploadUrl } from "../lib/uploadUrl";
 import { executeWorkHubCommand } from "../work-hub/commands";
+import { resolveWorkHubCapabilities } from "../work-hub/capabilities";
 import {
   createWorkHubAccess,
   requireWorkHubCapability,
@@ -452,8 +453,10 @@ router.get("/work-hub/home", async (req, res) => {
   const announcements = (await Promise.all(storedAnnouncements.map(async (row) =>
     await announcementChannelReadable(session, row.announcement) ? row : null
   ))).filter((row): row is NonNullable<typeof row> => row !== null);
+  const ownerId = session.vendorId ?? session.partnerId;
   return res.json({
     generatedAt: now.toISOString(),
+    capabilities: ownerId ? resolveWorkHubCapabilities(session, ownerId) : null,
     tasks,
     announcements,
     shifts,

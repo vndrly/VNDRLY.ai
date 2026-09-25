@@ -42,9 +42,25 @@ const PARTICIPANT_CAPABILITIES: WorkHubCapability[] = [
   "channel.read",
   "channel.write",
   "file.download",
+  "file.upload",
+  "note.create",
+  "note.edit",
+];
+const GATEKEEPER_CAPABILITIES: WorkHubCapability[] = [
+  ...PARTICIPANT_CAPABILITIES,
+  "asset.checkout",
 ];
 const OWNER_ADMIN_CAPABILITIES: WorkHubCapability[] = [
-  ...PARTICIPANT_CAPABILITIES,
+  ...GATEKEEPER_CAPABILITIES,
+  "asset.create",
+  "asset.manage",
+  "asset.verify-issued",
+  "export.payroll-hours",
+  "export.quickbooks-time",
+  "export.inventory-custody",
+  "export.staffing",
+  "export.safety-response",
+  "gate.location.manage",
   "channel.manage",
   "task.assign",
   "announcement.publish",
@@ -56,10 +72,17 @@ const OWNER_ADMIN_CAPABILITIES: WorkHubCapability[] = [
   "connector.manage",
 ];
 const GATE_SUPERVISOR_CAPABILITIES: WorkHubCapability[] = [
-  ...PARTICIPANT_CAPABILITIES,
+  ...GATEKEEPER_CAPABILITIES,
+  "asset.verify-issued",
+  "export.staffing",
   "task.assign",
   "shift.manage",
   "meeting.host",
+];
+const GATE_SUPERVISOR_ORGANIZATION_CAPABILITIES: WorkHubCapability[] = [
+  ...GATEKEEPER_CAPABILITIES,
+  "asset.verify-issued",
+  "export.staffing",
 ];
 
 function ownsContext(session: SessionPayload, owner: WorkHubOwner): boolean {
@@ -73,12 +96,16 @@ export function deriveWorkHubCapabilities(
 ): WorkHubCapability[] {
   const { session, owner, participant } = input;
   if (session.managedSubcontractor) {
-    if (owner.type !== "vendor" || owner.id !== session.vendorId || !participant) throw new WorkHubAccessError("not_found");
+    if (owner.type !== "vendor" || owner.id !== session.vendorId || !participant || session.managedSubcontractor.siteGrants.length === 0) throw new WorkHubAccessError("not_found");
     if (input.context.kind === "site" || input.context.kind === "gate") {
       const role = managedWorkerSiteRole(session, Number(input.context.id));
       if (!role) throw new WorkHubAccessError("not_found");
-      return role === "gate_supervisor" ? [...GATE_SUPERVISOR_CAPABILITIES] : [...PARTICIPANT_CAPABILITIES];
+      return role === "gate_supervisor" ? [...GATE_SUPERVISOR_CAPABILITIES] : [...GATEKEEPER_CAPABILITIES];
     }
+    if (input.context.kind === "organization")
+      return session.managedSubcontractor.siteGrants.some((grant) => grant.role === "gate_supervisor")
+        ? [...GATE_SUPERVISOR_ORGANIZATION_CAPABILITIES]
+        : [...GATEKEEPER_CAPABILITIES];
     return [...PARTICIPANT_CAPABILITIES];
   }
   if (session.role === "admin") return [...OWNER_ADMIN_CAPABILITIES];
@@ -89,12 +116,24 @@ export function deriveWorkHubCapabilities(
   }
   if (ownerMatch && session.membershipRole === "admin")
     return [...OWNER_ADMIN_CAPABILITIES];
+  if (ownerMatch && input.context.kind === "organization") {
+    if (session.vendorRole === "gate_supervisor")
+      return [...GATE_SUPERVISOR_ORGANIZATION_CAPABILITIES];
+    if (session.vendorRole === "gatekeeper")
+      return [...GATEKEEPER_CAPABILITIES];
+  }
   if (
     ownerMatch &&
     session.vendorRole === "gate_supervisor" &&
     (input.context.kind === "gate" || input.context.kind === "site")
   )
     return [...GATE_SUPERVISOR_CAPABILITIES];
+  if (
+    ownerMatch &&
+    session.vendorRole === "gatekeeper" &&
+    (input.context.kind === "gate" || input.context.kind === "site")
+  )
+    return [...GATEKEEPER_CAPABILITIES];
   if (participant || ownerMatch) return [...PARTICIPANT_CAPABILITIES];
   throw new WorkHubAccessError("not_found");
 }

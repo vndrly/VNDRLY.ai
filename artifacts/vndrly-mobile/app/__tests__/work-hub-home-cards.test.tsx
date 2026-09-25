@@ -1,6 +1,21 @@
 import fs from "node:fs";
 import path from "node:path";
-import { describe, expect, it } from "vitest";
+import React from "react";
+import { act, cleanup, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+const { response, membership } = vi.hoisted(() => ({ response: { current: {} as Record<string, unknown> }, membership: { id: 1 } }));
+vi.mock("@expo/vector-icons", () => ({ Feather: () => null }));
+vi.mock("expo-router", () => ({ router: { push: vi.fn() } }));
+vi.mock("@/components/ScreenSafeArea", () => ({ default: ({ children }: { children: React.ReactNode }) => <>{children}</> }));
+vi.mock("@/components/WorkHubPageTitle", () => ({ default: () => null }));
+vi.mock("@/hooks/useColors", () => ({ useColors: () => ({ background: "#fff", card: "#fff", primary: "#f90", border: "#ccc", text: "#111", mutedForeground: "#666" }) }));
+vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: { role: "field_employee", activeMembershipId: membership.id, availableMemberships: [{ id: membership.id, role: "member", orgName: "MidCon" }] } }) }));
+vi.mock("@/lib/api", () => ({ apiFetch: () => Promise.resolve(response.current) }));
+
+import WorkHubScreen from "../(tabs)/work-hub";
+
+afterEach(() => { cleanup(); membership.id = 1; });
 
 describe("Work Hub home cards", () => {
   const source = fs.readFileSync(path.resolve(__dirname, "../(tabs)/work-hub.tsx"), "utf8");
@@ -49,5 +64,33 @@ describe("Work Hub home cards", () => {
     expect(source).toContain('accessibilityLabel="Open Audio settings"');
     expect(source).toContain('pathname: "/profile"');
     expect(source).toContain('params: { openSettings: "audio" }');
+  });
+
+  it("renders Files and Inventory for a gatekeeper while hiding Exports", async () => {
+    response.current = { tasks: [], announcements: [], shifts: [], meetings: [], capabilities: { canViewExports: false, allowedExportDatasets: [] } };
+    render(<WorkHubScreen />);
+    await act(async () => {});
+    expect(screen.getByRole("button", { name: "Open Files & Inventory" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Open Exports" })).toBeNull();
+  });
+
+  it("renders Exports when the server allows a supervisor staffing export", async () => {
+    response.current = { tasks: [], announcements: [], shifts: [], meetings: [], capabilities: { canViewExports: true, allowedExportDatasets: ["staffing"] } };
+    render(<WorkHubScreen />);
+    await act(async () => {});
+    expect(screen.getByRole("button", { name: "Open Files & Inventory" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Open Exports" })).toBeTruthy();
+  });
+
+  it("hides the previous organization's Exports during a membership switch", async () => {
+    response.current = { capabilities: { canViewExports: true, allowedExportDatasets: ["staffing"] } };
+    const view = render(<WorkHubScreen />);
+    await act(async () => {});
+    expect(screen.getByRole("button", { name: "Open Exports" })).toBeTruthy();
+
+    membership.id = 2;
+    response.current = { capabilities: { canViewExports: false, allowedExportDatasets: [] } };
+    view.rerender(<WorkHubScreen />);
+    expect(screen.queryByRole("button", { name: "Open Exports" })).toBeNull();
   });
 });

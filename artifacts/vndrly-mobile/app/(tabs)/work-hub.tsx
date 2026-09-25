@@ -7,9 +7,9 @@ import WorkHubPageTitle from "@/components/WorkHubPageTitle";
 import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
-import { mobileWorkHubModules } from "@/lib/work-hub-mobile";
+import { mobileWorkHubModules, type MobileWorkHubCapabilities } from "@/lib/work-hub-mobile";
 
-type HomeData = { tasks?: unknown[]; announcements?: unknown[]; shifts?: unknown[]; meetings?: unknown[] };
+type HomeData = { tasks?: unknown[]; announcements?: unknown[]; shifts?: unknown[]; meetings?: unknown[]; capabilities?: MobileWorkHubCapabilities | null };
 type TodayItemProps = { icon: React.ComponentProps<typeof Feather>["name"]; label: string; value: string; onPress: () => void };
 function TodayItem({ icon, label, value, onPress }: TodayItemProps) {
   const colors = useColors();
@@ -57,14 +57,16 @@ export default function WorkHubScreen() {
   const { width } = useWindowDimensions();
   const membership = user?.availableMemberships?.find(item => item.id === user.activeMembershipId);
   const companyAdmin = user?.role === "admin" || membership?.role === "admin";
-  const modules = mobileWorkHubModules(width >= 768, companyAdmin, membership?.orgName);
-  const [home, setHome] = useState<HomeData | null>(null);
+  const activeMembershipId = user?.activeMembershipId;
+  const [homeState, setHomeState] = useState<{ membershipId: number | null | undefined; data: HomeData } | null>(null);
+  const home = homeState && homeState.membershipId === activeMembershipId ? homeState.data : null;
+  const modules = mobileWorkHubModules(width >= 768, companyAdmin, membership?.orgName, home?.capabilities);
   const [error, setError] = useState("");
   useEffect(() => {
     let active = true; setError("");
-    void apiFetch<HomeData>("/api/work-hub/home").then(value => { if (active) setHome(value); }).catch(() => { if (active) setError("Unable to load current Work Hub summaries. Tap any card to open its records."); });
+    void apiFetch<HomeData>("/api/work-hub/home").then(value => { if (active) setHomeState({ membershipId: activeMembershipId, data: value }); }).catch(() => { if (active) setError("Unable to load current Work Hub summaries. Tap any card to open its records."); });
     return () => { active = false; };
-  }, [user?.activeMembershipId]);
+  }, [activeMembershipId]);
   const cardWidth = width >= 768 ? "48.5%" : "100%";
   const tasks = home?.tasks?.length ?? 0, announcements = home?.announcements?.length ?? 0, shifts = home?.shifts?.length ?? 0, meetings = home?.meetings?.length ?? 0;
   const myWorkTitle = user?.managedSubcontractor ? "My Hours" : "My Work";
@@ -74,7 +76,8 @@ export default function WorkHubScreen() {
     { key: "implementation-exports", label: "Exports", icon: "download" },
     { key: "site-presence", label: "Site & Safety", icon: "shield" },
     ...modules.filter(({ key }) => key === "operations-health"),
-  ];
+  ].filter(({ key }) => key !== "implementation-exports" ||
+    Boolean(home?.capabilities?.canViewExports && home.capabilities.allowedExportDatasets.length > 0));
   return <ScreenSafeArea style={{ backgroundColor: colors.background }}><ScrollView contentContainerStyle={{ padding: 20, gap: 16 }}>
     <WorkHubPageTitle title="Work Hub" />
     {!home && !error ? <ActivityIndicator color={colors.primary} accessibilityLabel="Loading Work Hub summaries" /> : null}
