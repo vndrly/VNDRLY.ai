@@ -45,8 +45,7 @@ async function authorize(client: PoolClient, session: SessionPayload) {
     session.role !== "vendor" ||
     !session.vendorId ||
     session.membershipRole !== "admin" ||
-    session.managedSubcontractor ||
-    ["gatekeeper", "gate_supervisor"].includes(session.vendorRole ?? "")
+    session.managedSubcontractor
   )
     return deny();
   const result = await client.query(

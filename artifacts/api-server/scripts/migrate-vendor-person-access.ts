@@ -35,6 +35,13 @@ ON CONFLICT (vendor_people_id, role) DO UPDATE SET is_active = true, updated_at 
 INSERT INTO vendor_person_operational_roles (vendor_people_id, role, is_active)
 SELECT id, vendor_role, true FROM vendor_people WHERE deleted_at IS NULL AND vendor_role IN ('foreman','gatekeeper','gate_supervisor')
 ON CONFLICT (vendor_people_id, role) DO UPDATE SET is_active = true, updated_at = now();
+INSERT INTO vendor_person_site_access (vendor_people_id, site_location_id, is_active)
+SELECT DISTINCT person.id, assignment.site_location_id, true
+FROM vendor_people person
+JOIN site_work_assignments assignment ON assignment.vendor_id=person.vendor_id
+WHERE person.deleted_at IS NULL AND person.is_active=true
+AND person.vendor_role IN ('gatekeeper','gate_supervisor')
+ON CONFLICT (vendor_people_id, site_location_id) DO UPDATE SET is_active = true, updated_at = now();
 `;
 
 const ALLOWED_STATEMENT_PREFIXES = [
@@ -45,6 +52,7 @@ const ALLOWED_STATEMENT_PREFIXES = [
   "INSERT INTO vendor_person_operational_roles (vendor_people_id, role, is_active) SELECT id, 'office'",
   "INSERT INTO vendor_person_operational_roles (vendor_people_id, role, is_active) SELECT id, 'field_employee'",
   "INSERT INTO vendor_person_operational_roles (vendor_people_id, role, is_active) SELECT id, vendor_role",
+  "INSERT INTO vendor_person_site_access (vendor_people_id, site_location_id, is_active) SELECT DISTINCT person.id",
 ] as const;
 
 export function validateVendorPersonAccessMigration(source: string): void {

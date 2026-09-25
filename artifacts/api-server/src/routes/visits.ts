@@ -72,6 +72,7 @@ import {
   officeMayAccessGateOps,
   sessionHasGateOpsScope,
 } from "../lib/gate-ops-access";
+import { resolveVendorPersonAccess } from "../lib/vendor-person-access";
 import { isGeofenceBypassActive } from "../lib/geo";
 import { formatTooFarFromSiteMessage } from "@workspace/map-utils";
 import {
@@ -296,6 +297,9 @@ type Session = {
   exp?: number;
   vendorRole?: string | null;
   membershipRole?: string | null;
+  vendorPeopleId?: number | null;
+  gateAccessSiteIds?: number[];
+  gateSupervisorAccess?: boolean;
   managedSubcontractor?: import("../lib/session").SessionPayload["managedSubcontractor"];
 };
 function getStaffSession(req: any): Session | null {
@@ -315,7 +319,16 @@ function getStaffSession(req: any): Session | null {
 
 function isGatekeeperSession(session: Session | null): boolean {
   if (!session || (session.role !== "vendor" && !(session.role === "field_employee" && session.managedSubcontractor)) || !session.vendorId) return false;
+  if (session.role === "vendor" && session.membershipRole === "admin") return true;
   return session.vendorRole === "gatekeeper" || session.vendorRole === "gate_supervisor";
+}
+
+function gateSiteAssignmentScope(session: Session) {
+  const siteIds = session.gateAccessSiteIds ??
+    (session.managedSubcontractor ? managedWorkerSiteIds(session) : null);
+  return siteIds == null
+    ? undefined
+    : inArray(siteWorkAssignmentsTable.siteLocationId, siteIds.length > 0 ? siteIds : [-1]);
 }
 
 async function requireGatekeeperSession(
@@ -327,30 +340,62 @@ async function requireGatekeeperSession(
     res.status(401).json({ message: "Login required", code: AUTH_REQUIRED });
     return null;
   }
-  if (!isGatekeeperSession(session)) {
+  // Preserve signed sessions issued before normalized person access existed.
+  // Current sessions carry vendorPeopleId and are always checked through the
+  // normalized role/site resolver below.
+  if (isGatekeeperSession(session) && !session.vendorPeopleId) {
+    const assignments = await db
+      .select({ siteLocationId: siteWorkAssignmentsTable.siteLocationId })
+      .from(siteWorkAssignmentsTable)
+      .where(
+        and(
+          eq(siteWorkAssignmentsTable.vendorId, session.vendorId!),
+          session.managedSubcontractor
+            ? inArray(
+                siteWorkAssignmentsTable.siteLocationId,
+                managedWorkerSiteIds(session),
+              )
+            : undefined,
+        ),
+      );
+    session.gateAccessSiteIds = [...new Set(assignments.map((row) => row.siteLocationId))];
+    session.gateSupervisorAccess =
+      session.membershipRole === "admin" ||
+      session.vendorRole === "gate_supervisor" ||
+      Boolean(
+        session.managedSubcontractor &&
+          session.managedSubcontractor.siteGrants.some(
+            (grant) => grant.role === "gate_supervisor",
+          ),
+      );
+    return session;
+  }
+  if (!session.vendorPeopleId) {
     res
       .status(403)
       .json({ message: "Gatekeeper access required", code: VISIT_NO_ACCESS });
     return null;
   }
+  const access = await resolveVendorPersonAccess(session);
+  if (
+    !access ||
+    (!access.isVendorAdmin &&
+      !access.operationalRoles.some((role) =>
+        role === "gatekeeper" || role === "gate_supervisor"))
+  ) {
+    res
+      .status(403)
+      .json({ message: "Gatekeeper access required", code: VISIT_NO_ACCESS });
+    return null;
+  }
+  session.gateAccessSiteIds = access.siteIds;
+  session.gateSupervisorAccess =
+    access.isVendorAdmin || access.operationalRoles.includes("gate_supervisor");
   return session;
 }
 
 async function requireGateReconciliationSession(req: any, res: any): Promise<Session | null> {
-  const session = getStaffSession(req);
-  if (!session) {
-    res.status(401).json({ message: "Login required", code: AUTH_REQUIRED });
-    return null;
-  }
-  if (
-    (session.role !== "vendor" && !(session.role === "field_employee" && session.managedSubcontractor)) ||
-    !session.vendorId ||
-    !["gatekeeper", "gate_supervisor"].includes(session.vendorRole ?? "")
-  ) {
-    res.status(403).json({ message: "Gate staff access required", code: VISIT_NO_ACCESS });
-    return null;
-  }
-  return session;
+  return requireGatekeeperSession(req, res);
 }
 
 async function requireGateReviewSession(req: any, res: any): Promise<Session | null> {
@@ -888,13 +933,23 @@ router.get("/visits/gate/ops", async (req, res): Promise<void> => {
 router.get("/visits/gate/assigned-sites", async (req, res): Promise<void> => {
   const session = await requireGatekeeperSession(req, res);
   if (!session) return;
+  const permittedSiteIds = session.gateAccessSiteIds ?? [];
+  if (permittedSiteIds.length === 0) {
+    res.json({ sites: [], defaultSite: null });
+    return;
+  }
   const assignments = await db
     .select({
       id: siteWorkAssignmentsTable.id,
       siteLocationId: siteWorkAssignmentsTable.siteLocationId,
     })
     .from(siteWorkAssignmentsTable)
-    .where(and(eq(siteWorkAssignmentsTable.vendorId, session.vendorId!), session.managedSubcontractor ? inArray(siteWorkAssignmentsTable.siteLocationId, managedWorkerSiteIds(session)) : undefined));
+    .where(
+      and(
+        eq(siteWorkAssignmentsTable.vendorId, session.vendorId!),
+        inArray(siteWorkAssignmentsTable.siteLocationId, permittedSiteIds),
+      ),
+    );
   const siteIds = [...new Set(assignments.map((row) => row.siteLocationId))];
   if (siteIds.length === 0) {
     res.json({ sites: [], defaultSite: null });
@@ -995,7 +1050,7 @@ router.post("/visits/gate/observations", async (req, res): Promise<void> => {
       .from(siteWorkAssignmentsTable)
       .where(and(
         eq(siteWorkAssignmentsTable.siteLocationId, site.id),
-        and(eq(siteWorkAssignmentsTable.vendorId, session.vendorId!), session.managedSubcontractor ? inArray(siteWorkAssignmentsTable.siteLocationId, managedWorkerSiteIds(session)) : undefined),
+        and(eq(siteWorkAssignmentsTable.vendorId, session.vendorId!), gateSiteAssignmentScope(session)),
       ))
       .limit(1);
     if (!assignment) {
@@ -1139,6 +1194,7 @@ router.post("/visits/gate/:id/reconciliations/:reconciliationId/reverse", async 
       session.role === "admin" ||
       session.role === "partner" ||
       session.membershipRole === "admin" ||
+      session.gateSupervisorAccess === true ||
       session.vendorRole === "gate_supervisor" ||
       Boolean(session.managedSubcontractor && visitScope && managedWorkerSiteRole(session, visitScope.siteId) === "gate_supervisor");
     const result = await reverseVisitReconciliation({
@@ -1187,7 +1243,7 @@ router.post("/visits/gate/:id/reconcile", async (req, res): Promise<void> => {
       .from(siteWorkAssignmentsTable)
       .where(and(
         eq(siteWorkAssignmentsTable.siteLocationId, visit.siteLocationId),
-        and(eq(siteWorkAssignmentsTable.vendorId, session.vendorId!), session.managedSubcontractor ? inArray(siteWorkAssignmentsTable.siteLocationId, managedWorkerSiteIds(session)) : undefined),
+        and(eq(siteWorkAssignmentsTable.vendorId, session.vendorId!), gateSiteAssignmentScope(session)),
       ))
       .limit(1);
     if (!assignment) {
@@ -1214,7 +1270,12 @@ router.post("/visits/gate/:id/reconcile", async (req, res): Promise<void> => {
       at: input.completedAt ? new Date(input.completedAt) : new Date(),
       gatekeeperUserId: session.userId,
     });
-    const supervisorOverride = (session.managedSubcontractor ? managedWorkerSiteRole(session, visit.siteLocationId) === "gate_supervisor" : session.vendorRole === "gate_supervisor") && Boolean(input.overrideReason);
+    const supervisorOverride = (
+      session.gateSupervisorAccess === true ||
+      (session.managedSubcontractor
+        ? managedWorkerSiteRole(session, visit.siteLocationId) === "gate_supervisor"
+        : session.vendorRole === "gate_supervisor")
+    ) && Boolean(input.overrideReason);
     const state = reconciled.state === "reconciled" || supervisorOverride ? "reconciled" : "needs_supervisor_review";
     const [updated] = await db.update(siteVisitsTable).set({
       firstName: input.firstName,
@@ -1244,8 +1305,6 @@ router.post("/visits/gate/:id/reconcile", async (req, res): Promise<void> => {
 });
 // ---------- POST /api/visits/gate/check-in (authenticated gatekeeper) ----------
 router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
-  const session = await requireGatekeeperSession(req, res);
-  if (!session) return;
   const b = (req.body ?? {}) as {
     firstName?: string;
     lastName?: string;
@@ -1270,6 +1329,8 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
   let entryCategory;
   try { entryCategory = parseVisitEntryCategory(b.entryCategory); }
   catch { res.status(400).json({ message: "Invalid entry category", code: VISIT_INVALID_INPUT }); return; }
+  const session = await requireGatekeeperSession(req, res);
+  if (!session) return;
   const firstName = String(b.firstName ?? "").trim();
   const lastName = String(b.lastName ?? "").trim();
   if (!firstName || !lastName) {
@@ -1309,7 +1370,7 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
     .where(
       and(
         eq(siteWorkAssignmentsTable.siteLocationId, site.id),
-        and(eq(siteWorkAssignmentsTable.vendorId, session.vendorId!), session.managedSubcontractor ? inArray(siteWorkAssignmentsTable.siteLocationId, managedWorkerSiteIds(session)) : undefined),
+        and(eq(siteWorkAssignmentsTable.vendorId, session.vendorId!), gateSiteAssignmentScope(session)),
       ),
     )
     .limit(1);
@@ -1492,7 +1553,7 @@ router.post("/visits/gate/:id/check-out", async (req, res): Promise<void> => {
     .where(
       and(
         eq(siteWorkAssignmentsTable.siteLocationId, visit.siteLocationId),
-        and(eq(siteWorkAssignmentsTable.vendorId, session.vendorId!), session.managedSubcontractor ? inArray(siteWorkAssignmentsTable.siteLocationId, managedWorkerSiteIds(session)) : undefined),
+        and(eq(siteWorkAssignmentsTable.vendorId, session.vendorId!), gateSiteAssignmentScope(session)),
       ),
     )
     .limit(1);
@@ -1569,7 +1630,7 @@ router.post("/visits/gate/:id/admit", async (req, res): Promise<void> => {
     .where(
       and(
         eq(siteWorkAssignmentsTable.siteLocationId, visit.siteLocationId),
-        and(eq(siteWorkAssignmentsTable.vendorId, session.vendorId!), session.managedSubcontractor ? inArray(siteWorkAssignmentsTable.siteLocationId, managedWorkerSiteIds(session)) : undefined),
+        and(eq(siteWorkAssignmentsTable.vendorId, session.vendorId!), gateSiteAssignmentScope(session)),
       ),
     )
     .limit(1);
@@ -1953,7 +2014,7 @@ router.get("/visits/events", async (req, res): Promise<void> => {
     const assignments = await db
       .select({ siteLocationId: siteWorkAssignmentsTable.siteLocationId })
       .from(siteWorkAssignmentsTable)
-      .where(and(eq(siteWorkAssignmentsTable.vendorId, session.vendorId), session.managedSubcontractor ? inArray(siteWorkAssignmentsTable.siteLocationId, managedWorkerSiteIds(session)) : undefined));
+      .where(and(eq(siteWorkAssignmentsTable.vendorId, session.vendorId), gateSiteAssignmentScope(session)));
     return new Set(assignments.map((row) => row.siteLocationId));
   };
   let assignedSiteIds = await loadAssignedSites();
@@ -2184,7 +2245,7 @@ router.get("/visits", async (req, res): Promise<void> => {
     const assignments = await db
       .select({ siteLocationId: siteWorkAssignmentsTable.siteLocationId })
       .from(siteWorkAssignmentsTable)
-      .where(and(eq(siteWorkAssignmentsTable.vendorId, session.vendorId!), session.managedSubcontractor ? inArray(siteWorkAssignmentsTable.siteLocationId, managedWorkerSiteIds(session)) : undefined));
+      .where(and(eq(siteWorkAssignmentsTable.vendorId, session.vendorId!), gateSiteAssignmentScope(session)));
     const assignedSiteIds = [
       ...new Set(assignments.map((row) => row.siteLocationId)),
     ];
@@ -2395,7 +2456,7 @@ router.get(
         .from(siteWorkAssignmentsTable)
         .where(
           and(
-            and(eq(siteWorkAssignmentsTable.vendorId, session.vendorId), session.managedSubcontractor ? inArray(siteWorkAssignmentsTable.siteLocationId, managedWorkerSiteIds(session)) : undefined),
+            and(eq(siteWorkAssignmentsTable.vendorId, session.vendorId), gateSiteAssignmentScope(session)),
             eq(siteWorkAssignmentsTable.siteLocationId, siteId),
           ),
         )
@@ -2544,7 +2605,7 @@ router.get("/visits/:id", async (req, res): Promise<void> => {
       .from(siteWorkAssignmentsTable)
       .where(
         and(
-          and(eq(siteWorkAssignmentsTable.vendorId, session.vendorId!), session.managedSubcontractor ? inArray(siteWorkAssignmentsTable.siteLocationId, managedWorkerSiteIds(session)) : undefined),
+          and(eq(siteWorkAssignmentsTable.vendorId, session.vendorId!), gateSiteAssignmentScope(session)),
           eq(siteWorkAssignmentsTable.siteLocationId, v.siteLocationId),
         ),
       )

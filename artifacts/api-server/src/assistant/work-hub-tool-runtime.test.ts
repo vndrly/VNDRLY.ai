@@ -66,6 +66,23 @@ describe("resolveWorkHubToolRequest", () => {
     expect(resolveExecutableWorkHubToolRequest("confirm_work_hub_gate_location", { ...command, confirmation: "token", payload: {} }, true, { userId: 1, role: "vendor", membershipRole: "member", vendorRole: "gatekeeper", vendorId: 42 })).toHaveProperty("error");
     expect(resolveExecutableWorkHubToolRequest("query_worker_subscriptions", {}, false, { userId: 1, role: "field_employee" })).toHaveProperty("error");
   });
+  it("keeps gate-location tools available when a vendor admin also holds a gate role", () => {
+    const payload = { siteId: 9, name: "West", latitude: 35, longitude: -97, geofenceRadiusM: 100, active: true };
+    expect(
+      resolveExecutableWorkHubToolRequest(
+        "prepare_work_hub_gate_location",
+        { payload },
+        false,
+        {
+          userId: 1,
+          role: "vendor",
+          membershipRole: "admin",
+          vendorRole: "gate_supervisor",
+          vendorId: 42,
+        },
+      ),
+    ).toMatchObject({ path: "/gate-locations/preview" });
+  });
   it("records exact Work Hub audit identifiers including nested gate changes", () => {
     for (const key of ["fileId", "documentId", "assetId", "stationId", "channelId", "taskId", "occurrenceId", "exportId"])
       expect(inferWorkHubAuditTargetId({ [key]: "exact-record" })).toBe("exact-record");

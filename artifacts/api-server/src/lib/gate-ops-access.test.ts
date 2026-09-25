@@ -8,6 +8,13 @@ describe("officeMayAccessGateOps", () => {
     expect(officeMayAccessGateOps({ role: "vendor", vendorRole: "office" })).toBe(true);
     expect(officeMayAccessGateOps({ role: "vendor", vendorRole: "both" })).toBe(true);
     expect(officeMayAccessGateOps({ role: "vendor", vendorRole: null })).toBe(true);
+    expect(
+      officeMayAccessGateOps({
+        role: "vendor",
+        vendorRole: "gatekeeper",
+        membershipRole: "admin",
+      }),
+    ).toBe(true);
   });
 
   it("rejects booth operators and field personas", () => {

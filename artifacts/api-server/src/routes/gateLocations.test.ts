@@ -18,6 +18,7 @@ const admin = {
   role: "vendor",
   vendorId: 41,
   membershipRole: "admin",
+  vendorRole: null as string | null,
   sv: 1,
 };
 const values = {
@@ -123,6 +124,18 @@ function fixture() {
   };
 }
 describe("physical gate location management", () => {
+  it("allows a current vendor administrator even when they also hold a gate role", async () => {
+    const h = fixture();
+    expect(
+      (
+        await h.post("/preview", values, {
+          ...admin,
+          vendorRole: "gate_supervisor",
+        })
+      ).status,
+    ).toBe(200);
+  });
+
   it("requires authentication and denies gatekeepers, supervisors, partner and cross-org administrators", async () => {
     const h = fixture();
     expect((await request(h.app).get("/gate-locations/sites")).status).toBe(

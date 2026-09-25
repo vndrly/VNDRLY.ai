@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
 import { validateVendorPersonAccessMigration } from "../../scripts/migrate-vendor-person-access.js";
 
 const allowed = `
@@ -34,6 +35,13 @@ ON CONFLICT (vendor_people_id, role) DO UPDATE SET is_active = true, updated_at 
 INSERT INTO vendor_person_operational_roles (vendor_people_id, role, is_active)
 SELECT id, vendor_role, true FROM vendor_people WHERE deleted_at IS NULL AND vendor_role IN ('foreman','gatekeeper','gate_supervisor')
 ON CONFLICT (vendor_people_id, role) DO UPDATE SET is_active = true, updated_at = now();
+INSERT INTO vendor_person_site_access (vendor_people_id, site_location_id, is_active)
+SELECT DISTINCT person.id, assignment.site_location_id, true
+FROM vendor_people person
+JOIN site_work_assignments assignment ON assignment.vendor_id=person.vendor_id
+WHERE person.deleted_at IS NULL AND person.is_active=true
+AND person.vendor_role IN ('gatekeeper','gate_supervisor')
+ON CONFLICT (vendor_people_id, site_location_id) DO UPDATE SET is_active = true, updated_at = now();
 `;
 
 describe("vendor person access migration guard", () => {
@@ -45,5 +53,19 @@ describe("vendor person access migration guard", () => {
     expect(() => validateVendorPersonAccessMigration(`${allowed}\nDROP TABLE users;`)).toThrow(
       "Unsafe vendor person access migration refused",
     );
+  });
+
+  it("runs the guarded migration during API deployment", () => {
+    expect(
+      readFileSync(
+        new URL("../../../../.github/workflows/deploy-api.yml", import.meta.url),
+        "utf8",
+      ),
+    ).toContain("run migrate:vendor-person-access");
+  });
+
+  it("preserves existing direct gate staff site access during normalization", () => {
+    expect(allowed).toContain("JOIN site_work_assignments assignment");
+    expect(allowed).toContain("person.vendor_role IN ('gatekeeper','gate_supervisor')");
   });
 });

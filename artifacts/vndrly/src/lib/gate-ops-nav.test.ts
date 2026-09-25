@@ -19,6 +19,13 @@ describe("canViewGateLog", () => {
     expect(canViewGateLog({ role: "vendor", vendorRole: "office" })).toBe(true);
     expect(canViewGateLog({ role: "vendor", vendorRole: "both" })).toBe(true);
     expect(canViewGateLog({ role: "vendor", vendorRole: null })).toBe(true);
+    expect(
+      canViewGateLog({
+        role: "vendor",
+        vendorRole: "gatekeeper",
+        membershipRole: "admin",
+      }),
+    ).toBe(true);
     expect(canViewGateLog({ role: "vendor", vendorRole: "gatekeeper" })).toBe(false);
     expect(canViewGateLog({ role: "vendor", vendorRole: "field" })).toBe(false);
     expect(canViewGateLog({ role: "vendor", vendorRole: "foreman" })).toBe(false);

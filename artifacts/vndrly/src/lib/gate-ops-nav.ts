@@ -12,12 +12,14 @@ export type NavItem = {
 export type GateLogViewer = {
   role: string;
   vendorRole?: string | null;
+  membershipRole?: string | null;
 };
 
 export function canViewGateLog(user: GateLogViewer | null | undefined): boolean {
   if (!user) return false;
   if (user.role === "admin" || user.role === "partner") return true;
   if (user.role !== "vendor") return false;
+  if (user.membershipRole === "admin") return true;
   const role = user.vendorRole;
   return role == null || role === "office" || role === "both";
 }

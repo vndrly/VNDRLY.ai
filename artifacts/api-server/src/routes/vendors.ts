@@ -766,7 +766,7 @@ router.put("/vendors/:vendorId/people/:contactId/access", async (req, res): Prom
   } catch (error) {
     res.status(400).json({
       error: error instanceof Error ? error.message : "Invalid access update",
-      code: "validation.invalid_access",
+      code: "validation.invalid_input",
     });
     return;
   }

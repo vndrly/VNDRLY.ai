@@ -774,7 +774,7 @@ export function resolveExecutableWorkHubToolRequest(
   if (!metadata) return null;
   if (session && (!session.userId || !metadata.roles.includes(session.role as never))) return { error: "This tool is not available to your role." };
   if (session && metadata.companyAdminOnly && session.membershipRole !== "admin") return { error: "Organization administrator access is required." };
-  if (session && name.includes("gate_location") && (session.role !== "vendor" || !session.vendorId || session.membershipRole !== "admin" || session.managedSubcontractor || ["gatekeeper", "gate_supervisor"].includes(session.vendorRole ?? ""))) return { error: "Only a current vendor organization administrator may manage gate locations." };
+  if (session && name.includes("gate_location") && (session.role !== "vendor" || !session.vendorId || session.membershipRole !== "admin" || session.managedSubcontractor)) return { error: "Only a current vendor organization administrator may manage gate locations." };
   const input = record(rawInput);
   if (metadata.mutating && !mutationAuthorizedByServer)
     return {

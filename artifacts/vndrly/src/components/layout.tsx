@@ -85,13 +85,24 @@ function useNavItems(user: {
   vendorId: number | null;
   partnerId: number | null;
   vendorRole?: string | null;
+  activeMembershipId?: number | null;
+  availableMemberships?: Array<{ id: number; role: string }>;
   managedSubcontractor?: ManagedSubcontractor;
 } | null) {
   const { t } = useTranslation();
+  const gateViewer = user
+    ? {
+        ...user,
+        membershipRole:
+          user.availableMemberships?.find(
+            (membership) => membership.id === user.activeMembershipId,
+          )?.role ?? null,
+      }
+    : null;
   const gateEnabled = useQuery({
     queryKey: ["gate-log-enabled"],
     queryFn: () => visitsApi.gateEnabled(),
-    enabled: canViewGateLog(user),
+    enabled: canViewGateLog(gateViewer),
     staleTime: 60_000,
     retry: false,
   });
@@ -118,12 +129,12 @@ function useNavItems(user: {
       if (["invoices", "statements", "bills-to-pay"].includes(item.key)) return ACCOUNTING_ENABLED;
       return true;
     }), {
-      user,
+      user: gateViewer,
       gatekeepingEnabled: gateEnabled.data?.enabled === true,
       label: t("nav.gateLog"),
       icon: ClipboardList,
     });
-    if (gateEnabled.data?.enabled !== true || !canViewGateLog(user)) return wrapped;
+    if (gateEnabled.data?.enabled !== true || !canViewGateLog(gateViewer)) return wrapped;
     const gateMode = { href: "/gate/change-over", label: t("gateNav.gateMode", { defaultValue: "Gate Mode" }), icon: ClipboardList, key: "gate-mode" };
     const dashboardIndex = wrapped.findIndex((item) => item.key === "dashboard");
     return dashboardIndex < 0 ? [gateMode, ...wrapped] : [...wrapped.slice(0, dashboardIndex + 1), gateMode, ...wrapped.slice(dashboardIndex + 1)];

@@ -88,11 +88,18 @@ export async function requireChangeOverAccess(
   if (!assigned.rowCount)
     return fail(403, "forbidden", "You are not assigned to this site");
   const membership = await client.query(
-    "SELECT id, vendor_people_id FROM user_org_memberships WHERE user_id=$1 AND vendor_id=$2 AND org_type='vendor' AND ($3::int IS NULL OR id=$3)",
+    "SELECT id, vendor_people_id, role FROM user_org_memberships WHERE user_id=$1 AND vendor_id=$2 AND org_type='vendor' AND ($3::int IS NULL OR id=$3)",
     [session.userId, session.vendorId, session.activeMembershipId ?? null],
   );
   if (!membership.rowCount)
     return fail(403, "forbidden", "Current company membership required");
+  if (
+    session.role === "vendor" &&
+    session.membershipRole === "admin" &&
+    membership.rows.some((row) => row.role === "admin")
+  ) {
+    return { supervisor: true, site, user };
+  }
   if (session.managedSubcontractor) {
     const grants = await client.query(
       `SELECT g.role FROM managed_subcontractor_worker_sponsorships w
@@ -108,6 +115,24 @@ export async function requireChangeOverAccess(
         user,
       };
   } else {
+    const personId = membership.rows[0]?.vendor_people_id;
+    if (personId) {
+      const normalized = await client.query(
+        `SELECT r.role FROM vendor_person_operational_roles r
+        JOIN vendor_person_site_access a ON a.vendor_people_id=r.vendor_people_id
+        WHERE r.vendor_people_id=$1 AND r.is_active=true
+        AND r.role IN ('gatekeeper','gate_supervisor')
+        AND a.site_location_id=$2 AND a.is_active=true`,
+        [personId, siteId],
+      );
+      if (normalized.rowCount) {
+        return {
+          supervisor: normalized.rows.some((row) => row.role === "gate_supervisor"),
+          site,
+          user,
+        };
+      }
+    }
     const staff = await client.query(
       "SELECT vendor_role FROM vendor_people WHERE user_id=$1 AND vendor_id=$2 AND deleted_at IS NULL AND is_active=true AND vendor_role IN ('gatekeeper','gate_supervisor')",
       [session.userId, session.vendorId],
@@ -246,7 +271,7 @@ export async function listChangeOverSites(session: SessionPayload, mode: GateDis
       `SELECT s.id, s.name FROM site_locations s WHERE s.is_active IS DISTINCT FROM false AND s.hidden IS DISTINCT FROM true
     AND ($1='admin' OR ($1='partner' AND s.partner_id=$2) OR EXISTS (SELECT 1 FROM site_work_assignments a WHERE a.site_location_id=s.id AND a.vendor_id=$3))
     AND (
-      $5::boolean OR $1 IN ('admin','partner')
+      $5::boolean OR $6::boolean OR $1 IN ('admin','partner')
       OR EXISTS (
         SELECT 1 FROM gate_shifts active_shift
         JOIN gate_stations active_station ON active_station.id=active_shift.station_id
@@ -282,6 +307,7 @@ export async function listChangeOverSites(session: SessionPayload, mode: GateDis
         session.vendorId ?? null,
         session.userId ?? null,
         mode === "history",
+        session.role === "vendor" && session.membershipRole === "admin",
       ],
     )
   ).rows;
@@ -321,7 +347,7 @@ export async function listChangeOverStations(
            OR EXISTS (SELECT 1 FROM gate_duty_sessions finishing WHERE finishing.station_id=station.id AND finishing.user_id=$3 AND finishing.ended_at IS NULL)
            OR EXISTS (SELECT 1 FROM gate_work_sessions finishing JOIN work_hub_shifts finishing_shift ON finishing_shift.id=finishing.work_hub_shift_id WHERE finishing_shift.gate_station_id=station.id AND finishing.user_id=$3 AND finishing.ended_at IS NULL))
          AND (
-           $2 IN ('admin','partner')
+           $2 IN ('admin','partner') OR $4::boolean
            OR EXISTS (
              SELECT 1 FROM gate_shifts active_shift
              WHERE active_shift.station_id=station.id AND active_shift.operator_id=$3 AND active_shift.ended_at IS NULL
@@ -346,7 +372,12 @@ export async function listChangeOverStations(
            )
          )
        ORDER BY station.created_at, station.id`,
-      [siteId, session.role, session.userId ?? null],
+      [
+        siteId,
+        session.role,
+        session.userId ?? null,
+        session.role === "vendor" && session.membershipRole === "admin",
+      ],
     )
   ).rows;
 }
