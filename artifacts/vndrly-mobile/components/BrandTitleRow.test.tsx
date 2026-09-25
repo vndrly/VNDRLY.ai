@@ -54,7 +54,7 @@ describe("BrandTitleRow", () => {
   });
 
   it("uses the approved 20-point company name", () => {
-    const source = readFileSync(__filename.replace(/\.test\.tsx$/, ".tsx"), "utf8");
+    const source = readFileSync(__filename.replace(/\.test\.tsx$/, ".tsx"), "utf8").replace(/\r\n/g, "\n");
 
     expect(source).toContain('title: {\n    fontFamily: "Inter_700Bold",\n    fontSize: 20,');
   });

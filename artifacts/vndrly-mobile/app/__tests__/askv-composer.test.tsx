@@ -6,7 +6,7 @@ import en from "../../lib/locales/en.json";
 import es from "../../lib/locales/es.json";
 
 describe("Ask V composer", () => {
-  const source = fs.readFileSync(path.resolve(__dirname, "../(tabs)/askv.tsx"), "utf8");
+  const source = fs.readFileSync(path.resolve(__dirname, "../(tabs)/askv.tsx"), "utf8").replace(/\r\n/g, "\n");
 
   it("uses the approved invitation in both languages", () => {
     expect(en.askv.inputPlaceholder).toBe("What can Ask V do for you?");
