@@ -26,7 +26,7 @@ vi.mock("@/hooks/useColors", () => ({
 }));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
-    t: (key: string) => key.split(".").reduce((v: any, k) => v?.[k], en) ?? key,
+    t: (key: string, values?: Record<string, unknown>) => (key.split(".").reduce((v: any, k) => v?.[k], en) ?? key).replace(/\{\{(\w+)\}\}/g, (_: string, name: string) => String(values?.[name] ?? "")),
   }),
 }));
 vi.mock("expo-location", () => ({
@@ -37,14 +37,13 @@ vi.mock("expo-crypto", () => ({
   randomUUID: () => "11111111-1111-4111-8111-111111111111",
 }));
 vi.mock("@/components/MapboxNativeMap", () => ({ default: () => null }));
-vi.mock("@/components/TogglePillButton", () => ({
-  default: ({ children, onPress, disabled }: any) => (
-    <button disabled={disabled} onClick={onPress}>
-      {children}
-    </button>
-  ),
-}));
+vi.mock("@/hooks/use-brand", () => ({ useBrand: () => ({ primary: "#00adb5", name: "MidCon" }) }));
 import GateLocationsCard from "./GateLocationsCard";
+async function press(name: string) {
+  const button = await screen.findByRole("button", { name });
+  await waitFor(() => expect(button.getAttribute("aria-disabled")).not.toBe("true"));
+  fireEvent.click(button);
+}
 describe("Gate Locations profile card", () => {
   beforeEach(() => {
     mocks.auth.user = { id: 33, role: "vendor", vendorId: 41, partnerId: null };
@@ -68,9 +67,9 @@ describe("Gate Locations profile card", () => {
   afterEach(cleanup);
   it("immediately hides and clears a vendor draft when switching to a partner admin and back", async () => {
     const view = render(<GateLocationsCard />);
-    fireEvent.click(await screen.findByText("Gate Locations"));
-    fireEvent.click(await screen.findByText("Partner wellhead"));
-    fireEvent.click(await screen.findByText("Add gate"));
+    await press("Gate Locations");
+    await press("Partner wellhead");
+    await press("Add gate");
     fireEvent.change(screen.getByLabelText("Gate name"), { target: { value: "Unsaved private gate" } });
     mocks.auth.user = { id: 33, role: "partner", vendorId: 0, partnerId: 41 };
     mocks.auth.activeMembershipId = 2;
@@ -94,24 +93,24 @@ describe("Gate Locations profile card", () => {
   });
   it("captures a separate gate position, reviews exact values, and only saves after confirmation", async () => {
     render(<GateLocationsCard />);
-    fireEvent.click(await screen.findByText("Gate Locations"));
-    fireEvent.click(await screen.findByText("Partner wellhead"));
-    fireEvent.click(await screen.findByText("Add gate"));
+    await press("Gate Locations");
+    await press("Partner wellhead");
+    await press("Add gate");
     fireEvent.change(screen.getByLabelText("Gate name"), {
       target: { value: "West gate" },
     });
-    fireEvent.click(screen.getByText("Use my current location"));
+    await press("Use my current location");
     await waitFor(() =>
       expect(
         (screen.getByLabelText("Latitude") as HTMLInputElement).value,
       ).toBe("35.2"),
     );
-    fireEvent.click(screen.getByText("Review gate"));
+    await press("Review gate");
     await screen.findByText("Confirm gate");
     expect(
       mocks.api.mock.calls.filter((c) => c[0] === "/api/gate-locations"),
     ).toHaveLength(0);
-    fireEvent.click(screen.getByText("Confirm gate"));
+    await press("Confirm gate");
     await waitFor(() =>
       expect(mocks.api).toHaveBeenCalledWith(
         "/api/gate-locations",
@@ -121,6 +120,18 @@ describe("Gate Locations profile card", () => {
         }),
       ),
     );
+  });
+  it("provides a named gate map with exact position and 44-point input targets", async () => {
+    render(<GateLocationsCard />);
+    await press("Gate Locations");
+    await press("Partner wellhead");
+    await press("Add gate");
+    fireEvent.change(screen.getByLabelText("Gate name"), { target: { value: "West gate" } });
+    await press("Use my current location");
+    expect(await screen.findByRole("img", { name: "Gate map: West gate. Latitude 35.2, longitude -97.2, radius 500 meters." })).toBeTruthy();
+    for (const label of ["Gate name", "Latitude", "Longitude", "Radius in meters"]) {
+      expect(Number.parseFloat(getComputedStyle(screen.getByLabelText(label)).minHeight)).toBeGreaterThanOrEqual(44);
+    }
   });
   it("reviews deactivation and retries a failed save with the same operation key", async () => {
     const original = mocks.api.getMockImplementation()!;
@@ -146,14 +157,16 @@ describe("Gate Locations profile card", () => {
       return original(path, init);
     });
     render(<GateLocationsCard />);
-    fireEvent.click(await screen.findByText("Gate Locations"));
-    fireEvent.click(await screen.findByText("Partner wellhead"));
-    fireEvent.click(await screen.findByText("Edit gate: West gate"));
-    fireEvent.click(screen.getByText("Deactivate gate"));
-    fireEvent.click(screen.getByText("Review gate"));
-    fireEvent.click(await screen.findByText("Confirm gate"));
+    await press("Gate Locations");
+    await press("Partner wellhead");
+    const editButton = await screen.findByRole("button", { name: "Edit gate: West gate" });
+    expect(editButton.getAttribute("aria-label")).toBe("Edit gate: West gate");
+    await press("Edit gate: West gate");
+    await press("Deactivate gate");
+    await press("Review gate");
+    await press("Confirm gate");
     await screen.findByRole("alert");
-    fireEvent.click(screen.getByText("Confirm gate"));
+    await press("Confirm gate");
     await screen.findByText("Gate saved");
     const calls = mocks.api.mock.calls.filter(
       (c) => c[0] === "/api/gate-locations",

@@ -49,4 +49,23 @@ describe("Implementation A exports", () => {
   it("neutralizes spreadsheet formulas in user-entered fields", () => {
     const result = buildImplementationAExport({ dataset: "payroll", scope: { ownerOrgId: 10 }, rows: [{ ownerOrgId: 10, worker: "=SUM(A1:A2)", employer: "NewTek", sponsor: "MidCon", site: "A", hours: 1 }] });
     expect(result.csv).toContain("'=SUM(A1:A2)");
-  });});
+  });
+
+  it.each([
+    [" =1+1", "' =1+1"],
+    ["\t+1+1", "'\t+1+1"],
+    ["\r\n@SUM(A1)", "\"'\r\n@SUM(A1)\""],
+    ["\u0000\u001f-1+1", "'\u0000\u001f-1+1"],
+    ["\u00a0=1+1", "'\u00a0=1+1"],
+    ["\uFEFF=1+1", "'\uFEFF=1+1"],
+  ])("neutralizes a formula after leading whitespace or controls: %j", (worker, expected) => {
+    const result = buildImplementationAExport({ dataset: "payroll", scope: { ownerOrgId: 10 }, rows: [{ ownerOrgId: 10, worker, hours: 1 }] });
+    expect(result.csv).toBe(`worker,employer,sponsor,site,hours\r\n${expected},,,,1\r\n`);
+    expect(result.rows[0].worker).toBe(worker);
+  });
+
+  it("preserves harmless whitespace and quotes user text without interpreting it", () => {
+    const result = buildImplementationAExport({ dataset: "payroll", scope: { ownerOrgId: 10 }, rows: [{ ownerOrgId: 10, worker: '  Gate "A", crew', hours: 1 }] });
+    expect(result.csv).toBe('worker,employer,sponsor,site,hours\r\n"  Gate ""A"", crew",,,,1\r\n');
+  });
+});

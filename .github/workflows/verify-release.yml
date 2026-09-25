@@ -94,6 +94,23 @@ jobs:
           set -euo pipefail
           pnpm run test:api 2>&1 | tee "$RUNNER_TEMP/vndrly-api-tests.log"
 
+      - name: Replay guarded Work Hub migrations twice
+        id: migrations
+        if: >-
+          ${{ !cancelled() &&
+              steps.dependencies.outcome == 'success' &&
+              steps.postgres.outcome == 'success' &&
+              steps.db-safety.outcome == 'success' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm --filter @workspace/api-server exec tsx scripts/run-with-test-db.ts -- bash -euc '
+            for pass in 1 2; do
+              pnpm run migrate:asset-custody-fingerprint
+              pnpm run migrate:gate-locations
+            done
+          ' 2>&1 | tee "$RUNNER_TEMP/vndrly-migration-replay.log"
+
       - name: Full required test chain
         id: full-chain
         if: >-
@@ -123,6 +140,7 @@ jobs:
             ${{ runner.temp }}/vndrly-tests.log
             ${{ runner.temp }}/vndrly-api-tests.log
             ${{ runner.temp }}/vndrly-browser-tests.log
+            ${{ runner.temp }}/vndrly-migration-replay.log
             ${{ runner.temp }}/vndrly-postgres.log
             lib/e2e/test-results
           if-no-files-found: warn

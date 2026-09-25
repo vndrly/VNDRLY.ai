@@ -214,7 +214,7 @@ function GateLocationsPanel() {
                     )}
                   </Text>
                   <TogglePillButton disabled={busy} onPress={() => edit(gate)}>
-                    {t("gateLocations.edit")}: {gate.name}
+                    {`${t("gateLocations.edit")}: ${gate.name}`}
                   </TogglePillButton>
                 </View>
               ))}
@@ -307,9 +307,10 @@ function GateLocationsPanel() {
             </>
           ) : null}
           {previewValues ? (
+            <View accessible accessibilityRole="image" accessibilityLabel={t("gateLocations.mapLabel", { name: previewValues.name, latitude: previewValues.latitude, longitude: previewValues.longitude, radius: previewValues.geofenceRadiusM })}>
             <MapboxNativeMap
               height={200}
-              points={[{ id: "gate", ...previewValues }]}
+              points={[{ id: "gate", ...previewValues, title: previewValues.name, label: previewValues.name }]}
               circles={[
                 {
                   id: "radius",
@@ -320,6 +321,7 @@ function GateLocationsPanel() {
               center={[previewValues.longitude, previewValues.latitude]}
               zoom={13}
             />
+            </View>
           ) : null}
           {review ? (
             <>
@@ -366,7 +368,7 @@ function GateLocationsPanel() {
         </View>
       ) : null}
       {error ? (
-        <Text accessibilityRole="alert" style={{ color: colors.destructive }}>
+        <Text accessibilityRole="alert" style={{ color: colors.text, backgroundColor: colors.card, borderColor: colors.destructive, borderWidth: 1, borderRadius: 6, padding: 8 }}>
           {error}
         </Text>
       ) : null}
@@ -382,5 +384,5 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginTop: 8,
   },
-  input: { borderWidth: 1, padding: 10, borderRadius: 6 },
+  input: { borderWidth: 1, padding: 10, borderRadius: 6, minHeight: 44 },
 });

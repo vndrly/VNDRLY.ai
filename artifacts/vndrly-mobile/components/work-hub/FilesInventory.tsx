@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Text, TextInput, View } from "react-native";
 import * as Crypto from "expo-crypto";
@@ -26,6 +26,10 @@ export function FilesInventory({ owner, capabilities, files, notes, assets, chan
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
+  const errorId = useId();
+  const noteTitleRef = useRef<TextInput>(null);
+  const expectedReturnRef = useRef<TextInput>(null);
+  const [invalidField, setInvalidField] = useState<"noteTitle" | "expectedReturn" | null>(null);
   const [noteOpen, setNoteOpen] = useState(false);
   const [editing, setEditing] = useState<NoteRow | null>(null);
   const [channelId, setChannelId] = useState("");
@@ -37,8 +41,14 @@ export function FilesInventory({ owner, capabilities, files, notes, assets, chan
   const [expectedReturn, setExpectedReturn] = useState("");
   const card = { borderWidth: 1, borderColor: colors.border, borderRadius: 14, backgroundColor: colors.card, padding: 16, gap: 10 } as const;
   const muted = { color: colors.mutedForeground };
+  const enumLabel = (kind: "scope" | "status" | "condition", value: string) => t(`filesInventory.${kind}.${value}`, { defaultValue: t("filesInventory.unknownValue") });
+  const fieldError = (field: "noteTitle" | "expectedReturn") => ({
+    accessibilityHint: invalidField === field ? error : undefined,
+    "aria-invalid": invalidField === field,
+    "aria-describedby": invalidField === field ? errorId : undefined,
+  });
   const run = async (work: () => Promise<void>) => {
-    setBusy(true); setError("");
+    setBusy(true); setError(""); setInvalidField(null);
     try { await work(); }
     catch (cause) { setError(cause instanceof Error ? cause.message : t("filesInventory.actionFailed")); }
     finally { setBusy(false); }
@@ -62,7 +72,10 @@ export function FilesInventory({ owner, capabilities, files, notes, assets, chan
   });
   const saveNote = () => void run(async () => {
     const targetChannelId = editing?.channelId ?? channelId;
-    if (!targetChannelId || !noteTitle.trim()) throw new Error(t("filesInventory.chooseGroupAndTitle"));
+    if (!targetChannelId || !noteTitle.trim()) {
+      if (!noteTitle.trim()) { setInvalidField("noteTitle"); noteTitleRef.current?.focus(); }
+      throw new Error(t("filesInventory.chooseGroupAndTitle"));
+    }
     const path = `/api/work-hub/channels/${encodeURIComponent(targetChannelId)}/notes${editing ? `/${encodeURIComponent(editing.id)}` : ""}`;
     await apiFetch(path, { method: editing ? "PATCH" : "POST", body: JSON.stringify(command(owner, { title: noteTitle.trim(), body: noteBody }, editing?.version ?? null)) });
     setNoteOpen(false); setEditing(null); setNoteTitle(""); setNoteBody(""); setNotice(t(editing ? "filesInventory.noteUpdated" : "filesInventory.noteAdded"));
@@ -98,10 +111,16 @@ export function FilesInventory({ owner, capabilities, files, notes, assets, chan
     let expectedReturnAt: string | undefined;
     if (custody.action === "checkout" && expectedReturn.trim()) {
       const timestamp = Date.parse(expectedReturn.trim());
-      if (!Number.isFinite(timestamp)) throw new Error(t("filesInventory.invalidExpectedReturn"));
+      if (!Number.isFinite(timestamp)) {
+        setInvalidField("expectedReturn"); expectedReturnRef.current?.focus();
+        throw new Error(t("filesInventory.invalidExpectedReturn"));
+      }
       expectedReturnAt = new Date(timestamp).toISOString();
     }
-    if (custody.action === "checkout" && asset.policy?.expectedReturnRequired && !expectedReturnAt) throw new Error(t("filesInventory.expectedReturnRequired"));
+    if (custody.action === "checkout" && asset.policy?.expectedReturnRequired && !expectedReturnAt) {
+      setInvalidField("expectedReturn"); expectedReturnRef.current?.focus();
+      throw new Error(t("filesInventory.expectedReturnRequired"));
+    }
     try {
       const result = await apiFetch<{ status: "applied" | "conflict" | "blocked"; code?: string }>(`/api/implementation-a/assets/${encodeURIComponent(asset.id)}/${custody.action}`, { method: "POST", body: JSON.stringify({ operationId: custody.operationId, expectedVersion: asset.version, condition: custodyCondition, confirmed: true, photos: custodyPhotos, ...(expectedReturnAt ? { expectedReturnAt } : {}) }) });
       if (result.status === "conflict") {
@@ -126,7 +145,7 @@ export function FilesInventory({ owner, capabilities, files, notes, assets, chan
   });
 
   return <View style={{ gap: 14 }}>
-    {error ? <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{error}</Text> : null}
+    {error ? <Text nativeID={errorId} accessibilityRole="alert" style={{ color: colors.text, backgroundColor: colors.card, borderColor: colors.destructive, borderWidth: 1, borderRadius: 6, padding: 8 }}>{error}</Text> : null}
     {notice ? <Text accessibilityLiveRegion="polite" style={{ color: colors.text }}>{notice}</Text> : null}
     {!selectedAssetId && <View style={card}>
       <Text style={{ color: colors.text, fontSize: 18, fontWeight: "700" }}>{t("filesInventory.filesNotes")}</Text>
@@ -134,17 +153,17 @@ export function FilesInventory({ owner, capabilities, files, notes, assets, chan
         {capabilities.canUploadFile ? <TogglePillButton color="brand" accessibilityLabel={t("filesInventory.uploadFile")} disabled={busy} onPress={upload}>{t("filesInventory.uploadFile")}</TogglePillButton> : null}
         {capabilities.canCreateNote ? <TogglePillButton color="brand" accessibilityLabel={t("filesInventory.addNote")} disabled={busy} onPress={() => { setEditing(null); setNoteTitle(""); setNoteBody(""); setNoteOpen(true); }}>{t("filesInventory.addNote")}</TogglePillButton> : null}
       </View>
-      {capabilities.canUploadFile && !capabilities.canManageAsset && channels.length > 1 ? <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{channels.map(channel => <TogglePillButton key={channel.id} accessibilityLabel={t("filesInventory.fileGroup", { name: channel.name })} solid={channelId === channel.id} onPress={() => setChannelId(channel.id)}>{channel.name}</TogglePillButton>)}</View> : null}
+      {capabilities.canUploadFile && !capabilities.canManageAsset && channels.length > 1 ? <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{channels.map(channel => <TogglePillButton key={channel.id} accessibilityLabel={t("filesInventory.fileGroup", { name: channel.name })} accessibilityState={{ selected: channelId === channel.id }} disabled={busy} solid={channelId === channel.id} onPress={() => setChannelId(channel.id)}>{channel.name}</TogglePillButton>)}</View> : null}
       {noteOpen ? <View style={{ gap: 8 }}>
-        {!editing ? <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{channels.map(channel => <TogglePillButton key={channel.id} accessibilityLabel={t("filesInventory.useGroup", { name: channel.name })} solid={channelId === channel.id} onPress={() => setChannelId(channel.id)}>{channel.name}</TogglePillButton>)}</View> : null}
-        <TextInput accessibilityLabel={t("filesInventory.noteTitle")} value={noteTitle} onChangeText={setNoteTitle} placeholder={t("filesInventory.titlePlaceholder")} style={{ color: colors.text, borderWidth: 1, borderColor: colors.border, padding: 10 }} />
-        <TextInput accessibilityLabel={t("filesInventory.noteBody")} value={noteBody} onChangeText={setNoteBody} multiline placeholder={t("filesInventory.notePlaceholder")} style={{ color: colors.text, borderWidth: 1, borderColor: colors.border, padding: 10, minHeight: 90 }} />
+        {!editing ? <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{channels.map(channel => <TogglePillButton key={channel.id} accessibilityLabel={t("filesInventory.useGroup", { name: channel.name })} accessibilityState={{ selected: channelId === channel.id }} disabled={busy} solid={channelId === channel.id} onPress={() => setChannelId(channel.id)}>{channel.name}</TogglePillButton>)}</View> : null}
+        <TextInput ref={noteTitleRef} {...fieldError("noteTitle")} accessibilityLabel={t("filesInventory.noteTitle")} editable={!busy} value={noteTitle} onChangeText={setNoteTitle} placeholder={t("filesInventory.titlePlaceholder")} style={{ color: colors.text, borderWidth: 1, borderColor: colors.border, padding: 10, minHeight: 44 }} />
+        <TextInput accessibilityLabel={t("filesInventory.noteBody")} editable={!busy} value={noteBody} onChangeText={setNoteBody} multiline placeholder={t("filesInventory.notePlaceholder")} style={{ color: colors.text, borderWidth: 1, borderColor: colors.border, padding: 10, minHeight: 90 }} />
         <TogglePillButton color="brand" accessibilityLabel={t("filesInventory.saveNote")} disabled={busy} onPress={saveNote}>{t("filesInventory.saveNote")}</TogglePillButton>
       </View> : null}
       {!files.length && !notes.length ? <Text style={muted}>{t("filesInventory.noFilesNotes")}</Text> : null}
       {files.map(file => <View key={file.id} style={{ borderTopWidth: 1, borderColor: colors.border, paddingTop: 10, gap: 4 }}>
         <Text style={{ color: colors.text, fontWeight: "700" }}>{file.data.name ?? t("filesInventory.untitledFile")}</Text>
-        <Text style={muted}>{t("filesInventory.fileMetadata", { scope: file.data.scope ?? "company", user: file.createdBy ?? "—", date: file.updatedAt ? new Date(file.updatedAt).toLocaleDateString() : "" })}</Text>
+        <Text style={muted}>{t("filesInventory.fileMetadata", { scope: enumLabel("scope", file.data.scope ?? "company"), user: file.createdBy ?? "—", date: file.updatedAt ? new Date(file.updatedAt).toLocaleDateString() : "" })}</Text>
         <Text style={muted}>{t(file.data.currentFileId ? "filesInventory.finalized" : "filesInventory.reserved")}</Text>
         {file.capabilities?.canDownload ? <TogglePillButton color="brand" accessibilityLabel={t("filesInventory.openNamedFile", { name: file.data.name ?? t("filesInventory.untitledFile") })} disabled={busy} onPress={() => openFile(file)}>{t("filesInventory.openFile")}</TogglePillButton> : null}
       </View>)}
@@ -160,15 +179,15 @@ export function FilesInventory({ owner, capabilities, files, notes, assets, chan
       {!assets.length || selectedAssetId && !assets.some(asset => asset.id === selectedAssetId) ? <Text style={muted}>{t("filesInventory.noInventory")}</Text> : null}
       {assets.filter(asset => !selectedAssetId || asset.id === selectedAssetId).map(asset => <View key={asset.id} style={{ borderTopWidth: 1, borderColor: colors.border, paddingTop: 10, gap: 4 }}>
         <Text style={{ color: colors.text, fontWeight: "700" }}>{asset.name}</Text>
-        <Text style={muted}>{[asset.category, asset.status, asset.condition].filter(Boolean).join(" · ")}</Text>
+        <Text style={muted}>{[asset.category, asset.status ? enumLabel("status", asset.status) : null, asset.condition ? enumLabel("condition", asset.condition) : null].filter(Boolean).join(" · ")}</Text>
         <Text style={muted}>{[asset.currentHolderDisplayName ? t("filesInventory.heldBy", { name: asset.currentHolderDisplayName }) : null, asset.currentLocation, asset.hold ? t("filesInventory.hold", { reason: asset.hold }) : null].filter(Boolean).join(" · ")}</Text>
         {asset.capabilities?.canCheckOut && capabilities.canCheckOutAsset ? <TogglePillButton color="blue" accessibilityLabel={t("filesInventory.checkOutNamed", { name: asset.name })} disabled={busy} onPress={() => openCustody(asset, "checkout")}>{t("filesInventory.checkOut")}</TogglePillButton> : null}
         {asset.capabilities?.canReturn && capabilities.canCheckOutAsset ? <TogglePillButton color="blue" accessibilityLabel={t("filesInventory.returnNamed", { name: asset.name })} disabled={busy} onPress={() => openCustody(asset, "return")}>{t("filesInventory.returnAsset")}</TogglePillButton> : null}
         {asset.capabilities?.canVerifyIssued && capabilities.canVerifyIssuedAsset ? <TogglePillButton color="blue" accessibilityLabel={t("filesInventory.verifyNamed", { name: asset.name })} disabled={busy} onPress={() => openCustody(asset, "verify-issued")}>{t("filesInventory.verifyIssued")}</TogglePillButton> : null}
         {custody?.assetId === asset.id ? <View style={{ gap: 8 }}>
           <Text style={muted}>{t("filesInventory.custodyConfirmation", { name: asset.name })}</Text>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{(["new", "good", "fair", "damaged", "missing", "stolen"] as const).map(condition => <TogglePillButton key={condition} color="blue" solid={custodyCondition === condition} accessibilityLabel={t(`filesInventory.condition.${condition}`)} onPress={() => setCustodyCondition(condition)}>{t(`filesInventory.condition.${condition}`)}</TogglePillButton>)}</View>
-          {custody.action === "checkout" ? <TextInput accessibilityLabel={t("filesInventory.expectedReturn")} value={expectedReturn} onChangeText={setExpectedReturn} placeholder={t("filesInventory.expectedReturnPlaceholder")} style={{ color: colors.text, borderWidth: 1, borderColor: colors.border, padding: 10 }} /> : null}
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{(["new", "good", "fair", "damaged", "missing", "stolen"] as const).map(condition => <TogglePillButton key={condition} color="blue" solid={custodyCondition === condition} accessibilityState={{ selected: custodyCondition === condition }} disabled={busy} accessibilityLabel={t(`filesInventory.condition.${condition}`)} onPress={() => setCustodyCondition(condition)}>{t(`filesInventory.condition.${condition}`)}</TogglePillButton>)}</View>
+          {custody.action === "checkout" ? <TextInput ref={expectedReturnRef} {...fieldError("expectedReturn")} accessibilityLabel={t("filesInventory.expectedReturn")} editable={!busy} value={expectedReturn} onChangeText={setExpectedReturn} placeholder={t("filesInventory.expectedReturnPlaceholder")} style={{ color: colors.text, borderWidth: 1, borderColor: colors.border, padding: 10, minHeight: 44 }} /> : null}
           <TogglePillButton color="blue" accessibilityLabel={t("filesInventory.addEvidencePhoto")} disabled={busy} onPress={addCustodyPhoto}>{t("filesInventory.addEvidencePhoto")}</TogglePillButton>
           {custodyPhotos.length ? <Text style={muted}>{t("filesInventory.photoCount", { count: custodyPhotos.length })}</Text> : null}
           <TogglePillButton color="blue" accessibilityLabel={t(`filesInventory.confirm.${custody.action}`)} disabled={busy} onPress={() => submitCustody(asset)}>{t(`filesInventory.confirm.${custody.action}`)}</TogglePillButton>

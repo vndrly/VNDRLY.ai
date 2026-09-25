@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useId, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Pressable, Text, TextInput, View } from "react-native";
 import TogglePillButton from "@/components/TogglePillButton";
 import { useColors } from "@/hooks/useColors";
@@ -26,9 +27,7 @@ type SearchResult = {
 
 type SearchResponse = { results: SearchResult[]; cappedSources: string[]; nextCursor?: string | null };
 const contentTypes = [
-  ["message", "Messages"], ["note", "Notes"], ["meeting", "Meetings"],
-  ["transcript", "Transcripts"], ["file", "Files"], ["task", "Tasks"],
-  ["form", "Forms"], ["announcement", "Announcements"], ["asset", "Inventory"],
+  "message", "note", "meeting", "transcript", "file", "task", "form", "announcement", "asset",
 ] as const;
 
 function responseShape(value: SearchResponse | SearchResult[]): SearchResponse {
@@ -36,6 +35,8 @@ function responseShape(value: SearchResponse | SearchResult[]): SearchResponse {
 }
 
 export function WorkHubSearch({ onOpen, initialFilters }: { onOpen: (destination: WorkHubSearchDestination) => void; initialFilters?: WorkHubSearchFilters }) {
+  const { t } = useTranslation();
+  const typeLabel = (type: string) => t(`workHubSearch.types.${type}`, { defaultValue: t("workHubSearch.records") });
   const colors = useColors();
   const [query, setQuery] = useState(initialFilters?.query ?? "");
   const [start, setStart] = useState(initialFilters?.start ?? "");
@@ -48,13 +49,19 @@ export function WorkHubSearch({ onOpen, initialFilters }: { onOpen: (destination
   const [loading, setLoading] = useState(false);
   const [openingTitle, setOpeningTitle] = useState("");
   const [error, setError] = useState("");
+  const queryRef = useRef<TextInput>(null);
+  const errorId = useId();
+  const [invalidQuery, setInvalidQuery] = useState(false);
 
   const submit = async () => {
     if (query.trim().length < 2) {
-      setError("Enter at least two characters.");
+      setInvalidQuery(true);
+      queryRef.current?.focus();
+      setError(t("workHubSearch.minimumQuery"));
       return;
     }
     setLoading(true);
+    setInvalidQuery(false);
     setError("");
     setResults(null);
     try {
@@ -64,8 +71,8 @@ export function WorkHubSearch({ onOpen, initialFilters }: { onOpen: (destination
       setResults(response.results);
       setCappedSources(response.cappedSources);
       setNextCursor(response.nextCursor ?? null);
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Search could not be completed.");
+    } catch {
+      setError(t("workHubSearch.searchFailed"));
     } finally {
       setLoading(false);
     }
@@ -81,8 +88,8 @@ export function WorkHubSearch({ onOpen, initialFilters }: { onOpen: (destination
       setResults(current => [...(current ?? []), ...response.results]);
       setCappedSources(response.cappedSources);
       setNextCursor(response.nextCursor ?? null);
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "More results could not be loaded.");
+    } catch {
+      setError(t("workHubSearch.moreFailed"));
     } finally {
       setLoading(false);
     }
@@ -97,39 +104,39 @@ export function WorkHubSearch({ onOpen, initialFilters }: { onOpen: (destination
         : `/api/work-hub/search/items/${encodeURIComponent(result.subjectType)}/${encodeURIComponent(result.subjectId)}`;
       await apiFetch(detailPath);
       onOpen(result.destination);
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "This item is no longer available.");
+    } catch {
+      setError(t("workHubSearch.itemUnavailable"));
     } finally {
       setOpeningTitle("");
     }
   };
 
-  const inputStyle = { color: colors.text, borderWidth: 2, borderColor: colors.primary, borderRadius: 12, minHeight: 44, paddingHorizontal: 12 } as const;
+  const inputStyle = { color: colors.text, borderWidth: 2, borderColor: colors.primary, borderRadius: 12, minHeight: 44, minWidth: 0, paddingHorizontal: 12 } as const;
   return <View style={{ gap: 14 }}>
     <View style={{ borderWidth: 2, borderColor: colors.primary, borderRadius: 16, backgroundColor: colors.card, padding: 16, gap: 12 }}>
-      <Text style={{ color: colors.text, fontSize: 17, fontWeight: "700" }}>Find Work Hub records</Text>
-      <TextInput accessibilityLabel="Search Work Hub" value={query} onChangeText={setQuery} placeholder="Search authorized records" placeholderTextColor={colors.mutedForeground} style={inputStyle} />
+      <Text style={{ color: colors.text, fontSize: 17, fontWeight: "700" }}>{t("workHubSearch.title")}</Text>
+      <TextInput ref={queryRef} {...{ "aria-invalid": invalidQuery, "aria-describedby": invalidQuery ? errorId : undefined }} accessibilityHint={invalidQuery ? error : undefined} accessibilityLabel={t("workHubSearch.queryLabel")} value={query} onChangeText={setQuery} placeholder={t("workHubSearch.queryPlaceholder")} placeholderTextColor={colors.mutedForeground} style={inputStyle} />
       <View style={{ flexDirection: "row", gap: 8 }}>
-        <TextInput accessibilityLabel="From date" value={start} onChangeText={setStart} placeholder="From: YYYY-MM-DD" placeholderTextColor={colors.mutedForeground} style={[inputStyle, { flex: 1 }]} />
-        <TextInput accessibilityLabel="Through date" value={end} onChangeText={setEnd} placeholder="Through: YYYY-MM-DD" placeholderTextColor={colors.mutedForeground} style={[inputStyle, { flex: 1 }]} />
+        <TextInput accessibilityLabel={t("workHubSearch.fromLabel")} value={start} onChangeText={setStart} placeholder={t("workHubSearch.fromPlaceholder")} placeholderTextColor={colors.mutedForeground} style={[inputStyle, { flex: 1 }]} />
+        <TextInput accessibilityLabel={t("workHubSearch.throughLabel")} value={end} onChangeText={setEnd} placeholder={t("workHubSearch.throughPlaceholder")} placeholderTextColor={colors.mutedForeground} style={[inputStyle, { flex: 1 }]} />
       </View>
-      <Text style={{ color: colors.text, fontWeight: "600" }}>Content type</Text>
+      <Text style={{ color: colors.text, fontWeight: "600" }}>{t("workHubSearch.contentType")}</Text>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-        {contentTypes.map(([value, label]) => <TogglePillButton key={value} color="brand" solid={types.includes(value)} accessibilityLabel={label} accessibilityState={{ selected: types.includes(value) }} onPress={() => setTypes(current => current.includes(value) ? current.filter(type => type !== value) : [...current, value])}>{label}</TogglePillButton>)}
+        {contentTypes.map(value => <TogglePillButton key={value} color="brand" solid={types.includes(value)} accessibilityLabel={typeLabel(value)} accessibilityState={{ selected: types.includes(value) }} onPress={() => setTypes(current => current.includes(value) ? current.filter(type => type !== value) : [...current, value])}>{typeLabel(value)}</TogglePillButton>)}
       </View>
-      <TogglePillButton color="brand" solid accessibilityLabel="Search" onPress={() => void submit()}>Search</TogglePillButton>
+      <TogglePillButton color="brand" solid accessibilityLabel={t("workHubSearch.search")} onPress={() => void submit()}>{t("workHubSearch.search")}</TogglePillButton>
     </View>
     <View testID="search-results-divider" style={{ height: 2, backgroundColor: colors.primary }} />
-    {error ? <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{error}</Text> : null}
-    {loading ? <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}><ActivityIndicator color={colors.primary} /><Text style={{ color: colors.text }}>Searching…</Text></View> : null}
-    {!loading && results === null ? <Text style={{ color: colors.mutedForeground }}>Enter a search to see authorized records.</Text> : null}
-    {!loading && results?.length === 0 ? <Text style={{ color: colors.mutedForeground }}>No authorized results found.</Text> : null}
-    {cappedSources.length > 0 ? <Text style={{ color: colors.mutedForeground }}>Results may be limited for {cappedSources.join(", ")} because a source was capped. Narrow your dates or content type to search more precisely.</Text> : null}
-    {results?.map(result => <Pressable key={result.id} accessibilityRole="button" accessibilityLabel={`Open ${result.title}`} onPress={() => void open(result)} style={{ borderWidth: 1, borderColor: colors.border, borderRadius: 12, backgroundColor: colors.card, padding: 16, minHeight: 56, gap: 4 }}>
-      <Text style={{ color: colors.primary, fontWeight: "700" }}>{result.subjectType.toUpperCase()}</Text>
+    {error ? <Text nativeID={errorId} accessibilityRole="alert" style={{ color: colors.text, backgroundColor: colors.card, borderColor: colors.destructive, borderWidth: 1, borderRadius: 6, padding: 8 }}>{error}</Text> : null}
+    {loading ? <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}><ActivityIndicator color={colors.primary} /><Text style={{ color: colors.text }}>{t("workHubSearch.searching")}</Text></View> : null}
+    {!loading && results === null ? <Text style={{ color: colors.mutedForeground }}>{t("workHubSearch.initial")}</Text> : null}
+    {!loading && results?.length === 0 ? <Text style={{ color: colors.mutedForeground }}>{t("workHubSearch.empty")}</Text> : null}
+    {cappedSources.length > 0 ? <Text style={{ color: colors.mutedForeground }}>{t("workHubSearch.capped", { sources: cappedSources.map(typeLabel).join(", ") })}</Text> : null}
+    {results?.map(result => <Pressable key={result.id} accessibilityRole="button" accessibilityLabel={t("workHubSearch.open", { title: result.title })} onPress={() => void open(result)} style={{ borderWidth: 1, borderColor: colors.border, borderRadius: 12, backgroundColor: colors.card, padding: 16, minHeight: 56, gap: 4 }}>
+      <Text style={{ color: colors.primary, fontWeight: "700", textTransform: "uppercase" }}>{typeLabel(result.subjectType)}</Text>
       <Text style={{ color: colors.text, fontSize: 16, fontWeight: "700" }}>{result.title}</Text>
     </Pressable>)}
-    {nextCursor ? <TogglePillButton color="brand" accessibilityLabel="Load more inventory results" disabled={loading} onPress={() => void loadMore()}>Load more inventory results</TogglePillButton> : null}
-    {openingTitle ? <Text style={{ color: colors.mutedForeground }}>Opening {openingTitle}</Text> : null}
+    {nextCursor ? <TogglePillButton color="brand" accessibilityLabel={t("workHubSearch.loadMore")} disabled={loading} onPress={() => void loadMore()}>{t("workHubSearch.loadMore")}</TogglePillButton> : null}
+    {openingTitle ? <Text style={{ color: colors.mutedForeground }}>{t("workHubSearch.opening", { title: openingTitle })}</Text> : null}
   </View>;
 }

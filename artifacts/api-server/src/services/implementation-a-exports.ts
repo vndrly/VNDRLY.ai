@@ -14,7 +14,9 @@ const HEADERS: Record<ImplementationAExportDataset, string[]> = {
 
 const quote = (value: unknown) => {
   const raw = value == null ? "" : String(value);
-  const text = /^[=+\-@]/.test(raw) ? `'${raw}` : raw;
+  // Spreadsheet importers may ignore leading whitespace/control characters.
+  // Prefix the original cell, preserving its text while preventing evaluation.
+  const text = /^[\s\u0000-\u001f\u007f-\u009f]*[=+\-@]/u.test(raw) ? `'${raw}` : raw;
   return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 };
 

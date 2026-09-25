@@ -1,6 +1,10 @@
 import React from "react";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { createInstance } from "i18next";
+import { initReactI18next } from "react-i18next";
+import en from "@/lib/locales/en.json";
+import es from "@/lib/locales/es.json";
 import { WorkHubSearch, searchQueryPath } from "./WorkHubSearch";
 
 const network = vi.hoisted(() => ({ api: vi.fn() }));
@@ -8,9 +12,45 @@ vi.mock("@/lib/api", () => ({ apiFetch: network.api }));
 vi.mock("@/hooks/useColors", () => ({ useColors: () => ({ primary: "#c46126", card: "#222", text: "white", mutedForeground: "#aaa", border: "#555", destructive: "red" }) }));
 vi.mock("@/components/TogglePillButton", () => ({ default: ({ children, accessibilityLabel, accessibilityState, onPress }: any) => <button aria-label={accessibilityLabel} aria-pressed={accessibilityState?.selected} onClick={onPress}>{children}</button> }));
 
+const i18n = createInstance();
+await i18n.use(initReactI18next).init({ lng: "en", resources: { en: { translation: en }, es: { translation: es } }, interpolation: { escapeValue: false } });
+beforeEach(async () => { await i18n.changeLanguage("en"); });
 afterEach(() => { cleanup(); network.api.mockReset(); });
 
 describe("Work Hub Search", () => {
+  it("focuses a short search query and associates its validation error", () => {
+    render(<WorkHubSearch onOpen={vi.fn()} />);
+    fireEvent.click(screen.getByRole("button", { name: "Search" }));
+    const input = screen.getByLabelText("Search Work Hub");
+    expect(document.activeElement === input).toBe(true);
+    expect(input.getAttribute("aria-invalid")).toBe("true");
+    expect(document.getElementById(input.getAttribute("aria-describedby")!)?.textContent).toBe("Enter at least two characters.");
+  });
+  it("renders Spanish filters, errors, results, source-limit notices, and actions", async () => {
+    await i18n.changeLanguage("es");
+    network.api.mockResolvedValueOnce({ results: [{ id: "asset:one", subjectType: "asset", subjectId: "one", title: "Bomba 3", destination: { module: "files-notes", assetId: "one" } }], cappedSources: ["message"], nextCursor: "next" }).mockRejectedValue(new Error("Internal English detail"));
+    render(<WorkHubSearch onOpen={vi.fn()} />);
+    expect(screen.getByText("Buscar registros de Work Hub")).toBeTruthy();
+    expect(screen.getByLabelText("Desde la fecha")).toBeTruthy();
+    expect(screen.getByLabelText("Hasta la fecha")).toBeTruthy();
+    for (const name of ["Mensajes", "Notas", "Reuniones", "Transcripciones", "Archivos", "Tareas", "Formularios", "Anuncios", "Inventario"]) expect(screen.getByRole("button", { name })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Buscar" }));
+    expect(screen.getByRole("alert").textContent).toBe("Ingrese al menos dos caracteres.");
+    fireEvent.change(screen.getByLabelText("Buscar en Work Hub"), { target: { value: "Bomba" } });
+    fireEvent.click(screen.getByRole("button", { name: "Buscar" }));
+    expect(await screen.findByRole("button", { name: "Abrir Bomba 3" })).toBeTruthy();
+    expect(screen.getByText(/Los resultados de Mensajes pueden estar limitados/)).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Cargar más resultados de inventario" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Abrir Bomba 3" }));
+    expect((await screen.findByRole("alert")).textContent).toBe("Este elemento ya no está disponible.");
+    expect(screen.queryByText("Internal English detail")).toBeNull();
+  });
+  it("lets both date inputs shrink below their intrinsic width on small screens", () => {
+    render(<WorkHubSearch onOpen={vi.fn()} />);
+    for (const label of ["From date", "Through date"]) {
+      expect(getComputedStyle(screen.getByLabelText(label)).minWidth).toBe("0px");
+    }
+  });
   it("retains all linked type filters through display, submission and continuation", async () => {
     network.api.mockResolvedValueOnce({ results: [], cappedSources: [], nextCursor: "next" }).mockResolvedValue({ results: [], cappedSources: [] });
     render(<WorkHubSearch onOpen={vi.fn()} initialFilters={{ query: "pump", types: ["asset", "note"] }} />);
@@ -71,7 +111,7 @@ describe("Work Hub Search", () => {
     fireEvent.change(screen.getByLabelText("Search Work Hub"), { target: { value: "Pump" } });
     fireEvent.click(screen.getByRole("button", { name: "Search" }));
     fireEvent.click(await screen.findByRole("button", { name: "Open Pump 3" }));
-    expect((await screen.findByRole("alert")).textContent).toBe("Not found");
+    expect((await screen.findByRole("alert")).textContent).toBe("This item is no longer available.");
     expect(onOpen).not.toHaveBeenCalled();
   });
 
@@ -105,7 +145,7 @@ describe("Work Hub Search", () => {
     fireEvent.change(screen.getByLabelText("Search Work Hub"), { target: { value: "handoff" } });
     fireEvent.click(screen.getByRole("button", { name: "Notes" }));
     fireEvent.click(screen.getByRole("button", { name: "Search" }));
-    expect(await screen.findByText(/Results may be limited for channel/)).toBeTruthy();
+    expect(await screen.findByText(/Results may be limited for Groups/)).toBeTruthy();
     expect(screen.queryByText(/Recent results only/)).toBeNull();
   });
 });
