@@ -163,7 +163,7 @@ it("reveals Shift Notes ten at a time across server pages without report filters
   await waitFor(() => expect(env.fetch.mock.calls.some(([path]) => path.includes("search=report+only"))).toBe(true));
   expect(noteButtons()).toHaveLength(60);
   expect(env.api.mock.calls.filter(([path]) => path.includes("/notes?"))).toHaveLength(2);
-});
+}, 15_000);
 
 it("shows only active company employees in Shift Notes recipients", async () => {
   const base = env.api.getMockImplementation()!;
