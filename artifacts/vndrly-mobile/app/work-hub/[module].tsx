@@ -13,7 +13,7 @@ import {
 import WorkHubCalls from "@/components/WorkHubCalls";
 import { ManagedCrews } from "@/components/implementation-a/ManagedCrews";
 import { WorkforceCoverage } from "@/components/implementation-a/WorkforceCoverage";
-import { Assets } from "@/components/implementation-a/Assets";
+import { FilesInventory } from "@/components/work-hub/FilesInventory";
 import { SitePresence } from "@/components/implementation-a/SitePresence";
 import { SafetyResponse } from "@/components/implementation-a/SafetyResponse";
 import { ImplementationAExports } from "@/components/implementation-a/Exports";
@@ -29,7 +29,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { apiFetch } from "@/lib/api";
 import { captureAuthScope } from "@/lib/auth";
 import { pickMeetingFile, persistMeetingFileForOffline, uploadMeetingFile, type MeetingFileSource } from "@/lib/meeting-files";
-import { mobileOwner, moduleEndpoint } from "@/lib/work-hub-mobile";
+import { mobileOwner, moduleEndpoint, type MobileWorkHubCapabilities } from "@/lib/work-hub-mobile";
 import {
   flushNativeWorkHubQueue,
   isOfflineWorkHubFailure,
@@ -43,7 +43,6 @@ const titles: Record<string, string> = {
   activity: "Activity",
   "managed-crews": "Managed Crews",
   "workforce-coverage": "Workforce Coverage",
-  inventory: "Inventory",
   "site-presence": "Site Presence",
   "safety-response": "Safety Response",
   "implementation-exports": "Exports",
@@ -51,7 +50,7 @@ const titles: Record<string, string> = {
   chat: "Company Chat",
   crews: "Crews",
   calendar: "Calendar",
-  "files-notes": "Files & Notes",
+  "files-notes": "Files & Inventory",
   "tasks-forms": "Tasks & Forms",
   meetings: "Meetings",
   calls: "Calls",
@@ -79,7 +78,7 @@ export default function WorkHubModuleScreen() {
   const { user } = useAuth();
   const meetingCompanion = useMeetingCompanion();
   const { module: raw } = useLocalSearchParams<{ module: string }>();
-  const module = String(raw ?? "channels");
+  const module = raw === "inventory" ? "files-notes" : String(raw ?? "channels");
   const owner = mobileOwner(user);
   const activeMembership = user?.availableMemberships?.find(
     (membership) => membership.id === user.activeMembershipId,
@@ -117,7 +116,18 @@ export default function WorkHubModuleScreen() {
       setError("");
       try {
         if (user) await flushNativeWorkHubQueue(user);
-        setData(await apiFetch(moduleEndpoint(module, search)));
+        if (module === "files-notes") {
+          const currentOwner = mobileOwner(user);
+          if (!currentOwner) throw new Error("Choose a company to view files and inventory.");
+          const [files, rawAssets, channels, home] = await Promise.all([
+            apiFetch<any[]>(`/api/work-hub/file-library?orgType=${currentOwner.type}&orgId=${currentOwner.id}`),
+            apiFetch<any>("/api/implementation-a/assets"),
+            apiFetch<Row[]>("/api/work-hub/channels"),
+            apiFetch<{ capabilities: MobileWorkHubCapabilities }>("/api/work-hub/home"),
+          ]);
+          const notes = (await Promise.all(channels.map(channel => apiFetch<Row[]>(`/api/work-hub/channels/${channel.id}/notes`)))).flat();
+          setData({ files, assets: Array.isArray(rawAssets) ? rawAssets : rawAssets?.assets ?? [], channels, notes, capabilities: home.capabilities });
+        } else setData(await apiFetch(moduleEndpoint(module, search)));
       } catch (e) {
         setError(e instanceof Error ? e.message : "Could not load Work Hub");
       } finally {
@@ -341,7 +351,7 @@ export default function WorkHubModuleScreen() {
       setMeetingFileBusy(false);
     }
   };
-  if (["managed-crews", "workforce-coverage", "inventory", "site-presence", "safety-response", "implementation-exports", "operations-health"].includes(module))
+  if (["managed-crews", "workforce-coverage", "site-presence", "safety-response", "implementation-exports", "operations-health"].includes(module))
     return (
       <ScreenSafeArea style={{ backgroundColor: colors.background }}>
         <Stack.Screen options={{ title }} />
@@ -351,7 +361,6 @@ export default function WorkHubModuleScreen() {
           {!!error && <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{error}</Text>}
           {module === "managed-crews" && <ManagedCrews sponsorships={data?.sponsorships ?? []} />}
           {module === "workforce-coverage" && <WorkforceCoverage gaps={data?.gaps ?? []} />}
-          {module === "inventory" && <Assets assets={data?.assets ?? []} />}
           {module === "site-presence" && <SitePresence people={data?.people ?? data?.workers ?? []} canSeeExactLocation={canManage} />}
           {module === "safety-response" && <SafetyResponse />}
           {module === "implementation-exports" && owner && <ImplementationAExports owner={owner} />}
@@ -379,6 +388,8 @@ export default function WorkHubModuleScreen() {
         contentContainerStyle={{ padding: 20, gap: 14 }}
       >
         <WorkHubPageTitle title={title} />
+        {module === "files-notes" && owner && data?.capabilities && <FilesInventory owner={owner} userId={user?.id} capabilities={data.capabilities} files={data.files ?? []} notes={data.notes ?? []} assets={data.assets ?? []} channels={data.channels ?? []} onRefresh={() => load()} />}
+        {module === "files-notes" && !loading && data && !data.capabilities && <Text style={{ color: colors.mutedForeground }}>Files and inventory are not available for this company.</Text>}
         {module === "calendar" ? <WorkHubShiftCalendar items={rows} /> : null}
         {module === "search" && (
           <View style={{ flexDirection: "row", gap: 8 }}>
@@ -700,7 +711,7 @@ export default function WorkHubModuleScreen() {
               )}
             </View>
           ))}
-        {!loading && module !== "settings-connections" && module !== "calendar" && !rows.length && (
+        {!loading && module !== "settings-connections" && module !== "calendar" && module !== "files-notes" && !rows.length && (
           <Text
             style={{
               color: colors.mutedForeground,

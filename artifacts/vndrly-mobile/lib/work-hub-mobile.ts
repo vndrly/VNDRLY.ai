@@ -3,8 +3,16 @@ export type MobileTenant = {
   partnerId?: number | null;
 };
 export type MobileWorkHubCapabilities = {
+  canUploadFile: boolean;
+  canCreateNote: boolean;
+  canEditNote: boolean;
+  canCreateAsset: boolean;
+  canManageAsset: boolean;
+  canCheckOutAsset: boolean;
+  canVerifyIssuedAsset: boolean;
   canViewExports: boolean;
   allowedExportDatasets: readonly string[];
+  canManageGateLocations: boolean;
 };
 export function mobileOwner(user: MobileTenant | null | undefined) {
   if (user?.partnerId) return { type: "partner" as const, id: user.partnerId };
@@ -43,7 +51,7 @@ export function mobileWorkHubModules(
   isTablet: boolean,
   companyAdmin: boolean,
   companyName?: string | null,
-  capabilities?: MobileWorkHubCapabilities | null,
+  capabilities?: Pick<MobileWorkHubCapabilities, "canViewExports" | "allowedExportDatasets"> | null,
 ) {
   const items = [
     {
@@ -57,10 +65,9 @@ export function mobileWorkHubModules(
     { key: "calendar", label: "Calendar", icon: "calendar" },
     { key: "managed-crews", label: "Managed Crews", icon: "users" },
     { key: "workforce-coverage", label: "Workforce Coverage", icon: "clock" },
-    { key: "inventory", label: "Inventory", icon: "package" },
     { key: "site-presence", label: "Site Presence", icon: "map-pin" },
     { key: "safety-response", label: "Safety Response", icon: "shield" },
-    { key: "files-notes", label: "Files & Notes", icon: "folder" },
+    { key: "files-notes", label: "Files & Inventory", icon: "folder" },
     { key: "tasks-forms", label: "Tasks & Forms", icon: "check-square" },
     { key: "calls", label: "Calls", icon: "phone" },
     { key: "meetings", label: "Meetings", icon: "headphones" },

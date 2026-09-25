@@ -15,7 +15,7 @@ describe("Implementation A mobile journey", () => {
       expect.arrayContaining([
         "managed-crews",
         "workforce-coverage",
-        "inventory",
+        "files-notes",
         "site-presence",
         "safety-response",
         "calls",

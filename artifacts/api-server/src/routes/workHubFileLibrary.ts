@@ -182,12 +182,9 @@ router.get("/work-hub/file-library/public/:token", async (req, res) => {
         ),
       )
       .limit(1);
-    if (
-      !link ||
-      link.data.revoked ||
-      !(new Date(String(link.data.expiresAt)).getTime() > Date.now())
-    )
-      throw new FileError(404, "Link expired or revoked");
+    if (!link) throw new FileError(404, "Link not found");
+    if (link.data.revoked || !(new Date(String(link.data.expiresAt)).getTime() > Date.now()))
+      throw new FileError(403, "Link unavailable");
     const doc = await loadDocument(String(link.data.documentId));
     if (doc.orgId !== link.orgId || doc.orgType !== link.orgType)
       throw new FileError(404, "File not found");
@@ -314,6 +311,10 @@ router.get("/work-hub/file-library", async (req, res) => {
           canManage:
             doc.createdBy === actor.userId ||
             (await membership(actor, ownerOf(doc)))?.role === "admin",
+          capabilities: {
+            canDownload: doc.data.state === "active" && !!doc.data.currentFileId,
+            canManage: doc.createdBy === actor.userId || (await membership(actor, ownerOf(doc)))?.role === "admin",
+          },
         });
       } catch {}
     }

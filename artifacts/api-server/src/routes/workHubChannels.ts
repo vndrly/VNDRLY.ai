@@ -53,6 +53,17 @@ const createMessagePayload = z.object({
 const updateMessagePayload = z.object({
   body: z.string().trim().min(1).max(20_000),
 });
+const NOTE_AUTHOR_EDIT_WINDOW_MS = 15 * 60 * 1000;
+
+function canEditNote(actor: SessionPayload & { userId: number }, channel: typeof workHubChannelsTable.$inferSelect, note: typeof workHubNotesTable.$inferSelect, now = Date.now()): boolean {
+  if (actor.role === "admin") return true;
+  const ownsChannelOrganization = channel.ownerOrgType === "vendor"
+    ? actor.vendorId === channel.ownerOrgId
+    : actor.partnerId === channel.ownerOrgId;
+  if (ownsChannelOrganization && actor.membershipRole === "admin") return true;
+  if (ownsChannelOrganization && actor.vendorRole === "gate_supervisor") return true;
+  return note.createdById === actor.userId && now - note.updatedAt.getTime() < NOTE_AUTHOR_EDIT_WINDOW_MS;
+}
 
 function session(req: Request): (SessionPayload & { userId: number }) | null {
   const value = getSessionFromRequest(req);
@@ -506,14 +517,13 @@ router.get("/work-hub/channels/:channelId/notes", async (req, res) => {
       "Authentication required",
     );
   try {
-    await resolveChannelAccess(actor, req.params.channelId, "channel.read");
-    return res.json(
-      await db
+    const { channel, access } = await resolveChannelAccess(actor, req.params.channelId, "channel.read");
+    const notes = await db
         .select()
         .from(workHubNotesTable)
         .where(eq(workHubNotesTable.channelId, req.params.channelId))
-        .orderBy(desc(workHubNotesTable.updatedAt)),
-    );
+        .orderBy(desc(workHubNotesTable.updatedAt));
+    return res.json(notes.map(note => ({ ...note, capabilities: { canEdit: access.capabilities.has("note.edit") && canEditNote(actor, channel, note) } })));
   } catch (error) {
     return fail(res, error);
   }
@@ -532,9 +542,10 @@ router.post("/work-hub/channels/:channelId/notes", async (req, res) => {
     const { channel } = await resolveChannelAccess(
       actor,
       req.params.channelId,
-      "channel.write",
+      "note.create",
     );
     const envelope = workHubCommandEnvelopeSchema.parse(req.body);
+    if (envelope.owner.type !== channel.ownerOrgType || envelope.owner.id !== channel.ownerOrgId) throw new WorkHubAccessError("forbidden");
     const payload = z
       .object({
         title: z.string().trim().min(1).max(180),
@@ -577,14 +588,22 @@ router.patch(
         "Authentication required",
       );
     try {
-      await resolveChannelAccess(actor, req.params.channelId, "channel.write");
+      const { channel } = await resolveChannelAccess(actor, req.params.channelId, "note.edit");
       const envelope = workHubCommandEnvelopeSchema.parse(req.body);
+      if (envelope.owner.type !== channel.ownerOrgType || envelope.owner.id !== channel.ownerOrgId) throw new WorkHubAccessError("forbidden");
       const payload = z
         .object({
           title: z.string().trim().min(1).max(180),
           body: z.string().max(100_000),
         })
         .parse(envelope.payload);
+      // Check record authority before command replay can return a cached edit.
+      const [noteAtRequest] = await db.select().from(workHubNotesTable).where(and(
+        eq(workHubNotesTable.id, req.params.noteId),
+        eq(workHubNotesTable.channelId, req.params.channelId),
+      )).limit(1);
+      if (!noteAtRequest) throw new WorkHubAccessError("not_found");
+      if (!canEditNote(actor, channel, noteAtRequest)) throw new WorkHubAccessError("forbidden");
       const result = await executeWorkHubCommand(
         { userId: actor.userId, source: source(req) },
         "note.update",
@@ -599,8 +618,10 @@ router.patch(
                 eq(workHubNotesTable.channelId, req.params.channelId),
               ),
             )
+            .for("update")
             .limit(1);
           if (!current) throw new WorkHubAccessError("not_found");
+          if (!canEditNote(actor, channel, current)) throw new WorkHubAccessError("forbidden");
           if (current.version !== envelope.expectedVersion)
             throw new Error("work_hub.version_conflict");
           await tx

@@ -289,10 +289,13 @@ describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")(
         "sandbox",
       );
       await post("recycle", admin, { id: doc.documentId });
-      expect((await request(app).get(path)).status).toBe(404);
+      expect((await request(app).get(path)).status).toBe(403);
       await post("restore", admin, { id: doc.documentId });
       await post("revoke-share", admin, { id: doc.documentId });
-      expect((await request(app).get(path)).status).toBe(404);
+      const revoked = await request(app).get(path);
+      expect(revoked.status).toBe(403);
+      expect(revoked.body).not.toHaveProperty("data");
+      expect(revoked.body).not.toHaveProperty("fileName");
     });
     it("requires channel access and matching channel ownership", async () => {
       const doc = await upload("channel", member, "private channel content", {
