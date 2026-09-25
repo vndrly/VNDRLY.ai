@@ -90,7 +90,9 @@ export function createWorkHubExportsRouter(deps: WorkHubExportsRouterDependencie
   router.post("/work-hub/exports/implementation-a", async (req, res) => {
     const requester = actor(req);
     if (!requester) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
-    const authorized = authorizeImplementationAExport(req);
+    let authorized: ReturnType<typeof authorizeImplementationAExport>;
+    try { authorized = authorizeImplementationAExport(req); }
+    catch (error) { return failure(res, error); }
     if (!authorized) return sendApiError(res, 403, "work_hub.forbidden", "Export access denied");
     const { dataset, owner } = authorized;
     const scope = { ownerOrgId: owner.id, managedOrganizationId: typeof req.body?.scope?.managedOrganizationId === "string" ? req.body.scope.managedOrganizationId : undefined, siteIds: Array.isArray(req.body?.scope?.siteIds) ? req.body.scope.siteIds.filter((id: unknown): id is number => Number.isSafeInteger(id)) : undefined };
@@ -103,7 +105,9 @@ export function createWorkHubExportsRouter(deps: WorkHubExportsRouterDependencie
   router.post("/work-hub/exports/implementation-a/preview", async (req, res) => {
     const requester = actor(req);
     if (!requester) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
-    const authorized = authorizeImplementationAExport(req);
+    let authorized: ReturnType<typeof authorizeImplementationAExport>;
+    try { authorized = authorizeImplementationAExport(req); }
+    catch (error) { return failure(res, error); }
     if (!authorized) return sendApiError(res, 403, "work_hub.forbidden", "Export access denied");
     const { dataset, owner } = authorized;
     return res.json(previewImplementationAExport({ dataset, scope: { ownerOrgId: owner.id, managedOrganizationId: typeof req.body?.scope?.managedOrganizationId === "string" ? req.body.scope.managedOrganizationId : undefined, siteIds: Array.isArray(req.body?.scope?.siteIds) ? req.body.scope.siteIds.filter((id: unknown) => Number.isSafeInteger(id)) : undefined }, includeSensitivePayroll: req.body?.includeSensitivePayroll === true }));

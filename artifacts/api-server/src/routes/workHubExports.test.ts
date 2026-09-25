@@ -72,6 +72,14 @@ describe("Work Hub export HTTP boundary", () => {
     expect((await request(h.app).post(`/work-hub/exports/implementation-a${suffix}`).set("Cookie", cookie).send({ ...body, scope: { ownerOrgType: "vendor", ownerOrgId: 42 } })).status).toBe(403);
   });
 
+  it.each(["", "/preview"])("returns a scoped denial for a managed worker whose site grants were revoked on %s", async (suffix) => {
+    const h = appWith();
+    const revoked = buildTestCookie({ userId: 33, role: "field_employee", vendorId: 41, vendorRole: "gate_supervisor", membershipRole: "member", managedSubcontractor: { siteGrants: [] } });
+    const response = await request(h.app).post(`/work-hub/exports/implementation-a${suffix}`).set("Cookie", revoked).send({ dataset: "staffing", scope: { ownerOrgType: "vendor", ownerOrgId: 41 } });
+    expect(response.status).toBe(404);
+    expect(response.body).toMatchObject({ code: "work_hub.not_found" });
+  });
+
   it.each(["", "/preview"])("allows supervisors to export staffing only on %s", async (suffix) => {
     const h = appWith();
     const supervisor = buildTestCookie({ userId: 32, role: "field_employee", vendorId: 41, vendorRole: "gate_supervisor", membershipRole: "member" });
