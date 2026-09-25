@@ -1,22 +1,214 @@
-import { ArrowRight, BarChart3, CalendarClock, MapPinned, MessageSquareText, ShieldCheck } from "lucide-react";
-import { PngPillButton } from "@/components/png-pill-rollover";
-import { MARKETING_MODULES, marketingCtaHref } from "@/lib/marketing-content";
-import { VNDRLY_LOGO_SQUARE } from "@/lib/vndrly-brand-assets";
+import {
+  ArrowRight,
+  BadgeCheck,
+  BriefcaseBusiness,
+  Building2,
+  Check,
+  ClipboardCheck,
+  CreditCard,
+  MapPinned,
+  Network,
+  Radar,
+  ShieldCheck,
+  Star,
+  Users,
+} from "lucide-react";
+import heroBackground from "@assets/VNDRLY_Header_Blur_4_1776220762025.png";
+import halftone from "@assets/nav-pane-us-halftone.svg";
+import PngPill from "@/components/png-pill-rollover";
 import PublicAskV from "@/components/public-askv";
+import {
+  FEATURED_SOLUTIONS,
+  JOB_WORKFLOW,
+  MARKETING_MODULES,
+  PARTNER_BENEFITS,
+  VENDOR_BENEFITS,
+  marketingCtaHref,
+  marketingDemoHref,
+} from "@/lib/marketing-content";
+import { VNDRLY_LOGO_SQUARE } from "@/lib/vndrly-brand-assets";
 
-const motifs = [MapPinned, MessageSquareText, CalendarClock, BarChart3];
+const solutionIcons = [Radar, ShieldCheck];
+const moduleIcons = [MapPinned, ClipboardCheck, Users, BriefcaseBusiness];
+
+function PrimaryLink({ children, href }: { children: React.ReactNode; href: string }) {
+  return (
+    <a href={href} className="inline-flex min-h-11 items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
+      <PngPill className="min-w-36" color="blue" size="sm">
+        {children}
+      </PngPill>
+    </a>
+  );
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-xs font-black uppercase tracking-[.24em] text-cyan-700">
+      {children}
+    </p>
+  );
+}
+
+function BenefitList({ items }: { items: string[] }) {
+  return (
+    <ul className="mt-6 space-y-4">
+      {items.map((item) => (
+        <li key={item} className="flex gap-3 text-sm leading-6 text-slate-600">
+          <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-cyan-100 text-cyan-800">
+            <Check className="h-3.5 w-3.5" />
+          </span>
+          {item}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export default function MarketingHome() {
-  return <main className="min-h-screen bg-background text-foreground" data-testid="marketing-home">
-    <header className="sticky top-0 z-20 border-b bg-background/95 backdrop-blur"><nav aria-label="Public navigation" className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3"><a href="/" className="flex items-center gap-2 font-bold"><img src={VNDRLY_LOGO_SQUARE} alt="VNDRLY" className="h-9 w-9"/>VNDRLY</a><div className="flex items-center gap-3"><a href="#modules" className="hidden text-sm font-medium sm:inline">Explore modules</a><a href="/login" className="rounded-md px-3 py-2 text-sm font-semibold outline-none ring-offset-2 focus-visible:ring-2 focus-visible:ring-[var(--brand-primary)]">Sign in</a></div></nav></header>
-    <section className="relative overflow-hidden border-b"><div className="absolute inset-0 opacity-10 [background-image:radial-gradient(circle_at_1px_1px,var(--brand-primary)_1px,transparent_0)] [background-size:24px_24px]"/><div className="relative mx-auto grid max-w-7xl gap-10 px-4 py-20 lg:grid-cols-[1.15fr_.85fr] lg:py-28"><div><p className="text-sm font-bold uppercase tracking-[.22em] text-[var(--brand-primary)]">Field operations, connected</p><h1 className="mt-4 max-w-4xl text-4xl font-black leading-tight sm:text-6xl">Run the field, the office, and every handoff from one operational system.</h1><p className="mt-6 max-w-2xl text-lg text-muted-foreground">VNDRLY connects sites, crews, vendors, tickets, access, collaboration, reporting, and mobile execution—so the work and its context move together.</p><div className="mt-8 flex flex-wrap gap-3"><a href={marketingCtaHref}><PngPillButton>Sign up today <ArrowRight className="ml-2 h-4 w-4"/></PngPillButton></a><a href="mailto:support@vndrly.ai?subject=VNDRLY%20demo%20request" className="inline-flex min-h-11 items-center rounded-full border px-5 font-semibold focus-visible:ring-2 focus-visible:ring-[var(--brand-primary)]">Request a demo</a></div></div><div aria-label="Abstract connected operations illustration" className="grid grid-cols-2 gap-4 self-center">{motifs.map((Icon, index) => <div key={index} className="aspect-square rounded-2xl border bg-card p-6 shadow-sm"><Icon className="h-10 w-10 text-[var(--brand-primary)]"/><div className="mt-8 h-2 rounded bg-muted"/><div className="mt-3 h-2 w-2/3 rounded bg-muted"/></div>)}</div></div></section>
-    <section className="mx-auto max-w-7xl px-4 py-16"><div className="max-w-3xl"><p className="text-sm font-bold uppercase tracking-[.2em] text-[var(--brand-primary)]">The operational problem</p><h2 className="mt-2 text-3xl font-black">Calls, texts, spreadsheets, paper gate logs, schedules, and accounting handoffs rarely tell the same story.</h2><p className="mt-4 text-lg text-muted-foreground">When each handoff lives in a different tool, teams spend time reconstructing context and responsibility. VNDRLY keeps the job path connected from request through field work, review, and payment.</p></div><div className="mt-10 grid gap-8 md:grid-cols-3"><div><ShieldCheck className="h-6 w-6 text-[var(--brand-primary)]"/><h3 className="mt-3 text-xl font-bold">Context stays attached</h3><p className="mt-2 text-muted-foreground">Operational records, conversations, files, and decisions remain connected to the organizations and work they belong to.</p></div><div><CalendarClock className="h-6 w-6 text-[var(--brand-primary)]"/><h3 className="mt-3 text-xl font-bold">Fewer handoff gaps</h3><p className="mt-2 text-muted-foreground">Shared status, scheduling, and accountability help field and office teams act from the same picture.</p></div><div><MapPinned className="h-6 w-6 text-[var(--brand-primary)]"/><h3 className="mt-3 text-xl font-bold">Built for real operations</h3><p className="mt-2 text-muted-foreground">Role-aware web and mobile experiences support partners, vendors, admins, foremen, and field employees.</p></div></div></section>
-    <section className="border-y bg-card"><div className="mx-auto max-w-7xl px-4 py-16"><h2 className="text-3xl font-black">See your part of the operation.</h2><div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{[["Partners","Request, monitor, review, and approve work across sites."],["Vendor admins","Manage services, assignments, people, tickets, and billing context."],["Office teams","Coordinate schedules, documentation, notifications, and reporting."],["Foremen","See crews, schedules, safety context, communications, and field progress."],["Field employees","Use mobile workflows for assigned work, location phases, and completion."],["Gate admins","Manage authorized arrivals, visitors, site access, and gate history."]].map(([role,value]) => <div key={role} className="rounded-xl border bg-background p-5"><h3 className="font-bold">{role}</h3><p className="mt-2 text-sm text-muted-foreground">{value}</p></div>)}</div></div></section>
-    <section className="mx-auto max-w-7xl px-4 py-16"><h2 className="text-3xl font-black">One connected job path.</h2><ol aria-label="VNDRLY job workflow" className="mt-8 grid gap-3 md:grid-cols-5">{["Partner request","Vendor assignment","Crew field completion","Review & approval","Payment workflow"].map((step,index) => <li key={step} className="relative rounded-xl border bg-card p-5 motion-safe:animate-[pulse_3s_ease-in-out_infinite]" style={{ animationDelay: `${index * 180}ms` }}><span className="text-xs font-black text-[var(--brand-primary)]">0{index + 1}</span><p className="mt-2 font-bold">{step}</p></li>)}</ol></section>
-    <section id="modules" className="border-y bg-muted/25"><div className="mx-auto max-w-7xl px-4 py-16"><p className="text-sm font-bold uppercase tracking-[.2em] text-[var(--brand-primary)]">Connected workflow</p><h2 className="mt-2 text-3xl font-black">A broad platform, joined by the work.</h2><div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">{MARKETING_MODULES.map((module) => <article key={module.title} className="flex flex-col rounded-xl border bg-card p-6"><h3 className="text-lg font-bold">{module.title}</h3><p className="mt-2 flex-1 text-sm leading-6 text-muted-foreground">{module.description}</p><a href={module.ctaHref} className="mt-5 inline-flex min-h-11 items-center font-bold text-[var(--brand-primary)] underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-[var(--brand-primary)]" data-testid="module-signup-cta">Sign up today <ArrowRight className="ml-2 h-4 w-4"/></a></article>)}</div></div></section>
-    <section className="mx-auto grid max-w-7xl gap-10 px-4 py-16 lg:grid-cols-2"><div><h2 className="text-3xl font-black">Connected instead of reconstructed.</h2><div className="mt-6 overflow-hidden rounded-xl border"><div className="grid grid-cols-2 bg-muted px-4 py-3 font-bold"><span>Disconnected tools</span><span>VNDRLY workflow</span></div>{[["Status split across calls and sheets","Shared ticket and lifecycle context"],["Paper or isolated entry logs","Gate and visitor history tied to sites"],["Files detached from decisions","Files, notes, tasks, and approvals in context"],["Accounting rebuilt after the fact","Operational records flow toward billing and reporting"]].map((row) => <div key={row[0]} className="grid grid-cols-2 gap-4 border-t px-4 py-4 text-sm"><span className="text-muted-foreground">{row[0]}</span><span>{row[1]}</span></div>)}</div></div><div><h2 className="text-3xl font-black">Trust is part of the workflow.</h2><ul className="mt-6 space-y-4 text-muted-foreground"><li><strong className="text-foreground">Role and organization permissions</strong> govern authenticated access.</li><li><strong className="text-foreground">GPS accountability</strong> supports field lifecycle visibility when authorized and consented.</li><li><strong className="text-foreground">Tenant isolation</strong> keeps organization-owned records within their authorized context.</li><li><strong className="text-foreground">Audit history and data controls</strong> support accountable changes, retention, and access decisions.</li></ul></div></section>
-    <section className="border-y bg-card"><div className="mx-auto grid max-w-7xl gap-10 px-4 py-16 lg:grid-cols-2"><div><h2 className="text-3xl font-black">What happens after signup?</h2><ol className="mt-6 space-y-4"><li><strong>1. Choose your role.</strong> Start the partner or vendor registration path.</li><li><strong>2. Provide organization details.</strong> Enter only the information needed for setup and review.</li><li><strong>3. Complete onboarding.</strong> Configure your organization, people, services, and operational context as applicable.</li><li><strong>4. Begin connected work.</strong> Use the modules available to your role and organization.</li></ol><a href={marketingCtaHref} className="mt-7 inline-flex min-h-11 items-center font-bold text-[var(--brand-primary)] underline">Sign up today <ArrowRight className="ml-2 h-4 w-4"/></a></div><div><h2 className="text-3xl font-black">Frequently asked questions</h2><div className="mt-4 divide-y">{[["Is VNDRLY only for field employees?","No. VNDRLY provides role-aware experiences for partner, vendor, office, field, foreman, gate, and platform administration work."],["Does public AskV see my account?","No. Public AskV only answers from curated public product information. Sign in for authenticated workflows."],["Are audio recording and Microsoft 365 always active?","No. These are optional capabilities and remain unavailable until they are configured and enabled."],["Can I request a demo here?","Yes. The demo link opens your email client so you control what is sent; the website does not silently collect a lead."]].map(([q,a]) => <details key={q} className="py-4"><summary className="cursor-pointer font-bold">{q}</summary><p className="mt-2 text-sm text-muted-foreground">{a}</p></details>)}</div></div></div></section>
-    <section className="mx-auto max-w-4xl px-4 py-20 text-center"><h2 className="text-3xl font-black">Make the next handoff the easiest one.</h2><p className="mx-auto mt-3 max-w-2xl text-muted-foreground">Start with the VNDRLY role that fits your organization, or talk through the workflow with us.</p><div className="mt-7 flex justify-center gap-3"><a href={marketingCtaHref}><PngPillButton>Sign up today</PngPillButton></a><a href="mailto:support@vndrly.ai" className="inline-flex min-h-11 items-center px-4 font-semibold">Contact</a></div></section>
-    <footer className="border-t"><div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between"><span>© {new Date().getFullYear()} VNDRLY</span><div className="flex flex-wrap gap-5"><a href="/legal/privacy">Privacy</a><a href="/legal/terms">Terms</a><a href="mailto:support@vndrly.ai">Support</a><a href="mailto:support@vndrly.ai">Contact</a></div></div></footer>
-    <PublicAskV />
-  </main>;
+  return (
+    <main className="min-h-screen bg-[#f3f5f6] text-slate-950" data-testid="marketing-home">
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#15191d]/95 text-white shadow-lg backdrop-blur">
+        <nav aria-label="Public navigation" className="mx-auto flex max-w-7xl items-center gap-5 px-4 py-3">
+          <a href="/" className="flex shrink-0 items-center gap-2 font-black tracking-wide text-white">
+            <img src={VNDRLY_LOGO_SQUARE} alt="" className="h-10 w-10 rounded-sm" />
+            VNDRLY
+          </a>
+          <div className="ml-auto hidden items-center gap-6 lg:flex">
+            <a href="#solutions" className="text-sm font-semibold text-white hover:text-cyan-200">Solutions</a>
+            <a href="#workflow" className="text-sm font-semibold text-white hover:text-cyan-200">How it works</a>
+            <a href="#partners" className="text-sm font-semibold text-white hover:text-cyan-200">For partners</a>
+            <a href="#vendors" className="text-sm font-semibold text-white hover:text-cyan-200">For vendors</a>
+          </div>
+          <a href="/login" className="ml-auto text-sm font-bold text-white hover:text-cyan-200 lg:ml-2">Sign in</a>
+          <PrimaryLink href={marketingCtaHref}>Get started</PrimaryLink>
+        </nav>
+      </header>
+
+      <section className="relative isolate overflow-hidden bg-[#20262b] text-white">
+        <img src={heroBackground} alt="" className="absolute inset-0 h-full w-full object-cover object-center opacity-70" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#12171b] via-[#182027]/90 to-[#182027]/45" />
+        <img src={halftone} alt="" className="absolute -right-[18%] bottom-[-42%] w-[86rem] max-w-none opacity-[.17]" />
+        <div className="relative mx-auto grid min-h-[660px] max-w-7xl items-center gap-12 px-4 py-20 lg:grid-cols-[1.12fr_.88fr] lg:py-28">
+          <div>
+            <p className="text-sm font-black uppercase tracking-[.24em] text-cyan-300">Verified vendors. Connected operations.</p>
+            <h1 className="mt-5 max-w-4xl text-4xl font-black leading-[1.05] sm:text-6xl lg:text-7xl">
+              The trusted vendor network built for field operations.
+            </h1>
+            <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-200 sm:text-xl">
+              VNDRLY helps partners find proven service companies and gives vendors the tools to run the work—so reputation, people, sites, tickets, gates, and approvals stay connected.
+            </p>
+            <div className="mt-9 flex flex-wrap items-center gap-4">
+              <PrimaryLink href={marketingCtaHref}>Get started <ArrowRight className="h-4 w-4" /></PrimaryLink>
+              <a href={marketingDemoHref} className="inline-flex min-h-11 items-center rounded-full border border-white/60 bg-black/20 px-6 text-sm font-bold text-white transition hover:border-cyan-300 hover:bg-black/35 focus-visible:ring-2 focus-visible:ring-cyan-300">Request a demo</a>
+            </div>
+          </div>
+          <aside className="rounded-3xl border border-white/20 bg-black/35 p-6 shadow-2xl backdrop-blur-md sm:p-8" aria-label="Verified network highlights">
+            <div className="flex items-center gap-3"><Network className="h-8 w-8 text-cyan-300" /><div><p className="text-xs font-black uppercase tracking-[.18em] text-cyan-200">A living vendor directory</p><p className="font-bold">Maintained by the people doing the work</p></div></div>
+            <div className="mt-7 grid gap-4 sm:grid-cols-2">
+              {[
+                [BadgeCheck, "Verified fit", "Services, geography, eligibility, and current operational context."],
+                [Star, "Earned reputation", "Ratings and activity signals grounded in completed work."],
+                [Radar, "Faster discovery", "Find qualified providers without exposing who hired them."],
+                [ShieldCheck, "Permission aware", "Organizations see only the records and workflows they are authorized to use."],
+              ].map(([Icon, title, copy]) => {
+                const CardIcon = Icon as typeof BadgeCheck;
+                return <div key={title as string} className="rounded-2xl border border-white/15 bg-white/10 p-4"><CardIcon className="h-5 w-5 text-cyan-300"/><h2 className="mt-3 font-black">{title as string}</h2><p className="mt-1 text-sm leading-6 text-slate-300">{copy as string}</p></div>;
+              })}
+            </div>
+          </aside>
+        </div>
+        <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-b from-transparent to-[#f3f5f6]" />
+      </section>
+
+      <section id="solutions" className="mx-auto max-w-7xl px-4 py-20">
+        <div className="max-w-3xl">
+          <SectionLabel>Featured solutions</SectionLabel>
+          <h2 className="mt-3 text-3xl font-black sm:text-5xl">Put the network to work.</h2>
+          <p className="mt-4 text-lg leading-8 text-slate-600">Discover the right company when work appears, then keep every field and office handoff tied to the same trusted operational record.</p>
+        </div>
+        <div className="mt-10 grid gap-6 lg:grid-cols-2">
+          {FEATURED_SOLUTIONS.map((solution, index) => {
+            const Icon = solutionIcons[index];
+            return <article key={solution.title} className="relative overflow-hidden rounded-3xl border-2 border-cyan-600/70 bg-white p-7 shadow-[0_18px_50px_rgba(15,23,42,.08)] sm:p-9"><div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-cyan-300 via-cyan-600 to-blue-800"/><Icon className="h-9 w-9 text-cyan-700"/><p className="mt-5 text-xs font-black uppercase tracking-[.18em] text-cyan-700">{solution.eyebrow}</p><h3 className="mt-2 text-3xl font-black">{solution.title}</h3><p className="mt-3 leading-7 text-slate-600">{solution.description}</p><BenefitList items={solution.points}/></article>;
+          })}
+        </div>
+      </section>
+
+      <section id="workflow" className="border-y border-slate-300 bg-[#1f252a] text-white">
+        <div className="mx-auto max-w-7xl px-4 py-20">
+          <p className="text-xs font-black uppercase tracking-[.24em] text-cyan-300">One connected job lifecycle</p>
+          <h2 className="mt-3 max-w-4xl text-3xl font-black sm:text-5xl">From “we need this done” to an approval-ready record.</h2>
+          <ol aria-label="VNDRLY job workflow" className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-7">
+            {JOB_WORKFLOW.map(([title, copy], index) => <li key={title} className="rounded-2xl border border-white/15 bg-white/[.06] p-4"><span className="text-xs font-black text-cyan-300">0{index + 1}</span><h3 className="mt-2 font-black">{title}</h3><p className="mt-2 text-xs leading-5 text-slate-300">{copy}</p></li>)}
+          </ol>
+        </div>
+      </section>
+
+      <section className="mx-auto grid max-w-7xl gap-6 px-4 py-20 lg:grid-cols-2">
+        <article id="partners" className="rounded-3xl border bg-white p-7 shadow-sm sm:p-9">
+          <Building2 className="h-9 w-9 text-cyan-700"/>
+          <SectionLabel>For operating partners</SectionLabel>
+          <h2 className="mt-2 text-3xl font-black">For partners: know who can do the work—and what is happening now.</h2>
+          <BenefitList items={PARTNER_BENEFITS}/>
+        </article>
+        <article id="vendors" className="rounded-3xl border bg-white p-7 shadow-sm sm:p-9">
+          <BriefcaseBusiness className="h-9 w-9 text-cyan-700"/>
+          <SectionLabel>For vendors</SectionLabel>
+          <h2 className="mt-2 text-3xl font-black">For vendors: make proven performance easier to find and easier to repeat.</h2>
+          <BenefitList items={VENDOR_BENEFITS}/>
+        </article>
+      </section>
+
+      <section className="border-y bg-white">
+        <div className="mx-auto max-w-7xl px-4 py-20">
+          <SectionLabel>Connected operations</SectionLabel>
+          <h2 className="mt-3 text-3xl font-black sm:text-5xl">The field facts and the office workflow tell the same story.</h2>
+          <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+            {MARKETING_MODULES.map((module, index) => {
+              const Icon = moduleIcons[index];
+              return <article key={module.title} className="rounded-2xl border border-slate-300 bg-[#f7f8f9] p-6"><Icon className="h-7 w-7 text-cyan-700"/><h3 className="mt-4 text-xl font-black">{module.title}</h3><p className="mt-3 text-sm leading-6 text-slate-600">{module.description}</p></article>;
+            })}
+          </div>
+        </div>
+      </section>
+
+      <section aria-label="Secure direct payments" className="relative overflow-hidden bg-gradient-to-br from-cyan-950 via-slate-900 to-slate-950 text-white">
+        <div className="mx-auto grid max-w-7xl items-center gap-8 px-4 py-16 md:grid-cols-[auto_1fr_auto]">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-cyan-300/30 bg-cyan-300/10"><CreditCard className="h-8 w-8 text-cyan-300"/></div>
+          <div><p className="text-xs font-black uppercase tracking-[.2em] text-amber-300">Coming soon</p><h2 className="mt-2 text-3xl font-black">Secure direct payments</h2><p className="mt-3 max-w-3xl leading-7 text-slate-300">Move from approved work toward vendor payment without breaking the connected workflow. Payment availability, timing, and terms will be announced after the end-to-end service is verified.</p></div>
+          <PngPill color="amber" className="min-w-32">Coming soon</PngPill>
+        </div>
+      </section>
+
+      <section className="mx-auto grid max-w-7xl gap-10 px-4 py-20 lg:grid-cols-[1fr_.9fr]">
+        <div>
+          <SectionLabel>Trust without exposure</SectionLabel>
+          <h2 className="mt-3 text-3xl font-black sm:text-5xl">Useful signals. Private relationships.</h2>
+          <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-600">VNDRLY can help rank vendor fit using service alignment, operating geography, verified activity, responsiveness, and ratings. The public experience does not reveal who hired whom, private job details, or organization records.</p>
+          <div className="mt-8 grid gap-4 sm:grid-cols-2">{[[BadgeCheck,"Verified operational signals"],[ShieldCheck,"Role and organization permissions"],[Star,"Reputation built through work"],[Network,"No public account directory"]].map(([Icon,label]) => { const TrustIcon = Icon as typeof BadgeCheck; return <div key={label as string} className="flex items-center gap-3 rounded-xl border bg-white p-4 font-bold"><TrustIcon className="h-5 w-5 text-cyan-700"/>{label as string}</div>; })}</div>
+        </div>
+        <aside className="rounded-3xl border-2 border-cyan-600/60 bg-white p-8 shadow-xl">
+          <SectionLabel>Ask V — Product Guide</SectionLabel>
+          <h2 className="mt-3 text-3xl font-black">Questions before you sign in?</h2>
+          <p className="mt-4 leading-7 text-slate-600">Ask about product fit, roles, signup, onboarding, demos, or sales. The public Product Guide uses approved public information only and cannot access accounts, operational records, or internal actions.</p>
+          <p className="mt-6 text-sm font-bold text-cyan-800">Open Ask V in the lower-right corner.</p>
+        </aside>
+      </section>
+
+      <section className="border-y bg-white">
+        <div className="mx-auto grid max-w-7xl gap-10 px-4 py-20 lg:grid-cols-2">
+          <div><SectionLabel>Getting started</SectionLabel><h2 className="mt-3 text-3xl font-black">Bring your organization into one connected operating picture.</h2><ol className="mt-7 space-y-5">{[["Choose your path","Register as a partner or vendor organization."],["Build your operating profile","Add people, services, locations, credentials, and permissions."],["Connect the work","Use the VNDRLY modules available to your role and organization."]].map(([title,copy],index)=><li key={title} className="flex gap-4"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cyan-800 text-sm font-black text-white">{index+1}</span><div><h3 className="font-black">{title}</h3><p className="mt-1 text-sm text-slate-600">{copy}</p></div></li>)}</ol></div>
+          <div><SectionLabel>Frequently asked questions</SectionLabel><div className="mt-3 divide-y">{[["What do I need to sign up?","Start with your organization, role, and contact details. Additional operating information can be completed during onboarding."],["How long does signup take?","The initial registration is brief. The time to complete onboarding depends on your organization, services, people, and review needs."],["Does the public Product Guide see my account?","No. It uses approved public product information only. Authenticated Ask V operates separately after sign-in."],["How do I talk to sales?","Request a demo or contact VNDRLY support. You control what information is sent."]].map(([q,a])=><details key={q} className="py-5"><summary className="cursor-pointer font-black">{q}</summary><p className="mt-2 text-sm leading-6 text-slate-600">{a}</p></details>)}</div></div>
+        </div>
+      </section>
+
+      <section className="relative overflow-hidden bg-[#20262b] text-center text-white">
+        <img src={halftone} alt="" className="absolute left-1/2 top-1/2 w-[70rem] max-w-none -translate-x-1/2 -translate-y-1/2 opacity-10"/>
+        <div className="relative mx-auto max-w-4xl px-4 py-24"><p className="text-sm font-black uppercase tracking-[.22em] text-cyan-300">A better vendor network starts here</p><h2 className="mt-4 text-4xl font-black sm:text-6xl">Find the right fit. Run the work. Keep the proof.</h2><p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-slate-300">Start your VNDRLY profile or let us walk through the workflow with your team.</p><div className="mt-9 flex flex-wrap justify-center gap-4"><PrimaryLink href={marketingCtaHref}>Get started <ArrowRight className="h-4 w-4"/></PrimaryLink><a href={marketingDemoHref} className="inline-flex min-h-11 items-center rounded-full border border-white/60 px-6 font-bold text-white hover:border-cyan-300">Request a demo</a></div></div>
+      </section>
+
+      <footer className="border-t border-white/10 bg-[#15191d] text-slate-300"><div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 text-sm sm:flex-row sm:items-center sm:justify-between"><span>© {new Date().getFullYear()} VNDRLY</span><div className="flex flex-wrap gap-5"><a href="/legal/privacy" className="hover:text-white">Privacy</a><a href="/legal/terms" className="hover:text-white">Terms</a><a href="mailto:support@vndrly.ai" className="hover:text-white">Support</a><a href={marketingDemoHref} className="hover:text-white">Request a demo</a></div></div></footer>
+      <PublicAskV />
+    </main>
+  );
 }

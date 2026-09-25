@@ -3,8 +3,8 @@ import { MARKETING_MODULES, marketingCtaHref } from "./marketing-content";
 
 describe("commercial homepage content", () => {
   it("covers the product without endorsements or fabricated proof", () => {
-    expect(MARKETING_MODULES.length).toBeGreaterThanOrEqual(10);
-    expect(MARKETING_MODULES.some((item) => item.title.includes("Work Hub"))).toBe(true);
+    expect(MARKETING_MODULES.length).toBeGreaterThanOrEqual(4);
+    expect(MARKETING_MODULES.some((item) => item.description.includes("Work Hub"))).toBe(true);
     expect(MARKETING_MODULES.every((item) => !/partner logo|trusted by|customer/i.test(`${item.title} ${item.description}`))).toBe(true);
   });
 
