@@ -17,7 +17,7 @@ import { FilesInventory } from "@/components/work-hub/FilesInventory";
 import { WorkHubSearch, type WorkHubSearchDestination } from "@/components/work-hub/WorkHubSearch";
 import { SitePresence } from "@/components/implementation-a/SitePresence";
 import { SafetyResponse } from "@/components/implementation-a/SafetyResponse";
-import { ImplementationAExports } from "@/components/implementation-a/Exports";
+import { RoleExports } from "@/components/work-hub/RoleExports";
 import { OperationsHealth } from "@/components/implementation-a/OperationsHealth";
 import WorkHubConversation from "@/components/WorkHubConversation";
 import { useMeetingCompanion } from "@/components/MeetingCompanionProvider";
@@ -356,7 +356,7 @@ export default function WorkHubModuleScreen() {
           {module === "workforce-coverage" && <WorkforceCoverage gaps={data?.gaps ?? []} />}
           {module === "site-presence" && <SitePresence people={data?.people ?? data?.workers ?? []} canSeeExactLocation={canManage} />}
           {module === "safety-response" && <SafetyResponse />}
-          {module === "implementation-exports" && owner && <ImplementationAExports owner={owner} />}
+          {module === "implementation-exports" && owner && <RoleExports owner={owner} membershipId={user?.activeMembershipId} />}
           {module === "operations-health" && <OperationsHealth health={data} admin={canManage} />}
         </ScrollView>
       </ScreenSafeArea>

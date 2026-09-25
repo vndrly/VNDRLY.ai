@@ -7,19 +7,36 @@ import { ExportLifecycleError } from "../work-hub/governance-export-lifecycle";
 import { areWorkHubExportsEnabled, workHubExportLifecycle } from "../work-hub/governance-export-runtime";
 import { buildImplementationAExport, previewImplementationAExport, type ImplementationAExportDataset } from "../services/implementation-a-exports";
 import { recordExport } from "../lib/reports/audit";
+import { allowedExportDatasets, type ExportDataset } from "../work-hub/capabilities";
+import { deriveWorkHubCapabilities } from "../work-hub/context-access";
 
 
 type ImplementationAOwner = { type: "vendor" | "partner"; id: number };
 const rowsOf = <T>(value: unknown): T[] => ((value as { rows?: T[] }).rows ?? value) as T[];
-function implementationAExportOwner(req: Request): ImplementationAOwner | null {
+const implementationADatasetGrants: Record<ImplementationAExportDataset, ExportDataset> = {
+  payroll: "payroll-hours",
+  "quickbooks-time": "quickbooks-time",
+  assets: "inventory-custody",
+  staffing: "staffing",
+  safety: "safety-response",
+};
+function authorizeImplementationAExport(req: Request): { owner: ImplementationAOwner; dataset: ImplementationAExportDataset } | null {
+  const dataset = req.body?.dataset as ImplementationAExportDataset;
+  if (!Object.prototype.hasOwnProperty.call(implementationADatasetGrants, dataset)) return null;
   const type = req.body?.scope?.ownerOrgType;
   const id = Number(req.body?.scope?.ownerOrgId);
   if ((type !== "vendor" && type !== "partner") || !Number.isSafeInteger(id) || id <= 0) return null;
   const session = getSessionFromRequest(req);
-  if (!session) return null;
-  const owns = type === "vendor" ? session.vendorId === id : session.partnerId === id;
-  if (session.role !== "admin" && (!owns || session.membershipRole !== "admin")) return null;
-  return { type, id };
+  if (!session?.userId || (type === "vendor" ? session.vendorId !== id : session.partnerId !== id)) return null;
+  const owner: ImplementationAOwner = { type, id };
+  const capabilities = new Set(deriveWorkHubCapabilities({
+    session: { ...session, userId: session.userId },
+    owner,
+    context: { kind: "organization", id },
+    participant: true,
+  }));
+  if (!allowedExportDatasets(capabilities).includes(implementationADatasetGrants[dataset])) return null;
+  return { owner, dataset };
 }
 async function loadImplementationAExportRows(dataset: ImplementationAExportDataset, owner: ImplementationAOwner): Promise<Array<Record<string, unknown> & { ownerOrgId: number }>> {
   if (dataset === "assets") return rowsOf(await db.execute(sql`SELECT responsible_org_id AS "ownerOrgId", id::text AS "assetId", name, category, status, current_holder_user_id::text AS holder, COALESCE((SELECT condition FROM asset_custody_events WHERE asset_id = assets.id ORDER BY occurred_at DESC LIMIT 1), '') AS condition FROM assets WHERE responsible_org_type = ${owner.type} AND responsible_org_id = ${owner.id} AND retired_at IS NULL ORDER BY created_at, id`));
@@ -73,10 +90,9 @@ export function createWorkHubExportsRouter(deps: WorkHubExportsRouterDependencie
   router.post("/work-hub/exports/implementation-a", async (req, res) => {
     const requester = actor(req);
     if (!requester) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
-    const datasets = new Set<ImplementationAExportDataset>(["payroll", "quickbooks-time", "assets", "staffing", "safety"]);
-    const dataset = req.body?.dataset as ImplementationAExportDataset;
-    const owner = implementationAExportOwner(req);
-    if (!datasets.has(dataset) || !owner) return sendApiError(res, 403, "work_hub.forbidden", "Export access denied");
+    const authorized = authorizeImplementationAExport(req);
+    if (!authorized) return sendApiError(res, 403, "work_hub.forbidden", "Export access denied");
+    const { dataset, owner } = authorized;
     const scope = { ownerOrgId: owner.id, managedOrganizationId: typeof req.body?.scope?.managedOrganizationId === "string" ? req.body.scope.managedOrganizationId : undefined, siteIds: Array.isArray(req.body?.scope?.siteIds) ? req.body.scope.siteIds.filter((id: unknown): id is number => Number.isSafeInteger(id)) : undefined };
     const artifact = buildImplementationAExport({ dataset, scope, rows: await loadImplementationAExportRows(dataset, owner), includeSensitivePayroll: req.body?.includeSensitivePayroll === true });
     const body = Buffer.from(artifact.csv, "utf8");
@@ -87,11 +103,10 @@ export function createWorkHubExportsRouter(deps: WorkHubExportsRouterDependencie
   router.post("/work-hub/exports/implementation-a/preview", async (req, res) => {
     const requester = actor(req);
     if (!requester) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
-    const datasets = new Set<ImplementationAExportDataset>(["payroll", "quickbooks-time", "assets", "staffing", "safety"]);
-    const dataset = req.body?.dataset as ImplementationAExportDataset;
-    const ownerOrgId = Number(req.body?.scope?.ownerOrgId);
-    if (!datasets.has(dataset) || !Number.isSafeInteger(ownerOrgId) || ownerOrgId <= 0) return sendApiError(res, 400, "validation.invalid_request", "Invalid Implementation A export preview");
-    return res.json(previewImplementationAExport({ dataset, scope: { ownerOrgId, managedOrganizationId: typeof req.body?.scope?.managedOrganizationId === "string" ? req.body.scope.managedOrganizationId : undefined, siteIds: Array.isArray(req.body?.scope?.siteIds) ? req.body.scope.siteIds.filter((id: unknown) => Number.isSafeInteger(id)) : undefined }, includeSensitivePayroll: req.body?.includeSensitivePayroll === true }));
+    const authorized = authorizeImplementationAExport(req);
+    if (!authorized) return sendApiError(res, 403, "work_hub.forbidden", "Export access denied");
+    const { dataset, owner } = authorized;
+    return res.json(previewImplementationAExport({ dataset, scope: { ownerOrgId: owner.id, managedOrganizationId: typeof req.body?.scope?.managedOrganizationId === "string" ? req.body.scope.managedOrganizationId : undefined, siteIds: Array.isArray(req.body?.scope?.siteIds) ? req.body.scope.siteIds.filter((id: unknown) => Number.isSafeInteger(id)) : undefined }, includeSensitivePayroll: req.body?.includeSensitivePayroll === true }));
   });
   router.get("/work-hub/exports/:id", async (req, res) => {
     const requester = actor(req);

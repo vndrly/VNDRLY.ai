@@ -5,6 +5,9 @@ import { describe, expect, it, vi } from "vitest";
 import { buildTestCookie } from "../test-utils/session";
 import { createWorkHubExportsRouter } from "./workHubExports";
 
+vi.mock("@workspace/db", () => ({ db: { execute: vi.fn(async () => ({ rows: [] })) } }));
+vi.mock("../lib/reports/audit", () => ({ recordExport: vi.fn(async () => undefined) }));
+
 const id = "11111111-1111-4111-8111-111111111111";
 const cookie = buildTestCookie({ userId: 22, role: "vendor", vendorId: 41, membershipRole: "admin", displayName: "Casey" });
 function appWith(overrides: Record<string, unknown> = {}) {
@@ -55,8 +58,33 @@ describe("Work Hub export HTTP boundary", () => {
 
   it("previews scoped Implementation A columns without exporting data", async () => {
     const h = appWith();
-    expect((await request(h.app).post("/work-hub/exports/implementation-a/preview").send({ dataset: "assets", scope: { ownerOrgId: 41 } })).status).toBe(401);
-    const response = await request(h.app).post("/work-hub/exports/implementation-a/preview").set("Cookie", cookie).send({ dataset: "assets", scope: { ownerOrgId: 41 } });
+    expect((await request(h.app).post("/work-hub/exports/implementation-a/preview").send({ dataset: "assets", scope: { ownerOrgType: "vendor", ownerOrgId: 41 } })).status).toBe(401);
+    const response = await request(h.app).post("/work-hub/exports/implementation-a/preview").set("Cookie", cookie).send({ dataset: "assets", scope: { ownerOrgType: "vendor", ownerOrgId: 41 } });
     expect(response.status).toBe(200);
     expect(response.body).toMatchObject({ dataset: "assets", headers: ["assetId", "name", "category", "status", "holder", "condition"], excludedSensitiveFields: ["incidentDetail"] });
-  });});
+  });
+
+  it.each(["", "/preview"])("denies gatekeepers and cross-owner Implementation A requests on %s", async (suffix) => {
+    const h = appWith();
+    const gatekeeper = buildTestCookie({ userId: 31, role: "field_employee", vendorId: 41, vendorRole: "gatekeeper", membershipRole: "member" });
+    const body = { dataset: "staffing", scope: { ownerOrgType: "vendor", ownerOrgId: 41 } };
+    expect((await request(h.app).post(`/work-hub/exports/implementation-a${suffix}`).set("Cookie", gatekeeper).send(body)).status).toBe(403);
+    expect((await request(h.app).post(`/work-hub/exports/implementation-a${suffix}`).set("Cookie", cookie).send({ ...body, scope: { ownerOrgType: "vendor", ownerOrgId: 42 } })).status).toBe(403);
+  });
+
+  it.each(["", "/preview"])("allows supervisors to export staffing only on %s", async (suffix) => {
+    const h = appWith();
+    const supervisor = buildTestCookie({ userId: 32, role: "field_employee", vendorId: 41, vendorRole: "gate_supervisor", membershipRole: "member" });
+    const url = `/work-hub/exports/implementation-a${suffix}`;
+    const scope = { ownerOrgType: "vendor", ownerOrgId: 41 };
+    expect((await request(h.app).post(url).set("Cookie", supervisor).send({ dataset: "staffing", scope })).status).toBe(200);
+    expect((await request(h.app).post(url).set("Cookie", supervisor).send({ dataset: "payroll", scope })).status).toBe(403);
+  });
+
+  it.each(["", "/preview"])("allows org admins all five datasets on %s", async (suffix) => {
+    const h = appWith();
+    const url = `/work-hub/exports/implementation-a${suffix}`;
+    for (const dataset of ["payroll", "quickbooks-time", "assets", "staffing", "safety"])
+      expect((await request(h.app).post(url).set("Cookie", cookie).send({ dataset, scope: { ownerOrgType: "vendor", ownerOrgId: 41 } })).status).toBe(200);
+  });
+});
