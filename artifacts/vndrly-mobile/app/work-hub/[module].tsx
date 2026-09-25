@@ -29,7 +29,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { apiFetch } from "@/lib/api";
 import { captureAuthScope } from "@/lib/auth";
 import { pickMeetingFile, persistMeetingFileForOffline, uploadMeetingFile, type MeetingFileSource } from "@/lib/meeting-files";
-import { mobileOwner, moduleEndpoint, type MobileWorkHubCapabilities } from "@/lib/work-hub-mobile";
+import { loadFilesInventoryData, mobileOwner, moduleEndpoint } from "@/lib/work-hub-mobile";
 import {
   flushNativeWorkHubQueue,
   isOfflineWorkHubFailure,
@@ -50,7 +50,6 @@ const titles: Record<string, string> = {
   chat: "Company Chat",
   crews: "Crews",
   calendar: "Calendar",
-  "files-notes": "Files & Inventory",
   "tasks-forms": "Tasks & Forms",
   meetings: "Meetings",
   calls: "Calls",
@@ -85,6 +84,7 @@ export default function WorkHubModuleScreen() {
   );
   const title = module === "chat"
     ? `${activeMembership?.orgName?.trim() || "Company"} Chat`
+    : module === "files-notes" ? t("filesInventory.title")
     : (titles[module] ?? "Work Hub");
   const canManage =
     user?.role === "admin" || activeMembership?.role === "admin";
@@ -118,15 +118,8 @@ export default function WorkHubModuleScreen() {
         if (user) await flushNativeWorkHubQueue(user);
         if (module === "files-notes") {
           const currentOwner = mobileOwner(user);
-          if (!currentOwner) throw new Error("Choose a company to view files and inventory.");
-          const [files, rawAssets, channels, home] = await Promise.all([
-            apiFetch<any[]>(`/api/work-hub/file-library?orgType=${currentOwner.type}&orgId=${currentOwner.id}`),
-            apiFetch<any>("/api/implementation-a/assets"),
-            apiFetch<Row[]>("/api/work-hub/channels"),
-            apiFetch<{ capabilities: MobileWorkHubCapabilities }>("/api/work-hub/home"),
-          ]);
-          const notes = (await Promise.all(channels.map(channel => apiFetch<Row[]>(`/api/work-hub/channels/${channel.id}/notes`)))).flat();
-          setData({ files, assets: Array.isArray(rawAssets) ? rawAssets : rawAssets?.assets ?? [], channels, notes, capabilities: home.capabilities });
+          if (!currentOwner) throw new Error(t("filesInventory.chooseCompany"));
+          setData(await loadFilesInventoryData(currentOwner, apiFetch));
         } else setData(await apiFetch(moduleEndpoint(module, search)));
       } catch (e) {
         setError(e instanceof Error ? e.message : "Could not load Work Hub");
@@ -388,8 +381,8 @@ export default function WorkHubModuleScreen() {
         contentContainerStyle={{ padding: 20, gap: 14 }}
       >
         <WorkHubPageTitle title={title} />
-        {module === "files-notes" && owner && data?.capabilities && <FilesInventory owner={owner} userId={user?.id} capabilities={data.capabilities} files={data.files ?? []} notes={data.notes ?? []} assets={data.assets ?? []} channels={data.channels ?? []} onRefresh={() => load()} />}
-        {module === "files-notes" && !loading && data && !data.capabilities && <Text style={{ color: colors.mutedForeground }}>Files and inventory are not available for this company.</Text>}
+        {module === "files-notes" && owner && data?.capabilities && <FilesInventory owner={owner} capabilities={data.capabilities} files={data.files ?? []} notes={data.notes ?? []} assets={data.assets ?? []} channels={data.channels ?? []} onRefresh={() => load()} />}
+        {module === "files-notes" && !loading && data && !data.capabilities && <Text style={{ color: colors.mutedForeground }}>{t("filesInventory.noAccess")}</Text>}
         {module === "calendar" ? <WorkHubShiftCalendar items={rows} /> : null}
         {module === "search" && (
           <View style={{ flexDirection: "row", gap: 8 }}>

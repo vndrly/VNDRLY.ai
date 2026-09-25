@@ -12,6 +12,7 @@ vi.mock("@/components/WorkHubPageTitle", () => ({ default: () => null }));
 vi.mock("@/hooks/useColors", () => ({ useColors: () => ({ background: "#fff", card: "#fff", primary: "#f90", border: "#ccc", text: "#111", mutedForeground: "#666" }) }));
 vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: { role: "field_employee", activeMembershipId: membership.id, availableMemberships: [{ id: membership.id, role: "member", orgName: "MidCon" }] } }) }));
 vi.mock("@/lib/api", () => ({ apiFetch: () => Promise.resolve(response.current) }));
+vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string) => key === "filesInventory.title" ? "Files & Inventory" : key }) }));
 
 import WorkHubScreen from "../(tabs)/work-hub";
 
@@ -25,7 +26,7 @@ describe("Work Hub home cards", () => {
     expect(source).toContain('label={myWorkTitle}');
     expect(source).toContain('title="Today"');
     expect(source).toContain('title="Communications"');
-    expect(source).toContain('{ key: "files-notes", label: "Files & Inventory"');
+    expect(source).toContain('{ key: "files-notes", label: t("filesInventory.title")');
     expect(source).toContain('{ key: "site-presence", label: "Site & Safety"');
   });
 

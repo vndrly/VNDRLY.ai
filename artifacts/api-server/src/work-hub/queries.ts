@@ -65,7 +65,7 @@ export async function resolveChannelAccess(
     participant, visibilityRevision: `${session.userId}:${channel.updatedAt.toISOString()}`,
   });
   const scope = await collaborationChannelScope(session.userId, channel.id);
-  const resolved = scope && !session.managedSubcontractor ? { ...access, capabilities: new Set<WorkHubCapability>(scope.manager ? ["channel.read", "channel.write", "file.download", "channel.manage", "task.assign", "announcement.publish", "meeting.host"] : ["channel.read", "channel.write", "file.download"]) } : access;
+  const resolved = scope && !session.managedSubcontractor ? { ...access, capabilities: new Set<WorkHubCapability>(scope.manager ? ["channel.read", "channel.write", "file.download", "file.upload", "note.create", "note.edit", "channel.manage", "task.assign", "announcement.publish", "meeting.host"] : ["channel.read", "channel.write", "file.download", "file.upload", "note.create", "note.edit"]) } : access;
   requireWorkHubCapability(resolved, capability);
   return { channel, access: resolved };
 }
@@ -121,17 +121,27 @@ function listedChannelAccess(session: SessionPayload & { userId: number }): SQL 
   return sql`(${legacyAccess} OR ${collaborationAccess})`;
 }
 
-export async function listOwnedWorkHubChannels(session: SessionPayload & { userId: number }, before?: Date, limit = 50) {
+export async function listOwnedWorkHubChannels(session: SessionPayload & { userId: number }, before?: Date, limit = 50, beforeId?: string) {
   const requested = Math.min(100, Math.max(1, limit));
-  const rows = await db.select().from(workHubChannelsTable)
+  const page = (cursorAt?: Date, cursorId?: string) => db.select().from(workHubChannelsTable)
     .where(and(
       eq(workHubChannelsTable.status, "active"),
-      before ? lt(workHubChannelsTable.updatedAt, before) : undefined,
+      cursorAt ? cursorId
+        ? or(lt(workHubChannelsTable.updatedAt, cursorAt), and(eq(workHubChannelsTable.updatedAt, cursorAt), lt(workHubChannelsTable.id, cursorId)))
+        : lt(workHubChannelsTable.updatedAt, cursorAt) : undefined,
       listedChannelAccess(session),
     ))
     .orderBy(desc(workHubChannelsTable.updatedAt), desc(workHubChannelsTable.id))
     .limit(requested);
+  let rows = await page(before, beforeId);
   if (!session.managedSubcontractor) return rows;
-  const allowed = await Promise.all(rows.map((channel) => isWorkHubParticipant(session, channel)));
-  return rows.filter((_, index) => allowed[index]);
+  const visible: typeof rows = [];
+  while (rows.length) {
+    const allowed = await Promise.all(rows.map((channel) => isWorkHubParticipant(session, channel)));
+    visible.push(...rows.filter((_, index) => allowed[index]).slice(0, requested - visible.length));
+    if (visible.length === requested || rows.length < requested) break;
+    const last = rows[rows.length - 1]!;
+    rows = await page(last.updatedAt, last.id);
+  }
+  return visible;
 }

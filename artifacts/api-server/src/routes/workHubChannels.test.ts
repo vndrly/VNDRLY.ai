@@ -4,7 +4,7 @@ import cookieParser from "cookie-parser";
 import request from "supertest";
 import { eq } from "drizzle-orm";
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { db, usersTable, vendorsTable, userOrgMembershipsTable, workHubChannelsTable, workHubNotesTable, workHubNoteVersionsTable } from "@workspace/db";
+import { db, usersTable, vendorsTable, userOrgMembershipsTable, workHubChannelsTable, workHubChannelMembersTable, workHubCollaborationChannelsTable, workHubNotesTable, workHubNoteVersionsTable } from "@workspace/db";
 import channels from "./workHubChannels";
 import { buildTestCookie } from "../test-utils/session";
 
@@ -14,7 +14,7 @@ const app = express().use(express.json()).use(cookieParser()).use(channels);
 describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")("channel note edit authority", () => {
   let ownerId: number, channelId: string, authorId: number, otherId: number, supervisorId: number, adminId: number;
   let author: string, other: string, supervisor: string, admin: string;
-  const envelope = (payload: unknown, expectedVersion: number) => ({ owner: { type: "vendor", id: ownerId }, context: { kind: "organization", id: ownerId }, payloadVersion: 1, operationId: randomUUID(), expectedVersion, payload });
+  const envelope = (payload: unknown, expectedVersion: number | null) => ({ owner: { type: "vendor", id: ownerId }, context: { kind: "organization", id: ownerId }, payloadVersion: 1, operationId: randomUUID(), expectedVersion, payload });
   const edit = (noteId: string, cookie: string, version = 1) => request(app).patch(`/work-hub/channels/${channelId}/notes/${noteId}`).set("Cookie", cookie).send(envelope({ title: "Updated", body: "Changed" }, version));
   const note = async (at = new Date()) => (await db.insert(workHubNotesTable).values({ channelId, title: "Original", body: "First", createdById: authorId, updatedById: authorId, createdAt: at, updatedAt: at }).returning())[0]!;
 
@@ -50,5 +50,19 @@ describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")("channel note
     expect((await edit(supervised.id, supervisor)).status).toBe(200);
     const managed = await note(new Date(Date.now() - 16 * 60_000));
     expect((await edit(managed.id, admin)).status).toBe(200);
+  });
+
+  it("lets collaboration members create and edit their own notes but not another member's", async () => {
+    const [shared] = await db.insert(workHubChannelsTable).values({ ownerOrgType: "vendor", ownerOrgId: ownerId, contextKind: "organization", contextId: String(ownerId), name: "Shared notes", visibility: "private", createdById: adminId }).returning();
+    await db.insert(workHubCollaborationChannelsTable).values({ channelId: shared!.id, kind: "shared" });
+    await db.insert(workHubChannelMembersTable).values([
+      { channelId: shared!.id, userId: authorId, mode: "member" },
+      { channelId: shared!.id, userId: otherId, mode: "member" },
+    ]);
+    const created = await request(app).post(`/work-hub/channels/${shared!.id}/notes`).set("Cookie", author).send(envelope({ title: "Shared", body: "First" }, null));
+    expect(created.status).toBe(201);
+    const noteId = created.body.resource.id as string;
+    expect((await request(app).patch(`/work-hub/channels/${shared!.id}/notes/${noteId}`).set("Cookie", other).send(envelope({ title: "Other", body: "No" }, 1))).status).toBe(403);
+    expect((await request(app).patch(`/work-hub/channels/${shared!.id}/notes/${noteId}`).set("Cookie", author).send(envelope({ title: "Author", body: "Updated" }, 1))).status).toBe(200);
   });
 });

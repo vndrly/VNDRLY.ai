@@ -13,6 +13,15 @@ vi.mock("@/lib/api", () => ({ apiFetch: network.api, getApiBase: () => "https://
 vi.mock("expo-file-system/legacy", () => ({ cacheDirectory: "file:///cache/", downloadAsync: vi.fn(), deleteAsync: vi.fn() }));
 vi.mock("expo-sharing", () => ({ isAvailableAsync: vi.fn(), shareAsync: vi.fn() }));
 vi.mock("expo-crypto", () => ({ CryptoDigestAlgorithm: { SHA256: "SHA-256" }, digest: network.digest }));
+vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string, values?: Record<string, unknown>) => {
+  const labels: Record<string, string> = {
+    "filesInventory.filesNotes": "Files & Notes", "filesInventory.inventory": "Inventory",
+    "filesInventory.uploadFile": "Upload File", "filesInventory.addNote": "Add Note",
+    "filesInventory.reservedNotice": "{{name}}: reserved. Uploading…",
+    "filesInventory.finalizedNotice": "{{name}}: finalized and private.",
+  };
+  return (labels[key] ?? key).replace(/\{\{(\w+)\}\}/g, (_, name) => String(values?.[name] ?? ""));
+} }) }));
 
 const owner = { type: "vendor" as const, id: 7 };
 const records = {
@@ -61,11 +70,24 @@ describe("Files & Inventory", () => {
     } finally { globalThis.fetch = originalFetch; }
   });
 
-  it("shows a custody conflict instead of claiming checkout succeeded", async () => {
-    network.api.mockResolvedValueOnce({ status: "conflict", code: "asset.already_checked_out", version: 2 });
+  it("keeps inventory read-only until policy-aware custody actions are available", () => {
     render(<FilesInventory owner={owner} capabilities={caps} {...records} assets={[{ ...records.assets[0], version: 1 }]} channels={[]} onRefresh={vi.fn()} />);
-    fireEvent.click(screen.getByRole("button", { name: "Check out Radio 4" }));
-    expect((await screen.findByRole("alert")).textContent).toContain("asset.already_checked_out");
-    expect(screen.queryByText("Equipment checked out.")).toBeNull();
+    expect(screen.getByText("Radio 4")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Check out Radio 4" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Return Radio 4" })).toBeNull();
+  });
+
+  it("uses a private personal upload when no channel is available", async () => {
+    network.pick.mockResolvedValue({ name: "private.pdf", type: "application/pdf", size: 2, bytes: new Uint8Array([1, 2]) });
+    network.digest.mockResolvedValue(new Uint8Array(32).buffer);
+    network.api.mockResolvedValueOnce({ resource: { documentId: "document-2", fileId: "file-2", uploadURL: "https://example.test/upload" } }).mockResolvedValueOnce({ resource: {} });
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = vi.fn(async () => ({ ok: true })) as unknown as typeof fetch;
+    try {
+      render(<FilesInventory owner={owner} capabilities={caps} {...records} channels={[]} onRefresh={vi.fn()} />);
+      fireEvent.click(screen.getByRole("button", { name: "Upload File" }));
+      expect(await screen.findByText(/private.pdf: finalized and private/)).toBeTruthy();
+      expect(JSON.parse(network.api.mock.calls[0][1].body).payload).toMatchObject({ scope: "personal" });
+    } finally { globalThis.fetch = originalFetch; }
   });
 });

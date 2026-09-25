@@ -141,10 +141,14 @@ router.get("/work-hub/channels", async (req, res) => {
     typeof req.query.before === "string"
       ? new Date(req.query.before)
       : undefined;
+  const beforeId = typeof req.query.beforeId === "string" && uuid.safeParse(req.query.beforeId).success
+    ? req.query.beforeId
+    : undefined;
   const channels = await listOwnedWorkHubChannels(
     actor,
     before && !Number.isNaN(before.getTime()) ? before : undefined,
     Number(req.query.limit) || 50,
+    beforeId,
   );
   const enriched = await Promise.all(
     channels.map(async (channel) => {

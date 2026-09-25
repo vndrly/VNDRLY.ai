@@ -1,6 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Pressable, ScrollView, Text, View, useWindowDimensions, type DimensionValue } from "react-native";
 import ScreenSafeArea from "@/components/ScreenSafeArea";
 import WorkHubPageTitle from "@/components/WorkHubPageTitle";
@@ -52,6 +53,7 @@ function CommunicationsCard({ title, width, companyName, meetings }: { title: st
 function openModule(key: string) { router.push({ pathname: "/work-hub/[module]", params: { module: key } } as never); }
 
 export default function WorkHubScreen() {
+  const { t } = useTranslation();
   const colors = useColors();
   const { user } = useAuth();
   const { width } = useWindowDimensions();
@@ -60,7 +62,7 @@ export default function WorkHubScreen() {
   const activeMembershipId = user?.activeMembershipId;
   const [homeState, setHomeState] = useState<{ membershipId: number | null | undefined; data: HomeData } | null>(null);
   const home = homeState && homeState.membershipId === activeMembershipId ? homeState.data : null;
-  const modules = mobileWorkHubModules(width >= 768, companyAdmin, membership?.orgName, home?.capabilities);
+  const modules = mobileWorkHubModules(width >= 768, companyAdmin, membership?.orgName, home?.capabilities, t("filesInventory.title"));
   const [error, setError] = useState("");
   useEffect(() => {
     let active = true; setError("");
@@ -72,7 +74,7 @@ export default function WorkHubScreen() {
   const myWorkTitle = user?.managedSubcontractor ? "My Hours" : "My Work";
   const utilityModules = [
     { key: "search", label: "Search", icon: "search" },
-    { key: "files-notes", label: "Files & Inventory", icon: "folder" },
+    { key: "files-notes", label: t("filesInventory.title"), icon: "folder" },
     { key: "implementation-exports", label: "Exports", icon: "download" },
     { key: "site-presence", label: "Site & Safety", icon: "shield" },
     ...modules.filter(({ key }) => key === "operations-health"),

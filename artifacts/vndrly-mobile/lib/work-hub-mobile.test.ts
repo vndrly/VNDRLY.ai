@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mobileOwner, mobileWorkHubModules, moduleEndpoint } from "./work-hub-mobile";
+import { loadFilesInventoryData, mobileOwner, mobileWorkHubModules, moduleEndpoint } from "./work-hub-mobile";
 
 describe("mobile Work Hub boundary", () => {
   it("keeps mutations in the active organization", () => {
@@ -38,5 +38,30 @@ describe("mobile Work Hub boundary", () => {
     expect(gatekeeper.some((item) => item.key === "implementation-exports")).toBe(false);
     expect(supervisor.some((item) => item.key === "implementation-exports")).toBe(true);
     expect(gatekeeper.some((item) => item.key === "files-notes")).toBe(true);
+  });
+});
+
+describe("combined files and inventory loading", () => {
+  it("loads notes from more than fifty authorized channels", async () => {
+    const channels = Array.from({ length: 101 }, (_, index) => ({ id: `channel-${index}`, name: `Group ${index}`, updatedAt: new Date(Date.UTC(2026, 8, 24, 12, 0, 0) - index * 1000).toISOString() }));
+    const requests: string[] = [];
+    const fetchJson = async (path: string): Promise<any> => {
+      requests.push(path);
+      if (path.startsWith("/api/work-hub/channels?")) {
+        const parsed = new URL(path, "https://example.test");
+        const before = parsed.searchParams.get("before");
+        const beforeId = parsed.searchParams.get("beforeId");
+        return channels.filter(channel => !before || channel.updatedAt < before || (channel.updatedAt === before && channel.id < beforeId!)).slice(0, 100);
+      }
+      if (path.endsWith("/notes")) return [{ id: `note-${path.split("/")[4]}` }];
+      if (path === "/api/implementation-a/assets") return { assets: [] };
+      if (path === "/api/work-hub/home") return { capabilities: { canCreateNote: true } };
+      if (path.startsWith("/api/work-hub/file-library?")) return [];
+      throw new Error(`Unexpected request ${path}`);
+    };
+    const result = await loadFilesInventoryData({ type: "vendor", id: 7 }, fetchJson);
+    expect(result.channels).toHaveLength(101);
+    expect(result.notes).toHaveLength(101);
+    expect(requests.filter(path => path.startsWith("/api/work-hub/channels?"))).toHaveLength(2);
   });
 });

@@ -46,12 +46,42 @@ export function moduleEndpoint(module: string, query = "") {
   return "/api/work-hub/channels";
 }
 
+/** Load every authorized channel before collecting notes; channel lists are paged at 100. */
+export async function loadFilesInventoryData(
+  owner: { type: "vendor" | "partner"; id: number },
+  fetchJson: (path: string) => Promise<any>,
+) {
+  const [files, rawAssets, home] = await Promise.all([
+    fetchJson(`/api/work-hub/file-library?orgType=${owner.type}&orgId=${owner.id}`),
+    fetchJson("/api/implementation-a/assets"),
+    fetchJson("/api/work-hub/home"),
+  ]);
+  const channels: Array<{ id: string; name: string; updatedAt: string }> = [];
+  let before: { id: string; updatedAt: string } | null = null;
+  while (true) {
+    const cursor = before ? `&before=${encodeURIComponent(before.updatedAt)}&beforeId=${encodeURIComponent(before.id)}` : "";
+    const page = await fetchJson(`/api/work-hub/channels?limit=100${cursor}`) as typeof channels;
+    channels.push(...page);
+    if (page.length < 100) break;
+    const last = page[page.length - 1]!;
+    if (before?.id === last.id) throw new Error("Channel pagination did not advance.");
+    before = last;
+  }
+  const notes: unknown[] = [];
+  for (let index = 0; index < channels.length; index += 10) {
+    const batch = channels.slice(index, index + 10);
+    notes.push(...(await Promise.all(batch.map(channel => fetchJson(`/api/work-hub/channels/${encodeURIComponent(channel.id)}/notes`)))).flat());
+  }
+  return { files, assets: Array.isArray(rawAssets) ? rawAssets : rawAssets?.assets ?? [], channels, notes, capabilities: home.capabilities };
+}
+
 /** Mobile intentionally omits payroll processing, refunds and bulk migration. */
 export function mobileWorkHubModules(
   isTablet: boolean,
   companyAdmin: boolean,
   companyName?: string | null,
   capabilities?: Pick<MobileWorkHubCapabilities, "canViewExports" | "allowedExportDatasets"> | null,
+  filesInventoryLabel = "Files & Inventory",
 ) {
   const items = [
     {
@@ -67,7 +97,7 @@ export function mobileWorkHubModules(
     { key: "workforce-coverage", label: "Workforce Coverage", icon: "clock" },
     { key: "site-presence", label: "Site Presence", icon: "map-pin" },
     { key: "safety-response", label: "Safety Response", icon: "shield" },
-    { key: "files-notes", label: "Files & Inventory", icon: "folder" },
+    { key: "files-notes", label: filesInventoryLabel, icon: "folder" },
     { key: "tasks-forms", label: "Tasks & Forms", icon: "check-square" },
     { key: "calls", label: "Calls", icon: "phone" },
     { key: "meetings", label: "Meetings", icon: "headphones" },
