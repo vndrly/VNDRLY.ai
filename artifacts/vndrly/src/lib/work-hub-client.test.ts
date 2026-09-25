@@ -142,12 +142,13 @@ describe("Work Hub client boundary", () => {
   });
 
   it("maps searchable subjects back to usable module destinations", () => {
-    expect(workHubModulePath("message", "m1")).toBe(
-      "/work-hub/chat?message=m1",
+    expect(workHubModulePath("message", "7be22c7d-4638-4144-bb18-0d2a66996a43")).toBe(
+      "/work-hub/search?type=message&item=7be22c7d-4638-4144-bb18-0d2a66996a43",
     );
-    expect(workHubModulePath("meeting", "m2")).toBe(
-      "/work-hub/meetings?meeting=m2",
+    expect(workHubModulePath("meeting", "7be22c7d-4638-4144-bb18-0d2a66996a43")).toBe(
+      "/work-hub/search?type=meeting&item=7be22c7d-4638-4144-bb18-0d2a66996a43",
     );
-    expect(workHubModulePath("form", "f1")).toBe("/work-hub/tasks?form=f1");
+    expect(workHubModulePath("form", "7be22c7d-4638-4144-bb18-0d2a66996a43")).toBe("/work-hub/search?type=form&item=7be22c7d-4638-4144-bb18-0d2a66996a43");
+    expect(workHubModulePath("unknown", "abc")).toBe("/work-hub/search");
   });
 });

@@ -8,6 +8,22 @@ import {
 } from "./tool-registry";
 
 describe("AskV tool registry", () => {
+  it("offers self-profile writes only to the role supported by the profile endpoint", () => {
+    expect(toolsForRole("vendor").map(t => t.name)).not.toContain("confirm_work_hub_profile");
+    expect(toolsForRole("field_employee").map(t => t.name)).toContain("confirm_work_hub_profile");
+    expect(ASK_V_TOOL_REGISTRY.find(t => t.name === "confirm_asset_custody_action")?.auditTarget).toBe("asset");
+    expect(ASK_V_TOOL_REGISTRY.find(t => t.name === "confirm_work_hub_gate_location")?.auditTarget).toBe("station");
+  });
+  it("advertises asset identifiers, version and custody fields to realtime callers", () => {
+    const tool = toRealtimeTools(ASK_V_TOOL_REGISTRY).find(t => t.name === "confirm_asset_custody_action")!;
+    expect(tool.parameters.properties).toMatchObject({ action: expect.any(Object), assetId: expect.any(Object), expectedVersion: expect.any(Object), payload: { properties: { condition: expect.any(Object), photos: expect.any(Object), holderUserId: expect.any(Object) } } });
+    const gate = toRealtimeTools(ASK_V_TOOL_REGISTRY).find(t => t.name === "prepare_work_hub_gate_location")!;
+    expect(gate.parameters.properties).toMatchObject({ payload: { properties: { siteId: expect.any(Object), latitude: expect.any(Object), longitude: expect.any(Object), geofenceRadiusM: expect.any(Object) } } });
+    const reserve = toRealtimeTools(ASK_V_TOOL_REGISTRY).find(t => t.name === "prepare_work_hub_file_upload")!;
+    expect(reserve.parameters.properties).toMatchObject({ payload: { properties: { checksumSha256: expect.any(Object), byteSize: expect.any(Object), fileName: expect.any(Object), scope: expect.any(Object) } } });
+    const note = toRealtimeTools(ASK_V_TOOL_REGISTRY).find(t => t.name === "manage_work_hub_note")!;
+    expect(note.parameters.properties).toMatchObject({ payload: { properties: { title: expect.any(Object), body: expect.any(Object) } } });
+  });
   it("advertises provider-compatible values for onboarding fields and a selectable workflow", () => {
     const tools = toRealtimeTools(ASK_V_TOOL_REGISTRY);
     const field = tools.find((tool) => tool.name === "set_onboarding_field")!;

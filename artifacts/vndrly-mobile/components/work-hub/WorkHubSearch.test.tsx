@@ -11,6 +11,12 @@ vi.mock("@/components/TogglePillButton", () => ({ default: ({ children, accessib
 afterEach(() => { cleanup(); network.api.mockReset(); });
 
 describe("Work Hub Search", () => {
+  it("starts with the exact filters supplied by an assistant link", () => {
+    render(<WorkHubSearch onOpen={vi.fn()} initialFilters={{ query: "pump", start: "2026-09-01", end: "2026-09-24", types: ["asset"] }} />);
+    expect((screen.getByLabelText("Search Work Hub") as HTMLInputElement).value).toBe("pump");
+    expect((screen.getByLabelText("From date") as HTMLInputElement).value).toBe("2026-09-01");
+    expect((screen.getByLabelText("Through date") as HTMLInputElement).value).toBe("2026-09-24");
+  });
   it("serializes the exact query, date and type filters", () => {
     expect(searchQueryPath({ query: "pump & gate", start: "2026-09-01", end: "2026-09-24", types: ["asset"] }))
       .toBe("/api/work-hub/search?q=pump%20%26%20gate&start=2026-09-01&end=2026-09-24&type=asset");

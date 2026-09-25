@@ -1,11 +1,24 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-const ui = vi.hoisted(() => ({ push: vi.fn(), openURL: vi.fn() }));
+const ui = vi.hoisted(() => ({ push: vi.fn(), openURL: vi.fn(), api: vi.fn(), current: vi.fn(() => true) }));
 vi.mock("expo-router", () => ({ router: { push: ui.push } }));
 vi.mock("react-native", () => ({ Linking: { openURL: ui.openURL } }));
-vi.mock("@/lib/api", () => ({ getApiBase: () => "https://vndrly.ai" }));
+vi.mock("@/lib/api", () => ({ getApiBase: () => "https://vndrly.ai", apiFetch: ui.api }));
+vi.mock("@/lib/auth", () => ({ captureAuthScope: () => ({}), isAuthScopeCurrent: ui.current }));
 import { executeAskVClientIntent, readAskVSafetyDraft, registerAskVControl } from "../askv-client-tools";
-beforeEach(() => { ui.push.mockReset(); ui.openURL.mockReset().mockResolvedValue(undefined); });
+beforeEach(() => { ui.push.mockReset(); ui.openURL.mockReset().mockResolvedValue(undefined); ui.api.mockReset().mockResolvedValue({}); ui.current.mockReturnValue(true); });
 describe("AskV native client capabilities", () => {
+  it("reauthorizes exact Work Hub navigation and refuses revoked access", async () => {
+    const intent = { name: "open_screen", arguments: { path: "/work-hub/search?type=task&item=7be22c7d-4638-4144-bb18-0d2a66996a43" } };
+    expect(await executeAskVClientIntent(intent, "/askv")).toMatchObject({ ok: true, saved: false });
+    expect(ui.api).toHaveBeenCalledWith("/api/work-hub/search/items/task/7be22c7d-4638-4144-bb18-0d2a66996a43");
+    expect(ui.push).toHaveBeenCalledWith("/work-hub/search-item/task/7be22c7d-4638-4144-bb18-0d2a66996a43");
+    ui.push.mockClear(); ui.api.mockRejectedValue(new Error("Access revoked"));
+    expect(await executeAskVClientIntent(intent, "/askv")).toMatchObject({ ok: false });
+    expect(ui.push).not.toHaveBeenCalled();
+    ui.api.mockResolvedValue({}); ui.current.mockReturnValue(false);
+    expect(await executeAskVClientIntent(intent, "/askv")).toMatchObject({ ok: false });
+    expect(ui.push).not.toHaveBeenCalled();
+  });
   it("opens real mobile ticket/scanner routes rather than returning the web path as success", async () => {
     await executeAskVClientIntent({ name: "start_ticket_entry", arguments: { ticketId: 42, kind: "labor", path: "/tickets/42" } }, "/askv");
     expect(ui.push).toHaveBeenCalledWith(expect.objectContaining({ pathname: "/ticket/[id]", params: expect.objectContaining({ id: "42", askvEntry: "labor" }) }));

@@ -20,6 +20,22 @@ describe("parseTicketIdFromHref", () => {
 });
 
 describe("resolveAssistantLink", () => {
+  it("selects Inventory for inventory and asset module aliases", () => {
+    expect(resolveAssistantLink("/work-hub/assets")).toEqual({ type: "route", path: "/work-hub/files-notes?section=inventory" });
+    expect(resolveAssistantLink("vndrly-deep-link:work-hub-inventory")).toEqual({ type: "route", path: "/work-hub/files-notes?section=inventory" });
+  });
+  it("keeps exact Work Hub IDs and filter state in native routes", () => {
+    expect(resolveAssistantLink("/work-hub/search?type=task&item=7be22c7d-4638-4144-bb18-0d2a66996a43")).toEqual({ type: "route", path: "/work-hub/search-item/task/7be22c7d-4638-4144-bb18-0d2a66996a43" });
+    expect(resolveAssistantLink("/work-hub/search?q=pump&type=asset&start=2026-09-01")).toEqual({ type: "route", path: "/work-hub/search?q=pump&type=asset&start=2026-09-01" });
+    expect(resolveAssistantLink("/work-hub/files-notes?assetId=7be22c7d-4638-4144-bb18-0d2a66996a43")).toEqual({ type: "route", path: "/work-hub/files-notes?section=inventory&assetId=7be22c7d-4638-4144-bb18-0d2a66996a43" });
+    expect(resolveAssistantLink("/work-hub/search?type=unknown&item=abc")).toBeNull();
+    expect(resolveAssistantLink("vndrly-deep-link:work-hub-nonexistent")).toBeNull();
+  });
+  it("opens the native Shift Notes, Profile and Gate destinations", () => {
+    expect(resolveAssistantLink("/gate/shift-notes")).toEqual({ type: "route", path: "/gate/shift-notes" });
+    expect(resolveAssistantLink("/field/profile")).toEqual({ type: "route", path: "/(tabs)/profile" });
+    expect(resolveAssistantLink("/gate")).toEqual({ type: "route", path: "/(tabs)/gate" });
+  });
   it("maps VNDRLY-deep-link screen slugs to web URLs when no mobile screen exists", () => {
     expect(resolveAssistantLink("VNDRLY-deep-link:partner-catalog")).toEqual({
       type: "browser",

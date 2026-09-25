@@ -34,7 +34,7 @@ import {
   VOICE_WORKFLOWS,
   type VoiceWorkflow,
 } from "../assistant/tool-packs";
-import { isTypedWorkHubTool } from "../assistant/work-hub-tool-runtime";
+import { isTypedWorkHubTool, inferWorkHubAuditTargetId } from "../assistant/work-hub-tool-runtime";
 import {
   allowVoiceMetric,
   parseVoiceMetric,
@@ -954,8 +954,7 @@ router.post(
       fingerprint: mutationIdempotencyKey(session.userId!, name, input),
     };
     const scopeKey = mutationScopeKey(scope);
-    const targetId =
-      input.ticketId ?? input.visitId ?? input.siteLocationId ?? null;
+    const targetId = inferWorkHubAuditTargetId(input);
     const audit = (
       resultStatus:
         | "success"
@@ -978,7 +977,7 @@ router.post(
         provider: "openai_realtime",
         toolName: name,
         targetType: tool.auditTarget ?? null,
-        targetId: targetId as string | number | null,
+        targetId: targetId ?? inferWorkHubAuditTargetId({}, output),
         transcriptText,
         toolInput: { ...input, idempotencyKey: key, sessionId },
         toolOutput: output,

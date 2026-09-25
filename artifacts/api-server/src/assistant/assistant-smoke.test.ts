@@ -17,9 +17,16 @@ vi.mock("../lib/reports/sales-tax", () => ({
 }));
 
 import { buildDeepLink, periodToReportUrlRange, REPORT_CARD_IDS } from "./deep-links";
+import { gateDeepLinkScreen } from "./permissions";
 import { parsePageContext } from "./page-context";
 import { runDataTool } from "./data-tools";
 import { resolvePeriod } from "../lib/reports/period";
+
+it("keeps the field-only web profile destination out of office deep links", () => {
+  expect(gateDeepLinkScreen("vendor", "profile").ok).toBe(false);
+  expect(gateDeepLinkScreen("partner", "profile").ok).toBe(false);
+  expect(gateDeepLinkScreen("field_employee", "profile").ok).toBe(true);
+});
 
 describe("parsePageContext", () => {
   it("returns undefined for missing or invalid input", () => {
@@ -63,6 +70,11 @@ describe("parsePageContext", () => {
 });
 
 describe("buildDeepLink — reports card deep links", () => {
+  it("builds exact Work Hub destinations and preserves search filters", () => {
+    expect(buildDeepLink({ screen: "work-hub-item", subjectType: "task", itemId: "7be22c7d-4638-4144-bb18-0d2a66996a43" })).toBe("/work-hub/search?type=task&item=7be22c7d-4638-4144-bb18-0d2a66996a43");
+    expect(buildDeepLink({ screen: "work-hub-item", subjectType: "unknown", itemId: "abc" })).toHaveProperty("error");
+    expect(buildDeepLink({ screen: "work-hub-search", query: "pump", types: ["asset"], start: "2026-09-01" })).toBe("/work-hub/search?q=pump&start=2026-09-01&type=asset");
+  });
   it("builds sales tax YTD URL with optional state highlight", () => {
     const url = buildDeepLink({
       screen: "reports",

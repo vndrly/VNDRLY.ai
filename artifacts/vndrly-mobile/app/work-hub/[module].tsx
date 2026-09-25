@@ -77,7 +77,7 @@ export default function WorkHubModuleScreen() {
   const colors = useColors();
   const { user } = useAuth();
   const meetingCompanion = useMeetingCompanion();
-  const { module: raw, assetId: selectedAssetId } = useLocalSearchParams<{ module: string; assetId?: string }>();
+  const { module: raw, assetId: selectedAssetId, q: searchQuery, start: searchStart, end: searchEnd, type: searchType } = useLocalSearchParams<{ module: string; assetId?: string; q?: string; start?: string; end?: string; type?: string }>();
   const module = raw === "inventory" ? "files-notes" : String(raw ?? "channels");
   const owner = mobileOwner(user);
   const activeMembership = user?.availableMemberships?.find(
@@ -385,7 +385,7 @@ export default function WorkHubModuleScreen() {
       <Stack.Screen options={{ title }} />
       <ScrollView contentContainerStyle={{ padding: 20, gap: 14 }}>
         <WorkHubPageTitle title={title} />
-        <WorkHubSearch onOpen={open} />
+        <WorkHubSearch key={`${searchQuery}:${searchStart}:${searchEnd}:${searchType}`} onOpen={open} initialFilters={{ query: searchQuery ?? "", start: searchStart, end: searchEnd, types: searchType?.split(",") }} />
       </ScrollView>
     </ScreenSafeArea>;
   }

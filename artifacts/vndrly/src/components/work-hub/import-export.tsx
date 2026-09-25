@@ -1,5 +1,5 @@
 import { CsvImport } from "./csv-import";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
@@ -109,12 +109,25 @@ export function ImportExportTools() {
   const { user } = useAuth();
   const admin = isWorkHubAdmin(user);
   const owner = ownerForUser(user);
+  const scopeKey = `${user?.userId}:${user?.activeMembershipId}:${owner?.type}:${owner?.id}`;
+  const currentScope = useRef(scopeKey);
+  currentScope.current = scopeKey;
+  const exportController = useRef<AbortController | null>(null);
+  useEffect(() => () => { exportController.current?.abort(); }, [scopeKey]);
   const [dataset, setDataset] = useState("tasks");
   const [format, setFormat] = useState("csv");
   const [expiresAt, setExpiresAt] = useState("");
   const [operationId, setOperationId] = useState(createWorkHubOperationId);
   const [job, setJob] = useState<ExportStatus | null>(null);
   const [implementationDataset, setImplementationDataset] = useState<ImplementationExportDataset>("payroll");
+  const exportAccess = useQuery<{ capabilities?: { canViewExports: boolean; allowedExportDatasets: string[] } }>({
+    queryKey: ["work-hub", "export-capabilities", user?.userId, user?.activeMembershipId, owner?.type, owner?.id],
+    queryFn: () => workHubRequest("/home"),
+    enabled: Boolean(owner),
+  });
+  const grantNames: Record<ImplementationExportDataset, string> = { payroll: "payroll-hours", "quickbooks-time": "quickbooks-time", assets: "inventory-custody", staffing: "staffing", safety: "safety-response" };
+  const allowedDatasets = exportAccess.data?.capabilities?.canViewExports ? (Object.keys(grantNames) as ImplementationExportDataset[]).filter(key => exportAccess.data!.capabilities!.allowedExportDatasets.includes(grantNames[key])) : [];
+  const selectedImplementationDataset = allowedDatasets.includes(implementationDataset) ? implementationDataset : allowedDatasets[0] ?? "staffing";
   const history = useQuery<{ batches: Row[]; items: Row[] }>({
     queryKey: [
       "work-hub",
@@ -131,13 +144,18 @@ export function ImportExportTools() {
   });
   const implementationExport = useMutation({
     mutationFn: async () => {
-      if (!owner) throw new Error("An active company is required");
-      const response = await fetch("/api/work-hub/exports/implementation-a", { method: "POST", credentials: "include", headers: { "content-type": "application/json", "x-vndrly-client": "web" }, body: JSON.stringify({ dataset: implementationDataset, scope: { ownerOrgType: owner.type, ownerOrgId: owner.id } }) });
+      if (!owner || !allowedDatasets.includes(selectedImplementationDataset)) throw new Error("An authorized export dataset is required");
+      const controller = new AbortController();
+      exportController.current?.abort();
+      exportController.current = controller;
+      const response = await fetch("/api/work-hub/exports/implementation-a", { method: "POST", credentials: "include", signal: controller.signal, headers: { "content-type": "application/json", "x-vndrly-client": "web" }, body: JSON.stringify({ dataset: selectedImplementationDataset, scope: { ownerOrgType: owner.type, ownerOrgId: owner.id } }) });
       if (!response.ok) throw new Error((await response.json().catch(() => null))?.error ?? "Export failed");
-      const url = URL.createObjectURL(await response.blob());
+      const bytes = await response.blob();
+      if (controller.signal.aborted || currentScope.current !== scopeKey) throw new Error("Your active company changed. Request the export again.");
+      const url = URL.createObjectURL(bytes);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `vndrly-${implementationDataset}.csv`;
+      link.download = `vndrly-${selectedImplementationDataset}.csv`;
       link.click();
       URL.revokeObjectURL(url);
     },
@@ -203,17 +221,17 @@ export function ImportExportTools() {
           {shownJob.status === "expired" && <p>{t("workHubExports.expiredHelp")}</p>}
         </div>}
       </section>}
-      {admin && owner && <section className="rounded-xl border bg-card p-5">
+      {allowedDatasets.length > 0 && owner && <section className="rounded-xl border bg-card p-5">
         <h2 className="text-xl font-semibold">Workforce, inventory, and safety exports</h2>
         <p className="my-3 text-sm text-muted-foreground">Preview exactly what is included before creating an owner-scoped, audited CSV.</p>
-        <select aria-label="Implementation A export dataset" className="rounded border bg-background px-3 py-2" value={implementationDataset} onChange={(event) => setImplementationDataset(event.target.value as ImplementationExportDataset)}>
-          {Object.entries(implementationExportDescriptions).map(([value, option]) => <option key={value} value={value}>{option.label}</option>)}
+        <select aria-label="Implementation A export dataset" className="rounded border bg-background px-3 py-2" value={selectedImplementationDataset} onChange={(event) => setImplementationDataset(event.target.value as ImplementationExportDataset)}>
+          {allowedDatasets.map(value => <option key={value} value={value}>{implementationExportDescriptions[value].label}</option>)}
         </select>
         <div className="my-4 rounded-lg border p-4 text-sm" aria-live="polite">
           <p><strong>Period:</strong> All retained authorized records</p>
           <p><strong>People and sites:</strong> Current company scope only</p>
-          <p><strong>Included:</strong> {implementationExportDescriptions[implementationDataset].includes}</p>
-          <p><strong>Excluded:</strong> {implementationExportDescriptions[implementationDataset].excludes}</p>
+          <p><strong>Included:</strong> {implementationExportDescriptions[selectedImplementationDataset].includes}</p>
+          <p><strong>Excluded:</strong> {implementationExportDescriptions[selectedImplementationDataset].excludes}</p>
         </div>
         <BrandPillButton tone="green" disabled={implementationExport.isPending} onClick={() => implementationExport.mutate()}>Create audited CSV</BrandPillButton>
         <HubError error={implementationExport.error} />

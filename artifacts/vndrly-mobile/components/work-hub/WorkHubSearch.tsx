@@ -35,12 +35,12 @@ function responseShape(value: SearchResponse | SearchResult[]): SearchResponse {
   return Array.isArray(value) ? { results: value, cappedSources: [] } : value;
 }
 
-export function WorkHubSearch({ onOpen }: { onOpen: (destination: WorkHubSearchDestination) => void }) {
+export function WorkHubSearch({ onOpen, initialFilters }: { onOpen: (destination: WorkHubSearchDestination) => void; initialFilters?: WorkHubSearchFilters }) {
   const colors = useColors();
-  const [query, setQuery] = useState("");
-  const [start, setStart] = useState("");
-  const [end, setEnd] = useState("");
-  const [type, setType] = useState<string | null>(null);
+  const [query, setQuery] = useState(initialFilters?.query ?? "");
+  const [start, setStart] = useState(initialFilters?.start ?? "");
+  const [end, setEnd] = useState(initialFilters?.end ?? "");
+  const [type, setType] = useState<string | null>(initialFilters?.types?.[0] ?? null);
   const [results, setResults] = useState<SearchResult[] | null>(null);
   const [cappedSources, setCappedSources] = useState<string[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);

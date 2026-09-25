@@ -27,6 +27,7 @@ export type AskVAuditTarget =
   | "safety"
   | "hotlist"
   | "invoice"
+  | "asset" | "file" | "station" | "channel" | "task" | "occurrence" | "export" | "profile"
   | "work_hub";
 
 export interface AskVToolDefinition {
@@ -102,10 +103,11 @@ const TOOL_METADATA: Record<string, Partial<ToolMetadata>> = {
         confirmation: metadata.mutating ? "required" : "none",
         risk: metadata.mutating ? "high" : "read",
         pack: "screen",
-        auditTarget: "work_hub",
+        auditTarget: name.includes("gate_location") ? "station" : name.includes("profile") ? "profile" : name.includes("file") ? "file" : name.includes("channel") ? "channel" : name.includes("task") ? "task" : name.includes("meeting") || name.includes("replay") ? "occurrence" : name.includes("export") ? "export" : "work_hub",
         workHubFamily: metadata.family,
         companyAdminOnly: metadata.companyAdminOnly,
         authorityCapability: authorityCapabilityForWorkHubTool(metadata),
+        ...(name === "confirm_work_hub_profile" ? { roles: ["field_employee"] } : name === "prepare_work_hub_profile" ? { roles: ["vendor", "field_employee"] } : name.includes("gate_location") ? { roles: ["vendor"], companyAdminOnly: true } : {}),
       },
     ]),
   ),
@@ -250,13 +252,13 @@ export const ASK_V_TOOL_REGISTRY: AskVToolDefinition[] = [
     name: tool.name,
     description: tool.description,
     inputSchema: tool.input_schema,
-    roles: ALL_SIGNED_IN_ROLES,
+    roles: tool.roles,
     mutating: tool.mutating,
     confirmation: tool.confirmation,
     risk: tool.mutating ? ("high" as const) : ("read" as const),
     execution: "server" as const,
     pack: "role" as const,
-    auditTarget: tool.name.includes("incident") ? ("safety" as const) : ("work_hub" as const),
+    auditTarget: tool.name.includes("asset_custody") ? ("asset" as const) : tool.name.includes("incident") ? ("safety" as const) : ("work_hub" as const),
     authorityCapability: tool.authorityCapability,
   })),
 ];

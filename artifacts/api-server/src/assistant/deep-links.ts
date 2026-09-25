@@ -25,6 +25,7 @@ import {
   type Period,
   type PeriodPreset,
 } from "../lib/reports/period";
+import { workHubItemDestination } from "../../../../lib/api-client-react/src/work-hub-destinations";
 
 export type DeepLinkInput = {
   screen: string;
@@ -37,6 +38,12 @@ export type DeepLinkInput = {
   reportPreset?: string;
   /** Optional row highlight for salesTaxByState (e.g. TX). */
   highlightState?: string;
+  subjectType?: string;
+  itemId?: string;
+  query?: string;
+  start?: string;
+  end?: string;
+  types?: string[];
 };
 
 /** Report cards that support `?card=&periodStart=&periodEnd=` deep links. */
@@ -134,6 +141,13 @@ export const DEEP_LINK_SCREENS: ReadonlyArray<DeepLinkScreenDef> = [
   { screen: "work-hub-tasks", pattern: "/work-hub/tasks" },
   { screen: "work-hub-meetings", pattern: "/work-hub/meetings" },
   { screen: "work-hub-search", pattern: "/work-hub/search" },
+  { screen: "work-hub-item", pattern: "/work-hub/search" },
+  { screen: "shift-notes", pattern: "/gate/shift-notes" },
+  { screen: "profile", pattern: "/field/profile" },
+  { screen: "gate", pattern: "/gate" },
+  { screen: "work-hub-inventory", pattern: "/work-hub/assets" },
+  { screen: "work-hub-settings", pattern: "/work-hub/settings" },
+  { screen: "work-hub-implementation-exports", pattern: "/work-hub/implementation-exports" },
 ];
 
 // Lookup from screen name → definition. Built once at module load.
@@ -158,6 +172,9 @@ export function buildDeepLink(
 ): string | { error: string } {
   const def = SCREEN_BY_NAME.get(input.screen);
   if (!def) return { error: `Unknown screen: ${input.screen}` };
+  if (input.screen === "work-hub-item") {
+    return workHubItemDestination(input.subjectType ?? "", input.itemId ?? "")?.webPath ?? { error: "Choose an exact supported Work Hub record." };
+  }
 
   if (def.requiresId) {
     if (typeof input.id !== "number" || !Number.isFinite(input.id)) {
@@ -183,6 +200,12 @@ export function buildDeepLink(
   }
 
   const query: Record<string, string> = {};
+  if (input.screen === "work-hub-search") {
+    if (input.query) query.q = input.query;
+    if (input.start) query.start = input.start;
+    if (input.end) query.end = input.end;
+    if (input.types?.length) query.type = input.types.join(",");
+  }
   if (def.supportsStepQuery && input.step) {
     query.step = input.step;
   }

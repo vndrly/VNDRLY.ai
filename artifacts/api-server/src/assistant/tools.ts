@@ -62,6 +62,7 @@ export const DEEP_LINK_SCREENS = [
   "work-hub-tasks",
   "work-hub-meetings",
   "work-hub-search",
+  "work-hub-item", "work-hub-inventory", "work-hub-settings", "work-hub-implementation-exports", "shift-notes", "profile", "gate",
 ] as const;
 
 export const TOOLS: Anthropic.Tool[] = [
@@ -1208,6 +1209,12 @@ export const TOOLS: Anthropic.Tool[] = [
           enum: [...DEEP_LINK_SCREENS],
         },
         id: { type: "number", description: "Required for detail screens (e.g. ticket-detail, vendor-analytics, partner-analytics, crew-replay)." },
+        subjectType: { type: "string", enum: ["asset", "task", "meeting", "file", "announcement", "message", "note", "form", "transcript"] },
+        itemId: { type: "string", description: "Exact Work Hub UUID returned by an authorized read; required for work-hub-item." },
+        query: { type: "string" },
+        start: { type: "string" },
+        end: { type: "string" },
+        types: { type: "array", items: { type: "string" } },
         token: { type: "string", description: "Required for onboarding-field — the invite token from the email link." },
         step: { type: "string", description: "Optional ?step= query for onboarding deep-links." },
         reportCard: {

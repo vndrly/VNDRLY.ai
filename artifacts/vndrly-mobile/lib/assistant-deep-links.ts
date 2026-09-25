@@ -1,4 +1,5 @@
 import { getApiBase } from "@/lib/api";
+import { workHubItemDestination, WORK_HUB_MODULE_ALIASES } from "@workspace/api-client-react/work-hub-destinations";
 
 export type AssistantLinkTarget =
   | { type: "route"; path: string }
@@ -58,6 +59,9 @@ const MOBILE_ROUTE_BY_SCREEN: Record<string, string> = {
 };
 
 const MOBILE_ROUTE_BY_WEB_PATH: Record<string, string> = {
+  "/gate": "/(tabs)/gate",
+  "/gate/shift-notes": "/gate/shift-notes",
+  "/field/profile": "/(tabs)/profile",
   "/": "/(tabs)",
   "/field": "/(tabs)",
   "/tickets": "/history",
@@ -119,6 +123,14 @@ function ticketRoute(id: number): AssistantLinkTarget {
 function resolveScreenSlug(screen: string, id?: string): AssistantLinkTarget | null {
   const slug = screen.trim().toLowerCase().replace(/\s+/g, "-");
   if (!slug) return null;
+  if (slug === "work-hub") return { type: "route", path: "/(tabs)/work-hub" };
+  if (slug.startsWith("work-hub-")) {
+    const module = WORK_HUB_MODULE_ALIASES[slug.slice(9)];
+    return module ? { type: "route", path: `/work-hub/${module.native}${module.web === "assets" ? "?section=inventory" : ""}` } : null;
+  }
+  if (slug === "shift-notes") return { type: "route", path: "/gate/shift-notes" };
+  if (slug === "profile") return { type: "route", path: "/(tabs)/profile" };
+  if (slug === "gate") return { type: "route", path: "/(tabs)/gate" };
 
   if (slug === "ticket-detail" || slug === "tickets") {
     if (id) return ticketRoute(Number(id));
@@ -161,6 +173,19 @@ function resolveWebPath(pathAndQuery: string): AssistantLinkTarget | null {
   if (ticketId !== null) return ticketRoute(ticketId);
 
   const pathOnly = trimmed.split(/[?#]/)[0] ?? trimmed;
+  if (pathOnly === "/work-hub") return { type: "route", path: "/(tabs)/work-hub" };
+  if (pathOnly.startsWith("/work-hub/")) {
+    const params = new URLSearchParams(trimmed.split("?")[1] ?? "");
+    const item = params.get("item") ?? params.get("assetId");
+    if (item) {
+      const destination = workHubItemDestination(params.has("assetId") ? "asset" : params.get("type") ?? "", item);
+      return destination ? { type: "route", path: destination.nativePath } : null;
+    }
+    const module = WORK_HUB_MODULE_ALIASES[pathOnly.slice(10)];
+    if (!module) return null;
+    if (module.web === "assets") params.set("section", "inventory");
+    return { type: "route", path: `/work-hub/${module.native}${params.size ? `?${params}` : ""}` };
+  }
   const mobile = MOBILE_ROUTE_BY_WEB_PATH[pathOnly];
   if (mobile) return { type: "route", path: mobile };
 

@@ -3,6 +3,24 @@ import { toolsForRealtime, VOICE_WORKFLOWS } from "./tool-packs";
 import { DATA_TOOL_NAMES } from "./tool-names";
 
 describe("AskV realtime tool packs", () => {
+  it("keeps Shift Notes read-first and exposes safe Profile tools", () => {
+    const history = toolsForRealtime({ role: "vendor", path: "/gate/shift-notes" });
+    expect(history.map(t => t.name)).toContain("query_shift_notes");
+    expect(history.filter(t => t.mutating)).toEqual([]);
+    expect(toolsForRealtime({ role: "vendor", membershipRole: "admin", path: "/mobile/profile" }).map(t => t.name)).toContain("prepare_work_hub_profile");
+    expect(toolsForRealtime({ role: "vendor", membershipRole: "member", path: "/mobile/profile" }).map(t => t.name)).not.toContain("confirm_work_hub_gate_location");
+  });
+  it("loads canonical native Work Hub aliases", () => {
+    for (const path of ["/work-hub/files-notes", "/work-hub/inventory", "/work-hub/assets"]) {
+      const names = toolsForRealtime({ role: "vendor", path }).map(t => t.name);
+      expect(names).toContain("list_work_hub_files");
+      expect(names).toContain("query_asset_custody");
+      expect(names).toContain("list_work_hub_notes");
+      expect(names).toContain("manage_work_hub_note");
+    }
+    expect(toolsForRealtime({ role: "vendor", path: "/work-hub/tasks-forms" }).map(t => t.name)).toContain("manage_work_hub_task");
+    expect(toolsForRealtime({ role: "vendor", path: "/work-hub/implementation-exports" }).map(t => t.name)).toContain("preview_work_hub_role_export");
+  });
   it("exposes Gate Report in gate and reports workflows only to office roles", () => {
     for (const workflow of ["gate", "reports"] as const) {
       for (const role of ["admin", "partner", "vendor"]) {

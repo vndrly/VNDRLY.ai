@@ -15,6 +15,31 @@ const record = (value: unknown): Input =>
   value && typeof value === "object" && !Array.isArray(value)
     ? (value as Input)
     : {};
+const withoutNulls = (value: Input): Input => Object.fromEntries(Object.entries(value).filter(([, item]) => item != null));
+
+export function inferWorkHubAuditTargetId(rawInput: unknown, rawOutput?: unknown): string | number | null {
+  const input = record(rawInput);
+  let output = rawOutput;
+  if (typeof output === "string") { try { output = JSON.parse(output); } catch { output = null; } }
+  const result = record(output);
+  for (const source of [input, record(input.payload), record(result.resource), record(result.asset), result]) {
+    for (const key of ["documentId", "fileId", "assetId", "stationId", "channelId", "taskId", "occurrenceId", "exportId", "resourceId", "messageId", "noteId", "ticketId", "visitId", "notificationId", "siteId", "siteLocationId", "crewEmployeeId", "vendorId", "partnerId", "id"]) {
+      const value = source[key];
+      if (typeof value === "string" && value.trim() || typeof value === "number" && Number.isFinite(value)) return value as string | number;
+    }
+  }
+  return null;
+}
+
+export function describeWorkHubToolResult(name: string, rawInput: unknown, result: Record<string, unknown> | unknown[]) {
+  if (Array.isArray(result) || result.ok === false || result.error) return result;
+  if (name === "confirm_asset_custody_action" && ["conflict", "blocked"].includes(String(result.status)))
+    return { ...result, ok: false, error: result.code ?? "The asset changed or this action is blocked. Read it again before preparing a new action." };
+  const input = record(rawInput);
+  if ((name === "prepare_work_hub_file_upload" || name === "manage_work_hub_file" && input.action === "new_version") && record(result.resource).fileId)
+    return { ...result, state: "reserved", uploaded: false, finalized: false, nextStep: "Upload the selected bytes on the device, then finalize the returned documentId and fileId." };
+  return result;
+}
 const id = (value: unknown): string | null => {
   if (typeof value === "string" && value.trim()) return value.trim();
   if (typeof value === "number" && Number.isSafeInteger(value) && value > 0)
@@ -104,6 +129,19 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
   const action = typeof input.action === "string" ? input.action : "";
   const payload = record(input.payload);
   const resourceId = encoded(input.resourceId ?? input.id ?? input.assetId ?? input.tripId ?? input.eventId ?? input.invitationId);
+  if (name.includes("operations_displays")) return unsupported("operations display; use the authenticated companion");
+  if (name.includes("asset_custody")) {
+    const assetPayload = { ...withoutNulls(payload), ...(Array.isArray(payload.aliases) ? { aliases: payload.aliases.map(value => withoutNulls(record(value))) } : {}), ...(payload.alias ? { alias: withoutNulls(record(payload.alias)) } : {}) };
+    const actions = ["create", "aliases", "checkout", "return", "transfer", "condition", "hold", "merge", "verify-issued"];
+    if (name === "query_asset_custody") return request("GET", resourceId ? `/implementation-a/assets/${resourceId}` : "/implementation-a/assets");
+    if (!actions.includes(action)) return unsupported("asset custody");
+    if (action === "create") return name === "prepare_asset_custody_action" ? request("GET", "/implementation-a/assets") : request("POST", "/implementation-a/assets", { ...assetPayload, responsibleOwner: input.owner });
+    if (!resourceId) return { error: "A valid asset id is required." };
+    if (name === "prepare_asset_custody_action") return request("GET", `/implementation-a/assets/${resourceId}`);
+    if (!Number.isSafeInteger(input.expectedVersion) || Number(input.expectedVersion) < 1)
+      return { error: "Read the current asset version before confirming custody." };
+    return request("POST", `/implementation-a/assets/${resourceId}/${action}`, { ...assetPayload, operationId: input.operationId, expectedVersion: input.expectedVersion, confirmed: true });
+  }
   const readPaths: Record<string, string> = {
     query_account_invitations: "/implementation-a/account-invitations",
     query_workforce_coverage: "/implementation-a/workforce/coverage",
@@ -148,8 +186,10 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
     if (!resourceId) return { error: "A valid safety event id is required." };
     if (["escalate", "acknowledge", "evidence", "hold", "close"].includes(action)) return request("POST", `/implementation-a/safety/incidents/${resourceId}/${action}`, payload);
   }
-  if (name === "confirm_worker_subscriptions_action") return request("POST", resourceId ? `/implementation-a/subscriptions/${resourceId}/${action}` : "/implementation-a/subscriptions", payload);
-  if (name === "confirm_operations_displays_action") return request("POST", resourceId ? `/implementation-a/displays/${resourceId}/${action}` : "/implementation-a/displays", payload);
+  if (name === "confirm_worker_subscriptions_action") {
+    if (action === "create") return request("POST", "/implementation-a/subscriptions", payload);
+    if (resourceId && ["pause", "terminate", "reactivate"].includes(action)) return request("POST", `/implementation-a/subscriptions/${resourceId}/${action}`, payload);
+  }
   return unsupported("capability");
 }
 export function resolveWorkHubToolRequest(
@@ -161,6 +201,25 @@ export function resolveWorkHubToolRequest(
   let target: string | WorkHubToolRequest;
 
   switch (name) {
+    case "get_work_hub_settings": return request("GET", "/auth/me");
+    case "get_work_hub_connections": return request("GET", "/work-hub/connectors/microsoft-365");
+    case "set_work_hub_language":
+      return ["en", "es", "pt"].includes(String(input.language)) ? request("PATCH", "/auth/me/language", { language: input.language }) : unsupported("language");
+    case "preview_work_hub_role_export":
+      if (!["payroll", "quickbooks-time", "assets", "staffing", "safety"].includes(String(input.dataset))) return unsupported("export dataset");
+      return request("POST", "/work-hub/exports/implementation-a/preview", { dataset: input.dataset, scope: { ownerOrgType: record(input.owner).type, ownerOrgId: record(input.owner).id } });
+    case "get_work_hub_gate_locations":
+      return request("GET", input.siteId ? queryPath("/gate-locations", { siteId: input.siteId }) : "/gate-locations/sites");
+    case "prepare_work_hub_gate_location":
+      return request("POST", "/gate-locations/preview", withoutNulls(payload));
+    case "confirm_work_hub_gate_location":
+      if (!id(input.confirmation)) return { error: "Preview the exact gate values first." };
+      return request("POST", "/gate-locations", { ...withoutNulls(payload), confirmation: input.confirmation, idempotencyKey: input.operationId });
+    case "prepare_work_hub_profile":
+      return request("GET", "/field/me");
+    case "confirm_work_hub_profile":
+      if (!Object.keys(withoutNulls(payload)).length || Object.keys(payload).some(key => !["firstName", "lastName", "jobTitle", "phone", "pecExpirationDate"].includes(key))) return unsupported("profile field");
+      return request("PATCH", "/field/me", withoutNulls(payload));
     case "get_work_hub_briefing":
       return request("GET", "/work-hub/home");
     case "search_work_hub":
@@ -168,6 +227,8 @@ export function resolveWorkHubToolRequest(
         q: input.query,
         start: input.start,
         end: input.end,
+        type: Array.isArray(input.types) ? input.types.join(",") : input.type,
+        cursor: input.cursor,
       }));
     case "get_work_hub_activity":
       return request("GET", queryPath("/work-hub/activity", { q: input.query }));
@@ -589,8 +650,10 @@ export function resolveWorkHubToolRequest(
         ? request("GET", `/work-hub/file-library/${target}/versions`)
         : target;
     case "prepare_work_hub_file_upload":
-      return request("POST", "/work-hub/file-library/reserve", envelope(input));
+      return request("POST", "/work-hub/file-library/reserve", envelope(input, withoutNulls(payload)));
     case "manage_work_hub_file": {
+      if (input.action === "finalize" && (!id(input.fileId) || !id(payload.fileId)))
+        return { error: "Finalize requires the document id and reserved file id after the device uploads the bytes." };
       const actionMap: Record<string, string> = {
         favorite: "favorite", unfavorite: "favorite", recycle: "recycle",
         restore: "restore", finalize: "finalize", new_version: "reserve",
@@ -599,11 +662,11 @@ export function resolveWorkHubToolRequest(
       if (!action) return unsupported("file");
       if (input.action === "new_version")
         return request("POST", "/work-hub/file-library/reserve", envelope(input, {
-          ...payload,
+          ...withoutNulls(payload),
           documentId: input.fileId,
         }));
       return request("POST", `/work-hub/file-library/${action}`, envelope(input, {
-        ...payload,
+        ...withoutNulls(payload),
         id: input.fileId,
         ...(input.action === "unfavorite" ? { active: false } : {}),
         ...(input.action === "favorite" ? { active: true } : {}),
@@ -697,22 +760,29 @@ export function resolveExecutableWorkHubToolRequest(
   name: string,
   rawInput: unknown,
   mutationAuthorizedByServer: boolean,
+  session?: { userId?: number; role?: string; membershipRole?: string | null; vendorRole?: string | null; vendorId?: number | null; managedSubcontractor?: unknown },
 ): WorkHubToolRequest | null {
-  const metadata = WORK_HUB_TOOL_METADATA[name];
+  const metadata = resolveWorkHubToolMetadata(name);
   if (!metadata) return null;
+  if (session && (!session.userId || !metadata.roles.includes(session.role as never))) return { error: "This tool is not available to your role." };
+  if (session && metadata.companyAdminOnly && session.membershipRole !== "admin") return { error: "Organization administrator access is required." };
+  if (session && name.includes("gate_location") && (session.role !== "vendor" || !session.vendorId || session.membershipRole !== "admin" || session.managedSubcontractor || ["gatekeeper", "gate_supervisor"].includes(session.vendorRole ?? ""))) return { error: "Only a current vendor organization administrator may manage gate locations." };
   const input = record(rawInput);
   if (metadata.mutating && !mutationAuthorizedByServer)
     return {
       error: "Please confirm the exact Work Hub action first.",
       requiresConfirmation: true,
     };
-  return resolveWorkHubToolRequest(name, input);
+  return resolveWorkHubToolRequest(name, input) ?? resolveImplementationACapabilityRequest(name, input) ?? unsupported("tool");
 }
 import { WORK_HUB_TOOL_METADATA } from "./work-hub-tools";
-import { IMPLEMENTATION_A_CAPABILITY_TOOLS } from "./tool-registry";
+import { IMPLEMENTATION_A_CAPABILITY_TOOLS, findAskVTool } from "./tool-registry";
 
 export const isTypedWorkHubTool = (name: string): boolean =>
-  Boolean(WORK_HUB_TOOL_METADATA[name] || IMPLEMENTATION_A_CAPABILITY_TOOLS.some((tool) => tool.name === name));
+  Boolean(resolveWorkHubToolMetadata(name));
+
+export const resolveWorkHubToolMetadata = (name: string) =>
+  WORK_HUB_TOOL_METADATA[name] || IMPLEMENTATION_A_CAPABILITY_TOOLS.some((tool) => tool.name === name) ? findAskVTool(name) : null;
 
 export function bindWorkHubToolScope(
   rawInput: unknown,

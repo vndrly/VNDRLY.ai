@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ImportExportTools } from "./import-export";
@@ -12,6 +12,32 @@ function mount() { return render(<QueryClientProvider client={new QueryClient({ 
 
 describe("governed Work Hub exports", () => {
   beforeEach(() => { mocks.request.mockReset(); mocks.admin = true; mocks.request.mockResolvedValue({ batches: [], items: [] }); });
+  it("offers the supervisor only the server-granted staffing export", async () => {
+    mocks.admin = false;
+    mocks.request.mockResolvedValue({ capabilities: { canViewExports: true, allowedExportDatasets: ["staffing"] } });
+    mount();
+    const datasets = await screen.findByLabelText("Implementation A export dataset");
+    expect(datasets.textContent).toBe("Staffing");
+    expect((datasets as HTMLSelectElement).value).toBe("staffing");
+    expect(screen.queryByRole("option", { name: "Payroll hours" })).toBeNull();
+  });
+  it("does not download a pending export after the owner view unmounts", async () => {
+    mocks.admin = false;
+    mocks.request.mockResolvedValue({ capabilities: { canViewExports: true, allowedExportDatasets: ["staffing"] } });
+    let complete!: (value: Blob) => void;
+    const bytes = new Promise<Blob>(resolve => { complete = resolve; });
+    const fetcher = vi.fn().mockResolvedValue({ ok: true, blob: () => bytes });
+    const createObjectURL = vi.fn(() => "blob:export");
+    vi.stubGlobal("fetch", fetcher);
+    const view = mount();
+    await screen.findByLabelText("Implementation A export dataset");
+    vi.stubGlobal("URL", { createObjectURL, revokeObjectURL: vi.fn() });
+    fireEvent.click(screen.getByRole("button", { name: "Create audited CSV" }));
+    await waitFor(() => expect(fetcher).toHaveBeenCalled());
+    view.unmount();
+    await act(async () => { complete(new Blob(["staffing"])); await bytes; });
+    try { expect(createObjectURL).not.toHaveBeenCalled(); } finally { vi.unstubAllGlobals(); }
+  });
 
   it("hides export controls from users without policy management authority", () => {
     mocks.admin = false;

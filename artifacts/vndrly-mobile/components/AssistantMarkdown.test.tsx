@@ -1,10 +1,13 @@
 import React from "react";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-const { routerPush } = vi.hoisted(() => ({
+const { routerPush, apiRead } = vi.hoisted(() => ({
   routerPush: vi.fn(),
+  apiRead: vi.fn(),
 }));
+vi.mock("@/lib/api", () => ({ getApiBase: () => "https://vndrly.ai", apiFetch: apiRead }));
+vi.mock("@/lib/auth", () => ({ captureAuthScope: () => ({}), isAuthScopeCurrent: () => true }));
 
 vi.mock("expo-router", () => ({
   router: { push: routerPush },
@@ -26,6 +29,13 @@ afterEach(() => {
 });
 
 describe("AssistantMarkdown", () => {
+  it("refuses an exact Work Hub link when its access has been revoked", async () => {
+    apiRead.mockRejectedValueOnce(new Error("Access revoked"));
+    render(<AssistantMarkdown text="[Open task](/work-hub/search?type=task&item=7be22c7d-4638-4144-bb18-0d2a66996a43)" />);
+    fireEvent.click(screen.getByText("Open task"));
+    await waitFor(() => expect(apiRead).toHaveBeenCalled());
+    expect(routerPush).not.toHaveBeenCalled();
+  });
   it("renders partner catalog link label without raw markdown brackets", () => {
     render(
       <AssistantMarkdown text="[Open Partner Catalog →](VNDRLY-deep-link:partner catalog)" />,

@@ -49,6 +49,10 @@ const context = {
   required: ["kind", "id"],
   additionalProperties: false,
 };
+const gateLocation = { type: "object", properties: {
+  id: identifier(), version: { type: "integer" }, siteId: { type: "integer" }, name: text(), latitude: { type: "number" }, longitude: { type: "number" }, geofenceRadiusM: { type: "integer" }, active: { type: "boolean" },
+}, required: ["siteId", "name", "latitude", "longitude", "geofenceRadiusM", "active"], additionalProperties: false };
+const fileReservationProperties = { documentId: identifier(), scope: { type: "string", enum: ["personal", "company", "channel"] }, channelId: identifier(), fileName: text(), contentType: text(), byteSize: { type: "integer" }, checksumSha256: text() };
 
 function schema(
   properties: Record<string, unknown> = {},
@@ -107,11 +111,22 @@ function write(
 }
 
 const entries: Entry[] = [
+  read("get_work_hub_settings", "administration", "Read the caller's current account settings. Passwords, session tokens and device permissions are not editable through conversation."),
+  read("get_work_hub_connections", "administration", "Read the current Microsoft connection status. Authentication and consent must be completed in Settings & Connections; never collect credentials."),
+  write("set_work_hub_language", "administration", "Set the caller's preferred language after confirming the exact language.", writeSchema({ language: { type: "string", enum: ["en", "es", "pt"] } }, ["language"])),
+  read("preview_work_hub_role_export", "administration", "Preview an export allowed by the caller's current dataset grants. This does not download a file; open Exports to download and share.", schema({ dataset: { type: "string", enum: ["payroll", "quickbooks-time", "assets", "staffing", "safety"] } }, ["dataset"])),
+  read("get_work_hub_gate_locations", "administration", "List serviced sites or physical gates. Only current vendor organization administrators may manage these locations.", schema({ siteId: { type: "number" } })),
+  read("prepare_work_hub_gate_location", "administration", "Preview exact physical gate values and obtain a server confirmation token. Show name, site, coordinates, radius, active state and current version before confirmation.", schema({ payload: gateLocation }, ["payload"])),
+  write("confirm_work_hub_gate_location", "administration", "Save only the exact reviewed gate values with the preview confirmation token. Edits require payload.id and payload.version. Does not move the site wellhead.", writeSchema({ payload: gateLocation, confirmation: text() }, ["payload", "confirmation"]), true),
+  read("prepare_work_hub_profile", "administration", "Read the caller's own profile and compliance status before proposing exact safe edits. Never request credentials or claim external compliance verification."),
+  write("confirm_work_hub_profile", "administration", "Update only the caller's firstName, lastName, jobTitle, phone or pecExpirationDate after exact-value confirmation. A supplied PEC date is a self-reported edit, not verified compliance. Credentials and external compliance portal submission stay in the app.", writeSchema({ payload: { type: "object", properties: { firstName: text(), lastName: text(), jobTitle: text(), phone: text(), pecExpirationDate: text() }, additionalProperties: false } }, ["payload"])),
   read("get_work_hub_briefing", "command", "Get the caller''s permission-scoped Work Hub home briefing, required actions, summaries, and suggested next actions."),
   read("search_work_hub", "command", "Search authorized Work Hub messages, tasks, meetings, files, people, and activity.", schema({
     query: text("Natural-language search query."),
     start: text("Optional ISO start time."),
     end: text("Optional ISO end time."),
+    types: { type: "array", items: { type: "string", enum: ["message", "note", "meeting", "transcript", "file", "task", "form", "announcement", "asset"] } },
+    cursor: text("Continuation cursor returned by search."),
   }, ["query"])),
   read("get_work_hub_activity", "command", "List recent authorized Work Hub activity.", schema({
     query: text("Optional activity text filter."),
@@ -168,11 +183,11 @@ const entries: Entry[] = [
     messageId: identifier(),
   }, ["channelId"])),
   read("list_work_hub_notes", "collaboration", "List authorized channel notes.", schema({ channelId: identifier() }, ["channelId"])),
-  write("manage_work_hub_note", "collaboration", "Create or update an authorized channel note after confirmation.", writeSchema({
+  write("manage_work_hub_note", "collaboration", "Create or update an authorized channel note after exact-content confirmation. Read channel and current note version first; author edit windows and supervisor/admin permissions remain server enforced.", writeSchema({
     action: { type: "string", enum: ["create", "update"] },
     channelId: identifier(),
     noteId: identifier(),
-    payload: { type: "object" },
+    payload: { type: "object", properties: { title: text(), body: text() }, required: ["title", "body"], additionalProperties: false },
   }, ["action", "channelId", "payload"])),
   write("manage_work_hub_chat", "collaboration", "Create a private chat with selected authorized participants after confirmation.", writeSchema({
     recipientUserId: { type: "number" },
@@ -334,13 +349,13 @@ const entries: Entry[] = [
 
   read("list_work_hub_files", "files", "Search and list authorized Work Hub files.", schema({ query: text(), audience: text() })),
   read("get_work_hub_file_versions", "files", "List versions of an authorized Work Hub file.", schema({ fileId: identifier() }, ["fileId"])),
-  write("prepare_work_hub_file_upload", "files", "Reserve an authorized Work Hub file upload with an exact audience and destination.", writeSchema({
-    payload: { type: "object" },
+  write("prepare_work_hub_file_upload", "files", "Reserve an authorized Work Hub file upload with an exact audience and destination. A reservation is not an upload: the device must upload the bytes to uploadURL, then finalize the documentId and reserved fileId. Never claim uploaded or saved from reservation alone.", writeSchema({
+    payload: { type: "object", properties: fileReservationProperties, required: ["scope", "fileName", "contentType", "byteSize", "checksumSha256"], additionalProperties: false },
   }, ["payload"])),
   write("manage_work_hub_file", "files", "Favorite, recycle, restore, finalize, or add a version to an authorized file.", writeSchema({
     action: { type: "string", enum: ["favorite", "unfavorite", "recycle", "restore", "finalize", "new_version"] },
     fileId: identifier(),
-    payload: { type: "object" },
+    payload: { type: "object", properties: { ...fileReservationProperties, fileId: identifier("Reserved upload fileId required for finalize; top-level fileId is the documentId.") }, additionalProperties: false },
   }, ["action", "fileId", "payload"])),
   write("share_work_hub_file", "files", "Create or revoke an authorized file share after showing its audience and expiration.", writeSchema({
     action: { type: "string", enum: ["share", "revoke"] },

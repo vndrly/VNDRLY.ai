@@ -66,6 +66,8 @@ import {
   bindWorkHubToolScope,
   isTypedWorkHubTool,
   resolveExecutableWorkHubToolRequest,
+  inferWorkHubAuditTargetId,
+  describeWorkHubToolResult,
 } from "../assistant/work-hub-tool-runtime";
 import { isClientTool, runClientTool } from "../assistant/client-tools";
 import {
@@ -803,6 +805,7 @@ export async function runTool(
     name,
     bindWorkHubToolScope(input, session),
     workHubMutationAuthorizedByServer,
+    session,
   );
   if (workHubRequest) {
     if ("error" in workHubRequest)
@@ -813,7 +816,7 @@ export async function runTool(
           ? { requiresConfirmation: true }
           : {}),
       });
-    return JSON.stringify(
+    return JSON.stringify(describeWorkHubToolResult(name, input,
       await callNaturalVoiceDomainApi(
         workHubRequest.path,
         workHubRequest.method,
@@ -821,7 +824,7 @@ export async function runTool(
         session,
         workHubRequest.headers,
       ),
-    );
+    ));
   }
   if (name === "query_work_hub") {
     const args = (input ?? {}) as Record<string, unknown>;
@@ -1129,6 +1132,12 @@ export async function runTool(
           reportCard?: string;
           reportPreset?: string;
           highlightState?: string;
+          subjectType?: string;
+          itemId?: string;
+          query?: string;
+          start?: string;
+          end?: string;
+          types?: string[];
         };
         if (!args.screen) return JSON.stringify({ error: "Missing 'screen'." });
         // Role-aware gate (P0 fix from assistant review): the assistant
@@ -1143,6 +1152,7 @@ export async function runTool(
           return JSON.stringify({ error: gate.error });
         }
         const link = buildDeepLink({
+          ...args,
           screen: args.screen,
           id: args.id,
           token: args.token,
@@ -1169,17 +1179,6 @@ export async function runTool(
   }
 }
 
-function inferToolTargetId(input: unknown): string | number | null {
-  if (!input || typeof input !== "object") return null;
-  const args = input as Record<string, unknown>;
-  for (const key of ["ticketId", "notificationId", "siteId", "crewEmployeeId", "vendorId", "partnerId"]) {
-    const value = args[key];
-    if ((typeof value === "number" && Number.isFinite(value)) || (typeof value === "string" && value.trim())) {
-      return value as string | number;
-    }
-  }
-  return null;
-}
 
 function inferAskVSurface(pageContext: ReturnType<typeof parsePageContext> | undefined): AskVClientSurface {
   if (pageContext?.path?.startsWith("/mobile/") || pageContext?.currentLocation?.source === "mobile_device") {
@@ -1210,7 +1209,7 @@ async function auditToolCall(args: {
       toolName: args.toolName,
       actionType: tool?.mutating ? "write_tool" : "read_tool",
       targetType: tool?.auditTarget ?? null,
-      targetId: inferToolTargetId(args.toolInput),
+      targetId: inferWorkHubAuditTargetId(args.toolInput, args.toolOutput),
       transcriptText: args.userMessage,
       toolInput: args.toolInput,
       toolOutput: args.toolOutput,
@@ -1363,7 +1362,7 @@ async function handleConversationMessage(
       }
     }
   }
-  const assistantTools = pageContext?.path.startsWith("/work-hub")
+  const assistantTools = pageContext?.path && /\/(work-hub|profile|compliance|shift-notes)(?:\/|$)/.test(pageContext.path)
     ? toolsForRealtime({
         role: session.role,
         membershipRole: session.membershipRole,

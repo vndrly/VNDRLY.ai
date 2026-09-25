@@ -29,7 +29,7 @@ vi.mock("@/hooks/use-auth", () => ({
 }));
 
 vi.mock("@/lib/change-over-api", () => ({
-  changeOverRequest: vi.fn(async (path: string) => path === "/sites"
+  changeOverRequest: vi.fn(async (path: string) => path === "/sites?mode=history"
     ? { sites: [{ id: 42, name: "Big Cs Deep" }] }
     : { stations: [{ id: "main-gate", name: "Main gate" }] }),
 }));

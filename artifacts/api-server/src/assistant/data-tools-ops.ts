@@ -1443,9 +1443,12 @@ export async function runOpsDataTool(
     case "query_gate_change_over":
     case "query_shift_notes":
       try {
-        if (name === "query_gate_stations") return JSON.stringify(args.siteId == null
-          ? { sites: await listChangeOverSites(session) }
-          : { stations: await listChangeOverStations(session, z.number().int().positive().parse(args.siteId)) });
+        if (name === "query_gate_stations") {
+          const mode = z.enum(["operational", "history"]).parse(args.mode ?? "operational");
+          return JSON.stringify(args.siteId == null
+            ? { sites: await listChangeOverSites(session, mode) }
+            : { stations: await listChangeOverStations(session, z.number().int().positive().parse(args.siteId), mode) });
+        }
         const stationId = z.string().uuid().parse(args.stationId);
         if (name === "query_gate_change_over") return JSON.stringify(await getChangeOverState(session, stationId));
         const filters = z.object({ days: z.number().int().min(1).max(3650).optional(), search: z.string().max(200).optional(), before: z.string().datetime().optional() }).parse(args);

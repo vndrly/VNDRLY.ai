@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   bindWorkHubToolScope,
+  inferWorkHubAuditTargetId,
+  describeWorkHubToolResult,
   resolveExecutableWorkHubToolRequest,
   resolveWorkHubToolRequest,
 } from "./work-hub-tool-runtime";
@@ -13,6 +15,81 @@ const command = {
 };
 
 describe("resolveWorkHubToolRequest", () => {
+  it("reads settings and connections and confines language edits to supported values", () => {
+    expect(resolveExecutableWorkHubToolRequest("get_work_hub_settings", {}, false)).toMatchObject({ method: "GET", path: "/auth/me" });
+    expect(resolveExecutableWorkHubToolRequest("get_work_hub_connections", {}, false)).toMatchObject({ method: "GET", path: "/work-hub/connectors/microsoft-365" });
+    expect(resolveExecutableWorkHubToolRequest("set_work_hub_language", { ...command, language: "es" }, false)).toMatchObject({ requiresConfirmation: true });
+    expect(resolveExecutableWorkHubToolRequest("set_work_hub_language", { ...command, language: "es" }, true)).toMatchObject({ method: "PATCH", path: "/auth/me/language", body: { language: "es" } });
+    expect(resolveExecutableWorkHubToolRequest("set_work_hub_language", { ...command, language: "invalid" }, true)).toHaveProperty("error");
+  });
+  it("reports reservations and stale custody results without claiming completion", () => {
+    expect(describeWorkHubToolResult("prepare_work_hub_file_upload", {}, { resource: { documentId: "doc-1", fileId: "file-2" } })).toMatchObject({ state: "reserved", uploaded: false, finalized: false });
+    expect(describeWorkHubToolResult("confirm_asset_custody_action", {}, { status: "conflict", code: "asset.version_conflict" })).toMatchObject({ ok: false, status: "conflict", code: "asset.version_conflict" });
+    expect(inferWorkHubAuditTargetId({}, { resource: { documentId: "doc-1", fileId: "file-2" } })).toBe("doc-1");
+  });
+  it("rejects arbitrary Implementation A action paths", () => {
+    expect(resolveExecutableWorkHubToolRequest("confirm_worker_subscriptions_action", { resourceId: "id", action: "../../unexpected", payload: {} }, true)).toHaveProperty("error");
+    expect(resolveExecutableWorkHubToolRequest("confirm_operations_displays_action", { resourceId: "id", action: "../../unexpected", payload: {} }, true)).toHaveProperty("error");
+  });
+  it("creates assets only under the bound owner and normalizes optional realtime values", () => {
+    expect(resolveExecutableWorkHubToolRequest("confirm_asset_custody_action", { ...command, action: "create", payload: { name: "Radio", category: "equipment", legalOwner: "Vendor", responsibleOwner: { type: "vendor", id: 999 } } }, true)).toMatchObject({ method: "POST", path: "/implementation-a/assets", body: { responsibleOwner: command.owner } });
+    const result = resolveExecutableWorkHubToolRequest("confirm_asset_custody_action", { ...command, action: "checkout", assetId: "asset-1", expectedVersion: 2, payload: { condition: "good", holderUserId: null, photos: null, note: null } }, true);
+    expect(result).toMatchObject({ method: "POST", body: { condition: "good", expectedVersion: 2 } });
+    expect(result && "body" in result ? result.body : {}).not.toHaveProperty("holderUserId");
+    const created = resolveExecutableWorkHubToolRequest("confirm_asset_custody_action", { ...command, action: "create", payload: { name: "Radio", aliases: [{ kind: "asset_tag", value: "R1", jurisdiction: null }] } }, true);
+    expect(created).toMatchObject({ body: { aliases: [{ kind: "asset_tag", value: "R1" }] } });
+    expect(created && "body" in created ? (created.body.aliases as object[])[0] : {}).not.toHaveProperty("jurisdiction");
+  });
+  it("denies anonymous asset reads and non-admin gate location execution", () => {
+    expect(resolveExecutableWorkHubToolRequest("query_asset_custody", {}, false, { role: "any" })).toHaveProperty("error");
+    expect(resolveExecutableWorkHubToolRequest("confirm_work_hub_gate_location", { ...command, confirmation: "token", payload: {} }, true, { userId: 1, role: "vendor", membershipRole: "member", vendorRole: "gatekeeper", vendorId: 42 })).toHaveProperty("error");
+    expect(resolveExecutableWorkHubToolRequest("query_worker_subscriptions", {}, false, { userId: 1, role: "field_employee" })).toHaveProperty("error");
+  });
+  it("records exact Work Hub audit identifiers including nested gate changes", () => {
+    for (const key of ["fileId", "documentId", "assetId", "stationId", "channelId", "taskId", "occurrenceId", "exportId"])
+      expect(inferWorkHubAuditTargetId({ [key]: "exact-record" })).toBe("exact-record");
+    expect(inferWorkHubAuditTargetId({ payload: { id: "gate-1" } })).toBe("gate-1");
+  });
+  it("executes registered asset reads and prepares the exact asset", () => {
+    expect(resolveExecutableWorkHubToolRequest("query_asset_custody", {}, false)).toMatchObject({ method: "GET", path: "/implementation-a/assets" });
+    expect(resolveExecutableWorkHubToolRequest("prepare_asset_custody_action", { action: "checkout", assetId: "asset-1" }, false)).toMatchObject({ method: "GET", path: "/implementation-a/assets/asset-1" });
+    expect(resolveExecutableWorkHubToolRequest("prepare_asset_custody_action", { action: "erase", assetId: "asset-1" }, false)).toHaveProperty("error");
+  });
+  it("requires server confirmation and preserves custody concurrency and retry fields", () => {
+    const input = { ...command, assetId: "asset-1", action: "checkout", expectedVersion: 3, payload: { condition: "good", photos: [], confirmed: true } };
+    expect(resolveExecutableWorkHubToolRequest("confirm_asset_custody_action", input, false)).toMatchObject({ requiresConfirmation: true });
+    expect(resolveExecutableWorkHubToolRequest("confirm_asset_custody_action", input, true)).toMatchObject({ method: "POST", path: "/implementation-a/assets/asset-1/checkout", body: { operationId: command.operationId, expectedVersion: 3, confirmed: true, condition: "good" } });
+    expect(resolveExecutableWorkHubToolRequest("confirm_asset_custody_action", { ...input, expectedVersion: null }, true)).toHaveProperty("error");
+    expect(resolveExecutableWorkHubToolRequest("confirm_asset_custody_action", { ...input, action: "erase" }, true)).toHaveProperty("error");
+  });
+  it("preserves inventory search filters and pagination", () => {
+    expect(resolveExecutableWorkHubToolRequest("search_work_hub", { query: "pump", types: ["asset", "note"], cursor: "next" }, false)).toMatchObject({ path: "/work-hub/search?q=pump&type=asset%2Cnote&cursor=next" });
+  });
+  it("binds role export preview to the session owner and rejects unknown datasets", () => {
+    expect(resolveExecutableWorkHubToolRequest("preview_work_hub_role_export", { ...command, dataset: "staffing", scope: { ownerOrgId: 999 } }, false)).toMatchObject({ method: "POST", path: "/work-hub/exports/implementation-a/preview", body: { dataset: "staffing", scope: { ownerOrgType: "vendor", ownerOrgId: 42 } } });
+    expect(resolveExecutableWorkHubToolRequest("preview_work_hub_role_export", { ...command, dataset: "secrets" }, false)).toHaveProperty("error");
+  });
+  it("previews exact gate values and requires the returned token for save", () => {
+    const payload = { siteId: 9, name: "West", latitude: 35, longitude: -97, geofenceRadiusM: 100, active: true };
+    expect(resolveExecutableWorkHubToolRequest("prepare_work_hub_gate_location", { payload }, false)).toMatchObject({ method: "POST", path: "/gate-locations/preview", body: payload });
+    expect(resolveExecutableWorkHubToolRequest("confirm_work_hub_gate_location", { ...command, payload }, true)).toHaveProperty("error");
+    expect(resolveExecutableWorkHubToolRequest("confirm_work_hub_gate_location", { ...command, payload, confirmation: "server-token" }, true)).toMatchObject({ method: "POST", path: "/gate-locations", body: { ...payload, confirmation: "server-token", idempotencyKey: command.operationId } });
+  });
+  it("restricts profile and compliance edits to safe exact fields", () => {
+    expect(resolveExecutableWorkHubToolRequest("prepare_work_hub_profile", {}, false)).toMatchObject({ method: "GET", path: "/field/me" });
+    expect(resolveExecutableWorkHubToolRequest("confirm_work_hub_profile", { ...command, payload: { phone: "555-0100", pecExpirationDate: "2027-01-01" } }, true)).toMatchObject({ method: "PATCH", path: "/field/me", body: { phone: "555-0100", pecExpirationDate: "2027-01-01" } });
+    expect(resolveExecutableWorkHubToolRequest("confirm_work_hub_profile", { ...command, payload: { password: "forbidden" } }, true)).toHaveProperty("error");
+  });
+  it("does not clear unspecified profile fields supplied as realtime nulls", () => {
+    expect(resolveExecutableWorkHubToolRequest("confirm_work_hub_profile", { ...command, payload: { phone: "555-0100", jobTitle: null, pecExpirationDate: null } }, true)).toMatchObject({ body: { phone: "555-0100" } });
+    const result = resolveExecutableWorkHubToolRequest("confirm_work_hub_profile", { ...command, payload: { phone: "555-0100", jobTitle: null } }, true);
+    expect("body" in result! && result.body).not.toHaveProperty("jobTitle");
+    expect(resolveExecutableWorkHubToolRequest("confirm_work_hub_profile", { ...command, payload: { phone: null } }, true)).toHaveProperty("error");
+  });
+  it("requires both document and reserved file IDs to finalize uploaded bytes", () => {
+    expect(resolveExecutableWorkHubToolRequest("manage_work_hub_file", { ...command, action: "finalize", fileId: "document-1", payload: {} }, true)).toHaveProperty("error");
+    expect(resolveExecutableWorkHubToolRequest("manage_work_hub_file", { ...command, action: "finalize", fileId: "document-1", payload: { fileId: "reserved-2" } }, true)).toMatchObject({ body: { payload: { id: "document-1", fileId: "reserved-2" } } });
+  });
   it("binds organization scope from the authenticated session instead of model arguments", () => {
     expect(
       bindWorkHubToolScope(

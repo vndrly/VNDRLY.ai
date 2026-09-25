@@ -7,6 +7,7 @@ export const CHANGE_OVER_TOOLS: Anthropic.Tool[] = [
     input_schema: {
       type: "object",
       properties: {
+        mode: { type: "string", enum: ["operational", "history"], description: "Use history for Shift Notes and past/inactive gates; authorization is still checked." },
         siteId: {
           type: "integer",
           description: "Optional authorized site ID to list its gate stations",

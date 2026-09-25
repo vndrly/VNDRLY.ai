@@ -11,6 +11,7 @@ import {
 
 import { useColors } from "@/hooks/useColors";
 import { resolveAssistantLink } from "@/lib/assistant-deep-links";
+import { openAuthorizedAssistantLink } from "@/lib/askv-client-tools";
 import {
   parseAssistantInlineSegments,
   type AssistantInlineSegment,
@@ -20,6 +21,10 @@ function openAssistantLink(href: string): void {
   const target = resolveAssistantLink(href);
   if (!target) return;
   if (target.type === "route") {
+    if (target.path.startsWith("/work-hub/")) {
+      void openAuthorizedAssistantLink(href);
+      return;
+    }
     router.push(target.path as never);
     return;
   }

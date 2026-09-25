@@ -1,6 +1,9 @@
 import { router } from "expo-router";
 import { Linking } from "react-native";
-import { getApiBase } from "@/lib/api";
+import { getApiBase, apiFetch } from "@/lib/api";
+import { captureAuthScope, isAuthScopeCurrent } from "@/lib/auth";
+import { resolveAssistantLink } from "./assistant-deep-links";
+import { workHubItemDestination } from "@workspace/api-client-react/work-hub-destinations";
 
 export interface AskVClientIntent { name: string; arguments: Record<string, unknown> }
 export interface AskVClientResult { ok: boolean; message: string; opened?: boolean; saved?: boolean; responseMode?: "silent" }
@@ -66,6 +69,26 @@ function ticketId(value: unknown): number | null {
 const fail = (message: string): AskVClientResult => ({ ok: false, message });
 const opened = (message: string): AskVClientResult => ({ ok: true, opened: true, saved: false, message });
 
+/** Re-read exact records before navigation; a link never grants access. */
+export async function openAuthorizedAssistantLink(href: string): Promise<AskVClientResult> {
+  const target = resolveAssistantLink(href);
+  if (!target) return fail("This destination is not available.");
+  try {
+    if (target.type === "browser") { await Linking.openURL(target.url); return opened("Opened this VNDRLY screen in the browser."); }
+    const detail = target.path.match(/^\/work-hub\/search-item\/([^/]+)\/([^/?]+)/);
+    const meeting = target.path.match(/^\/work-hub\/meeting\/([^/?]+)/);
+    const assetId = new URLSearchParams(target.path.split("?")[1] ?? "").get("assetId");
+    const destination = detail ? workHubItemDestination(detail[1], detail[2]) : meeting ? workHubItemDestination("meeting", meeting[1]) : assetId ? workHubItemDestination("asset", assetId) : null;
+    if (destination) {
+      const scope = captureAuthScope();
+      await apiFetch(`/api${destination.readPath}`);
+      if (!isAuthScopeCurrent(scope)) return fail("Your active account changed. Open the item again.");
+    }
+    router.push(target.path as never);
+    return opened("Opened the requested screen.");
+  } catch (error) { return fail(error instanceof Error ? error.message : "This item is no longer available."); }
+}
+
 /** Only explicit, validated app capabilities execute here. No result claims a record was saved. */
 export async function executeAskVClientIntent(intent: AskVClientIntent, path: string): Promise<AskVClientResult> {
   const args = intent.arguments;
@@ -81,6 +104,8 @@ export async function executeAskVClientIntent(intent: AskVClientIntent, path: st
       return focus?.() ? opened("Focused the requested control.") : fail("That control is not available on the current screen.");
     }
     if (intent.name === "open_screen") {
+      if (typeof args.path === "string" && /^\/work-hub(?:\/|$)/.test(args.path)) return openAuthorizedAssistantLink(args.path);
+      if (String(args.screen).startsWith("work-hub") || args.screen === "shift-notes") return openAuthorizedAssistantLink(`vndrly-deep-link:${args.screen}`);
       let target = screens[String(args.screen)];
       const id = ticketId(args.id);
       if (args.screen === "ticket-detail" && id) target = "/ticket/" + id;

@@ -43,6 +43,11 @@ beforeEach(() => {
   vi.stubGlobal("fetch", fetchMock);
 });
 describe("AskV canonical Gate and field operations", () => {
+  it("carries server-authorized asset confirmation to the custody endpoint", async () => {
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ status: "applied" }) });
+    await callNaturalVoiceDomainApi("/implementation-a/assets/7be22c7d-4638-4144-bb18-0d2a66996a43/checkout", "POST", { confirmed: true, expectedVersion: 2, operationId: "operation" }, gate);
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({ confirmed: true, expectedVersion: 2, operationId: "operation" });
+  });
   it("supports the full internal Work Hub method set and marks requests as Ask V", async () => {
     fetchMock.mockResolvedValue({
       ok: true,

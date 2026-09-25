@@ -164,7 +164,7 @@ describe("Work Hub AskV web/iOS parity", () => {
     ).filter((tool) => !["query_work_hub", "propose_work_hub_action"].includes(tool.name));
     expect(typed.length).toBeGreaterThanOrEqual(35);
     for (const tool of typed) {
-      expect(tool.auditTarget, tool.name).toBe("work_hub");
+      expect(tool.auditTarget, tool.name).toMatch(/^(work_hub|file|station|channel|task|occurrence|export|profile)$/);
       if (tool.mutating) expect(tool.confirmation, tool.name).toBe("required");
     }
   });

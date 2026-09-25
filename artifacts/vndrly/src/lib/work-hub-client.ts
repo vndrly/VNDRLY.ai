@@ -1,3 +1,4 @@
+import { workHubItemDestination } from "@workspace/api-client-react/work-hub-destinations";
 export type WorkHubOwner = { type: "vendor" | "partner"; id: number };
 export type WorkHubUser = {
   role: string;
@@ -122,15 +123,5 @@ export function normalizeWorkHubSearchResponse<T>(value: T[] | WorkHubSearchResp
 }
 
 export function workHubModulePath(subjectType: string, subjectId: string) {
-  if (["message", "channel", "note", "file"].includes(subjectType))
-    return `/work-hub/chat?${subjectType}=${encodeURIComponent(subjectId)}`;
-  if (["meeting", "meeting_occurrence"].includes(subjectType))
-    return `/work-hub/meetings?meeting=${encodeURIComponent(subjectId)}`;
-  if (
-    ["task", "form", "checklist", "announcement", "approval"].includes(
-      subjectType,
-    )
-  )
-    return `/work-hub/tasks?${subjectType}=${encodeURIComponent(subjectId)}`;
-  return "/work-hub/search";
+  return workHubItemDestination(subjectType, subjectId)?.webPath ?? "/work-hub/search";
 }

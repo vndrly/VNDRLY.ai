@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./work-hub-destinations": "./src/work-hub-destinations.ts",
     "./meeting-streaming": "./src/meeting-streaming.ts",
     "./meeting-workspace": "./src/meeting-workspace.ts"
   },

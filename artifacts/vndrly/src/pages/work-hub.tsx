@@ -7,6 +7,7 @@ import { Subscriptions } from "@/components/implementation-a/subscriptions";
 import { OperationsHealth } from "@/components/implementation-a/operations-health";
 import { ImportExportTools } from "@/components/work-hub/import-export";
 import { FilesAndNotes } from "@/components/work-hub/files-and-notes";
+import { WorkHubExactItem } from "@/components/work-hub/exact-item";
 import { WorkHubCalls } from "@/components/work-hub/calls";
 import { MeetingScheduling } from "@/components/work-hub/meeting-scheduling";
 import { ActivityWorkspace, CollaborationWorkspace } from "@/components/work-hub/collaboration";
@@ -2057,11 +2058,12 @@ function FilesModule() {
   );
 }
 function SearchModule() {
-  const [q, setQ] = useState("");
-  const [term, setTerm] = useState("");
-  const [start, setStart] = useState("");
-  const [end, setEnd] = useState("");
-  const [type, setType] = useState("");
+  const params = new URLSearchParams(window.location.search);
+  const [q, setQ] = useState(params.get("q") ?? "");
+  const [term, setTerm] = useState(params.get("q") ?? "");
+  const [start, setStart] = useState(params.get("start")?.slice(0, 10) ?? "");
+  const [end, setEnd] = useState(params.get("end")?.slice(0, 10) ?? "");
+  const [type, setType] = useState(params.get("type") ?? "");
   const results = useQuery<WorkHubSearchResponse<Row>>({
     queryKey: ["work-hub", "search", term, start, end, type],
     queryFn: async () => {
@@ -2074,6 +2076,7 @@ function SearchModule() {
     },
     enabled: term.length >= 2,
   });
+  if (params.has("item")) return <Shell module="search"><WorkHubExactItem key={params.toString()} subjectType={params.get("type") ?? ""} itemId={params.get("item") ?? ""} /></Shell>;
   return (
     <Shell module="search">
       <Card>
@@ -2130,7 +2133,7 @@ function SearchModule() {
           {results.data?.results.map((r) => (
             <a
               key={r.id}
-              href={workHubModulePath(r.subjectType, r.subjectId)}
+              href={workHubModulePath(r.subjectType, r.subjectType === "meeting" ? r.contextId : r.subjectId)}
               className="rounded-lg border p-4 hover:bg-muted"
             >
               <span className="text-xs uppercase text-muted-foreground">
@@ -2304,6 +2307,7 @@ function WorkHubContent() {
     if (channel) navigate(`/work-hub/chat?channel=${encodeURIComponent(channel)}`, { replace: true });
   }, [moduleName, navigate]);
   if (!module) return <ActivityWorkspace />;
+  if (moduleName === "implementation-exports") return <Shell module="settings"><ImportExportTools /></Shell>;
   if (moduleName === "managed-crews") return <ManagedCrews />;
   if (moduleName === "coverage") return <WorkforceCoverage />;
   if (moduleName === "assets") return <Assets />;

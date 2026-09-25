@@ -83,6 +83,8 @@ export type DeepLinkGateResult = { ok: true } | { ok: false; error: string };
 // the deep_link_to tool case so a regression test can call the exact
 // same function the runtime uses.
 export function gateDeepLinkScreen(role: AssistantRole, screen: string): DeepLinkGateResult {
+  if (screen === "profile") return role === "field_employee" ? { ok: true } : { ok: false, error: "The web profile is field-only. Open Work Hub Settings, or use the native Profile screen." };
+  if (role !== "any" && ["work-hub-item", "work-hub-inventory", "work-hub-settings", "work-hub-implementation-exports", "shift-notes", "gate"].includes(screen)) return { ok: true };
   const allowed = ROLE_ALLOWED_SCREENS[role];
   if (!allowed) return { ok: true };
   if (allowed.has(screen)) return { ok: true };
