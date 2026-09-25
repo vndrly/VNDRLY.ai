@@ -5,10 +5,26 @@ vi.mock("react-native", () => ({ Linking: { openURL: ui.openURL } }));
 vi.mock("@/lib/api", () => ({ getApiBase: () => "https://vndrly.ai", apiFetch: ui.api }));
 vi.mock("@/lib/auth", () => ({ captureAuthScope: () => ({}), isAuthScopeCurrent: ui.current }));
 import { executeAskVClientIntent, readAskVSafetyDraft, registerAskVControl } from "../askv-client-tools";
+import { runClientTool } from "../../../api-server/src/assistant/client-tools";
 beforeEach(() => { ui.push.mockReset(); ui.openURL.mockReset().mockResolvedValue(undefined); ui.api.mockReset().mockResolvedValue({}); ui.current.mockReturnValue(true); });
 describe("AskV native client capabilities", () => {
+  it("opens a managed document from real server arguments while preserving legacy files", async () => {
+    for (const [subjectType, readPath] of [["document", "/api/work-hub/file-library/7be22c7d-4638-4144-bb18-0d2a66996a43"], ["file", "/api/work-hub/search/items/file/7be22c7d-4638-4144-bb18-0d2a66996a43"]]) {
+      const emitted = JSON.parse(runClientTool("open_screen", { screen: "work-hub-item", subjectType, itemId: "7be22c7d-4638-4144-bb18-0d2a66996a43" }, { userId: 10, role: "field_employee" }));
+      expect(emitted.ok).toBe(true);
+      expect(await executeAskVClientIntent(emitted.intent, "/askv")).toMatchObject({ ok: true });
+      expect(ui.api).toHaveBeenLastCalledWith(readPath);
+    }
+  });
+  it("opens the complete search query emitted by the server", async () => {
+    const emitted = JSON.parse(runClientTool("open_screen", { screen: "work-hub-search", query: "pump", types: ["asset", "note"], start: "2026-09-01" }, { userId: 10, role: "field_employee" }));
+    expect(await executeAskVClientIntent(emitted.intent, "/askv")).toMatchObject({ ok: true });
+    expect(ui.push).toHaveBeenCalledWith("/work-hub/search?q=pump&start=2026-09-01&type=asset%2Cnote");
+  });
   it("reauthorizes exact Work Hub navigation and refuses revoked access", async () => {
-    const intent = { name: "open_screen", arguments: { path: "/work-hub/search?type=task&item=7be22c7d-4638-4144-bb18-0d2a66996a43" } };
+    const emitted = JSON.parse(runClientTool("open_screen", { screen: "work-hub-item", subjectType: "task", itemId: "7be22c7d-4638-4144-bb18-0d2a66996a43" }, { userId: 10, role: "field_employee" }));
+    expect(emitted.ok).toBe(true);
+    const intent = emitted.intent;
     expect(await executeAskVClientIntent(intent, "/askv")).toMatchObject({ ok: true, saved: false });
     expect(ui.api).toHaveBeenCalledWith("/api/work-hub/search/items/task/7be22c7d-4638-4144-bb18-0d2a66996a43");
     expect(ui.push).toHaveBeenCalledWith("/work-hub/search-item/task/7be22c7d-4638-4144-bb18-0d2a66996a43");

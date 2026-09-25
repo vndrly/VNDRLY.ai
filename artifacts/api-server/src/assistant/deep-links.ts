@@ -201,6 +201,10 @@ export function buildDeepLink(
 
   const query: Record<string, string> = {};
   if (input.screen === "work-hub-search") {
+    if (input.query != null && (typeof input.query !== "string" || input.query.length > 1000)) return { error: "Choose a valid search query." };
+    if (input.types != null && (!Array.isArray(input.types) || input.types.some(type => !["asset", "task", "meeting", "file", "announcement", "message", "note", "form", "transcript"].includes(type)))) return { error: "Choose supported search types." };
+    for (const date of [input.start, input.end]) if (date != null && (typeof date !== "string" || !/^\d{4}-\d{2}-\d{2}(?:T.*)?$/.test(date) || !Number.isFinite(Date.parse(date)))) return { error: "Choose valid search dates." };
+    if (input.start && input.end && Date.parse(input.start) > Date.parse(input.end)) return { error: "Search start must not follow its end." };
     if (input.query) query.q = input.query;
     if (input.start) query.start = input.start;
     if (input.end) query.end = input.end;

@@ -15,6 +15,27 @@ const command = {
 };
 
 describe("resolveWorkHubToolRequest", () => {
+  it("lists managed files in the authenticated organization, not a model-supplied owner", () => {
+    const scoped = bindWorkHubToolScope({ owner: { type: "partner", id: 999 }, query: "pump", audience: "channel" }, { vendorId: 42 });
+    expect(resolveExecutableWorkHubToolRequest("list_work_hub_files", scoped, false)).toMatchObject({ path: "/work-hub/file-library?orgType=vendor&orgId=42&q=pump&scope=channel" });
+  });
+  it("records the gate station instead of the site's numeric ID", () => {
+    const station = "7be22c7d-4638-4144-bb18-0d2a66996a43";
+    expect(inferWorkHubAuditTargetId({ payload: { siteId: 9, id: station } }, undefined, "confirm_work_hub_gate_location")).toBe(station);
+    expect(inferWorkHubAuditTargetId({ payload: { siteId: 9 } }, { station: { id: station } }, "confirm_work_hub_gate_location")).toBe(station);
+    expect(inferWorkHubAuditTargetId({ payload: { siteId: 9 } }, JSON.stringify({ id: station, siteId: 9 }), "confirm_work_hub_gate_location")).toBe(station);
+    expect(inferWorkHubAuditTargetId({ payload: { siteId: 9 } }, undefined, "prepare_work_hub_gate_location")).toBeNull();
+  });
+  it("normalizes reviewed file-share payloads without sending realtime nulls", () => {
+    expect(resolveExecutableWorkHubToolRequest("share_work_hub_file", { ...command, fileId: "doc", action: "share", payload: { expiresInDays: 3, shareId: null } }, true)).toMatchObject({ path: "/work-hub/file-library/share", body: { payload: { id: "doc", expiresInDays: 3 } } });
+    const revoked = resolveExecutableWorkHubToolRequest("share_work_hub_file", { ...command, fileId: "doc", action: "revoke", payload: { shareId: "share", expiresInDays: null } }, true);
+    expect(revoked).toMatchObject({ path: "/work-hub/file-library/revoke-share", body: { payload: { id: "doc", shareId: "share" } } });
+    expect(revoked && "body" in revoked ? revoked.body.payload : {}).not.toHaveProperty("expiresInDays");
+  });
+  it("requires an exact share to revoke and a reviewed expiry to create a share", () => {
+    expect(resolveExecutableWorkHubToolRequest("share_work_hub_file", { ...command, fileId: "doc", action: "revoke", payload: {} }, true)).toHaveProperty("error");
+    for (const expiresInDays of [null, 0, 31, 1.5]) expect(resolveExecutableWorkHubToolRequest("share_work_hub_file", { ...command, fileId: "doc", action: "share", payload: { expiresInDays } }, true)).toHaveProperty("error");
+  });
   it("reads settings and connections and confines language edits to supported values", () => {
     expect(resolveExecutableWorkHubToolRequest("get_work_hub_settings", {}, false)).toMatchObject({ method: "GET", path: "/auth/me" });
     expect(resolveExecutableWorkHubToolRequest("get_work_hub_connections", {}, false)).toMatchObject({ method: "GET", path: "/work-hub/connectors/microsoft-365" });

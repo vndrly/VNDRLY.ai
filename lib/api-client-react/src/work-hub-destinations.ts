@@ -4,6 +4,11 @@
 export function workHubItemDestination(subjectType: string, subjectId: string) {
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(subjectId)) return null;
   const id = encodeURIComponent(subjectId);
+  if (subjectType === "document") return {
+    webPath: `/work-hub/search?type=document&item=${id}`,
+    nativePath: `/work-hub/search-item/document/${id}`,
+    readPath: `/work-hub/file-library/${id}`,
+  };
   if (subjectType === "asset") return {
     webPath: `/work-hub/search?type=asset&item=${id}`,
     nativePath: `/work-hub/files-notes?section=inventory&assetId=${id}`,

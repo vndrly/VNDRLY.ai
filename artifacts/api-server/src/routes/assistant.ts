@@ -1209,7 +1209,7 @@ async function auditToolCall(args: {
       toolName: args.toolName,
       actionType: tool?.mutating ? "write_tool" : "read_tool",
       targetType: tool?.auditTarget ?? null,
-      targetId: inferWorkHubAuditTargetId(args.toolInput, args.toolOutput),
+      targetId: inferWorkHubAuditTargetId(args.toolInput, args.toolOutput, args.toolName),
       transcriptText: args.userMessage,
       toolInput: args.toolInput,
       toolOutput: args.toolOutput,

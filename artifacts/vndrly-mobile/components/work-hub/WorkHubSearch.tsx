@@ -40,7 +40,7 @@ export function WorkHubSearch({ onOpen, initialFilters }: { onOpen: (destination
   const [query, setQuery] = useState(initialFilters?.query ?? "");
   const [start, setStart] = useState(initialFilters?.start ?? "");
   const [end, setEnd] = useState(initialFilters?.end ?? "");
-  const [type, setType] = useState<string | null>(initialFilters?.types?.[0] ?? null);
+  const [types, setTypes] = useState<string[]>(initialFilters?.types ?? []);
   const [results, setResults] = useState<SearchResult[] | null>(null);
   const [cappedSources, setCappedSources] = useState<string[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
@@ -58,7 +58,7 @@ export function WorkHubSearch({ onOpen, initialFilters }: { onOpen: (destination
     setError("");
     setResults(null);
     try {
-      const filters: WorkHubSearchFilters = { query: query.trim(), ...(start ? { start } : {}), ...(end ? { end } : {}), ...(type ? { types: [type] } : {}) };
+      const filters: WorkHubSearchFilters = { query: query.trim(), ...(start ? { start } : {}), ...(end ? { end } : {}), ...(types.length ? { types } : {}) };
       const response = responseShape(await apiFetch<SearchResponse | SearchResult[]>(buildWorkHubSearchPath(filters)));
       setSubmittedFilters(filters);
       setResults(response.results);
@@ -115,7 +115,7 @@ export function WorkHubSearch({ onOpen, initialFilters }: { onOpen: (destination
       </View>
       <Text style={{ color: colors.text, fontWeight: "600" }}>Content type</Text>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-        {contentTypes.map(([value, label]) => <TogglePillButton key={value} color="brand" solid={type === value} accessibilityLabel={label} accessibilityState={{ selected: type === value }} onPress={() => setType(type === value ? null : value)}>{label}</TogglePillButton>)}
+        {contentTypes.map(([value, label]) => <TogglePillButton key={value} color="brand" solid={types.includes(value)} accessibilityLabel={label} accessibilityState={{ selected: types.includes(value) }} onPress={() => setTypes(current => current.includes(value) ? current.filter(type => type !== value) : [...current, value])}>{label}</TogglePillButton>)}
       </View>
       <TogglePillButton color="brand" solid accessibilityLabel="Search" onPress={() => void submit()}>Search</TogglePillButton>
     </View>

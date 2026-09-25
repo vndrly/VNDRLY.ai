@@ -8,6 +8,12 @@ import {
 } from "./tool-registry";
 
 describe("AskV tool registry", () => {
+  it("carries reviewed share expiry and exact share ID through strict realtime schemas", () => {
+    const share = toRealtimeTools(ASK_V_TOOL_REGISTRY).find(t => t.name === "share_work_hub_file")!;
+    expect(share.parameters.properties).toMatchObject({ payload: { additionalProperties: false, properties: { shareId: expect.any(Object), expiresInDays: { minimum: 1, maximum: 30 } } } });
+    const open = toRealtimeTools(ASK_V_TOOL_REGISTRY).find(t => t.name === "open_screen")!;
+    expect(open.parameters.properties).toMatchObject({ subjectType: expect.any(Object), itemId: expect.any(Object), query: expect.any(Object), start: expect.any(Object), end: expect.any(Object), types: expect.any(Object) });
+  });
   it("offers self-profile writes only to the role supported by the profile endpoint", () => {
     expect(toolsForRole("vendor").map(t => t.name)).not.toContain("confirm_work_hub_profile");
     expect(toolsForRole("field_employee").map(t => t.name)).toContain("confirm_work_hub_profile");

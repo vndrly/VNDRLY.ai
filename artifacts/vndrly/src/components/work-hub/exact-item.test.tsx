@@ -4,6 +4,13 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { WorkHubExactItem } from "./exact-item";
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 describe("exact Work Hub destination", () => {
+  it("uses the managed document reader for file-library IDs, not the legacy file index", async () => {
+    const fetcher = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ subjectType: "document", title: "Managed document", status: "active" }) });
+    vi.stubGlobal("fetch", fetcher);
+    render(<WorkHubExactItem subjectType="document" itemId="7be22c7d-4638-4144-bb18-0d2a66996a43" />);
+    await screen.findByText("Managed document");
+    expect(fetcher).toHaveBeenCalledWith("/api/work-hub/file-library/7be22c7d-4638-4144-bb18-0d2a66996a43", expect.objectContaining({ credentials: "include" }));
+  });
   it("loads the current authorized record instead of displaying the search summary", async () => {
     const fetcher = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ title: "Current task", body: "Current authorized detail", status: "open" }) });
     vi.stubGlobal("fetch", fetcher);

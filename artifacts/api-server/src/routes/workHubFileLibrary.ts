@@ -323,6 +323,24 @@ router.get("/work-hub/file-library", async (req, res) => {
     return failure(res, error);
   }
 });
+// Managed document IDs are distinct from legacy finalized work_hub_files IDs.
+// Read through the same authorization boundary as download, never the legacy index.
+router.get("/work-hub/file-library/:id", async (req, res) => {
+  try {
+    const actor = getSessionFromRequest(req) as Actor | null;
+    if (!actor?.userId) return res.sendStatus(401);
+    const doc = await loadDocument(z.string().uuid().parse(req.params.id));
+    await documentAccess(actor, doc);
+    const canManage = doc.createdBy === actor.userId || (await membership(actor, ownerOf(doc)))?.role === "admin";
+    res.setHeader("Cache-Control", "no-store");
+    return res.json({
+      id: doc.id, subjectType: "document", title: String(doc.data.name ?? "File"),
+      status: doc.data.state, updatedAt: doc.updatedAt,
+      contentType: doc.data.contentType, byteSize: doc.data.byteSize,
+      capabilities: { canDownload: doc.data.state === "active" && !!doc.data.currentFileId, canManage },
+    });
+  } catch (error) { return failure(res, error); }
+});
 router.get("/work-hub/file-library/:id/download", async (req, res) => {
   try {
     const actor = getSessionFromRequest(req) as Actor | null;
@@ -648,7 +666,8 @@ router.post("/work-hub/file-library/:action", async (req, res) => {
           );
           return { id: link.id, documentId: doc.id, token, expiresAt };
         } else if (action === "revoke-share") {
-          // Revoke every public link for this document without changing or deleting its object.
+          // A reviewed share ID revokes only that link; legacy UI callers without an
+          // ID explicitly use the existing revoke-all action for this document.
           const links = await tx
             .select()
             .from(library)
@@ -659,7 +678,9 @@ router.post("/work-hub/file-library/:action", async (req, res) => {
                 sql`${library.data}->>'documentId' = ${doc.id}`,
               ),
             );
-          for (const link of links)
+          const selected = p.shareId ? links.filter(link => link.id === p.shareId) : links;
+          if (p.shareId && !selected.length) throw new FileError(404, "Share not found");
+          for (const link of selected)
             await tx
               .update(library)
               .set({

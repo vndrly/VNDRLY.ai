@@ -17,11 +17,17 @@ const record = (value: unknown): Input =>
     : {};
 const withoutNulls = (value: Input): Input => Object.fromEntries(Object.entries(value).filter(([, item]) => item != null));
 
-export function inferWorkHubAuditTargetId(rawInput: unknown, rawOutput?: unknown): string | number | null {
+export function inferWorkHubAuditTargetId(rawInput: unknown, rawOutput?: unknown, toolName?: string): string | number | null {
   const input = record(rawInput);
   let output = rawOutput;
   if (typeof output === "string") { try { output = JSON.parse(output); } catch { output = null; } }
   const result = record(output);
+  if (toolName?.includes("gate_location")) {
+    for (const value of [input.stationId, record(input.payload).id, result.id, record(result.station).id, record(result.resource).id, record(result.values).id]) {
+      if (typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)) return value;
+    }
+    return null;
+  }
   for (const source of [input, record(input.payload), record(result.resource), record(result.asset), result]) {
     for (const key of ["documentId", "fileId", "assetId", "stationId", "channelId", "taskId", "occurrenceId", "exportId", "resourceId", "messageId", "noteId", "ticketId", "visitId", "notificationId", "siteId", "siteLocationId", "crewEmployeeId", "vendorId", "partnerId", "id"]) {
       const value = source[key];
@@ -643,7 +649,7 @@ export function resolveWorkHubToolRequest(
         : target;
 
     case "list_work_hub_files":
-      return request("GET", queryPath("/work-hub/file-library", { q: input.query, scope: input.audience }));
+      return request("GET", queryPath("/work-hub/file-library", { orgType: record(input.owner).type, orgId: record(input.owner).id, q: input.query, scope: input.audience }));
     case "get_work_hub_file_versions":
       target = required(input.fileId, "file id");
       return typeof target === "string"
@@ -673,9 +679,11 @@ export function resolveWorkHubToolRequest(
       }));
     }
     case "share_work_hub_file": {
+      if (input.action === "revoke" && !id(payload.shareId)) return { error: "Choose the exact share ID to revoke; use the file UI to revoke all links." };
+      if (input.action === "share" && (!Number.isSafeInteger(payload.expiresInDays) || Number(payload.expiresInDays) < 1 || Number(payload.expiresInDays) > 30)) return { error: "Confirm an expiry of 1 to 30 days before creating the share." };
       const action = input.action === "share" ? "share" : input.action === "revoke" ? "revoke-share" : null;
       return action
-        ? request("POST", `/work-hub/file-library/${action}`, envelope(input, { ...payload, id: input.fileId }))
+        ? request("POST", `/work-hub/file-library/${action}`, envelope(input, { ...withoutNulls(payload), id: input.fileId }))
         : unsupported("file share");
     }
 

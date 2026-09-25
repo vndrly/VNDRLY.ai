@@ -347,7 +347,7 @@ const entries: Entry[] = [
     payload: { type: "object" },
   }, ["occurrenceId", "payload"])),
 
-  read("list_work_hub_files", "files", "Search and list authorized Work Hub files.", schema({ query: text(), audience: text() })),
+  read("list_work_hub_files", "files", "Search and list authorized Work Hub managed documents in the active organization. Each returned id is a document ID: open it with subjectType document, not legacy file.", schema({ query: text(), audience: text() })),
   read("get_work_hub_file_versions", "files", "List versions of an authorized Work Hub file.", schema({ fileId: identifier() }, ["fileId"])),
   write("prepare_work_hub_file_upload", "files", "Reserve an authorized Work Hub file upload with an exact audience and destination. A reservation is not an upload: the device must upload the bytes to uploadURL, then finalize the documentId and reserved fileId. Never claim uploaded or saved from reservation alone.", writeSchema({
     payload: { type: "object", properties: fileReservationProperties, required: ["scope", "fileName", "contentType", "byteSize", "checksumSha256"], additionalProperties: false },
@@ -357,10 +357,10 @@ const entries: Entry[] = [
     fileId: identifier(),
     payload: { type: "object", properties: { ...fileReservationProperties, fileId: identifier("Reserved upload fileId required for finalize; top-level fileId is the documentId.") }, additionalProperties: false },
   }, ["action", "fileId", "payload"])),
-  write("share_work_hub_file", "files", "Create or revoke an authorized file share after showing its audience and expiration.", writeSchema({
+  write("share_work_hub_file", "files", "Create or revoke an authorized file share after exact-value confirmation. For share, review the public-link audience and require expiresInDays (1 to 30). For revoke, require the exact shareId; this does not revoke other links. Revoke-all remains an explicit file UI action.", writeSchema({
     action: { type: "string", enum: ["share", "revoke"] },
     fileId: identifier(),
-    payload: { type: "object" },
+    payload: { type: "object", properties: { shareId: { type: "string", format: "uuid" }, expiresInDays: { type: "integer", minimum: 1, maximum: 30 } }, additionalProperties: false },
   }, ["action", "fileId", "payload"])),
 
   read("get_work_hub_finance", "finance", "Read permission-scoped Work Hub billing, payroll, invoice, and approval information.", schema({ query: text(), status: text() })),

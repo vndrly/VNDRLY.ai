@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
+import { workHubItemDestination } from "@workspace/api-client-react/work-hub-destinations";
 
 type Item = { id: string; subjectType: string; title: string; body?: unknown; status?: string; updatedAt?: string };
 
@@ -15,7 +16,9 @@ export function WorkHubSearchItem({ subjectType, itemId }: { subjectType: string
     setLoading(true);
     setItem(null);
     setError("");
-    apiFetch<Item>(`/api/work-hub/search/items/${encodeURIComponent(subjectType)}/${encodeURIComponent(itemId)}`)
+    const destination = workHubItemDestination(subjectType, itemId);
+    if (!destination) { setError("Item not found"); setLoading(false); return; }
+    apiFetch<Item>(`/api${destination.readPath}`)
       .then(value => { if (active) setItem(value); })
       .catch(cause => { if (active) setError(cause instanceof Error ? cause.message : "Item not found"); })
       .finally(() => { if (active) setLoading(false); });

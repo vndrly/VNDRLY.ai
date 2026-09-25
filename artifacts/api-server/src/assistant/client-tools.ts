@@ -36,9 +36,18 @@ export function runClientTool(
     const gate = gateDeepLinkScreen(session.role as AssistantRole, args.screen);
     if (!gate.ok) return fail(gate.error);
     if (args.id != null && (!Number.isSafeInteger(args.id) || Number(args.id) <= 0)) return fail("Choose a valid record.");
+    for (const key of ["subjectType", "itemId", "query", "start", "end"])
+      if (args[key] != null && typeof args[key] !== "string") return fail("Choose valid navigation values.");
+    if (args.types != null && (!Array.isArray(args.types) || args.types.some(value => typeof value !== "string"))) return fail("Choose valid search types.");
     const link = buildDeepLink({
       screen: args.screen,
       id: typeof args.id === "number" ? args.id : undefined,
+      subjectType: args.subjectType as string | undefined,
+      itemId: args.itemId as string | undefined,
+      query: args.query as string | undefined,
+      start: args.start as string | undefined,
+      end: args.end as string | undefined,
+      types: args.types as string[] | undefined,
     });
     if (typeof link !== "string") return fail(link.error);
     args.path = link;

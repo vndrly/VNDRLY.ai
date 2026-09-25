@@ -954,7 +954,7 @@ router.post(
       fingerprint: mutationIdempotencyKey(session.userId!, name, input),
     };
     const scopeKey = mutationScopeKey(scope);
-    const targetId = inferWorkHubAuditTargetId(input);
+    const targetId = inferWorkHubAuditTargetId(input, undefined, name);
     const audit = (
       resultStatus:
         | "success"
@@ -977,7 +977,7 @@ router.post(
         provider: "openai_realtime",
         toolName: name,
         targetType: tool.auditTarget ?? null,
-        targetId: targetId ?? inferWorkHubAuditTargetId({}, output),
+        targetId: targetId ?? inferWorkHubAuditTargetId({}, output, name),
         transcriptText,
         toolInput: { ...input, idempotencyKey: key, sessionId },
         toolOutput: output,

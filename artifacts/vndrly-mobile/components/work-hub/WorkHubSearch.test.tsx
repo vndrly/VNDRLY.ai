@@ -1,16 +1,28 @@
 import React from "react";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { WorkHubSearch, searchQueryPath } from "./WorkHubSearch";
 
 const network = vi.hoisted(() => ({ api: vi.fn() }));
 vi.mock("@/lib/api", () => ({ apiFetch: network.api }));
 vi.mock("@/hooks/useColors", () => ({ useColors: () => ({ primary: "#c46126", card: "#222", text: "white", mutedForeground: "#aaa", border: "#555", destructive: "red" }) }));
-vi.mock("@/components/TogglePillButton", () => ({ default: ({ children, accessibilityLabel, onPress }: any) => <button aria-label={accessibilityLabel} onClick={onPress}>{children}</button> }));
+vi.mock("@/components/TogglePillButton", () => ({ default: ({ children, accessibilityLabel, accessibilityState, onPress }: any) => <button aria-label={accessibilityLabel} aria-pressed={accessibilityState?.selected} onClick={onPress}>{children}</button> }));
 
 afterEach(() => { cleanup(); network.api.mockReset(); });
 
 describe("Work Hub Search", () => {
+  it("retains all linked type filters through display, submission and continuation", async () => {
+    network.api.mockResolvedValueOnce({ results: [], cappedSources: [], nextCursor: "next" }).mockResolvedValue({ results: [], cappedSources: [] });
+    render(<WorkHubSearch onOpen={vi.fn()} initialFilters={{ query: "pump", types: ["asset", "note"] }} />);
+    expect(screen.getByRole("button", { name: "Inventory" }).getAttribute("aria-pressed")).toBe("true");
+    expect(screen.getByRole("button", { name: "Notes" }).getAttribute("aria-pressed")).toBe("true");
+    fireEvent.click(screen.getByRole("button", { name: "Search" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Load more inventory results" }));
+    await waitFor(() => expect(network.api).toHaveBeenLastCalledWith("/api/work-hub/search?q=pump&type=asset%2Cnote&cursor=next"));
+    fireEvent.click(screen.getByRole("button", { name: "Inventory" }));
+    fireEvent.click(screen.getByRole("button", { name: "Search" }));
+    await waitFor(() => expect(network.api).toHaveBeenLastCalledWith("/api/work-hub/search?q=pump&type=note"));
+  });
   it("starts with the exact filters supplied by an assistant link", () => {
     render(<WorkHubSearch onOpen={vi.fn()} initialFilters={{ query: "pump", start: "2026-09-01", end: "2026-09-24", types: ["asset"] }} />);
     expect((screen.getByLabelText("Search Work Hub") as HTMLInputElement).value).toBe("pump");
