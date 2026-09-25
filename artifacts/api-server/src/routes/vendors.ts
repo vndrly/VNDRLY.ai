@@ -1,7 +1,20 @@
 import { Router, type IRouter } from "express";
-import { eq, and, notInArray, isNull, sql } from "drizzle-orm";
+import { eq, and, notInArray, isNull, sql, inArray } from "drizzle-orm";
 import crypto from "crypto";
-import { db, vendorsTable, vendorContactsTable, vendorNotesTable, fieldEmployeesTable, partnerVendorRelationshipsTable, usersTable } from "@workspace/db";
+import { z } from "zod/v4";
+import {
+  db,
+  vendorsTable,
+  vendorContactsTable,
+  vendorNotesTable,
+  fieldEmployeesTable,
+  partnerVendorRelationshipsTable,
+  usersTable,
+  userOrgMembershipsTable,
+  siteLocationsTable,
+  vendorPersonOperationalRolesTable,
+  vendorPersonSiteAccessTable,
+} from "@workspace/db";
 import { SESSION_SECRET } from "../lib/session";
 import { findVendorMatches, normalizeVendorName } from "../lib/vendor-match";
 import {
@@ -60,9 +73,26 @@ import {
   DeleteVendorNoteParams,
 } from "@workspace/api-zod";
 import { sendResponse, sendResponseStatus } from "../lib/typed-response";
+import {
+  legacyOperationalRoles,
+  loadAuthorizedVendorSiteIds,
+  loadPeopleAccess,
+  projectLegacyVendorRole,
+} from "../lib/vendor-person-access.js";
+import { prepareAccessReplacement } from "../lib/vendor-person-access-management.js";
 
 import { sendValidationFailed } from "../lib/validation-error";
 const router: IRouter = Router();
+
+const VendorPersonAccessParams = z.object({
+  vendorId: z.coerce.number().int().positive(),
+  contactId: z.coerce.number().int().positive().optional(),
+});
+
+const VendorPersonAccessBody = z.object({
+  operationalRoles: z.array(z.string()).max(5),
+  siteLocationIds: z.array(z.number().int().positive()).max(500),
+});
 
 function noteOwner(session: Session) {
   if (session.role === "admin") return { ownerOrgType: "platform", ownerOrgId: 0 };
@@ -584,6 +614,233 @@ router.delete("/vendors/:id", async (req, res): Promise<void> => {
     return;
   }
   res.sendStatus(204);
+});
+
+router.get("/vendors/:vendorId/people-access", async (req, res): Promise<void> => {
+  const session = getSession(req);
+  if (!session) {
+    res.status(401).json({ error: "Not authenticated", code: "auth.not_authenticated" });
+    return;
+  }
+  const params = VendorPersonAccessParams.safeParse(req.params);
+  if (!params.success) {
+    sendValidationFailed(res, params.error, { code: "validation.invalid_input" });
+    return;
+  }
+  const auth = await assertCanManageVendorPeople(session, params.data.vendorId);
+  if (!auth.ok) {
+    res.status(auth.status).json({ error: auth.message, code: "auth.forbidden" });
+    return;
+  }
+
+  const people = await db
+    .select({
+      id: fieldEmployeesTable.id,
+      userId: fieldEmployeesTable.userId,
+      vendorRole: fieldEmployeesTable.vendorRole,
+    })
+    .from(fieldEmployeesTable)
+    .where(
+      and(
+        eq(fieldEmployeesTable.vendorId, params.data.vendorId),
+        isNull(fieldEmployeesTable.deletedAt),
+      ),
+    );
+  const peopleIds = people.map((person) => person.id);
+  const [accessByPerson, membershipRows, authorizedSiteIds] = await Promise.all([
+    loadPeopleAccess(peopleIds),
+    peopleIds.length
+      ? db
+          .select({ vendorPeopleId: userOrgMembershipsTable.vendorPeopleId, role: userOrgMembershipsTable.role })
+          .from(userOrgMembershipsTable)
+          .where(
+            and(
+              eq(userOrgMembershipsTable.orgType, "vendor"),
+              eq(userOrgMembershipsTable.vendorId, params.data.vendorId),
+              inArray(userOrgMembershipsTable.vendorPeopleId, peopleIds),
+            ),
+          )
+      : Promise.resolve([] as Array<{ vendorPeopleId: number | null; role: string }>),
+    loadAuthorizedVendorSiteIds(params.data.vendorId),
+  ]);
+  const adminPeopleIds = new Set(
+    membershipRows
+      .filter((membership) => membership.role === "admin" && membership.vendorPeopleId != null)
+      .map((membership) => membership.vendorPeopleId as number),
+  );
+  const eligibleSites = authorizedSiteIds.length
+    ? await db
+        .select({ id: siteLocationsTable.id, name: siteLocationsTable.name })
+        .from(siteLocationsTable)
+        .where(inArray(siteLocationsTable.id, authorizedSiteIds))
+        .orderBy(siteLocationsTable.name)
+    : [];
+  const allowedSites = new Set(authorizedSiteIds);
+
+  res.json({
+    eligibleSites,
+    people: people.map((person) => {
+      const stored = accessByPerson.get(person.id);
+      const isAdmin = adminPeopleIds.has(person.id);
+      const operationalRoles =
+        stored && stored.operationalRoles.length > 0
+          ? stored.operationalRoles
+          : legacyOperationalRoles(person.vendorRole);
+      const siteLocationIds = isAdmin
+        ? []
+        : (stored?.siteLocationIds ?? []).filter((siteId) => allowedSites.has(siteId));
+      return {
+        vendorPeopleId: person.id,
+        isAdmin,
+        operationalRoles,
+        siteAccessMode: isAdmin ? "all_authorized" : "selected",
+        siteLocationIds,
+      };
+    }),
+  });
+});
+
+router.put("/vendors/:vendorId/people/:contactId/access", async (req, res): Promise<void> => {
+  const session = getSession(req);
+  if (!session) {
+    res.status(401).json({ error: "Not authenticated", code: "auth.not_authenticated" });
+    return;
+  }
+  const params = VendorPersonAccessParams.safeParse(req.params);
+  const body = VendorPersonAccessBody.safeParse(req.body);
+  if (!params.success) {
+    sendValidationFailed(res, params.error, { code: "validation.invalid_input" });
+    return;
+  }
+  if (!body.success) {
+    sendValidationFailed(res, body.error, { code: "validation.invalid_input" });
+    return;
+  }
+  if (!params.data.contactId) {
+    res.status(400).json({ error: "Employee id is required", code: "validation.invalid_input" });
+    return;
+  }
+  const auth = await assertCanManageVendorPeople(session, params.data.vendorId);
+  if (!auth.ok) {
+    res.status(auth.status).json({ error: auth.message, code: "auth.forbidden" });
+    return;
+  }
+  const [person] = await db
+    .select({
+      id: fieldEmployeesTable.id,
+      vendorId: fieldEmployeesTable.vendorId,
+      userId: fieldEmployeesTable.userId,
+      vendorRole: fieldEmployeesTable.vendorRole,
+    })
+    .from(fieldEmployeesTable)
+    .where(
+      and(
+        eq(fieldEmployeesTable.id, params.data.contactId),
+        eq(fieldEmployeesTable.vendorId, params.data.vendorId),
+        isNull(fieldEmployeesTable.deletedAt),
+      ),
+    )
+    .limit(1);
+  if (!person) {
+    res.status(404).json({ error: "Employee not found", code: "employee.not_found" });
+    return;
+  }
+  const [membership] = person.userId
+    ? await db
+        .select({ role: userOrgMembershipsTable.role })
+        .from(userOrgMembershipsTable)
+        .where(
+          and(
+            eq(userOrgMembershipsTable.userId, person.userId),
+            eq(userOrgMembershipsTable.orgType, "vendor"),
+            eq(userOrgMembershipsTable.vendorId, params.data.vendorId),
+          ),
+        )
+        .limit(1)
+    : [];
+  const isAdmin = membership?.role === "admin";
+  const authorizedSiteIds = await loadAuthorizedVendorSiteIds(params.data.vendorId);
+  let prepared;
+  try {
+    prepared = prepareAccessReplacement(body.data, { isAdmin, authorizedSiteIds });
+  } catch (error) {
+    res.status(400).json({
+      error: error instanceof Error ? error.message : "Invalid access update",
+      code: "validation.invalid_access",
+    });
+    return;
+  }
+
+  await db.transaction(async (tx) => {
+    for (const role of prepared.operationalRoles) {
+      await tx
+        .insert(vendorPersonOperationalRolesTable)
+        .values({
+          vendorPeopleId: person.id,
+          role,
+          isActive: true,
+          grantedByUserId: session.userId,
+        })
+        .onConflictDoUpdate({
+          target: [
+            vendorPersonOperationalRolesTable.vendorPeopleId,
+            vendorPersonOperationalRolesTable.role,
+          ],
+          set: { isActive: true, grantedByUserId: session.userId, updatedAt: new Date() },
+        });
+    }
+    const roleDeactivateWhere = prepared.operationalRoles.length
+      ? and(
+          eq(vendorPersonOperationalRolesTable.vendorPeopleId, person.id),
+          notInArray(vendorPersonOperationalRolesTable.role, prepared.operationalRoles),
+        )
+      : eq(vendorPersonOperationalRolesTable.vendorPeopleId, person.id);
+    await tx
+      .update(vendorPersonOperationalRolesTable)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(roleDeactivateWhere);
+
+    for (const siteLocationId of prepared.siteLocationIds) {
+      await tx
+        .insert(vendorPersonSiteAccessTable)
+        .values({
+          vendorPeopleId: person.id,
+          siteLocationId,
+          isActive: true,
+          grantedByUserId: session.userId,
+        })
+        .onConflictDoUpdate({
+          target: [vendorPersonSiteAccessTable.vendorPeopleId, vendorPersonSiteAccessTable.siteLocationId],
+          set: { isActive: true, grantedByUserId: session.userId, updatedAt: new Date() },
+        });
+    }
+    const siteDeactivateWhere = prepared.siteLocationIds.length
+      ? and(
+          eq(vendorPersonSiteAccessTable.vendorPeopleId, person.id),
+          notInArray(vendorPersonSiteAccessTable.siteLocationId, prepared.siteLocationIds),
+        )
+      : eq(vendorPersonSiteAccessTable.vendorPeopleId, person.id);
+    await tx
+      .update(vendorPersonSiteAccessTable)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(siteDeactivateWhere);
+
+    if (!isAdmin) {
+      const legacyVendorRole = projectLegacyVendorRole(prepared.operationalRoles) ?? "office";
+      await tx
+        .update(fieldEmployeesTable)
+        .set({ vendorRole: legacyVendorRole })
+        .where(eq(fieldEmployeesTable.id, person.id));
+    }
+  });
+
+  res.json({
+    vendorPeopleId: person.id,
+    isAdmin,
+    operationalRoles: prepared.operationalRoles,
+    siteAccessMode: prepared.siteAccessMode,
+    siteLocationIds: prepared.siteLocationIds,
+  });
 });
 
 router.get("/vendor-contacts", async (req, res): Promise<void> => {

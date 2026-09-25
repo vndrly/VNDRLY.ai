@@ -33,6 +33,7 @@ import EmployeePortalLoginFields from "@/components/employee-portal-login-fields
 import CertificationsSection from "@/components/certifications-section";
 import ContentPaneBackLink from "@/components/content-pane-back-link";
 import ManagedSubcontractorEmployeesCard from "@/components/managed-subcontractor-employees-card";
+import EmployeeAccessEditor, { type EmployeeOperationalRole } from "@/components/employee-access-editor";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -105,6 +106,19 @@ type PersonRow = {
   // Null when there's no linked login or the user hasn't picked one yet.
   preferredLanguage?: string | null;
   profilePendingReviewAt?: string | null;
+};
+
+type PersonAccessRow = {
+  vendorPeopleId: number;
+  isAdmin: boolean;
+  operationalRoles: EmployeeOperationalRole[];
+  siteAccessMode: "all_authorized" | "selected";
+  siteLocationIds: number[];
+};
+
+type PeopleAccessResponse = {
+  eligibleSites: Array<{ id: number; name: string }>;
+  people: PersonAccessRow[];
 };
 
 function ProfileReviewDot() {
@@ -218,6 +232,23 @@ export default function FieldEmployees() {
     },
   });
 
+  const accessQueryKey = ["vendor-people-access", vendorId] as const;
+  const { data: peopleAccess } = useQuery<PeopleAccessResponse>({
+    queryKey: accessQueryKey,
+    enabled: !!vendorId && !isPartner,
+    queryFn: async () => {
+      const response = await fetch(`${BASE}/api/vendors/${vendorId}/people-access`, {
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error("Failed to load employee access");
+      return response.json();
+    },
+  });
+  const accessByPersonId = useMemo(
+    () => new Map((peopleAccess?.people ?? []).map((access) => [access.vendorPeopleId, access])),
+    [peopleAccess],
+  );
+
   const createContact = useCreateVendorContact();
   const updateVendorContact = useUpdateVendorContact();
   const createPartnerContact = useCreatePartnerContact();
@@ -229,13 +260,25 @@ export default function FieldEmployees() {
   const [editingFromFieldTable, setEditingFromFieldTable] = useState(false);
   const [editingOfficeVendorId, setEditingOfficeVendorId] = useState<number | null>(null);
   const [editOfficeForm, setEditOfficeForm] = useState<EditOfficeForm>({ jobTitle: "", firstName: "", lastName: "", email: "", phone: "", vendorRole: "office", pecCertification: false, pecExpirationDate: "", photoUrl: null, roles: [] });
+  const [editAccessForm, setEditAccessForm] = useState<{
+    isAdmin: boolean;
+    operationalRoles: EmployeeOperationalRole[];
+    siteLocationIds: number[];
+  }>({ isAdmin: false, operationalRoles: [], siteLocationIds: [] });
   const initialEditOfficeFormRef = useRef<EditOfficeForm | null>(null);
-  const editOfficeDirty = useMemo(() => !!initialEditOfficeFormRef.current && JSON.stringify(editOfficeForm) !== JSON.stringify(initialEditOfficeFormRef.current), [editOfficeForm]);
+  const initialEditAccessFormRef = useRef<typeof editAccessForm | null>(null);
+  const editOfficeDirty = useMemo(
+    () =>
+      (!!initialEditOfficeFormRef.current && JSON.stringify(editOfficeForm) !== JSON.stringify(initialEditOfficeFormRef.current)) ||
+      (!!initialEditAccessFormRef.current && JSON.stringify(editAccessForm) !== JSON.stringify(initialEditAccessFormRef.current)),
+    [editOfficeForm, editAccessForm],
+  );
   useUnsavedChanges(editOfficeOpen && editOfficeDirty);
   const tryCloseEditOffice = (open: boolean) => {
     if (!open && editOfficeDirty && !window.confirm("You have unsaved changes. Discard them?")) return;
     if (!open) {
       initialEditOfficeFormRef.current = null;
+      initialEditAccessFormRef.current = null;
       setEditingOfficeContactId(null);
       setEditingFromFieldTable(false);
       setEditingOfficeVendorId(null);
@@ -261,20 +304,50 @@ export default function FieldEmployees() {
     };
     setEditOfficeForm(hydrated);
     initialEditOfficeFormRef.current = hydrated;
+    const access = accessByPersonId.get(p.id);
+    const hydratedAccess = {
+      isAdmin: access?.isAdmin ?? p.vendorRole === "admin",
+      operationalRoles: access?.operationalRoles ?? [],
+      siteLocationIds: access?.siteLocationIds ?? [],
+    };
+    setEditAccessForm(hydratedAccess);
+    initialEditAccessFormRef.current = hydratedAccess;
     setEditOfficeOpen(true);
   };
 
-  const handleEditOffice = (e: React.FormEvent) => {
+  const handleEditOffice = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingOfficeContactId || !editingOfficeVendorId) return;
     const targetVendorId = editingOfficeVendorId;
+    const accessResponse = await fetch(
+      `${BASE}/api/vendors/${targetVendorId}/people/${editingOfficeContactId}/access`,
+      {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          operationalRoles: editAccessForm.operationalRoles,
+          siteLocationIds: editAccessForm.siteLocationIds,
+        }),
+      },
+    );
+    if (!accessResponse.ok) {
+      const body = await accessResponse.json().catch(() => null);
+      toast({
+        title: body?.error ?? "Failed to update role and site access",
+        variant: "destructive",
+      });
+      return;
+    }
     updateVendorContact.mutate(
       { vendorId: targetVendorId, contactId: editingOfficeContactId, data: { ...editOfficeForm, phone: stripPhone(editOfficeForm.phone) || null, pecExpirationDate: editOfficeForm.pecExpirationDate || null } },
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: ["vendor-contacts", vendorId ?? "all"] });
           queryClient.invalidateQueries({ queryKey: getListFieldEmployeesQueryKey(fieldQueryParams) });
+          queryClient.invalidateQueries({ queryKey: accessQueryKey });
           initialEditOfficeFormRef.current = editOfficeForm;
+          initialEditAccessFormRef.current = editAccessForm;
           setEditOfficeOpen(false);
           setEditingOfficeContactId(null);
           setEditingOfficeVendorId(null);
@@ -393,9 +466,18 @@ export default function FieldEmployees() {
   const sortedOffice = useMemo(() => sortRows(filterByStatus((officeEmployees ?? []).filter((person) => person.vendorRole !== "gatekeeper") as PersonRow[]), officeSort), [officeEmployees, officeSort, statusFilter]);
   const sortedGate = useMemo(() => {
     const people = [...(officeEmployees ?? []), ...(fieldEmployees ?? [])] as PersonRow[];
-    const gate = Array.from(new Map(people.filter((person) => person.vendorRole === "gatekeeper").map((person) => [person.id, person])).values());
+    const gate = Array.from(
+      new Map(
+        people
+          .filter((person) => {
+            const roles = accessByPersonId.get(person.id)?.operationalRoles ?? [];
+            return roles.includes("gatekeeper") || roles.includes("gate_supervisor") || person.vendorRole === "gatekeeper" || person.vendorRole === "gate_supervisor";
+          })
+          .map((person) => [person.id, person]),
+      ).values(),
+    );
     return sortRows(filterByStatus(gate), gateSort);
-  }, [officeEmployees, fieldEmployees, gateSort, statusFilter]);
+  }, [officeEmployees, fieldEmployees, accessByPersonId, gateSort, statusFilter]);
   const sortedField = useMemo(() => sortRows(filterByStatus((fieldEmployees ?? []) as PersonRow[]), fieldSort), [fieldEmployees, fieldSort, statusFilter]);
 
   const handleAdd = (e: React.FormEvent, defaultRole: string) => {
@@ -499,7 +581,24 @@ export default function FieldEmployees() {
       {!isVendor && <TableCell>{p.vendorName || "-"}</TableCell>}
       <TableCell>{p.email}</TableCell>
       <TableCell>{formatPhone(p.phone)}</TableCell>
-      <TableCell><EmployeeRolePill role={p.vendorRole} /></TableCell>
+      <TableCell>
+        <div className="flex flex-wrap gap-1" data-testid={`roles-${p.id}`}>
+          {(() => {
+            const access = accessByPersonId.get(p.id);
+            const chips = [
+              ...(access?.isAdmin ? ["admin"] : []),
+              ...(access?.operationalRoles ?? []),
+            ];
+            if (chips.length === 0) return <EmployeeRolePill role={p.vendorRole} />;
+            return chips.map((role) => (
+              <EmployeeRolePill
+                key={role}
+                role={role === "field_employee" ? "field" : role}
+              />
+            ));
+          })()}
+        </div>
+      </TableCell>
       <TableCell><PecStatusBadge expirationDate={p.pecExpirationDate} /></TableCell>
       {kind === "field" && (
         <TableCell data-testid={`text-language-${p.id}`}>
@@ -868,23 +967,13 @@ export default function FieldEmployees() {
               <Label>{t("fieldEmployees.jobTitle")}</Label>
               <Input value={editOfficeForm.jobTitle} onChange={(e) => setEditOfficeForm({ ...editOfficeForm, jobTitle: e.target.value })} data-testid="input-edit-office-job-title" />
             </div>
-            <div>
-              <Label>{t("fieldEmployees.role")}</Label>
-              <Select value={editOfficeForm.vendorRole} onValueChange={(v) => setEditOfficeForm({ ...editOfficeForm, vendorRole: v })}>
-                <SelectTrigger data-testid="select-edit-office-role"><SelectValue placeholder={t("fieldEmployees.selectRole")} /></SelectTrigger>
-                <SelectContent>
-                  {(!isForemanOnly || pecIsCurrent(editOfficeForm)) ? (
-                    <SelectItem value="admin" className="focus:bg-transparent data-[highlighted]:bg-transparent"><EmployeeRolePill role="admin" /></SelectItem>
-                  ) : null}
-                  <SelectItem value="office" className="focus:bg-transparent data-[highlighted]:bg-transparent"><EmployeeRolePill role="office" /></SelectItem>
-                  <SelectItem value="field" className="focus:bg-transparent data-[highlighted]:bg-transparent"><EmployeeRolePill role="field" /></SelectItem>
-                  <SelectItem value="both" className="focus:bg-transparent data-[highlighted]:bg-transparent"><EmployeeRolePill role="both" /></SelectItem>
-                  <SelectItem value="foreman" className="focus:bg-transparent data-[highlighted]:bg-transparent"><EmployeeRolePill role="foreman" /></SelectItem>
-                  <SelectItem value="gatekeeper" className="focus:bg-transparent data-[highlighted]:bg-transparent"><EmployeeRolePill role="gatekeeper" /></SelectItem>
-                  <SelectItem value="gate_supervisor" className="focus:bg-transparent data-[highlighted]:bg-transparent"><EmployeeRolePill role="gate_supervisor" /></SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <EmployeeAccessEditor
+              isAdmin={editAccessForm.isAdmin}
+              operationalRoles={editAccessForm.operationalRoles}
+              siteLocationIds={editAccessForm.siteLocationIds}
+              eligibleSites={peopleAccess?.eligibleSites ?? []}
+              onChange={(next) => setEditAccessForm({ ...editAccessForm, ...next })}
+            />
             <div className="grid grid-cols-2 gap-4">
               <div><Label>{t("fieldEmployees.firstName")}</Label><Input value={editOfficeForm.firstName} onChange={(e) => setEditOfficeForm({ ...editOfficeForm, firstName: e.target.value })} required data-testid="input-edit-office-first-name" /></div>
               <div><Label>{t("fieldEmployees.lastName")}</Label><Input value={editOfficeForm.lastName} onChange={(e) => setEditOfficeForm({ ...editOfficeForm, lastName: e.target.value })} required data-testid="input-edit-office-last-name" /></div>
