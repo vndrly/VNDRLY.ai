@@ -1,4 +1,26 @@
 {
+  "gateLocations": {
+    "title": "Ubicaciones de puertas",
+    "description": "Administre puertas físicas en sitios de socios con servicio autorizado. Las coordenadas son independientes del pozo del socio.",
+    "noSites": "No hay sitios con servicio autorizado disponibles.",
+    "name": "Nombre de la puerta",
+    "latitude": "Latitud",
+    "longitude": "Longitud",
+    "radius": "Radio en metros",
+    "add": "Agregar puerta",
+    "edit": "Editar puerta",
+    "active": "Activa",
+    "inactive": "Inactiva",
+    "deactivate": "Desactivar puerta",
+    "reactivate": "Activar puerta",
+    "currentLocation": "Usar mi ubicación actual",
+    "locationDenied": "Se denegó el permiso de ubicación. Puede ingresar las coordenadas manualmente.",
+    "review": "Revisar puerta",
+    "confirm": "Confirmar puerta",
+    "back": "Volver a editar",
+    "saved": "Puerta guardada",
+    "error": "No se pudo completar la acción. Verifique su acceso y actualice la puerta antes de reintentar una edición desactualizada."
+  },
   "filesInventory": {
     "title": "Archivos e inventario",
     "filesNotes": "Archivos y notas",

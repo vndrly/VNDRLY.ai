@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "migrate:gate-locations": "tsx scripts/migrate-gate-locations.ts",
     "migrate:gate-alert-channels": "tsx scripts/migrate-gate-alert-channels.ts",
     "migrate:push-token-retirement": "tsx scripts/migrate-push-token-retirement.ts",
     "dev": "pnpm run dev:local",

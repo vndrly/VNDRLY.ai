@@ -8,6 +8,8 @@ import {
   jsonb,
   index,
   uniqueIndex,
+  doublePrecision,
+  boolean,
 } from "drizzle-orm/pg-core";
 import { siteLocationsTable } from "./siteLocations";
 import { usersTable } from "./users";
@@ -21,9 +23,16 @@ export const gateStationsTable = pgTable(
       .notNull()
       .references(() => siteLocationsTable.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
+    // Physical gates are independent of the partner-owned wellhead position.
+    latitude: doublePrecision("latitude"),
+    longitude: doublePrecision("longitude"),
+    geofenceRadiusM: integer("geofence_radius_m").notNull().default(500),
+    active: boolean("active").notNull().default(true),
+    version: integer("version").notNull().default(1),
     createdAt: time("created_at").notNull().defaultNow(),
   },
   (t) => ({
+    activeSiteIdx: index("gate_stations_site_active_idx").on(t.siteId, t.active),
     nameUnique: uniqueIndex("gate_stations_site_name_unique").on(
       t.siteId,
       t.name,

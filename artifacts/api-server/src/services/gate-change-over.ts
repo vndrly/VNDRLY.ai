@@ -307,6 +307,10 @@ export async function listChangeOverStations(
       `SELECT station.id, station.name, station.site_id
        FROM gate_stations station
        WHERE station.site_id=$1
+         AND (station.active=true
+           OR EXISTS (SELECT 1 FROM gate_shifts finishing WHERE finishing.station_id=station.id AND finishing.operator_id=$3 AND finishing.ended_at IS NULL)
+           OR EXISTS (SELECT 1 FROM gate_duty_sessions finishing WHERE finishing.station_id=station.id AND finishing.user_id=$3 AND finishing.ended_at IS NULL)
+           OR EXISTS (SELECT 1 FROM gate_work_sessions finishing JOIN work_hub_shifts finishing_shift ON finishing_shift.id=finishing.work_hub_shift_id WHERE finishing_shift.gate_station_id=station.id AND finishing.user_id=$3 AND finishing.ended_at IS NULL))
          AND (
            $2 IN ('admin','partner')
            OR EXISTS (
@@ -393,8 +397,8 @@ export async function startGateShift(
   stationId: string,
 ) {
   return changeOverTransaction(async (c) => {
-    await stationAccess(c, session, stationId);
     await lockStation(c, stationId);
+    const access = await stationAccess(c, session, stationId);
     const shift = await activeShift(c, stationId);
     if (shift) {
       if (shift.operator_id === session.userId) return shift;
@@ -404,6 +408,8 @@ export async function startGateShift(
         "This gate has an active shift; use Change Over to accept it",
       );
     }
+    if (access.station.active === false)
+      return fail(409, "station_inactive", "This gate is inactive");
     return (
       await c.query(
         "INSERT INTO gate_shifts(station_id,operator_id) VALUES($1,$2) RETURNING *",

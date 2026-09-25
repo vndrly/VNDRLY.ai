@@ -110,6 +110,7 @@ import {
   startPaidTravel,
 } from "../services/gate-attendance";
 import { ChangeOverError } from "../services/gate-change-over";
+import { gateStationSchedulingFilter } from "../services/gate-location-policy";
 
 const router: IRouter = Router();
 const storage = new ObjectStorageService();
@@ -1831,7 +1832,7 @@ router.post("/work-hub/shifts", async (req, res) => {
       const [station] = await db
         .select({ id: gateStationsTable.id, siteId: gateStationsTable.siteId })
         .from(gateStationsTable)
-        .where(eq(gateStationsTable.id, payload.gateStationId!))
+        .where(gateStationSchedulingFilter(payload.gateStationId!))
         .limit(1);
       if (!station || station.siteId !== payload.siteLocationId)
         throw new z.ZodError([]);
@@ -1870,6 +1871,12 @@ router.post("/work-hub/shifts", async (req, res) => {
       "shift.create",
       envelope,
       async (tx) => {
+        // Recheck under a row lock so deactivation cannot race scheduling.
+        if (isGateShift) {
+          const [station] = await tx.select({ siteId: gateStationsTable.siteId }).from(gateStationsTable)
+            .where(gateStationSchedulingFilter(payload.gateStationId!)).limit(1).for("share");
+          if (!station || station.siteId !== payload.siteLocationId) throw new z.ZodError([]);
+        }
         const [shift] = await tx
           .insert(workHubShiftsTable)
           .values({
@@ -2007,7 +2014,7 @@ router.patch("/work-hub/shifts/:id", async (req, res) => {
       const nextGateValues = Object.values(nextGate);
       if (nextGateValues.some((value) => value != null) && nextGateValues.some((value) => value == null)) throw new z.ZodError([]);
       if (nextGate.gateStationId && nextGate.siteLocationId) {
-        const [station] = await tx.select({ siteId: gateStationsTable.siteId }).from(gateStationsTable).where(eq(gateStationsTable.id, nextGate.gateStationId)).limit(1);
+        const [station] = await tx.select({ siteId: gateStationsTable.siteId }).from(gateStationsTable).where(gateStationSchedulingFilter(nextGate.gateStationId, payload.action === "cancel")).limit(1).for("share");
         if (!station || station.siteId !== nextGate.siteLocationId) throw new z.ZodError([]);
       }
       const instructions = payload.mandatory === undefined ? payload.instructions : `${payload.instructions ?? current.instructions ?? ""}${payload.instructions || current.instructions ? "\n" : ""}Mandatory: ${payload.mandatory ? "Yes" : "No"}`;

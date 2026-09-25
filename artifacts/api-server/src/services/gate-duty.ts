@@ -85,15 +85,18 @@ async function stationWithAccess(
   client: Queryable,
   session: SessionPayload,
   stationId: string,
+  requireActive = false,
 ) {
   const station = (
     await client.query(
-      "SELECT id,site_id,name FROM gate_stations WHERE id=$1",
+      `SELECT id,site_id,name,active FROM gate_stations WHERE id=$1${requireActive ? " FOR SHARE" : ""}`,
       [stationId],
     )
   ).rows[0];
   if (!station) fail(404, "not_found", "Gate not found");
   const access = await requireChangeOverAccess(client, session, station.site_id);
+  if (requireActive && station.active === false)
+    fail(409, "station_inactive", "This gate is inactive");
   return { station, access };
 }
 
@@ -124,7 +127,7 @@ async function shiftForWorker(
     fail(409, "gate_shift_required", "This is not a scheduled Gate shift");
   if (stationId && shift.gate_station_id !== stationId)
     fail(409, "station_mismatch", "The shift belongs to a different gate");
-  await stationWithAccess(client, session, shift.gate_station_id);
+  await stationWithAccess(client, session, shift.gate_station_id, true);
   return shift;
 }
 
@@ -148,7 +151,7 @@ async function insertDuty(
   await client.query("SELECT id FROM gate_stations WHERE id=$1 FOR UPDATE", [
     input.stationId,
   ]);
-  await stationWithAccess(client, session, input.stationId);
+  await stationWithAccess(client, session, input.stationId, true);
   let shift = null;
   if (input.workHubShiftId) {
     shift = await shiftForWorker(

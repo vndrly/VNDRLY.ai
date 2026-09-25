@@ -1,4 +1,26 @@
 {
+  "gateLocations": {
+    "title": "Gate Locations",
+    "description": "Manage physical gates for serviced partner sites. Gate coordinates are separate from the partner's wellhead.",
+    "noSites": "No authorized serviced sites are available.",
+    "name": "Gate name",
+    "latitude": "Latitude",
+    "longitude": "Longitude",
+    "radius": "Radius in meters",
+    "add": "Add gate",
+    "edit": "Edit gate",
+    "active": "Active",
+    "inactive": "Inactive",
+    "deactivate": "Deactivate gate",
+    "reactivate": "Activate gate",
+    "currentLocation": "Use my current location",
+    "locationDenied": "Location permission was denied. You can enter coordinates manually.",
+    "review": "Review gate",
+    "confirm": "Confirm gate",
+    "back": "Back to editing",
+    "saved": "Gate saved",
+    "error": "Unable to complete this action. Check your access and refresh the gate before retrying an outdated edit."
+  },
   "filesInventory": {
     "title": "Files & Inventory",
     "filesNotes": "Files & Notes",

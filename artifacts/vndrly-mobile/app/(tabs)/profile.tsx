@@ -21,6 +21,7 @@ import ScreenSafeArea from "@/components/ScreenSafeArea";
 import SphereBackButton from "@/components/SphereBackButton";
 import ProfilePhotoImage from "@/components/ProfilePhotoImage";
 import WorkHubDeviceSettings from "@/components/WorkHubDeviceSettings";
+import GateLocationsCard from "@/components/profile/GateLocationsCard";
 import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch, logout, updatePreferredLanguage } from "@/lib/api";
@@ -484,6 +485,8 @@ export default function ProfileScreen() {
           <Feather name="chevron-right" size={18} color="#ffffff" style={[styles.actionChevron, styles.pillIconShadow]} />
         </LayeredPillButton>
       ) : null}
+
+      <GateLocationsCard key={activeMembershipId ?? "no-membership"} />
 
       {canManageCompany ? (
         <LayeredPillButton
