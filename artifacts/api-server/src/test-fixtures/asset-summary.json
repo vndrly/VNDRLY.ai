@@ -1,0 +1,15 @@
+{
+  "id": "00000000-0000-4000-8000-000000000001",
+  "name": "Issued radio",
+  "category": "equipment",
+  "status": "checked_out",
+  "condition": null,
+  "version": 2,
+  "holderUserId": 11,
+  "currentHolderDisplayName": "User 11",
+  "currentLocation": null,
+  "hold": null,
+  "expectedReturnAt": null,
+  "policy": { "photosRequiredOnCheckout": false, "photosRequiredOnReturn": false, "expectedReturnRequired": false, "supervisorApprovalRequired": false },
+  "capabilities": { "canCheckOut": false, "canReturn": true, "canVerifyIssued": true }
+}

@@ -1,5 +1,8 @@
 {
+  "workHubExports": { "noAccess": "No hay exportaciones disponibles para este rol." },
   "workHubSearch": {
+    "unknownStatus": "Estado no disponible",
+    "statuses": { "active": "Activo", "open": "Abierto", "pending": "Pendiente", "assigned": "Asignado", "in_progress": "En curso", "completed": "Completado", "cancelled": "Cancelado", "draft": "Borrador", "scheduled": "Programado", "finalized": "Finalizado", "archived": "Archivado", "closed": "Cerrado", "declined": "Rechazado", "accepted": "Aceptado", "submitted": "Enviado", "approved": "Aprobado", "denied": "Denegado", "available": "Disponible", "checked_out": "Retirado", "held": "Retenido", "retired": "Dado de baja", "merged": "Fusionado" },
     "title": "Buscar registros de Work Hub",
     "queryLabel": "Buscar en Work Hub",
     "queryPlaceholder": "Buscar registros autorizados",

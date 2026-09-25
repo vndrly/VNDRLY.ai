@@ -68,6 +68,7 @@ camera-gateway.json
 .local/
 .worktrees/
 .superpowers/
+lib/db/.work-hub-previous-*/
 lib/e2e/scripts/.replit-profile/
 
 # Per-run output of `pnpm --filter @workspace/api-server run eval`. The

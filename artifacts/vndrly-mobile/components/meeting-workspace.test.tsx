@@ -23,6 +23,7 @@ const env = vi.hoisted(() => ({
   spanish: false,
   accessibilityFocus: vi.fn(),
   announce: vi.fn(),
+  user: { id: 1, activeMembershipId: 10 },
 }));
 
 vi.mock("react-native", async (importOriginal) => {
@@ -108,9 +109,10 @@ vi.mock("@/hooks/use-brand", () => ({
   useBrand: () => ({ primary: "#00adb5", name: "MidCon" }),
 }));
 vi.mock("@/hooks/use-auth", () => ({
-  useAuth: () => ({ user: { id: 1, activeMembershipId: 10 } }),
+  useAuth: () => ({ user: env.user }),
 }));
-vi.mock("@/lib/auth", () => ({ getToken: env.getToken }));
+vi.mock("@/lib/auth", () => ({ getToken: env.getToken, captureAuthScope: () => ({ generation: 1 }), isAuthScopeCurrent: () => true }));
+vi.mock("@/lib/work-hub-file-upload", () => ({ uploadWorkHubFile: vi.fn() }));
 vi.mock("@/lib/api", () => ({
   apiFetch: vi.fn(async () => env.moduleData),
   getApiBase: () => "https://vndrly.example",
@@ -150,9 +152,8 @@ vi.mock("expo-router", () => ({
   useLocalSearchParams: () => ({ module: env.moduleName }),
   router: { push: env.push },
 }));
-vi.mock("react-i18next", () => ({
-  useTranslation: () => ({
-    t: (key: string, values?: any) => {
+vi.mock("react-i18next", () => {
+    const t = (key: string, values?: any) => {
       const labels: Record<string, string> = {
         "meetingWorkspace.opening": "Opening meeting…",
         "meetingWorkspace.transcriptionUnavailable":
@@ -206,9 +207,9 @@ vi.mock("react-i18next", () => ({
       return raw.replace(/\{\{(\w+)\}\}/g, (_match, name) =>
         String(values?.[name] ?? ""),
       );
-    },
-  }),
-}));
+    };
+  return { useTranslation: () => ({ t }) };
+});
 
 import MeetingWorkspace from "./meeting-workspace";
 import WorkHubModuleScreen from "../app/work-hub/[module]";

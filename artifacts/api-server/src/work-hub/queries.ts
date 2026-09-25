@@ -1,4 +1,5 @@
-import { and, desc, eq, lt, or, sql, type SQL } from "drizzle-orm";
+import { and, desc, eq, getTableColumns, lt, or, sql, type SQL } from "drizzle-orm";
+import { z } from "zod/v4";
 import { db, siteWorkAssignmentsTable, siteLocationsTable, ticketsTable, workHubChannelMembersTable, workHubChannelsTable } from "@workspace/db";
 import type { SessionPayload } from "../lib/session";
 import { managedWorkerSiteRole } from "../lib/managed-worker-access";
@@ -121,27 +122,40 @@ function listedChannelAccess(session: SessionPayload & { userId: number }): SQL 
   return sql`(${legacyAccess} OR ${collaborationAccess})`;
 }
 
-export async function listOwnedWorkHubChannels(session: SessionPayload & { userId: number }, before?: Date, limit = 50, beforeId?: string) {
+const ChannelCursorSchema = z.object({ updatedAt: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z$/), id: z.uuid() });
+type ChannelCursor = z.infer<typeof ChannelCursorSchema>;
+export function decodeChannelCursor(token: string): ChannelCursor {
+  if (token.length > 512 || !/^[A-Za-z0-9_-]+$/.test(token)) throw new Error("Invalid channel cursor");
+  return ChannelCursorSchema.parse(JSON.parse(Buffer.from(token, "base64url").toString("utf8")));
+}
+
+export async function listOwnedWorkHubChannels(session: SessionPayload & { userId: number }, before?: Date | ChannelCursor, limit = 50, beforeId?: string) {
   const requested = Math.min(100, Math.max(1, limit));
-  const page = (cursorAt?: Date, cursorId?: string) => db.select().from(workHubChannelsTable)
+  const page = (cursorAt?: string, cursorId?: string) => db.select({
+    ...getTableColumns(workHubChannelsTable),
+    cursorUpdatedAt: sql<string>`to_char(${workHubChannelsTable.updatedAt} AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')`,
+  }).from(workHubChannelsTable)
     .where(and(
       eq(workHubChannelsTable.status, "active"),
       cursorAt ? cursorId
-        ? or(lt(workHubChannelsTable.updatedAt, cursorAt), and(eq(workHubChannelsTable.updatedAt, cursorAt), lt(workHubChannelsTable.id, cursorId)))
-        : lt(workHubChannelsTable.updatedAt, cursorAt) : undefined,
+        ? or(sql`${workHubChannelsTable.updatedAt} < ${cursorAt}::timestamptz`, and(sql`${workHubChannelsTable.updatedAt} = ${cursorAt}::timestamptz`, lt(workHubChannelsTable.id, cursorId)))
+        : sql`${workHubChannelsTable.updatedAt} < ${cursorAt}::timestamptz` : undefined,
       listedChannelAccess(session),
     ))
     .orderBy(desc(workHubChannelsTable.updatedAt), desc(workHubChannelsTable.id))
     .limit(requested);
-  let rows = await page(before, beforeId);
-  if (!session.managedSubcontractor) return rows;
+  let rows = await page(before instanceof Date ? before.toISOString() : before?.updatedAt, before instanceof Date ? beforeId : before?.id ?? beforeId);
+  const withCursors = (values: typeof rows) => values.map(({ cursorUpdatedAt, ...channel }) => ({
+    ...channel, continuationCursor: Buffer.from(JSON.stringify({ updatedAt: cursorUpdatedAt, id: channel.id })).toString("base64url"),
+  }));
+  if (!session.managedSubcontractor) return withCursors(rows);
   const visible: typeof rows = [];
   while (rows.length) {
     const allowed = await Promise.all(rows.map((channel) => isWorkHubParticipant(session, channel)));
     visible.push(...rows.filter((_, index) => allowed[index]).slice(0, requested - visible.length));
     if (visible.length === requested || rows.length < requested) break;
     const last = rows[rows.length - 1]!;
-    rows = await page(last.updatedAt, last.id);
+    rows = await page(last.cursorUpdatedAt, last.id);
   }
-  return visible;
+  return withCursors(visible);
 }

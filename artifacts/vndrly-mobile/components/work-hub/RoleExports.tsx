@@ -3,6 +3,7 @@ import { Text } from "react-native";
 import { ImplementationAExports } from "@/components/implementation-a/Exports";
 import { apiFetch } from "@/lib/api";
 import { useColors } from "@/hooks/useColors";
+import { useTranslation } from "react-i18next";
 
 type ExportDataset = "payroll" | "quickbooks-time" | "assets" | "staffing" | "safety";
 const datasetNames: Record<ExportDataset, string> = {
@@ -14,6 +15,7 @@ const datasetNames: Record<ExportDataset, string> = {
 };
 
 export function RoleExports({ owner, membershipId }: { owner: { type: "vendor" | "partner"; id: number }; membershipId?: number | null }) {
+  const { t } = useTranslation();
   const colors = useColors();
   const scopeKey = `${membershipId ?? ""}:${owner.type}:${owner.id}`;
   const [access, setAccess] = useState<{ scopeKey: string; datasets: ExportDataset[] } | null>(null);
@@ -30,6 +32,6 @@ export function RoleExports({ owner, membershipId }: { owner: { type: "vendor" |
     return () => { active = false; };
   }, [scopeKey]);
   if (!access || access.scopeKey !== scopeKey) return null;
-  if (access.datasets.length === 0) return <Text style={{ color: colors.mutedForeground }}>No exports available for this role.</Text>;
+  if (access.datasets.length === 0) return <Text style={{ color: colors.mutedForeground }}>{t("workHubExports.noAccess")}</Text>;
   return <ImplementationAExports owner={owner} allowedDatasets={access.datasets} />;
 }

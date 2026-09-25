@@ -149,8 +149,8 @@ type ReplayDownloadInput = Omit<DownloadInput, "fileId"> & {
 const normalizedType = (value: string | null) => (value ?? "").toLowerCase().split(";")[0].trim();
 const safeName = (value: string) => value.replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/^-+|-+$/g, "") || "meeting-file";
 
-async function downloadAndShareProtectedMeetingFile(
-  input: Omit<DownloadInput, "fileId">,
+export async function downloadAndShareProtectedFile(
+  input: Omit<DownloadInput, "fileId" | "occurrenceId">,
   path: string,
   headers?: Record<string, string>,
 ): Promise<void> {
@@ -194,14 +194,14 @@ async function downloadAndShareProtectedMeetingFile(
 }
 
 export async function downloadAndShareMeetingFile(input: DownloadInput): Promise<void> {
-  return downloadAndShareProtectedMeetingFile(
+  return downloadAndShareProtectedFile(
     input,
     `/api/work-hub/meetings/${encodeURIComponent(input.occurrenceId)}/files/${encodeURIComponent(input.fileId)}`,
   );
 }
 
 export async function downloadAndShareMeetingReplayFile(input: ReplayDownloadInput): Promise<void> {
-  return downloadAndShareProtectedMeetingFile(
+  return downloadAndShareProtectedFile(
     input,
     `/api/work-hub/meetings/${encodeURIComponent(input.occurrenceId)}/replay/files/${encodeURIComponent(input.replayEventId)}`,
     { "x-replay-renderer-version": "1", "x-replay-schema-version": "2" },

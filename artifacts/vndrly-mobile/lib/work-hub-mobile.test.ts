@@ -42,6 +42,21 @@ describe("mobile Work Hub boundary", () => {
 });
 
 describe("combined files and inventory loading", () => {
+  it("continues with the server's opaque channel cursor without serializing timestamps", async () => {
+    let calls = 0;
+    const channels = Array.from({ length: 100 }, (_, n) => ({ id: `channel-${n}`, name: "Shared", ownerOrgType: "partner", ownerOrgId: 9, contextKind: "site", contextId: "33", updatedAt: "2026-09-24T12:00:00.123Z", continuationCursor: `opaque-${n}` }));
+    const result = await loadFilesInventoryData({ type: "vendor", id: 7 }, async path => {
+      if (path.startsWith("/api/work-hub/channels?")) {
+        if (calls++ === 0) return channels;
+        expect(new URL(path, "https://example.test").searchParams.get("cursor")).toBe("opaque-99");
+        return [];
+      }
+      if (path === "/api/work-hub/home") return { capabilities: {} };
+      if (path === "/api/implementation-a/assets") return { assets: [], capabilities: {} };
+      return [];
+    });
+    expect(result.channels[0]).toMatchObject({ ownerOrgType: "partner", ownerOrgId: 9, contextKind: "site", contextId: "33" });
+  });
   it("loads notes from more than fifty authorized channels", async () => {
     const channels = Array.from({ length: 101 }, (_, index) => ({ id: `channel-${index}`, name: `Group ${index}`, updatedAt: new Date(Date.UTC(2026, 8, 24, 12, 0, 0) - index * 1000).toISOString() }));
     const requests: string[] = [];

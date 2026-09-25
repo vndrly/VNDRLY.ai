@@ -8,9 +8,11 @@ import {
   db,
   usersTable,
   vendorsTable,
+  partnersTable,
   userOrgMembershipsTable,
   workHubChannelsTable,
   workHubChannelMembersTable,
+  workHubCollaborationChannelsTable,
   workHubFilesTable,
 } from "@workspace/db";
 import files from "./workHubFileLibrary";
@@ -341,6 +343,28 @@ describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")(
             .set("Cookie", member)
         ).status,
       ).toBe(200);
+    });
+    it("reserves and finalizes in the invited partner channel owner and rechecks revoked membership on both replays", async () => {
+      const [partner] = await db.insert(partnersTable).values({ name: `File partner ${randomUUID()}`, contactName: "Test", contactEmail: "partner@example.invalid" }).returning();
+      const [channel] = await db.insert(workHubChannelsTable).values({ ownerOrgType: "partner", ownerOrgId: partner!.id, contextKind: "organization", contextId: String(partner!.id), name: "Shared partner files", visibility: "private", createdById: adminId }).returning();
+      await db.insert(workHubCollaborationChannelsTable).values({ channelId: channel!.id, kind: "shared" });
+      await db.insert(workHubChannelMembersTable).values({ channelId: channel!.id, userId: externalId, mode: "member" });
+      const reserve = { ...envelope(draft("channel", "partner file", { channelId: channel!.id })), owner: { type: "partner", id: partner!.id }, context: { kind: "organization", id: partner!.id } };
+      const send = (action: string, body: object) => request(app).post(`/work-hub/file-library/${action}`).set("Cookie", external).send(body);
+      expect((await send("reserve", { ...reserve, owner: { type: "vendor", id: externalOrg }, context: { kind: "organization", id: externalOrg } })).status).toBe(403);
+      const reserved = await send("reserve", reserve);
+      expect(reserved.status).toBe(201);
+      expect((await send("reserve", reserve)).body.resource.fileId).toBe(reserved.body.resource.fileId);
+      objects.set(reserved.body.resource.objectPath, Buffer.from("partner file"));
+      const finalize = { ...reserve, operationId: randomUUID(), payload: { id: reserved.body.resource.documentId, fileId: reserved.body.resource.fileId } };
+      expect((await send("finalize", finalize)).status).toBe(201);
+      expect((await send("finalize", finalize)).body.replayed).toBe(true);
+      expect((await request(app).get(`/work-hub/file-library/${reserved.body.resource.documentId}/download`).set("Cookie", external)).text).toBe("partner file");
+      await db.delete(workHubChannelMembersTable).where(and(eq(workHubChannelMembersTable.channelId, channel!.id), eq(workHubChannelMembersTable.userId, externalId)));
+      expect((await send("reserve", reserve)).status).toBe(404);
+      expect((await send("finalize", finalize)).status).toBe(404);
+      expect((await request(app).get(`/work-hub/file-library/${reserved.body.resource.documentId}/download`).set("Cookie", external)).status).toBe(404);
+      expect(await db.select().from(workHubFilesTable).where(eq(workHubFilesTable.id, reserved.body.resource.fileId))).toHaveLength(1);
     });
     it("retains existing uploads without exposing foreign tenant files or object keys", async () => {
       const path = "/objects/uploads/" + randomUUID();

@@ -49,6 +49,19 @@ afterEach(() => {
 });
 
 describe("Implementation A CSV scope", () => {
+  it("uses the native UUID when browser crypto is unavailable", async () => {
+    (globalThis.expo as any).uuidv4 = () => "11111111-1111-4111-8111-111111111111";
+    const browserUuid = vi.spyOn(globalThis.crypto, "randomUUID").mockImplementation(() => { throw new Error("Browser UUID unavailable"); });
+    try {
+      const csv = pendingCsv();
+      render(<ImplementationAExports owner={owner} allowedDatasets={["staffing"]} />);
+      fireEvent.click(screen.getByRole("button", { name: "Create Staffing CSV" }));
+      await waitForRequest();
+      await act(async () => { csv.resolve("worker\r\nA\r\n"); });
+      await waitFor(() => expect(env.share).toHaveBeenCalledOnce());
+      expect(env.write.mock.calls[0]![0]).toContain("11111111-1111-4111-8111-111111111111.csv");
+    } finally { browserUuid.mockRestore(); }
+  });
   it("shares a current owner's CSV through the auth-scoped request and cleans its temporary file", async () => {
     const csv = pendingCsv();
     render(<ImplementationAExports owner={owner} allowedDatasets={["staffing"]} />);

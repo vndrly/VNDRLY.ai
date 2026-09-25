@@ -4,6 +4,7 @@ import request from "supertest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { buildTestCookie } from "../test-utils/session";
 import { createMemoryAssetRepository, type AssetRepository } from "../services/assets";
+import canonicalSummary from "../test-fixtures/asset-summary.json";
 
 const state = vi.hoisted(() => ({
   repository: null as AssetRepository | null,
@@ -42,6 +43,24 @@ beforeEach(() => {
 });
 
 describe("asset inventory and custody routes", () => {
+  it.each(["admin-issued", "transferred"])("lets the current recipient verify %s equipment and serializes a safe custodian", async (kind) => {
+    const asset = await state.repository!.create({ name: "Issued radio", category: "equipment", legalOwner: "Vendor", responsibleOwner: owner, aliases: [], provisional: false });
+    const issued = await request(app).post(`/implementation-a/assets/${asset.id}/checkout`).set("Cookie", admin).send({ ...command(1), holderUserId: kind === "admin-issued" ? 11 : 13 });
+    expect(issued.body.status).toBe("applied");
+    let version = 2;
+    if (kind === "transferred") {
+      const moved = await request(app).post(`/implementation-a/assets/${asset.id}/transfer`).set("Cookie", supervisor).send({ ...command(2), toHolderUserId: 11 });
+      expect(moved.body.status).toBe("applied");
+      version = 3;
+    }
+    const list = await request(app).get("/implementation-a/assets").set("Cookie", gatekeeper);
+    expect(list.body.assets[0]).toEqual({ ...canonicalSummary, id: asset.id, version });
+    const input = command(version);
+    const verified = await request(app).post(`/implementation-a/assets/${asset.id}/verify-issued`).set("Cookie", gatekeeper).send(input);
+    expect(verified.body.status).toBe("applied");
+    expect((await request(app).post(`/implementation-a/assets/${asset.id}/verify-issued`).set("Cookie", otherGatekeeper).send(command(version + 1))).status).toBe(403);
+    expect((await request(app).post(`/implementation-a/assets/${asset.id}/verify-issued`).set("Cookie", gatekeeper).send(input)).body.version).toBe(version + 1);
+  });
   it("returns canonical assets and capability object to a gatekeeper", async () => {
     await state.repository!.create({ name: "Radio", category: "equipment", legalOwner: "Vendor", responsibleOwner: owner, aliases: [], provisional: false });
     const response = await request(app).get("/implementation-a/assets").set("Cookie", gatekeeper);

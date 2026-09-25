@@ -5,7 +5,7 @@ import { getSessionFromRequest } from "../lib/session";
 import { sendApiError } from "../lib/apiError";
 import { ExportLifecycleError } from "../work-hub/governance-export-lifecycle";
 import { areWorkHubExportsEnabled, workHubExportLifecycle } from "../work-hub/governance-export-runtime";
-import { buildImplementationAExport, previewImplementationAExport, type ImplementationAExportDataset } from "../services/implementation-a-exports";
+import { buildImplementationAExport, previewImplementationAExport, type ImplementationAExportDataset, type ImplementationAExportScope } from "../services/implementation-a-exports";
 import { recordExport } from "../lib/reports/audit";
 import { allowedExportDatasets, type ExportDataset } from "../work-hub/capabilities";
 import { deriveWorkHubCapabilities } from "../work-hub/context-access";
@@ -20,7 +20,7 @@ const implementationADatasetGrants: Record<ImplementationAExportDataset, ExportD
   staffing: "staffing",
   safety: "safety-response",
 };
-function authorizeImplementationAExport(req: Request): { owner: ImplementationAOwner; dataset: ImplementationAExportDataset } | null {
+function authorizeImplementationAExport(req: Request): { owner: ImplementationAOwner; dataset: ImplementationAExportDataset; scope: ImplementationAExportScope } | null {
   const dataset = req.body?.dataset as ImplementationAExportDataset;
   if (!Object.prototype.hasOwnProperty.call(implementationADatasetGrants, dataset)) return null;
   const type = req.body?.scope?.ownerOrgType;
@@ -36,11 +36,26 @@ function authorizeImplementationAExport(req: Request): { owner: ImplementationAO
     participant: true,
   }));
   if (!allowedExportDatasets(capabilities).includes(implementationADatasetGrants[dataset])) return null;
-  return { owner, dataset };
+  const requestedSites = req.body?.scope?.siteIds;
+  if (requestedSites !== undefined && (!Array.isArray(requestedSites) || requestedSites.some((siteId: unknown) => !Number.isSafeInteger(siteId) || Number(siteId) <= 0))) return null;
+  let siteIds: readonly number[] | undefined = requestedSites === undefined ? undefined : [...new Set<number>(requestedSites)];
+  if (session.managedSubcontractor) {
+    // A supervisor grant at one site never grants owner-wide staffing access.
+    // Capture the signed scope once, shared by preview, final selection, and audit.
+    const allowedSites = [...new Set(session.managedSubcontractor.siteGrants
+      .filter(grant => grant.role === "gate_supervisor").map(grant => grant.siteId))];
+    if (!allowedSites.length || (siteIds && (!siteIds.length || siteIds.some(siteId => !allowedSites.includes(siteId))))) return null;
+    siteIds = siteIds ?? allowedSites;
+  }
+  const scope = Object.freeze({ ownerOrgId: owner.id,
+    managedOrganizationId: typeof req.body?.scope?.managedOrganizationId === "string" ? req.body.scope.managedOrganizationId : undefined,
+    siteIds: siteIds ? Object.freeze([...siteIds]) : undefined,
+  });
+  return { owner, dataset, scope };
 }
 async function loadImplementationAExportRows(dataset: ImplementationAExportDataset, owner: ImplementationAOwner): Promise<Array<Record<string, unknown> & { ownerOrgId: number }>> {
   if (dataset === "assets") return rowsOf(await db.execute(sql`SELECT responsible_org_id AS "ownerOrgId", id::text AS "assetId", name, category, status, current_holder_user_id::text AS holder, COALESCE((SELECT condition FROM asset_custody_events WHERE asset_id = assets.id ORDER BY occurred_at DESC LIMIT 1), '') AS condition FROM assets WHERE responsible_org_type = ${owner.type} AND responsible_org_id = ${owner.id} AND retired_at IS NULL ORDER BY created_at, id`));
-  if (dataset === "staffing") return rowsOf(await db.execute(sql`SELECT s.owner_org_id AS "ownerOrgId", s.id::text AS "assignmentId", COALESCE(u.display_name, u.username, 'Worker ' || a.user_id::text) AS worker, '' AS employer, '' AS sponsor, COALESCE(s.project_name, s.title) AS site, s.starts_at AS "startsAt", s.ends_at AS "endsAt", a.status FROM work_hub_shift_assignments a JOIN work_hub_shifts s ON s.id = a.shift_id LEFT JOIN users u ON u.id = a.user_id WHERE s.owner_org_type = ${owner.type} AND s.owner_org_id = ${owner.id} ORDER BY s.starts_at, a.id`));
+  if (dataset === "staffing") return rowsOf(await db.execute(sql`SELECT s.owner_org_id AS "ownerOrgId", s.site_location_id AS "siteId", s.id::text AS "assignmentId", COALESCE(u.display_name, u.username, 'Worker ' || a.user_id::text) AS worker, '' AS employer, '' AS sponsor, COALESCE(s.project_name, s.title) AS site, s.starts_at AS "startsAt", s.ends_at AS "endsAt", a.status FROM work_hub_shift_assignments a JOIN work_hub_shifts s ON s.id = a.shift_id LEFT JOIN users u ON u.id = a.user_id WHERE s.owner_org_type = ${owner.type} AND s.owner_org_id = ${owner.id} ORDER BY s.starts_at, a.id`));
   if (dataset === "safety") { const ownerClause = owner.type === "vendor" ? sql`e.vendor_id = ${owner.id}` : sql`e.partner_id = ${owner.id}`; return rowsOf(await db.execute(sql`SELECT ${owner.id}::int AS "ownerOrgId", e.site_location_id AS "siteId", e.event_number AS "eventId", e.created_at AS "reportedAt", COALESCE(r.severity, CASE WHEN e.is_high_potential THEN 'urgent' ELSE 'standard' END) AS severity, COALESCE(r.response_status, e.status) AS status, CASE WHEN r.acknowledged_at IS NULL THEN 'Awaiting acknowledgement' ELSE 'Acknowledged' END AS acknowledgement FROM safety_events e LEFT JOIN safety_incident_responses r ON r.event_id = e.id WHERE ${ownerClause} ORDER BY e.created_at, e.id`)); }
   return rowsOf(await db.execute(sql`SELECT org_id AS "ownerOrgId", data->>'managedOrganizationId' AS "managedOrganizationId", NULLIF(data->>'siteId', '')::int AS "siteId", data->>'worker' AS worker, data->>'employer' AS employer, data->>'sponsor' AS sponsor, data->>'site' AS site, COALESCE(NULLIF(data->>'hours', '')::numeric, 0) AS hours, data->>'payRate' AS "payRate" FROM work_hub_finance_records WHERE org_type = ${owner.type} AND org_id = ${owner.id} AND kind IN ('time_entry', 'payroll_hours', 'worker_hours') ORDER BY created_at, id`));
 }
@@ -94,8 +109,7 @@ export function createWorkHubExportsRouter(deps: WorkHubExportsRouterDependencie
     try { authorized = authorizeImplementationAExport(req); }
     catch (error) { return failure(res, error); }
     if (!authorized) return sendApiError(res, 403, "work_hub.forbidden", "Export access denied");
-    const { dataset, owner } = authorized;
-    const scope = { ownerOrgId: owner.id, managedOrganizationId: typeof req.body?.scope?.managedOrganizationId === "string" ? req.body.scope.managedOrganizationId : undefined, siteIds: Array.isArray(req.body?.scope?.siteIds) ? req.body.scope.siteIds.filter((id: unknown): id is number => Number.isSafeInteger(id)) : undefined };
+    const { dataset, owner, scope } = authorized;
     const artifact = buildImplementationAExport({ dataset, scope, rows: await loadImplementationAExportRows(dataset, owner), includeSensitivePayroll: req.body?.includeSensitivePayroll === true });
     const body = Buffer.from(artifact.csv, "utf8");
     await recordExport({ req, reportKind: `implementation_a_${dataset}`, format: "csv", scope: artifact.audit.scope, rowCount: artifact.audit.rowCount, fileBytes: body.length, detailJson: { hash: artifact.sha256, result: artifact.audit.result } });
@@ -109,8 +123,8 @@ export function createWorkHubExportsRouter(deps: WorkHubExportsRouterDependencie
     try { authorized = authorizeImplementationAExport(req); }
     catch (error) { return failure(res, error); }
     if (!authorized) return sendApiError(res, 403, "work_hub.forbidden", "Export access denied");
-    const { dataset, owner } = authorized;
-    return res.json(previewImplementationAExport({ dataset, scope: { ownerOrgId: owner.id, managedOrganizationId: typeof req.body?.scope?.managedOrganizationId === "string" ? req.body.scope.managedOrganizationId : undefined, siteIds: Array.isArray(req.body?.scope?.siteIds) ? req.body.scope.siteIds.filter((id: unknown) => Number.isSafeInteger(id)) : undefined }, includeSensitivePayroll: req.body?.includeSensitivePayroll === true }));
+    const { dataset, scope } = authorized;
+    return res.json(previewImplementationAExport({ dataset, scope, includeSensitivePayroll: req.body?.includeSensitivePayroll === true }));
   });
   router.get("/work-hub/exports/:id", async (req, res) => {
     const requester = actor(req);

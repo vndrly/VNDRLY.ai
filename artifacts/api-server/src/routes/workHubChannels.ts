@@ -28,6 +28,7 @@ import {
 } from "../work-hub/context-access";
 import {
   listOwnedWorkHubChannels,
+  decodeChannelCursor,
   resolveChannelAccess,
 } from "../work-hub/queries";
 import { publishWorkHubEvent } from "../work-hub/events";
@@ -144,9 +145,14 @@ router.get("/work-hub/channels", async (req, res) => {
   const beforeId = typeof req.query.beforeId === "string" && uuid.safeParse(req.query.beforeId).success
     ? req.query.beforeId
     : undefined;
+  let cursor: ReturnType<typeof decodeChannelCursor> | undefined;
+  if (req.query.cursor !== undefined) {
+    try { cursor = decodeChannelCursor(z.string().parse(req.query.cursor)); }
+    catch { return sendApiError(res, 400, "validation.invalid_request", "Invalid channel cursor"); }
+  }
   const channels = await listOwnedWorkHubChannels(
     actor,
-    before && !Number.isNaN(before.getTime()) ? before : undefined,
+    cursor ?? (before && !Number.isNaN(before.getTime()) ? before : undefined),
     Number(req.query.limit) || 50,
     beforeId,
   );

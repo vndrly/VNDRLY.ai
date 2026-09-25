@@ -7,10 +7,12 @@ vi.mock("@/components/TogglePillButton", () => ({
   default: ({ children, accessibilityLabel, onPress }: any) => <button aria-label={accessibilityLabel} onClick={onPress}>{children}</button>,
 }));
 vi.mock("@/hooks/useColors", () => ({ useColors: () => ({ card: "white", text: "black", mutedForeground: "gray", border: "gray", primary: "blue" }) }));
-const network = vi.hoisted(() => ({ pick: vi.fn(), api: vi.fn(), digest: vi.fn() }));
+const network = vi.hoisted(() => ({ pick: vi.fn(), api: vi.fn(), digest: vi.fn(), upload: vi.fn() }));
 const photos = vi.hoisted(() => ({ capture: vi.fn() }));
 vi.mock("@/lib/photos", () => ({ captureAndUploadImage: photos.capture }));
 vi.mock("@/lib/meeting-files", () => ({ pickMeetingFile: network.pick }));
+vi.mock("@/lib/work-hub-file-upload", () => ({ uploadWorkHubFile: network.upload }));
+vi.mock("@/lib/auth", () => ({ captureAuthScope: () => ({ generation: 1 }), isAuthScopeCurrent: () => true, subscribeUser: () => () => {}, subscribeToken: () => () => {} }));
 vi.mock("@/lib/api", () => ({ apiFetch: network.api, getApiBase: () => "https://example.test" }));
 vi.mock("expo-file-system/legacy", () => ({ cacheDirectory: "file:///cache/", downloadAsync: vi.fn(), deleteAsync: vi.fn() }));
 vi.mock("expo-sharing", () => ({ isAvailableAsync: vi.fn(), shareAsync: vi.fn() }));
@@ -31,13 +33,14 @@ vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string, valu
 } }) }));
 
 const owner = { type: "vendor" as const, id: 7 };
+const channel = { id: "channel-1", name: "Gate A", ownerOrgType: "vendor" as const, ownerOrgId: 7, contextKind: "organization", contextId: "7" };
 const records = {
   files: [{ id: "file-1", data: { name: "Gate log.pdf", scope: "company", currentFileId: "version-1", state: "active" }, createdBy: 12, updatedAt: "2026-09-24T12:00:00Z", capabilities: { canDownload: true, canManage: false } }],
   notes: [{ id: "note-1", channelId: "channel-1", title: "Shift notes", body: "Handoff", version: 1, createdById: 12, createdAt: "2026-09-24T12:00:00Z", capabilities: { canEdit: false } }],
   assets: [{ id: "asset-1", name: "Radio 4", category: "Radio", status: "available", condition: "good", version: 1, holderUserId: null, currentHolderDisplayName: null, currentLocation: "Gate A", hold: null, policy: { photosRequiredOnCheckout: false, photosRequiredOnReturn: false, expectedReturnRequired: false, supervisorApprovalRequired: false }, capabilities: { canCheckOut: true, canReturn: false, canVerifyIssued: false } }],
 };
 const caps = { canUploadFile: true, canCreateNote: true, canEditNote: true, canCreateAsset: false, canManageAsset: false, canCheckOutAsset: true, canVerifyIssuedAsset: true, canViewExports: false, allowedExportDatasets: [], canManageGateLocations: false };
-afterEach(() => { cleanup(); network.pick.mockReset(); network.api.mockReset(); network.digest.mockReset(); photos.capture.mockReset(); });
+afterEach(() => { cleanup(); network.pick.mockReset(); network.api.mockReset(); network.digest.mockReset(); network.upload.mockReset(); photos.capture.mockReset(); });
 
 describe("Files & Inventory", () => {
   it("lands on the exact inventory asset from a search destination", () => {
@@ -47,7 +50,7 @@ describe("Files & Inventory", () => {
     expect(screen.queryByText("Gate log.pdf")).toBeNull();
   });
   it("shows both cards and permitted creation actions", () => {
-    render(<FilesInventory owner={owner} capabilities={caps} {...records} channels={[{ id: "channel-1", name: "Gate A" }]} onRefresh={vi.fn()} />);
+    render(<FilesInventory owner={owner} capabilities={caps} {...records} channels={[channel]} onRefresh={vi.fn()} />);
     expect(screen.getByText("Files & Notes")).toBeTruthy();
     expect(screen.getByText("Inventory")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Upload File" })).toBeTruthy();
@@ -70,17 +73,14 @@ describe("Files & Inventory", () => {
     network.pick.mockResolvedValue({ name: "permit.pdf", type: "application/pdf", size: 2, bytes: new Uint8Array([1, 2]) });
     network.digest.mockResolvedValue(new Uint8Array(32).buffer);
     network.api.mockResolvedValueOnce({ resource: { documentId: "document-1", fileId: "file-1", uploadURL: "https://example.test/upload" } }).mockResolvedValueOnce({ resource: {} });
-    let uploaded!: (response: { ok: boolean }) => void;
-    const originalFetch = globalThis.fetch;
-    globalThis.fetch = vi.fn(() => new Promise(resolve => { uploaded = resolve as typeof uploaded; })) as typeof fetch;
-    try {
-      render(<FilesInventory owner={owner} capabilities={caps} {...records} channels={[{ id: "channel-1", name: "Gate A" }]} onRefresh={vi.fn()} />);
+    let uploaded!: (response: boolean) => void;
+    network.upload.mockImplementation(() => new Promise(resolve => { uploaded = resolve; }));
+      render(<FilesInventory owner={owner} capabilities={caps} {...records} channels={[channel]} onRefresh={vi.fn()} />);
       fireEvent.click(screen.getByRole("button", { name: "Upload File" }));
       expect(await screen.findByText(/permit.pdf: reserved/)).toBeTruthy();
       expect(JSON.parse(network.api.mock.calls[0][1].body).payload).toMatchObject({ scope: "channel", channelId: "channel-1" });
-      uploaded({ ok: true });
+      uploaded(true);
       expect(await screen.findByText(/permit.pdf: finalized and private/)).toBeTruthy();
-    } finally { globalThis.fetch = originalFetch; }
   });
 
   it("offers policy-aware checkout with evidence, expected return, and the asset version", async () => {
@@ -104,6 +104,7 @@ describe("Files & Inventory", () => {
     fireEvent.click(screen.getByRole("button", { name: "Check out Radio 4" }));
     fireEvent.click(screen.getByRole("button", { name: "Confirm checkout" }));
     expect(network.api).not.toHaveBeenCalled();
+    await screen.findByText("filesInventory.photoRequired");
     fireEvent.click(screen.getByRole("button", { name: "Add evidence photo" }));
     expect(await screen.findByText("filesInventory.photoAdded")).toBeTruthy();
     fireEvent.change(screen.getByLabelText("Expected return"), { target: { value: "2026-10-01T12:00:00Z" } });
@@ -132,13 +133,10 @@ describe("Files & Inventory", () => {
     network.pick.mockResolvedValue({ name: "private.pdf", type: "application/pdf", size: 2, bytes: new Uint8Array([1, 2]) });
     network.digest.mockResolvedValue(new Uint8Array(32).buffer);
     network.api.mockResolvedValueOnce({ resource: { documentId: "document-2", fileId: "file-2", uploadURL: "https://example.test/upload" } }).mockResolvedValueOnce({ resource: {} });
-    const originalFetch = globalThis.fetch;
-    globalThis.fetch = vi.fn(async () => ({ ok: true })) as unknown as typeof fetch;
-    try {
+    network.upload.mockResolvedValue(true);
       render(<FilesInventory owner={owner} capabilities={caps} {...records} channels={[]} onRefresh={vi.fn()} />);
       fireEvent.click(screen.getByRole("button", { name: "Upload File" }));
       expect(await screen.findByText(/private.pdf: finalized and private/)).toBeTruthy();
       expect(JSON.parse(network.api.mock.calls[0][1].body).payload).toMatchObject({ scope: "personal" });
-    } finally { globalThis.fetch = originalFetch; }
   });
 });

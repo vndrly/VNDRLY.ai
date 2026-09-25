@@ -1,6 +1,10 @@
 import React from "react";
 import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import i18next from "i18next";
+import { initReactI18next } from "react-i18next";
+import en from "@/lib/locales/en.json";
+import es from "@/lib/locales/es.json";
 import { RoleExports } from "./RoleExports";
 
 const network = vi.hoisted(() => ({ api: vi.fn() }));
@@ -13,8 +17,15 @@ vi.mock("expo-sharing", () => ({ shareAsync: vi.fn() }));
 
 const owner = { type: "vendor" as const, id: 41 };
 afterEach(() => { cleanup(); network.api.mockReset(); });
+beforeEach(async () => { await i18next.use(initReactI18next).init({ lng: "en", resources: { en: { translation: en }, es: { translation: es } } }); });
 
 describe("role-aware Work Hub exports", () => {
+  it("localizes the no-export state in Spanish", async () => {
+    await i18next.changeLanguage("es");
+    network.api.mockResolvedValue({ capabilities: { canViewExports: false, allowedExportDatasets: [] } });
+    render(<RoleExports owner={owner} membershipId={1} />);
+    expect(await screen.findByText("No hay exportaciones disponibles para este rol.")).toBeTruthy();
+  });
   it("hides the entire export card when the current owner grants no datasets", async () => {
     network.api.mockResolvedValue({ capabilities: { canViewExports: false, allowedExportDatasets: [] } });
     render(<RoleExports owner={owner} membershipId={1} />);

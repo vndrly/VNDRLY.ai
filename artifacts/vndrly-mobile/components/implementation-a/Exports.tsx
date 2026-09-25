@@ -4,6 +4,7 @@ import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import { apiFetchRaw } from "@/lib/api";
 import { captureAuthScope, isAuthScopeCurrent } from "@/lib/auth";
+import { nativeUuid } from "@/lib/native-uuid";
 import { useColors } from "@/hooks/useColors";
 import TogglePillButton from "@/components/TogglePillButton";
 import { ImplementationASurface } from "./Surface";
@@ -61,7 +62,7 @@ export function ImplementationAExports({ owner, allowedDatasets }: { owner: { ty
       assertCurrent();
       const csv = await response.text();
       assertCurrent();
-      uri = `${FileSystem.cacheDirectory}vndrly-${selected}-${crypto.randomUUID()}.csv`;
+      uri = `${FileSystem.cacheDirectory}vndrly-${selected}-${nativeUuid()}.csv`;
       await FileSystem.writeAsStringAsync(uri, csv);
       assertCurrent();
       await Sharing.shareAsync(uri, { mimeType: "text/csv", dialogTitle: detail[0] });

@@ -4,6 +4,8 @@ import request from "supertest";
 import { describe, expect, it, vi } from "vitest";
 import { buildTestCookie } from "../test-utils/session";
 import { createWorkHubExportsRouter } from "./workHubExports";
+import { db } from "@workspace/db";
+import { PgDialect } from "drizzle-orm/pg-core";
 
 vi.mock("@workspace/db", () => ({ db: { execute: vi.fn(async () => ({ rows: [] })) } }));
 vi.mock("../lib/reports/audit", () => ({ recordExport: vi.fn(async () => undefined) }));
@@ -21,6 +23,29 @@ function appWith(overrides: Record<string, unknown> = {}) {
 }
 
 describe("Work Hub export HTTP boundary", () => {
+  it.each(["", "/preview"])("binds managed supervisor staffing to signed sites even when siteIds are omitted on %s", async (suffix) => {
+    const h = appWith();
+    const managed = buildTestCookie({ userId: 33, role: "field_employee", vendorId: 41, vendorRole: "gate_supervisor", managedSubcontractor: { siteGrants: [{ siteId: 101, role: "gate_supervisor" }, { siteId: 202, role: "gatekeeper" }] } });
+    vi.mocked(db.execute).mockResolvedValueOnce({ rows: [
+      { ownerOrgId: 41, siteId: 101, assignmentId: "allowed", worker: "Allowed worker" },
+      { ownerOrgId: 41, siteId: 202, assignmentId: "forbidden", worker: "Forbidden worker" },
+    ] } as any);
+    const body = { dataset: "staffing", scope: { ownerOrgType: "vendor", ownerOrgId: 41 } };
+    const response = await request(h.app).post(`/work-hub/exports/implementation-a${suffix}`).set("Cookie", managed).send(body);
+    expect(response.status).toBe(200);
+    if (suffix) expect(response.body.scope.siteIds).toEqual([101]);
+    else {
+      expect(response.text).toContain("Allowed worker");
+      expect(response.text).not.toContain("Forbidden worker");
+      const query = new PgDialect().sqlToQuery(vi.mocked(db.execute).mock.calls.at(-1)![0] as any);
+      expect(query.sql).toContain('s.site_location_id AS "siteId"');
+    }
+    for (const siteIds of [[202], [101, 202], []]) {
+      const denied = await request(h.app).post(`/work-hub/exports/implementation-a${suffix}`).set("Cookie", managed).send({ ...body, scope: { ...body.scope, siteIds } });
+      expect(denied.status).toBe(403);
+    }
+    vi.mocked(db.execute).mockReset().mockResolvedValue({ rows: [] } as any);
+  });
   it("requires authentication and returns 202 for a new private export job", async () => {
     const h = appWith();
     expect((await request(h.app).post("/work-hub/exports").send({})).status).toBe(401);

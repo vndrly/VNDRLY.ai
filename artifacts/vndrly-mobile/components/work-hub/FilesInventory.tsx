@@ -1,26 +1,33 @@
-import React, { useId, useRef, useState } from "react";
+import React, { useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Text, TextInput, View } from "react-native";
 import * as Crypto from "expo-crypto";
-import * as FileSystem from "expo-file-system/legacy";
-import * as Sharing from "expo-sharing";
 import TogglePillButton from "@/components/TogglePillButton";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch, getApiBase } from "@/lib/api";
-import { getToken } from "@/lib/auth";
-import { pickMeetingFile } from "@/lib/meeting-files";
+import { captureAuthScope, isAuthScopeCurrent, subscribeUser, subscribeToken, type AuthScope } from "@/lib/auth";
+import { pickMeetingFile, downloadAndShareProtectedFile, type OwnedMeetingFile } from "@/lib/meeting-files";
+import { uploadWorkHubFile } from "@/lib/work-hub-file-upload";
+import { nativeUuid } from "@/lib/native-uuid";
 import { captureAndUploadImage } from "@/lib/photos";
 import type { MobileWorkHubCapabilities } from "@/lib/work-hub-mobile";
 
 type Owner = { type: "vendor" | "partner"; id: number };
-type FileRow = { id: string; data: { name?: string; scope?: string; state?: string; currentFileId?: string | null }; createdBy?: number; updatedAt?: string; capabilities?: { canDownload: boolean; canManage: boolean } };
+type FileRow = { id: string; data: { name?: string; scope?: string; state?: string; currentFileId?: string | null; contentType?: string; byteSize?: number }; createdBy?: number; updatedAt?: string; capabilities?: { canDownload: boolean; canManage: boolean } };
 type NoteRow = { id: string; channelId: string; title: string; body: string; version: number; createdById: number; createdAt: string; capabilities?: { canEdit: boolean } };
 type AssetRow = { id: string; name: string; category?: string; status?: string; condition?: string | null; version?: number; holderUserId?: number | null; currentHolderDisplayName?: string | null; currentLocation?: string | null; hold?: string | null; policy?: { photosRequiredOnCheckout: boolean; photosRequiredOnReturn: boolean; expectedReturnRequired: boolean; supervisorApprovalRequired: boolean }; capabilities?: { canCheckOut: boolean; canReturn: boolean; canVerifyIssued: boolean } };
-type Props = { owner: Owner; capabilities: MobileWorkHubCapabilities; files: FileRow[]; notes: NoteRow[]; assets: AssetRow[]; channels: Array<{ id: string; name: string }>; onRefresh: () => void | Promise<void>; selectedAssetId?: string };
+type ChannelRow = { id: string; name: string; ownerOrgType: Owner["type"]; ownerOrgId: number; contextKind: string; contextId: string | number };
+type Props = { owner: Owner; capabilities: MobileWorkHubCapabilities; files: FileRow[]; notes: NoteRow[]; assets: AssetRow[]; channels: ChannelRow[]; onRefresh: () => void | Promise<void>; selectedAssetId?: string };
 
-const command = (owner: Owner, payload: unknown, expectedVersion: number | null = null) => ({ operationId: crypto.randomUUID(), owner, context: { kind: "organization", id: owner.id }, payloadVersion: 1, expectedVersion, payload });
+const command = (owner: Owner, payload: unknown, expectedVersion: number | null = null, context = { kind: "organization", id: owner.id as string | number }) => ({ operationId: nativeUuid(), owner, context, payloadVersion: 1, expectedVersion, payload });
+type RequestScope = { authScope: AuthScope; signal: AbortSignal; assertCurrent: () => void; registerTemporaryCleanup: (cleanup: (() => void) | null) => void };
+type UploadAttempt = { targetKey: string; file: OwnedMeetingFile; reserve: ReturnType<typeof command>; reserved?: { documentId: string; fileId: string; uploadURL: string; owner?: Owner }; uploaded?: boolean; finalize?: ReturnType<typeof command> };
 
-export function FilesInventory({ owner, capabilities, files, notes, assets, channels, onRefresh, selectedAssetId }: Props) {
+export function FilesInventory(props: Props) {
+  return <FilesInventoryContent key={`${props.owner.type}:${props.owner.id}`} {...props} />;
+}
+
+function FilesInventoryContent({ owner, capabilities, files, notes, assets, channels, onRefresh, selectedAssetId }: Props) {
   const { t } = useTranslation();
   const colors = useColors();
   const [busy, setBusy] = useState(false);
@@ -39,6 +46,18 @@ export function FilesInventory({ owner, capabilities, files, notes, assets, chan
   const [custodyCondition, setCustodyCondition] = useState("good");
   const [custodyPhotos, setCustodyPhotos] = useState<string[]>([]);
   const [expectedReturn, setExpectedReturn] = useState("");
+  const requestRef = useRef<AbortController | null>(null);
+  const mountedRef = useRef(false);
+  const cleanupRef = useRef<(() => void) | null>(null);
+  const noteAttempt = useRef<{ key: string; body: ReturnType<typeof command> } | null>(null);
+  const uploadAttempt = useRef<UploadAttempt | null>(null);
+  useEffect(() => {
+    mountedRef.current = true;
+    const invalidate = () => { requestRef.current?.abort(); cleanupRef.current?.(); noteAttempt.current = null; uploadAttempt.current = null; };
+    const unsubscribeUser = subscribeUser(invalidate);
+    const unsubscribeToken = subscribeToken(invalidate);
+    return () => { mountedRef.current = false; invalidate(); unsubscribeUser(); unsubscribeToken(); };
+  }, []);
   const card = { borderWidth: 1, borderColor: colors.border, borderRadius: 14, backgroundColor: colors.card, padding: 16, gap: 10 } as const;
   const muted = { color: colors.mutedForeground };
   const enumLabel = (kind: "scope" | "status" | "condition", value: string) => t(`filesInventory.${kind}.${value}`, { defaultValue: t("filesInventory.unknownValue") });
@@ -47,64 +66,100 @@ export function FilesInventory({ owner, capabilities, files, notes, assets, chan
     "aria-invalid": invalidField === field,
     "aria-describedby": invalidField === field ? errorId : undefined,
   });
-  const run = async (work: () => Promise<void>) => {
+  const run = async (work: (scope: RequestScope) => Promise<void>) => {
+    if (requestRef.current) return;
+    const controller = new AbortController();
+    requestRef.current = controller;
+    const authScope = captureAuthScope();
+    const current = () => mountedRef.current && requestRef.current === controller && !controller.signal.aborted && isAuthScopeCurrent(authScope);
+    const assertCurrent = () => { if (!current()) throw Object.assign(new Error("Request authorization changed"), { name: "AbortError" }); };
     setBusy(true); setError(""); setInvalidField(null);
-    try { await work(); }
-    catch (cause) { setError(cause instanceof Error ? cause.message : t("filesInventory.actionFailed")); }
-    finally { setBusy(false); }
+    try { assertCurrent(); await work({ authScope, signal: controller.signal, assertCurrent, registerTemporaryCleanup: cleanup => { cleanupRef.current = cleanup; } }); }
+    catch (cause) {
+      if (current()) {
+        setError(cause instanceof Error ? cause.message : t("filesInventory.actionFailed"));
+        if ([401, 403, 404].includes((cause as { status?: number }).status ?? 0)) {
+          noteAttempt.current = null; uploadAttempt.current = null;
+          await onRefresh();
+        }
+      }
+    }
+    finally { if (current()) setBusy(false); if (requestRef.current === controller) requestRef.current = null; }
   };
-  const upload = () => void run(async () => {
-    const selectedChannel = channelId || (channels.length === 1 ? channels[0]!.id : "");
+  const channelTarget = (id: string) => {
+    const channel = channels.find(item => item.id === id);
+    if (!channel) throw new Error(t("filesInventory.chooseGroup"));
+    return { owner: { type: channel.ownerOrgType, id: channel.ownerOrgId }, context: { kind: channel.contextKind, id: channel.contextId } };
+  };
+  const upload = () => void run(async (scope) => {
+    const selectedChannel = channelId || (!capabilities.canManageAsset && channels.length === 1 ? channels[0]!.id : "");
     if (!capabilities.canManageAsset && !selectedChannel && channels.length > 0) throw new Error(t("filesInventory.chooseGroup"));
-    const picked = await pickMeetingFile("files");
-    if (!picked) return;
-    const bytes = picked.bytes;
-    const checksum = Array.from(new Uint8Array(await Crypto.digest(Crypto.CryptoDigestAlgorithm.SHA256, bytes.buffer as ArrayBuffer))).map(byte => byte.toString(16).padStart(2, "0")).join("");
-    const uploadScope = capabilities.canManageAsset ? "company" : selectedChannel ? "channel" : "personal";
-    const reserved = await apiFetch<{ resource: { documentId: string; fileId: string; uploadURL: string } }>("/api/work-hub/file-library/reserve", { method: "POST", body: JSON.stringify(command(owner, { scope: uploadScope, ...(uploadScope === "channel" ? { channelId: selectedChannel } : {}), fileName: picked.name, contentType: picked.type, byteSize: picked.size, checksumSha256: checksum })) });
-    setNotice(t("filesInventory.reservedNotice", { name: picked.name }));
-    const response = await fetch(reserved.resource.uploadURL, { method: "PUT", headers: { "Content-Type": picked.type }, body: new Blob([bytes.buffer as ArrayBuffer], { type: picked.type }) });
-    if (!response.ok) throw new Error(t("filesInventory.uploadFailed", { name: picked.name }));
-    setNotice(t("filesInventory.uploadedNotice", { name: picked.name }));
-    await apiFetch("/api/work-hub/file-library/finalize", { method: "POST", body: JSON.stringify(command(owner, { id: reserved.resource.documentId, fileId: reserved.resource.fileId })) });
-    setNotice(t("filesInventory.finalizedNotice", { name: picked.name }));
+    const uploadScope = selectedChannel ? "channel" : capabilities.canManageAsset ? "company" : "personal";
+    const targetOwner = uploadScope === "channel" ? channelTarget(selectedChannel).owner : owner;
+    // File-library envelopes require the document owner's organization context;
+    // the channel itself remains in the reserve payload for ACL enforcement.
+    const target = { owner: targetOwner, context: { kind: "organization", id: targetOwner.id } };
+    const targetKey = JSON.stringify({ ...target, uploadScope, channelId: selectedChannel });
+    if (!uploadAttempt.current || uploadAttempt.current.targetKey !== targetKey) {
+      const picked = await pickMeetingFile("files"); scope.assertCurrent();
+      if (!picked) return;
+      const bytes = new Uint8Array(picked.bytes);
+      const checksum = Array.from(new Uint8Array(await Crypto.digest(Crypto.CryptoDigestAlgorithm.SHA256, bytes.buffer))).map(byte => byte.toString(16).padStart(2, "0")).join("");
+      scope.assertCurrent();
+      uploadAttempt.current = { targetKey, file: { ...picked, bytes, size: bytes.byteLength }, reserve: command(target.owner, { scope: uploadScope, ...(uploadScope === "channel" ? { channelId: selectedChannel } : {}), fileName: picked.name, contentType: picked.type, byteSize: bytes.byteLength, checksumSha256: checksum }, null, target.context) };
+    }
+    const attempt = uploadAttempt.current;
+    if (!attempt.reserved) {
+      const reserved = await apiFetch<{ resource: NonNullable<UploadAttempt["reserved"]> }>("/api/work-hub/file-library/reserve", { method: "POST", body: JSON.stringify(attempt.reserve), signal: scope.signal }, scope.authScope);
+      scope.assertCurrent(); attempt.reserved = reserved.resource;
+    }
+    if (!attempt.uploaded) {
+      setNotice(t("filesInventory.reservedNotice", { name: attempt.file.name }));
+      if (!await uploadWorkHubFile({ ...scope, file: attempt.file, uploadURL: attempt.reserved.uploadURL })) throw new Error(t("filesInventory.uploadFailed", { name: attempt.file.name }));
+      scope.assertCurrent(); attempt.uploaded = true;
+    }
+    setNotice(t("filesInventory.uploadedNotice", { name: attempt.file.name }));
+    attempt.finalize ??= command(attempt.reserved.owner ?? attempt.reserve.owner, { id: attempt.reserved.documentId, fileId: attempt.reserved.fileId });
+    await apiFetch("/api/work-hub/file-library/finalize", { method: "POST", body: JSON.stringify(attempt.finalize), signal: scope.signal }, scope.authScope);
+    scope.assertCurrent(); uploadAttempt.current = null;
+    setNotice(t("filesInventory.finalizedNotice", { name: attempt.file.name }));
     await onRefresh();
   });
-  const saveNote = () => void run(async () => {
+  const saveNote = () => void run(async (scope) => {
     const targetChannelId = editing?.channelId ?? channelId;
     if (!targetChannelId || !noteTitle.trim()) {
       if (!noteTitle.trim()) { setInvalidField("noteTitle"); noteTitleRef.current?.focus(); }
       throw new Error(t("filesInventory.chooseGroupAndTitle"));
     }
     const path = `/api/work-hub/channels/${encodeURIComponent(targetChannelId)}/notes${editing ? `/${encodeURIComponent(editing.id)}` : ""}`;
-    await apiFetch(path, { method: editing ? "PATCH" : "POST", body: JSON.stringify(command(owner, { title: noteTitle.trim(), body: noteBody }, editing?.version ?? null)) });
+    const target = channelTarget(targetChannelId);
+    const payload = { title: noteTitle.trim(), body: noteBody };
+    const key = JSON.stringify({ path, ...target, payload, version: editing?.version ?? null });
+    if (noteAttempt.current?.key !== key) noteAttempt.current = { key, body: command(target.owner, payload, editing?.version ?? null, target.context) };
+    await apiFetch(path, { method: editing ? "PATCH" : "POST", body: JSON.stringify(noteAttempt.current.body), signal: scope.signal }, scope.authScope);
+    scope.assertCurrent(); noteAttempt.current = null;
     setNoteOpen(false); setEditing(null); setNoteTitle(""); setNoteBody(""); setNotice(t(editing ? "filesInventory.noteUpdated" : "filesInventory.noteAdded"));
     await onRefresh();
   });
-  const openFile = (file: FileRow) => void run(async () => {
-    const token = await getToken();
-    if (!token || !FileSystem.cacheDirectory || !(await Sharing.isAvailableAsync())) throw new Error(t("filesInventory.viewUnavailable"));
-    const uri = `${FileSystem.cacheDirectory}work-hub-${file.id}-${Date.now()}`;
-    try {
-      const result = await FileSystem.downloadAsync(`${getApiBase()}/api/work-hub/file-library/${encodeURIComponent(file.id)}/download`, uri, { headers: { Authorization: `Bearer ${token}`, "x-vndrly-client": "ios" } });
-      if (result.status !== 200) throw new Error(t("filesInventory.fileUnavailable"));
-      await Sharing.shareAsync(uri, { dialogTitle: file.data.name ?? t("filesInventory.openFile") });
-    } finally { await FileSystem.deleteAsync(uri, { idempotent: true }).catch(() => undefined); }
+  const openFile = (file: FileRow) => void run(async (scope) => {
+    if (!file.capabilities?.canDownload || !file.data.contentType || !file.data.byteSize) throw new Error(t("filesInventory.fileUnavailable"));
+    await downloadAndShareProtectedFile({ ...scope, fileName: file.data.name ?? t("filesInventory.openFile"), contentType: file.data.contentType, byteSize: file.data.byteSize }, `/api/work-hub/file-library/${encodeURIComponent(file.id)}/download`);
   });
   const openCustody = (asset: AssetRow, action: "checkout" | "return" | "verify-issued") => {
-    setCustody({ assetId: asset.id, action, operationId: crypto.randomUUID() });
+    setCustody({ assetId: asset.id, action, operationId: nativeUuid() });
     setCustodyCondition(asset.condition && ["new", "good", "fair", "damaged", "missing", "stolen"].includes(asset.condition) ? asset.condition : "good");
     setCustodyPhotos([]);
     setExpectedReturn("");
     setError("");
   };
-  const addCustodyPhoto = () => void run(async () => {
+  const addCustodyPhoto = () => void run(async (scope) => {
     const uploaded = await captureAndUploadImage();
+    scope.assertCurrent();
     if (!uploaded) return;
     setCustodyPhotos((current) => [...current, `${getApiBase()}/api/storage${uploaded.objectPath}`]);
     setNotice(t("filesInventory.photoAdded"));
   });
-  const submitCustody = (asset: AssetRow) => void run(async () => {
+  const submitCustody = (asset: AssetRow) => void run(async (scope) => {
     if (!custody || !asset.version) return;
     const needsPhotos = custody.action === "checkout" ? asset.policy?.photosRequiredOnCheckout : custody.action === "return" ? asset.policy?.photosRequiredOnReturn : false;
     if (needsPhotos && custodyPhotos.length === 0) throw new Error(t("filesInventory.photoRequired"));
@@ -122,10 +177,12 @@ export function FilesInventory({ owner, capabilities, files, notes, assets, chan
       throw new Error(t("filesInventory.expectedReturnRequired"));
     }
     try {
-      const result = await apiFetch<{ status: "applied" | "conflict" | "blocked"; code?: string }>(`/api/implementation-a/assets/${encodeURIComponent(asset.id)}/${custody.action}`, { method: "POST", body: JSON.stringify({ operationId: custody.operationId, expectedVersion: asset.version, condition: custodyCondition, confirmed: true, photos: custodyPhotos, ...(expectedReturnAt ? { expectedReturnAt } : {}) }) });
+      const result = await apiFetch<{ status: "applied" | "conflict" | "blocked"; code?: string }>(`/api/implementation-a/assets/${encodeURIComponent(asset.id)}/${custody.action}`, { method: "POST", body: JSON.stringify({ operationId: custody.operationId, expectedVersion: asset.version, condition: custodyCondition, confirmed: true, photos: custodyPhotos, ...(expectedReturnAt ? { expectedReturnAt } : {}) }), signal: scope.signal }, scope.authScope);
+      scope.assertCurrent();
       if (result.status === "conflict") {
         setCustody(null);
         await onRefresh();
+        scope.assertCurrent();
         setNotice(t("filesInventory.assetChanged"));
         return;
       }
@@ -134,9 +191,11 @@ export function FilesInventory({ owner, capabilities, files, notes, assets, chan
       setNotice(t("filesInventory.custodyApplied"));
       await onRefresh();
     } catch (cause) {
+      scope.assertCurrent();
       if ((cause as { code?: string }).code === "asset.version_conflict") {
         setCustody(null);
         await onRefresh();
+        scope.assertCurrent();
         setNotice(t("filesInventory.assetChanged"));
         return;
       }
@@ -151,7 +210,7 @@ export function FilesInventory({ owner, capabilities, files, notes, assets, chan
       <Text style={{ color: colors.text, fontSize: 18, fontWeight: "700" }}>{t("filesInventory.filesNotes")}</Text>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
         {capabilities.canUploadFile ? <TogglePillButton color="brand" accessibilityLabel={t("filesInventory.uploadFile")} disabled={busy} onPress={upload}>{t("filesInventory.uploadFile")}</TogglePillButton> : null}
-        {capabilities.canCreateNote ? <TogglePillButton color="brand" accessibilityLabel={t("filesInventory.addNote")} disabled={busy} onPress={() => { setEditing(null); setNoteTitle(""); setNoteBody(""); setNoteOpen(true); }}>{t("filesInventory.addNote")}</TogglePillButton> : null}
+        {capabilities.canCreateNote ? <TogglePillButton color="brand" accessibilityLabel={t("filesInventory.addNote")} disabled={busy} onPress={() => { noteAttempt.current = null; setEditing(null); setNoteTitle(""); setNoteBody(""); setNoteOpen(true); }}>{t("filesInventory.addNote")}</TogglePillButton> : null}
       </View>
       {capabilities.canUploadFile && !capabilities.canManageAsset && channels.length > 1 ? <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{channels.map(channel => <TogglePillButton key={channel.id} accessibilityLabel={t("filesInventory.fileGroup", { name: channel.name })} accessibilityState={{ selected: channelId === channel.id }} disabled={busy} solid={channelId === channel.id} onPress={() => setChannelId(channel.id)}>{channel.name}</TogglePillButton>)}</View> : null}
       {noteOpen ? <View style={{ gap: 8 }}>
@@ -171,7 +230,7 @@ export function FilesInventory({ owner, capabilities, files, notes, assets, chan
         <Text style={{ color: colors.text, fontWeight: "700" }}>{note.title}</Text>
         <Text style={muted}>{t("filesInventory.noteMetadata", { user: note.createdById, date: new Date(note.createdAt).toLocaleDateString() })}</Text>
         <Text style={{ color: colors.text }}>{note.body}</Text>
-        {capabilities.canEditNote && note.capabilities?.canEdit ? <TogglePillButton color="brand" accessibilityLabel={t("filesInventory.editNamedNote", { name: note.title })} disabled={busy} onPress={() => { setEditing(note); setNoteTitle(note.title); setNoteBody(note.body); setNoteOpen(true); }}>{t("filesInventory.editNote")}</TogglePillButton> : null}
+        {capabilities.canEditNote && note.capabilities?.canEdit ? <TogglePillButton color="brand" accessibilityLabel={t("filesInventory.editNamedNote", { name: note.title })} disabled={busy} onPress={() => { noteAttempt.current = null; setEditing(note); setNoteTitle(note.title); setNoteBody(note.body); setNoteOpen(true); }}>{t("filesInventory.editNote")}</TogglePillButton> : null}
       </View>)}
     </View>}
     <View style={card}>

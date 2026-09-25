@@ -111,6 +111,14 @@ test("API starts after database prerequisites regardless of browser or static ou
   );
 });
 
+test("migration evidence upgrades the pinned previous schema before replaying the real commands", () => {
+  const migration = namedStep("Rehearse first application and replay of guarded Work Hub migrations");
+  assertCondition(migration, "${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.postgres.outcome == 'success' && steps.db-safety.outcome == 'success' }}");
+  assert.match(migration, /pnpm --filter @workspace\/api-server exec tsx scripts\/rehearse-work-hub-migrations\.ts/);
+  assert.doesNotMatch(migration, /run-with-test-db/);
+  assert.match(stepContaining("actions/checkout@v4"), /fetch-depth: 0/);
+});
+
 test("full chain starts after browser and database prerequisites regardless of static or API outcomes", () => {
   const fullChain = namedStep("Full required test chain");
   assertCondition(

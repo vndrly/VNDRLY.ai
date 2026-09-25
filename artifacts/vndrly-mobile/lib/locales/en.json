@@ -1,5 +1,8 @@
 {
+  "workHubExports": { "noAccess": "No exports available for this role." },
   "workHubSearch": {
+    "unknownStatus": "Status unavailable",
+    "statuses": { "active": "Active", "open": "Open", "pending": "Pending", "assigned": "Assigned", "in_progress": "In progress", "completed": "Completed", "cancelled": "Cancelled", "draft": "Draft", "scheduled": "Scheduled", "finalized": "Finalized", "archived": "Archived", "closed": "Closed", "declined": "Declined", "accepted": "Accepted", "submitted": "Submitted", "approved": "Approved", "denied": "Denied", "available": "Available", "checked_out": "Checked out", "held": "On hold", "retired": "Retired", "merged": "Merged" },
     "title": "Find Work Hub records",
     "queryLabel": "Search Work Hub",
     "queryPlaceholder": "Search authorized records",

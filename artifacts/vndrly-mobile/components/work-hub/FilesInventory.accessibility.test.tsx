@@ -9,7 +9,8 @@ import { FilesInventory } from "./FilesInventory";
 
 const mocks = vi.hoisted(() => ({ api: vi.fn() }));
 vi.mock("@/lib/api", () => ({ apiFetch: mocks.api, getApiBase: () => "https://example.test" }));
-vi.mock("@/lib/auth", () => ({ getToken: vi.fn() }));
+vi.mock("@/lib/auth", () => ({ captureAuthScope: () => ({ generation: 1 }), isAuthScopeCurrent: () => true, subscribeUser: () => () => {}, subscribeToken: () => () => {} }));
+vi.mock("@/lib/work-hub-file-upload", () => ({ uploadWorkHubFile: vi.fn() }));
 vi.mock("@/lib/photos", () => ({ captureAndUploadImage: vi.fn() }));
 vi.mock("@/lib/meeting-files", () => ({ pickMeetingFile: vi.fn() }));
 vi.mock("expo-file-system/legacy", () => ({ cacheDirectory: "file:///cache/", downloadAsync: vi.fn(), deleteAsync: vi.fn() }));
@@ -26,7 +27,7 @@ const props = {
   owner: { type: "vendor" as const, id: 7 },
   capabilities: { canUploadFile: true, canCreateNote: true, canEditNote: true, canCreateAsset: false, canManageAsset: false, canCheckOutAsset: true, canVerifyIssuedAsset: true, canViewExports: false, allowedExportDatasets: [], canManageGateLocations: false },
   files: [{ id: "file-1", data: { name: "Gate log.pdf", scope: "company", currentFileId: "version-1" }, createdBy: 12 }],
-  notes: [], assets: [asset], channels: [{ id: "channel-1", name: "Gate A" }, { id: "channel-2", name: "Gate B" }], onRefresh: vi.fn(),
+  notes: [], assets: [asset], channels: [{ id: "channel-1", name: "Gate A", ownerOrgType: "vendor" as const, ownerOrgId: 7, contextKind: "organization", contextId: "7" }, { id: "channel-2", name: "Gate B", ownerOrgType: "vendor" as const, ownerOrgId: 7, contextKind: "organization", contextId: "7" }], onRefresh: vi.fn(),
 };
 async function mount(language = "en") {
   const i18n = createInstance();

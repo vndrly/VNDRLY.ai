@@ -23,6 +23,7 @@ import {
   type AssetCapabilities,
   type AssetOwner,
   type AssetSummary,
+  type AssetRecord,
 } from "../services/assets";
 
 const router = Router();
@@ -231,6 +232,11 @@ function sendError(res: Response, error: unknown) {
   return res.status(500).json({ code: "asset.internal_error" });
 }
 
+function canVerifyCurrentHolder(context: Awaited<ReturnType<typeof actor>>, asset: AssetRecord): boolean {
+  return context.canVerifyIssuedAsset && asset.status === "checked_out" && asset.holderUserId !== null &&
+    (context.isAssetManager || context.isGateSupervisor || asset.holderUserId === context.userId);
+}
+
 router.get("/implementation-a/assets", async (req, res) => {
   try {
     const context = await actor(req);
@@ -242,12 +248,12 @@ router.get("/implementation-a/assets", async (req, res) => {
       const currentPolicy = await policy(asset.responsibleOwner, asset.category);
       const canOversee = context.isAssetManager || context.isGateSupervisor;
       const policyAllows = !currentPolicy.supervisorApprovalRequired || canOversee;
-      const latestCheckout = [...asset.history].reverse().find((event) => event.type === "checkout" || event.type === "transfer");
-      const issuedByViewer = latestCheckout?.type === "checkout" && latestCheckout.actorUserId === context.userId && latestCheckout.toHolderUserId === asset.holderUserId;
       return {
         id: asset.id, name: asset.name, category: asset.category, status: asset.status,
         condition: asset.condition ?? null, version: asset.version,
-        holderUserId: asset.holderUserId, currentLocation: asset.currentLocation ?? null,
+        holderUserId: asset.holderUserId,
+        currentHolderDisplayName: asset.holderUserId === null ? null : `User ${asset.holderUserId}`,
+        currentLocation: asset.currentLocationType === "user" ? null : asset.currentLocation ?? null,
         hold: asset.hold ?? null, expectedReturnAt: asset.expectedReturnAt ?? null,
         policy: {
           photosRequiredOnCheckout: currentPolicy.photosRequiredOnCheckout,
@@ -258,7 +264,7 @@ router.get("/implementation-a/assets", async (req, res) => {
         capabilities: {
           canCheckOut: context.canCheckOutAsset && policyAllows && asset.status === "available" && asset.holderUserId === null,
           canReturn: context.canCheckOutAsset && policyAllows && asset.holderUserId !== null && (canOversee || asset.holderUserId === context.userId),
-          canVerifyIssued: context.canVerifyIssuedAsset && asset.status === "checked_out" && asset.holderUserId !== null && (canOversee || issuedByViewer),
+          canVerifyIssued: canVerifyCurrentHolder(context, asset),
         },
       };
     }));
@@ -470,10 +476,9 @@ router.post("/implementation-a/assets/:assetId/verify-issued", async (req, res) 
     const assetId = IdSchema.parse(req.params.assetId);
     const asset = await databaseAssetRepository.get(assetId);
     if (!asset) throw new AssetServiceError("asset.not_found", 404);
-    assertOwner(asset.responsibleOwner, context.owner, context.isPlatformAdmin);
-    const latestCheckout = [...asset.history].reverse().find((event) => event.type === "checkout" || event.type === "transfer");
+    await assertCurrentAssetAccess(context, asset.responsibleOwner);
     const verifiedReplay = asset.history.some((event) => event.id === req.body?.operationId && event.type === "verify-issued" && event.actorUserId === context.userId);
-    if (!context.isAssetManager && !context.isGateSupervisor && !verifiedReplay && !(latestCheckout?.type === "checkout" && latestCheckout.actorUserId === context.userId && latestCheckout.toHolderUserId === asset.holderUserId))
+    if (!verifiedReplay && !canVerifyCurrentHolder(context, asset))
       throw new AssetServiceError("asset.verify_issued_forbidden", 403);
     const input = AssetCustodyCommandSchema.parse(req.body);
     return res.json(await service.verifyIssuedAsset({ assetId, actorUserId: context.userId, operationId: input.operationId, condition: input.condition, confirmed: input.confirmed, expectedVersion: input.expectedVersion, note: input.note, photos: input.photos, expectedReturnAt: input.expectedReturnAt ? new Date(input.expectedReturnAt) : undefined }));

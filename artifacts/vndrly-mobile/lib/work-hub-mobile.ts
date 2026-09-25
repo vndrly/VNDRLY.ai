@@ -69,10 +69,10 @@ export async function loadFilesInventoryData(
     fetchJson("/api/implementation-a/assets"),
     fetchJson("/api/work-hub/home"),
   ]);
-  const channels: Array<{ id: string; name: string; updatedAt: string }> = [];
-  let before: { id: string; updatedAt: string } | null = null;
+  const channels: Array<{ id: string; name: string; updatedAt: string; continuationCursor?: string; ownerOrgType: "vendor" | "partner"; ownerOrgId: number; contextKind: string; contextId: string }> = [];
+  let before: typeof channels[number] | null = null;
   while (true) {
-    const cursor = before ? `&before=${encodeURIComponent(before.updatedAt)}&beforeId=${encodeURIComponent(before.id)}` : "";
+    const cursor = before?.continuationCursor ? `&cursor=${encodeURIComponent(before.continuationCursor)}` : before ? `&before=${encodeURIComponent(before.updatedAt)}&beforeId=${encodeURIComponent(before.id)}` : "";
     const page = await fetchJson(`/api/work-hub/channels?limit=100${cursor}`) as typeof channels;
     channels.push(...page);
     if (page.length < 100) break;

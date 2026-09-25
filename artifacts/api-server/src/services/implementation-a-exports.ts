@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 
 export type ImplementationAExportDataset = "payroll" | "quickbooks-time" | "assets" | "staffing" | "safety";
-export type ImplementationAExportScope = { ownerOrgId: number; managedOrganizationId?: string; siteIds?: number[] };
+export type ImplementationAExportScope = Readonly<{ ownerOrgId: number; managedOrganizationId?: string; siteIds?: readonly number[] }>;
 type ExportRow = Record<string, unknown> & { ownerOrgId: number; managedOrganizationId?: string; siteId?: number };
 
 const HEADERS: Record<ImplementationAExportDataset, string[]> = {

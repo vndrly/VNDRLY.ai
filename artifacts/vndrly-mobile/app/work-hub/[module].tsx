@@ -1,5 +1,5 @@
 import { Stack, router, useLocalSearchParams } from "expo-router";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
@@ -28,7 +28,7 @@ import WorkHubShiftCalendar from "@/components/WorkHubShiftCalendar";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/hooks/use-auth";
 import { apiFetch } from "@/lib/api";
-import { captureAuthScope } from "@/lib/auth";
+import { captureAuthScope, isAuthScopeCurrent } from "@/lib/auth";
 import { pickMeetingFile, persistMeetingFileForOffline, uploadMeetingFile, type MeetingFileSource } from "@/lib/meeting-files";
 import { loadFilesInventoryData, mobileOwner, moduleEndpoint } from "@/lib/work-hub-mobile";
 import {
@@ -73,6 +73,14 @@ function envelope(
 }
 
 export default function WorkHubModuleScreen() {
+  const { user } = useAuth();
+  // Local protected results and drafts belong to one authentication/membership
+  // generation, even if Expo keeps this route mounted while the context changes.
+  const scopeKey = `${user?.id}:${user?.activeMembershipId}:${user?.vendorId}:${user?.partnerId}:${captureAuthScope().generation}`;
+  return <WorkHubModuleContent key={scopeKey} />;
+}
+
+function WorkHubModuleContent() {
   const { t } = useTranslation();
   const colors = useColors();
   const { user } = useAuth();
@@ -110,28 +118,40 @@ export default function WorkHubModuleScreen() {
   const [selectedPersonId, setSelectedPersonId] = useState("");
   const [chatActionBusy, setChatActionBusy] = useState(false);
   const [chatActionNotice, setChatActionNotice] = useState("");
+  const loadController = useRef<AbortController | null>(null);
+  useEffect(() => () => { loadController.current?.abort(); }, []);
   const load = useCallback(
     async (search = "") => {
+      const authScope = captureAuthScope();
+      const controller = new AbortController();
+      loadController.current?.abort();
+      loadController.current = controller;
+      const current = () => loadController.current === controller && !controller.signal.aborted && isAuthScopeCurrent(authScope);
+      const fetchScoped = (path: string) => apiFetch(path, { signal: controller.signal }, authScope);
       setLoading(true);
       setError("");
+      if (module === "files-notes") setData(undefined);
       try {
         if (user) await flushNativeWorkHubQueue(user);
+        if (!current()) return;
+        let result: unknown;
         if (module === "files-notes") {
           const currentOwner = mobileOwner(user);
           if (!currentOwner) throw new Error(t("filesInventory.chooseCompany"));
-          setData(await loadFilesInventoryData(currentOwner, apiFetch));
-        } else setData(await apiFetch(moduleEndpoint(module, search)));
+          result = await loadFilesInventoryData(currentOwner, fetchScoped);
+        } else result = await fetchScoped(moduleEndpoint(module, search));
+        if (current()) setData(result);
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Could not load Work Hub");
+        if (current()) { setData(undefined); setError(e instanceof Error ? e.message : "Could not load Work Hub"); }
       } finally {
-        setLoading(false);
+        if (current()) setLoading(false);
       }
     },
-    [module, user],
+    [module, user, t],
   );
   useEffect(() => {
     if (module !== "calls" && module !== "search" && module !== "safety-response" && module !== "implementation-exports") void load("");
-  }, [module]);
+  }, [module, load]);
   useEffect(() => {
     if (module !== "calendar" || !canManage) return;
     apiFetch<{ sites: Row[] }>("/api/gate-change-over/sites")

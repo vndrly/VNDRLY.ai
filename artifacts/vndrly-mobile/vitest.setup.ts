@@ -29,6 +29,7 @@
 import path from "node:path";
 import Module from "node:module";
 import { vi } from "vitest";
+import { randomUUID } from "node:crypto";
 
 const ASSETS_ROOT = path.resolve(__dirname);
 const _Module = Module as unknown as {
@@ -123,6 +124,7 @@ const expoGlobal: {
   NativeModule: typeof StubEventEmitter;
   SharedObject: typeof StubEventEmitter;
   SharedRef: typeof StubEventEmitter;
+  uuidv4: typeof randomUUID;
 } = {
   EventEmitter: StubEventEmitter,
   modules: modulesProxy,
@@ -132,6 +134,7 @@ const expoGlobal: {
   NativeModule: StubEventEmitter,
   SharedObject: StubEventEmitter,
   SharedRef: StubEventEmitter,
+  uuidv4: randomUUID,
 };
 
 // `globalThis.expo` typing in `expo-modules-core` is loose; `as never`
