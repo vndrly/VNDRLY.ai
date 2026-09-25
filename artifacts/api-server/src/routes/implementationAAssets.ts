@@ -33,6 +33,7 @@ async function actor(req: Request): Promise<{
   userId: number;
   owner: AssetOwner | null;
   roles: string[];
+  isPlatformAdmin: boolean;
   isAssetManager: boolean;
   isGateSupervisor: boolean;
   canCheckOutAsset: boolean;
@@ -51,8 +52,8 @@ async function actor(req: Request): Promise<{
     session.membershipRole,
     session.vendorRole,
   ].filter((role): role is string => Boolean(role));
-  const isAdmin =
-    session.role === "admin" || session.membershipRole === "admin";
+  const isPlatformAdmin = session.role === "admin";
+  const isAdmin = isPlatformAdmin || session.membershipRole === "admin";
   if (!isAdmin && owner?.type === "vendor") {
     const grants = await db
       .select({ role: managedSubcontractorRoleGrantsTable.role })
@@ -87,6 +88,7 @@ async function actor(req: Request): Promise<{
     userId: session.userId,
     owner,
     roles,
+    isPlatformAdmin,
     isAssetManager,
     isGateSupervisor,
     canCheckOutAsset: isAssetManager || isGateSupervisor || isGatekeeper,
@@ -264,7 +266,7 @@ router.get("/implementation-a/assets/find", async (req, res) => {
     assertOwner(
       asset.responsibleOwner,
       context.owner,
-      context.roles.includes("admin"),
+      context.isPlatformAdmin,
     );
     return res.json(asset);
   } catch (error) {
@@ -281,7 +283,7 @@ router.post("/implementation-a/assets", async (req, res) => {
     assertOwner(
       input.responsibleOwner,
       context.owner,
-      context.roles.includes("admin"),
+      context.isPlatformAdmin,
     );
     const currentPolicy = await policy(input.responsibleOwner, input.category);
     if (currentPolicy.identifierRequired && input.aliases.length === 0)
@@ -322,7 +324,7 @@ router.post("/implementation-a/assets/:assetId/aliases", async (req, res) => {
     assertOwner(
       asset.responsibleOwner,
       context.owner,
-      context.roles.includes("admin"),
+      context.isPlatformAdmin,
     );
     const input = z
       .object({
@@ -348,15 +350,16 @@ router.post("/implementation-a/assets/:assetId/checkout", async (req, res) => {
     assertOwner(
       asset.responsibleOwner,
       context.owner,
-      context.roles.includes("admin"),
+      context.isPlatformAdmin,
     );
     const input = AssetCustodyCommandSchema.extend({ holderUserId: z.number().int().positive().optional() }).parse(req.body);
+    const replay = asset.history.some((event) => event.id === input.operationId && event.actorUserId === context.userId);
     const holderUserId = input.holderUserId ?? context.userId;
     if (holderUserId !== context.userId && !context.isGateSupervisor && !context.isAssetManager)
       throw new AssetServiceError("asset.checkout_forbidden", 403);
-    if (holderUserId !== context.userId) await assertTransferRecipient(asset.responsibleOwner, holderUserId);
+    if (holderUserId !== context.userId && !replay) await assertTransferRecipient(asset.responsibleOwner, holderUserId);
     const currentPolicy = await policy(asset.responsibleOwner, asset.category);
-    enforcePolicy({
+    if (!replay) enforcePolicy({
       action: "checkout",
       photos: input.photos,
       expectedReturnAt: input.expectedReturnAt,
@@ -393,14 +396,15 @@ router.post("/implementation-a/assets/:assetId/return", async (req, res) => {
     assertOwner(
       asset.responsibleOwner,
       context.owner,
-      context.roles.includes("admin"),
+      context.isPlatformAdmin,
     );
     const input = AssetCustodyCommandSchema.parse(req.body);
     if (!context.canCheckOutAsset) throw new AssetServiceError("asset.return_forbidden", 403);
-    const replay = asset.history.find((event) => event.id === input.operationId && event.type === "return" && event.actorUserId === context.userId);
-    if (asset.holderUserId !== context.userId && !context.isGateSupervisor && !context.isAssetManager && !replay)
+    const priorEvent = asset.history.find((event) => event.id === input.operationId && event.actorUserId === context.userId);
+    const replay = priorEvent?.type === "return" ? priorEvent : undefined;
+    if (asset.holderUserId !== context.userId && !context.isGateSupervisor && !context.isAssetManager && !priorEvent)
       throw new AssetServiceError("asset.holder_mismatch", 403);
-    enforcePolicy({
+    if (!priorEvent) enforcePolicy({
       action: "return",
       photos: input.photos,
       isAssetManager: context.isAssetManager || context.isGateSupervisor,
@@ -421,6 +425,7 @@ router.post("/implementation-a/assets/:assetId/return", async (req, res) => {
         expectedVersion: input.expectedVersion,
         note: input.note,
         photos: input.photos,
+        expectedReturnAt: input.expectedReturnAt ? new Date(input.expectedReturnAt) : undefined,
       }),
     );
   } catch (error) {
@@ -435,12 +440,13 @@ router.post("/implementation-a/assets/:assetId/verify-issued", async (req, res) 
     const assetId = IdSchema.parse(req.params.assetId);
     const asset = await databaseAssetRepository.get(assetId);
     if (!asset) throw new AssetServiceError("asset.not_found", 404);
-    assertOwner(asset.responsibleOwner, context.owner, context.roles.includes("admin"));
+    assertOwner(asset.responsibleOwner, context.owner, context.isPlatformAdmin);
     const latestCheckout = [...asset.history].reverse().find((event) => event.type === "checkout" || event.type === "transfer");
-    if (!context.isAssetManager && !context.isGateSupervisor && !(latestCheckout?.type === "checkout" && latestCheckout.actorUserId === context.userId && latestCheckout.toHolderUserId === asset.holderUserId))
+    const verifiedReplay = asset.history.some((event) => event.id === req.body?.operationId && event.type === "verify-issued" && event.actorUserId === context.userId);
+    if (!context.isAssetManager && !context.isGateSupervisor && !verifiedReplay && !(latestCheckout?.type === "checkout" && latestCheckout.actorUserId === context.userId && latestCheckout.toHolderUserId === asset.holderUserId))
       throw new AssetServiceError("asset.verify_issued_forbidden", 403);
     const input = AssetCustodyCommandSchema.parse(req.body);
-    return res.json(await service.verifyIssuedAsset({ assetId, actorUserId: context.userId, operationId: input.operationId, condition: input.condition, confirmed: input.confirmed, expectedVersion: input.expectedVersion, note: input.note, photos: input.photos }));
+    return res.json(await service.verifyIssuedAsset({ assetId, actorUserId: context.userId, operationId: input.operationId, condition: input.condition, confirmed: input.confirmed, expectedVersion: input.expectedVersion, note: input.note, photos: input.photos, expectedReturnAt: input.expectedReturnAt ? new Date(input.expectedReturnAt) : undefined }));
   } catch (error) {
     return sendError(res, error);
   }
@@ -456,26 +462,30 @@ router.post("/implementation-a/assets/:assetId/transfer", async (req, res) => {
     assertOwner(
       asset.responsibleOwner,
       context.owner,
-      context.roles.includes("admin"),
+      context.isPlatformAdmin,
     );
-    if (!context.isAssetManager && !context.isGateSupervisor && asset.holderUserId !== context.userId)
-      throw new AssetServiceError("asset.holder_mismatch", 403);
     const input = AssetCustodyCommandSchema.extend({
       toHolderUserId: z.number().int().positive(),
     }).parse(req.body);
+    const replay = asset.history.find((event) => event.id === input.operationId && event.type === "transfer" && event.actorUserId === context.userId);
+    if (!context.isAssetManager && !context.isGateSupervisor && asset.holderUserId !== context.userId && !replay)
+      throw new AssetServiceError("asset.holder_mismatch", 403);
     if (!asset.holderUserId)
-      throw new AssetServiceError("asset.not_checked_out");
-    await assertTransferRecipient(asset.responsibleOwner, input.toHolderUserId);
+      if (!replay) throw new AssetServiceError("asset.not_checked_out");
+    if (!replay) await assertTransferRecipient(asset.responsibleOwner, input.toHolderUserId);
     return res.json(
       await service.transferAsset({
         assetId,
-        fromHolderUserId: asset.holderUserId,
+        fromHolderUserId: replay?.fromHolderUserId ?? asset.holderUserId!,
         toHolderUserId: input.toHolderUserId,
+        actorUserId: context.userId,
+        operationId: input.operationId,
         condition: input.condition,
         confirmed: input.confirmed,
         expectedVersion: input.expectedVersion,
         note: input.note,
         photos: input.photos,
+        expectedReturnAt: input.expectedReturnAt ? new Date(input.expectedReturnAt) : undefined,
       }),
     );
   } catch (error) {
@@ -493,7 +503,7 @@ router.post("/implementation-a/assets/:assetId/condition", async (req, res) => {
     assertOwner(
       asset.responsibleOwner,
       context.owner,
-      context.roles.includes("admin"),
+      context.isPlatformAdmin,
     );
     if (!context.isAssetManager && !context.isGateSupervisor && asset.holderUserId !== context.userId)
       throw new AssetServiceError("asset.condition_forbidden", 403);
@@ -522,7 +532,7 @@ router.post("/implementation-a/assets/:assetId/hold", async (req, res) => {
     assertOwner(
       asset.responsibleOwner,
       context.owner,
-      context.roles.includes("admin"),
+      context.isPlatformAdmin,
     );
     const input = z
       .object({
@@ -557,12 +567,12 @@ router.post("/implementation-a/assets/:assetId/merge", async (req, res) => {
     assertOwner(
       surviving.responsibleOwner,
       context.owner,
-      context.roles.includes("admin"),
+      context.isPlatformAdmin,
     );
     assertOwner(
       merged.responsibleOwner,
       context.owner,
-      context.roles.includes("admin"),
+      context.isPlatformAdmin,
     );
     if (
       surviving.responsibleOwner.type !== merged.responsibleOwner.type ||

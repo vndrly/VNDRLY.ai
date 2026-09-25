@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 
 export type AssetOwner = { type: "vendor" | "partner"; id: number };
 export type AssetAlias = { kind: "vin" | "plate" | "serial" | "asset_tag" | "model" | "other"; jurisdiction?: string; value: string };
@@ -45,7 +45,7 @@ export type AssetSummary = Pick<AssetRecord, "id" | "name" | "category" | "statu
   };
   capabilities: { canCheckOut: boolean; canReturn: boolean; canVerifyIssued: boolean };
 };
-export type CustodyEvent = { id: string; type: "checkout" | "return" | "transfer" | "condition" | "hold" | "merge" | "verify-issued"; actorUserId?: number | null; condition?: AssetCondition; fromHolderUserId?: number | null; toHolderUserId?: number | null; note?: string; photos?: string[]; occurredAt: Date };
+export type CustodyEvent = { id: string; type: "checkout" | "return" | "transfer" | "condition" | "hold" | "merge" | "verify-issued"; actorUserId?: number | null; commandFingerprint?: string | null; condition?: AssetCondition; fromHolderUserId?: number | null; toHolderUserId?: number | null; note?: string; photos?: string[]; occurredAt: Date };
 
 export class AssetServiceError extends Error {
   constructor(public readonly code: string, public readonly status = 409) { super(code); }
@@ -62,6 +62,18 @@ export interface AssetRepository {
 
 const normalized = (value: string) => value.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
 const aliasKey = (alias: AssetAlias) => `${alias.kind}:${alias.jurisdiction?.trim().toUpperCase() ?? ""}:${normalized(alias.value)}`;
+type CustodyFingerprintInput = { action: "checkout" | "return" | "transfer" | "verify-issued"; assetId: string; actorUserId: number; fromHolderUserId?: number | null; toHolderUserId?: number | null; condition: AssetCondition; note?: string; photos?: string[]; expectedReturnAt?: Date };
+function commandFingerprint(input: CustodyFingerprintInput): string {
+  const canonical = [input.action, input.assetId, input.actorUserId, input.fromHolderUserId ?? null, input.toHolderUserId ?? null, input.condition, input.note?.trim() ?? "", [...(input.photos ?? [])].sort(), input.expectedReturnAt?.toISOString() ?? null];
+  return createHash("sha256").update(JSON.stringify(canonical)).digest("hex");
+}
+function replayResult(asset: AssetRecord, operationId: string | undefined, fingerprint: string) {
+  const prior = operationId ? asset.history.find((event) => event.id === operationId) : undefined;
+  if (!prior) return null;
+  return prior.commandFingerprint === fingerprint
+    ? { status: "applied" as const, version: asset.version, asset }
+    : { status: "conflict" as const, code: "asset.operation_reused" };
+}
 
 export function createMemoryAssetRepository(): AssetRepository {
   const records = new Map<string, AssetRecord>();
@@ -118,63 +130,70 @@ export function createAssetService(repository: AssetRepository) {
     async checkoutAsset(input: { assetId: string; holderUserId: number; actorUserId?: number; operationId?: string; condition: AssetCondition; confirmed: boolean; expectedVersion: number; note?: string; photos?: string[]; expectedReturnAt?: Date }) {
       if (!input.confirmed) return { status: "blocked" as const, code: "asset.confirmation_required" };
       const asset = await getCurrent(input.assetId);
-      const replay = input.operationId ? asset.history.find((event) => event.id === input.operationId) : undefined;
-      if (replay) return replay.type === "checkout" && replay.toHolderUserId === input.holderUserId && replay.actorUserId === (input.actorUserId ?? input.holderUserId) && replay.condition === input.condition
-        ? { status: "applied" as const, version: asset.version, asset }
-        : { status: "conflict" as const, code: "asset.operation_reused" };
+      const fingerprint = commandFingerprint({ action: "checkout", assetId: input.assetId, actorUserId: input.actorUserId ?? input.holderUserId, fromHolderUserId: null, toHolderUserId: input.holderUserId, condition: input.condition, note: input.note, photos: input.photos, expectedReturnAt: input.expectedReturnAt });
+      const replay = replayResult(asset, input.operationId, fingerprint);
+      if (replay) return replay;
       if (asset.version !== input.expectedVersion) return { status: "conflict" as const, code: "asset.version_conflict", version: asset.version };
       if (asset.status === "held") return { status: "blocked" as const, code: "asset.on_hold" };
       if (asset.holderUserId !== null) return { status: "conflict" as const, code: "asset.already_checked_out", version: asset.version };
       asset.holderUserId = input.holderUserId;
-      asset.status = "checked_out";
+      asset.status = ["damaged", "missing", "stolen"].includes(input.condition) ? "held" : "checked_out";
       asset.currentLocationType = "user";
       asset.currentLocationId = String(input.holderUserId);
       asset.currentLocation = `user:${input.holderUserId}`;
       asset.expectedReturnAt = input.expectedReturnAt;
-      asset.history.push({ id: input.operationId ?? randomUUID(), type: "checkout", actorUserId: input.actorUserId ?? input.holderUserId, condition: input.condition, fromHolderUserId: null, toHolderUserId: input.holderUserId, note: input.note, photos: input.photos, occurredAt: new Date() });
+      asset.history.push({ id: input.operationId ?? randomUUID(), type: "checkout", actorUserId: input.actorUserId ?? input.holderUserId, commandFingerprint: fingerprint, condition: input.condition, fromHolderUserId: null, toHolderUserId: input.holderUserId, note: input.note, photos: input.photos, occurredAt: new Date() });
       const saved = await repository.save(asset, input.expectedVersion);
       return saved ? { status: "applied" as const, version: saved.version, asset: saved } : { status: "conflict" as const, code: "asset.version_conflict" };
     },
     async returnAsset(input: { assetId: string; holderUserId: number; actorUserId?: number; operationId?: string; condition: AssetCondition; confirmed: boolean; expectedVersion: number; note?: string; photos?: string[]; expectedReturnAt?: Date }) {
       if (!input.confirmed) return { status: "blocked" as const, code: "asset.confirmation_required" };
       const asset = await getCurrent(input.assetId);
-      const replay = input.operationId ? asset.history.find((event) => event.id === input.operationId) : undefined;
-      if (replay) return replay.type === "return" && replay.fromHolderUserId === input.holderUserId && replay.actorUserId === (input.actorUserId ?? input.holderUserId) && replay.condition === input.condition
-        ? { status: "applied" as const, version: asset.version, asset }
-        : { status: "conflict" as const, code: "asset.operation_reused" };
+      const fingerprint = commandFingerprint({ action: "return", assetId: input.assetId, actorUserId: input.actorUserId ?? input.holderUserId, fromHolderUserId: input.holderUserId, toHolderUserId: null, condition: input.condition, note: input.note, photos: input.photos, expectedReturnAt: input.expectedReturnAt });
+      const replay = replayResult(asset, input.operationId, fingerprint);
+      if (replay) return replay;
       if (asset.version !== input.expectedVersion) return { status: "conflict" as const, code: "asset.version_conflict", version: asset.version };
       if (asset.holderUserId !== input.holderUserId) return { status: "blocked" as const, code: "asset.holder_mismatch" };
-      asset.history.push({ id: input.operationId ?? randomUUID(), type: "return", actorUserId: input.actorUserId ?? input.holderUserId, condition: input.condition, fromHolderUserId: input.holderUserId, toHolderUserId: null, note: input.note, photos: input.photos, occurredAt: new Date() });
+      asset.history.push({ id: input.operationId ?? randomUUID(), type: "return", actorUserId: input.actorUserId ?? input.holderUserId, commandFingerprint: fingerprint, condition: input.condition, fromHolderUserId: input.holderUserId, toHolderUserId: null, note: input.note, photos: input.photos, occurredAt: new Date() });
       asset.holderUserId = null;
       asset.currentLocationType = null;
       asset.currentLocationId = null;
       asset.currentLocation = null;
       asset.expectedReturnAt = undefined;
-      asset.status = ["damaged", "missing", "stolen"].includes(input.condition) ? "held" : "available";
+      asset.status = asset.status === "held" || ["damaged", "missing", "stolen"].includes(input.condition) ? "held" : "available";
       const saved = await repository.save(asset, input.expectedVersion);
       return saved ? { status: "applied" as const, version: saved.version, asset: saved } : { status: "conflict" as const, code: "asset.version_conflict" };
     },
-    async verifyIssuedAsset(input: { assetId: string; actorUserId: number; operationId: string; condition: AssetCondition; confirmed: boolean; expectedVersion: number; note?: string; photos?: string[] }) {
+    async verifyIssuedAsset(input: { assetId: string; actorUserId: number; operationId: string; condition: AssetCondition; confirmed: boolean; expectedVersion: number; note?: string; photos?: string[]; expectedReturnAt?: Date }) {
       if (!input.confirmed) return { status: "blocked" as const, code: "asset.confirmation_required" };
       const asset = await getCurrent(input.assetId);
-      const replay = asset.history.find((event) => event.id === input.operationId);
-      if (replay) return replay.type === "verify-issued" && replay.actorUserId === input.actorUserId && replay.condition === input.condition
-        ? { status: "applied" as const, version: asset.version, asset }
-        : { status: "conflict" as const, code: "asset.operation_reused" };
+      const prior = asset.history.find((event) => event.id === input.operationId);
+      const fingerprint = commandFingerprint({ action: "verify-issued", assetId: input.assetId, actorUserId: input.actorUserId, fromHolderUserId: prior?.fromHolderUserId ?? asset.holderUserId, toHolderUserId: prior?.toHolderUserId ?? asset.holderUserId, condition: input.condition, note: input.note, photos: input.photos, expectedReturnAt: input.expectedReturnAt });
+      const replay = replayResult(asset, input.operationId, fingerprint);
+      if (replay) return replay;
       if (asset.version !== input.expectedVersion) return { status: "conflict" as const, code: "asset.version_conflict", version: asset.version };
       if (asset.status === "held") return { status: "blocked" as const, code: "asset.on_hold" };
       if (asset.holderUserId === null) return { status: "blocked" as const, code: "asset.not_checked_out" };
-      asset.history.push({ id: input.operationId, type: "verify-issued", actorUserId: input.actorUserId, condition: input.condition, fromHolderUserId: asset.holderUserId, toHolderUserId: asset.holderUserId, note: input.note, photos: input.photos, occurredAt: new Date() });
+      asset.history.push({ id: input.operationId, type: "verify-issued", actorUserId: input.actorUserId, commandFingerprint: fingerprint, condition: input.condition, fromHolderUserId: asset.holderUserId, toHolderUserId: asset.holderUserId, note: input.note, photos: input.photos, occurredAt: new Date() });
+      if (["damaged", "missing", "stolen"].includes(input.condition)) asset.status = "held";
       const saved = await repository.save(asset, input.expectedVersion);
       return saved ? { status: "applied" as const, version: saved.version, asset: saved } : { status: "conflict" as const, code: "asset.version_conflict" };
     },
-    async transferAsset(input: { assetId: string; fromHolderUserId: number; toHolderUserId: number; condition: AssetCondition; confirmed: boolean; expectedVersion: number; note?: string; photos?: string[]; expectedReturnAt?: Date }) {
+    async transferAsset(input: { assetId: string; fromHolderUserId: number; toHolderUserId: number; actorUserId?: number; operationId?: string; condition: AssetCondition; confirmed: boolean; expectedVersion: number; note?: string; photos?: string[]; expectedReturnAt?: Date }) {
       const asset = await getCurrent(input.assetId);
       if (!input.confirmed) return { status: "blocked" as const, code: "asset.confirmation_required" };
+      const fingerprint = commandFingerprint({ action: "transfer", assetId: input.assetId, actorUserId: input.actorUserId ?? input.fromHolderUserId, fromHolderUserId: input.fromHolderUserId, toHolderUserId: input.toHolderUserId, condition: input.condition, note: input.note, photos: input.photos, expectedReturnAt: input.expectedReturnAt });
+      const replay = replayResult(asset, input.operationId, fingerprint);
+      if (replay) return replay;
       if (asset.version !== input.expectedVersion) return { status: "conflict" as const, code: "asset.version_conflict", version: asset.version };
+      if (asset.status === "held") return { status: "blocked" as const, code: "asset.on_hold" };
       if (asset.holderUserId !== input.fromHolderUserId) return { status: "blocked" as const, code: "asset.holder_mismatch" };
       asset.holderUserId = input.toHolderUserId;
-      asset.history.push({ id: randomUUID(), type: "transfer", condition: input.condition, fromHolderUserId: input.fromHolderUserId, toHolderUserId: input.toHolderUserId, note: input.note, photos: input.photos, occurredAt: new Date() });
+      asset.currentLocationType = "user";
+      asset.currentLocationId = String(input.toHolderUserId);
+      asset.currentLocation = `user:${input.toHolderUserId}`;
+      if (["damaged", "missing", "stolen"].includes(input.condition)) asset.status = "held";
+      asset.history.push({ id: input.operationId ?? randomUUID(), type: "transfer", actorUserId: input.actorUserId ?? input.fromHolderUserId, commandFingerprint: fingerprint, condition: input.condition, fromHolderUserId: input.fromHolderUserId, toHolderUserId: input.toHolderUserId, note: input.note, photos: input.photos, occurredAt: new Date() });
       const saved = await repository.save(asset, input.expectedVersion);
       return saved ? { status: "applied" as const, version: saved.version, asset: saved } : { status: "conflict" as const, code: "asset.version_conflict" };
     },
@@ -200,7 +219,8 @@ export function createAssetService(repository: AssetRepository) {
       const surviving = await getCurrent(input.survivingAssetId);
       const merged = await getCurrent(input.mergedAssetId);
       for (const alias of merged.aliases) if (!surviving.aliases.some((item) => aliasKey(item) === aliasKey(alias))) surviving.aliases.push(alias);
-      surviving.history.push(...merged.history, { id: randomUUID(), type: "merge", note: input.reason, occurredAt: new Date() });
+      if (!repository.recordMerge) surviving.history.push(...merged.history);
+      surviving.history.push({ id: randomUUID(), type: "merge", note: input.reason, occurredAt: new Date() });
       const saved = await repository.save(surviving, surviving.version);
       if (!saved) throw new AssetServiceError("asset.version_conflict");
       merged.status = "merged";
@@ -208,7 +228,7 @@ export function createAssetService(repository: AssetRepository) {
       merged.aliases = [];
       await repository.save(merged, merged.version);
       await repository.recordMerge?.({ survivingAssetId: saved.id, mergedAssetId: merged.id, reason: input.reason });
-      return saved;
+      return repository.recordMerge ? (await repository.get(saved.id) ?? saved) : saved;
     },
   };
 }

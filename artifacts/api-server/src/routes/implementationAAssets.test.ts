@@ -18,7 +18,12 @@ vi.mock("../services/asset-database-repository", () => ({ databaseAssetRepositor
 } }));
 vi.mock("@workspace/db", async (importOriginal) => {
   const original = await importOriginal<typeof import("@workspace/db")>();
-  return { ...original, db: { select: () => ({ from: () => ({ innerJoin: () => ({ where: async () => [] }), where: () => ({ limit: async () => [state.policy] }) }) }) } };
+  return { ...original, db: { select: () => ({ from: (table: unknown) => ({
+    innerJoin: () => ({ where: async () => [] }),
+    where: () => table === original.userOrgMembershipsTable
+      ? Promise.resolve([{ orgType: "vendor", vendorId: 7, partnerId: null }])
+      : { limit: async () => [state.policy] },
+  }) }) } };
 });
 import assetsRouter from "./implementationAAssets";
 
@@ -62,12 +67,31 @@ describe("asset inventory and custody routes", () => {
     expect(response.status).toBe(201);
   });
 
+  it("keeps an organization admin inside their owner on every custody action", async () => {
+    const foreign = await state.repository!.create({ name: "Other radio", category: "equipment", legalOwner: "Other", responsibleOwner: { type: "vendor", id: 8 }, aliases: [], provisional: false });
+    const paths = ["checkout", "return", "verify-issued"];
+    for (const action of paths) {
+      const response = await request(app).post(`/implementation-a/assets/${foreign.id}/${action}`).set("Cookie", admin).send(command(1));
+      expect(response.status, action).toBe(404);
+    }
+  });
+
   it("applies gatekeeper self checkout once and rejects a stale version", async () => {
     const asset = await state.repository!.create({ name: "Radio", category: "equipment", legalOwner: "Vendor", responsibleOwner: owner, aliases: [], provisional: false });
     const first = await request(app).post(`/implementation-a/assets/${asset.id}/checkout`).set("Cookie", gatekeeper).send(command(1));
     expect(first.body).toMatchObject({ status: "applied", asset: { holderUserId: 11, version: 2 } });
     const stale = await request(app).post(`/implementation-a/assets/${asset.id}/checkout`).set("Cookie", gatekeeper).send(command(1));
     expect(stale.body).toMatchObject({ status: "conflict", code: "asset.version_conflict" });
+  });
+
+  it("replays an exact checkout after policy changes without applying it again", async () => {
+    const asset = await state.repository!.create({ name: "Radio", category: "equipment", legalOwner: "Vendor", responsibleOwner: owner, aliases: [], provisional: false });
+    const input = command(1);
+    expect((await request(app).post(`/implementation-a/assets/${asset.id}/checkout`).set("Cookie", gatekeeper).send(input)).body.status).toBe("applied");
+    state.policy.photosRequiredOnCheckout = true;
+    state.policy.expectedReturnRequired = true;
+    const replay = await request(app).post(`/implementation-a/assets/${asset.id}/checkout`).set("Cookie", gatekeeper).send(input);
+    expect(replay.body).toMatchObject({ status: "applied", version: 2 });
   });
 
   it("blocks checkout when held or category evidence is missing", async () => {
@@ -114,5 +138,17 @@ describe("asset inventory and custody routes", () => {
     const retry = await request(app).post(`/implementation-a/assets/${asset.id}/return`).set("Cookie", gatekeeper).send(input);
     expect(first.body).toMatchObject({ status: "applied", version: 3 });
     expect(retry.body).toMatchObject({ status: "applied", version: 3 });
+  });
+
+  it("replays a transfer only for the original recipient and evidence", async () => {
+    const asset = await state.repository!.create({ name: "Radio", category: "equipment", legalOwner: "Vendor", responsibleOwner: owner, aliases: [], provisional: false });
+    await request(app).post(`/implementation-a/assets/${asset.id}/checkout`).set("Cookie", gatekeeper).send(command(1));
+    const input = { ...command(2), toHolderUserId: 12, note: "handoff", photos: ["https://example.test/first.jpg"] };
+    const first = await request(app).post(`/implementation-a/assets/${asset.id}/transfer`).set("Cookie", supervisor).send(input);
+    expect(first.body).toMatchObject({ status: "applied", asset: { holderUserId: 12, currentLocationId: "12" } });
+    const retry = await request(app).post(`/implementation-a/assets/${asset.id}/transfer`).set("Cookie", supervisor).send(input);
+    expect(retry.body).toMatchObject({ status: "applied", version: 3 });
+    const altered = await request(app).post(`/implementation-a/assets/${asset.id}/transfer`).set("Cookie", supervisor).send({ ...input, photos: ["https://example.test/second.jpg"] });
+    expect(altered.body).toMatchObject({ status: "conflict", code: "asset.operation_reused" });
   });
 });

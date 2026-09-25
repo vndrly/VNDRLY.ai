@@ -66,7 +66,8 @@
     "migrate:gate-change-over": "node scripts/apply-gate-change-over-migration.mjs",
     "migrate:gate-operations": "node scripts/apply-gate-operations-command-center-migration.mjs",
     "migrate:camera-registry": "node scripts/apply-camera-registry-migration.mjs",
-    "migrate:gate-notification-preferences": "tsx scripts/migrate-gate-notification-preferences.ts"
+    "migrate:gate-notification-preferences": "tsx scripts/migrate-gate-notification-preferences.ts",
+    "migrate:asset-custody-fingerprint": "tsx scripts/migrate-asset-custody-fingerprint.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",

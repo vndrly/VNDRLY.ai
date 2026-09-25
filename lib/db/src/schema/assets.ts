@@ -34,6 +34,7 @@ export const assetCategoryPoliciesTable = pgTable("asset_category_policies", {
 
 export const assetCustodyEventsTable = pgTable("asset_custody_events", {
   id: uuid("id").primaryKey().defaultRandom(), assetId: uuid("asset_id").notNull().references(() => assetsTable.id), eventType: text("event_type").notNull(), fromHolderUserId: integer("from_holder_user_id").references(() => usersTable.id), toHolderUserId: integer("to_holder_user_id").references(() => usersTable.id), condition: text("condition"), note: text("note"), actorUserId: integer("actor_user_id").references(() => usersTable.id), operationId: uuid("operation_id").notNull(), assetVersion: integer("asset_version").notNull(), occurredAt: timestamp("occurred_at", { withTimezone: true }).notNull().defaultNow(),
+  commandFingerprint: text("command_fingerprint"),
 }, (table) => ({ operationUnique: uniqueIndex("asset_custody_operation_unique").on(table.operationId), assetHistoryIdx: index("asset_custody_history_idx").on(table.assetId, table.occurredAt) }));
 
 export const assetConditionEvidenceTable = pgTable("asset_condition_evidence", {

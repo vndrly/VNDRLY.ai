@@ -8,6 +8,7 @@ import {
   assetsTable,
   db,
 } from "@workspace/db";
+import { AssetServiceError } from "./assets";
 import type {
   AssetAlias,
   AssetCondition,
@@ -35,6 +36,7 @@ function mapEvent(row: typeof assetCustodyEventsTable.$inferSelect): CustodyEven
     fromHolderUserId: row.fromHolderUserId,
     toHolderUserId: row.toHolderUserId,
     actorUserId: row.actorUserId,
+    commandFingerprint: row.commandFingerprint,
     ...(row.note ? { note: row.note } : {}),
     occurredAt: row.occurredAt,
   };
@@ -157,7 +159,7 @@ export const databaseAssetRepository: AssetRepository = {
         .where(eq(assetCustodyEventsTable.assetId, asset.id));
       const existingIds = new Set(existing.map((event) => event.id));
       for (const event of asset.history.filter((candidate) => !existingIds.has(candidate.id))) {
-        await tx.insert(assetCustodyEventsTable).values({
+        const [insertedEvent] = await tx.insert(assetCustodyEventsTable).values({
           id: event.id,
           assetId: asset.id,
           eventType: event.type,
@@ -167,9 +169,11 @@ export const databaseAssetRepository: AssetRepository = {
           condition: event.condition ?? null,
           note: event.note ?? null,
           operationId: event.id,
+          commandFingerprint: event.commandFingerprint ?? null,
           assetVersion: expectedVersion + 1,
           occurredAt: event.occurredAt,
-        }).onConflictDoNothing({ target: assetCustodyEventsTable.operationId });
+        }).onConflictDoNothing({ target: assetCustodyEventsTable.operationId }).returning({ id: assetCustodyEventsTable.id });
+        if (!insertedEvent) throw new AssetServiceError("asset.operation_reused");
         if (event.type === "hold" || (event.condition && ["damaged", "missing", "stolen"].includes(event.condition))) {
           await tx.insert(assetHoldsTable).values({
             assetId: asset.id,
