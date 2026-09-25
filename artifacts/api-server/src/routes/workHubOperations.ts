@@ -365,6 +365,16 @@ router.get("/work-hub/home", async (req, res) => {
       "Authentication required",
     );
   const now = new Date();
+  if (session.managedSubcontractor?.siteGrants.length === 0) {
+    return res.json({
+      generatedAt: now.toISOString(),
+      capabilities: null,
+      tasks: [],
+      announcements: [],
+      shifts: [],
+      meetings: [],
+    });
+  }
   const [tasks, storedAnnouncements, shifts, meetings] = await Promise.all([
     db
       .select()
@@ -456,9 +466,7 @@ router.get("/work-hub/home", async (req, res) => {
   const ownerId = session.vendorId ?? session.partnerId;
   return res.json({
     generatedAt: now.toISOString(),
-    capabilities: ownerId && (!session.managedSubcontractor || session.managedSubcontractor.siteGrants.length > 0)
-      ? resolveWorkHubCapabilities(session, ownerId)
-      : null,
+    capabilities: ownerId ? resolveWorkHubCapabilities(session, ownerId) : null,
     tasks,
     announcements,
     shifts,
