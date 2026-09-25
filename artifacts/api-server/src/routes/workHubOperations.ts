@@ -7,8 +7,10 @@ import {
   desc,
   eq,
   gte,
+  ilike,
   inArray,
   isNull,
+  lt,
   lte,
   or,
   sql,
@@ -17,6 +19,11 @@ import { z } from "zod/v4";
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import {
   db,
+  assetAliasesTable,
+  assetConditionEvidenceTable,
+  assetHoldsTable,
+  assetsTable,
+  managedSubcontractorWorkerSponsorshipsTable,
   workHubAcknowledgementsTable,
   workHubChannelsTable,
   workHubApprovalRequestsTable,
@@ -3064,10 +3071,11 @@ router.get("/work-hub/search", async (req, res) => {
     );
   const q = z.string().trim().min(2).max(200).parse(req.query.q);
   const start = req.query.start ? new Date(String(req.query.start)) : null;
-  const end = req.query.end ? new Date(String(req.query.end)) : null;
-  const subjectType = req.query.type
-    ? z.string().trim().max(80).parse(req.query.type)
-    : null;
+  const end = req.query.end ? new Date(/^\d{4}-\d{2}-\d{2}$/.test(String(req.query.end)) ? `${req.query.end}T23:59:59.999Z` : String(req.query.end)) : null;
+  const subjectTypes = req.query.type
+    ? z.string().trim().max(200).parse(req.query.type).split(",").filter(Boolean)
+    : [];
+  const subjectType = subjectTypes.length === 1 ? subjectTypes[0] : null;
   if (
     (start && Number.isNaN(start.getTime())) ||
     (end && Number.isNaN(end.getTime())) ||
@@ -3092,7 +3100,51 @@ router.get("/work-hub/search", async (req, res) => {
         .toLowerCase()
         .includes(q.toLowerCase()),
     );
-  const wants = (type: string) => !subjectType || subjectType === type;
+  const wants = (type: string) => subjectTypes.length === 0 || subjectTypes.includes(type);
+  const ownerType = session.vendorId ? "vendor" : session.partnerId ? "partner" : null;
+  const ownerId = session.vendorId ?? session.partnerId ?? null;
+  const currentMembership = ownerType && ownerId ? await db.select({ id: userOrgMembershipsTable.id })
+    .from(userOrgMembershipsTable)
+    .where(and(eq(userOrgMembershipsTable.userId, session.userId), eq(userOrgMembershipsTable.orgType, ownerType),
+      ownerType === "vendor" ? eq(userOrgMembershipsTable.vendorId, ownerId) : eq(userOrgMembershipsTable.partnerId, ownerId)))
+    .limit(1) : [];
+  const currentSponsorship = ownerType === "vendor" && ownerId ? await db.select({ id: managedSubcontractorWorkerSponsorshipsTable.id })
+    .from(managedSubcontractorWorkerSponsorshipsTable)
+    .where(and(eq(managedSubcontractorWorkerSponsorshipsTable.workerUserId, session.userId),
+      eq(managedSubcontractorWorkerSponsorshipsTable.sponsorVendorId, ownerId),
+      eq(managedSubcontractorWorkerSponsorshipsTable.status, "active"))).limit(1) : [];
+  const canSearchAssets = session.role === "admin" || currentMembership.length > 0 || currentSponsorship.length > 0;
+  const currentlyVisibleOwner = (type: string, id: number) => session.role === "admin" ||
+    type === ownerType && id === ownerId && (currentMembership.length > 0 || currentSponsorship.length > 0);
+  const assetOnly = subjectTypes.length === 1 && subjectTypes[0] === "asset";
+  let assetCursor: { updatedAt: string; id: string } | null = null;
+  if (req.query.cursor) {
+    if (!assetOnly) return sendApiError(res, 400, "work_hub.invalid_operation", "Cursor requires inventory filter");
+    try {
+      const decoded = JSON.parse(Buffer.from(String(req.query.cursor), "base64url").toString("utf8"));
+      assetCursor = z.object({ updatedAt: z.iso.datetime(), id: z.uuid() }).parse(decoded);
+    } catch {
+      return sendApiError(res, 400, "work_hub.invalid_operation", "Invalid search cursor");
+    }
+  }
+  const assetTerm = `%${q.replace(/[\\%_]/g, "\\$&")}%`;
+  const assetMatches = q.toLowerCase() === "all" ? undefined : or(
+    ilike(assetsTable.name, assetTerm), ilike(assetsTable.category, assetTerm), ilike(assetsTable.status, assetTerm),
+    ilike(assetsTable.legalOwnerName, assetTerm), ilike(assetsTable.manufacturer, assetTerm), ilike(assetsTable.model, assetTerm),
+    ilike(assetsTable.currentLocationType, assetTerm), ilike(assetsTable.currentLocationId, assetTerm),
+    sql`exists (select 1 from ${usersTable} holder where holder.id = ${assetsTable.currentHolderUserId} and holder.display_name ilike ${assetTerm})`,
+    sql`exists (select 1 from ${assetAliasesTable} alias where alias.asset_id = ${assetsTable.id} and alias.active = true and alias.display_value ilike ${assetTerm})`,
+    sql`exists (select 1 from ${assetConditionEvidenceTable} evidence where evidence.asset_id = ${assetsTable.id} and evidence.condition ilike ${assetTerm})`,
+    sql`exists (select 1 from ${assetHoldsTable} hold where hold.asset_id = ${assetsTable.id} and hold.released_at is null and hold.reason ilike ${assetTerm})`,
+  );
+  const assets = wants("asset") && canSearchAssets ? await db.select().from(assetsTable)
+    .where(and(session.role === "admin" ? undefined : ownerType && ownerId
+      ? and(eq(assetsTable.responsibleOrgType, ownerType), eq(assetsTable.responsibleOrgId, ownerId))
+      : sql`false`, isNull(assetsTable.mergedIntoId), assetMatches,
+      start ? gte(assetsTable.updatedAt, start) : undefined, end ? lte(assetsTable.updatedAt, end) : undefined,
+      assetCursor ? or(lt(assetsTable.updatedAt, new Date(assetCursor.updatedAt)),
+        and(eq(assetsTable.updatedAt, new Date(assetCursor.updatedAt)), lt(assetsTable.id, assetCursor.id))) : undefined))
+    .orderBy(desc(assetsTable.updatedAt), desc(assetsTable.id)).limit(assetOnly ? 101 : 200) : [];
   const [tasks, meetings, files, announcements, channels] = await Promise.all([
     db
       .select()
@@ -3130,6 +3182,8 @@ router.get("/work-hub/search", async (req, res) => {
   await Promise.all(
     channels.map(async (channel) => {
       try {
+        if (channel.ownerOrgType === ownerType && channel.ownerOrgId === ownerId &&
+          !currentlyVisibleOwner(channel.ownerOrgType, channel.ownerOrgId)) return;
         await resolveChannelAccess(session, channel.id, "channel.read");
         visibleChannels.add(channel.id);
       } catch {
@@ -3189,6 +3243,8 @@ router.get("/work-hub/search", async (req, res) => {
         segment: workHubTranscriptSegmentsTable,
         occurrenceId: workHubMeetingArtifactsTable.occurrenceId,
         startsAt: workHubMeetingOccurrencesTable.startsAt,
+        ownerOrgType: workHubMeetingsTable.ownerOrgType,
+        ownerOrgId: workHubMeetingsTable.ownerOrgId,
       })
       .from(workHubTranscriptSegmentsTable)
       .innerJoin(
@@ -3205,13 +3261,21 @@ router.get("/work-hub/search", async (req, res) => {
           workHubMeetingArtifactsTable.occurrenceId,
         ),
       )
+      .innerJoin(workHubMeetingsTable, eq(workHubMeetingsTable.id, workHubMeetingOccurrencesTable.meetingId))
       .limit(500),
   ]);
-  const results = [
+  const allResults = [
+    ...assets.slice(0, assetOnly ? 100 : 200).map((row) => ({
+      id: `asset:${row.id}`, subjectType: "asset", subjectId: row.id,
+      title: row.name, contextKind: "organization", contextId: `${row.responsibleOrgType}:${row.responsibleOrgId}`,
+      updatedAt: row.updatedAt,
+      destination: { module: "files-notes", section: "inventory", assetId: row.id },
+    })),
     ...tasks
       .filter(
         (row) =>
           wants("task") &&
+          currentlyVisibleOwner(row.ownerOrgType, row.ownerOrgId) &&
           inRange(row.updatedAt) &&
           matches(row.title, row.description),
       )
@@ -3229,6 +3293,7 @@ router.get("/work-hub/search", async (req, res) => {
         ({ occurrence, meeting }) =>
           wants("meeting") &&
           meetingParticipantIds.has(occurrence.id) &&
+          currentlyVisibleOwner(meeting.ownerOrgType, meeting.ownerOrgId) &&
           inRange(occurrence.startsAt) &&
           matches(meeting.title, meeting.agenda),
       )
@@ -3263,6 +3328,7 @@ router.get("/work-hub/search", async (req, res) => {
       .filter(
         (row) =>
           wants("announcement") &&
+          currentlyVisibleOwner(row.ownerOrgType, row.ownerOrgId) &&
           (!row.channelId || visibleChannels.has(row.channelId)) &&
           inRange(row.publishedAt) &&
           matches(row.title, row.body),
@@ -3310,11 +3376,7 @@ router.get("/work-hub/search", async (req, res) => {
       .filter(
         ({ instance, template }) =>
           wants("form") &&
-          sessionCanSeeOwner(
-            session,
-            template.ownerOrgType,
-            template.ownerOrgId,
-          ) &&
+          currentlyVisibleOwner(template.ownerOrgType, template.ownerOrgId) &&
           inRange(instance.createdAt) &&
           matches(template.name, instance.definitionSnapshot),
       )
@@ -3329,18 +3391,17 @@ router.get("/work-hub/search", async (req, res) => {
       })),
     ...transcripts
       .filter(
-        ({ occurrenceId, segment, startsAt }) =>
-          (!subjectType ||
-            subjectType === "transcript" ||
-            subjectType === "meeting") &&
+        ({ occurrenceId, segment, startsAt, ownerOrgType, ownerOrgId }) =>
+          (wants("transcript") || wants("meeting")) &&
           meetingParticipantIds.has(occurrenceId) &&
+          currentlyVisibleOwner(ownerOrgType, ownerOrgId) &&
           inRange(startsAt) &&
           matches(segment.text),
       )
       .map(({ occurrenceId, segment, startsAt }) => ({
         id: `transcript:${segment.id}`,
-        subjectType: "meeting",
-        subjectId: occurrenceId,
+        subjectType: "transcript",
+        subjectId: segment.id,
         title: segment.text.slice(0, 120),
         contextKind: "meeting",
         contextId: occurrenceId,
@@ -3350,10 +3411,107 @@ router.get("/work-hub/search", async (req, res) => {
     .sort(
       (a, b) =>
         new Date(b.updatedAt ?? 0).getTime() -
-        new Date(a.updatedAt ?? 0).getTime(),
-    )
-    .slice(0, 100);
-  return res.json(results);
+        new Date(a.updatedAt ?? 0).getTime() || b.id.localeCompare(a.id),
+    );
+  const results = allResults.slice(0, 100);
+  const destinationFor = (row: (typeof results)[number]) => {
+    if ("destination" in row) return row.destination;
+    if (row.subjectType === "meeting")
+      return { module: "meeting", occurrenceId: row.contextId };
+    return { module: "search-item", section: row.subjectType, itemId: row.subjectId };
+  };
+  const cappedSources = [
+    wants("task") && tasks.length >= 200 && "task", wants("meeting") && meetings.length >= 200 && "meeting",
+    wants("file") && files.length >= 200 && "file", wants("announcement") && announcements.length >= 200 && "announcement",
+    subjectTypes.length === 0 && channels.length >= 500 && "channel",
+    wants("message") && messages.length >= 300 && "message", wants("note") && notes.length >= 200 && "note",
+    wants("form") && forms.length >= 200 && "form", (wants("transcript") || wants("meeting")) && transcripts.length >= 500 && "transcript",
+    wants("asset") && assets.length >= (assetOnly ? 101 : 200) && "asset", allResults.length > 100 && "combined",
+  ].filter((value): value is string => Boolean(value));
+  const lastAsset = assetOnly && assets.length > 100 ? assets[99] : null;
+  const nextCursor = lastAsset ? Buffer.from(JSON.stringify({ updatedAt: lastAsset.updatedAt.toISOString(), id: lastAsset.id })).toString("base64url") : null;
+  return res.json({ results: results.map(row => ({ ...row, destination: destinationFor(row) })), cappedSources, nextCursor });
+});
+router.get("/work-hub/search/items/:type/:id", async (req, res) => {
+  const session = actor(req);
+  if (!session) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
+  const kind = z.enum(["task", "meeting", "file", "announcement", "message", "note", "form", "transcript"]).safeParse(req.params.type);
+  const id = z.uuid().safeParse(req.params.id);
+  if (!kind.success || !id.success) return sendApiError(res, 400, "work_hub.invalid_operation", "Invalid search item");
+  const notFound = () => sendApiError(res, 404, "work_hub.not_found", "Item not found");
+  const liveOwner = async (ownerType: string, ownerId: number) => {
+    if (!sessionCanSeeOwner(session, ownerType, ownerId)) return false;
+    if (session.role === "admin") return true;
+    const memberships = await db.select({ id: userOrgMembershipsTable.id }).from(userOrgMembershipsTable)
+      .where(and(eq(userOrgMembershipsTable.userId, session.userId), eq(userOrgMembershipsTable.orgType, ownerType),
+        ownerType === "vendor" ? eq(userOrgMembershipsTable.vendorId, ownerId) : eq(userOrgMembershipsTable.partnerId, ownerId))).limit(1);
+    if (memberships.length) return true;
+    if (ownerType !== "vendor" || !session.managedSubcontractor) return false;
+    const sponsorship = await db.select({ id: managedSubcontractorWorkerSponsorshipsTable.id }).from(managedSubcontractorWorkerSponsorshipsTable)
+      .where(and(eq(managedSubcontractorWorkerSponsorshipsTable.workerUserId, session.userId),
+        eq(managedSubcontractorWorkerSponsorshipsTable.sponsorVendorId, ownerId),
+        eq(managedSubcontractorWorkerSponsorshipsTable.status, "active"))).limit(1);
+    return sponsorship.length > 0;
+  };
+  if (kind.data === "task") {
+    const [row] = await db.select().from(workHubTasksTable).where(eq(workHubTasksTable.id, id.data)).limit(1);
+    if (!row || !await liveOwner(row.ownerOrgType, row.ownerOrgId) || session.managedSubcontractor && row.assigneeUserId !== session.userId && row.createdById !== session.userId) return notFound();
+    return res.json({ id: row.id, subjectType: "task", title: row.title, body: row.description, status: row.status, updatedAt: row.updatedAt });
+  }
+  if (kind.data === "meeting") {
+    const [row] = await db.select({ occurrence: workHubMeetingOccurrencesTable, meeting: workHubMeetingsTable })
+      .from(workHubMeetingOccurrencesTable).innerJoin(workHubMeetingsTable, eq(workHubMeetingsTable.id, workHubMeetingOccurrencesTable.meetingId))
+      .where(eq(workHubMeetingOccurrencesTable.id, id.data)).limit(1);
+    if (!row || !await liveOwner(row.meeting.ownerOrgType, row.meeting.ownerOrgId)) return notFound();
+    const [participant] = await db.select({ id: workHubMeetingParticipantsTable.id }).from(workHubMeetingParticipantsTable)
+      .where(and(eq(workHubMeetingParticipantsTable.occurrenceId, id.data), eq(workHubMeetingParticipantsTable.userId, session.userId))).limit(1);
+    if (!participant) return notFound();
+    return res.json({ id: row.occurrence.id, subjectType: "meeting", title: row.meeting.title, body: row.meeting.agenda, startsAt: row.occurrence.startsAt });
+  }
+  if (kind.data === "file") {
+    const [row] = await db.select().from(workHubFilesTable).where(and(eq(workHubFilesTable.id, id.data), eq(workHubFilesTable.state, "finalized"))).limit(1);
+    if (!row?.channelId) return notFound();
+    try {
+      const { channel } = await resolveChannelAccess(session, row.channelId, "channel.read");
+      if (sessionCanSeeOwner(session, channel.ownerOrgType, channel.ownerOrgId) && !await liveOwner(channel.ownerOrgType, channel.ownerOrgId)) return notFound();
+    } catch { return notFound(); }
+    return res.json({ id: row.id, subjectType: "file", title: row.fileName, channelId: row.channelId, updatedAt: row.finalizedAt });
+  }
+  if (kind.data === "message" || kind.data === "note") {
+    const [row] = kind.data === "message"
+      ? await db.select().from(workHubMessagesTable).where(eq(workHubMessagesTable.id, id.data)).limit(1)
+      : await db.select().from(workHubNotesTable).where(eq(workHubNotesTable.id, id.data)).limit(1);
+    if (!row) return notFound();
+    try {
+      const { channel } = await resolveChannelAccess(session, row.channelId, "channel.read");
+      if (sessionCanSeeOwner(session, channel.ownerOrgType, channel.ownerOrgId) && !await liveOwner(channel.ownerOrgType, channel.ownerOrgId)) return notFound();
+    } catch { return notFound(); }
+    return res.json({ id: row.id, subjectType: kind.data, title: "title" in row ? row.title : row.body.slice(0, 120), body: row.body, channelId: row.channelId });
+  }
+  if (kind.data === "announcement") {
+    const [row] = await db.select().from(workHubAnnouncementsTable)
+      .where(and(eq(workHubAnnouncementsTable.id, id.data), announcementReadable(session.userId))).limit(1);
+    if (!row || !await liveOwner(row.ownerOrgType, row.ownerOrgId) || !await announcementChannelReadable(session, row)) return notFound();
+    return res.json({ id: row.id, subjectType: "announcement", title: row.title, body: row.body, updatedAt: row.publishedAt });
+  }
+  if (kind.data === "form") {
+    const [row] = await db.select({ instance: workHubFormInstancesTable, template: workHubFormTemplatesTable })
+      .from(workHubFormInstancesTable).innerJoin(workHubFormTemplatesTable, eq(workHubFormTemplatesTable.id, workHubFormInstancesTable.templateId))
+      .where(eq(workHubFormInstancesTable.id, id.data)).limit(1);
+    if (!row || !await liveOwner(row.template.ownerOrgType, row.template.ownerOrgId) || session.role !== "admin" && row.instance.assigneeUserId !== session.userId) return notFound();
+    return res.json({ id: row.instance.id, subjectType: "form", title: row.template.name, body: row.instance.definitionSnapshot, updatedAt: row.instance.createdAt });
+  }
+  const [row] = await db.select({ segment: workHubTranscriptSegmentsTable, occurrence: workHubMeetingOccurrencesTable, meeting: workHubMeetingsTable })
+    .from(workHubTranscriptSegmentsTable)
+    .innerJoin(workHubMeetingArtifactsTable, eq(workHubMeetingArtifactsTable.id, workHubTranscriptSegmentsTable.artifactId))
+    .innerJoin(workHubMeetingOccurrencesTable, eq(workHubMeetingOccurrencesTable.id, workHubMeetingArtifactsTable.occurrenceId))
+    .innerJoin(workHubMeetingsTable, eq(workHubMeetingsTable.id, workHubMeetingOccurrencesTable.meetingId))
+    .where(eq(workHubTranscriptSegmentsTable.id, id.data)).limit(1);
+  if (!row || !await liveOwner(row.meeting.ownerOrgType, row.meeting.ownerOrgId)) return notFound();
+  const [participant] = await db.select({ id: workHubMeetingParticipantsTable.id }).from(workHubMeetingParticipantsTable)
+    .where(and(eq(workHubMeetingParticipantsTable.occurrenceId, row.occurrence.id), eq(workHubMeetingParticipantsTable.userId, session.userId))).limit(1);
+  if (!participant) return notFound();
+  return res.json({ id: row.segment.id, subjectType: "transcript", title: row.meeting.title, body: row.segment.text, occurrenceId: row.occurrence.id });
 });
 router.get("/work-hub/connectors/microsoft-365", async (req, res) => {
   const session = actor(req);

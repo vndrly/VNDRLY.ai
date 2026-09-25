@@ -16,11 +16,11 @@ type Owner = { type: "vendor" | "partner"; id: number };
 type FileRow = { id: string; data: { name?: string; scope?: string; state?: string; currentFileId?: string | null }; createdBy?: number; updatedAt?: string; capabilities?: { canDownload: boolean; canManage: boolean } };
 type NoteRow = { id: string; channelId: string; title: string; body: string; version: number; createdById: number; createdAt: string; capabilities?: { canEdit: boolean } };
 type AssetRow = { id: string; name: string; category?: string; status?: string; condition?: string | null; version?: number; holderUserId?: number | null; currentHolderDisplayName?: string | null; currentLocation?: string | null; hold?: string | null; policy?: { photosRequiredOnCheckout: boolean; photosRequiredOnReturn: boolean; expectedReturnRequired: boolean; supervisorApprovalRequired: boolean }; capabilities?: { canCheckOut: boolean; canReturn: boolean; canVerifyIssued: boolean } };
-type Props = { owner: Owner; capabilities: MobileWorkHubCapabilities; files: FileRow[]; notes: NoteRow[]; assets: AssetRow[]; channels: Array<{ id: string; name: string }>; onRefresh: () => void | Promise<void> };
+type Props = { owner: Owner; capabilities: MobileWorkHubCapabilities; files: FileRow[]; notes: NoteRow[]; assets: AssetRow[]; channels: Array<{ id: string; name: string }>; onRefresh: () => void | Promise<void>; selectedAssetId?: string };
 
 const command = (owner: Owner, payload: unknown, expectedVersion: number | null = null) => ({ operationId: crypto.randomUUID(), owner, context: { kind: "organization", id: owner.id }, payloadVersion: 1, expectedVersion, payload });
 
-export function FilesInventory({ owner, capabilities, files, notes, assets, channels, onRefresh }: Props) {
+export function FilesInventory({ owner, capabilities, files, notes, assets, channels, onRefresh, selectedAssetId }: Props) {
   const { t } = useTranslation();
   const colors = useColors();
   const [busy, setBusy] = useState(false);
@@ -128,7 +128,7 @@ export function FilesInventory({ owner, capabilities, files, notes, assets, chan
   return <View style={{ gap: 14 }}>
     {error ? <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{error}</Text> : null}
     {notice ? <Text accessibilityLiveRegion="polite" style={{ color: colors.text }}>{notice}</Text> : null}
-    <View style={card}>
+    {!selectedAssetId && <View style={card}>
       <Text style={{ color: colors.text, fontSize: 18, fontWeight: "700" }}>{t("filesInventory.filesNotes")}</Text>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
         {capabilities.canUploadFile ? <TogglePillButton color="brand" accessibilityLabel={t("filesInventory.uploadFile")} disabled={busy} onPress={upload}>{t("filesInventory.uploadFile")}</TogglePillButton> : null}
@@ -154,11 +154,11 @@ export function FilesInventory({ owner, capabilities, files, notes, assets, chan
         <Text style={{ color: colors.text }}>{note.body}</Text>
         {capabilities.canEditNote && note.capabilities?.canEdit ? <TogglePillButton color="brand" accessibilityLabel={t("filesInventory.editNamedNote", { name: note.title })} disabled={busy} onPress={() => { setEditing(note); setNoteTitle(note.title); setNoteBody(note.body); setNoteOpen(true); }}>{t("filesInventory.editNote")}</TogglePillButton> : null}
       </View>)}
-    </View>
+    </View>}
     <View style={card}>
       <Text style={{ color: colors.text, fontSize: 18, fontWeight: "700" }}>{t("filesInventory.inventory")}</Text>
-      {!assets.length ? <Text style={muted}>{t("filesInventory.noInventory")}</Text> : null}
-      {assets.map(asset => <View key={asset.id} style={{ borderTopWidth: 1, borderColor: colors.border, paddingTop: 10, gap: 4 }}>
+      {!assets.length || selectedAssetId && !assets.some(asset => asset.id === selectedAssetId) ? <Text style={muted}>{t("filesInventory.noInventory")}</Text> : null}
+      {assets.filter(asset => !selectedAssetId || asset.id === selectedAssetId).map(asset => <View key={asset.id} style={{ borderTopWidth: 1, borderColor: colors.border, paddingTop: 10, gap: 4 }}>
         <Text style={{ color: colors.text, fontWeight: "700" }}>{asset.name}</Text>
         <Text style={muted}>{[asset.category, asset.status, asset.condition].filter(Boolean).join(" · ")}</Text>
         <Text style={muted}>{[asset.currentHolderDisplayName ? t("filesInventory.heldBy", { name: asset.currentHolderDisplayName }) : null, asset.currentLocation, asset.hold ? t("filesInventory.hold", { reason: asset.hold }) : null].filter(Boolean).join(" · ")}</Text>

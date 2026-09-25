@@ -40,6 +40,12 @@ const caps = { canUploadFile: true, canCreateNote: true, canEditNote: true, canC
 afterEach(() => { cleanup(); network.pick.mockReset(); network.api.mockReset(); network.digest.mockReset(); photos.capture.mockReset(); });
 
 describe("Files & Inventory", () => {
+  it("lands on the exact inventory asset from a search destination", () => {
+    render(<FilesInventory owner={owner} capabilities={caps} {...records} assets={[...records.assets, { ...records.assets[0], id: "asset-2", name: "Radio 5" }]} channels={[]} onRefresh={vi.fn()} selectedAssetId="asset-1" />);
+    expect(screen.getByText("Radio 4")).toBeTruthy();
+    expect(screen.queryByText("Radio 5")).toBeNull();
+    expect(screen.queryByText("Gate log.pdf")).toBeNull();
+  });
   it("shows both cards and permitted creation actions", () => {
     render(<FilesInventory owner={owner} capabilities={caps} {...records} channels={[{ id: "channel-1", name: "Gate A" }]} onRefresh={vi.fn()} />);
     expect(screen.getByText("Files & Notes")).toBeTruthy();

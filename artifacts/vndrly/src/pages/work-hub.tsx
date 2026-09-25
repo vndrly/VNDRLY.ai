@@ -59,8 +59,10 @@ import {
   isWorkHubAdmin,
   isWorkHubScheduler,
   ownerForUser,
+  normalizeWorkHubSearchResponse,
   workHubModulePath,
   workHubRequest,
+  type WorkHubSearchResponse,
 } from "@/lib/work-hub-client";
 import {
   BrandedInput,
@@ -2060,15 +2062,15 @@ function SearchModule() {
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
   const [type, setType] = useState("");
-  const results = useQuery<Row[]>({
+  const results = useQuery<WorkHubSearchResponse<Row>>({
     queryKey: ["work-hub", "search", term, start, end, type],
-    queryFn: () => {
+    queryFn: async () => {
       const params = new URLSearchParams({ q: term });
       if (start)
         params.set("start", new Date(`${start}T00:00:00`).toISOString());
       if (end) params.set("end", new Date(`${end}T23:59:59.999`).toISOString());
       if (type) params.set("type", type);
-      return workHubRequest(`/search?${params.toString()}`);
+      return normalizeWorkHubSearchResponse(await workHubRequest<Row[] | WorkHubSearchResponse<Row>>(`/search?${params.toString()}`));
     },
     enabled: term.length >= 2,
   });
@@ -2117,12 +2119,15 @@ function SearchModule() {
               <option value="form">Forms</option>
               <option value="meeting">Meetings</option>
               <option value="announcement">Announcements</option>
+              <option value="note">Notes</option>
+              <option value="transcript">Transcripts</option>
+              <option value="asset">Inventory</option>
             </select>
             <BrandPillButton type="submit" tone="brand">
               Search
             </BrandPillButton>
           </form>
-          {results.data?.map((r) => (
+          {results.data?.results.map((r) => (
             <a
               key={r.id}
               href={workHubModulePath(r.subjectType, r.subjectId)}
@@ -2135,7 +2140,8 @@ function SearchModule() {
               <p className="text-xs">Updated {displayDate(r.updatedAt)}</p>
             </a>
           ))}
-          {term && !results.data?.length && (
+          {!!results.data?.cappedSources.length && <p className="text-xs text-muted-foreground">Recent results only for {results.data.cappedSources.join(", ")}. Narrow your dates or content type for a more precise search.</p>}
+          {term && !results.data?.results.length && (
             <Empty>No authorized results found.</Empty>
           )}
         </CardContent>

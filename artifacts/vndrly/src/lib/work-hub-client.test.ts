@@ -6,11 +6,17 @@ import {
   createWorkHubOperationId,
   isWorkHubScheduler,
   ownerForUser,
+  normalizeWorkHubSearchResponse,
   workHubModulePath,
   type WorkHubUser,
 } from "./work-hub-client";
 
 describe("Work Hub client boundary", () => {
+  it("accepts the new search envelope and an older bare-array response", () => {
+    const result = { id: "task:1", title: "Inspect pump" };
+    expect(normalizeWorkHubSearchResponse({ results: [result], cappedSources: ["task"], nextCursor: null })).toEqual({ results: [result], cappedSources: ["task"], nextCursor: null });
+    expect(normalizeWorkHubSearchResponse([result])).toEqual({ results: [result], cappedSources: [], nextCursor: null });
+  });
   it("only lets platform or organization administrators manage channels", () => {
     expect(
       canManageWorkHubChannels({

@@ -116,6 +116,11 @@ export async function workHubRequest<T>(
   return response.json();
 }
 
+export type WorkHubSearchResponse<T> = { results: T[]; cappedSources: string[]; nextCursor: string | null };
+export function normalizeWorkHubSearchResponse<T>(value: T[] | WorkHubSearchResponse<T>): WorkHubSearchResponse<T> {
+  return Array.isArray(value) ? { results: value, cappedSources: [], nextCursor: null } : value;
+}
+
 export function workHubModulePath(subjectType: string, subjectId: string) {
   if (["message", "channel", "note", "file"].includes(subjectType))
     return `/work-hub/chat?${subjectType}=${encodeURIComponent(subjectId)}`;

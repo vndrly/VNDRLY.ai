@@ -148,6 +148,22 @@ async function assertTransferRecipient(
     throw new AssetServiceError("asset.transfer_recipient_not_found", 404);
   }
 }
+async function assertCurrentAssetAccess(context: Awaited<ReturnType<typeof actor>>, owner: AssetOwner): Promise<void> {
+  assertOwner(owner, context.owner, context.isPlatformAdmin);
+  if (context.isPlatformAdmin) return;
+  const memberships = await db.select({ orgType: userOrgMembershipsTable.orgType, vendorId: userOrgMembershipsTable.vendorId, partnerId: userOrgMembershipsTable.partnerId })
+    .from(userOrgMembershipsTable).where(eq(userOrgMembershipsTable.userId, context.userId));
+  if (memberships.some(row => row.orgType === owner.type && (owner.type === "vendor" ? row.vendorId : row.partnerId) === owner.id)) return;
+  if (owner.type === "vendor") {
+    const sponsorships = await db.select({ id: managedSubcontractorWorkerSponsorshipsTable.id })
+      .from(managedSubcontractorWorkerSponsorshipsTable)
+      .where(and(eq(managedSubcontractorWorkerSponsorshipsTable.workerUserId, context.userId),
+        eq(managedSubcontractorWorkerSponsorshipsTable.sponsorVendorId, owner.id),
+        eq(managedSubcontractorWorkerSponsorshipsTable.status, "active"))).limit(1);
+    if (sponsorships.length) return;
+  }
+  throw new AssetServiceError("asset.not_found", 404);
+}
 async function policy(owner: AssetOwner, category: string) {
   const [row] = await db
     .select()
@@ -220,6 +236,7 @@ router.get("/implementation-a/assets", async (req, res) => {
     const context = await actor(req);
     if (!context.owner)
       throw new AssetServiceError("asset.owner_required", 403);
+    await assertCurrentAssetAccess(context, context.owner);
     const records = await databaseAssetRepository.all(context.owner);
     const assets: AssetSummary[] = await Promise.all(records.map(async (asset) => {
       const currentPolicy = await policy(asset.responsibleOwner, asset.category);
@@ -428,6 +445,19 @@ router.post("/implementation-a/assets/:assetId/return", async (req, res) => {
         expectedReturnAt: input.expectedReturnAt ? new Date(input.expectedReturnAt) : undefined,
       }),
     );
+  } catch (error) {
+    return sendError(res, error);
+  }
+});
+
+router.get("/implementation-a/assets/:assetId", async (req, res) => {
+  try {
+    const context = await actor(req);
+    const assetId = IdSchema.parse(req.params.assetId);
+    const asset = await databaseAssetRepository.get(assetId);
+    if (!asset) throw new AssetServiceError("asset.not_found", 404);
+    await assertCurrentAssetAccess(context, asset.responsibleOwner);
+    return res.json(asset);
   } catch (error) {
     return sendError(res, error);
   }

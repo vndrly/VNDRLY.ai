@@ -14,6 +14,19 @@ export type MobileWorkHubCapabilities = {
   allowedExportDatasets: readonly string[];
   canManageGateLocations: boolean;
 };
+export type WorkHubSearchFilters = {
+  query: string;
+  start?: string;
+  end?: string;
+  types?: string[];
+};
+export function buildWorkHubSearchPath(filters: WorkHubSearchFilters) {
+  const parts = [`q=${encodeURIComponent(filters.query)}`];
+  if (filters.start) parts.push(`start=${encodeURIComponent(filters.start)}`);
+  if (filters.end) parts.push(`end=${encodeURIComponent(filters.end)}`);
+  if (filters.types?.length) parts.push(`type=${encodeURIComponent(filters.types.join(","))}`);
+  return `/api/work-hub/search?${parts.join("&")}`;
+}
 export function mobileOwner(user: MobileTenant | null | undefined) {
   if (user?.partnerId) return { type: "partner" as const, id: user.partnerId };
   if (user?.vendorId) return { type: "vendor" as const, id: user.vendorId };
@@ -35,7 +48,7 @@ export function moduleEndpoint(module: string, query = "") {
   if (module === "settings-connections")
     return "/api/work-hub/connectors/microsoft-365";
   if (module === "search")
-    return `/api/work-hub/search?q=${encodeURIComponent(query)}`;
+    return buildWorkHubSearchPath({ query });
   if (module === "calendar" || module === "meetings" || module === "workforce-coverage") {
     const start = new Date();
     const end = new Date(start);

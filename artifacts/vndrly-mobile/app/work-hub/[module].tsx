@@ -14,6 +14,7 @@ import WorkHubCalls from "@/components/WorkHubCalls";
 import { ManagedCrews } from "@/components/implementation-a/ManagedCrews";
 import { WorkforceCoverage } from "@/components/implementation-a/WorkforceCoverage";
 import { FilesInventory } from "@/components/work-hub/FilesInventory";
+import { WorkHubSearch, type WorkHubSearchDestination } from "@/components/work-hub/WorkHubSearch";
 import { SitePresence } from "@/components/implementation-a/SitePresence";
 import { SafetyResponse } from "@/components/implementation-a/SafetyResponse";
 import { ImplementationAExports } from "@/components/implementation-a/Exports";
@@ -76,7 +77,7 @@ export default function WorkHubModuleScreen() {
   const colors = useColors();
   const { user } = useAuth();
   const meetingCompanion = useMeetingCompanion();
-  const { module: raw } = useLocalSearchParams<{ module: string }>();
+  const { module: raw, assetId: selectedAssetId } = useLocalSearchParams<{ module: string; assetId?: string }>();
   const module = raw === "inventory" ? "files-notes" : String(raw ?? "channels");
   const owner = mobileOwner(user);
   const activeMembership = user?.availableMemberships?.find(
@@ -92,7 +93,6 @@ export default function WorkHubModuleScreen() {
   const [data, setData] = useState<any>();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
-  const [query, setQuery] = useState("");
   const [draft, setDraft] = useState("");
   const [calendarGateShift, setCalendarGateShift] = useState(false);
   const [gateSites, setGateSites] = useState<Row[]>([]);
@@ -111,7 +111,7 @@ export default function WorkHubModuleScreen() {
   const [chatActionBusy, setChatActionBusy] = useState(false);
   const [chatActionNotice, setChatActionNotice] = useState("");
   const load = useCallback(
-    async (search = query) => {
+    async (search = "") => {
       setLoading(true);
       setError("");
       try {
@@ -127,10 +127,10 @@ export default function WorkHubModuleScreen() {
         setLoading(false);
       }
     },
-    [module, query, user],
+    [module, user],
   );
   useEffect(() => {
-    if (module !== "calls" && module !== "safety-response" && module !== "implementation-exports") void load("");
+    if (module !== "calls" && module !== "search" && module !== "safety-response" && module !== "implementation-exports") void load("");
   }, [module]);
   useEffect(() => {
     if (module !== "calendar" || !canManage) return;
@@ -371,6 +371,24 @@ export default function WorkHubModuleScreen() {
         </ScrollView>
       </ScreenSafeArea>
     );
+  if (module === "search") {
+    const open = (destination: WorkHubSearchDestination) => {
+      if (destination.module === "meeting" && destination.occurrenceId) {
+        router.push(`/work-hub/meeting/${encodeURIComponent(destination.occurrenceId)}` as never);
+      } else if (destination.module === "files-notes" && destination.assetId) {
+        router.push({ pathname: "/work-hub/[module]", params: { module: "files-notes", section: "inventory", assetId: destination.assetId } } as never);
+      } else if (destination.itemId && destination.section) {
+        router.push(`/work-hub/search-item/${encodeURIComponent(destination.section)}/${encodeURIComponent(destination.itemId)}` as never);
+      }
+    };
+    return <ScreenSafeArea style={{ backgroundColor: colors.background }}>
+      <Stack.Screen options={{ title }} />
+      <ScrollView contentContainerStyle={{ padding: 20, gap: 14 }}>
+        <WorkHubPageTitle title={title} />
+        <WorkHubSearch onOpen={open} />
+      </ScrollView>
+    </ScreenSafeArea>;
+  }
   return (
     <ScreenSafeArea style={{ backgroundColor: colors.background }}>
       <Stack.Screen options={{ title }} />
@@ -381,46 +399,9 @@ export default function WorkHubModuleScreen() {
         contentContainerStyle={{ padding: 20, gap: 14 }}
       >
         <WorkHubPageTitle title={title} />
-        {module === "files-notes" && owner && data?.capabilities && <FilesInventory owner={owner} capabilities={data.capabilities} files={data.files ?? []} notes={data.notes ?? []} assets={data.assets ?? []} channels={data.channels ?? []} onRefresh={() => load()} />}
+        {module === "files-notes" && owner && data?.capabilities && <FilesInventory owner={owner} capabilities={data.capabilities} files={data.files ?? []} notes={data.notes ?? []} assets={data.assets ?? []} channels={data.channels ?? []} selectedAssetId={selectedAssetId} onRefresh={() => load()} />}
         {module === "files-notes" && !loading && data && !data.capabilities && <Text style={{ color: colors.mutedForeground }}>{t("filesInventory.noAccess")}</Text>}
         {module === "calendar" ? <WorkHubShiftCalendar items={rows} /> : null}
-        {module === "search" && (
-          <View style={{ flexDirection: "row", gap: 8 }}>
-            <TextInput
-              accessibilityLabel="Search Work Hub"
-              value={query}
-              onChangeText={setQuery}
-              placeholder="Search authorized records"
-              placeholderTextColor={colors.mutedForeground}
-              style={{
-                flex: 1,
-                color: colors.text,
-                borderWidth: 1,
-                borderColor: colors.border,
-                borderRadius: 10,
-                minHeight: 44,
-                padding: 12,
-              }}
-            />
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => load(query)}
-              style={{
-                backgroundColor: colors.primary,
-                borderRadius: 10,
-                minHeight: 44,
-                padding: 12,
-                justifyContent: "center",
-              }}
-            >
-              <Text
-                style={{ color: colors.primaryForeground, fontWeight: "700" }}
-              >
-                Search
-              </Text>
-            </Pressable>
-          </View>
-        )}
         {module === "files-notes" && meetingCompanion?.active && (
           <View accessibilityLabel="Active meeting upload" style={{ borderWidth: 1, borderColor: colors.primary, borderRadius: 12, padding: 16, gap: 10, backgroundColor: colors.card }}>
             <Text style={{ color: colors.text, fontWeight: "700", fontSize: 17 }}>Sharing to: {meetingCompanion.active.title}</Text>
