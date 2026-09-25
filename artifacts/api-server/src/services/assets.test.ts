@@ -30,6 +30,24 @@ describe("Implementation A asset custody", () => {
     expect(await service.checkoutAsset({ assetId: asset.id, holderUserId: 7, condition: "fair", confirmed: true, expectedVersion: 2 })).toMatchObject({ status: "blocked", code: "asset.on_hold" });
   });
 
+  it("replays a custody operation without duplicating history or advancing version", async () => {
+    const service = createAssetService(createMemoryAssetRepository());
+    const asset = await service.createAsset({ name: "Radio", category: "equipment", legalOwner: "MidCon", responsibleOwner: { type: "vendor", id: 20 }, aliases: [] });
+    const input = { assetId: asset.id, holderUserId: 7, actorUserId: 7, operationId: "11111111-1111-4111-8111-111111111111", condition: "good" as const, confirmed: true, expectedVersion: 1 };
+    expect(await service.checkoutAsset(input)).toMatchObject({ status: "applied", version: 2 });
+    expect(await service.checkoutAsset(input)).toMatchObject({ status: "applied", version: 2, asset: { history: [{ id: input.operationId }] } });
+    expect(await service.checkoutAsset({ ...input, holderUserId: 8 })).toMatchObject({ status: "conflict", code: "asset.operation_reused" });
+  });
+
+  it("replays a return after the holder has already been cleared", async () => {
+    const service = createAssetService(createMemoryAssetRepository());
+    const asset = await service.createAsset({ name: "Radio", category: "equipment", legalOwner: "MidCon", responsibleOwner: { type: "vendor", id: 20 }, aliases: [] });
+    await service.checkoutAsset({ assetId: asset.id, holderUserId: 7, condition: "good", confirmed: true, expectedVersion: 1 });
+    const input = { assetId: asset.id, holderUserId: 7, actorUserId: 7, operationId: "22222222-2222-4222-8222-222222222222", condition: "good" as const, confirmed: true, expectedVersion: 2 };
+    expect(await service.returnAsset(input)).toMatchObject({ status: "applied", version: 3 });
+    expect(await service.returnAsset(input)).toMatchObject({ status: "applied", version: 3 });
+  });
+
   it("merges only with Asset Manager authority and retains both histories", async () => {
     const service = createAssetService(createMemoryAssetRepository());
     const first = await service.createAsset({ name: "Truck", category: "vehicle", legalOwner: "MidCon", responsibleOwner: { type: "vendor", id: 20 }, aliases: [{ kind: "plate", jurisdiction: "TX", value: "ABC123" }] });

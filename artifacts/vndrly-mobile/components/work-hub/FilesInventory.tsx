@@ -9,12 +9,13 @@ import { useColors } from "@/hooks/useColors";
 import { apiFetch, getApiBase } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 import { pickMeetingFile } from "@/lib/meeting-files";
+import { captureAndUploadImage } from "@/lib/photos";
 import type { MobileWorkHubCapabilities } from "@/lib/work-hub-mobile";
 
 type Owner = { type: "vendor" | "partner"; id: number };
 type FileRow = { id: string; data: { name?: string; scope?: string; state?: string; currentFileId?: string | null }; createdBy?: number; updatedAt?: string; capabilities?: { canDownload: boolean; canManage: boolean } };
 type NoteRow = { id: string; channelId: string; title: string; body: string; version: number; createdById: number; createdAt: string; capabilities?: { canEdit: boolean } };
-type AssetRow = { id: string; name: string; category?: string; status?: string; condition?: string; version?: number; holderUserId?: number | null; currentHolderDisplayName?: string | null; currentLocation?: string | null; hold?: string | null };
+type AssetRow = { id: string; name: string; category?: string; status?: string; condition?: string | null; version?: number; holderUserId?: number | null; currentHolderDisplayName?: string | null; currentLocation?: string | null; hold?: string | null; policy?: { photosRequiredOnCheckout: boolean; photosRequiredOnReturn: boolean; expectedReturnRequired: boolean; supervisorApprovalRequired: boolean }; capabilities?: { canCheckOut: boolean; canReturn: boolean; canVerifyIssued: boolean } };
 type Props = { owner: Owner; capabilities: MobileWorkHubCapabilities; files: FileRow[]; notes: NoteRow[]; assets: AssetRow[]; channels: Array<{ id: string; name: string }>; onRefresh: () => void | Promise<void> };
 
 const command = (owner: Owner, payload: unknown, expectedVersion: number | null = null) => ({ operationId: crypto.randomUUID(), owner, context: { kind: "organization", id: owner.id }, payloadVersion: 1, expectedVersion, payload });
@@ -30,6 +31,10 @@ export function FilesInventory({ owner, capabilities, files, notes, assets, chan
   const [channelId, setChannelId] = useState("");
   const [noteTitle, setNoteTitle] = useState("");
   const [noteBody, setNoteBody] = useState("");
+  const [custody, setCustody] = useState<{ assetId: string; action: "checkout" | "return" | "verify-issued"; operationId: string } | null>(null);
+  const [custodyCondition, setCustodyCondition] = useState("good");
+  const [custodyPhotos, setCustodyPhotos] = useState<string[]>([]);
+  const [expectedReturn, setExpectedReturn] = useState("");
   const card = { borderWidth: 1, borderColor: colors.border, borderRadius: 14, backgroundColor: colors.card, padding: 16, gap: 10 } as const;
   const muted = { color: colors.mutedForeground };
   const run = async (work: () => Promise<void>) => {
@@ -73,6 +78,52 @@ export function FilesInventory({ owner, capabilities, files, notes, assets, chan
       await Sharing.shareAsync(uri, { dialogTitle: file.data.name ?? t("filesInventory.openFile") });
     } finally { await FileSystem.deleteAsync(uri, { idempotent: true }).catch(() => undefined); }
   });
+  const openCustody = (asset: AssetRow, action: "checkout" | "return" | "verify-issued") => {
+    setCustody({ assetId: asset.id, action, operationId: crypto.randomUUID() });
+    setCustodyCondition(asset.condition && ["new", "good", "fair", "damaged", "missing", "stolen"].includes(asset.condition) ? asset.condition : "good");
+    setCustodyPhotos([]);
+    setExpectedReturn("");
+    setError("");
+  };
+  const addCustodyPhoto = () => void run(async () => {
+    const uploaded = await captureAndUploadImage();
+    if (!uploaded) return;
+    setCustodyPhotos((current) => [...current, `${getApiBase()}/api/storage${uploaded.objectPath}`]);
+    setNotice(t("filesInventory.photoAdded"));
+  });
+  const submitCustody = (asset: AssetRow) => void run(async () => {
+    if (!custody || !asset.version) return;
+    const needsPhotos = custody.action === "checkout" ? asset.policy?.photosRequiredOnCheckout : custody.action === "return" ? asset.policy?.photosRequiredOnReturn : false;
+    if (needsPhotos && custodyPhotos.length === 0) throw new Error(t("filesInventory.photoRequired"));
+    let expectedReturnAt: string | undefined;
+    if (custody.action === "checkout" && expectedReturn.trim()) {
+      const timestamp = Date.parse(expectedReturn.trim());
+      if (!Number.isFinite(timestamp)) throw new Error(t("filesInventory.invalidExpectedReturn"));
+      expectedReturnAt = new Date(timestamp).toISOString();
+    }
+    if (custody.action === "checkout" && asset.policy?.expectedReturnRequired && !expectedReturnAt) throw new Error(t("filesInventory.expectedReturnRequired"));
+    try {
+      const result = await apiFetch<{ status: "applied" | "conflict" | "blocked"; code?: string }>(`/api/implementation-a/assets/${encodeURIComponent(asset.id)}/${custody.action}`, { method: "POST", body: JSON.stringify({ operationId: custody.operationId, expectedVersion: asset.version, condition: custodyCondition, confirmed: true, photos: custodyPhotos, ...(expectedReturnAt ? { expectedReturnAt } : {}) }) });
+      if (result.status === "conflict") {
+        setCustody(null);
+        await onRefresh();
+        setNotice(t("filesInventory.assetChanged"));
+        return;
+      }
+      if (result.status === "blocked") throw new Error(result.code ?? t("filesInventory.actionFailed"));
+      setCustody(null);
+      setNotice(t("filesInventory.custodyApplied"));
+      await onRefresh();
+    } catch (cause) {
+      if ((cause as { code?: string }).code === "asset.version_conflict") {
+        setCustody(null);
+        await onRefresh();
+        setNotice(t("filesInventory.assetChanged"));
+        return;
+      }
+      throw cause;
+    }
+  });
 
   return <View style={{ gap: 14 }}>
     {error ? <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{error}</Text> : null}
@@ -111,6 +162,17 @@ export function FilesInventory({ owner, capabilities, files, notes, assets, chan
         <Text style={{ color: colors.text, fontWeight: "700" }}>{asset.name}</Text>
         <Text style={muted}>{[asset.category, asset.status, asset.condition].filter(Boolean).join(" · ")}</Text>
         <Text style={muted}>{[asset.currentHolderDisplayName ? t("filesInventory.heldBy", { name: asset.currentHolderDisplayName }) : null, asset.currentLocation, asset.hold ? t("filesInventory.hold", { reason: asset.hold }) : null].filter(Boolean).join(" · ")}</Text>
+        {asset.capabilities?.canCheckOut && capabilities.canCheckOutAsset ? <TogglePillButton color="blue" accessibilityLabel={t("filesInventory.checkOutNamed", { name: asset.name })} disabled={busy} onPress={() => openCustody(asset, "checkout")}>{t("filesInventory.checkOut")}</TogglePillButton> : null}
+        {asset.capabilities?.canReturn && capabilities.canCheckOutAsset ? <TogglePillButton color="blue" accessibilityLabel={t("filesInventory.returnNamed", { name: asset.name })} disabled={busy} onPress={() => openCustody(asset, "return")}>{t("filesInventory.returnAsset")}</TogglePillButton> : null}
+        {asset.capabilities?.canVerifyIssued && capabilities.canVerifyIssuedAsset ? <TogglePillButton color="blue" accessibilityLabel={t("filesInventory.verifyNamed", { name: asset.name })} disabled={busy} onPress={() => openCustody(asset, "verify-issued")}>{t("filesInventory.verifyIssued")}</TogglePillButton> : null}
+        {custody?.assetId === asset.id ? <View style={{ gap: 8 }}>
+          <Text style={muted}>{t("filesInventory.custodyConfirmation", { name: asset.name })}</Text>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{(["new", "good", "fair", "damaged", "missing", "stolen"] as const).map(condition => <TogglePillButton key={condition} color="blue" solid={custodyCondition === condition} accessibilityLabel={t(`filesInventory.condition.${condition}`)} onPress={() => setCustodyCondition(condition)}>{t(`filesInventory.condition.${condition}`)}</TogglePillButton>)}</View>
+          {custody.action === "checkout" ? <TextInput accessibilityLabel={t("filesInventory.expectedReturn")} value={expectedReturn} onChangeText={setExpectedReturn} placeholder={t("filesInventory.expectedReturnPlaceholder")} style={{ color: colors.text, borderWidth: 1, borderColor: colors.border, padding: 10 }} /> : null}
+          <TogglePillButton color="blue" accessibilityLabel={t("filesInventory.addEvidencePhoto")} disabled={busy} onPress={addCustodyPhoto}>{t("filesInventory.addEvidencePhoto")}</TogglePillButton>
+          {custodyPhotos.length ? <Text style={muted}>{t("filesInventory.photoCount", { count: custodyPhotos.length })}</Text> : null}
+          <TogglePillButton color="blue" accessibilityLabel={t(`filesInventory.confirm.${custody.action}`)} disabled={busy} onPress={() => submitCustody(asset)}>{t(`filesInventory.confirm.${custody.action}`)}</TogglePillButton>
+        </View> : null}
       </View>)}
     </View>
   </View>;

@@ -15,12 +15,37 @@ export type AssetRecord = {
   provisional: boolean;
   status: "available" | "checked_out" | "held" | "retired" | "merged";
   holderUserId: number | null;
+  currentLocationType?: string | null;
+  currentLocationId?: string | null;
+  currentLocation?: string | null;
+  condition?: AssetCondition | null;
+  hold?: string | null;
   expectedReturnAt?: Date;
   version: number;
   history: CustodyEvent[];
   mergedIntoId?: string;
 };
-export type CustodyEvent = { id: string; type: "checkout" | "return" | "transfer" | "condition" | "hold" | "merge"; condition?: AssetCondition; fromHolderUserId?: number | null; toHolderUserId?: number | null; note?: string; photos?: string[]; occurredAt: Date };
+/** Canonical GET /implementation-a/assets response; item actions are scoped to the viewer. */
+export type AssetCapabilities = {
+  canCreateAsset: boolean;
+  canManageAsset: boolean;
+  canCheckOutAsset: boolean;
+  canVerifyIssuedAsset: boolean;
+};
+export type AssetSummary = Pick<AssetRecord, "id" | "name" | "category" | "status" | "version" | "holderUserId"> & {
+  condition: AssetCondition | null;
+  currentLocation: string | null;
+  hold: string | null;
+  expectedReturnAt: Date | null;
+  policy: {
+    photosRequiredOnCheckout: boolean;
+    photosRequiredOnReturn: boolean;
+    expectedReturnRequired: boolean;
+    supervisorApprovalRequired: boolean;
+  };
+  capabilities: { canCheckOut: boolean; canReturn: boolean; canVerifyIssued: boolean };
+};
+export type CustodyEvent = { id: string; type: "checkout" | "return" | "transfer" | "condition" | "hold" | "merge" | "verify-issued"; actorUserId?: number | null; condition?: AssetCondition; fromHolderUserId?: number | null; toHolderUserId?: number | null; note?: string; photos?: string[]; occurredAt: Date };
 
 export class AssetServiceError extends Error {
   constructor(public readonly code: string, public readonly status = 409) { super(code); }
@@ -90,28 +115,56 @@ export function createAssetService(repository: AssetRepository) {
       if (found) return found;
       return repository.create({ name: `${input.identifier.kind.toUpperCase()} ${input.identifier.value}`, category: input.identifier.kind === "plate" || input.identifier.kind === "vin" ? "vehicle" : "uncategorized", legalOwner: "Unknown", responsibleOwner: input.responsibleOwner, aliases: [input.identifier], provisional: true });
     },
-    async checkoutAsset(input: { assetId: string; holderUserId: number; condition: AssetCondition; confirmed: boolean; expectedVersion: number; note?: string; photos?: string[]; expectedReturnAt?: Date }) {
+    async checkoutAsset(input: { assetId: string; holderUserId: number; actorUserId?: number; operationId?: string; condition: AssetCondition; confirmed: boolean; expectedVersion: number; note?: string; photos?: string[]; expectedReturnAt?: Date }) {
       if (!input.confirmed) return { status: "blocked" as const, code: "asset.confirmation_required" };
       const asset = await getCurrent(input.assetId);
+      const replay = input.operationId ? asset.history.find((event) => event.id === input.operationId) : undefined;
+      if (replay) return replay.type === "checkout" && replay.toHolderUserId === input.holderUserId && replay.actorUserId === (input.actorUserId ?? input.holderUserId) && replay.condition === input.condition
+        ? { status: "applied" as const, version: asset.version, asset }
+        : { status: "conflict" as const, code: "asset.operation_reused" };
       if (asset.version !== input.expectedVersion) return { status: "conflict" as const, code: "asset.version_conflict", version: asset.version };
       if (asset.status === "held") return { status: "blocked" as const, code: "asset.on_hold" };
       if (asset.holderUserId !== null) return { status: "conflict" as const, code: "asset.already_checked_out", version: asset.version };
       asset.holderUserId = input.holderUserId;
       asset.status = "checked_out";
+      asset.currentLocationType = "user";
+      asset.currentLocationId = String(input.holderUserId);
+      asset.currentLocation = `user:${input.holderUserId}`;
       asset.expectedReturnAt = input.expectedReturnAt;
-      asset.history.push({ id: randomUUID(), type: "checkout", condition: input.condition, fromHolderUserId: null, toHolderUserId: input.holderUserId, note: input.note, photos: input.photos, occurredAt: new Date() });
+      asset.history.push({ id: input.operationId ?? randomUUID(), type: "checkout", actorUserId: input.actorUserId ?? input.holderUserId, condition: input.condition, fromHolderUserId: null, toHolderUserId: input.holderUserId, note: input.note, photos: input.photos, occurredAt: new Date() });
       const saved = await repository.save(asset, input.expectedVersion);
       return saved ? { status: "applied" as const, version: saved.version, asset: saved } : { status: "conflict" as const, code: "asset.version_conflict" };
     },
-    async returnAsset(input: { assetId: string; holderUserId: number; condition: AssetCondition; confirmed: boolean; expectedVersion: number; note?: string; photos?: string[]; expectedReturnAt?: Date }) {
+    async returnAsset(input: { assetId: string; holderUserId: number; actorUserId?: number; operationId?: string; condition: AssetCondition; confirmed: boolean; expectedVersion: number; note?: string; photos?: string[]; expectedReturnAt?: Date }) {
       if (!input.confirmed) return { status: "blocked" as const, code: "asset.confirmation_required" };
       const asset = await getCurrent(input.assetId);
+      const replay = input.operationId ? asset.history.find((event) => event.id === input.operationId) : undefined;
+      if (replay) return replay.type === "return" && replay.fromHolderUserId === input.holderUserId && replay.actorUserId === (input.actorUserId ?? input.holderUserId) && replay.condition === input.condition
+        ? { status: "applied" as const, version: asset.version, asset }
+        : { status: "conflict" as const, code: "asset.operation_reused" };
       if (asset.version !== input.expectedVersion) return { status: "conflict" as const, code: "asset.version_conflict", version: asset.version };
       if (asset.holderUserId !== input.holderUserId) return { status: "blocked" as const, code: "asset.holder_mismatch" };
-      asset.history.push({ id: randomUUID(), type: "return", condition: input.condition, fromHolderUserId: input.holderUserId, toHolderUserId: null, note: input.note, photos: input.photos, occurredAt: new Date() });
+      asset.history.push({ id: input.operationId ?? randomUUID(), type: "return", actorUserId: input.actorUserId ?? input.holderUserId, condition: input.condition, fromHolderUserId: input.holderUserId, toHolderUserId: null, note: input.note, photos: input.photos, occurredAt: new Date() });
       asset.holderUserId = null;
+      asset.currentLocationType = null;
+      asset.currentLocationId = null;
+      asset.currentLocation = null;
       asset.expectedReturnAt = undefined;
       asset.status = ["damaged", "missing", "stolen"].includes(input.condition) ? "held" : "available";
+      const saved = await repository.save(asset, input.expectedVersion);
+      return saved ? { status: "applied" as const, version: saved.version, asset: saved } : { status: "conflict" as const, code: "asset.version_conflict" };
+    },
+    async verifyIssuedAsset(input: { assetId: string; actorUserId: number; operationId: string; condition: AssetCondition; confirmed: boolean; expectedVersion: number; note?: string; photos?: string[] }) {
+      if (!input.confirmed) return { status: "blocked" as const, code: "asset.confirmation_required" };
+      const asset = await getCurrent(input.assetId);
+      const replay = asset.history.find((event) => event.id === input.operationId);
+      if (replay) return replay.type === "verify-issued" && replay.actorUserId === input.actorUserId && replay.condition === input.condition
+        ? { status: "applied" as const, version: asset.version, asset }
+        : { status: "conflict" as const, code: "asset.operation_reused" };
+      if (asset.version !== input.expectedVersion) return { status: "conflict" as const, code: "asset.version_conflict", version: asset.version };
+      if (asset.status === "held") return { status: "blocked" as const, code: "asset.on_hold" };
+      if (asset.holderUserId === null) return { status: "blocked" as const, code: "asset.not_checked_out" };
+      asset.history.push({ id: input.operationId, type: "verify-issued", actorUserId: input.actorUserId, condition: input.condition, fromHolderUserId: asset.holderUserId, toHolderUserId: asset.holderUserId, note: input.note, photos: input.photos, occurredAt: new Date() });
       const saved = await repository.save(asset, input.expectedVersion);
       return saved ? { status: "applied" as const, version: saved.version, asset: saved } : { status: "conflict" as const, code: "asset.version_conflict" };
     },

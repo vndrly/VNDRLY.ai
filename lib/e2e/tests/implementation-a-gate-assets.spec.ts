@@ -16,9 +16,16 @@ test("a spoken Texas plate resolves one vehicle, transfers custody, and auto-adm
   const pool = createPool();
   const stamp = makeStamp();
   const admin = await createVendorActor(pool, "Fleet Sponsor");
+  const ordinaryMember = await createVendorMember(pool, admin.vendorId, "Fleet Member");
   const driver = await createVendorMember(pool, admin.vendorId, "Fleet Driver");
   const driverContext = await browser.newContext();
+  const memberContext = await browser.newContext();
   try {
+    const [person] = (await pool.query(
+      "INSERT INTO vendor_people(vendor_id,user_id,vendor_role,first_name,email) VALUES($1,$2,'gatekeeper','Fleet',$3) RETURNING id",
+      [admin.vendorId, driver.userId, driver.username],
+    )).rows;
+    await pool.query("UPDATE user_org_memberships SET vendor_people_id=$1 WHERE user_id=$2", [person.id, driver.userId]);
     const partner = await createPartner(pool, {
       name: `Example Site Owner ${stamp}`,
       contactName: "Example Site Owner",
@@ -62,6 +69,14 @@ test("a spoken Texas plate resolves one vehicle, transfers custody, and auto-adm
     );
     expect(createdAsset.status()).toBe(201);
     const asset = await createdAsset.json();
+
+    const memberPage = await memberContext.newPage();
+    await loginAsVendor(memberPage, ordinaryMember);
+    const forbiddenCheckout = await memberPage.request.post(
+      `/api/implementation-a/assets/${asset.id}/checkout`,
+      { data: { operationId: randomUUID(), expectedVersion: asset.version, condition: "good", confirmed: true, photos: [] } },
+    );
+    expect(forbiddenCheckout.status()).toBe(403);
 
     const driverPage = await driverContext.newPage();
     await loginAsVendor(driverPage, driver);
@@ -140,6 +155,7 @@ test("a spoken Texas plate resolves one vehicle, transfers custody, and auto-adm
     expect(visits.rowCount).toBe(1);
   } finally {
     await driverContext.close();
+    await memberContext.close();
     await pool.end();
   }
 });

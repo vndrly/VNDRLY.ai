@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import {
   assetAliasesTable,
   assetConditionEvidenceTable,
@@ -34,6 +34,7 @@ function mapEvent(row: typeof assetCustodyEventsTable.$inferSelect): CustodyEven
     ...(row.condition ? { condition: row.condition as AssetCondition } : {}),
     fromHolderUserId: row.fromHolderUserId,
     toHolderUserId: row.toHolderUserId,
+    actorUserId: row.actorUserId,
     ...(row.note ? { note: row.note } : {}),
     occurredAt: row.occurredAt,
   };
@@ -42,10 +43,13 @@ function mapEvent(row: typeof assetCustodyEventsTable.$inferSelect): CustodyEven
 async function loadAsset(id: string): Promise<AssetRecord | null> {
   const [row] = await db.select().from(assetsTable).where(eq(assetsTable.id, id)).limit(1);
   if (!row) return null;
-  const [aliases, history] = await Promise.all([
+  const [aliases, history, evidence, activeHold] = await Promise.all([
     db.select().from(assetAliasesTable).where(and(eq(assetAliasesTable.assetId, id), eq(assetAliasesTable.active, true))),
     db.select().from(assetCustodyEventsTable).where(eq(assetCustodyEventsTable.assetId, id)).orderBy(assetCustodyEventsTable.occurredAt),
+    db.select().from(assetConditionEvidenceTable).where(eq(assetConditionEvidenceTable.assetId, id)).orderBy(assetConditionEvidenceTable.reportedAt),
+    db.select().from(assetHoldsTable).where(and(eq(assetHoldsTable.assetId, id), isNull(assetHoldsTable.releasedAt))).limit(1),
   ]);
+  const latestEvidence = evidence.at(-1);
   return {
     id: row.id,
     name: row.name,
@@ -58,6 +62,11 @@ async function loadAsset(id: string): Promise<AssetRecord | null> {
     provisional: row.provisional,
     status: row.status as AssetRecord["status"],
     holderUserId: row.currentHolderUserId,
+    currentLocationType: row.currentLocationType,
+    currentLocationId: row.currentLocationId,
+    currentLocation: row.currentLocationType && row.currentLocationId ? `${row.currentLocationType}:${row.currentLocationId}` : null,
+    condition: latestEvidence?.condition && latestEvidence.condition !== "not_reported" ? latestEvidence.condition as AssetCondition : null,
+    hold: activeHold[0]?.reason ?? null,
     ...(row.expectedReturnAt ? { expectedReturnAt: row.expectedReturnAt } : {}),
     version: row.version,
     history: history.map(mapEvent),
@@ -119,6 +128,8 @@ export const databaseAssetRepository: AssetRepository = {
         manufacturer: asset.manufacturer ?? null,
         model: asset.model ?? null,
         currentHolderUserId: asset.holderUserId,
+        currentLocationType: asset.currentLocationType ?? null,
+        currentLocationId: asset.currentLocationId ?? null,
         expectedReturnAt: asset.expectedReturnAt ?? null,
         status: asset.status,
         mergedIntoId: asset.mergedIntoId ?? null,
@@ -152,6 +163,7 @@ export const databaseAssetRepository: AssetRepository = {
           eventType: event.type,
           fromHolderUserId: event.fromHolderUserId ?? null,
           toHolderUserId: event.toHolderUserId ?? null,
+          actorUserId: event.actorUserId ?? null,
           condition: event.condition ?? null,
           note: event.note ?? null,
           operationId: event.id,

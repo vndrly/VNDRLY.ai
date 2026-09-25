@@ -20,7 +20,9 @@ import { isAssetHolderInScope } from "../services/asset-holder-scope";
 import {
   AssetServiceError,
   createAssetService,
+  type AssetCapabilities,
   type AssetOwner,
+  type AssetSummary,
 } from "../services/assets";
 
 const router = Router();
@@ -32,6 +34,9 @@ async function actor(req: Request): Promise<{
   owner: AssetOwner | null;
   roles: string[];
   isAssetManager: boolean;
+  isGateSupervisor: boolean;
+  canCheckOutAsset: boolean;
+  canVerifyIssuedAsset: boolean;
 }> {
   const session = getSessionFromRequest(req);
   if (!session?.userId)
@@ -75,11 +80,17 @@ async function actor(req: Request): Promise<{
       );
     roles.push(...grants.map((grant) => grant.role));
   }
+  const isAssetManager = isAdmin || roles.includes("asset_manager");
+  const isGateSupervisor = roles.includes("gate_supervisor");
+  const isGatekeeper = roles.includes("gatekeeper");
   return {
     userId: session.userId,
     owner,
     roles,
-    isAssetManager: isAdmin || roles.includes("asset_manager"),
+    isAssetManager,
+    isGateSupervisor,
+    canCheckOutAsset: isAssetManager || isGateSupervisor || isGatekeeper,
+    canVerifyIssuedAsset: isAssetManager || isGateSupervisor || isGatekeeper,
   };
 }
 
@@ -207,7 +218,38 @@ router.get("/implementation-a/assets", async (req, res) => {
     const context = await actor(req);
     if (!context.owner)
       throw new AssetServiceError("asset.owner_required", 403);
-    return res.json(await databaseAssetRepository.all(context.owner));
+    const records = await databaseAssetRepository.all(context.owner);
+    const assets: AssetSummary[] = await Promise.all(records.map(async (asset) => {
+      const currentPolicy = await policy(asset.responsibleOwner, asset.category);
+      const canOversee = context.isAssetManager || context.isGateSupervisor;
+      const policyAllows = !currentPolicy.supervisorApprovalRequired || canOversee;
+      const latestCheckout = [...asset.history].reverse().find((event) => event.type === "checkout" || event.type === "transfer");
+      const issuedByViewer = latestCheckout?.type === "checkout" && latestCheckout.actorUserId === context.userId && latestCheckout.toHolderUserId === asset.holderUserId;
+      return {
+        id: asset.id, name: asset.name, category: asset.category, status: asset.status,
+        condition: asset.condition ?? null, version: asset.version,
+        holderUserId: asset.holderUserId, currentLocation: asset.currentLocation ?? null,
+        hold: asset.hold ?? null, expectedReturnAt: asset.expectedReturnAt ?? null,
+        policy: {
+          photosRequiredOnCheckout: currentPolicy.photosRequiredOnCheckout,
+          photosRequiredOnReturn: currentPolicy.photosRequiredOnReturn,
+          expectedReturnRequired: currentPolicy.expectedReturnRequired,
+          supervisorApprovalRequired: currentPolicy.supervisorApprovalRequired,
+        },
+        capabilities: {
+          canCheckOut: context.canCheckOutAsset && policyAllows && asset.status === "available" && asset.holderUserId === null,
+          canReturn: context.canCheckOutAsset && policyAllows && asset.holderUserId !== null && (canOversee || asset.holderUserId === context.userId),
+          canVerifyIssued: context.canVerifyIssuedAsset && asset.status === "checked_out" && asset.holderUserId !== null && (canOversee || issuedByViewer),
+        },
+      };
+    }));
+    const capabilities: AssetCapabilities = {
+        canCreateAsset: context.isAssetManager,
+        canManageAsset: context.isAssetManager,
+        canCheckOutAsset: context.canCheckOutAsset,
+        canVerifyIssuedAsset: context.canVerifyIssuedAsset,
+    };
+    return res.json({ assets, capabilities });
   } catch (error) {
     return sendError(res, error);
   }
@@ -253,8 +295,8 @@ router.post("/implementation-a/assets", async (req, res) => {
 router.post("/implementation-a/assets/provisional", async (req, res) => {
   try {
     const context = await actor(req);
-    if (!context.owner)
-      throw new AssetServiceError("asset.owner_required", 403);
+    if (!context.owner || !context.isAssetManager)
+      throw new AssetServiceError("asset.asset_manager_required", 403);
     const input = z.object({ identifier: AssetAliasSchema }).parse(req.body);
     return res
       .status(201)
@@ -299,6 +341,7 @@ router.post("/implementation-a/assets/:assetId/aliases", async (req, res) => {
 router.post("/implementation-a/assets/:assetId/checkout", async (req, res) => {
   try {
     const context = await actor(req);
+    if (!context.canCheckOutAsset) throw new AssetServiceError("asset.checkout_forbidden", 403);
     const assetId = IdSchema.parse(req.params.assetId);
     const asset = await databaseAssetRepository.get(assetId);
     if (!asset) throw new AssetServiceError("asset.not_found", 404);
@@ -307,19 +350,25 @@ router.post("/implementation-a/assets/:assetId/checkout", async (req, res) => {
       context.owner,
       context.roles.includes("admin"),
     );
-    const input = AssetCustodyCommandSchema.parse(req.body);
+    const input = AssetCustodyCommandSchema.extend({ holderUserId: z.number().int().positive().optional() }).parse(req.body);
+    const holderUserId = input.holderUserId ?? context.userId;
+    if (holderUserId !== context.userId && !context.isGateSupervisor && !context.isAssetManager)
+      throw new AssetServiceError("asset.checkout_forbidden", 403);
+    if (holderUserId !== context.userId) await assertTransferRecipient(asset.responsibleOwner, holderUserId);
     const currentPolicy = await policy(asset.responsibleOwner, asset.category);
     enforcePolicy({
       action: "checkout",
       photos: input.photos,
       expectedReturnAt: input.expectedReturnAt,
-      isAssetManager: context.isAssetManager,
+      isAssetManager: context.isAssetManager || context.isGateSupervisor,
       policy: currentPolicy,
     });
     return res.json(
       await service.checkoutAsset({
         assetId,
-        holderUserId: context.userId,
+        holderUserId,
+        actorUserId: context.userId,
+        operationId: input.operationId,
         condition: input.condition,
         confirmed: input.confirmed,
         expectedVersion: input.expectedVersion,
@@ -347,20 +396,26 @@ router.post("/implementation-a/assets/:assetId/return", async (req, res) => {
       context.roles.includes("admin"),
     );
     const input = AssetCustodyCommandSchema.parse(req.body);
+    if (!context.canCheckOutAsset) throw new AssetServiceError("asset.return_forbidden", 403);
+    const replay = asset.history.find((event) => event.id === input.operationId && event.type === "return" && event.actorUserId === context.userId);
+    if (asset.holderUserId !== context.userId && !context.isGateSupervisor && !context.isAssetManager && !replay)
+      throw new AssetServiceError("asset.holder_mismatch", 403);
     enforcePolicy({
       action: "return",
       photos: input.photos,
-      isAssetManager: context.isAssetManager,
+      isAssetManager: context.isAssetManager || context.isGateSupervisor,
       policy: await policy(asset.responsibleOwner, asset.category),
     });
-    const holderUserId = context.isAssetManager
+    const holderUserId = replay?.fromHolderUserId ?? (context.isAssetManager || context.isGateSupervisor
       ? asset.holderUserId
-      : context.userId;
+      : context.userId);
     if (!holderUserId) throw new AssetServiceError("asset.not_checked_out");
     return res.json(
       await service.returnAsset({
         assetId,
         holderUserId,
+        actorUserId: context.userId,
+        operationId: input.operationId,
         condition: input.condition,
         confirmed: input.confirmed,
         expectedVersion: input.expectedVersion,
@@ -373,9 +428,28 @@ router.post("/implementation-a/assets/:assetId/return", async (req, res) => {
   }
 });
 
+router.post("/implementation-a/assets/:assetId/verify-issued", async (req, res) => {
+  try {
+    const context = await actor(req);
+    if (!context.canVerifyIssuedAsset) throw new AssetServiceError("asset.verify_issued_forbidden", 403);
+    const assetId = IdSchema.parse(req.params.assetId);
+    const asset = await databaseAssetRepository.get(assetId);
+    if (!asset) throw new AssetServiceError("asset.not_found", 404);
+    assertOwner(asset.responsibleOwner, context.owner, context.roles.includes("admin"));
+    const latestCheckout = [...asset.history].reverse().find((event) => event.type === "checkout" || event.type === "transfer");
+    if (!context.isAssetManager && !context.isGateSupervisor && !(latestCheckout?.type === "checkout" && latestCheckout.actorUserId === context.userId && latestCheckout.toHolderUserId === asset.holderUserId))
+      throw new AssetServiceError("asset.verify_issued_forbidden", 403);
+    const input = AssetCustodyCommandSchema.parse(req.body);
+    return res.json(await service.verifyIssuedAsset({ assetId, actorUserId: context.userId, operationId: input.operationId, condition: input.condition, confirmed: input.confirmed, expectedVersion: input.expectedVersion, note: input.note, photos: input.photos }));
+  } catch (error) {
+    return sendError(res, error);
+  }
+});
+
 router.post("/implementation-a/assets/:assetId/transfer", async (req, res) => {
   try {
     const context = await actor(req);
+    if (!context.canCheckOutAsset) throw new AssetServiceError("asset.transfer_forbidden", 403);
     const assetId = IdSchema.parse(req.params.assetId);
     const asset = await databaseAssetRepository.get(assetId);
     if (!asset) throw new AssetServiceError("asset.not_found", 404);
@@ -384,7 +458,7 @@ router.post("/implementation-a/assets/:assetId/transfer", async (req, res) => {
       context.owner,
       context.roles.includes("admin"),
     );
-    if (!context.isAssetManager && asset.holderUserId !== context.userId)
+    if (!context.isAssetManager && !context.isGateSupervisor && asset.holderUserId !== context.userId)
       throw new AssetServiceError("asset.holder_mismatch", 403);
     const input = AssetCustodyCommandSchema.extend({
       toHolderUserId: z.number().int().positive(),
@@ -412,6 +486,7 @@ router.post("/implementation-a/assets/:assetId/transfer", async (req, res) => {
 router.post("/implementation-a/assets/:assetId/condition", async (req, res) => {
   try {
     const context = await actor(req);
+    if (!context.canCheckOutAsset) throw new AssetServiceError("asset.condition_forbidden", 403);
     const assetId = IdSchema.parse(req.params.assetId);
     const asset = await databaseAssetRepository.get(assetId);
     if (!asset) throw new AssetServiceError("asset.not_found", 404);
@@ -420,6 +495,8 @@ router.post("/implementation-a/assets/:assetId/condition", async (req, res) => {
       context.owner,
       context.roles.includes("admin"),
     );
+    if (!context.isAssetManager && !context.isGateSupervisor && asset.holderUserId !== context.userId)
+      throw new AssetServiceError("asset.condition_forbidden", 403);
     const input = z
       .object({
         condition: AssetConditionSchema,

@@ -54,7 +54,7 @@ describe("combined files and inventory loading", () => {
         return channels.filter(channel => !before || channel.updatedAt < before || (channel.updatedAt === before && channel.id < beforeId!)).slice(0, 100);
       }
       if (path.endsWith("/notes")) return [{ id: `note-${path.split("/")[4]}` }];
-      if (path === "/api/implementation-a/assets") return { assets: [] };
+      if (path === "/api/implementation-a/assets") return { assets: [{ id: "asset-1", name: "Radio" }], capabilities: { canCheckOutAsset: true, canVerifyIssuedAsset: true } };
       if (path === "/api/work-hub/home") return { capabilities: { canCreateNote: true } };
       if (path.startsWith("/api/work-hub/file-library?")) return [];
       throw new Error(`Unexpected request ${path}`);
@@ -62,6 +62,8 @@ describe("combined files and inventory loading", () => {
     const result = await loadFilesInventoryData({ type: "vendor", id: 7 }, fetchJson);
     expect(result.channels).toHaveLength(101);
     expect(result.notes).toHaveLength(101);
+    expect(result.assets).toEqual([{ id: "asset-1", name: "Radio" }]);
+    expect(result.capabilities).toMatchObject({ canCreateNote: true, canCheckOutAsset: true, canVerifyIssuedAsset: true });
     expect(requests.filter(path => path.startsWith("/api/work-hub/channels?"))).toHaveLength(2);
   });
 });

@@ -72,7 +72,7 @@ export async function loadFilesInventoryData(
     const batch = channels.slice(index, index + 10);
     notes.push(...(await Promise.all(batch.map(channel => fetchJson(`/api/work-hub/channels/${encodeURIComponent(channel.id)}/notes`)))).flat());
   }
-  return { files, assets: Array.isArray(rawAssets) ? rawAssets : rawAssets?.assets ?? [], channels, notes, capabilities: home.capabilities };
+  return { files, assets: Array.isArray(rawAssets) ? rawAssets : rawAssets.assets, channels, notes, capabilities: { ...home.capabilities, ...(Array.isArray(rawAssets) ? {} : rawAssets.capabilities) } };
 }
 
 /** Mobile intentionally omits payroll processing, refunds and bulk migration. */
