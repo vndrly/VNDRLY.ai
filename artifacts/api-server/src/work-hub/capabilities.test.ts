@@ -12,6 +12,7 @@ describe("Work Hub role capability matrix", () => {
       canCreateNote: true,
       canCreateAsset: false,
       canCheckOutAsset: true,
+      canVerifyIssuedAsset: true,
       canViewExports: false,
       allowedExportDatasets: [],
       canManageGateLocations: false,
@@ -46,7 +47,7 @@ describe("Work Hub role capability matrix", () => {
       participant: true,
     });
 
-    expect(capabilities).toEqual(expect.arrayContaining(["file.upload", "note.create", "asset.checkout"]));
+    expect(capabilities).toEqual(expect.arrayContaining(["file.upload", "note.create", "asset.checkout", "asset.verify-issued"]));
     expect(capabilities).not.toEqual(expect.arrayContaining(["asset.create", "export.staffing", "gate.location.manage"]));
   });
 

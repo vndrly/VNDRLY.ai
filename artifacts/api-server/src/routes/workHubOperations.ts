@@ -456,7 +456,9 @@ router.get("/work-hub/home", async (req, res) => {
   const ownerId = session.vendorId ?? session.partnerId;
   return res.json({
     generatedAt: now.toISOString(),
-    capabilities: ownerId ? resolveWorkHubCapabilities(session, ownerId) : null,
+    capabilities: ownerId && (!session.managedSubcontractor || session.managedSubcontractor.siteGrants.length > 0)
+      ? resolveWorkHubCapabilities(session, ownerId)
+      : null,
     tasks,
     announcements,
     shifts,

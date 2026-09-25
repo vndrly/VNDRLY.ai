@@ -49,12 +49,12 @@ const PARTICIPANT_CAPABILITIES: WorkHubCapability[] = [
 const GATEKEEPER_CAPABILITIES: WorkHubCapability[] = [
   ...PARTICIPANT_CAPABILITIES,
   "asset.checkout",
+  "asset.verify-issued",
 ];
 const OWNER_ADMIN_CAPABILITIES: WorkHubCapability[] = [
   ...GATEKEEPER_CAPABILITIES,
   "asset.create",
   "asset.manage",
-  "asset.verify-issued",
   "export.payroll-hours",
   "export.quickbooks-time",
   "export.inventory-custody",
@@ -73,7 +73,6 @@ const OWNER_ADMIN_CAPABILITIES: WorkHubCapability[] = [
 ];
 const GATE_SUPERVISOR_CAPABILITIES: WorkHubCapability[] = [
   ...GATEKEEPER_CAPABILITIES,
-  "asset.verify-issued",
   "export.staffing",
   "task.assign",
   "shift.manage",
@@ -81,7 +80,6 @@ const GATE_SUPERVISOR_CAPABILITIES: WorkHubCapability[] = [
 ];
 const GATE_SUPERVISOR_ORGANIZATION_CAPABILITIES: WorkHubCapability[] = [
   ...GATEKEEPER_CAPABILITIES,
-  "asset.verify-issued",
   "export.staffing",
 ];
 
