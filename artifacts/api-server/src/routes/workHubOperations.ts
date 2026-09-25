@@ -57,6 +57,8 @@ import {
   workHubTranscriptSegmentsTable,
   workHubAuditLogTable,
   siteWorkAssignmentsTable,
+  siteLocationsTable,
+  ticketsTable,
   gateStationsTable,
   usersTable,
   userOrgMembershipsTable,
@@ -79,7 +81,7 @@ import {
 } from "../work-hub/context-access";
 import { resolveChannelAccess } from "../work-hub/queries";
 import { collaborationChannelScope } from "../work-hub/collaboration-access";
-import { assetCursorCondition, channelSearchContext, decodeAssetCursor, encodeAssetCursor, searchCappedSources } from "./workHubSearchPolicy";
+import { assetCursorCondition, channelSearchContexts, decodeAssetCursor, encodeAssetCursor, searchCappedSources } from "./workHubSearchPolicy";
 import { isWorkHubEnabled } from "../work-hub/feature-access";
 import {
   normalizeRecurrenceRule,
@@ -157,13 +159,27 @@ async function searchChannelAccess(
   memberships: Awaited<ReturnType<typeof currentChannelMemberships>>,
   currentlySponsored: boolean,
 ) {
-  let context = channelSearchContext(session, channel, memberships, currentlySponsored, false);
-  if (!context) {
-    const scope = await collaborationChannelScope(session.userId, channel.id);
-    context = channelSearchContext(session, channel, memberships, currentlySponsored, scope?.kind === "shared" && scope.readable === true);
+  const relatedOwners: Array<{ ownerOrgType: string; ownerOrgId: number }> = [];
+  const contextId = Number(channel.contextId);
+  if (Number.isSafeInteger(contextId) && contextId > 0 && channel.contextKind === "site") {
+    const [site] = await db.select({ partnerId: siteLocationsTable.partnerId }).from(siteLocationsTable)
+      .where(eq(siteLocationsTable.id, contextId)).limit(1);
+    if (site) relatedOwners.push({ ownerOrgType: "partner", ownerOrgId: site.partnerId });
+  } else if (Number.isSafeInteger(contextId) && contextId > 0 && channel.contextKind === "ticket") {
+    const [ticket] = await db.select({ vendorId: ticketsTable.vendorId, partnerId: siteLocationsTable.partnerId })
+      .from(ticketsTable).innerJoin(siteLocationsTable, eq(siteLocationsTable.id, ticketsTable.siteLocationId))
+      .where(eq(ticketsTable.id, contextId)).limit(1);
+    if (ticket) relatedOwners.push({ ownerOrgType: "vendor", ownerOrgId: ticket.vendorId },
+      { ownerOrgType: "partner", ownerOrgId: ticket.partnerId });
   }
-  if (!context) throw new WorkHubAccessError("not_found");
-  return resolveChannelAccess(context, channel.id, "channel.read");
+  const scope = await collaborationChannelScope(session.userId, channel.id);
+  const contexts = channelSearchContexts(session, channel, memberships, currentlySponsored,
+    scope?.kind === "shared" && scope.readable === true, relatedOwners);
+  for (const context of contexts) {
+    try { return await resolveChannelAccess(context, channel.id, "channel.read"); }
+    catch (error) { if (!(error instanceof WorkHubAccessError)) throw error; }
+  }
+  throw new WorkHubAccessError("not_found");
 }
 async function currentChannelSponsorship(session: Actor, channel: typeof workHubChannelsTable.$inferSelect) {
   if (!session.managedSubcontractor || channel.ownerOrgType !== "vendor" || session.vendorId !== channel.ownerOrgId) return false;

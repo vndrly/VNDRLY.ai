@@ -4,7 +4,7 @@ import cookieParser from "cookie-parser";
 import request from "supertest";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { eq, inArray, sql } from "drizzle-orm";
-import { assetsTable, db, partnersTable, userOrgMembershipsTable, usersTable, vendorsTable, workHubAnnouncementRecipientsTable, workHubAnnouncementsTable, workHubChannelsTable, workHubChannelMembersTable, workHubCollaborationChannelsTable, workHubFilesTable, workHubMessagesTable, workHubNotesTable, workHubTasksTable } from "@workspace/db";
+import { assetsTable, db, partnersTable, siteLocationsTable, ticketsTable, userOrgMembershipsTable, usersTable, vendorsTable, workTypesTable, workHubAnnouncementRecipientsTable, workHubAnnouncementsTable, workHubChannelsTable, workHubChannelMembersTable, workHubCollaborationChannelsTable, workHubFilesTable, workHubMessagesTable, workHubNotesTable, workHubTasksTable } from "@workspace/db";
 import operations from "./workHubOperations";
 import assetRoutes from "./implementationAAssets";
 import { buildTestCookie } from "../test-utils/session";
@@ -122,5 +122,41 @@ describe.skipIf(!isolated)("federated Work Hub asset search", () => {
     await db.insert(workHubCollaborationChannelsTable).values({ channelId: channel.id, kind: "shared" });
     await db.insert(workHubChannelMembersTable).values({ channelId: channel.id, userId: viewerId, mode: "member" });
     expect((await request(app).get(`/work-hub/search/items/message/${message.id}`).set("Cookie", cookie)).status).toBe(200);
+  });
+
+  it("uses the live partner relationship for vendor-owned site and ticket channels, then honors revocation and explicit sharing", async () => {
+    const suffix = randomUUID();
+    const [partner] = await db.insert(partnersTable).values({ name: `Search Site Partner ${suffix}`, contactName: "Fixture", contactEmail: `${suffix}@example.invalid` }).returning();
+    const [membership] = await db.insert(userOrgMembershipsTable).values({ userId: viewerId, orgType: "partner", partnerId: partner.id, role: "member" }).returning();
+    const [site] = await db.insert(siteLocationsTable).values({ partnerId: partner.id, name: `Site ${suffix}`, address: "Fixture", latitude: 1, longitude: 1, siteCode: `SEARCH-${suffix}` }).returning();
+    const [workType] = await db.insert(workTypesTable).values({ name: `Search Work ${suffix}`, category: "Fixture" }).returning();
+    const [ticket] = await db.insert(ticketsTable).values({ siteLocationId: site.id, vendorId: otherId, workTypeId: workType.id }).returning();
+    const content = `RelatedPartner${suffix.replaceAll("-", "")}`;
+    const [siteChannel, ticketChannel] = await db.insert(workHubChannelsTable).values([
+      { ownerOrgType: "vendor", ownerOrgId: otherId, contextKind: "site", contextId: String(site.id), name: `Site ${suffix}`, createdById: viewerId },
+      { ownerOrgType: "vendor", ownerOrgId: otherId, contextKind: "ticket", contextId: String(ticket.id), name: `Ticket ${suffix}`, createdById: viewerId },
+    ]).returning();
+    const [siteMessage, ticketMessage] = await db.insert(workHubMessagesTable).values([siteChannel, ticketChannel].map(channel => ({
+      channelId: channel.id, authorUserId: viewerId, body: content, clientOperationId: randomUUID(),
+    }))).returning();
+    const search = () => request(app).get("/work-hub/search").query({ q: content, type: "message" }).set("Cookie", cookie);
+    const visible = await search();
+    expect(visible.status, JSON.stringify(visible.body)).toBe(200);
+    for (const message of [siteMessage, ticketMessage]) {
+      expect(visible.body.results).toContainEqual(expect.objectContaining({ subjectId: message.id }));
+      expect((await request(app).get(`/work-hub/search/items/message/${message.id}`).set("Cookie", cookie)).status).toBe(200);
+    }
+    await db.delete(userOrgMembershipsTable).where(eq(userOrgMembershipsTable.id, membership.id));
+    const revoked = await search();
+    for (const message of [siteMessage, ticketMessage]) {
+      expect(revoked.body.results).not.toContainEqual(expect.objectContaining({ subjectId: message.id }));
+      expect((await request(app).get(`/work-hub/search/items/message/${message.id}`).set("Cookie", cookie)).status).toBe(404);
+    }
+    await db.insert(workHubCollaborationChannelsTable).values({ channelId: siteChannel.id, kind: "shared" });
+    await db.insert(workHubChannelMembersTable).values({ channelId: siteChannel.id, userId: viewerId, mode: "member" });
+    const shared = await search();
+    expect(shared.body.results).toContainEqual(expect.objectContaining({ subjectId: siteMessage.id }));
+    expect(shared.body.results).not.toContainEqual(expect.objectContaining({ subjectId: ticketMessage.id }));
+    expect((await request(app).get(`/work-hub/search/items/message/${siteMessage.id}`).set("Cookie", cookie)).status).toBe(200);
   });
 });

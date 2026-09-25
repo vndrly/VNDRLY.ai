@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { PgDialect } from "drizzle-orm/pg-core";
-import { assetCursorCondition, channelSearchContext, decodeAssetCursor, encodeAssetCursor, searchCappedSources } from "./workHubSearchPolicy";
+import { assetCursorCondition, channelSearchContext, channelSearchContexts, decodeAssetCursor, encodeAssetCursor, searchCappedSources } from "./workHubSearchPolicy";
 
 const vendorSession = { userId: 17, role: "vendor", vendorId: 4, partnerId: null, membershipRole: "admin" };
 
@@ -27,6 +27,16 @@ describe("Work Hub search boundaries", () => {
     const worker = { ...vendorSession, managedSubcontractor: { siteGrants: [] } };
     expect(channelSearchContext(worker, { ownerOrgType: "partner", ownerOrgId: 8 }, [], false, true))
       .toMatchObject({ managedSubcontractor: undefined });
+  });
+
+  it("uses a current partner-site or ticket membership for a vendor-owned channel, then fails closed on revocation", () => {
+    const channel = { ownerOrgType: "vendor", ownerOrgId: 10 };
+    const partner = { orgType: "partner", partnerId: 8, vendorId: null, role: "member" };
+    const relationship = [{ ownerOrgType: "partner", ownerOrgId: 8 }];
+    expect(channelSearchContexts(vendorSession, channel, [partner], false, false, relationship))
+      .toEqual([expect.objectContaining({ vendorId: null, partnerId: 8, membershipRole: "member" })]);
+    expect(channelSearchContexts(vendorSession, channel, [], false, false, relationship)).toEqual([]);
+    expect(channelSearchContexts(vendorSession, channel, [], false, true, relationship)).toEqual([vendorSession]);
   });
 
   it("preserves six-digit PostgreSQL precision in the inventory cursor and SQL bound parameter", () => {

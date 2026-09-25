@@ -6,27 +6,33 @@ type ChannelOwner = { ownerOrgType: string; ownerOrgId: number };
 type Membership = { orgType: string; vendorId: number | null; partnerId: number | null; role: string };
 type ChannelSession = { role?: string; vendorId?: number | null; partnerId?: number | null; membershipRole?: string | null; managedSubcontractor?: { siteGrants: unknown[] } };
 
-/** Derive channel access from current membership, never a stale active-owner cookie. */
-export function channelSearchContext<T extends ChannelSession>(
+/** Candidate contexts are grounded in current memberships, not the active-owner cookie. */
+export function channelSearchContexts<T extends ChannelSession>(
   session: T,
   channel: ChannelOwner,
   memberships: readonly Membership[],
   currentlySponsored: boolean,
   currentSharedInvitation: boolean,
+  relatedOwners: readonly ChannelOwner[] = [],
+): T[] {
+  if (session.role === "admin") return [session];
+  const eligibleOwners = [channel, ...relatedOwners];
+  const contexts = memberships.filter(row => eligibleOwners.some(owner => row.orgType === owner.ownerOrgType &&
+    (row.orgType === "vendor" ? row.vendorId : row.partnerId) === owner.ownerOrgId)).map(membership => ({
+      ...session,
+      vendorId: membership.orgType === "vendor" ? membership.vendorId : null,
+      partnerId: membership.orgType === "partner" ? membership.partnerId : null,
+      membershipRole: membership.role,
+      managedSubcontractor: undefined,
+    } as T));
+  if (channel.ownerOrgType === "vendor" && currentlySponsored && session.vendorId === channel.ownerOrgId) contexts.push(session);
+  if (currentSharedInvitation) contexts.push(session.managedSubcontractor ? { ...session, managedSubcontractor: undefined } : session);
+  return contexts;
+}
+export function channelSearchContext<T extends ChannelSession>(
+  session: T, channel: ChannelOwner, memberships: readonly Membership[], currentlySponsored: boolean, currentSharedInvitation: boolean,
 ): T | null {
-  if (session.role === "admin") return session;
-  const membership = memberships.find(row => row.orgType === channel.ownerOrgType &&
-    (row.orgType === "vendor" ? row.vendorId : row.partnerId) === channel.ownerOrgId);
-  if (membership) return {
-    ...session,
-    vendorId: membership.orgType === "vendor" ? channel.ownerOrgId : null,
-    partnerId: membership.orgType === "partner" ? channel.ownerOrgId : null,
-    membershipRole: membership.role,
-    managedSubcontractor: undefined,
-  };
-  if (channel.ownerOrgType === "vendor" && currentlySponsored && session.vendorId === channel.ownerOrgId) return session;
-  if (!currentSharedInvitation) return null;
-  return session.managedSubcontractor ? { ...session, managedSubcontractor: undefined } : session;
+  return channelSearchContexts(session, channel, memberships, currentlySponsored, currentSharedInvitation)[0] ?? null;
 }
 
 const AssetCursorSchema = z.object({
