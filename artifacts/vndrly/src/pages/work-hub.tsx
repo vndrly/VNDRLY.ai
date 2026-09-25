@@ -2140,7 +2140,7 @@ function SearchModule() {
               <p className="text-xs">Updated {displayDate(r.updatedAt)}</p>
             </a>
           ))}
-          {!!results.data?.cappedSources.length && <p className="text-xs text-muted-foreground">Recent results only for {results.data.cappedSources.join(", ")}. Narrow your dates or content type for a more precise search.</p>}
+          {!!results.data?.cappedSources.length && <p className="text-xs text-muted-foreground">Results may be limited for {results.data.cappedSources.join(", ")} because a source was capped. Narrow your dates or content type for a more precise search.</p>}
           {term && !results.data?.results.length && (
             <Empty>No authorized results found.</Empty>
           )}

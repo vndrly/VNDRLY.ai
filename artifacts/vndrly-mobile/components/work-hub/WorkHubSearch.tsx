@@ -124,7 +124,7 @@ export function WorkHubSearch({ onOpen }: { onOpen: (destination: WorkHubSearchD
     {loading ? <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}><ActivityIndicator color={colors.primary} /><Text style={{ color: colors.text }}>Searching…</Text></View> : null}
     {!loading && results === null ? <Text style={{ color: colors.mutedForeground }}>Enter a search to see authorized records.</Text> : null}
     {!loading && results?.length === 0 ? <Text style={{ color: colors.mutedForeground }}>No authorized results found.</Text> : null}
-    {cappedSources.length > 0 ? <Text style={{ color: colors.mutedForeground }}>Recent results only for {cappedSources.join(", ")}. Narrow your dates or content type to search more precisely.</Text> : null}
+    {cappedSources.length > 0 ? <Text style={{ color: colors.mutedForeground }}>Results may be limited for {cappedSources.join(", ")} because a source was capped. Narrow your dates or content type to search more precisely.</Text> : null}
     {results?.map(result => <Pressable key={result.id} accessibilityRole="button" accessibilityLabel={`Open ${result.title}`} onPress={() => void open(result)} style={{ borderWidth: 1, borderColor: colors.border, borderRadius: 12, backgroundColor: colors.card, padding: 16, minHeight: 56, gap: 4 }}>
       <Text style={{ color: colors.primary, fontWeight: "700" }}>{result.subjectType.toUpperCase()}</Text>
       <Text style={{ color: colors.text, fontSize: 16, fontWeight: "700" }}>{result.title}</Text>

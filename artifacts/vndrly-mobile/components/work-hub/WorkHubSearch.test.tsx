@@ -38,7 +38,7 @@ describe("Work Hub Search", () => {
     fireEvent.click(screen.getByRole("button", { name: "Search" }));
     expect(await screen.findByRole("button", { name: "Open Pump 3" })).toBeTruthy();
     expect(network.api).toHaveBeenCalledWith("/api/work-hub/search?q=Pump%203&type=asset");
-    expect(screen.getByText(/Recent results only/)).toBeTruthy();
+    expect(screen.getByText(/Results may be limited/)).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Open Pump 3" }));
     expect(await screen.findByText("Opening Pump 3")).toBeTruthy();
     expect(network.api).toHaveBeenCalledWith("/api/implementation-a/assets/7ea62dde-bf89-4ad5-b25c-5b7775023bba");
@@ -79,5 +79,15 @@ describe("Work Hub Search", () => {
     expect(network.api).toHaveBeenLastCalledWith("/api/work-hub/search?q=Pump&type=asset&cursor=cursor-token");
     expect(await screen.findByRole("button", { name: "Open Pump Two" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Open Pump One" })).toBeTruthy();
+  });
+
+  it("does not imply recency when an unordered channel scan is capped", async () => {
+    network.api.mockResolvedValue({ results: [], cappedSources: ["channel"], nextCursor: null });
+    render(<WorkHubSearch onOpen={vi.fn()} />);
+    fireEvent.change(screen.getByLabelText("Search Work Hub"), { target: { value: "handoff" } });
+    fireEvent.click(screen.getByRole("button", { name: "Notes" }));
+    fireEvent.click(screen.getByRole("button", { name: "Search" }));
+    expect(await screen.findByText(/Results may be limited for channel/)).toBeTruthy();
+    expect(screen.queryByText(/Recent results only/)).toBeNull();
   });
 });

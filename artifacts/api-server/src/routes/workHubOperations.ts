@@ -6,6 +6,7 @@ import {
   asc,
   desc,
   eq,
+  getTableColumns,
   gte,
   ilike,
   inArray,
@@ -77,6 +78,8 @@ import {
   WorkHubAccessError,
 } from "../work-hub/context-access";
 import { resolveChannelAccess } from "../work-hub/queries";
+import { collaborationChannelScope } from "../work-hub/collaboration-access";
+import { assetCursorCondition, channelSearchContext, decodeAssetCursor, encodeAssetCursor, searchCappedSources } from "./workHubSearchPolicy";
 import { isWorkHubEnabled } from "../work-hub/feature-access";
 import {
   normalizeRecurrenceRule,
@@ -139,6 +142,37 @@ function actor(req: Request): Actor | null {
   const value = getSessionFromRequest(req);
   if (value?.managedSubcontractor && !value.vendorId) return null;
   return value?.userId ? (value as Actor) : null;
+}
+async function currentChannelMemberships(userId: number) {
+  return db.select({
+    orgType: userOrgMembershipsTable.orgType,
+    vendorId: userOrgMembershipsTable.vendorId,
+    partnerId: userOrgMembershipsTable.partnerId,
+    role: userOrgMembershipsTable.role,
+  }).from(userOrgMembershipsTable).where(eq(userOrgMembershipsTable.userId, userId));
+}
+async function searchChannelAccess(
+  session: Actor,
+  channel: typeof workHubChannelsTable.$inferSelect,
+  memberships: Awaited<ReturnType<typeof currentChannelMemberships>>,
+  currentlySponsored: boolean,
+) {
+  let context = channelSearchContext(session, channel, memberships, currentlySponsored, false);
+  if (!context) {
+    const scope = await collaborationChannelScope(session.userId, channel.id);
+    context = channelSearchContext(session, channel, memberships, currentlySponsored, scope?.kind === "shared" && scope.readable === true);
+  }
+  if (!context) throw new WorkHubAccessError("not_found");
+  return resolveChannelAccess(context, channel.id, "channel.read");
+}
+async function currentChannelSponsorship(session: Actor, channel: typeof workHubChannelsTable.$inferSelect) {
+  if (!session.managedSubcontractor || channel.ownerOrgType !== "vendor" || session.vendorId !== channel.ownerOrgId) return false;
+  const rows = await db.select({ id: managedSubcontractorWorkerSponsorshipsTable.id })
+    .from(managedSubcontractorWorkerSponsorshipsTable)
+    .where(and(eq(managedSubcontractorWorkerSponsorshipsTable.workerUserId, session.userId),
+      eq(managedSubcontractorWorkerSponsorshipsTable.sponsorVendorId, channel.ownerOrgId),
+      eq(managedSubcontractorWorkerSponsorshipsTable.status, "active"))).limit(1);
+  return rows.length > 0;
 }
 function clientSource(req: Request): "web" | "ios" {
   return req.header("x-vndrly-client") === "ios" ? "ios" : "web";
@@ -3075,7 +3109,6 @@ router.get("/work-hub/search", async (req, res) => {
   const subjectTypes = req.query.type
     ? z.string().trim().max(200).parse(req.query.type).split(",").filter(Boolean)
     : [];
-  const subjectType = subjectTypes.length === 1 ? subjectTypes[0] : null;
   if (
     (start && Number.isNaN(start.getTime())) ||
     (end && Number.isNaN(end.getTime())) ||
@@ -3103,11 +3136,9 @@ router.get("/work-hub/search", async (req, res) => {
   const wants = (type: string) => subjectTypes.length === 0 || subjectTypes.includes(type);
   const ownerType = session.vendorId ? "vendor" : session.partnerId ? "partner" : null;
   const ownerId = session.vendorId ?? session.partnerId ?? null;
-  const currentMembership = ownerType && ownerId ? await db.select({ id: userOrgMembershipsTable.id })
-    .from(userOrgMembershipsTable)
-    .where(and(eq(userOrgMembershipsTable.userId, session.userId), eq(userOrgMembershipsTable.orgType, ownerType),
-      ownerType === "vendor" ? eq(userOrgMembershipsTable.vendorId, ownerId) : eq(userOrgMembershipsTable.partnerId, ownerId)))
-    .limit(1) : [];
+  const currentMemberships = await currentChannelMemberships(session.userId);
+  const currentMembership = currentMemberships.filter(row => row.orgType === ownerType &&
+    (ownerType === "vendor" ? row.vendorId : row.partnerId) === ownerId);
   const currentSponsorship = ownerType === "vendor" && ownerId ? await db.select({ id: managedSubcontractorWorkerSponsorshipsTable.id })
     .from(managedSubcontractorWorkerSponsorshipsTable)
     .where(and(eq(managedSubcontractorWorkerSponsorshipsTable.workerUserId, session.userId),
@@ -3116,13 +3147,14 @@ router.get("/work-hub/search", async (req, res) => {
   const canSearchAssets = session.role === "admin" || currentMembership.length > 0 || currentSponsorship.length > 0;
   const currentlyVisibleOwner = (type: string, id: number) => session.role === "admin" ||
     type === ownerType && id === ownerId && (currentMembership.length > 0 || currentSponsorship.length > 0);
+  const currentlyMemberOfOwner = (type: string, id: number) => session.role === "admin" ||
+    currentMemberships.some(row => row.orgType === type && (type === "vendor" ? row.vendorId : row.partnerId) === id);
   const assetOnly = subjectTypes.length === 1 && subjectTypes[0] === "asset";
-  let assetCursor: { updatedAt: string; id: string } | null = null;
+  let assetCursor: ReturnType<typeof decodeAssetCursor> | null = null;
   if (req.query.cursor) {
     if (!assetOnly) return sendApiError(res, 400, "work_hub.invalid_operation", "Cursor requires inventory filter");
     try {
-      const decoded = JSON.parse(Buffer.from(String(req.query.cursor), "base64url").toString("utf8"));
-      assetCursor = z.object({ updatedAt: z.iso.datetime(), id: z.uuid() }).parse(decoded);
+      assetCursor = decodeAssetCursor(String(req.query.cursor));
     } catch {
       return sendApiError(res, 400, "work_hub.invalid_operation", "Invalid search cursor");
     }
@@ -3137,13 +3169,15 @@ router.get("/work-hub/search", async (req, res) => {
     sql`exists (select 1 from ${assetConditionEvidenceTable} evidence where evidence.asset_id = ${assetsTable.id} and evidence.condition ilike ${assetTerm})`,
     sql`exists (select 1 from ${assetHoldsTable} hold where hold.asset_id = ${assetsTable.id} and hold.released_at is null and hold.reason ilike ${assetTerm})`,
   );
-  const assets = wants("asset") && canSearchAssets ? await db.select().from(assetsTable)
+  const assets = wants("asset") && canSearchAssets ? await db.select({
+    ...getTableColumns(assetsTable),
+    cursorUpdatedAt: sql<string>`to_char(${assetsTable.updatedAt} AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')`,
+  }).from(assetsTable)
     .where(and(session.role === "admin" ? undefined : ownerType && ownerId
       ? and(eq(assetsTable.responsibleOrgType, ownerType), eq(assetsTable.responsibleOrgId, ownerId))
       : sql`false`, isNull(assetsTable.mergedIntoId), assetMatches,
       start ? gte(assetsTable.updatedAt, start) : undefined, end ? lte(assetsTable.updatedAt, end) : undefined,
-      assetCursor ? or(lt(assetsTable.updatedAt, new Date(assetCursor.updatedAt)),
-        and(eq(assetsTable.updatedAt, new Date(assetCursor.updatedAt)), lt(assetsTable.id, assetCursor.id))) : undefined))
+      assetCursor ? assetCursorCondition(assetCursor) : undefined))
     .orderBy(desc(assetsTable.updatedAt), desc(assetsTable.id)).limit(assetOnly ? 101 : 200) : [];
   const [tasks, meetings, files, announcements, channels] = await Promise.all([
     db
@@ -3173,7 +3207,7 @@ router.get("/work-hub/search", async (req, res) => {
     db
       .select()
       .from(workHubAnnouncementsTable)
-      .where(and(ownerFilterFor(session, workHubAnnouncementsTable), announcementReadable(session.userId)))
+      .where(announcementReadable(session.userId))
       .orderBy(desc(workHubAnnouncementsTable.publishedAt))
       .limit(200),
     db.select().from(workHubChannelsTable).limit(500),
@@ -3182,9 +3216,8 @@ router.get("/work-hub/search", async (req, res) => {
   await Promise.all(
     channels.map(async (channel) => {
       try {
-        if (channel.ownerOrgType === ownerType && channel.ownerOrgId === ownerId &&
-          !currentlyVisibleOwner(channel.ownerOrgType, channel.ownerOrgId)) return;
-        await resolveChannelAccess(session, channel.id, "channel.read");
+        await searchChannelAccess(session, channel, currentMemberships,
+          channel.ownerOrgType === "vendor" && channel.ownerOrgId === ownerId && currentSponsorship.length > 0);
         visibleChannels.add(channel.id);
       } catch {
         /* hidden */
@@ -3328,7 +3361,7 @@ router.get("/work-hub/search", async (req, res) => {
       .filter(
         (row) =>
           wants("announcement") &&
-          currentlyVisibleOwner(row.ownerOrgType, row.ownerOrgId) &&
+          currentlyMemberOfOwner(row.ownerOrgType, row.ownerOrgId) &&
           (!row.channelId || visibleChannels.has(row.channelId)) &&
           inRange(row.publishedAt) &&
           matches(row.title, row.body),
@@ -3407,8 +3440,8 @@ router.get("/work-hub/search", async (req, res) => {
         contextId: occurrenceId,
         updatedAt: startsAt,
       })),
-  ]
-    .sort(
+  ];
+  if (!assetOnly) allResults.sort(
       (a, b) =>
         new Date(b.updatedAt ?? 0).getTime() -
         new Date(a.updatedAt ?? 0).getTime() || b.id.localeCompare(a.id),
@@ -3420,16 +3453,14 @@ router.get("/work-hub/search", async (req, res) => {
       return { module: "meeting", occurrenceId: row.contextId };
     return { module: "search-item", section: row.subjectType, itemId: row.subjectId };
   };
-  const cappedSources = [
-    wants("task") && tasks.length >= 200 && "task", wants("meeting") && meetings.length >= 200 && "meeting",
-    wants("file") && files.length >= 200 && "file", wants("announcement") && announcements.length >= 200 && "announcement",
-    subjectTypes.length === 0 && channels.length >= 500 && "channel",
-    wants("message") && messages.length >= 300 && "message", wants("note") && notes.length >= 200 && "note",
-    wants("form") && forms.length >= 200 && "form", (wants("transcript") || wants("meeting")) && transcripts.length >= 500 && "transcript",
-    wants("asset") && assets.length >= (assetOnly ? 101 : 200) && "asset", allResults.length > 100 && "combined",
-  ].filter((value): value is string => Boolean(value));
+  const cappedSources = searchCappedSources({
+    types: subjectTypes, channelCount: channels.length, combinedCount: allResults.length, assetOnly,
+    sourceCounts: { task: tasks.length, meeting: meetings.length, file: files.length,
+      announcement: announcements.length, message: messages.length, note: notes.length,
+      form: forms.length, transcript: transcripts.length, asset: assets.length },
+  });
   const lastAsset = assetOnly && assets.length > 100 ? assets[99] : null;
-  const nextCursor = lastAsset ? Buffer.from(JSON.stringify({ updatedAt: lastAsset.updatedAt.toISOString(), id: lastAsset.id })).toString("base64url") : null;
+  const nextCursor = lastAsset ? encodeAssetCursor({ updatedAt: lastAsset.cursorUpdatedAt, id: lastAsset.id }) : null;
   return res.json({ results: results.map(row => ({ ...row, destination: destinationFor(row) })), cappedSources, nextCursor });
 });
 router.get("/work-hub/search/items/:type/:id", async (req, res) => {
@@ -3472,8 +3503,9 @@ router.get("/work-hub/search/items/:type/:id", async (req, res) => {
     const [row] = await db.select().from(workHubFilesTable).where(and(eq(workHubFilesTable.id, id.data), eq(workHubFilesTable.state, "finalized"))).limit(1);
     if (!row?.channelId) return notFound();
     try {
-      const { channel } = await resolveChannelAccess(session, row.channelId, "channel.read");
-      if (sessionCanSeeOwner(session, channel.ownerOrgType, channel.ownerOrgId) && !await liveOwner(channel.ownerOrgType, channel.ownerOrgId)) return notFound();
+      const [channel] = await db.select().from(workHubChannelsTable).where(eq(workHubChannelsTable.id, row.channelId)).limit(1);
+      if (!channel) return notFound();
+      await searchChannelAccess(session, channel, await currentChannelMemberships(session.userId), await currentChannelSponsorship(session, channel));
     } catch { return notFound(); }
     return res.json({ id: row.id, subjectType: "file", title: row.fileName, channelId: row.channelId, updatedAt: row.finalizedAt });
   }
@@ -3483,15 +3515,25 @@ router.get("/work-hub/search/items/:type/:id", async (req, res) => {
       : await db.select().from(workHubNotesTable).where(eq(workHubNotesTable.id, id.data)).limit(1);
     if (!row) return notFound();
     try {
-      const { channel } = await resolveChannelAccess(session, row.channelId, "channel.read");
-      if (sessionCanSeeOwner(session, channel.ownerOrgType, channel.ownerOrgId) && !await liveOwner(channel.ownerOrgType, channel.ownerOrgId)) return notFound();
+      const [channel] = await db.select().from(workHubChannelsTable).where(eq(workHubChannelsTable.id, row.channelId)).limit(1);
+      if (!channel) return notFound();
+      await searchChannelAccess(session, channel, await currentChannelMemberships(session.userId), await currentChannelSponsorship(session, channel));
     } catch { return notFound(); }
     return res.json({ id: row.id, subjectType: kind.data, title: "title" in row ? row.title : row.body.slice(0, 120), body: row.body, channelId: row.channelId });
   }
   if (kind.data === "announcement") {
     const [row] = await db.select().from(workHubAnnouncementsTable)
       .where(and(eq(workHubAnnouncementsTable.id, id.data), announcementReadable(session.userId))).limit(1);
-    if (!row || !await liveOwner(row.ownerOrgType, row.ownerOrgId) || !await announcementChannelReadable(session, row)) return notFound();
+    if (!row) return notFound();
+    const memberships = await currentChannelMemberships(session.userId);
+    if (session.role !== "admin" && !memberships.some(membership => membership.orgType === row.ownerOrgType &&
+      (row.ownerOrgType === "vendor" ? membership.vendorId : membership.partnerId) === row.ownerOrgId)) return notFound();
+    if (row.channelId) {
+      const [channel] = await db.select().from(workHubChannelsTable).where(eq(workHubChannelsTable.id, row.channelId)).limit(1);
+      if (!channel) return notFound();
+      try { await searchChannelAccess(session, channel, memberships, await currentChannelSponsorship(session, channel)); }
+      catch { return notFound(); }
+    }
     return res.json({ id: row.id, subjectType: "announcement", title: row.title, body: row.body, updatedAt: row.publishedAt });
   }
   if (kind.data === "form") {
