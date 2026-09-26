@@ -72,6 +72,25 @@ describe("VNDRLY public homepage", () => {
     expect(highlightTitle.parentElement?.querySelector("svg")?.getAttribute("class")).toContain("text-amber-300");
   });
 
+  it("uses the exact VNDRLY amber for public actions and navigation", () => {
+    render(<MarketingHome />);
+
+    const navigation = screen.getByRole("navigation", { name: /public navigation/i });
+    for (const label of ["Solutions", "How it works", "For partners", "For vendors", "Sign in"]) {
+      expect(within(navigation).getByRole("link", { name: label }).className).toContain("hover:text-[#F59E0B]");
+    }
+
+    for (const link of screen.getAllByRole("link", { name: /request a demo/i })) {
+      expect(link.className).toContain("hover:text-[#F59E0B]");
+      if (link.className.includes("rounded-full")) {
+        expect(link.className).toContain("hover:border-[#F59E0B]");
+      }
+    }
+
+    expect(screen.getByText("A living vendor directory").className).toContain("text-[#F59E0B]");
+    expect(screen.getByText("Maintained by the people doing the work").className).toContain("text-slate-300");
+  });
+
   it("uses the approved network and security language", () => {
     render(<MarketingHome />);
 

@@ -74,12 +74,12 @@ export default function MarketingHome() {
             VNDRLY
           </a>
           <div className="ml-auto hidden items-center gap-6 lg:flex">
-            <a href="#solutions" className="text-sm font-semibold text-white hover:text-amber-200">Solutions</a>
-            <a href="#workflow" className="text-sm font-semibold text-white hover:text-amber-200">How it works</a>
-            <a href="#partners" className="text-sm font-semibold text-white hover:text-amber-200">For partners</a>
-            <a href="#vendors" className="text-sm font-semibold text-white hover:text-amber-200">For vendors</a>
+            <a href="#solutions" className="text-sm font-semibold text-white hover:text-[#F59E0B]">Solutions</a>
+            <a href="#workflow" className="text-sm font-semibold text-white hover:text-[#F59E0B]">How it works</a>
+            <a href="#partners" className="text-sm font-semibold text-white hover:text-[#F59E0B]">For partners</a>
+            <a href="#vendors" className="text-sm font-semibold text-white hover:text-[#F59E0B]">For vendors</a>
           </div>
-          <a href="/login" className="ml-auto text-sm font-bold text-white hover:text-amber-200 lg:ml-2">Sign in</a>
+          <a href="/login" className="ml-auto text-sm font-bold text-white hover:text-[#F59E0B] lg:ml-2">Sign in</a>
           <PrimaryLink href={marketingCtaHref}>Get started</PrimaryLink>
         </nav>
       </header>
@@ -99,11 +99,11 @@ export default function MarketingHome() {
             </p>
             <div className="mt-9 flex flex-wrap items-center gap-4">
               <PrimaryLink href={marketingCtaHref}>Get started <ArrowRight className="h-4 w-4" /></PrimaryLink>
-              <a href={marketingDemoHref} className="inline-flex min-h-11 items-center rounded-full border border-white/60 bg-black/20 px-6 text-sm font-bold text-white transition hover:border-amber-300 hover:bg-black/35 focus-visible:ring-2 focus-visible:ring-amber-300">Request a demo</a>
+              <a href={marketingDemoHref} className="inline-flex min-h-11 items-center rounded-full border border-white/60 bg-black/20 px-6 text-sm font-bold text-white transition hover:border-[#F59E0B] hover:bg-black/35 hover:text-[#F59E0B] focus-visible:ring-2 focus-visible:ring-[#F59E0B]">Request a demo</a>
             </div>
           </div>
           <aside className="rounded-3xl border border-white/20 bg-black/35 p-6 shadow-2xl backdrop-blur-md sm:p-8" aria-label="Verified network highlights">
-            <div className="flex items-center gap-3"><Network className="h-8 w-8 text-amber-300" /><div><p className="text-xs font-black uppercase tracking-[.18em] text-amber-200">A living vendor directory</p><p className="font-bold text-amber-200">Maintained by the people doing the work</p></div></div>
+            <div className="flex items-center gap-3"><Network className="h-8 w-8 text-amber-300" /><div><p className="text-xs font-black uppercase tracking-[.18em] text-[#F59E0B]">A living vendor directory</p><p className="font-bold text-slate-300">Maintained by the people doing the work</p></div></div>
             <div className="mt-7 grid gap-4 sm:grid-cols-2">
               {[
                 [BadgeCheck, "Verified fit", "Services, geography, eligibility, and current operational context."],
@@ -204,10 +204,10 @@ export default function MarketingHome() {
 
       <section className="relative overflow-hidden bg-[#20262b] text-center text-white">
         <img src={halftone} alt="" className="absolute left-1/2 top-1/2 w-[70rem] max-w-none -translate-x-1/2 -translate-y-1/2 opacity-10"/>
-        <div className="relative mx-auto max-w-4xl px-4 py-24"><p className="text-sm font-black uppercase tracking-[.22em] text-amber-300">A better vendor network starts here</p><h2 className="mt-4 text-4xl font-black sm:text-6xl">Find the right fit. Run the work. Keep the proof.</h2><p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-slate-300">Start your VNDRLY profile or let us walk through the workflow with your team.</p><div className="mt-9 flex flex-wrap justify-center gap-4"><PrimaryLink href={marketingCtaHref}>Get started <ArrowRight className="h-4 w-4"/></PrimaryLink><a href={marketingDemoHref} className="inline-flex min-h-11 items-center rounded-full border border-white/60 px-6 font-bold text-white hover:border-amber-300">Request a demo</a></div></div>
+        <div className="relative mx-auto max-w-4xl px-4 py-24"><p className="text-sm font-black uppercase tracking-[.22em] text-amber-300">A better vendor network starts here</p><h2 className="mt-4 text-4xl font-black sm:text-6xl">Find the right fit. Run the work. Keep the proof.</h2><p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-slate-300">Start your VNDRLY profile or let us walk through the workflow with your team.</p><div className="mt-9 flex flex-wrap justify-center gap-4"><PrimaryLink href={marketingCtaHref}>Get started <ArrowRight className="h-4 w-4"/></PrimaryLink><a href={marketingDemoHref} className="inline-flex min-h-11 items-center rounded-full border border-white/60 px-6 font-bold text-white hover:border-[#F59E0B] hover:text-[#F59E0B] focus-visible:ring-2 focus-visible:ring-[#F59E0B]">Request a demo</a></div></div>
       </section>
 
-      <footer className="border-t border-white/10 bg-[#15191d] text-slate-300"><div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 text-sm sm:flex-row sm:items-center sm:justify-between"><span>© {new Date().getFullYear()} VNDRLY</span><div className="flex flex-wrap gap-5"><a href="/legal/privacy" className="hover:text-white">Privacy</a><a href="/legal/terms" className="hover:text-white">Terms</a><a href="mailto:support@vndrly.ai" className="hover:text-white">Support</a><a href={marketingDemoHref} className="hover:text-white">Request a demo</a></div></div></footer>
+      <footer className="border-t border-white/10 bg-[#15191d] text-slate-300"><div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 text-sm sm:flex-row sm:items-center sm:justify-between"><span>© {new Date().getFullYear()} VNDRLY</span><div className="flex flex-wrap gap-5"><a href="/legal/privacy" className="hover:text-white">Privacy</a><a href="/legal/terms" className="hover:text-white">Terms</a><a href="mailto:support@vndrly.ai" className="hover:text-white">Support</a><a href={marketingDemoHref} className="hover:text-[#F59E0B]">Request a demo</a></div></div></footer>
       <PublicAskV />
     </main>
   );
