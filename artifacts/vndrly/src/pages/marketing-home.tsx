@@ -50,11 +50,11 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-function BenefitList({ items, dark = false }: { items: string[]; dark?: boolean }) {
+function BenefitList({ items, dark = false, textClassName }: { items: string[]; dark?: boolean; textClassName?: string }) {
   return (
     <ul className="mt-6 space-y-4">
       {items.map((item) => (
-        <li key={item} className={`flex gap-3 text-sm leading-6 ${dark ? "text-slate-300" : "text-slate-600"}`}>
+        <li key={item} className={`flex gap-3 text-sm leading-6 ${textClassName ?? (dark ? "text-slate-300" : "text-slate-600")}`}>
           <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--vndrly-amber)]/15 text-[var(--vndrly-amber)]">
             <Check className="h-3.5 w-3.5 text-[var(--vndrly-amber)]" strokeWidth={3} />
           </span>
@@ -147,16 +147,14 @@ export default function MarketingHome() {
 
       <section className="mx-auto grid max-w-7xl gap-6 px-4 py-20 lg:grid-cols-2">
         <article id="partners" className="rounded-3xl border-2 border-[var(--vndrly-amber)] bg-[#2b3035] p-7 text-white shadow-xl sm:p-9">
-          <Building2 className="h-9 w-9 text-[var(--vndrly-amber)]"/>
-          <SectionLabel>For operating partners</SectionLabel>
-          <h2 className="mt-2 text-3xl font-black text-[var(--vndrly-amber)]">For partners: know who can do the work—and what is happening now.</h2>
-          <BenefitList items={PARTNER_BENEFITS} dark/>
+          <div className="flex items-center gap-3"><Building2 className="h-9 w-9 text-[var(--vndrly-amber)]"/><p className="text-base font-black uppercase tracking-[.18em] text-[var(--vndrly-amber)]">For operating partners</p></div>
+          <h2 className="mt-5 text-2xl font-black leading-tight text-white">For partners: know who can do the work—and what is happening now.</h2>
+          <BenefitList items={PARTNER_BENEFITS} dark textClassName="text-white"/>
         </article>
         <article id="vendors" className="rounded-3xl border-2 border-[var(--vndrly-amber)] bg-[#2b3035] p-7 text-white shadow-xl sm:p-9">
-          <BriefcaseBusiness className="h-9 w-9 text-[var(--vndrly-amber)]"/>
-          <SectionLabel>For vendors</SectionLabel>
-          <h2 className="mt-2 text-3xl font-black text-[var(--vndrly-amber)]">For vendors: make proven performance easier to find and easier to repeat.</h2>
-          <BenefitList items={VENDOR_BENEFITS} dark/>
+          <div className="flex items-center gap-3"><BriefcaseBusiness className="h-9 w-9 text-[var(--vndrly-amber)]"/><p className="text-base font-black uppercase tracking-[.18em] text-[var(--vndrly-amber)]">For vendors</p></div>
+          <h2 className="mt-5 text-2xl font-black leading-tight text-white">For vendors: make proven performance easier to find and easier to repeat.</h2>
+          <BenefitList items={VENDOR_BENEFITS} dark textClassName="text-white"/>
         </article>
       </section>
 

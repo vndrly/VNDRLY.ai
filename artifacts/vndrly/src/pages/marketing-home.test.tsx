@@ -152,14 +152,19 @@ describe("VNDRLY public homepage", () => {
   it("uses charcoal partner and vendor cards with exact VNDRLY amber accents", () => {
     render(<MarketingHome />);
 
-    for (const name of [/^For partners:/i, /^For vendors:/i]) {
+    for (const [name, label] of [[/^For partners:/i, "For operating partners"], [/^For vendors:/i, "For vendors"]] as const) {
       const card = screen.getByRole("heading", { name }).closest("article");
       expect(card?.className).toContain("bg-[#2b3035]");
       expect(card?.className).toContain("border-[var(--vndrly-amber)]");
-      expect(card?.querySelector("svg")?.getAttribute("class")).toContain("text-[var(--vndrly-amber)]");
-      expect(card?.querySelector("h2")?.className).toContain("text-[var(--vndrly-amber)]");
+      const labelElement = within(card as HTMLElement).getByText(label, { exact: true });
+      expect(labelElement.parentElement?.className).toContain("flex");
+      expect(labelElement.className).toContain("text-base");
+      expect(labelElement.className).toContain("font-black");
+      expect(labelElement.previousElementSibling?.getAttribute("class")).toContain("text-[var(--vndrly-amber)]");
+      expect(card?.querySelector("h2")?.className).toContain("text-2xl");
+      expect(card?.querySelector("h2")?.className).toContain("text-white");
       for (const item of card?.querySelectorAll("li") ?? []) {
-        expect(item.className).toContain("text-slate-300");
+        expect(item.className).toContain("text-white");
       }
     }
   });
