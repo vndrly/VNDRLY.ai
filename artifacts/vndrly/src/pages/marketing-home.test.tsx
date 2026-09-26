@@ -283,7 +283,7 @@ describe("VNDRLY public homepage", () => {
     expect(solutionsHeading.className).toContain("text-[23px]");
     expect(solutionsHeading.className).toContain("sm:text-[36px]");
 
-    for (const title of ["Hotlist", "VNDRLY Gate"]) {
+    for (const title of ["Hotlist", "VNDRLY Gate (or upgrade to Gate Pro)"]) {
       const productHeading = screen.getByRole("heading", { name: title });
       const card = productHeading.closest("article");
       expect(card?.className).toContain("border-[var(--vndrly-amber)]");
@@ -372,7 +372,7 @@ describe("VNDRLY public homepage", () => {
   it("keeps featured card borders uniform and uses bold amber benefit checks", () => {
     render(<MarketingHome />);
 
-    for (const title of ["Hotlist", "VNDRLY Gate"]) {
+    for (const title of ["Hotlist", "VNDRLY Gate (or upgrade to Gate Pro)"]) {
       const card = screen.getByRole("heading", { name: title }).closest("article");
       expect(card?.className).toContain("border-2");
       expect(card?.className).toContain("bg-[#2b3035]");

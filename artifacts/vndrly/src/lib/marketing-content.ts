@@ -15,7 +15,7 @@ export const FEATURED_SOLUTIONS = [
     ],
   },
   {
-    title: "VNDRLY Gate",
+    title: "VNDRLY Gate (or upgrade to Gate Pro)",
     eyebrow: "Run accountable gate operations",
     description:
       "Connect gate locations, shifts, arrivals, visitors, handoffs, and history in one operational record.",
