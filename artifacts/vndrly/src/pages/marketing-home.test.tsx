@@ -71,4 +71,13 @@ describe("VNDRLY public homepage", () => {
     expect(highlightTitle.className).toContain("text-amber-300");
     expect(highlightTitle.parentElement?.querySelector("svg")?.getAttribute("class")).toContain("text-amber-300");
   });
+
+  it("uses the approved network and security language", () => {
+    render(<MarketingHome />);
+
+    expect(screen.getByText("Find qualified providers fast through our network of vendors.")).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Security aware" })).toBeTruthy();
+    expect(screen.getByText("All transactions are audited for security 24/7")).toBeTruthy();
+    expect(screen.queryByText("Permission aware")).toBeNull();
+  });
 });

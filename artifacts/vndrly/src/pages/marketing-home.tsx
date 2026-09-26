@@ -108,8 +108,8 @@ export default function MarketingHome() {
               {[
                 [BadgeCheck, "Verified fit", "Services, geography, eligibility, and current operational context."],
                 [Star, "Earned reputation", "Ratings and activity signals grounded in completed work."],
-                [Radar, "Faster discovery", "Find qualified providers without exposing who hired them."],
-                [ShieldCheck, "Permission aware", "Organizations see only the records and workflows they are authorized to use."],
+                [Radar, "Faster discovery", "Find qualified providers fast through our network of vendors."],
+                [ShieldCheck, "Security aware", "All transactions are audited for security 24/7"],
               ].map(([Icon, title, copy]) => {
                 const CardIcon = Icon as typeof BadgeCheck;
                 return <div key={title as string} className="rounded-2xl border border-white/15 bg-white/10 p-4"><CardIcon className="h-5 w-5 text-amber-300"/><h2 className="mt-3 font-black text-amber-300">{title as string}</h2><p className="mt-1 text-sm leading-6 text-slate-300">{copy as string}</p></div>;
