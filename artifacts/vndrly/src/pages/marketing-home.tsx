@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import heroBackground from "@assets/VNDRLY_Header_Blur_4_1776220762025.png";
 import halftone from "@assets/nav-pane-us-halftone.svg";
-import PngPill from "@/components/png-pill-rollover";
+import PngPill, { PngPillLink } from "@/components/png-pill-rollover";
 import PublicAskV from "@/components/public-askv";
 import { PILL_COLORS } from "@/lib/pill-colors";
 import {
@@ -80,8 +80,7 @@ export default function MarketingHome() {
             <a href="#partners" className="text-sm font-semibold text-white hover:text-[var(--vndrly-amber)]">For partners</a>
             <a href="#vendors" className="text-sm font-semibold text-white hover:text-[var(--vndrly-amber)]">For vendors</a>
           </div>
-          <a href="/login" className="ml-auto text-sm font-bold text-white hover:text-[var(--vndrly-amber)] lg:ml-2">Sign in</a>
-          <PrimaryLink href={marketingCtaHref}>Get started</PrimaryLink>
+          <PngPillLink href="/login" color="amber" height={35} className="ml-auto min-w-36 lg:ml-2" labelClassName="text-[15px] font-black">Sign In</PngPillLink>
         </nav>
       </header>
 
@@ -113,7 +112,7 @@ export default function MarketingHome() {
                 [ShieldCheck, "Security aware", "All transactions are audited for security 24/7"],
               ].map(([Icon, title, copy]) => {
                 const CardIcon = Icon as typeof BadgeCheck;
-                return <div key={title as string} className="rounded-2xl border border-white/15 bg-white/10 p-4"><CardIcon className="h-5 w-5 text-[var(--vndrly-amber)]"/><h2 className="mt-3 font-black text-[var(--vndrly-amber)]">{title as string}</h2><p className="mt-1 text-sm leading-6 text-white">{copy as string}</p></div>;
+                return <div key={title as string} className="rounded-2xl border border-white/15 bg-white/10 p-4"><div className="flex items-center gap-2"><CardIcon className="h-5 w-5 text-[var(--vndrly-amber)]"/><h2 className="font-black text-white">{title as string}</h2></div><p className="mt-2 text-sm leading-6 text-white">{copy as string}</p></div>;
               })}
             </div>
           </aside>

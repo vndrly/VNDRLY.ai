@@ -43,7 +43,13 @@ describe("VNDRLY public homepage", () => {
     expect(within(navigation).getByRole("link", { name: /solutions/i }).getAttribute("href")).toBe("#solutions");
     expect(within(navigation).getByRole("link", { name: /for partners/i }).getAttribute("href")).toBe("#partners");
     expect(within(navigation).getByRole("link", { name: /for vendors/i }).getAttribute("href")).toBe("#vendors");
-    expect(within(navigation).getByRole("link", { name: /sign in/i }).getAttribute("href")).toBe("/login");
+    const signIn = within(navigation).getByRole("link", { name: /sign in/i });
+    expect(signIn.getAttribute("href")).toBe("/login");
+    expect(signIn.getAttribute("data-color")).toBe("amber");
+    expect(signIn.style.height).toBe("35px");
+    expect(signIn.querySelector("span")?.className).toContain("text-[15px]");
+    expect(signIn.querySelector("span")?.className).toContain("font-black");
+    expect(within(navigation).queryByRole("link", { name: /get started/i })).toBeNull();
     expect(screen.getAllByRole("link", { name: /get started/i }).length).toBeGreaterThan(1);
     expect(screen.getAllByRole("link", { name: /request a demo/i }).length).toBeGreaterThan(0);
   });
@@ -67,16 +73,19 @@ describe("VNDRLY public homepage", () => {
       expect(link.firstElementChild?.getAttribute("data-color")).toBe("amber");
     }
 
-    const highlightTitle = screen.getByRole("heading", { name: "Verified fit" });
-    expect(highlightTitle.className).toContain("text-[var(--vndrly-amber)]");
-    expect(highlightTitle.parentElement?.querySelector("svg")?.getAttribute("class")).toContain("text-[var(--vndrly-amber)]");
+    for (const title of ["Verified fit", "Earned reputation", "Faster discovery", "Security aware"]) {
+      const highlightTitle = screen.getByRole("heading", { name: title });
+      expect(highlightTitle.className).toContain("text-white");
+      expect(highlightTitle.parentElement?.className).toContain("flex");
+      expect(highlightTitle.previousElementSibling?.getAttribute("class")).toContain("text-[var(--vndrly-amber)]");
+    }
   });
 
   it("uses the exact VNDRLY amber for public actions and navigation", () => {
     render(<MarketingHome />);
 
     const navigation = screen.getByRole("navigation", { name: /public navigation/i });
-    for (const label of ["Solutions", "How it works", "For partners", "For vendors", "Sign in"]) {
+    for (const label of ["Solutions", "How it works", "For partners", "For vendors"]) {
       expect(within(navigation).getByRole("link", { name: label }).className).toContain("hover:text-[var(--vndrly-amber)]");
     }
 

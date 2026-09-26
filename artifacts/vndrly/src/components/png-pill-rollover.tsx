@@ -214,6 +214,69 @@ export default function PngPill({
   );
 }
 
+interface PngPillLinkProps {
+  children: React.ReactNode;
+  href: string;
+  color?: PngPillColor;
+  height?: number;
+  className?: string;
+  labelClassName?: string;
+  "aria-label"?: string;
+  "data-testid"?: string;
+}
+
+/** Semantic navigation link with the canonical grey-idle → colored-active PNG treatment. */
+export function PngPillLink({
+  children,
+  href,
+  color = "brand",
+  height = PILL_HEIGHT_PX,
+  className,
+  labelClassName,
+  ...props
+}: PngPillLinkProps) {
+  const brand = useBrand();
+  const activeSrc = hoverSrcForColor(color, undefined, brand.primary, brand.name);
+
+  return (
+    <a
+      href={href}
+      className={cn(
+        PILL_WRAPPER_CLASS,
+        PILL_HEIGHT_CLASS,
+        "group cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vndrly-amber)]",
+        "transition-transform active:scale-[0.98]",
+        className,
+      )}
+      style={{ height }}
+      data-testid={props["data-testid"]}
+      data-color={color}
+      aria-label={props["aria-label"]}
+    >
+      <PillColorLayer
+        src={PILL_IDLE}
+        className="opacity-90 transition-opacity duration-200 group-hover:opacity-0 group-focus-visible:opacity-0 group-active:opacity-0"
+      />
+      <PillColorLayer
+        src={activeSrc}
+        className="opacity-0 transition-opacity duration-200 group-hover:opacity-90 group-focus-visible:opacity-90 group-active:opacity-90"
+      />
+      <PillGlossOverlay />
+      <span
+        className={cn(
+          PILL_LABEL_CLASS,
+          "h-full gap-1.5 text-gray-700 transition-colors duration-200",
+          "group-hover:text-white group-focus-visible:text-white group-active:text-white",
+          "group-hover:drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] group-focus-visible:drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] group-active:drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]",
+          labelClassName,
+        )}
+      >
+        {children}
+      </span>
+    </a>
+  );
+}
+
 interface PngPillButtonProps {
   children: React.ReactNode;
   color?: PngPillColor | "image";
