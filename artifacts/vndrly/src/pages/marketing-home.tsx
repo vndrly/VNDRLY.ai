@@ -80,7 +80,7 @@ export default function MarketingHome() {
             <a href="#partners" className="text-sm font-semibold text-white hover:text-[var(--vndrly-amber)]">For partners</a>
             <a href="#vendors" className="text-sm font-semibold text-white hover:text-[var(--vndrly-amber)]">For vendors</a>
           </div>
-          <PngPillLink href="/login" color="amber" height={35} className="ml-auto min-w-36 lg:ml-2" labelClassName="text-[15px] font-black">Sign In</PngPillLink>
+          <PngPillLink href="/login" color="amber" height={30} className="ml-auto min-w-36 lg:ml-2" labelClassName="text-[15px] font-black">Sign In</PngPillLink>
         </nav>
       </header>
 

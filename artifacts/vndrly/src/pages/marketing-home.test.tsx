@@ -46,7 +46,7 @@ describe("VNDRLY public homepage", () => {
     const signIn = within(navigation).getByRole("link", { name: /sign in/i });
     expect(signIn.getAttribute("href")).toBe("/login");
     expect(signIn.getAttribute("data-color")).toBe("amber");
-    expect(signIn.style.height).toBe("35px");
+    expect(signIn.style.height).toBe("30px");
     expect(signIn.querySelector("span")?.className).toContain("text-[15px]");
     expect(signIn.querySelector("span")?.className).toContain("font-black");
     expect(within(navigation).queryByRole("link", { name: /get started/i })).toBeNull();
