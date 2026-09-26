@@ -81,6 +81,30 @@ describe("VNDRLY public homepage", () => {
     }
   });
 
+  it("uses compact 25px conversion pills and a centered halftone-only hero", () => {
+    render(<MarketingHome />);
+
+    const primaryActions = screen.getAllByTestId("marketing-primary-cta");
+    const demoActions = screen.getAllByTestId("marketing-demo-cta");
+    expect(primaryActions).toHaveLength(2);
+    expect(demoActions).toHaveLength(2);
+
+    for (const action of [...primaryActions, ...demoActions]) {
+      expect(action.style.height).toBe("25px");
+      expect(action.className).toContain("text-[13px]");
+      expect(action.className).toContain("font-bold");
+    }
+
+    const hero = screen.getByTestId("marketing-hero");
+    expect(within(hero).queryByTestId("hero-photo")).toBeNull();
+    const heroHalftone = within(hero).getByTestId("hero-halftone");
+    expect(heroHalftone.className).toContain("left-1/2");
+    expect(heroHalftone.className).toContain("top-1/2");
+    expect(heroHalftone.className).toContain("-translate-x-1/2");
+    expect(heroHalftone.className).toContain("-translate-y-1/2");
+    expect(heroHalftone.className).toContain("w-[86rem]");
+  });
+
   it("uses the exact VNDRLY amber for public actions and navigation", () => {
     render(<MarketingHome />);
 
