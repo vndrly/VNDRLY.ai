@@ -105,7 +105,7 @@ export default function MarketingHome() {
               <a href={marketingDemoHref} data-testid="marketing-demo-cta" style={{ height: 30, minHeight: 30, maxHeight: 30, boxSizing: "border-box", fontSize: 13, fontWeight: 700 }} className="inline-flex items-center rounded-full border border-white/60 bg-black/20 px-6 text-[13px] font-bold text-white transition hover:border-[var(--vndrly-amber)] hover:bg-black/35 hover:text-[var(--vndrly-amber)] focus-visible:ring-2 focus-visible:ring-[var(--vndrly-amber)]">Request a demo</a>
             </div>
           </div>
-          <aside className="rounded-3xl border border-white/20 bg-black/35 p-6 shadow-2xl backdrop-blur-md sm:p-8" aria-label="Verified network highlights">
+          <aside data-testid="marketing-card" className="rounded-3xl border-2 border-[var(--vndrly-amber)] bg-black/35 p-6 shadow-2xl backdrop-blur-md sm:p-8" aria-label="Verified network highlights">
             <div className="flex items-center gap-3"><Network className="h-8 w-8 text-[var(--vndrly-amber)]" /><div><p className="text-xs font-black uppercase tracking-[.18em] text-[var(--vndrly-amber)]">A living vendor directory</p><p className="font-bold text-white">Maintained by the people doing the work</p></div></div>
             <div className="mt-7 grid gap-4 sm:grid-cols-2">
               {[
@@ -115,7 +115,7 @@ export default function MarketingHome() {
                 [ShieldCheck, "Security aware", "All transactions are audited for security 24/7"],
               ].map(([Icon, title, copy]) => {
                 const CardIcon = Icon as typeof BadgeCheck;
-                return <div key={title as string} className="rounded-2xl border border-white/15 bg-white/10 p-4"><div className="flex items-center gap-2"><CardIcon className="h-5 w-5 text-[var(--vndrly-amber)]"/><h2 className="font-black text-white">{title as string}</h2></div><p className="mt-2 text-sm leading-6 text-white">{copy as string}</p></div>;
+                return <div key={title as string} data-testid="marketing-card" className="rounded-2xl border-2 border-[var(--vndrly-amber)] bg-white/10 p-4"><div className="flex items-center gap-2"><CardIcon className="h-5 w-5 text-[var(--vndrly-amber)]"/><h2 className="font-black text-white">{title as string}</h2></div><p className="mt-2 text-sm leading-6 text-white">{copy as string}</p></div>;
               })}
             </div>
           </aside>
@@ -132,7 +132,7 @@ export default function MarketingHome() {
         <div className="mt-10 grid gap-6 lg:grid-cols-2">
           {FEATURED_SOLUTIONS.map((solution, index) => {
             const Icon = solutionIcons[index];
-            return <article key={solution.title} className="relative overflow-hidden rounded-3xl border-2 border-[var(--vndrly-amber)] bg-[#2b3035] p-7 text-white shadow-[0_18px_50px_rgba(15,23,42,.16)] sm:p-9"><div className="flex items-center gap-3"><Icon className="h-9 w-9 text-[var(--vndrly-amber)]"/><h3 className="text-2xl font-black text-white">{solution.title}</h3></div><p className="mt-5 text-xs font-black uppercase tracking-[.18em] text-[var(--vndrly-amber)]">{solution.eyebrow}</p><p className="mt-3 leading-7 text-slate-300">{solution.description}</p><BenefitList items={solution.points} dark textClassName="text-white"/></article>;
+            return <article key={solution.title} data-testid="marketing-card" className="relative overflow-hidden rounded-3xl border-2 border-[var(--vndrly-amber)] bg-[#2b3035] p-7 text-white shadow-[0_18px_50px_rgba(15,23,42,.16)] sm:p-9"><div className="flex items-center gap-3"><Icon className="h-9 w-9 text-[var(--vndrly-amber)]"/><h3 className="text-2xl font-black text-white">{solution.title}</h3></div><p className="mt-5 text-xs font-black uppercase tracking-[.18em] text-[var(--vndrly-amber)]">{solution.eyebrow}</p><p className="mt-3 leading-7 text-slate-300">{solution.description}</p><BenefitList items={solution.points} dark textClassName="text-white"/></article>;
           })}
         </div>
       </section>
@@ -153,18 +153,18 @@ export default function MarketingHome() {
             </ol>
           </div>
           <ol aria-label="VNDRLY job workflow" className="mt-2 grid gap-3 sm:grid-cols-2 lg:grid-cols-7">
-            {JOB_WORKFLOW.map(([title, copy]) => <li key={title} className="rounded-2xl border border-[var(--vndrly-amber)] bg-white/[.06] p-4"><p className="text-xs leading-5 text-white">{copy}</p></li>)}
+            {JOB_WORKFLOW.map(([title, copy]) => <li key={title} data-testid="marketing-card" className="rounded-2xl border-2 border-[var(--vndrly-amber)] bg-white/[.06] p-4"><p className="text-xs leading-5 text-white">{copy}</p></li>)}
           </ol>
         </div>
       </section>
 
       <section className="mx-auto grid max-w-7xl gap-6 px-4 py-20 lg:grid-cols-2">
-        <article id="partners" className="rounded-3xl border-2 border-[var(--vndrly-amber)] bg-[#2b3035] p-7 text-white shadow-xl sm:p-9">
+        <article id="partners" data-testid="marketing-card" className="rounded-3xl border-2 border-[var(--vndrly-amber)] bg-[#2b3035] p-7 text-white shadow-xl sm:p-9">
           <div className="flex items-center gap-3"><Building2 className="h-9 w-9 text-[var(--vndrly-amber)]"/><p className="text-base font-black uppercase tracking-[.18em] text-[var(--vndrly-amber)]">For operating partners</p></div>
           <h2 className="mt-5 text-2xl font-black leading-tight text-white">For partners: know who can do the work—and what is happening now.</h2>
           <BenefitList items={PARTNER_BENEFITS} dark textClassName="text-white"/>
         </article>
-        <article id="vendors" className="rounded-3xl border-2 border-[var(--vndrly-amber)] bg-[#2b3035] p-7 text-white shadow-xl sm:p-9">
+        <article id="vendors" data-testid="marketing-card" className="rounded-3xl border-2 border-[var(--vndrly-amber)] bg-[#2b3035] p-7 text-white shadow-xl sm:p-9">
           <div className="flex items-center gap-3"><BriefcaseBusiness className="h-9 w-9 text-[var(--vndrly-amber)]"/><p className="text-base font-black uppercase tracking-[.18em] text-[var(--vndrly-amber)]">For vendors</p></div>
           <h2 className="mt-5 text-2xl font-black leading-tight text-white">For vendors: make proven performance easier to find and easier to repeat.</h2>
           <BenefitList items={VENDOR_BENEFITS} dark textClassName="text-white"/>
@@ -178,7 +178,7 @@ export default function MarketingHome() {
           <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
             {MARKETING_MODULES.map((module, index) => {
               const Icon = moduleIcons[index];
-              return <article key={module.title} className="rounded-2xl border border-slate-300 bg-[#f7f8f9] p-6"><Icon className="h-7 w-7 text-[var(--vndrly-amber)]"/><h3 className="mt-4 text-xl font-black text-[var(--vndrly-amber)]">{module.title}</h3><p className="mt-3 text-sm leading-6 text-slate-600">{module.description}</p></article>;
+              return <article key={module.title} data-testid="marketing-card" className="rounded-2xl border-2 border-[var(--vndrly-amber)] bg-[#f7f8f9] p-6"><Icon className="h-7 w-7 text-[var(--vndrly-amber)]"/><h3 className="mt-4 text-xl font-black text-[var(--vndrly-amber)]">{module.title}</h3><p className="mt-3 text-sm leading-6 text-slate-600">{module.description}</p></article>;
             })}
           </div>
         </div>
@@ -197,9 +197,9 @@ export default function MarketingHome() {
           <SectionLabel>Trust without exposure</SectionLabel>
           <h2 className="mt-3 text-3xl font-black sm:text-5xl">Useful signals. Private relationships.</h2>
           <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-600">VNDRLY can help rank vendor fit using service alignment, operating geography, verified activity, responsiveness, and ratings. The public experience does not reveal who hired whom, private job details, or organization records.</p>
-          <div className="mt-8 grid gap-4 sm:grid-cols-2">{[[BadgeCheck,"Verified operational signals"],[ShieldCheck,"Role and organization permissions"],[Star,"Reputation built through work"],[Network,"No public account directory"]].map(([Icon,label]) => { const TrustIcon = Icon as typeof BadgeCheck; return <div key={label as string} className="flex items-center gap-3 rounded-xl border bg-white p-4 font-bold text-[var(--vndrly-amber)]"><TrustIcon className="h-5 w-5 text-[var(--vndrly-amber)]"/>{label as string}</div>; })}</div>
+          <div className="mt-8 grid gap-4 sm:grid-cols-2">{[[BadgeCheck,"Verified operational signals"],[ShieldCheck,"Role and organization permissions"],[Star,"Reputation built through work"],[Network,"No public account directory"]].map(([Icon,label]) => { const TrustIcon = Icon as typeof BadgeCheck; return <div key={label as string} data-testid="marketing-card" className="flex items-center gap-3 rounded-xl border-2 border-[var(--vndrly-amber)] bg-white p-4 font-bold text-[var(--vndrly-amber)]"><TrustIcon className="h-5 w-5 text-[var(--vndrly-amber)]"/>{label as string}</div>; })}</div>
         </div>
-        <aside className="rounded-3xl border-2 border-[var(--vndrly-amber)] bg-white p-8 shadow-xl">
+        <aside data-testid="marketing-card" className="rounded-3xl border-2 border-[var(--vndrly-amber)] bg-white p-8 shadow-xl">
           <SectionLabel>Ask V — Product Guide</SectionLabel>
           <h2 className="mt-3 text-3xl font-black text-[var(--vndrly-amber)]">Questions before you sign in?</h2>
           <p className="mt-4 leading-7 text-slate-600">Ask about product fit, roles, signup, onboarding, demos, or sales. The public Product Guide uses approved public information only and cannot access accounts, operational records, or internal actions.</p>

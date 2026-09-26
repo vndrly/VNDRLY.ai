@@ -150,6 +150,17 @@ describe("VNDRLY public homepage", () => {
     }
   });
 
+  it("uses a 2px VNDRLY amber outline on every card surface", () => {
+    render(<MarketingHome />);
+
+    const cards = screen.getAllByTestId("marketing-card");
+    expect(cards).toHaveLength(25);
+    for (const card of cards) {
+      expect(card.className).toContain("border-2");
+      expect(card.className).toContain("border-[var(--vndrly-amber)]");
+    }
+  });
+
   it("uses compact section headings and exact VNDRLY amber card treatments", () => {
     render(<MarketingHome />);
 
