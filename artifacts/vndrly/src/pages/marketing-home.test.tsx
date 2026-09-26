@@ -179,6 +179,17 @@ describe("VNDRLY public homepage", () => {
     }
   });
 
+  it("separates every major homepage section with a 2px VNDRLY amber divider", () => {
+    render(<MarketingHome />);
+
+    const dividers = screen.getAllByTestId("marketing-section-divider");
+    expect(dividers).toHaveLength(8);
+    for (const divider of dividers) {
+      expect(divider.className).toContain("border-t-2");
+      expect(divider.className).toContain("border-[var(--vndrly-amber)]");
+    }
+  });
+
   it("uses compact section headings and exact VNDRLY amber card treatments", () => {
     render(<MarketingHome />);
 

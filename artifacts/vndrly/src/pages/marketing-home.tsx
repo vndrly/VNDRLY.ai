@@ -57,6 +57,10 @@ function SectionLabel({ children, shadow = false }: { children: React.ReactNode;
   );
 }
 
+function SectionDivider() {
+  return <div data-testid="marketing-section-divider" aria-hidden="true" className="border-t-2 border-[var(--vndrly-amber)]" />;
+}
+
 function BenefitList({ items, dark = false, textClassName }: { items: string[]; dark?: boolean; textClassName?: string }) {
   return (
     <ul className="mt-6 space-y-4">
@@ -126,6 +130,7 @@ export default function MarketingHome() {
         <div data-testid="hero-fade" className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-b from-transparent to-[#3a3d42]" />
       </section>
 
+      <SectionDivider />
       <section id="solutions" className="mx-auto max-w-7xl px-4 py-20">
         <div className="max-w-3xl">
           <SectionLabel shadow>Featured solutions</SectionLabel>
@@ -140,7 +145,8 @@ export default function MarketingHome() {
         </div>
       </section>
 
-      <section id="workflow" className="border-y border-slate-300 bg-[#1f252a] text-white">
+      <SectionDivider />
+      <section id="workflow" className="bg-[#1f252a] text-white">
         <div className="mx-auto max-w-7xl px-4 py-20">
           <p className="text-xs font-black uppercase tracking-[.24em] text-[var(--vndrly-amber)]">One connected job lifecycle</p>
           <h2 className="mt-3 max-w-4xl text-[23px] font-black sm:text-[36px]">From “we need this done” to an approval-ready record.</h2>
@@ -161,6 +167,7 @@ export default function MarketingHome() {
         </div>
       </section>
 
+      <SectionDivider />
       <section className="mx-auto grid max-w-7xl gap-6 px-4 py-20 lg:grid-cols-2">
         <article id="partners" data-testid="marketing-card" className="rounded-3xl border-2 border-[var(--vndrly-amber)] bg-[#2b3035] p-7 text-white shadow-xl sm:p-9">
           <div className="flex items-center gap-3"><Building2 className="h-9 w-9 text-[var(--vndrly-amber)]"/><p className="text-base font-black uppercase tracking-[.18em] text-[var(--vndrly-amber)]">For operating partners</p></div>
@@ -174,7 +181,8 @@ export default function MarketingHome() {
         </article>
       </section>
 
-      <section className="border-y bg-white">
+      <SectionDivider />
+      <section className="bg-white">
         <div className="mx-auto max-w-7xl px-4 py-20">
           <SectionLabel>Connected operations</SectionLabel>
           <h2 className="mt-3 text-3xl font-black sm:text-5xl">The field facts and the office workflow tell the same story.</h2>
@@ -187,6 +195,7 @@ export default function MarketingHome() {
         </div>
       </section>
 
+      <SectionDivider />
       <section aria-label="Secure direct payments" className="relative overflow-hidden bg-gradient-to-br from-cyan-950 via-slate-900 to-slate-950 text-white">
         <div className="mx-auto grid max-w-7xl items-center gap-8 px-4 py-16 md:grid-cols-[auto_1fr_auto]">
           <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-[var(--vndrly-amber)] bg-[var(--vndrly-amber)]/10"><CreditCard className="h-8 w-8 text-[var(--vndrly-amber)]"/></div>
@@ -195,6 +204,7 @@ export default function MarketingHome() {
         </div>
       </section>
 
+      <SectionDivider />
       <section className="mx-auto grid max-w-7xl gap-10 px-4 py-20 lg:grid-cols-[1fr_.9fr]">
         <div>
           <SectionLabel>Trust without exposure</SectionLabel>
@@ -210,13 +220,15 @@ export default function MarketingHome() {
         </aside>
       </section>
 
-      <section className="border-y bg-white">
+      <SectionDivider />
+      <section className="bg-white">
         <div className="mx-auto grid max-w-7xl gap-10 px-4 py-20 lg:grid-cols-2">
           <div><SectionLabel>Getting started</SectionLabel><h2 className="mt-3 text-3xl font-black">Bring your organization into one connected operating picture.</h2><ol className="mt-7 space-y-5">{[["Choose your path","Register as a partner or vendor organization."],["Build your operating profile","Add people, services, locations, credentials, and permissions."],["Connect the work","Use the VNDRLY modules available to your role and organization."]].map(([title,copy],index)=><li key={title} className="flex gap-4"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--vndrly-amber)] text-sm font-black text-slate-950">{index+1}</span><div><h3 className="font-black">{title}</h3><p className="mt-1 text-sm text-slate-600">{copy}</p></div></li>)}</ol></div>
           <div><SectionLabel>Frequently asked questions</SectionLabel><div className="mt-3 divide-y">{[["What do I need to sign up?","Start with your organization, role, and contact details. Additional operating information can be completed during onboarding."],["How long does signup take?","The initial registration is brief. The time to complete onboarding depends on your organization, services, people, and review needs."],["Does the public Product Guide see my account?","No. It uses approved public product information only. Authenticated Ask V operates separately after sign-in."],["How do I talk to sales?","Request a demo or contact VNDRLY support. You control what information is sent."]].map(([q,a])=><details key={q} className="py-5"><summary className="cursor-pointer font-black">{q}</summary><p className="mt-2 text-sm leading-6 text-slate-600">{a}</p></details>)}</div></div>
         </div>
       </section>
 
+      <SectionDivider />
       <section className="relative overflow-hidden bg-[#20262b] text-center text-white">
         <img src={halftone} alt="" className="absolute left-1/2 top-1/2 w-[70rem] max-w-none -translate-x-1/2 -translate-y-1/2 opacity-10"/>
         <div className="relative mx-auto max-w-4xl px-4 py-24"><p className="text-sm font-black uppercase tracking-[.22em] text-[var(--vndrly-amber)]">A better vendor network starts here</p><h2 className="mt-4 text-4xl font-black sm:text-6xl">Find the right fit. Run the work. Keep the proof.</h2><p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-slate-300">Start your VNDRLY profile or let us walk through the workflow with your team.</p><div className="mt-9 flex flex-wrap justify-center gap-4"><PrimaryLink href={marketingCtaHref}>Get started <ArrowRight className="h-4 w-4"/></PrimaryLink><a href={marketingDemoHref} data-testid="marketing-demo-cta" style={{ height: 30, minHeight: 30, maxHeight: 30, boxSizing: "border-box", fontSize: 13, fontWeight: 700 }} className="inline-flex items-center rounded-full border border-white/60 px-6 text-[13px] font-bold text-white hover:border-[var(--vndrly-amber)] hover:text-[var(--vndrly-amber)] focus-visible:ring-2 focus-visible:ring-[var(--vndrly-amber)]">Request a demo</a></div></div>
