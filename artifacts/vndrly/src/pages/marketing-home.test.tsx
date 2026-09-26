@@ -28,12 +28,21 @@ describe("VNDRLY public homepage", () => {
     expect(within(payments).getAllByText(/coming soon/i).length).toBeGreaterThan(0);
     const directPayments = within(payments).getByRole("heading", { name: "Secure direct payments" });
     const payrollReporting = within(payments).getByRole("heading", { name: "Make Payroll & IRS Reporting" });
+    const invoicing = within(payments).getByRole("heading", { name: "Invoicing has never been easier" });
     expect(
       directPayments.compareDocumentPosition(payrollReporting) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     expect(
+      payrollReporting.compareDocumentPosition(invoicing) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
       within(payments).getByText(
         "Manage mileage and hours for your employees, compatible with QuickBooks, OpenAccountant with CSV exports available if you choose.",
+      ),
+    ).toBeTruthy();
+    expect(
+      within(payments).getByText(
+        "Automatic invoicing prepares your work product into a electronic invoice that stays in the same workflow native to VNDRLY with a full audit trail. Partners can verify the work product before paying Vendors",
       ),
     ).toBeTruthy();
     expect(within(payments).getByTestId("marketing-coming-soon-pill").style.height).toBe("30px");

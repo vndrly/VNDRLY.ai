@@ -6,6 +6,7 @@ import {
   Check,
   ClipboardCheck,
   CreditCard,
+  FileText,
   MapPinned,
   Network,
   Radar,
@@ -219,6 +220,10 @@ export default function MarketingHome() {
               <div className="grid gap-5 sm:grid-cols-[auto_1fr]">
                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-[var(--vndrly-amber)] bg-[var(--vndrly-amber)]/10"><ClipboardCheck className="h-8 w-8 text-[var(--vndrly-amber)]"/></div>
                 <div><h2 className="text-3xl font-black">Make Payroll &amp; IRS Reporting</h2><p className="mt-3 max-w-3xl leading-7 text-slate-300">Manage mileage and hours for your employees, compatible with QuickBooks, OpenAccountant with CSV exports available if you choose.</p></div>
+              </div>
+              <div className="grid gap-5 sm:grid-cols-[auto_1fr]">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-[var(--vndrly-amber)] bg-[var(--vndrly-amber)]/10"><FileText className="h-8 w-8 text-[var(--vndrly-amber)]"/></div>
+                <div><h2 className="text-3xl font-black">Invoicing has never been easier</h2><p className="mt-3 max-w-3xl leading-7 text-slate-300">Automatic invoicing prepares your work product into a electronic invoice that stays in the same workflow native to VNDRLY with a full audit trail. Partners can verify the work product before paying Vendors</p></div>
               </div>
             </div>
           </div>
