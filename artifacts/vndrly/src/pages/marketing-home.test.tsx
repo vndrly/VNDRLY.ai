@@ -82,6 +82,13 @@ describe("VNDRLY public homepage", () => {
       expect(highlightTitle.parentElement?.className).toContain("flex");
       expect(highlightTitle.previousElementSibling?.getAttribute("class")).toContain("text-[var(--vndrly-amber)]");
     }
+
+    for (const description of [
+      "Turn urgent field demand into a qualified opportunity without rebuilding the vendor search from scratch.",
+      "Connect gate locations, shifts, arrivals, visitors, handoffs, and history in one operational record.",
+    ]) {
+      expect(screen.getByText(description).className).toContain("text-white");
+    }
   });
 
   it("uses 30px conversion pills and a centered halftone-only hero", () => {
@@ -225,7 +232,7 @@ describe("VNDRLY public homepage", () => {
       expect(card?.className).toContain("bg-[#2b3035]");
       expect(card?.innerHTML).not.toContain("absolute inset-x-0 top-0 h-1");
 
-      expect(card?.querySelector("p.leading-7")?.className).toContain("text-slate-300");
+      expect(card?.querySelector("p.leading-7")?.className).toContain("text-white");
       for (const item of card?.querySelectorAll("li") ?? []) {
         expect(item.className).toContain("text-white");
       }

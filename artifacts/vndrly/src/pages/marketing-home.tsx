@@ -132,7 +132,7 @@ export default function MarketingHome() {
         <div className="mt-10 grid gap-6 lg:grid-cols-2">
           {FEATURED_SOLUTIONS.map((solution, index) => {
             const Icon = solutionIcons[index];
-            return <article key={solution.title} data-testid="marketing-card" className="relative overflow-hidden rounded-3xl border-2 border-[var(--vndrly-amber)] bg-[#2b3035] p-7 text-white shadow-[0_18px_50px_rgba(15,23,42,.16)] sm:p-9"><div className="flex items-center gap-3"><Icon className="h-9 w-9 text-[var(--vndrly-amber)]"/><h3 className="text-2xl font-black text-white">{solution.title}</h3></div><p className="mt-5 text-xs font-black uppercase tracking-[.18em] text-[var(--vndrly-amber)]">{solution.eyebrow}</p><p className="mt-3 leading-7 text-slate-300">{solution.description}</p><BenefitList items={solution.points} dark textClassName="text-white"/></article>;
+            return <article key={solution.title} data-testid="marketing-card" className="relative overflow-hidden rounded-3xl border-2 border-[var(--vndrly-amber)] bg-[#2b3035] p-7 text-white shadow-[0_18px_50px_rgba(15,23,42,.16)] sm:p-9"><div className="flex items-center gap-3"><Icon className="h-9 w-9 text-[var(--vndrly-amber)]"/><h3 className="text-2xl font-black text-white">{solution.title}</h3></div><p className="mt-5 text-xs font-black uppercase tracking-[.18em] text-[var(--vndrly-amber)]">{solution.eyebrow}</p><p className="mt-3 leading-7 text-white">{solution.description}</p><BenefitList items={solution.points} dark textClassName="text-white"/></article>;
           })}
         </div>
       </section>
