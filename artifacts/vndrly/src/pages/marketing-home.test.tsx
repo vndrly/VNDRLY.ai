@@ -225,6 +225,23 @@ describe("VNDRLY public homepage", () => {
     }
   });
 
+  it("matches connected operations cards to the featured solution card treatment", () => {
+    render(<MarketingHome />);
+
+    for (const title of ["Plan & dispatch", "Execute & verify", "Collaborate & hand off", "Review & report"]) {
+      const heading = screen.getByRole("heading", { name: title });
+      const card = heading.closest("article");
+      expect(card?.className).toContain("rounded-3xl");
+      expect(card?.className).toContain("border-2");
+      expect(card?.className).toContain("border-[var(--vndrly-amber)]");
+      expect(card?.className).toContain("bg-[#2b3035]");
+      expect(heading.className).toContain("text-white");
+      expect(heading.parentElement?.className).toContain("flex");
+      expect(heading.previousElementSibling?.tagName).toBe("svg");
+      expect(card?.querySelector("p")?.className).toContain("text-white");
+    }
+  });
+
   it("places a number-free seven-stage lifecycle stepper above white workflow blurbs", () => {
     render(<MarketingHome />);
 

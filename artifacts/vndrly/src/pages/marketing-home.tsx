@@ -199,7 +199,7 @@ export default function MarketingHome() {
           <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
             {MARKETING_MODULES.map((module, index) => {
               const Icon = moduleIcons[index];
-              return <article key={module.title} data-testid="marketing-card" className="rounded-2xl border-2 border-[var(--vndrly-amber)] bg-[#f7f8f9] p-6"><Icon className="h-7 w-7 text-[var(--vndrly-amber)]"/><h3 className="mt-4 text-xl font-black text-[var(--vndrly-amber)]">{module.title}</h3><p className="mt-3 text-sm leading-6 text-slate-600">{module.description}</p></article>;
+              return <article key={module.title} data-testid="marketing-card" className="rounded-3xl border-2 border-[var(--vndrly-amber)] bg-[#2b3035] p-6 text-white shadow-[0_18px_50px_rgba(15,23,42,.16)]"><div className="flex items-center gap-3"><Icon className="h-7 w-7 text-[var(--vndrly-amber)]"/><h3 className="text-xl font-black text-white">{module.title}</h3></div><p className="mt-4 text-sm leading-6 text-white">{module.description}</p></article>;
             })}
           </div>
         </div>
