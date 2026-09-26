@@ -60,6 +60,7 @@ function SectionLabel({ children, featured = false }: { children: React.ReactNod
         padding: "6px 12px",
         fontSize: 14,
         lineHeight: "18px",
+        color: "white",
       } : undefined}
     >
       {children}
@@ -194,7 +195,7 @@ export default function MarketingHome() {
       <SectionDivider />
       <section className="bg-white">
         <div className="mx-auto max-w-7xl px-4 py-20">
-          <SectionLabel>Connected operations</SectionLabel>
+          <SectionLabel featured>Connected operations</SectionLabel>
           <h2 className="mt-3 text-3xl font-black sm:text-5xl">The field facts and the office workflow tell the same story.</h2>
           <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
             {MARKETING_MODULES.map((module, index) => {

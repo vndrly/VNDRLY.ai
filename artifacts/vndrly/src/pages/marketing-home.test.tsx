@@ -70,13 +70,21 @@ describe("VNDRLY public homepage", () => {
 
     expect(screen.getByText("Verified vendors. Connected operations.").className).toContain("text-[var(--vndrly-amber)]");
     const featuredSolutionsLabel = screen.getByText("Featured solutions");
-    expect(featuredSolutionsLabel.className).toContain("text-[var(--vndrly-amber)]");
+    expect(featuredSolutionsLabel.style.color).toBe("white");
     expect(featuredSolutionsLabel.style.textShadow).toBe("");
     expect(featuredSolutionsLabel.style.backgroundColor).toBe("rgb(43, 48, 53)");
     expect(featuredSolutionsLabel.style.borderWidth).toBe("2px");
     expect(featuredSolutionsLabel.style.borderColor).toBe("var(--vndrly-amber)");
     expect(featuredSolutionsLabel.style.padding).toBe("6px 12px");
     expect(featuredSolutionsLabel.style.fontSize).toBe("14px");
+
+    const connectedOperationsLabel = screen.getByText("Connected operations", { exact: true });
+    expect(connectedOperationsLabel.style.color).toBe("white");
+    expect(connectedOperationsLabel.style.backgroundColor).toBe("rgb(43, 48, 53)");
+    expect(connectedOperationsLabel.style.borderWidth).toBe("2px");
+    expect(connectedOperationsLabel.style.borderColor).toBe("var(--vndrly-amber)");
+    expect(connectedOperationsLabel.style.padding).toBe("6px 12px");
+    expect(connectedOperationsLabel.style.fontSize).toBe("14px");
     expect(screen.getByTestId("hero-fade").className).toContain("to-[#3a3d42]");
 
     for (const link of screen.getAllByRole("link", { name: /get started/i })) {
