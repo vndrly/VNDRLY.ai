@@ -56,7 +56,7 @@ function BenefitList({ items, dark = false }: { items: string[]; dark?: boolean 
       {items.map((item) => (
         <li key={item} className={`flex gap-3 text-sm leading-6 ${dark ? "text-slate-300" : "text-slate-600"}`}>
           <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--vndrly-amber)]/15 text-[var(--vndrly-amber)]">
-            <Check className="h-3.5 w-3.5" />
+            <Check className="h-3.5 w-3.5 text-[var(--vndrly-amber)]" strokeWidth={3} />
           </span>
           {item}
         </li>
@@ -130,7 +130,7 @@ export default function MarketingHome() {
         <div className="mt-10 grid gap-6 lg:grid-cols-2">
           {FEATURED_SOLUTIONS.map((solution, index) => {
             const Icon = solutionIcons[index];
-            return <article key={solution.title} className="relative overflow-hidden rounded-3xl border-2 border-[var(--vndrly-amber)] bg-white p-7 shadow-[0_18px_50px_rgba(15,23,42,.08)] sm:p-9"><div className="absolute inset-x-0 top-0 h-1 bg-[var(--vndrly-amber)]"/><Icon className="h-9 w-9 text-[var(--vndrly-amber)]"/><p className="mt-5 text-xs font-black uppercase tracking-[.18em] text-[var(--vndrly-amber)]">{solution.eyebrow}</p><h3 className="mt-2 text-3xl font-black text-[var(--vndrly-amber)]">{solution.title}</h3><p className="mt-3 leading-7 text-slate-600">{solution.description}</p><BenefitList items={solution.points}/></article>;
+            return <article key={solution.title} className="relative overflow-hidden rounded-3xl border-2 border-[var(--vndrly-amber)] bg-[#2b3035] p-7 text-white shadow-[0_18px_50px_rgba(15,23,42,.16)] sm:p-9"><Icon className="h-9 w-9 text-[var(--vndrly-amber)]"/><p className="mt-5 text-xs font-black uppercase tracking-[.18em] text-[var(--vndrly-amber)]">{solution.eyebrow}</p><h3 className="mt-2 text-3xl font-black text-[var(--vndrly-amber)]">{solution.title}</h3><p className="mt-3 leading-7 text-slate-300">{solution.description}</p><BenefitList items={solution.points} dark/></article>;
           })}
         </div>
       </section>

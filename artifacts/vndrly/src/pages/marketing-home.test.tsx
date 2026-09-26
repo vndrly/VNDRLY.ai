@@ -117,6 +117,29 @@ describe("VNDRLY public homepage", () => {
     }
   });
 
+  it("keeps featured card borders uniform and uses bold amber benefit checks", () => {
+    render(<MarketingHome />);
+
+    for (const title of ["Hotlist", "VNDRLY Gate"]) {
+      const card = screen.getByRole("heading", { name: title }).closest("article");
+      expect(card?.className).toContain("border-2");
+      expect(card?.className).toContain("bg-[#2b3035]");
+      expect(card?.innerHTML).not.toContain("absolute inset-x-0 top-0 h-1");
+
+      expect(card?.querySelector("p.leading-7")?.className).toContain("text-slate-300");
+      for (const item of card?.querySelectorAll("li") ?? []) {
+        expect(item.className).toContain("text-slate-300");
+      }
+
+      const checks = card?.querySelectorAll("li svg") ?? [];
+      expect(checks.length).toBeGreaterThan(0);
+      for (const check of checks) {
+        expect(check.getAttribute("class")).toContain("text-[var(--vndrly-amber)]");
+        expect(check.getAttribute("stroke-width")).toBe("3");
+      }
+    }
+  });
+
   it("uses charcoal partner and vendor cards with exact VNDRLY amber accents", () => {
     render(<MarketingHome />);
 
