@@ -62,7 +62,7 @@ describe("VNDRLY public homepage", () => {
     const payments = screen.getByRole("region", { name: /secure direct payments/i });
     expect(payments.className).toContain("bg-[#20262b]");
     expect(payments.className).not.toContain("bg-gradient-to-br");
-    expect(within(payments).getAllByText(/coming soon/i).length).toBeGreaterThan(0);
+    expect(within(payments).getAllByText("Coming soon", { exact: true })).toHaveLength(1);
     const directPayments = within(payments).getByRole("heading", { name: "Secure direct payments" });
     const payrollReporting = within(payments).getByRole("heading", { name: "Make Payroll & IRS Reporting" });
     const invoicing = within(payments).getByRole("heading", { name: "Invoicing has never been easier" });
@@ -82,7 +82,13 @@ describe("VNDRLY public homepage", () => {
         "Automatic invoicing prepares your work product into a electronic invoice that stays in the same workflow native to VNDRLY with a full audit trail. Partners can verify the work product before paying Vendors",
       ),
     ).toBeTruthy();
-    expect(within(payments).getByTestId("marketing-coming-soon-pill").style.height).toBe("30px");
+    const comingSoonPill = within(payments).getByTestId("marketing-coming-soon-pill");
+    expect(comingSoonPill.style.height).toBe("30px");
+    expect(comingSoonPill.className).toContain("shadow-[0_8px_20px_rgba(245,158,11,.3)]");
+    const comingSoonText = within(comingSoonPill).getByText("Coming soon", { exact: true });
+    expect(comingSoonText.className).toContain("text-[15px]");
+    expect(comingSoonText.className).toContain("font-black");
+    expect(comingSoonPill.compareDocumentPosition(directPayments) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(within(payments).queryByText(/available now|pay today/i)).toBeNull();
   });
 
