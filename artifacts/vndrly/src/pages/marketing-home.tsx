@@ -130,7 +130,7 @@ export default function MarketingHome() {
         <div className="mt-10 grid gap-6 lg:grid-cols-2">
           {FEATURED_SOLUTIONS.map((solution, index) => {
             const Icon = solutionIcons[index];
-            return <article key={solution.title} className="relative overflow-hidden rounded-3xl border-2 border-[var(--vndrly-amber)] bg-[#2b3035] p-7 text-white shadow-[0_18px_50px_rgba(15,23,42,.16)] sm:p-9"><Icon className="h-9 w-9 text-[var(--vndrly-amber)]"/><p className="mt-5 text-xs font-black uppercase tracking-[.18em] text-[var(--vndrly-amber)]">{solution.eyebrow}</p><h3 className="mt-2 text-3xl font-black text-white">{solution.title}</h3><p className="mt-3 leading-7 text-slate-300">{solution.description}</p><BenefitList items={solution.points} dark textClassName="text-white"/></article>;
+            return <article key={solution.title} className="relative overflow-hidden rounded-3xl border-2 border-[var(--vndrly-amber)] bg-[#2b3035] p-7 text-white shadow-[0_18px_50px_rgba(15,23,42,.16)] sm:p-9"><div className="flex items-center gap-3"><Icon className="h-9 w-9 text-[var(--vndrly-amber)]"/><h3 className="text-2xl font-black text-white">{solution.title}</h3></div><p className="mt-5 text-xs font-black uppercase tracking-[.18em] text-[var(--vndrly-amber)]">{solution.eyebrow}</p><p className="mt-3 leading-7 text-slate-300">{solution.description}</p><BenefitList items={solution.points} dark textClassName="text-white"/></article>;
           })}
         </div>
       </section>
@@ -143,13 +143,15 @@ export default function MarketingHome() {
             <ol aria-label="Job lifecycle progress" className="grid min-w-[760px] grid-cols-7">
               {JOB_WORKFLOW.map(([title], index) => <li key={title} className="relative flex flex-col items-center px-2 text-center">
                 {index < JOB_WORKFLOW.length - 1 && <span aria-hidden="true" className="absolute left-1/2 top-5 h-0.5 w-full bg-[var(--vndrly-amber)]/60"/>}
-                <span className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full border-2 border-[var(--vndrly-amber)] bg-[#1f252a] text-xs font-black text-[var(--vndrly-amber)]">0{index + 1}</span>
+                <span className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full border-2 border-[var(--vndrly-amber)] bg-[#1f252a]">
+                  <span data-step-dot aria-hidden="true" className="h-3 w-3 rounded-full bg-white"/>
+                </span>
                 <span className="mt-3 text-sm font-black text-white">{title}</span>
               </li>)}
             </ol>
           </div>
           <ol aria-label="VNDRLY job workflow" className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-7">
-            {JOB_WORKFLOW.map(([title, copy], index) => <li key={title} className="rounded-2xl border border-[var(--vndrly-amber)] bg-white/[.06] p-4"><span className="text-xs font-black text-[var(--vndrly-amber)]">0{index + 1}</span><h3 className="mt-2 font-black text-[var(--vndrly-amber)]">{title}</h3><p className="mt-2 text-xs leading-5 text-white">{copy}</p></li>)}
+            {JOB_WORKFLOW.map(([title, copy]) => <li key={title} className="rounded-2xl border border-[var(--vndrly-amber)] bg-white/[.06] p-4"><h3 className="font-black text-[var(--vndrly-amber)]">{title}</h3><p className="mt-2 text-xs leading-5 text-white">{copy}</p></li>)}
           </ol>
         </div>
       </section>

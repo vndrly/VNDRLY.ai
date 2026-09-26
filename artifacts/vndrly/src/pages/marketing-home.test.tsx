@@ -108,10 +108,14 @@ describe("VNDRLY public homepage", () => {
     expect(solutionsHeading.className).toContain("sm:text-[36px]");
 
     for (const title of ["Hotlist", "VNDRLY Gate"]) {
-      const card = screen.getByRole("heading", { name: title }).closest("article");
+      const productHeading = screen.getByRole("heading", { name: title });
+      const card = productHeading.closest("article");
       expect(card?.className).toContain("border-[var(--vndrly-amber)]");
       expect(card?.querySelector("svg")?.getAttribute("class")).toContain("text-[var(--vndrly-amber)]");
-      expect(screen.getByRole("heading", { name: title }).className).toContain("text-white");
+      expect(productHeading.className).toContain("text-2xl");
+      expect(productHeading.className).toContain("text-white");
+      expect(productHeading.parentElement?.className).toContain("flex");
+      expect(productHeading.previousElementSibling?.tagName).toBe("svg");
     }
 
     const workflowHeading = screen.getByRole("heading", {
@@ -126,7 +130,7 @@ describe("VNDRLY public homepage", () => {
     }
   });
 
-  it("places a seven-stage lifecycle stepper above white workflow blurbs", () => {
+  it("places a number-free seven-stage lifecycle stepper above white workflow blurbs", () => {
     render(<MarketingHome />);
 
     const stepper = screen.getByRole("list", { name: /job lifecycle progress/i });
@@ -138,9 +142,13 @@ describe("VNDRLY public homepage", () => {
     expect(workflowCards).toHaveLength(7);
     expect(stepper.compareDocumentPosition(cards) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 
-    for (const [index, title] of ["Find", "Dispatch", "Accept", "Assign", "Verify", "Complete", "Approve"].entries()) {
+    for (const title of ["Find", "Dispatch", "Accept", "Assign", "Verify", "Complete", "Approve"]) {
+      const index = ["Find", "Dispatch", "Accept", "Assign", "Verify", "Complete", "Approve"].indexOf(title);
       expect(within(stepperItems[index]).getByText(title, { exact: true })).toBeTruthy();
-      expect(within(stepperItems[index]).getByText(`0${index + 1}`, { exact: true })).toBeTruthy();
+      expect(stepperItems[index].querySelector("[data-step-dot]")?.className).toContain("bg-white");
+      expect(stepperItems[index].textContent).not.toContain(`0${index + 1}`);
+      expect(workflowCards[index].firstElementChild?.tagName).toBe("H3");
+      expect(workflowCards[index].textContent).not.toContain(`0${index + 1}`);
       expect(workflowCards[index].querySelector("p")?.className).toContain("text-white");
     }
   });
