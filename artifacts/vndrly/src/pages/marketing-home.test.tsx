@@ -84,7 +84,7 @@ describe("VNDRLY public homepage", () => {
     ).toBeTruthy();
     const comingSoonPill = within(payments).getByTestId("marketing-coming-soon-pill");
     expect(comingSoonPill.style.height).toBe("30px");
-    expect(comingSoonPill.className).toContain("shadow-[0_8px_20px_rgba(245,158,11,.3)]");
+    expect(comingSoonPill.className).not.toContain("shadow-[0_8px_20px_rgba(245,158,11,.3)]");
     const comingSoonText = within(comingSoonPill).getByText("Coming soon", { exact: true });
     expect(comingSoonText.className).toContain("text-[15px]");
     expect(comingSoonText.className).toContain("font-black");

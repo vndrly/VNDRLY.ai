@@ -225,7 +225,7 @@ export default function MarketingHome() {
       <section aria-label="Secure direct payments and payroll reporting" className="relative overflow-hidden bg-[#20262b] text-white">
         <div className="mx-auto grid max-w-7xl items-start gap-8 px-4 py-16 md:grid-cols-[1fr_auto]">
           <div>
-            <PngPill color="amber" height={30} className="min-w-32 shadow-[0_8px_20px_rgba(245,158,11,.3)]" data-testid="marketing-coming-soon-pill">
+            <PngPill color="amber" height={30} className="min-w-32" data-testid="marketing-coming-soon-pill">
               <span className="text-[15px] font-black">Coming soon</span>
             </PngPill>
             <div className="mt-5 space-y-8">
