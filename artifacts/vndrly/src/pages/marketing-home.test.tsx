@@ -49,6 +49,9 @@ describe("VNDRLY public homepage", () => {
     expect(signIn.style.height).toBe("30px");
     expect(signIn.querySelector("span")?.className).toContain("text-[15px]");
     expect(signIn.querySelector("span")?.className).toContain("font-black");
+    const signInLayers = signIn.querySelectorAll(":scope > div");
+    expect(signInLayers[1]?.className).toContain("group-hover:opacity-100");
+    expect(signInLayers[1]?.className).not.toContain("group-hover:opacity-90");
     expect(within(navigation).queryByRole("link", { name: /get started/i })).toBeNull();
     expect(screen.getAllByRole("link", { name: /get started/i }).length).toBeGreaterThan(1);
     expect(screen.getAllByRole("link", { name: /request a demo/i }).length).toBeGreaterThan(0);

@@ -263,7 +263,7 @@ export function PngPillLink({
       />
       <PillColorLayer
         src={activeSrc}
-        className="opacity-0 transition-opacity duration-200 group-hover:opacity-90 group-focus-visible:opacity-90 group-active:opacity-90"
+        className="opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100 group-active:opacity-100"
       />
       <PillGlossOverlay />
       <span
