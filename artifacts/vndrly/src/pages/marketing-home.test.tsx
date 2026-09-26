@@ -31,6 +31,11 @@ describe("VNDRLY public homepage", () => {
     expect(trustLabel.compareDocumentPosition(workHub) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(workHub.compareDocumentPosition(gettingStarted) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(within(workHub).getByRole("heading", { name: "Keep every conversation tied to the work." })).toBeTruthy();
+    expect(
+      within(workHub).getByText(
+        "Share durable updates, decisions, and company-wide messages using push notifications, without relying on scattered texts to coordinate work.",
+      ),
+    ).toBeTruthy();
 
     const cards = within(workHub).getAllByRole("article");
     expect(cards).toHaveLength(6);

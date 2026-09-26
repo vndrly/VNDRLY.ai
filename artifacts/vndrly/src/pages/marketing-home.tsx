@@ -42,7 +42,7 @@ const workHubFeatures = [
   [CalendarDays, "Calendars & scheduling", "Keep meetings, deadlines, shifts, and shared events visible to the people who need them."],
   [ListChecks, "Tasks & handoffs", "Assign owners, track progress, and move work between field and office teams without losing the next step."],
   [Files, "Forms & files", "Keep operational forms, documents, photos, and reference files where the work is happening."],
-  [Megaphone, "Notes & announcements", "Share durable updates, decisions, and company-wide messages without relying on scattered texts."],
+  [Megaphone, "Notes & announcements", "Share durable updates, decisions, and company-wide messages using push notifications, without relying on scattered texts to coordinate work."],
   [Video, "Meetings & role-aware collaboration", "Bring the right partners, vendors, and employees together while keeping access aligned with their roles."],
 ] as const;
 
