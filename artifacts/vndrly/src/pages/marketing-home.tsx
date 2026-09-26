@@ -38,7 +38,7 @@ import { VNDRLY_LOGO_SQUARE } from "@/lib/vndrly-brand-assets";
 const solutionIcons = [Radar, ShieldCheck];
 const moduleIcons = [MapPinned, ClipboardCheck, Users, BriefcaseBusiness];
 const workHubFeatures = [
-  [MessageSquare, "Single or Group Chats", "Organize team discussions by project, site, vendor, or priority so context stays attached."],
+  [MessageSquare, "Single or group chat conversations", "Organize team discussions by project, site, vendor, or priority so context stays attached."],
   [CalendarDays, "Calendars & scheduling", "Keep meetings, deadlines, shifts, and shared events visible to the people who need them."],
   [ListChecks, "Tasks & handoffs", "Assign owners, track progress, and move work between field and office teams without losing the next step."],
   [Files, "Forms & files", "Keep operational forms, documents, photos, and reference files where the work is happening."],
