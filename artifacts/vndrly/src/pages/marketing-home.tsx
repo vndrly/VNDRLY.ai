@@ -46,11 +46,21 @@ function PrimaryLink({ children, href }: { children: React.ReactNode; href: stri
   );
 }
 
-function SectionLabel({ children, shadow = false }: { children: React.ReactNode; shadow?: boolean }) {
+function SectionLabel({ children, featured = false }: { children: React.ReactNode; featured?: boolean }) {
   return (
     <p
       className="text-xs font-black uppercase tracking-[.24em] text-[var(--vndrly-amber)]"
-      style={shadow ? { textShadow: "0 2px 4px rgba(0, 0, 0, 0.8)" } : undefined}
+      style={featured ? {
+        display: "inline-block",
+        backgroundColor: "#2b3035",
+        borderWidth: 2,
+        borderStyle: "solid",
+        borderColor: "var(--vndrly-amber)",
+        borderRadius: 8,
+        padding: "6px 12px",
+        fontSize: 14,
+        lineHeight: "18px",
+      } : undefined}
     >
       {children}
     </p>
@@ -133,7 +143,7 @@ export default function MarketingHome() {
       <SectionDivider />
       <section id="solutions" className="mx-auto max-w-7xl px-4 py-20">
         <div className="max-w-3xl">
-          <SectionLabel shadow>Featured solutions</SectionLabel>
+          <SectionLabel featured>Featured solutions</SectionLabel>
           <h2 className="mt-3 text-[23px] font-black sm:text-[36px]">Put the network to work.</h2>
           <p className="mt-4 text-lg leading-8 text-slate-600">Discover the right company when work appears, then keep every field and office handoff tied to the same trusted operational record.</p>
         </div>
@@ -149,7 +159,7 @@ export default function MarketingHome() {
       <section id="workflow" className="bg-[#1f252a] text-white">
         <div className="mx-auto max-w-7xl px-4 py-20">
           <p className="text-xs font-black uppercase tracking-[.24em] text-[var(--vndrly-amber)]">One connected job lifecycle</p>
-          <h2 className="mt-3 max-w-4xl text-[23px] font-black sm:text-[36px]">From “we need this done” to an approval-ready record.</h2>
+          <h2 className="mt-3 max-w-4xl text-[23px] font-black sm:text-[36px]">From “we need this done” to an approval-ready record, ready to be paid</h2>
           <div className="mt-10 overflow-x-auto">
             <ol aria-label="Job lifecycle progress" className="grid min-w-[760px] grid-cols-7">
               {JOB_WORKFLOW.map(([title], index) => <li key={title} className="relative flex flex-col items-center px-2 text-center">

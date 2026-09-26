@@ -71,7 +71,12 @@ describe("VNDRLY public homepage", () => {
     expect(screen.getByText("Verified vendors. Connected operations.").className).toContain("text-[var(--vndrly-amber)]");
     const featuredSolutionsLabel = screen.getByText("Featured solutions");
     expect(featuredSolutionsLabel.className).toContain("text-[var(--vndrly-amber)]");
-    expect(featuredSolutionsLabel.style.textShadow).toBe("0 2px 4px rgba(0, 0, 0, 0.8)");
+    expect(featuredSolutionsLabel.style.textShadow).toBe("");
+    expect(featuredSolutionsLabel.style.backgroundColor).toBe("rgb(43, 48, 53)");
+    expect(featuredSolutionsLabel.style.borderWidth).toBe("2px");
+    expect(featuredSolutionsLabel.style.borderColor).toBe("var(--vndrly-amber)");
+    expect(featuredSolutionsLabel.style.padding).toBe("6px 12px");
+    expect(featuredSolutionsLabel.style.fontSize).toBe("14px");
     expect(screen.getByTestId("hero-fade").className).toContain("to-[#3a3d42]");
 
     for (const link of screen.getAllByRole("link", { name: /get started/i })) {
@@ -209,7 +214,7 @@ describe("VNDRLY public homepage", () => {
     }
 
     const workflowHeading = screen.getByRole("heading", {
-      name: /approval-ready record/i,
+      name: "From “we need this done” to an approval-ready record, ready to be paid",
     });
     expect(workflowHeading.className).toContain("text-[23px]");
     expect(workflowHeading.className).toContain("sm:text-[36px]");
