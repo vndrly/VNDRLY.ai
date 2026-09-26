@@ -60,7 +60,7 @@ describe("VNDRLY public homepage", () => {
     expect(headline.className).toContain("lg:text-[54px]");
 
     expect(screen.getByText("Verified vendors. Connected operations.").className).toContain("text-amber-300");
-    expect(screen.getByText("Featured solutions").className).toContain("text-amber-700");
+    expect(screen.getByText("Featured solutions").className).toContain("text-[#F59E0B]");
     expect(screen.getByTestId("hero-fade").className).toContain("to-[#3a3d42]");
 
     for (const link of screen.getAllByRole("link", { name: /get started/i })) {
@@ -89,6 +89,32 @@ describe("VNDRLY public homepage", () => {
 
     expect(screen.getByText("A living vendor directory").className).toContain("text-[#F59E0B]");
     expect(screen.getByText("Maintained by the people doing the work").className).toContain("text-slate-300");
+  });
+
+  it("uses compact section headings and exact VNDRLY amber card treatments", () => {
+    render(<MarketingHome />);
+
+    const solutionsHeading = screen.getByRole("heading", { name: "Put the network to work." });
+    expect(solutionsHeading.className).toContain("text-[23px]");
+    expect(solutionsHeading.className).toContain("sm:text-[36px]");
+
+    for (const title of ["Hotlist", "VNDRLY Gate"]) {
+      const card = screen.getByRole("heading", { name: title }).closest("article");
+      expect(card?.className).toContain("border-[#F59E0B]");
+      expect(card?.querySelector("svg")?.getAttribute("class")).toContain("text-[#F59E0B]");
+      expect(screen.getByRole("heading", { name: title }).className).toContain("text-[#F59E0B]");
+    }
+
+    const workflowHeading = screen.getByRole("heading", {
+      name: /approval-ready record/i,
+    });
+    expect(workflowHeading.className).toContain("text-[23px]");
+    expect(workflowHeading.className).toContain("sm:text-[36px]");
+
+    for (const card of within(screen.getByRole("list", { name: /job workflow/i })).getAllByRole("listitem")) {
+      expect(card.className).toContain("border-[#F59E0B]");
+      expect(card.querySelector("h3")?.className).toContain("text-[#F59E0B]");
+    }
   });
 
   it("uses the approved network and security language", () => {

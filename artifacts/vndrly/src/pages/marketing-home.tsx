@@ -43,7 +43,7 @@ function PrimaryLink({ children, href }: { children: React.ReactNode; href: stri
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-xs font-black uppercase tracking-[.24em] text-amber-700">
+    <p className="text-xs font-black uppercase tracking-[.24em] text-[#F59E0B]">
       {children}
     </p>
   );
@@ -54,7 +54,7 @@ function BenefitList({ items }: { items: string[] }) {
     <ul className="mt-6 space-y-4">
       {items.map((item) => (
         <li key={item} className="flex gap-3 text-sm leading-6 text-slate-600">
-          <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-800">
+          <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#F59E0B]/15 text-[#F59E0B]">
             <Check className="h-3.5 w-3.5" />
           </span>
           {item}
@@ -123,23 +123,23 @@ export default function MarketingHome() {
       <section id="solutions" className="mx-auto max-w-7xl px-4 py-20">
         <div className="max-w-3xl">
           <SectionLabel>Featured solutions</SectionLabel>
-          <h2 className="mt-3 text-3xl font-black sm:text-5xl">Put the network to work.</h2>
+          <h2 className="mt-3 text-[23px] font-black sm:text-[36px]">Put the network to work.</h2>
           <p className="mt-4 text-lg leading-8 text-slate-600">Discover the right company when work appears, then keep every field and office handoff tied to the same trusted operational record.</p>
         </div>
         <div className="mt-10 grid gap-6 lg:grid-cols-2">
           {FEATURED_SOLUTIONS.map((solution, index) => {
             const Icon = solutionIcons[index];
-            return <article key={solution.title} className="relative overflow-hidden rounded-3xl border-2 border-amber-500/70 bg-white p-7 shadow-[0_18px_50px_rgba(15,23,42,.08)] sm:p-9"><div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-amber-200 via-amber-500 to-orange-700"/><Icon className="h-9 w-9 text-amber-700"/><p className="mt-5 text-xs font-black uppercase tracking-[.18em] text-amber-700">{solution.eyebrow}</p><h3 className="mt-2 text-3xl font-black text-amber-700">{solution.title}</h3><p className="mt-3 leading-7 text-slate-600">{solution.description}</p><BenefitList items={solution.points}/></article>;
+            return <article key={solution.title} className="relative overflow-hidden rounded-3xl border-2 border-[#F59E0B] bg-white p-7 shadow-[0_18px_50px_rgba(15,23,42,.08)] sm:p-9"><div className="absolute inset-x-0 top-0 h-1 bg-[#F59E0B]"/><Icon className="h-9 w-9 text-[#F59E0B]"/><p className="mt-5 text-xs font-black uppercase tracking-[.18em] text-[#F59E0B]">{solution.eyebrow}</p><h3 className="mt-2 text-3xl font-black text-[#F59E0B]">{solution.title}</h3><p className="mt-3 leading-7 text-slate-600">{solution.description}</p><BenefitList items={solution.points}/></article>;
           })}
         </div>
       </section>
 
       <section id="workflow" className="border-y border-slate-300 bg-[#1f252a] text-white">
         <div className="mx-auto max-w-7xl px-4 py-20">
-          <p className="text-xs font-black uppercase tracking-[.24em] text-amber-300">One connected job lifecycle</p>
-          <h2 className="mt-3 max-w-4xl text-3xl font-black sm:text-5xl">From “we need this done” to an approval-ready record.</h2>
+          <p className="text-xs font-black uppercase tracking-[.24em] text-[#F59E0B]">One connected job lifecycle</p>
+          <h2 className="mt-3 max-w-4xl text-[23px] font-black sm:text-[36px]">From “we need this done” to an approval-ready record.</h2>
           <ol aria-label="VNDRLY job workflow" className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-7">
-            {JOB_WORKFLOW.map(([title, copy], index) => <li key={title} className="rounded-2xl border border-white/15 bg-white/[.06] p-4"><span className="text-xs font-black text-amber-300">0{index + 1}</span><h3 className="mt-2 font-black text-amber-300">{title}</h3><p className="mt-2 text-xs leading-5 text-slate-300">{copy}</p></li>)}
+            {JOB_WORKFLOW.map(([title, copy], index) => <li key={title} className="rounded-2xl border border-[#F59E0B] bg-white/[.06] p-4"><span className="text-xs font-black text-[#F59E0B]">0{index + 1}</span><h3 className="mt-2 font-black text-[#F59E0B]">{title}</h3><p className="mt-2 text-xs leading-5 text-slate-300">{copy}</p></li>)}
           </ol>
         </div>
       </section>
