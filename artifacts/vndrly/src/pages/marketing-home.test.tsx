@@ -73,7 +73,7 @@ describe("VNDRLY public homepage", () => {
     expect(screen.getByTestId("hero-fade").className).toContain("to-[#3a3d42]");
 
     for (const link of screen.getAllByRole("link", { name: /get started/i })) {
-      expect(link.firstElementChild?.getAttribute("data-color")).toBe("amber");
+      expect(link.getAttribute("data-color")).toBe("amber");
     }
 
     for (const title of ["Verified fit", "Earned reputation", "Faster discovery", "Security aware"]) {
@@ -100,12 +100,12 @@ describe("VNDRLY public homepage", () => {
       expect(action.className).toContain("font-bold");
     }
     for (const action of primaryActions) {
-      const paintedPill = action.firstElementChild as HTMLElement;
-      expect(paintedPill.style.height).toBe("30px");
-      expect(paintedPill.style.minHeight).toBe("30px");
-      expect(paintedPill.style.maxHeight).toBe("30px");
-      expect(paintedPill.className).not.toContain("h-[23px]");
-      expect(paintedPill.querySelector("span span")?.className).toContain("font-black");
+      expect(action.getAttribute("data-color")).toBe("amber");
+      expect(action.className).toContain("group");
+      const layers = Array.from(action.children).filter((child) => child.tagName === "DIV") as HTMLElement[];
+      expect(layers[0]?.className).toContain("group-hover:opacity-0");
+      expect(layers[1]?.className).toContain("group-hover:opacity-100");
+      expect(action.querySelector(":scope > span")?.className).toContain("font-black");
     }
     for (const action of demoActions) {
       expect(action.style.fontSize).toBe("13px");

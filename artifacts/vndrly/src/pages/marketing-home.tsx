@@ -33,16 +33,16 @@ const moduleIcons = [MapPinned, ClipboardCheck, Users, BriefcaseBusiness];
 
 function PrimaryLink({ children, href }: { children: React.ReactNode; href: string }) {
   return (
-    <a
+    <PngPillLink
       href={href}
+      color="amber"
+      height={30}
       data-testid="marketing-primary-cta"
-      className="inline-flex items-center text-[13px] font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vndrly-amber)]"
-      style={{ height: 30, minHeight: 30, maxHeight: 30, boxSizing: "border-box" }}
+      className="min-w-36 text-[13px] font-bold"
+      labelClassName="text-[13px] font-black"
     >
-      <PngPill className="min-w-36" color="amber" height={30}>
-        <span className="flex items-center gap-1.5 text-[13px] font-black">{children}</span>
-      </PngPill>
-    </a>
+      {children}
+    </PngPillLink>
   );
 }
 
