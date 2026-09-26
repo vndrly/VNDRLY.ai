@@ -21,11 +21,22 @@ describe("VNDRLY public homepage", () => {
     expect(screen.getByRole("heading", { name: /vndrly gate/i })).toBeTruthy();
   });
 
-  it("labels unfinished payments as coming soon", () => {
+  it("shows the payment and payroll roadmap as coming soon", () => {
     render(<MarketingHome />);
 
     const payments = screen.getByRole("region", { name: /secure direct payments/i });
     expect(within(payments).getAllByText(/coming soon/i).length).toBeGreaterThan(0);
+    const directPayments = within(payments).getByRole("heading", { name: "Secure direct payments" });
+    const payrollReporting = within(payments).getByRole("heading", { name: "Make Payroll & IRS Reporting" });
+    expect(
+      directPayments.compareDocumentPosition(payrollReporting) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      within(payments).getByText(
+        "Manage mileage and hours for your employees, compatible with QuickBooks, OpenAccountant with CSV exports available if you choose.",
+      ),
+    ).toBeTruthy();
+    expect(within(payments).getByTestId("marketing-coming-soon-pill").style.height).toBe("30px");
     expect(within(payments).queryByText(/available now|pay today/i)).toBeNull();
   });
 

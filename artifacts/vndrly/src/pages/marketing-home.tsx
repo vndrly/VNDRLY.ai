@@ -207,11 +207,22 @@ export default function MarketingHome() {
       </section>
 
       <SectionDivider />
-      <section aria-label="Secure direct payments" className="relative overflow-hidden bg-gradient-to-br from-cyan-950 via-slate-900 to-slate-950 text-white">
-        <div className="mx-auto grid max-w-7xl items-center gap-8 px-4 py-16 md:grid-cols-[auto_1fr_auto]">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-[var(--vndrly-amber)] bg-[var(--vndrly-amber)]/10"><CreditCard className="h-8 w-8 text-[var(--vndrly-amber)]"/></div>
-          <div><p className="text-xs font-black uppercase tracking-[.2em] text-[var(--vndrly-amber)]">Coming soon</p><h2 className="mt-2 text-3xl font-black">Secure direct payments</h2><p className="mt-3 max-w-3xl leading-7 text-slate-300">Move from approved work toward vendor payment without breaking the connected workflow. Payment availability, timing, and terms will be announced after the end-to-end service is verified.</p></div>
-          <PngPill color="amber" className="min-w-32">Coming soon</PngPill>
+      <section aria-label="Secure direct payments and payroll reporting" className="relative overflow-hidden bg-gradient-to-br from-cyan-950 via-slate-900 to-slate-950 text-white">
+        <div className="mx-auto grid max-w-7xl items-start gap-8 px-4 py-16 md:grid-cols-[1fr_auto]">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[.2em] text-[var(--vndrly-amber)]">Coming soon</p>
+            <div className="mt-5 space-y-8">
+              <div className="grid gap-5 sm:grid-cols-[auto_1fr]">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-[var(--vndrly-amber)] bg-[var(--vndrly-amber)]/10"><CreditCard className="h-8 w-8 text-[var(--vndrly-amber)]"/></div>
+                <div><h2 className="text-3xl font-black">Secure direct payments</h2><p className="mt-3 max-w-3xl leading-7 text-slate-300">Move from approved work toward vendor payment without breaking the connected workflow. Payment availability, timing, and terms will be announced after the end-to-end service is verified.</p></div>
+              </div>
+              <div className="grid gap-5 sm:grid-cols-[auto_1fr]">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-[var(--vndrly-amber)] bg-[var(--vndrly-amber)]/10"><ClipboardCheck className="h-8 w-8 text-[var(--vndrly-amber)]"/></div>
+                <div><h2 className="text-3xl font-black">Make Payroll &amp; IRS Reporting</h2><p className="mt-3 max-w-3xl leading-7 text-slate-300">Manage mileage and hours for your employees, compatible with QuickBooks, OpenAccountant with CSV exports available if you choose.</p></div>
+              </div>
+            </div>
+          </div>
+          <PngPill color="amber" height={30} className="min-w-32" data-testid="marketing-coming-soon-pill">Coming soon</PngPill>
         </div>
       </section>
 
