@@ -129,6 +129,10 @@ export const PNG_PILL_COLORS = {
   amber: "#F59E0B",
 } as const;
 
+function exactPillHeight(height: number): React.CSSProperties {
+  return { height, minHeight: height, maxHeight: height, boxSizing: "border-box" };
+}
+
 export type PngPillColor = keyof typeof PNG_PILL_COLORS;
 
 function hoverSrcForColor(
@@ -189,11 +193,11 @@ export default function PngPill({
     <div
       className={cn(
         wrapperClass,
-        PILL_HEIGHT_CLASS,
+        height === PILL_HEIGHT_PX && PILL_HEIGHT_CLASS,
         interactive && "pointer-events-auto",
         className,
       )}
-      style={{ height }}
+      style={exactPillHeight(height)}
       data-testid={props["data-testid"]}
       data-color={props["data-color"] ?? color}
       aria-label={props["aria-label"]}
@@ -243,12 +247,12 @@ export function PngPillLink({
       href={href}
       className={cn(
         PILL_WRAPPER_CLASS,
-        PILL_HEIGHT_CLASS,
+        height === PILL_HEIGHT_PX && PILL_HEIGHT_CLASS,
         "group cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vndrly-amber)]",
         "transition-transform active:scale-[0.98]",
         className,
       )}
-      style={{ height }}
+      style={exactPillHeight(height)}
       data-testid={props["data-testid"]}
       data-color={color}
       aria-label={props["aria-label"]}
@@ -348,14 +352,14 @@ export function PngPillButton({
       title={title}
       className={cn(
         PILL_WRAPPER_CLASS,
-        PILL_HEIGHT_CLASS,
+        height === PILL_HEIGHT_PX && PILL_HEIGHT_CLASS,
         "group cursor-pointer bg-transparent border-0 p-0",
         fullWidth && "w-full",
         "transition-transform active:scale-[0.98]",
         "disabled:opacity-50 disabled:cursor-not-allowed",
         className,
       )}
-      style={{ height }}
+      style={exactPillHeight(height)}
       data-testid={props["data-testid"]}
       role={props.role}
       aria-label={props["aria-label"]}

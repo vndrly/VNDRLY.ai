@@ -91,8 +91,17 @@ describe("VNDRLY public homepage", () => {
 
     for (const action of [...primaryActions, ...demoActions]) {
       expect(action.style.height).toBe("25px");
+      expect(action.style.minHeight).toBe("25px");
+      expect(action.style.maxHeight).toBe("25px");
       expect(action.className).toContain("text-[13px]");
       expect(action.className).toContain("font-bold");
+    }
+    for (const action of primaryActions) {
+      const paintedPill = action.firstElementChild as HTMLElement;
+      expect(paintedPill.style.height).toBe("25px");
+      expect(paintedPill.style.minHeight).toBe("25px");
+      expect(paintedPill.style.maxHeight).toBe("25px");
+      expect(paintedPill.className).not.toContain("h-[23px]");
     }
     for (const action of demoActions) {
       expect(action.style.fontSize).toBe("13px");
