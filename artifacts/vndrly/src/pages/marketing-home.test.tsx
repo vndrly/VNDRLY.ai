@@ -59,8 +59,8 @@ describe("VNDRLY public homepage", () => {
     expect(headline.className).toContain("sm:text-[45px]");
     expect(headline.className).toContain("lg:text-[54px]");
 
-    expect(screen.getByText("Verified vendors. Connected operations.").className).toContain("text-amber-300");
-    expect(screen.getByText("Featured solutions").className).toContain("text-[#F59E0B]");
+    expect(screen.getByText("Verified vendors. Connected operations.").className).toContain("text-[var(--vndrly-amber)]");
+    expect(screen.getByText("Featured solutions").className).toContain("text-[var(--vndrly-amber)]");
     expect(screen.getByTestId("hero-fade").className).toContain("to-[#3a3d42]");
 
     for (const link of screen.getAllByRole("link", { name: /get started/i })) {
@@ -68,8 +68,8 @@ describe("VNDRLY public homepage", () => {
     }
 
     const highlightTitle = screen.getByRole("heading", { name: "Verified fit" });
-    expect(highlightTitle.className).toContain("text-amber-300");
-    expect(highlightTitle.parentElement?.querySelector("svg")?.getAttribute("class")).toContain("text-amber-300");
+    expect(highlightTitle.className).toContain("text-[var(--vndrly-amber)]");
+    expect(highlightTitle.parentElement?.querySelector("svg")?.getAttribute("class")).toContain("text-[var(--vndrly-amber)]");
   });
 
   it("uses the exact VNDRLY amber for public actions and navigation", () => {
@@ -77,17 +77,17 @@ describe("VNDRLY public homepage", () => {
 
     const navigation = screen.getByRole("navigation", { name: /public navigation/i });
     for (const label of ["Solutions", "How it works", "For partners", "For vendors", "Sign in"]) {
-      expect(within(navigation).getByRole("link", { name: label }).className).toContain("hover:text-[#F59E0B]");
+      expect(within(navigation).getByRole("link", { name: label }).className).toContain("hover:text-[var(--vndrly-amber)]");
     }
 
     for (const link of screen.getAllByRole("link", { name: /request a demo/i })) {
-      expect(link.className).toContain("hover:text-[#F59E0B]");
+      expect(link.className).toContain("hover:text-[var(--vndrly-amber)]");
       if (link.className.includes("rounded-full")) {
-        expect(link.className).toContain("hover:border-[#F59E0B]");
+        expect(link.className).toContain("hover:border-[var(--vndrly-amber)]");
       }
     }
 
-    expect(screen.getByText("A living vendor directory").className).toContain("text-[#F59E0B]");
+    expect(screen.getByText("A living vendor directory").className).toContain("text-[var(--vndrly-amber)]");
     expect(screen.getByText("Maintained by the people doing the work").className).toContain("text-slate-300");
   });
 
@@ -100,9 +100,9 @@ describe("VNDRLY public homepage", () => {
 
     for (const title of ["Hotlist", "VNDRLY Gate"]) {
       const card = screen.getByRole("heading", { name: title }).closest("article");
-      expect(card?.className).toContain("border-[#F59E0B]");
-      expect(card?.querySelector("svg")?.getAttribute("class")).toContain("text-[#F59E0B]");
-      expect(screen.getByRole("heading", { name: title }).className).toContain("text-[#F59E0B]");
+      expect(card?.className).toContain("border-[var(--vndrly-amber)]");
+      expect(card?.querySelector("svg")?.getAttribute("class")).toContain("text-[var(--vndrly-amber)]");
+      expect(screen.getByRole("heading", { name: title }).className).toContain("text-[var(--vndrly-amber)]");
     }
 
     const workflowHeading = screen.getByRole("heading", {
@@ -112,9 +112,38 @@ describe("VNDRLY public homepage", () => {
     expect(workflowHeading.className).toContain("sm:text-[36px]");
 
     for (const card of within(screen.getByRole("list", { name: /job workflow/i })).getAllByRole("listitem")) {
-      expect(card.className).toContain("border-[#F59E0B]");
-      expect(card.querySelector("h3")?.className).toContain("text-[#F59E0B]");
+      expect(card.className).toContain("border-[var(--vndrly-amber)]");
+      expect(card.querySelector("h3")?.className).toContain("text-[var(--vndrly-amber)]");
     }
+  });
+
+  it("uses charcoal partner and vendor cards with exact VNDRLY amber accents", () => {
+    render(<MarketingHome />);
+
+    for (const name of [/^For partners:/i, /^For vendors:/i]) {
+      const card = screen.getByRole("heading", { name }).closest("article");
+      expect(card?.className).toContain("bg-[#2b3035]");
+      expect(card?.className).toContain("border-[var(--vndrly-amber)]");
+      expect(card?.querySelector("svg")?.getAttribute("class")).toContain("text-[var(--vndrly-amber)]");
+      expect(card?.querySelector("h2")?.className).toContain("text-[var(--vndrly-amber)]");
+      for (const item of card?.querySelectorAll("li") ?? []) {
+        expect(item.className).toContain("text-slate-300");
+      }
+    }
+  });
+
+  it("uses only the exact VNDRLY amber across public branded accents", () => {
+    render(<MarketingHome />);
+
+    expect(screen.getByTestId("marketing-home").style.getPropertyValue("--vndrly-amber")).toBe("#F59E0B");
+
+    const offBrandAmber = [...document.querySelectorAll("[class]")]
+      .map((element) => element.getAttribute("class") ?? "")
+      .filter((className) =>
+        /(?:text|border|bg|ring)-(?:amber|orange)-\d+/.test(className) || className.includes("#F59E0B"),
+      );
+
+    expect(offBrandAmber).toEqual([]);
   });
 
   it("uses the approved network and security language", () => {
