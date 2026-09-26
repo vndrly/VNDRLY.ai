@@ -88,7 +88,16 @@ describe("VNDRLY public homepage", () => {
     }
 
     expect(screen.getByText("A living vendor directory").className).toContain("text-[var(--vndrly-amber)]");
-    expect(screen.getByText("Maintained by the people doing the work").className).toContain("text-slate-300");
+    expect(screen.getByText("Maintained by the people doing the work").className).toContain("text-white");
+
+    for (const copy of [
+      "Services, geography, eligibility, and current operational context.",
+      "Ratings and activity signals grounded in completed work.",
+      "Find qualified providers fast through our network of vendors.",
+      "All transactions are audited for security 24/7",
+    ]) {
+      expect(screen.getByText(copy).className).toContain("text-white");
+    }
   });
 
   it("uses compact section headings and exact VNDRLY amber card treatments", () => {

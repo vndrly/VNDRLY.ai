@@ -104,7 +104,7 @@ export default function MarketingHome() {
             </div>
           </div>
           <aside className="rounded-3xl border border-white/20 bg-black/35 p-6 shadow-2xl backdrop-blur-md sm:p-8" aria-label="Verified network highlights">
-            <div className="flex items-center gap-3"><Network className="h-8 w-8 text-[var(--vndrly-amber)]" /><div><p className="text-xs font-black uppercase tracking-[.18em] text-[var(--vndrly-amber)]">A living vendor directory</p><p className="font-bold text-slate-300">Maintained by the people doing the work</p></div></div>
+            <div className="flex items-center gap-3"><Network className="h-8 w-8 text-[var(--vndrly-amber)]" /><div><p className="text-xs font-black uppercase tracking-[.18em] text-[var(--vndrly-amber)]">A living vendor directory</p><p className="font-bold text-white">Maintained by the people doing the work</p></div></div>
             <div className="mt-7 grid gap-4 sm:grid-cols-2">
               {[
                 [BadgeCheck, "Verified fit", "Services, geography, eligibility, and current operational context."],
@@ -113,7 +113,7 @@ export default function MarketingHome() {
                 [ShieldCheck, "Security aware", "All transactions are audited for security 24/7"],
               ].map(([Icon, title, copy]) => {
                 const CardIcon = Icon as typeof BadgeCheck;
-                return <div key={title as string} className="rounded-2xl border border-white/15 bg-white/10 p-4"><CardIcon className="h-5 w-5 text-[var(--vndrly-amber)]"/><h2 className="mt-3 font-black text-[var(--vndrly-amber)]">{title as string}</h2><p className="mt-1 text-sm leading-6 text-slate-300">{copy as string}</p></div>;
+                return <div key={title as string} className="rounded-2xl border border-white/15 bg-white/10 p-4"><CardIcon className="h-5 w-5 text-[var(--vndrly-amber)]"/><h2 className="mt-3 font-black text-[var(--vndrly-amber)]">{title as string}</h2><p className="mt-1 text-sm leading-6 text-white">{copy as string}</p></div>;
               })}
             </div>
           </aside>
