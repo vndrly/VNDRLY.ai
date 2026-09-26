@@ -242,6 +242,27 @@ describe("VNDRLY public homepage", () => {
     }
   });
 
+  it("matches trust and Product Guide cards to the featured solution treatment", () => {
+    render(<MarketingHome />);
+
+    for (const label of ["Verified operational signals", "Role and organization permissions", "Reputation built through work", "No public account directory"]) {
+      const card = screen.getByText(label, { exact: true }).closest('[data-testid="marketing-card"]');
+      expect(card?.className).toContain("border-2");
+      expect(card?.className).toContain("border-[var(--vndrly-amber)]");
+      expect(card?.className).toContain("bg-[#2b3035]");
+      expect(card?.className).toContain("text-white");
+      expect(card?.querySelector("svg")?.getAttribute("class")).toContain("text-[var(--vndrly-amber)]");
+    }
+
+    const productGuideHeading = screen.getByRole("heading", { name: "Questions before you sign in?" });
+    const productGuideCard = productGuideHeading.closest("aside");
+    expect(productGuideCard?.className).toContain("border-2");
+    expect(productGuideCard?.className).toContain("border-[var(--vndrly-amber)]");
+    expect(productGuideCard?.className).toContain("bg-[#2b3035]");
+    expect(productGuideHeading.className).toContain("text-white");
+    expect(productGuideCard?.querySelector("p.leading-7")?.className).toContain("text-white");
+  });
+
   it("places a number-free seven-stage lifecycle stepper above white workflow blurbs", () => {
     render(<MarketingHome />);
 

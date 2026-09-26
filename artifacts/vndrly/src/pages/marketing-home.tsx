@@ -220,12 +220,12 @@ export default function MarketingHome() {
           <SectionLabel>Trust without exposure</SectionLabel>
           <h2 className="mt-3 text-3xl font-black sm:text-5xl">Useful signals. Private relationships.</h2>
           <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-600">VNDRLY can help rank vendor fit using service alignment, operating geography, verified activity, responsiveness, and ratings. The public experience does not reveal who hired whom, private job details, or organization records.</p>
-          <div className="mt-8 grid gap-4 sm:grid-cols-2">{[[BadgeCheck,"Verified operational signals"],[ShieldCheck,"Role and organization permissions"],[Star,"Reputation built through work"],[Network,"No public account directory"]].map(([Icon,label]) => { const TrustIcon = Icon as typeof BadgeCheck; return <div key={label as string} data-testid="marketing-card" className="flex items-center gap-3 rounded-xl border-2 border-[var(--vndrly-amber)] bg-white p-4 font-bold text-[var(--vndrly-amber)]"><TrustIcon className="h-5 w-5 text-[var(--vndrly-amber)]"/>{label as string}</div>; })}</div>
+          <div className="mt-8 grid gap-4 sm:grid-cols-2">{[[BadgeCheck,"Verified operational signals"],[ShieldCheck,"Role and organization permissions"],[Star,"Reputation built through work"],[Network,"No public account directory"]].map(([Icon,label]) => { const TrustIcon = Icon as typeof BadgeCheck; return <div key={label as string} data-testid="marketing-card" className="flex items-center gap-3 rounded-2xl border-2 border-[var(--vndrly-amber)] bg-[#2b3035] p-4 font-bold text-white shadow-[0_18px_50px_rgba(15,23,42,.16)]"><TrustIcon className="h-5 w-5 text-[var(--vndrly-amber)]"/>{label as string}</div>; })}</div>
         </div>
-        <aside data-testid="marketing-card" className="rounded-3xl border-2 border-[var(--vndrly-amber)] bg-white p-8 shadow-xl">
+        <aside data-testid="marketing-card" className="rounded-3xl border-2 border-[var(--vndrly-amber)] bg-[#2b3035] p-8 text-white shadow-xl">
           <SectionLabel>Ask V — Product Guide</SectionLabel>
-          <h2 className="mt-3 text-3xl font-black text-[var(--vndrly-amber)]">Questions before you sign in?</h2>
-          <p className="mt-4 leading-7 text-slate-600">Ask about product fit, roles, signup, onboarding, demos, or sales. The public Product Guide uses approved public information only and cannot access accounts, operational records, or internal actions.</p>
+          <h2 className="mt-3 text-3xl font-black text-white">Questions before you sign in?</h2>
+          <p className="mt-4 leading-7 text-white">Ask about product fit, roles, signup, onboarding, demos, or sales. The public Product Guide uses approved public information only and cannot access accounts, operational records, or internal actions.</p>
           <p className="mt-6 text-sm font-bold text-[var(--vndrly-amber)]">Open Ask V in the lower-right corner.</p>
         </aside>
       </section>
