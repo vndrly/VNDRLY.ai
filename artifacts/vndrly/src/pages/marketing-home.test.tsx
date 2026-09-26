@@ -47,4 +47,28 @@ describe("VNDRLY public homepage", () => {
     expect(screen.getAllByRole("link", { name: /get started/i }).length).toBeGreaterThan(1);
     expect(screen.getAllByRole("link", { name: /request a demo/i }).length).toBeGreaterThan(0);
   });
+
+  it("uses the approved compact amber homepage treatment", () => {
+    render(<MarketingHome />);
+
+    const headline = screen.getByRole("heading", {
+      level: 1,
+      name: /trusted vendor network/i,
+    });
+    expect(headline.className).toContain("text-[27px]");
+    expect(headline.className).toContain("sm:text-[45px]");
+    expect(headline.className).toContain("lg:text-[54px]");
+
+    expect(screen.getByText("Verified vendors. Connected operations.").className).toContain("text-amber-300");
+    expect(screen.getByText("Featured solutions").className).toContain("text-amber-700");
+    expect(screen.getByTestId("hero-fade").className).toContain("to-[#3a3d42]");
+
+    for (const link of screen.getAllByRole("link", { name: /get started/i })) {
+      expect(link.firstElementChild?.getAttribute("data-color")).toBe("amber");
+    }
+
+    const highlightTitle = screen.getByRole("heading", { name: "Verified fit" });
+    expect(highlightTitle.className).toContain("text-amber-300");
+    expect(highlightTitle.parentElement?.querySelector("svg")?.getAttribute("class")).toContain("text-amber-300");
+  });
 });
