@@ -46,9 +46,12 @@ function PrimaryLink({ children, href }: { children: React.ReactNode; href: stri
   );
 }
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
+function SectionLabel({ children, shadow = false }: { children: React.ReactNode; shadow?: boolean }) {
   return (
-    <p className="text-xs font-black uppercase tracking-[.24em] text-[var(--vndrly-amber)]">
+    <p
+      className="text-xs font-black uppercase tracking-[.24em] text-[var(--vndrly-amber)]"
+      style={shadow ? { textShadow: "0 2px 4px rgba(0, 0, 0, 0.8)" } : undefined}
+    >
       {children}
     </p>
   );
@@ -125,7 +128,7 @@ export default function MarketingHome() {
 
       <section id="solutions" className="mx-auto max-w-7xl px-4 py-20">
         <div className="max-w-3xl">
-          <SectionLabel>Featured solutions</SectionLabel>
+          <SectionLabel shadow>Featured solutions</SectionLabel>
           <h2 className="mt-3 text-[23px] font-black sm:text-[36px]">Put the network to work.</h2>
           <p className="mt-4 text-lg leading-8 text-slate-600">Discover the right company when work appears, then keep every field and office handoff tied to the same trusted operational record.</p>
         </div>

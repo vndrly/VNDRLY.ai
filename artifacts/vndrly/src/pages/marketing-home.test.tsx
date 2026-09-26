@@ -69,7 +69,9 @@ describe("VNDRLY public homepage", () => {
     expect(headline.className).toContain("lg:text-[54px]");
 
     expect(screen.getByText("Verified vendors. Connected operations.").className).toContain("text-[var(--vndrly-amber)]");
-    expect(screen.getByText("Featured solutions").className).toContain("text-[var(--vndrly-amber)]");
+    const featuredSolutionsLabel = screen.getByText("Featured solutions");
+    expect(featuredSolutionsLabel.className).toContain("text-[var(--vndrly-amber)]");
+    expect(featuredSolutionsLabel.style.textShadow).toBe("0 2px 4px rgba(0, 0, 0, 0.8)");
     expect(screen.getByTestId("hero-fade").className).toContain("to-[#3a3d42]");
 
     for (const link of screen.getAllByRole("link", { name: /get started/i })) {
