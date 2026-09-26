@@ -179,6 +179,23 @@ describe("VNDRLY public homepage", () => {
     }
   });
 
+  it("shows the Site Map demo above Connected Operations cards with a phone-specific image", () => {
+    render(<MarketingHome />);
+
+    const card = screen.getByLabelText("Connected Operations Site Map demo");
+    expect(card.className).toContain("border-2");
+    expect(card.className).toContain("border-[var(--vndrly-amber)]");
+    expect(card.className).toContain("bg-[#2b3035]");
+
+    const picture = within(card).getByTestId("connected-operations-site-map-picture");
+    const mobileSource = picture.querySelector("source");
+    const desktopImage = within(picture as HTMLElement).getByRole("img", { name: /site map demo/i });
+
+    expect(mobileSource?.getAttribute("media")).toBe("(max-width: 639px)");
+    expect(mobileSource?.getAttribute("srcset")).toBe("/demo/vndrly-site-map-demo-mobile.png");
+    expect(desktopImage.getAttribute("src")).toBe("/demo/vndrly-site-map-demo.png");
+  });
+
   it("uses 30px conversion pills and a centered halftone-only hero", () => {
     render(<MarketingHome />);
 
@@ -254,7 +271,7 @@ describe("VNDRLY public homepage", () => {
     render(<MarketingHome />);
 
     const cards = screen.getAllByTestId("marketing-card");
-    expect(cards).toHaveLength(31);
+    expect(cards).toHaveLength(32);
     for (const card of cards) {
       expect(card.className).toContain("border-2");
       if (card.getAttribute("aria-label") === "Verified network highlights") {

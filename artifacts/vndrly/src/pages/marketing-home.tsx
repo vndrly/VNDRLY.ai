@@ -212,7 +212,13 @@ export default function MarketingHome() {
         <div className="mx-auto max-w-7xl px-4 py-20">
           <SectionLabel featured>Connected operations</SectionLabel>
           <h2 className="mt-3 text-3xl font-black sm:text-5xl">The field facts and the office workflow tell the same story.</h2>
-          <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+          <figure aria-label="Connected Operations Site Map demo" data-testid="marketing-card" className="mt-10 overflow-hidden rounded-3xl border-2 border-[var(--vndrly-amber)] bg-[#2b3035] shadow-[0_18px_50px_rgba(15,23,42,.16)]">
+            <picture data-testid="connected-operations-site-map-picture">
+              <source media="(max-width: 639px)" srcSet="/demo/vndrly-site-map-demo-mobile.png" />
+              <img src="/demo/vndrly-site-map-demo.png" alt="Synthetic VNDRLY Site Map demo showing current workers and certification status" className="block h-auto w-full" />
+            </picture>
+          </figure>
+          <div className="mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
             {MARKETING_MODULES.map((module, index) => {
               const Icon = moduleIcons[index];
               return <article key={module.title} data-testid="marketing-card" className="rounded-3xl border-2 border-[var(--vndrly-amber)] bg-[#2b3035] p-6 text-white shadow-[0_18px_50px_rgba(15,23,42,.16)]"><div className="flex items-center gap-3"><Icon className="h-7 w-7 text-[var(--vndrly-amber)]"/><h3 className="text-xl font-black text-white">{module.title}</h3></div><p className="mt-4 text-sm leading-6 text-white">{module.description}</p></article>;
