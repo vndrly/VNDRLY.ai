@@ -60,6 +60,8 @@ describe("VNDRLY public homepage", () => {
     render(<MarketingHome />);
 
     const payments = screen.getByRole("region", { name: /secure direct payments/i });
+    expect(payments.className).toContain("bg-[#20262b]");
+    expect(payments.className).not.toContain("bg-gradient-to-br");
     expect(within(payments).getAllByText(/coming soon/i).length).toBeGreaterThan(0);
     const directPayments = within(payments).getByRole("heading", { name: "Secure direct payments" });
     const payrollReporting = within(payments).getByRole("heading", { name: "Make Payroll & IRS Reporting" });
