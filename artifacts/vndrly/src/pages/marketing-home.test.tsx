@@ -149,6 +149,11 @@ describe("VNDRLY public homepage", () => {
     expect(screen.getByText("A living vendor directory").className).toContain("text-[var(--vndrly-amber)]");
     expect(screen.getByText("Maintained by the people doing the work").className).toContain("text-white");
 
+    const directoryCard = screen.getByLabelText("Verified network highlights");
+    expect(directoryCard.className).toContain("bg-[#2b3035]");
+    expect(directoryCard.className).toContain("border-2");
+    expect(directoryCard.className).toContain("border-[#9ca3af]");
+
     for (const copy of [
       "Services, geography, eligibility, and current operational context.",
       "Ratings and activity signals grounded in completed work.",
@@ -159,14 +164,18 @@ describe("VNDRLY public homepage", () => {
     }
   });
 
-  it("uses a 2px VNDRLY amber outline on every card surface", () => {
+  it("uses a 2px VNDRLY amber outline on every card surface except the light-grey directory frame", () => {
     render(<MarketingHome />);
 
     const cards = screen.getAllByTestId("marketing-card");
     expect(cards).toHaveLength(25);
     for (const card of cards) {
       expect(card.className).toContain("border-2");
-      expect(card.className).toContain("border-[var(--vndrly-amber)]");
+      if (card.getAttribute("aria-label") === "Verified network highlights") {
+        expect(card.className).toContain("border-[#9ca3af]");
+      } else {
+        expect(card.className).toContain("border-[var(--vndrly-amber)]");
+      }
     }
   });
 

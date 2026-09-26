@@ -108,7 +108,7 @@ export default function MarketingHome() {
               <a href={marketingDemoHref} data-testid="marketing-demo-cta" style={{ height: 30, minHeight: 30, maxHeight: 30, boxSizing: "border-box", fontSize: 13, fontWeight: 700 }} className="inline-flex items-center rounded-full border border-white/60 bg-black/20 px-6 text-[13px] font-bold text-white transition hover:border-[var(--vndrly-amber)] hover:bg-black/35 hover:text-[var(--vndrly-amber)] focus-visible:ring-2 focus-visible:ring-[var(--vndrly-amber)]">Request a demo</a>
             </div>
           </div>
-          <aside data-testid="marketing-card" className="rounded-3xl border-2 border-[var(--vndrly-amber)] bg-black/35 p-6 shadow-2xl backdrop-blur-md sm:p-8" aria-label="Verified network highlights">
+          <aside data-testid="marketing-card" className="rounded-3xl border-2 border-[#9ca3af] bg-[#2b3035] p-6 shadow-2xl backdrop-blur-md sm:p-8" aria-label="Verified network highlights">
             <div className="flex items-center gap-3"><Network className="h-8 w-8 text-[var(--vndrly-amber)]" /><div><p className="text-xs font-black uppercase tracking-[.18em] text-[var(--vndrly-amber)]">A living vendor directory</p><p className="font-bold text-white">Maintained by the people doing the work</p></div></div>
             <div className="mt-7 grid gap-4 sm:grid-cols-2">
               {[
