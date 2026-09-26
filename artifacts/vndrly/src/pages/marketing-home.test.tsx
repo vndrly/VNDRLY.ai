@@ -96,9 +96,6 @@ describe("VNDRLY public homepage", () => {
       expect(action.style.height).toBe("25px");
       expect(action.style.minHeight).toBe("25px");
       expect(action.style.maxHeight).toBe("25px");
-      expect(action.style.width).toBe("120px");
-      expect(action.style.minWidth).toBe("120px");
-      expect(action.style.maxWidth).toBe("120px");
       expect(action.className).toContain("text-[13px]");
       expect(action.className).toContain("font-bold");
     }
@@ -108,7 +105,6 @@ describe("VNDRLY public homepage", () => {
       expect(paintedPill.style.minHeight).toBe("25px");
       expect(paintedPill.style.maxHeight).toBe("25px");
       expect(paintedPill.className).not.toContain("h-[23px]");
-      expect(paintedPill.className).toContain("w-full");
     }
     for (const action of demoActions) {
       expect(action.style.fontSize).toBe("13px");

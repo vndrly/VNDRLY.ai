@@ -37,9 +37,9 @@ function PrimaryLink({ children, href }: { children: React.ReactNode; href: stri
       href={href}
       data-testid="marketing-primary-cta"
       className="inline-flex items-center text-[13px] font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vndrly-amber)]"
-      style={{ width: 120, minWidth: 120, maxWidth: 120, height: 25, minHeight: 25, maxHeight: 25, boxSizing: "border-box" }}
+      style={{ height: 25, minHeight: 25, maxHeight: 25, boxSizing: "border-box" }}
     >
-      <PngPill className="w-full" color="amber" height={25}>
+      <PngPill className="min-w-36" color="amber" height={25}>
         <span className="flex items-center gap-1.5 text-[13px] font-bold">{children}</span>
       </PngPill>
     </a>
@@ -102,7 +102,7 @@ export default function MarketingHome() {
             </p>
             <div className="mt-9 flex flex-wrap items-center gap-4">
               <PrimaryLink href={marketingCtaHref}>Get started <ArrowRight className="h-4 w-4" /></PrimaryLink>
-              <a href={marketingDemoHref} data-testid="marketing-demo-cta" style={{ width: 120, minWidth: 120, maxWidth: 120, height: 25, minHeight: 25, maxHeight: 25, boxSizing: "border-box", fontSize: 13, fontWeight: 700 }} className="inline-flex items-center justify-center rounded-full border border-white/60 bg-black/20 text-[13px] font-bold text-white transition hover:border-[var(--vndrly-amber)] hover:bg-black/35 hover:text-[var(--vndrly-amber)] focus-visible:ring-2 focus-visible:ring-[var(--vndrly-amber)]">Request a demo</a>
+              <a href={marketingDemoHref} data-testid="marketing-demo-cta" style={{ height: 25, minHeight: 25, maxHeight: 25, boxSizing: "border-box", fontSize: 13, fontWeight: 700 }} className="inline-flex items-center rounded-full border border-white/60 bg-black/20 px-6 text-[13px] font-bold text-white transition hover:border-[var(--vndrly-amber)] hover:bg-black/35 hover:text-[var(--vndrly-amber)] focus-visible:ring-2 focus-visible:ring-[var(--vndrly-amber)]">Request a demo</a>
             </div>
           </div>
           <aside className="rounded-3xl border border-white/20 bg-black/35 p-6 shadow-2xl backdrop-blur-md sm:p-8" aria-label="Verified network highlights">
@@ -216,7 +216,7 @@ export default function MarketingHome() {
 
       <section className="relative overflow-hidden bg-[#20262b] text-center text-white">
         <img src={halftone} alt="" className="absolute left-1/2 top-1/2 w-[70rem] max-w-none -translate-x-1/2 -translate-y-1/2 opacity-10"/>
-        <div className="relative mx-auto max-w-4xl px-4 py-24"><p className="text-sm font-black uppercase tracking-[.22em] text-[var(--vndrly-amber)]">A better vendor network starts here</p><h2 className="mt-4 text-4xl font-black sm:text-6xl">Find the right fit. Run the work. Keep the proof.</h2><p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-slate-300">Start your VNDRLY profile or let us walk through the workflow with your team.</p><div className="mt-9 flex flex-wrap justify-center gap-4"><PrimaryLink href={marketingCtaHref}>Get started <ArrowRight className="h-4 w-4"/></PrimaryLink><a href={marketingDemoHref} data-testid="marketing-demo-cta" style={{ width: 120, minWidth: 120, maxWidth: 120, height: 25, minHeight: 25, maxHeight: 25, boxSizing: "border-box", fontSize: 13, fontWeight: 700 }} className="inline-flex items-center justify-center rounded-full border border-white/60 text-[13px] font-bold text-white hover:border-[var(--vndrly-amber)] hover:text-[var(--vndrly-amber)] focus-visible:ring-2 focus-visible:ring-[var(--vndrly-amber)]">Request a demo</a></div></div>
+        <div className="relative mx-auto max-w-4xl px-4 py-24"><p className="text-sm font-black uppercase tracking-[.22em] text-[var(--vndrly-amber)]">A better vendor network starts here</p><h2 className="mt-4 text-4xl font-black sm:text-6xl">Find the right fit. Run the work. Keep the proof.</h2><p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-slate-300">Start your VNDRLY profile or let us walk through the workflow with your team.</p><div className="mt-9 flex flex-wrap justify-center gap-4"><PrimaryLink href={marketingCtaHref}>Get started <ArrowRight className="h-4 w-4"/></PrimaryLink><a href={marketingDemoHref} data-testid="marketing-demo-cta" style={{ height: 25, minHeight: 25, maxHeight: 25, boxSizing: "border-box", fontSize: 13, fontWeight: 700 }} className="inline-flex items-center rounded-full border border-white/60 px-6 text-[13px] font-bold text-white hover:border-[var(--vndrly-amber)] hover:text-[var(--vndrly-amber)] focus-visible:ring-2 focus-visible:ring-[var(--vndrly-amber)]">Request a demo</a></div></div>
       </section>
 
       <footer className="border-t border-white/10 bg-[#15191d] text-slate-300"><div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 text-sm sm:flex-row sm:items-center sm:justify-between"><span>© {new Date().getFullYear()} VNDRLY</span><div className="flex flex-wrap gap-5"><a href="/legal/privacy" className="hover:text-white">Privacy</a><a href="/legal/terms" className="hover:text-white">Terms</a><a href="mailto:support@vndrly.ai" className="hover:text-white">Support</a><a href={marketingDemoHref} className="hover:text-[var(--vndrly-amber)]">Request a demo</a></div></div></footer>
