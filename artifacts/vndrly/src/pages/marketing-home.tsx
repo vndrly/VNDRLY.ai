@@ -139,7 +139,7 @@ export default function MarketingHome() {
         <div className="mx-auto max-w-7xl px-4 py-20">
           <p className="text-xs font-black uppercase tracking-[.24em] text-[var(--vndrly-amber)]">One connected job lifecycle</p>
           <h2 className="mt-3 max-w-4xl text-[23px] font-black sm:text-[36px]">From “we need this done” to an approval-ready record.</h2>
-          <div className="mt-10 overflow-x-auto pb-2">
+          <div className="mt-10 overflow-x-auto">
             <ol aria-label="Job lifecycle progress" className="grid min-w-[760px] grid-cols-7">
               {JOB_WORKFLOW.map(([title], index) => <li key={title} className="relative flex flex-col items-center px-2 text-center">
                 {index < JOB_WORKFLOW.length - 1 && <span aria-hidden="true" className="absolute left-1/2 top-5 h-0.5 w-full bg-[var(--vndrly-amber)]/60"/>}
@@ -150,8 +150,8 @@ export default function MarketingHome() {
               </li>)}
             </ol>
           </div>
-          <ol aria-label="VNDRLY job workflow" className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-7">
-            {JOB_WORKFLOW.map(([title, copy]) => <li key={title} className="rounded-2xl border border-[var(--vndrly-amber)] bg-white/[.06] p-4"><h3 className="font-black text-[var(--vndrly-amber)]">{title}</h3><p className="mt-2 text-xs leading-5 text-white">{copy}</p></li>)}
+          <ol aria-label="VNDRLY job workflow" className="mt-2 grid gap-3 sm:grid-cols-2 lg:grid-cols-7">
+            {JOB_WORKFLOW.map(([title, copy]) => <li key={title} className="rounded-2xl border border-[var(--vndrly-amber)] bg-white/[.06] p-4"><p className="text-xs leading-5 text-white">{copy}</p></li>)}
           </ol>
         </div>
       </section>

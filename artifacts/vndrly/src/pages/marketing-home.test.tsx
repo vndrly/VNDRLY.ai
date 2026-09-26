@@ -126,7 +126,7 @@ describe("VNDRLY public homepage", () => {
 
     for (const card of within(screen.getByRole("list", { name: /job workflow/i })).getAllByRole("listitem")) {
       expect(card.className).toContain("border-[var(--vndrly-amber)]");
-      expect(card.querySelector("h3")?.className).toContain("text-[var(--vndrly-amber)]");
+      expect(card.querySelector("h3")).toBeNull();
     }
   });
 
@@ -147,10 +147,12 @@ describe("VNDRLY public homepage", () => {
       expect(within(stepperItems[index]).getByText(title, { exact: true })).toBeTruthy();
       expect(stepperItems[index].querySelector("[data-step-dot]")?.className).toContain("bg-white");
       expect(stepperItems[index].textContent).not.toContain(`0${index + 1}`);
-      expect(workflowCards[index].firstElementChild?.tagName).toBe("H3");
+      expect(workflowCards[index].querySelector("h3")).toBeNull();
+      expect(workflowCards[index].firstElementChild?.tagName).toBe("P");
       expect(workflowCards[index].textContent).not.toContain(`0${index + 1}`);
       expect(workflowCards[index].querySelector("p")?.className).toContain("text-white");
     }
+    expect(cards.className).toContain("mt-2");
   });
 
   it("keeps featured card borders uniform and uses bold amber benefit checks", () => {
