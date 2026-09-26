@@ -21,6 +21,36 @@ describe("VNDRLY public homepage", () => {
     expect(screen.getByRole("heading", { name: /vndrly gate/i })).toBeTruthy();
   });
 
+  it("presents Work Hub after trust without exposure", () => {
+    render(<MarketingHome />);
+
+    const trustLabel = screen.getByText("Trust without exposure", { exact: true });
+    const workHub = screen.getByRole("region", { name: "Work Hub" });
+    const gettingStarted = screen.getByText("Getting started", { exact: true });
+
+    expect(trustLabel.compareDocumentPosition(workHub) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(workHub.compareDocumentPosition(gettingStarted) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(within(workHub).getByRole("heading", { name: "Keep every conversation tied to the work." })).toBeTruthy();
+
+    const cards = within(workHub).getAllByRole("article");
+    expect(cards).toHaveLength(6);
+    for (const title of [
+      "Channels & conversations",
+      "Calendars & scheduling",
+      "Tasks & handoffs",
+      "Forms & files",
+      "Notes & announcements",
+      "Meetings & role-aware collaboration",
+    ]) {
+      const heading = within(workHub).getByRole("heading", { name: title });
+      const card = heading.closest("article");
+      expect(card?.className).toContain("border-2");
+      expect(card?.className).toContain("border-[var(--vndrly-amber)]");
+      expect(card?.className).toContain("bg-[#2b3035]");
+      expect(card?.querySelector("p")?.className).toContain("text-white");
+    }
+  });
+
   it("shows the payment and payroll roadmap as coming soon", () => {
     render(<MarketingHome />);
 
@@ -211,7 +241,7 @@ describe("VNDRLY public homepage", () => {
     render(<MarketingHome />);
 
     const cards = screen.getAllByTestId("marketing-card");
-    expect(cards).toHaveLength(25);
+    expect(cards).toHaveLength(31);
     for (const card of cards) {
       expect(card.className).toContain("border-2");
       if (card.getAttribute("aria-label") === "Verified network highlights") {
@@ -226,7 +256,7 @@ describe("VNDRLY public homepage", () => {
     render(<MarketingHome />);
 
     const dividers = screen.getAllByTestId("marketing-section-divider");
-    expect(dividers).toHaveLength(8);
+    expect(dividers).toHaveLength(9);
     for (const divider of dividers) {
       expect(divider.className).toContain("border-t-2");
       expect(divider.className).toContain("border-[var(--vndrly-amber)]");

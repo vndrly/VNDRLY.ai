@@ -3,16 +3,22 @@ import {
   BadgeCheck,
   BriefcaseBusiness,
   Building2,
+  CalendarDays,
   Check,
   ClipboardCheck,
   CreditCard,
+  Files,
   FileText,
+  ListChecks,
   MapPinned,
+  Megaphone,
+  MessageSquare,
   Network,
   Radar,
   ShieldCheck,
   Star,
   Users,
+  Video,
 } from "lucide-react";
 import halftone from "@assets/nav-pane-us-halftone.svg";
 import PngPill, { PngPillLink } from "@/components/png-pill-rollover";
@@ -31,6 +37,14 @@ import { VNDRLY_LOGO_SQUARE } from "@/lib/vndrly-brand-assets";
 
 const solutionIcons = [Radar, ShieldCheck];
 const moduleIcons = [MapPinned, ClipboardCheck, Users, BriefcaseBusiness];
+const workHubFeatures = [
+  [MessageSquare, "Channels & conversations", "Organize team discussions by project, site, vendor, or priority so context stays attached."],
+  [CalendarDays, "Calendars & scheduling", "Keep meetings, deadlines, shifts, and shared events visible to the people who need them."],
+  [ListChecks, "Tasks & handoffs", "Assign owners, track progress, and move work between field and office teams without losing the next step."],
+  [Files, "Forms & files", "Keep operational forms, documents, photos, and reference files where the work is happening."],
+  [Megaphone, "Notes & announcements", "Share durable updates, decisions, and company-wide messages without relying on scattered texts."],
+  [Video, "Meetings & role-aware collaboration", "Bring the right partners, vendors, and employees together while keeping access aligned with their roles."],
+] as const;
 
 function PrimaryLink({ children, href }: { children: React.ReactNode; href: string }) {
   return (
@@ -245,6 +259,30 @@ export default function MarketingHome() {
           <p className="mt-4 leading-7 text-white">Ask about product fit, roles, signup, onboarding, demos, or sales. The public Product Guide uses approved public information only and cannot access accounts, operational records, or internal actions.</p>
           <p className="mt-6 text-sm font-bold text-[var(--vndrly-amber)]">Open Ask V in the lower-right corner.</p>
         </aside>
+      </section>
+
+      <SectionDivider />
+      <section aria-label="Work Hub" className="relative overflow-hidden bg-[#20262b] text-white">
+        <img src={halftone} alt="" className="absolute left-1/2 top-1/2 w-[76rem] max-w-none -translate-x-1/2 -translate-y-1/2 opacity-[.07]"/>
+        <div className="relative mx-auto max-w-7xl px-4 py-20">
+          <div className="max-w-4xl">
+            <SectionLabel>Connected teamwork</SectionLabel>
+            <h2 className="mt-3 text-4xl font-black sm:text-5xl">Work Hub</h2>
+            <h3 className="mt-4 text-2xl font-black sm:text-3xl">Keep every conversation tied to the work.</h3>
+            <p className="mt-5 max-w-3xl text-lg leading-8 text-white">Bring channels, calendars, tasks, forms, files, notes, announcements, meetings, and handoffs into one shared operational context. Work Hub helps field and office teams stay aligned without losing decisions across scattered tools.</p>
+          </div>
+          <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            {workHubFeatures.map(([Icon, title, description]) => (
+              <article key={title} data-testid="marketing-card" className="rounded-3xl border-2 border-[var(--vndrly-amber)] bg-[#2b3035] p-6 text-white shadow-[0_18px_50px_rgba(15,23,42,.2)]">
+                <div className="flex items-center gap-3">
+                  <Icon className="h-7 w-7 shrink-0 text-[var(--vndrly-amber)]"/>
+                  <h3 className="text-xl font-black text-white">{title}</h3>
+                </div>
+                <p className="mt-4 leading-7 text-white">{description}</p>
+              </article>
+            ))}
+          </div>
+        </div>
       </section>
 
       <SectionDivider />
