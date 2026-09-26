@@ -84,7 +84,7 @@ describe("VNDRLY public homepage", () => {
     }
   });
 
-  it("uses compact 25px conversion pills and a centered halftone-only hero", () => {
+  it("uses 30px conversion pills and a centered halftone-only hero", () => {
     render(<MarketingHome />);
 
     const primaryActions = screen.getAllByTestId("marketing-primary-cta");
@@ -93,17 +93,17 @@ describe("VNDRLY public homepage", () => {
     expect(demoActions).toHaveLength(2);
 
     for (const action of [...primaryActions, ...demoActions]) {
-      expect(action.style.height).toBe("25px");
-      expect(action.style.minHeight).toBe("25px");
-      expect(action.style.maxHeight).toBe("25px");
+      expect(action.style.height).toBe("30px");
+      expect(action.style.minHeight).toBe("30px");
+      expect(action.style.maxHeight).toBe("30px");
       expect(action.className).toContain("text-[13px]");
       expect(action.className).toContain("font-bold");
     }
     for (const action of primaryActions) {
       const paintedPill = action.firstElementChild as HTMLElement;
-      expect(paintedPill.style.height).toBe("25px");
-      expect(paintedPill.style.minHeight).toBe("25px");
-      expect(paintedPill.style.maxHeight).toBe("25px");
+      expect(paintedPill.style.height).toBe("30px");
+      expect(paintedPill.style.minHeight).toBe("30px");
+      expect(paintedPill.style.maxHeight).toBe("30px");
       expect(paintedPill.className).not.toContain("h-[23px]");
     }
     for (const action of demoActions) {
