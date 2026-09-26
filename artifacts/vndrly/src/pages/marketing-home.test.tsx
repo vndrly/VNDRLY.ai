@@ -35,7 +35,7 @@ describe("VNDRLY public homepage", () => {
     const cards = within(workHub).getAllByRole("article");
     expect(cards).toHaveLength(6);
     for (const title of [
-      "Channels & conversations",
+      "Single or Group Chats",
       "Calendars & scheduling",
       "Tasks & handoffs",
       "Forms & files",
