@@ -126,6 +126,25 @@ describe("VNDRLY public homepage", () => {
     }
   });
 
+  it("places a seven-stage lifecycle stepper above white workflow blurbs", () => {
+    render(<MarketingHome />);
+
+    const stepper = screen.getByRole("list", { name: /job lifecycle progress/i });
+    const cards = screen.getByRole("list", { name: /job workflow/i });
+    const stepperItems = within(stepper).getAllByRole("listitem");
+    const workflowCards = within(cards).getAllByRole("listitem");
+
+    expect(stepperItems).toHaveLength(7);
+    expect(workflowCards).toHaveLength(7);
+    expect(stepper.compareDocumentPosition(cards) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+    for (const [index, title] of ["Find", "Dispatch", "Accept", "Assign", "Verify", "Complete", "Approve"].entries()) {
+      expect(within(stepperItems[index]).getByText(title, { exact: true })).toBeTruthy();
+      expect(within(stepperItems[index]).getByText(`0${index + 1}`, { exact: true })).toBeTruthy();
+      expect(workflowCards[index].querySelector("p")?.className).toContain("text-white");
+    }
+  });
+
   it("keeps featured card borders uniform and uses bold amber benefit checks", () => {
     render(<MarketingHome />);
 
