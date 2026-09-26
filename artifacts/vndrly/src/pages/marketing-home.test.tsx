@@ -105,6 +105,7 @@ describe("VNDRLY public homepage", () => {
       expect(paintedPill.style.minHeight).toBe("30px");
       expect(paintedPill.style.maxHeight).toBe("30px");
       expect(paintedPill.className).not.toContain("h-[23px]");
+      expect(paintedPill.querySelector("span span")?.className).toContain("font-black");
     }
     for (const action of demoActions) {
       expect(action.style.fontSize).toBe("13px");

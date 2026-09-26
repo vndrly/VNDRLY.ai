@@ -40,7 +40,7 @@ function PrimaryLink({ children, href }: { children: React.ReactNode; href: stri
       style={{ height: 30, minHeight: 30, maxHeight: 30, boxSizing: "border-box" }}
     >
       <PngPill className="min-w-36" color="amber" height={30}>
-        <span className="flex items-center gap-1.5 text-[13px] font-bold">{children}</span>
+        <span className="flex items-center gap-1.5 text-[13px] font-black">{children}</span>
       </PngPill>
     </a>
   );
