@@ -85,6 +85,16 @@ describe("VNDRLY public homepage", () => {
     expect(connectedOperationsLabel.style.borderColor).toBe("var(--vndrly-amber)");
     expect(connectedOperationsLabel.style.padding).toBe("6px 12px");
     expect(connectedOperationsLabel.style.fontSize).toBe("14px");
+
+    for (const text of ["Getting started", "Frequently asked questions"]) {
+      const label = screen.getByText(text, { exact: true });
+      expect(label.style.color).toBe("white");
+      expect(label.style.backgroundColor).toBe("rgb(43, 48, 53)");
+      expect(label.style.borderWidth).toBe("2px");
+      expect(label.style.borderColor).toBe("var(--vndrly-amber)");
+      expect(label.style.padding).toBe("6px 12px");
+      expect(label.style.fontSize).toBe("14px");
+    }
     expect(screen.getByTestId("hero-fade").className).toContain("to-[#3a3d42]");
 
     for (const link of screen.getAllByRole("link", { name: /get started/i })) {
