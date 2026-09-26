@@ -94,6 +94,10 @@ describe("VNDRLY public homepage", () => {
       expect(action.className).toContain("text-[13px]");
       expect(action.className).toContain("font-bold");
     }
+    for (const action of demoActions) {
+      expect(action.style.fontSize).toBe("13px");
+      expect(action.style.fontWeight).toBe("700");
+    }
 
     const hero = screen.getByTestId("marketing-hero");
     expect(within(hero).queryByTestId("hero-photo")).toBeNull();
