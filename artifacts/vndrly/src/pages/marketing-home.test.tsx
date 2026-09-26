@@ -111,7 +111,7 @@ describe("VNDRLY public homepage", () => {
       const card = screen.getByRole("heading", { name: title }).closest("article");
       expect(card?.className).toContain("border-[var(--vndrly-amber)]");
       expect(card?.querySelector("svg")?.getAttribute("class")).toContain("text-[var(--vndrly-amber)]");
-      expect(screen.getByRole("heading", { name: title }).className).toContain("text-[var(--vndrly-amber)]");
+      expect(screen.getByRole("heading", { name: title }).className).toContain("text-white");
     }
 
     const workflowHeading = screen.getByRole("heading", {
@@ -137,7 +137,7 @@ describe("VNDRLY public homepage", () => {
 
       expect(card?.querySelector("p.leading-7")?.className).toContain("text-slate-300");
       for (const item of card?.querySelectorAll("li") ?? []) {
-        expect(item.className).toContain("text-slate-300");
+        expect(item.className).toContain("text-white");
       }
 
       const checks = card?.querySelectorAll("li svg") ?? [];
