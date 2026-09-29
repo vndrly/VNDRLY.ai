@@ -12,7 +12,6 @@ import { VNDRLY_LOGO_SQUARE as vndrlyLogo } from "@/lib/vndrly-brand-assets";
 import BlueButton from "@/components/blue-button";
 import GreyButton from "@/components/grey-button";
 import LanguageToggle from "@/components/language-toggle";
-import DarkLightToggle, { type ThemeMode } from "@/components/dark-light-toggle";
 import { cn } from "@/lib/utils";
 import { NAV_PANE_DARK_BG } from "@/components/nav-pane-tokens";
 import { NavPaneHalftoneBackground } from "@/components/nav-pane-halftone-background";
@@ -154,29 +153,26 @@ export default function SignupPartner() {
     setSaving(false);
   };
 
-  const [themeMode, setThemeMode] = useState<ThemeMode>("dark");
-  const isDark = themeMode === "dark";
+
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
-      <div className="flex-1 flex items-center justify-center px-6 py-12 lg:px-16 relative overflow-hidden" style={{ backgroundColor: isDark ? NAV_PANE_DARK_BG : "#ffffff" }}>
-        <NavPaneHalftoneBackground enabled={isDark} variant="auth" />
+      <div className="flex-1 flex items-center justify-center px-6 py-12 lg:px-16 relative overflow-hidden" style={{ backgroundColor: NAV_PANE_DARK_BG }}>
+        <NavPaneHalftoneBackground enabled variant="auth" />
         <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/8 to-transparent pointer-events-none" />
         <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/8 to-transparent pointer-events-none" />
         <div className="absolute top-4 right-4 z-20">
-          <LanguageToggle variant={isDark ? "dark" : "light"} />
+          <LanguageToggle variant="dark" />
         </div>
-        <div className="absolute top-4 left-4 z-20">
-          <DarkLightToggle mode={themeMode} onChange={setThemeMode} variant={isDark ? "dark" : "light"} />
-        </div>
+
         <div className="w-full max-w-md relative z-10">
           <div className="flex flex-col items-start mb-8">
             <img src={vndrlyLogo} alt="VNDRLY Logo" className="w-16 h-16 rounded-xl mb-3" draggable={false} />
             <div className="flex items-center gap-3">
               <img src={backIcon} alt="Back" className="w-10 h-10 cursor-pointer hover:opacity-80 transition-opacity" draggable={false} onClick={() => navigate("/signup")} data-testid="button-back" />
-              <h1 className={cn("text-2xl font-bold tracking-tight", isDark ? "text-white" : "text-gray-900")}>Partner Onboarding</h1>
+              <h1 className={cn("text-2xl font-bold tracking-tight", "text-white")}>Partner Onboarding</h1>
             </div>
-            <p className={cn("text-sm mt-1", isDark ? "text-gray-300" : "text-gray-500")}>Tell us about your company to get started.</p>
+            <p className={cn("text-sm mt-1", "text-gray-300")}>Tell us about your company to get started.</p>
           </div>
 
           <div className={`border-2 rounded-xl p-6 shadow-xl transition-colors duration-300 ${formReady ? "border-blue-500" : "border-gray-300"}`}>

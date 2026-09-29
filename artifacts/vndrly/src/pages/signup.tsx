@@ -1,8 +1,6 @@
-import { useState } from "react";
 import { useLocation } from "wouter";
 import { VNDRLY_LOGO_SQUARE as vndrlyLogo } from "@/lib/vndrly-brand-assets";
 import LanguageToggle from "@/components/language-toggle";
-import DarkLightToggle, { type ThemeMode } from "@/components/dark-light-toggle";
 import SphereBackButton from "@/components/sphere-back-button";
 import SidebarButton from "@/components/sidebar-button";
 import { brandStyleVars, DEFAULT_BRAND } from "@/hooks/use-brand";
@@ -12,8 +10,7 @@ import { cn } from "@/lib/utils";
 
 export default function Signup() {
   const [, navigate] = useLocation();
-  const [themeMode, setThemeMode] = useState<ThemeMode>("dark");
-  const isDark = themeMode === "dark";
+
 
   return (
     <div
@@ -22,21 +19,15 @@ export default function Signup() {
     >
       <div
         className="flex-1 flex items-center justify-center px-6 py-12 lg:px-16 relative overflow-hidden"
-        style={{ backgroundColor: isDark ? NAV_PANE_DARK_BG : "#ffffff" }}
+        style={{ backgroundColor: NAV_PANE_DARK_BG }}
       >
-        <NavPaneHalftoneBackground enabled={isDark} variant="auth" />
+        <NavPaneHalftoneBackground enabled variant="auth" />
         <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/8 to-transparent pointer-events-none" />
         <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/8 to-transparent pointer-events-none" />
         <div className="absolute top-4 right-4 z-20">
-          <LanguageToggle variant={isDark ? "dark" : "light"} />
+          <LanguageToggle variant="dark" />
         </div>
-        <div className="absolute top-4 left-4 z-20">
-          <DarkLightToggle
-            mode={themeMode}
-            onChange={setThemeMode}
-            variant={isDark ? "dark" : "light"}
-          />
-        </div>
+
         <div className="w-full max-w-md relative z-10">
           <div className="flex items-center gap-3 mb-6">
             <img
@@ -60,7 +51,7 @@ export default function Signup() {
               <h1
                 className={cn(
                   "text-3xl font-bold tracking-tight",
-                  isDark ? "text-white" : "text-gray-900",
+                  "text-white",
                 )}
               >
                 Get Started with VNDRLY
@@ -68,7 +59,7 @@ export default function Signup() {
               <p
                 className={cn(
                   "text-sm mt-2",
-                  isDark ? "text-gray-300" : "text-gray-500",
+                  "text-gray-300",
                 )}
               >
                 Choose your account type to begin onboarding.
@@ -80,15 +71,13 @@ export default function Signup() {
             <div
               className={cn(
                 "border-2 rounded-xl p-6 transition-colors",
-                isDark
-                  ? "border-amber-500/70 hover:bg-white/5"
-                  : "border-amber-500 hover:bg-amber-50/50",
+                "border-amber-500/70 hover:bg-white/5",
               )}
             >
               <h2
                 className={cn(
                   "text-lg font-bold mb-1",
-                  isDark ? "text-white" : "text-gray-900",
+                  "text-white",
                 )}
               >
                 Sign Up as a Vendor
@@ -96,7 +85,7 @@ export default function Signup() {
               <p
                 className={cn(
                   "text-sm",
-                  isDark ? "text-gray-300" : "text-gray-500",
+                  "text-gray-300",
                 )}
               >
                 You provide field services and assign employees to job sites.
@@ -104,7 +93,7 @@ export default function Signup() {
               <div className="mt-4">
                 <SidebarButton
                   isActive={false}
-                  theme={isDark ? "dark" : "light"}
+                  theme={"dark"}
                   className="w-full"
                   testId="button-begin-vendor-onboarding"
                   onClick={() => navigate("/signup/vendor")}
@@ -117,15 +106,13 @@ export default function Signup() {
             <div
               className={cn(
                 "border-2 rounded-xl p-6 transition-colors",
-                isDark
-                  ? "border-[color:var(--brand-primary)]/70 hover:bg-white/5"
-                  : "border-amber-500 hover:bg-amber-50/50",
+                "border-[color:var(--brand-primary)]/70 hover:bg-white/5",
               )}
             >
               <h2
                 className={cn(
                   "text-lg font-bold mb-1",
-                  isDark ? "text-white" : "text-gray-900",
+                  "text-white",
                 )}
               >
                 Sign Up as a Partner
@@ -133,7 +120,7 @@ export default function Signup() {
               <p
                 className={cn(
                   "text-sm",
-                  isDark ? "text-gray-300" : "text-gray-500",
+                  "text-gray-300",
                 )}
               >
                 You own or manage drilling sites and oversee vendor operations.
@@ -141,7 +128,7 @@ export default function Signup() {
               <div className="mt-4">
                 <SidebarButton
                   isActive={false}
-                  theme={isDark ? "dark" : "light"}
+                  theme={"dark"}
                   className="w-full"
                   testId="button-begin-partner-onboarding"
                   onClick={() => navigate("/signup/partner")}
@@ -155,13 +142,13 @@ export default function Signup() {
           <div
             className={cn(
               "mt-6 pt-4 border-t",
-              isDark ? "border-white/20" : "border-gray-200",
+              "border-white/20",
             )}
           >
             <p
               className={cn(
                 "text-sm text-center",
-                isDark ? "text-gray-300" : "text-gray-500",
+                "text-gray-300",
               )}
             >
               Already have an account?{" "}

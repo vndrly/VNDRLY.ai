@@ -30,7 +30,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import DarkLightToggle, { type ThemeMode } from "@/components/dark-light-toggle";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { MapPin, Plus, ArrowRight, Navigation, CheckCircle2, Clock, AlertTriangle, User, FileText, ClipboardList, Save, ChevronDown, DollarSign } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -309,20 +308,13 @@ export default function Portal({ siteCode }: { siteCode: string }) {
 
   const lineItemSubtotal = ticketLineItems?.reduce((sum, item) => sum + (parseFloat(item.quantity) * parseFloat(item.unitPrice)), 0) ?? 0;
 
-  // Site portal honors the same Dark/Light surface toggle as the
-  // vendor sign-in family. Defaults to dark; switching to light
-  // swaps the page bg from #3a3d42 (matching the sidebar token /
-  // vdark preset) to white.
-  const [themeMode, setThemeMode] = useState<ThemeMode>("dark");
-  const isDark = themeMode === "dark";
-  const portalBg = isDark ? NAV_PANE_DARK_BG : "#ffffff";
+
+  const portalBg = NAV_PANE_DARK_BG;
 
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center relative" style={{ backgroundColor: portalBg }}>
-        <div className="absolute top-4 left-4 z-20">
-          <DarkLightToggle mode={themeMode} onChange={setThemeMode} variant={isDark ? "dark" : "light"} />
-        </div>
+
         <Skeleton className="h-64 w-full max-w-md" />
       </div>
     );
@@ -356,10 +348,8 @@ export default function Portal({ siteCode }: { siteCode: string }) {
       // applies, which is what we want for things like the toaster.
       style={{ ...partnerBrandStyle, backgroundColor: portalBg }}
     >
-      <NavPaneHalftoneBackground enabled={isDark} variant="auth" />
-      <div className="absolute top-4 left-4 z-30">
-        <DarkLightToggle mode={themeMode} onChange={setThemeMode} variant={isDark ? "dark" : "light"} />
-      </div>
+      <NavPaneHalftoneBackground enabled variant="auth" />
+
       <div className="relative overflow-hidden" style={{ backgroundColor: "hsl(220 10% 25%)" }}>
         <div
           className="absolute inset-0 pointer-events-none z-[1]"
@@ -444,7 +434,7 @@ export default function Portal({ siteCode }: { siteCode: string }) {
                   <div className="relative" ref={vendorMenuRef}>
                     <PngPillButton
                       color="blue"
-                     
+
                       onClick={() => setVendorMenuOpen((v) => !v)}
                       className="w-full justify-between"
                       data-testid="select-portal-vendor"
@@ -482,7 +472,7 @@ export default function Portal({ siteCode }: { siteCode: string }) {
                     <div className="relative" ref={employeeMenuRef}>
                       <PngPillButton
                         color="blue"
-                       
+
                         onClick={() => setEmployeeMenuOpen((v) => !v)}
                         className="w-full justify-between"
                         data-testid="select-portal-employee"
@@ -839,7 +829,7 @@ export default function Portal({ siteCode }: { siteCode: string }) {
                     <PortalButton
                       type="submit"
                       disabled={createTicket.isPending}
-                     
+
                       testId="button-checkin-new"
                     >
                       <CheckCircle2 className="w-4 h-4 mr-2" />{createTicket.isPending ? "Checking In..." : "Check In & Create Ticket"}

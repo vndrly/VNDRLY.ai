@@ -41,7 +41,6 @@ import { useTranslation } from "react-i18next";
 import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import { useAuth } from "@/hooks/use-auth";
 import LanguageToggle from "@/components/language-toggle";
-import DarkLightToggle from "@/components/dark-light-toggle";
 import { useTheme } from "@/hooks/use-theme";
 import { useWorkHubDevicePresence } from "@/hooks/use-work-hub-device-presence";
 import { MeetingSessionProvider } from "@/components/meeting-session-provider";
@@ -248,7 +247,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const recentAvg = recentRatings.length > 0 ? recentRatings.reduce((s, r) => s + r.rating, 0) / recentRatings.length : null;
   const brand = useBrand();
   const branded = brand.isOrgBranded;
-  const { resolved: themeResolved, setMode: setThemeMode } = useTheme();
+  const { resolved: themeResolved } = useTheme();
   const isDarkTheme = themeResolved === "dark";
   // Sidebar prefers the dedicated square logo (rendered at 64x64). If the
   // partner hasn't uploaded a square one yet, fall back to the main logo so
@@ -402,11 +401,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               after the nav loop so every role — admin / vendor /
               partner / field — gets the same toggles in the sidebar. */}
           <div className="pt-6 pb-1 px-1 flex justify-between items-center gap-2">
-            <DarkLightToggle
-              mode={isDarkTheme ? "dark" : "light"}
-              onChange={(m) => setThemeMode(m)}
-              variant={isDarkTheme ? "dark" : "light"}
-            />
+
             <LanguageToggle variant={isDarkTheme ? "dark" : "light"} />
           </div>
           {user && (

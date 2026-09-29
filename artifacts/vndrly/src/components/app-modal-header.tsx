@@ -58,7 +58,7 @@ export function AppModalHeader({
   return (
     <div
       className={cn(
-        "relative z-10 shrink-0 overflow-hidden border-b border-white/20",
+        "relative isolate z-10 shrink-0 overflow-hidden border-b border-white/20",
         "[&_[data-slot=dialog-description]]:!text-white/80 [&_[data-slot=dialog-title]]:!text-white [&_[data-slot=sheet-description]]:!text-white/80 [&_[data-slot=sheet-title]]:!text-white",
         compact ? "h-16 min-h-16" : "min-h-[118px]",
         className,
@@ -67,7 +67,7 @@ export function AppModalHeader({
     >
       <div
         aria-hidden
-        className={APP_MODAL_ALWAYS_DARK.accentHeaderClassName}
+        className={cn(APP_MODAL_ALWAYS_DARK.accentHeaderClassName, "z-0")}
         data-testid="modal-accent-header"
         style={{
           ...APP_MODAL_ALWAYS_DARK.accentHeaderStyle,
@@ -83,8 +83,8 @@ export function AppModalHeader({
       />
       <div
         className={cn(
-          "relative z-10 flex gap-3 px-3 pr-24",
-          compact ? "min-h-16 items-center" : "min-h-[118px] items-end pb-0",
+          "relative z-10 flex flex-wrap gap-3 px-3",
+          compact ? "min-h-16 items-center py-2" : "min-h-[118px] items-center pt-[62px] pb-2",
         )}
       >
         <div
@@ -108,11 +108,11 @@ export function AppModalHeader({
         {Icon ? (
           <Icon
             aria-hidden="true"
-            className="mb-3 h-6 w-6 shrink-0"
+            className="h-6 w-6 shrink-0"
             style={{ color: iconColor ?? "var(--brand-primary)" }}
           />
         ) : null}
-        <div className={cn("min-w-0 flex-1 text-left", !compact && "pb-2")}>
+        <div className="min-w-0 flex-1 text-left">
           {children ?? (
             <>
               {title ? <div className="text-lg font-semibold text-white drop-shadow-sm">{title}</div> : null}
@@ -120,13 +120,13 @@ export function AppModalHeader({
             </>
           )}
         </div>
-      </div>
-      <div
-        className="absolute right-4 top-4 z-30 flex items-center gap-1"
-        data-testid={controlsTestId}
-      >
-        {settings}
-        {closeControl}
+        <div
+          className="relative z-30 ml-auto flex shrink-0 items-center gap-1"
+          data-testid={controlsTestId}
+        >
+          {settings}
+          {closeControl}
+        </div>
       </div>
     </div>
   );

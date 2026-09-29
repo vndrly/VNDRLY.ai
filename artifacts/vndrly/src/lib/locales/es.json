@@ -350,6 +350,7 @@
     }
   },
   "login": {
+    "learnMoreVndrly": "Conoce más sobre VNDRLY.ai",
     "title": "Portal de la Empresa",
     "gateTitle": "Portería",
     "subtitle": "Inicia sesión en tu portal para gestionar las operaciones de campo.",
@@ -4829,12 +4830,6 @@
     "pickTicketTitle": "Tickets abiertos",
     "noOpenTickets": "No hay tickets abiertos para su proveedor.",
     "emptyForeman": "Nada programado aún. Toque Programar ticket para asignar cuadrilla a un trabajo abierto."
-  },
-  "fieldProfile": {
-    "appearance": "Apariencia",
-    "themeLight": "Claro",
-    "themeDark": "Oscuro",
-    "themeSystem": "Sistema"
   },
   "mySchedule": {
     "title": "Mi Agenda",

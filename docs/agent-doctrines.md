@@ -309,3 +309,14 @@ or hand-rolling Tailwind gradients.
 
 For interactive buttons keep using the `TogglePillButton` doctrine above —
 ImagePill is read-only by design (`pointer-events-none`).
+
+## Modal header standard (2026-09-29)
+
+Use `AppModalHeader` for standard and custom modal headers, including public AskV.
+Keep the oil-rig artwork behind all foreground content in an isolated stacking context.
+Align the company logo, title or status, and header controls vertically in one row
+with 8px of clearance above the divider. Settings, Add, Save, Delete, Minimize,
+and Close header controls belong in that row, not in the top-right corner.
+AskV retains its working voice-status pill; omit its duplicate inner AskV logo.
+The floating AskV mark is 96x48 while open and retains its original 64x32 closed size.
+Form submission and confirmation actions in dialog bodies keep their existing semantics.

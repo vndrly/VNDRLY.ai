@@ -18,7 +18,7 @@ vi.mock("@/hooks/use-auth", () => ({
 
 vi.mock("@/hooks/use-theme", () => ({
   useTheme: () => ({
-    resolved: "light",
+    resolved: "dark",
     setMode: vi.fn(),
   }),
 }));
@@ -60,9 +60,6 @@ vi.mock("@/components/language-toggle", () => ({
   default: () => <div data-testid="language-toggle" />,
 }));
 
-vi.mock("@/components/dark-light-toggle", () => ({
-  default: () => <div data-testid="theme-toggle" />,
-}));
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({

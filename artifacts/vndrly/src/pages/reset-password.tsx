@@ -11,7 +11,6 @@ import { NavPaneHalftoneBackground } from "@/components/nav-pane-halftone-backgr
 import { NavPaneHeaderBlur } from "@/components/nav-pane-header-blur";
 import AmberButton from "@/components/amber-button";
 import GreyButton from "@/components/grey-button";
-import DarkLightToggle, { type ThemeMode } from "@/components/dark-light-toggle";
 import { cn } from "@/lib/utils";
 import { translateApiError } from "@/lib/api-error";
 
@@ -28,8 +27,7 @@ export default function ResetPassword() {
   const [confirm, setConfirm] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [done, setDone] = useState(false);
-  const [themeMode, setThemeMode] = useState<ThemeMode>("dark");
-  const isDark = themeMode === "dark";
+
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -81,23 +79,21 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col px-6 py-12 lg:px-16 relative overflow-hidden" style={{ backgroundColor: isDark ? NAV_PANE_DARK_BG : "#f9fafb" }}>
-      <NavPaneHalftoneBackground enabled={isDark} variant="auth" />
-      {isDark && <NavPaneHeaderBlur height={240} />}
-      <div className="absolute top-4 left-4 z-20">
-        <DarkLightToggle mode={themeMode} onChange={setThemeMode} variant={isDark ? "dark" : "light"} />
-      </div>
+    <div className="min-h-screen flex flex-col px-6 py-12 lg:px-16 relative overflow-hidden" style={{ backgroundColor: NAV_PANE_DARK_BG }}>
+      <NavPaneHalftoneBackground enabled variant="auth" />
+      <NavPaneHeaderBlur height={240} />
+
       <div className="flex-1 flex items-center justify-center">
         <div className="w-full max-w-md relative z-10">
           <div className="flex items-center gap-3 mb-3">
             <img src={vndrlyLogo} alt="VNDRLY Logo" className="w-12 h-12 rounded-lg shrink-0" draggable={false} />
             <div className="flex-1 min-w-0">
-              <h1 className={cn("text-2xl font-bold tracking-tight leading-none", isDark ? "text-white" : "text-gray-900")}>VNDRLY</h1>
-              <p className={cn("text-sm font-semibold leading-tight mt-1", isDark ? "text-gray-200" : "text-gray-700")}>Field Employee Portal</p>
+              <h1 className={cn("text-2xl font-bold tracking-tight leading-none", "text-white")}>VNDRLY</h1>
+              <p className={cn("text-sm font-semibold leading-tight mt-1", "text-gray-200")}>Field Employee Portal</p>
             </div>
           </div>
           <div className="mb-8">
-            <p className={cn("text-xs", isDark ? "text-gray-300" : "text-gray-500")}>Choose a new password for your portal account.</p>
+            <p className={cn("text-xs", "text-gray-300")}>Choose a new password for your portal account.</p>
           </div>
 
           {validating ? (

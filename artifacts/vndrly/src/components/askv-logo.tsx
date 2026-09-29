@@ -108,8 +108,8 @@ export function AskVFloatingLauncherMark({
 }) {
   return (
     <AskVLogo
-      width={ASKV_LAUNCHER_WIDTH}
-      height={ASKV_LAUNCHER_HEIGHT}
+      width={ASKV_LAUNCHER_WIDTH * (panelOpen ? 1.5 : 1)}
+      height={ASKV_LAUNCHER_HEIGHT * (panelOpen ? 1.5 : 1)}
       engaged={engaged}
       panelOpen={panelOpen}
     />

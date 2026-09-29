@@ -7,7 +7,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
 import { useBrand, brandStyleVars } from "@/hooks/use-brand";
 import LanguageToggle from "@/components/language-toggle";
-import DarkLightToggle from "@/components/dark-light-toggle";
 import NotificationsBell from "@/components/notifications-bell";
 import SidebarButton from "@/components/sidebar-button";
 import GateVoiceCircleButton from "@/components/gate-voice-circle-button";
@@ -75,7 +74,7 @@ export function FieldOpsPortalShell({
   const { user, logout } = useAuth();
   const brand = useBrand();
   const branded = brand.isOrgBranded;
-  const { resolved: themeResolved, setMode: setThemeMode } = useTheme();
+  const { resolved: themeResolved } = useTheme();
   const isDarkTheme = themeResolved === "dark";
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [vendorName, setVendorName] = useState<string | null>(null);
@@ -251,11 +250,7 @@ export function FieldOpsPortalShell({
             );
           })}
           <div className="pt-6 pb-1 px-1 flex justify-between items-center gap-2">
-            <DarkLightToggle
-              mode={isDarkTheme ? "dark" : "light"}
-              onChange={(m) => setThemeMode(m)}
-              variant={isDarkTheme ? "dark" : "light"}
-            />
+
             <LanguageToggle variant={isDarkTheme ? "dark" : "light"} />
           </div>
           {user && (

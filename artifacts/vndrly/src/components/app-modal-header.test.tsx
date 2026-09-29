@@ -42,7 +42,7 @@ describe("AppModalHeader", () => {
     expect(screen.getByTestId("app-modal-header-logo").querySelector("img")?.getAttribute("src")).toBe(
       "/midcon-square.png",
     );
-    expect(screen.getByTestId("app-modal-header-controls").className).toContain("right-4");
+    expect(screen.getByTestId("app-modal-header-controls").className).toContain("items-center");
     const controls = screen.getByTestId("app-modal-header-controls");
     expect(controls.textContent).toBe("SettingsClose");
   });
@@ -66,6 +66,6 @@ describe("AppModalHeader", () => {
     expect(screen.getByTestId("app-modal-header-logo").querySelector("img")?.getAttribute("src")).toBe(
       "/midcon-square.png",
     );
-    expect(screen.getByTestId("app-modal-header-controls").className).toContain("right-4");
+    expect(screen.getByTestId("app-modal-header-controls").className).toContain("items-center");
   });
 });

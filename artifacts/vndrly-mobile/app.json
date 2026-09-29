@@ -6,7 +6,7 @@
     "orientation": "default",
     "icon": "./assets/icons/vndrly.png",
     "scheme": "vndrly-mobile",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "runtimeVersion": {
       "policy": "appVersion"

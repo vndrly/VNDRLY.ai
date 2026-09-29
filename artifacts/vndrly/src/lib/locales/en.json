@@ -350,6 +350,7 @@
     }
   },
   "login": {
+    "learnMoreVndrly": "Learn more about VNDRLY.ai",
     "title": "Company Portal",
     "gateTitle": "Gate",
     "subtitle": "Sign in to your portal to manage field operations.",
@@ -4829,12 +4830,6 @@
     "pickTicketTitle": "Open tickets",
     "noOpenTickets": "No open tickets for your vendor.",
     "emptyForeman": "Nothing scheduled yet. Tap Schedule Ticket to assign a crew to an open job."
-  },
-  "fieldProfile": {
-    "appearance": "Appearance",
-    "themeLight": "Light",
-    "themeDark": "Dark",
-    "themeSystem": "System"
   },
   "mySchedule": {
     "title": "My Schedule",

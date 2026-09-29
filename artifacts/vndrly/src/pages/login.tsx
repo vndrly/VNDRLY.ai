@@ -1,8 +1,9 @@
+import { LoginHomeLink } from "@/components/login-home-link";
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { Check, Copy, Eye, EyeOff, LogIn, UserPlus } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { BrandedInput } from "@/components/work-hub/chrome";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -14,7 +15,6 @@ import { NavPaneHalftoneBackground } from "@/components/nav-pane-halftone-backgr
 import { NavPaneHeaderBlur } from "@/components/nav-pane-header-blur";
 import SidebarButton from "@/components/sidebar-button";
 import LanguageToggle from "@/components/language-toggle";
-import DarkLightToggle, { type ThemeMode } from "@/components/dark-light-toggle";
 import { PoweredByVndrly } from "@/components/powered-by-vndrly";
 
 import logoUnderlay from "@assets/logo-underrlay_1778217900673.png";
@@ -37,11 +37,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  // Local Dark/Light surface toggle — defaults to the vdark treatment
-  // captured in docs/ui-presets.md (`vlight`). Light mode reverts the vendor sign-in to the
-  // pre-vdark white-surface palette (text-gray-900 / 700 / 500 etc.).
-  const [themeMode, setThemeMode] = useState<ThemeMode>("dark");
-  const isDark = themeMode === "dark";
+
   const [isResettingDemo, setIsResettingDemo] = useState(false);
   const [demoAccounts, setDemoAccounts] = useState<DemoAccount[] | null>(null);
   const [isLoadingDemoAccounts, setIsLoadingDemoAccounts] = useState(false);
@@ -272,17 +268,17 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row" style={brandStyleVars(brand)}>
-      <div className="flex-1 flex items-center justify-center px-6 py-12 lg:px-16 relative overflow-hidden" style={{ backgroundColor: isDark ? NAV_PANE_DARK_BG : "#ffffff" }}>
-        <NavPaneHalftoneBackground enabled={isDark} variant="auth" />
-        {isDark && <NavPaneHeaderBlur height={240} />}
+      <div className="flex-1 flex items-center justify-center px-6 pt-28 pb-12 lg:px-16 relative overflow-hidden" style={{ backgroundColor: NAV_PANE_DARK_BG }}>
+        <NavPaneHalftoneBackground enabled variant="auth" />
+        <NavPaneHeaderBlur height={240} />
         <PoweredByVndrly
-          className={cn("absolute bottom-4 right-4 z-20", isDark ? "text-gray-300" : "text-gray-500")}
+          className={cn("absolute bottom-4 right-4 z-20", "text-gray-300")}
         />
         <div className="absolute top-4 right-4 z-20">
-          <LanguageToggle variant={isDark ? "dark" : "light"} />
+          <LanguageToggle variant="dark" />
         </div>
         <div className="absolute top-4 left-4 z-20">
-          <DarkLightToggle mode={themeMode} onChange={setThemeMode} variant={isDark ? "dark" : "light"} />
+          <LoginHomeLink />
         </div>
         <div className="w-full max-w-md relative z-10">
           <div className="flex items-center gap-3 mb-3">
@@ -346,22 +342,22 @@ export default function Login() {
               );
             })()}
             <div className="flex-1 min-w-0">
-              <h1 className={cn("text-2xl font-bold tracking-tight leading-none", isDark ? "text-white" : "text-gray-900")}>{branded && brand.name ? brand.name : "VNDRLY"}</h1>
-              <p className={cn("text-sm font-semibold leading-tight mt-1", isDark ? "text-gray-200" : "text-gray-700")}>{location.startsWith("/gate") ? t("login.gateTitle") : t("login.title")}</p>
+              <h1 className={cn("text-2xl font-bold tracking-tight leading-none", "text-white")}>{branded && brand.name ? brand.name : "VNDRLY"}</h1>
+              <p className={cn("text-sm font-semibold leading-tight mt-1", "text-gray-200")}>{location.startsWith("/gate") ? t("login.gateTitle") : t("login.title")}</p>
             </div>
           </div>
           <div className="mb-8">
-            <p className={cn("text-xs", isDark ? "text-gray-300" : "text-gray-500")}>{location.startsWith("/gate") ? t("login.gateSubtitle") : t("login.subtitle")}</p>
+            <p className={cn("text-xs", "text-gray-300")}>{location.startsWith("/gate") ? t("login.gateSubtitle") : t("login.subtitle")}</p>
           </div>
 
           <div
-            className={cn("border-2 rounded-xl p-6 shadow-xl transition-colors duration-300", formReady ? (branded ? "" : "border-amber-500") : "border-gray-300")}
-            style={formReady && branded ? { borderColor: brand.primary } : undefined}
+            className="border-2 border-[color:var(--brand-primary)] rounded-xl p-6 shadow-xl transition-colors duration-300"
+            data-testid="login-credentials-card"
           >
             <form id="login-form" onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="username" className={isDark ? "text-gray-100" : "text-gray-700"}>{t("login.emailLabel")}</Label>
-                <Input
+                <Label htmlFor="username" className={"text-gray-100"}>{t("login.emailLabel")}</Label>
+                <BrandedInput
                   id="username"
                   type="text"
                   value={username}
@@ -369,13 +365,13 @@ export default function Login() {
                   placeholder={t("login.emailPlaceholder")}
                   autoComplete="username"
                   data-testid="input-username"
-                  className="h-[38px] bg-white rounded-md"
+                  className="h-11 px-4"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password" className={isDark ? "text-gray-100" : "text-gray-700"}>{t("login.passwordLabel")}</Label>
+                <Label htmlFor="password" className={"text-gray-100"}>{t("login.passwordLabel")}</Label>
                 <div className="relative">
-                  <Input
+                  <BrandedInput
                     id="password"
                     type={showPassword ? "text" : "password"}
                     value={password}
@@ -383,15 +379,14 @@ export default function Login() {
                     placeholder={t("login.passwordPlaceholder")}
                     autoComplete="current-password"
                     data-testid="input-password"
-                    className="h-[38px] bg-white rounded-md pr-10"
+                    className="h-11 pl-4 pr-12"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
                     aria-label={showPassword ? "Hide password" : "Show password"}
                     data-testid="button-toggle-password-visibility"
-                    className="absolute inset-y-0 right-0 flex items-center justify-center w-10 text-gray-500 hover:text-gray-800 focus:outline-none focus:text-gray-800"
-                    tabIndex={-1}
+                    className="absolute inset-y-0 right-1 flex items-center justify-center w-10 rounded-full text-gray-500 hover:text-gray-800 focus-visible:outline-2 focus-visible:outline-[color:var(--brand-primary)]"
                   >
                     {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                   </button>
@@ -424,12 +419,12 @@ export default function Login() {
               above. Text is left-aligned (rather than centered) for the
               same reason. The Reset my Password link sits inline next to
               the "Field Employees:" heading. */}
-          <div className={cn("mt-4 pt-4 px-6 border-t", isDark ? "border-white/20" : "border-gray-200")}>
-            <p className={cn("text-sm leading-relaxed", isDark ? "text-gray-300" : "text-gray-500")}>
-              <span className={cn("font-medium", isDark ? "text-gray-100" : "text-gray-700")}>{t("login.fieldEmployees")}</span>{" "}
+          <div className={cn("mt-4 pt-4 px-6 border-t", "border-white/20")}>
+            <p className={cn("text-sm leading-relaxed", "text-gray-300")}>
+              <span className={cn("font-medium", "text-gray-100")}>{t("login.fieldEmployees")}</span>{" "}
               <a
                 href="/forgot-password"
-                className={cn("font-semibold hover:text-[color:var(--brand-primary)] no-underline transition-colors", isDark ? "text-gray-200" : "text-gray-500")}
+                className="font-semibold text-[color:var(--brand-primary)] hover:underline no-underline transition-colors"
                 onClick={(e) => { e.preventDefault(); navigate("/forgot-password"); }}
                 data-testid="link-reset-password"
               >
@@ -438,8 +433,8 @@ export default function Login() {
               <br />
               {t("login.fieldEmployeesNote")}
             </p>
-            <p className={cn("mt-3 text-sm leading-relaxed", isDark ? "text-gray-300" : "text-gray-500")}>
-              <span className={cn("font-medium", isDark ? "text-gray-100" : "text-gray-700")}>{t("login.newToVndrly")}</span>{" "}
+            <p className={cn("mt-3 text-sm leading-relaxed", "text-gray-300")}>
+              <span className={cn("font-medium", "text-gray-100")}>{t("login.newToVndrly")}</span>{" "}
               <a
                 href="/signup"
                 className="font-semibold text-[color:var(--brand-primary)] hover:underline no-underline transition-colors"
@@ -450,9 +445,9 @@ export default function Login() {
               </a>
               <br />
               <span className="italic">"{t("login.newToVndrlyQuote")}"</span>{" "}
-              <span className={isDark ? "text-gray-300" : "text-gray-500"}>{t("login.newToVndrlyAttribution")}</span>
+              <span className={"text-gray-300"}>{t("login.newToVndrlyAttribution")}</span>
             </p>
-            <p className={cn("mt-3 text-sm", isDark ? "text-gray-300" : "text-gray-500")}>
+            <p className={cn("mt-3 text-sm", "text-gray-300")}>
               <a
                 href="/legal/eula"
                 className="font-semibold text-[color:var(--brand-primary)] hover:underline no-underline transition-colors"
@@ -471,7 +466,7 @@ export default function Login() {
               (which uses p-6 → 24px horizontal padding) so the visitor
               button lines up under "Sign In to Portal" at the exact same
               width. */}
-          <div className={cn("mt-5 pt-4 px-6 border-t", isDark ? "border-white/20" : "border-gray-200")}>
+          <div className={cn("mt-5 pt-4 px-6 border-t", "border-white/20")}>
             <SidebarButton
               isActive={false}
               testId="button-continue-as-visitor"

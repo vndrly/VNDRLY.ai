@@ -1,11 +1,9 @@
 import { useLocation } from "wouter";
 import { VNDRLY_LOGO_SQUARE as vndrlyLogo } from "@/lib/vndrly-brand-assets";
-import DarkLightToggle, { type ThemeMode } from "@/components/dark-light-toggle";
 import LanguageToggle from "@/components/language-toggle";
 import { cn } from "@/lib/utils";
 import { NAV_PANE_DARK_BG } from "@/components/nav-pane-tokens";
 import { NavPaneHalftoneBackground } from "@/components/nav-pane-halftone-background";
-import { useState } from "react";
 import {
   PLATFORM_EULA_LAST_UPDATED,
   PLATFORM_EULA_PRIVACY_URL,
@@ -15,18 +13,17 @@ import {
 
 export default function PlatformEulaPage() {
   const [, navigate] = useLocation();
-  const [themeMode, setThemeMode] = useState<ThemeMode>("dark");
-  const isDark = themeMode === "dark";
+
 
   return (
     <div
       className="min-h-screen flex flex-col px-6 py-12 lg:px-16 relative overflow-hidden"
-      style={{ backgroundColor: isDark ? NAV_PANE_DARK_BG : "#f9fafb" }}
+      style={{ backgroundColor: NAV_PANE_DARK_BG }}
     >
-      <NavPaneHalftoneBackground enabled={isDark} variant="auth" />
+      <NavPaneHalftoneBackground enabled variant="auth" />
       <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
-        <DarkLightToggle mode={themeMode} onChange={setThemeMode} variant={isDark ? "dark" : "light"} />
-        <LanguageToggle variant={isDark ? "dark" : "light"} />
+
+        <LanguageToggle variant="dark" />
       </div>
       <div className="w-full max-w-3xl mx-auto relative z-10">
         <div className="flex items-center gap-3 mb-6">
@@ -40,7 +37,7 @@ export default function PlatformEulaPage() {
             <h1
               className={cn(
                 "text-2xl font-bold tracking-tight",
-                isDark ? "text-white" : "text-gray-900",
+                "text-white",
               )}
             >
               {PLATFORM_EULA_TITLE}
@@ -48,7 +45,7 @@ export default function PlatformEulaPage() {
             <p
               className={cn(
                 "text-sm mt-1",
-                isDark ? "text-gray-300" : "text-gray-500",
+                "text-gray-300",
               )}
             >
               Last updated {PLATFORM_EULA_LAST_UPDATED}
@@ -59,9 +56,7 @@ export default function PlatformEulaPage() {
         <div
           className={cn(
             "rounded-xl border p-6 shadow-sm",
-            isDark
-              ? "border-white/15 bg-white/5 text-gray-100"
-              : "border-gray-200 bg-white text-gray-800",
+            "border-white/15 bg-white/5 text-gray-100",
           )}
         >
           <pre
@@ -75,7 +70,7 @@ export default function PlatformEulaPage() {
         <p
           className={cn(
             "text-xs mt-4",
-            isDark ? "text-gray-400" : "text-gray-500",
+            "text-gray-400",
           )}
         >
           Privacy Policy:{" "}
@@ -87,12 +82,12 @@ export default function PlatformEulaPage() {
           </a>
         </p>
 
-        <div className={cn("mt-8 pt-4 border-t", isDark ? "border-white/20" : "border-gray-200")}>
+        <div className={cn("mt-8 pt-4 border-t", "border-white/20")}>
           <button
             type="button"
             className={cn(
               "text-sm font-semibold underline underline-offset-2",
-              isDark ? "text-amber-400 hover:text-amber-300" : "text-amber-600 hover:text-amber-700",
+              "text-amber-400 hover:text-amber-300",
             )}
             onClick={() => navigate("/")}
             data-testid="link-eula-back-sign-in"

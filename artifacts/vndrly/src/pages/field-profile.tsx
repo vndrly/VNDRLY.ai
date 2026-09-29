@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
-import { ChevronRight, User as UserIcon, Edit3, Shield, Users, LogOut, Sun, Moon, Monitor, Check } from "lucide-react";
+import { ChevronRight, User as UserIcon, Edit3, Shield, Users, LogOut, Check } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { useTheme } from "@/hooks/use-theme";
 import PngPill, { PngPillButton } from "@/components/png-pill-rollover";
 import LanguageToggle from "@/components/language-toggle";
 import { cn } from "@/lib/utils";
@@ -40,7 +39,6 @@ export default function FieldProfile() {
   const { user, logout, switchContext } = useAuth();
   const availableMemberships = user?.availableMemberships ?? [];
   const activeMembershipId = user?.activeMembershipId ?? null;
-  const { mode, setMode } = useTheme();
   const [me, setMe] = useState<FieldMe | null>(null);
   const [switchingId, setSwitchingId] = useState<number | null>(null);
 
@@ -136,39 +134,6 @@ export default function FieldProfile() {
         </section>
       ) : null}
 
-      <section className="rounded-xl border border-border bg-card p-4 mb-4">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-          {t("fieldProfile.appearance")}
-        </h2>
-        <div className="grid grid-cols-3 gap-2">
-          {([
-            { value: "light", icon: Sun, labelKey: "fieldProfile.themeLight" },
-            { value: "dark", icon: Moon, labelKey: "fieldProfile.themeDark" },
-            { value: "system", icon: Monitor, labelKey: "fieldProfile.themeSystem" },
-          ] as const).map((opt) => {
-            const Icon = opt.icon;
-            const active = mode === opt.value;
-            return (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => setMode(opt.value)}
-                aria-pressed={active}
-                data-testid={`button-theme-${opt.value}`}
-                className={cn(
-                  "flex flex-col items-center gap-1 py-2.5 rounded-lg border text-xs font-medium transition-colors",
-                  active
-                    ? "border-[color:var(--brand-primary)] bg-accent text-foreground"
-                    : "border-border text-muted-foreground hover:bg-muted",
-                )}
-              >
-                <Icon className="w-4 h-4" />
-                <span>{t(opt.labelKey)}</span>
-              </button>
-            );
-          })}
-        </div>
-      </section>
 
       <section className="rounded-xl border border-border bg-card p-4 mb-4">
         <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">

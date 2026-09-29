@@ -4,7 +4,7 @@ import { Sparkles, ArrowUp, Trash2, Loader2, Download, CheckCircle2, Circle, Plu
 import { useTranslation } from "react-i18next";
 import { AppModalHeader } from "@/components/app-modal-header";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { AskVFloatingLauncherMark, AskVLogo, ASKV_LAUNCHER_HEIGHT, ASKV_LAUNCHER_WIDTH } from "@/components/askv-logo";
+import { AskVFloatingLauncherMark, ASKV_LAUNCHER_HEIGHT, ASKV_LAUNCHER_WIDTH } from "@/components/askv-logo";
 import { PngPillButton as PillButton, brandImagePillSrc } from "@/components/png-pill-rollover";
 import BrandPillButton from "@/components/brand-pill-button";
 import { PillColorLayer } from "@/components/png-pill-chrome";
@@ -174,20 +174,6 @@ const SIGNUP_QUICK_ACTIONS: Record<
     ],
   },
 };
-
-// Small per-brand Ask V icon at full vibrancy (modal header).
-function AskVBrightIcon({ height = 48 }: { height?: number }) {
-  const width = height * 2;
-  return (
-    <span
-      aria-hidden="true"
-      className="relative inline-block shrink-0"
-      style={{ width, height }}
-    >
-      <AskVLogo width={width} height={height} bright />
-    </span>
-  );
-}
 
 // Header icon-only control — no pill/square chrome, just the glyph on the modal bar.
 const headerIconClassName = cn(
@@ -888,7 +874,6 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
           logo={{ testId: "assistant-header-logo" }}
           title={
             <div className="flex items-center gap-2" data-testid="assistant-brand-controls">
-              <AskVBrightIcon height={minimized ? 40 : 48} />
               {!embedded && !tokenMode && !signupMode && askVUserId != null && <AskVStatusIndicator />}
               <DialogTitle className="sr-only">AskV</DialogTitle>
               <DialogDescription className="sr-only">
@@ -1502,7 +1487,7 @@ export function AssistantLauncher({
             ? "fixed bottom-5 left-5 z-[1100] hover:scale-[1.03]"
             : "relative z-[1100]",
         )}
-        style={{ width: ASKV_LAUNCHER_WIDTH, height: ASKV_LAUNCHER_HEIGHT }}
+        style={{ width: ASKV_LAUNCHER_WIDTH * (open ? 1.5 : 1), height: ASKV_LAUNCHER_HEIGHT * (open ? 1.5 : 1) }}
         data-testid="assistant-launcher"
         aria-label={open ? "Close Ask V" : "Open Ask V"}
         aria-expanded={open}

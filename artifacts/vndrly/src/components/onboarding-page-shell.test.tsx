@@ -1,25 +1,8 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { DEFAULT_BRAND } from "@/hooks/use-brand";
 import { OnboardingPageShell } from "./onboarding-page-shell";
 
-vi.mock("@/components/dark-light-toggle", () => ({
-  default: ({
-    mode,
-    onChange,
-  }: {
-    mode: "dark" | "light";
-    onChange: (mode: "dark" | "light") => void;
-  }) => (
-    <button
-      type="button"
-      data-testid="theme-toggle-mock"
-      onClick={() => onChange(mode === "dark" ? "light" : "dark")}
-    >
-      {mode}
-    </button>
-  ),
-}));
 
 vi.mock("@/components/language-toggle", () => ({
   default: () => <div data-testid="language-toggle-mock" />,
@@ -31,7 +14,7 @@ vi.mock("@/components/nav-pane-halftone-background", () => ({
 }));
 
 describe("OnboardingPageShell", () => {
-  it("uses the standard VNDRLY dark treatment and supports light mode", () => {
+  it("uses the standard VNDRLY dark treatment without an appearance switch", () => {
     render(
       <OnboardingPageShell brand={DEFAULT_BRAND}>
         <div>Wizard content</div>
@@ -44,8 +27,6 @@ describe("OnboardingPageShell", () => {
     expect(screen.getByTestId("language-toggle-mock")).toBeTruthy();
     expect(screen.getByText("Wizard content")).toBeTruthy();
 
-    fireEvent.click(screen.getByTestId("theme-toggle-mock"));
-    expect(shell.getAttribute("data-theme")).toBe("light");
-    expect(screen.queryByTestId("halftone-mock")).toBeNull();
+    expect(screen.queryByTestId("dark-light-toggle")).toBeNull();
   });
 });

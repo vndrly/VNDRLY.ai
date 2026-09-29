@@ -17,7 +17,7 @@ import { Slot, router, usePathname, useSegments } from "expo-router";
 import * as Notifications from "expo-notifications";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useState } from "react";
-import { Platform } from "react-native";
+import { Appearance, Platform } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
@@ -291,6 +291,10 @@ function AuthGate() {
 }
 
 function RootLayout() {
+  useEffect(() => {
+    if (Platform.OS !== "web") Appearance.setColorScheme("dark");
+  }, []);
+
   const [fontsLoaded, fontError] = useFonts({
     Inter_400Regular,
     Inter_500Medium,
