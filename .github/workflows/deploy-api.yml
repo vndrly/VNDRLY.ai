@@ -35,13 +35,14 @@ jobs:
       VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
       VPS_PORT: ${{ secrets.VPS_PORT }}
       ASSEMBLYAI_API_KEY: ${{ secrets.ASSEMBLYAI_API_KEY }}
+      MASSIVE_API_KEY: ${{ secrets.MASSIVE_API_KEY }}
       EXPECTED_SHA: ${{ github.sha }}
     steps:
       - name: Verify deployment configuration
         shell: bash
         run: |
           set -euo pipefail
-          for name in VPS_HOST VPS_USER VPS_PASSWORD VPS_PORT ASSEMBLYAI_API_KEY; do
+          for name in VPS_HOST VPS_USER VPS_PASSWORD VPS_PORT ASSEMBLYAI_API_KEY MASSIVE_API_KEY; do
             if [ -z "${!name:-}" ]; then
               echo "::error title=Missing deployment secret::$name is not configured"
               exit 1
@@ -74,6 +75,14 @@ jobs:
             -o StrictHostKeyChecking=accept-new \
             "$VPS_USER@$VPS_HOST" \
             'umask 077; cat > /tmp/vndrly-assemblyai-key'
+          printf '%s' "$MASSIVE_API_KEY" | sshpass -e ssh \
+            -p "$VPS_PORT" \
+            -o ConnectTimeout=20 \
+            -o PreferredAuthentications=password \
+            -o PubkeyAuthentication=no \
+            -o StrictHostKeyChecking=accept-new \
+            "$VPS_USER@$VPS_HOST" \
+            'umask 077; cat > /tmp/vndrly-massive-key'
           sshpass -e ssh \
             -p "$VPS_PORT" \
             -o ConnectTimeout=20 \
@@ -83,7 +92,7 @@ jobs:
             "$VPS_USER@$VPS_HOST" \
             "EXPECTED_SHA=$EXPECTED_SHA RELAY_HOST=$VPS_HOST bash -s" <<'REMOTE'
           set -euo pipefail
-          trap 'sudo rm -f /tmp/vndrly-assemblyai-key' EXIT
+          trap 'sudo rm -f /tmp/vndrly-assemblyai-key /tmp/vndrly-massive-key' EXIT
           APP_DIR=/var/www/vndrly
           cd "$APP_DIR"
           sudo -u vndrly git remote set-url origin https://github.com/vndrly/VNDRLY.ai.git
@@ -111,12 +120,15 @@ jobs:
             exit 1
           fi
           assemblyai_key="$(sudo cat /tmp/vndrly-assemblyai-key)"
+          massive_api_key="$(sudo cat /tmp/vndrly-massive-key)"
           if [ "${#assemblyai_key}" -lt 16 ]; then
             echo "Meeting transcription key is invalid; refusing API restart" >&2
             exit 1
           fi
           sudo sed -i '/^ASSEMBLYAI_API_KEY=/d; /^ASSEMBLYAI_MODEL_TRAINING_ALLOWED=/d; /^ASSEMBLYAI_MAX_CONCURRENT_STREAMS=/d; /^VNDRLY_MEETING_STT_PROVIDER=/d' .env.production
           printf 'ASSEMBLYAI_API_KEY=%s\n' "$assemblyai_key" | sudo tee -a .env.production >/dev/null
+          sudo sed -i '/^MASSIVE_API_KEY=/d' .env.production
+          printf 'MASSIVE_API_KEY=%s\n' "$massive_api_key" | sudo tee -a .env.production >/dev/null
           printf '%s\n' 'ASSEMBLYAI_MODEL_TRAINING_ALLOWED=1' 'ASSEMBLYAI_MAX_CONCURRENT_STREAMS=5' 'VNDRLY_MEETING_STT_PROVIDER=assemblyai' | sudo tee -a .env.production >/dev/null
           sudo sed -i '/^ASKV_NATURAL_VOICE_USER_IDS=/d' .env.production
           if ! sudo grep -q '^ASKV_NATURAL_VOICE_ENABLED=' .env.production; then
