@@ -74,6 +74,7 @@ export const PUBLIC_UNAUTHENTICATED_ALLOWLIST: ApiAllowRule[] = [
   ...DEV_UNAUTHENTICATED_ALLOWLIST,
   { method: "GET", pattern: /^\/api\/healthz\/?$/ },
   { method: "GET", pattern: /^\/api\/health\/?$/ },
+  { method: "POST", pattern: /^\/api\/public\/askv\/?$/ },
   { method: "POST", pattern: /^\/api\/onboarding\/partner\/?$/ },
   { method: "POST", pattern: /^\/api\/onboarding\/vendor\/?$/ },
   { method: "GET", pattern: /^\/api\/onboarding\/verify-email\/[^/]+\/?$/ },

@@ -504,7 +504,7 @@ export const databaseGateReportDependencies: GateReportDependencies = {
           WHEN u.id=$2 THEN 'self'
           WHEN lower(coalesce(u.email,u.username))='v@vndrly.ai' THEN 'platform'
           WHEN (
-            (m.vendor_id IN (SELECT vendor_id FROM sender_vendor_orgs) AND (m.role='admin' OR vp.vendor_role IN ('office','both','gate_supervisor')))
+            (m.vendor_id IN (SELECT vendor_id FROM sender_vendor_orgs) AND (m.role='admin' OR vp.vendor_role IN ('office','both','gate_supervisor','gatekeeper')))
             OR (m.partner_id IN (SELECT partner_id FROM sender_partner_orgs) AND m.role='admin')
             OR (w.managed_organization_id IN (SELECT managed_organization_id FROM sender_managed_orgs) AND g.role IN ('managed_company_manager','gate_supervisor'))
             OR (w.sponsor_vendor_id IN (SELECT vendor_id FROM sender_vendor_orgs) AND g.site_id=$1 AND g.role IN ('managed_company_manager','gate_supervisor'))
@@ -528,7 +528,7 @@ export const databaseGateReportDependencies: GateReportDependencies = {
          AND (
            u.id=$2
            OR lower(coalesce(u.email,u.username))='v@vndrly.ai'
-           OR (m.vendor_id IN (SELECT vendor_id FROM sender_vendor_orgs) AND (m.role='admin' OR vp.vendor_role IN ('office','both','gate_supervisor')))
+           OR (m.vendor_id IN (SELECT vendor_id FROM sender_vendor_orgs) AND (m.role='admin' OR vp.vendor_role IN ('office','both','gate_supervisor','gatekeeper')))
            OR (m.partner_id IN (SELECT partner_id FROM sender_partner_orgs) AND m.role='admin')
            OR (w.managed_organization_id IN (SELECT managed_organization_id FROM sender_managed_orgs) AND g.role IN ('managed_company_manager','gate_supervisor'))
            OR (w.sponsor_vendor_id IN (SELECT vendor_id FROM sender_vendor_orgs) AND g.site_id=$1 AND g.role IN ('managed_company_manager','gate_supervisor'))

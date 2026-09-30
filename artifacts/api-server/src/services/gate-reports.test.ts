@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
 import {
   createMemoryGateReportDependencies,
   deliverGateReports,
@@ -16,6 +17,15 @@ const filters = {
 };
 
 describe("Gate reports", () => {
+  it("keeps peer gatekeepers eligible for shift handoff reports", () => {
+    const source = readFileSync(new URL("./gate-reports.ts", import.meta.url), "utf8");
+    const eligibleRoleClauses = source.match(
+      /vp\.vendor_role IN \('office','both','gate_supervisor','gatekeeper'\)/g,
+    );
+
+    expect(eligibleRoleClauses).toHaveLength(2);
+  });
+
   it("supports the approved ranges through a full year", () => {
     expect(parseGateReportFilters({ ...filters, range: "1y" })).toMatchObject({ range: "1y" });
     expect(() => parseGateReportFilters({ ...filters, range: "10y" })).toThrow();

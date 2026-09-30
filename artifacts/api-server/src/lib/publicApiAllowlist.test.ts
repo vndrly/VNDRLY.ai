@@ -30,4 +30,14 @@ describe("public invitation activation boundary", () => {
       ).toBe(false);
     }
   });
+
+  it("allows anonymous visitors to ask the public Product Guide", () => {
+    const path = "/api/public/askv";
+
+    expect(
+      PUBLIC_UNAUTHENTICATED_ALLOWLIST.some(
+        (rule) => rule.method === "POST" && rule.pattern.test(path),
+      ),
+    ).toBe(true);
+  });
 });
