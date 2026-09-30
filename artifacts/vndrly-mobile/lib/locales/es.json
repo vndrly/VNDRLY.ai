@@ -139,7 +139,8 @@
     "saved": "Guardado",
     "add": "Agregar",
     "save": "Guardar",
-    "edit": "Editar"
+    "edit": "Editar",
+    "back": "Atrás"
   },
   "freshness": {
     "live": "En vivo",
@@ -2488,6 +2489,8 @@
     "emailReport": "Enviar informe",
     "saveCopy": "Guardar una copia",
     "noFormat": "Primero elija PDF, CSV o DOC.",
+    "email": "Enviar enlace seguro",
+    "sendEmail": "Enviar enlace seguro ahora",
     "recipients": "Destinatarios autorizados",
     "selected": "{{count}} seleccionados",
     "toggleRecipients": "Expandir o contraer destinatarios autorizados",

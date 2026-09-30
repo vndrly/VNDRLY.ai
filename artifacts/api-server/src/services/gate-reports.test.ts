@@ -144,4 +144,78 @@ describe("Gate reports", () => {
     }, deps);
     expect(recipients.map((recipient) => recipient.userId)).toEqual([1, 2]);
   });
+
+  it("keeps gate report recipients inside the sender's company chain", async () => {
+    const deps = createMemoryGateReportDependencies({
+      access: new Map([
+        [1, { kind: "full_site" }],
+        [2, { kind: "full_site" }],
+        [3, { kind: "full_site" }],
+        [4, { kind: "full_site" }],
+        [5, { kind: "full_site" }],
+      ]),
+      candidates: [
+        { userId: 1, name: "Bob Gatekeeper", role: "gatekeeper", relationship: "self", accountKind: "standard", senderIsCompanyAdmin: false },
+        { userId: 2, name: "Midcon Supervisor", role: "gate_supervisor", relationship: "company", accountKind: "standard", senderIsCompanyAdmin: false },
+        { userId: 3, name: "E2E Test Admin", role: "admin", relationship: "company", accountKind: "test", senderIsCompanyAdmin: false },
+        { userId: 4, name: "Warwick Admin", role: "admin", relationship: "unrelated", accountKind: "standard", senderIsCompanyAdmin: false },
+        { userId: 5, name: "VNDRLY Admin", role: "admin", relationship: "platform", accountKind: "canonical_platform_admin", senderIsCompanyAdmin: false },
+      ],
+    });
+    const recipients = await listGateReportRecipients({ senderUserId: 1, reportKind: "history", filters }, deps);
+    expect(recipients.map((recipient) => recipient.userId)).toEqual([1, 2]);
+  });
+
+  it("offers the single canonical VNDRLY admin only to a company admin", async () => {
+    const deps = createMemoryGateReportDependencies({
+      access: new Map([
+        [10, { kind: "full_site" }],
+        [11, { kind: "full_site" }],
+        [12, { kind: "full_site" }],
+      ]),
+      candidates: [
+        { userId: 10, name: "Midcon Admin", role: "admin", relationship: "self", accountKind: "standard", senderIsCompanyAdmin: true },
+        { userId: 11, name: "VNDRLY Admin", role: "admin", relationship: "platform", accountKind: "canonical_platform_admin", senderIsCompanyAdmin: true },
+        { userId: 12, name: "VNDRLY Admin", role: "admin", relationship: "platform", accountKind: "platform_admin", senderIsCompanyAdmin: true },
+      ],
+    });
+    const recipients = await listGateReportRecipients({ senderUserId: 10, reportKind: "history", filters }, deps);
+    expect(recipients.map((recipient) => recipient.userId)).toEqual([10, 11]);
+  });
+
+  it("returns each authorized recipient only once when memberships overlap", async () => {
+    const deps = createMemoryGateReportDependencies({
+      access: new Map([
+        [1, { kind: "full_site" }],
+        [2, { kind: "full_site" }],
+      ]),
+      candidates: [
+        { userId: 1, name: "Bob Gatekeeper", role: "gatekeeper", relationship: "self", accountKind: "standard", senderIsCompanyAdmin: false },
+        { userId: 2, name: "Midcon Supervisor", role: "gate_supervisor", relationship: "company", accountKind: "standard", senderIsCompanyAdmin: false },
+        { userId: 2, name: "Midcon Supervisor", role: "office", relationship: "company", accountKind: "standard", senderIsCompanyAdmin: false },
+      ],
+    });
+    const recipients = await listGateReportRecipients({ senderUserId: 1, reportKind: "history", filters }, deps);
+    expect(recipients.map((recipient) => recipient.userId)).toEqual([1, 2]);
+  });
+
+  it("rejects a direct delivery request to a recipient outside the selector policy", async () => {
+    const deps = createMemoryGateReportDependencies({
+      access: new Map([
+        [1, { kind: "full_site" }],
+        [4, { kind: "full_site" }],
+      ]),
+      candidates: [
+        { userId: 1, name: "Bob Gatekeeper", role: "gatekeeper", relationship: "self", accountKind: "standard", senderIsCompanyAdmin: false },
+        { userId: 4, name: "Unrelated Admin", role: "admin", relationship: "unrelated", accountKind: "standard", senderIsCompanyAdmin: false },
+      ],
+    });
+    await expect(deliverGateReports({
+      senderUserId: 1,
+      recipientUserIds: [4],
+      reportKind: "history",
+      format: "pdf",
+      filters,
+    }, deps)).rejects.toMatchObject({ status: 403, code: "gate_report.recipient_forbidden" });
+  });
 });

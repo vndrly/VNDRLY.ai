@@ -33,6 +33,14 @@ export type GateReportDelivery = {
   expiresAt: Date;
   revokedAt: Date | null;
 };
+type GateReportRecipientCandidate = {
+  userId: number;
+  name: string;
+  role: string;
+  relationship?: "self" | "company" | "platform" | "unrelated";
+  accountKind?: "standard" | "test" | "canonical_platform_admin" | "platform_admin";
+  senderIsCompanyAdmin?: boolean;
+};
 
 export class GateReportsError extends Error {
   constructor(public status: number, public code: string) {
@@ -50,7 +58,11 @@ export interface GateReportDependencies {
   resolveContext(filters: GateReportFilters): Promise<{ siteName: string; stationName: string }>;
   sendLink(input: { recipientUserId: number; url: string; token: string; reportKind: GateReportKind; format: GateReportFormat }): Promise<void>;
   sendAttachment(input: { recipientUserId: number; subject: string; filename: string; contentType: string; body: Buffer }): Promise<void>;
-  listRecipientCandidates(filters: GateReportFilters, reportKind: GateReportKind): Promise<Array<{ userId: number; name: string; role: string }>>;
+  listRecipientCandidates(
+    filters: GateReportFilters,
+    senderUserId: number,
+    reportKind: GateReportKind,
+  ): Promise<GateReportRecipientCandidate[]>;
   now(): Date;
 }
 
@@ -58,6 +70,14 @@ const fail = (status: number, code: string): never => { throw new GateReportsErr
 const tokenHash = (token: string) => createHash("sha256").update(token).digest("hex");
 const ranges: GateReportRange[] = ["current_shift", "previous_shift", "24h", "7d", "14d", "30d", "90d", "1y"];
 const recordTypes: GateReportRecordType[] = ["all", "check_ins", "check_outs", "visitors_on_site", "employees_on_site", "vehicles_on_site", "pending", "needs_review"];
+
+function recipientCandidateIsSelectable(candidate: GateReportRecipientCandidate) {
+  if (candidate.accountKind === "test" || candidate.relationship === "unrelated") return false;
+  if (candidate.relationship === "platform") {
+    return candidate.accountKind === "canonical_platform_admin" && candidate.senderIsCompanyAdmin === true;
+  }
+  return true;
+}
 
 export function parseGateReportFilters(input: Partial<Record<keyof GateReportFilters, unknown>>): GateReportFilters {
   const siteId = Number(input.siteId);
@@ -91,10 +111,13 @@ export async function deliverGateReports(input: {
   if (!senderScope) throw new GateReportsError(403, "gate_report.forbidden");
   if (input.reportKind === "shift_notes" && senderScope.kind !== "full_site")
     fail(403, "gate_report.shift_notes_scope_required");
-  if (input.reportKind === "shift_notes") {
-    const allowed = new Set((await deps.listRecipientCandidates(filters, input.reportKind)).map(recipient => recipient.userId));
-    if (recipients.some(recipientUserId => !allowed.has(recipientUserId))) fail(403, "gate_report.recipient_forbidden");
-  }
+  const selectableRecipients = new Set(
+    (await deps.listRecipientCandidates(filters, input.senderUserId, input.reportKind))
+      .filter(recipientCandidateIsSelectable)
+      .map((candidate) => candidate.userId),
+  );
+  if (recipients.some((recipientUserId) => !selectableRecipients.has(recipientUserId)))
+    fail(403, "gate_report.recipient_forbidden");
   const resolvedRecipients = await Promise.all(recipients.map(async (recipientUserId) => ({
     recipientUserId,
     scope: await deps.resolveAccess(recipientUserId, filters, input.reportKind),
@@ -243,13 +266,21 @@ export async function listGateReportRecipients(
   if (!senderScope) throw new GateReportsError(403, "gate_report.forbidden");
   if (input.reportKind === "shift_notes" && senderScope.kind !== "full_site")
     fail(403, "gate_report.shift_notes_scope_required");
-  const candidates = await deps.listRecipientCandidates(filters, input.reportKind);
+  const candidates = await deps.listRecipientCandidates(
+    filters,
+    input.senderUserId,
+    input.reportKind,
+  );
   const recipients = [];
+  const seenUserIds = new Set<number>();
   for (const candidate of candidates) {
+    if (!recipientCandidateIsSelectable(candidate)) continue;
+    if (seenUserIds.has(candidate.userId)) continue;
     const scope = await deps.resolveAccess(candidate.userId, filters, input.reportKind);
     if (!scope) continue;
     if (input.reportKind === "shift_notes" && scope.kind !== "full_site") continue;
     if (senderScope.kind === "company" && scope.kind === "company" && senderScope.company.toLowerCase() !== scope.company.toLowerCase()) continue;
+    seenUserIds.add(candidate.userId);
     recipients.push({ ...candidate, scope: scope.kind });
   }
   return recipients;
@@ -448,46 +479,71 @@ export const databaseGateReportDependencies: GateReportDependencies = {
       body: input.body,
     });
   },
-  async listRecipientCandidates(filters, reportKind) {
-    if (reportKind === "shift_notes") {
-      const rows = (await pool.query(
-        `SELECT DISTINCT u.id AS user_id,coalesce(u.display_name,u.username) AS name,
-          coalesce(vp.vendor_role,m.role) AS role
-         FROM users u
-         JOIN user_org_memberships m ON m.user_id=u.id AND m.org_type='vendor'
-         JOIN vendor_people vp ON vp.user_id=u.id AND vp.vendor_id=m.vendor_id AND vp.deleted_at IS NULL AND vp.is_active=true
-         WHERE u.suspended_at IS NULL AND coalesce(u.email,u.username) LIKE '%@%'
-           AND EXISTS (SELECT 1 FROM site_work_assignments a WHERE a.vendor_id=m.vendor_id AND a.site_location_id=$1)
-           AND vp.vendor_role IN ('admin','office','both','gate_supervisor','gatekeeper')
-           AND lower(coalesce(u.email,u.username)) !~ '(^|[.@_-])(e2e|test)([.@_-]|$)'
-           AND lower(coalesce(u.display_name,'')) !~ '(^|[^a-z])(e2e|test)([^a-z]|$)'
-         ORDER BY name LIMIT 5000`,
-        [filters.siteId],
-      )).rows;
-      return rows.map((row) => ({ userId: Number(row.user_id), name: String(row.name), role: String(row.role ?? "member") }));
-    }
+  async listRecipientCandidates(filters, senderUserId) {
     const rows = (await pool.query(
-      `SELECT DISTINCT u.id AS user_id,coalesce(u.display_name,u.username) AS name,
-        coalesce(vp.vendor_role,m.role,u.role) AS role
+      `WITH sender_vendor_orgs AS (
+         SELECT vendor_id FROM user_org_memberships WHERE user_id=$2 AND org_type='vendor' AND vendor_id IS NOT NULL
+         UNION SELECT vendor_id FROM vendor_people WHERE user_id=$2 AND deleted_at IS NULL AND is_active=true
+         UNION SELECT sponsor_vendor_id FROM managed_subcontractor_worker_sponsorships WHERE worker_user_id=$2 AND status='active'
+       ), sender_partner_orgs AS (
+         SELECT partner_id FROM user_org_memberships WHERE user_id=$2 AND org_type='partner' AND partner_id IS NOT NULL
+       ), sender_managed_orgs AS (
+         SELECT managed_organization_id FROM managed_subcontractor_worker_sponsorships WHERE worker_user_id=$2 AND status='active'
+       ), sender_company_admin AS (
+         SELECT EXISTS (
+           SELECT 1 FROM user_org_memberships WHERE user_id=$2 AND role='admin'
+           UNION ALL
+           SELECT 1 FROM managed_subcontractor_worker_sponsorships w
+           JOIN managed_subcontractor_role_grants g ON g.sponsorship_id=w.id
+           WHERE w.worker_user_id=$2 AND w.status='active' AND g.status='active' AND g.role='managed_company_manager'
+         ) AS allowed
+       )
+       SELECT DISTINCT u.id AS user_id,coalesce(u.display_name,u.username) AS name,
+        coalesce(vp.vendor_role,m.role,g.role,u.role) AS role,
+        CASE
+          WHEN u.id=$2 THEN 'self'
+          WHEN lower(coalesce(u.email,u.username))='v@vndrly.ai' THEN 'platform'
+          WHEN (
+            (m.vendor_id IN (SELECT vendor_id FROM sender_vendor_orgs) AND (m.role='admin' OR vp.vendor_role IN ('office','both','gate_supervisor')))
+            OR (m.partner_id IN (SELECT partner_id FROM sender_partner_orgs) AND m.role='admin')
+            OR (w.managed_organization_id IN (SELECT managed_organization_id FROM sender_managed_orgs) AND g.role IN ('managed_company_manager','gate_supervisor'))
+            OR (w.sponsor_vendor_id IN (SELECT vendor_id FROM sender_vendor_orgs) AND g.site_id=$1 AND g.role IN ('managed_company_manager','gate_supervisor'))
+          ) THEN 'company'
+          ELSE 'unrelated'
+        END AS relationship,
+        CASE
+          WHEN lower(coalesce(u.email,u.username))='v@vndrly.ai' THEN 'canonical_platform_admin'
+          WHEN lower(coalesce(u.email,u.username)) ~ '(^|[.@_-])(e2e|test)([.@_-]|$)'
+            OR lower(coalesce(u.display_name,'')) ~ '(^|[^a-z])(e2e|test)([^a-z]|$)' THEN 'test'
+          WHEN u.role='admin' THEN 'platform_admin'
+          ELSE 'standard'
+        END AS account_kind,
+        (SELECT allowed FROM sender_company_admin) AS sender_is_company_admin
        FROM users u
        LEFT JOIN user_org_memberships m ON m.user_id=u.id
        LEFT JOIN vendor_people vp ON vp.user_id=u.id AND vp.deleted_at IS NULL AND vp.is_active=true
-       LEFT JOIN site_locations s ON s.id=$1
+       LEFT JOIN managed_subcontractor_worker_sponsorships w ON w.worker_user_id=u.id AND w.status='active'
+       LEFT JOIN managed_subcontractor_role_grants g ON g.sponsorship_id=w.id AND g.status='active' AND (g.site_id=$1 OR g.site_id IS NULL)
        WHERE u.suspended_at IS NULL AND coalesce(u.email,u.username) LIKE '%@%'
-         AND (u.role='admin'
-           OR (m.org_type='partner' AND m.partner_id=s.partner_id)
-           OR (m.org_type='vendor' AND EXISTS (
-             SELECT 1 FROM site_work_assignments a WHERE a.vendor_id=m.vendor_id AND a.site_location_id=$1
-           ))
-           OR EXISTS (
-             SELECT 1 FROM managed_subcontractor_worker_sponsorships w
-             LEFT JOIN managed_subcontractor_role_grants g ON g.sponsorship_id=w.id
-             WHERE w.worker_user_id=u.id AND w.status='active' AND (g.site_id=$1 OR g.site_id IS NULL)
-           ))
+         AND (
+           u.id=$2
+           OR lower(coalesce(u.email,u.username))='v@vndrly.ai'
+           OR (m.vendor_id IN (SELECT vendor_id FROM sender_vendor_orgs) AND (m.role='admin' OR vp.vendor_role IN ('office','both','gate_supervisor')))
+           OR (m.partner_id IN (SELECT partner_id FROM sender_partner_orgs) AND m.role='admin')
+           OR (w.managed_organization_id IN (SELECT managed_organization_id FROM sender_managed_orgs) AND g.role IN ('managed_company_manager','gate_supervisor'))
+           OR (w.sponsor_vendor_id IN (SELECT vendor_id FROM sender_vendor_orgs) AND g.site_id=$1 AND g.role IN ('managed_company_manager','gate_supervisor'))
+         )
        ORDER BY name LIMIT 5000`,
-      [filters.siteId],
+      [filters.siteId, senderUserId],
     )).rows;
-    return rows.map((row) => ({ userId: Number(row.user_id), name: String(row.name), role: String(row.role ?? "member") }));
+    return rows.map((row) => ({
+      userId: Number(row.user_id),
+      name: String(row.name),
+      role: String(row.role ?? "member"),
+      relationship: String(row.relationship) as GateReportRecipientCandidate["relationship"],
+      accountKind: String(row.account_kind) as GateReportRecipientCandidate["accountKind"],
+      senderIsCompanyAdmin: Boolean(row.sender_is_company_admin),
+    }));
   },
   now: () => new Date(),
 };
@@ -511,6 +567,7 @@ export function createMemoryGateReportDependencies(input: {
   access: Map<number, GateReportScope | null>;
   rows?: GateReportRow[];
   recipients?: Array<{ userId: number; name: string; role: string }>;
+  candidates?: GateReportRecipientCandidate[];
   context?: { siteName: string; stationName: string };
 }): GateReportDependencies & {
   sent(): Array<{ recipientUserId: number; url: string; token: string }>;
@@ -535,7 +592,13 @@ export function createMemoryGateReportDependencies(input: {
     async sendLink(message) { sent.push({ recipientUserId: message.recipientUserId, url: message.url, token: message.token }); },
     async sendAttachment(message) { attachments.push(message); },
     async listRecipientCandidates() {
-      return input.recipients ?? [...input.access.keys()].map((userId) => ({ userId, name: `User ${userId}`, role: "member" }));
+      return input.candidates
+        ?? input.recipients
+        ?? [...input.access.keys()].map((userId) => ({
+          userId,
+          name: `User ${userId}`,
+          role: "member",
+        }));
     },
     now: () => new Date("2026-09-22T12:00:00.000Z"),
   };
