@@ -5,6 +5,7 @@ import { createAskVRealtimeClient, type AskVRealtimeClient, type VoiceTranscript
 import { ASKV_IDLE_MS, type AskVVoiceState } from '@/lib/askv-voice-state';
 import { addAskVToolLocation } from '@/lib/askv-tool-location';
 import { createAskVVoiceMetrics } from '@/lib/askv-voice-metrics';
+import { readGateVoiceDraft, notifyGateVoiceSaved, subscribeGateVoiceDraft } from '@workspace/gate-booth';
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
 const GATE_SUBMISSION_TOOLS = new Set(['confirm_visitor_check_in', 'confirm_visitor_check_out']);
 export type AskVRealtimeState = AskVVoiceState;
@@ -26,6 +27,9 @@ export function useAskVRealtime(args?: {
   const userSpeaking = useRef(false);
   const metrics = useRef<ReturnType<typeof createAskVVoiceMetrics> | undefined>(undefined);
   const latestContext = useRef<Parameters<AskVRealtimeClient['updateContext']>[0] | undefined>(undefined);
+  useEffect(() => subscribeGateVoiceDraft(() => {
+    client.current?.updateContext({ ...latestContext.current, gateDraft: readGateVoiceDraft() ?? null });
+  }), []);
   const transition = useCallback((next: AskVVoiceState) => { current.current = next; setState(next); }, []);
   const clearIdle = useCallback(() => { clearTimeout(timer.current); timer.current = undefined; }, []);
   const stop = useCallback(() => {
@@ -82,6 +86,11 @@ export function useAskVRealtime(args?: {
           if (!valid()) throw new Error('Voice session ended.');
           clearIdle(); transition('thinking');
           let domain = call.arguments && typeof call.arguments === 'object' ? call.arguments as Record<string, unknown> : {};
+          const gateDraft = /^(prepare|confirm)_visitor_check_in$/.test(call.name) ? readGateVoiceDraft() : undefined;
+          if (gateDraft) {
+            domain = { ...gateDraft, ...domain };
+            applyAskVClientIntent({ name: 'prefill_gate_visit', arguments: { values: domain } });
+          }
           const pending = pendingConfirmations.get(call.name);
           let confirmationEventId: string | undefined;
           let actionEventId: string | undefined;
@@ -113,6 +122,7 @@ export function useAskVRealtime(args?: {
               sessionId, conversationId: conversation.conversationId, callId: call.callId,
               confirmationEventId,
               actionEventId,
+              gateDraft,
               idempotencyKey: pending ? pending.key : call.callId,
               clientSurface: 'web' }) });
           const body = await result.json();
@@ -121,6 +131,7 @@ export function useAskVRealtime(args?: {
           const output = body.output ?? (body.requiresConfirmation ? body : body.message ?? body.error ?? '');
           let parsed: Record<string, unknown> | undefined;
           try { parsed = typeof output === 'string' ? JSON.parse(output) : output; } catch { /* ordinary tool text */ }
+          if (parsed?.ok === true && parsed.action === 'visitor_checked_in') notifyGateVoiceSaved(domain);
           if (parsed?.requiresConfirmation && typeof parsed.idempotencyKey === 'string') pendingConfirmations.set(call.name, { key: parsed.idempotencyKey, arguments: parsed.arguments, afterEventId: lastUserTranscript?.eventId });
           else if (result.ok) pendingConfirmations.delete(call.name);
           if (!valid()) throw new Error('Voice session ended.');
@@ -146,7 +157,7 @@ export function useAskVRealtime(args?: {
       });
       if (!valid()) { created.close(); return; }
       client.current = created;
-      if (latestContext.current) created.updateContext(latestContext.current);
+      if (latestContext.current || readGateVoiceDraft()) created.updateContext({ ...latestContext.current, gateDraft: readGateVoiceDraft() });
       await created.connect(); if (!valid()) { created.close(); return; }
       if (current.current === 'connecting') transition('listening');
       // The click greeting arms idle only after its actual output-buffer stop event.

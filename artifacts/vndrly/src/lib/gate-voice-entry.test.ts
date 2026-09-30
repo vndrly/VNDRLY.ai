@@ -87,6 +87,14 @@ describe("parseGateVoiceEntry", () => {
 });
 
 describe("parseGateVoiceCommand", () => {
+  it.each(["submit", "log him", "check him in", "check in and submit"])("keeps completion-only commands out of the name fields: %s", transcript => {
+    expect(parseGateVoiceCommand(transcript)).toEqual({ intent: "check-in", fill: {} });
+  });
+  it("captures the approved next truck command", () => {
+    expect(parseGateVoiceCommand("Next truck, Bob's Trucking, Bob Vila, plate ABC one two three, check him in.")).toMatchObject({
+      intent: "check-in", fill: { firstName: "Bob", lastName: "Vila", company: "Bob's Trucking", vehiclePlate: "ABC123" },
+    });
+  });
   it("understands a driver name followed by checking out", () => {
     expect(parseGateVoiceCommand("Bob Villa checking out")).toEqual({
       intent: "check-out",

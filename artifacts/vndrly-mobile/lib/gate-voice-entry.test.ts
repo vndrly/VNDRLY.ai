@@ -198,3 +198,8 @@ describe("recoverGateVoiceCommand", () => {
     });
   });
 });
+describe("completion-only speech", () => {
+  it.each(["submit", "log him", "check him in", "check in and submit"])("does not fill names from %s", transcript => {
+    expect(parseGateVoiceCommand(transcript)).toEqual({ intent: "check-in", fill: {} });
+  });
+});

@@ -354,6 +354,11 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
               confirmationEventId: _untrustedEventId, actionEventId: _untrustedActionEventId,
               idempotencyKey: _untrustedKey, callId: _untrustedCallId,
               ...rawArguments } = parsed ?? {};
+            const gateDraft = /^(prepare|confirm)_visitor_check_in$/.test(call.name) ? readGateVoiceDraft() : undefined;
+            if (gateDraft) {
+              for (const [key, value] of Object.entries(gateDraft)) if (rawArguments[key] == null) rawArguments[key] = value;
+              await executeAskVClientIntent({ name: "prefill_gate_visit", arguments: { values: rawArguments } }, pathRef.current);
+            }
             // GPS writes replace model coordinates with the captured device
             // location. Null schema fields and echoed GPS identify the same draft.
             const { latitude: _latitude, longitude: _longitude, ...withoutDeviceCoordinates } = rawArguments;
@@ -418,6 +423,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
               name: call.name, arguments: domainArguments, clientSurface: "ios",
               sessionId: session.sessionId, conversationId: session.conversationId,
               callId: call.callId, idempotencyKey: stableKey,
+              gateDraft,
               ...(confirmationEventId ? { confirmationEventId } : {}),
               ...(actionEventId ? { actionEventId } : {}),
             }, ac.signal); }
@@ -448,6 +454,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
               const result = await executeAskVClientIntent(output.intent, pathRef.current);
               return JSON.stringify(result);
             }
+            if (output.ok === true && output.action === "visitor_checked_in") notifyGateVoiceSaved(domainArguments);
             if (data.ok === true && (data.mutating === true || (data.mutation && typeof data.mutation === "object") || Array.isArray(data.refresh)
               || Array.isArray(output.refresh) || output.visitId || output.ticketId)) emitAskVDataChanged();
             return JSON.stringify(output);
@@ -641,3 +648,4 @@ export function useAskVVoiceSession(): AskVVoiceSessionValue {
   if (!session) throw new Error("useAskVVoiceSession must be used within AskVVoiceProvider");
   return session;
 }
+import { readGateVoiceDraft, notifyGateVoiceSaved } from "@workspace/gate-booth";

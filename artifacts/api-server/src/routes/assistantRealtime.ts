@@ -754,7 +754,7 @@ router.post("/assistant/realtime/context", async (req, res): Promise<void> => {
   res.json({
     tools: toRealtimeTools(selected),
     toolMetadata: toRealtimeToolMetadata(selected),
-    context: compactVoiceContext(session, context),
+    context: { ...compactVoiceContext(session, context), gateDraft: parseGateDraft(req.body?.gateDraft) ?? null },
   });
 });
 router.post("/assistant/realtime/end", async (req, res): Promise<void> => {
@@ -922,6 +922,7 @@ router.post(
           utterance: actionPhrase,
           toolName: name,
           toolArguments: input,
+          currentDraft: req.body?.gateDraft && typeof req.body.gateDraft === "object" && !Array.isArray(req.body.gateDraft) ? req.body.gateDraft : undefined,
         })
           .authorization === "submit",
     );
@@ -1308,3 +1309,4 @@ router.post("/assistant/voice/transcript", async (req, res): Promise<void> => {
 });
 
 export default router;
+import { parseGateDraft } from "../assistant/page-context";

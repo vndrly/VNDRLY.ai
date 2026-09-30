@@ -1,3 +1,4 @@
+import { interpretGateSpeech, normalizeSpokenPlate } from "@workspace/gate-booth";
 import {
   normalizePlateState,
   parseSpokenPlateState,
@@ -84,7 +85,7 @@ export function parseGateVoiceEntry(transcript: string): GateVoiceFill {
   const notes = valueAfterToEnd(text, ["notes", "note", "remark", "comment"]);
   const duration = valueAfter(text, ["duration", "time"]);
   const result: GateVoiceFill = {};
-  if (plate) result.vehiclePlate = plate.replace(/\s+/g, "").toUpperCase();
+  if (plate) result.vehiclePlate = normalizeSpokenPlate(plate);
   applyName(result, driver);
   if (company) result.company = company;
   if (purpose) result.purpose = purpose;
@@ -98,9 +99,10 @@ export function parseGateVoiceEntry(transcript: string): GateVoiceFill {
 
 export function parseGateVoiceCommand(transcript: string): GateVoiceCommand {
   const intent: GateVoiceIntent = CHECK_OUT.test(transcript) ? "check-out" : CHECK_IN.test(transcript) ? "check-in" : "fill";
-  const fill = parseGateVoiceEntry(transcript);
-  if (!fill.firstName && !fill.lastName) applyName(fill, implicitDriver(transcript));
-  return { intent, fill };
+  const speech = interpretGateSpeech(transcript);
+  const fill = { ...parseGateVoiceEntry(speech.text), ...speech.fields };
+  if (!fill.firstName && !fill.lastName && speech.text) applyName(fill, implicitDriver(speech.text));
+  return { intent: speech.action === "check-in" || speech.action === "check-out" ? speech.action : intent, fill };
 }
 
 export function recoverGateVoiceCommand<T extends GateCheckoutVisit>(

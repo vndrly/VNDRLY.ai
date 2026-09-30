@@ -1,4 +1,5 @@
 import type { GateEntryDraft } from "@/lib/gate-entry-memory";
+import { interpretGateSpeech, normalizeSpokenPlate } from "@workspace/gate-booth";
 import { parseSpokenPlateState } from "@workspace/plate-state";
 
 export type GateVoiceIntent = "check-in" | "check-out" | "fill";
@@ -87,7 +88,7 @@ export function parseGateVoiceEntry(transcript: string): Partial<GateEntryDraft>
   const result: Partial<GateEntryDraft> = {};
   const plateState = parseSpokenPlateState(text);
   if (plateState) result.plateState = plateState;
-  if (plate) result.vehiclePlate = plate.replace(/\s+/g, "").toUpperCase();
+  if (plate) result.vehiclePlate = normalizeSpokenPlate(plate);
   applyName(result, driver);
   if (company) result.company = company;
   if (
@@ -102,9 +103,10 @@ export function parseGateVoiceEntry(transcript: string): Partial<GateEntryDraft>
 
 export function parseGateVoiceCommand(transcript: string): GateVoiceCommand {
   const intent: GateVoiceIntent = CHECK_OUT.test(transcript) ? "check-out" : CHECK_IN.test(transcript) ? "check-in" : "fill";
-  const fill = parseGateVoiceEntry(transcript);
-  if (!fill.firstName && !fill.lastName) applyName(fill, implicitDriver(transcript));
-  return { intent, fill };
+  const speech = interpretGateSpeech(transcript);
+  const fill = { ...parseGateVoiceEntry(speech.text), ...speech.fields };
+  if (!fill.firstName && !fill.lastName && speech.text) applyName(fill, implicitDriver(speech.text));
+  return { intent: speech.action === "check-in" || speech.action === "check-out" ? speech.action : intent, fill };
 }
 
 function normalize(value: string | null | undefined): string {

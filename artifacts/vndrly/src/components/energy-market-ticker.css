@@ -1,0 +1,10 @@
+.energy-market-ticker { flex: 1 1 0%; min-width: 0; overflow: hidden; white-space: nowrap; color: #f3f4f6; font-size: 12px; line-height: 24px; mask-image: linear-gradient(to right, transparent, black 10px, black calc(100% - 10px), transparent); }
+.energy-market-ticker-track { display: flex; width: max-content; animation: energy-market-scroll 75s linear infinite; }
+.energy-market-ticker-group { display: flex; flex-shrink: 0; align-items: center; }
+.energy-market-ticker-quote { display: inline-flex; align-items: baseline; gap: 6px; padding: 0 12px; font-variant-numeric: tabular-nums; }
+.energy-market-ticker-note { color: #cbd5e1; font-size: 11px; }
+.energy-market-up { color: #86efac; }
+.energy-market-down { color: #fda4af; }
+.energy-market-ticker:hover .energy-market-ticker-track { animation-play-state: paused; }
+@keyframes energy-market-scroll { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .energy-market-ticker { overflow-x: auto; } .energy-market-ticker-track { animation: none; } .energy-market-ticker-group[aria-hidden] { display: none; } }

@@ -1,3 +1,4 @@
+import { interpretGateSpeech, gateDraftMatches } from "@workspace/gate-booth";
 export type GatePromptKind = "add_details_or_complete" | null;
 export type GateAuthorization =
   | "prepare"
@@ -11,6 +12,7 @@ export interface GateIntentInput {
   toolName: string;
   pendingPrompt?: GatePromptKind;
   toolArguments?: Record<string, unknown>;
+  currentDraft?: Record<string, unknown>;
 }
 
 export interface GateIntentDecision {
@@ -60,6 +62,7 @@ export function classifyGateIntent(
   input: GateIntentInput,
 ): GateIntentDecision {
   const normalizedUtterance = normalize(input.utterance);
+  const speech = interpretGateSpeech(input.utterance);
   const operationCommand = OPERATION_COMMANDS[input.toolName];
   if (operationCommand) {
     if (CANCEL.test(normalizedUtterance) || NEGATED_ACTION.test(normalizedUtterance))
@@ -87,6 +90,15 @@ export function classifyGateIntent(
   ) {
     return { action, authorization: "cancel", normalizedUtterance };
   }
+  if (speech.submit && input.toolName !== `confirm_visitor_${speech.action === "check-out" ? "check_out" : "check_in"}`)
+    return { action, authorization: "clarify", normalizedUtterance };
+  if (speech.submit && input.toolArguments && (
+    (Object.keys(speech.fields).length === 0 && input.currentDraft && ["firstName", "lastName", "company", "vehiclePlate", "siteLocationId"].every(key => Boolean(input.currentDraft?.[key])) && gateDraftMatches(input.currentDraft, input.toolArguments)) ||
+    (speech.fields.vehiclePlate && String(input.toolArguments.vehiclePlate ?? "").replace(/[^a-z0-9]/gi, "").toUpperCase() === speech.fields.vehiclePlate.replace(/[^A-Z0-9]/g, "") &&
+      (!speech.fields.firstName || normalize(String(input.toolArguments.firstName ?? "")) === normalize(speech.fields.firstName)) &&
+      (!speech.fields.lastName || normalize(String(input.toolArguments.lastName ?? "")) === normalize(speech.fields.lastName)) &&
+      (!speech.fields.company || normalize(String(input.toolArguments.company ?? "")) === normalize(speech.fields.company)))
+  )) return { action, authorization: "submit", normalizedUtterance };
   if (
     input.utterance.includes("?") ||
     QUOTED.test(normalizedUtterance) ||

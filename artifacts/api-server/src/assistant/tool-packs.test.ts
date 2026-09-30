@@ -3,6 +3,11 @@ import { toolsForRealtime, VOICE_WORKFLOWS } from "./tool-packs";
 import { DATA_TOOL_NAMES } from "./tool-names";
 
 describe("AskV realtime tool packs", () => {
+  it("gives the dedicated AskV page its market quote tools", () => {
+    const names = toolsForRealtime({ role: "vendor", path: "/work-hub/askv" }).map(tool => tool.name);
+    expect(names).toContain("get_stock_quote");
+    expect(names).toContain("get_crude_oil_price");
+  });
   it("keeps Shift Notes read-first and exposes safe Profile tools", () => {
     const history = toolsForRealtime({ role: "vendor", path: "/gate/shift-notes" });
     expect(history.map(t => t.name)).toContain("query_shift_notes");

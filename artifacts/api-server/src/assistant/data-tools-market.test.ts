@@ -13,12 +13,18 @@ vi.mock("../lib/market-data/alpha-vantage", () => ({
   fetchAlphaVantageWtiCrude: vi.fn(),
 }));
 
+vi.mock("../lib/market-data/massive", () => ({
+  isMassiveConfigured: vi.fn(() => false),
+  fetchMassiveStockQuote: vi.fn(),
+}));
+
 import {
   fetchAlphaVantageStockQuote,
   fetchAlphaVantageWtiCrude,
   isAlphaVantageConfigured,
 } from "../lib/market-data/alpha-vantage";
 import { fetchFinnhubStockQuote, isFinnhubConfigured } from "../lib/market-data/finnhub";
+import { fetchMassiveStockQuote, isMassiveConfigured } from "../lib/market-data/massive";
 
 const session = { role: "vendor", vendorId: 1, userId: 1 } as never;
 
@@ -31,6 +37,7 @@ describe("MARKET_DATA_TOOL_NAMES", () => {
 describe("runDataTool — market data", () => {
   afterEach(() => {
     vi.clearAllMocks();
+    vi.mocked(isMassiveConfigured).mockReturnValue(false);
   });
 
   it("get_stock_quote requires symbol", async () => {
@@ -41,8 +48,28 @@ describe("runDataTool — market data", () => {
   it("get_stock_quote errors when no providers configured", async () => {
     vi.mocked(isFinnhubConfigured).mockReturnValue(false);
     vi.mocked(isAlphaVantageConfigured).mockReturnValue(false);
+    vi.mocked(isMassiveConfigured).mockReturnValue(false);
     const out = JSON.parse(await runDataTool("get_stock_quote", { symbol: "XOM" }, session));
     expect(out.error).toMatch(/not configured/i);
+  });
+
+  it("get_stock_quote uses the configured Massive delayed quote feed", async () => {
+    vi.mocked(isFinnhubConfigured).mockReturnValue(false);
+    vi.mocked(isMassiveConfigured).mockReturnValue(true);
+    vi.mocked(fetchMassiveStockQuote).mockResolvedValue({
+      provider: "massive",
+      symbol: "XOM",
+      price: 161.35,
+      change: -1.14,
+      changePercent: "-0.7%",
+      previousClose: 162.49,
+      asOfUnix: 1790719200,
+      delayed: true,
+    });
+
+    const out = JSON.parse(await runDataTool("get_stock_quote", { symbol: "XOM" }, session));
+    expect(out).toMatchObject({ provider: "massive", symbol: "XOM", price: 161.35, delayed: true });
+    expect(fetchMassiveStockQuote).toHaveBeenCalledWith("XOM");
   });
 
   it("get_stock_quote prefers Finnhub when configured", async () => {

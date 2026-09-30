@@ -39,6 +39,7 @@ const AssistantLauncher = lazy(() =>
   })),
 );
 import AskVStatusIndicator from "@/components/askv-status-indicator";
+import { EnergyMarketTicker } from './energy-market-ticker';
 import AskVWaveform from "@/components/askv-waveform";
 import { useAskVVoiceSession } from "@/hooks/use-askv-voice-session";
 
@@ -301,7 +302,8 @@ export function FieldOpsPortalShell({
           data-testid="askv-pane"
         >
           <AskVStatusIndicator placement="top-strip" />
-          <div className="ml-auto flex items-center gap-3 overflow-visible">
+          <EnergyMarketTicker />
+          <div className="ml-auto flex shrink-0 items-center gap-3 overflow-visible">
             <Suspense fallback={null}>
               <AssistantLauncher placement="askv-pane" />
             </Suspense>

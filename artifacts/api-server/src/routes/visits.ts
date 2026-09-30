@@ -1442,7 +1442,22 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
     return;
   }
 
-  const [visit] = await db
+  // Serialize active visits for this plate across retries and simultaneous operators.
+  const saved = await db.transaction(async tx => {
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${'gate:' + site.id + ':' + (plate.plateState ?? '') + ':' + plate.vehiclePlate}))`);
+    const [active] = await tx.select().from(siteVisitsTable).where(and(
+      eq(siteVisitsTable.siteLocationId, site.id),
+      plate.vehiclePlate ? eq(siteVisitsTable.vehiclePlate, plate.vehiclePlate) : isNull(siteVisitsTable.vehiclePlate),
+      plate.plateState ? eq(siteVisitsTable.plateState, plate.plateState) : isNull(siteVisitsTable.plateState),
+      isNull(siteVisitsTable.checkOutTime),
+    )).limit(1);
+    if (active) {
+      const same = active.firstName.trim().toLowerCase() === firstName.toLowerCase()
+        && active.lastName.trim().toLowerCase() === lastName.toLowerCase()
+        && (active.company ?? '').trim().toLowerCase() === String(b.company ?? '').trim().toLowerCase();
+      return { visit: same ? active : null, reused: true };
+    }
+    const [created] = await tx
     .insert(siteVisitsTable)
     .values({
       siteLocationId: site.id,
@@ -1479,6 +1494,17 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
       recordedByUserId: session.userId ?? null,
     })
     .returning();
+    return { visit: created, reused: false };
+  });
+  const visit = saved.visit;
+  if (!visit) {
+    res.status(409).json({ message: 'This vehicle already has an active visit. Resolve or check out that visit before checking in another driver.', code: VISIT_INVALID_INPUT });
+    return;
+  }
+  if (saved.reused) {
+    res.status(200).json({ ...visit, hostName, siteName: site.name });
+    return;
+  }
 
   const recipients = await findPartnerVisitNotifierUserIds(site.partnerId);
   const visitorName = `${visit.firstName} ${visit.lastName}`.trim();

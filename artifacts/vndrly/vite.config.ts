@@ -2,6 +2,9 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
+import fs from 'node:fs';
+import { parseEnv } from 'node:util';
+import { fetchEnergyTicker } from '../api-server/src/lib/market-data/energy-ticker';
 
 const rawPort = process.env.PORT;
 
@@ -15,7 +18,28 @@ const basePath = process.env.BASE_PATH ?? "/";
 
 export default defineConfig({
   base: basePath,
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), {
+    name: 'local-market-ticker',
+    apply: 'serve',
+    configureServer(server) {
+      // Explicit local-only provider configuration; the key never enters browser code.
+      if (!process.env.MASSIVE_API_KEY_FILE && !process.env.MASSIVE_API_KEY) return;
+      let key = process.env.MASSIVE_API_KEY;
+      if (!key && process.env.MASSIVE_API_KEY_FILE) {
+        const raw = fs.readFileSync(process.env.MASSIVE_API_KEY_FILE, 'utf8').trim();
+        const values = parseEnv(raw);
+        key = Object.entries(values).find(([name]) => /massive|polygon|api.?key/i.test(name))?.[1]
+          ?? (/^[A-Za-z0-9_-]+$/.test(raw) ? raw : undefined);
+      }
+      server.middlewares.use('/api/market/ticker', async (req, res) => {
+        if (req.method !== 'GET') { res.statusCode=405;res.end();return; }
+        res.setHeader('Content-Type','application/json');
+        res.setHeader('Cache-Control','no-store');
+        try {res.end(JSON.stringify(await fetchEnergyTicker(key)));}
+        catch {res.statusCode=503;res.end(JSON.stringify({error:'Market data unavailable'}));}
+      });
+    },
+  }],
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "src"),

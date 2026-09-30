@@ -1,4 +1,5 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { Router } from 'wouter';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 
@@ -15,7 +16,7 @@ vi.mock('@/hooks/use-askv-voice-session', () => ({ useAskVVoiceSession: () => ({
   muted: state.muted, state: 'error', error: null, acrossVndrly: false, wakeReady: false,
   startConversation: state.startConversation, closePanel: state.closePanel, stop: vi.fn(), setMuted: vi.fn(),
 }) }));
-import { AssistantPanel, OnboardingMiniStepper } from './assistant-panel';
+import { AssistantLauncher, AssistantPanel, OnboardingMiniStepper } from './assistant-panel';
 import { getAskVMicrophoneState, selectAskVMicrophone } from '@/lib/askv-microphone';
 
 class Recorder {
@@ -26,7 +27,7 @@ class Recorder {
 }
 let track: { stop: ReturnType<typeof vi.fn>; label: string };
 beforeEach(() => {
-  localStorage.clear(); state.muted = false; selectAskVMicrophone('headset');
+  localStorage.clear(); state.muted = false; state.assistant.streaming = false; selectAskVMicrophone('headset');
   track = { stop: vi.fn(), label: 'Wired headset' };
   vi.stubGlobal('MediaRecorder', Recorder);
   vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false })));
@@ -35,6 +36,58 @@ beforeEach(() => {
   } });
 });
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+
+it.each(['/work-hub/askv', '/work-hub/askv/'])('keeps automatic results inline on %s while allowing an explicit open', (path) => {
+  sessionStorage.clear();
+  const client = new QueryClient();
+  render(<Router hook={() => [path, () => {}]}><QueryClientProvider client={client}><AssistantLauncher /></QueryClientProvider></Router>);
+  act(() => window.dispatchEvent(new CustomEvent('askv:show-results')));
+  expect(screen.queryByTestId('assistant-panel')).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Open Ask V' }));
+  expect(screen.getByTestId('assistant-panel')).not.toBeNull();
+  sessionStorage.clear();
+});
+
+it('still opens result panels on other pages', () => {
+  sessionStorage.clear();
+  const client = new QueryClient();
+  render(<Router hook={() => ['/work-hub/finance', () => {}]}><QueryClientProvider client={client}><AssistantLauncher /></QueryClientProvider></Router>);
+  act(() => window.dispatchEvent(new CustomEvent('askv:show-results')));
+  expect(screen.getByTestId('assistant-panel')).not.toBeNull();
+  sessionStorage.clear();
+});
+
+it('keeps page actions outside the conversation and lets readers stay in earlier history', () => {
+  const queryClient = new QueryClient();
+  const panel = () => <QueryClientProvider client={queryClient}><AssistantPanel embedded open onOpenChange={() => {}} /></QueryClientProvider>;
+  const view = render(panel());
+  const list = screen.getByTestId('assistant-conversation-scroll');
+  expect(list.contains(screen.getByTestId('assistant-page-toolbar'))).toBe(false);
+  expect(screen.queryByTestId('assistant-header')).toBeNull();
+  Object.defineProperties(list, { scrollHeight: { configurable: true, value: 1000 }, clientHeight: { configurable: true, value: 300 } });
+  list.scrollTop = 100;
+  fireEvent.scroll(list);
+  state.assistant.streaming = true;
+  view.rerender(panel());
+  expect(list.scrollTop).toBe(100);
+  list.scrollTop = 700;
+  fireEvent.scroll(list);
+  Object.defineProperty(list, 'scrollHeight', { configurable: true, value: 1200 });
+  state.assistant.streaming = false;
+  view.rerender(panel());
+  expect(list.scrollTop).toBe(1200);
+});
+
+it('keeps empty submissions disabled while allowing the Send hover surface to receive pointer events', () => {
+  const queryClient = new QueryClient();
+  render(<QueryClientProvider client={queryClient}><AssistantPanel embedded open onOpenChange={() => {}} /></QueryClientProvider>);
+  const send = screen.getByRole('button', { name: 'Send message' }) as HTMLButtonElement;
+  expect(send.disabled).toBe(true);
+  expect(send.className).not.toContain('pointer-events-none');
+  expect(within(send).getByTestId('sphere-back-circle')).not.toBeNull();
+  fireEvent.change(screen.getByTestId('assistant-input'), { target: { value: 'Hello' } });
+  expect(send.disabled).toBe(false);
+});
 
 it('uses the selected input for fallback recording and releases it when AskV is muted', async () => {
   const queryClient = new QueryClient();

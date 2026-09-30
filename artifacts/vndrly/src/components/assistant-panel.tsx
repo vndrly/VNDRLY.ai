@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
-import { Sparkles, ArrowUp, Trash2, Loader2, Download, CheckCircle2, Circle, Plus, X, ThumbsUp, ThumbsDown, Send, Mail, Mic, Settings, Copy, Minus, Maximize2 } from "lucide-react";
+import { Sparkles, Trash2, Loader2, Download, CheckCircle2, Circle, Plus, X, ThumbsUp, ThumbsDown, Send, Mail, Mic, Settings, Copy, Minus, Maximize2 } from "lucide-react";
+import SphereBackButton from "@/components/sphere-back-button";
+import { VNDRLY_LOGO_SQUARE } from "@/lib/vndrly-brand-assets";
 import { useTranslation } from "react-i18next";
-import { AppModalHeader } from "@/components/app-modal-header";
+import { AppModalHeader, type AppModalHeaderProps } from "@/components/app-modal-header";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AskVFloatingLauncherMark, ASKV_LAUNCHER_HEIGHT, ASKV_LAUNCHER_WIDTH } from "@/components/askv-logo";
 import { PngPillButton as PillButton, brandImagePillSrc } from "@/components/png-pill-rollover";
@@ -188,6 +190,8 @@ function HeaderIconButton({
   testId,
   title,
   pressed,
+  lightSurface = false,
+  brandedDark = false,
 }: {
   children: React.ReactNode;
   onClick?: () => void;
@@ -195,6 +199,8 @@ function HeaderIconButton({
   testId?: string;
   title?: string;
   pressed?: boolean;
+  lightSurface?: boolean;
+  brandedDark?: boolean;
 }) {
   return (
     <button
@@ -206,6 +212,8 @@ function HeaderIconButton({
       aria-pressed={pressed}
       className={cn(
         headerIconClassName,
+        lightSurface && "text-gray-400 hover:text-[color:var(--brand-primary)] focus-visible:ring-[color:var(--brand-primary)]",
+        brandedDark && "text-gray-100 hover:text-[color:var(--brand-primary)] focus-visible:ring-[color:var(--brand-primary)]",
         "disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:text-gray-300",
         pressed && "text-[color:var(--brand-primary)]",
       )}
@@ -213,6 +221,13 @@ function HeaderIconButton({
       {children}
     </button>
   );
+}
+
+function AskVPageToolbar({ title, settings }: AppModalHeaderProps) {
+  return <div className="flex shrink-0 items-center justify-end gap-2 bg-[#3a3d42] px-3 py-2" data-testid="assistant-page-toolbar">
+    <img src={VNDRLY_LOGO_SQUARE} alt="VNDRLY.ai" className="mr-auto h-6 w-6 shrink-0 rounded-[4px]" draggable={false} />
+    {title}{settings}
+  </div>;
 }
 
 function HeaderIconLink({
@@ -303,6 +318,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
   const sharedAssistant = !tokenMode && !signupMode ? voiceSession.assistant : undefined;
   const {
     messages,
+    conversationId,
     streaming,
     activeTool,
     error,
@@ -340,6 +356,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
   const [transcribing, setTranscribing] = useState(false);
   const [voiceError, setVoiceError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const followLatestRef = useRef(true);
   const voiceRecorderRef = useRef<MediaRecorder | null>(null);
   const voiceStreamRef = useRef<MediaStream | null>(null);
   const voiceMeterRef = useRef<ReturnType<typeof meterAskVMicrophone> | null>(null);
@@ -511,6 +528,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
     }
     const sourceName = tokenMode ? tokenName : user?.displayName ?? null;
     const name = sourceName?.split(" ")[0] ?? "there";
+    if (embedded) return `Hi ${name}! What can I help you with?`;
     if (progress) {
       const stepLabel = STEP_LABELS[progress.currentStep] ?? progress.currentStep;
       const orgLabel = progress.orgType === "field_employee" ? "field-employee" : progress.orgType;
@@ -518,11 +536,17 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
     }
     if (voiceSession.greeting && !signupMode && !tokenMode) return voiceSession.greeting;
     return `Hi ${name}! I can answer how-to questions about VNDRLY and walk you through onboarding. What can I help with?`;
-  }, [user, progress, tokenMode, tokenName, signupMode, signupLang, voiceSession.greeting]);
+  }, [user, progress, tokenMode, tokenName, signupMode, signupLang, voiceSession.greeting, embedded]);
 
-  // Auto-scroll to bottom on new content.
+  // Reopening or selecting a conversation starts at its newest messages.
   useEffect(() => {
-    if (!scrollRef.current) return;
+    followLatestRef.current = true;
+    if (open && scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [open, conversationId]);
+
+  // Follow replies only while the reader is already at the bottom.
+  useEffect(() => {
+    if (!scrollRef.current || !followLatestRef.current) return;
     scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages, streaming]);
 
@@ -689,6 +713,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
   const handleSend = (text?: string) => {
     const v = (text ?? input).trim();
     if (!v) return;
+    followLatestRef.current = true;
     cancelVoiceRecording();
     stopAskVSpeech();
     setVoiceError(null);
@@ -829,6 +854,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
   const showMessageFeedback = !tokenMode && !signupMode;
   const showVoiceInput = !tokenMode && !signupMode && !voiceSession.muted && (sharedAssistant ? voiceSession.state === "error" : !textOnly);
   const panelError = voiceError ?? error;
+  const PanelHeader = embedded ? AskVPageToolbar : AppModalHeader;
 
   useEffect(() => {
     if (voiceSession.muted) cancelVoiceRecording();
@@ -868,7 +894,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
         data-testid="assistant-panel"
         hideClose
       >
-        <AppModalHeader
+        <PanelHeader
           compact={minimized}
           testId="assistant-header"
           logo={{ testId: "assistant-header-logo" }}
@@ -884,7 +910,6 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
           }
           settings={
             <div className="flex items-center gap-1">
-            {embedded && !tokenMode && !signupMode && askVUserId != null && <AskVStatusIndicator />}
             {/* Pre-auth EN/ES toggle, only visible on the public
                 signup pages. Visitors have no saved language
                 ireference yet, so we let them flii explicitly when
@@ -926,6 +951,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
             {messages.length > 0 && (
               <>
                 <HeaderIconButton
+                  brandedDark={embedded}
                   onClick={handleStartNew}
                   disabled={streaming}
                   testId="assistant-new"
@@ -934,6 +960,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
                   <Plus className="w-4 h-4" />
                 </HeaderIconButton>
                 <HeaderIconButton
+                  brandedDark={embedded}
                   onClick={handleExport}
                   disabled={streaming}
                   testId="assistant-export"
@@ -943,6 +970,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
                 </HeaderIconButton>
                 {!tokenMode && !signupMode && (
                   <HeaderIconButton
+                  brandedDark={embedded}
                     onClick={handleClear}
                     disabled={streaming}
                     testId="assistant-clear"
@@ -956,6 +984,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
             {!tokenMode && !signupMode && askVUserId != null && (
               <>
                 <HeaderIconButton
+                  brandedDark={embedded}
                   onClick={() => setShowSettings((value) => !value)}
                   testId="assistant-settings"
                   title="Ask V settings"
@@ -968,6 +997,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
             {!embedded && (
               <>
                 <HeaderIconButton
+                  brandedDark={embedded}
                   onClick={() => setMinimized((value) => !value)}
                   testId="assistant-minimize"
                   title={minimized ? "Restore AskV" : "Minimize AskV"}
@@ -975,6 +1005,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
                   {minimized ? <Maximize2 className="w-4 h-4" /> : <Minus className="w-4 h-4" />}
                 </HeaderIconButton>
                 <HeaderIconButton
+                  brandedDark={embedded}
                   onClick={handleClose}
                   testId="assistant-close"
                   title="Close"
@@ -1006,7 +1037,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
           </div>
         )}
 
-        {!minimized && progress && (
+        {!embedded && !minimized && progress && (
           <OnboardingMiniStepper progress={progress} />
         )}
         {!minimized && !tokenMode && !signupMode && voiceSession.error && (
@@ -1022,7 +1053,10 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
           />
         )}
 
-        <div ref={scrollRef} className={cn("relative z-10 min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4", minimized && "hidden")}>
+        <div ref={scrollRef} data-testid="assistant-conversation-scroll" onScroll={(event) => {
+          const list = event.currentTarget;
+          followLatestRef.current = list.scrollHeight - list.scrollTop - list.clientHeight < 48;
+        }} className={cn("relative z-10 min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-4", embedded ? "pt-1" : "pt-4", minimized && "hidden")}>
           {messages.length === 0 && (
             <div className="siace-y-3">
               <div className={cn("relative w-fit max-w-[90%] rounded-2xl px-4 py-2 text-sm", embedded ? "bg-gray-200 text-gray-900" : "text-gray-300")}>
@@ -1034,7 +1068,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
                   />}
                 <span className="relative z-10">{greeting}</span>
               </div>
-              {quickActions.length > 0 && (
+              {!embedded && quickActions.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                   {quickActions.map((qa) => (
                     <PillButton
@@ -1089,6 +1123,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
                             data-testid={`assistant-msg-feedback-${m.serverId}`}
                           >
                             <HeaderIconButton
+                  lightSurface={embedded}
                               onClick={() => void handleFeedback(m.serverId!, "helpful")}
                               disabled={feedbackPendingId != null}
                               pressed={m.feedbackRating === "helpful"}
@@ -1098,6 +1133,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
                               <ThumbsUp className="w-4 h-4" />
                             </HeaderIconButton>
                             <HeaderIconButton
+                  lightSurface={embedded}
                               onClick={() => void handleFeedback(m.serverId!, "unhelpful")}
                               disabled={feedbackPendingId != null}
                               pressed={m.feedbackRating === "unhelpful"}
@@ -1107,6 +1143,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
                               <ThumbsDown className="w-4 h-4" />
                             </HeaderIconButton>
                             <HeaderIconButton
+                  lightSurface={embedded}
                               onClick={() => copyMessage(m)}
                               testId={`assistant-copy-${m.serverId}`}
                               title="Copy result"
@@ -1114,6 +1151,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
                               <Copy className="w-4 h-4" />
                             </HeaderIconButton>
                             <HeaderIconButton
+                  lightSurface={embedded}
                               onClick={() => openSendToForMessage(messageIndex, m)}
                               testId={`assistant-send-to-${m.serverId}`}
                               title="Send to"
@@ -1157,7 +1195,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
         </div>
 
         <form
-          className={cn("relative z-10 shrink-0 border-t px-3 py-3", embedded ? "border-gray-200 bg-white" : "border-white/20 bg-transparent", minimized && "hidden")}
+          className={cn("relative z-10 shrink-0 border-t px-3 py-3", embedded ? "border-white/20 bg-[#3a3d42]" : "border-white/20 bg-transparent", minimized && "hidden")}
           onSubmit={(e) => {
             e.preventDefault();
             handleSend();
@@ -1168,7 +1206,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask anything about VNDRLY..."
-              className="resize-none min-h-[76px] max-h-40 rounded-2xl bg-white text-gray-900"
+              className="resize-none min-h-[76px] max-h-40 rounded-2xl border-[color:var(--brand-primary)] bg-white text-gray-900 focus-visible:ring-[color:var(--brand-primary)]"
               rows={3}
               disabled={streaming || transcribing || voiceRecording}
               data-testid="assistant-input"
@@ -1203,23 +1241,23 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
                 )}
               </BrandPillButton>
             )}
-            <BrandPillButton
+            <button
               type="submit"
               disabled={streaming || transcribing || voiceRecording || !input.trim()}
-              hoverSrc={sendHoverPillSrc}
-              className="min-w-[40px] shrink-0 px-2"
+              className="group flex h-11 w-11 shrink-0 items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-primary)] disabled:cursor-not-allowed disabled:opacity-50"
               data-testid="assistant-send"
               title="Send message"
+              aria-label="Send message"
             >
               {streaming ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                <ArrowUp className="w-4 h-4" />
+                <SphereBackButton size={40} direction="up" />
               )}
-            </BrandPillButton>
+            </button>
           </div>
           <p
-            className={cn("mt-2 inline-flex items-center justify-center gap-1 text-[10px] italic", embedded ? "text-gray-500" : "text-gray-400")}
+            className={cn("mt-2 inline-flex items-center justify-center gap-1 text-[10px] italic", embedded ? "text-gray-300" : "text-gray-400")}
             data-testid="assistant-footer-disclaimer"
           >
             <span>
@@ -1439,6 +1477,8 @@ export function AssistantLauncher({
   /** `floating` = bottom-left FAB; `askv-pane` = main layout AskV pane. */
   placement?: "floating" | "askv-pane" | "onboarding";
 } = {}) {
+  const [launcherLocation] = useLocation();
+  const hasInlineConversation = launcherLocation.split(/[?#]/)[0].replace(/\/$/, "") === "/work-hub/askv";
   const [open, setOpen] = useState(() => {
     if (typeof window === "undefined") return false;
     return window.sessionStorage.getItem("vndrly.askv.panelOpen") === "true";
@@ -1456,13 +1496,16 @@ export function AssistantLauncher({
   }, []);
   useEffect(() => {
     const showResults = () => {
+      // The AskV page already displays these results through the shared conversation.
+      // Keep explicit launcher clicks available, but do not open a duplicate surface.
+      if (hasInlineConversation) return;
       setResultsReady(true);
       setOpen(true);
       window.setTimeout(() => setResultsReady(false), 1200);
     };
     window.addEventListener("askv:show-results", showResults);
     return () => window.removeEventListener("askv:show-results", showResults);
-  }, []);
+  }, [hasInlineConversation]);
   useEffect(() => {
     const openPanel = () => setOpen(true);
     window.addEventListener("askv:open-panel", openPanel);

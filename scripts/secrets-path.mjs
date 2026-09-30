@@ -58,6 +58,15 @@ export function supabaseEnvPath() {
   return process.env.SUPABASE_ENV || path.join(SECRETS_DIR, "Supabase.env");
 }
 
+export function supabaseDatabaseEnvPath() {
+  if (process.env.SUPABASE_DATABASE_ENV) return process.env.SUPABASE_DATABASE_ENV;
+  for (const fileName of ["RXYmyPRXY_Supabase.env", "Supabase.env"]) {
+    const candidate = path.join(SECRETS_DIR, fileName);
+    if (existsSync(candidate)) return candidate;
+  }
+  return path.join(SECRETS_DIR, "RXYmyPRXY_Supabase.env");
+}
+
 export function githubPatPath() {
   return (
     process.env.GITHUB_PAT_FILE ||
@@ -75,6 +84,14 @@ export function twilioEnvPath() {
 
 export function sendGridEnvPath() {
   return process.env.SENDGRID_ENV || path.join(SECRETS_DIR, "SendGrid_API_Key.env");
+}
+
+export function massiveEnvPath() {
+  return process.env.MASSIVE_ENV || path.join(SECRETS_DIR, "Massive-API-Key.env");
+}
+
+export function anthropicEnvPath() {
+  return process.env.ANTHROPIC_ENV || path.join(SECRETS_DIR, "ANTHROPIC_API_KEY.env");
 }
 
 /**

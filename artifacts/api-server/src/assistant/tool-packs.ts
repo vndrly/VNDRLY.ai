@@ -238,8 +238,10 @@ export function toolsForRealtime(args: {
       /\/work-hub\/askv(?:\/|$)/i.test(path)
         ? WORK_HUB_TOOL_FAMILIES
         : [workHubToolFamilyForPath(path)];
-    if (/\/work-hub\/askv(?:\/|$)/i.test(path))
+    if (/\/work-hub\/askv(?:[/?#]|$)/i.test(path)) {
       for (const name of IMPLEMENTATION_A_TOOL_NAMES) allowed.add(name);
+      for (const name of WORKFLOW_TOOLS.market) allowed.add(name);
+    }
     for (const family of families) {
       for (const name of WORK_HUB_TOOL_NAMES_BY_FAMILY[family]) {
         allowed.add(name);

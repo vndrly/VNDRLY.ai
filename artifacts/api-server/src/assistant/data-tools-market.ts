@@ -12,6 +12,10 @@ import {
   fetchFinnhubStockQuote,
   isFinnhubConfigured,
 } from "../lib/market-data/finnhub";
+import {
+  fetchMassiveStockQuote,
+  isMassiveConfigured,
+} from "../lib/market-data/massive";
 
 import { MARKET_DATA_TOOL_NAMES } from "./tool-names";
 export { MARKET_DATA_TOOL_NAMES } from "./tool-names";
@@ -50,6 +54,18 @@ async function getStockQuote(args: Record<string, unknown>, session: SessionPayl
     }
   }
 
+  if (isMassiveConfigured()) {
+    try {
+      const quote = await fetchMassiveStockQuote(raw);
+      return JSON.stringify({
+        ...quote,
+        note: "US equity quote via Massive Stocks Starter; data is delayed by approximately 15 minutes.",
+      });
+    } catch (e) {
+      errors.push(`Massive: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+
   if (isAlphaVantageConfigured()) {
     try {
       const quote = await fetchAlphaVantageStockQuote(raw);
@@ -62,9 +78,9 @@ async function getStockQuote(args: Record<string, unknown>, session: SessionPayl
     }
   }
 
-  if (!isFinnhubConfigured() && !isAlphaVantageConfigured()) {
+  if (!isFinnhubConfigured() && !isMassiveConfigured() && !isAlphaVantageConfigured()) {
     return err(
-      "Market data is not configured. Set FINNHUB_API_KEY and/or ALPHA_VANTAGE_API_KEY in the server environment.",
+      "Market data is not configured. Set MASSIVE_API_KEY, FINNHUB_API_KEY, or ALPHA_VANTAGE_API_KEY in the server environment.",
     );
   }
 

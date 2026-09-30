@@ -9,6 +9,7 @@ import {
   ROOT,
   godaddyEnvPath,
   mapboxEnvPath,
+  massiveEnvPath,
   openAiEnvPath,
   sendGridEnvPath,
   supabaseEnvPath,
@@ -163,6 +164,15 @@ async function main() {
     localEnv.match(/^FINNHUB_API_KEY=(.+)$/m)?.[1]?.trim() ?? "";
   const alphaVantageKey =
     localEnv.match(/^ALPHA_VANTAGE_API_KEY=(.+)$/m)?.[1]?.trim() ?? "";
+  const massivePath = massiveEnvPath();
+  const massiveEnv = parseEnvFile(massivePath);
+  const massiveRaw = existsSync(massivePath)
+    ? readFileSync(massivePath, "utf8").trim()
+    : "";
+  const massiveKey =
+    localEnv.match(/^MASSIVE_API_KEY=(.+)$/m)?.[1]?.trim() ??
+    envValue(massiveEnv, "MASSIVE_API_KEY").trim() ??
+    (/^[A-Za-z0-9_-]+$/.test(massiveRaw) ? massiveRaw : "");
   const mapboxEnv = parseEnvFile(mapboxEnvPath());
   const mapboxAccessToken =
     localEnv.match(/^MAPBOX_ACCESS_TOKEN=(.+)$/m)?.[1]?.trim() ??
@@ -270,6 +280,7 @@ async function main() {
     openaiKey ? `OPENAI_API_KEY=${openaiKey}` : "",
     finnhubKey ? `FINNHUB_API_KEY=${finnhubKey}` : "",
     alphaVantageKey ? `ALPHA_VANTAGE_API_KEY=${alphaVantageKey}` : "",
+    massiveKey ? `MASSIVE_API_KEY=${massiveKey}` : "",
     mapboxAccessToken ? `MAPBOX_ACCESS_TOKEN=${mapboxAccessToken}` : "",
     mapboxAccessToken ? `VITE_MAPBOX_ACCESS_TOKEN=${mapboxAccessToken}` : "",
     twilioAccountSid ? `TWILIO_ACCOUNT_SID=${twilioAccountSid}` : "",

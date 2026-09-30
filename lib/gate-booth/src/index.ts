@@ -1,3 +1,5 @@
+export { interpretGateSpeech, normalizeSpokenPlate, recoverGateSpeechFields, type GateSpeechFields } from "./voice-command";
+export { registerGateVoiceForm, readGateVoiceDraft, notifyGateVoiceSaved, gateDraftMatches, notifyGateVoiceDraftChanged, subscribeGateVoiceDraft } from "./voice-draft";
 import {
   formatMetersAsMiles,
   haversineMeters,

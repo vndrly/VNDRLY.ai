@@ -1,4 +1,5 @@
 import { Link, useLocation } from "wouter";
+import { EnergyMarketTicker } from './energy-market-ticker';
 import { cn } from "@/lib/utils";
 import { isManagedSubcontractor, type ManagedSubcontractor } from "@/lib/managed-subcontractor-access";
 import {
@@ -263,7 +264,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   // nav-pane background as the left sidebar; hosts Ask V + powered-by.
   // The dedicated Work Hub AskV route embeds the complete assistant. Hiding
   // the global launcher there prevents two simultaneous assistant sessions.
-  const showAskVPane = !!user && location !== "/work-hub/askv";
+  const showAskVPane = !!user;
   const navPaneStyle = { backgroundColor: NAV_PANE_DARK_BG } as const;
 
   return (
@@ -449,7 +450,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           data-testid="askv-pane"
         >
           <AskVStatusIndicator placement="top-strip" />
-          <div className="ml-auto flex items-center gap-3 overflow-visible">
+          <EnergyMarketTicker />
+          <div className="ml-auto flex shrink-0 items-center gap-3 overflow-visible">
             <Suspense fallback={null}>
               <AssistantLauncher placement="askv-pane" />
             </Suspense>

@@ -8,7 +8,7 @@ export interface AskVRealtimeClient {
   connect(): Promise<void>; close(): void; interrupt(): void; sendText(text: string): void;
   setMicEnabled(enabled: boolean): void;
   applyToolContext(payload: { tools?: unknown[]; context?: unknown }): void;
-  updateContext(context: { path?: string; entityId?: number | null; org?: string | null; location?: string | null }): void;
+  updateContext(context: { path?: string; entityId?: number | null; org?: string | null; location?: string | null; gateDraft?: Record<string, unknown> | null }): void;
 }
 export interface RealtimeClientOptions {
   seedMessage?: string; path?: string; entityId?: number | null;

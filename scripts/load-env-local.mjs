@@ -6,10 +6,13 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  anthropicEnvPath,
   mapboxEnvPath,
+  massiveEnvPath,
   openAiEnvPath,
   sendGridEnvPath,
   supabaseEnvPath,
+  supabaseDatabaseEnvPath,
   twilioEnvPath,
 } from "./secrets-path.mjs";
 
@@ -64,6 +67,35 @@ setEnv(
   envFileValue(supabaseEnv, "SUPABASE_SERVICE_ROLE_KEY"),
 );
 
+const supabaseDatabaseEnv = parseEnvFile(supabaseDatabaseEnvPath());
+const legacySupabasePath = supabaseEnvPath();
+const legacySupabaseRaw = existsSync(legacySupabasePath)
+  ? readFileSync(legacySupabasePath, "utf8")
+  : "";
+const legacyDatabasePassword =
+  legacySupabaseRaw.match(/password is:\s*(\S+)/i)?.[1] || "";
+const databasePassword =
+  legacyDatabasePassword || supabaseDatabaseEnv.SUPABASE_DB_PASSWORD || "";
+if (!process.env.DATABASE_URL && databasePassword) {
+  const databaseUser = supabaseDatabaseEnv.SUPABASE_USER || "postgres.bihjmgbdzbhcnsuhzzwo";
+  const databaseHost = supabaseDatabaseEnv.SUPABASE_DB_HOST || "aws-1-us-west-2.pooler.supabase.com";
+  const databasePort = supabaseDatabaseEnv.SUPABASE_DB_PORT || "6543";
+  setEnv(
+    "DATABASE_URL",
+    `postgresql://${encodeURIComponent(databaseUser)}:${encodeURIComponent(databasePassword)}@${databaseHost}:${databasePort}/postgres`,
+  );
+}
+
+const anthropicPath = anthropicEnvPath();
+const anthropicEnv = parseEnvFile(anthropicPath);
+const anthropicRaw = existsSync(anthropicPath) ? readFileSync(anthropicPath, "utf8").trim() : "";
+setEnv(
+  "ANTHROPIC_API_KEY",
+  envFileValue(anthropicEnv, "ANTHROPIC_API_KEY") || (/^sk-ant-/i.test(anthropicRaw) ? anthropicRaw : ""),
+);
+setEnv("AI_INTEGRATIONS_ANTHROPIC_API_KEY", process.env.ANTHROPIC_API_KEY || "");
+setEnv("AI_INTEGRATIONS_ANTHROPIC_BASE_URL", "https://api.anthropic.com");
+
 const mapboxEnv = parseEnvFile(mapboxEnvPath());
 const mapboxAccessToken =
   mapboxEnv.MAPBOX_ACCESS_TOKEN ||
@@ -73,6 +105,9 @@ const mapboxAccessToken =
 setEnv("MAPBOX_ACCESS_TOKEN", mapboxAccessToken);
 setEnv("VITE_MAPBOX_ACCESS_TOKEN", mapboxAccessToken);
 setEnv("EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN", mapboxAccessToken);
+
+const massivePath = massiveEnvPath();
+if (existsSync(massivePath)) setEnv("MASSIVE_API_KEY_FILE", massivePath);
 
 const twilioEnv = parseEnvFile(twilioEnvPath());
 for (const key of [

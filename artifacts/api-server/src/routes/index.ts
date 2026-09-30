@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import healthRouter from "./health";
+import marketTickerRouter from './marketTicker';
 import payrollRouter from "./payroll";
 import publicConfigRouter from "./publicConfig";
 import partnersRouter from "./partners";
@@ -83,6 +84,7 @@ import camerasRouter from "./cameras";
 const router: IRouter = Router();
 
 router.use(authRouter);
+router.use(marketTickerRouter);
 // One-shot live-account password recovery, fully gated behind the
 // ADMIN_RECOVERY_SECRET prod env var. When the env var is unset (the
 // default), the route returns 404 — i.e. the endpoint is inert. Set the
