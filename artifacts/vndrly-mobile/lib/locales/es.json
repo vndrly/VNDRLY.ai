@@ -2489,8 +2489,6 @@
     "emailReport": "Enviar informe",
     "saveCopy": "Guardar una copia",
     "noFormat": "Primero elija PDF, CSV o DOC.",
-    "email": "Enviar enlace seguro",
-    "sendEmail": "Enviar enlace seguro ahora",
     "recipients": "Destinatarios autorizados",
     "selected": "{{count}} seleccionados",
     "toggleRecipients": "Expandir o contraer destinatarios autorizados",

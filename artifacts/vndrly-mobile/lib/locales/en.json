@@ -2489,8 +2489,6 @@
     "emailReport": "Email Report",
     "saveCopy": "Save a Copy",
     "noFormat": "Choose PDF, CSV, or DOC first.",
-    "email": "Email secure link",
-    "sendEmail": "Send secure link",
     "recipients": "Authorized recipients",
     "selected": "{{count}} selected",
     "toggleRecipients": "Expand or collapse authorized recipients",

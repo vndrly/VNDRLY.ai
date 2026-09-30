@@ -16,7 +16,7 @@ export function EnergyMarketTicker() {
   });
   const labels: Record<string, string> = {DOW: 'DOW', NASDAQ: 'NASDAQ', WTI: 'Light Sweet', BRENT: 'Brent', WCS: 'Heavy Crude'};
   const quotes = ['DOW', 'NASDAQ', 'WTI', 'BRENT', 'WCS'].flatMap(symbol => {
-    const quote = data?.quotes.find(q => q.symbol === symbol);
+    const quote = data?.quotes?.find(q => q.symbol === symbol);
     return quote ? [quote] : [];
   });
   const signed = (n: number, dollar = false) => `${n < 0 ? '−' : '+'}${dollar ? '$' : ''}${Math.abs(n).toFixed(2)}`;

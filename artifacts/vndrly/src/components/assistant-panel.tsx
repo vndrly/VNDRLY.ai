@@ -230,6 +230,10 @@ function AskVPageToolbar({ title, settings }: AppModalHeaderProps) {
   </div>;
 }
 
+function AskVPanelHeader({ embedded, ...props }: AppModalHeaderProps & { embedded: boolean }) {
+  return embedded ? <AskVPageToolbar {...props} /> : <AppModalHeader {...props} />;
+}
+
 function HeaderIconLink({
   children,
   href,
@@ -854,8 +858,6 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
   const showMessageFeedback = !tokenMode && !signupMode;
   const showVoiceInput = !tokenMode && !signupMode && !voiceSession.muted && (sharedAssistant ? voiceSession.state === "error" : !textOnly);
   const panelError = voiceError ?? error;
-  const PanelHeader = embedded ? AskVPageToolbar : AppModalHeader;
-
   useEffect(() => {
     if (voiceSession.muted) cancelVoiceRecording();
   }, [voiceSession.muted, cancelVoiceRecording]);
@@ -894,7 +896,8 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
         data-testid="assistant-panel"
         hideClose
       >
-        <PanelHeader
+        <AskVPanelHeader
+          embedded={embedded}
           compact={minimized}
           testId="assistant-header"
           logo={{ testId: "assistant-header-logo" }}

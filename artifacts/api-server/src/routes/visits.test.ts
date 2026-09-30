@@ -334,6 +334,7 @@ function makeQuery(tableName: string, selection?: Selection) {
 
 vi.mock("@workspace/db", () => {
   const db = {
+    execute: vi.fn(async () => []),
     select: (_cols?: any) => ({
       from: (t: any) => {
         selectCounts[t.__name] = (selectCounts[t.__name] ?? 0) + 1;
@@ -398,6 +399,8 @@ vi.mock("@workspace/db", () => {
         return { where };
       },
     }),
+    transaction: async <T>(callback: (tx: any) => Promise<T>): Promise<T> =>
+      callback(db),
   };
   return {
     db,

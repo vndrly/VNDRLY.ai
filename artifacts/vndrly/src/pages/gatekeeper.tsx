@@ -1035,7 +1035,6 @@ export default function GatekeeperPage() {
       !context ||
       !firstName.trim() ||
       !lastName.trim() ||
-      !company.trim() ||
       !vehiclePlate.trim()
     ) {
       setError(t("gatekeeper.requiredFields"));
