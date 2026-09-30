@@ -1898,6 +1898,8 @@
     "sharedAnswerFallback": "Shared AskV answer",
     "transcriptErrorTitle": "Could not export transcript",
     "transcriptShareUnavailable": "Sharing is not available on this device.",
+    "resultsTitle": "AskV results",
+    "closeResults": "Close AskV results",
     "quickActions": {
       "fieldEtaTicket": "ETA to next ticket",
       "fieldNextTicket": "Closest ticket",

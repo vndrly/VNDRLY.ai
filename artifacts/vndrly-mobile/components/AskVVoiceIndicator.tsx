@@ -16,7 +16,7 @@ export default function AskVVoiceIndicator({ inline = false }: { inline?: boolea
   const voiceUnavailable = voice.state === "error";
   const voiceActive = !voice.muted && ["connecting", "greeting", "listening", "thinking", "speaking", "wake-idle"].includes(voice.state);
   const voiceStatus = voiceUnavailable ? "unavailable" : voiceActive ? "active" : "muted";
-  const voiceLabel = voiceStatus === "active" ? "AskV is Active" : voiceStatus === "muted" ? "AskV is Muted" : "AskV is Unavailable";
+  const voiceLabel = voiceStatus === "active" ? "Click to Stop V" : voiceStatus === "muted" ? "Click to Start V" : "AskV is Unavailable";
   if (
     !voice.preferencesReady ||
     (!inline && pathname.endsWith("/askv")) ||

@@ -67,6 +67,8 @@ export interface UseAssistantOptions {
   onAssistantReply?: (text: string) => void;
   onClientIntent?: (intent: AskVClientIntent) => Promise<AskVClientResult>;
   onMutation?: () => void;
+  /** Current native route, normalized for the server's page-aware tool pack. */
+  pagePath?: string;
 }
 
 export function useAssistant(opts: UseAssistantOptions = {}) {
@@ -75,6 +77,8 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
   const onClientIntentRef = useRef(opts.onClientIntent);
   onClientIntentRef.current = opts.onClientIntent;
   const onMutationRef = useRef(opts.onMutation); onMutationRef.current = opts.onMutation;
+  const pagePathRef = useRef(opts.pagePath ?? "/mobile/askv");
+  pagePathRef.current = opts.pagePath ?? "/mobile/askv";
   const [conversationId, setConversationId] = useState<number | null>(null);
   const [messages, setMessages] = useState<AssistantMessage[]>([]);
   const [streaming, setStreaming] = useState(false);
@@ -222,7 +226,7 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
                 ...(convId !== null ? { conversationId: convId } : {}),
                 deviceContext: { sourceDeviceId },
                 pageContext: {
-                  path: "/mobile/askv",
+                  path: pagePathRef.current,
                   ...(currentLocation ? { currentLocation } : {}),
                 },
               }),

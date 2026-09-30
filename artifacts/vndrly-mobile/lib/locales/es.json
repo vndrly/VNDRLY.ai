@@ -1898,6 +1898,8 @@
     "sharedAnswerFallback": "Respuesta compartida de AskV",
     "transcriptErrorTitle": "No se pudo exportar la transcripción",
     "transcriptShareUnavailable": "Compartir no está disponible en este dispositivo.",
+    "resultsTitle": "Resultados de AskV",
+    "closeResults": "Cerrar resultados de AskV",
     "quickActions": {
       "fieldEtaTicket": "ETA al próximo ticket",
       "fieldNextTicket": "Ticket más cercano",

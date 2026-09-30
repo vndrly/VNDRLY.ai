@@ -1,3 +1,5 @@
+import { resolveWorkHubToolMetadata } from "./work-hub-tool-runtime";
+
 const REFRESH: Record<string, string[]> = {
   start_onboarding: ["onboarding"],
   set_onboarding_field: ["onboarding"],
@@ -17,7 +19,9 @@ export function voiceMutationHint(
   success: boolean,
   replayed: boolean,
 ) {
-  if (!success || !REFRESH[name]) return undefined;
+  if (!success) return undefined;
+  const refresh = REFRESH[name] ?? (resolveWorkHubToolMetadata(name)?.mutating ? ["work-hub"] : undefined);
+  if (!refresh) return undefined;
   let result: Record<string, unknown> = {};
   try {
     result = JSON.parse(output);
@@ -34,5 +38,5 @@ export function voiceMutationHint(
         : [];
     }),
   );
-  return { name, refresh: REFRESH[name], ...ids, replayed };
+  return { name, refresh, ...ids, replayed };
 }

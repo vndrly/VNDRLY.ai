@@ -29,4 +29,20 @@ describe("voice mutation refresh hints", () => {
       voiceMutationHint("query_tickets", {}, "[]", true, false),
     ).toBeUndefined();
   });
+  it("refreshes the active clients after every committed typed Work Hub action", () => {
+    for (const name of [
+      "send_work_hub_message",
+      "manage_work_hub_task",
+      "manage_work_hub_calendar_item",
+      "manage_work_hub_file",
+      "set_work_hub_language",
+      "confirm_asset_custody_action",
+    ]) {
+      expect(voiceMutationHint(name, {}, '{"ok":true}', true, false), name).toEqual({
+        name,
+        refresh: ["work-hub"],
+        replayed: false,
+      });
+    }
+  });
 });

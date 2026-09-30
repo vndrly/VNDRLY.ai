@@ -54,7 +54,7 @@ describe("AskVVoiceIndicator", () => {
 
     const inlineScreen = render(<AskVVoiceIndicator inline />);
     expect(inlineScreen.getByTestId("askv-inline-status")).toBeTruthy();
-    expect(inlineScreen.getByText("AskV is Muted")).toBeTruthy();
+    expect(inlineScreen.getByText("Click to Start V")).toBeTruthy();
   });
 
   it("moves the AskV voice control into the Gate header without leaving a duplicate overlay", () => {
@@ -64,7 +64,7 @@ describe("AskVVoiceIndicator", () => {
 
     const inlineScreen = render(<AskVVoiceIndicator inline />);
     expect(inlineScreen.getByTestId("askv-inline-status")).toBeTruthy();
-    expect(inlineScreen.getByText("AskV is Muted")).toBeTruthy();
+    expect(inlineScreen.getByText("Click to Start V")).toBeTruthy();
     fireEvent.click(inlineScreen.getByTestId("askv-global-mute"));
     expect(env.setMuted).toHaveBeenCalledWith(false);
   });
@@ -77,8 +77,8 @@ describe("AskVVoiceIndicator", () => {
     expect(screen.getByTestId("askv-global-mute").getAttribute("data-inactive")).toBe("false");
     expect(screen.getByTestId("askv-global-mute").getAttribute("data-color")).toBe("#1f9a3d");
     expect(screen.getByTestId("askv-global-mute").getAttribute("data-source")).toContain("pill_green_approval1.png");
-    expect(screen.getByText("AskV is Active")).toBeTruthy();
-    expect(screen.getByText("AskV is Active").getAttribute("style")).toContain("color: rgb(255, 255, 255)");
+    expect(screen.getByText("Click to Stop V")).toBeTruthy();
+    expect(screen.getByText("Click to Stop V").getAttribute("style")).toContain("color: rgb(255, 255, 255)");
     expect(screen.getByTestId("askv-waveform").firstElementChild?.getAttribute("style")).toContain("background-color: rgb(255, 255, 255)");
   });
 
@@ -102,7 +102,7 @@ describe("AskVVoiceIndicator", () => {
 
     expect(screen.getByTestId("askv-global-mute").getAttribute("data-inactive")).toBe("true");
     expect(screen.getByTestId("askv-global-mute").getAttribute("data-color")).toBe("brand");
-    expect(screen.getByText("AskV is Muted")).toBeTruthy();
+    expect(screen.getByText("Click to Start V")).toBeTruthy();
     expect(screen.getByTestId("askv-waveform")).toBeTruthy();
   });
 

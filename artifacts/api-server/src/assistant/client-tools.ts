@@ -10,6 +10,11 @@ const CLIENT_TOOLS = new Set([
   "launch_scanner",
   "start_ticket_entry",
 ]);
+/** All structured client intents the server can emit, including the Gate handoff. */
+export const ASKV_SERVER_CLIENT_INTENT_NAMES = Object.freeze([
+  ...CLIENT_TOOLS,
+  "prefill_gate_visit",
+]);
 export function isClientTool(name: string): boolean {
   return CLIENT_TOOLS.has(name);
 }

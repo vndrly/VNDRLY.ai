@@ -5,6 +5,7 @@ import {
   readAskVCurrentLocationForMessage,
 } from "@/lib/assistant-location-context";
 import { createWorkHubOperationId } from "@/lib/work-hub-client";
+import { shouldOfferAskVVisualResult } from "@workspace/api-client-react/askv-visual-results";
 
 export type SignupAssistantLang = "en" | "es";
 
@@ -123,6 +124,7 @@ export interface ConversationSummary {
 type StreamEvent =
   | { type: "token"; delta: string }
   | { type: "tool"; name: string; status: "start" | "end" }
+  | { type: "client_intent"; intent: AskVClientIntent }
   | { type: "done"; content: string; assistantMessageId?: number }
   | { type: "error"; message: string };
 
@@ -403,6 +405,7 @@ export function useAssistant(opts: AssistantOptions = {}) {
           throw new Error(`HTTP ${res.status}`);
         }
         let accumulatedContent = "";
+        const clientResults: Array<ReturnType<typeof applyAskVClientIntent>> = [];
         await consumeSse(res.body, ac.signal, (evt) => {
           if (evt.type === "token") {
             accumulatedContent += evt.delta;
@@ -413,8 +416,11 @@ export function useAssistant(opts: AssistantOptions = {}) {
             );
           } else if (evt.type === "tool") {
             setActiveTool(evt.status === "start" ? evt.name : null);
+          } else if (evt.type === "client_intent") {
+            clientResults.push(applyAskVClientIntent(evt.intent));
           } else if (evt.type === "done") {
-            const spoken = (evt.content || accumulatedContent).trim();
+            const clientMessage = clientResults.map((result) => result.message).filter(Boolean).join(" ");
+            const spoken = (clientMessage || evt.content || accumulatedContent).trim();
             setMessages((prev) =>
               prev.map((m) =>
                 m.id === assistantId
@@ -422,7 +428,7 @@ export function useAssistant(opts: AssistantOptions = {}) {
                       ...m,
                       id: evt.assistantMessageId ? `db-${evt.assistantMessageId}` : m.id,
                       serverId: evt.assistantMessageId,
-                      content: evt.content || m.content,
+                      content: clientMessage || evt.content || m.content,
                       pending: false,
                     }
                   : m,
@@ -706,13 +712,13 @@ async function consumeSse(
       }
       else if (eventName === 'client_intent') {
         const intent = (parsed as { intent?: AskVClientIntent }).intent;
-        if (intent?.name) applyAskVClientIntent(intent);
+        if (intent?.name) onEvent({ type: "client_intent", intent });
       }
       else if (eventName === "token") onEvent({ type: "token", delta: (parsed as { delta: string }).delta });
       else if (eventName === "tool") onEvent({ type: "tool", ...(parsed as { name: string; status: "start" | "end" }) });
       else if (eventName === "done") {
         const payload = parsed as { content: string; assistantMessageId?: number };
-        if (payload.content.length >= 240 || /\|.+\||```|\b(total|quarter|report|results?|meetings?|messages?|files?|tasks?|forms?)\b/i.test(payload.content)) {
+        if (shouldOfferAskVVisualResult(payload.content)) {
           window.dispatchEvent(new CustomEvent("askv:show-results", { detail: { content: payload.content } }));
         }
         onEvent({

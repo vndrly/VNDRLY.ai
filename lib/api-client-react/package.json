@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./work-hub-destinations": "./src/work-hub-destinations.ts",
+    "./askv-visual-results": "./src/askv-visual-results.ts",
     "./meeting-streaming": "./src/meeting-streaming.ts",
     "./meeting-workspace": "./src/meeting-workspace.ts"
   },

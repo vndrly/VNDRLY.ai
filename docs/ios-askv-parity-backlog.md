@@ -1,6 +1,6 @@
 # iOS Ask V parity backlog
 
-This checklist is included in the September 22 Gate operations TestFlight release. Calendar and Gate Ask V parity now share server permissions, confirmation, audit, and idempotency boundaries; the remaining release gate is the exact-tree verification and successful TestFlight submission.
+This checklist is included in the September 22 Gate operations TestFlight release. Calendar and Gate Ask V parity share server permissions, confirmation, audit, and idempotency boundaries. The September 30 wiring audit completed the remaining code-level toolbox, client-intent, destination, visual-result, and mutation-refresh parity work. Physical iOS and push verification remains a release acceptance step, not an unwired code path.
 
 Before the next iOS or TestFlight update, explicitly confirm with the user that this parity batch is included, then verify each item in the native app rather than assuming server availability proves the iOS experience.
 
@@ -23,15 +23,21 @@ Before the next iOS or TestFlight update, explicitly confirm with the user that 
 
 ## Native Ask V experience
 
-- Use the exact voice-control labels “Click to Start V” and “Click to Stop V.”
-- Open the visual Ask V results surface for numbers, tables, long text, agendas, meeting notes, and employee details.
-- Keep the live conversation and delivered result visible in that surface.
-- Make agenda items and Calendar results open the exact native detail destination.
-- Verify role, company, site, and tenant scoping for every read and write.
+- [x] Use the exact voice-control labels “Click to Start V” and “Click to Stop V.”
+- [x] Open the visual Ask V results surface for numbers, tables, long text, agendas, meeting notes, and employee details.
+- [x] Keep the live conversation and delivered result visible in that surface.
+- [x] Make agenda items and Calendar results open the exact native detail destination.
+- [x] Verify role, company, site, and tenant scoping for every read and write through registry/runtime, role-pack, exact-record reauthorization, confirmation, and idempotency contracts.
+
+The dedicated native Ask V routes now resolve to `/mobile/work-hub/askv` for both typed and realtime conversations. The normalizer is idempotent, so an already-qualified context cannot become `/mobile/mobile/...`. Every native page pack is contract-checked against the corresponding web page for all four roles and both admin/member memberships.
+
+Every structured client intent emitted by the server has an explicit web and native handler. Web and native surfaces report the client handler's actual result rather than treating server intent emission as proof that navigation, camera, scanner, maps, focus, Gate prefill, safety drafting, or ticket-entry handoff completed.
+
+Every successful registered Work Hub mutation now emits the shared refresh signal in addition to its existing device event. Web invalidates the active query cache and iOS refreshes the relevant native data; pending, denied, failed, draft-only, and read-only calls emit no mutation success.
 
 ## Required mobile verification
 
-- Add or update native contract tests for the tool pack and one-confirmation flow.
+- [x] Add or update native contract tests for the tool pack and one-confirmation flow.
 - Exercise the flows on an authenticated iOS build.
 - Verify push notifications on-device.
 - Complete OTA when sufficient and TestFlight when native code or bundled native behavior changes.

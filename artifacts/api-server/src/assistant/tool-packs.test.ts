@@ -8,6 +8,39 @@ describe("AskV realtime tool packs", () => {
     expect(names).toContain("get_stock_quote");
     expect(names).toContain("get_crude_oil_price");
   });
+  it("gives native AskV the same complete role-safe toolbox as web AskV", () => {
+    const context = { role: "vendor", membershipRole: "admin" } as const;
+    const web = toolsForRealtime({ ...context, path: "/work-hub/askv" }).map((tool) => tool.name);
+    const native = toolsForRealtime({ ...context, path: "/mobile/work-hub/askv" }).map((tool) => tool.name);
+    expect(native).toEqual(web);
+    expect(native).toEqual(expect.arrayContaining([
+      "send_work_hub_message",
+      "manage_work_hub_task",
+      "manage_work_hub_calendar_item",
+      "query_asset_custody",
+      "open_screen",
+    ]));
+  });
+  it("keeps every native page toolbox equal to its web counterpart for every role", () => {
+    const paths = [
+      "/dashboard", "/tickets", "/tickets/42", "/schedule", "/gatekeeper",
+      "/gate/shift-notes", "/notifications", "/profile", "/compliance", "/reports",
+      "/onboarding/vendor", "/work-hub/askv", "/work-hub/activity", "/work-hub/chat",
+      "/work-hub/channels", "/work-hub/crews", "/work-hub/calendar", "/work-hub/calls",
+      "/work-hub/voicemail", "/work-hub/files", "/work-hub/files-notes", "/work-hub/inventory",
+      "/work-hub/assets", "/work-hub/tasks-forms", "/work-hub/meetings", "/work-hub/finance",
+      "/work-hub/administration", "/work-hub/implementation-exports", "/work-hub/settings-connections",
+    ];
+    for (const role of ["admin", "partner", "vendor", "field_employee"] as const) {
+      for (const membershipRole of ["admin", "member"] as const) {
+        for (const path of paths) {
+          const web = toolsForRealtime({ role, membershipRole, path }).map((tool) => tool.name);
+          const native = toolsForRealtime({ role, membershipRole, path: `/mobile${path}` }).map((tool) => tool.name);
+          expect(native, `${role}/${membershipRole}: ${path}`).toEqual(web);
+        }
+      }
+    }
+  });
   it("keeps Shift Notes read-first and exposes safe Profile tools", () => {
     const history = toolsForRealtime({ role: "vendor", path: "/gate/shift-notes" });
     expect(history.map(t => t.name)).toContain("query_shift_notes");

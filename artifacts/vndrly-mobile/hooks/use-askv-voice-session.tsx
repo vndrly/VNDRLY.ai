@@ -16,6 +16,7 @@ import { recordAskVMetric } from "@/lib/askv-voice-metrics";
 import { getApiBase } from "@/lib/api";
 import { ASKV_IDLE_MS, type AskVVoiceState } from "@/lib/askv-voice-state";
 import { readAskVAcrossVndrly, readAskVMuted, writeAskVAcrossVndrly, writeAskVMuted } from "@/lib/askvVoicePreferences";
+import { nativeAskVContextPath } from "@/lib/askv-context-path";
 
 type Assistant = ReturnType<typeof useAssistant>;
 interface AskVVoiceSessionValue {
@@ -123,6 +124,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
     onAssistantReply: text => replies.current.forEach(listener => listener(text)),
     onClientIntent: intent => executeAskVClientIntent(intent, pathRef.current),
     onMutation: emitAskVDataChanged,
+    pagePath: nativeAskVContextPath(pathname),
   });
   const assistantRef = useRef(baseAssistant); assistantRef.current = baseAssistant;
   const startRef = useRef<(seed?: string, path?: string) => Promise<void>>(async () => {});
@@ -228,13 +230,14 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
   }, [flushTranscripts]);
 
   const syncContext = useCallback((session: LiveSession, path: string) => {
+    const toolPath = nativeAskVContextPath(path);
     const version = ++contextVersion.current;
     const update = contextQueue.current.catch(() => undefined).then(async () => {
       if (sessionRef.current !== session || version !== contextVersion.current) return;
-      const entityId = Number(path.match(/\/(?:ticket|site|invoice)\/(\d+)/)?.[1]) || undefined;
-      const data = await post(session.token, "realtime/context", { sessionId: session.sessionId, path, entityId }, abortRef.current?.signal);
+      const entityId = Number(toolPath.match(/\/(?:ticket|site|invoice)\/(\d+)/)?.[1]) || undefined;
+      const data = await post(session.token, "realtime/context", { sessionId: session.sessionId, path: toolPath, entityId }, abortRef.current?.signal);
       if (sessionRef.current === session && version === contextVersion.current) {
-        clientRef.current?.updateContext({ ...data.context, path, tools: data.tools });
+        clientRef.current?.updateContext({ ...data.context, path: toolPath, tools: data.tools });
       }
     });
     contextQueue.current = update;
@@ -343,9 +346,10 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
           startedAt, turnStartedAt: startedAt, woke: Boolean(seed?.toLowerCase().includes("wake")), hadUserTurn: false, firstAudio: false,
         };
         sessionRef.current = session;
+        const toolPath = nativeAskVContextPath(path ?? pathRef.current);
         const client = await createAskVRealtimeClient({
           token, sessionId: session.sessionId, conversationId: session.conversationId,
-          signal: ac.signal, seedMessage: seed, path: path ?? pathRef.current,
+          signal: ac.signal, seedMessage: seed, path: toolPath,
           greeting: spokenGreeting, history, audioSource: detector?.audioSource,
           onToolCall: async call => {
             check(); clearIdle(); writeState("thinking");

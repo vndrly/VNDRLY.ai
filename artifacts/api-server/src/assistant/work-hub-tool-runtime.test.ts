@@ -6,6 +6,8 @@ import {
   resolveExecutableWorkHubToolRequest,
   resolveWorkHubToolRequest,
 } from "./work-hub-tool-runtime";
+import { WORK_HUB_TOOL_NAMES } from "./work-hub-tools";
+import { IMPLEMENTATION_A_CAPABILITY_TOOLS } from "./tool-registry";
 
 const command = {
   operationId: "00000000-0000-4000-8000-000000000001",
@@ -15,6 +17,16 @@ const command = {
 };
 
 describe("resolveWorkHubToolRequest", () => {
+  it("wires every advertised typed Work Hub tool into the runtime", () => {
+    const names = [
+      ...WORK_HUB_TOOL_NAMES,
+      ...IMPLEMENTATION_A_CAPABILITY_TOOLS.map((tool) => tool.name),
+    ];
+    const missing = names.filter(
+      (name) => resolveExecutableWorkHubToolRequest(name, {}, false) === null,
+    );
+    expect(missing).toEqual([]);
+  });
   it("lists managed files in the authenticated organization, not a model-supplied owner", () => {
     const scoped = bindWorkHubToolScope({ owner: { type: "partner", id: 999 }, query: "pump", audience: "channel" }, { vendorId: 42 });
     expect(resolveExecutableWorkHubToolRequest("list_work_hub_files", scoped, false)).toMatchObject({ path: "/work-hub/file-library?orgType=vendor&orgId=42&q=pump&scope=channel" });

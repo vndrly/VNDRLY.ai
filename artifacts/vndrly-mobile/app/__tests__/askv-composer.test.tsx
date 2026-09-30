@@ -18,4 +18,11 @@ describe("Ask V composer", () => {
     expect(source).toContain('<Feather name="send" size={18} color="#ffffff" />');
     expect(source).not.toContain('<Feather name="message-circle" size={18} color="#ffffff" />');
   });
+
+  it("offers and renders the expanded native result surface", () => {
+    expect(source).toContain("shouldOfferAskVVisualResult(m.content)");
+    expect(source).toContain('testID={`askv-open-result-${m.serverId}`}');
+    expect(source).toContain('testID="askv-close-result"');
+    expect(source).toContain('<AssistantMarkdown text={visualResult?.content ?? ""} />');
+  });
 });

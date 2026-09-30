@@ -3,6 +3,18 @@ export type AskVClientIntent = {
   arguments?: Record<string, unknown>;
 };
 
+/** Must stay equal to the server-emitted intent catalog. */
+export const ASKV_WEB_CLIENT_INTENT_NAMES = Object.freeze([
+  "open_screen",
+  "focus_control",
+  "prefill_draft",
+  "prefill_gate_visit",
+  "launch_camera",
+  "launch_maps",
+  "launch_scanner",
+  "start_ticket_entry",
+]);
+
 export function parseAskVClientIntent(output: string): AskVClientIntent | null {
   try {
     const parsed = JSON.parse(output) as { execution?: string; intent?: AskVClientIntent };

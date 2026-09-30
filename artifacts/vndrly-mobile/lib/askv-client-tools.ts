@@ -7,6 +7,17 @@ import { workHubItemDestination } from "@workspace/api-client-react/work-hub-des
 
 export interface AskVClientIntent { name: string; arguments: Record<string, unknown> }
 export interface AskVClientResult { ok: boolean; message: string; opened?: boolean; saved?: boolean; responseMode?: "silent" }
+/** Must stay equal to the server-emitted intent catalog. */
+export const ASKV_NATIVE_CLIENT_INTENT_NAMES = Object.freeze([
+  "open_screen",
+  "focus_control",
+  "prefill_draft",
+  "prefill_gate_visit",
+  "launch_camera",
+  "launch_maps",
+  "launch_scanner",
+  "start_ticket_entry",
+]);
 const controls = new Map<string, () => boolean>();
 const dataChanged = new Set<() => void>();
 export type AskVGatePrefill = { mode: "check-in" | "check-out"; values: Record<string, unknown>; provenance: Record<string, unknown>; matches: Array<{ id: number }>; missing: string[] };
@@ -35,6 +46,10 @@ export function registerAskVControl(path: string, id: string, focus: () => boole
   const key = path + ":" + id;
   controls.set(key, focus);
   return () => { if (controls.get(key) === focus) controls.delete(key); };
+}
+export function registerAskVControlAliases(paths: readonly string[], id: string, focus: () => boolean): () => void {
+  const remove = [...new Set(paths)].map((path) => registerAskVControl(path, id, focus));
+  return () => remove.forEach((unregister) => unregister());
 }
 const screens: Record<string, string> = {
   home: "/(tabs)", dashboard: "/(tabs)", tickets: "/(tabs)", schedule: "/(tabs)/schedule",

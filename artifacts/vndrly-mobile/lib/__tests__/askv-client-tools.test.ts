@@ -4,10 +4,18 @@ vi.mock("expo-router", () => ({ router: { push: ui.push } }));
 vi.mock("react-native", () => ({ Linking: { openURL: ui.openURL } }));
 vi.mock("@/lib/api", () => ({ getApiBase: () => "https://vndrly.ai", apiFetch: ui.api }));
 vi.mock("@/lib/auth", () => ({ captureAuthScope: () => ({}), isAuthScopeCurrent: ui.current }));
-import { executeAskVClientIntent, readAskVSafetyDraft, registerAskVControl } from "../askv-client-tools";
-import { runClientTool } from "../../../api-server/src/assistant/client-tools";
+import { ASKV_NATIVE_CLIENT_INTENT_NAMES, executeAskVClientIntent, readAskVSafetyDraft, registerAskVControl, registerAskVControlAliases } from "../askv-client-tools";
+import { ASKV_SERVER_CLIENT_INTENT_NAMES, runClientTool } from "../../../api-server/src/assistant/client-tools";
 beforeEach(() => { ui.push.mockReset(); ui.openURL.mockReset().mockResolvedValue(undefined); ui.api.mockReset().mockResolvedValue({}); ui.current.mockReturnValue(true); });
 describe("AskV native client capabilities", () => {
+  it("keeps every server-emitted client intent wired on native", () => {
+    const expected = new Set([
+      "open_screen", "focus_control", "prefill_draft", "prefill_gate_visit",
+      "launch_camera", "launch_maps", "launch_scanner", "start_ticket_entry",
+    ]);
+    expect(new Set(ASKV_SERVER_CLIENT_INTENT_NAMES)).toEqual(expected);
+    expect(new Set(ASKV_NATIVE_CLIENT_INTENT_NAMES)).toEqual(expected);
+  });
   it("opens a managed document from real server arguments while preserving legacy files", async () => {
     for (const [subjectType, readPath] of [["document", "/api/work-hub/file-library/7be22c7d-4638-4144-bb18-0d2a66996a43"], ["file", "/api/work-hub/search/items/file/7be22c7d-4638-4144-bb18-0d2a66996a43"]]) {
       const emitted = JSON.parse(runClientTool("open_screen", { screen: "work-hub-item", subjectType, itemId: "7be22c7d-4638-4144-bb18-0d2a66996a43" }, { userId: 10, role: "field_employee" }));
@@ -59,6 +67,15 @@ describe("AskV native client capabilities", () => {
     const remove = registerAskVControl("/askv", "message", focus);
     expect(await executeAskVClientIntent({ name: "focus_control", arguments: { controlId: "message" } }, "/askv")).toMatchObject({ ok: true });
     expect(await executeAskVClientIntent({ name: "focus_control", arguments: { controlId: "message" } }, "/safety-report")).toMatchObject({ ok: false });
+    remove();
+  });
+  it("focuses the AskV composer from either dedicated native route", async () => {
+    const focus = vi.fn().mockReturnValue(true);
+    const remove = registerAskVControlAliases(["/askv", "/work-hub/askv"], "message", focus);
+    for (const path of ["/askv", "/work-hub/askv"]) {
+      expect(await executeAskVClientIntent({ name: "focus_control", arguments: { controlId: "message" } }, path)).toMatchObject({ ok: true });
+    }
+    expect(focus).toHaveBeenCalledTimes(2);
     remove();
   });
 });

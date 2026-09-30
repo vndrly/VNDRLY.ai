@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import { parseTicketIdFromHref, resolveAssistantLink } from "@/lib/assistant-deep-links";
+import {
+  buildDeepLink,
+  DEEP_LINK_SCREENS,
+} from "../../../api-server/src/assistant/deep-links";
 
 describe("parseTicketIdFromHref", () => {
   it.each([
@@ -20,6 +24,39 @@ describe("parseTicketIdFromHref", () => {
 });
 
 describe("resolveAssistantLink", () => {
+  it("opens every URL emitted by the server deep-link registry", () => {
+    for (const definition of DEEP_LINK_SCREENS) {
+      if (definition.screen === "work-hub-item") continue;
+      const href = buildDeepLink({
+        screen: definition.screen,
+        id: definition.requiresId ? 42 : undefined,
+        token: definition.requiresToken ? "review-token" : undefined,
+      });
+      expect(typeof href, definition.screen).toBe("string");
+      expect(resolveAssistantLink(href as string), `${definition.screen}: ${String(href)}`).not.toBeNull();
+    }
+  });
+
+  it("opens every exact Work Hub record type emitted by the server", () => {
+    const itemId = "7be22c7d-4638-4144-bb18-0d2a66996a43";
+    for (const subjectType of [
+      "document",
+      "asset",
+      "task",
+      "meeting",
+      "file",
+      "announcement",
+      "message",
+      "note",
+      "form",
+      "transcript",
+    ]) {
+      const href = buildDeepLink({ screen: "work-hub-item", subjectType, itemId });
+      expect(typeof href, subjectType).toBe("string");
+      expect(resolveAssistantLink(href as string), `${subjectType}: ${String(href)}`).not.toBeNull();
+    }
+  });
+
   it("selects Inventory for inventory and asset module aliases", () => {
     expect(resolveAssistantLink("/work-hub/assets")).toEqual({ type: "route", path: "/work-hub/files-notes?section=inventory" });
     expect(resolveAssistantLink("vndrly-deep-link:work-hub-inventory")).toEqual({ type: "route", path: "/work-hub/files-notes?section=inventory" });

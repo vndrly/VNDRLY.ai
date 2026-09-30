@@ -7,6 +7,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Linking,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -48,8 +49,10 @@ import { readInitialAskVPromptParam } from "@/lib/assistant-ticket-actions";
 import { isForemanEmployeeUser } from "@/lib/mobile-viewer";
 import { buildAssistantShareMailtoUrl } from "@/lib/notification-mailto";
 import { SCREEN_SUBTITLE_TEXT } from "@/lib/pill-doctrine";
-import { registerAskVControl } from "@/lib/askv-client-tools";
+import { registerAskVControlAliases } from "@/lib/askv-client-tools";
+import { nativeAskVContextPath } from "@/lib/askv-context-path";
 import { screenTopPadding } from "@/lib/screen-insets";
+import { shouldOfferAskVVisualResult } from "@workspace/api-client-react/askv-visual-results";
 
 function truncateSharePreview(text: string, max: number) {
   const trimmed = text.trim();
@@ -99,7 +102,7 @@ export default function AskVScreen() {
     if (voiceSession.preferencesReady) {
       if (!sessionRef.current.acrossVndrly) voiceSession.setAcrossVndrly(true);
       if (!sessionRef.current.muted) {
-        void voiceSession.startConversation("open AskV", "/askv");
+        void voiceSession.startConversation("open AskV", nativeAskVContextPath("/askv"));
       }
     }
     return () => {
@@ -113,7 +116,7 @@ export default function AskVScreen() {
   const autoPromptRef = useRef<string | null>(null);
   const [draft, setDraft] = useState("");
   const inputRef = useRef<TextInput>(null);
-  useEffect(() => registerAskVControl("/askv", "message", () => {
+  useEffect(() => registerAskVControlAliases(["/askv", "/work-hub/askv"], "message", () => {
     if (!inputRef.current) return false; inputRef.current.focus(); return true;
   }), []);
   const [readAloud, setReadAloud] = useState(true);
@@ -122,6 +125,7 @@ export default function AskVScreen() {
   const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
   const [feedbackPendingId, setFeedbackPendingId] = useState<number | null>(null);
   const [assistantShare, setAssistantShare] = useState<AssistantShareContext | null>(null);
+  const [visualResult, setVisualResult] = useState<AssistantMessage | null>(null);
   const [quickActionUsage, setQuickActionUsage] = useState<QuickActionUsage>({});
   const askVUserId = typeof user?.id === "number" ? user.id : null;
 
@@ -465,6 +469,15 @@ export default function AskVScreen() {
                       style={[styles.messageActions, { borderTopColor: colors.border }]}
                       testID={`askv-msg-feedback-${m.serverId}`}
                     >
+                      {shouldOfferAskVVisualResult(m.content) ? (
+                        <BubbleIconButton
+                          name="maximize-2"
+                          onPress={() => setVisualResult(m)}
+                          color={colors.mutedForeground}
+                          activeColor={brand.primary}
+                          testID={`askv-open-result-${m.serverId}`}
+                        />
+                      ) : null}
                       <BubbleIconButton
                         name={speakingMessageId === m.id ? "square" : "volume-2"}
                         onPress={() => onSpeakMessage(m)}
@@ -572,6 +585,34 @@ export default function AskVScreen() {
         share={assistantShare}
         onClose={() => setAssistantShare(null)}
       />
+      <Modal
+        visible={visualResult !== null}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setVisualResult(null)}
+      >
+        <View style={[styles.resultSurface, { backgroundColor: colors.background, paddingTop: Math.max(insets.top, 20) }]}>
+          <View style={[styles.resultHeader, { borderBottomColor: colors.border }]}>
+            <Text accessibilityRole="header" style={[styles.resultTitle, { color: colors.foreground }]}>
+              {t("askv.resultsTitle")}
+            </Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t("askv.closeResults")}
+              hitSlop={10}
+              onPress={() => setVisualResult(null)}
+              testID="askv-close-result"
+            >
+              <Feather name="x" size={24} color={colors.foreground} />
+            </Pressable>
+          </View>
+          <ScrollView contentContainerStyle={styles.resultContent}>
+            <View style={[styles.resultCard, { backgroundColor: colors.card, borderColor: brand.primary }]}>
+              <AssistantMarkdown text={visualResult?.content ?? ""} />
+            </View>
+          </ScrollView>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -662,4 +703,16 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
   },
   sendBtn: { minWidth: 44, width: 44, paddingHorizontal: 0 },
+  resultSurface: { flex: 1 },
+  resultHeader: {
+    alignItems: "center",
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingBottom: 14,
+    paddingHorizontal: 20,
+  },
+  resultTitle: { fontFamily: "Inter_700Bold", fontSize: 20 },
+  resultContent: { padding: 20 },
+  resultCard: { borderRadius: 12, borderWidth: 2, padding: 16 },
 });

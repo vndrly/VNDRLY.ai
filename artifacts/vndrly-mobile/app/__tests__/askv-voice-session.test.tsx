@@ -94,6 +94,21 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.useRealTimers(); vi.unstubAllGlobals(); });
 
 describe("mobile AskV session ownership", () => {
+  it("requests the complete dedicated Ask V toolbox for typed and voice turns", async () => {
+    env.muted = true;
+    const { result } = renderHook(useAskVVoiceSession, { wrapper });
+    await flush();
+    await act(async () => { await result.current.assistant.send("Show my operations"); });
+    const chat = vi.mocked(fetch).mock.calls.find(([url]) => String(url).endsWith("/chat"));
+    expect(JSON.parse(String(chat?.[1]?.body))).toMatchObject({
+      pageContext: { path: "/mobile/work-hub/askv" },
+    });
+
+    act(() => result.current.setMuted(false));
+    await flush();
+    expect(env.options[0]).toMatchObject({ path: "/mobile/work-hub/askv" });
+  });
+
   it("honors the server pilot switch before acquiring audio and retains typing", async () => {
     const original = vi.mocked(fetch).getMockImplementation()!;
     vi.mocked(fetch).mockImplementation(async (...args) => String(args[0]).endsWith("/capabilities") ? new Response('{"enabled":false}') : original(...args));
@@ -191,9 +206,9 @@ describe("mobile AskV session ownership", () => {
     env.path = "/ticket/42"; rerender(); await flush();
     const connected = client();
     await act(async () => { resolve(connected); await start; });
-    expect(connected.updateContext).toHaveBeenLastCalledWith(expect.objectContaining({ path: "/ticket/42" }));
+    expect(connected.updateContext).toHaveBeenLastCalledWith(expect.objectContaining({ path: "/mobile/ticket/42" }));
     const contexts = vi.mocked(fetch).mock.calls.filter(([url]) => String(url).endsWith("/context"));
-    expect(JSON.parse(String(contexts.at(-1)![1]?.body))).toMatchObject({ path: "/ticket/42", entityId: 42 });
+    expect(JSON.parse(String(contexts.at(-1)![1]?.body))).toMatchObject({ path: "/mobile/ticket/42", entityId: 42 });
   });
 
   it("closes a client that arrives after mute while startup is pending", async () => {
