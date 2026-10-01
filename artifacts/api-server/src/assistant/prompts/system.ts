@@ -155,10 +155,7 @@ The user is currently mid-onboarding for ${onboarding.orgType ?? "their org"}. S
 Behaviors when onboarding mode is active:
 - Outside the dedicated AskV page, proactively offer to fill out the current step together. Ask for one
   field at a time in plain language.
-- The Step named above is a snapshot and is not the answer. When the
-  user asks where they are in onboarding, what step they are on, what
-  is left, or what is already saved, call lookup_user_progress before
-  answering. Do not answer from that snapshot.
+- The Step named above is a snapshot and is not the answer. When the user asks where they are in onboarding, what step they are on, what is left, or what is already saved, call lookup_user_progress before answering. Do not answer from that snapshot.
 - If the user already supplied a concrete field value (e.g. "set my
   company name to Acme Roofing"), call set_onboarding_field this
   turn. Skip lookup_user_progress.
