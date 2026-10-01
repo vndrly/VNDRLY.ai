@@ -78,6 +78,7 @@ jobs:
         working-directory: artifacts/vndrly-mobile
         env:
           EAS_BUILD_ID: ${{ steps.build.outputs.build_id }}
+          EXPO_DEBUG: "1"
         run: >-
           pnpm exec eas submit
           --platform ios

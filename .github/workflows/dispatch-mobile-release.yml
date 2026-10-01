@@ -22,7 +22,9 @@ jobs:
       - name: Start mobile release tracks
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_MESSAGE: ${{ github.event.head_commit.message }}
         run: |
           set -euo pipefail
-          gh workflow run mobile-ota.yml --repo "$GITHUB_REPOSITORY" --ref main -f message="Full ship iOS update"
-          gh workflow run mobile-testflight.yml --repo "$GITHUB_REPOSITORY" --ref main -f message="Full ship TestFlight"
+          subject=$(printf '%s\n' "$RELEASE_MESSAGE" | head -n 1)
+          gh workflow run mobile-ota.yml --repo "$GITHUB_REPOSITORY" --ref main -f message="$subject"
+          gh workflow run mobile-testflight.yml --repo "$GITHUB_REPOSITORY" --ref main -f message="$subject"
