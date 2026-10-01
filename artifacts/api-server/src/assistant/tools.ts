@@ -81,7 +81,7 @@ export const TOOLS: Anthropic.Tool[] = [
   {
     name: "lookup_user_progress",
     description:
-      "Returns the current onboarding progress for this user's org (current step, completed steps, skipped steps, and the partial payload). Always call this before suggesting onboarding actions if you don't already have fresh state. Do not call this first when the user already provided an explicit write (e.g. set company name to X) — call set_onboarding_field instead.",
+      "Returns the current onboarding progress for this user's org (current step, completed steps, skipped steps, and the partial payload). The step named in the prompt is a snapshot and is not the answer. When the user asks where they are in onboarding, what step they are on, what is left, or what is already saved, call this before answering. Do not call this first when the user already provided an explicit write (e.g. set company name to X) — call set_onboarding_field instead.",
     input_schema: { type: "object", properties: {}, additionalProperties: false },
   },
   {
