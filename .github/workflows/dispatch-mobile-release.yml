@@ -1,0 +1,28 @@
+name: Dispatch mobile release
+
+# The cloud-agent GitHub token cannot call workflow_dispatch. This
+# workflow runs only when this file changes and starts the iOS OTA and
+# TestFlight tracks for the current main commit. GITHUB_TOKEN is
+# allowed to create workflow_dispatch runs.
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/dispatch-mobile-release.yml"
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  dispatch:
+    name: Dispatch OTA and TestFlight
+    runs-on: ubuntu-latest
+    steps:
+      - name: Start mobile release tracks
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          gh workflow run mobile-ota.yml --ref main -f message="Full ship iOS update"
+          gh workflow run mobile-testflight.yml --ref main -f message="Full ship TestFlight"
