@@ -24,5 +24,5 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          gh workflow run mobile-ota.yml --ref main -f message="Full ship iOS update"
-          gh workflow run mobile-testflight.yml --ref main -f message="Full ship TestFlight"
+          gh workflow run mobile-ota.yml --repo "$GITHUB_REPOSITORY" --ref main -f message="Full ship iOS update"
+          gh workflow run mobile-testflight.yml --repo "$GITHUB_REPOSITORY" --ref main -f message="Full ship TestFlight"
