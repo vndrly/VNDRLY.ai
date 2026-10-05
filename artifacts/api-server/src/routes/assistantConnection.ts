@@ -63,6 +63,9 @@ router.get("/.well-known/oauth-authorization-server", (_req, res) => res.json({
 }));
 router.get("/.well-known/oauth-protected-resource", (_req, res) => res.json({ resource: ASSISTANT_RESOURCE, authorization_servers: [ASSISTANT_ISSUER], scopes_supported: ASSISTANT_SCOPES, bearer_methods_supported: ["header"] }));
 router.get("/authorize", async (req, res) => {
+  // The consent POST redirects to the fixed ChatGPT callback. Helmet's default
+  // form-action self would otherwise block that browser redirect after success.
+  res.set("Content-Security-Policy", "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; script-src 'self'; form-action 'self' https://chatgpt.com/connector_platform_oauth_redirect");
   try {
     await validateAssistantAuthorization(req.query, await clientRedirects());
     if (typeof req.query.state !== "string" || req.query.state.length > 4096) throw new AssistantOAuthError("invalid_request");

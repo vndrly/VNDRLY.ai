@@ -43,6 +43,7 @@ afterEach(() => { delete process.env.ASSISTANT_CONNECTION_ENABLED; vi.unstubAllG
 async function consent(scope = auth.scope) {
   const response = await request(app).get(`${base}/authorize`).query({ ...auth, scope }).set("Cookie", cookie());
   expect(response.status).toBe(200);
+  expect(response.headers["content-security-policy"]).toContain("form-action 'self' https://chatgpt.com/connector_platform_oauth_redirect");
   const consentValue = /name="consent" value="([^"]+)"/.exec(response.text)![1];
   const nonceCookie = response.headers["set-cookie"][0].split(";")[0];
   return { consentValue, cookies: `${cookie()}; ${nonceCookie}` };
@@ -59,6 +60,25 @@ async function tokens(scope = auth.scope) {
   return response.body;
 }
 describe("ChatGPT account connection boundary", () => {
+  it("keeps workspace reads within granted scopes and hides unassigned Gate navigation", async () => {
+    const credentials = await tokens("work_hub:read");
+    mocks.run.mockResolvedValue(JSON.stringify({ tasks: [], shifts: [], meetings: [], announcements: [] }));
+    const call = (view: string) => request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "v_show_workspace", arguments: { view } } });
+    const workday = await call("my_workday");
+    expect(workday.body.result.structuredContent.availableViews).not.toContain("gate_board");
+    expect(workday.body.result.isError).toBe(false);
+    mocks.run.mockClear();
+    expect((await call("gate_board")).body.result.isError).toBe(true);
+    expect(mocks.run).not.toHaveBeenCalled();
+  });
+  it("requires account authentication even for static workspace resources", async () => {
+    const resource = { jsonrpc: "2.0", id: 1, method: "resources/read", params: { uri: "ui://vndrly/workspace/v1.html" } };
+    expect((await request(app).post(`${base}/mcp`).send(resource)).status).toBe(401);
+    const credentials = await tokens();
+    const response = await request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send(resource);
+    expect(response.body.result.contents[0].mimeType).toBe("text/html;profile=mcp-app");
+    expect(response.body.result.contents[0]._meta.ui.csp.connectDomains).toEqual([]);
+  });
   it("is disabled until explicitly configured", async () => {
     delete process.env.ASSISTANT_CONNECTION_ENABLED;
     expect((await request(app).get(`${base}/.well-known/oauth-authorization-server`)).status).toBe(503);
