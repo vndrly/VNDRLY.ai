@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import pg from "pg";
+import { provisionFreshLocalTestDatabase, resolveFreshLocalTestDatabaseTarget } from "../../../../scripts/fresh-test-database.mjs";
 
 const rawUrl = process.env.VNDRLY_TEST_DB_MODE === "fresh-local" && process.env.VNDRLY_ISOLATED_TEST_DB === "1"
   ? process.env.TEST_DATABASE_URL : undefined;
@@ -10,7 +11,18 @@ const migration = readFileSync(new URL("../../scripts/harden-public-data-api.sql
 
 describe.skipIf(!enabled)("public Data API hardening in a fresh isolated PostgreSQL cluster", () => {
   it("denies public roles, preserves owner/service access, closes defaults and is repeatable", async () => {
-    const client = new pg.Client({ connectionString: rawUrl });
+    // Schema-wide DDL must not lock the API suite's database: imported route
+    // modules can retain background connections even with file parallelism off.
+    // Provision a new local database through the same guarded, additive helper.
+    const fixture = resolveFreshLocalTestDatabaseTarget(process.env);
+    await provisionFreshLocalTestDatabase(
+      fixture,
+      (connectionString: string) => new pg.Client({ connectionString }),
+      async () => ({ hasDataLoss: false, warnings: [], statementsToExecute: [
+        "CREATE TABLE public.hardening_isolation_probe (id integer)",
+      ] }),
+    );
+    const client = new pg.Client({ connectionString: fixture.testUrl });
     try {
       await client.connect();
       await client.query("BEGIN");
