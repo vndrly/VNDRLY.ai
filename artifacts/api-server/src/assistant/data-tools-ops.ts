@@ -1333,14 +1333,9 @@ async function queryFlaggedTickets(args: Record<string, unknown>, session: Sessi
   const blocked = blockFieldEmployee(session, "query_flagged_tickets");
   if (blocked) return blocked;
   const limit = clampLimit(args.limit);
-  const filters = [isNull(ticketFlagsTable.clearedAt)];
-  if (session.role === "partner" && session.partnerId) {
-    filters.push(
-      sql`${ticketsTable.siteLocationId} IN (SELECT id FROM site_locations WHERE partner_id = ${session.partnerId})`,
-    );
-  } else if (session.role === "vendor" && session.vendorId) {
-    filters.push(eq(ticketsTable.vendorId, session.vendorId));
-  }
+  const scope = ticketScopeFilters(session);
+  if (scope === null) return err("No org scope on this session.");
+  const filters = [isNull(ticketFlagsTable.clearedAt), ...scope] as Parameters<typeof and>;
   const rows = await db
     .select({
       flagId: ticketFlagsTable.id,
@@ -1360,7 +1355,9 @@ async function lookupTicketPaymentStatus(args: Record<string, unknown>, session:
   const blocked = blockFieldEmployee(session, "lookup_ticket_payment_status");
   if (blocked) return blocked;
   const ticketId = Number(args.ticketId);
-  if (!Number.isFinite(ticketId)) return err("ticketId is required.");
+  if (!Number.isSafeInteger(ticketId) || ticketId <= 0) return err("ticketId is required.");
+  const scope = ticketScopeFilters(session);
+  if (scope === null) return err("No org scope on this session.");
   const [row] = await db
     .select({
       id: ticketsTable.id,
@@ -1370,9 +1367,9 @@ async function lookupTicketPaymentStatus(args: Record<string, unknown>, session:
       paymentDispersedAt: ticketsTable.paymentDispersedAt,
     })
     .from(ticketsTable)
-    .where(eq(ticketsTable.id, ticketId))
+    .where(and(eq(ticketsTable.id, ticketId), ...(scope as Parameters<typeof and>)))
     .limit(1);
-  if (!row) return err(`Ticket ${ticketId} not found.`);
+  if (!row) return err("Ticket not found or not visible to your account.");
   return JSON.stringify(row);
 }
 

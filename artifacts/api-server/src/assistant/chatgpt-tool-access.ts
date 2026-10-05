@@ -1,10 +1,31 @@
 import type { SessionPayload } from "../lib/session";
 import { toolsForRealtime } from "./tool-packs";
 import type { AskVToolDefinition } from "./tool-registry";
+import { ASK_V_TOOL_REGISTRY } from "./tool-registry";
+import { CHATGPT_READ_CAPABILITIES, type ChatGptReadCapabilityScope } from "./chatgpt-read-capabilities";
 
-export type ChatGptAssistantScope = "gate:read" | "work_hub:read" | "gate:write" | "work_hub:write";
+export type ChatGptAssistantScope = "gate:read" | "work_hub:read" | "gate:write" | "work_hub:write" | ChatGptReadCapabilityScope;
 
 const GATE_ACTIONS = new Set(["confirm_visitor_check_in", "confirm_visitor_check_out", "start_paid_travel", "assume_gate_shift", "set_gate_coverage_status", "deliver_gate_report", "reconcile_stale_gate_visit", "reverse_gate_reconciliation"]);
+const GATE_DRAFT_TOOLS = new Set(["resolve_gate_check_in", "prepare_visitor_check_in", "prepare_visitor_check_out"]);
+export function chatGptReadToolDescription(tool: AskVToolDefinition): string {
+  return GATE_DRAFT_TOOLS.has(tool.name)
+    ? `${tool.description} In ChatGPT this returns draft fields and matching candidates only. No VNDRLY form is populated and no entry or checkout is submitted. Use the authenticated VNDRLY approval flow to submit a change; device location must come from the approval device.`
+    : tool.description;
+}
+export function chatGptReadToolOutput(name: string, output: unknown): unknown {
+  if (name === "lookup_user_progress" && output && typeof output === "object" && !Array.isArray(output)) {
+    const record = output as Record<string, unknown>;
+    const progress = record.progress;
+    if (!progress || typeof progress !== "object" || Array.isArray(progress)) return output;
+    const source = progress as Record<string, unknown>;
+    return { progress: Object.fromEntries(["orgType", "currentStep", "completedSteps", "skippedSteps", "completedAt"].filter(key => key in source).map(key => [key, source[key]])) };
+  }
+  if (!GATE_DRAFT_TOOLS.has(name) || !output || typeof output !== "object" || Array.isArray(output)) return output;
+  const { intent: _intent, execution: _execution, ...draft } = output as Record<string, unknown>;
+  return { ...draft, execution: "draft_only", submitted: false, formPopulated: false,
+    message: "Draft fields and candidates only. No VNDRLY form was populated and no gate record was submitted. Submit through the authenticated VNDRLY approval flow." };
+}
 export function chatGptActionTools(session: SessionPayload, scopes: readonly string[]): AskVToolDefinition[] {
   if (!session.userId || !["admin", "partner", "vendor", "field_employee"].includes(session.role ?? "")) return [];
   const gate = scopes.includes("gate:write") ? toolsForRealtime({ role: session.role, membershipRole: session.membershipRole, path: "/gate", workflow: "gate" }).filter((tool) => GATE_ACTIONS.has(tool.name)) : [];
@@ -21,11 +42,16 @@ export function chatGptReadableTools(
 ): AskVToolDefinition[] {
   if (!session.userId || !["admin", "partner", "vendor", "field_employee"].includes(session.role ?? "")) return [];
   const candidates: AskVToolDefinition[] = [];
+  const explicitNames = new Set<string>(Object.entries(CHATGPT_READ_CAPABILITIES)
+    .filter(([scope]) => scopes.includes(scope)).flatMap(([, capability]) => [...capability.tools]));
+  candidates.push(...ASK_V_TOOL_REGISTRY.filter(tool => explicitNames.has(tool.name)
+    && (tool.roles.includes(session.role as "admin" | "partner" | "vendor" | "field_employee") || tool.roles.includes("any"))
+    && (!tool.companyAdminOnly || session.membershipRole === "admin")));
   if (scopes.includes("gate:read")) {
     candidates.push(...toolsForRealtime({
       role: session.role, membershipRole: session.membershipRole,
       path: "/gate", workflow: "gate",
-    }).filter((tool) => /^(query_gate_|query_shift_notes$|search_gate_history$|query_active_visitors$|query_visits$|find_active_visitors$)/.test(tool.name)));
+    }).filter((tool) => GATE_DRAFT_TOOLS.has(tool.name) || /^(query_gate_|query_shift_notes$|search_gate_history$|query_active_visitors$|query_visits$|find_active_visitors$)/.test(tool.name)));
   }
   if (scopes.includes("work_hub:read")) {
     candidates.push(...toolsForRealtime({

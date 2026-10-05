@@ -10,7 +10,7 @@ The approved user-layer integration reuses the live Ask V tool registry and cano
 - Exact redirect: `https://chatgpt.com/connector_platform_oauth_redirect`.
 - Public client, authorization code + S256 PKCE; codes expire after five minutes and are single-use.
 - Access tokens expire after ten minutes. Refresh tokens rotate, have a thirty-day maximum lifetime, and replay revokes the grant.
-- Supported scopes: `gate:read`, `work_hub:read`, `gate:write`, `work_hub:write`. Request only the needed scopes.
+- Base scopes: `gate:read`, `work_hub:read`, `gate:write`, `work_hub:write`. Optional read-family scopes: `tickets:read`, `sites:read`, `crew:read`, `finance:read`, `catalog:read`, `safety:read`, `onboarding:read`, `operations:read`. Request only the needed scopes. Existing grants retain their original scopes; adding families requires new consent. The consent page lists the requested record families, including location access for crew reads.
 - Consent requires the signed-in VNDRLY account, exact same-site origin and a short-lived signed, cookie-bound form. It does not collect a password or accept new terms.
 - Current account suspension, forced password change, session version, organization membership and managed-site grants are rechecked against the database. Account-context changes require reconnecting.
 
@@ -19,6 +19,10 @@ Only token hashes are stored. Grants live in a dedicated `users.assistant_oauth_
 ## Tools and real changes
 
 Read tools are filtered through the existing role/tool-pack registry and the connection's scopes. Gate discovery, change-over, shift notes, visitor lookup/history and reports reuse their existing permission checks. Work Hub exposes authorized briefing, calendar, tasks, channels/messages, meetings and other supported read families.
+
+The optional read families use an explicit tool allowlist, registry roles and company-admin restrictions. New registry tools are not automatically exposed. Canonical reads retain tenant, site, worker and authority checks. Onboarding reads reject ordinary organizational members; the ChatGPT result exposes progress fields only, not the arbitrary setup payload. Payment lookup and legacy ticket lookup reuse the canonical ticket filter and fail closed without scope.
+
+Gate resolution and form-preparation helpers return draft fields and matching candidates only. The connection removes their client prefill intent and explicitly reports that no form was populated and no record was submitted. Phone cameras, scanners and client navigation still require a supported device/handoff. Unsupported capability GET routes and legacy `lookup_open_tickets` remain outside the optional connection allowlists. This expansion provides read coverage, not complete Ask V write or device parity.
 
 Gate and Work Hub mutation tools prepare a draft and return a secure VNDRLY approval link. `v_prepare_action` is also available for explicit typed preparation. Preparing does not submit the change. `v_action_status` returns the actual saved result, including pending/running/uncertain states.
 

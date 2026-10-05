@@ -895,6 +895,9 @@ export async function runTool(
       case "lookup_user_progress": {
         const scope = scopeFromSession(session);
         if (!scope) return JSON.stringify({ error: "No org scope on this session." });
+        if (scope.orgType !== "field_employee" && session.role !== "admin" && session.membershipRole !== "admin") {
+          return JSON.stringify({ error: "Only organization admins can read organizational onboarding progress." });
+        }
         const where = scope.orgType === "partner"
           ? eq(onboardingProgressTable.partnerId, scope.partnerId!)
           : scope.orgType === "vendor"
@@ -1091,22 +1094,10 @@ export async function runTool(
       }
 
       case "lookup_open_tickets": {
-        const filters = [ne(ticketsTable.status, "closed")];
-        if (session.role === "vendor" && session.vendorId) {
-          filters.push(eq(ticketsTable.vendorId, session.vendorId));
-        } else if (session.role === "partner" && session.partnerId) {
-          // Partner scope: tickets at sites belonging to this partner.
-          // Done via subquery on sites for now to keep this self-contained.
-          filters.push(
-            sql`${ticketsTable.siteLocationId} IN (SELECT id FROM site_locations WHERE partner_id = ${session.partnerId})`,
-          );
-        } else if (session.role === "field_employee" && session.vendorPeopleId) {
-          // Field portal currently joins via crew, but for a quick
-          // lookup the assigned fieldEmployeeId is a usable proxy.
-          filters.push(
-            sql`${ticketsTable.fieldEmployeeId} IN (SELECT id FROM field_employees WHERE vendor_people_id = ${session.vendorPeopleId})`,
-          );
-        }
+        const { ticketScopeFilters } = await import("../assistant/data-tools-helpers");
+        const scope = ticketScopeFilters(session);
+        if (scope === null) return JSON.stringify({ error: "No authorized ticket scope on this session." });
+        const filters = [ne(ticketsTable.status, "closed"), ...scope] as Parameters<typeof and>;
         const rows = await db
           .select({
             id: ticketsTable.id,

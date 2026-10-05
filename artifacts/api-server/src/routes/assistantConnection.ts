@@ -4,13 +4,14 @@ import { SESSION_SECRET, getSessionFromRequest } from "../lib/session";
 import { createRateLimiter } from "../lib/rate-limit-factory";
 import { validateAssistantSession, withAssistantGrants } from "../assistant/chatgpt-grant-store";
 import { ASSISTANT_ISSUER, ASSISTANT_RESOURCE, ASSISTANT_SCOPES, CHATGPT_CLIENT_ID, AssistantOAuthError, validateAssistantAuthorization, issueAssistantCode, exchangeAssistantCode, refreshAssistantTokens, assistantAccessMatches, assistantTokenHash, assistantTokenUserId } from "../assistant/chatgpt-oauth";
-import { chatGptActionTools, chatGptReadableTools, requireChatGptReadableTool } from "../assistant/chatgpt-tool-access";
+import { chatGptActionTools, chatGptReadableTools, requireChatGptReadableTool, chatGptReadToolDescription, chatGptReadToolOutput } from "../assistant/chatgpt-tool-access";
 import { WORKSPACE_HTML, WORKSPACE_URI, WORKSPACE_TOOL, workspaceRequest, workspaceOutput } from "../assistant/chatgpt-workspace";
 import { askvPendingConfirmations, organizationKeyFromSession, runBoundTypedAskVTool } from "../assistant/askv-pending-confirmation";
 import { mutationIdempotencyKey, readPersistentAskVMutationResult } from "../assistant/askv-idempotency";
 import type { AssistantPreparedAction } from "../assistant/chatgpt-oauth";
 import { runTool } from "./assistant";
 import { writeAskVActionAudit } from "../assistant/action-audit";
+import { CHATGPT_READ_CAPABILITIES } from "../assistant/chatgpt-read-capabilities";
 
 const router = Router();
 const origin = new URL(ASSISTANT_ISSUER).origin;
@@ -76,7 +77,9 @@ router.get("/authorize", async (req, res) => {
     res.cookie("vndrly_assistant_consent", nonce, { httpOnly: true, secure: true, sameSite: "lax", path: "/api/assistant-connection", maxAge: 300_000 });
     const consent = envelope({ request: req.query, userId: current.userId, sv: current.sv, activeMembershipId: current.activeMembershipId ?? null, nonce, expires: Date.now() + 300_000 });
     const writeAccess = String(req.query.scope).split(" ").some((scope) => scope.endsWith(":write"));
-    return page(res, `<p>Connect ChatGPT to the Gate and Work Hub records available to ${escape(current.displayName ?? "your VNDRLY account")}.</p><p>${writeAccess ? "V can read records and prepare changes. Changes requiring approval are completed through your signed-in VNDRLY account." : "This connection can read records. It cannot change them."}</p><form method="post" action="/api/assistant-connection/authorize"><input type="hidden" name="consent" value="${escape(consent)}"><button type="submit">Connect my VNDRLY account</button></form>`);
+    const requestedScopes = String(req.query.scope).split(" ");
+    const labels: Record<string, string> = { "gate:read": "Gate records and draft preparation", "gate:write": "Prepare Gate changes for authenticated approval", "work_hub:read": "Work Hub records", "work_hub:write": "Prepare Work Hub changes for authenticated approval", ...Object.fromEntries(Object.entries(CHATGPT_READ_CAPABILITIES).map(([scope, capability]) => [scope, capability.label])) };
+    return page(res, `<p>Connect ChatGPT to the VNDRLY records available to ${escape(current.displayName ?? "your VNDRLY account")}.</p><ul>${requestedScopes.map(scope => `<li>${escape(labels[scope] ?? scope)}</li>`).join("")}</ul><p>${writeAccess ? "V can read the listed records and prepare changes. Changes requiring approval are completed through your signed-in VNDRLY account." : "This connection can read the listed records. It cannot change them."}</p><form method="post" action="/api/assistant-connection/authorize"><input type="hidden" name="consent" value="${escape(consent)}"><button type="submit">Connect my VNDRLY account</button></form>`);
   } catch (error) { return oauthError(res, error); }
 });
 router.post("/authorize", async (req, res) => {
@@ -160,7 +163,7 @@ router.post("/mcp", async (req, res) => {
     return reply({ contents: [{ uri: WORKSPACE_URI, mimeType: "text/html;profile=mcp-app", text: WORKSPACE_HTML, _meta: { ui: { csp: { connectDomains: [], resourceDomains: [] }, prefersBorder: true } } }] });
   }
   if (message.method === "tools/list") {
-    const reads = chatGptReadableTools(authorized.session, authorized.scopes).map((tool) => ({ name: tool.name, description: tool.description, inputSchema: tool.inputSchema, annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false } }));
+    const reads = chatGptReadableTools(authorized.session, authorized.scopes).map((tool) => ({ name: tool.name, description: chatGptReadToolDescription(tool), inputSchema: tool.inputSchema, annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false } }));
     if (reads.some(tool => ["get_work_hub_briefing", "get_work_hub_calendar", "query_gate_stations"].includes(tool.name))) reads.push(WORKSPACE_TOOL);
     const actions = chatGptActionTools(authorized.session, authorized.scopes);
     const preparedTools = actions.map((tool) => ({ name: tool.name, description: `${tool.description} This ChatGPT connection prepares the change and returns a VNDRLY authorization link; it does not execute until authorized there. Never claim prepared means completed.`, inputSchema: { ...tool.inputSchema, properties: Object.fromEntries(Object.entries(tool.inputSchema.properties ?? {}).filter(([key]) => !SERVER_ACTION_FIELDS.has(key))), required: (tool.inputSchema.required ?? []).filter((key) => !SERVER_ACTION_FIELDS.has(key)) }, annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false } }));
@@ -226,7 +229,7 @@ router.post("/mcp", async (req, res) => {
       return reply({ content: [{ type: "text", text }], isError: false });
     }
     const tool = requireChatGptReadableTool(authorized.session, authorized.scopes, name);
-    const text = await runTool(name, args, authorized.session, "");
+    const text = JSON.stringify(chatGptReadToolOutput(name, JSON.parse(await runTool(name, args, authorized.session, ""))));
     const output = JSON.parse(text);
     const failed = Boolean(output?.error || output?.ok === false);
     await writeAskVActionAudit({ session: authorized.session, clientSurface: "api", inputMode: "web_text", provider: "chatgpt_mcp", toolName: name, targetType: tool.auditTarget, toolInput: args, toolOutput: output, resultStatus: failed ? "failure" : "success" });
