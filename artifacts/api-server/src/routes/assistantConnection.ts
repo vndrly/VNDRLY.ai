@@ -5,6 +5,7 @@ import { createRateLimiter } from "../lib/rate-limit-factory";
 import { validateAssistantSession, withAssistantGrants } from "../assistant/chatgpt-grant-store";
 import { ASSISTANT_ISSUER, ASSISTANT_RESOURCE, ASSISTANT_SCOPES, CHATGPT_CLIENT_ID, AssistantOAuthError, validateAssistantAuthorization, issueAssistantCode, exchangeAssistantCode, refreshAssistantTokens, assistantAccessMatches, assistantTokenHash, assistantTokenUserId } from "../assistant/chatgpt-oauth";
 import { chatGptActionTools, chatGptReadableTools, requireChatGptReadableTool } from "../assistant/chatgpt-tool-access";
+import { WORKSPACE_HTML, WORKSPACE_URI, WORKSPACE_TOOL, workspaceRequest, workspaceOutput } from "../assistant/chatgpt-workspace";
 import { askvPendingConfirmations, organizationKeyFromSession, runBoundTypedAskVTool } from "../assistant/askv-pending-confirmation";
 import { mutationIdempotencyKey, readPersistentAskVMutationResult } from "../assistant/askv-idempotency";
 import type { AssistantPreparedAction } from "../assistant/chatgpt-oauth";
@@ -148,10 +149,16 @@ router.post("/mcp", async (req, res) => {
   if (!message || Array.isArray(message) || message.jsonrpc !== "2.0" || typeof message.method !== "string") return res.status(400).json({ error: "invalid_request" });
   const reply = (result: unknown) => res.json({ jsonrpc: "2.0", id: message.id, result });
   if (message.id === undefined) return res.status(202).end();
-  if (message.method === "initialize") return reply({ protocolVersion: "2025-06-18", capabilities: { tools: { listChanged: false } }, serverInfo: { name: "VNDRLY.ai", version: "1.1.0" }, instructions: "These tools access live VNDRLY records within the connected account permissions." });
+  if (message.method === "initialize") return reply({ protocolVersion: "2025-06-18", capabilities: { tools: { listChanged: false }, resources: { listChanged: false }, extensions: { "io.modelcontextprotocol/ui": {} } }, serverInfo: { name: "VNDRLY.ai", version: "1.2.0" }, instructions: "These tools access live VNDRLY records within the connected account permissions." });
   if (message.method === "ping") return reply({});
+  if (message.method === "resources/list") return reply({ resources: [{ uri: WORKSPACE_URI, name: "VNDRLY work desk", mimeType: "text/html;profile=mcp-app" }] });
+  if (message.method === "resources/read") {
+    if (message.params?.uri !== WORKSPACE_URI) return res.json({ jsonrpc: "2.0", id: message.id, error: { code: -32602, message: "Unknown resource" } });
+    return reply({ contents: [{ uri: WORKSPACE_URI, mimeType: "text/html;profile=mcp-app", text: WORKSPACE_HTML, _meta: { ui: { csp: { connectDomains: [], resourceDomains: [] }, prefersBorder: true } } }] });
+  }
   if (message.method === "tools/list") {
     const reads = chatGptReadableTools(authorized.session, authorized.scopes).map((tool) => ({ name: tool.name, description: tool.description, inputSchema: tool.inputSchema, annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false } }));
+    if (reads.some(tool => ["get_work_hub_briefing", "get_work_hub_calendar", "query_gate_stations"].includes(tool.name))) reads.push(WORKSPACE_TOOL);
     const actions = chatGptActionTools(authorized.session, authorized.scopes);
     const preparedTools = actions.map((tool) => ({ name: tool.name, description: `${tool.description} This ChatGPT connection prepares the change and returns a VNDRLY authorization link; it does not execute until authorized there. Never claim prepared means completed.`, inputSchema: { ...tool.inputSchema, properties: Object.fromEntries(Object.entries(tool.inputSchema.properties ?? {}).filter(([key]) => !SERVER_ACTION_FIELDS.has(key))), required: (tool.inputSchema.required ?? []).filter((key) => !SERVER_ACTION_FIELDS.has(key)) }, annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false } }));
     return reply({ tools: [...reads, ...preparedTools, ...(actions.length ? [{ name: "v_prepare_action", description: "Prepare an authorized Gate or Work Hub change and return its secure VNDRLY approval link. This tool never claims the change is completed. Model-supplied approval and GPS are ignored.", inputSchema: { type: "object", properties: { toolName: { type: "string", enum: actions.map((tool) => tool.name) }, arguments: { type: "object" } }, required: ["toolName", "arguments"], additionalProperties: false }, annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false } }, { name: "v_action_status", description: "Read the status and actual result of an action prepared by this connected account. Pending or running does not mean completed.", inputSchema: { type: "object", properties: { reference: { type: "string" } }, required: ["reference"], additionalProperties: false }, annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false } }] : [])] });
@@ -161,6 +168,23 @@ router.post("/mcp", async (req, res) => {
     const name = message.params?.name;
     const args = message.params?.arguments ?? {};
     if (typeof name !== "string" || !args || typeof args !== "object" || Array.isArray(args)) throw new Error("Invalid tool request");
+    if (name === "v_show_workspace") {
+      const request = workspaceRequest(args);
+      const source = requireChatGptReadableTool(authorized.session, authorized.scopes, request.sourceTool);
+      const raw = JSON.parse(await runTool(source.name, request.sourceArguments, authorized.session, ""));
+      const output = workspaceOutput(request.view, source.name, request.sourceArguments, raw);
+      const allowedNames = new Set(chatGptReadableTools(authorized.session, authorized.scopes).map(tool => tool.name));
+      output.availableViews = [];
+      if (allowedNames.has("get_work_hub_briefing")) output.availableViews.push("my_workday");
+      if (allowedNames.has("get_work_hub_calendar")) output.availableViews.push("work_calendar");
+      if (allowedNames.has("query_gate_stations")) {
+        const gates = request.view === "gate_board" ? raw : JSON.parse(await runTool("query_gate_stations", {}, authorized.session, ""));
+        if (request.view === "gate_board" || (Array.isArray(gates.sites) && gates.sites.length > 0)) output.availableViews.push("gate_board");
+        if (request.view !== "gate_board") await writeAskVActionAudit({ session: authorized.session, clientSurface: "api", inputMode: "web_text", provider: "chatgpt_mcp", toolName: "query_gate_stations", targetType: "site", toolInput: {}, toolOutput: gates, resultStatus: gates.error ? "failure" : "success" });
+      }
+      await writeAskVActionAudit({ session: authorized.session, clientSurface: "api", inputMode: "web_text", provider: "chatgpt_mcp", toolName: source.name, targetType: source.auditTarget, toolInput: request.sourceArguments, toolOutput: raw, resultStatus: "success" });
+      return reply({ content: [{ type: "text", text: JSON.stringify(output) }], structuredContent: output, isError: false });
+    }
     if (name === "v_action_status") {
       if (assistantTokenUserId(args.reference) !== authorized.session.userId) throw new Error("Action unavailable");
       const status = await withAssistantGrants(authorized.session.userId!, async (grants, database) => {
