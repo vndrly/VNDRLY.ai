@@ -25,6 +25,7 @@ import {
 import { requireTenant } from "./lib/requireTenant";
 import { isAllowedCorsOrigin } from "./lib/corsOrigins";
 import helmet from "helmet";
+import assistantConnectionRouter from "./routes/assistantConnection";
 
 const app: Express = express();
 
@@ -56,7 +57,7 @@ app.use(
         return {
           id: req.id,
           method: req.method,
-          url: req.url?.split("?")[0]?.replace(/(\/account-invitations\/activate\/)[^/]+/i, "$1[redacted]"),
+          url: req.url?.split("?")[0]?.replace(/(\/account-invitations\/activate\/)[^/]+/i, "$1[redacted]")?.replace(/(\/assistant-connection\/actions\/)[^/]+/i, "$1[redacted]"),
         };
       },
       res(res) {
@@ -86,6 +87,13 @@ app.use(cookieParser());
 app.post(/^\/api\/work-hub\/meetings\/[^/]+\/transcribe-audio\/?$/, express.json({ limit: "6mb" }));
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
+
+// Scoped assistant credentials must never become general staff session cookies.
+app.use("/api/assistant-connection", assistantConnectionRouter);
+app.get("/.well-known/oauth-authorization-server/api/assistant-connection", (_req, res) =>
+  res.redirect(307, "/api/assistant-connection/.well-known/oauth-authorization-server"));
+app.get("/.well-known/oauth-protected-resource/api/assistant-connection/mcp", (_req, res) =>
+  res.redirect(307, "/api/assistant-connection/.well-known/oauth-protected-resource"));
 
 // Bearer-token shim: mobile clients send the signed session as
 // `Authorization: Bearer <token>`. Route the token to the appropriate

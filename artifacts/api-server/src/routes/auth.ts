@@ -163,9 +163,9 @@ interface ResolvedContext {
  */
 export async function resolveContext(
   user: typeof usersTable.$inferSelect,
+  contextDb: Omit<typeof db, "$client"> = db,
 ): Promise<ResolvedContext> {
-  const rows = await db
-    .select({
+  const rows = await contextDb.select({
       id: userOrgMembershipsTable.id,
       orgType: userOrgMembershipsTable.orgType,
       partnerId: userOrgMembershipsTable.partnerId,
@@ -228,8 +228,7 @@ export async function resolveContext(
     let vendorPeopleId: number | null = null;
     let resolvedVendorId: number | null = null;
     if (user.role === "field_employee") {
-      const [vp] = await db
-        .select({
+      const [vp] = await contextDb.select({
           id: vendorPeopleTable.id,
           vendorId: vendorPeopleTable.vendorId,
           vendorRole: vendorPeopleTable.vendorRole,
@@ -250,7 +249,7 @@ export async function resolveContext(
     // Retain the restricted identity after sponsorship termination. A fresh
     // login must not fall back into legacy unscoped employee route behavior.
     const [managedHistory] = user.role === "field_employee" && !vendorPeopleId
-      ? await db.select({ id: managedSubcontractorWorkerSponsorshipsTable.id })
+      ? await contextDb.select({ id: managedSubcontractorWorkerSponsorshipsTable.id })
         .from(managedSubcontractorWorkerSponsorshipsTable)
         .where(eq(managedSubcontractorWorkerSponsorshipsTable.workerUserId, user.id)).limit(1)
       : [];
@@ -282,14 +281,12 @@ export async function resolveContext(
   let resolvedVendorPeopleId: number | null = preferred.vendorPeopleId;
   if (preferred.orgType === "vendor") {
     if (resolvedVendorPeopleId) {
-      const [vp] = await db
-        .select({ vendorRole: vendorPeopleTable.vendorRole })
+      const [vp] = await contextDb.select({ vendorRole: vendorPeopleTable.vendorRole })
         .from(vendorPeopleTable)
         .where(eq(vendorPeopleTable.id, resolvedVendorPeopleId));
       vendorRole = vp?.vendorRole ?? null;
     } else {
-      const [vp] = await db
-        .select({
+      const [vp] = await contextDb.select({
           id: vendorPeopleTable.id,
           vendorRole: vendorPeopleTable.vendorRole,
         })
@@ -311,7 +308,7 @@ export async function resolveContext(
 
   let managedSubcontractor: ResolvedContext["managedSubcontractor"];
   if (preferred.orgType === "vendor" && preferred.role === "field_employee" && !resolvedVendorPeopleId) {
-    const [activation] = await db.select({ id: accountInvitationsTable.id }).from(accountInvitationsTable).where(and(
+    const [activation] = await contextDb.select({ id: accountInvitationsTable.id }).from(accountInvitationsTable).where(and(
       eq(accountInvitationsTable.userId, user.id), eq(accountInvitationsTable.sponsorVendorId, preferred.orgId), eq(accountInvitationsTable.state, "claimed"),
     )).limit(1);
     if (!activation) return {
@@ -319,7 +316,7 @@ export async function resolveContext(
       vendorRole: null, vendorPeopleId: null, availableMemberships: memberships.filter((membership) => membership.id !== preferred.id),
       managedSubcontractor: { siteGrants: [] },
     };
-    const grants = await db.select({ siteId: managedSubcontractorRoleGrantsTable.siteId, role: managedSubcontractorRoleGrantsTable.role })
+    const grants = await contextDb.select({ siteId: managedSubcontractorRoleGrantsTable.siteId, role: managedSubcontractorRoleGrantsTable.role })
       .from(managedSubcontractorWorkerSponsorshipsTable)
       .innerJoin(managedSubcontractorRoleGrantsTable, eq(managedSubcontractorRoleGrantsTable.sponsorshipId, managedSubcontractorWorkerSponsorshipsTable.id))
       .innerJoin(siteWorkAssignmentsTable, and(eq(siteWorkAssignmentsTable.siteLocationId, managedSubcontractorRoleGrantsTable.siteId), eq(siteWorkAssignmentsTable.vendorId, managedSubcontractorWorkerSponsorshipsTable.sponsorVendorId)))

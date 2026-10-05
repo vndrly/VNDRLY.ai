@@ -4,7 +4,7 @@ import type { AskVAuditTarget } from "./tool-registry";
 
 export type AskVClientSurface = "ios" | "web" | "api";
 export type AskVInputMode = "ios_voice" | "web_voice" | "web_text" | "ios_text";
-export type AskVProvider = "openai_realtime" | "anthropic" | "openai_tts";
+export type AskVProvider = "openai_realtime" | "anthropic" | "openai_tts" | "chatgpt_mcp";
 
 export interface WriteAskVActionAuditArgs {
   session: SessionPayload;

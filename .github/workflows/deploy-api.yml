@@ -13,6 +13,7 @@ on:
       - "scripts/assistant-action-audit-migration.mjs"
       - "scripts/work-hub-*-migration.mjs"
       - "scripts/provision-work-hub-audio.sh"
+      - "scripts/provision-assistant-discovery.sh"
       - ".github/workflows/deploy-api.yml"
   workflow_dispatch:
 
@@ -174,6 +175,11 @@ jobs:
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:gate-notification-preferences
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:gate-alert-channels
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:push-token-retirement
+          sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:assistant-connection
+          sudo bash scripts/provision-assistant-discovery.sh
+          if ! sudo grep -q '^ASSISTANT_CONNECTION_ENABLED=' .env.production; then
+            printf '%s\n' 'ASSISTANT_CONNECTION_ENABLED=1' | sudo tee -a .env.production >/dev/null
+          fi
           unset database_url openai_key assemblyai_key
           sudo systemctl daemon-reload
           sudo systemctl enable vndrly-api 2>/dev/null || true

@@ -41,6 +41,23 @@ export function mutationScopeKey(scope: AskVMutationScope): string {
     scope.key,
   ]);
 }
+/** Read an existing durable result without starting or retrying its operation. */
+export async function readPersistentAskVMutationResult(
+  scope: AskVMutationScope,
+  database?: Omit<typeof import("@workspace/db").db, "$client">,
+): Promise<string | null> {
+  const { db, assistantActionAuditTable: table } = await import("@workspace/db");
+  const { and, eq } = await import("drizzle-orm");
+  const [row] = await (database ?? db).select().from(table).where(and(
+    eq(table.userId, scope.userId), eq(table.actionType, `askv-idempotency:${mutationScopeKey(scope)}`),
+  )).limit(1);
+  if (!row || row.errorCode !== null) return null;
+  if ((row.toolInput as { fingerprint?: string } | null)?.fingerprint !== scope.fingerprint) throw new Error("Stored operation fingerprint does not match");
+  const output = row.toolOutput;
+  if (typeof output === "string") return output;
+  if (output && typeof output === "object" && "format" in output && output.format === "askv-operation-result-v1" && "output" in output && typeof output.output === "string") return output.output;
+  return JSON.stringify(output ?? null);
+}
 /** In-process join only. Durable writes also reserve a persisted audit row below. */
 export class AskVIdempotencyStore {
   private readonly values = new Map<

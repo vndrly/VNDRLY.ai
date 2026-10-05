@@ -33,7 +33,7 @@ test("API deploy transfers the meeting transcription key without logging it and 
   assert.doesNotMatch(workflow, /echo[^\n]*ASSEMBLYAI_API_KEY/);
 });
 
-test("API deploy builds, migrates, restarts, and health-checks without touching web or nginx", () => {
+test("API deploy builds, migrates, restarts, health-checks and provisions scoped discovery", () => {
   assert.match(workflow, /git fetch origin main/);
   assert.match(workflow, /git diff --exit-code --quiet/);
   assert.match(workflow, /git diff --cached --exit-code --quiet/);
@@ -56,7 +56,8 @@ test("API deploy builds, migrates, restarts, and health-checks without touching 
   assert.match(workflow, /sed[^\n]+ASKV_NATURAL_VOICE_USER_IDS[^\n]+\.env\.production/);
 
   assert.doesNotMatch(workflow, /rsync/);
-  assert.doesNotMatch(workflow, /nginx|certbot/);
+  assert.doesNotMatch(workflow, /certbot/);
+  assert.match(workflow, /sudo bash scripts\/provision-assistant-discovery\.sh/);
   assert.doesNotMatch(workflow, /drizzle(?:-kit)?\s+push/i);
   assert.doesNotMatch(workflow, /\b(?:DROP|TRUNCATE)\b/i);
   assert.doesNotMatch(workflow, /tee \.env\.production/);
