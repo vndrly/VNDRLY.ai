@@ -95,6 +95,15 @@ jobs:
           set -euo pipefail
           pnpm run test:api 2>&1 | tee "$RUNNER_TEMP/vndrly-api-tests.log"
 
+      - name: Retain failed API gate diagnostics immediately
+        if: ${{ !cancelled() && steps.api.outcome == 'failure' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: failed-api-gate-${{ github.run_id }}
+          path: ${{ runner.temp }}/vndrly-api-tests.log
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Rehearse first application and replay of guarded Work Hub migrations
         id: migrations
         if: >-
