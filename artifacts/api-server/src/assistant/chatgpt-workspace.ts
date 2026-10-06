@@ -1,21 +1,23 @@
 import { getFlow, type OrgPersona } from "./prompts/onboarding-flows";
 
-export type WorkspaceView = "my_workday" | "gate_board" | "work_calendar" | "onboarding";
+export type WorkspaceView = "my_workday" | "gate_board" | "work_calendar" | "onboarding" | "tickets" | "notifications";
 export const WORKSPACE_URI = "ui://vndrly/workspace/v1.html";
 export const WORKSPACE_TOOL = {
   name: "v_show_workspace",
-  description: "Show an embedded VNDRLY My Workday, Gate Board, or Work Calendar using fresh permission-scoped records. Onboarding shows saved setup steps without changing fields. Gate selection without a station lists authorized locations. Calendar requires an explicit start and end window. This view does not start tracking or change records.",
-  inputSchema: { type: "object" as const, properties: { view: { type: "string", enum: ["my_workday", "gate_board", "work_calendar", "onboarding"] }, siteId: { type: "integer", minimum: 1 }, stationId: { type: "string", format: "uuid" }, start: { type: "string", format: "date-time" }, end: { type: "string", format: "date-time" } }, required: ["view"], additionalProperties: false },
+  description: "Show an embedded VNDRLY My Workday, Gate Board, Work Calendar, Tickets, or Notifications using fresh permission-scoped records. Onboarding shows saved setup steps without changing fields. Gate selection without a station lists authorized locations. Calendar requires an explicit start and end window. This view does not start tracking or change records.",
+  inputSchema: { type: "object" as const, properties: { view: { type: "string", enum: ["my_workday", "gate_board", "work_calendar", "onboarding", "tickets", "notifications"] }, siteId: { type: "integer", minimum: 1 }, stationId: { type: "string", format: "uuid" }, start: { type: "string", format: "date-time" }, end: { type: "string", format: "date-time" } }, required: ["view"], additionalProperties: false },
   annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
   _meta: { ui: { resourceUri: WORKSPACE_URI }, "openai/outputTemplate": WORKSPACE_URI, "openai/widgetAccessible": true },
 };
 export function workspaceRequest(input: Record<string, unknown>) {
   const view = input.view;
-  if (!["my_workday", "gate_board", "work_calendar", "onboarding"].includes(String(view))) throw new Error("Unknown workspace view");
+  if (!["my_workday", "gate_board", "work_calendar", "onboarding", "tickets", "notifications"].includes(String(view))) throw new Error("Unknown workspace view");
   let sourceTool: string;
   let sourceArguments: Record<string, unknown> = {};
   if (view === "my_workday") sourceTool = "get_work_hub_briefing";
   else if (view === "onboarding") sourceTool = "lookup_user_progress";
+  else if (view === "tickets") { sourceTool = "query_tickets"; sourceArguments = { limit: 50, sinceDays: 30 }; }
+  else if (view === "notifications") { sourceTool = "query_notifications"; sourceArguments = { limit: 50, unreadOnly: true }; }
   else if (view === "gate_board") {
     if (input.stationId !== undefined) {
       if (typeof input.stationId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(input.stationId)) throw new Error("Select an authorized gate");
@@ -55,7 +57,7 @@ export function workspaceOutput(view: WorkspaceView, sourceTool: string, sourceA
   if (["my_workday", "work_calendar"].includes(view) && ![data.tasks, data.shifts, data.meetings].every(Array.isArray)) throw new Error("Incomplete workspace result");
   if (view === "gate_board" && sourceTool === "query_gate_stations" && !Array.isArray(data.sites) && !Array.isArray(data.stations)) throw new Error("Incomplete gate result");
   if (view === "gate_board" && sourceTool === "query_gate_change_over" && (!data.station || !("shift" in data) || !("snapshot" in data) || !Array.isArray(data.items))) throw new Error("Incomplete gate result");
-  const result: WorkspaceOutput = { view, title: { my_workday: "My Workday", gate_board: "Gate Board", work_calendar: "Work Calendar", onboarding: "Onboarding" }[view], generatedAt: moment(data.generatedAt) ?? now.toISOString(), sourceTool, sourceArguments, sections: [], attention: [], metrics: [] };
+  const result: WorkspaceOutput = { view, title: { my_workday: "My Workday", gate_board: "Gate Board", work_calendar: "Work Calendar", onboarding: "Onboarding", tickets: "Tickets", notifications: "Notifications" }[view], generatedAt: moment(data.generatedAt) ?? now.toISOString(), sourceTool, sourceArguments, sections: [], attention: [], metrics: [] };
   if (view === "my_workday") {
     const tasks = list(data.tasks).map(row => taskRow(row, now.getTime()));
     const announcements = list(data.announcements).map(row => ({ title: text(object(row.announcement).title, "Announcement"), detail: text(object(row.announcement).body), ...(object(row.announcement).acknowledgementRequired === true && object(row.recipient).acknowledgedAt == null ? { attention: "Acknowledgement pending" } : {}) }));
@@ -69,6 +71,15 @@ export function workspaceOutput(view: WorkspaceView, sourceTool: string, sourceA
   } else if (view === "work_calendar") {
     result.sections = ["shifts", "meetings", "tasks"].map(kind => ({ title: kind[0].toUpperCase() + kind.slice(1), rows: list(data[kind]).map(row => { const item = object(row.item); const record = kind === "meetings" ? object(item.meeting) : item; const timing = kind === "meetings" ? object(item.occurrence) : item; return { title: text(record.title, kind === "tasks" ? "Task" : "Scheduled work"), detail: text(record.status), time: moment(timing.startsAt ?? timing.dueAt), ...(kind === "tasks" ? { attention: taskRow(item, now.getTime()).attention } : {}) }; }), empty: `No ${kind} in this window.` }));
     result.attention = result.sections.flatMap(section => section.rows.filter(row => row.attention));
+  } else if (view === "tickets") {
+    if (!Array.isArray(data.tickets)) throw new Error("Incomplete ticket result");
+    const rows = list(data.tickets).map(ticket => ({ title: `Ticket ${Number.isSafeInteger(ticket.id) ? ticket.id : "record"}`, detail: text(ticket.status, "Status unavailable"), time: moment(ticket.createdAt), ...(["kicked_back", "pending_review"].includes(ticket.status) ? { attention: ticket.status === "kicked_back" ? "Returned for changes" : "Review pending" } : {}) }));
+    result.sections = [{ title: "Recent authorized tickets", rows, empty: "No tickets returned for the last 30 days." }];
+    result.attention = rows.filter(row => row.attention);
+    result.metrics = [{ label: "Tickets shown", value: rows.length }];
+  } else if (view === "notifications") {
+    if (!Array.isArray(data.rows)) throw new Error("Incomplete notification result");
+    result.sections = [{ title: "Unread notifications", rows: list(data.rows).map(row => ({ title: text(row.title, "Notification"), detail: text(row.body), time: moment(row.createdAt) })), empty: "No unread notifications returned." }];
   } else if (view === "onboarding") {
     if (!("progress" in data)) throw new Error("Incomplete onboarding result");
     if (data.progress === null) {
@@ -108,7 +119,7 @@ export function workspaceOutput(view: WorkspaceView, sourceTool: string, sourceA
 // No network requests or credential storage: interactive reads use the authenticated MCP host bridge.
 export const WORKSPACE_HTML = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>VNDRLY work desk</title><style>
 *{box-sizing:border-box}body{margin:0;padding:20px;font:14px/1.5 system-ui,sans-serif;color:var(--color-text-primary,#20252a);background:var(--color-background-primary,#fff)}header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #ddd;padding-bottom:14px}h1{font-size:22px;margin:0}h2{font-size:16px;margin:0 0 10px}p{margin:5px 0}.muted{color:var(--color-text-secondary,#66717b)}a{color:inherit;text-underline-offset:4px}nav{display:flex;gap:18px;flex-wrap:wrap;padding:16px 0}nav a[aria-current=page]{font-weight:700}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(235px,1fr));gap:14px}article,.attention{border:1px solid #ddd;border-radius:12px;padding:16px}.attention{margin-bottom:14px;border-left:4px solid #F59E0B}.row{padding:10px 0;border-top:1px solid #eee}.row:first-of-type{border-top:0}.row strong{display:block}.metrics{display:flex;gap:18px;flex-wrap:wrap;margin:0 0 16px}.metric b{display:block;font-size:24px}#status{min-height:24px}.error{border-left:4px solid #DC2626;padding-left:12px}footer{margin-top:16px;font-size:12px}@media(prefers-color-scheme:dark){body{color:#eee;background:#202123}article,.attention,header{border-color:#555}.row{border-color:#444}}
-</style></head><body><header><div><p class="muted">VNDRLY.ai · V</p><h1 id="title">Your work desk</h1></div><a href="#refresh" id="refresh">Refresh</a></header><nav aria-label="Workspace views"><a href="#my_workday" data-view="my_workday">My Workday</a><a href="#gate_board" data-view="gate_board">Gate Board</a><a href="#work_calendar" data-view="work_calendar">Work Calendar</a><a href="#onboarding" data-view="onboarding">Onboarding</a></nav><p id="status" role="status">Waiting for your authorized VNDRLY records…</p><div id="content"></div><footer class="muted" id="updated"></footer><script>
+</style></head><body><header><div><p class="muted">VNDRLY.ai · V</p><h1 id="title">Your work desk</h1></div><a href="#refresh" id="refresh">Refresh</a></header><nav aria-label="Workspace views"><a href="#my_workday" data-view="my_workday">My Workday</a><a href="#gate_board" data-view="gate_board">Gate Board</a><a href="#work_calendar" data-view="work_calendar">Work Calendar</a><a href="#onboarding" data-view="onboarding">Onboarding</a><a href="#tickets" data-view="tickets">Tickets</a><a href="#notifications" data-view="notifications">Notifications</a></nav><p id="status" role="status">Waiting for your authorized VNDRLY records…</p><div id="content"></div><footer class="muted" id="updated"></footer><script>
 (()=>{const pending=new Map();let id=1,current=null;const el=id=>document.getElementById(id);const add=(parent,tag,value,cls)=>{const node=document.createElement(tag);node.textContent=value;if(cls)node.className=cls;parent.append(node);return node;};
 function request(method,params){const requestId=id++;return new Promise((resolve,reject)=>{const timeout=setTimeout(()=>{pending.delete(requestId);reject(Error('The request timed out. Your previous view has not been refreshed.'));},20000);pending.set(requestId,{resolve,reject,timeout});window.parent.postMessage({jsonrpc:'2.0',id:requestId,method,params},'*');});}
 function render(output){if(!output||!Array.isArray(output.sections))return;current=output;el('title').textContent=output.title;document.querySelectorAll('[data-view]').forEach(link=>{link.hidden=!Array.isArray(output.availableViews)||!output.availableViews.includes(link.dataset.view);if(link.dataset.view===output.view)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');});el('status').textContent='';el('status').className='';const content=el('content');content.replaceChildren();function row(parent,item){const card=add(parent,'div','','row');add(card,'strong',item.title);if(item.detail)add(card,'p',item.detail,'muted');if(item.time){const date=new Date(item.time);if(Number.isFinite(date.getTime()))add(card,'p',date.toLocaleString(),'muted');}if(item.attention)add(card,'p',item.attention);}

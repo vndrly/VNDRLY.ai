@@ -696,8 +696,12 @@ async function ensureProgress(scope: OrgScope) {
       vendorPeopleId: scope.vendorPeopleId,
       currentStep: defaultStepFor(scope),
     })
+    .onConflictDoNothing()
     .returning();
-  return row;
+  if (row) return row;
+  const [concurrent] = await db.select().from(onboardingProgressTable).where(where).limit(1);
+  if (!concurrent) throw new Error("Onboarding progress unavailable");
+  return concurrent;
 }
 
 // Whitelists of valid step keys + payload top-level paths per persona,
@@ -958,12 +962,17 @@ export async function runTool(
           return JSON.stringify({ error: fieldCheck.error });
         }
         const existing = await ensureProgress(scope);
-        const payload = { ...((existing.payload ?? {}) as Record<string, unknown>) };
-        setByPath(payload, path, args.value);
-        await db
-          .update(onboardingProgressTable)
-          .set({ payload })
-          .where(eq(onboardingProgressTable.id, existing.id));
+        // Different approved field edits must merge against the latest row.
+        // The OAuth action claim lock is released before domain execution.
+        await db.transaction(async (tx) => {
+          const [current] = await tx.select().from(onboardingProgressTable)
+            .where(eq(onboardingProgressTable.id, existing.id)).for("update");
+          if (!current) throw new Error("Onboarding progress unavailable");
+          const payload = structuredClone((current.payload ?? {}) as Record<string, unknown>);
+          setByPath(payload, path, args.value);
+          await tx.update(onboardingProgressTable).set({ payload })
+            .where(eq(onboardingProgressTable.id, current.id));
+        });
         return JSON.stringify({ ok: true, path, value: args.value });
       }
 

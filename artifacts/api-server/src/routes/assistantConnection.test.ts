@@ -60,6 +60,35 @@ async function tokens(scope = auth.scope) {
   return response.body;
 }
 describe("ChatGPT account connection boundary", () => {
+  it("prepares separately consented onboarding changes without private audit values or legal acceptance", async () => {
+    mocks.validate.mockImplementation(async (value) => ({ ...value, membershipRole: "admin", exp: Math.floor(Date.now() / 1000) + 60 }));
+    const read = await tokens("onboarding:read");
+    const call = (access: string, path: string) => request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${access}`).send({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "set_onboarding_field", arguments: { path, value: "synthetic-private-value" } } });
+    expect((await call(read.access_token, "taxIds.federalTaxId")).body.result.isError).toBe(true);
+    const write = await tokens("onboarding:write");
+    expect((await call(write.access_token, "legalConsent.accepted")).body.result.isError).toBe(true);
+    const prepared = await call(write.access_token, "taxIds.federalTaxId");
+    expect(JSON.parse(prepared.body.result.content[0].text)).toMatchObject({ status: "pending", requiresConfirmation: true });
+    expect(mocks.run).not.toHaveBeenCalled();
+    expect(JSON.stringify(mocks.audit.mock.calls)).not.toContain("synthetic-private-value");
+  });
+  it("projects final onboarding completion before durable execution and result readback", async () => {
+    mocks.validate.mockImplementation(async (value) => ({ ...value, membershipRole: "admin", exp: Math.floor(Date.now() / 1000) + 60 }));
+    const credentials = await tokens("onboarding:write");
+    const response = await request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "finalize_onboarding", arguments: {} } });
+    const prepared = JSON.parse(response.body.result.content[0].text);
+    const actionPath = new URL(prepared.approvalUrl).pathname;
+    const approval = await request(app).get(actionPath).set("Cookie", cookie());
+    const nonce = /name="nonce" value="([^"]+)"/.exec(approval.text)![1];
+    const actionCookie = approval.headers["set-cookie"][0].split(";")[0];
+    mocks.run.mockResolvedValue(JSON.stringify({ ok: true, response: JSON.stringify({ orgType: "vendor", currentStep: "done", completedAt: "2026-10-06", payload: { taxId: "synthetic-private-value" } }) }));
+    const result = await request(app).post(actionPath).set("Origin", "https://vndrly.ai").set("Cookie", `${cookie()}; ${actionCookie}`).type("form").send({ nonce });
+    expect(result.status).toBe(200);
+    expect(result.text).not.toContain("synthetic-private-value");
+    expect(result.text).toContain("done");
+    expect(JSON.stringify(grants)).not.toContain("synthetic-private-value");
+    expect(JSON.stringify(mocks.audit.mock.calls)).not.toContain("synthetic-private-value");
+  });
   it("requires onboarding scope and omits private setup fields from workspace output and audit", async () => {
     const deniedCredentials = await tokens("work_hub:read");
     const message = { jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "v_show_workspace", arguments: { view: "onboarding" } } };
@@ -86,6 +115,11 @@ describe("ChatGPT account connection boundary", () => {
     mocks.run.mockClear();
     expect((await call("gate_board")).body.result.isError).toBe(true);
     expect(mocks.run).not.toHaveBeenCalled();
+  });
+  it.each(["tickets:read", "operations:read"])("advertises workspace for standalone %s access", async scope => {
+    const credentials = await tokens(scope);
+    const result = await request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 1, method: "tools/list" });
+    expect(result.body.result.tools.map((tool: { name: string }) => tool.name)).toContain("v_show_workspace");
   });
   it("requires account authentication even for static workspace resources", async () => {
     const resource = { jsonrpc: "2.0", id: 1, method: "resources/read", params: { uri: "ui://vndrly/workspace/v1.html" } };

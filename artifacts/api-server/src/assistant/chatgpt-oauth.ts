@@ -1,11 +1,12 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import type { SessionPayload } from "../lib/session";
 import { CHATGPT_READ_CAPABILITIES } from "./chatgpt-read-capabilities";
+import { CHATGPT_WRITE_CAPABILITIES } from "./chatgpt-write-capabilities";
 
 export const ASSISTANT_ISSUER = "https://vndrly.ai/api/assistant-connection";
 export const ASSISTANT_RESOURCE = `${ASSISTANT_ISSUER}/mcp`;
 export const CHATGPT_CLIENT_ID = "https://chatgpt.com/oauth/client.json";
-export const ASSISTANT_SCOPES = ["gate:read", "work_hub:read", "gate:write", "work_hub:write", ...Object.keys(CHATGPT_READ_CAPABILITIES)] as const;
+export const ASSISTANT_SCOPES = ["gate:read", "work_hub:read", "gate:write", "work_hub:write", ...Object.keys(CHATGPT_READ_CAPABILITIES), ...Object.keys(CHATGPT_WRITE_CAPABILITIES)] as const;
 const ACCESS_MS = 10 * 60_000;
 const REFRESH_MS = 30 * 24 * 60 * 60_000;
 

@@ -6,6 +6,18 @@ import { runOpsDataTool } from "./data-tools-ops";
 import { runTool } from "../routes/assistant";
 
 describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")("assistant read authorization against isolated records", () => {
+  it("preserves simultaneous approved onboarding field updates", async () => {
+    assertFreshLocalTestDatabaseEnvironment(process.env);
+    const suffix = randomUUID();
+    const [vendor] = await db.insert(vendorsTable).values({ name: `onboarding-lock-${suffix}`, contactName: "Synthetic", contactEmail: `${suffix}@example.invalid` }).returning();
+    const [user] = await db.insert(usersTable).values({ username: `onboarding-${suffix}`, passwordHash: "unused-isolated-fixture", displayName: "Synthetic admin", role: "vendor" }).returning();
+    const session = { userId: user.id, role: "vendor", vendorId: vendor.id, membershipRole: "admin" };
+    await runTool("start_onboarding", {}, session, "");
+    const results = await Promise.all(["federalTaxId", "stateTaxId", "physicalAddress", "billingAddress"].map(path => runTool("set_onboarding_field", { path: `taxIds.${path}`, value: `synthetic-${path}` }, session, "")));
+    expect(results.map(result => JSON.parse(result).ok)).toEqual([true, true, true, true]);
+    const progress = JSON.parse(await runTool("lookup_user_progress", {}, session, ""));
+    expect(progress.progress.payload.taxIds).toEqual({ federalTaxId: "synthetic-federalTaxId", stateTaxId: "synthetic-stateTaxId", physicalAddress: "synthetic-physicalAddress", billingAddress: "synthetic-billingAddress" });
+  });
   it("blocks foreign payment data, limits worker tickets, and refuses member onboarding reads", async () => {
     assertFreshLocalTestDatabaseEnvironment(process.env);
     const suffix = randomUUID();
@@ -16,6 +28,11 @@ describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")("assistant re
     const [workType] = await db.insert(workTypesTable).values({ name: `Scope fixture ${suffix}`, category: "service" }).returning();
     const [worker] = await db.insert(vendorPeopleTable).values({ vendorId: vendors[0].id, firstName: "Synthetic", lastName: "Worker", email: `${suffix}@example.invalid` }).returning();
     const tickets = await db.insert(ticketsTable).values(vendors.map((vendor, i) => ({ vendorId: vendor.id, siteLocationId: sites[i].id, workTypeId: workType.id, fieldEmployeeId: i === 0 ? worker.id : null, paymentReference: `private-payment-${i}-${suffix}` }))).returning();
+    await db.insert(vendorPeopleTable).values([1, 2].map(n => ({ vendorId: vendors[1].id, firstName: "Foreign", lastName: `Crew ${n}`, email: `foreign-${n}-${suffix}@example.invalid` })));
+    const foreignSchedule = await runTool("schedule_ticket_crew", { ticketId: tickets[1].id, crewMemberName: "Foreign", scheduledStartAt: "2026-10-10T12:00:00.000Z", confirmed: true }, { userId: user.id, role: "vendor", vendorId: vendors[0].id }, "");
+    expect(JSON.parse(foreignSchedule)).toHaveProperty("error");
+    expect(JSON.parse(foreignSchedule)).not.toHaveProperty("matches");
+    expect(foreignSchedule).not.toContain("@example.invalid");
     for (const session of [{ userId: user.id, role: "vendor", vendorId: vendors[0].id }, { userId: user.id, role: "partner", partnerId: partners[0].id }]) {
       expect(JSON.parse(await runOpsDataTool("lookup_ticket_payment_status", { ticketId: tickets[0].id }, session))).toMatchObject({ id: tickets[0].id });
       const refused = await runOpsDataTool("lookup_ticket_payment_status", { ticketId: tickets[1].id }, session);

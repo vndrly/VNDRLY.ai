@@ -7,7 +7,7 @@ import { and, eq, isNull, sql } from "drizzle-orm";
 import { db, notificationsTable, ticketNoteLogsTable, ticketsTable, vendorPeopleTable } from "@workspace/db";
 import type { SessionPayload } from "../lib/session";
 import { SESSION_SECRET } from "../lib/session";
-import { handleScheduleTicketRequest } from "../routes/ticketSchedule";
+import { handleScheduleTicketRequest, resolveSchedulerAuth } from "../routes/ticketSchedule";
 import { clearTicketFlag, flagTicket } from "../lib/ticket-flag";
 import {
   fieldEmployeeCanAccessTicket,
@@ -200,6 +200,11 @@ async function scheduleTicketCrew(
     .where(eq(ticketsTable.id, Math.floor(ticketId)))
     .limit(1);
   if (!ticket) return err(`Ticket ${Math.floor(ticketId)} was not found.`);
+
+  // Resolve authorization before looking up names or exposing roster matches.
+  if (!(await resolveSchedulerAuth({ ...session, userId: session.userId, role: session.role, vendorId: session.vendorId ?? null, partnerId: session.partnerId ?? null }, ticket.id, ticket.vendorId))) {
+    return err("Not allowed to schedule crew for this ticket.");
+  }
 
   const { employee, matches } = await resolveCrewEmployee(input, ticket.vendorId);
   if (!employee) {

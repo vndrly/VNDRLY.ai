@@ -111,7 +111,7 @@ async function loadTicketForAuth(ticketId: number) {
 }
 
 // Platform admin OR vendor admin OR assigned / acting foreman on this ticket.
-async function resolveSchedulerAuth(
+export async function resolveSchedulerAuth(
   session: Session,
   ticketId: number,
   ticketVendorId: number,

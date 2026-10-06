@@ -12,6 +12,7 @@ import type { AssistantPreparedAction } from "../assistant/chatgpt-oauth";
 import { runTool } from "./assistant";
 import { writeAskVActionAudit } from "../assistant/action-audit";
 import { CHATGPT_READ_CAPABILITIES } from "../assistant/chatgpt-read-capabilities";
+import { CHATGPT_WRITE_CAPABILITIES, validateChatGptActionInput, chatGptActionAuditInput, chatGptActionResult } from "../assistant/chatgpt-write-capabilities";
 
 const router = Router();
 const origin = new URL(ASSISTANT_ISSUER).origin;
@@ -78,7 +79,7 @@ router.get("/authorize", async (req, res) => {
     const consent = envelope({ request: req.query, userId: current.userId, sv: current.sv, activeMembershipId: current.activeMembershipId ?? null, nonce, expires: Date.now() + 300_000 });
     const writeAccess = String(req.query.scope).split(" ").some((scope) => scope.endsWith(":write"));
     const requestedScopes = String(req.query.scope).split(" ");
-    const labels: Record<string, string> = { "gate:read": "Gate records and draft preparation", "gate:write": "Prepare Gate changes for authenticated approval", "work_hub:read": "Work Hub records", "work_hub:write": "Prepare Work Hub changes for authenticated approval", ...Object.fromEntries(Object.entries(CHATGPT_READ_CAPABILITIES).map(([scope, capability]) => [scope, capability.label])) };
+    const labels: Record<string, string> = { "gate:read": "Gate records and draft preparation", "gate:write": "Prepare Gate changes for authenticated approval", "work_hub:read": "Work Hub records", "work_hub:write": "Prepare Work Hub changes for authenticated approval", ...Object.fromEntries(Object.entries({...CHATGPT_READ_CAPABILITIES, ...CHATGPT_WRITE_CAPABILITIES}).map(([scope, capability]) => [scope, capability.label])) };
     return page(res, `<p>Connect ChatGPT to the VNDRLY records available to ${escape(current.displayName ?? "your VNDRLY account")}.</p><ul>${requestedScopes.map(scope => `<li>${escape(labels[scope] ?? scope)}</li>`).join("")}</ul><p>${writeAccess ? "V can read the listed records and prepare changes. Changes requiring approval are completed through your signed-in VNDRLY account." : "This connection can read the listed records. It cannot change them."}</p><form method="post" action="/api/assistant-connection/authorize"><input type="hidden" name="consent" value="${escape(consent)}"><button type="submit">Connect my VNDRLY account</button></form>`);
   } catch (error) { return oauthError(res, error); }
 });
@@ -164,10 +165,10 @@ router.post("/mcp", async (req, res) => {
   }
   if (message.method === "tools/list") {
     const reads = chatGptReadableTools(authorized.session, authorized.scopes).map((tool) => ({ name: tool.name, description: chatGptReadToolDescription(tool), inputSchema: tool.inputSchema, annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false } }));
-    if (reads.some(tool => ["get_work_hub_briefing", "get_work_hub_calendar", "query_gate_stations", "lookup_user_progress"].includes(tool.name))) reads.push(WORKSPACE_TOOL);
+    if (reads.some(tool => ["get_work_hub_briefing", "get_work_hub_calendar", "query_gate_stations", "lookup_user_progress", "query_tickets", "query_notifications"].includes(tool.name))) reads.push(WORKSPACE_TOOL);
     const actions = chatGptActionTools(authorized.session, authorized.scopes);
     const preparedTools = actions.map((tool) => ({ name: tool.name, description: `${tool.description} This ChatGPT connection prepares the change and returns a VNDRLY authorization link; it does not execute until authorized there. Never claim prepared means completed.`, inputSchema: { ...tool.inputSchema, properties: Object.fromEntries(Object.entries(tool.inputSchema.properties ?? {}).filter(([key]) => !SERVER_ACTION_FIELDS.has(key))), required: (tool.inputSchema.required ?? []).filter((key) => !SERVER_ACTION_FIELDS.has(key)) }, annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false } }));
-    return reply({ tools: [...reads, ...preparedTools, ...(actions.length ? [{ name: "v_prepare_action", description: "Prepare an authorized Gate or Work Hub change and return its secure VNDRLY approval link. This tool never claims the change is completed. Model-supplied approval and GPS are ignored.", inputSchema: { type: "object", properties: { toolName: { type: "string", enum: actions.map((tool) => tool.name) }, arguments: { type: "object" } }, required: ["toolName", "arguments"], additionalProperties: false }, annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false } }, { name: "v_action_status", description: "Read the status and actual result of an action prepared by this connected account. Pending or running does not mean completed.", inputSchema: { type: "object", properties: { reference: { type: "string" } }, required: ["reference"], additionalProperties: false }, annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false } }] : [])] });
+    return reply({ tools: [...reads, ...preparedTools, ...(actions.length ? [{ name: "v_prepare_action", description: "Prepare an authorized VNDRLY change and return its secure VNDRLY approval link. This tool never claims the change is completed. Model-supplied approval and GPS are ignored.", inputSchema: { type: "object", properties: { toolName: { type: "string", enum: actions.map((tool) => tool.name) }, arguments: { type: "object" } }, required: ["toolName", "arguments"], additionalProperties: false }, annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false } }, { name: "v_action_status", description: "Read the status and actual result of an action prepared by this connected account. Pending or running does not mean completed.", inputSchema: { type: "object", properties: { reference: { type: "string" } }, required: ["reference"], additionalProperties: false }, annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false } }] : [])] });
   }
   if (message.method !== "tools/call") return res.json({ jsonrpc: "2.0", id: message.id, error: { code: -32601, message: "Method not found" } });
   try {
@@ -184,6 +185,8 @@ router.post("/mcp", async (req, res) => {
       if (allowedNames.has("get_work_hub_briefing")) output.availableViews.push("my_workday");
       if (allowedNames.has("get_work_hub_calendar")) output.availableViews.push("work_calendar");
       if (allowedNames.has("lookup_user_progress")) output.availableViews.push("onboarding");
+      if (allowedNames.has("query_tickets")) output.availableViews.push("tickets");
+      if (allowedNames.has("query_notifications")) output.availableViews.push("notifications");
       if (allowedNames.has("query_gate_stations")) {
         const gates = request.view === "gate_board" ? raw : JSON.parse(await runTool("query_gate_stations", {}, authorized.session, ""));
         if (request.view === "gate_board" || (Array.isArray(gates.sites) && gates.sites.length > 0)) output.availableViews.push("gate_board");
@@ -212,6 +215,7 @@ router.post("/mcp", async (req, res) => {
       if (!tool || !suppliedInput || typeof suppliedInput !== "object" || Array.isArray(suppliedInput)) throw new Error("Action unavailable");
       const input = Object.fromEntries(Object.entries(suppliedInput).filter(([key]) => !SERVER_ACTION_FIELDS.has(key)));
       if (JSON.stringify(input).length > 20_000) throw new Error("Action too large");
+      validateChatGptActionInput(tool.name, input);
       const actionToken = `${authorized.session.userId}.${randomBytes(32).toString("base64url")}`;
       const fingerprint = mutationIdempotencyKey(authorized.session.userId!, tool.name, input);
       const prepared = await withAssistantGrants(authorized.session.userId!, async (grants) => {
@@ -226,7 +230,7 @@ router.post("/mcp", async (req, res) => {
       });
       const previousResult = prepared.result ? JSON.parse(prepared.result) : null;
       const text = JSON.stringify({ ok: prepared.state === "completed" && !previousResult?.error && previousResult?.ok !== false, requiresConfirmation: prepared.state === "pending", status: prepared.state, toolName: tool.name, reference: prepared.reference, approvalUrl: `${ASSISTANT_ISSUER}/actions/${prepared.reference}`, result: previousResult, message: prepared.state === "pending" ? "The change is prepared. Complete its required authorization in your VNDRLY account; it has not been submitted." : "This matching action was already submitted. Inspect its status and actual result." });
-      await writeAskVActionAudit({ session: authorized.session, clientSurface: "api", inputMode: "web_text", provider: "chatgpt_mcp", toolName: tool.name, targetType: tool.auditTarget, toolInput: input, resultStatus: "requires_confirmation" });
+      await writeAskVActionAudit({ session: authorized.session, clientSurface: "api", inputMode: "web_text", provider: "chatgpt_mcp", toolName: tool.name, targetType: tool.auditTarget, toolInput: chatGptActionAuditInput(tool.name, input), resultStatus: "requires_confirmation" });
       return reply({ content: [{ type: "text", text }], isError: false });
     }
     const tool = requireChatGptReadableTool(authorized.session, authorized.scopes, name);
@@ -243,12 +247,12 @@ router.post("/mcp", async (req, res) => {
   }
 });
 router.all("/mcp", (_req, res) => res.status(405).set("Allow", "POST").end());
-const needsLocation = (toolName: string) => ["confirm_visitor_check_in", "confirm_visitor_check_out", "start_paid_travel"].includes(toolName);
+const needsLocation = (toolName: string) => ["confirm_visitor_check_in", "confirm_visitor_check_out", "start_paid_travel", "set_ticket_lifecycle", "close_ticket_for_review"].includes(toolName);
 const unresolved = (action: AssistantPreparedAction) => action.state === "running" || action.state === "outcome_unknown";
 async function reconcileAction(action: AssistantPreparedAction, session: import("../lib/session").SessionPayload, database: Omit<typeof import("@workspace/db").db, "$client">) {
   if (!unresolved(action) || !action.executionFingerprint) return;
   const result = await readPersistentAskVMutationResult({ userId: session.userId!, organizationKey: organizationKeyFromSession(session), sessionId: `conversation:${action.turnId}`, key: `chatgpt:${action.tokenHash}`, fingerprint: action.executionFingerprint }, database);
-  if (result !== null) { action.state = "completed"; action.result = result; action.expiresAt = Date.now() + 3600_000; }
+  if (result !== null) { action.state = "completed"; action.result = JSON.stringify(chatGptActionResult(action.toolName, JSON.parse(result))); action.arguments = chatGptActionAuditInput(action.toolName, action.arguments); action.expiresAt = Date.now() + 3600_000; }
   else if (action.createdAt < Date.now() - 300_000) action.state = "outcome_unknown";
 }
 async function authorizedAction(req: Request) {
@@ -271,7 +275,7 @@ async function authorizedAction(req: Request) {
   });
   return { token, session: current, action: found };
 }
-router.get("/actions-client.js", (_req, res) => res.type("application/javascript").send(`document.querySelector('form[data-location="required"]')?.addEventListener('submit', function(event) { if (this.dataset.located === 'yes') return; event.preventDefault(); const form = this; const status = document.getElementById('location-status'); status.textContent = 'Getting your current location…'; navigator.geolocation.getCurrentPosition(function(position) { form.elements.latitude.value = position.coords.latitude; form.elements.longitude.value = position.coords.longitude; form.elements.accuracyMeters.value = position.coords.accuracy; form.dataset.located = 'yes'; form.requestSubmit(); }, function() { status.textContent = 'Location permission is required for this Gate action. Enable location and try again.'; }, {enableHighAccuracy:true,timeout:15000,maximumAge:0}); });`));
+router.get("/actions-client.js", (_req, res) => res.type("application/javascript").send(`document.querySelector('form[data-location="required"]')?.addEventListener('submit', function(event) { if (this.dataset.located === 'yes') return; event.preventDefault(); const form = this; const status = document.getElementById('location-status'); status.textContent = 'Getting your current location…'; navigator.geolocation.getCurrentPosition(function(position) { form.elements.latitude.value = position.coords.latitude; form.elements.longitude.value = position.coords.longitude; form.elements.accuracyMeters.value = position.coords.accuracy; form.dataset.located = 'yes'; form.requestSubmit(); }, function() { status.textContent = 'Location permission is required for this VNDRLY action. Enable location and try again.'; }, {enableHighAccuracy:true,timeout:15000,maximumAge:0}); });`));
 router.get("/actions/:actionToken", async (req, res) => {
   try {
     const { token, action } = await authorizedAction(req);
@@ -294,6 +298,7 @@ router.post("/actions/:actionToken", async (req, res) => {
     const proof = readActionEnvelope(signed);
     if (proof.tokenHash !== assistantTokenHash(reserved.token) || proof.nonce !== req.body.nonce) throw new AssistantOAuthError("access_denied");
     const input = { ...reserved.action.arguments };
+    validateChatGptActionInput(reserved.action.toolName, input);
     if (needsLocation(reserved.action.toolName)) {
       const latitude = Number(req.body.latitude), longitude = Number(req.body.longitude), accuracyMeters = Number(req.body.accuracyMeters);
       if (!req.body.latitude || !req.body.longitude || !Number.isFinite(latitude) || Math.abs(latitude) > 90 || !Number.isFinite(longitude) || Math.abs(longitude) > 180 || !Number.isFinite(accuracyMeters) || accuracyMeters < 0) throw new AssistantOAuthError("invalid_request");
@@ -319,15 +324,16 @@ router.post("/actions/:actionToken", async (req, res) => {
     const sessionId = `conversation:${reserved.action.turnId}`;
     askvPendingConfirmations.set({ userId: reserved.session.userId!, organizationKey: organizationKeyFromSession(reserved.session), sessionId, contextKey: reserved.action.tokenHash, toolName: reserved.action.toolName, arguments: input, idempotencyKey: `chatgpt:${reserved.action.tokenHash}` });
     const tool = chatGptActionTools(reserved.session, ASSISTANT_SCOPES).find((item) => item.name === reserved!.action.toolName)!;
-    const result = await runBoundTypedAskVTool({ name: tool.name, input, session: reserved.session, conversationId: reserved.action.turnId, turnId: reserved.action.turnId, contextKey: reserved.action.tokenHash, phrase: "confirm", execute: (authorizedInput) => runTool(tool.name, authorizedInput, reserved!.session, "", false, Boolean(tool.workHubFamily)) });
-    const output = JSON.parse(result);
+    const result = await runBoundTypedAskVTool({ name: tool.name, input, session: reserved.session, conversationId: reserved.action.turnId, turnId: reserved.action.turnId, contextKey: reserved.action.tokenHash, phrase: "confirm", execute: async (authorizedInput) => JSON.stringify(chatGptActionResult(tool.name, JSON.parse(await runTool(tool.name, authorizedInput, reserved!.session, "", false, Boolean(tool.workHubFamily))))) });
+    const output = chatGptActionResult(tool.name, JSON.parse(result)) as Record<string, unknown>;
+    const savedResult = JSON.stringify(output);
     await withAssistantGrants(reserved.session.userId!, async (grants) => {
       const action = grants.flatMap((grant) => grant.actions ?? []).find((item) => item.tokenHash === reserved!.action.tokenHash);
-      if (action) { action.state = "completed"; action.result = result; action.expiresAt = Date.now() + 3600_000; }
+      if (action) { action.state = "completed"; action.result = savedResult; action.arguments = chatGptActionAuditInput(tool.name, action.arguments); action.expiresAt = Date.now() + 3600_000; }
     });
-    await writeAskVActionAudit({ session: reserved.session, clientSurface: "api", inputMode: "web_text", provider: "chatgpt_mcp", toolName: tool.name, targetType: tool.auditTarget, toolInput: input, toolOutput: output, resultStatus: output?.error || output?.ok === false ? "failure" : "success", confirmationPhrase: "Authenticated VNDRLY action approval" });
+    await writeAskVActionAudit({ session: reserved.session, clientSurface: "api", inputMode: "web_text", provider: "chatgpt_mcp", toolName: tool.name, targetType: tool.auditTarget, toolInput: chatGptActionAuditInput(tool.name, input), toolOutput: output, resultStatus: output?.error || output?.ok === false ? "failure" : "success", confirmationPhrase: "Authenticated VNDRLY action approval" });
     res.clearCookie("vndrly_assistant_action", { path: "/api/assistant-connection/actions", secure: true, sameSite: "lax" });
-    return page(res, `<h2>Action result</h2><pre>${escape(result)}</pre>`);
+    return page(res, `<h2>Action result</h2><pre>${escape(savedResult)}</pre>`);
   } catch (error) {
     if (claimed && reserved) {
       try {

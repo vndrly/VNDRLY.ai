@@ -2,6 +2,19 @@ import { describe, expect, it } from "vitest";
 import { workspaceOutput, workspaceRequest, WORKSPACE_HTML } from "./chatgpt-workspace";
 const now = new Date("2026-10-05T17:00:00Z");
 describe("VNDRLY workspace presentation", () => {
+  it("shows authorized ticket statuses without inventing age or tracking claims", () => {
+    const output = workspaceOutput("tickets", "query_tickets", {}, { tickets: [{ id: 42, status: "kicked_back", createdAt: "2026-10-01T12:00:00Z" }, { id: 43, status: "approved" }] }, now);
+    expect(output.attention).toEqual([expect.objectContaining({ title: "Ticket 42", attention: "Returned for changes" })]);
+    expect(JSON.stringify(output)).not.toMatch(/stale|tracking/i);
+    expect(workspaceRequest({ view: "tickets" }).sourceTool).toBe("query_tickets");
+    expect(() => workspaceOutput("tickets", "query_tickets", {}, {}, now)).toThrow("Incomplete");
+  });
+  it("uses canonical personal notification rows and rejects incomplete responses", () => {
+    const output = workspaceOutput("notifications", "query_notifications", {}, { rows: [{ title: "<script>text</script>", body: "Meeting scheduled", createdAt: now.toISOString() }] }, now);
+    expect(output.sections[0].rows[0].title).toBe("<script>text</script>");
+    expect(workspaceRequest({ view: "notifications" }).sourceArguments).toEqual({ limit: 50, unreadOnly: true });
+    expect(() => workspaceOutput("notifications", "query_notifications", {}, {}, now)).toThrow("Incomplete");
+  });
   it("shows canonical onboarding steps without private payload fields", () => {
     const output = workspaceOutput("onboarding", "lookup_user_progress", {}, { progress: { orgType: "vendor", currentStep: "branding", completedSteps: ["company-basics"], skippedSteps: [], payload: { taxId: "private-tax-value" } } }, now);
     expect(output.sections[0].rows.find(row => row.title === "Vendor branding")).toMatchObject({ detail: "Current step" });

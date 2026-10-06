@@ -3,8 +3,13 @@ import { toolsForRealtime } from "./tool-packs";
 import type { AskVToolDefinition } from "./tool-registry";
 import { ASK_V_TOOL_REGISTRY } from "./tool-registry";
 import { CHATGPT_READ_CAPABILITIES, type ChatGptReadCapabilityScope } from "./chatgpt-read-capabilities";
+import { CHATGPT_WRITE_CAPABILITIES, type ChatGptWriteCapabilityScope } from "./chatgpt-write-capabilities";
 
-export type ChatGptAssistantScope = "gate:read" | "work_hub:read" | "gate:write" | "work_hub:write" | ChatGptReadCapabilityScope;
+export type ChatGptAssistantScope = "gate:read" | "work_hub:read" | "gate:write" | "work_hub:write" | ChatGptReadCapabilityScope | ChatGptWriteCapabilityScope;
+
+const hasOnboardingScope = (session: SessionPayload) =>
+  (session.role === "field_employee" && Boolean(session.vendorPeopleId)) ||
+  (session.membershipRole === "admin" && ((session.role === "partner" && Boolean(session.partnerId)) || (session.role === "vendor" && Boolean(session.vendorId))));
 
 const GATE_ACTIONS = new Set(["confirm_visitor_check_in", "confirm_visitor_check_out", "start_paid_travel", "assume_gate_shift", "set_gate_coverage_status", "deliver_gate_report", "reconcile_stale_gate_visit", "reverse_gate_reconciliation"]);
 const GATE_DRAFT_TOOLS = new Set(["resolve_gate_check_in", "prepare_visitor_check_in", "prepare_visitor_check_out"]);
@@ -30,7 +35,12 @@ export function chatGptActionTools(session: SessionPayload, scopes: readonly str
   if (!session.userId || !["admin", "partner", "vendor", "field_employee"].includes(session.role ?? "")) return [];
   const gate = scopes.includes("gate:write") ? toolsForRealtime({ role: session.role, membershipRole: session.membershipRole, path: "/gate", workflow: "gate" }).filter((tool) => GATE_ACTIONS.has(tool.name)) : [];
   const hub = scopes.includes("work_hub:write") ? toolsForRealtime({ role: session.role, membershipRole: session.membershipRole, path: "/work-hub/askv" }).filter((tool) => Boolean(tool.workHubFamily) && tool.mutating) : [];
-  return [...new Map([...gate, ...hub].filter((tool) => tool.execution !== "client").map((tool) => [tool.name, tool])).values()];
+  const names = new Set<string>(Object.entries(CHATGPT_WRITE_CAPABILITIES).filter(([scope]) => scopes.includes(scope)).flatMap(([, capability]) => [...capability.tools]));
+  const additional = ASK_V_TOOL_REGISTRY.filter(tool => names.has(tool.name)
+    && (!(CHATGPT_WRITE_CAPABILITIES["onboarding:write"].tools as readonly string[]).includes(tool.name) || hasOnboardingScope(session))
+    && (tool.roles.includes(session.role as "admin" | "partner" | "vendor" | "field_employee") || tool.roles.includes("any"))
+    && (!tool.companyAdminOnly || session.membershipRole === "admin") && tool.mutating);
+  return [...new Map([...gate, ...hub, ...additional].filter((tool) => tool.execution !== "client").map((tool) => [tool.name, tool])).values()];
 }
 
 /** A scoped connection never broadens the tool registry's role permissions.
@@ -45,7 +55,7 @@ export function chatGptReadableTools(
   const explicitNames = new Set<string>(Object.entries(CHATGPT_READ_CAPABILITIES)
     .filter(([scope]) => scopes.includes(scope)).flatMap(([, capability]) => [...capability.tools]));
   candidates.push(...ASK_V_TOOL_REGISTRY.filter(tool => explicitNames.has(tool.name)
-    && (tool.name !== "lookup_user_progress" || (session.role === "field_employee" && Boolean(session.vendorPeopleId)) || (session.membershipRole === "admin" && ((session.role === "partner" && Boolean(session.partnerId)) || (session.role === "vendor" && Boolean(session.vendorId)))))
+    && (tool.name !== "lookup_user_progress" || hasOnboardingScope(session))
     && (tool.roles.includes(session.role as "admin" | "partner" | "vendor" | "field_employee") || tool.roles.includes("any"))
     && (!tool.companyAdminOnly || session.membershipRole === "admin")));
   if (scopes.includes("gate:read")) {
