@@ -86,6 +86,13 @@ describe("resolveWorkHubToolRequest", () => {
     expect(resolveExecutableWorkHubToolRequest("query_asset_custody", { alias: { kind: "plate", value: " " } }, false)).toMatchObject({ error: "Supply an exact valid asset identifier." });
     expect(resolveExecutableWorkHubToolRequest("query_asset_custody", { assetId: "asset-one", alias: { kind: "plate", value: "TX123" } }, false)).toMatchObject({ path: "/implementation-a/assets/asset-one" });
   });
+  it("creates provisional inventory only after authorization with a bounded exact identifier", () => {
+    const input = { ...command, action: "provisional", payload: { alias: { kind: "plate", value: " TX123 ", jurisdiction: " TX ", owner: "foreign" }, responsibleOwner: { type: "partner", id: 999 }, holderUserId: 99 } };
+    expect(resolveExecutableWorkHubToolRequest("confirm_asset_custody_action", input, false)).toMatchObject({ requiresConfirmation: true });
+    expect(resolveExecutableWorkHubToolRequest("confirm_asset_custody_action", input, true)).toEqual({ method: "POST", path: "/implementation-a/assets/provisional", body: { identifier: { kind: "plate", value: "TX123", jurisdiction: "TX" } } });
+    expect(resolveExecutableWorkHubToolRequest("prepare_asset_custody_action", input, false)).toMatchObject({ method: "GET", path: "/implementation-a/assets/find?kind=plate&value=TX123&jurisdiction=TX" });
+    for (const alias of [{ kind: "plate", value: " " }, { kind: "gps", value: "TX123" }, { kind: "vin", value: "x".repeat(201) }, { kind: "plate", value: "TX123", jurisdiction: "T" }]) expect(resolveExecutableWorkHubToolRequest("confirm_asset_custody_action", { ...input, payload: { alias } }, true)).toHaveProperty("error");
+  });
   it("uses server-owned replay IDs for workforce and trips and bounds subscription confirmation", () => {
     for (const [name, action] of [["confirm_workforce_coverage_action", "assign"], ["confirm_field_trips_action", "start"]]) {
       const input = { ...command, action, payload: { operationId: "model-replay", owner: { type: "partner", id: 999 } } };

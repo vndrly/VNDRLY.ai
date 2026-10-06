@@ -126,7 +126,10 @@ export function createAssetService(repository: AssetRepository) {
     },
     async findOrCreateProvisional(input: { identifier: AssetAlias; responsibleOwner: AssetOwner }) {
       const found = await repository.find(input.identifier);
-      if (found) return found;
+      if (found) {
+        if (found.responsibleOwner.type !== input.responsibleOwner.type || found.responsibleOwner.id !== input.responsibleOwner.id) throw new AssetServiceError("asset.not_found", 404);
+        return found;
+      }
       return repository.create({ name: `${input.identifier.kind.toUpperCase()} ${input.identifier.value}`, category: input.identifier.kind === "plate" || input.identifier.kind === "vin" ? "vehicle" : "uncategorized", legalOwner: "Unknown", responsibleOwner: input.responsibleOwner, aliases: [input.identifier], provisional: true });
     },
     async checkoutAsset(input: { assetId: string; holderUserId: number; actorUserId?: number; operationId?: string; condition: AssetCondition; confirmed: boolean; expectedVersion: number; note?: string; photos?: string[]; expectedReturnAt?: Date }) {

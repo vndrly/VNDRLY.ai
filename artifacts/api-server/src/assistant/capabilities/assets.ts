@@ -8,7 +8,7 @@ export const ASSET_CAPABILITY_TOOLS = capabilityTools("asset_custody", "asset lo
     properties: {
       assetId: { type: "string" },
       alias: { ...alias, description: "Read an exact authorized asset by plate, VIN, serial number or asset tag. Supply jurisdiction for plates when known; never guess an identifier." },
-      action: { type: "string", enum: ["create", "aliases", "checkout", "return", "transfer", "condition", "hold", "merge", "verify-issued"] },
+      action: { type: "string", enum: ["create", "provisional", "aliases", "checkout", "return", "transfer", "condition", "hold", "merge", "verify-issued"] },
       operationId: { type: "string", format: "uuid" },
       expectedVersion: { type: "integer", minimum: 1 },
       payload: { type: "object", properties: {

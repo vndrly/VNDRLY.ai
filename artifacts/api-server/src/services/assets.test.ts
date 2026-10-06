@@ -22,6 +22,18 @@ describe("Implementation A asset custody", () => {
     const result = await service.findOrCreateProvisional({ identifier: { kind: "plate", jurisdiction: "TX", value: "ZZZ999" }, responsibleOwner: { type: "vendor", id: 20 } });
     expect(result).toMatchObject({ provisional: true, aliases: [{ kind: "plate", jurisdiction: "TX", value: "ZZZ999" }] });
   });
+  it("reuses only the same owner's provisional match and never reveals or alters a foreign match", async () => {
+    const repository = createMemoryAssetRepository();
+    const service = createAssetService(repository);
+    const identifier = { kind: "plate" as const, jurisdiction: "TX", value: "ZZZ999" };
+    const responsibleOwner = { type: "vendor" as const, id: 20 };
+    const original = await service.findOrCreateProvisional({ identifier, responsibleOwner });
+    const before = await repository.get(original.id);
+    expect(await service.findOrCreateProvisional({ identifier, responsibleOwner })).toEqual(before);
+    for (const owner of [{ type: "vendor" as const, id: 21 }, { type: "partner" as const, id: 20 }]) await expect(service.findOrCreateProvisional({ identifier, responsibleOwner: owner })).rejects.toMatchObject({ code: "asset.not_found", status: 404 });
+    expect(await repository.get(original.id)).toEqual(before);
+    expect(await repository.all(responsibleOwner)).toHaveLength(1);
+  });
 
   it("blocks checkout while an asset is held", async () => {
     const service = createAssetService(createMemoryAssetRepository());

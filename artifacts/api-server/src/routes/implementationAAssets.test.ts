@@ -43,6 +43,16 @@ beforeEach(() => {
 });
 
 describe("asset inventory and custody routes", () => {
+  it("does not reveal or modify a foreign asset through provisional registration", async () => {
+    const identifier = { kind: "plate" as const, jurisdiction: "TX", value: "FOREIGN1" };
+    const foreign = await state.repository!.create({ name: "Private truck", category: "vehicle", legalOwner: "Other company", responsibleOwner: { type: "vendor", id: 8 }, aliases: [identifier], provisional: false });
+    const response = await request(app).post("/implementation-a/assets/provisional").set("Cookie", admin).send({ identifier });
+    expect(response.status).toBe(404);
+    expect(JSON.stringify(response.body)).not.toContain("Private truck");
+    expect(await state.repository!.get(foreign.id)).toEqual(foreign);
+    expect(await state.repository!.all(foreign.responsibleOwner)).toHaveLength(1);
+    expect(await state.repository!.all(owner)).toHaveLength(0);
+  });
   it.each(["admin-issued", "transferred"])("lets the current recipient verify %s equipment and serializes a safe custodian", async (kind) => {
     const asset = await state.repository!.create({ name: "Issued radio", category: "equipment", legalOwner: "Vendor", responsibleOwner: owner, aliases: [], provisional: false });
     const issued = await request(app).post(`/implementation-a/assets/${asset.id}/checkout`).set("Cookie", admin).send({ ...command(1), holderUserId: kind === "admin-issued" ? 11 : 13 });

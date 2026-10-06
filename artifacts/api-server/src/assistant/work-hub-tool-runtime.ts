@@ -183,7 +183,7 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
   if (name.includes("operations_displays")) return unsupported("operations display; use the authenticated companion");
   if (name.includes("asset_custody")) {
     const assetPayload = { ...withoutNulls(payload), ...(Array.isArray(payload.aliases) ? { aliases: payload.aliases.map(value => withoutNulls(record(value))) } : {}), ...(payload.alias ? { alias: withoutNulls(record(payload.alias)) } : {}) };
-    const actions = ["create", "aliases", "checkout", "return", "transfer", "condition", "hold", "merge", "verify-issued"];
+    const actions = ["create", "provisional", "aliases", "checkout", "return", "transfer", "condition", "hold", "merge", "verify-issued"];
     if (name === "query_asset_custody") {
       if (resourceId) return request("GET", `/implementation-a/assets/${resourceId}`);
       if (input.alias !== undefined) {
@@ -194,6 +194,16 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
       return request("GET", "/implementation-a/assets");
     }
     if (!actions.includes(action)) return unsupported("asset custody");
+    if (action === "provisional") {
+      const alias = record(payload.alias);
+      const value = typeof alias.value === "string" ? alias.value.trim() : "";
+      const jurisdiction = typeof alias.jurisdiction === "string" ? alias.jurisdiction.trim() : undefined;
+      if (!["vin", "plate", "serial", "asset_tag", "model", "other"].includes(String(alias.kind)) || !value || value.length > 200 || alias.jurisdiction != null && (!jurisdiction || jurisdiction.length < 2 || jurisdiction.length > 32)) return { error: "Supply an exact valid asset identifier." };
+      const identifier = { kind: alias.kind, value, ...(jurisdiction ? { jurisdiction } : {}) };
+      return name === "prepare_asset_custody_action"
+        ? request("GET", queryPath("/implementation-a/assets/find", identifier))
+        : request("POST", "/implementation-a/assets/provisional", { identifier });
+    }
     if (action === "create") return name === "prepare_asset_custody_action" ? request("GET", "/implementation-a/assets") : request("POST", "/implementation-a/assets", { ...assetPayload, responsibleOwner: input.owner });
     if (!resourceId) return { error: "A valid asset id is required." };
     if (name === "prepare_asset_custody_action") return request("GET", `/implementation-a/assets/${resourceId}`);
