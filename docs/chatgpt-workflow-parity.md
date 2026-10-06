@@ -70,3 +70,6 @@ Acceptance: synthetic exact match across two isolated companies creates one priv
 
 ### Dictated safety drafts (candidate)
 The ChatGPT safety read family can prepare dictated safety-report fields through the existing pure draft helper. Results explicitly state that no report was submitted, no form was populated, and site access has not been verified. Saving the report still uses the authorized safety workflow. This addition is pending full release validation and live ChatGPT verification.
+
+### Ticket device entry (candidate)
+`v_open_ticket_entry` reads the exact authorized ticket before creating an account-bound link to the existing photo, parts, labor, or mileage entry screen. Opening the signed link rechecks the account, active organization, session generation, current connection grant and ticket access. The destination is fixed to the saved ticket; arbitrary redirects are rejected. The device screen retains edit-role and lifecycle checks. Opening the link does not save entries, upload photos, grant camera access or start GPS tracking. Completion requires readback of actual saved ticket records. This closes a device navigation gap, not independent capture inside ChatGPT; full release validation and live device verification remain pending.

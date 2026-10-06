@@ -1,5 +1,21 @@
 import { describe, expect, it } from "vitest";
 import { fileDeviceHandoff, requireMatchingFileDevice, meetingDeviceHandoff, requireMatchingMeetingDevice } from "./chatgpt-device-handoff";
+import { ticketDeviceHandoff, requireMatchingTicketDevice } from "./chatgpt-device-handoff";
+
+describe("ticket device handoff", () => {
+  const session = { userId: 17, role: "vendor" as const, vendorId: 4, activeMembershipId: 7, sv: 2 };
+  it.each(["photo", "parts", "labor", "mileage"])("binds %s entry to the same account, company and saved ticket", entry => {
+    const handoff = ticketDeviceHandoff(session, "grant", 42, entry);
+    expect(requireMatchingTicketDevice(handoff, session)).toBe(`/tickets/42?askvEntry=${entry}`);
+    for (const mismatch of [{ ...session, userId: 18 }, { ...session, vendorId: 5 }, { ...session, sv: 3 }, { ...session, activeMembershipId: 8 }]) expect(() => requireMatchingTicketDevice(handoff, mismatch)).toThrow();
+    expect(() => requireMatchingTicketDevice({ ...handoff, expires: 0 }, session)).toThrow();
+    expect(() => requireMatchingTicketDevice({ ...handoff, kind: "file-device-handoff" as never }, session)).toThrow();
+  });
+  it("rejects arbitrary destinations and invalid identifiers", () => {
+    for (const id of [0, -1, 1.5, Number.MAX_SAFE_INTEGER + 1, "42"]) expect(() => ticketDeviceHandoff(session, "grant", id, "photo")).toThrow();
+    for (const entry of ["../files", "photo&redirect=https://evil.invalid", undefined]) expect(() => ticketDeviceHandoff(session, "grant", 42, entry)).toThrow();
+  });
+});
 
 describe("file device handoff identity", () => {
   const session = { userId: 17, role: "vendor" as const, vendorId: 4, activeMembershipId: 7, sv: 2 };

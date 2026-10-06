@@ -39,3 +39,26 @@ export function requireMatchingMeetingDevice(handoff: MeetingDeviceHandoff, curr
   requireMatchingFileDevice({ ...handoff, kind: "file-device-handoff" }, current);
   return "/work-hub/meetings?meeting=" + encodeURIComponent(handoff.occurrenceId);
 }
+
+export const TICKET_ENTRY_KINDS = ["photo", "parts", "labor", "mileage"] as const;
+type TicketEntryKind = typeof TICKET_ENTRY_KINDS[number];
+export type TicketDeviceHandoff = Omit<FileDeviceHandoff, "kind"> & { kind: "ticket-device-handoff"; ticketId: number; entry: TicketEntryKind };
+
+export function ticketDeviceHandoff(session: SessionPayload, grantConsentHash: string, ticketId: unknown, entry: unknown): TicketDeviceHandoff {
+  if (typeof ticketId !== "number" || !Number.isSafeInteger(ticketId) || ticketId <= 0 || !TICKET_ENTRY_KINDS.includes(entry as TicketEntryKind)) throw new Error("A saved ticket and supported entry type are required");
+  return { ...fileDeviceHandoff(session, grantConsentHash), kind: "ticket-device-handoff", ticketId, entry: entry as TicketEntryKind };
+}
+
+export function requireMatchingTicketDevice(handoff: TicketDeviceHandoff, current: SessionPayload): string {
+  if (handoff.kind !== "ticket-device-handoff") throw new Error("A valid ticket handoff is required");
+  ticketDeviceHandoff(current, handoff.grantConsentHash, handoff.ticketId, handoff.entry);
+  requireMatchingFileDevice({ ...handoff, kind: "file-device-handoff" }, current);
+  return `/tickets/${handoff.ticketId}?askvEntry=${handoff.entry}`;
+}
+
+export const TICKET_DEVICE_TOOL = {
+  name: "v_open_ticket_entry",
+  description: "Open an account-bound device screen for photo, parts, labor, or mileage entry on a ticket this account can read. The device rechecks editing permissions and lifecycle. This link does not upload, save entries, start tracking, or grant microphone/camera access. Read back the saved ticket afterward before claiming completion.",
+  inputSchema: { type: "object" as const, properties: { ticketId: { type: "integer", minimum: 1 }, entry: { type: "string", enum: [...TICKET_ENTRY_KINDS] } }, required: ["ticketId", "entry"], additionalProperties: false },
+  annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+};

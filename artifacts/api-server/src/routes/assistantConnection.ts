@@ -17,6 +17,7 @@ import { CHATGPT_READ_CAPABILITIES } from "../assistant/chatgpt-read-capabilitie
 import { publicMapConfig } from "../lib/public-map-config";
 import { SPECIALISTS_TOOL, specialistDirectory } from "../assistant/chatgpt-specialists";
 import { fileDeviceHandoff, requireMatchingFileDevice, type FileDeviceHandoff, meetingDeviceHandoff, requireMatchingMeetingDevice, type MeetingDeviceHandoff } from "../assistant/chatgpt-device-handoff";
+import { ticketDeviceHandoff, requireMatchingTicketDevice, type TicketDeviceHandoff, TICKET_DEVICE_TOOL } from "../assistant/chatgpt-device-handoff";
 import { CHATGPT_WRITE_CAPABILITIES, validateChatGptActionInput, sanitizeChatGptActionInput, chatGptActionAuditInput, chatGptActionResult } from "../assistant/chatgpt-write-capabilities";
 
 import { RESUME_PLAN_TOOL, resumedWorkPlan, PREPARE_PLAN_TOOL, prepareWorkPlan, RUN_PLAN_READ_TOOL, plannedReadRequests, CONTROL_PLAN_TOOL, prepareWorkPlanControl } from "../assistant/chatgpt-coordinated-plan";
@@ -110,6 +111,26 @@ router.get("/device/meetings/:handoff", async (req, res) => {
     return res.redirect(302, destination);
   } catch {
     return page(res.status(403), '<p>This meeting link is expired, disconnected, or unavailable to this account and organization. Request a fresh link from V. No microphone, camera, or recording was started.</p>');
+  }
+});
+router.get("/device/tickets/:handoff", async (req, res) => {
+  try {
+    const handoff = readEnvelope(req.params.handoff) as unknown as TicketDeviceHandoff;
+    const session = getSessionFromRequest(req);
+    if (!session) return page(res, '<p>Sign into the same VNDRLY account used by ChatGPT in another tab, then refresh this page.</p><p><a href="/login" target="_blank" rel="noopener">Sign into VNDRLY</a></p>');
+    const current = await validateAssistantSession(session);
+    const destination = requireMatchingTicketDevice(handoff, current);
+    await withAssistantGrants(current.userId!, async (grants, database) => {
+      const grant = grants.find(item => !item.revoked && item.consentHash === handoff.grantConsentHash);
+      if (!grant) throw new AssistantOAuthError("access_denied");
+      requireMatchingTicketDevice(handoff, await validateAssistantSession(grant.session, database));
+      requireChatGptReadableTool(current, grant.scopes, "query_ticket_detail");
+    });
+    const result = JSON.parse(await runTool("query_ticket_detail", { ticketId: handoff.ticketId }, current, ""));
+    if (!result || result.ticketId !== handoff.ticketId || result.error || result.ok === false) throw new AssistantOAuthError("access_denied");
+    return res.redirect(302, destination);
+  } catch {
+    return page(res.status(403), '<p>This ticket link is expired, disconnected, or unavailable to this account and organization. Request a fresh link from V. No entry, upload, or tracking was started.</p>');
   }
 });
 router.get("/authorize", async (req, res) => {
@@ -215,6 +236,7 @@ router.post("/mcp", async (req, res) => {
   if (message.method === "tools/list") {
     const reads = chatGptReadableTools(authorized.session, authorized.scopes).map((tool) => ({ name: tool.name, description: chatGptReadToolDescription(tool), inputSchema: tool.inputSchema, annotations: chatGptReadToolAnnotations(tool.name) }));
     reads.push(SPECIALISTS_TOOL);
+    if (reads.some(tool => tool.name === "query_ticket_detail")) reads.push(TICKET_DEVICE_TOOL);
     if (reads.some(tool => tool.name === "list_work_hub_tasks")) reads.push(RESUME_PLAN_TOOL, RUN_PLAN_READ_TOOL);
     if (reads.some(tool => ["get_work_hub_briefing", "get_work_hub_calendar", "query_gate_stations", "lookup_user_progress", "query_tickets", "query_notifications", "query_field_trips", "query_asset_custody"].includes(tool.name))) reads.push(WORKSPACE_TOOL);
     const actions = chatGptActionTools(authorized.session, authorized.scopes);
@@ -228,6 +250,15 @@ router.post("/mcp", async (req, res) => {
     let name = message.params?.name;
     let args = message.params?.arguments ?? {};
     if (typeof name !== "string" || !args || typeof args !== "object" || Array.isArray(args)) throw new Error("Invalid tool request");
+    if (name === TICKET_DEVICE_TOOL.name) {
+      const tool = requireChatGptReadableTool(authorized.session, authorized.scopes, "query_ticket_detail");
+      if (!authorized.grantConsentHash || Object.keys(args).some(key => !["ticketId", "entry"].includes(key))) throw new AssistantOAuthError("invalid_request");
+      const handoff = ticketDeviceHandoff(authorized.session, authorized.grantConsentHash, args.ticketId, args.entry);
+      const result = JSON.parse(await runTool(tool.name, { ticketId: handoff.ticketId }, authorized.session, ""));
+      if (!result || result.ticketId !== handoff.ticketId || result.error || result.ok === false) throw new AssistantOAuthError("access_denied");
+      await writeAskVActionAudit({ session: authorized.session, clientSurface: "api", inputMode: "web_text", provider: "chatgpt_mcp", toolName: tool.name, targetType: "ticket", toolInput: { ticketId: handoff.ticketId }, resultStatus: "success" });
+      return reply({ content: [{ type: "text", text: JSON.stringify({ deviceUrl: ASSISTANT_ISSUER + "/device/tickets/" + envelope(handoff), ticketId: handoff.ticketId, entry: handoff.entry, entrySaved: false, deviceCaptureStarted: false, message: "Complete the requested entry on this device screen. Its editing permissions remain authoritative. Read back the saved ticket before claiming completion." }) }], isError: false });
+    }
     if (name === "v_resume_work_plan" || name === "v_run_work_plan_read") {
       if (Object.keys(args).some(key => !(name === "v_run_work_plan_read" ? ["taskId", "stepId", "toolArguments"] : ["taskId"]).includes(key)) || typeof args.taskId !== "string") throw new Error("Invalid plan request");
       requireChatGptReadableTool(authorized.session, authorized.scopes, "list_work_hub_tasks");
@@ -527,4 +558,3 @@ function oauthError(res: Response, error: unknown) {
   return res.status(error instanceof AssistantOAuthError ? 400 : 503).json({ error: error instanceof AssistantOAuthError ? error.code : "temporarily_unavailable" });
 }
 export default router;
-
