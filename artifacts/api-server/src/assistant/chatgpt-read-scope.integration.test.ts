@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import express from "express";
 import cookieParser from "cookie-parser";
 import request from "supertest";
-import { db, vendorsTable, partnersTable, siteLocationsTable, workTypesTable, ticketsTable, vendorPeopleTable, usersTable, safetyEventsTable, safetyIncidentResponsesTable, workHubShiftsTable, workHubShiftAssignmentsTable, workforceCoverageRecordsTable, assetsTable } from "@workspace/db";
+import { db, vendorsTable, partnersTable, siteLocationsTable, workTypesTable, ticketsTable, vendorPeopleTable, usersTable, safetyEventsTable, safetyIncidentResponsesTable, workHubShiftsTable, workHubShiftAssignmentsTable, workforceCoverageRecordsTable, assetsTable, partnerVendorRelationshipsTable, siteWorkAssignmentsTable } from "@workspace/db";
 import safetyRouter from "../routes/implementationASafety";
 import safetyReportsRouter from "../routes/safety";
 import workforceRouter from "../routes/implementationAWorkforce";
@@ -43,6 +43,29 @@ describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")("assistant re
     expectStatus(await request(app).post(`/tickets/${ticket.id}/approve`).set("Cookie", cookie).send({}), 200);
     const [replayed] = await db.select().from(ticketsTable).where(eq(ticketsTable.id, ticket.id));
     expect(replayed.approvedAt).toEqual(approved.approvedAt);
+  });
+  it("preserves managed site grants while allowing a resolved legacy worker to report on a stopped assigned site", async () => {
+    assertFreshLocalTestDatabaseEnvironment(process.env);
+    const suffix = randomUUID();
+    const [vendor] = await db.insert(vendorsTable).values({ name: `report-vendor-${suffix}`, contactName: "Synthetic", contactEmail: `v-${suffix}@example.invalid` }).returning();
+    const [partner] = await db.insert(partnersTable).values({ name: `report-partner-${suffix}`, contactName: "Synthetic", contactEmail: `p-${suffix}@example.invalid` }).returning();
+    const [user] = await db.insert(usersTable).values({ username: `reporter-${suffix}`, passwordHash: "unused-isolated-fixture", displayName: "Synthetic reporter", role: "field_employee" }).returning();
+    const [worker] = await db.insert(vendorPeopleTable).values({ vendorId: vendor.id, userId: user.id, firstName: "Synthetic", lastName: "Reporter", email: `w-${suffix}@example.invalid` }).returning();
+    const [site] = await db.insert(siteLocationsTable).values({ partnerId: partner.id, name: "Stopped synthetic site", address: "Synthetic", latitude: 0, longitude: 0, siteCode: `SR-${suffix}`, isActive: false, status: "inactive" }).returning();
+    const [workType] = await db.insert(workTypesTable).values({ name: `Reporting ${suffix}`, category: "service" }).returning();
+    await db.insert(partnerVendorRelationshipsTable).values({ partnerId: partner.id, vendorId: vendor.id, status: "approved" });
+    await db.insert(siteWorkAssignmentsTable).values({ siteLocationId: site.id, vendorId: vendor.id, workTypeId: workType.id });
+    await db.insert(ticketsTable).values({ vendorId: vendor.id, siteLocationId: site.id, workTypeId: workType.id, fieldEmployeeId: worker.id, status: "in_progress", lifecycleState: "on_site" });
+    const app = express().use(express.json()).use(cookieParser()).use(safetyReportsRouter);
+    const reporter = { userId: user.id, role: "field_employee", vendorId: vendor.id };
+    const input = { siteLocationId: site.id, title: "Synthetic follow-up", eventType: "observation" };
+    await request(app).post("/safety/events").set("Cookie", buildTestCookie({ ...reporter, vendorPeopleId: worker.id, managedSubcontractor: { siteGrants: [] } })).send({ ...input, isStopWork: true }).expect(403);
+    const [unassignedTicket] = await db.insert(ticketsTable).values({ vendorId: vendor.id, siteLocationId: site.id, workTypeId: workType.id, status: "initiated" }).returning();
+    const deniedTicket = await request(app).post("/safety/events").set("Cookie", buildTestCookie({ ...reporter, vendorPeopleId: worker.id })).send({ ...input, ticketId: unassignedTicket.id }).expect(403);
+    expect(deniedTicket.body.code).toBe("safety.forbidden_ticket");
+    await request(app).post("/safety/events").set("Cookie", buildTestCookie(reporter)).send(input).expect(201);
+    await db.update(siteLocationsTable).set({ hidden: true }).where(eq(siteLocationsTable.id, site.id));
+    await request(app).post("/safety/events").set("Cookie", buildTestCookie(reporter)).send(input).expect(403);
   });
   it("preserves simultaneous approved onboarding field updates", async () => {
     assertFreshLocalTestDatabaseEnvironment(process.env);
