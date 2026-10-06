@@ -1,4 +1,5 @@
 import type { Anthropic } from "@workspace/integrations-anthropic-ai/sdk";
+import { WORK_HUB_CONTEXT_KINDS } from "@workspace/api-zod";
 
 export const WORK_HUB_TOOL_FAMILIES = [
   "command",
@@ -42,7 +43,7 @@ const context = {
   properties: {
     kind: {
       type: "string",
-      enum: ["organization", "ticket", "site", "crew", "gate", "project", "channel", "meeting"],
+      enum: [...WORK_HUB_CONTEXT_KINDS],
     },
     id: { anyOf: [{ type: "number" }, { type: "string" }] },
   },

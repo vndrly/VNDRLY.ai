@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ASK_V_TOOL_REGISTRY } from "./tool-registry";
 import { toolsForRealtime, workHubToolFamilyForPath } from "./tool-packs";
+import { workHubContextRefSchema } from "@workspace/api-zod";
 
 const namesFor = (
   path: string,
@@ -10,6 +11,17 @@ const namesFor = (
   toolsForRealtime({ role, membershipRole, path }).map((tool) => tool.name);
 
 describe("Work Hub AskV web/iOS parity", () => {
+  it("advertises only executable canonical command contexts, including chat", () => {
+    for (const entry of ASK_V_TOOL_REGISTRY) {
+      const context = (entry.inputSchema.properties as Record<string, any> | undefined)?.context;
+      if (!context?.properties?.kind?.enum) continue;
+      const kinds: string[] = context.properties.kind.enum;
+      expect(kinds, entry.name).toContain("chat");
+      for (const kind of kinds) {
+        expect(workHubContextRefSchema.safeParse({ kind, id: "synthetic-demo" }).success, `${entry.name}: ${kind}`).toBe(true);
+      }
+    }
+  });
   it("does not advertise operations that lack a safe executable Work Hub route", () => {
     const actions = (name: string) => {
       const tool = ASK_V_TOOL_REGISTRY.find((entry) => entry.name === name);
