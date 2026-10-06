@@ -2336,6 +2336,7 @@ router.post("/tickets/:id/approve", async (req, res): Promise<void> => {
   // any work happened. `approved` is allowed for idempotency. The existing
   // CAS below makes a no-op idempotent.
   const APPROVABLE_STATUSES: ReadonlySet<string> = new Set([
+    "submitted",
     "pending_review",
     "completed",
     "approved",

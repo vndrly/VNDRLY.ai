@@ -947,3 +947,15 @@ describe("POST /tickets/:id/kickback — pre-status guard", () => {
     expect(r.body.code).toBe("ticket.not_kickbackable");
   });
 });
+
+describe("submitted ticket approval state", () => {
+  it("lets the owning partner pass the state guard after submission", async () => {
+    ticketRow = makeTicketRow({ id: 42, ticketId: 42, partnerId: 5, vendorId: 11, status: "submitted" });
+    const response = await request(app).post("/api/tickets/42/approve").set("Cookie", cookieFor({ userId: 1, role: "partner", partnerId: 5 })).send({});
+    // The empty update fixture stops at the existing idempotent readback.
+    // This regression only proves submitted is eligible; it does not prove a full lifecycle.
+    expectStatus(response, 200);
+    expect(response.body.code).not.toBe("ticket.not_approvable");
+    expect(response.body.error).not.toBe("ticket_not_approvable");
+  });
+});

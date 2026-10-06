@@ -8,12 +8,37 @@ import { db, vendorsTable, partnersTable, siteLocationsTable, workTypesTable, ti
 import safetyRouter from "../routes/implementationASafety";
 import workforceRouter from "../routes/implementationAWorkforce";
 import tripsRouter from "../routes/implementationATrips";
+import ticketsRouter from "../routes/tickets";
+import { attachTestErrorMiddleware, expectStatus } from "../test-utils/route-app";
 import { buildTestCookie } from "../test-utils/session";
 import { assertFreshLocalTestDatabaseEnvironment } from "../../../../scripts/fresh-test-database.mjs";
 import { runOpsDataTool } from "./data-tools-ops";
 import { runTool } from "../routes/assistant";
 
 describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")("assistant read authorization against isolated records", () => {
+  it("persists submitted-ticket approval only for the owning partner and preserves its timestamp on replay", async () => {
+    assertFreshLocalTestDatabaseEnvironment(process.env);
+    const suffix = randomUUID();
+    const [vendor] = await db.insert(vendorsTable).values({ name: `approval-vendor-${suffix}`, contactName: "Synthetic", contactEmail: `v-${suffix}@example.invalid` }).returning();
+    const partners = await db.insert(partnersTable).values([1, 2].map(n => ({ name: `approval-partner-${n}-${suffix}`, contactName: "Synthetic", contactEmail: `p${n}-${suffix}@example.invalid` }))).returning();
+    const [user] = await db.insert(usersTable).values({ username: `approval-${suffix}`, passwordHash: "unused-isolated-fixture", displayName: "Synthetic approver", role: "partner" }).returning();
+    const [site] = await db.insert(siteLocationsTable).values({ partnerId: partners[0].id, name: "Synthetic approval site", address: "Synthetic", latitude: 0, longitude: 0, siteCode: `AP-${suffix}` }).returning();
+    const [workType] = await db.insert(workTypesTable).values({ name: `Approval fixture ${suffix}`, category: "service" }).returning();
+    const [ticket] = await db.insert(ticketsTable).values({ vendorId: vendor.id, siteLocationId: site.id, workTypeId: workType.id, status: "submitted", lifecycleState: "off_site" }).returning();
+    const app = express().use(express.json()).use(cookieParser()).use(ticketsRouter);
+    attachTestErrorMiddleware(app);
+    await request(app).post(`/tickets/${ticket.id}/approve`).set("Cookie", buildTestCookie({ userId: user.id, role: "partner", partnerId: partners[1].id })).send({}).expect(403);
+    const [unchanged] = await db.select().from(ticketsTable).where(eq(ticketsTable.id, ticket.id));
+    expect(unchanged.status).toBe("submitted");
+    const cookie = buildTestCookie({ userId: user.id, role: "partner", partnerId: partners[0].id });
+    expectStatus(await request(app).post(`/tickets/${ticket.id}/approve`).set("Cookie", cookie).send({}), 200);
+    const [approved] = await db.select().from(ticketsTable).where(eq(ticketsTable.id, ticket.id));
+    expect(approved).toMatchObject({ status: "approved", lifecycleState: "off_site" });
+    expect(approved.approvedAt).not.toBeNull();
+    expectStatus(await request(app).post(`/tickets/${ticket.id}/approve`).set("Cookie", cookie).send({}), 200);
+    const [replayed] = await db.select().from(ticketsTable).where(eq(ticketsTable.id, ticket.id));
+    expect(replayed.approvedAt).toEqual(approved.approvedAt);
+  });
   it("preserves simultaneous approved onboarding field updates", async () => {
     assertFreshLocalTestDatabaseEnvironment(process.env);
     const suffix = randomUUID();
