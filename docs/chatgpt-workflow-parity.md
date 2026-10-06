@@ -17,6 +17,25 @@ This candidate is not a declaration of complete web/iOS or Ask V parity. The pub
 
 ## Completion still required
 
+### Coordinated workday recovery requirement
+
+V must turn a single multi-domain instruction into a shared, durable plan, rather than independent chats that lose dependencies. The user's unexpected-absence example is a required acceptance scenario. Specialist names select accountable toolsets; adding a specialist must not create permissions or imply a background worker already exists.
+
+| Workstream | Responsible specialist | Required outcome and evidence |
+| --- | --- | --- |
+| Invoicing | Finn | Determine the last actually issued invoice within the selected company/customer scope. If older than 15 days, prepare eligible uninvoiced work and an itemized draft, flagging missing rates, approvals or billing rules. No invoice issuance or payment approval follows from a request to prepare. |
+| Incoming communications | Work Hub communications specialist | Apply an authorized temporary availability message through supported channels, deduplicate replies and stop it on return or expiry. Do not disclose a doctor's appointment unless explicitly requested. Unsupported inbox monitoring must be reported. |
+| Calendar recovery | Work Hub scheduling specialist | Resolve today/tomorrow and close of business using the user's timezone and company hours; identify movable commitments, travel and dependencies; propose or perform authorized moves and contact affected people. Track proposed, sent, accepted, declined and unanswered separately. A sent message is not agreement. |
+| Payment review | Finn and field operations | Assemble tickets actually awaiting the user's review, with amounts, evidence and exceptions. Preserve individual ticket decisions in the return briefing for batch approve/disapprove; do not approve automatically. |
+| Gate coverage | Gate and scheduling specialists | Find uncovered intervals at authorized contracted sites. Produce reachable, qualified candidates with availability and compliance evidence. Do not invent phone numbers, assign unavailable people or claim a candidate accepted. |
+| Long-held equipment | Ivy | List equipment checked out longer than 90 days, current holder, checkout date, custody history, due date and condition. Separate unknown dates and unresolved custody rather than estimating them. |
+| Available work | Field operations | Match current Hotlist jobs against the vendor's actual service catalog, approved relationships, capacity, geography and compliance. Return eligible opportunities and reasons; a match is not a bid or awarded job. |
+| Verification and return briefing | V with Audrey | Read saved results after each change, preserve failures and pending responses, and put payment decisions first when the user returns. Include a recovery schedule through close of business tomorrow, with actual completion versus outstanding work. |
+
+The plan needs operation identifiers, record references, assigned toolsets, prerequisites, deadlines, retry protection, checkpoints and cancellation. Independent reads can proceed together; dependent writes wait for their prerequisites. Scope and role checks remain authoritative on every action. Permission revocation, account/company switches and partial failures must not cause cross-company work or repeat a completed change. Cost limits and missing providers must be visible before starting paid/background work.
+
+Acceptance requires executing this scenario with synthetic records across invoicing, communications, calendar, ticket review, Gate coverage, equipment and Hotlist, including a failed scheduling response, a retry, a revoked permission and a resumed plan. Existing specialist directory and individual tools do not establish that durable orchestration, unattended communication monitoring or a return trigger is implemented. Those remain explicit implementation and verification gaps.
+
 1. Live verification of the new component-mediated action panel. The candidate binds authorization to the current connection and saved action, rechecks permissions at submission, and reuses durable results. Location-dependent actions still use the secure device authorization page.
 2. End-to-end synthetic persona and company/site assignment checks for Gate, tickets, Work Hub and inventory. Base role descriptors alone do not prove gatekeeper, foreman or fleet-manager entitlement.
 3. Live verification of the separately consented payment-record transition and evidence-upload workflows, with canonical finance permissions and actual result checks.
@@ -33,4 +52,15 @@ Candidate API typecheck and focused authorization, workspace, runtime and connec
 ### Ticket corrections follow-up
 
 The follow-up adds platform-administrator-only `manage_ticket_record` action `unlock` for submitted/approved corrections, requiring a trimmed reason of 1 to 500 characters. It cannot substitute for cancelled-ticket reactivation or change the requested target status. `reverse_ticket_payment_record` uses the canonical AP reversal endpoint and the separately consented `finance:write` family. It restores the accounting record to `approved` and retains domain audit history; it never refunds or cancels a real payment. Both adapters forward only the exact ticket and reason, require saved-action authorization, and leave current status and Accounts Payable checks to the canonical endpoint. Focused adapter/scope tests pass; this follow-up still requires full validation and deployment.
+
+
+## Asset recovery expansion requirement (not implemented)
+
+Inventory/Fleet should support authorized lost/stolen reports, original ownership evidence, exact normalized VIN/serial/manufacturer identifiers, and a recovery case with disputed, resolved and withdrawn states. Asset names alone must never trigger a theft match. Reporting an item stolen is an allegation, not proof of ownership or wrongdoing.
+
+A registration matching an active stolen report should retain the attempted registration as pending verification, preserve existing ownership and custody, and privately notify authorized recovery staff and the reporting owner. Do not falsely confirm ownership or disclose another company's records. Allow mediated contact and release direct contact details only under an authorized disclosure rule. Preserve evidence, match confidence, notification acknowledgements and an audit trail; support false-positive appeals and legitimate transfers.
+
+Tracker providers must use an extensible adapter with explicit account authorization, asset binding, last observation time, source and accuracy. Show location, distance or routing only from verified authorized observations, clearly labeling stale or unavailable data. Apple Find My sharing is not evidence that VNDRLY has a supported location API. Concealed installation on owned equipment does not guarantee concealment from a finder: AirTag and compatible devices provide unwanted-tracking alerts. Do not disable those protections. Fleet cellular/GPS providers require a separate verified integration and cost assessment.
+
+Acceptance: synthetic exact match across two isolated companies creates one private recovery case on retry, never transfers ownership, never leaks the owner's identity to an unverified registrant, refuses unauthorized location access, and handles a withdrawn report and a verified sale without a permanent theft flag. This requirement does not claim a deployed registry, tracker connection or recovery workflow.
 

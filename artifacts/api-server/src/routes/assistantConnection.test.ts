@@ -479,4 +479,19 @@ it('executes a saved plan read step without claiming a saved checkpoint',async()
  expect(response.body.result.structuredContent).toMatchObject({stepId:'brief',executionStarted:true,checkpointSaved:false,results:[{toolName:'get_work_hub_briefing',result:{tasks:[],events:[]}}]});
  expect(grants[0].actions??[]).toHaveLength(0);
 });
+it.each(['exception', 'ok false'])('preserves successful planned reads when another lookup returns %s', async (failure) => {
+ const {createCoordinatedPlan,encodePlanDescription}=await import('../assistant/coordinated-plan');
+ const taskId='11111111-1111-4111-8111-111111111111';
+ const plan=createCoordinatedPlan({userId:17,organizationKey:'vendor:4'},[{id:'brief',specialist:'V',toolNames:['get_work_hub_briefing','list_work_hub_tasks'],dependsOn:[]}]);
+ const credentials=await tokens('work_hub:read');
+ mocks.run.mockResolvedValueOnce(JSON.stringify([{id:taskId,ownerOrgType:'vendor',ownerOrgId:4,version:1,description:encodePlanDescription(plan)}])).mockResolvedValueOnce(JSON.stringify({tasks:[],events:[]}));
+ if(failure==='exception') mocks.run.mockRejectedValueOnce(new Error('private-provider-detail'));
+ else mocks.run.mockResolvedValueOnce(JSON.stringify({ok:false,message:'Unavailable'}));
+ const response=await request(app).post(base+'/mcp').set('Authorization','Bearer '+credentials.access_token).send({jsonrpc:'2.0',id:1,method:'tools/call',params:{name:'v_run_work_plan_read',arguments:{taskId,stepId:'brief',toolArguments:{get_work_hub_briefing:{},list_work_hub_tasks:{}}}}});
+ const output=response.body.result.structuredContent;
+ expect(output).toMatchObject({executionStarted:true,checkpointSaved:false,results:[{toolName:'get_work_hub_briefing',result:{tasks:[],events:[]}},{toolName:'list_work_hub_tasks',result:{ok:false}}]});
+ expect(JSON.stringify(response.body)).not.toContain('private-provider-detail');
+ expect(mocks.audit).toHaveBeenLastCalledWith(expect.objectContaining({toolName:'list_work_hub_tasks',resultStatus:'failure'}));
+ expect(grants[0].actions??[]).toHaveLength(0);
+});
 

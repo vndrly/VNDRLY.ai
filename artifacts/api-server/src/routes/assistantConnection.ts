@@ -244,8 +244,15 @@ router.post("/mcp", async (req, res) => {
         const results = [];
         for (const request of requests) {
           const tool = requireChatGptReadableTool(session, authorized.scopes, request.name);
-          const result = chatGptReadToolOutput(tool.name, JSON.parse(await runTool(tool.name, request.arguments, session, "")));
-          await writeAskVActionAudit({ session, clientSurface: "api", inputMode: "web_text", provider: "chatgpt_mcp", toolName: tool.name, targetType: tool.auditTarget, toolInput: request.arguments, toolOutput: result, resultStatus: (result as { error?: unknown })?.error ? "failure" : "success" });
+          let result: unknown;
+          try {
+            result = chatGptReadToolOutput(tool.name, JSON.parse(await runTool(tool.name, request.arguments, session, "")));
+          } catch {
+            // Preserve earlier reads without exposing internal/provider exception details.
+            result = { ok: false, error: "This planned lookup failed. Its result is unavailable; retry this lookup before treating the step as complete." };
+          }
+          const failed = !!(result as { error?: unknown })?.error || (result as { ok?: boolean })?.ok === false;
+          await writeAskVActionAudit({ session, clientSurface: "api", inputMode: "web_text", provider: "chatgpt_mcp", toolName: tool.name, targetType: tool.auditTarget, toolInput: request.arguments, toolOutput: result, resultStatus: failed ? "failure" : "success" });
           results.push({ toolName: tool.name, result });
         }
         const executed = { taskId: output.taskId, stepId: args.stepId, results, executionStarted: true, checkpointSaved: false };
