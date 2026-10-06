@@ -30,10 +30,22 @@ describe("assistant OAuth security", () => {
     const first = exchangeAssistantCode(grant, exchange(code), 2000);
     const args = { client_id: CHATGPT_CLIENT_ID, resource: ASSISTANT_RESOURCE, refresh_token: first.refresh_token };
     const next = refreshAssistantTokens(grant, args, 3000);
-    expect(assistantAccessMatches(grant, first.access_token, 3000)).toBe(false);
+    expect(assistantAccessMatches(grant, first.access_token, 3000)).toBe(true);
     expect(assistantAccessMatches(grant, next.access_token, 3000)).toBe(true);
     expect(() => refreshAssistantTokens(grant, args, 4000)).toThrow();
     expect(assistantAccessMatches(grant, next.access_token, 4000)).toBe(false);
+    expect(assistantAccessMatches(grant, first.access_token, 4000)).toBe(false);
+  });
+  it("keeps overlapping access tokens only until their original expiry", () => {
+    const { code, grant } = fresh();
+    const first = exchangeAssistantCode(grant, exchange(code), 2000);
+    const next = refreshAssistantTokens(grant, { client_id: CHATGPT_CLIENT_ID, resource: ASSISTANT_RESOURCE, refresh_token: first.refresh_token }, 3000);
+    expect(assistantAccessMatches(grant, first.access_token, 601999)).toBe(true);
+    expect(assistantAccessMatches(grant, first.access_token, 602000)).toBe(false);
+    expect(assistantAccessMatches(grant, next.access_token, 602000)).toBe(true);
+    const last = refreshAssistantTokens(grant, { client_id: CHATGPT_CLIENT_ID, resource: ASSISTANT_RESOURCE, refresh_token: next.refresh_token }, 602000);
+    expect(grant.previousAccessTokens).toHaveLength(1);
+    expect(assistantAccessMatches(grant, last.access_token, 602000)).toBe(true);
   });
   it("rejects an expanded refresh scope and malformed opaque tokens", () => {
     const { code, grant } = fresh();

@@ -3,7 +3,7 @@ import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { SESSION_SECRET, getSessionFromRequest } from "../lib/session";
 import { createRateLimiter } from "../lib/rate-limit-factory";
 import { validateAssistantSession, withAssistantGrants } from "../assistant/chatgpt-grant-store";
-import { ASSISTANT_ISSUER, ASSISTANT_RESOURCE, ASSISTANT_SCOPES, CHATGPT_CLIENT_ID, AssistantOAuthError, validateAssistantAuthorization, issueAssistantCode, exchangeAssistantCode, refreshAssistantTokens, assistantAccessMatches, assistantTokenHash, assistantTokenUserId } from "../assistant/chatgpt-oauth";
+import { ASSISTANT_ISSUER, ASSISTANT_RESOURCE, ASSISTANT_SCOPES, CHATGPT_CLIENT_ID, AssistantOAuthError, validateAssistantAuthorization, issueAssistantCode, exchangeAssistantCode, refreshAssistantTokens, assistantAccessMatches, assistantAccessHashMatches, assistantTokenHash, assistantTokenUserId } from "../assistant/chatgpt-oauth";
 import { chatGptActionTools, chatGptReadableTools, requireChatGptReadableTool, chatGptReadToolDescription, chatGptReadToolOutput } from "../assistant/chatgpt-tool-access";
 import { WORKSPACE_HTML, WORKSPACE_URI, WORKSPACE_TOOL, workspaceRequest, workspaceOutput } from "../assistant/chatgpt-workspace";
 import { askvPendingConfirmations, organizationKeyFromSession, runBoundTypedAskVTool } from "../assistant/askv-pending-confirmation";
@@ -130,7 +130,7 @@ router.post("/revoke", async (req, res) => {
     const userId = assistantTokenUserId(req.body.token);
     if (userId) await withAssistantGrants(userId, async (grants) => {
       const hash = assistantTokenHash(req.body.token);
-      const grant = grants.find((item) => item.accessHash === hash || item.refreshHash === hash || item.previousRefreshHashes.includes(hash));
+      const grant = grants.find((item) => item.accessHash === hash || item.previousAccessTokens?.some(token => token.hash === hash) || item.refreshHash === hash || item.previousRefreshHashes.includes(hash));
       if (grant) grant.revoked = true;
     });
     return res.status(200).end();
@@ -144,7 +144,7 @@ async function authenticate(req: Request) {
     const grant = grants.find((item) => assistantAccessMatches(item, raw));
     if (!grant) throw new AssistantOAuthError("invalid_token");
     const session = await validateAssistantSession(grant.session, database);
-    return { session, scopes: grant.scopes, grantAccessHash: grant.accessHash };
+    return { session, scopes: grant.scopes, grantAccessHash: assistantTokenHash(raw) };
   });
 }
 router.post("/mcp", async (req, res) => {
@@ -201,7 +201,7 @@ router.post("/mcp", async (req, res) => {
     if (name === "v_action_status") {
       if (assistantTokenUserId(args.reference) !== authorized.session.userId) throw new Error("Action unavailable");
       const status = await withAssistantGrants(authorized.session.userId!, async (grants, database) => {
-        const grant = grants.find((item) => !item.revoked && item.accessHash === authorized.grantAccessHash);
+        const grant = grants.find((item) => assistantAccessHashMatches(item, authorized.grantAccessHash));
         if (!grant) throw new Error("Action unavailable");
         const owner = grants.find((item) => organizationKeyFromSession(item.session) === organizationKeyFromSession(grant.session) && item.actions?.some((action) => action.tokenHash === assistantTokenHash(args.reference)));
         const action = owner?.actions?.find((item) => item.tokenHash === assistantTokenHash(args.reference));
@@ -222,7 +222,7 @@ router.post("/mcp", async (req, res) => {
       const actionToken = `${authorized.session.userId}.${randomBytes(32).toString("base64url")}`;
       const fingerprint = mutationIdempotencyKey(authorized.session.userId!, tool.name, input);
       const prepared = await withAssistantGrants(authorized.session.userId!, async (grants) => {
-        const grant = grants.find((item) => !item.revoked && item.accessHash === authorized.grantAccessHash);
+        const grant = grants.find((item) => assistantAccessHashMatches(item, authorized.grantAccessHash));
         if (!grant) throw new AssistantOAuthError("access_denied");
         grant.actions = (grant.actions ?? []).filter((action) => unresolved(action) || action.expiresAt > Date.now());
         const prior = grants.filter((item) => organizationKeyFromSession(item.session) === organizationKeyFromSession(grant.session)).flatMap((item) => (item.actions ?? []).filter((action) => !item.revoked || unresolved(action))).find((action) => action.fingerprint === fingerprint && (unresolved(action) || action.createdAt > Date.now() - 300_000) && action.reference);

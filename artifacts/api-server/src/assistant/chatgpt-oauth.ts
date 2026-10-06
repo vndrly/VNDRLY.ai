@@ -20,6 +20,7 @@ export type AssistantAuthorization = {
 export type AssistantOAuthGrant = AssistantAuthorization & {
   session: SessionPayload; codeHash?: string; codeExpiresAt: number;
   accessHash?: string; accessExpiresAt?: number;
+  previousAccessTokens?: { hash: string; expiresAt: number }[];
   refreshHash?: string; previousRefreshHashes: string[]; refreshExpiresAt?: number;
   revoked: boolean;
   consentHash?: string;
@@ -66,6 +67,14 @@ export function issueAssistantCode(authorization: AssistantAuthorization, sessio
   return { code, grant };
 }
 function issueTokens(grant: AssistantOAuthGrant, now: number) {
+  // Refresh can overlap resource requests still using an unexpired access token.
+  // Keep its original expiry; grant revocation still invalidates every token.
+  const previous = (grant.previousAccessTokens ?? []).filter(item => item.expiresAt > now);
+  if (grant.accessHash && grant.accessExpiresAt && grant.accessExpiresAt > now) {
+    previous.push({ hash: grant.accessHash, expiresAt: grant.accessExpiresAt });
+  }
+  if (previous.length > 128) { grant.revoked = true; throw new AssistantOAuthError("invalid_grant"); }
+  grant.previousAccessTokens = previous;
   const access = token(grant.session.userId!);
   const refresh = token(grant.session.userId!);
   grant.accessHash = assistantTokenHash(access); grant.accessExpiresAt = now + ACCESS_MS;
@@ -91,5 +100,9 @@ export function refreshAssistantTokens(grant: AssistantOAuthGrant, input: Record
   return issueTokens(grant, now);
 }
 export function assistantAccessMatches(grant: AssistantOAuthGrant, access: string, now = Date.now()): boolean {
-  return !grant.revoked && Boolean(grant.accessHash && grant.accessExpiresAt && grant.accessExpiresAt > now && same(assistantTokenHash(access), grant.accessHash));
+  return assistantAccessHashMatches(grant, assistantTokenHash(access), now);
+}
+export function assistantAccessHashMatches(grant: AssistantOAuthGrant, hash: string, now = Date.now()): boolean {
+  return !grant.revoked && (Boolean(grant.accessHash && grant.accessExpiresAt && grant.accessExpiresAt > now && same(hash, grant.accessHash)) ||
+    Boolean(grant.previousAccessTokens?.some(item => item.expiresAt > now && same(hash, item.hash))));
 }
