@@ -42,7 +42,8 @@ describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")("assistant re
     for (const session of [{ userId: actor.id, role: "partner", partnerId: owners[1].id }, { userId: actor.id, role: "vendor", vendorId: vendor.id }]) {
       expectStatus(await request(app).patch(endpoint).set("Cookie", buildTestCookie(session)).send({ isGateContractor: true }), 403);
     }
-    const cookie = buildTestCookie({ userId: actor.id, role: "partner", partnerId: owners[0].id });
+    const [ownerMembership] = await db.insert(userOrgMembershipsTable).values({ userId: actor.id, orgType: "partner", partnerId: owners[0].id, role: "admin" }).returning();
+    const cookie = buildTestCookie({ userId: actor.id, role: "partner", partnerId: owners[0].id, membershipRole: "admin", activeMembershipId: ownerMembership.id, sv: actor.sessionVersion });
     expectStatus(await request(app).patch(endpoint).set("Cookie", cookie).send({ isGateContractor: true }), 200);
     expectStatus(await request(app).patch(endpoint).set("Cookie", cookie).send({ isGateContractor: true }), 200);
     const [saved] = await db.select().from(siteWorkAssignmentsTable).where(eq(siteWorkAssignmentsTable.id, assignment.id));
