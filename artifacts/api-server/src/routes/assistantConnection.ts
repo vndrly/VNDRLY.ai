@@ -206,7 +206,14 @@ router.post("/mcp", async (req, res) => {
     if (typeof name !== "string" || !args || typeof args !== "object" || Array.isArray(args)) throw new Error("Invalid tool request");
     if (name === "v_list_specialists") {
       if (Object.keys(args).length) throw new Error("Specialist directory takes no arguments");
-      const result = specialistDirectory(chatGptReadableTools(authorized.session, authorized.scopes), chatGptActionTools(authorized.session, authorized.scopes));
+      const reads = chatGptReadableTools(authorized.session, authorized.scopes);
+      let hasGateSites = false;
+      if (reads.some(tool => tool.name === "query_gate_stations")) {
+        const gates = JSON.parse(await runTool("query_gate_stations", {}, authorized.session, ""));
+        hasGateSites = !gates.error && Array.isArray(gates.sites) && gates.sites.length > 0;
+        await writeAskVActionAudit({ session: authorized.session, clientSurface: "api", inputMode: "web_text", provider: "chatgpt_mcp", toolName: "query_gate_stations", targetType: "site", toolInput: {}, toolOutput: gates, resultStatus: gates.error ? "failure" : "success" });
+      }
+      const result = specialistDirectory(reads, chatGptActionTools(authorized.session, authorized.scopes), { hasGateSites });
       return reply({ content: [{ type: "text", text: JSON.stringify(result) }], structuredContent: result });
     }
     if (name === "v_submit_panel_action") {

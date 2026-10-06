@@ -264,6 +264,16 @@ describe("ChatGPT account connection boundary", () => {
     expect(mocks.run).toHaveBeenCalledWith("query_gate_stations", {}, expect.objectContaining({ userId: 17, vendorId: 4 }), "");
     expect(mocks.audit).toHaveBeenCalledWith(expect.objectContaining({ provider: "chatgpt_mcp", resultStatus: "success" }));
   });
+  it("derives Gate specialist visibility from current site authorization, not merely a grant", async () => {
+    const credentials = await tokens();
+    const directory = () => request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 4, method: "tools/call", params: { name: "v_list_specialists", arguments: {} } });
+    mocks.run.mockResolvedValueOnce(JSON.stringify({ sites: [] }));
+    expect((await directory()).body.result.structuredContent.specialists.some((item: { id: string }) => item.id === "gate")).toBe(false);
+    mocks.run.mockResolvedValueOnce(JSON.stringify({ sites: [{ id: 3 }] }));
+    expect((await directory()).body.result.structuredContent.specialists.some((item: { id: string }) => item.id === "gate")).toBe(true);
+    mocks.run.mockResolvedValueOnce(JSON.stringify({ error: "Access unavailable", sites: [{ id: 3 }] }));
+    expect((await directory()).body.result.structuredContent.specialists.some((item: { id: string }) => item.id === "gate")).toBe(false);
+  });
   it("blocks writes, arbitrary tools and cross-origin MCP requests", async () => {
     const credentials = await tokens();
     for (const name of ["confirm_visitor_check_out", "arbitrary_sql"]) {

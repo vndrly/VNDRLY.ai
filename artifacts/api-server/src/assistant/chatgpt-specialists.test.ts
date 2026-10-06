@@ -3,6 +3,12 @@ import { specialistDirectory } from "./chatgpt-specialists";
 import { CHATGPT_READ_CAPABILITIES } from "./chatgpt-read-capabilities";
 
 describe("connected specialist directory", () => {
+  it("hides gate tools without a current authorized site while retaining other work", () => {
+    const result = specialistDirectory([{ name: "query_gate_stations" }, { name: "query_active_visitors" }, { name: "query_asset_custody" }], [{ name: "manage_gate_shift" }], { hasGateSites: false });
+    expect(result.specialists.map(item => item.id)).toEqual(["inventory"]);
+    expect(result.coordinatorTools).toEqual([]);
+    expect(specialistDirectory([{ name: "query_gate_stations" }], [], { hasGateSites: true }).specialists[0].id).toBe("gate");
+  });
   it("hides domains with no authorized tools and never manufactures actions", () => {
     const result = specialistDirectory([{ name: "query_asset_custody" }], []);
     expect(result.specialists.map(item => item.id)).toEqual(["inventory"]);

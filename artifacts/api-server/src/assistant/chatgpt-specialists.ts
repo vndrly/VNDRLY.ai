@@ -27,7 +27,13 @@ export const SPECIALISTS_TOOL = {
 };
 
 /** Only describe tools already filtered by the connection's current grants and role. */
-export function specialistDirectory(reads: readonly AvailableTool[], actions: readonly AvailableTool[]) {
+export function specialistDirectory(reads: readonly AvailableTool[], actions: readonly AvailableTool[], context: { hasGateSites?: boolean } = {}) {
+  // Tool grants alone do not establish a company's contracted gate assignment.
+  if (context.hasGateSites === false) {
+    const gate = SPECIALISTS.find(item => item.id === "gate")!;
+    reads = reads.filter(tool => !gate.matches.test(tool.name));
+    actions = actions.filter(tool => !gate.matches.test(tool.name));
+  }
   const readNames = new Set(reads.map(tool => tool.name));
   const actionNames = new Set(actions.map(tool => tool.name));
   const names = [...new Set([...readNames, ...actionNames])].sort();
