@@ -15,6 +15,7 @@ import { ACTION_PANEL_URI, LEGACY_ACTION_PANEL_URI, ACTION_STATUS_OUTPUT_SCHEMA,
 import { writeAskVActionAudit } from "../assistant/action-audit";
 import { CHATGPT_READ_CAPABILITIES } from "../assistant/chatgpt-read-capabilities";
 import { publicMapConfig } from "../lib/public-map-config";
+import { SPECIALISTS_TOOL, specialistDirectory } from "../assistant/chatgpt-specialists";
 import { CHATGPT_WRITE_CAPABILITIES, validateChatGptActionInput, sanitizeChatGptActionInput, chatGptActionAuditInput, chatGptActionResult } from "../assistant/chatgpt-write-capabilities";
 
 const router = Router();
@@ -169,6 +170,7 @@ router.post("/mcp", async (req, res) => {
   }
   if (message.method === "tools/list") {
     const reads = chatGptReadableTools(authorized.session, authorized.scopes).map((tool) => ({ name: tool.name, description: chatGptReadToolDescription(tool), inputSchema: tool.inputSchema, annotations: chatGptReadToolAnnotations(tool.name) }));
+    reads.push(SPECIALISTS_TOOL);
     if (reads.some(tool => ["get_work_hub_briefing", "get_work_hub_calendar", "query_gate_stations", "lookup_user_progress", "query_tickets", "query_notifications", "query_field_trips", "query_asset_custody"].includes(tool.name))) reads.push(WORKSPACE_TOOL);
     const actions = chatGptActionTools(authorized.session, authorized.scopes);
     const preparedTools = actions.map((tool) => ({ name: tool.name, description: `${tool.description}${tool.name === "manage_ticket_record" ? " Authorized operations can overwrite ticket fields, cancel tickets, or remove line items. This call only prepares the change; submission requires the existing authorization panel." : ""} This connection prepares the exact change for authorization in the VNDRLY action panel. Location-dependent actions use the secure device authorization link. Never claim prepared means completed.`, inputSchema: { ...tool.inputSchema, properties: Object.fromEntries(Object.entries(tool.inputSchema.properties ?? {}).filter(([key]) => !SERVER_ACTION_FIELDS.has(key))), required: (tool.inputSchema.required ?? []).filter((key) => !SERVER_ACTION_FIELDS.has(key)) }, annotations: { readOnlyHint: false, destructiveHint: tool.name === "manage_ticket_record", openWorldHint: false }, _meta: ACTION_PANEL_META }));
@@ -180,6 +182,11 @@ router.post("/mcp", async (req, res) => {
     const name = message.params?.name;
     const args = message.params?.arguments ?? {};
     if (typeof name !== "string" || !args || typeof args !== "object" || Array.isArray(args)) throw new Error("Invalid tool request");
+    if (name === "v_list_specialists") {
+      if (Object.keys(args).length) throw new Error("Specialist directory takes no arguments");
+      const result = specialistDirectory(chatGptReadableTools(authorized.session, authorized.scopes), chatGptActionTools(authorized.session, authorized.scopes));
+      return reply({ content: [{ type: "text", text: JSON.stringify(result) }], structuredContent: result });
+    }
     if (name === "v_submit_panel_action") {
       if (typeof args.reference !== "string" || assistantTokenUserId(args.reference) !== authorized.session.userId) throw new AssistantOAuthError("access_denied");
       const proof = readEnvelope(args.proof) as unknown as { kind: string; tokenHash: string; fingerprint: string; nonce: string; expires: number };
