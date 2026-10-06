@@ -68,3 +68,5 @@ Acceptance: synthetic exact match across two isolated companies creates one priv
 
 `v_prepare_work_plan_control` prepares one step's waiting, pending (retry), or cancelled state through canonical Work Hub task updates and the existing authorization panel. It requires both task reads and writes, the linked plan user/company, and the exact fetched task version. It preserves the task's current status and refuses terminal steps/tasks. Retry checks currently permitted tools. It cannot manufacture completed checkpoints, run external work, cancel already-running provider actions, or start unattended monitoring. Canonical update readback and full deployment verification remain required.
 
+### Dictated safety drafts (candidate)
+The ChatGPT safety read family can prepare dictated safety-report fields through the existing pure draft helper. Results explicitly state that no report was submitted, no form was populated, and site access has not been verified. Saving the report still uses the authorized safety workflow. This addition is pending full release validation and live ChatGPT verification.

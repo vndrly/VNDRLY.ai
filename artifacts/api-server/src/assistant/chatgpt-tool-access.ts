@@ -20,12 +20,18 @@ export function chatGptReadToolAnnotations(name: string) {
   return { readOnlyHint: true, destructiveHint: false, openWorldHint: EXTERNAL_READ_TOOLS.has(name) };
 }
 export function chatGptReadToolDescription(tool: AskVToolDefinition): string {
+  if (tool.name === 'draft_safety_report') return `${tool.description} Returns dictated draft fields only. No safety record is saved, submitted, or populated in a form. Site and ticket references still require canonical authorization before submission.`;
   if (/^prepare_(account_invitations|workforce_coverage|incident_response|field_trips|asset_custody|worker_subscriptions|operations_displays)_action$/.test(tool.name)) return `${tool.description} This reads authorized context only. No bound action, approval, or record change is created. Use an exposed write tool to prepare an authenticated approval.`;
   return GATE_DRAFT_TOOLS.has(tool.name)
     ? `${tool.description} In ChatGPT this returns draft fields and matching candidates only. No VNDRLY form is populated and no entry or checkout is submitted. Use the authenticated VNDRLY approval flow to submit a change; device location must come from the approval device.`
     : tool.description;
 }
 export function chatGptReadToolOutput(name: string, output: unknown): unknown {
+  if (name === 'draft_safety_report' && output && typeof output === 'object' && !Array.isArray(output)) {
+    const { intent: _intent, execution: _execution, ...draft } = output as Record<string, unknown>;
+    return { ...draft, execution: 'draft_only', submitted: false, formPopulated: false, siteAccessVerified: false,
+      message: 'Dictated draft only. No safety record was saved or submitted, no form was populated, and site/ticket access was not verified by this draft helper.' };
+  }
   if (name === "lookup_user_progress" && output && typeof output === "object" && !Array.isArray(output)) {
     const record = output as Record<string, unknown>;
     const progress = record.progress;

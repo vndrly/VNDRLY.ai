@@ -205,7 +205,8 @@ const TOOL_METADATA: Record<string, Partial<ToolMetadata>> = {
     pack: "screen",
     auditTarget: "ticket",
   },
-  draft_safety_report: { mutating: true, pack: "screen", auditTarget: "safety" },
+  // Builds draft fields only; it does not persist or submit a safety report.
+  draft_safety_report: { mutating: false, confirmation: "none", pack: "screen", auditTarget: "safety" },
   open_screen: { execution: "client", pack: "core" },
   select_tool_pack: { pack: "core" },
   focus_control: { execution: "client", pack: "core" },

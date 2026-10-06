@@ -98,4 +98,13 @@ describe("ChatGPT assistant tool access", () => {
     expect(result).toEqual({ progress: { orgType: "vendor", currentStep: "profile", completedSteps: [] } });
     expect(JSON.stringify(result)).not.toContain("synthetic-sensitive");
   });
+  it('exposes dictated safety drafts only with safety consent and removes client claims',()=>{
+    expect(()=>requireChatGptReadableTool(session,['operations:read'],'draft_safety_report')).toThrow();
+    const tool=requireChatGptReadableTool(session,['safety:read'],'draft_safety_report');
+    expect(tool).toMatchObject({mutating:false,confirmation:'none',execution:'server'});
+    const raw={ok:true,submitted:false,draft:{title:'Loose railing',siteLocationId:390},execution:'client',intent:{name:'prefill_draft'}};
+    expect(chatGptReadToolOutput(tool.name,raw)).toMatchObject({draft:raw.draft,submitted:false,formPopulated:false,execution:'draft_only',siteAccessVerified:false});
+    expect(chatGptReadToolOutput(tool.name,raw)).not.toHaveProperty('intent');
+    expect(chatGptReadToolDescription(tool)).toContain('No safety record');
+  });
 });

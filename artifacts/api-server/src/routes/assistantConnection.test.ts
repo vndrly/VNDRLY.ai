@@ -518,4 +518,16 @@ it('prepares a version-bound plan pause without executing or fabricating complet
  expect(mocks.run).not.toHaveBeenCalled();
  expect(grants[0].actions).toHaveLength(1);
 });
-
+it('returns safety draft fields through the scoped read boundary without a client command',async()=>{
+ const credentials=await tokens('safety:read');
+ const call=(token:string)=>request(app).post(base+'/mcp').set('Authorization','Bearer '+token).send({jsonrpc:'2.0',id:1,method:'tools/call',params:{name:'draft_safety_report',arguments:{title:'SYNTHETIC loose railing',eventType:'unsafe_condition',siteLocationId:392}}});
+ mocks.run.mockResolvedValue(JSON.stringify({ok:true,draft:{title:'SYNTHETIC loose railing',siteLocationId:392},submitted:false,execution:'client',intent:{name:'prefill_draft'}}));
+ const response=await call(credentials.access_token);
+ const result=JSON.parse(response.body.result.content[0].text);
+ expect(result).toMatchObject({submitted:false,execution:'draft_only',formPopulated:false,siteAccessVerified:false});
+ expect(result).not.toHaveProperty('intent');
+ expect(grants[0].actions??[]).toHaveLength(0);
+ const limited=await tokens('operations:read');mocks.run.mockClear();
+ expect((await call(limited.access_token)).body.result.isError).toBe(true);
+ expect(mocks.run).not.toHaveBeenCalled();
+});
