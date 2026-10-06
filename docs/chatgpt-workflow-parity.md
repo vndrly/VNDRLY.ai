@@ -25,3 +25,7 @@ This candidate is not a declaration of complete web/iOS or Ask V parity. The pub
 ## Validation status
 
 Candidate API typecheck and focused authorization, workspace, runtime and connection tests pass locally. Full repository validation, deployment and live ChatGPT verification remain required before calling this expansion released. No live records were changed by these local tests.
+### Ticket crew acknowledgement
+
+`acknowledge_ticket_assignment` confirms or declines the connected user's own active crew assignment through the canonical endpoint. Both the worker record and ticket must belong to the current vendor context. Other-worker identifiers are ignored, removed assignments are refused, and vendor contract acceptance remains a separate action. The isolated database regression covers these boundaries; complete workflow parity still requires the remaining device and domain capabilities documented below.
+

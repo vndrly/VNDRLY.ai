@@ -17,6 +17,16 @@ const command = {
 };
 
 describe("resolveWorkHubToolRequest", () => {
+  it("acknowledges only the caller's assignment after trusted authorization", () => {
+    const input = { ticketId: 12, status: "confirmed", note: "I will be there", employeeId: 999, vendorId: 888 };
+    const actor = { userId: 17, role: "field_employee" };
+    expect(resolveExecutableWorkHubToolRequest("acknowledge_ticket_assignment", input, false, actor)).toMatchObject({ requiresConfirmation: true });
+    expect(resolveExecutableWorkHubToolRequest("acknowledge_ticket_assignment", input, true, actor)).toEqual({ method: "POST", path: "/tickets/12/crew/ack", body: { status: "confirmed", note: "I will be there" } });
+    expect(resolveExecutableWorkHubToolRequest("acknowledge_ticket_assignment", { ...input, ticketId: "12/crew" }, true, actor)).toHaveProperty("error");
+    expect(resolveExecutableWorkHubToolRequest("acknowledge_ticket_assignment", { ...input, status: "accept-contract" }, true, actor)).toHaveProperty("error");
+    expect(resolveExecutableWorkHubToolRequest("acknowledge_ticket_assignment", { ...input, note: "x".repeat(501) }, true, actor)).toHaveProperty("error");
+    expect(resolveExecutableWorkHubToolRequest("acknowledge_ticket_assignment", input, true, { userId: 1, role: "admin" })).toHaveProperty("error");
+  });
   it("ends exact Gate sessions only with trusted authorization and required handoff facts", () => {
     const stationId = "00000000-0000-4000-8000-000000000001";
     const dutySessionId = "00000000-0000-4000-8000-000000000002";

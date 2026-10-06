@@ -11,6 +11,11 @@ export function ticketRecordActionsForRole(role: string) {
 }
 /** Reuses canonical ticket endpoints; their role, ownership and lifecycle guards remain authoritative. */
 export const TICKET_WORKFLOW_TOOLS: AskVToolDefinition[] = [{
+  name: "acknowledge_ticket_assignment",
+  description: "Confirm or decline your own active ticket crew assignment in your current vendor organization. This only records your acknowledgement; it cannot respond for another worker, accept the vendor's ticket contract, remove crew or change the ticket lifecycle.",
+  inputSchema: { type: "object", properties: { ticketId: { type: "integer", minimum: 1 }, status: { type: "string", enum: ["confirmed", "declined"] }, note: { type: "string", maxLength: 500 } }, required: ["ticketId", "status"], additionalProperties: false },
+  roles: ["vendor", "field_employee"], mutating: true, confirmation: "required", risk: "low", execution: "server", pack: "role", auditTarget: "ticket",
+}, {
   name: "manage_ticket_record",
   description: "Prepare an authorized ticket creation, edit, acceptance, submission, review, cancellation or line-item change. Read the ticket and required fields first. Approval/payment-review actions are only for the owning partner or VNDRLY administrator; worker access is limited to assigned tickets. This does not transfer money, start GPS tracking, upload photos or bypass ticket lifecycle rules.",
   inputSchema: { type: "object", properties: { action: { type: "string", enum: [...TICKET_RECORD_ACTIONS] }, ticketId: { type: "integer", minimum: 1 }, lineItemId: { type: "integer", minimum: 1 }, payload: { type: "object", description: "Exact canonical ticket or line-item fields supplied by the user; do not invent required values." } }, required: ["action", "payload"], additionalProperties: false },

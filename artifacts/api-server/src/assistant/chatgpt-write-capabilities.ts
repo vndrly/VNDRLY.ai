@@ -10,7 +10,7 @@ export const CHATGPT_WRITE_CAPABILITIES = {
   "assets:write": { label: "Prepare authorized asset creation, checkout, return, transfer, condition, and hold changes", tools: ["confirm_asset_custody_action"] },
   "invitations:write": { label: "Prepare vendor administrator account invitation creation, resends, and revocation", tools: ["confirm_account_invitations_action"] },
   "onboarding:write": { label: "Prepare your onboarding field changes and completion for authenticated approval", tools: ["start_onboarding", "set_onboarding_field", "complete_onboarding_step", "finalize_onboarding"] },
-  "tickets:write": { label: "Prepare authorized ticket creation, edits, assignments, line items, lifecycle changes, and role-appropriate review", tools: ["manage_ticket_record", "schedule_ticket_crew", "set_ticket_flag", "post_ticket_comment", "set_ticket_lifecycle", "close_ticket_for_review"] },
+  "tickets:write": { label: "Prepare authorized ticket creation, edits, assignments, acknowledgements, line items, lifecycle changes, and role-appropriate review", tools: ["manage_ticket_record", "acknowledge_ticket_assignment", "schedule_ticket_crew", "set_ticket_flag", "post_ticket_comment", "set_ticket_lifecycle", "close_ticket_for_review"] },
   "operations:write": { label: "Prepare changes to your notification read status", tools: ["mark_notifications_read"] },
 } as const;
 export type ChatGptWriteCapabilityScope = keyof typeof CHATGPT_WRITE_CAPABILITIES;

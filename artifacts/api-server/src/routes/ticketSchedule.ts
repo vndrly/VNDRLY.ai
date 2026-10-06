@@ -1169,9 +1169,12 @@ router.get("/me/upcoming-schedule", async (req, res): Promise<void> => {
 // Crew member confirms or declines an assignment.
 router.post("/tickets/:id/crew/ack", async (req, res): Promise<void> => {
   const ticketId = Number(req.params.id);
-  if (!Number.isFinite(ticketId)) { res.status(400).json({ error: "Invalid id", code: "validation.invalid_id" }); return; }
+  if (!Number.isSafeInteger(ticketId) || ticketId <= 0) { res.status(400).json({ error: "Invalid id", code: "validation.invalid_id" }); return; }
   const session = getSession(req);
   if (!session) { res.status(401).json({ error: "Not authenticated", code: "auth.not_authenticated" }); return; }
+  if (!["vendor", "field_employee"].includes(session.role) || !session.vendorId) {
+    res.status(403).json({ error: "Use your active vendor organization to acknowledge your own assignment", code: "schedule.not_on_crew" }); return;
+  }
 
   const status = String(req.body?.status ?? "");
   if (status !== "confirmed" && status !== "declined") {
@@ -1180,19 +1183,23 @@ router.post("/tickets/:id/crew/ack", async (req, res): Promise<void> => {
   }
   const note = typeof req.body?.note === "string" ? req.body.note.slice(0, 500) : null;
 
-  // Find the active ticket_crew row for this user on this ticket via vendor_people lookup.
+  // Resolve this exact assignment, not the first person row for a multi-org user.
   const [me] = await db
-    .select({ id: vendorPeopleTable.id })
-    .from(vendorPeopleTable)
-    .where(and(eq(vendorPeopleTable.userId, session.userId), isNull(vendorPeopleTable.deletedAt)));
+    .select({ id: ticketCrewTable.id })
+    .from(ticketCrewTable)
+    .innerJoin(vendorPeopleTable, eq(ticketCrewTable.employeeId, vendorPeopleTable.id))
+    .innerJoin(ticketsTable, eq(ticketCrewTable.ticketId, ticketsTable.id))
+    .where(and(eq(ticketCrewTable.ticketId, ticketId), eq(vendorPeopleTable.userId, session.userId),
+      eq(vendorPeopleTable.vendorId, session.vendorId), eq(ticketsTable.vendorId, session.vendorId),
+      isNull(vendorPeopleTable.deletedAt), isNull(ticketCrewTable.removedAt)));
   if (!me) { res.status(403).json({ error: "Not on crew", code: "schedule.not_on_crew" }); return; }
 
   const result = await db
     .update(ticketCrewTable)
     .set({ ackStatus: status, ackAt: new Date(), ackNote: note })
     .where(and(
+      eq(ticketCrewTable.id, me.id),
       eq(ticketCrewTable.ticketId, ticketId),
-      eq(ticketCrewTable.employeeId, me.id),
       isNull(ticketCrewTable.removedAt),
     ))
     .returning({ id: ticketCrewTable.id });
