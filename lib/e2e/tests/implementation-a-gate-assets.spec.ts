@@ -107,18 +107,30 @@ test("a spoken Texas plate resolves one vehicle, transfers custody, and auto-adm
       },
     });
 
+    const tripStartData = {
+      owner: { type: "vendor", id: driver.vendorId },
+      driverUserId: driver.userId,
+      vehicleAssetId: asset.id,
+      assignmentId: `haul-${stamp}`,
+      siteLocationId: site.id,
+      destinationSource: "assignment",
+      activeShiftId: null,
+    };
+    const forbiddenStart = await driverPage.request.post(
+      "/api/implementation-a/trips",
+      { data: { ...tripStartData, operationId: randomUUID() } },
+    );
+    expect(forbiddenStart.status()).toBe(403);
+    await pool.query(
+      "INSERT INTO partner_vendor_relationships (partner_id, vendor_id, status) VALUES ($1, $2, 'approved')",
+      [partner.id, admin.vendorId],
+    );
     const started = await driverPage.request.post(
       "/api/implementation-a/trips",
       {
         data: {
           operationId: randomUUID(),
-          owner: { type: "vendor", id: driver.vendorId },
-          driverUserId: driver.userId,
-          vehicleAssetId: asset.id,
-          assignmentId: `haul-${stamp}`,
-          siteLocationId: site.id,
-          destinationSource: "assignment",
-          activeShiftId: null,
+          ...tripStartData,
         },
       },
     );
