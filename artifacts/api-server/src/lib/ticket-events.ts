@@ -261,9 +261,11 @@ export function subscribeTicketEvents(
 // with publishTicketUnblocked + subscribeTicketEvents) before relying on
 // new NOTIFY traffic to fan out — events published while the listener is
 // offline are inherently dropped by Postgres LISTEN/NOTIFY semantics.
-export function __forceCloseListenerForTests(): boolean {
+export async function __forceCloseListenerForTests(): Promise<boolean> {
   const client = listenerClient;
   if (!client) return false;
-  void client.end().catch(() => undefined);
+  // Do not let the readiness probe round-trip through the closing listener.
+  // Await the end event before the test publishes anything for its successor.
+  await client.end();
   return true;
 }

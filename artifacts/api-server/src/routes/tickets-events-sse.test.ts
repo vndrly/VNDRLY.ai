@@ -692,7 +692,7 @@ describe.runIf(haveRealDb)("/api/tickets/events end-to-end", () => {
         // Force the LISTEN client to end. This triggers the 'end' event
         // handler in ticket-events.ts, which schedules the reconnect timer
         // — exactly the production path we need to cover.
-        const closed = ticketEvents.__forceCloseListenerForTests();
+        const closed = await ticketEvents.__forceCloseListenerForTests();
         expect(closed).toBe(true);
 
         // Wait for the bus to come back online. The probe in
