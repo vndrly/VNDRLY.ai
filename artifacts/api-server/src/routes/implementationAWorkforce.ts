@@ -11,6 +11,7 @@ import {
   managedSubcontractorRoleGrantsTable,
   managedSubcontractorWorkerSponsorshipsTable,
   usersTable,
+  userOrgMembershipsTable,
   vendorPeopleTable,
   workforceCoverageRecordsTable,
   workforceStaffingRequirementsTable,
@@ -63,12 +64,14 @@ async function schedulingAuthority(req: Request, shiftId: string) {
   return { session, decision };
 }
 
-async function eligibilityFor(workerUserId: number, shiftId: string) {
+async function eligibilityFor(workerUserId: number, shiftId: string, vendorId: number) {
   const [shift] = await db.select().from(workHubShiftsTable).where(eq(workHubShiftsTable.id, shiftId)).limit(1);
   const [user] = await db.select({ suspendedAt: usersTable.suspendedAt }).from(usersTable).where(eq(usersTable.id, workerUserId)).limit(1);
   if (!shift || !user) throw new WorkforceCoverageError("workforce.shift_or_worker_not_found", 404);
-  const [person] = await db.select({ id: vendorPeopleTable.id, isActive: vendorPeopleTable.isActive }).from(vendorPeopleTable).where(eq(vendorPeopleTable.userId, workerUserId)).limit(1);
-  const [sponsorship] = await db.select({ status: managedSubcontractorWorkerSponsorshipsTable.status }).from(managedSubcontractorWorkerSponsorshipsTable).where(eq(managedSubcontractorWorkerSponsorshipsTable.workerUserId, workerUserId)).limit(1);
+  const [person] = await db.select({ id: vendorPeopleTable.id, isActive: vendorPeopleTable.isActive }).from(vendorPeopleTable).where(and(eq(vendorPeopleTable.userId, workerUserId), eq(vendorPeopleTable.vendorId, vendorId))).limit(1);
+  const [sponsorship] = await db.select({ status: managedSubcontractorWorkerSponsorshipsTable.status }).from(managedSubcontractorWorkerSponsorshipsTable).where(and(eq(managedSubcontractorWorkerSponsorshipsTable.workerUserId, workerUserId), eq(managedSubcontractorWorkerSponsorshipsTable.sponsorVendorId, vendorId))).limit(1);
+  const [membership] = await db.select({ id: userOrgMembershipsTable.id }).from(userOrgMembershipsTable).where(and(eq(userOrgMembershipsTable.userId, workerUserId), eq(userOrgMembershipsTable.orgType, "vendor"), eq(userOrgMembershipsTable.vendorId, vendorId))).limit(1);
+  if (!person && !sponsorship && !membership) throw new WorkforceCoverageError("workforce.shift_or_worker_not_found", 404);
   const accountState = sponsorship?.status === "terminated" || person?.isActive === false ? "terminated" as const : sponsorship?.status === "paused" || user.suspendedAt ? "paused" as const : "active" as const;
   const qualificationCodes = shift.qualificationCodes ?? [];
   const certifications = person && qualificationCodes.length ? await db.select({ name: employeeCertificationsTable.name, expirationDate: employeeCertificationsTable.expirationDate }).from(employeeCertificationsTable).where(and(eq(employeeCertificationsTable.employeeId, person.id), isNull(employeeCertificationsTable.deletedAt))) : [];
@@ -111,7 +114,8 @@ router.get("/implementation-a/workforce/coverage", async (req, res) => {
 router.post("/implementation-a/workforce/assignments", async (req, res) => {
   try {
     const input = AssignWorkforceShiftSchema.parse(req.body);
-    const [{ session, decision }, context] = await Promise.all([schedulingAuthority(req, input.shiftId), eligibilityFor(input.workerUserId, input.shiftId)]);
+    const { session, decision } = await schedulingAuthority(req, input.shiftId);
+    const context = await eligibilityFor(input.workerUserId, input.shiftId, session.vendorId!);
     const result = await assignShift({ ...input, assignedById: session.userId!, assignedAt: new Date(), shiftStartsAt: context.shift.startsAt, eligibility: context.eligibility, overrideAuthorized: decision.allowed }, databaseWorkforceAssignmentRepository);
     return res.status(result.allowed ? 201 : 409).json(result);
   } catch (error) { return sendError(res, error); }
@@ -128,7 +132,10 @@ router.patch("/implementation-a/workforce/assignments/:assignmentId/acknowledge"
 router.post("/implementation-a/workforce/coverage/:coverageId/evaluate", async (req, res) => {
   try {
     const input = z.object({ shiftId: z.string().uuid(), assignedCount: z.number().int().nonnegative(), requiredCount: z.number().int().positive(), expectedVersion: z.number().int().nonnegative() }).parse(req.body);
-    await schedulingAuthority(req, input.shiftId);
+    const coverageId = id.parse(req.params.coverageId);
+    const [record] = await db.select({ shiftId: workforceCoverageRecordsTable.shiftId }).from(workforceCoverageRecordsTable).where(eq(workforceCoverageRecordsTable.id, coverageId)).limit(1);
+    if (!record || record.shiftId !== input.shiftId) throw new WorkforceCoverageError("workforce.not_found", 404);
+    await schedulingAuthority(req, record.shiftId);
     return res.json(await evaluateCoverage({ coverageId: id.parse(req.params.coverageId), ...input }, databaseWorkforceAssignmentRepository));
   } catch (error) { return sendError(res, error); }
 });
@@ -136,7 +143,10 @@ router.post("/implementation-a/workforce/coverage/:coverageId/evaluate", async (
 router.post("/implementation-a/workforce/coverage/:coverageId/escalate", async (req, res) => {
   try {
     const input = z.object({ shiftId: z.string().uuid(), expectedVersion: z.number().int().nonnegative() }).parse(req.body);
-    await schedulingAuthority(req, input.shiftId);
+    const coverageId = id.parse(req.params.coverageId);
+    const [record] = await db.select({ shiftId: workforceCoverageRecordsTable.shiftId }).from(workforceCoverageRecordsTable).where(eq(workforceCoverageRecordsTable.id, coverageId)).limit(1);
+    if (!record || record.shiftId !== input.shiftId) throw new WorkforceCoverageError("workforce.not_found", 404);
+    await schedulingAuthority(req, record.shiftId);
     return res.json(await escalateCoverage({ coverageId: id.parse(req.params.coverageId), expectedVersion: input.expectedVersion }, databaseWorkforceAssignmentRepository));
   } catch (error) { return sendError(res, error); }
 });

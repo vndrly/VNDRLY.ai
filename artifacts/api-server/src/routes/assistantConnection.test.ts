@@ -232,6 +232,23 @@ describe("ChatGPT account connection boundary", () => {
     const status = await request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 9, method: "tools/call", params: { name: "v_action_status", arguments: { reference: prepared.reference } } });
     expect(JSON.parse(status.body.result.content[0].text)).toMatchObject({ state: "completed", result: { ok: true, status: "applied" } });
   });
+  it("uses approval-device location for a trip update and discards model telemetry", async () => {
+    const credentials = await tokens("crew:read trips:write");
+    const response = await request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 8, method: "tools/call", params: { name: "v_prepare_action", arguments: { toolName: "confirm_field_trips_action", arguments: { action: "location", resourceId: "synthetic-trip", payload: { expectedVersion: 1, latitude: 1, longitude: 2, accuracyMeters: 3, recordedAt: "fake", speedMps: 99, operationId: "fake" } } } } });
+    const prepared = JSON.parse(response.body.result.content[0].text);
+    expect(grants[0].actions![0].arguments).toMatchObject({ payload: { expectedVersion: 1 } });
+    expect(grants[0].actions![0].arguments.payload).not.toHaveProperty("latitude");
+    const actionPath = new URL(prepared.approvalUrl).pathname;
+    const approval = await request(app).get(actionPath).set("Cookie", cookie());
+    expect(approval.text).toContain('data-location="required"');
+    const nonce = /name="nonce" value="([^"]+)"/.exec(approval.text)![1];
+    const actionCookie = approval.headers["set-cookie"][0].split(";")[0];
+    mocks.run.mockResolvedValueOnce(JSON.stringify({ ok: true }));
+    await request(app).post(actionPath).set("Cookie", `${cookie()}; ${actionCookie}`).set("Origin", "https://vndrly.ai").type("form").send({ nonce, latitude: 31, longitude: -98, accuracyMeters: 5 }).expect(200);
+    expect(mocks.run.mock.calls[0][1].payload).toMatchObject({ expectedVersion: 1, latitude: 31, longitude: -98, accuracyMeters: 5, speedMps: null });
+    expect(Number.isFinite(Date.parse(mocks.run.mock.calls[0][1].payload.recordedAt))).toBe(true);
+    expect(grants[0].actions![0].result).toContain('"trackingCollectorStarted":false');
+  });
   it("retains uncertain writes across delayed retries and reconciles durable results without execution", async () => {
     const credentials = await tokens("gate:read gate:write");
     const prepare = () => request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 8, method: "tools/call", params: { name: "set_gate_coverage_status", arguments: { stationId: "test-station", reason: "Isolated test", mode: "paused_indefinitely" } } });

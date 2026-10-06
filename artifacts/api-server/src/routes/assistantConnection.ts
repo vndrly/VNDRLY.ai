@@ -13,7 +13,7 @@ import { runTool } from "./assistant";
 import { writeAskVActionAudit } from "../assistant/action-audit";
 import { CHATGPT_READ_CAPABILITIES } from "../assistant/chatgpt-read-capabilities";
 import { publicMapConfig } from "../lib/public-map-config";
-import { CHATGPT_WRITE_CAPABILITIES, validateChatGptActionInput, chatGptActionAuditInput, chatGptActionResult } from "../assistant/chatgpt-write-capabilities";
+import { CHATGPT_WRITE_CAPABILITIES, validateChatGptActionInput, sanitizeChatGptActionInput, chatGptActionAuditInput, chatGptActionResult } from "../assistant/chatgpt-write-capabilities";
 
 const router = Router();
 const origin = new URL(ASSISTANT_ISSUER).origin;
@@ -216,7 +216,7 @@ router.post("/mcp", async (req, res) => {
       const tool = permittedActions.find((candidate) => candidate.name === (name === "v_prepare_action" ? args.toolName : name));
       const suppliedInput = name === "v_prepare_action" ? args.arguments : args;
       if (!tool || !suppliedInput || typeof suppliedInput !== "object" || Array.isArray(suppliedInput)) throw new Error("Action unavailable");
-      const input = Object.fromEntries(Object.entries(suppliedInput).filter(([key]) => !SERVER_ACTION_FIELDS.has(key)));
+      const input = sanitizeChatGptActionInput(tool.name, Object.fromEntries(Object.entries(suppliedInput).filter(([key]) => !SERVER_ACTION_FIELDS.has(key))));
       if (JSON.stringify(input).length > 20_000) throw new Error("Action too large");
       validateChatGptActionInput(tool.name, input);
       const actionToken = `${authorized.session.userId}.${randomBytes(32).toString("base64url")}`;
@@ -250,7 +250,7 @@ router.post("/mcp", async (req, res) => {
   }
 });
 router.all("/mcp", (_req, res) => res.status(405).set("Allow", "POST").end());
-const needsLocation = (toolName: string) => ["confirm_visitor_check_in", "confirm_visitor_check_out", "start_paid_travel", "set_ticket_lifecycle", "close_ticket_for_review"].includes(toolName);
+const needsLocation = (toolName: string, input: Record<string, unknown> = {}) => ["confirm_visitor_check_in", "confirm_visitor_check_out", "start_paid_travel", "set_ticket_lifecycle", "close_ticket_for_review"].includes(toolName) || (toolName === "confirm_field_trips_action" && input.action === "location");
 const unresolved = (action: AssistantPreparedAction) => action.state === "running" || action.state === "outcome_unknown";
 async function reconcileAction(action: AssistantPreparedAction, session: import("../lib/session").SessionPayload, database: Omit<typeof import("@workspace/db").db, "$client">) {
   if (!unresolved(action) || !action.executionFingerprint) return;
@@ -287,7 +287,7 @@ router.get("/actions/:actionToken", async (req, res) => {
     if (action.state === "outcome_unknown") return page(res, "<p>This action may already have completed. Check the current VNDRLY record before taking another action. V will not submit it again automatically.</p>");
     const nonce = randomBytes(32).toString("base64url");
     res.cookie("vndrly_assistant_action", envelope({ tokenHash: assistantTokenHash(token), nonce, expires: Date.now() + 300_000 }), { httpOnly: true, secure: true, sameSite: "lax", path: "/api/assistant-connection/actions", maxAge: 300_000 });
-    return page(res, `<h2>Approve VNDRLY action</h2><p>${escape(action.toolName.replaceAll("_", " "))}</p><pre>${escape(JSON.stringify(action.arguments, null, 2))}</pre>${action.toolName === "start_paid_travel" ? "<p>This starts paid time with your current location. Continuous trip tracking must be enabled in the VNDRLY mobile app; this browser does not start it.</p>" : ""}<form method="post" data-location="${needsLocation(action.toolName) ? "required" : "optional"}"><input type="hidden" name="nonce" value="${escape(nonce)}"><input type="hidden" name="latitude"><input type="hidden" name="longitude"><input type="hidden" name="accuracyMeters"><button type="submit">Approve and submit</button></form><p id="location-status"></p><script src="/api/assistant-connection/actions-client.js" defer></script>`);
+    return page(res, `<h2>Approve VNDRLY action</h2><p>${escape(action.toolName.replaceAll("_", " "))}</p><pre>${escape(JSON.stringify(action.arguments, null, 2))}</pre>${action.toolName === "start_paid_travel" ? "<p>This starts paid time with your current location. Continuous trip tracking must be enabled in the VNDRLY mobile app; this browser does not start it.</p>" : ""}<form method="post" data-location="${needsLocation(action.toolName, action.arguments) ? "required" : "optional"}"><input type="hidden" name="nonce" value="${escape(nonce)}"><input type="hidden" name="latitude"><input type="hidden" name="longitude"><input type="hidden" name="accuracyMeters"><button type="submit">Approve and submit</button></form><p id="location-status"></p><script src="/api/assistant-connection/actions-client.js" defer></script>`);
   } catch (error) { return oauthError(res, error); }
 });
 router.post("/actions/:actionToken", async (req, res) => {
@@ -305,10 +305,12 @@ router.post("/actions/:actionToken", async (req, res) => {
     const operationHex = reserved.action.tokenHash.slice(0, 32);
     input.operationId = `${operationHex.slice(0, 8)}-${operationHex.slice(8, 12)}-4${operationHex.slice(13, 16)}-8${operationHex.slice(17, 20)}-${operationHex.slice(20, 32)}`;
     validateChatGptActionInput(reserved.action.toolName, input);
-    if (needsLocation(reserved.action.toolName)) {
+    if (needsLocation(reserved.action.toolName, input)) {
       const latitude = Number(req.body.latitude), longitude = Number(req.body.longitude), accuracyMeters = Number(req.body.accuracyMeters);
       if (!req.body.latitude || !req.body.longitude || !Number.isFinite(latitude) || Math.abs(latitude) > 90 || !Number.isFinite(longitude) || Math.abs(longitude) > 180 || !Number.isFinite(accuracyMeters) || accuracyMeters < 0) throw new AssistantOAuthError("invalid_request");
-      Object.assign(input, { latitude, longitude, accuracyMeters });
+      if (reserved.action.toolName === "confirm_field_trips_action") {
+        input.payload = { ...(input.payload as Record<string, unknown>), latitude, longitude, accuracyMeters, speedMps: null, recordedAt: new Date().toISOString() };
+      } else Object.assign(input, { latitude, longitude, accuracyMeters });
       if (reserved.action.toolName === "start_paid_travel") {
         delete input.latitude; delete input.longitude; delete input.accuracyMeters;
         Object.assign(input, { startLatitude: latitude, startLongitude: longitude, locationSharingActive: false });

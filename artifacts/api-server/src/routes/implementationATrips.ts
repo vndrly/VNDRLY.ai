@@ -13,6 +13,9 @@ import {
   usersTable,
   vendorPeopleTable,
   assetsTable,
+  userOrgMembershipsTable,
+  managedSubcontractorWorkerSponsorshipsTable,
+  workHubShiftsTable,
 } from "@workspace/db";
 import { getSessionFromRequest } from "../lib/session";
 import { createFieldTripService, FieldTripError, type FieldTripRecord, type TripOwner } from "../services/field-trips";
@@ -20,6 +23,7 @@ import { assertFieldTripAccess, authorizeFieldTripCompletion } from "../services
 import { databaseFieldTripRepository, findActiveTripForDriver } from "../services/field-trip-database-repository";
 import { crossingDeduplicationKey, evaluateDirectionalCrossing } from "../services/geofence-crossings";
 import { activeFieldTripFilter, fieldTripOverviewPosition, fieldTripOverviewScope } from "../services/field-trip-overview";
+import { vendorCanReadPartner } from "../lib/approved-partner-sites";
 
 const router = Router();
 const service = createFieldTripService(databaseFieldTripRepository);
@@ -114,6 +118,22 @@ router.post("/implementation-a/trips", async (req, res) => {
       if (!context.owner || input.owner.type !== context.owner.type || input.owner.id !== context.owner.id) throw new FieldTripError("trip.owner_forbidden", 403);
       if (!context.isAdmin && !context.isOrgAdmin && input.driverUserId !== context.session.userId) throw new FieldTripError("trip.driver_required", 403);
     }
+    const [membership] = await db.select({ id: userOrgMembershipsTable.id }).from(userOrgMembershipsTable).where(and(eq(userOrgMembershipsTable.userId, input.driverUserId), eq(userOrgMembershipsTable.orgType, input.owner.type), input.owner.type === "vendor" ? eq(userOrgMembershipsTable.vendorId, input.owner.id) : eq(userOrgMembershipsTable.partnerId, input.owner.id))).limit(1);
+    const [person] = input.owner.type === "vendor" ? await db.select({ id: vendorPeopleTable.id }).from(vendorPeopleTable).where(and(eq(vendorPeopleTable.userId, input.driverUserId), eq(vendorPeopleTable.vendorId, input.owner.id), eq(vendorPeopleTable.isActive, true))).limit(1) : [];
+    const [sponsorship] = input.owner.type === "vendor" ? await db.select({ id: managedSubcontractorWorkerSponsorshipsTable.id }).from(managedSubcontractorWorkerSponsorshipsTable).where(and(eq(managedSubcontractorWorkerSponsorshipsTable.workerUserId, input.driverUserId), eq(managedSubcontractorWorkerSponsorshipsTable.sponsorVendorId, input.owner.id), eq(managedSubcontractorWorkerSponsorshipsTable.status, "active"))).limit(1) : [];
+    if (!membership && !person && !sponsorship) throw new FieldTripError("trip.driver_required", 403);
+    const [driver] = await db.select({ suspendedAt: usersTable.suspendedAt }).from(usersTable).where(eq(usersTable.id, input.driverUserId)).limit(1);
+    if (!driver || driver.suspendedAt) throw new FieldTripError("trip.driver_required", 403);
+    if (input.vehicleAssetId) {
+      const [asset] = await db.select({ id: assetsTable.id }).from(assetsTable).where(and(eq(assetsTable.id, input.vehicleAssetId), eq(assetsTable.responsibleOrgType, input.owner.type), eq(assetsTable.responsibleOrgId, input.owner.id))).limit(1);
+      if (!asset) throw new FieldTripError("trip.vehicle_forbidden", 403);
+    }
+    const [site] = await db.select({ partnerId: siteLocationsTable.partnerId }).from(siteLocationsTable).where(eq(siteLocationsTable.id, input.siteLocationId)).limit(1);
+    if (!site || (input.owner.type === "partner" ? site.partnerId !== input.owner.id : !(await vendorCanReadPartner(input.owner.id, site.partnerId)))) throw new FieldTripError("trip.destination_forbidden", 403);
+    if (input.activeShiftId) {
+      const [shift] = await db.select({ id: workHubShiftsTable.id }).from(workHubShiftsTable).where(and(eq(workHubShiftsTable.id, input.activeShiftId), eq(workHubShiftsTable.ownerOrgType, input.owner.type), eq(workHubShiftsTable.ownerOrgId, input.owner.id))).limit(1);
+      if (!shift) throw new FieldTripError("trip.shift_forbidden", 403);
+    }
     const [consent] = await db.select({ id: locationConsentsTable.id }).from(locationConsentsTable).where(and(eq(locationConsentsTable.userId, input.driverUserId), isNull(locationConsentsTable.revokedAt))).limit(1);
     if (!consent) throw new FieldTripError("trip.location_consent_required", 403);
     return res.status(201).json(await service.startTrip(input));
@@ -137,7 +157,7 @@ router.get("/implementation-a/trips", async (req, res) => {
     const rows = await db.select({ trip: fieldTripsTable, driverName: usersTable.displayName, vehicleName: assetsTable.name, siteName: siteLocationsTable.name })
       .from(fieldTripsTable).innerJoin(siteLocationsTable, eq(fieldTripsTable.siteLocationId, siteLocationsTable.id))
       .leftJoin(usersTable, eq(fieldTripsTable.driverUserId, usersTable.id))
-      .leftJoin(assetsTable, eq(fieldTripsTable.vehicleAssetId, assetsTable.id))
+      .leftJoin(assetsTable, and(eq(fieldTripsTable.vehicleAssetId, assetsTable.id), eq(assetsTable.responsibleOrgType, fieldTripsTable.ownerOrgType), eq(assetsTable.responsibleOrgId, fieldTripsTable.ownerOrgId)))
       .where(and(scope, activeFieldTripFilter())).orderBy(desc(fieldTripsTable.updatedAt)).limit(201);
     return res.json({ generatedAt: new Date().toISOString(), truncated: rows.length > 200, trips: rows.slice(0, 200).map(({ trip, driverName, vehicleName, siteName }) => {
       const exact = context.session.role === "admin" || context.session.membershipRole === "admin" || trip.driverUserId === context.session.userId || ["dispatcher", "foreman", "both", "gate_supervisor", "safety_manager"].includes(context.session.vendorRole ?? "");
@@ -188,6 +208,9 @@ router.post("/implementation-a/trips/:tripId/pause", async (req, res) => {
   try {
     const context = actor(req);
     const tripId = IdSchema.parse(req.params.tripId);
+    const trip = await databaseFieldTripRepository.get(tripId);
+    if (!trip) throw new FieldTripError("trip.not_found", 404);
+    assertTripAccess(trip, context);
     const input = z.object({ expectedVersion: z.number().int().positive() }).parse(req.body);
     return res.json(await service.pauseWorkTracking({ tripId, expectedVersion: input.expectedVersion, actorUserId: context.session.userId! }));
   } catch (error) { return sendError(res, error); }

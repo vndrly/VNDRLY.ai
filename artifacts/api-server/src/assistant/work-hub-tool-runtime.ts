@@ -126,8 +126,8 @@ const normalizedMeetingCreatePayload = (input: Input): Input => {
   };
 };
 const direct = (input: Input, extra: Input = {}): Input => ({
-  operationId: input.operationId,
   ...record(input.payload),
+  operationId: input.operationId,
   ...extra,
 });
 
@@ -173,9 +173,9 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
     if (action === "revoke") return request("DELETE", `/implementation-a/account-invitations/${resourceId}`, payload);
   }
   if (name === "confirm_workforce_coverage_action") {
-    if (action === "assign") return request("POST", "/implementation-a/workforce/assignments", payload);
+    if (action === "assign") return request("POST", "/implementation-a/workforce/assignments", direct(input));
     if (!resourceId) return { error: "A valid assignment or coverage id is required." };
-    if (action === "acknowledge") return request("PATCH", `/implementation-a/workforce/assignments/${resourceId}/acknowledge`, payload);
+    if (action === "acknowledge") return request("PATCH", `/implementation-a/workforce/assignments/${resourceId}/acknowledge`, direct(input));
     if (["evaluate", "escalate"].includes(action)) return request("POST", `/implementation-a/workforce/coverage/${resourceId}/${action}`, payload);
   }
   if (name === "confirm_asset_custody_action") {
@@ -183,9 +183,10 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
     if (["checkout", "return", "transfer", "condition", "hold", "merge"].includes(action)) return request("POST", `/implementation-a/assets/${resourceId}/${action}`, payload);
   }
   if (name === "confirm_field_trips_action") {
-    if (action === "start") return request("POST", "/implementation-a/trips", payload);
+    if (action === "start") return request("POST", "/implementation-a/trips", direct(input, { owner: input.owner }));
     if (!resourceId) return { error: "A valid trip id is required." };
     if (["location", "pause"].includes(action)) return request("POST", `/implementation-a/trips/${resourceId}/${action}`, payload);
+    if (action === "complete") return request("POST", `/implementation-a/trips/${resourceId}/complete`, direct(input));
   }
   if (name === "confirm_incident_response_action") {
     if (action === "create") return request("POST", "/implementation-a/safety/incidents", payload);
@@ -193,7 +194,7 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
     if (["escalate", "acknowledge", "evidence", "hold", "close"].includes(action)) return request("POST", `/implementation-a/safety/incidents/${resourceId}/${action}`, payload);
   }
   if (name === "confirm_worker_subscriptions_action") {
-    if (action === "create") return request("POST", "/implementation-a/subscriptions", payload);
+    if (action === "create") return request("POST", "/implementation-a/subscriptions", { ...payload, confirmed: true });
     if (resourceId && ["pause", "terminate", "reactivate"].includes(action)) return request("POST", `/implementation-a/subscriptions/${resourceId}/${action}`, payload);
   }
   return unsupported("capability");

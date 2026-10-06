@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { chatGptActionTools } from "./chatgpt-tool-access";
-import { validateChatGptActionInput, chatGptActionAuditInput, chatGptActionResult } from "./chatgpt-write-capabilities";
+import { validateChatGptActionInput, sanitizeChatGptActionInput, chatGptActionAuditInput, chatGptActionResult } from "./chatgpt-write-capabilities";
 
 describe("ChatGPT onboarding changes", () => {
   const admin = { userId: 17, role: "vendor", membershipRole: "admin", vendorId: 4 };
@@ -35,6 +35,19 @@ describe("ChatGPT onboarding changes", () => {
     expect(names(admin, ["invitations:write"])).toEqual(["confirm_account_invitations_action"]);
     expect(names({ ...admin, membershipRole: "member" }, ["invitations:write"])).toEqual([]);
     expect(chatGptActionTools({ userId: 17, role: "partner", partnerId: 4, membershipRole: "admin" }, ["invitations:write"])).toEqual([]);
+  });
+  it("requires each remaining action family and prevents assistant-supplied trip telemetry", () => {
+    for (const [scope, name] of [["workforce:write", "confirm_workforce_coverage_action"], ["trips:write", "confirm_field_trips_action"], ["safety:write", "confirm_incident_response_action"], ["subscriptions:write", "confirm_worker_subscriptions_action"]]) {
+      expect(names(admin, [scope])).toEqual([name]);
+      expect(names(admin, [scope.replace(":write", ":read")])).toEqual([]);
+    }
+    expect(names({ ...admin, membershipRole: "member" }, ["subscriptions:write"])).toEqual([]);
+    const raw = { action: "location", payload: { expectedVersion: 1, latitude: 30, longitude: -100, accuracyMeters: 1, recordedAt: "fake", speedMps: 99, operationId: "fake", confirmed: true } };
+    expect(sanitizeChatGptActionInput("confirm_field_trips_action", raw)).toEqual({ action: "location", payload: { expectedVersion: 1 } });
+    expect(raw.payload.latitude).toBe(30);
+    expect(() => validateChatGptActionInput("confirm_field_trips_action", { action: "forged" })).toThrow();
+    expect(chatGptActionResult("confirm_incident_response_action", { id: 1, eventId: 2, originalReport: "private", safetyChainSnapshot: [17], responseStatus: "closed" })).toEqual({ id: 1, eventId: 2, responseStatus: "closed" });
+    expect(chatGptActionAuditInput("confirm_incident_response_action", { action: "evidence", payload: { value: "private" } })).toMatchObject({ payload: "[redacted]" });
   });
   it("cannot manufacture legal acceptance, credentials, or prototype paths", () => {
     expect(() => validateChatGptActionInput("complete_onboarding_step", { step: "set-password", nextStep: "done" })).toThrow();

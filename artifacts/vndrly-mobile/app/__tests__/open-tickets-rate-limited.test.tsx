@@ -249,7 +249,7 @@ describe("HomeScreen — Task #691 rate-limit gate", () => {
     // full mobile vitest suite runs together (Task #653) the shared
     // thread pool can starve real timers for long enough to slip
     // past that budget. Bumping to 8s keeps the assertion meaningful
-    // (still well under the default 5m vitest-test timeout) without
+    // with an explicit enclosing test budget longer than that wait, without
     // changing what the test verifies.
     await waitFor(
       () => {
@@ -268,7 +268,7 @@ describe("HomeScreen — Task #691 rate-limit gate", () => {
         screen.queryAllByTestId("toast-tickets-rate-limited").length,
       ).toBe(0);
     });
-  });
+  }, 15000);
 
   it("shows the reconnecting toast when the shared cooldown arms on the field home tab", async () => {
     apiFetchMock.mockImplementation((url: string) => {

@@ -77,7 +77,7 @@ export async function callNaturalVoiceDomainApi(
   } = input;
   // This flag was set by the typed runtime only after server-owned confirmation.
   // Asset custody's canonical API requires it in addition to version and operation ID.
-  if (/^\/implementation-a\/assets\/[^/]+\/(checkout|return|transfer|verify-issued)$/.test(path))
+  if (/^\/implementation-a\/assets\/[^/]+\/(checkout|return|transfer|verify-issued)$/.test(path) || (path === "/implementation-a/subscriptions" && method === "POST"))
     body.confirmed = _confirmed === true;
   const response = await fetch(`http://127.0.0.1:${port}/api${path}`, {
     method,

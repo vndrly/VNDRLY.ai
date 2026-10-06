@@ -17,6 +17,16 @@ const command = {
 };
 
 describe("resolveWorkHubToolRequest", () => {
+  it("uses server-owned replay IDs for workforce and trips and bounds subscription confirmation", () => {
+    for (const [name, action] of [["confirm_workforce_coverage_action", "assign"], ["confirm_field_trips_action", "start"]]) {
+      const input = { ...command, action, payload: { operationId: "model-replay", owner: { type: "partner", id: 999 } } };
+      expect(resolveExecutableWorkHubToolRequest(name, input, false)).toMatchObject({ requiresConfirmation: true });
+      const result = resolveExecutableWorkHubToolRequest(name, input, true);
+      expect(result).toMatchObject({ body: { operationId: command.operationId } });
+      if (action === "start") expect(result).toMatchObject({ body: { owner: command.owner } });
+    }
+    expect(resolveExecutableWorkHubToolRequest("confirm_worker_subscriptions_action", { ...command, action: "create", payload: { confirmed: false } }, true)).toMatchObject({ body: { confirmed: true } });
+  });
   it("wires every advertised typed Work Hub tool into the runtime", () => {
     const names = [
       ...WORK_HUB_TOOL_NAMES,

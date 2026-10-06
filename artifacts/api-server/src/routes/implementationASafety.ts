@@ -289,6 +289,16 @@ router.post(
         EventIdSchema.parse(req.params.eventId),
         actor,
       );
+      if (response.closedAt || response.responseStatus === "closed")
+        throw Object.assign(new Error("This incident is already closed"), { status: 409 });
+      const authorized =
+        actor.session.role === "admin" ||
+        actor.session.membershipRole === "admin" ||
+        actor.session.vendorRole === "safety_manager" ||
+        response.assignedResponderUserId === actor.userId ||
+        response.safetyChainSnapshot.includes(actor.userId);
+      if (!authorized)
+        throw Object.assign(new Error("Only a designated responder or safety administrator may acknowledge this incident"), { status: 403 });
       const now = new Date();
       const [updated] = await db
         .update(safetyIncidentResponsesTable)
@@ -299,8 +309,10 @@ router.post(
           acknowledgedAt: now,
           updatedAt: now,
         })
-        .where(eq(safetyIncidentResponsesTable.id, response.id))
+        .where(and(eq(safetyIncidentResponsesTable.id, response.id), isNull(safetyIncidentResponsesTable.closedAt)))
         .returning();
+      if (!updated)
+        throw Object.assign(new Error("This incident is already closed"), { status: 409 });
       return res.json(updated);
     } catch (error) {
       return sendError(res, error);
