@@ -32,6 +32,7 @@ export type AssumeGateDutyInput = {
 
 export type EndGateDutyInput = {
   dutySessionId: string;
+  stationId?: string;
   reason: string;
   handoffCompleted: boolean;
   at?: Date;
@@ -332,6 +333,7 @@ export async function endGateDuty(
       )
     ).rows[0];
     if (!duty) fail(404, "duty_not_found", "Active Gate duty was not found");
+    if (input.stationId && duty.station_id !== input.stationId) fail(404, "duty_not_found", "Active Gate duty was not found at this station");
     const { access } = await stationWithAccess(
       client,
       session,
@@ -392,7 +394,7 @@ export async function endGateDuty(
 
 export async function endWorkSession(
   session: SessionPayload,
-  input: { workSessionId: string; reason?: string; at?: Date },
+  input: { workSessionId: string; stationId?: string; reason?: string; at?: Date },
 ) {
   return changeOverTransaction(async (client) => {
     const userId = requireUser(session);
@@ -403,6 +405,7 @@ export async function endWorkSession(
       )
     ).rows[0];
     if (!work) fail(404, "work_session_not_found", "Work session was not found");
+    if (input.stationId && work.station_id !== input.stationId) fail(404, "work_session_not_found", "Work session was not found at this station");
     if (work.user_id !== userId)
       fail(403, "owner_required", "Only the worker may end this work session");
     if (work.ended_at) return workRow(work);

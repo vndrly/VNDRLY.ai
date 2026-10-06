@@ -229,6 +229,7 @@ async function scheduleTicketCrew(
         scheduledStartAt: scheduledStartAt.toISOString(),
         scheduledDurationMinutes,
         crewEmployeeIds: [employee.id],
+        preserveExistingCrew: true,
         warningKinds: Array.isArray(input.warningKinds) ? input.warningKinds : ["1d", "12h", "1h"],
         force: input.force === true,
       },

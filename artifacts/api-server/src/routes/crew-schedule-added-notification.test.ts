@@ -59,6 +59,8 @@ let selectQueue: any[] = [];
 // uses `.returning()`; the scheduled-notifications insert does not,
 // so it never consumes from this queue.
 let insertReturningQueue: any[][] = [];
+let updates: Array<{ table: string; values: Record<string, unknown> }> = [];
+let ignoredInsertConflicts = 0;
 
 function makeChain(rows: any[]) {
   const chain: any = {
@@ -73,6 +75,7 @@ function makeChain(rows: any[]) {
       then: (resolve: any) => Promise.resolve(rows).then(resolve),
       orderBy: () => Promise.resolve(rows),
       limit: () => Promise.resolve(rows),
+      for: () => Promise.resolve(rows),
       leftJoin: () => next,
       innerJoin: () => next,
     };
@@ -100,6 +103,7 @@ vi.mock("@workspace/db", () => {
     insert: () => ({
       values: () => {
         const next: any = {
+          onConflictDoNothing: () => { ignoredInsertConflicts++; return next; },
           returning: () => {
             const rows = insertReturningQueue.shift() ?? [];
             return Promise.resolve(rows);
@@ -111,8 +115,8 @@ vi.mock("@workspace/db", () => {
         return next;
       },
     }),
-    update: () => ({
-      set: () => ({ where: () => ({ returning: () => Promise.resolve([]) }) }),
+    update: (table: any) => ({
+      set: (values: Record<string, unknown>) => { updates.push({ table: table.id.__table, values }); return { where: () => ({ returning: () => Promise.resolve([]) }) }; },
     }),
     delete: () => ({ where: () => Promise.resolve([]) }),
     transaction: async (fn: any) => fn(db),
@@ -194,6 +198,8 @@ const SCHEDULED_AT = "2026-05-01T15:00:00.000Z";
 beforeEach(async () => {
   selectQueue = [];
   insertReturningQueue = [];
+  updates = [];
+  ignoredInsertConflicts = 0;
   notifyUsersMock.mockClear();
   sendPushToUserMock.mockClear();
   vi.resetModules();
@@ -241,6 +247,36 @@ function insertedCrewRows(
 }
 
 describe("POST /tickets/:id/schedule — Task #636 / Task #642 crew_added fan-out", () => {
+  it("adds one worker without removing existing crew or clearing the foremen", async () => {
+    const crew = [{ id: 501, userId: 100 }, { id: 502, userId: 200 }];
+    selectQueue = queueForCrew(crew);
+    selectQueue.splice(1, 0, [{ employeeId: 501 }]);
+    selectQueue.push([{ employeeId: 501 }]);
+    selectQueue.push([{ id: TICKET_ID }], [{ employeeId: 501 }]);
+    insertReturningQueue = [insertedCrewRows([{ id: 502, addedAt: new Date() }])];
+    const response = await request(app).post(`/api/tickets/${TICKET_ID}/schedule`).set("Cookie", adminCookie)
+      .send({ scheduledStartAt: SCHEDULED_AT, crewEmployeeIds: [502], preserveExistingCrew: true, warningKinds: [] });
+    expectStatus(response, 200);
+    expect(updates.some(update => update.table === "ticketCrew")).toBe(false);
+    const ticketUpdate = updates.find(update => update.table === "tickets")!;
+    expect(ticketUpdate.values).not.toHaveProperty("foremanUserId");
+    expect(ticketUpdate.values).not.toHaveProperty("actingForemanUserId");
+    expect(ignoredInsertConflicts).toBe(1);
+    expect(selectQueue).toEqual([]);
+  });
+  it.each([{ currentIds: [501, 503] }, { currentIds: [] }])("rejects a concurrent roster change without any mutation: %j", async ({ currentIds }) => {
+    const crew = [{ id: 501, userId: 100 }, { id: 502, userId: 200 }];
+    selectQueue = queueForCrew(crew);
+    selectQueue.splice(1, 0, [{ employeeId: 501 }]);
+    selectQueue.push([{ employeeId: 501 }], [{ id: TICKET_ID }], currentIds.map(employeeId => ({ employeeId })));
+    const response = await request(app).post(`/api/tickets/${TICKET_ID}/schedule`).set("Cookie", adminCookie)
+      .send({ scheduledStartAt: SCHEDULED_AT, crewEmployeeIds: [502], preserveExistingCrew: true, warningKinds: [] });
+    expectStatus(response, 409);
+    expect(response.body.code).toBe("schedule.roster_changed");
+    expect(updates).toEqual([]);
+    expect(ignoredInsertConflicts).toBe(0);
+    expect(notifyUsersMock).not.toHaveBeenCalled();
+  });
   it("notifies every crew member with a linked user exactly once with the right dedupe key (including addedAt), link, and pushData", async () => {
     const crew = [
       { id: 501, userId: 100, firstName: "Alex", lastName: "Doe" },

@@ -8,6 +8,7 @@ import { TRIP_CAPABILITY_TOOLS } from "./capabilities/trips";
 import { SAFETY_CAPABILITY_TOOLS } from "./capabilities/safety";
 import { ACCOUNT_CAPABILITY_TOOLS } from "./capabilities/accounts";
 import { TICKET_WORKFLOW_TOOLS } from "./ticket-workflow-tools";
+import { GATE_WORKFLOW_TOOLS } from "./gate-workflow-tools";
 import {
   WORK_HUB_TOOL_METADATA,
   type WorkHubToolFamily,
@@ -191,7 +192,7 @@ const TOOL_METADATA: Record<string, Partial<ToolMetadata>> = {
   },
   start_paid_travel: { roles: GATE_ROLES, mutating: true, confirmation: "required", risk: "high", pack: "screen", auditTarget: "site" },
   assume_gate_shift: { roles: GATE_ROLES, mutating: true, confirmation: "required", risk: "high", pack: "screen", auditTarget: "site" },
-  set_gate_coverage_status: { roles: OFFICE_ROLES, mutating: true, confirmation: "required", risk: "high", pack: "screen", auditTarget: "site" },
+  set_gate_coverage_status: { roles: GATE_ROLES, mutating: true, confirmation: "required", risk: "high", pack: "screen", auditTarget: "site" },
   deliver_gate_report: { roles: GATE_ROLES, mutating: true, confirmation: "required", risk: "high", pack: "screen", auditTarget: "site" },
   reconcile_stale_gate_visit: { roles: GATE_ROLES, mutating: true, confirmation: "required", risk: "high", pack: "screen", auditTarget: "site" },
   reverse_gate_reconciliation: { roles: GATE_ROLES, mutating: true, confirmation: "required", risk: "high", pack: "screen", auditTarget: "site" },
@@ -214,7 +215,7 @@ const TOOL_METADATA: Record<string, Partial<ToolMetadata>> = {
   launch_scanner: { execution: "client", pack: "core" },
   start_ticket_entry: { execution: "client", pack: "screen", auditTarget: "ticket" },
   mark_notifications_read: { mutating: true, confirmation: "required", auditTarget: "notification" },
-  schedule_ticket_crew: { roles: OFFICE_ROLES, mutating: true, confirmation: "required", auditTarget: "ticket" },
+  schedule_ticket_crew: { roles: GATE_ROLES, mutating: true, confirmation: "required", auditTarget: "ticket" },
   set_ticket_flag: { mutating: true, confirmation: "required", auditTarget: "ticket" },
   post_ticket_comment: { roles: VENDOR_FIELD_ROLES, mutating: true, confirmation: "required", auditTarget: "message" },
 };
@@ -232,6 +233,7 @@ export const IMPLEMENTATION_A_CAPABILITY_TOOLS = [
 
 export const ASK_V_TOOL_REGISTRY: AskVToolDefinition[] = [
   ...TICKET_WORKFLOW_TOOLS,
+  ...GATE_WORKFLOW_TOOLS,
   ...TOOLS.map((tool) => {
     const metadata = { ...DEFAULT_METADATA, ...(TOOL_METADATA[tool.name] ?? {}) };
     return {

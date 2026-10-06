@@ -245,6 +245,7 @@ export async function handleScheduleTicketRequest(req: any, res: any): Promise<v
   if (!auth) return;
 
   const body = req.body ?? {};
+  const preserveExistingCrew = body.preserveExistingCrew === true;
   const scheduledStartAt = body.scheduledStartAt ? new Date(body.scheduledStartAt) : null;
   if (!scheduledStartAt || Number.isNaN(scheduledStartAt.getTime())) {
     res.status(400).json({
@@ -272,6 +273,13 @@ export async function handleScheduleTicketRequest(req: any, res: any): Promise<v
   const crewEmployeeIds: number[] = Array.isArray(body.crewEmployeeIds)
     ? body.crewEmployeeIds.map((n: unknown) => Number(n)).filter((n: number) => Number.isFinite(n))
     : [];
+  let preservedCrewSnapshot: number[] = [];
+  if (preserveExistingCrew) {
+    const existing = await db.select({ employeeId: ticketCrewTable.employeeId })
+      .from(ticketCrewTable).where(and(eq(ticketCrewTable.ticketId, ticketId), isNull(ticketCrewTable.removedAt)));
+    preservedCrewSnapshot = existing.map(row => row.employeeId);
+    crewEmployeeIds.splice(0, crewEmployeeIds.length, ...new Set([...preservedCrewSnapshot, ...crewEmployeeIds]));
+  }
   const warningKinds: string[] = Array.isArray(body.warningKinds)
     ? Array.from(new Set(
         body.warningKinds.filter((k: unknown): k is string => typeof k === "string" && VALID_KINDS.has(k))
@@ -616,25 +624,35 @@ export async function handleScheduleTicketRequest(req: any, res: any): Promise<v
   // the shape used by POST /tickets/:id/crew-roster (Task #631) so a
   // re-schedule of the same person fires a fresh push.
   const addedAtByEmployeeId = new Map<number, Date>();
+  let crewChanged = false;
 
   // Transaction: replace ticket_crew, update tickets, regenerate scheduled notifications.
   await db.transaction(async (tx) => {
-    // Soft-remove all currently-active crew rows.
-    await tx
+    if (preserveExistingCrew) {
+      // The parent lock also blocks new FK-backed assignments while we write.
+      await tx.select({ id: ticketsTable.id }).from(ticketsTable).where(eq(ticketsTable.id, ticketId)).for("update");
+      const currentCrew = await tx.select({ employeeId: ticketCrewTable.employeeId }).from(ticketCrewTable)
+        .where(and(eq(ticketCrewTable.ticketId, ticketId), isNull(ticketCrewTable.removedAt))).for("update");
+      const current = currentCrew.map(row => row.employeeId).sort((a, b) => a - b);
+      const prepared = [...preservedCrewSnapshot].sort((a, b) => a - b);
+      if (JSON.stringify(current) !== JSON.stringify(prepared)) { crewChanged = true; return; }
+    }
+    // Additive requests preserve existing assignments and acknowledgements.
+    if (!preserveExistingCrew) await tx
       .update(ticketCrewTable)
       .set({ removedAt: now, removedByUserId: auth.session.userId })
       .where(and(eq(ticketCrewTable.ticketId, ticketId), isNull(ticketCrewTable.removedAt)));
 
     // Insert new crew rows.
     if (crewEmployeeIds.length > 0) {
-      const insertedCrew = await tx
+      const crewInsert = tx
         .insert(ticketCrewTable)
         .values(crewEmployeeIds.map((employeeId) => ({
           ticketId,
           employeeId,
           addedByUserId: auth.session.userId,
-        })))
-        .returning({
+        })));
+      const insertedCrew = await (preserveExistingCrew ? crewInsert.onConflictDoNothing() : crewInsert).returning({
           employeeId: ticketCrewTable.employeeId,
           addedAt: ticketCrewTable.addedAt,
         });
@@ -653,8 +671,8 @@ export async function handleScheduleTicketRequest(req: any, res: any): Promise<v
       .set({
         scheduledStartAt,
         scheduledDurationMinutes,
-        foremanUserId,
-        actingForemanUserId,
+        ...(!preserveExistingCrew || body.foremanUserId !== undefined ? { foremanUserId } : {}),
+        ...(!preserveExistingCrew || body.actingForemanUserId !== undefined ? { actingForemanUserId } : {}),
         scheduledAt: now,
         scheduledById: auth.session.userId,
       })
@@ -681,6 +699,10 @@ export async function handleScheduleTicketRequest(req: any, res: any): Promise<v
       await tx.insert(ticketScheduledNotificationsTable).values(notifRows);
     }
   });
+  if (crewChanged) {
+    res.status(409).json({ error: "crew_roster_changed", code: "schedule.roster_changed", message: "The crew changed while scheduling. Read the current roster and prepare the addition again; no schedule or crew change was applied." });
+    return;
+  }
 
   // Task #625 / #642 / #649: persistent inbox + push via notifyUsers below
   // (no duplicate in-memory-only ticket_scheduled push).

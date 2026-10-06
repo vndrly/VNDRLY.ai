@@ -142,7 +142,7 @@ router.post("/gate-change-over/:stationId/duty/assume", async (req, res) => {
 router.post(
   "/gate-change-over/:stationId/duty/:dutySessionId/end",
   async (req, res) => {
-    uuid.parse(req.params.stationId);
+    const stationId = uuid.parse(req.params.stationId);
     const body = z
       .object({
         reason: text.max(500),
@@ -153,6 +153,7 @@ router.post(
       await endGateDuty(sessionFor(req), {
         ...body,
         dutySessionId: uuid.parse(req.params.dutySessionId),
+        stationId,
       }),
     );
   },
@@ -160,12 +161,13 @@ router.post(
 router.post(
   "/gate-change-over/:stationId/work-sessions/:workSessionId/end",
   async (req, res) => {
-    uuid.parse(req.params.stationId);
+    const stationId = uuid.parse(req.params.stationId);
     const body = z.object({ reason: text.max(500).optional() }).parse(req.body);
     res.json(
       await endWorkSession(sessionFor(req), {
         ...body,
         workSessionId: uuid.parse(req.params.workSessionId),
+        stationId,
       }),
     );
   },

@@ -36,9 +36,11 @@ export function chatGptReadToolOutput(name: string, output: unknown): unknown {
 export function chatGptActionTools(session: SessionPayload, scopes: readonly string[]): AskVToolDefinition[] {
   if (!session.userId || !["admin", "partner", "vendor", "field_employee"].includes(session.role ?? "")) return [];
   const gate = scopes.includes("gate:write") ? toolsForRealtime({ role: session.role, membershipRole: session.membershipRole, path: "/gate", workflow: "gate" }).filter((tool) => GATE_ACTIONS.has(tool.name)) : [];
+  if (scopes.includes("gate:write")) gate.push(...ASK_V_TOOL_REGISTRY.filter(tool => tool.name === "manage_gate_shift" && tool.roles.includes(session.role as never)));
   const hub = scopes.includes("work_hub:write") ? toolsForRealtime({ role: session.role, membershipRole: session.membershipRole, path: "/work-hub/askv" }).filter((tool) => Boolean(tool.workHubFamily) && tool.mutating) : [];
   const names = new Set<string>(Object.entries(CHATGPT_WRITE_CAPABILITIES).filter(([scope]) => scopes.includes(scope)).flatMap(([, capability]) => [...capability.tools]));
   const additional = ASK_V_TOOL_REGISTRY.filter(tool => names.has(tool.name)
+    && (tool.name !== "schedule_ticket_crew" || session.role !== "field_employee" || ["foreman", "both"].includes(session.vendorRole ?? ""))
     && (!tool.name.includes("account_invitations") || (session.role === "vendor" && Boolean(session.vendorId) && session.membershipRole === "admin"))
     && (!tool.name.includes("worker_subscriptions") || (session.role === "vendor" && Boolean(session.vendorId) && session.membershipRole === "admin"))
     && (!(CHATGPT_WRITE_CAPABILITIES["onboarding:write"].tools as readonly string[]).includes(tool.name) || hasOnboardingScope(session))

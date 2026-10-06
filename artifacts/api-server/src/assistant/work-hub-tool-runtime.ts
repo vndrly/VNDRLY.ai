@@ -133,6 +133,16 @@ const direct = (input: Input, extra: Input = {}): Input => ({
 });
 
 function resolveImplementationACapabilityRequest(name: string, input: Input): WorkHubToolRequest | null {
+  if (name === "manage_gate_shift") {
+    const uuid = (value: unknown) => typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+    if (!uuid(input.stationId)) return { error: "Read the exact authorized Gate station first." };
+    const base = `/gate-change-over/${input.stationId}`;
+    if (input.action === "prepare_handoff") return request("POST", `${base}/prepare`, { notes: input.notes ?? "" });
+    if (input.action === "cancel_handoff" && typeof input.reason === "string" && input.reason.trim()) return request("POST", `${base}/cancel`, { reason: input.reason });
+    if (input.action === "end_duty" && uuid(input.dutySessionId) && typeof input.reason === "string" && input.reason.trim() && typeof input.handoffCompleted === "boolean") return request("POST", `${base}/duty/${input.dutySessionId}/end`, { reason: input.reason, handoffCompleted: input.handoffCompleted });
+    if (input.action === "end_work" && uuid(input.workSessionId)) return request("POST", `${base}/work-sessions/${input.workSessionId}/end`, withoutNulls({ reason: input.reason }));
+    return { error: "Supply the exact session and required handoff facts for this Gate action." };
+  }
   if (name === "record_ticket_payment") {
     if (!Number.isSafeInteger(input.ticketId) || Number(input.ticketId) <= 0) return { error: "Select an exact authorized ticket." };
     return request("POST", `/tickets/${input.ticketId}/disperse-funds`, { paymentMethod: input.paymentMethod, paymentReference: input.paymentReference, note: input.note });
@@ -815,7 +825,7 @@ export const isTypedWorkHubTool = (name: string): boolean =>
   Boolean(resolveWorkHubToolMetadata(name));
 
 export const resolveWorkHubToolMetadata = (name: string) =>
-  ["manage_ticket_record", "record_ticket_payment"].includes(name) || WORK_HUB_TOOL_METADATA[name] || IMPLEMENTATION_A_CAPABILITY_TOOLS.some((tool) => tool.name === name) ? findAskVTool(name) : null;
+  ["manage_ticket_record", "record_ticket_payment", "manage_gate_shift"].includes(name) || WORK_HUB_TOOL_METADATA[name] || IMPLEMENTATION_A_CAPABILITY_TOOLS.some((tool) => tool.name === name) ? findAskVTool(name) : null;
 
 export function bindWorkHubToolScope(
   rawInput: unknown,

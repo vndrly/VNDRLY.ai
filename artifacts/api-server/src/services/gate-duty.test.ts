@@ -6,6 +6,7 @@ import type { SessionPayload } from "../lib/session";
 import {
   assumeGateDuty,
   endGateDuty,
+  endWorkSession,
   getGateRoster,
   startWorkSession,
 } from "./gate-duty";
@@ -128,6 +129,15 @@ describe("Gate duty teams", () => {
     expect(await getGateRoster(f.workers[1]!, f.stationId)).toMatchObject([
       { id: chad.id, userId: f.workers[1]!.userId },
     ]);
+  });
+  it("rejects ending duty or work through a different station without closing either session", async () => {
+    const f = await fixture();
+    const work = await startWorkSession(f.workers[0]!, { stationId: f.stationId, workHubShiftId: f.shiftId, source: "web", idempotencyKey: key() });
+    const duty = await assumeGateDuty(f.workers[0]!, { stationId: f.stationId, workSessionId: work.workSession.id, source: "web", idempotencyKey: key() });
+    const wrongStation = key();
+    await expect(endGateDuty(f.workers[0]!, { stationId: wrongStation, dutySessionId: duty.id, reason: "End shift", handoffCompleted: true })).rejects.toMatchObject({ code: "change_over.duty_not_found" });
+    await expect(endWorkSession(f.workers[0]!, { stationId: wrongStation, workSessionId: work.workSession.id })).rejects.toMatchObject({ code: "change_over.work_session_not_found" });
+    expect(await getGateRoster(f.workers[0]!, f.stationId)).toMatchObject([{ id: duty.id }]);
   });
 
   it("returns the same duty record for an idempotent retry", async () => {

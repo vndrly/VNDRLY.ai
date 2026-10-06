@@ -52,6 +52,17 @@ describe("ChatGPT onboarding changes", () => {
     expect(chatGptActionTools(worker, ["operations:write"]).map(tool => tool.name)).toEqual(["mark_notifications_read"]);
     expect(chatGptActionTools(worker, ["tickets:read", "operations:read"])).toEqual([]);
   });
+  it("allows foreman scheduling discovery while retaining separate ticket consent", () => {
+    const foreman = { userId: 17, role: "field_employee", vendorPeopleId: 8, vendorId: 4, vendorRole: "foreman" };
+    expect(chatGptActionTools(foreman, ["tickets:write"]).map(tool => tool.name)).toContain("schedule_ticket_crew");
+    expect(chatGptActionTools({ ...foreman, vendorRole: "both" }, ["tickets:write"]).map(tool => tool.name)).toContain("schedule_ticket_crew");
+    expect(chatGptActionTools(foreman, ["tickets:read"])).toEqual([]);
+  });
+  it("requires Gate write access for duty completion and handoff preparation", () => {
+    const worker = { userId: 17, role: "field_employee", vendorPeopleId: 8, vendorId: 4 };
+    expect(chatGptActionTools(worker, ["gate:write"]).map(tool => tool.name)).toContain("manage_gate_shift");
+    expect(chatGptActionTools(worker, ["gate:read", "tickets:write"]).map(tool => tool.name)).not.toContain("manage_gate_shift");
+  });
   it("requires asset and invitation writes separately and restricts invitation administration", () => {
     expect(names(admin, ["operations:read", "invitations:read"])).toEqual([]);
     expect(names(admin, ["assets:write"])).toEqual(["confirm_asset_custody_action"]);

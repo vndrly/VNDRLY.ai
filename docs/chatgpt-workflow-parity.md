@@ -10,6 +10,8 @@ This candidate is not a declaration of complete web/iOS or Ask V parity. The pub
 - `record_ticket_payment` records an already-made payment through the canonical Accounts Payable endpoint, with new explicit `finance:write` consent. Existing grants do not inherit it; this tool never transfers money.
 - ChatGPT ticket creation strips supplied location assertions and creates pending arrival. Creating a ticket never proves arrival or starts a location collector.
 - Bound approval dispatch uses the typed-tool classifier, including ticket and asset capabilities. Durable action claims and saved results prevent approval retries from submitting a second change.
+- `manage_gate_shift` adds duty/work-session completion and handoff preparation/cancellation. Exact session identifiers come from station state; incoming-worker authentication remains a trusted device flow. End-session routes reject a mismatched station.
+- Scheduling one crew member preserves existing assignments, acknowledgements and foreman fields. A locked roster check refuses stale additions/removals before applying any change. Field foremen and Gate supervisors retain the canonical ticket/site authority checks.
 - VENDRY Fleet is an explicit disconnected extension placeholder. Existing authorized trip views remain available; tagged-vehicle tracking, load phases, missing-vehicle distance and navigation await the Fleet package.
 
 ## Completion still required

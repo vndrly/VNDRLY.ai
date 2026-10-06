@@ -17,6 +17,18 @@ const command = {
 };
 
 describe("resolveWorkHubToolRequest", () => {
+  it("ends exact Gate sessions only with trusted authorization and required handoff facts", () => {
+    const stationId = "00000000-0000-4000-8000-000000000001";
+    const dutySessionId = "00000000-0000-4000-8000-000000000002";
+    const workSessionId = "00000000-0000-4000-8000-000000000003";
+    const actor = { userId: 17, role: "field_employee" };
+    const input = { stationId, dutySessionId, action: "end_duty", reason: "Shift finished", handoffCompleted: false };
+    expect(resolveExecutableWorkHubToolRequest("manage_gate_shift", input, false, actor)).toMatchObject({ requiresConfirmation: true });
+    expect(resolveExecutableWorkHubToolRequest("manage_gate_shift", { ...input, handoffCompleted: undefined }, true, actor)).toHaveProperty("error");
+    expect(resolveExecutableWorkHubToolRequest("manage_gate_shift", input, true, actor)).toMatchObject({ path: `/gate-change-over/${stationId}/duty/${dutySessionId}/end`, body: { reason: "Shift finished", handoffCompleted: false } });
+    expect(resolveExecutableWorkHubToolRequest("manage_gate_shift", { stationId, workSessionId, action: "end_work" }, true, actor)).toMatchObject({ path: `/gate-change-over/${stationId}/work-sessions/${workSessionId}/end` });
+    expect(resolveExecutableWorkHubToolRequest("manage_gate_shift", { stationId, action: "transfer", proof: "invented" }, true, actor)).toHaveProperty("error");
+  });
   it("records a payment only after trusted authorization without moving money", () => {
     const input = { ticketId: 12, paymentMethod: "check", paymentReference: "1234", note: "Already paid" };
     expect(resolveExecutableWorkHubToolRequest("record_ticket_payment", input, false)).toMatchObject({ requiresConfirmation: true });
