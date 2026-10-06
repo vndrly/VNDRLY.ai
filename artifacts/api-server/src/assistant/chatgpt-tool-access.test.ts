@@ -1,9 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { chatGptReadableTools, requireChatGptReadableTool, chatGptReadToolOutput, chatGptReadToolDescription } from "./chatgpt-tool-access";
+import { chatGptReadableTools, requireChatGptReadableTool, chatGptReadToolOutput, chatGptReadToolDescription, chatGptReadToolAnnotations } from "./chatgpt-tool-access";
 import { CHATGPT_READ_CAPABILITIES } from "./chatgpt-read-capabilities";
 import { findAskVTool } from "./tool-registry";
 
 describe("ChatGPT assistant tool access", () => {
+  it("discloses external market-data reads without marking them destructive", () => {
+    for (const name of ["get_stock_quote", "get_crude_oil_price"]) {
+      expect(chatGptReadToolAnnotations(name)).toEqual({ readOnlyHint: true, destructiveHint: false, openWorldHint: true });
+    }
+    expect(chatGptReadToolAnnotations("query_asset_custody").openWorldHint).toBe(false);
+  });
   const session = { userId: 17, role: "vendor", membershipRole: "member", vendorId: 4 };
   it("rejects anonymous and unsupported identities", () => {
     expect(chatGptReadableTools({}, ["gate:read", "work_hub:read"])).toEqual([]);

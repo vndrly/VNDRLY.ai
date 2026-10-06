@@ -4,7 +4,7 @@ import { SESSION_SECRET, getSessionFromRequest } from "../lib/session";
 import { createRateLimiter } from "../lib/rate-limit-factory";
 import { validateAssistantSession, withAssistantGrants } from "../assistant/chatgpt-grant-store";
 import { ASSISTANT_ISSUER, ASSISTANT_RESOURCE, ASSISTANT_SCOPES, CHATGPT_CLIENT_ID, AssistantOAuthError, validateAssistantAuthorization, issueAssistantCode, exchangeAssistantCode, refreshAssistantTokens, assistantAccessMatches, assistantAccessHashMatches, assistantTokenHash, assistantTokenUserId } from "../assistant/chatgpt-oauth";
-import { chatGptActionTools, chatGptReadableTools, requireChatGptReadableTool, chatGptReadToolDescription, chatGptReadToolOutput } from "../assistant/chatgpt-tool-access";
+import { chatGptActionTools, chatGptReadableTools, requireChatGptReadableTool, chatGptReadToolDescription, chatGptReadToolOutput, chatGptReadToolAnnotations } from "../assistant/chatgpt-tool-access";
 import { WORKSPACE_HTML, WORKSPACE_URI, WORKSPACE_TOOL, workspaceRequest, workspaceOutput } from "../assistant/chatgpt-workspace";
 import { askvPendingConfirmations, organizationKeyFromSession, runBoundTypedAskVTool } from "../assistant/askv-pending-confirmation";
 import { mutationIdempotencyKey, readPersistentAskVMutationResult } from "../assistant/askv-idempotency";
@@ -168,7 +168,7 @@ router.post("/mcp", async (req, res) => {
     return reply({ contents: [{ uri: WORKSPACE_URI, mimeType: "text/html;profile=mcp-app", text: WORKSPACE_HTML, _meta: { ui: { csp: { connectDomains: [], resourceDomains: authorized.scopes.includes("crew:read") ? ["https://api.mapbox.com"] : [] }, prefersBorder: true } } }] });
   }
   if (message.method === "tools/list") {
-    const reads = chatGptReadableTools(authorized.session, authorized.scopes).map((tool) => ({ name: tool.name, description: chatGptReadToolDescription(tool), inputSchema: tool.inputSchema, annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false } }));
+    const reads = chatGptReadableTools(authorized.session, authorized.scopes).map((tool) => ({ name: tool.name, description: chatGptReadToolDescription(tool), inputSchema: tool.inputSchema, annotations: chatGptReadToolAnnotations(tool.name) }));
     if (reads.some(tool => ["get_work_hub_briefing", "get_work_hub_calendar", "query_gate_stations", "lookup_user_progress", "query_tickets", "query_notifications", "query_field_trips", "query_asset_custody"].includes(tool.name))) reads.push(WORKSPACE_TOOL);
     const actions = chatGptActionTools(authorized.session, authorized.scopes);
     const preparedTools = actions.map((tool) => ({ name: tool.name, description: `${tool.description}${tool.name === "manage_ticket_record" ? " Authorized operations can overwrite ticket fields, cancel tickets, or remove line items. This call only prepares the change; submission requires the existing authorization panel." : ""} This connection prepares the exact change for authorization in the VNDRLY action panel. Location-dependent actions use the secure device authorization link. Never claim prepared means completed.`, inputSchema: { ...tool.inputSchema, properties: Object.fromEntries(Object.entries(tool.inputSchema.properties ?? {}).filter(([key]) => !SERVER_ACTION_FIELDS.has(key))), required: (tool.inputSchema.required ?? []).filter((key) => !SERVER_ACTION_FIELDS.has(key)) }, annotations: { readOnlyHint: false, destructiveHint: tool.name === "manage_ticket_record", openWorldHint: false }, _meta: ACTION_PANEL_META }));
