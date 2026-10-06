@@ -8,13 +8,15 @@ describe("ChatGPT onboarding changes", () => {
   it("requires separate finance write consent and leaves AP authority to the canonical endpoint", () => {
     expect(names(admin, ["tickets:write"])).not.toContain("record_ticket_payment");
     expect(names(admin, ["finance:read"])).not.toContain("record_ticket_payment");
+    expect(names(admin, ["tickets:write"])).not.toContain("reverse_ticket_payment_record");
+    expect(names(admin, ["finance:read"])).not.toContain("reverse_ticket_payment_record");
     expect(names(admin, ["finance:write"])).toEqual([]);
     const partner = { userId: 17, role: "partner", partnerId: 4 };
-    expect(chatGptActionTools(partner, ["finance:write"]).map(tool => tool.name)).toEqual(["record_ticket_payment"]);
-    expect(chatGptActionTools({ userId: 17, role: "admin" }, ["finance:write"]).map(tool => tool.name)).toEqual(["record_ticket_payment"]);
+    expect(chatGptActionTools(partner, ["finance:write"]).map(tool => tool.name)).toEqual(["record_ticket_payment", "reverse_ticket_payment_record"]);
+    expect(chatGptActionTools({ userId: 17, role: "admin" }, ["finance:write"]).map(tool => tool.name)).toEqual(["record_ticket_payment", "reverse_ticket_payment_record"]);
   });
   it.each([
-    ["admin", ["approve", "accept", "reactivate"]],
+    ["admin", ["approve", "accept", "reactivate", "unlock"]],
     ["partner", ["approve", "reinvite"]],
     ["vendor", ["accept", "deny", "awaiting_payment"]],
     ["field_employee", ["create", "update", "submit", "awaiting_payment"]],
@@ -25,6 +27,7 @@ describe("ChatGPT onboarding changes", () => {
     const schema = tool.inputSchema as { properties: { action: { enum: string[] } } };
     expect(schema.properties.action.enum).toEqual(expect.arrayContaining(expected as string[]));
     if (role !== "admin") expect(schema.properties.action.enum).not.toContain("reactivate");
+    if (role !== "admin") expect(schema.properties.action.enum).not.toContain("unlock");
     if (!["admin", "partner"].includes(String(role))) expect(schema.properties.action.enum).not.toContain("approve");
     if (!["admin", "vendor"].includes(String(role))) expect(schema.properties.action.enum).not.toContain("accept");
   });

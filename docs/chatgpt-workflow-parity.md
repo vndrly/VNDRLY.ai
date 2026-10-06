@@ -30,3 +30,7 @@ Candidate API typecheck and focused authorization, workspace, runtime and connec
 
 `acknowledge_ticket_assignment` confirms or declines the connected user's own active crew assignment through the canonical endpoint. Both the worker record and ticket must belong to the current vendor context. Other-worker identifiers are ignored, removed assignments are refused, and vendor contract acceptance remains a separate action. The isolated database regression covers these boundaries; complete workflow parity still requires the remaining device and domain capabilities documented below.
 
+### Ticket corrections follow-up
+
+The follow-up adds platform-administrator-only `manage_ticket_record` action `unlock` for submitted/approved corrections, requiring a trimmed reason of 1 to 500 characters. It cannot substitute for cancelled-ticket reactivation or change the requested target status. `reverse_ticket_payment_record` uses the canonical AP reversal endpoint and the separately consented `finance:write` family. It restores the accounting record to `approved` and retains domain audit history; it never refunds or cancels a real payment. Both adapters forward only the exact ticket and reason, require saved-action authorization, and leave current status and Accounts Payable checks to the canonical endpoint. Focused adapter/scope tests pass; this follow-up still requires full validation and deployment.
+

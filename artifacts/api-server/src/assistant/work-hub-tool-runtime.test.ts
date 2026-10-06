@@ -55,6 +55,25 @@ describe("resolveWorkHubToolRequest", () => {
     expect(resolveExecutableWorkHubToolRequest("record_ticket_payment", input, false)).toMatchObject({ requiresConfirmation: true });
     expect(resolveExecutableWorkHubToolRequest("record_ticket_payment", input, true)).toMatchObject({ method: "POST", path: "/tickets/12/disperse-funds", body: { paymentMethod: "check", paymentReference: "1234", note: "Already paid" } });
   });
+  it("reverses only the payment record with trusted authorization and a bounded reason", () => {
+    const input = { ticketId: 12, reason: "  Recorded against wrong check  ", paymentReference: "override", actorUserId: 999 };
+    expect(resolveExecutableWorkHubToolRequest("reverse_ticket_payment_record", input, false, { userId: 1, role: "partner" })).toMatchObject({ requiresConfirmation: true });
+    const resolved = resolveExecutableWorkHubToolRequest("reverse_ticket_payment_record", input, true, { userId: 1, role: "partner" });
+    expect(resolved).toMatchObject({ method: "POST", path: "/tickets/12/reverse-dispersal" });
+    expect((resolved as { body: unknown }).body).toEqual({ reason: "Recorded against wrong check" });
+    for (const reason of [" ", "x".repeat(501), 17]) expect(resolveExecutableWorkHubToolRequest("reverse_ticket_payment_record", { ticketId: 12, reason }, true)).toHaveProperty("error");
+    expect(resolveExecutableWorkHubToolRequest("reverse_ticket_payment_record", { ...input, ticketId: "12/reverse-dispersal" }, true)).toHaveProperty("error");
+    expect(resolveExecutableWorkHubToolRequest("reverse_ticket_payment_record", input, true, { userId: 1, role: "vendor" })).toHaveProperty("error");
+  });
+  it("unlocks corrections only for platform administrators and ignores supplied state overrides", () => {
+    const input = { action: "unlock", ticketId: 12, payload: { reason: "  Correct labor entry  ", status: "funds_dispersed", actorUserId: 999 } };
+    expect(resolveExecutableWorkHubToolRequest("manage_ticket_record", input, false, { userId: 1, role: "admin" })).toMatchObject({ requiresConfirmation: true });
+    expect(resolveExecutableWorkHubToolRequest("manage_ticket_record", input, true, { userId: 1, role: "partner" })).toHaveProperty("error");
+    const resolved = resolveExecutableWorkHubToolRequest("manage_ticket_record", input, true, { userId: 1, role: "admin" });
+    expect(resolved).toMatchObject({ path: "/tickets/12/unlock", method: "POST" });
+    expect((resolved as { body: unknown }).body).toEqual({ reason: "Correct labor entry" });
+    for (const reason of [" ", "x".repeat(501), 17]) expect(resolveExecutableWorkHubToolRequest("manage_ticket_record", { ...input, payload: { reason } }, true, { userId: 1, role: "admin" })).toHaveProperty("error");
+  });
   it("requires trusted authorization and the right role for ticket transitions", () => {
     expect(resolveExecutableWorkHubToolRequest("manage_ticket_record", { action: "approve", ticketId: 12, payload: {} }, false, { userId: 1, role: "partner" })).toMatchObject({ requiresConfirmation: true });
     expect(resolveExecutableWorkHubToolRequest("manage_ticket_record", { action: "approve", ticketId: 12, payload: {} }, true, { userId: 1, role: "field_employee" })).toMatchObject({ error: "This ticket action is unavailable to your role." });

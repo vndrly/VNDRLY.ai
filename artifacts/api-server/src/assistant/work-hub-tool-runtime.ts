@@ -158,12 +158,21 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
     if (!Number.isSafeInteger(input.ticketId) || Number(input.ticketId) <= 0) return { error: "Select an exact authorized ticket." };
     return request("POST", `/tickets/${input.ticketId}/disperse-funds`, { paymentMethod: input.paymentMethod, paymentReference: input.paymentReference, note: input.note });
   }
+  if (name === "reverse_ticket_payment_record") {
+    if (!Number.isSafeInteger(input.ticketId) || Number(input.ticketId) <= 0) return { error: "Select an exact authorized ticket." };
+    if (typeof input.reason !== "string" || !input.reason.trim() || input.reason.trim().length > 500) return { error: "Supply a payment reversal reason of 1 to 500 characters." };
+    return request("POST", `/tickets/${input.ticketId}/reverse-dispersal`, { reason: input.reason.trim() });
+  }
   const action = typeof input.action === "string" ? input.action : "";
   const payload = record(input.payload);
   if (name === "manage_ticket_record") {
     if (action === "create") return request("POST", "/tickets", payload);
     if (!Number.isSafeInteger(input.ticketId) || Number(input.ticketId) <= 0) return { error: "Select an exact authorized ticket." };
     const base = `/tickets/${input.ticketId}`;
+    if (action === "unlock") {
+      if (typeof payload.reason !== "string" || !payload.reason.trim() || payload.reason.trim().length > 500) return { error: "Supply a ticket correction reason of 1 to 500 characters." };
+      return request("POST", `${base}/unlock`, { reason: payload.reason.trim() });
+    }
     if (action === "update") return request("PATCH", base, payload);
     if (action === "add_line_item") return request("POST", `${base}/line-items`, payload);
     if (action === "remove_line_item") return Number.isSafeInteger(input.lineItemId) && Number(input.lineItemId) > 0 ? request("DELETE", `${base}/line-items/${input.lineItemId}`) : { error: "Select an exact line item." };
@@ -836,7 +845,7 @@ export const isTypedWorkHubTool = (name: string): boolean =>
   Boolean(resolveWorkHubToolMetadata(name));
 
 export const resolveWorkHubToolMetadata = (name: string) =>
-  ["manage_ticket_record", "acknowledge_ticket_assignment", "record_ticket_payment", "manage_gate_shift"].includes(name) || WORK_HUB_TOOL_METADATA[name] || IMPLEMENTATION_A_CAPABILITY_TOOLS.some((tool) => tool.name === name) ? findAskVTool(name) : null;
+  ["manage_ticket_record", "acknowledge_ticket_assignment", "record_ticket_payment", "reverse_ticket_payment_record", "manage_gate_shift"].includes(name) || WORK_HUB_TOOL_METADATA[name] || IMPLEMENTATION_A_CAPABILITY_TOOLS.some((tool) => tool.name === name) ? findAskVTool(name) : null;
 
 export function bindWorkHubToolScope(
   rawInput: unknown,

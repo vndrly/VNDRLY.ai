@@ -2,7 +2,7 @@ import { TICKET_RECORD_ACTIONS } from "./ticket-workflow-tools";
 
 /** Separate write consent never follows from a read grant. */
 export const CHATGPT_WRITE_CAPABILITIES = {
-  "finance:write": { label: "Prepare recording an already-made ticket payment with current Accounts Payable authority", tools: ["record_ticket_payment"] },
+  "finance:write": { label: "Prepare recording or reversing ticket payment records with current Accounts Payable authority; never transfer money", tools: ["record_ticket_payment", "reverse_ticket_payment_record"] },
   "workforce:write": { label: "Prepare authorized shift assignments, acknowledgements, and coverage evaluation or escalation", tools: ["confirm_workforce_coverage_action"] },
   "trips:write": { label: "Prepare authorized trip start, pause, completion, or one approval-device location update", tools: ["confirm_field_trips_action"] },
   "safety:write": { label: "Prepare authorized incident response, acknowledgement, evidence, escalation, and closure", tools: ["confirm_incident_response_action"] },
