@@ -5,6 +5,7 @@ import path from "path";
 import fs from 'node:fs';
 import { parseEnv } from 'node:util';
 import { fetchEnergyTicker } from '../api-server/src/lib/market-data/energy-ticker';
+import { renderPublicPrivacyHtml } from './src/lib/public-legal-html';
 
 const rawPort = process.env.PORT;
 
@@ -19,6 +20,12 @@ const basePath = process.env.BASE_PATH ?? "/";
 export default defineConfig({
   base: basePath,
   plugins: [react(), tailwindcss(), {
+    name: 'public-privacy-document',
+    apply: 'build',
+    generateBundle() {
+      this.emitFile({ type: 'asset', fileName: 'legal/privacy/index.html', source: renderPublicPrivacyHtml() });
+    },
+  }, {
     name: 'local-market-ticker',
     apply: 'serve',
     configureServer(server) {
