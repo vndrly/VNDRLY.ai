@@ -5,7 +5,7 @@ import { findAskVTool } from "./tool-registry";
 
 describe("ChatGPT assistant tool access", () => {
   it("discloses external market-data reads without marking them destructive", () => {
-    for (const name of ["get_stock_quote", "get_crude_oil_price"]) {
+    for (const name of ["get_stock_quote", "get_crude_oil_price", "query_crew_eta", "query_ticket_route_eta", "estimate_driving_route", "query_ticket_mileage_audit"]) {
       expect(chatGptReadToolAnnotations(name)).toEqual({ readOnlyHint: true, destructiveHint: false, openWorldHint: true });
     }
     expect(chatGptReadToolAnnotations("query_asset_custody").openWorldHint).toBe(false);

@@ -163,7 +163,7 @@ router.post("/mcp", async (req, res) => {
   if (message.method === "ping") return reply({});
   if (message.method === "resources/list") return reply({ resources: [{ uri: WORKSPACE_URI, name: "VNDRLY work desk", mimeType: "text/html;profile=mcp-app" }, { uri: ACTION_PANEL_URI, name: "VNDRLY action authorization", mimeType: "text/html;profile=mcp-app" }] });
   if (message.method === "resources/read") {
-    if ([ACTION_PANEL_URI, LEGACY_ACTION_PANEL_URI].includes(message.params?.uri)) return reply({ contents: [{ uri: message.params.uri, mimeType: "text/html;profile=mcp-app", text: ACTION_PANEL_HTML, _meta: { ui: { csp: { connectDomains: [], resourceDomains: [] }, prefersBorder: true } } }] });
+    if ([ACTION_PANEL_URI, LEGACY_ACTION_PANEL_URI].includes(message.params?.uri)) return reply({ contents: [{ uri: message.params.uri, mimeType: "text/html;profile=mcp-app", text: ACTION_PANEL_HTML, _meta: { "openai/widgetDescription": "VNDRLY action authorization panel. Shows the exact prepared change, current saved status, and actual result after submission. Location-dependent changes use the secure device authorization link.", ui: { csp: { connectDomains: [], resourceDomains: [] }, prefersBorder: true } } }] });
     if (message.params?.uri !== WORKSPACE_URI) return res.json({ jsonrpc: "2.0", id: message.id, error: { code: -32602, message: "Unknown resource" } });
     return reply({ contents: [{ uri: WORKSPACE_URI, mimeType: "text/html;profile=mcp-app", text: WORKSPACE_HTML, _meta: { ui: { csp: { connectDomains: [], resourceDomains: authorized.scopes.includes("crew:read") ? ["https://api.mapbox.com"] : [] }, prefersBorder: true } } }] });
   }
