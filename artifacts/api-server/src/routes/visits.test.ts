@@ -166,6 +166,7 @@ const tables = {
   ]),
   vendors: tableTag("vendors", ["id", "name"]),
   siteWorkAssignments: tableTag("siteWorkAssignments", [
+    "isGateContractor",
     "id",
     "siteLocationId",
     "vendorId",
@@ -586,7 +587,20 @@ afterEach(() => {
 });
 
 describe("POST /api/visits/gate/read-plate", () => {
+  it("denies plate reading after the last Gate contract is revoked", async () => {
+    seedScenario();
+    fixtures.siteWorkAssignments[0].vendorId = 9;
+    fixtures.siteWorkAssignments[0].isGateContractor = false;
+    const response = await request(app).post("/api/visits/gate/read-plate")
+      .set("Cookie", staffCookie({ userId: 77, role: "vendor", vendorId: 9, vendorRole: "gatekeeper" }))
+      .send({ objectPath: "/objects/uploads/00000000-0000-4000-8000-000000000001" });
+    expect(response.status).toBe(403);
+    expect(readPlateFromImageMock).not.toHaveBeenCalled();
+    expect(getStoredObjectMock).not.toHaveBeenCalled();
+  });
   it("returns the legacy scalar plate and OCR metadata at the top level", async () => {
+    seedScenario();
+    fixtures.siteWorkAssignments[0].vendorId = 9;
     getStoredObjectMock.mockResolvedValue({
       body: Buffer.from("plate-photo"),
       contentType: "image/jpeg",
@@ -738,7 +752,7 @@ function seedScenario() {
   fixtures.vendors = [vendor, otherVendor];
   fixtures.siteLocations = [site, otherSite];
   fixtures.siteWorkAssignments = [
-    { id: 1, siteLocationId: site.id, vendorId: vendor.id },
+    { id: 1, siteLocationId: site.id, vendorId: vendor.id, isGateContractor: true },
   ];
   return { partner, vendor, otherVendor, site, otherSite };
 }

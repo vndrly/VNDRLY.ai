@@ -985,6 +985,10 @@ router.get("/visits/gate/assigned-sites", async (req, res): Promise<void> => {
 router.post("/visits/gate/read-plate", async (req, res): Promise<void> => {
   const session = await requireGatekeeperSession(req, res);
   if (!session) return;
+  if (!session.gateAccessSiteIds?.length) {
+    res.status(403).json({ message: "Gate contractor access required", code: VISIT_NO_ACCESS });
+    return;
+  }
   if (!(await enforceGateOcrRateLimit(req, res, session))) return;
   const b = (req.body ?? {}) as { objectPath?: string };
   if (!b.objectPath) {
