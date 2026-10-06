@@ -1,7 +1,74 @@
 import { describe, expect, it } from "vitest";
+import { runInNewContext } from "node:vm";
 import { workspaceOutput, workspaceRequest, WORKSPACE_HTML } from "./chatgpt-workspace";
 const now = new Date("2026-10-05T17:00:00Z");
+function workspaceHarness() {
+  const nodes = new Map<string, any>();
+  const makeNode = () => ({ textContent: "", className: "", append() {}, replaceChildren() {}, setAttribute() {}, removeAttribute() {} });
+  for (const id of ["title", "status", "content", "updated", "refresh"]) nodes.set(id, makeNode());
+  const links = ["fleet", "tickets", "notifications"].map(view => ({ ...makeNode(), dataset: { view }, hidden: false, onclick: undefined as any }));
+  const requests: any[] = [];
+  const intervals: (() => void)[] = [];
+  let receive: (event: any) => void;
+  const parent = { postMessage: (message: any) => requests.push(message) };
+  runInNewContext(WORKSPACE_HTML.match(/<script>([\s\S]*)<\/script>/)![1], {
+    document: { getElementById: (id: string) => nodes.get(id), createElement: makeNode, querySelectorAll: () => links, documentElement: { scrollHeight: 300 } },
+    window: { parent, addEventListener: (_: string, callback: any) => { receive = callback; } },
+    setTimeout: () => 0, clearTimeout() {}, setInterval: (callback: () => void) => { intervals.push(callback); return 0; },
+  });
+  const output = (view: string) => ({ view, title: view, availableViews: ["tickets", "notifications"], sections: [], attention: [], metrics: [], generatedAt: now.toISOString(), sourceArguments: {} });
+  return {
+    nodes,
+    requests,
+    tick: () => intervals.forEach(callback => callback()),
+    publish: (view: string) => receive!({ source: parent, data: { jsonrpc: "2.0", method: "ui/notifications/tool-result", params: { structuredContent: output(view) } } }),
+    click: (view: string) => links.find(link => link.dataset.view === view)!.onclick({ preventDefault() {} }),
+    reply: async (view: string, failed = false) => {
+      const sent = requests.find(message => message.params?.arguments?.view === view);
+      receive!({ source: parent, data: { jsonrpc: "2.0", id: sent.id, result: failed ? { isError: true } : { structuredContent: output(view) } } });
+      await Promise.resolve();
+    },
+  };
+}
 describe("VNDRLY workspace presentation", () => {
+  it("refreshes an initially host-rendered Fleet panel without overlapping a pending refresh", async () => {
+    const ui = workspaceHarness();
+    ui.publish("fleet");
+    ui.tick();
+    ui.tick();
+    expect(ui.requests.filter(message => message.method === "tools/call")).toHaveLength(1);
+    await ui.reply("fleet");
+    ui.tick();
+    expect(ui.requests.filter(message => message.method === "tools/call")).toHaveLength(2);
+  });
+  it("does not let Fleet polling override a newer panel while navigation is pending", async () => {
+    const ui = workspaceHarness();
+    ui.click("fleet");
+    await ui.reply("fleet");
+    ui.click("tickets");
+    ui.tick();
+    expect(ui.requests.filter(message => message.method === "tools/call").map(message => message.params.arguments.view)).toEqual(["fleet", "tickets"]);
+    await ui.reply("tickets");
+    expect(ui.nodes.get("title").textContent).toBe("tickets");
+  });
+  it("keeps the latest selected panel when older requests finish afterward", async () => {
+    const ui = workspaceHarness();
+    ui.click("tickets");
+    ui.click("notifications");
+    await ui.reply("notifications");
+    expect(ui.nodes.get("title").textContent).toBe("notifications");
+    await ui.reply("tickets");
+    expect(ui.nodes.get("title").textContent).toBe("notifications");
+  });
+  it("does not overwrite a newer panel with an older request failure", async () => {
+    const ui = workspaceHarness();
+    ui.click("tickets");
+    ui.click("notifications");
+    await ui.reply("notifications");
+    await ui.reply("tickets", true);
+    expect(ui.nodes.get("title").textContent).toBe("notifications");
+    expect(ui.nodes.get("status").textContent).toBe("");
+  });
   it("maps only returned reliable positions and preserves freshness states", () => {
     const output = workspaceOutput("fleet", "query_field_trips", {}, { trips: [{ driverName: "Synthetic Driver", vehicleName: "Truck", presenceState: "on_site", trackingState: "active", freshness: "stale", recordedAt: now.toISOString(), location: { latitude: 35, longitude: -97 } }, { driverName: "Redacted Driver", presenceState: "en_route", freshness: "redacted", location: null }] }, now);
     expect(output.fleetMap?.points).toEqual([expect.objectContaining({ label: "Truck · Synthetic Driver", freshness: "stale" })]);
