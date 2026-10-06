@@ -43,6 +43,12 @@ beforeEach(() => {
   vi.stubGlobal("fetch", fetchMock);
 });
 describe("AskV canonical Gate and field operations", () => {
+  it("recognizes successful empty revocation responses without parsing JSON", async () => {
+    const json = vi.fn().mockRejectedValue(new SyntaxError("Empty response"));
+    fetchMock.mockResolvedValue({ ok: true, status: 204, json });
+    expect(await callNaturalVoiceDomainApi("/implementation-a/account-invitations/synthetic", "DELETE", {}, gate)).toEqual({ ok: true, status: "applied" });
+    expect(json).not.toHaveBeenCalled();
+  });
   it("carries server-authorized asset confirmation to the custody endpoint", async () => {
     fetchMock.mockResolvedValue({ ok: true, json: async () => ({ status: "applied" }) });
     await callNaturalVoiceDomainApi("/implementation-a/assets/7be22c7d-4638-4144-bb18-0d2a66996a43/checkout", "POST", { confirmed: true, expectedVersion: 2, operationId: "operation" }, gate);

@@ -1,5 +1,5 @@
 import { Router, type Request, type Response } from "express";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, desc, eq, isNull } from "drizzle-orm";
 import { z } from "zod/v4";
 import {
   CloseSafetyIncidentInputSchema,
@@ -75,10 +75,10 @@ async function fallbackAdmins(owner: {
 
 function assertEventAccess(
   actor: ReturnType<typeof context>,
-  event: { vendorId: number | null; partnerId: number },
+  event: { vendorId: number | null; partnerId: number; reportedByUserId: number },
 ): void {
   if (actor.session.role === "admin") return;
-  if (!isSafetyIncidentInScope(actor.owner, event)) {
+  if ((actor.session.role === "field_employee" && event.reportedByUserId !== actor.userId) || !isSafetyIncidentInScope(actor.owner, event)) {
     throw Object.assign(new Error("Incident response not found"), {
       status: 404,
       code: "safety.response_not_found",
@@ -100,6 +100,7 @@ async function loadResponse(
       .select({
         partnerId: safetyEventsTable.partnerId,
         vendorId: safetyEventsTable.vendorId,
+        reportedByUserId: safetyEventsTable.reportedByUserId,
       })
       .from(safetyEventsTable)
       .where(eq(safetyEventsTable.id, eventId))
@@ -114,6 +115,30 @@ async function loadResponse(
   assertEventAccess(actor, event);
   return response;
 }
+
+/** Match the existing safety-event read scope and omit reports/evidence/recipients. */
+router.get(["/implementation-a/safety/incidents", "/implementation-a/safety/incidents/:eventId"], async (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+  try {
+    const actor = context(req);
+    const scope = actor.session.role === "admin" ? []
+      : actor.session.role === "field_employee" ? [eq(safetyEventsTable.reportedByUserId, actor.userId)]
+      : actor.owner ? [actor.owner.type === "vendor" ? eq(safetyEventsTable.vendorId, actor.owner.id) : eq(safetyEventsTable.partnerId, actor.owner.id)] : null;
+    if (scope === null) return res.status(403).json({ code: "safety.owner_required" });
+    const eventId = req.params.eventId === undefined ? undefined : EventIdSchema.parse(req.params.eventId);
+    const incidents = await db.select({ eventId: safetyIncidentResponsesTable.eventId,
+      eventNumber: safetyEventsTable.eventNumber, siteLocationId: safetyEventsTable.siteLocationId,
+      severity: safetyIncidentResponsesTable.severity, responseStatus: safetyIncidentResponsesTable.responseStatus,
+      responseDeadlineAt: safetyIncidentResponsesTable.responseDeadlineAt,
+      acknowledgedAt: safetyIncidentResponsesTable.acknowledgedAt, closedAt: safetyIncidentResponsesTable.closedAt,
+      degradedCapabilities: safetyIncidentResponsesTable.degradedCapabilities, updatedAt: safetyIncidentResponsesTable.updatedAt,
+    }).from(safetyIncidentResponsesTable).innerJoin(safetyEventsTable, eq(safetyEventsTable.id, safetyIncidentResponsesTable.eventId))
+      .where(and(...scope, ...(eventId === undefined ? [] : [eq(safetyEventsTable.id, eventId)])))
+      .orderBy(desc(safetyIncidentResponsesTable.updatedAt)).limit(100);
+    if (eventId !== undefined && !incidents.length) return res.status(404).json({ code: "safety.response_not_found" });
+    return res.json({ incidents });
+  } catch (error) { return sendError(res, error); }
+});
 
 router.post("/implementation-a/safety/incidents", async (req, res) => {
   try {
@@ -138,6 +163,7 @@ router.post("/implementation-a/safety/incidents", async (req, res) => {
         id: safetyEventsTable.id,
         partnerId: safetyEventsTable.partnerId,
         vendorId: safetyEventsTable.vendorId,
+        reportedByUserId: safetyEventsTable.reportedByUserId,
       })
       .from(safetyEventsTable)
       .where(eq(safetyEventsTable.id, input.safetyEventId))

@@ -111,6 +111,20 @@ describe.skipIf(!usesIsolatedDatabase)("secure account invitations", () => {
     };
   }
 
+  it("lists only administrator-owned invitation status without activation secrets", async () => {
+    const issued = await issueAccountInvitation(actor(), invitationInput());
+    const result = await request(app).get("/implementation-a/account-invitations").set("Cookie", adminCookie).expect(200);
+    expect(result.headers["cache-control"]).toBe("no-store");
+    expect(result.body.invitations.some((row: { id: string }) => row.id === issued.invitationId)).toBe(true);
+    expect(JSON.stringify(result.body)).not.toContain(issued.rawToken);
+    for (const row of result.body.invitations) {
+      expect(row).not.toHaveProperty("tokenHash");
+      expect(row).not.toHaveProperty("deliveryError");
+    }
+    await request(app).get("/implementation-a/account-invitations").set("Cookie", buildTestCookie({ userId: adminId, role: "vendor", vendorId, membershipRole: "member" })).expect(403);
+    await request(app).get("/implementation-a/account-invitations").set("Cookie", buildTestCookie({ userId: adminId, role: "vendor", vendorId: vendorId + 1000000, membershipRole: "admin" })).expect(403);
+  });
+
   it("does not resurrect an invitation revoked while email delivery is in flight", async () => {
     const input = invitationInput();
     sendAccountInvitationEmailMock.mockImplementationOnce(async () => {

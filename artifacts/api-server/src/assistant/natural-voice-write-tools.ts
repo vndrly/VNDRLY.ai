@@ -92,6 +92,7 @@ export async function callNaturalVoiceDomainApi(
     signal: AbortSignal.timeout(30_000),
     redirect: "error",
   });
+  if (response.ok && response.status === 204) return { ok: true, status: "applied" };
   const result = (await response.json()) as Record<string, unknown> | unknown[];
   if (!response.ok) {
     const failure = Array.isArray(result) ? {} : result;

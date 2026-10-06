@@ -215,6 +215,23 @@ describe("ChatGPT account connection boundary", () => {
     const status = await request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 9, method: "tools/call", params: { name: "v_action_status", arguments: { reference: prepared.reference } } });
     expect(JSON.parse(status.body.result.content[0].text)).toMatchObject({ state: "completed", result: { ok: true, action: "gate_coverage_updated" } });
   });
+  it("records invitation revocation success and does not repeat it on approval retry", async () => {
+    mocks.validate.mockImplementation(async value => ({ ...value, membershipRole: "admin" }));
+    const credentials = await tokens("invitations:read invitations:write");
+    const response = await request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 8, method: "tools/call", params: { name: "v_prepare_action", arguments: { toolName: "confirm_account_invitations_action", arguments: { action: "revoke", resourceId: "synthetic-invitation" } } } });
+    const prepared = JSON.parse(response.body.result.content[0].text);
+    const actionPath = new URL(prepared.approvalUrl).pathname;
+    const approval = await request(app).get(actionPath).set("Cookie", cookie());
+    const nonce = /name="nonce" value="([^"]+)"/.exec(approval.text)![1];
+    const actionCookie = approval.headers["set-cookie"][0].split(";")[0];
+    mocks.run.mockResolvedValueOnce(JSON.stringify({ ok: true, status: "applied" }));
+    const submit = () => request(app).post(actionPath).set("Cookie", `${cookie()}; ${actionCookie}`).set("Origin", "https://vndrly.ai").type("form").send({ nonce });
+    expect((await submit()).status).toBe(200);
+    expect((await submit()).status).toBe(200);
+    expect(mocks.run).toHaveBeenCalledTimes(1);
+    const status = await request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 9, method: "tools/call", params: { name: "v_action_status", arguments: { reference: prepared.reference } } });
+    expect(JSON.parse(status.body.result.content[0].text)).toMatchObject({ state: "completed", result: { ok: true, status: "applied" } });
+  });
   it("retains uncertain writes across delayed retries and reconciles durable results without execution", async () => {
     const credentials = await tokens("gate:read gate:write");
     const prepare = () => request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 8, method: "tools/call", params: { name: "set_gate_coverage_status", arguments: { stationId: "test-station", reason: "Isolated test", mode: "paused_indefinitely" } } });

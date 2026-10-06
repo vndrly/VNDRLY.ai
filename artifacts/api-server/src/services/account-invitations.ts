@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
-import { and, eq, ne, sql } from "drizzle-orm";
+import { and, desc, eq, ne, sql } from "drizzle-orm";
 import {
   accountInvitationsTable,
   db,
@@ -64,6 +64,24 @@ async function assertVendorAdmin(actor: AccountInvitationActor): Promise<void> {
       "account_invitation.vendor_admin_required",
     );
   }
+}
+
+/** Administrator-only projection: invitation tokens and delivery errors stay private. */
+export async function listAccountInvitations(actor: AccountInvitationActor) {
+  await assertVendorAdmin(actor);
+  return db.select({
+    id: accountInvitationsTable.id,
+    userId: accountInvitationsTable.userId,
+    username: accountInvitationsTable.username,
+    email: accountInvitationsTable.email,
+    state: accountInvitationsTable.state,
+    expiresAt: accountInvitationsTable.expiresAt,
+    deliveredAt: accountInvitationsTable.deliveredAt,
+    claimedAt: accountInvitationsTable.claimedAt,
+    revokedAt: accountInvitationsTable.revokedAt,
+  }).from(accountInvitationsTable)
+    .where(eq(accountInvitationsTable.sponsorVendorId, actor.vendorId))
+    .orderBy(desc(accountInvitationsTable.createdAt)).limit(100);
 }
 
 async function assertManagedOrganizationSponsor(
@@ -262,11 +280,13 @@ export async function issueAccountInvitation(
     sponsorName: issued.sponsorName,
     expiresAt,
   });
+  const [delivery] = await db.select({ state: accountInvitationsTable.state }).from(accountInvitationsTable).where(eq(accountInvitationsTable.id, issued.invitation.id)).limit(1);
   return {
     invitationId: issued.invitation.id,
     userId: issued.user.id,
     rawToken,
     expiresAt,
+    deliveryState: delivery?.state ?? "pending",
   };
 }
 
@@ -334,7 +354,8 @@ export async function resendAccountInvitation(
     sponsorName: vendor?.name ?? "your sponsoring company",
     expiresAt,
   });
-  return { invitationId, userId: invitation.userId, rawToken, expiresAt };
+  const [delivery] = await db.select({ state: accountInvitationsTable.state }).from(accountInvitationsTable).where(eq(accountInvitationsTable.id, invitationId)).limit(1);
+  return { invitationId, userId: invitation.userId, rawToken, expiresAt, deliveryState: delivery?.state ?? "pending" };
 }
 
 export async function revokeAccountInvitation(

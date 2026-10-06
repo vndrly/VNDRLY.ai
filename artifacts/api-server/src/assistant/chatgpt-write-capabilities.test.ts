@@ -29,6 +29,13 @@ describe("ChatGPT onboarding changes", () => {
     expect(chatGptActionTools(worker, ["operations:write"]).map(tool => tool.name)).toEqual(["mark_notifications_read"]);
     expect(chatGptActionTools(worker, ["tickets:read", "operations:read"])).toEqual([]);
   });
+  it("requires asset and invitation writes separately and restricts invitation administration", () => {
+    expect(names(admin, ["operations:read", "invitations:read"])).toEqual([]);
+    expect(names(admin, ["assets:write"])).toEqual(["confirm_asset_custody_action"]);
+    expect(names(admin, ["invitations:write"])).toEqual(["confirm_account_invitations_action"]);
+    expect(names({ ...admin, membershipRole: "member" }, ["invitations:write"])).toEqual([]);
+    expect(chatGptActionTools({ userId: 17, role: "partner", partnerId: 4, membershipRole: "admin" }, ["invitations:write"])).toEqual([]);
+  });
   it("cannot manufacture legal acceptance, credentials, or prototype paths", () => {
     expect(() => validateChatGptActionInput("complete_onboarding_step", { step: "set-password", nextStep: "done" })).toThrow();
     for (const path of ["platformEula.accepted", "legalConsent.accepted", "legalConsent.smsOptIn", "info.password", "info.accessToken", "__proto__.admin", "info.constructor.prototype", "info..firstName"]) {

@@ -13,6 +13,15 @@ describe("ChatGPT assistant tool access", () => {
     expect(chatGptReadableTools(session, [])).toEqual([]);
     expect(chatGptReadableTools(session, ["*"])).toEqual([]);
   });
+  it("requires separate invitation consent and a vendor administrator", () => {
+    const admin = { ...session, membershipRole: "admin" };
+    expect(() => requireChatGptReadableTool(admin, ["operations:read"], "query_account_invitations")).toThrow();
+    expect(requireChatGptReadableTool(admin, ["invitations:read"], "query_account_invitations").name).toBe("query_account_invitations");
+    expect(() => requireChatGptReadableTool(session, ["invitations:read"], "query_account_invitations")).toThrow();
+    expect(() => requireChatGptReadableTool({ userId: 17, role: "partner", partnerId: 4, membershipRole: "admin" }, ["invitations:read"], "query_account_invitations")).toThrow();
+    expect(() => requireChatGptReadableTool(admin, ["operations:read"], "query_workforce_coverage")).toThrow();
+    expect(chatGptReadToolDescription(requireChatGptReadableTool(admin, ["invitations:read"], "prepare_account_invitations_action"))).toContain("No bound action");
+  });
   it("advertises onboarding only for a resolvable administrator or field-self scope", () => {
     const has = (identity: Parameters<typeof chatGptReadableTools>[0]) => chatGptReadableTools(identity, ["onboarding:read"]).some(tool => tool.name === "lookup_user_progress");
     expect(has(session)).toBe(false);

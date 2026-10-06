@@ -1,5 +1,5 @@
 import { Router, type Request, type Response } from "express";
-import { and, eq, gte, isNull, lt, ne } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, isNull, lt, ne } from "drizzle-orm";
 import { z } from "zod/v4";
 import {
   AcknowledgeWorkforceAssignmentSchema,
@@ -44,6 +44,8 @@ function sendError(res: Response, error: unknown) {
 async function schedulingAuthority(req: Request, shiftId: string) {
   const session = getSessionFromRequest(req);
   if (!session?.userId || !session.vendorId) throw new WorkforceCoverageError("workforce.not_found", 404);
+  const [shift] = await db.select({ id: workHubShiftsTable.id }).from(workHubShiftsTable).where(and(eq(workHubShiftsTable.id, shiftId), eq(workHubShiftsTable.ownerOrgType, "vendor"), eq(workHubShiftsTable.ownerOrgId, session.vendorId))).limit(1);
+  if (!shift) throw new WorkforceCoverageError("workforce.not_found", 404);
   const [scope] = await db.select({ siteId: workforceStaffingRequirementsTable.siteId }).from(workforceCoverageRecordsTable).leftJoin(workforceStaffingRequirementsTable, eq(workforceStaffingRequirementsTable.id, workforceCoverageRecordsTable.requirementId)).where(eq(workforceCoverageRecordsTable.shiftId, shiftId)).limit(1);
   const grants = session.role === "admin" || session.membershipRole === "admin" ? [] : await db.select({ role: managedSubcontractorRoleGrantsTable.role, siteId: managedSubcontractorRoleGrantsTable.siteId, crewId: managedSubcontractorRoleGrantsTable.crewId }).from(managedSubcontractorRoleGrantsTable).innerJoin(managedSubcontractorWorkerSponsorshipsTable, eq(managedSubcontractorWorkerSponsorshipsTable.id, managedSubcontractorRoleGrantsTable.sponsorshipId)).where(and(eq(managedSubcontractorWorkerSponsorshipsTable.workerUserId, session.userId), eq(managedSubcontractorWorkerSponsorshipsTable.sponsorVendorId, session.vendorId), eq(managedSubcontractorWorkerSponsorshipsTable.status, "active"), eq(managedSubcontractorRoleGrantsTable.status, "active")));
   const isAdmin = session.role === "admin" || session.membershipRole === "admin";
@@ -81,6 +83,30 @@ async function eligibilityFor(workerUserId: number, shiftId: string) {
   const weekHours = assigned.reduce((sum, item) => sum + Math.max(0, item.endsAt.getTime() - item.startsAt.getTime()), shift.endsAt.getTime() - shift.startsAt.getTime()) / 3_600_000;
   return { shift, eligibility: { accountState, credentialsCurrent, overlaps, overtime: weekHours > 40, restWindow } };
 }
+
+router.get("/implementation-a/workforce/coverage", async (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+  try {
+    const session = getSessionFromRequest(req);
+    if (!session?.userId) throw new WorkforceCoverageError("workforce.not_found", 404);
+    const owner = session.role === "partner" && session.partnerId ? { type: "partner", id: session.partnerId }
+      : session.vendorId ? { type: "vendor", id: session.vendorId } : null;
+    if (session.role !== "admin" && !owner) throw new WorkforceCoverageError("workforce.not_found", 404);
+    const filters = session.role === "admin" ? [] : [eq(workHubShiftsTable.ownerOrgType, owner!.type), eq(workHubShiftsTable.ownerOrgId, owner!.id)];
+    // Ordinary members see only coverage for their own assigned shifts.
+    if (session.role !== "admin" && session.membershipRole !== "admin") {
+      filters.push(inArray(workHubShiftsTable.id, db.select({ id: workHubShiftAssignmentsTable.shiftId }).from(workHubShiftAssignmentsTable).where(eq(workHubShiftAssignmentsTable.userId, session.userId))));
+    }
+    const coverage = await db.select({ id: workforceCoverageRecordsTable.id, shiftId: workforceCoverageRecordsTable.shiftId,
+      shiftTitle: workHubShiftsTable.title, startsAt: workHubShiftsTable.startsAt, endsAt: workHubShiftsTable.endsAt,
+      requiredCount: workforceCoverageRecordsTable.requiredCount, assignedCount: workforceCoverageRecordsTable.assignedCount,
+      actualCount: workforceCoverageRecordsTable.actualCount, state: workforceCoverageRecordsTable.state,
+      escalationDueAt: workforceCoverageRecordsTable.escalationDueAt, version: workforceCoverageRecordsTable.version,
+    }).from(workforceCoverageRecordsTable).innerJoin(workHubShiftsTable, eq(workHubShiftsTable.id, workforceCoverageRecordsTable.shiftId))
+      .where(and(...filters)).orderBy(desc(workHubShiftsTable.startsAt)).limit(100);
+    return res.json({ coverage });
+  } catch (error) { return sendError(res, error); }
+});
 
 router.post("/implementation-a/workforce/assignments", async (req, res) => {
   try {

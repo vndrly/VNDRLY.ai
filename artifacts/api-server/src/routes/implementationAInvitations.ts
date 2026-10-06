@@ -10,6 +10,7 @@ import {
   claimAccountInvitation,
   getInvitationStatus,
   issueAccountInvitation,
+  listAccountInvitations,
   resendAccountInvitation,
   revokeAccountInvitation,
   type AccountInvitationActor,
@@ -55,6 +56,13 @@ function sendError(res: Response, error: unknown): void {
   });
 }
 
+router.get("/implementation-a/account-invitations", async (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+  try {
+    res.json({ invitations: await listAccountInvitations(actorFrom(req)) });
+  } catch (error) { sendError(res, error); }
+});
+
 router.post("/implementation-a/account-invitations", async (req, res) => {
   try {
     const result = await issueAccountInvitation(
@@ -65,6 +73,7 @@ router.post("/implementation-a/account-invitations", async (req, res) => {
       invitationId: result.invitationId,
       userId: result.userId,
       expiresAt: result.expiresAt.toISOString(),
+      deliveryState: result.deliveryState,
     });
   } catch (error) {
     sendError(res, error);
@@ -83,6 +92,7 @@ router.post(
         invitationId: result.invitationId,
         userId: result.userId,
         expiresAt: result.expiresAt.toISOString(),
+        deliveryState: result.deliveryState,
       });
     } catch (error) {
       sendError(res, error);
