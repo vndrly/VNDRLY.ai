@@ -33,6 +33,10 @@ import { enforceSafetyRateLimit } from "../lib/safety-rate-limit";
 import { currentGateSiteRecipientIds } from "../services/gate-notification-events";
 import { sessionCanReadSafetyEvent } from "../lib/safety-event-access";
 
+import { loadAuthorizedVendorSiteIds, resolveVendorPersonAccess } from "../lib/vendor-person-access";
+import { employeeCanReadSite } from "../lib/approved-partner-sites";
+import { ticketScopeFilters } from "../assistant/data-tools-helpers";
+
 const router: IRouter = Router();
 
 function readSession(req: Parameters<typeof getSessionFromRequest>[0]): SessionPayload {
@@ -381,6 +385,7 @@ router.post("/safety/events", requireSession, enforceSafetyRateLimit, async (req
       id: siteLocationsTable.id,
       partnerId: siteLocationsTable.partnerId,
       name: siteLocationsTable.name,
+      hidden: siteLocationsTable.hidden,
     })
     .from(siteLocationsTable)
     .where(eq(siteLocationsTable.id, siteId))
@@ -395,6 +400,28 @@ router.post("/safety/events", requireSession, enforceSafetyRateLimit, async (req
       ? Number(vendorId)
       : session.vendorId ?? (ticketId ? await loadTicketVendorId(Number(ticketId)) : null);
 
+  // Reports remain possible after stop-work; inactive does not mean unauthorized.
+  let authorizedSite = session.role === "admin" || (session.role === "partner" && session.partnerId === site.partnerId);
+  if (!authorizedSite && session.vendorId && ["vendor", "field_employee"].includes(session.role ?? "")) {
+    const access = await resolveVendorPersonAccess(session, { includeInactive: true });
+    authorizedSite = Boolean(access?.siteIds.includes(siteId));
+    if (!authorizedSite && !session.managedSubcontractor && !site.hidden && access?.vendorPeopleId) authorizedSite = await employeeCanReadSite(access.vendorPeopleId, session.vendorId, site.partnerId, siteId);
+  }
+  if (!authorizedSite) { sendApiError(res, 403, "safety.forbidden_site", "Site is outside your authorized work context."); return; }
+  if (session.role !== "admin" && session.role !== "partner" && resolvedVendorId !== session.vendorId) {
+    sendApiError(res, 403, "safety.forbidden_vendor", "Vendor is outside your active organization."); return;
+  }
+  if (session.role !== "admin" && session.role === "partner" && resolvedVendorId != null && !(await loadAuthorizedVendorSiteIds(resolvedVendorId, { includeInactive: true })).includes(siteId)) {
+    sendApiError(res, 403, "safety.forbidden_vendor", "Vendor is not authorized for this site."); return;
+  }
+  if (ticketId != null) {
+    if (!Number.isSafeInteger(Number(ticketId)) || Number(ticketId) <= 0) { sendApiError(res, 400, "safety.invalid_ticket", "A valid ticket is required."); return; }
+    const scope = ticketScopeFilters(session);
+    const [ticket] = scope === null ? [] : await db.select({ siteLocationId: ticketsTable.siteLocationId, vendorId: ticketsTable.vendorId }).from(ticketsTable).where(and(eq(ticketsTable.id, Number(ticketId)), ...(scope as Parameters<typeof and>))).limit(1);
+    if (!ticket || ticket.siteLocationId !== siteId || ticket.vendorId !== resolvedVendorId) {
+      sendApiError(res, 403, "safety.forbidden_ticket", "Ticket must be authorized and match this site and vendor."); return;
+    }
+  }
   const now = new Date();
   const stopWork = Boolean(isStopWork);
   const eventNumber = generateEventNumber();

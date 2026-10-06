@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 import request from "supertest";
 import { db, vendorsTable, partnersTable, siteLocationsTable, workTypesTable, ticketsTable, vendorPeopleTable, usersTable, safetyEventsTable, safetyIncidentResponsesTable, workHubShiftsTable, workHubShiftAssignmentsTable, workforceCoverageRecordsTable, assetsTable } from "@workspace/db";
 import safetyRouter from "../routes/implementationASafety";
+import safetyReportsRouter from "../routes/safety";
 import workforceRouter from "../routes/implementationAWorkforce";
 import tripsRouter from "../routes/implementationATrips";
 import ticketsRouter from "../routes/tickets";
@@ -77,7 +78,14 @@ describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")("assistant re
       expect(refused).not.toContain(tickets[1].paymentReference!);
     }
     const employee = { userId: user.id, role: "field_employee", vendorPeopleId: worker.id, vendorId: vendors[0].id };
-    const app = express().use(express.json()).use(cookieParser()).use(safetyRouter).use(workforceRouter).use(tripsRouter);
+    const app = express().use(express.json()).use(cookieParser()).use(safetyRouter).use(safetyReportsRouter).use(workforceRouter).use(tripsRouter);
+    const reportInput = { eventType: "unsafe_condition", title: "Synthetic scope regression", siteLocationId: sites[1].id, isStopWork: true };
+    await request(app).post("/safety/events").set("Cookie", buildTestCookie(employee)).send(reportInput).expect(403);
+    const [foreignSite] = await db.select().from(siteLocationsTable).where(eq(siteLocationsTable.id, sites[1].id));
+    expect(foreignSite.isActive).toBe(true);
+    const ownerCookie = buildTestCookie({ userId: user.id, role: "partner", partnerId: partners[0].id });
+    await request(app).post("/safety/events").set("Cookie", ownerCookie).send({ ...reportInput, siteLocationId: sites[0].id, vendorId: vendors[1].id }).expect(403);
+    await request(app).post("/safety/events").set("Cookie", ownerCookie).send({ ...reportInput, siteLocationId: sites[0].id, ticketId: tickets[1].id }).expect(403);
     const [otherUser] = await db.insert(usersTable).values({ username: `other-${suffix}`, passwordHash: "unused-isolated-fixture", displayName: "Other worker", role: "field_employee" }).returning();
     await db.insert(vendorPeopleTable).values({ vendorId: vendors[1].id, userId: otherUser.id, firstName: "Foreign", lastName: "Worker", email: `other-${suffix}@example.invalid` });
     const events = await db.insert(safetyEventsTable).values([0, 1, 2].map(n => ({ eventNumber: `E${n}-${suffix}`, eventType: "unsafe_condition", title: "Synthetic safety event", siteLocationId: sites[n === 2 ? 1 : 0].id, partnerId: partners[n === 2 ? 1 : 0].id, vendorId: vendors[n === 2 ? 1 : 0].id, reportedByUserId: n === 0 ? user.id : otherUser.id }))).returning();
@@ -118,5 +126,8 @@ describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")("assistant re
     expect(visible.tickets.map((ticket: { id: number }) => ticket.id)).toEqual([tickets[0].id]);
     expect(JSON.parse(await runTool("lookup_open_tickets", {}, { userId: user.id, role: "field_employee", vendorId: vendors[0].id }, ""))).toHaveProperty("error");
     expect(JSON.parse(await runTool("lookup_user_progress", {}, { userId: user.id, role: "vendor", vendorId: vendors[0].id, membershipRole: "member" }, ""))).toHaveProperty("error");
+    await db.update(siteLocationsTable).set({ isActive: false, status: "inactive" }).where(eq(siteLocationsTable.id, sites[0].id));
+    await request(app).post("/safety/events").set("Cookie", ownerCookie).send({ eventType: "observation", title: "Synthetic stopped-site follow-up", siteLocationId: sites[0].id }).expect(201);
+    await db.update(siteLocationsTable).set({ isActive: true, status: "active" }).where(eq(siteLocationsTable.id, sites[0].id));
   });
 });

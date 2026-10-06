@@ -69,7 +69,7 @@ export function mayPerformGateAction(
   return access.isVendorAdmin || access.operationalRoles.includes(requiredRole);
 }
 
-export async function loadAuthorizedVendorSiteIds(vendorId: number): Promise<number[]> {
+export async function loadAuthorizedVendorSiteIds(vendorId: number, options: { includeInactive?: boolean } = {}): Promise<number[]> {
   const rows = await db
     .select({ id: siteLocationsTable.id })
     .from(siteWorkAssignmentsTable)
@@ -88,7 +88,7 @@ export async function loadAuthorizedVendorSiteIds(vendorId: number): Promise<num
     .where(
       and(
         eq(siteWorkAssignmentsTable.vendorId, vendorId),
-        eq(siteLocationsTable.isActive, true),
+        options.includeInactive ? undefined : eq(siteLocationsTable.isActive, true),
         eq(siteLocationsTable.hidden, false),
       ),
     );
@@ -128,6 +128,7 @@ export async function loadSelectedSiteIds(vendorPeopleId: number): Promise<numbe
 
 export async function resolveVendorPersonAccess(
   session: SessionPayload,
+  options: { includeInactive?: boolean } = {},
 ): Promise<VendorPersonAccess | null> {
   const vendorId = Number(session.vendorId);
   if (!Number.isInteger(vendorId) || vendorId <= 0) return null;
@@ -135,7 +136,7 @@ export async function resolveVendorPersonAccess(
   const isVendorAdmin =
     session.role === "admin" ||
     (session.role === "vendor" && session.membershipRole === "admin");
-  const authorizedSiteIds = await loadAuthorizedVendorSiteIds(vendorId);
+  const authorizedSiteIds = await loadAuthorizedVendorSiteIds(vendorId, options);
 
   if (session.managedSubcontractor) {
     const siteGrants = session.managedSubcontractor.siteGrants.filter((grant) =>
