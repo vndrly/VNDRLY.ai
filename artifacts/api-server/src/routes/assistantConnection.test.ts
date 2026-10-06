@@ -23,8 +23,8 @@ const redirect = "https://chatgpt.com/connector_platform_oauth_redirect";
 const verifier = "q".repeat(43);
 const auth = { client_id: CHATGPT_CLIENT_ID, redirect_uri: redirect, response_type: "code", resource: ASSISTANT_RESOURCE, code_challenge_method: "S256", code_challenge: assistantPkceChallenge(verifier), scope: "gate:read work_hub:read", state: "opaque-state" };
 const session = { userId: 17, role: "vendor", membershipRole: "member", vendorId: 4, sv: 1, exp: Math.floor(Date.now() / 1000) + 600 };
-function cookie() {
-  const body = Buffer.from(JSON.stringify(session)).toString("base64");
+function cookie(actor = session) {
+  const body = Buffer.from(JSON.stringify(actor)).toString("base64");
   return `vndrly_session=${body}.${createHmac("sha256", "test-secret").update(body).digest("hex")}`;
 }
 let grants: AssistantOAuthGrant[];
@@ -61,6 +61,26 @@ async function tokens(scope = auth.scope) {
   return response.body;
 }
 describe("ChatGPT account connection boundary", () => {
+  it.each(["valid", "access expired", "revoked", "scope removed", "wrong user", "tampered", "external destination"])("keeps the file device handoff bound when %s", async (condition) => {
+    const credentials = await tokens("operations:read");
+    mocks.run.mockResolvedValue(JSON.stringify({ url: "/work-hub/files" }));
+    const response = await request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "deep_link_to", arguments: { screen: "work-hub-files" } } });
+    const result = JSON.parse(response.body.result.content[0].text);
+    expect(result.completed).toBe(false);
+    const path = new URL(result.url).pathname;
+    if (condition === "access expired") { grants[0].accessExpiresAt = Date.now() - 1; grants[0].accessHash = "refreshed-access-hash"; }
+    if (condition === "revoked") grants[0].revoked = true;
+    if (condition === "scope removed") grants[0].scopes = [];
+    if (condition === "external destination") mocks.run.mockResolvedValue(JSON.stringify({ url: "https://example.com" }));
+    const opened = await request(app).get(condition === "tampered" ? `${path}changed` : path).set("Cookie", cookie(condition === "wrong user" ? { ...session, userId: 18 } : session));
+    if (["valid", "access expired"].includes(condition)) {
+      expect(opened.status).toBe(302);
+      expect(opened.headers.location).toBe("/work-hub/files");
+    } else {
+      expect(opened.status).toBe(403);
+      expect(opened.headers.location).toBeUndefined();
+    }
+  });
   it("keeps panel proof component-only and binds submission to the current grant", async () => {
     const credentials = await tokens("tickets:write");
     const call = (name: string, args: Record<string, unknown>, access = credentials.access_token) => request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${access}`).send({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name, arguments: args } });

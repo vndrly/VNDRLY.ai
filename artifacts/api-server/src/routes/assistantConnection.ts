@@ -16,6 +16,7 @@ import { writeAskVActionAudit } from "../assistant/action-audit";
 import { CHATGPT_READ_CAPABILITIES } from "../assistant/chatgpt-read-capabilities";
 import { publicMapConfig } from "../lib/public-map-config";
 import { SPECIALISTS_TOOL, specialistDirectory } from "../assistant/chatgpt-specialists";
+import { fileDeviceHandoff, requireMatchingFileDevice, type FileDeviceHandoff } from "../assistant/chatgpt-device-handoff";
 import { CHATGPT_WRITE_CAPABILITIES, validateChatGptActionInput, sanitizeChatGptActionInput, chatGptActionAuditInput, chatGptActionResult } from "../assistant/chatgpt-write-capabilities";
 
 const router = Router();
@@ -68,6 +69,27 @@ router.get("/.well-known/oauth-authorization-server", (_req, res) => res.json({
   client_id_metadata_document_supported: true, authorization_response_iss_parameter_supported: true,
 }));
 router.get("/.well-known/oauth-protected-resource", (_req, res) => res.json({ resource: ASSISTANT_RESOURCE, authorization_servers: [ASSISTANT_ISSUER], scopes_supported: ASSISTANT_SCOPES, bearer_methods_supported: ["header"] }));
+router.get("/device/files/:handoff", async (req, res) => {
+  try {
+    const handoff = readEnvelope(req.params.handoff) as unknown as FileDeviceHandoff;
+    const session = getSessionFromRequest(req);
+    if (!session) return page(res, '<p>Sign into the same VNDRLY account used by ChatGPT in another tab, then refresh this page.</p><p><a href="/login" target="_blank" rel="noopener">Sign into VNDRLY</a></p>');
+    const current = await validateAssistantSession(session);
+    requireMatchingFileDevice(handoff, current);
+    await withAssistantGrants(current.userId!, async (grants, database) => {
+      const grant = grants.find(item => !item.revoked && item.consentHash && item.consentHash === handoff.grantConsentHash);
+      if (!grant) throw new AssistantOAuthError("access_denied");
+      const connected = await validateAssistantSession(grant.session, database);
+      requireMatchingFileDevice(handoff, connected);
+      requireChatGptReadableTool(connected, grant.scopes, "deep_link_to");
+    });
+    const destination = JSON.parse(await runTool("deep_link_to", { screen: "work-hub-files" }, current, ""));
+    if (destination.url !== "/work-hub/files") throw new AssistantOAuthError("access_denied");
+    return res.redirect(302, "/work-hub/files");
+  } catch {
+    return page(res.status(403), '<p>This file handoff is expired, disconnected, or belongs to a different VNDRLY account or organization. Use the same account and organization as ChatGPT, then request a fresh file link from V. No upload was started.</p>');
+  }
+});
 router.get("/authorize", async (req, res) => {
   // The consent POST redirects to the fixed ChatGPT callback. Helmet's default
   // form-action self would otherwise block that browser redirect after success.
@@ -147,7 +169,7 @@ async function authenticate(req: Request) {
     const grant = grants.find((item) => assistantAccessMatches(item, raw));
     if (!grant) throw new AssistantOAuthError("invalid_token");
     const session = await validateAssistantSession(grant.session, database);
-    return { session, scopes: grant.scopes, grantAccessHash: assistantTokenHash(raw) };
+    return { session, scopes: grant.scopes, grantAccessHash: assistantTokenHash(raw), grantConsentHash: grant.consentHash };
   });
 }
 router.post("/mcp", async (req, res) => {
@@ -279,7 +301,13 @@ router.post("/mcp", async (req, res) => {
       return reply({ content: [{ type: "text", text }], isError: false, ...(prepared.state === "pending" && prepared.panelProof ? { _meta: { componentApproval: { toolName: tool.name, reference: prepared.reference, proof: needsLocation(tool.name, input) ? undefined : prepared.panelProof, arguments: input, requiresLocation: needsLocation(tool.name, input), approvalUrl: `${ASSISTANT_ISSUER}/actions/${prepared.reference}` } } } : {}) });
     }
     const tool = requireChatGptReadableTool(authorized.session, authorized.scopes, name);
-    const text = JSON.stringify(chatGptReadToolOutput(name, JSON.parse(await runTool(name, args, authorized.session, ""))));
+    let readOutput = chatGptReadToolOutput(name, JSON.parse(await runTool(name, args, authorized.session, "")));
+    if (name === "deep_link_to" && args.screen === "work-hub-files" && (readOutput as { url?: string })?.url === "/work-hub/files") {
+      if (!authorized.grantConsentHash) throw new AssistantOAuthError("access_denied");
+      readOutput = { ...(readOutput as object), url: `${ASSISTANT_ISSUER}/device/files/${envelope(fileDeviceHandoff(authorized.session, authorized.grantConsentHash))}`,
+        completed: false, message: "Use this account-bound device link to select and upload the actual file. This link does not upload bytes. After the device reports success, read the file and versions through this same ChatGPT account before claiming completion." };
+    }
+    const text = JSON.stringify(readOutput);
     const output = JSON.parse(text);
     const failed = Boolean(output?.error || output?.ok === false);
     await writeAskVActionAudit({ session: authorized.session, clientSurface: "api", inputMode: "web_text", provider: "chatgpt_mcp", toolName: name, targetType: tool.auditTarget, toolInput: args, toolOutput: output, resultStatus: failed ? "failure" : "success" });
