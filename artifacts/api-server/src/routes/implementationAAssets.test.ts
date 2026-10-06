@@ -194,3 +194,14 @@ it("filters long-held custody while reporting unknown dates separately", async (
   expect(result.body.unknownCustodyDates.map((row: { id: string }) => row.id)).toEqual([unknown.id]);
   expect((await request(app).get("/implementation-a/assets?checkedOutLongerThanDays=-1").set("Cookie", admin)).status).toBe(400);
 });
+
+it("keeps long-held custody reports inside the connected company", async () => {
+  const foreign = await state.repository!.create({ name: "Foreign long-held truck", category: "vehicle", legalOwner: "Foreign vendor", responsibleOwner: { type: "vendor", id: 8 }, aliases: [], provisional: false });
+  await state.repository!.save({ ...foreign, status: "checked_out", holderUserId: 99, history: [{ id: crypto.randomUUID(), type: "checkout", occurredAt: new Date(Date.now() - 100 * 86400000), actorUserId: 99, toHolderUserId: 99 }] }, foreign.version);
+  const response = await request(app).get("/implementation-a/assets?checkedOutLongerThanDays=90").set("Cookie", admin);
+  expect(response.status).toBe(200);
+  expect(response.body.assets).toEqual([]);
+  expect(response.body.unknownCustodyDates).toEqual([]);
+  expect(JSON.stringify(response.body)).not.toContain(foreign.id);
+  expect((await request(app).get("/implementation-a/assets?checkedOutLongerThanDays=90")).status).toBe(401);
+});
