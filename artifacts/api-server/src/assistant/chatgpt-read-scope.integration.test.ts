@@ -5,7 +5,7 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import pinoHttp from "pino-http";
 import request from "supertest";
-import { db, vendorsTable, partnersTable, siteLocationsTable, workTypesTable, ticketsTable, vendorPeopleTable, usersTable, safetyEventsTable, safetyIncidentResponsesTable, workHubShiftsTable, workHubShiftAssignmentsTable, workforceCoverageRecordsTable, assetsTable, partnerVendorRelationshipsTable, siteWorkAssignmentsTable } from "@workspace/db";
+import { db, vendorsTable, partnersTable, siteLocationsTable, workTypesTable, ticketsTable, vendorPeopleTable, usersTable, safetyEventsTable, safetyIncidentResponsesTable, workHubShiftsTable, workHubShiftAssignmentsTable, workforceCoverageRecordsTable, assetsTable, partnerVendorRelationshipsTable, siteWorkAssignmentsTable, userOrgMembershipsTable } from "@workspace/db";
 import safetyRouter from "../routes/implementationASafety";
 import safetyReportsRouter from "../routes/safety";
 import workforceRouter from "../routes/implementationAWorkforce";
@@ -64,6 +64,24 @@ describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")("assistant re
     expectStatus(await request(app).post(`/tickets/${ticket.id}/approve`).set("Cookie", cookie).send({}), 200);
     const [replayed] = await db.select().from(ticketsTable).where(eq(ticketsTable.id, ticket.id));
     expect(replayed.approvedAt).toEqual(approved.approvedAt);
+    const payment = { paymentMethod: "check", paymentReference: "SYNTHETIC-NO-BANK-PAYMENT", note: "Runner-local accounting fixture only" };
+    expectStatus(await request(app).post(`/tickets/${ticket.id}/disperse-funds`).set("Cookie", fieldCookie).send(payment), 403);
+    expectStatus(await request(app).post(`/tickets/${ticket.id}/disperse-funds`).set("Cookie", cookie).send(payment), 403);
+    await state("approved", "off_site");
+    const [apMembership] = await db.insert(userOrgMembershipsTable).values({ userId: user.id, orgType: "partner", partnerId: partners[0].id, role: "ap" }).returning();
+    const apCookie = buildTestCookie({ userId: user.id, role: "partner", partnerId: partners[0].id, membershipRole: "ap", activeMembershipId: apMembership.id });
+    expectStatus(await request(app).post(`/tickets/${ticket.id}/awaiting-payment`).set("Cookie", apCookie).send({ note: "Synthetic AP review complete" }), 200);
+    await state("awaiting_payment", "off_site");
+    expectStatus(await request(app).post(`/tickets/${ticket.id}/disperse-funds`).set("Cookie", apCookie).send(payment), 200);
+    const [paid] = await db.select().from(ticketsTable).where(eq(ticketsTable.id, ticket.id));
+    expect(paid).toMatchObject({ status: "funds_dispersed", lifecycleState: "off_site", paymentMethod: "check", paymentReference: payment.paymentReference });
+    expect(paid.paymentDispersedAt).not.toBeNull();
+    // Canonical replay rejects a second accounting write and retains the first record.
+    expectStatus(await request(app).post(`/tickets/${ticket.id}/disperse-funds`).set("Cookie", apCookie).send(payment), 409);
+    const [paymentReplay] = await db.select().from(ticketsTable).where(eq(ticketsTable.id, ticket.id));
+    expect(paymentReplay.paymentDispersedAt).toEqual(paid.paymentDispersedAt);
+    expect(paymentReplay.paymentReference).toBe(payment.paymentReference);
+
   });
   it("preserves managed site grants while allowing a resolved legacy worker to report on a stopped assigned site", async () => {
     assertFreshLocalTestDatabaseEnvironment(process.env);
