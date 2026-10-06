@@ -19,17 +19,25 @@ it("does not upload audio when consent is revoked while audio is being encoded",
   expect(fetcher).not.toHaveBeenCalled();
 });
 
-it("passes cancellation to the authenticated transcription request", async () => {
+it("cancels the authenticated transcription request when consent is revoked", async () => {
   vi.stubGlobal("FileReader", class {
     result = "data:audio/webm;base64,YXVkaW8=";
     onload: (() => void) | null = null;
     readAsDataURL() { this.onload?.(); }
   });
-  const fetcher = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ text: "Ready." }) });
+  const fetcher = vi.fn((_url: string, _options: RequestInit) => new Promise<Response>(() => {}));
   vi.stubGlobal("fetch", fetcher);
   const controller = new AbortController();
-  await expect(transcribeMeetingRecording("meeting", new Blob(["audio"]), controller.signal)).resolves.toBe("Ready.");
-  expect(fetcher).toHaveBeenCalledWith("/api/work-hub/meetings/meeting/transcribe-audio", expect.objectContaining({ signal: controller.signal, credentials: "include" }));
+  const pending = transcribeMeetingRecording("meeting", new Blob(["audio"]), controller.signal, {});
+  const rejected = expect(pending).rejects.toMatchObject({ name: "AbortError" });
+  await vi.waitFor(() => expect(fetcher).toHaveBeenCalledOnce());
+  const [url, options] = fetcher.mock.calls[0];
+  expect(url).toBe("/api/work-hub/meetings/meeting/transcribe-audio");
+  expect(options.credentials).toBe("include");
+  expect(options.signal?.aborted).toBe(false);
+  controller.abort();
+  await rejected;
+  expect(options.signal?.aborted).toBe(true);
 });
 
 it("accepts Safari recording codec parameters without changing the audio format", async () => {
