@@ -1,6 +1,6 @@
 import en from "@/lib/locales/en.json";
 import { afterEach, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import Login from "./login";
 import { DEFAULT_BRAND } from "@/hooks/use-brand";
 
@@ -10,13 +10,13 @@ vi.mock("@/hooks/use-brand", async (importOriginal) => {
   return { ...actual, useBrand: () => brandState.brand ?? actual.DEFAULT_BRAND };
 });
 
-const authState = vi.hoisted(() => ({ user: null as any, navigate: vi.fn(), location: "/login" }));
-vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: authState.user, login: vi.fn() }) }));
+const authState = vi.hoisted(() => ({ user: null as any, navigate: vi.fn(), location: "/login", login: vi.fn(), logout: vi.fn() }));
+vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: authState.user, login: authState.login, logout: authState.logout }) }));
 vi.mock("wouter", () => ({ useLocation: () => [authState.location, authState.navigate] }));
 vi.mock("@/hooks/use-toast", () => ({ useToast: () => ({ toast: vi.fn() }) }));
 vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string) => key === "login.learnMoreVndrly" ? en.login.learnMoreVndrly : key, i18n: { language: "en" } }) }));
 vi.mock("@/components/language-toggle", () => ({ default: () => <span>EN / ES</span> }));
-afterEach(() => { cleanup(); vi.unstubAllGlobals(); brandState.brand = null; authState.user = null; authState.navigate.mockClear(); });
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); brandState.brand = null; authState.user = null; authState.navigate.mockClear(); authState.login.mockReset(); authState.logout.mockClear(); });
 
 it("replaces the login theme switch with a branded link directly to the commercial homepage", () => {
   vi.stubGlobal("fetch", vi.fn(async () => ({ ok: false })));
@@ -60,4 +60,19 @@ it("retains the normal signed-in login redirect", () => {
   vi.stubGlobal("fetch", vi.fn(async () => ({ ok: false })));
   render(<Login />);
   expect(authState.navigate).toHaveBeenCalledWith("/", { replace: true });
+});
+
+it("signs into the chosen account without logging out the existing linked account", async () => {
+  authState.user = { role: "partner" };
+  authState.login.mockResolvedValue(undefined);
+  const fetchMock = vi.fn(async (_input: RequestInfo | URL) => ({ ok: false }));
+  vi.stubGlobal("fetch", fetchMock);
+  render(<Login allowAccountSwitch />);
+  fireEvent.change(screen.getByTestId("input-username"), { target: { value: "reviewer@example.test" } });
+  fireEvent.change(screen.getByTestId("input-password"), { target: { value: "synthetic-test-password" } });
+  fireEvent.submit(screen.getByTestId("input-password").closest("form")!);
+  await waitFor(() => expect(authState.navigate).toHaveBeenCalledWith("/", { replace: true }));
+  expect(authState.login).toHaveBeenCalledWith("reviewer@example.test", "synthetic-test-password");
+  expect(authState.logout).not.toHaveBeenCalled();
+  expect(fetchMock.mock.calls.some(call => String(call[0]).includes("logout"))).toBe(false);
 });
