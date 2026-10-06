@@ -105,7 +105,8 @@ beforeEach(async () => {
     users: [{ id: 1, role: "vendor", sessionVersion: 1 }, { id: 2, role: "vendor", sessionVersion: 1 }, { id: 3, role: "vendor", sessionVersion: 1 }],
     vendor_people: [{ id: 22, userId: 2, vendorId: 11, vendorRole: "gatekeeper", isActive: true }],
     site_work_assignments: [{ id: 8, vendorId: 11, siteLocationId: 3 }],
-    site_locations: [{ id: 3, partnerId: 22, name: "Gate site", isActive: true }],
+    site_locations: [{ id: 3, partnerId: 22, name: "Gate site", isActive: true, hidden: false }],
+    partner_vendor_relationships: [{ id: 9, vendorId: 11, partnerId: 22, status: "approved" }],
     partners: [{ id: 22, name: "Site owner" }],
   };
   state.notifications = []; state.sequence = 10; state.revoked.clear();
@@ -136,6 +137,15 @@ beforeEach(async () => {
 });
 const post = (path: string, body: any) => request(app).post(path).set("Cookie", cookie).send(body);
 describe("real Work Hub notification producers", () => {
+  it("blocks safety reporting and notification when the vendor relationship is unapproved", async () => {
+    state.tables.partner_vendor_relationships[0].status = "pending";
+    const response = await post("/safety/events", { eventType: "near_miss", title: "Synthetic stop work", siteLocationId: 3, isStopWork: true });
+    expect(response.status).toBe(403);
+    expect(response.body.code).toBe("safety.forbidden_site");
+    expect(state.tables.safety_events ?? []).toEqual([]);
+    expect(state.tables.site_locations[0].isActive).toBe(true);
+    expect(state.notifications).toEqual([]);
+  });
   it.each([
     ["tasks", { title: "Gate task", assigneeUserId: 2 }, "work_hub_task_assigned", "/work-hub/tasks/"],
     ["shifts", { title: "Gate shift", timezone: "America/Chicago", startsAt: "2026-09-25T12:00:00Z", endsAt: "2026-09-25T20:00:00Z", assigneeUserIds: [2] }, "work_hub_shift_assigned", "/work-hub/calendar?shift="],
