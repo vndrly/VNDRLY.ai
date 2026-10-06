@@ -471,6 +471,7 @@ export function resolveWorkHubToolRequest(
         if (!["open", "in_progress", "completed", "cancelled"].includes(String(status)))
           return { error: "A valid task status is required." };
         return request("PATCH", `/work-hub/tasks/${target}`, envelope(input, {
+          ...(input.action === "update" ? payload : {}),
           status,
         }));
       }

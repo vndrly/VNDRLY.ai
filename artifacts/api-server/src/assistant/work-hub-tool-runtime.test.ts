@@ -385,8 +385,13 @@ describe("resolveWorkHubToolRequest", () => {
     })).toMatchObject({ body: { accept: true } });
   });
 
-  it("translates natural task actions to the API''s status-only update contract", () => {
+  it("preserves task update fields while translating complete and cancel statuses", () => {
     const taskId = "7be22c7d-4638-4144-bb18-0d2a66996a43";
+    const description = JSON.stringify({ version: 4, steps: [{ id: "gate_coverage", state: "waiting" }] });
+    expect(resolveWorkHubToolRequest("manage_work_hub_task", {
+      ...command, action: "update", taskId, expectedVersion: 3,
+      payload: { status: "open", description },
+    })).toMatchObject({ body: { expectedVersion: 3, payload: { status: "open", description } } });
     expect(resolveWorkHubToolRequest("manage_work_hub_task", {
       ...command, action: "complete", taskId, payload: {},
     })).toMatchObject({ body: { payload: { status: "completed" } } });
