@@ -70,6 +70,13 @@ describe("ChatGPT account connection boundary", () => {
     expect(mocks.run).not.toHaveBeenCalled();
     const descriptors = await request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 2, method: "tools/list" });
     expect(descriptors.body.result.tools.find((tool: { name: string }) => tool.name === "v_submit_panel_action")._meta.ui.visibility).toEqual(["app"]);
+    for (const name of ["manage_ticket_record", "v_prepare_action", "v_submit_panel_action"]) {
+      expect(descriptors.body.result.tools.find((tool: { name: string }) => tool.name === name).annotations.destructiveHint).toBe(true);
+    }
+    const ticketTool = descriptors.body.result.tools.find((tool: { name: string }) => tool.name === "manage_ticket_record");
+    expect(ticketTool._meta.ui.resourceUri).toBe("ui://vndrly/action/v2.html");
+    expect(ticketTool.description).toContain("This call only prepares the change");
+    expect(descriptors.body.result.tools.find((tool: { name: string }) => tool.name === "v_action_status").outputSchema.required).toEqual(["state", "toolName", "result"]);
     expect((await call("v_submit_panel_action", { reference: component.reference, proof: "model-confirmed" })).body.result.isError).toBe(true);
     const other = await tokens("tickets:write");
     expect((await call("v_submit_panel_action", component, other.access_token)).body.result.isError).toBe(true);

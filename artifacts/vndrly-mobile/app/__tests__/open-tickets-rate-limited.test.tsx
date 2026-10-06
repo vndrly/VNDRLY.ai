@@ -144,7 +144,6 @@ import {
   cleanup,
   render,
   screen,
-  waitFor,
 } from "@testing-library/react";
 
 import {
@@ -164,20 +163,23 @@ function makeRateLimitError(retryAfterSeconds = 12) {
 afterEach(() => {
   cleanup();
   __resetTicketsRateLimitForTests();
+  vi.useRealTimers();
 });
 
 beforeEach(() => {
   apiFetchMock.mockReset();
   routerPushMock.mockReset();
   __resetTicketsRateLimitForTests();
+  vi.useRealTimers();
 });
 
 describe("HomeScreen — Task #691 rate-limit gate", () => {
   it("surfaces the reconnecting toast when mounted while a cooldown is already active, then auto-recovers when the window expires", async () => {
     // Pre-arm the shared cooldown to simulate the background reporter
     // having already tripped a 429 just before the user opened this
-    // tab. Use a short window so the test recovers quickly without
-    // fake-timer plumbing.
+    // tab. Control the clock so a busy test runner cannot expire the
+    // window between mounting and verifying the paused state.
+    vi.useFakeTimers();
     noteTicketsRateLimit(makeRateLimitError(1));
 
     // /api/field/open-tickets must NOT be hit while the cooldown is
@@ -201,11 +203,7 @@ describe("HomeScreen — Task #691 rate-limit gate", () => {
 
     // The reconnecting toast must appear so the user understands the
     // pause instead of seeing a silent empty list.
-    await waitFor(() => {
-      expect(
-        screen.queryAllByTestId("toast-tickets-rate-limited").length,
-      ).toBeGreaterThan(0);
-    });
+    expect(screen.queryAllByTestId("toast-tickets-rate-limited").length).toBeGreaterThan(0);
 
     // Sanity: the early-exit guard inside `load()` must short-circuit
     // before any /api/field/open-tickets call — otherwise we'd
@@ -241,33 +239,17 @@ describe("HomeScreen — Task #691 rate-limit gate", () => {
       return Promise.resolve(null);
     });
 
-    // Wait for the cooldown to expire and the recovery effect to fire
-    // /api/field/open-tickets at least once. The wall-clock window
-    // here covers (a) the 1s real-timer cooldown set above, plus (b)
-    // the React re-render + recovery effect that re-invokes load().
-    // 3s was enough when this test ran in isolation, but once the
-    // full mobile vitest suite runs together (Task #653) the shared
-    // thread pool can starve real timers for long enough to slip
-    // past that budget. Bumping to 8s keeps the assertion meaningful
-    // with an explicit enclosing test budget longer than that wait, without
-    // changing what the test verifies.
-    await waitFor(
-      () => {
-        expect(
-          apiFetchMock.mock.calls.some(
-            ([u]) => u === "/api/field/open-tickets",
-          ),
-        ).toBe(true);
-      },
-      { timeout: 8000 },
-    );
-
-    // And the reconnecting toast clears once we're back online.
-    await waitFor(() => {
-      expect(
-        screen.queryAllByTestId("toast-tickets-rate-limited").length,
-      ).toBe(0);
+    // Exercise the real recovery effect at the deadline without relying on
+    // wall-clock scheduling under the full mobile suite's worker load.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(999);
     });
+    expect(apiFetchMock.mock.calls.some(([u]) => u === "/api/field/open-tickets")).toBe(false);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(2);
+    });
+    expect(apiFetchMock.mock.calls.some(([u]) => u === "/api/field/open-tickets")).toBe(true);
+    expect(screen.queryAllByTestId("toast-tickets-rate-limited").length).toBe(0);
   }, 15000);
 
   it("shows the reconnecting toast when the shared cooldown arms on the field home tab", async () => {
@@ -291,10 +273,6 @@ describe("HomeScreen — Task #691 rate-limit gate", () => {
       noteTicketsRateLimit(makeRateLimitError(15));
     });
 
-    await waitFor(() => {
-      expect(
-        screen.queryAllByTestId("toast-tickets-rate-limited").length,
-      ).toBeGreaterThan(0);
-    });
+    expect(screen.queryAllByTestId("toast-tickets-rate-limited").length).toBeGreaterThan(0);
   });
 });
