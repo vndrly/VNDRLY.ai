@@ -4,7 +4,7 @@ export const TICKET_RECORD_ACTIONS = ["create", "update", "accept", "deny", "rei
 export function ticketRecordActionsForRole(role: string) {
   return TICKET_RECORD_ACTIONS.filter(action => {
     if (action === "reactivate") return role === "admin";
-    if (["approve", "kickback", "awaiting_payment", "reinvite"].includes(action)) return ["admin", "partner"].includes(role);
+    if (["approve", "kickback", "reinvite"].includes(action)) return ["admin", "partner"].includes(role);
     if (["accept", "deny"].includes(action)) return ["admin", "vendor"].includes(role);
     return ["admin", "partner", "vendor", "field_employee"].includes(role);
   });

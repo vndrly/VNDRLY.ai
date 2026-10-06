@@ -16,8 +16,8 @@ describe("ChatGPT onboarding changes", () => {
   it.each([
     ["admin", ["approve", "accept", "reactivate"]],
     ["partner", ["approve", "reinvite"]],
-    ["vendor", ["accept", "deny"]],
-    ["field_employee", ["create", "update", "submit"]],
+    ["vendor", ["accept", "deny", "awaiting_payment"]],
+    ["field_employee", ["create", "update", "submit", "awaiting_payment"]],
   ])("advertises only the canonical ticket action family for %s", (role, expected) => {
     const actor = { userId: 17, role: String(role), vendorId: 4, partnerId: 5, vendorPeopleId: 8 };
     expect(chatGptActionTools(actor, ["tickets:read"])).toEqual([]);
