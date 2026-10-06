@@ -310,7 +310,7 @@ const entries: Entry[] = [
     payload: { type: "object" },
   }, ["action", "voicemailId"])),
 
-  write("manage_work_hub_meeting", "meetings", "Create, join, leave, end, update, reschedule, or cancel an authorized meeting.", writeSchema({
+  write("manage_work_hub_meeting", "meetings", "Create, join, leave, end, update, reschedule, or cancel an authorized meeting. Creation requires payload.title, payload.startsAt (UTC ISO timestamp ending in Z), payload.timezone, and optionally payload.endsAt and participantUserIds. Use startsAt/endsAt, never startAt/endAt. Saving a meeting does not start audio/video capture.", writeSchema({
     action: { type: "string", enum: ["create", "join", "leave", "end", "update", "reschedule", "cancel"] },
     occurrenceId: identifier(),
     payload: { type: "object" },

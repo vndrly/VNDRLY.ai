@@ -3,6 +3,15 @@ import { chatGptActionTools } from "./chatgpt-tool-access";
 import { validateChatGptActionInput, sanitizeChatGptActionInput, chatGptActionAuditInput, chatGptActionResult } from "./chatgpt-write-capabilities";
 
 describe("ChatGPT onboarding changes", () => {
+  it("rejects unsavable meeting timestamps before presenting an authorization", () => {
+    const payload = { title: "Synthetic meeting", startsAt: "2026-10-07T14:00:00.000Z", endsAt: "2026-10-07T14:15:00.000Z", timezone: "America/Chicago", participantUserIds: [1069] };
+    expect(() => validateChatGptActionInput("manage_work_hub_meeting", { action: "create", payload })).not.toThrow();
+    for (const invalid of [{ ...payload, startsAt: undefined, startAt: "2026-10-07T09:00:00-05:00" }, { ...payload, startsAt: "2026-10-07T09:00:00-05:00" }, { ...payload, endsAt: payload.startsAt }, { ...payload, title: "" }]) {
+      expect(() => validateChatGptActionInput("manage_work_hub_meeting", { action: "create", payload: invalid })).toThrow();
+      expect(() => validateChatGptActionInput("manage_work_hub_calendar_item", { action: "create", kind: "meeting", payload: invalid })).toThrow();
+    }
+    expect(() => validateChatGptActionInput("manage_work_hub_meeting", { action: "join", occurrenceId: "existing", payload: {} })).not.toThrow();
+  });
   const admin = { userId: 17, role: "vendor", membershipRole: "admin", vendorId: 4 };
   const names = (session = admin, scopes = ["onboarding:write"]) => chatGptActionTools(session, scopes).map(tool => tool.name);
   it("requires separate finance write consent and leaves AP authority to the canonical endpoint", () => {

@@ -1,4 +1,5 @@
 import { TICKET_RECORD_ACTIONS } from "./ticket-workflow-tools";
+import { z } from "zod/v4";
 
 /** Separate write consent never follows from a read grant. */
 export const CHATGPT_WRITE_CAPABILITIES = {
@@ -41,6 +42,13 @@ export function validateChatGptActionInput(name: string, input: Record<string, u
     confirm_account_invitations_action: ["create", "resend", "revoke"],
   };
   if (allowed[name] && !allowed[name].includes(String(input.action))) throw new Error("Unsupported VNDRLY action");
+  if (input.action === "create" && (name === "manage_work_hub_meeting" || (name === "manage_work_hub_calendar_item" && ["meeting", "event"].includes(String(input.kind))))) {
+    const payload = input.payload && typeof input.payload === "object" && !Array.isArray(input.payload) ? input.payload as Record<string, unknown> : {};
+    const timestamp = (value: unknown) => z.iso.datetime().safeParse(value).success;
+    if ("startAt" in payload || "endAt" in payload || !timestamp(payload.startsAt) || (payload.endsAt != null && !timestamp(payload.endsAt))) throw new Error("Use payload.startsAt and optional payload.endsAt as UTC ISO timestamps ending in Z; startAt/endAt are not supported");
+    if (typeof payload.title !== "string" || !payload.title.trim() || payload.title.trim().length > 200 || typeof payload.timezone !== "string" || payload.timezone.length < 3 || payload.timezone.length > 80) throw new Error("Supply the exact meeting title and timezone before preparing it");
+    if (payload.endsAt != null && Date.parse(String(payload.endsAt)) <= Date.parse(String(payload.startsAt))) throw new Error("The meeting end must follow its start");
+  }
   if (name === "complete_onboarding_step" && input.step === "set-password") throw new Error("Complete password setup on the VNDRLY credential screen");
   if (name !== "set_onboarding_field") return;
   const path = input.path;
