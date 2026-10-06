@@ -17,7 +17,7 @@ test("Gate Dashboard opens an exact current-shift History query", async ({ page 
     const workTypeId = (await pool.query("INSERT INTO work_types(name,category) VALUES($1,'gate') RETURNING id", [stamp])).rows[0].id;
     const personId = (await pool.query("INSERT INTO vendor_people(vendor_id,user_id,vendor_role,first_name,email) VALUES($1,$2,'gate_supervisor','Gate',$3) RETURNING id", [operator.vendorId, operator.userId, operator.username])).rows[0].id;
     await pool.query("UPDATE user_org_memberships SET vendor_people_id=$1 WHERE user_id=$2", [personId, operator.userId]);
-    await pool.query("INSERT INTO site_work_assignments(site_location_id,work_type_id,vendor_id) VALUES($1,$2,$3)", [site.id, workTypeId, operator.vendorId]);
+    await pool.query("INSERT INTO site_work_assignments(site_location_id,work_type_id,vendor_id,is_gate_contractor) VALUES($1,$2,$3,true)", [site.id, workTypeId, operator.vendorId]);
     const stationId = (await pool.query("INSERT INTO gate_stations(site_id,name) VALUES($1,$2) RETURNING id", [site.id, `Operations gate ${stamp}`])).rows[0].id;
 
     await loginAsVendor(page, operator);

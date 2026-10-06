@@ -52,7 +52,7 @@ test("gate handoff authenticates, acknowledges, transfers and opens the selected
         [person, actor.userId],
       );
       await pool.query(
-        "INSERT INTO site_work_assignments(site_location_id,work_type_id,vendor_id) VALUES($1,$2,$3)",
+        "INSERT INTO site_work_assignments(site_location_id,work_type_id,vendor_id,is_gate_contractor) VALUES($1,$2,$3,true)",
         [site.id, work, actor.vendorId],
       );
     }

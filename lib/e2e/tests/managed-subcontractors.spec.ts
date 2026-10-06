@@ -69,6 +69,7 @@ test.describe("vendor managed subcontractors", () => {
       siteLocationId: site.id,
       workTypeId: work.id,
       vendorId,
+      isGateContractor: true,
     });
   });
   test.afterAll(async () => {

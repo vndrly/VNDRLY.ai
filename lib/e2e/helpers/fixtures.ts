@@ -127,6 +127,7 @@ export interface CreateSiteWorkAssignmentInput {
   siteLocationId: number;
   workTypeId: number;
   vendorId: number;
+  isGateContractor?: boolean;
 }
 
 /**
@@ -140,9 +141,9 @@ export async function createSiteWorkAssignment(
   input: CreateSiteWorkAssignmentInput,
 ): Promise<void> {
   await pool.query(
-    `INSERT INTO site_work_assignments (site_location_id, work_type_id, vendor_id)
-     VALUES ($1, $2, $3)`,
-    [input.siteLocationId, input.workTypeId, input.vendorId],
+    `INSERT INTO site_work_assignments (site_location_id, work_type_id, vendor_id, is_gate_contractor)
+     VALUES ($1, $2, $3, $4)`,
+    [input.siteLocationId, input.workTypeId, input.vendorId, input.isGateContractor ?? false],
   );
 }
 
