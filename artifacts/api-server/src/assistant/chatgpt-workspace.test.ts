@@ -2,6 +2,15 @@ import { describe, expect, it } from "vitest";
 import { workspaceOutput, workspaceRequest, WORKSPACE_HTML } from "./chatgpt-workspace";
 const now = new Date("2026-10-05T17:00:00Z");
 describe("VNDRLY workspace presentation", () => {
+  it("shows canonical onboarding steps without private payload fields", () => {
+    const output = workspaceOutput("onboarding", "lookup_user_progress", {}, { progress: { orgType: "vendor", currentStep: "branding", completedSteps: ["company-basics"], skippedSteps: [], payload: { taxId: "private-tax-value" } } }, now);
+    expect(output.sections[0].rows.find(row => row.title === "Vendor branding")).toMatchObject({ detail: "Current step" });
+    expect(output.sections[0].rows.some(row => row.detail === "Completed")).toBe(true);
+    expect(JSON.stringify(output)).not.toContain("private-tax-value");
+    expect(workspaceRequest({ view: "onboarding" }).sourceTool).toBe("lookup_user_progress");
+    expect(() => workspaceOutput("onboarding", "lookup_user_progress", {}, {}, now)).toThrow("Incomplete");
+    expect(workspaceOutput("onboarding", "lookup_user_progress", {}, { progress: null }, now).sections[0].rows).toEqual([]);
+  });
   it("projects canonical nested calendar meetings", () => {
     const output = workspaceOutput("work_calendar", "get_work_hub_calendar", {}, { tasks: [], shifts: [], meetings: [{ item: { meeting: { title: "Safety briefing" }, occurrence: { startsAt: now.toISOString() } } }] }, now);
     expect(output.sections[1].rows[0]).toMatchObject({ title: "Safety briefing", time: now.toISOString() });

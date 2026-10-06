@@ -10,6 +10,7 @@ import {
 import { VNDRLY_LOGO_SQUARE as vndrlyLogo } from "@/lib/vndrly-brand-assets";
 
 interface LegalDocumentPageProps {
+  children?: React.ReactNode;
   title: string;
   description: string;
   sections: LegalSection[];
@@ -21,6 +22,7 @@ export function LegalDocumentPage({
   description,
   sections,
   kind,
+  children,
 }: LegalDocumentPageProps): React.ReactElement {
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
@@ -82,6 +84,7 @@ export function LegalDocumentPage({
           </section>
         )}
 
+        {children}
         <div className="space-y-7">
           {sections.map((section) => (
             <section key={section.title} className="border-b border-slate-200 pb-6 last:border-b-0">

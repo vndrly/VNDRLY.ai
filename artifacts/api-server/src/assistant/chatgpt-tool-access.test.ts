@@ -13,6 +13,14 @@ describe("ChatGPT assistant tool access", () => {
     expect(chatGptReadableTools(session, [])).toEqual([]);
     expect(chatGptReadableTools(session, ["*"])).toEqual([]);
   });
+  it("advertises onboarding only for a resolvable administrator or field-self scope", () => {
+    const has = (identity: Parameters<typeof chatGptReadableTools>[0]) => chatGptReadableTools(identity, ["onboarding:read"]).some(tool => tool.name === "lookup_user_progress");
+    expect(has(session)).toBe(false);
+    expect(has({ ...session, membershipRole: "admin" })).toBe(true);
+    expect(has({ userId: 1, role: "admin", membershipRole: "admin" })).toBe(false);
+    expect(has({ userId: 1, role: "field_employee", vendorPeopleId: null })).toBe(false);
+    expect(has({ userId: 1, role: "field_employee", vendorPeopleId: 8 })).toBe(true);
+  });
   it("keeps Gate and Work Hub grants separate", () => {
     const gate = chatGptReadableTools(session, ["gate:read"]);
     const hub = chatGptReadableTools(session, ["work_hub:read"]);

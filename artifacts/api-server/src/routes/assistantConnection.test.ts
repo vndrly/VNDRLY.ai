@@ -60,6 +60,22 @@ async function tokens(scope = auth.scope) {
   return response.body;
 }
 describe("ChatGPT account connection boundary", () => {
+  it("requires onboarding scope and omits private setup fields from workspace output and audit", async () => {
+    const deniedCredentials = await tokens("work_hub:read");
+    const message = { jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "v_show_workspace", arguments: { view: "onboarding" } } };
+    expect((await request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${deniedCredentials.access_token}`).send(message)).body.result.isError).toBe(true);
+    expect(mocks.run).not.toHaveBeenCalled();
+    const memberCredentials = await tokens("onboarding:read");
+    expect((await request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${memberCredentials.access_token}`).send(message)).body.result.isError).toBe(true);
+    mocks.validate.mockImplementation(async (value) => ({ ...value, membershipRole: "admin", exp: Math.floor(Date.now() / 1000) + 60 }));
+    const credentials = await tokens("onboarding:read");
+    mocks.run.mockResolvedValue(JSON.stringify({ progress: { orgType: "vendor", currentStep: "branding", completedSteps: [], skippedSteps: [], payload: { taxId: "private-tax-value" } } }));
+    const result = await request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send(message);
+    expect(result.body.result.isError).toBe(false);
+    expect(result.body.result.structuredContent.availableViews).toContain("onboarding");
+    expect(JSON.stringify(result.body)).not.toContain("private-tax-value");
+    expect(JSON.stringify(mocks.audit.mock.calls)).not.toContain("private-tax-value");
+  });
   it("keeps workspace reads within granted scopes and hides unassigned Gate navigation", async () => {
     const credentials = await tokens("work_hub:read");
     mocks.run.mockResolvedValue(JSON.stringify({ tasks: [], shifts: [], meetings: [], announcements: [] }));

@@ -1,5 +1,6 @@
 import { LegalDocumentPage } from "@/components/legal-document-page";
 import { PRIVACY_POLICY_SECTIONS, TERMS_SECTIONS } from "@/lib/legal-docs";
+import { OnboardingLegalConsentStep } from "@/components/onboarding-legal-consent-step";
 
 const messagingSections = [
   {
@@ -27,6 +28,12 @@ export default function LegalMessagingConsentPage(): React.ReactElement {
       title="Messaging Consent Disclosure"
       description="A public compliance reference showing how VNDRLY presents Privacy Policy, Terms & Conditions, and voluntary SMS consent during onboarding."
       sections={messagingSections}
-    />
+    >
+      <section className="mb-8 rounded-lg border border-slate-200 bg-white p-5" aria-label="Onboarding consent screen preview">
+        <h2 className="mb-3 text-lg font-semibold">Onboarding consent screen preview</h2>
+        <p className="mb-4 text-sm text-slate-600">This is the same consent screen used in partner and vendor onboarding. This public preview does not enroll anyone or record consent. Both choices begin unchecked; SMS is optional.</p>
+        <OnboardingLegalConsentStep value={{ accepted: false, smsOptIn: false, version: "" }} onChange={() => {}} disabled />
+      </section>
+    </LegalDocumentPage>
   );
 }

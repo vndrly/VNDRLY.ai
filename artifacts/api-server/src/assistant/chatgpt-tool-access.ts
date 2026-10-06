@@ -45,6 +45,7 @@ export function chatGptReadableTools(
   const explicitNames = new Set<string>(Object.entries(CHATGPT_READ_CAPABILITIES)
     .filter(([scope]) => scopes.includes(scope)).flatMap(([, capability]) => [...capability.tools]));
   candidates.push(...ASK_V_TOOL_REGISTRY.filter(tool => explicitNames.has(tool.name)
+    && (tool.name !== "lookup_user_progress" || (session.role === "field_employee" && Boolean(session.vendorPeopleId)) || (session.membershipRole === "admin" && ((session.role === "partner" && Boolean(session.partnerId)) || (session.role === "vendor" && Boolean(session.vendorId)))))
     && (tool.roles.includes(session.role as "admin" | "partner" | "vendor" | "field_employee") || tool.roles.includes("any"))
     && (!tool.companyAdminOnly || session.membershipRole === "admin")));
   if (scopes.includes("gate:read")) {
