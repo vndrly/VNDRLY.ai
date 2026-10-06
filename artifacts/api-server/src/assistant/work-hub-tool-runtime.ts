@@ -156,7 +156,7 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
   }
   if (name === "record_ticket_payment") {
     if (!Number.isSafeInteger(input.ticketId) || Number(input.ticketId) <= 0) return { error: "Select an exact authorized ticket." };
-    return request("POST", `/tickets/${input.ticketId}/disperse-funds`, { paymentMethod: input.paymentMethod, paymentReference: input.paymentReference, note: input.note });
+    return request("POST", `/tickets/${input.ticketId}/disperse-funds`, { paymentMethod: input.paymentMethod, paymentReference: input.paymentReference, note: input.note, paymentReceiptUrl: input.paymentReceiptUrl });
   }
   if (name === "reverse_ticket_payment_record") {
     if (!Number.isSafeInteger(input.ticketId) || Number(input.ticketId) <= 0) return { error: "Select an exact authorized ticket." };

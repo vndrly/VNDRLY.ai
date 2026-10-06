@@ -570,3 +570,9 @@ it("requests a bounded long-held equipment report through the authorized asset l
   expect(resolveExecutableWorkHubToolRequest("query_asset_custody", { checkedOutLongerThanDays: 90 }, false)).toMatchObject({ method: "GET", path: "/implementation-a/assets?checkedOutLongerThanDays=90" });
   expect(resolveExecutableWorkHubToolRequest("query_asset_custody", { checkedOutLongerThanDays: -1 }, false)).toHaveProperty("error");
 });
+
+it("forwards ACH payment evidence only through confirmed payment records", () => {
+ const input = { ticketId: 12, paymentMethod: "ach", paymentReference: "SYNTHETIC-ACH", paymentReceiptUrl: "private/authorized-receipt.png", note: "Already paid" };
+ expect(resolveExecutableWorkHubToolRequest("record_ticket_payment", input, false)).toMatchObject({ requiresConfirmation: true });
+ expect(resolveExecutableWorkHubToolRequest("record_ticket_payment", input, true)).toMatchObject({ method: "POST", path: "/tickets/12/disperse-funds", body: { paymentMethod: input.paymentMethod, paymentReference: input.paymentReference, note: input.note, paymentReceiptUrl: input.paymentReceiptUrl } });
+});

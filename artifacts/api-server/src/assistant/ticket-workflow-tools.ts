@@ -24,7 +24,7 @@ export const TICKET_WORKFLOW_TOOLS: AskVToolDefinition[] = [{
 }, {
   name: "record_ticket_payment",
   description: "Record an already-made ticket payment using VNDRLY's canonical disperse-funds endpoint. This records payment metadata and moves an approved or awaiting-payment ticket to funds_dispersed; it does not transfer money. Requires the owning partner's Accounts Payable authority or platform administrator, separate finance write consent and trusted approval. Never invent a payment or reference.",
-  inputSchema: { type: "object", properties: { ticketId: { type: "integer", minimum: 1 }, paymentMethod: { type: "string", enum: ["check", "etf", "other"] }, paymentReference: { type: "string" }, note: { type: "string" } }, required: ["ticketId", "paymentMethod"], additionalProperties: false },
+  inputSchema: { type: "object", properties: { ticketId: { type: "integer", minimum: 1 }, paymentMethod: { type: "string", enum: ["check", "etf", "ach", "other"] }, paymentReference: { type: "string" }, paymentReceiptUrl: { type: "string", description: "Existing authorized proof-of-payment upload path. Never invent a receipt or claim this tool uploads evidence." }, note: { type: "string" } }, required: ["ticketId", "paymentMethod"], additionalProperties: false },
   roles: ["admin", "partner"], mutating: true, confirmation: "required", risk: "high", execution: "server", pack: "role", auditTarget: "ticket",
 }, {
   name: "reverse_ticket_payment_record",
