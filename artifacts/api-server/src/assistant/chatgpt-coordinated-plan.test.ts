@@ -8,4 +8,14 @@ it("resumes only the actor's company plan and rechecks revoked tools",()=>{
  expect(()=>resumedWorkPlan([task],task.id,{...identity,userId:18},new Set())).toThrow("identity");
  expect(()=>resumedWorkPlan([task],task.id,{...identity,organizationKey:"vendor:5"},new Set())).toThrow("company");
 });
+it("prepares an actor-bound task with stable retry contents and refuses unavailable steps", async()=>{
+ const {prepareWorkPlan}=await import('./chatgpt-coordinated-plan');
+ const identity={userId:17,organizationKey:'vendor:4'},owner={type:'vendor' as const,id:4};
+ const input={planId:'11111111-1111-4111-8111-111111111111',title:'Morning recovery',steps:[{id:'review',specialist:'Finn',toolNames:['query_tickets'],dependsOn:[]}]};
+ const a=prepareWorkPlan(input,identity,owner,new Set(['query_tickets']));
+ expect(prepareWorkPlan(input,identity,owner,new Set(['query_tickets']))).toEqual(a);
+ expect(JSON.parse(a.payload.description).identity).toEqual(identity);
+ expect(()=>prepareWorkPlan(input,identity,owner,new Set())).toThrow('unavailable');
+ expect(()=>prepareWorkPlan({...input,userId:99},identity,owner,new Set(['query_tickets']))).toThrow();
+});
 

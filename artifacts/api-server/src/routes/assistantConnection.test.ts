@@ -454,4 +454,19 @@ it("resumes a coordinated plan only with Work Hub read access and the linked act
  expect(denied.body.result.isError).toBe(true);
  expect(mocks.run).not.toHaveBeenCalled();
 });
+it("prepares coordinated task creation through the existing action panel, without executing it",async()=>{
+ const credentials=await tokens('work_hub:read work_hub:write');
+ const input={planId:'11111111-1111-4111-8111-111111111111',title:'Synthetic recovery',steps:[{id:'brief',specialist:'V',toolNames:['get_work_hub_briefing'],dependsOn:[]}]};
+ const call=()=>request(app).post(base+'/mcp').set('Authorization','Bearer '+credentials.access_token).send({jsonrpc:'2.0',id:1,method:'tools/call',params:{name:'v_prepare_work_plan',arguments:input}});
+ const response=await call();
+ expect(response.body.result.isError).not.toBe(true);
+ const result=JSON.parse(response.body.result.content[0].text);
+ expect(result.requiresConfirmation).toBe(true);
+ expect(grants[0].actions?.[0].toolName).toBe('manage_work_hub_task');
+ expect(grants[0].actions?.[0].arguments.owner).toEqual({type:'vendor',id:4});
+ expect(JSON.parse((grants[0].actions?.[0].arguments.payload as {description:string}).description).identity).toEqual({userId:17,organizationKey:'vendor:4'});
+ expect(mocks.run).not.toHaveBeenCalled();
+ const retry=await call();expect(JSON.parse(retry.body.result.content[0].text).reference).toBe(result.reference);
+ expect(grants[0].actions).toHaveLength(1);
+});
 

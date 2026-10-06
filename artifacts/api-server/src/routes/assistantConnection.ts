@@ -19,7 +19,7 @@ import { SPECIALISTS_TOOL, specialistDirectory } from "../assistant/chatgpt-spec
 import { fileDeviceHandoff, requireMatchingFileDevice, type FileDeviceHandoff, meetingDeviceHandoff, requireMatchingMeetingDevice, type MeetingDeviceHandoff } from "../assistant/chatgpt-device-handoff";
 import { CHATGPT_WRITE_CAPABILITIES, validateChatGptActionInput, sanitizeChatGptActionInput, chatGptActionAuditInput, chatGptActionResult } from "../assistant/chatgpt-write-capabilities";
 
-import { RESUME_PLAN_TOOL, resumedWorkPlan } from "../assistant/chatgpt-coordinated-plan";
+import { RESUME_PLAN_TOOL, resumedWorkPlan, PREPARE_PLAN_TOOL, prepareWorkPlan } from "../assistant/chatgpt-coordinated-plan";
 
 const router = Router();
 const origin = new URL(ASSISTANT_ISSUER).origin;
@@ -218,14 +218,15 @@ router.post("/mcp", async (req, res) => {
     if (reads.some(tool => tool.name === "list_work_hub_tasks")) reads.push(RESUME_PLAN_TOOL);
     if (reads.some(tool => ["get_work_hub_briefing", "get_work_hub_calendar", "query_gate_stations", "lookup_user_progress", "query_tickets", "query_notifications", "query_field_trips", "query_asset_custody"].includes(tool.name))) reads.push(WORKSPACE_TOOL);
     const actions = chatGptActionTools(authorized.session, authorized.scopes);
+    const planTools = actions.some(tool => tool.name === "manage_work_hub_task") ? [{ ...PREPARE_PLAN_TOOL, _meta: ACTION_PANEL_META }] : [];
     const preparedTools = actions.map((tool) => ({ name: tool.name, description: `${tool.description}${tool.name === "manage_ticket_record" ? " Authorized operations can overwrite ticket fields, cancel tickets, or remove line items. This call only prepares the change; submission requires the existing authorization panel." : ""} This connection prepares the exact change for authorization in the VNDRLY action panel. Location-dependent actions use the secure device authorization link. Never claim prepared means completed.`, inputSchema: { ...tool.inputSchema, properties: Object.fromEntries(Object.entries(tool.inputSchema.properties ?? {}).filter(([key]) => !SERVER_ACTION_FIELDS.has(key))), required: (tool.inputSchema.required ?? []).filter((key) => !SERVER_ACTION_FIELDS.has(key)) }, annotations: { readOnlyHint: false, destructiveHint: tool.name === "manage_ticket_record", openWorldHint: false }, _meta: ACTION_PANEL_META }));
 
-    return reply({ tools: [...reads, ...preparedTools, ...(actions.length ? [SUBMIT_PANEL_ACTION_TOOL] : []), ...(actions.length ? [{ name: "v_prepare_action", _meta: ACTION_PANEL_META, description: "Prepare an authorized VNDRLY change and return its secure VNDRLY approval link. This tool never claims the change is completed. Model-supplied approval and GPS are ignored.", inputSchema: { type: "object", properties: { toolName: { type: "string", enum: actions.map((tool) => tool.name) }, arguments: { type: "object" } }, required: ["toolName", "arguments"], additionalProperties: false }, annotations: { readOnlyHint: false, destructiveHint: actions.some(tool => tool.name === "manage_ticket_record"), openWorldHint: false } }, { name: "v_action_status", outputSchema: ACTION_STATUS_OUTPUT_SCHEMA, _meta: { "openai/widgetAccessible": true }, description: "Read the status and actual result of an action prepared by this connected account. Pending or running does not mean completed.", inputSchema: { type: "object", properties: { reference: { type: "string" } }, required: ["reference"], additionalProperties: false }, annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false } }] : [])] });
+    return reply({ tools: [...reads, ...preparedTools, ...planTools, ...(actions.length ? [SUBMIT_PANEL_ACTION_TOOL] : []), ...(actions.length ? [{ name: "v_prepare_action", _meta: ACTION_PANEL_META, description: "Prepare an authorized VNDRLY change and return its secure VNDRLY approval link. This tool never claims the change is completed. Model-supplied approval and GPS are ignored.", inputSchema: { type: "object", properties: { toolName: { type: "string", enum: actions.map((tool) => tool.name) }, arguments: { type: "object" } }, required: ["toolName", "arguments"], additionalProperties: false }, annotations: { readOnlyHint: false, destructiveHint: actions.some(tool => tool.name === "manage_ticket_record"), openWorldHint: false } }, { name: "v_action_status", outputSchema: ACTION_STATUS_OUTPUT_SCHEMA, _meta: { "openai/widgetAccessible": true }, description: "Read the status and actual result of an action prepared by this connected account. Pending or running does not mean completed.", inputSchema: { type: "object", properties: { reference: { type: "string" } }, required: ["reference"], additionalProperties: false }, annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false } }] : [])] });
   }
   if (message.method !== "tools/call") return res.json({ jsonrpc: "2.0", id: message.id, error: { code: -32601, message: "Method not found" } });
   try {
-    const name = message.params?.name;
-    const args = message.params?.arguments ?? {};
+    let name = message.params?.name;
+    let args = message.params?.arguments ?? {};
     if (typeof name !== "string" || !args || typeof args !== "object" || Array.isArray(args)) throw new Error("Invalid tool request");
     if (name === "v_resume_work_plan") {
       if (Object.keys(args).some(key => key !== "taskId") || typeof args.taskId !== "string") throw new Error("Invalid plan request");
@@ -318,6 +319,14 @@ router.post("/mcp", async (req, res) => {
       return reply({ content: [{ type: "text", text: JSON.stringify(status) }], structuredContent: status, isError: false });
     }
     const permittedActions = chatGptActionTools(authorized.session, authorized.scopes);
+    if (name === "v_prepare_work_plan") {
+      if (!permittedActions.some(tool => tool.name === "manage_work_hub_task")) throw new Error("Action unavailable");
+      const session = authorized.session;
+      const owner = session.vendorId ? { type: "vendor" as const, id: session.vendorId } : session.partnerId ? { type: "partner" as const, id: session.partnerId } : null;
+      if (!owner || !session.userId) throw new Error("Plan company unavailable");
+      args = prepareWorkPlan(args, { userId: session.userId, organizationKey: owner.type + ":" + owner.id }, owner, new Set([...chatGptReadableTools(session, authorized.scopes), ...permittedActions].map(tool => tool.name)));
+      name = "manage_work_hub_task";
+    }
     if (name === "v_prepare_action" || permittedActions.some((tool) => tool.name === name)) {
       const tool = permittedActions.find((candidate) => candidate.name === (name === "v_prepare_action" ? args.toolName : name));
       const suppliedInput = name === "v_prepare_action" ? args.arguments : args;
