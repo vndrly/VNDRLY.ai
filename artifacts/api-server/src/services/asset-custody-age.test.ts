@@ -22,3 +22,8 @@ describe("continuous equipment custody age", () => {
     expect(custodyAge({ holderUserId: 1, history: [event("checkout", "2026-10-07T12:00:00Z", null, 1)] }, now).custodyDays).toBeNull();
   });
 });
+
+it("refuses an age when the custody chain contains a future or invalid transfer timestamp", () => {
+  for (const date of ["2026-10-07T12:00:00Z", "invalid"])
+    expect(custodyAge({ holderUserId: 2, history: [event("checkout", "2026-06-01T12:00:00Z", null, 1), event("transfer", date, 1, 2)] }, now).custodyDays).toBeNull();
+});
