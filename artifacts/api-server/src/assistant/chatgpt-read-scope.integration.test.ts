@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { eq } from "drizzle-orm";
 import express from "express";
 import cookieParser from "cookie-parser";
+import pinoHttp from "pino-http";
 import request from "supertest";
 import { db, vendorsTable, partnersTable, siteLocationsTable, workTypesTable, ticketsTable, vendorPeopleTable, usersTable, safetyEventsTable, safetyIncidentResponsesTable, workHubShiftsTable, workHubShiftAssignmentsTable, workforceCoverageRecordsTable, assetsTable, partnerVendorRelationshipsTable, siteWorkAssignmentsTable } from "@workspace/db";
 import safetyRouter from "../routes/implementationASafety";
@@ -17,7 +18,7 @@ import { runOpsDataTool } from "./data-tools-ops";
 import { runTool } from "../routes/assistant";
 
 describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")("assistant read authorization against isolated records", () => {
-  it("persists submission then owning-partner approval and preserves its timestamp on replay", async () => {
+  it("persists vendor acceptance, field lifecycle, submission and owning-partner approval", async () => {
     assertFreshLocalTestDatabaseEnvironment(process.env);
     const suffix = randomUUID();
     const [vendor] = await db.insert(vendorsTable).values({ name: `approval-vendor-${suffix}`, contactName: "Synthetic", contactEmail: `v-${suffix}@example.invalid` }).returning();
@@ -25,10 +26,30 @@ describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")("assistant re
     const [user] = await db.insert(usersTable).values({ username: `approval-${suffix}`, passwordHash: "unused-isolated-fixture", displayName: "Synthetic approver", role: "partner" }).returning();
     const [site] = await db.insert(siteLocationsTable).values({ partnerId: partners[0].id, name: "Synthetic approval site", address: "Synthetic", latitude: 0, longitude: 0, siteCode: `AP-${suffix}` }).returning();
     const [workType] = await db.insert(workTypesTable).values({ name: `Approval fixture ${suffix}`, category: "service" }).returning();
-    const [ticket] = await db.insert(ticketsTable).values({ vendorId: vendor.id, siteLocationId: site.id, workTypeId: workType.id, status: "completed", lifecycleState: "off_site" }).returning();
-    const app = express().use(express.json()).use(cookieParser()).use(ticketsRouter);
+    const [fieldUser] = await db.insert(usersTable).values({ username: `field-lifecycle-${suffix}`, passwordHash: "unused-isolated-fixture", displayName: "Synthetic field worker", role: "field_employee" }).returning();
+    const [worker] = await db.insert(vendorPeopleTable).values({ vendorId: vendor.id, userId: fieldUser.id, firstName: "Synthetic", lastName: "Worker", email: `field-${suffix}@example.invalid` }).returning();
+    await db.insert(siteWorkAssignmentsTable).values({ vendorId: vendor.id, siteLocationId: site.id, workTypeId: workType.id });
+    const [ticket] = await db.insert(ticketsTable).values({ vendorId: vendor.id, siteLocationId: site.id, workTypeId: workType.id, fieldEmployeeId: worker.id, status: "awaiting_acceptance", lifecycleState: "pending_arrival" }).returning();
+    const app = express().use(pinoHttp({ autoLogging: false })).use(express.json()).use(cookieParser()).use(ticketsRouter);
     attachTestErrorMiddleware(app);
     const [submitter] = await db.insert(usersTable).values({ username: `submitter-${suffix}`, passwordHash: "unused-isolated-fixture", displayName: "Synthetic vendor", role: "vendor" }).returning();
+    const vendorCookie = buildTestCookie({ userId: submitter.id, role: "vendor", vendorId: vendor.id });
+    const fieldCookie = buildTestCookie({ userId: fieldUser.id, role: "field_employee", vendorId: vendor.id, vendorPeopleId: worker.id });
+    const state = async (status: string, lifecycleState: string) => {
+      const [saved] = await db.select().from(ticketsTable).where(eq(ticketsTable.id, ticket.id));
+      expect(saved).toMatchObject({ status, lifecycleState });
+    };
+    expectStatus(await request(app).post(`/tickets/${ticket.id}/accept`).set("Cookie", vendorCookie).send({}), 200);
+    await state("initiated", "pending_arrival");
+    expectStatus(await request(app).post(`/tickets/${ticket.id}/en-route`).set("Cookie", fieldCookie).send({ startingMileage: 100 }), 200);
+    await state("initiated", "en_route");
+    // Coordinates belong only to this fictional runner-local site, not a real device.
+    expectStatus(await request(app).post(`/tickets/${ticket.id}/on-location`).set("Cookie", fieldCookie).send({ latitude: 0, longitude: 0 }), 200);
+    await state("initiated", "on_location");
+    expectStatus(await request(app).post(`/tickets/${ticket.id}/check-in`).set("Cookie", fieldCookie).send({ latitude: 0, longitude: 0 }), 200);
+    await state("in_progress", "on_site");
+    expectStatus(await request(app).post(`/tickets/${ticket.id}/check-out`).set("Cookie", fieldCookie).send({ latitude: 0, longitude: 0, workCompleted: true, endingMileage: 101 }), 200);
+    await state("completed", "off_site");
     expectStatus(await request(app).post(`/tickets/${ticket.id}/submit`).set("Cookie", buildTestCookie({ userId: submitter.id, role: "vendor", vendorId: vendor.id })).send({}), 200);
     const [submitted] = await db.select().from(ticketsTable).where(eq(ticketsTable.id, ticket.id));
     expect(submitted).toMatchObject({ status: "submitted", lifecycleState: "off_site" });
