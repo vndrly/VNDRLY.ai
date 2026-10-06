@@ -180,6 +180,8 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
     return transitions[action] ? request("POST", `${base}/${transitions[action]}`, payload) : unsupported("ticket action");
   }
   const resourceId = encoded(input.resourceId ?? input.id ?? input.assetId ?? input.tripId ?? input.eventId ?? input.invitationId);
+  if (name === "query_operations_displays" || name === "prepare_operations_displays_action")
+    return request("GET", "/implementation-a/operations-displays");
   if (name.includes("operations_displays")) return unsupported("operations display; use the authenticated companion");
   if (name.includes("asset_custody")) {
     const assetPayload = { ...withoutNulls(payload), ...(Array.isArray(payload.aliases) ? { aliases: payload.aliases.map(value => withoutNulls(record(value))) } : {}), ...(payload.alias ? { alias: withoutNulls(record(payload.alias)) } : {}) };
@@ -218,7 +220,6 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
     query_field_trips: resourceId ? `/implementation-a/trips/${resourceId}` : "/implementation-a/trips",
     query_incident_response: resourceId ? `/implementation-a/safety/incidents/${resourceId}` : "/implementation-a/safety/incidents",
     query_worker_subscriptions: "/implementation-a/subscriptions",
-    query_operations_displays: "/implementation-a/displays",
   };
   if (readPaths[name]) return request("GET", readPaths[name]);
   if (name.startsWith("prepare_") && name.endsWith("_action")) {

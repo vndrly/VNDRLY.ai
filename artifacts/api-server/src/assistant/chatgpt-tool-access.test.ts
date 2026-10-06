@@ -4,6 +4,13 @@ import { CHATGPT_READ_CAPABILITIES } from "./chatgpt-read-capabilities";
 import { findAskVTool } from "./tool-registry";
 
 describe("ChatGPT assistant tool access", () => {
+  it("limits operations displays to an administrator's active company", () => {
+    const tool = "query_operations_displays";
+    expect(() => requireChatGptReadableTool({ userId: 1, role: "vendor", vendorId: 7, membershipRole: "admin" }, ["operations:read"], tool)).not.toThrow();
+    for (const identity of [{ userId: 1, role: "vendor", vendorId: 7, membershipRole: "member" }, { userId: 1, role: "admin" }, { userId: 1, role: "field_employee", vendorId: 7 }])
+      expect(() => requireChatGptReadableTool(identity, ["operations:read"], tool)).toThrow();
+    expect(chatGptReadToolDescription(requireChatGptReadableTool({ userId: 1, role: "vendor", vendorId: 7, membershipRole: "admin" }, ["operations:read"], "prepare_operations_displays_action"))).toContain("No bound action");
+  });
   it("discloses external market-data reads without marking them destructive", () => {
     for (const name of ["get_stock_quote", "get_crude_oil_price", "query_crew_eta", "query_ticket_route_eta", "estimate_driving_route", "query_ticket_mileage_audit"]) {
       expect(chatGptReadToolAnnotations(name)).toEqual({ readOnlyHint: true, destructiveHint: false, openWorldHint: true });

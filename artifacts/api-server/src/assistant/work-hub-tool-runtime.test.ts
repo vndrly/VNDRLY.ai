@@ -17,6 +17,12 @@ const command = {
 };
 
 describe("resolveWorkHubToolRequest", () => {
+  it("reads registered displays without accepting model-supplied screen control", () => {
+    for (const name of ["query_operations_displays", "prepare_operations_displays_action"])
+      expect(resolveExecutableWorkHubToolRequest(name, { owner: { type: "vendor", id: 999 }, action: "route", payload: {} }, false))
+        .toMatchObject({ method: "GET", path: "/implementation-a/operations-displays" });
+    expect(resolveExecutableWorkHubToolRequest("confirm_operations_displays_action", { action: "route" }, true)).toHaveProperty("error");
+  });
   it("binds carry-forward changes to the saved item and station after trusted authorization", () => {
     const stationId = "00000000-0000-4000-8000-000000000001";
     const itemId = "00000000-0000-4000-8000-000000000002";

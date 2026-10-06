@@ -1,5 +1,5 @@
 import { Router, type Request, type Response } from "express";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { z } from "zod/v4";
 import {
   registerOperationsDisplaySchema,
@@ -181,6 +181,29 @@ function fail(res: Response, error: unknown) {
           : "operations_display.internal_error",
     });
 }
+
+router.get("/implementation-a/operations-displays", async (req, res) => {
+  try {
+    const context = adminContext(req);
+    const displays = await db.select().from(operationsDisplaysTable).where(and(
+      eq(operationsDisplaysTable.ownerOrgType, context.owner.type),
+      eq(operationsDisplaysTable.ownerOrgId, context.owner.id),
+    ));
+    const outputs = displays.length ? await db.select().from(operationsDisplayOutputsTable)
+      .where(inArray(operationsDisplayOutputsTable.displayId, displays.map(display => display.id))) : [];
+    return res.json({ displays: displays.map(display => ({
+      id: display.id, name: display.name, privacyMode: display.privacyMode,
+      siteAllowlist: display.siteAllowlist, viewAllowlist: display.viewAllowlist,
+      revokedAt: display.revokedAt, updatedAt: display.updatedAt,
+      outputs: outputs.filter(output => output.displayId === display.id).map(output => ({
+        id: output.id, name: output.name, currentView: output.currentView,
+        currentSiteLocationId: output.currentSiteLocationId,
+        currentMeetingOccurrenceId: output.currentMeetingOccurrenceId,
+        cameraEnabled: false, microphoneEnabled: false, updatedAt: output.updatedAt,
+      })),
+    })), controlRequiresAuthenticatedCompanion: true });
+  } catch (error) { return fail(res, error); }
+});
 
 router.post("/implementation-a/operations-displays", async (req, res) => {
   try {
