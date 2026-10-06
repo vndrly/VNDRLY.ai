@@ -430,3 +430,11 @@ describe("ChatGPT account connection boundary", () => {
     expect(mocks.bound).toHaveBeenCalledWith(expect.objectContaining({ input: expect.objectContaining({ startLatitude: 35.4, startLongitude: -97.2, locationSharingActive: false }) }));
   });
 });
+
+it("offers explicit account switching without authorizing a connection", async () => {
+  const response = await request(app).get(`${base}/authorize`).query(auth).set("Cookie", cookie());
+  expect(response.status).toBe(200);
+  expect(response.text).toContain('href="/switch-account"');
+  expect(response.text).toContain("Switch VNDRLY account");
+  expect(grants).toHaveLength(0);
+});
