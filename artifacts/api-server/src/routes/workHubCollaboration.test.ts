@@ -13,6 +13,7 @@ import {
   userOrgMembershipsTable,
   workHubChannelsTable,
   workHubChannelMembersTable,
+  notificationsTable,
 } from "@workspace/db";
 import collaboration from "./workHubCollaboration";
 import channels from "./workHubChannels";
@@ -174,6 +175,27 @@ describe.skipIf(process.env.VNDRLY_ISOLATED_TEST_DB !== "1")("collaboration dura
     expect(duplicate.status).toBe(201);
     expect((await request(app).delete(`/work-hub/crews/${duplicate.body.id}`).set("Cookie", adminCookie)).status).toBe(200);
     expect((await request(app).get("/work-hub/crews").set("Cookie", adminCookie)).body.some((crew: { id: string }) => crew.id === duplicate.body.id)).toBe(false);
+  });
+  it("reuses a colleague chat and delivers a retried message exactly once", async () => {
+    const chat = await request(app).post("/work-hub/chats").set("Cookie", adminCookie).send({ recipientUserId: memberId });
+    expect(chat.status).toBe(201);
+    const channelId = chat.body.channel.id;
+    const reused = await request(app).post("/work-hub/chats").set("Cookie", adminCookie).send({ recipientUserId: memberId });
+    expect(reused.body.channel.id).toBe(channelId);
+    const envelope = { operationId: randomUUID(), owner: { type: "vendor", id: ownerId }, context: { kind: "organization", id: String(ownerId) }, expectedVersion: null, payloadVersion: 1, payload: { body: "Joe, you are late.", kind: "text", mentionUserIds: [] } };
+    const endpoint = "/work-hub/channels/" + channelId + "/messages";
+    const first = await request(app).post(endpoint).set("Cookie", adminCookie).send(envelope);
+    expect(first.status).toBe(201);
+    const replay = await request(app).post(endpoint).set("Cookie", adminCookie).send(envelope);
+    expect(replay.status).toBe(200);
+    expect(replay.body.resource.id).toBe(first.body.resource.id);
+    const notifications = await db.select().from(notificationsTable).where(eq(notificationsTable.dedupeKey, `work-hub-message:${first.body.resource.id}:1`));
+    expect(notifications).toHaveLength(1);
+    expect(notifications[0]).toMatchObject({ userId: memberId, type: "work_hub_message", body: envelope.payload.body });
+    const received = await request(app).get(endpoint).set("Cookie", memberCookie);
+    expect(received.status).toBe(200);
+    expect(received.body.filter((message: { body: string }) => message.body === envelope.payload.body)).toHaveLength(1);
+    expect((await request(app).get(endpoint).set("Cookie", externalCookie)).status).toBe(404);
   });
   it("does not expose cross-company chats until the recipient accepts", async () => {
     const [relationship] = await db.insert(workHubChannelsTable).values({ ownerOrgType: "vendor", ownerOrgId: ownerId, contextKind: "organization", contextId: randomUUID(), name: "Authorized relationship", visibility: "private", createdById: adminId }).returning();
