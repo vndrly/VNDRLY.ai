@@ -5,6 +5,14 @@ import { validateChatGptActionInput, sanitizeChatGptActionInput, chatGptActionAu
 describe("ChatGPT onboarding changes", () => {
   const admin = { userId: 17, role: "vendor", membershipRole: "admin", vendorId: 4 };
   const names = (session = admin, scopes = ["onboarding:write"]) => chatGptActionTools(session, scopes).map(tool => tool.name);
+  it("requires separate finance write consent and leaves AP authority to the canonical endpoint", () => {
+    expect(names(admin, ["tickets:write"])).not.toContain("record_ticket_payment");
+    expect(names(admin, ["finance:read"])).not.toContain("record_ticket_payment");
+    expect(names(admin, ["finance:write"])).toEqual([]);
+    const partner = { userId: 17, role: "partner", partnerId: 4 };
+    expect(chatGptActionTools(partner, ["finance:write"]).map(tool => tool.name)).toEqual(["record_ticket_payment"]);
+    expect(chatGptActionTools({ userId: 17, role: "admin" }, ["finance:write"]).map(tool => tool.name)).toEqual(["record_ticket_payment"]);
+  });
   it.each([
     ["admin", ["approve", "accept", "reactivate"]],
     ["partner", ["approve", "reinvite"]],

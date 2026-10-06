@@ -133,6 +133,10 @@ const direct = (input: Input, extra: Input = {}): Input => ({
 });
 
 function resolveImplementationACapabilityRequest(name: string, input: Input): WorkHubToolRequest | null {
+  if (name === "record_ticket_payment") {
+    if (!Number.isSafeInteger(input.ticketId) || Number(input.ticketId) <= 0) return { error: "Select an exact authorized ticket." };
+    return request("POST", `/tickets/${input.ticketId}/disperse-funds`, { paymentMethod: input.paymentMethod, paymentReference: input.paymentReference, note: input.note });
+  }
   const action = typeof input.action === "string" ? input.action : "";
   const payload = record(input.payload);
   if (name === "manage_ticket_record") {
@@ -811,7 +815,7 @@ export const isTypedWorkHubTool = (name: string): boolean =>
   Boolean(resolveWorkHubToolMetadata(name));
 
 export const resolveWorkHubToolMetadata = (name: string) =>
-  name === "manage_ticket_record" || WORK_HUB_TOOL_METADATA[name] || IMPLEMENTATION_A_CAPABILITY_TOOLS.some((tool) => tool.name === name) ? findAskVTool(name) : null;
+  ["manage_ticket_record", "record_ticket_payment"].includes(name) || WORK_HUB_TOOL_METADATA[name] || IMPLEMENTATION_A_CAPABILITY_TOOLS.some((tool) => tool.name === name) ? findAskVTool(name) : null;
 
 export function bindWorkHubToolScope(
   rawInput: unknown,

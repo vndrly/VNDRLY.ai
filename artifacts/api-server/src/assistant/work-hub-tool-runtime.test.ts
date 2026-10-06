@@ -17,6 +17,11 @@ const command = {
 };
 
 describe("resolveWorkHubToolRequest", () => {
+  it("records a payment only after trusted authorization without moving money", () => {
+    const input = { ticketId: 12, paymentMethod: "check", paymentReference: "1234", note: "Already paid" };
+    expect(resolveExecutableWorkHubToolRequest("record_ticket_payment", input, false)).toMatchObject({ requiresConfirmation: true });
+    expect(resolveExecutableWorkHubToolRequest("record_ticket_payment", input, true)).toMatchObject({ method: "POST", path: "/tickets/12/disperse-funds", body: { paymentMethod: "check", paymentReference: "1234", note: "Already paid" } });
+  });
   it("requires trusted authorization and the right role for ticket transitions", () => {
     expect(resolveExecutableWorkHubToolRequest("manage_ticket_record", { action: "approve", ticketId: 12, payload: {} }, false, { userId: 1, role: "partner" })).toMatchObject({ requiresConfirmation: true });
     expect(resolveExecutableWorkHubToolRequest("manage_ticket_record", { action: "approve", ticketId: 12, payload: {} }, true, { userId: 1, role: "field_employee" })).toMatchObject({ error: "This ticket action is unavailable to your role." });
