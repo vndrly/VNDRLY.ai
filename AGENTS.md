@@ -218,6 +218,18 @@ Outbound email (password resets, invoice delivery, digests) is not enabled yet; 
 ### Accounting Connections
 Vendors connect QuickBooks Online and OpenAccountant from the Reports page. OpenAccountant ships with both an OAuth2 default flow (`GET /api/accounting/oa/connect` + `/callback`) and a long-lived API-key fallback (`POST /api/accounting/oa/connect-api-key`). Admin setup for the OAuth path — required env vars (`OPENACCOUNTANT_CLIENT_ID`, `OPENACCOUNTANT_CLIENT_SECRET`, `OPENACCOUNTANT_REDIRECT_URI`, plus optional `OPENACCOUNTANT_OAUTH_BASE_URL` / `OPENACCOUNTANT_OAUTH_SCOPE`), how to register the OA OAuth client, and the API-key fallback are documented in `docs/accounting-oauth.md`.
 
+## Cursor Cloud specific instructions
+
+Cloud Agents do not use the shared Supabase database. `start` runs a loopback PostgreSQL 16 cluster owned by the `ubuntu` user:
+
+- Data directory: `/var/lib/vndrly-postgres`
+- URL: `postgresql://postgres@127.0.0.1:55432/vndrly` (trust auth)
+- Schema is applied only when that database has no tables, and only when `DATABASE_URL` is exactly that loopback URL
+
+Node 24.21.0 and pnpm 9.15.9 live in `/usr/local/bin`. This image also exposes Node 22 earlier on `PATH`; install appends `export PATH="/usr/local/bin:$PATH"` to `~/.bashrc`. Use `pnpm install --frozen-lockfile`.
+
+`start` then launches the API on port 8080 (`vndrly-api`) and Vite on port 5173 (`vndrly-web`). In development, `POST /api/auth/seed` creates the canonical demo accounts from `docs/canonical-credentials.md`. Sign in at `http://127.0.0.1:5173/login`. `AI_INTEGRATIONS_ANTHROPIC_API_KEY` defaults to `local-test-disabled` so the API process can boot; Ask VNDRLY needs a real key. Install runs `pnpm run typecheck:libs` so web typecheck can see the library project references. `pnpm lint:i18n` is the fast locale check.
+
 ## External Dependencies
 - **PostgreSQL (Supabase):** Primary relational database — project `bihjmgbdzbhcnsuhzzwo`, us-west-2. Local `.env.local` and production `.env.production` both point at the same Supabase instance. See **`docs/database.md`**.
 - **Drizzle ORM:** TypeScript ORM.
