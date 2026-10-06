@@ -1098,7 +1098,7 @@ router.post("/:occurrenceId/end", route(async (req, _res, tx, ctx) => {
   await saveRuntime(tx, ctx, { ...ctx.runtime, endedAt: endedAt.toISOString(), presence: {}, connections: {}, signals: [], activity: {} }, { status: "ended", transcriptState: "complete", recordingState: "off" });
   await tx.update(attendance).set({ leftAt: endedAt }).where(and(eq(attendance.occurrenceId, ctx.id), isNull(attendance.leftAt)));
   await tx.update(artifacts).set({ state: "complete" }).where(and(eq(artifacts.occurrenceId, ctx.id), eq(artifacts.artifactType, "transcript")));
-  await tx.insert(chat).values({ occurrenceId: ctx.id, userId: ctx.session.userId, messageType: "system", body: "The host ended the meeting. The shared transcript is saved." });
+  await tx.insert(chat).values({ occurrenceId: ctx.id, userId: ctx.session.userId, messageType: "system", body: "The host ended the meeting." });
   await audit(tx, ctx, "meeting.ended");
   afterCommit(req, () => closeAllAssemblyAIStreams(ctx.id));
   return { ended: true };

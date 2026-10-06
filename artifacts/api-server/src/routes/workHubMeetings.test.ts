@@ -504,6 +504,14 @@ describe("shipped audio compatibility", () => {
 });
 
 describe("meeting lifecycle HTTP boundaries", () => {
+  it("does not claim a saved transcript when ending a meeting without one", async () => {
+    seed({ runtime: {} });
+    const response = await request(app()).post(`/meetings/${meetingId}/end`).send({});
+    expect(response.status).toBe(200);
+    const message = mocks.mutations.map(m => m.value as any).find(value => value?.messageType === "system");
+    expect(message.body).not.toMatch(/transcript.*saved/i);
+  });
+
   it("requires authentication", async () => {
     mocks.session = null;
     expect((await request(app()).get(`/meetings/${meetingId}/catch-up`)).status).toBe(401);
