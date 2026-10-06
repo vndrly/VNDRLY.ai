@@ -1,4 +1,5 @@
 import { workHubItemDestination } from "@workspace/api-client-react/work-hub-destinations";
+import { withRequestDeadline } from "./request-deadline";
 export type WorkHubOwner = { type: "vendor" | "partner"; id: number };
 export type WorkHubUser = {
   role: string;
@@ -101,10 +102,12 @@ export async function workHubRequest<T>(
   path: string,
   init?: RequestInit,
 ): Promise<T> {
+  return withRequestDeadline(async signal => {
   const response = await fetch(`/api/work-hub${path}`, {
     credentials: "include",
     ...init,
     headers: { "Content-Type": "application/json", ...init?.headers },
+    signal,
   });
   if (!response.ok) {
     const body = await response.json().catch(() => null);
@@ -115,6 +118,10 @@ export async function workHubRequest<T>(
     );
   }
   return response.json();
+  }, { signal: init?.signal, timeoutMs: 30_000, timeoutMessage:
+    !init?.method || ["GET", "HEAD"].includes(init.method.toUpperCase())
+      ? "VNDRLY did not respond in time. Refresh to read the latest records."
+      : "VNDRLY did not confirm this change in time. Its result is unverified; check the saved record before submitting again." });
 }
 
 export type WorkHubSearchResponse<T> = { results: T[]; cappedSources: string[]; nextCursor: string | null };

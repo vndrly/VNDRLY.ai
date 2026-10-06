@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { WorkHubCardTitle } from "./chrome";
 import { useMeetingSession } from "@/components/meeting-session-provider";
+import { withRequestDeadline } from "@/lib/request-deadline";
 type Document = {
   id: string;
   createdBy: number;
@@ -179,11 +180,12 @@ export function WorkHubFiles() {
         };
         setReservedUpload(reservation);
       }
-      const response = await fetch(reservation.resource.uploadURL, {
+      const response = await withRequestDeadline(signal => fetch(reservation.resource.uploadURL, {
         method: "PUT",
         headers: { "Content-Type": file.type || "application/octet-stream" },
         body: file,
-      });
+        signal,
+      }), { timeoutMs: 120_000, timeoutMessage: "File transfer was not confirmed in time. No new version has been confirmed; check the library before retrying this staged upload." });
       if (!response.ok)
         throw new Error(
           `File upload failed (${response.status}). No new version was published.`,
