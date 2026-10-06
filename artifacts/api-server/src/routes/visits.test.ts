@@ -510,6 +510,13 @@ vi.mock("../lib/gate-ocr-rate-limit", () => ({
 }));
 
 const publishVisitEventMock = vi.fn();
+const personAccessMock = vi.fn();
+const reviewListMock = vi.fn(async ({ siteIds }: { siteIds: number[] }) => ({ siteIds, visits: [] }));
+vi.mock("../lib/vendor-person-access", () => ({ resolveVendorPersonAccess: personAccessMock }));
+vi.mock("../services/gate-reconciliation", async (importOriginal) => ({
+  ...await importOriginal<typeof import("../services/gate-reconciliation")>(),
+  listVisitsNeedingReview: reviewListMock,
+}));
 let visitEventSubscriber: ((event: any) => void) | null = null;
 vi.mock("../lib/visit-events", () => ({
   getCurrentVisitEventSeq: vi.fn(async () => 0),
@@ -568,6 +575,8 @@ beforeEach(async () => {
   visitEventSubscriber = null;
   readPlateFromImageMock.mockReset();
   getStoredObjectMock.mockReset();
+  personAccessMock.mockReset();
+  reviewListMock.mockClear();
   vi.resetModules();
   visitsModule = await import("./visits");
   app = express();
@@ -575,6 +584,41 @@ beforeEach(async () => {
   app.use(express.json());
   app.use("/api", visitsModule.default);
   attachTestErrorMiddleware(app);
+});
+
+describe("normalized Gate review access", () => {
+  it("preserves scoped office access without including another assigned site", async () => {
+    fixtures.siteWorkAssignments.push(
+      { id: 1, vendorId: 41, siteLocationId: 22, isGateContractor: true },
+      { id: 2, vendorId: 41, siteLocationId: 23, isGateContractor: true },
+    );
+    personAccessMock.mockResolvedValue({ isVendorAdmin: false, operationalRoles: ["office"], siteIds: [22] });
+    const response = await request(app).get("/api/visits/gate/review").set("Cookie", buildTestCookie({
+      userId: 12, role: "vendor", vendorId: 41, vendorPeopleId: 969, vendorRole: "office",
+    }));
+    expect(response.status).toBe(200);
+    expect(reviewListMock).toHaveBeenCalledWith({ siteIds: [22] });
+  });
+  it.each(["gatekeeper", "gate_supervisor"])("uses current %s permissions and selected contracted sites", async role => {
+    fixtures.siteWorkAssignments.push(
+      { id: 1, vendorId: 41, siteLocationId: 22, isGateContractor: true },
+      { id: 2, vendorId: 41, siteLocationId: 23, isGateContractor: true },
+    );
+    personAccessMock.mockResolvedValue({ isVendorAdmin: false, operationalRoles: [role], siteIds: [22, 99] });
+    const response = await request(app).get("/api/visits/gate/review").set("Cookie", buildTestCookie({
+      userId: 12, role: "field_employee", vendorId: 41, vendorPeopleId: 969, vendorRole: role,
+    }));
+    expect(response.status).toBe(200);
+    expect(reviewListMock).toHaveBeenCalledWith({ siteIds: [22] });
+  });
+  it("denies a revoked Gate role even when the signed session retains its old role", async () => {
+    personAccessMock.mockResolvedValue({ isVendorAdmin: false, operationalRoles: ["field_employee"], siteIds: [22] });
+    const response = await request(app).get("/api/visits/gate/review").set("Cookie", buildTestCookie({
+      userId: 12, role: "field_employee", vendorId: 41, vendorPeopleId: 969, vendorRole: "gate_supervisor",
+    }));
+    expect(response.status).toBe(403);
+    expect(reviewListMock).not.toHaveBeenCalled();
+  });
 });
 
 afterEach(() => {

@@ -1,4 +1,5 @@
 import { managedWorkerSessionIsCurrent } from "../lib/managed-worker-session";
+import { hasGateSupervisorAuthority } from "../lib/gate-supervisor-authority";
 import { managedWorkerSiteIds, managedWorkerSiteRole } from "../lib/managed-worker-access";
 import { Router, type IRouter } from "express";
 import {
@@ -406,6 +407,19 @@ async function requireGateReviewSession(req: any, res: any): Promise<Session | n
     res.status(401).json({ message: "Login required", code: AUTH_REQUIRED });
     return null;
   }
+  if (session.vendorPeopleId) {
+    const access = await resolveVendorPersonAccess(session);
+    const gateRole = access?.operationalRoles.some(role => role === "gatekeeper" || role === "gate_supervisor");
+    const officeRole = access?.operationalRoles.includes("office") && officeMayAccessGateOps(session) && sessionHasGateOpsScope(session);
+    if (!access || (!access.isVendorAdmin && !gateRole && !officeRole)) {
+      res.status(403).json({ message: "Gate access required", code: VISIT_NO_ACCESS });
+      return null;
+    }
+    const contracted = new Set(await loadAssignedSiteIds(session.vendorId ?? 0));
+    session.gateAccessSiteIds = access.siteIds.filter(siteId => contracted.has(siteId));
+    session.gateSupervisorAccess = access.isVendorAdmin || access.operationalRoles.includes("gate_supervisor");
+    return session;
+  }
   if (
     !isGatekeeperSession(session) &&
     (!officeMayAccessGateOps(session) || !sessionHasGateOpsScope(session))
@@ -715,6 +729,10 @@ async function gateReviewSiteIds(session: Session): Promise<number[]> {
     return loadPartnerSiteIds(session.partnerId);
   if (session.vendorId) {
     const assigned = await loadAssignedSiteIds(session.vendorId);
+    if (session.gateAccessSiteIds != null) {
+      const allowed = new Set(session.gateAccessSiteIds);
+      return assigned.filter((siteId) => allowed.has(siteId));
+    }
     if (session.managedSubcontractor) {
       const allowed = new Set(managedWorkerSiteIds(session));
       return assigned.filter((siteId) => allowed.has(siteId));
@@ -1196,13 +1214,7 @@ router.post("/visits/gate/:id/reconciliations/:reconciliationId/reverse", async 
       .from(siteVisitsTable)
       .where(eq(siteVisitsTable.id, visitId))
       .limit(1);
-    const supervisor =
-      session.role === "admin" ||
-      session.role === "partner" ||
-      session.membershipRole === "admin" ||
-      session.gateSupervisorAccess === true ||
-      session.vendorRole === "gate_supervisor" ||
-      Boolean(session.managedSubcontractor && visitScope && managedWorkerSiteRole(session, visitScope.siteId) === "gate_supervisor");
+    const supervisor = Boolean(visitScope && hasGateSupervisorAuthority(session, visitScope.siteId));
     const result = await reverseVisitReconciliation({
       visitId,
       reconciliationId,
@@ -1276,12 +1288,7 @@ router.post("/visits/gate/:id/reconcile", async (req, res): Promise<void> => {
       at: input.completedAt ? new Date(input.completedAt) : new Date(),
       gatekeeperUserId: session.userId,
     });
-    const supervisorOverride = (
-      session.gateSupervisorAccess === true ||
-      (session.managedSubcontractor
-        ? managedWorkerSiteRole(session, visit.siteLocationId) === "gate_supervisor"
-        : session.vendorRole === "gate_supervisor")
-    ) && Boolean(input.overrideReason);
+    const supervisorOverride = hasGateSupervisorAuthority(session, visit.siteLocationId) && Boolean(input.overrideReason);
     const state = reconciled.state === "reconciled" || supervisorOverride ? "reconciled" : "needs_supervisor_review";
     const [updated] = await db.update(siteVisitsTable).set({
       firstName: input.firstName,
