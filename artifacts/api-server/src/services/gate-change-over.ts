@@ -93,11 +93,11 @@ export async function requireChangeOverAccess(
   )
     return fail(403, "forbidden", "Assigned gate access required");
   const assigned = await client.query(
-    "SELECT id FROM site_work_assignments WHERE vendor_id=$1 AND site_location_id=$2 LIMIT 1",
+    "SELECT id FROM site_work_assignments WHERE vendor_id=$1 AND site_location_id=$2 AND is_gate_contractor=true LIMIT 1",
     [session.vendorId, siteId],
   );
   if (!assigned.rowCount)
-    return fail(403, "forbidden", "You are not assigned to this site");
+    return fail(403, "forbidden", "Your company is not designated as a Gate contractor at this site");
   const membership = await client.query(
     "SELECT id, vendor_people_id, role FROM user_org_memberships WHERE user_id=$1 AND vendor_id=$2 AND org_type='vendor' AND ($3::int IS NULL OR id=$3)",
     [session.userId, session.vendorId, session.activeMembershipId ?? null],
@@ -280,7 +280,7 @@ export async function listChangeOverSites(session: SessionPayload, mode: GateDis
   const sites = (
     await pool.query(
       `SELECT s.id, s.name FROM site_locations s WHERE s.is_active IS DISTINCT FROM false AND s.hidden IS DISTINCT FROM true
-    AND ($1='admin' OR ($1='partner' AND s.partner_id=$2) OR EXISTS (SELECT 1 FROM site_work_assignments a WHERE a.site_location_id=s.id AND a.vendor_id=$3))
+    AND ($1='admin' OR ($1='partner' AND s.partner_id=$2) OR EXISTS (SELECT 1 FROM site_work_assignments a WHERE a.site_location_id=s.id AND a.vendor_id=$3 AND a.is_gate_contractor=true))
     AND (
       $5::boolean OR $6::boolean OR $1 IN ('admin','partner')
       OR EXISTS (

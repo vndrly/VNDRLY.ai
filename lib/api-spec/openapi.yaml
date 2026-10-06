@@ -5048,6 +5048,9 @@ components:
     SiteWorkAssignment:
       type: object
       properties:
+        isGateContractor:
+          type: boolean
+          description: Explicit site-owner designation of this vendor as a Gate contractor.
         id:
           type: integer
         siteLocationId:
@@ -5069,6 +5072,9 @@ components:
     CreateSiteAssignmentBody:
       type: object
       properties:
+        isGateContractor:
+          type: boolean
+          description: Explicit site-owner designation of this vendor as a Gate contractor.
         workTypeId:
           type: integer
         vendorId:
@@ -5080,6 +5086,9 @@ components:
     UpdateSiteAssignmentBody:
       type: object
       properties:
+        isGateContractor:
+          type: boolean
+          description: Explicit site-owner designation of this vendor as a Gate contractor.
         afe:
           type: ["string", "null"]
 

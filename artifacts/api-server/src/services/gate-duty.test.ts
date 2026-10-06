@@ -40,7 +40,7 @@ async function fixture(policy: "on_site" | "paid_travel" = "on_site") {
     )
   ).rows[0].id as number;
   await pool.query(
-    "INSERT INTO site_work_assignments(site_location_id,work_type_id,vendor_id) VALUES($1,$2,$3)",
+    "INSERT INTO site_work_assignments(site_location_id,work_type_id,vendor_id,is_gate_contractor) VALUES($1,$2,$3,true)",
     [site, workType, vendor],
   );
   const stationId = (

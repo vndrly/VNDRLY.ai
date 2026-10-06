@@ -1017,6 +1017,10 @@
     "passFailedToast": "No se pudo rechazar la asignación."
   },
   "siteLocations": {
+    "gateContractor": "Contratista de acceso",
+    "gateContractorAssigned": "Asignado",
+    "gateContractorNotAssigned": "No asignado",
+    "gateContractorUpdateFailed": "No se pudo actualizar el contratista de acceso",
     "title": "Ubicaciones",
     "addSite": "Agregar Sitio",
     "addSiteLocation": "Agregar Ubicación",

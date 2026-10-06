@@ -3,6 +3,7 @@ import {
   useGetSiteLocation,
   useGetSiteLocationQrCode,
   useCreateSiteAssignment,
+  useUpdateSiteAssignment,
   useDeleteSiteAssignment,
   useUpdateSiteLocation,
   useDeleteSiteLocation,
@@ -64,6 +65,7 @@ export default function SiteLocationDetail({ id }: { id: number }) {
   const { data: vendors } = useListVendors();
   const createAssignment = useCreateSiteAssignment();
   const deleteAssignment = useDeleteSiteAssignment();
+  const updateAssignment = useUpdateSiteAssignment();
   const deleteSite = useDeleteSiteLocation();
   const updateSite = useUpdateSiteLocation();
   const [, navigate] = useLocation();
@@ -1322,6 +1324,7 @@ export default function SiteLocationDetail({ id }: { id: number }) {
                     <TableHead>{t("siteLocations.workType")}</TableHead>
                     {!isVendor && <TableHead>{t("siteLocations.vendor")}</TableHead>}
                     <TableHead>{t("siteLocations.afeColumn")}</TableHead>
+                    <TableHead>{t("siteLocations.gateContractor")}</TableHead>
                     {canManageAssignments && <TableHead></TableHead>}
                   </TableRow>
                 </TableHeader>
@@ -1339,6 +1342,20 @@ export default function SiteLocationDetail({ id }: { id: number }) {
                             {t("siteLocations.afeNotSet")}
                           </span>
                         )}
+                      </TableCell>
+                      <TableCell>
+                        {canManageAssignments ? (
+                          <Checkbox
+                            aria-label={`${t("siteLocations.gateContractor")}: ${a.vendorName} / ${a.workTypeName}`}
+                            checked={a.isGateContractor === true}
+                            disabled={updateAssignment.isPending}
+                            onCheckedChange={(checked) => updateAssignment.mutate(
+                              { siteId: id, assignmentId: a.id, data: { isGateContractor: checked === true } },
+                              { onSuccess: () => { queryClient.invalidateQueries({ queryKey: getGetSiteLocationQueryKey(id) }); queryClient.invalidateQueries({ queryKey: getListSiteAssignmentsQueryKey(id) }); },
+                                onError: (error) => toast({ title: t("siteLocations.gateContractorUpdateFailed"), description: error.message, variant: "destructive" }) }
+                            )}
+                          />
+                        ) : t(a.isGateContractor ? "siteLocations.gateContractorAssigned" : "siteLocations.gateContractorNotAssigned")}
                       </TableCell>
                       {canManageAssignments && (
                         <TableCell>

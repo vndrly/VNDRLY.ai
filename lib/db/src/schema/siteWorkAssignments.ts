@@ -1,4 +1,4 @@
-import { pgTable, serial, integer, text, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, text, boolean, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { siteLocationsTable } from "./siteLocations";
@@ -13,6 +13,8 @@ export const siteWorkAssignmentsTable = pgTable(
     workTypeId: integer("work_type_id").notNull().references(() => workTypesTable.id),
     vendorId: integer("vendor_id").notNull().references(() => vendorsTable.id),
     afe: text("afe"),
+    // Explicit site-owner designation; ordinary service assignments do not grant Gate authority.
+    isGateContractor: boolean("is_gate_contractor").notNull().default(false),
   },
   (t) => ({
     // A vendor may only be pinned to a given (site_location, work_type)

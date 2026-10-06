@@ -693,6 +693,7 @@ export const GetSiteLocationResponse = zod.object({
   "sourceType": zod.string(),
   "createdAt": zod.coerce.date(),
   "assignments": zod.array(zod.object({
+  "isGateContractor": zod.boolean().optional(),
   "id": zod.number(),
   "siteLocationId": zod.number(),
   "workTypeId": zod.number(),
@@ -782,6 +783,7 @@ export const ListSiteAssignmentsParams = zod.object({
 })
 
 export const ListSiteAssignmentsResponseItem = zod.object({
+  "isGateContractor": zod.boolean().optional(),
   "id": zod.number(),
   "siteLocationId": zod.number(),
   "workTypeId": zod.number(),
@@ -802,6 +804,7 @@ export const CreateSiteAssignmentParams = zod.object({
 })
 
 export const CreateSiteAssignmentBody = zod.object({
+  "isGateContractor": zod.boolean().optional(),
   "workTypeId": zod.number(),
   "vendorId": zod.number(),
   "afe": zod.string().nullish()
@@ -817,10 +820,12 @@ export const UpdateSiteAssignmentParams = zod.object({
 })
 
 export const UpdateSiteAssignmentBody = zod.object({
+  "isGateContractor": zod.boolean().optional(),
   "afe": zod.string().nullish()
 })
 
 export const UpdateSiteAssignmentResponse = zod.object({
+  "isGateContractor": zod.boolean().optional(),
   "id": zod.number(),
   "siteLocationId": zod.number(),
   "workTypeId": zod.number(),

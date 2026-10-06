@@ -335,6 +335,11 @@ export default function PartnerSiteCrewMapScreen() {
         }
       >
       <Text style={[styles.sub, { color: colors.mutedForeground }]}>{t("partnerMap.subtitle")}</Text>
+      {showAddSite && selectedSiteId !== "all" && <LayeredPillButton
+        testID="button-gate-contractors" height={40}
+        onPress={() => router.push({ pathname: "/site-gate-contractors", params: { siteId: String(selectedSiteId) } } as never)}>
+        <Text style={LAYERED_PILL_BUTTON_TEXT}>{t("siteLocations.gateContractors")}</Text>
+      </LayeredPillButton>}
 
       <Text style={[styles.siteLabel, { color: colors.mutedForeground }]}>
         {t("partnerMap.selectSite")}

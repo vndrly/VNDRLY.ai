@@ -1044,6 +1044,8 @@ export const SiteLocationDetailTaxProvider = {
 } as const;
 
 export interface SiteWorkAssignment {
+  /** Explicit site-owner Gate contractor designation. */
+  isGateContractor?: boolean;
   id: number;
   siteLocationId: number;
   workTypeId: number;
@@ -1168,6 +1170,8 @@ export interface QrCodeData {
 }
 
 export interface CreateSiteAssignmentBody {
+  /** Explicit site-owner Gate contractor designation. */
+  isGateContractor?: boolean;
   workTypeId: number;
   vendorId: number;
   /** @nullable */
@@ -1175,6 +1179,8 @@ export interface CreateSiteAssignmentBody {
 }
 
 export interface UpdateSiteAssignmentBody {
+  /** Explicit site-owner Gate contractor designation. */
+  isGateContractor?: boolean;
   /** @nullable */
   afe?: string | null;
 }

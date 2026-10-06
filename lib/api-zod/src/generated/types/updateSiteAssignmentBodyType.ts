@@ -7,6 +7,7 @@
  */
 
 export interface UpdateSiteAssignmentBodyType {
+  isGateContractor?: boolean;
   /** @nullable */
   afe?: string | null;
 }

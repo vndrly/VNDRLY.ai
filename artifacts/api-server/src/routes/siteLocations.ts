@@ -335,6 +335,7 @@ router.get("/site-locations/:id", async (req, res): Promise<void> => {
       workTypeCategory: workTypesTable.category,
       vendorName: vendorsTable.name,
       afe: siteWorkAssignmentsTable.afe,
+      isGateContractor: siteWorkAssignmentsTable.isGateContractor,
     })
     .from(siteWorkAssignmentsTable)
     .innerJoin(workTypesTable, eq(siteWorkAssignmentsTable.workTypeId, workTypesTable.id))
@@ -609,6 +610,7 @@ router.get("/site-locations/:siteId/assignments", async (req, res): Promise<void
       workTypeCategory: workTypesTable.category,
       vendorName: vendorsTable.name,
       afe: siteWorkAssignmentsTable.afe,
+      isGateContractor: siteWorkAssignmentsTable.isGateContractor,
     })
     .from(siteWorkAssignmentsTable)
     .innerJoin(workTypesTable, eq(siteWorkAssignmentsTable.workTypeId, workTypesTable.id))
@@ -900,15 +902,23 @@ router.post("/site-locations/:siteId/assignments", async (req, res): Promise<voi
     siteLocationId: params.data.siteId,
   });
 
-  const [assignment] = await db
-    .insert(siteWorkAssignmentsTable)
-    .values({
-      workTypeId: parsed.data.workTypeId,
-      vendorId: parsed.data.vendorId,
-      siteLocationId: params.data.siteId,
-      afe: resolvedAfe,
-    })
-    .returning();
+  const assignmentValues = {
+    workTypeId: parsed.data.workTypeId, vendorId: parsed.data.vendorId,
+    siteLocationId: params.data.siteId, afe: resolvedAfe,
+    isGateContractor: parsed.data.isGateContractor ?? false,
+  };
+  const assignment = assignmentValues.isGateContractor
+    ? await db.transaction(async tx => {
+        const [saved] = await tx.insert(siteWorkAssignmentsTable).values(assignmentValues).returning();
+        await tx.insert(siteLocationAdminAuditLogTable).values({
+          siteLocationId: params.data.siteId, action: "gate_contractor_changed",
+          changes: { assignmentId: saved.id, vendorId: saved.vendorId, isGateContractor: { before: false, after: true } },
+          actorUserId: session.userId ?? null, actorRole: session.role!,
+          actorIp: req.socket.remoteAddress ?? null, actorUserAgent: req.headers["user-agent"] ?? null,
+        });
+        return saved;
+      })
+    : (await db.insert(siteWorkAssignmentsTable).values(assignmentValues).returning())[0];
 
   const [result] = await db
     .select({
@@ -920,6 +930,7 @@ router.post("/site-locations/:siteId/assignments", async (req, res): Promise<voi
       workTypeCategory: workTypesTable.category,
       vendorName: vendorsTable.name,
       afe: siteWorkAssignmentsTable.afe,
+      isGateContractor: siteWorkAssignmentsTable.isGateContractor,
     })
     .from(siteWorkAssignmentsTable)
     .leftJoin(workTypesTable, eq(siteWorkAssignmentsTable.workTypeId, workTypesTable.id))
@@ -964,16 +975,26 @@ router.patch("/site-locations/:siteId/assignments/:assignmentId", async (req, re
     return;
   }
 
-  const [updated] = await db
-    .update(siteWorkAssignmentsTable)
-    .set(parsed.data)
-    .where(
-      and(
-        eq(siteWorkAssignmentsTable.id, params.data.assignmentId),
-        eq(siteWorkAssignmentsTable.siteLocationId, params.data.siteId),
-      ),
-    )
-    .returning();
+  const assignmentScope = and(
+    eq(siteWorkAssignmentsTable.id, params.data.assignmentId),
+    eq(siteWorkAssignmentsTable.siteLocationId, params.data.siteId),
+  );
+  const updated = parsed.data.isGateContractor === undefined
+    ? (await db.update(siteWorkAssignmentsTable).set(parsed.data).where(assignmentScope).returning())[0]
+    : await db.transaction(async (tx) => {
+        const [before] = await tx.select().from(siteWorkAssignmentsTable).where(assignmentScope).for("update");
+        if (!before) return null;
+        const [saved] = await tx.update(siteWorkAssignmentsTable).set(parsed.data).where(assignmentScope).returning();
+        if (saved && before.isGateContractor !== saved.isGateContractor) {
+          await tx.insert(siteLocationAdminAuditLogTable).values({
+            siteLocationId: params.data.siteId, action: "gate_contractor_changed",
+            changes: { assignmentId: before.id, vendorId: before.vendorId, isGateContractor: { before: before.isGateContractor, after: saved.isGateContractor } },
+            actorUserId: session.userId ?? null, actorRole: session.role!,
+            actorIp: req.socket.remoteAddress ?? null, actorUserAgent: req.headers["user-agent"] ?? null,
+          });
+        }
+        return saved;
+      });
 
   if (!updated) {
     sendApiError(res, 404, "assignment.not_found", "Assignment not found");
@@ -990,6 +1011,7 @@ router.patch("/site-locations/:siteId/assignments/:assignmentId", async (req, re
       workTypeCategory: workTypesTable.category,
       vendorName: vendorsTable.name,
       afe: siteWorkAssignmentsTable.afe,
+      isGateContractor: siteWorkAssignmentsTable.isGateContractor,
     })
     .from(siteWorkAssignmentsTable)
     .leftJoin(workTypesTable, eq(siteWorkAssignmentsTable.workTypeId, workTypesTable.id))

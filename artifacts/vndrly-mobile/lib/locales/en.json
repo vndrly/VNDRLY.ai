@@ -1978,6 +1978,11 @@
     "subtitle": "Platform-wide open ticket overview. Use the web portal for full admin tools."
   },
   "siteLocations": {
+    "gateContractors": "Gate contractors",
+    "gateContractorOwnerOnly": "Select an owned site using a partner or platform admin account.",
+    "gateContractorHelp": "Designate the companies contracted to operate this gate. Their workers still need authorized Gate roles. Removing the designation revokes Gate access.",
+    "gateContractorLabel": "Gate contractor: {{vendor}}, {{work}}",
+    "noAssignments": "No vendor service assignments for this site.",
     "addSite": "Add site",
     "nameLabel": "Site name",
     "namePlaceholder": "e.g. Pad 12",

@@ -1017,6 +1017,10 @@
     "passFailedToast": "Could not pass on work assignment."
   },
   "siteLocations": {
+    "gateContractor": "Gate contractor",
+    "gateContractorAssigned": "Assigned",
+    "gateContractorNotAssigned": "Not assigned",
+    "gateContractorUpdateFailed": "Could not update Gate contractor",
     "title": "Site Locations",
     "addSite": "Add Site",
     "addSiteLocation": "Add Site Location",

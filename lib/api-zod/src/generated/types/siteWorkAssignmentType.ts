@@ -7,6 +7,7 @@
  */
 
 export interface SiteWorkAssignmentType {
+  isGateContractor?: boolean;
   id: number;
   siteLocationId: number;
   workTypeId: number;

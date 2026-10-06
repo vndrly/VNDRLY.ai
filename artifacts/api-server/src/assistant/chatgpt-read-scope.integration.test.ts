@@ -5,12 +5,14 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import pinoHttp from "pino-http";
 import request from "supertest";
-import { db, vendorsTable, partnersTable, siteLocationsTable, workTypesTable, ticketsTable, vendorPeopleTable, usersTable, safetyEventsTable, safetyIncidentResponsesTable, workHubShiftsTable, workHubShiftAssignmentsTable, workforceCoverageRecordsTable, assetsTable, partnerVendorRelationshipsTable, siteWorkAssignmentsTable, userOrgMembershipsTable } from "@workspace/db";
+import { db, pool, vendorsTable, partnersTable, siteLocationsTable, workTypesTable, ticketsTable, vendorPeopleTable, usersTable, safetyEventsTable, safetyIncidentResponsesTable, workHubShiftsTable, workHubShiftAssignmentsTable, workforceCoverageRecordsTable, assetsTable, partnerVendorRelationshipsTable, siteWorkAssignmentsTable, userOrgMembershipsTable, siteLocationAdminAuditLogTable } from "@workspace/db";
 import safetyRouter from "../routes/implementationASafety";
 import safetyReportsRouter from "../routes/safety";
 import workforceRouter from "../routes/implementationAWorkforce";
 import tripsRouter from "../routes/implementationATrips";
 import ticketsRouter from "../routes/tickets";
+import siteLocationsRouter from "../routes/siteLocations";
+import { listChangeOverSites, requireChangeOverAccess } from "../services/gate-change-over";
 import { attachTestErrorMiddleware, expectStatus } from "../test-utils/route-app";
 import { buildTestCookie } from "../test-utils/session";
 import { assertFreshLocalTestDatabaseEnvironment } from "../../../../scripts/fresh-test-database.mjs";
@@ -18,6 +20,47 @@ import { runOpsDataTool } from "./data-tools-ops";
 import { runTool } from "../routes/assistant";
 
 describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")("assistant read authorization against isolated records", () => {
+
+  it("lets only the site owner designate a Gate contractor and audits real changes once", async () => {
+    assertFreshLocalTestDatabaseEnvironment(process.env);
+    const suffix = randomUUID();
+    const [vendor] = await db.insert(vendorsTable).values({ name: "Gate contractor " + suffix, contactName: "Synthetic", contactEmail: suffix + "@example.invalid" }).returning();
+    const owners = await db.insert(partnersTable).values([1,2].map(n => ({ name: "Gate owner " + n + suffix, contactName: "Synthetic", contactEmail: n + suffix + "@example.invalid" }))).returning();
+    const [actor] = await db.insert(usersTable).values({ username: "gate-owner-" + suffix, passwordHash: "unused-isolated-fixture", displayName: "Synthetic owner", role: "partner" }).returning();
+    const [site] = await db.insert(siteLocationsTable).values({ partnerId: owners[0].id, name: "Synthetic Gate contract", address: "Synthetic", latitude: 0, longitude: 0, siteCode: "GC-" + suffix }).returning();
+    const [work] = await db.insert(workTypesTable).values({ name: "Gate work " + suffix, category: "gate" }).returning();
+    const [assignment] = await db.insert(siteWorkAssignmentsTable).values({ vendorId: vendor.id, siteLocationId: site.id, workTypeId: work.id }).returning();
+    expect(assignment.isGateContractor).toBe(false);
+    const [gateAdmin] = await db.insert(usersTable).values({ username: "gate-admin-" + suffix, passwordHash: "unused-isolated-fixture", displayName: "Synthetic Gate admin", role: "vendor" }).returning();
+    const [membership] = await db.insert(userOrgMembershipsTable).values({ userId: gateAdmin.id, orgType: "vendor", vendorId: vendor.id, role: "admin" }).returning();
+    const gateSession = { userId: gateAdmin.id, role: "vendor", vendorId: vendor.id, membershipRole: "admin", activeMembershipId: membership.id, sv: gateAdmin.sessionVersion };
+    await expect(requireChangeOverAccess(pool, gateSession, site.id)).rejects.toMatchObject({ status: 403 });
+    expect((await listChangeOverSites(gateSession)).map(row => row.id)).not.toContain(site.id);
+    const app = express().use(express.json()).use(cookieParser()).use(siteLocationsRouter);
+    attachTestErrorMiddleware(app);
+    const endpoint = "/site-locations/" + site.id + "/assignments/" + assignment.id;
+    for (const session of [{ userId: actor.id, role: "partner", partnerId: owners[1].id }, { userId: actor.id, role: "vendor", vendorId: vendor.id }]) {
+      expectStatus(await request(app).patch(endpoint).set("Cookie", buildTestCookie(session)).send({ isGateContractor: true }), 403);
+    }
+    const cookie = buildTestCookie({ userId: actor.id, role: "partner", partnerId: owners[0].id });
+    expectStatus(await request(app).patch(endpoint).set("Cookie", cookie).send({ isGateContractor: true }), 200);
+    expectStatus(await request(app).patch(endpoint).set("Cookie", cookie).send({ isGateContractor: true }), 200);
+    const [saved] = await db.select().from(siteWorkAssignmentsTable).where(eq(siteWorkAssignmentsTable.id, assignment.id));
+    expect(saved.isGateContractor).toBe(true);
+    await expect(requireChangeOverAccess(pool, gateSession, site.id)).resolves.toMatchObject({ supervisor: true });
+    expect((await listChangeOverSites(gateSession)).map(row => row.id)).toContain(site.id);
+    const audit = await db.select().from(siteLocationAdminAuditLogTable).where(eq(siteLocationAdminAuditLogTable.siteLocationId, site.id));
+    expect(audit).toHaveLength(1);
+    expect(audit[0]).toMatchObject({ action: "gate_contractor_changed", actorUserId: actor.id, actorRole: "partner", changes: { assignmentId: assignment.id, vendorId: vendor.id, isGateContractor: { before: false, after: true } } });
+    // Removing the designation must revoke access immediately, even for a
+    // still-signed-in vendor administrator with a valid membership.
+    expectStatus(await request(app).patch(endpoint).set("Cookie", cookie).send({ isGateContractor: false }), 200);
+    await expect(requireChangeOverAccess(pool, gateSession, site.id)).rejects.toMatchObject({ status: 403 });
+    expect((await listChangeOverSites(gateSession)).map(row => row.id)).not.toContain(site.id);
+    const revokedAudit = await db.select().from(siteLocationAdminAuditLogTable).where(eq(siteLocationAdminAuditLogTable.siteLocationId, site.id));
+    expect(revokedAudit).toHaveLength(2);
+    expect(revokedAudit.find(row => (row.changes as any).isGateContractor.after === false)).toMatchObject({ actorUserId: actor.id, changes: { isGateContractor: { before: true, after: false } } });
+  });
   it("persists vendor acceptance, field lifecycle, submission and owning-partner approval", async () => {
     assertFreshLocalTestDatabaseEnvironment(process.env);
     const suffix = randomUUID();

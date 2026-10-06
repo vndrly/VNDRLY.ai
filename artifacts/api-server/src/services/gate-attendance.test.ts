@@ -17,7 +17,7 @@ async function fixture() {
   const vendor = (await pool.query("INSERT INTO vendors(name,contact_name,contact_email) VALUES($1,'Test','test@example.invalid') RETURNING id", [`Attendance vendor ${suffix}`])).rows[0].id;
   const site = (await pool.query("INSERT INTO site_locations(partner_id,name,address,latitude,longitude,site_code) VALUES($1,'Attendance site','Fixture',30,-100,$2) RETURNING id", [partner, suffix])).rows[0].id;
   const workType = (await pool.query("INSERT INTO work_types(name,category) VALUES($1,'gate') RETURNING id", [`Attendance ${suffix}`])).rows[0].id;
-  await pool.query("INSERT INTO site_work_assignments(site_location_id,work_type_id,vendor_id) VALUES($1,$2,$3)", [site, workType, vendor]);
+  await pool.query("INSERT INTO site_work_assignments(site_location_id,work_type_id,vendor_id,is_gate_contractor) VALUES($1,$2,$3,true)", [site, workType, vendor]);
   const stationId = (await pool.query("INSERT INTO gate_stations(site_id,name) VALUES($1,$2) RETURNING id", [site, `Gate ${suffix}`])).rows[0].id;
   const sessions: SessionPayload[] = [];
   for (const role of ["gatekeeper", "gate_supervisor"]) {

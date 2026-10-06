@@ -48,16 +48,20 @@ try {
   const partner = await client.query("INSERT INTO partners(name, contact_name, contact_email) VALUES ('Rehearsal', 'Fixture', 'fixture@example.invalid') RETURNING id");
   const site = await client.query("INSERT INTO site_locations(partner_id, name, address, latitude, longitude, site_code) VALUES ($1, 'Wellhead', 'Fixture', 35, -97, 'REHEARSAL') RETURNING id", [partner.rows[0].id]);
   await client.query("INSERT INTO gate_stations(site_id, name) VALUES ($1, 'Original gate')", [site.rows[0].id]);
+  const vendor = await client.query("INSERT INTO vendors(name, contact_name, contact_email) VALUES ('Original contractor', 'Fixture', 'contractor@example.invalid') RETURNING id");
+  const work = await client.query("INSERT INTO work_types(name, category) VALUES ('Original service', 'service') RETURNING id");
+  await client.query("INSERT INTO site_work_assignments(site_location_id, vendor_id, work_type_id) VALUES ($1, $2, $3)", [site.rows[0].id, vendor.rows[0].id, work.rows[0].id]);
   const asset = await client.query("INSERT INTO assets(name, category, legal_owner_name, responsible_org_type, responsible_org_id) VALUES ('Radio', 'Equipment', 'Fixture', 'partner', $1) RETURNING id", [partner.rows[0].id]);
   await client.query("INSERT INTO asset_custody_events(asset_id, event_type, operation_id, asset_version, note) VALUES ($1, 'condition', $2, 1, 'Keep original history')", [asset.rows[0].id, randomUUID()]);
   await rehearseWorkHubMigrations({
     inspect: async () => {
-      const fields = await client.query("SELECT table_name || '.' || column_name AS name FROM information_schema.columns WHERE table_schema = 'public' AND table_name IN ('gate_stations', 'asset_custody_events') ORDER BY table_name, ordinal_position");
+      const fields = await client.query("SELECT table_name || '.' || column_name AS name FROM information_schema.columns WHERE table_schema = 'public' AND table_name IN ('gate_stations', 'asset_custody_events', 'site_work_assignments') ORDER BY table_name, ordinal_position");
       const index = await client.query("SELECT 1 FROM pg_indexes WHERE schemaname = 'public' AND indexname = 'gate_stations_site_active_idx'");
       const gates = await client.query("SELECT jsonb_agg(to_jsonb(g) - ARRAY['latitude','longitude','geofence_radius_m','active','version'] ORDER BY id) AS records FROM gate_stations g");
       const custody = await client.query("SELECT jsonb_agg(to_jsonb(c) - 'command_fingerprint' ORDER BY id) AS records FROM asset_custody_events c");
       const sites = await client.query("SELECT jsonb_agg(to_jsonb(s) ORDER BY id) AS records FROM site_locations s");
-      return { fields: fields.rows.map(row => row.name), gateIndex: index.rowCount === 1, originalRows: JSON.stringify([gates.rows, custody.rows, sites.rows]) };
+      const assignments = await client.query("SELECT jsonb_agg(to_jsonb(a) - 'is_gate_contractor' ORDER BY id) AS records FROM site_work_assignments a");
+      return { fields: fields.rows.map(row => row.name), gateIndex: index.rowCount === 1, originalRows: JSON.stringify([gates.rows, custody.rows, sites.rows, assignments.rows]) };
     },
     migrate: async (command: string) => {
       console.log(`Applying ${command} to owned scratch database`);
@@ -71,6 +75,7 @@ try {
   const gate = (await client.query("SELECT latitude, longitude, geofence_radius_m, active, version FROM gate_stations")).rows[0];
   assert.deepEqual(gate, { latitude: null, longitude: null, geofence_radius_m: 500, active: true, version: 1 });
   assert.equal((await client.query("SELECT command_fingerprint FROM asset_custody_events")).rows[0].command_fingerprint, null);
+  assert.equal((await client.query("SELECT is_gate_contractor FROM site_work_assignments")).rows[0].is_gate_contractor, false, "Existing service assignments must not silently gain Gate authority");
   console.log("PASS: first application, replay, defaults, original gate/site values and custody history preserved");
 } finally {
   await client.end();

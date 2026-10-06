@@ -1978,6 +1978,11 @@
     "subtitle": "Vista general de tickets abiertos en la plataforma. Use el portal web para herramientas administrativas completas."
   },
   "siteLocations": {
+    "gateContractors": "Contratistas de acceso",
+    "gateContractorOwnerOnly": "Seleccione un sitio propio con una cuenta de socio o administrador de la plataforma.",
+    "gateContractorHelp": "Designe las empresas contratadas para operar este acceso. Sus trabajadores aún necesitan roles de acceso autorizados. Quitar la designación revoca el acceso.",
+    "gateContractorLabel": "Contratista de acceso: {{vendor}}, {{work}}",
+    "noAssignments": "No hay asignaciones de servicios de proveedores para este sitio.",
     "addSite": "Agregar sitio",
     "nameLabel": "Nombre del sitio",
     "namePlaceholder": "p. ej. Pad 12",

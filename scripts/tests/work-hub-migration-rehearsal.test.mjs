@@ -13,7 +13,8 @@ function harness({ alreadyCurrent = false, brokenGate = false, changedRows = fal
     inspect: async () => ({ fields: [...fields], gateIndex: gateApplied, originalRows: changedRows && gateApplied ? "changed" : "same-original-values" }),
     migrate: async command => {
       calls.push(command);
-      if (command === "migrate:asset-custody-fingerprint") fields.add("asset_custody_events.command_fingerprint");
+      if (command === "migrate:gate-contractor") fields.add("site_work_assignments.is_gate_contractor");
+      else if (command === "migrate:asset-custody-fingerprint") fields.add("asset_custody_events.command_fingerprint");
       else if (!brokenGate) { for (const name of ["latitude", "longitude", "geofence_radius_m", "active", "version"]) fields.add(`gate_stations.${name}`); gateApplied = true; }
     },
   };
@@ -21,7 +22,7 @@ function harness({ alreadyCurrent = false, brokenGate = false, changedRows = fal
 test("requests both guarded migrations against a previous schema, checks the upgrade, and replays both", async () => {
   const h = harness();
   await rehearseWorkHubMigrations(h);
-  assert.deepEqual(h.calls, ["migrate:asset-custody-fingerprint", "migrate:gate-locations", "migrate:asset-custody-fingerprint", "migrate:gate-locations"]);
+  assert.deepEqual(h.calls, ["migrate:gate-contractor", "migrate:asset-custody-fingerprint", "migrate:gate-locations", "migrate:gate-contractor", "migrate:asset-custody-fingerprint", "migrate:gate-locations"]);
 });
 test("rejects current-schema replay masquerading as first-application evidence before migrating", async () => {
   const h = harness({ alreadyCurrent: true });

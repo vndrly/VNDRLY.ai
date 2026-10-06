@@ -54,7 +54,7 @@ async function fixture() {
     )
   ).rows[0].id;
   await pool.query(
-    "INSERT INTO site_work_assignments(site_location_id,work_type_id,vendor_id) VALUES($1,$2,$3)",
+    "INSERT INTO site_work_assignments(site_location_id,work_type_id,vendor_id,is_gate_contractor) VALUES($1,$2,$3,true)",
     [site, work, vendor],
   );
   const station = (
@@ -220,7 +220,7 @@ describe("Change Over database guarantees", () => {
       )
     ).rows[0].work_type_id;
     await pool.query(
-      "INSERT INTO site_work_assignments(site_location_id,work_type_id,vendor_id) VALUES($1,$3,$2),($4,$3,$2)",
+      "INSERT INTO site_work_assignments(site_location_id,work_type_id,vendor_id,is_gate_contractor) VALUES($1,$3,$2,true),($4,$3,$2,true)",
       [scheduledSite, f.vendor, workTypeId, unrelatedSite],
     );
     const shiftId = (

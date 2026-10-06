@@ -350,6 +350,7 @@ async function requireGatekeeperSession(
       .where(
         and(
           eq(siteWorkAssignmentsTable.vendorId, session.vendorId!),
+          eq(siteWorkAssignmentsTable.isGateContractor, true),
           session.managedSubcontractor
             ? inArray(
                 siteWorkAssignmentsTable.siteLocationId,
@@ -388,7 +389,8 @@ async function requireGatekeeperSession(
       .json({ message: "Gatekeeper access required", code: VISIT_NO_ACCESS });
     return null;
   }
-  session.gateAccessSiteIds = access.siteIds;
+  const contractedSites = new Set(await loadAssignedSiteIds(session.vendorId ?? 0));
+  session.gateAccessSiteIds = access.siteIds.filter(siteId => contractedSites.has(siteId));
   session.gateSupervisorAccess =
     access.isVendorAdmin || access.operationalRoles.includes("gate_supervisor");
   return session;
@@ -692,7 +694,7 @@ async function loadAssignedSiteIds(vendorId: number): Promise<number[]> {
   const assignments = await db
     .select({ siteLocationId: siteWorkAssignmentsTable.siteLocationId })
     .from(siteWorkAssignmentsTable)
-    .where(eq(siteWorkAssignmentsTable.vendorId, vendorId));
+    .where(and(eq(siteWorkAssignmentsTable.vendorId, vendorId), eq(siteWorkAssignmentsTable.isGateContractor, true)));
   return [...new Set(assignments.map((row) => row.siteLocationId))];
 }
 

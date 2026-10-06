@@ -7,6 +7,7 @@
  */
 
 export interface CreateSiteAssignmentBodyType {
+  isGateContractor?: boolean;
   workTypeId: number;
   vendorId: number;
   /** @nullable */
