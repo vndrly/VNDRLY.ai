@@ -217,4 +217,14 @@ it("includes an authorized holder name in the custody list",async()=>{
  const response=await request(app).get("/implementation-a/assets").set("Cookie",admin);
  expect(response.status).toBe(200);expect(response.body.assets[0]).toMatchObject({holderUserId:11,currentHolderDisplayName:"Synthetic Gatekeeper"});
 });
+it('returns named custody history through exact asset and alias lookup',async()=>{
+ const asset=await state.repository!.create({name:'Radio',category:'equipment',legalOwner:'Vendor',responsibleOwner:owner,aliases:[{kind:'serial',value:'SYNTHETIC-RADIO-1'}],provisional:false});
+ await request(app).post('/implementation-a/assets/'+asset.id+'/checkout').set('Cookie',admin).send({...command(1),holderUserId:11});
+ state.holderName='Synthetic Gatekeeper';
+ const detail=await request(app).get('/implementation-a/assets/'+asset.id).set('Cookie',admin);
+ expect(detail.body).toMatchObject({holderUserId:11,currentHolderDisplayName:'Synthetic Gatekeeper'});
+ expect(detail.body.history[0]).toMatchObject({type:'checkout',toHolderUserId:11,toHolderDisplayName:'Synthetic Gatekeeper'});
+ const found=await request(app).get('/implementation-a/assets/find').query({kind:'serial',value:'SYNTHETIC-RADIO-1'}).set('Cookie',admin);
+ expect(found.status).toBe(200);expect(found.body.currentHolderDisplayName).toBe('Synthetic Gatekeeper');
+});
 

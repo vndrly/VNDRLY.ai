@@ -152,6 +152,23 @@ async function assertTransferRecipient(
     throw new AssetServiceError("asset.transfer_recipient_not_found", 404);
   }
 }
+async function holderName(owner: AssetOwner, userId: number | null) {
+  return assetHolderDisplayName(owner, userId, assertTransferRecipient, async id => {
+    const rows = await db.select({ displayName: usersTable.displayName }).from(usersTable).where(eq(usersTable.id, id)).limit(1);
+    return rows[0]?.displayName ?? null;
+  });
+}
+async function assetDetails(asset: AssetRecord) {
+  const names = new Map<number, Promise<string | null>>();
+  const name = (id: number | null | undefined) => {
+    if (id == null) return Promise.resolve(null);
+    if (!names.has(id)) names.set(id, holderName(asset.responsibleOwner, id));
+    return names.get(id)!;
+  };
+  return { ...asset, ...custodyAge(asset, new Date()), currentHolderDisplayName: await name(asset.holderUserId),
+    history: await Promise.all(asset.history.map(async event => ({ ...event,
+      fromHolderDisplayName: await name(event.fromHolderUserId), toHolderDisplayName: await name(event.toHolderUserId) }))) };
+}
 async function assertCurrentAssetAccess(context: Awaited<ReturnType<typeof actor>>, owner: AssetOwner): Promise<void> {
   assertOwner(owner, context.owner, context.isPlatformAdmin);
   if (context.isPlatformAdmin) return;
@@ -258,7 +275,7 @@ router.get("/implementation-a/assets", async (req, res) => {
         condition: asset.condition ?? null, version: asset.version,
         holderUserId: asset.holderUserId,
         ...custodyAge(asset, evaluatedAt),
-        currentHolderDisplayName: await assetHolderDisplayName(asset.responsibleOwner, asset.holderUserId, assertTransferRecipient, async userId => { const rows = await db.select({ displayName: usersTable.displayName }).from(usersTable).where(eq(usersTable.id, userId)).limit(1); return rows[0]?.displayName ?? null; }),
+        currentHolderDisplayName: await holderName(asset.responsibleOwner, asset.holderUserId),
         currentLocation: asset.currentLocationType === "user" ? null : asset.currentLocation ?? null,
         hold: asset.hold ?? null, expectedReturnAt: asset.expectedReturnAt ?? null,
         policy: {
@@ -296,12 +313,8 @@ router.get("/implementation-a/assets/find", async (req, res) => {
     const alias = AssetAliasSchema.parse(req.query);
     const asset = await service.findAsset(alias);
     if (!asset) throw new AssetServiceError("asset.not_found", 404);
-    assertOwner(
-      asset.responsibleOwner,
-      context.owner,
-      context.isPlatformAdmin,
-    );
-    return res.json(asset);
+    await assertCurrentAssetAccess(context, asset.responsibleOwner);
+    return res.json(await assetDetails(asset));
   } catch (error) {
     return sendError(res, error);
   }
@@ -473,7 +486,7 @@ router.get("/implementation-a/assets/:assetId", async (req, res) => {
     const asset = await databaseAssetRepository.get(assetId);
     if (!asset) throw new AssetServiceError("asset.not_found", 404);
     await assertCurrentAssetAccess(context, asset.responsibleOwner);
-    return res.json(asset);
+    return res.json(await assetDetails(asset));
   } catch (error) {
     return sendError(res, error);
   }
