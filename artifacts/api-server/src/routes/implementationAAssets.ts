@@ -1,3 +1,4 @@
+import { assetHolderDisplayName } from "../services/asset-holder-name";
 import { custodyAge } from "../services/asset-custody-age";
 import { Router, type Request, type Response } from "express";
 import { and, eq } from "drizzle-orm";
@@ -13,6 +14,7 @@ import {
   db,
   managedSubcontractorRoleGrantsTable,
   managedSubcontractorWorkerSponsorshipsTable,
+  usersTable,
   userOrgMembershipsTable,
 } from "@workspace/db";
 import { getSessionFromRequest } from "../lib/session";
@@ -256,7 +258,7 @@ router.get("/implementation-a/assets", async (req, res) => {
         condition: asset.condition ?? null, version: asset.version,
         holderUserId: asset.holderUserId,
         ...custodyAge(asset, evaluatedAt),
-        currentHolderDisplayName: asset.holderUserId === null ? null : `User ${asset.holderUserId}`,
+        currentHolderDisplayName: await assetHolderDisplayName(asset.responsibleOwner, asset.holderUserId, assertTransferRecipient, async userId => { const rows = await db.select({ displayName: usersTable.displayName }).from(usersTable).where(eq(usersTable.id, userId)).limit(1); return rows[0]?.displayName ?? null; }),
         currentLocation: asset.currentLocationType === "user" ? null : asset.currentLocation ?? null,
         hold: asset.hold ?? null, expectedReturnAt: asset.expectedReturnAt ?? null,
         policy: {
@@ -679,3 +681,4 @@ router.put("/implementation-a/assets/policies/:category", async (req, res) => {
 });
 
 export default router;
+

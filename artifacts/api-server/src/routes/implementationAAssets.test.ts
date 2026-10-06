@@ -8,6 +8,7 @@ import canonicalSummary from "../test-fixtures/asset-summary.json";
 
 const state = vi.hoisted(() => ({
   repository: null as AssetRepository | null,
+  holderName: null as string | null,
   policy: { photosRequiredOnCheckout: false, photosRequiredOnReturn: false, expectedReturnRequired: false, supervisorApprovalRequired: false, identifierRequired: false },
 }));
 vi.mock("../services/asset-database-repository", () => ({ databaseAssetRepository: {
@@ -21,7 +22,9 @@ vi.mock("@workspace/db", async (importOriginal) => {
   const original = await importOriginal<typeof import("@workspace/db")>();
   return { ...original, db: { select: () => ({ from: (table: unknown) => ({
     innerJoin: () => ({ where: async () => [] }),
-    where: () => table === original.userOrgMembershipsTable
+    where: () => table === original.usersTable
+      ? { limit: async () => state.holderName ? [{ displayName: state.holderName }] : [] }
+      : table === original.userOrgMembershipsTable
       ? Promise.resolve([{ orgType: "vendor", vendorId: 7, partnerId: null }])
       : { limit: async () => [state.policy] },
   }) }) } };
@@ -39,6 +42,7 @@ const command = (version: number, operationId = crypto.randomUUID()) => ({ opera
 
 beforeEach(() => {
   state.repository = createMemoryAssetRepository();
+  state.holderName = null;
   state.policy = { photosRequiredOnCheckout: false, photosRequiredOnReturn: false, expectedReturnRequired: false, supervisorApprovalRequired: false, identifierRequired: false };
 });
 
@@ -205,3 +209,12 @@ it("keeps long-held custody reports inside the connected company", async () => {
   expect(JSON.stringify(response.body)).not.toContain(foreign.id);
   expect((await request(app).get("/implementation-a/assets?checkedOutLongerThanDays=90")).status).toBe(401);
 });
+
+it("includes an authorized holder name in the custody list",async()=>{
+ const asset=await state.repository!.create({name:"Radio",category:"equipment",legalOwner:"Vendor",responsibleOwner:owner,aliases:[],provisional:false});
+ await request(app).post("/implementation-a/assets/"+asset.id+"/checkout").set("Cookie",admin).send({...command(1),holderUserId:11});
+ state.holderName="Synthetic Gatekeeper";
+ const response=await request(app).get("/implementation-a/assets").set("Cookie",admin);
+ expect(response.status).toBe(200);expect(response.body.assets[0]).toMatchObject({holderUserId:11,currentHolderDisplayName:"Synthetic Gatekeeper"});
+});
+
