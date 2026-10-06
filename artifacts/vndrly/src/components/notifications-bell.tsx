@@ -13,10 +13,12 @@ import {
 import { useRateLimitGate } from "@/hooks/use-rate-limit-gate";
 import { useBrowserNotifications } from "@/hooks/use-browser-notifications";
 import { useNotificationsModal } from "@/components/notifications-modal-context";
+import { useMessageSound } from "@/hooks/use-message-sound";
 
 export default function NotificationsBell() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  useMessageSound(user?.userId);
   const qc = useQueryClient();
   const [, navigate] = useLocation();
   const notificationsModal = useNotificationsModal();

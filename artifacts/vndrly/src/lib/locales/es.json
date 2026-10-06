@@ -1732,6 +1732,8 @@
       "commentReplyDigestDesc": "Agrupa las nuevas respuestas en tickets y trabajos de Hotlist en los que participas en un único correo cada pocos minutos, para que un hilo activo no llene tu bandeja de entrada. Las @menciones siempre se envían por correo al instante cuando los correos de comentarios están activados.",
       "mobilePush": "Notificaciones móviles",
       "mobilePushDesc": "Envía notificaciones push a tu dispositivo móvil.",
+      "messageSounds": "Sonidos de mensajes de Work Hub",
+      "messageSoundsDesc": "Reproducir un timbre en este navegador al recibir mensajes de Work Hub. Interactúa con la página una vez para habilitar el audio. Se respetan las preferencias de notificaciones, el horario de silencio y los ajustes de audio del navegador y dispositivo. Mantén VNDRLY abierto para recibir estas alertas.",
       "browserPopups": "Alertas emergentes del navegador",
       "browserPopupsDesc": "Muestra una ventana emergente del sistema cuando llega una nueva alerta en este navegador, incluso si la campana está cerrada. Esta configuración aplica solo a este navegador.",
       "browserPopupsUnsupported": "Este navegador no admite notificaciones emergentes.",

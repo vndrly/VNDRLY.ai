@@ -10,6 +10,9 @@ export type NotificationCreatedBrowserDetail = {
   title?: string;
   body?: string | null;
   link?: string | null;
+  userId?: number;
+  createdAt?: string;
+  audible?: boolean;
 };
 
 export type NotificationRow = {

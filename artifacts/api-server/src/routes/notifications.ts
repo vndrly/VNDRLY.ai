@@ -562,6 +562,9 @@ export async function notifyUsers(userIds: number[], notif: NotifyInput): Promis
         title: notif.title,
         body: notif.body ?? null,
         link: notif.link ?? null,
+        audible: !urgent && Boolean(prefs.get(r.userId)?.pushEnabled)
+          && categoryEnabled(prefs.get(r.userId)!, category, notif.type)
+          && !inDndWindow(prefs.get(r.userId)!, new Date()),
         createdAt:
           r.createdAt instanceof Date ? r.createdAt.toISOString() : String(r.createdAt),
       });

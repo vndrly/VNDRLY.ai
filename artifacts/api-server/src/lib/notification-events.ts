@@ -32,6 +32,8 @@ export type NotificationCreatedEvent = {
   body: string | null;
   link: string | null;
   createdAt: string;
+  /** Server preference decision for live browser message sounds. Missing means silent. */
+  audible?: boolean;
 };
 
 export type NotificationStateChangedEvent = {
@@ -232,6 +234,7 @@ export function publishNotificationCreated(input: {
   body: string | null;
   link: string | null;
   createdAt: string;
+  audible?: boolean;
 }): void {
   const ev: NotificationCreatedEvent = {
     type: "notification.created",
@@ -243,6 +246,7 @@ export function publishNotificationCreated(input: {
     body: input.body,
     link: input.link,
     createdAt: input.createdAt,
+    audible: input.audible === true,
   };
   publishNotificationEvent(ev);
 }

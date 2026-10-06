@@ -1732,6 +1732,8 @@
       "commentReplyDigestDesc": "Batches new replies on tickets and hotlist jobs you're a participant on into one email every few minutes, so a busy thread doesn't fill your inbox. @Mentions are always emailed instantly when comment email is on.",
       "mobilePush": "Mobile push",
       "mobilePushDesc": "Send push notifications to your mobile device.",
+      "messageSounds": "Work Hub message sounds",
+      "messageSoundsDesc": "Ring on this browser for new Work Hub messages. Interact with the page once to enable audio. Notification settings, quiet hours, browser and device audio settings still apply. Keep VNDRLY open to receive these alerts.",
       "browserPopups": "Browser pop-up alerts",
       "browserPopupsDesc": "Show a system pop-up when a new alert arrives in this browser, even if the bell isn't open. This setting applies to this browser only.",
       "browserPopupsUnsupported": "This browser doesn't support pop-up notifications.",

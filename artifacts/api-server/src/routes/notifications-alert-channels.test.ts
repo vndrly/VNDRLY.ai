@@ -22,12 +22,32 @@ vi.mock("../services/gate-alert-delivery", async importOriginal => ({ ...await i
 vi.mock("../lib/expo-push", () => ({ sendPushToUser: vi.fn(async () => ({ delivered: true })) }));
 vi.mock("../lib/notification-events", () => ({ publishNotificationCreated: vi.fn(), publishNotificationStateChanged: vi.fn(), subscribeNotificationEvents: vi.fn(), getCurrentNotificationEventSeq: vi.fn() }));
 import router, { notifyUsers } from "./notifications";
+import { publishNotificationCreated } from "../lib/notification-events";
 const app = express(); app.use(express.json(), cookieParser(), router);
 const gateCookie = () => buildTestCookie({ userId: 7, role: "field_employee", vendorId: 3, vendorRole: "gatekeeper", activeMembershipId: 8 });
 beforeEach(() => {
+  vi.mocked(publishNotificationCreated).mockClear();
   state.prefs = { userId: 7 }; state.writes = []; state.notices = []; state.fanout.mockReset(); state.fanout.mockResolvedValue(undefined);
   state.failBadge = false;
   state.recipient = { userId: 7, gate: true, membershipId: 8, vendorPeopleId: 9, phone: "+14055551212", email: "worker@example.invalid", gateAlertsEnabled: true };
+});
+describe("Work Hub recipient sound preference", () => {
+  it("authorizes a live message sound for its recipient", async () => {
+    Object.assign(state.prefs, { pushEnabled: true, workHubMessagesEnabled: true });
+    await notifyUsers([7], { type: "work_hub_message", title: "New message" });
+    expect(publishNotificationCreated).toHaveBeenCalledWith(expect.objectContaining({ userId: 7, notifType: "work_hub_message", audible: true }));
+  });
+  it("still saves a message but silences its browser sound when push is disabled", async () => {
+    Object.assign(state.prefs, { pushEnabled: false, workHubMessagesEnabled: true });
+    expect(await notifyUsers([7], { type: "work_hub_message", title: "New message" })).toBe(1);
+    expect(publishNotificationCreated).toHaveBeenCalledWith(expect.objectContaining({ audible: false }));
+  });
+  it("does not use browser audio to bypass quiet hours", async () => {
+    const hour = new Date().getHours();
+    Object.assign(state.prefs, { pushEnabled: true, workHubMessagesEnabled: true, dndStartHour: hour, dndEndHour: (hour + 1) % 24 });
+    await notifyUsers([7], { type: "work_hub_mention", title: "Mention" });
+    expect(publishNotificationCreated).toHaveBeenCalledWith(expect.objectContaining({ audible: false }));
+  });
 });
 describe("gate alert preference authorization", () => {
   it("requires authentication and never accepts another user's consent target", async () => {

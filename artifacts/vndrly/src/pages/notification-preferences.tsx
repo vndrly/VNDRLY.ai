@@ -24,6 +24,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import SphereBackButton from "@/components/sphere-back-button";
 import { useBrowserNotifications } from "@/hooks/use-browser-notifications";
+import { useMessageSoundPreference } from "@/hooks/use-message-sound";
+import { useAuth } from "@/hooks/use-auth";
 
 // Task #796 — collapse the two underlying booleans into a single 4-option
 // channel picker for the QB bulk-action expiry warning. The mapping has to
@@ -97,6 +99,8 @@ export default function NotificationPreferencesPage() {
   // toggle so a user who blocked us at the OS prompt sees why no
   // pop-ups arrive.
   const browserNotif = useBrowserNotifications();
+  const { user } = useAuth();
+  const messageSound = useMessageSoundPreference(user?.userId);
   const { data, isLoading } = useQuery({
     queryKey: ["notification-prefs"],
     queryFn: () => notificationsApi.getPreferences(),
@@ -238,6 +242,14 @@ export default function NotificationPreferencesPage() {
             data-testid="switch-browserPopupsEnabled"
             aria-label={t("notifications.prefs.browserPopups")}
           />
+        </div>
+        <div className="flex items-start justify-between p-4 gap-4">
+          <div className="pr-4">
+            <div className="font-medium text-sm">{t("notifications.prefs.messageSounds")}</div>
+            <div className="text-xs text-muted-foreground">{t("notifications.prefs.messageSoundsDesc")}</div>
+          </div>
+          <Switch checked={messageSound.enabled} onCheckedChange={messageSound.setEnabled}
+            data-testid="switch-messageSounds" aria-label={t("notifications.prefs.messageSounds")} />
         </div>
         <div className="flex items-start justify-between p-4 gap-4">
           <div className="pr-4">
