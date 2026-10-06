@@ -1,0 +1,24 @@
+# ChatGPT workflow parity expansion
+
+This candidate is not a declaration of complete web/iOS or Ask V parity. The public package already in OpenAI review and its submitted version must be distinguished from this candidate. No new Fleet GPS or background collection is implemented here.
+
+## Candidate changes
+
+- Inventory workspace projects authorized asset records, custody holder, condition, return deadline and attention status. Exact plate, VIN, serial and tag lookup reuses the canonical asset alias lookup and owner checks. Asset history and mutations retain existing custody policies.
+- `manage_ticket_record` prepares creation, edits, acceptance, denial, reinvitation, submission, approval, kickback, awaiting-payment, cancellation, administrator reactivation and line-item changes through the existing ticket endpoints. Current endpoint authorization and lifecycle rules remain authoritative.
+- Ticket descriptors filter action choices by actor role; ticket writes require their separate scope. Partner review is not available to workers. Reactivation remains platform-admin-only.
+- ChatGPT ticket creation strips supplied location assertions and creates pending arrival. Creating a ticket never proves arrival or starts a location collector.
+- Bound approval dispatch uses the typed-tool classifier, including ticket and asset capabilities. Durable action claims and saved results prevent approval retries from submitting a second change.
+- VENDRY Fleet is an explicit disconnected extension placeholder. Existing authorized trip views remain available; tagged-vehicle tracking, load phases, missing-vehicle distance and navigation await the Fleet package.
+
+## Completion still required
+
+1. Component-mediated approval within ChatGPT with current-grant checks, bound single-use authorization and durable replay handling; current approved changes still use the secure VNDRLY approval page.
+2. End-to-end synthetic persona and company/site assignment checks for Gate, tickets, Work Hub and inventory. Base role descriptors alone do not prove gatekeeper, foreman or fleet-manager entitlement.
+3. Complete ticket payment-record and evidence-upload transitions, with canonical finance permissions and actual result checks.
+4. Meeting audio/video capture, transcription input, camera uploads and continuous location collection need a supported device integration. Existing meeting/transcript management tools do not themselves collect media.
+5. Fleet package connection once its trusted vehicle/driver/load and GPS-tag services exist.
+
+## Validation status
+
+Candidate API typecheck and focused authorization, workspace, runtime and connection tests pass locally. Full repository validation, deployment and live ChatGPT verification remain required before calling this expansion released. No live records were changed by these local tests.

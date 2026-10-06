@@ -1,3 +1,5 @@
+import { TICKET_RECORD_ACTIONS } from "./ticket-workflow-tools";
+
 /** Separate write consent never follows from a read grant. */
 export const CHATGPT_WRITE_CAPABILITIES = {
   "workforce:write": { label: "Prepare authorized shift assignments, acknowledgements, and coverage evaluation or escalation", tools: ["confirm_workforce_coverage_action"] },
@@ -7,13 +9,18 @@ export const CHATGPT_WRITE_CAPABILITIES = {
   "assets:write": { label: "Prepare authorized asset creation, checkout, return, transfer, condition, and hold changes", tools: ["confirm_asset_custody_action"] },
   "invitations:write": { label: "Prepare vendor administrator account invitation creation, resends, and revocation", tools: ["confirm_account_invitations_action"] },
   "onboarding:write": { label: "Prepare your onboarding field changes and completion for authenticated approval", tools: ["start_onboarding", "set_onboarding_field", "complete_onboarding_step", "finalize_onboarding"] },
-  "tickets:write": { label: "Prepare authorized ticket assignments, flags, comments, lifecycle changes, and review submission", tools: ["schedule_ticket_crew", "set_ticket_flag", "post_ticket_comment", "set_ticket_lifecycle", "close_ticket_for_review"] },
+  "tickets:write": { label: "Prepare authorized ticket creation, edits, assignments, line items, lifecycle changes, and role-appropriate review", tools: ["manage_ticket_record", "schedule_ticket_crew", "set_ticket_flag", "post_ticket_comment", "set_ticket_lifecycle", "close_ticket_for_review"] },
   "operations:write": { label: "Prepare changes to your notification read status", tools: ["mark_notifications_read"] },
 } as const;
 export type ChatGptWriteCapabilityScope = keyof typeof CHATGPT_WRITE_CAPABILITIES;
 
 /** Device telemetry and domain replay keys are supplied by the approval server. */
 export function sanitizeChatGptActionInput(name: string, input: Record<string, unknown>): Record<string, unknown> {
+  if (name === "manage_ticket_record") {
+    const payload = input.payload && typeof input.payload === "object" && !Array.isArray(input.payload) ? input.payload as Record<string, unknown> : {};
+    const serverFields = new Set(["latitude", "longitude", "checkInLatitude", "checkInLongitude", "accuracyMeters", "recordedAt", "operationId", "confirmed", "idempotencyKey", "locationSharingActive"]);
+    return { ...input, payload: { ...Object.fromEntries(Object.entries(payload).filter(([key]) => !serverFields.has(key))), ...(input.action === "create" ? { initialState: "pending_arrival" } : {}) } };
+  }
   if (!/^confirm_(field_trips|workforce_coverage|worker_subscriptions|incident_response|account_invitations)_action$/.test(name)) return input;
   const payload = input.payload && typeof input.payload === "object" && !Array.isArray(input.payload) ? input.payload as Record<string, unknown> : {};
   const fields = new Set(["operationId", "confirmed", ...(name === "confirm_field_trips_action" ? ["latitude", "longitude", "accuracyMeters", "recordedAt", "speedMps"] : [])]);
@@ -25,6 +32,7 @@ export function sanitizeChatGptActionInput(name: string, input: Record<string, u
  */
 export function validateChatGptActionInput(name: string, input: Record<string, unknown>): void {
   const allowed: Record<string, readonly string[]> = {
+    manage_ticket_record: TICKET_RECORD_ACTIONS,
     confirm_workforce_coverage_action: ["assign", "acknowledge", "evaluate", "escalate"],
     confirm_field_trips_action: ["start", "location", "pause", "complete"],
     confirm_incident_response_action: ["create", "escalate", "acknowledge", "evidence", "hold", "close"],

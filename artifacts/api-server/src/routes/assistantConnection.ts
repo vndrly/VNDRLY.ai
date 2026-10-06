@@ -10,6 +10,7 @@ import { askvPendingConfirmations, organizationKeyFromSession, runBoundTypedAskV
 import { mutationIdempotencyKey, readPersistentAskVMutationResult } from "../assistant/askv-idempotency";
 import type { AssistantPreparedAction } from "../assistant/chatgpt-oauth";
 import { runTool } from "./assistant";
+import { isTypedWorkHubTool } from "../assistant/work-hub-tool-runtime";
 import { writeAskVActionAudit } from "../assistant/action-audit";
 import { CHATGPT_READ_CAPABILITIES } from "../assistant/chatgpt-read-capabilities";
 import { publicMapConfig } from "../lib/public-map-config";
@@ -190,6 +191,7 @@ router.post("/mcp", async (req, res) => {
       if (allowedNames.has("query_tickets")) output.availableViews.push("tickets");
       if (allowedNames.has("query_notifications")) output.availableViews.push("notifications");
       if (allowedNames.has("query_field_trips")) output.availableViews.push("fleet");
+      if (allowedNames.has("query_asset_custody")) output.availableViews.push("inventory");
       if (allowedNames.has("query_gate_stations")) {
         const gates = request.view === "gate_board" ? raw : JSON.parse(await runTool("query_gate_stations", {}, authorized.session, ""));
         if (request.view === "gate_board" || (Array.isArray(gates.sites) && gates.sites.length > 0)) output.availableViews.push("gate_board");
@@ -332,7 +334,7 @@ router.post("/actions/:actionToken", async (req, res) => {
     const sessionId = `conversation:${reserved.action.turnId}`;
     askvPendingConfirmations.set({ userId: reserved.session.userId!, organizationKey: organizationKeyFromSession(reserved.session), sessionId, contextKey: reserved.action.tokenHash, toolName: reserved.action.toolName, arguments: input, idempotencyKey: `chatgpt:${reserved.action.tokenHash}` });
     const tool = chatGptActionTools(reserved.session, ASSISTANT_SCOPES).find((item) => item.name === reserved!.action.toolName)!;
-    const result = await runBoundTypedAskVTool({ name: tool.name, input, session: reserved.session, conversationId: reserved.action.turnId, turnId: reserved.action.turnId, contextKey: reserved.action.tokenHash, phrase: "confirm", execute: async (authorizedInput) => JSON.stringify(chatGptActionResult(tool.name, JSON.parse(await runTool(tool.name, authorizedInput, reserved!.session, "", false, Boolean(tool.workHubFamily))))) });
+    const result = await runBoundTypedAskVTool({ name: tool.name, input, session: reserved.session, conversationId: reserved.action.turnId, turnId: reserved.action.turnId, contextKey: reserved.action.tokenHash, phrase: "confirm", execute: async (authorizedInput) => JSON.stringify(chatGptActionResult(tool.name, JSON.parse(await runTool(tool.name, authorizedInput, reserved!.session, "", false, isTypedWorkHubTool(tool.name))))) });
     const output = chatGptActionResult(tool.name, JSON.parse(result)) as Record<string, unknown>;
     const savedResult = JSON.stringify(output);
     await withAssistantGrants(reserved.session.userId!, async (grants) => {

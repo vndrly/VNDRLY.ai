@@ -1,3 +1,4 @@
+import { ticketRecordActionsForRole } from "./ticket-workflow-tools";
 export type WorkHubHttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
 export type WorkHubToolRequest =
@@ -134,12 +135,30 @@ const direct = (input: Input, extra: Input = {}): Input => ({
 function resolveImplementationACapabilityRequest(name: string, input: Input): WorkHubToolRequest | null {
   const action = typeof input.action === "string" ? input.action : "";
   const payload = record(input.payload);
+  if (name === "manage_ticket_record") {
+    if (action === "create") return request("POST", "/tickets", payload);
+    if (!Number.isSafeInteger(input.ticketId) || Number(input.ticketId) <= 0) return { error: "Select an exact authorized ticket." };
+    const base = `/tickets/${input.ticketId}`;
+    if (action === "update") return request("PATCH", base, payload);
+    if (action === "add_line_item") return request("POST", `${base}/line-items`, payload);
+    if (action === "remove_line_item") return Number.isSafeInteger(input.lineItemId) && Number(input.lineItemId) > 0 ? request("DELETE", `${base}/line-items/${input.lineItemId}`) : { error: "Select an exact line item." };
+    const transitions: Record<string, string> = { accept: "accept", deny: "deny", reinvite: "reinvite", submit: "submit", approve: "approve", kickback: "kickback", awaiting_payment: "awaiting-payment", cancel: "cancel", reactivate: "reactivate" };
+    return transitions[action] ? request("POST", `${base}/${transitions[action]}`, payload) : unsupported("ticket action");
+  }
   const resourceId = encoded(input.resourceId ?? input.id ?? input.assetId ?? input.tripId ?? input.eventId ?? input.invitationId);
   if (name.includes("operations_displays")) return unsupported("operations display; use the authenticated companion");
   if (name.includes("asset_custody")) {
     const assetPayload = { ...withoutNulls(payload), ...(Array.isArray(payload.aliases) ? { aliases: payload.aliases.map(value => withoutNulls(record(value))) } : {}), ...(payload.alias ? { alias: withoutNulls(record(payload.alias)) } : {}) };
     const actions = ["create", "aliases", "checkout", "return", "transfer", "condition", "hold", "merge", "verify-issued"];
-    if (name === "query_asset_custody") return request("GET", resourceId ? `/implementation-a/assets/${resourceId}` : "/implementation-a/assets");
+    if (name === "query_asset_custody") {
+      if (resourceId) return request("GET", `/implementation-a/assets/${resourceId}`);
+      if (input.alias !== undefined) {
+        const alias = record(input.alias);
+        if (!["vin", "plate", "serial", "asset_tag", "model", "other"].includes(String(alias.kind)) || typeof alias.value !== "string" || !alias.value.trim()) return { error: "Supply an exact valid asset identifier." };
+        return request("GET", queryPath("/implementation-a/assets/find", { kind: alias.kind, value: alias.value, jurisdiction: alias.jurisdiction }));
+      }
+      return request("GET", "/implementation-a/assets");
+    }
     if (!actions.includes(action)) return unsupported("asset custody");
     if (action === "create") return name === "prepare_asset_custody_action" ? request("GET", "/implementation-a/assets") : request("POST", "/implementation-a/assets", { ...assetPayload, responsibleOwner: input.owner });
     if (!resourceId) return { error: "A valid asset id is required." };
@@ -777,6 +796,7 @@ export function resolveExecutableWorkHubToolRequest(
   if (session && metadata.companyAdminOnly && session.membershipRole !== "admin") return { error: "Organization administrator access is required." };
   if (session && name.includes("gate_location") && (session.role !== "vendor" || !session.vendorId || session.membershipRole !== "admin" || session.managedSubcontractor)) return { error: "Only a current vendor organization administrator may manage gate locations." };
   const input = record(rawInput);
+  if (name === "manage_ticket_record" && session && !ticketRecordActionsForRole(session.role ?? "").includes(String(input.action) as never)) return { error: "This ticket action is unavailable to your role." };
   if (metadata.mutating && !mutationAuthorizedByServer)
     return {
       error: "Please confirm the exact Work Hub action first.",
@@ -791,7 +811,7 @@ export const isTypedWorkHubTool = (name: string): boolean =>
   Boolean(resolveWorkHubToolMetadata(name));
 
 export const resolveWorkHubToolMetadata = (name: string) =>
-  WORK_HUB_TOOL_METADATA[name] || IMPLEMENTATION_A_CAPABILITY_TOOLS.some((tool) => tool.name === name) ? findAskVTool(name) : null;
+  name === "manage_ticket_record" || WORK_HUB_TOOL_METADATA[name] || IMPLEMENTATION_A_CAPABILITY_TOOLS.some((tool) => tool.name === name) ? findAskVTool(name) : null;
 
 export function bindWorkHubToolScope(
   rawInput: unknown,

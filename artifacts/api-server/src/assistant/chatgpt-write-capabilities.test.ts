@@ -5,6 +5,21 @@ import { validateChatGptActionInput, sanitizeChatGptActionInput, chatGptActionAu
 describe("ChatGPT onboarding changes", () => {
   const admin = { userId: 17, role: "vendor", membershipRole: "admin", vendorId: 4 };
   const names = (session = admin, scopes = ["onboarding:write"]) => chatGptActionTools(session, scopes).map(tool => tool.name);
+  it.each([
+    ["admin", ["approve", "accept", "reactivate"]],
+    ["partner", ["approve", "reinvite"]],
+    ["vendor", ["accept", "deny"]],
+    ["field_employee", ["create", "update", "submit"]],
+  ])("advertises only the canonical ticket action family for %s", (role, expected) => {
+    const actor = { userId: 17, role: String(role), vendorId: 4, partnerId: 5, vendorPeopleId: 8 };
+    expect(chatGptActionTools(actor, ["tickets:read"])).toEqual([]);
+    const tool = chatGptActionTools(actor, ["tickets:write"]).find(item => item.name === "manage_ticket_record")!;
+    const schema = tool.inputSchema as { properties: { action: { enum: string[] } } };
+    expect(schema.properties.action.enum).toEqual(expect.arrayContaining(expected as string[]));
+    if (role !== "admin") expect(schema.properties.action.enum).not.toContain("reactivate");
+    if (!["admin", "partner"].includes(String(role))) expect(schema.properties.action.enum).not.toContain("approve");
+    if (!["admin", "vendor"].includes(String(role))) expect(schema.properties.action.enum).not.toContain("accept");
+  });
   it("requires separate write consent and resolvable organization administration", () => {
     expect(names(admin, ["onboarding:read"])).toEqual([]);
     expect(names({ ...admin, membershipRole: "member" })).toEqual([]);

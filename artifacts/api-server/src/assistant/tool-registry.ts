@@ -7,6 +7,7 @@ import { ASSET_CAPABILITY_TOOLS } from "./capabilities/assets";
 import { TRIP_CAPABILITY_TOOLS } from "./capabilities/trips";
 import { SAFETY_CAPABILITY_TOOLS } from "./capabilities/safety";
 import { ACCOUNT_CAPABILITY_TOOLS } from "./capabilities/accounts";
+import { TICKET_WORKFLOW_TOOLS } from "./ticket-workflow-tools";
 import {
   WORK_HUB_TOOL_METADATA,
   type WorkHubToolFamily,
@@ -230,6 +231,7 @@ export const IMPLEMENTATION_A_CAPABILITY_TOOLS = [
 ];
 
 export const ASK_V_TOOL_REGISTRY: AskVToolDefinition[] = [
+  ...TICKET_WORKFLOW_TOOLS,
   ...TOOLS.map((tool) => {
     const metadata = { ...DEFAULT_METADATA, ...(TOOL_METADATA[tool.name] ?? {}) };
     return {

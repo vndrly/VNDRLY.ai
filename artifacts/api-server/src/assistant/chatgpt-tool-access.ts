@@ -4,6 +4,7 @@ import type { AskVToolDefinition } from "./tool-registry";
 import { ASK_V_TOOL_REGISTRY } from "./tool-registry";
 import { CHATGPT_READ_CAPABILITIES, type ChatGptReadCapabilityScope } from "./chatgpt-read-capabilities";
 import { CHATGPT_WRITE_CAPABILITIES, type ChatGptWriteCapabilityScope } from "./chatgpt-write-capabilities";
+import { ticketRecordActionsForRole } from "./ticket-workflow-tools";
 
 export type ChatGptAssistantScope = "gate:read" | "work_hub:read" | "gate:write" | "work_hub:write" | ChatGptReadCapabilityScope | ChatGptWriteCapabilityScope;
 
@@ -43,7 +44,11 @@ export function chatGptActionTools(session: SessionPayload, scopes: readonly str
     && (!(CHATGPT_WRITE_CAPABILITIES["onboarding:write"].tools as readonly string[]).includes(tool.name) || hasOnboardingScope(session))
     && (tool.roles.includes(session.role as "admin" | "partner" | "vendor" | "field_employee") || tool.roles.includes("any"))
     && (!tool.companyAdminOnly || session.membershipRole === "admin") && tool.mutating);
-  return [...new Map([...gate, ...hub, ...additional].filter((tool) => tool.execution !== "client").map((tool) => [tool.name, tool])).values()];
+  return [...new Map([...gate, ...hub, ...additional].filter((tool) => tool.execution !== "client").map((tool) => [tool.name, tool])).values()].map(tool => {
+    if (tool.name !== "manage_ticket_record") return tool;
+    const schema = tool.inputSchema as { properties: Record<string, unknown> };
+    return { ...tool, inputSchema: { ...tool.inputSchema, properties: { ...schema.properties, action: { type: "string", enum: ticketRecordActionsForRole(session.role ?? "") } } } };
+  });
 }
 
 /** A scoped connection never broadens the tool registry's role permissions.

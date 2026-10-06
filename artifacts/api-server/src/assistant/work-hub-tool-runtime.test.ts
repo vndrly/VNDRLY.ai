@@ -17,6 +17,18 @@ const command = {
 };
 
 describe("resolveWorkHubToolRequest", () => {
+  it("requires trusted authorization and the right role for ticket transitions", () => {
+    expect(resolveExecutableWorkHubToolRequest("manage_ticket_record", { action: "approve", ticketId: 12, payload: {} }, false, { userId: 1, role: "partner" })).toMatchObject({ requiresConfirmation: true });
+    expect(resolveExecutableWorkHubToolRequest("manage_ticket_record", { action: "approve", ticketId: 12, payload: {} }, true, { userId: 1, role: "field_employee" })).toMatchObject({ error: "This ticket action is unavailable to your role." });
+    expect(resolveExecutableWorkHubToolRequest("manage_ticket_record", { action: "approve", ticketId: 12, payload: {} }, true, { userId: 1, role: "partner" })).toMatchObject({ path: "/tickets/12/approve", method: "POST" });
+    expect(resolveExecutableWorkHubToolRequest("manage_ticket_record", { action: "update", ticketId: "12/approve", payload: {} }, true)).toMatchObject({ error: "Select an exact authorized ticket." });
+    expect(resolveExecutableWorkHubToolRequest("manage_ticket_record", { action: "transfer-money", ticketId: 12, payload: {} }, true)).toMatchObject({ error: "That Work Hub ticket action action is not supported." });
+  });
+  it("finds inventory by exact plate without allowing caller scope overrides", () => {
+    expect(resolveExecutableWorkHubToolRequest("query_asset_custody", { alias: { kind: "plate", value: "TX 123", jurisdiction: "TX", owner: "foreign" } }, false)).toMatchObject({ method: "GET", path: "/implementation-a/assets/find?kind=plate&value=TX+123&jurisdiction=TX" });
+    expect(resolveExecutableWorkHubToolRequest("query_asset_custody", { alias: { kind: "plate", value: " " } }, false)).toMatchObject({ error: "Supply an exact valid asset identifier." });
+    expect(resolveExecutableWorkHubToolRequest("query_asset_custody", { assetId: "asset-one", alias: { kind: "plate", value: "TX123" } }, false)).toMatchObject({ path: "/implementation-a/assets/asset-one" });
+  });
   it("uses server-owned replay IDs for workforce and trips and bounds subscription confirmation", () => {
     for (const [name, action] of [["confirm_workforce_coverage_action", "assign"], ["confirm_field_trips_action", "start"]]) {
       const input = { ...command, action, payload: { operationId: "model-replay", owner: { type: "partner", id: 999 } } };

@@ -31,6 +31,20 @@ function workspaceHarness() {
   };
 }
 describe("VNDRLY workspace presentation", () => {
+  it("shows only the canonical inventory projection and highlights missing assets", () => {
+    expect(workspaceRequest({ view: "inventory" })).toMatchObject({ sourceTool: "query_asset_custody", sourceArguments: {} });
+    const output = workspaceOutput("inventory", "query_asset_custody", {}, { assets: [{ name: "Test truck", status: "checked_out", currentHolderDisplayName: "User 7", condition: "missing", privateTelemetry: "secret" }] }, now);
+    expect(output.sections[0].rows[0]).toMatchObject({ title: "Test truck", attention: "missing" });
+    expect(output.sections[0].rows[0].detail).toContain("User 7");
+    expect(JSON.stringify(output)).not.toContain("secret");
+    expect(() => workspaceOutput("inventory", "query_asset_custody", {}, {}, now)).toThrow("Incomplete inventory");
+  });
+  it("labels fleet package capabilities unavailable without inventing truck positions", () => {
+    const output = workspaceOutput("fleet", "query_field_trips", {}, { trips: [] }, now);
+    expect(output.sections[1]).toMatchObject({ title: "VENDRY Fleet" });
+    expect(output.sections[1].rows[0].detail).toContain("not connected yet");
+    expect(output.fleetMap?.points).toEqual([]);
+  });
   it("refreshes an initially host-rendered Fleet panel without overlapping a pending refresh", async () => {
     const ui = workspaceHarness();
     ui.publish("fleet");

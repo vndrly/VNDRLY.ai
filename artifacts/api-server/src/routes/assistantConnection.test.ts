@@ -13,6 +13,7 @@ vi.mock("../lib/rate-limit-factory", () => ({ createRateLimiter: () => ({ enforc
 vi.mock("../assistant/askv-pending-confirmation", () => ({ organizationKeyFromSession: (session: Record<string, unknown>) => JSON.stringify([session.role, session.vendorId, session.partnerId, session.activeMembershipId]), askvPendingConfirmations: { set: mocks.pending }, runBoundTypedAskVTool: mocks.bound }));
 vi.mock("../assistant/askv-idempotency", async (importOriginal) => ({ ...await importOriginal<typeof import("../assistant/askv-idempotency")>(), readPersistentAskVMutationResult: mocks.durableResult }));
 import router from "./assistantConnection";
+import { resolveExecutableWorkHubToolRequest } from "../assistant/work-hub-tool-runtime";
 
 const app = express();
 app.use(cookieParser(), express.json(), express.urlencoded({ extended: false }));
@@ -60,6 +61,35 @@ async function tokens(scope = auth.scope) {
   return response.body;
 }
 describe("ChatGPT account connection boundary", () => {
+  it("never uses model-supplied ticket coordinates to auto-check in", async () => {
+    const credentials = await tokens("tickets:write");
+    const response = await request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "manage_ticket_record", arguments: { action: "create", payload: { description: "Repair", initialState: "on_site", checkInLatitude: 35, checkInLongitude: -97, confirmed: true } } } });
+    expect(JSON.parse(response.body.result.content[0].text).status).toBe("pending");
+    expect(grants[0].actions?.[0].arguments).toMatchObject({ payload: { description: "Repair", initialState: "pending_arrival" } });
+    expect(grants[0].actions?.[0].arguments.payload).not.toHaveProperty("checkInLatitude");
+    expect(grants[0].actions?.[0].arguments.payload).not.toHaveProperty("checkInLongitude");
+    expect(mocks.run).not.toHaveBeenCalled();
+  });
+  it("dispatches an approved ticket mutation once and reuses its saved result", async () => {
+    const credentials = await tokens("tickets:write");
+    const response = await request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "manage_ticket_record", arguments: { action: "update", ticketId: 12, payload: { description: "Reviewed repair" } } } });
+    const prepared = JSON.parse(response.body.result.content[0].text);
+    expect(prepared.status).toBe("pending");
+    expect(mocks.run).not.toHaveBeenCalled();
+    const actionPath = new URL(prepared.approvalUrl).pathname;
+    const approval = await request(app).get(actionPath).set("Cookie", cookie());
+    const nonce = /name="nonce" value="([^"]+)"/.exec(approval.text)![1];
+    const actionCookie = approval.headers["set-cookie"][0].split(";")[0];
+    mocks.run.mockImplementation(async (name, input, actor, _history, _stream, trusted) => {
+      expect(resolveExecutableWorkHubToolRequest(name, input, trusted, actor)).toMatchObject({ method: "PATCH", path: "/tickets/12", body: { description: "Reviewed repair" } });
+      return JSON.stringify({ ok: true, id: 12 });
+    });
+    const submit = () => request(app).post(actionPath).set("Origin", "https://vndrly.ai").set("Cookie", `${cookie()}; ${actionCookie}`).type("form").send({ nonce });
+    expect((await submit()).status).toBe(200);
+    await submit();
+    expect(mocks.run).toHaveBeenCalledTimes(1);
+    expect(grants[0].actions?.[0]).toMatchObject({ state: "completed", result: JSON.stringify({ ok: true, id: 12 }) });
+  });
   it("prepares separately consented onboarding changes without private audit values or legal acceptance", async () => {
     mocks.validate.mockImplementation(async (value) => ({ ...value, membershipRole: "admin", exp: Math.floor(Date.now() / 1000) + 60 }));
     const read = await tokens("onboarding:read");
