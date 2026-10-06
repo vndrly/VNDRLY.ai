@@ -1,5 +1,6 @@
 import { TICKET_RECORD_ACTIONS } from "./ticket-workflow-tools";
 import { z } from "zod/v4";
+import { AssetCustodyCommandSchema } from "@workspace/api-zod";
 
 /** Separate write consent never follows from a read grant. */
 export const CHATGPT_WRITE_CAPABILITIES = {
@@ -42,6 +43,12 @@ export function validateChatGptActionInput(name: string, input: Record<string, u
     confirm_account_invitations_action: ["create", "resend", "revoke"],
   };
   if (allowed[name] && !allowed[name].includes(String(input.action))) throw new Error("Unsupported VNDRLY action");
+  if (name === "confirm_asset_custody_action" && ["checkout", "return", "transfer", "verify-issued"].includes(String(input.action))) {
+    const payload = input.payload && typeof input.payload === "object" && !Array.isArray(input.payload) ? input.payload as Record<string, unknown> : {};
+    const custody = AssetCustodyCommandSchema.omit({ operationId: true, confirmed: true });
+    const schema = input.action === "transfer" ? custody.extend({ toHolderUserId: z.number().int().positive() }) : custody;
+    if (!schema.safeParse({ ...payload, expectedVersion: input.expectedVersion }).success) throw new Error("Supply the current asset version and an explicitly known condition before preparing custody changes. Ask for missing condition; never invent it. Check required photos and return time against the actual asset policy.");
+  }
   if (input.action === "create" && (name === "manage_work_hub_meeting" || (name === "manage_work_hub_calendar_item" && ["meeting", "event"].includes(String(input.kind))))) {
     const payload = input.payload && typeof input.payload === "object" && !Array.isArray(input.payload) ? input.payload as Record<string, unknown> : {};
     const timestamp = (value: unknown) => z.iso.datetime().safeParse(value).success;

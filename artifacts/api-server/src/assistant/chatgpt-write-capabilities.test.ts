@@ -3,6 +3,16 @@ import { chatGptActionTools } from "./chatgpt-tool-access";
 import { validateChatGptActionInput, sanitizeChatGptActionInput, chatGptActionAuditInput, chatGptActionResult } from "./chatgpt-write-capabilities";
 
 describe("ChatGPT onboarding changes", () => {
+  it("requires actual condition and version before preparing an asset custody change", () => {
+    for (const action of ["checkout", "return", "transfer", "verify-issued"]) {
+      const input = { action, expectedVersion: 1, payload: { condition: "good", toHolderUserId: 1069 } };
+      expect(() => validateChatGptActionInput("confirm_asset_custody_action", input)).not.toThrow();
+      expect(() => validateChatGptActionInput("confirm_asset_custody_action", { ...input, payload: {} })).toThrow(/condition/);
+      expect(() => validateChatGptActionInput("confirm_asset_custody_action", { ...input, expectedVersion: undefined })).toThrow();
+    }
+    expect(() => validateChatGptActionInput("confirm_asset_custody_action", { action: "transfer", expectedVersion: 1, payload: { condition: "good" } })).toThrow();
+    expect(() => validateChatGptActionInput("confirm_asset_custody_action", { action: "create", payload: { name: "Synthetic radio" } })).not.toThrow();
+  });
   it("rejects unsavable meeting timestamps before presenting an authorization", () => {
     const payload = { title: "Synthetic meeting", startsAt: "2026-10-07T14:00:00.000Z", endsAt: "2026-10-07T14:15:00.000Z", timezone: "America/Chicago", participantUserIds: [1069] };
     expect(() => validateChatGptActionInput("manage_work_hub_meeting", { action: "create", payload })).not.toThrow();
