@@ -487,6 +487,9 @@ it("prepares coordinated task creation through the existing action panel, withou
  expect(response.body.result.isError).not.toBe(true);
  const result=JSON.parse(response.body.result.content[0].text);
  expect(result.requiresConfirmation).toBe(true);
+ expect(response.body.result.structuredContent).toEqual(result);
+ expect(response.body.result.structuredContent).not.toHaveProperty('proof');
+ expect(response.body.result.structuredContent).toMatchObject({status:'pending',result:null});
  expect(grants[0].actions?.[0].toolName).toBe('manage_work_hub_task');
  expect(grants[0].actions?.[0].arguments.owner).toEqual({type:'vendor',id:4});
  expect(JSON.parse((grants[0].actions?.[0].arguments.payload as {description:string}).description).identity).toEqual({userId:17,organizationKey:'vendor:4'});
