@@ -30,6 +30,7 @@
 // auto_unapproved bucket also drives the partner-facing email digest.
 
 import { and, eq, inArray, isNull } from "drizzle-orm";
+import { qualifiedVendorStaffCondition } from "./vendor-qualified-staff.js";
 import {
   db,
   partnerVendorRelationshipsTable,
@@ -239,19 +240,16 @@ export async function recomputeApproval(
         .limit(1)
     : [];
 
-  // A "qualified employee" today is any non-deleted vendor_people row
-  // with role in {field, admin}. We deliberately don't gate on
+  // Active field, foreman and Gate staff count under their current grants.
+  // Legacy roles are used only when no current operational grant exists.
+  // We deliberately don't gate on
   // certifications here — those reminders live in the cert-reminder
   // worker. Future iterations can plumb cert rows into this query.
   const [anyEmployee] = await db
     .select({ id: vendorPeopleTable.id })
     .from(vendorPeopleTable)
     .where(
-      and(
-        eq(vendorPeopleTable.vendorId, vendorId),
-        isNull(vendorPeopleTable.deletedAt),
-        inArray(vendorPeopleTable.vendorRole, ["field", "admin"]),
-      ),
+      qualifiedVendorStaffCondition(vendorId),
     )
     .limit(1);
 
