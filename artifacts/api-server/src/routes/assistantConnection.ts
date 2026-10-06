@@ -19,6 +19,8 @@ import { SPECIALISTS_TOOL, specialistDirectory } from "../assistant/chatgpt-spec
 import { fileDeviceHandoff, requireMatchingFileDevice, type FileDeviceHandoff, meetingDeviceHandoff, requireMatchingMeetingDevice, type MeetingDeviceHandoff } from "../assistant/chatgpt-device-handoff";
 import { CHATGPT_WRITE_CAPABILITIES, validateChatGptActionInput, sanitizeChatGptActionInput, chatGptActionAuditInput, chatGptActionResult } from "../assistant/chatgpt-write-capabilities";
 
+import { RESUME_PLAN_TOOL, resumedWorkPlan } from "../assistant/chatgpt-coordinated-plan";
+
 const router = Router();
 const origin = new URL(ASSISTANT_ISSUER).origin;
 const limiter = createRateLimiter({ resourcePrefix: "assistant_connection", errorCode: "assistant_connection.rate_limited", logKind: "assistant_connection.rate_limit", defaultMax: 60, defaultWindowMs: 60_000, message: "Please wait before trying V again." });
@@ -213,6 +215,7 @@ router.post("/mcp", async (req, res) => {
   if (message.method === "tools/list") {
     const reads = chatGptReadableTools(authorized.session, authorized.scopes).map((tool) => ({ name: tool.name, description: chatGptReadToolDescription(tool), inputSchema: tool.inputSchema, annotations: chatGptReadToolAnnotations(tool.name) }));
     reads.push(SPECIALISTS_TOOL);
+    if (reads.some(tool => tool.name === "list_work_hub_tasks")) reads.push(RESUME_PLAN_TOOL);
     if (reads.some(tool => ["get_work_hub_briefing", "get_work_hub_calendar", "query_gate_stations", "lookup_user_progress", "query_tickets", "query_notifications", "query_field_trips", "query_asset_custody"].includes(tool.name))) reads.push(WORKSPACE_TOOL);
     const actions = chatGptActionTools(authorized.session, authorized.scopes);
     const preparedTools = actions.map((tool) => ({ name: tool.name, description: `${tool.description}${tool.name === "manage_ticket_record" ? " Authorized operations can overwrite ticket fields, cancel tickets, or remove line items. This call only prepares the change; submission requires the existing authorization panel." : ""} This connection prepares the exact change for authorization in the VNDRLY action panel. Location-dependent actions use the secure device authorization link. Never claim prepared means completed.`, inputSchema: { ...tool.inputSchema, properties: Object.fromEntries(Object.entries(tool.inputSchema.properties ?? {}).filter(([key]) => !SERVER_ACTION_FIELDS.has(key))), required: (tool.inputSchema.required ?? []).filter((key) => !SERVER_ACTION_FIELDS.has(key)) }, annotations: { readOnlyHint: false, destructiveHint: tool.name === "manage_ticket_record", openWorldHint: false }, _meta: ACTION_PANEL_META }));
@@ -224,6 +227,18 @@ router.post("/mcp", async (req, res) => {
     const name = message.params?.name;
     const args = message.params?.arguments ?? {};
     if (typeof name !== "string" || !args || typeof args !== "object" || Array.isArray(args)) throw new Error("Invalid tool request");
+    if (name === "v_resume_work_plan") {
+      if (Object.keys(args).some(key => key !== "taskId") || typeof args.taskId !== "string") throw new Error("Invalid plan request");
+      requireChatGptReadableTool(authorized.session, authorized.scopes, "list_work_hub_tasks");
+      const session = authorized.session;
+      const owner = session.vendorId ? { type: "vendor", id: session.vendorId } : session.partnerId ? { type: "partner", id: session.partnerId } : null;
+      if (!owner || !session.userId) throw new Error("Plan company unavailable");
+      const raw = JSON.parse(await runTool("list_work_hub_tasks", {}, session, ""));
+      const tools = [...chatGptReadableTools(session, authorized.scopes), ...chatGptActionTools(session, authorized.scopes)];
+      const output = resumedWorkPlan(raw, args.taskId, { userId: session.userId, organizationKey: owner.type + ":" + owner.id }, new Set(tools.map(tool => tool.name)));
+      await writeAskVActionAudit({ session, clientSurface: "api", inputMode: "web_text", provider: "chatgpt_mcp", toolName: "list_work_hub_tasks", targetType: "task", toolInput: { taskId: args.taskId }, toolOutput: { taskId: output.taskId, taskVersion: output.taskVersion }, resultStatus: "success" });
+      return reply({ content: [{ type: "text", text: JSON.stringify(output) }], structuredContent: output });
+    }
     if (name === "v_list_specialists") {
       if (Object.keys(args).length) throw new Error("Specialist directory takes no arguments");
       const reads = chatGptReadableTools(authorized.session, authorized.scopes);
@@ -472,3 +487,4 @@ function oauthError(res: Response, error: unknown) {
   return res.status(error instanceof AssistantOAuthError ? 400 : 503).json({ error: error instanceof AssistantOAuthError ? error.code : "temporarily_unavailable" });
 }
 export default router;
+

@@ -438,3 +438,20 @@ it("offers explicit account switching without authorizing a connection", async (
   expect(response.text).toContain("Switch VNDRLY account");
   expect(grants).toHaveLength(0);
 });
+
+it("resumes a coordinated plan only with Work Hub read access and the linked actor", async () => {
+ const { createCoordinatedPlan, encodePlanDescription } = await import("../assistant/coordinated-plan");
+ const taskId = "11111111-1111-4111-8111-111111111111";
+ const plan = createCoordinatedPlan({ userId: 17, organizationKey: "vendor:4" }, [{ id: "brief", specialist: "V", toolNames: ["get_work_hub_briefing"], dependsOn: [] }]);
+ mocks.run.mockResolvedValue(JSON.stringify([{ id: taskId, ownerOrgType: "vendor", ownerOrgId: 4, version: 1, description: encodePlanDescription(plan) }]));
+ const credentials = await tokens("work_hub:read");
+ const call = (access: string) => request(app).post(base + "/mcp").set("Authorization", "Bearer " + access).send({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "v_resume_work_plan", arguments: { taskId } } });
+ const resumed = await call(credentials.access_token);
+ expect(resumed.body.result.structuredContent).toMatchObject({ taskId, eligibleStepIds: ["brief"], executionStarted: false, recordedCompletionRequiresReadback: true });
+ const limited = await tokens("gate:read");
+ mocks.run.mockClear();
+ const denied = await call(limited.access_token);
+ expect(denied.body.result.isError).toBe(true);
+ expect(mocks.run).not.toHaveBeenCalled();
+});
+
