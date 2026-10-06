@@ -4,8 +4,20 @@ import { VENDRY_FLEET_INTEGRATION } from "./chatgpt-fleet-integration";
 
 export type WorkspaceView = "my_workday" | "gate_board" | "work_calendar" | "onboarding" | "tickets" | "notifications" | "fleet" | "inventory";
 export const WORKSPACE_URI = "ui://vndrly/workspace/v1.html";
+const WORKSPACE_VIEWS = ["my_workday", "gate_board", "work_calendar", "onboarding", "tickets", "notifications", "fleet", "inventory"];
+const ROW_SCHEMA = { type: "object", properties: { title: { type: "string" }, detail: { type: "string" }, time: { type: "string" }, attention: { type: "string" } }, required: ["title"], additionalProperties: false };
+export const WORKSPACE_OUTPUT_SCHEMA = {
+  type: "object", properties: {
+    view: { type: "string", enum: WORKSPACE_VIEWS }, title: { type: "string" }, generatedAt: { type: "string", format: "date-time" },
+    availableViews: { type: "array", items: { type: "string", enum: WORKSPACE_VIEWS } }, sourceTool: { type: "string" }, sourceArguments: { type: "object" },
+    sections: { type: "array", items: { type: "object", properties: { title: { type: "string" }, rows: { type: "array", items: ROW_SCHEMA }, empty: { type: "string" } }, required: ["title", "rows", "empty"], additionalProperties: false } },
+    attention: { type: "array", items: ROW_SCHEMA }, metrics: { type: "array", items: { type: "object", properties: { label: { type: "string" }, value: { type: "number" } }, required: ["label", "value"], additionalProperties: false } },
+    fleetMap: { type: "object", properties: { publicToken: { type: "string" }, points: { type: "array", items: { type: "object", properties: { latitude: { type: "number", minimum: -90, maximum: 90 }, longitude: { type: "number", minimum: -180, maximum: 180 }, recordedAt: { type: "string", format: "date-time" }, freshness: { type: "string" }, label: { type: "string" } }, required: ["latitude", "longitude", "recordedAt", "freshness", "label"], additionalProperties: false } } }, required: ["points"], additionalProperties: false },
+  }, required: ["view", "title", "generatedAt", "sourceTool", "sourceArguments", "sections", "attention", "metrics"], additionalProperties: false,
+};
 export const WORKSPACE_TOOL = {
   name: "v_show_workspace",
+  outputSchema: WORKSPACE_OUTPUT_SCHEMA,
   description: "Show an embedded VNDRLY My Workday, Gate Board, Work Calendar, Tickets, Notifications, Inventory, or Fleet using fresh permission-scoped records. Onboarding shows saved setup steps without changing fields. Gate selection without a station lists authorized locations. Calendar requires an explicit start and end window. Fleet shows existing authorized trips and an explicitly disconnected VENDRY Fleet placeholder; tagged vehicle location and routes are unavailable. This view does not start tracking or change records.",
   inputSchema: { type: "object" as const, properties: { view: { type: "string", enum: ["my_workday", "gate_board", "work_calendar", "onboarding", "tickets", "notifications", "fleet", "inventory"] }, siteId: { type: "integer", minimum: 1 }, stationId: { type: "string", format: "uuid" }, start: { type: "string", format: "date-time" }, end: { type: "string", format: "date-time" } }, required: ["view"], additionalProperties: false },
   annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },

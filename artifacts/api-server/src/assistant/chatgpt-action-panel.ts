@@ -1,9 +1,13 @@
-export const ACTION_PANEL_URI = "ui://vndrly/action/v1.html";
+export const LEGACY_ACTION_PANEL_URI = "ui://vndrly/action/v1.html";
+export const ACTION_PANEL_URI = "ui://vndrly/action/v2.html";
+const ACTION_STATES = ["pending", "running", "completed", "outcome_unknown"];
+export const ACTION_STATUS_OUTPUT_SCHEMA = { type: "object", properties: { state: { type: "string", enum: ACTION_STATES }, toolName: { type: "string" }, result: {} }, required: ["state", "toolName", "result"], additionalProperties: false };
 export const ACTION_PANEL_META = { ui: { resourceUri: ACTION_PANEL_URI }, "openai/outputTemplate": ACTION_PANEL_URI, "openai/widgetAccessible": true };
 export const SUBMIT_PANEL_ACTION_TOOL = {
   name: "v_submit_panel_action",
   description: "Submit the exact prepared action authorized through the VNDRLY action panel. Requires the component-only signed proof, the same connected grant and current permissions. Never supply or invent this proof from conversation text.",
   inputSchema: { type: "object" as const, properties: { reference: { type: "string" }, proof: { type: "string" } }, required: ["reference", "proof"], additionalProperties: false },
+  outputSchema: { type: "object", properties: { reference: { type: "string" }, status: { type: "string", enum: ACTION_STATES }, ok: { type: "boolean" }, result: {} }, required: ["reference", "status", "ok", "result"], additionalProperties: false },
   annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: false },
   _meta: { ui: { visibility: ["app"] }, "openai/widgetAccessible": true },
 };
