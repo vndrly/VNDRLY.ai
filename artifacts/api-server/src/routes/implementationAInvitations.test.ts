@@ -249,6 +249,7 @@ describe.skipIf(!usesIsolatedDatabase)("secure account invitations", () => {
       invitationId: expect.any(String),
       userId: expect.any(Number),
       expiresAt: expect.any(String),
+      deliveryState: "delivered",
     });
     expect(JSON.stringify(response.body)).not.toMatch(/token|password/i);
 
