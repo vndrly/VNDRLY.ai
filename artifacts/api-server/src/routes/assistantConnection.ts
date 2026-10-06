@@ -16,7 +16,7 @@ import { writeAskVActionAudit } from "../assistant/action-audit";
 import { CHATGPT_READ_CAPABILITIES } from "../assistant/chatgpt-read-capabilities";
 import { publicMapConfig } from "../lib/public-map-config";
 import { SPECIALISTS_TOOL, specialistDirectory } from "../assistant/chatgpt-specialists";
-import { fileDeviceHandoff, requireMatchingFileDevice, type FileDeviceHandoff } from "../assistant/chatgpt-device-handoff";
+import { fileDeviceHandoff, requireMatchingFileDevice, type FileDeviceHandoff, meetingDeviceHandoff, requireMatchingMeetingDevice, type MeetingDeviceHandoff } from "../assistant/chatgpt-device-handoff";
 import { CHATGPT_WRITE_CAPABILITIES, validateChatGptActionInput, sanitizeChatGptActionInput, chatGptActionAuditInput, chatGptActionResult } from "../assistant/chatgpt-write-capabilities";
 
 const router = Router();
@@ -88,6 +88,26 @@ router.get("/device/files/:handoff", async (req, res) => {
     return res.redirect(302, "/work-hub/files");
   } catch {
     return page(res.status(403), '<p>This file handoff is expired, disconnected, or belongs to a different VNDRLY account or organization. Use the same account and organization as ChatGPT, then request a fresh file link from V. No upload was started.</p>');
+  }
+});
+router.get("/device/meetings/:handoff", async (req, res) => {
+  try {
+    const handoff = readEnvelope(req.params.handoff) as unknown as MeetingDeviceHandoff;
+    const session = getSessionFromRequest(req);
+    if (!session) return page(res, '<p>Sign into the same VNDRLY account used by ChatGPT in another tab, then refresh this page.</p><p><a href="/login" target="_blank" rel="noopener">Sign into VNDRLY</a></p>');
+    const current = await validateAssistantSession(session);
+    const destination = requireMatchingMeetingDevice(handoff, current);
+    await withAssistantGrants(current.userId!, async (grants, database) => {
+      const grant = grants.find(item => !item.revoked && item.consentHash === handoff.grantConsentHash);
+      if (!grant) throw new AssistantOAuthError("access_denied");
+      requireMatchingMeetingDevice(handoff, await validateAssistantSession(grant.session, database));
+      requireChatGptReadableTool(current, grant.scopes, "get_work_hub_meeting_catchup");
+    });
+    const result = JSON.parse(await runTool("get_work_hub_meeting_catchup", { occurrenceId: handoff.occurrenceId }, current, ""));
+    if (result.error || result.ok === false) throw new AssistantOAuthError("access_denied");
+    return res.redirect(302, destination);
+  } catch {
+    return page(res.status(403), '<p>This meeting link is expired, disconnected, or unavailable to this account and organization. Request a fresh link from V. No microphone, camera, or recording was started.</p>');
   }
 });
 router.get("/authorize", async (req, res) => {
@@ -313,6 +333,11 @@ router.post("/mcp", async (req, res) => {
       if (!authorized.grantConsentHash) throw new AssistantOAuthError("access_denied");
       readOutput = { ...(readOutput as object), url: `${ASSISTANT_ISSUER}/device/files/${envelope(fileDeviceHandoff(authorized.session, authorized.grantConsentHash))}`,
         completed: false, message: "Use this account-bound device link to select and upload the actual file. This link does not upload bytes. After the device reports success, read the file and versions through this same ChatGPT account before claiming completion." };
+    }
+    if (name === "get_work_hub_meeting_catchup" && !(readOutput as { error?: unknown; ok?: boolean })?.error && (readOutput as { ok?: boolean })?.ok !== false) {
+      if (!authorized.grantConsentHash || typeof args.occurrenceId !== "string") throw new AssistantOAuthError("access_denied");
+      readOutput = { ...(readOutput as object), deviceUrl: ASSISTANT_ISSUER + "/device/meetings/" + envelope(meetingDeviceHandoff(authorized.session, authorized.grantConsentHash, args.occurrenceId)), deviceCaptureStarted: false,
+        deviceMessage: "Open this account-bound link for the saved meeting. Joining, microphone/camera permission, and permitted recording must be completed on that device. This link does not start capture or transcription." };
     }
     const text = JSON.stringify(readOutput);
     const output = JSON.parse(text);

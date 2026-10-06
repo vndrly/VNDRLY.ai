@@ -26,3 +26,16 @@ export function requireMatchingFileDevice(handoff: FileDeviceHandoff, current: S
     throw new Error("Sign into the same VNDRLY account and organization used by this ChatGPT connection, then request a fresh file link");
   }
 }
+
+export type MeetingDeviceHandoff = Omit<FileDeviceHandoff, "kind"> & { kind: "meeting-device-handoff"; occurrenceId: string };
+
+export function meetingDeviceHandoff(session: SessionPayload, grantConsentHash: string, occurrenceId: string): MeetingDeviceHandoff {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(occurrenceId)) throw new Error("A saved meeting occurrence is required");
+  return { ...fileDeviceHandoff(session, grantConsentHash), kind: "meeting-device-handoff", occurrenceId };
+}
+
+export function requireMatchingMeetingDevice(handoff: MeetingDeviceHandoff, current: SessionPayload): string {
+  if (handoff.kind !== "meeting-device-handoff" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(handoff.occurrenceId)) throw new Error("A valid meeting handoff is required");
+  requireMatchingFileDevice({ ...handoff, kind: "file-device-handoff" }, current);
+  return "/work-hub/meetings?meeting=" + encodeURIComponent(handoff.occurrenceId);
+}

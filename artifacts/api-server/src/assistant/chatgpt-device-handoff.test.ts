@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fileDeviceHandoff, requireMatchingFileDevice } from "./chatgpt-device-handoff";
+import { fileDeviceHandoff, requireMatchingFileDevice, meetingDeviceHandoff, requireMatchingMeetingDevice } from "./chatgpt-device-handoff";
 
 describe("file device handoff identity", () => {
   const session = { userId: 17, role: "vendor" as const, vendorId: 4, activeMembershipId: 7, sv: 2 };
@@ -15,5 +15,20 @@ describe("file device handoff identity", () => {
     expect(() => requireMatchingFileDevice({ ...handoff, expires: Date.now() - 1 }, session)).toThrow();
     expect(() => requireMatchingFileDevice({ ...handoff, kind: "other" as never }, session)).toThrow();
     expect(() => fileDeviceHandoff({ role: "vendor" }, "hash")).toThrow();
+  });
+});
+
+ describe("meeting device handoff", () => {
+  const session = { userId: 17, role: "vendor" as const, vendorId: 4, activeMembershipId: 7, sv: 2 };
+  const id = "17795fa1-bb5f-4abc-a5f8-7e9b33a0ec05";
+  it("opens only the bound saved meeting for the same account", () => {
+    const handoff = meetingDeviceHandoff(session, "grant", id);
+    expect(requireMatchingMeetingDevice(handoff, session)).toBe("/work-hub/meetings?meeting=" + id);
+    for (const mismatch of [{ ...session, userId: 18 }, { ...session, vendorId: 5 }, { ...session, sv: 3 }]) expect(() => requireMatchingMeetingDevice(handoff, mismatch)).toThrow();
+    expect(() => requireMatchingMeetingDevice({ ...handoff, expires: 0 }, session)).toThrow();
+    expect(() => requireMatchingMeetingDevice({ ...handoff, kind: "file-device-handoff" as never }, session)).toThrow();
+  });
+  it("rejects arbitrary destinations and missing meeting identifiers", () => {
+    for (const value of ["", "../files", "https://example.invalid", id + "?redirect=x"]) expect(() => meetingDeviceHandoff(session, "grant", value)).toThrow();
   });
 });
