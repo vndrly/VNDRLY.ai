@@ -12,12 +12,13 @@ import type { AssistantPreparedAction } from "../assistant/chatgpt-oauth";
 import { runTool } from "./assistant";
 import { writeAskVActionAudit } from "../assistant/action-audit";
 import { CHATGPT_READ_CAPABILITIES } from "../assistant/chatgpt-read-capabilities";
+import { publicMapConfig } from "../lib/public-map-config";
 import { CHATGPT_WRITE_CAPABILITIES, validateChatGptActionInput, chatGptActionAuditInput, chatGptActionResult } from "../assistant/chatgpt-write-capabilities";
 
 const router = Router();
 const origin = new URL(ASSISTANT_ISSUER).origin;
 const limiter = createRateLimiter({ resourcePrefix: "assistant_connection", errorCode: "assistant_connection.rate_limited", logKind: "assistant_connection.rate_limit", defaultMax: 60, defaultWindowMs: 60_000, message: "Please wait before trying V again." });
-const SERVER_ACTION_FIELDS = new Set(["confirmed", "idempotencyKey", "voiceSessionId", "latitude", "longitude", "accuracyMeters", "startLatitude", "startLongitude", "locationSharingActive", "currentLocation"]);
+const SERVER_ACTION_FIELDS = new Set(["confirmed", "operationId", "idempotencyKey", "voiceSessionId", "latitude", "longitude", "accuracyMeters", "startLatitude", "startLongitude", "locationSharingActive", "currentLocation"]);
 const escape = (text: string) => text.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 const sign = (body: string) => createHmac("sha256", SESSION_SECRET).update(`assistant-consent:${body}`).digest("base64url");
 function envelope(value: unknown) {
@@ -161,11 +162,11 @@ router.post("/mcp", async (req, res) => {
   if (message.method === "resources/list") return reply({ resources: [{ uri: WORKSPACE_URI, name: "VNDRLY work desk", mimeType: "text/html;profile=mcp-app" }] });
   if (message.method === "resources/read") {
     if (message.params?.uri !== WORKSPACE_URI) return res.json({ jsonrpc: "2.0", id: message.id, error: { code: -32602, message: "Unknown resource" } });
-    return reply({ contents: [{ uri: WORKSPACE_URI, mimeType: "text/html;profile=mcp-app", text: WORKSPACE_HTML, _meta: { ui: { csp: { connectDomains: [], resourceDomains: [] }, prefersBorder: true } } }] });
+    return reply({ contents: [{ uri: WORKSPACE_URI, mimeType: "text/html;profile=mcp-app", text: WORKSPACE_HTML, _meta: { ui: { csp: { connectDomains: [], resourceDomains: authorized.scopes.includes("crew:read") ? ["https://api.mapbox.com"] : [] }, prefersBorder: true } } }] });
   }
   if (message.method === "tools/list") {
     const reads = chatGptReadableTools(authorized.session, authorized.scopes).map((tool) => ({ name: tool.name, description: chatGptReadToolDescription(tool), inputSchema: tool.inputSchema, annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false } }));
-    if (reads.some(tool => ["get_work_hub_briefing", "get_work_hub_calendar", "query_gate_stations", "lookup_user_progress", "query_tickets", "query_notifications"].includes(tool.name))) reads.push(WORKSPACE_TOOL);
+    if (reads.some(tool => ["get_work_hub_briefing", "get_work_hub_calendar", "query_gate_stations", "lookup_user_progress", "query_tickets", "query_notifications", "query_field_trips"].includes(tool.name))) reads.push(WORKSPACE_TOOL);
     const actions = chatGptActionTools(authorized.session, authorized.scopes);
     const preparedTools = actions.map((tool) => ({ name: tool.name, description: `${tool.description} This ChatGPT connection prepares the change and returns a VNDRLY authorization link; it does not execute until authorized there. Never claim prepared means completed.`, inputSchema: { ...tool.inputSchema, properties: Object.fromEntries(Object.entries(tool.inputSchema.properties ?? {}).filter(([key]) => !SERVER_ACTION_FIELDS.has(key))), required: (tool.inputSchema.required ?? []).filter((key) => !SERVER_ACTION_FIELDS.has(key)) }, annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false } }));
     return reply({ tools: [...reads, ...preparedTools, ...(actions.length ? [{ name: "v_prepare_action", description: "Prepare an authorized VNDRLY change and return its secure VNDRLY approval link. This tool never claims the change is completed. Model-supplied approval and GPS are ignored.", inputSchema: { type: "object", properties: { toolName: { type: "string", enum: actions.map((tool) => tool.name) }, arguments: { type: "object" } }, required: ["toolName", "arguments"], additionalProperties: false }, annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false } }, { name: "v_action_status", description: "Read the status and actual result of an action prepared by this connected account. Pending or running does not mean completed.", inputSchema: { type: "object", properties: { reference: { type: "string" } }, required: ["reference"], additionalProperties: false }, annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false } }] : [])] });
@@ -180,6 +181,7 @@ router.post("/mcp", async (req, res) => {
       const source = requireChatGptReadableTool(authorized.session, authorized.scopes, request.sourceTool);
       const raw = chatGptReadToolOutput(source.name, JSON.parse(await runTool(source.name, request.sourceArguments, authorized.session, "")));
       const output = workspaceOutput(request.view, source.name, request.sourceArguments, raw);
+      if (output.fleetMap) output.fleetMap.publicToken = publicMapConfig(process.env).mapboxAccessToken;
       const allowedNames = new Set(chatGptReadableTools(authorized.session, authorized.scopes).map(tool => tool.name));
       output.availableViews = [];
       if (allowedNames.has("get_work_hub_briefing")) output.availableViews.push("my_workday");
@@ -187,6 +189,7 @@ router.post("/mcp", async (req, res) => {
       if (allowedNames.has("lookup_user_progress")) output.availableViews.push("onboarding");
       if (allowedNames.has("query_tickets")) output.availableViews.push("tickets");
       if (allowedNames.has("query_notifications")) output.availableViews.push("notifications");
+      if (allowedNames.has("query_field_trips")) output.availableViews.push("fleet");
       if (allowedNames.has("query_gate_stations")) {
         const gates = request.view === "gate_board" ? raw : JSON.parse(await runTool("query_gate_stations", {}, authorized.session, ""));
         if (request.view === "gate_board" || (Array.isArray(gates.sites) && gates.sites.length > 0)) output.availableViews.push("gate_board");
@@ -298,6 +301,9 @@ router.post("/actions/:actionToken", async (req, res) => {
     const proof = readActionEnvelope(signed);
     if (proof.tokenHash !== assistantTokenHash(reserved.token) || proof.nonce !== req.body.nonce) throw new AssistantOAuthError("access_denied");
     const input = { ...reserved.action.arguments };
+    // Stable server-owned domain operation ID; model keys cannot select replays.
+    const operationHex = reserved.action.tokenHash.slice(0, 32);
+    input.operationId = `${operationHex.slice(0, 8)}-${operationHex.slice(8, 12)}-4${operationHex.slice(13, 16)}-8${operationHex.slice(17, 20)}-${operationHex.slice(20, 32)}`;
     validateChatGptActionInput(reserved.action.toolName, input);
     if (needsLocation(reserved.action.toolName)) {
       const latitude = Number(req.body.latitude), longitude = Number(req.body.longitude), accuracyMeters = Number(req.body.accuracyMeters);

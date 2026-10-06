@@ -2,6 +2,13 @@ import { describe, expect, it } from "vitest";
 import { workspaceOutput, workspaceRequest, WORKSPACE_HTML } from "./chatgpt-workspace";
 const now = new Date("2026-10-05T17:00:00Z");
 describe("VNDRLY workspace presentation", () => {
+  it("maps only returned reliable positions and preserves freshness states", () => {
+    const output = workspaceOutput("fleet", "query_field_trips", {}, { trips: [{ driverName: "Synthetic Driver", vehicleName: "Truck", presenceState: "on_site", trackingState: "active", freshness: "stale", recordedAt: now.toISOString(), location: { latitude: 35, longitude: -97 } }, { driverName: "Redacted Driver", presenceState: "en_route", freshness: "redacted", location: null }] }, now);
+    expect(output.fleetMap?.points).toEqual([expect.objectContaining({ label: "Truck · Synthetic Driver", freshness: "stale" })]);
+    expect(output.attention).toHaveLength(1);
+    expect(workspaceRequest({ view: "fleet" }).sourceTool).toBe("query_field_trips");
+    expect(() => workspaceOutput("fleet", "query_field_trips", {}, {}, now)).toThrow("Incomplete");
+  });
   it("shows authorized ticket statuses without inventing age or tracking claims", () => {
     const output = workspaceOutput("tickets", "query_tickets", {}, { tickets: [{ id: 42, status: "kicked_back", createdAt: "2026-10-01T12:00:00Z" }, { id: 43, status: "approved" }] }, now);
     expect(output.attention).toEqual([expect.objectContaining({ title: "Ticket 42", attention: "Returned for changes" })]);

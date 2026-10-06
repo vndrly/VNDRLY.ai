@@ -183,7 +183,7 @@ describe("ChatGPT account connection boundary", () => {
   });
   it("prepares a write without executing, strips model authority/GPS, and deduplicates retries", async () => {
     const credentials = await tokens("gate:read gate:write work_hub:read work_hub:write");
-    const prepare = () => request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 8, method: "tools/call", params: { name: "v_prepare_action", arguments: { toolName: "assume_gate_shift", arguments: { stationId: "test-station", confirmed: true, idempotencyKey: "model-key", latitude: 10, longitude: 20 } } } });
+    const prepare = () => request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 8, method: "tools/call", params: { name: "v_prepare_action", arguments: { toolName: "assume_gate_shift", arguments: { stationId: "test-station", confirmed: true, idempotencyKey: "model-key", operationId: "model-operation", latitude: 10, longitude: 20 } } } });
     const first = await prepare(), second = await prepare();
     expect(first.body.result.isError).toBe(false);
     const prepared = JSON.parse(first.body.result.content[0].text);
@@ -210,6 +210,7 @@ describe("ChatGPT account connection boundary", () => {
     expect((await submit("https://vndrly.ai")).status).toBe(200);
     expect((await submit("https://vndrly.ai")).status).toBe(200);
     expect(mocks.bound).toHaveBeenCalledTimes(1);
+    expect(mocks.bound.mock.calls[0][0].input.operationId).toMatch(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-8[a-f0-9]{3}-[a-f0-9]{12}$/);
     expect(mocks.bound).toHaveBeenCalledWith(expect.objectContaining({ phrase: "confirm", session: expect.objectContaining({ userId: 17 }) }));
     const status = await request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 9, method: "tools/call", params: { name: "v_action_status", arguments: { reference: prepared.reference } } });
     expect(JSON.parse(status.body.result.content[0].text)).toMatchObject({ state: "completed", result: { ok: true, action: "gate_coverage_updated" } });

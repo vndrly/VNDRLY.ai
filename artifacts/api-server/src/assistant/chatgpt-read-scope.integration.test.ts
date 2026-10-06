@@ -40,6 +40,7 @@ describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")("assistant re
       expect(refused).not.toContain(tickets[1].paymentReference!);
     }
     const employee = { userId: user.id, role: "field_employee", vendorPeopleId: worker.id, vendorId: vendors[0].id };
+    await db.insert(ticketsTable).values(["cancelled", "denied", "funds_dispersed", "completed", "submitted", "approved", "awaiting_payment"].map(status => ({ vendorId: vendors[0].id, siteLocationId: sites[0].id, workTypeId: workType.id, fieldEmployeeId: worker.id, status, createdAt: new Date(Date.now() + 1000) })));
     const visible = JSON.parse(await runTool("lookup_open_tickets", {}, employee, ""));
     expect(visible.tickets.map((ticket: { id: number }) => ticket.id)).toEqual([tickets[0].id]);
     expect(JSON.parse(await runTool("lookup_open_tickets", {}, { userId: user.id, role: "field_employee", vendorId: vendors[0].id }, ""))).toHaveProperty("error");

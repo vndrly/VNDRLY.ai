@@ -12,12 +12,14 @@ import {
   siteVisitsTable,
   usersTable,
   vendorPeopleTable,
+  assetsTable,
 } from "@workspace/db";
 import { getSessionFromRequest } from "../lib/session";
 import { createFieldTripService, FieldTripError, type FieldTripRecord, type TripOwner } from "../services/field-trips";
 import { assertFieldTripAccess, authorizeFieldTripCompletion } from "../services/field-trip-access";
 import { databaseFieldTripRepository, findActiveTripForDriver } from "../services/field-trip-database-repository";
 import { crossingDeduplicationKey, evaluateDirectionalCrossing } from "../services/geofence-crossings";
+import { activeFieldTripFilter, fieldTripOverviewPosition, fieldTripOverviewScope } from "../services/field-trip-overview";
 
 const router = Router();
 const service = createFieldTripService(databaseFieldTripRepository);
@@ -31,8 +33,9 @@ function actor(req: Request) {
     : session.partnerId
       ? { type: "partner", id: session.partnerId }
       : null;
-  const isAdmin = session.role === "admin" || session.membershipRole === "admin";
-  return { session, owner, isAdmin };
+  const isAdmin = session.role === "admin";
+  const isOrgAdmin = session.membershipRole === "admin";
+  return { session, owner, isAdmin, isOrgAdmin };
 }
 
 function assertTripAccess(trip: FieldTripRecord, context: ReturnType<typeof actor>) {
@@ -40,6 +43,8 @@ function assertTripAccess(trip: FieldTripRecord, context: ReturnType<typeof acto
     userId: context.session.userId!,
     owner: context.owner,
     isAdmin: context.isAdmin,
+    isOrgAdmin: context.isOrgAdmin,
+    restrictToDriver: context.session.role === "field_employee" && !context.isOrgAdmin && !["dispatcher", "foreman", "both", "gate_supervisor", "safety_manager"].includes(context.session.vendorRole ?? ""),
     vendorRole: context.session.vendorRole ?? null,
   });
 }
@@ -107,7 +112,7 @@ router.post("/implementation-a/trips", async (req, res) => {
     const input = StartFieldTripSchema.parse(req.body);
     if (context.session.role !== "admin") {
       if (!context.owner || input.owner.type !== context.owner.type || input.owner.id !== context.owner.id) throw new FieldTripError("trip.owner_forbidden", 403);
-      if (!context.isAdmin && input.driverUserId !== context.session.userId) throw new FieldTripError("trip.driver_required", 403);
+      if (!context.isAdmin && !context.isOrgAdmin && input.driverUserId !== context.session.userId) throw new FieldTripError("trip.driver_required", 403);
     }
     const [consent] = await db.select({ id: locationConsentsTable.id }).from(locationConsentsTable).where(and(eq(locationConsentsTable.userId, input.driverUserId), isNull(locationConsentsTable.revokedAt))).limit(1);
     if (!consent) throw new FieldTripError("trip.location_consent_required", 403);
@@ -125,13 +130,29 @@ router.get("/implementation-a/trips/active", async (req, res) => {
   } catch (error) { return sendError(res, error); }
 });
 
+router.get("/implementation-a/trips", async (req, res) => {
+  try {
+    const context = actor(req);
+    const scope = fieldTripOverviewScope(context.session);
+    const rows = await db.select({ trip: fieldTripsTable, driverName: usersTable.displayName, vehicleName: assetsTable.name, siteName: siteLocationsTable.name })
+      .from(fieldTripsTable).innerJoin(siteLocationsTable, eq(fieldTripsTable.siteLocationId, siteLocationsTable.id))
+      .leftJoin(usersTable, eq(fieldTripsTable.driverUserId, usersTable.id))
+      .leftJoin(assetsTable, eq(fieldTripsTable.vehicleAssetId, assetsTable.id))
+      .where(and(scope, activeFieldTripFilter())).orderBy(desc(fieldTripsTable.updatedAt)).limit(201);
+    return res.json({ generatedAt: new Date().toISOString(), truncated: rows.length > 200, trips: rows.slice(0, 200).map(({ trip, driverName, vehicleName, siteName }) => {
+      const exact = context.session.role === "admin" || context.session.membershipRole === "admin" || trip.driverUserId === context.session.userId || ["dispatcher", "foreman", "both", "gate_supervisor", "safety_manager"].includes(context.session.vendorRole ?? "");
+      return { id: trip.id, driverUserId: trip.driverUserId, driverName, vehicleAssetId: trip.vehicleAssetId, vehicleName, siteLocationId: trip.siteLocationId, siteName, trackingState: trip.trackingState, presenceState: trip.presenceState, ...(exact ? fieldTripOverviewPosition(trip) : { location: null, recordedAt: null, ageSeconds: null, freshness: "redacted" }) };
+    }) });
+  } catch (error) { return sendError(res, error); }
+});
+
 router.get("/implementation-a/trips/:tripId", async (req, res) => {
   try {
     const context = actor(req);
     const trip = await databaseFieldTripRepository.get(IdSchema.parse(req.params.tripId));
     if (!trip) throw new FieldTripError("trip.not_found", 404);
     assertTripAccess(trip, context);
-    const canSeeExact = context.isAdmin || context.session.userId === trip.driverUserId || ["dispatcher", "foreman", "gate_supervisor", "safety_manager"].includes(context.session.vendorRole ?? "");
+    const canSeeExact = context.isAdmin || context.isOrgAdmin || context.session.userId === trip.driverUserId || ["dispatcher", "foreman", "gate_supervisor", "safety_manager"].includes(context.session.vendorRole ?? "");
     return res.json(canSeeExact ? trip : { id: trip.id, driverUserId: trip.driverUserId, siteLocationId: trip.siteLocationId, presenceState: trip.presenceState, trackingState: trip.trackingState, lastLocation: null, route: null });
   } catch (error) { return sendError(res, error); }
 });
@@ -183,6 +204,7 @@ router.post("/implementation-a/trips/:tripId/complete", async (req, res) => {
       userId: context.session.userId!,
       owner: context.owner,
       isAdmin: context.isAdmin,
+      isOrgAdmin: context.isOrgAdmin,
       vendorRole: context.session.vendorRole ?? null,
     });
     return res.json(await service.completeTrip({

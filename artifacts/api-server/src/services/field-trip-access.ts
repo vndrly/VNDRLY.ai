@@ -4,6 +4,8 @@ export type FieldTripActor = {
   userId: number;
   owner: TripOwner | null;
   isAdmin: boolean;
+  isOrgAdmin?: boolean;
+  restrictToDriver?: boolean;
   vendorRole: string | null;
 };
 
@@ -14,12 +16,13 @@ export function assertFieldTripAccess(trip: FieldTripRecord, actor: FieldTripAct
   if (!actor.owner || trip.owner.type !== actor.owner.type || trip.owner.id !== actor.owner.id) {
     throw new FieldTripError("trip.not_found", 404);
   }
+  if (actor.restrictToDriver && trip.driverUserId !== actor.userId) throw new FieldTripError("trip.not_found", 404);
 }
 
 export function authorizeFieldTripCompletion(trip: FieldTripRecord, actor: FieldTripActor): { actorMayComplete: boolean } {
   assertFieldTripAccess(trip, actor);
   if (trip.driverUserId === actor.userId) return { actorMayComplete: false };
-  const actorMayComplete = actor.isAdmin || SUPERVISOR_ROLES.has(actor.vendorRole ?? "");
+  const actorMayComplete = actor.isAdmin || actor.isOrgAdmin === true || SUPERVISOR_ROLES.has(actor.vendorRole ?? "");
   if (!actorMayComplete) throw new FieldTripError("trip.completion_forbidden", 403);
   return { actorMayComplete: true };
 }

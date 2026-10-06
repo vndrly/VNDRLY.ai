@@ -9,6 +9,13 @@ const trip = {
 } as FieldTripRecord;
 
 describe("field trip completion authorization", () => {
+  it("keeps an organization administrator inside their own organization", () => {
+    expect(() => authorizeFieldTripCompletion(trip, { userId: 12, owner: { type: "vendor", id: 8 }, isAdmin: false, isOrgAdmin: true, vendorRole: null })).toThrowError(expect.objectContaining({ code: "trip.not_found" }));
+    expect(authorizeFieldTripCompletion(trip, { userId: 12, owner: { type: "vendor", id: 7 }, isAdmin: false, isOrgAdmin: true, vendorRole: null })).toEqual({ actorMayComplete: true });
+  });
+  it("hides another driver's trip even within the same company", () => {
+    expect(() => authorizeFieldTripCompletion(trip, { userId: 12, owner: { type: "vendor", id: 7 }, isAdmin: false, vendorRole: "field_employee", restrictToDriver: true })).toThrowError(expect.objectContaining({ code: "trip.not_found" }));
+  });
   it("allows a driver to end their own trip", () => {
     expect(authorizeFieldTripCompletion(trip, { userId: 91, owner: { type: "vendor", id: 7 }, isAdmin: false, vendorRole: "field_employee" })).toEqual({ actorMayComplete: false });
   });

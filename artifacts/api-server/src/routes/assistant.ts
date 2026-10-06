@@ -1106,7 +1106,8 @@ export async function runTool(
         const { ticketScopeFilters } = await import("../assistant/data-tools-helpers");
         const scope = ticketScopeFilters(session);
         if (scope === null) return JSON.stringify({ error: "No authorized ticket scope on this session." });
-        const filters = [ne(ticketsTable.status, "closed"), ...scope] as Parameters<typeof and>;
+        // Match the field open-ticket workflow, rather than an obsolete "closed" status.
+        const filters = [inArray(ticketsTable.status, ["initiated", "draft", "in_progress", "kicked_back", "pending_review"]), ...scope] as Parameters<typeof and>;
         const rows = await db
           .select({
             id: ticketsTable.id,

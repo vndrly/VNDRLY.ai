@@ -60,14 +60,14 @@ describe("ChatGPT assistant tool access", () => {
     expect(() => requireChatGptReadableTool(session, ["tickets:read"], "query_gps_trail")).toThrow();
     expect(requireChatGptReadableTool(session, ["crew:read"], "query_gps_trail").name).toBe("query_gps_trail");
   });
-  it("maps only explicit known server reads and excludes the legacy unscoped worker lookup", () => {
+  it("maps only explicit known server reads including the repaired scoped worker lookup", () => {
     for (const capability of Object.values(CHATGPT_READ_CAPABILITIES)) for (const name of capability.tools) {
       const tool = findAskVTool(name);
       expect(tool, name).not.toBeNull();
       expect(tool, name).toMatchObject({ mutating: false, confirmation: "none", execution: "server" });
     }
     const all = chatGptReadableTools({ userId: 1, role: "admin", membershipRole: "admin" }, Object.keys(CHATGPT_READ_CAPABILITIES));
-    expect(all.some(tool => tool.name === "lookup_open_tickets")).toBe(false);
+    expect(all.some(tool => tool.name === "lookup_open_tickets")).toBe(true);
     expect(all.some(tool => tool.name === "launch_camera")).toBe(false);
     expect(all.some(tool => tool.name === "set_ticket_lifecycle")).toBe(false);
   });
