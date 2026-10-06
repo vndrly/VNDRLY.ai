@@ -11,6 +11,7 @@ import { mutationIdempotencyKey, readPersistentAskVMutationResult } from "../ass
 import type { AssistantPreparedAction } from "../assistant/chatgpt-oauth";
 import { runTool } from "./assistant";
 import { isTypedWorkHubTool } from "../assistant/work-hub-tool-runtime";
+import { ACTION_PANEL_URI, ACTION_PANEL_HTML, ACTION_PANEL_META, SUBMIT_PANEL_ACTION_TOOL } from "../assistant/chatgpt-action-panel";
 import { writeAskVActionAudit } from "../assistant/action-audit";
 import { CHATGPT_READ_CAPABILITIES } from "../assistant/chatgpt-read-capabilities";
 import { publicMapConfig } from "../lib/public-map-config";
@@ -160,8 +161,9 @@ router.post("/mcp", async (req, res) => {
   if (message.id === undefined) return res.status(202).end();
   if (message.method === "initialize") return reply({ protocolVersion: "2025-06-18", capabilities: { tools: { listChanged: false }, resources: { listChanged: false }, extensions: { "io.modelcontextprotocol/ui": {} } }, serverInfo: { name: "VNDRLY.ai", version: "1.2.0" }, instructions: "These tools access live VNDRLY records within the connected account permissions." });
   if (message.method === "ping") return reply({});
-  if (message.method === "resources/list") return reply({ resources: [{ uri: WORKSPACE_URI, name: "VNDRLY work desk", mimeType: "text/html;profile=mcp-app" }] });
+  if (message.method === "resources/list") return reply({ resources: [{ uri: WORKSPACE_URI, name: "VNDRLY work desk", mimeType: "text/html;profile=mcp-app" }, { uri: ACTION_PANEL_URI, name: "VNDRLY action authorization", mimeType: "text/html;profile=mcp-app" }] });
   if (message.method === "resources/read") {
+    if (message.params?.uri === ACTION_PANEL_URI) return reply({ contents: [{ uri: ACTION_PANEL_URI, mimeType: "text/html;profile=mcp-app", text: ACTION_PANEL_HTML, _meta: { ui: { csp: { connectDomains: [], resourceDomains: [] }, prefersBorder: true } } }] });
     if (message.params?.uri !== WORKSPACE_URI) return res.json({ jsonrpc: "2.0", id: message.id, error: { code: -32602, message: "Unknown resource" } });
     return reply({ contents: [{ uri: WORKSPACE_URI, mimeType: "text/html;profile=mcp-app", text: WORKSPACE_HTML, _meta: { ui: { csp: { connectDomains: [], resourceDomains: authorized.scopes.includes("crew:read") ? ["https://api.mapbox.com"] : [] }, prefersBorder: true } } }] });
   }
@@ -169,14 +171,45 @@ router.post("/mcp", async (req, res) => {
     const reads = chatGptReadableTools(authorized.session, authorized.scopes).map((tool) => ({ name: tool.name, description: chatGptReadToolDescription(tool), inputSchema: tool.inputSchema, annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false } }));
     if (reads.some(tool => ["get_work_hub_briefing", "get_work_hub_calendar", "query_gate_stations", "lookup_user_progress", "query_tickets", "query_notifications", "query_field_trips", "query_asset_custody"].includes(tool.name))) reads.push(WORKSPACE_TOOL);
     const actions = chatGptActionTools(authorized.session, authorized.scopes);
-    const preparedTools = actions.map((tool) => ({ name: tool.name, description: `${tool.description} This ChatGPT connection prepares the change and returns a VNDRLY authorization link; it does not execute until authorized there. Never claim prepared means completed.`, inputSchema: { ...tool.inputSchema, properties: Object.fromEntries(Object.entries(tool.inputSchema.properties ?? {}).filter(([key]) => !SERVER_ACTION_FIELDS.has(key))), required: (tool.inputSchema.required ?? []).filter((key) => !SERVER_ACTION_FIELDS.has(key)) }, annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false } }));
-    return reply({ tools: [...reads, ...preparedTools, ...(actions.length ? [{ name: "v_prepare_action", description: "Prepare an authorized VNDRLY change and return its secure VNDRLY approval link. This tool never claims the change is completed. Model-supplied approval and GPS are ignored.", inputSchema: { type: "object", properties: { toolName: { type: "string", enum: actions.map((tool) => tool.name) }, arguments: { type: "object" } }, required: ["toolName", "arguments"], additionalProperties: false }, annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false } }, { name: "v_action_status", description: "Read the status and actual result of an action prepared by this connected account. Pending or running does not mean completed.", inputSchema: { type: "object", properties: { reference: { type: "string" } }, required: ["reference"], additionalProperties: false }, annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false } }] : [])] });
+    const preparedTools = actions.map((tool) => ({ name: tool.name, description: `${tool.description} This connection prepares the exact change for authorization in the VNDRLY action panel. Location-dependent actions use the secure device authorization link. Never claim prepared means completed.`, inputSchema: { ...tool.inputSchema, properties: Object.fromEntries(Object.entries(tool.inputSchema.properties ?? {}).filter(([key]) => !SERVER_ACTION_FIELDS.has(key))), required: (tool.inputSchema.required ?? []).filter((key) => !SERVER_ACTION_FIELDS.has(key)) }, annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false }, _meta: ACTION_PANEL_META }));
+    if (actions.length) preparedTools.push(SUBMIT_PANEL_ACTION_TOOL);
+    return reply({ tools: [...reads, ...preparedTools, ...(actions.length ? [{ name: "v_prepare_action", _meta: ACTION_PANEL_META, description: "Prepare an authorized VNDRLY change and return its secure VNDRLY approval link. This tool never claims the change is completed. Model-supplied approval and GPS are ignored.", inputSchema: { type: "object", properties: { toolName: { type: "string", enum: actions.map((tool) => tool.name) }, arguments: { type: "object" } }, required: ["toolName", "arguments"], additionalProperties: false }, annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false } }, { name: "v_action_status", description: "Read the status and actual result of an action prepared by this connected account. Pending or running does not mean completed.", inputSchema: { type: "object", properties: { reference: { type: "string" } }, required: ["reference"], additionalProperties: false }, annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false } }] : [])] });
   }
   if (message.method !== "tools/call") return res.json({ jsonrpc: "2.0", id: message.id, error: { code: -32601, message: "Method not found" } });
   try {
     const name = message.params?.name;
     const args = message.params?.arguments ?? {};
     if (typeof name !== "string" || !args || typeof args !== "object" || Array.isArray(args)) throw new Error("Invalid tool request");
+    if (name === "v_submit_panel_action") {
+      if (typeof args.reference !== "string" || assistantTokenUserId(args.reference) !== authorized.session.userId) throw new AssistantOAuthError("access_denied");
+      const proof = readEnvelope(args.proof) as unknown as { kind: string; tokenHash: string; fingerprint: string; nonce: string; expires: number };
+      if (proof.kind !== "component-action" || proof.tokenHash !== assistantTokenHash(args.reference) || typeof proof.fingerprint !== "string" || !/^[A-Za-z0-9_-]{43}$/.test(proof.nonce ?? "")) throw new AssistantOAuthError("access_denied");
+      const action = await withAssistantGrants(authorized.session.userId!, async (grants, database) => {
+        const grant = grants.find(item => assistantAccessHashMatches(item, authorized.grantAccessHash));
+        const candidate = grant?.actions?.find(item => item.tokenHash === proof.tokenHash);
+        if (!grant || !candidate || candidate.fingerprint !== proof.fingerprint || (!unresolved(candidate) && candidate.expiresAt <= Date.now()) || needsLocation(candidate.toolName, candidate.arguments)) throw new AssistantOAuthError("access_denied");
+        const current = await validateAssistantSession(grant.session, database);
+        if (!chatGptActionTools(current, grant.scopes).some(tool => tool.name === candidate.toolName)) throw new AssistantOAuthError("access_denied");
+        await reconcileAction(candidate, current, database);
+        return structuredClone(candidate);
+      });
+      const reserved = { token: args.reference, session: authorized.session, action };
+      if (action.state === "pending") {
+        const operationHex = action.tokenHash.slice(0, 32);
+        const input = { ...action.arguments, operationId: `${operationHex.slice(0, 8)}-${operationHex.slice(8, 12)}-4${operationHex.slice(13, 16)}-8${operationHex.slice(17, 20)}-${operationHex.slice(20, 32)}` };
+        await executePreparedAction(reserved, input, { grantAccessHash: authorized.grantAccessHash, fingerprint: proof.fingerprint, expires: proof.expires });
+      }
+      const saved = await withAssistantGrants(authorized.session.userId!, async (grants, database) => {
+        const grant = grants.find(item => assistantAccessHashMatches(item, authorized.grantAccessHash));
+        const candidate = grant?.actions?.find(item => item.tokenHash === proof.tokenHash);
+        if (!grant || !candidate) throw new AssistantOAuthError("access_denied");
+        await validateAssistantSession(grant.session, database);
+        return structuredClone(candidate);
+      });
+      const result = saved.result ? JSON.parse(saved.result) : null;
+      const outcome = { reference: args.reference, status: saved.state, ok: saved.state === "completed" && !result?.error && result?.ok !== false, result };
+      return reply({ structuredContent: outcome, content: [{ type: "text", text: JSON.stringify(outcome) }], isError: saved.state === "completed" && !outcome.ok });
+    }
     if (name === "v_show_workspace") {
       const request = workspaceRequest(args);
       const source = requireChatGptReadableTool(authorized.session, authorized.scopes, request.sourceTool);
@@ -228,15 +261,15 @@ router.post("/mcp", async (req, res) => {
         if (!grant) throw new AssistantOAuthError("access_denied");
         grant.actions = (grant.actions ?? []).filter((action) => unresolved(action) || action.expiresAt > Date.now());
         const prior = grants.filter((item) => organizationKeyFromSession(item.session) === organizationKeyFromSession(grant.session)).flatMap((item) => (item.actions ?? []).filter((action) => !item.revoked || unresolved(action))).find((action) => action.fingerprint === fingerprint && (unresolved(action) || action.createdAt > Date.now() - 300_000) && action.reference);
-        if (prior) return { reference: prior.reference!, state: prior.state, result: prior.result };
+        if (prior) return { reference: prior.reference!, state: prior.state, result: prior.result, panelProof: grant.actions?.includes(prior) && prior.state === "pending" ? envelope({ kind: "component-action", tokenHash: prior.tokenHash, fingerprint: prior.fingerprint, nonce: randomBytes(32).toString("base64url"), expires: prior.expiresAt }) : undefined };
         if (grant.actions.length >= 20) throw new Error("Too many pending actions");
         grant.actions.push({ reference: actionToken, tokenHash: assistantTokenHash(actionToken), toolName: tool.name, arguments: input, fingerprint, createdAt: Date.now(), expiresAt: Date.now() + 300_000, turnId: randomBytes(6).readUIntBE(0, 6), state: "pending" });
-        return { reference: actionToken, state: "pending", result: undefined };
+        return { reference: actionToken, state: "pending", result: undefined, panelProof: envelope({ kind: "component-action", tokenHash: assistantTokenHash(actionToken), fingerprint, nonce: randomBytes(32).toString("base64url"), expires: Date.now() + 300_000 }) };
       });
       const previousResult = prepared.result ? JSON.parse(prepared.result) : null;
       const text = JSON.stringify({ ok: prepared.state === "completed" && !previousResult?.error && previousResult?.ok !== false, requiresConfirmation: prepared.state === "pending", status: prepared.state, toolName: tool.name, reference: prepared.reference, approvalUrl: `${ASSISTANT_ISSUER}/actions/${prepared.reference}`, result: previousResult, message: prepared.state === "pending" ? "The change is prepared. Complete its required authorization in your VNDRLY account; it has not been submitted." : "This matching action was already submitted. Inspect its status and actual result." });
       await writeAskVActionAudit({ session: authorized.session, clientSurface: "api", inputMode: "web_text", provider: "chatgpt_mcp", toolName: tool.name, targetType: tool.auditTarget, toolInput: chatGptActionAuditInput(tool.name, input), resultStatus: "requires_confirmation" });
-      return reply({ content: [{ type: "text", text }], isError: false });
+      return reply({ content: [{ type: "text", text }], isError: false, ...(prepared.state === "pending" && prepared.panelProof ? { _meta: { componentApproval: { toolName: tool.name, reference: prepared.reference, proof: needsLocation(tool.name, input) ? undefined : prepared.panelProof, arguments: input, requiresLocation: needsLocation(tool.name, input), approvalUrl: `${ASSISTANT_ISSUER}/actions/${prepared.reference}` } } } : {}) });
     }
     const tool = requireChatGptReadableTool(authorized.session, authorized.scopes, name);
     const text = JSON.stringify(chatGptReadToolOutput(name, JSON.parse(await runTool(name, args, authorized.session, ""))));
@@ -280,6 +313,45 @@ async function authorizedAction(req: Request) {
   });
   return { token, session: current, action: found };
 }
+async function executePreparedAction(reserved: Awaited<ReturnType<typeof authorizedAction>>, input: Record<string, unknown>, component?: { grantAccessHash: string; fingerprint: string; expires: number }) {
+  let claimed = false;
+  try {
+    validateChatGptActionInput(reserved.action.toolName, input);
+    const claim = await withAssistantGrants(reserved.session.userId!, async (grants, database) => {
+      const grant = grants.find(item => item.actions?.some(action => action.tokenHash === reserved.action.tokenHash));
+      if (!grant || grant.revoked || organizationKeyFromSession(grant.session) !== organizationKeyFromSession(reserved.session)) throw new AssistantOAuthError("access_denied");
+      const current = await validateAssistantSession(grant.session, database);
+      const action = grant.actions!.find(item => item.tokenHash === reserved.action.tokenHash)!;
+      const tool = chatGptActionTools(current, grant.scopes).find(item => item.name === action.toolName);
+      if (!tool) throw new AssistantOAuthError("access_denied");
+      if (component && (!assistantAccessHashMatches(grant, component.grantAccessHash) || component.fingerprint !== action.fingerprint || component.expires <= Date.now() || needsLocation(action.toolName, action.arguments))) throw new AssistantOAuthError("access_denied");
+      if (action.state !== "pending") return null;
+      if (action.expiresAt <= Date.now()) throw new AssistantOAuthError("access_denied");
+      action.state = "running";
+      action.executionFingerprint = mutationIdempotencyKey(current.userId!, action.toolName, input);
+      action.expiresAt = Date.now() + 3600_000;
+      return { session: current, tool };
+    });
+    if (!claim) return null;
+    claimed = true;
+    const { session, tool } = claim;
+    askvPendingConfirmations.set({ userId: session.userId!, organizationKey: organizationKeyFromSession(session), sessionId: `conversation:${reserved.action.turnId}`, contextKey: reserved.action.tokenHash, toolName: tool.name, arguments: input, idempotencyKey: `chatgpt:${reserved.action.tokenHash}` });
+    const result = await runBoundTypedAskVTool({ name: tool.name, input, session, conversationId: reserved.action.turnId, turnId: reserved.action.turnId, contextKey: reserved.action.tokenHash, phrase: "confirm", execute: async authorizedInput => JSON.stringify(chatGptActionResult(tool.name, JSON.parse(await runTool(tool.name, authorizedInput, session, "", false, isTypedWorkHubTool(tool.name))))) });
+    const output = chatGptActionResult(tool.name, JSON.parse(result)) as Record<string, unknown>;
+    const savedResult = JSON.stringify(output);
+    await withAssistantGrants(session.userId!, async grants => {
+      const action = grants.flatMap(grant => grant.actions ?? []).find(item => item.tokenHash === reserved.action.tokenHash);
+      if (action) { action.state = "completed"; action.result = savedResult; action.arguments = chatGptActionAuditInput(tool.name, action.arguments); action.expiresAt = Date.now() + 3600_000; }
+    });
+    await writeAskVActionAudit({ session, clientSurface: "api", inputMode: "web_text", provider: "chatgpt_mcp", toolName: tool.name, targetType: tool.auditTarget, toolInput: chatGptActionAuditInput(tool.name, input), toolOutput: output, resultStatus: output?.error || output?.ok === false ? "failure" : "success", confirmationPhrase: component ? "VNDRLY component-mediated action authorization" : "Authenticated VNDRLY action approval" });
+    return savedResult;
+  } catch (error) {
+    if (claimed) {
+      try { await withAssistantGrants(reserved.session.userId!, async grants => { const action = grants.flatMap(grant => grant.actions ?? []).find(item => item.tokenHash === reserved.action.tokenHash); if (action?.state === "running") action.state = "outcome_unknown"; }); } catch { /* The durable running claim still prevents a duplicate. */ }
+    }
+    throw error;
+  }
+}
 router.get("/actions-client.js", (_req, res) => res.type("application/javascript").send(`document.querySelector('form[data-location="required"]')?.addEventListener('submit', function(event) { if (this.dataset.located === 'yes') return; event.preventDefault(); const form = this; const status = document.getElementById('location-status'); status.textContent = 'Getting your current location…'; navigator.geolocation.getCurrentPosition(function(position) { form.elements.latitude.value = position.coords.latitude; form.elements.longitude.value = position.coords.longitude; form.elements.accuracyMeters.value = position.coords.accuracy; form.dataset.located = 'yes'; form.requestSubmit(); }, function() { status.textContent = 'Location permission is required for this VNDRLY action. Enable location and try again.'; }, {enableHighAccuracy:true,timeout:15000,maximumAge:0}); });`));
 router.get("/actions/:actionToken", async (req, res) => {
   try {
@@ -294,7 +366,6 @@ router.get("/actions/:actionToken", async (req, res) => {
 });
 router.post("/actions/:actionToken", async (req, res) => {
   let reserved: Awaited<ReturnType<typeof authorizedAction>> | undefined;
-  let claimed = false;
   try {
     if (req.headers.origin !== origin) throw new AssistantOAuthError("access_denied");
     reserved = await authorizedAction(req);
@@ -318,41 +389,11 @@ router.post("/actions/:actionToken", async (req, res) => {
         Object.assign(input, { startLatitude: latitude, startLongitude: longitude, locationSharingActive: false });
       }
     }
-    const claim = await withAssistantGrants(reserved.session.userId!, async (grants, database) => {
-      const grant = grants.find((item) => item.actions?.some((action) => action.tokenHash === assistantTokenHash(reserved!.token)));
-      if (!grant || grant.revoked) throw new AssistantOAuthError("access_denied");
-      await validateAssistantSession(grant.session, database);
-      const action = grant.actions!.find((item) => item.tokenHash === assistantTokenHash(reserved!.token));
-      if (!action || action.state !== "pending") return false;
-      action.state = "running";
-      action.executionFingerprint = mutationIdempotencyKey(reserved!.session.userId!, action.toolName, input);
-      action.expiresAt = Date.now() + 3600_000;
-      return true;
-    });
-    if (!claim) return page(res, "<p>This action was already submitted. Refresh its approval page for the result.</p>");
-    claimed = true;
-    const sessionId = `conversation:${reserved.action.turnId}`;
-    askvPendingConfirmations.set({ userId: reserved.session.userId!, organizationKey: organizationKeyFromSession(reserved.session), sessionId, contextKey: reserved.action.tokenHash, toolName: reserved.action.toolName, arguments: input, idempotencyKey: `chatgpt:${reserved.action.tokenHash}` });
-    const tool = chatGptActionTools(reserved.session, ASSISTANT_SCOPES).find((item) => item.name === reserved!.action.toolName)!;
-    const result = await runBoundTypedAskVTool({ name: tool.name, input, session: reserved.session, conversationId: reserved.action.turnId, turnId: reserved.action.turnId, contextKey: reserved.action.tokenHash, phrase: "confirm", execute: async (authorizedInput) => JSON.stringify(chatGptActionResult(tool.name, JSON.parse(await runTool(tool.name, authorizedInput, reserved!.session, "", false, isTypedWorkHubTool(tool.name))))) });
-    const output = chatGptActionResult(tool.name, JSON.parse(result)) as Record<string, unknown>;
-    const savedResult = JSON.stringify(output);
-    await withAssistantGrants(reserved.session.userId!, async (grants) => {
-      const action = grants.flatMap((grant) => grant.actions ?? []).find((item) => item.tokenHash === reserved!.action.tokenHash);
-      if (action) { action.state = "completed"; action.result = savedResult; action.arguments = chatGptActionAuditInput(tool.name, action.arguments); action.expiresAt = Date.now() + 3600_000; }
-    });
-    await writeAskVActionAudit({ session: reserved.session, clientSurface: "api", inputMode: "web_text", provider: "chatgpt_mcp", toolName: tool.name, targetType: tool.auditTarget, toolInput: chatGptActionAuditInput(tool.name, input), toolOutput: output, resultStatus: output?.error || output?.ok === false ? "failure" : "success", confirmationPhrase: "Authenticated VNDRLY action approval" });
+    const savedResult = await executePreparedAction(reserved, input);
+    if (savedResult === null) return page(res, "<p>This action was already submitted. Refresh its approval page for the result.</p>");
     res.clearCookie("vndrly_assistant_action", { path: "/api/assistant-connection/actions", secure: true, sameSite: "lax" });
     return page(res, `<h2>Action result</h2><pre>${escape(savedResult)}</pre>`);
   } catch (error) {
-    if (claimed && reserved) {
-      try {
-        await withAssistantGrants(reserved.session.userId!, async (grants) => {
-          const action = grants.flatMap((grant) => grant.actions ?? []).find((item) => item.tokenHash === reserved!.action.tokenHash);
-          if (action?.state === "running") action.state = "outcome_unknown";
-        });
-      } catch { /* Durable running reservation still prevents a duplicate. */ }
-    }
     return oauthError(res, error);
   }
 });

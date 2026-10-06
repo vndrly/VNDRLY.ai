@@ -14,7 +14,7 @@ This candidate is not a declaration of complete web/iOS or Ask V parity. The pub
 
 ## Completion still required
 
-1. Component-mediated approval within ChatGPT with current-grant checks, bound single-use authorization and durable replay handling; current approved changes still use the secure VNDRLY approval page.
+1. Live verification of the new component-mediated action panel. The candidate binds authorization to the current connection and saved action, rechecks permissions at submission, and reuses durable results. Location-dependent actions still use the secure device authorization page.
 2. End-to-end synthetic persona and company/site assignment checks for Gate, tickets, Work Hub and inventory. Base role descriptors alone do not prove gatekeeper, foreman or fleet-manager entitlement.
 3. Live verification of the separately consented payment-record transition and evidence-upload workflows, with canonical finance permissions and actual result checks.
 4. Meeting audio/video capture, transcription input, camera uploads and continuous location collection need a supported device integration. Existing meeting/transcript management tools do not themselves collect media.

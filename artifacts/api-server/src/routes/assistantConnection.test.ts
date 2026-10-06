@@ -61,6 +61,46 @@ async function tokens(scope = auth.scope) {
   return response.body;
 }
 describe("ChatGPT account connection boundary", () => {
+  it("keeps panel proof component-only and binds submission to the current grant", async () => {
+    const credentials = await tokens("tickets:write");
+    const call = (name: string, args: Record<string, unknown>, access = credentials.access_token) => request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${access}`).send({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name, arguments: args } });
+    const prepared = await call("manage_ticket_record", { action: "update", ticketId: 12, payload: { description: "Reviewed repair" } });
+    const component = prepared.body.result._meta.componentApproval;
+    expect(JSON.stringify(prepared.body.result.content)).not.toContain(component.proof);
+    expect(mocks.run).not.toHaveBeenCalled();
+    const descriptors = await request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 2, method: "tools/list" });
+    expect(descriptors.body.result.tools.find((tool: { name: string }) => tool.name === "v_submit_panel_action")._meta.ui.visibility).toEqual(["app"]);
+    expect((await call("v_submit_panel_action", { reference: component.reference, proof: "model-confirmed" })).body.result.isError).toBe(true);
+    const other = await tokens("tickets:write");
+    expect((await call("v_submit_panel_action", component, other.access_token)).body.result.isError).toBe(true);
+    mocks.run.mockImplementation(async (name, input, actor, _history, _stream, trusted) => {
+      expect(resolveExecutableWorkHubToolRequest(name, input, trusted, actor)).toMatchObject({ method: "PATCH", path: "/tickets/12" });
+      return JSON.stringify({ ok: true, id: 12 });
+    });
+    expect((await call("v_submit_panel_action", component)).body.result.structuredContent).toMatchObject({ status: "completed", ok: true, result: { id: 12 } });
+    expect((await call("v_submit_panel_action", component)).body.result.structuredContent.status).toBe("completed");
+    expect(mocks.run).toHaveBeenCalledTimes(1);
+  });
+  it.each(["revoked", "scope removed", "expired", "tampered"])("rejects a panel action when authorization is %s", async (condition) => {
+    const credentials = await tokens("tickets:write");
+    const call = (name: string, args: Record<string, unknown>) => request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name, arguments: args } });
+    const prepared = await call("manage_ticket_record", { action: "update", ticketId: 12, payload: { description: "Reviewed repair" } });
+    const component = prepared.body.result._meta.componentApproval;
+    if (condition === "revoked") grants[0].revoked = true;
+    if (condition === "scope removed") grants[0].scopes = [];
+    if (condition === "expired") grants[0].actions![0].expiresAt = Date.now() - 1;
+    if (condition === "tampered") component.proof += "altered";
+    const denied = await call("v_submit_panel_action", component);
+    expect(denied.status !== 200 || denied.body.result?.isError === true).toBe(true);
+    expect(mocks.run).not.toHaveBeenCalled();
+  });
+  it("does not mint a component submission proof for a location-dependent action", async () => {
+    const credentials = await tokens("gate:write");
+    const prepared = await request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "confirm_visitor_check_in", arguments: { siteId: 3, firstName: "Fixture", lastName: "Driver" } } });
+    expect(prepared.body.result._meta.componentApproval).toMatchObject({ requiresLocation: true });
+    expect(prepared.body.result._meta.componentApproval).not.toHaveProperty("proof");
+    expect(mocks.run).not.toHaveBeenCalled();
+  });
   it("never uses model-supplied ticket coordinates to auto-check in", async () => {
     const credentials = await tokens("tickets:write");
     const response = await request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "manage_ticket_record", arguments: { action: "create", payload: { description: "Repair", initialState: "on_site", checkInLatitude: 35, checkInLongitude: -97, confirmed: true } } } });
@@ -101,6 +141,8 @@ describe("ChatGPT account connection boundary", () => {
     expect(JSON.parse(prepared.body.result.content[0].text)).toMatchObject({ status: "pending", requiresConfirmation: true });
     expect(mocks.run).not.toHaveBeenCalled();
     expect(JSON.stringify(mocks.audit.mock.calls)).not.toContain("synthetic-private-value");
+    expect(prepared.body.result._meta.componentApproval).toMatchObject({ toolName: "set_onboarding_field", arguments: { path: "taxIds.federalTaxId", value: "synthetic-private-value" } });
+    expect(JSON.stringify(prepared.body.result.content)).not.toContain("synthetic-private-value");
   });
   it("projects final onboarding completion before durable execution and result readback", async () => {
     mocks.validate.mockImplementation(async (value) => ({ ...value, membershipRole: "admin", exp: Math.floor(Date.now() / 1000) + 60 }));
