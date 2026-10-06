@@ -5,6 +5,7 @@
     "noEmit": true,
     "rootDir": ".",
     "types": ["node"],
+    "lib": ["es2022", "dom", "dom.iterable"],
     "moduleResolution": "bundler"
   },
   "include": ["tests", "helpers", "playwright.config.ts"]

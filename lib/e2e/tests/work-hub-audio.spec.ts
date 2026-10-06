@@ -33,7 +33,7 @@ test("two invited users exchange real internal audio while recording stays off",
   });
   try {
     const vendor = await createVendor(pool, { name: `Example Audio ${stamp}`, contactName: "Audio Example", contactEmail: `audio-${stamp}@example.invalid` });
-    const users = [];
+    const users: Array<{ id: number; username: string; label: string }> = [];
     for (const label of ["Caller", "Recipient"]) {
       const username = `audio-${label.toLowerCase()}-${stamp}@example.invalid`;
       const user = await createUser(pool, { username, email: username, passwordHash: hashPassword(password), role: "vendor", displayName: `Example ${label} ${stamp}` });
