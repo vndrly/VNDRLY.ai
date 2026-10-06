@@ -29,4 +29,17 @@ export function prepareWorkPlan(input:unknown,identity:{userId:number;organizati
  const plan={...createCoordinatedPlan(identity,request.steps),id:request.planId};
  return {owner,context:{kind:"organization",id:owner.id},expectedVersion:null,action:"create",payload:{title:request.title,description:encodePlanDescription(plan)}};
 }
+export const RUN_PLAN_READ_TOOL = {
+ name:'v_run_work_plan_read',description:'Run the currently authorized read tools for one eligible step in a saved coordinated plan. Does not execute writes, start monitoring, or save a completion checkpoint. Return actual results and preserve errors.',
+ inputSchema:{type:'object' as const,properties:{taskId:{type:'string',format:'uuid'},stepId:{type:'string'},toolArguments:{type:'object',description:'Map from each planned read tool name to its arguments'}},required:['taskId','stepId','toolArguments'],additionalProperties:false},
+ annotations:{readOnlyHint:true,destructiveHint:false,openWorldHint:true},
+};
+export function plannedReadRequests(resumed:ReturnType<typeof resumedWorkPlan>,stepId:string,argumentsByTool:unknown,readTools:ReadonlySet<string>){
+ if(!resumed.eligibleStepIds.includes(stepId))throw Error('Plan step not eligible');
+ const step=resumed.plan.steps.find(step=>step.id===stepId)!;
+ if(step.toolNames.some(name=>!readTools.has(name)))throw Error('Step requires an action authorization');
+ const args=z.record(z.string(),z.record(z.string(),z.unknown())).parse(argumentsByTool);
+ if(Object.keys(args).some(name=>!step.toolNames.includes(name))||step.toolNames.some(name=>!(name in args)))throw Error('Supply arguments only for the planned read tools');
+ return step.toolNames.map(name=>({name,arguments:args[name]}));
+}
 

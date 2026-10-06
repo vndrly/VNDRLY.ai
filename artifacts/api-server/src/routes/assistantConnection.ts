@@ -19,7 +19,7 @@ import { SPECIALISTS_TOOL, specialistDirectory } from "../assistant/chatgpt-spec
 import { fileDeviceHandoff, requireMatchingFileDevice, type FileDeviceHandoff, meetingDeviceHandoff, requireMatchingMeetingDevice, type MeetingDeviceHandoff } from "../assistant/chatgpt-device-handoff";
 import { CHATGPT_WRITE_CAPABILITIES, validateChatGptActionInput, sanitizeChatGptActionInput, chatGptActionAuditInput, chatGptActionResult } from "../assistant/chatgpt-write-capabilities";
 
-import { RESUME_PLAN_TOOL, resumedWorkPlan, PREPARE_PLAN_TOOL, prepareWorkPlan } from "../assistant/chatgpt-coordinated-plan";
+import { RESUME_PLAN_TOOL, resumedWorkPlan, PREPARE_PLAN_TOOL, prepareWorkPlan, RUN_PLAN_READ_TOOL, plannedReadRequests } from "../assistant/chatgpt-coordinated-plan";
 
 const router = Router();
 const origin = new URL(ASSISTANT_ISSUER).origin;
@@ -215,7 +215,7 @@ router.post("/mcp", async (req, res) => {
   if (message.method === "tools/list") {
     const reads = chatGptReadableTools(authorized.session, authorized.scopes).map((tool) => ({ name: tool.name, description: chatGptReadToolDescription(tool), inputSchema: tool.inputSchema, annotations: chatGptReadToolAnnotations(tool.name) }));
     reads.push(SPECIALISTS_TOOL);
-    if (reads.some(tool => tool.name === "list_work_hub_tasks")) reads.push(RESUME_PLAN_TOOL);
+    if (reads.some(tool => tool.name === "list_work_hub_tasks")) reads.push(RESUME_PLAN_TOOL, RUN_PLAN_READ_TOOL);
     if (reads.some(tool => ["get_work_hub_briefing", "get_work_hub_calendar", "query_gate_stations", "lookup_user_progress", "query_tickets", "query_notifications", "query_field_trips", "query_asset_custody"].includes(tool.name))) reads.push(WORKSPACE_TOOL);
     const actions = chatGptActionTools(authorized.session, authorized.scopes);
     const planTools = actions.some(tool => tool.name === "manage_work_hub_task") ? [{ ...PREPARE_PLAN_TOOL, _meta: ACTION_PANEL_META }] : [];
@@ -228,8 +228,8 @@ router.post("/mcp", async (req, res) => {
     let name = message.params?.name;
     let args = message.params?.arguments ?? {};
     if (typeof name !== "string" || !args || typeof args !== "object" || Array.isArray(args)) throw new Error("Invalid tool request");
-    if (name === "v_resume_work_plan") {
-      if (Object.keys(args).some(key => key !== "taskId") || typeof args.taskId !== "string") throw new Error("Invalid plan request");
+    if (name === "v_resume_work_plan" || name === "v_run_work_plan_read") {
+      if (Object.keys(args).some(key => !(name === "v_run_work_plan_read" ? ["taskId", "stepId", "toolArguments"] : ["taskId"]).includes(key)) || typeof args.taskId !== "string") throw new Error("Invalid plan request");
       requireChatGptReadableTool(authorized.session, authorized.scopes, "list_work_hub_tasks");
       const session = authorized.session;
       const owner = session.vendorId ? { type: "vendor", id: session.vendorId } : session.partnerId ? { type: "partner", id: session.partnerId } : null;
@@ -238,6 +238,19 @@ router.post("/mcp", async (req, res) => {
       const tools = [...chatGptReadableTools(session, authorized.scopes), ...chatGptActionTools(session, authorized.scopes)];
       const output = resumedWorkPlan(raw, args.taskId, { userId: session.userId, organizationKey: owner.type + ":" + owner.id }, new Set(tools.map(tool => tool.name)));
       await writeAskVActionAudit({ session, clientSurface: "api", inputMode: "web_text", provider: "chatgpt_mcp", toolName: "list_work_hub_tasks", targetType: "task", toolInput: { taskId: args.taskId }, toolOutput: { taskId: output.taskId, taskVersion: output.taskVersion }, resultStatus: "success" });
+      if (name === "v_run_work_plan_read") {
+        if (typeof args.stepId !== "string") throw new Error("Missing plan step");
+        const requests = plannedReadRequests(output, args.stepId, args.toolArguments, new Set(chatGptReadableTools(session, authorized.scopes).map(tool => tool.name)));
+        const results = [];
+        for (const request of requests) {
+          const tool = requireChatGptReadableTool(session, authorized.scopes, request.name);
+          const result = chatGptReadToolOutput(tool.name, JSON.parse(await runTool(tool.name, request.arguments, session, "")));
+          await writeAskVActionAudit({ session, clientSurface: "api", inputMode: "web_text", provider: "chatgpt_mcp", toolName: tool.name, targetType: tool.auditTarget, toolInput: request.arguments, toolOutput: result, resultStatus: (result as { error?: unknown })?.error ? "failure" : "success" });
+          results.push({ toolName: tool.name, result });
+        }
+        const executed = { taskId: output.taskId, stepId: args.stepId, results, executionStarted: true, checkpointSaved: false };
+        return reply({ content: [{ type: "text", text: JSON.stringify(executed) }], structuredContent: executed });
+      }
       return reply({ content: [{ type: "text", text: JSON.stringify(output) }], structuredContent: output });
     }
     if (name === "v_list_specialists") {

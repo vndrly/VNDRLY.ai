@@ -18,4 +18,16 @@ it("prepares an actor-bound task with stable retry contents and refuses unavaila
  expect(()=>prepareWorkPlan(input,identity,owner,new Set())).toThrow('unavailable');
  expect(()=>prepareWorkPlan({...input,userId:99},identity,owner,new Set(['query_tickets']))).toThrow();
 });
+it('refuses a write or unrelated argument injection in a planned read',async()=>{
+ const {plannedReadRequests}=await import('./chatgpt-coordinated-plan');
+ const identity={userId:17,organizationKey:'vendor:4'};
+ const plan=createCoordinatedPlan(identity,[{id:'review',specialist:'Finn',toolNames:['manage_ticket_record'],dependsOn:[]}]);
+ const task={id:'11111111-1111-4111-8111-111111111111',ownerOrgType:'vendor',ownerOrgId:4,version:1,description:encodePlanDescription(plan)};
+ const resumed=resumedWorkPlan([task],task.id,identity,new Set(['manage_ticket_record']));
+ expect(()=>plannedReadRequests(resumed,'review',{manage_ticket_record:{}},new Set())).toThrow('authorization');
+ const readPlan=createCoordinatedPlan(identity,[{id:'brief',specialist:'V',toolNames:['get_work_hub_briefing'],dependsOn:[]}]);
+ const ready=resumedWorkPlan([{...task,description:encodePlanDescription(readPlan)}],task.id,identity,new Set(['get_work_hub_briefing']));
+ expect(()=>plannedReadRequests(ready,'brief',{get_work_hub_briefing:{},query_tickets:{}},new Set(['get_work_hub_briefing']))).toThrow('planned');
+ expect(()=>plannedReadRequests(ready,'foreign',{},new Set(['get_work_hub_briefing']))).toThrow('eligible');
+});
 

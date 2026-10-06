@@ -469,4 +469,14 @@ it("prepares coordinated task creation through the existing action panel, withou
  const retry=await call();expect(JSON.parse(retry.body.result.content[0].text).reference).toBe(result.reference);
  expect(grants[0].actions).toHaveLength(1);
 });
+it('executes a saved plan read step without claiming a saved checkpoint',async()=>{
+ const {createCoordinatedPlan,encodePlanDescription}=await import('../assistant/coordinated-plan');
+ const taskId='11111111-1111-4111-8111-111111111111';
+ const plan=createCoordinatedPlan({userId:17,organizationKey:'vendor:4'},[{id:'brief',specialist:'V',toolNames:['get_work_hub_briefing'],dependsOn:[]}]);
+ const credentials=await tokens('work_hub:read');
+ mocks.run.mockResolvedValueOnce(JSON.stringify([{id:taskId,ownerOrgType:'vendor',ownerOrgId:4,version:1,description:encodePlanDescription(plan)}])).mockResolvedValueOnce(JSON.stringify({tasks:[],events:[]}));
+ const response=await request(app).post(base+'/mcp').set('Authorization','Bearer '+credentials.access_token).send({jsonrpc:'2.0',id:1,method:'tools/call',params:{name:'v_run_work_plan_read',arguments:{taskId,stepId:'brief',toolArguments:{get_work_hub_briefing:{}}}}});
+ expect(response.body.result.structuredContent).toMatchObject({stepId:'brief',executionStarted:true,checkpointSaved:false,results:[{toolName:'get_work_hub_briefing',result:{tasks:[],events:[]}}]});
+ expect(grants[0].actions??[]).toHaveLength(0);
+});
 
