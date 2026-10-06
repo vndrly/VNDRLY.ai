@@ -10,11 +10,13 @@ vi.mock("@/hooks/use-brand", async (importOriginal) => {
   return { ...actual, useBrand: () => brandState.brand ?? actual.DEFAULT_BRAND };
 });
 
-vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: null, login: vi.fn() }) }));
+const authState = vi.hoisted(() => ({ user: null as any, navigate: vi.fn(), location: "/login" }));
+vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: authState.user, login: vi.fn() }) }));
+vi.mock("wouter", () => ({ useLocation: () => [authState.location, authState.navigate] }));
 vi.mock("@/hooks/use-toast", () => ({ useToast: () => ({ toast: vi.fn() }) }));
 vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string) => key === "login.learnMoreVndrly" ? en.login.learnMoreVndrly : key, i18n: { language: "en" } }) }));
 vi.mock("@/components/language-toggle", () => ({ default: () => <span>EN / ES</span> }));
-afterEach(() => { cleanup(); vi.unstubAllGlobals(); brandState.brand = null; });
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); brandState.brand = null; authState.user = null; authState.navigate.mockClear(); });
 
 it("replaces the login theme switch with a branded link directly to the commercial homepage", () => {
   vi.stubGlobal("fetch", vi.fn(async () => ({ ok: false })));
@@ -43,4 +45,19 @@ it("keeps company identity on the login form while the home link retains VNDRLY 
   expect((password as HTMLInputElement).value).toBe("test-password");
   fireEvent.click(screen.getByTestId("button-toggle-password-visibility"));
   expect(password.getAttribute("type")).toBe("password");
+});
+
+it("allows explicit account switching without redirecting the signed-in account", () => {
+  authState.user = { role: "partner" };
+  vi.stubGlobal("fetch", vi.fn(async () => ({ ok: false })));
+  render(<Login allowAccountSwitch />);
+  expect(screen.getByLabelText("login.passwordLabel")).toBeTruthy();
+  expect(authState.navigate).not.toHaveBeenCalled();
+});
+
+it("retains the normal signed-in login redirect", () => {
+  authState.user = { role: "partner" };
+  vi.stubGlobal("fetch", vi.fn(async () => ({ ok: false })));
+  render(<Login />);
+  expect(authState.navigate).toHaveBeenCalledWith("/", { replace: true });
 });

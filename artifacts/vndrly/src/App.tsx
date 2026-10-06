@@ -227,6 +227,7 @@ function AuthenticatedRouter() {
         <Route path="/print-visitor-qrs" component={PrintVisitorQrsPage} />
         <Route path="/print-ticket/:id">{(params) => <PrintTicketPage id={parseInt(params.id)} />}</Route>
         <Route path="/print-hotlist" component={PrintHotlistPage} />
+        <Route path="/switch-account"><Login allowAccountSwitch /></Route>
         <Route path="/forgot-password" component={ForgotPassword} />
         <Route path="/reset-password" component={ResetPassword} />
         <Route path="/activate-account" component={ActivateAccount} />
@@ -249,8 +250,8 @@ function AuthenticatedRouter() {
         {!user && <Route path="/" component={MarketingHome} />}
         {!user ? (
           <>
-            <Route path="/login" component={Login} />
-            <Route path="/*splat" component={Login} />
+            <Route path="/login"><Login /></Route>
+            <Route path="/*splat"><Login /></Route>
           </>
         ) : (user.role === "vendor" && ["gatekeeper", "gate_supervisor"].includes(user.vendorRole ?? "")) || isManagedSubcontractor(user) ? (
           <GatePortalLayout>
@@ -398,6 +399,7 @@ function GlobalAssistantLauncher({ authenticated }: { authenticated: boolean }) 
     matches("/forgot-password") ||
     matches("/reset-password") ||
     matches("/login") ||
+    matches("/switch-account") ||
     matches("/signup") ||
     matches("/legal");
   if (hidden) return null;

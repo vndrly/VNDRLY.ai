@@ -32,7 +32,7 @@ type DemoAccount = {
   role: string;
 };
 
-export default function Login() {
+export default function Login({ allowAccountSwitch = false }: { allowAccountSwitch?: boolean } = {}) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -51,10 +51,10 @@ export default function Login() {
   const [location, navigate] = useLocation();
 
   useEffect(() => {
-    if (user && (location === "/login" || location === "/login/" || location === "/gate")) {
+    if (!allowAccountSwitch && user && (location === "/login" || location === "/login/" || location === "/gate")) {
       navigate(gateDashboardRouteFor(user), { replace: true });
     }
-  }, [user, location, navigate]);
+  }, [allowAccountSwitch, user, location, navigate]);
 
   // Dev-only: pull the demo accounts the API server is willing to seed
   // so non-engineers can autofill the form without hunting through code.
