@@ -557,3 +557,11 @@ describe("resolveWorkHubToolRequest", () => {
     });
   });
 });
+
+describe("initial safety report canonical request", () => {
+  it("requires approval and targets initial report rather than incident response", () => {
+    const input = { action: "report", payload: { siteLocationId: 1, title: "Synthetic", eventType: "observation" } };
+    expect(resolveExecutableWorkHubToolRequest("confirm_incident_response_action", input, false)).toMatchObject({ requiresConfirmation: true });
+    expect(resolveExecutableWorkHubToolRequest("confirm_incident_response_action", input, true)).toMatchObject({ method: "POST", path: "/safety/events" });
+  });
+});

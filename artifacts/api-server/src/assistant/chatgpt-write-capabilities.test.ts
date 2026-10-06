@@ -122,3 +122,14 @@ describe("ChatGPT onboarding changes", () => {
       .toEqual({ ok: true, progress: { currentStep: "done", completedAt: "2026-10-06" } });
   });
 });
+
+describe("initial safety report preparation", () => {
+  it("requires actual report fields and removes untrusted device evidence", () => {
+    const name = "confirm_incident_response_action";
+    const input = { action: "report", payload: { title: "Synthetic observation", eventType: "observation", siteLocationId: 1, latitude: 1, longitude: 2, attachmentPaths: ["foreign/path"] } };
+    expect(() => validateChatGptActionInput(name, input)).not.toThrow();
+    expect(() => validateChatGptActionInput(name, { action: "report", payload: {} })).toThrow();
+    expect(sanitizeChatGptActionInput(name, input).payload).toEqual({ title: "Synthetic observation", eventType: "observation", siteLocationId: 1 });
+    expect(chatGptActionResult(name, { success: true, data: { id: 4, status: "submitted", description: "private", reportedByUserId: 8 } })).toEqual({ ok: true, id: 4, status: "submitted" });
+  });
+});

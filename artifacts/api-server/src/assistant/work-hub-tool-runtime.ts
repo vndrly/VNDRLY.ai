@@ -253,6 +253,7 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
     if (action === "complete") return request("POST", `/implementation-a/trips/${resourceId}/complete`, direct(input));
   }
   if (name === "confirm_incident_response_action") {
+    if (action === "report") return request("POST", "/safety/events", payload);
     if (action === "create") return request("POST", "/implementation-a/safety/incidents", payload);
     if (!resourceId) return { error: "A valid safety event id is required." };
     if (["escalate", "acknowledge", "evidence", "hold", "close"].includes(action)) return request("POST", `/implementation-a/safety/incidents/${resourceId}/${action}`, payload);
