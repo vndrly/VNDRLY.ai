@@ -140,6 +140,8 @@ flow is documented in one place.
 
 ## AskV voice session codes
 
+Scheduling returns HTTP 409 with `schedule.roster_changed` (legacy `error: crew_roster_changed`) when a saved additive crew request races a roster change. Both identifiers are translated in web and mobile EN/ES. Refresh the roster and prepare a new request; no schedule or crew write was applied.
+
 These dotted `code` values from `assistantRealtime.ts` are translated under `errors.assistant` in both web and mobile EN/ES catalogs.
 
 | Code | HTTP | User recovery |

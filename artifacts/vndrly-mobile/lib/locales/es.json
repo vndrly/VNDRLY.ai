@@ -769,7 +769,9 @@
       "rows_required": "Por favor proporciona al menos una fila.",
       "too_many_rows": "Demasiadas filas en esta solicitud."
     },
+    "crew_roster_changed": "La cuadrilla cambió durante la programación. Actualiza la lista e inténtalo de nuevo; no se aplicaron cambios.",
     "schedule": {
+      "roster_changed": "La cuadrilla cambió durante la programación. Actualiza la lista e inténtalo de nuevo; no se aplicaron cambios.",
       "start_required": "Se requiere una fecha de inicio.",
       "invalid_duration": "La duración debe ser de al menos 15 minutos.",
       "invalid_crew": "El tamaño de la cuadrilla debe ser un número entero positivo.",

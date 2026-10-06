@@ -17,6 +17,17 @@ const command = {
 };
 
 describe("resolveWorkHubToolRequest", () => {
+  it("binds carry-forward changes to the saved item and station after trusted authorization", () => {
+    const stationId = "00000000-0000-4000-8000-000000000001";
+    const itemId = "00000000-0000-4000-8000-000000000002";
+    const actor = { userId: 17, role: "field_employee" };
+    for (const [action, kind] of [["open_item", "open"], ["resolve_item", "resolve"], ["reopen_item", "reopen"]]) {
+      const input = { stationId, itemId, action, text: " Worker note ", actorId: 999, kind: "transfer" };
+      expect(resolveExecutableWorkHubToolRequest("manage_gate_shift", input, false, actor)).toMatchObject({ requiresConfirmation: true });
+      expect(resolveExecutableWorkHubToolRequest("manage_gate_shift", input, true, actor)).toEqual({ method: "POST", path: `/gate-change-over/${stationId}/items`, body: { itemId, kind, text: "Worker note" } });
+      for (const bad of [{ itemId: "../other" }, { text: " " }, { text: "x".repeat(2001) }, { stationId: "../foreign" }]) expect(resolveExecutableWorkHubToolRequest("manage_gate_shift", { ...input, ...bad }, true, actor)).toHaveProperty("error");
+    }
+  });
   it("acknowledges only the caller's assignment after trusted authorization", () => {
     const input = { ticketId: 12, status: "confirmed", note: "I will be there", employeeId: 999, vendorId: 888 };
     const actor = { userId: 17, role: "field_employee" };

@@ -769,7 +769,9 @@
       "rows_required": "Please provide at least one row.",
       "too_many_rows": "Too many rows in this request."
     },
+    "crew_roster_changed": "The crew changed while scheduling. Refresh the roster and try again; no changes were applied.",
     "schedule": {
+      "roster_changed": "The crew changed while scheduling. Refresh the roster and try again; no changes were applied.",
       "start_required": "A start date is required.",
       "invalid_duration": "The duration must be at least 15 minutes.",
       "invalid_crew": "Crew size must be a positive whole number.",

@@ -474,6 +474,7 @@ describe("inlineErrorForTicketAction (Task #532)", () => {
 // error code emission in `routes/ticketSchedule.ts` and `routes/crew.ts`
 // (and the corresponding `errors.*` keys in en.json / es.json).
 const TASK_531_CODES = [
+  "schedule.roster_changed",
   "schedule.start_required",
   "schedule.invalid_duration",
   "schedule.invalid_crew",
