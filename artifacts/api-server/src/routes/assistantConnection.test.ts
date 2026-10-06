@@ -494,4 +494,28 @@ it.each(['exception', 'ok false'])('preserves successful planned reads when anot
  expect(mocks.audit).toHaveBeenLastCalledWith(expect.objectContaining({toolName:'list_work_hub_tasks',resultStatus:'failure'}));
  expect(grants[0].actions??[]).toHaveLength(0);
 });
+it('prepares a version-bound plan pause without executing or fabricating completion',async()=>{
+ const {createCoordinatedPlan,encodePlanDescription}=await import('../assistant/coordinated-plan');
+ const taskId='11111111-1111-4111-8111-111111111111';
+ const plan=createCoordinatedPlan({userId:17,organizationKey:'vendor:4'},[{id:'brief',specialist:'V',toolNames:['get_work_hub_briefing'],dependsOn:[]}]);
+ const row={id:taskId,ownerOrgType:'vendor',ownerOrgId:4,version:3,status:'in_progress',description:encodePlanDescription(plan)};
+ const credentials=await tokens('work_hub:read work_hub:write');
+ const input={taskId,expectedTaskVersion:3,stepId:'brief',state:'waiting',detail:'Waiting for the user to return'};
+ const call=(args:unknown,token=credentials.access_token)=>request(app).post(base+'/mcp').set('Authorization','Bearer '+token).send({jsonrpc:'2.0',id:1,method:'tools/call',params:{name:'v_prepare_work_plan_control',arguments:args}});
+ mocks.run.mockResolvedValue(JSON.stringify([row]));
+ const response=await call(input);
+ expect(response.body.result.isError).toBe(false);
+ expect(JSON.parse(response.body.result.content[0].text)).toMatchObject({requiresConfirmation:true,status:'pending',toolName:'manage_work_hub_task'});
+ const saved=grants[0].actions![0];
+ expect(saved.arguments).toMatchObject({taskId,expectedVersion:3,action:'update',payload:{status:'in_progress'}});
+ expect(JSON.parse((saved.arguments.payload as {description:string}).description).steps[0]).toMatchObject({state:'waiting',resultReferences:[]});
+ expect(mocks.run).toHaveBeenCalledTimes(1);
+ const retry=await call(input);expect(JSON.parse(retry.body.result.content[0].text).reference).toBe(saved.reference);
+ expect((await call({...input,state:'completed',resultReferences:['fabricated']})).body.result.isError).toBe(true);
+ expect((await call({...input,expectedTaskVersion:2})).body.result.isError).toBe(true);
+ const limited=await tokens('work_hub:read');mocks.run.mockClear();
+ expect((await call(input,limited.access_token)).body.result.isError).toBe(true);
+ expect(mocks.run).not.toHaveBeenCalled();
+ expect(grants[0].actions).toHaveLength(1);
+});
 

@@ -64,3 +64,7 @@ Tracker providers must use an extensible adapter with explicit account authoriza
 
 Acceptance: synthetic exact match across two isolated companies creates one private recovery case on retry, never transfers ownership, never leaks the owner's identity to an unverified registrant, refuses unauthorized location access, and handles a withdrawn report and a verified sale without a permanent theft flag. This requirement does not claim a deployed registry, tracker connection or recovery workflow.
 
+### Coordinated plan controls candidate
+
+`v_prepare_work_plan_control` prepares one step's waiting, pending (retry), or cancelled state through canonical Work Hub task updates and the existing authorization panel. It requires both task reads and writes, the linked plan user/company, and the exact fetched task version. It preserves the task's current status and refuses terminal steps/tasks. Retry checks currently permitted tools. It cannot manufacture completed checkpoints, run external work, cancel already-running provider actions, or start unattended monitoring. Canonical update readback and full deployment verification remain required.
+

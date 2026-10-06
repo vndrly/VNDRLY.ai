@@ -1,5 +1,5 @@
 import { z } from "zod/v4";
-import { createCoordinatedPlan, encodePlanDescription, decodePlanDescription, eligiblePlanSteps } from "./coordinated-plan";
+import { createCoordinatedPlan, encodePlanDescription, decodePlanDescription, eligiblePlanSteps, checkpointPlan } from "./coordinated-plan";
 export const RESUME_PLAN_TOOL = {
  name:"v_resume_work_plan",description:"Resume a saved coordinated Work Hub plan for this connected user and company. Returns recorded checkpoints and currently available next steps; does not execute work. Recorded completion is not proof: verify referenced canonical records before reporting success.",
  inputSchema:{type:"object" as const,properties:{taskId:{type:"string",format:"uuid"}},required:["taskId"],additionalProperties:false},
@@ -10,10 +10,27 @@ export function resumedWorkPlan(value:unknown,taskId:string,identity:{userId:num
  const envelope=z.union([z.array(z.unknown()),z.object({tasks:z.array(z.unknown())}),z.object({items:z.array(z.unknown())})]).parse(value);
  const rows=Array.isArray(envelope)?envelope:"tasks" in envelope?envelope.tasks:envelope.items;
  const candidate=rows.find(row=>!!row&&typeof row==="object"&&(row as {id?:string}).id===taskId);
- const task=z.object({id:z.string().uuid(),ownerOrgType:z.enum(["vendor","partner"]),ownerOrgId:z.number().int().positive(),version:z.number().int().positive(),description:z.string()}).parse(candidate);
+ const task=z.object({id:z.string().uuid(),ownerOrgType:z.enum(["vendor","partner"]),ownerOrgId:z.number().int().positive(),version:z.number().int().positive(),description:z.string(),status:z.enum(['open','in_progress','completed','cancelled']).optional()}).parse(candidate);
  if(identity.organizationKey!==`${task.ownerOrgType}:${task.ownerOrgId}`)throw Error("Plan company mismatch");
  const plan=decodePlanDescription(task.description,identity);
- return {taskId:task.id,taskVersion:task.version,plan,eligibleStepIds:eligiblePlanSteps(plan,identity,availableTools).map(step=>step.id),executionStarted:false,recordedCompletionRequiresReadback:true};
+ return {taskId:task.id,taskVersion:task.version,taskStatus:task.status,plan,eligibleStepIds:eligiblePlanSteps(plan,identity,availableTools).map(step=>step.id),executionStarted:false,recordedCompletionRequiresReadback:true};
+}
+export const CONTROL_PLAN_TOOL = {
+ name:'v_prepare_work_plan_control',description:'Prepare pausing, retrying or cancelling one saved plan step through the existing Work Hub authorization panel. Supply the last fetched task version. Does not mark work completed, execute a step or cancel an already-running external action. Retry rechecks current tools; completed and cancelled steps cannot be restarted.',
+ inputSchema:{type:'object' as const,properties:{taskId:{type:'string',format:'uuid'},expectedTaskVersion:{type:'integer',minimum:1},stepId:{type:'string'},state:{type:'string',enum:['pending','waiting','cancelled']},detail:{type:'string',maxLength:2000}},required:['taskId','expectedTaskVersion','stepId','state'],additionalProperties:false},
+ annotations:{readOnlyHint:false,destructiveHint:false,openWorldHint:false},
+};
+export function prepareWorkPlanControl(value:unknown,input:unknown,identity:{userId:number;organizationKey:string},owner:{type:'vendor'|'partner';id:number},availableTools:ReadonlySet<string>){
+ const request=z.object({taskId:z.string().uuid(),expectedTaskVersion:z.number().int().positive(),stepId:z.string().min(1).max(100),state:z.enum(['pending','waiting','cancelled']),detail:z.string().max(2000).optional()}).strict().parse(input);
+ if(identity.organizationKey!==owner.type+':'+owner.id)throw Error('Plan company mismatch');
+ const resumed=resumedWorkPlan(value,request.taskId,identity,availableTools);
+ if(resumed.taskVersion!==request.expectedTaskVersion)throw Error('Task version changed');
+ if(!resumed.taskStatus||['completed','cancelled'].includes(resumed.taskStatus))throw Error('Plan task is terminal or status unavailable');
+ const step=resumed.plan.steps.find(step=>step.id===request.stepId);
+ if(!step)throw Error('Unknown plan step');
+ if(request.state==='pending'&&step.toolNames.some(name=>!availableTools.has(name)))throw Error('Plan requires unavailable tool');
+ const plan=checkpointPlan(resumed.plan,identity,resumed.plan.version,request.stepId,{state:request.state,resultReferences:[],detail:request.detail});
+ return {owner,context:{kind:'organization',id:owner.id},taskId:request.taskId,expectedVersion:request.expectedTaskVersion,action:'update',payload:{status:resumed.taskStatus,description:encodePlanDescription(plan)}};
 }
 
 export const PREPARE_PLAN_TOOL = {

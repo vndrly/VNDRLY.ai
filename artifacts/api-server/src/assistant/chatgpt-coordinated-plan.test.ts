@@ -1,6 +1,21 @@
 import {expect,it} from "vitest";
 import {createCoordinatedPlan,encodePlanDescription} from "./coordinated-plan";
 import {resumedWorkPlan} from "./chatgpt-coordinated-plan";
+it('prepares safe pause, retry and cancellation with task concurrency protection',async()=>{
+ const {prepareWorkPlanControl}=await import('./chatgpt-coordinated-plan');
+ const identity={userId:17,organizationKey:'vendor:4'},owner={type:'vendor' as const,id:4};
+ const plan=createCoordinatedPlan(identity,[{id:'review',specialist:'Finn',toolNames:['query_tickets'],dependsOn:[]}]);
+ const task={id:'11111111-1111-4111-8111-111111111111',ownerOrgType:'vendor',ownerOrgId:4,version:3,status:'in_progress',description:encodePlanDescription(plan)};
+ const input={taskId:task.id,expectedTaskVersion:3,stepId:'review',state:'waiting',detail:'Awaiting billing information'};
+ const paused=prepareWorkPlanControl([task],input,identity,owner,new Set());
+ expect(paused).toMatchObject({taskId:task.id,expectedVersion:3,action:'update',payload:{status:'in_progress'}});
+ expect(JSON.parse(paused.payload.description).steps[0]).toMatchObject({state:'waiting',resultReferences:[],detail:input.detail});
+ expect(()=>prepareWorkPlanControl([task],{...input,state:'completed',resultReferences:['invented']},identity,owner,new Set())).toThrow();
+ expect(()=>prepareWorkPlanControl([task],{...input,expectedTaskVersion:2},identity,owner,new Set())).toThrow('version');
+ expect(()=>prepareWorkPlanControl([task],{...input,state:'pending'},identity,owner,new Set())).toThrow('unavailable');
+ expect(()=>prepareWorkPlanControl([{...task,status:'completed'}],input,identity,owner,new Set())).toThrow('terminal');
+ expect(()=>prepareWorkPlanControl([task],input,{...identity,userId:18},owner,new Set())).toThrow('identity');
+});
 it("resumes only the actor's company plan and rechecks revoked tools",()=>{
  const identity={userId:17,organizationKey:"vendor:4"};const plan=createCoordinatedPlan(identity,[{id:"review",specialist:"Finn",toolNames:["query_tickets"],dependsOn:[]}]);const task={id:"11111111-1111-4111-8111-111111111111",ownerOrgType:"vendor",ownerOrgId:4,version:1,description:encodePlanDescription(plan)};
  expect(resumedWorkPlan([task],task.id,identity,new Set()).eligibleStepIds).toEqual([]);
