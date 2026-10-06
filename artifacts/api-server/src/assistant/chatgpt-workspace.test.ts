@@ -161,3 +161,13 @@ describe("VNDRLY workspace presentation", () => {
   });
 });
 
+
+it("shows continuous custody age without guessing unknown checkout dates", () => {
+  const result = workspaceOutput("inventory", "query_asset_custody", {}, { assets: [
+    { name: "Old kit", holderUserId: 7, custodyDays: 91, status: "checked_out" },
+    { name: "Unknown kit", holderUserId: 8, custodyDays: null, status: "checked_out" },
+  ] }, now);
+  expect(result.sections[0].rows[0]).toMatchObject({ attention: "Checked out longer than 90 days" });
+  expect(result.sections[0].rows[0].detail).toContain("91 days");
+  expect(result.sections[0].rows[1].detail).toContain("Checkout date unknown");
+});

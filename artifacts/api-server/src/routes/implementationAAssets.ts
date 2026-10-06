@@ -1,3 +1,4 @@
+import { custodyAge } from "../services/asset-custody-age";
 import { Router, type Request, type Response } from "express";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod/v4";
@@ -252,6 +253,7 @@ router.get("/implementation-a/assets", async (req, res) => {
         id: asset.id, name: asset.name, category: asset.category, status: asset.status,
         condition: asset.condition ?? null, version: asset.version,
         holderUserId: asset.holderUserId,
+        ...custodyAge(asset),
         currentHolderDisplayName: asset.holderUserId === null ? null : `User ${asset.holderUserId}`,
         currentLocation: asset.currentLocationType === "user" ? null : asset.currentLocation ?? null,
         hold: asset.hold ?? null, expectedReturnAt: asset.expectedReturnAt ?? null,

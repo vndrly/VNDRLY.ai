@@ -35,6 +35,8 @@ export type AssetCapabilities = {
 export type AssetSummary = Pick<AssetRecord, "id" | "name" | "category" | "status" | "version" | "holderUserId"> & {
   /** Safe explicit fallback avoids disclosing private user profile fields. */
   currentHolderDisplayName: string | null;
+  checkedOutAt?: Date | null;
+  custodyDays?: number | null;
   condition: AssetCondition | null;
   currentLocation: string | null;
   hold: string | null;
