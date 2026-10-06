@@ -182,3 +182,15 @@ describe("asset inventory and custody routes", () => {
     expect(altered.body).toMatchObject({ status: "conflict", code: "asset.operation_reused" });
   });
 });
+
+it("filters long-held custody while reporting unknown dates separately", async () => {
+  const old = await state.repository!.create({ name: "Old radio", category: "equipment", legalOwner: "Vendor", responsibleOwner: owner, aliases: [], provisional: false });
+  const unknown = await state.repository!.create({ name: "Undated radio", category: "equipment", legalOwner: "Vendor", responsibleOwner: owner, aliases: [], provisional: false });
+  await state.repository!.save({ ...old, status: "checked_out", holderUserId: 11, history: [{ id: crypto.randomUUID(), type: "checkout", toHolderUserId: 11, fromHolderUserId: null, occurredAt: new Date(Date.now() - 91 * 86400000) }] }, old.version);
+  await state.repository!.save({ ...unknown, status: "checked_out", holderUserId: 11 }, unknown.version);
+  const result = await request(app).get("/implementation-a/assets?checkedOutLongerThanDays=90").set("Cookie", admin);
+  expect(result.status).toBe(200);
+  expect(result.body.assets.map((row: { id: string }) => row.id)).toEqual([old.id]);
+  expect(result.body.unknownCustodyDates.map((row: { id: string }) => row.id)).toEqual([unknown.id]);
+  expect((await request(app).get("/implementation-a/assets?checkedOutLongerThanDays=-1").set("Cookie", admin)).status).toBe(400);
+});

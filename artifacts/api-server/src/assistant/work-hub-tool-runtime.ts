@@ -193,6 +193,10 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
         if (!["vin", "plate", "serial", "asset_tag", "model", "other"].includes(String(alias.kind)) || typeof alias.value !== "string" || !alias.value.trim()) return { error: "Supply an exact valid asset identifier." };
         return request("GET", queryPath("/implementation-a/assets/find", { kind: alias.kind, value: alias.value, jurisdiction: alias.jurisdiction }));
       }
+      if (input.checkedOutLongerThanDays !== undefined) {
+        if (!Number.isSafeInteger(input.checkedOutLongerThanDays) || Number(input.checkedOutLongerThanDays) < 1 || Number(input.checkedOutLongerThanDays) > 36500) return { error: "Supply a custody age of 1 to 36500 days." };
+        return request("GET", queryPath("/implementation-a/assets", { checkedOutLongerThanDays: input.checkedOutLongerThanDays }));
+      }
       return request("GET", "/implementation-a/assets");
     }
     if (!actions.includes(action)) return unsupported("asset custody");

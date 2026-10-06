@@ -244,6 +244,8 @@ router.get("/implementation-a/assets", async (req, res) => {
     if (!context.owner)
       throw new AssetServiceError("asset.owner_required", 403);
     await assertCurrentAssetAccess(context, context.owner);
+    const days = req.query.checkedOutLongerThanDays === undefined ? undefined : z.coerce.number().int().min(1).max(36500).parse(req.query.checkedOutLongerThanDays);
+    const evaluatedAt = new Date();
     const records = await databaseAssetRepository.all(context.owner);
     const assets: AssetSummary[] = await Promise.all(records.map(async (asset) => {
       const currentPolicy = await policy(asset.responsibleOwner, asset.category);
@@ -253,7 +255,7 @@ router.get("/implementation-a/assets", async (req, res) => {
         id: asset.id, name: asset.name, category: asset.category, status: asset.status,
         condition: asset.condition ?? null, version: asset.version,
         holderUserId: asset.holderUserId,
-        ...custodyAge(asset),
+        ...custodyAge(asset, evaluatedAt),
         currentHolderDisplayName: asset.holderUserId === null ? null : `User ${asset.holderUserId}`,
         currentLocation: asset.currentLocationType === "user" ? null : asset.currentLocation ?? null,
         hold: asset.hold ?? null, expectedReturnAt: asset.expectedReturnAt ?? null,
@@ -276,6 +278,10 @@ router.get("/implementation-a/assets", async (req, res) => {
         canCheckOutAsset: context.canCheckOutAsset,
         canVerifyIssuedAsset: context.canVerifyIssuedAsset,
     };
+    if (days !== undefined) {
+      const cutoff = evaluatedAt.getTime() - days * 86_400_000;
+      return res.json({ assets: assets.filter(asset => asset.holderUserId !== null && asset.checkedOutAt != null && asset.checkedOutAt.getTime() < cutoff), unknownCustodyDates: assets.filter(asset => asset.holderUserId !== null && asset.checkedOutAt == null), capabilities, checkedOutLongerThanDays: days, evaluatedAt });
+    }
     return res.json({ assets, capabilities });
   } catch (error) {
     return sendError(res, error);

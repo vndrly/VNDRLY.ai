@@ -6,6 +6,7 @@ export const ASSET_CAPABILITY_TOOLS = capabilityTools("asset_custody", "asset lo
   input_schema: {
     type: "object" as const,
     properties: {
+      checkedOutLongerThanDays: { type: "integer", minimum: 1, maximum: 36500, description: "List current custody older than this many days; report unknownCustodyDates separately. Applies only to list reads, not exact asset or alias lookup." },
       assetId: { type: "string" },
       alias: { ...alias, description: "Read an exact authorized asset by plate, VIN, serial number or asset tag. Supply jurisdiction for plates when known; never guess an identifier." },
       action: { type: "string", enum: ["create", "provisional", "aliases", "checkout", "return", "transfer", "condition", "hold", "merge", "verify-issued"] },

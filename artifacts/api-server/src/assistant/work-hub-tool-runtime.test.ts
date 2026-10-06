@@ -565,3 +565,8 @@ describe("initial safety report canonical request", () => {
     expect(resolveExecutableWorkHubToolRequest("confirm_incident_response_action", input, true)).toMatchObject({ method: "POST", path: "/safety/events" });
   });
 });
+
+it("requests a bounded long-held equipment report through the authorized asset list", () => {
+  expect(resolveExecutableWorkHubToolRequest("query_asset_custody", { checkedOutLongerThanDays: 90 }, false)).toMatchObject({ method: "GET", path: "/implementation-a/assets?checkedOutLongerThanDays=90" });
+  expect(resolveExecutableWorkHubToolRequest("query_asset_custody", { checkedOutLongerThanDays: -1 }, false)).toHaveProperty("error");
+});
