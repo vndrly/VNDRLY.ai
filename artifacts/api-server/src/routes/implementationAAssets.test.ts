@@ -64,7 +64,8 @@ describe("asset inventory and custody routes", () => {
       version = 3;
     }
     const list = await request(app).get("/implementation-a/assets").set("Cookie", gatekeeper);
-    expect(list.body.assets[0]).toEqual({ ...canonicalSummary, id: asset.id, version });
+    const savedCheckout = (await state.repository!.get(asset.id))!.history.find(event => event.type === "checkout")!;
+    expect(list.body.assets[0]).toEqual({ ...canonicalSummary, id: asset.id, version, checkedOutAt: savedCheckout.occurredAt.toISOString(), custodyDays: 0 });
     const input = command(version);
     const verified = await request(app).post(`/implementation-a/assets/${asset.id}/verify-issued`).set("Cookie", gatekeeper).send(input);
     expect(verified.body.status).toBe("applied");
