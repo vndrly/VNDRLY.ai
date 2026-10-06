@@ -383,7 +383,7 @@ export function resolveWorkHubToolRequest(
             parentMessageId: input.replyToId,
             rootMessageId: input.replyToId,
             mentionUserIds: payload.mentionUserIds ?? [],
-            kind: payload.kind ?? "message",
+            kind: payload.kind ?? "text",
           }))
         : target;
     case "manage_work_hub_message": {

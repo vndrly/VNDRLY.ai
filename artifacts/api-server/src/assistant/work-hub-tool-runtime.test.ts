@@ -17,6 +17,13 @@ const command = {
 };
 
 describe("resolveWorkHubToolRequest", () => {
+  it("uses the canonical text message kind for an ordinary spoken message", () => {
+    const channelId = "00000000-0000-4000-8000-000000000002";
+    const input = { ...command, channelId, body: "SYNTHETIC DEMO: I am running late" };
+    expect(resolveExecutableWorkHubToolRequest("send_work_hub_message", input, false)).toMatchObject({ requiresConfirmation: true });
+    const resolved = resolveExecutableWorkHubToolRequest("send_work_hub_message", input, true);
+    expect(resolved).toMatchObject({ method: "POST", path: `/work-hub/channels/${channelId}/messages`, body: { payload: { body: input.body, kind: "text", mentionUserIds: [] } } });
+  });
   it("reads registered displays without accepting model-supplied screen control", () => {
     for (const name of ["query_operations_displays", "prepare_operations_displays_action"])
       expect(resolveExecutableWorkHubToolRequest(name, { owner: { type: "vendor", id: 999 }, action: "route", payload: {} }, false))
