@@ -27,19 +27,30 @@ type Queryable = Pick<PoolClient, "query">;
 export async function changeOverTransaction<T>(
   work: (client: PoolClient) => Promise<T>,
 ): Promise<T> {
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
-    await client.query("SET LOCAL lock_timeout = '5s'");
-    await client.query("SET LOCAL statement_timeout = '15s'");
-    const result = await work(client);
-    await client.query("COMMIT");
-    return result;
-  } catch (error) {
-    await client.query("ROLLBACK");
-    throw error;
-  } finally {
-    client.release();
+  for (let attempt = 0; ; attempt++) {
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      await client.query("SET LOCAL lock_timeout = '5s'");
+      await client.query("SET LOCAL statement_timeout = '15s'");
+      const result = await work(client);
+      await client.query("COMMIT");
+      return result;
+    } catch (error) {
+      await client.query("ROLLBACK");
+      // PostgreSQL aborts a deadlock victim's entire transaction. Re-evaluate
+      // authorization and the handoff revision after rollback; retain every
+      // lock. Provider work stays outside this callback. Never replay an
+      // uncertain commit, failed rollback, or a non-deadlock application error.
+      if (
+        attempt >= 2 ||
+        !error || typeof error !== "object" ||
+        !("code" in error) || error.code !== "40P01"
+      ) throw error;
+    } finally {
+      client.release();
+    }
+    await new Promise((resolve) => setTimeout(resolve, 25 * (attempt + 1)));
   }
 }
 
