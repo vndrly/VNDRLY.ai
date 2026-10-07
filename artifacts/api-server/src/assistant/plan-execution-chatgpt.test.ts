@@ -49,3 +49,11 @@ it("returns only bound metadata when original execution authority has expired", 
   expect(output).toMatchObject({ state: "completed", savedResultsAvailable: false });
   expect(output).not.toHaveProperty("brief"); expect(output).not.toHaveProperty("steps");
 });
+it('describes only implemented exact approved effects and current authority boundaries within the public description budget', () => {
+ const description=PLAN_EXECUTION_PREPARE_TOOL.description;
+ for(const phrase of ['invoice drafts','calendar reschedule','away responder','whole-plan approval','current permissions','Never starts execution','No payment transfer'])expect(description).toContain(phrase);
+ expect(description).not.toContain('No outgoing message, calendar change');
+ expect(description).toContain('awaiting_payment');
+ expect(description).toContain('bounded sinceDays/limit');
+ expect(description.length).toBeLessThanOrEqual(1024);
+});
