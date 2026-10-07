@@ -20,6 +20,7 @@ export function chatGptReadToolAnnotations(name: string) {
   return { readOnlyHint: true, destructiveHint: false, openWorldHint: EXTERNAL_READ_TOOLS.has(name) };
 }
 export function chatGptReadToolDescription(tool: AskVToolDefinition): string {
+  if (tool.name === "prepare_visitor_check_in") return `${tool.description} In ChatGPT, prepare exact visitor fields only (firstName, lastName, company, vehiclePlate, plateState, siteLocationId and selected hostType/host ID). Device GPS is not a model input. Once visitor fields are complete, use an exposed confirm_visitor_check_in tool with the exact draft to prepare its account-bound authorization link; the approval device supplies location and the user approves. This read does not create a link, submit a record, or grant site access. No VNDRLY form is populated.`;
   if (tool.name === 'draft_safety_report') return `${tool.description} Returns dictated draft fields only. No safety record is saved, submitted, or populated in a form. Site and ticket references still require canonical authorization before submission.`;
   if (/^prepare_(account_invitations|workforce_coverage|incident_response|field_trips|asset_custody|worker_subscriptions|operations_displays)_action$/.test(tool.name)) return `${tool.description} This reads authorized context only. No bound action, approval, or record change is created. Use an exposed write tool to prepare an authenticated approval.`;
   return GATE_DRAFT_TOOLS.has(tool.name)
@@ -28,7 +29,7 @@ export function chatGptReadToolDescription(tool: AskVToolDefinition): string {
 }
 export function chatGptReadToolOutput(name: string, output: unknown): unknown {
   if (name === 'draft_safety_report' && output && typeof output === 'object' && !Array.isArray(output)) {
-    const { intent: _intent, execution: _execution, ...draft } = output as Record<string, unknown>;
+  const { intent: _intent, execution: _execution, ...draft } = output as Record<string, unknown>;
     return { ...draft, execution: 'draft_only', submitted: false, formPopulated: false, siteAccessVerified: false,
       message: 'Dictated draft only. No safety record was saved or submitted, no form was populated, and site/ticket access was not verified by this draft helper.' };
   }
@@ -40,6 +41,16 @@ export function chatGptReadToolOutput(name: string, output: unknown): unknown {
     return { progress: Object.fromEntries(["orgType", "currentStep", "completedSteps", "skippedSteps", "completedAt"].filter(key => key in source).map(key => [key, source[key]])) };
   }
   if (!GATE_DRAFT_TOOLS.has(name) || !output || typeof output !== "object" || Array.isArray(output)) return output;
+  if (name === "prepare_visitor_check_in") {
+    const record = output as Record<string, unknown>;
+    const rawDraft = record.draft;
+    const visitorDraft = rawDraft && typeof rawDraft === "object" && !Array.isArray(rawDraft) ? Object.fromEntries(Object.entries(rawDraft).filter(([key]) => ["firstName", "lastName", "company", "vehiclePlate", "plateState", "purpose", "notes", "expectedDurationMinutes", "siteLocationId", "hostType", "hostPartnerId", "hostVendorId", "phone", "email", "platePhotoUrl", "vehiclePhotoUrl"].includes(key))) : {};
+    const missing = Array.isArray(record.missing) ? record.missing.filter(field => typeof field === "string" && !["latitude", "longitude"].includes(field)) : ["visitor_fields"];
+    return { ok: missing.length === 0, draft: visitorDraft, missing, deviceRequiredFields: ["latitude", "longitude"], visitorDraftComplete: missing.length === 0, execution: "draft_only", submitted: false, formPopulated: false, siteAccessVerified: false,
+      ...(missing.length === 0 ? { continuation: { toolName: "confirm_visitor_check_in", arguments: visitorDraft, requiredScope: "gate:write", preparationRequired: true, deviceLocationRequired: true } } : {}),
+      message: missing.length ? "Visitor draft only. Complete the listed visitor fields. Location must come from the authenticated approval device; never invent coordinates. No Gate record was submitted." : "Visitor fields are ready for action preparation. If the connected account has Gate write consent, call confirm_visitor_check_in with this exact draft to obtain its account-bound device authorization link. The device must supply its actual location and the user must approve; current Gate site and host permissions are rechecked. No approval link or Gate record has been created by this draft." };
+  }
+
   const { intent: _intent, execution: _execution, ...draft } = output as Record<string, unknown>;
   return { ...draft, execution: "draft_only", submitted: false, formPopulated: false,
     message: "Draft fields and candidates only. No VNDRLY form was populated and no gate record was submitted. Submit through the authenticated VNDRLY approval flow." };
@@ -58,6 +69,7 @@ export function chatGptActionTools(session: SessionPayload, scopes: readonly str
     && (tool.roles.includes(session.role as "admin" | "partner" | "vendor" | "field_employee") || tool.roles.includes("any"))
     && (!tool.companyAdminOnly || session.membershipRole === "admin") && tool.mutating);
   return [...new Map([...gate, ...hub, ...additional].filter((tool) => tool.execution !== "client").map((tool) => [tool.name, tool])).values()].map(tool => {
+    if (tool.name === "confirm_asset_custody_action" && session.role !== "admin") { const schema = tool.inputSchema as { properties: Record<string, unknown> }; const action = schema.properties.action as { enum: string[] }; return { ...tool, inputSchema: { ...tool.inputSchema, properties: { ...schema.properties, action: { type: "string", enum: action.enum.filter(value => value !== "resolve_identifier_claim") } } } }; }
     if (tool.name !== "manage_ticket_record") return tool;
     const schema = tool.inputSchema as { properties: Record<string, unknown> };
     return { ...tool, inputSchema: { ...tool.inputSchema, properties: { ...schema.properties, action: { type: "string", enum: ticketRecordActionsForRole(session.role ?? "") } } } };

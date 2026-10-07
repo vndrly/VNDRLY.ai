@@ -821,3 +821,99 @@ it('returns safety draft fields through the scoped read boundary without a clien
  expect((await call(limited.access_token)).body.result.isError).toBe(true);
  expect(mocks.run).not.toHaveBeenCalled();
 });
+
+it("Gate checkpoint retrieves own durable receipt and exact scoped visit, then rechecks before approval", async () => {
+  const { createCoordinatedPlan, encodePlanDescription } =
+    await import("../assistant/coordinated-plan");
+  const taskId = "11111111-1111-4111-8111-111111111111";
+  const credentials = await tokens(
+    "work_hub:read work_hub:write gate:read gate:write",
+  );
+  const call = (name: string, args: unknown) =>
+    request(app)
+      .post(base + "/mcp")
+      .set("Authorization", "Bearer " + credentials.access_token)
+      .send({
+        jsonrpc: "2.0",
+        id: 1,
+        method: "tools/call",
+        params: { name, arguments: args },
+      });
+  const prepared = (await call("confirm_visitor_check_out", { visitId: 7 }))
+    .body.result;
+  const reference = JSON.parse(prepared.content[0].text).reference;
+  const stored = grants[0].actions![0];
+  stored.state = "completed";
+  stored.executionFingerprint = "canonical-durable-gate-checkout";
+  stored.result = JSON.stringify({
+    ok: true,
+    action: "visitor_checked_out",
+    visitId: 7,
+  });
+  const plan = createCoordinatedPlan(
+    { userId: 17, organizationKey: "vendor:4" },
+    [
+      {
+        id: "exit",
+        specialist: "Gate",
+        toolNames: ["confirm_visitor_check_out"],
+        dependsOn: [],
+        completion: {
+          kind: "canonical_gate_visit_action_saved",
+          action: "check_out",
+          visitId: 7,
+          siteLocationId: 392,
+        },
+      },
+    ],
+  );
+  const row = {
+    id: taskId,
+    subjectType: "task",
+    ownerOrgType: "vendor",
+    ownerOrgId: 4,
+    version: 3,
+    status: "open",
+    description: encodePlanDescription(plan),
+  };
+  const visit = {
+    id: 7,
+    siteLocationId: 392,
+    firstName: "Synthetic",
+    lastName: "Visitor",
+    hostType: "vendor",
+    hostVendorId: 4,
+    hostPartnerId: null,
+    checkInTime: "2030-01-01T11:00:00Z",
+    checkOutTime: "2030-01-01T12:00:00Z",
+    autoCheckedOut: false,
+  };
+  mocks.taskRead.mockImplementation(async (path) =>
+    path === "/visits/7" ? visit : row,
+  );
+  const checkpoint = (
+    await call("v_prepare_work_plan_completion", {
+      taskId,
+      expectedTaskVersion: 3,
+      stepId: "exit",
+      actionReference: reference,
+    })
+  ).body.result;
+  expect(checkpoint.isError).toBe(false);
+  expect(mocks.taskRead).toHaveBeenCalledWith(
+    "/visits/7",
+    "GET",
+    {},
+    expect.objectContaining({ userId: 17 }),
+  );
+  expect(mocks.bound).not.toHaveBeenCalled();
+  mocks.taskRead.mockImplementation(async (path) =>
+    path === "/visits/7" ? { error: "Current site permission revoked" } : row,
+  );
+  expect(
+    (await call("v_submit_panel_action", checkpoint._meta.componentApproval))
+      .body.result.isError,
+  ).toBe(true);
+  expect(mocks.bound).not.toHaveBeenCalled();
+});
+

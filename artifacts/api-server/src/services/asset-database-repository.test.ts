@@ -2,6 +2,7 @@ import { beforeEach, expect, it, vi } from "vitest";
 import { createAssetService, type AssetRecord } from "./assets";
 
 const state = vi.hoisted(() => ({ stagedUpdate: false, committed: false, rolledBack: false, evidenceWrites: 0, eventWrites: 0, eventPayload: null as Record<string, unknown> | null,
+  acceptAlias: false, aliasConflict: null as Record<string, unknown> | null,
   acceptEvents: false, savedFields: {} as Record<string, unknown>, events: [] as Record<string, unknown>[], evidence: [] as Record<string, unknown>[], holds: [] as Record<string, unknown>[],
 }));
 vi.mock("@workspace/db", async (importOriginal) => {
@@ -21,6 +22,7 @@ vi.mock("@workspace/db", async (importOriginal) => {
         update: () => ({ set: (fields: Record<string, unknown>) => ({ where: () => ({ returning: async () => { state.stagedUpdate = true; if (state.acceptEvents) state.savedFields = fields; return [{ id: "asset-2" }]; } }) }) }),
         select: () => ({ from: () => ({ where: async () => state.events.map(event => ({ id: event.id })) }) }),
         insert: (table: unknown) => ({ values: (payload: Record<string, unknown>) => {
+          if (table === original.assetAliasesTable) return { onConflictDoUpdate: (conflict: Record<string, unknown>) => { state.aliasConflict = conflict; return { returning: async () => state.acceptAlias ? [{ id: "alias" }] : [] }; } };
           if (table === original.assetCustodyEventsTable) {
             state.eventWrites++;
             state.eventPayload = payload;
@@ -41,6 +43,18 @@ vi.mock("@workspace/db", async (importOriginal) => {
       }
     },
   } };
+});
+
+it("rolls back a concurrent identifier collision without reassigning its owner", async () => {
+  state.acceptAlias = false;
+  const asset = (await databaseAssetRepository.get("asset-2"))!;
+  asset.aliases = [{ kind: "serial", value: "FOREIGN-SERIAL" }];
+  await expect(databaseAssetRepository.save(asset, asset.version)).rejects.toMatchObject({ code: "asset.identifier_in_use" });
+  expect(state.aliasConflict).toMatchObject({ set: { displayValue: "FOREIGN-SERIAL", active: true } });
+  expect(state.aliasConflict?.setWhere).toBeTruthy();
+  expect((state.aliasConflict?.set as Record<string, unknown>).assetId).toBeUndefined();
+  expect(state.rolledBack).toBe(true);
+  expect(state.committed).toBe(false);
 });
 import { databaseAssetRepository } from "./asset-database-repository";
 
@@ -82,4 +96,3 @@ it("rolls back a CAS update when an operation ID already belongs to another asse
   expect(state.committed).toBe(false);
   expect(state.evidenceWrites).toBe(0);
 });
-

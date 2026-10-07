@@ -394,6 +394,18 @@ router.get("/work-hub/channels/:channelId/messages", async (req, res) => {
   } catch (error) { return fail(res, error); }
 });
 
+router.get("/work-hub/channels/:channelId/messages/:messageId", async (req,res) => {
+  const actor=session(req);
+  if(!actor)return sendApiError(res,401,"auth.unauthenticated","Authentication required");
+  try{
+    const channelId=z.string().uuid().parse(req.params.channelId),messageId=z.string().uuid().parse(req.params.messageId);
+    const {channel}=await resolveChannelAccess(actor,channelId,"channel.read");
+    const [message]=await db.select().from(workHubMessagesTable).where(and(eq(workHubMessagesTable.id,messageId),eq(workHubMessagesTable.channelId,channel.id))).limit(1);
+    if(!message)throw new WorkHubAccessError("not_found");
+    return res.json({source:"vndrly",authority:"work_hub_message",channel:{id:channel.id,ownerOrgType:channel.ownerOrgType,ownerOrgId:channel.ownerOrgId},message:{...message,body:message.deletedAt?"":message.body}});
+  }catch(error){return fail(res,error);}
+});
+
 router.post("/work-hub/channels/:channelId/messages", async (req, res) => {
   const actor = session(req);
   if (!actor)

@@ -226,7 +226,8 @@ export function createAssetService(repository: AssetRepository) {
       if (input.survivingAssetId === input.mergedAssetId) throw new AssetServiceError("asset.invalid_merge");
       const surviving = await getCurrent(input.survivingAssetId);
       const merged = await getCurrent(input.mergedAssetId);
-      for (const alias of merged.aliases) if (!surviving.aliases.some((item) => aliasKey(item) === aliasKey(alias))) surviving.aliases.push(alias);
+      if (surviving.responsibleOwner.type !== merged.responsibleOwner.type || surviving.responsibleOwner.id !== merged.responsibleOwner.id) throw new AssetServiceError("asset.cross_owner_merge_forbidden", 403);
+      if (!repository.recordMerge) for (const alias of merged.aliases) if (!surviving.aliases.some((item) => aliasKey(item) === aliasKey(alias))) surviving.aliases.push(alias);
       if (!repository.recordMerge) surviving.history.push(...merged.history);
       surviving.history.push({ id: randomUUID(), type: "merge", note: input.reason, occurredAt: new Date() });
       const saved = await repository.save(surviving, surviving.version);

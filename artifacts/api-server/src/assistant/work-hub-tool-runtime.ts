@@ -274,7 +274,7 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
   if (name.includes("operations_displays")) return unsupported("operations display; use the authenticated companion");
   if (name.includes("asset_custody")) {
     const assetPayload = { ...withoutNulls(payload), ...(Array.isArray(payload.aliases) ? { aliases: payload.aliases.map(value => withoutNulls(record(value))) } : {}), ...(payload.alias ? { alias: withoutNulls(record(payload.alias)) } : {}) };
-    const actions = ["create", "provisional", "aliases", "checkout", "return", "transfer", "condition", "hold", "release_hold", "merge", "verify-issued"];
+    const actions = ["create", "provisional", "aliases", "checkout", "return", "transfer", "condition", "hold", "release_hold", "merge", "verify-issued", "loss_report", "identifier_claim", "resolve_identifier_claim"];
     if (name === "query_asset_custody") {
       if (resourceId) return request("GET", `/implementation-a/assets/${resourceId}`);
       if (input.alias !== undefined) {
@@ -309,9 +309,14 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
       if (!holdId || !z.uuid().safeParse(payload.holdId).success || !z.uuid().safeParse(input.operationId).success || typeof payload.reason !== "string" || !payload.reason.trim() || payload.reason.trim().length > 2000) return { error: "Supply an exact Inventory hold ID and release reason." };
       return request("POST", `/implementation-a/assets/${resourceId}/holds/${holdId}/release`, { operationId: input.operationId, expectedVersion: input.expectedVersion, reason: payload.reason.trim() });
     }
+    if (action === "loss_report") return request("POST", `/implementation-a/assets/${resourceId}/loss-report`, { operationId: input.operationId, expectedVersion: input.expectedVersion, condition: payload.condition, reason: payload.reason, confirmed: true });
+    if (action === "identifier_claim") return request("POST", `/implementation-a/assets/${resourceId}/identifier-claims`, { operationId: input.operationId, claimId: input.operationId, expectedVersion: input.expectedVersion, alias: payload.alias, reason: payload.reason, confirmed: true });
+    if (action === "resolve_identifier_claim") { const claimId = encoded(payload.claimId); if (!z.uuid().safeParse(payload.claimId).success) return { error: "An exact claim ID is required." }; return request("POST", `/implementation-a/assets/${resourceId}/identifier-claims/${claimId}/resolve`, { operationId: input.operationId, expectedVersion: input.expectedVersion, decision: payload.decision, reason: payload.reason, ...(payload.correctedAlias ? { correctedAlias: payload.correctedAlias } : {}), confirmed: true }); }
     return request("POST", `/implementation-a/assets/${resourceId}/${action}`, { ...assetPayload, operationId: input.operationId, expectedVersion: input.expectedVersion, confirmed: true });
   }
   const readPaths: Record<string, string> = {
+    query_asset_identifier_review_queue: "/implementation-a/asset-identifier-claims",
+    query_asset_identifier_claims: resourceId ? `/implementation-a/assets/${resourceId}/identifier-claims` : "",
     query_ticket_assignment_candidates: queryPath("/implementation-a/workforce/ticket-assignment-candidates", { vendorId: input.vendorId, name: input.name, limit: input.limit }),
     query_account_invitations: "/implementation-a/account-invitations",
     query_workforce_coverage: "/implementation-a/workforce/coverage",
@@ -320,6 +325,7 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
     query_incident_response: resourceId ? `/implementation-a/safety/incidents/${resourceId}` : "/implementation-a/safety/incidents",
     query_worker_subscriptions: "/implementation-a/subscriptions",
   };
+  if (name === "query_asset_identifier_claims" && !resourceId) return { error: "An exact asset ID is required." };
   if (readPaths[name]) return request("GET", readPaths[name]);
   if (name.startsWith("prepare_") && name.endsWith("_action")) {
     const queryName = name.replace(/^prepare_/, "query_").replace(/_action$/, "");
@@ -747,7 +753,7 @@ export function resolveWorkHubToolRequest(
       if (["update", "reschedule", "cancel"].includes(String(input.action)))
         return request("PATCH", `/work-hub/meetings/${target}`, envelope(input, {
           ...payload,
-          ...(input.action === "cancel" ? { status: "cancelled" } : {}),
+          ...(input.action === "cancel" ? { action: "cancel" } : {}),
         }));
       return unsupported("meeting");
     case "moderate_work_hub_meeting": {

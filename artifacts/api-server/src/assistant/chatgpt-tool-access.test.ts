@@ -83,7 +83,7 @@ describe("ChatGPT assistant tool access", () => {
   it("returns draft data without a client execution claim or form instruction", () => {
     const raw = { ok: true, draft: { firstName: "Sam" }, missing: ["latitude"], execution: "client", intent: { name: "prefill_gate_visit" } };
     const projected = chatGptReadToolOutput("prepare_visitor_check_in", raw);
-    expect(projected).toMatchObject({ draft: raw.draft, missing: raw.missing, execution: "draft_only", submitted: false, formPopulated: false });
+    expect(projected).toMatchObject({ draft: raw.draft, missing: [], deviceRequiredFields: ["latitude", "longitude"], execution: "draft_only", submitted: false, formPopulated: false });
     expect(projected).not.toHaveProperty("intent");
     expect(raw).toHaveProperty("intent");
     expect(chatGptReadToolOutput("query_gate_stations", raw)).toBe(raw);
@@ -122,3 +122,54 @@ describe("ChatGPT assistant tool access", () => {
     expect(chatGptReadToolDescription(tool)).toContain('No safety record');
   });
 });
+
+it("separates approval-device GPS from missing visitor fields without minting an action or trusting model coordinates", () => {
+  const draft = {
+    firstName: "Synthetic",
+    lastName: "Visitor",
+    siteLocationId: 392,
+    hostType: "vendor",
+    hostVendorId: 1107,
+    vehiclePlate: "SYNTHETIC",
+    plateState: "OK",
+    latitude: 35,
+    longitude: -97,
+    confirmed: true,
+  };
+  const ready = chatGptReadToolOutput("prepare_visitor_check_in", {
+    ok: false,
+    draft,
+    missing: ["latitude", "longitude"],
+    recovery: { promptField: "latitude" },
+  }) as Record<string, unknown>;
+  expect(ready).toMatchObject({
+    ok: true,
+    visitorDraftComplete: true,
+    missing: [],
+    deviceRequiredFields: ["latitude", "longitude"],
+    submitted: false,
+    formPopulated: false,
+    siteAccessVerified: false,
+    continuation: {
+      toolName: "confirm_visitor_check_in",
+      requiredScope: "gate:write",
+      preparationRequired: true,
+      deviceLocationRequired: true,
+    },
+  });
+  expect(ready.draft).not.toHaveProperty("latitude");
+  expect(ready.draft).not.toHaveProperty("longitude");
+  expect(ready.draft).not.toHaveProperty("confirmed");
+  expect(ready).not.toHaveProperty("recovery");
+  const incomplete = chatGptReadToolOutput("prepare_visitor_check_in", {
+    draft,
+    missing: ["vehiclePlate", "latitude", "longitude"],
+  }) as Record<string, unknown>;
+  expect(incomplete).toMatchObject({
+    ok: false,
+    missing: ["vehiclePlate"],
+    visitorDraftComplete: false,
+  });
+  expect(incomplete).not.toHaveProperty("continuation");
+});
+

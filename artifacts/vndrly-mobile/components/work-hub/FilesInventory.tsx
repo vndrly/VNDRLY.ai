@@ -11,6 +11,7 @@ import { uploadWorkHubFile } from "@/lib/work-hub-file-upload";
 import { nativeUuid } from "@/lib/native-uuid";
 import { captureAndUploadImage } from "@/lib/photos";
 import type { MobileWorkHubCapabilities } from "@/lib/work-hub-mobile";
+import { InventoryRecovery } from "./InventoryRecovery";
 
 type Owner = { type: "vendor" | "partner"; id: number };
 type FileRow = { id: string; data: { name?: string; scope?: string; state?: string; currentFileId?: string | null; contentType?: string; byteSize?: number }; createdBy?: number; updatedAt?: string; capabilities?: { canDownload: boolean; canManage: boolean } };
@@ -271,8 +272,9 @@ function FilesInventoryContent({ owner, capabilities, files, notes, assets, chan
     <View style={card}>
       <Text style={{ color: colors.text, fontSize: 18, fontWeight: "700" }}>{t("filesInventory.inventory")}</Text>
       {!assets.length || selectedAssetId && !assets.some(asset => asset.id === selectedAssetId) ? <Text style={muted}>{t("filesInventory.noInventory")}</Text> : null}
-      {assets.filter(asset => !selectedAssetId || asset.id === selectedAssetId).map(asset => <View key={asset.id} style={{ borderTopWidth: 1, borderColor: colors.border, paddingTop: 10, gap: 4 }}>
+      {assets.filter(asset => !selectedAssetId || asset.id === selectedAssetId).map((asset,index) => <View key={asset.id} style={{ borderTopWidth: 1, borderColor: colors.border, paddingTop: 10, gap: 4 }}>
         <Text style={{ color: colors.text, fontWeight: "700" }}>{asset.name}</Text>
+        <InventoryRecovery assetId={asset.id} owner={owner} canManage={capabilities.canManageAsset} onRefresh={onRefresh} includePlatformQueue={index===0}/>
         <Text style={muted}>{[asset.category, asset.status ? enumLabel("status", asset.status) : null, asset.condition ? enumLabel("condition", asset.condition) : null].filter(Boolean).join(" · ")}</Text>
         <Text style={muted}>{[asset.currentHolderDisplayName ? t("filesInventory.heldBy", { name: asset.currentHolderDisplayName }) : null, asset.currentLocation, asset.hold ? t("filesInventory.hold", { reason: asset.hold }) : null].filter(Boolean).join(" · ")}</Text>
         {[...(asset.holds ?? []), ...(releaseUnknown && releaseAttempt.current?.assetId === asset.id && !asset.holds?.some(hold => hold.id === releaseAttempt.current?.holdId) ? [{ id: releaseAttempt.current.holdId, reason: t("filesInventory.holdReleaseUnknown"), placedAt: "", source: "inventory" as const, canRelease: false }] : [])].map(hold => <View key={hold.id} style={{ gap: 6 }}>

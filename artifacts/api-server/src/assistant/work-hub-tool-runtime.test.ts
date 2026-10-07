@@ -401,6 +401,13 @@ describe("resolveWorkHubToolRequest", () => {
     })).toMatchObject({ body: { accept: true } });
   });
 
+  it("sends the canonical meeting cancellation action rather than an ignored status", () => {
+    const occurrenceId = "7be22c7d-4638-4144-bb18-0d2a66996a43";
+    expect(resolveWorkHubToolRequest("manage_work_hub_meeting", {
+      ...command, action: "cancel", occurrenceId, payload: {},
+    })).toMatchObject({ method: "PATCH", path: `/work-hub/meetings/${occurrenceId}`, body: { payload: { action: "cancel" } } });
+  });
+
   it("preserves task update fields while translating complete and cancel statuses", () => {
     const taskId = "7be22c7d-4638-4144-bb18-0d2a66996a43";
     const description = JSON.stringify({ version: 4, steps: [{ id: "gate_coverage", state: "waiting" }] });

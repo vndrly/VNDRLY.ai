@@ -4,7 +4,7 @@ import cookieParser from "cookie-parser";
 import request from "supertest";
 import { and, eq, sql } from "drizzle-orm";
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { db, usersTable, vendorsTable, partnersTable, userOrgMembershipsTable, workHubChannelsTable, workHubChannelMembersTable, workHubCollaborationChannelsTable, workHubNotesTable, workHubNoteVersionsTable } from "@workspace/db";
+import { db, usersTable, vendorsTable, partnersTable, userOrgMembershipsTable, workHubChannelsTable, workHubChannelMembersTable, workHubCollaborationChannelsTable, workHubNotesTable, workHubNoteVersionsTable, workHubMessagesTable } from "@workspace/db";
 import channels from "./workHubChannels";
 import { buildTestCookie } from "../test-utils/session";
 
@@ -29,6 +29,19 @@ describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")("channel note
     other = buildTestCookie({ userId: otherId, role: "vendor", vendorId: ownerId, membershipRole: "member" });
     supervisor = buildTestCookie({ userId: supervisorId, role: "vendor", vendorId: ownerId, membershipRole: "member", vendorRole: "gate_supervisor" });
     admin = buildTestCookie({ userId: adminId, role: "vendor", vendorId: ownerId, membershipRole: "admin" });
+  });
+
+  it("reads an exact message beyond the list page and refuses a different channel or nonparticipant",async()=>{
+    const privateChannel=(await db.insert(workHubChannelsTable).values({ownerOrgType:'vendor',ownerOrgId:ownerId,contextKind:'organization',contextId:randomUUID(),name:'Private exact message',visibility:'private',createdById:authorId}).returning())[0]!;
+    await db.insert(workHubChannelMembersTable).values({channelId:privateChannel.id,userId:authorId,mode:'owner'});
+    const messages=await db.insert(workHubMessagesTable).values(Array.from({length:105},(_,i)=>({channelId:privateChannel.id,authorUserId:authorId,body:`Recorded ${i}`,kind:'text',clientOperationId:randomUUID(),createdAt:new Date(Date.now()-i*1000)}))).returning();
+    const target=messages.at(-1)!;
+    const exact=await request(app).get(`/work-hub/channels/${privateChannel.id}/messages/${target.id}`).set('Cookie',author);
+    expect(exact.status).toBe(200);expect(exact.body).toMatchObject({source:'vndrly',authority:'work_hub_message',channel:{id:privateChannel.id,ownerOrgId:ownerId},message:{id:target.id,body:target.body}});
+    expect((await request(app).get(`/work-hub/channels/${channelId}/messages/${target.id}`).set('Cookie',author)).status).toBe(404);
+    expect((await request(app).get(`/work-hub/channels/${privateChannel.id}/messages/${target.id}`).set('Cookie',other)).status).toBe(404);
+    await db.update(workHubMessagesTable).set({deletedAt:new Date()}).where(eq(workHubMessagesTable.id,target.id));
+    const deleted=await request(app).get(`/work-hub/channels/${privateChannel.id}/messages/${target.id}`).set('Cookie',author);expect(deleted.body.message.body).toBe('');
   });
 
   it.each([false, true])("paginates six-digit channel timestamps exactly once with managed filtering=%s", async (managed) => {

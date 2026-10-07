@@ -101,6 +101,10 @@ export const databaseAssetRepository: AssetRepository = {
         })));
       }
       return created.id;
+    }).catch((error: unknown) => {
+      const failure = (error as { cause?: { code?: string; constraint?: string }; code?: string; constraint?: string }).cause ?? error as { code?: string; constraint?: string };
+      if (failure.code === "23505" && failure.constraint === "asset_alias_lookup_unique") throw new AssetServiceError("asset.identifier_in_use");
+      throw error;
     });
     const created = await loadAsset(id);
     if (!created) throw new Error("asset.create_failed");
@@ -143,7 +147,7 @@ export const databaseAssetRepository: AssetRepository = {
       if (!updated) return false;
 
       for (const alias of asset.aliases) {
-        await tx.insert(assetAliasesTable).values({
+        const [writtenAlias] = await tx.insert(assetAliasesTable).values({
           assetId: asset.id,
           kind: alias.kind,
           jurisdiction: normalizeJurisdiction(alias.jurisdiction),
@@ -151,8 +155,10 @@ export const databaseAssetRepository: AssetRepository = {
           displayValue: alias.value.trim(),
         }).onConflictDoUpdate({
           target: [assetAliasesTable.kind, assetAliasesTable.jurisdiction, assetAliasesTable.normalizedValue],
-          set: { assetId: asset.id, displayValue: alias.value.trim(), active: true, retiredAt: null },
-        });
+          set: { displayValue: alias.value.trim(), active: true, retiredAt: null },
+          setWhere: eq(assetAliasesTable.assetId, asset.id),
+        }).returning({ id: assetAliasesTable.id });
+        if (!writtenAlias) throw new AssetServiceError("asset.identifier_in_use");
       }
 
       const existing = await tx.select({ id: assetCustodyEventsTable.id })
@@ -207,6 +213,10 @@ export const databaseAssetRepository: AssetRepository = {
 
   async recordMerge(input) {
     await db.transaction(async (tx) => {
+      const [surviving] = await tx.select().from(assetsTable).where(eq(assetsTable.id, input.survivingAssetId)).for("update");
+      const [merged] = await tx.select().from(assetsTable).where(eq(assetsTable.id, input.mergedAssetId)).for("update");
+      if (!surviving || !merged || surviving.responsibleOrgType !== merged.responsibleOrgType || surviving.responsibleOrgId !== merged.responsibleOrgId || merged.status !== "merged" || merged.mergedIntoId !== surviving.id) throw new AssetServiceError("asset.cross_owner_merge_forbidden", 403);
+      await tx.update(assetAliasesTable).set({ assetId: input.survivingAssetId }).where(eq(assetAliasesTable.assetId, input.mergedAssetId));
       await tx.update(assetCustodyEventsTable)
         .set({ assetId: input.survivingAssetId })
         .where(eq(assetCustodyEventsTable.assetId, input.mergedAssetId));
@@ -224,4 +234,3 @@ export const databaseAssetRepository: AssetRepository = {
     });
   },
 };
-

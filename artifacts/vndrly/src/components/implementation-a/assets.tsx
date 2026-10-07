@@ -1,3 +1,4 @@
+import { InventoryRecovery, InventoryIdentifierQueue } from "./asset-recovery";
 import { useAuth } from "@/hooks/use-auth";
 import { InventoryHoldRelease, type InventoryHold } from "./asset-hold-release";
 import { useQuery } from "@tanstack/react-query";
@@ -24,6 +25,8 @@ export function Assets() {
   const { user } = useAuth();
   const identity = JSON.stringify([
     user?.userId,
+    user?.role,
+    user?.vendorRole,
     user?.activeMembershipId,
     user?.vendorId,
     user?.partnerId,
@@ -38,6 +41,9 @@ export function Assets() {
       title="Inventory"
       description="Asset identity, custody, condition, and evidence history."
     >
+      {user?.role === "admin" && (
+        <InventoryIdentifierQueue key={identity} identity={identity} />
+      )}
       {!query.isError && query.data?.assets?.length ? (
         <ul className="grid gap-3">
           {query.data.assets.map((asset) => (
@@ -68,6 +74,16 @@ export function Assets() {
                   onSaved={() => query.refetch()}
                 />
               ) : null}
+              {user?.userId && (
+                <InventoryRecovery
+                  key={identity + asset.id + "recovery"}
+                  assetId={asset.id}
+                  identity={identity}
+                  userId={user.userId}
+                  canManage={query.data.capabilities.canManageAsset}
+                  onSaved={() => query.refetch()}
+                />
+              )}
               {asset.hold ? (
                 <p className="text-sm text-muted-foreground">
                   Hold: {asset.hold}

@@ -1687,7 +1687,8 @@
       "safety_stop_work": "Stop work",
       "safety_event_hipo": "High-potential incident",
       "safety_event_update": "Safety update",
-      "safety_event_closed": "Safety closed"
+      "safety_event_closed": "Safety closed",
+      "asset_identifier_claim": "Inventory identifier review"
     },
     "categories": {
       "all": "All",
@@ -2790,5 +2791,57 @@
     "unavailable": "This plan is unavailable for the current account or company. Refresh after checking your active account.",
     "dependencies": "Prerequisites: {{value}}",
     "readOnlyCheckpoint": "This checkpoint records observed queries only; it does not complete business work."
+  },
+  "inventoryRecovery": {
+    "detail": "Inventory recovery and identifier review",
+    "reason": "Reason",
+    "missing": "Report missing",
+    "stolen": "Report stolen",
+    "claim": "Request identifier review",
+    "alias": "Identifier",
+    "jurisdiction": "Jurisdiction (plates only)",
+    "reviewClaim": "Review exact claim",
+    "review": "Review exact request",
+    "confirm": "Confirm reviewed request",
+    "retry": "Retry exact request",
+    "unknown": "Outcome is unverified. Retry the same request without changing its target or version.",
+    "conflict": "Permission or saved version changed. Refresh before preparing another request.",
+    "refresh": "Refresh current records",
+    "saved": "Canonical record saved.",
+    "lossHint": "This records a user report and places a hold. Recorded custody remains unchanged; physical loss is not verified.",
+    "claimHint": "An identifier collision requires platform mediation. Ownership is not transferred and the other owner is not disclosed.",
+    "last": "Last recorded custody",
+    "tag": "Live tag tracking is not connected. No tag location is available.",
+    "recorded": "Recorded custody does not verify current physical possession.",
+    "unavailable": "Current records are unavailable for this account.",
+    "incoming": "Incoming identifier notices (requester undisclosed)",
+    "own": "Your asset's identifier claims",
+    "queue": "Platform identifier review queue",
+    "partial": "Only the first 100 records are shown.",
+    "required": "Enter the required reason and identifier fields.",
+    "corrected": "Corrected identifier",
+    "statuses": {
+      "pending_review": "Pending platform review",
+      "awaiting_evidence": "Awaiting evidence",
+      "rejected": "Rejected",
+      "resolved_existing_retained": "Existing registration retained",
+      "resolved_requester_corrected": "Requester identifier corrected"
+    },
+    "decisions": {
+      "request_evidence": "Request evidence",
+      "reject": "Reject",
+      "retain_existing": "Retain existing registration",
+      "correct_requester_alias": "Correct requester identifier"
+    },
+    "identifiers": {
+      "serial": "Serial number",
+      "vin": "Vehicle identification number",
+      "plate": "License plate",
+      "asset_tag": "Asset tag identifier",
+      "model": "Model identifier",
+      "other": "Other identifier"
+    },
+    "recordVersion": "Saved record version",
+    "claimReference": "Exact claim reference"
   }
 }

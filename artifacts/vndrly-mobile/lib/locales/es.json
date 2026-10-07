@@ -1687,7 +1687,8 @@
       "safety_stop_work": "Paro de trabajo",
       "safety_event_hipo": "Incidente de alto potencial",
       "safety_event_update": "Actualización de seguridad",
-      "safety_event_closed": "Seguridad cerrada"
+      "safety_event_closed": "Seguridad cerrada",
+      "asset_identifier_claim": "Revisión de identificador de inventario"
     },
     "categories": {
       "all": "Todas",
@@ -2790,5 +2791,57 @@
     "unavailable": "Este plan no está disponible para la cuenta o empresa actual. Verifica tu cuenta activa y actualiza.",
     "dependencies": "Requisitos previos: {{value}}",
     "readOnlyCheckpoint": "Este punto de control registra solo consultas observadas; no completa trabajo operativo."
+  },
+  "inventoryRecovery": {
+    "detail": "Recuperación y revisión de identificadores",
+    "reason": "Motivo",
+    "missing": "Reportar desaparecido",
+    "stolen": "Reportar robado",
+    "claim": "Solicitar revisión del identificador",
+    "alias": "Identificador",
+    "jurisdiction": "Jurisdicción (solo placas)",
+    "reviewClaim": "Revisar reclamación exacta",
+    "review": "Revisar solicitud exacta",
+    "confirm": "Confirmar solicitud revisada",
+    "retry": "Reintentar solicitud exacta",
+    "unknown": "El resultado no está verificado. Reintente la misma solicitud sin cambiar destino ni versión.",
+    "conflict": "Cambió el permiso o la versión guardada. Actualice antes de preparar otra solicitud.",
+    "refresh": "Actualizar registros actuales",
+    "saved": "Registro canónico guardado.",
+    "lossHint": "Se registra un reporte y una retención. La custodia registrada permanece igual; no se verifica la pérdida física.",
+    "claimHint": "Una colisión requiere mediación de la plataforma. No transfiere propiedad ni revela al otro propietario.",
+    "last": "Última custodia registrada",
+    "tag": "El seguimiento de etiquetas no está conectado. No hay ubicación disponible.",
+    "recorded": "La custodia registrada no verifica la posesión física actual.",
+    "unavailable": "Los registros actuales no están disponibles para esta cuenta.",
+    "incoming": "Avisos entrantes (solicitante no revelado)",
+    "own": "Reclamaciones del identificador de su activo",
+    "queue": "Cola de revisión de la plataforma",
+    "partial": "Solo se muestran los primeros 100 registros.",
+    "required": "Ingrese el motivo y los campos de identificador requeridos.",
+    "corrected": "Identificador corregido",
+    "statuses": {
+      "pending_review": "Pendiente de revisión",
+      "awaiting_evidence": "En espera de evidencia",
+      "rejected": "Rechazado",
+      "resolved_existing_retained": "Registro existente conservado",
+      "resolved_requester_corrected": "Identificador del solicitante corregido"
+    },
+    "decisions": {
+      "request_evidence": "Solicitar evidencia",
+      "reject": "Rechazar",
+      "retain_existing": "Conservar registro existente",
+      "correct_requester_alias": "Corregir identificador del solicitante"
+    },
+    "identifiers": {
+      "serial": "Número de serie",
+      "vin": "Identificación del vehículo",
+      "plate": "Matrícula",
+      "asset_tag": "Identificador de etiqueta",
+      "model": "Identificador de modelo",
+      "other": "Otro identificador"
+    },
+    "recordVersion": "Versión del registro guardado",
+    "claimReference": "Referencia de reclamación exacta"
   }
 }

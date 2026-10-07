@@ -1,4 +1,7 @@
 import { createAssetHoldReleaseService, readAssetHolds, authorizeAssetHoldRelease } from "../services/asset-hold-release";
+import { createAssetLossReportService } from "../services/asset-loss-report";
+import { createAssetIdentifierClaimService } from "../services/asset-identifier-claims";
+import { notifyUsers } from "./notifications";
 import { pool } from "@workspace/db";
 import { assetHolderDisplayName } from "../services/asset-holder-name";
 import { custodyAge } from "../services/asset-custody-age";
@@ -180,7 +183,9 @@ async function assetDetails(asset: AssetRecord, req?: Request) {
     if (!names.has(id)) names.set(id, holderName(asset.responsibleOwner, id));
     return names.get(id)!;
   };
-  return { ...asset, holds: req ? await projectedHolds(req, asset) : [], ...custodyAge(asset, new Date()), currentHolderDisplayName: await name(asset.holderUserId),
+  const last = [...asset.history].reverse().find(event => ["checkout", "return", "transfer", "verify-issued"].includes(event.type) && (event.toHolderUserId != null || event.fromHolderUserId != null));
+  const lastHolder = last?.toHolderUserId ?? last?.fromHolderUserId ?? null;
+  return { ...asset, lastCustody: last ? { holderUserId: lastHolder, holderDisplayName: await name(lastHolder), recordedAt: last.occurredAt, eventType: last.type, source: "recorded_custody", physicalPossessionVerified: false } : null, gpsTag: { status: "not_connected", location: null, liveTrackingAvailable: false }, holds: req ? await projectedHolds(req, asset) : [], ...custodyAge(asset, new Date()), currentHolderDisplayName: await name(asset.holderUserId),
     history: await Promise.all(asset.history.map(async event => ({ ...event,
       fromHolderDisplayName: await name(event.fromHolderUserId), toHolderDisplayName: await name(event.toHolderUserId) }))) };
 }
@@ -593,6 +598,39 @@ router.post("/implementation-a/assets/:assetId/condition", async (req, res) => {
   } catch (error) {
     return sendError(res, error);
   }
+});
+
+router.post("/implementation-a/assets/:assetId/loss-report", async (req, res) => {
+  try {
+    const session = getSessionFromRequest(req);
+    if (!session?.userId) throw new AssetServiceError("asset.unauthenticated", 401);
+    return res.json(await createAssetLossReportService(pool).report(session, IdSchema.parse(req.params.assetId), req.body));
+  } catch (error) { return sendError(res, error); }
+});
+
+router.get("/implementation-a/assets/:assetId/identifier-claims", async (req, res) => {
+  try { const session = getSessionFromRequest(req); if (!session?.userId) throw new AssetServiceError("asset.unauthenticated", 401); return res.json(await createAssetIdentifierClaimService(pool).list(session, IdSchema.parse(req.params.assetId))); }
+  catch (error) { return sendError(res, error); }
+});
+router.post("/implementation-a/assets/:assetId/identifier-claims", async (req, res) => {
+  try {
+    const session = getSessionFromRequest(req); if (!session?.userId) throw new AssetServiceError("asset.unauthenticated", 401);
+    const result = await createAssetIdentifierClaimService(pool).submit(session, IdSchema.parse(req.params.assetId), req.body);
+    if (result.notice?.userIds.length) {
+      // A generic owner notice exposes neither the requesting company nor custody.
+      try { await notifyUsers(result.notice.userIds, { type: "asset_identifier_claim", category: "system", title: "Inventory identifier requires review", body: "A registration collision was recorded. An authorized platform mediator must review it; custody and ownership are unchanged.", link: "/work-hub/files", dedupeKey: `asset-claim:${result.notice.operationId}` }); }
+      catch (error) { console.error("Inventory claim notice could not be created", error); }
+    }
+    return res.json(result.claim);
+  } catch (error) { return sendError(res, error); }
+});
+router.post("/implementation-a/assets/:assetId/identifier-claims/:claimId/resolve", async (req, res) => {
+  try { const session = getSessionFromRequest(req); if (!session?.userId) throw new AssetServiceError("asset.unauthenticated", 401); return res.json(await createAssetIdentifierClaimService(pool).resolve(session, IdSchema.parse(req.params.assetId), IdSchema.parse(req.params.claimId), req.body)); }
+  catch (error) { return sendError(res, error); }
+});
+router.get("/implementation-a/asset-identifier-claims", async (req, res) => {
+  try { const session = getSessionFromRequest(req); if (!session?.userId) throw new AssetServiceError("asset.unauthenticated", 401); return res.json(await createAssetIdentifierClaimService(pool).reviewQueue(session)); }
+  catch (error) { return sendError(res, error); }
 });
 
 router.post("/implementation-a/assets/:assetId/hold", async (req, res) => {

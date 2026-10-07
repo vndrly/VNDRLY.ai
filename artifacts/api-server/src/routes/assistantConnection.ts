@@ -1,3 +1,4 @@
+import { savedGateVisitResourceId } from "../assistant/plan-gate-visit-proof";
 import { selectConsentedScopes } from "../assistant/chatgpt-consent-selection";
 import { fleetConsentUpgradeTools, partnerFleetConsentUpgradeTools, supportFleetConsentUpgradeTools, fleetConsentChallenge, fleetToolSecuritySchemes } from "../assistant/chatgpt-fleet-consent";
 import { createFleetService } from "../services/fleet-ops";
@@ -36,6 +37,8 @@ import { verifiedPlanCompletionIds } from "../assistant/plan-completion-proof";
 import { readExactPlanTask } from "../assistant/coordinated-plan-exact-task";
 import { callNaturalVoiceDomainApi } from "../assistant/natural-voice-write-tools";
 import { savedWorkHubTaskResourceId } from "../assistant/plan-work-hub-task-proof";
+import { savedWorkHubMeetingResourceId } from "../assistant/plan-work-hub-meeting-proof";
+import { savedWorkHubMessageTarget } from "../assistant/plan-work-hub-message-proof";
 
 const router = Router();
 const origin = new URL(ASSISTANT_ISSUER).origin;
@@ -630,6 +633,18 @@ async function currentPlanCompletion(session: SessionPayload, scopes: string[], 
       requireChatGptReadableTool(session, scopes, 'list_work_hub_tasks');
       const resourceId = savedWorkHubTaskResourceId(evidence.action);
       evidence.resource = await callNaturalVoiceDomainApi(`/work-hub/search/items/task/${resourceId}`, 'GET', {}, session);
+    } else if (step?.completion?.kind === 'canonical_work_hub_meeting_action_saved') {
+      requireChatGptReadableTool(session, scopes, 'get_work_hub_calendar_item');
+      const resourceId = savedWorkHubMeetingResourceId(evidence.action);
+      evidence.resource = await callNaturalVoiceDomainApi(`/work-hub/calendar/items/meeting/${resourceId}`, 'GET', {}, session);
+    } else if (step?.completion?.kind === 'canonical_gate_visit_action_saved') {
+      requireChatGptReadableTool(session, scopes, 'search_gate_history');
+      const resourceId = savedGateVisitResourceId(evidence.action);
+      evidence.resource = await callNaturalVoiceDomainApi(`/visits/${resourceId}`, 'GET', {}, session);
+    } else if (step?.completion?.kind === 'canonical_work_hub_message_saved') {
+      requireChatGptReadableTool(session,scopes,'list_work_hub_messages');
+      const target=savedWorkHubMessageTarget(evidence.action);
+      evidence.resource=await callNaturalVoiceDomainApi(`/work-hub/channels/${target.channelId}/messages/${target.messageId}`,'GET',{},session);
     } else throw Error('Unsupported plan completion');
   }
   return preparePlanCompletion(tasks, request, { userId: session.userId, organizationKey: owner.type + ':' + owner.id }, owner, available, new Set(reads.map(tool => tool.name)), evidence, SESSION_SECRET, Date.now(), observedAt);
