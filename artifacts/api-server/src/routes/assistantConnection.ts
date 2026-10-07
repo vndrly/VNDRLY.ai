@@ -78,7 +78,7 @@ router.get("/device/files/:handoff", async (req, res) => {
   try {
     const handoff = readEnvelope(req.params.handoff) as unknown as FileDeviceHandoff;
     const session = getSessionFromRequest(req);
-    if (!session) return page(res, '<p>Sign into the same VNDRLY account used by ChatGPT in another tab, then refresh this page.</p><p><a href="/login" target="_blank" rel="noopener">Sign into VNDRLY</a></p>');
+    if (!session) return page(res, '<p>Sign into the same VNDRLY account used by ChatGPT in another tab, then refresh this page.</p><p><a href="/switch-account" target="_blank" rel="noopener">Sign into VNDRLY</a></p>');
     const current = await validateAssistantSession(session);
     requireMatchingFileDevice(handoff, current);
     await withAssistantGrants(current.userId!, async (grants, database) => {
@@ -99,7 +99,7 @@ router.get("/device/meetings/:handoff", async (req, res) => {
   try {
     const handoff = readEnvelope(req.params.handoff) as unknown as MeetingDeviceHandoff;
     const session = getSessionFromRequest(req);
-    if (!session) return page(res, '<p>Sign into the same VNDRLY account used by ChatGPT in another tab, then refresh this page.</p><p><a href="/login" target="_blank" rel="noopener">Sign into VNDRLY</a></p>');
+    if (!session) return page(res, '<p>Sign into the same VNDRLY account used by ChatGPT in another tab, then refresh this page.</p><p><a href="/switch-account" target="_blank" rel="noopener">Sign into VNDRLY</a></p>');
     const current = await validateAssistantSession(session);
     const destination = requireMatchingMeetingDevice(handoff, current);
     await withAssistantGrants(current.userId!, async (grants, database) => {
@@ -112,14 +112,14 @@ router.get("/device/meetings/:handoff", async (req, res) => {
     if (result.error || result.ok === false) throw new AssistantOAuthError("access_denied");
     return res.redirect(302, destination);
   } catch {
-    return page(res.status(403), '<p>This meeting link is expired, disconnected, or unavailable to this account and organization. Request a fresh link from V. No microphone, camera, or recording was started.</p>');
+    return page(res.status(403), '<p>This meeting link is expired, disconnected, or unavailable to this account and organization. Refresh sign-in with the same VNDRLY account and organization used by ChatGPT, then return here and refresh. If the connection was revoked or the link expired, request a fresh link from V. No microphone, camera, or recording was started.</p><p><a href="/switch-account" target="_blank" rel="noopener">Refresh VNDRLY sign-in</a></p>');
   }
 });
 router.get("/device/tickets/:handoff", async (req, res) => {
   try {
     const handoff = readEnvelope(req.params.handoff) as unknown as TicketDeviceHandoff;
     const session = getSessionFromRequest(req);
-    if (!session) return page(res, '<p>Sign into the same VNDRLY account used by ChatGPT in another tab, then refresh this page.</p><p><a href="/login" target="_blank" rel="noopener">Sign into VNDRLY</a></p>');
+    if (!session) return page(res, '<p>Sign into the same VNDRLY account used by ChatGPT in another tab, then refresh this page.</p><p><a href="/switch-account" target="_blank" rel="noopener">Sign into VNDRLY</a></p>');
     const current = await validateAssistantSession(session);
     const destination = requireMatchingTicketDevice(handoff, current);
     await withAssistantGrants(current.userId!, async (grants, database) => {
@@ -139,7 +139,7 @@ router.get("/device/gate/:handoff", async (req, res) => {
   try {
     const handoff = readEnvelope(req.params.handoff) as unknown as GateDeviceHandoff;
     const session = getSessionFromRequest(req);
-    if (!session) return page(res, '<p>Sign into the same VNDRLY account used by ChatGPT, then refresh this page.</p><p><a href="/login" target="_blank" rel="noopener">Sign into VNDRLY</a></p>');
+    if (!session) return page(res, '<p>Sign into the same VNDRLY account used by ChatGPT, then refresh this page.</p><p><a href="/switch-account" target="_blank" rel="noopener">Sign into VNDRLY</a></p>');
     const current = await validateAssistantSession(session);
     const destination = requireMatchingGateDevice(handoff, current);
     await withAssistantGrants(current.userId!, async (grants, database) => {
@@ -165,7 +165,7 @@ router.get("/authorize", async (req, res) => {
     await validateAssistantAuthorization(req.query, await clientRedirects());
     if (typeof req.query.state !== "string" || req.query.state.length > 4096) throw new AssistantOAuthError("invalid_request");
     const session = getSessionFromRequest(req);
-    if (!session) return page(res, '<p>Sign into VNDRLY in another tab, then return here and refresh this page.</p><p><a href="/login" target="_blank" rel="noopener">Sign into VNDRLY</a></p>');
+    if (!session) return page(res, '<p>Sign into VNDRLY in another tab, then return here and refresh this page.</p><p><a href="/switch-account" target="_blank" rel="noopener">Sign into VNDRLY</a></p>');
     const current = await validateAssistantSession(session);
     const nonce = randomBytes(32).toString("base64url");
     res.cookie("vndrly_assistant_consent", nonce, { httpOnly: true, secure: true, sameSite: "lax", path: "/api/assistant-connection", maxAge: 300_000 });

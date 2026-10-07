@@ -120,7 +120,7 @@ describe("ChatGPT account connection boundary", () => {
       expect(response.body.result.content[0].text).not.toContain("deviceUrl");
     }
   });
-  it.each(["valid", "revoked", "scope removed", "wrong user", "meeting denied"])("checks meeting handoff when %s", async (condition) => {
+  it.each(["valid", "revoked", "scope removed", "wrong user", "meeting denied", "stale browser session"])("checks meeting handoff when %s", async (condition) => {
     const credentials = await tokens("work_hub:read");
     const occurrenceId = "17795fa1-bb5f-4abc-a5f8-7e9b33a0ec05";
     mocks.run.mockResolvedValue(JSON.stringify({ ok: true, transcript: [] }));
@@ -131,10 +131,16 @@ describe("ChatGPT account connection boundary", () => {
     if (condition === "revoked") grants[0].revoked = true;
     if (condition === "scope removed") grants[0].scopes = [];
     if (condition === "meeting denied") mocks.run.mockResolvedValue(JSON.stringify({ error: "Denied" }));
+    if (condition === "stale browser session") mocks.validate.mockRejectedValueOnce(new Error("Session expired"));
     const opened = await request(app).get(path).set("Cookie", cookie(condition === "wrong user" ? { ...session, userId: 18 } : session));
     expect(opened.status).toBe(condition === "valid" ? 302 : 403);
     if (condition === "valid") expect(opened.headers.location).toBe("/work-hub/meetings?meeting=" + occurrenceId);
-    else expect(opened.headers.location).toBeUndefined();
+    else {
+      expect(opened.headers.location).toBeUndefined();
+      expect(opened.text).toContain('href="/switch-account"');
+      expect(opened.text).not.toContain('href="/login"');
+      expect(opened.text).toContain("No microphone, camera, or recording was started");
+    }
   });
 
   it.each(["valid", "access expired", "revoked", "scope removed", "wrong user", "tampered", "external destination"])("keeps the file device handoff bound when %s", async (condition) => {
