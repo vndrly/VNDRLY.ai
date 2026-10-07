@@ -5,6 +5,18 @@ import {
 } from "./field-trips";
 
 describe("field trips", () => {
+  it("lets only the driver resume a paused trip without inventing a location or reviving completed work", async () => {
+    const service = createFieldTripService(createMemoryFieldTripRepository());
+    const trip = await service.startTrip({ operationId: "00000000-0000-4000-8000-000000000099", owner: { type: "vendor", id: 1 }, driverUserId: 9, vehicleAssetId: null, assignmentId: null, siteLocationId: 44, destinationSource: "confirmed", activeShiftId: null });
+    const paused = await service.pauseWorkTracking({ tripId: trip.id, expectedVersion: trip.version, actorUserId: 9 });
+    await expect(service.resumeWorkTracking({ tripId: trip.id, expectedVersion: paused.version, actorUserId: 10 })).rejects.toMatchObject({ code: "trip.driver_required", status: 403 });
+    await expect(service.resumeWorkTracking({ tripId: trip.id, expectedVersion: trip.version, actorUserId: 9 })).rejects.toMatchObject({ code: "trip.version_conflict" });
+    const resumed = await service.resumeWorkTracking({ tripId: trip.id, expectedVersion: paused.version, actorUserId: 9 });
+    expect(resumed).toMatchObject({ trackingState: "active", pausedAt: null, lastReliablePoint: null, presenceState: "en_route" });
+    expect((await service.resumeWorkTracking({ tripId: trip.id, expectedVersion: resumed.version, actorUserId: 9 })).version).toBe(resumed.version);
+    const completed = await service.completeTrip({ tripId: trip.id, expectedVersion: resumed.version, operationId: "complete-resume-test", actorUserId: 9, actorMayComplete: false, reason: "end_of_work", needsSupervisorConfirmation: false, completedAt: new Date() });
+    for (const operation of [service.pauseWorkTracking, service.resumeWorkTracking]) await expect(operation({ tripId: trip.id, expectedVersion: completed.version, actorUserId: 9 })).rejects.toMatchObject({ code: "trip.already_completed" });
+  });
   it("starts one idempotent trip and pauses tracking without losing the last point", async () => {
     const service = createFieldTripService(createMemoryFieldTripRepository());
     const trip = await service.startTrip({ operationId: "00000000-0000-4000-8000-000000000001", owner: { type: "vendor", id: 1 }, driverUserId: 9, vehicleAssetId: null, assignmentId: "assignment-1", siteLocationId: 44, destinationSource: "assignment", activeShiftId: null });

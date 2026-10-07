@@ -60,6 +60,12 @@ function sendError(res: Response, error: unknown) {
   return res.status(500).json({ code: "trip.internal_error" });
 }
 
+async function requireCurrentLocationConsent(driverUserId: number) {
+  const [consent] = await db.select({ id: locationConsentsTable.id }).from(locationConsentsTable)
+    .where(and(eq(locationConsentsTable.userId, driverUserId), isNull(locationConsentsTable.revokedAt))).limit(1);
+  if (!consent) throw new FieldTripError("trip.location_consent_required", 403);
+}
+
 async function finalizeCrossing(trip: FieldTripRecord) {
   const [site, points] = await Promise.all([
     db.select().from(siteLocationsTable).where(eq(siteLocationsTable.id, trip.siteLocationId)).limit(1).then((rows) => rows[0]),
@@ -134,8 +140,7 @@ router.post("/implementation-a/trips", async (req, res) => {
       const [shift] = await db.select({ id: workHubShiftsTable.id }).from(workHubShiftsTable).where(and(eq(workHubShiftsTable.id, input.activeShiftId), eq(workHubShiftsTable.ownerOrgType, input.owner.type), eq(workHubShiftsTable.ownerOrgId, input.owner.id))).limit(1);
       if (!shift) throw new FieldTripError("trip.shift_forbidden", 403);
     }
-    const [consent] = await db.select({ id: locationConsentsTable.id }).from(locationConsentsTable).where(and(eq(locationConsentsTable.userId, input.driverUserId), isNull(locationConsentsTable.revokedAt))).limit(1);
-    if (!consent) throw new FieldTripError("trip.location_consent_required", 403);
+    await requireCurrentLocationConsent(input.driverUserId);
     return res.status(201).json(await service.startTrip(input));
   } catch (error) { return sendError(res, error); }
 });
@@ -185,6 +190,7 @@ router.post("/implementation-a/trips/:tripId/location", async (req, res) => {
     if (!trip) throw new FieldTripError("trip.not_found", 404);
     assertTripAccess(trip, context);
     if (context.session.userId !== trip.driverUserId) throw new FieldTripError("trip.driver_required", 403);
+    await requireCurrentLocationConsent(trip.driverUserId);
     const input = UpdateFieldTripLocationSchema.parse(req.body);
     const updated = await service.updateTripLocation({ tripId, ...input, recordedAt: new Date(input.recordedAt) });
     return res.status(201).json(await finalizeCrossing(updated));
@@ -213,6 +219,20 @@ router.post("/implementation-a/trips/:tripId/pause", async (req, res) => {
     assertTripAccess(trip, context);
     const input = z.object({ expectedVersion: z.number().int().positive() }).parse(req.body);
     return res.json(await service.pauseWorkTracking({ tripId, expectedVersion: input.expectedVersion, actorUserId: context.session.userId! }));
+  } catch (error) { return sendError(res, error); }
+});
+
+router.post("/implementation-a/trips/:tripId/resume", async (req, res) => {
+  try {
+    const context = actor(req);
+    const tripId = IdSchema.parse(req.params.tripId);
+    const trip = await databaseFieldTripRepository.get(tripId);
+    if (!trip) throw new FieldTripError("trip.not_found", 404);
+    assertTripAccess(trip, context);
+    if (context.session.userId !== trip.driverUserId) throw new FieldTripError("trip.driver_required", 403);
+    await requireCurrentLocationConsent(trip.driverUserId);
+    const input = z.object({ expectedVersion: z.number().int().positive() }).parse(req.body);
+    return res.json(await service.resumeWorkTracking({ tripId, expectedVersion: input.expectedVersion, actorUserId: context.session.userId! }));
   } catch (error) { return sendError(res, error); }
 });
 

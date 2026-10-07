@@ -253,7 +253,7 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
   if (name === "confirm_field_trips_action") {
     if (action === "start") return request("POST", "/implementation-a/trips", direct(input, { owner: input.owner }));
     if (!resourceId) return { error: "A valid trip id is required." };
-    if (["location", "pause"].includes(action)) return request("POST", `/implementation-a/trips/${resourceId}/${action}`, payload);
+    if (["location", "pause", "resume"].includes(action)) return request("POST", `/implementation-a/trips/${resourceId}/${action}`, payload);
     if (action === "complete") return request("POST", `/implementation-a/trips/${resourceId}/complete`, direct(input));
   }
   if (name === "confirm_incident_response_action") {

@@ -107,6 +107,9 @@ describe("resolveWorkHubToolRequest", () => {
     for (const alias of [{ kind: "plate", value: " " }, { kind: "gps", value: "TX123" }, { kind: "vin", value: "x".repeat(201) }, { kind: "plate", value: "TX123", jurisdiction: "T" }]) expect(resolveExecutableWorkHubToolRequest("confirm_asset_custody_action", { ...input, payload: { alias } }, true)).toHaveProperty("error");
   });
   it("uses server-owned replay IDs for workforce and trips and bounds subscription confirmation", () => {
+    const resume = { ...command, action: "resume", resourceId: "trip-one", payload: { expectedVersion: 4 } };
+    expect(resolveExecutableWorkHubToolRequest("confirm_field_trips_action", resume, false)).toMatchObject({ requiresConfirmation: true });
+    expect(resolveExecutableWorkHubToolRequest("confirm_field_trips_action", resume, true)).toMatchObject({ method: "POST", path: "/implementation-a/trips/trip-one/resume", body: { expectedVersion: 4 } });
     for (const [name, action] of [["confirm_workforce_coverage_action", "assign"], ["confirm_field_trips_action", "start"]]) {
       const input = { ...command, action, payload: { operationId: "model-replay", owner: { type: "partner", id: 999 } } };
       expect(resolveExecutableWorkHubToolRequest(name, input, false)).toMatchObject({ requiresConfirmation: true });

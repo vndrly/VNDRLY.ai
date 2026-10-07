@@ -6,7 +6,7 @@ import { AssetCustodyCommandSchema } from "@workspace/api-zod";
 export const CHATGPT_WRITE_CAPABILITIES = {
   "finance:write": { label: "Prepare recording or reversing ticket payment records with current Accounts Payable authority; never transfer money", tools: ["record_ticket_payment", "reverse_ticket_payment_record"] },
   "workforce:write": { label: "Prepare authorized shift assignments, acknowledgements, and coverage evaluation or escalation", tools: ["confirm_workforce_coverage_action"] },
-  "trips:write": { label: "Prepare authorized trip start, pause, completion, or one approval-device location update", tools: ["confirm_field_trips_action"] },
+  "trips:write": { label: "Prepare authorized trip start, pause, driver resume, completion, or one approval-device location update; never start a device collector", tools: ["confirm_field_trips_action"] },
   "safety:write": { label: "Prepare authorized incident response, acknowledgement, evidence, escalation, and closure", tools: ["confirm_incident_response_action"] },
   "subscriptions:write": { label: "Prepare vendor administrator worker subscription creation, pause, termination, or reactivation", tools: ["confirm_worker_subscriptions_action"] },
   "assets:write": { label: "Prepare authorized asset creation, checkout, return, transfer, condition, and hold changes", tools: ["confirm_asset_custody_action"] },
@@ -37,7 +37,7 @@ export function validateChatGptActionInput(name: string, input: Record<string, u
   const allowed: Record<string, readonly string[]> = {
     manage_ticket_record: TICKET_RECORD_ACTIONS,
     confirm_workforce_coverage_action: ["assign", "acknowledge", "evaluate", "escalate"],
-    confirm_field_trips_action: ["start", "location", "pause", "complete"],
+    confirm_field_trips_action: ["start", "location", "pause", "resume", "complete"],
     confirm_incident_response_action: ["report", "create", "escalate", "acknowledge", "evidence", "hold", "close"],
     confirm_worker_subscriptions_action: ["create", "pause", "terminate", "reactivate"],
     confirm_account_invitations_action: ["create", "resend", "revoke"],

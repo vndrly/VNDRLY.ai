@@ -125,8 +125,22 @@ export function createFieldTripService(repository: FieldTripRepository, routeEst
       const trip = await current(input.tripId);
       if (trip.driverUserId !== input.actorUserId) throw new FieldTripError("trip.driver_required", 403);
       if (trip.version !== input.expectedVersion) throw new FieldTripError("trip.version_conflict");
+      if (trip.trackingState === "completed") throw new FieldTripError("trip.already_completed");
+      if (trip.trackingState === "paused") return trip;
       trip.trackingState = "paused";
       trip.pausedAt = new Date();
+      const saved = await repository.save(trip, input.expectedVersion);
+      if (!saved) throw new FieldTripError("trip.version_conflict");
+      return saved;
+    },
+    async resumeWorkTracking(input: { tripId: string; expectedVersion: number; actorUserId: number }) {
+      const trip = await current(input.tripId);
+      if (trip.driverUserId !== input.actorUserId) throw new FieldTripError("trip.driver_required", 403);
+      if (trip.version !== input.expectedVersion) throw new FieldTripError("trip.version_conflict");
+      if (trip.trackingState === "completed") throw new FieldTripError("trip.already_completed");
+      if (trip.trackingState === "active") return trip;
+      trip.trackingState = "active";
+      trip.pausedAt = null;
       const saved = await repository.save(trip, input.expectedVersion);
       if (!saved) throw new FieldTripError("trip.version_conflict");
       return saved;
