@@ -4,7 +4,7 @@ import { ACTION_PANEL_HTML, actionRecordSummary } from "./chatgpt-action-panel";
 
 function panelHarness() {
   const nodes = new Map<string, any>();
-  for (const id of ["title", "status", "summary", "details", "submit", "device"]) nodes.set(id, { textContent: "", hidden: true, setAttribute() {} });
+  for (const id of ["title", "status", "summary", "details", "submit", "device", "check"]) nodes.set(id, { textContent: "", hidden: true, setAttribute() {} });
   const requests: any[] = [];
   let receive: (event: any) => void;
   const parent = { postMessage: (message: any) => requests.push(message) };
@@ -16,11 +16,33 @@ function panelHarness() {
   return { nodes, requests,
     publish: (requiresLocation = false, source = parent, reference = "17.reference") => receive!({ source, data: { jsonrpc: "2.0", method: "ui/notifications/tool-result", params: { _meta: { componentApproval: { toolName: "manage_ticket_record", reference, proof: requiresLocation ? undefined : "component-only", arguments: { description: "<img onerror=attack>" }, requiresLocation, approvalUrl: "https://vndrly.ai/api/assistant-connection/actions/17.reference" } } } } }),
     click: () => nodes.get("submit").onclick({ preventDefault() {} }),
+    check: () => nodes.get("check").onclick({ preventDefault() {} }),
+    failSubmission: () => { const sent = requests.filter(item => item.params?.name === "v_submit_panel_action").at(-1); receive!({ source: parent, data: { jsonrpc: "2.0", id: sent.id, error: { code: -32603 } } }); },
     status: async (state = "pending", result: unknown = null) => { const sent = requests.filter(item => item.method === "tools/call" && item.params.name === "v_action_status").at(-1); receive!({ source: parent, data: { jsonrpc: "2.0", id: sent.id, result: { structuredContent: { state, result } } } }); await Promise.resolve(); },
     reply: (outcome: unknown, isError = false) => { const sent = requests.find(item => item.method === "tools/call" && item.params.name === "v_submit_panel_action"); receive!({ source: parent, data: { jsonrpc: "2.0", id: sent.id, result: { structuredContent: outcome, isError } } }); },
   };
 }
 describe("VNDRLY component-mediated action panel", () => {
+  it("checks the same saved result after interruption without submitting again", async () => {
+    const ui = panelHarness(); ui.publish(); await ui.status();
+    const submission = ui.click(); ui.failSubmission(); await submission;
+    expect(ui.nodes.get("submit").hidden).toBe(true);
+    expect(ui.nodes.get("check").hidden).toBe(false);
+    const checking = ui.check();
+    expect(ui.requests.filter(item => item.params?.name === "v_submit_panel_action")).toHaveLength(1);
+    await ui.status("completed", { operationId: "saved-on-server" }); await checking;
+    expect(ui.nodes.get("status").textContent).toContain("completed");
+    expect(ui.nodes.get("details").textContent).toContain("saved-on-server");
+    expect(ui.nodes.get("submit").hidden).toBe(true);
+    expect(ui.nodes.get("check").hidden).toBe(true);
+  });
+  it("offers retry only after a fresh pending result and requires another explicit click", async () => {
+    const ui = panelHarness(); ui.publish(); await ui.status();
+    const submission = ui.click(); ui.failSubmission(); await submission;
+    const checking = ui.check(); await ui.status("pending"); await checking;
+    expect(ui.nodes.get("submit").hidden).toBe(false);
+    expect(ui.requests.filter(item => item.params?.name === "v_submit_panel_action")).toHaveLength(1);
+  });
   it("shows coordinated steps without receipt or identity metadata while retaining exact details", async () => {
     const description = JSON.stringify({ schemaVersion: 1, version: 6, identity: { userId: 17 }, steps: [{ id: "payment_review", state: "pending", resultReferences: ["private-receipt"] }, { id: "hotlist", state: "waiting" }] });
     const result = { id: "plan-task", description };
