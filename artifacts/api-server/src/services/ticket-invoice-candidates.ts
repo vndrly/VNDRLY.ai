@@ -113,7 +113,25 @@ export async function readTicketInvoiceCandidates(
           vendorId: z.literal(actor.vendorId),
           siteLocationId: z.number().int().positive(),
           status: z.literal("approved"),
-          updatedAt: z.union([z.date(), z.iso.datetime()]),
+          // Raw PG executes return timestamptz strings; ORM selects return Dates.
+          // Normalize only an explicit timezone and retain the existing Date-based
+          // millisecond CAS representation used by canonical ticket preparation.
+          updatedAt: z.union([
+            z.date(),
+            z
+              .string()
+              .regex(
+                /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}(?::?\d{2})?)$/,
+              )
+              .transform((value) =>
+                value
+                  .replace(" ", "T")
+                  .replace(/([+-]\d{2})$/, "$1:00")
+                  .replace(/([+-]\d{2})(\d{2})$/, "$1:$2"),
+              )
+              .pipe(z.iso.datetime({ offset: true }))
+              .transform((value) => new Date(value)),
+          ]),
         })
         .strict(),
     )

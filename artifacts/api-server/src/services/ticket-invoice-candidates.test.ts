@@ -8,7 +8,7 @@ const session = {
   membershipRole: "member",
   sv: 1,
 };
-function fixture() {
+function fixture(updatedAt: unknown = new Date("2026-10-07T10:00:00.123Z")) {
   const query = vi
     .fn()
     .mockResolvedValueOnce({ rows: [{ id: 17 }] })
@@ -20,7 +20,7 @@ function fixture() {
           vendorId: 4,
           siteLocationId: 392,
           status: "approved",
-          updatedAt: new Date("2026-10-07T10:00:00.123Z"),
+          updatedAt,
         },
         {
           id: 100008,
@@ -42,6 +42,24 @@ function fixture() {
       ),
   };
 }
+it("normalizes timezone-bearing raw PostgreSQL timestamps to the existing canonical millisecond version", async () => {
+  for (const timestamp of [
+    "2026-10-07 10:00:00.123456+00",
+    "2026-10-07 15:30:00.123456+05:30",
+    "2026-10-07T10:00:00.123456Z",
+  ]) {
+    const result = await fixture(timestamp).run({ limit: 1 });
+    expect(result.tickets[0].expectedUpdatedAt).toBe(
+      "2026-10-07T10:00:00.123Z",
+    );
+    expect(result.tickets[0].expectedUpdatedAt).toBe(
+      new Date(timestamp).toISOString(),
+    );
+  }
+  await expect(
+    fixture("2026-10-07 10:00:00.123456").run({ limit: 1 }),
+  ).rejects.toThrow();
+});
 it("returns bounded exact version selections and explicit current source/truncation without approval", async () => {
   const f = fixture();
   const result = await f.run({ limit: 1, afterTicketId: 100000 });
