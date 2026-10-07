@@ -10,8 +10,12 @@ import canonicalSummary from "../test-fixtures/asset-summary.json";
 const state = vi.hoisted(() => ({
   repository: null as AssetRepository | null,
   holderName: null as string | null,
+  revoked: false,
+  revokeManagerDuringRead: false,
+  managerReads: 0,
   policy: { photosRequiredOnCheckout: false, photosRequiredOnReturn: false, expectedReturnRequired: false, supervisorApprovalRequired: false, identifierRequired: false },
 }));
+vi.mock("../assistant/chatgpt-grant-store", () => ({ validateAssistantSession: async (session: unknown) => { if (state.revoked) throw new Error("revoked"); return session; } }));
 vi.mock("../services/asset-database-repository", () => ({ databaseAssetRepository: {
   create: (...args: Parameters<AssetRepository["create"]>) => state.repository!.create(...args),
   get: (...args: Parameters<AssetRepository["get"]>) => state.repository!.get(...args),
@@ -21,8 +25,8 @@ vi.mock("../services/asset-database-repository", () => ({ databaseAssetRepositor
 } }));
 vi.mock("@workspace/db", async (importOriginal) => {
   const original = await importOriginal<typeof import("@workspace/db")>();
-  return { ...original, db: { select: () => ({ from: (table: unknown) => ({
-    innerJoin: () => ({ where: async () => [] }),
+  return { ...original, pool: { query: async () => ({ rows: [{ user_id: 12, display_name: "Synthetic coworker" }] }) }, db: { select: () => ({ from: (table: unknown) => ({
+    innerJoin: () => ({ where: async () => state.revokeManagerDuringRead && ++state.managerReads === 1 ? [{ role: "asset_manager" }] : [] }),
     where: () => table === original.usersTable
       ? { limit: async () => state.holderName ? [{ displayName: state.holderName }] : [] }
       : table === original.userOrgMembershipsTable
@@ -44,10 +48,48 @@ const command = (version: number, operationId = crypto.randomUUID()) => ({ opera
 beforeEach(() => {
   state.repository = createMemoryAssetRepository();
   state.holderName = null;
+  state.revoked = false;
+  state.revokeManagerDuringRead = false;
+  state.managerReads = 0;
   state.policy = { photosRequiredOnCheckout: false, photosRequiredOnReturn: false, expectedReturnRequired: false, supervisorApprovalRequired: false, identifierRequired: false };
 });
 
 describe("asset inventory and custody routes", () => {
+  it("rechecks a managed Asset Manager grant after asynchronous reads even when the session remains valid", async () => {
+    const asset = await state.repository!.create({ name: "Synthetic held tool", category: "equipment", legalOwner: "Vendor", responsibleOwner: owner, aliases: [], provisional: false });
+    await request(app).post(`/implementation-a/assets/${asset.id}/checkout`).set("Cookie", admin).send({ ...command(1), holderUserId: 11 });
+    const path = `/implementation-a/assets/${asset.id}`;
+    for (const action of ["choices", "readback", "transfer"]) {
+      state.revokeManagerDuringRead = true; state.managerReads = 0;
+      const input = { ...command(2), toHolderUserId: 12 };
+      const response = action === "choices" ? await request(app).get(`${path}/transfer-recipients`).set("Cookie", member)
+        : action === "readback" ? await request(app).get(`${path}/transfers/${input.operationId}`).set("Cookie", member)
+        : await request(app).post(`${path}/transfer`).set("Cookie", member).send(input);
+      expect(response.status).toBe(403);
+      expect(response.body.code).toBe("asset.transfer_forbidden");
+      expect(state.managerReads).toBe(2);
+      expect(await state.repository!.get(asset.id)).toMatchObject({ holderUserId: 11, version: 2 });
+    }
+  });
+  it("offers scoped transfer choices and reconciles only an exact saved own transfer", async () => {
+    const asset = await state.repository!.create({ name: "Synthetic tool", category: "equipment", legalOwner: "Vendor", responsibleOwner: owner, aliases: [], provisional: false });
+    await request(app).post(`/implementation-a/assets/${asset.id}/checkout`).set("Cookie", admin).send({ ...command(1), holderUserId: 11 });
+    const path = `/implementation-a/assets/${asset.id}`;
+    const choices = await request(app).get(`${path}/transfer-recipients`).set("Cookie", gatekeeper);
+    expect(choices.status).toBe(200);
+    expect(choices.body).toMatchObject({ actorUserId: 11, holderUserId: 11, version: 2, canTransfer: true, recipients: [{ userId: 12, displayName: "Synthetic coworker" }] });
+    expect((await request(app).get(`${path}/transfer-recipients`).set("Cookie", otherGatekeeper)).status).toBe(403);
+    expect((await request(app).get(`${path}/transfer-recipients`).set("Cookie", member)).status).toBe(403);
+    const input = { ...command(2), toHolderUserId: 12, note: "Recorded custody transfer" };
+    expect((await request(app).get(`${path}/transfers/${input.operationId}`).set("Cookie", gatekeeper)).body.receipt).toBeNull();
+    expect((await request(app).post(`${path}/transfer`).set("Cookie", gatekeeper).send(input)).body.status).toBe("applied");
+    const receipt = await request(app).get(`${path}/transfers/${input.operationId}`).set("Cookie", gatekeeper);
+    expect(receipt.body).toMatchObject({ currentVersion: 3, receipt: { actorUserId: 11, fromHolderUserId: 11, toHolderUserId: 12, operationId: input.operationId, physicalHandoffVerified: false } });
+    expect((await request(app).post(`${path}/transfer`).set("Cookie", gatekeeper).send(input)).body.status).toBe("applied");
+    state.revoked = true;
+    expect((await request(app).get(`${path}/transfers/${input.operationId}`).set("Cookie", gatekeeper)).status).toBe(403);
+    expect((await request(app).post(`${path}/transfer`).set("Cookie", gatekeeper).send(input)).status).toBe(403);
+  });
   it("attributes a hold to the authenticated administrator rather than a supplied actor", async () => {
     const asset = await state.repository!.create({ name: "Synthetic radio", category: "equipment", legalOwner: "Vendor", responsibleOwner: owner, aliases: [], provisional: false });
     const response = await request(app).post(`/implementation-a/assets/${asset.id}/hold`).set("Cookie", admin).send({ reason: "Inspect before reissue", expectedVersion: 1, actorUserId: 999 });
@@ -77,7 +119,7 @@ describe("asset inventory and custody routes", () => {
     }
     const list = await request(app).get("/implementation-a/assets").set("Cookie", gatekeeper);
     const savedCheckout = (await state.repository!.get(asset.id))!.history.find(event => event.type === "checkout")!;
-    expect(list.body.assets[0]).toEqual({ ...canonicalSummary, id: asset.id, version, checkedOutAt: savedCheckout.occurredAt.toISOString(), custodyDays: 0 });
+    expect(list.body.assets[0]).toEqual({ ...canonicalSummary, capabilities: { ...canonicalSummary.capabilities, canTransfer: true }, id: asset.id, version, checkedOutAt: savedCheckout.occurredAt.toISOString(), custodyDays: 0 });
     const input = command(version);
     const verified = await request(app).post(`/implementation-a/assets/${asset.id}/verify-issued`).set("Cookie", gatekeeper).send(input);
     expect(verified.body.status).toBe("applied");

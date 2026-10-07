@@ -12,11 +12,12 @@ import { nativeUuid } from "@/lib/native-uuid";
 import { captureAndUploadImage } from "@/lib/photos";
 import type { MobileWorkHubCapabilities } from "@/lib/work-hub-mobile";
 import { InventoryRecovery } from "./InventoryRecovery";
+import { InventoryTransfer } from "./InventoryTransfer";
 
 type Owner = { type: "vendor" | "partner"; id: number };
 type FileRow = { id: string; data: { name?: string; scope?: string; state?: string; currentFileId?: string | null; contentType?: string; byteSize?: number }; createdBy?: number; updatedAt?: string; capabilities?: { canDownload: boolean; canManage: boolean } };
 type NoteRow = { id: string; channelId: string; title: string; body: string; version: number; createdById: number; createdAt: string; capabilities?: { canEdit: boolean } };
-type AssetRow = { id: string; name: string; category?: string; status?: string; condition?: string | null; version?: number; holderUserId?: number | null; currentHolderDisplayName?: string | null; currentLocation?: string | null; hold?: string | null; holds?: { id: string; reason: string; placedAt: string; source: "inventory" | "fleet_maintenance"; canRelease: boolean }[]; policy?: { photosRequiredOnCheckout: boolean; photosRequiredOnReturn: boolean; expectedReturnRequired: boolean; supervisorApprovalRequired: boolean }; capabilities?: { canCheckOut: boolean; canReturn: boolean; canVerifyIssued: boolean } };
+type AssetRow = { id: string; name: string; category?: string; status?: string; condition?: string | null; version?: number; holderUserId?: number | null; currentHolderDisplayName?: string | null; currentLocation?: string | null; hold?: string | null; holds?: { id: string; reason: string; placedAt: string; source: "inventory" | "fleet_maintenance"; canRelease: boolean }[]; policy?: { photosRequiredOnCheckout: boolean; photosRequiredOnReturn: boolean; expectedReturnRequired: boolean; supervisorApprovalRequired: boolean }; capabilities?: { canCheckOut: boolean; canReturn: boolean; canVerifyIssued: boolean; canTransfer?: boolean } };
 type ChannelRow = { id: string; name: string; ownerOrgType: Owner["type"]; ownerOrgId: number; contextKind: string; contextId: string | number };
 type Props = { owner: Owner; capabilities: MobileWorkHubCapabilities; files: FileRow[]; notes: NoteRow[]; assets: AssetRow[]; channels: ChannelRow[]; onRefresh: () => void | Promise<void>; selectedAssetId?: string };
 
@@ -274,6 +275,7 @@ function FilesInventoryContent({ owner, capabilities, files, notes, assets, chan
       {!assets.length || selectedAssetId && !assets.some(asset => asset.id === selectedAssetId) ? <Text style={muted}>{t("filesInventory.noInventory")}</Text> : null}
       {assets.filter(asset => !selectedAssetId || asset.id === selectedAssetId).map((asset,index) => <View key={asset.id} style={{ borderTopWidth: 1, borderColor: colors.border, paddingTop: 10, gap: 4 }}>
         <Text style={{ color: colors.text, fontWeight: "700" }}>{asset.name}</Text>
+        <InventoryTransfer assetId={asset.id} owner={owner} canTransfer={asset.capabilities?.canTransfer === true} onRefresh={onRefresh} />
         <InventoryRecovery assetId={asset.id} owner={owner} canManage={capabilities.canManageAsset} onRefresh={onRefresh} includePlatformQueue={index===0}/>
         <Text style={muted}>{[asset.category, asset.status ? enumLabel("status", asset.status) : null, asset.condition ? enumLabel("condition", asset.condition) : null].filter(Boolean).join(" · ")}</Text>
         <Text style={muted}>{[asset.currentHolderDisplayName ? t("filesInventory.heldBy", { name: asset.currentHolderDisplayName }) : null, asset.currentLocation, asset.hold ? t("filesInventory.hold", { reason: asset.hold }) : null].filter(Boolean).join(" · ")}</Text>
@@ -302,3 +304,5 @@ function FilesInventoryContent({ owner, capabilities, files, notes, assets, chan
     </View>
   </View>;
 }
+
+

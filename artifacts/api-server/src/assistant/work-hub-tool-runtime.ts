@@ -362,6 +362,7 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
     return request("POST", `/implementation-a/assets/${resourceId}/${action}`, { ...assetPayload, operationId: input.operationId, expectedVersion: input.expectedVersion, confirmed: true });
   }
   const readPaths: Record<string, string> = {
+    query_asset_transfer_recipients: z.uuid().safeParse(input.assetId).success ? `/implementation-a/assets/${encoded(input.assetId)}/transfer-recipients` : "",
     query_asset_identifier_review_queue: "/implementation-a/asset-identifier-claims",
     query_asset_identifier_claims: resourceId ? `/implementation-a/assets/${resourceId}/identifier-claims` : "",
     query_ticket_assignment_candidates: queryPath("/implementation-a/workforce/ticket-assignment-candidates", { vendorId: input.vendorId, name: input.name, limit: input.limit }),
@@ -372,6 +373,7 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
     query_incident_response: resourceId ? `/implementation-a/safety/incidents/${resourceId}` : "/implementation-a/safety/incidents",
     query_worker_subscriptions: "/implementation-a/subscriptions",
   };
+  if (name === "query_asset_transfer_recipients" && !z.uuid().safeParse(input.assetId).success) return { error: "An exact asset ID is required." };
   if (name === "query_asset_identifier_claims" && !resourceId) return { error: "An exact asset ID is required." };
   if (readPaths[name]) return request("GET", readPaths[name]);
   if (name.startsWith("prepare_") && name.endsWith("_action")) {

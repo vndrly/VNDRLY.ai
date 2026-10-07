@@ -5,6 +5,8 @@ import { notifyUsers } from "./notifications";
 import { pool } from "@workspace/db";
 import { assetHolderDisplayName } from "../services/asset-holder-name";
 import { custodyAge } from "../services/asset-custody-age";
+import { validateAssistantSession } from "../assistant/chatgpt-grant-store";
+import { canTransferAsset, readTransferRecipients, assetTransferReceipt } from "../services/asset-transfer-access";
 import { Router, type Request, type Response } from "express";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod/v4";
@@ -13,6 +15,7 @@ import {
   AssetConditionSchema,
   AssetCustodyCommandSchema,
   CreateAssetSchema,
+  AssetTransferInputSchema, AssetTransferRecipientsSchema, AssetTransferReadbackSchema,
 } from "@workspace/api-zod";
 import {
   assetCategoryPoliciesTable,
@@ -46,6 +49,11 @@ async function projectedHolds(req: Request, asset: AssetRecord) {
     canRelease = true; await client.query("COMMIT");
   } catch { await client.query("ROLLBACK"); } finally { client.release(); }
   return holds.map(hold => ({...hold, canRelease: canRelease && hold.source === "inventory" && !["merged", "retired"].includes(asset.status)}));
+}
+async function requireFreshTransferSession(req: Request) {
+  const session = getSessionFromRequest(req);
+  if (!session) throw new AssetServiceError("asset.unauthenticated", 401);
+  try { await validateAssistantSession(session); } catch { throw new AssetServiceError("asset.transfer_forbidden", 403); }
 }
 const router = Router();
 const service = createAssetService(databaseAssetRepository);
@@ -309,6 +317,7 @@ router.get("/implementation-a/assets", async (req, res) => {
           canCheckOut: context.canCheckOutAsset && policyAllows && asset.status === "available" && asset.holderUserId === null,
           canReturn: context.canCheckOutAsset && policyAllows && asset.holderUserId !== null && (canOversee || asset.holderUserId === context.userId),
           canVerifyIssued: canVerifyCurrentHolder(context, asset),
+          canTransfer: canTransferAsset(context, asset),
         },
       };
     }));
@@ -531,8 +540,44 @@ router.post("/implementation-a/assets/:assetId/verify-issued", async (req, res) 
   }
 });
 
+router.get("/implementation-a/assets/:assetId/transfer-recipients", async (req, res) => {
+  try {
+    await requireFreshTransferSession(req);
+    const context = await actor(req), assetId = IdSchema.parse(req.params.assetId);
+    const asset = await databaseAssetRepository.get(assetId);
+    if (!asset) throw new AssetServiceError("asset.not_found", 404);
+    await assertCurrentAssetAccess(context, asset.responsibleOwner);
+    if (!canTransferAsset(context, asset)) throw new AssetServiceError("asset.transfer_forbidden", 403);
+    const choices = await readTransferRecipients(pool, asset);
+    const current = await databaseAssetRepository.get(assetId);
+    if (!current || current.version !== asset.version) throw new AssetServiceError("asset.version_conflict", 409);
+    await requireFreshTransferSession(req);
+    const freshContext = await actor(req);
+    assertOwner(current.responsibleOwner, freshContext.owner, freshContext.isPlatformAdmin);
+    if (!canTransferAsset(freshContext, current)) throw new AssetServiceError("asset.transfer_forbidden", 403);
+    return res.json(AssetTransferRecipientsSchema.parse({ assetId, version: asset.version, holderUserId: asset.holderUserId, actorUserId: context.userId, canTransfer: true, ...choices }));
+  } catch (error) { return sendError(res, error); }
+});
+router.get("/implementation-a/assets/:assetId/transfers/:operationId", async (req, res) => {
+  try {
+    await requireFreshTransferSession(req);
+    const context = await actor(req), assetId = IdSchema.parse(req.params.assetId), operationId = IdSchema.parse(req.params.operationId);
+    const asset = await databaseAssetRepository.get(assetId);
+    if (!asset) throw new AssetServiceError("asset.not_found", 404);
+    await assertCurrentAssetAccess(context, asset.responsibleOwner);
+    if (!context.canCheckOutAsset) throw new AssetServiceError("asset.transfer_forbidden", 403);
+    const receipt = assetTransferReceipt(asset, operationId, context.userId);
+    if (!receipt && !canTransferAsset(context, asset)) throw new AssetServiceError("asset.transfer_forbidden", 403);
+    await requireFreshTransferSession(req);
+    const freshContext = await actor(req);
+    assertOwner(asset.responsibleOwner, freshContext.owner, freshContext.isPlatformAdmin);
+    if (!freshContext.canCheckOutAsset || (!receipt && !canTransferAsset(freshContext, asset))) throw new AssetServiceError("asset.transfer_forbidden", 403);
+    return res.json(AssetTransferReadbackSchema.parse({ receipt, currentVersion: asset.version }));
+  } catch (error) { return sendError(res, error); }
+});
 router.post("/implementation-a/assets/:assetId/transfer", async (req, res) => {
   try {
+    await requireFreshTransferSession(req);
     const context = await actor(req);
     if (!context.canCheckOutAsset) throw new AssetServiceError("asset.transfer_forbidden", 403);
     const assetId = IdSchema.parse(req.params.assetId);
@@ -543,15 +588,21 @@ router.post("/implementation-a/assets/:assetId/transfer", async (req, res) => {
       context.owner,
       context.isPlatformAdmin,
     );
-    const input = AssetCustodyCommandSchema.extend({
-      toHolderUserId: z.number().int().positive(),
-    }).parse(req.body);
+    const input = AssetTransferInputSchema.parse(req.body);
     const replay = asset.history.find((event) => event.id === input.operationId && event.type === "transfer" && event.actorUserId === context.userId);
     if (!context.isAssetManager && !context.isGateSupervisor && asset.holderUserId !== context.userId && !replay)
       throw new AssetServiceError("asset.holder_mismatch", 403);
     if (!asset.holderUserId)
       if (!replay) throw new AssetServiceError("asset.not_checked_out");
-    if (!replay) await assertTransferRecipient(asset.responsibleOwner, input.toHolderUserId);
+    if (!replay) {
+      await assertTransferRecipient(asset.responsibleOwner, input.toHolderUserId);
+      const active = await pool.query("SELECT id FROM users WHERE id=$1 AND suspended_at IS NULL", [input.toHolderUserId]);
+      if (!active.rows.length) throw new AssetServiceError("asset.transfer_recipient_not_found", 404);
+    }
+    await requireFreshTransferSession(req);
+    const freshContext = await actor(req);
+    assertOwner(asset.responsibleOwner, freshContext.owner, freshContext.isPlatformAdmin);
+    if (!freshContext.canCheckOutAsset || (!replay && !canTransferAsset(freshContext, asset))) throw new AssetServiceError("asset.transfer_forbidden", 403);
     return res.json(
       await service.transferAsset({
         assetId,

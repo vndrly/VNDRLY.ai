@@ -4,6 +4,13 @@ import { CHATGPT_READ_CAPABILITIES } from "./chatgpt-read-capabilities";
 import { findAskVTool } from "./tool-registry";
 
 describe("ChatGPT assistant tool access", () => {
+  it("offers exact-asset transfer choices under the existing read scope without inferring custody authority", () => {
+    const keeper = { userId: 11, role: "field_employee", vendorId: 7, vendorRole: "gatekeeper" };
+    expect(requireChatGptReadableTool(keeper, ["operations:read"], "query_asset_transfer_recipients").name).toBe("query_asset_transfer_recipients");
+    expect(() => requireChatGptReadableTool(keeper, [], "query_asset_transfer_recipients")).toThrow();
+    expect(requireChatGptReadableTool({ ...keeper, vendorRole: "field" }, ["operations:read"], "query_asset_transfer_recipients").description).toContain("canonical endpoint");
+    expect(findAskVTool("query_asset_transfer_recipients")?.mutating).toBe(false);
+  });
   it("discovers ticket scheduling for assigned or acting foremen without granting ordinary workers scheduler authority", async () => {
     const worker = { userId: 9, role: "field_employee", vendorId: 12, vendorRole: "field" };
     expect(chatGptActionTools(worker, ["tickets:write"]).some(tool => tool.name === "schedule_ticket_crew")).toBe(true);

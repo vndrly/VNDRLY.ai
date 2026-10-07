@@ -48,7 +48,7 @@ export type AssetSummary = Pick<AssetRecord, "id" | "name" | "category" | "statu
     expectedReturnRequired: boolean;
     supervisorApprovalRequired: boolean;
   };
-  capabilities: { canCheckOut: boolean; canReturn: boolean; canVerifyIssued: boolean };
+  capabilities: { canCheckOut: boolean; canReturn: boolean; canVerifyIssued: boolean; canTransfer?: boolean };
 };
 export type CustodyEvent = { id: string; type: "checkout" | "return" | "transfer" | "condition" | "hold" | "hold_release" | "merge" | "verify-issued"; actorUserId?: number | null; commandFingerprint?: string | null; condition?: AssetCondition; fromHolderUserId?: number | null; toHolderUserId?: number | null; note?: string; photos?: string[]; occurredAt: Date };
 

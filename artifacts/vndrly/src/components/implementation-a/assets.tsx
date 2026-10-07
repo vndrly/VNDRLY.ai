@@ -1,4 +1,5 @@
 import { InventoryRecovery, InventoryIdentifierQueue } from "./asset-recovery";
+import { InventoryTransfer } from "./asset-transfer";
 import { useAuth } from "@/hooks/use-auth";
 import { InventoryHoldRelease, type InventoryHold } from "./asset-hold-release";
 import { useQuery } from "@tanstack/react-query";
@@ -15,6 +16,7 @@ type Asset = {
   currentLocation?: string | null;
   hold?: string | null;
   holderUserId?: number | null;
+  capabilities?: { canTransfer?: boolean };
 };
 type AssetCapabilities = {
   canCheckOutAsset: boolean;
@@ -74,6 +76,9 @@ export function Assets() {
                   onSaved={() => query.refetch()}
                 />
               ) : null}
+              {user?.userId && (
+                <InventoryTransfer key={identity + asset.id + "transfer"} assetId={asset.id} assetName={asset.name} userId={user.userId} identity={identity} canTransfer={asset.capabilities?.canTransfer === true} onSaved={async () => { const value = await query.refetch(); if (value.isError) throw new Error("Refresh failed"); }} />
+              )}
               {user?.userId && (
                 <InventoryRecovery
                   key={identity + asset.id + "recovery"}

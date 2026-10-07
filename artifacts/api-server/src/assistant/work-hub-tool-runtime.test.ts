@@ -35,6 +35,11 @@ it("keeps authenticated exact read arguments separate from injected envelope aut
 });
 
 describe("resolveWorkHubToolRequest", () => {
+  it("reads transfer choices only for an exact asset through the canonical authority endpoint", () => {
+    const assetId = "11111111-1111-4111-8111-111111111111";
+    expect(resolveExecutableWorkHubToolRequest("query_asset_transfer_recipients", { assetId }, false)).toEqual({ method: "GET", path: `/implementation-a/assets/${assetId}/transfer-recipients`, body: {} });
+    for (const input of [{}, { assetId: "../other" }, { resourceId: assetId }]) expect(resolveExecutableWorkHubToolRequest("query_asset_transfer_recipients", input, false)).toHaveProperty("error");
+  });
   it("requires an exact trip for the ETA read adapter", () => {
     const resourceId = "00000000-0000-4000-8000-000000000009";
     expect(resolveExecutableWorkHubToolRequest("query_field_trip_eta", { resourceId }, false)).toMatchObject({ method: "GET", path: `/implementation-a/trips/${resourceId}/eta` });
