@@ -59,6 +59,12 @@ describe("ChatGPT assistant tool access", () => {
     expect(gate.some((tool) => tool.workHubFamily)).toBe(false);
     expect(hub.every((tool) => Boolean(tool.workHubFamily))).toBe(true);
   });
+  it("exposes channel participants only under the connected Work Hub read grant", () => {
+    const name = "list_work_hub_channel_members";
+    expect(requireChatGptReadableTool(session, ["work_hub:read"], name)).toMatchObject({ name, mutating: false });
+    for (const scopes of [[], ["gate:read"], ["work_hub:write"]])
+      expect(() => requireChatGptReadableTool(session, scopes, name)).toThrow();
+  });
   it("excludes writes and client operations even for an administrator", () => {
     const tools = chatGptReadableTools({ userId: 1, role: "admin", membershipRole: "admin" }, ["gate:read", "work_hub:read"]);
     expect(tools.every((tool) => !tool.mutating && tool.confirmation === "none" && tool.execution !== "client")).toBe(true);

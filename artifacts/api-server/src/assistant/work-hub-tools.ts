@@ -148,6 +148,7 @@ const entries: Entry[] = [
     payload: { type: "object" },
   }, ["action", "crewId", "userId"])),
   read("list_work_hub_channels", "collaboration", "List channels visible to the caller.", schema({ crewId: identifier() })),
+  read("list_work_hub_channel_members", "collaboration", "Read the current authorized participants of a visible channel before choosing a message destination.", schema({ channelId: identifier() }, ["channelId"])),
   write("manage_work_hub_channel", "collaboration", "Create or delete a channel after confirmation.", writeSchema({
     action: { type: "string", enum: ["create", "delete"] },
     channelId: identifier(),

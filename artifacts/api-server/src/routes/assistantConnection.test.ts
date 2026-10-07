@@ -176,7 +176,7 @@ describe("ChatGPT account connection boundary", () => {
       expect(descriptors.body.result.tools.find((tool: { name: string }) => tool.name === name).annotations.destructiveHint).toBe(true);
     }
     const ticketTool = descriptors.body.result.tools.find((tool: { name: string }) => tool.name === "manage_ticket_record");
-    expect(ticketTool._meta.ui.resourceUri).toBe("ui://vndrly/action/v5.html");
+    expect(ticketTool._meta.ui.resourceUri).toBe("ui://vndrly/action/v6.html");
     for (const version of [1, 2, 3, 4]) {
       const resource = await request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 3, method: "resources/read", params: { uri: `ui://vndrly/action/v${version}.html` } });
       expect(resource.body.result.contents[0].mimeType).toContain("text/html");

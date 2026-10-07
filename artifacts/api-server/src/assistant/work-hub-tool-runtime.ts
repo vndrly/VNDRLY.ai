@@ -345,6 +345,11 @@ export function resolveWorkHubToolRequest(
       return request("GET", input.crewId
         ? queryPath("/work-hub/channels", { crewId: input.crewId })
         : "/work-hub/channels");
+    case "list_work_hub_channel_members":
+      target = required(input.channelId, "channel id");
+      return typeof target === "string"
+        ? request("GET", `/work-hub/channels/${target}/members`)
+        : target;
     case "manage_work_hub_channel":
       if (input.action === "create")
         return request("POST", "/work-hub/channels", envelope(input));

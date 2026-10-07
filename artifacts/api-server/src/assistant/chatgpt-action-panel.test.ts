@@ -23,6 +23,24 @@ function panelHarness() {
   };
 }
 describe("VNDRLY component-mediated action panel", () => {
+  it("does not claim attendance when a completed request still needs device authorization", async () => {
+    const result = { participationMode: "view_only", authorizationRequired: true, startedAt: null };
+    const ui = panelHarness(); ui.publish(); await ui.status();
+    const submission = ui.click();
+    ui.reply({ status: "completed", ok: true, result }); await submission;
+    expect(ui.nodes.get("status").textContent).toContain("authorization is still required");
+    expect(ui.nodes.get("status").textContent).not.toContain("change completed");
+    const checking = ui.check(); await ui.status("completed", result); await checking;
+    expect(ui.nodes.get("status").textContent).toContain("authorization is still required");
+    expect(ui.requests.filter(item => item.params?.name === "v_submit_panel_action")).toHaveLength(1);
+  });
+  it("reports view-only saved results honestly when reopening", async () => {
+    const ui = panelHarness(); ui.publish();
+    await ui.status("completed", { participationMode: "view_only", startedAt: null });
+    expect(ui.nodes.get("status").textContent).toContain("View-only access");
+    expect(ui.nodes.get("status").textContent).not.toContain("change completed");
+    expect(ui.nodes.get("submit").hidden).toBe(true);
+  });
   it("shows a saved rejection after interruption without claiming success or resubmitting", async () => {
     const ui = panelHarness(); ui.publish(); await ui.status();
     const submission = ui.click(); ui.failSubmission(); await submission;
