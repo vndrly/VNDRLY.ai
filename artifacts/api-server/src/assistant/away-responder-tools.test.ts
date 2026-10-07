@@ -23,3 +23,19 @@ it("separates own current-company read/write scopes and reads only exact joined 
 it("pins pause/revoke to exact rule/revision without configure fields",()=>{
  for(const action of ["pause","revoke"]){const args={action,expectedVersion:2,ruleId:channel};expect(awayResponderRequest(args,id).body).toEqual({...args,operationId:id});expect(AWAY_RESPONDER_ARGUMENTS.safeParse({...args,replyText:"Changed"}).success).toBe(false);}
 });
+
+it("advertises provider-compatible object roots across the full catalog and routed packs", async()=>{
+ const {TOOLS}=await import("./tools");const {toolsForRealtime}=await import("./tool-packs");
+ const check=(schema:Record<string,unknown>)=>{expect(schema.type).toBe("object");for(const key of ["anyOf","oneOf","allOf"])expect(schema).not.toHaveProperty(key);};
+ for(const tool of TOOLS)check(tool.input_schema as Record<string,unknown>);
+ for(const role of ["vendor","partner","field_employee","admin"])for(const path of ["/work-hub/askv","/work-hub/chat","/work-hub/crews","/work-hub/calendar","/work-hub/files","/work-hub/finance","/gate","/tickets","/profile"])for(const tool of toolsForRealtime({role,path,membershipRole:"admin"}))check(tool.inputSchema as Record<string,unknown>);
+ const tool=TOOLS.find(t=>t.name==="manage_work_hub_away_responder")!;
+ expect((tool.input_schema.properties as Record<string,unknown>).action).toMatchObject({enum:["configure","pause","revoke"]});
+ expect(tool.input_schema.required).toEqual(["action","expectedVersion"]);
+});
+it("retains strict action requirements despite the provider object envelope",()=>{
+ for(const raw of [{action:"configure",expectedVersion:0},{action:"pause",expectedVersion:2},{action:"revoke",expectedVersion:2,ruleId:channel,startsAt:input.startsAt},{...input,ruleId:channel},{...input,action:"anything"}]){
+  expect(AWAY_RESPONDER_ARGUMENTS.safeParse(raw).success).toBe(false);
+  expect(resolveExecutableWorkHubToolRequest("manage_work_hub_away_responder",{...raw,operationId:id},true,user)).toHaveProperty("error");
+ }
+});

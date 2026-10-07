@@ -9,7 +9,7 @@ Pod::Spec.new do |s|
   s.platforms = { :ios => '15.1' }
   s.source = { :git => '' }
   s.static_framework = true
-  s.swift_version = '5.9'
+  s.swift_version = '5.0'
   s.dependency 'ExpoModulesCore'
   s.frameworks = 'UIKit'
   s.weak_frameworks = 'ActivityKit'

@@ -134,6 +134,7 @@ test("adds a real embedded extension and app-target intents once, preserving app
     assert.equal(settings.CURRENT_PROJECT_VERSION, "212");
     assert.equal(settings.IPHONEOS_DEPLOYMENT_TARGET, "16.2");
     assert.equal(settings.APPLICATION_EXTENSION_API_ONLY, "YES");
+    assert.equal(settings.SWIFT_VERSION, "5.0");
   }
   assert.match(once, /VndrlyWorkIntents.swift/);
   assert.match(once, /VndrlyWorkActivity.swift/);
@@ -249,5 +250,13 @@ test("bundles EN/ES intent and shortcut resources in app, and widget resources i
             row[2].includes("${applicationName}"),
         ),
       );
+  }
+});
+
+test("local modules select supported Swift language mode, not compiler minor version", () => {
+  for (const name of ["vndrly-system-surfaces/ios/VndrlySystemSurfaces.podspec", "vndrly-work-capture/ios/VndrlyWorkCapture.podspec"]) {
+    const pod = fs.readFileSync(path.join(__dirname, "../modules", name), "utf8");
+    assert.match(pod, /s\.swift_version = '5\.0'/);
+    assert.doesNotMatch(pod, /s\.swift_version = '5\.9'/);
   }
 });

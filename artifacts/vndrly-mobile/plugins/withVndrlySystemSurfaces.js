@@ -129,7 +129,7 @@ function configureProject(project, config) {
       INFOPLIST_FILE: `"${TARGET}/${TARGET}-Info.plist"`,
       PRODUCT_BUNDLE_IDENTIFIER: `"${config.ios.bundleIdentifier}.workactivity"`,
       IPHONEOS_DEPLOYMENT_TARGET: "16.2",
-      SWIFT_VERSION: "5.9",
+      SWIFT_VERSION: "5.0",
       TARGETED_DEVICE_FAMILY: '"1,2"',
       APPLICATION_EXTENSION_API_ONLY: "YES",
       CODE_SIGN_STYLE: "Automatic",
