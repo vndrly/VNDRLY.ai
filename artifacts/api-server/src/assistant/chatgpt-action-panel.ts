@@ -1,5 +1,6 @@
 export const LEGACY_ACTION_PANEL_URI = "ui://vndrly/action/v1.html";
-export const ACTION_PANEL_URI = "ui://vndrly/action/v2.html";
+export const PREVIOUS_ACTION_PANEL_URI = "ui://vndrly/action/v2.html";
+export const ACTION_PANEL_URI = "ui://vndrly/action/v3.html";
 const ACTION_STATES = ["pending", "running", "completed", "outcome_unknown"];
 export const ACTION_STATUS_OUTPUT_SCHEMA = { type: "object", properties: { state: { type: "string", enum: ACTION_STATES }, toolName: { type: "string" }, result: {} }, required: ["state", "toolName", "result"], additionalProperties: false };
 export const ACTION_PANEL_META = { ui: { resourceUri: ACTION_PANEL_URI }, "openai/outputTemplate": ACTION_PANEL_URI, "openai/widgetAccessible": true };

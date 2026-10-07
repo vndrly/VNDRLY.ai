@@ -30,6 +30,9 @@ it("preserves partial failure rather than pretending the lookup succeeded", () =
 });
 it("rejects expired, cross-user, cross-company and forged checkpoint fields", () => {
   const { task, receipt } = setup();
+  for (const invalidTime of [Number.NaN, Infinity, -Infinity]) {
+    expect(() => preparePlanReadCheckpoint([task], receipt, identity, owner, reads, invalidTime)).toThrow("observation time");
+  }
   for (const invalid of [{ ...receipt, expires: now }, { ...receipt, userId: 18 }, { ...receipt, organizationKey: "vendor:5" }, { ...receipt, kind: "component-action" }, { ...receipt, completed: true }]) {
     expect(() => preparePlanReadCheckpoint([task], invalid, identity, owner, reads, now)).toThrow();
   }

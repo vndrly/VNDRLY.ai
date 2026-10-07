@@ -13,7 +13,8 @@ export function resumedWorkPlan(value:unknown,taskId:string,identity:{userId:num
  const task=z.object({id:z.string().uuid(),ownerOrgType:z.enum(["vendor","partner"]),ownerOrgId:z.number().int().positive(),version:z.number().int().positive(),description:z.string(),status:z.enum(['open','in_progress','completed','cancelled']).optional()}).parse(candidate);
  if(identity.organizationKey!==`${task.ownerOrgType}:${task.ownerOrgId}`)throw Error("Plan company mismatch");
  const plan=decodePlanDescription(task.description,identity);
- return {taskId:task.id,taskVersion:task.version,taskStatus:task.status,plan,eligibleStepIds:eligiblePlanSteps(plan,identity,availableTools).map(step=>step.id),overdueStepIds:overduePlanStepIds(plan,identity,now),executionStarted:false,recordedCompletionRequiresReadback:true};
+ const terminal=task.status==='completed'||task.status==='cancelled';
+ return {taskId:task.id,taskVersion:task.version,taskStatus:task.status,plan,eligibleStepIds:terminal?[]:eligiblePlanSteps(plan,identity,availableTools).map(step=>step.id),overdueStepIds:overduePlanStepIds(plan,identity,now),executionStarted:false,recordedCompletionRequiresReadback:true};
 }
 export const CONTROL_PLAN_TOOL = {
  name:'v_prepare_work_plan_control',description:'Prepare pausing, retrying or cancelling one saved plan step through the existing Work Hub authorization panel. Supply the last fetched task version. Does not mark work completed, execute a step or cancel an already-running external action. Retry rechecks current tools; completed and cancelled steps cannot be restarted.',

@@ -21,9 +21,10 @@ export type PlanReadReceipt = z.infer<typeof receiptSchema>;
 /** receiptValue must already have passed the server's signed-envelope verifier. */
 export function preparePlanReadCheckpoint(tasks: unknown, receiptValue: unknown, identity: PlanIdentity, owner: { type: "vendor" | "partner"; id: number }, availableReads: ReadonlySet<string>, now: number) {
   const receipt = receiptSchema.parse(receiptValue);
+  if (!Number.isFinite(now)) throw Error("Invalid plan observation time");
   if (receipt.expires <= now || Date.parse(receipt.observedAt) > now) throw Error("Plan read receipt expired or invalid");
   if (receipt.userId !== identity.userId || receipt.organizationKey !== identity.organizationKey || identity.organizationKey !== `${owner.type}:${owner.id}`) throw Error("Plan read receipt identity changed");
-  const resumed = resumedWorkPlan(tasks, receipt.taskId, identity, availableReads);
+  const resumed = resumedWorkPlan(tasks, receipt.taskId, identity, availableReads, now);
   if (resumed.taskVersion !== receipt.taskVersion || resumed.plan.version !== receipt.planVersion) throw Error("Plan changed after lookup");
   if (!resumed.taskStatus || ["completed", "cancelled"].includes(resumed.taskStatus)) throw Error("Plan task is terminal");
   const step = resumed.plan.steps.find(row => row.id === receipt.stepId);

@@ -61,6 +61,7 @@ it('refuses a write or unrelated argument injection in a planned read',async()=>
  const ready=resumedWorkPlan([{...task,description:encodePlanDescription(readPlan)}],task.id,identity,new Set(['get_work_hub_briefing']));
  for(const status of ['completed','cancelled'] as const) {
   const terminal=resumedWorkPlan([{...task,status,description:encodePlanDescription(readPlan)}],task.id,identity,new Set(['get_work_hub_briefing']));
+  expect(terminal.eligibleStepIds).toEqual([]);
   expect(()=>plannedReadRequests(terminal,'brief',{get_work_hub_briefing:{}},new Set(['get_work_hub_briefing']))).toThrow('terminal');
  }
  expect(()=>plannedReadRequests(ready,'brief',{get_work_hub_briefing:{},query_tickets:{}},new Set(['get_work_hub_briefing']))).toThrow('planned');
