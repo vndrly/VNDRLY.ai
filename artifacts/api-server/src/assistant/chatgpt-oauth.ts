@@ -33,6 +33,8 @@ export type AssistantPreparedAction = {
   executionFingerprint?: string;
   /** Lookup reference only: it cannot authorize a read or write without the bound account. */
   reference?: string;
+  /** Server-created completion request; revalidated against current records at approval. Never populated from tool arguments. */
+  planCompletion?: { request: Record<string, unknown>; observedAt: number };
 };
 export const assistantTokenHash = (value: string) => createHash("sha256").update(value).digest("hex");
 export function assistantPkceChallenge(verifier: string): string {

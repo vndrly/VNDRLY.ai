@@ -1,7 +1,11 @@
 import { z } from "zod/v4";
 import { randomUUID } from "node:crypto";
 export type PlanIdentity = { userId: number; organizationKey: string };
-export type PlanStepInput = { id: string; specialist: string; toolNames: string[]; dependsOn: string[]; deadlineAt?: string };
+export const planCompletionIntentSchema = z.discriminatedUnion("kind", [
+ z.object({ kind: z.literal("planned_read_observed") }).strict(),
+ z.object({ kind: z.literal("canonical_ticket_action_saved"), action: z.enum(["submit", "approve", "cancel"]), ticketId: z.number().int().positive() }).strict(),
+]);
+export type PlanStepInput = { id: string; specialist: string; toolNames: string[]; dependsOn: string[]; deadlineAt?: string; completion?: z.infer<typeof planCompletionIntentSchema> };
 export type PlanStep = PlanStepInput & { state: "pending" | "completed" | "failed" | "waiting" | "cancelled"; resultReferences: string[]; detail?: string };
 export type CoordinatedPlan = { schemaVersion: 1; id: string; version: number; identity: PlanIdentity; steps: PlanStep[] };
 function validateGraph(steps: PlanStepInput[]) {
@@ -9,6 +13,7 @@ function validateGraph(steps: PlanStepInput[]) {
  const ids = new Set(steps.map(s=>s.id));
  if (ids.size !== steps.length || steps.some(s=>!s.id.trim() || !s.specialist.trim() || !s.toolNames.length || s.toolNames.some(n=>!n.trim()))) throw Error("Invalid plan step");
  for (const step of steps) if (step.deadlineAt !== undefined) z.string().datetime().parse(step.deadlineAt);
+ for (const step of steps) if (step.completion !== undefined) planCompletionIntentSchema.parse(step.completion);
  const completed = new Set<string>(); const active = new Set<string>();
  const byId = new Map(steps.map(s=>[s.id,s]));
  function visit(id: string) {
@@ -59,6 +64,7 @@ const persistedStep = z.object({
  toolNames:z.array(z.string().trim().min(1).max(150)).min(1).max(50),
  dependsOn:z.array(z.string().trim().min(1).max(100)).max(100),
  deadlineAt:z.string().datetime().optional(),
+ completion:planCompletionIntentSchema.optional(),
  state:z.enum(["pending","completed","failed","waiting","cancelled"]),
  resultReferences:z.array(z.string().trim().min(1).max(500)).max(100),detail:z.string().max(2000).optional(),
 }).strict();

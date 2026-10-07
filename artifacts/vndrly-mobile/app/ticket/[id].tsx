@@ -55,7 +55,8 @@ import {
   isTicketsRateLimited,
   noteTicketsRateLimit,
 } from "@/lib/ticketsRateLimitGate";
-import { getUser, type StoredUser } from "@/lib/auth";
+import { captureAuthScope, isAuthScopeCurrent, getUser, type StoredUser } from "@/lib/auth";
+import { createTicketPhotoClient, readTicketPhotoAttempt, ticketPhotoAccount } from "@/lib/ticket-photo-association";
 import { askVActionsForTicket, askVPromptRoute } from "@/lib/assistant-ticket-actions";
 import { nudgeLiveLocationReporter } from "@/lib/liveLocationReporter";
 import { MAP_TILE_SIZE, getOsmTile, openInMaps } from "@/lib/maps";
@@ -288,6 +289,17 @@ export default function TicketDetailScreen() {
   const { t } = useTranslation();
   const { id, askvEntry, askvEntryId } = useLocalSearchParams<{ id: string; askvEntry?: string; askvEntryId?: string }>();
   const ticketId = Number(id);
+  const photoBusy = useRef(false);
+  const photoContext = useRef("");
+  photoContext.current = `${currentUser ? ticketPhotoAccount(currentUser) : ""}:${ticketId}`;
+  const [photoInFlight, setPhotoInFlight] = useState(false);
+  const [photoPending, setPhotoPending] = useState(false);
+  useEffect(() => {
+    let live = true;
+    setPhotoPending(false);
+    if (currentUser && Number.isInteger(ticketId) && ticketId > 0) void readTicketPhotoAttempt(currentUser, ticketId).then(pending => { if (live) setPhotoPending(!!pending); }).catch(() => {});
+    return () => { live = false; };
+  }, [currentUser, ticketId]);
   const { nudgeFlashingTicketIds, handlePushData } = useTicketNudgeFlash({
     enabled: Number.isFinite(ticketId) && ticketId > 0,
     ticketId: Number.isFinite(ticketId) ? ticketId : undefined,
@@ -936,16 +948,30 @@ export default function TicketDetailScreen() {
   };
 
   const addPhotoNote = async () => {
+    if (!currentUser || photoBusy.current) return;
+    photoBusy.current = true;
+    setPhotoInFlight(true);
+    const photoScope = captureAuthScope();
+    const context = photoContext.current;
+    const currentPhotoContext = () => isAuthScopeCurrent(photoScope) && photoContext.current === context;
+    const client = createTicketPhotoClient(currentUser, ticketId);
     try {
-      const result = await captureAndUploadImage();
-      if (!result) return;
-      await apiFetch(`/api/tickets/${ticketId}/note-logs`, {
-        method: "POST",
-        body: JSON.stringify({ content: `[photo] ${result.objectPath}` }),
-      });
+      const actualUser = await getUser();
+      if (!isAuthScopeCurrent(photoScope) || !actualUser || ticketPhotoAccount(actualUser) !== ticketPhotoAccount(currentUser)) throw Object.assign(new Error("Request authorization changed"), { name: "AbortError" });
+      const receipt = await client.associate();
+      if (!receipt || !currentPhotoContext()) return;
+      setPhotoPending(false);
       load();
     } catch (e: unknown) {
-      Alert.alert(t("common.error"), translateApiError(e, t, t("tickets.errorAttachPhoto")));
+      if ((e as { name?: string }).name !== "AbortError" && currentPhotoContext()) {
+        const pending = await client.pending().catch(() => null);
+        if (!currentPhotoContext()) return;
+        setPhotoPending(!!pending);
+        Alert.alert(t("common.error"), translateApiError(e, t, t("tickets.errorAttachPhoto")));
+      }
+    } finally {
+      photoBusy.current = false;
+      setPhotoInFlight(false);
     }
   };
 
@@ -4212,6 +4238,10 @@ export default function TicketDetailScreen() {
       </View>
       ) : null}
 
+      {(isEditable || photoPending) && currentUser ? <LayeredPillButton onPress={addPhotoNote} disabled={photoInFlight} height={40} testID="button-ticket-photo-association">
+        <Text style={{ color: "#ffffff" }}>{t(photoPending ? "ticketPhoto.retry" : "ticketPhoto.capture")}</Text>
+      </LayeredPillButton> : null}
+      {photoPending ? <Text style={{ color: colors.mutedForeground }}>{t("ticketPhoto.pending")}</Text> : null}
       <CommentsPanel source="ticket" parentId={Number(ticketId)} />
 
       <View

@@ -8,6 +8,7 @@ import { OperationsHealth } from "@/components/implementation-a/operations-healt
 import { ImportExportTools } from "@/components/work-hub/import-export";
 import { FilesAndNotes } from "@/components/work-hub/files-and-notes";
 import { WorkHubExactItem } from "@/components/work-hub/exact-item";
+import { WorkPlanDetail, isWorkPlanDescription } from "@/components/work-hub/plan-detail";
 import { WorkHubCalls } from "@/components/work-hub/calls";
 import { MeetingScheduling } from "@/components/work-hub/meeting-scheduling";
 import { ActivityWorkspace, CollaborationWorkspace } from "@/components/work-hub/collaboration";
@@ -1359,16 +1360,14 @@ function TasksModule() {
                       {row.priority} · {row.status}
                     </span>
                     <h2 className="font-semibold">{row.title}</h2>
-                    <p className="text-sm text-muted-foreground">
-                      {row.description}
-                    </p>
+                    {isWorkPlanDescription(row.description) ? <WorkPlanDetail key={`${user?.userId}:${user?.role}:${user?.activeMembershipId}:${owner?.type}:${owner?.id}:${row.id}`} taskId={row.id} taskVersion={row.version} identity={`${user?.userId}:${user?.role}:${user?.activeMembershipId}:${owner?.type}:${owner?.id}`} /> : <p className="text-sm text-muted-foreground">{row.description}</p>}
                     <p className="text-xs">
                       Assignee {row.assigneeUserId ?? "unassigned"} · Due{" "}
                       {displayDate(row.dueAt)}
                     </p>
                   </div>
                   <div className="flex gap-2">
-                    {row.status === "open" && (
+                    {row.status === "open" && !isWorkPlanDescription(row.description) && (
                       <BrandPillButton
                         tone="brand"
                         onClick={() =>
@@ -1378,7 +1377,7 @@ function TasksModule() {
                         Start
                       </BrandPillButton>
                     )}
-                    {row.status !== "completed" && (
+                    {row.status !== "completed" && !isWorkPlanDescription(row.description) && (
                       <BrandPillButton
                         tone="green"
                         onClick={() =>

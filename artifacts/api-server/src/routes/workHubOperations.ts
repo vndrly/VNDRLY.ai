@@ -111,6 +111,13 @@ import {
 } from "../services/gate-attendance";
 import { ChangeOverError } from "../services/gate-change-over";
 import { gateStationSchedulingFilter } from "../services/gate-location-policy";
+import { SESSION_SECRET } from "../lib/session";
+import { validateAssistantSession } from "../assistant/chatgpt-grant-store";
+import { ASSISTANT_SCOPES } from "../assistant/chatgpt-oauth";
+import { chatGptActionTools, chatGptReadableTools } from "../assistant/chatgpt-tool-access";
+import { planOperationTools } from "../assistant/chatgpt-operation-tools";
+import { resumedWorkPlan } from "../assistant/chatgpt-coordinated-plan";
+import { verifiedPlanCompletionIds } from "../assistant/plan-completion-proof";
 
 const router: IRouter = Router();
 const storage = new ObjectStorageService();
@@ -532,6 +539,22 @@ router.get("/work-hub/home", async (req, res) => {
   });
 });
 
+router.get("/work-hub/tasks/:id/plan", async (req, res) => {
+  try {
+    const savedSession = actor(req);
+    if (!savedSession) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
+    const session = await validateAssistantSession(savedSession);
+    const taskId = z.string().uuid().parse(req.params.id);
+    const [task] = await db.select().from(workHubTasksTable).where(and(eq(workHubTasksTable.id, taskId), ownerFilter(session as Actor))).limit(1);
+    if (!task || !session.userId) return sendApiError(res, 404, "work_hub.not_found", "Plan unavailable");
+    const tools = [...chatGptReadableTools(session, [...ASSISTANT_SCOPES]), ...planOperationTools(chatGptActionTools(session, [...ASSISTANT_SCOPES]))];
+    // Native/web session authority, not an OAuth scope grant or promise that ChatGPT exposes these tools.
+    const projection = resumedWorkPlan([task], taskId, { userId: session.userId, organizationKey: `${task.ownerOrgType}:${task.ownerOrgId}` }, new Set(tools.map(tool => tool.name)), Date.now(), (id, plan) => verifiedPlanCompletionIds(SESSION_SECRET, id, plan));
+    return res.json({ ...projection, title: task.title, permissionSource: "current_platform_session", backgroundExecutionAvailable: false });
+  } catch {
+    return sendApiError(res, 403, "work_hub.forbidden", "Plan unavailable or account access changed");
+  }
+});
 router.get("/work-hub/tasks", async (req, res) => {
   const session = actor(req);
   if (!session)

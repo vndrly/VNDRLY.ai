@@ -225,3 +225,61 @@ describe("Task #524 — server refuses crew actions on a deactivated worker", ()
     expect(r.body.code).not.toBe("crew.employee_inactive");
   });
 });
+
+describe("current foreman actor authority", () => {
+  it.each(["foreman", "both"])(
+    "rejects inactive %s actor before another worker's crew write",
+    async (vendorRole) => {
+      selectQueue = [
+        ticketRow,
+        { vendorId: VENDOR_ID, vendorRole, isActive: false },
+      ];
+      const result = await request(app)
+        .post(`/api/tickets/${TICKET_ID}/crew-roster`)
+        .set(
+          "Cookie",
+          cookieFor({ userId: 9, role: "field_employee", vendorId: VENDOR_ID }),
+        )
+        .send({ employeeId: 555 });
+      expect(result.status).toBe(403);
+      expect(result.body.code).toBe("ticket.no_access");
+    },
+  );
+  it.each(["foreman", "both"])(
+    "retains active %s actor authority and reaches the target-worker guard",
+    async (vendorRole) => {
+      selectQueue = [
+        ticketRow,
+        { vendorId: VENDOR_ID, vendorRole, isActive: true },
+        { id: 555, vendorId: VENDOR_ID, isActive: false },
+      ];
+      const result = await request(app)
+        .post(`/api/tickets/${TICKET_ID}/crew-roster`)
+        .set(
+          "Cookie",
+          cookieFor({ userId: 9, role: "field_employee", vendorId: VENDOR_ID }),
+        )
+        .send({ employeeId: 555 });
+      expect(result.status).toBe(409);
+      expect(result.body.code).toBe("crew.employee_inactive");
+    },
+  );
+  it.each(["gate_supervisor", "office", "field"])(
+    "does not infer foreman crew mutation authority from %s",
+    async (vendorRole) => {
+      selectQueue = [
+        ticketRow,
+        { vendorId: VENDOR_ID, vendorRole, isActive: true },
+      ];
+      const result = await request(app)
+        .post(`/api/tickets/${TICKET_ID}/crew-roster`)
+        .set(
+          "Cookie",
+          cookieFor({ userId: 9, role: "field_employee", vendorId: VENDOR_ID }),
+        )
+        .send({ employeeId: 555 });
+      expect(result.status).toBe(403);
+      expect(result.body.code).toBe("ticket.no_access");
+    },
+  );
+});

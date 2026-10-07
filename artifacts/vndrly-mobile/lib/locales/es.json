@@ -2757,5 +2757,38 @@
       "office": "Oficina",
       "both": "Trabajador de campo y capataz"
     }
+  },
+  "ticketPhoto": {
+    "retry": "Comprobar foto guardada y reintentar",
+    "capture": "Tomar foto del ticket",
+    "pending": "La asociación de la foto no está verificada. Comprobar o reintentar usa la misma carga y operación guardadas; no toma otra foto."
+  },
+  "workPlan": {
+    "refresh": "Actualizar registro actual",
+    "none": "Ninguno",
+    "verified": "Punto de control de finalización verificado con evidencia guardada",
+    "boundary": "Esta vista lee el plan guardado. No ejecuta pasos, aprueba acciones ni prueba trabajo físico.",
+    "title": "Plan de trabajo",
+    "revision": "Revisión de tarea {{task}} · Revisión del plan {{plan}} · {{status}}",
+    "tools": "Herramientas previstas: {{value}}",
+    "notCompleted": "Sin punto de control de finalización verificado",
+    "recordedUnverified": "Registrado como completado; evidencia no verificada",
+    "loading": "Cargando plan de trabajo",
+    "open": "Abrir plan de trabajo",
+    "states": {
+      "cancelled": "Cancelado",
+      "waiting": "En espera",
+      "pending": "Pendiente",
+      "completed": "Registrado como completado",
+      "failed": "Fallido"
+    },
+    "eligible": "Elegible en la sesión actual de la plataforma; el consentimiento de ChatGPT se verifica por separado",
+    "overdue": "Vencido; sin ejecución automática",
+    "handoff": "Usa el panel de autorización de acciones existente en tu cuenta conectada de ChatGPT para preparar y aprobar un punto de control de finalización. Actualiza aquí para leer el resultado realmente guardado.",
+    "references": "Referencias de evidencia guardadas: {{value}}",
+    "deadline": "Fecha límite informativa: {{value}}",
+    "unavailable": "Este plan no está disponible para la cuenta o empresa actual. Verifica tu cuenta activa y actualiza.",
+    "dependencies": "Requisitos previos: {{value}}",
+    "readOnlyCheckpoint": "Este punto de control registra solo consultas observadas; no completa trabajo operativo."
   }
 }

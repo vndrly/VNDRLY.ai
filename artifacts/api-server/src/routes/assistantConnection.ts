@@ -31,6 +31,8 @@ import { CHATGPT_WRITE_CAPABILITIES, validateChatGptActionInput, sanitizeChatGpt
 
 import { RESUME_PLAN_TOOL, resumedWorkPlan, PREPARE_PLAN_TOOL, prepareWorkPlan, RUN_PLAN_READ_TOOL, plannedReadRequests, CONTROL_PLAN_TOOL, prepareWorkPlanControl } from "../assistant/chatgpt-coordinated-plan";
 import { PLAN_READ_CHECKPOINT_TOOL, preparePlanReadCheckpoint } from "../assistant/chatgpt-plan-read-checkpoint";
+import { PLAN_COMPLETION_TOOL, planCompletionRequestSchema, preparePlanCompletion } from "../assistant/chatgpt-plan-completion";
+import { verifiedPlanCompletionIds } from "../assistant/plan-completion-proof";
 
 const router = Router();
 const origin = new URL(ASSISTANT_ISSUER).origin;
@@ -38,6 +40,7 @@ const limiter = createRateLimiter({ resourcePrefix: "assistant_connection", erro
 const SERVER_ACTION_FIELDS = new Set(["confirmed", "operationId", "idempotencyKey", "voiceSessionId", "latitude", "longitude", "accuracyMeters", "startLatitude", "startLongitude", "locationSharingActive", "currentLocation"]);
 const escape = (text: string) => text.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 const sign = (body: string) => createHmac("sha256", SESSION_SECRET).update(`assistant-consent:${body}`).digest("base64url");
+const verifyPlanCompletions = (taskId: string, plan: import('../assistant/coordinated-plan').CoordinatedPlan) => verifiedPlanCompletionIds(SESSION_SECRET, taskId, plan);
 function envelope(value: unknown) {
   const body = Buffer.from(JSON.stringify(value)).toString("base64url");
   return `${body}.${sign(body)}`;
@@ -318,7 +321,7 @@ router.post("/mcp", async (req, res) => {
     const actions = chatGptActionTools(authorized.session, authorized.scopes);
     const upgradeTools = financeConsentUpgradeTools(authorized.session, authorized.scopes).map(tool => ({ name: tool.name, description: `${tool.description} Additional finance consent is required before preparation; this does not transfer money.`, inputSchema: { ...tool.inputSchema, properties: Object.fromEntries(Object.entries(tool.inputSchema.properties ?? {}).filter(([key]) => !SERVER_ACTION_FIELDS.has(key))), required: (tool.inputSchema.required ?? []).filter(key => !SERVER_ACTION_FIELDS.has(key)) }, securitySchemes: FINANCE_SECURITY_SCHEMES, annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: false }, _meta: { securitySchemes: FINANCE_SECURITY_SCHEMES } }));
     upgradeTools.push(...fleetUpgradeDescriptors.filter(tool => !tool.annotations.readOnlyHint));
-    const planTools = actions.some(tool => tool.name === "manage_work_hub_task") ? [{ ...PREPARE_PLAN_TOOL, _meta: ACTION_PANEL_META }, ...(reads.some(tool => tool.name === 'list_work_hub_tasks') ? [{ ...CONTROL_PLAN_TOOL, _meta: ACTION_PANEL_META }, { ...PLAN_READ_CHECKPOINT_TOOL, _meta: ACTION_PANEL_META }] : [])] : [];
+    const planTools = actions.some(tool => tool.name === "manage_work_hub_task") ? [{ ...PREPARE_PLAN_TOOL, _meta: ACTION_PANEL_META }, ...(reads.some(tool => tool.name === 'list_work_hub_tasks') ? [{ ...CONTROL_PLAN_TOOL, _meta: ACTION_PANEL_META }, { ...PLAN_READ_CHECKPOINT_TOOL, _meta: ACTION_PANEL_META }, { ...PLAN_COMPLETION_TOOL, _meta: ACTION_PANEL_META }] : [])] : [];
     const preparedTools = exposedOperationTools(actions).map((tool) => ({ ...(CHATGPT_WRITE_CAPABILITIES["finance:write"].tools.includes(tool.name as never) ? { securitySchemes: FINANCE_SECURITY_SCHEMES } : {}), ...(fleetToolSecuritySchemes(tool.name, authorized.scopes) ? { securitySchemes: fleetToolSecuritySchemes(tool.name, authorized.scopes) } : {}), name: tool.name, description: `${tool.description}${tool.name.startsWith("manage_ticket_record") ? " Authorized operations can overwrite ticket fields, cancel tickets, or remove line items. This call only prepares the change; submission requires the existing authorization panel." : ""} This connection prepares the exact change for authorization in the VNDRLY action panel. Location-dependent actions use the secure device authorization link. Never claim prepared means completed.`, inputSchema: { ...tool.inputSchema, properties: Object.fromEntries(Object.entries(tool.inputSchema.properties ?? {}).filter(([key]) => !SERVER_ACTION_FIELDS.has(key))), required: (tool.inputSchema.required ?? []).filter((key) => !SERVER_ACTION_FIELDS.has(key)) }, annotations: { readOnlyHint: false, destructiveHint: tool.name.startsWith("manage_ticket_record") || tool.name === "manage_gate_shift_cancel_handoff" || tool.name === "cancel_fleet_cargo_transfer" || tool.name === "cancel_fleet_equipment_replacement", openWorldHint: false }, _meta: { ...ACTION_PANEL_META, ...(fleetToolSecuritySchemes(tool.name, authorized.scopes) ? { securitySchemes: fleetToolSecuritySchemes(tool.name, authorized.scopes) } : {}) } }));
 
     return reply({ tools: [...reads, ...preparedTools, ...upgradeTools, ...planTools, ...(actions.length ? [SUBMIT_PANEL_ACTION_TOOL] : []), ...((actions.length || upgradeTools.length) ? [{ name: "v_prepare_action", securitySchemes: [{ type: "oauth2", scopes: [...authorized.scopes] }], _meta: { ...ACTION_PANEL_META, securitySchemes: [{ type: "oauth2", scopes: [...authorized.scopes] }] }, description: "Prepare an authorized VNDRLY change and return its secure VNDRLY approval link. This tool never claims the change is completed. Model-supplied approval and GPS are ignored. Finance operations may require finance:write consent when invoked; unrelated operations retain existing scopes.", inputSchema: { type: "object", properties: { toolName: { type: "string", enum: [...actions, ...upgradeTools].map((tool) => tool.name) }, arguments: { type: "object" } }, required: ["toolName", "arguments"], additionalProperties: false }, annotations: { readOnlyHint: false, destructiveHint: actions.some(tool => tool.name === "manage_ticket_record"), openWorldHint: false } }, { name: "v_action_status", outputSchema: ACTION_STATUS_OUTPUT_SCHEMA, _meta: { "openai/widgetAccessible": true }, description: "Read the status and actual result of an action prepared by this connected account. Pending or running does not mean completed.", inputSchema: { type: "object", properties: { reference: { type: "string" } }, required: ["reference"], additionalProperties: false }, annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false } }] : [])] });
@@ -374,7 +377,7 @@ router.post("/mcp", async (req, res) => {
       if (!owner || !session.userId) throw new Error("Plan company unavailable");
       const raw = JSON.parse(await runTool("list_work_hub_tasks", {}, session, ""));
       const tools = [...chatGptReadableTools(session, authorized.scopes), ...planOperationTools(chatGptActionTools(session, authorized.scopes))];
-      const output = resumedWorkPlan(raw, args.taskId, { userId: session.userId, organizationKey: owner.type + ":" + owner.id }, new Set(tools.map(tool => tool.name)));
+      const output = resumedWorkPlan(raw, args.taskId, { userId: session.userId, organizationKey: owner.type + ":" + owner.id }, new Set(tools.map(tool => tool.name)), Date.now(), verifyPlanCompletions);
       await writeAskVActionAudit({ session, clientSurface: "api", inputMode: "web_text", provider: "chatgpt_mcp", toolName: "list_work_hub_tasks", targetType: "task", toolInput: { taskId: args.taskId }, toolOutput: { taskId: output.taskId, taskVersion: output.taskVersion }, resultStatus: "success" });
       if (name === "v_run_work_plan_read") {
         if (typeof args.stepId !== "string") throw new Error("Missing plan step");
@@ -501,6 +504,14 @@ router.post("/mcp", async (req, res) => {
     const operation = resolveOperationTool(name, args, permittedActions);
     name = operation.name;
     args = operation.input;
+    let planCompletion: AssistantPreparedAction['planCompletion'];
+    if (name === 'v_prepare_work_plan_completion') {
+      const request = planCompletionRequestSchema.parse(args);
+      const observedAt = Date.now();
+      args = await currentPlanCompletion(authorized.session, authorized.scopes, request, observedAt);
+      planCompletion = { request, observedAt };
+      name = 'manage_work_hub_task';
+    }
     if (name === 'v_prepare_work_plan_read_checkpoint') {
       if (!permittedActions.some(tool => tool.name === 'manage_work_hub_task')) throw new Error('Action unavailable');
       if (Object.keys(args).some(key => key !== 'receipt')) throw new Error('Invalid checkpoint request');
@@ -510,7 +521,7 @@ router.post("/mcp", async (req, res) => {
       if (!owner || !session.userId) throw new Error('Plan company unavailable');
       const receipt = readEnvelope(args.receipt);
       const raw = JSON.parse(await runTool('list_work_hub_tasks', {}, session, ''));
-      args = preparePlanReadCheckpoint(raw, receipt, { userId: session.userId, organizationKey: owner.type + ':' + owner.id }, owner, new Set(chatGptReadableTools(session, authorized.scopes).map(tool => tool.name)), Date.now());
+      args = preparePlanReadCheckpoint(raw, receipt, { userId: session.userId, organizationKey: owner.type + ':' + owner.id }, owner, new Set(chatGptReadableTools(session, authorized.scopes).map(tool => tool.name)), Date.now(), verifyPlanCompletions);
       name = 'manage_work_hub_task';
     }
     if (name === 'v_prepare_work_plan_control') {
@@ -520,7 +531,7 @@ router.post("/mcp", async (req, res) => {
       const owner = session.vendorId ? { type: 'vendor' as const, id: session.vendorId } : session.partnerId ? { type: 'partner' as const, id: session.partnerId } : null;
       if (!owner || !session.userId) throw new Error('Plan company unavailable');
       const raw = JSON.parse(await runTool('list_work_hub_tasks', {}, session, ''));
-      args = prepareWorkPlanControl(raw, args, { userId: session.userId, organizationKey: owner.type + ':' + owner.id }, owner, new Set([...chatGptReadableTools(session, authorized.scopes), ...planOperationTools(permittedActions)].map(tool => tool.name)));
+      args = prepareWorkPlanControl(raw, args, { userId: session.userId, organizationKey: owner.type + ':' + owner.id }, owner, new Set([...chatGptReadableTools(session, authorized.scopes), ...planOperationTools(permittedActions)].map(tool => tool.name)), verifyPlanCompletions);
       await writeAskVActionAudit({ session, clientSurface: 'api', inputMode: 'web_text', provider: 'chatgpt_mcp', toolName: 'list_work_hub_tasks', targetType: 'task', toolInput: { taskId: args.taskId }, toolOutput: { taskId: args.taskId, taskVersion: args.expectedVersion }, resultStatus: 'success' });
       name = 'manage_work_hub_task';
     }
@@ -548,7 +559,7 @@ router.post("/mcp", async (req, res) => {
         const prior = grants.filter((item) => organizationKeyFromSession(item.session) === organizationKeyFromSession(grant.session)).flatMap((item) => (item.actions ?? []).filter((action) => !item.revoked || unresolved(action))).find((action) => action.fingerprint === fingerprint && (unresolved(action) || action.createdAt > Date.now() - 300_000) && action.reference);
         if (prior) return { reference: prior.reference!, state: prior.state, result: prior.result, panelProof: grant.actions?.includes(prior) && prior.state === "pending" ? envelope({ kind: "component-action", tokenHash: prior.tokenHash, fingerprint: prior.fingerprint, nonce: randomBytes(32).toString("base64url"), expires: prior.expiresAt }) : undefined };
         if (grant.actions.length >= 20) throw new Error("Too many pending actions");
-        grant.actions.push({ reference: actionToken, tokenHash: assistantTokenHash(actionToken), toolName: tool.name, arguments: input, fingerprint, createdAt: Date.now(), expiresAt: Date.now() + 300_000, turnId: randomBytes(6).readUIntBE(0, 6), state: "pending" });
+        grant.actions.push({ reference: actionToken, tokenHash: assistantTokenHash(actionToken), toolName: tool.name, arguments: input, fingerprint, createdAt: Date.now(), expiresAt: Date.now() + 300_000, turnId: randomBytes(6).readUIntBE(0, 6), state: "pending", ...(planCompletion ? { planCompletion } : {}) });
         return { reference: actionToken, state: "pending", result: undefined, panelProof: envelope({ kind: "component-action", tokenHash: assistantTokenHash(actionToken), fingerprint, nonce: randomBytes(32).toString("base64url"), expires: Date.now() + 300_000 }) };
       });
       const previousResult = prepared.result ? JSON.parse(prepared.result) : null;
@@ -582,6 +593,33 @@ router.post("/mcp", async (req, res) => {
 });
 router.all("/mcp", (_req, res) => res.status(405).set("Allow", "POST").end());
 const needsLocation = (toolName: string, input: Record<string, unknown> = {}) => ["confirm_visitor_check_in", "confirm_visitor_check_out", "start_paid_travel", "set_ticket_lifecycle", "close_ticket_for_review"].includes(toolName) || (toolName === "confirm_field_trips_action" && input.action === "location");
+async function currentPlanCompletion(session: SessionPayload, scopes: string[], input: unknown, observedAt: number) {
+  const request = planCompletionRequestSchema.parse(input);
+  const reads = chatGptReadableTools(session, scopes);
+  const actions = chatGptActionTools(session, scopes);
+  if (!session.userId || !actions.some(tool => tool.name === 'manage_work_hub_task')) throw Error('Action unavailable');
+  requireChatGptReadableTool(session, scopes, 'list_work_hub_tasks');
+  const owner = session.vendorId ? { type: 'vendor' as const, id: session.vendorId } : session.partnerId ? { type: 'partner' as const, id: session.partnerId } : null;
+  if (!owner) throw Error('Plan company unavailable');
+  const tasks = JSON.parse(await runTool('list_work_hub_tasks', {}, session, ''));
+  const available = new Set([...reads, ...planOperationTools(actions)].map(tool => tool.name));
+  const resumed = resumedWorkPlan(tasks, request.taskId, { userId: session.userId, organizationKey: owner.type + ':' + owner.id }, available, Date.now(), verifyPlanCompletions);
+  const step = resumed.plan.steps.find(row => row.id === request.stepId);
+  const evidence: { receipt?: unknown; action?: unknown; ticket?: unknown } = {};
+  if (request.receipt) evidence.receipt = readEnvelope(request.receipt);
+  if (request.actionReference) {
+    if (assistantTokenUserId(request.actionReference) !== session.userId) throw Error('Action unavailable');
+    evidence.action = await withAssistantGrants(session.userId, async grants => {
+      const action = grants.filter(grant => organizationKeyFromSession(grant.session) === organizationKeyFromSession(session)).flatMap(grant => grant.actions ?? []).find(action => action.tokenHash === assistantTokenHash(request.actionReference!));
+      if (!action) throw Error('Saved action unavailable');
+      return structuredClone(action);
+    });
+    if (step?.completion?.kind !== 'canonical_ticket_action_saved') throw Error('Unsupported plan completion');
+    requireChatGptReadableTool(session, scopes, 'query_ticket_detail');
+    evidence.ticket = JSON.parse(await runTool('query_ticket_detail', { ticketId: step.completion.ticketId }, session, ''));
+  }
+  return preparePlanCompletion(tasks, request, { userId: session.userId, organizationKey: owner.type + ':' + owner.id }, owner, available, new Set(reads.map(tool => tool.name)), evidence, SESSION_SECRET, Date.now(), observedAt);
+}
 const unresolved = (action: AssistantPreparedAction) => action.state === "running" || action.state === "outcome_unknown";
 async function reconcileAction(action: AssistantPreparedAction, session: import("../lib/session").SessionPayload, database: Omit<typeof import("@workspace/db").db, "$client">) {
   if (!unresolved(action) || !action.executionFingerprint) return;
@@ -626,11 +664,16 @@ async function executePreparedAction(reserved: Awaited<ReturnType<typeof authori
       action.state = "running";
       action.executionFingerprint = mutationIdempotencyKey(current.userId!, action.toolName, input);
       action.expiresAt = Date.now() + 3600_000;
-      return { session: current, tool };
+      return { session: current, tool, scopes: grant.scopes, planCompletion: action.planCompletion };
     });
     if (!claim) return null;
     claimed = true;
     const { session, tool } = claim;
+    if (claim.planCompletion) {
+      const checked = await currentPlanCompletion(session, claim.scopes, claim.planCompletion.request, claim.planCompletion.observedAt);
+      const preparedInput = Object.fromEntries(Object.entries(input).filter(([key]) => !SERVER_ACTION_FIELDS.has(key)));
+      if (JSON.stringify(checked) !== JSON.stringify(preparedInput)) throw Error('Plan completion changed before approval');
+    }
     askvPendingConfirmations.set({ userId: session.userId!, organizationKey: organizationKeyFromSession(session), sessionId: `conversation:${reserved.action.turnId}`, contextKey: reserved.action.tokenHash, toolName: tool.name, arguments: input, idempotencyKey: `chatgpt:${reserved.action.tokenHash}` });
     const result = await runBoundTypedAskVTool({ name: tool.name, input, session, conversationId: reserved.action.turnId, turnId: reserved.action.turnId, contextKey: reserved.action.tokenHash, phrase: "confirm", execute: async authorizedInput => JSON.stringify(chatGptActionResult(tool.name, JSON.parse(await runTool(tool.name, authorizedInput, session, "", false, isTypedWorkHubTool(tool.name))))) });
     const output = chatGptActionResult(tool.name, JSON.parse(result)) as Record<string, unknown>;

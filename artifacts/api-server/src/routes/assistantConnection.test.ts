@@ -41,6 +41,24 @@ beforeEach(() => {
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => ({ client_id: CHATGPT_CLIENT_ID, redirect_uris: [redirect], token_endpoint_auth_methods_supported: ["none"] }) }));
 });
 afterEach(() => { delete process.env.ASSISTANT_CONNECTION_ENABLED; vi.unstubAllGlobals(); vi.restoreAllMocks(); });
+it.each([false, true])('rechecks observed plan completion at approval (changed task: %s)', async changed => {
+ const {createCoordinatedPlan,encodePlanDescription}=await import('../assistant/coordinated-plan');
+ const taskId='11111111-1111-4111-8111-111111111111';
+ const plan=createCoordinatedPlan({userId:17,organizationKey:'vendor:4'},[{id:'brief',specialist:'V',toolNames:['get_work_hub_briefing'],dependsOn:[],completion:{kind:'planned_read_observed'}}]);
+ const row={id:taskId,ownerOrgType:'vendor',ownerOrgId:4,version:1,status:'open',description:encodePlanDescription(plan)};
+ const credentials=await tokens('work_hub:read work_hub:write');
+ const call=(name:string,args:unknown)=>request(app).post(base+'/mcp').set('Authorization','Bearer '+credentials.access_token).send({jsonrpc:'2.0',id:1,method:'tools/call',params:{name,arguments:args}});
+ mocks.run.mockImplementation(async name => JSON.stringify(name==='list_work_hub_tasks'?[row]:{tasks:[],events:[]}));
+ const receipt=(await call('v_run_work_plan_read',{taskId,stepId:'brief',toolArguments:{get_work_hub_briefing:{}}})).body.result.structuredContent.checkpointReceipt;
+ const prepared=(await call('v_prepare_work_plan_completion',{taskId,expectedTaskVersion:1,stepId:'brief',receipt})).body.result;
+ expect(prepared.isError).toBe(false);
+ expect(grants[0].actions![0].state).toBe('pending');
+ expect(mocks.bound).not.toHaveBeenCalled();
+ if(changed) row.version=2;
+ const response=(await call('v_submit_panel_action',prepared._meta.componentApproval)).body.result;
+ if(changed) { expect(response.isError).toBe(true); expect(mocks.bound).not.toHaveBeenCalled(); }
+ else { expect(response.structuredContent.status).toBe('completed'); expect(mocks.bound).toHaveBeenCalledOnce(); }
+});
 async function consent(scope = auth.scope) {
   const response = await request(app).get(`${base}/authorize`).query({ ...auth, scope }).set("Cookie", cookie());
   expect(response.status).toBe(200);
@@ -758,4 +776,3 @@ it('returns safety draft fields through the scoped read boundary without a clien
  expect((await call(limited.access_token)).body.result.isError).toBe(true);
  expect(mocks.run).not.toHaveBeenCalled();
 });
-

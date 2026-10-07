@@ -31,6 +31,7 @@ import { apiFetch } from "@/lib/api";
 import { captureAuthScope, isAuthScopeCurrent } from "@/lib/auth";
 import { pickMeetingFile, persistMeetingFileForOffline, uploadMeetingFile, type MeetingFileSource } from "@/lib/meeting-files";
 import { loadFilesInventoryData, mobileOwner, moduleEndpoint } from "@/lib/work-hub-mobile";
+import { isCoordinatedPlanDescription } from "@/lib/work-hub-plan";
 import {
   flushNativeWorkHubQueue,
   isOfflineWorkHubFailure,
@@ -207,7 +208,7 @@ function WorkHubModuleContent() {
     return [];
   }, [data, module]);
   const complete = async (row: Row) => {
-    if (!owner) return;
+    if (!owner || isCoordinatedPlanDescription(row.description)) return;
     const body = envelope(owner, { status: "completed" }, row.version);
     const path = `/api/work-hub/tasks/${row.id}`;
     try {
@@ -636,7 +637,7 @@ function WorkHubModuleContent() {
               >
                 {row.title ?? row.name ?? row.fileName ?? "Untitled record"}
               </Text>
-              {row.description || row.agenda || row.body ? (
+              {(row.description || row.agenda || row.body) && !(module === "tasks-forms" && isCoordinatedPlanDescription(row.description)) ? (
                 <Text style={{ color: colors.mutedForeground }}>
                   {row.description ?? row.agenda ?? row.body}
                 </Text>
@@ -677,7 +678,8 @@ function WorkHubModuleContent() {
                   </Text>
                 </Pressable>
               )}
-              {module === "tasks-forms" && row.status !== "completed" && (
+              {module === "tasks-forms" && isCoordinatedPlanDescription(row.description) ? <TogglePillButton color="blue" onPress={() => router.push(`/work-hub/task/${row.id}` as never)}>{t("workPlan.open")}</TogglePillButton> : null}
+              {module === "tasks-forms" && row.status !== "completed" && !isCoordinatedPlanDescription(row.description) && (
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={`Complete ${row.title}`}

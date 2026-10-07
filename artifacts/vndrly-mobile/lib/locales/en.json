@@ -2757,5 +2757,38 @@
       "office": "Office",
       "both": "Field worker and foreman"
     }
+  },
+  "ticketPhoto": {
+    "retry": "Check saved photo and retry",
+    "capture": "Capture ticket photo",
+    "pending": "Photo association is unverified. Checking or retrying uses the same saved upload and operation; it does not take another photo."
+  },
+  "workPlan": {
+    "refresh": "Refresh current record",
+    "none": "None",
+    "verified": "Completion checkpoint verified against saved evidence",
+    "boundary": "This view reads the saved plan. It does not run steps, approve actions, or prove physical work.",
+    "title": "Work plan",
+    "revision": "Task revision {{task}} · Plan revision {{plan}} · {{status}}",
+    "tools": "Planned tools: {{value}}",
+    "notCompleted": "No verified completion checkpoint",
+    "recordedUnverified": "Recorded completed; evidence not verified",
+    "loading": "Loading work plan",
+    "open": "Open work plan",
+    "states": {
+      "cancelled": "Cancelled",
+      "waiting": "Waiting",
+      "pending": "Pending",
+      "completed": "Recorded completed",
+      "failed": "Failed"
+    },
+    "eligible": "Eligible under the current platform session; ChatGPT consent is checked separately",
+    "overdue": "Overdue; no automatic execution",
+    "handoff": "Use the existing action authorization panel in your connected ChatGPT account to prepare and approve a completion checkpoint. Refresh here to read the actual saved result.",
+    "references": "Saved evidence references: {{value}}",
+    "deadline": "Informational deadline: {{value}}",
+    "unavailable": "This plan is unavailable for the current account or company. Refresh after checking your active account.",
+    "dependencies": "Prerequisites: {{value}}",
+    "readOnlyCheckpoint": "This checkpoint records observed queries only; it does not complete business work."
   }
 }

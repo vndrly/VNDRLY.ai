@@ -145,10 +145,10 @@ async function ensureCrewMutate(req: any, res: any, ticketId: number): Promise<{
     // can mutate crew records on behalf of others. Plain field employees can
     // still self check-in/out via the legacy /tickets/:id/check-in route.
     const [me] = await db
-      .select({ vendorId: vendorPeopleTable.vendorId, vendorRole: vendorPeopleTable.vendorRole })
+      .select({ vendorId: vendorPeopleTable.vendorId, vendorRole: vendorPeopleTable.vendorRole, isActive: vendorPeopleTable.isActive })
       .from(vendorPeopleTable)
-      .where(and(eq(vendorPeopleTable.userId, session.userId), isNull(vendorPeopleTable.deletedAt)));
-    if (me && me.vendorId === ticket.vendorId && (me.vendorRole === "foreman" || me.vendorRole === "both")) {
+      .where(and(eq(vendorPeopleTable.userId, session.userId), eq(vendorPeopleTable.isActive, true), isNull(vendorPeopleTable.deletedAt)));
+    if (me && me.isActive === true && me.vendorId === ticket.vendorId && (me.vendorRole === "foreman" || me.vendorRole === "both")) {
       return { session, vendorId: ticket.vendorId };
     }
   }

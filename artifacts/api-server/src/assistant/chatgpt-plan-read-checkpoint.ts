@@ -1,6 +1,6 @@
 import { z } from "zod/v4";
 import { checkpointPlan, encodePlanDescription, type PlanIdentity } from "./coordinated-plan";
-import { resumedWorkPlan } from "./chatgpt-coordinated-plan";
+import { resumedWorkPlan, type PlanCompletionVerifier } from "./chatgpt-coordinated-plan";
 
 export const PLAN_READ_CHECKPOINT_TOOL = {
   name: "v_prepare_work_plan_read_checkpoint",
@@ -9,22 +9,22 @@ export const PLAN_READ_CHECKPOINT_TOOL = {
   annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
 };
 
-const receiptSchema = z.object({
+export const planReadReceiptSchema = z.object({
   kind: z.literal("plan-read-checkpoint"), id: z.string().uuid(),
   userId: z.number().int().positive(), organizationKey: z.string().min(1),
   taskId: z.string().uuid(), taskVersion: z.number().int().positive(), planVersion: z.number().int().positive(),
   stepId: z.string().min(1).max(100), expires: z.number().finite(), observedAt: z.string().datetime(),
   observations: z.array(z.object({ toolName: z.string().min(1), failed: z.boolean(), resultHash: z.string().regex(/^[a-f0-9]{64}$/) }).strict()).min(1).max(50),
 }).strict();
-export type PlanReadReceipt = z.infer<typeof receiptSchema>;
+export type PlanReadReceipt = z.infer<typeof planReadReceiptSchema>;
 
 /** receiptValue must already have passed the server's signed-envelope verifier. */
-export function preparePlanReadCheckpoint(tasks: unknown, receiptValue: unknown, identity: PlanIdentity, owner: { type: "vendor" | "partner"; id: number }, availableReads: ReadonlySet<string>, now: number) {
-  const receipt = receiptSchema.parse(receiptValue);
+export function preparePlanReadCheckpoint(tasks: unknown, receiptValue: unknown, identity: PlanIdentity, owner: { type: "vendor" | "partner"; id: number }, availableReads: ReadonlySet<string>, now: number, verifyCompleted?: PlanCompletionVerifier) {
+  const receipt = planReadReceiptSchema.parse(receiptValue);
   if (!Number.isFinite(now)) throw Error("Invalid plan observation time");
   if (receipt.expires <= now || Date.parse(receipt.observedAt) > now) throw Error("Plan read receipt expired or invalid");
   if (receipt.userId !== identity.userId || receipt.organizationKey !== identity.organizationKey || identity.organizationKey !== `${owner.type}:${owner.id}`) throw Error("Plan read receipt identity changed");
-  const resumed = resumedWorkPlan(tasks, receipt.taskId, identity, availableReads, now);
+  const resumed = resumedWorkPlan(tasks, receipt.taskId, identity, availableReads, now, verifyCompleted);
   if (resumed.taskVersion !== receipt.taskVersion || resumed.plan.version !== receipt.planVersion) throw Error("Plan changed after lookup");
   if (!resumed.taskStatus || ["completed", "cancelled"].includes(resumed.taskStatus)) throw Error("Plan task is terminal");
   const step = resumed.plan.steps.find(row => row.id === receipt.stepId);
