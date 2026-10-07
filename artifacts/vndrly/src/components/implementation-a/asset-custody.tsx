@@ -229,7 +229,7 @@ export function InventoryCustody({
               setCondition("good");
             }}
           >
-            {t("inventoryCustody." + a)}
+            {t(`inventoryCustody.${a}`)}
           </PngPillButton>
         ))}
       {action && (
@@ -246,7 +246,7 @@ export function InventoryCustody({
               {["new", "good", "fair", "damaged", "missing", "stolen"].map(
                 (c) => (
                   <option key={c} value={c}>
-                    {t("inventoryCustody.conditions." + c)}
+                    {t(`inventoryCustody.conditions.${c}`)}
                   </option>
                 ),
               )}
