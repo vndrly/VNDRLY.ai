@@ -1,3 +1,4 @@
+import { TicketLaborFinalizationInputSchema } from "@workspace/api-zod";
 import { awayResponderRequest,AWAY_RESPONDER_READ_INPUT } from "./away-responder-tools";
 import { meetingSearchInputSchema, searchSavedMeetingProjection } from "./work-hub-meeting-search";
 import { displayActionRequest } from "./operations-display-action-adapter";
@@ -188,6 +189,11 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
     if (action === "unlock") {
       if (typeof payload.reason !== "string" || !payload.reason.trim() || payload.reason.trim().length > 500) return { error: "Supply a ticket correction reason of 1 to 500 characters." };
       return request("POST", `${base}/unlock`, { reason: payload.reason.trim() });
+    }
+    if (action === "finalize_labor") {
+      const fields = TicketLaborFinalizationInputSchema.omit({ operationId: true }).safeParse(payload);
+      const command = fields.success ? TicketLaborFinalizationInputSchema.safeParse({ ...fields.data, operationId: input.operationId }) : null;
+      return command?.success ? request("POST", `${base}/close`, command.data) : { error: "Supply the exact current ticket timestamp for labor finalization." };
     }
     if (action === "update") return request("PATCH", base, payload);
     if (action === "add_line_item") return request("POST", `${base}/line-items`, payload);

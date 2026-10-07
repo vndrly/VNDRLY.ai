@@ -20,3 +20,5 @@ export * from "./operations-display-view";
 export * from "./work-hub-away";
 export * from "./work-hub-calendar-response";
 export * from "./asset-transfer";
+
+export * from "./ticket-labor-finalization";

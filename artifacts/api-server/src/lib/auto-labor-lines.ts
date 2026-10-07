@@ -57,9 +57,11 @@ function isoWeekKey(d: Date): string {
  * Safe to call from check-out / submit handlers — returns the number of
  * rows inserted (0 if no closed sessions exist yet).
  */
-export async function regenerateAutoLaborLines(ticketId: number): Promise<number> {
+export async function regenerateAutoLaborLines(ticketId: number, database?: Omit<typeof db, "$client">): Promise<number> {
+  if (!database) return db.transaction(tx => regenerateAutoLaborLines(ticketId, tx));
+  await database.execute(sql`SELECT id FROM tickets WHERE id=${ticketId} FOR UPDATE`);
   // Resolve OT thresholds from vendor config (same precedence as labor-summary).
-  const [ticketRow] = await db
+  const [ticketRow] = await database
     .select({ vendorId: ticketsTable.vendorId, closedAt: ticketsTable.closedAt })
     .from(ticketsTable)
     .where(eq(ticketsTable.id, ticketId));
@@ -75,7 +77,7 @@ export async function regenerateAutoLaborLines(ticketId: number): Promise<number
   let vendorDailyOt: number | null = null;
   let vendorWeeklyOt: number | null = null;
   if (ticketRow?.vendorId) {
-    const [v] = await db
+    const [v] = await database
       .select({ dailyOt: vendorsTable.dailyOtHours, weeklyOt: vendorsTable.weeklyOtHours })
       .from(vendorsTable)
       .where(eq(vendorsTable.id, ticketRow.vendorId));
@@ -87,7 +89,7 @@ export async function regenerateAutoLaborLines(ticketId: number): Promise<number
   const dailyOt = vendorDailyOt || DEFAULT_DAILY_OT_HOURS;
   const weeklyOt = vendorWeeklyOt || DEFAULT_WEEKLY_OT_HOURS;
 
-  const sessions = await db
+  const sessions = await database
     .select({
       employeeId: ticketCheckInsTable.employeeId,
       employeeName: sql<string>`${vendorPeopleTable.firstName} || ' ' || ${vendorPeopleTable.lastName}`,
@@ -179,7 +181,7 @@ export async function regenerateAutoLaborLines(ticketId: number): Promise<number
     }
   }
 
-  await db.delete(ticketLineItemsTable).where(and(
+  await database.delete(ticketLineItemsTable).where(and(
     eq(ticketLineItemsTable.ticketId, ticketId),
     eq(ticketLineItemsTable.type, "labor"),
     sql`${ticketLineItemsTable.description} LIKE '[auto]%'`,
@@ -226,7 +228,7 @@ export async function regenerateAutoLaborLines(ticketId: number): Promise<number
     });
   }
   if (rows.length > 0) {
-    await db.insert(ticketLineItemsTable).values(rows);
+    await database.insert(ticketLineItemsTable).values(rows);
   }
   return rows.length;
 }

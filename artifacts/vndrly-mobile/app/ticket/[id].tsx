@@ -43,6 +43,7 @@ import NudgeFlashOverlay from "@/components/NudgeFlashOverlay";
 import CommentsPanel from "@/components/CommentsPanel";
 import TicketRecovery from "@/components/TicketRecovery";
 import TicketUnlock from "@/components/TicketUnlock";
+import TicketLaborFinalization from "@/components/TicketLaborFinalization";
 import TicketStatusStepper from "@/components/TicketStatusStepper";
 import { useColors } from "@/hooks/useColors";
 import { useTicketsRateLimitGate } from "@/hooks/use-tickets-rate-limit-gate";
@@ -70,6 +71,8 @@ import { PILL_CHIP_LAYOUT, PILL_TEXT, PILL_HEIGHT_PX } from "@/lib/pill-doctrine
 
 type Ticket = {
   id: number;
+  updatedAt: string;
+  viewerCanFinalizeLabor?: boolean;
   status: string;
   description: string | null;
   siteName?: string | null;
@@ -1376,37 +1379,6 @@ export default function TicketDetailScreen() {
     else void runCheckOut(null);
   };
 
-  // Foreman / vendor-admin / org-admin freezes the per-employee running
-  // [auto] labor totals. Server runs a final regenerateAutoLaborLines,
-  // stamps closedAt + closedById, and short-circuits future regen calls
-  // so accounting can edit the rows by hand without late check-out
-  // events overwriting them.
-  const closeTicketFinal = async () => {
-    Alert.alert(
-      t("tickets.closeTicketTitle"),
-      t("tickets.closeTicketBody"),
-      [
-        { text: t("common.cancel"), style: "cancel" },
-        {
-          text: t("tickets.closeTicket"),
-          style: "destructive",
-          onPress: async () => {
-            setActionInFlight("close_ticket");
-            setFieldError(null);
-            try {
-              await apiFetch(`/api/tickets/${ticketId}/close`, { method: "POST" });
-              await load();
-            } catch (e: unknown) {
-              await handleActionError(e, "close", t("tickets.errorCloseTicket"));
-            } finally {
-              setActionInFlight(null);
-            }
-          },
-        },
-      ],
-    );
-  };
-
   const submitForReview = async () => {
     setActionInFlight("close");
     setFieldError(null);
@@ -2553,16 +2525,7 @@ export default function TicketDetailScreen() {
         // CLOSE_TICKET_REFUSE_STATUSES guard is the source of truth.
         const isVendorAdminOrOffice =
           currentUser?.role === "vendor" || currentUser?.role === "admin";
-        const canCloseTicket =
-          isVendorAdminOrOffice &&
-          !ticket?.closedAt &&
-          status !== "awaiting_acceptance" &&
-          status !== "denied" &&
-          status !== "submitted" &&
-          status !== "approved" &&
-          status !== "cancelled" &&
-          status !== "completed" &&
-          status !== "funds_dispersed";
+
         const canEnRoute =
           !blockedByAssignment &&
           (lifecycle === "pending_arrival" || lifecycle === "en_route");
@@ -2708,22 +2671,7 @@ export default function TicketDetailScreen() {
                 stray late check-out events overwriting them. Hidden once
                 the ticket is closed (closedAt set) so the button never
                 shows up "already done" on a frozen ticket. */}
-            {canCloseTicket ? (
-              <LayeredPillButton
-                onPress={closeTicketFinal}
-                disabled={actionInFlight !== null}
-                loading={actionInFlight === "close_ticket"}
-                inactive={actionInFlight !== null && actionInFlight !== "close_ticket"}
-                height={40}
-                style={styles.actionBtnFull}
-                testID="button-close-ticket"
-              >
-                <Feather name="lock" size={16} color="#ffffff" style={styles.actionBtnIconShadow} />
-                <Text style={[styles.directionsBtnText, styles.actionBtnTextShadow, { color: "#ffffff" }]}>
-                  {t("tickets.closeTicket")}
-                </Text>
-              </LayeredPillButton>
-            ) : null}
+            <TicketLaborFinalization ticketId={ticketId} updatedAt={String(ticket.updatedAt)} canFinalize={(ticket as typeof ticket & { viewerCanFinalizeLabor?: boolean }).viewerCanFinalizeLabor === true} user={currentUser} onRefresh={load} disabled={actionInFlight !== null} />
             {/* ── Task #575: Mark Awaiting Payment ──
                 Active state uses the orange "$" pill image; inactive
                 (another action in flight) falls back to the light-grey

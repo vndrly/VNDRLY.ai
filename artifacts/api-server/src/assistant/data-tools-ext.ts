@@ -15,6 +15,7 @@ import {
   invoicesTable,
 } from "@workspace/db";
 import type { SessionPayload } from "../lib/session";
+import { createTicketLaborFinalizationService } from "../services/ticket-labor-finalization";
 import {
   fieldEmployeeCanAccessTicket,
   loadFieldTicketAccessRow,
@@ -127,6 +128,7 @@ async function queryTicketDetail(
       startingMileage: ticketsTable.startingMileage,
       endingMileage: ticketsTable.endingMileage,
       createdAt: ticketsTable.createdAt,
+      updatedAt: ticketsTable.updatedAt,
       closedAt: ticketsTable.closedAt,
       scheduledStartAt: ticketsTable.scheduledStartAt,
       paymentReceiptUrl: ticketsTable.paymentReceiptUrl,
@@ -193,6 +195,8 @@ async function queryTicketDetail(
     endingMileage: row.endingMileage,
     scheduledStartAt: row.scheduledStartAt,
     createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    viewerCanFinalizeLabor: await createTicketLaborFinalizationService().canFinalize(session, input.ticketId),
     closedAt: row.closedAt,
     hasPaymentReceipt: !!row.paymentReceiptUrl,
     crewCount: Number(crewAgg?.n ?? 0),

@@ -1,3 +1,4 @@
+import TicketLaborFinalization from "@/components/ticket-labor-finalization";
 import { PngPillButton } from "@/components/png-pill-rollover";
 import { TicketVoiceEntry } from "@/components/ticket-voice-entry";
 import type { TicketTransition } from "@workspace/api-client-react";
@@ -1372,6 +1373,7 @@ export default function TicketDetail({ id }: { id: number }) {
       className={`space-y-6 relative ${isNudgeFlashing ? "nudge-flash-page" : ""}`}
       data-testid="ticket-detail-page"
     >
+      <TicketLaborFinalization ticketId={id} updatedAt={String(ticket.updatedAt)} canFinalize={(ticket as typeof ticket & { viewerCanFinalizeLabor?: boolean }).viewerCanFinalizeLabor === true} onSaved={invalidate} />
       <TicketVoiceEntry
         key={`${id}:${user?.userId}:${user?.activeMembershipId}`}
         actorIdentity={JSON.stringify([user?.userId,user?.activeMembershipId,user?.vendorId,user?.partnerId])}

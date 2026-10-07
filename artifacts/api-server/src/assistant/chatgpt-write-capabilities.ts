@@ -1,3 +1,4 @@
+import { TicketLaborFinalizationInputSchema } from "@workspace/api-zod";
 import { AWAY_RESPONDER_ARGUMENTS } from "./away-responder-tools";
 import { FLEET_REPLACEMENT_ACTIONS } from "./fleet-replacement-tools";
 import { displayActionCommand } from "./operations-display-action-adapter";
@@ -56,6 +57,7 @@ export function sanitizeChatGptActionInput(name: string, input: Record<string, u
  * Model-supplied acceptance flags never stand in for the person's action.
  */
 export function validateChatGptActionInput(name: string, input: Record<string, unknown>): void {
+  if (name === "manage_ticket_record" && input.action === "finalize_labor") TicketLaborFinalizationInputSchema.omit({ operationId: true }).parse(input.payload);
   if(name === "manage_work_hub_away_responder") {const {operationId,...fields}=input;if(operationId!==undefined)z.uuid().parse(operationId);AWAY_RESPONDER_ARGUMENTS.parse(fields);}
   if(name === "respond_work_hub_meeting_invitation") {const {operationId,...fields}=input;if(operationId!==undefined)z.uuid().parse(operationId);CALENDAR_RESPONSE_ARGUMENTS.parse(fields);}
   if(name === "reschedule_work_hub_meeting" || name === "prepare_ticket_invoices") {

@@ -1,0 +1,70 @@
+import React from "react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, expect, it, vi } from "vitest";
+const state = vi.hoisted(() => ({ api: vi.fn(), current: true, stored: new Map<string, string>(), operations: 0 }));
+vi.mock("@/lib/api", () => ({ apiFetch: (...args: unknown[]) => state.api(...args) }));
+vi.mock("@/lib/auth", () => ({ captureAuthScope: () => "account-scope", isAuthScopeCurrent: () => state.current }));
+vi.mock("expo-secure-store", () => ({ getItemAsync: async (key: string) => state.stored.get(key) ?? null, setItemAsync: async (key: string, value: string) => { state.stored.set(key, value); }, deleteItemAsync: async (key: string) => { state.stored.delete(key); } }));
+vi.mock("expo-crypto", () => ({ randomUUID: () => ++state.operations === 1 ? "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa" : "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb" }));
+vi.mock("@/components/TogglePillButton", () => ({ default: ({ children, onPress, disabled }: any) => <button onClick={onPress} disabled={disabled}>{children}</button> }));
+vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string) => key, i18n: { language: "en" } }) }));
+import TicketLaborFinalization from "./TicketLaborFinalization";
+const user = { id: 9, role: "field_employee", vendorId: 4, activeMembershipId: 5 } as any;
+const version = "2026-10-07T10:00:00.000Z";
+const saved = { ticketId: 7, operationId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", actorUserId: 9, closedById: 9, expectedUpdatedAt: version, updatedAt: "2026-10-07T10:01:00.000Z", closedAt: "2026-10-07T10:01:00.000Z", autoLaborLineCount: 2, status: "applied", submitted: false, physicalWorkVerified: false };
+beforeEach(() => { cleanup(); state.api.mockReset(); state.current = true; state.operations = 0; state.stored.clear(); });
+async function confirm() { await waitFor(() => expect((screen.getByText("Finalize recorded labor") as HTMLButtonElement).disabled).toBe(false)); fireEvent.click(screen.getByText("Finalize recorded labor")); fireEvent.click(screen.getByText("Confirm freeze")); }
+it("uses server current capability for an assigned foreman, not the office role label", async () => {
+  state.api.mockResolvedValueOnce({ receipt: null }).mockResolvedValueOnce(saved);
+  const onRefresh = vi.fn();
+  render(<TicketLaborFinalization user={user} ticketId={7} updatedAt={version} canFinalize onRefresh={onRefresh} />);
+  await confirm(); await waitFor(() => expect(onRefresh).toHaveBeenCalledOnce());
+  expect(state.api.mock.calls[1]).toEqual(["/api/tickets/7/close", { method: "POST", body: JSON.stringify({ operationId: saved.operationId, expectedUpdatedAt: version }) }, "account-scope"]);
+  expect(screen.queryByRole("button")).toBeNull();
+});
+it("restores the exact persisted request after restart and reads saved receipt without another POST", async () => {
+  state.api.mockResolvedValueOnce({ receipt: null }).mockRejectedValueOnce(Error("dropped"));
+  const first = render(<TicketLaborFinalization user={user} ticketId={7} updatedAt={version} canFinalize onRefresh={vi.fn()} />);
+  await confirm(); await screen.findByText(/Result unresolved/); first.unmount();
+  state.api.mockResolvedValueOnce({ receipt: saved });
+  const onRefresh = vi.fn();
+  render(<TicketLaborFinalization user={user} ticketId={7} updatedAt="2026-10-07T11:00:00.000Z" canFinalize={false} onRefresh={onRefresh} />);
+  await screen.findByText("Check saved request"); fireEvent.click(screen.getByText("Check saved request"));
+  await waitFor(() => expect(onRefresh).toHaveBeenCalledOnce());
+  expect(state.api.mock.calls.filter(([, init]) => init.method === "POST")).toHaveLength(1);
+  expect(state.stored.size).toBe(0);
+});
+it("a changed account after lookup cannot start a mutation or report success", async () => {
+  let finish!: (value: unknown) => void;
+  state.api.mockImplementation(() => new Promise(resolve => { finish = resolve; }));
+  const onRefresh = vi.fn();
+  render(<TicketLaborFinalization user={user} ticketId={7} updatedAt={version} canFinalize onRefresh={onRefresh} />);
+  await confirm(); await waitFor(() => expect(state.api).toHaveBeenCalledOnce());
+  state.current = false; finish({ receipt: null });
+  await new Promise(resolve => setTimeout(resolve, 0));
+  expect(state.api).toHaveBeenCalledOnce(); expect(onRefresh).not.toHaveBeenCalled();
+});
+it("a definitive conflict requests refresh and permits a newly reviewed operation only on a different authoritative timestamp", async () => {
+  state.api.mockResolvedValueOnce({ receipt: null }).mockRejectedValueOnce(Object.assign(Error("changed"), { status: 409 }));
+  const onRefresh = vi.fn();
+  const view = render(<TicketLaborFinalization user={user} ticketId={7} updatedAt={version} canFinalize onRefresh={onRefresh} />);
+  await confirm(); await screen.findByText(/The ticket changed/);
+  expect(onRefresh).toHaveBeenCalledOnce(); expect(state.stored.size).toBe(0);
+  view.rerender(<TicketLaborFinalization user={user} ticketId={7} updatedAt={version} canFinalize onRefresh={onRefresh} />);
+  expect(screen.queryByRole("button")).toBeNull(); expect(state.api).toHaveBeenCalledTimes(2);
+  const fresh = "2026-10-07T10:02:00.000Z";
+  view.rerender(<TicketLaborFinalization user={user} ticketId={7} updatedAt={fresh} canFinalize onRefresh={onRefresh} />);
+  await screen.findByText("Finalize recorded labor");
+  expect(state.api).toHaveBeenCalledTimes(2);
+  state.api.mockResolvedValueOnce({ receipt: null }).mockResolvedValueOnce({ ...saved, operationId: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", expectedUpdatedAt: fresh, updatedAt: "2026-10-07T10:03:00.000Z", closedAt: "2026-10-07T10:03:00.000Z" });
+  await confirm(); await waitFor(() => expect(onRefresh).toHaveBeenCalledTimes(2));
+  const posts = state.api.mock.calls.filter(([, init]) => init.method === "POST");
+  expect(JSON.parse(posts[1][1].body)).toEqual({ operationId: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", expectedUpdatedAt: fresh });
+});
+it("a rejected refresh preserves verified saved state without another request", async () => {
+  state.api.mockResolvedValueOnce({ receipt: null }).mockResolvedValueOnce(saved);
+  render(<TicketLaborFinalization user={user} ticketId={7} updatedAt={version} canFinalize onRefresh={async () => { throw Error("refresh unavailable"); }} />);
+  await confirm(); await screen.findByText(/Totals saved and frozen. The view could not refresh/);
+  expect(screen.queryByRole("button")).toBeNull(); expect(screen.queryByText(/Result unresolved/)).toBeNull();
+  expect(state.api).toHaveBeenCalledTimes(2); expect(state.stored.size).toBe(0);
+});

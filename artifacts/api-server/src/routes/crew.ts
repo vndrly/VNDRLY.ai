@@ -15,7 +15,9 @@ import {
 } from "@workspace/db";
 import { formatTicketTrackingNumber } from "@workspace/db/format";
 
-import { SESSION_SECRET } from "../lib/session";
+import { SESSION_SECRET, getSessionFromRequest } from "../lib/session";
+import { createTicketLaborFinalizationService, TicketLaborFinalizationError } from "../services/ticket-labor-finalization";
+import { ZodError } from "zod/v4";
 import { logger } from "../lib/logger";
 import { regenerateAutoLaborLines } from "../lib/auto-labor-lines";
 import { notifyUsers } from "./notifications";
@@ -416,119 +418,28 @@ router.patch("/tickets/:id/crew-sessions/:sessionId", async (req, res): Promise<
 // stamps `closedAt` + `closedById`. After this the regen helper short-
 // circuits, so accounting can edit the rows by hand without them being
 // overwritten by stray late check-out events.
-// Statuses where closing is meaningless: ticket is either pre-handshake
-// (vendor hasn't accepted yet) or already past the foreman's authority
-// (back-office accounting / payment-side has taken over). We DO allow
-// closing in `pending_review` and `kicked_back` because that's the
-// realistic state the ticket sits in once everyone has clocked out and
-// the foreman is wrapping up — the existing MUTABLE_TICKET_STATUSES
-// gate (initiated/draft/in_progress/kicked_back) used by per-employee
-// check-in is too narrow for closing, so we run our own status check
-// here instead of going through ensureCrewMutate.
-const CLOSE_TICKET_REFUSE_STATUSES = new Set([
-  "awaiting_acceptance",
-  "denied",
-  "cancelled",
-  "approved",
-  "completed",
-  "funds_dispersed",
-  "submitted",
-]);
-
+// Finalization freezes recorded auto labor independently of submission and checkout.
+const laborFinalization = createTicketLaborFinalizationService();
 router.post("/tickets/:id/close", async (req, res): Promise<void> => {
-  const ticketId = Number(req.params.id);
-  if (!Number.isFinite(ticketId)) {
-    res.status(400).json({ error: "Invalid id", code: "validation.invalid_id" });
-    return;
+  const session = getSessionFromRequest(req);
+  if (!session) { res.status(401).json({ code: "auth.not_authenticated", error: "Not authenticated" }); return; }
+  try { res.json(await laborFinalization.apply(session, Number(req.params.id), req.body)); }
+  catch (error) {
+    if (error instanceof TicketLaborFinalizationError) { res.status(error.status).json({ code: error.code, error: error.code }); return; }
+    if (error instanceof ZodError) { res.status(400).json({ code: "ticket.invalid_update_body", error: "Supply exact operation and current ticket timestamp" }); return; }
+    throw error;
   }
-
-  const session = getSession(req);
-  if (!session) {
-    res.status(401).json({ error: "Not authenticated", code: "auth.not_authenticated" });
-    return;
-  }
-
-  const [existing] = await db
-    .select({
-      id: ticketsTable.id,
-      vendorId: ticketsTable.vendorId,
-      status: ticketsTable.status,
-      closedAt: ticketsTable.closedAt,
-    })
-    .from(ticketsTable)
-    .where(eq(ticketsTable.id, ticketId));
-  if (!existing) {
-    res.status(404).json({ error: "Ticket not found", code: "ticket.not_found" });
-    return;
-  }
-  if (existing.closedAt) {
-    res.status(409).json({
-      error: "Ticket already closed",
-      code: "ticket.already_closed",
-      closedAt: existing.closedAt,
-    });
-    return;
-  }
-  if (CLOSE_TICKET_REFUSE_STATUSES.has(existing.status)) {
-    res.status(409).json({
-      error: `Ticket is ${existing.status.replace(/_/g, " ")} and cannot be closed`,
-      code: "ticket.not_closeable",
-    });
-    return;
-  }
-
-  // Same actor set as ensureCrewMutate — admin (org-admin), vendor user
-  // matching the ticket (vendor-admin), or field_employee with
-  // vendorRole 'foreman'/'both' (foreman). Inlined here because we
-  // intentionally skip ensureCrewMutate's MUTABLE_TICKET_STATUSES gate.
-  let allowed = false;
-  if (session.role === "admin") {
-    allowed = true;
-  } else if (session.role === "vendor" && session.vendorId === existing.vendorId) {
-    allowed = true;
-  } else if (session.role === "field_employee") {
-    const [me] = await db
-      .select({ vendorId: vendorPeopleTable.vendorId, vendorRole: vendorPeopleTable.vendorRole })
-      .from(vendorPeopleTable)
-      .where(and(eq(vendorPeopleTable.userId, session.userId), isNull(vendorPeopleTable.deletedAt)));
-    if (me && me.vendorId === existing.vendorId && (me.vendorRole === "foreman" || me.vendorRole === "both")) {
-      allowed = true;
-    }
-  }
-  if (!allowed) {
-    res.status(403).json({ error: "Not allowed", code: "ticket.no_access" });
-    return;
-  }
-
-  // Final regen BEFORE stamping closedAt so the helper still runs (the
-  // short-circuit guard would otherwise return 0 immediately). If the
-  // regen fails we bail out and leave the ticket open — re-trying close
-  // is safe and keeps us out of the half-frozen state where closedAt is
-  // set but the lines weren't refreshed.
-  try {
-    await regenerateAutoLaborLines(ticketId);
-  } catch (err) {
-    logger.error({ err, ticketId }, "final regenerate auto labor lines failed (close) — refusing to close");
-    res.status(500).json({ error: "Could not finalize labor totals", code: "ticket.close_regen_failed" });
-    return;
-  }
-
-  const closedAt = new Date();
-  const [row] = await db.update(ticketsTable)
-    .set({
-      closedAt,
-      closedById: session.userId,
-    })
-    .where(eq(ticketsTable.id, ticketId))
-    .returning({
-      id: ticketsTable.id,
-      closedAt: ticketsTable.closedAt,
-      closedById: ticketsTable.closedById,
-    });
-
-  res.json(row);
 });
-
+router.get("/tickets/:id/close/operations/:operationId", async (req, res): Promise<void> => {
+  const session = getSessionFromRequest(req);
+  if (!session) { res.status(401).json({ code: "auth.not_authenticated", error: "Not authenticated" }); return; }
+  try { res.json({ receipt: await laborFinalization.read(session, Number(req.params.id), String(req.params.operationId)) }); }
+  catch (error) {
+    if (error instanceof TicketLaborFinalizationError) { res.status(error.status).json({ code: error.code, error: error.code }); return; }
+    if (error instanceof ZodError) { res.status(400).json({ code: "ticket.invalid_update_body", error: "Invalid operation" }); return; }
+    throw error;
+  }
+});
 // GET /tickets/:id/crew-roster
 // Lightweight roster of who is currently on site for a ticket. Distinct from
 // crew-sessions (which tracks individual check-in/out events) — the roster is

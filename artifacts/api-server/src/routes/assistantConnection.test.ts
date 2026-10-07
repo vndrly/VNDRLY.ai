@@ -1036,3 +1036,28 @@ it("Gate checkpoint retrieves own durable receipt and exact scoped visit, then r
   expect(mocks.bound).not.toHaveBeenCalled();
 });
 
+
+it("reconciles an interrupted labor finalization by exact canonical receipt without resubmitting", async () => {
+  const credentials = await tokens("tickets:write");
+  const expectedUpdatedAt = "2026-10-07T10:00:00.000Z";
+  const response = await request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "manage_ticket_record", arguments: { action: "finalize_labor", ticketId: 12, payload: { expectedUpdatedAt } } } });
+  const prepared = JSON.parse(response.body.result.content[0].text);
+  expect(prepared.status).toBe("pending");
+  const actionPath = new URL(prepared.approvalUrl).pathname;
+  const approval = await request(app).get(actionPath).set("Cookie", cookie());
+  const nonce = /name="nonce" value="([^"]+)"/.exec(approval.text)![1];
+  const actionCookie = approval.headers["set-cookie"][0].split(";")[0];
+  mocks.bound.mockRejectedValueOnce(new Error("Interrupted after atomic labor freeze"));
+  expect((await request(app).post(actionPath).set("Cookie", `${cookie()}; ${actionCookie}`).set("Origin", "https://vndrly.ai").type("form").send({ nonce })).status).toBe(503);
+  expect(grants[0].actions![0].state).toBe("outcome_unknown");
+  const hex = grants[0].actions![0].tokenHash.slice(0, 32);
+  const operationId = `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-8${hex.slice(17, 20)}-${hex.slice(20, 32)}`;
+  const status = () => request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 2, method: "tools/call", params: { name: "v_action_status", arguments: { reference: prepared.reference } } });
+  mocks.taskRead.mockResolvedValueOnce({ receipt: null });
+  expect(JSON.parse((await status()).body.result.content[0].text)).toMatchObject({ state: "outcome_unknown" });
+  mocks.taskRead.mockResolvedValueOnce({ receipt: { ticketId: 12, operationId, actorUserId: 17, expectedUpdatedAt, updatedAt: "2026-10-07T10:01:00.000Z", closedAt: "2026-10-07T10:01:00.000Z", closedById: 17, autoLaborLineCount: 2, status: "applied", physicalWorkVerified: false, submitted: false } });
+  expect(JSON.parse((await status()).body.result.content[0].text)).toMatchObject({ state: "completed", result: { ticketId: 12, status: "applied", physicalWorkVerified: false, submitted: false } });
+  expect(mocks.taskRead).toHaveBeenLastCalledWith(`/tickets/12/close/operations/${operationId}`, "GET", {}, expect.objectContaining({ userId: 17 }));
+  expect(mocks.bound).toHaveBeenCalledTimes(1);
+  expect(mocks.run).not.toHaveBeenCalled();
+});

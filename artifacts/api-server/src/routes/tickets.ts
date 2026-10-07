@@ -1,6 +1,8 @@
 import { Router, type IRouter } from "express";
 import { eq, and, or, ne, sql, desc, asc, isNull, aliasedTable } from "drizzle-orm";
-import { decodeSession } from "../lib/session";
+import { decodeSession, getSessionFromRequest } from "../lib/session";
+import { z } from "zod";
+import { createTicketLaborFinalizationService } from "../services/ticket-labor-finalization";
 
 import { createTicketPhotoService, ownedTicketPhoto, TicketPhotoError, TicketPhotoInputSchema } from "../services/ticket-photo-association";
 import { SESSION_SECRET } from "../lib/session";
@@ -1584,8 +1586,9 @@ router.get("/tickets/:id", async (req, res): Promise<void> => {
     workTypeId: ticket.workTypeId,
     siteLocationId: ticket.siteLocationId,
   });
-  sendResponse(res, GetTicketResponse, {
+  sendResponse(res, GetTicketResponse.extend({ viewerCanFinalizeLabor: z.boolean() }), {
     ...ticket,
+    viewerCanFinalizeLabor: await createTicketLaborFinalizationService().canFinalize(getSessionFromRequest(req), params.data.id),
     viewerCanDisperseFunds,
     viewerCanReverseDispersal,
     phoneIntakeCallerName,
