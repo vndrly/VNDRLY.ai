@@ -1,3 +1,5 @@
+// Unlock workflow is covered by TicketUnlock.test.tsx.
+vi.mock("@/components/TicketUnlock", () => ({ default: () => null }));
 import React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
