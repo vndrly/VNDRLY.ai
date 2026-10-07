@@ -6,6 +6,8 @@ import { callNaturalVoiceDomainApi } from "./natural-voice-write-tools";
 import { planExecutionFingerprint, type PlanExecutionAuthorization, type PlanExecutionCurrentAuthorization } from "./plan-execution";
 import type { SessionPayload } from "../lib/session";
 import { invoiceActivityAvailable } from "./invoice-activity-chatgpt";
+import { ticketInvoicePreparationAvailable } from "./ticket-invoice-preparation-tools";
+import { availableWorkdayOpportunityTools } from "./workday-opportunity-chatgpt";
 
 /** Fresh authority only. Stored OAuth credentials and delegation data are not authority. */
 export async function currentPlanExecutionAuthority(authorization: PlanExecutionAuthorization): Promise<{
@@ -45,6 +47,8 @@ export async function currentPlanExecutionAuthority(authorization: PlanExecution
     planFingerprint: planExecutionFingerprint(plan),
     availableTools: [...new Set([...readable, ...chatGptActionTools(session, scopes)].map(tool => tool.name).concat(invoiceActivityAvailable(session, scopes) ? ["query_invoice_activity"] : []))],
   };
+  current.availableTools.push(...availableWorkdayOpportunityTools(session,scopes).map(tool=>tool.name));
+  if(ticketInvoicePreparationAvailable(session,scopes))current.availableTools.push("prepare_ticket_invoices");
   // Canonical adapters call this helper directly as well as through the executor.
   // Do not rely on the executor's separate preflight for effect-time authority.
   if (current.taskVersion !== authorization.taskVersion || current.planId !== authorization.planId ||

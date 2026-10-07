@@ -1,5 +1,6 @@
 import type { Anthropic } from "@workspace/integrations-anthropic-ai/sdk";
 import { WORK_HUB_CONTEXT_KINDS } from "@workspace/api-zod";
+import { TICKET_INVOICE_PREPARATION_TOOL } from "./ticket-invoice-preparation-tools";
 
 export const WORK_HUB_TOOL_FAMILIES = [
   "command",
@@ -112,6 +113,7 @@ function write(
 }
 
 const entries: Entry[] = [
+  write(TICKET_INVOICE_PREPARATION_TOOL.name, "finance", TICKET_INVOICE_PREPARATION_TOOL.description, TICKET_INVOICE_PREPARATION_TOOL.inputSchema),
   read("get_work_hub_settings", "administration", "Read the caller's current account settings. Passwords, session tokens and device permissions are not editable through conversation."),
   read("get_work_hub_connections", "administration", "Read the current Microsoft connection status. Authentication and consent must be completed in Settings & Connections; never collect credentials."),
   write("set_work_hub_language", "administration", "Set the caller's preferred language after confirming the exact language.", writeSchema({ language: { type: "string", enum: ["en", "es", "pt"] } }, ["language"])),

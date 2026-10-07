@@ -9,6 +9,9 @@ import { planExecutionResultSchema, type PlanExecutionAuthorization } from "./pl
 import type { PersonalDraftCommand, PlanExecutionCanonicalApi } from "./plan-execution-adapters";
 import { createPlanExecutionBusinessReads, PLAN_EXECUTION_BUSINESS_READ_CANDIDATES } from "./plan-execution-business-reads";
 import { createPlanInvoiceActivityRead } from "./plan-execution-invoice-activity";
+import { createPlanTicketInvoicePreparation } from "./plan-execution-ticket-invoices";
+import { createPlanOpportunityRead } from "./plan-execution-opportunities";
+import { PLAN_EXECUTION_OPPORTUNITY_INPUTS } from "./plan-execution-read-policy";
 
 type Authority = Awaited<ReturnType<typeof currentPlanExecutionAuthority>>;
 type Receipt = Pick<typeof workHubClientOperationsTable.$inferSelect, "userId" | "commandKind" | "operationId" | "ownerOrgType" | "ownerOrgId" | "resultJson" | "appliedAt">;
@@ -60,6 +63,7 @@ export function createPlanExecutionCanonicalApi(overrides: Partial<Dependencies>
     return { state: "completed" as const, result: planExecutionResultSchema.parse({ operationId: command.operationId, sourceReferences: [`task:${saved.data.id}:v${saved.data.version}`], summary: "Company Work Hub draft task saved and read back, assigned only to the requester. Authorized coworkers may see it; no business action was completed." }) };
   }
   return {
+    prepareTicketInvoices: createPlanTicketInvoicePreparation({authorize:deps.authorize,request:deps.request}),
     readbackDraft,
     async savePersonalDraft(authorization, supplied) {
       const prior = await readbackDraft(authorization, supplied);
@@ -74,6 +78,7 @@ export function createPlanExecutionCanonicalApi(overrides: Partial<Dependencies>
       return result.result;
     },
     async read(authorization, step) {
+      if(Object.hasOwn(PLAN_EXECUTION_OPPORTUNITY_INPUTS,step.toolName))return createPlanOpportunityRead({authorize:deps.authorize})(authorization,step);
       if (step.toolName === "query_invoice_activity") return createPlanInvoiceActivityRead({ authorize: deps.authorize })(authorization, step);
       // Existing custody delegations retain their original bound adapter. New
       // business families dispatch only through fixed canonical read tools.

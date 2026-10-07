@@ -1,5 +1,6 @@
 import { FLEET_REPLACEMENT_ACTIONS } from "./fleet-replacement-tools";
 import { displayActionCommand } from "./operations-display-action-adapter";
+import { TICKET_INVOICE_PREPARATION_ARGUMENTS } from "./ticket-invoice-preparation-tools";
 import { financeRecordAction, WORK_HUB_FINANCE_RECORD_ACTIONS } from "./work-hub-finance-actions";
 import { FleetReplacementInputSchema, FleetReplacementActionSchema, AssetLossReportInputSchema, AssetIdentifierClaimInputSchema, AssetIdentifierClaimResolutionSchema } from "@workspace/api-zod";
 import { FLEET_CARGO_ACTIONS } from "./fleet-cargo-tools";
@@ -14,7 +15,7 @@ export const CHATGPT_WRITE_CAPABILITIES = {
   "fleet:dispatch": { label: "Prepare explicitly authorized Fleet dispatch actions", tools: ["prepare_fleet_equipment_replacement","cancel_fleet_equipment_replacement","prepare_fleet_cargo_transfer","complete_fleet_cargo_transfer","cancel_fleet_cargo_transfer","edit_fleet_draft","manage_fleet_run","set_fleet_preferences","manage_fleet_saved_view","reconcile_fleet_gate_visit"] },
   "fleet:run": { label: "Prepare own assigned Fleet acknowledgement, user-reported inspection, stops, load/delivery and closeout", tools: ["accept_fleet_equipment_replacement","acknowledge_fleet_cargo_source","acknowledge_fleet_cargo_recipient","report_fleet_defect","acknowledge_fleet_assignment", "transition_fleet_run","set_fleet_preferences","manage_fleet_saved_view","reconcile_fleet_gate_visit"] },
   "fleet:review": { label: "Prepare Fleet Manager closeout review; no ticket or financial approval", tools: ["review_fleet_closeout"] },
-  "finance:write": { label: "Prepare recording or reversing ticket payment records with current Accounts Payable authority; never transfer money", tools: ["record_ticket_payment", "reverse_ticket_payment_record"] },
+  "finance:write": { label: "Prepare authorized canonical invoice drafts or ticket payment records; never transfer money", tools: ["prepare_ticket_invoices", "record_ticket_payment", "reverse_ticket_payment_record"] },
   "workforce:write": { label: "Prepare authorized shift assignments, acknowledgements, and coverage evaluation or escalation", tools: ["confirm_workforce_coverage_action"] },
   "trips:write": { label: "Prepare authorized trip start, pause, driver resume, completion, or one approval-device location update; never start a device collector", tools: ["confirm_field_trips_action"] },
   "safety:write": { label: "Prepare authorized incident response, acknowledgement, evidence, escalation, and closure", tools: ["confirm_incident_response_action"] },
@@ -29,6 +30,7 @@ export type ChatGptWriteCapabilityScope = keyof typeof CHATGPT_WRITE_CAPABILITIE
 
 /** Device telemetry and domain replay keys are supplied by the approval server. */
 export function sanitizeChatGptActionInput(name: string, input: Record<string, unknown>): Record<string, unknown> {
+  if(name === "prepare_ticket_invoices") {const {operationId:_operationId,confirmed:_confirmed,...fields}=input;return fields;}
   if (name === "confirm_operations_displays_action") {
     const { operationId: _operationId, confirmed: _confirmed, ...fields } = input;
     return fields;
@@ -48,6 +50,7 @@ export function sanitizeChatGptActionInput(name: string, input: Record<string, u
  * Model-supplied acceptance flags never stand in for the person's action.
  */
 export function validateChatGptActionInput(name: string, input: Record<string, unknown>): void {
+  if(name === "prepare_ticket_invoices") TICKET_INVOICE_PREPARATION_ARGUMENTS.parse(input);
   if (name === "confirm_operations_displays_action") displayActionCommand(input, true);
   if (name === "manage_work_hub_finance" && (WORK_HUB_FINANCE_RECORD_ACTIONS as readonly unknown[]).includes(input.action)) financeRecordAction(input);
   if(name==="reconcile_fleet_gate_visit"){z.uuid().parse(input.runId);FleetGateLinkInputSchema.parse({operationId:"00000000-0000-4000-8000-000000000001",expectedVersion:input.expectedVersion,stopId:input.stopId,visitId:input.visitId,reason:input.reason});}

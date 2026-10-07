@@ -1,4 +1,5 @@
 import fleetRouter from "./fleet";
+import ticketInvoicePreparationRouter from "./ticketInvoicePreparation";
 import operationsDisplayViewRouter from "./operationsDisplayView";
 import { Router, type IRouter } from "express";
 import healthRouter from "./health";
@@ -176,6 +177,7 @@ router.use(implementationAWorkforceRouter);
 router.use(implementationAAssetsRouter);
 router.use(implementationATripsRouter);
 router.use(fleetRouter);
+router.use(ticketInvoicePreparationRouter);
 router.use(implementationASafetyRouter);
 router.use(implementationASubscriptionsRouter);
 router.use(implementationADisplaysRouter);

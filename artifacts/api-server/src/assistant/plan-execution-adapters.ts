@@ -12,6 +12,7 @@ export interface PlanExecutionCanonicalApi{
  readbackDraft(authorization:PlanExecutionAuthorization,command:PersonalDraftCommand):Promise<PlanExecutionReconciliation>;
  /** Save through canonical Work Hub command+receipt+current exact readback; no interactive-confirm spoof. */
  savePersonalDraft(authorization:PlanExecutionAuthorization,command:PersonalDraftCommand):Promise<PlanExecutionResult>;
+ prepareTicketInvoices?(authorization:PlanExecutionAuthorization,step:PlanExecutionStep,readback:boolean):Promise<PlanExecutionReconciliation>;
 }
 /** Retrieved text is literal record data. No model interpretation, instruction following, recipients or external effects. */
 export function personalDraftDescription(results:PlanExecutionResult[]):string{
@@ -29,5 +30,6 @@ export function createPlanExecutionAdapters(api:PlanExecutionCanonicalApi):Recor
  return {
   authorized_read:{async execute(context,step){assertRead(step);return planExecutionResultSchema.parse(await api.read(context.authorization,step));},async reconcile(_context,step){assertRead(step);return {state:'not_found'};}},
   personal_draft:{async execute(context,step){return planExecutionResultSchema.parse(await api.savePersonalDraft(context.authorization,command(context,step)));},async reconcile(context,step){return api.readbackDraft(context.authorization,command(context,step));}},
+  ticket_invoice_preparation:{async execute(context,step){if(!api.prepareTicketInvoices)throw Error('Invoice preparation unavailable');const result=await api.prepareTicketInvoices(context.authorization,step,false);if(result.state!=='completed')throw Error('Invoice preparation outcome unverified');return result.result;},async reconcile(context,step){if(!api.prepareTicketInvoices)throw Error('Invoice preparation unavailable');return api.prepareTicketInvoices(context.authorization,step,true);}},
  };
 }

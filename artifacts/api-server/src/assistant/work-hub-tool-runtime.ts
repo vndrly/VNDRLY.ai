@@ -1,5 +1,6 @@
 import { meetingSearchInputSchema, searchSavedMeetingProjection } from "./work-hub-meeting-search";
 import { displayActionRequest } from "./operations-display-action-adapter";
+import { ticketInvoicePreparationCommand } from "./ticket-invoice-preparation-tools";
 import { financeRecordAction } from "./work-hub-finance-actions";
 import { z } from "zod/v4";
 import { FLEET_REPLACEMENT_ACTIONS } from "./fleet-replacement-tools";
@@ -281,6 +282,12 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
   if (name === "confirm_operations_displays_action") {
     try { return displayActionRequest(input); }
     catch { return { error: "Supply exact saved display ID, updatedAt, supported monitor/action/site or meeting and reason. Pairing and registration remain device-only." }; }
+  }
+  if(name === "prepare_ticket_invoices") {
+    try {
+      const {operationId,confirmed:_confirmed,owner:_owner,context:_context,...fields}=input;
+      return request("POST","/invoices/ticket-preparation/execute",ticketInvoicePreparationCommand(fields,z.uuid().parse(operationId)));
+    } catch { return {error:"Supply exact approved ticket versions and recorded invoice chronology basis."}; }
   }
   if (name.includes("asset_custody")) {
     const assetPayload = { ...withoutNulls(payload), ...(Array.isArray(payload.aliases) ? { aliases: payload.aliases.map(value => withoutNulls(record(value))) } : {}), ...(payload.alias ? { alias: withoutNulls(record(payload.alias)) } : {}) };

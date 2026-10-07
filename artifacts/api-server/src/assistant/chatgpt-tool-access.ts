@@ -68,7 +68,7 @@ export function chatGptActionTools(session: SessionPayload, scopes: readonly str
     && (!(CHATGPT_WRITE_CAPABILITIES["onboarding:write"].tools as readonly string[]).includes(tool.name) || hasOnboardingScope(session))
     && (tool.roles.includes(session.role as "admin" | "partner" | "vendor" | "field_employee") || tool.roles.includes("any"))
     && (!tool.companyAdminOnly || session.membershipRole === "admin") && tool.mutating);
-  return [...new Map([...gate, ...hub, ...additional].filter((tool) => tool.execution !== "client").map((tool) => [tool.name, tool])).values()].map(tool => {
+  return [...new Map([...gate, ...hub, ...additional].filter((tool) => tool.execution !== "client" && (tool.name !== "prepare_ticket_invoices" || ticketInvoicePreparationAvailable(session,scopes))).map((tool) => [tool.name, tool])).values()].map(tool => {
     if (tool.name === "schedule_ticket_crew" && session.role === "field_employee") return { ...tool, description: `${tool.description} Field employees require current vendor foreman authority or assignment as the exact ticket's foreman or acting foreman. The canonical ticket permission is checked before crew lookup and execution; discovery does not grant company roster access.` };
     if (tool.name === "confirm_asset_custody_action" && session.role !== "admin") { const schema = tool.inputSchema as { properties: Record<string, unknown> }; const action = schema.properties.action as { enum: string[] }; return { ...tool, inputSchema: { ...tool.inputSchema, properties: { ...schema.properties, action: { type: "string", enum: action.enum.filter(value => value !== "resolve_identifier_claim") } } } }; }
     if (tool.name !== "manage_ticket_record") return tool;
@@ -122,3 +122,4 @@ export function requireChatGptReadableTool(
   if (!tool) throw new Error("Tool is unavailable for this account and connection scope");
   return tool;
 }
+import { ticketInvoicePreparationAvailable } from "./ticket-invoice-preparation-tools";

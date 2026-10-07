@@ -1,0 +1,44 @@
+import { randomUUID } from "node:crypto";
+import { describe, expect, it } from "vitest";
+import { assertFreshLocalTestDatabaseEnvironment } from "../../../../scripts/fresh-test-database.mjs";
+
+const isolated = process.env.VNDRLY_TEST_DB_MODE === "fresh-local" && process.env.VNDRLY_ISOLATED_TEST_DB === "1";
+if (isolated) assertFreshLocalTestDatabaseEnvironment(process.env);
+describe.skipIf(!isolated)("canonical ticket invoice preparation isolated persistence", () => {
+  it("creates actual generator drafts once under concurrent retry and denies revoked replay", async () => {
+    assertFreshLocalTestDatabaseEnvironment(process.env);
+    const s = await import("@workspace/db");
+    const { eq, and } = await import("drizzle-orm");
+    const { ticketInvoicePreparationForSession } = await import("./ticket-invoice-preparation-repository");
+    const target = new URL(process.env.DATABASE_URL!);
+    const identity = (await s.pool.query("SELECT current_database() AS database,host(inet_server_addr()) AS address,inet_server_port() AS port")).rows[0];
+    expect(identity).toEqual({database:process.env.VNDRLY_FRESH_TEST_DB_NAME,address:"127.0.0.1",port:Number(target.port)});
+    const marker=randomUUID();
+    const [vendor]=await s.db.insert(s.vendorsTable).values({name:`Synthetic invoice preparation ${marker}`,contactName:"Synthetic",contactEmail:`${marker}@example.invalid`}).returning();
+    const [partner]=await s.db.insert(s.partnersTable).values({name:`Synthetic invoice partner ${marker}`,contactName:"Synthetic",contactEmail:`partner-${marker}@example.invalid`}).returning();
+    const [user]=await s.db.insert(s.usersTable).values({username:`invoice-preparation-${marker}`,passwordHash:"synthetic-unusable-login",role:"vendor",displayName:"Synthetic isolated billing"}).returning();
+    const [membership]=await s.db.insert(s.userOrgMembershipsTable).values({userId:user.id,orgType:"vendor",vendorId:vendor.id,role:"admin"}).returning();
+    const [workType]=await s.db.insert(s.workTypesTable).values({name:`Synthetic preparation ${marker}`,category:"operations"}).returning();
+    const [site]=await s.db.insert(s.siteLocationsTable).values({partnerId:partner.id,name:`Synthetic site ${marker}`,address:"Synthetic isolated fixture",latitude:30,longitude:-97,state:"TX",siteCode:`IP-${marker.slice(0,20)}`}).returning();
+    await s.db.insert(s.vendorPartnerBillingSettingsTable).values({vendorId:vendor.id,partnerId:partner.id,cadence:"weekly",paymentTermsDays:30});
+    const now=new Date();
+    await s.pool.query("INSERT INTO work_hub_finance_records(org_type,org_id,kind,record_key,data) VALUES ('vendor',$1,'invoice',$2,$3::jsonb)",[vendor.id,`synthetic-history-${marker}`,JSON.stringify({status:"issued",approvedAt:new Date(now.getTime()-20*86400000).toISOString()})]);
+    const [ticket]=await s.db.insert(s.ticketsTable).values({vendorId:vendor.id,siteLocationId:site.id,workTypeId:workType.id,status:"approved",approvedAt:now,lifecycleState:"off_site"}).returning();
+    const session={userId:user.id,role:"vendor",vendorId:vendor.id,activeMembershipId:membership.id,membershipRole:"admin",sv:user.sessionVersion};
+    const api=ticketInvoicePreparationForSession(session);
+    const command={operationId:randomUUID(),basis:"recorded_invoice_activity",tickets:[{ticketId:ticket.id,expectedUpdatedAt:ticket.updatedAt.toISOString()}]};
+    const [first,second]=await Promise.all([api.execute(command),api.execute(command)]);
+    expect(first).toEqual(second); expect(first?.status).toBe("prepared");
+    expect(first).toMatchObject({emailSent:false,issued:false,paymentRecorded:false});
+    const invoices=await s.db.select().from(s.invoicesTable).where(eq(s.invoicesTable.vendorId,vendor.id));
+    expect(invoices).toHaveLength(1); expect(invoices[0].status).toBe("draft"); expect(invoices[0].sentAt).toBeNull();
+    expect(await s.db.select().from(s.invoiceTicketLinksTable).where(eq(s.invoiceTicketLinksTable.ticketId,ticket.id))).toHaveLength(1);
+    expect(await s.db.select().from(s.workHubClientOperationsTable).where(and(eq(s.workHubClientOperationsTable.userId,user.id),eq(s.workHubClientOperationsTable.commandKind,"ticket_invoice_preparation")))).toHaveLength(1);
+    expect(await s.db.select().from(s.workHubAuditLogTable).where(and(eq(s.workHubAuditLogTable.actorUserId,user.id),eq(s.workHubAuditLogTable.operationId,command.operationId)))).toHaveLength(1);
+    expect(await api.readback(command)).toEqual(first);
+    await expect(api.execute({...command,basis:"provider_acceptance"})).rejects.toThrow("operation_conflict");
+    await s.db.update(s.userOrgMembershipsTable).set({role:"member"}).where(eq(s.userOrgMembershipsTable.id,membership.id));
+    await expect(api.execute(command)).rejects.toThrow("current_authority_required");
+    await expect(api.readback(command)).rejects.toThrow("current_authority_required");
+  });
+});

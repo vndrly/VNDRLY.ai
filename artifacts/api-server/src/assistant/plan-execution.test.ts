@@ -10,7 +10,7 @@ function harness(){
  const execute=vi.fn(async (_context:any,step:any)=>({operationId:step.operationId,sourceReferences:[step.id==='read'?'asset:21':'task:'+uuid(7)],summary:step.id==='read'?'One issued asset.':'Personal draft saved.'}));
  const reconcile=vi.fn(async()=>({state:'not_found' as const}));
  const notify=vi.fn(async(_authorization:any,_operationId:string,_brief:string)=>({saved:true as const,operationId:uuid(6)}));
- const deps={repository,now:()=>now,authorize:async()=>current,adapters:{authorized_read:{execute,reconcile},personal_draft:{execute,reconcile}},notify};
+ const deps={repository,now:()=>now,authorize:async()=>current,adapters:{authorized_read:{execute,reconcile},personal_draft:{execute,reconcile},ticket_invoice_preparation:{execute:vi.fn(async()=>{throw Error('Unexpected invoice action in legacy fixture');}),reconcile}},notify};
  return {deps,execute,reconcile,notify,get run(){return run;},set run(v:PlanExecutionRun){run=v;},current,advance:(n:number)=>{now=n;},restart:()=>{held=false;},cancel:()=>{run.cancelRequested=true;}};
 }
 it('executes exact dependent read/draft, persists source receipts and sends one deduplicated brief',async()=>{const h=harness();await createPlanExecutor(h.deps).runOne();expect(h.run.state).toBe('completed');expect(h.execute).toHaveBeenCalledTimes(2);expect(h.notify).toHaveBeenCalledTimes(1);expect(h.run.steps.every(s=>s.state==='completed')).toBe(true);await createPlanExecutor(h.deps).runOne();expect(h.notify).toHaveBeenCalledTimes(1);});

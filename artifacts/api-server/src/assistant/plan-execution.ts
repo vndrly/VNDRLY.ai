@@ -1,10 +1,12 @@
 import { createHash } from 'node:crypto';
 import { z } from 'zod/v4';
+import { TICKET_INVOICE_PREPARATION_ARGUMENTS } from './ticket-invoice-preparation-tools';
+import { PLAN_EXECUTION_OPPORTUNITY_INPUTS } from './plan-execution-read-policy';
 import { PLAN_EXECUTION_READ_TOOL_NAMES, PLAN_EXECUTION_BUSINESS_READ_CANDIDATES, PLAN_EXECUTION_INVOICE_ACTIVITY_INPUT } from './plan-execution-read-policy';
 
 const jsonObject = z.record(z.string(), z.json());
 export const planExecutionRequesterSchema = z.object({userId:z.number().int().positive(),organizationKey:z.string().regex(/^(vendor|partner):[1-9]\d*$/),membershipId:z.number().int().positive(),sessionVersion:z.number().int().positive()}).strict();
-export const planExecutionStepSchema = z.object({id:z.string().min(1).max(100),adapter:z.enum(['authorized_read','personal_draft']),toolName:z.string().min(1).max(150),arguments:jsonObject,dependsOn:z.array(z.string().min(1).max(100)).max(20),operationId:z.string().uuid()}).strict();
+export const planExecutionStepSchema = z.object({id:z.string().min(1).max(100),adapter:z.enum(['authorized_read','personal_draft','ticket_invoice_preparation']),toolName:z.string().min(1).max(150),arguments:jsonObject,dependsOn:z.array(z.string().min(1).max(100)).max(20),operationId:z.string().uuid()}).strict();
 export const planExecutionAuthorizationSchema = z.object({id:z.string().uuid(),requester:planExecutionRequesterSchema,grantReference:z.string().min(1).max(200),taskId:z.string().uuid(),taskVersion:z.number().int().positive(),planId:z.string().uuid(),planVersion:z.number().int().positive(),planFingerprint:z.string().regex(/^[a-f0-9]{64}$/),approvedAt:z.number().int().nonnegative(),expiresAt:z.number().int().positive(),maxAttempts:z.number().int().min(1).max(5),steps:z.array(planExecutionStepSchema).min(1).max(20),notificationOperationId:z.string().uuid()}).strict().superRefine((a,ctx)=>{
  const ids=new Set(a.steps.map(s=>s.id)),ops=new Set(a.steps.map(s=>s.operationId));
  if(ids.size!==a.steps.length||ops.size!==a.steps.length||ops.has(a.notificationOperationId))ctx.addIssue({code:'custom',message:'Step and operation IDs must be unique'});
@@ -14,6 +16,11 @@ export const planExecutionAuthorizationSchema = z.object({id:z.string().uuid(),r
  if(!a.steps.every(s=>visit(s.id)))ctx.addIssue({code:'custom',message:'Invalid dependency graph'});
  if(a.steps.some(s=>Buffer.byteLength(JSON.stringify(s.arguments))>8192))ctx.addIssue({code:'custom',message:'Approved arguments exceed bounded capacity'});
  for(const step of a.steps){
+  if(step.adapter==='authorized_read'&&Object.hasOwn(PLAN_EXECUTION_OPPORTUNITY_INPUTS,step.toolName)&&!PLAN_EXECUTION_OPPORTUNITY_INPUTS[step.toolName as keyof typeof PLAN_EXECUTION_OPPORTUNITY_INPUTS].safeParse(step.arguments).success)ctx.addIssue({code:'custom',message:'Invalid exact opportunity read arguments'});
+  if(step.adapter==='ticket_invoice_preparation') {
+   const args=TICKET_INVOICE_PREPARATION_ARGUMENTS.safeParse(step.arguments);
+   if(step.toolName!=='prepare_ticket_invoices'||!args.success||!step.dependsOn.some(id=>a.steps.some(read=>read.id===id&&read.adapter==='authorized_read'&&read.toolName==='query_invoice_activity'&&read.arguments.basis===args.data?.basis)))ctx.addIssue({code:'custom',message:'Invoice preparation requires exact selections and matching approved chronology dependency'});
+  }
   if(step.adapter==='authorized_read'&&!PLAN_EXECUTION_READ_TOOL_NAMES.includes(step.toolName))ctx.addIssue({code:'custom',message:'Unsupported unattended read tool'});
   if(step.adapter==='authorized_read'&&step.toolName==='query_invoice_activity'&&!PLAN_EXECUTION_INVOICE_ACTIVITY_INPUT.safeParse(step.arguments).success)ctx.addIssue({code:'custom',message:'Invalid invoice activity basis'});
   if(step.adapter==='authorized_read'&&step.toolName!=='query_asset_custody'&&Object.hasOwn(PLAN_EXECUTION_BUSINESS_READ_CANDIDATES,step.toolName)&&!PLAN_EXECUTION_BUSINESS_READ_CANDIDATES[step.toolName as keyof typeof PLAN_EXECUTION_BUSINESS_READ_CANDIDATES].safeParse(step.arguments).success)ctx.addIssue({code:'custom',message:'Invalid bounded business read arguments'});
