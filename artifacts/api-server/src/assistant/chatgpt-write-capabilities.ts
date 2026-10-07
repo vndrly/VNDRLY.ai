@@ -1,4 +1,5 @@
 import { FLEET_REPLACEMENT_ACTIONS } from "./fleet-replacement-tools";
+import { financeRecordAction, WORK_HUB_FINANCE_RECORD_ACTIONS } from "./work-hub-finance-actions";
 import { FleetReplacementInputSchema, FleetReplacementActionSchema, AssetLossReportInputSchema, AssetIdentifierClaimInputSchema, AssetIdentifierClaimResolutionSchema } from "@workspace/api-zod";
 import { FLEET_CARGO_ACTIONS } from "./fleet-cargo-tools";
 import { TICKET_RECORD_ACTIONS } from "./ticket-workflow-tools";
@@ -42,6 +43,7 @@ export function sanitizeChatGptActionInput(name: string, input: Record<string, u
  * Model-supplied acceptance flags never stand in for the person's action.
  */
 export function validateChatGptActionInput(name: string, input: Record<string, unknown>): void {
+  if (name === "manage_work_hub_finance" && (WORK_HUB_FINANCE_RECORD_ACTIONS as readonly unknown[]).includes(input.action)) financeRecordAction(input);
   if(name==="reconcile_fleet_gate_visit"){z.uuid().parse(input.runId);FleetGateLinkInputSchema.parse({operationId:"00000000-0000-4000-8000-000000000001",expectedVersion:input.expectedVersion,stopId:input.stopId,visitId:input.visitId,reason:input.reason});}
   if(name==="manage_fleet_saved_view")FleetSavedViewInputSchema.parse({operationId:"00000000-0000-4000-8000-000000000001",viewId:input.viewId,expectedVersion:input.expectedVersion,action:input.action,name:input.name,filters:input.filters});
   if(["report_fleet_defect","manage_fleet_maintenance"].includes(name)){

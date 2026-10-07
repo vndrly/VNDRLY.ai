@@ -69,7 +69,8 @@ describe("ChatGPT onboarding changes", () => {
     const ticketTools = chatGptActionTools(worker, ["tickets:write"]).map(tool => tool.name);
     expect(ticketTools).toContain("set_ticket_lifecycle");
     expect(ticketTools).toContain("post_ticket_comment");
-    expect(ticketTools).not.toContain("schedule_ticket_crew");
+    expect(ticketTools).toContain("schedule_ticket_crew");
+    expect(chatGptActionTools(worker, ["tickets:write"]).find(tool => tool.name === "schedule_ticket_crew")?.description).toContain("exact ticket's foreman or acting foreman");
     expect(ticketTools).not.toContain("mark_notifications_read");
     expect(chatGptActionTools(worker, ["operations:write"]).map(tool => tool.name)).toEqual(["mark_notifications_read"]);
     expect(chatGptActionTools(worker, ["tickets:read", "operations:read"])).toEqual([]);

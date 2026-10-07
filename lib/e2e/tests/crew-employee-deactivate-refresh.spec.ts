@@ -57,6 +57,7 @@ type Seed = {
   foremanUserId: number;
   foremanUsername: string;
   foremanVendorPersonId: number;
+  workerVendorPersonId: number;
 };
 
 const PASSWORD = "e524pass123";
@@ -144,6 +145,16 @@ async function seedFixture(): Promise<Seed> {
     userId: foremanUser.id,
   });
 
+  // Keep the requesting foreman active while deactivating a separate target.
+  const workerVp = await createVendorPerson(pool, {
+    vendorId: vendor.id,
+    vendorRole: "field_employee",
+    firstName: "E524Worker",
+    lastName: stamp,
+    email: `e524-worker-${stamp}@example.com`,
+    isActive: true,
+  });
+
   // The ticket the foreman has open in the mobile app. Status must be in
   // MUTABLE_TICKET_STATUSES so ensureCrewMutate doesn't 409 on
   // ticket.not_editable before we get to the inactive guard.
@@ -168,6 +179,7 @@ async function seedFixture(): Promise<Seed> {
     foremanUserId: foremanUser.id,
     foremanUsername,
     foremanVendorPersonId: foremanVp.id,
+    workerVendorPersonId: workerVp.id,
   };
 }
 
@@ -183,8 +195,9 @@ async function cleanup(s: Seed): Promise<void> {
     [s.siteId],
   );
   await pool.query(`DELETE FROM site_locations WHERE id = $1`, [s.siteId]);
-  await pool.query(`DELETE FROM vendor_people WHERE id = $1`, [
+  await pool.query(`DELETE FROM vendor_people WHERE id IN ($1, $2)`, [
     s.foremanVendorPersonId,
+    s.workerVendorPersonId,
   ]);
   await pool.query(`DELETE FROM users WHERE id IN ($1, $2)`, [
     s.vendorAdminUserId,
@@ -279,8 +292,8 @@ test.describe.serial(
       expect(baselineRes.ok()).toBe(true);
       const baseline = (await baselineRes.json()) as Array<{ id: number }>;
       expect(
-        baseline.some((e) => e.id === seed.foremanVendorPersonId),
-        "baseline /api/field-employees should include the active foreman",
+        baseline.some((e) => e.id === seed.workerVendorPersonId),
+        "baseline /api/field-employees should include the active worker",
       ).toBe(true);
 
       // ── (1) Office deactivates the crew member ─────────────────────
@@ -290,7 +303,7 @@ test.describe.serial(
       // admin can target this row because session.vendorId matches the
       // employee's vendorId.
       const deactivateRes = await officeApi.patch(
-        `/api/field-employees/${seed.foremanVendorPersonId}`,
+        `/api/field-employees/${seed.workerVendorPersonId}`,
         { data: { isActive: false } },
       );
       expect(
@@ -303,7 +316,7 @@ test.describe.serial(
       // Belt-and-braces: the underlying column actually flipped.
       const dbCheck = await pool.query<{ is_active: boolean }>(
         `SELECT is_active FROM vendor_people WHERE id = $1`,
-        [seed.foremanVendorPersonId],
+        [seed.workerVendorPersonId],
       );
       expect(dbCheck.rows[0]?.is_active).toBe(false);
 
@@ -311,7 +324,7 @@ test.describe.serial(
       // crew.employee_inactive code the mobile component maps to the
       // localized "That crew member was just deactivated…" inline error.
       const checkInRes = await foremanApi.post(
-        `/api/tickets/${seed.ticketId}/crew/${seed.foremanVendorPersonId}/check-in`,
+        `/api/tickets/${seed.ticketId}/crew/${seed.workerVendorPersonId}/check-in`,
         { data: {} },
       );
       expect(checkInRes.status()).toBe(409);
@@ -355,7 +368,7 @@ test.describe.serial(
         isActive?: boolean | null;
       }>;
       expect(
-        polled.some((e) => e.id === seed.foremanVendorPersonId),
+        polled.some((e) => e.id === seed.workerVendorPersonId),
         "after deactivation, /api/field-employees must no longer include the worker",
       ).toBe(false);
       // Anything still in the list must be active — sanity check that the
@@ -363,6 +376,20 @@ test.describe.serial(
       for (const e of polled) {
         expect(e.isActive).not.toBe(false);
       }
+
+      // The active foreman survived the target-only deactivation.
+      expect(polled.some((e) => e.id === seed.foremanVendorPersonId)).toBe(true);
+      // Revoking the actor must still deny mutations before target validation.
+      const revokeActor = await officeApi.patch(
+        `/api/field-employees/${seed.foremanVendorPersonId}`,
+        { data: { isActive: false } },
+      );
+      expect(revokeActor.ok()).toBe(true);
+      const denied = await foremanApi.post(
+        `/api/tickets/${seed.ticketId}/crew/${seed.workerVendorPersonId}/check-in`,
+        { data: {} },
+      );
+      expect(denied.status()).toBe(403);
     });
   },
 );

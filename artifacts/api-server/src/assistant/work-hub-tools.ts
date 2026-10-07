@@ -281,6 +281,7 @@ const entries: Entry[] = [
     end: text("ISO end time."),
     payload: { type: "object" },
   }, ["action", "companyId", "start", "end"])),
+  read("get_work_hub_scheduling_availability", "scheduling", "Read one authorized scheduling page's current saved availability windows, server-returned booking slots and current version. Windows are returned only when the current caller may manage that scheduling page; slots respect the canonical calendar conflicts. Read this before replacing availability or selecting an exact booking slot. No Outlook calendar access or booking is performed.", schema({ meetingTypeId: identifier() }, ["meetingTypeId"])),
   read("list_work_hub_meeting_types", "scheduling", "List meeting types and scheduling pages visible to the caller."),
   write("manage_work_hub_meeting_type", "scheduling", "Create or update a meeting type after confirmation.", writeSchema({
     action: { type: "string", enum: ["create", "update"] },
@@ -328,7 +329,7 @@ const entries: Entry[] = [
     sourceId: identifier("Saved chat-message or transcript-segment id."),
     sourceType: { type: "string", enum: ["chat", "transcript"] },
   }, ["occurrenceId", "sourceId", "sourceType"])),
-  read("search_work_hub_meeting", "meetings", "Search an authorized meeting transcript or replay for an exact topic or moment.", schema({
+  read("search_work_hub_meeting", "meetings", "Search the caller's authorized saved meeting transcript and chat for a nonempty literal query, ignoring case. Returns matching source IDs, actual transcript time ranges or chat timestamps and match evidence only. No recording, provider search, transcript generation or playback is started.", schema({
     occurrenceId: identifier(),
     query: text(),
   }, ["occurrenceId", "query"])),
@@ -366,8 +367,8 @@ const entries: Entry[] = [
   }, ["action", "fileId", "payload"])),
 
   read("get_work_hub_finance", "finance", "Read permission-scoped Work Hub billing, payroll, invoice, and approval information.", schema({ query: text(), status: text() })),
-  write("manage_work_hub_finance", "finance", "Create or update an invoice draft, or send an invoice email after confirmation.", writeSchema({
-    action: { type: "string", enum: ["create_draft", "update_draft", "send_email"] },
+  write("manage_work_hub_finance", "finance", "Create/update an invoice draft, issue its billing record, create or revoke its public view link, record an already-made outside payment, or request an invoice email after confirmation. Current company Billing Manager/admin authority is rechecked. For share, explicitly review that anyone holding the bearer link can view the invoice for 30 days; payload must contain audience:'anyone_with_link' and expiresInDays:30. This creates a link, does not send it, and does not prove anyone viewed it. revoke_share revokes only the invoice's current link. record_outside_payment requires the actual positive integer amountCents, method cash/check/bank and unique reference of a payment already made elsewhere; it never transfers money or accesses a bank. Refunds, payroll approval and external payment execution remain unavailable. No invoice revision/CAS guarantee is claimed.", writeSchema({
+    action: { type: "string", enum: ["create_draft", "update_draft", "send_email", "issue", "share", "revoke_share", "record_outside_payment"] },
     recordId: identifier(),
     payload: { type: "object" },
   }, ["action", "payload"])),

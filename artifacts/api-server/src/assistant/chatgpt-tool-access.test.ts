@@ -1,9 +1,34 @@
-import { describe, expect, it } from "vitest";
-import { chatGptReadableTools, requireChatGptReadableTool, chatGptReadToolOutput, chatGptReadToolDescription, chatGptReadToolAnnotations } from "./chatgpt-tool-access";
+import { describe, expect, it, vi } from "vitest";
+import { chatGptActionTools, chatGptReadableTools, requireChatGptReadableTool, chatGptReadToolOutput, chatGptReadToolDescription, chatGptReadToolAnnotations } from "./chatgpt-tool-access";
 import { CHATGPT_READ_CAPABILITIES } from "./chatgpt-read-capabilities";
 import { findAskVTool } from "./tool-registry";
 
 describe("ChatGPT assistant tool access", () => {
+  it("discovers ticket scheduling for assigned or acting foremen without granting ordinary workers scheduler authority", async () => {
+    const worker = { userId: 9, role: "field_employee", vendorId: 12, vendorRole: "field" };
+    expect(chatGptActionTools(worker, ["tickets:write"]).some(tool => tool.name === "schedule_ticket_crew")).toBe(true);
+    expect(chatGptActionTools(worker, ["tickets:read"]).some(tool => tool.name === "schedule_ticket_crew")).toBe(false);
+    expect(() => requireChatGptReadableTool(worker, ["workforce:read"], "query_ticket_assignment_candidates")).toThrow();
+    const { db, ticketsTable } = await import("@workspace/db");
+    const { resolveSchedulerAuth } = await import("../routes/ticketSchedule");
+    const originalSelect = db.select.bind(db);
+    const select = vi.spyOn(db, "select");
+    try {
+      for (const ticket of [
+        { foremanUserId: 9, actingForemanUserId: null },
+        { foremanUserId: 14, actingForemanUserId: 9 },
+        { foremanUserId: 14, actingForemanUserId: 15 },
+      ]) {
+        const builder = originalSelect({ foremanUserId: ticketsTable.foremanUserId, actingForemanUserId: ticketsTable.actingForemanUserId });
+        const query = builder.from(ticketsTable);
+        vi.spyOn(query, "execute").mockResolvedValue([ticket]);
+        vi.spyOn(builder, "from").mockReturnValue(query);
+        select.mockReturnValue(builder);
+        expect(await resolveSchedulerAuth({ ...worker, partnerId: null }, 77, 12)).toBe(ticket.foremanUserId === 9 || ticket.actingForemanUserId === 9);
+      }
+      expect(select).toHaveBeenCalledTimes(3);
+    } finally { select.mockRestore(); }
+  });
   it("requires workforce consent and foreman scope for field-worker roster discovery", () => {
     const name = "query_ticket_assignment_candidates";
     const foreman = { userId: 9, role: "field_employee", vendorId: 12, vendorRole: "foreman" };

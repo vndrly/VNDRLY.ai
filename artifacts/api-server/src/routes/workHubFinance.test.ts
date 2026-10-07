@@ -13,6 +13,7 @@ import {
 } from "@workspace/db";
 import finance from "./workHubFinance";
 import { buildTestCookie } from "../test-utils/session";
+import { resolveExecutableWorkHubToolRequest } from "../assistant/work-hub-tool-runtime";
 vi.mock("../work-hub/feature-access", () => ({
   isWorkHubEnabled: async () => true,
 }));
@@ -247,6 +248,33 @@ describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")(
         amountCents: 1000,
       });
       expect(refund.body.resource.data.paidCents).toBe(2000);
+    });
+    it("executes approved record-only adapters with current billing authorization and exact replay", async () => {
+      const created = await post("invoice-save", admin, { customer: "Synthetic adapter customer", description: "Recorded service only", amountCents: 5000, dueDate: "2026-10-01" });
+      expect(created.status).toBe(200);
+      const recordId = created.body.resource.id;
+      const send = (action: string, payload: Record<string, unknown>, cookie = member, operationId = randomUUID()) => {
+        const input = { ...envelope(payload, operationId), action, recordId };
+        const wire = resolveExecutableWorkHubToolRequest("manage_work_hub_finance", input, true);
+        if (!wire || "error" in wire) throw Error("Expected canonical finance request");
+        return request(app).post(wire.path).set("Cookie", cookie).set("x-vndrly-source", "askv").send(wire.body);
+      };
+      expect((await send("issue", {}, foreign)).status).toBe(403);
+      const issueId = randomUUID();
+      expect((await send("issue", {}, member, issueId)).body.resource.data.status).toBe("issued");
+      expect((await send("issue", {}, member, issueId)).body.replayed).toBe(true);
+      const shareId = randomUUID(), publicFields = { audience: "anyone_with_link", expiresInDays: 30 };
+      const shared = await send("share", publicFields, member, shareId);
+      expect(shared.status).toBe(200);
+      expect((await send("share", publicFields, member, shareId)).body.resource.data.shareToken).toBe(shared.body.resource.data.shareToken);
+      expect((await send("revoke_share", {})).body.resource.data.shareToken).toBeNull();
+      const operationId = randomUUID(), payment = { amountCents: 1000, method: "check", reference: `Synthetic-${operationId}` };
+      const saved = await send("record_outside_payment", payment, member, operationId);
+      expect(saved.status).toBe(200);
+      expect(saved.body.resource.data.payments).toEqual([expect.objectContaining({ id: operationId, amountCents: 1000, feeCents: 0 })]);
+      expect((await send("record_outside_payment", payment, member, operationId)).body.replayed).toBe(true);
+      await post("grant", admin, { userId: memberId, roles: [] });
+      expect((await send("record_outside_payment", payment, member, operationId)).status).toBe(403);
     });
     it("requires payroll grants, rejects cross-employer records and leaves taxes uncalculated", async () => {
       const payroll = {

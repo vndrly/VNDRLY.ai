@@ -62,13 +62,13 @@ export function chatGptActionTools(session: SessionPayload, scopes: readonly str
   const hub = scopes.includes("work_hub:write") ? toolsForRealtime({ role: session.role, membershipRole: session.membershipRole, path: "/work-hub/askv" }).filter((tool) => Boolean(tool.workHubFamily) && tool.mutating) : [];
   const names = new Set<string>(Object.entries(CHATGPT_WRITE_CAPABILITIES).filter(([scope]) => scopes.includes(scope)).flatMap(([, capability]) => [...capability.tools]));
   const additional = ASK_V_TOOL_REGISTRY.filter(tool => names.has(tool.name)
-    && (tool.name !== "schedule_ticket_crew" || session.role !== "field_employee" || ["foreman", "both"].includes(session.vendorRole ?? ""))
     && (!tool.name.includes("account_invitations") || (session.role === "vendor" && Boolean(session.vendorId) && session.membershipRole === "admin"))
     && (!tool.name.includes("worker_subscriptions") || (session.role === "vendor" && Boolean(session.vendorId) && session.membershipRole === "admin"))
     && (!(CHATGPT_WRITE_CAPABILITIES["onboarding:write"].tools as readonly string[]).includes(tool.name) || hasOnboardingScope(session))
     && (tool.roles.includes(session.role as "admin" | "partner" | "vendor" | "field_employee") || tool.roles.includes("any"))
     && (!tool.companyAdminOnly || session.membershipRole === "admin") && tool.mutating);
   return [...new Map([...gate, ...hub, ...additional].filter((tool) => tool.execution !== "client").map((tool) => [tool.name, tool])).values()].map(tool => {
+    if (tool.name === "schedule_ticket_crew" && session.role === "field_employee") return { ...tool, description: `${tool.description} Field employees require current vendor foreman authority or assignment as the exact ticket's foreman or acting foreman. The canonical ticket permission is checked before crew lookup and execution; discovery does not grant company roster access.` };
     if (tool.name === "confirm_asset_custody_action" && session.role !== "admin") { const schema = tool.inputSchema as { properties: Record<string, unknown> }; const action = schema.properties.action as { enum: string[] }; return { ...tool, inputSchema: { ...tool.inputSchema, properties: { ...schema.properties, action: { type: "string", enum: action.enum.filter(value => value !== "resolve_identifier_claim") } } } }; }
     if (tool.name !== "manage_ticket_record") return tool;
     const schema = tool.inputSchema as { properties: Record<string, unknown> };

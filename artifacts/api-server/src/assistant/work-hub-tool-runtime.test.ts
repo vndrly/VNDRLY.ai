@@ -613,3 +613,82 @@ it("forwards ACH payment evidence only through confirmed payment records", () =>
 });
 
 it('maps exact Inventory hold release to the separate scoped endpoint without custody or physical-repair fields',()=>{const input={owner:{type:'vendor',id:7},assetId:'11111111-1111-4111-8111-111111111111',action:'release_hold',operationId:'22222222-2222-4222-8222-222222222222',expectedVersion:4,payload:{holdId:'33333333-3333-4333-8333-333333333333',reason:'Administrative release'}};expect(resolveExecutableWorkHubToolRequest('confirm_asset_custody_action',input,true)).toEqual({method:'POST',path:'/implementation-a/assets/'+input.assetId+'/holds/'+input.payload.holdId+'/release',body:{operationId:input.operationId,expectedVersion:4,reason:'Administrative release'}});expect(resolveExecutableWorkHubToolRequest('confirm_asset_custody_action',{...input,payload:{reason:'Missing exact hold'}},true)).toHaveProperty('error');});
+
+it("reads current scheduling slots/windows/version through exact scoped canonical GET without write authority", () => {
+  const meetingTypeId = "11111111-1111-4111-8111-111111111111";
+  expect(
+    resolveExecutableWorkHubToolRequest(
+      "get_work_hub_scheduling_availability",
+      { meetingTypeId, owner: { type: "vendor", id: 999 } },
+      false,
+    ),
+  ).toEqual({
+    method: "GET",
+    path: "/work-hub/scheduling/types/" + meetingTypeId + "/availability",
+    body: {},
+  });
+  for (const bad of [undefined, "../foreign", 123])
+    expect(
+      resolveWorkHubToolRequest("get_work_hub_scheduling_availability", {
+        meetingTypeId: bad,
+      }),
+    ).toHaveProperty("error");
+  const projection = {
+    windows: [],
+    slots: ["2026-10-08T12:00:00Z"],
+    version: 7,
+  };
+  expect(
+    describeWorkHubToolResult(
+      "get_work_hub_scheduling_availability",
+      { meetingTypeId },
+      projection,
+    ),
+  ).toEqual(projection);
+  expect(
+    describeWorkHubToolResult(
+      "get_work_hub_scheduling_availability",
+      { meetingTypeId },
+      { ok: false, error: "Forbidden" },
+    ),
+  ).toEqual({ ok: false, error: "Forbidden" });
+});
+it("meeting search validates query before HTTP and respects denial rather than returning raw catchup", () => {
+  const occurrenceId = "11111111-1111-4111-8111-111111111111";
+  expect(
+    resolveExecutableWorkHubToolRequest(
+      "search_work_hub_meeting",
+      { occurrenceId, query: "pump" },
+      false,
+    ),
+  ).toMatchObject({
+    method: "GET",
+    path: "/work-hub/meetings/" + occurrenceId + "/catch-up",
+  });
+  for (const query of [undefined, "", " ", "x".repeat(501)])
+    expect(
+      resolveWorkHubToolRequest("search_work_hub_meeting", {
+        occurrenceId,
+        query,
+      }),
+    ).toHaveProperty("error");
+  expect(
+    describeWorkHubToolResult(
+      "search_work_hub_meeting",
+      { occurrenceId, query: "pump" },
+      { ok: false, error: "Current participant denied" },
+    ),
+  ).toEqual({ ok: false, error: "Current participant denied" });
+  expect(
+    describeWorkHubToolResult(
+      "search_work_hub_meeting",
+      { occurrenceId, query: "pump" },
+      {
+        occurrence: { id: occurrenceId },
+        chat: [],
+        transcript: [],
+        recap: "unrelated private summary",
+      },
+    ),
+  ).toMatchObject({ ok: true, matches: [], matchCount: 0 });
+});

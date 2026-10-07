@@ -1,3 +1,5 @@
+import { meetingSearchInputSchema, searchSavedMeetingProjection } from "./work-hub-meeting-search";
+import { financeRecordAction } from "./work-hub-finance-actions";
 import { z } from "zod/v4";
 import { FLEET_REPLACEMENT_ACTIONS } from "./fleet-replacement-tools";
 import { FleetReplacementInputSchema, FleetReplacementActionSchema } from "@workspace/api-zod";
@@ -45,6 +47,10 @@ export function inferWorkHubAuditTargetId(rawInput: unknown, rawOutput?: unknown
 }
 
 export function describeWorkHubToolResult(name: string, rawInput: unknown, result: Record<string, unknown> | unknown[]) {
+  if (name === "search_work_hub_meeting") {
+    if (!Array.isArray(result) && (result.ok === false || result.error)) return result;
+    return searchSavedMeetingProjection(rawInput,result);
+  }
   if (Array.isArray(result) || result.ok === false || result.error) return result;
   if (name === "confirm_asset_custody_action" && ["conflict", "blocked"].includes(String(result.status)))
     return { ...result, ok: false, error: result.code ?? "The asset changed or this action is blocked. Read it again before preparing a new action." };
@@ -695,6 +701,9 @@ export function resolveWorkHubToolRequest(
         end: input.end,
         }), payload);
       }
+    case "get_work_hub_scheduling_availability":
+      if (!z.uuid().safeParse(input.meetingTypeId).success) return { error: "An exact saved meeting type ID is required." };
+      return request("GET", `/work-hub/scheduling/types/${input.meetingTypeId}/availability`);
     case "list_work_hub_meeting_types":
       return request("GET", "/work-hub/scheduling/types");
     case "manage_work_hub_meeting_type":
@@ -789,6 +798,7 @@ export function resolveWorkHubToolRequest(
           })
         : target;
     case "search_work_hub_meeting":
+      if (!meetingSearchInputSchema.safeParse(input).success) return { error: "Supply an exact meeting occurrence, nonempty query (up to 500 characters), and limit from 1 to 100." };
       target = required(input.occurrenceId, "meeting occurrence id");
       return typeof target === "string"
         ? request("GET", `/work-hub/meetings/${target}/catch-up`)
@@ -867,6 +877,10 @@ export function resolveWorkHubToolRequest(
     case "get_work_hub_finance":
       return request("GET", queryPath("/work-hub/finance", { q: input.query, status: input.status }));
     case "manage_work_hub_finance":
+      if (["issue", "share", "revoke_share", "record_outside_payment"].includes(String(input.action))) {
+        try { const operation = financeRecordAction(input); return request("POST", `/work-hub/finance/${operation.endpoint}`, envelope(input, operation.payload)); }
+        catch { return { error: "Supply the exact invoice and required recorded payment or public-link disclosure fields." }; }
+      }
       if (["create_draft", "update_draft"].includes(String(input.action)))
         return request("POST", "/work-hub/finance/invoice-save", envelope(input, {
           ...payload,
