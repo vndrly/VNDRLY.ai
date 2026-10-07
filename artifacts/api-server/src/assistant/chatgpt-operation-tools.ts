@@ -2,6 +2,11 @@ import type { AskVToolDefinition } from './tool-registry';
 
 const families = new Set(['manage_gate_shift', 'manage_ticket_record']);
 
+/** Legacy plan records keep canonical names; new plans may select exposed names. */
+export function planOperationTools(tools: AskVToolDefinition[]): AskVToolDefinition[] {
+  return [...new Map([...tools, ...exposedOperationTools(tools)].map(tool => [tool.name, tool])).values()];
+}
+
 /** Publish each operation independently while retaining canonical authorization. */
 export function exposedOperationTools(tools: AskVToolDefinition[]): AskVToolDefinition[] {
   return tools.flatMap(tool => {

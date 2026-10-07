@@ -1,5 +1,5 @@
 import { Router, type Request, type Response } from "express";
-import { exposedOperationTools, resolveOperationTool } from "../assistant/chatgpt-operation-tools";
+import { exposedOperationTools, resolveOperationTool, planOperationTools } from "../assistant/chatgpt-operation-tools";
 import { createHmac, createHash, randomUUID, randomBytes, timingSafeEqual } from "node:crypto";
 import { SESSION_SECRET, getSessionFromRequest } from "../lib/session";
 import { createRateLimiter } from "../lib/rate-limit-factory";
@@ -308,7 +308,7 @@ router.post("/mcp", async (req, res) => {
       const owner = session.vendorId ? { type: "vendor", id: session.vendorId } : session.partnerId ? { type: "partner", id: session.partnerId } : null;
       if (!owner || !session.userId) throw new Error("Plan company unavailable");
       const raw = JSON.parse(await runTool("list_work_hub_tasks", {}, session, ""));
-      const tools = [...chatGptReadableTools(session, authorized.scopes), ...chatGptActionTools(session, authorized.scopes)];
+      const tools = [...chatGptReadableTools(session, authorized.scopes), ...planOperationTools(chatGptActionTools(session, authorized.scopes))];
       const output = resumedWorkPlan(raw, args.taskId, { userId: session.userId, organizationKey: owner.type + ":" + owner.id }, new Set(tools.map(tool => tool.name)));
       await writeAskVActionAudit({ session, clientSurface: "api", inputMode: "web_text", provider: "chatgpt_mcp", toolName: "list_work_hub_tasks", targetType: "task", toolInput: { taskId: args.taskId }, toolOutput: { taskId: output.taskId, taskVersion: output.taskVersion }, resultStatus: "success" });
       if (name === "v_run_work_plan_read") {
@@ -346,7 +346,7 @@ router.post("/mcp", async (req, res) => {
         hasGateSites = !gates.error && Array.isArray(gates.sites) && gates.sites.length > 0;
         await writeAskVActionAudit({ session: authorized.session, clientSurface: "api", inputMode: "web_text", provider: "chatgpt_mcp", toolName: "query_gate_stations", targetType: "site", toolInput: {}, toolOutput: gates, resultStatus: gates.error ? "failure" : "success" });
       }
-      const result = specialistDirectory(reads, chatGptActionTools(authorized.session, authorized.scopes), { hasGateSites });
+      const result = specialistDirectory(reads, exposedOperationTools(chatGptActionTools(authorized.session, authorized.scopes)), { hasGateSites });
       return reply({ content: [{ type: "text", text: JSON.stringify(result) }], structuredContent: result });
     }
     if (name === "v_submit_panel_action") {
@@ -438,7 +438,7 @@ router.post("/mcp", async (req, res) => {
       const owner = session.vendorId ? { type: 'vendor' as const, id: session.vendorId } : session.partnerId ? { type: 'partner' as const, id: session.partnerId } : null;
       if (!owner || !session.userId) throw new Error('Plan company unavailable');
       const raw = JSON.parse(await runTool('list_work_hub_tasks', {}, session, ''));
-      args = prepareWorkPlanControl(raw, args, { userId: session.userId, organizationKey: owner.type + ':' + owner.id }, owner, new Set([...chatGptReadableTools(session, authorized.scopes), ...permittedActions].map(tool => tool.name)));
+      args = prepareWorkPlanControl(raw, args, { userId: session.userId, organizationKey: owner.type + ':' + owner.id }, owner, new Set([...chatGptReadableTools(session, authorized.scopes), ...planOperationTools(permittedActions)].map(tool => tool.name)));
       await writeAskVActionAudit({ session, clientSurface: 'api', inputMode: 'web_text', provider: 'chatgpt_mcp', toolName: 'list_work_hub_tasks', targetType: 'task', toolInput: { taskId: args.taskId }, toolOutput: { taskId: args.taskId, taskVersion: args.expectedVersion }, resultStatus: 'success' });
       name = 'manage_work_hub_task';
     }
@@ -447,7 +447,7 @@ router.post("/mcp", async (req, res) => {
       const session = authorized.session;
       const owner = session.vendorId ? { type: "vendor" as const, id: session.vendorId } : session.partnerId ? { type: "partner" as const, id: session.partnerId } : null;
       if (!owner || !session.userId) throw new Error("Plan company unavailable");
-      args = prepareWorkPlan(args, { userId: session.userId, organizationKey: owner.type + ":" + owner.id }, owner, new Set([...chatGptReadableTools(session, authorized.scopes), ...permittedActions].map(tool => tool.name)));
+      args = prepareWorkPlan(args, { userId: session.userId, organizationKey: owner.type + ":" + owner.id }, owner, new Set([...chatGptReadableTools(session, authorized.scopes), ...planOperationTools(permittedActions)].map(tool => tool.name)));
       name = "manage_work_hub_task";
     }
     if (name === "v_prepare_action" || permittedActions.some((tool) => tool.name === name)) {
