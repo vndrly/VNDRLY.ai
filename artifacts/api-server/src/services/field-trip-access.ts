@@ -11,6 +11,15 @@ export type FieldTripActor = {
 
 const SUPERVISOR_ROLES = new Set(["dispatcher", "foreman", "gate_supervisor", "safety_manager"]);
 
+/** Partner read access follows owned sites; mutation authority remains owner-bound. */
+export function assertFieldTripReadAccess(trip: FieldTripRecord, actor: FieldTripActor, sitePartnerId: number | null) {
+  if (!actor.isAdmin && actor.owner?.type === "partner") {
+    if (sitePartnerId !== actor.owner.id) throw new FieldTripError("trip.not_found", 404);
+    return;
+  }
+  assertFieldTripAccess(trip, actor);
+}
+
 export function assertFieldTripAccess(trip: FieldTripRecord, actor: FieldTripActor) {
   if (actor.isAdmin) return;
   if (!actor.owner || trip.owner.type !== actor.owner.type || trip.owner.id !== actor.owner.id) {
@@ -26,3 +35,4 @@ export function authorizeFieldTripCompletion(trip: FieldTripRecord, actor: Field
   if (!actorMayComplete) throw new FieldTripError("trip.completion_forbidden", 403);
   return { actorMayComplete: true };
 }
+

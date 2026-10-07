@@ -212,10 +212,10 @@ export function createAssetService(repository: AssetRepository) {
       if (!saved) throw new AssetServiceError("asset.version_conflict");
       return saved;
     },
-    async placeAssetHold(input: { assetId: string; reason: string; expectedVersion: number }) {
+    async placeAssetHold(input: { assetId: string; reason: string; expectedVersion: number; actorUserId: number }) {
       const asset = await getCurrent(input.assetId);
       asset.status = "held";
-      asset.history.push({ id: randomUUID(), type: "hold", note: input.reason, occurredAt: new Date() });
+      asset.history.push({ id: randomUUID(), type: "hold", actorUserId: input.actorUserId, note: input.reason, occurredAt: new Date() });
       const saved = await repository.save(asset, input.expectedVersion);
       if (!saved) throw new AssetServiceError("asset.version_conflict");
       return saved;
@@ -239,3 +239,4 @@ export function createAssetService(repository: AssetRepository) {
     },
   };
 }
+

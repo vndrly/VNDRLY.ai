@@ -180,6 +180,10 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
     return transitions[action] ? request("POST", `${base}/${transitions[action]}`, payload) : unsupported("ticket action");
   }
   const resourceId = encoded(input.resourceId ?? input.id ?? input.assetId ?? input.tripId ?? input.eventId ?? input.invitationId);
+  if (name === "query_field_trip_eta") {
+    const tripId = required(input.resourceId, "trip resourceId");
+    return typeof tripId === "string" ? request("GET", `/implementation-a/trips/${tripId}/eta`) : tripId;
+  }
   if (name === "query_operations_displays" || name === "prepare_operations_displays_action")
     return request("GET", "/implementation-a/operations-displays");
   if (name.includes("operations_displays")) return unsupported("operations display; use the authenticated companion");
@@ -888,3 +892,4 @@ export function bindWorkHubToolScope(
       : currentContext;
   return { ...input, owner, context };
 }
+

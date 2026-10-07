@@ -17,6 +17,11 @@ const command = {
 };
 
 describe("resolveWorkHubToolRequest", () => {
+  it("requires an exact trip for the ETA read adapter", () => {
+    const resourceId = "00000000-0000-4000-8000-000000000009";
+    expect(resolveExecutableWorkHubToolRequest("query_field_trip_eta", { resourceId }, false)).toMatchObject({ method: "GET", path: `/implementation-a/trips/${resourceId}/eta` });
+    expect(resolveExecutableWorkHubToolRequest("query_field_trip_eta", {}, false)).toHaveProperty("error");
+  });
   it("reads channel participants through the existing authorized endpoint without a mutation", () => {
     const channelId = "00000000-0000-4000-8000-000000000002";
     expect(resolveExecutableWorkHubToolRequest("list_work_hub_channel_members", { channelId }, false)).toMatchObject({ method: "GET", path: `/work-hub/channels/${channelId}/members` });
@@ -599,3 +604,4 @@ it("forwards ACH payment evidence only through confirmed payment records", () =>
  expect(resolveExecutableWorkHubToolRequest("record_ticket_payment", input, false)).toMatchObject({ requiresConfirmation: true });
  expect(resolveExecutableWorkHubToolRequest("record_ticket_payment", input, true)).toMatchObject({ method: "POST", path: "/tickets/12/disperse-funds", body: { paymentMethod: input.paymentMethod, paymentReference: input.paymentReference, note: input.note, paymentReceiptUrl: input.paymentReceiptUrl } });
 });
+

@@ -1,30 +1,33 @@
 import { beforeEach, expect, it, vi } from "vitest";
-import type { AssetRecord } from "./assets";
+import { createAssetService, type AssetRecord } from "./assets";
 
-const state = vi.hoisted(() => ({ stagedUpdate: false, committed: false, rolledBack: false, evidenceWrites: 0, eventWrites: 0, eventPayload: null as Record<string, unknown> | null }));
+const state = vi.hoisted(() => ({ stagedUpdate: false, committed: false, rolledBack: false, evidenceWrites: 0, eventWrites: 0, eventPayload: null as Record<string, unknown> | null,
+  acceptEvents: false, savedFields: {} as Record<string, unknown>, events: [] as Record<string, unknown>[], evidence: [] as Record<string, unknown>[], holds: [] as Record<string, unknown>[],
+}));
 vi.mock("@workspace/db", async (importOriginal) => {
   const original = await importOriginal<typeof import("@workspace/db")>();
   return { ...original, db: {
     select: () => ({ from: (table: unknown) => {
       const query = {
         where() { return this; },
-        orderBy: async () => [],
-        limit: async () => table === original.assetsTable ? [{ id: "asset-2", name: "Radio", category: "equipment", legalOwnerName: "Vendor", responsibleOrgType: "vendor", responsibleOrgId: 7, provisional: false, status: "checked_out", currentHolderUserId: 11, currentLocationType: "user", currentLocationId: "11", expectedReturnAt: null, version: 2, manufacturer: null, model: null, mergedIntoId: null }] : [],
+        orderBy: async () => table === original.assetCustodyEventsTable ? state.events : table === original.assetConditionEvidenceTable ? state.evidence : [],
+        limit: async () => table === original.assetsTable ? [{ id: "asset-2", name: "Radio", category: "equipment", legalOwnerName: "Vendor", responsibleOrgType: "vendor", responsibleOrgId: 7, provisional: false, status: "checked_out", currentHolderUserId: 11, currentLocationType: "user", currentLocationId: "11", expectedReturnAt: null, version: 2, manufacturer: null, model: null, mergedIntoId: null, ...state.savedFields }] : table === original.assetHoldsTable ? state.holds : [],
         then: (resolve: (rows: unknown[]) => unknown) => Promise.resolve([]).then(resolve),
       };
       return query;
     } }),
     transaction: async (work: (tx: any) => Promise<unknown>) => {
       const tx = {
-        update: () => ({ set: () => ({ where: () => ({ returning: async () => { state.stagedUpdate = true; return [{ id: "asset-2" }]; } }) }) }),
-        select: () => ({ from: () => ({ where: async () => [] }) }),
+        update: () => ({ set: (fields: Record<string, unknown>) => ({ where: () => ({ returning: async () => { state.stagedUpdate = true; if (state.acceptEvents) state.savedFields = fields; return [{ id: "asset-2" }]; } }) }) }),
+        select: () => ({ from: () => ({ where: async () => state.events.map(event => ({ id: event.id })) }) }),
         insert: (table: unknown) => ({ values: (payload: Record<string, unknown>) => {
           if (table === original.assetCustodyEventsTable) {
             state.eventWrites++;
             state.eventPayload = payload;
-            return { onConflictDoNothing: () => ({ returning: async () => [] }) };
+            return { onConflictDoNothing: () => ({ returning: async () => { if (!state.acceptEvents) return []; state.events.push(payload); return [{ id: payload.id }]; } }) };
           }
-          if (table === original.assetConditionEvidenceTable) state.evidenceWrites++;
+          if (table === original.assetConditionEvidenceTable) { state.evidenceWrites++; state.evidence.push(payload); }
+          if (table === original.assetHoldsTable) state.holds.push(payload);
           return Promise.resolve();
         } }),
       };
@@ -41,7 +44,28 @@ vi.mock("@workspace/db", async (importOriginal) => {
 });
 import { databaseAssetRepository } from "./asset-database-repository";
 
-beforeEach(() => { state.stagedUpdate = false; state.committed = false; state.rolledBack = false; state.evidenceWrites = 0; state.eventWrites = 0; state.eventPayload = null; });
+beforeEach(() => { state.stagedUpdate = false; state.committed = false; state.rolledBack = false; state.evidenceWrites = 0; state.eventWrites = 0; state.eventPayload = null; state.acceptEvents = false; state.savedFields = {}; state.events = []; state.evidence = []; state.holds = []; });
+
+it("preserves the latest reported condition and authenticated hold actor after saving and reloading", async () => {
+  state.acceptEvents = true;
+  const service = createAssetService(databaseAssetRepository);
+  await service.reportAssetCondition({ assetId: "asset-2", condition: "fair", expectedVersion: 2 });
+  await service.reportAssetCondition({ assetId: "asset-2", condition: "good", expectedVersion: 3 });
+  const held = await service.placeAssetHold({ assetId: "asset-2", reason: "Inspect before reissue", expectedVersion: 4, actorUserId: 13 });
+  expect(state.evidence.map(row => row.condition)).toEqual(["fair", "good", "not_reported"]);
+  expect(held).toMatchObject({ status: "held", condition: "good", hold: "Inspect before reissue", version: 5 });
+  const reloaded = await databaseAssetRepository.get("asset-2");
+  expect(reloaded).toMatchObject({ status: "held", condition: "good", version: 5 });
+  expect(reloaded!.history.at(-1)).toMatchObject({ type: "hold", actorUserId: 13, note: "Inspect before reissue" });
+  expect(state.eventPayload).toMatchObject({ eventType: "hold", actorUserId: 13 });
+});
+
+it("keeps condition unknown when all saved evidence is note-only", async () => {
+  state.acceptEvents = true;
+  await createAssetService(databaseAssetRepository).placeAssetHold({ assetId: "asset-2", reason: "Awaiting inspection", expectedVersion: 2, actorUserId: 13 });
+  expect((await databaseAssetRepository.get("asset-2"))!.condition).toBeNull();
+  expect(state.evidence[0]).toMatchObject({ condition: "not_reported" });
+});
 
 it("rolls back a CAS update when an operation ID already belongs to another asset", async () => {
   const asset: AssetRecord = {
@@ -58,3 +82,4 @@ it("rolls back a CAS update when an operation ID already belongs to another asse
   expect(state.committed).toBe(false);
   expect(state.evidenceWrites).toBe(0);
 });
+

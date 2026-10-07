@@ -36,6 +36,12 @@ describe("field trips", () => {
     await service.updateTripLocation({ tripId: trip.id, expectedVersion: trip.version, latitude: 31, longitude: -102, accuracyMeters: 8, speedMps: 20, recordedAt });
     const eta = await service.estimateTripEta(trip.id, { latitude: 31.2, longitude: -101.8 }, new Date("2026-09-13T12:01:00.000Z"));
     expect(eta).toMatchObject({ ok: true, durationMinutes: 14, sourceRecordedAt: recordedAt, sourceAgeSeconds: 60 });
+    route.mockClear();
+    expect(await service.estimateTripEta(trip.id, { latitude: 31.2, longitude: -101.8 }, new Date("2026-09-13T12:16:00.000Z"))).toMatchObject({ ok: false, code: "trip.location_not_current" });
+    expect(await service.estimateTripEta(trip.id, { latitude: 31.2, longitude: -101.8 }, new Date("2026-09-13T11:58:00.000Z"))).toMatchObject({ ok: false, code: "trip.location_not_current" });
+    await service.pauseWorkTracking({ tripId: trip.id, expectedVersion: 2, actorUserId: 9 });
+    expect(await service.estimateTripEta(trip.id, { latitude: 31.2, longitude: -101.8 }, new Date("2026-09-13T12:01:00.000Z"))).toMatchObject({ ok: false, code: "trip.location_not_current" });
+    expect(route).not.toHaveBeenCalled();
   });
 
   it("keeps an active hauling trip open across exit and repeated re-entry", async () => {
@@ -63,3 +69,4 @@ describe("field trips", () => {
     await expect(service.completeTrip({ tripId: trip.id, expectedVersion: trip.version, operationId: "00000000-0000-4000-8000-000000000006", actorUserId: 9, actorMayComplete: false, reason: "end_of_work", needsSupervisorConfirmation: false, completedAt })).rejects.toMatchObject({ code: "trip.version_conflict" });
   });
 });
+

@@ -598,7 +598,7 @@ router.post("/implementation-a/assets/:assetId/hold", async (req, res) => {
         expectedVersion: z.number().int().positive(),
       })
       .parse(req.body);
-    return res.json(await service.placeAssetHold({ assetId, ...input }));
+    return res.json(await service.placeAssetHold({ assetId, ...input, actorUserId: context.userId }));
   } catch (error) {
     return sendError(res, error);
   }

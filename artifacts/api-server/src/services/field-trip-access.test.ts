@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { authorizeFieldTripCompletion } from "./field-trip-access";
+import { assertFieldTripReadAccess, authorizeFieldTripCompletion } from "./field-trip-access";
 import type { FieldTripRecord } from "./field-trips";
 
 const trip = {
@@ -32,3 +32,11 @@ describe("field trip completion authorization", () => {
     expect(() => authorizeFieldTripCompletion(trip, { userId: 12, owner: { type: "vendor", id: 7 }, isAdmin: false, vendorRole: "field_employee" })).toThrowError(expect.objectContaining({ code: "trip.completion_forbidden", status: 403 }));
   });
 });
+
+it("separates partner owned-site reads from vendor-trip mutation authority", () => {
+ const actor = { userId: 12, owner: { type: "partner" as const, id: 8 }, isAdmin: false, vendorRole: null };
+ expect(() => assertFieldTripReadAccess(trip, actor, 8)).not.toThrow();
+ expect(() => assertFieldTripReadAccess(trip, actor, 9)).toThrowError(expect.objectContaining({ code: "trip.not_found" }));
+ expect(() => authorizeFieldTripCompletion(trip, actor)).toThrowError(expect.objectContaining({ code: "trip.not_found" }));
+});
+

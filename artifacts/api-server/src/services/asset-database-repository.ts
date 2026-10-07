@@ -51,7 +51,8 @@ async function loadAsset(id: string): Promise<AssetRecord | null> {
     db.select().from(assetConditionEvidenceTable).where(eq(assetConditionEvidenceTable.assetId, id)).orderBy(assetConditionEvidenceTable.reportedAt),
     db.select().from(assetHoldsTable).where(and(eq(assetHoldsTable.assetId, id), isNull(assetHoldsTable.releasedAt))).limit(1),
   ]);
-  const latestEvidence = evidence.at(-1);
+  // Note-only events (including holds) do not replace a reported condition.
+  const latestEvidence = [...evidence].reverse().find((item) => item.condition && item.condition !== "not_reported");
   return {
     id: row.id,
     name: row.name,
@@ -223,3 +224,4 @@ export const databaseAssetRepository: AssetRepository = {
     });
   },
 };
+

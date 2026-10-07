@@ -15,7 +15,7 @@ const hasOnboardingScope = (session: SessionPayload) =>
 const GATE_ACTIONS = new Set(["confirm_visitor_check_in", "confirm_visitor_check_out", "start_paid_travel", "assume_gate_shift", "set_gate_coverage_status", "deliver_gate_report", "reconcile_stale_gate_visit", "reverse_gate_reconciliation"]);
 const GATE_DRAFT_TOOLS = new Set(["resolve_gate_check_in", "prepare_visitor_check_in", "prepare_visitor_check_out"]);
 // Market-data and road-routing reads query independently operated providers.
-const EXTERNAL_READ_TOOLS = new Set(["get_stock_quote", "get_crude_oil_price", "query_crew_eta", "query_ticket_route_eta", "estimate_driving_route", "query_ticket_mileage_audit"]);
+const EXTERNAL_READ_TOOLS = new Set(["get_stock_quote", "get_crude_oil_price", "query_crew_eta", "query_field_trip_eta", "query_ticket_route_eta", "estimate_driving_route", "query_ticket_mileage_audit"]);
 export function chatGptReadToolAnnotations(name: string) {
   return { readOnlyHint: true, destructiveHint: false, openWorldHint: EXTERNAL_READ_TOOLS.has(name) };
 }
@@ -109,3 +109,4 @@ export function requireChatGptReadableTool(
   if (!tool) throw new Error("Tool is unavailable for this account and connection scope");
   return tool;
 }
+

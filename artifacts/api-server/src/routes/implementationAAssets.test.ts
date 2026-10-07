@@ -47,6 +47,13 @@ beforeEach(() => {
 });
 
 describe("asset inventory and custody routes", () => {
+  it("attributes a hold to the authenticated administrator rather than a supplied actor", async () => {
+    const asset = await state.repository!.create({ name: "Synthetic radio", category: "equipment", legalOwner: "Vendor", responsibleOwner: owner, aliases: [], provisional: false });
+    const response = await request(app).post(`/implementation-a/assets/${asset.id}/hold`).set("Cookie", admin).send({ reason: "Inspect before reissue", expectedVersion: 1, actorUserId: 999 });
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({ status: "held", version: 2 });
+    expect((await state.repository!.get(asset.id))!.history.at(-1)).toMatchObject({ type: "hold", actorUserId: 13, note: "Inspect before reissue" });
+  });
   it("does not reveal or modify a foreign asset through provisional registration", async () => {
     const identifier = { kind: "plate" as const, jurisdiction: "TX", value: "FOREIGN1" };
     const foreign = await state.repository!.create({ name: "Private truck", category: "vehicle", legalOwner: "Other company", responsibleOwner: { type: "vendor", id: 8 }, aliases: [identifier], provisional: false });

@@ -91,6 +91,8 @@ export function createFieldTripService(repository: FieldTripRepository, routeEst
     async estimateTripEta(tripId: string, destination: { latitude: number; longitude: number }, now = new Date()) {
       const trip = await current(tripId);
       if (!trip.lastReliablePoint) return { ok: false as const, code: "trip.location_unavailable" };
+      const age = now.getTime() - trip.lastReliablePoint.recordedAt.getTime();
+      if (trip.trackingState !== "active" || age > 900_000 || age < -60_000) return { ok: false as const, code: "trip.location_not_current", sourceRecordedAt: trip.lastReliablePoint.recordedAt, sourceAgeSeconds: Math.max(0, Math.round(age / 1000)) };
       const estimate: RouteEstimateResult = await routeEstimator({ origin: trip.lastReliablePoint, destination });
       if (!estimate.ok) return { ...estimate, sourceRecordedAt: trip.lastReliablePoint.recordedAt, sourceAgeSeconds: Math.max(0, Math.round((now.getTime() - trip.lastReliablePoint.recordedAt.getTime()) / 1_000)) };
       return { ...estimate, estimatedAt: now, sourceRecordedAt: trip.lastReliablePoint.recordedAt, sourceAgeSeconds: Math.max(0, Math.round((now.getTime() - trip.lastReliablePoint.recordedAt.getTime()) / 1_000)) };
@@ -147,3 +149,4 @@ export function createFieldTripService(repository: FieldTripRepository, routeEst
     },
   };
 }
+

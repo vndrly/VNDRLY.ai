@@ -19,7 +19,7 @@ import {
 } from "@workspace/db";
 import { getSessionFromRequest } from "../lib/session";
 import { createFieldTripService, FieldTripError, type FieldTripRecord, type TripOwner } from "../services/field-trips";
-import { assertFieldTripAccess, authorizeFieldTripCompletion } from "../services/field-trip-access";
+import { assertFieldTripAccess, assertFieldTripReadAccess, authorizeFieldTripCompletion } from "../services/field-trip-access";
 import { databaseFieldTripRepository, findActiveTripForDriver } from "../services/field-trip-database-repository";
 import { crossingDeduplicationKey, evaluateDirectionalCrossing } from "../services/geofence-crossings";
 import { activeFieldTripFilter, fieldTripOverviewPosition, fieldTripOverviewScope } from "../services/field-trip-overview";
@@ -51,6 +51,13 @@ function assertTripAccess(trip: FieldTripRecord, context: ReturnType<typeof acto
     restrictToDriver: context.session.role === "field_employee" && !context.isOrgAdmin && !["dispatcher", "foreman", "both", "gate_supervisor", "safety_manager"].includes(context.session.vendorRole ?? ""),
     vendorRole: context.session.vendorRole ?? null,
   });
+}
+
+async function assertTripReadAccess(trip: FieldTripRecord, context: ReturnType<typeof actor>) {
+  const [site] = await db.select({ partnerId: siteLocationsTable.partnerId }).from(siteLocationsTable).where(eq(siteLocationsTable.id, trip.siteLocationId)).limit(1);
+  if (!site) throw new FieldTripError("trip.not_found", 404);
+  if (context.session.role !== "partner") { assertTripAccess(trip, context); return; }
+  assertFieldTripReadAccess(trip, { userId: context.session.userId!, owner: context.owner, isAdmin: context.isAdmin, vendorRole: null }, site.partnerId);
 }
 
 function sendError(res: Response, error: unknown) {
@@ -176,9 +183,9 @@ router.get("/implementation-a/trips/:tripId", async (req, res) => {
     const context = actor(req);
     const trip = await databaseFieldTripRepository.get(IdSchema.parse(req.params.tripId));
     if (!trip) throw new FieldTripError("trip.not_found", 404);
-    assertTripAccess(trip, context);
-    const canSeeExact = context.isAdmin || context.isOrgAdmin || context.session.userId === trip.driverUserId || ["dispatcher", "foreman", "gate_supervisor", "safety_manager"].includes(context.session.vendorRole ?? "");
-    return res.json(canSeeExact ? trip : { id: trip.id, driverUserId: trip.driverUserId, siteLocationId: trip.siteLocationId, presenceState: trip.presenceState, trackingState: trip.trackingState, lastLocation: null, route: null });
+    await assertTripReadAccess(trip, context);
+    const canSeeExact = context.session.role !== "partner" && (context.isAdmin || context.isOrgAdmin || context.session.userId === trip.driverUserId || ["dispatcher", "foreman", "gate_supervisor", "safety_manager"].includes(context.session.vendorRole ?? ""));
+    return res.json(canSeeExact ? trip : { id: trip.id, driverUserId: trip.driverUserId, siteLocationId: trip.siteLocationId, presenceState: trip.presenceState, trackingState: trip.trackingState, version: trip.version, lastLocation: null, route: null });
   } catch (error) { return sendError(res, error); }
 });
 
@@ -203,7 +210,7 @@ router.get("/implementation-a/trips/:tripId/eta", async (req, res) => {
     const tripId = IdSchema.parse(req.params.tripId);
     const trip = await databaseFieldTripRepository.get(tripId);
     if (!trip) throw new FieldTripError("trip.not_found", 404);
-    assertTripAccess(trip, context);
+    await assertTripReadAccess(trip, context);
     const [site] = await db.select({ latitude: siteLocationsTable.latitude, longitude: siteLocationsTable.longitude }).from(siteLocationsTable).where(eq(siteLocationsTable.id, trip.siteLocationId)).limit(1);
     if (!site) throw new FieldTripError("trip.destination_not_found", 404);
     return res.json(await service.estimateTripEta(trip.id, site));
@@ -261,3 +268,4 @@ router.post("/implementation-a/trips/:tripId/complete", async (req, res) => {
 });
 
 export default router;
+

@@ -38,7 +38,7 @@ describe("Implementation A asset custody", () => {
   it("blocks checkout while an asset is held", async () => {
     const service = createAssetService(createMemoryAssetRepository());
     const asset = await service.createAsset({ name: "Television", category: "electronics", legalOwner: "MidCon", responsibleOwner: { type: "vendor", id: 20 }, aliases: [] });
-    await service.placeAssetHold({ assetId: asset.id, reason: "damage_review", expectedVersion: 1 });
+    await service.placeAssetHold({ assetId: asset.id, reason: "damage_review", expectedVersion: 1, actorUserId: 7 });
     expect(await service.checkoutAsset({ assetId: asset.id, holderUserId: 7, condition: "fair", confirmed: true, expectedVersion: 2 })).toMatchObject({ status: "blocked", code: "asset.on_hold" });
   });
 
@@ -125,3 +125,4 @@ describe("Implementation A asset custody", () => {
     expect(recordMerge).toHaveBeenCalledOnce();
   });
 });
+
