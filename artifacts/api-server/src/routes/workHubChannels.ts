@@ -1,3 +1,4 @@
+import { resolveMessageThread } from "../work-hub/message-thread";
 import { assertCollaborationInvite } from "../work-hub/collaboration-access";
 import { applyAwayRepliesForIncoming } from "../services/work-hub-away-responder-repository";
 import { Router, type IRouter, type Request, type Response } from "express";
@@ -10,6 +11,7 @@ import {
   workHubChannelMembersTable,
   workHubChannelsTable,
   workHubMessagesTable,
+  workHubClientOperationsTable,
   workHubMessageVersionsTable,
   workHubMentionsTable,
   workHubReactionsTable,
@@ -420,17 +422,31 @@ router.post("/work-hub/channels/:channelId/messages", async (req, res) => {
     const { channel } = await resolveChannelAccess(actor, req.params.channelId, "channel.write");
     const envelope = workHubCommandEnvelopeSchema.parse(req.body); const payload = createMessagePayload.parse(envelope.payload);
     if (envelope.owner.type !== channel.ownerOrgType || envelope.owner.id !== channel.ownerOrgId) throw new WorkHubAccessError("forbidden");
+    let thread = { parentMessageId: null as string | null, rootMessageId: null as string | null };
     const result = await executeWorkHubCommand({ userId: actor.userId, source: source(req) }, "message.create", envelope, async (tx) => {
-      for (const referenceId of [payload.rootMessageId, payload.parentMessageId].filter(Boolean)) {
-        const [reference] = await tx.select().from(workHubMessagesTable).where(and(eq(workHubMessagesTable.id, referenceId!), eq(workHubMessagesTable.channelId, channel.id))).limit(1);
-        if (!reference) throw new WorkHubAccessError("not_found");
-      }
-      const [message] = await tx.insert(workHubMessagesTable).values({ channelId: channel.id, authorUserId: actor.userId, body: payload.body, kind: payload.kind, rootMessageId: payload.rootMessageId ?? null, parentMessageId: payload.parentMessageId ?? null, clientOperationId: envelope.operationId }).returning();
+      const [message] = await tx.insert(workHubMessagesTable).values({ channelId: channel.id, authorUserId: actor.userId, body: payload.body, kind: payload.kind, rootMessageId: thread.rootMessageId, parentMessageId: thread.parentMessageId, clientOperationId: envelope.operationId }).returning();
       if (payload.mentionUserIds.length) await tx.insert(workHubMentionsTable).values([...new Set(payload.mentionUserIds)].map((mentionedUserId) => ({ messageId: message.id, mentionedUserId }))).onConflictDoNothing();
       await appendWorkHubAudit({ actorUserId: actor.userId, owner: envelope.owner, action: "message.created", subjectType: "message", subjectId: message.id, newVersion: 1, source: source(req), operationId: envelope.operationId }, tx);
       if (message.kind === "text") await applyAwayRepliesForIncoming(tx, actor, message.id, channel.id);
       return message;
+    }, async (tx) => {
+      thread = await resolveMessageThread(channel.id, payload, async (referenceId) => {
+        const [reference] = await tx.select().from(workHubMessagesTable).where(and(eq(workHubMessagesTable.id, referenceId), eq(workHubMessagesTable.channelId, channel.id))).limit(1);
+        return reference;
+      });
+      const [prior] = await tx.select().from(workHubClientOperationsTable).where(and(eq(workHubClientOperationsTable.userId, actor.userId), eq(workHubClientOperationsTable.commandKind, "message.create"), eq(workHubClientOperationsTable.operationId, envelope.operationId))).limit(1);
+      if (prior?.resultJson) {
+        const saved = prior.resultJson;
+        if (saved.channelId !== channel.id || saved.authorUserId !== actor.userId || saved.body !== payload.body || saved.kind !== payload.kind || saved.parentMessageId !== thread.parentMessageId || saved.rootMessageId !== thread.rootMessageId) throw new WorkHubAccessError("forbidden");
+        const mentions = await tx.select({ userId: workHubMentionsTable.mentionedUserId }).from(workHubMentionsTable).where(eq(workHubMentionsTable.messageId, String(saved.id)));
+        const actual = mentions.map(row => row.userId).sort((a, b) => a - b);
+        const requested = [...new Set(payload.mentionUserIds)].sort((a, b) => a - b);
+        if (JSON.stringify(actual) !== JSON.stringify(requested)) throw new WorkHubAccessError("forbidden");
+      }
     });
+    if (result.resource.channelId !== channel.id || result.resource.authorUserId !== actor.userId || result.resource.body !== payload.body || result.resource.kind !== payload.kind || result.resource.parentMessageId !== thread.parentMessageId || result.resource.rootMessageId !== thread.rootMessageId) throw new WorkHubAccessError("forbidden");
+    const savedMentions = await db.select({ userId: workHubMentionsTable.mentionedUserId }).from(workHubMentionsTable).where(eq(workHubMentionsTable.messageId, result.resource.id));
+    if (JSON.stringify(savedMentions.map(row => row.userId).sort((a, b) => a - b)) !== JSON.stringify([...new Set(payload.mentionUserIds)].sort((a, b) => a - b))) throw new WorkHubAccessError("forbidden");
     if (!result.replayed) {
       const members = await db.select({ userId: workHubChannelMembersTable.userId }).from(workHubChannelMembersTable)
         .where(eq(workHubChannelMembersTable.channelId, channel.id));

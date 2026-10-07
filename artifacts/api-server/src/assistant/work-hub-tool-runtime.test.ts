@@ -754,3 +754,11 @@ it("routes requester continuation only through trusted authorization and the sav
   expect(resolveExecutableWorkHubToolRequest("confirm_asset_custody_action",{...input,payload:{...input.payload,photos:["invented"]}},true)).toHaveProperty("error");
  }
 });
+
+it("lets canonical saved parent ancestry determine the reply root", () => {
+  const result = resolveWorkHubToolRequest("send_work_hub_message", { ...command, channelId: "channel", body: "Nested reply", replyToId: "reply-B" });
+  expect(result).toMatchObject({ method: "POST", path: "/work-hub/channels/channel/messages", body: { payload: { parentMessageId: "reply-B" } } });
+  if (!result || !("body" in result)) throw new Error("Expected canonical message request");
+  expect(result.body).toHaveProperty("payload.parentMessageId", "reply-B");
+  expect(result.body).not.toHaveProperty("payload.rootMessageId");
+});

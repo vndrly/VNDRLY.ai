@@ -31,6 +31,64 @@ describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")("channel note
     admin = buildTestCookie({ userId: adminId, role: "vendor", vendorId: ownerId, membershipRole: "admin" });
   });
 
+  it("retains nested reply ancestry, one exact replay, and rejects a foreign parent", async () => {
+    const path = `/work-hub/channels/${channelId}/messages`;
+    const send = (payload: Record<string, unknown>, operationId = randomUUID()) => {
+      const body = { ...envelope(payload, null), operationId };
+      return { body, request: () => request(app).post(path).set("Cookie", author).send(body) };
+    };
+    const a = await send({ body: "Synthetic root A" }).request();
+    expect(a.status).toBe(201);
+    const rootId = a.body.resource.id;
+    const b = await send({ body: "Synthetic reply B", parentMessageId: rootId }).request();
+    expect(b.status).toBe(201);
+    expect(b.body.resource.rootMessageId).toBe(rootId);
+    const cRequest = send({ body: "Synthetic nested C", parentMessageId: b.body.resource.id });
+    const c = await cRequest.request();
+    expect(c.status).toBe(201);
+    expect(c.body.resource).toMatchObject({ parentMessageId: b.body.resource.id, rootMessageId: rootId });
+    const replay = await cRequest.request();
+    expect(replay.status).toBe(200);
+    expect(replay.body.replayed).toBe(true);
+    expect(replay.body.resource).toEqual(c.body.resource);
+    await db.update(workHubMessagesTable).set({ deletedAt: new Date() }).where(eq(workHubMessagesTable.id, c.body.resource.id));
+    expect((await cRequest.request()).body.resource).toEqual(c.body.resource);
+    const [tombstone] = await db.select().from(workHubMessagesTable).where(eq(workHubMessagesTable.id, c.body.resource.id));
+    expect(tombstone!.deletedAt).not.toBeNull();
+    const saved = await db.select().from(workHubMessagesTable).where(eq(workHubMessagesTable.clientOperationId, cRequest.body.operationId));
+    expect(saved).toHaveLength(1);
+    const list = await request(app).get(path).set("Cookie", author);
+    expect(list.status).toBe(200);
+    const thread = list.body.filter((row: { id: string; rootMessageId: string | null }) => row.id === rootId || row.rootMessageId === rootId);
+    expect(thread.map((row: { id: string }) => row.id).sort()).toEqual([rootId, b.body.resource.id, c.body.resource.id].sort());
+    for (const historicalRoot of [null, b.body.resource.id]) {
+      await db.update(workHubMessagesTable).set({ rootMessageId: historicalRoot }).where(eq(workHubMessagesTable.id, b.body.resource.id));
+      const legacyRequest = send({ body: "Reply to legacy ancestry", parentMessageId: b.body.resource.id });
+      const accepted = await legacyRequest.request();
+      expect(accepted.status).toBe(201);
+      expect(accepted.body.resource).toMatchObject({ parentMessageId: b.body.resource.id, rootMessageId: rootId });
+      const retried = await legacyRequest.request();
+      expect(retried.status).toBe(200);
+      expect(retried.body.resource).toEqual(accepted.body.resource);
+      expect(await db.select().from(workHubMessagesTable).where(eq(workHubMessagesTable.clientOperationId, legacyRequest.body.operationId))).toHaveLength(1);
+      const [unchanged] = await db.select().from(workHubMessagesTable).where(eq(workHubMessagesTable.id, b.body.resource.id));
+      expect(unchanged!.rootMessageId).toBe(historicalRoot);
+    }
+    const [foreignChannel] = await db.insert(workHubChannelsTable).values({ ownerOrgType: "vendor", ownerOrgId: ownerId, contextKind: "organization", contextId: randomUUID(), name: "Separate thread", visibility: "private", createdById: otherId }).returning();
+    const [foreign] = await db.insert(workHubMessagesTable).values({ channelId: foreignChannel!.id, authorUserId: otherId, body: "Private parent", kind: "text", clientOperationId: randomUUID() }).returning();
+    const denied = send({ body: "Must not save", parentMessageId: foreign!.id });
+    expect((await denied.request()).status).toBe(404);
+    expect(await db.select().from(workHubMessagesTable).where(eq(workHubMessagesTable.clientOperationId, denied.body.operationId))).toHaveLength(0);
+    expect((await send({ body: "Synthetic nested C", parentMessageId: foreign!.id }, cRequest.body.operationId).request()).status).toBe(404);
+    expect((await send({ body: "Changed replay body", parentMessageId: b.body.resource.id }, cRequest.body.operationId).request()).status).toBe(403);
+    const [otherChannel] = await db.insert(workHubChannelsTable).values({ ownerOrgType: "vendor", ownerOrgId: ownerId, contextKind: "organization", contextId: randomUUID(), name: "Other accessible channel", visibility: "organization", createdById: adminId }).returning();
+    expect((await request(app).post(`/work-hub/channels/${otherChannel!.id}/messages`).set("Cookie", author).send(cRequest.body)).status).toBe(404);
+    expect((await request(app).post(`/work-hub/channels/${otherChannel!.id}/messages`).set("Cookie", author).send({ ...cRequest.body, payload: { body: "Synthetic nested C" } })).status).toBe(403);
+    const mismatched = send({ body: "Wrong root", parentMessageId: b.body.resource.id, rootMessageId: b.body.resource.id });
+    expect((await mismatched.request()).status).toBe(403);
+    expect(await db.select().from(workHubMessagesTable).where(eq(workHubMessagesTable.clientOperationId, mismatched.body.operationId))).toHaveLength(0);
+  });
+
   it("reads an exact message beyond the list page and refuses a different channel or nonparticipant",async()=>{
     const privateChannel=(await db.insert(workHubChannelsTable).values({ownerOrgType:'vendor',ownerOrgId:ownerId,contextKind:'organization',contextId:randomUUID(),name:'Private exact message',visibility:'private',createdById:authorId}).returning())[0]!;
     await db.insert(workHubChannelMembersTable).values({channelId:privateChannel.id,userId:authorId,mode:'owner'});

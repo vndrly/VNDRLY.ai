@@ -536,7 +536,6 @@ export function resolveWorkHubToolRequest(
         ? request("POST", `/work-hub/channels/${target}/messages`, envelope(input, {
             body: input.body,
             parentMessageId: input.replyToId,
-            rootMessageId: input.replyToId,
             mentionUserIds: payload.mentionUserIds ?? [],
             kind: payload.kind ?? "text",
           }))
