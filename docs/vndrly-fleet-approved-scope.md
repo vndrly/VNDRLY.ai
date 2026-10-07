@@ -11,6 +11,30 @@ Approved by the user on 2026-10-06. Finish the current integration ship, then im
 
 Authorization combines company membership, role, assigned fleet/site and action. Dispatcher authority cannot clear safety defects, override out-of-service restrictions or read another company's fleet. The same server authorization applies in every interface and to Felix/V tools.
 
+## Permission contract
+
+| Capability | Fleet Manager | Dispatcher | Driver |
+| --- | --- | --- | --- |
+| Fleet map, availability and run status | Assigned fleet | Assigned fleet | Own assigned run |
+| Assign drivers, vehicles, trailers and loads | Yes | Yes | No |
+| Dispatch and reassign eligible work | Yes | Yes | Acknowledge own assignment |
+| Vehicle registry and custody | Manage assigned fleet | Read availability | View assigned equipment |
+| Maintenance and inspection planning | Manage | View readiness restrictions | Perform assigned inspection; report defects |
+| Release an out-of-service vehicle | Only with separately granted safety release permission | No | No |
+| Rates, costs and financial reporting | Only with separately granted finance permission | No by default | No by default |
+| Grant roles or expand fleet scope | Company Admin permission required | No | No |
+
+Small companies assign Fleet Manager to one person, including dispatch. Larger companies add Dispatchers scoped to the fleets and sites they operate. Existing Foreman and Gate Supervisor roles do not automatically gain fleet-wide control. A person can hold several explicitly granted roles.
+
+All assignment changes must validate driver qualifications, availability, vehicle readiness, company/site authorization and concurrent revisions on the server. Views and assistant tool discovery use the same permission contract; hiding a button is not authorization.
+
+## Delivery order
+
+1. Finish the current verified integration release, including the ChatGPT package and TestFlight.
+2. Build shared fleet records, role grants and server permission checks, reusing existing identity and inventory records.
+3. Deliver the complete first workflow on web and iOS, then expose the same services through Felix/V and ChatGPT.
+4. Verify manager, dispatcher and driver workflows and denied access using isolated synthetic records before the next full ship.
+
 ## Assignment states
 
 Keep dispatched, acknowledged and started distinct. Saving and notifying an assignment is not driver acceptance or physical movement. Preserve actor, timestamps, revision history and retry protection. Reassignment must not overwrite an active driver's run without the canonical transition policy.

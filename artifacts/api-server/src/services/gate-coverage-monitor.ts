@@ -82,24 +82,11 @@ export async function setGateCoverageStatus(
     ).rows[0];
     if (!station) fail(404, "not_found", "Gate not found");
     const previous = (await client.query("SELECT mode FROM gate_coverage_status WHERE station_id=$1", [input.stationId])).rows[0];
-    let supervisor = false;
-    try {
-      supervisor = (
-        await requireChangeOverAccess(client, session, Number(station.site_id))
-      ).supervisor;
-    } catch (error) {
-      if (!(error instanceof ChangeOverError) || error.status === 401) throw error;
-    }
-    if (!supervisor) {
-      const admin = await client.query(
-        `SELECT id FROM user_org_memberships
-         WHERE user_id=$1 AND org_type='vendor' AND vendor_id=$2 AND role='admin'
-         AND ($3::int IS NULL OR id=$3)`,
-        [session.userId, session.vendorId ?? -1, session.activeMembershipId ?? null],
-      );
-      if (!admin.rowCount)
-        fail(403, "supervisor_required", "Supervisor or administrator access required");
-    }
+    // Site access already checks the current company membership and explicit
+    // Gate contractor designation. A company admin cannot bypass that denial.
+    const access = await requireChangeOverAccess(client, session, Number(station.site_id));
+    if (!access.supervisor)
+      fail(403, "supervisor_required", "Supervisor or administrator access required");
     const row = (
       await client.query(
         `INSERT INTO gate_coverage_status(station_id,mode,paused_until,reason,changed_by_user_id)
