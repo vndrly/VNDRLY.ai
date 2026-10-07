@@ -183,6 +183,12 @@ jobs:
           if ! sudo grep -q '^ASSISTANT_CONNECTION_ENABLED=' .env.production; then
             printf '%s\n' 'ASSISTANT_CONNECTION_ENABLED=1' | sudo tee -a .env.production >/dev/null
           fi
+          # Authorized bounded worker rollout follows its guarded migration.
+          # Preserve an explicit VPS disable; individual runs still require
+          # exact authenticated approval and fresh permission checks.
+          if ! sudo grep -q '^ASSISTANT_PLAN_EXECUTION_ENABLED=' .env.production; then
+            printf '%s\n' 'ASSISTANT_PLAN_EXECUTION_ENABLED=1' | sudo tee -a .env.production >/dev/null
+          fi
           unset database_url openai_key assemblyai_key
           sudo systemctl daemon-reload
           sudo systemctl enable vndrly-api 2>/dev/null || true
@@ -191,3 +197,4 @@ jobs:
 
       - name: Verify API health
         run: curl --fail --silent --show-error --retry 8 --retry-delay 3 https://vndrly.ai/api/healthz
+
