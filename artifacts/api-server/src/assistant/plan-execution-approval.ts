@@ -14,7 +14,7 @@ export const planExecutionProposalInputSchema = z.object({
   maxAttempts: z.number().int().min(1).max(5),
   steps: z.array(z.object({
     id: z.string().min(1).max(100),
-    adapter: z.enum(["authorized_read", "personal_draft", "ticket_invoice_preparation"]),
+    adapter: z.enum(["authorized_read", "personal_draft", "ticket_invoice_preparation", "calendar_reschedule"]),
     toolName: z.string().min(1).max(150),
     arguments: z.record(z.string(), z.json()),
   }).strict()).min(1).max(20),

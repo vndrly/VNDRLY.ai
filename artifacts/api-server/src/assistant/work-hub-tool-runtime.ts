@@ -293,6 +293,14 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
       return request("POST","/invoices/ticket-preparation/execute",ticketInvoicePreparationCommand(fields,z.uuid().parse(operationId)));
     } catch { return {error:"Supply exact approved ticket versions and recorded invoice chronology basis."}; }
   }
+  if(name === "query_calendar_reschedule_snapshot") {
+    try { const args=z.object({occurrenceId:z.uuid()}).strict().parse(input);return request("GET",`/work-hub/calendar-reschedule/${args.occurrenceId}/snapshot`); }
+    catch {return {error:"Supply the exact saved meeting occurrence."};}
+  }
+  if(name === "reschedule_work_hub_meeting") {
+    try {const {operationId,confirmed:_confirmed,owner:_owner,context:_context,...fields}=input;return calendarRescheduleRequest(fields,z.uuid().parse(operationId));}
+    catch {return {error:"Supply the exact saved snapshot, UTC interval and unchanged meeting timezone."};}
+  }
   if (name.includes("asset_custody")) {
     const assetPayload = { ...withoutNulls(payload), ...(Array.isArray(payload.aliases) ? { aliases: payload.aliases.map(value => withoutNulls(record(value))) } : {}), ...(payload.alias ? { alias: withoutNulls(record(payload.alias)) } : {}) };
     const actions = ["create", "provisional", "aliases", "checkout", "return", "transfer", "condition", "hold", "release_hold", "merge", "verify-issued", "loss_report", "identifier_claim", "resolve_identifier_claim"];
@@ -991,6 +999,7 @@ export function resolveExecutableWorkHubToolRequest(
   return resolveWorkHubToolRequest(name, input) ?? resolveImplementationACapabilityRequest(name, input) ?? unsupported("tool");
 }
 import { WORK_HUB_TOOL_METADATA } from "./work-hub-tools";
+import { calendarRescheduleRequest } from "./calendar-reschedule-tools";
 import { IMPLEMENTATION_A_CAPABILITY_TOOLS, findAskVTool } from "./tool-registry";
 
 export const isTypedWorkHubTool = (name: string): boolean =>

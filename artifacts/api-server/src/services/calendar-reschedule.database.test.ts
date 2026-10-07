@@ -1,0 +1,32 @@
+import {randomUUID} from "node:crypto";
+import {describe,expect,it} from "vitest";
+import {assertFreshLocalTestDatabaseEnvironment} from "../../../../scripts/fresh-test-database.mjs";
+const isolated=process.env.VNDRLY_TEST_DB_MODE==="fresh-local"&&process.env.VNDRLY_ISOLATED_TEST_DB==="1";
+if(isolated)assertFreshLocalTestDatabaseEnvironment(process.env);
+describe.skipIf(!isolated)("canonical conditional calendar reschedule persistence",()=>{
+ it("serializes exact retry, refuses current conflicts/terminal and rechecks revoked membership",async()=>{
+  assertFreshLocalTestDatabaseEnvironment(process.env);
+  const s=await import("@workspace/db"),{eq,and}=await import("drizzle-orm"),{calendarRescheduleForSession}=await import("./calendar-reschedule-repository");
+  const target=new URL(process.env.DATABASE_URL!);expect((await s.pool.query("SELECT current_database() AS database,host(inet_server_addr()) AS address,inet_server_port() AS port")).rows[0]).toEqual({database:process.env.VNDRLY_FRESH_TEST_DB_NAME,address:"127.0.0.1",port:Number(target.port)});
+  const marker=randomUUID(),[vendor]=await s.db.insert(s.vendorsTable).values({name:`Synthetic calendar ${marker}`,contactName:"Synthetic",contactEmail:`${marker}@example.invalid`}).returning();
+  const [user]=await s.db.insert(s.usersTable).values({username:`calendar-${marker}`,passwordHash:"synthetic-unusable-login",role:"vendor",displayName:"Synthetic calendar host"}).returning();
+  const [membership]=await s.db.insert(s.userOrgMembershipsTable).values({userId:user.id,orgType:"vendor",vendorId:vendor.id,role:"admin"}).returning();
+  const [meeting]=await s.db.insert(s.workHubMeetingsTable).values({ownerOrgType:"vendor",ownerOrgId:vendor.id,title:"Synthetic recorded meeting",timezone:"UTC",createdById:user.id}).returning();
+  const start=new Date(Date.now()+86400000),end=new Date(start.getTime()+3600000);
+  const [occurrence]=await s.db.insert(s.workHubMeetingOccurrencesTable).values({meetingId:meeting.id,startsAt:start,endsAt:end}).returning();
+  await s.db.insert(s.workHubMeetingParticipantsTable).values({occurrenceId:occurrence.id,userId:user.id,role:"host",rsvp:"accepted"});
+  const session={userId:user.id,role:"vendor",vendorId:vendor.id,membershipRole:"admin",activeMembershipId:membership.id,sv:user.sessionVersion},api=calendarRescheduleForSession(session);
+  const observed=await api.inspect(occurrence.id),command={operationId:randomUUID(),occurrenceId:occurrence.id,expectedFingerprint:observed.fingerprint,startsAt:new Date(start.getTime()+86400000).toISOString(),endsAt:new Date(end.getTime()+86400000).toISOString(),timezone:"UTC"};
+  const [first,second]=await Promise.all([api.execute(command),api.execute(command)]);expect(first.receipt).toEqual(second.receipt);expect([first.replayed,second.replayed].sort()).toEqual([false,true]);
+  expect((await s.db.select().from(s.workHubMeetingOccurrencesTable).where(eq(s.workHubMeetingOccurrencesTable.id,occurrence.id)))[0].startsAt.toISOString()).toBe(command.startsAt);
+  expect((await s.db.select().from(s.workHubMeetingParticipantsTable).where(eq(s.workHubMeetingParticipantsTable.occurrenceId,occurrence.id)))[0].rsvp).toBe("pending");
+  expect(await s.db.select().from(s.workHubClientOperationsTable).where(and(eq(s.workHubClientOperationsTable.userId,user.id),eq(s.workHubClientOperationsTable.commandKind,"calendar.reschedule")))).toHaveLength(1);
+  expect(await s.db.select().from(s.workHubAuditLogTable).where(and(eq(s.workHubAuditLogTable.actorUserId,user.id),eq(s.workHubAuditLogTable.operationId,command.operationId)))).toHaveLength(1);
+  expect((await api.readback(command)).receipt).toEqual(first.receipt);
+  await expect(api.execute({...command,operationId:randomUUID()})).rejects.toThrow("snapshot_conflict");
+  const current=await api.inspect(occurrence.id);await s.db.update(s.workHubMeetingOccurrencesTable).set({status:"cancelled"}).where(eq(s.workHubMeetingOccurrencesTable.id,occurrence.id));
+  await expect(api.execute({...command,operationId:randomUUID(),expectedFingerprint:current.fingerprint})).rejects.toThrow("terminal_occurrence");
+  await s.db.update(s.userOrgMembershipsTable).set({role:"member"}).where(eq(s.userOrgMembershipsTable.id,membership.id));
+  await expect(api.readback(command)).rejects.toThrow();await expect(api.execute(command)).rejects.toThrow();
+ });
+});

@@ -124,6 +124,43 @@ async function tokens(scope = auth.scope) {
   return response.body;
 }
 describe("ChatGPT account connection boundary", () => {
+  it.each([
+    { name: "reschedule_work_hub_meeting", input: { occurrenceId: "11111111-1111-4111-8111-111111111111", expectedFingerprint: "a".repeat(64), startsAt: "2026-10-08T14:00:00.000Z", endsAt: "2026-10-08T15:00:00.000Z", timezone: "America/Chicago" } },
+    { name: "prepare_ticket_invoices", input: { basis: "recorded_invoice_activity", tickets: [{ ticketId: 21, expectedUpdatedAt: "2026-10-07T10:00:00.000Z" }] } },
+  ])("submits approved $name with only the trusted operation ID and does not repeat it", async ({ name, input }) => {
+    const credentials = await tokens("work_hub:read work_hub:write finance:read finance:write");
+    const actor = { ...session, activeMembershipId: 8, membershipRole: "admin" };
+    grants[0].session = { ...grants[0].session, ...actor };
+    const response = await request(app).post(base + "/mcp").set("Authorization", "Bearer " + credentials.access_token).send({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "v_prepare_action", arguments: { toolName: name, arguments: { ...input, operationId: "99999999-9999-4999-8999-999999999999", confirmed: true } } } });
+    expect(response.body.result.isError).toBe(false);
+    const prepared = response.body.result.structuredContent;
+    expect(grants[0].actions![0].arguments).not.toHaveProperty("operationId");
+    expect(mocks.run).not.toHaveBeenCalled();
+    const path = new URL(prepared.approvalUrl).pathname;
+    const approval = await request(app).get(path).set("Cookie", cookie(actor));
+    const nonce = /name="nonce" value="([^"]+)"/.exec(approval.text)![1];
+    const proof = approval.headers["set-cookie"][0].split(";")[0];
+    mocks.run.mockResolvedValue(JSON.stringify({ ok: true, saved: name }));
+    const submit = () => request(app).post(path).set("Cookie", `${cookie(actor)}; ${proof}`).set("Origin", "https://vndrly.ai").type("form").send({ nonce });
+    expect((await submit()).status).toBe(200);
+    expect((await submit()).status).toBe(200);
+    expect(mocks.bound).toHaveBeenCalledOnce();
+    expect(mocks.bound.mock.calls[0][0].input.operationId).toMatch(/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-8[a-f0-9]{3}-[a-f0-9]{12}$/);
+    expect(mocks.bound.mock.calls[0][0].input.operationId).not.toBe("99999999-9999-4999-8999-999999999999");
+  });
+  it("advertises calendar snapshot reads and approved rescheduling with their separate current permissions", async () => {
+    const credentials = await tokens("work_hub:read work_hub:write");
+    grants[0].session = { ...grants[0].session, activeMembershipId: 8, membershipRole: "admin" };
+    const invoke = () => request(app).post(base + "/mcp").set("Authorization", "Bearer " + credentials.access_token).send({ jsonrpc: "2.0", id: 1, method: "tools/list" });
+    const tools = (await invoke()).body.result.tools;
+    expect(tools.find((tool: { name: string }) => tool.name === "query_calendar_reschedule_snapshot")).toMatchObject({ outputSchema: { additionalProperties: false }, securitySchemes: [{ type: "oauth2", scopes: ["work_hub:read"] }] });
+    const write = tools.find((tool: { name: string }) => tool.name === "reschedule_work_hub_meeting");
+    expect(write.securitySchemes).toEqual([{ type: "oauth2", scopes: ["work_hub:write"] }]);
+    expect(write._meta.securitySchemes).toEqual(write.securitySchemes);
+    grants[0].scopes = ["work_hub:read"];
+    expect((await invoke()).body.result.tools.some((tool: { name: string }) => tool.name === write.name)).toBe(false);
+    expect(mocks.run).not.toHaveBeenCalled();
+  });
   it("advertises both required finance permissions for invoice preparation without changing other finance metadata", async () => {
     const credentials = await tokens("work_hub:read work_hub:write finance:read finance:write");
     grants[0].session = { ...grants[0].session, activeMembershipId: 8, membershipRole: "admin" };

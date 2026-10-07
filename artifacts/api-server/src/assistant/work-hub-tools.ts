@@ -1,6 +1,7 @@
 import type { Anthropic } from "@workspace/integrations-anthropic-ai/sdk";
 import { WORK_HUB_CONTEXT_KINDS } from "@workspace/api-zod";
 import { TICKET_INVOICE_PREPARATION_TOOL } from "./ticket-invoice-preparation-tools";
+import { CALENDAR_RESCHEDULE_TOOLS } from "./calendar-reschedule-tools";
 import { TICKET_INVOICE_CANDIDATES_TOOL } from "./ticket-invoice-candidates-tools";
 
 export const WORK_HUB_TOOL_FAMILIES = [
@@ -114,6 +115,8 @@ function write(
 }
 
 const entries: Entry[] = [
+  read(CALENDAR_RESCHEDULE_TOOLS[0].name,"meetings",CALENDAR_RESCHEDULE_TOOLS[0].description,{...CALENDAR_RESCHEDULE_TOOLS[0].inputSchema,type:"object"}),
+  write(CALENDAR_RESCHEDULE_TOOLS[1].name,"meetings",CALENDAR_RESCHEDULE_TOOLS[1].description,{...CALENDAR_RESCHEDULE_TOOLS[1].inputSchema,type:"object"}),
   read(TICKET_INVOICE_CANDIDATES_TOOL.name,"finance",TICKET_INVOICE_CANDIDATES_TOOL.description,TICKET_INVOICE_CANDIDATES_TOOL.inputSchema),
   write(TICKET_INVOICE_PREPARATION_TOOL.name, "finance", TICKET_INVOICE_PREPARATION_TOOL.description, TICKET_INVOICE_PREPARATION_TOOL.inputSchema),
   read("get_work_hub_settings", "administration", "Read the caller's current account settings. Passwords, session tokens and device permissions are not editable through conversation."),

@@ -1,6 +1,7 @@
 import { FLEET_REPLACEMENT_ACTIONS } from "./fleet-replacement-tools";
 import { displayActionCommand } from "./operations-display-action-adapter";
 import { TICKET_INVOICE_PREPARATION_ARGUMENTS } from "./ticket-invoice-preparation-tools";
+import { CALENDAR_RESCHEDULE_ARGUMENTS } from "./calendar-reschedule-tools";
 import { financeRecordAction, WORK_HUB_FINANCE_RECORD_ACTIONS } from "./work-hub-finance-actions";
 import { FleetReplacementInputSchema, FleetReplacementActionSchema, AssetLossReportInputSchema, AssetIdentifierClaimInputSchema, AssetIdentifierClaimResolutionSchema } from "@workspace/api-zod";
 import { FLEET_CARGO_ACTIONS } from "./fleet-cargo-tools";
@@ -30,6 +31,7 @@ export type ChatGptWriteCapabilityScope = keyof typeof CHATGPT_WRITE_CAPABILITIE
 
 /** Device telemetry and domain replay keys are supplied by the approval server. */
 export function sanitizeChatGptActionInput(name: string, input: Record<string, unknown>): Record<string, unknown> {
+  if(name === "reschedule_work_hub_meeting") {const {operationId:_operationId,confirmed:_confirmed,...fields}=input;return fields;}
   if(name === "prepare_ticket_invoices") {const {operationId:_operationId,confirmed:_confirmed,...fields}=input;return fields;}
   if (name === "confirm_operations_displays_action") {
     const { operationId: _operationId, confirmed: _confirmed, ...fields } = input;
@@ -50,7 +52,11 @@ export function sanitizeChatGptActionInput(name: string, input: Record<string, u
  * Model-supplied acceptance flags never stand in for the person's action.
  */
 export function validateChatGptActionInput(name: string, input: Record<string, unknown>): void {
-  if(name === "prepare_ticket_invoices") TICKET_INVOICE_PREPARATION_ARGUMENTS.parse(input);
+  if(name === "reschedule_work_hub_meeting" || name === "prepare_ticket_invoices") {
+    const {operationId,...fields}=input;
+    if(operationId!==undefined)z.uuid().parse(operationId);
+    (name === "reschedule_work_hub_meeting" ? CALENDAR_RESCHEDULE_ARGUMENTS : TICKET_INVOICE_PREPARATION_ARGUMENTS).parse(fields);
+  }
   if (name === "confirm_operations_displays_action") displayActionCommand(input, true);
   if (name === "manage_work_hub_finance" && (WORK_HUB_FINANCE_RECORD_ACTIONS as readonly unknown[]).includes(input.action)) financeRecordAction(input);
   if(name==="reconcile_fleet_gate_visit"){z.uuid().parse(input.runId);FleetGateLinkInputSchema.parse({operationId:"00000000-0000-4000-8000-000000000001",expectedVersion:input.expectedVersion,stopId:input.stopId,visitId:input.visitId,reason:input.reason});}

@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import request from "supertest";
 import { attachTestErrorMiddleware, expectStatus } from "../test-utils/route-app";
 import { buildTestCookie } from "../test-utils/session";
+import { makeTicketRow } from "../test-utils/ticket-row";
 
 // Task #572: regression coverage for the new "assignment removed mid-job"
 // guard on the field-employee state-change endpoints. The mobile ticket
@@ -34,6 +35,7 @@ const cookieFor = (s: object) => buildTestCookie(s);
 // it reads them.
 let selectQueue: any[] = [];
 let updateReturning: any[] = [];
+let updateValues: Record<string, unknown>[] = [];
 
 function makeChain(rows: any[]) {
   const chain: any = {
@@ -79,11 +81,14 @@ vi.mock("@workspace/db", () => {
       values: () => ({ returning: () => Promise.resolve([{ id: 1 }]) }),
     }),
     update: () => ({
-      set: () => ({
+      set: (value: Record<string, unknown>) => {
+        updateValues.push(value);
+        return {
         where: () => ({
           returning: () => Promise.resolve(updateReturning),
         }),
-      }),
+        };
+      },
     }),
     delete: () => ({ where: () => Promise.resolve([]) }),
     transaction: async (fn: any) => fn(db),
@@ -132,6 +137,7 @@ vi.mock("../lib/expo-push", () => ({
 vi.mock("../lib/invoice-generator", () => ({
   enqueueInvoiceGenerationForTicket: vi.fn(async () => undefined),
 }));
+vi.mock("../lib/auto-labor-lines", () => ({ regenerateAutoLaborLines: vi.fn(async () => undefined) }));
 
 vi.mock("../lib/ticket-transitions", () => ({
   recordTicketTransition: vi.fn(async () => undefined),
@@ -177,6 +183,7 @@ const pendingReviewTicketRow = { status: "pending_review" };
 beforeEach(async () => {
   selectQueue = [];
   updateReturning = [];
+  updateValues = [];
   vi.resetModules();
   const router = (await import("./tickets")).default;
   app = express();
@@ -374,5 +381,65 @@ describe("POST /tickets/:id/check-out — Task #572 assignment guard", () => {
     expect(r.status).toBe(400);
     expect(r.body.code).toBe("field_ticket.work_type_not_allowed");
     expect(r.body.error).toBe("work_type_not_allowed");
+  });
+});
+
+describe("pre-clock field lifecycle acceptance", () => {
+  it.each([
+    "primary", "assigned_foreman",
+  ].flatMap(actor => [
+    { actor, route: "en-route", from: "pending_arrival", to: "en_route" },
+    { actor, route: "on-location", from: "en_route", to: "on_location" },
+  ]))("advances $route for $actor with current assignment without starting billing or inventing GPS", async ({ actor, route, from, to }) => {
+    const saved = { id: TICKET_ID, status: "initiated", lifecycleState: to, siteName: "Fixture site" };
+    selectQueue = [
+      actor === "primary" ? ownershipRow : { ...ownershipRow, fieldEmployeeId: null, foremanUserId: 1234 },
+      vendorPersonRow,
+      ticketAssignmentRow,
+      { id: 99 },
+      { status: "initiated", lifecycleState: from },
+      saved,
+    ];
+    updateReturning = [saved];
+    const r = await request(app).post(`/api/tickets/${TICKET_ID}/${route}`).set("Cookie", fieldCookie).send({});
+    expect(r.status).toBe(200);
+    expect(r.body.ticket).toMatchObject({ status: "initiated", lifecycleState: to });
+    expect(updateValues).toHaveLength(1);
+    expect(updateValues[0]).toMatchObject({ lifecycleState: to });
+    expect(updateValues[0]).not.toHaveProperty("status");
+    expect(updateValues[0]).not.toHaveProperty("checkInTime");
+    expect(updateValues[0]).toMatchObject(route === "en-route" ? { departureLatitude: null, departureLongitude: null } : { onLocationLatitude: null, onLocationLongitude: null });
+  });
+  it.each(["en-route", "on-location"])("denies foreign-company %s before transition despite a coincident assignee id", async route => {
+    selectQueue = [{ ...ownershipRow, vendorId: VENDOR_ID + 1 }, vendorPersonRow];
+    const r = await request(app).post(`/api/tickets/${TICKET_ID}/${route}`).set("Cookie", fieldCookie).send({});
+    expect(r.status).toBe(403);
+    expect(updateValues).toEqual([]);
+  });
+});
+
+describe("field checkout acceptance", () => {
+  it.each([false, true])("ends field tracking coherently when workCompleted=%s without fabricating a location", async workCompleted => {
+    const status = workCompleted ? "completed" : "pending_review";
+    const result = makeTicketRow({
+      id: TICKET_ID, status, lifecycleState: "off_site", vendorId: VENDOR_ID,
+      fieldEmployeeId: FE_ID, siteLocationId: SITE_ID, workTypeId: WORK_TYPE_ID,
+      checkOutTime: new Date(), closedById: 1234,
+    });
+    selectQueue = [ownershipRow, vendorPersonRow, acceptedTicketRow, acceptedTicketRow, ticketAssignmentRow, { id: 99 }, acceptedTicketRow, result];
+    updateReturning = [result];
+    const r = await request(app).post(`/api/tickets/${TICKET_ID}/check-out`).set("Cookie", fieldCookie).send({ workCompleted });
+    expect(r.status).toBe(200);
+    expect(r.body).toMatchObject({ status, lifecycleState: "off_site" });
+    expect(updateValues[0]).toMatchObject({ status, lifecycleState: "off_site", closedById: 1234 });
+    expect(updateValues[0]!.checkOutLatitude).toBeUndefined();
+    expect(updateValues[0]!.checkOutLongitude).toBeUndefined();
+    expect(updateValues[1]).toMatchObject({ checkOutAt: expect.any(Date) });
+  });
+  it("denies foreign-company checkout before closing tracking or recording a transition", async () => {
+    selectQueue = [{ ...ownershipRow, vendorId: VENDOR_ID + 1 }, vendorPersonRow];
+    const r = await request(app).post(`/api/tickets/${TICKET_ID}/check-out`).set("Cookie", fieldCookie).send({ workCompleted: true });
+    expect(r.status).toBe(403);
+    expect(updateValues).toEqual([]);
   });
 });
