@@ -35,6 +35,7 @@ function snapshot(): MeetingSnapshot {
   };
 }
 beforeEach(() => {
+  window.localStorage.clear(); window.sessionStorage.clear();
   vi.useFakeTimers(); vi.setSystemTime(new Date("2026-09-09T14:05:00Z"));
   Recorder.instances = [];
   track = Object.assign(new EventTarget(), { enabled: true, readyState: "live", stop: vi.fn() }) as unknown as MediaStreamTrack;
@@ -58,7 +59,7 @@ async function connect(result: { current: ReturnType<typeof useMeetingAudio> }) 
 
 describe("consented meeting microphone transcription", () => {
   it("fails closed immediately when renewal says audio ownership expired", async () => {
-    window.localStorage.setItem("vndrly.workHubDeviceId", "10000000-0000-4000-8000-000000000001");
+    window.localStorage.setItem("vndrly.workHubDeviceId:4", "10000000-0000-4000-8000-000000000001");
     boundary.request.mockImplementation(async (path: string, options?: RequestInit) => {
       if (path.endsWith("/join")) return { userId: 4, startedAt: "2026-09-09T14:05:00Z", iceServers: [] };
       if (path.endsWith("/audio-lease") && options?.method === "POST") return { token: "a".repeat(32), generation: 1, expiresAt: "2026-09-09T14:05:10Z" };
@@ -124,7 +125,7 @@ describe("consented meeting microphone transcription", () => {
     expect(result.current.error).toMatch(/another device/i);
   });
   it("keeps the microphone off and releases a lease if Cancel races failover activation", async () => {
-    window.localStorage.setItem("vndrly.workHubDeviceId", "10000000-0000-4000-8000-000000000001");
+    window.localStorage.setItem("vndrly.workHubDeviceId:4", "10000000-0000-4000-8000-000000000001");
     let finishActivation!: (lease: { token: string; generation: number; expiresAt: string }) => void;
     const activation = new Promise<{ token: string; generation: number; expiresAt: string }>(resolve => { finishActivation = resolve; });
     boundary.request.mockImplementation(async (path: string, options?: RequestInit) => {

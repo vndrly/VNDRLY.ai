@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { createWorkHubOperationId, workHubRequest } from "@/lib/work-hub-client";
 
 const DEVICE_KEY = "vndrly.workHubDeviceId";
@@ -30,33 +30,36 @@ function storedId(storage: Storage, key: string) {
   return value;
 }
 
-export function workHubDeviceIdentity() {
-  if (typeof window === "undefined") return null;
-  return { deviceId: storedId(localStorage, DEVICE_KEY), connectionId: storedId(sessionStorage, CONNECTION_KEY) };
+export function workHubDeviceIdentity(userId: number | null | undefined) {
+  if (typeof window === "undefined" || !Number.isSafeInteger(userId) || Number(userId) <= 0) return null;
+  // A shared terminal must not reuse another person's registered device ID.
+  // Legacy unscoped IDs cannot be adopted without server ownership evidence.
+  return { deviceId: storedId(localStorage, `${DEVICE_KEY}:${userId}`), connectionId: storedId(sessionStorage, `${CONNECTION_KEY}:${userId}`) };
 }
 
-export function useWorkHubDevicePresence(path: string, enabled: boolean) {
-  const registered = useRef(false);
+export function useWorkHubDevicePresence(path: string, enabled: boolean, userId: number | null | undefined, organizationKey: string) {
   useEffect(() => {
     if (!enabled || typeof window === "undefined") return;
     let stopped = false;
     let timer: ReturnType<typeof setInterval> | undefined;
-    const identity = workHubDeviceIdentity();
+    let registered = false;
+    const identity = workHubDeviceIdentity(userId);
     if (!identity) return;
     const { deviceId, connectionId } = identity;
     const heartbeat = async () => {
       if (stopped) return;
-      if (!registered.current) {
+      if (!registered) {
         await workHubRequest("/devices/register", { method: "POST", body: JSON.stringify({ deviceId, friendlyName: navigator.platform || "Web browser", deviceClass: /Mobi|Android/i.test(navigator.userAgent) ? "phone" : "desktop", capabilities: { microphone: true, speaker: true, fileSelection: true } }) });
-        registered.current = true;
+        if (stopped) return;
+        registered = true;
       }
       await workHubRequest(`/devices/${deviceId}/heartbeat`, { method: "POST", body: JSON.stringify({ connectionId, foreground: document.visibilityState === "visible", microphonePermission: "unknown", surface: workHubSurfaceForPath(`${window.location.pathname}${window.location.search}`) }) });
     };
-    const send = () => { void heartbeat().catch(() => { registered.current = false; }); };
+    const send = () => { void heartbeat().catch(() => { registered = false; }); };
     send();
     timer = setInterval(send, 12_000);
     document.addEventListener("visibilitychange", send);
     window.addEventListener("focus", send);
     return () => { stopped = true; if (timer) clearInterval(timer); document.removeEventListener("visibilitychange", send); window.removeEventListener("focus", send); };
-  }, [enabled, path]);
+  }, [enabled, path, userId, organizationKey]);
 }

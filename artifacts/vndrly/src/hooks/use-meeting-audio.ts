@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createWorkHubOperationId, workHubRequest } from "@/lib/work-hub-client";
 import type { MeetingSnapshot } from "@/lib/meeting-types";
 import { useMeetingTranscription } from "./use-meeting-transcription";
+import { workHubDeviceIdentity } from "./use-work-hub-device-presence";
 
 type MeetingPeer = { userId: number; deviceId: string; connectionId: string };
 type MeetingIdentity = { deviceId: string; connectionId: string };
@@ -10,13 +11,6 @@ type Signal = { sequence: number; fromUserId: number; fromDeviceId?: string; kin
 type Peer = { userId: number; connection: RTCPeerConnection; audio: HTMLAudioElement; pendingIce: RTCIceCandidateInit[] };
 type OwnershipLease = { token: string; generation: number; expiresAt: string };
 type OwnershipState = { deviceId: string; generation: number; active: boolean; expiresAt: string; pendingDeviceId: string | null };
-
-const DEVICE_STORAGE_KEY = "vndrly.workHubDeviceId";
-function browserDeviceId() {
-  const existing = window.localStorage.getItem(DEVICE_STORAGE_KEY);
-  if (existing) return existing;
-  const created = createWorkHubOperationId(); window.localStorage.setItem(DEVICE_STORAGE_KEY, created); return created;
-}
 
 export function useMeetingAudio(occurrenceId: string, snapshot: MeetingSnapshot | undefined) {
   const [joined, setJoined] = useState(false);
@@ -28,7 +22,7 @@ export function useMeetingAudio(occurrenceId: string, snapshot: MeetingSnapshot 
   const [handoffBusy, setHandoffBusy] = useState(false);
   const peers = useRef(new Map<string, Peer>());
   const stream = useRef<MediaStream | null>(null);
-  const identity = useRef<MeetingIdentity>({ deviceId: browserDeviceId(), connectionId: createWorkHubOperationId() });
+  const identity = useRef<MeetingIdentity>({ deviceId: "", connectionId: createWorkHubOperationId() });
   const ownership = useRef<OwnershipLease | null>(null);
   const transcription = useMeetingTranscription(occurrenceId, snapshot, joined, muted, stream, () => ownership.current ? { ...identity.current, token: ownership.current.token, generation: ownership.current.generation } : null);
   const { stopTranscription } = transcription;
@@ -100,6 +94,9 @@ export function useMeetingAudio(occurrenceId: string, snapshot: MeetingSnapshot 
     if (joining.current || lease.current) return;
     joining.current = true; setError(null);
     try {
+      const device = workHubDeviceIdentity(snapshot?.userId);
+      if (!device) throw new Error("Sign in before joining meeting audio.");
+      identity.current = { deviceId: device.deviceId, connectionId: createWorkHubOperationId() };
       if (!navigator.mediaDevices?.getUserMedia) throw new Error("Microphone access requires a secure connection and a supported browser.");
       const input = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: false });
       if (!alive.current) { input.getTracks().forEach((track) => track.stop()); return; }

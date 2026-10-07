@@ -14,6 +14,7 @@ import {
   brandImagePillSrc,
 } from "@/components/png-pill-rollover";
 import { useBrand } from "@/hooks/use-brand";
+import { useAuth } from "@/hooks/use-auth";
 import MeetingAudioRoom from "@/components/meeting-audio-room";
 import {
   createWorkHubOperationId,
@@ -184,6 +185,7 @@ function VoicemailRecorder({
   );
 }
 export function WorkHubCalls() {
+  const { user } = useAuth();
   const brand = useBrand();
   const queryClient = useQueryClient();
   const pendingDial = useRef<{
@@ -289,7 +291,7 @@ export function WorkHubCalls() {
   );
   const respond = (id: string, action: string) => {
     setSelected(id);
-    const identity = action === "accept" ? workHubDeviceIdentity() : null;
+    const identity = action === "accept" ? workHubDeviceIdentity(user?.userId) : null;
     change.mutate({ path: `/calls/${id}/respond`, body: { action, ...(identity ?? {}) } });
   };
   useEffect(() => {

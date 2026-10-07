@@ -31,7 +31,7 @@ export default function WorkHubDeviceSettings() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const cache = useQueryClient();
-  const currentId = useMemo(() => workHubDeviceIdentity()?.deviceId ?? "", []);
+  const currentId = useMemo(() => workHubDeviceIdentity(user?.userId)?.deviceId ?? "", [user?.userId]);
   const admin = isWorkHubAdmin(user);
   const [names, setNames] = useState<Record<string, string>>({});
   const own = useQuery<Device[]>({ queryKey: ["work-hub", "devices", "self"], queryFn: () => workHubRequest("/devices") });
