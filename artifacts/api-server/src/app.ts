@@ -26,6 +26,7 @@ import { requireTenant } from "./lib/requireTenant";
 import { isAllowedCorsOrigin } from "./lib/corsOrigins";
 import helmet from "helmet";
 import assistantConnectionRouter from "./routes/assistantConnection";
+import { organizationSubscriptionWebhook } from "./routes/organizationSubscription";
 
 const app: Express = express();
 
@@ -82,6 +83,9 @@ app.use(corsMiddleware);
 app.options(/^\/api\//, corsMiddleware);
 app.use(helmet());
 app.use(cookieParser());
+// Stripe signatures must be verified against the original bytes on this exact
+// endpoint, before the shared JSON parser or authenticated application routes.
+app.use("/api/organization-subscription/webhook", organizationSubscriptionWebhook);
 // Four MiB of native meeting audio expands to roughly 5.34 MiB in base64.
 // Keep the larger JSON allowance confined to this authenticated capture route.
 app.post(/^\/api\/work-hub\/meetings\/[^/]+\/transcribe-audio\/?$/, express.json({ limit: "6mb" }));

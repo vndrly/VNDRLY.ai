@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "migrate:stripe-billing": "tsx scripts/migrate-stripe-billing.ts",
     "migrate:assistant-connection": "tsx scripts/migrate-assistant-connection.ts",
     "migrate:assistant-plan-execution": "tsx scripts/migrate-assistant-plan-execution.ts",
     "migrate:gate-locations": "tsx scripts/migrate-gate-locations.ts",

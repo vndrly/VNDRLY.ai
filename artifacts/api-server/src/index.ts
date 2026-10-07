@@ -1,6 +1,7 @@
 import app from "./app";
 import { createPlanExecutionLifecycle } from "./assistant/plan-execution-lifecycle";
 import { createCanonicalPlanExecutionWorker } from "./assistant/plan-execution-worker";
+import { createCanonicalBillingReconciler } from "./services/stripe-billing-worker";
 import { logger } from "./lib/logger";
 import { startInactivityNotifier } from "./lib/inactivity-notifier";
 import { startRulesEngine } from "./lib/rules-engine";
@@ -104,6 +105,7 @@ const MAX_LISTEN_ATTEMPTS = 5;
 const LISTEN_RETRY_DELAY_MS = 500;
 
 let listenAttempts = 0;
+let billingReconciler: ReturnType<typeof createCanonicalBillingReconciler> | undefined;
 const planExecutionLifecycle = createPlanExecutionLifecycle({
   enabled: () => process.env.ASSISTANT_PLAN_EXECUTION_ENABLED === "1",
   create: () => createCanonicalPlanExecutionWorker({ onError: failure => logger.warn(failure, "Plan execution worker stopped a poll") }),
@@ -119,6 +121,15 @@ function createServer() {
 }
 
 function onListening(): void {
+  if (!billingReconciler) {
+    try {
+      billingReconciler = createCanonicalBillingReconciler(() =>
+        logger.warn({ code: "billing_reconciliation_failed" }, "Billing reconciliation will retry"));
+      billingReconciler.start();
+    } catch {
+      logger.warn({ code: "billing_setup_unavailable" }, "Billing reconciliation is unavailable");
+    }
+  }
   void planExecutionLifecycle.start();
   listenAttempts = 0;
   logger.info({ port }, "Server listening");
@@ -225,6 +236,7 @@ function onError(err: NodeJS.ErrnoException): void {
 async function shutdown(signal: NodeJS.Signals): Promise<void> {
   logger.info({ signal }, "Shutting down server");
   const planExecutionStop = planExecutionLifecycle.stop();
+  const billingStop = billingReconciler?.stop() ?? Promise.resolve();
   stopStaleVisitSweeper();
   stopGateEvidenceCleanupWorker();
   stopScheduledNotificationWorker();
@@ -252,6 +264,7 @@ async function shutdown(signal: NodeJS.Signals): Promise<void> {
   void stopMajikEventBus();
   await retentionPlannerStop;
   await planExecutionStop;
+  await billingStop;
   void completeServerShutdown({
     closeServer: (done) => server.close(done),
     closeStreams: closeAllAssemblyAIStreams,

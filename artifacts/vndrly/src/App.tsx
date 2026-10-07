@@ -98,6 +98,7 @@ const ReportsPage = lazy(() => import("@/pages/reports"));
 const CrewMapPage = lazy(() => import("@/pages/crew-map"));
 const OperationsDisplayViewer = lazy(() => import("@/pages/operations-display-viewer"));
 const OperationsDisplayDirectory = lazy(() => import("@/pages/operations-display-directory"));
+const OrganizationSubscription = lazy(() => import("@/pages/organization-subscription"));
 const CrewReplayPage = lazy(() => import("@/pages/crew-replay"));
 const SiteMapPage = lazy(() => import("@/pages/site-map"));
 const VisitDetailPage = lazy(() => import("@/pages/visit-detail"));
@@ -241,6 +242,7 @@ function AuthenticatedRouter() {
         <Route path="/switch-account"><Login allowAccountSwitch /></Route>
         <Route path="/operations-display/:displayId/:monitorId">{params => <OperationsDisplayViewer displayId={params.displayId} monitorId={params.monitorId} />}</Route>
         <Route path="/operations-display" component={OperationsDisplayDirectory} />
+        <Route path="/organization-subscription" component={OrganizationSubscription} />
         <Route path="/work-hub/administration/displays" component={OperationsDisplayDirectory} />
         <Route path="/forgot-password" component={ForgotPassword} />
         <Route path="/reset-password" component={ResetPassword} />

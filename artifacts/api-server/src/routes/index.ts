@@ -1,4 +1,5 @@
 import fleetRouter from "./fleet";
+import { organizationSubscriptionRouter } from "./organizationSubscription";
 import ticketInvoicePreparationRouter from "./ticketInvoicePreparation";
 import calendarRescheduleRouter from "./calendarReschedule";
 import calendarResponseRouter from "./calendarResponse";
@@ -87,6 +88,7 @@ import implementationAHealthRouter from "./implementationAHealth";
 import camerasRouter from "./cameras";
 
 const router: IRouter = Router();
+router.use("/organization-subscription", organizationSubscriptionRouter);
 
 router.use(authRouter);
 router.use(marketTickerRouter);

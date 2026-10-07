@@ -179,6 +179,7 @@ jobs:
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:assistant-connection
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:assistant-plan-execution
           sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:fleet-ops
+          sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:stripe-billing
           sudo bash scripts/provision-assistant-discovery.sh
           if ! sudo grep -q '^ASSISTANT_CONNECTION_ENABLED=' .env.production; then
             printf '%s\n' 'ASSISTANT_CONNECTION_ENABLED=1' | sudo tee -a .env.production >/dev/null
