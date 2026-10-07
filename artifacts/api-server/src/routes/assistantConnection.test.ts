@@ -61,6 +61,16 @@ async function tokens(scope = auth.scope) {
   return response.body;
 }
 describe("ChatGPT account connection boundary", () => {
+  it("reads connection context without unrelated Work Hub permissions or credentials", async () => {
+    const credentials = await tokens("gate:read");
+    const response = await request(app).post(base + "/mcp").set("Authorization", "Bearer " + credentials.access_token).send({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "v_connection_context", arguments: {} } });
+    const context = JSON.parse(response.body.result.content[0].text);
+    expect(context).toMatchObject({ userId: 17, vendorId: 4, grantedScopes: ["gate:read"], operationalAccessVerified: false });
+    expect(Object.keys(context)).not.toContain("sv");
+    expect(Object.keys(context)).not.toContain("exp");
+    expect(response.body.result.content[0].text).not.toContain(credentials.access_token);
+    expect(mocks.run).not.toHaveBeenCalled();
+  });
   it.each(["valid", "revoked", "scope removed", "wrong user", "station denied", "wrong station"])("rechecks Gate device navigation when %s", async condition => {
     const credentials = await tokens("gate:read");
     const stationId = "17795fa1-bb5f-4abc-a5f8-7e9b33a0ec05";

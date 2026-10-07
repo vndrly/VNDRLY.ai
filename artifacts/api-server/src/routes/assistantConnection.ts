@@ -260,6 +260,7 @@ router.post("/mcp", async (req, res) => {
   if (message.method === "tools/list") {
     const reads = chatGptReadableTools(authorized.session, authorized.scopes).map((tool) => ({ name: tool.name, description: chatGptReadToolDescription(tool), inputSchema: tool.inputSchema, annotations: chatGptReadToolAnnotations(tool.name) }));
     reads.push(SPECIALISTS_TOOL);
+    reads.push({ name: "v_connection_context", description: "Read this connection's authenticated account and granted scope names. These are connection facts, not proof of operational site access or permission to perform an action. Use before selecting role-dependent workflows; do not infer roles from display names.", inputSchema: { type: "object", properties: {}, additionalProperties: false }, annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false } });
     if (reads.some(tool => tool.name === "query_gate_change_over")) reads.push(GATE_DEVICE_TOOL);
     if (reads.some(tool => tool.name === "query_ticket_detail")) reads.push(TICKET_DEVICE_TOOL);
     if (reads.some(tool => tool.name === "list_work_hub_tasks")) reads.push(RESUME_PLAN_TOOL, RUN_PLAN_READ_TOOL);
@@ -275,6 +276,13 @@ router.post("/mcp", async (req, res) => {
     let name = message.params?.name;
     let args = message.params?.arguments ?? {};
     if (typeof name !== "string" || !args || typeof args !== "object" || Array.isArray(args)) throw new Error("Invalid tool request");
+    if (name === "v_connection_context") {
+      if (Object.keys(args).length) throw new AssistantOAuthError("invalid_request");
+      const session = authorized.session;
+      const context = { userId: session.userId, role: session.role, membershipRole: session.membershipRole ?? null, vendorRole: session.vendorRole ?? null, vendorId: session.vendorId ?? null, partnerId: session.partnerId ?? null, activeMembershipId: session.activeMembershipId ?? null, grantedScopes: authorized.scopes, operationalAccessVerified: false };
+      await writeAskVActionAudit({ session, clientSurface: "api", inputMode: "web_text", provider: "chatgpt_mcp", toolName: name, targetType: "profile", toolInput: {}, resultStatus: "success" });
+      return reply({ content: [{ type: "text", text: JSON.stringify(context) }], isError: false });
+    }
     if (name === GATE_DEVICE_TOOL.name) {
       requireChatGptReadableTool(authorized.session, authorized.scopes, "query_gate_change_over");
       if (!authorized.grantConsentHash || Object.keys(args).some(key => key !== "stationId")) throw new AssistantOAuthError("invalid_request");
