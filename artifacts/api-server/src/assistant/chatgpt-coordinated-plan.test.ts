@@ -59,6 +59,10 @@ it('refuses a write or unrelated argument injection in a planned read',async()=>
  expect(()=>plannedReadRequests(resumed,'review',{manage_ticket_record:{}},new Set())).toThrow('authorization');
  const readPlan=createCoordinatedPlan(identity,[{id:'brief',specialist:'V',toolNames:['get_work_hub_briefing'],dependsOn:[]}]);
  const ready=resumedWorkPlan([{...task,description:encodePlanDescription(readPlan)}],task.id,identity,new Set(['get_work_hub_briefing']));
+ for(const status of ['completed','cancelled'] as const) {
+  const terminal=resumedWorkPlan([{...task,status,description:encodePlanDescription(readPlan)}],task.id,identity,new Set(['get_work_hub_briefing']));
+  expect(()=>plannedReadRequests(terminal,'brief',{get_work_hub_briefing:{}},new Set(['get_work_hub_briefing']))).toThrow('terminal');
+ }
  expect(()=>plannedReadRequests(ready,'brief',{get_work_hub_briefing:{},query_tickets:{}},new Set(['get_work_hub_briefing']))).toThrow('planned');
  expect(()=>plannedReadRequests(ready,'foreign',{},new Set(['get_work_hub_briefing']))).toThrow('eligible');
 });

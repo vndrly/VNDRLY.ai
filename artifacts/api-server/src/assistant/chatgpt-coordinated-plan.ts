@@ -52,6 +52,7 @@ export const RUN_PLAN_READ_TOOL = {
  annotations:{readOnlyHint:true,destructiveHint:false,openWorldHint:true},
 };
 export function plannedReadRequests(resumed:ReturnType<typeof resumedWorkPlan>,stepId:string,argumentsByTool:unknown,readTools:ReadonlySet<string>){
+ if(resumed.taskStatus==='completed'||resumed.taskStatus==='cancelled')throw Error('Plan task is terminal');
  if(!resumed.eligibleStepIds.includes(stepId))throw Error('Plan step not eligible');
  const step=resumed.plan.steps.find(step=>step.id===stepId)!;
  if(step.toolNames.some(name=>!readTools.has(name)))throw Error('Step requires an action authorization');
