@@ -1,4 +1,4 @@
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import {
   assetAliasesTable,
   assetConditionEvidenceTable,
@@ -74,7 +74,15 @@ async function loadAsset(id: string): Promise<AssetRecord | null> {
     version: row.version,
     history: history.map(mapEvent),
     ...(row.mergedIntoId ? { mergedIntoId: row.mergedIntoId } : {}),
+    // Read-only links preserve the source asset of every historical fact.
+    mergedSources: await mergedSources(id),
   };
+}
+
+async function mergedSources(id: string): Promise<Record<string,unknown>[]> {
+  const direct=await db.select({id:assetMergesTable.id}).from(assetMergesTable).where(eq(assetMergesTable.survivingAssetId,id));
+  if(!direct.length)return [];
+  return (await db.execute(sql`WITH RECURSIVE sources(id) AS (SELECT merged_asset_id FROM asset_merges WHERE surviving_asset_id=${id}::uuid UNION SELECT m.merged_asset_id FROM asset_merges m JOIN sources s ON m.surviving_asset_id=s.id) SELECT a.id AS "assetId", a.name, a.version, m.reason, m.merged_at AS "mergedAt", COALESCE((SELECT jsonb_agg(jsonb_build_object('kind',x.kind,'value',x.display_value,'jurisdiction',x.jurisdiction)) FROM asset_aliases x WHERE x.asset_id=a.id AND x.active=true),'[]'::jsonb) AS aliases, COALESCE((SELECT jsonb_agg(jsonb_build_object('id',e.id,'operationId',e.operation_id,'type',e.event_type,'actorUserId',e.actor_user_id,'occurredAt',e.occurred_at,'fromHolderUserId',e.from_holder_user_id,'toHolderUserId',e.to_holder_user_id)) FROM asset_custody_events e WHERE e.asset_id=a.id),'[]'::jsonb) AS history FROM sources s JOIN assets a ON a.id=s.id JOIN asset_merges m ON m.merged_asset_id=a.id ORDER BY a.id`)).rows;
 }
 
 export const databaseAssetRepository: AssetRepository = {
@@ -123,7 +131,14 @@ export const databaseAssetRepository: AssetRepository = {
         eq(assetAliasesTable.active, true),
       ))
       .limit(1);
-    return match ? loadAsset(match.assetId) : null;
+    if (!match) return null;
+    let asset = await loadAsset(match.assetId);
+    const seen = new Set<string>();
+    while (asset?.mergedIntoId && !seen.has(asset.id)) {
+      seen.add(asset.id);
+      asset = await loadAsset(asset.mergedIntoId);
+    }
+    return asset;
   },
 
   async save(asset, expectedVersion) {

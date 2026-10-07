@@ -14,6 +14,7 @@ import { useTranslation } from "react-i18next";
 import { meetingClock, meetingTimer } from "@workspace/api-client-react/meeting-workspace";
 import WorkHubAudioRoom from "@/components/WorkHubAudioRoom";
 import MeetingRsvp from "@/components/MeetingRsvp";
+import MeetingAssistantInvitation from "@/components/MeetingAssistantInvitation";
 import MeetingSpeakingBars from "@/components/MeetingSpeakingBars";
 import MeetingTimeline, {
   authorizedThreadEntries,
@@ -182,6 +183,7 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
           <Text selectable style={{ color: "#ffffff", fontWeight: "700" }}>
             {host?.displayName ?? t("meetingWorkspace.host", { defaultValue: "Host" })} · {t("meetingWorkspace.host", { defaultValue: "Host" })}
           </Text>
+          <MeetingAssistantInvitation occurrenceId={occurrenceId} version={snapshot.assistantInvitationVersion} canManage={snapshot.canManageAssistantInvitation === true && !ended} invited={Boolean(snapshot.occurrence.askvInvitedAt)} onSaved={workspace.refresh} />
           {snapshot.assistantParticipant?.visible && <Text selectable style={{ color: brand.primary, fontWeight: "800" }}>{snapshot.assistantParticipant.label} · {snapshot.assistantParticipant.state === "paused" ? t("meetingWorkspace.paused", { defaultValue: "Paused" }) : t("meetingWorkspace.silentAssistant", { defaultValue: "Silent unless addressed" })}</Text>}
           <Pressable
             ref={rosterTriggerRef}

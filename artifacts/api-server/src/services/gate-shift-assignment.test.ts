@@ -15,10 +15,11 @@ vi.mock("../assistant/gate-staffing-candidates", () => ({ readGateStaffingCandid
 const shiftId = "00000000-0000-4000-8000-000000000001";
 const operationId = "00000000-0000-4000-8000-000000000002";
 const session = { userId: 17, role: "vendor", vendorId: 4, activeMembershipId: 8, membershipRole: "admin", sv: 2 };
-function fixture(dropCommit = false) {
+function fixture(dropCommit = false, fleetConflict = false) {
   let saved: unknown = null;
   let version = 2;
   const query = vi.fn(async (text: string, values: unknown[] = []) => {
+    if (text.startsWith("SELECT 1 FROM vendors v CROSS JOIN LATERAL")) return { rows: fleetConflict ? [{ conflict: 1 }] : [], rowCount: fleetConflict ? 1 : 0 };
     if (text.startsWith("SELECT s.*")) return { rows: [{ id: shiftId, version, site_location_id: 392, gate_station_id: operationId, qualification_codes: [], open: true }], rowCount: 1 };
     if (text.startsWith("SELECT id FROM work_hub_shift_assignments WHERE shift_id")) return { rows: [], rowCount: 0 };
     if (text.startsWith("SELECT result_json")) return { rows: saved ? [{ result_json: saved }] : [], rowCount: saved ? 1 : 0 };
@@ -31,6 +32,14 @@ function fixture(dropCommit = false) {
   return { database, query };
 }
 beforeEach(() => { authority.current = true; });
+it("refuses a current scheduled Fleet conflict before creating Gate assignment or receipt", async () => {
+  const f = fixture(false, true);
+  await expect(executeGateShiftAssignment(session, shiftId, { operationId, expectedVersion: 2, assigneeUserIds: [18] }, f.database)).rejects.toThrow("work_hub.assignment_conflict");
+  expect(f.query.mock.calls.some(([text]) => /^(INSERT|UPDATE|DELETE)/.test(text))).toBe(false);
+  const query = f.query.mock.calls.find(([text]) => text.startsWith("SELECT 1 FROM vendors v CROSS JOIN LATERAL"))!;
+  expect(query[0]).toContain("'dispatched','acknowledged','in_progress'");
+  expect(query[0]).toContain("run->'schedule'<>'null'::jsonb");
+});
 it("creation readback returns only the original actor's saved resource and refuses revoked authority", async () => {
   const resource = { id: shiftId, ownerOrgType: "vendor", ownerOrgId: 4, createdById: 17, assigneeUserIds: [18], open: false };
   const query = vi.fn(async (text: string) => {

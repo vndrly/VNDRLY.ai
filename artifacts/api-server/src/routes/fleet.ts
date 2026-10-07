@@ -17,6 +17,13 @@ import {
 } from "../services/fleet-support";
 const router = Router();
 const service = createFleetService(databaseFleetRepository);
+router.get("/fleet/drivers/:driverUserId/availability", endpoint(req => service.driverAvailability(actor(req), z.coerce.number().int().positive().parse(req.params.driverUserId))));
+router.post("/fleet/drivers/:driverUserId/availability", endpoint(req => {
+  const driverUserId = z.coerce.number().int().positive().parse(req.params.driverUserId);
+  if (req.body?.driverUserId !== driverUserId) throw new FleetError("fleet.invalid_request", 400);
+  return service.recordDriverAvailability(actor(req), req.body);
+}));
+router.get("/fleet/drivers/:driverUserId/availability/operations/:operationId", endpoint(req => service.driverAvailabilityOperation(actor(req), z.coerce.number().int().positive().parse(req.params.driverUserId), z.uuid().parse(req.params.operationId))));
 router.get("/fleet/runs/:id/review-packet",endpoint(req=>service.reviewPacket(actor(req),z.uuid().parse(req.params.id))));
 router.get("/fleet/runs/:id/replacements", endpoint(req => service.replacements(actor(req), z.uuid().parse(req.params.id))));
 router.post("/fleet/runs/:id/replacements", endpoint(req => service.proposeReplacement(actor(req), z.uuid().parse(req.params.id), req.body)));

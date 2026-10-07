@@ -11,6 +11,7 @@ import { PILL_IDLE, pillGreen } from "@/lib/pill-palette-assets";
 import { PILL_LABEL_CLASS, pillLabelToneClass } from "@/lib/pill-doctrine";
 import "./meeting-workspace.css";
 import AskVListeningPill from "./askv-listening-pill";
+import MeetingAssistantInvitation from "./meeting-assistant-invitation";
 import MeetingReplayWorkspace from "./meeting-replay-workspace";
 import { useMeetingSession } from "./meeting-session-provider";
 
@@ -171,7 +172,8 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
         {data.transcriptionIndicator === "persistent" && <span className="meeting-recording-indicator" role="status">● {t("meetingWorkspace.transcriptionActiveIndicator", { defaultValue: "Transcription active" })}</span>}
         <p>{t("meetingWorkspace.presentCount", { defaultValue: "{{count}} present", count: present.length })} · {ended ? t("meetingWorkspace.meetingEnded", { defaultValue: "Meeting ended" }) : audio.joined ? t("meetingWorkspace.live", { defaultValue: "Live" }) : t("meetingWorkspace.workspaceLabel", { defaultValue: "Meeting workspace" })} · {audio.transcriptionActive ? t("meetingWorkspace.transcribingMic", { defaultValue: "Transcribing your microphone" }) : invited ? captureLabel : t("meetingWorkspace.transcriptionPaused", { defaultValue: "Transcription paused" })}</p>
         <div className="meeting-actions">
-          <AskVListeningPill active={audio.transcriptionActive} statusLabel={captureLabel} disabled={!data.canManage || busy || ended} title={data.canManage ? t("meetingWorkspace.pauseRestartV", { defaultValue: "Pause or restart V" }) : t("meetingWorkspace.hostControlsV", { defaultValue: "The host controls V" })} onClick={() => { if (invited) audio.stopTranscription(); void action("askv", { invited: !invited }); }} />
+          <AskVListeningPill active={audio.transcriptionActive} statusLabel={captureLabel} disabled={true} title={data.canManage ? t("meetingWorkspace.pauseRestartV", { defaultValue: "Pause or restart V" }) : t("meetingWorkspace.hostControlsV", { defaultValue: "The host controls V" })} onClick={() => undefined} />
+          <MeetingAssistantInvitation occurrenceId={occurrenceId} version={data.assistantInvitationVersion} canManage={data.canManageAssistantInvitation === true && !ended} invited={invited} onSaved={(next) => { if (!next) audio.stopTranscription(); return qc.invalidateQueries({ queryKey }); }} />
           {!audio.joined && !ended && !viewOnly && <button onClick={() => void audio.join()}>{t("meetingWorkspace.joinAudio", { defaultValue: "Join audio" })}</button>}
           {audio.joined && <><button disabled={Boolean(selfParticipant?.hostMutedAt)} onClick={() => void audio.toggleMute()} aria-pressed={!audio.muted}>{selfParticipant?.hostMutedAt ? t("meetingWorkspace.mutedByHost", { defaultValue: "Muted by host" }) : audio.muted ? t("meetingWorkspace.unmuteMic", { defaultValue: "Unmute mic" }) : t("meetingWorkspace.muteMic", { defaultValue: "Mute mic" })}</button><button onClick={() => void audio.leave()}>{t("meetingWorkspace.leave", { defaultValue: "Leave" })}</button></>}
           {audio.joined && audio.audioOnAnotherDevice && <button disabled={audio.handoffBusy || Boolean(selfParticipant?.hostMutedAt)} onClick={() => void audio.moveAudioHere()}>{audio.handoffBusy ? t("meetingWorkspace.movingAudio", { defaultValue: "Moving audio…" }) : t("meetingWorkspace.moveAudioHere", { defaultValue: "Move audio here" })}</button>}

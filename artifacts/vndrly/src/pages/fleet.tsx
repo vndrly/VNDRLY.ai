@@ -28,6 +28,7 @@ import {
   parseFleetSchedule,
 } from "@/components/fleet-schedule-fields";
 import { FleetDraftEditor } from "@/components/fleet-draft-editor";
+import { FleetDriverAvailability } from "@/components/fleet-driver-availability";
 import { FleetReplacementPanel } from "@/components/fleet-replacement";
 import { FleetCargoPanel } from "@/components/fleet-cargo";
 import { FleetReviewPacketPanel } from "@/components/fleet-review-packet";
@@ -74,7 +75,11 @@ function FleetWorkspace({
   userId: number;
   identity: string;
 }) {
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
+  const describeFleetError = (error: unknown, fallback: string) => {
+    const code = (error as { code?: string })?.code;
+    return code === "fleet.driver_availability_unknown" ? t("fleetAvailability.unknown_no_window") : code === "fleet.driver_schedule_conflict" ? t("fleetAvailability.recorded_conflict") : fleetErrorMessage(error, fallback);
+  };
   const c = fleetCopy(i18n.language);
   const [location] = useLocation();
   const queryClient = useQueryClient();
@@ -271,7 +276,7 @@ function FleetWorkspace({
       setNotice(c.saved);
       await reload();
     } catch (error) {
-      setNotice(fleetErrorMessage(error, c.blocked));
+      setNotice(describeFleetError(error, c.blocked));
       await reload();
     } finally {
       setBusy(false);
@@ -357,7 +362,7 @@ function FleetWorkspace({
       setNotice(c.saved);
       await reload();
     } catch (error) {
-      setNotice(fleetErrorMessage(error, c.blocked));
+      setNotice(describeFleetError(error, c.blocked));
     } finally {
       setBusy(false);
     }
@@ -993,6 +998,7 @@ function FleetWorkspace({
                 canDispatch={data.capabilities.canDispatch}
                 onSaved={reload}
               />
+              <FleetDriverAvailability key={`${identity}:${run.id}:availability`} driverUserId={run.driverUserId} runId={run.id} />
               <FleetReviewPacketPanel run={run} identity={identity} />
               <FleetEvidencePanel
                 key={run.id}

@@ -1,3 +1,7 @@
+import { InventoryPolicyCommandSchema, InventoryMergeCommandSchema } from "@workspace/api-zod";
+import { MeetingMessageArgumentsSchema } from "../work-hub/meeting-message";
+import { MeetingAssistantInvitationInputSchema } from "@workspace/api-zod";
+import { FleetAvailabilityInputSchema } from "@workspace/api-zod";
 import { GateShiftClaimInputSchema } from "@workspace/api-zod";
 import { TicketLaborFinalizationInputSchema } from "@workspace/api-zod";
 import { awayResponderRequest,AWAY_RESPONDER_READ_INPUT } from "./away-responder-tools";
@@ -203,6 +207,15 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
     return transitions[action] ? request("POST", `${base}/${transitions[action]}`, payload) : unsupported("ticket action");
   }
   if (FLEET_TOOLS.some(tool => tool.name === name)) {
+    if (name === "query_fleet_driver_availability") {
+      if (!z.object({ driverUserId: z.number().int().positive() }).strict().safeParse(input).success) return { error: "Select an exact authorized Fleet driver." };
+      return request("GET", `/fleet/drivers/${input.driverUserId}/availability`);
+    }
+    if (name === "record_fleet_driver_availability") {
+      const { confirmed: _confirmed, ...business } = input;
+      const command = FleetAvailabilityInputSchema.safeParse(business);
+      return command.success ? request("POST", `/fleet/drivers/${command.data.driverUserId}/availability`, command.data) : { error: "Supply the exact driver, current availability fingerprint, selected record and reviewed interval." };
+    }
     if(name==="query_fleet_support"){
       if(input.companyId===undefined)return request("GET","/fleet/support");
       if(!Number.isInteger(input.companyId)||Number(input.companyId)<1)return {error:"Select an explicitly authorized support company."};
@@ -323,7 +336,15 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
   }
   if (name.includes("asset_custody")) {
     const assetPayload = { ...withoutNulls(payload), ...(Array.isArray(payload.aliases) ? { aliases: payload.aliases.map(value => withoutNulls(record(value))) } : {}), ...(payload.alias ? { alias: withoutNulls(record(payload.alias)) } : {}) };
-    const actions = ["create", "provisional", "aliases", "checkout", "return", "transfer", "condition", "hold", "release_hold", "merge", "verify-issued", "loss_report", "identifier_claim", "respond_identifier_claim", "withdraw_identifier_claim", "resolve_identifier_claim"];
+    const actions = ["create", "provisional", "aliases", "checkout", "return", "transfer", "condition", "hold", "release_hold", "merge", "policy", "verify-issued", "loss_report", "identifier_claim", "respond_identifier_claim", "withdraw_identifier_claim", "resolve_identifier_claim"];
+    if (action === "policy") {
+      const category=z.string().trim().min(1).max(80).safeParse(payload.category);
+      if(!category.success)return {error:"Supply the exact Inventory category policy."};
+      const path=`/implementation-a/assets/policies/${encoded(category.data)}`;
+      if(name !== "confirm_asset_custody_action")return request("GET",path);
+      const parsed=InventoryPolicyCommandSchema.safeParse({operationId:input.operationId,expectedVersion:input.expectedVersion,confirmed:true,policy:payload.policy});
+      return parsed.success?request("PUT",path,parsed.data):{error:"Review the exact current category policy and version before saving."};
+    }
     if (name === "query_asset_custody") {
       if (resourceId) return request("GET", `/implementation-a/assets/${resourceId}`);
       if (input.alias !== undefined) {
@@ -353,6 +374,10 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
     if (name === "prepare_asset_custody_action") return request("GET", `/implementation-a/assets/${resourceId}${["respond_identifier_claim", "withdraw_identifier_claim"].includes(action) ? "/identifier-claims" : ""}`);
     if (!Number.isSafeInteger(input.expectedVersion) || Number(input.expectedVersion) < 1)
       return { error: "Read the current asset version before confirming custody." };
+    if(action === "merge") {
+      const parsed=InventoryMergeCommandSchema.safeParse({...assetPayload,operationId:input.operationId,expectedVersion:input.expectedVersion,confirmed:true});
+      return parsed.success?request("POST",`/implementation-a/assets/${resourceId}/merge`,parsed.data):{error:"Supply both exact current asset revisions and the reviewed merge reason."};
+    }
     if (action === "release_hold") {
       const holdId = encoded(payload.holdId);
       if (!holdId || !z.uuid().safeParse(payload.holdId).success || !z.uuid().safeParse(input.operationId).success || typeof payload.reason !== "string" || !payload.reason.trim() || payload.reason.trim().length > 2000) return { error: "Supply an exact Inventory hold ID and release reason." };
@@ -810,7 +835,17 @@ export function resolveWorkHubToolRequest(
         return request("POST", "/work-hub/tasks", envelope(input, payload));
       return unsupported("voicemail");
 
+    case "send_work_hub_meeting_message": {
+      const args = MeetingMessageArgumentsSchema.safeParse({ occurrenceId: input.occurrenceId, body: input.body, ...(input.recipientUserId === undefined ? {} : { recipientUserId: input.recipientUserId }) });
+      const id = z.uuid().safeParse(input.operationId);
+      return args.success && id.success ? request("POST", `/work-hub/meetings/${args.data.occurrenceId}/chat`, { id: id.data, body: args.data.body, recipientUserId: args.data.recipientUserId ?? null }) : { error: "Review an exact occurrence, message body and optional current attendee." };
+    }
     case "manage_work_hub_meeting":
+      if (input.action === "set_assistant") {
+        const target = z.uuid().safeParse(input.occurrenceId), fields = MeetingAssistantInvitationInputSchema.omit({ operationId: true }).safeParse(payload);
+        const command = fields.success ? MeetingAssistantInvitationInputSchema.safeParse({ ...fields.data, operationId: input.operationId }) : null;
+        return target.success && command?.success ? request("POST", `/work-hub/meetings/${target.data}/askv`, command.data) : { error: "Review an exact occurrence, current invitation version and explicit invited boolean." };
+      }
       if (input.action === "create")
         return request("POST", "/work-hub/meetings", envelope(input, normalizedMeetingCreatePayload(input)));
       target = required(input.occurrenceId, "meeting occurrence id");
@@ -1050,6 +1085,7 @@ export function bindWorkHubToolScope(
   toolName?: string,
 ): Input {
   const input = record(rawInput);
+  if (["query_fleet_driver_availability", "record_fleet_driver_availability"].includes(toolName ?? "")) return input;
   // These exact reads and strict commands derive account authority only from the authenticated canonical
   // endpoint. Preserve their strict model arguments, including rejecting any
   // caller-supplied owner/context instead of silently discarding those fields.

@@ -120,6 +120,15 @@ export async function guardGateShiftAssignments(
   // All mutable evidence is locked before this fresh authority and policy read.
   const fresh = await currentGateShift(client, session, shiftId, supervisor);
   if (userIds.length && (fresh.recurrence != null || ["cancelled", "completed"].includes(fresh.milestone_status))) throw new GateShiftAssignmentError("work_hub.invalid_operation");
+  // Fleet scheduling writers take this same complete user set before the vendor
+  // lock. The current committed window is therefore checked in either race order.
+  if (userIds.length) {
+    const fleetConflict = await client.query(
+      "SELECT 1 FROM vendors v CROSS JOIN LATERAL jsonb_array_elements(COALESCE(v.fleet_ops_state->'runs','[]'::jsonb)) run WHERE v.id=$1 AND (run->>'companyId')::int=$1 AND (run->>'driverUserId')::int=ANY($2::int[]) AND run->>'status' IN ('dispatched','acknowledged','in_progress') AND run->'schedule' IS NOT NULL AND run->'schedule'<>'null'::jsonb AND (run->'schedule'->>'plannedStartAt')::timestamptz<$4 AND (run->'schedule'->>'plannedEndAt')::timestamptz>$3 LIMIT 1",
+      [session.vendorId, userIds, fresh.starts_at, fresh.ends_at],
+    );
+    if (fleetConflict.rows.length) throw new GateShiftAssignmentError("work_hub.assignment_conflict");
+  }
   const evidence = await readGateStaffingCandidatesForClient(shiftId, session, client, requireChangeOverAccess, new Date(), userIds, supervisor);
   assertGateShiftAssignmentPolicy(fresh.qualification_codes, userIds, evidence.candidates);
   if (evidence.shiftVersion !== fresh.version) throw new GateShiftAssignmentError("work_hub.version_conflict");

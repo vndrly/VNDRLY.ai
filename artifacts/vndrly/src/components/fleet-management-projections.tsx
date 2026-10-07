@@ -6,6 +6,7 @@ import type {
   FleetRun,
 } from "@workspace/api-zod";
 import { fleetCopy } from "@/lib/fleet-copy";
+import { FleetDriverAvailability } from "./fleet-driver-availability";
 
 export function FleetManagementProjections({
   section,
@@ -102,6 +103,7 @@ export function FleetManagementProjections({
                 .map((driver) => (
                   <article className="rounded border p-3" key={driver.userId}>
                     <h3>{driver.name}</h3>
+                    <FleetDriverAvailability driverUserId={driver.userId} />
                     <p>
                       {fleets
                         .filter((fleet) => driver.fleetIds.includes(fleet.id))
@@ -126,11 +128,12 @@ export function FleetManagementProjections({
             runs
               .filter((run) => match(run.labels?.driverName ?? run.title))
               .map((run) => (
-                <p key={run.id}>
+                <article key={run.id}>
                   <Link href={`/fleet/runs/${run.id}`}>
                     {run.labels?.driverName ?? c.assigned} · {run.title}
                   </Link>
-                </p>
+                  <FleetDriverAvailability driverUserId={run.driverUserId} runId={run.id} />
+                </article>
               ))
           )}
         </>

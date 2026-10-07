@@ -328,8 +328,9 @@ const entries: Entry[] = [
     payload: { type: "object" },
   }, ["action", "voicemailId"])),
 
-  write("manage_work_hub_meeting", "meetings", "Create, join, leave, end, update, reschedule, or cancel an authorized meeting. Creation requires payload.title, payload.startsAt (UTC ISO timestamp ending in Z), payload.timezone, and optionally payload.endsAt and participantUserIds. Use startsAt/endsAt, never startAt/endAt. Saving a meeting does not start audio/video capture.", writeSchema({
-    action: { type: "string", enum: ["create", "join", "leave", "end", "update", "reschedule", "cancel"] },
+  write("send_work_hub_meeting_message", "meetings", "Prepare a typed message to an exact authorized active meeting occurrence, either everyone in the room or an explicit current attendee. Requires existing work participation authorization; does not accept consent, start capture, or prove delivery/read.", writeSchema({ occurrenceId: identifier(), body: text(), recipientUserId: { type: "number", description: "Optional exact current attendee ID for a private room message; omit for everyone." } }, ["occurrenceId", "body"])),
+  write("manage_work_hub_meeting", "meetings", "Create, join, leave, end, update, reschedule, cancel, or explicitly set V invitation for an authorized meeting. set_assistant is host-only: exact occurrenceId and payload {expectedVersion: current assistantInvitationVersion, invited: boolean}. Invitation never accepts attendee consent or starts device capture. Creation requires payload.title, payload.startsAt (UTC ISO timestamp ending in Z), payload.timezone, and optionally payload.endsAt and participantUserIds. Use startsAt/endsAt, never startAt/endAt. Saving a meeting does not start audio/video capture.", writeSchema({
+    action: { type: "string", enum: ["create", "join", "leave", "end", "update", "reschedule", "cancel", "set_assistant"] },
     occurrenceId: identifier(),
     payload: { type: "object" },
   }, ["action", "payload"])),

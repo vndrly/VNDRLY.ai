@@ -33,6 +33,17 @@ describe('role-bound operation exposure', () => {
   });
 });
 
+it('advertises destructive Inventory merge/policy changes while keeping preparation read-only', () => {
+  const session={userId:17,role:'vendor',vendorId:4,membershipRole:'admin',activeMembershipId:8,sv:2};
+  const action=chatGptActionTools(session,['assets:write']).find(tool=>tool.name==='confirm_asset_custody_action');
+  expect(action).toBeDefined();
+  expect(operationToolAnnotations(action!)).toEqual({readOnlyHint:false,destructiveHint:true,openWorldHint:false});
+  const read=chatGptReadableTools(session,['operations:read']).find(tool=>tool.name==='prepare_asset_custody_action');
+  expect(read).toBeDefined();
+  expect(operationToolAnnotations(read!)).toEqual({readOnlyHint:true,destructiveHint:false,openWorldHint:false});
+  expect(chatGptActionTools(session,[]).some(tool=>tool.name==='confirm_asset_custody_action')).toBe(false);
+});
+
 it('exposes only current permitted away/display/workforce operations with fixed canonical bindings', () => {
   const session={userId:17,role:'vendor',vendorId:4,membershipRole:'admin',activeMembershipId:8,sv:2};
   const actions=chatGptActionTools(session,['work_hub:write','operations:write','workforce:write']);

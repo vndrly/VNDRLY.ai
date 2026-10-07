@@ -1,3 +1,4 @@
+import { InventoryManagement } from "./InventoryManagement";
 import { InventoryRegistration } from "./InventoryRegistration";
 import { makeCustodyAttempt, custodyFingerprintValues, submitCustodyAttempt, CustodyAbsentConflict, type CustodyAttempt } from "@workspace/api-zod";
 import React, { useEffect, useId, useRef, useState } from "react";
@@ -287,6 +288,7 @@ function FilesInventoryContent({ owner, capabilities, files, notes, assets, chan
         <Text style={{ color: colors.text, fontWeight: "700" }}>{asset.name}</Text>
         <InventoryTransfer assetId={asset.id} owner={owner} canTransfer={asset.capabilities?.canTransfer === true} onRefresh={onRefresh} />
         <InventoryRecovery assetId={asset.id} owner={owner} canManage={capabilities.canManageAsset} onRefresh={onRefresh} includePlatformQueue={index===0}/>
+        {asset.category && asset.status && asset.version && <InventoryManagement owner={owner} asset={{...asset,category:asset.category,status:asset.status,version:asset.version}} assets={assets.filter((a): a is AssetRow & {category:string;status:string;version:number} => !!a.category && !!a.status && !!a.version)} canManage={capabilities.canManageAsset} onSaved={onRefresh} />}
         <InventoryRegistration owner={owner} assetId={asset.id} version={asset.version} canManage={capabilities.canManageAsset} onSaved={onRefresh} />
         <Text style={muted}>{[asset.category, asset.status ? enumLabel("status", asset.status) : null, asset.condition ? enumLabel("condition", asset.condition) : null].filter(Boolean).join(" · ")}</Text>
         <Text style={muted}>{[asset.currentHolderDisplayName ? t("filesInventory.heldBy", { name: asset.currentHolderDisplayName }) : null, asset.currentLocation, asset.hold ? t("filesInventory.hold", { reason: asset.hold }) : null].filter(Boolean).join(" · ")}</Text>

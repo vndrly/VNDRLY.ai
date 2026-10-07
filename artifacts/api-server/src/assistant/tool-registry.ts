@@ -110,7 +110,7 @@ const TOOL_METADATA: Record<string, Partial<ToolMetadata>> = {
         workHubFamily: metadata.family,
         companyAdminOnly: metadata.companyAdminOnly,
         authorityCapability: authorityCapabilityForWorkHubTool(metadata),
-        ...(name === "confirm_work_hub_profile" ? { roles: ["field_employee"] } : name === "prepare_work_hub_profile" ? { roles: ["vendor", "field_employee"] } : name.includes("gate_location") ? { roles: ["vendor"], companyAdminOnly: true } : {}),
+        ...(name === "confirm_work_hub_profile" ? { roles: ["field_employee"] } : name === "prepare_work_hub_profile" ? { roles: ["vendor", "field_employee", "partner", "admin"] } : name.includes("gate_location") ? { roles: ["vendor"], companyAdminOnly: true } : {}),
       },
     ]),
   ),

@@ -3,8 +3,10 @@ import FleetReplacement from "@/components/FleetReplacement";
 import FleetCargo from "@/components/FleetCargo";
 import FleetEvidence from "@/components/FleetEvidence";
 import FleetDraftEditor from "@/components/FleetDraftEditor";
+import FleetDriverAvailability from "@/components/FleetDriverAvailability";
 import FleetEta from "@/components/FleetEta";
 import { useFleetCopy } from "@/lib/fleet-copy";
+import { useTranslation } from "react-i18next";
 import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, ScrollView, Text, TextInput, View } from "react-native";
 import * as Crypto from "expo-crypto";
@@ -34,6 +36,11 @@ export default function FleetWorkspace({ initialRunId, initialMode = "desk" }: {
 } = {}) {
     const colors = useColors();
     const copy = useFleetCopy();
+    const { t } = useTranslation();
+    const describeFleetError = (error: unknown) => {
+        const code = (error as { code?: string })?.code;
+        return code === "fleet.driver_availability_unknown" ? t("fleetAvailability.unknown_no_window") : code === "fleet.driver_schedule_conflict" ? t("fleetAvailability.recorded_conflict") : fleetErrorMessage(error);
+    };
     const { user, activeMembershipId, activeMembership } = useAuth();
     const identity = `${user?.id}:${activeMembershipId}`;
     const identityRef = useRef(identity);
@@ -129,7 +136,7 @@ export default function FleetWorkspace({ initialRunId, initialMode = "desk" }: {
                 .catch(async (e) => {
                 if (!alive)
                     return;
-                setError(fleetErrorMessage(e));
+                setError(describeFleetError(e));
                 if (scope && (e as {
                     code?: string;
                 }).code === "network.unreachable") {
@@ -185,7 +192,7 @@ export default function FleetWorkspace({ initialRunId, initialMode = "desk" }: {
                 if (scope && /\/actions$/.test(path))
                     await nativeFleetOffline.resolve(scope, (body as FleetActionInput).operationId, status === 401 || status === 403 ? "revoked" : "conflict", e instanceof Error ? e.message : "Fleet refused this offline action.");
                 setUnresolved(null);
-                setError(`${copy(fleetErrorMessage(e))} ${copy("Refresh current permissions and run revision before preparing another action.")}`);
+                setError(`${copy(describeFleetError(e))} ${copy("Refresh current permissions and run revision before preparing another action.")}`);
                 setData(null);
                 return;
             }
@@ -209,7 +216,7 @@ export default function FleetWorkspace({ initialRunId, initialMode = "desk" }: {
                 }
             }
             if (!scope || !/\/actions$/.test(path) || !overview?.runs.some(run => run.id === path.split("/").at(-2) && run.driverUserId === scope.userId && !["dispatch", "reassign", "cancel", "review", "link_ticket"].includes((body as FleetActionInput).action))) setUnresolved({ path, body, operationId });
-            setError(`${copy(fleetErrorMessage(e))} ${copy("Outcome needs verification. Refresh the run before retrying operation")} ${operationId}.`);
+            setError(`${copy(describeFleetError(e))} ${copy("Outcome needs verification. Refresh the run before retrying operation")} ${operationId}.`);
             setData(null);
             setRevision(n => n + 1);
         }
@@ -288,7 +295,7 @@ export default function FleetWorkspace({ initialRunId, initialMode = "desk" }: {
             const next = await apiFetch<FleetOverview>(`/api/fleet/overview?cursor=${encodeURIComponent(overview.page.nextCursor)}`);
             if (identityRef.current !== requestIdentity) return;
             setData(previous => previous?.identity === requestIdentity ? { ...previous, overview: { ...next, runs: [...new Map([...previous.overview.runs, ...next.runs].map(run => [run.id, run])).values()] } } : previous);
-        } catch (e) { if (identityRef.current === requestIdentity) setError(fleetErrorMessage(e)); }
+        } catch (e) { if (identityRef.current === requestIdentity) setError(describeFleetError(e)); }
         finally { if (identityRef.current === requestIdentity) setBusy(false); }
     }
     async function saveHome(defaultWorkspace: "standard" | "fleet_desk" | "fleet_my_day") {
@@ -303,7 +310,7 @@ export default function FleetWorkspace({ initialRunId, initialMode = "desk" }: {
         }
         catch (e) {
             if (identityRef.current === requestIdentity) {
-                setError(`${copy(fleetErrorMessage(e))} ${copy("Refresh the saved preference before retrying.")}`);
+                setError(`${copy(describeFleetError(e))} ${copy("Refresh the saved preference before retrying.")}`);
                 setData(null);
             }
         }
@@ -326,7 +333,7 @@ export default function FleetWorkspace({ initialRunId, initialMode = "desk" }: {
     {unresolved && <View style={{ gap: 8 }}><Text style={textStyle}>{copy("Unverified operation: ")}{unresolved.operationId}{copy(". No new action can be started until this outcome is resolved.")}</Text><TogglePillButton disabled={busy || !current} onPress={() => void write(unresolved.path, unresolved.body)}>{copy("Retry same operation after readback")}</TogglePillButton></View>}
     {!current && !error && <ActivityIndicator />}
     {overview && !overview.enabled && <Text style={textStyle}>{copy("Fleet is not enabled for your current company and grants.")}</Text>}
-    {mode === "directory" && current && overview?.capabilities.canDispatch && !cachedAt && <View style={{gap:8}}><Text style={textStyle}>{copy("Authorized driver and equipment directory. Availability is a current server projection; dispatch rechecks qualifications, holds and site access.")}</Text>{current.resources.drivers.filter(driver => !fleetFilter || driver.fleetIds.includes(fleetFilter)).map(driver => <Text key={driver.userId} style={textStyle}>{driver.name} · {driver.userId}</Text>)}{current.resources.equipment.filter(asset => !fleetFilter || overview.fleets.find(fleet => fleet.id === fleetFilter)?.equipmentAssetIds.includes(asset.id)).map(asset => <Text key={asset.id} style={textStyle}>{asset.name} · {copy(asset.category)} · {copy(asset.status)} · {copy(asset.dispatchable ? "Dispatch candidate" : "Not dispatchable")} · {asset.id}</Text>)}</View>}
+    {mode === "directory" && current && overview?.capabilities.canDispatch && !cachedAt && <View style={{gap:8}}><Text style={textStyle}>{copy("Authorized driver and equipment directory. Availability is a current server projection; dispatch rechecks qualifications, holds and site access.")}</Text>{current.resources.drivers.filter(driver => !fleetFilter || driver.fleetIds.includes(fleetFilter)).map(driver => <View key={driver.userId}><Text style={textStyle}>{driver.name}</Text><FleetDriverAvailability key={`${identity}:${driver.userId}`} driverUserId={driver.userId} actorUserId={user!.id} companyId={overview.companyId}/></View>)}{current.resources.equipment.filter(asset => !fleetFilter || overview.fleets.find(fleet => fleet.id === fleetFilter)?.equipmentAssetIds.includes(asset.id)).map(asset => <Text key={asset.id} style={textStyle}>{asset.name} · {copy(asset.category)} · {copy(asset.status)} · {copy(asset.dispatchable ? "Dispatch candidate" : "Not dispatchable")} · {asset.id}</Text>)}</View>}
     {mode === "review" && <Text style={textStyle}>{copy("Loaded runs awaiting review. Open a run to inspect recorded references and use its permitted review action. Missing media is not physical proof.")}</Text>}
     {mode === "reports" && overview && !cachedAt && <FleetReports key={identity} overview={overview}/>}
     {mode === "maintenance" && overview && current && !cachedAt && user?.id && <FleetMaintenance key={identity} overview={overview} resources={current.resources} userId={user.id}/>}
@@ -346,6 +353,7 @@ export default function FleetWorkspace({ initialRunId, initialMode = "desk" }: {
       {visibleRuns.map(item => <TogglePillButton key={item.id} onPress={() => { setSelected(item.id); router.push(`/fleet-run/${item.id}` as never); }}>{fleetRunLabel(item, copy)}</TogglePillButton>)}
       </>}
       {run && mode !== "maintenance" && mode !== "reports" && <View style={{ gap: 12, padding: 14, borderWidth: 1, borderColor: colors.border, borderRadius: 12 }}>
+        {!cachedAt && user && (run.driverUserId === user.id || overview.capabilities.canDispatch) && <FleetDriverAvailability key={`${identity}:${run.id}:availability`} driverUserId={run.driverUserId} actorUserId={user.id} companyId={overview.companyId} runId={run.id}/>} 
         <FleetDraftEditor key={`${identity}:${run.id}`} run={run} fleet={overview.fleets.find(fleet=>fleet.id===run.fleetId)} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length>0} onSaved={()=>setRevision(n=>n+1)}/>
         {run.schedule && <Text style={textStyle}>{copy("Planned schedule")}: {run.schedule.plannedStartAt} → {run.schedule.plannedEndAt} · {run.schedule.timezone} · {copy("Informational hours")}</Text>}
         {run.operationalProfile && <Text style={textStyle}>{copy("Saved operational profile")}: {run.operationalProfile.name}</Text>}

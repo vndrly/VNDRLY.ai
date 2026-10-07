@@ -15,7 +15,7 @@ export function canonicalOperationToolName(name: string): string {
 export function operationToolAnnotations(tool: AskVToolDefinition) {
   const canonical = canonicalOperationToolName(tool.name);
   return { readOnlyHint: !tool.mutating, destructiveHint: tool.mutating && (
-    canonical === 'manage_ticket_record' || tool.name === 'manage_gate_shift_cancel_handoff' ||
+    canonical === 'manage_ticket_record' || canonical === 'confirm_asset_custody_action' || tool.name === 'manage_gate_shift_cancel_handoff' ||
     canonical === 'manage_work_hub_away_responder' || canonical === 'confirm_operations_displays_action' ||
     canonical === 'confirm_workforce_coverage_action' || ['cancel_fleet_cargo_transfer','cancel_fleet_equipment_replacement'].includes(tool.name)
   ), openWorldHint: false };

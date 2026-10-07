@@ -1,3 +1,4 @@
+import { meetingMessageReceipt } from "../work-hub/meeting-message";
 import express, { Router, type Request, type Response, type NextFunction } from "express";
 import { createHash, randomUUID } from "node:crypto";
 import { and, asc, eq, gt, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
@@ -11,7 +12,7 @@ import {
   workHubAudioLeasesTable as audioLeases,
   workHubCallsTable as calls,
   vendorPeopleTable, partnerContactsTable,
-  userOrgMembershipsTable,
+  userOrgMembershipsTable, workHubClientOperationsTable,
 } from "@workspace/db";
 import { workHubMeetingParticipationAuthorizationsTable as participationAuthorizations } from "@workspace/db/schema";
 import { getSessionFromRequest } from "../lib/session";
@@ -46,6 +47,10 @@ import { AudioLeaseError, selectFailoverCandidate } from "../work-hub/audio-leas
 import { getDevicePreferences, recordSuccessfulHandoff } from "../work-hub/device-preferences";
 import { acceptParticipationAuthorization, askVParticipantState, participationState } from "../services/meeting-participation";
 
+import { validateAssistantSession } from "../assistant/chatgpt-grant-store";
+import { applyMeetingInvitation, MeetingInvitationError, meetingInvitationVersion } from "../work-hub/meeting-assistant-invitation";
+import { MeetingAssistantInvitationInputSchema } from "@workspace/api-zod";
+
 const router = Router();
 type TranscriptionProvider = "native" | "assemblyai";
 export function effectiveMeetingTranscriptionPolicyVersion(baseVersion: number, provider: TranscriptionProvider) {
@@ -78,8 +83,8 @@ function clientSource(req: Request): "web" | "ios" {
 }
 
 /** All meeting mutations share a row lock, including consent, join, and removal. */
-async function context(req: Request, tx: Tx) {
-  const session = getSessionFromRequest(req);
+async function context(req: Request, tx: Tx, currentSession?: ReturnType<typeof getSessionFromRequest>) {
+  const session = currentSession ?? getSessionFromRequest(req);
   if (!session?.userId) throw new MeetingError(401, "Authentication required");
   const id = z.string().uuid().parse(req.params.occurrenceId);
   const [occurrence] = await tx.select().from(occurrences).where(eq(occurrences.id, id)).for("update");
@@ -153,13 +158,21 @@ async function saveRuntime(tx: Tx, ctx: Context, runtime: MeetingRuntime, extra:
   await tx.update(occurrences).set({ runtime: runtime as Record<string, unknown>, ...extra }).where(eq(occurrences.id, ctx.id));
 }
 type Handler = (req: Request, res: Response, tx: Tx, ctx: Context) => Promise<unknown>;
-function route(handler: Handler) {
+function route(handler: Handler, freshActor = false) {
   return async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       // Respond after commit: a successful HTTP response must mean the write persisted.
       let status = 200;
       const result = await db.transaction(async (tx) => {
-        const ctx = await context(req, tx);
+        let currentSession;
+        if (freshActor) {
+          const signed = getSessionFromRequest(req);
+          if (!signed?.userId) throw new MeetingError(401, "Authentication required");
+          await tx.execute(sql`SELECT id FROM users WHERE id=${signed.userId} FOR SHARE`);
+          if (signed.activeMembershipId) await tx.execute(sql`SELECT id FROM user_org_memberships WHERE id=${signed.activeMembershipId} FOR SHARE`);
+          try { currentSession = await validateAssistantSession(signed, tx); } catch { throw new MeetingError(403, "Current account cannot post in this meeting"); }
+        }
+        const ctx = await context(req, tx, currentSession);
         const value = await handler(req, res, tx, ctx);
         status = res.statusCode;
         return value;
@@ -416,16 +429,209 @@ router.get("/:occurrenceId/signals", route(async (req, _res, _tx, ctx) => {
   return req.query.after === undefined && req.query.since !== undefined ? signals : { sequence: ctx.runtime.sequence ?? 0, signals };
 }));
 
-router.post("/:occurrenceId/askv", route(async (req, _res, tx, ctx) => {
-  active(ctx); host(ctx);
-  const { invited } = z.object({ invited: z.boolean() }).parse(req.body);
-  await tx.update(occurrences).set({ askvInvitedAt: invited ? new Date() : null, askvInvitedById: invited ? ctx.session.userId : null, transcriptState: invited ? "waiting_for_consent" : "paused" }).where(eq(occurrences.id, ctx.id));
-  await tx.insert(chat).values({ occurrenceId: ctx.id, userId: ctx.session.userId, messageType: "system", body: invited ? "Ask V was invited. Transcription starts when everyone present accepts the notice. Ask V stays silent unless addressed." : "Ask V was removed. Transcription is paused." });
-  await audit(tx, ctx, invited ? "meeting.askv_invited" : "meeting.askv_removed");
-  if (!invited) afterCommit(req, () => closeAllAssemblyAIStreams(ctx.id));
-  return { invited };
-}));
-
+/** Actor locks precede the occurrence lock; first effect and receipt replay share current authority. */
+async function invitationCommand(req: Request, readOnly: boolean) {
+  const rawSession = getSessionFromRequest(req);
+  if (!rawSession?.userId)
+    throw new MeetingError(401, "Authentication required");
+  const command = MeetingAssistantInvitationInputSchema.parse(
+    readOnly
+      ? {
+          operationId: req.params.operationId,
+          expectedVersion: Number(req.query.expectedVersion),
+          invited:
+            req.query.invited === "true"
+              ? true
+              : req.query.invited === "false"
+                ? false
+                : undefined,
+        }
+      : req.body,
+  );
+  return db.transaction(async (tx) => {
+    await tx
+      .select({ id: usersTable.id })
+      .from(usersTable)
+      .where(eq(usersTable.id, rawSession.userId!))
+      .for("share");
+    if (rawSession.activeMembershipId)
+      await tx
+        .select({ id: userOrgMembershipsTable.id })
+        .from(userOrgMembershipsTable)
+        .where(eq(userOrgMembershipsTable.id, rawSession.activeMembershipId))
+        .for("share");
+    let session;
+    try {
+      session = await validateAssistantSession(rawSession, tx);
+    } catch {
+      throw new MeetingError(
+        403,
+        "Your current account can no longer manage this meeting",
+      );
+    }
+    const ctx = await context(req, tx);
+    active(ctx);
+    host(ctx);
+    if (
+      !sessionCanSeeOwner(
+        session,
+        ctx.meeting.ownerOrgType,
+        ctx.meeting.ownerOrgId,
+      )
+    )
+      throw new MeetingError(
+        403,
+        "Meeting is outside the current organization",
+      );
+    const actor = {
+      userId: session.userId!,
+      actorMembershipId: session.activeMembershipId ?? null,
+      actorSessionVersion: session.sv!,
+      ownerOrgType: ctx.meeting.ownerOrgType as "vendor" | "partner",
+      ownerOrgId: ctx.meeting.ownerOrgId,
+    };
+    return applyMeetingInvitation(
+      ctx.id,
+      actor,
+      command,
+      {
+        authorize: async () => {
+          active(ctx);
+          host(ctx);
+        },
+        prior: async (operationId) => {
+          const [row] = await tx
+            .select()
+            .from(workHubClientOperationsTable)
+            .where(
+              and(
+                eq(workHubClientOperationsTable.userId, actor.userId),
+                eq(workHubClientOperationsTable.commandKind, "meeting.askv"),
+                eq(workHubClientOperationsTable.operationId, operationId),
+              ),
+            )
+            .limit(1);
+          if (!row) return null;
+          if (
+            !row.appliedAt ||
+            !row.resultJson ||
+            row.ownerOrgType !== actor.ownerOrgType ||
+            row.ownerOrgId !== actor.ownerOrgId
+          )
+            throw new MeetingError(409, "Invalid saved invitation operation");
+          return row.resultJson;
+        },
+        state: () => ({
+          runtime: ctx.occurrence.runtime ?? {},
+          invited: Boolean(ctx.occurrence.askvInvitedAt),
+        }),
+        now: () => new Date(),
+        save: async (receipt, runtime) => {
+          await tx
+            .update(occurrences)
+            .set({
+              runtime,
+              ...(receipt.changed
+                ? {
+                    askvInvitedAt: receipt.invited
+                      ? new Date(receipt.recordedAt)
+                      : null,
+                    askvInvitedById: receipt.invited ? actor.userId : null,
+                    transcriptState: receipt.invited
+                      ? "waiting_for_consent"
+                      : "paused",
+                  }
+                : {}),
+            })
+            .where(eq(occurrences.id, ctx.id));
+          if (receipt.changed)
+            await tx
+              .insert(chat)
+              .values({
+                occurrenceId: ctx.id,
+                userId: actor.userId,
+                messageType: "system",
+                body: receipt.invited
+                  ? "Ask V was invited. Transcription starts when everyone present accepts the notice. Ask V stays silent unless addressed."
+                  : "Ask V was removed. Transcription is paused.",
+              });
+          await appendWorkHubAudit(
+            {
+              actorUserId: actor.userId,
+              owner: { type: actor.ownerOrgType, id: actor.ownerOrgId },
+              action: receipt.invited
+                ? "meeting.askv_invited"
+                : "meeting.askv_removed",
+              subjectType: "meeting_occurrence",
+              subjectId: ctx.id,
+              source: clientSource(req),
+              operationId: command.operationId,
+              priorVersion: command.expectedVersion,
+              newVersion: receipt.version,
+              metadata: {
+                invited: receipt.invited,
+                changed: receipt.changed,
+                consentAccepted: false,
+                deviceCaptureStarted: false,
+              },
+            },
+            tx,
+          );
+          await tx
+            .insert(workHubClientOperationsTable)
+            .values({
+              userId: actor.userId,
+              ownerOrgType: actor.ownerOrgType,
+              ownerOrgId: actor.ownerOrgId,
+              commandKind: "meeting.askv",
+              operationId: command.operationId,
+              appliedAt: new Date(receipt.recordedAt),
+              resultJson: receipt,
+            });
+          if (receipt.changed && !receipt.invited)
+            afterCommit(req, () => closeAllAssemblyAIStreams(ctx.id));
+        },
+      },
+      readOnly,
+    );
+  });
+}
+function invitationRoute(readOnly: boolean) {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const receipt = await invitationCommand(req, readOnly);
+      const tasks = committedTasks.get(req) ?? [];
+      committedTasks.delete(req);
+      await Promise.allSettled(tasks.map((task) => task()));
+      res.json(readOnly ? { receipt } : receipt);
+    } catch (error) {
+      committedTasks.delete(req);
+      if (error instanceof z.ZodError)
+        return sendApiError(
+          res,
+          400,
+          "work_hub.invalid_operation",
+          "Review an exact invitation request",
+        );
+      if (
+        error instanceof MeetingError ||
+        error instanceof MeetingInvitationError
+      )
+        return sendApiError(
+          res,
+          error.status,
+          "work_hub.meeting",
+          error.message,
+        );
+      return next(error);
+    }
+  };
+}
+router.post("/:occurrenceId/askv", invitationRoute(false));
+router.get(
+  "/:occurrenceId/askv/operations/:operationId",
+  invitationRoute(true),
+);
 const nativeAudioLimit = 4 * 1024 * 1024;
 const nativeAudioPayload = z.object({
   audioBase64: z.string().min(1).regex(/^[A-Za-z0-9+/]*={0,2}$/),
@@ -633,13 +839,14 @@ router.post("/:occurrenceId/chat", route(async (req, _res, tx, ctx) => {
   const [message] = await tx.insert(chat).values({ ...payload, occurrenceId: ctx.id, userId: ctx.session.userId, messageType: "typed" }).onConflictDoNothing().returning();
   if (!message) {
     const [existing] = await tx.select().from(chat).where(and(eq(chat.id, payload.id!), eq(chat.occurrenceId, ctx.id), eq(chat.userId, ctx.session.userId)));
-    if (!existing || existing.body !== payload.body || existing.recipientUserId !== payload.recipientUserId) throw new MeetingError(409, "Message identifier conflict");
+    if (!existing || existing.messageType !== "typed" || existing.body !== payload.body || existing.recipientUserId !== payload.recipientUserId) throw new MeetingError(409, "Message identifier conflict");
     return existing;
   }
+  await audit(tx, ctx, "meeting.message_sent", { messageId: message.id, private: payload.recipientUserId !== null });
   const activity = { ...ctx.runtime.activity }; delete activity[ctx.session.userId];
   await saveRuntime(tx, ctx, { ...ctx.runtime, activity });
   return message;
-}));
+}, true));
 
 type MeetingQuestionSource = {
   id: string;
@@ -1073,10 +1280,14 @@ router.get("/:occurrenceId/catch-up", route(async (_req, _res, tx, ctx) => {
   const { runtime: _runtime, providerRoomId: _room, ...occurrence } = ctx.occurrence;
   const provider = transcriptionProvider();
   const myParticipation = participationState({ authorizationAcceptedAt: consent[0]?.response === "accepted" ? consent[0].respondedAt : null });
+  let canManageAssistantInvitation = false;
+  if (ctx.participant.role === "host" && !["ended", "cancelled"].includes(ctx.occurrence.status)) {
+    try { const fresh = await validateAssistantSession(ctx.session, tx); canManageAssistantInvitation = sessionCanSeeOwner(fresh, ctx.meeting.ownerOrgType, ctx.meeting.ownerOrgId); } catch { /* Current authority is unavailable; invitation controls stay closed. */ }
+  }
   const assistantParticipant = askVParticipantState({ invited: Boolean(ctx.occurrence.askvInvitedAt), paused: Boolean(ctx.occurrence.askvInvitedAt) && !transcription });
   return {
     occurrence: { ...occurrence, startedAt: ctx.runtime.startedAt ?? null, endedAt: ctx.runtime.endedAt ?? null },
-    meeting: ctx.meeting, userId: ctx.session.userId, canManage: ctx.participant.role === "host", canModerate: ["host", "co_host"].includes(ctx.participant.role), canViewAttendance: privileged,
+    meeting: ctx.meeting, userId: ctx.session.userId, canManage: ctx.participant.role === "host", canManageAssistantInvitation, assistantInvitationVersion: meetingInvitationVersion(ctx.occurrence.runtime ?? {}), canModerate: ["host", "co_host"].includes(ctx.participant.role), canViewAttendance: privileged,
     transcription, nativeCaptureAvailable: provider === "native" && nativeTranscriptionAvailable(),
     streamingCaptureAvailable: provider === "assemblyai" && assemblyAIStreamingAvailable() && streamingTrialAudienceAllows(ctx.all.filter((participant) => !participant.removedAt).map((participant) => participant.userId)),
     myConsent: consent[0]?.response ?? "pending", participationMode: myParticipation.mode, authorizationRequired: myParticipation.mode === "view_only", transcriptionIndicator: ctx.occurrence.askvInvitedAt ? "persistent" : "off", assistantParticipant, mySpeakRequest: mySpeakRequest ?? null,
@@ -1228,3 +1439,13 @@ router.delete("/:occurrenceId/files/:fileId", route(async (req, _res, tx, ctx) =
 }));
 
 export default router;
+router.get("/:occurrenceId/chat/operations/:messageId", route(async (req, _res, tx, ctx) => {
+  active(ctx);
+  await requireParticipation(tx, ctx);
+  const id = z.uuid().parse(req.params.messageId);
+  const [message] = await tx.select().from(chat).where(and(eq(chat.id, id), eq(chat.occurrenceId, ctx.id), eq(chat.userId, ctx.session.userId)));
+  if (!message) return { receipt: null };
+  if (message.messageType !== "typed") throw new MeetingError(409, "Message identifier conflict");
+  if (message.recipientUserId !== null && !ctx.all.some(p => p.userId === message.recipientUserId && !p.removedAt)) throw new MeetingError(403, "Recipient is no longer available");
+  return { receipt: meetingMessageReceipt({ id:message.id, occurrenceId:message.occurrenceId, userId:message.userId, body:message.body, recipientUserId:message.recipientUserId, createdAt:message.createdAt, messageType:message.messageType }) };
+}, true));

@@ -1,3 +1,7 @@
+import { InventoryPolicyCommandSchema, InventoryMergeCommandSchema } from "@workspace/api-zod";
+import { MeetingMessageArgumentsSchema } from "../work-hub/meeting-message";
+import { MeetingAssistantInvitationInputSchema } from "@workspace/api-zod";
+import { FleetAvailabilityInputSchema } from "@workspace/api-zod";
 import { TicketLaborFinalizationInputSchema } from "@workspace/api-zod";
 import { AWAY_RESPONDER_ARGUMENTS } from "./away-responder-tools";
 import { FLEET_REPLACEMENT_ACTIONS } from "./fleet-replacement-tools";
@@ -16,7 +20,7 @@ import { FleetCargoTransferInputSchema, FleetCargoTransferActionSchema, FleetDra
 export const CHATGPT_WRITE_CAPABILITIES = {
   "fleet:maintenance": {label:"Prepare Fleet Manager maintenance and explicitly permitted hold release; no physical certification",tools:["manage_fleet_maintenance","report_fleet_defect"]},
   "fleet:admin":{label:"Prepare current company administrator Fleet settings and explicit role grants",tools:["manage_fleet_settings"]},
-  "fleet:dispatch": { label: "Prepare explicitly authorized Fleet dispatch actions", tools: ["prepare_fleet_equipment_replacement","cancel_fleet_equipment_replacement","prepare_fleet_cargo_transfer","complete_fleet_cargo_transfer","cancel_fleet_cargo_transfer","edit_fleet_draft","manage_fleet_run","set_fleet_preferences","manage_fleet_saved_view","reconcile_fleet_gate_visit"] },
+  "fleet:dispatch": { label: "Prepare explicitly authorized Fleet dispatch actions", tools: ["record_fleet_driver_availability","prepare_fleet_equipment_replacement","cancel_fleet_equipment_replacement","prepare_fleet_cargo_transfer","complete_fleet_cargo_transfer","cancel_fleet_cargo_transfer","edit_fleet_draft","manage_fleet_run","set_fleet_preferences","manage_fleet_saved_view","reconcile_fleet_gate_visit"] },
   "fleet:run": { label: "Prepare own assigned Fleet acknowledgement, user-reported inspection, stops, load/delivery and closeout", tools: ["accept_fleet_equipment_replacement","acknowledge_fleet_cargo_source","acknowledge_fleet_cargo_recipient","report_fleet_defect","acknowledge_fleet_assignment", "transition_fleet_run","set_fleet_preferences","manage_fleet_saved_view","reconcile_fleet_gate_visit"] },
   "fleet:review": { label: "Prepare Fleet Manager closeout review; no ticket or financial approval", tools: ["review_fleet_closeout"] },
   "finance:write": { label: "Prepare authorized canonical invoice drafts or ticket payment records; never transfer money", tools: ["prepare_ticket_invoices", "record_ticket_payment", "reverse_ticket_payment_record"] },
@@ -34,6 +38,9 @@ export type ChatGptWriteCapabilityScope = keyof typeof CHATGPT_WRITE_CAPABILITIE
 
 /** Device telemetry and domain replay keys are supplied by the approval server. */
 export function sanitizeChatGptActionInput(name: string, input: Record<string, unknown>): Record<string, unknown> {
+  if (name === "send_work_hub_meeting_message") { const { operationId: _op, confirmed: _confirm, ...fields } = input; return fields; }
+  if (name === "manage_work_hub_meeting" && input.action === "set_assistant") { const { operationId: _operationId, confirmed: _confirmed, ...fields } = input; return fields; }
+  if (name === "record_fleet_driver_availability") { const { operationId: _operationId, confirmed: _confirmed, ...fields } = input; return fields; }
   if(name === "manage_work_hub_away_responder") {const {operationId:_operationId,confirmed:_confirmed,...fields}=input;return fields;}
   if(name === "respond_work_hub_meeting_invitation") {const {operationId:_operationId,confirmed:_confirmed,...fields}=input;return fields;}
   if(name === "reschedule_work_hub_meeting") {const {operationId:_operationId,confirmed:_confirmed,...fields}=input;return fields;}
@@ -57,6 +64,12 @@ export function sanitizeChatGptActionInput(name: string, input: Record<string, u
  * Model-supplied acceptance flags never stand in for the person's action.
  */
 export function validateChatGptActionInput(name: string, input: Record<string, unknown>): void {
+  if (name === "send_work_hub_meeting_message") { const { operationId, ...fields } = input; if (operationId !== undefined) z.uuid().parse(operationId); MeetingMessageArgumentsSchema.parse(fields); }
+  if (name === "manage_work_hub_meeting" && input.action === "set_assistant") { z.uuid().parse(input.occurrenceId); MeetingAssistantInvitationInputSchema.omit({ operationId: true }).parse(input.payload); }
+  if (name === "record_fleet_driver_availability") {
+    const { operationId: _operationId, confirmed: _confirmed, ...fields } = input;
+    FleetAvailabilityInputSchema.omit({ operationId: true }).parse(fields);
+  }
   if (name === "react_work_hub_message") { z.uuid().parse(input.channelId); z.uuid().parse(input.messageId); z.object({ emoji: z.string().trim().min(1).max(16), action: z.enum(["add", "remove"]).optional() }).parse({ emoji: input.reaction, action: input.action }); }
   if (name === "manage_ticket_record" && input.action === "finalize_labor") TicketLaborFinalizationInputSchema.omit({ operationId: true }).parse(input.payload);
   if(name === "manage_work_hub_away_responder") {const {operationId,...fields}=input;if(operationId!==undefined)z.uuid().parse(operationId);AWAY_RESPONDER_ARGUMENTS.parse(fields);}
@@ -111,6 +124,11 @@ export function validateChatGptActionInput(name: string, input: Record<string, u
   if (name === "confirm_incident_response_action" && input.action === "report") {
     const payload = input.payload && typeof input.payload === "object" && !Array.isArray(input.payload) ? input.payload as Record<string, unknown> : {};
     if (!z.object({ siteLocationId: z.number().int().positive(), title: z.string().trim().min(1).max(200), description: z.string().max(4000).optional(), isStopWork: z.boolean().optional(), isHighPotential: z.boolean().optional(), isAnonymous: z.boolean().optional(), ticketId: z.number().int().positive().optional(), vendorId: z.number().int().positive().optional(), eventType: z.enum(["near_miss", "unsafe_condition", "unsafe_act", "injury", "property_damage", "observation"]) }).safeParse(payload).success) throw new Error("Supply the actual site, report title and supported event type before preparing a safety report.");
+  }
+  if(name === "confirm_asset_custody_action" && ["merge","policy"].includes(String(input.action))) {
+    const p=input.payload as Record<string,unknown>;
+    if(input.action === "merge"){z.uuid().parse(input.assetId??input.resourceId);InventoryMergeCommandSchema.parse({...p,operationId:"00000000-0000-4000-8000-000000000001",expectedVersion:input.expectedVersion,confirmed:true});}
+    else {z.string().trim().min(1).max(80).parse(p?.category);InventoryPolicyCommandSchema.parse({operationId:"00000000-0000-4000-8000-000000000001",expectedVersion:input.expectedVersion,confirmed:true,policy:p?.policy});}
   }
   if (name === "confirm_asset_custody_action" && input.action === "release_hold") {
     const payload = input.payload as Record<string, unknown> | undefined;

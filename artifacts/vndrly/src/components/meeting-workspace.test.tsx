@@ -228,16 +228,14 @@ describe("approved Work Hub meeting workspace", () => {
     expect(refreshed.getAttribute("src")).toBe("/api/storage/objects/uploads/fresh-photo");
     expect(refreshed.style.display).not.toBe("none");
   });
-  it("uses the revised V control and posts the host's pause action", async () => {
+  it("does not expose the old unversioned V toggle when invitation capability is unavailable", () => {
     mocks.audio.muted = false; mocks.audio.transcriptionActive = true;
-    const { rerender } = render(<MeetingWorkspace occurrenceId="meeting" />);
-    fireEvent.click(screen.getByRole("button", { name: "V is listening" }));
-    await waitFor(() => expect(mocks.request).toHaveBeenCalledWith("/meetings/meeting/askv", expect.objectContaining({ body: '{"invited":false}' })));
-    expect(mocks.audio.stopTranscription).toHaveBeenCalled();
-    mocks.audio.transcriptionActive = false;
-    mocks.snapshot.transcription = false; mocks.snapshot.occurrence.askvInvitedAt = null;
-    rerender(<MeetingWorkspace occurrenceId="meeting" />);
-    expect(screen.getByRole("button", { name: "Click to restart V" })).toBeTruthy();
+    render(<MeetingWorkspace occurrenceId="meeting" />);
+    const indicator = screen.getByRole("button", { name: "V is listening" });
+    expect((indicator as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(indicator);
+    expect(mocks.request).not.toHaveBeenCalled();
+    expect(mocks.audio.stopTranscription).not.toHaveBeenCalled();
   });
   it("never claims transcription is saving or V is listening from permission alone", () => {
     render(<MeetingWorkspace occurrenceId="meeting" />);

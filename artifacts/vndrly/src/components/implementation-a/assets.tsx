@@ -1,3 +1,4 @@
+import { InventoryManagement } from "./asset-management";
 import { InventoryCustody } from "./asset-custody";
 import { InventoryRegistration } from "./asset-registration";
 import { InventoryRecovery, InventoryIdentifierQueue } from "./asset-recovery";
@@ -83,6 +84,7 @@ export function Assets() {
                 />
               ) : null}
               {user?.userId && <InventoryCustody key={identity+asset.id+"custody"} asset={{...asset,holderUserId:asset.holderUserId??null}} userId={user.userId} identity={identity} onSaved={refreshed} />}
+              {owner && user?.userId && <InventoryManagement key={identity+asset.id+"management"} owner={owner} identity={identity} userId={user.userId} asset={asset} assets={query.data.assets} canManage={query.data.capabilities.canManageAsset} onSaved={refreshed} />}
               {owner && <InventoryRegistration key={identity+asset.id+"alias"} owner={owner} identity={identity} assetId={asset.id} version={asset.version} canManage={query.data.capabilities.canManageAsset} onSaved={refreshed} />}
               {user?.userId && (
                 <InventoryTransfer key={identity + asset.id + "transfer"} assetId={asset.id} assetName={asset.name} userId={user.userId} identity={identity} canTransfer={asset.capabilities?.canTransfer === true} onSaved={async () => { const value = await query.refetch(); if (value.isError) throw new Error("Refresh failed"); }} />

@@ -7,6 +7,7 @@ import {
   FleetOperationalProfileSchema,
   FleetInspectionResponsesSchema,
   FleetManifestValuesSchema,
+  FleetAvailabilityInputSchema,
 } from "@workspace/api-zod";
 import type { AskVToolDefinition } from "./tool-registry";
 const id = { type: "string", format: "uuid" };
@@ -338,9 +339,14 @@ export const FLEET_TOOLS: AskVToolDefinition[] = [
     "query_fleet_resources",
     "Read eligible company Fleet driver and inventory vehicle/trailer selection context. Fleet Manager or Dispatcher only; dispatch rechecks holds, custody, site grants and concurrent assignments.",
   ),
+  read("query_fleet_driver_availability", "Read bounded saved availability records and exact fingerprint for a driver in your current authorized Fleet. Managers/dispatchers can read shared-fleet drivers; drivers can read only themselves. Records are not physical readiness. Read query_fleet_run_detail for exact run-window blockers.", { driverUserId: { type: "integer", minimum: 1 } }, ["driverUserId"]),
+  {
+    ...action("record_fleet_driver_availability", "Prepare recording or replacing one current-company driver's availability interval. Fleet Manager or Dispatcher in the driver's shared Fleet only. Read records/fingerprint first; select recordId or null for a new nonoverlapping record, exact window/timezone and available boolean. Human approval required. This records planning evidence, never starts duty or verifies physical readiness. Current commitments, permissions and snapshot are rechecked.", {}, []),
+    inputSchema: { type: "object", properties: z.toJSONSchema(FleetAvailabilityInputSchema.omit({ operationId: true })).properties ?? {}, required: ["driverUserId", "recordId", "expectedFingerprint", "window", "available"], additionalProperties: false },
+  },
   action(
     "manage_fleet_run",
-    "Prepare exact Fleet run creation, dispatch, reassignment or cancellation. Requires explicit Fleet Manager or Dispatcher grants. Separate dispatch, driver acknowledgement and physical departure; never claim prepared means saved. For create supply fleetId,title,driverUserId,vehicleAssetId and ordered stops with UUID id/siteId/kind pickup|delivery|return/zero-based sequence. link_ticket links only an existing authorized ticketId without changing the ticket. Equipment references existing inventory explicitly assigned to this fleet; no location collector starts.",
+    "Prepare exact Fleet run creation, dispatch, reassignment or cancellation. Requires explicit Fleet Manager or Dispatcher grants. Scheduled dispatch/reassignment requires covering recorded availability without confirmed conflicts; unplanned runs retain existing policy and have no verified availability window. Separate dispatch, driver acknowledgement and physical departure; never claim prepared means saved. For create supply fleetId,title,driverUserId,vehicleAssetId and ordered stops with UUID id/siteId/kind pickup|delivery|return/zero-based sequence. link_ticket links only an existing authorized ticketId without changing the ticket. Equipment references existing inventory explicitly assigned to this fleet; no location collector starts.",
     {
       ...common,
       action: {

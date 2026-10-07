@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   executed: [] as SQL[],
   mutations: [] as Array<{ type: string; value?: unknown }>,
   audit: vi.fn(),
+  validate: vi.fn(),
   getObject: vi.fn(),
   nativeAvailable: vi.fn(),
   nativeTranscribe: vi.fn(),
@@ -22,6 +23,7 @@ const mocks = vi.hoisted(() => ({
   failCommit: false,
   authorizationAccepted: true,
 }));
+vi.mock("../assistant/chatgpt-grant-store", () => ({ validateAssistantSession: (...args: unknown[]) => mocks.validate(...args) }));
 vi.mock("../lib/session", () => ({ getSessionFromRequest: () => mocks.session }));
 vi.mock("../work-hub/audit", () => ({ appendWorkHubAudit: mocks.audit }));
 vi.mock("../lib/objectStore", () => ({ getObjectStore: () => ({ getObject: mocks.getObject }) }));
@@ -78,6 +80,7 @@ function app(legacy = false) {
   return app;
 }
 beforeEach(() => {
+  mocks.validate.mockReset().mockImplementation(async (session) => session);
   mocks.session = { userId: 1, vendorId: 22, partnerId: null, role: "vendor" };
   mocks.results = []; mocks.predicates = []; mocks.executed = []; mocks.mutations = []; mocks.failCommit = false; mocks.authorizationAccepted = true;
   mocks.audit.mockReset(); mocks.getObject.mockReset();
@@ -583,4 +586,22 @@ describe("meeting lifecycle HTTP boundaries", () => {
     expect(visibility?.sql).toContain('"recipient_user_id" is null');
     expect(visibility?.params).toEqual([meetingId, 1, 1]);
   });
+});
+
+it("rechecks current session before meeting-message first write and exact readback", async () => {
+ mocks.validate.mockRejectedValue(Error("revoked"));
+ seed();
+ expect((await request(app()).post(`/meetings/${meetingId}/chat`).send({id:messageId,body:"synthetic"})).status).toBe(403);
+ expect(mocks.mutations).toEqual([]);
+ seed();
+ expect((await request(app()).get(`/meetings/${meetingId}/chat/operations/${messageId}`)).status).toBe(403);
+ expect(mocks.mutations).toEqual([]);
+});
+it("exact readback returns only own typed saved message and rejects removed recipients", async () => {
+ seed();mocks.results.push([{id:messageId,occurrenceId:meetingId,userId:1,body:"synthetic",recipientUserId:2,createdAt:new Date("2026-10-07T10:00:00Z"),messageType:"typed"}]);
+ const reply=await request(app()).get(`/meetings/${meetingId}/chat/operations/${messageId}`);
+ expect(reply.status).toBe(200);expect(reply.body).toEqual({receipt:{id:messageId,occurrenceId:meetingId,userId:1,body:"synthetic",recipientUserId:2,createdAt:"2026-10-07T10:00:00.000Z",messageType:"typed",status:"saved",consentAccepted:false,deviceCaptureStarted:false}});
+ expect(mocks.mutations).toEqual([]);
+ seed({guestRemoved:true});mocks.results.push([{id:messageId,occurrenceId:meetingId,userId:1,body:"synthetic",recipientUserId:2,createdAt:new Date(),messageType:"typed"}]);
+ expect((await request(app()).get(`/meetings/${meetingId}/chat/operations/${messageId}`)).status).toBe(403);
 });

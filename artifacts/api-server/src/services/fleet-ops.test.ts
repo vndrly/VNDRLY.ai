@@ -52,8 +52,10 @@ function fixture() {
   };
   let hold = false;
   let sitesVisible = true;
+  let availability: { starts_at: string; ends_at: string; available: boolean; recurrence: null }[] = [];
   const client = {
     query: async (sql: string) => {
+      if (sql.includes("FROM work_hub_availability")) return { rows: availability };
       if (sql.includes("m.user_id=ANY")) return {rows:[{user_id:1},{user_id:2}]};
       if (sql.startsWith("INSERT INTO asset_holds")) hold = true;
       return {
@@ -92,6 +94,7 @@ function fixture() {
   return {
     service: createFleetService(repo),
     state: () => state,
+    availability: (available: boolean) => { availability = [{ starts_at: "2026-10-08T12:00:00Z", ends_at: "2026-10-08T20:00:00Z", available, recurrence: null }]; },
     revokeSites: () => {
       sitesVisible = false;
     },
@@ -157,6 +160,7 @@ describe("Fleet durable service authority contract", () => {
     let run=await f.service.create(manager,{...createInput,schedule:{plannedStartAt:"2026-10-08T12:00:00Z",plannedEndAt:"2026-10-08T20:00:00Z",timezone:"America/Chicago"}});
     expect(run.canEditDraft).toBe(true);expect(run.operationalProfile?.inspectionItems).toHaveLength(1);
     f.state().fleets[0].operationalProfile=undefined;
+    f.availability(true);
     run=await f.service.action(manager,run.id,{operationId:crypto.randomUUID(),action:"dispatch",expectedVersion:run.version});
     run=await f.service.action(driver,run.id,{operationId:crypto.randomUUID(),action:"acknowledge",expectedVersion:run.version});
     await expect(f.service.action(driver,run.id,{operationId:crypto.randomUUID(),action:"inspect",inspectionOutcome:"passed",notes:"User report",expectedVersion:run.version})).rejects.toMatchObject({code:"fleet.inspection_fields_required"});
@@ -169,6 +173,21 @@ describe("Fleet durable service authority contract", () => {
     await expect(f.service.action(driver,run.id,load)).rejects.toMatchObject({code:"fleet.load_fields_required"});
     run=await f.service.action(driver,run.id,{...load,manifestValues:{seal:"Actual user-reported seal"}});
     expect(run.loads[0].manifestValues).toEqual({seal:"Actual user-reported seal"});expect(run.loads[0].source).toBe("user_report");
+  });
+  it("allows scheduled planning but denies dispatch without covering saved availability", async () => {
+    const f = fixture();
+    const run = await f.service.create(manager, { ...createInput, schedule: { plannedStartAt: "2026-10-08T12:00:00Z", plannedEndAt: "2026-10-08T20:00:00Z", timezone: "America/Chicago" } });
+    const command = { operationId: crypto.randomUUID(), action: "dispatch", expectedVersion: run.version };
+    await expect(f.service.action(manager, run.id, command)).rejects.toMatchObject({ code: "fleet.driver_availability_unknown" });
+    expect(f.state().runs[0].status).toBe("draft");
+    expect(f.state().runs[0].version).toBe(run.version);
+    f.availability(false);
+    await expect(f.service.action(manager, run.id, command)).rejects.toMatchObject({ code: "fleet.driver_schedule_conflict" });
+    f.availability(true);
+    const saved = await f.service.action(manager, run.id, command);
+    f.availability(false);
+    expect(await f.service.action(manager, run.id, command)).toEqual(saved);
+    expect(f.state().runs[0].version).toBe(run.version + 1);
   });
   it("retains inspection exceptions and requires inventory release before a later passed inspection can start", async () => {
     const f = fixture();

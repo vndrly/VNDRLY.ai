@@ -59,6 +59,8 @@ export type FleetSessionAuthority = {
   role?: string;
   vendorPeopleId?: number | null;
   operationId?: string;
+  schedulingRunId?: string;
+  schedulingDriverUserIds?: number[];
 };
 export interface FleetRepository {
   transaction<T>(
@@ -74,6 +76,24 @@ const boundedFleetRepository: FleetRepository = {
     const client = await pool.connect();
     try {
       await client.query("BEGIN");
+      let schedulingDriver: number | undefined;
+      if (authority?.schedulingRunId || authority?.schedulingDriverUserIds) {
+        if (authority.schedulingRunId) {
+          const before = await client.query(
+            "SELECT run->>'driverUserId' AS driver_user_id FROM vendors v CROSS JOIN LATERAL jsonb_array_elements(COALESCE(v.fleet_ops_state->'runs','[]'::jsonb)) run WHERE v.id=$1 AND run->>'id'=$2",
+            [companyId, authority.schedulingRunId],
+          );
+          const historical = before.rows.length ? before : await client.query(
+            "SELECT tool_output->>'driverUserId' AS driver_user_id FROM assistant_action_audit WHERE target_type='fleet-run' AND target_id=$1 AND vendor_id=$2 ORDER BY id DESC LIMIT 1", [authority.schedulingRunId, companyId],
+          );
+          if (historical.rows.length !== 1) throw new FleetError("fleet.not_found", 404);
+          schedulingDriver = Number(historical.rows[0].driver_user_id);
+        }
+        const ids = [...new Set([actorUserId, ...(authority.schedulingDriverUserIds ?? []), ...(schedulingDriver ? [schedulingDriver] : [])])].sort((a, b) => a - b);
+        if (ids.some(id => !Number.isSafeInteger(id) || id <= 0) || ids.length > 21) throw new FleetError("fleet.invalid_request", 400);
+        await client.query("SET LOCAL lock_timeout='5s'");
+        await client.query("SELECT id FROM users WHERE id=ANY($1::int[]) ORDER BY id FOR UPDATE", [ids]);
+      }
       if (
         !authority ||
         !Number.isInteger(authority.sv) ||
@@ -113,6 +133,14 @@ const boundedFleetRepository: FleetRepository = {
       const state = FleetStateSchema.parse(
         vendor.rows[0].fleet_ops_state ?? emptyFleetState(),
       );
+      if (authority?.schedulingRunId) {
+        let currentDriver = state.runs.find(run => run.id === authority.schedulingRunId)?.driverUserId;
+        if (currentDriver === undefined) {
+          const historical = await client.query("SELECT tool_output->>'driverUserId' AS driver_user_id FROM assistant_action_audit WHERE target_type='fleet-run' AND target_id=$1 AND vendor_id=$2 ORDER BY id DESC LIMIT 1", [authority.schedulingRunId, companyId]);
+          currentDriver = historical.rows.length ? Number(historical.rows[0].driver_user_id) : undefined;
+        }
+        if (currentDriver !== schedulingDriver) throw new FleetError("fleet.version_conflict");
+      }
       const previous = JSON.stringify({ ...state, operations: [] });
       if (authority.operationId) {
         const stored = await client.query(

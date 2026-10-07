@@ -57,6 +57,8 @@ export type MeetingSnapshot = {
   streamingCaptureAvailable?: boolean;
   userId: number;
   canManage: boolean;
+  canManageAssistantInvitation?: boolean;
+  assistantInvitationVersion?: number;
   canModerate?: boolean;
   canViewAttendance: boolean;
   transcription: boolean;

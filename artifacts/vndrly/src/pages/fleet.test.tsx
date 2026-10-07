@@ -19,7 +19,7 @@ vi.mock("@/hooks/use-auth", () => ({
   useAuth: () => ({ user: { userId: 7, vendorId: 1, activeMembershipId: 2 } }),
 }));
 vi.mock("react-i18next", () => ({
-  useTranslation: () => ({ i18n: { language: "en" } }),
+  useTranslation: () => ({ i18n: { language: "en" }, t: (key: string) => key }),
 }));
 vi.mock("wouter", () => ({
   useLocation: () => [api.location],

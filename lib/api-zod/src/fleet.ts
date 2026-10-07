@@ -2,6 +2,7 @@ import { FleetCargoMarkerSchema } from "./fleet-cargo";
 import { FleetReplacementMarkerSchema } from "./fleet-replacement";
 import { FleetScheduleSchema, FleetOperationalProfileSchema, FleetInspectionResponsesSchema, FleetManifestValuesSchema } from "./fleet-planning";
 import { z } from "zod/v4";
+import { FleetAvailabilitySchema } from "./fleet-availability";
 export const FleetRoleSchema = z.enum([
   "fleet_manager",
   "dispatcher",
@@ -162,6 +163,7 @@ export const FleetRunSchema = z.object({
     .max(200),
   linkedTicketId: z.number().int().positive().nullable(),
   allowedActions: z.array(FleetRunActionSchema),
+  availability: FleetAvailabilitySchema.optional(),
 });
 export const FleetActionInputSchema = z
   .object({

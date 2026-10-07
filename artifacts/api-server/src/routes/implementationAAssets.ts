@@ -1,3 +1,4 @@
+import { createInventoryManagementService } from "../services/inventory-management";
 import { createAssetHoldReleaseService, readAssetHolds, authorizeAssetHoldRelease } from "../services/asset-hold-release";
 import { createAssetLossReportService } from "../services/asset-loss-report";
 import { createAssetIdentifierClaimService } from "../services/asset-identifier-claims";
@@ -715,95 +716,26 @@ router.post("/implementation-a/assets/:assetId/hold", async (req, res) => {
   }
 });
 
-router.post("/implementation-a/assets/:assetId/merge", async (req, res) => {
-  try {
-    const context = await actor(req);
-    if (!context.isAssetManager)
-      throw new AssetServiceError("asset.asset_manager_required", 403);
-    const survivingAssetId = IdSchema.parse(req.params.assetId);
-    const input = z
-      .object({
-        mergedAssetId: z.string().uuid(),
-        reason: z.string().trim().min(1).max(2_000),
-      })
-      .parse(req.body);
-    const [surviving, merged] = await Promise.all([
-      databaseAssetRepository.get(survivingAssetId),
-      databaseAssetRepository.get(input.mergedAssetId),
-    ]);
-    if (!surviving || !merged)
-      throw new AssetServiceError("asset.not_found", 404);
-    assertOwner(
-      surviving.responsibleOwner,
-      context.owner,
-      context.isPlatformAdmin,
-    );
-    assertOwner(
-      merged.responsibleOwner,
-      context.owner,
-      context.isPlatformAdmin,
-    );
-    if (
-      surviving.responsibleOwner.type !== merged.responsibleOwner.type ||
-      surviving.responsibleOwner.id !== merged.responsibleOwner.id
-    )
-      throw new AssetServiceError("asset.cross_owner_merge_forbidden", 403);
-    return res.json(
-      await service.mergeAssets({
-        survivingAssetId,
-        mergedAssetId: input.mergedAssetId,
-        actorRoles: context.roles.concat("asset_manager"),
-        reason: input.reason,
-      }),
-    );
-  } catch (error) {
-    return sendError(res, error);
-  }
+const management = createInventoryManagementService(pool);
+const CategorySchema = z.string().trim().min(1).max(80);
+async function managementSession(req: Request) {
+  const session = getSessionFromRequest(req);
+  if (!session) throw new AssetServiceError("asset.unauthenticated", 401);
+  await validateAssistantSession(session);
+  return session;
+}
+router.get("/implementation-a/assets/policies/:category", async (req, res) => {
+  try { return res.json(await management.readPolicy(await managementSession(req), CategorySchema.parse(req.params.category))); } catch(error) { return sendError(res,error); }
 });
-
-router.put("/implementation-a/assets/policies/:category", async (req, res) => {
-  try {
-    const context = await actor(req);
-    if (!context.owner || !context.isAssetManager)
-      throw new AssetServiceError("asset.asset_manager_required", 403);
-    const category = z
-      .string()
-      .trim()
-      .min(1)
-      .max(80)
-      .parse(req.params.category);
-    const input = z
-      .object({
-        identifierRequired: z.boolean().default(false),
-        photosRequiredOnCheckout: z.boolean().default(false),
-        photosRequiredOnReturn: z.boolean().default(false),
-        supervisorApprovalRequired: z.boolean().default(false),
-        expectedReturnRequired: z.boolean().default(false),
-      })
-      .parse(req.body);
-    const [saved] = await db
-      .insert(assetCategoryPoliciesTable)
-      .values({
-        ownerOrgType: context.owner.type,
-        ownerOrgId: context.owner.id,
-        category,
-        ...input,
-      })
-      .onConflictDoUpdate({
-        target: [
-          assetCategoryPoliciesTable.ownerOrgType,
-          assetCategoryPoliciesTable.ownerOrgId,
-          assetCategoryPoliciesTable.category,
-        ],
-        set: { ...input, updatedAt: new Date() },
-      })
-      .returning();
-    return res.json(saved);
-  } catch (error) {
-    return sendError(res, error);
-  }
+router.get("/implementation-a/assets/management/operations/:operationId", async (req,res) => {
+  try { return res.json(await management.readReceipt(await managementSession(req), IdSchema.parse(req.params.operationId))); } catch(error) { return sendError(res,error); }
 });
-
+router.post("/implementation-a/assets/:assetId/merge", async (req,res) => {
+  try { return res.json(await management.merge(await managementSession(req),IdSchema.parse(req.params.assetId),req.body)); } catch(error) { return sendError(res,error); }
+});
+router.put("/implementation-a/assets/policies/:category", async (req,res) => {
+  try { return res.json(await management.configurePolicy(await managementSession(req),CategorySchema.parse(req.params.category),req.body)); } catch(error) { return sendError(res,error); }
+});
 router.post("/implementation-a/assets/:assetId/holds/:holdId/release", async (req, res) => {
   try {
     const session = getSessionFromRequest(req);

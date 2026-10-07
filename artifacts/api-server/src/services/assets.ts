@@ -24,6 +24,8 @@ export type AssetRecord = {
   version: number;
   history: CustodyEvent[];
   mergedIntoId?: string;
+  /** Source-linked records; never copied into current custody or mutable aliases. */
+  mergedSources?: Record<string, unknown>[];
 };
 /** Canonical GET /implementation-a/assets response; item actions are scoped to the viewer. */
 export type AssetCapabilities = {
@@ -109,7 +111,7 @@ export function createAssetService(repository: AssetRepository) {
   async function getCurrent(id: string) {
     const asset = await repository.get(id);
     if (!asset) throw new AssetServiceError("asset.not_found", 404);
-    if (asset.status === "merged" && asset.mergedIntoId) return getCurrent(asset.mergedIntoId);
+    if (asset.status === "merged" || asset.status === "retired") throw new AssetServiceError("asset.record_read_only",409);
     return asset;
   }
 

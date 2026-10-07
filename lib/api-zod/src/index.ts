@@ -26,3 +26,8 @@ export * from "./gate-shift-assignment";
 
 export * from "./inventory-custody-client";
 export * from "./inventory-registration-client";
+export * from "./inventory-management";
+export * from "./inventory-management-client";
+export * from "./meeting-assistant-invitation";
+export * from "./fleet-availability";
+export * from "./fleet-availability-client";

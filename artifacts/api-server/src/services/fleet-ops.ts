@@ -5,6 +5,8 @@ import { createFleetReplacementOperations, assertFleetReplacementCustody } from 
 import { fleetReplacementReady } from "@workspace/api-zod";
 import { createFleetEvidenceOperations } from "./fleet-evidence";
 import { createFleetPlanningOperations } from "./fleet-planning";
+import { readFleetAvailability, requireFleetAvailability, type FleetAvailability } from "./fleet-availability";
+import { createFleetAvailabilityManagement } from "./fleet-availability-management";
 import { checkFleetInspectionRequirements, checkFleetManifestRequirements } from "@workspace/api-zod";
 import type { FleetItemizedAuthority } from "./fleet-itemized-repository";
 import {
@@ -46,6 +48,7 @@ export type FleetActor = {
     currentSiteIds?: number[];
     activeSiteIds?: number[];
     labels?: Map<string, NonNullable<FleetRun["labels"]>>;
+    availability?: Map<string, FleetAvailability>;
   };
 function grantFor(state: FleetState, actor: FleetActor): FleetGrant | null {
   const grant = state.grants.find((g) => g.userId === actor.userId);
@@ -185,6 +188,7 @@ function project(
     },
     canEditDraft: run.status === "draft" && permitted(state, actor, run, "dispatch") && (!actor.currentRunsById || actor.currentRunsById.get(run.id)?.version === run.version),
     allowedActions: allowed(state, actor, run),
+    availability: actor.availability?.get(`${run.id}:${run.driverUserId}:${JSON.stringify(run.schedule ?? null)}`),
   };
 }
 async function eligible(state: FleetState, client: PoolClient, run: FleetRun) {
@@ -394,6 +398,7 @@ export function createFleetService(repository: FleetRepository) {
       });
     },
     ...createFleetPlanningOperations(transaction, permitted, eligible, project),
+    ...createFleetAvailabilityManagement(transaction),
     ...createFleetMaintenanceOperations(transaction, grantFor),
     ...createFleetReportingOperations(transaction, grantFor),
     ...createFleetGateOperations(transaction, permitted),
@@ -475,9 +480,11 @@ export function createFleetService(repository: FleetRepository) {
         },
       ),
     detail: (actor: FleetActor, runId: string) =>
-      transaction(Object.assign(actor, { runId }), async (state) => {
+      transaction(Object.assign(actor, { runId }), async (state, client) => {
         const run = state.runs.find((r) => r.id === runId);
         if (!run) throw new FleetError("fleet.not_found", 404);
+        project(state, actor, run);
+        actor.availability = new Map([[`${run.id}:${run.driverUserId}:${JSON.stringify(run.schedule ?? null)}`, await readFleetAvailability(client, actor.companyId, run.driverUserId, run.schedule)]]);
         return project(state, actor, run);
       }),
     resources: (actor: FleetActor): Promise<FleetResources> =>
@@ -827,11 +834,13 @@ export function createFleetService(repository: FleetRepository) {
         },
       ),
     action: async (actor: FleetActor, runId: string, input: unknown) => {
+      const requested = FleetActionInputSchema.parse(input);
       let notice: Parameters<typeof emitFleetRunNotification>[0] | undefined;
       const result = await transaction(
         Object.assign(actor, {
           operationId: FleetActionInputSchema.parse(input).operationId,
           runId,
+          ...(["dispatch", "reassign"].includes(requested.action) ? { schedulingRunId: runId, schedulingDriverUserIds: requested.driverUserId ? [requested.driverUserId] : [] } : {}),
         }),
         async (state, client) => {
           const body = FleetActionInputSchema.parse(input);
@@ -1100,6 +1109,8 @@ export function createFleetService(repository: FleetRepository) {
               run.status = "draft";
             }
             await eligible(state, client, run);
+            if (["dispatch", "reassign"].includes(body.action))
+              requireFleetAvailability(await readFleetAvailability(client, actor.companyId, run.driverUserId, run.schedule));
             if (body.action === "dispatch") run.status = "dispatched";
           }
           run.version++;
