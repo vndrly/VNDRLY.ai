@@ -1025,8 +1025,13 @@ export const resolveWorkHubToolMetadata = (name: string) =>
 export function bindWorkHubToolScope(
   rawInput: unknown,
   session: { vendorId?: number | null; partnerId?: number | null },
+  toolName?: string,
 ): Input {
   const input = record(rawInput);
+  // These exact reads derive authority only from the authenticated canonical
+  // endpoint. Preserve their strict model arguments, including rejecting any
+  // caller-supplied owner/context instead of silently discarding those fields.
+  if (["query_work_hub_away_responder", "query_work_hub_away_channels", "query_work_hub_meeting_responses", "query_calendar_reschedule_snapshot", "query_ticket_invoice_candidates"].includes(toolName ?? "")) return input;
   const owner = session.vendorId
     ? { type: "vendor", id: session.vendorId }
     : session.partnerId
