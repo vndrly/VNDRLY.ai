@@ -30,15 +30,23 @@ describe.runIf(process.env.VNDRLY_TEST_DB_MODE === "fresh-local" && process.env.
     }
     const [author, coworker, foreign] = actors;
     const channels = [];
-    for (let index = 0; index < 2; index++) {
-      const [channel] = await d.db.insert(d.workHubChannelsTable).values({ ownerOrgType: "vendor", ownerOrgId: vendor.id, contextKind: "organization", contextId: String(vendor.id), name: "Synthetic mutation " + index, visibility: "organization", createdById: author.user.id }).returning();
+    const contexts = [
+      { contextKind: "organization", contextId: String(vendor.id), visibility: "organization" },
+      { contextKind: "chat", contextId: randomUUID(), visibility: "private" },
+    ];
+    for (const [index, context] of contexts.entries()) {
+      const [channel] = await d.db.insert(d.workHubChannelsTable).values({ ownerOrgType: "vendor", ownerOrgId: vendor.id, ...context, name: "Synthetic mutation " + index, createdById: author.user.id }).returning();
       channels.push(channel);
     }
+    // The second context is a real private conversation with an explicit writer,
+    // rather than a duplicate organization channel or a fabricated owner ID.
+    await d.db.insert(d.workHubChannelMembersTable).values({ channelId: channels[1].id, userId: author.user.id, mode: "member" });
     const [message, other] = await d.db.insert(d.workHubMessagesTable).values([
       { channelId: channels[0].id, authorUserId: author.user.id, body: "Synthetic original", kind: "text", clientOperationId: randomUUID() },
       { channelId: channels[1].id, authorUserId: author.user.id, body: "Synthetic second", kind: "text", clientOperationId: randomUUID() },
     ]).returning();
     const app = express().use(express.json()).use(cookieParser()).use(router);
+    expect((await request(app).get(`/work-hub/channels/${channels[1].id}/messages`).set("Cookie", author.cookie)).status).toBe(200);
     const path = `/work-hub/channels/${channels[0].id}/messages/${message.id}`;
     const command = (body: string, expectedVersion: number, operationId = randomUUID()) => ({ operationId, payloadVersion: 1, expectedVersion, owner: { type: "vendor", id: vendor.id }, context: { kind: "organization", id: vendor.id }, payload: { body } });
     const edits = [command("Synthetic first edit", 1), command("Synthetic competing edit", 1)];
@@ -49,7 +57,8 @@ describe.runIf(process.env.VNDRLY_TEST_DB_MODE === "fresh-local" && process.env.
     expect(replay.status).toBe(200);
     expect(replay.body.resource).toEqual(responses[winner].body.resource);
     expect((await request(app).patch(path).set("Cookie", author.cookie).send({ ...edits[winner], payload: { body: "Changed same-operation text" } })).status).toBe(403);
-    expect((await request(app).patch(`/work-hub/channels/${channels[1].id}/messages/${other.id}`).set("Cookie", author.cookie).send(edits[winner])).status).toBe(403);
+    const otherContext = { kind: "chat", id: channels[1].contextId };
+    expect((await request(app).patch(`/work-hub/channels/${channels[1].id}/messages/${other.id}`).set("Cookie", author.cookie).send({ ...edits[winner], context: otherContext })).status).toBe(403);
     expect((await request(app).patch(path).set("Cookie", coworker.cookie).send(command("Not my message", 2))).status).toBe(403);
     expect((await request(app).patch(path).set("Cookie", foreign.cookie).send(command("Foreign", 2))).status).toBe(404);
     const deletion = { ...command("", 2), payload: {} };
@@ -60,7 +69,7 @@ describe.runIf(process.env.VNDRLY_TEST_DB_MODE === "fresh-local" && process.env.
     const deletedReplay = await request(app).delete(path).set("Cookie", author.cookie).send(deletion);
     expect(deletedReplay.status).toBe(200);
     expect(deletedReplay.body.resource).toEqual(deleted.body.resource);
-    expect((await request(app).delete(`/work-hub/channels/${channels[1].id}/messages/${other.id}`).set("Cookie", author.cookie).send(deletion)).status).toBe(403);
+    expect((await request(app).delete(`/work-hub/channels/${channels[1].id}/messages/${other.id}`).set("Cookie", author.cookie).send({ ...deletion, context: otherContext })).status).toBe(403);
     // A historical edit receipt remains historical; replay never resurrects a tombstone.
     expect((await request(app).patch(path).set("Cookie", author.cookie).send(edits[winner])).status).toBe(200);
     expect((await d.db.select().from(d.workHubMessagesTable).where(eq(d.workHubMessagesTable.id, message.id)))[0]).toMatchObject({ body: "", version: 3 });
