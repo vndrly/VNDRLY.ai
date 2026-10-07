@@ -23,6 +23,16 @@ function panelHarness() {
   };
 }
 describe("VNDRLY component-mediated action panel", () => {
+  it("shows a saved rejection after interruption without claiming success or resubmitting", async () => {
+    const ui = panelHarness(); ui.publish(); await ui.status();
+    const submission = ui.click(); ui.failSubmission(); await submission;
+    const checking = ui.check();
+    await ui.status("completed", { ok: false, status: 400, error: "Check the requested fields" }); await checking;
+    expect(ui.nodes.get("status").textContent).toContain("rejected");
+    expect(ui.nodes.get("status").textContent).not.toContain("completed");
+    expect(ui.nodes.get("submit").hidden).toBe(true);
+    expect(ui.requests.filter(item => item.params?.name === "v_submit_panel_action")).toHaveLength(1);
+  });
   it("checks the same saved result after interruption without submitting again", async () => {
     const ui = panelHarness(); ui.publish(); await ui.status();
     const submission = ui.click(); ui.failSubmission(); await submission;
