@@ -17,6 +17,7 @@ import TogglePillButton from "@/components/TogglePillButton";
 import FleetRunAction from "@/components/FleetRunAction";
 import MapboxNativeMap from "@/components/MapboxNativeMap";
 import FleetPhoneLocation from "@/components/FleetPhoneLocation";
+import FleetLiveActivity from "@/components/FleetLiveActivity";
 import FleetGate from "@/components/FleetGate";
 import FleetReports from "@/components/FleetReports";
 import FleetMaintenance from "@/components/FleetMaintenance";
@@ -358,6 +359,7 @@ export default function FleetWorkspace({ initialRunId, initialMode = "desk" }: {
         {run.records.map(record => <Text key={record.id} style={textStyle}>{copy(record.kind)}{copy(": ")}{record.quantity ?? record.reading} {record.unit}{copy(" \u00B7 ")}{record.notes}{copy(" \u00B7 source ")}{copy(record.source)}{copy(" \u00B7 captured ")}{record.capturedAt ?? copy("not separately supplied")}{copy(" \u00B7 accepted ")}{record.recordedAt}</Text>)}
         {run.events.map(event => <Text key={event.id} style={textStyle}>{event.type}{copy(" \u00B7 captured ")}{event.capturedAt ?? copy("not separately supplied")}{copy(" \u00B7 accepted ")}{event.recordedAt}</Text>)}
         {run.driverUserId === user?.id && overview.capabilities.canDrive && verifiedAccount && !cachedAt && <FleetPhoneLocation key={`${identity}:${run.id}:${run.vehicleAssetId}:${run.trailerAssetId}`} run={run} account={verifiedAccount} disabled={busy || !!unresolved || pendingRun.length > 0}/>}
+        {run.driverUserId === user?.id && overview.capabilities.canDrive && verifiedAccount && !cachedAt && <FleetLiveActivity key={`live:${identity}:${run.id}`} runId={run.id} active={run.status === "in_progress" && run.phase !== "paused"} disabled={busy || !!unresolved || pendingRun.length > 0} />}
         <FleetReplacement key={`${identity}:${run.id}`} run={run} canDispatch={overview.capabilities.canDispatch} equipment={current.resources.equipment.filter(asset=>overview.fleets.find(f=>f.id===run.fleetId)?.equipmentAssetIds.includes(asset.id))} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length>0} onChanged={()=>setRevision(n=>n+1)}/>
         <FleetCargo key={`${identity}:${run.id}`} run={run} canDispatch={overview.capabilities.canDispatch} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length>0} onChanged={()=>setRevision(n=>n+1)}/>
         <FleetReviewPacket key={`${identity}:${run.id}`} run={run} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length>0}/>

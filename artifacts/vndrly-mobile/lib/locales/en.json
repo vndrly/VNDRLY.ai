@@ -2919,5 +2919,41 @@
     "checkSavedMeetings": "Check saved meetings",
     "schedulingDoesNotJoinAudioAuthorize": "Scheduling does not join audio, authorize recording, or confirm attendance.",
     "matchingRecorded": "A matching meeting is recorded ({{id}}). This does not prove the original request or attendee acceptance."
+  },
+  "nativeWorkDraft": {
+    "summary": "Summarize on this iPhone",
+    "reviewOnly": "Review this draft. Nothing has been saved.",
+    "truncated": "Some scanned text was shortened. Check the source document.",
+    "useDraft": "Use this draft",
+    "unavailable": "This device feature is unavailable or was cancelled. Continue editing manually.",
+    "scan": "Scan text into a draft"
+  },
+  "nativeLiveWork": {
+    "unavailable": "Current work activity could not be verified. Open VNDRLY to refresh.",
+    "stop": "Stop work activity",
+    "description": "Show minimal work status on your lock screen. This does not track GPS and becomes stale without fresh updates.",
+    "show": "Show work activity",
+    "shown": "Current assigned run verified. Work activity requested."
+  },
+  "workHubUpload": {
+    "scope": {
+      "personal": "Personal file",
+      "company": "Company file",
+      "channel": "Shared group file: visible to authorized group members"
+    },
+    "file": "Upload file in background",
+    "reserved": "Transfer pending; this is not yet a saved file.",
+    "saved": "File saved and visible in Work Hub.",
+    "upload": "Upload this page",
+    "unknown": "Result unresolved. Resume the same attempt to verify it; no new file was created.",
+    "review": "Review the original pages. OCR is a draft; no page is saved automatically.",
+    "scan": "Scan document",
+    "resume": "Resume and verify",
+    "refresh": "File is saved. Refresh the list to see it.",
+    "transported": "Bytes transported; saved-file verification remains.",
+    "pending": "Pending file attempt",
+    "cancel": "Stop this attempt",
+    "discard": "Discard unsaved pages",
+    "failed": "Transport stopped. You can cancel this attempt; existing records are preserved."
   }
 }

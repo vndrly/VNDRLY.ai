@@ -42,6 +42,14 @@ function resolvePushType(msg: ExpoPushMessage): string | undefined {
   return typeof t === "string" ? t : undefined;
 }
 
+/** Actions remain pointers to a saved recipient notification, never payload authority. */
+export function resolvePushCategory(msg: ExpoPushMessage): string | undefined {
+  const raw = msg.data?.notificationId;
+  const id = typeof raw === "number" ? raw : typeof raw === "string" && /^[1-9]\d*$/.test(raw) ? Number(raw) : NaN;
+  if (!Number.isSafeInteger(id) || id < 1) return undefined;
+  return resolvePushType(msg) === "work_hub_meeting_invite" ? "vndrly_meeting" : "vndrly_record";
+}
+
 function resolveInterruptionLevel(msg: ExpoPushMessage): ExpoPushMessage["interruptionLevel"] {
   if (msg.interruptionLevel) return msg.interruptionLevel;
   const type = resolvePushType(msg);
@@ -58,6 +66,7 @@ async function sendExpoPushBatch(tokens: string[], msg: ExpoPushMessage) {
     title: msg.title,
     body: msg.body,
     data: msg.data ?? {},
+    ...(resolvePushCategory(msg) ? { categoryId: resolvePushCategory(msg) } : {}),
     priority: msg.priority ?? (type && TIME_SENSITIVE_PUSH_TYPES.has(type) ? "high" : "default"),
     interruptionLevel,
     ...(msg.badge != null && Number.isFinite(msg.badge)

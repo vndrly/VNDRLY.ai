@@ -1,0 +1,13 @@
+# Native system work surfaces
+
+This local Expo module carries projections only. It never authenticates a user, authorizes a role, saves a ticket/Gate/Fleet mutation, accepts meeting consent, or stores a bearer credential.
+
+The containing app must obtain a current canonical record with a validated user, organization, membership and session version, bind that exact context with `setContext`, and then send a minimal `WorkActivitySnapshot`. Logout, organization switch, revoked authorization, terminal work state and unavailable canonical reads must end activities or clear the context. No system-provided action parameter is authority.
+
+`withVndrlySystemSurfaces` adds the app-target App Intents source and a separately embedded WidgetKit extension, declares `NSSupportsLiveActivities`, and supplies the extension identifier to EAS provisioning. Add that local plugin in the Expo config after source review. The App Shortcuts open the existing authenticated `native-entry` route; they do not execute business mutations. A custom scheme is opened in the foreground app process with UIKit, never supplied to the universal-link-only OpenURLIntent.
+
+ActivityKit is availability-guarded at iOS 16.2 and honors OS authorization. Updates require a foreground app and a matching hashed local context. Recorded snapshot times must be recent; staleDate is at most five minutes later. The widget shows only generic work/freshness content and applies privacy-sensitive rendering. It does not display employee, company, customer, location, truck, financial or medical details. Local expiration tasks are best-effort when the app can run; OS stale presentation remains the boundary while suspended. There are no ActivityKit push tokens or APNs updates, so this is not a continuous background server feed.
+
+Validation completed locally: configuration tests using the installed Xcode-project manipulation library and TypeScript checks. Required remaining gates: Expo prebuild/config evaluation, macOS Xcode/EAS compile and archive, correct app/extension signing and matching bundle versions, App Intent metadata extraction, Siri/Shortcuts foreground handoff, exact current-account routing, ActivityKit permission, stale/lock-screen behavior and logout/context termination on an actual device. Windows source checks do not prove Swift compilation or device behavior.
+
+Primary references: https://developer.apple.com/documentation/appintents/openurlintent and https://developer.apple.com/documentation/activitykit/displaying-live-data-with-live-activities .

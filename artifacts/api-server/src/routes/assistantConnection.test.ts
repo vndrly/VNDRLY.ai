@@ -349,6 +349,19 @@ describe("ChatGPT account connection boundary", () => {
     expect(response.body.result.content[0].text).not.toContain(credentials.access_token);
     expect(mocks.run).not.toHaveBeenCalled();
   });
+  it("projects the freshly validated own employee mapping for the current membership", async () => {
+    const credentials = await tokens("gate:read");
+    const read = async () => {
+      const response = await request(app).post(base + "/mcp").set("Authorization", "Bearer " + credentials.access_token).send({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "v_connection_context", arguments: {} } });
+      return JSON.parse(response.body.result.content[0].text);
+    };
+    for (const current of [{role:"field_employee",vendorPeopleId:969,activeMembershipId:795},{role:"field_employee",vendorPeopleId:971,activeMembershipId:796},{role:"partner",vendorId:null,partnerId:8,vendorPeopleId:null,activeMembershipId:797}]) {
+      mocks.validate.mockImplementation(async value => ({ ...value, ...current, exp: Math.floor(Date.now() / 1000) + 60 }));
+      expect(await read()).toMatchObject({userId:17,...current});
+    }
+    expect(mocks.run).not.toHaveBeenCalled();
+    expect(grants[0].scopes).toEqual(["gate:read"]);
+  });
   it.each(["valid", "revoked", "scope removed", "wrong user", "station denied", "wrong station"])("rechecks Gate device navigation when %s", async condition => {
     const credentials = await tokens("gate:read");
     const stationId = "17795fa1-bb5f-4abc-a5f8-7e9b33a0ec05";

@@ -13,6 +13,8 @@ import { captureAndUploadImage } from "@/lib/photos";
 import type { MobileWorkHubCapabilities } from "@/lib/work-hub-mobile";
 import { InventoryRecovery } from "./InventoryRecovery";
 import { InventoryTransfer } from "./InventoryTransfer";
+import NativeNoteDraft from "./NativeNoteDraft";
+import BackgroundWorkHubUpload from "./BackgroundWorkHubUpload";
 
 type Owner = { type: "vendor" | "partner"; id: number };
 type FileRow = { id: string; data: { name?: string; scope?: string; state?: string; currentFileId?: string | null; contentType?: string; byteSize?: number }; createdBy?: number; updatedAt?: string; capabilities?: { canDownload: boolean; canManage: boolean } };
@@ -33,6 +35,7 @@ function FilesInventoryContent({ owner, capabilities, files, notes, assets, chan
   const { t } = useTranslation();
   const colors = useColors();
   const [busy, setBusy] = useState(false);
+  const [backgroundUploadAvailable, setBackgroundUploadAvailable] = useState(false);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const errorId = useId();
@@ -246,14 +249,16 @@ function FilesInventoryContent({ owner, capabilities, files, notes, assets, chan
     {!selectedAssetId && <View style={card}>
       <Text style={{ color: colors.text, fontSize: 18, fontWeight: "700" }}>{t("filesInventory.filesNotes")}</Text>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-        {capabilities.canUploadFile ? <TogglePillButton color="brand" accessibilityLabel={t("filesInventory.uploadFile")} disabled={busy} onPress={upload}>{t("filesInventory.uploadFile")}</TogglePillButton> : null}
+        {capabilities.canUploadFile && !backgroundUploadAvailable ? <TogglePillButton color="brand" accessibilityLabel={t("filesInventory.uploadFile")} disabled={busy} onPress={upload}>{t("filesInventory.uploadFile")}</TogglePillButton> : null}
         {capabilities.canCreateNote ? <TogglePillButton color="brand" accessibilityLabel={t("filesInventory.addNote")} disabled={busy} onPress={() => { noteAttempt.current = null; setEditing(null); setNoteTitle(""); setNoteBody(""); setNoteOpen(true); }}>{t("filesInventory.addNote")}</TogglePillButton> : null}
       </View>
       {capabilities.canUploadFile && !capabilities.canManageAsset && channels.length > 1 ? <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{channels.map(channel => <TogglePillButton key={channel.id} accessibilityLabel={t("filesInventory.fileGroup", { name: channel.name })} accessibilityState={{ selected: channelId === channel.id }} disabled={busy} solid={channelId === channel.id} onPress={() => setChannelId(channel.id)}>{channel.name}</TogglePillButton>)}</View> : null}
+      {capabilities.canUploadFile ? <BackgroundWorkHubUpload target={{owner: channelId || (!capabilities.canManageAsset && channels.length === 1) ? channelTarget(channelId || channels[0]!.id).owner : owner, scope: channelId || (!capabilities.canManageAsset && channels.length === 1) ? "channel" : capabilities.canManageAsset ? "company" : "personal", channelId: channelId || (!capabilities.canManageAsset && channels.length === 1 ? channels[0]!.id : undefined)}} disabled={busy || (!capabilities.canManageAsset && channels.length > 1 && !channelId)} onAvailability={setBackgroundUploadAvailable} onSaved={onRefresh} /> : null}
       {noteOpen ? <View style={{ gap: 8 }}>
         {!editing ? <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{channels.map(channel => <TogglePillButton key={channel.id} accessibilityLabel={t("filesInventory.useGroup", { name: channel.name })} accessibilityState={{ selected: channelId === channel.id }} disabled={busy} solid={channelId === channel.id} onPress={() => setChannelId(channel.id)}>{channel.name}</TogglePillButton>)}</View> : null}
         <TextInput ref={noteTitleRef} {...fieldError("noteTitle")} accessibilityLabel={t("filesInventory.noteTitle")} editable={!busy} value={noteTitle} onChangeText={setNoteTitle} placeholder={t("filesInventory.titlePlaceholder")} style={{ color: colors.text, borderWidth: 1, borderColor: colors.border, padding: 10, minHeight: 44 }} />
         <TextInput accessibilityLabel={t("filesInventory.noteBody")} editable={!busy} value={noteBody} onChangeText={setNoteBody} multiline placeholder={t("filesInventory.notePlaceholder")} style={{ color: colors.text, borderWidth: 1, borderColor: colors.border, padding: 10, minHeight: 90 }} />
+        <NativeNoteDraft key={`${owner.type}:${owner.id}:${editing?.id ?? "new"}:${editing?.version ?? 0}:${editing?.channelId ?? channelId}`} value={noteBody} disabled={busy} onChange={setNoteBody} onBusy={setBusy} />
         <TogglePillButton color="brand" accessibilityLabel={t("filesInventory.saveNote")} disabled={busy} onPress={saveNote}>{t("filesInventory.saveNote")}</TogglePillButton>
       </View> : null}
       {!files.length && !notes.length ? <Text style={muted}>{t("filesInventory.noFilesNotes")}</Text> : null}

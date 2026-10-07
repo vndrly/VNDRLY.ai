@@ -18,6 +18,7 @@ import {
 } from "@tanstack/react-query";
 import { Slot, router, usePathname, useSegments } from "expo-router";
 import * as Notifications from "expo-notifications";
+import { handleNotificationAction, NOTIFICATION_ACTIONS } from "@/lib/notification-actions";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useState } from "react";
 import { Appearance, Platform } from "react-native";
@@ -44,6 +45,8 @@ import {
   isTokenCacheReady,
   subscribeToken,
   getUser,
+  captureAuthScope,
+  isAuthScopeCurrent,
 } from "@/lib/auth";
 import { isGatekeeperUser } from "@/lib/mobile-viewer";
 import { gateLandingRoute, isGatekeeperRouteAllowed } from "@/lib/app-navigation";
@@ -239,23 +242,25 @@ function AuthGate() {
   useEffect(() => {
     if (!checked || !hasAuth) return;
     if (Platform.OS === "web") return;
+    let active = true;
 
-    async function handlePushOpen(data: unknown) {
+    async function handlePushOpen(data: unknown, action?: string) {
+      const canonicalAction = action && action !== Notifications.DEFAULT_ACTION_IDENTIFIER
+        ? action : notificationIdFromPushData(data) ? NOTIFICATION_ACTIONS.open : null;
+      if (canonicalAction) {
+        if (!active) return;
+        const scope = captureAuthScope();
+        if (!Object.values(NOTIFICATION_ACTIONS).some(value => value === canonicalAction)) return;
+        const result = await handleNotificationAction(canonicalAction, data, router);
+        if (!active || !isAuthScopeCurrent(scope)) return;
+        if (result !== "handled") router.push("/notifications" as never);
+        void syncAppIconBadge();
+        return;
+      }
       if(isFleetPushNotification(data)){
         const result=await openFleetPushNotification(data,router);
         if(result!=="opened")router.push("/notifications" as never);
         void syncAppIconBadge();return;
-      }
-      const notifId = notificationIdFromPushData(data);
-      if (notifId != null) {
-        try {
-          const { apiFetch } = await import("@/lib/api");
-          await apiFetch(`/api/notifications/${notifId}/read`, {
-            method: "POST",
-          });
-        } catch {
-          // ignore
-        }
       }
       const route = routeForPushData(data);
       if (route.type === "route") {
@@ -266,14 +271,14 @@ function AuthGate() {
 
     const sub = Notifications.addNotificationResponseReceivedListener(
       (resp) => {
-        void handlePushOpen(resp.notification.request.content.data);
+        void handlePushOpen(resp.notification.request.content.data, resp.actionIdentifier);
       },
     );
     void Notifications.getLastNotificationResponseAsync().then((resp) => {
       if (!resp) return;
-      void handlePushOpen(resp.notification.request.content.data);
+      void handlePushOpen(resp.notification.request.content.data, resp.actionIdentifier);
     });
-    return () => sub.remove();
+    return () => { active = false; sub.remove(); };
   }, [checked, hasAuth]);
 
   // Register push token for any authenticated role (not only Home tab).

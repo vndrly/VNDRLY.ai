@@ -2919,5 +2919,41 @@
     "checkSavedMeetings": "Consultar reuniones guardadas",
     "schedulingDoesNotJoinAudioAuthorize": "Programar no inicia audio, autoriza grabación ni confirma asistencia.",
     "matchingRecorded": "Se registró una reunión coincidente ({{id}}). No prueba la solicitud original ni la aceptación."
+  },
+  "nativeWorkDraft": {
+    "summary": "Resumir en este iPhone",
+    "reviewOnly": "Revisa este borrador. No se ha guardado nada.",
+    "truncated": "Parte del texto escaneado se acortó. Revisa el documento original.",
+    "useDraft": "Usar este borrador",
+    "unavailable": "Esta función del dispositivo no está disponible o se canceló. Continúa editando manualmente.",
+    "scan": "Escanear texto para un borrador"
+  },
+  "nativeLiveWork": {
+    "unavailable": "No se pudo verificar la actividad de trabajo actual. Abre VNDRLY para actualizar.",
+    "stop": "Detener actividad de trabajo",
+    "description": "Mostrar un estado de trabajo mínimo en la pantalla bloqueada. No rastrea el GPS y queda desactualizado sin nuevas actualizaciones.",
+    "show": "Mostrar actividad de trabajo",
+    "shown": "Se verificó el recorrido asignado actual. Se solicitó la actividad de trabajo."
+  },
+  "workHubUpload": {
+    "scope": {
+      "personal": "Archivo personal",
+      "company": "Archivo de la empresa",
+      "channel": "Archivo de grupo compartido: visible para los miembros autorizados"
+    },
+    "file": "Subir archivo en segundo plano",
+    "reserved": "Transferencia pendiente; aún no es un archivo guardado.",
+    "saved": "Archivo guardado y visible en Work Hub.",
+    "upload": "Subir esta página",
+    "unknown": "Resultado pendiente. Reanude el mismo intento para verificarlo; no se creó otro archivo.",
+    "review": "Revise las páginas originales. El OCR es un borrador; ninguna página se guarda automáticamente.",
+    "scan": "Escanear documento",
+    "resume": "Reanudar y verificar",
+    "refresh": "El archivo está guardado. Actualice la lista para verlo.",
+    "transported": "Bytes transportados; falta verificar el archivo guardado.",
+    "pending": "Intento de archivo pendiente",
+    "cancel": "Detener este intento",
+    "discard": "Descartar páginas sin guardar",
+    "failed": "La transferencia se detuvo. Puede cancelar el intento; los registros existentes se conservan."
   }
 }

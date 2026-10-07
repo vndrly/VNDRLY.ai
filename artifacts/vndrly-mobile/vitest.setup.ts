@@ -173,6 +173,9 @@ vi.mock("expo/build/Expo.fx", () => ({}));
 vi.mock("expo", () => ({
   registerRootComponent: () => undefined,
   disableErrorHandling: () => undefined,
+  // Optional local iOS bridges are absent in jsdom; capability tests supply
+  // explicit native mocks instead of claiming a device feature exists.
+  requireOptionalNativeModule: () => null,
 }));
 
 // `expo/src/winter/runtime.ts` does the same dynamic-`require` dance:

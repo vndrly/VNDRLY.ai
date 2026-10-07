@@ -10,7 +10,14 @@ import { applyPushBadgeFromPayload } from "./notificationBadge";
 import { isExpoGo } from "./runtime";
 import { isWorkHubMessagePush } from "./work-hub-message-sound";
 import { handleWorkHubMessageSound } from "./work-hub-message-sound-native";
+import { notificationCategoryDefinitions } from "./notification-actions";
 
+export async function registerNotificationActions(): Promise<void> {
+  if (isExpoGo || Platform.OS === "web") return;
+  for (const category of notificationCategoryDefinitions) {
+    await Notifications.setNotificationCategoryAsync(category.identifier, category.actions);
+  }
+}
 // expo-notifications in SDK 54 dropped remote push support inside
 // Expo Go. setNotificationHandler still works for local notifications
 // on iOS Expo Go but on Android Expo Go it throws at module load,
@@ -64,6 +71,7 @@ export async function registerForPushNotifications(): Promise<string | null> {
   // on iOS that surfaces as a red screen. Skip cleanly.
   if (isExpoGo) return null;
   if (!Device.isDevice) return null;
+  await registerNotificationActions().catch(() => undefined);
 
   const { status: existing } = await Notifications.getPermissionsAsync();
   let finalStatus = existing;

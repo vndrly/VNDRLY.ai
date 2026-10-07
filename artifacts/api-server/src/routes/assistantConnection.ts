@@ -391,7 +391,7 @@ router.post("/mcp", async (req, res) => {
     if (name === "v_connection_context") {
       if (Object.keys(args).length) throw new AssistantOAuthError("invalid_request");
       const session = authorized.session;
-      const context = { userId: session.userId, role: session.role, membershipRole: session.membershipRole ?? null, vendorRole: session.vendorRole ?? null, vendorId: session.vendorId ?? null, partnerId: session.partnerId ?? null, activeMembershipId: session.activeMembershipId ?? null, grantedScopes: authorized.scopes, operationalAccessVerified: false };
+      const context = { userId: session.userId, role: session.role, membershipRole: session.membershipRole ?? null, vendorRole: session.vendorRole ?? null, vendorPeopleId: session.vendorPeopleId ?? null, vendorId: session.vendorId ?? null, partnerId: session.partnerId ?? null, activeMembershipId: session.activeMembershipId ?? null, grantedScopes: authorized.scopes, operationalAccessVerified: false };
       await writeAskVActionAudit({ session, clientSurface: "api", inputMode: "web_text", provider: "chatgpt_mcp", toolName: name, targetType: "profile", toolInput: {}, resultStatus: "success" });
       return reply({ content: [{ type: "text", text: JSON.stringify(context) }], isError: false });
     }
