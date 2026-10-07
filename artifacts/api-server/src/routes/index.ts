@@ -1,4 +1,5 @@
 import fleetRouter from "./fleet";
+import operationsDisplayViewRouter from "./operationsDisplayView";
 import { Router, type IRouter } from "express";
 import healthRouter from "./health";
 import marketTickerRouter from './marketTicker';
@@ -178,6 +179,7 @@ router.use(fleetRouter);
 router.use(implementationASafetyRouter);
 router.use(implementationASubscriptionsRouter);
 router.use(implementationADisplaysRouter);
+router.use(operationsDisplayViewRouter);
 router.use(implementationAHealthRouter);
 router.use(camerasRouter);
 

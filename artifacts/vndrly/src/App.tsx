@@ -96,6 +96,8 @@ const VendorAnalytics = lazy(() => import("@/pages/vendor-analytics"));
 const PartnerAnalytics = lazy(() => import("@/pages/partner-analytics"));
 const ReportsPage = lazy(() => import("@/pages/reports"));
 const CrewMapPage = lazy(() => import("@/pages/crew-map"));
+const OperationsDisplayViewer = lazy(() => import("@/pages/operations-display-viewer"));
+const OperationsDisplayDirectory = lazy(() => import("@/pages/operations-display-directory"));
 const CrewReplayPage = lazy(() => import("@/pages/crew-replay"));
 const SiteMapPage = lazy(() => import("@/pages/site-map"));
 const VisitDetailPage = lazy(() => import("@/pages/visit-detail"));
@@ -237,6 +239,9 @@ function AuthenticatedRouter() {
         <Route path="/print-ticket/:id">{(params) => <PrintTicketPage id={parseInt(params.id)} />}</Route>
         <Route path="/print-hotlist" component={PrintHotlistPage} />
         <Route path="/switch-account"><Login allowAccountSwitch /></Route>
+        <Route path="/operations-display/:displayId/:monitorId">{params => <OperationsDisplayViewer displayId={params.displayId} monitorId={params.monitorId} />}</Route>
+        <Route path="/operations-display" component={OperationsDisplayDirectory} />
+        <Route path="/work-hub/administration/displays" component={OperationsDisplayDirectory} />
         <Route path="/forgot-password" component={ForgotPassword} />
         <Route path="/reset-password" component={ResetPassword} />
         <Route path="/activate-account" component={ActivateAccount} />
