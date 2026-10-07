@@ -16,4 +16,8 @@ export const PLAN_EXECUTION_BUSINESS_READ_CANDIDATES = {
   query_asset_custody: z.object({ checkedOutLongerThanDays: z.number().int().min(90).max(36500).default(90) }).strict(),
 };
 export const PLAN_EXECUTION_INVOICE_ACTIVITY_INPUT = z.object({ basis: z.enum(["recorded_invoice_activity", "provider_acceptance"]).default("recorded_invoice_activity") }).strict();
-export const PLAN_EXECUTION_READ_TOOL_NAMES = ["list_work_hub_tasks", "query_invoice_activity", ...Object.keys(PLAN_EXECUTION_BUSINESS_READ_CANDIDATES)];
+export const PLAN_EXECUTION_OPPORTUNITY_INPUTS = {
+  query_gate_staffing_candidates: z.object({ shiftId: z.uuid() }).strict(),
+  query_qualified_hotlist_jobs: z.object({ limit: z.number().int().min(1).max(25).default(25), afterJobId: z.number().int().nonnegative().default(0) }).strict(),
+};
+export const PLAN_EXECUTION_READ_TOOL_NAMES = ["list_work_hub_tasks", "query_invoice_activity", ...Object.keys(PLAN_EXECUTION_OPPORTUNITY_INPUTS), ...Object.keys(PLAN_EXECUTION_BUSINESS_READ_CANDIDATES)];

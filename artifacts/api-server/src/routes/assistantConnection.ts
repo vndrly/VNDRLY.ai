@@ -44,6 +44,7 @@ import { PLAN_EXECUTION_PREPARE_TOOL, PLAN_EXECUTION_STATUS_TOOL, PLAN_EXECUTION
 import { PLAN_EXECUTION_CALENDAR_TOOL, handlePlanExecutionCalendarTool } from "../assistant/plan-execution-calendar-chatgpt";
 import { recoverOperationsDisplayAction } from "../assistant/operations-display-action-recovery";
 import { INVOICE_ACTIVITY_TOOL, handleInvoiceActivityTool, invoiceActivityAvailable } from "../assistant/invoice-activity-chatgpt";
+import { WORKDAY_OPPORTUNITY_TOOLS, availableWorkdayOpportunityTools, handleWorkdayOpportunityTool } from "../assistant/workday-opportunity-chatgpt";
 
 const router = Router();
 const origin = new URL(ASSISTANT_ISSUER).origin;
@@ -325,6 +326,7 @@ router.post("/mcp", async (req, res) => {
     reads.push(...fleetUpgradeDescriptors.filter(tool => tool.annotations.readOnlyHint));
     reads.push(SPECIALISTS_TOOL);
     if (invoiceActivityAvailable(authorized.session, authorized.scopes)) reads.push(INVOICE_ACTIVITY_TOOL);
+    reads.push(...availableWorkdayOpportunityTools(authorized.session, authorized.scopes));
     reads.push({ name: "v_connection_context", description: "Read this connection's authenticated account and granted scope names. These are connection facts, not proof of operational site access or permission to perform an action. Use before selecting role-dependent workflows; do not infer roles from display names.", inputSchema: { type: "object", properties: {}, additionalProperties: false }, annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false } });
     if (reads.some(tool => tool.name === "query_gate_change_over")) reads.push(GATE_DEVICE_TOOL);
     if (reads.some(tool => tool.name === "query_ticket_detail")) reads.push(TICKET_DEVICE_TOOL);
@@ -349,6 +351,12 @@ router.post("/mcp", async (req, res) => {
     let name = message.params?.name;
     let args = message.params?.arguments ?? {};
     if (typeof name !== "string" || !args || typeof args !== "object" || Array.isArray(args)) throw new Error("Invalid tool request");
+    const opportunityTool = WORKDAY_OPPORTUNITY_TOOLS.find(tool => tool.name === name);
+    if (opportunityTool) {
+      const output = await handleWorkdayOpportunityTool(opportunityTool.name, args, authorized.session, authorized.scopes);
+      await writeAskVActionAudit({ session: authorized.session, clientSurface: "api", inputMode: "web_text", provider: "chatgpt_mcp", toolName: name, targetType: "work_hub", toolInput: args, resultStatus: "success" });
+      return reply({ content: [{ type: "text", text: JSON.stringify(output) }], structuredContent: output, isError: false });
+    }
     if (name === INVOICE_ACTIVITY_TOOL.name) {
       const output = await handleInvoiceActivityTool(args, authorized.session, authorized.scopes);
       await writeAskVActionAudit({ session: authorized.session, clientSurface: "api", inputMode: "web_text", provider: "chatgpt_mcp", toolName: name, targetType: "invoice", toolInput: { basis: output.basis }, resultStatus: "success" });
@@ -413,13 +421,16 @@ router.post("/mcp", async (req, res) => {
         const requests = plannedReadRequests(output, args.stepId, args.toolArguments, availablePlanReadNames(session, authorized.scopes));
         const results = [];
         for (const request of requests) {
+          const opportunity = availableWorkdayOpportunityTools(session, authorized.scopes).find(tool => tool.name === request.name);
           const tool = request.name === INVOICE_ACTIVITY_TOOL.name && invoiceActivityAvailable(session, authorized.scopes)
             ? { name: INVOICE_ACTIVITY_TOOL.name, auditTarget: "invoice" as const }
+            : opportunity ? { name: opportunity.name, auditTarget: "work_hub" as const }
             : requireChatGptReadableTool(session, authorized.scopes, request.name);
           let result: unknown;
           try {
             result = tool.name === INVOICE_ACTIVITY_TOOL.name
               ? await handleInvoiceActivityTool(request.arguments, session, authorized.scopes)
+              : opportunity ? await handleWorkdayOpportunityTool(opportunity.name, request.arguments, session, authorized.scopes)
               : chatGptReadToolOutput(tool.name, JSON.parse(await runTool(tool.name, request.arguments, session, "")));
           } catch {
             // Preserve earlier reads without exposing internal/provider exception details.
@@ -633,7 +644,7 @@ async function authorizedExactPlanTask(session: SessionPayload, scopes: string[]
   return [await readExactPlanTask(path => callNaturalVoiceDomainApi(path, 'GET', {}, session), taskId, { userId: session.userId, organizationKey: owner })];
 }
 function availablePlanReadNames(session: SessionPayload, scopes: string[]) {
-  return new Set([...chatGptReadableTools(session, scopes).map(tool => tool.name), ...(invoiceActivityAvailable(session, scopes) ? [INVOICE_ACTIVITY_TOOL.name] : [])]);
+  return new Set([...chatGptReadableTools(session, scopes).map(tool => tool.name), ...availableWorkdayOpportunityTools(session, scopes).map(tool => tool.name), ...(invoiceActivityAvailable(session, scopes) ? [INVOICE_ACTIVITY_TOOL.name] : [])]);
 }
 async function currentPlanCompletion(session: SessionPayload, scopes: string[], input: unknown, observedAt: number) {
   const request = planCompletionRequestSchema.parse(input);
