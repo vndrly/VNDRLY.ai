@@ -1,0 +1,42 @@
+import React from "react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, expect, it, vi } from "vitest";
+const mocks = vi.hoisted(() => ({ api: vi.fn() }));
+vi.mock("@/lib/api", () => ({ apiFetch: mocks.api }));
+vi.mock("@/hooks/useColors", () => ({ useColors: () => ({ text: "black", border: "gray" }) }));
+vi.mock("@/lib/fleet-copy", () => ({ useFleetCopy: () => (value: string) => value }));
+vi.mock("expo-crypto", () => ({ randomUUID: () => "10000000-0000-4000-8000-000000000001" }));
+vi.mock("@/components/TogglePillButton", () => ({ default: ({ children, onPress, disabled }: any) => <button disabled={disabled} onClick={onPress}>{children}</button> }));
+vi.mock("@react-native-community/datetimepicker", () => ({ default: () => null }));
+import FleetMaintenance from "./FleetMaintenance";
+const fleetId = "20000000-0000-4000-8000-000000000001", assetId = "30000000-0000-4000-8000-000000000001";
+const run = { id: "40000000-0000-4000-8000-000000000001", driverUserId: 1, fleetId, vehicleAssetId: assetId, trailerAssetId: null, title: "Own run" };
+const overview = { runs: [run, { ...run, id: "40000000-0000-4000-8000-000000000002", driverUserId: 2, title: "Another driver" }], fleets: [], capabilities: { canManage: false, canDrive: true } } as any;
+const record = { id: "50000000-0000-4000-8000-000000000001", companyId:609,fleetId,assetId,runId:run.id,kind:"defect",title:"Light fault",status:"reported",version:1,dueAt:null,holdId:"60000000-0000-4000-8000-000000000001",events:[],allowedActions:[] };
+afterEach(() => { cleanup(); mocks.api.mockReset(); });
+it("reports only exact own equipment and preserves an unknown operation for exact replay", async () => {
+  mocks.api.mockImplementation(async (path: string, options?: any) => {
+    if (!options) return { records: [], nextCursor: null, generatedAt:"2026-10-07T12:00:00Z" };
+    const writes = mocks.api.mock.calls.filter(call => call[1]?.method === "POST");
+    if (writes.length === 1) throw new Error("Network interrupted");
+    return { ...record, events:[{operationId:JSON.parse(options.body).operationId,action:"report",actorUserId:1,recordedAt:"2026-10-07T12:00:00Z",notes:"Broken light",source:"user_report"}] };
+  });
+  render(<FleetMaintenance overview={overview} resources={{ drivers:[],equipment:[] }} userId={1}/>);
+  expect(screen.queryByText(/Another driver/)).toBeNull();
+  fireEvent.click(screen.getByRole("button",{name:/Own run/}));
+  fireEvent.change(screen.getByLabelText("Report title"),{target:{value:"Light fault"}});
+  fireEvent.change(screen.getByLabelText("Report notes"),{target:{value:"Broken light"}});
+  fireEvent.click(screen.getByRole("button",{name:"Save equipment report"}));
+  fireEvent.click(await screen.findByRole("button",{name:"Verify and retry the exact maintenance operation"}));
+  await waitFor(() => expect(mocks.api.mock.calls.filter(call => call[1]?.method === "POST")).toHaveLength(2));
+  const writes = mocks.api.mock.calls.filter(call => call[1]?.method === "POST");
+  expect(writes[1][1].body).toBe(writes[0][1].body);
+  expect(JSON.parse(writes[0][1].body)).toMatchObject({fleetId,assetId,runId:run.id,kind:"defect"});
+});
+it("shows only server allowed maintenance actions, without giving dispatch safety release", async () => {
+  mocks.api.mockImplementation(async path => path.endsWith(record.id) ? {...record,allowedActions:["triage"]} : {records:[record],nextCursor:null,generatedAt:"2026-10-07T12:00:00Z"});
+  render(<FleetMaintenance overview={overview} resources={{drivers:[],equipment:[]}} userId={1}/>);
+  fireEvent.click(await screen.findByRole("button",{name:"Light fault · reported"}));
+  expect(await screen.findByRole("button",{name:"triage"})).toBeTruthy();
+  expect(screen.queryByRole("button",{name:"release"})).toBeNull();
+});

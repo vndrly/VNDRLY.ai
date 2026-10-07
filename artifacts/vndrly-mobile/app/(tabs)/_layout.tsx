@@ -8,7 +8,8 @@ import AdaptiveNavigationShell from "@/components/AdaptiveNavigationShell";
 import { useAuth } from "@/hooks/use-auth";
 import { apiFetch, logout } from "@/lib/api";
 import { fleetHomeRoute } from "@/lib/fleet-mobile";
-import type { FleetOverview } from "@workspace/api-zod";
+import { useFleetCopy } from "@/lib/fleet-copy";
+import type { FleetOverview, FleetSiteChoices, FleetSupportChoices } from "@workspace/api-zod";
 import {
   buildAppNavigation,
   type AppNavigationItem,
@@ -24,15 +25,25 @@ import { useUnreadNotificationCount } from "@/lib/notificationBadge";
 
 export default function TabLayout() {
   const { t } = useTranslation();
+  const fleetCopy = useFleetCopy();
   const badges = useTabBadges();
   const notificationCount = useUnreadNotificationCount(true);
-  const { user, activeMembershipId } = useAuth();
+  const { user, activeMembershipId, activeMembership } = useAuth();
   const pathname = usePathname();
   const fleetIdentity = `${user?.id}:${activeMembershipId}`;
+  const [fleetSupportAccess,setFleetSupportAccess]=useState<string|null>(null);
+  const [fleetSiteAccess,setFleetSiteAccess] = useState<string|null>(null);
   const [fleetAccess, setFleetAccess] = useState<string | null>(null);
   useEffect(() => {
     let alive = true;
     setFleetAccess(null);
+    setFleetSupportAccess(null);
+    if(user?.id && user.role === "admin") void apiFetch<FleetSupportChoices>("/api/fleet/support").then(result=>{if(alive && result.readOnly===true && result.companies.length>0)setFleetSupportAccess(fleetIdentity);}).catch(()=>undefined);
+    setFleetSiteAccess(null);
+    if (user?.id && (activeMembership ? activeMembership.orgType === "partner" : user.role === "partner")) {
+      void apiFetch<FleetSiteChoices>("/api/fleet/site-activity").then(result=>{if(alive && result.capabilities.canReadSiteActivity)setFleetSiteAccess(fleetIdentity);}).catch(()=>undefined);
+      return () => {alive=false;};
+    }
     if (user?.id) void apiFetch<FleetOverview>("/api/fleet/overview")
       .then(result => {
         if (!alive) return;
@@ -42,7 +53,7 @@ export default function TabLayout() {
       })
       .catch(() => undefined);
     return () => { alive = false; };
-  }, [fleetIdentity, user?.id, pathname]);
+  }, [fleetIdentity, user?.id, user?.role, activeMembership?.orgType, pathname]);
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const [gateVoiceListening, setGateVoiceListening] = useState(false);
@@ -52,6 +63,9 @@ export default function TabLayout() {
   const labels = useMemo<AppNavigationLabels>(
     () => ({
       askv: t("tabs.askv"),
+      fleet: fleetCopy("Fleet Ops"),
+      fleetSiteActivity: fleetCopy("Fleet site activity"),
+      fleetSupport: fleetCopy("Fleet support"),
       comms: t("tabs.comms"),
       crews: t("tabs.crews"),
       flagged: t("tabs.flagged"),
@@ -67,11 +81,11 @@ export default function TabLayout() {
       changeOver: t("changeOver.title"),
       shiftNotes: t("changeOver.shiftNotes"),
     }),
-    [t, user],
+    [t, user, fleetCopy],
   );
   const items = useMemo(
-    () => buildAppNavigation({ user, labels, badges, fleetEnabled: fleetAccess === fleetIdentity }),
-    [badges, labels, user, fleetAccess, fleetIdentity],
+    () => buildAppNavigation({ user, labels, badges, fleetEnabled: fleetAccess === fleetIdentity, fleetSupportEnabled: fleetSupportAccess === fleetIdentity, fleetSiteActivityEnabled: fleetSiteAccess === fleetIdentity }),
+    [badges, labels, user, fleetAccess, fleetSiteAccess, fleetSupportAccess, fleetIdentity],
   );
   const activeKey = activeNavigationKey(pathname);
 

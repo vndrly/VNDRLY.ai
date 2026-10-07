@@ -99,6 +99,9 @@ describe("ChatGPT account connection boundary", () => {
     expect(ordinary._meta?.["mcp/www_authenticate"]).toBeUndefined();
     expect(ordinary.isError).toBe(false);
     grants[0].actions = [];
+    // Tool discovery may inspect trusted Partner site choices; payment preparation must not read or execute anything.
+    expect(mocks.run.mock.calls.map(([tool])=>tool)).toEqual(["query_fleet_site_activity"]);
+    mocks.run.mockClear();
 
     for (const params of [{ name: "record_ticket_payment", arguments: { ticketId: 1 } }, { name: "v_prepare_action", arguments: { toolName: "record_ticket_payment", arguments: { ticketId: 1 } } }]) {
       const result = (await invoke("tools/call", params)).body.result;
@@ -157,6 +160,23 @@ describe("ChatGPT account connection boundary", () => {
     const response = await request(app).post(base + "/mcp").set("Authorization", "Bearer " + credentials.access_token).send({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "v_open_gate_handoff", arguments: { stationId: "17795fa1-bb5f-4abc-a5f8-7e9b33a0ec05" } } });
     expect(response.body.result.isError).toBe(true);
     expect(response.body.result.content[0].text).not.toContain("deviceUrl");
+  });
+  it.each(["valid", "revoked", "scope removed", "wrong user", "run denied", "wrong run"])("rechecks Fleet run handoff when %s", async condition => {
+    const credentials = await tokens("fleet:read");
+    const runId = "17795fa1-bb5f-4abc-a5f8-7e9b33a0ec05";
+    mocks.run.mockResolvedValue(JSON.stringify({ id: runId }));
+    const response = await request(app).post(base + "/mcp").set("Authorization", "Bearer " + credentials.access_token).send({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "v_open_fleet_run", arguments: { runId } } });
+    expect(response.body.result.isError).toBe(false);
+    const result = JSON.parse(response.body.result.content[0].text);
+    expect(result).toMatchObject({ runId, entrySaved: false, deviceCaptureStarted: false, nativeAppOpened: false });
+    if (condition === "revoked") grants[0].revoked = true;
+    if (condition === "scope removed") grants[0].scopes = [];
+    if (condition === "run denied") mocks.run.mockResolvedValue(JSON.stringify({ error: "Denied" }));
+    if (condition === "wrong run") mocks.run.mockResolvedValue(JSON.stringify({ id: "another" }));
+    const opened = await request(app).get(new URL(result.deviceUrl).pathname).set("Cookie", cookie(condition === "wrong user" ? { ...session, userId: 18 } : session));
+    expect(opened.status).toBe(condition === "valid" ? 302 : 403);
+    if (condition === "valid") expect(opened.headers.location).toBe("/fleet/runs/" + runId);
+    expect(mocks.bound).not.toHaveBeenCalled();
   });
   it.each(["valid", "revoked", "scope removed", "wrong user", "ticket denied", "wrong ticket"])("rechecks ticket entry handoff when %s", async condition => {
     const credentials = await tokens("tickets:read");
@@ -695,4 +715,3 @@ it('returns safety draft fields through the scoped read boundary without a clien
  expect((await call(limited.access_token)).body.result.isError).toBe(true);
  expect(mocks.run).not.toHaveBeenCalled();
 });
-

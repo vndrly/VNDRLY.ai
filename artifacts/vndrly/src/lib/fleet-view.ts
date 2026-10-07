@@ -1,4 +1,25 @@
 import type { FleetOverview } from "@workspace/api-zod";
+export function fleetHomePath(
+  overview: FleetOverview | undefined,
+  search: string,
+) {
+  if (
+    !overview?.enabled ||
+    new URLSearchParams(search).get("workspace") === "standard"
+  )
+    return null;
+  if (
+    overview.preference?.defaultWorkspace === "fleet_desk" &&
+    overview.capabilities.canDispatch
+  )
+    return "/fleet";
+  if (
+    overview.preference?.defaultWorkspace === "fleet_my_day" &&
+    overview.capabilities.canDrive
+  )
+    return "/fleet/my-day";
+  return null;
+}
 export function fleetVisibleRuns(
   overview: FleetOverview,
   userId: number,

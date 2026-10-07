@@ -1,5 +1,5 @@
 import { Feather } from "@expo/vector-icons";
-import { router, Stack } from "expo-router";
+import { router, Stack, useLocalSearchParams } from "expo-router";
 import * as Location from "expo-location";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -16,9 +16,13 @@ import AmberButton from "@/components/AmberButton";
 import InPageHeader from "@/components/InPageHeader";
 import { useColors } from "@/hooks/useColors";
 import { acceptConsent, setConsentDeclined } from "@/lib/locationConsent";
+import { fleetConsentReturnRoute } from "@/lib/fleet-mobile";
 import { startLiveLocationReporter } from "@/lib/liveLocationReporter";
 
 export default function LocationConsentScreen() {
+  const params = useLocalSearchParams();
+  const fleetReturn = fleetConsentReturnRoute(params.returnTo);
+  const returnRoute = fleetReturn ?? "/(tabs)";
   const colors = useColors();
   const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
@@ -40,7 +44,7 @@ export default function LocationConsentScreen() {
       await acceptConsent();
       await setConsentDeclined(false);
       await startLiveLocationReporter();
-      router.replace("/(tabs)");
+      router.replace(returnRoute as never);
     } catch (e: unknown) {
       Alert.alert(t("common.error"), e instanceof Error ? e.message : t("consent.couldNotSave"));
     } finally {
@@ -50,7 +54,7 @@ export default function LocationConsentScreen() {
 
   const onDecline = async () => {
     await setConsentDeclined(true);
-    router.replace("/(tabs)");
+    router.replace(returnRoute as never);
   };
 
   return (
@@ -58,7 +62,7 @@ export default function LocationConsentScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <InPageHeader
         title={t("consent.title")}
-        onBack={() => router.replace("/profile")}
+        onBack={() => router.replace((fleetReturn ?? "/profile") as never)}
       />
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={[styles.iconWrap, { backgroundColor: colors.accent }]}>

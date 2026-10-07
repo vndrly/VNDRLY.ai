@@ -1,0 +1,33 @@
+import React from "react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, expect, it, vi } from "vitest";
+const mocks=vi.hoisted(()=>({api:vi.fn(),route:vi.fn(),app: null as null|((state:string)=>void),token:null as null|(()=>void)}));
+vi.mock("@/lib/api",()=>({apiFetch:mocks.api}));
+vi.mock("@/lib/auth",()=>({captureAuthScope:()=>({generation:1}),isAuthScopeCurrent:()=>true,subscribeUser:()=>()=>{},subscribeToken:(callback:()=>void)=>{mocks.token=callback;return()=>{};}}));
+vi.mock("@/lib/locationConsent",()=>({hasActiveConsentForThisDevice:async()=>true}));
+vi.mock("@/lib/deviceId",()=>({getDeviceId:async()=>"synthetic-device"}));
+vi.mock("@/hooks/useColors",()=>({useColors:()=>({text:"black"})}));
+vi.mock("@/lib/fleet-copy",()=>({useFleetCopy:()=>(value:string)=>value}));
+vi.mock("expo-crypto",()=>({randomUUID:()=>"10000000-0000-4000-8000-000000000001"}));
+vi.mock("expo-router",()=>({router:{push:mocks.route}}));
+vi.mock("expo-location",()=>({Accuracy:{Balanced:1},getForegroundPermissionsAsync:async()=>({status:"granted"}),getCurrentPositionAsync:async()=>({coords:{latitude:35,longitude:-97,accuracy:15},timestamp:Date.parse("2026-10-07T12:00:00Z")})}));
+vi.mock("react-native",async()=>({...await vi.importActual<any>("react-native"),AppState:{currentState:"active",addEventListener:(_:string,callback:(state:string)=>void)=>{mocks.app=callback;return{remove:()=>{}};}}}));
+vi.mock("@/components/TogglePillButton",()=>({default:({children,onPress,disabled}:any)=><button disabled={disabled} onClick={onPress}>{children}</button>}));
+import FleetPhoneLocation from "./FleetPhoneLocation";
+const account={userId:1,companyId:2,membershipId:3,sessionVersion:1};
+const run={id:"20000000-0000-4000-8000-000000000001",version:7,companyId:2,driverUserId:1,vehicleAssetId:"30000000-0000-4000-8000-000000000001",trailerAssetId:null,status:"in_progress",phase:"traveling_to_pickup"} as any;
+afterEach(()=>{cleanup();mocks.api.mockReset();mocks.route.mockReset();mocks.app=null;mocks.token=null;});
+it("renders accepted phone-only data, then stops visibly on app background and account token change",async()=>{
+  mocks.api.mockImplementation(async(path,options)=>options?{runId:run.id,vehicleAssetId:run.vehicleAssetId,driverUserId:1,latitude:35,longitude:-97,accuracyMeters:15,recordedAt:"2026-10-07T12:00:00Z",receivedAt:"2026-10-07T12:00:01Z",source:"driver_phone",freshness:"recent",physicalProofVerified:false}:path.endsWith("overview")?{accountScope:account,capabilities:{canDrive:true}}:run);
+  render(<FleetPhoneLocation run={run} account={account} disabled={false}/>);
+  fireEvent.click(screen.getByRole("button",{name:"Start foreground phone sharing"}));
+  expect(await screen.findByText(/This driver's phone position was accepted/)).toBeTruthy();
+  act(()=>mocks.app?.("background"));expect(screen.getByText(/foreground only and stopped/)).toBeTruthy();
+  act(()=>mocks.token?.());expect(screen.getByText(/account or device context changed/)).toBeTruthy();expect(screen.queryByText(/Last accepted phone observation/)).toBeNull();
+});
+it("opens the existing consent screen with only the exact run return route",()=>{
+  render(<FleetPhoneLocation run={run} account={account} disabled={false}/>);
+  fireEvent.click(screen.getByRole("button",{name:"Review device location consent"}));
+  expect(mocks.route).toHaveBeenCalledWith({pathname:"/location-consent",params:{returnTo:`/fleet-run/${run.id}`}});
+  expect(mocks.api).not.toHaveBeenCalled();
+});

@@ -81,3 +81,21 @@ export const TICKET_DEVICE_TOOL = {
   inputSchema: { type: "object" as const, properties: { ticketId: { type: "integer", minimum: 1 }, entry: { type: "string", enum: [...TICKET_ENTRY_KINDS] } }, required: ["ticketId", "entry"], additionalProperties: false },
   annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
 };
+
+export type FleetDeviceHandoff = Omit<FileDeviceHandoff, "kind"> & { kind: "fleet-device-handoff"; runId: string };
+export function fleetDeviceHandoff(session: SessionPayload, grantConsentHash: string, runId: unknown): FleetDeviceHandoff {
+  if (typeof runId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(runId)) throw new Error("A saved Fleet run is required");
+  return { ...fileDeviceHandoff(session, grantConsentHash), kind: "fleet-device-handoff", runId };
+}
+export function requireMatchingFleetDevice(handoff: FleetDeviceHandoff, current: SessionPayload): string {
+  if (handoff.kind !== "fleet-device-handoff") throw new Error("A valid Fleet handoff is required");
+  fleetDeviceHandoff(current, handoff.grantConsentHash, handoff.runId);
+  requireMatchingFileDevice({ ...handoff, kind: "file-device-handoff" }, current);
+  return "/fleet/runs/" + encodeURIComponent(handoff.runId);
+}
+export const FLEET_DEVICE_TOOL = {
+  name: "v_open_fleet_run",
+  description: "Open the exact authorized Fleet run on an account-bound web device screen. The screen rechecks current permissions and run state. Opening it does not save an inspection, load, delivery or closeout, start phone tracking, upload evidence or open the native iOS app. Read the saved run afterward before reporting completion.",
+  inputSchema: { type: "object" as const, properties: { runId: { type: "string", format: "uuid" } }, required: ["runId"], additionalProperties: false },
+  annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+};

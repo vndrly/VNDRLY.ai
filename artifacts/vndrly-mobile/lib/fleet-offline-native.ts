@@ -1,10 +1,10 @@
 import * as SecureStore from "expo-secure-store";
-import { createFleetOfflineStore, fleetOfflineByteLength } from "./fleet-offline";
+import { createFleetOfflineStore, fleetOfflineByteLength, FLEET_OFFLINE_MAX_BYTES } from "./fleet-offline";
 
 // Device-only encrypted chunks keep records out of unencrypted preferences.
 const options = { keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY };
 const CHUNK = 400;
-const MAX_CHUNKS = 42;
+const MAX_CHUNKS = Math.ceil(FLEET_OFFLINE_MAX_BYTES / CHUNK);
 const REGISTRY = "vndrly.fleet.registry";
 const scopeKey = /^vndrly\.fleet\.\d+\.\d+\.\d+$/;
 function registryKeys(raw: string | null) {
@@ -29,7 +29,7 @@ export const nativeFleetOffline = createFleetOfflineStore({
     return parts.join("");
   },
   async setItem(key, value) {
-    if (fleetOfflineByteLength(value) > 16 * 1024) throw new Error("Assigned Fleet cache exceeds the 16 KB device limit.");
+    if (fleetOfflineByteLength(value) > FLEET_OFFLINE_MAX_BYTES) throw new Error("Assigned Fleet cache exceeds the 64 KB device limit.");
     if (!scopeKey.test(key)) throw new Error("Fleet cache key is invalid.");
     const keys = registryKeys(await SecureStore.getItemAsync(REGISTRY, options));
     if (!keys.includes(key)) { if (keys.length >= 20) throw new Error("Fleet cache registry is full."); await SecureStore.setItemAsync(REGISTRY, JSON.stringify([...keys, key]), options); }

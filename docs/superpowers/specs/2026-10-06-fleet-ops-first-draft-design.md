@@ -1,6 +1,6 @@
 # VNDRLY Fleet Ops — first design draft
 
-Status: approved for implementation by the user October 7, 2026. Not yet implemented or shipped. Prepared October 6, 2026.
+Status: approved for implementation by the user October 7, 2026. Implementation underway; not yet shipped or verified on devices. Prepared October 6, 2026.
 
 ## Product brief
 

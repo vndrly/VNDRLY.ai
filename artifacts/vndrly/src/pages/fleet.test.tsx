@@ -2,7 +2,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 const api = vi.hoisted(() => ({
-  overview: vi.fn(),
+  overviewPage: vi.fn(),
+  run: vi.fn(),
+  gateObservations: vi.fn(),
+  location: "/fleet/my-day",
   resources: vi.fn(),
   action: vi.fn(),
   create: vi.fn(),
@@ -18,7 +21,7 @@ vi.mock("react-i18next", () => ({
   useTranslation: () => ({ i18n: { language: "en" } }),
 }));
 vi.mock("wouter", () => ({
-  useLocation: () => ["/fleet/my-day"],
+  useLocation: () => [api.location],
   Link: ({ children }: { children: React.ReactNode }) => (
     <span>{children}</span>
   ),
@@ -56,7 +59,8 @@ const run = {
 };
 beforeEach(() => {
   vi.clearAllMocks();
-  api.overview.mockResolvedValue({
+  api.location = "/fleet/my-day";
+  api.overviewPage.mockResolvedValue({
     companyId: 1,
     enabled: true,
     roles: ["driver"],
@@ -82,14 +86,71 @@ const mount = () =>
     </QueryClientProvider>,
   );
 describe("Fleet driver workspace", () => {
+  it("clears previously loaded runs when a later page reports their fleet grant revoked", async () => {
+    const initial = await api.overviewPage();
+    api.overviewPage
+      .mockResolvedValueOnce({
+        ...initial,
+        page: { limit: 1, nextCursor: "next" },
+      })
+      .mockResolvedValueOnce({
+        ...initial,
+        fleets: [],
+        runs: [],
+        page: { limit: 1, nextCursor: null },
+      });
+    mount();
+    await screen.findByText("Own pickup");
+    fireEvent.click(screen.getByText("Load more authorized runs"));
+    await screen.findByText("No runs are currently assigned to you.");
+    expect(screen.queryByText("Own pickup")).toBeNull();
+  });
+  it("loads a current authorized run detail even beyond the overview page", async () => {
+    api.location = "/fleet/runs/historical";
+    api.run.mockResolvedValueOnce({
+      ...run,
+      id: "historical",
+      title: "Historical pickup",
+    });
+    mount();
+    await screen.findAllByText("Historical pickup");
+    expect(api.run).toHaveBeenCalledWith("historical");
+    expect(screen.getByText("Acknowledge assignment")).toBeTruthy();
+  });
+  it("loads the server cursor without losing already loaded authorized runs", async () => {
+    const initial = await api.overviewPage();
+    api.overviewPage
+      .mockResolvedValueOnce({
+        ...initial,
+        runs: [run],
+        page: { limit: 1, nextCursor: "next-authorized-page" },
+      })
+      .mockResolvedValueOnce({
+        ...initial,
+        runs: [{ ...run, id: "run2", title: "Second pickup" }],
+        page: { limit: 1, nextCursor: null },
+      });
+    mount();
+    fireEvent.click(await screen.findByText("Load more authorized runs"));
+    await screen.findByText("Second pickup");
+    expect(api.overviewPage).toHaveBeenCalledWith("next-authorized-page");
+    expect(screen.getByText("Own pickup")).toBeTruthy();
+  });
   it("keeps generated run and stop identities on exact create retry", async () => {
     const fleetId = "22222222-2222-4222-8222-222222222222";
     const assetId = "33333333-3333-4333-8333-333333333333";
-    api.overview.mockResolvedValueOnce({
+    api.overviewPage.mockResolvedValueOnce({
       companyId: 1,
       enabled: true,
       capabilities: { canDrive: true, canDispatch: true, canManage: true },
-      fleets: [{ id: fleetId, name: "North fleet", siteIds: [10, 20] }],
+      fleets: [
+        {
+          id: fleetId,
+          name: "North fleet",
+          siteIds: [10, 20],
+          equipmentAssetIds: [assetId],
+        },
+      ],
       runs: [],
       observations: [],
       unavailableIntegrations: [],
@@ -163,11 +224,11 @@ describe("Fleet driver workspace", () => {
     });
   });
   it("does not advertise blocked or absent run actions", async () => {
-    api.overview.mockResolvedValueOnce({
+    api.overviewPage.mockResolvedValueOnce({
       companyId: 1,
       enabled: true,
       capabilities: { canDrive: true },
-      fleets: [],
+      fleets: [{ id: "fleet1", name: "Fleet one", siteIds: [10] }],
       runs: [{ ...run, allowedActions: [] }],
       observations: [],
       unavailableIntegrations: [],

@@ -18,6 +18,9 @@ export type AppNavigationItem = {
 };
 
 export type AppNavigationLabels = {
+  fleet?: string;
+  fleetSiteActivity?: string;
+  fleetSupport?: string;
   askv: string;
   comms: string;
   crews: string;
@@ -45,6 +48,8 @@ export type AppNavigationBadges = {
 
 type Input = {
   fleetEnabled?: boolean;
+  fleetSiteActivityEnabled?: boolean;
+  fleetSupportEnabled?: boolean;
   badges: AppNavigationBadges;
   labels: AppNavigationLabels;
   user: StoredUser | null | undefined;
@@ -52,6 +57,8 @@ type Input = {
 
 export function buildAppNavigation({
   fleetEnabled = false,
+  fleetSiteActivityEnabled = false,
+  fleetSupportEnabled = false,
   user,
   labels,
   badges,
@@ -66,7 +73,8 @@ export function buildAppNavigation({
       item("shift-notes", "/(tabs)/shift-notes", labels.shiftNotes ?? "Shift Notes", "file-text"),
       item("profile", "/(tabs)/profile", labels.profile, "user"),
     ];
-    if (fleetEnabled) gateItems.splice(2, 0, item("fleet", "/(tabs)/fleet", "Fleet Ops", "truck"));
+    if (fleetSiteActivityEnabled) gateItems.splice(2, 0, item("fleet-site-activity", "/(tabs)/fleet-site-activity", labels.fleetSiteActivity ?? "Fleet site activity", "activity"));
+    if (fleetEnabled) gateItems.splice(2, 0, item("fleet", "/(tabs)/fleet", labels.fleet ?? "Fleet Ops", "truck"));
     return gateItems;
   }
 
@@ -83,7 +91,9 @@ export function buildAppNavigation({
       badge: badges.flagged,
     },
   ];
-  if (fleetEnabled) result.splice(2, 0, item("fleet", "/(tabs)/fleet", "Fleet Ops", "truck"));
+  if (fleetSupportEnabled) result.splice(2, 0, item("fleet-support", "/(tabs)/fleet-support", labels.fleetSupport ?? "Fleet support", "shield"));
+  if (fleetSiteActivityEnabled) result.splice(2, 0, item("fleet-site-activity", "/(tabs)/fleet-site-activity", labels.fleetSiteActivity ?? "Fleet site activity", "activity"));
+  if (fleetEnabled) result.splice(2, 0, item("fleet", "/(tabs)/fleet", labels.fleet ?? "Fleet Ops", "truck"));
 
   if (
     user?.role === "admin" ||
@@ -125,7 +135,7 @@ export function isGatekeeperRouteAllowed(
     "notification-preferences",
   ]);
   return (
-    (root === "(tabs)" && (isGatekeeperTabKey(child) || child === "fleet" || child === "fleet-run")) ||
+    (root === "(tabs)" && (isGatekeeperTabKey(child) || child === "fleet" || child === "fleet-run" || child === "fleet-site-activity")) ||
     root === "work-hub" ||
     profileActionRoutes.has(root)
   );

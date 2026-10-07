@@ -1,3 +1,4 @@
+import { fleetCopy } from "@/lib/fleet-copy";
 import { Link, useLocation } from "wouter";
 import { EnergyMarketTicker } from './energy-market-ticker';
 import { cn } from "@/lib/utils";
@@ -223,28 +224,40 @@ const FIXED_APP_CHROME = true;
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const { user, logout } = useAuth();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const fleetText = fleetCopy(i18n.language);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const fleetAccess = useQuery({ queryKey: ["fleet", `${user?.userId}:${user?.activeMembershipId}:${user?.vendorId}:${user?.partnerId}`], queryFn: fleetClient.overview, enabled: Boolean(user), retry: false, staleTime: 30_000 });
   const portalNavItems = useNavItems(user);
-  const standardNavItems = orderPortalNavigation(fleetAccess.data?.enabled || fleetAccess.data?.capabilities.canSetup ? [...portalNavItems, { key: "fleet", href: "/fleet", label: "Fleet Ops", icon: Gauge }] : portalNavItems, user?.role);
+  const siteFleetAccess = useQuery({ queryKey: ["fleet-site-choices", `${user?.userId}:${user?.activeMembershipId}:${user?.partnerId}`], queryFn: fleetClient.siteChoices, enabled: Boolean(user?.partnerId), retry: false, staleTime: 30_000 });
+  const canReadFleetSites = !siteFleetAccess.isError && siteFleetAccess.data?.capabilities.canReadSiteActivity === true;
+  const canEnterFleet = Boolean(fleetAccess.data?.capabilities.canSetup || (fleetAccess.data?.enabled && (fleetAccess.data.capabilities.canDispatch || fleetAccess.data.capabilities.canDrive || fleetAccess.data.capabilities.canManage)));
+  const supportFleetAccess = useQuery({queryKey:["fleet-support-choices", `${user?.userId}:${user?.activeMembershipId}`],queryFn:fleetClient.supportChoices,enabled:user?.role==="admin",retry:false,staleTime:30_000});
+  const supportNav = !supportFleetAccess.isError && supportFleetAccess.data?.companies.length ? [{key:"fleet-support",href:"/fleet/support",label:fleetText.support,icon:Gauge}] : [];
+  const standardNavItems = orderPortalNavigation(canEnterFleet ? [...portalNavItems, { key: "fleet", href: "/fleet", label: fleetText.workspace, icon: Gauge }] : canReadFleetSites ? [...portalNavItems, { key: "fleet-site-activity", href: "/fleet/site-activity", label: fleetText.siteActivity, icon: Gauge }] : [...portalNavItems, ...supportNav], user?.role);
   const inWorkHub = isWorkHubPath(location);
   const inFleet = location === "/fleet" || location.startsWith("/fleet/");
   const fleetNavItems = [
-    ...(fleetAccess.data?.capabilities.canDispatch ? [{ key: "fleet-desk", href: "/fleet", label: "Fleet Desk", icon: Gauge }, { key: "fleet-dispatch", href: "/fleet/dispatch", label: "Dispatch", icon: ClipboardList }] : []),
-    { key: "fleet-map", href: "/fleet/map", label: "Recorded Map", icon: MapIcon },
-    { key: "fleet-runs", href: "/fleet/runs", label: "Runs", icon: FileText },
-    ...(fleetAccess.data?.capabilities.canDrive ? [{ key: "fleet-my-day", href: "/fleet/my-day", label: "My Day", icon: Users }] : []),
-    { key: "fleet-loads", href: "/fleet/loads", label: "Loads & Manifests", icon: Receipt },
-    { key: "fleet-inventory", href: "/work-hub/inventory", label: "Inventory", icon: BriefcaseBusiness },
-    ...(fleetAccess.data?.capabilities.canManage ? [{ key: "fleet-review", href: "/fleet/review", label: "Operational Review", icon: UserCheck }] : []),
-    ...(fleetAccess.data?.capabilities.canSetup ? [{ key: "fleet-setup", href: "/fleet/setup", label: "Fleet Setup", icon: Gauge }] : []),
-    { key: "fleet-settings", href: "/fleet/settings", label: "Workspace Settings", icon: Gauge },
-    { key: "fleet-work-hub", href: "/work-hub", label: "Work Hub", icon: BriefcaseBusiness },
+    ...(fleetAccess.data?.capabilities.canDispatch ? [{ key: "fleet-desk", href: "/fleet", label: fleetText.desk, icon: Gauge }, { key: "fleet-dispatch", href: "/fleet/dispatch", label: fleetText.dispatch, icon: ClipboardList }] : []),
+    { key: "fleet-map", href: "/fleet/map", label: fleetText.map, icon: MapIcon },
+    { key: "fleet-runs", href: "/fleet/runs", label: fleetText.runs, icon: FileText },
+    ...(fleetAccess.data?.capabilities.canDrive ? [{ key: "fleet-my-day", href: "/fleet/my-day", label: fleetText.myDay, icon: Users }] : []),
+    { key: "fleet-loads", href: "/fleet/loads", label: fleetText.loads, icon: Receipt },
+    { key: "fleet-inventory", href: "/fleet/equipment", label: fleetText.equipment, icon: BriefcaseBusiness },
+    ...((fleetAccess.data?.capabilities.canReportDefect ?? (fleetAccess.data?.capabilities.canManage || fleetAccess.data?.capabilities.canDrive)) ? [{ key: "fleet-maintenance", href: "/fleet/maintenance", label: fleetText.maintenance, icon: ClipboardList }] : []),
+    ...(fleetAccess.data?.capabilities.canManage ? [{ key: "fleet-review", href: "/fleet/review", label: fleetText.review, icon: UserCheck }] : []),
+    ...(fleetAccess.data?.capabilities.canSetup ? [{ key: "fleet-setup", href: "/fleet/setup", label: fleetText.setup, icon: Gauge }] : []),
+    { key: "fleet-drivers", href: "/fleet/drivers", label: fleetText.drivers, icon: Users },
+    { key: "fleet-readiness", href: "/fleet/readiness", label: fleetText.readinessTitle, icon: ClipboardList },
+    { key: "fleet-costs", href: "/fleet/costs", label: fleetText.costs, icon: Receipt },
+    { key: "fleet-settings", href: "/fleet/settings", label: fleetText.settings, icon: Gauge },
+    { key: "fleet-reports", href: "/fleet/reports", label: fleetText.reports, icon: Receipt },
+    { key: "fleet-work-hub", href: "/work-hub", label: fleetText.workHub, icon: BriefcaseBusiness },
+    { key: "fleet-standard", href: "/?workspace=standard", label: fleetText.fieldOps, icon: LayoutDashboard },
   ];
   useWorkHubDevicePresence(location, Boolean(user?.vendorId || user?.partnerId), user?.userId, `${user?.vendorId ?? ""}:${user?.partnerId ?? ""}`);
 
-  const navItems = inFleet && fleetAccess.data && (fleetAccess.data.enabled || fleetAccess.data.capabilities.canSetup) ? fleetNavItems : inWorkHub ? getWorkHubNavItems(user?.role).map((item) => ({ ...item, icon: workHubIcons[item.key as keyof typeof workHubIcons] })) : standardNavItems;
+  const navItems = inFleet && canEnterFleet ? fleetNavItems : inWorkHub ? getWorkHubNavItems(user?.role).map((item) => ({ ...item, icon: workHubIcons[item.key as keyof typeof workHubIcons] })) : standardNavItems;
   const { data: vendor } = useGetVendor(user?.vendorId ?? 0, { query: { enabled: user?.role === "vendor" && !!user.vendorId, queryKey: getGetVendorQueryKey(user?.vendorId ?? 0) } });
   const { data: partner } = useGetPartner(user?.partnerId ?? 0, { query: { enabled: user?.role === "partner" && !!user.partnerId, queryKey: getGetPartnerQueryKey(user?.partnerId ?? 0) } });
   const { data: vendorRatings } = useGetVendorRatings(user?.vendorId ?? 0, {

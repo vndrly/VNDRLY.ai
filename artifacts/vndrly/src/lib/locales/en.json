@@ -4686,6 +4686,10 @@
       "publish_failed": "We couldn't publish your catalog. Please try again."
     }
 ,
+    "fleet": {
+      "invalid_request": "The Fleet request is invalid. Review the fields and try again.",
+      "internal_error": "The Fleet request could not be completed. Please try again."
+    },
     "asset": {
       "invalid_request": "The asset request is invalid.",
       "internal_error": "The asset request could not be completed."

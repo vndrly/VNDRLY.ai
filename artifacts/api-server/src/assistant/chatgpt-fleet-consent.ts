@@ -19,6 +19,7 @@ export function fleetConsentUpgradeTools(session: SessionPayload, scopes: readon
   if (overview.capabilities.canDispatch) eligible.add("fleet:dispatch");
   if (overview.capabilities.canDrive) eligible.add("fleet:run");
   if (overview.capabilities.canManage) eligible.add("fleet:review");
+  if (overview.capabilities.canMaintain === true) eligible.add("fleet:maintenance");
   if (overview.capabilities.canSetup) eligible.add("fleet:admin");
   const available = new Set([...chatGptReadableTools(session, scopes), ...chatGptActionTools(session, scopes)].map(tool => tool.name));
   const candidates = [...eligible].filter(scope => !scopes.includes(scope)).flatMap(scope => {
@@ -38,4 +39,16 @@ export function fleetConsentChallenge(issuer: string, scopes: readonly string[],
   const scope = [...new Set([...scopes, requiredScope])].join(" ");
   return { isError: true, content: [{ type: "text", text: "Additional Fleet consent is required. No Fleet records were returned or changes prepared by this request. Reauthorize the intended VNDRLY account and verify its identity and permissions before continuing." }],
     _meta: { "mcp/www_authenticate": [`Bearer resource_metadata="${issuer}/.well-known/oauth-protected-resource", error="insufficient_scope", error_description="Fleet consent is required", scope="${scope}"`] } };
+}
+
+/** Choices must come from the trusted site service under the current Partner membership. */
+export function partnerFleetConsentUpgradeTools(session: SessionPayload, scopes: readonly string[], choices: {sites: {siteId: number}[]} | null) {
+  if(session.role!=="partner" || !session.partnerId || !choices?.sites.length || scopes.includes("fleet:read")) return [];
+  return chatGptReadableTools(session,[...scopes,"fleet:read"]).filter(tool=>tool.name==="query_fleet_site_activity").map(tool=>({tool,scope:"fleet:read"}));
+}
+
+/** Platform title alone never grants company access; choices require an active support grant. */
+export function supportFleetConsentUpgradeTools(session: SessionPayload, scopes: readonly string[], choices: {companies: unknown[]} | null) {
+  if(session.role!=="admin" || !session.userId || !choices?.companies.length || scopes.includes("fleet:read")) return [];
+  return chatGptReadableTools(session,[...scopes,"fleet:read"]).filter(tool=>tool.name==="query_fleet_support").map(tool=>({tool,scope:"fleet:read"}));
 }

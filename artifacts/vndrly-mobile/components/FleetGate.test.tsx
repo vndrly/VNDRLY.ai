@@ -1,0 +1,40 @@
+import React from "react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, expect, it, vi } from "vitest";
+const mocks=vi.hoisted(()=>({api:vi.fn()}));
+vi.mock("@/lib/api",()=>({apiFetch:mocks.api}));
+vi.mock("@/hooks/useColors",()=>({useColors:()=>({text:"black",border:"gray"})}));
+vi.mock("@/lib/fleet-copy",()=>({useFleetCopy:()=>(value:string)=>value}));
+vi.mock("expo-crypto",()=>({randomUUID:()=>"10000000-0000-4000-8000-000000000001"}));
+vi.mock("@/components/TogglePillButton",()=>({default:({children,onPress,disabled}:any)=><button disabled={disabled} onClick={onPress}>{children}</button>}));
+import FleetGate from "./FleetGate";
+const run={id:"20000000-0000-4000-8000-000000000001",version:7,vehicleAssetId:"30000000-0000-4000-8000-000000000001",stops:[{id:"40000000-0000-4000-8000-000000000001",sequence:0,siteId:392,kind:"pickup"},{id:"40000000-0000-4000-8000-000000000002",sequence:1,siteId:393,kind:"delivery"}]} as any;
+const observation=(visitId:number,siteId=392)=>({visitId,siteId,vehicleAssetId:run.vehicleAssetId,checkInAt:"2026-10-07T12:00:00Z",checkOutAt:null,observedArrivalAt:null,observedDepartureAt:null,source:"gate_user_report",reconciliationState:"unmatched"});
+const data={runId:run.id,version:7,observations:[observation(101),observation(102),observation(103,393)],ambiguous:true,basis:"same_equipment_site_time_window",automaticAdmissionCreated:false,canLink:true,links:[]};
+afterEach(()=>{cleanup();mocks.api.mockReset();});
+it("requires an explicit same-stop candidate when matching is ambiguous and verifies a dropped accepted response",async()=>{
+  const changed=vi.fn();let saved:any=null;
+  mocks.api.mockImplementation(async(_,options)=>{
+    if(!options)return saved?{...data,version:8,links:[saved]}:data;
+    const input=JSON.parse(options.body);saved={runId:run.id,stopId:input.stopId,visitId:input.visitId,operationId:input.operationId,version:8,recordedAt:"2026-10-07T12:01:00Z",observation:observation(input.visitId),automaticAdmissionCreated:false};
+    throw new Error("response lost");
+  });
+  render(<FleetGate run={run} disabled={false} onChanged={changed}/>);
+  fireEvent.click(screen.getByRole("button",{name:"Load authorized Gate observations"}));
+  expect(await screen.findByText(/Multiple visits match/)).toBeTruthy();
+  expect((screen.getByRole("button",{name:"Link the selected existing visit"}) as HTMLButtonElement).disabled).toBe(true);
+  fireEvent.click(screen.getByRole("button",{name:"1. pickup · Site 392"}));
+  expect(screen.queryByRole("button",{name:/Gate visit 103/})).toBeNull();
+  fireEvent.click(screen.getByRole("button",{name:/Gate visit 102/}));
+  fireEvent.change(screen.getByLabelText("Gate match reason"),{target:{value:"Checked actual equipment and stop against the existing visit"}});
+  fireEvent.click(screen.getByRole("button",{name:"Link the selected existing visit"}));
+  fireEvent.click(await screen.findByRole("button",{name:"Verify the exact Gate link operation"}));
+  await waitFor(()=>expect(changed).toHaveBeenCalledTimes(1));
+  const writes=mocks.api.mock.calls.filter(call=>call[1]?.method==="POST");expect(writes).toHaveLength(1);
+  expect(JSON.parse(writes[0][1].body)).toMatchObject({expectedVersion:7,stopId:run.stops[0].id,visitId:102});
+  expect(writes[0][0]).toBe(`/api/fleet/runs/${run.id}/gate-links`);
+});
+it("does not load or link while the run has unresolved offline work",()=>{
+  render(<FleetGate run={run} disabled={true} onChanged={vi.fn()}/>);
+  fireEvent.click(screen.getByRole("button",{name:"Load authorized Gate observations"}));expect(mocks.api).not.toHaveBeenCalled();
+});

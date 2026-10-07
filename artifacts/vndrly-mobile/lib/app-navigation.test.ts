@@ -192,3 +192,10 @@ describe("buildAppNavigation", () => {
     expect(items.find((entry) => entry.key === "flagged")?.badge).toBe(1);
   });
 });
+
+it("shows partner site activity only from its separate server capability without operational Fleet navigation",()=>{
+  const items=buildAppNavigation({user:user("partner"),labels,badges,fleetSiteActivityEnabled:true});
+  expect(items.find(entry=>entry.key==="fleet-site-activity")?.href).toBe("/(tabs)/fleet-site-activity");
+  expect(items.some(entry=>entry.key==="fleet")).toBe(false);
+  expect(buildAppNavigation({user:user("partner"),labels,badges}).some(entry=>entry.key==="fleet-site-activity")).toBe(false);
+});

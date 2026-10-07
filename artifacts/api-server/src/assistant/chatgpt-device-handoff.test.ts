@@ -2,6 +2,20 @@ import { describe, expect, it } from "vitest";
 import { fileDeviceHandoff, requireMatchingFileDevice, meetingDeviceHandoff, requireMatchingMeetingDevice } from "./chatgpt-device-handoff";
 import { ticketDeviceHandoff, requireMatchingTicketDevice } from "./chatgpt-device-handoff";
 import { gateDeviceHandoff, requireMatchingGateDevice } from "./chatgpt-device-handoff";
+import { fleetDeviceHandoff, requireMatchingFleetDevice } from "./chatgpt-device-handoff";
+
+describe("Fleet device handoff", () => {
+  const session = { userId: 17, role: "vendor", vendorId: 4, activeMembershipId: 7, sv: 2 };
+  const runId = "17795fa1-bb5f-4abc-a5f8-7e9b33a0ec05";
+  it("binds an exact run to the user, company, membership and session generation", () => {
+    const handoff = fleetDeviceHandoff(session, "grant", runId);
+    expect(requireMatchingFleetDevice(handoff, session)).toBe("/fleet/runs/" + runId);
+    for (const changed of [{ ...session, userId: 18 }, { ...session, vendorId: 5 }, { ...session, sv: 3 }, { ...session, activeMembershipId: 8 }]) expect(() => requireMatchingFleetDevice(handoff, changed)).toThrow();
+    expect(() => requireMatchingFleetDevice({ ...handoff, expires: 0 }, session)).toThrow();
+    expect(() => requireMatchingFleetDevice({ ...handoff, kind: "ticket-device-handoff" as never }, session)).toThrow();
+    expect(() => fleetDeviceHandoff(session, "grant", runId + "?redirect=elsewhere")).toThrow();
+  });
+});
 
 describe("Gate device handoff", () => {
   const session = { userId: 17, role: "vendor", vendorId: 4, activeMembershipId: 7, sv: 2 };

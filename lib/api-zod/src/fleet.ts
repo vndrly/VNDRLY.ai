@@ -84,6 +84,7 @@ export const FleetLoadSchema = z
 export const FleetRunRecordSchema = z
   .object({
     id: z.uuid(),
+    vehicleAssetId: z.uuid().nullable().default(null),
     kind: z.enum(["fuel", "meter"]),
     quantity: z.number().positive().nullable(),
     reading: z.number().nonnegative().nullable(),
@@ -188,6 +189,13 @@ export const CreateFleetRunSchema = z
 export type FleetRun = z.infer<typeof FleetRunSchema>;
 export type FleetActionInput = z.infer<typeof FleetActionInputSchema>;
 export type FleetOverview = {
+  accountScope?: {
+    userId: number;
+    companyId: number;
+    membershipId: number;
+    sessionVersion: number;
+  };
+  page?: { limit: number; nextCursor: string | null };
   preference?: FleetWorkspacePreference;
   companyId: number;
   enabled: boolean;
@@ -196,6 +204,9 @@ export type FleetOverview = {
     canDispatch: boolean;
     canManage: boolean;
     canDrive: boolean;
+    canMaintain?: boolean;
+    canReportDefect?: boolean;
+    canReleaseHold?: boolean;
     canSetup: boolean;
   };
   fleets: z.infer<typeof FleetDefinitionSchema>[];
@@ -230,12 +241,49 @@ export const FleetSetupInputSchema = z
     enabled: z.boolean(),
     fleets: z.array(FleetDefinitionSchema).max(50),
     grants: z.array(FleetGrantSchema).max(500),
+    supportGrants: z
+      .array(
+        z
+          .object({
+            userId: z.number().int().positive(),
+            fleetIds: z.array(z.uuid()).min(1).max(50),
+            siteIds: z.array(z.number().int().positive()).min(1).max(200),
+            expiresAt: z.iso.datetime(),
+            reason: z.string().trim().min(1).max(2000),
+            financeRead: z.boolean().default(false),
+          })
+          .strict(),
+      )
+      .max(50)
+      .optional(),
   })
   .strict();
 export type FleetSetup = z.infer<typeof FleetSetupInputSchema> & {
   members: { userId: number; name: string }[];
   sites: { siteId: number; name: string }[];
   equipment: { assetId: string; name: string; category: string }[];
+};
+export type FleetSupportGrant = NonNullable<
+  z.infer<typeof FleetSetupInputSchema>["supportGrants"]
+>[number];
+export type FleetSupportChoices = {
+  companies: {
+    companyId: number;
+    companyName: string;
+    expiresAt: string;
+    reason: string;
+  }[];
+  readOnly: true;
+};
+export type FleetSupportRead = {
+  companyId: number;
+  companyName: string;
+  expiresAt: string;
+  reason: string;
+  runs: FleetRun[];
+  readOnly: true;
+  coordinateDisclosure: false;
+  page: { nextCursor: string | null };
 };
 
 export const FleetWorkspacePreferenceInputSchema = z
@@ -256,3 +304,198 @@ export const FleetWorkspacePreferenceSchema = z
 export type FleetWorkspacePreference = z.infer<
   typeof FleetWorkspacePreferenceSchema
 >;
+
+export const FleetMaintenanceCreateSchema = z
+  .object({
+    operationId: z.uuid(),
+    fleetId: z.uuid(),
+    assetId: z.uuid(),
+    runId: z.uuid().optional(),
+    kind: z.enum(["defect", "scheduled_service"]),
+    title: z.string().trim().min(1).max(200),
+    notes: z.string().trim().min(1).max(2000),
+    dueAt: z.iso.datetime().optional(),
+  })
+  .strict();
+export const FleetMaintenanceActionSchema = z
+  .object({
+    operationId: z.uuid(),
+    expectedVersion: z.number().int().positive(),
+    action: z.enum(["triage", "record_repair", "release", "cancel"]),
+    notes: z.string().trim().min(1).max(2000),
+  })
+  .strict();
+export const FleetMaintenanceRecordSchema = z
+  .object({
+    id: z.uuid(),
+    companyId: z.number().int().positive(),
+    fleetId: z.uuid(),
+    assetId: z.uuid(),
+    runId: z.uuid().nullable(),
+    kind: z.enum(["defect", "scheduled_service"]),
+    title: z.string(),
+    status: z.enum([
+      "reported",
+      "in_service",
+      "repair_recorded",
+      "released",
+      "cancelled",
+    ]),
+    version: z.number().int().positive(),
+    dueAt: z.iso.datetime().nullable(),
+    holdId: z.uuid().nullable(),
+    events: z
+      .array(
+        z.object({
+          operationId: z.uuid(),
+          action: z.string(),
+          actorUserId: z.number().int().positive(),
+          recordedAt: z.iso.datetime(),
+          notes: z.string(),
+          source: z.literal("user_report"),
+        }),
+      )
+      .max(200),
+    allowedActions: z.array(FleetMaintenanceActionSchema.shape.action),
+  })
+  .strict();
+export type FleetMaintenanceRecord = z.infer<
+  typeof FleetMaintenanceRecordSchema
+>;
+export type FleetMaintenanceCreate = z.infer<
+  typeof FleetMaintenanceCreateSchema
+>;
+export type FleetMaintenanceAction = z.infer<
+  typeof FleetMaintenanceActionSchema
+>;
+export type FleetMaintenancePage = {
+  records: FleetMaintenanceRecord[];
+  nextCursor: string | null;
+  generatedAt: string;
+};
+
+export const FleetReportFilterSchema = z
+  .object({
+    fleetId: z.uuid().optional(),
+    siteId: z.number().int().positive().optional(),
+    startsAt: z.iso.datetime().optional(),
+    endsAt: z.iso.datetime().optional(),
+  })
+  .strict()
+  .refine(
+    (value) =>
+      !value.startsAt ||
+      !value.endsAt ||
+      Date.parse(value.endsAt) > Date.parse(value.startsAt),
+    "Report end must follow start",
+  );
+export type FleetReportFilter = z.infer<typeof FleetReportFilterSchema>;
+export const FleetReportSchema = z
+  .object({
+    generatedAt: z.iso.datetime(),
+    filters: FleetReportFilterSchema,
+    source: z.literal("recorded_fleet_events"),
+    dateBasis: z.literal("run_created_at"),
+    runCount: z.number().int().nonnegative(),
+    completedRunCount: z.number().int().nonnegative(),
+    submittedRunCount: z.number().int().nonnegative(),
+    inspectionExceptions: z.number().int().nonnegative(),
+    loadTotals: z.array(
+      z.object({
+        commodity: z.string(),
+        unit: z.string(),
+        quantity: z.number().nonnegative(),
+        deliveredQuantity: z.number().nonnegative(),
+      }),
+    ),
+    distanceTotals: z.array(
+      z.object({ unit: z.string(), distance: z.number().nonnegative() }),
+    ),
+    fuelTotals: z
+      .array(z.object({ unit: z.string(), quantity: z.number().nonnegative() }))
+      .nullable(),
+    unavailableMetrics: z.array(
+      z.object({ metric: z.string(), reason: z.string() }),
+    ),
+  })
+  .strict();
+export type FleetReport = {
+  generatedAt: string;
+  filters: FleetReportFilter;
+  source: "recorded_fleet_events";
+  dateBasis: "run_created_at";
+  runCount: number;
+  completedRunCount: number;
+  submittedRunCount: number;
+  inspectionExceptions: number;
+  loadTotals: {
+    commodity: string;
+    unit: string;
+    quantity: number;
+    deliveredQuantity: number;
+  }[];
+  distanceTotals: { unit: string; distance: number }[];
+  fuelTotals: { unit: string; quantity: number }[] | null;
+  unavailableMetrics: { metric: string; reason: string }[];
+};
+export const FleetSavedViewInputSchema = z
+  .object({
+    operationId: z.uuid(),
+    viewId: z.uuid().optional(),
+    expectedVersion: z.number().int().positive().optional(),
+    action: z.enum(["save", "archive"]),
+    name: z.string().trim().min(1).max(100).optional(),
+    filters: FleetReportFilterSchema.optional(),
+  })
+  .strict();
+export type FleetSavedView = {
+  id: string;
+  userId: number;
+  companyId: number;
+  version: number;
+  name: string;
+  filters: FleetReportFilter;
+  archived: boolean;
+  recordedAt: string;
+  lastOperationId?: string;
+};
+export const FleetGateLinkInputSchema = z
+  .object({
+    operationId: z.uuid(),
+    expectedVersion: z.number().int().positive(),
+    stopId: z.uuid(),
+    visitId: z.number().int().positive(),
+    reason: z.string().trim().min(1).max(1000),
+  })
+  .strict();
+export type FleetGateObservation = {
+  visitId: number;
+  siteId: number;
+  vehicleAssetId: string;
+  checkInAt: string;
+  checkOutAt: string | null;
+  observedArrivalAt: string | null;
+  observedDepartureAt: string | null;
+  source: string | null;
+  reconciliationState: string;
+};
+export type FleetGateObservations = {
+  runId: string;
+  version: number;
+  observations: FleetGateObservation[];
+  ambiguous: boolean;
+  basis: "same_equipment_site_time_window";
+  automaticAdmissionCreated: false;
+  canLink: boolean;
+  links: FleetGateLink[];
+};
+export type FleetGateLink = {
+  runId: string;
+  stopId: string;
+  visitId: number;
+  operationId: string;
+  version: number;
+  recordedAt: string;
+  observation: FleetGateObservation;
+  automaticAdmissionCreated: false;
+};

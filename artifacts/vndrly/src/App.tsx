@@ -1,8 +1,9 @@
-import { Switch, Route, Router as WouterRouter, useLocation, useRoute } from "wouter";
+import { Switch, Route, Router as WouterRouter, useLocation, useRoute, useSearch } from "wouter";
 import { lazy, Suspense, useEffect } from "react";
 const PayrollPage = lazy(() => import("@/pages/payroll"));
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { fleetClient } from "@/lib/fleet-client";
+import { fleetHomePath } from "@/lib/fleet-view";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
@@ -208,13 +209,14 @@ function AdminRoutes() {
 function AuthenticatedRouter() {
   const { user, isLoading } = useAuth();
   const [location, navigate] = useLocation();
-  const fleetHome = useQuery({ queryKey: ["fleet", `${user?.userId}:${user?.activeMembershipId}:${user?.vendorId}:${user?.partnerId}`], queryFn: fleetClient.overview, enabled: Boolean(user?.vendorId && location === "/" && ["vendor", "field_employee"].includes(user?.role ?? "")), retry: false, staleTime: 30_000 });
-  const homePreference = fleetHome.data?.preference?.defaultWorkspace;
-  const homeTarget = fleetHome.data?.enabled && homePreference === "fleet_desk" && fleetHome.data.capabilities.canDispatch ? "/fleet" : fleetHome.data?.enabled && homePreference === "fleet_my_day" && fleetHome.data.capabilities.canDrive ? "/fleet/my-day" : null;
+  const search = useSearch();
+  const standardHome = new URLSearchParams(search).get("workspace") === "standard";
+  const fleetHome = useQuery({ queryKey: ["fleet", `${user?.userId}:${user?.activeMembershipId}:${user?.vendorId}:${user?.partnerId}`], queryFn: fleetClient.overview, enabled: Boolean(user?.vendorId && location === "/" && !standardHome && ["vendor", "field_employee"].includes(user?.role ?? "")), retry: false, staleTime: 30_000 });
+  const homeTarget = fleetHomePath(fleetHome.data, search);
   useEffect(() => { if (location === "/" && homeTarget) navigate(homeTarget, { replace: true }); }, [location, homeTarget, navigate]);
   const gateWorker = Boolean(user && ((user.role === "vendor" && ["gatekeeper", "gate_supervisor"].includes(user.vendorRole ?? "")) || isManagedSubcontractor(user)));
 
-  if (isLoading || (user?.vendorId && location === "/" && !fleetHome.isError && (fleetHome.isFetching || homeTarget))) {
+  if (isLoading || (user?.vendorId && location === "/" && !standardHome && !fleetHome.isError && (fleetHome.isFetching || homeTarget))) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500" />

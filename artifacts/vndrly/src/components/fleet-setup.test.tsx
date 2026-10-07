@@ -56,6 +56,40 @@ const mount = () =>
     </QueryClientProvider>,
   );
 describe("Fleet configuration", () => {
+  it("preserves explicit support scope and expiry when saving unrelated configuration", async () => {
+    const supportGrants = [
+      {
+        userId: 88,
+        fleetIds: [fleetId],
+        siteIds: [10],
+        expiresAt: "2026-10-10T00:00:00Z",
+        reason: "Approved investigation",
+        financeRead: false,
+      },
+    ];
+    api.setup.mockResolvedValue({ ...initial, supportGrants });
+    mount();
+    fireEvent.click(await screen.findByLabelText("Enable Fleet Ops"));
+    fireEvent.click(screen.getByText("Save reviewed configuration"));
+    await waitFor(() => expect(api.saveSetup).toHaveBeenCalledOnce());
+    expect(api.saveSetup.mock.calls[0][0].supportGrants).toEqual(supportGrants);
+    expect(api.saveSetup.mock.calls[0][0].grants).toEqual(initial.grants);
+  });
+  it("changes safety-release authority explicitly without changing finance authority or driver role", async () => {
+    mount();
+    fireEvent.click(
+      await screen.findByLabelText(
+        "Authority to release a Fleet safety hold after documented repair and review",
+      ),
+    );
+    fireEvent.click(screen.getByText("Save reviewed configuration"));
+    await waitFor(() => expect(api.saveSetup).toHaveBeenCalledOnce());
+    expect(api.saveSetup.mock.calls[0][0].grants[0]).toMatchObject({
+      roles: ["driver"],
+      safetyRelease: false,
+      financeRead: true,
+    });
+  });
   it("sends reviewed version and preserves separate grants without leaking response-only directories", async () => {
     mount();
     fireEvent.click(await screen.findByLabelText("Enable Fleet Ops"));

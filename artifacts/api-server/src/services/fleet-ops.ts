@@ -1,3 +1,12 @@
+import type { FleetItemizedAuthority } from "./fleet-itemized-repository";
+import {
+  createFleetMaintenanceOperations,
+  recordFleetInspectionException,
+} from "./fleet-maintenance";
+import { createFleetReportingOperations } from "./fleet-reporting";
+import { createFleetGateOperations } from "./fleet-gate-correlation";
+import { createFleetLocationOperations } from "./fleet-location";
+import { createFleetEtaOperations } from "./fleet-eta";
 import { createHash, randomUUID } from "node:crypto";
 import {
   CreateFleetRunSchema,
@@ -24,7 +33,8 @@ import {
 export type FleetActor = {
   userId: number;
   companyId: number;
-} & FleetSessionAuthority & {
+} & FleetSessionAuthority &
+  FleetItemizedAuthority & {
     currentSiteIds?: number[];
     activeSiteIds?: number[];
     labels?: Map<string, NonNullable<FleetRun["labels"]>>;
@@ -59,9 +69,13 @@ function permitted(
   action: "view" | "dispatch" | "perform_run",
 ) {
   const grant = grantFor(state, actor);
+  const current = actor.currentRunsById
+    ? actor.currentRunsById.get(run.id)
+    : run;
+  if (!current) return false;
   return (
-    mayPerformFleetAction(actor.userId, grant, target(run), action) &&
-    run.siteIds.every(
+    mayPerformFleetAction(actor.userId, grant, target(current), action) &&
+    [...current.siteIds, ...run.siteIds].every(
       (siteId) =>
         grant?.siteIds.includes(siteId) &&
         actor.currentSiteIds?.includes(siteId),
@@ -79,6 +93,11 @@ function allowed(
   )
     return [];
   const result: FleetRun["allowedActions"] = [];
+  if (
+    actor.currentRunsById &&
+    actor.currentRunsById.get(run.id)?.version !== run.version
+  )
+    return result;
   const grant = grantFor(state, actor);
   if (run.status === "submitted_for_review")
     return grant?.roles.includes("fleet_manager") ? ["review"] : [];
@@ -95,13 +114,15 @@ function allowed(
     result.push("inspect", "record_meter");
     const inspection = run.inspections.at(-1);
     if (
-      !run.inspections.some((i) => i.outcome === "defect_reported") &&
       inspection?.outcome === "passed" &&
       inspection.driverUserId === run.driverUserId &&
       inspection.vehicleAssetId === run.vehicleAssetId &&
       inspection.trailerAssetId === run.trailerAssetId &&
       run.records.some(
-        (r) => r.kind === "meter" && ["miles", "kilometers"].includes(r.unit),
+        (r) =>
+          r.kind === "meter" &&
+          r.vehicleAssetId === run.vehicleAssetId &&
+          ["miles", "kilometers"].includes(r.unit),
       )
     )
       result.push("start");
@@ -130,7 +151,15 @@ function allowed(
   }
   return result;
 }
-function labelKey(run:FleetRun){return [run.id,run.driverUserId,run.vehicleAssetId,run.trailerAssetId,...run.siteIds].join(":");}
+function labelKey(run: FleetRun) {
+  return [
+    run.id,
+    run.driverUserId,
+    run.vehicleAssetId,
+    run.trailerAssetId,
+    ...run.siteIds,
+  ].join(":");
+}
 function project(
   state: FleetState,
   actor: FleetActor,
@@ -278,14 +307,14 @@ export function createFleetService(repository: FleetRepository) {
         const siteIds =
           state.grants.find((g) => g.userId === actor.userId)?.siteIds ?? [];
         const sites = await client.query(
-          "SELECT DISTINCT s.id,s.is_active FROM site_locations s JOIN partner_vendor_relationships r ON r.partner_id=s.partner_id WHERE r.vendor_id=$1 AND s.id=ANY($2::int[]) AND r.status=ANY($3::text[]) AND COALESCE(s.hidden,false)=false",
+          "SELECT s.id,s.is_active FROM site_locations s JOIN partner_vendor_relationships r ON r.partner_id=s.partner_id WHERE r.vendor_id=$1 AND s.id=ANY($2::int[]) AND r.status=ANY($3::text[]) AND COALESCE(s.hidden,false)=false FOR SHARE OF s,r",
           [actor.companyId, siteIds, [...ACTIVE_APPROVAL_STATUSES]],
         );
         actor.currentSiteIds = sites.rows.map((s) => s.id);
         actor.activeSiteIds = sites.rows
           .filter((s) => s.is_active)
           .map((s) => s.id);
-        const visible = state.runs.filter((r) =>
+        const visible = [...state.runs, ...(actor.pageRuns ?? [])].filter((r) =>
           permitted(state, actor, r, "view"),
         );
         const equipment = await client.query(
@@ -335,55 +364,97 @@ export function createFleetService(repository: FleetRepository) {
       },
       actor,
     );
+  const locations = createFleetLocationOperations(transaction, permitted);
   return {
+    recordLocation: locations.record,
+    locationObservations: locations.observations,
+    ...createFleetEtaOperations(
+      transaction,
+      permitted,
+      locations.readObservations,
+    ),
+    ...createFleetMaintenanceOperations(transaction, grantFor),
+    ...createFleetReportingOperations(transaction, grantFor),
+    ...createFleetGateOperations(transaction, permitted),
     overview: (actor: FleetActor): Promise<FleetOverview> =>
-      transaction(actor, async (state, client) => {
-        const admin = await client.query(
-          "SELECT id FROM user_org_memberships WHERE user_id=$1 AND vendor_id=$2 AND org_type='vendor' AND role='admin' AND id=$3",
-          [actor.userId, actor.companyId, actor.activeMembershipId],
-        );
-        const grant = grantFor(state, actor);
-        const roles = grant?.roles ?? [];
-        return {
-          companyId: actor.companyId,
-          preference: state.preferences.find(
-            (p) => p.userId === actor.userId,
-          ) ?? {
-            userId: actor.userId,
-            version: 1,
-            defaultWorkspace: "standard",
-            selectedFleetId: null,
-          },
-          enabled: state.enabled,
-          roles: [...roles],
-          capabilities: {
-            canDispatch:
-              roles.includes("fleet_manager") || roles.includes("dispatcher"),
-            canManage: roles.includes("fleet_manager"),
-            canDrive: roles.includes("driver"),
-            canSetup:
-              actor.role === "vendor" &&
-              actor.membershipRole === "admin" &&
-              admin.rows.length > 0,
-          },
-          fleets: state.fleets.filter((f) => grant?.fleetIds.includes(f.id)),
-          runs: state.runs
-            .filter((run) => permitted(state, actor, run, "view"))
-            .map((run) => project(state, actor, run)),
-          observations: [],
-          unavailableIntegrations: [
-            "vehicle_telemetry",
-            "device_capture",
-            "inspection_media",
-            "delivery_media",
-            "regulated_compliance",
-            "ticket_billing_linkage",
-          ],
-          generatedAt: new Date().toISOString(),
-        };
-      }),
+      transaction(
+        Object.assign(actor, { runPage: actor.runPage ?? { limit: 50 } }),
+        async (state, client) => {
+          const admin = await client.query(
+            "SELECT id FROM user_org_memberships WHERE user_id=$1 AND vendor_id=$2 AND org_type='vendor' AND role='admin' AND id=$3",
+            [actor.userId, actor.companyId, actor.activeMembershipId],
+          );
+          const grant = grantFor(state, actor);
+          const roles = grant?.roles ?? [];
+          return {
+            ...(Number.isInteger(actor.activeMembershipId) &&
+            Number.isInteger(actor.sv)
+              ? {
+                  accountScope: {
+                    userId: actor.userId,
+                    companyId: actor.companyId,
+                    membershipId: actor.activeMembershipId!,
+                    sessionVersion: actor.sv!,
+                  },
+                }
+              : {}),
+            companyId: actor.companyId,
+            preference: state.preferences.find(
+              (p) => p.userId === actor.userId,
+            ) ?? {
+              userId: actor.userId,
+              version: 1,
+              defaultWorkspace: "standard",
+              selectedFleetId: null,
+            },
+            enabled: state.enabled,
+            roles: [...roles],
+            capabilities: {
+              canDispatch:
+                roles.includes("fleet_manager") || roles.includes("dispatcher"),
+              canManage: roles.includes("fleet_manager"),
+              canDrive: roles.includes("driver"),
+              canMaintain: roles.includes("fleet_manager"),
+              canReportDefect:
+                roles.includes("fleet_manager") || roles.includes("driver"),
+              canReleaseHold:
+                roles.includes("fleet_manager") &&
+                grant?.safetyRelease === true,
+              canSetup:
+                actor.role === "vendor" &&
+                actor.membershipRole === "admin" &&
+                admin.rows.length > 0,
+            },
+            fleets: state.fleets.filter((f) => grant?.fleetIds.includes(f.id)),
+            page: {
+              limit: actor.runPage?.limit ?? 50,
+              nextCursor: actor.nextRunCursor ?? null,
+            },
+            runs: (actor.pageRuns ?? state.runs)
+              .filter(
+                (run) => !actor.pageRunIds || actor.pageRunIds.includes(run.id),
+              )
+              .filter((run) => permitted(state, actor, run, "view"))
+              .map((run) => project(state, actor, run)),
+            observations: await locations.readObservations(
+              state,
+              client,
+              actor,
+            ),
+            unavailableIntegrations: [
+              "vehicle_telemetry",
+              "device_capture",
+              "inspection_media",
+              "delivery_media",
+              "regulated_compliance",
+              "ticket_billing_linkage",
+            ],
+            generatedAt: new Date().toISOString(),
+          };
+        },
+      ),
     detail: (actor: FleetActor, runId: string) =>
-      transaction(actor, async (state) => {
+      transaction(Object.assign(actor, { runId }), async (state) => {
         const run = state.runs.find((r) => r.id === runId);
         if (!run) throw new FleetError("fleet.not_found", 404);
         return project(state, actor, run);
@@ -529,6 +600,7 @@ export function createFleetService(repository: FleetRepository) {
           enabled: state.enabled,
           fleets: state.fleets,
           grants: state.grants,
+          supportGrants: state.supportGrants,
           members: members.rows.map((row) => ({
             userId: row.id,
             name: row.display_name,
@@ -577,6 +649,35 @@ export function createFleetService(repository: FleetRepository) {
           "SELECT m.user_id FROM user_org_memberships m JOIN users u ON u.id=m.user_id WHERE m.vendor_id=$1 AND m.org_type='vendor' AND m.user_id=ANY($2::int[]) AND u.suspended_at IS NULL",
           [actor.companyId, body.grants.map((g) => g.userId)],
         );
+        if (body.supportGrants) {
+          if (
+            new Set(body.supportGrants.map((grant) => grant.userId)).size !==
+            body.supportGrants.length
+          )
+            throw new FleetError("fleet.invalid_support_grant", 400);
+          const admins = await client.query(
+            "SELECT id FROM users WHERE id=ANY($1::int[]) AND role='admin' AND suspended_at IS NULL FOR SHARE",
+            [body.supportGrants.map((grant) => grant.userId)],
+          );
+          for (const grant of body.supportGrants)
+            if (
+              !admins.rows.some((user) => user.id === grant.userId) ||
+              Date.parse(grant.expiresAt) > Date.now() + 7 * 86400000 ||
+              !grant.fleetIds.every((id) =>
+                body.fleets.some((fleet) => fleet.id === id),
+              ) ||
+              !grant.siteIds.every(
+                (id) =>
+                  sites.some((site) => site.siteId === id) &&
+                  body.fleets.some(
+                    (fleet) =>
+                      grant.fleetIds.includes(fleet.id) &&
+                      fleet.siteIds.includes(id),
+                  ),
+              )
+            )
+              throw new FleetError("fleet.invalid_support_grant", 403);
+        }
         for (const g of body.grants)
           if (
             !members.rows.some((m) => m.user_id === g.userId) ||
@@ -599,6 +700,7 @@ export function createFleetService(repository: FleetRepository) {
               enabled: state.enabled,
               fleets: state.fleets,
               grants: state.grants,
+              supportGrants: state.supportGrants,
             }),
             JSON.stringify(body),
           ],
@@ -616,6 +718,7 @@ export function createFleetService(repository: FleetRepository) {
         state.enabled = body.enabled;
         state.fleets = body.fleets;
         state.grants = body.grants;
+        if (body.supportGrants) state.supportGrants = body.supportGrants;
         state.version++;
         return { version: state.version, enabled: state.enabled };
       }),
@@ -705,6 +808,7 @@ export function createFleetService(repository: FleetRepository) {
       transaction(
         Object.assign(actor, {
           operationId: FleetActionInputSchema.parse(input).operationId,
+          runId,
         }),
         async (state, client) => {
           const body = FleetActionInputSchema.parse(input);
@@ -748,11 +852,22 @@ export function createFleetService(repository: FleetRepository) {
               body.trailerAssetId !== undefined)
           )
             throw new FleetError("fleet.unexpected_assignment", 400);
+          if (
+            [
+              "arrive_stop",
+              "depart_stop",
+              "record_load",
+              "record_delivery",
+              "submit_closeout",
+            ].includes(body.action)
+          )
+            await eligible(state, client, run);
           const priorAssignment = {
             driverUserId: run.driverUserId,
             vehicleAssetId: run.vehicleAssetId,
             trailerAssetId: run.trailerAssetId,
           };
+          let maintenanceIds: string[] = [];
           if (
             body.action === "submit_closeout" &&
             run.events.at(-1)?.type === "review" &&
@@ -775,8 +890,25 @@ export function createFleetService(repository: FleetRepository) {
             if (run.records.length >= 200)
               throw new FleetError("fleet.store_capacity_reached");
             if (body.action === "record_meter") {
+              const distance = run.records.find(
+                (r) =>
+                  r.vehicleAssetId === run.vehicleAssetId &&
+                  r.kind === "meter" &&
+                  ["miles", "kilometers"].includes(r.unit),
+              );
+              if (
+                distance &&
+                ["miles", "kilometers"].includes(body.unit) &&
+                distance.unit !== body.unit
+              )
+                throw new FleetError("fleet.meter_unit_mismatch", 400);
               const last = run.records
-                .filter((r) => r.kind === "meter" && r.unit === body.unit)
+                .filter(
+                  (r) =>
+                    r.vehicleAssetId === run.vehicleAssetId &&
+                    r.kind === "meter" &&
+                    r.unit === body.unit,
+                )
                 .at(-1);
               if (
                 last?.reading !== null &&
@@ -787,6 +919,7 @@ export function createFleetService(repository: FleetRepository) {
             }
             run.records.push({
               id: randomUUID(),
+              vehicleAssetId: run.vehicleAssetId,
               kind: body.action === "record_fuel" ? "fuel" : "meter",
               quantity: body.action === "record_fuel" ? body.quantity! : null,
               reading: body.action === "record_meter" ? body.reading! : null,
@@ -833,6 +966,14 @@ export function createFleetService(repository: FleetRepository) {
               throw new FleetError("fleet.inspection_fields_required", 400);
             if (run.inspections.length >= 100)
               throw new FleetError("fleet.store_capacity_reached");
+            if (body.inspectionOutcome === "defect_reported")
+              maintenanceIds = await recordFleetInspectionException(
+                client,
+                actor,
+                run,
+                body.operationId,
+                body.notes,
+              );
             run.inspections.push({
               driverUserId: run.driverUserId,
               vehicleAssetId: run.vehicleAssetId,
@@ -941,6 +1082,7 @@ export function createFleetService(repository: FleetRepository) {
             ...(body.capturedAt ? { capturedAt: body.capturedAt } : {}),
             source: "user_report",
             details: {
+              ...(maintenanceIds.length ? { maintenanceIds } : {}),
               ...(body.reason ? { reason: body.reason } : {}),
               ...(body.notes ? { notes: body.notes } : {}),
               ...(body.decision ? { decision: body.decision } : {}),

@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
@@ -11,8 +15,15 @@ import {
   fleetActionComplete,
 } from "@/components/fleet-action-fields";
 import { fleetCopy } from "@/lib/fleet-copy";
+import { FleetSupportPanel } from "@/components/fleet-support";
+import { FleetManagementProjections } from "@/components/fleet-management-projections";
+import { FleetSiteActivityPanel } from "@/components/fleet-site-activity";
 import { FleetSetupPanel } from "@/components/fleet-setup";
 import { FleetPreferences } from "@/components/fleet-preferences";
+import { FleetMaintenancePanel } from "@/components/fleet-maintenance";
+import { FleetReportsPanel } from "@/components/fleet-reports";
+import { FleetEtaPanel } from "@/components/fleet-eta";
+import { FleetGateObservationsPanel } from "@/components/fleet-gate-observations";
 import { fleetPositions, fleetVisibleRuns } from "@/lib/fleet-view";
 import {
   CreateFleetRunSchema,
@@ -22,7 +33,22 @@ import type { z } from "zod/v4";
 
 export default function FleetPage() {
   const { user } = useAuth();
+  const [location] = useLocation();
   if (!user) return null;
+  if (location === "/fleet/support")
+    return (
+      <FleetSupportPanel
+        key={`${user.userId}:${user.activeMembershipId}`}
+        identity={`${user.userId}:${user.activeMembershipId}`}
+      />
+    );
+  if (location === "/fleet/site-activity")
+    return (
+      <FleetSiteActivityPanel
+        key={`${user.userId}:${user.activeMembershipId}:${user.partnerId}`}
+        identity={`${user.userId}:${user.activeMembershipId}:${user.partnerId}`}
+      />
+    );
   return (
     <FleetWorkspace
       key={`${user.userId}:${user.activeMembershipId}:${user.vendorId}:${user.partnerId}`}
@@ -42,15 +68,47 @@ function FleetWorkspace({
   const c = fleetCopy(i18n.language);
   const [location] = useLocation();
   const queryClient = useQueryClient();
-  const overview = useQuery({
-    queryKey: ["fleet", identity],
-    queryFn: fleetClient.overview,
+  const routeRunId = location.startsWith("/fleet/runs/")
+    ? location.split("/")[3]
+    : "";
+  const routeRun = useQuery({
+    queryKey: ["fleet", identity, "run", routeRunId],
+    queryFn: () => fleetClient.run(routeRunId),
+    enabled: Boolean(routeRunId),
     retry: false,
   });
+  const overview = useInfiniteQuery({
+    queryKey: ["fleet", identity, "pages"],
+    initialPageParam: undefined as string | undefined,
+    queryFn: ({ pageParam }) => fleetClient.overviewPage(pageParam),
+    getNextPageParam: (page) => page.page?.nextCursor ?? undefined,
+    retry: false,
+  });
+  const latestPage = overview.data?.pages.at(-1);
+  const overviewData = latestPage && {
+    ...latestPage,
+    runs: [
+      ...new Map(
+        overview
+          .data!.pages.flatMap((page) => page.runs)
+          .filter((run) => !(routeRun.isError && run.id === routeRunId))
+          .concat(routeRun.data && !routeRun.isError ? [routeRun.data] : [])
+          .filter((run) =>
+            latestPage.fleets.some(
+              (fleet) =>
+                fleet.id === run.fleetId &&
+                run.siteIds.every((siteId) => fleet.siteIds.includes(siteId)),
+            ),
+          )
+          .map((run) => [run.id, run]),
+      ).values(),
+    ],
+    observations: overview.data!.pages.flatMap((page) => page.observations),
+  };
   const resources = useQuery({
     queryKey: ["fleet-resources", identity],
     queryFn: fleetClient.resources,
-    enabled: Boolean(overview.data?.capabilities.canDispatch),
+    enabled: Boolean(overviewData?.capabilities.canDispatch),
     retry: false,
   });
   const createRetry = useRef<{
@@ -63,6 +121,9 @@ function FleetWorkspace({
   const [selected, setSelected] = useState(
     location.startsWith("/fleet/runs/") ? location.split("/")[3] : "",
   );
+  useEffect(() => {
+    if (routeRunId) setSelected(routeRunId);
+  }, [routeRunId]);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [status, setStatus] = useState(
@@ -85,12 +146,12 @@ function FleetWorkspace({
   >([]);
   const preferenceApplied = useRef(false);
   useEffect(() => {
-    if (!preferenceApplied.current && overview.data) {
+    if (!preferenceApplied.current && overviewData) {
       preferenceApplied.current = true;
-      const preferred = overview.data.preference?.selectedFleetId;
+      const preferred = overviewData.preference?.selectedFleetId;
       if (
         preferred &&
-        overview.data.fleets.some((fleet) => fleet.id === preferred)
+        overviewData.fleets.some((fleet) => fleet.id === preferred)
       )
         setFleetId(preferred);
     }
@@ -106,8 +167,15 @@ function FleetWorkspace({
         </PngPillButton>
       </div>
     );
-  const data = overview.data;
-  if (!data?.enabled)
+  const data = overviewData;
+  if (
+    !data?.enabled ||
+    !(
+      data.capabilities.canDrive ||
+      data.capabilities.canDispatch ||
+      data.capabilities.canManage
+    )
+  )
     return (
       <div className="p-6">
         <p>{c.denied}</p>
@@ -126,6 +194,25 @@ function FleetWorkspace({
       <div className="space-y-4 p-6">
         <Link href="/fleet">{c.desk}</Link>
         <FleetPreferences overview={data} identity={identity} />
+      </div>
+    );
+  if (location.endsWith("/maintenance"))
+    return (
+      <div className="space-y-4 p-6">
+        <Link href="/fleet">{c.workspace}</Link>
+        <FleetMaintenancePanel
+          overview={data}
+          resources={resources.data}
+          identity={identity}
+          userId={userId}
+        />
+      </div>
+    );
+  if (location.endsWith("/reports"))
+    return (
+      <div className="space-y-4 p-6">
+        <Link href="/fleet">{c.workspace}</Link>
+        <FleetReportsPanel overview={data} identity={identity} />
       </div>
     );
   const mine =
@@ -274,10 +361,18 @@ function FleetWorkspace({
           <Link href="/fleet/my-day">{c.myDay}</Link>
         )}
         {data.capabilities.canSetup && (
-          <Link href="/fleet/setup">Fleet setup</Link>
+          <Link href="/fleet/setup">{c.setup}</Link>
         )}
-        <Link href="/work-hub/inventory">{c.equipment}</Link>
+        <Link href="/fleet/equipment">{c.equipment}</Link>
+        <Link href="/fleet/drivers">{c.drivers}</Link>
+        <Link href="/fleet/readiness">{c.readinessTitle}</Link>
+        <Link href="/fleet/costs">{c.costs}</Link>
+        {(data.capabilities.canReportDefect ??
+          (data.capabilities.canManage || data.capabilities.canDrive)) && (
+          <Link href="/fleet/maintenance">{c.maintenance}</Link>
+        )}
         <Link href="/work-hub">{c.workHub}</Link>
+        <Link href="/fleet/reports">{c.reports}</Link>
       </nav>
       <div className="flex flex-wrap gap-3">
         <select
@@ -365,6 +460,18 @@ function FleetWorkspace({
         )}
       </div>
       {notice && <p role="status">{notice}</p>}
+      {["equipment", "drivers", "readiness", "costs"].includes(
+        location.split("/")[2],
+      ) && (
+        <FleetManagementProjections
+          section={location.split("/")[2]}
+          data={data}
+          resources={!resources.isError ? candidates : undefined}
+          runs={runs}
+          fleetId={fleetId}
+          search={search}
+        />
+      )}
       {location.endsWith("/loads") && (
         <section className="space-y-3 rounded-xl border p-4">
           <h2 className="text-lg font-semibold">{c.loads}</h2>
@@ -508,6 +615,10 @@ function FleetWorkspace({
                 .filter(
                   (e) =>
                     e.dispatchable &&
+                    (
+                      data.fleets.find((fleet) => fleet.id === fleetId)
+                        ?.equipmentAssetIds ?? []
+                    ).includes(e.id) &&
                     ["vehicle", "truck"].includes(e.category.toLowerCase()),
                 )
                 .map((e) => (
@@ -528,7 +639,12 @@ function FleetWorkspace({
               {candidates?.equipment
                 .filter(
                   (e) =>
-                    e.dispatchable && e.category.toLowerCase() === "trailer",
+                    e.dispatchable &&
+                    (
+                      data.fleets.find((fleet) => fleet.id === fleetId)
+                        ?.equipmentAssetIds ?? []
+                    ).includes(e.id) &&
+                    e.category.toLowerCase() === "trailer",
                 )
                 .map((e) => (
                   <option key={e.id} value={e.id}>
@@ -699,6 +815,14 @@ function FleetWorkspace({
                   run.vehicleAssetId}
               </p>
               <h3>{c.stops}</h3>
+              <p>
+                {c.trailer}:{" "}
+                {run.labels?.trailerName ??
+                  candidates?.equipment.find(
+                    (asset) => asset.id === run.trailerAssetId,
+                  )?.name ??
+                  (run.trailerAssetId ? run.trailerAssetId : c.unlinked)}
+              </p>
               <p className="text-xs">
                 Current stop:{" "}
                 {run.currentStopId
@@ -758,6 +882,17 @@ function FleetWorkspace({
                 </Link>
               )}
               <h3>{c.availableActions}</h3>
+              <FleetEtaPanel
+                key={`${run.id}:${run.version}`}
+                run={run}
+                identity={identity}
+              />
+              <FleetGateObservationsPanel
+                key={run.id}
+                run={run}
+                identity={identity}
+                onSaved={reload}
+              />
               <div className="flex flex-wrap gap-2">
                 {run.allowedActions.map((action) => (
                   <PngPillButton
@@ -862,6 +997,11 @@ function FleetWorkspace({
                           .filter(
                             (e) =>
                               e.dispatchable &&
+                              (
+                                data.fleets.find(
+                                  (fleet) => fleet.id === run.fleetId,
+                                )?.equipmentAssetIds ?? []
+                              ).includes(e.id) &&
                               ["vehicle", "truck"].includes(
                                 e.category.toLowerCase(),
                               ),
@@ -900,6 +1040,11 @@ function FleetWorkspace({
                           .filter(
                             (e) =>
                               e.dispatchable &&
+                              (
+                                data.fleets.find(
+                                  (fleet) => fleet.id === run.fleetId,
+                                )?.equipmentAssetIds ?? []
+                              ).includes(e.id) &&
                               e.category.toLowerCase() === "trailer",
                           )
                           .map((e) => (
@@ -964,6 +1109,17 @@ function FleetWorkspace({
         <h2 className="font-semibold">
           {mine ? c.assigned : c.runs} ({runs.length})
         </h2>
+        <p className="text-xs text-muted-foreground">
+          {c.loadedRuns}: {data.runs.length}
+        </p>
+        {overview.hasNextPage && (
+          <PngPillButton
+            disabled={overview.isFetchingNextPage}
+            onClick={() => void overview.fetchNextPage()}
+          >
+            {c.loadMore}
+          </PngPillButton>
+        )}
         {!runs.length && <p>{mine ? c.noAssigned : c.noRuns}</p>}
         <div className="divide-y">
           {runs.map((item) => (

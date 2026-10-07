@@ -31,6 +31,56 @@ function workspaceHarness() {
   };
 }
 describe("VNDRLY workspace presentation", () => {
+  it("selects canonical Fleet sources and requires an exact run identity", () => {
+    expect(workspaceRequest({ view: "fleet" }, new Set(["query_fleet_briefing"])).sourceTool).toBe("query_fleet_briefing");
+    expect(workspaceRequest({ view: "fleet_dispatch" }).sourceTool).toBe("query_fleet_resources");
+    expect(workspaceRequest({ view: "fleet_map", limit: 20, cursor: "20:40" }).sourceArguments).toEqual({limit: 20, cursor: "20:40"});
+    expect(() => workspaceRequest({ view: "fleet_map", cursor: "forged" })).toThrow();
+    expect(() => workspaceRequest({ view: "fleet_map", limit: 500 })).toThrow();
+    expect(() => workspaceRequest({ view: "fleet_run", runId: "all" })).toThrow();
+  });
+  it("keeps maintenance holds visible without claiming repair releases them", () => {
+    const record = {id:"16b9e6dd-c2ea-44eb-82f4-2698199d92a1",companyId:1107,fleetId:"16b9e6dd-c2ea-44eb-82f4-2698199d92a2",assetId:"16b9e6dd-c2ea-44eb-82f4-2698199d92a3",runId:null,kind:"defect",title:"Synthetic defect",status:"repair_recorded",version:3,dueAt:null,holdId:"16b9e6dd-c2ea-44eb-82f4-2698199d92a4",events:[],allowedActions:[]};
+    expect(workspaceRequest({view:"fleet_maintenance"}).sourceTool).toBe("query_fleet_maintenance");
+    expect(workspaceRequest({view:"fleet_maintenance",cursor:"200",limit:10}).sourceArguments).toEqual({cursor:"200",limit:10});
+    expect(()=>workspaceRequest({view:"fleet_maintenance",cursor:"20:40"})).toThrow();
+    const output=workspaceOutput("fleet_maintenance","query_fleet_maintenance",{},{records:[record],nextCursor:null},now);
+    expect(output.attention[0].attention).toContain("repair notes alone do not release");
+    expect(output.sections[0].rows[0].detail).not.toContain("permitted: release");
+    expect(()=>workspaceOutput("fleet_maintenance","query_fleet_maintenance",{},{},now)).toThrow("Incomplete");
+  });
+  it("renders sourced report totals separately by unit and preserves redacted fuel", () => {
+    const data={generatedAt:now.toISOString(),filters:{},source:"recorded_fleet_events",dateBasis:"run_created_at",runCount:2,completedRunCount:1,submittedRunCount:1,inspectionExceptions:0,loadTotals:[{commodity:"Water",unit:"barrels",quantity:10,deliveredQuantity:10},{commodity:"Water",unit:"gallons",quantity:5,deliveredQuantity:0}],distanceTotals:[{unit:"miles",distance:10},{unit:"km",distance:8}],fuelTotals:null,unavailableMetrics:[{metric:"Vehicle telemetry",reason:"Not configured"}]};
+    const output=workspaceOutput("fleet_reports","query_fleet_report",{},data,now);
+    expect(output.sections[1].rows.map(row=>row.title)).toEqual(["Water · barrels","Water · gallons"]);
+    expect(output.sections[2].rows.map(row=>row.title)).toEqual(["miles","km"]);
+    expect(output.sections[3].empty).toContain("not available under this grant");
+    expect(output.sections[4].rows[0].detail).toBe("Not configured");
+    expect(workspaceRequest({view:"fleet_reports",start:now.toISOString()}).sourceArguments).toEqual({startsAt:now.toISOString()});
+  });
+  it("shows only the Partner's returned site events without disclosing identities or coordinates",()=>{
+    expect(workspaceRequest({view:"fleet_site",siteId:392,start:now.toISOString()}).sourceArguments).toEqual({siteId:392,startsAt:now.toISOString()});
+    const output=workspaceOutput("fleet_site","query_fleet_site_activity",{siteId:392},{siteName:"Synthetic site",source:"recorded_fleet_events",coordinateDisclosure:false,records:[{vendorName:"Synthetic vendor",status:"in_progress",driverName:"PRIVATE_DRIVER",latitude:35,stops:[{kind:"pickup",events:[{type:"arrive_stop",recordedAt:now.toISOString()}]}],loads:[]}],unavailableMetrics:[]},now);
+    expect(JSON.stringify(output)).toContain("arrive_stop");
+    expect(JSON.stringify(output)).not.toContain("PRIVATE_DRIVER");
+    expect(JSON.stringify(output)).not.toContain("latitude");
+    expect(()=>workspaceOutput("fleet_site","query_fleet_site_activity",{}, {records:[],source:"recorded_fleet_events",coordinateDisclosure:true},now)).toThrow("Incomplete");
+  });
+  it("shows only sourced authorized driver-phone observations and page-scoped counts", () => {
+    const run = { id: "16b9e6dd-c2ea-44eb-82f4-2698199d92a1", fleetId: "16b9e6dd-c2ea-44eb-82f4-2698199d92a2", companyId: 1107, title: "Synthetic run", driverUserId: 1073, vehicleAssetId: "16b9e6dd-c2ea-44eb-82f4-2698199d92a3", trailerAssetId: null, siteIds: [392], status: "in_progress", phase: "en_route", version: 4, stops: [{id: "16b9e6dd-c2ea-44eb-82f4-2698199d92a4", siteId: 392, kind: "pickup", sequence: 0}], loads: [], inspections: [], currentStopId: null, visitedStopIds: [], events: [], linkedTicketId: null, allowedActions: ["pause"] };
+    const observation = {runId: run.id, source: "driver_phone", latitude: 35, longitude: -97, recordedAt: now.toISOString(), freshness: "stale"};
+    const data = {runs: [run], roles: ["driver"], observations: [observation, {...observation, source: "unknown"}, {...observation, runId: "other"}], unavailableIntegrations: ["Vehicle GPS"], page: {nextCursor: "next"}};
+    const output = workspaceOutput("fleet_map", "query_fleet_briefing", {}, data, now);
+    expect(output.fleetMap?.points).toHaveLength(1);
+    expect(output.fleetMap?.points[0]).toMatchObject({label: "Driver phone · Synthetic run", freshness: "stale"});
+    expect(output.sections[0].rows[0].runId).toBe(run.id);
+    expect(output.metrics.find(metric => metric.label === "Shown in progress")?.value).toBe(1);
+    expect(output.attention.some(row => row.title === "More authorized runs available")).toBe(true);
+    expect(() => workspaceOutput("fleet", "query_fleet_briefing", {}, {...data, roles: []}, now)).toThrow("unavailable");
+    const detail = workspaceOutput("fleet_run", "query_fleet_run_detail", {runId: run.id}, run, now);
+    expect(detail.sourceArguments).toEqual({runId: run.id});
+    expect(detail.sections.some(section => section.rows.some(row => row.title === "pause"))).toBe(true);
+  });
   it("shows only the canonical inventory projection and highlights missing assets", () => {
     expect(workspaceRequest({ view: "inventory" })).toMatchObject({ sourceTool: "query_asset_custody", sourceArguments: {} });
     const output = workspaceOutput("inventory", "query_asset_custody", {}, { assets: [{ name: "Test truck", status: "checked_out", currentHolderDisplayName: "User 7", condition: "missing", privateTelemetry: "secret" }] }, now);
@@ -54,6 +104,12 @@ describe("VNDRLY workspace presentation", () => {
     await ui.reply("fleet");
     ui.tick();
     expect(ui.requests.filter(message => message.method === "tools/call")).toHaveLength(2);
+  });
+  it("refreshes the recorded Fleet Map through the same authorized view", () => {
+    const ui = workspaceHarness();
+    ui.publish("fleet_map");
+    ui.tick();
+    expect(ui.requests.find(message => message.method === "tools/call")?.params.arguments.view).toBe("fleet_map");
   });
   it("does not let Fleet polling override a newer panel while navigation is pending", async () => {
     const ui = workspaceHarness();

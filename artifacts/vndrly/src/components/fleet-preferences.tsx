@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+import { fleetCopy } from "@/lib/fleet-copy";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import type {
@@ -13,14 +15,10 @@ export function FleetPreferences({
   overview: FleetOverview;
   identity: string;
 }) {
+  const { i18n } = useTranslation();
+  const c = fleetCopy(i18n.language);
   const preference = overview.preference;
-  if (!preference)
-    return (
-      <p>
-        Workspace preference is unavailable. Refresh to load its current
-        version.
-      </p>
-    );
+  if (!preference) return <p>{c.preferenceUnavailable}</p>;
   return (
     <PreferenceForm
       key={preference.version}
@@ -39,6 +37,8 @@ function PreferenceForm({
   overview: FleetOverview;
   identity: string;
 }) {
+  const { i18n } = useTranslation();
+  const c = fleetCopy(i18n.language);
   const queryClient = useQueryClient();
   const [workspace, setWorkspace] = useState(preference.defaultWorkspace);
   const [fleetId, setFleetId] = useState(preference.selectedFleetId ?? "");
@@ -53,25 +53,20 @@ function PreferenceForm({
         defaultWorkspace: workspace,
         selectedFleetId: fleetId || null,
       });
-      setMessage("Workspace preference saved.");
+      setMessage(c.preferenceSaved);
       await queryClient.invalidateQueries({ queryKey: ["fleet", identity] });
     } catch {
-      setMessage(
-        "Preference was not confirmed. Refresh and review its current version before retrying.",
-      );
+      setMessage(c.preferenceFailed);
     } finally {
       setBusy(false);
     }
   }
   return (
     <section className="space-y-4 rounded-xl border p-4">
-      <h2 className="text-xl font-semibold">Your Fleet workspace</h2>
-      <p>
-        Choose your default home in this company. This setting does not grant
-        access or change assignments.
-      </p>
+      <h2 className="text-xl font-semibold">{c.preferenceHeading}</h2>
+      <p>{c.preferenceExplanation}</p>
       <label className="block">
-        Default home
+        {c.defaultHome}
         <select
           className="ml-3 rounded border bg-background p-2"
           disabled={busy}
@@ -82,24 +77,24 @@ function PreferenceForm({
             )
           }
         >
-          <option value="standard">Standard company home</option>
+          <option value="standard">{c.standardHome}</option>
           {overview.capabilities.canDispatch && (
-            <option value="fleet_desk">Fleet Desk</option>
+            <option value="fleet_desk">{c.desk}</option>
           )}
           {overview.capabilities.canDrive && (
-            <option value="fleet_my_day">Fleet My Day</option>
+            <option value="fleet_my_day">{c.myDay}</option>
           )}
         </select>
       </label>
       <label className="block">
-        Preferred fleet
+        {c.preferredFleet}
         <select
           className="ml-3 rounded border bg-background p-2"
           disabled={busy}
           value={fleetId}
           onChange={(e) => setFleetId(e.target.value)}
         >
-          <option value="">All authorized fleets</option>
+          <option value="">{c.allFleets}</option>
           {overview.fleets.map((fleet) => (
             <option key={fleet.id} value={fleet.id}>
               {fleet.name}
@@ -108,7 +103,7 @@ function PreferenceForm({
         </select>
       </label>
       <PngPillButton disabled={busy} onClick={() => void save()}>
-        Save reviewed preference
+        {c.savePreference}
       </PngPillButton>
       {message && <p role="status">{message}</p>}
     </section>

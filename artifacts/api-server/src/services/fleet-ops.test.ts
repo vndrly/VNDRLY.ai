@@ -1,4 +1,8 @@
 import { describe, expect, it } from "vitest";
+import {
+  previewFleetRunActions,
+  FleetActionInputSchema,
+} from "@workspace/api-zod";
 import type { PoolClient } from "pg";
 import { createFleetService } from "./fleet-ops";
 import {
@@ -46,28 +50,31 @@ function fixture() {
   let hold = false;
   let sitesVisible = true;
   const client = {
-    query: async (sql: string) => ({
-      rows: sql.includes("vendor_people")
-        ? [{ id: 2 }]
-        : sql.includes("FROM assets")
-          ? [
-              {
-                id: vehicle,
-                status: "available",
-                category: "truck",
-                current_holder_user_id: null,
-              },
-            ]
-          : sql.includes("asset_holds")
-            ? hold
-              ? [{ id: 1 }]
-              : []
-            : sql.includes("site_locations")
-              ? sitesVisible
-                ? [{ id: 9, is_active: true }]
+    query: async (sql: string) => {
+      if (sql.startsWith("INSERT INTO asset_holds")) hold = true;
+      return {
+        rows: sql.includes("vendor_people")
+          ? [{ id: 2 }]
+          : sql.includes("FROM assets")
+            ? [
+                {
+                  id: vehicle,
+                  status: "available",
+                  category: "truck",
+                  current_holder_user_id: null,
+                },
+              ]
+            : sql.includes("asset_holds")
+              ? hold
+                ? [{ id: 1 }]
                 : []
-              : [],
-    }),
+              : sql.includes("site_locations")
+                ? sitesVisible
+                  ? [{ id: 9, is_active: true }]
+                  : []
+                : [],
+      };
+    },
   } as unknown as PoolClient;
   const repo: FleetRepository = {
     async transaction(companyId, userId, operation) {
@@ -87,6 +94,9 @@ function fixture() {
     hold: () => {
       hold = true;
     },
+    releaseInventoryHold: () => {
+      hold = false;
+    },
   };
 }
 const createInput = {
@@ -105,6 +115,150 @@ const createInput = {
   ],
 };
 describe("Fleet durable service authority contract", () => {
+  it("retains inspection exceptions and requires inventory release before a later passed inspection can start", async () => {
+    const f = fixture();
+    let run = await f.service.create(manager, createInput);
+    run = await f.service.action(manager, run.id, {
+      operationId: crypto.randomUUID(),
+      action: "dispatch",
+      expectedVersion: run.version,
+    });
+    run = await f.service.action(driver, run.id, {
+      operationId: crypto.randomUUID(),
+      action: "acknowledge",
+      expectedVersion: run.version,
+    });
+    run = await f.service.action(driver, run.id, {
+      operationId: crypto.randomUUID(),
+      action: "record_meter",
+      reading: 100,
+      unit: "miles",
+      notes: "Reported odometer",
+      expectedVersion: run.version,
+    });
+    run = await f.service.action(driver, run.id, {
+      operationId: crypto.randomUUID(),
+      action: "inspect",
+      inspectionOutcome: "defect_reported",
+      notes: "Reported inspection exception",
+      expectedVersion: run.version,
+    });
+    expect(run.events.at(-1)?.details?.maintenanceIds).toHaveLength(1);
+    run = await f.service.action(driver, run.id, {
+      operationId: crypto.randomUUID(),
+      action: "inspect",
+      inspectionOutcome: "passed",
+      notes: "User reports later inspection passed",
+      expectedVersion: run.version,
+    });
+    await expect(
+      f.service.action(driver, run.id, {
+        operationId: crypto.randomUUID(),
+        action: "start",
+        expectedVersion: run.version,
+      }),
+    ).rejects.toMatchObject({ code: "fleet.equipment_on_hold" });
+    expect(f.state().runs[0].status).toBe("acknowledged");
+    f.releaseInventoryHold();
+    run = await f.service.action(driver, run.id, {
+      operationId: crypto.randomUUID(),
+      action: "start",
+      expectedVersion: run.version,
+    });
+    expect(run.status).toBe("in_progress");
+    expect(run.inspections.map((i) => i.outcome)).toEqual([
+      "defect_reported",
+      "passed",
+    ]);
+  });
+  it("keeps offline proposed hauling phases aligned with canonical acceptance without fabricating records", async () => {
+    const f = fixture(),
+      deliveryId = crypto.randomUUID(),
+      loadId = crypto.randomUUID();
+    let run = await f.service.create(manager, {
+      ...createInput,
+      stops: [
+        ...createInput.stops,
+        { id: deliveryId, siteId: 9, kind: "delivery", sequence: 1 },
+      ],
+    });
+    run = await f.service.action(manager, run.id, {
+      operationId: crypto.randomUUID(),
+      expectedVersion: run.version,
+      action: "dispatch",
+    });
+    const base = structuredClone(run),
+      original = JSON.stringify(base);
+    const queued: ReturnType<typeof FleetActionInputSchema.parse>[] = [];
+    const inputs = [
+      { action: "acknowledge" },
+      {
+        action: "inspect",
+        inspectionOutcome: "passed",
+        notes: "Driver reports inspection",
+      },
+      {
+        action: "record_meter",
+        reading: 100,
+        unit: "miles",
+        notes: "Driver reports initial odometer",
+      },
+      { action: "start" },
+      { action: "arrive_stop", stopId: createInput.stops[0].id },
+      {
+        action: "record_load",
+        loadId,
+        commodity: "Synthetic gravel",
+        quantity: 10,
+        unit: "tons",
+        manifestReference: "fictional-manifest",
+      },
+      { action: "depart_stop", stopId: createInput.stops[0].id },
+      { action: "arrive_stop", stopId: deliveryId },
+      {
+        action: "record_delivery",
+        loadId,
+        deliveryReference: "fictional-delivery",
+      },
+      { action: "depart_stop", stopId: deliveryId },
+      {
+        action: "record_meter",
+        reading: 110,
+        unit: "miles",
+        notes: "Driver reports final odometer",
+      },
+      { action: "submit_closeout" },
+    ];
+    for (const fields of inputs) {
+      const command = FleetActionInputSchema.parse({
+        ...fields,
+        operationId: crypto.randomUUID(),
+        expectedVersion: run.version,
+        capturedAt: new Date().toISOString(),
+        source: "user_report",
+      });
+      queued.push(command);
+      const proposed = previewFleetRunActions(base, queued);
+      run = await f.service.action(driver, run.id, command);
+      expect(proposed).toMatchObject({
+        unsynced: true,
+        expectedVersion: run.version,
+        status: run.status,
+        phase: run.phase,
+        currentStopId: run.currentStopId,
+        visitedStopIds: run.visitedStopIds,
+      });
+      expect(proposed.loads.map((l) => l.delivered)).toEqual(
+        run.loads.map((l) => Boolean(l.deliveredAt)),
+      );
+    }
+    expect(JSON.stringify(base)).toBe(original);
+    expect(base.events).toHaveLength(2);
+    expect(run.status).toBe("submitted_for_review");
+    expect(() =>
+      previewFleetRunActions(base, [{ ...queued[0], expectedVersion: 99 }]),
+    ).toThrow();
+  });
   it("creates/replays a draft without dispatch or fabricated telemetry", async () => {
     const f = fixture();
     const run = await f.service.create(manager, createInput);

@@ -1474,6 +1474,10 @@
       "not_found": "We couldn't find that partner contact.",
       "already_provisioned": "That partner contact has already been provisioned."
     },
+    "fleet": {
+      "invalid_request": "The Fleet request is invalid. Review the fields and try again.",
+      "internal_error": "The Fleet request could not be completed. Please try again."
+    },
     "asset": {
       "invalid_request": "The asset request is invalid.",
       "internal_error": "The asset request could not be completed."

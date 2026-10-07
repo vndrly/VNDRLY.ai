@@ -1,14 +1,32 @@
 import type {
+  FleetSupportChoices,
+  FleetSupportRead,
+  FleetSiteChoices,
+  FleetSiteActivity,
   FleetOverview,
   FleetRun,
   FleetResources,
   FleetActionInput,
   FleetSetup,
+  FleetMaintenancePage,
+  FleetMaintenanceRecord,
+  FleetMaintenanceCreate,
+  FleetMaintenanceAction,
+  FleetReport,
+  FleetReportFilter,
+  FleetSavedView,
+  FleetGateObservations,
+  FleetGateLink,
 } from "@workspace/api-zod";
 import {
   CreateFleetRunSchema,
   FleetSetupInputSchema,
   FleetWorkspacePreferenceInputSchema,
+  FleetSavedViewInputSchema,
+  FleetReportSchema,
+  FleetEtaSchema,
+  FleetMaintenanceRecordSchema,
+  FleetGateLinkInputSchema,
 } from "@workspace/api-zod";
 import type { z } from "zod/v4";
 export class FleetRequestError extends Error {
@@ -72,6 +90,62 @@ async function request<T>(path: string, body?: unknown): Promise<T> {
   return response.json();
 }
 export const fleetClient = {
+  eta: (id: string) =>
+    request<unknown>(`/runs/${encodeURIComponent(id)}/eta`).then((data) =>
+      FleetEtaSchema.parse(data),
+    ),
+  supportChoices: () => request<FleetSupportChoices>("/support"),
+  supportCompany: (id: number, cursor?: string) =>
+    request<FleetSupportRead>(
+      `/support/${id}${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ""}`,
+    ),
+  siteChoices: () => request<FleetSiteChoices>("/site-activity"),
+  siteActivity: (
+    siteId: number,
+    filters: { startsAt?: string; endsAt?: string },
+  ) => {
+    const query = new URLSearchParams(filters);
+    return request<FleetSiteActivity>(
+      `/site-activity/${siteId}${query.size ? `?${query}` : ""}`,
+    );
+  },
+  gateObservations: (id: string) =>
+    request<FleetGateObservations>(
+      `/runs/${encodeURIComponent(id)}/gate-observations`,
+    ),
+  linkGateVisit: (
+    id: string,
+    input: z.infer<typeof FleetGateLinkInputSchema>,
+  ) =>
+    request<FleetGateLink>(`/runs/${encodeURIComponent(id)}/gate-links`, input),
+  report: (filters: FleetReportFilter) => {
+    const query = new URLSearchParams();
+    for (const [key, value] of Object.entries(filters))
+      if (value !== undefined) query.set(key, String(value));
+    return request<FleetReport>(
+      `/reports${query.size ? `?${query}` : ""}`,
+    ).then((data) => FleetReportSchema.parse(data));
+  },
+  savedViews: () => request<{ views: FleetSavedView[] }>("/views"),
+  saveView: (input: z.infer<typeof FleetSavedViewInputSchema>) =>
+    request<FleetSavedView>("/views", input),
+  maintenance: (cursor?: string) =>
+    request<FleetMaintenancePage>(
+      `/maintenance${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ""}`,
+    ),
+  maintenanceDetail: (id: string) =>
+    request<FleetMaintenanceRecord>(
+      `/maintenance/${encodeURIComponent(id)}`,
+    ).then((data) => FleetMaintenanceRecordSchema.parse(data)),
+  createMaintenance: (input: FleetMaintenanceCreate) =>
+    request<FleetMaintenanceRecord>("/maintenance", input).then((data) =>
+      FleetMaintenanceRecordSchema.parse(data),
+    ),
+  maintenanceAction: (id: string, input: FleetMaintenanceAction) =>
+    request<FleetMaintenanceRecord>(
+      `/maintenance/${encodeURIComponent(id)}/actions`,
+      input,
+    ).then((data) => FleetMaintenanceRecordSchema.parse(data)),
   savePreference: (
     input: z.infer<typeof FleetWorkspacePreferenceInputSchema>,
   ) => request<unknown>("/preferences", input),
@@ -79,6 +153,10 @@ export const fleetClient = {
   saveSetup: (input: z.infer<typeof FleetSetupInputSchema>) =>
     request<unknown>("/setup", input),
   overview: () => request<FleetOverview>("/overview"),
+  overviewPage: (cursor?: string) =>
+    request<FleetOverview>(
+      `/overview${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ""}`,
+    ),
   resources: () => request<FleetResources>("/resources"),
   run: (id: string) => request<FleetRun>(`/runs/${encodeURIComponent(id)}`),
   create: (input: z.infer<typeof CreateFleetRunSchema>) =>

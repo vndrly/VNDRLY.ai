@@ -6,8 +6,8 @@ export function fleetActionInput(run: FleetRun, action: FleetActionInput["action
   return { ...fields, action, operationId, expectedVersion: run.version };
 }
 
-export function fleetRunLabel(run: FleetRun): string {
-  return `${run.title} · ${run.status.replaceAll("_", " ")}`;
+export function fleetRunLabel(run: FleetRun, copy: (text: string) => string = text => text): string {
+  return `${run.title} · ${copy(run.status.replaceAll("_", " "))}`;
 }
 export function fleetHomeRoute(overview: Pick<FleetOverview, "enabled" | "capabilities" | "preference">): string | null {
   if (!overview.enabled) return null;
@@ -37,4 +37,15 @@ export function fleetErrorMessage(error: unknown): string {
     "fleet.stop_order_conflict": "This stop is not the next permitted stop for the run.",
   };
   return (code && messages[code]) || (error instanceof Error ? error.message : "Fleet operation failed.");
+}
+
+export function fleetQueueErrorMessage(error: unknown): string {
+  const message = error instanceof Error ? error.message : "Offline storage failed.";
+  return /\d+ KB/.test(message) || message.includes("device limit") || message === "Fleet offline queue is full."
+    ? "Device storage is full. This entry was not saved. Synchronize pending entries before recording more."
+    : message;
+}
+
+export function fleetConsentReturnRoute(value: unknown): string | null {
+  return typeof value === "string" && /^\/fleet-run\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value) ? value : null;
 }

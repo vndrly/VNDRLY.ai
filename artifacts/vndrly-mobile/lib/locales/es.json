@@ -1474,6 +1474,10 @@
       "not_found": "No encontramos ese contacto del socio.",
       "already_provisioned": "Ese contacto del socio ya fue dado de alta."
     },
+    "fleet": {
+      "invalid_request": "La solicitud de flota no es válida. Revisa los campos e inténtalo de nuevo.",
+      "internal_error": "No se pudo completar la solicitud de flota. Inténtalo de nuevo."
+    },
     "asset": {
       "invalid_request": "La solicitud del activo no es válida.",
       "internal_error": "No se pudo completar la solicitud del activo."

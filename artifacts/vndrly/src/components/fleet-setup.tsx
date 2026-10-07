@@ -1,3 +1,6 @@
+import { FleetSupportGrants } from "@/components/fleet-support-grants";
+import { useTranslation } from "react-i18next";
+import { fleetCopy } from "@/lib/fleet-copy";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { FleetSetupInputSchema, type FleetSetup } from "@workspace/api-zod";
@@ -5,22 +8,19 @@ import { fleetClient } from "@/lib/fleet-client";
 import { PngPillButton } from "@/components/png-pill-rollover";
 
 export function FleetSetupPanel({ identity }: { identity: string }) {
+  const { i18n } = useTranslation();
+  const c = fleetCopy(i18n.language);
   const query = useQuery({
     queryKey: ["fleet-setup", identity],
     queryFn: fleetClient.setup,
     retry: false,
   });
-  if (query.isPending) return <p>Loading Fleet configuration…</p>;
-  if (!query.data)
-    return (
-      <p role="alert">
-        Fleet setup requires company administrator permission. Refresh to retry.
-      </p>
-    );
+  if (query.isPending) return <p>{c.setupLoading}</p>;
+  if (!query.data) return <p role="alert">{c.setupDenied}</p>;
   return (
     <div className="space-y-3">
       <PngPillButton onClick={() => void query.refetch()}>
-        Refresh configuration
+        {c.refreshConfiguration}
       </PngPillButton>
       <FleetSetupForm
         key={query.data.expectedVersion}
@@ -37,6 +37,8 @@ function FleetSetupForm({
   initial: FleetSetup;
   identity: string;
 }) {
+  const { i18n } = useTranslation();
+  const c = fleetCopy(i18n.language);
   const queryClient = useQueryClient();
   const [draft, setDraft] = useState(() => structuredClone(initial));
   const [busy, setBusy] = useState(false);
@@ -92,28 +94,26 @@ function FleetSetupForm({
           enabled: draft.enabled,
           fleets: draft.fleets,
           grants: draft.grants,
+          ...(draft.supportGrants !== undefined
+            ? { supportGrants: draft.supportGrants }
+            : {}),
         }),
       );
-      setMessage("Fleet configuration saved.");
+      setMessage(c.setupSaved);
       await queryClient.invalidateQueries({ queryKey: ["fleet", identity] });
       await queryClient.invalidateQueries({
         queryKey: ["fleet-setup", identity],
       });
     } catch {
-      setMessage(
-        "Configuration could not be saved. Refresh and review company sites, memberships and current version before retrying.",
-      );
+      setMessage(c.setupFailed);
     } finally {
       setBusy(false);
     }
   }
   return (
     <section className="space-y-4 rounded-xl border p-4">
-      <h2 className="text-xl font-semibold">Fleet setup</h2>
-      <p className="text-sm">
-        Company administrators explicitly enable Fleet and assign fleets, sites
-        and roles. Review all changes before saving.
-      </p>
+      <h2 className="text-xl font-semibold">{c.setup}</h2>
+      <p className="text-sm">{c.setupExplanation}</p>
       <label>
         <input
           type="checkbox"
@@ -121,17 +121,15 @@ function FleetSetupForm({
           disabled={busy}
           onChange={(e) => setDraft({ ...draft, enabled: e.target.checked })}
         />{" "}
-        Enable Fleet Ops
+        {c.enableFleet}
       </label>
       <div className="space-y-3">
-        <h3 className="font-semibold">Fleets and authorized sites</h3>
+        <h3 className="font-semibold">{c.fleetsSites}</h3>
         {draft.fleets.map((fleet) => (
           <fieldset className="rounded border p-3" key={fleet.id}>
             <legend>{fleet.name}</legend>
             <div className="space-y-1">
-              <h4 className="text-sm font-semibold">
-                Assigned inventory equipment
-              </h4>
+              <h4 className="text-sm font-semibold">{c.assignedEquipment}</h4>
               {initial.equipment.map((asset) => (
                 <label className="mr-4 inline-block" key={asset.assetId}>
                   <input
@@ -161,7 +159,7 @@ function FleetSetupForm({
               ))}
             </div>
             <label className="block text-sm">
-              Required certifications (one per line)
+              {c.certifications}
               <textarea
                 disabled={busy}
                 className="block w-full rounded border bg-background p-2"
@@ -204,8 +202,8 @@ function FleetSetupForm({
           </fieldset>
         ))}
         <input
-          aria-label="New fleet name"
-          placeholder="New fleet name"
+          aria-label={c.newFleet}
+          placeholder={c.newFleet}
           value={fleetName}
           disabled={busy}
           onChange={(e) => setFleetName(e.target.value)}
@@ -229,16 +227,16 @@ function FleetSetupForm({
             setFleetName("");
           }}
         >
-          Add fleet
+          {c.addFleet}
         </PngPillButton>
       </div>
       <div className="space-y-3">
-        <h3 className="font-semibold">Explicit member grants</h3>
+        <h3 className="font-semibold">{c.memberGrants}</h3>
         {draft.grants.map((grant) => (
           <fieldset key={grant.userId} className="space-y-2 rounded border p-3">
             <legend>
               {initial.members.find((member) => member.userId === grant.userId)
-                ?.name ?? `Member ${grant.userId}`}
+                ?.name ?? `${c.member} ${grant.userId}`}
             </legend>
             <div>
               {(["fleet_manager", "dispatcher", "driver"] as const).map(
@@ -256,7 +254,7 @@ function FleetSetupForm({
                         })
                       }
                     />{" "}
-                    {role.replaceAll("_", " ")}
+                    {c[role]}
                   </label>
                 ),
               )}
@@ -317,6 +315,23 @@ function FleetSetupForm({
                   </label>
                 ))}
             </div>
+            <div className="space-y-2">
+              {(["safetyRelease", "financeRead"] as const).map((authority) => (
+                <label className="block" key={authority}>
+                  <input
+                    type="checkbox"
+                    disabled={busy}
+                    checked={grant[authority]}
+                    onChange={(event) =>
+                      updateGrant(grant.userId, {
+                        [authority]: event.target.checked,
+                      })
+                    }
+                  />{" "}
+                  {c[authority]}
+                </label>
+              ))}
+            </div>
             <PngPillButton
               color="red"
               disabled={busy}
@@ -327,17 +342,17 @@ function FleetSetupForm({
                 })
               }
             >
-              Remove grant
+              {c.removeGrant}
             </PngPillButton>
           </fieldset>
         ))}
         <select
-          aria-label="Company member"
+          aria-label={c.member}
           disabled={busy}
           value={memberId}
           onChange={(e) => setMemberId(e.target.value)}
         >
-          <option value="">Choose company member</option>
+          <option value="">{c.chooseMember}</option>
           {initial.members
             .filter(
               (member) => !draft.grants.some((g) => g.userId === member.userId),
@@ -368,15 +383,16 @@ function FleetSetupForm({
             setMemberId("");
           }}
         >
-          Add member grant
+          {c.addGrant}
         </PngPillButton>
       </div>
-      <p className="text-xs">
-        Safety-release and finance authorities remain separate; this form
-        preserves existing settings.
-      </p>
+      <FleetSupportGrants
+        draft={draft}
+        onChange={(supportGrants) => setDraft({ ...draft, supportGrants })}
+      />
+      <p className="text-xs">{c.separateAuthorities}</p>
       <PngPillButton disabled={busy} onClick={() => void save()}>
-        Save reviewed configuration
+        {c.saveConfiguration}
       </PngPillButton>
       {message && <p role="status">{message}</p>}
     </section>

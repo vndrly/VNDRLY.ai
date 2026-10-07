@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { FleetOverview } from "@workspace/api-zod";
-import { fleetPositions, fleetVisibleRuns } from "./fleet-view";
+import { fleetHomePath, fleetPositions, fleetVisibleRuns } from "./fleet-view";
 const overview = {
   companyId: 1,
   runs: [
@@ -68,6 +68,26 @@ const overview = {
   ],
 } as unknown as FleetOverview;
 describe("Fleet view isolation", () => {
+  it("honors explicit authorized home preferences and an explicit Field Ops switch", () => {
+    const driver = {
+      ...overview,
+      enabled: true,
+      capabilities: { canDrive: true, canDispatch: false },
+      preference: { defaultWorkspace: "fleet_my_day" },
+    } as FleetOverview;
+    expect(fleetHomePath(driver, "")).toBe("/fleet/my-day");
+    expect(fleetHomePath(driver, "workspace=standard")).toBeNull();
+    expect(fleetHomePath({ ...driver, preference: undefined }, "")).toBeNull();
+    expect(
+      fleetHomePath(
+        {
+          ...driver,
+          capabilities: { ...driver.capabilities, canDrive: false },
+        },
+        "",
+      ),
+    ).toBeNull();
+  });
   it("keeps My Day own-driver/company records and applies site/fleet filters", () => {
     expect(
       fleetVisibleRuns(overview, 7, true, "a", "10", "WATER").map((r) => r.id),

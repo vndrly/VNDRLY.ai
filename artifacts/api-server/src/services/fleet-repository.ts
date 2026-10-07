@@ -1,9 +1,11 @@
+import { createItemizedFleetRepository } from "./fleet-itemized-repository";
 import { z } from "zod/v4";
 import {
   FleetDefinitionSchema,
   FleetGrantSchema,
   FleetRunSchema,
   FleetWorkspacePreferenceSchema,
+  FleetSetupInputSchema,
 } from "@workspace/api-zod";
 import { pool } from "@workspace/db";
 import type { PoolClient } from "pg";
@@ -13,6 +15,9 @@ export const FleetStateSchema = z
     enabled: z.boolean(),
     fleets: z.array(FleetDefinitionSchema).max(50),
     grants: z.array(FleetGrantSchema).max(500),
+    supportGrants: FleetSetupInputSchema.shape.supportGrants
+      .unwrap()
+      .default([]),
     runs: z.array(FleetRunSchema).max(1000),
     preferences: z.array(FleetWorkspacePreferenceSchema).max(500).default([]),
     operations: z
@@ -42,6 +47,7 @@ export const emptyFleetState = (): FleetState => ({
   enabled: false,
   fleets: [],
   grants: [],
+  supportGrants: [],
   runs: [],
   operations: [],
   preferences: [],
@@ -63,7 +69,7 @@ export interface FleetRepository {
   ): Promise<T>;
 }
 /** A bounded vendor aggregate serializes dispatch and grants. Never silently drops history. */
-export const databaseFleetRepository: FleetRepository = {
+const boundedFleetRepository: FleetRepository = {
   async transaction(companyId, actorUserId, operation, authority) {
     const client = await pool.connect();
     try {
@@ -157,3 +163,9 @@ export const databaseFleetRepository: FleetRepository = {
     }
   },
 };
+
+export const databaseFleetRepository = createItemizedFleetRepository(
+  boundedFleetRepository,
+  (code = "fleet.active_run_capacity_reached", status = 409) =>
+    new FleetError(code, status),
+);

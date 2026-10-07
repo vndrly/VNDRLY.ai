@@ -1,5 +1,5 @@
 import { selectConsentedScopes } from "../assistant/chatgpt-consent-selection";
-import { fleetConsentUpgradeTools, fleetConsentChallenge, fleetToolSecuritySchemes } from "../assistant/chatgpt-fleet-consent";
+import { fleetConsentUpgradeTools, partnerFleetConsentUpgradeTools, supportFleetConsentUpgradeTools, fleetConsentChallenge, fleetToolSecuritySchemes } from "../assistant/chatgpt-fleet-consent";
 import { createFleetService } from "../services/fleet-ops";
 import { databaseFleetRepository } from "../services/fleet-repository";
 import type { SessionPayload } from "../lib/session";
@@ -26,6 +26,7 @@ import { SPECIALISTS_TOOL, specialistDirectory } from "../assistant/chatgpt-spec
 import { fileDeviceHandoff, requireMatchingFileDevice, type FileDeviceHandoff, meetingDeviceHandoff, requireMatchingMeetingDevice, type MeetingDeviceHandoff } from "../assistant/chatgpt-device-handoff";
 import { ticketDeviceHandoff, requireMatchingTicketDevice, type TicketDeviceHandoff, TICKET_DEVICE_TOOL } from "../assistant/chatgpt-device-handoff";
 import { gateDeviceHandoff, requireMatchingGateDevice, type GateDeviceHandoff, GATE_DEVICE_TOOL } from "../assistant/chatgpt-device-handoff";
+import { fleetDeviceHandoff, requireMatchingFleetDevice, type FleetDeviceHandoff, FLEET_DEVICE_TOOL } from "../assistant/chatgpt-device-handoff";
 import { CHATGPT_WRITE_CAPABILITIES, validateChatGptActionInput, sanitizeChatGptActionInput, chatGptActionAuditInput, chatGptActionResult } from "../assistant/chatgpt-write-capabilities";
 
 import { RESUME_PLAN_TOOL, resumedWorkPlan, PREPARE_PLAN_TOOL, prepareWorkPlan, RUN_PLAN_READ_TOOL, plannedReadRequests, CONTROL_PLAN_TOOL, prepareWorkPlanControl } from "../assistant/chatgpt-coordinated-plan";
@@ -164,6 +165,26 @@ router.get("/device/gate/:handoff", async (req, res) => {
     return page(res.status(403), '<p>This Gate link is expired, disconnected, or unavailable to this account. Request a fresh link from V. No shift was transferred.</p>');
   }
 });
+router.get("/device/fleet/:handoff", async (req, res) => {
+  try {
+    const handoff = readEnvelope(req.params.handoff) as unknown as FleetDeviceHandoff;
+    const session = getSessionFromRequest(req);
+    if (!session) return page(res, '<p>Sign into the same VNDRLY account used by ChatGPT, then refresh this page.</p><p><a href="/switch-account" target="_blank" rel="noopener">Sign into VNDRLY</a></p>');
+    const current = await validateAssistantSession(session);
+    const destination = requireMatchingFleetDevice(handoff, current);
+    await withAssistantGrants(current.userId!, async (grants, database) => {
+      const grant = grants.find(item => !item.revoked && item.consentHash === handoff.grantConsentHash);
+      if (!grant) throw new AssistantOAuthError("access_denied");
+      requireMatchingFleetDevice(handoff, await validateAssistantSession(grant.session, database));
+      requireChatGptReadableTool(current, grant.scopes, "query_fleet_run_detail");
+    });
+    const result = JSON.parse(await runTool("query_fleet_run_detail", { runId: handoff.runId }, current, ""));
+    if (!result || result.id !== handoff.runId || result.error || result.ok === false) throw new AssistantOAuthError("access_denied");
+    return res.redirect(302, destination);
+  } catch {
+    return page(res.status(403), '<p>This Fleet link is expired, disconnected, or unavailable to this account and organization. Request a fresh link from V. No entry, tracking or upload was started.</p>');
+  }
+});
 router.get("/authorize", async (req, res) => {
   // The consent POST redirects to the fixed ChatGPT callback. Helmet's default
   // form-action self would otherwise block that browser redirect after success.
@@ -249,6 +270,12 @@ async function authenticate(req: Request) {
   });
 }
 async function fleetUpgradeDiscovery(session: SessionPayload, scopes: readonly string[]) {
+  if(session.role==="admin" && session.userId) {
+    try { const choices=JSON.parse(await runTool("query_fleet_support",{},session,"")); return Array.isArray(choices.companies) ? supportFleetConsentUpgradeTools(session,scopes,choices) : []; } catch { return []; }
+  }
+  if(session.role==="partner" && session.partnerId && session.userId) {
+    try { const choices=JSON.parse(await runTool("query_fleet_site_activity",{},session,"")); return Array.isArray(choices.sites) ? partnerFleetConsentUpgradeTools(session,scopes,choices) : []; } catch { return []; }
+  }
   if (!session.vendorId || !session.userId || !["vendor", "field_employee"].includes(session.role ?? "")) return [];
   try {
     const overview = await createFleetService(databaseFleetRepository).overview({ ...session, userId: session.userId, companyId: session.vendorId });
@@ -271,7 +298,7 @@ router.post("/mcp", async (req, res) => {
   if (message.method === "resources/read") {
     if ([ACTION_PANEL_URI, ATTENDANCE_ACTION_PANEL_URI, RECOVERY_ACTION_PANEL_URI, RECENT_ACTION_PANEL_URI, PREVIOUS_ACTION_PANEL_URI, LEGACY_ACTION_PANEL_URI].includes(message.params?.uri)) return reply({ contents: [{ uri: message.params.uri, mimeType: "text/html;profile=mcp-app", text: ACTION_PANEL_HTML, _meta: { "openai/widgetDescription": "VNDRLY action authorization panel. Shows the exact prepared change, current saved status, and actual result after submission. Location-dependent changes use the secure device authorization link.", ui: { csp: { connectDomains: [], resourceDomains: [] }, prefersBorder: true } } }] });
     if (message.params?.uri !== WORKSPACE_URI) return res.json({ jsonrpc: "2.0", id: message.id, error: { code: -32602, message: "Unknown resource" } });
-    return reply({ contents: [{ uri: WORKSPACE_URI, mimeType: "text/html;profile=mcp-app", text: WORKSPACE_HTML, _meta: { ui: { csp: { connectDomains: [], resourceDomains: authorized.scopes.includes("crew:read") ? ["https://api.mapbox.com"] : [] }, prefersBorder: true } } }] });
+    return reply({ contents: [{ uri: WORKSPACE_URI, mimeType: "text/html;profile=mcp-app", text: WORKSPACE_HTML, _meta: { ui: { csp: { connectDomains: [], resourceDomains: (authorized.scopes.includes("crew:read") || authorized.scopes.includes("fleet:read")) ? ["https://api.mapbox.com"] : [] }, prefersBorder: true } } }] });
   }
   if (message.method === "tools/list") {
     const fleetUpgrades = await fleetUpgradeDiscovery(authorized.session, authorized.scopes);
@@ -285,8 +312,9 @@ router.post("/mcp", async (req, res) => {
     reads.push({ name: "v_connection_context", description: "Read this connection's authenticated account and granted scope names. These are connection facts, not proof of operational site access or permission to perform an action. Use before selecting role-dependent workflows; do not infer roles from display names.", inputSchema: { type: "object", properties: {}, additionalProperties: false }, annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false } });
     if (reads.some(tool => tool.name === "query_gate_change_over")) reads.push(GATE_DEVICE_TOOL);
     if (reads.some(tool => tool.name === "query_ticket_detail")) reads.push(TICKET_DEVICE_TOOL);
+    if (chatGptReadableTools(authorized.session, authorized.scopes).some(tool => tool.name === "query_fleet_run_detail")) reads.push(FLEET_DEVICE_TOOL);
     if (reads.some(tool => tool.name === "list_work_hub_tasks")) reads.push(RESUME_PLAN_TOOL, RUN_PLAN_READ_TOOL);
-    if (reads.some(tool => ["get_work_hub_briefing", "get_work_hub_calendar", "query_gate_stations", "lookup_user_progress", "query_tickets", "query_notifications", "query_field_trips", "query_asset_custody"].includes(tool.name))) reads.push(WORKSPACE_TOOL);
+    if (reads.some(tool => ["get_work_hub_briefing", "get_work_hub_calendar", "query_gate_stations", "lookup_user_progress", "query_tickets", "query_notifications", "query_field_trips", "query_fleet_briefing", "query_fleet_site_activity", "query_asset_custody"].includes(tool.name))) reads.push(WORKSPACE_TOOL);
     const actions = chatGptActionTools(authorized.session, authorized.scopes);
     const upgradeTools = financeConsentUpgradeTools(authorized.session, authorized.scopes).map(tool => ({ name: tool.name, description: `${tool.description} Additional finance consent is required before preparation; this does not transfer money.`, inputSchema: { ...tool.inputSchema, properties: Object.fromEntries(Object.entries(tool.inputSchema.properties ?? {}).filter(([key]) => !SERVER_ACTION_FIELDS.has(key))), required: (tool.inputSchema.required ?? []).filter(key => !SERVER_ACTION_FIELDS.has(key)) }, securitySchemes: FINANCE_SECURITY_SCHEMES, annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: false }, _meta: { securitySchemes: FINANCE_SECURITY_SCHEMES } }));
     upgradeTools.push(...fleetUpgradeDescriptors.filter(tool => !tool.annotations.readOnlyHint));
@@ -312,6 +340,14 @@ router.post("/mcp", async (req, res) => {
       const context = { userId: session.userId, role: session.role, membershipRole: session.membershipRole ?? null, vendorRole: session.vendorRole ?? null, vendorId: session.vendorId ?? null, partnerId: session.partnerId ?? null, activeMembershipId: session.activeMembershipId ?? null, grantedScopes: authorized.scopes, operationalAccessVerified: false };
       await writeAskVActionAudit({ session, clientSurface: "api", inputMode: "web_text", provider: "chatgpt_mcp", toolName: name, targetType: "profile", toolInput: {}, resultStatus: "success" });
       return reply({ content: [{ type: "text", text: JSON.stringify(context) }], isError: false });
+    }
+    if (name === FLEET_DEVICE_TOOL.name) {
+      requireChatGptReadableTool(authorized.session, authorized.scopes, "query_fleet_run_detail");
+      if (!authorized.grantConsentHash || Object.keys(args).some(key => key !== "runId")) throw new AssistantOAuthError("invalid_request");
+      const handoff = fleetDeviceHandoff(authorized.session, authorized.grantConsentHash, args.runId);
+      const result = JSON.parse(await runTool("query_fleet_run_detail", { runId: handoff.runId }, authorized.session, ""));
+      if (!result || result.id !== handoff.runId || result.error || result.ok === false) throw new AssistantOAuthError("access_denied");
+      return reply({ content: [{ type: "text", text: JSON.stringify({ deviceUrl: ASSISTANT_ISSUER + "/device/fleet/" + envelope(handoff), runId: handoff.runId, entrySaved: false, deviceCaptureStarted: false, nativeAppOpened: false }) }], isError: false });
     }
     if (name === GATE_DEVICE_TOOL.name) {
       requireChatGptReadableTool(authorized.session, authorized.scopes, "query_gate_change_over");
@@ -409,20 +445,30 @@ router.post("/mcp", async (req, res) => {
       return reply({ structuredContent: outcome, content: [{ type: "text", text: JSON.stringify(outcome) }], isError: saved.state === "completed" && !outcome.ok });
     }
     if (name === "v_show_workspace") {
-      const request = workspaceRequest(args);
+      const allowedNames = new Set(chatGptReadableTools(authorized.session, authorized.scopes).map(tool => tool.name));
+      const request = workspaceRequest(args, allowedNames);
       const source = requireChatGptReadableTool(authorized.session, authorized.scopes, request.sourceTool);
       const raw = chatGptReadToolOutput(source.name, JSON.parse(await runTool(source.name, request.sourceArguments, authorized.session, "")));
       const output = workspaceOutput(request.view, source.name, request.sourceArguments, raw);
       if (output.fleetMap) output.fleetMap.publicToken = publicMapConfig(process.env).mapboxAccessToken;
-      const allowedNames = new Set(chatGptReadableTools(authorized.session, authorized.scopes).map(tool => tool.name));
       output.availableViews = [];
       if (allowedNames.has("get_work_hub_briefing")) output.availableViews.push("my_workday");
       if (allowedNames.has("get_work_hub_calendar")) output.availableViews.push("work_calendar");
       if (allowedNames.has("lookup_user_progress")) output.availableViews.push("onboarding");
       if (allowedNames.has("query_tickets")) output.availableViews.push("tickets");
       if (allowedNames.has("query_notifications")) output.availableViews.push("notifications");
-      if (allowedNames.has("query_field_trips")) output.availableViews.push("fleet");
+      if (allowedNames.has("query_fleet_briefing")) {
+        const fleet = request.sourceTool === "query_fleet_briefing" ? raw : JSON.parse(await runTool("query_fleet_capabilities", {}, authorized.session, ""));
+        if (request.sourceTool !== "query_fleet_briefing") await writeAskVActionAudit({ session: authorized.session, clientSurface: "api", inputMode: "web_text", provider: "chatgpt_mcp", toolName: "query_fleet_capabilities", targetType: "work_hub", toolInput: {}, toolOutput: fleet, resultStatus: fleet.error ? "failure" : "success" });
+        if (!fleet.error && (fleet.roles?.length || fleet.capabilities?.canSetup)) {
+          output.availableViews.push("fleet", "fleet_map");
+          if (allowedNames.has("query_fleet_report")) output.availableViews.push("fleet_reports");
+          if ((fleet.capabilities?.canMaintain || fleet.capabilities?.canReportDefect) && allowedNames.has("query_fleet_maintenance")) output.availableViews.push("fleet_maintenance");
+          if (fleet.capabilities?.canDispatch && allowedNames.has("query_fleet_resources")) output.availableViews.push("fleet_dispatch");
+        }
+      } else if (allowedNames.has("query_field_trips")) output.availableViews.push("fleet");
       if (allowedNames.has("query_asset_custody")) output.availableViews.push("inventory");
+      if (allowedNames.has("query_fleet_site_activity")) output.availableViews.push("fleet_site");
       if (allowedNames.has("query_gate_stations")) {
         const gates = request.view === "gate_board" ? raw : JSON.parse(await runTool("query_gate_stations", {}, authorized.session, ""));
         if (request.view === "gate_board" || (Array.isArray(gates.sites) && gates.sites.length > 0)) output.availableViews.push("gate_board");

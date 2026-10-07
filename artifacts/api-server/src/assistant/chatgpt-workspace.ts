@@ -1,11 +1,12 @@
 import { getFlow, type OrgPersona } from "./prompts/onboarding-flows";
 import { FLEET_MAP_CLIENT } from "./chatgpt-fleet-map";
 import { VENDRY_FLEET_INTEGRATION } from "./chatgpt-fleet-integration";
+import { FleetRunSchema, FleetMaintenanceRecordSchema, FleetReportSchema, FleetReportFilterSchema, FleetSiteActivityFilterSchema } from "@workspace/api-zod";
 
-export type WorkspaceView = "my_workday" | "gate_board" | "work_calendar" | "onboarding" | "tickets" | "notifications" | "fleet" | "inventory";
+export type WorkspaceView = "my_workday" | "gate_board" | "work_calendar" | "onboarding" | "tickets" | "notifications" | "fleet" | "fleet_map" | "fleet_dispatch" | "fleet_run" | "fleet_maintenance" | "fleet_reports" | "fleet_site" | "inventory";
 export const WORKSPACE_URI = "ui://vndrly/workspace/v1.html";
-const WORKSPACE_VIEWS = ["my_workday", "gate_board", "work_calendar", "onboarding", "tickets", "notifications", "fleet", "inventory"];
-const ROW_SCHEMA = { type: "object", properties: { title: { type: "string" }, detail: { type: "string" }, time: { type: "string" }, attention: { type: "string" } }, required: ["title"], additionalProperties: false };
+const WORKSPACE_VIEWS = ["my_workday", "gate_board", "work_calendar", "onboarding", "tickets", "notifications", "fleet", "fleet_map", "fleet_dispatch", "fleet_run", "fleet_maintenance", "fleet_reports", "fleet_site", "inventory"];
+const ROW_SCHEMA = { type: "object", properties: { title: { type: "string" }, detail: { type: "string" }, time: { type: "string" }, attention: { type: "string" }, runId: { type: "string", format: "uuid" } }, required: ["title"], additionalProperties: false };
 export const WORKSPACE_OUTPUT_SCHEMA = {
   type: "object", properties: {
     view: { type: "string", enum: WORKSPACE_VIEWS }, title: { type: "string" }, generatedAt: { type: "string", format: "date-time" },
@@ -18,21 +19,30 @@ export const WORKSPACE_OUTPUT_SCHEMA = {
 export const WORKSPACE_TOOL = {
   name: "v_show_workspace",
   outputSchema: WORKSPACE_OUTPUT_SCHEMA,
-  description: "Show an embedded VNDRLY My Workday, Gate Board, Work Calendar, Tickets, Notifications, Inventory, or Fleet using fresh permission-scoped records. Onboarding shows saved setup steps without changing fields. Gate selection without a station lists authorized locations. Calendar requires an explicit start and end window. Fleet shows existing authorized trips and an explicitly disconnected VENDRY Fleet placeholder; tagged vehicle location and routes are unavailable. This view does not start tracking or change records.",
-  inputSchema: { type: "object" as const, properties: { view: { type: "string", enum: ["my_workday", "gate_board", "work_calendar", "onboarding", "tickets", "notifications", "fleet", "inventory"] }, siteId: { type: "integer", minimum: 1 }, stationId: { type: "string", format: "uuid" }, start: { type: "string", format: "date-time" }, end: { type: "string", format: "date-time" } }, required: ["view"], additionalProperties: false },
+  description: "Show embedded authorized VNDRLY work records. Fleet Desk/Map use the canonical Fleet overview when granted, otherwise Fleet shows legacy authorized work trips. Fleet Dispatch requires dispatch resource access; Fleet Run requires an exact authorized runId. Views show saved records and sourced observations, not proof of physical movement, inspection, tracking or media capture. Calendar requires explicit start/end. This read does not change records.",
+  inputSchema: { type: "object" as const, properties: { view: { type: "string", enum: WORKSPACE_VIEWS }, runId: { type: "string", format: "uuid" }, fleetId: { type: "string", format: "uuid" }, limit: { type: "integer", minimum: 1, maximum: 50 }, cursor: { type: "string", pattern: "^[0-9]{1,10}(:[0-9]{1,10})?$" }, siteId: { type: "integer", minimum: 1 }, stationId: { type: "string", format: "uuid" }, start: { type: "string", format: "date-time" }, end: { type: "string", format: "date-time" } }, required: ["view"], additionalProperties: false },
   annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
   _meta: { ui: { resourceUri: WORKSPACE_URI }, "openai/outputTemplate": WORKSPACE_URI, "openai/widgetAccessible": true },
 };
-export function workspaceRequest(input: Record<string, unknown>) {
+export function workspaceRequest(input: Record<string, unknown>, availableTools: ReadonlySet<string> = new Set()) {
   const view = input.view;
-  if (!["my_workday", "gate_board", "work_calendar", "onboarding", "tickets", "notifications", "fleet", "inventory"].includes(String(view))) throw new Error("Unknown workspace view");
+  if (!WORKSPACE_VIEWS.includes(String(view))) throw new Error("Unknown workspace view");
   let sourceTool: string;
   let sourceArguments: Record<string, unknown> = {};
   if (view === "my_workday") sourceTool = "get_work_hub_briefing";
   else if (view === "onboarding") sourceTool = "lookup_user_progress";
   else if (view === "tickets") { sourceTool = "query_tickets"; sourceArguments = { limit: 50, sinceDays: 30 }; }
   else if (view === "notifications") { sourceTool = "query_notifications"; sourceArguments = { limit: 50, unreadOnly: true }; }
-  else if (view === "fleet") sourceTool = "query_field_trips";
+  else if (view === "fleet") sourceTool = availableTools.has("query_fleet_briefing") ? "query_fleet_briefing" : "query_field_trips";
+  else if (view === "fleet_map") sourceTool = "query_fleet_briefing";
+  else if (view === "fleet_maintenance") sourceTool = "query_fleet_maintenance";
+  else if (view === "fleet_site") {
+    sourceTool="query_fleet_site_activity";
+    if(input.siteId!==undefined){if(!Number.isSafeInteger(input.siteId)||Number(input.siteId)<1)throw new Error("Select an authorized site");sourceArguments={siteId:input.siteId,...FleetSiteActivityFilterSchema.parse({...(input.start!==undefined?{startsAt:input.start}:{}),...(input.end!==undefined?{endsAt:input.end}:{})})};}
+  }
+  else if (view === "fleet_reports") { sourceTool = "query_fleet_report"; sourceArguments = FleetReportFilterSchema.parse({ ...(input.fleetId !== undefined ? {fleetId:input.fleetId}:{}), ...(input.siteId !== undefined ? {siteId:input.siteId}:{}), ...(input.start !== undefined ? {startsAt:input.start}:{}), ...(input.end !== undefined ? {endsAt:input.end}:{}) }); }
+  else if (view === "fleet_dispatch") sourceTool = "query_fleet_resources";
+  else if (view === "fleet_run") { sourceTool = "query_fleet_run_detail"; sourceArguments = {runId: FleetRunSchema.shape.id.parse(input.runId)}; }
   else if (view === "inventory") sourceTool = "query_asset_custody";
   else if (view === "gate_board") {
     if (input.stationId !== undefined) {
@@ -48,9 +58,19 @@ export function workspaceRequest(input: Record<string, unknown>) {
     if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start || end - start > 31 * 86400000) throw new Error("Provide a calendar window of up to 31 days");
     sourceTool = "get_work_hub_calendar"; sourceArguments = { start: input.start, end: input.end };
   }
+  if (sourceTool === "query_fleet_briefing") {
+    if (input.limit !== undefined && (!Number.isInteger(input.limit) || Number(input.limit) < 1 || Number(input.limit) > 50)) throw new Error("Select a Fleet page size from 1 to 50");
+    if (input.cursor !== undefined && (typeof input.cursor !== "string" || !/^[0-9]{1,10}:[0-9]{1,10}$/.test(input.cursor))) throw new Error("Use the returned Fleet page cursor");
+    sourceArguments = { ...(input.limit !== undefined ? {limit: input.limit} : {}), ...(input.cursor !== undefined ? {cursor: input.cursor} : {}) };
+  }
+  if (sourceTool === "query_fleet_maintenance") {
+    if (input.limit !== undefined && (!Number.isInteger(input.limit) || Number(input.limit) < 1 || Number(input.limit) > 50)) throw new Error("Select a Fleet page size from 1 to 50");
+    if (input.cursor !== undefined && (typeof input.cursor !== "string" || !/^[0-9]{1,10}$/.test(input.cursor))) throw new Error("Use the returned maintenance page cursor");
+    sourceArguments = { ...(input.limit !== undefined ? {limit: input.limit} : {}), ...(input.cursor !== undefined ? {cursor: input.cursor} : {}) };
+  }
   return { view: view as WorkspaceView, sourceTool, sourceArguments };
 }
-export interface WorkspaceRow { title: string; detail?: string; time?: string; attention?: string; }
+export interface WorkspaceRow { title: string; detail?: string; time?: string; attention?: string; runId?: string; }
 export interface WorkspaceSection { title: string; rows: WorkspaceRow[]; empty: string; }
 export interface WorkspaceOutput {
   view: WorkspaceView; title: string; generatedAt: string;
@@ -74,7 +94,7 @@ export function workspaceOutput(view: WorkspaceView, sourceTool: string, sourceA
   if (["my_workday", "work_calendar"].includes(view) && ![data.tasks, data.shifts, data.meetings].every(Array.isArray)) throw new Error("Incomplete workspace result");
   if (view === "gate_board" && sourceTool === "query_gate_stations" && !Array.isArray(data.sites) && !Array.isArray(data.stations)) throw new Error("Incomplete gate result");
   if (view === "gate_board" && sourceTool === "query_gate_change_over" && (!data.station || !("shift" in data) || !("snapshot" in data) || !Array.isArray(data.items))) throw new Error("Incomplete gate result");
-  const result: WorkspaceOutput = { view, title: { my_workday: "My Workday", gate_board: "Gate Board", work_calendar: "Work Calendar", onboarding: "Onboarding", tickets: "Tickets", notifications: "Notifications", fleet: "Fleet", inventory: "Inventory" }[view], generatedAt: moment(data.generatedAt) ?? now.toISOString(), sourceTool, sourceArguments, sections: [], attention: [], metrics: [] };
+  const result: WorkspaceOutput = { view, title: { my_workday: "My Workday", gate_board: "Gate Board", work_calendar: "Work Calendar", onboarding: "Onboarding", tickets: "Tickets", notifications: "Notifications", fleet: "Fleet", fleet_map: "Fleet Recorded Map", fleet_dispatch: "Fleet Dispatch", fleet_run: "Fleet Run", fleet_maintenance: "Fleet Maintenance", fleet_reports: "Fleet Reports", fleet_site: "Site Fleet Activity", inventory: "Inventory" }[view], generatedAt: moment(data.generatedAt) ?? now.toISOString(), sourceTool, sourceArguments, sections: [], attention: [], metrics: [] };
   if (view === "my_workday") {
     const tasks = list(data.tasks).map(row => taskRow(row, now.getTime()));
     const announcements = list(data.announcements).map(row => ({ title: text(object(row.announcement).title, "Announcement"), detail: text(object(row.announcement).body), ...(object(row.announcement).acknowledgementRequired === true && object(row.recipient).acknowledgedAt == null ? { attention: "Acknowledgement pending" } : {}) }));
@@ -88,6 +108,65 @@ export function workspaceOutput(view: WorkspaceView, sourceTool: string, sourceA
   } else if (view === "work_calendar") {
     result.sections = ["shifts", "meetings", "tasks"].map(kind => ({ title: kind[0].toUpperCase() + kind.slice(1), rows: list(data[kind]).map(row => { const item = object(row.item); const record = kind === "meetings" ? object(item.meeting) : item; const timing = kind === "meetings" ? object(item.occurrence) : item; return { title: text(record.title, kind === "tasks" ? "Task" : "Scheduled work"), detail: text(record.status), time: moment(timing.startsAt ?? timing.dueAt), ...(kind === "tasks" ? { attention: taskRow(item, now.getTime()).attention } : {}) }; }), empty: `No ${kind} in this window.` }));
     result.attention = result.sections.flatMap(section => section.rows.filter(row => row.attention));
+  } else if (view === "fleet_dispatch") {
+    if (!Array.isArray(data.drivers) || !Array.isArray(data.equipment)) throw new Error("Incomplete Fleet resources");
+    result.sections = [
+      {title: "Authorized drivers", rows: list(data.drivers).map(row => ({title: text(row.name, "Driver"), detail: `User ${Number.isSafeInteger(row.userId) ? row.userId : "unknown"}`})), empty: "No eligible drivers returned."},
+      {title: "Equipment selection", rows: list(data.equipment).map(row => ({title: text(row.name, "Equipment"), detail: [text(row.category),text(row.status)].filter(Boolean).join(" · "), ...(row.dispatchable === false ? {attention: "Not dispatchable"} : {})})), empty: "No equipment returned."},
+    ];
+    result.attention = result.sections.flatMap(section => section.rows.filter(row => row.attention));
+  } else if (view === "fleet_site") {
+    if(Array.isArray(data.sites)) result.sections=[{title:"Your authorized sites",rows:list(data.sites).map(site=>({title:text(site.name,"Site"),detail:`Site ${site.siteId} · ask V to show its recorded Fleet activity`})),empty:"No authorized sites returned."}];
+    else {
+      if(!Array.isArray(data.records)||data.source!=="recorded_fleet_events"||data.coordinateDisclosure!==false)throw new Error("Incomplete site Fleet result");
+      result.title=text(data.siteName,"Site Fleet Activity");
+      result.sections=[{title:"Recorded site activity",rows:list(data.records).map(record=>({title:text(record.vendorName,"Authorized vendor"),detail:[text(record.status),...list(record.stops).map(stop=>`${text(stop.kind)}: ${list(stop.events).map(event=>`${text(event.type)} ${moment(event.recordedAt)??"time unavailable"}`).join(", ")}`),...list(record.loads).map(load=>`${text(load.commodity)} · ${load.quantity} ${text(load.unit)} · ${text(load.direction)}`)].filter(Boolean).join(" · ")})),empty:"No recorded activity in this authorized window."},{title:"Scope and source",rows:[{title:"Own-site recorded events",detail:"Date filters select run creation cohorts. This view omits other routes, personal coordinates and financial records; reported events are not physical proof."},...list((Array.isArray(data.unavailableMetrics)?data.unavailableMetrics:[]).map(metric=>({metric}))).map(item=>({title:text(item.metric),detail:"Unavailable"}))],empty:""}];
+    }
+  } else if (view === "fleet_reports") {
+    const report = FleetReportSchema.parse(data);
+    result.metrics = [{label:"Recorded runs",value:report.runCount},{label:"Completed runs",value:report.completedRunCount},{label:"Submitted runs",value:report.submittedRunCount},{label:"Reported inspection exceptions",value:report.inspectionExceptions}];
+    result.sections = [
+      {title:"Report basis",rows:[{title:"Recorded run creation cohort",detail:"Date filters select runs by creation time. Totals include the recorded entries on those runs; they are not daily physical telemetry totals."}],empty:""},
+      {title:"Recorded load totals",rows:report.loadTotals.map(total=>({title:`${total.commodity} · ${total.unit}`,detail:`${total.quantity} recorded · ${total.deliveredQuantity} delivery recorded`})),empty:"No loads in this authorized report."},
+      {title:"Reported meter distance",rows:report.distanceTotals.map(total=>({title:total.unit,detail:`${total.distance} · ${report.source}`})),empty:"No comparable meter records."},
+      {title:"Authorized reported fuel",rows:(report.fuelTotals??[]).map(total=>({title:total.unit,detail:String(total.quantity)})),empty:report.fuelTotals===null?"Fuel totals are not available under this grant.":"No fuel records."},
+      {title:"Unavailable metrics",rows:report.unavailableMetrics.map(metric=>({title:metric.metric,detail:metric.reason})),empty:"No unavailable metrics reported."},
+    ];
+  } else if (view === "fleet_maintenance") {
+    if (!Array.isArray(data.records)) throw new Error("Incomplete Fleet maintenance result");
+    const records = list(data.records).map(record => FleetMaintenanceRecordSchema.parse(record));
+    result.sections = [{title: "Authorized maintenance and defect reports", rows: records.map(record => ({title: record.title, detail: `${record.kind} · ${record.status} · asset ${record.assetId} · version ${record.version}${record.allowedActions.length ? " · permitted: " + record.allowedActions.join(", ") : ""}`, ...(record.dueAt ? {time: record.dueAt} : {}), ...(record.holdId && record.status !== "released" ? {attention: "Equipment hold recorded; repair notes alone do not release it"} : {})})), empty: "No authorized maintenance records returned."}];
+    result.attention = result.sections[0].rows.filter(row => row.attention);
+    if (data.nextCursor) result.attention.push({title: "More maintenance records available", detail: "Ask V for the next authorized maintenance page."});
+  } else if (view === "fleet_run") {
+    const run = FleetRunSchema.parse(data);
+    result.title = run.title;
+    result.sections = [
+      {title: "Saved assignment", rows: [{title: run.labels?.driverName ?? `Driver ${run.driverUserId}`, detail: [run.labels?.vehicleName ?? run.vehicleAssetId, run.labels?.trailerName, run.status, run.phase, `Version ${run.version}`].filter(Boolean).join(" · ")}], empty: ""},
+      {title: "Ordered stops", rows: [...run.stops].sort((a,b) => a.sequence-b.sequence).map(stop => ({title: `${stop.sequence + 1}. ${stop.kind}`, detail: `${run.labels?.sites.find(site => site.siteId === stop.siteId)?.name ?? `Site ${stop.siteId}`} · ${run.currentStopId === stop.id ? "Current stop" : run.visitedStopIds.includes(stop.id) ? "Visit recorded" : "Visit not recorded"}`})), empty: "No stops saved."},
+      {title: "Reported inspections", rows: run.inspections.map(inspection => ({title: inspection.outcome.replaceAll("_", " "), detail: `${inspection.notes} · ${inspection.source} · user ${inspection.recordedByUserId}`, time: inspection.recordedAt, ...(inspection.outcome === "defect_reported" ? {attention: "Defect reported"} : {})})), empty: "No inspection reports saved."},
+      {title: "Reported meters and fuel", rows: run.records.map(record => ({title: record.kind, detail: `${record.reading ?? record.quantity ?? "No value"} ${record.unit} · ${record.notes} · ${record.source}`, time: record.recordedAt})), empty: "No meter or fuel records saved."},
+      {title: "Loads and delivery records", rows: run.loads.map(load => ({title: load.commodity, detail: `${load.quantity} ${load.unit} · ${load.manifestReference}${load.deliveryReference ? " · " + load.deliveryReference : ""}`, time: load.deliveredAt ?? load.recordedAt, ...(!load.deliveredAt ? {attention: "Delivery not recorded"} : {})})), empty: "No loads saved."},
+      {title: "Permitted next actions", rows: run.allowedActions.map(action => ({title: action.replaceAll("_", " "), detail: "Ask V to perform this action with the required actual observations."})), empty: "No actions currently permitted."},
+      {title: "Saved timeline", rows: run.events.slice(-50).map(event => ({title: event.type, detail: `Recorded by user ${event.actorUserId}${event.source ? " · " + event.source : ""}${event.capturedAt ? " · captured " + event.capturedAt : ""}`, time: event.recordedAt})), empty: "No saved events."},
+    ];
+    result.attention = result.sections.flatMap(section => section.rows.filter(row => row.attention));
+  } else if ((view === "fleet" || view === "fleet_map") && sourceTool === "query_fleet_briefing") {
+    if (!Array.isArray(data.runs) || !Array.isArray(data.roles) || !Array.isArray(data.observations) || !Array.isArray(data.unavailableIntegrations) || (!data.roles.length && object(data.capabilities).canSetup !== true)) throw new Error("Fleet workspace unavailable");
+    result.title = view === "fleet_map" ? "Fleet Recorded Map" : "Fleet Desk";
+    const runs = list(data.runs).map(row => FleetRunSchema.parse(row));
+    result.sections = [{title: "Authorized runs", rows: runs.map(run => ({title: run.title, runId: run.id, detail: [run.labels?.driverName ?? `Driver ${run.driverUserId}`, run.labels?.vehicleName, run.status, run.phase].filter(Boolean).join(" · "), ...(run.status === "submitted_for_review" ? {attention: "Operational review pending"} : {})})), empty: "No authorized runs returned."},
+      {title: "Integration status", rows: list(data.unavailableIntegrations.map((name: unknown) => ({name}))).map(row => ({title: text(row.name), detail: "Not configured or verified."})), empty: "No unavailable integrations reported."}];
+    result.attention = result.sections.flatMap(section => section.rows.filter(row => row.attention));
+    result.metrics = ["draft", "dispatched", "acknowledged", "in_progress", "submitted_for_review"].map(status => ({label: `Shown ${status.replaceAll("_", " ")}`, value: runs.filter(run => run.status === status).length}));
+    if (object(data.page).nextCursor) result.attention.push({title: "More authorized runs available", detail: "Counts and map cover this returned page. Ask V for the next page or a specific run."});
+    result.fleetMap = {points: list(data.observations).flatMap(observation => {
+      const run = runs.find(run => run.id === observation.runId);
+      const timestamp = moment(observation.recordedAt);
+      return run && timestamp && observation.source === "driver_phone" && observation.freshness !== "unavailable" && typeof observation.latitude === "number" && Number.isFinite(observation.latitude) && Math.abs(observation.latitude) <= 90 && typeof observation.longitude === "number" && Number.isFinite(observation.longitude) && Math.abs(observation.longitude) <= 180
+        ? [{latitude: observation.latitude, longitude: observation.longitude, recordedAt: timestamp, freshness: text(observation.freshness), label: `${run.labels?.driverName ?? "Driver"} phone · ${run.title}${typeof observation.accuracyMeters === "number" ? " · reported accuracy ±" + observation.accuracyMeters + " m" : ""}`}]
+        : [];
+    })};
   } else if (view === "fleet") {
     if (!Array.isArray(data.trips)) throw new Error("Incomplete fleet result");
     const trips = list(data.trips);
@@ -152,16 +231,13 @@ export function workspaceOutput(view: WorkspaceView, sourceTool: string, sourceA
 // Records use the authenticated MCP bridge. Fleet basemap images use the existing public Mapbox configuration.
 export const WORKSPACE_HTML = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>VNDRLY work desk</title><style>
 *{box-sizing:border-box}body{margin:0;padding:20px;font:14px/1.5 system-ui,sans-serif;color:var(--color-text-primary,#20252a);background:var(--color-background-primary,#fff)}header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #ddd;padding-bottom:14px}h1{font-size:22px;margin:0}h2{font-size:16px;margin:0 0 10px}p{margin:5px 0}.muted{color:var(--color-text-secondary,#66717b)}a{color:inherit;text-underline-offset:4px}nav{display:flex;gap:18px;flex-wrap:wrap;padding:16px 0}nav a[aria-current=page]{font-weight:700}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(235px,1fr));gap:14px}article,.attention{border:1px solid #ddd;border-radius:12px;padding:16px}.attention{margin-bottom:14px;border-left:4px solid #F59E0B}.row{padding:10px 0;border-top:1px solid #eee}.row:first-of-type{border-top:0}.row strong{display:block}.metrics{display:flex;gap:18px;flex-wrap:wrap;margin:0 0 16px}.metric b{display:block;font-size:24px}#status{min-height:24px}.error{border-left:4px solid #DC2626;padding-left:12px}footer{margin-top:16px;font-size:12px}@media(prefers-color-scheme:dark){body{color:#eee;background:#202123}article,.attention,header{border-color:#555}.row{border-color:#444}}
-</style></head><body><header><div><p class="muted">VNDRLY.ai · V</p><h1 id="title">Your work desk</h1></div><a href="#refresh" id="refresh">Refresh</a></header><nav aria-label="Workspace views"><a href="#my_workday" data-view="my_workday">My Workday</a><a href="#gate_board" data-view="gate_board">Gate Board</a><a href="#work_calendar" data-view="work_calendar">Work Calendar</a><a href="#onboarding" data-view="onboarding">Onboarding</a><a href="#tickets" data-view="tickets">Tickets</a><a href="#notifications" data-view="notifications">Notifications</a><a href="#fleet" data-view="fleet">Fleet</a><a href="#inventory" data-view="inventory">Inventory</a></nav><p id="status" role="status">Waiting for your authorized VNDRLY records…</p><div id="content"></div><footer class="muted" id="updated"></footer><script>
+</style></head><body><header><div><p class="muted">VNDRLY.ai · V</p><h1 id="title">Your work desk</h1></div><a href="#refresh" id="refresh">Refresh</a></header><nav aria-label="Workspace views"><a href="#my_workday" data-view="my_workday">My Workday</a><a href="#gate_board" data-view="gate_board">Gate Board</a><a href="#work_calendar" data-view="work_calendar">Work Calendar</a><a href="#onboarding" data-view="onboarding">Onboarding</a><a href="#tickets" data-view="tickets">Tickets</a><a href="#notifications" data-view="notifications">Notifications</a><a href="#fleet" data-view="fleet">Fleet</a><a href="#fleet_map" data-view="fleet_map">Fleet Map</a><a href="#fleet_dispatch" data-view="fleet_dispatch">Dispatch</a><a href="#fleet_maintenance" data-view="fleet_maintenance">Maintenance</a><a href="#fleet_reports" data-view="fleet_reports">Reports</a><a href="#fleet_site" data-view="fleet_site">Site Activity</a><a href="#inventory" data-view="inventory">Inventory</a></nav><p id="status" role="status">Waiting for your authorized VNDRLY records…</p><div id="content"></div><footer class="muted" id="updated"></footer><script>
 (()=>{${FLEET_MAP_CLIENT}
 const pending=new Map();let id=1,current=null,navigationVersion=0,selectedView=null,navigationPending=false;const el=id=>document.getElementById(id);const add=(parent,tag,value,cls)=>{const node=document.createElement(tag);node.textContent=value;if(cls)node.className=cls;parent.append(node);return node;};
 function request(method,params){const requestId=id++;return new Promise((resolve,reject)=>{const timeout=setTimeout(()=>{pending.delete(requestId);reject(Error('The request timed out. Your previous view has not been refreshed.'));},20000);pending.set(requestId,{resolve,reject,timeout});window.parent.postMessage({jsonrpc:'2.0',id:requestId,method,params},'*');});}
-function render(output){if(!output||!Array.isArray(output.sections)||(navigationPending&&output.view!==selectedView))return;if(fleetMap){fleetMap.remove();fleetMap=null;}current=output;selectedView=output.view;el('title').textContent=output.title;document.querySelectorAll('[data-view]').forEach(link=>{link.hidden=!Array.isArray(output.availableViews)||!output.availableViews.includes(link.dataset.view);if(link.dataset.view===output.view)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');});el('status').textContent='';el('status').className='';const content=el('content');content.replaceChildren();renderFleetMap(output,content);function row(parent,item){const card=add(parent,'div','','row');add(card,'strong',item.title);if(item.detail)add(card,'p',item.detail,'muted');if(item.time){const date=new Date(item.time);if(Number.isFinite(date.getTime()))add(card,'p',date.toLocaleString(),'muted');}if(item.attention)add(card,'p',item.attention);}
+function render(output){if(!output||!Array.isArray(output.sections)||(navigationPending&&output.view!==selectedView))return;if(fleetMap){fleetMap.remove();fleetMap=null;}current=output;selectedView=output.view;el('title').textContent=output.title;document.querySelectorAll('[data-view]').forEach(link=>{link.hidden=!Array.isArray(output.availableViews)||!output.availableViews.includes(link.dataset.view);if(link.dataset.view===output.view)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');});el('status').textContent='';el('status').className='';const content=el('content');content.replaceChildren();renderFleetMap(output,content);function row(parent,item){const card=add(parent,'div','','row');add(card,'strong',item.title);if(item.detail)add(card,'p',item.detail,'muted');if(item.time){const date=new Date(item.time);if(Number.isFinite(date.getTime()))add(card,'p',date.toLocaleString(),'muted');}if(item.attention)add(card,'p',item.attention);if(typeof item.runId==='string'&&/^[0-9a-f-]{36}$/i.test(item.runId)){const open=add(card,'button','Open run');open.onclick=()=>load('fleet_run',false,{runId:item.runId});}}
 if(output.attention.length){const area=add(content,'section','','attention');add(area,'h2','Needs attention');output.attention.forEach(item=>row(area,item));}if(output.metrics.length){const area=add(content,'section','','metrics');output.metrics.forEach(item=>{const metric=add(area,'div','','metric');add(metric,'b',String(item.value));add(metric,'span',item.label);});}const grid=add(content,'div','','grid');output.sections.forEach(section=>{const panel=add(grid,'article','');add(panel,'h2',section.title);if(!section.rows.length)add(panel,'p',section.empty,'muted');section.rows.forEach(item=>row(panel,item));});el('updated').textContent='Records fetched '+new Date(output.generatedAt).toLocaleString()+'. Refresh for the latest state.';window.parent.postMessage({jsonrpc:'2.0',method:'ui/notifications/size-changed',params:{height:document.documentElement.scrollHeight}},'*');}
-async function load(view,refresh){const version=++navigationVersion;selectedView=view;navigationPending=true;el('status').textContent='Refreshing authorized work records…';try{let args=refresh&&current?current.sourceArguments:{};if(view==='work_calendar'&&!args.start){const start=new Date();start.setHours(0,0,0,0);const end=new Date(start);end.setDate(end.getDate()+7);args={start:start.toISOString(),end:end.toISOString()};}const next=await request('tools/call',{name:'v_show_workspace',arguments:{view,...args}});if(version!==navigationVersion)return;if(next.isError||!next.structuredContent)throw Error('This view is unavailable for your account or requested location. Ask V to select an authorized site or reconnect VNDRLY.');render(next.structuredContent);}catch(error){if(version!==navigationVersion)return;el('status').textContent=error.message;el('status').className='error';}finally{if(version===navigationVersion)navigationPending=false;}}
+async function load(view,refresh,providedArgs){const version=++navigationVersion;selectedView=view;navigationPending=true;el('status').textContent='Refreshing authorized work records…';try{let args=providedArgs||(refresh&&current?current.sourceArguments:{});if(view==='fleet_reports'||view==='fleet_site'){args={...(args.fleetId?{fleetId:args.fleetId}:{}),...(args.siteId?{siteId:args.siteId}:{}),...(args.startsAt||args.start?{start:args.startsAt||args.start}:{}),...(args.endsAt||args.end?{end:args.endsAt||args.end}:{})};}if(view==='work_calendar'&&!args.start){const start=new Date();start.setHours(0,0,0,0);const end=new Date(start);end.setDate(end.getDate()+7);args={start:start.toISOString(),end:end.toISOString()};}const next=await request('tools/call',{name:'v_show_workspace',arguments:{view,...args}});if(version!==navigationVersion)return;if(next.isError||!next.structuredContent)throw Error('This view is unavailable for your account or requested location. Ask V to select an authorized site or reconnect VNDRLY.');render(next.structuredContent);}catch(error){if(version!==navigationVersion)return;el('status').textContent=error.message;el('status').className='error';}finally{if(version===navigationVersion)navigationPending=false;}}
 window.addEventListener('message',event=>{if(event.source!==window.parent)return;const message=event.data;if(!message||message.jsonrpc!=='2.0')return;const waiting=pending.get(message.id);if(waiting){clearTimeout(waiting.timeout);pending.delete(message.id);message.error?waiting.reject(Error('VNDRLY could not complete this request.')):waiting.resolve(message.result);return;}if(message.method==='ui/notifications/tool-result'){if(message.params?.isError){el('status').textContent='VNDRLY could not load this view. Ask V to check the connection.';return;}render(message.params?.structuredContent);}});
 el('refresh').onclick=event=>{event.preventDefault();if(current)load(current.view,true);};document.querySelectorAll('[data-view]').forEach(link=>link.onclick=event=>{event.preventDefault();load(link.dataset.view,false);});request('ui/initialize',{appInfo:{name:'VNDRLY work desk',version:'1.0.0'},appCapabilities:{},protocolVersion:'2026-01-26'}).then(()=>{window.parent.postMessage({jsonrpc:'2.0',method:'ui/notifications/initialized'},'*');}).catch(()=>{el('status').textContent='Open this view inside your connected assistant to load work records.';});})();
 </script></body></html>`;
-
-
-

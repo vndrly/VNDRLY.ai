@@ -1,0 +1,34 @@
+import React from "react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, expect, it, vi } from "vitest";
+const mocks=vi.hoisted(()=>({api:vi.fn(),membership:1}));
+vi.mock("@/lib/api",()=>({apiFetch:mocks.api}));
+vi.mock("@/hooks/use-auth",()=>({useAuth:()=>({user:{id:1,role:"partner"},activeMembershipId:mocks.membership})}));
+vi.mock("@/hooks/useColors",()=>({useColors:()=>({text:"black",border:"gray"})}));
+vi.mock("@/lib/fleet-copy",()=>({useFleetCopy:()=>(value:string)=>value}));
+vi.mock("@react-native-community/datetimepicker",()=>({default:()=>null}));
+vi.mock("@/components/ScreenSafeArea",()=>({default:({children}:any)=><div>{children}</div>}));
+vi.mock("@/components/WorkHubPageTitle",()=>({default:({title}:any)=><h1>{title}</h1>}));
+vi.mock("@/components/TogglePillButton",()=>({default:({children,onPress,disabled}:any)=><button disabled={disabled} onClick={onPress}>{children}</button>}));
+import FleetSiteActivity from "./FleetSiteActivity";
+const choices={sites:[{siteId:392,name:"Synthetic site"}],capabilities:{canReadSiteActivity:true,canDispatch:false,canDrive:false}};
+const activity={siteId:392,siteName:"Synthetic site",coordinateDisclosure:false,window:{startsAt:"2026-09-07T00:00:00Z",endsAt:"2026-10-07T00:00:00Z",dateBasis:"run_created_at"},records:[{runId:"20000000-0000-4000-8000-000000000001",vendorName:"Synthetic hauling company",status:"in_progress",stops:[{stopId:"40000000-0000-4000-8000-000000000001",kind:"delivery",events:[{type:"arrive_stop",source:"user_report",recordedAt:"2026-10-07T00:00:00Z",capturedAt:null}]}],loads:[{loadId:"50000000-0000-4000-8000-000000000001",commodity:"Synthetic sand",quantity:25,unit:"tons",direction:"delivery",delivered:false}]}],source:"recorded_fleet_events",unavailableMetrics:["vehicle_telemetry"]};
+afterEach(()=>{cleanup();mocks.api.mockReset();mocks.membership=1;});
+it("loads an exact authorized site projection through the partner endpoint without operational writes",async()=>{
+  mocks.api.mockImplementation(async path=>path==="/api/fleet/site-activity"?choices:activity);
+  render(<FleetSiteActivity/>);
+  fireEvent.click(await screen.findByRole("button",{name:"Synthetic site"}));
+  fireEvent.click(screen.getByRole("button",{name:"Load authorized site activity"}));
+  expect(await screen.findByText("Synthetic hauling company · in_progress")).toBeTruthy();
+  expect(screen.getByText(/Synthetic sand: 25 tons/)).toBeTruthy();
+  expect(mocks.api).toHaveBeenCalledWith("/api/fleet/site-activity/392?");
+  expect(mocks.api.mock.calls.some(call=>call[1]?.method==="POST")).toBe(false);
+  expect(screen.queryByRole("button",{name:"dispatch"})).toBeNull();
+});
+it("clears old site data on membership switch and refuses a mismatched response scope",async()=>{
+  mocks.api.mockImplementation(async path=>path==="/api/fleet/site-activity"?choices:{...activity,siteId:999});
+  const view=render(<FleetSiteActivity/>);fireEvent.click(await screen.findByRole("button",{name:"Synthetic site"}));fireEvent.click(screen.getByRole("button",{name:"Load authorized site activity"}));
+  expect(await screen.findByText("Site activity scope could not be verified.")).toBeTruthy();expect(screen.queryByText(/Synthetic hauling company/)).toBeNull();
+  mocks.membership=2;mocks.api.mockImplementation(()=>new Promise(()=>{}));view.rerender(<FleetSiteActivity/>);
+  expect(screen.queryByRole("button",{name:"Synthetic site"})).toBeNull();await waitFor(()=>expect(mocks.api).toHaveBeenCalledTimes(3));
+});

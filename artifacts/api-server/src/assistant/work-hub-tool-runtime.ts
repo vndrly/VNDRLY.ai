@@ -1,4 +1,4 @@
-import { CreateFleetRunSchema, FleetRunSchema, FleetActionInputSchema, FleetSetupInputSchema, FleetWorkspacePreferenceInputSchema } from "@workspace/api-zod";
+import { CreateFleetRunSchema, FleetRunSchema, FleetActionInputSchema, FleetSetupInputSchema, FleetWorkspacePreferenceInputSchema,FleetMaintenanceCreateSchema,FleetMaintenanceActionSchema,FleetReportFilterSchema,FleetSavedViewInputSchema,FleetGateLinkInputSchema,FleetSiteActivityFilterSchema } from "@workspace/api-zod";
 import { FLEET_TOOLS } from "./fleet-tools";
 import { ticketRecordActionsForRole } from "./ticket-workflow-tools";
 export type WorkHubHttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
@@ -182,13 +182,54 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
     return transitions[action] ? request("POST", `${base}/${transitions[action]}`, payload) : unsupported("ticket action");
   }
   if (FLEET_TOOLS.some(tool => tool.name === name)) {
+    if(name==="query_fleet_support"){
+      if(input.companyId===undefined)return request("GET","/fleet/support");
+      if(!Number.isInteger(input.companyId)||Number(input.companyId)<1)return {error:"Select an explicitly authorized support company."};
+      if(input.cursor!==undefined&&(typeof input.cursor!=="string"||!/^\d{1,10}:\d{1,10}$/.test(input.cursor)))return {error:"Use exact returned support page cursor."};
+      return request("GET",`/fleet/support/${input.companyId}${input.cursor===undefined?"":`?cursor=${encodeURIComponent(String(input.cursor))}`}`);
+    }
+    if(name==="query_fleet_site_activity"){
+      if(input.siteId===undefined)return request("GET","/fleet/site-activity");
+      if(!Number.isInteger(input.siteId)||Number(input.siteId)<1)return {error:"Select exact authorized site."};
+      const filter=FleetSiteActivityFilterSchema.safeParse({startsAt:input.startsAt,endsAt:input.endsAt});if(!filter.success)return {error:"Use an ordered UTC site activity window."};const query=new URLSearchParams(Object.entries(filter.data).filter(([,v])=>v!==undefined).map(([k,v])=>[k,String(v)]));return request("GET",`/fleet/site-activity/${input.siteId}${query.size?`?${query}`:""}`);
+    }
+    if(["query_fleet_gate_observations","reconcile_fleet_gate_visit"].includes(name)){
+      if(!FleetRunSchema.shape.id.safeParse(input.runId).success)return {error:"Select exact authorized Fleet run UUID."};
+      if(name==="query_fleet_gate_observations")return request("GET",`/fleet/runs/${input.runId}/gate-observations`);
+      const body=FleetGateLinkInputSchema.safeParse({operationId:input.operationId,expectedVersion:input.expectedVersion,stopId:input.stopId,visitId:input.visitId,reason:input.reason});return body.success?request("POST",`/fleet/runs/${input.runId}/gate-links`,body.data):{error:"Select exact Gate observation and stop, current version and supplied reason."};
+    }
+    if(name==="query_fleet_saved_views")return request("GET","/fleet/views");
+    if(name==="query_fleet_report"){const filters=FleetReportFilterSchema.safeParse({fleetId:input.fleetId,siteId:input.siteId,startsAt:input.startsAt,endsAt:input.endsAt});if(!filters.success)return {error:"Supply authorized exact Fleet report filters and UTC dates."};const query=new URLSearchParams(Object.entries(filters.data).filter(([,value])=>value!==undefined).map(([key,value])=>[key,String(value)]));return request("GET",`/fleet/reports${query.size?`?${query}`:""}`);}
+    if(name==="manage_fleet_saved_view"){const body=FleetSavedViewInputSchema.safeParse({operationId:input.operationId,viewId:input.viewId,expectedVersion:input.expectedVersion,action:input.action,name:input.name,filters:input.filters});return body.success?request("POST","/fleet/views",body.data):{error:"Supply exact personal saved view fields and current version."};}
+    if(name==="query_fleet_maintenance"){
+      if(input.maintenanceId!==undefined)return FleetRunSchema.shape.id.safeParse(input.maintenanceId).success?request("GET",`/fleet/maintenance/${input.maintenanceId}`):{error:"Select an exact maintenance UUID."};
+      if(input.limit!==undefined&&(!Number.isInteger(input.limit)||Number(input.limit)<1||Number(input.limit)>50))return {error:"Maintenance page limit must be 1 to 50."};
+      if(input.cursor!==undefined&&(typeof input.cursor!=="string"||!/^\d{1,10}$/.test(input.cursor)))return {error:"Use exact returned maintenance cursor."};
+      const query=new URLSearchParams();if(input.limit!==undefined)query.set("limit",String(input.limit));if(input.cursor!==undefined)query.set("cursor",String(input.cursor));return request("GET",`/fleet/maintenance${query.size?`?${query}`:""}`);
+    }
+    if(["report_fleet_defect","manage_fleet_maintenance"].includes(name)){
+      if(name==="report_fleet_defect"||input.action==="create"){
+        const body=FleetMaintenanceCreateSchema.safeParse({operationId:input.operationId,fleetId:input.fleetId,assetId:input.assetId,runId:input.runId,kind:name==="report_fleet_defect"?"defect":"scheduled_service",title:input.title,notes:input.notes,dueAt:input.dueAt});return body.success?request("POST","/fleet/maintenance",body.data):{error:"Supply exact maintenance equipment and user-reported notes."};
+      }
+      if(!FleetRunSchema.shape.id.safeParse(input.maintenanceId).success)return {error:"Select exact maintenance UUID."};
+      const body=FleetMaintenanceActionSchema.safeParse({operationId:input.operationId,expectedVersion:input.expectedVersion,action:input.action,notes:input.notes});return body.success?request("POST",`/fleet/maintenance/${input.maintenanceId}/actions`,body.data):{error:"Supply exact current maintenance version and authorized action."};
+    }
     if(name==="set_fleet_preferences"){const parsed=FleetWorkspacePreferenceInputSchema.safeParse({expectedVersion:input.expectedVersion,defaultWorkspace:input.defaultWorkspace,selectedFleetId:input.selectedFleetId});return parsed.success?request("POST","/fleet/preferences",parsed.data):{error:"Supply exact current preference version and accessible fleet choice."};}
     if(name==="query_fleet_settings")return request("GET","/fleet/setup");
-    if(name==="manage_fleet_settings"){const body=FleetSetupInputSchema.safeParse({expectedVersion:input.expectedVersion,enabled:input.enabled,fleets:input.fleets,grants:input.grants});return body.success?request("POST","/fleet/setup",body.data):{error:"Supply the exact current Fleet settings and version."};}
-    if (["query_fleet_capabilities", "query_fleet_briefing", "query_fleet_runs"].includes(name)) return request("GET", "/fleet/overview");
+    if(name==="manage_fleet_settings"){const body=FleetSetupInputSchema.safeParse({expectedVersion:input.expectedVersion,enabled:input.enabled,fleets:input.fleets,grants:input.grants,supportGrants:input.supportGrants});return body.success?request("POST","/fleet/setup",body.data):{error:"Supply the exact current Fleet settings and version."};}
+    if (name === "query_fleet_capabilities") return request("GET", "/fleet/overview");
+    if (["query_fleet_briefing", "query_fleet_runs"].includes(name)) {
+      if (input.limit !== undefined && (!Number.isInteger(input.limit) || Number(input.limit) < 1 || Number(input.limit) > 50)) return {error:"Fleet page limit must be an integer from 1 to 50."};
+      if (input.cursor !== undefined && (typeof input.cursor !== "string" || !/^\d{1,10}:\d{1,10}$/.test(input.cursor))) return {error:"Use the exact returned Fleet nextCursor."};
+      const query = new URLSearchParams();
+      if (input.limit !== undefined) query.set("limit", String(input.limit));
+      if (input.cursor !== undefined) query.set("cursor", String(input.cursor));
+      return request("GET", `/fleet/overview${query.size ? `?${query}` : ""}`);
+    }
     if (name === "query_fleet_resources") return request("GET", "/fleet/resources");
     const runId = required(input.runId, "run id");
     if(typeof runId==="string"&&!FleetRunSchema.shape.id.safeParse(runId).success)return {error:"Select an exact Fleet run UUID."};
+    if (name === "query_fleet_run_eta") return typeof runId === "string" ? request("GET", `/fleet/runs/${runId}/eta`) : runId;
     if (name === "query_fleet_run_detail") return typeof runId === "string" ? request("GET", `/fleet/runs/${runId}`) : runId;
     const keys=["operationId","expectedVersion","action","fleetId","title","driverUserId","vehicleAssetId","trailerAssetId","stops","reason","stopId","inspectionOutcome","notes","loadId","commodity","quantity","unit","manifestReference","deliveryReference","decision","capturedAt","source","reading","ticketId"];
     const fields=Object.fromEntries(keys.filter(key=>input[key]!==undefined).map(key=>[key,input[key]]));

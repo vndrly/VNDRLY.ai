@@ -6,12 +6,18 @@ const readApp = (file: string) =>
   fs.readFileSync(path.resolve(__dirname, `../${file}`), "utf8");
 
 describe("Profile return navigation", () => {
-  it.each(["employees.tsx", "services.tsx", "location-consent.tsx"])(
+  it.each(["employees.tsx", "services.tsx"])(
     "%s returns to Profile instead of the Dashboard fallback",
     (file) => {
       expect(readApp(file)).toContain('onBack={() => router.replace("/profile")}');
     },
   );
+
+  it("location consent preserves Profile back navigation unless an exact Fleet run return was validated", () => {
+    const source = readApp("location-consent.tsx");
+    expect(source).toContain("fleetConsentReturnRoute(params.returnTo)");
+    expect(source).toContain('onBack={() => router.replace((fleetReturn ?? "/profile") as never)}');
+  });
 
   it.each([
     ["edit-profile.tsx", 'testIdPrefix="edit-profile"'],

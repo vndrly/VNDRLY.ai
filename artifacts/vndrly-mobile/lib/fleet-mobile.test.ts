@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { FleetRun } from "@workspace/api-zod";
-import { fleetActionInput, fleetHomeRoute } from "./fleet-mobile";
+import { fleetConsentReturnRoute, fleetActionInput, fleetHomeRoute } from "./fleet-mobile";
 
 describe("Fleet mobile action contract", () => {
   it("honors only explicit saved home with current corresponding server capability", () => {
@@ -17,4 +17,9 @@ describe("Fleet mobile action contract", () => {
   it("refuses actions absent from current authorized run", () => {
     expect(() => fleetActionInput(run, "dispatch", "operation")).toThrow("unavailable");
   });
+});
+
+it("allows only an exact Fleet device route after location consent",()=>{
+  expect(fleetConsentReturnRoute("/fleet-run/20000000-0000-4000-8000-000000000001")).toBe("/fleet-run/20000000-0000-4000-8000-000000000001");
+  for(const value of ["https://outside.example", "/profile", "/fleet-run/../profile", ["/fleet-run/20000000-0000-4000-8000-000000000001"]]) expect(fleetConsentReturnRoute(value)).toBeNull();
 });
