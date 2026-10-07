@@ -5,7 +5,8 @@ import { ASKV_SERVER_CLIENT_INTENT_NAMES, isClientTool } from "./client-tools";
 import { isDataTool } from "./data-tools";
 import { ASK_V_TOOL_REGISTRY } from "./tool-registry";
 import { isWriteTool } from "./write-tools";
-import { resolveWorkHubToolMetadata } from "./work-hub-tool-runtime";
+import { resolveExecutableWorkHubToolRequest, resolveWorkHubToolMetadata } from "./work-hub-tool-runtime";
+import { awayResponderRequest } from "./away-responder-tools";
 
 describe("AskV advertised tool wiring", () => {
   const readIntentCatalog = (url: URL, exportName: string) => {
@@ -46,10 +47,14 @@ describe("AskV advertised tool wiring", () => {
     const workHubRuntime = readFileSync(new URL("./work-hub-tool-runtime.ts", import.meta.url), "utf8");
     const displayCommands = readFileSync(new URL("./operations-display-commands.ts", import.meta.url), "utf8");
     expect(workHubRuntime).toContain("displayActionRequest(input)");
+    const awayCommands = readFileSync(new URL("./away-responder-tools.ts", import.meta.url), "utf8");
+    expect(workHubRuntime).toContain("awayResponderRequest(fields,z.uuid().parse(operationId))");
+    expect(awayCommands).toContain("AWAY_RESPONDER_ARGUMENTS.parse(raw)");
+    expect(awayCommands).toContain("WorkHubAwayCommandSchema.parse(");
     const missing = ASK_V_TOOL_REGISTRY.flatMap((tool) => {
       const actionSchema = (tool.inputSchema.properties as Record<string, { enum?: unknown[] }> | undefined)?.action;
       const actions = Array.isArray(actionSchema?.enum) ? actionSchema.enum.filter((value): value is string => typeof value === "string") : [];
-      const source = tool.name === "propose_work_hub_action" ? routeSource : tool.name === "confirm_operations_displays_action" ? workHubRuntime + displayCommands : workHubRuntime;
+      const source = tool.name === "propose_work_hub_action" ? routeSource : tool.name === "confirm_operations_displays_action" ? workHubRuntime + displayCommands : tool.name === "manage_work_hub_away_responder" ? workHubRuntime + awayCommands : workHubRuntime;
       return actions.filter((action) =>
         !source.includes(`"${action}"`) &&
         !source.includes(`'${action}'`) &&
@@ -58,5 +63,23 @@ describe("AskV advertised tool wiring", () => {
         .map((action) => `${tool.name}:${action}`);
     });
     expect(missing).toEqual([]);
+  });
+
+  it("executes every advertised away variant through its strict delegated command", () => {
+    const operationId = "00000000-0000-4000-8000-000000000001";
+    const ruleId = "00000000-0000-4000-8000-000000000002";
+    const session = { userId: 9, role: "vendor", vendorId: 4, activeMembershipId: 5, sv: 1, membershipRole: "member" };
+    const configure = { action: "configure", expectedVersion: 0, startsAt: "2026-10-08T10:00:00Z", endsAt: "2026-10-09T10:00:00Z", replyText: "Please contact the office.", channelIds: [ruleId] };
+    const variants = [configure, { action: "pause", expectedVersion: 2, ruleId }, { action: "revoke", expectedVersion: 2, ruleId }];
+    const tool = ASK_V_TOOL_REGISTRY.find(tool => tool.name === "manage_work_hub_away_responder")!;
+    expect((tool.inputSchema.properties as Record<string, { enum?: unknown[] }>).action.enum).toEqual(variants.map(input => input.action));
+    for (const input of variants) {
+      expect(resolveExecutableWorkHubToolRequest(tool.name, { ...input, operationId }, false, session)).toMatchObject({ requiresConfirmation: true });
+      expect(resolveExecutableWorkHubToolRequest(tool.name, { ...input, operationId }, true, session)).toEqual(awayResponderRequest(input, operationId));
+      const incomplete = input.action === "configure" ? { action: input.action, expectedVersion: 0 } : { action: input.action, expectedVersion: 2 };
+      for (const invalid of [incomplete, { ...input, owner: { type: "vendor", id: 99 } }, input.action === "configure" ? { ...input, ruleId } : { ...input, replyText: "Unreviewed replacement" }]) {
+        expect(resolveExecutableWorkHubToolRequest(tool.name, { ...invalid, operationId }, true, session)).toHaveProperty("error");
+      }
+    }
   });
 });
