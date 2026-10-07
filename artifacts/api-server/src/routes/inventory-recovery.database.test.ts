@@ -205,7 +205,7 @@ describe.runIf(process.env.VNDRLY_TEST_DB_MODE === "fresh-local")(
       const replies=await Promise.all(Array.from({length:3},()=>request(app).post(`${claimPath}/respond`).set("Cookie",cookies[1]).send(response)));
       expect(replies.map(r=>({status:r.status,body:r.body})), "Exact concurrent requester response receipts").toEqual(Array.from({length:3},()=>({status:200,body:expect.objectContaining({version:3,status:"pending_review",physicalEvidenceVerified:false,responseReason:response.reason})})));
       expect(replies[0].body).toMatchObject({version:3,status:"pending_review",physicalEvidenceVerified:false,responseReason:response.reason});
-      expect(replies.every(r=>JSON.stringify(r.body)===JSON.stringify(replies[0].body))).toBe(true);
+      for (const reply of replies) expect(reply.body).toEqual(replies[0].body);
       const refreshedClaims=await request(app).get(`${base}/identifier-claims`).set("Cookie",cookies[1]).expect(200);expect(refreshedClaims.body.claims.find((c:{id:string})=>c.id===claim.claimId)).toMatchObject({version:3,requesterActions:["withdraw"]});
       const responseAudits=await pool.query("SELECT id FROM assistant_action_audit WHERE target_type='asset-identifier-claim' AND tool_input->>'operationId'=$1",[response.operationId]);expect(responseAudits.rows).toHaveLength(1);
       await request(app).post(`${claimPath}/respond`).set("Cookie",cookies[0]).send(response).expect(404);
