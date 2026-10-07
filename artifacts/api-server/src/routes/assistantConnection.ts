@@ -468,6 +468,7 @@ router.post("/mcp", async (req, res) => {
           output.availableViews.push("fleet", "fleet_map");
           if (allowedNames.has("query_fleet_run_eta")) output.availableViews.push("fleet_eta");
           if (allowedNames.has("query_fleet_evidence")) output.availableViews.push("fleet_evidence");
+          if (allowedNames.has("query_fleet_review_packet")) output.availableViews.push("fleet_review");
           if (allowedNames.has("query_fleet_report")) output.availableViews.push("fleet_reports");
           if ((fleet.capabilities?.canMaintain || fleet.capabilities?.canReportDefect) && allowedNames.has("query_fleet_maintenance")) output.availableViews.push("fleet_maintenance");
           if (fleet.capabilities?.canDispatch && allowedNames.has("query_fleet_resources")) output.availableViews.push("fleet_dispatch");
@@ -700,4 +701,3 @@ function oauthError(res: Response, error: unknown) {
   return res.status(error instanceof AssistantOAuthError ? 400 : 503).json({ error: error instanceof AssistantOAuthError ? error.code : "temporarily_unavailable" });
 }
 export default router;
-

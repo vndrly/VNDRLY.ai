@@ -8,15 +8,18 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-const { apiFetch, params } = vi.hoisted(() => ({
+const { apiFetch, params, navigate } = vi.hoisted(() => ({
   apiFetch: vi.fn(),
+  navigate: vi.fn(),
   params: { requestId: "" },
 }));
 vi.mock("@/lib/api", () => ({ apiFetch }));
 vi.mock("expo-router", () => ({
   useLocalSearchParams: () => params,
   Stack: { Screen: () => null },
+  router: {push:navigate},
 }));
+vi.mock("@/components/TogglePillButton",()=>({default:({children,onPress,disabled}:any)=><button disabled={disabled} onClick={onPress}>{children}</button>}));
 vi.mock("@/lib/notificationBadge", () => ({ syncAppIconBadge: vi.fn() }));
 vi.mock("@/hooks/useColors", () => ({
   useColors: () => ({ primary: "orange", card: "white" }),
@@ -141,12 +144,17 @@ function Host() {
 }
 beforeEach(() => {
   apiFetch.mockReset();
+  navigate.mockReset();
 });
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
 });
 const cases = [
+  {
+    name:"Fleet run",href:`/fleet/runs/${id}`,endpoint:`/api/fleet/runs/${id}`,
+    data:{id,fleetId:other,companyId:609,title:"Exact Fleet assignment",driverUserId:1,vehicleAssetId:other,trailerAssetId:null,status:"dispatched",phase:null,version:1,stops:[{id:other,siteId:392,kind:"pickup",sequence:0}],siteIds:[392],loads:[],inspections:[],records:[],events:[],currentStopId:null,visitedStopIds:[],linkedTicketId:null,allowedActions:["acknowledge"]},text:"Exact Fleet assignment",
+  },
   {
     name: "task path",
     href: `/work-hub/tasks/${id}`,
@@ -322,6 +330,10 @@ it.each(cases)(
     fireEvent.click(screen.getByText("Open"));
     await waitFor(() => expect(screen.getByText("opened")).toBeTruthy());
     expect(apiFetch).toHaveBeenCalledWith(endpoint);
+    if(href.startsWith("/fleet/runs/")){
+      fireEvent.click(screen.getByRole("button",{name:"Open exact Fleet run"}));
+      expect(navigate).toHaveBeenCalledWith({pathname:"/fleet-run/[id]",params:{id}});
+    }
     expect(apiFetch).toHaveBeenCalledWith("/api/notifications/42/read", {
       method: "POST",
       signal: expect.any(AbortSignal),

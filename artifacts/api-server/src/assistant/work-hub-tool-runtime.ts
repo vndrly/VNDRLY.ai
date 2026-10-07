@@ -248,6 +248,7 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
     if (name === "query_fleet_equipment_replacements") return typeof runId === "string" ? request("GET", `/fleet/runs/${runId}/replacements`) : runId;
     if (name === "query_fleet_cargo_transfers") return typeof runId === "string" ? request("GET", `/fleet/runs/${runId}/cargo-transfers`) : runId;
     if (name === "query_fleet_evidence") return typeof runId === "string" ? request("GET", `/fleet/runs/${runId}/evidence`) : runId;
+    if (name === "query_fleet_review_packet") return typeof runId === "string" ? request("GET", `/fleet/runs/${runId}/review-packet`) : runId;
     if (name === "query_fleet_run_eta") return typeof runId === "string" ? request("GET", `/fleet/runs/${runId}/eta`) : runId;
     if (name === "query_fleet_run_detail") return typeof runId === "string" ? request("GET", `/fleet/runs/${runId}`) : runId;
     const keys=["operationId","expectedVersion","action","fleetId","title","driverUserId","vehicleAssetId","trailerAssetId","stops","schedule","inspectionResponses","manifestValues","reason","stopId","inspectionOutcome","notes","loadId","commodity","quantity","unit","manifestReference","deliveryReference","decision","capturedAt","source","reading","ticketId"];

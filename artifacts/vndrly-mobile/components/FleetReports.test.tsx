@@ -10,6 +10,11 @@ vi.mock("@react-native-community/datetimepicker", () => ({ default: () => null }
 vi.mock("@/components/TogglePillButton", () => ({ default: ({ children, onPress, disabled }: any) => <button disabled={disabled} onClick={onPress}>{children}</button> }));
 import FleetReports from "./FleetReports";
 afterEach(() => { cleanup(); mocks.api.mockReset(); });
+it("labels recorded timing and late-vs-plan counts without duty, billing or physical proof",async()=>{
+ const report={generatedAt:"2026-10-07T12:00:00Z",filters:{},source:"recorded_fleet_events",dateBasis:"run_created_at",runCount:2,completedRunCount:2,submittedRunCount:0,inspectionExceptions:0,loadTotals:[],distanceTotals:[],fuelTotals:null,unavailableMetrics:[],recordedTiming:{source:"server_recorded_event_times",physicalPresenceVerified:false,contractualTimelinessVerified:false,eligibleRunCount:1,invalidSequenceCount:1,elapsedMinutes:90,pausedMinutes:10,activeMinutes:80,plannedStartCount:1,lateStartCount:1,startOffsetTotalMinutes:5,plannedFinishCount:1,lateFinishCount:0,finishOffsetTotalMinutes:-5}};
+ mocks.api.mockImplementation(async path=>path==="/api/fleet/views"?{views:[]}:report);
+ render(<FleetReports overview={{fleets:[],runs:[]} as any}/>);fireEvent.click(screen.getByRole("button",{name:"Run authorized report"}));expect(await screen.findByText("Recorded workflow timing")).toBeTruthy();expect(screen.getByText(/Eligible recorded sequences: 1.*Excluded invalid sequences: 1/)).toBeTruthy();expect(screen.getByText(/Recorded starts after plan: 1 \/ 1.*Recorded closeouts after plan: 0 \/ 1/)).toBeTruthy();expect(screen.getByText(/not duty hours, billable time, physical presence/)).toBeTruthy();
+});
 it("uses exact permitted filters and distinguishes unavailable financial metrics from recorded zero", async () => {
   const id="20000000-0000-4000-8000-000000000001";
   const result = {generatedAt:"2026-10-07T12:00:00Z",filters:{fleetId:id,siteId:392},source:"recorded_fleet_events",dateBasis:"run_created_at",runCount:1,completedRunCount:0,submittedRunCount:0,inspectionExceptions:0,loadTotals:[{commodity:"Synthetic sand",unit:"tons",quantity:5,deliveredQuantity:0}],distanceTotals:[],fuelTotals:null,unavailableMetrics:[{metric:"Live ETA",reason:"No sourced vehicle location"}]};

@@ -1002,11 +1002,15 @@ async function notificationVisibility(session: Session) {
     return prefs;
   }
   return async (row: NotificationRow) => {
+    if (row.type === "fleet_run_event") {
+      if ((await preferences()).crewEnabled === false) return false;
+      return (await resolveNotificationDestination(session,row.link,undefined,row)) !== null;
+    }
     if (!gate) {
       // Work Hub/Gate notices retain their legacy array shape, but a stored
       // recipient id must never outlive current membership or subject access.
-      const protectedDestination = row.type.startsWith("work_hub_") || row.type.startsWith("gate_") ||
-        /^\/(?:\(tabs\)\/)?(?:work-hub|gate|gate-change-over|shift-notes|profile|safety)(?:[/?]|$)/.test(row.link ?? "");
+      const protectedDestination = row.type.startsWith("work_hub_") || row.type.startsWith("gate_") || row.type.startsWith("fleet_") ||
+        /^\/(?:\(tabs\)\/)?(?:work-hub|gate|gate-change-over|shift-notes|profile|safety|fleet)(?:[/?]|$)/.test(row.link ?? "");
       if (protectedDestination && !await resolveNotificationDestination(session, row.link, undefined, row)) return false;
       if (resolveGateNotificationCategory(row) === "alerts")
         return categoryEnabled({ ...DEFAULT_PREFS, ...await preferences() }, categoryForType(row.type)) !== false;

@@ -309,6 +309,35 @@ export function FleetReportsPanel({
               </p>
             ))}
           </div>
+          {data.recordedTiming && (
+            <section className="space-y-2 rounded border p-3">
+              <h2>{c.timingTitle}</h2>
+              <p>{c.timingSource}</p>
+              {[
+                [c.timingEligible, data.recordedTiming.eligibleRunCount],
+                [c.timingInvalid, data.recordedTiming.invalidSequenceCount],
+                [c.timingElapsed, data.recordedTiming.elapsedMinutes],
+                [c.timingPaused, data.recordedTiming.pausedMinutes],
+                [c.timingActive, data.recordedTiming.activeMinutes],
+                [c.timingStart, data.recordedTiming.plannedStartCount],
+                [c.timingLateStart, data.recordedTiming.lateStartCount],
+                [
+                  c.timingStartOffset,
+                  data.recordedTiming.startOffsetTotalMinutes,
+                ],
+                [c.timingFinish, data.recordedTiming.plannedFinishCount],
+                [c.timingLateFinish, data.recordedTiming.lateFinishCount],
+                [
+                  c.timingFinishOffset,
+                  data.recordedTiming.finishOffsetTotalMinutes,
+                ],
+              ].map(([label, value]) => (
+                <p key={label}>
+                  {label}: {value}
+                </p>
+              ))}
+            </section>
+          )}
           <h2 className="font-semibold">{c.loads}</h2>
           {data.loadTotals.length ? (
             <table className="w-full text-left">

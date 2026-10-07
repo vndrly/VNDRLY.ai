@@ -17,6 +17,7 @@ import {
 } from "../services/fleet-support";
 const router = Router();
 const service = createFleetService(databaseFleetRepository);
+router.get("/fleet/runs/:id/review-packet",endpoint(req=>service.reviewPacket(actor(req),z.uuid().parse(req.params.id))));
 router.get("/fleet/runs/:id/replacements", endpoint(req => service.replacements(actor(req), z.uuid().parse(req.params.id))));
 router.post("/fleet/runs/:id/replacements", endpoint(req => service.proposeReplacement(actor(req), z.uuid().parse(req.params.id), req.body)));
 router.post("/fleet/runs/:id/replacements/:replacementId/actions", endpoint(req => service.replacementAction(actor(req), z.uuid().parse(req.params.id), z.uuid().parse(req.params.replacementId), req.body)));

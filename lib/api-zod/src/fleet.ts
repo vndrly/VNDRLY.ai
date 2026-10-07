@@ -406,6 +406,23 @@ export const FleetReportFilterSchema = z
     "Report end must follow start",
   );
 export type FleetReportFilter = z.infer<typeof FleetReportFilterSchema>;
+export const FleetRecordedTimingSchema = z.object({
+  source: z.literal("server_recorded_event_times"),
+  physicalPresenceVerified: z.literal(false),
+  contractualTimelinessVerified: z.literal(false),
+  eligibleRunCount: z.number().int().nonnegative(),
+  invalidSequenceCount: z.number().int().nonnegative(),
+  elapsedMinutes: z.number().finite().nonnegative(),
+  pausedMinutes: z.number().finite().nonnegative(),
+  activeMinutes: z.number().finite().nonnegative(),
+  plannedStartCount: z.number().int().nonnegative(),
+  lateStartCount: z.number().int().nonnegative(),
+  startOffsetTotalMinutes: z.number().finite(),
+  plannedFinishCount: z.number().int().nonnegative(),
+  lateFinishCount: z.number().int().nonnegative(),
+  finishOffsetTotalMinutes: z.number().finite(),
+}).strict();
+export type FleetRecordedTiming = z.infer<typeof FleetRecordedTimingSchema>;
 export const FleetReportSchema = z
   .object({
     generatedAt: z.iso.datetime(),
@@ -416,6 +433,7 @@ export const FleetReportSchema = z
     completedRunCount: z.number().int().nonnegative(),
     submittedRunCount: z.number().int().nonnegative(),
     inspectionExceptions: z.number().int().nonnegative(),
+    recordedTiming: FleetRecordedTimingSchema.optional(),
     loadTotals: z.array(
       z.object({
         commodity: z.string(),
@@ -444,6 +462,7 @@ export type FleetReport = {
   completedRunCount: number;
   submittedRunCount: number;
   inspectionExceptions: number;
+  recordedTiming?: FleetRecordedTiming;
   loadTotals: {
     commodity: string;
     unit: string;

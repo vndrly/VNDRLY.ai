@@ -1,4 +1,6 @@
 import { createFleetCargoOperations } from "./fleet-cargo";
+import { readFleetReviewPacket } from "./fleet-review-packet";
+import { fleetRunNotificationRecipients, emitFleetRunNotification } from "./fleet-notifications";
 import { createFleetReplacementOperations, assertFleetReplacementCustody } from "./fleet-replacement";
 import { fleetReplacementReady } from "@workspace/api-zod";
 import { createFleetEvidenceOperations } from "./fleet-evidence";
@@ -383,6 +385,14 @@ export function createFleetService(repository: FleetRepository) {
     ...createFleetCargoOperations(transaction, permitted, eligible),
     ...createFleetReplacementOperations(transaction, permitted, eligible),
     ...createFleetEvidenceOperations(transaction, permitted),
+    reviewPacket: (actor: FleetActor, runId: string) => {
+      const bound = {...actor,runId};
+      return transaction(bound, async (state,client) => {
+      const run = state.runs.find(item => item.id === runId);
+      if (!run || !permitted(state,bound,run,"view")) throw new FleetError("fleet.not_found",404);
+      return readFleetReviewPacket(client,run);
+      });
+    },
     ...createFleetPlanningOperations(transaction, permitted, eligible, project),
     ...createFleetMaintenanceOperations(transaction, grantFor),
     ...createFleetReportingOperations(transaction, grantFor),
@@ -816,8 +826,9 @@ export function createFleetService(repository: FleetRepository) {
           return project(state, actor, run);
         },
       ),
-    action: (actor: FleetActor, runId: string, input: unknown) =>
-      transaction(
+    action: async (actor: FleetActor, runId: string, input: unknown) => {
+      let notice: Parameters<typeof emitFleetRunNotification>[0] | undefined;
+      const result = await transaction(
         Object.assign(actor, {
           operationId: FleetActionInputSchema.parse(input).operationId,
           runId,
@@ -1071,6 +1082,7 @@ export function createFleetService(repository: FleetRepository) {
             load.deliveredAt = new Date().toISOString();
             run.phase = "unloading";
           } else if (body.action === "submit_closeout") {
+            if ((await readFleetReviewPacket(client,run)).missingRequiredCount) throw new FleetError("fleet.evidence_required",400);
             run.status = "submitted_for_review";
             run.phase = null;
           } else if (body.action === "review") {
@@ -1114,8 +1126,12 @@ export function createFleetService(repository: FleetRepository) {
             runId: run.id,
             result: structuredClone(run),
           });
+          notice = await fleetRunNotificationRecipients(state,client,run,body.action,body.operationId,actor.userId);
           return project(state, actor, run);
         },
-      ),
+      );
+      if (notice) await emitFleetRunNotification(notice);
+      return result;
+    },
   };
 }

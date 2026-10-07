@@ -65,6 +65,7 @@ export function effectiveNotificationCategory(n: NotificationRow): string {
 }
 
 export const NOTIFICATION_TYPE_META: Record<string, { icon: FeatherName; labelKey: string }> = {
+  fleet_run_event: {icon:"truck",labelKey:"notifications.types.fleet_run_event"},
   ticket_assigned: { icon: "briefcase", labelKey: "notifications.types.ticket_assigned" },
   ticket_note_added: { icon: "file-text", labelKey: "notifications.types.ticket_note_added" },
   ticket_forwarded: { icon: "send", labelKey: "notifications.types.ticket_forwarded" },

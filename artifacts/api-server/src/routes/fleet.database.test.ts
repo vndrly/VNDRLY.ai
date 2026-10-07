@@ -181,6 +181,8 @@ describe.runIf(process.env.VNDRLY_TEST_DB_MODE === "fresh-local")(
       expect(repeated.map((r) => r.status)).toEqual(Array(6).fill(200));
       expect(new Set(repeated.map((r) => r.body.version)).size).toBe(1);
       version = repeated[0].body.version;
+      const notices = await pool.query("SELECT user_id,link FROM notifications WHERE dedupe_key=$1",[`fleet:${vendor.id}:${dispatch.operationId}`]);
+      expect(notices.rows).toEqual([{user_id:users[1].id,link:`/fleet/runs/${id}`}]);
       expect(
         (
           await pool.query(
@@ -401,6 +403,9 @@ describe.runIf(process.env.VNDRLY_TEST_DB_MODE === "fresh-local")(
         unit: "gallons",
         notes: "Synthetic recorded fuel entry",
       });
+      const packet = await request(app).get(`/fleet/runs/${id}/review-packet`).set("Cookie",cookies[1]);
+      expect(packet.status).toBe(200);
+      expect(packet.body).toMatchObject({runId:id,runVersion:version,missingRequiredCount:0,readyForOperationalReview:true,physicalProofVerified:false,signatureIdentityVerified:false});
       await act(1, "submit_closeout");
       const completed = await act(0, "review", {
         decision: "accept",

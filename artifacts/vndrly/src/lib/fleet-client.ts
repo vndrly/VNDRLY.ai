@@ -19,6 +19,7 @@ import type {
   FleetGateLink,
 } from "@workspace/api-zod";
 import {
+  FleetReviewPacketSchema,
   FleetReplacementInputSchema,
   FleetReplacementActionSchema,
   FleetReplacementSchema,
@@ -103,6 +104,10 @@ async function request<T>(
   return response.json();
 }
 export const fleetClient = {
+  reviewPacket: (id: string) =>
+    request<unknown>(`/runs/${encodeURIComponent(id)}/review-packet`).then(
+      (value) => FleetReviewPacketSchema.parse(value),
+    ),
   evidence: (id: string) =>
     request<{ runId: string; evidence: unknown[] }>(
       `/runs/${encodeURIComponent(id)}/evidence`,

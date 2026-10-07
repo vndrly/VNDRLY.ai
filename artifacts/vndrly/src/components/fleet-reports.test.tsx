@@ -146,3 +146,34 @@ describe("Fleet reports and personal filters", () => {
     });
   });
 });
+
+it("shows timing source cohorts and excludes verified duty claims", async () => {
+  api.report.mockResolvedValue({
+    ...report,
+    recordedTiming: {
+      eligibleRunCount: 2,
+      invalidSequenceCount: 1,
+      elapsedMinutes: 90,
+      pausedMinutes: 20,
+      activeMinutes: 70,
+      plannedStartCount: 2,
+      lateStartCount: 1,
+      startOffsetTotalMinutes: 10,
+      plannedFinishCount: 1,
+      lateFinishCount: 1,
+      finishOffsetTotalMinutes: 5,
+      source: "server_recorded_event_times",
+      physicalPresenceVerified: false,
+      contractualTimelinessVerified: false,
+    },
+  });
+  mount();
+  await screen.findByText("Runs with usable start-to-closeout records: 2");
+  expect(
+    screen.getByText("Runs excluded for invalid event order: 1"),
+  ).toBeTruthy();
+  expect(
+    screen.getByText("Recorded elapsed minutes excluding pauses: 70"),
+  ).toBeTruthy();
+  expect(screen.getByText(/not verified physical presence/)).toBeTruthy();
+});

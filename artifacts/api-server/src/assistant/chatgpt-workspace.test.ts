@@ -2,6 +2,18 @@ import { describe, expect, it } from "vitest";
 import { runInNewContext } from "node:vm";
 import { workspaceOutput, workspaceRequest, WORKSPACE_HTML } from "./chatgpt-workspace";
 const now = new Date("2026-10-05T17:00:00Z");
+it("binds operational review requirements to the exact run without implying approval or exposing private files", () => {
+  const runId="17795fa1-bb5f-4abc-a5f8-7e9b33a0ec05";
+  const request=workspaceRequest({view:"fleet_review",runId});
+  expect(request).toMatchObject({sourceTool:"query_fleet_review_packet",sourceArguments:{runId}});
+  expect(()=>workspaceRequest({view:"fleet_review"})).toThrow();
+  const packet={runId,runVersion:5,status:"in_progress",requirements:[{id:"delivery",label:"Delivery photo",kind:"photo",scope:"run",required:true,loadId:null,evidenceIds:[],missing:true,fileUrl:"/private-file",sha256:"private-hash"}],missingRequiredCount:1,readyForOperationalReview:false,inspectionComplete:false,manifestComplete:true,closeoutRecordsComplete:false,inspectionExceptions:0,undeliveredLoadCount:0,source:"recorded_fleet_records",physicalProofVerified:false,signatureIdentityVerified:false,limitations:["Saved associations do not verify physical work."]};
+  const output=workspaceOutput("fleet_review",request.sourceTool,request.sourceArguments,packet,now);
+  const optionalOutput=workspaceOutput("fleet_review",request.sourceTool,request.sourceArguments,{...packet,requirements:[{...packet.requirements[0],required:false}],missingRequiredCount:0,inspectionComplete:true,manifestComplete:true,closeoutRecordsComplete:true},now); expect(optionalOutput.attention).toHaveLength(0); expect(optionalOutput.sections[0].rows[0].detail).toContain("Optional, no saved file"); expect(output.attention[0].title).toBe("Delivery photo"); expect(output.attention.map(row=>row.title)).toContain("Inspection records"); expect(output.sections[1].rows.find(row=>row.title==="Load manifests")?.detail).toBe("Complete saved records");
+  expect(output.sections[1].rows[0].detail).toContain("does not approve");
+  expect(JSON.stringify(output)).not.toMatch(/private-file|private-hash/);
+  expect(()=>workspaceOutput("fleet_review",request.sourceTool,{runId:"afafd3ab-bca4-4949-a3db-768ae3b31f10"},packet,now)).toThrow("another run");
+});
 it("keeps Fleet evidence metadata bound to the exact run without disclosing file URLs", () => {
   const runId="17795fa1-bb5f-4abc-a5f8-7e9b33a0ec05";
   expect(workspaceRequest({view:"fleet_evidence",runId})).toMatchObject({sourceTool:"query_fleet_evidence",sourceArguments:{runId}});

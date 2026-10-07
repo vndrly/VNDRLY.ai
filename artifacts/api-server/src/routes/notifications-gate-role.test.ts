@@ -17,7 +17,10 @@ const state = vi.hoisted(() => ({
   cursorTimestampBindings: [] as string[],
   subscriber: undefined as undefined | ((event: any) => void),
   currentSession: null as any,
+  fleetReadable: true,
 }));
+vi.mock("../services/fleet-ops",()=>({createFleetService:()=>({detail:async()=>{if(!state.fleetReadable)throw new Error("Revoked Fleet assignment");return {};}})}));
+vi.mock("../services/fleet-repository",()=>({databaseFleetRepository:{}}));
 // PostgreSQL compares all six fractional digits even when the driver returns a Date.
 const timestampKey = vi.hoisted(() => (value: any): string => {
   const text =
@@ -290,6 +293,7 @@ beforeEach(async () => {
   state.revokedChannels.clear();
   state.revokedSites.clear();
   state.events = [];
+  state.fleetReadable = true;
   state.pageSizes = [];
   state.cursorTimestampBindings = [];
   state.channelContexts = {};
@@ -304,6 +308,19 @@ const get = (path = "", cookie = gate) =>
   request(app).get(`/api/notifications${path}`).set("Cookie", cookie);
 
 describe("role-aware notification inbox", () => {
+  it("lets an explicitly authorized Gate/Fleet coworker resolve run alerts while honoring Fleet revocation and crew preferences",async()=>{
+    const link="/fleet/runs/10000000-0000-4000-8000-000000000007";
+    state.tables.notifications=[notification(1,"fleet_run_event",{category:"crew",link})];
+    const available=await get();
+    expect(JSON.stringify(available.body)).toContain(link);
+    expect((await request(app).post("/api/notifications/1/resolve").set("Cookie",gate)).status).toBe(200);
+    state.fleetReadable=false;
+    expect(JSON.stringify((await get()).body)).not.toContain(link);
+    expect((await request(app).post("/api/notifications/1/resolve").set("Cookie",gate)).status).toBe(404);
+    state.fleetReadable=true;
+    state.tables.notificationPreferences=[{userId:7,crewEnabled:false}];
+    expect(JSON.stringify((await get()).body)).not.toContain(link);
+  });
   it("keeps managed workers with empty grants restricted during recipient reconstruction", async () => {
     state.tables.users = [{ id: 7, sessionVersion: 1 }];
     state.tables.workHubTasks = [{ id: channel, ownerOrgType: "vendor", ownerOrgId: 11, createdById: 8, assigneeUserId: 9 }];

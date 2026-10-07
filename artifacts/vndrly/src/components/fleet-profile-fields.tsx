@@ -30,6 +30,7 @@ export function FleetProfileFields({
           value={value?.name ?? ""}
           onChange={(event) =>
             onChange({
+              ...value,
               name: event.target.value,
               inspectionItems: value?.inspectionItems ?? [],
               manifestFields: value?.manifestFields ?? [],
@@ -122,6 +123,165 @@ export function FleetProfileFields({
             </PngPillButton>
           </fieldset>
         ))}
+      {value && (
+        <fieldset className="space-y-2">
+          <legend>{c.attachmentRequirements}</legend>
+          <p className="text-xs">{c.attachmentRequirementsHint}</p>
+          {(value.evidenceRequirements ?? []).map((item, index) => (
+            <div key={index} className="flex flex-wrap gap-2">
+              <label>
+                {c.requirementId}
+                <input
+                  disabled={disabled}
+                  value={item.id}
+                  onChange={(event) =>
+                    onChange({
+                      ...value,
+                      evidenceRequirements: value.evidenceRequirements?.map(
+                        (row, i) =>
+                          i === index
+                            ? { ...row, id: event.target.value }
+                            : row,
+                      ),
+                    })
+                  }
+                />
+              </label>
+              <label>
+                {c.requirementLabel}
+                <input
+                  disabled={disabled}
+                  value={item.label}
+                  onChange={(event) =>
+                    onChange({
+                      ...value,
+                      evidenceRequirements: value.evidenceRequirements?.map(
+                        (row, i) =>
+                          i === index
+                            ? { ...row, label: event.target.value }
+                            : row,
+                      ),
+                    })
+                  }
+                />
+              </label>
+              <label>
+                {c.attachmentKind}
+                <select
+                  disabled={disabled}
+                  value={item.kind}
+                  onChange={(event) =>
+                    onChange({
+                      ...value,
+                      evidenceRequirements: value.evidenceRequirements?.map(
+                        (row, i) =>
+                          i === index
+                            ? {
+                                ...row,
+                                kind: event.target.value as typeof item.kind,
+                              }
+                            : row,
+                      ),
+                    })
+                  }
+                >
+                  {(
+                    [
+                      ["photo", c.packetPhoto],
+                      ["scale", c.packetScale],
+                      ["receipt", c.packetReceipt],
+                      ["signature", c.packetSignature],
+                    ] as const
+                  ).map(([kind, label]) => (
+                    <option key={kind} value={kind}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                {c.attachmentScope}
+                <select
+                  disabled={disabled}
+                  value={item.scope}
+                  onChange={(event) =>
+                    onChange({
+                      ...value,
+                      evidenceRequirements: value.evidenceRequirements?.map(
+                        (row, i) =>
+                          i === index
+                            ? {
+                                ...row,
+                                scope: event.target.value as typeof item.scope,
+                              }
+                            : row,
+                      ),
+                    })
+                  }
+                >
+                  <option value="run">{c.attachmentRun}</option>
+                  <option value="each_load">{c.attachmentLoad}</option>
+                </select>
+              </label>
+              <label>
+                <input
+                  disabled={disabled}
+                  type="checkbox"
+                  checked={item.required}
+                  onChange={(event) =>
+                    onChange({
+                      ...value,
+                      evidenceRequirements: value.evidenceRequirements?.map(
+                        (row, i) =>
+                          i === index
+                            ? { ...row, required: event.target.checked }
+                            : row,
+                      ),
+                    })
+                  }
+                />
+                {c.required}
+              </label>
+              <PngPillButton
+                disabled={disabled}
+                onClick={() =>
+                  onChange({
+                    ...value,
+                    evidenceRequirements: value.evidenceRequirements?.filter(
+                      (_, i) => i !== index,
+                    ),
+                  })
+                }
+              >
+                {c.removeRequirement}
+              </PngPillButton>
+            </div>
+          ))}
+          <PngPillButton
+            disabled={
+              disabled || (value.evidenceRequirements?.length ?? 0) >= 20
+            }
+            onClick={() => {
+              const id = "file_" + crypto.randomUUID().slice(0, 8);
+              onChange({
+                ...value,
+                evidenceRequirements: [
+                  ...(value.evidenceRequirements ?? []),
+                  {
+                    id,
+                    label: id,
+                    kind: "photo",
+                    scope: "run",
+                    required: false,
+                  },
+                ],
+              });
+            }}
+          >
+            {c.addRequirement}
+          </PngPillButton>
+        </fieldset>
+      )}
     </section>
   );
 }

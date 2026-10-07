@@ -32,13 +32,15 @@ describe("mobile Fleet authorization", () => {
     expect(screen.queryByText(/completed/)).toBeNull();
   });
   it("loads driver work without dispatcher roster and labels absent telemetry", async () => {
-    mocks.api.mockResolvedValue(overview);
+    mocks.api.mockResolvedValue({...overview,unavailableIntegrations:["vehicle_hardware","camera_playback"]});
     render(<FleetWorkspace />);
     expect(await screen.findByText("My Fleet Day")).toBeTruthy();
     expect(mocks.api).toHaveBeenCalledTimes(1);
     expect(mocks.api).toHaveBeenCalledWith("/api/fleet/overview");
     expect(screen.getByText(/No sourced Fleet location/)).toBeTruthy();
     expect(screen.queryByText("Create draft run")).toBeNull();
+    expect(screen.queryByText(/vehicle_hardware|camera_playback/)).toBeNull();
+    expect(screen.getByText(/trackers, camera feeds/)).toBeTruthy();
   });
   it("clears old company records immediately when active membership changes", async () => {
     mocks.api.mockResolvedValueOnce(overview).mockImplementation(() => new Promise(() => {}));

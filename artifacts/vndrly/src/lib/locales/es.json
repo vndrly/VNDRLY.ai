@@ -1674,6 +1674,7 @@
       "workflow_nudge": "Recordatorio de flujo",
       "ticket_flagged": "Ticket marcado",
       "crew_added": "Añadido a la cuadrilla",
+      "fleet_run_event": "Actualización del recorrido de flota",
       "schedule_changed": "Horario actualizado",
       "crew_removed": "Retirado de la cuadrilla",
       "crew_punch_in": "Entrada de cuadrilla",
@@ -4687,6 +4688,7 @@
     }
 ,
     "fleet": {
+      "evidence_required": "Faltan evidencias requeridas de la flota. Revise el paquete del recorrido y adjunte los registros reales.",
       "invalid_request": "La solicitud de flota no es válida. Revisa los campos e inténtalo de nuevo.",
       "internal_error": "No se pudo completar la solicitud de flota. Inténtalo de nuevo."
     },

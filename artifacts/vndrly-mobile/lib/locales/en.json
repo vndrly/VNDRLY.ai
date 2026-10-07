@@ -1475,6 +1475,7 @@
       "already_provisioned": "That partner contact has already been provisioned."
     },
     "fleet": {
+      "evidence_required": "Required Fleet evidence is missing. Review the run packet and attach the actual records.",
       "invalid_request": "The Fleet request is invalid. Review the fields and try again.",
       "internal_error": "The Fleet request could not be completed. Please try again."
     },
@@ -1604,6 +1605,7 @@
       "ticket_forwarded": "Ticket update sent",
       "askv_shared": "AskV message shared",
       "crew_added": "Added to crew",
+      "fleet_run_event": "Fleet run update",
       "schedule_changed": "Schedule changed",
       "crew_removed": "Removed from crew",
       "hotlist_match": "Hotlist match",

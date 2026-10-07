@@ -30,6 +30,7 @@ import {
 import { FleetDraftEditor } from "@/components/fleet-draft-editor";
 import { FleetReplacementPanel } from "@/components/fleet-replacement";
 import { FleetCargoPanel } from "@/components/fleet-cargo";
+import { FleetReviewPacketPanel } from "@/components/fleet-review-packet";
 import { FleetEvidencePanel } from "@/components/fleet-evidence";
 import { FleetEtaPanel } from "@/components/fleet-eta";
 import { FleetGateObservationsPanel } from "@/components/fleet-gate-observations";
@@ -992,6 +993,7 @@ function FleetWorkspace({
                 canDispatch={data.capabilities.canDispatch}
                 onSaved={reload}
               />
+              <FleetReviewPacketPanel run={run} identity={identity} />
               <FleetEvidencePanel
                 key={run.id}
                 run={run}
@@ -1015,7 +1017,29 @@ function FleetWorkspace({
                   <PngPillButton
                     key={action}
                     disabled={busy}
-                    onClick={() => {
+                    onClick={async () => {
+                      if (action === "submit_closeout") {
+                        setBusy(true);
+                        try {
+                          const packet = await fleetClient.reviewPacket(run.id);
+                          if (
+                            packet.runId !== run.id ||
+                            packet.runVersion !== run.version
+                          ) {
+                            setNotice(c.packetUnavailable);
+                            return;
+                          }
+                          if (packet.missingRequiredCount > 0) {
+                            setNotice(c.packetIncomplete);
+                            return;
+                          }
+                        } catch {
+                          setNotice(c.packetUnavailable);
+                          return;
+                        } finally {
+                          setBusy(false);
+                        }
+                      }
                       setReason("");
                       setPending({
                         id: run.id,
@@ -1257,9 +1281,7 @@ function FleetWorkspace({
         </div>
       </section>
       {data.unavailableIntegrations.length > 0 && (
-        <p className="text-sm text-muted-foreground">
-          {c.unavailableTracking} {data.unavailableIntegrations.join(", ")}
-        </p>
+        <p className="text-sm text-muted-foreground">{c.unavailableTracking}</p>
       )}
     </main>
   );

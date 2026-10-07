@@ -39,11 +39,16 @@ export const FleetOperationalProfileSchema = z
     name: z.string().trim().min(1).max(100),
     inspectionItems: z.array(requirement).max(50),
     manifestFields: z.array(requirement).max(50),
+    evidenceRequirements: z.array(requirement.extend({
+      kind: z.enum(["photo", "scale", "receipt", "signature"]),
+      scope: z.enum(["run", "each_load"]),
+    }).strict()).max(20).optional(),
   })
   .strict()
   .superRefine((value, context) => {
-    for (const key of ["inspectionItems", "manifestFields"] as const) {
-      if (new Set(value[key].map((item) => item.id)).size !== value[key].length)
+    for (const key of ["inspectionItems", "manifestFields", "evidenceRequirements"] as const) {
+      const items = value[key] ?? [];
+      if (new Set(items.map((item) => item.id)).size !== items.length)
         context.addIssue({
           code: "custom",
           path: [key],

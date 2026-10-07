@@ -1475,6 +1475,7 @@
       "already_provisioned": "Ese contacto del socio ya fue dado de alta."
     },
     "fleet": {
+      "evidence_required": "Faltan evidencias requeridas de la flota. Revise el paquete del recorrido y adjunte los registros reales.",
       "invalid_request": "La solicitud de flota no es válida. Revisa los campos e inténtalo de nuevo.",
       "internal_error": "No se pudo completar la solicitud de flota. Inténtalo de nuevo."
     },
@@ -1604,6 +1605,7 @@
       "ticket_forwarded": "Actualización de ticket enviada",
       "askv_shared": "Mensaje de AskV compartido",
       "crew_added": "Añadido a la cuadrilla",
+      "fleet_run_event": "Actualización del recorrido de flota",
       "schedule_changed": "Horario actualizado",
       "crew_removed": "Retirado de la cuadrilla",
       "hotlist_match": "Coincidencia de hotlist",

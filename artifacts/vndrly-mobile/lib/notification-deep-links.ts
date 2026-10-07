@@ -100,11 +100,13 @@ export async function resolveNotificationHref(
 export async function openNotificationDestination(
   row: NotificationRow,
   router: NotificationRouter,
+  expectedKind?:NotificationTarget["kind"],
 ): Promise<"opened" | "unavailable"> {
   const scope = captureAuthScope();
   const href = await resolveNotificationHref(row);
   if (!href || !isAuthScopeCurrent(scope)) return "unavailable";
   const target = parseNotificationTarget(href)!;
+  if(expectedKind&&target.kind!==expectedKind)return "unavailable";
   const requestId = `${Date.now()}-${++sequence}`;
   let finish!: (result: OpenResult) => void;
   const result = new Promise<OpenResult>((resolve) => {

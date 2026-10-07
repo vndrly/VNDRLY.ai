@@ -95,6 +95,16 @@ export async function resolveNotificationDestination(
     "approval",
   ]);
   if (keys.some((key) => !permittedKeys.has(key))) return null;
+  const fleetRun = /^\/fleet\/runs\/([^/]+)$/.exec(path);
+  if (fleetRun) {
+    if (keys.length || !uuid.test(fleetRun[1]) || !session.vendorId || !["vendor","field_employee"].includes(session.role ?? "")) return null;
+    try {
+      const {createFleetService} = await import("../services/fleet-ops");
+      const {databaseFleetRepository} = await import("../services/fleet-repository");
+      await createFleetService(databaseFleetRepository).detail({...session,userId:session.userId,companyId:session.vendorId},fleetRun[1]);
+      return `/fleet/runs/${fleetRun[1]}`;
+    } catch { return null; }
+  }
   const ownerType = session.vendorId ? "vendor" : "partner";
   const ownerId = session.vendorId ?? session.partnerId;
   const memberships = ownerId

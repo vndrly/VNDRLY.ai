@@ -4,7 +4,7 @@ import React, {
   useState,
   useSyncExternalStore,
 } from "react";
-import { Stack, useLocalSearchParams } from "expo-router";
+import { Stack, router, useLocalSearchParams } from "expo-router";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import ScreenSafeArea from "@/components/ScreenSafeArea";
@@ -21,6 +21,8 @@ import {
 } from "@/lib/notification-destination";
 import { syncAppIconBadge } from "@/lib/notificationBadge";
 import { captureAuthScope, subscribeToken, subscribeUser } from "@/lib/auth";
+import TogglePillButton from "@/components/TogglePillButton";
+import { useFleetCopy } from "@/lib/fleet-copy";
 
 function subscribeAuthScope(listener: () => void) {
   const user = subscribeUser(listener);
@@ -36,6 +38,7 @@ export default function NotificationDestinationScreen() {
   const { requestId } = useLocalSearchParams<{ requestId: string }>();
   const colors = useColors();
   const { t } = useTranslation();
+  const fleetCopy=useFleetCopy();
   const generation = useSyncExternalStore(subscribeAuthScope, authGeneration);
   const [loaded, setLoaded] = useState<{
     requestId: string;
@@ -109,7 +112,7 @@ export default function NotificationDestinationScreen() {
     });
   }, [record, requestId]);
   const title =
-    record?.kind === "credential"
+    record?.kind === "fleet" ? fleetCopy("Fleet") : record?.kind === "credential"
       ? t("notifications.categories.compliance", { defaultValue: "Compliance" })
       : record?.kind === "handoff"
         ? t("notifications.categories.handoffs", { defaultValue: "Handoffs" })
@@ -151,9 +154,10 @@ export default function NotificationDestinationScreen() {
             ) : null}
             {record.lines.map((line, index) => (
               <Text key={index} style={{ color: colors.text }}>
-                {line}
+                {record.kind==="fleet"?fleetCopy(line):line}
               </Text>
             ))}
+            {record.kind==="fleet"&&<TogglePillButton onPress={()=>router.push({pathname:"/fleet-run/[id]",params:{id:record.subjectId}} as never)}>{fleetCopy("Open exact Fleet run")}</TogglePillButton>}
           </View>
         ) : (
           <ActivityIndicator color={colors.primary} />

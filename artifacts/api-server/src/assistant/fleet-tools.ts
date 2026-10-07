@@ -70,6 +70,7 @@ const common = {
 export const FLEET_TOOLS: AskVToolDefinition[] = [
   ...FLEET_CARGO_TOOLS,
   ...FLEET_REPLACEMENT_TOOLS,
+  read("query_fleet_review_packet", "Read the exact authorized Fleet run operational review packet: configured saved-evidence completeness, reported inspection exceptions and undelivered loads. Missing attachments remain explicit; saved bytes and user-reported signatures do not prove physical delivery or identity. This is a read and never approves a run.", {runId:id}, ["runId"]),
   read(
     "query_fleet_evidence",
     "Read exact authorized Fleet run device-upload evidence metadata and authenticated file links. Upload association requires actual device bytes and your own current assignment. Signature images are user-reported, not identity verified; attachments never prove actual delivery or regulatory clearance.",
@@ -216,7 +217,7 @@ export const FLEET_TOOLS: AskVToolDefinition[] = [
   {
     ...action(
       "manage_fleet_settings",
-      "Prepare active-company Fleet enablement, definitions and explicit member role/site grants against exact expectedVersion. Current company administrator only. Preserve requirements and grants that are not being changed; no implied Fleet authority from company title.",
+      "Prepare active-company Fleet enablement, definitions and explicit member role/site grants against exact expectedVersion. Current company administrator only. Optional operationalProfile evidenceRequirements configure required saved photo/scale/receipt/signature associations for the run or each load; new runs snapshot these requirements, existing runs retain their saved profile. Preserve requirements and grants that are not being changed; no implied Fleet authority from company title or physical proof from attachments.",
       {
         expectedVersion: { type: "integer", minimum: 1 },
         enabled: { type: "boolean" },

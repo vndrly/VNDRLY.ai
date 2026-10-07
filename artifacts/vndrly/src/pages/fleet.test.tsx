@@ -5,6 +5,7 @@ const api = vi.hoisted(() => ({
   overviewPage: vi.fn(),
   run: vi.fn(),
   gateObservations: vi.fn(),
+  reviewPacket: vi.fn(),
   location: "/fleet/my-day",
   resources: vi.fn(),
   action: vi.fn(),
@@ -261,4 +262,29 @@ describe("Fleet driver workspace", () => {
     expect(screen.queryByText("Acknowledge assignment")).toBeNull();
     expect(api.action).not.toHaveBeenCalled();
   });
+});
+
+it("blocks closeout review until current required saved files are present", async () => {
+  api.location = "/fleet/runs/run1";
+  api.run.mockResolvedValue({
+    ...run,
+    status: "in_progress",
+    allowedActions: ["submit_closeout"],
+  });
+  api.reviewPacket.mockResolvedValue({
+    runId: run.id,
+    runVersion: run.version,
+    missingRequiredCount: 1,
+    inspectionExceptions: 0,
+    undeliveredLoadCount: 0,
+    requirements: [],
+  });
+  mount();
+  const button = await screen.findByRole("button", { name: "submit closeout" });
+  fireEvent.click(button);
+  await screen.findAllByText(
+    "Recorded requirements are incomplete. Save missing files and complete the inspection, manifests and closeout records before review.",
+  );
+  expect(api.action).not.toHaveBeenCalled();
+  expect(screen.queryByText(/Review change submit_closeout/)).toBeNull();
 });

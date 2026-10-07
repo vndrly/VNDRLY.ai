@@ -11,6 +11,7 @@ import {
 import type { PoolClient } from "pg";
 import type { FleetActor } from "./fleet-ops";
 import { FleetError, type FleetState } from "./fleet-repository";
+import { summarizeRecordedFleetTiming } from "./fleet-recorded-timing";
 type Access = (
   state: FleetState,
   actor: FleetActor,
@@ -93,6 +94,7 @@ export function summarizeFleetRecords(
         n + r.inspections.filter((i) => i.outcome === "defect_reported").length,
       0,
     ),
+    recordedTiming: summarizeRecordedFleetTiming(runs),
     loadTotals: [...loads.values()],
     distanceTotals: [...distance].map(([unit, distance]) => ({
       unit,
@@ -114,7 +116,7 @@ export function summarizeFleetRecords(
       {
         metric: "dwell_detention_on_time",
         reason:
-          "Accepted record times and user reports are not verified physical arrival or contractual target times.",
+          "Recorded start, pause and closeout intervals and comparisons to the saved plan are available. They do not verify physical arrival, billable detention or contractual on-time performance.",
       },
       {
         metric: "cost_per_run",

@@ -1,3 +1,4 @@
+import FleetReviewPacket from "@/components/FleetReviewPacket";
 import FleetReplacement from "@/components/FleetReplacement";
 import FleetCargo from "@/components/FleetCargo";
 import FleetEvidence from "@/components/FleetEvidence";
@@ -332,10 +333,10 @@ export default function FleetWorkspace({ initialRunId, initialMode = "desk" }: {
     {current && overview?.enabled && <>
       <Text style={textStyle}>{copy("Updated ")}{overview.generatedAt}{copy(". Roles: ")}{overview.roles.map(role => copy(role.replaceAll("_", " "))).join(", ")}</Text>
       {(mode === "desk" || mode === "map") && <><Text style={textStyle}>{copy("Location sources")}</Text>
-      {overview.observations.length > 0 && <MapboxNativeMap height={280} points={overview.observations.map((observation, index) => ({ id: `${observation.runId}:${index}`, latitude: observation.latitude, longitude: observation.longitude, title: `Driver phone · ${observation.freshness}`, color: observation.freshness === "recent" ? colors.primary : colors.mutedForeground }))}/>}
+      {overview.observations.length > 0 && <MapboxNativeMap height={280} points={overview.observations.map((observation, index) => ({ id: `${observation.runId}:${index}`, latitude: observation.latitude, longitude: observation.longitude, title: `${copy("Driver phone")} · ${copy(observation.freshness)}`, color: observation.freshness === "recent" ? colors.primary : colors.mutedForeground }))}/>}
       {overview.observations.length === 0 && <Text style={textStyle}>{copy("No sourced Fleet location is available. Truck position, ETA and live tracking are unavailable.")}</Text>}
       {overview.observations.map((o, i) => <Text key={`${o.runId}:${i}`} style={textStyle}>{copy("Driver phone for run ")}{o.runId}{copy(": ")}{o.latitude}{copy(", ")}{o.longitude}{copy(" \u00B7 ")}{copy(o.freshness)}{copy(" \u00B7 recorded ")}{o.recordedAt}{copy(". This is a phone observation, not truck telemetry.")}</Text>)}
-      {overview.unavailableIntegrations.map(name => <Text key={name} style={textStyle}>{copy(name)}{copy(": unavailable")}</Text>)}
+      {overview.unavailableIntegrations.length > 0 && <Text style={textStyle}>{copy("Vehicle and trailer trackers, camera feeds and truck-safe routing need separately configured integrations.")}</Text>}
       </>}
       {mode !== "setup" && mode !== "map" && mode !== "maintenance" && mode !== "reports" && <>
       <Text style={[textStyle, { fontWeight: "700" }]}>{copy("Runs")}</Text>
@@ -359,6 +360,7 @@ export default function FleetWorkspace({ initialRunId, initialMode = "desk" }: {
         {run.driverUserId === user?.id && overview.capabilities.canDrive && verifiedAccount && !cachedAt && <FleetPhoneLocation key={`${identity}:${run.id}:${run.vehicleAssetId}:${run.trailerAssetId}`} run={run} account={verifiedAccount} disabled={busy || !!unresolved || pendingRun.length > 0}/>}
         <FleetReplacement key={`${identity}:${run.id}`} run={run} canDispatch={overview.capabilities.canDispatch} equipment={current.resources.equipment.filter(asset=>overview.fleets.find(f=>f.id===run.fleetId)?.equipmentAssetIds.includes(asset.id))} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length>0} onChanged={()=>setRevision(n=>n+1)}/>
         <FleetCargo key={`${identity}:${run.id}`} run={run} canDispatch={overview.capabilities.canDispatch} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length>0} onChanged={()=>setRevision(n=>n+1)}/>
+        <FleetReviewPacket key={`${identity}:${run.id}`} run={run} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length>0}/>
         <FleetEvidence key={`${identity}:${run.id}`} run={run} account={overview.capabilities.canDrive ? verifiedAccount ?? undefined : undefined} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length>0} onChanged={()=>setRevision(n=>n+1)}/>
         <FleetEta key={`${identity}:${run.id}:${run.version}`} runId={run.id} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length > 0}/>
         <FleetGate key={`${identity}:${run.id}:${run.version}`} run={run} disabled={busy || !!cachedAt || !!unresolved || pendingRun.length > 0} onChanged={() => setRevision(n => n + 1)}/>

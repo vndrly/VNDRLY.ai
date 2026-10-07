@@ -1,4 +1,5 @@
 import { apiFetch } from "./api";
+import { FleetRunSchema } from "@workspace/api-zod";
 
 type WorkKind =
   | "shift"
@@ -9,6 +10,7 @@ type WorkKind =
   | "form"
   | "checklist";
 export type NotificationTarget =
+  | { kind: "fleet"; id: string }
   | { kind: WorkKind; id: string; messageId?: string }
   | { kind: "credential"; id: string }
   | { kind: "safety"; id: string }
@@ -41,6 +43,8 @@ export function parseNotificationTarget(
     const params = url.searchParams;
     const keys = [...params.keys()];
     if (new Set(keys).size !== keys.length) return null;
+    const fleetId=path.match(/^\/fleet\/runs\/([^/]+)$/)?.[1];
+    if(fleetId)return !keys.length&&uuid.test(fleetId)?{kind:"fleet",id:fleetId}:null;
     const safetyId = path.match(/^\/safety\/([1-9]\d*)$/)?.[1];
     if (safetyId) return !keys.length && positiveId(safetyId) ? { kind: "safety", id: safetyId } : null;
     if (path === "/profile") {
@@ -188,6 +192,10 @@ function content(
 export async function loadNotificationDestination(
   target: NotificationTarget,
 ): Promise<NotificationDestinationContent> {
+  if(target.kind==="fleet"){
+    const run=FleetRunSchema.parse(await apiFetch(`/api/fleet/runs/${target.id}`));
+    return content(target,run,run.title,[run.phase??""]);
+  }
   if (target.kind === "safety") {
     const data = await apiFetch<{ data: { event: RecordData } }>(`/api/safety/events/${target.id}`);
     return content(target, data.data?.event);

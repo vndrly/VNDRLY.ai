@@ -1,4 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi, beforeEach } from "vitest";
+const notifications = vi.hoisted(() => vi.fn());
+vi.mock("../routes/notifications", () => ({notifyUsers:notifications}));
+beforeEach(() => {notifications.mockReset().mockResolvedValue(1);});
 import {
   previewFleetRunActions,
   FleetActionInputSchema,
@@ -51,6 +54,7 @@ function fixture() {
   let sitesVisible = true;
   const client = {
     query: async (sql: string) => {
+      if (sql.includes("m.user_id=ANY")) return {rows:[{user_id:1},{user_id:2}]};
       if (sql.startsWith("INSERT INTO asset_holds")) hold = true;
       return {
         rows: sql.includes("vendor_people")
@@ -115,6 +119,38 @@ const createInput = {
   ],
 };
 describe("Fleet durable service authority contract", () => {
+  it("notifies only newly committed dispatch events and never repeats alerts on exact replay", async () => {
+    const f=fixture();
+    const run=await f.service.create(manager,createInput);
+    const input={operationId:crypto.randomUUID(),expectedVersion:run.version,action:"dispatch"};
+    const dispatched=await f.service.action(manager,run.id,input);
+    expect(f.state().runs[0].status).toBe("dispatched");
+    expect(notifications).toHaveBeenCalledTimes(1);
+    expect(notifications).toHaveBeenCalledWith([2],expect.objectContaining({type:"fleet_run_event",dedupeKey:`fleet:7:${input.operationId}`}));
+    expect(await f.service.action(manager,run.id,input)).toMatchObject({version:dispatched.version});
+    expect(notifications).toHaveBeenCalledTimes(1);
+    notifications.mockRejectedValue(new Error("Unavailable delivery"));
+    const cancelled=await f.service.action(manager,run.id,{operationId:crypto.randomUUID(),expectedVersion:dispatched.version,action:"cancel",reason:"Synthetic cancellation"});
+    expect(cancelled.status).toBe("cancelled");
+    expect(f.state().runs[0].status).toBe("cancelled");
+  });
+  it("reads a scoped review packet and refuses closeout with missing snapshotted evidence", async () => {
+    const f=fixture();
+    f.state().fleets[0].operationalProfile={name:"Saved receipt required",inspectionItems:[],manifestFields:[],evidenceRequirements:[{id:"receipt",label:"Saved receipt",kind:"receipt",scope:"run",required:true}]};
+    const created=await f.service.create(manager,createInput);
+    const run=f.state().runs[0];
+    run.status="in_progress";run.phase=null;run.visitedStopIds=run.stops.map(stop=>stop.id);
+    run.loads=[{id:crypto.randomUUID(),pickupStopId:run.stops[0].id,deliveryStopId:run.stops[0].id,commodity:"Water",quantity:1,unit:"bbl",manifestReference:"Synthetic",deliveryReference:"Reported",recordedByUserId:2,recordedAt:new Date().toISOString(),deliveredAt:new Date().toISOString(),source:"user_report" as const}];
+    run.records=[100,101].map(reading=>({id:crypto.randomUUID(),vehicleAssetId:vehicle,kind:"meter",quantity:null,reading,unit:"miles",notes:"Reported",recordedByUserId:2,recordedAt:new Date().toISOString(),capturedAt:null,source:"user_report"}));
+    f.state().fleets[0].operationalProfile!.evidenceRequirements=[];
+    const packet=await f.service.reviewPacket(driver,created.id);
+    expect(packet.missingRequiredCount).toBe(1);
+    expect(packet.physicalProofVerified).toBe(false);
+    await expect(f.service.action(driver,created.id,{operationId:crypto.randomUUID(),expectedVersion:run.version,action:"submit_closeout"})).rejects.toMatchObject({code:"fleet.evidence_required"});
+    expect(f.state().runs[0].status).toBe("in_progress");
+    f.revokeSites();
+    await expect(f.service.reviewPacket(driver,created.id)).rejects.toMatchObject({code:"fleet.not_found"});
+  });
   it("snapshots configured requirements and enforces checklist before accepting a passed inspection", async () => {
     const f=fixture();
     f.state().fleets[0].operationalProfile={name:"Bulk",inspectionItems:[{id:"brakes",label:"Brakes",required:true}],manifestFields:[{id:"seal",label:"Seal reference",required:true}]};

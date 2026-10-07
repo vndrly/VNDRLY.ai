@@ -1,4 +1,5 @@
 import "@/lib/fleet-evidence-device-native";
+import {isFleetPushNotification,openFleetPushNotification} from "@/lib/fleet-push-notification";
 import "@/lib/fleet-background-location-native";
 import "react-native-gesture-handler";
 
@@ -239,6 +240,11 @@ function AuthGate() {
     if (Platform.OS === "web") return;
 
     async function handlePushOpen(data: unknown) {
+      if(isFleetPushNotification(data)){
+        const result=await openFleetPushNotification(data,router);
+        if(result!=="opened")router.push("/notifications" as never);
+        void syncAppIconBadge();return;
+      }
       const notifId = notificationIdFromPushData(data);
       if (notifId != null) {
         try {
