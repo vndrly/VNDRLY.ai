@@ -1267,3 +1267,24 @@ it("recovers an interrupted speak request only from its exact receipt without an
  expect(mocks.taskRead).toHaveBeenLastCalledWith(`/work-hub/meetings/${occurrenceId}/request-to-speak/operations/${operationId}`,"GET",{},expect.objectContaining({userId:17}));
  expect(mocks.bound).toHaveBeenCalledTimes(1);expect(mocks.run).not.toHaveBeenCalled();
 });
+
+it.each([{savedName:'prepare_workforce_coverage_action_assign',legacy:false},{savedName:'prepare_workforce_coverage_action',legacy:false},{savedName:'prepare_workforce_coverage_action_assign',legacy:true}])('executes and checkpoints workforce reference $savedName (legacy $legacy) without substitution', async ({savedName,legacy}) => {
+ const {createCoordinatedPlan,encodePlanDescription}=await import('../assistant/coordinated-plan');
+ const taskId='11111111-1111-4111-8111-111111111111',alias='prepare_workforce_coverage_action_assign';
+ const plan=createCoordinatedPlan({userId:17,organizationKey:'vendor:4'},[{id:'coverage',specialist:'V',toolNames:[savedName],dependsOn:[]}]);
+ const row={id:taskId,ownerOrgType:'vendor',ownerOrgId:4,version:1,status:'open',description:encodePlanDescription(plan)};
+ const credentials=await tokens('work_hub:read work_hub:write workforce:read');
+ const call=(name:string,args:unknown)=>request(app).post(base+'/mcp').set('Authorization','Bearer '+credentials.access_token).send({jsonrpc:'2.0',id:1,method:'tools/call',params:{name,arguments:args}});
+ mocks.taskRead.mockResolvedValue({...row,subjectType:'task'});mocks.run.mockResolvedValue(JSON.stringify({coverage:[]}));
+ const args={taskId,stepId:'coverage',arguments:{}};
+ const invoke=(business:Record<string,unknown>={})=>legacy?call('v_run_work_plan_read',{taskId,stepId:'coverage',toolArguments:{[savedName]:business}}):call('v_plan_read__'+alias,{...args,arguments:business});
+ const result=(await invoke()).body.result;
+ expect(result.isError).not.toBe(true);
+ expect(result.structuredContent.results[0].toolName).toBe(savedName);
+ expect(mocks.run).toHaveBeenCalledWith('prepare_workforce_coverage_action',{action:'assign'},expect.objectContaining({userId:17,vendorId:4}),"");
+ const checkpoint=(await call('v_prepare_work_plan_read_checkpoint',{receipts:[result.structuredContent.checkpointReceipt]})).body.result;
+ expect(checkpoint.isError).not.toBe(true);expect(mocks.bound).not.toHaveBeenCalled();
+ expect((await invoke({action:'escalate'})).body.result.isError).toBe(true);
+ grants[0].scopes=grants[0].scopes.filter(x=>x!=='workforce:read');mocks.run.mockClear();
+ expect((await invoke()).body.result.isError).toBe(true);expect(mocks.run).not.toHaveBeenCalled();
+});

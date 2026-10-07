@@ -26,7 +26,7 @@ it("keeps canonical read schemas and denies removed operations or envelope subst
  const tool = plannedReadOperationTools(reads)[0];
  expect(tool.inputSchema.properties.arguments).toEqual(reads[0].inputSchema);
  const raw = { taskId, stepId: "review", arguments: { status: "submitted" } };
- expect(resolvePlannedReadOperation(tool.name, raw, reads)).toEqual({ ...raw, toolName: "query_tickets" });
+ expect(resolvePlannedReadOperation(tool.name, raw, reads)).toEqual({ ...raw, toolName: "query_tickets", referenceToolName: "query_tickets" });
  expect(() => resolvePlannedReadOperation(tool.name, { ...raw, toolName: "query_invoices" }, reads)).toThrow();
  expect(() => resolvePlannedReadOperation(tool.name, raw, [])).toThrow();
 });

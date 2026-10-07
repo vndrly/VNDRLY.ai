@@ -14,7 +14,7 @@ export function resolvePlannedReadOperation(name: string, raw: unknown, reads: R
   if (!tool) throw Error("Planned read operation unavailable");
   const input = z.object({ taskId: z.uuid(), stepId: z.string().min(1).max(100), arguments: z.record(z.string(), z.unknown()) }).strict().parse(raw);
   const operation=resolveOperationTool(tool.name,input.arguments,reads as AskVToolDefinition[]);
-  return { ...input, arguments:operation.input, toolName:operation.name };
+  return { ...input, arguments:operation.input, toolName:operation.name, referenceToolName:tool.name };
 }
 export function backgroundStepOperationTools(available: ReadonlySet<string>) {
   return PLAN_OPERATION_INPUTS.filter(operation => available.has(operation.toolName)).map(operation => ({ name: definitionPrefix + operation.key, description: `${operation.description} Returns an inert typed step fragment only. Include every prerequisite in the complete saved-plan proposal, then obtain separate same-account browser approval within five minutes. This tool cannot grant authority or start execution.`, inputSchema: { ...z.toJSONSchema(z.object({ id: z.string().min(1).max(100), arguments: operation.input }).strict()), type: "object" as const }, annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false } }));

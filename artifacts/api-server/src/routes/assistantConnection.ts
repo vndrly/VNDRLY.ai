@@ -451,9 +451,11 @@ router.post("/mcp", async (req, res) => {
       await writeAskVActionAudit({ session, clientSurface: "api", inputMode: "web_text", provider: "chatgpt_mcp", toolName: "list_work_hub_tasks", targetType: "task", toolInput: { taskId: args.taskId }, toolOutput: { taskId: output.taskId, taskVersion: output.taskVersion }, resultStatus: "success" });
       if (name === "v_run_work_plan_read") {
         if (typeof args.stepId !== "string") throw new Error("Missing plan step");
-        const requests = singlePlanRead ? [plannedSingleReadRequest(output,args.stepId,singlePlanRead.toolName,singlePlanRead.arguments,availablePlanReadNames(session,authorized.scopes))] : plannedReadRequests(output, args.stepId, args.toolArguments, availablePlanReadNames(session, authorized.scopes));
+        const requests = singlePlanRead ? [plannedSingleReadRequest(output,args.stepId,output.plan.steps.find(step=>step.id===args.stepId)?.toolNames.includes(singlePlanRead.referenceToolName)?singlePlanRead.referenceToolName:singlePlanRead.toolName,singlePlanRead.arguments,availablePlanReadNames(session,authorized.scopes))] : plannedReadRequests(output, args.stepId, args.toolArguments, availablePlanReadNames(session, authorized.scopes));
         const results = [];
-        for (const request of requests) {
+        for (const savedRequest of requests) {
+          const resolved=singlePlanRead ? {name:singlePlanRead.toolName,input:singlePlanRead.arguments} : resolveOperationTool(savedRequest.name,savedRequest.arguments,chatGptReadableTools(session,authorized.scopes));
+          const request={name:resolved.name,arguments:resolved.input};
           const opportunity = availableWorkdayOpportunityTools(session, authorized.scopes).find(tool => tool.name === request.name);
           const invoiceCandidates = request.name === TICKET_INVOICE_CANDIDATES_TOOL.name && ticketInvoiceCandidatesAvailable(session, authorized.scopes);
           const tool = request.name === INVOICE_ACTIVITY_TOOL.name && invoiceActivityAvailable(session, authorized.scopes)
@@ -474,7 +476,7 @@ router.post("/mcp", async (req, res) => {
           }
           const failed = !!(result as { error?: unknown })?.error || (result as { ok?: boolean })?.ok === false;
           await writeAskVActionAudit({ session, clientSurface: "api", inputMode: "web_text", provider: "chatgpt_mcp", toolName: tool.name, targetType: tool.auditTarget, toolInput: request.arguments, toolOutput: result, resultStatus: failed ? "failure" : "success" });
-          results.push({ toolName: tool.name, result });
+          results.push({ toolName: savedRequest.name, result });
         }
         const checkpointReceipt = envelope({ kind: "plan-read-checkpoint", id: randomUUID(), userId: session.userId, organizationKey: owner.type + ":" + owner.id,
           taskId: output.taskId, taskVersion: output.taskVersion, planVersion: output.plan.version, stepId: args.stepId,
@@ -680,7 +682,7 @@ async function authorizedExactPlanTask(session: SessionPayload, scopes: string[]
   return [await readExactPlanTask(path => callNaturalVoiceDomainApi(path, 'GET', {}, session), taskId, { userId: session.userId, organizationKey: owner })];
 }
 function availablePlanReadNames(session: SessionPayload, scopes: string[]) {
-  return new Set([...chatGptReadableTools(session, scopes).map(tool => tool.name), ...availableWorkdayOpportunityTools(session, scopes).map(tool => tool.name), ...(invoiceActivityAvailable(session, scopes) ? [INVOICE_ACTIVITY_TOOL.name] : []), ...(ticketInvoiceCandidatesAvailable(session, scopes) ? [TICKET_INVOICE_CANDIDATES_TOOL.name] : [])]);
+  return new Set([...planOperationTools(chatGptReadableTools(session, scopes)).map(tool => tool.name), ...availableWorkdayOpportunityTools(session, scopes).map(tool => tool.name), ...(invoiceActivityAvailable(session, scopes) ? [INVOICE_ACTIVITY_TOOL.name] : []), ...(ticketInvoiceCandidatesAvailable(session, scopes) ? [TICKET_INVOICE_CANDIDATES_TOOL.name] : [])]);
 }
 function currentPlanReadDefinitions(session:SessionPayload,scopes:string[]){
  return [...chatGptReadableTools(session,scopes),...availableWorkdayOpportunityTools(session,scopes),...(invoiceActivityAvailable(session,scopes)?[INVOICE_ACTIVITY_TOOL]:[]),...(ticketInvoiceCandidatesAvailable(session,scopes)?[TICKET_INVOICE_CANDIDATES_TOOL]:[])];
