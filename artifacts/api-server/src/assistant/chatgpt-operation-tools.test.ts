@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { chatGptActionTools } from './chatgpt-tool-access';
-import { exposedOperationTools, resolveOperationTool, planOperationTools } from './chatgpt-operation-tools';
+import { chatGptActionTools, chatGptReadableTools } from './chatgpt-tool-access';
+import { exposedOperationTools, resolveOperationTool, planOperationTools, operationToolAnnotations, canonicalOperationToolName } from './chatgpt-operation-tools';
 import { prepareWorkPlan } from './chatgpt-coordinated-plan';
 import { specialistDirectory } from './chatgpt-specialists';
 describe('role-bound operation exposure', () => {
@@ -31,4 +31,31 @@ describe('role-bound operation exposure', () => {
     expect(directory.specialists.find(s=>s.id==='field_operations')?.prepareTools).toContain('manage_ticket_record_submit');
     expect(directory.specialists.find(s=>s.id==='field_operations')?.prepareTools).not.toContain('manage_ticket_record');
   });
+});
+
+it('exposes only current permitted away/display/workforce operations with fixed canonical bindings', () => {
+  const session={userId:17,role:'vendor',vendorId:4,membershipRole:'admin',activeMembershipId:8,sv:2};
+  const actions=chatGptActionTools(session,['work_hub:write','operations:write','workforce:write']);
+  const exposed=exposedOperationTools(actions);
+  for(const [family,operations] of [['manage_work_hub_away_responder',['configure','pause','revoke']],['confirm_operations_displays_action',['route','join_room','revoke']],['confirm_workforce_coverage_action',['assign','acknowledge','evaluate','escalate']]] as const) {
+    expect(exposed.some(tool=>tool.name===family)).toBe(false);
+    for(const action of operations){
+      const tool=exposed.find(tool=>tool.name===family+'_'+action)!;
+      expect(tool).toBeDefined();expect(tool.inputSchema.properties).not.toHaveProperty('action');
+      expect(resolveOperationTool(tool.name,{expectedVersion:2},actions)).toEqual({name:family,input:{expectedVersion:2,action}});
+      expect(()=>resolveOperationTool(tool.name,{action:'other'},actions)).toThrow('fixed');
+      expect(operationToolAnnotations(tool)).toMatchObject({readOnlyHint:false,destructiveHint:true,openWorldHint:false});
+      expect(canonicalOperationToolName(tool.name)).toBe(family);
+      expect(resolveOperationTool(tool.name,{},[]).name).toBe(tool.name);
+    }
+  }
+  const reads=chatGptReadableTools(session,['workforce:read']);
+  const prepared=exposedOperationTools(reads).filter(tool=>tool.name.startsWith('prepare_workforce_coverage_action_'));
+  expect(prepared).toHaveLength(4);
+  for(const tool of prepared)expect(operationToolAnnotations(tool)).toEqual({readOnlyHint:true,destructiveHint:false,openWorldHint:false});
+  const away=exposed.find(tool=>tool.name==='manage_work_hub_away_responder_pause')!;
+  expect(away.inputSchema.required).toEqual(['expectedVersion','ruleId']);expect(away.inputSchema.properties).not.toHaveProperty('replyText');
+  const display=exposed.find(tool=>tool.name==='confirm_operations_displays_action_revoke')!;
+  expect(display.inputSchema.required).toEqual(['displayId','expectedUpdatedAt','reason']);expect(display.inputSchema.properties).not.toHaveProperty('view');
+  expect(exposedOperationTools(chatGptActionTools({...session,membershipRole:'member'},['operations:write'])).some(tool=>tool.name.startsWith('confirm_operations_displays_action'))).toBe(false);
 });

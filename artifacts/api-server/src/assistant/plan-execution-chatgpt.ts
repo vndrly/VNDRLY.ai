@@ -25,7 +25,7 @@ export const PLAN_EXECUTION_STATUS_TOOL = {
 };
 export const PLAN_EXECUTION_CANCEL_TOOL = {
   ...PLAN_EXECUTION_STATUS_TOOL, name: "v_cancel_background_work", description: "Cancel this account's exact saved delegation when explicitly requested. Prevents further effects, but cannot undo an issued command. Unknown prior outcomes remain unknown.",
-  annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+  annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: false },
 };
 export function planExecutionPublicRun(run: PlanExecutionRun) {
   const { grantReference: _private, ...authorization } = run.authorization;

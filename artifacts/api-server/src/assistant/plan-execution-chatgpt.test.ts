@@ -2,7 +2,7 @@ import { afterEach, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({ status: vi.fn(), cancel: vi.fn(), metadata: vi.fn() }));
 vi.mock("./plan-execution-consent", () => ({ createPlanExecutionConsentService: () => ({ status: mocks.status, cancel: mocks.cancel, statusMetadata: mocks.metadata }) }));
 vi.mock("./chatgpt-tool-access", () => ({ chatGptReadableTools: (_session: unknown, scopes: string[]) => scopes.includes("work_hub:read") ? [{ name: "list_work_hub_tasks" }] : [], chatGptActionTools: () => [] }));
-import { planExecutionPublicRun, handlePlanExecutionTool, PLAN_EXECUTION_PREPARE_TOOL } from "./plan-execution-chatgpt";
+import { planExecutionPublicRun, handlePlanExecutionTool, PLAN_EXECUTION_PREPARE_TOOL, PLAN_EXECUTION_CANCEL_TOOL } from "./plan-execution-chatgpt";
 import { createPlanExecution } from "./plan-execution";
 afterEach(() => vi.unstubAllEnvs());
 function run() {
@@ -56,4 +56,9 @@ it('describes only implemented exact approved effects and current authority boun
  expect(description).toContain('awaiting_payment');
  expect(description).toContain('bounded sinceDays/limit');
  expect(description.length).toBeLessThanOrEqual(1024);
+});
+
+it("marks cancellation as destructive without claiming prior effects can be undone", () => {
+  expect(PLAN_EXECUTION_CANCEL_TOOL.annotations).toEqual({readOnlyHint:false,destructiveHint:true,openWorldHint:false});
+  expect(PLAN_EXECUTION_CANCEL_TOOL.description).toContain("cannot undo an issued command");
 });

@@ -24,7 +24,7 @@ export function gateAssignmentTransactionClient(tx: Parameters<Parameters<typeof
   return { transactionDatabase: tx, query: async (text: string, values: unknown[] = []) => {
     const parts = text.split(/(\$\d+)/g);
     const query = sql.join(parts.map(part => /^\$\d+$/.test(part)
-      ? sql`${values[Number(part.slice(1)) - 1]}` : sql.raw(part)), sql.raw(""));
+      ? sql`${sql.param(values[Number(part.slice(1)) - 1])}` : sql.raw(part)), sql.raw(""));
     const result = await tx.execute(query) as { rows?: unknown[] } | unknown[];
     const rows = Array.isArray(result) ? result : result.rows ?? [];
     return { rows, rowCount: rows.length };

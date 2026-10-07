@@ -1116,3 +1116,41 @@ it("reconciles an interrupted labor finalization by exact canonical receipt with
   expect(mocks.bound).toHaveBeenCalledTimes(1);
   expect(mocks.run).not.toHaveBeenCalled();
 });
+
+it('publishes fixed away/display operations with current scopes and refuses operation substitution before preparing', async()=>{
+  const credentials=await tokens('work_hub:write operations:write');
+  grants[0].session={...grants[0].session,activeMembershipId:8,membershipRole:'admin'};
+  const call=(method:string,params?:unknown)=>request(app).post(base+'/mcp').set('Authorization','Bearer '+credentials.access_token).send({jsonrpc:'2.0',id:1,method,params});
+  const tools=(await call('tools/list')).body.result.tools;
+  const away=tools.find((tool:{name:string})=>tool.name==='manage_work_hub_away_responder_revoke');
+  expect(away).toMatchObject({annotations:{readOnlyHint:false,destructiveHint:true},securitySchemes:[{type:'oauth2',scopes:['work_hub:write']}]});
+  expect(away._meta.securitySchemes).toEqual(away.securitySchemes);
+  expect(tools.some((tool:{name:string})=>tool.name==='manage_work_hub_away_responder')).toBe(false);
+  expect(tools.find((tool:{name:string})=>tool.name==='confirm_operations_displays_action_revoke')).toMatchObject({annotations:{destructiveHint:true}});
+  const input={expectedVersion:2,ruleId:'11111111-1111-4111-8111-111111111111'};
+  const prepared=(await call('tools/call',{name:away.name,arguments:input})).body.result;
+  expect(prepared.isError).not.toBe(true);
+  expect(grants[0].actions!.at(-1)).toMatchObject({toolName:'manage_work_hub_away_responder',arguments:{...input,action:'revoke'}});
+  const count=grants[0].actions!.length;
+  expect((await call('tools/call',{name:away.name,arguments:{...input,action:'configure'}})).body.result.isError).toBe(true);
+  expect(grants[0].actions).toHaveLength(count);expect(mocks.bound).not.toHaveBeenCalled();expect(mocks.run).not.toHaveBeenCalled();
+  grants[0].session.membershipRole='member';
+  expect((await call('tools/list')).body.result.tools.some((tool:{name:string})=>tool.name.startsWith('confirm_operations_displays_action_'))).toBe(false);
+  expect((await call('tools/call',{name:'confirm_operations_displays_action_revoke',arguments:{}})).body.result.isError).toBe(true);
+});
+it('resolves a workforce read operation to the same current authorized canonical read without preparing a write',async()=>{
+  const credentials=await tokens('workforce:read');
+  const call=(method:string,params?:unknown)=>request(app).post(base+'/mcp').set('Authorization','Bearer '+credentials.access_token).send({jsonrpc:'2.0',id:1,method,params});
+  const tools=(await call('tools/list')).body.result.tools;
+  const read=tools.find((tool:{name:string})=>tool.name==='prepare_workforce_coverage_action_assign');
+  expect(read).toMatchObject({annotations:{readOnlyHint:true,destructiveHint:false}});
+  expect(tools.some((tool:{name:string})=>tool.name==='prepare_workforce_coverage_action')).toBe(false);
+  const input={resourceId:'11111111-1111-4111-8111-111111111111'};
+  expect((await call('tools/call',{name:read.name,arguments:input})).body.result.isError).not.toBe(true);
+  expect(mocks.run).toHaveBeenLastCalledWith('prepare_workforce_coverage_action',expect.objectContaining({...input,action:'assign'}),expect.objectContaining({userId:17,vendorId:4}),expect.any(String));
+  const called=mocks.run.mock.calls.length;
+  expect((await call('tools/call',{name:read.name,arguments:{...input,action:'escalate'}})).body.result.isError).toBe(true);
+  expect(mocks.run).toHaveBeenCalledTimes(called);expect(mocks.bound).not.toHaveBeenCalled();expect(grants[0].actions??[]).toHaveLength(0);
+  grants[0].scopes=[];
+  expect((await call('tools/call',{name:read.name,arguments:input})).body.result.isError).toBe(true);expect(mocks.run).toHaveBeenCalledTimes(called);
+});

@@ -1,5 +1,6 @@
 import { beforeEach, expect, it, vi } from "vitest";
 import type { Pool } from "pg";
+import { PgDialect } from "drizzle-orm/pg-core";
 import { authorizeGateSchedulingSite, gateAssignmentTransactionClient, lockShiftSchedulingRows, executeGateShiftAssignment, executeGateShiftClaim, readGateShiftAssignment, readShiftCreationOperation } from "./gate-shift-assignment";
 import { readGateStaffingCandidatesForClient } from "../assistant/gate-staffing-candidates";
 
@@ -110,4 +111,18 @@ it("does not confuse the pg connection database name with the same-transaction a
   await authorizeGateSchedulingSite(gateAssignmentTransactionClient(transaction as never),session,392,operationId);
   expect(validate.mock.calls.at(-1)![1]).toBe(transaction);
   expect(transaction.execute).toHaveBeenCalled();
+});
+
+it.each([{ value: [] }, { value: [133] }, { value: [133, 134] }, { value: null }])("preserves array/null as a single PostgreSQL parameter: $value", async ({ value }) => {
+  const dialect = new PgDialect();
+  const execute = vi.fn(async (query) => {
+    const compiled = dialect.sqlToQuery(query);
+    expect(compiled.sql).toBe("SELECT id FROM users WHERE id=ANY($1::integer[]) OR $2::integer[] IS NULL OR id=ANY($3::integer[])");
+    expect(compiled.params).toEqual([value, value, value]);
+    expect(compiled.params[0]).toBe(value);
+    return { rows: [{ id: 133 }] };
+  });
+  const client = gateAssignmentTransactionClient({ execute } as never);
+  expect(await client.query("SELECT id FROM users WHERE id=ANY($1::integer[]) OR $1::integer[] IS NULL OR id=ANY($1::integer[])", [value])).toMatchObject({ rows: [{ id: 133 }], rowCount: 1 });
+  expect(execute).toHaveBeenCalledOnce();
 });
