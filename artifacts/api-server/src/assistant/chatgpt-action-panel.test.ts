@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { runInNewContext } from "node:vm";
-import { ACTION_PANEL_HTML } from "./chatgpt-action-panel";
+import { ACTION_PANEL_HTML, actionRecordSummary } from "./chatgpt-action-panel";
 
 function panelHarness() {
   const nodes = new Map<string, any>();
-  for (const id of ["title", "status", "details", "submit", "device"]) nodes.set(id, { textContent: "", hidden: true, setAttribute() {} });
+  for (const id of ["title", "status", "summary", "details", "submit", "device"]) nodes.set(id, { textContent: "", hidden: true, setAttribute() {} });
   const requests: any[] = [];
   let receive: (event: any) => void;
   const parent = { postMessage: (message: any) => requests.push(message) };
@@ -21,6 +21,21 @@ function panelHarness() {
   };
 }
 describe("VNDRLY component-mediated action panel", () => {
+  it("summarizes the saved ticket using business fields while keeping full details", async () => {
+    const ui = panelHarness(); ui.publish(); await ui.status("completed", { id: 100006, status: "awaiting_acceptance", siteName: "Demo well", description: "No real work", checkInLatitude: null, paymentDispersedById: null });
+    expect(ui.nodes.get("summary").textContent).toContain("Ticket: 100006");
+    expect(ui.nodes.get("summary").textContent).toContain("Status: awaiting acceptance");
+    expect(ui.nodes.get("summary").textContent).toContain("Site: Demo well");
+    expect(ui.nodes.get("summary").textContent).not.toContain("paymentDispersedById");
+    expect(ui.nodes.get("details").textContent).toContain("paymentDispersedById");
+    expect(ACTION_PANEL_HTML).toContain("<details><summary>Record details</summary>");
+  });
+  it("does not claim missing records or convert caller text into markup", () => {
+    expect(actionRecordSummary("manage_ticket_record", null)).toContain("inspect the exact values");
+    expect(actionRecordSummary("manage_ticket_record", { resource: { id: 3, description: "<img onerror=attack>" } })).toContain("<img onerror=attack>");
+    const ui = panelHarness(); ui.publish();
+    expect(ui.nodes.get("summary").textContent).toContain("<img onerror=attack>");
+  });
   it("does not accept an outside frame's authorization and renders notes as text", () => {
     const ui = panelHarness();
     ui.publish(false, {} as any);
