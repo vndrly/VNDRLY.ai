@@ -1,6 +1,19 @@
 import { describe, expect, it } from "vitest";
 import { fileDeviceHandoff, requireMatchingFileDevice, meetingDeviceHandoff, requireMatchingMeetingDevice } from "./chatgpt-device-handoff";
 import { ticketDeviceHandoff, requireMatchingTicketDevice } from "./chatgpt-device-handoff";
+import { gateDeviceHandoff, requireMatchingGateDevice } from "./chatgpt-device-handoff";
+
+describe("Gate device handoff", () => {
+  const session = { userId: 17, role: "vendor", vendorId: 4, activeMembershipId: 7, sv: 2 };
+  const station = "17795fa1-bb5f-4abc-a5f8-7e9b33a0ec05";
+  it("binds station navigation to the outgoing account without granting incoming access", () => {
+    const handoff = gateDeviceHandoff(session, "grant", station);
+    expect(requireMatchingGateDevice(handoff, session)).toBe("/gate/change-over?stationId=" + station);
+    for (const changed of [{ ...session, userId: 18 }, { ...session, vendorId: 5 }, { ...session, sv: 3 }]) expect(() => requireMatchingGateDevice(handoff, changed)).toThrow();
+    expect(() => requireMatchingGateDevice({ ...handoff, expires: 0 }, session)).toThrow();
+    expect(() => gateDeviceHandoff(session, "grant", station + "&redirect=elsewhere")).toThrow();
+  });
+});
 
 describe("ticket device handoff", () => {
   const session = { userId: 17, role: "vendor" as const, vendorId: 4, activeMembershipId: 7, sv: 2 };

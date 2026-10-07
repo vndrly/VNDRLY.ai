@@ -41,6 +41,25 @@ export function requireMatchingMeetingDevice(handoff: MeetingDeviceHandoff, curr
 }
 
 export const TICKET_ENTRY_KINDS = ["photo", "parts", "labor", "mileage"] as const;
+export type GateDeviceHandoff = Omit<FileDeviceHandoff, "kind"> & { kind: "gate-device-handoff"; stationId: string };
+
+export function gateDeviceHandoff(session: SessionPayload, grantConsentHash: string, stationId: unknown): GateDeviceHandoff {
+  if (typeof stationId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(stationId)) throw new Error("A saved Gate station is required");
+  return { ...fileDeviceHandoff(session, grantConsentHash), kind: "gate-device-handoff", stationId };
+}
+
+export function requireMatchingGateDevice(handoff: GateDeviceHandoff, current: SessionPayload): string {
+  if (handoff.kind !== "gate-device-handoff") throw new Error("A valid Gate handoff is required");
+  gateDeviceHandoff(current, handoff.grantConsentHash, handoff.stationId);
+  requireMatchingFileDevice({ ...handoff, kind: "file-device-handoff" }, current);
+  return "/gate/change-over?stationId=" + encodeURIComponent(handoff.stationId);
+}
+export const GATE_DEVICE_TOOL = {
+  name: "v_open_gate_handoff",
+  description: "Open the account-bound Change Over device screen for an authorized saved Gate station. Incoming-worker authentication and acceptance happen on that screen. This link does not transfer a shift, accept a handoff, or end duty. Read the saved station state afterward before claiming completion.",
+  inputSchema: { type: "object" as const, properties: { stationId: { type: "string", format: "uuid" } }, required: ["stationId"], additionalProperties: false },
+  annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+};
 type TicketEntryKind = typeof TICKET_ENTRY_KINDS[number];
 export type TicketDeviceHandoff = Omit<FileDeviceHandoff, "kind"> & { kind: "ticket-device-handoff"; ticketId: number; entry: TicketEntryKind };
 

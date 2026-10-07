@@ -61,6 +61,30 @@ async function tokens(scope = auth.scope) {
   return response.body;
 }
 describe("ChatGPT account connection boundary", () => {
+  it.each(["valid", "revoked", "scope removed", "wrong user", "station denied", "wrong station"])("rechecks Gate device navigation when %s", async condition => {
+    const credentials = await tokens("gate:read");
+    const stationId = "17795fa1-bb5f-4abc-a5f8-7e9b33a0ec05";
+    mocks.run.mockResolvedValue(JSON.stringify({ station: { id: stationId, site_id: 392 } }));
+    const response = await request(app).post(base + "/mcp").set("Authorization", "Bearer " + credentials.access_token).send({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "v_open_gate_handoff", arguments: { stationId } } });
+    expect(response.body.result.isError).toBe(false);
+    const result = JSON.parse(response.body.result.content[0].text);
+    expect(result).toMatchObject({ stationId, handoffTransferred: false });
+    if (condition === "revoked") grants[0].revoked = true;
+    if (condition === "scope removed") grants[0].scopes = [];
+    if (condition === "station denied") mocks.run.mockResolvedValue(JSON.stringify({ error: "Denied" }));
+    if (condition === "wrong station") mocks.run.mockResolvedValue(JSON.stringify({ station: { id: "another" } }));
+    const opened = await request(app).get(new URL(result.deviceUrl).pathname).set("Cookie", cookie(condition === "wrong user" ? { ...session, userId: 18 } : session));
+    expect(opened.status).toBe(condition === "valid" ? 302 : 403);
+    if (condition === "valid") expect(opened.headers.location).toBe("/gate/change-over?stationId=" + stationId + "&siteId=392");
+    expect(mocks.bound).not.toHaveBeenCalled();
+  });
+  it("does not issue Gate links for inaccessible stations or arbitrary destinations", async () => {
+    const credentials = await tokens("gate:read");
+    mocks.run.mockResolvedValue(JSON.stringify({ error: "Denied" }));
+    const response = await request(app).post(base + "/mcp").set("Authorization", "Bearer " + credentials.access_token).send({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "v_open_gate_handoff", arguments: { stationId: "17795fa1-bb5f-4abc-a5f8-7e9b33a0ec05" } } });
+    expect(response.body.result.isError).toBe(true);
+    expect(response.body.result.content[0].text).not.toContain("deviceUrl");
+  });
   it.each(["valid", "revoked", "scope removed", "wrong user", "ticket denied", "wrong ticket"])("rechecks ticket entry handoff when %s", async condition => {
     const credentials = await tokens("tickets:read");
     mocks.run.mockResolvedValue(JSON.stringify({ ticketId: 42, status: "in_progress" }));

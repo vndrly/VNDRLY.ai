@@ -18,6 +18,7 @@ import { publicMapConfig } from "../lib/public-map-config";
 import { SPECIALISTS_TOOL, specialistDirectory } from "../assistant/chatgpt-specialists";
 import { fileDeviceHandoff, requireMatchingFileDevice, type FileDeviceHandoff, meetingDeviceHandoff, requireMatchingMeetingDevice, type MeetingDeviceHandoff } from "../assistant/chatgpt-device-handoff";
 import { ticketDeviceHandoff, requireMatchingTicketDevice, type TicketDeviceHandoff, TICKET_DEVICE_TOOL } from "../assistant/chatgpt-device-handoff";
+import { gateDeviceHandoff, requireMatchingGateDevice, type GateDeviceHandoff, GATE_DEVICE_TOOL } from "../assistant/chatgpt-device-handoff";
 import { CHATGPT_WRITE_CAPABILITIES, validateChatGptActionInput, sanitizeChatGptActionInput, chatGptActionAuditInput, chatGptActionResult } from "../assistant/chatgpt-write-capabilities";
 
 import { RESUME_PLAN_TOOL, resumedWorkPlan, PREPARE_PLAN_TOOL, prepareWorkPlan, RUN_PLAN_READ_TOOL, plannedReadRequests, CONTROL_PLAN_TOOL, prepareWorkPlanControl } from "../assistant/chatgpt-coordinated-plan";
@@ -134,6 +135,28 @@ router.get("/device/tickets/:handoff", async (req, res) => {
     return page(res.status(403), '<p>This ticket link is expired, disconnected, or unavailable to this account and organization. Request a fresh link from V. No entry, upload, or tracking was started.</p>');
   }
 });
+router.get("/device/gate/:handoff", async (req, res) => {
+  try {
+    const handoff = readEnvelope(req.params.handoff) as unknown as GateDeviceHandoff;
+    const session = getSessionFromRequest(req);
+    if (!session) return page(res, '<p>Sign into the same VNDRLY account used by ChatGPT, then refresh this page.</p><p><a href="/login" target="_blank" rel="noopener">Sign into VNDRLY</a></p>');
+    const current = await validateAssistantSession(session);
+    const destination = requireMatchingGateDevice(handoff, current);
+    await withAssistantGrants(current.userId!, async (grants, database) => {
+      const grant = grants.find(item => !item.revoked && item.consentHash === handoff.grantConsentHash);
+      if (!grant) throw new AssistantOAuthError("access_denied");
+      requireMatchingGateDevice(handoff, await validateAssistantSession(grant.session, database));
+      requireChatGptReadableTool(current, grant.scopes, "query_gate_change_over");
+    });
+    const result = JSON.parse(await runTool("query_gate_change_over", { stationId: handoff.stationId }, current, ""));
+    if (!result || result.station?.id !== handoff.stationId || result.error || result.ok === false) throw new AssistantOAuthError("access_denied");
+    const siteId = result.station.site_id;
+    if (!Number.isSafeInteger(siteId) || siteId <= 0) throw new AssistantOAuthError("access_denied");
+    return res.redirect(302, destination + "&siteId=" + siteId);
+  } catch {
+    return page(res.status(403), '<p>This Gate link is expired, disconnected, or unavailable to this account. Request a fresh link from V. No shift was transferred.</p>');
+  }
+});
 router.get("/authorize", async (req, res) => {
   // The consent POST redirects to the fixed ChatGPT callback. Helmet's default
   // form-action self would otherwise block that browser redirect after success.
@@ -237,6 +260,7 @@ router.post("/mcp", async (req, res) => {
   if (message.method === "tools/list") {
     const reads = chatGptReadableTools(authorized.session, authorized.scopes).map((tool) => ({ name: tool.name, description: chatGptReadToolDescription(tool), inputSchema: tool.inputSchema, annotations: chatGptReadToolAnnotations(tool.name) }));
     reads.push(SPECIALISTS_TOOL);
+    if (reads.some(tool => tool.name === "query_gate_change_over")) reads.push(GATE_DEVICE_TOOL);
     if (reads.some(tool => tool.name === "query_ticket_detail")) reads.push(TICKET_DEVICE_TOOL);
     if (reads.some(tool => tool.name === "list_work_hub_tasks")) reads.push(RESUME_PLAN_TOOL, RUN_PLAN_READ_TOOL);
     if (reads.some(tool => ["get_work_hub_briefing", "get_work_hub_calendar", "query_gate_stations", "lookup_user_progress", "query_tickets", "query_notifications", "query_field_trips", "query_asset_custody"].includes(tool.name))) reads.push(WORKSPACE_TOOL);
@@ -251,6 +275,14 @@ router.post("/mcp", async (req, res) => {
     let name = message.params?.name;
     let args = message.params?.arguments ?? {};
     if (typeof name !== "string" || !args || typeof args !== "object" || Array.isArray(args)) throw new Error("Invalid tool request");
+    if (name === GATE_DEVICE_TOOL.name) {
+      requireChatGptReadableTool(authorized.session, authorized.scopes, "query_gate_change_over");
+      if (!authorized.grantConsentHash || Object.keys(args).some(key => key !== "stationId")) throw new AssistantOAuthError("invalid_request");
+      const handoff = gateDeviceHandoff(authorized.session, authorized.grantConsentHash, args.stationId);
+      const result = JSON.parse(await runTool("query_gate_change_over", { stationId: handoff.stationId }, authorized.session, ""));
+      if (!result || result.station?.id !== handoff.stationId || result.error || result.ok === false) throw new AssistantOAuthError("access_denied");
+      return reply({ content: [{ type: "text", text: JSON.stringify({ deviceUrl: ASSISTANT_ISSUER + "/device/gate/" + envelope(handoff), stationId: handoff.stationId, handoffTransferred: false }) }], isError: false });
+    }
     if (name === TICKET_DEVICE_TOOL.name) {
       const tool = requireChatGptReadableTool(authorized.session, authorized.scopes, "query_ticket_detail");
       if (!authorized.grantConsentHash || Object.keys(args).some(key => !["ticketId", "entry"].includes(key))) throw new AssistantOAuthError("invalid_request");

@@ -20,6 +20,8 @@ import {
   reverseGateReconciliation,
 } from "./natural-voice-write-tools";
 const fetchMock = vi.fn();
+const accessMock = vi.hoisted(() => vi.fn());
+vi.mock("../lib/vendor-person-access", () => ({ resolveVendorPersonAccess: accessMock }));
 const gate = {
   userId: 10,
   role: "vendor",
@@ -41,9 +43,27 @@ const fields = {
 };
 beforeEach(() => {
   fetchMock.mockReset();
+  accessMock.mockReset();
   vi.stubGlobal("fetch", fetchMock);
 });
 describe("AskV canonical Gate and field operations", () => {
+  it("uses current operational roles for normalized Gate accounts and rejects revoked roles", async () => {
+    const session = { ...gate, vendorRole: "field_employee", vendorPeopleId: 77 };
+    accessMock.mockResolvedValue({ isVendorAdmin: false, operationalRoles: ["gatekeeper"] });
+    fetchMock.mockResolvedValue({ ok: true, json: async () => [] });
+    expect(JSON.parse(await searchGateHistory({ siteLocationId: 9 }, session)).ok).toBe(true);
+    expect(accessMock).toHaveBeenCalledWith(session);
+    fetchMock.mockClear();
+    accessMock.mockResolvedValue({ isVendorAdmin: false, operationalRoles: ["field_employee"] });
+    expect(JSON.parse(await searchGateHistory({}, { ...session, vendorRole: "gatekeeper" })).ok).toBe(false);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+  it("retains canonical site denial even when the account has a Gate role", async () => {
+    accessMock.mockResolvedValue({ isVendorAdmin: false, operationalRoles: ["gatekeeper"] });
+    fetchMock.mockResolvedValue({ ok: false, status: 403, json: async () => ({ message: "Site access denied", code: "VISIT_NO_ACCESS" }) });
+    const result = JSON.parse(await searchGateHistory({ siteLocationId: 999 }, { ...gate, vendorPeopleId: 77 }));
+    expect(result).toMatchObject({ ok: false, error: "Site access denied" });
+  });
   it("recognizes successful empty revocation responses without parsing JSON", async () => {
     const json = vi.fn().mockRejectedValue(new SyntaxError("Empty response"));
     fetchMock.mockResolvedValue({ ok: true, status: 204, json });
@@ -141,6 +161,15 @@ describe("AskV canonical Gate and field operations", () => {
       missing: ["plateState"],
       recovery: { promptField: "plateState", offerCamera: true },
     });
+  });
+  it("normalizes spoken state names without inventing missing location data", async () => {
+    const result = JSON.parse(await prepareVisitorCheckIn({ ...fields, plateState: " Oklahoma ", latitude: undefined, longitude: undefined }));
+    expect(result.draft.plateState).toBe("OK");
+    expect(result.intent.arguments.values.plateState).toBe("OK");
+    expect(result.missing).toEqual(["latitude", "longitude"]);
+    expect(fetchMock).not.toHaveBeenCalled();
+    const unknown = JSON.parse(await prepareVisitorCheckIn({ ...fields, plateState: "unknown state" }));
+    expect(unknown.missing).toEqual(["plateState"]);
   });
   it("denies non-gatekeepers before any visitor write", async () => {
     expect(

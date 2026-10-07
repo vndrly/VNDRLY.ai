@@ -1,4 +1,5 @@
 import { createHash, createHmac } from "node:crypto";
+import { normalizePlateState } from "@workspace/plate-state";
 import { SESSION_SECRET, type SessionPayload } from "../lib/session";
 
 function err(message: string): string {
@@ -110,7 +111,12 @@ export async function callNaturalVoiceDomainApi(
   }
   return result;
 }
-function gatekeeper(session: SessionPayload): boolean {
+async function gatekeeper(session: SessionPayload): Promise<boolean> {
+  if (session.userId && session.vendorId && session.vendorPeopleId) {
+    const { resolveVendorPersonAccess } = await import("../lib/vendor-person-access");
+    const access = await resolveVendorPersonAccess(session);
+    return Boolean(access && (access.isVendorAdmin || access.operationalRoles.some(role => role === "gatekeeper" || role === "gate_supervisor")));
+  }
   return Boolean(
     session.userId &&
     (session.role === "vendor" || (session.role === "field_employee" && session.managedSubcontractor)) &&
@@ -137,7 +143,9 @@ function writeGuard(
   return null;
 }
 export async function prepareVisitorCheckIn(input: unknown): Promise<string> {
-  const args = argsOf(input);
+  const supplied = argsOf(input);
+  const state = normalizePlateState(typeof supplied.plateState === "string" ? supplied.plateState : null);
+  const args = state ? { ...supplied, plateState: state } : supplied;
   const missing = missingCheckInFields(args);
   const promptField = missing[0] ?? null;
   return JSON.stringify({
@@ -165,7 +173,7 @@ export async function confirmVisitorCheckIn(
   input: unknown,
   session: SessionPayload,
 ): Promise<string> {
-  if (!gatekeeper(session))
+  if (!(await gatekeeper(session)))
     return err("Visitor check-in requires your assigned Gatekeeper account.");
   const args = argsOf(input);
   const guard = writeGuard(args, true);
@@ -202,7 +210,7 @@ export async function findActiveVisitors(
 ): Promise<string> {
   if (
     !session?.userId ||
-    (!["admin", "partner", "vendor"].includes(session.role ?? "") && !gatekeeper(session))
+    (!["admin", "partner", "vendor"].includes(session.role ?? "") && !(await gatekeeper(session)))
   )
     return err("You cannot view visitor records.");
   const args = argsOf(input);
@@ -297,7 +305,7 @@ export async function searchGateHistory(
   input: unknown,
   session: SessionPayload,
 ): Promise<string> {
-  if (!gatekeeper(session))
+  if (!(await gatekeeper(session)))
     return err("Gate history requires your assigned Gatekeeper account.");
   const args = argsOf(input);
   const query = new URLSearchParams({ limit: "25" });
@@ -374,7 +382,7 @@ export async function resolveGateCheckInCandidate(
   input: unknown,
   session: SessionPayload,
 ): Promise<string> {
-  if (!gatekeeper(session))
+  if (!(await gatekeeper(session)))
     return err("Gate candidate resolution requires your assigned Gatekeeper account.");
   const args = argsOf(input);
   const vehiclePlate = normalizedGatePlate(args.vehiclePlate);
@@ -525,7 +533,7 @@ export async function confirmVisitorCheckOut(
   input: unknown,
   session: SessionPayload,
 ): Promise<string> {
-  if (!gatekeeper(session))
+  if (!(await gatekeeper(session)))
     return err("Visitor check-out requires your assigned Gatekeeper account.");
   const args = argsOf(input);
   const guard = writeGuard(args, true);
