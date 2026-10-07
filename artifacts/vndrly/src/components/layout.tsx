@@ -41,6 +41,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import { useAuth } from "@/hooks/use-auth";
+import { fleetClient } from "@/lib/fleet-client";
 import LanguageToggle from "@/components/language-toggle";
 import { useTheme } from "@/hooks/use-theme";
 import { useWorkHubDevicePresence } from "@/hooks/use-work-hub-device-presence";
@@ -224,11 +225,26 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const { t } = useTranslation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const standardNavItems = orderPortalNavigation(useNavItems(user), user?.role);
+  const fleetAccess = useQuery({ queryKey: ["fleet", `${user?.userId}:${user?.activeMembershipId}:${user?.vendorId}:${user?.partnerId}`], queryFn: fleetClient.overview, enabled: Boolean(user), retry: false, staleTime: 30_000 });
+  const portalNavItems = useNavItems(user);
+  const standardNavItems = orderPortalNavigation(fleetAccess.data?.enabled || fleetAccess.data?.capabilities.canSetup ? [...portalNavItems, { key: "fleet", href: "/fleet", label: "Fleet Ops", icon: Gauge }] : portalNavItems, user?.role);
   const inWorkHub = isWorkHubPath(location);
+  const inFleet = location === "/fleet" || location.startsWith("/fleet/");
+  const fleetNavItems = [
+    ...(fleetAccess.data?.capabilities.canDispatch ? [{ key: "fleet-desk", href: "/fleet", label: "Fleet Desk", icon: Gauge }, { key: "fleet-dispatch", href: "/fleet/dispatch", label: "Dispatch", icon: ClipboardList }] : []),
+    { key: "fleet-map", href: "/fleet/map", label: "Recorded Map", icon: MapIcon },
+    { key: "fleet-runs", href: "/fleet/runs", label: "Runs", icon: FileText },
+    ...(fleetAccess.data?.capabilities.canDrive ? [{ key: "fleet-my-day", href: "/fleet/my-day", label: "My Day", icon: Users }] : []),
+    { key: "fleet-loads", href: "/fleet/loads", label: "Loads & Manifests", icon: Receipt },
+    { key: "fleet-inventory", href: "/work-hub/inventory", label: "Inventory", icon: BriefcaseBusiness },
+    ...(fleetAccess.data?.capabilities.canManage ? [{ key: "fleet-review", href: "/fleet/review", label: "Operational Review", icon: UserCheck }] : []),
+    ...(fleetAccess.data?.capabilities.canSetup ? [{ key: "fleet-setup", href: "/fleet/setup", label: "Fleet Setup", icon: Gauge }] : []),
+    { key: "fleet-settings", href: "/fleet/settings", label: "Workspace Settings", icon: Gauge },
+    { key: "fleet-work-hub", href: "/work-hub", label: "Work Hub", icon: BriefcaseBusiness },
+  ];
   useWorkHubDevicePresence(location, Boolean(user?.vendorId || user?.partnerId), user?.userId, `${user?.vendorId ?? ""}:${user?.partnerId ?? ""}`);
 
-  const navItems = inWorkHub ? getWorkHubNavItems(user?.role).map((item) => ({ ...item, icon: workHubIcons[item.key as keyof typeof workHubIcons] })) : standardNavItems;
+  const navItems = inFleet && fleetAccess.data && (fleetAccess.data.enabled || fleetAccess.data.capabilities.canSetup) ? fleetNavItems : inWorkHub ? getWorkHubNavItems(user?.role).map((item) => ({ ...item, icon: workHubIcons[item.key as keyof typeof workHubIcons] })) : standardNavItems;
   const { data: vendor } = useGetVendor(user?.vendorId ?? 0, { query: { enabled: user?.role === "vendor" && !!user.vendorId, queryKey: getGetVendorQueryKey(user?.vendorId ?? 0) } });
   const { data: partner } = useGetPartner(user?.partnerId ?? 0, { query: { enabled: user?.role === "partner" && !!user.partnerId, queryKey: getGetPartnerQueryKey(user?.partnerId ?? 0) } });
   const { data: vendorRatings } = useGetVendorRatings(user?.vendorId ?? 0, {

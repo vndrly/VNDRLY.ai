@@ -6,7 +6,9 @@ import { useTranslation } from "react-i18next";
 
 import AdaptiveNavigationShell from "@/components/AdaptiveNavigationShell";
 import { useAuth } from "@/hooks/use-auth";
-import { logout } from "@/lib/api";
+import { apiFetch, logout } from "@/lib/api";
+import { fleetHomeRoute } from "@/lib/fleet-mobile";
+import type { FleetOverview } from "@workspace/api-zod";
 import {
   buildAppNavigation,
   type AppNavigationItem,
@@ -24,8 +26,23 @@ export default function TabLayout() {
   const { t } = useTranslation();
   const badges = useTabBadges();
   const notificationCount = useUnreadNotificationCount(true);
-  const { user } = useAuth();
+  const { user, activeMembershipId } = useAuth();
   const pathname = usePathname();
+  const fleetIdentity = `${user?.id}:${activeMembershipId}`;
+  const [fleetAccess, setFleetAccess] = useState<string | null>(null);
+  useEffect(() => {
+    let alive = true;
+    setFleetAccess(null);
+    if (user?.id) void apiFetch<FleetOverview>("/api/fleet/overview")
+      .then(result => {
+        if (!alive) return;
+        if (result.enabled || result.capabilities?.canSetup) setFleetAccess(fleetIdentity);
+        const home = fleetHomeRoute(result);
+        if (home && activeNavigationKey(pathname) === "index") router.replace(home as never);
+      })
+      .catch(() => undefined);
+    return () => { alive = false; };
+  }, [fleetIdentity, user?.id, pathname]);
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const [gateVoiceListening, setGateVoiceListening] = useState(false);
@@ -53,8 +70,8 @@ export default function TabLayout() {
     [t, user],
   );
   const items = useMemo(
-    () => buildAppNavigation({ user, labels, badges }),
-    [badges, labels, user],
+    () => buildAppNavigation({ user, labels, badges, fleetEnabled: fleetAccess === fleetIdentity }),
+    [badges, labels, user, fleetAccess, fleetIdentity],
   );
   const activeKey = activeNavigationKey(pathname);
 
@@ -93,6 +110,7 @@ export default function TabLayout() {
 }
 
 export function activeNavigationKey(pathname: string): string {
+  if (pathname.split("/").includes("fleet-run")) return "fleet";
   if (
     pathname === "/" ||
     pathname === "/index" ||

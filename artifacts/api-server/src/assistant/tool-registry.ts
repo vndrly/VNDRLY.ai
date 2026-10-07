@@ -1,3 +1,4 @@
+import { FLEET_TOOLS } from "./fleet-tools";
 import type { Anthropic } from "@workspace/integrations-anthropic-ai/sdk";
 import type { AuthorityCapability } from "../../../../lib/api-zod/src/implementation-a/authority";
 import { DEEP_LINK_SCREENS, TOOLS } from "./tools";
@@ -233,6 +234,7 @@ export const IMPLEMENTATION_A_CAPABILITY_TOOLS = [
 ];
 
 export const ASK_V_TOOL_REGISTRY: AskVToolDefinition[] = [
+  ...FLEET_TOOLS,
   ...TICKET_WORKFLOW_TOOLS,
   ...GATE_WORKFLOW_TOOLS,
   ...TOOLS.map((tool) => {

@@ -4,3 +4,4 @@ export * from "./custom";
 export * from "./push-warnings";
 export * from "./work-hub";
 export * from "./implementation-a";
+export * from "./fleet";

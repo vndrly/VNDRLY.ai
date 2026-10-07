@@ -1,5 +1,6 @@
 /** Explicit server-read adapters. A new registry tool is not exposed automatically. */
 export const CHATGPT_READ_CAPABILITIES = {
+  "fleet:read": { label: "Explicitly authorized Fleet company, runs, stops, loads, inspection reports and dispatch context", tools: ["query_fleet_settings", "query_fleet_capabilities", "query_fleet_briefing", "query_fleet_runs", "query_fleet_run_detail", "query_fleet_resources"] },
   "invitations:read": { label: "Vendor administrator invitation enrollment and delivery status", tools: ["query_account_invitations", "prepare_account_invitations_action"] },
   "workforce:read": { label: "Authorized staffing coverage, field roster and assignment status", tools: ["query_workforce_coverage", "prepare_workforce_coverage_action", "query_ticket_assignment_candidates"] },
   "tickets:read": { label: "Assigned tickets, work details, and proof", tools: ["lookup_open_tickets", "query_tickets", "query_ticket_detail", "query_ticket_proof_packet", "query_ticket_crew", "query_ticket_labor", "query_ticket_notes", "query_work_type_history", "query_flagged_tickets", "query_ticket_logged_miles", "query_ticket_mileage_audit"] },
@@ -12,4 +13,3 @@ export const CHATGPT_READ_CAPABILITIES = {
   "operations:read": { label: "Authorized notifications, attention items, assets, subscriptions, and operating metrics", tools: ["get_stock_quote", "get_crude_oil_price", "deep_link_to", "query_notifications", "query_attention_briefing", "query_vendor_performance", "query_field_metrics", "query_asset_custody", "prepare_asset_custody_action", "query_worker_subscriptions", "prepare_worker_subscriptions_action", "query_operations_displays", "prepare_operations_displays_action"] },
 } as const;
 export type ChatGptReadCapabilityScope = keyof typeof CHATGPT_READ_CAPABILITIES;
-

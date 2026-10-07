@@ -1,3 +1,5 @@
+import { CreateFleetRunSchema, FleetRunSchema, FleetActionInputSchema, FleetSetupInputSchema, FleetWorkspacePreferenceInputSchema } from "@workspace/api-zod";
+import { FLEET_TOOLS } from "./fleet-tools";
 import { ticketRecordActionsForRole } from "./ticket-workflow-tools";
 export type WorkHubHttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
@@ -178,6 +180,27 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
     if (action === "remove_line_item") return Number.isSafeInteger(input.lineItemId) && Number(input.lineItemId) > 0 ? request("DELETE", `${base}/line-items/${input.lineItemId}`) : { error: "Select an exact line item." };
     const transitions: Record<string, string> = { accept: "accept", deny: "deny", reinvite: "reinvite", submit: "submit", approve: "approve", kickback: "kickback", awaiting_payment: "awaiting-payment", cancel: "cancel", reactivate: "reactivate" };
     return transitions[action] ? request("POST", `${base}/${transitions[action]}`, payload) : unsupported("ticket action");
+  }
+  if (FLEET_TOOLS.some(tool => tool.name === name)) {
+    if(name==="set_fleet_preferences"){const parsed=FleetWorkspacePreferenceInputSchema.safeParse({expectedVersion:input.expectedVersion,defaultWorkspace:input.defaultWorkspace,selectedFleetId:input.selectedFleetId});return parsed.success?request("POST","/fleet/preferences",parsed.data):{error:"Supply exact current preference version and accessible fleet choice."};}
+    if(name==="query_fleet_settings")return request("GET","/fleet/setup");
+    if(name==="manage_fleet_settings"){const body=FleetSetupInputSchema.safeParse({expectedVersion:input.expectedVersion,enabled:input.enabled,fleets:input.fleets,grants:input.grants});return body.success?request("POST","/fleet/setup",body.data):{error:"Supply the exact current Fleet settings and version."};}
+    if (["query_fleet_capabilities", "query_fleet_briefing", "query_fleet_runs"].includes(name)) return request("GET", "/fleet/overview");
+    if (name === "query_fleet_resources") return request("GET", "/fleet/resources");
+    const runId = required(input.runId, "run id");
+    if(typeof runId==="string"&&!FleetRunSchema.shape.id.safeParse(runId).success)return {error:"Select an exact Fleet run UUID."};
+    if (name === "query_fleet_run_detail") return typeof runId === "string" ? request("GET", `/fleet/runs/${runId}`) : runId;
+    const keys=["operationId","expectedVersion","action","fleetId","title","driverUserId","vehicleAssetId","trailerAssetId","stops","reason","stopId","inspectionOutcome","notes","loadId","commodity","quantity","unit","manifestReference","deliveryReference","decision","capturedAt","source","reading","ticketId"];
+    const fields=Object.fromEntries(keys.filter(key=>input[key]!==undefined).map(key=>[key,input[key]]));
+    const validActions: Record<string,string[]> = {manage_fleet_run:["create","dispatch","reassign","cancel","link_ticket"],transition_fleet_run:["inspect","start","arrive_stop","depart_stop","record_load","record_delivery","submit_closeout","pause","resume","record_fuel","record_meter"]};
+    if(validActions[name]&&!validActions[name].includes(String(input.action)))return {error:"This Fleet action is unavailable through this tool."};
+    if (name === "manage_fleet_run" && input.action === "create") {
+      const { action: _action, expectedVersion: _version, ...create }=fields;
+      const parsed=CreateFleetRunSchema.safeParse(create);return parsed.success?request("POST","/fleet/runs",parsed.data):{error:"Supply the exact Fleet creation fields and server-authorized operation ID."};
+    }
+    if (typeof runId !== "string") return runId;
+    const parsed=FleetActionInputSchema.safeParse({...fields,action:name==="acknowledge_fleet_assignment"?"acknowledge":name==="review_fleet_closeout"?"review":input.action});
+    return parsed.success?request("POST", "/fleet/runs/"+runId+"/actions",parsed.data):{error:"Supply the exact Fleet action fields, current version and server-authorized operation ID."};
   }
   const resourceId = encoded(input.resourceId ?? input.id ?? input.assetId ?? input.tripId ?? input.eventId ?? input.invitationId);
   if (name === "query_field_trip_eta") {
@@ -872,7 +895,7 @@ export const isTypedWorkHubTool = (name: string): boolean =>
   Boolean(resolveWorkHubToolMetadata(name));
 
 export const resolveWorkHubToolMetadata = (name: string) =>
-  ["manage_ticket_record", "acknowledge_ticket_assignment", "record_ticket_payment", "reverse_ticket_payment_record", "manage_gate_shift"].includes(name) || WORK_HUB_TOOL_METADATA[name] || IMPLEMENTATION_A_CAPABILITY_TOOLS.some((tool) => tool.name === name) ? findAskVTool(name) : null;
+  ["manage_ticket_record", "acknowledge_ticket_assignment", "record_ticket_payment", "reverse_ticket_payment_record", "manage_gate_shift"].includes(name) || WORK_HUB_TOOL_METADATA[name] || [...IMPLEMENTATION_A_CAPABILITY_TOOLS, ...FLEET_TOOLS].some((tool) => tool.name === name) ? findAskVTool(name) : null;
 
 export function bindWorkHubToolScope(
   rawInput: unknown,
@@ -892,4 +915,3 @@ export function bindWorkHubToolScope(
       : currentContext;
   return { ...input, owner, context };
 }
-

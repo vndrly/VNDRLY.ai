@@ -72,6 +72,19 @@ try {
       });
     },
   });
+  const originalVendor=(await client.query("SELECT to_jsonb(v) AS record FROM vendors v WHERE id=$1",[vendor.rows[0].id])).rows[0].record;
+  const migrateFleet=()=>new Promise<void>((resolve,reject)=>{
+    const child=spawn("corepack",["pnpm","--filter","@workspace/api-server","run","migrate:fleet-ops"],{cwd:root,env:childEnvironment,stdio:"inherit"});
+    child.once("error",reject);child.once("exit",code=>code===0?resolve():reject(new Error("Fleet migration exited "+code)));
+  });
+  await migrateFleet();
+  assert.equal((await client.query("SELECT fleet_ops_state FROM vendors WHERE id=$1",[vendor.rows[0].id])).rows[0].fleet_ops_state,null,"Existing vendor must remain disabled/unconfigured");
+  const sentinel={version:1,enabled:false,fleets:[],grants:[],runs:[],operations:[]};
+  await client.query("UPDATE vendors SET fleet_ops_state=$2::jsonb WHERE id=$1",[vendor.rows[0].id,JSON.stringify(sentinel)]);
+  await migrateFleet();
+  const replayed=(await client.query("SELECT to_jsonb(v)-'fleet_ops_state' AS original,fleet_ops_state FROM vendors v WHERE id=$1",[vendor.rows[0].id])).rows[0];
+  assert.deepEqual(replayed.original,originalVendor,"Fleet migration preserves existing vendor fields");
+  assert.deepEqual(replayed.fleet_ops_state,sentinel,"Fleet migration replay preserves configured state");
   const gate = (await client.query("SELECT latitude, longitude, geofence_radius_m, active, version FROM gate_stations")).rows[0];
   assert.deepEqual(gate, { latitude: null, longitude: null, geofence_radius_m: 500, active: true, version: 1 });
   assert.equal((await client.query("SELECT command_fingerprint FROM asset_custody_events")).rows[0].command_fingerprint, null);

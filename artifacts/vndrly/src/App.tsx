@@ -1,7 +1,8 @@
 import { Switch, Route, Router as WouterRouter, useLocation, useRoute } from "wouter";
 import { lazy, Suspense, useEffect } from "react";
 const PayrollPage = lazy(() => import("@/pages/payroll"));
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
+import { fleetClient } from "@/lib/fleet-client";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
@@ -105,6 +106,7 @@ const ForemanCrewMapPage = lazy(() => import("@/pages/foreman-crew-map"));
 const ForemanAnalytics = lazy(() => import("@/pages/foreman-analytics"));
 const Admin1099Transmitter = lazy(() => import("@/pages/admin-1099-transmitter"));
 const WorkHubPage = lazy(() => import("@/pages/work-hub"));
+const FleetPage = lazy(() => import("@/pages/fleet"));
 const MarketingHome = lazy(() => import("@/pages/marketing-home"));
 
 function RouteFallback() {
@@ -205,9 +207,14 @@ function AdminRoutes() {
 
 function AuthenticatedRouter() {
   const { user, isLoading } = useAuth();
+  const [location, navigate] = useLocation();
+  const fleetHome = useQuery({ queryKey: ["fleet", `${user?.userId}:${user?.activeMembershipId}:${user?.vendorId}:${user?.partnerId}`], queryFn: fleetClient.overview, enabled: Boolean(user?.vendorId && location === "/" && ["vendor", "field_employee"].includes(user?.role ?? "")), retry: false, staleTime: 30_000 });
+  const homePreference = fleetHome.data?.preference?.defaultWorkspace;
+  const homeTarget = fleetHome.data?.enabled && homePreference === "fleet_desk" && fleetHome.data.capabilities.canDispatch ? "/fleet" : fleetHome.data?.enabled && homePreference === "fleet_my_day" && fleetHome.data.capabilities.canDrive ? "/fleet/my-day" : null;
+  useEffect(() => { if (location === "/" && homeTarget) navigate(homeTarget, { replace: true }); }, [location, homeTarget, navigate]);
   const gateWorker = Boolean(user && ((user.role === "vendor" && ["gatekeeper", "gate_supervisor"].includes(user.vendorRole ?? "")) || isManagedSubcontractor(user)));
 
-  if (isLoading) {
+  if (isLoading || (user?.vendorId && location === "/" && !fleetHome.isError && (fleetHome.isFetching || homeTarget))) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500" />
@@ -245,6 +252,9 @@ function AuthenticatedRouter() {
         {user && <Route path="/gate/change-over"><GatePortalLayout returnToAdmin={!gateWorker}><GateChangeOverPage /></GatePortalLayout></Route>}
         {user && <Route path="/gate/shift-notes"><GatePortalLayout returnToAdmin={!gateWorker}><GateShiftNotesPage /></GatePortalLayout></Route>}
         {user && <Route path="/gate"><GatePortalLayout returnToAdmin={!gateWorker}><GatekeeperPage /></GatePortalLayout></Route>}
+        {user && <Route path="/fleet/runs/:id"><Layout><FleetPage /></Layout></Route>}
+        {user && <Route path="/fleet/:section"><Layout><FleetPage /></Layout></Route>}
+        {user && <Route path="/fleet"><Layout><FleetPage /></Layout></Route>}
         <Route path="/work-hub/:module"><Layout><WorkHubPage /></Layout></Route>
         <Route path="/work-hub"><Layout><WorkHubPage /></Layout></Route>
         {!user && <Route path="/" component={MarketingHome} />}

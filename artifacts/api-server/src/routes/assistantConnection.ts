@@ -1,4 +1,8 @@
 import { selectConsentedScopes } from "../assistant/chatgpt-consent-selection";
+import { fleetConsentUpgradeTools, fleetConsentChallenge, fleetToolSecuritySchemes } from "../assistant/chatgpt-fleet-consent";
+import { createFleetService } from "../services/fleet-ops";
+import { databaseFleetRepository } from "../services/fleet-repository";
+import type { SessionPayload } from "../lib/session";
 import { financeConsentUpgradeTools, requiresFinanceConsent, financeConsentChallenge, FINANCE_SECURITY_SCHEMES } from "../assistant/chatgpt-consent-upgrade";
 import { Router, type Request, type Response } from "express";
 import { exposedOperationTools, resolveOperationTool, planOperationTools } from "../assistant/chatgpt-operation-tools";
@@ -244,6 +248,13 @@ async function authenticate(req: Request) {
     return { session, scopes: grant.scopes, grantAccessHash: assistantTokenHash(raw), grantConsentHash: grant.consentHash };
   });
 }
+async function fleetUpgradeDiscovery(session: SessionPayload, scopes: readonly string[]) {
+  if (!session.vendorId || !session.userId || !["vendor", "field_employee"].includes(session.role ?? "")) return [];
+  try {
+    const overview = await createFleetService(databaseFleetRepository).overview({ ...session, userId: session.userId, companyId: session.vendorId });
+    return fleetConsentUpgradeTools(session, scopes, overview);
+  } catch { return []; } // Unavailable or revoked authority never exposes hypothetical access.
+}
 router.post("/mcp", async (req, res) => {
   let authorized;
   try { authorized = await authenticate(req); } catch {
@@ -263,7 +274,13 @@ router.post("/mcp", async (req, res) => {
     return reply({ contents: [{ uri: WORKSPACE_URI, mimeType: "text/html;profile=mcp-app", text: WORKSPACE_HTML, _meta: { ui: { csp: { connectDomains: [], resourceDomains: authorized.scopes.includes("crew:read") ? ["https://api.mapbox.com"] : [] }, prefersBorder: true } } }] });
   }
   if (message.method === "tools/list") {
-    const reads = chatGptReadableTools(authorized.session, authorized.scopes).map((tool) => ({ name: tool.name, description: chatGptReadToolDescription(tool), inputSchema: tool.inputSchema, annotations: chatGptReadToolAnnotations(tool.name) }));
+    const fleetUpgrades = await fleetUpgradeDiscovery(authorized.session, authorized.scopes);
+    const fleetUpgradeDescriptors = fleetUpgrades.map(({tool, scope}) => {
+      const securitySchemes = [{ type: "oauth2" as const, scopes: [scope] }];
+      return { name: tool.name, description: `${tool.description} Additional Fleet consent is required before this tool can access records or prepare a change.`, inputSchema: { ...tool.inputSchema, properties: Object.fromEntries(Object.entries(tool.inputSchema.properties ?? {}).filter(([key]) => !SERVER_ACTION_FIELDS.has(key))), required: (tool.inputSchema.required ?? []).filter(key => !SERVER_ACTION_FIELDS.has(key)) }, securitySchemes, _meta: { securitySchemes }, annotations: { readOnlyHint: !tool.mutating, destructiveHint: tool.mutating, openWorldHint: false } };
+    });
+    const reads: Array<{ name: string; description: string; inputSchema: ReturnType<typeof chatGptReadableTools>[number]["inputSchema"]; annotations: ReturnType<typeof chatGptReadToolAnnotations>; securitySchemes?: ReturnType<typeof fleetToolSecuritySchemes>; _meta?: Record<string, unknown>; outputSchema?: unknown }> = chatGptReadableTools(authorized.session, authorized.scopes).map((tool) => ({ ...(fleetToolSecuritySchemes(tool.name, authorized.scopes) ? { securitySchemes: fleetToolSecuritySchemes(tool.name, authorized.scopes), _meta: { securitySchemes: fleetToolSecuritySchemes(tool.name, authorized.scopes) } } : {}), name: tool.name, description: chatGptReadToolDescription(tool), inputSchema: tool.inputSchema, annotations: chatGptReadToolAnnotations(tool.name) }));
+    reads.push(...fleetUpgradeDescriptors.filter(tool => tool.annotations.readOnlyHint));
     reads.push(SPECIALISTS_TOOL);
     reads.push({ name: "v_connection_context", description: "Read this connection's authenticated account and granted scope names. These are connection facts, not proof of operational site access or permission to perform an action. Use before selecting role-dependent workflows; do not infer roles from display names.", inputSchema: { type: "object", properties: {}, additionalProperties: false }, annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false } });
     if (reads.some(tool => tool.name === "query_gate_change_over")) reads.push(GATE_DEVICE_TOOL);
@@ -272,8 +289,9 @@ router.post("/mcp", async (req, res) => {
     if (reads.some(tool => ["get_work_hub_briefing", "get_work_hub_calendar", "query_gate_stations", "lookup_user_progress", "query_tickets", "query_notifications", "query_field_trips", "query_asset_custody"].includes(tool.name))) reads.push(WORKSPACE_TOOL);
     const actions = chatGptActionTools(authorized.session, authorized.scopes);
     const upgradeTools = financeConsentUpgradeTools(authorized.session, authorized.scopes).map(tool => ({ name: tool.name, description: `${tool.description} Additional finance consent is required before preparation; this does not transfer money.`, inputSchema: { ...tool.inputSchema, properties: Object.fromEntries(Object.entries(tool.inputSchema.properties ?? {}).filter(([key]) => !SERVER_ACTION_FIELDS.has(key))), required: (tool.inputSchema.required ?? []).filter(key => !SERVER_ACTION_FIELDS.has(key)) }, securitySchemes: FINANCE_SECURITY_SCHEMES, annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: false }, _meta: { securitySchemes: FINANCE_SECURITY_SCHEMES } }));
+    upgradeTools.push(...fleetUpgradeDescriptors.filter(tool => !tool.annotations.readOnlyHint));
     const planTools = actions.some(tool => tool.name === "manage_work_hub_task") ? [{ ...PREPARE_PLAN_TOOL, _meta: ACTION_PANEL_META }, ...(reads.some(tool => tool.name === 'list_work_hub_tasks') ? [{ ...CONTROL_PLAN_TOOL, _meta: ACTION_PANEL_META }, { ...PLAN_READ_CHECKPOINT_TOOL, _meta: ACTION_PANEL_META }] : [])] : [];
-    const preparedTools = exposedOperationTools(actions).map((tool) => ({ ...(CHATGPT_WRITE_CAPABILITIES["finance:write"].tools.includes(tool.name as never) ? { securitySchemes: FINANCE_SECURITY_SCHEMES } : {}), name: tool.name, description: `${tool.description}${tool.name.startsWith("manage_ticket_record") ? " Authorized operations can overwrite ticket fields, cancel tickets, or remove line items. This call only prepares the change; submission requires the existing authorization panel." : ""} This connection prepares the exact change for authorization in the VNDRLY action panel. Location-dependent actions use the secure device authorization link. Never claim prepared means completed.`, inputSchema: { ...tool.inputSchema, properties: Object.fromEntries(Object.entries(tool.inputSchema.properties ?? {}).filter(([key]) => !SERVER_ACTION_FIELDS.has(key))), required: (tool.inputSchema.required ?? []).filter((key) => !SERVER_ACTION_FIELDS.has(key)) }, annotations: { readOnlyHint: false, destructiveHint: tool.name.startsWith("manage_ticket_record"), openWorldHint: false }, _meta: ACTION_PANEL_META }));
+    const preparedTools = exposedOperationTools(actions).map((tool) => ({ ...(CHATGPT_WRITE_CAPABILITIES["finance:write"].tools.includes(tool.name as never) ? { securitySchemes: FINANCE_SECURITY_SCHEMES } : {}), ...(fleetToolSecuritySchemes(tool.name, authorized.scopes) ? { securitySchemes: fleetToolSecuritySchemes(tool.name, authorized.scopes) } : {}), name: tool.name, description: `${tool.description}${tool.name.startsWith("manage_ticket_record") ? " Authorized operations can overwrite ticket fields, cancel tickets, or remove line items. This call only prepares the change; submission requires the existing authorization panel." : ""} This connection prepares the exact change for authorization in the VNDRLY action panel. Location-dependent actions use the secure device authorization link. Never claim prepared means completed.`, inputSchema: { ...tool.inputSchema, properties: Object.fromEntries(Object.entries(tool.inputSchema.properties ?? {}).filter(([key]) => !SERVER_ACTION_FIELDS.has(key))), required: (tool.inputSchema.required ?? []).filter((key) => !SERVER_ACTION_FIELDS.has(key)) }, annotations: { readOnlyHint: false, destructiveHint: tool.name.startsWith("manage_ticket_record"), openWorldHint: false }, _meta: { ...ACTION_PANEL_META, ...(fleetToolSecuritySchemes(tool.name, authorized.scopes) ? { securitySchemes: fleetToolSecuritySchemes(tool.name, authorized.scopes) } : {}) } }));
 
     return reply({ tools: [...reads, ...preparedTools, ...upgradeTools, ...planTools, ...(actions.length ? [SUBMIT_PANEL_ACTION_TOOL] : []), ...((actions.length || upgradeTools.length) ? [{ name: "v_prepare_action", securitySchemes: [{ type: "oauth2", scopes: [...authorized.scopes] }], _meta: { ...ACTION_PANEL_META, securitySchemes: [{ type: "oauth2", scopes: [...authorized.scopes] }] }, description: "Prepare an authorized VNDRLY change and return its secure VNDRLY approval link. This tool never claims the change is completed. Model-supplied approval and GPS are ignored. Finance operations may require finance:write consent when invoked; unrelated operations retain existing scopes.", inputSchema: { type: "object", properties: { toolName: { type: "string", enum: [...actions, ...upgradeTools].map((tool) => tool.name) }, arguments: { type: "object" } }, required: ["toolName", "arguments"], additionalProperties: false }, annotations: { readOnlyHint: false, destructiveHint: actions.some(tool => tool.name === "manage_ticket_record"), openWorldHint: false } }, { name: "v_action_status", outputSchema: ACTION_STATUS_OUTPUT_SCHEMA, _meta: { "openai/widgetAccessible": true }, description: "Read the status and actual result of an action prepared by this connected account. Pending or running does not mean completed.", inputSchema: { type: "object", properties: { reference: { type: "string" } }, required: ["reference"], additionalProperties: false }, annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false } }] : [])] });
   }
@@ -283,6 +301,11 @@ router.post("/mcp", async (req, res) => {
     let args = message.params?.arguments ?? {};
     if (typeof name !== "string" || !args || typeof args !== "object" || Array.isArray(args)) throw new Error("Invalid tool request");
     if (requiresFinanceConsent(authorized.session, authorized.scopes, name, args)) return reply(financeConsentChallenge(ASSISTANT_ISSUER, authorized.scopes));
+    const fleetTarget = name === "v_prepare_action" ? args.toolName : name;
+    if (typeof fleetTarget === "string" && /fleet/.test(fleetTarget)) {
+      const missing = (await fleetUpgradeDiscovery(authorized.session, authorized.scopes)).find(item => item.tool.name === fleetTarget);
+      if (missing) return reply(fleetConsentChallenge(ASSISTANT_ISSUER, authorized.scopes, missing.scope));
+    }
     if (name === "v_connection_context") {
       if (Object.keys(args).length) throw new AssistantOAuthError("invalid_request");
       const session = authorized.session;
@@ -625,4 +648,3 @@ function oauthError(res: Response, error: unknown) {
   return res.status(error instanceof AssistantOAuthError ? 400 : 503).json({ error: error instanceof AssistantOAuthError ? error.code : "temporarily_unavailable" });
 }
 export default router;
-

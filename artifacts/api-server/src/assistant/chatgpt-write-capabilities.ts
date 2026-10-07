@@ -1,9 +1,13 @@
 import { TICKET_RECORD_ACTIONS } from "./ticket-workflow-tools";
 import { z } from "zod/v4";
-import { AssetCustodyCommandSchema } from "@workspace/api-zod";
+import { AssetCustodyCommandSchema, CreateFleetRunSchema, FleetActionInputSchema, FleetSetupInputSchema, FleetWorkspacePreferenceInputSchema } from "@workspace/api-zod";
 
 /** Separate write consent never follows from a read grant. */
 export const CHATGPT_WRITE_CAPABILITIES = {
+  "fleet:admin":{label:"Prepare current company administrator Fleet settings and explicit role grants",tools:["manage_fleet_settings"]},
+  "fleet:dispatch": { label: "Prepare explicitly authorized Fleet dispatch actions", tools: ["manage_fleet_run","set_fleet_preferences"] },
+  "fleet:run": { label: "Prepare own assigned Fleet acknowledgement, user-reported inspection, stops, load/delivery and closeout", tools: ["acknowledge_fleet_assignment", "transition_fleet_run","set_fleet_preferences"] },
+  "fleet:review": { label: "Prepare Fleet Manager closeout review; no ticket or financial approval", tools: ["review_fleet_closeout"] },
   "finance:write": { label: "Prepare recording or reversing ticket payment records with current Accounts Payable authority; never transfer money", tools: ["record_ticket_payment", "reverse_ticket_payment_record"] },
   "workforce:write": { label: "Prepare authorized shift assignments, acknowledgements, and coverage evaluation or escalation", tools: ["confirm_workforce_coverage_action"] },
   "trips:write": { label: "Prepare authorized trip start, pause, driver resume, completion, or one approval-device location update; never start a device collector", tools: ["confirm_field_trips_action"] },
@@ -34,7 +38,18 @@ export function sanitizeChatGptActionInput(name: string, input: Record<string, u
  * Model-supplied acceptance flags never stand in for the person's action.
  */
 export function validateChatGptActionInput(name: string, input: Record<string, unknown>): void {
+  if(name==="set_fleet_preferences")FleetWorkspacePreferenceInputSchema.parse({expectedVersion:input.expectedVersion,defaultWorkspace:input.defaultWorkspace,selectedFleetId:input.selectedFleetId});
+  if(name==="manage_fleet_settings")FleetSetupInputSchema.parse({expectedVersion:input.expectedVersion,enabled:input.enabled,fleets:input.fleets,grants:input.grants});
+  if(["manage_fleet_run","acknowledge_fleet_assignment","transition_fleet_run","review_fleet_closeout"].includes(name)){
+    const keys=["expectedVersion","action","fleetId","title","driverUserId","vehicleAssetId","trailerAssetId","stops","reason","stopId","inspectionOutcome","notes","loadId","commodity","quantity","unit","manifestReference","deliveryReference","decision","capturedAt","source","reading","ticketId"];
+    const fields=Object.fromEntries(keys.filter(key=>input[key]!==undefined).map(key=>[key,input[key]]));
+    const operationId="00000000-0000-4000-8000-000000000001";
+    if(name==="manage_fleet_run"&&input.action==="create"){const {action,expectedVersion,...create}=fields;CreateFleetRunSchema.parse({...create,operationId});}
+    else { z.uuid().parse(input.runId);FleetActionInputSchema.parse({...fields,operationId,action:name==="acknowledge_fleet_assignment"?"acknowledge":name==="review_fleet_closeout"?"review":input.action}); }
+  }
   const allowed: Record<string, readonly string[]> = {
+    manage_fleet_run: ["create","dispatch","reassign","cancel","link_ticket"],
+    transition_fleet_run: ["inspect","start","arrive_stop","depart_stop","record_load","record_delivery","submit_closeout","pause","resume","record_fuel","record_meter"],
     manage_ticket_record: TICKET_RECORD_ACTIONS,
     confirm_workforce_coverage_action: ["assign", "acknowledge", "evaluate", "escalate"],
     confirm_field_trips_action: ["start", "location", "pause", "resume", "complete"],

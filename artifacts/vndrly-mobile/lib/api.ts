@@ -393,6 +393,8 @@ export async function switchContext(membershipId: number): Promise<StoredUser> {
   if (data.token) await setToken(data.token);
   const { user, preferredLanguage } = buildStoredUser(data);
   await setUser(user);
+  const { clearFleetOfflineOnSignOut } = await import("./fleet-offline-native");
+  await clearFleetOfflineOnSignOut();
   if (preferredLanguage) {
     await setLanguage(preferredLanguage);
   }
@@ -445,4 +447,6 @@ export async function logout() {
   }
   await setToken(null);
   await setUser(null);
+  const { clearFleetOfflineOnSignOut } = await import("./fleet-offline-native");
+  await clearFleetOfflineOnSignOut();
 }

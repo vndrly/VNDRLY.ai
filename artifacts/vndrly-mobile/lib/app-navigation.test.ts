@@ -29,6 +29,12 @@ const user = (role: string, vendorRole?: string): StoredUser => ({
 });
 
 describe("buildAppNavigation", () => {
+  it("exposes Fleet only after scoped server authorization, including a separately granted Gate worker", () => {
+    for (const person of [user("vendor", "admin"), user("vendor", "gatekeeper"), user("field_employee")]) {
+      expect(buildAppNavigation({ user: person, labels, badges }).some(item => item.key === "fleet")).toBe(false);
+      expect(buildAppNavigation({ user: person, labels, badges, fleetEnabled: true }).find(item => item.key === "fleet")?.href).toBe("/(tabs)/fleet");
+    }
+  });
   it("opens Dashboard after sign-in for both gate roles only", () => {
     for (const role of ["gatekeeper", "gate_supervisor"]) {
       expect(gateLandingRoute(user("vendor", role))).toBe("/(tabs)/change-over");

@@ -44,18 +44,20 @@ export type AppNavigationBadges = {
 };
 
 type Input = {
+  fleetEnabled?: boolean;
   badges: AppNavigationBadges;
   labels: AppNavigationLabels;
   user: StoredUser | null | undefined;
 };
 
 export function buildAppNavigation({
+  fleetEnabled = false,
   user,
   labels,
   badges,
 }: Input): AppNavigationItem[] {
   if (isGatekeeperUser(user)) {
-    return [
+    const gateItems = [
       item("change-over", "/(tabs)/change-over", labels.changeOver ?? "Dashboard", "grid"),
       item("work-hub", "/work-hub", labels.workHub, "briefcase"),
       item("gate", "/(tabs)/gate", labels.gate, "truck"),
@@ -64,6 +66,8 @@ export function buildAppNavigation({
       item("shift-notes", "/(tabs)/shift-notes", labels.shiftNotes ?? "Shift Notes", "file-text"),
       item("profile", "/(tabs)/profile", labels.profile, "user"),
     ];
+    if (fleetEnabled) gateItems.splice(2, 0, item("fleet", "/(tabs)/fleet", "Fleet Ops", "truck"));
+    return gateItems;
   }
 
   const result: AppNavigationItem[] = [
@@ -79,6 +83,7 @@ export function buildAppNavigation({
       badge: badges.flagged,
     },
   ];
+  if (fleetEnabled) result.splice(2, 0, item("fleet", "/(tabs)/fleet", "Fleet Ops", "truck"));
 
   if (
     user?.role === "admin" ||
@@ -120,7 +125,7 @@ export function isGatekeeperRouteAllowed(
     "notification-preferences",
   ]);
   return (
-    (root === "(tabs)" && isGatekeeperTabKey(child)) ||
+    (root === "(tabs)" && (isGatekeeperTabKey(child) || child === "fleet" || child === "fleet-run")) ||
     root === "work-hub" ||
     profileActionRoutes.has(root)
   );
