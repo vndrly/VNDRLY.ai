@@ -43,6 +43,7 @@ import assistantPlanExecutionRouter from "./assistantPlanExecution";
 import { PLAN_EXECUTION_PREPARE_TOOL, PLAN_EXECUTION_STATUS_TOOL, PLAN_EXECUTION_CANCEL_TOOL, handlePlanExecutionTool } from "../assistant/plan-execution-chatgpt";
 import { PLAN_EXECUTION_CALENDAR_TOOL, handlePlanExecutionCalendarTool } from "../assistant/plan-execution-calendar-chatgpt";
 import { recoverOperationsDisplayAction } from "../assistant/operations-display-action-recovery";
+import { INVOICE_ACTIVITY_TOOL, handleInvoiceActivityTool, invoiceActivityAvailable } from "../assistant/invoice-activity-chatgpt";
 
 const router = Router();
 const origin = new URL(ASSISTANT_ISSUER).origin;
@@ -323,6 +324,7 @@ router.post("/mcp", async (req, res) => {
     const reads: Array<{ name: string; description: string; inputSchema: ReturnType<typeof chatGptReadableTools>[number]["inputSchema"]; annotations: ReturnType<typeof chatGptReadToolAnnotations>; securitySchemes?: ReturnType<typeof fleetToolSecuritySchemes>; _meta?: Record<string, unknown>; outputSchema?: unknown }> = chatGptReadableTools(authorized.session, authorized.scopes).map((tool) => ({ ...(fleetToolSecuritySchemes(tool.name, authorized.scopes) ? { securitySchemes: fleetToolSecuritySchemes(tool.name, authorized.scopes), _meta: { securitySchemes: fleetToolSecuritySchemes(tool.name, authorized.scopes) } } : {}), name: tool.name, description: chatGptReadToolDescription(tool), inputSchema: tool.inputSchema, annotations: chatGptReadToolAnnotations(tool.name) }));
     reads.push(...fleetUpgradeDescriptors.filter(tool => tool.annotations.readOnlyHint));
     reads.push(SPECIALISTS_TOOL);
+    if (invoiceActivityAvailable(authorized.session, authorized.scopes)) reads.push(INVOICE_ACTIVITY_TOOL);
     reads.push({ name: "v_connection_context", description: "Read this connection's authenticated account and granted scope names. These are connection facts, not proof of operational site access or permission to perform an action. Use before selecting role-dependent workflows; do not infer roles from display names.", inputSchema: { type: "object", properties: {}, additionalProperties: false }, annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false } });
     if (reads.some(tool => tool.name === "query_gate_change_over")) reads.push(GATE_DEVICE_TOOL);
     if (reads.some(tool => tool.name === "query_ticket_detail")) reads.push(TICKET_DEVICE_TOOL);
@@ -347,6 +349,11 @@ router.post("/mcp", async (req, res) => {
     let name = message.params?.name;
     let args = message.params?.arguments ?? {};
     if (typeof name !== "string" || !args || typeof args !== "object" || Array.isArray(args)) throw new Error("Invalid tool request");
+    if (name === INVOICE_ACTIVITY_TOOL.name) {
+      const output = await handleInvoiceActivityTool(args, authorized.session, authorized.scopes);
+      await writeAskVActionAudit({ session: authorized.session, clientSurface: "api", inputMode: "web_text", provider: "chatgpt_mcp", toolName: name, targetType: "invoice", toolInput: { basis: output.basis }, resultStatus: "success" });
+      return reply({ content: [{ type: "text", text: JSON.stringify(output) }], structuredContent: output, isError: false });
+    }
     if ([PLAN_EXECUTION_PREPARE_TOOL.name, PLAN_EXECUTION_STATUS_TOOL.name, PLAN_EXECUTION_CANCEL_TOOL.name, PLAN_EXECUTION_CALENDAR_TOOL.name].includes(name)) {
       if (!authorized.grantConsentHash) throw new AssistantOAuthError("access_denied");
       const handler = name === PLAN_EXECUTION_CALENDAR_TOOL.name ? handlePlanExecutionCalendarTool : (input: unknown, session: typeof authorized.session, scopes: string[], grant: string) => handlePlanExecutionTool(name, input, session, scopes, grant);

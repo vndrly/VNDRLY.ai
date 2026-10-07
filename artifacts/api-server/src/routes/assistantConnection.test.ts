@@ -124,6 +124,18 @@ async function tokens(scope = auth.scope) {
   return response.body;
 }
 describe("ChatGPT account connection boundary", () => {
+  it("discovers invoice activity only for a current company finance grant and refuses a direct ungranted call", async () => {
+    const credentials = await tokens("gate:read work_hub:read finance:read");
+    grants[0].session = { ...grants[0].session, activeMembershipId: 8, membershipRole: "admin" };
+    const invoke = (method: string, params?: unknown) => request(app).post(base + "/mcp").set("Authorization", "Bearer " + credentials.access_token).send({ jsonrpc: "2.0", id: 1, method, params });
+    const listed = (await invoke("tools/list")).body.result.tools;
+    expect(listed.find((tool: { name: string }) => tool.name === "query_invoice_activity")).toMatchObject({ annotations: { readOnlyHint: true }, securitySchemes: [{ type: "oauth2", scopes: ["finance:read"] }] });
+    grants[0].scopes = grants[0].scopes.filter(scope => scope !== "finance:read");
+    expect((await invoke("tools/list")).body.result.tools.some((tool: { name: string }) => tool.name === "query_invoice_activity")).toBe(false);
+    const rejected = (await invoke("tools/call", { name: "query_invoice_activity", arguments: {} })).body.result;
+    expect(rejected.isError).toBe(true);
+    expect(mocks.run).not.toHaveBeenCalled();
+  });
   it("challenges missing Fleet consent for the authorized Partner workspace source before reading records", async () => {
     const credentials = await tokens("gate:read work_hub:read");
     grants[0].session = { ...grants[0].session, role: "partner", vendorId: null, partnerId: 609, membershipRole: "admin" };
