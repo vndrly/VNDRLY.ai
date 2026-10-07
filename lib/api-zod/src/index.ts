@@ -17,3 +17,4 @@ export * from "./fleet-review-packet";
 export * from "./legal-policy";
 export * from "./inventory-recovery";
 export * from "./operations-display-view";
+export * from "./work-hub-away";

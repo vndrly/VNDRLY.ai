@@ -4,6 +4,8 @@ const positive = z.number().int().positive();
 const empty = z.object({}).strict();
 /** Fixed supported read schemas. Existing custody reads retain their legacy bounds. */
 export const PLAN_EXECUTION_BUSINESS_READ_CANDIDATES = {
+  query_work_hub_away_responder: empty,
+  query_work_hub_away_channels: empty,
   query_work_hub_meeting_responses: z.object({ occurrenceId: z.uuid() }).strict(),
   query_calendar_reschedule_snapshot: z.object({ occurrenceId: z.uuid() }).strict(),
   query_ticket_invoice_candidates: z.object({ limit: z.number().int().min(1).max(20).default(20), afterTicketId: z.number().int().nonnegative().default(0) }).strict(),

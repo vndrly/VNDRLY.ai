@@ -2848,5 +2848,33 @@
     },
     "recordVersion": "Saved record version",
     "claimReference": "Exact claim reference"
+  },
+  "workHubAway": {
+    "conflict": "The setting changed and this request was refused. Refresh the current setting before reviewing a new request.",
+    "replacePrevious": "Saving here replaces your previous away setting. Its private text and conversations are not shown in this organization.",
+    "open": "Away replies",
+    "title": "Work Hub away replies",
+    "description": "Send your approved neutral reply once per selected conversation and time window when a new message arrives. This saves an in-app reply; delivery, reading and sound are not guaranteed.",
+    "neutral": "I am away. I will reply when available.",
+    "loadFailed": "Away settings are unavailable in this account.",
+    "saveFailed": "Check the time window, reply and selected conversations. The setting was not confirmed saved.",
+    "unknown": "The outcome is unresolved. Check and retry the exact original request; do not assume it was saved.",
+    "saved": "Canonical setting saved.",
+    "retry": "Check and retry exact request",
+    "windowHint": "Enter start and end with a timezone, for example 2026-10-08T08:00:00-05:00. The window must end in the future and last no more than 31 days.",
+    "start": "Away start with timezone",
+    "end": "Away end with timezone",
+    "reply": "Neutral reply text",
+    "channels": "Select joined writable conversations",
+    "noChannels": "No eligible joined conversations are available.",
+    "partial": "Only the first eligible conversations are shown.",
+    "save": "Save approved away reply",
+    "pause": "Pause away replies",
+    "revoke": "Revoke away replies",
+    "refresh": "Refresh current setting",
+    "active": "Saved rule: active",
+    "paused": "Saved rule: paused",
+    "revoked": "Saved rule: revoked",
+    "notConfigured": "No rule is configured for this organization."
   }
 }

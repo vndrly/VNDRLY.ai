@@ -13,6 +13,7 @@ import {
 
 import AmberButton from "@/components/AmberButton";
 import PortalPageHeader from "@/components/PortalPageHeader";
+import WorkHubAwaySettings from "@/components/work-hub/WorkHubAwaySettings";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
 import { captureAuthScope, isAuthScopeCurrent, subscribeToken, subscribeUser } from "@/lib/auth";
@@ -281,6 +282,7 @@ function NotificationPreferencesForm() {
             {t("notifications.save")}
           </AmberButton>
         </View>
+        <WorkHubAwaySettings />
       </ScrollView>
     </View>
   );

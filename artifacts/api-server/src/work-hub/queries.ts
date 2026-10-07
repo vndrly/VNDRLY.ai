@@ -7,30 +7,30 @@ import { createWorkHubAccess, requireWorkHubCapability, type WorkHubAccess } fro
 import type { WorkHubCapability } from "@workspace/api-zod";
 import { collaborationChannelAccess, collaborationChannelScope } from "./collaboration-access";
 
-export async function isWorkHubParticipant(session: SessionPayload & { userId: number }, channel: typeof workHubChannelsTable.$inferSelect): Promise<boolean> {
+export async function isWorkHubParticipant(session: SessionPayload & { userId: number }, channel: typeof workHubChannelsTable.$inferSelect, database: Omit<typeof db, "$client"> = db): Promise<boolean> {
   if (session.managedSubcontractor) {
     if (channel.ownerOrgType !== "vendor" || channel.ownerOrgId !== session.vendorId) return false;
     if (channel.contextKind === "site" || channel.contextKind === "gate") {
       if (!managedWorkerSiteRole(session, Number(channel.contextId))) return false;
-      const [assignment] = await db.select({ id: siteWorkAssignmentsTable.id }).from(siteWorkAssignmentsTable)
+      const [assignment] = await database.select({ id: siteWorkAssignmentsTable.id }).from(siteWorkAssignmentsTable)
         .where(and(eq(siteWorkAssignmentsTable.vendorId, channel.ownerOrgId), eq(siteWorkAssignmentsTable.siteLocationId, Number(channel.contextId)))).limit(1);
       if (!assignment) return false;
     }
-    const collaboration = await collaborationChannelAccess(session.userId, channel.id);
+    const collaboration = await collaborationChannelAccess(session.userId, channel.id, database);
     if (collaboration !== null) return collaboration;
-    const [member] = await db.select({ id: workHubChannelMembersTable.id }).from(workHubChannelMembersTable)
+    const [member] = await database.select({ id: workHubChannelMembersTable.id }).from(workHubChannelMembersTable)
       .where(and(eq(workHubChannelMembersTable.channelId, channel.id), eq(workHubChannelMembersTable.userId, session.userId))).limit(1);
     if (member) return true;
     return channel.visibility === "organization" && (channel.contextKind === "organization" || channel.contextKind === "site" || channel.contextKind === "gate");
   }
-  const collaborationAccess = await collaborationChannelAccess(session.userId, channel.id);
+  const collaborationAccess = await collaborationChannelAccess(session.userId, channel.id, database);
   if (collaborationAccess !== null) return collaborationAccess;
   if (session.role === "admin") return true;
   const ownerMatch = channel.ownerOrgType === "vendor"
     ? session.vendorId === channel.ownerOrgId
     : session.partnerId === channel.ownerOrgId;
   if (ownerMatch && session.membershipRole === "admin") return true;
-  const [membership] = await db.select({ id: workHubChannelMembersTable.id })
+  const [membership] = await database.select({ id: workHubChannelMembersTable.id })
     .from(workHubChannelMembersTable)
     .where(and(eq(workHubChannelMembersTable.channelId, channel.id), eq(workHubChannelMembersTable.userId, session.userId)))
     .limit(1);
@@ -39,33 +39,33 @@ export async function isWorkHubParticipant(session: SessionPayload & { userId: n
   if (channel.contextKind === "ticket") {
     const ticketId = Number(channel.contextId);
     if (!Number.isInteger(ticketId)) return false;
-    const [ticket] = await db.select({ vendorId: ticketsTable.vendorId, partnerId: siteLocationsTable.partnerId })
+    const [ticket] = await database.select({ vendorId: ticketsTable.vendorId, partnerId: siteLocationsTable.partnerId })
       .from(ticketsTable).innerJoin(siteLocationsTable, eq(siteLocationsTable.id, ticketsTable.siteLocationId))
       .where(eq(ticketsTable.id, ticketId)).limit(1);
     return Boolean(ticket && ((session.vendorId && session.vendorId === ticket.vendorId) || (session.partnerId && session.partnerId === ticket.partnerId)));
   }
   if (channel.contextKind === "site") {
     const siteId = Number(channel.contextId);
-    const [site] = await db.select({ partnerId: siteLocationsTable.partnerId }).from(siteLocationsTable).where(eq(siteLocationsTable.id, siteId)).limit(1);
+    const [site] = await database.select({ partnerId: siteLocationsTable.partnerId }).from(siteLocationsTable).where(eq(siteLocationsTable.id, siteId)).limit(1);
     return Boolean(site && session.partnerId === site.partnerId);
   }
   return false;
 }
 
 export async function resolveChannelAccess(
-  session: SessionPayload & { userId: number }, channelId: string, capability: WorkHubCapability,
+  session: SessionPayload & { userId: number }, channelId: string, capability: WorkHubCapability, database: Omit<typeof db, "$client"> = db,
 ): Promise<{ channel: typeof workHubChannelsTable.$inferSelect; access: WorkHubAccess }> {
-  const [channel] = await db.select().from(workHubChannelsTable).where(eq(workHubChannelsTable.id, channelId)).limit(1);
+  const [channel] = await database.select().from(workHubChannelsTable).where(eq(workHubChannelsTable.id, channelId)).limit(1);
   if (!channel || channel.status !== "active") throw new (await import("./context-access")).WorkHubAccessError("not_found");
-  if (await collaborationChannelAccess(session.userId, channel.id) === false) throw new (await import("./context-access")).WorkHubAccessError("not_found");
-  const participant = await isWorkHubParticipant(session, channel);
+  if (await collaborationChannelAccess(session.userId, channel.id, database) === false) throw new (await import("./context-access")).WorkHubAccessError("not_found");
+  const participant = await isWorkHubParticipant(session, channel, database);
   if (!participant) throw new (await import("./context-access")).WorkHubAccessError("not_found");
   const access = createWorkHubAccess({
     session, owner: { type: channel.ownerOrgType as "vendor" | "partner", id: channel.ownerOrgId },
     context: { kind: channel.contextKind as "organization" | "ticket" | "site" | "crew" | "gate" | "chat", id: channel.contextId },
     participant, visibilityRevision: `${session.userId}:${channel.updatedAt.toISOString()}`,
   });
-  const scope = await collaborationChannelScope(session.userId, channel.id);
+  const scope = await collaborationChannelScope(session.userId, channel.id, database);
   const resolved = scope && !session.managedSubcontractor ? { ...access, capabilities: new Set<WorkHubCapability>(scope.manager ? ["channel.read", "channel.write", "file.download", "file.upload", "note.create", "note.edit", "channel.manage", "task.assign", "announcement.publish", "meeting.host"] : ["channel.read", "channel.write", "file.download", "file.upload", "note.create", "note.edit"]) } : access;
   requireWorkHubCapability(resolved, capability);
   return { channel, access: resolved };

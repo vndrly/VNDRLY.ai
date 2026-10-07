@@ -13,6 +13,7 @@ export interface PlanExecutionCanonicalApi{
  /** Save through canonical Work Hub command+receipt+current exact readback; no interactive-confirm spoof. */
  savePersonalDraft(authorization:PlanExecutionAuthorization,command:PersonalDraftCommand):Promise<PlanExecutionResult>;
  prepareTicketInvoices?(authorization:PlanExecutionAuthorization,step:PlanExecutionStep,readback:boolean):Promise<PlanExecutionReconciliation>;
+ configureAway?(authorization:PlanExecutionAuthorization,step:PlanExecutionStep,readback:boolean):Promise<PlanExecutionReconciliation>;
  rescheduleCalendar?(authorization:PlanExecutionAuthorization,step:PlanExecutionStep,readback:boolean):Promise<PlanExecutionReconciliation>;
 }
 /** Retrieved text is literal record data. No model interpretation, instruction following, recipients or external effects. */
@@ -32,6 +33,7 @@ export function createPlanExecutionAdapters(api:PlanExecutionCanonicalApi):Recor
   authorized_read:{async execute(context,step){assertRead(step);return planExecutionResultSchema.parse(await api.read(context.authorization,step));},async reconcile(_context,step){assertRead(step);return {state:'not_found'};}},
   personal_draft:{async execute(context,step){return planExecutionResultSchema.parse(await api.savePersonalDraft(context.authorization,command(context,step)));},async reconcile(context,step){return api.readbackDraft(context.authorization,command(context,step));}},
   ticket_invoice_preparation:{async execute(context,step){if(!api.prepareTicketInvoices)throw Error('Invoice preparation unavailable');const result=await api.prepareTicketInvoices(context.authorization,step,false);if(result.state!=='completed')throw Error('Invoice preparation outcome unverified');return result.result;},async reconcile(context,step){if(!api.prepareTicketInvoices)throw Error('Invoice preparation unavailable');return api.prepareTicketInvoices(context.authorization,step,true);}},
+  away_responder:{async execute(context,step){if(!api.configureAway)throw Error('Away responder unavailable');const result=await api.configureAway(context.authorization,step,false);if(result.state!=='completed')throw Error('Away outcome unverified');return result.result;},async reconcile(context,step){if(!api.configureAway)throw Error('Away responder unavailable');return api.configureAway(context.authorization,step,true);}},
   calendar_reschedule:{async execute(context,step){if(!api.rescheduleCalendar)throw Error('Calendar reschedule unavailable');const result=await api.rescheduleCalendar(context.authorization,step,false);if(result.state!=='completed')throw Error('Calendar outcome unverified');return result.result;},async reconcile(context,step){if(!api.rescheduleCalendar)throw Error('Calendar reschedule unavailable');return api.rescheduleCalendar(context.authorization,step,true);}},
  };
 }

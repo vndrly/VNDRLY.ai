@@ -11,6 +11,7 @@ import { WorkHubExactItem } from "@/components/work-hub/exact-item";
 import { WorkPlanDetail, isWorkPlanDescription } from "@/components/work-hub/plan-detail";
 import { WorkHubCalls } from "@/components/work-hub/calls";
 import { MeetingScheduling } from "@/components/work-hub/meeting-scheduling";
+import { WorkHubAwaySettings } from "@/components/work-hub/away-settings";
 import { ActivityWorkspace, CollaborationWorkspace } from "@/components/work-hub/collaboration";
 import { CalendarTimeGrid, localDateKey } from "@/components/work-hub/calendar-views";
 import ManagedSubcontractorHoursPanel from "@/components/managed-subcontractor-hours-panel";
@@ -2164,7 +2165,7 @@ function SettingsModule() {
     enabled: canManage,
   });
   return (
-    <Shell module="settings"><ImportExportTools />
+    <Shell module="settings">{user?.userId && ownerForUser(user) && <WorkHubAwaySettings key={`${user.userId}:${user.role}:${user.activeMembershipId}:${user.vendorId}:${user.partnerId}`} identity={`${user.userId}:${user.role}:${user.activeMembershipId}:${user.vendorId}:${user.partnerId}`} actorId={user.userId} owner={ownerForUser(user)!} />}<ImportExportTools />
       <Card>
         <CardHeader>
           <CardTitle><WorkHubCardTitle icon={Link2}>Microsoft 365 import</WorkHubCardTitle></CardTitle>

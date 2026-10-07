@@ -1,3 +1,4 @@
+import { AWAY_RESPONDER_TOOLS } from "./away-responder-tools";
 import type { Anthropic } from "@workspace/integrations-anthropic-ai/sdk";
 import { WORK_HUB_CONTEXT_KINDS } from "@workspace/api-zod";
 import { TICKET_INVOICE_PREPARATION_TOOL } from "./ticket-invoice-preparation-tools";
@@ -116,6 +117,9 @@ function write(
 }
 
 const entries: Entry[] = [
+  read(AWAY_RESPONDER_TOOLS[0].name,"collaboration",AWAY_RESPONDER_TOOLS[0].description,{...AWAY_RESPONDER_TOOLS[0].inputSchema,type:"object"}),
+  read(AWAY_RESPONDER_TOOLS[1].name,"collaboration",AWAY_RESPONDER_TOOLS[1].description,{...AWAY_RESPONDER_TOOLS[1].inputSchema,type:"object"}),
+  write(AWAY_RESPONDER_TOOLS[2].name,"collaboration",AWAY_RESPONDER_TOOLS[2].description,{...AWAY_RESPONDER_TOOLS[2].inputSchema,type:"object"}),
   read(CALENDAR_RESPONSE_TOOLS[0].name,"meetings",CALENDAR_RESPONSE_TOOLS[0].description,{...CALENDAR_RESPONSE_TOOLS[0].inputSchema,type:"object"}),
   write(CALENDAR_RESPONSE_TOOLS[1].name,"meetings",CALENDAR_RESPONSE_TOOLS[1].description,{...CALENDAR_RESPONSE_TOOLS[1].inputSchema,type:"object"}),
   read(CALENDAR_RESCHEDULE_TOOLS[0].name,"meetings",CALENDAR_RESCHEDULE_TOOLS[0].description,{...CALENDAR_RESCHEDULE_TOOLS[0].inputSchema,type:"object"}),

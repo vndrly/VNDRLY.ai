@@ -24,6 +24,7 @@ import { executeWorkHubCommand } from "../work-hub/commands";
 import { resolveChannelAccess } from "../work-hub/queries";
 import { canManageCrew } from "../work-hub/collaboration-policy";
 import { appendWorkHubAudit } from "../work-hub/audit";
+import { awayActor, createDatabaseAwayResponder, readAwayResponder, listAwayResponderChannels, readAwayResponderOperation } from "../services/work-hub-away-responder-repository";
 import {
   listEligibleWorkHubPeople,
   resolveWorkHubInviteEligibility,
@@ -617,9 +618,42 @@ router.put("/work-hub/preferences", async (req, res) => {
     .values({ userId: res.locals.collaborationActor.userId, preferences })
     .onConflictDoUpdate({
       target: workHubPreferencesTable.userId,
-      set: { preferences },
+      // Public preference updates cannot erase or replace server-owned settings.
+      set: { preferences: sql`${workHubPreferencesTable.preferences} || ${JSON.stringify(preferences)}::jsonb` },
     });
   return res.json(preferences);
+});
+router.get("/work-hub/away-responder/channels", async (req, res) => {
+  const actor=getSessionFromRequest(req);
+  if(!actor?.userId)return sendApiError(res,401,"auth.unauthenticated","Authentication required");
+  try{return res.json(await listAwayResponderChannels(actor));}
+  catch{return sendApiError(res,403,"work_hub.forbidden","Away conversations unavailable in the current account");}
+});
+router.get("/work-hub/away-responder/operations/:operationId", async (req, res) => {
+  const actor=getSessionFromRequest(req);
+  if(!actor?.userId)return sendApiError(res,401,"auth.unauthenticated","Authentication required");
+  try{return res.json(await readAwayResponderOperation(actor,req.params.operationId));}
+  catch{return sendApiError(res,403,"work_hub.forbidden","Away request unavailable in the current account");}
+});
+router.get("/work-hub/away-responder", async (req, res) => {
+  const actor = getSessionFromRequest(req);
+  if (!actor?.userId) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
+  try { return res.json(await readAwayResponder(actor)); }
+  catch { return sendApiError(res, 403, "work_hub.forbidden", "Away setting unavailable in the current account"); }
+});
+router.post("/work-hub/away-responder", async (req, res) => {
+  const actor = getSessionFromRequest(req);
+  if (!actor?.userId) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
+  try { return res.json(await createDatabaseAwayResponder(actor).configure(req.body, awayActor(actor))); }
+  catch (error) {
+    if (error instanceof z.ZodError) return sendApiError(res, 400, "validation.invalid_request", "Invalid away setting");
+    const conflict = error instanceof Error && /(?:version_conflict|operation_conflict)/.test(error.message);
+    if (conflict) return sendApiError(res,409,"work_hub.forbidden","Away setting changed; review the current setting");
+    if (error instanceof Error && error.message==="away_responder.invalid_window") return sendApiError(res,400,"validation.invalid_request","Invalid away time window");
+    if (error instanceof Error && /^away_responder\.(?:current_owner_required|current_authority_required|rule_not_found)$/.test(error.message)) return sendApiError(res,403,"work_hub.forbidden","Away setting unavailable in the current account");
+    // A database/commit failure cannot establish that this operation was refused.
+    return sendApiError(res,503,"server.internal_error","Away request result is unverified; check the exact saved request before retrying");
+  }
 });
 router.get("/work-hub/chats", async (_req, res) =>
   res.json(

@@ -127,6 +127,7 @@ describe("ChatGPT account connection boundary", () => {
   it.each([
     { name: "reschedule_work_hub_meeting", input: { occurrenceId: "11111111-1111-4111-8111-111111111111", expectedFingerprint: "a".repeat(64), startsAt: "2026-10-08T14:00:00.000Z", endsAt: "2026-10-08T15:00:00.000Z", timezone: "America/Chicago" } },
     { name: "respond_work_hub_meeting_invitation", input: { occurrenceId: "11111111-1111-4111-8111-111111111111", expectedFingerprint: "a".repeat(64), response: "accepted" } },
+    { name: "manage_work_hub_away_responder", input: { action: "configure", expectedVersion: 0, startsAt: "2026-10-08T14:00:00.000Z", endsAt: "2026-10-08T15:00:00.000Z", replyText: "I will reply when I return.", channelIds: ["11111111-1111-4111-8111-111111111111"] } },
     { name: "prepare_ticket_invoices", input: { basis: "recorded_invoice_activity", tickets: [{ ticketId: 21, expectedUpdatedAt: "2026-10-07T10:00:00.000Z" }] } },
   ])("submits approved $name with only the trusted operation ID and does not repeat it", async ({ name, input }) => {
     const credentials = await tokens("work_hub:read work_hub:write finance:read finance:write");

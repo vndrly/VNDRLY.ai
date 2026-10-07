@@ -1,3 +1,4 @@
+import { awayResponderRequest,AWAY_RESPONDER_READ_INPUT } from "./away-responder-tools";
 import { meetingSearchInputSchema, searchSavedMeetingProjection } from "./work-hub-meeting-search";
 import { displayActionRequest } from "./operations-display-action-adapter";
 import { ticketInvoicePreparationCommand } from "./ticket-invoice-preparation-tools";
@@ -303,6 +304,12 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
   }
   if(name === "query_work_hub_meeting_responses") {
     try{const args=CALENDAR_RESPONSE_READ_INPUT.parse(input);return request("GET",`/work-hub/calendar-response/${args.occurrenceId}/snapshot`);}catch{return{error:"Supply the exact saved meeting occurrence."};}
+  }
+  if(name === "query_work_hub_away_responder" || name === "query_work_hub_away_channels") {
+    try{AWAY_RESPONDER_READ_INPUT.parse(input);return request("GET",name === "query_work_hub_away_channels"?"/work-hub/away-responder/channels":"/work-hub/away-responder");}catch{return{error:"Read only your current account away settings or joined writable channels."};}
+  }
+  if(name === "manage_work_hub_away_responder") {
+    try{const {operationId,confirmed:_confirmed,owner:_owner,context:_context,...fields}=input;return awayResponderRequest(fields,z.uuid().parse(operationId));}catch{return{error:"Supply the exact reviewed away action and current revision."};}
   }
   if(name === "respond_work_hub_meeting_invitation") {
     try{const {operationId,confirmed:_confirmed,owner:_owner,context:_context,...fields}=input;return calendarResponseRequest(fields,z.uuid().parse(operationId));}catch{return{error:"Supply your exact current invitation snapshot and accepted or declined response."};}

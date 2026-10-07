@@ -1,3 +1,4 @@
+import { AWAY_RESPONDER_ARGUMENTS } from "./away-responder-tools";
 import { createHash } from 'node:crypto';
 import { z } from 'zod/v4';
 import { TICKET_INVOICE_PREPARATION_ARGUMENTS } from './ticket-invoice-preparation-tools';
@@ -8,7 +9,7 @@ import { PLAN_EXECUTION_READ_TOOL_NAMES, PLAN_EXECUTION_BUSINESS_READ_CANDIDATES
 
 const jsonObject = z.record(z.string(), z.json());
 export const planExecutionRequesterSchema = z.object({userId:z.number().int().positive(),organizationKey:z.string().regex(/^(vendor|partner):[1-9]\d*$/),membershipId:z.number().int().positive(),sessionVersion:z.number().int().positive()}).strict();
-export const planExecutionStepSchema = z.object({id:z.string().min(1).max(100),adapter:z.enum(['authorized_read','personal_draft','ticket_invoice_preparation','calendar_reschedule']),toolName:z.string().min(1).max(150),arguments:jsonObject,dependsOn:z.array(z.string().min(1).max(100)).max(20),operationId:z.string().uuid()}).strict();
+export const planExecutionStepSchema = z.object({id:z.string().min(1).max(100),adapter:z.enum(['authorized_read','personal_draft','ticket_invoice_preparation','calendar_reschedule','away_responder']),toolName:z.string().min(1).max(150),arguments:jsonObject,dependsOn:z.array(z.string().min(1).max(100)).max(20),operationId:z.string().uuid()}).strict();
 export const planExecutionAuthorizationSchema = z.object({id:z.string().uuid(),requester:planExecutionRequesterSchema,grantReference:z.string().min(1).max(200),taskId:z.string().uuid(),taskVersion:z.number().int().positive(),planId:z.string().uuid(),planVersion:z.number().int().positive(),planFingerprint:z.string().regex(/^[a-f0-9]{64}$/),approvedAt:z.number().int().nonnegative(),expiresAt:z.number().int().positive(),maxAttempts:z.number().int().min(1).max(5),steps:z.array(planExecutionStepSchema).min(1).max(20),notificationOperationId:z.string().uuid()}).strict().superRefine((a,ctx)=>{
  const ids=new Set(a.steps.map(s=>s.id)),ops=new Set(a.steps.map(s=>s.operationId));
  if(ids.size!==a.steps.length||ops.size!==a.steps.length||ops.has(a.notificationOperationId))ctx.addIssue({code:'custom',message:'Step and operation IDs must be unique'});
@@ -18,6 +19,7 @@ export const planExecutionAuthorizationSchema = z.object({id:z.string().uuid(),r
  if(!a.steps.every(s=>visit(s.id)))ctx.addIssue({code:'custom',message:'Invalid dependency graph'});
  if(a.steps.some(s=>Buffer.byteLength(JSON.stringify(s.arguments))>8192))ctx.addIssue({code:'custom',message:'Approved arguments exceed bounded capacity'});
  for(const step of a.steps){
+  if(step.adapter==='away_responder'&&(step.toolName!=='manage_work_hub_away_responder'||!AWAY_RESPONDER_ARGUMENTS.safeParse(step.arguments).success))ctx.addIssue({code:'custom',message:'Away responder requires exact reviewed own rule command'});
   if(step.adapter==='calendar_reschedule'&&(step.toolName!=='reschedule_work_hub_meeting'||!CALENDAR_RESCHEDULE_ARGUMENTS.safeParse(step.arguments).success))ctx.addIssue({code:'custom',message:'Calendar reschedule requires exact snapshot and UTC interval'});
   if(step.adapter==='authorized_read'&&step.toolName==='query_ticket_invoice_candidates'&&!ticketInvoiceCandidatesInputSchema.safeParse(step.arguments).success)ctx.addIssue({code:'custom',message:'Invalid bounded invoice candidate selection'});
   if(step.adapter==='authorized_read'&&Object.hasOwn(PLAN_EXECUTION_OPPORTUNITY_INPUTS,step.toolName)&&!PLAN_EXECUTION_OPPORTUNITY_INPUTS[step.toolName as keyof typeof PLAN_EXECUTION_OPPORTUNITY_INPUTS].safeParse(step.arguments).success)ctx.addIssue({code:'custom',message:'Invalid exact opportunity read arguments'});

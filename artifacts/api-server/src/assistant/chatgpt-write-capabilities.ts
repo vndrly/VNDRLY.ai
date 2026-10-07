@@ -1,3 +1,4 @@
+import { AWAY_RESPONDER_ARGUMENTS } from "./away-responder-tools";
 import { FLEET_REPLACEMENT_ACTIONS } from "./fleet-replacement-tools";
 import { displayActionCommand } from "./operations-display-action-adapter";
 import { TICKET_INVOICE_PREPARATION_ARGUMENTS } from "./ticket-invoice-preparation-tools";
@@ -32,6 +33,7 @@ export type ChatGptWriteCapabilityScope = keyof typeof CHATGPT_WRITE_CAPABILITIE
 
 /** Device telemetry and domain replay keys are supplied by the approval server. */
 export function sanitizeChatGptActionInput(name: string, input: Record<string, unknown>): Record<string, unknown> {
+  if(name === "manage_work_hub_away_responder") {const {operationId:_operationId,confirmed:_confirmed,...fields}=input;return fields;}
   if(name === "respond_work_hub_meeting_invitation") {const {operationId:_operationId,confirmed:_confirmed,...fields}=input;return fields;}
   if(name === "reschedule_work_hub_meeting") {const {operationId:_operationId,confirmed:_confirmed,...fields}=input;return fields;}
   if(name === "prepare_ticket_invoices") {const {operationId:_operationId,confirmed:_confirmed,...fields}=input;return fields;}
@@ -54,6 +56,7 @@ export function sanitizeChatGptActionInput(name: string, input: Record<string, u
  * Model-supplied acceptance flags never stand in for the person's action.
  */
 export function validateChatGptActionInput(name: string, input: Record<string, unknown>): void {
+  if(name === "manage_work_hub_away_responder") {const {operationId,...fields}=input;if(operationId!==undefined)z.uuid().parse(operationId);AWAY_RESPONDER_ARGUMENTS.parse(fields);}
   if(name === "respond_work_hub_meeting_invitation") {const {operationId,...fields}=input;if(operationId!==undefined)z.uuid().parse(operationId);CALENDAR_RESPONSE_ARGUMENTS.parse(fields);}
   if(name === "reschedule_work_hub_meeting" || name === "prepare_ticket_invoices") {
     const {operationId,...fields}=input;

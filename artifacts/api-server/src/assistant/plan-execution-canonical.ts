@@ -1,3 +1,4 @@
+import { createPlanAwayCommand } from "./plan-execution-away-command";
 import { and, eq } from "drizzle-orm";
 import { db, notificationPreferencesTable, notificationsTable, workHubClientOperationsTable } from "@workspace/db";
 import { z } from "zod/v4";
@@ -12,6 +13,7 @@ import { createPlanInvoiceActivityRead } from "./plan-execution-invoice-activity
 import { createPlanTicketInvoicePreparation } from "./plan-execution-ticket-invoices";
 import { createPlanCalendarReschedule,createPlanCalendarSnapshotRead } from "./plan-execution-calendar-reschedule";
 import { createPlanCalendarResponsesRead } from "./plan-execution-calendar-responses";
+import { createPlanAwayRead } from "./plan-execution-away-reads";
 import { createPlanTicketInvoiceCandidatesRead } from "./plan-execution-ticket-invoice-candidates";
 import { createPlanOpportunityRead } from "./plan-execution-opportunities";
 import { PLAN_EXECUTION_OPPORTUNITY_INPUTS } from "./plan-execution-read-policy";
@@ -67,6 +69,7 @@ export function createPlanExecutionCanonicalApi(overrides: Partial<Dependencies>
   }
   return {
     prepareTicketInvoices: createPlanTicketInvoicePreparation({authorize:deps.authorize,request:deps.request}),
+    configureAway: createPlanAwayCommand({authorize:deps.authorize,request:deps.request}),
     rescheduleCalendar: createPlanCalendarReschedule({authorize:deps.authorize,request:deps.request}),
     readbackDraft,
     async savePersonalDraft(authorization, supplied) {
@@ -83,6 +86,7 @@ export function createPlanExecutionCanonicalApi(overrides: Partial<Dependencies>
     },
     async read(authorization, step) {
       if(step.toolName==="query_work_hub_meeting_responses")return createPlanCalendarResponsesRead({authorize:deps.authorize,request:deps.request})(authorization,step);
+      if(["query_work_hub_away_responder","query_work_hub_away_channels"].includes(step.toolName))return createPlanAwayRead({authorize:deps.authorize,request:deps.request})(authorization,step);
       if(step.toolName==="query_calendar_reschedule_snapshot")return createPlanCalendarSnapshotRead({authorize:deps.authorize,request:deps.request})(authorization,step);
       if(step.toolName==="query_ticket_invoice_candidates")return createPlanTicketInvoiceCandidatesRead({authorize:deps.authorize,request:deps.request})(authorization,step);
       if(Object.hasOwn(PLAN_EXECUTION_OPPORTUNITY_INPUTS,step.toolName))return createPlanOpportunityRead({authorize:deps.authorize})(authorization,step);

@@ -2848,5 +2848,33 @@
     },
     "recordVersion": "Versión del registro guardado",
     "claimReference": "Referencia de reclamación exacta"
+  },
+  "workHubAway": {
+    "conflict": "La configuración cambió y se rechazó esta solicitud. Actualiza la configuración actual antes de revisar una solicitud nueva.",
+    "replacePrevious": "Guardar aquí reemplaza tu configuración de ausencia anterior. Su texto privado y sus conversaciones no se muestran en esta organización.",
+    "open": "Respuestas de ausencia",
+    "title": "Respuestas de ausencia de Work Hub",
+    "description": "Envía tu respuesta neutral aprobada una vez por conversación seleccionada y período cuando llega un mensaje nuevo. Se guarda una respuesta en la aplicación; no se garantiza entrega, lectura ni sonido.",
+    "neutral": "Estoy ausente. Responderé cuando esté disponible.",
+    "loadFailed": "La configuración de ausencia no está disponible en esta cuenta.",
+    "saveFailed": "Revisa el período, la respuesta y las conversaciones seleccionadas. No se confirmó que se guardara.",
+    "unknown": "El resultado no está resuelto. Comprueba y reintenta la solicitud original exacta; no supongas que se guardó.",
+    "saved": "Se guardó la configuración canónica.",
+    "retry": "Comprobar y reintentar solicitud exacta",
+    "windowHint": "Introduce inicio y fin con zona horaria, por ejemplo 2026-10-08T08:00:00-05:00. El fin debe ser futuro y el período no puede superar 31 días.",
+    "start": "Inicio de ausencia con zona horaria",
+    "end": "Fin de ausencia con zona horaria",
+    "reply": "Texto neutral de respuesta",
+    "channels": "Selecciona conversaciones con acceso de escritura en las que participas",
+    "noChannels": "No hay conversaciones elegibles disponibles.",
+    "partial": "Solo se muestran las primeras conversaciones elegibles.",
+    "save": "Guardar respuesta de ausencia aprobada",
+    "pause": "Pausar respuestas de ausencia",
+    "revoke": "Revocar respuestas de ausencia",
+    "refresh": "Actualizar configuración actual",
+    "active": "Regla guardada: activa",
+    "paused": "Regla guardada: pausada",
+    "revoked": "Regla guardada: revocada",
+    "notConfigured": "No hay una regla configurada para esta organización."
   }
 }

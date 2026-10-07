@@ -13,14 +13,15 @@ import { WorkHubAccessError } from "./context-access";
 export async function collaborationChannelScope(
   userId: number,
   channelId: string,
+  database: Omit<typeof db, "$client"> = db,
 ) {
-  const [scope] = await db
+  const [scope] = await database
     .select()
     .from(workHubCollaborationChannelsTable)
     .where(eq(workHubCollaborationChannelsTable.channelId, channelId))
     .limit(1);
   if (!scope) return null;
-  const [member] = await db
+  const [member] = await database
     .select()
     .from(workHubChannelMembersTable)
     .where(
@@ -32,7 +33,7 @@ export async function collaborationChannelScope(
     .limit(1);
   const crewMember = scope.crewId
     ? (
-        await db
+        await database
           .select()
           .from(workHubCrewMembersTable)
           .where(
@@ -45,13 +46,13 @@ export async function collaborationChannelScope(
       )[0]
     : null;
   if (scope.crewId && scope.kind !== "shared") {
-    const [crew] = await db
+    const [crew] = await database
       .select()
       .from(workHubCrewsTable)
       .where(eq(workHubCrewsTable.id, scope.crewId))
       .limit(1);
     const [company] = crew
-      ? await db
+      ? await database
           .select()
           .from(userOrgMembershipsTable)
           .where(
@@ -83,8 +84,9 @@ export async function collaborationChannelScope(
 export async function collaborationChannelAccess(
   userId: number,
   channelId: string,
+  database: Omit<typeof db, "$client"> = db,
 ): Promise<boolean | null> {
-  return (await collaborationChannelScope(userId, channelId))?.readable ?? null;
+  return (await collaborationChannelScope(userId, channelId, database))?.readable ?? null;
 }
 /** Existing membership endpoint must never bypass chat consent or private Crew membership. */
 export async function assertCollaborationInvite(

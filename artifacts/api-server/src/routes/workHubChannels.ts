@@ -1,4 +1,5 @@
 import { assertCollaborationInvite } from "../work-hub/collaboration-access";
+import { applyAwayRepliesForIncoming } from "../services/work-hub-away-responder-repository";
 import { Router, type IRouter, type Request, type Response } from "express";
 import { and, desc, eq, gt, lt, ne, sql, inArray } from "drizzle-orm";
 import { z } from "zod/v4";
@@ -427,6 +428,7 @@ router.post("/work-hub/channels/:channelId/messages", async (req, res) => {
       const [message] = await tx.insert(workHubMessagesTable).values({ channelId: channel.id, authorUserId: actor.userId, body: payload.body, kind: payload.kind, rootMessageId: payload.rootMessageId ?? null, parentMessageId: payload.parentMessageId ?? null, clientOperationId: envelope.operationId }).returning();
       if (payload.mentionUserIds.length) await tx.insert(workHubMentionsTable).values([...new Set(payload.mentionUserIds)].map((mentionedUserId) => ({ messageId: message.id, mentionedUserId }))).onConflictDoNothing();
       await appendWorkHubAudit({ actorUserId: actor.userId, owner: envelope.owner, action: "message.created", subjectType: "message", subjectId: message.id, newVersion: 1, source: source(req), operationId: envelope.operationId }, tx);
+      if (message.kind === "text") await applyAwayRepliesForIncoming(tx, actor, message.id, channel.id);
       return message;
     });
     if (!result.replayed) {
