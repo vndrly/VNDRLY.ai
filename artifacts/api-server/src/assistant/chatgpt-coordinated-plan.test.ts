@@ -1,6 +1,23 @@
 import {expect,it} from "vitest";
 import {createCoordinatedPlan,encodePlanDescription} from "./coordinated-plan";
 import {resumedWorkPlan} from "./chatgpt-coordinated-plan";
+it('persists resolved deadlines and reports overdue unfinished work without executing it',async()=>{
+ const {prepareWorkPlan}=await import('./chatgpt-coordinated-plan');
+ const identity={userId:17,organizationKey:'vendor:4'},owner={type:'vendor' as const,id:4};
+ const input={planId:'11111111-1111-4111-8111-111111111111',title:'Recovery deadline',steps:[{id:'review',specialist:'Finn',toolNames:['query_tickets'],dependsOn:[],deadlineAt:'2026-10-07T22:00:00Z'}]};
+ const prepared=prepareWorkPlan(input,identity,owner,new Set(['query_tickets']));
+ const task={id:input.planId,ownerOrgType:'vendor',ownerOrgId:4,version:1,description:prepared.payload.description};
+ expect(resumedWorkPlan([task],task.id,identity,new Set(),Date.parse('2026-10-07T22:00:00Z'))).toMatchObject({overdueStepIds:[],eligibleStepIds:[],executionStarted:false});
+ expect(resumedWorkPlan([task],task.id,identity,new Set(),Date.parse('2026-10-07T22:00:01Z'))).toMatchObject({overdueStepIds:['review'],eligibleStepIds:[],executionStarted:false});
+ expect(JSON.parse(task.description).steps[0].deadlineAt).toBe(input.steps[0].deadlineAt);
+ const saved=JSON.parse(task.description);
+ for(const state of ['completed','cancelled']) {
+  const terminal={...saved,steps:[{...saved.steps[0],state,resultReferences:state==='completed'?['canonical:task:verified']:[]}]};
+  expect(resumedWorkPlan([{...task,description:JSON.stringify(terminal)}],task.id,identity,new Set(['query_tickets']),Date.parse('2026-10-08T22:00:00Z'))).toMatchObject({overdueStepIds:[],eligibleStepIds:[],executionStarted:false});
+ }
+ expect(()=>resumedWorkPlan([task],task.id,identity,new Set(),Number.NaN)).toThrow('observation time');
+ for(const deadlineAt of ['tomorrow','2026-10-07T17:00:00']) expect(()=>prepareWorkPlan({...input,steps:[{...input.steps[0],deadlineAt}]},identity,owner,new Set(['query_tickets']))).toThrow();
+});
 it('prepares safe pause, retry and cancellation with task concurrency protection',async()=>{
  const {prepareWorkPlanControl}=await import('./chatgpt-coordinated-plan');
  const identity={userId:17,organizationKey:'vendor:4'},owner={type:'vendor' as const,id:4};
@@ -45,4 +62,3 @@ it('refuses a write or unrelated argument injection in a planned read',async()=>
  expect(()=>plannedReadRequests(ready,'brief',{get_work_hub_briefing:{},query_tickets:{}},new Set(['get_work_hub_briefing']))).toThrow('planned');
  expect(()=>plannedReadRequests(ready,'foreign',{},new Set(['get_work_hub_briefing']))).toThrow('eligible');
 });
-

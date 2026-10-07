@@ -44,6 +44,20 @@ Acceptance requires executing this scenario with synthetic records across invoic
 
 ## Validation status
 
+### Local coordinated-plan deadlines
+
+Plan steps can now retain an optional resolved UTC deadlineAt. Resume reports overdueStepIds for unfinished work while preserving current tool permissions and dependency eligibility. Completed/cancelled steps are excluded; unresolved natural-language dates, timezone-free timestamps and invalid observation times are rejected. Existing plans without deadlines remain readable. Sixteen focused plan/checkpoint tests and API typechecking pass. This local candidate does not start an executor, schedule a notification or establish that deadline-based work runs unattended; full validation and deployment remain required.
+
+### Release 7963c661 — post-deployment verification
+
+The exact candidate passed Verify release run 37556275705 and advanced main without force. Web Publish 37557743051 and API Deploy 37557743061 succeeded. Public API health returned 200 OK after deployment. Production iOS OTA run 37557756195 published update group 0e11dacc-9969-45ed-833a-a7c67c6c6fd9 for runtime 1.0.2. TestFlight run 37557756701 was still building at this checkpoint; submission is not established.
+
+The existing ChatGPT plugin was updated in place to package 1.8.3, preserving its account links. A post-deployment settings read confirmed Synthetic Reviewer user 1069, partner 609, membership 795. Saved task c33e5e14-d6e8-452a-a6d9-48a6277fcdcf remained completed, version 2. New authenticated panel action 1069.hhKX256CMFdbEBilchXTY8E5A_dgHNl3B8WWvdS-awE created fictional task c8804cdb-8347-41cd-baf3-2b27d8090b35. Independent canonical readback at 2026-10-07T01:39:39.306Z confirmed its exact release-test title and description, open status, version 1 and no due date; the saved coordinated plan remained version 6. Evidence lives in V-Connection-Runtime/synthetic-release-7963-readback.json and vndrly-release-7963-action-completed.png. This proves this release's scoped read and harmless write, not full Gate/ticket/device lifecycle parity or public-directory approval.
+
+### Live long-held equipment lookup — 2026-10-07 01:32 UTC
+
+The installed ChatGPT connection answered a read-only Synthetic Reviewer request for custody older than 90 days, reporting no matching assets and no unknown checkout dates, evaluated at 01:32:48.798Z. No mutation was requested. This is an empty-result interaction check, not proof that a populated overdue report correctly identifies a holder, checkout date or due date. Positive-record and cross-company behavior still require their corresponding regression and live fixture evidence.
+
 ### Live readable action panel — 2026-10-07 01:20 UTC
 
 Release `278bb9e706ab8bf3e4092cc2f05fe61e41622772` passed web and API deployment; public API health recovered to HTTP 200. An actual ChatGPT action panel rendered a description-only readable summary for new fictional task creation using Synthetic OpenAI Reviewer. Action `1069.w5GfINuvZEwJ3dayQdBEdnbSHSyYPir5-Mij9tuqw-Q` was submitted through the embedded approval control and displayed “The change completed.” Canonical cookie-authenticated GET /work-hub/tasks independently returned exactly one matching task, `c33e5e14-d6e8-452a-a6d9-48a6277fcdcf`, version 1, open, with the exact fictional title and description and no due date. The existing coordinated plan task remained version 6 with its serialized description preserved. Evidence: `V-Connection-Runtime/synthetic-readable-action-readback.json` and local screenshot `chatgpt-readable-action-completed.jpg`. This proves the deployed readable panel and one canonical task creation, not full domain parity, notification delivery or unattended orchestration.

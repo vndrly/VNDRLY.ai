@@ -1,11 +1,11 @@
 import { z } from "zod/v4";
-import { createCoordinatedPlan, encodePlanDescription, decodePlanDescription, eligiblePlanSteps, checkpointPlan } from "./coordinated-plan";
+import { createCoordinatedPlan, encodePlanDescription, decodePlanDescription, eligiblePlanSteps, checkpointPlan, overduePlanStepIds } from "./coordinated-plan";
 export const RESUME_PLAN_TOOL = {
  name:"v_resume_work_plan",description:"Resume a saved coordinated Work Hub plan for this connected user and company. Returns recorded checkpoints and currently available next steps; does not execute work. Recorded completion is not proof: verify referenced canonical records before reporting success.",
  inputSchema:{type:"object" as const,properties:{taskId:{type:"string",format:"uuid"}},required:["taskId"],additionalProperties:false},
  annotations:{readOnlyHint:true,destructiveHint:false,openWorldHint:false},
 };
-export function resumedWorkPlan(value:unknown,taskId:string,identity:{userId:number;organizationKey:string},availableTools:ReadonlySet<string>){
+export function resumedWorkPlan(value:unknown,taskId:string,identity:{userId:number;organizationKey:string},availableTools:ReadonlySet<string>,now=Date.now()){
  z.string().uuid().parse(taskId);
  const envelope=z.union([z.array(z.unknown()),z.object({tasks:z.array(z.unknown())}),z.object({items:z.array(z.unknown())})]).parse(value);
  const rows=Array.isArray(envelope)?envelope:"tasks" in envelope?envelope.tasks:envelope.items;
@@ -13,7 +13,7 @@ export function resumedWorkPlan(value:unknown,taskId:string,identity:{userId:num
  const task=z.object({id:z.string().uuid(),ownerOrgType:z.enum(["vendor","partner"]),ownerOrgId:z.number().int().positive(),version:z.number().int().positive(),description:z.string(),status:z.enum(['open','in_progress','completed','cancelled']).optional()}).parse(candidate);
  if(identity.organizationKey!==`${task.ownerOrgType}:${task.ownerOrgId}`)throw Error("Plan company mismatch");
  const plan=decodePlanDescription(task.description,identity);
- return {taskId:task.id,taskVersion:task.version,taskStatus:task.status,plan,eligibleStepIds:eligiblePlanSteps(plan,identity,availableTools).map(step=>step.id),executionStarted:false,recordedCompletionRequiresReadback:true};
+ return {taskId:task.id,taskVersion:task.version,taskStatus:task.status,plan,eligibleStepIds:eligiblePlanSteps(plan,identity,availableTools).map(step=>step.id),overdueStepIds:overduePlanStepIds(plan,identity,now),executionStarted:false,recordedCompletionRequiresReadback:true};
 }
 export const CONTROL_PLAN_TOOL = {
  name:'v_prepare_work_plan_control',description:'Prepare pausing, retrying or cancelling one saved plan step through the existing Work Hub authorization panel. Supply the last fetched task version. Does not mark work completed, execute a step or cancel an already-running external action. Retry rechecks current tools; completed and cancelled steps cannot be restarted.',
@@ -35,10 +35,10 @@ export function prepareWorkPlanControl(value:unknown,input:unknown,identity:{use
 
 export const PREPARE_PLAN_TOOL = {
  name:"v_prepare_work_plan",description:"Prepare a durable coordinated Work Hub task for several specialists. Use a stable UUID planId for retries. The user/company come from the linked account. Every requested tool must already be permitted. Saving the plan requires the existing action panel and does not start background execution.",
- inputSchema:{type:"object" as const,properties:{planId:{type:"string",format:"uuid"},title:{type:"string",maxLength:200},steps:{type:"array",minItems:1,maxItems:100,items:{type:"object",properties:{id:{type:"string"},specialist:{type:"string"},toolNames:{type:"array",items:{type:"string"}},dependsOn:{type:"array",items:{type:"string"}}},required:["id","specialist","toolNames","dependsOn"],additionalProperties:false}}},required:["planId","title","steps"],additionalProperties:false},
+ inputSchema:{type:"object" as const,properties:{planId:{type:"string",format:"uuid"},title:{type:"string",maxLength:200},steps:{type:"array",minItems:1,maxItems:100,items:{type:"object",properties:{id:{type:"string"},specialist:{type:"string"},toolNames:{type:"array",items:{type:"string"}},dependsOn:{type:"array",items:{type:"string"}},deadlineAt:{type:"string",format:"date-time",description:"Resolved UTC deadline; saving it does not schedule execution"}},required:["id","specialist","toolNames","dependsOn"],additionalProperties:false}}},required:["planId","title","steps"],additionalProperties:false},
  annotations:{readOnlyHint:false,destructiveHint:false,openWorldHint:false},
 };
-const planRequest=z.object({planId:z.string().uuid(),title:z.string().trim().min(1).max(200),steps:z.array(z.object({id:z.string().min(1).max(100),specialist:z.string().min(1).max(100),toolNames:z.array(z.string().min(1).max(150)).min(1).max(50),dependsOn:z.array(z.string().min(1).max(100)).max(100)}).strict()).min(1).max(100)}).strict();
+const planRequest=z.object({planId:z.string().uuid(),title:z.string().trim().min(1).max(200),steps:z.array(z.object({id:z.string().min(1).max(100),specialist:z.string().min(1).max(100),toolNames:z.array(z.string().min(1).max(150)).min(1).max(50),dependsOn:z.array(z.string().min(1).max(100)).max(100),deadlineAt:z.string().datetime().optional()}).strict()).min(1).max(100)}).strict();
 export function prepareWorkPlan(input:unknown,identity:{userId:number;organizationKey:string},owner:{type:"vendor"|"partner";id:number},availableTools:ReadonlySet<string>){
  const request=planRequest.parse(input);
  if(identity.organizationKey!==owner.type+":"+owner.id)throw Error("Plan company mismatch");

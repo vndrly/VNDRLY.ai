@@ -1,13 +1,14 @@
 import { z } from "zod/v4";
 import { randomUUID } from "node:crypto";
 export type PlanIdentity = { userId: number; organizationKey: string };
-export type PlanStepInput = { id: string; specialist: string; toolNames: string[]; dependsOn: string[] };
+export type PlanStepInput = { id: string; specialist: string; toolNames: string[]; dependsOn: string[]; deadlineAt?: string };
 export type PlanStep = PlanStepInput & { state: "pending" | "completed" | "failed" | "waiting" | "cancelled"; resultReferences: string[]; detail?: string };
 export type CoordinatedPlan = { schemaVersion: 1; id: string; version: number; identity: PlanIdentity; steps: PlanStep[] };
 function validateGraph(steps: PlanStepInput[]) {
  if (!steps.length || steps.length > 100) throw Error("Plan needs 1 to 100 steps");
  const ids = new Set(steps.map(s=>s.id));
  if (ids.size !== steps.length || steps.some(s=>!s.id.trim() || !s.specialist.trim() || !s.toolNames.length || s.toolNames.some(n=>!n.trim()))) throw Error("Invalid plan step");
+ for (const step of steps) if (step.deadlineAt !== undefined) z.string().datetime().parse(step.deadlineAt);
  const completed = new Set<string>(); const active = new Set<string>();
  const byId = new Map(steps.map(s=>[s.id,s]));
  function visit(id: string) {
@@ -32,6 +33,12 @@ export function eligiblePlanSteps(plan: CoordinatedPlan, identity: PlanIdentity,
  assertIdentity(plan,identity);validateGraph(plan.steps);
  return plan.steps.filter(s=>s.state==="pending" && s.toolNames.every(n=>availableTools.has(n)) && s.dependsOn.every(id=>plan.steps.find(p=>p.id===id)?.state==="completed"));
 }
+/** Deadline reporting is observational; it does not authorize or execute overdue work. */
+export function overduePlanStepIds(plan: CoordinatedPlan, identity: PlanIdentity, now: number): string[] {
+ assertIdentity(plan, identity); validateGraph(plan.steps);
+ if (!Number.isFinite(now)) throw Error("Invalid plan observation time");
+ return plan.steps.filter(step => step.state !== "completed" && step.state !== "cancelled" && step.deadlineAt !== undefined && Date.parse(step.deadlineAt) < now).map(step => step.id);
+}
 /** Call only after trusted record/action readback. References supplied by a model are not completion evidence.
  * Persist the returned plan with the Work Hub task's own expectedVersion and operationId.
  */
@@ -51,6 +58,7 @@ const persistedStep = z.object({
  id:z.string().trim().min(1).max(100),specialist:z.string().trim().min(1).max(100),
  toolNames:z.array(z.string().trim().min(1).max(150)).min(1).max(50),
  dependsOn:z.array(z.string().trim().min(1).max(100)).max(100),
+ deadlineAt:z.string().datetime().optional(),
  state:z.enum(["pending","completed","failed","waiting","cancelled"]),
  resultReferences:z.array(z.string().trim().min(1).max(500)).max(100),detail:z.string().max(2000).optional(),
 }).strict();
@@ -65,4 +73,3 @@ export function decodePlanDescription(description:string,identity:PlanIdentity):
 export function encodePlanDescription(plan:CoordinatedPlan):string {
  const description=JSON.stringify(plan);decodePlanDescription(description,plan.identity);return description;
 }
-
