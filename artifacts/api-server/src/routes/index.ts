@@ -1,6 +1,7 @@
 import fleetRouter from "./fleet";
 import ticketInvoicePreparationRouter from "./ticketInvoicePreparation";
 import calendarRescheduleRouter from "./calendarReschedule";
+import calendarResponseRouter from "./calendarResponse";
 import operationsDisplayViewRouter from "./operationsDisplayView";
 import { Router, type IRouter } from "express";
 import healthRouter from "./health";
@@ -180,6 +181,7 @@ router.use(implementationATripsRouter);
 router.use(fleetRouter);
 router.use(ticketInvoicePreparationRouter);
 router.use(calendarRescheduleRouter);
+router.use(calendarResponseRouter);
 router.use(implementationASafetyRouter);
 router.use(implementationASubscriptionsRouter);
 router.use(implementationADisplaysRouter);

@@ -126,6 +126,7 @@ async function tokens(scope = auth.scope) {
 describe("ChatGPT account connection boundary", () => {
   it.each([
     { name: "reschedule_work_hub_meeting", input: { occurrenceId: "11111111-1111-4111-8111-111111111111", expectedFingerprint: "a".repeat(64), startsAt: "2026-10-08T14:00:00.000Z", endsAt: "2026-10-08T15:00:00.000Z", timezone: "America/Chicago" } },
+    { name: "respond_work_hub_meeting_invitation", input: { occurrenceId: "11111111-1111-4111-8111-111111111111", expectedFingerprint: "a".repeat(64), response: "accepted" } },
     { name: "prepare_ticket_invoices", input: { basis: "recorded_invoice_activity", tickets: [{ ticketId: 21, expectedUpdatedAt: "2026-10-07T10:00:00.000Z" }] } },
   ])("submits approved $name with only the trusted operation ID and does not repeat it", async ({ name, input }) => {
     const credentials = await tokens("work_hub:read work_hub:write finance:read finance:write");
@@ -154,11 +155,16 @@ describe("ChatGPT account connection boundary", () => {
     const invoke = () => request(app).post(base + "/mcp").set("Authorization", "Bearer " + credentials.access_token).send({ jsonrpc: "2.0", id: 1, method: "tools/list" });
     const tools = (await invoke()).body.result.tools;
     expect(tools.find((tool: { name: string }) => tool.name === "query_calendar_reschedule_snapshot")).toMatchObject({ outputSchema: { additionalProperties: false }, securitySchemes: [{ type: "oauth2", scopes: ["work_hub:read"] }] });
+    expect(tools.find((tool: { name: string }) => tool.name === "query_work_hub_meeting_responses")).toMatchObject({ outputSchema: { additionalProperties: false }, securitySchemes: [{ type: "oauth2", scopes: ["work_hub:read"] }] });
+    const responseWrite = tools.find((tool: { name: string }) => tool.name === "respond_work_hub_meeting_invitation");
+    expect(responseWrite.securitySchemes).toEqual([{ type: "oauth2", scopes: ["work_hub:write"] }]);
+    expect(responseWrite._meta.securitySchemes).toEqual(responseWrite.securitySchemes);
     const write = tools.find((tool: { name: string }) => tool.name === "reschedule_work_hub_meeting");
     expect(write.securitySchemes).toEqual([{ type: "oauth2", scopes: ["work_hub:write"] }]);
     expect(write._meta.securitySchemes).toEqual(write.securitySchemes);
     grants[0].scopes = ["work_hub:read"];
     expect((await invoke()).body.result.tools.some((tool: { name: string }) => tool.name === write.name)).toBe(false);
+    expect((await invoke()).body.result.tools.some((tool: { name: string }) => tool.name === responseWrite.name)).toBe(false);
     expect(mocks.run).not.toHaveBeenCalled();
   });
   it("advertises both required finance permissions for invoice preparation without changing other finance metadata", async () => {

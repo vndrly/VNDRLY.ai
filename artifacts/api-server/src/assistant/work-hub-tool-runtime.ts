@@ -301,6 +301,12 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
     try {const {operationId,confirmed:_confirmed,owner:_owner,context:_context,...fields}=input;return calendarRescheduleRequest(fields,z.uuid().parse(operationId));}
     catch {return {error:"Supply the exact saved snapshot, UTC interval and unchanged meeting timezone."};}
   }
+  if(name === "query_work_hub_meeting_responses") {
+    try{const args=CALENDAR_RESPONSE_READ_INPUT.parse(input);return request("GET",`/work-hub/calendar-response/${args.occurrenceId}/snapshot`);}catch{return{error:"Supply the exact saved meeting occurrence."};}
+  }
+  if(name === "respond_work_hub_meeting_invitation") {
+    try{const {operationId,confirmed:_confirmed,owner:_owner,context:_context,...fields}=input;return calendarResponseRequest(fields,z.uuid().parse(operationId));}catch{return{error:"Supply your exact current invitation snapshot and accepted or declined response."};}
+  }
   if (name.includes("asset_custody")) {
     const assetPayload = { ...withoutNulls(payload), ...(Array.isArray(payload.aliases) ? { aliases: payload.aliases.map(value => withoutNulls(record(value))) } : {}), ...(payload.alias ? { alias: withoutNulls(record(payload.alias)) } : {}) };
     const actions = ["create", "provisional", "aliases", "checkout", "return", "transfer", "condition", "hold", "release_hold", "merge", "verify-issued", "loss_report", "identifier_claim", "resolve_identifier_claim"];
@@ -1000,6 +1006,7 @@ export function resolveExecutableWorkHubToolRequest(
 }
 import { WORK_HUB_TOOL_METADATA } from "./work-hub-tools";
 import { calendarRescheduleRequest } from "./calendar-reschedule-tools";
+import { calendarResponseRequest,CALENDAR_RESPONSE_READ_INPUT } from "./calendar-response-tools";
 import { IMPLEMENTATION_A_CAPABILITY_TOOLS, findAskVTool } from "./tool-registry";
 
 export const isTypedWorkHubTool = (name: string): boolean =>

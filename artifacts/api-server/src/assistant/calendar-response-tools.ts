@@ -1,0 +1,11 @@
+import {z} from "zod/v4";
+import type {SessionPayload} from "../lib/session";
+import {calendarResponseInputSchema,calendarResponseObservationSchema} from "../services/calendar-response";
+export const CALENDAR_RESPONSE_ARGUMENTS=calendarResponseInputSchema.omit({operationId:true});
+export const CALENDAR_RESPONSE_READ_INPUT=z.object({occurrenceId:z.uuid()}).strict();
+export const CALENDAR_RESPONSE_TOOLS=[
+ {name:"query_work_hub_meeting_responses",description:"Read your exact current Work Hub meeting invitation and your saved response. Current authorized hosts additionally see current participants' recorded decisions. Only scheduleResponseVerified:true establishes a recorded response to this exact schedule. Legacy or stale acceptance is unknown; nothing proves external attendee acceptance, physical attendance or recording consent.",inputSchema:z.toJSONSchema(CALENDAR_RESPONSE_READ_INPUT),outputSchema:z.toJSONSchema(calendarResponseObservationSchema),securitySchemes:[{type:"oauth2" as const,scopes:["work_hub:read"]}],annotations:{readOnlyHint:true,destructiveHint:false,openWorldHint:false}},
+ {name:"respond_work_hub_meeting_invitation",description:"Prepare approval to record your own accepted or declined response to one exact saved scheduled Work Hub invitation using the current schedule fingerprint. You cannot respond for another person. This does not join audio, grant recording consent, send email or prove anyone attended. Current account, active participant and schedule are rechecked at execution.",inputSchema:z.toJSONSchema(CALENDAR_RESPONSE_ARGUMENTS),securitySchemes:[{type:"oauth2" as const,scopes:["work_hub:write"]}],annotations:{readOnlyHint:false,destructiveHint:false,openWorldHint:false}},
+] as const;
+export function calendarResponseAvailable(session:SessionPayload,scopes:readonly string[],write=true){return Boolean(session.userId&&session.activeMembershipId&&session.sv&&(session.role==="partner"?session.partnerId:session.vendorId))&&scopes.includes(write?"work_hub:write":"work_hub:read")&&["vendor","partner","field_employee"].includes(session.role??"");}
+export function calendarResponseRequest(raw:unknown,operationId:string){return{method:"POST" as const,path:"/work-hub/calendar-response/execute",body:calendarResponseInputSchema.parse({...CALENDAR_RESPONSE_ARGUMENTS.parse(raw),operationId})};}

@@ -11,6 +11,7 @@ import { createPlanExecutionBusinessReads, PLAN_EXECUTION_BUSINESS_READ_CANDIDAT
 import { createPlanInvoiceActivityRead } from "./plan-execution-invoice-activity";
 import { createPlanTicketInvoicePreparation } from "./plan-execution-ticket-invoices";
 import { createPlanCalendarReschedule,createPlanCalendarSnapshotRead } from "./plan-execution-calendar-reschedule";
+import { createPlanCalendarResponsesRead } from "./plan-execution-calendar-responses";
 import { createPlanTicketInvoiceCandidatesRead } from "./plan-execution-ticket-invoice-candidates";
 import { createPlanOpportunityRead } from "./plan-execution-opportunities";
 import { PLAN_EXECUTION_OPPORTUNITY_INPUTS } from "./plan-execution-read-policy";
@@ -81,6 +82,7 @@ export function createPlanExecutionCanonicalApi(overrides: Partial<Dependencies>
       return result.result;
     },
     async read(authorization, step) {
+      if(step.toolName==="query_work_hub_meeting_responses")return createPlanCalendarResponsesRead({authorize:deps.authorize,request:deps.request})(authorization,step);
       if(step.toolName==="query_calendar_reschedule_snapshot")return createPlanCalendarSnapshotRead({authorize:deps.authorize,request:deps.request})(authorization,step);
       if(step.toolName==="query_ticket_invoice_candidates")return createPlanTicketInvoiceCandidatesRead({authorize:deps.authorize,request:deps.request})(authorization,step);
       if(Object.hasOwn(PLAN_EXECUTION_OPPORTUNITY_INPUTS,step.toolName))return createPlanOpportunityRead({authorize:deps.authorize})(authorization,step);

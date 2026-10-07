@@ -1,0 +1,30 @@
+import {randomUUID} from "node:crypto";
+import {describe,expect,it} from "vitest";
+import {assertFreshLocalTestDatabaseEnvironment} from "../../../../scripts/fresh-test-database.mjs";
+const isolated=process.env.VNDRLY_TEST_DB_MODE==="fresh-local"&&process.env.VNDRLY_ISOLATED_TEST_DB==="1";
+if(isolated)assertFreshLocalTestDatabaseEnvironment(process.env);
+describe.skipIf(!isolated)("canonical saved participant response persistence",()=>{
+ it("records one exact response, distinguishes stale schedules and refuses revoked membership replay",async()=>{
+  assertFreshLocalTestDatabaseEnvironment(process.env);
+  const s=await import("@workspace/db"),{eq,and}=await import("drizzle-orm"),{calendarResponseForSession}=await import("./calendar-response-repository");
+  const target=new URL(process.env.DATABASE_URL!);expect((await s.pool.query("SELECT current_database() AS database,host(inet_server_addr()) AS address,inet_server_port() AS port")).rows[0]).toEqual({database:process.env.VNDRLY_FRESH_TEST_DB_NAME,address:"127.0.0.1",port:Number(target.port)});
+  const marker=randomUUID(),[vendor]=await s.db.insert(s.vendorsTable).values({name:`Synthetic RSVP ${marker}`,contactName:"Synthetic",contactEmail:`${marker}@example.invalid`}).returning();
+  const [user]=await s.db.insert(s.usersTable).values({username:`rsvp-${marker}`,passwordHash:"synthetic-unusable-login",role:"vendor",displayName:"Synthetic participant"}).returning();
+  const [membership]=await s.db.insert(s.userOrgMembershipsTable).values({userId:user.id,orgType:"vendor",vendorId:vendor.id,role:"admin"}).returning();
+  const [meeting]=await s.db.insert(s.workHubMeetingsTable).values({ownerOrgType:"vendor",ownerOrgId:vendor.id,title:"Synthetic RSVP meeting",timezone:"UTC",createdById:user.id}).returning();
+  const start=new Date(Date.now()+86400000),[occurrence]=await s.db.insert(s.workHubMeetingOccurrencesTable).values({meetingId:meeting.id,startsAt:start,endsAt:new Date(start.getTime()+3600000)}).returning();
+  await s.db.insert(s.workHubMeetingParticipantsTable).values({occurrenceId:occurrence.id,userId:user.id,role:"host",rsvp:"pending"});
+  const api=calendarResponseForSession({userId:user.id,role:"vendor",vendorId:vendor.id,membershipRole:"admin",activeMembershipId:membership.id,sv:user.sessionVersion});
+  const observed=await api.inspect(occurrence.id),command={operationId:randomUUID(),occurrenceId:occurrence.id,expectedFingerprint:observed.fingerprint,response:"accepted"};
+  const [first,second]=await Promise.all([api.execute(command),api.execute(command)]);expect(first.receipt).toEqual(second.receipt);expect([first.replayed,second.replayed].sort()).toEqual([false,true]);
+  expect((await s.db.select().from(s.workHubMeetingParticipantsTable).where(eq(s.workHubMeetingParticipantsTable.occurrenceId,occurrence.id)))[0].rsvp).toBe("accepted");
+  expect(await s.db.select().from(s.workHubClientOperationsTable).where(and(eq(s.workHubClientOperationsTable.userId,user.id),eq(s.workHubClientOperationsTable.commandKind,"calendar.response")))).toHaveLength(1);
+  expect(await s.db.select().from(s.workHubAuditLogTable).where(and(eq(s.workHubAuditLogTable.actorUserId,user.id),eq(s.workHubAuditLogTable.operationId,command.operationId)))).toHaveLength(1);
+  expect((await api.readback(command)).receipt).toEqual(first.receipt);expect((await api.inspect(occurrence.id)).responses[0]).toMatchObject({response:"accepted",scheduleResponseVerified:true});
+  await s.db.update(s.workHubMeetingOccurrencesTable).set({startsAt:new Date(start.getTime()+86400000)}).where(eq(s.workHubMeetingOccurrencesTable.id,occurrence.id));
+  expect((await api.inspect(occurrence.id)).responses[0]).toMatchObject({response:"unknown",recordedResponse:"accepted",scheduleResponseVerified:false});
+  await expect(api.execute({...command,operationId:randomUUID()})).rejects.toThrow("snapshot_conflict");
+  await s.db.update(s.userOrgMembershipsTable).set({role:"member"}).where(eq(s.userOrgMembershipsTable.id,membership.id));
+  await expect(api.readback(command)).rejects.toThrow();await expect(api.execute(command)).rejects.toThrow();
+ });
+});
