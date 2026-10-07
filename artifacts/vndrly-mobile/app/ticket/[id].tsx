@@ -41,6 +41,7 @@ import TicketNudgePanel from "@/components/TicketNudgePanel";
 import TicketFlagPanel from "@/components/TicketFlagPanel";
 import NudgeFlashOverlay from "@/components/NudgeFlashOverlay";
 import CommentsPanel from "@/components/CommentsPanel";
+import TicketRecovery from "@/components/TicketRecovery";
 import TicketUnlock from "@/components/TicketUnlock";
 import TicketStatusStepper from "@/components/TicketStatusStepper";
 import { useColors } from "@/hooks/useColors";
@@ -2120,6 +2121,7 @@ export default function TicketDetailScreen() {
             testID="ticket-detail-live-location-pill"
           />
         ) : null}
+        <TicketRecovery user={currentUser} ticketId={ticketId} status={ticket.status} onRefresh={() => load()} />
         <TicketUnlock user={currentUser} ticketId={ticketId} status={ticket.status} onRefresh={() => load()} />
         {ticket.unlockedAt ? (
           <TouchableOpacity
