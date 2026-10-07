@@ -1,4 +1,4 @@
-import { createHmac } from "node:crypto";
+import { createHash, createHmac } from "node:crypto";
 import { SESSION_SECRET, type SessionPayload } from "../lib/session";
 
 function err(message: string): string {
@@ -573,7 +573,17 @@ async function gateOperation(
   const args = argsOf(input);
   const guard = writeGuard(args, true);
   if (guard) return guard;
-  const result = await callNaturalVoiceDomainApi(path, method, apiInput ?? args, session, { "Idempotency-Key": String(args.idempotencyKey ?? "") });
+  let body = apiInput ?? args;
+  if (action === "paid_travel_started" || action === "gate_shift_assumed") {
+    // Canonical duty endpoints require a UUID. Keep the trusted approval key
+    // stable across retries; never create a fresh operation for a retry.
+    const key = String(args.idempotencyKey);
+    const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    const hex = createHash("sha256").update(JSON.stringify(["askv-gate", action, session.userId, session.vendorId, session.partnerId, key])).digest("hex");
+    const operationId = uuid.test(key) ? key : `${hex.slice(0, 8)}-${hex.slice(8, 12)}-5${hex.slice(13, 16)}-a${hex.slice(17, 20)}-${hex.slice(20, 32)}`;
+    body = { ...body, idempotencyKey: operationId };
+  }
+  const result = await callNaturalVoiceDomainApi(path, method, body, session, { "Idempotency-Key": String(args.idempotencyKey ?? "") });
   return JSON.stringify(Array.isArray(result) || (result as Record<string, unknown>).error ? result : {
     ok: true, action, message, responseMode: "concise", refresh: ["gate", "work-hub", "notifications"], result,
   });

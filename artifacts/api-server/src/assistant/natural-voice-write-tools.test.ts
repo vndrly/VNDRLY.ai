@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { z } from "zod";
 import {
   confirmVisitorCheckIn,
   confirmVisitorCheckOut,
@@ -317,6 +318,23 @@ describe("AskV canonical Gate and field operations", () => {
     for (const [, request] of fetchMock.mock.calls) {
       expect(request.headers["Idempotency-Key"]).toBe("gate-operation-1");
     }
+  });
+
+  it("adapts trusted Gate duty keys to canonical UUIDs without changing retry identity", async () => {
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ id: "duty" }) });
+    const input = { stationId: "station-1", workHubShiftId: "shift-1", confirmed: true, idempotencyKey: "chatgpt:trusted-action" };
+    await assumeGateShift(input, gate);
+    await assumeGateShift(input, gate);
+    await startPaidTravel(input, gate);
+    await assumeGateShift(input, { ...gate, userId: 11 });
+    const keys = fetchMock.mock.calls.map(([, request]) => JSON.parse(request.body).idempotencyKey);
+    for (const key of keys) expect(z.string().uuid().safeParse(key).success).toBe(true);
+    expect(keys[0]).toBe(keys[1]);
+    expect(keys[0]).not.toBe(keys[2]);
+    expect(keys[0]).not.toBe(keys[3]);
+    const existing = "11111111-1111-4111-8111-111111111111";
+    await assumeGateShift({ ...input, idempotencyKey: existing }, gate);
+    expect(JSON.parse(fetchMock.mock.calls[4][1].body).idempotencyKey).toBe(existing);
   });
 
   it("delivers only to server-authorized report recipients without leaking guard fields", async () => {
