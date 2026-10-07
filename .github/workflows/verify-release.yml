@@ -38,10 +38,26 @@ jobs:
 
       - name: Install the pinned test browser
         id: browser
+        timeout-minutes: 8
         if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
         shell: bash
         run: |
           set -euo pipefail
+          # Avoid the runner image's unreliable HTTP Azure Ubuntu mirror.
+          # Limit each apt acquisition; the step bound also covers provisioning.
+          sudo python3 - /etc/apt/sources.list /etc/apt/sources.list.d/ubuntu.sources <<'PY'
+          import pathlib, re, sys
+          for name in sys.argv[1:]:
+              source = pathlib.Path(name)
+              if not source.exists():
+                  continue
+              text = source.read_text()
+              text = re.sub(r'https?://azure\.archive\.ubuntu\.com/ubuntu', 'https://archive.ubuntu.com/ubuntu', text)
+              text = re.sub(r'http://(?:[a-z]{2}\.)?archive\.ubuntu\.com/ubuntu', 'https://archive.ubuntu.com/ubuntu', text)
+              text = text.replace('http://security.ubuntu.com/ubuntu', 'https://security.ubuntu.com/ubuntu')
+              source.write_text(text)
+          PY
+          printf '%s\n' 'Acquire::Retries "2";' 'Acquire::http::Timeout "20";' 'Acquire::https::Timeout "20";' | sudo tee /etc/apt/apt.conf.d/80-vndrly-acquire >/dev/null
           pnpm --filter @workspace/e2e exec playwright install --with-deps chromium
           browser_path="$(pnpm --filter @workspace/e2e exec node -e 'console.log(require("@playwright/test").chromium.executablePath())')"
           test -x "$browser_path"

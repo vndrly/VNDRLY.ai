@@ -38,6 +38,41 @@ function assertCondition(step, condition) {
   );
 }
 
+test("browser provisioning uses HTTPS Ubuntu mirrors and bounded failures without bypassing dependencies", () => {
+  const browser = namedStep("Install the pinned test browser");
+  assert.match(browser, /^        timeout-minutes: 8$/m);
+  assert.match(browser, /azure\\\.archive\\\.ubuntu\\\.com/);
+  assert.match(browser, /https:\/\/archive\.ubuntu\.com\/ubuntu/);
+  assert.match(browser, /https:\/\/security\.ubuntu\.com\/ubuntu/);
+  assert.match(browser, /Acquire::Retries "2"/);
+  assert.match(browser, /Acquire::http::Timeout "20"/);
+  assert.match(browser, /Acquire::https::Timeout "20"/);
+  assert.match(browser, /\/etc\/apt\/sources\.list\.d\/ubuntu\.sources/);
+  assert.match(browser, /^          pnpm --filter @workspace\/e2e exec playwright install --with-deps chromium$/m);
+  assert.ok(browser.indexOf("Acquire::Retries") < browser.indexOf("playwright install --with-deps"));
+  assert.doesNotMatch(browser, /continue-on-error|\|\|\s*true|--no-deps/);
+});
+
+test("the workflow mirror rules cover legacy and deb822 sources while preserving unrelated repositories", () => {
+  const browser = namedStep("Install the pinned test browser");
+  const rules = [...browser.matchAll(/text = re\.sub\(r'([^']+)', '([^']+)', text\)/g)];
+  const literals = [...browser.matchAll(/text = text\.replace\('([^']+)', '([^']+)'\)/g)];
+  assert.equal(rules.length, 2);
+  assert.equal(literals.length, 1);
+  const convert = text => {
+    for (const [, pattern, replacement] of rules) text = text.replace(new RegExp(pattern, "g"), replacement);
+    for (const [, before, after] of literals) text = text.split(before).join(after);
+    return text;
+  };
+  const legacy = "deb http://azure.archive.ubuntu.com/ubuntu noble main\ndeb http://security.ubuntu.com/ubuntu noble-security main\n";
+  assert.equal(convert(legacy), "deb https://archive.ubuntu.com/ubuntu noble main\ndeb https://security.ubuntu.com/ubuntu noble-security main\n");
+  const deb822 = "Types: deb\nURIs: https://azure.archive.ubuntu.com/ubuntu http://us.archive.ubuntu.com/ubuntu\nSuites: noble noble-updates\nSigned-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg\n";
+  assert.equal(convert(deb822), deb822.replace("https://azure.archive.ubuntu.com/ubuntu", "https://archive.ubuntu.com/ubuntu").replace("http://us.archive.ubuntu.com/ubuntu", "https://archive.ubuntu.com/ubuntu"));
+  const unrelated = "deb https://packages.microsoft.com/ubuntu/24.04/prod noble main\n";
+  assert.equal(convert(unrelated), unrelated);
+  assert.equal(convert(convert(legacy)), convert(legacy));
+});
+
 test("release gates have unique stable step identities", () => {
   const expected = {
     dependencies: "pnpm install --frozen-lockfile",
