@@ -15,4 +15,18 @@ The embedded authorization panel reported completion. Independent occurrence cat
 
 The initial calendar read incorrectly used the parent meeting ID and returned404. Reading with the occurrence ID succeeded. Tool descriptions now explicitly identify the occurrence ID for calendar meeting reads/changes; deployment and refreshed discovery of that clarification remain pending.
 
-This proves scheduling and saved-record readback. It does not prove joining, media capture, recording, transcription, cancellation, notifications, or attendee acceptance.
+## Reschedule and cancellation
+
+The same occurrence was rescheduled through the embedded authenticated calendar action to October 7, 2026 10:30–10:40 AM America/Chicago (15:30–15:40Z).
+
+- Action: 1069.5-u64YCDMbjVnS65NGL_M3IuqN5zL4FFQKHqZfEbBqY
+- Applied operation: 846f0042-7a13-4d29-812e-d19f2035b05b at 2026-10-07T01:04:00.182Z, replayed false
+- Independent canonical calendar read confirmed the changed time, scheduled status, original title and recording/transcription off.
+
+The disposable fictional occurrence was then cancelled through the embedded authenticated calendar action.
+
+- Action: 1069.W60MXO0rXbNp7DFWps4AOBuuDGPehtNK1AhiDNduQTQ
+- Applied operation: 172b79ca-4ce4-44a8-820e-e423370427db at 2026-10-07T01:05:25.375Z, replayed false
+- Saved result: occurrence status cancelled, retaining its rescheduled times and recording/transcription off. A fresh independent canonical calendar read confirmed all these values and the original synthetic title.
+
+This proves scheduling, rescheduling and cancellation with independent saved-record readbacks. It does not prove joining, media capture, recording, transcription, notifications, or attendee acceptance.

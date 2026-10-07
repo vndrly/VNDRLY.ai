@@ -63,6 +63,21 @@ describe("voice-opened ticket entries", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it("consumes a closed partner ticket deep link once without capture or writes", async () => {
+    window.history.replaceState(null, "", "/tickets/100005?askvEntry=photo&view=audit");
+    const closed = { ...ticket, id: 100005, status: "funds_dispersed", lifecycleState: "off_site" };
+    const onLineItem = vi.fn();
+    const view = render(<TicketVoiceEntry {...props} ticket={closed} role="partner" onLineItem={onLineItem} />);
+    expect((await screen.findByRole("status")).textContent).toContain("cannot add entries");
+    expect(window.location.search).toBe("?view=audit");
+    view.rerender(<TicketVoiceEntry {...props} ticket={{ ...closed }} role="partner" onLineItem={onLineItem} />);
+    expect(screen.getAllByRole("dialog")).toHaveLength(1);
+    expect(screen.queryByLabelText("Choose ticket photo")).toBeNull();
+    expect(gps).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(onLineItem).not.toHaveBeenCalled();
+  });
+
   it.each([
     { role: "partner", status: "initiated", accessAllowed: true },
     { role: "admin", status: "initiated", accessAllowed: true },

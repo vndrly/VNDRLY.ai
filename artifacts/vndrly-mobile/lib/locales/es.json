@@ -1509,6 +1509,9 @@
       "internal_error": "No se pudo completar la solicitud del viaje."
     },
     "workforce": {
+      "login_required": "Inicia sesión para ver el personal.",
+      "vendor_scope_required": "Selecciona un proveedor para ver su personal.",
+      "roster_access_denied": "No tienes permiso para ver este personal.",
       "invalid_request": "La solicitud de personal no es válida.",
       "internal_error": "No se pudo completar la solicitud de personal."
     }

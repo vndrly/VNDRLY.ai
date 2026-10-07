@@ -44,6 +44,10 @@ Acceptance requires executing this scenario with synthetic records across invoic
 
 ## Validation status
 
+### Live Gate role boundary — 2026-10-07 00:19 UTC
+
+Production web and API deployment of `301bf03d745c57c0342e746a54d7e582adf68b62` passed, with public health returning 200 after restart. The fictional relationship for Vendor 1107 and Partner 609 was restored through the canonical approval endpoint without changing its existing fictional agreement. Canonical role updates tested worker 1073/person 969 as both gatekeeper and gate supervisor: each returned exactly Site 392 and HTTP 200 from the Gate review queue. Original gatekeeper access was restored and reread. Only fictional records were changed; passwords were unchanged. Evidence: `V-Connection-Runtime/synthetic-gate-role-boundaries-postdeploy.json`. This proves live API site/read boundaries, not an actual ChatGPT worker account connection or complete check-in/out workflow. Later access-migration replay and planned-read checkpoint candidates remain in validation.
+
 Candidate API typecheck and focused authorization, workspace, runtime and connection tests pass locally. Full repository validation, deployment and live ChatGPT verification remain required before calling this expansion released. No live records were changed by these local tests.
 ### Ticket crew acknowledgement
 
@@ -68,8 +72,16 @@ Acceptance: synthetic exact match across two isolated companies creates one priv
 
 `v_prepare_work_plan_control` prepares one step's waiting, pending (retry), or cancelled state through canonical Work Hub task updates and the existing authorization panel. It requires both task reads and writes, the linked plan user/company, and the exact fetched task version. It preserves the task's current status and refuses terminal steps/tasks. Retry checks currently permitted tools. It cannot manufacture completed checkpoints, run external work, cancel already-running provider actions, or start unattended monitoring. Canonical update readback and full deployment verification remain required.
 
+#### Live persistence verification — 2026-10-07 00:06 UTC
+
+The deployed payload correction passed an actual ChatGPT embedded-panel execution using only Synthetic OpenAI Reviewer. Action `1069.CQqwIkYfoHAZJ83OjjxKPn4VRvJ6h-6ITPkVZ-QBPl8` completed with operation `add98ef7-2eaf-4f07-83d0-073e039a87fd`. Independent `list_work_hub_tasks` readback confirms task `23598d53-27fd-4eb6-bf6b-4e32ec7f443a` version 5, embedded plan version 4, and `gate_coverage` state `waiting` with the exact synthetic persistence-check detail. Other steps retain their previous states. This proves the plan-step pause was saved; it does not prove background execution, calendar recovery or Gate coverage completion. The new scoped Gate access and staff-qualification fixes remain in separate validation candidates.
+
 ### Dictated safety drafts (candidate)
 The ChatGPT safety read family can prepare dictated safety-report fields through the existing pure draft helper. Results explicitly state that no report was submitted, no form was populated, and site access has not been verified. Saving the report still uses the authorized safety workflow. This addition is pending full release validation and live ChatGPT verification.
 
 ### Ticket device entry (candidate)
 `v_open_ticket_entry` reads the exact authorized ticket before creating an account-bound link to the existing photo, parts, labor, or mileage entry screen. Opening the signed link rechecks the account, active organization, session generation, current connection grant and ticket access. The destination is fixed to the saved ticket; arbitrary redirects are rejected. The device screen retains edit-role and lifecycle checks. Opening the link does not save entries, upload photos, grant camera access or start GPS tracking. Completion requires readback of actual saved ticket records. This closes a device navigation gap, not independent capture inside ChatGPT; full release validation and live device verification remain pending.
+
+#### Live device-screen retry — 2026-10-07 01:07 UTC
+
+The existing synthetic ticket photo-entry tab initially rendered the sign-in form. Direct form entry signed in as Synthetic OpenAI Reviewer (partner609); the dashboard identified that exact fictional organization. No password was changed. The same saved credentials also passed canonical API sign-in, and GET /tickets/100005 returned HTTP200 in512ms with funds_dispersed status. The browser sign-in instead returned to the dashboard, losing the requested ticket destination. Explicit navigation back to /tickets/100005?askvEntry=photo then timed out; a fresh binding to that same tab also timed out. This distinguishes a browser ticket-screen/handoff failure from a rejected account or unavailable ticket API. No photo was selected, uploaded or saved, and no location permission was granted. Ticket device-entry completion remains unverified; do not describe opening its signed link as completing evidence capture.

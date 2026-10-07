@@ -4729,6 +4729,9 @@
       "internal_error": "The trip request could not be completed."
     },
     "workforce": {
+      "login_required": "Sign in to view the workforce.",
+      "vendor_scope_required": "Select a vendor to view its workforce.",
+      "roster_access_denied": "You do not have permission to view this workforce.",
       "invalid_request": "The workforce request is invalid.",
       "internal_error": "The workforce request could not be completed."
     }

@@ -499,6 +499,21 @@ describe("ticket-detail — Task #632 status-pill role coverage", () => {
 
 // Exercise the real deep-link integration into the existing parts/labor editor.
 describe("ticket-detail voice entry integration", () => {
+  it("renders a closed partner ticket reached through a photo deep link without offering capture", () => {
+    currentUser.value = {
+      ...adminUser, role: "partner", partnerId: 22, activeMembershipId: 795,
+      availableMemberships: [{ id: 795, role: "admin", entityType: "partner", entityId: 22, entityName: "Synthetic Partner" }],
+    };
+    ticketState.data = { ...baseTicket, status: "funds_dispersed", lifecycleState: "off_site" };
+    window.history.replaceState(null, "", `/tickets/${TICKET_ID}?askvEntry=photo`);
+    render(<TicketDetail id={TICKET_ID} />);
+    expect(screen.getByTestId("status-funds-dispersed")).toBeTruthy();
+    expect(screen.queryByLabelText("Choose ticket photo")).toBeNull();
+    expect(window.location.search).toBe("");
+    expect(createNoteLogMock).not.toHaveBeenCalled();
+    expect(updateMutateMock).not.toHaveBeenCalled();
+  });
+
   for (const [kind, expected] of [["parts", "part"], ["labor", "labor"]] as const) {
     it(`focuses and selects ${kind} without submitting the form`, () => {
       currentUser.value = fieldEmployeeUser;
