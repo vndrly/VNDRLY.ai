@@ -1,3 +1,4 @@
+import { GateShiftClaimInputSchema } from "@workspace/api-zod";
 import { TicketLaborFinalizationInputSchema } from "@workspace/api-zod";
 import { awayResponderRequest,AWAY_RESPONDER_READ_INPUT } from "./away-responder-tools";
 import { meetingSearchInputSchema, searchSavedMeetingProjection } from "./work-hub-meeting-search";
@@ -675,8 +676,16 @@ export function resolveWorkHubToolRequest(
         return request("POST", "/work-hub/shifts", envelope(input));
       target = required(input.shiftId, "shift id");
       if (typeof target !== "string") return target;
-      if (input.action === "claim")
-        return request("POST", `/work-hub/shifts/${target}/claim`);
+      if (input.action === "claim") {
+        // Legacy non-Gate shifts retain their canonical behavior. Gate rejects
+        // unversioned claims itself; a reviewed Gate version must remain exact.
+        if (input.expectedVersion === null || input.expectedVersion === undefined)
+          return request("POST", `/work-hub/shifts/${target}/claim`);
+        const command = GateShiftClaimInputSchema.safeParse({ operationId: input.operationId, expectedVersion: input.expectedVersion });
+        return command.success
+          ? request("POST", `/work-hub/shifts/${target}/claim`, command.data)
+          : { error: "Supply the exact current shift version and trusted operation." };
+      }
       if (["update", "reschedule", "cancel"].includes(String(input.action)))
         return request("PATCH", `/work-hub/shifts/${target}`, envelope(input, {
           ...payload,

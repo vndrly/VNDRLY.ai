@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { eq } from "drizzle-orm";
 import express from "express";
 import cookieParser from "cookie-parser";
 import request from "supertest";
@@ -15,6 +16,7 @@ import {
   workTypesTable,
   siteWorkAssignmentsTable,
   gateStationsTable,
+  partnerVendorRelationshipsTable,
 } from "@workspace/db";
 import scheduling from "./workHubScheduling";
 import operations from "./workHubOperations";
@@ -56,7 +58,7 @@ describe("authenticated scheduling reservations", () => {
           })),
         )
         .returning();
-      await db
+      const memberships = await db
         .insert(userOrgMembershipsTable)
         .values(
           people.map((person, i) => ({
@@ -65,13 +67,15 @@ describe("authenticated scheduling reservations", () => {
             vendorId: companies[i === 2 ? 1 : 0]!.id,
             role: i === 1 ? "member" : "admin",
           })),
-        );
+        ).returning();
       [hostCookie, memberCookie, otherCookie] = people.map((p, i) =>
         buildTestCookie({
           userId: p.id,
           role: "vendor",
           vendorId: companies[i === 2 ? 1 : 0]!.id,
-          membershipRole: "admin",
+          membershipRole: memberships[i]!.role,
+          activeMembershipId: memberships[i]!.id,
+          sv: p.sessionVersion,
         }),
       ) as [string, string, string];
       [hostUserId, memberUserId, foreignUserId] = people.map((person) => person.id) as [number, number, number];
@@ -79,7 +83,8 @@ describe("authenticated scheduling reservations", () => {
       const [partner] = await db.insert(partnersTable).values({ name: `Gate partner ${suffix}`, contactName: "Test", contactEmail: `gate.${suffix}@example.invalid` }).returning();
       const [site] = await db.insert(siteLocationsTable).values({ partnerId: partner!.id, name: `Gate site ${suffix}`, address: "Fixture", latitude: 30, longitude: -100, siteCode: `GATE-${suffix}` }).returning();
       const [workType] = await db.insert(workTypesTable).values({ name: `Gate ${suffix}`, category: "gate" }).returning();
-      await db.insert(siteWorkAssignmentsTable).values({ siteLocationId: site!.id, workTypeId: workType!.id, vendorId });
+      await db.insert(siteWorkAssignmentsTable).values({ siteLocationId: site!.id, workTypeId: workType!.id, vendorId, isGateContractor: true });
+      await db.insert(partnerVendorRelationshipsTable).values({ partnerId: partner!.id, vendorId, status: "approved" });
       const [station] = await db.insert(gateStationsTable).values({ siteId: site!.id, name: `Scheduling gate ${suffix}` }).returning();
       gateSiteId = site!.id;
       gateStationId = station!.id;
@@ -246,7 +251,7 @@ describe("authenticated scheduling reservations", () => {
           startsAt: start.toISOString(),
           endsAt: new Date(start.getTime() + 12 * 60 * 60_000).toISOString(),
           timezone: "America/Chicago",
-          assigneeUserIds: [memberUserId],
+          assigneeUserIds: [],
           qualificationCodes: [],
           calendarType: "company",
           siteLocationId: gateSiteId,
@@ -263,5 +268,17 @@ describe("authenticated scheduling reservations", () => {
         requiredStaffCount: 2,
         workStartPolicy: "paid_travel",
       });
+      const unqualified = await request(app).post("/work-hub/shifts").set("Cookie", hostCookie).send({
+        ...body, operationId: randomUUID(), payload: { ...body.payload, assigneeUserIds: [memberUserId] },
+      });
+      expect(unqualified.status).toBe(409);
+      const update = await request(app).patch(`/work-hub/shifts/${created.body.resource.id}`).set("Cookie", hostCookie).send({
+        ...body, operationId: randomUUID(), expectedVersion: created.body.resource.version,
+        payload: { assigneeUserIds: [memberUserId] },
+      });
+      expect(update.status).toBe(409);
+      const [stored] = await db.select().from(workHubShiftsTable).where(eq(workHubShiftsTable.id, created.body.resource.id));
+      expect(stored.version).toBe(created.body.resource.version);
+      expect(await db.select().from(workHubShiftAssignmentsTable).where(eq(workHubShiftAssignmentsTable.shiftId, stored.id))).toHaveLength(0);
     });
 });

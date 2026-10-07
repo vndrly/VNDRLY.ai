@@ -16,6 +16,61 @@ vi.mock("../assistant/askv-idempotency", async (importOriginal) => ({ ...await i
 import router from "./assistantConnection";
 import { resolveExecutableWorkHubToolRequest } from "../assistant/work-hub-tool-runtime";
 
+it("checks the immutable shift creation receipt after interruption without creating a second shift", async () => {
+  const credentials = await tokens("work_hub:write");
+  const payload = { title: "Synthetic recovery shift", startsAt: "2026-10-07T10:00:00Z", endsAt: "2026-10-07T11:00:00Z", timezone: "UTC", assigneeUserIds: [18] };
+  const response = await request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "manage_work_hub_shift", arguments: { action: "create", owner: { type: "vendor", id: 4 }, payload } } });
+  const prepared = JSON.parse(response.body.result.content[0].text);
+  expect(prepared.status).toBe("pending");
+  const actionPath = new URL(prepared.approvalUrl).pathname;
+  const approval = await request(app).get(actionPath).set("Cookie", cookie());
+  const nonce = /name="nonce" value="([^"]+)"/.exec(approval.text)![1];
+  const actionCookie = approval.headers["set-cookie"][0].split(";")[0];
+  mocks.bound.mockRejectedValueOnce(Error("Interrupted after shift creation"));
+  expect((await request(app).post(actionPath).set("Cookie", `${cookie()}; ${actionCookie}`).set("Origin", "https://vndrly.ai").type("form").send({ nonce })).status).toBe(503);
+  const hex = grants[0].actions![0].tokenHash.slice(0, 32);
+  const operationId = `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-8${hex.slice(17, 20)}-${hex.slice(20, 32)}`;
+  const status = () => request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 2, method: "tools/call", params: { name: "v_action_status", arguments: { reference: prepared.reference } } });
+  mocks.taskRead.mockResolvedValueOnce({ receipt: null });
+  expect(JSON.parse((await status()).body.result.content[0].text)).toMatchObject({ state: "outcome_unknown" });
+  const resource = { ...Object.fromEntries(["projectName", "instructions", "dependencyTitle", "blockers", "ownerUserId", "afeCode", "ticketNumber", "budgetAmount", "budgetUsedAmount", "invoicedAmount", "invoiceReference", "siteLocationId", "gateStationId", "requiredStaffCount", "workStartPolicy"].map(key => [key, null])), ...payload, id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", ownerOrgType: "vendor", ownerOrgId: 4, createdById: 17, open: false, qualificationCodes: [], recurrence: null, calendarType: "company", milestoneStatus: "upcoming", percentComplete: 0, sharedWithUserIds: [] };
+  const receipt = { operationId, appliedAt: "2026-10-07T09:00:00.000Z", replayed: true, resource };
+  mocks.taskRead.mockResolvedValueOnce({ receipt: { ...receipt, resource: { ...resource, assigneeUserIds: [19] } } });
+  expect(JSON.parse((await status()).body.result.content[0].text)).toMatchObject({ state: "outcome_unknown" });
+  mocks.taskRead.mockResolvedValueOnce({ receipt });
+  expect(JSON.parse((await status()).body.result.content[0].text)).toMatchObject({ state: "completed", result: { operationId, resource: { id: resource.id } } });
+  expect(mocks.taskRead).toHaveBeenLastCalledWith(`/work-hub/shifts/operations/${operationId}`, "GET", {}, expect.objectContaining({ userId: 17 }));
+  expect(mocks.bound).toHaveBeenCalledTimes(1);
+  expect(mocks.run).not.toHaveBeenCalled();
+});
+
+it("recovers an interrupted Gate self-claim from its exact receipt without claiming attendance or resending", async () => {
+  const credentials = await tokens("work_hub:write");
+  const shiftId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+  const response = await request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "manage_work_hub_shift", arguments: { action: "claim", shiftId, expectedVersion: 3, payload: {} } } });
+  const prepared = JSON.parse(response.body.result.content[0].text);
+  expect(prepared.status).toBe("pending");
+  const actionPath = new URL(prepared.approvalUrl).pathname;
+  const approval = await request(app).get(actionPath).set("Cookie", cookie());
+  const nonce = /name="nonce" value="([^"]+)"/.exec(approval.text)![1];
+  const actionCookie = approval.headers["set-cookie"][0].split(";")[0];
+  mocks.bound.mockRejectedValueOnce(new Error("Interrupted after Gate claim saved"));
+  expect((await request(app).post(actionPath).set("Cookie", `${cookie()}; ${actionCookie}`).set("Origin", "https://vndrly.ai").type("form").send({ nonce })).status).toBe(503);
+  const hex = grants[0].actions![0].tokenHash.slice(0, 32);
+  const operationId = `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-8${hex.slice(17, 20)}-${hex.slice(20, 32)}`;
+  const { createHash } = await import("node:crypto");
+  const { gateShiftAssignmentFingerprintValues } = await import("@workspace/api-zod");
+  const commandFingerprint = createHash("sha256").update(JSON.stringify({ action: "claim", ...gateShiftAssignmentFingerprintValues(shiftId, 17, 4, { operationId, expectedVersion: 3, assigneeUserIds: [17] }) })).digest("hex");
+  const status = () => request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 2, method: "tools/call", params: { name: "v_action_status", arguments: { reference: prepared.reference } } });
+  mocks.taskRead.mockResolvedValueOnce({ receipt: null });
+  expect(JSON.parse((await status()).body.result.content[0].text)).toMatchObject({ state: "outcome_unknown" });
+  mocks.taskRead.mockResolvedValueOnce({ receipt: { operationId, actorUserId: 17, shiftId, previousVersion: 3, resultingVersion: 4, assigneeUserIds: [17], commandFingerprint, recordedAt: "2026-10-07T10:01:00.000Z", assignmentRecorded: true, physicalAttendanceVerified: false } });
+  expect(JSON.parse((await status()).body.result.content[0].text)).toMatchObject({ state: "completed", result: { assignmentRecorded: true, physicalAttendanceVerified: false } });
+  expect(mocks.taskRead).toHaveBeenLastCalledWith(`/work-hub/shifts/${shiftId}/claim/operations/${operationId}`, "GET", {}, expect.objectContaining({ userId: 17 }));
+  expect(mocks.bound).toHaveBeenCalledTimes(1);
+  expect(mocks.run).not.toHaveBeenCalled();
+});
+
 const app = express();
 app.use(cookieParser(), express.json(), express.urlencoded({ extended: false }));
 app.use("/api/assistant-connection", router);

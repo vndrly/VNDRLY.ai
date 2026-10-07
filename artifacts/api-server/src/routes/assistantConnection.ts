@@ -50,6 +50,8 @@ import { CALENDAR_RESPONSE_TOOLS } from "../assistant/calendar-response-tools";
 import { AWAY_RESPONDER_TOOLS } from "../assistant/away-responder-tools";
 import { recoverAwayResponderAction } from "../assistant/away-responder-action-recovery";
 import { recoverTicketLaborFinalizationAction } from "../assistant/ticket-labor-finalization-recovery";
+import { recoverGateShiftClaimAction } from "../assistant/gate-shift-claim-recovery";
+import { recoverWorkHubShiftCreationAction } from "../assistant/shift-creation-recovery";
 import { INVOICE_ACTIVITY_TOOL, handleInvoiceActivityTool, invoiceActivityAvailable } from "../assistant/invoice-activity-chatgpt";
 import { TICKET_INVOICE_CANDIDATES_TOOL, handleTicketInvoiceCandidatesTool, ticketInvoiceCandidatesAvailable } from "../assistant/ticket-invoice-candidates-tools";
 import { TICKET_INVOICE_PREPARATION_TOOL } from "../assistant/ticket-invoice-preparation-tools";
@@ -730,6 +732,14 @@ async function reconcileAction(action: AssistantPreparedAction, session: import(
   }
   if (result === null && action.toolName === "manage_ticket_record" && action.arguments.action === "finalize_labor") {
     const receipt = await recoverTicketLaborFinalizationAction(action, session, scopes);
+    if (receipt !== null) result = JSON.stringify(receipt);
+  }
+  if (result === null && action.toolName === "manage_work_hub_shift" && action.arguments.action === "claim") {
+    const receipt = await recoverGateShiftClaimAction(action, session, scopes);
+    if (receipt !== null) result = JSON.stringify(receipt);
+  }
+  if (result === null && action.arguments.action === "create" && (action.toolName === "manage_work_hub_shift" || (action.toolName === "manage_work_hub_calendar_item" && action.arguments.kind === "shift"))) {
+    const receipt = await recoverWorkHubShiftCreationAction(action, session, scopes);
     if (receipt !== null) result = JSON.stringify(receipt);
   }
   if (result !== null) { action.state = "completed"; action.result = JSON.stringify(chatGptActionResult(action.toolName, JSON.parse(result))); action.arguments = chatGptActionAuditInput(action.toolName, action.arguments); action.expiresAt = Date.now() + 3600_000; }

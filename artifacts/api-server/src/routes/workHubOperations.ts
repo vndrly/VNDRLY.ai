@@ -101,6 +101,8 @@ import {
 } from "../work-hub/internal-audio";
 import { getObjectStore } from "../lib/objectStore";
 import workHubMeetingsRouter from "./workHubMeetings";
+import gateShiftAssignmentsRouter from "./gateShiftAssignments";
+import { lockShiftSchedulingRows, authorizeGateSchedulingSite, executeGateShiftClaim, gateAssignmentTransactionClient, guardGateShiftAssignments, GateShiftAssignmentError } from "../services/gate-shift-assignment";
 import workHubMeetingReplayRouter from "./workHubMeetingReplay";
 import { assertOwnerMatchesChannel, assertOwnerUsers } from "../work-hub/owner-users";
 import {
@@ -248,6 +250,8 @@ class MeetingAvailabilityConflictError extends Error {
   }
 }
 function failure(res: Response, error: unknown): void {
+  if (error instanceof GateShiftAssignmentError) { sendApiError(res, error.status, error.code, "Review current Gate assignment eligibility"); return; }
+  if (error instanceof Error && /^(gate_assignment|gate_candidates)\./.test(error.message)) { sendApiError(res, 409, "work_hub.invalid_operation", error.message); return; }
   if (error instanceof MeetingAvailabilityConflictError) {
     sendApiError(res, error.status, error.code, error.message, error.details);
     return;
@@ -282,11 +286,14 @@ function failure(res: Response, error: unknown): void {
   throw error;
 }
 
-async function claimOpenShift(shiftId: string, userId: number) {
+async function claimOpenShift(shiftId: string, userId: number, session: SessionPayload) {
   return db.transaction(async (tx) => {
+    await lockShiftSchedulingRows(gateAssignmentTransactionClient(tx), userId, shiftId, [userId]);
+    const [current] = await tx.select().from(workHubShiftsTable).where(eq(workHubShiftsTable.id, shiftId)).limit(1).for("update");
+    if (current?.gateStationId) throw new GateShiftAssignmentError("work_hub.version_conflict");
     const [claimedShift] = await tx
       .update(workHubShiftsTable)
-      .set({ open: false, updatedAt: new Date() })
+      .set({ open: false, ...(current?.gateStationId ? { version: current.version + 1 } : {}), updatedAt: new Date() })
       .where(
         and(
           eq(workHubShiftsTable.id, shiftId),
@@ -371,6 +378,7 @@ router.use("/work-hub", async (_req, res, next) => {
 
 router.use("/work-hub/meetings", workHubMeetingReplayRouter);
 router.use("/work-hub/meetings", workHubMeetingsRouter);
+router.use(gateShiftAssignmentsRouter);
 
 router.get("/work-hub/audit", async (req, res) => {
   const session = actor(req);
@@ -1768,7 +1776,8 @@ router.get("/work-hub/calendar/items/:kind/:id", async (req, res) => {
       if (!item || !sessionCanSeeOwner(session, item.ownerOrgType, item.ownerOrgId)) throw new WorkHubAccessError("not_found");
       const assigned = await db.select({ id: workHubShiftAssignmentsTable.id }).from(workHubShiftAssignmentsTable).where(and(eq(workHubShiftAssignmentsTable.shiftId, item.id), eq(workHubShiftAssignmentsTable.userId, session.userId))).limit(1);
       if (session.managedSubcontractor && item.createdById !== session.userId && !assigned.length && !(item.sharedWithUserIds ?? []).includes(session.userId)) throw new WorkHubAccessError("not_found");
-      return res.json({ source: "vndrly", authority: "work_hub_shift", item });
+      const assignees = await db.select({ userId: workHubShiftAssignmentsTable.userId }).from(workHubShiftAssignmentsTable).where(and(eq(workHubShiftAssignmentsTable.shiftId, item.id), sql`${workHubShiftAssignmentsTable.status} not in ('cancelled','declined')`));
+      return res.json({ source: "vndrly", authority: "work_hub_shift", item: { ...item, assigneeUserIds: [...new Set(assignees.map(row => row.userId))].sort((a, b) => a - b) } });
     }
     if (kind === "task") {
       const [item] = await db.select().from(workHubTasksTable).where(eq(workHubTasksTable.id, itemId)).limit(1);
@@ -1935,6 +1944,7 @@ router.post("/work-hub/shifts", async (req, res) => {
             createdById: session.userId,
           })
           .returning();
+        if (isGateShift) await guardGateShiftAssignments(gateAssignmentTransactionClient(tx), session, shift.id, payload.assigneeUserIds);
         if (payload.assigneeUserIds.length)
           await tx
             .insert(workHubShiftAssignmentsTable)
@@ -1946,7 +1956,11 @@ router.post("/work-hub/shifts", async (req, res) => {
               })),
             )
             .onConflictDoNothing();
-        return shift;
+        return { ...shift, assigneeUserIds: [...new Set(payload.assigneeUserIds)].sort((a, b) => a - b) };
+      },
+      async (tx) => {
+        await lockShiftSchedulingRows(gateAssignmentTransactionClient(tx),session.userId,null,payload.assigneeUserIds);
+        if (isGateShift) await authorizeGateSchedulingSite(gateAssignmentTransactionClient(tx), session, payload.siteLocationId!, payload.gateStationId!);
       },
     );
     if (!result.replayed)
@@ -2025,7 +2039,7 @@ router.patch("/work-hub/shifts/:id", async (req, res) => {
     if (payload.startsAt && payload.endsAt && new Date(payload.startsAt) >= new Date(payload.endsAt)) throw new z.ZodError([]);
     if (payload.assigneeUserIds) await assertOwnerUsers(envelope.owner, payload.assigneeUserIds);
     const result = await executeWorkHubCommand({ userId: session.userId, source: clientSource(req) }, "shift.update", envelope, async (tx) => {
-      const [current] = await tx.select().from(workHubShiftsTable).where(eq(workHubShiftsTable.id, req.params.id)).limit(1);
+      const [current] = await tx.select().from(workHubShiftsTable).where(eq(workHubShiftsTable.id, req.params.id)).limit(1).for("update");
       if (!current || current.ownerOrgType !== envelope.owner.type || current.ownerOrgId !== envelope.owner.id || !sessionCanSeeOwner(session, current.ownerOrgType, current.ownerOrgId)) throw new WorkHubAccessError("not_found");
       if (current.version !== envelope.expectedVersion) throw new Error("work_hub.version_conflict");
       const nextGate = {
@@ -2054,11 +2068,19 @@ router.patch("/work-hub/shifts/:id", async (req, res) => {
         ...(payload.action === "cancel" ? { milestoneStatus: "cancelled", open: false } : {}),
         version: current.version + 1, updatedAt: new Date(),
       }).where(eq(workHubShiftsTable.id, current.id)).returning();
+      if (nextGate.gateStationId && payload.action !== "cancel") {
+        const assignees = payload.assigneeUserIds ?? (await tx.select({ userId: workHubShiftAssignmentsTable.userId }).from(workHubShiftAssignmentsTable).where(eq(workHubShiftAssignmentsTable.shiftId, current.id))).map(item => item.userId);
+        await guardGateShiftAssignments(gateAssignmentTransactionClient(tx), session, current.id, assignees);
+      }
       if (payload.assigneeUserIds) {
         await tx.delete(workHubShiftAssignmentsTable).where(eq(workHubShiftAssignmentsTable.shiftId, current.id));
         if (payload.assigneeUserIds.length) await tx.insert(workHubShiftAssignmentsTable).values([...new Set(payload.assigneeUserIds)].map((userId) => ({ shiftId: current.id, userId, assignedById: session.userId })));
       }
       return updated;
+    }, async (tx) => {
+      await lockShiftSchedulingRows(gateAssignmentTransactionClient(tx),session.userId,String(req.params.id),payload.assigneeUserIds??[]);
+      const [current] = await tx.select().from(workHubShiftsTable).where(eq(workHubShiftsTable.id, req.params.id)).limit(1).for("update");
+      if (current?.gateStationId && current.siteLocationId) await authorizeGateSchedulingSite(gateAssignmentTransactionClient(tx), session, current.siteLocationId, current.gateStationId, true, payload.action === "cancel");
     });
     return res.json(result);
   } catch (error) { return failure(res, error); }
@@ -2081,6 +2103,10 @@ router.post("/work-hub/shifts/:id/claim", async (req, res) => {
     return sendApiError(res, 404, "work_hub.not_found", "Not found");
   if (session.managedSubcontractor && !(shift.sharedWithUserIds ?? []).includes(session.userId))
     return sendApiError(res, 404, "work_hub.not_found", "Not found");
+  if (shift.gateStationId) {
+    try { return res.json(await executeGateShiftClaim(session, shift.id, req.body)); }
+    catch (error) { return failure(res, error); }
+  }
   if (!shift.open)
     return sendApiError(
       res,
@@ -2088,7 +2114,9 @@ router.post("/work-hub/shifts/:id/claim", async (req, res) => {
       "work_hub.invalid_operation",
       "Shift is not open",
     );
-  const assignment = await claimOpenShift(shift.id, session.userId);
+  let assignment;
+  try { assignment = await claimOpenShift(shift.id, session.userId, session); }
+  catch (error) { return failure(res, error); }
   if (!assignment)
     return sendApiError(
       res,

@@ -5,7 +5,10 @@ import {
   workforceCoverageRecordsTable,
   workHubShiftAssignmentsTable,
   workHubShiftsTable,
+  workHubClientOperationsTable,
 } from "@workspace/db";
+import type { SessionPayload } from "../lib/session";
+import { createHash } from "node:crypto";
 export type WorkerAccountState = "active" | "paused" | "terminated";
 export type AssignmentWarning = "workforce.overtime_warning" | "workforce.rest_window_warning";
 export type ReminderKind = "assignment" | "t24" | "t1" | "start" | "no_show";
@@ -133,11 +136,29 @@ export class WorkforceCoverageError extends Error {
   }
 }
 
-export const databaseWorkforceAssignmentRepository: WorkforceAssignmentRepository = {
+export function workforceAssignmentRepositoryForSession(session?: SessionPayload): WorkforceAssignmentRepository {
+return {
   async createAssignment(input) {
     return db.transaction(async (tx) => {
-      const [shift] = await tx.select({ id: workHubShiftsTable.id, version: workHubShiftsTable.version }).from(workHubShiftsTable).where(eq(workHubShiftsTable.id, input.shiftId)).limit(1);
+      const { lockShiftSchedulingRows, gateAssignmentTransactionClient } = await import("./gate-shift-assignment");
+      await lockShiftSchedulingRows(gateAssignmentTransactionClient(tx),input.assignedById,input.shiftId,[input.workerUserId]);
+      const [shift] = await tx.select().from(workHubShiftsTable).where(eq(workHubShiftsTable.id, input.shiftId)).limit(1).for("update");
       if (!shift) throw new WorkforceCoverageError("workforce.shift_not_found", 404);
+      const gate = shift.gateStationId && shift.siteLocationId;
+      const fingerprint = createHash("sha256").update(JSON.stringify({ shiftId: input.shiftId, workerUserId: input.workerUserId, assignedById: input.assignedById, operationId: input.operationId, expectedVersion: input.expectedVersion, overrideReason: input.overrideReason })).digest("hex");
+      if (gate) {
+        if (!session || session.userId !== input.assignedById) throw new WorkforceCoverageError("work_hub.forbidden", 403);
+        const { authorizeGateSchedulingSite, gateAssignmentTransactionClient, guardGateShiftAssignments } = await import("./gate-shift-assignment");
+        const client = gateAssignmentTransactionClient(tx);
+        await authorizeGateSchedulingSite(client, session, shift.siteLocationId!, shift.gateStationId!);
+        const [prior] = await tx.select().from(workHubClientOperationsTable).where(and(eq(workHubClientOperationsTable.userId, session.userId), eq(workHubClientOperationsTable.commandKind, "workforce.gate.assign"), eq(workHubClientOperationsTable.operationId, input.operationId))).limit(1);
+        if (prior) {
+          const saved = prior.resultJson as { fingerprint?: string; resource?: { id: string; version: number } } | null;
+          if (prior.ownerOrgType !== "vendor" || prior.ownerOrgId !== session.vendorId || saved?.fingerprint !== fingerprint || !saved.resource) throw new WorkforceCoverageError("work_hub.operation_conflict");
+          return saved.resource;
+        }
+        await guardGateShiftAssignments(client, session, input.shiftId, [input.workerUserId]);
+      }
       if (shift.version !== input.expectedVersion) throw new WorkforceCoverageError("workforce.version_conflict");
       await tx.insert(workHubShiftAssignmentsTable).values({ shiftId: input.shiftId, userId: input.workerUserId, assignedById: input.assignedById, warningSnapshot: input.warnings }).onConflictDoNothing({ target: [workHubShiftAssignmentsTable.shiftId, workHubShiftAssignmentsTable.userId] });
       const [created] = await tx.insert(workforceAssignmentStatesTable).values({
@@ -150,7 +171,13 @@ export const databaseWorkforceAssignmentRepository: WorkforceAssignmentRepositor
         warningSnapshot: input.warnings,
         overrideReason: input.overrideReason,
       }).onConflictDoNothing({ target: workforceAssignmentStatesTable.operationId }).returning({ id: workforceAssignmentStatesTable.id, version: workforceAssignmentStatesTable.version });
-      if (created) return created;
+      if (created) {
+        if (gate) {
+          await tx.update(workHubShiftsTable).set({ version: shift.version + 1, updatedAt: new Date() }).where(and(eq(workHubShiftsTable.id, shift.id), eq(workHubShiftsTable.version, input.expectedVersion)));
+          await tx.insert(workHubClientOperationsTable).values({ userId: session!.userId!, commandKind: "workforce.gate.assign", operationId: input.operationId, ownerOrgType: "vendor", ownerOrgId: session!.vendorId!, resultJson: { fingerprint, resource: created }, appliedAt: new Date() });
+        }
+        return created;
+      }
       const [replayed] = await tx.select({ id: workforceAssignmentStatesTable.id, version: workforceAssignmentStatesTable.version }).from(workforceAssignmentStatesTable).where(eq(workforceAssignmentStatesTable.operationId, input.operationId)).limit(1);
       if (!replayed) throw new WorkforceCoverageError("workforce.assignment_conflict");
       return replayed;
@@ -167,3 +194,5 @@ export const databaseWorkforceAssignmentRepository: WorkforceAssignmentRepositor
     return updated;
   },
 };
+}
+export const databaseWorkforceAssignmentRepository = workforceAssignmentRepositoryForSession();

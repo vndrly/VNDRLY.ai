@@ -1,5 +1,6 @@
+import { GateShiftStaffingCandidateEvidenceSchema } from "@workspace/api-zod";
 import { pool } from "@workspace/db";
-import type { Pool } from "pg";
+import type { Pool, PoolClient } from "pg";
 import { z } from "zod/v4";
 import type { SessionPayload } from "../lib/session";
 import { requireChangeOverAccess } from "../services/gate-change-over";
@@ -7,19 +8,7 @@ import { evaluateAssignmentEligibility } from "../services/workforce-coverage";
 import { requireChatGptReadableTool } from "./chatgpt-tool-access";
 
 export const GATE_STAFFING_CANDIDATE_INPUT = z.object({ shiftId: z.uuid() }).strict();
-export const GATE_STAFFING_CANDIDATE_OUTPUT = z.object({
-  shiftId: z.uuid(), shiftVersion: z.number().int().positive(), siteId: z.number().int().positive(), startsAt: z.iso.datetime(), endsAt: z.iso.datetime(), observedAt: z.iso.datetime(),
-  candidates: z.array(z.object({
-    vendorPeopleId: z.number().int().positive(), userId: z.number().int().positive(), name: z.string().max(401),
-    requirements: z.array(z.object({ code: z.string().max(100), currentRecorded: z.boolean(), vendorVerified: z.boolean(), sourceIds: z.array(z.number().int().positive()).max(100) }).strict()).max(50),
-    qualificationState: z.enum(["recorded_requirements_verified", "missing_or_unverified", "unknown_no_configured_requirements"]),
-    availability: z.enum(["recorded_conflict", "unknown_recurrence", "recorded_available", "unknown_no_window"]),
-    eligibility: z.object({ allowed: z.boolean(), code: z.enum(["workforce.account_paused", "workforce.account_terminated", "workforce.credentials_expired", "workforce.shift_overlap", "workforce.override_required", "workforce.assignment_allowed"]), warnings: z.array(z.enum(["workforce.overtime_warning", "workforce.rest_window_warning"])).max(2), overrideRequired: z.boolean() }).strict(),
-    contact: z.object({ workHubUserId: z.number().int().positive(), reachability: z.literal("unknown") }).strict(), sourceReference: z.string().regex(/^vendor_people:[1-9]\d*$/),
-  }).strict()).max(25), truncated: z.boolean(),
-  coverage: z.object({ state: z.string().max(100), required: z.number().int().nonnegative(), assigned: z.number().int().nonnegative(), recordedActual: z.number().int().nonnegative() }).strict().nullable(),
-  assignmentMade: z.literal(false), messageSent: z.literal(false), limitations: z.array(z.string().max(1500)).max(10),
-}).strict();
+export const GATE_STAFFING_CANDIDATE_OUTPUT = GateShiftStaffingCandidateEvidenceSchema;
 export const GATE_STAFFING_CANDIDATE_OUTPUT_SCHEMA = { ...z.toJSONSchema(GATE_STAFFING_CANDIDATE_OUTPUT), type: "object" as const };
 const date = (value: unknown) => { const result = new Date(String(value)); if (!Number.isFinite(result.getTime())) throw Error("gate_candidates.invalid_record"); return result; };
 const expirationDate = (value: unknown): string | null => {
@@ -43,7 +32,17 @@ export async function readGateStaffingCandidates(raw: unknown, session: SessionP
   const input = GATE_STAFFING_CANDIDATE_INPUT.parse(raw);
   if (!gateStaffingCandidatesAvailable(session, scopes)) throw Error("gate_candidates.current_vendor_and_staffing_scope_required");
   const client = await database.connect();
-  try {
+  try { return await readGateStaffingCandidatesForClient(input.shiftId, session, client, authorize, now); }
+  finally { client.release(); }
+}
+
+/** Cookie routes enforce their capability; transactions reuse the same canonical evidence. */
+export async function readGateStaffingCandidatesForClient(
+  shiftId: string, session: SessionPayload, client: Pick<PoolClient, "query">,
+  authorize = requireChangeOverAccess, now = new Date(), selectedUserIds?: number[], supervisor = true,
+) {
+  const input = GATE_STAFFING_CANDIDATE_INPUT.parse({ shiftId });
+  if (!["vendor", "field_employee"].includes(session.role ?? "") || !session.vendorId || !session.userId) throw Error("gate_candidates.current_vendor_required");
     const load = async () => {
       const result = await client.query(`SELECT s.id,s.version,s.starts_at,s.ends_at,s.qualification_codes,g.site_id,c.required_count,c.assigned_count,c.actual_count,c.state AS coverage_state
         FROM work_hub_shifts s JOIN gate_stations g ON g.id=s.gate_station_id LEFT JOIN workforce_coverage_records c ON c.shift_id=s.id
@@ -58,7 +57,8 @@ export async function readGateStaffingCandidates(raw: unknown, session: SessionP
     };
     await contract();
     const access = await authorize(client, session, Number(shift.site_id));
-    if (!access.supervisor) throw Error("gate_candidates.supervisor_required");
+    if (supervisor && !access.supervisor) throw Error("gate_candidates.supervisor_required");
+    if (!supervisor && selectedUserIds?.some(id => id !== session.userId)) throw Error("gate_candidates.supervisor_required");
     const start = date(shift.starts_at), end = date(shift.ends_at);
     if (end <= start || end.getTime() - start.getTime() > 7 * 86400000 || !Number.isFinite(now.getTime())) throw Error("gate_candidates.invalid_interval");
     const codes = z.array(z.string().trim().min(1).max(100)).max(50).nullable().parse(shift.qualification_codes) ?? [];
@@ -68,7 +68,8 @@ export async function readGateStaffingCandidates(raw: unknown, session: SessionP
       AND EXISTS(SELECT 1 FROM vendor_person_site_access a WHERE a.vendor_people_id=p.id AND a.site_location_id=$2 AND a.is_active=true)
       AND (EXISTS(SELECT 1 FROM vendor_person_operational_roles r WHERE r.vendor_people_id=p.id AND r.is_active=true AND r.role IN ('gatekeeper','gate_supervisor'))
         OR (NOT EXISTS(SELECT 1 FROM vendor_person_operational_roles r WHERE r.vendor_people_id=p.id) AND p.vendor_role IN ('gatekeeper','gate_supervisor')))
-      ORDER BY p.id LIMIT 26`, [session.vendorId, shift.site_id]);
+      AND ($3::integer[] IS NULL OR p.user_id=ANY($3::integer[]))
+      ORDER BY p.id LIMIT 26`, [session.vendorId, shift.site_id, selectedUserIds ?? null]);
     const candidates = [];
     for (const rawPerson of people.rows.slice(0, 25)) {
       const person = personSchema.parse(rawPerson);
@@ -82,7 +83,7 @@ export async function readGateStaffingCandidates(raw: unknown, session: SessionP
         return { code, currentRecorded: matches.length > 0, vendorVerified: matches.some(cert => cert.vendor_verified_at != null), sourceIds: matches.map(cert => z.number().int().positive().parse(cert.id)) };
       });
       const assigned = await client.query(`SELECT s.id,s.starts_at,s.ends_at FROM work_hub_shift_assignments a JOIN work_hub_shifts s ON s.id=a.shift_id
-        WHERE a.user_id=$1 AND s.owner_org_type='vendor' AND s.owner_org_id=$2 AND s.id<>$3 AND s.ends_at>=$4 AND s.starts_at<$5`, [person.user_id, session.vendorId, shift.id, new Date(start.getTime() - 7 * 86400000), new Date(end.getTime() + 7 * 86400000)]);
+        WHERE a.user_id=$1 AND s.owner_org_type='vendor' AND s.owner_org_id=$2 AND s.id<>$3 AND a.status NOT IN ('cancelled','declined') AND s.milestone_status<>'cancelled' AND s.ends_at>=$4 AND s.starts_at<$5`, [person.user_id, session.vendorId, shift.id, new Date(start.getTime() - 7 * 86400000), new Date(end.getTime() + 7 * 86400000)]);
       const intervals = assigned.rows.map(item => ({ start: date(item.starts_at), end: date(item.ends_at) }));
       const overlaps = intervals.some(item => item.start < end && item.end > start);
       const restWindow = intervals.some(item => Math.abs(item.end.getTime() - start.getTime()) < 8 * 3600000 || Math.abs(end.getTime() - item.start.getTime()) < 8 * 3600000);
@@ -101,9 +102,8 @@ export async function readGateStaffingCandidates(raw: unknown, session: SessionP
     }
     const fresh = await authorize(client, session, Number(shift.site_id));
     await contract();
-    if (!fresh.supervisor || JSON.stringify(await load()) !== JSON.stringify(shift)) throw Error("gate_candidates.context_changed");
+    if ((supervisor && !fresh.supervisor) || JSON.stringify(await load()) !== JSON.stringify(shift)) throw Error("gate_candidates.context_changed");
     return GATE_STAFFING_CANDIDATE_OUTPUT.parse({ shiftId: input.shiftId, shiftVersion: z.number().int().positive().parse(shift.version), siteId: Number(shift.site_id), startsAt: start.toISOString(), endsAt: end.toISOString(), observedAt: now.toISOString(), candidates, truncated: people.rows.length > 25,
       coverage: shift.coverage_state == null ? null : { state: String(shift.coverage_state), required: Number(shift.required_count), assigned: Number(shift.assigned_count), recordedActual: Number(shift.actual_count) },
       assignmentMade: false, messageSent: false, limitations: ["Availability and qualifications are saved records, not physical readiness or guaranteed reachability. Other-company commitments, unrecorded duties and recurring availability are not verified. Certificates without expiration dates do not establish current qualification; no explicit nonexpiring designation exists here.", "Only direct current-company Gate-role members with selected site access are included; sponsored external workers require a separate canonical candidate adapter.", "Eligibility applies the existing assignment policy only to recorded same-company shifts in the seven-day window on each side of this interval. Rest and overtime are bounded observations, not regulatory or complete personal-schedule clearance. Assignment authorization, qualifications and availability must be checked again when assigning. Coverage counts do not prove an uncovered physical interval."] });
-  } finally { client.release(); }
 }

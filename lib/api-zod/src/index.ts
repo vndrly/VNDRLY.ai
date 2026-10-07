@@ -22,3 +22,4 @@ export * from "./work-hub-calendar-response";
 export * from "./asset-transfer";
 
 export * from "./ticket-labor-finalization";
+export * from "./gate-shift-assignment";

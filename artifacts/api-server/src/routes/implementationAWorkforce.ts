@@ -24,6 +24,7 @@ import {
   acknowledgeAssignment,
   assignShift,
   databaseWorkforceAssignmentRepository,
+  workforceAssignmentRepositoryForSession,
   escalateCoverage,
   evaluateCoverage,
   WorkforceCoverageError,
@@ -135,7 +136,7 @@ router.post("/implementation-a/workforce/assignments", async (req, res) => {
     const input = AssignWorkforceShiftSchema.parse(req.body);
     const { session, decision } = await schedulingAuthority(req, input.shiftId);
     const context = await eligibilityFor(input.workerUserId, input.shiftId, session.vendorId!);
-    const result = await assignShift({ ...input, assignedById: session.userId!, assignedAt: new Date(), shiftStartsAt: context.shift.startsAt, eligibility: context.eligibility, overrideAuthorized: decision.allowed }, databaseWorkforceAssignmentRepository);
+    const result = await assignShift({ ...input, assignedById: session.userId!, assignedAt: new Date(), shiftStartsAt: context.shift.startsAt, eligibility: context.eligibility, overrideAuthorized: decision.allowed }, workforceAssignmentRepositoryForSession(session));
     return res.status(result.allowed ? 201 : 409).json(result);
   } catch (error) { return sendError(res, error); }
 });

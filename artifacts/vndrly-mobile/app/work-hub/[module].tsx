@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import MeetingScheduling from "@/components/MeetingScheduling";
+import ShiftScheduling from "@/components/ShiftScheduling";
 import WorkHubCalls from "@/components/WorkHubCalls";
 import { ManagedCrews } from "@/components/implementation-a/ManagedCrews";
 import { WorkforceCoverage } from "@/components/implementation-a/WorkforceCoverage";
@@ -104,13 +105,6 @@ function WorkHubModuleContent() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState("");
-  const [calendarGateShift, setCalendarGateShift] = useState(false);
-  const [gateSites, setGateSites] = useState<Row[]>([]);
-  const [gateStations, setGateStations] = useState<Row[]>([]);
-  const [gateSiteId, setGateSiteId] = useState("");
-  const [gateStationId, setGateStationId] = useState("");
-  const [requiredGatekeepers, setRequiredGatekeepers] = useState("1");
-  const [workStartPolicy, setWorkStartPolicy] = useState<"on_site" | "paid_travel">("on_site");
   const [meetingFileBusy, setMeetingFileBusy] = useState(false);
   const [meetingFileNotice, setMeetingFileNotice] = useState("");
   const [meetingFileError, setMeetingFileError] = useState("");
@@ -154,21 +148,6 @@ function WorkHubModuleContent() {
   useEffect(() => {
     if (module !== "calls" && module !== "search" && module !== "safety-response" && module !== "implementation-exports") void load("");
   }, [module, load]);
-  useEffect(() => {
-    if (module !== "calendar" || !canManage) return;
-    apiFetch<{ sites: Row[] }>("/api/gate-change-over/sites")
-      .then((result) => setGateSites(result.sites ?? []))
-      .catch(() => setGateSites([]));
-  }, [canManage, module]);
-  useEffect(() => {
-    if (!gateSiteId) {
-      setGateStations([]);
-      return;
-    }
-    apiFetch<{ stations: Row[] }>(`/api/gate-change-over/stations?siteId=${gateSiteId}`)
-      .then((result) => setGateStations(result.stations ?? []))
-      .catch(() => setGateStations([]));
-  }, [gateSiteId]);
   useEffect(() => {
     if (module !== "chat") return;
     let active = true;
@@ -229,16 +208,6 @@ function WorkHubModuleContent() {
   };
   const quickCreate = async () => {
     if (!owner || !draft.trim()) return;
-    if (
-      module === "calendar" &&
-      calendarGateShift &&
-      (!gateSiteId || !gateStationId || Number(requiredGatekeepers) < 1)
-    ) {
-      setError("Choose the Gate site, station, and required staffing first.");
-      return;
-    }
-    const startsAt = new Date(Date.now() + 60 * 60_000);
-    const endsAt = new Date(startsAt.getTime() + 60 * 60_000);
     const targets: Record<string, { path: string; payload: Row }> = {
       channels: { path: "/api/work-hub/crews", payload: { name: draft } },
       "tasks-forms": {
@@ -247,24 +216,6 @@ function WorkHubModuleContent() {
           title: draft,
           priority: "normal",
           assigneeUserId: user?.id ?? null,
-        },
-      },
-      calendar: {
-        path: "/api/work-hub/shifts",
-        payload: {
-          title: draft,
-          startsAt: startsAt.toISOString(),
-          endsAt: endsAt.toISOString(),
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          open: false,
-          assigneeUserIds: [],
-          qualificationCodes: [],
-          ...(calendarGateShift ? {
-            siteLocationId: Number(gateSiteId),
-            gateStationId,
-            requiredStaffCount: Number(requiredGatekeepers),
-            workStartPolicy,
-          } : {}),
         },
       },
     };
@@ -276,9 +227,6 @@ function WorkHubModuleContent() {
           owner,
           target.payload,
           undefined,
-          module === "calendar" && calendarGateShift
-            ? { kind: "gate", id: Number(gateSiteId) }
-            : undefined,
         );
     try {
       await apiFetch(target.path, {
@@ -487,37 +435,13 @@ function WorkHubModuleContent() {
           </View>
         )}
         {module === "meetings" && <MeetingScheduling onSaved={() => load("")} />}
+        {module === "calendar" && <ShiftScheduling onSaved={() => load("")} />}
         {owner &&
           canManage &&
-          ["channels", "calendar", "tasks-forms"].includes(
+          ["channels", "tasks-forms"].includes(
             module,
           ) && (
             <View style={{ gap: 10 }}>
-              {module === "calendar" && (
-                <View accessibilityLabel="Gate shift scheduling" style={{ borderWidth: 2, borderColor: colors.primary, borderRadius: 16, padding: 12, gap: 10, backgroundColor: colors.card }}>
-                  <Text style={{ color: colors.text, fontWeight: "700" }}>Shift type</Text>
-                  <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-                    <TogglePillButton color="brand" solid={!calendarGateShift} accessibilityLabel="Standard shift" onPress={() => setCalendarGateShift(false)}>Standard</TogglePillButton>
-                    <TogglePillButton color="brand" solid={calendarGateShift} accessibilityLabel="Gate shift" onPress={() => setCalendarGateShift(true)}>Gate shift</TogglePillButton>
-                  </View>
-                  {calendarGateShift && <>
-                    <Text style={{ color: colors.text, fontWeight: "700" }}>Gate site</Text>
-                    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-                      {gateSites.map((site) => <TogglePillButton key={site.id} color="brand" solid={gateSiteId === String(site.id)} accessibilityLabel={`Gate site ${site.name}`} onPress={() => { setGateSiteId(String(site.id)); setGateStationId(""); }}>{site.name}</TogglePillButton>)}
-                    </View>
-                    <Text style={{ color: colors.text, fontWeight: "700" }}>Gate station</Text>
-                    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-                      {gateStations.map((station) => <TogglePillButton key={station.id} color="brand" solid={gateStationId === station.id} accessibilityLabel={`Gate station ${station.name}`} onPress={() => setGateStationId(station.id)}>{station.name}</TogglePillButton>)}
-                    </View>
-                    <TextInput accessibilityLabel="Required gatekeepers" keyboardType="number-pad" value={requiredGatekeepers} onChangeText={setRequiredGatekeepers} placeholder="Required gatekeepers" placeholderTextColor={colors.mutedForeground} style={{ color: colors.text, borderWidth: 2, borderColor: colors.primary, borderRadius: 999, minHeight: 44, paddingHorizontal: 14 }} />
-                    <Text style={{ color: colors.text, fontWeight: "700" }}>Work start policy</Text>
-                    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-                      <TogglePillButton color="brand" solid={workStartPolicy === "on_site"} accessibilityLabel="Start work on site" onPress={() => setWorkStartPolicy("on_site")}>On-site start</TogglePillButton>
-                      <TogglePillButton color="brand" solid={workStartPolicy === "paid_travel"} accessibilityLabel="Paid travel starts work" onPress={() => setWorkStartPolicy("paid_travel")}>Paid travel</TogglePillButton>
-                    </View>
-                  </>}
-                </View>
-              )}
             <View style={{ flexDirection: "row", gap: 8 }}>
               <TextInput
                 accessibilityLabel={`New ${title} item`}
