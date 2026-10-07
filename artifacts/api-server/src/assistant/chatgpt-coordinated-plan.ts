@@ -19,7 +19,7 @@ export function resumedWorkPlan(value:unknown,taskId:string,identity:{userId:num
 export const CONTROL_PLAN_TOOL = {
  name:'v_prepare_work_plan_control',description:'Prepare pausing, retrying or cancelling one saved plan step through the existing Work Hub authorization panel. Supply the last fetched task version. Does not mark work completed, execute a step or cancel an already-running external action. Retry rechecks current tools; completed and cancelled steps cannot be restarted.',
  inputSchema:{type:'object' as const,properties:{taskId:{type:'string',format:'uuid'},expectedTaskVersion:{type:'integer',minimum:1},stepId:{type:'string'},state:{type:'string',enum:['pending','waiting','cancelled']},detail:{type:'string',maxLength:2000}},required:['taskId','expectedTaskVersion','stepId','state'],additionalProperties:false},
- annotations:{readOnlyHint:false,destructiveHint:false,openWorldHint:false},
+ annotations:{readOnlyHint:false,destructiveHint:true,openWorldHint:false},
 };
 export function prepareWorkPlanControl(value:unknown,input:unknown,identity:{userId:number;organizationKey:string},owner:{type:'vendor'|'partner';id:number},availableTools:ReadonlySet<string>){
  const request=z.object({taskId:z.string().uuid(),expectedTaskVersion:z.number().int().positive(),stepId:z.string().min(1).max(100),state:z.enum(['pending','waiting','cancelled']),detail:z.string().max(2000).optional()}).strict().parse(input);

@@ -172,10 +172,12 @@ describe("ChatGPT account connection boundary", () => {
     expect(mocks.run).not.toHaveBeenCalled();
     const descriptors = await request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 2, method: "tools/list" });
     expect(descriptors.body.result.tools.find((tool: { name: string }) => tool.name === "v_submit_panel_action")._meta.ui.visibility).toEqual(["app"]);
-    for (const name of ["manage_ticket_record", "v_prepare_action", "v_submit_panel_action"]) {
+    for (const name of ["manage_ticket_record_update", "v_prepare_action", "v_submit_panel_action"]) {
       expect(descriptors.body.result.tools.find((tool: { name: string }) => tool.name === name).annotations.destructiveHint).toBe(true);
     }
-    const ticketTool = descriptors.body.result.tools.find((tool: { name: string }) => tool.name === "manage_ticket_record");
+    const ticketTool = descriptors.body.result.tools.find((tool: { name: string }) => tool.name === "manage_ticket_record_update");
+    expect(ticketTool.inputSchema.properties).not.toHaveProperty("action");
+    expect(descriptors.body.result.tools.some((tool: { name: string }) => tool.name === "manage_ticket_record")).toBe(false);
     expect(ticketTool._meta.ui.resourceUri).toBe("ui://vndrly/action/v6.html");
     for (const version of [1, 2, 3, 4]) {
       const resource = await request(app).post(`${base}/mcp`).set("Authorization", `Bearer ${credentials.access_token}`).send({ jsonrpc: "2.0", id: 3, method: "resources/read", params: { uri: `ui://vndrly/action/v${version}.html` } });
