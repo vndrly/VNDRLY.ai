@@ -9,7 +9,7 @@ export function actionRecordSummary(toolName: string, input: unknown): string {
   const value = input as Record<string, unknown>;
   const resource = value.resource && typeof value.resource === "object" && !Array.isArray(value.resource) ? value.resource as Record<string, unknown> : value;
   const payload = resource.payload && typeof resource.payload === "object" && !Array.isArray(resource.payload) ? resource.payload as Record<string, unknown> : resource;
-  const labels: Record<string, string> = { id: toolName === "manage_ticket_record" ? "Ticket" : "Record", ticketId: "Ticket", action: "Action", title: "Title", name: "Name", status: "Status", siteName: "Site", vendorName: "Company", fieldEmployeeName: "Worker", description: "Description", body: "Message", reason: "Reason", error: "Issue", message: "Message" };
+  const labels: Record<string, string> = { id: toolName === "manage_ticket_record" ? "Ticket" : "Record", ticketId: "Ticket", taskId: "Task", itemId: "Calendar item", assetId: "Asset", stationId: "Gate station", tripId: "Trip", action: "Action", title: "Title", name: "Name", status: "Status", siteName: "Site", vendorName: "Company", fieldEmployeeName: "Worker", description: "Description", body: "Message", reason: "Reason", error: "Issue", message: "Message" };
   const lines: string[] = [];
   for (const key of Object.keys(labels)) {
     const item = payload[key] ?? resource[key];

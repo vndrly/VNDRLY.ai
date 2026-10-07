@@ -27,7 +27,17 @@ Do not treat any of these as optional, later, or "separate":
    important track. VNDRLY is an **app-driven database**. A full
    ship is not done until TestFlight is submitted.
 
-Stay on it through troubleshooting until all seven are live. Do not
+8. **ChatGPT VNDRLY plugin** — include the matching MCP tools, embedded
+   views, skills, manifest, branding and package in every full ship.
+   Update the existing installed VNDRLY plugin; do not create duplicate
+   catalogue entries. Refresh its tool definitions after API deployment,
+   preserve linked accounts and existing grants, and verify an actual
+   permission-scoped ChatGPT read plus a harmless synthetic action with
+   canonical result readback. Update the public submission when applicable;
+   distinguish installed, submitted, approved and publicly available status.
+   Never report public availability while OpenAI review is pending.
+
+Stay on it through troubleshooting until all eight tracks are verified. Do not
 pause to re-ask permission between stages.
 
 This standing authorization never permits a force push/history rewrite,
@@ -52,18 +62,21 @@ Follow this path without adding approval or duplicate-validation delays:
    after confirming the current remote `main` parent. Avoid intermediate
    release-only commits unless they fix a demonstrated failure.
 4. Start monitoring web Publish, API Deploy (including guarded
-   Supabase migrations), Expo OTA, and the TestFlight build/submit
+   Supabase migrations), Expo OTA, TestFlight build/submit, and the
+   ChatGPT plugin update
    concurrently. Verify `https://vndrly.ai` / `/gate`,
    `https://vndrly.ai/api/healthz`, the Expo update group, and the
-   TestFlight build.
-5. Full ship is not complete until TestFlight is submitted. Web
+   TestFlight build, and the installed ChatGPT plugin through a real tool call.
+5. Full ship is not complete until TestFlight is submitted and the matching
+   ChatGPT plugin update is installed and verified. Web
    or API going live first does not finish the ship. Fix native
    blockers under the same release command.
 6. On failure, retrieve the exact job logs, fix the root cause, and retry under
    the standing release authorization. Do not pause to ask permission again
    for a safe retry already covered by the release command.
 7. The release handoff must include the commit, workflow results, public
-   verification, TestFlight status, and elapsed commit-to-live time.
+   verification, TestFlight status, ChatGPT plugin version and live test
+   evidence, public plugin review status, and elapsed commit-to-live time.
 
 The detailed checklist and measured baseline are in
 `docs/release-fast-path.md`.

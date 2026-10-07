@@ -49,13 +49,18 @@ or unfinished implementation is development time, not web deployment time.
 3. Use the GitHub integration first. Publish the feature branch and advance
    `main` without force from the current verified remote parent.
 4. Let `.github/workflows/publish.yml` build and deploy the web application.
-5. In parallel, monitor the GitHub run and any path-eligible Expo production
-   OTA workflow.
+5. In parallel, monitor web Publish, API Deploy with guarded migrations,
+   production Expo OTA and native TestFlight build/submit. Include the matching
+   VNDRLY ChatGPT plugin package and MCP deployment in the same full ship.
 6. When the deploy job succeeds, verify the public route and confirm that the
    deployed bundle belongs to the intended commit when the change affects
    client assets.
-7. Report the commit, workflow link, public result, and commit-to-live elapsed
-   time immediately.
+7. After API deployment, update the existing VNDRLY ChatGPT plugin, refresh
+   tools, preserve its linked accounts and verify its live workflows as below.
+8. Report the commit, all workflow results, public checks, Expo update group,
+   TestFlight submission, plugin version and live evidence, public plugin
+   review status, and commit-to-live elapsed time. A web-live update may be
+   reported immediately, but is not full-ship completion.
 
 ## Validation reuse
 
@@ -72,11 +77,30 @@ test database described in `AGENTS.md`.
 
 - A fingerprint-compatible production OTA runs alongside the web deployment.
   It does not delay reporting that the web release is live.
-- A new native TestFlight binary is a separate, explicitly authorized track.
-  Start it after the web publication is underway or complete, then monitor its
-  build and App Store submission independently.
+- Every full ship includes a new native TestFlight build and submission under
+  standing authorization. Start it alongside the other release tracks; do not
+  ask again whether it is included.
 - Native build duration and Apple processing time are never counted against
   the 10-minute web release target.
+
+## ChatGPT plugin release track
+
+- Release the matching MCP tools, embedded views, skills, manifest, branding
+  and package. Record the package version and source commit.
+- Update the existing installed VNDRLY entry; do not create duplicate plugins
+  or catalogue entries as a release shortcut.
+- After the live API is healthy, refresh ChatGPT's cached tool definitions.
+  Preserve connected accounts and current grants. New scopes still require
+  explicit consent; a release must not silently expand permissions.
+- Verify an actual role-scoped read, the affected embedded views, and a harmless
+  synthetic prepared action through authorization and independent canonical
+  readback. A package upload or healthy API alone does not prove this track.
+- Update the public draft/submission when applicable. Report installed,
+  submitted, approved and publicly available status separately. OpenAI review
+  is an external gate; report a pending gate rather than claim public release.
+- Full ship requires both TestFlight submission and the matching installed
+  ChatGPT plugin update with live verification, together with the other
+  mandatory tracks in AGENTS.md.
 
 ## Failure handling
 

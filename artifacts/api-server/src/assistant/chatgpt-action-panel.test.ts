@@ -21,6 +21,13 @@ function panelHarness() {
   };
 }
 describe("VNDRLY component-mediated action panel", () => {
+  it("shows the exact target of a task completion outside its empty payload", () => {
+    const summary = actionRecordSummary("manage_work_hub_task", { action: "complete", taskId: "synthetic-task", expectedVersion: 1, payload: {} });
+    expect(summary).toContain("Task: synthetic-task");
+    expect(summary).toContain("Action: complete");
+    expect(summary).not.toContain("expectedVersion");
+    expect(actionRecordSummary("confirm_asset_custody_action", { assetId: "synthetic-asset", action: "return", payload: { description: "Fictional return" } })).toContain("Asset: synthetic-asset");
+  });
   it("summarizes the saved ticket using business fields while keeping full details", async () => {
     const ui = panelHarness(); ui.publish(); await ui.status("completed", { id: 100006, status: "awaiting_acceptance", siteName: "Demo well", description: "No real work", checkInLatitude: null, paymentDispersedById: null });
     expect(ui.nodes.get("summary").textContent).toContain("Ticket: 100006");
