@@ -1,8 +1,8 @@
+import { addChannelMember, readChannelMemberAccess, readChannelMembers } from "../work-hub/channel-members";
 import { messageReactionPayload, reactionActive, assertReactionReceipt, type ReactionIntent } from "../work-hub/message-reaction";
 import { resolveMessageThread } from "../work-hub/message-thread";
 import { assertMessageMutationReceipt, assertMessageMutationTarget, type MessageMutationIntent } from "../work-hub/message-mutation";
 import { validateAssistantSession } from "../assistant/chatgpt-grant-store";
-import { assertCollaborationInvite } from "../work-hub/collaboration-access";
 import { applyAwayRepliesForIncoming } from "../services/work-hub-away-responder-repository";
 import { Router, type IRouter, type Request, type Response } from "express";
 import { and, desc, eq, gt, lt, ne, sql, inArray } from "drizzle-orm";
@@ -325,6 +325,13 @@ router.delete("/work-hub/channels/:channelId", async (req, res) => {
   }
 });
 
+router.get("/work-hub/channels/:channelId/member-access", async (req, res) => {
+  const actor = session(req);
+  if (!actor) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
+  try { return res.json(await readChannelMemberAccess(actor, uuid.parse(req.params.channelId))); }
+  catch (error) { return fail(res, error); }
+});
+
 router.get("/work-hub/channels/:channelId/members", async (req, res) => {
   const actor = session(req);
   if (!actor)
@@ -335,22 +342,7 @@ router.get("/work-hub/channels/:channelId/members", async (req, res) => {
       "Authentication required",
     );
   try {
-    await resolveChannelAccess(actor, req.params.channelId, "channel.read");
-    const rows = await db
-      .select({
-        id: workHubChannelMembersTable.id,
-        userId: usersTable.id,
-        displayName: usersTable.displayName,
-        email: usersTable.email,
-        mode: workHubChannelMembersTable.mode,
-      })
-      .from(workHubChannelMembersTable)
-      .innerJoin(
-        usersTable,
-        eq(usersTable.id, workHubChannelMembersTable.userId),
-      )
-      .where(eq(workHubChannelMembersTable.channelId, req.params.channelId));
-    return res.json(rows);
+    return res.json(await readChannelMembers(actor, uuid.parse(req.params.channelId)));
   } catch (error) {
     return fail(res, error);
   }
@@ -366,15 +358,8 @@ router.post("/work-hub/channels/:channelId/members", async (req, res) => {
       "Authentication required",
     );
   try {
-    const { channel } = await resolveChannelAccess(actor, req.params.channelId, "channel.manage");
-    const email = z.string().trim().email().parse(req.body?.email).toLowerCase();
-    const [invitee] = await db.select({ id: usersTable.id }).from(usersTable)
-      .where(sql`lower(coalesce(${usersTable.email}, ${usersTable.username})) = ${email}`).limit(1);
-    if (!invitee) return sendApiError(res, 404, "work_hub.invitee_not_found", "No VNDRLY user was found for that email");
-    await assertCollaborationInvite(channel, invitee.id);
-    const [member] = await db.insert(workHubChannelMembersTable).values({ channelId: channel.id, userId: invitee.id, mode: "member" })
-      .onConflictDoUpdate({ target: [workHubChannelMembersTable.channelId, workHubChannelMembersTable.userId], set: { mode: "member" } }).returning();
-    await appendWorkHubAudit({ actorUserId: actor.userId, owner: { type: channel.ownerOrgType as "vendor" | "partner", id: channel.ownerOrgId }, action: "channel.member_added", subjectType: "channel", subjectId: channel.id, source: source(req), metadata: { invitedUserId: invitee.id } });
+    const member = await addChannelMember(actor, uuid.parse(req.params.channelId), req.body, source(req));
+    if (!member) return sendApiError(res, 404, "work_hub.invitee_not_found", "No VNDRLY user was found for that email");
     return res.status(201).json(member);
   } catch (error) {
     return fail(res, error);

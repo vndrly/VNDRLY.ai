@@ -59,3 +59,22 @@ describe("candidate business reads, not workflow completion", () => {
     }
   });
 });
+
+it("projects populated shifts and mixed calendar families using their actual fields", async () => {
+  const selected = step("get_work_hub_calendar", { start: "2026-10-07T00:00:00Z", end: "2026-10-09T00:00:00Z" });
+  const output = { shifts: [{ item: { id: uuid(6), title: "Saved shift", startsAt: "2026-10-07T10:00:00.000Z", endsAt: "2026-10-07T11:00:00.000Z", open: false, milestoneStatus: "upcoming", instructions: "private" } }], tasks: [{ item: { id: uuid(7), title: "Saved task", dueAt: null, status: "open", description: "private" } }], meetings: [{ item: { meeting: { id: uuid(8), title: "Saved meeting" }, occurrence: { id: uuid(9), startsAt: "2026-10-07T12:00:00.000Z", endsAt: "2026-10-07T13:00:00.000Z", status: "scheduled" } } }] };
+  const h = harness(selected, output);
+  const result = await h.read(h.authorization, selected);
+  expect(result.operationId).toBe(selected.operationId);
+  expect(JSON.parse(result.summary).records).toEqual([
+    { kind: "tasks", id: uuid(7), title: "Saved task", dueAt: null, status: "open" },
+    { kind: "shifts", id: uuid(6), title: "Saved shift", startsAt: "2026-10-07T10:00:00.000Z", endsAt: "2026-10-07T11:00:00.000Z", open: false, milestoneStatus: "upcoming" },
+    { kind: "meetings", id: uuid(9), title: "Saved meeting", startsAt: "2026-10-07T12:00:00.000Z", endsAt: "2026-10-07T13:00:00.000Z", status: "scheduled" },
+  ]);
+  expect(result.summary).not.toContain("private");
+  expect(h.authorize).toHaveBeenCalledTimes(2);
+  for (const invalid of [{ open: "false" }, { startsAt: "unknown" }, { milestoneStatus: null }]) {
+    const bad = harness(selected, { ...output, shifts: [{ item: { ...output.shifts[0].item, ...invalid } }] });
+    await expect(bad.read(bad.authorization, selected)).rejects.toThrow();
+  }
+});

@@ -106,7 +106,7 @@ export function createPlanExecutor(deps:PlanExecutorDependencies){return {async 
    if(!result){
     if(state.attempts>=run.authorization.maxAttempts){await save({...run,state:'blocked',detail:'Bounded attempts exhausted'});return true;}
     const next=structuredClone(run);next.state='running';next.steps[index].state='running';next.steps[index].attempts++;await save(next);await fresh();
-    try{result=await adapter.execute({...context,attempt:run.steps[index].attempts},step);}catch{const unknown=structuredClone(run);unknown.state='outcome_unknown';unknown.steps[index].state='outcome_unknown';unknown.detail='Command may have committed; exact canonical reconciliation required';await save(unknown);return true;}
+    try{result=await adapter.execute({...context,attempt:run.steps[index].attempts},step);}catch{const unknown=structuredClone(run);unknown.state='outcome_unknown';unknown.steps[index].state='outcome_unknown';unknown.detail=step.adapter==='authorized_read'?'Authorized read result unavailable; current-authorized read reconciliation required':'Command may have committed; exact canonical reconciliation required';await save(unknown);return true;}
    }
    if(result&&"state" in result){await fresh();if(result.state==="waiting"){if(step.adapter!=="calendar_confirmation"||!Number.isSafeInteger(result.retryAt)||result.retryAt<=deps.now()||result.retryAt>run.authorization.expiresAt)throw Error("Invalid confirmation retry");const waiting=structuredClone(run);waiting.state="pending";waiting.steps[index].state="pending";waiting.nextAttemptAt=result.retryAt;waiting.detail="Waiting for saved participant responses; bounded attempts and deadline apply";await save(waiting);return true;}result=result.result;}
    run.nextAttemptAt=undefined;

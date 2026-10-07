@@ -57,7 +57,12 @@ export function createPlanExecutionBusinessReads(overrides: Partial<Dependencies
     else if (name === "query_asset_custody") { sourceRows = rows(raw.assets); projected = sourceRows.map(row => ({ ...fields(row, ["id", "name", "category", "status", "holderUserId", "currentHolderDisplayName", "checkedOutAt", "custodyDays", "expectedReturnAt"]), responsibleCompanyKey: authorization.requester.organizationKey })); limitations.push("Recorded custody age only; assets with unknown custody dates may be omitted. No physical possession proof."); }
     else {
       for (const family of ["tasks", "shifts", "meetings"]) for (const wrapper of rows(raw[family])) {
-        const item = object(wrapper.item); const value = family === "meetings" ? { ...fields(item.meeting, ["id", "title"]), ...fields(item.occurrence, ["id", "startsAt", "endsAt", "status"]) } : fields(item, ["id", "title", "startsAt", "endsAt", "dueAt", "status"]);
+        const item = object(wrapper.item);
+        const value = family === "meetings"
+          ? z.object({ id: z.uuid(), title: text, startsAt: z.iso.datetime(), endsAt: z.iso.datetime(), status: text }).parse({ ...fields(item.meeting, ["id", "title"]), ...fields(item.occurrence, ["id", "startsAt", "endsAt", "status"]) })
+          : family === "shifts"
+            ? z.object({ id: z.uuid(), title: text, startsAt: z.iso.datetime(), endsAt: z.iso.datetime(), open: z.boolean(), milestoneStatus: text }).parse(item)
+            : z.object({ id: z.uuid(), title: text, dueAt: z.iso.datetime().nullable(), status: text }).parse(item);
         sourceRows.push(wrapper); projected.push({ kind: family, ...value });
       }
       limitations.push("Authorized calendar records only; external commitments and real attendance are unknown.");

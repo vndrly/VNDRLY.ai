@@ -736,6 +736,9 @@
     "cameraUnavailablePickSite": "Camera is unavailable in this build. Choose a site by name instead."
   },
   "errors": {
+    "work_hub": {
+      "invalid_operation": "Unable to verify this Work Hub operation. Refresh and try again."
+    },
     "gate_report": {
       "invalid_request": "Check the report filters and try again",
       "invalid_token": "This secure report link is invalid or has expired"

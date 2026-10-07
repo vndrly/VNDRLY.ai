@@ -42,3 +42,14 @@ it('keeps a transient reconciliation error recoverable without resending the com
 it('reconciles durable running state after crash and refuses unknown or exhausted retries',async()=>{const h=harness();h.run.steps[0].state='running';h.run.steps[0].attempts=1;h.reconcile.mockResolvedValueOnce({state:'unknown'} as any);await createPlanExecutor(h.deps).runOne();expect(h.run.state).toBe('outcome_unknown');expect(h.execute).not.toHaveBeenCalled();h.run.steps[0].attempts=3;h.reconcile.mockResolvedValueOnce({state:'not_found'});h.restart();await createPlanExecutor(h.deps).runOne();expect(h.run.state).toBe('blocked');expect(h.execute).not.toHaveBeenCalled();});
 it('refuses mutated private authorization instead of treating persisted tool names as approval',async()=>{const h=harness();h.run.authorization.steps[0].arguments={condition:'all'};await createPlanExecutor(h.deps).runOne();expect(h.execute).not.toHaveBeenCalled();expect(h.notify).not.toHaveBeenCalled();});
 it('bounds repeated unknown reconciliation and notification attempts',async()=>{const h=harness();h.execute.mockRejectedValueOnce(Error('dropped'));await createPlanExecutor(h.deps).runOne();h.reconcile.mockResolvedValue({state:'unknown'} as any);for(let i=0;i<4;i++){h.restart();await createPlanExecutor(h.deps).runOne();}expect(h.reconcile).toHaveBeenCalledTimes(3);expect(h.run.state).toBe('blocked');expect(h.run.steps[0].state).toBe('outcome_unknown');const n=harness();n.notify.mockRejectedValue(Error('unknown'));for(let i=0;i<4;i++){n.restart();await createPlanExecutor(n.deps).runOne();}expect(n.notify).toHaveBeenCalledTimes(3);expect(n.run.state).toBe('blocked');});
+
+it('retains the exact failed read operation for authorized retry while actual writes remain uncertain', async () => {
+ const h=harness();h.execute.mockRejectedValueOnce(Error('Projection unavailable'));
+ await createPlanExecutor(h.deps).runOne();
+ expect(h.run.detail).toBe('Authorized read result unavailable; current-authorized read reconciliation required');
+ expect(h.run.steps[0].state).toBe('outcome_unknown');expect(h.run.steps[1].state).toBe('pending');
+ h.restart();await createPlanExecutor(h.deps).runOne();
+ expect(h.run.state).toBe('completed');expect(h.execute.mock.calls[0][1].operationId).toBe(uuid(4));expect(h.execute.mock.calls[1][1].operationId).toBe(uuid(4));
+ const w=harness();w.execute.mockImplementationOnce(async()=>({operationId:uuid(4),sourceReferences:['asset:21'],summary:'read'})).mockRejectedValueOnce(Error('Write response lost'));
+ await createPlanExecutor(w.deps).runOne();expect(w.run.detail).toBe('Command may have committed; exact canonical reconciliation required');expect(w.run.steps[1].state).toBe('outcome_unknown');
+});

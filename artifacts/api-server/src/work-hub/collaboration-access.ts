@@ -92,14 +92,15 @@ export async function collaborationChannelAccess(
 export async function assertCollaborationInvite(
   channel: { id: string; ownerOrgType: string; ownerOrgId: number },
   inviteeId: number,
+  database: Omit<typeof db, "$client"> = db,
 ) {
-  const scope = await collaborationChannelScope(inviteeId, channel.id);
+  const scope = await collaborationChannelScope(inviteeId, channel.id, database);
   if (!scope) return;
   if (scope.kind === "chat") throw new WorkHubAccessError("forbidden");
   if (scope.kind === "shared") {
     // Sharing is limited to a person already in the owning company. External sharing
     // uses the explicit accepted invitation flow, never a generic email addition.
-    const [org] = await db
+    const [org] = await database
       .select()
       .from(userOrgMembershipsTable)
       .where(
@@ -115,7 +116,7 @@ export async function assertCollaborationInvite(
     if (!org) throw new WorkHubAccessError("forbidden");
     return;
   }
-  const [crew] = await db
+  const [crew] = await database
     .select()
     .from(workHubCrewMembersTable)
     .where(

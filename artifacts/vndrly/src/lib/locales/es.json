@@ -3907,6 +3907,9 @@
     "mismatch": "Las contraseñas no coinciden."
   },
   "errors": {
+    "work_hub": {
+      "invalid_operation": "No se pudo verificar esta operación de Work Hub. Actualiza e inténtalo de nuevo."
+    },
     "gate_report": {
       "invalid_request": "Revise los filtros del informe e inténtelo de nuevo",
       "invalid_token": "Este enlace seguro del informe no es válido o ha vencido"
